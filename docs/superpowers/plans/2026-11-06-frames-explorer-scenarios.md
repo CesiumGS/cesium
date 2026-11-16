@@ -30,7 +30,7 @@
   - the worker for PROJ and runs (R13);
   - untrusted strings rendered as text;
   - the ion token never in the worker, URL, params, report, storage or console;
-  - the HUD exception for canvas colours.
+  - the HUD exception for canvas colors.
 - **The globe stays the hero.** The tree diagram docks beside it in Dyno's side column (R17: Dyno owns the column widths).
 - **Knobs, not an editor:** three or four knobs per scenario, on the frames it added. No adding or removing frames, and no typed definitions.
 - **Proof:**
@@ -126,7 +126,7 @@
     - a lunar site (under MOON_ME) and a ship (under ITRF) meet at ICRF;
     - a node and its own ancestor give an empty `up` side;
     - every pair among the capstone's four objects is checked against a hand-written ancestor table.
-  - **`layoutTree`:** no two nodes at the same depth closer than `nodeWidth`; parents centred over their children within a pixel; a 20-node tree fits `width`.
+  - **`layoutTree`:** no two nodes at the same depth closer than `nodeWidth`; parents centered over their children within a pixel; a 20-node tree fits `width`.
 - [ ] **Step 2: Run** the two test files and confirm they fail.
 - [ ] **Step 3: Implement.** For the layout, use a Reingold–Tilford-style tidy tree, or a simpler subtree-width pass that meets the tests.
 - [ ] **Step 4: Run** the tests and confirm they pass, along with the existing tree tests.
@@ -147,7 +147,7 @@
 - **Consumes:** Task 1's `ScenarioSpec`, `KnobState` and `checkedState`; Task 2's `AddedFrameSpec`; the catalog's `StressResult`, `StressContext` and `judgeResult`.
 - **Produces** (`evaluate.ts`):
   - `interface ScenarioAnswer { headline: string; value?: number; unit?: string; accuracy: { meters?: number; note: string }; path?: { from: string; to: string } }`. The path names node ids for `branchPath`.
-  - `interface SightLine { id: string; from: readonly number[]; to: readonly number[]; label: string }`. Positions are Earth-fixed, in metres. The main thread resolves these against terrain (Task 5).
+  - `interface SightLine { id: string; from: readonly number[]; to: readonly number[]; label: string }`. Positions are Earth-fixed, in meters. The main thread resolves these against terrain (Task 5).
   - `interface ScenarioEvaluation { scenario: ScenarioId; added: readonly AddedFrameSpec[]; answer: ScenarioAnswer; overlays: readonly { id: string; geometry: OverlayGeometry }[]; sightLines?: readonly SightLine[]; live: readonly StressResult[]; checkedAnswerValue?: number }`. `live` holds the judged checks at these knobs. `checkedAnswerValue` is the answer at the checked setup, for the delta.
   - `type ScenarioEvaluator = (ctx: StressContext, knobs: KnobState, epochTdb: number) => Promise<ScenarioEvaluation>`.
   - `registerScenario(id: ScenarioId, evaluator: ScenarioEvaluator): void`.
@@ -205,7 +205,7 @@ This task replaces the tour and the Explore tab's layout. It ports three scenari
   - Each switch takes a generation number. Replies from an older generation are dropped, and the old scenario's overlays are removed before the new ones draw (Review Focus 3).
 - **Layout (spec "How the page works"):**
   - the scenario strip at the panel's top;
-  - the tree diagram (Task 2's layout, with family colours, added frames distinct, and each edge's kind and accuracy; Review Focus 5's path lit edge by edge on answer, honouring reduced motion). On a scenario switch, the tree visibly rebuilds: shared nodes move to their new places and added frames attach in place, which is the spec's "same system, different shape" moment. Reduced motion cuts straight to the new shape;
+  - the tree diagram (Task 2's layout, with family colors, added frames distinct, and each edge's kind and accuracy; Review Focus 5's path lit edge by edge on answer, honoring reduced motion). On a scenario switch, the tree visibly rebuilds: shared nodes move to their new places and added frames attach in place, which is the spec's "same system, different shape" moment. Reduced motion cuts straight to the new shape;
   - the headline answer, with its accuracy;
   - the knobs, with the checked-setup marker and "Back to the checked setup";
   - the proof (Task 3's rows, which open into the existing inspector).
@@ -219,7 +219,7 @@ This task replaces the tour and the Explore tab's layout. It ports three scenari
   - "Back to the checked setup" restores the checked knobs and epoch;
   - the deep link round-trips scenario, knobs, time and a node selection.
 - [ ] **Step 2: Run** them and confirm they fail.
-- [ ] **Step 3: Implement** the host, the three scenarios and the panel. Keep the camera behaviour that landed in commit 09f98a729a and its fix round: orbit off the surface, globe controls on it, Frame content and `F`, the pivot marker. Each scenario names its rig.
+- [ ] **Step 3: Implement** the host, the three scenarios and the panel. Keep the camera behavior that landed in commit 09f98a729a and its fix round: orbit off the surface, globe controls on it, Frame content and `F`, the pivot marker. Each scenario names its rig.
 - [ ] **Step 4: Run** `npm test`, `npm run test:data` and tsc, and confirm they pass.
 - [ ] **Step 5: Check in the browser** on 5190:
   - switch among the three scenarios mid-load;
@@ -228,7 +228,7 @@ This task replaces the tour and the Explore tab's layout. It ports three scenari
   - check light and dark, desktop and 380 px.
 - [ ] **Step 6: Commit** with "examples: frames explorer scenarios replace the tour: strip, tree diagram, answer, knobs, proof".
 
-### Task 4b: Split main.ts and panel.css (owner, 2026-11-06), no behaviour change
+### Task 4b: Split main.ts and panel.css (owner, 2026-11-06), no behavior change
 
 Iteration slowed because `main.ts` (about 3,700 lines, almost all of it one `run` closure) and `panel/panel.css` (about 2,800 lines) make every task read and diff most of the example. Split them before Tasks 5–8 add six scenarios.
 
@@ -244,11 +244,11 @@ Iteration slowed because `main.ts` (about 3,700 lines, almost all of it one `run
   - deep links and history.
   `main.ts` keeps `run`: it builds these modules, wires them together, and owns teardown.
 - Split `panel/panel.css` per component (`TreeDiagram.css`, `Proof.css` and so on), with shared tokens and utilities in one small file. Classes are namespaced by component.
-- Tests: none change behaviour. Move or extract pure helpers where a module boundary makes them testable.
+- Tests: none change behavior. Move or extract pure helpers where a module boundary makes them testable.
 
 **Rules:**
 
-- **No behaviour change.** The same DOM, the same CSS cascade outcome, the same camera and overlay behaviour. Before and after, `npm test` and `npm run test:data` give the same counts and the same 225 results, with fingerprints.json unchanged.
+- **No behavior change.** The same DOM, the same CSS cascade outcome, the same camera and overlay behavior. Before and after, `npm test` and `npm run test:data` give the same counts and the same 225 results, with fingerprints.json unchanged.
 - **Small modules with explicit dependencies.** Each module exports a `create…(deps)` that returns its API and a `dispose`. No module reaches into another's state. Shared state passes as explicit objects, not module-level globals.
 - **The size target:** no example file over about 800 lines, except tests, and `main.ts` under about 600.
 - **Commits:** one module (or a few small ones) per commit, each green on tsc, `npm test` and lint, so a regression is bisectable.
@@ -311,7 +311,7 @@ The library-level design (revisions, cheap synchronous queries and budgeted asyn
 
 - **Produces:**
   - `terrainLineOfSight(from: ArrayLike<number>, to: ArrayLike<number>, sampleHeight: (longitude: number, latitude: number) => number | undefined, options?: { step?: number; ellipsoid?: Ellipsoid; terrainAccuracy?: number }): { clear: boolean | undefined; minClearance?: number; blockedAt?: Float64Array; unknownFraction: number; accuracy: { meters?: number; note: string } }`.
-  - Positions are Earth-fixed, in metres. `clear` is `undefined` when unknown spans could hide an obstruction. `minClearance` is the ray's lowest height above the terrain, in metres.
+  - Positions are Earth-fixed, in meters. `clear` is `undefined` when unknown spans could hide an obstruction. `minClearance` is the ray's lowest height above the terrain, in meters.
 - **Consumes, in the page:** a sampler from `viewer.globe?.surfaceHeight` (or `sampleHeight` where the globe offers it). It uses the finest loaded tile. Check `src/globe/TerrainSource.ts` and `src/streaming/Tileset3D.ts` for which is right for line of sight, and say why.
 
 - [ ] **Step 1: Write the failing tests,** with a synthetic sampler (a Gaussian hill on the ellipsoid):
@@ -319,10 +319,10 @@ The library-level design (revisions, cheap synchronous queries and budgeted asyn
   - a ray through it is `clear: false`, with `blockedAt` on the hill's face;
   - **Review Focus 2:** a sampler returning `undefined` over 30% of the path in the middle gives `clear: undefined` and `unknownFraction` of about 0.3, never `true`;
   - the accuracy note includes the terrain accuracy passed in;
-  - a ray entirely above the terrain by kilometres is clear, with a stride-adaptive sample count.
+  - a ray entirely above the terrain by kilometers is clear, with a stride-adaptive sample count.
 - [ ] **Step 2: Run** and confirm they fail.
 - [ ] **Step 3: Implement:**
-  - geodetic sampling along the segment, every `step` metres (default: the tile level's ground spacing or 30 m), with refinement near the minimum clearance;
+  - geodetic sampling along the segment, every `step` meters (default: the tile level's ground spacing or 30 m), with refinement near the minimum clearance;
   - the earth's curvature through the ellipsoid;
   - a note in the doc comment that it is CPU-sampled, and that a GPU viewshed belongs to plan 5's renderer items.
 - [ ] **Step 4: Run** the tests and `npm test`, and confirm they pass.
@@ -365,7 +365,7 @@ Every scenario task from here on follows the patterns Task 4 settled:
   - only frames are drawn in the tree;
   - data is a dashed card pinned beside the frame it's expressed in;
   - the drawn-in frame carries a "Drawing in" tag;
-  - the `branchPath` route lights up, with a travelling dot;
+  - the `branchPath` route lights up, with a traveling dot;
   - numbered route steps below the tree give each step's physical meaning and its accuracy.
 - **The question and the headline.** The big value answers the question directly. `ScenarioAnswer.label` is required: a value, a unit and a few words. The callout and the panel agree.
 - **Checks, not proof** (Task 6c): each check row names its kind (published reference, measured data, hand formula, round trip, live re-run). Only measured-data rows say "validated".
@@ -437,19 +437,19 @@ Both look up from a site on the Earth into space. Both need Task 5's terrain lin
 - [ ] **Step 5: Check in the browser:** the knobs, the answer, proof on and off the checked setup, and the route lighting from the DSS frame to Orion. Take screenshots into the SDD workspace.
 - [ ] **Step 6: Commit** with "examples: frames explorer scenarios: a dish tracks Orion, and where the Moon is from here".
 
-### Task 6c: "Proof" becomes "Checks", with each check's kind colour-coded, and the knobs move up (owner, 2026-11-06)
+### Task 6c: "Proof" becomes "Checks", with each check's kind color-coded, and the knobs move up (owner, 2026-11-06)
 
 The owner: "Proof" overclaims. Most checks are verification: they compare the computation with an independent reference calculation, a hand formula or a round trip. A few are validation, against measured data such as NGS survey marks or tracking data. So:
 
 - **Rename.** Each scenario's "Proof" becomes **"Checks"**. That covers the section heading, the copy, the markers ("At the checked setup…"), the "Open in Verification" link text where it applies, and the identifiers: `proof`, `ProofRow`, `proofRows`, `Proof.tsx`, the CSS classes and the tests. The secondary tab stays **"Verification"**, which describes the catalog accurately.
-- **Each row names its kind,** in words and with a colour-coded tag:
+- **Each row names its kind,** in words and with a color-coded tag:
   - **Published reference:** compared with a cited independent computation (Ashby & Patla, JPL Horizons, IERS).
   - **Measured data:** compared with measurements, such as NGS survey marks or tracking data. Only these rows may say "validated".
   - **Hand formula:** an independent closed-form check (R11).
   - **Round trip / consistency:** two routes or a there-and-back that agree.
   - **Live re-run:** off the checked setup, re-judged at your settings.
-- **Kind and status stay separate.** The kind is a small colour tag with a label. The status keeps its own icon and word (checked, failed, loading, reference applies at the checked setup). Colour never carries meaning alone, and the kind colours never reuse the pass, fail or warning colours.
-- **Colours** come from StrataKit's palette tokens, legible in light and dark at AA contrast. Show a compact legend once, at the top of the Checks section.
+- **Kind and status stay separate.** The kind is a small color tag with a label. The status keeps its own icon and word (checked, failed, loading, reference applies at the checked setup). Color never carries meaning alone, and the kind colors never reuse the pass, fail or warning colors.
+- **Colors** come from StrataKit's palette tokens, legible in light and dark at AA contrast. Show a compact legend once, at the top of the Checks section.
 - **The data** gets a `kind` on each catalog result or proof spec, derived where possible: `source` with a measured flag, hand formula, round trip. A test asserts every scenario's check rows have a kind, and that only measured-data rows use the word "validated".
 - **The knobs move up** (owner: "the knobs are hard to find since you have to scroll way down to find them … maybe right under the question above the frame tree"). The Scenarios tab's order becomes:
   1. the scenario picker;
@@ -462,12 +462,12 @@ The owner: "Proof" overclaims. Most checks are verification: they compare the co
 
   Knobs stay compact: a single row of controls where they fit, wrapping at narrow widths. The "Knobs and proof ↓" pill becomes "Checks ↓", or goes away if Checks is reachable without it. The camera and time controls stay on the globe.
 - **Moments are easy to find** (owner, 2026-11-06: "where's the 'behind the moon' preset?"). Today the dish's "Behind the Moon" preset is a small chip styled like the "Checked setup" status chip, under the answer and below the tree, so it reads as a status, not a button. Move scenario moments into the knobs row as clearly styled buttons, for example "Jump to: Behind the Moon". Also make the timeline's marked window itself clickable, jumping to its start. Check the mockup covers this.
-- **A mockup comes first.** Show the owner a mockup of the new order, with the knobs under the question and the coloured check rows and legend, in light and dark, before building. The design note is the conventions' "mockups first" rule.
+- **A mockup comes first.** Show the owner a mockup of the new order, with the knobs under the question and the colored check rows and legend, in light and dark, before building. The design note is the conventions' "mockups first" rule.
 
 - [ ] Show the mockup, and get the owner's choice.
 - [ ] Rename across code, copy and tests.
 - [ ] Add `kind`, the tags, the legend and the tests.
-- [ ] Run the focused tests and tsc. Take one screenshot per scenario's Checks section. Commit with "examples: frames explorer: Checks, with each check's kind named and colour-coded".
+- [ ] Run the focused tests and tsc. Take one screenshot per scenario's Checks section. Commit with "examples: frames explorer: Checks, with each check's kind named and color-coded".
 
 ### Task 7: The drone and the ship
 
@@ -485,13 +485,13 @@ The owner: "Proof" overclaims. Most checks are verification: they compare the co
   - Heading comes from the horizontal velocity in the local east-north-up frame. Pitch and roll come from `attitude`, or level.
   - The frame's `toParent` is position plus rotation, built with the library's public `Frame` constructor.
 - **drone:**
-  - a synthetic track over the BIM site, labelled as such, and a camera-mount frame (tilt knob) on the body;
-  - the answer: the camera's footprint centre on the terrain, through Task 5, as design-grid E and N;
+  - a synthetic track over the BIM site, labeled as such, and a camera-mount frame (tilt knob) on the body;
+  - the answer: the camera's footprint center on the terrain, through Task 5, as design-grid E and N;
   - knobs: tilt, position along the track, and the height datum (ellipsoid or NAVD88 through GEOID18 for the drone's reported height).
   - A sampled viewshed overlay (which ground cells the camera sees, from Task 5's function over a coarse grid) is a welcome extension. Build it only if it costs under 50 ms on the main thread at the default grid; measure and say.
 - **ship:**
   - a vessel entering San Francisco Bay;
-  - a body frame with modelled pitch and roll (a gentle, labelled sea state), and a mast-sensor frame;
+  - a body frame with modeled pitch and roll (a gentle, labeled sea state), and a mast-sensor frame;
   - the port's design grid: California zone 3;
   - the answer: the ship's E and N on the port grid, and whether the mast can see a named buoy past the headland, through Task 5 over real terrain;
   - knobs: time along the track, mast height, height datum.
@@ -503,7 +503,7 @@ The owner: "Proof" overclaims. Most checks are verification: they compare the co
 
 - [ ] **Step 1: Write the failing tests:**
   - `trackFrame`: heading equals the hand azimuth of a track heading north-east; a level attitude keeps the body's z along the local up within 1e-12; a roll of 10° rotates y about x by 10°.
-  - The drone footprint: over a synthetic flat sampler, the footprint centre matches the hand ray-plane intersection.
+  - The drone footprint: over a synthetic flat sampler, the footprint center matches the hand ray-plane intersection.
   - The ship's line of sight to the buoy: blocked with a hill sampler between them, and clear when the mast height rises above it (hand geometry).
 - [ ] **Step 2: Run** and confirm they fail.
 - [ ] **Step 3: Implement,** including the data decision. A setup change follows the existing manifest and SHA-pin pattern.
@@ -530,7 +530,7 @@ The owner: "Proof" overclaims. Most checks are verification: they compare the co
   - `jointChain.ts` is the example app's code, not the library's. It lives under `examples/` and uses only the public API: `new Frame(name, parent, toParent, { cache: false })`. Joint angles are state beyond the instant, so they take `cache: false` (Frame.ts:27-31).
   - The diagram marks these frames as defined by the app, distinct from the library's built-in frames. Reuse or rename the "added by this scenario" treatment so it reads "defined by your app".
   - The answer area offers a short "How these frames are defined" disclosure. It shows the 5–10 lines of app code that create one joint frame, taken from the source and rendered as text.
-  - **Accuracy is the app's to state (owner, 2026-11-06).** Each joint carries its encoder's angular accuracy and each link its length tolerance, from a synthetic spec sheet, labelled. Example values: ±0.005° per encoder and ±0.2 mm per link. The base placement carries its survey accuracy.
+  - **Accuracy is the app's to state (owner, 2026-11-06).** Each joint carries its encoder's angular accuracy and each link its length tolerance, from a synthetic spec sheet, labeled. Example values: ±0.005° per encoder and ±0.2 mm per link. The base placement carries its survey accuracy.
     - Compose them to the tool: each joint's angular error times its lever arm (the distance from that joint to the tool), plus the link and base terms. Combine them as root-sum-square, and say so.
     - The tool's stated accuracy then grows visibly as the arm extends. Show that in the answer, for example "±1.8 mm, most of it from the shoulder encoder".
     - Test it against a hand computation at two arm poses.
@@ -538,24 +538,24 @@ The owner: "Proof" overclaims. Most checks are verification: they compare the co
       - an optional `accuracy` in `Frame`'s constructor options. It reuses the example's `EdgeAccuracy` shape, moved into the library: `{ radians?, meters?, byDefinition?, note }`, or "not stated". The built-in edges and the example's tree.ts take their accuracies from it, so there is one source of truth.
       - a first-order point composer, for example `pointAccuracy(point, from, to, instant)`. It returns `{ meters | undefined, terms: { frame, meters, note }[], unboundedBy?: frameName }`.
         - Each angular term is scaled by its lever arm: the point's distance from that edge's rotation origin.
-        - Metre terms add directly.
+        - Meter terms add directly.
         - Terms combine root-sum-square, and the result says so.
         - An unbounded edge makes the total unbounded and names that edge. It is never dropped.
-        - This generalises the example's `accuracyOf`, which moves into it.
+        - This generalizes the example's `accuracyOf`, which moves into it.
       - The arm, and the scenarios already on screen, use it. The answer names the dominant term. Test it against hand computations: two arm poses, plus earth-turns' existing angular case.
       - Confidence levels, correlated terms and per-direction error ellipsoids are plan 5 ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)). Don't build them here; mark every value as 1σ for now, as the example already does.
   - **Library gaps:** record any in the report and in [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) "Carried forward". Implement one only if it is small and the scenario can't be honest without it, and ledger the ruling. Candidates:
     - a revision or change signal, so a state-dependent frame can stay cached and the renderer knows to redraw;
     - velocities (plan 3).
 - **robot-arm:**
-  - **The tree:** pad ENU (`eastNorthUpFrame` at the pad) → arm base (a fixed placement, with a stated, labelled survey accuracy) → base yaw → shoulder → elbow → wrist → tool. Link lengths are synthetic, sized like a launch-pad service arm, and labelled synthetic.
+  - **The tree:** pad ENU (`eastNorthUpFrame` at the pad) → arm base (a fixed placement, with a stated, labeled survey accuracy) → base yaw → shoulder → elbow → wrist → tool. Link lengths are synthetic, sized like a launch-pad service arm, and labeled synthetic.
   - **The place:** Kennedy Space Center LC-39A, unless a better-documented pad is found. Cite the pad's coordinates.
   - **The mark (data):** a nearby NGS mark or CORS station whose published coordinates give both NAD83(2011) and ITRF. Pin it as a data card in its NAD83(2011) CRS, reached through PROJ. Cite its datasheet, with its PID and date.
-    - If no such station exists within a few kilometres, use the nearest published one, and say so in the answer's paragraph.
+    - If no such station exists within a few kilometers, use the nearest published one, and say so in the answer's paragraph.
     - Ledger the choice.
   - **The answer:** "the tool is X m from the mark (its name)", as a straight-line distance, with the composed accuracy: joints exact, base survey ±, mark datasheet ±, and the PROJ operation's ±. The route steps run from the tool down the chain to the pad ENU, through ITRF, and out to NAD83(2011).
   - **Knobs:** base yaw, shoulder, elbow, wrist, each a range with limits.
-  - **On the globe:** the arm drawn as link segments with a small triad at each joint, the tool marked, and a leader line from the tool to the mark labelled with the distance. Use a terrain or ellipsoid rig close to the pad.
+  - **On the globe:** the arm drawn as link segments with a small triad at each joint, the tool marked, and a leader line from the tool to the mark labeled with the distance. Use a terrain or ellipsoid rig close to the pad.
   - **Proof:**
     - at the checked angles, forward kinematics against a hand closed-form solution (R11);
     - a round trip through the chain, tool → ITRF → tool;

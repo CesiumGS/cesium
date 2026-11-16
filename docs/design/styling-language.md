@@ -13,9 +13,9 @@
 
 - **A pipeline per layer:** select features, transform their geometry through a chain of operators, then draw one mark.
   - _Operators_ derive geometry (outlines, shared boundaries, anchor points), place items (points along a line, grids and scatters in a polygon, parallel offsets), generate lines (hatches, contours, flow lines) or aggregate (clusters, density).
-  - _Marks_ are a fill, a stroke, a symbol, text or a solid. They share one paint model: colour, patterns, dashes, an outline, casing or halo, and a material.
+  - _Marks_ are a fill, a stroke, a symbol, text or a solid. They share one paint model: color, patterns, dashes, an outline, casing or halo, and a material.
 - **Every field can be data-driven.** Each field is evaluated at the rate its inputs vary: once per style, per feature, per item an operator produced, or per vertex.
-- **Lengths carry units:** screen pixels, paper millimetres at a reference scale, and ground metres. They're checked when a style compiles.
+- **Lengths carry units:** screen pixels, paper millimeters at a reference scale, and ground meters. They're checked when a style compiles.
 - **What the data must supply follows from the style.** A style's inputs determine a data-requirements manifest, which a tiler or data service can read.
 - **Placement and collision are one pass per frame** across all layers and all composed content. Occluded marks can show as ghosts.
 - **Scales and legends come from the same definitions.** Drawing order is in explicit bands, and styles compose (a base and its overrides).
@@ -32,7 +32,7 @@
   - a CPU part;
   - a per-feature or per-item compute pass that writes a style table;
   - vertex and fragment parts.
-- **Styling meets shading at material inputs.** A style's paint feeds the engine's material (colour, opacity, emissive, metallic and roughness). Anything beyond that is a shading function through the same IR, as MaterialX's pattern graphs meet its surface shader.
+- **Styling meets shading at material inputs.** A style's paint feeds the engine's material (color, opacity, emissive, metallic and roughness). Anything beyond that is a shading function through the same IR, as MaterialX's pattern graphs meet its surface shader.
 - **Geometry-changing fields depend on the kind of change:**
   - fields that move geometry (offsets, extrusion heights, a profile's exaggeration) are smooth nodes ([transform-graph.md](transform-graph.md)), so true and drawn picks come for free;
   - operators that change topology (items along a line, hatches, contours) are compute passes emitting into indirect draws, as the b-rep dicing does.
@@ -41,7 +41,7 @@
 
 **In the compiler, every value the runtime supplies is a declared input** with three parts:
 
-1. **A name** in the language, abstract, such as `view.metresPerPixel` or `feature.id`.
+1. **A name** in the language, abstract, such as `view.metersPerPixel` or `feature.id`.
 2. **A type,** with a unit where it has one.
 3. **A rate.**
 
@@ -58,15 +58,15 @@ The engine keeps a registry of _providers_, one per input, for each kind of cont
 | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | Feature properties                                                                                                 | Feature                               | 3D Tiles property tables (the 1.x style binding, `FeatureStyle`); typed columns on a `PointSource` | Columnar storage indexed by the feature's index, typed in the IR                                                                          |
 | A stable feature identity                                                                                          | Feature                               | Feature IDs and pick IDs, per tile or draw                                                         | Required for state, randomness and labels. A provider maps it from the content's own ID semantics. **Gap:** not stable across tiles today |
-| Feature state (hovered, selected, run-time overrides)                                                              | Feature, changing at interaction rate | Per-draw colour and visibility (`World.setColor`, `setVisible`); picks name features               | A per-world state table (bits and override slots) by stable ID, written by the application. **Gap**                                       |
+| Feature state (hovered, selected, run-time overrides)                                                              | Feature, changing at interaction rate | Per-draw color and visibility (`World.setColor`, `setVisible`); picks name features               | A per-world state table (bits and override slots) by stable ID, written by the application. **Gap**                                       |
 | Style parameters                                                                                                   | Style                                 | Uniforms, as `VectorLayer.setParameter` does                                                       | Uniforms, with per-view values as `view.setParameter` has for transforms                                                                  |
-| The view (camera, viewport, metres per pixel, scale, pitch)                                                        | View, per frame                       | The view's per-frame data (`viewFrameData`)                                                        | View-rate inputs. Per-point distance is computed in the stage from the camera-relative position                                           |
+| The view (camera, viewport, meters per pixel, scale, pitch)                                                        | View, per frame                       | The view's per-frame data (`viewFrameData`)                                                        | View-rate inputs. Per-point distance is computed in the stage from the camera-relative position                                           |
 | Time                                                                                                               | Frame                                 | The scene clock                                                                                    | A uniform                                                                                                                                 |
 | Geometry measures (area, length, centroid, label point)                                                            | Feature                               | Not computed today                                                                                 | The data or tiler supplies them, or a per-feature compute pass at load. **Gap**                                                           |
 | Items an operator produced (index, count, position along, angle)                                                   | Item                                  | Not built (only the point layers' cull kernel)                                                     | Each generating pass writes item records that later stages read. **Gap**                                                                  |
 | Vertex values (true and drawn position, normal, distance along a line, a b-rep face's (u, v), a point's intensity) | Vertex or fragment                    | Varyings: true position (`truePositionEC`), normals, the patch UV varying                          | Vertex and fragment inputs. True and drawn come from the transform graph                                                                  |
 | Surfaces below (height, slope, for clamping)                                                                       | Item or vertex                        | Height captures (the tracks' clamp) and terrain queries                                            | A capture texture or a compute query                                                                                                      |
-| Neighbours (distance to another layer's features)                                                                  | Feature                               | The geometry query interface (closest point, rays)                                                 | A per-feature compute pass over the query interface. **Gap**                                                                              |
+| Neighbors (distance to another layer's features)                                                                  | Feature                               | The geometry query interface (closest point, rays)                                                 | A per-feature compute pass over the query interface. **Gap**                                                                              |
 | Statistics (min, max, mean, quantiles)                                                                             | Style, per data layer                 | Not computed today                                                                                 | Metadata statistics from the data, or a GPU reduction. **Gap**                                                                            |
 
 **What the language gives back:**

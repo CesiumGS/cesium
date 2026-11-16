@@ -375,7 +375,7 @@ Each ruling is listed with what it costs if it is wrong.
   | EARTH, 399 | EME2000 (OEM), or frame 1 with `j2000: "eme2000"` | `eme2000` |
   | EARTH, 399 | ICRF / GCRF, or frame 1 with `j2000: "icrf"` | `gcrf` |
   | EARTH, 399 | ITRF / ITRF93, SPK frame 13000 | `itrf` |
-  | MOON, 301 | ICRF or EME2000 | `moonIcrf` (an EME2000 Moon-centred source throws "not supported yet") |
+  | MOON, 301 | ICRF or EME2000 | `moonIcrf` (an EME2000 Moon-centered source throws "not supported yet") |
   | SUN, 10 | ICRF | `hcrs` |
   | SSB, 0 | ICRF | `icrf` |
 
@@ -434,7 +434,7 @@ Each ruling is listed with what it costs if it is wrong.
   - **Main SPK:** target −24, center 399, frame 1, type 13, 6 segments, TDB 828367171 to 829137274.
   - **Gap-fill SPK:** the same target, center, frame and type, 5 segments.
   - **Stations:** 19 targets 3990xx, center 399, frame 13000 (ITRF93), type 8.
-  - **OEM:** 6 segments, EME2000, Earth-centred, UTC, with no `INTERPOLATION` keyword. NAIF converted it with Hermite degree 11.
+  - **OEM:** 6 segments, EME2000, Earth-centered, UTC, with no `INTERPOLATION` keyword. NAIF converted it with Hermite degree 11.
   - `loadFrameData`'s required roles are unchanged; trajectories are optional.
 
 - [ ] **Step 1: Extend setup.** `ensureFrameData` downloads the four files with `ensureNaif` (pinned), stores them, and adds their manifest entries. Their credits are "NASA JSC FOD Navigation, via NAIF" for the Artemis files and "NAIF/JPL" for the stations. Run `npm run setup` and confirm the four files are in the store and the manifest.

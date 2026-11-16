@@ -6,7 +6,7 @@
 
 **Architecture:** Pure TypeScript in a new `src/measure/`, built on plan 2's frame tree and trajectories.
 
-- **The tree's Earth link.** It gains the IERS relativistic link between geocentric TT-compatible coordinates and barycentric TDB-compatible ones. A TDB-compatible Earth-centred frame sits beside it for SPICE-convention data.
+- **The tree's Earth link.** It gains the IERS relativistic link between geocentric TT-compatible coordinates and barycentric TDB-compatible ones. A TDB-compatible Earth-centered frame sits beside it for SPICE-convention data.
 - **The signal.** Light time is solved in ICRF, the only inertial frame. Velocities come from central differences of the frame tree.
 - **Validation.** Everything is checked against spiceypy fixtures. The finished call is then checked against NASA's archived DSN Now ranges and the published lunar occultation times of Artemis II.
 
@@ -23,7 +23,7 @@
 
 Each ruling ends with what it costs if it is wrong.
 
-- **R1. Two Earth-centred inertial frames.**
+- **R1. Two Earth-centered inertial frames.**
   - IERS Conventions 2010, eq. 11.19 (verified in TN36 ch. 11, 2026-11-05) applies to geocentric vectors that are TT-compatible:
 
     r_TDB = r_TT · (1 − U/c² − L_C) − ½ (V · r_TT) V / c²
@@ -124,7 +124,7 @@ Each ruling ends with what it costs if it is wrong.
 
 ---
 
-### Task 1: The relativistic Earth link and the Earth-centred ICRF frame
+### Task 1: The relativistic Earth link and the Earth-centered ICRF frame
 
 **Files:**
 
@@ -164,7 +164,7 @@ Each ruling ends with what it costs if it is wrong.
 - [ ] **Step 2: Run** `npx vitest run test/frameTree.test.ts test/trajectory.test.ts` and `npm run test:data`, and confirm the new tests fail.
 - [ ] **Step 3: Implement.** The GCRF edge fills its `Mat4` directly: linear part `(1 − U/c² − L_C)·I − ½VVᵀ/c²`, translation `earth`. Note in `toParentMatrix`'s doc that edges may now be affine, but only this one is. The `frames.ts` header cites IERS TN36 eq. 11.19 and R1.
 - [ ] **Step 4: Run** the tests, `npm test` and `npm run test:data`, and confirm they pass.
-- [ ] **Step 5: Commit** with "measure: the IERS relativistic GCRS link and the Earth-centred ICRF frame".
+- [ ] **Step 5: Commit** with "measure: the IERS relativistic GCRS link and the Earth-centered ICRF frame".
 
 ### Task 2: Accuracy inputs: EOP's last observation, OEM covariance and trajectory sigmas
 
@@ -516,7 +516,7 @@ Each ruling ends with what it costs if it is wrong.
 
 - [ ] **Step 1: README.** Document:
   - `measure`, its result fields and `measureSpan`;
-  - the two Earth-centred frames (R1) and which data belongs in each;
+  - the two Earth-centered frames (R1) and which data belongs in each;
   - how to read an accuracy statement;
   - the Artemis covariance units (R7);
   - the DSN Now credit.

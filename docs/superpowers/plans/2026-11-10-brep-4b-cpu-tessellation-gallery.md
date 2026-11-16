@@ -4,7 +4,7 @@
 
 **Goal:** See B-reps on screen before GPU tessellation exists. `tessellateBrep` turns a `BrepForm` into ordinary meshes: shaded faces, plus edges as lines. A gallery example draws step 4's three fixtures with them, and one b-rep that went through the `BENTLEY_brep` glTF path.
 
-**Architecture:** `src/brep/tessellate.ts` is small and kept, but it isn't the reference: SMLib is ([breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md), "SMLib's jobs"), for real models' trims, seams and singular faces, and the exact float64 evaluation is the ground truth for chordal error. This tessellator serves the host path that loads no WebAssembly (`display(tolerance)` and a quick fallback mesh) and this example. The tiler, offline, uses SMLib natively. Each face's parameter domain is tessellated as a grid whose density comes from a chordal-error bound. Triangles whose centre falls outside the trim are dropped, and the edges, drawn on top as lines, hide the jagged trim boundary. Only the example's glue gets replaced at step 5. Placement is an ordinary rigid model matrix, so this doesn't wait for the placement review ([geometry-through-placement-review.md](../../design/geometry-through-placement-review.md)).
+**Architecture:** `src/brep/tessellate.ts` is small and kept, but it isn't the reference: SMLib is ([breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md), "SMLib's jobs"), for real models' trims, seams and singular faces, and the exact float64 evaluation is the ground truth for chordal error. This tessellator serves the host path that loads no WebAssembly (`display(tolerance)` and a quick fallback mesh) and this example. The tiler, offline, uses SMLib natively. Each face's parameter domain is tessellated as a grid whose density comes from a chordal-error bound. Triangles whose center falls outside the trim are dropped, and the edges, drawn on top as lines, hide the jagged trim boundary. Only the example's glue gets replaced at step 5. Placement is an ordinary rigid model matrix, so this doesn't wait for the placement review ([geometry-through-placement-review.md](../../design/geometry-through-placement-review.md)).
 
 **Tech Stack:** TypeScript, vitest, the engine's `World.addMesh` and `addDraw`, the examples gallery.
 
@@ -47,7 +47,7 @@ export interface TessellateOptions {
   readonly trimGrid?: number;
 }
 export interface BrepMesh {
-  /** Positions are relative to this, m (the centre of the vertices' bounds). */
+  /** Positions are relative to this, m (the center of the vertices' bounds). */
   readonly origin: Float64Array;
   /** Every face, unwelded between faces: featureIds holds each vertex's face index. */
   readonly faces: { readonly positions: Float32Array; readonly normals: Float32Array; readonly indices: Uint32Array; readonly featureIds: Uint32Array };
@@ -75,7 +75,7 @@ Rules (fixed):
 - Edges: each 3D segment of degree 1 is one line. Higher degrees get `n = ceil(sqrt(0.125 · D / tolerance))` lines (at least 1, at most 256), with D the segment's largest second difference of divided control points.
 
 - [ ] **Step 1: Write the failing tests** (with `boxBrep`, `cappedCylinderBrep` and `trimmedNurbsBrep`):
-  - **Box:** 12 triangles, 24 face vertices, and 12 edge lines. Every triangle's geometric normal points away from the box's centre. `featureIds` cover faces 0–5 and edges 0–11. `positions + origin` reproduces the corners within 1e-6 m.
+  - **Box:** 12 triangles, 24 face vertices, and 12 edge lines. Every triangle's geometric normal points away from the box's center. `featureIds` cover faces 0–5 and edges 0–11. `positions + origin` reproduces the corners within 1e-6 m.
   - **Capped cylinder, tolerance 1 mm:**
     - Every side vertex is at radius 1 within 1e-6 m.
     - Each side triangle's edge midpoints are within 1 mm + 1e-6 of the surface.
@@ -84,7 +84,7 @@ Rules (fixed):
   - **Trimmed NURBS, tolerance 0.05 m:**
     - No kept triangle has its (u, v) centroid inside the hole.
     - The kept area in (u, v) is within 5% of `1 − π·0.2²`.
-    - At 200 seeded cell centres, the distance from the surface to the triangle's plane point is within the tolerance.
+    - At 200 seeded cell centers, the distance from the surface to the triangle's plane point is within the tolerance.
     - `error` is 0.05.
   - **Caps:** `maxGrid: 4` with a tolerance of 1e-6 gives `error` > 1e-6 and no more than 4 × 4 cells per face.
   - **Bad tolerance:** a tolerance of 0 throws `"tessellateBrep: tolerance must be a positive finite number"`.
@@ -109,7 +109,7 @@ Rules (fixed):
 
 What it shows:
 
-- **The scene:** the three shapes in a row on a light ground grid, scaled to read together. The NURBS face is 100 m across, so scale it by 0.03; the box and the cylinder stay as they are. Each draw gets an ordinary rigid `model` matrix. Faces get a light grey lit material, each face a slightly different tint from its face index. Edges are near-black lines, unlit.
+- **The scene:** the three shapes in a row on a light ground grid, scaled to read together. The NURBS face is 100 m across, so scale it by 0.03; the box and the cylinder stay as they are. Each draw gets an ordinary rigid `model` matrix. Faces get a light gray lit material, each face a slightly different tint from its face index. Edges are near-black lines, unlit.
 - **The panel:**
   - A tolerance slider (0.1 mm to 50 mm, logarithmic, default 1 mm) that re-tessellates. Next to it, the triangle and line counts and the time `tessellateBrep` took.
   - Checkboxes for "Faces" and "Edges".

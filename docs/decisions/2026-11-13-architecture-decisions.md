@@ -19,7 +19,7 @@
 - `WorkerPool` stays as the transport, and Comlink is evaluated for the query round trips; the per-frame command stream uses our own batched protocol.
 - The scheduler is ours: priority by visible screen-space error (shared with requests), dependencies, cancellation when a tile is deselected, and one main-thread apply phase with a millisecond budget shown in the inspector.
 - **Shared memory is detected, never required:** with `crossOriginIsolated`, a `SharedArrayBuffer` and `Atomics` path; without it, transferables, behind the same API. `queue.writeBuffer` takes shared views, so decode workers can fill a shared ring the device thread uploads without a copy.
-- **Jobs may yield sound partial results** the engine uses at once, cancellable when their inputs change. Examples: the horizon occluder's walk, imagery compositing, and later a progressive renderer's accumulation. Such jobs report as refinement sources (renderer decision 7).
+- **Jobs may yield sound partial results** the engine uses at once, cancelable when their inputs change. Examples: the horizon occluder's walk, imagery compositing, and later a progressive renderer's accumulation. Such jobs report as refinement sources (renderer decision 7).
 - No new dependency without the owner's OK. The job-system session writes the design section with prior art, build against adopt, and the engine-in-a-worker spike's measurements.
 
 **The core IR.**
@@ -48,4 +48,4 @@
 - Values may change; the layout may not. Fixed explanations sit behind an ⓘ tooltip, varying sentences become fixed-slot tables, the header has fixed segments, numbers use tabular figures, and a DOM-skeleton test enforces all of it.
 - Series sit in the section they belong to. CPU and GPU time are together in Frame, sharing the time axis and crosshair; "Last 30 s" is gone.
 - Reading a moving chart: hover pauses the display, a click pins a sample (anchored to its tick, not a pixel), Pause/Live with arrow-key stepping, and a per-tick ring buffer so a paused chart can be read frame by frame.
-- Charts follow data-visualization practice: form by job, one scale per chart, colour by entity in a fixed, validated order, and hover values everywhere.
+- Charts follow data-visualization practice: form by job, one scale per chart, color by entity in a fixed, validated order, and hover values everywhere.

@@ -23,7 +23,7 @@
 
 ## Review Focus
 
-1. A mesh far from the origin (ECEF, about 6.4e6 m): a query with `origin` near the geometry must keep millimetre agreement with the same query done in local coordinates. Test in Task 1.
+1. A mesh far from the origin (ECEF, about 6.4e6 m): a query with `origin` near the geometry must keep millimeter agreement with the same query done in local coordinates. Test in Task 1.
 2. Malformed meshes: an index past the vertex count, or a degenerate (zero-area) triangle, must be skipped, never crash and never give NaN. Test in Tasks 1 and 2.
 3. A ray that starts inside a distance field's solid hits at its start. A ray grazing the surface tangentially must end as hit, miss or `unknown`, never loop past `maxSteps`. Test in Task 4.
 4. A `tMin`/`tMax` window that excludes the only hit must answer `miss`, never a hit outside the window. Test in Task 1.
@@ -68,7 +68,7 @@ export interface RayHitOptions {
   /** The part of the segment searched, as fractions from `from` to `to` (defaults 0 and 1, inclusive). */
   readonly tMin?: number;
   readonly tMax?: number;
-  /** Where the arithmetic is centred, for precision far from the coordinates' origin. Inputs and outputs stay in placed coordinates. */
+  /** Where the arithmetic is centered, for precision far from the coordinates' origin. Inputs and outputs stay in placed coordinates. */
   readonly origin?: ArrayLike<number>;
   /** Stop at the first hit found, not the nearest. */
   readonly anyHit?: boolean;
@@ -222,7 +222,7 @@ Task 1 implements `kind`, `version`, `bounds`, `rayHit` and `display`. `closestP
 **Interfaces:**
 
 - Consumes: `meshGeometry`, `rayHit` with `tMin`, `tMax`, `origin` and `anyHit`, and `segmentDistance` from Tasks 1 and 2.
-- Produces: no new API. `geometryBackend.ts` no longer defines triangle maths.
+- Produces: no new API. `geometryBackend.ts` no longer defines triangle math.
 
 - [ ] **Step 1: Run the four test files before changing anything,** and note the pass counts. `npx vitest run test/geometryRays.test.ts test/snap.test.ts test/designGlobeExactSnap.test.ts test/seams.test.ts`
 - [ ] **Step 2: `castTilesetRays`.** For each `g` of `tile.geometry`, call `meshGeometry(g).rayHit(ray, { tMin: Math.max(lo, tolerance / span), tMax: Math.min(hi, 1 - tolerance / span) })`. Take the nearest hit across geometries as `nearest`. Only when no geometry hits, and `tile.geometricError > 0`, compute `near` as the minimum `segmentDistance(ray.from, ray.to)` over the geometries. That is the same set of triangles the old else-branch measured, because none of them hit inside the window. Keep everything else in the function as it is.
@@ -264,7 +264,7 @@ export function sdfGeometry(
 ): GeometryQueries;
 ```
 
-Behaviour:
+Behavior:
 
 - `kind` is `"frep"`. The single face is `{kind:"face", index:0}`.
 - `rayHit` clips `[tMin, tMax]` to the bounds box (slab test). No overlap is a `miss`. Then it sphere-traces: `t += d / length`. A start inside (distance < 0) hits at the start. Distance < `epsilon` is a hit, with the normal from central differences (step `epsilon`). Passing the end is a miss. Running out of steps is `unknown`, `"notConverged"`. Hit accuracy is `{meters: epsilon + error, exact: false}`.
@@ -294,11 +294,11 @@ Behaviour:
 - Modify: [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md) (repo root)
 
 - [ ] **Step 1: Export.** In `src/index.ts`, after `terrainQueries`, add a comment, "Geometry queries per object ([breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md), a draft before the API review): meshes and distance fields today, b-reps next", followed by `export * from "./geometry/index.ts";`. If a name clashes (check `npm run typecheck`), export by name instead.
-- [ ] **Step 2: Record the draft and its questions in [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md).** After the "Spike B result" paragraph, add a paragraph headed `**Step 3 draft (2026-11-09).**` that summarises the interface: per object, synchronous, float64, placed coordinates with an `origin`; three-way ray answers; accuracy on every answer; mesh and distance-field adapters; tileset rays and snap occlusion moved onto it. Follow it with `**Questions for the API review:**` and these items, worded plainly:
+- [ ] **Step 2: Record the draft and its questions in [breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md).** After the "Spike B result" paragraph, add a paragraph headed `**Step 3 draft (2026-11-09).**` that summarizes the interface: per object, synchronous, float64, placed coordinates with an `origin`; three-way ray answers; accuracy on every answer; mesh and distance-field adapters; tileset rays and snap occlusion moved onto it. Follow it with `**Questions for the API review:**` and these items, worded plainly:
   1. Two layers: a synchronous object layer under the asynchronous scene layer. Should a server's staged answers ([breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md)) arrive as a scene-layer backend, as drafted, or should the object layer be asynchronous?
   2. Frames and instants live at the scene layer, and object answers are in placed coordinates. Should each object state its frame and instant?
   3. `EntityRef` is a number plus an optional feature ID, and mesh edges are half-edges (`triangle * 3 + side`). Stable source IDs ([breps-and-geometry-queries.md](../../design/breps-and-geometry-queries.md), "The tiles must carry") need strings or a source table.
-  4. `GeometryAccuracy` is one number in metres. Should it compose with the measure module's `AccuracyTerm`s, and is it a bound or 1σ?
+  4. `GeometryAccuracy` is one number in meters. Should it compose with the measure module's `AccuracyTerm`s, and is it a bound or 1σ?
   5. Is `display(tolerance)` a query, or does it belong to the render form (steps 4 and 5)?
   6. `segmentDistance` exists for the "missed by less than its error" verdict. Keep it, or replace it with a ray answer that carries the near miss?
   7. The client snap's search of the screen aperture isn't moved yet: it needs a cone or screen-space query.

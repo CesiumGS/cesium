@@ -7,7 +7,7 @@
 **Sources:**
 
 - [layers-engine-renderer-backend.md](../../design/layers-engine-renderer-backend.md) (layers: engine, renderer, GPU backend) and [investigations-2026-11-13.md](../../design/investigations-2026-11-13.md), especially "Swappable and hybrid renderers", its decisions of 2026-11-13, and "Architecture decisions from the 2026-11-13 discussion".
-- `docs/superpowers/plans/2026-11-12-transform-graph.md` (routes, the IR, centre constants, fitted lattices).
+- `docs/superpowers/plans/2026-11-12-transform-graph.md` (routes, the IR, center constants, fitted lattices).
 - [core-ir.md](../../design/core-ir.md), "The core IR", and its owner's decisions: Cesium IR (`cesium-ir`).
 - The Cesium IR implementation plan (`docs/superpowers/plans/2026-11-13-cesium-ir.md`, reviewed 2026-11-13). CS-39 and CS-40 depend on its milestones by name.
 - The engine profiles plan (`docs/superpowers/plans/2026-11-13-engine-profiles.md`): facts, paths, support reports, personas. This plan uses its terms and fills its M8.
@@ -119,7 +119,7 @@ Today a second renderer couldn't draw anything: the data it needs lives in the r
 
 | Data | Today | Renderer-neutral home |
 | --- | --- | --- |
-| Draw records (bounds, colour, material, transform, flags, feature base, imagery slice, view mask, clip block, placement, instances, morph) | `WorldRaster.drawConstants`: CPU words with a GPU mirror. The words are already neutral | The CPU words move to a scene-tier `WorldDraws`, with a change log (dirty slots) that each renderer drains. `DrawConstants` stays the only writer (the seam) |
+| Draw records (bounds, color, material, transform, flags, feature base, imagery slice, view mask, clip block, placement, instances, morph) | `WorldRaster.drawConstants`: CPU words with a GPU mirror. The words are already neutral | The CPU words move to a scene-tier `WorldDraws`, with a change log (dirty slots) that each renderer drains. `DrawConstants` stays the only writer (the seam) |
 | Batches (mesh, material, texture set, double-sided, shader, route variant, kind) | `WorldRaster.batches`; `Batch.chunks` is a `GPUBuffer` | The key fields move to `WorldDraws`; GPU fields stay in each renderer's batch state |
 | Transforms and instances | `MirroredTable` in `WorldRaster`: float64 CPU tables with GPU mirrors | The CPU tables move to the scene; each renderer mirrors them |
 | Materials | `WorldRaster.materialsF32` and `materialsU32` | CPU arrays to the scene; slots already live in `WorldScene` |
@@ -164,7 +164,7 @@ interface ViewRenderer {
 ### Culling and level of detail
 
 - **Selection already runs on the CPU,** including the horizon occluder behind the `Occluder` interface. The WebGL 2 renderer uses its results as they are. The selected tiles must be identical in both renderers (section 7).
-- **Per-draw culling** runs on the CPU over the records' bounds (centre and radius words), the view mask and the shown flag, per view per tick. This replaces `cull.slang`. A few thousand draws is a short loop, and it's timed in the inspector.
+- **Per-draw culling** runs on the CPU over the records' bounds (center and radius words), the view mask and the shown flag, per view per tick. This replaces `cull.slang`. A few thousand draws is a short loop, and it's timed in the inspector.
 - **No occlusion culling.** The depth pyramid (`hzb.slang`, `occlusionQuery.slang`) needs compute. The horizon occluder in selection covers the large case.
 - **Instances:** per-instance range culling (`visibleWithin`, `visibleBeyond`) runs on the CPU into a compacted per-view instance buffer, only for instanced draws with ranges. Others draw all instances.
 
@@ -179,7 +179,7 @@ interface ViewRenderer {
 ### Warps
 
 - **Compiled routes:** the transform graph lowers to Cesium IR, and Cesium IR's GLSL ES emitter writes the vertex stage's fused `transformPoint` (section 4). Table-driven warps, such as the corridor, compile to a fixed program over a table. WebGL 2 holds the table as a std140 uniform block of vec4s; [core-ir.md](../../design/core-ir.md) measured that compiling and linking in WebGL 2.
-- **Centre constants** are computed on the CPU in float64 per draw, by Cesium IR's evaluator (the conformant one). This replaces the df64 compute pass (`warpFitDirect.slang`) for parameters that don't separate. Parameters that enter linearly stay per-view uniforms.
+- **Center constants** are computed on the CPU in float64 per draw, by Cesium IR's evaluator (the conformant one). This replaces the df64 compute pass (`warpFitDirect.slang`) for parameters that don't separate. Parameters that enter linearly stay per-view uniforms.
 - **Fitted lattices** go into float textures (`RGBA32F`, `texelFetch` with trilinear filtering in the shader, since float textures filter only with `OES_texture_float_linear`). The fits already have a CPU implementation (`fitLattice` in `src/scene/warpFit.ts`), which the WebGL 2 device uses in place of `warpFitGpu.slang`.
 - **Height-normal terrain** (`setDrawHeightNormal`) reads the per-vertex `h·n̂` attribute as WebGPU's vertex stage does.
 
@@ -191,7 +191,7 @@ interface ViewRenderer {
 
 ### MSAA
 
-- 4× multisampled renderbuffers for HDR colour (`RGBA16F`, which needs `EXT_color_buffer_float`), display colour and depth, resolved with `blitFramebuffer`.
+- 4× multisampled renderbuffers for HDR color (`RGBA16F`, which needs `EXT_color_buffer_float`), display color and depth, resolved with `blitFramebuffer`.
 - **Feature IDs can't be multisampled:** OpenGL ES 3.0 refuses integer formats with samples above zero, and all of a framebuffer's attachments share one sample count. So IDs come from a separate single-sampled pass on demand (section 5).
 
 ### The compute kernels, one by one
@@ -213,7 +213,7 @@ interface ViewRenderer {
 | `hzb` (2), `occlusionQuery` (1) | None |
 | `glare` (1) | None in the PoC |
 | `dice` (2), `pointCull` (3), `points` (2), `modelPool` (5) | None: patches, points and vectors are optional |
-| `warpFitGpu` (3), `warpFitDirect` (3) | CPU fits and CPU centre constants |
+| `warpFitGpu` (3), `warpFitDirect` (3) | CPU fits and CPU center constants |
 | `boundary`, `layouts`, `transforms`, `reference`, `iblReference` | Reflection or reference only: not drawn |
 
 ### Readbacks
@@ -248,7 +248,7 @@ Notes:
 
 - **Named outputs (AOVs):**
   - `color`: the HDR scene, `RGBA16F`, resolved from MSAA.
-  - `displayColor`: unlit, display-referred colour, `RGBA8` sRGB.
+  - `displayColor`: unlit, display-referred color, `RGBA8` sRGB.
   - `depth`: resolved by `blitFramebuffer` (one sample, not an average).
   - `ids`: a single-sampled `RG16UI` pass (a 32-bit ID in two halves, as on WebGPU), drawn only when something reads it. A pick scissors it to the pick's window. A post stage reading IDs draws it full screen, which costs a second geometry pass, reported in the inspector.
 - **Post chain:** the same three slots (`scene`, `exposed`, `display`) as fragment passes over the resolved targets. FXAA is already a fragment pass. Glare has no WebGL 2 step in the PoC.
@@ -321,13 +321,13 @@ No time estimates: each milestone states what it needs, its order and when it's 
 | # | Milestone | Model | Needs | Done when |
 | --- | --- | --- | --- | --- |
 | CS-32 | **Shader route spike** (a decision tool, per the spike rules). Our own naga crate, built with the approved Rust toolchain on development machines and CI, found through `NAGA`. Three entry points through Slang → WGSL → naga → GLSL ES 300: a minimal surface (attributes, a uniform block, a data texture), `present`, and one atmosphere table as a fragment pass. Our crate's WASM build is measured against the published naga-wasm. The page states the data, the costs and the decision asked | Opus | – | The build-time route is confirmed or replaced. Our crate is adopted, unless it's far larger than naga-wasm; then the owner decides |
-| CS-33 | **Seam extraction, WebGPU only.** `WorldDraws` (records, batches, transforms, instances, materials, placements on the CPU, with a change log), `RenderDevice`, `WorldMirror`, `ViewRenderer`. The WebGPU renderer implements them. Pure moves: a type check per commit, the full suite and parity once at the end (the refactor rule) | Opus | – | No behaviour change. WebGPU parity suites unchanged. The boundary test has the `webgl2` tier |
+| CS-33 | **Seam extraction, WebGPU only.** `WorldDraws` (records, batches, transforms, instances, materials, placements on the CPU, with a change log), `RenderDevice`, `WorldMirror`, `ViewRenderer`. The WebGPU renderer implements them. Pure moves: a type check per commit, the full suite and parity once at the end (the refactor rule) | Opus | – | No behavior change. WebGPU parity suites unchanged. The boundary test has the `webgl2` tier |
 | CS-34 | **Neutral content resources.** Texture sources in place of GPU textures in `gltfModel.ts`. `MeshData` kept until uploaded. `ImageryCompositor` with the WebGPU compute implementation moved behind it. The `GlobeImagery` exceptions removed from `TIER_EXCEPTIONS` | Opus | CS-33 | Same parity. Three fewer named exceptions |
-| CS-35 | **Probe, option and an empty WebGL 2 device.** `renderer` option, the probe on both threads, facts, personas, the `webgl2` chunk loaded dynamically. Clears to the background colour; the inspector shows the device and reason. The profiles plan's CS-30 (support rules) lands with it | Sonnet | CS-33; profiles CS-21 | `emulate: "webgl2-basic"` makes an engine that clears. The bundle check passes |
+| CS-35 | **Probe, option and an empty WebGL 2 device.** `renderer` option, the probe on both threads, facts, personas, the `webgl2` chunk loaded dynamically. Clears to the background color; the inspector shows the device and reason. The profiles plan's CS-30 (support rules) lands with it | Sonnet | CS-33; profiles CS-21 | `emulate: "webgl2-basic"` makes an engine that clears. The bundle check passes |
 | CS-36 | **First draws, unlit** (the first visible milestone). Slab mirrors, VAOs, data textures for records, materials and transforms, CPU culling, eye-relative float64 matrices, both depth paths, 4× MSAA, the present pass. glTF and 3D Tiles meshes, unlit | Opus | CS-32, CS-34, CS-35 | `models` and `tileset` unlit within tolerance. Selection identical |
 | CS-37 | **Globe, terrain and imagery.** Terrain draws (skirts, upsampled clip boxes, height-normal attribute, geomorph), the fragment imagery compositor into a texture array, fades | Opus | CS-36 | `globe` and `imagery` within tolerance |
 | CS-38 | **Lighting and instancing.** Sun and fixed ambient, PBR metallic-roughness, normal maps, double-sided, alpha mask, per-draw ordering for blended draws, instanced draws, billboards | Sonnet | CS-36 | Lit `models`, i3dm tiles, b-reps through CPU tessellation within tolerance |
-| CS-39 | **Styles and warps through Cesium IR.** The renderer takes the GLSL ES that Cesium IR's emitter writes for styles, compiled routes and table-driven warps, and binds their uniform block and tables. Also: the arena data texture, centre constants from Cesium IR's float64 evaluator, and lattices as float textures. No GLSL target in `styleExpression.ts` or `codegen.ts` | Opus | CS-38. CS-52 (the GLSL ES 3.00 emitter). CS-55 (styles on Cesium IR). CS-53 and CS-54 (transforms and routes on Cesium IR). CS-56 (tables and the bounded search) | Style rows, `vertical-exaggeration` and `transform-graph` within tolerance. The test that `src/webgl2/` builds no style or warp GLSL itself passes |
+| CS-39 | **Styles and warps through Cesium IR.** The renderer takes the GLSL ES that Cesium IR's emitter writes for styles, compiled routes and table-driven warps, and binds their uniform block and tables. Also: the arena data texture, center constants from Cesium IR's float64 evaluator, and lattices as float textures. No GLSL target in `styleExpression.ts` or `codegen.ts` | Opus | CS-38. CS-52 (the GLSL ES 3.00 emitter). CS-55 (styles on Cesium IR). CS-53 and CS-54 (transforms and routes on Cesium IR). CS-56 (tables and the bounded search) | Style rows, `vertical-exaggeration` and `transform-graph` within tolerance. The test that `src/webgl2/` builds no style or warp GLSL itself passes |
 | CS-40 | **Picks, outputs and user code.** First half, which doesn't need Cesium IR and may land first: the ID pass, async readbacks, `pickPosition`, named outputs, `view.support.outputs`. Second half: `CustomShader` hooks and user post stages. User WGSL (or Slang, through slang-wasm to WGSL) is lowered through naga into Cesium IR, emitted as GLSL ES and linked at the entry points' hook sites. Refusals carry Cesium IR's diagnostic | Opus | CS-36. Second half also: CS-58 (the WGSL front end). CS-61 (the API surface: hooks and post stages) | Pick parity. `customShader` hook rows within tolerance for every hook Cesium IR accepts. Refused hooks report the same diagnostic on both renderers |
 | CS-42 | **Atmosphere.** Atmosphere and sky tables as fragment passes, the sky, aerial perspective, image-based light from it, average-luminance exposure | Opus | CS-38 | Default-look pages within the atmosphere tolerance |
 | CS-43 | **Research: the browsers without WebGPU.** The share of users without WebGPU, by browser and platform, and which WebGL 2 extensions they expose: `EXT_clip_control`, `WEBGL_multi_draw`, `EXT_float_blend`, `OES_texture_float_linear`, `EXT_color_buffer_float`, `EXT_disjoint_timer_query_webgl2`, and the compressed formats. Every figure has a dated source. Feeds the handbook's compatibility tab and the personas | Sonnet | – | A dated table in this plan (or a linked note) that orders CS-44's steps, and the personas checked against it |

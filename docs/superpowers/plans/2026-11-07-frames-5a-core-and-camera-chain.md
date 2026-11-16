@@ -34,9 +34,9 @@ Each is marked "(plan's call)" where it is used. One line each, then what undoin
 9. **A route's revision is the sum of the revisions along it.** A drifting accuracy publishes when it moves by more than 1% or 1 mm; for an angular figure, 1 mm at the Earth's equatorial radius (about 0.16 nrad). *Undo:* two functions.
 10. **Frame data loads by role** (`loadFrameRoles`). The Earth orientation provider loads the EOP table and leap seconds; the ephemeris provider loads the planets and Moon packs together, since `Ephemeris.fromPacks` takes both. *Undo:* `loadFrameData` is kept as the all-roles wrapper.
 11. **Precision names:** `"analytic"` and `"precise"`. *Undo:* a type.
-12. **The analytic stand-ins reproduce today's analytic sky.** The Sun's analytic edge puts it at the barycentre, stating the offset as its accuracy, and the Earth's places it from Meeus's Sun, so the Sun's direction from the Earth is exactly today's. MOON_ME's analytic accuracy is the largest difference from the lunar PCK over 2000 to 2050 that a data test measures, rounded up. *Undo:* stand-in definitions only.
+12. **The analytic stand-ins reproduce today's analytic sky.** The Sun's analytic edge puts it at the barycenter, stating the offset as its accuracy, and the Earth's places it from Meeus's Sun, so the Sun's direction from the Earth is exactly today's. MOON_ME's analytic accuracy is the largest difference from the lunar PCK over 2000 to 2050 that a data test measures, rounded up. *Undo:* stand-in definitions only.
 13. **The catalog's precise edges share code with `createFrames`** (`src/frames/edges.ts`), so both trees agree to the bit. *Undo:* duplicate code.
-14. **`FrameUnavailableError` is defined in the core** (`src/camera/frameResolver.ts`), so the camera layer can recognise "not ready" from any resolver. *Undo:* a class move.
+14. **`FrameUnavailableError` is defined in the core** (`src/camera/frameResolver.ts`), so the camera layer can recognize "not ready" from any resolver. *Undo:* a class move.
 15. **Scene seconds are UTC seconds since 1970** (`Clock.time / 1000`). `Clock.instant()` maps them through the leap-second table. Inside a leap second the mapping repeats a second, as UTC milliseconds do today. *Undo:* the mapping function.
 16. **`SceneClock.change` is `"steady" | "jump" | "reverse"`.** *Undo:* a type.
 17. **The anchor table has 32 slots per view.** Slot 0 is "no anchor", so a world holds 31 anchors. A transform's anchor slot rides in `Transform.flags` bits 8 to 15. *Undo:* a constant and a bit field.
@@ -262,7 +262,7 @@ it("package.json exports the five entry points", () =>
 - Produces (on `Frame`):
   - `readonly revision: number`, starting at 0;
   - `invalidate(): void`, which bumps `revision` and drops the cached matrix. A cached reference frame's entry is keyed by `(instant.tt, revision)`. `cache: false` stays for compatibility.
-  - `publishedAccuracy(instant: Instant): Readonly<FrameAccuracy>`: the last published figure, replaced (and `revision` bumped) only when the new one differs by more than 1% of the figure or 1 mm, whichever is larger; for `radians`, 1 mm at 6,378,137 m (plan's call 9). A change of kind (metres to radians, stated to not stated) always publishes.
+  - `publishedAccuracy(instant: Instant): Readonly<FrameAccuracy>`: the last published figure, replaced (and `revision` bumped) only when the new one differs by more than 1% of the figure or 1 mm, whichever is larger; for `radians`, 1 mm at 6,378,137 m (plan's call 9). A change of kind (meters to radians, stated to not stated) always publishes.
   - `routeRevision(from: Frame, to: Frame): number` in `Frame.ts`: the sum of `revision` over every reference frame on the route through the lowest common ancestor (plan's call 9).
 
 - [ ] **Step 1: Write the failing test:**
@@ -287,7 +287,7 @@ it("a route's revision sums the revisions along it", () => {
   expect(routeRevision(a, b)).toBe(3); // a and b are siblings under root
 });
 it("publishes a drifting accuracy only past 1% or 1 mm", () => {
-  // metres: 0.100 → 0.1009 keeps 0.100; → 0.1011 publishes
+  // meters: 0.100 → 0.1009 keeps 0.100; → 0.1011 publishes
   // radians: 1e-9 → 1.1e-9 publishes (1 mm at the equator is 1.57e-10 rad)
 });
 ```
@@ -317,7 +317,7 @@ it("publishes a drifting accuracy only past 1% or 1 mm", () => {
 - [ ] **Step 4: Run** the tests, tsc, eslint, prettier.
 - [ ] **Step 5: Commit** with "frames: one ENU convention (up at the foot); the stress context's frames getter is enumerable".
 
-### Task 5: Frame data by role, cancellable, with a capped buffer
+### Task 5: Frame data by role, cancelable, with a capped buffer
 
 **Files:**
 
@@ -340,7 +340,7 @@ it("publishes a drifting accuracy only past 1% or 1 mm", () => {
 - [ ] **Step 2: Run** them and confirm they fail.
 - [ ] **Step 3: Implement.**
 - [ ] **Step 4: Run** the tests, `npm run test:data`, tsc, eslint, prettier.
-- [ ] **Step 5: Surface and commit** with "ephemeris: frame data by role, cancellable; readWithProgress caps its preallocation at 64 MB".
+- [ ] **Step 5: Surface and commit** with "ephemeris: frame data by role, cancelable; readWithProgress caps its preallocation at 64 MB".
 
 ### Task 6: The catalog, providers on demand and stand-ins
 
@@ -355,11 +355,11 @@ it("publishes a drifting accuracy only past 1% or 1 mm", () => {
 - Consumes: Task 3 (`revision`, `invalidate`), Task 5 (`loadFrameRoles`).
 - Produces:
   - In `src/camera/frameResolver.ts` (core): `interface FrameKey { readonly name: string }` (a `Frame` satisfies it); `class FrameUnavailableError extends Error { readonly frame: string; readonly reason: "loading" | "failed" | "outsideData" }` (plan's call 14).
-  - `sunPosition(ms: number, out: Vec3): Vec3` in `src/time/sun.ts`: Meeus's Sun from the Earth's centre, metres, in ICRF axes (`sunDirection`'s direction turned back by `icrfToFixed(ms)ᵀ`, times Meeus's distance).
+  - `sunPosition(ms: number, out: Vec3): Vec3` in `src/time/sun.ts`: Meeus's Sun from the Earth's center, meters, in ICRF axes (`sunDirection`'s direction turned back by `icrfToFixed(ms)ᵀ`, times Meeus's distance).
   - `src/frames/edges.ts`: the precise edge functions `createFrames` uses today, one per reference frame (`gcrfEdge(data)`, `itrfEdge(data)`, `bodyEdge(name, data)`, `moonMeEdge(data)`), each `(instant: Instant, out: Mat4) => void` (plan's call 13). `createFrames` builds its tree from them, with unchanged numbers.
   - `src/frames/analytic.ts`: the stand-in edge for each reference frame that has one, with its stated accuracy (plan's call 12):
     - ITRF from GCRF: `icrfToFixed`'s rotation; 0.0023° (about 8″) from the IAU 2006/2000A model, as plan 1 measured;
-    - HCRS at the barycentre (identity to ICRF), stating the Sun–barycentre offset (about 2.2 million km at most) as its accuracy;
+    - HCRS at the barycenter (identity to ICRF), stating the Sun–barycenter offset (about 2.2 million km at most) as its accuracy;
     - GCRF and EARTH_ICRF translated by `−sunPosition` from HCRS (the Earth from Meeus's Sun), so the Sun's direction from the Earth is exactly `sunDirection`'s;
     - MOON_ICRF translated by `moonPosition` from GCRF, about 10″ (some 20 km at the Moon);
     - MOON_ME rotated by `moonAxes`, at the accuracy Step 1's data test measures, rounded up;
@@ -610,7 +610,7 @@ A browser check (port 5192).
 - Consumes: Tasks 7, 8 and 9.
 - Produces:
   - `interface FrameResolver`:
-    - `resolve(frame: FrameKey, base: FrameKey, seconds: number, out: Float64Array): Float64Array`: `p_base = out · p_frame` (column-major float64, metres). Throws `FrameUnavailableError` when it can't answer yet;
+    - `resolve(frame: FrameKey, base: FrameKey, seconds: number, out: Float64Array): Float64Array`: `p_base = out · p_frame` (column-major float64, meters). Throws `FrameUnavailableError` when it can't answer yet;
     - `motion?(frame: FrameKey, base: FrameKey, seconds: number, out: FrameMotion): FrameMotion`, with `interface FrameMotion { readonly velocity: Float64Array; readonly angularVelocity: Float64Array }` (m/s and rad/s, in `base`'s axes);
     - `routeRevision(frame: FrameKey, base: FrameKey): number`: goes up when the route's inputs change, never with time alone.
   - `tableResolver(world: World): FrameResolver`: the transform table as the only reference frames (`world.root`, anchors at `world.anchorMatrix`, nodes from `world.frameOf`). Its `routeRevision` is the world's transform version.
@@ -739,7 +739,7 @@ A browser check (port 5194).
   1. ITRF and GCRF at the same instants: the images agree within the gate's tolerance;
   2. GCRF with the clock playing at 3,600×: the sky alone (globe hidden) is the same image at two instants (a still star field), and the globe's pixels differ (the Earth turns);
   3. re-rooting at a paused instant: no pixel beyond the tolerance;
-  4. a core-only scene (the page imports nothing from `/frames`): a box on a node moved each tick, followed by a rig, stays at the view's centre within one pixel.
+  4. a core-only scene (the page imports nothing from `/frames`): a box on a node moved each tick, followed by a rig, stays at the view's center within one pixel.
 - [ ] **Step 4: Browser check (port 5194):** open `/spikes/rerooting.html?bench` and run `runRerooting()`; every check passes. Record the measured values in the commit message. Stop the server.
 - [ ] **Step 5: Commit** with "spikes: a rig on GCRF draws the turning Earth; re-rooting changes no pixel".
 
@@ -784,13 +784,13 @@ A browser check (port 5194).
 - Consumes: Tasks 2 and 15.
 - Produces (plan's call 36):
   - In `src/frames/coordinates.ts`: the data types `CrsRef`, `CrsUnits`, `AreaOfInterest` and `GridFactors` (moved; `crs.ts` and `factors.ts` re-export them), and:
-    - `interface CoordinateOperation { forward(xyz: ArrayLike<number>, out?: Float64Array): Float64Array; inverse(xyz: ArrayLike<number>, out?: Float64Array): Float64Array; readonly accuracy: number | undefined; readonly description: string }` (the CRS's own units to longitude and latitude in degrees and height in metres; PROJ's `RecordedOperation` satisfies it, `description` being its pipeline);
+    - `interface CoordinateOperation { forward(xyz: ArrayLike<number>, out?: Float64Array): Float64Array; inverse(xyz: ArrayLike<number>, out?: Float64Array): Float64Array; readonly accuracy: number | undefined; readonly description: string }` (the CRS's own units to longitude and latitude in degrees and height in meters; PROJ's `RecordedOperation` satisfies it, `description` being its pipeline);
     - `interface CoordinateService { resolve(request: CoordinateRequest, options?: { signal?: AbortSignal }): Promise<ResolvedCoordinates> }`;
     - `interface CoordinateRequest { readonly crs: CrsRef; readonly body: Body; readonly areaOfInterest?: AreaOfInterest; readonly pinned?: unknown }` (`pinned` is the service's own; PROJ's takes a `Pipeline` or a string);
     - `interface ResolvedCoordinates { readonly operation: CoordinateOperation; readonly units: CrsUnits; gridFactors(projected: ArrayLike<number>): GridFactors; readonly credits: readonly string[] }`.
   - `projCoordinateService(options: { proj: ProjApi; grids?: GridSource }): CoordinateService` in `src/engineering/projCoordinates.ts`: today's resolution path (grids, fallbacks, better candidates) behind the interface.
   - `EngineeringFrame.load(definition, options: EngineeringFrameLoadOptions)`, where the options take `coordinates?: CoordinateService` beside today's `proj` and `grids` (which build a `projCoordinateService`). One of the two is required.
-  - `type PlacementMode = "rigid" | "reprojected" | "hosted"`. `placeHosted(frameName: string, coordinates?: ResolvedCoordinates): DesignPlacement`: content drawn as delivered (`displayed` is the identity on body-fixed metres); `designOf` uses the host's coordinates when given and otherwise throws `DESIGN_NOT_INVERTED`, so a pick reports true values only.
+  - `type PlacementMode = "rigid" | "reprojected" | "hosted"`. `placeHosted(frameName: string, coordinates?: ResolvedCoordinates): DesignPlacement`: content drawn as delivered (`displayed` is the identity on body-fixed meters); `designOf` uses the host's coordinates when given and otherwise throws `DESIGN_NOT_INVERTED`, so a pick reports true values only.
 
 - [ ] **Step 1: Write the failing tests:**
   - `test/coordinateService.test.ts`: a fake service (a plain scale and offset) builds an `EngineeringFrame` with no PROJ loaded, and `toBodyFixed` / `fromBodyFixed` round-trip within `1e-9` m; a service that rejects makes `load` reject naming the engineering frame; an aborted `signal` rejects with `AbortError`; neither caches anything (Review Focus 5); a hosted tileset's pick gives true values and no design coordinates without a service, and design coordinates with one.
@@ -823,7 +823,7 @@ A browser check (port 5195).
 
 - [ ] **Step 1: Write the failing test** (`test/seams.test.ts`) with the four bypass checks and `slotOf`'s mapping on a `fakeEngine` world with three batches.
 - [ ] **Step 2: Run** and confirm it fails.
-- [ ] **Step 3: Implement.** No behaviour changes: the records' bytes are the same. Then `npm run shaders` and `npm run shaders:check`.
+- [ ] **Step 3: Implement.** No behavior changes: the records' bytes are the same. Then `npm run shaders` and `npm run shaders:check`.
 - [ ] **Step 4: Run** the test, `npm test`, tsc, eslint, prettier.
 - [ ] **Step 5: Browser check (port 5195):** `parity`, `customShader` and `alloc`, one at a time, against the base commit's results. Stop the server.
 - [ ] **Step 6: Commit** with "render: one seam each for per-draw constants and draw arguments, with bypass tests".
@@ -841,7 +841,7 @@ A browser check (port 5195).
 - Produces:
   - `interface AccelerationStructures { tilePlaced(tileset: Tileset3D, tile: Tile, draws: readonly DrawHandle[]): void; tileUnloaded(tileset: Tileset3D, tile: Tile): void; drawAdded(draw: DrawHandle): void; drawRemoved(draw: DrawHandle): void }`, and `World.acceleration: AccelerationStructures` (a no-op by default). Tile placement and unload in `Tileset3D`, and `World.addDraw` and `removeDraw`, each call it at one point.
   - In `src/query/queries.ts` (plan's call 38):
-    - `interface RayQuery { readonly anchor: AnchorHandle | undefined; readonly seconds: number; readonly rays: readonly QueryRay[]; readonly targets: readonly ("terrain" | "draws")[] }`, `interface QueryRay { readonly from: ArrayLike<number>; readonly to: ArrayLike<number> }` (metres in `anchor`'s coordinates);
+    - `interface RayQuery { readonly anchor: AnchorHandle | undefined; readonly seconds: number; readonly rays: readonly QueryRay[]; readonly targets: readonly ("terrain" | "draws")[] }`, `interface QueryRay { readonly from: ArrayLike<number>; readonly to: ArrayLike<number> }` (meters in `anchor`'s coordinates);
     - `type RayVerdict = "clear" | "blocked" | "unknown"`;
     - `interface RayAnswer { readonly verdict: RayVerdict; readonly hit?: { readonly t: number; readonly position: Float64Array }; readonly unknown: readonly { readonly from: number; readonly to: number; readonly reason: "notLoaded" | "notRefined" | "withinError" | "outsideData" | "unsupported" }[]; readonly accuracy: { readonly meters?: number; readonly note: string } }`;
     - `interface QueryAnswer { readonly rays: readonly RayAnswer[]; readonly revision: number; readonly final: boolean }` (`final: false` when more tiles are loading);
@@ -964,7 +964,7 @@ A browser check (port 5197, after Task 20's server is stopped).
   - The realtime-tracks example names the Earth's anchor for its point source and sets its view's rig explicitly (`engine.cameras.setRig(view, { position: { frame: viewer.frames.get("ITRF") }, orientation: { kind: "free" } })`).
 
 - [ ] **Step 1: Check** that no other agent has uncommitted edits in `examples/frames-explorer/`. Wait if one does.
-- [ ] **Step 2: Write the failing tests** where behaviour is testable in Node: the explorer's `frameData.ts` resolves its `Frames` from a catalog (stubbed store) and reports progress; the explorer's numbers (`npm run test:data`) don't move.
+- [ ] **Step 2: Write the failing tests** where behavior is testable in Node: the explorer's `frameData.ts` resolves its `Frames` from a catalog (stubbed store) and reports progress; the explorer's numbers (`npm run test:data`) don't move.
 - [ ] **Step 3: Implement.**
 - [ ] **Step 4: Run** the explorer's tests, `npm test`, `npm run test:data`, tsc, eslint, prettier.
 - [ ] **Step 5: Browser check (port 5197):** the explorer's scenarios list, one GCRF-heavy scene and the lunar scene; then the realtime-tracks page at 100,000 vehicles. Each looks and runs as before. Stop the server.

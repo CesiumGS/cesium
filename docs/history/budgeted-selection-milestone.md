@@ -119,9 +119,9 @@ change after them is measured against a guardrail:
   - _In motion_: alike (0.17 and 0.15); both draw only the coarsest
     levels near arrival (0.6 at 94% of the flight) and space at the top
     (the end pitch, −35°, is kept the whole way, as flyTo does).
-  - Nothing was cancelled: 3D Tiles and terrain cancel a request only
+  - Nothing was canceled: 3D Tiles and terrain cancel a request only
     after 30 frames untouched, and most loads finish sooner; imagery
-    sources are never cancelled once requested. **Next**: what 2.0
+    sources are never canceled once requested. **Next**: what 2.0
     fetches in flight that is never drawn (purpose stats for imagery
     too), cancellation for imagery, and whether the descent's loads or
     the 3 s flight's prefetch (1 s ahead at thousands of km/s) are
@@ -216,10 +216,10 @@ _r38 (overnight, toward the L1′ exit check)_:
   `cullRequestsWhileMoving` is the crude case. Slow orbits are untouched
   (NYC 10.9 MB, quality in motion 0.008 vs 1.x 0.030).
 - **Imagery requests (done r38)**: globe imagery counts requests, bytes,
-  drawn and cancelled (an Imagery row in the inspector's purposes and in
+  drawn and canceled (an Imagery row in the inspector's purposes and in
   run metrics) and cancels sources no wanted tile has needed for 30
   frames. Flight Philadelphia–Tokyo: 31.7 → 25.9 MB (1.x 24.7), quality
-  in motion unchanged (0.149 vs 1.x 0.164). Nothing was cancelled on a
+  in motion unchanged (0.149 vs 1.x 0.164). Nothing was canceled on a
   fast link (loads finish inside the 30 frames); the savings come from
   not requesting in motion.
 - **Dyno's guardrails (retuned r38)**: the default plan depends on what

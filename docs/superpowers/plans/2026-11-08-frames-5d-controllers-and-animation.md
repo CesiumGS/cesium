@@ -86,8 +86,8 @@ In order: the animation core (1 to 11), rigs (12 to 16), controllers (17 to 23),
 1. **`src/animation/` imports only `src/core` and `src/math`,** enforced in `test/importBoundary.test.ts`. _Undo:_ one rule.
 2. **`Engine.timeline`** advances in the loop after the tick listeners (so the clock has moved) and before `cameras.update`, and at the start of `renderFrame()` outside the loop. _Undo:_ one call site.
 3. **An animation's clock** is `"wall"` (the default) or a `SceneClock` object. A transition's `"scene"` means its world's clock (`cameras.clock(world)`). _Undo:_ a type.
-4. **A scene-clock animation is a pure function of `clock.seconds`.** It stays on the timeline until cancelled, keeps no loop awake by itself outside its active span, and its `finished` re-arms when the clock is scrubbed back across its end, as the Web Animations API does. _Undo:_ one state rule.
-5. **`finished` never rejects.** It resolves to `"finished"` or `"cancelled"`, so an interrupted flight is no unhandled rejection. _Undo:_ a promise's shape.
+4. **A scene-clock animation is a pure function of `clock.seconds`.** It stays on the timeline until canceled, keeps no loop awake by itself outside its active span, and its `finished` re-arms when the clock is scrubbed back across its end, as the Web Animations API does. _Undo:_ one state rule.
+5. **`finished` never rejects.** It resolves to `"finished"` or `"canceled"`, so an interrupted flight is no unhandled rejection. _Undo:_ a promise's shape.
 6. **No iterations, fill modes or composition.** The spec lists duration, delay, easing, play, pause, reverse, rate and `finished`. An animation's value stays where its setter last wrote it. _Undo:_ additive.
 7. **Easing presets are CSS's values** (`linear`, `ease`, `ease-in`, `ease-out`, `ease-in-out`). A spring is `{ kind: "spring", response, dampingRatio?, velocity? }`: `response` is its time constant in seconds, `dampingRatio` defaults to 1. With no `duration`, a spring's animation lasts until it settles within 0.001 of 1, in value and in value per second. _Undo:_ a type.
 8. **Samplers read glTF 2.0's definitions** (step, linear with slerp for rotations, cubic spline with its in-tangent, value, out-tangent layout), with time in seconds, held at the ends. _Undo:_ none; it's the format.
@@ -115,7 +115,7 @@ In order: the animation core (1 to 11), rigs (12 to 16), controllers (17 to 23),
 30. **Re-attaching:** free flight attaches to the body with the lowest height ÷ maximum radius, and changes only when another's figure is under 0.8 of the current one's, so it doesn't flip at the boundary. Between bodies it stays on the last body-fixed frame. It is a controller policy over `context.setRig`. _Undo:_ a constant.
 31. **The hand-over:** below 0.02 of the body's maximum radius, free-fly offers the body's globe controls (`handOver: "offer"`, the default, calls `onOffer({ body, accept })`; `"auto"` accepts at once; `"off"` never offers). It re-arms above 0.03. Accepting starts a transition, never a jump. _Undo:_ constants and a default.
 32. **The level assist** turns roll toward the nearest body's up with a 1 s time constant, off by default, and changes nothing else. _Undo:_ a constant.
-33. **`Camera.orthographic: { height: number; far?: number } | undefined`.** `height` is the view's height in metres. Reverse-Z over a finite range: `z = (far − d) / (far − near)`. `far` defaults to the larger of 1,000 m and 100 × `height`. See ruling 6. _Undo:_ a default.
+33. **`Camera.orthographic: { height: number; far?: number } | undefined`.** `height` is the view's height in meters. Reverse-Z over a finite range: `z = (far − d) / (far − near)`. `far` defaults to the larger of 1,000 m and 100 × `height`. See ruling 6. _Undo:_ a default.
 34. **`Camera.imagePlane(aspect)`** is the one place that reads the projection: `{ orthographic, tanX, tanY, halfX, halfY }`. A bypass test fails on reading `.fovy` anywhere else in `src/` and `widgets/`. _Undo:_ a test.
 35. **In an orthographic view, ambient occlusion is off and the light grid is one cell** (every light in every pixel's list, within the grid's capacity). Carried forward. _Undo:_ each is local.
 36. **The sky sees an orthographic view as its narrowest dolly perspective** (call 37's field of view). So it needs no second form, it can't divide by zero, and a dolly's last step shows the same sky. _Undo:_ one function.
@@ -124,8 +124,8 @@ In order: the animation core (1 to 11), rigs (12 to 16), controllers (17 to 23),
 39. **`FrameResolver.commonAncestor?(a, b)`.** The frames resolver and table resolver answer it. A host's resolver without it blends in the source rig's position reference frame. See ruling 3. _Undo:_ an optional method.
 40. **While a rig in a transition can't be evaluated, the transition pauses:** the camera holds its last good pose, the weight holds, `held(view)` says why, one report goes out, and it resumes when the rig answers. It never times out. An application can cancel it. _Undo:_ one state.
 41. **Built-in defaults:** `duration: "auto"`, `easing: "ease-in-out"`, `clock: "wall"`, `path: "straight"`, `interrupt: "stop"`. `"auto"` is `clamp(1.2 + 0.35 · log₁₀(1 + span / 1000 m), 1.2, 3.5)` seconds, where `span` is the distance between the two poses at the start. _Undo:_ defaults.
-42. **An arc's peak** defaults to the larger of both ends' heights and min(0.25 × the arc's length along the sphere, 2 × `radius`). Height is `(1−w)h₀ + w·h₁ + 4w(1−w)·max(0, peak − max(h₀, h₁))`. Direction slerps about the arc's centre. A spline is a centripetal Catmull-Rom through its points, parameterized by chord length, with live ends. _Undo:_ formulas.
-43. **Interruptions.** `stop`: the rig becomes `freeRig` of the nearer of the two (weight below 0.5: the source), the camera stays, and that rig's controller takes over and receives the input. `handover`: `stop`, plus a carry: the camera's velocity, kept in the layer and re-expressed on a change of root, decaying with a 0.4 s time constant, so any controller gets it. `finish`: input is dropped, not queued. A programmatic `transition` over a running one follows the running one's policy; under `finish`, the latest waits and earlier waiters end `"cancelled"`. _Undo:_ each policy is local.
+42. **An arc's peak** defaults to the larger of both ends' heights and min(0.25 × the arc's length along the sphere, 2 × `radius`). Height is `(1−w)h₀ + w·h₁ + 4w(1−w)·max(0, peak − max(h₀, h₁))`. Direction slerps about the arc's center. A spline is a centripetal Catmull-Rom through its points, parameterized by chord length, with live ends. _Undo:_ formulas.
+43. **Interruptions.** `stop`: the rig becomes `freeRig` of the nearer of the two (weight below 0.5: the source), the camera stays, and that rig's controller takes over and receives the input. `handover`: `stop`, plus a carry: the camera's velocity, kept in the layer and re-expressed on a change of root, decaying with a 0.4 s time constant, so any controller gets it. `finish`: input is dropped, not queued. A programmatic `transition` over a running one follows the running one's policy; under `finish`, the latest waits and earlier waiters end `"canceled"`. _Undo:_ each policy is local.
 44. **The pair table's keys** are `"<from kind>><to kind>"`, with `*` for either side. A rig's kind is `rig.kind`, else its controller's `kind`, else `"free"`. _Undo:_ a string format.
 45. **The Viewer's defaults for flights:** an arc over the view's body when both ends are on it, straight otherwise, and an app-wide duration of 0 when `prefers-reduced-motion` matches. The camera layer reads no DOM. _Undo:_ two lines.
 46. **CAD's standard views animate on the timeline,** turning the camera about the focus at a constant distance. A straight blend would dip through the model. Any input stops them. _Undo:_ local.
@@ -142,8 +142,8 @@ Places where the spec, read against the code and the earlier plans, is contradic
 4. **"Damping per rig part"** (sections 7.5 and 11.3) against a rig whose free parts are written by the controller, so the rig has nothing to damp. _Ruling:_ call 14: the controller writes the goal.
 5. **"Damping is a critically damped spring per rig part"** against the globe's inertia and wheel glide, tuned against 1.x. _Ruling:_ call 21. They are controller motions, not rig damping.
 6. **"Reverse-Z, as the perspective one"** (section 11.3). Today's reverse-Z has an infinite far plane, and code reads depth as `near / depth`. An orthographic projection has no infinite form. _Ruling:_ call 33. Linear reverse-Z in float32 is coarsest near the camera: about 6 × 10⁻⁸ of the range, so 6 mm at 100 km. A `far` an application or `fitBounds` sets tightens it.
-7. **"Earth to a lunar site blends in ICRF"** (section 11.5) puts the eye about 1.5 × 10¹¹ m from render space's origin. Anchors are safe: each has its own eye. Two things are not. Draws under no anchor would wrap past hi/lo's ±2³¹ m, since slot 0 is never hidden; call 16 hides them. And float64's step at that size is about 30 µm, which is the precision of the blended pose while it runs: well under a pixel for content more than a few centimetres away. A test states it (Task 10).
-8. **§14.4's "GCRF gets an orbit rig about the Earth's centre on the `"inertial"` preset".** 5b's `inertial` takes its primary vector as the target's position from the central body, and with GCRF's origin at the Earth that vector is zero, so the preset is degenerate. _Ruling for 5d:_ GCRF needs no preset: an orbit rig on GCRF with reference up +Z holds the stars still. Task 20 pins it, and 5g's table should say so.
+7. **"Earth to a lunar site blends in ICRF"** (section 11.5) puts the eye about 1.5 × 10¹¹ m from render space's origin. Anchors are safe: each has its own eye. Two things are not. Draws under no anchor would wrap past hi/lo's ±2³¹ m, since slot 0 is never hidden; call 16 hides them. And float64's step at that size is about 30 µm, which is the precision of the blended pose while it runs: well under a pixel for content more than a few centimeters away. A test states it (Task 10).
+8. **§14.4's "GCRF gets an orbit rig about the Earth's center on the `"inertial"` preset".** 5b's `inertial` takes its primary vector as the target's position from the central body, and with GCRF's origin at the Earth that vector is zero, so the preset is degenerate. _Ruling for 5d:_ GCRF needs no preset: an orbit rig on GCRF with reference up +Z holds the stars still. Task 20 pins it, and 5g's table should say so.
 9. **[scene-items.md](../../design/scene-items.md) lists "models and per-node transforms (5d)" among things to take up as items,** and section 11.5 adds them to `ModelPlacement`. _Ruling:_ section 11.5. They are a method on `ModelPlacement` now, and a later item can wrap it (call 11).
 10. **"Within a pixel at the target"** (section 11.6) names no resolution. _Ruling:_ at the transition's end, on a view 1,024 px tall, the target's origin lands within 1 px of where the target rig's own evaluation puts it (Tasks 10 and 20).
 
@@ -288,21 +288,21 @@ New files, by responsibility (modified code is named by symbol in each task):
   - `type AnimationClock = "wall" | SceneClock` (author's call 3);
   - `interface AnimationOptions<T> { readonly value: (progress: number) => T; readonly set: (value: T) => void; readonly duration?: number; readonly delay?: number; readonly easing?: Easing; readonly clock?: AnimationClock; readonly playbackRate?: number; readonly autoplay?: boolean }`: seconds; `duration` required unless the easing is a spring; `value` gets the eased progress;
   - `lerpValue(from: number, to: number): (p: number) => number` and `samplerValue(sampler: Sampler, out: Float64Array): (p: number) => Float64Array`, the latter's `duration` defaulting to the sampler's;
-  - `type AnimationEnd = "finished" | "cancelled"` (author's call 5);
-  - `class Animation<T>`, with no iterations or fill modes (author's call 6): `readonly state: "idle" | "running" | "paused" | "finished" | "cancelled"`; `readonly finished: Promise<AnimationEnd>`; `currentTime` (seconds); `readonly progress`; `readonly velocity` (eased progress per second); `playbackRate`; `play()`; `pause()`; `reverse()`; `finish()`; `cancel()`;
+  - `type AnimationEnd = "finished" | "canceled"` (author's call 5);
+  - `class Animation<T>`, with no iterations or fill modes (author's call 6): `readonly state: "idle" | "running" | "paused" | "finished" | "canceled"`; `readonly finished: Promise<AnimationEnd>`; `currentTime` (seconds); `readonly progress`; `readonly velocity` (eased progress per second); `playbackRate`; `play()`; `pause()`; `reverse()`; `finish()`; `cancel()`;
   - `class Timeline`: `animate<T>(options: AnimationOptions<T>): Animation<T>`; `bind<T>(options: { readonly clock: SceneClock; readonly value: (seconds: number) => T; readonly set: (value: T) => void }): { remove(): void }` (author's call 9); `update(now: number): boolean`; `readonly size: number`;
   - `Engine.timeline: Timeline` (author's call 2).
-  - A setter that throws is reported once through `EngineErrors` (kind `"animation"`), and its animation is cancelled. The tick goes on.
+  - A setter that throws is reported once through `EngineErrors` (kind `"animation"`), and its animation is canceled. The tick goes on.
 
 - [ ] **Step 1: Write the failing test** (an injected `now` and the `FakeClock` from `test/cameraLayer.test.ts`, moved to a small `test/fakeClock.ts`; no wall-clock waits):
   - wall clock, linear, 2 s: at `now + 1000` the setter saw 0.5; `pause` holds through later updates; `play` resumes from there; `playbackRate` 2 takes half the time; `reverse` runs back from where it is; `delay` writes nothing early; `finish()` writes the end at once;
-  - `finished` resolves `"finished"` with the end value written exactly; `cancel()` resolves `"cancelled"`, and the setter isn't called again;
+  - `finished` resolves `"finished"` with the end value written exactly; `cancel()` resolves `"canceled"`, and the setter isn't called again;
   - duration 0: the end value at the first update, and `finished` resolves;
   - scene clock (Review Focus 2): a paused clock holds it however far `now` moves; at rate 3,600 it follows `clock.seconds`; set back, it evaluates at the clock's time; scrubbed past the end `finished` resolves, then scrubbed back `state` is `"running"` and `finished` is a new promise; scrubbed before the start it writes `value(0)` once;
   - awake: `update` returns true for a running wall animation and a scene animation in its active span on a playing clock; false when paused, settled, or with a paused clock; a scene animation's clock waking the host: a clock change wakes `Engine` while one is registered, and not after `cancel()`;
   - `bind`: writes at once and when `clock.seconds` changes, not otherwise; follows a scrub backward; writes nothing after `remove()`; a sampler's value read through it at a key equals that key;
   - order: in `fakeEngine`'s loop, a tick listener moves the clock, a scene animation's setter reads the new seconds, and `cameras.update` runs after it (a recorded array);
-  - the setter that throws: one report, cancelled, and another animation still runs;
+  - the setter that throws: one report, canceled, and another animation still runs;
   - the import rule (author's call 1): `src/animation/` importing from `src/scene` fails the boundary test (the new rule, checked against a synthetic import list).
 - [ ] **Step 2: Run** and confirm it fails.
 - [ ] **Step 3: Implement.** `update` returns at once when `size` is 0. A clock is watched once, however many animations use it.
@@ -336,7 +336,7 @@ New files, by responsibility (modified code is named by symbol in each task):
     - the refusals above; `setNodeTransform` after `remove()` throws as `setTransform` does.
   - `test/animationSetters.test.ts`:
     - `parameterSetter` writes a parameter globally and per view; an easing that overshoots `valid` is clamped and the animation runs on, a direct set outside it throws, and leaving `expected` rebuilds bounds and throws nothing; a non-finite value throws through `Timeline`'s one report;
-    - an animated affine node over a draw under a smooth node: over 100 animated ticks nothing recompiles and no fit is made, since the route's shape key is stable and only the draw's centre constant changes;
+    - an animated affine node over a draw under a smooth node: over 100 animated ticks nothing recompiles and no fit is made, since the route's shape key is stable and only the draw's center constant changes;
     - an azimuth sampler on a scene clock (`samplerValue`, `nodeTransformSetter`) gives the dish its key's rotation at a key, and the earlier one scrubbed back;
     - a track: `timeline.bind` with a position sampler and `placement.setTransform` puts the model at the key; a rig `{ position: { frame: world.root, anchor: world.frameOf(placement.transform, "track"), offset: [0, 0, 100] }, orientation: { kind: "free" } }` on the table resolver rides 100 m above it (ruling 1);
     - a clamped track: `timeline.bind` writes `PointSource.update` samples each clock change, with `clamp` set: the source sees each sample, and the clamp's capture is requested as today.
@@ -567,7 +567,7 @@ New files, by responsibility (modified code is named by symbol in each task):
   - `FrameResolver.commonAncestor?(a: FrameKey, b: FrameKey): FrameKey | undefined`;
   - `interface TargetPose { readonly position?: ArrayLike<number>; readonly direction?: ArrayLike<number>; readonly up?: ArrayLike<number>; readonly fov?: number; readonly near?: number; readonly orthographic?: Orthographic | null }`: in the target rig's position reference frame;
   - `interface TransitionOptions { readonly to: Rig; readonly pose?: TargetPose; readonly controller?: CameraController; readonly duration?: number | "auto"; readonly easing?: Easing; readonly clock?: "wall" | "scene"; readonly path?: TransitionPath; readonly blendFrame?: FrameKey; readonly interrupt?: "stop" | "handover" | "finish"; readonly focusDistance?: number; readonly onWeight?: (weight: number) => void }`. `onWeight` runs in the same step, so one animation can drive a placement's blend (5f's morph);
-  - `type TransitionEnd = "arrived" | "stopped" | "handedOver" | "cancelled"`;
+  - `type TransitionEnd = "arrived" | "stopped" | "handedOver" | "canceled"`;
   - `class Transition { readonly view: View; readonly from: Rig; readonly to: Rig; readonly blendFrame: FrameKey; readonly weight: number; readonly animation: Animation<number>; readonly finished: Promise<TransitionEnd>; cancel(): void }`;
   - `CameraLayer.transition(view: View, options: TransitionOptions): Transition`, `CameraLayer.running(view: View): Transition | undefined`;
   - While one runs, `root(view)` is its blend reference frame and `rig(view)` a free rig on it. `controller(view)` is `undefined`, the source's being kept for an interruption. At the end, `setRig(view, to)`, the target's pose, and `options.controller` attached.
@@ -591,7 +591,7 @@ New files, by responsibility (modified code is named by symbol in each task):
   - a rig whose target is a model under that lift: the blend's pose is the displayed pose, and the end is within 1 px of the target rig's own evaluation;
   - Review Focus 1: the target throws `FrameUnavailableError` for 5 ticks at weight 0.4: no NaN, the pose and weight hold, `held(view)` names it, one report goes out, `finished` stays pending, and it goes on after;
   - Review Focus 2: `clock.seconds` set back an hour in a wall-clock transition: the next tick's pose is the blend at the new time. A `clock: "scene"` transition: scrubbed before its start the camera is at the source's pose; past its end it arrives once, and scrubbing back doesn't start it again;
-  - Review Focus 4: `removeView`, a change of `view.world`, `setRig`, `setController` and the engine's destroy each settle `finished` as `"cancelled"`, with no later tick touching the view;
+  - Review Focus 4: `removeView`, a change of `view.world`, `setRig`, `setController` and the engine's destroy each settle `finished` as `"canceled"`, with no later tick touching the view;
   - Review Focus 5: identical source and target poses finish with no NaN;
   - ruling 7: on a blend root 1.5 × 10¹¹ m from the anchors, the eye in the target's anchor is right within 100 µm, and a rigid point 100 m away moves under 0.01 px between two ticks of an idle camera.
 - [ ] **Step 2: Run** and confirm it fails.
@@ -610,7 +610,7 @@ New files, by responsibility (modified code is named by symbol in each task):
 
 - Consumes: Task 10.
 - Produces (author's calls 41, 42 and 44):
-  - `type TransitionPath = "straight" | { readonly kind: "arc"; readonly center: FrameKey; readonly radius: number; readonly maximumHeight?: number } | { readonly kind: "spline"; readonly points: readonly ArrayLike<number>[] }`: points are in the blend reference frame; an arc's centre is that reference frame's origin, resolved each tick, and `radius` what height is measured from;
+  - `type TransitionPath = "straight" | { readonly kind: "arc"; readonly center: FrameKey; readonly radius: number; readonly maximumHeight?: number } | { readonly kind: "spline"; readonly points: readonly ArrayLike<number>[] }`: points are in the blend reference frame; an arc's center is that reference frame's origin, resolved each tick, and `radius` what height is measured from;
   - `pathPoint(path: ResolvedPath, a: ArrayLike<number>, b: ArrayLike<number>, weight: number, out: Float64Array): void`;
   - `interface TransitionDefaults { readonly duration?: number | "auto"; readonly easing?: Easing; readonly clock?: "wall" | "scene"; readonly path?: TransitionPath; readonly interrupt?: "stop" | "handover" | "finish" }`;
   - `CameraLayer.transitionDefaults: { app: TransitionDefaults; pairs: Record<string, TransitionDefaults> }`;
@@ -622,7 +622,7 @@ New files, by responsibility (modified code is named by symbol in each task):
     - `maximumHeight` below both ends gives no dip: height is the linear mix;
     - the same over the Moon's radius: no Earth constant is read (a test with an arbitrary radius);
     - antipodal ends (Review Focus 5): a finite path in the plane holding the camera's right, with no NaN;
-    - live: a moving centre and target stay exact at the end, each tick evaluated at that tick's seconds;
+    - live: a moving center and target stay exact at the end, each tick evaluated at that tick's seconds;
     - a spline through three points passes through each within 10⁻⁹ m at its chord-length weight; live ends; two points is a straight line;
     - easing maps time onto the path, not the path's shape: the same path under two easings visits the same points.
   - `test/transitionDefaults.test.ts`:
@@ -648,14 +648,14 @@ New files, by responsibility (modified code is named by symbol in each task):
 - Consumes: Tasks 7, 10 and 11.
 - Produces (author's call 43):
   - `Transition.interrupt(kind?: "stop" | "handover" | "finish"): void`, default the transition's own;
-  - `CameraLayer` keeps a per-view carry (metres per second and radians per second in the root's axes), stepped before the rig, re-expressed on a change of root, busy until under 1 mm/s and 10⁻⁶ rad/s.
+  - `CameraLayer` keeps a per-view carry (meters per second and radians per second in the root's axes), stepped before the rig, re-expressed on a change of root, busy until under 1 mm/s and 10⁻⁶ rad/s.
 
 - [ ] **Step 1: Write the failing test:**
   - `stop` by input: at weight 0.3 the rig becomes `freeRig(from)`, at 0.7 `freeRig(to)`; the camera's world pose is unchanged within 10⁻⁶ m across it; the root is that rig's position reference frame; that rig's controller is attached and receives the press that stopped it, so the drag moves the camera at once; `finished` is `"stopped"`;
   - `stop` is the default for input (the built-in), as 1.x's `flyTo`;
   - `handover`: the camera's velocity just after equals the blend's just before within 1%; it decays to 1% in 5 × 0.4 s; a drag during it adds to it; `finished` is `"handedOver"`; the carry works on a host's object-literal controller (it needs no method); a re-root during it keeps world velocity continuous;
   - `finish`: a press and a wheel during the flight reach no controller and no `inputs` count; after arrival the next press works; a press held through the arrival starts nothing (Review Focus 3);
-  - programmatic, over a running transition: under `stop`, the new one starts from the current pose, with no jump, and the old `finished` is `"stopped"`; under `finish`, the new one waits for the arrival, and a third replaces it, the second ending `"cancelled"`; under `handover`, the carry joins the new blend;
+  - programmatic, over a running transition: under `stop`, the new one starts from the current pose, with no jump, and the old `finished` is `"stopped"`; under `finish`, the new one waits for the arrival, and a third replaces it, the second ending `"canceled"`; under `handover`, the carry joins the new blend;
   - a drag under way when a programmatic transition starts: the controller gets `end` first (Review Focus 3);
   - a followed anchor under a ×10 lift over Earth content moves at J·v in the root's axes, and the carry and damping lag read that displayed motion (differences of `place`), so a re-root during a handover keeps the displayed velocity continuous there too;
   - a spring easing on a plain `Animation`, replaced with `velocity: old.velocity`, keeps its slope (the spec's words, on the animation core);
@@ -687,7 +687,7 @@ New files, by responsibility (modified code is named by symbol in each task):
       readonly speed?: number; // m/s with no bodies; default 100
       readonly speedFactor?: number; // of the height, per second; default 0.5
       readonly minSpeed?: number; // m/s; default 1
-      readonly rangeLimit?: number | false; // m from the nearest body's centre, or the root's origin; default false
+      readonly rangeLimit?: number | false; // m from the nearest body's center, or the root's origin; default false
       readonly level?: boolean; // default false
       readonly handOver?: "offer" | "auto" | "off"; // default "offer"
       readonly handOverHeight?: number; // of the maximum radius; default 0.02
@@ -703,7 +703,7 @@ New files, by responsibility (modified code is named by symbol in each task):
 
 - [ ] **Step 1: Write the failing test** (`fakeEngine`, a stub resolver with an Earth and a Moon on their own turning reference frames 384,400 km apart, injected `now`):
   - the six axes: each held key moves along the camera's own axis, with position changing and orientation not;
-  - no bodies: 1 s of `flyForward` moves `speed` metres within 2%, with no pick and no body read;
+  - no bodies: 1 s of `flyForward` moves `speed` meters within 2%, with no pick and no body read;
   - speed: from a height h₀ of 1,000 km, 1 s moves to h₀ · e^(−0.5) within 2% at 60 Hz; near the surface, at least `minSpeed`; it goes through the surface with no stop, and the height is negative after (no constraint but the range limit);
   - look and roll: `look` turns with position fixed; flying over the pole has no gimbal flip; `rollLeft` changes `up` only;
   - level: rolled 30°, `level: true` is under 1° after 5 s, with direction unchanged within 10⁻⁹ rad; off, it stays;
@@ -723,7 +723,7 @@ New files, by responsibility (modified code is named by symbol in each task):
 **Files:**
 
 - Create: `test/orthographic.test.ts`
-- Modify: `Camera` (`orthographic`, `imagePlane`, `metresPerPixel`, `rayOrigin`, `rayDirection`, `projection`, `frustumPlanes`, `copyFrom`), `projectToPixel`, `View.anchorCamera`, `View.setCameraFromAnchor`, `View`'s `project`, `m4` (`orthographicReverseZ`), `depthDistance`, `alongRay`, `PickCamera`, `PickTick`, `PendingCamera`, `corePick`, `pickInterpreter`, the engineering `pick` and `snap`, `Engine`'s selection views, `writeLights`, `positionCamera`, `pickTick`, `Stepwise`, `GlobeStepwise`, `Budgeted`, `GlobeBudgeted`, `isScaledSpacePointVisible`'s callers, the other `.fovy` readers (`render/view/pickDomain.ts`, `frames/pickTruth.ts`, `measure/curve.ts` for `DrawnCurve`'s 0.5 px, `scene/tileSelection.ts`, and the pick variant's narrow frustum in `render/view/picks.ts`), `fitCascades`, `packViewLights`, `ViewLink.groundPoint`, `OrbitController` (its wheel scales `height`), the globe and free-fly guards, the seams test, the core entry point, `api/surface.txt`
+- Modify: `Camera` (`orthographic`, `imagePlane`, `metersPerPixel`, `rayOrigin`, `rayDirection`, `projection`, `frustumPlanes`, `copyFrom`), `projectToPixel`, `View.anchorCamera`, `View.setCameraFromAnchor`, `View`'s `project`, `m4` (`orthographicReverseZ`), `depthDistance`, `alongRay`, `PickCamera`, `PickTick`, `PendingCamera`, `corePick`, `pickInterpreter`, the engineering `pick` and `snap`, `Engine`'s selection views, `writeLights`, `positionCamera`, `pickTick`, `Stepwise`, `GlobeStepwise`, `Budgeted`, `GlobeBudgeted`, `isScaledSpacePointVisible`'s callers, the other `.fovy` readers (`render/view/pickDomain.ts`, `frames/pickTruth.ts`, `measure/curve.ts` for `DrawnCurve`'s 0.5 px, `scene/tileSelection.ts`, and the pick variant's narrow frustum in `render/view/picks.ts`), `fitCascades`, `packViewLights`, `ViewLink.groundPoint`, `OrbitController` (its wheel scales `height`), the globe and free-fly guards, the seams test, the core entry point, `api/surface.txt`
 
 **Interfaces:**
 
@@ -731,13 +731,13 @@ New files, by responsibility (modified code is named by symbol in each task):
 - Produces (author's calls 33 to 35):
   - `interface Orthographic { readonly height: number; readonly far?: number }`; `Camera.orthographic: Orthographic | undefined`, setting it bumps `version`, and refuses a height that isn't positive and finite, naming it (Review Focus 5);
   - `Camera.imagePlane(aspect: number): ImagePlane`, `interface ImagePlane { readonly orthographic: boolean; readonly tanX: number; readonly tanY: number; readonly halfX: number; readonly halfY: number }`: a perspective image plane's `half` are 0, an orthographic one's `tan` are 0. Not "lens": the observer's glare uses that word for optics (`GlarePupil`, `spikes`);
-  - `Camera.far(): number`; `Camera.metresPerPixel(distance: number, pixelHeight: number, aspect: number): number`; `Camera.rayOrigin(ndcX, ndcY, aspect, out: Vec3): Vec3`;
+  - `Camera.far(): number`; `Camera.metersPerPixel(distance: number, pixelHeight: number, aspect: number): number`; `Camera.rayOrigin(ndcX, ndcY, aspect, out: Vec3): Vec3`;
   - `m4.orthographicReverseZ(out, halfX, halfY, near, far)`;
   - `isScaledSpacePointVisibleParallel(direction, occludee, minimumHeight)`, beside the existing test, for an eye at infinity;
   - `SelectionView.orthographicHeight?: number`: with it, a tile's screen-space error is `error × σ_max × height / orthographicHeight + fit error`, at every distance (σ_max is 1 on a rigid route);
-  - `View.scaleAt(point: ArrayLike<number>, node?: FrameKey): { readonly min: number; readonly max: number }`: the singular values [σ_min, σ_max] of J along the route from the point's node (default the content's own) to the view's render space (`routeSingularRange`). Times the orthographic view's pixels per metre, this is the print scale: one value for a similarity, two when H and V differ, a range otherwise. Refusing a demanded single scale is the printing step's ([infrastructure-and-geoscience-capabilities.md](../../design/infrastructure-and-geoscience-capabilities.md), 6);
+  - `View.scaleAt(point: ArrayLike<number>, node?: FrameKey): { readonly min: number; readonly max: number }`: the singular values [σ_min, σ_max] of J along the route from the point's node (default the content's own) to the view's render space (`routeSingularRange`). Times the orthographic view's pixels per meter, this is the print scale: one value for a similarity, two when H and V differ, a range otherwise. Refusing a demanded single scale is the printing step's ([infrastructure-and-geoscience-capabilities.md](../../design/infrastructure-and-geoscience-capabilities.md), 6);
   - `depthDistance` takes `{ near, far? }`: with `far`, distance is `far − depth × (far − near)`; underlay scaling as today;
-  - `PickCamera` keeps `fovy` for hosts and gains `orthographicHeight?`; the tolerance sites read `pickMetresPerPixel(camera, distance)`.
+  - `PickCamera` keeps `fovy` for hosts and gains `orthographicHeight?`; the tolerance sites read `pickMetersPerPixel(camera, distance)`.
   - A new seam in `test/seams.test.ts`: `.fovy` is read only in `Camera`'s file and where a `PickCamera` is built, naming the line otherwise (author's call 34). `Camera.fovy` stays for hosts, and in an orthographic view returns the narrowest dolly field of view.
 
 - [ ] **Step 1: Write the failing test** (`test/orthographic.test.ts`):
@@ -745,12 +745,12 @@ New files, by responsibility (modified code is named by symbol in each task):
   - planes: side planes have normals ±right, ±up and `d` of the half extents; a sphere just outside is culled by `inFrustum`'s formula, and one touching isn't;
   - rays: the same `direction` at every pixel; `rayOrigin` differs by `ndcX × halfX × right + ndcY × halfY × up`;
   - round trip: `projectToPixel` of `alongRay` returns the pixel within 10⁻⁶ px at any depth, and a pixel doesn't depend on depth;
-  - `metresPerPixel`: height 2,000 m on 1,024 px is 1.953125 m at any distance;
+  - `metersPerPixel`: height 2,000 m on 1,024 px is 1.953125 m at any distance;
   - screen-space error: 16 m of error, 1,024 px, height 2,048 m is 8, at 1 km and at 10,000 km, in `Stepwise` and `GlobeStepwise`; the same selection results at both distances on the stubbed tileset harness;
   - fog off in an orthographic selection view;
   - the horizon: a point on the far side is hidden, a near-limb point visible; 1,000 sampled points agree with the perspective test from an eye 10⁹ radii out along −direction;
   - depth: `depthDistance` at near, far and the middle, within 10⁻⁶ m; underlay scaling holds;
-  - picks: `corePick` at a pixel gives the point that projects there, and its `camera` carries the image plane; pick tolerance in `pickInterpreter` is `metresPerPixel`; picks are rayed from `rayOrigin`, including the pick variant's narrow frustum;
+  - picks: `corePick` at a pixel gives the point that projects there, and its `camera` carries the image plane; pick tolerance in `pickInterpreter` is `metersPerPixel`; picks are rayed from `rayOrigin`, including the pick variant's narrow frustum;
   - `scaleAt`: with a ×10 lift over Earth content at 100 m height it gives [1, 10] within 10⁻³, and [1, 1] with no deformer;
   - dicing needs no change (`dice.slang` already handles orthographic views): a test pins it;
   - copies: `copyFrom`, `anchorCamera`, `setCameraFromAnchor` and a re-root keep `orthographic`;
@@ -761,7 +761,7 @@ New files, by responsibility (modified code is named by symbol in each task):
   - the seam test: a `.fovy` read planted in a fixture fails naming its line;
   - Review Focus 5: a viewport 0 px tall: `imagePlane` at an aspect that isn't positive and finite answers as for an aspect of 1, so no plane is NaN; an orthographic height of 0 or NaN is refused, named.
 - [ ] **Step 2: Run** and confirm it fails.
-- [ ] **Step 3: Implement.** Every `.fovy` read moves to `imagePlane`, `metresPerPixel` or `pickMetresPerPixel`. Resolve Tasks 8, 9 and 13's `it.todo`s here.
+- [ ] **Step 3: Implement.** Every `.fovy` read moves to `imagePlane`, `metersPerPixel` or `pickMetersPerPixel`. Resolve Tasks 8, 9 and 13's `it.todo`s here.
 - [ ] **Step 4: Run** the test, `npm test`, `npm run test:data` (`pickInterpreter`), tsc, eslint, prettier.
 - [ ] **Step 5: Surface and commit** with "camera: the orthographic camera: picking, culling, horizon culling and screen-space error in their orthographic forms".
 
@@ -842,7 +842,7 @@ A browser check (port 5191, author's call 47).
   - The standard views, in the axes of the rig's `reference` (else the position reference frame's), Z up: top looks along −Z with up +Y; front looks along +Y with up +Z; side looks along −X with up +Z; isometric looks along (−1, 1, −1)/√3 with up +Z.
 
 - [ ] **Step 1: Write the failing test,** with `describe.each(["perspective", "orthographic"])`, in render space with no frames module, and on a stub reference frame turned 30° from the root:
-  - orbit about a picked point: its pixel holds within 10⁻⁶ px over a drag, off the view's centre; a late pick changes the pivot with no jump; a pick that answers `undefined` uses the depth plane; no surface is needed to start; with a ×10 lift over Earth content, an orbit about a picked point holds its pixel within 10⁻⁶ px, and the height it reports is the true one;
+  - orbit about a picked point: its pixel holds within 10⁻⁶ px over a drag, off the view's center; a late pick changes the pivot with no jump; a pick that answers `undefined` uses the depth plane; no surface is needed to start; with a ×10 lift over Earth content, an orbit about a picked point holds its pixel within 10⁻⁶ px, and the height it reports is the true one;
   - pan: the point under the cursor follows it within 10⁻⁶ px (at the pivot's depth in perspective, at any depth in orthographic);
   - zoom: the point under the cursor holds its pixel within 10⁻⁶ px. In orthographic, `height` scales and the camera pans. In perspective, it stops at `minDistance`, or passes with `false`;
   - `fitSelection`: `fit`'s box's 8 corners are in view after the action, and with no `fit`, or `fit` returning `undefined`, nothing happens and nothing throws;

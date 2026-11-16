@@ -66,8 +66,8 @@ Where an old milestone had a partial dependency, it was split in two, and both h
 | MX-8 | CS-77 | glTF `KHR_materials_*` onto the same material | Live MaterialX graph editing |
 | MX-8 (sheen and anisotropy) | CS-78 | glTF sheen and anisotropy onto the tier 2 lobes | Live MaterialX graph editing |
 | MX-2 | CS-79 | Presets with live parameters on the stage | Live MaterialX graph editing |
-| MX-3 | CS-80 | The node editor (React Flow) and rewiring, with compiles as cancellable jobs | Live MaterialX graph editing |
-| MX-4 | CS-81 | Thumbnails (a cancellable job on Cesium IR's evaluator) and picks | Live MaterialX graph editing |
+| MX-3 | CS-80 | The node editor (React Flow) and rewiring, with compiles as cancelable jobs | Live MaterialX graph editing |
+| MX-4 | CS-81 | Thumbnails (a cancelable job on Cesium IR's evaluator) and picks | Live MaterialX graph editing |
 | MX-5d | CS-82 | The city and terrain places | Live MaterialX graph editing |
 | MX-5d (night windows and zinc roofs) | CS-83 | Night windows and zinc roofs in the city places | Live MaterialX graph editing |
 | MX-10 | CS-84 | The WebGL 2 renderer's path | Live MaterialX graph editing |
@@ -111,7 +111,7 @@ Where an old milestone had a partial dependency, it was split in two, and both h
 | LT-7 (script) | CS-127 | The frame-jump script (`scripts/frameJumps.mjs`, reading recorder dumps) | Level-of-detail transitions |
 | LT-7 | CS-128 | Measure the transitions: the protocols and the report | Level-of-detail transitions |
 | LT-8 | CS-133 | Distance-driven morph factors for terrain | Level-of-detail transitions |
-| R1 (refinement) | CS-134 | The source registry and snapshot, with adapters and a check against today's `needsTicks`; no behaviour change | Refinement and convergence |
+| R1 (refinement) | CS-134 | The source registry and snapshot, with adapters and a check against today's `needsTicks`; no behavior change | Refinement and convergence |
 | R2 | CS-135 | Public reads (`view.refinement`, `onRefinement`, `stats.loop`) | Refinement and convergence |
 | R3 | CS-136 | `converged()`, replacing `whenReady` | Refinement and convergence |
 | R4 | CS-137 | `freeze` (a per-view selection hold; suspends the governor) | Refinement and convergence |
@@ -137,7 +137,7 @@ Where an old milestone had a partial dependency, it was split in two, and both h
 | SR-13 (auth-refresh hook) | CS-157 | The app's auth-refresh hook | Streaming robustness |
 | transform graph task 10 | CS-159 | Per-view routes without twins | The transform graph |
 | transform graph task 11 | CS-160 | The camera branch: eye steps | The transform graph |
-| transform graph task 12, fix 3 | CS-161 | Centre constants on the GPU for every draw | The transform graph |
+| transform graph task 12, fix 3 | CS-161 | Center constants on the GPU for every draw | The transform graph |
 | transform graph task 12, fix 5 | CS-162 | A non-blocking fit fallback | The transform graph |
 | transform graph task 12, fix 4 | CS-163 | No compile before first draw: the interpreter pipeline | The transform graph |
 | transform graph fix 8 | CS-164 | Level of detail through a warp: the remaining increments | The transform graph |
@@ -196,7 +196,7 @@ The overall plan's numbered sections, and where their text went on 2026-11-13. U
 | 13.15 | `docs/design/gpu-limits-and-capacities.md` |
 | 13.16 | `docs/design/ray-queries-where-they-run.md` |
 | 13.17 | `docs/design/layers-engine-renderer-backend.md` |
-| 13.18 | `docs/design/colour-in-the-styling-language.md` |
+| 13.18 | `docs/design/color-in-the-styling-language.md` |
 | 13.19 | `docs/design/semantic-metadata-and-picking.md` |
 | 13.20 | `docs/design/editing.md` |
 | 13.21 | `docs/design/ion-as-a-module.md` |

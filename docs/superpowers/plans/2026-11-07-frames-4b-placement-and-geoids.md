@@ -62,7 +62,7 @@ One line each: what was chosen, then what undoing it costs.
 13. **A rigid tileset uses the standard root `transform`, equal to `RigidPlacement.matrix`.** The reader checks the declared anchor against that transform and refuses a mismatch. A reprojected tileset is plain Earth-fixed tiles. Both are readable by any 3D Tiles 1.1 viewer. *Undo:* the generator and one check.
 14. **PROJ loads on `georeferenceTileset()`,** not on `Tileset3D.load`, which only parses the declaration. *Undo:* one call site.
 15. **Ready for the morph.** The generator writes the rigid and reprojected tilesets with identical tile trees and vertex order, and a test pins it, so plan 5 can pair the vertices. No dual-position attribute is written. *Undo:* the generator.
-16. **The corridor is in EPSG:6420+6360** (NAD83(2011) / California zone 3 in US survey feet, with NAVD88 heights in US survey feet, through GEOID18). It runs 164,042 ftUS from (6,080,000, 2,110,000) at azimuth 100°, with three spiralled curves and a bridge at stations 600+00 to 612+00 (Task 12). Its frame pins GEOID18's operation (`CORRIDOR_PIPELINE`, 2026-11-07, owner's call): PROJ ranks NADCON5 with GEOID99 or GEOID03 (stated ±1.14 m) ahead of GEOID18 (±2.015 m), and those geoids are superseded for NAVD88. A pin that matches one of PROJ's candidates keeps that candidate's stated accuracy (`matchedCandidate`); one that matches none states none. *Undo:* edit the data file and regenerate; drop the pin.
+16. **The corridor is in EPSG:6420+6360** (NAD83(2011) / California zone 3 in US survey feet, with NAVD88 heights in US survey feet, through GEOID18). It runs 164,042 ftUS from (6,080,000, 2,110,000) at azimuth 100°, with three spiraled curves and a bridge at stations 600+00 to 612+00 (Task 12). Its frame pins GEOID18's operation (`CORRIDOR_PIPELINE`, 2026-11-07, owner's call): PROJ ranks NADCON5 with GEOID99 or GEOID03 (stated ±1.14 m) ahead of GEOID18 (±2.015 m), and those geoids are superseded for NAVD88. A pin that matches one of PROJ's candidates keeps that candidate's stated accuracy (`matchedCandidate`); one that matches none states none. *Undo:* edit the data file and regenerate; drop the pin.
 17. **Tessellation.** The leaf chord error is at most 0.003 ftUS (about 0.9 mm), on 2,000 ft leaf tiles, with parents decimated 2× per level. A tile's `geometricError` is the snap tolerance it states. *Undo:* generator parameters.
 18. **Client snapping needs `retainGeometry: true` on the tileset** (CPU copies of the loaded tiles). It snaps to the hit draw's vertices first, then its edges, then the surface. *Undo:* one option; a GPU route could replace it later.
 19. **The portfolio** (Task 12):
@@ -172,7 +172,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
   - `packages/next/examples/design-globe/DESIGN.md`
   - `packages/next/examples/design-globe/design-mocks/*.svg` and `*.png`
 
-- [ ] **Step 1:** Mock the page against Dyno's design guide and the frames explorer's DESIGN.md (layout in the side column, type, colour, the HUD exception), at desktop and at a 380 px panel, light and dark. Cover:
+- [ ] **Step 1:** Mock the page against Dyno's design guide and the frames explorer's DESIGN.md (layout in the side column, type, color, the HUD exception), at desktop and at a 380 px panel, light and dark. Cover:
   - the portfolio list;
   - the rigid / reprojected switch, with the sag shown;
   - the measure tool (snap mode: exact, geometry, none), with design, true and scale-factor readouts and station, offset and elevation;
@@ -596,7 +596,7 @@ Each of these is expensive to undo or is genuinely the owner's. The task order k
     - `readonly mode: PlacementMode`;
     - `readonly frame: EngineeringFrame`;
     - `readonly rigid?: RigidPlacement` (rigid only);
-    - `displayed(design: ArrayLike<number>, out?: Float64Array): Float64Array`, the body-fixed metres of a design point as this placement draws it;
+    - `displayed(design: ArrayLike<number>, out?: Float64Array): Float64Array`, the body-fixed meters of a design point as this placement draws it;
     - `designOf(position: ArrayLike<number>, out?: Float64Array): Float64Array`, the exact inverse (spec §7.3);
     - `displayError(design: ArrayLike<number>): number`, which is `|displayed(design) − frame.toBodyFixed(design)|` in m (0 when reprojected).
 
@@ -733,9 +733,9 @@ Use erasable TypeScript only (no parameter properties or enums), so the Node gen
     - Tokyo (−7,000 E, −35,500 N, in normalized order);
     - Amsterdam (121,000, 487,000);
     - Nairobi (257,000, 9,857,000);
-    - Phoenix (EPSG:6405, NAD83(2011) / Arizona Central in international feet, at the zone's centre, + 8228, pinned to GEOID18; EPSG:2223 until 2026-11-07);
+    - Phoenix (EPSG:6405, NAD83(2011) / Arizona Central in international feet, at the zone's center, + 8228, pinned to GEOID18; EPSG:2223 until 2026-11-07);
     - Jakarta (702,000, 9,314,000) on EPSG:9488+9471, Task 7's compound, with `geoidFallback: "EGM96"`.
-  - **`ION_SLOTS: readonly { label: string; ionAssetId?: number; frame?: EngineeringFrameDefinition; placement?: PlacementMode }[]`**, with two empty entries labelled "Metrostation (share key)" and "Your long iModel" (held item 2).
+  - **`ION_SLOTS: readonly { label: string; ionAssetId?: number; frame?: EngineeringFrameDefinition; placement?: PlacementMode }[]`**, with two empty entries labeled "Metrostation (share key)" and "Your long iModel" (held item 2).
 
 - [ ] **Step 1: Write the failing tests:**
   - **The corridor** (`test/designGlobeCorridor.test.ts`):
@@ -804,9 +804,9 @@ Use erasable TypeScript only (no parameter properties or enums), so the Node gen
     It regenerates only when the manifest differs.
   - **Tiles:**
     - Leaves cover 2,000 ft of station, and their parents are decimated 2× per level.
-    - **`geometricError`.** The engine scales a tile's `geometricError` by its transform's largest scale (`Tile.ts`), which on the rigid root is 0.3048006 (feet to metres). So the rigid tileset writes it in design units (0.003 ft at the leaves) and the reprojected one in metres (0.003 × 0.3048006…), both doubling per level. The scaled `Tile.geometricError` is then equal in the two.
-    - **Rigid:** the root `transform` is `placeRigid(frame, pointAt(ANCHOR_STATION)).rigid.matrix`, which takes absolute design units to Earth-fixed metres. Each tile's `transform` translates from its parent's centre to its own, in design units; the root's centre is the design origin. Vertices are design units relative to their tile's centre.
-    - **Reprojected:** each vertex goes through `frame.toBodyFixed`, relative to the tile's Earth-fixed centre.
+    - **`geometricError`.** The engine scales a tile's `geometricError` by its transform's largest scale (`Tile.ts`), which on the rigid root is 0.3048006 (feet to meters). So the rigid tileset writes it in design units (0.003 ft at the leaves) and the reprojected one in meters (0.003 × 0.3048006…), both doubling per level. The scaled `Tile.geometricError` is then equal in the two.
+    - **Rigid:** the root `transform` is `placeRigid(frame, pointAt(ANCHOR_STATION)).rigid.matrix`, which takes absolute design units to Earth-fixed meters. Each tile's `transform` translates from its parent's center to its own, in design units; the root's center is the design origin. Vertices are design units relative to their tile's center.
+    - **Reprojected:** each vertex goes through `frame.toBodyFixed`, relative to the tile's Earth-fixed center.
     - Content is glTF Y-up, so a tile-space (E, N, U) is written as (E, U, −N), and the same for Earth-fixed offsets.
     - Both carry `BENTLEY_engineering_frame` and `BENTLEY_alignments`. Their tile ids, trees and vertex order are identical (call 15).
   - **`answers.json`:**
@@ -931,7 +931,7 @@ No UI is in this task.
     - `pairs: { id; from: number; to: number /* indices into points */; designDistance; horizontalDistance; trueDistance; ends: { a: { station; offset }; b: { station; offset } } }[]`.
 
     Write the generator and this type from one shape: Task 14 writes what this type reads.
-  - **The survey mark** (owner, 2026-11-07). `Answers` gains `mark: { pid; name; datasheetUrl; retrieved; geodetic: { longitude; latitude; ellipsoidHeight } /* NAD83(2011), as NGS publishes */; publishedSpc: { easting; northing } /* zone 3, US ft, from the datasheet */; nearest: { station; offset }; designDistance; trueDistance }`. Pick a real NGS mark within a few hundred feet of the corridor near its far end, with a NAD83(2011) position and zone 3 coordinates on its datasheet. The generator (Task 14's script, extended here) computes its nearest centreline point and the distances. A check row compares PROJ's zone 3 coordinates for the mark with the datasheet's (kind "published reference").
+  - **The survey mark** (owner, 2026-11-07). `Answers` gains `mark: { pid; name; datasheetUrl; retrieved; geodetic: { longitude; latitude; ellipsoidHeight } /* NAD83(2011), as NGS publishes */; publishedSpc: { easting; northing } /* zone 3, US ft, from the datasheet */; nearest: { station; offset }; designDistance; trueDistance }`. Pick a real NGS mark within a few hundred feet of the corridor near its far end, with a NAD83(2011) position and zone 3 coordinates on its datasheet. The generator (Task 14's script, extended here) computes its nearest centerline point and the distances. A check row compares PROJ's zone 3 coordinates for the mark with the datasheet's (kind "published reference").
   - **`loadAnswers(url: string, signal: AbortSignal): Promise<Answers>`.** It validates the shape and the finite numbers, and throws naming the path.
   - **`class ExactSnapService implements SnapService`**, with `constructor(tileset: Tileset3D /* a corridor tileset */, alignment: Alignment)`. It is the server side of Task 16's split (owner, 2026-11-07, mirroring 1.x's `SnapService`): it takes a `ServiceSnapRequest` built from the client snap (`testPoint` = the client's `hitPoint`, `closePoint` = its `snapPoint`, the same camera snapshot) and refines it against the design data. The page runs it through `refiningSnap(request, client, exact, onUpdate)`, so the client's mesh snap shows at once and the exact answer replaces it.
     - It snaps in design space, from `placement.designOf(testPoint)`, within the aperture converted to design units by the footprint. In order:
@@ -955,7 +955,7 @@ No UI is in this task.
     - near a tick at 45,000 it gives `point` at exactly (45,000, ±35);
     - before the start, it gives the raw pick with no station.
   - **Checks:** a shown value inside its tolerance passes; one 2× outside fails; an absent one is `not-shown`.
-  - **The measurement model:** for `answers.pairs[0]` (10,000 ft along the first tangent, on its +2% grade) it shows a horizontal design distance of "10,000.000 ftUS" and a 3D design distance of about "10,002.000 ftUS", each labelled, and the true distance in metres to the millimetre.
+  - **The measurement model:** for `answers.pairs[0]` (10,000 ft along the first tangent, on its +2% grade) it shows a horizontal design distance of "10,000.000 ftUS" and a 3D design distance of about "10,002.000 ftUS", each labeled, and the true distance in meters to the millimeter.
 - [ ] **Step 2: Run** the tests and confirm they fail.
 - [ ] **Step 3: Implement.**
 - [ ] **Step 4: Run** the tests and confirm they pass.
@@ -990,7 +990,7 @@ The owner: the portfolio "should show every country done right, and talk about t
     | London | a utility pole line, poles every 50 m with the spans between | about 30 km |
     | California | the corridor (Task 14) | about 50 km |
 
-  - **`PortfolioModel`**, a union by kind with each kind's parameters, all in design units. Every model is defined on one flat design plane, so its rigid error grows about d²/2R from the anchor at its centre.
+  - **`PortfolioModel`**, a union by kind with each kind's parameters, all in design units. Every model is defined on one flat design plane, so its rigid error grows about d²/2R from the anchor at its center.
   - **Each site writes `portfolio-<id>-rigid/` and `portfolio-<id>-reprojected/`.** They follow Task 14's rules:
     - identical tile ids, trees and vertex order;
     - a real level-of-detail tree: leaves sized to the model, and parents decimated, with `geometricError` the larger of twice the children's and the measured simplification error;
@@ -1025,14 +1025,14 @@ The owner: the portfolio "should show every country done right, and talk about t
 - [ ] **Step 2: Implement** to DESIGN.md and the approved mockup:
   - load PROJ and the `GridSource` (`/proj-grids/`) lazily, with progress;
   - add both corridor tilesets with `retainGeometry` and `georeferenceTileset` each;
-  - make the switch a smooth morph between the placements (owner, 2026-11-07: the page's centrepiece, "really demonstrating the change in coordinate frames"), keeping the camera. Each vertex moves from its rigid to its reprojected position, partnered by call 15's identical tile ids and vertex order.
+  - make the switch a smooth morph between the placements (owner, 2026-11-07: the page's centerpiece, "really demonstrating the change in coordinate frames"), keeping the camera. Each vertex moves from its rigid to its reprojected position, partnered by call 15's identical tile ids and vertex order.
     - Prefer glTF morph targets written by the generator (the reprojected position as a target on the rigid tiles, in the rigid tile's frame) if the engine animates morph weights; otherwise the page builds the morph from both tilesets' retained geometry. Say which.
     - During the morph, a pick gives no design coordinates (the drawn geometry is between placements), and the HUD says so.
     - The other placement stays as a ghost (thin, translucent), a secondary visual for the before and after.
     - Reduced motion switches at once.
-  - true scale by default (owner, 2026-11-07): an "Exaggerate the error" toggle, off by default, labelled with its factor while on. The opening shot is at true scale near the far end (about 20 km from the anchor, about 31 m of sag), with a "Fly along" control down the corridor to the anchor;
+  - true scale by default (owner, 2026-11-07): an "Exaggerate the error" toggle, off by default, labeled with its factor while on. The opening shot is at true scale near the far end (about 20 km from the anchor, about 31 m of sag), with a "Fly along" control down the corridor to the anchor;
   - show the sag (`displayError`) under the cursor in rigid mode;
-  - draw the error whiskers (a leader every 1,000 ft from each rigid position to its reprojected partner, coloured by length, shrinking with the morph) and the anchor ring (examples/design-globe/DESIGN.md, "Visuals in the viewer");
+  - draw the error whiskers (a leader every 1,000 ft from each rigid position to its reprojected partner, colored by length, shrinking with the morph) and the anchor ring (examples/design-globe/DESIGN.md, "Visuals in the viewer");
   - add the portfolio list (Task 17b's ladder, ordered by size), with a fly-to; each site's panel leads with its CRS, units, height system and grid credits ("every country, done right"), then one line of the story: the model's extent, its rigid error at the edge, and whether rigid is an acceptable approximation there. Every site has the morph, whiskers and ghost.
 - [ ] **Step 3: Run** the tests, tsc, eslint and prettier.
 - [ ] **Step 4: Browser check** on your own port. Both modes draw. A pick on each (Task 15 on the GPU) gives design coordinates within the stated pick tolerance of the vertex under the cursor. A portfolio site in London loads its OS grids from `/proj-grids/`, with byte progress.
@@ -1050,7 +1050,7 @@ The owner: the portfolio "should show every country done right, and talk about t
   - the two-click state machine (first point, second point, reset with Escape);
   - the snap mode selects `ExactSnapService`, `ClientSnapService` or a plain `pickDesign`;
   - the deep link carries both design points.
-  - the page opens with two measurements already made (owner, 2026-11-07): the design against itself (a marker at station 170,000's true position, to the drawn station: about 31.6 m rigid, 0.000 m reprojected, shrinking during the morph) and the design against the survey mark (`answers.mark`, to the nearest drawn centreline point). A quieter third pair, two stations 10,000 ft apart, shows the design distance identical in both placements.
+  - the page opens with two measurements already made (owner, 2026-11-07): the design against itself (a marker at station 170,000's true position, to the drawn station: about 31.6 m rigid, 0.000 m reprojected, shrinking during the morph) and the design against the survey mark (`answers.mark`, to the nearest drawn centerline point). A quieter third pair, two stations 10,000 ft apart, shows the design distance identical in both placements.
 - [ ] **Step 2: Implement:**
   - the measure tool, through `measure(a.design, b.design, …)`;
   - the readouts from `measurementModel`;
@@ -1062,7 +1062,7 @@ The owner: the portfolio "should show every country done right, and talk about t
 - [ ] **Step 4: Browser check** on your own port:
   - exact snapping gives `answers.pairs[0]` exactly;
   - geometry snapping lands within 1e-4 m;
-  - the true distance is shown beside the design distance, labelled, never instead of it.
+  - the true distance is shown beside the design distance, labeled, never instead of it.
 - [ ] **Step 5: Commit** with "examples: design globe: the measure tool with exact and geometry snapping".
 
 ### Task 20: checks, slots, reviews and browser checks

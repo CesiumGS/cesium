@@ -4,7 +4,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 
 History is in git. Tags like "r23" in this document are old revision numbers, kept so references to them still make sense.
 
-**What this holds:** the goal, the principles, how the project's documents are organised, and where to look. Until 2026-11-13 this file held everything in one place; that content now lives in the files indexed below, unchanged, and the work is tracked as items in [`packages/next/work/`](packages/next/work/README.md).
+**What this holds:** the goal, the principles, how the project's documents are organized, and where to look. Until 2026-11-13 this file held everything in one place; that content now lives in the files indexed below, unchanged, and the work is tracked as items in [`packages/next/work/`](packages/next/work/README.md).
 
 ## Goal
 
@@ -32,13 +32,13 @@ The public API is open to breaking changes. 1.x serves two roles only: it is the
 
 ## Principles
 
-- **1.x is the oracle, not the template.** It is the visual and behavioural reference we test against and a source of formulas and heuristics, never an architectural model (the goal above; [parity strategy](docs/design/parity.md)).
-- **Mirror 1.x where users want its behaviour; elsewhere do what 2.0's design implies,** keep a setting where users depend on the old behaviour, and record the choice ([product choices](docs/decisions/product-choices.md)).
+- **1.x is the oracle, not the template.** It is the visual and behavioral reference we test against and a source of formulas and heuristics, never an architectural model (the goal above; [parity strategy](docs/design/parity.md)).
+- **Mirror 1.x where users want its behavior; elsewhere do what 2.0's design implies,** keep a setting where users depend on the old behavior, and record the choice ([product choices](docs/decisions/product-choices.md)).
 - **Plans by milestones and dependencies, never durations** (owner, 2026-11-13). The work items carry the order: what an item needs, and what is ready.
 - **Measure before adopting.** Spikes are decision tools, and performance claims come from the benchmark suite ([performance methodology](docs/design/performance-methodology.md), [the benchmark suite](docs/design/benchmark-suite.md)).
 - **Decisions are written down with their reasons and dates,** in [`docs/decisions/`](#decisions) or in the design note they belong to.
 
-## How the documents are organised
+## How the documents are organized
 
 | Where                     | What it holds                                                                                               | Changes when                                              |
 | ------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
@@ -90,7 +90,7 @@ The public API is open to breaking changes. 1.x serves two roles only: it is the
 - [GPU resource limits and capacities](docs/design/gpu-limits-and-capacities.md): Device limits, capacities and how the engine sizes and reports them.
 - [Ray queries: where they run, and when acceleration structures are built](docs/design/ray-queries-where-they-run.md): Placement of ray queries on CPU and GPU, and when acceleration structures are built (owner, 2026-11-06).
 - [Layers: engine, renderer and GPU backend](docs/design/layers-engine-renderer-backend.md): Notes on the layers between the engine, a renderer and the GPU backend (2026-11-08).
-- [Colour in the styling language](docs/design/colour-in-the-styling-language.md): How colour works in the styling language (owner, 2026-11-08).
+- [Color in the styling language](docs/design/color-in-the-styling-language.md): How color works in the styling language (owner, 2026-11-08).
 - [Semantic metadata and picking](docs/design/semantic-metadata-and-picking.md): For a later brainstorm: semantic metadata and picking (owner, 2026-11-08).
 - [Editing](docs/design/editing.md): For a later brainstorm: editing (owner, 2026-11-08).
 - [Ion as a swappable module](docs/design/ion-as-a-module.md): Cesium ion behind an interface the host can replace (owner, 2026-11-08).

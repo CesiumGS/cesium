@@ -258,7 +258,7 @@ done:
   Shared memory replaced them (above); `[ForceUnroll]` for loops over a
   constant count keeps their indices constant.
 - **Every Slang loop pays Tint's loop guard (Chrome, Metal; found r59).**
-  Metal treats an infinite loop as undefined behaviour, so Tint, writing
+  Metal treats an infinite loop as undefined behavior, so Tint, writing
   MSL, guards every loop it can't prove finite with a 64-bit counter
   (`uint2 tint_loop_idx`: a decrement with carry, an `all()` test and a
   branch per iteration). Only a `for` with a counter and a constant bound

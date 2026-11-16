@@ -269,7 +269,7 @@ _Frames 3 results (r63): measurement._ The third of five plans
 accuracy inputs on `Trajectory` and the EOP table. Rendering is unchanged.
 Worst agreement the tests measured, 2026-11-05:
 
-- **Two Earth-centred frames** (R1): `gcrf` is the true GCRS (TT-compatible,
+- **Two Earth-centered frames** (R1): `gcrf` is the true GCRS (TT-compatible,
   joined to ICRF by IERS eq. 11.19) and `earthIcrf` carries SPK and OEM data.
   At 3.844e8 m perpendicular to V on 2026-04-06T23:00 UTC the two differ by
   9.48 m.
@@ -307,7 +307,7 @@ Worst agreement the tests measured, 2026-11-05:
 
 Rulings:
 
-- **R1**: two Earth-centred frames; SPK and OEM data sit under `EARTH_ICRF`.
+- **R1**: two Earth-centered frames; SPK and OEM data sit under `EARTH_ICRF`.
 - **R2**: the Moon's edge stays Newtonian (3 cm or less, stated, not applied).
 - **R3**: velocities are central differences over 0.5 s, one-sided at data edges.
 - **R4**: Doppler includes both ends' proper-time rates.
@@ -416,7 +416,7 @@ out, because none of them changes a result.
     - local ENU and world-transform frames;
     - trajectories;
     - engineering frames.
-  - **Each edge labelled with its kind:** Newtonian translation, rotation,
+  - **Each edge labeled with its kind:** Newtonian translation, rotation,
     the IERS affine edge, or a recorded PROJ operation with its pipeline,
     grids and accuracy.
   - **Stress tests run on the page:**
@@ -439,7 +439,7 @@ out, because none of them changes a result.
       visible;
     - a rigid placement drawn next to the exact reprojection of the same
       long line, showing the sag growing away from the anchor;
-    - round-trip test points drawn as markers, coloured by error against
+    - round-trip test points drawn as markers, colored by error against
       tolerance;
     - selecting a tree node moves the camera to that frame and highlights
       its path to the root.
@@ -484,7 +484,7 @@ measured, 2026-11-05:
   points plus every join and end, left and right. At State Plane magnitudes
   (start (6,000,000, 2,000,000)) it is 2.6e-10 for station and 4.8e-10 for
   offset, which is the ulp of the coordinate itself (9.3e-10). A point on the
-  centerline has offset within 2.1e-13. Near the centre of curvature the
+  centerline has offset within 2.1e-13. Near the center of curvature the
   station is known only to about 3.5e-9 (offset -90, radius 100, at E =
   6,000,000), the input's rounding times R/(R - |offset|). That is irreducible
   and an independent exact foot agrees to 2.3e-13. A spiral whose
@@ -550,7 +550,7 @@ scale factor within 1.8e-13). The single fix wave did five things:
 
 - exported the 4a API from `src/index.ts`, with `@emnapi/runtime` now a
   dynamic import;
-- removed a false end-of-alignment throw near the centre of curvature;
+- removed a false end-of-alignment throw near the center of curvature;
 - added WKT2 `BOUNDCRS` support, for the TOWGS84 CRSs GDAL and iModels
   export. Units and factors come from the source CRS, and the operation from
   the bound CRS;
@@ -558,7 +558,7 @@ scale factor within 1.8e-13). The single fix wave did five things:
 - corrected the README.
 
 The re-review then found that every 2D projected CRS with a geocentric
-Helmert round-tripped off by millimetres: EPSG:30169 by 2.8 mm, EPSG:26741 by
+Helmert round-tripped off by millimeters: EPSG:30169 by 2.8 mm, EPSG:26741 by
 0.76 mm. The cause is PROJ pushing the height around the Helmert. The inverse
 is now refined against the forward, so these round trips are under 1e-8 m, and
 an inverse that can't reproduce its forward within 1e-6 m throws. Final
@@ -636,7 +636,7 @@ because ion exposes no CRS for an asset). Measured 2026-11-06:
   allows 16 ULP of the point's magnitude (about 1.5e-8 m at Earth radius). The
   worst case reads 3.75 ULP (IOGP's Transverse Mercator forward). The flat
   1e-9 m the plan first set is about 1 ULP at 6.4e6 m, so it was impossible by
-  construction. Drift that matters shows up at a millimetre or more.
+  construction. Drift that matters shows up at a millimeter or more.
 - **Reference values (R10).** Every expected value is from a source that
   does not use this library or PROJ, retrieved 2026-11-06:
   - NGS Data Sheets for five marks (California 3, Florida East,
@@ -663,7 +663,7 @@ because ion exposes no CRS for an asset). Measured 2026-11-06:
   case was dropped for a missing source. The IFC case checks the model
   origin and x axis of Annex E.7.3 against the file's own `IfcSite` values
   (0.96 mm), because no public example gives a non-origin model point; the
-  example's missing `Scale` for millimetre units is recorded as a finding.
+  example's missing `Scale` for millimeter units is recorded as a finding.
   IOGP's Transverse Mercator forward example differs from the library by
   9.9 mm, while the Ordnance Survey worked example agrees. IOGP's uses the
   JHS formulas, so the difference is the method. It is shown as an effect
@@ -679,7 +679,7 @@ because ion exposes no CRS for an asset). Measured 2026-11-06:
   | 60°, UTM 32N   | 113.09 m | 357.61 m | 1130.86 m | 0.04%         |
   | 80°, EPSG:3413 | 112.91 m | 357.06 m | 1129.12 m | 0.19%         |
 
-  So a rigid placement stays within a centimetre of exact out to about 357 m
+  So a rigid placement stays within a centimeter of exact out to about 357 m
   from its anchor. The tour's rigid-against-exact line sags 31.4 m at 20 km.
 
 - **Other effect sizes.** Giving no coordinate epoch moves a point by 29.88 cm
@@ -760,7 +760,7 @@ build:lib` exits 0, and `loadProj` from its output resolves in a browser
     the composed statement, accuracies stated inconsistently, and result rows
     breaking at 380 px (4 Critical, 19 Important);
   - the second found stop 4 not showing the rigid-placement sag (now a side
-    camera, with the sag drawn ×50 and labelled, plus a "Show true scale"
+    camera, with the sag drawn ×50 and labeled, plus a "Show true scale"
     switch), the walk amber from a signal-only warning, geocentric triads
     running through the Earth, stop 2 near-black at 3600× and then washed
     out (exposure −1.5 at desktop widths, −0.6 narrow), and the narrow
@@ -781,7 +781,7 @@ real work. The wording and test-strength nits the reviews raised are left out,
 because none of them changes a result.
 
 - **Renderer / engine: a screen-space wide-line material.** The overlays use
-  1-pixel line lists, with hierarchy by colour strength and no halos. A
+  1-pixel line lists, with hierarchy by color strength and no halos. A
   wide line with a halo would let them read at a distance.
 - **Renderer / engine: a no-depth-test draw flag.** The geocentric triads need
   x-ray dashes where they pass behind the Earth. Today a whole axis is hidden
@@ -888,8 +888,8 @@ asset 2: no access token`, on every example.~~ Done (ion token setting): the
   frames that carry the terms on no edge. `accuracyOf` still gives a point
   on the Moon no lever for MOON_ME's orientation, and the library's MOON_ME
   still states none. The explorer covers it on its own side: it estimates
-  MOON_ME at 3 × 10⁻⁷ rad, labelled "estimated, illustrative", and its walk
-  adds that times a point's distance from the Moon's centre, so the lunar
+  MOON_ME at 3 × 10⁻⁷ rad, labeled "estimated, illustrative", and its walk
+  adds that times a point's distance from the Moon's center, so the lunar
   site walks to ITRF at ±0.52 m, not the ±3 cm `accuracyOf` alone gives.)
 
 _Plan 5 design input: routing a design CRS into the frame tree (owner,
@@ -906,7 +906,7 @@ _Plan 5b (Task 5) did part: the built-in edges state every term (the ephemeris e
   to ITRF2020 at the frame's epoch, through the published transformation for
   its datum (for NAD83(2011), NGS's 14-parameter Helmert to ITRF2020; check
   `proj.db` carries it). Stated accuracies then describe the real chain at
-  centimetre level, and comparing candidates means something.
+  centimeter level, and comparing candidates means something.
 - **Reasonable defaults, decided by the engine.** Per height system, prefer the
   current geoid model (GEOID18 for NAVD88, and so on). Per horizontal datum,
   prefer the published, time-dependent route to ITRF. Rank by stated accuracy
@@ -1007,7 +1007,7 @@ don't need to load up a bunch of frame tree stuff for an app that's never
 going to go into space."
 
 - **The rendering core knows one flat space and nothing about frames:** a
-  Cartesian render space in metres with no meaning attached, a transform per
+  Cartesian render space in meters with no meaning attached, a transform per
   draw, and a camera pose in it. Precision stays camera-relative, so one core
   serves a site, the Earth and the Moon. The core's only frame-adjacent
   feature is that a draw has a **placement**: affine (a matrix) or per vertex,
@@ -1207,7 +1207,7 @@ with a brainstorm first:
   still: on MOON_ME the Moon stays put as time runs; on GCRF the Earth turns
   underneath; on a trajectory the camera rides along.
 - **Inputs are expressed in the rig's frame.** The pivot is a point in it (a
-  body centre, a site, a selected frame's origin). "Up" is one of its axes (a
+  body center, a site, a selected frame's origin). "Up" is one of its axes (a
   pole, an orbit normal, an engineering frame's up). Heading is measured from
   a reference axis in it (north, grid north, x).
 - **The rig is only a pose in a frame (owner, 2026-11-07).** It holds no
@@ -1218,7 +1218,7 @@ with a brainstorm first:
   case, so no constraint lives anywhere a controller can't turn it off
   (seeing underground, such as translucent terrain, is the renderer's).
 - **The rig splits position from orientation (owner, 2026-11-07),** after
-  Cinemachine's Body and Aim, so any follow behaviour is expressible and the
+  Cinemachine's Body and Aim, so any follow behavior is expressible and the
   user chooses it:
   - **position:** an anchor (a frame's origin, such as Orion's), an offset,
     and the frame the offset is expressed in;
@@ -1266,7 +1266,7 @@ with a brainstorm first:
 - **Flights between rigs need a defined hand-off,** for example the Earth to
   a lunar site: interpolate in a common frame, then re-attach.
 - **The sky follows what the rig is attached to (owner, 2026-11-06).** Today
-  the Earth's sunrise and sunset sky colours still show while the camera
+  the Earth's sunrise and sunset sky colors still show while the camera
   orbits in space, as in the frames example's orbit scenes. The sky and
   atmosphere should come from the rig's body and the camera's place relative
   to it:
@@ -1284,7 +1284,7 @@ with a brainstorm first:
   and what is seen through each is composited physically (the Moon seen
   through Earth's air from the ground; Earth's limb shell against black sky
   from the Moon). The frames example's orbit scenes showing Earth's sunrise
-  colours in space are a bug in how the camera's position reaches the
+  colors in space are a bug in how the camera's position reaches the
   atmosphere, not a missing blend.
 
 **Design space and the global view, with a morph between them (owner,
@@ -1359,11 +1359,11 @@ tree". Plan 5 should separate them:
 **Accuracy along a route: declared per edge, composed by the library (owner,
 2026-11-06).** "Seems easy for a user to screw up." The rule: the app
 declares each edge's error in its own terms (an angle for an encoder or Earth
-orientation, metres for a link tolerance, a survey or an ephemeris, exact by
+orientation, meters for a link tolerance, a survey or an ephemeris, exact by
 definition, or not stated), and the library composes it for a point along the
 route. The frames example's Task 7b lands the first-order version: an optional
 `accuracy` on `Frame`, and `pointAccuracy`, which scales angular terms by
-their lever arms, adds metre terms, combines them root-sum-square, names the
+their lever arms, adds meter terms, combines them root-sum-square, names the
 dominant term, and propagates "not stated" by name. Plan 5 designs the rest:
 
 - **Confidence is declared, and never mixed silently.** Each edge says whether
@@ -1408,7 +1408,7 @@ we probably don't need the async API". So:
 - **Bulk work only, if anything, gets an async shape.** Sampling a long
   trajectory into a mesh, accuracy statements over many samples, proof checks
   and PROJ batches are genuinely heavy, and today they run in the example's
-  worker. Plan 5 decides only whether the library offers them as cancellable
+  worker. Plan 5 decides only whether the library offers them as cancelable
   (`AbortSignal`), progress-reporting operations that run in a worker or
   under the engine's per-frame budget. That is a question about bulk
   operations, not about the frame tree.
@@ -1419,7 +1419,7 @@ we probably don't need the async API". So:
 - **Rays in a frame.** A ray is given in some frame at an instant (a dish's
   ENU, a drone camera's mount, a robot tool, a lunar site), and the library
   carries it through the tree to each target's frame. It doesn't assume
-  Earth-fixed metres.
+  Earth-fixed meters.
 - **Targets in their own frames.** Terrain and tilesets belong to a body
   frame: Earth terrain in ITRF, the Moon's terrain and imagery in MOON_ME,
   and an iModel in its design space or placed through its CRS. Moving bodies
@@ -1461,7 +1461,7 @@ proposed moves. Questions to answer:
   exposes internals (stress-context getters, renderer state the examples
   poke)?
 - **Shape.** Check the API's consistency: sync versus async, `AbortSignal`
-  everywhere work can be cancelled, `dispose` lifetimes, events or
+  everywhere work can be canceled, `dispose` lifetimes, events or
   subscriptions versus polling, units and frames named in types, and errors
   that say what to do.
 - **Stability tiers.** Which parts are stable and which are experimental, how
@@ -1628,7 +1628,7 @@ are left out.
 - **Plan 5: move the example's `accuracyOf` onto `pointAccuracy`.** Partly
   done (the owner's follow-up, 2026-11-07): every frame the example defines
   states its accuracy (`scenarios/stated.ts`: published where a source gives
-  one, DSN 810-005 for the dishes; estimated and labelled for the drone and
+  one, DSN 810-005 for the dishes; estimated and labeled for the drone and
   the ship; exact by definition for a chosen site or a knob's value), the
   walk composes those with `pointAccuracy` up to the nearest built-in frame,
   and each answer carries its app-defined ends at the walk's figure (a data
@@ -1746,9 +1746,9 @@ API.
 - **NGS mark HS5109 (GOLD CREEK) against PROJ.** PROJ's California zone 3,
   through the corridor's own operation, gives the datasheet's easting to
   0.0016 ftUS and its northing to 0.0051 ftUS, within 0.00664 ftUS (the
-  datasheet's millimetre rounding converted to feet, plus its 0.005). Its
+  datasheet's millimeter rounding converted to feet, plus its 0.005). Its
   body-fixed position matches the datasheet's X, Y, Z within 0.6 mm. The
-  page's distance from the mark to the centreline is 501.188 ftUS against
+  page's distance from the mark to the centerline is 501.188 ftUS against
   501.193 ftUS from NGS's own zone 3 values, within 0.0094 ftUS.
 - **Snapping.** An exact snap on the alignment lands on the analytic geometry
   within 10⁻¹⁰ ft in the browser (the check allows 10⁻⁶ design units). The
@@ -1840,7 +1840,7 @@ Calls made, one line each (the plan lists all 23 with their undo costs):
   relates the Dutch LAT depth only by a ballpark.
 - **EGM2008 is opt-in** (80.6 MB, `--grids egm2008`), loaded whole.
 - **Strict WKT2 everywhere** for declared and app-supplied CRSs; the
-  explorer's "Try your own" still takes WKT1, labelled, under the grid rule.
+  explorer's "Try your own" still takes WKT1, labeled, under the grid rule.
 - **`/frames-data/proj/` still serves the pinned GEOID18 grid** that setup
   verified; every other grid comes through `/proj-grids/`.
 
@@ -1895,7 +1895,7 @@ work. The wording and test-strength nits the reviews raised are left out.
 - **Renderer / engine: the sleeping frame loop.** Wake on the inputs it still
   can't see (`View.readHdr`, `PointCuller`'s pipelines, Safari's pixel-ratio
   changes), let per-frame sync loops (the translucency example) sleep, and
-  document the accessors' behaviour change (`Camera.version` and the View
+  document the accessors' behavior change (`Camera.version` and the View
   fields lose their own keys). The Viewer's clock listener isn't removed on
   destroy (older), and MOON_ME's label jumps 10 px for one frame while
   playing (untraced).
@@ -1963,7 +1963,7 @@ Closed by Task 22.
   once `relativeMatrix` multiplies by the anchor's axes, even the identity,
   even behind a branch that never runs, the compiler sums the instance's
   translation in the order the code is written, and 14 of 75 components move
-  by one float32 ulp (3.6 to 22 micrometres at 40 to 380 m). That is not a
+  by one float32 ulp (3.6 to 22 micrometers at 40 to 380 m). That is not a
   precision loss: against the exact sum the old order was closer, but
   neither order is promised. One 4× sample at pixel (113, 152) flips. Plan call 18
   promises the inputs, not the pixels, and no engine change was made. Whoever
@@ -2068,7 +2068,7 @@ real work. The wording and test-strength nits the reviews raised are left out.
   request window; imagery slices sit outside the byte budget; the worker path
   of upsampling has not been run.
 - **Smaller engine items.** `Ellipsoid.cartesianToCartographic` loses about
-  0.3 micrometres of height near the equator. Tile load, unload and slot reuse
+  0.3 micrometers of height near the equator. Tile load, unload and slot reuse
   have no clip tests. A thrown server error does not reset the snap run. The
   design globe shows a thin line where its item switches to opaque, and its
   rigid normals stay as they are until the [geometry-through-placement-review.md](geometry-through-placement-review.md) review.
@@ -2123,7 +2123,7 @@ formatter the time controls now use.
   east-north-up reference frame without an accuracy unbounded in `accuracyOf`
   (the DSN-station rows, many `measure` and design tests), and would drop the
   Earth-orientation term for two Earth sites, because the route never crosses
-  ITRF. That is a wide behaviour change across `measure`, the design tests and
+  ITRF. That is a wide behavior change across `measure`, the design tests and
   the explorer, so it needs a pass of its own, with its moves listed. One rule
   to settle in it: the ephemeris edges share a "difference" source, but a
   route from an Earth site to Orion crosses GCRF and EARTH_ICRF, both the
@@ -2149,7 +2149,7 @@ _Carried forward from frames plan 5b._ Real deferred work only.
   takes its revision from the world's content revision alone, not from the
   frame resolver's routes.
 - **Terrain bands** are offset ellipsoids; the Earth's geodetic offsets differ
-  from them by metres near the poles.
+  from them by meters near the poles.
 
 _Carried forward from the sky and observer plan._ These are deferred items that are real work. The nits are left out.
 
@@ -2163,4 +2163,4 @@ _Carried forward from the sky and observer plan._ These are deferred items that 
 - **A hidden sun's veil pops at the screen's edge.** While any disc tap is on screen the veil takes its visibility from those; a sun leaving the screen jumps to the body-only answer in about one tick of a pan.
 - **Recovery after device loss.** A loss turns the stages that were on off for good and says so; nothing listens to `restored`.
 - **The eye's limit costs 3.9 ms at 2560×1440 on an M2** (the cost page), the biggest single post stage. A half-size ring would cut it.
-- **The terms of the default sky pack's sources, still unsettled.** The pack stays marked not cleared and local. This plan concludes nothing about licences.
+- **The terms of the default sky pack's sources, still unsettled.** The pack stays marked not cleared and local. This plan concludes nothing about licenses.

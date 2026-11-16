@@ -71,7 +71,7 @@
 - [x] **Step 2: Run** `npx vitest run test/instant.test.ts` and confirm it fails (modules missing).
 - [x] **Step 3: Implement.**
   - `LeapSeconds.fromIers` parses the data lines into sorted UTC-ms thresholds (from each MJD), and the expiry line into `expires`.
-  - `Instant.fromUtc` computes `tt = ((utcMs − 946_728_000_000) / 1000) + taiMinusUtc(utcMs) + 32.184`. 946,728,000,000 is the Unix ms of 2000-01-01T12:00:00, as if TT were UTC-labelled; the integer subtraction happens first. Check: at J2000 TT, UTC is 11:58:55.816 and TAI−UTC is 32.
+  - `Instant.fromUtc` computes `tt = ((utcMs − 946_728_000_000) / 1000) + taiMinusUtc(utcMs) + 32.184`. 946,728,000,000 is the Unix ms of 2000-01-01T12:00:00, as if TT were UTC-labeled; the integer subtraction happens first. Check: at J2000 TT, UTC is 11:58:55.816 and TAI−UTC is 32.
   - `toUtc` inverts it, iterating once on `taiMinusUtc` at a leap boundary, and rounds to the millisecond.
 - [x] **Step 4: Run** the test and confirm it passes.
 - [x] **Step 5: Commit** `test/instant.test.ts src/time/leapSeconds.ts src/time/Instant.ts` with "frames: Instant and leap seconds".

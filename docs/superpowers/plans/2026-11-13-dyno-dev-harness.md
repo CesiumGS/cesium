@@ -74,19 +74,19 @@ Benchmarking data answers five questions. The model gives each one a home.
 1. **What can be measured?** These are definitions: content, a camera, settings, metrics. They live in the repository, versioned with the code that reads them.
 2. **What was measured, where and how?** These are executions: one invocation, on one machine, of one commit, with its configurations. A run is immutable once written.
 3. **What does the history say?** This is derived data: series over baseline runs, change points, flake rates. It can always be recomputed.
-4. **What did we conclude?** These are judgements, made by a person or an agent: a study's verdict, an alert's triage, an approved image, an annotation. They are mutable, and each records who made it and when.
+4. **What did we conclude?** These are judgments, made by a person or an agent: a study's verdict, an alert's triage, an approved image, an annotation. They are mutable, and each records who made it and when.
 5. **Why did we measure, and what is it for?** This is the work: the tracker's items (`CS-<n>`), including the decisions waiting on the owner. It lives in the tracker, not in Dyno.
 
-A **study** is the judgement that ties questions 2, 4 and 5 together. It holds a question and a hypothesis written before results, the runs that test it, and a verdict that cites them and informs a decision. A study doesn't execute anything; runs do. A run doesn't conclude anything; a study does.
+A **study** is the judgment that ties questions 2, 4 and 5 together. It holds a question and a hypothesis written before results, the runs that test it, and a verdict that cites them and informs a decision. A study doesn't execute anything; runs do. A run doesn't conclude anything; a study does.
 
 ### The model
 
-Where each layer lives follows one rule. Judgements about the work (studies) live with the work, in the repository, on the branch. Judgements about runs (triage, approved images, pins) live with the runs, in the store on the machine that holds them.
+Where each layer lives follows one rule. Judgments about the work (studies) live with the work, in the repository, on the branch. Judgments about runs (triage, approved images, pins) live with the runs, in the store on the machine that holds them.
 
 ```text
 WORK (repo, the tracker)   Item CS-<n> ─────────── decision items
                               │ serves                  ▲ informs
-JUDGEMENTS (repo)          Study ─ question, hypothesis, expectations, status
+JUDGMENTS (repo)          Study ─ question, hypothesis, expectations, status
                               │      design: the runs it plans (commands)
                               │      notes: dated observations
                               │      verdict: outcome, reasoning, cited runs, decision ──┘
@@ -98,7 +98,7 @@ EXECUTIONS (store)         Run ─ kind, purpose, machine, commit, branch, workt
                               │    cells: scene × scenario × configuration → metric samples
                               │    captures (images, time series), result (scorecard), validity
 DERIVED (computed)         Summary · Series · Change point · Flake rate · Noise floor
-JUDGEMENTS (store)         Alert triage (on change points) · Approved image (on checks)
+JUDGMENTS (store)         Alert triage (on change points) · Approved image (on checks)
                            Annotation (on series) · Pin (on runs)
 DEFINITIONS (repo)         Dataset · Scene (groups A to D) · Scenario · Check · Lab page
                            Setup · Setting · Metric · Budget · Area · Tier · Example
@@ -109,9 +109,9 @@ DEFINITIONS (repo)         Dataset · Scene (groups A to D) · Scenario · Check
 | Concept | Layer | What it is | Relation to studies | Where it lives |
 | --- | --- | --- | --- | --- |
 | **Item** | Work | A tracker item, `CS-<n>`: a task, a decision, an investigation. | A study serves one item; several studies may serve one item. | The tracker. Dyno stores the ID only. |
-| **Study** (new) | Judgement | A question, a hypothesis, expectations, a design, notes, a status (open, concluded or abandoned) and a verdict. No machine details; runs cited by ID. | It is the study. | The repo: `packages/next/work/studies/<id>.md`, beside the tracker's items |
-| **Expectations** | Judgement | The primary metric, the guardrails and the tolerance, declared before results (the "Decide" practice in `docs/design/benchmark-analysis-and-experience.md`). | A study declares them; its runs copy them into `plan`, so each run's scorecard tests them. | The study; a copy in each run |
-| **Verdict** (new) | Judgement | Supported, refuted or inconclusive, with the reasoning, the runs cited (each with what it showed) and the decision it informs (`CS-<n>`). | It ends a study. | The study |
+| **Study** (new) | Judgment | A question, a hypothesis, expectations, a design, notes, a status (open, concluded or abandoned) and a verdict. No machine details; runs cited by ID. | It is the study. | The repo: `packages/next/work/studies/<id>.md`, beside the tracker's items |
+| **Expectations** | Judgment | The primary metric, the guardrails and the tolerance, declared before results (the "Decide" practice in `docs/design/benchmark-analysis-and-experience.md`). | A study declares them; its runs copy them into `plan`, so each run's scorecard tests them. | The study; a copy in each run |
+| **Verdict** (new) | Judgment | Supported, refuted or inconclusive, with the reasoning, the runs cited (each with what it showed) and the decision it informs (`CS-<n>`). | It ends a study. | The study |
 | **Run** | Execution | One invocation, one result file, one machine and commit. Its **kind** is `bench`, `images`, `lab`, `recording` or `tests`. | Evidence: a run made for a study records `study`. An earlier run can be attached. | `<store>/<id>.json`, with its summary and assets |
 | **Purpose** | Execution | `baseline` (the integration branch, clean, the history Trends draws) or `dev` (everything else). | Study runs are dev runs. A verdict may cite baseline runs. | The run |
 | **Sweep** | Execution | Part of a run's design: axes, points and a reference. It is one run because its points must alternate in one session for the statistics to hold. | A study's design may call for several runs (a sweep, an image run, a before and after); each sweep is one of them. | The run (`results.sweep`) |
@@ -121,20 +121,20 @@ DEFINITIONS (repo)         Dataset · Scene (groups A to D) · Scenario · Check
 | **Validity** | Derived | Valid, valid with warnings, or invalid, from the recorded conditions. | A verdict cites valid runs; Dyno warns when it doesn't. | Computed from the run |
 | **Summary** | Derived | The run's compact form for lists and charts. | | `<id>.summary.json` |
 | **Series** | Derived | Baseline runs of one scene, scenario, setup and machine for one metric, over commits: one line on Trends. | A study about a regression starts from a series. | Computed from summaries |
-| **Change point**, **alert** | Derived, then judgement | A detected shift in a series (E-Divisive means), grouped across scenes into an alert with a triage state. | "Investigate" on an alert opens a study with the alert's runs attached. | Computed; triage in `triage.json` |
+| **Change point**, **alert** | Derived, then judgment | A detected shift in a series (E-Divisive means), grouped across scenes into an alert with a triage state. | "Investigate" on an alert opens a study with the alert's runs attached. | Computed; triage in `triage.json` |
 | **Noise floor** | Derived | The spread of a metric over repeated reference points. | It makes "within noise" a statement a verdict can rest on. | Computed from the run |
 | **Flake rate** | Derived | A test's failures over runs on unchanged trees. | A study can investigate a flake like any regression. | Computed from test runs |
 | **Scene**, **scenario** | Definition | Content with a camera path, in groups A to D (D: gallery examples and Lab pages, section 3); a scenario is what happens in a scene. | A study's runs name them. | `bench/suite/catalog/` |
 | **Check** | Definition | A scene at a moment of its camera path (or settled), captured and compared. | Image runs capture checks; a study cites them. | The scene (`checks`) |
-| **Approved image** | Judgement | The image a check is compared against, per renderer class (the files say "baselines"). | A study may approve a new image as part of its verdict. | `<store>/baselines/<class>/` |
+| **Approved image** | Judgment | The image a check is compared against, per renderer class (the files say "baselines"). | A study may approve a new image as part of its verdict. | `<store>/baselines/<class>/` |
 | **Setup**, **setting** | Definition | A setup is named engine settings without a build (`2.0+stepwise`); a setting is one variable in the registry (section 4). | Sweep axes are settings. | The catalog; `bench/suite/settings.mjs` |
 | **Engine** | Definition | 1.x or 2.0, from a release, the working tree or a git ref (`docs/design/benchmark-suite.md`, "Engines and versions"). | | `engines.mjs` |
 | **Metric**, **budget** | Definition | A measured quantity with units and a direction; a budget is a limit on one per scene. | Expectations name metrics. | `report.mjs`, the catalog |
 | **Lab page** | Definition | A harness with `mount` and `run`. | A group D scene can name one. | `lab/pages.ts` |
 | **Machine**, **runner**, **device** | Execution context | A machine is a computer with an alias (`mac`, `win`) and a hardware class. A runner is a machine that lends its browser and GPU to runs another machine drives and serves; a device is any paired browser (section 8). "Served remotely" is part of a machine's identity. | A study can use runs from every machine and device, and Dyno warns when a timing claim mixes them. | `BENCH_MACHINE`; the hub's device registry |
 | **Recording** | Execution | A run of kind `recording`: a live session's time series, with no repetitions and no controlled conditions. | Evidence for "what happens when", never for "faster". | The run |
-| **Annotation** | Judgement | A dated note on series: method, machine, data, or (new) **decision**. | A concluded study whose decision lands adds a decision annotation at that commit. | `annotations.json`, the store |
-| **Pin** | Judgement | Keeps a run out of retention. | Retention also keeps every run a study file cites or attaches, on any local branch. | The run's sidecar |
+| **Annotation** | Judgment | A dated note on series: method, machine, data, or (new) **decision**. | A concluded study whose decision lands adds a decision annotation at that commit. | `annotations.json`, the store |
+| **Pin** | Judgment | Keeps a run out of retention. | Retention also keeps every run a study file cites or attaches, on any local branch. | The run's sidecar |
 
 ### Studies in detail
 
@@ -205,7 +205,7 @@ Supported. (The reasoning, in prose.)
 - **Writes are file writes,** and nothing commits them. The CLI writes study files in the current worktree. Dyno's dev server writes them through the same validation (`POST /bench-results/studies/<id>` validates, then writes the file into its own worktree). An agent commits study changes with its work, as it does tracker items; the owner commits changes made in Dyno.
   - Dyno marks a study with uncommitted changes.
   - The tracker's `check` (`scripts/work/views.mjs check`) validates study files beside items.
-- **Studies on other branches.** Dyno and the CLI read studies from the current branch's files. `studies --all-branches` and Dyno's Studies page also list studies that exist only on other local branches (read through git, read-only, labelled with their branch). The main session can therefore see an agent's study before it merges.
+- **Studies on other branches.** Dyno and the CLI read studies from the current branch's files. `studies --all-branches` and Dyno's Studies page also list studies that exist only on other local branches (read through git, read-only, labeled with their branch). The main session can therefore see an agent's study before it merges.
 - **Conflicts** are ordinary merge conflicts in a Markdown file. One branch owns a study at a time, the way a claimed item is owned: the study's `item` is claimed by that branch in the tracker.
 - **Archives don't carry studies.** They travel with the branch.
 
@@ -287,7 +287,7 @@ A group D scene names a gallery example, its parameters and how to frame it.
   - The Examples view stays for looking. It gains a "Measure this" button that copies the command, as the Explorer has.
 - **The pose.**
   - Examples interpret their own parameters, so `view=zermatt-close` keeps working.
-  - For an arbitrary pose, the host gives examples one shared contract: a `camera` parameter (`lon,lat,height,heading,pitch,range`, in degrees and metres, height above the ellipsoid as drawn). The host applies it after the example's own setup, through the engine's camera API.
+  - For an arbitrary pose, the host gives examples one shared contract: a `camera` parameter (`lon,lat,height,heading,pitch,range`, in degrees and meters, height above the ellipsoid as drawn). The host applies it after the example's own setup, through the engine's camera API.
   - An example opts out by declaring `pose: false` in `examples/index.ts`, for examples whose camera is the point of the example.
   - The Explorer's and the Viewer's "save this view" writes the same six numbers.
 - **When it is settled.**
@@ -552,7 +552,7 @@ The Mac builds, serves, drives and records; results land directly in its store. 
 ### The certificate authority
 
 - **Like mkcert:** an ECDSA P-256 root, made once, with leaf certificates for the hub.
-- **Name Constraints.** The root carries a Name Constraints extension that limits it to `.local` names and private address ranges, so a stolen key can't sign a certificate for any public site. CS-406 checks that each target platform honours the extension (Windows, macOS, iOS, Android, Linux Firefox) and records the result. A platform that rejects a constrained root gets the constraint dropped only after the owner agrees.
+- **Name Constraints.** The root carries a Name Constraints extension that limits it to `.local` names and private address ranges, so a stolen key can't sign a certificate for any public site. CS-406 checks that each target platform honors the extension (Windows, macOS, iOS, Android, Linux Firefox) and records the result. A platform that rejects a constrained root gets the constraint dropped only after the owner agrees.
 - **Leaf certificates** are short-lived and renewed by the hub itself, within Apple's limit for certificates under user-installed roots (825 days). They name `<mac>.local` and each private LAN address the Mac has, so devices that don't resolve `.local` names (some Android versions) use the address.
 - **Made with a small reviewed dependency.** Node can't issue X.509 certificates by itself. The candidate is a WebCrypto-based X.509 library such as `@peculiar/x509`, as a pinned development dependency, health-checked when it is added; OpenSSL isn't on every machine.
 - **Rotation.** `cli.mjs ca rotate` makes a new root. Every device then installs the new certificate and pairs again; the old root stops being served.
@@ -564,10 +564,10 @@ The pairing page can't be trusted before the authority is, so the certificate co
 - **The plain-HTTP page** (`http://<mac>.local:<port>/ca`) offers the certificate as a download and as a QR code, with the steps for the device it detects. It also shows the certificate's SHA-256 fingerprint.
 - **Comparing fingerprints.** The owner compares that fingerprint with the one Dyno shows on the Mac (Settings, Devices) before trusting it. The certificate is public; only its fingerprint needs checking.
 - **Per platform** (the steps on the page):
-  - **Windows:** open the `.crt` and install it into the current user's Trusted Root Certification Authorities. No admin rights. Edge and Chrome honour the current user's roots.
+  - **Windows:** open the `.crt` and install it into the current user's Trusted Root Certification Authorities. No admin rights. Edge and Chrome honor the current user's roots.
   - **iOS and iPadOS:** a configuration profile (`.mobileconfig`) download, installed in Settings, then Settings › General › About › Certificate Trust Settings › enable full trust for the root.
   - **Android:** Settings › Security › Encryption and credentials › Install a certificate › CA certificate.
-    - Apps trust user-installed authorities only if they opt in. CS-408 checks which browsers honour them (Chrome, Firefox, which needs its "use third-party CA certificates" setting, Samsung Internet, Edge) and on which Android versions, and records the result in `bench/suite/DEVICES.md`.
+    - Apps trust user-installed authorities only if they opt in. CS-408 checks which browsers honor them (Chrome, Firefox, which needs its "use third-party CA certificates" setting, Samsung Internet, Edge) and on which Android versions, and records the result in `bench/suite/DEVICES.md`.
   - **macOS and Linux:** the requester itself doesn't need to trust its own authority. Other Macs use Keychain Access, and Linux Firefox its own certificate settings.
 - **The runner** doesn't use the operating system's trust store. At pairing it saves the authority's certificate (checked against the fingerprint) and trusts only that certificate for the hub connection.
 
@@ -804,7 +804,7 @@ How they are run:
 | CS-405 | **The Studies page.** (Opus.) Studies: a list with status, item, question, latest evidence, branch, and a mark for uncommitted changes; studies on other local branches, read-only. A study's page: the question, hypothesis and expectations; the design as copyable commands, each marked with the run that executed it; the evidence, with each sweep in the sweep view, image runs as grids, before-and-after runs as forest plots with their results, and runs not in this store shown by ID and machine; notes; the verdict form (outcome, reasoning, cited runs picked from the evidence, decision item), which writes the file. Analysis replaced: `/analysis` redirects to Studies, and sweep runs without a study open in their run report. Overview's "Open studies". "Investigate" on alerts. Decision annotations on Trends. | new `views/Studies.tsx`, `views/Study.tsx`, `studies.css`; `views/Analysis.tsx` (removed), `routes.tsx`, `shell.tsx` (the rail item), `views/Overview.tsx`, `views/Alerts.tsx`, `trendsModel.ts`, `DESIGN.md` | The α study (CS-396) reads from question to verdict on one page. A verdict recorded in the page writes the file and appears in `study show`, and the reverse. Old `/analysis?sweep=` links land on the run's report or its study. Owner review by clicking around. | CS-395, CS-403, CS-404 |
 | CS-406 | **The certificate authority, the hub and pairing.** (Opus.) `ca init` and `ca rotate`: an ECDSA root with Name Constraints, short-lived leaves for `<mac>.local` and the LAN addresses, made with a reviewed X.509 dependency, the key kept outside the repo. `hub`: LAN-only binding with the source-address check; the plain-HTTP certificate page with fingerprint and per-platform steps; the pairing page and `/pair`; device tokens (cookie or file), the registry, revocation. Settings › Devices in Dyno (list, pair, revoke, the authority's fingerprint). The platform check of Name Constraints, recorded. | new `bench/suite/hub/ca.mjs`, `hub.mjs`, `pairing.mjs`, `devices.mjs`, `commands/hub.mjs`, `views/Devices.tsx`; `cli.mjs` (dispatch), `routes.tsx`, `shell.tsx` (the Settings menu), `package.json` (`hub`, the X.509 dependency) | Tests with two temporary homes on loopback: the issued leaf verifies under the root, and a certificate for a public name can't be issued. A request without a token, with a revoked token, or from a public source address is refused. A code works once and fails after three wrong tries. The authority's key is never written inside the repo or into an archive, and the hub logs no token. The owner pairs the laptop's Edge and an iPhone by clicking around. | CS-390 |
 | CS-407 | **The runner and remote runs.** `runner pair` and `runner` on the laptop: the outbound WebSocket, the device token, the pinned authority, jobs as browser sessions (`launchServer` on loopback, the Playwright protocol carried in the WebSocket), the laptop's run lock and wake lock, the telemetry stream, the versions and flags report. `bench/suite/browserArgs.mjs` shared by both sides. On the Mac: `run --on` and `images --on`, the hub fronting each run's servers with a session cookie, origins rewritten for pages, `chromium.connect` to the hub's local endpoint, the runner's telemetry in place of the local sampler, the link measured, `servedFrom` and the machine key, the runner's state on Getting started. | new `bench/suite/runner/runner.mjs`, `bench/suite/hub/jobs.mjs`, `hub/front.mjs`, `browserArgs.mjs`; `commands/runner.mjs`, `cli.mjs`, `images.mjs`, `telemetry.mjs`, `reuse.mjs` (the machine key), `views/FirstRun.tsx` | The α study's run, started on the Mac with `--on win`, measures in the laptop's Edge in a secure, cross-origin-isolated context and lands in the Mac's store as `machine: win`, served from `mac`. A remote run's first content differs from a local one on the laptop while frame time doesn't, and the two never share a series or reuse each other's repetitions. A second job waits on the laptop's lock and is told whose run holds it. Ctrl-C on the Mac, or a dropped connection, leaves no browser or lock on the laptop. A Playwright mismatch is refused with the fix. Nothing listens on the laptop's network interfaces. | CS-390, CS-406 |
-| CS-408 | **The device lab.** The runner for Firefox on Linux, and for Android Chrome over `adb` from the machine the phone is plugged into. Manual device runs: `device-run` with one-time links and QR codes, the suite page's post-back of scenes, checks and the capability report, device aliases and hardware classes, validity "warning" by design. Which Android browsers and versions honour user-installed authorities and resolve `.local` names, checked and recorded in `bench/suite/DEVICES.md`. | `commands/device.mjs`, new `bench/suite/hub/deviceRuns.mjs`, `capabilities.ts`, `DEVICES.md`; `suite.ts` (post-back), `runner/runner.mjs` (Firefox, Android), `manifest.mjs`, `views/Runs.tsx` (devices) | A paired iPhone opens a run link, and its capability report and one scene's timings land in the Mac's store under its alias. Firefox on Linux runs a scene automatically. An Android phone runs a WebGPU scene in a secure context. A link works once. | CS-394, CS-404, CS-407 |
+| CS-408 | **The device lab.** The runner for Firefox on Linux, and for Android Chrome over `adb` from the machine the phone is plugged into. Manual device runs: `device-run` with one-time links and QR codes, the suite page's post-back of scenes, checks and the capability report, device aliases and hardware classes, validity "warning" by design. Which Android browsers and versions honor user-installed authorities and resolve `.local` names, checked and recorded in `bench/suite/DEVICES.md`. | `commands/device.mjs`, new `bench/suite/hub/deviceRuns.mjs`, `capabilities.ts`, `DEVICES.md`; `suite.ts` (post-back), `runner/runner.mjs` (Firefox, Android), `manifest.mjs`, `views/Runs.tsx` (devices) | A paired iPhone opens a run link, and its capability report and one scene's timings land in the Mac's store under its alias. Firefox on Linux runs a scene automatically. An Android phone runs a WebGPU scene in a secure context. A link works once. | CS-394, CS-404, CS-407 |
 
 **Order.**
 
@@ -978,14 +978,14 @@ Each has a recommendation; the plan assumes it.
 
 ## 15. Risks
 
-- **The store becomes a dump.** Many sessions making dev runs could bury the history. The defences are the purpose default, the baseline guard, Trends' default, studies and the item filter; retention handles the rest.
+- **The store becomes a dump.** Many sessions making dev runs could bury the history. The defenses are the purpose default, the baseline guard, Trends' default, studies and the item filter; retention handles the rest.
 - **Studies nobody concludes.** Open studies pile up. Overview lists open studies with their latest note, and the tracker's Work page shows the ones behind decisions. A study with no runs for a while is flagged as stale on Studies, by count of newer runs on its item, not by a date.
-- **Verdicts that overreach.** A verdict claims more than its runs show. The defences are citations with what each run showed, warnings for invalid runs or mixed hardware classes, and the owner's step on decisions.
+- **Verdicts that overreach.** A verdict claims more than its runs show. The defenses are citations with what each run showed, warnings for invalid runs or mixed hardware classes, and the owner's step on decisions.
 - **Sweeps that cost too much.** Grids grow fast. The printed point count, the confirmation above 60 browser runs and early stop limit it; the skill says to cut axes first.
 - **A setting that isn't applied.** The registry closes the silent no-op for known settings. CS-393's test reads a setting back from the page, so an adapter that stops applying it fails a test, not a study.
 - **Example scenes drift from the examples.** An example may change its parameters or presets. Declared parameters make the CLI fail loudly when one disappears, and group D image checks show a changed look.
 - **Timings from a busy machine.** The lock serializes runs, but a person's open dev server still renders. The run records other GPU processes and flags them. Development runs are judged within one run, against the base engine, which cancels most of it.
-- **The hub as an attack surface.** It listens on the LAN while it runs and serves the run's pages. The defences:
+- **The hub as an attack surface.** It listens on the LAN while it runs and serves the run's pages. The defenses:
   - private source addresses only;
   - a device token on every request, except the pairing exchange (which needs a one-time code) and the public certificate page;
   - revocation from Dyno;
@@ -993,15 +993,15 @@ Each has a recommendation; the plan assumes it.
   - nothing listening when the hub isn't running.
 
   The runner opens no port at all.
-- **The certificate authority's key.** Whoever holds it can sign certificates that paired devices trust. The defences:
+- **The certificate authority's key.** Whoever holds it can sign certificates that paired devices trust. The defenses:
   - it never leaves `~/.cesium-bench/ca/` (readable by the user only), and never enters the repo, an archive or a request;
-  - Name Constraints limit what it can sign to `.local` names and private addresses, where the platforms honour them;
+  - Name Constraints limit what it can sign to `.local` names and private addresses, where the platforms honor them;
   - `ca rotate` replaces it, and devices re-pair.
 - **Devices that don't trust the authority.** Some Android browsers ignore user-installed authorities. CS-408 records which; those browsers take part over `adb` (Chrome on the phone's `localhost`) or not at all.
 - **Studies out of sight on branches.** A study lives on its branch until it merges. `studies --all-branches` and the Studies page read other local branches through git, and the agent's report names the branch. Two branches editing one study conflict like any file; the tracker's claim on the study's item keeps one owner at a time.
 - **Timings skewed by the link.** Engine assets cross the LAN in every cold context. "Served remotely" is part of the machine identity, the link is measured and flagged, and first content and settle are named as affected. Within-run comparisons, where every engine pays the same, stay the default.
 - **Version drift between the machines.** Playwright, the browser and the flags must match. The runner reports all three and the Mac refuses a mismatch with the fix.
-- **Secrets in metadata or requests.** URLs, recordings and requests could carry keys. The defences:
+- **Secrets in metadata or requests.** URLs, recordings and requests could carry keys. The defenses:
   - requests are classified by host, never stored as URLs;
   - recording metadata keeps only allowlisted parameters;
   - everything on the LAN is HTTPS or TLS WebSocket under the local authority, and neither the hub nor the runner logs page traffic, URLs or tokens;

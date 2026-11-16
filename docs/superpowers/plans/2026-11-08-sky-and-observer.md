@@ -12,7 +12,7 @@
 - **A stage** declares its slot, what it reads, and whether it's physics, a model or a look. A host application can add one. Built-in multi-pass stages (glare) use an internal form of the same thing, registered in the same graph function.
 - **The sky data pack** is a folder of a manifest, points and a background. The engine knows nothing of where it came from. A script builds it in a local store. A Vite plugin refuses to emit an uncleared pack. Today's map stays the default.
 - **Stars** stay scene data: a `StarField` of typed arrays. The rasterizer sorts them into 384 sky cells, culls those in compute, and draws 4-vertex strips into the star layer. Each observer sets the point spread.
-- **Glare** reads the image for its veil and a light list for the sun and the bright stars. The sun's disc is masked out of the image, and its veil is computed in closed form from its true illuminance, so no clamped pixel carries its energy. Spikes are sprites of a kernel that a worker computes once. No FFT runs in the live path.
+- **Glare** reads the image for its veil and a light list for the sun and the bright stars. The sun's disk is masked out of the image, and its veil is computed in closed form from its true illuminance, so no clamped pixel carries its energy. Spikes are sprites of a kernel that a worker computes once. No FFT runs in the live path.
 
 **Tech Stack:** TypeScript, Slang compiled to checked-in WGSL (`npm run shaders`), WebGPU, Vitest, Playwright (`bench/run.mjs`), the Vite dev server for one check page, `node:zlib` for reading EXR. No new npm dependencies.
 
@@ -75,13 +75,13 @@ Each is marked "(author's call N)" where it's used. One line each, then what und
 27. **The cull's visibility threshold divides by the chain's largest `shadowGain`,** so a look that lifts shadows can't reveal a culled star's absence. _Undo:_ one term.
 28. **The eye's point limit is a `model` stage, not a star gain.** Where nothing was drawn (depth at the far plane), it fades what stands above its surroundings below a limit: magnitude 6 dark-adapted, brighter in proportion to the rods' threshold at the eye's adaptation. Only with the eye, and skipped above 30 cd/m² of adaptation. _Undo:_ remove the stage.
 29. **No special path for stars beside a sunlit Earth.** Physics shows none there, as photographs do (question 3). _Undo:_ a look stage later.
-30. **`STARLIGHT` splits into a `faintStars` uniform:** all of it with today's map; half with a deep pack, in the sky seen and in the environment, plus the pack's mean background in the environment only. The half is the spike's guess at the zodiacal light's share, and is labelled a guess. _Undo:_ one number.
+30. **`STARLIGHT` splits into a `faintStars` uniform:** all of it with today's map; half with a deep pack, in the sky seen and in the environment, plus the pack's mean background in the environment only. The half is the spike's guess at the zodiacal light's share, and is labeled a guess. _Undo:_ one number.
 31. **Order:** the meter, the eye's local adaptation, the eye's point limit, the source list, the veil, the sprites, the composite, the response. Glare feeds neither the meter nor the adaptation ([custom-post-processing.md](../../design/custom-post-processing.md)). `readHdr` stays before all of it. _Undo:_ registration order.
-32. **The sun's energy.** In the veil's input, pixels inside the sun's disc count as zero. Its veil is `E × V × share × psf(r)` per pixel, in closed form, from the same level weights as the pyramid: `E` is its true illuminance through the air, from the `sunLight` table, and `V` its visibility. So it's the right size at any exposure, and it doesn't vanish as the sun leaves the screen. _Undo:_ a shader branch, at the cost of the clamp.
+32. **The sun's energy.** In the veil's input, pixels inside the sun's disk count as zero. Its veil is `E × V × share × psf(r)` per pixel, in closed form, from the same level weights as the pyramid: `E` is its true illuminance through the air, from the `sunLight` table, and `V` its visibility. So it's the right size at any exposure, and it doesn't vanish as the sun leaves the screen. _Undo:_ a shader branch, at the cost of the clamp.
 33. **Equal energy per octave of angle.** Each level's weight comes from the angle its σ covers at this field of view, over 0.1° to 60°, so a star's veil at 1° reads the same at a wide field and a long lens, and what falls outside the view is lost. _Undo:_ one function.
 34. **The veil is composed at half size, from a half-size base, then added.** _Undo:_ a target size.
 35. **`share` defaults to 0.2,** from the paper. It's a choice, not a measurement. _Undo:_ a default.
-36. **`V` is 32 taps over the disc:** depth at sample 0, the body's ellipsoid and the Moon's disc, per tap. A tap off screen counts as visible. _Undo:_ a constant.
+36. **`V` is 32 taps over the disk:** depth at sample 0, the body's ellipsoid and the Moon's disk, per tap. A tap off screen counts as visible. _Undo:_ a constant.
 37. **Stars in the list are the 2,048 brightest,** walked by one thread in order, so the brightest always win a sprite. _Undo:_ a constant.
 38. **Sprites use `draw(4, 256)` with a degenerate vertex for an unused slot,** not an indirect draw, so they avoid [indirect-draws-on-intel.md](../../design/indirect-draws-on-intel.md)'s risk. A pixel budget of 4 million per view bounds overdraw. _Undo:_ one draw call.
 39. **Kernels come from a pupil, computed once in a worker, in angle.** Apertures: `round`, `vanes`, `hex`, `blades7`. The spike's streak stays out: it read most as an effect, and its grating failed. The eye gets a veil and no spikes for now. _Undo:_ a list.
@@ -93,7 +93,7 @@ Each is marked "(author's call N)" where it's used. One line each, then what und
 
 Where the sources disagree.
 
-1. **[water-and-sun-glare.md](../../design/water-and-sun-glare.md) says glare "needs the sun's disc to keep its true luminance rather than being clamped". [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md) says its energy comes "from the list and not from clamped pixels".** _Ruling:_ [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md), the later and the owner's. The disc stays clamped in the image (call 32).
+1. **[water-and-sun-glare.md](../../design/water-and-sun-glare.md) says glare "needs the sun's disk to keep its true luminance rather than being clamped". [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md) says its energy comes "from the list and not from clamped pixels".** _Ruling:_ [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md), the later and the owner's. The disk stays clamped in the image (call 32).
 2. **[2026-11-08-owners-calls-for-later-plans.md](../../decisions/2026-11-08-owners-calls-for-later-plans.md) assigns the star exposure's removal to 5e. [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md) moves it before 5b.** _Ruling:_ [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md), as the owner's order. See "What other plans need".
 3. **[2026-11-08-owners-calls-for-later-plans.md](../../decisions/2026-11-08-owners-calls-for-later-plans.md) holds raw Gaia and Hipparcos as optional and off. The hybrid needs a bright-end catalog, and HYG is built on Hipparcos.** _Ruling for now:_ "raw" means the ESA files, so HYG may be the default in a local pack, uncleared, with its stacking written in its manifest (call 14). The terms stay unsettled, and this plan concludes nothing about them. The owner can change it (question 2).
 4. **The `Viewer` set `EYE_STARS_EV100` to −3 for "about 1.x's brightness" (r43). The owner's rule is no gains on scene light for looks.** _Ruling:_ the owner's rule. Star brightness against 1.x's sky box isn't a parity target. No gated suite draws it. Dyno's side-by-side Viewer will differ, and the example says so.
@@ -107,7 +107,7 @@ Copied from 5d where they apply, with this plan's additions.
 - **Scene data and rasterizer data stay apart:** `src/scene/observer.ts`, `src/scene/postStage.ts`, `src/atmosphere/skyPack.ts`, `src/atmosphere/starCells.ts`, `veilWeights.ts` and `glareKernel.ts` hold no GPU types, and `test/importBoundary.test.ts` says so. Don't add a renderer interface.
 - **Earth-only scenes with no sky are unchanged:** the parity suites show no pixel difference at any task. Metal can reorder a float sum when a kernel's code changes, so explain any difference before accepting it.
 - **Sky data during R&D ([2026-11-08-owners-calls-for-later-plans.md](../../decisions/2026-11-08-owners-calls-for-later-plans.md)):** no sky data, derived data or derived images in the repository, on a server of ours, in a library build, or in the handbook's file. Fetched by a script into the store, on the developer's machine. Stills and pack files never go in a commit. Numbers do.
-- **Licences:** describe what a page says, with the date read. Don't write a legal conclusion, and don't describe the situation as resolved.
+- **Licenses:** describe what a page says, with the date read. Don't write a legal conclusion, and don't describe the situation as resolved.
 - **Pay for what you use:** a Viewer with no pack and no glare loads nothing new and allocates no new target. `scripts/checkBundle.mjs` and `test/libraryWidgets.test.ts` hold.
 - **Allocation:** steady-state ticks allocate nothing new, with glare and stages on (`alloc`).
 - **GPU safety:** see "GPU safety". Every loop has a constant bound. Node tests first. One small browser page at a time, on the task's own port. Never use the server on 127.0.0.1:5190. If the device is lost, stop and find out why.
@@ -312,7 +312,7 @@ No picture changes. EV100 stays the unit.
 - [ ] **Step 5: Browser check** (port 5195, `spikes/observer.html`, group `stages`): a stage that inverts red changes a known pixel; a no-op `exposed` stage differs from none by at most 1/255 on every pixel; a stage reading `depth` shows the terrain's outline; a stage returning NaN shows as 0 at that pixel only, since the chain's glue replaces a non-finite result (Review Focus 3); two views with different stages; a clean console. Stop the server.
 - [ ] **Step 6: Commit** with "render: post stages: a first public interface, with slots, kinds and declared reads".
 
-### Task 3: The astrophoto tone curve, labelled
+### Task 3: The astrophoto tone curve, labeled
 
 A look, as a stage, over the whole image. It's built only on Task 2's public interface, which is part of what it proves.
 
@@ -332,7 +332,7 @@ A look, as a stage, over the whole image. It's built only on Task 2's public int
 - [ ] **Step 2: Run** and confirm it fails.
 - [ ] **Step 3: Implement.** WGSL text in the stage, from the spike's finding (asinh on luminance, black point, 1.4× saturation at full strength). The spike's stretch inside the sky shader isn't carried over.
 - [ ] **Step 4: Run** the test and tsc. Browser check (port 5195, group `curve`): with the stage, an Earth pixel and a star pixel both change by what `astroCurve` says, within 2/255, with the meter's reading unchanged.
-- [ ] **Step 5: Commit** with "render: the astrophoto curve, a labelled look over the whole image".
+- [ ] **Step 5: Commit** with "render: the astrophoto curve, a labeled look over the whole image".
 - [ ] **Step 6: Batch A's gates** (see "Batches and gates"). Expect no pixel difference in any suite. Report the `alloc` numbers.
 
 ## Batch B: the sky data pack
@@ -360,7 +360,7 @@ A look, as a stage, over the whole image. It's built only on Task 2's public int
         terms: string; // what its page says, with the date read
       }>;
       credits: readonly string[]; // shown by the Viewer, as text
-      modelled: readonly string[]; // what is modelled rather than measured
+      modeled: readonly string[]; // what is modeled rather than measured
       points: { file: string; count: number; floatsPerStar: 8 };
       background: {
         file: string;
@@ -432,7 +432,7 @@ A look, as a stage, over the whole image. It's built only on Task 2's public int
 - Produces (author's calls 13 to 17, 21):
   - `npm run sky -- fetch`, `build [--recipe id] [--background 1024|2048] [--catalog file --allow-unsettled-terms]`, `info`. Into `SKY_DATA_DIR`, default `~/.cesium-bench/sky`. It refuses an output inside any git worktree;
   - `readExr(bytes): { width; height; channels: Record<string, Float32Array> }`: scanline, half or float, ZIP compression (`compression` 3, as the NASA files use; checked for this plan). Others are refused, naming the compression. All sizes are checked before allocating, and a width or height over 32,768 is refused;
-  - `findPeaks(luminance, width, height): Peak[]`: local maxima with the window stretched in x with latitude; flat tops merged to one (clipped discs); a centroid per peak, in RA and Dec; threshold 0.0035; findings from the spike's `c_points.py`, rewritten without its dependencies;
+  - `findPeaks(luminance, width, height): Peak[]`: local maxima with the window stretched in x with latitude; flat tops merged to one (clipped disks); a centroid per peak, in RA and Dec; threshold 0.0035; findings from the spike's `c_points.py`, rewritten without its dependencies;
   - `fitFluxCurve(pairs: { flux; magnitude }[]): (flux) => magnitude`: monotonic and piecewise linear, by binned medians;
   - `mergeHybrid(catalog, mapStars, split = 7): Star[]`: catalog stars at the split or brighter; map stars below it that match no catalog star within 2 arcminutes; brightest first;
   - `starColor(bv: number): [r, g, b]`, luminance 1: Ballesteros 2012's temperature, a blackbody through the CIE functions;
@@ -441,14 +441,14 @@ A look, as a stage, over the whole image. It's built only on Task 2's public int
 
 - [ ] **Step 1: Write the failing test** (`test/skyPackBuild.test.ts`, all fixtures synthetic, made in the test; injected `fetch`, no network):
   - an EXR written by the test (ZIP, half float, 3 channels) reads back within half-float rounding; a PIZ header is refused by name; a claimed 100,000 × 100,000 is refused before allocating;
-  - `findPeaks` finds Gaussians placed at known RA and Dec within 0.3 texels; a flat-topped disc counts once; a disc stretched in x at Dec 85° counts once, while two peaks 3 texels apart at the equator stay two; a star on the RA seam counts once;
+  - `findPeaks` finds Gaussians placed at known RA and Dec within 0.3 texels; a flat-topped disk counts once; a disk stretched in x at Dec 85° counts once, while two peaks 3 texels apart at the equator stay two; a star on the RA seam counts once;
   - `fitFluxCurve` recovers a known non-linear curve within 0.05 magnitudes (accuracy against a truth the test chose), and is monotonic with noisy pairs;
   - `mergeHybrid`: a bright star in both comes from the catalog only; a faint one in the map stays; a catalog star at magnitude 8 isn't used; output is brightest first;
   - `starColor`: B−V 1.85 is redder than B−V −0.03, luminance 1 within 10⁻⁶;
   - `build` on a tiny synthetic source: its output passes `parseManifest`, `readPoints` and `readBackground`; `distributable` is false, and the sources and credits are listed; a run with the output inside the repository is refused; `--catalog` without `--allow-unsettled-terms` is refused, naming the flag, and with it the source shows in the manifest as supplied locally;
   - `RECIPES`: every recipe's flag is false; no recipe's URL holds `gea.esac.esa.int`, `cosmos.esa.int` or `cds.unistra.fr`; every source has `terms` with a date.
 - [ ] **Step 2: Run** and confirm it fails.
-- [ ] **Step 3: Implement.** The URLs come from NASA SVS 4851's page and HYG's repository. Read each page again before writing its `terms`: the licence report warns that its quotes are pointers. If `scratchpad/star-spike-data/` still holds the files, take the SHA-256 and sizes from them; otherwise pin them on the first fetch and say so in the commit. Treat downloads as untrusted: `verifiedDownload`, and the reader's checks.
+- [ ] **Step 3: Implement.** The URLs come from NASA SVS 4851's page and HYG's repository. Read each page again before writing its `terms`: the license report warns that its quotes are pointers. If `scratchpad/star-spike-data/` still holds the files, take the SHA-256 and sizes from them; otherwise pin them on the first fetch and say so in the commit. Treat downloads as untrusted: `verifiedDownload`, and the reader's checks.
 - [ ] **Step 4: Run** the test and tsc.
 - [ ] **Step 5: A real run on this machine** (it fetches about 300 MB; a heavy job, so run it when nothing else is measuring): `npm run sky -- fetch`, `npm run sky -- build`, then `SKY_DATA=1 npx vitest run test/data/skyPack.test.ts`. That data test checks: between 450,000 and 700,000 stars; counts brighter than magnitude 8 within 15% of Allen's 41,000, and 9 within 15% of 120,000; Sirius, Canopus and Arcturus within 0.1 magnitudes of −1.46, −0.74 and −0.05; the mean background between 0.5 and 2.5 × 10⁻⁴ cd/m², since the spike's level is good to maybe a factor of 2. Those are published facts, and the test holds no pack data. These counts agree with what the calibration used, so they are a check of the build, not independent proof.
 - [ ] **Step 6: Commit** with "scripts: build a local sky pack, never distributable, from fetched sources".
@@ -584,7 +584,7 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
 - [ ] **Step 2: Run** and confirm they fail.
 - [ ] **Step 3: Implement.** `npm run shaders`. Read the Metal of `skyStarsFragment`, `skyFromTableFragment` and the eye limit.
 - [ ] **Step 4: Run** the tests, `test/sky.test.ts`, `test/exposureAdapt.test.ts`, `test/meterEmission.test.ts`, `test/frameSky.test.ts`, tsc. If a meter reading moves, explain it: star pixels were metered at the boosted value.
-- [ ] **Step 5: Browser check** (port 5195, group `fudges`). Read `view.readout()` as text, and take stills only for judgement:
+- [ ] **Step 5: Browser check** (port 5195, group `fudges`). Read `view.readout()` as text, and take stills only for judgment:
   - the table's rows, by scene: stars gone beside the sunlit Earth from orbit; present on a moonless night, with terrain pixels unchanged by the limit;
   - **twilight against naked-eye limits ([2026-11-08-owners-calls-for-later-plans.md](../../decisions/2026-11-08-owners-calls-for-later-plans.md)):** with the sun at −6°, −12° and −18° and a real pack or today's map, read the faintest of a list of named stars that shows above the sky at the zenith. Record the table in the commit. Published rule-of-thumb limits (from general knowledge; check them before quoting) are about magnitude 1, 3 to 4, and 6. Don't tune anything to match. A wide miss goes to the owner.
 - [ ] **Step 6: Commit** with "sky: stars take the view's exposure: remove the star exposure rule, and split STARLIGHT". State the table in the message.
@@ -606,15 +606,15 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
   - `lightListFor(view): { sun: boolean; stars: number }`: this first version of [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md)'s point 3 names what's in the list: the sun where the view draws it (`sunDisk`, with an atmosphere), and the star field's bright end. A comment says 5e adds the Moon and planets;
   - constants `GLARE_SOURCES = 256`, `GLARE_BRIGHT_STARS = 2048`, `GLARE_DISC_TAPS = 32`, `GLARE_SPRITE_PIXELS = 4_000_000`, `GLARE_SPRITE_MAX_RADIUS = 512`, each with a source pin against the shader's;
   - kernel `glareSources`: `[numthreads(1, 1, 1)]`, writing a per-view storage buffer of a header and `GlareSource { float2 pixel; float radius; float visibility; float3 light; float kind }`, in lux through the air. Record 0 is always the sun, with visibility 0 if there's none;
-  - `discTaps(n: number): [x, y][]`: a Vogel spiral in the unit disc, as a constant table, pure;
-  - `tapVisible`: depth at sample 0 at the far plane, off screen counts as visible, then the ray misses the body's ellipsoid (the same scaled-sphere test as `marchedSky`), then it isn't in the Moon's disc (`sky.moon`, `sky.moonSize`);
+  - `discTaps(n: number): [x, y][]`: a Vogel spiral in the unit disk, as a constant table, pure;
+  - `tapVisible`: depth at sample 0 at the far plane, off screen counts as visible, then the ray misses the body's ellipsoid (the same scaled-sphere test as `marchedSky`), then it isn't in the Moon's disk (`sky.moon`, `sky.moonSize`);
   - the sun's `light` is the `sunLight` table's value at the camera, by the mapping `sunlightThroughAir` uses, shared rather than copied; with `lighting.sunIlluminance` set to a number, that number. A star's is its illuminance times the table's color at its direction over the sun's outside the air;
   - a star becomes a source only if on screen within its radius, with visibility 1 from one tap, and bright enough at this exposure that its sprite shows: the `radii` table, from Task 14. Until then the table is empty, so only the sun is a source. The walk stops at 256 sources or the pixel budget, and the brightest come first, since `glareStars` is brightest first.
 
 - [ ] **Step 1: Write the failing test** (`test/glareSources.test.ts`). The fake GPU runs no shader, so ports of the rules are tested, with source pins on the constants, as `test/meterGuard.test.ts` does. A browser step tests the shader itself.
-  - `discTaps(32)`: all in the unit disc, with a centroid within 0.05 of the origin, and an even spread: half-disc coverage is within 2 taps of 16 at 8 angles;
-  - a port of `tapVisible`: a half-covered disc is 0.5 ± 0.07; two-disc overlap against the analytic eclipse fraction is within 0.05 at 10 separations; every tap off screen is 1; a sun below the horizon from the ground is 0 by the ellipsoid (Review Focus 1);
-  - moving the sun's disc across a limb in 64 steps, no step changes visibility by over 2/32 (no pop);
+  - `discTaps(32)`: all in the unit disk, with a centroid within 0.05 of the origin, and an even spread: half-disk coverage is within 2 taps of 16 at 8 angles;
+  - a port of `tapVisible`: a half-covered disk is 0.5 ± 0.07; two-disk overlap against the analytic eclipse fraction is within 0.05 at 10 separations; every tap off screen is 1; a sun below the horizon from the ground is 0 by the ellipsoid (Review Focus 1);
+  - moving the sun's disk across a limb in 64 steps, no step changes visibility by over 2/32 (no pop);
   - the walk: with 3,000 bright stars it stops at 256 and keeps the 256 brightest; with four huge sprites it stops at the pixel budget; with a test table, a star with a shown value below its cut isn't a source;
   - `lightListFor`: no sun with `background: "color"` or `sunDisk` false; zero stars with no field;
   - glare off: no pass acquires anything, and the buffer isn't written;
@@ -640,7 +640,7 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
   - `VEIL_LEVELS = 9`; `veilWeights(pixelAngle: number, levels: number, basePixels: number): Float32Array`: each level's share of the energy, equal per octave of angle from 0.1° to 60°. A level's σ is `basePixels × 2^i` pixels, or that times `pixelAngle` in angle. Octaves finer than level 0's go to level 0, and octaves wider than the top level are lost. Zeros, not NaN, for a `pixelAngle` that isn't positive and finite;
   - `veilSpread(r: number, weights, basePixels): number`: per pixel², the closed form that the pyramid amounts to for a point, `Σ wᵢ exp(−r² / 2σᵢ²) / (2π σᵢ²)`, the same in `glare.slang`;
   - `sunVeil(pixelOffset, pixelSolidAngle, light, visibility, share, weights, basePixels, z): [r, g, b]`, pure, with a fade from z 0.15 to 0.05, so the sun behind the camera adds nothing;
-  - **Passes,** declared as a `scene` stage's `passes` and `textures` (call 9), the sun's record and the weights set per view in `perView`: `glare.input` writes level 0 of `glare.pyramid` (half size, `rgba16float`, mips): the image, clamped to 10,000, with pixels inside the sun's disc as zero; `glare.down.N`, 4 bilinear taps; `glare.veil`, half size: `share × Σ wᵢ bicubic(level i)` plus `sunVeil`; `glare.composite`, into `glare.image` (full size, `rgba16float`): `min(image, 10000) × (1 − share Σwᵢ) + veil`, with anything not finite replaced by 0;
+  - **Passes,** declared as a `scene` stage's `passes` and `textures` (call 9), the sun's record and the weights set per view in `perView`: `glare.input` writes level 0 of `glare.pyramid` (half size, `rgba16float`, mips): the image, clamped to 10,000, with pixels inside the sun's disk as zero; `glare.down.N`, 4 bilinear taps; `glare.veil`, half size: `share × Σ wᵢ bicubic(level i)` plus `sunVeil`; `glare.composite`, into `glare.image` (full size, `rgba16float`): `min(image, 10000) × (1 − share Σwᵢ) + veil`, with anything not finite replaced by 0;
   - the `present` pass reads `glare.image` when glare ran, by `get()`, so nothing allocates when it's off; the eye's adaptation map still reads `resolved`;
   - `View.readHdr(options?: { after?: "glare" })`, for checks; the default stays before glare.
 
@@ -653,7 +653,7 @@ The examples are rough, from general knowledge. The numbers come from `eyeRespon
   - energy: a port of composite on a flat image gives the image back within 10⁻⁶; on a point in the middle of a 1,024² grid, input plus veil holds the input's total within 2%, less what's outside the view;
   - fp16: `10000 + 256 × 200 < 65504` as constants, pinned to the shader's; a port of the composite on infinity and NaN gives finite values (Review Focus 3);
   - the graph: `meter` and `adaptation` come before `glare.input`, and neither reads a glare output; with glare off, no glare texture is acquired, and `present` binds `resolved`; the pyramid's desc has 9 mips at half size, and per-mip views are made once;
-  - the sun's mask: a port tests a pixel inside the disc's cosine as zero, and outside as itself.
+  - the sun's mask: a port tests a pixel inside the disk's cosine as zero, and outside as itself.
 - [ ] **Step 2: Run** and confirm it fails.
 - [ ] **Step 3: Implement.** `[ForceUnroll]` on the levels. Read the Metal of the veil and the composite.
 - [ ] **Step 4: Run** the test and tsc.
@@ -806,7 +806,7 @@ Skip this task if Batch E is short of time. Say so in the results. Nothing else 
 
 - [ ] **Step 1: Write the failing test** (`test/observerDocs.test.ts`): each value export of the observer, stages and pack in `api/surface.txt` is named in the README; the scene tab's "checked" date is no older than this task's; `handbook/` holds no image, file or string derived from a pack (no `CSKY` magic, and no `sky-pack` URL); `sources.ts` holds the paper, with the date read.
 - [ ] **Step 2: Docs.** The README covers the observer, stages (with what's a look), the pack, `npm run sky`, and that a pack isn't shipped. The handbook describes the engine as an embeddable rendering core, adds no roadmap, and shows no sky data. Read each outside page before adding it to `sources.ts`.
-- [ ] **Step 3: The overall plan.** A "Sky and observer results" note under [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md): measured values, calls and rulings one line each, the Intel results, or that they're still owed. Correct what's now stale: [2026-11-08-owners-calls-for-later-plans.md](../../decisions/2026-11-08-owners-calls-for-later-plans.md)'s "5e removes it", [sun-and-sky-example.md](../../design/sun-and-sky-example.md)'s table row, [custom-post-processing.md](../../design/custom-post-processing.md)'s "Not designed" and the "60,000" (three clamps), [water-and-sun-glare.md](../../design/water-and-sun-glare.md)'s disc rule (ruling 1). Write the real deferred work to [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)'s "Carried forward" list before deleting any ledger: the veil's asymmetric form from the paper; a truss across spikes; the Moon and planets in the list; the eye's color for bright stars; ambient occlusion's slot; [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md)'s graph-level slicing; a `Renderer` interface when a second one is chosen; and the terms, still unsettled. Licences get no conclusion.
+- [ ] **Step 3: The overall plan.** A "Sky and observer results" note under [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md): measured values, calls and rulings one line each, the Intel results, or that they're still owed. Correct what's now stale: [2026-11-08-owners-calls-for-later-plans.md](../../decisions/2026-11-08-owners-calls-for-later-plans.md)'s "5e removes it", [sun-and-sky-example.md](../../design/sun-and-sky-example.md)'s table row, [custom-post-processing.md](../../design/custom-post-processing.md)'s "Not designed" and the "60,000" (three clamps), [water-and-sun-glare.md](../../design/water-and-sun-glare.md)'s disk rule (ruling 1). Write the real deferred work to [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md)'s "Carried forward" list before deleting any ledger: the veil's asymmetric form from the paper; a truss across spikes; the Moon and planets in the list; the eye's color for bright stars; ambient occlusion's slot; [sky-light-and-points-unifications.md](../../design/sky-light-and-points-unifications.md)'s graph-level slicing; a `Renderer` interface when a second one is chosen; and the terms, still unsettled. Licenses get no conclusion.
 - [ ] **Step 4: Gates, once:**
   - `npx tsc --noEmit -p .`, `npx tsc --noEmit -p tsconfig.lib.json`, `npx eslint .`, `npx prettier --check .`;
   - `npm test`, `npm run test:data`, `SKY_DATA=1 npx vitest run test/data/skyPack.test.ts` where a pack exists;
@@ -868,6 +868,6 @@ Most important first. Each has the default the plan follows.
 
 1. **Should the Viewer turn glare on by default?** A tight core with no glare makes bright stars stand out less, and a veil also lowers contrast in daylight scenes. _Default:_ off until you've judged Batch D's renders; then it's one line.
 2. **HYG as the default pack's bright end.** The spike found a map alone can't do it. HYG's page states CC BY-SA 4.0. Its inputs include Hipparcos, whose ESA page states CC BY-NC 3.0 IGO, and its pages don't say how those sit together (both read 2026-11-08). _Default:_ use it locally, marked uncleared, with raw Hipparcos and Gaia supplied by hand only. Should it stay out until someone reads the terms? The plan then has no bright end to offer but what a developer supplies.
-3. **Stars beside a sunlit Earth from orbit.** With the rule gone, they vanish, as in photographs. _Default:_ accept it, with no special path. A look stage could add them later, labelled.
+3. **Stars beside a sunlit Earth from orbit.** With the rule gone, they vanish, as in photographs. _Default:_ accept it, with no special path. A look stage could add them later, labeled.
 4. **The tight core on today's map.** [2026-11-08-owners-calls-for-later-plans.md](../../decisions/2026-11-08-owners-calls-for-later-plans.md) says a checkout with no pack draws what it draws now, and also says to drop the halo. _Default:_ the data stays, the drawing improves (call 23). Say if the default look should hold until a pack is on.
 5. **Rename 5d's `Camera.lens` to `Camera.imagePlane`?** _Default:_ yes, before 5d is built. See "What other plans need".

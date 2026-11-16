@@ -4,7 +4,7 @@
 
 **Goal:** Add a gallery example, "Frames and projections", that shows the frame tree and the engineering frames working. It has three parts:
 
-- **A live tree:** each edge labelled with its kind.
+- **A live tree:** each edge labeled with its kind.
 - **Viewer overlays:** these draw the transforms on the globe.
 - **A stress-test suite:** it runs in the page, with each result checked against its tolerance and shown with its accuracy statement.
 
@@ -43,7 +43,7 @@ Plan 4b later adds three things here:
 - **R4. Everything is drawn in the engine's Earth-fixed world.**
   - A frame's placement is `frameTransform(frame, frames.itrf, t)` at the clock's time. Rendering stays Earth-fixed until plan 5.
   - Triads are scaled for visibility: a fixed fraction of the camera's distance to the frame's origin, clamped. The scale is documented on screen.
-  - The EME2000/ICRF frame bias, 23 mas, is drawn exaggerated, using a control from 1× to 10⁷× labelled with its factor.
+  - The EME2000/ICRF frame bias, 23 mas, is drawn exaggerated, using a control from 1× to 10⁷× labeled with its factor.
 - **R5. Missing data degrades the page, never breaks it.** Without the frames store or PROJ, the panel says what's missing and to run `npm run setup`. Every feature that doesn't need that data still works.
 - **R6. Load lazily.**
   - Frame data loads at start.
@@ -183,7 +183,7 @@ Plan 4b later adds three things here:
 
 ## Global Constraints
 
-- **Units.** Everything is float64 on the CPU. The GPU sees only the engine's usual camera-relative geometry. Meters, seconds, radians and degrees are labelled wherever shown.
+- **Units.** Everything is float64 on the CPU. The GPU sees only the engine's usual camera-relative geometry. Meters, seconds, radians and degrees are labeled wherever shown.
 - **Example contract.** The module follows `examples/types.ts`:
   - `run(context)` builds in its own viewer and returns a `Dispose`;
   - disposables go in `context.scope`;
@@ -379,7 +379,7 @@ Plan 4b later adds three things here:
     - **Across 180°:** two equator points at ±179.999° have a measured straight-line distance of 2a·sin(Δλ/2) within 1e-9 m.
   - **"Space"** (needs `orion`):
     - **Light time and Doppler** from DSS-43 to Orion against plan 3's SPICE-derived fixture, `test/fixtures/frames/signal.json`, with plan 3's tolerances. Import the fixture; don't copy it.
-    - **Line of sight from DSS-43**, at two instants near the flyby taken from the OEM: one where Orion is behind the Moon and one hours earlier where it's clear. Each verdict is checked by hand geometry: the angle between the directions to the Moon's centre and to Orion, against asin(1737.4 km / Moon distance), plus whether Orion is farther than the Moon.
+    - **Line of sight from DSS-43**, at two instants near the flyby taken from the OEM: one where Orion is behind the Moon and one hours earlier where it's clear. Each verdict is checked by hand geometry: the angle between the directions to the Moon's center and to Orion, against asin(1737.4 km / Moon distance), plus whether Orion is farther than the Moon.
     - **Effect sizes (R11):**
       - the frame bias at the Moon's distance, as the EME2000 against EARTH_ICRF difference of a point there, against the bias angle times r (about 43 m);
       - the GCRF scaling at the Moon's distance, against r·(GM☉/(c²·r☉) + L_C);
@@ -401,7 +401,7 @@ Plan 4b later adds three things here:
     - **GDA94 to GDA2020:** check the ICSM GDA2020 Technical Manual's worked example of the 7-parameter transformation, hand-coded in the case, with its values in `references.json`. Show its size (about 1.8 m) as an effect size.
     - **Through the library:** run the same point through `resolveOperation`. If the library picks the conformal grid, which isn't in the store, the case expects the throw naming that grid (R7).
     - **Drift:** Australia's drift in ITRF2014, in cm per year, from the published plate-motion model's Euler-pole rates, as an effect size. "How fast does a map go stale?"
-  - **"Below the ellipsoid"** (mining and tunnelling):
+  - **"Below the ellipsoid"** (mining and tunneling):
     - **Elevation factors:** at h = −500 m and −2000 m, against R/(R+h) with R the Gaussian mean radius, to 1e-12. They're greater than 1.
     - **A tunnel:** two portals 5 km apart at h = +300 m, with the tunnel at h = −200 m. Check the ground distance at tunnel level against the grid distance, through the combined factor, against the hand formula, to 1e-9 relative.
     - **A guard:** a station at negative ellipsoid height doesn't block its own line of sight. This is plan 3's fixed bug, guarded here.
@@ -651,7 +651,7 @@ Plan 4b later adds three things here:
      - triads;
      - the California design grid with true-north lines;
      - a site grid (θ = 12.5°, s = 1.0000375) over it;
-     - the rigid and exact 20 km line, with its sag labelled at the far end;
+     - the rigid and exact 20 km line, with its sag labeled at the far end;
      - round-trip markers from the last test run;
      - Orion's path, drawn in GCRF, ITRF or MOON_ME;
      - distortion: Tissot ellipses and combined-factor contours in ppm, with a CRS chooser (California state plane 6420, UTM 10N, Web Mercator 3857, and the low-distortion zone, which flies to its own site) and a height control;
@@ -672,7 +672,7 @@ Plan 4b later adds three things here:
   - Build a static prototype with the real panel code and stub data, then take screenshots in light and dark, at desktop and narrow widths.
   - The controller dispatches a UX review on the most capable model. It checks against Nielsen's heuristics, WCAG 2.2 AA and R16's two audiences. Fix its findings.
   - Send the screenshots to the owner. This doesn't block: the owner may redirect, and the design iterates once built.
-- [ ] **Step 1: Write** `main.ts` (and `panel.tsx`), and register the example in `examples/index.ts`. The description: "The frame tree and engineering frames, drawn on the globe and stress-tested in the page: every edge labelled, every result checked against its tolerance."
+- [ ] **Step 1: Write** `main.ts` (and `panel.tsx`), and register the example in `examples/index.ts`. The description: "The frame tree and engineering frames, drawn on the globe and stress-tested in the page: every edge labeled, every result checked against its tolerance."
 - [ ] **Step 2: Check it in the browser.**
   - Start the dev server (`preview_start` "dyno") and open `/#/examples/frames-explorer`.
   - **Tree:**
@@ -681,7 +681,7 @@ Plan 4b later adds three things here:
     - **Far-from-origin precision:** this answers the engine user's question "why does my model shake far from the origin?". Fly to the lunar south-pole site's triad, 384,000 km from the Earth-fixed origin, at a camera distance of about 100 m, and orbit it slowly. The triad doesn't jitter. Take two screenshots from the same camera pose and confirm the triad hasn't moved. Describe both in the report.
   - **Overlays:**
     - Turning on the design grid shows grid lines and true-north lines diverging away from the central meridian.
-    - The rigid and exact lines separate visibly toward the far end, labelled about 31 m at 20 km (the spec's figure, section 4).
+    - The rigid and exact lines separate visibly toward the far end, labeled about 31 m at 20 km (the spec's figure, section 4).
     - Orion's path in GCRF shows the figure-eight, and in MOON_ME the far-side swing.
   - **Accuracy (R8):** every tree row, the selected node's composed statement, every overlay legend and every test row shows an accuracy. Undefined ones read "not bounded" with their reason.
   - **Loading (R9):** with Chromium's network throttling at "Slow 4G" in the page's dev tools (or the preview's equivalent), turning on the design grid shows PROJ's fetch progressing in Status and an inline spinner on the toggle until the grid draws. Turning on Orion's path does the same for the OEM.
