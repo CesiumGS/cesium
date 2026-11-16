@@ -537,7 +537,7 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 0 of 22 done, 8 ready, 3 blocked, 11 proposed.
+CS-191, Planned, led by owner: 1 of 22 done, 8 ready, 2 blocked, 11 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -570,7 +570,7 @@ No milestone
 - [?] CS-279 More terrain and imagery providers, and several imagery layers on one globe. Proposed. Needs nothing.
 - [?] CS-280 Thin wrappers for ion's REST API, including element metadata. Proposed. Needs CS-269.
 - [ ] CS-452 decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?. Needs nothing. Decided by owner.
-- [ ] CS-551 decision: Does content from every kind of source, the globe included, load through one module seam built now?. Needs nothing. Decided by owner.
+- [x] CS-551 decision: Does content from every kind of source, the globe included, load through one module seam built now?. Done.
 - [ ] CS-553 What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline. Needs nothing.
 
 ### Sky, light and atmosphere

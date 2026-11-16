@@ -127,7 +127,7 @@ CS-191 Content sources and formats
   CS-274  decision: glTF 1.0 and deprecated extensions: upgrade on load, or drop?
   CS-275  decision: Which of M6's remaining showcases to build: splats, compute point clouds, WebXR, headless Dawn?
   CS-452  decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?
-  CS-551  decision: Does content from every kind of source, the globe included, load through one module seam built now?
+  CS-552  The content-source seam: one interface every source module implements, designed and planned
   CS-553  What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline
 
 CS-192 Sky, light and atmosphere

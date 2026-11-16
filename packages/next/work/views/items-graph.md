@@ -341,7 +341,7 @@ graph LR
     CS_279["CS-279 More terrain and imagery providers, and several imagery layers "]:::proposed
     CS_280["CS-280 Thin wrappers for ion's REST API, including element metadata"]:::proposed
     CS_452["CS-452 How should semantic metadata reach the engine, and what does pi"]:::decision
-    CS_551["CS-551 Does content from every kind of source, the globe included, loa"]:::decision
+    CS_551["CS-551 Does content from every kind of source, the globe included, loa"]:::done
     CS_552["CS-552 The content-source seam: one interface every source module impl"]:::open
     CS_553["CS-553 What 3D Tiles costs an application that doesn't use them, measu"]:::open
     CS_554["CS-554 3D Tiles loads through the content-source seam, with a @cesium/"]:::proposed

@@ -594,7 +594,7 @@ No milestone
 
 ### Content sources and formats
 
-[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 0 of 22 done, 8 ready, 3 blocked, 11 proposed.
+[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 1 of 22 done, 8 ready, 2 blocked, 11 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token ([CS-497](./milestones/CS-497-cesium-ion-is-a-swappable-module-with-a-default.md), Planned)
 
@@ -627,7 +627,7 @@ No milestone
 - [?] [CS-279](./items/CS-279-more-terrain-and-imagery-providers-and-several.md) More terrain and imagery providers, and several imagery layers on one globe. Proposed. Needs nothing.
 - [?] [CS-280](./items/CS-280-thin-wrappers-for-ion-s-rest-api-including.md) Thin wrappers for ion's REST API, including element metadata. Proposed. Needs CS-269.
 - [ ] [CS-452](./items/CS-452-how-should-semantic-metadata-reach-the-engine.md) decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?. Needs nothing. Decided by owner.
-- [ ] [CS-551](./items/CS-551-does-content-from-every-kind-of-source-the.md) decision: Does content from every kind of source, the globe included, load through one module seam built now?. Needs nothing. Decided by owner.
+- [x] [CS-551](./items/CS-551-does-content-from-every-kind-of-source-the.md) decision: Does content from every kind of source, the globe included, load through one module seam built now?. Done.
 - [ ] [CS-553](./items/CS-553-what-3d-tiles-costs-an-application-that-doesn-t.md) What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline. Needs nothing.
 
 ### Sky, light and atmosphere
