@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-199
 outcome: "The dev server and bench suite have no open Snyk findings, share keys and ion tokens stay out of builds, and the built gallery runs from static hosting."
-constraints: [CS-358 c?, CS-359 c?, CS-360 c?, CS-413 c?]
+constraints: [CS-358 c?, CS-359 c?, CS-360 c?, CS-413 c?, CS-544 c?]
 ---
 
 ## Done when
