@@ -188,7 +188,7 @@ const toolIcons = {
  *
  * @private
  */
-const EditorToolbarIcons = Object.freeze({
+const EditorToolbarIcons = {
   /**
    * The Object Mode (<code>none</code>) and Edit Mode (<code>edit</code>) icons.
    * @type {Object<string, EditorToolbarIcon>}
@@ -206,6 +206,8 @@ const EditorToolbarIcons = Object.freeze({
    * @type {Object<string, EditorToolbarIcon>}
    */
   tool: toolIcons,
-});
+};
+
+Object.freeze(EditorToolbarIcons);
 
 export default EditorToolbarIcons;
