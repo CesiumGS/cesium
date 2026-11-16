@@ -114,6 +114,11 @@ function reverseTriangleWindingOrder(geometry) {
     for (const name in attributes) {
       if (attributes.hasOwnProperty(name)) {
         const attribute = attributes[name];
+        // GeometryAttributes creates own properties for unused attributes
+        // (e.g. normal, st, color) with an undefined value.
+        if (!defined(attribute) || !defined(attribute.values)) {
+          continue;
+        }
         const values = attribute.values;
         const numberOfComponents = attribute.componentsPerAttribute;
         const numberOfVertices = values.length / numberOfComponents;
@@ -143,6 +148,12 @@ function transformToWorldCoordinates(
   const length = instances.length;
   let i;
 
+  // The primitive matrix is modified below on the un-baked path, so record its
+  // determinant sign first. When the geometry is baked to world coordinates,
+  // the winding order is corrected against this sign.
+  Matrix4.getMatrix3(primitiveModelMatrix, scratchMatrix3);
+  const primitiveDeterminant = Matrix3.determinant(scratchMatrix3);
+
   if (!toWorld && length > 1) {
     const modelMatrix = instances[0].modelMatrix;
 
@@ -161,9 +172,6 @@ function transformToWorldCoordinates(
     // negative determinant mirrors the geometry, which flips the front face of
     // every triangle, so the winding order must be reversed to keep back face
     // culling from culling the front faces.
-    Matrix4.getMatrix3(primitiveModelMatrix, scratchMatrix3);
-    const primitiveDeterminant = Matrix3.determinant(scratchMatrix3);
-
     const mirrored = new Array(length);
     let mirroredStripOrFan = false;
     for (i = 0; i < length; ++i) {
@@ -220,6 +228,11 @@ function transformToWorldCoordinates(
       primitiveModelMatrix,
     );
   }
+
+  return {
+    toWorld: toWorld,
+    primitiveDeterminant: primitiveDeterminant,
+  };
 }
 function addGeometryBatchId(geometry, batchId) {
   const attributes = geometry.attributes;
@@ -291,7 +304,11 @@ function geometryPipeline(parameters) {
   //>>includeEnd('debug');
 
   // Unify to world coordinates before combining.
-  transformToWorldCoordinates(instances, modelMatrix, scene3DOnly);
+  const bakeInfo = transformToWorldCoordinates(
+    instances,
+    modelMatrix,
+    scene3DOnly,
+  );
 
   // Clip to IDL
   if (!scene3DOnly) {
@@ -414,7 +431,13 @@ function geometryPipeline(parameters) {
     geometries = splitGeometries;
   }
 
-  return geometries;
+  return {
+    geometries: geometries,
+    bakedToWorld: bakeInfo.toWorld,
+    bakedModelMatrixSign: bakeInfo.toWorld
+      ? Math.sign(bakeInfo.primitiveDeterminant)
+      : 0,
+  };
 }
 
 function createPickOffsets(instances, geometryName, geometries, pickOffsets) {
@@ -493,8 +516,13 @@ PrimitivePipeline.combineGeometry = function (parameters) {
 
   let offsetInstanceExtend;
   let hasOffset = false;
+  let bakedToWorld = false;
+  let bakedModelMatrixSign = 0;
   if (length > 0) {
-    geometries = geometryPipeline(parameters);
+    const pipelineResult = geometryPipeline(parameters);
+    geometries = pipelineResult.geometries;
+    bakedToWorld = pipelineResult.bakedToWorld;
+    bakedModelMatrixSign = pipelineResult.bakedModelMatrixSign;
     if (geometries.length > 0) {
       attributeLocations = GeometryPipeline.createAttributeLocations(
         geometries[0],
@@ -552,6 +580,8 @@ PrimitivePipeline.combineGeometry = function (parameters) {
   return {
     geometries: geometries,
     modelMatrix: parameters.modelMatrix,
+    bakedToWorld: bakedToWorld,
+    bakedModelMatrixSign: bakedModelMatrixSign,
     attributeLocations: attributeLocations,
     pickOffsets: pickOffsets,
     offsetInstanceExtend: offsetInstanceExtend,
@@ -1002,6 +1032,8 @@ PrimitivePipeline.packCombineGeometryResults = function (
     geometries: results.geometries,
     attributeLocations: results.attributeLocations,
     modelMatrix: results.modelMatrix,
+    bakedToWorld: results.bakedToWorld,
+    bakedModelMatrixSign: results.bakedModelMatrixSign,
     pickOffsets: results.pickOffsets,
     offsetInstanceExtend: results.offsetInstanceExtend,
     boundingSpheres: packedBoundingSpheres,
@@ -1017,6 +1049,8 @@ PrimitivePipeline.unpackCombineGeometryResults = function (packedResult) {
     geometries: packedResult.geometries,
     attributeLocations: packedResult.attributeLocations,
     modelMatrix: packedResult.modelMatrix,
+    bakedToWorld: packedResult.bakedToWorld,
+    bakedModelMatrixSign: packedResult.bakedModelMatrixSign,
     pickOffsets: packedResult.pickOffsets,
     offsetInstanceExtend: packedResult.offsetInstanceExtend,
     boundingSpheres: unpackBoundingSpheres(packedResult.boundingSpheres),

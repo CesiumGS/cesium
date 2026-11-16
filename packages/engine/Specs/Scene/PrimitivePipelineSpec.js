@@ -178,6 +178,48 @@ describe(
       ]);
     });
 
+    it("reverses non-indexed triangles when the attribute container has unused attributes", function () {
+      function makeGeometryAttributesInstance(positions, modelMatrix) {
+        const attributes = new GeometryAttributes({
+          position: new GeometryAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            values: positions,
+          }),
+        });
+
+        return new GeometryInstance({
+          geometry: new Geometry({
+            attributes: attributes,
+            indices: undefined,
+            primitiveType: PrimitiveType.TRIANGLES,
+            boundingSphere: BoundingSphere.fromVertices(positions),
+          }),
+          modelMatrix: modelMatrix,
+        });
+      }
+
+      const positions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
+      const mirrored = makeGeometryAttributesInstance(
+        positions.slice(),
+        MIRROR,
+      );
+      const normal = makeGeometryAttributesInstance(positions.slice(), OFFSET);
+
+      const results = combine([mirrored, normal], Matrix4.IDENTITY);
+      const geometry = results.geometries[0];
+
+      // GeometryAttributes creates own properties for the unused attributes
+      // (normal, st, color, ...) with an undefined value, which must be skipped.
+      expect(geometry.indices).toBeUndefined();
+      expect(geometry.attributes.position.values).toEqual([
+        0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 100.0, 0.0, 0.0, 101.0,
+        0.0, 0.0, 100.0, 1.0, 0.0,
+      ]);
+      expect(results.bakedToWorld).toBe(true);
+      expect(results.bakedModelMatrixSign).toBe(1);
+    });
+
     it("expands every strip in a batch when a mirrored strip is expanded", function () {
       const mirrored = makeInstance(
         [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0],
@@ -217,6 +259,8 @@ describe(
       // The model matrix stays on the draw command; the geometry is untouched
       expect(instance.geometry.indices).toEqual([0, 1, 2]);
       expect(results.modelMatrix.equals(Matrix4.clone(MIRROR))).toBe(true);
+      expect(results.bakedToWorld).toBe(false);
+      expect(results.bakedModelMatrixSign).toBe(0);
     });
   },
   "WebGL",
