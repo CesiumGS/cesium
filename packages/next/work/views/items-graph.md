@@ -5,7 +5,7 @@
 ```mermaid
 graph LR
   subgraph CS_8["Engine profiles"]
-    CS_20["CS-20 Facts and personas"]:::open
+    CS_20["CS-20 Facts and personas"]:::done
     CS_21["CS-21 The catalog, rules and resolver"]:::open
     CS_22["CS-22 Paths in one place, with the seam test"]:::open
     CS_23["CS-23 Support reports on 'Engine' and 'View' ('view.support', 'view.ef"]:::open
@@ -23,6 +23,7 @@ graph LR
     CS_368["CS-368 'Engine.queries' takes the application's backends"]:::open
     CS_369["CS-369 Importing an outside renderer's colour and depth"]:::proposed
     CS_507["CS-507 Silent fallbacks become support notices"]:::open
+    CS_539["CS-539 How CS-20 reaches main while the merge queue cannot verify it"]:::done
   end
   subgraph CS_9["WebGL 2 renderer"]
     CS_32["CS-32 The shader route spike: our own naga crate measured against the "]:::open

@@ -4,11 +4,11 @@
 
 ### Engine profiles
 
-CS-8, Planned, led by owner: 0 of 18 done, 2 ready, 14 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](docs/superpowers/plans/2026-11-13-engine-profiles.md).
+CS-8, Planned, led by owner: 2 of 19 done, 2 ready, 13 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](docs/superpowers/plans/2026-11-13-engine-profiles.md).
 
 Milestone: Each view knows what the device supports and why (CS-466, Planned)
 
-- [ ] CS-20 Facts and personas. Needs nothing.
+- [x] CS-20 Facts and personas. Done.
 - [ ] CS-21 The catalog, rules and resolver. Needs CS-20.
 - [ ] CS-22 Paths in one place, with the seam test. Needs CS-21.
 - [ ] CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`). Needs CS-22.
@@ -35,6 +35,7 @@ No milestone
 - [ ] CS-30 The WebGL 2 renderer's facts and support rules. Needs CS-21 and CS-35 (WebGL 2 renderer).
 - [?] CS-367 Profiles later: measured step costs, a wider governor, a fidelity bias, host facts and storage. Proposed. Needs CS-26.
 - [?] CS-369 Importing an outside renderer's colour and depth. Proposed. Needs CS-23.
+- [x] CS-539 decision: How CS-20 reaches main while the merge queue cannot verify it. Done.
 
 ### The WebGL 2 renderer
 

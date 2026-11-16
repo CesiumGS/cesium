@@ -4,8 +4,6 @@
 
 ```text
 CS-8 Engine profiles
-  CS-21  The catalog, rules and resolver
-      ← CS-20 Facts and personas
   CS-22  Paths in one place, with the seam test
       ← CS-21 The catalog, rules and resolver
   CS-23  Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
@@ -532,5 +530,5 @@ CS-18 The work tracker
       ← CS-529 Which milestones does 2.0.0 need?
         CS-532 Release 2.0.0-rc.1
 
-192 blocked
+191 blocked
 ```

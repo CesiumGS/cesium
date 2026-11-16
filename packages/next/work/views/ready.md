@@ -4,7 +4,7 @@
 
 ```text
 CS-8 Engine profiles
-  CS-20  Facts and personas
+  CS-21  The catalog, rules and resolver
   CS-368  `Engine.queries` takes the application's backends
 
 CS-9 The WebGL 2 renderer

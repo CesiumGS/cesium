@@ -3,6 +3,9 @@
 # Merged, not released
 
 ```text
+CS-8 Engine profiles
+  CS-20  Facts and personas
+
 CS-9 The WebGL 2 renderer
   CS-43  Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have
 
@@ -20,5 +23,5 @@ CS-18 The work tracker
 CS-389 Dyno as the development harness
   CS-403  Dyno's navigation rail, regrouped by what people come to do
 
-9 merged item(s) not in a release
+10 merged item(s) not in a release
 ```
