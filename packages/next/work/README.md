@@ -409,7 +409,7 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 12 of 23 done, 3 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 12 of 24 done, 4 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
@@ -428,6 +428,7 @@ Milestone: Dyno's Work page shows the live system and the release plan ([CS-561]
 - [ ] [CS-545](./items/CS-545-dyno-s-roadmap-shows-each-release-as-a-flag.md) Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it. Needs nothing.
 - [ ] [CS-547](./items/CS-547-your-move-s-in-progress-shows-the-live-run.md) Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Needs nothing.
 - [ ] [CS-562](./items/CS-562-dyno-s-work-page-lists-the-items-in-no.md) Dyno's Work page lists the items in no milestone, filterable by kind and state. Needs nothing.
+- [ ] [CS-563](./items/CS-563-dyno-s-roadmap-shows-proposed-milestones-with.md) Dyno's roadmap shows proposed milestones with dashed outlines. Needs nothing.
 
 No milestone
 

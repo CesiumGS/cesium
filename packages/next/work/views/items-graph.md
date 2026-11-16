@@ -233,6 +233,7 @@ graph LR
     CS_545["CS-545 Dyno's roadmap shows each release as a flag above the grid, aft"]:::open
     CS_547["CS-547 Your move's In progress shows the live run: dispatches in fligh"]:::open
     CS_562["CS-562 Dyno's Work page lists the items in no milestone, filterable by"]:::open
+    CS_563["CS-563 Dyno's roadmap shows proposed milestones with dashed outlines"]:::open
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external
