@@ -129,7 +129,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 0 of 27 done, 4 ready, 21 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 0 of 30 done, 4 ready, 24 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -169,6 +169,9 @@ No milestone
 - [?] [CS-373](./items/CS-373-slang-ahead-of-time-for-apps-a-cli-and-a.md) Slang ahead of time for apps: a CLI and a bundler plugin. Proposed. Needs CS-61.
 - [ ] [CS-543](./items/CS-543-cs-48-s-formula-cases-checked-against-the-whole.md) CS-48's formula cases checked against the whole KHR_interactivity spec. Needs nothing.
 - [ ] [CS-546](./items/CS-546-the-builder-s-x-0-rewrite-and-the-spec-s-signed.md) decision: The builder's x + 0 rewrite and the spec's signed zero. Needs nothing. Decided by owner.
+- [ ] [CS-548](./items/CS-548-the-ir-s-math-eq-covers-floatn-and-bool-as-khr.md) The IR's math/eq covers floatN and bool, as KHR_interactivity defines it. Needs CS-48.
+- [ ] [CS-549](./items/CS-549-the-ir-models-math-normalize-s-isvalid-output.md) The IR models math/normalize's isValid output. Needs CS-48.
+- [ ] [CS-550](./items/CS-550-the-core-ir-spike-s-evaluator-gets-dot-and.md) The core IR spike's evaluator gets dot and intToFloat's signed zero right. Needs CS-48 and CS-543.
 
 ### Live MaterialX graph editing
 

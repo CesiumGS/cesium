@@ -72,6 +72,9 @@ graph LR
     CS_373["CS-373 Slang ahead of time for apps: a CLI and a bundler plugin"]:::proposed
     CS_543["CS-543 CS-48's formula cases checked against the whole KHR_interactivi"]:::open
     CS_546["CS-546 The builder's x + 0 rewrite and the spec's signed zero"]:::decision
+    CS_548["CS-548 The IR's math/eq covers floatN and bool, as KHR_interactivity d"]:::open
+    CS_549["CS-549 The IR models math/normalize's isValid output"]:::open
+    CS_550["CS-550 The core IR spike's evaluator gets dot and intToFloat's signed "]:::open
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -871,6 +874,10 @@ graph LR
   CS_529 --> CS_533
   CS_532 --> CS_533
   CS_541 --> CS_542
+  CS_48 --> CS_548
+  CS_48 --> CS_549
+  CS_48 --> CS_550
+  CS_543 --> CS_550
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

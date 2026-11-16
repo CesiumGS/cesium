@@ -125,6 +125,13 @@ CS-10 Cesium IR
       ← CS-68 General bounded loops
   CS-371  Math ops the transform graph needs: `atanh`, `asinh`, `acosh`, `expm1`, `log1p`, `%`, `hypot`
       ← CS-48 The core (types, rates, equations, literal slots, the builder)
+  CS-548  The IR's math/eq covers floatN and bool, as KHR_interactivity defines it
+      ← CS-48 The core (types, rates, equations, literal slots, the builder)
+  CS-549  The IR models math/normalize's isValid output
+      ← CS-48 The core (types, rates, equations, literal slots, the builder)
+  CS-550  The core IR spike's evaluator gets dot and intToFloat's signed zero right
+      ← CS-48 The core (types, rates, equations, literal slots, the builder)
+        CS-543 CS-48's formula cases checked against the whole KHR_interactivity spec
 
 CS-11 Live MaterialX graph editing
   CS-76  OpenPBR tier 2 (fuzz, anisotropy, tangents)
@@ -528,5 +535,5 @@ CS-18 The work tracker
       ← CS-529 Which milestones does 2.0.0 need?
         CS-532 Release 2.0.0-rc.1
 
-191 blocked
+194 blocked
 ```
