@@ -147,6 +147,20 @@ class GeometryAttributeDescriptor {
   }
 
   /**
+   * A name that identifies the attribute: the semantic, followed by
+   * <code>_</code> and the set index if it has one, such as
+   * <code>POSITION</code>, <code>TEXCOORD_1</code> or <code>_TEMPERATURE</code>.
+   *
+   * @type {string}
+   * @readonly
+   */
+  get name() {
+    return defined(this.#setIndex)
+      ? `${this.#semantic}_${this.#setIndex}`
+      : this.#semantic;
+  }
+
+  /**
    * The type of the values returned by a {@link GeometryAttributeReader} for
    * this attribute. For example, {@link AttributeType.VEC3} for positions and
    * {@link AttributeType.VEC2} for texture coordinates. Colors are always
