@@ -185,5 +185,8 @@ CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
   CS-454  decision: What is the full version of scene items: references, groups, the globe as an item, and how close to USD?
 
-136 ready
+CS-18 The work tracker
+  CS-545  Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it
+
+137 ready
 ```

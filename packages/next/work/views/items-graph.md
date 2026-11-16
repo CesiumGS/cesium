@@ -226,6 +226,7 @@ graph LR
     CS_532["CS-532 Release 2.0.0-rc.1"]:::open
     CS_533["CS-533 Release 2.0.0"]:::open
     CS_536["CS-536 Approve a store device"]:::done
+    CS_545["CS-545 Dyno's roadmap shows each release as a flag above the grid, aft"]:::open
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external

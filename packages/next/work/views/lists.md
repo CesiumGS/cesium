@@ -348,7 +348,7 @@ No milestone
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 12 of 20 done, 0 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 12 of 21 done, 1 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
@@ -378,6 +378,7 @@ No milestone
 - [ ] CS-532 Release 2.0.0-rc.1. Needs CS-528 and CS-531.
 - [ ] CS-533 Release 2.0.0. Needs CS-529 and CS-532.
 - [x] CS-536 decision: Approve a store device. Done.
+- [ ] CS-545 Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it. Needs nothing.
 
 ### Follow-ups for other teams
 
