@@ -519,5 +519,18 @@ CS-389 Dyno as the development harness
   CS-518  A space switch in Dyno's rail: the engine and the work
       ← CS-517 The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
 
-188 blocked
+CS-18 The work tracker
+  CS-530  Release 2.0.0-alpha.1
+      ← CS-526 Which milestones does 2.0.0-alpha.1 need?
+  CS-531  Release 2.0.0-beta.1
+      ← CS-527 Which milestones does 2.0.0-beta.1 need?
+        CS-530 Release 2.0.0-alpha.1
+  CS-532  Release 2.0.0-rc.1
+      ← CS-528 Which milestones does 2.0.0-rc.1 need?
+        CS-531 Release 2.0.0-beta.1
+  CS-533  Release 2.0.0
+      ← CS-529 Which milestones does 2.0.0 need?
+        CS-532 Release 2.0.0-rc.1
+
+192 blocked
 ```

@@ -4,9 +4,9 @@
 
 ```text
 CS-1 Renderers and engine profiles [Planned], a long outcome
-  constraints: 0 of 11 done
-  unmet: not linked to a clause yet (open: CS-414, CS-415, CS-416, CS-466, CS-467, CS-468, CS-491, CS-492, CS-493, CS-502, CS-503; check not passed)
-  to shape: outcome; done_when; check; link CS-414, CS-415, CS-416, CS-466, CS-467, CS-468, CS-491, CS-492, CS-493, CS-502, CS-503 to a clause
+  constraints: 0 of 13 done
+  unmet: not linked to a clause yet (open: CS-414, CS-415, CS-416, CS-466, CS-467, CS-468, CS-491, CS-492, CS-493, CS-502, CS-503, CS-534, CS-535; check not passed)
+  to shape: outcome; done_when; check; link CS-414, CS-415, CS-416, CS-466, CS-467, CS-468, CS-491, CS-492, CS-493, CS-502, CS-503, CS-534, CS-535 to a clause
 
 CS-2 Cesium IR and materials [Planned], a long outcome
   constraints: 0 of 9 done
@@ -495,5 +495,17 @@ CS-524 The tracker runs on human-in-the-lead [Planned], under CS-18 The work tra
   check due: every constraint is done; the check has not passed
   to shape: done_when; check; link CS-520, CS-521, CS-522, CS-523 to a clause
 
-80 open milestone(s)
+CS-534 Infrastructure and geoscience data shows in 2.0 [Proposed], under CS-196 Infrastructure and geoscience capabilities
+  outcome: Scalar fields, volumes and per-element overrides draw at scale, models print to scale and align with their site in WebXR, and gallery examples show each.
+  constraints: 0 of 7 done
+  unmet: not linked to a clause yet (open: CS-337, CS-338, CS-339, CS-340, CS-341, CS-342, CS-343; check not passed)
+  to shape: done_when; check; link CS-337, CS-338, CS-339, CS-340, CS-341, CS-342, CS-343 to a clause
+
+CS-535 Rays query the scene on the GPU [Proposed], under CS-197 Ray queries and path tracing
+  outcome: Rays query the scene on the GPU, from user code too, for a viewshed, a near-field terrain trace and a progressive path-traced view.
+  constraints: 0 of 6 done
+  unmet: not linked to a clause yet (open: CS-344, CS-345, CS-346, CS-347, CS-348, CS-349; check not passed)
+  to shape: done_when; check; link CS-344, CS-345, CS-346, CS-347, CS-348, CS-349 to a clause
+
+82 open milestone(s)
 ```

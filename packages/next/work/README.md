@@ -403,7 +403,7 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 11 of 11 done, 0 ready, 0 blocked. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 11 of 19 done, 0 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
@@ -424,6 +424,14 @@ No milestone
 - [x] [CS-171](./items/CS-171-are-these-the-right-initiatives.md) decision: Are these the right initiatives?. Done.
 - [x] [CS-172](./items/CS-172-keep-the-renumbering-table.md) decision: Keep the renumbering table?. Done.
 - [x] [CS-173](./items/CS-173-which-older-open-questions-in-the-design-notes.md) decision: Which older open questions in the design notes are still open?. Done.
+- [?] [CS-526](./items/CS-526-which-milestones-does-2-0-0-alpha-1-need.md) decision: Which milestones does 2.0.0-alpha.1 need?. Proposed. Needs nothing. Decided by owner.
+- [?] [CS-527](./items/CS-527-which-milestones-does-2-0-0-beta-1-need.md) decision: Which milestones does 2.0.0-beta.1 need?. Proposed. Needs nothing. Decided by owner.
+- [?] [CS-528](./items/CS-528-which-milestones-does-2-0-0-rc-1-need.md) decision: Which milestones does 2.0.0-rc.1 need?. Proposed. Needs nothing. Decided by owner.
+- [?] [CS-529](./items/CS-529-which-milestones-does-2-0-0-need.md) decision: Which milestones does 2.0.0 need?. Proposed. Needs nothing. Decided by owner.
+- [ ] [CS-530](./items/CS-530-release-2-0-0-alpha-1.md) Release 2.0.0-alpha.1. Needs CS-526.
+- [ ] [CS-531](./items/CS-531-release-2-0-0-beta-1.md) Release 2.0.0-beta.1. Needs CS-527 and CS-530.
+- [ ] [CS-532](./items/CS-532-release-2-0-0-rc-1.md) Release 2.0.0-rc.1. Needs CS-528 and CS-531.
+- [ ] [CS-533](./items/CS-533-release-2-0-0.md) Release 2.0.0. Needs CS-529 and CS-532.
 
 ### Follow-ups for other teams
 
@@ -730,6 +738,8 @@ No milestone
 
 [CS-196](./projects/CS-196-infrastructure-and-geoscience-capabilities.md), Planned, led by owner: 0 of 7 done, 0 ready, 0 blocked, 7 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](../../../docs/design/infrastructure-and-geoscience-capabilities.md).
 
+Milestone: Infrastructure and geoscience data shows in 2.0 ([CS-534](./milestones/CS-534-infrastructure-and-geoscience-data-shows-in-2-0.md), Proposed)
+
 - [?] [CS-337](./items/CS-337-scalar-fields-on-any-geometry-values-colour.md) Scalar fields on any geometry: values, colour ramps, legends and picks. Proposed. Needs CS-265 (Vector drawing and the styling language).
 - [?] [CS-338](./items/CS-338-per-element-overrides-at-scale-through-the.md) Per-element overrides at scale, through the styling language. Proposed. Needs CS-266 (Vector drawing and the styling language).
 - [?] [CS-339](./items/CS-339-volumes-voxel-grids-ray-marched-or-as.md) Volumes: voxel grids, ray-marched or as isosurfaces. Proposed. Needs nothing.
@@ -741,6 +751,8 @@ No milestone
 ### Ray queries and path tracing
 
 [CS-197](./projects/CS-197-ray-queries-and-path-tracing.md), Planned, led by owner: 0 of 6 done, 0 ready, 0 blocked, 6 proposed. Plan: [ray-queries-where-they-run.md](../../../docs/design/ray-queries-where-they-run.md).
+
+Milestone: Rays query the scene on the GPU ([CS-535](./milestones/CS-535-rays-query-the-scene-on-the-gpu.md), Proposed)
 
 - [?] [CS-344](./items/CS-344-the-ray-query-design-when-acceleration.md) The ray-query design: when acceleration structures are built, which level of detail a ray sees. Proposed. Needs nothing.
 - [?] [CS-345](./items/CS-345-acceleration-structures-behind-acceleration-ts.md) Acceleration structures behind `acceleration.ts`. Proposed. Needs CS-344.

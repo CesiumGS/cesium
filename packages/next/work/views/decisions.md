@@ -78,5 +78,15 @@ CS-437 The public API reviews
   CS-454  What is the full version of scene items: references, groups, the globe as an item, and how close to USD? (owner)
       waited on by CS-102
 
-28 open decision(s) for owner
+CS-18 The work tracker
+  CS-526  Which milestones does 2.0.0-alpha.1 need? (owner)
+      waited on by CS-530
+  CS-527  Which milestones does 2.0.0-beta.1 need? (owner)
+      waited on by CS-531
+  CS-528  Which milestones does 2.0.0-rc.1 need? (owner)
+      waited on by CS-532
+  CS-529  Which milestones does 2.0.0 need? (owner)
+      waited on by CS-533
+
+32 open decision(s) for owner
 ```

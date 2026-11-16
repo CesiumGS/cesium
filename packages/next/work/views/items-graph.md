@@ -215,6 +215,14 @@ graph LR
     CS_521["CS-521 The tracker's files in human-in-the-lead's format"]:::done
     CS_522["CS-522 hitld's commands replace scripts/work"]:::done
     CS_523["CS-523 Dyno's board reads human-in-the-lead's read API"]:::done
+    CS_526["CS-526 Which milestones does 2.0.0-alpha.1 need?"]:::decision
+    CS_527["CS-527 Which milestones does 2.0.0-beta.1 need?"]:::decision
+    CS_528["CS-528 Which milestones does 2.0.0-rc.1 need?"]:::decision
+    CS_529["CS-529 Which milestones does 2.0.0 need?"]:::decision
+    CS_530["CS-530 Release 2.0.0-alpha.1"]:::open
+    CS_531["CS-531 Release 2.0.0-beta.1"]:::open
+    CS_532["CS-532 Release 2.0.0-rc.1"]:::open
+    CS_533["CS-533 Release 2.0.0"]:::open
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external
@@ -843,6 +851,13 @@ graph LR
   CS_520 --> CS_521
   CS_521 --> CS_522
   CS_521 --> CS_523
+  CS_526 --> CS_530
+  CS_527 --> CS_531
+  CS_530 --> CS_531
+  CS_528 --> CS_532
+  CS_531 --> CS_532
+  CS_529 --> CS_533
+  CS_532 --> CS_533
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3
