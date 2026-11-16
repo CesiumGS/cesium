@@ -2,7 +2,8 @@
 id: CS-521
 title: The tracker's files in human-in-the-lead's format
 kind: work
-status: Planned
+status: In progress
+claimed: hitld-migration
 created: 2026-11-15
 project: CS-18
 needs: [CS-520]
