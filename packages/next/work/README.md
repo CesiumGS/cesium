@@ -710,7 +710,7 @@ No milestone
 
 ### Development harness
 
-[CS-6](./initiatives/CS-6-development-harness.md), In progress: 6 of 59 done, 22 ready, 27 blocked, 10 proposed.
+[CS-6](./initiatives/CS-6-development-harness.md), In progress: 6 of 62 done, 23 ready, 29 blocked, 10 proposed.
 
 #### The work tracker
 
@@ -793,7 +793,7 @@ No milestone
 
 #### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 1 of 22 done, 4 ready, 17 blocked. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 1 of 25 done, 5 ready, 19 blocked. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for
 
@@ -828,9 +828,15 @@ Milestone: Other machines and devices run Dyno's scenes
 - [ ] [CS-408](./items/CS-408-the-device-lab.md) The device lab. Needs CS-394, CS-404 and CS-407.
 - [ ] [CS-411](./items/CS-411-may-the-mac-make-baseline-runs-in-the-laptop-s.md) decision: May the Mac make baseline runs in the laptop's browser?. Needs nothing. Decided by owner.
 
+Milestone: Dyno switches between the engine and the work
+
+- [ ] [CS-517](./items/CS-517-the-agent-system-s-pages-the-merge-queue-quotas.md) The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers. Needs CS-516.
+- [ ] [CS-518](./items/CS-518-a-space-switch-in-dyno-s-rail-the-engine-and.md) A space switch in Dyno's rail: the engine and the work. Needs CS-517.
+
 No milestone
 
 - [x] [CS-403](./items/CS-403-dyno-s-navigation-rail-regrouped-by-what-people.md) Dyno's navigation rail, regrouped by what people come to do. Done.
+- [ ] [CS-516](./items/CS-516-human-in-the-lead-v0-1-0-rc-1-is-released.md) external: human-in-the-lead v0.1.0-rc.1 is released. Needs nothing. Waiting on human-in-the-lead.
 
 ### Upstream follow-ups
 
