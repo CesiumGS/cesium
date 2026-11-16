@@ -2,10 +2,11 @@
 id: CS-21
 title: The catalog, rules and resolver
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-8
 needs: [CS-20]
+claimed_by: D-4
 touches: [packages/next/src/profile/**]
 ---
 
