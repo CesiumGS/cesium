@@ -1,7 +1,6 @@
 import { readFileSync } from "fs";
 /**
- * Reads the reviewed "NEEDS SHIM" list that scripts/generateCoreReExportShims.js
- * uses to generate the shim files, e.g. for packages/engine/Source/Core/Deprecated/
+ * Reads the reviewed "NEEDS SHIM" list, e.g., for packages/engine/Source/Core/Deprecated/
  * @param {string} candidatesPath The path of the TXT file with the shim info
  * @returns {string[]} The shim list
  * @throws {Error} When no 'NEEDS SHIM' is found in the specified file

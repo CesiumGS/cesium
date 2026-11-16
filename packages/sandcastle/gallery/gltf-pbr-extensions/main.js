@@ -191,6 +191,10 @@ const modelOptions = [
     text: "Clear Coat Car Paint",
     onselect: () => loadModel(2584328),
   },
+  {
+    text: "Compare Emissive Strength",
+    onselect: () => loadModel(6061592),
+  },
 ];
 Sandcastle.addToolbarMenu(modelOptions, "modelsToolbar");
 loadModel(2584329);

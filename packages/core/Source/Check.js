@@ -4,11 +4,15 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * Contains functions for checking that supplied arguments are of a specified type
  * or meet specified conditions
+ *
+ * @type {object}
  */
 const Check = {};
 
 /**
  * Contains type checking functions, all using the typeof operator
+ *
+ * @type {object}
  */
 Check.typeOf = {};
 

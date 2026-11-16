@@ -1,5 +1,6 @@
 id: no-package-types-for-local-declarations
 valid:
+  # functions
   - function fn () {}
   - /** @ignore */ function a () {};
   - /** @private */ function a () {};
@@ -7,10 +8,32 @@ valid:
   - /** @private */ function a () {}; export { a };
   - /** @ignore */ function a () {}; export default a;
   - /** @private */ function a () {}; export default a;
+
+  # variables
+  - const a = 1;
+  - /** @ignore */ const a = 1;
+  - /** @ignore */ const a = 1; export { a };
+  - /** Lorem ipsum. */ const a = 1; export { a };
+  - /** Lorem ipsum. */ const a = 1; export default Object.freeze(a);
+
+  # classes
+  - class A {};
+  - /** @ignore */ class A {};
+  - /** @ignore */ class A {}; export { A };
+  - /** Lorem ipsum. */ class A {}; export { A };
 invalid:
+  # functions
   - /** Lorem ipsum. */ function a () {};
   - /** Lorem ipsum. */ function a () {};
   - /** Lorem ipsum. */ function a () {}; export { b };
   - /** Lorem ipsum. */ function a () {}; export { b };
   - /** Lorem ipsum. */ function a () {}; export default b;
   - /** Lorem ipsum. */ function a () {}; export default b;
+
+   # variables
+  - /** Lorem ipsum. */ const a = 1;
+  - /** Lorem ipsum. */ const a = 1; export { b };
+
+   # classes
+  - /** Lorem ipsum. */ class A {};
+  - /** Lorem ipsum. */ class A {}; export { B };

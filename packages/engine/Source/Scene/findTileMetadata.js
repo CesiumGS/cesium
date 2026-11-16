@@ -37,6 +37,13 @@ function findTileMetadata(tileset, tileHeader) {
   const classes = tileset.schema.classes ?? Frozen.EMPTY_OBJECT;
   if (defined(metadataJson.class)) {
     const tileClass = classes[metadataJson.class];
+    if (!defined(tileClass)) {
+      findTileMetadata._oneTimeWarning(
+        `findTileMetadata-missing-class-${metadataJson.class}`,
+        `Could not find class "${metadataJson.class}" in the metadata schema; ignoring tile metadata. Classes used by external tilesets must also be defined in the root tileset.json schema.`,
+      );
+      return undefined;
+    }
     return new TileMetadata({
       tile: metadataJson,
       class: tileClass,

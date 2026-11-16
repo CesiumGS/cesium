@@ -5,7 +5,7 @@ import { DeveloperError } from "@cesium/core";
  * object's context so that the new function is always called immediately
  * before the old one.
  *
- * @private
+ * @internal
  */
 function wrapFunction(obj, oldFunction, newFunction) {
   //>>includeStart('debug', pragmas.debug);

@@ -1,9 +1,7 @@
 // @ts-check
 
+import { globSync, mkdirSync } from "node:fs";
 import path from "node:path";
-
-import { mkdirp } from "mkdirp";
-import { globby } from "globby";
 
 import {
   glslToJavaScript,
@@ -17,25 +15,25 @@ import {
 
 /** @import {CesiumBundles} from "../../../scripts/build-utilities.js"; */
 
-export const sourceGlobs = [
-  "packages/engine/Source/**/*.js",
-  "!packages/engine/Source/*.js",
-  "!packages/engine/Source/Core/globalTypes.js",
-  "!packages/engine/Source/Workers/**",
-  "packages/engine/Source/Workers/createTaskProcessorWorker.js",
-  "!packages/engine/Source/ThirdParty/Workers/**.js",
-  "!packages/engine/Source/ThirdParty/google-earth-dbroot-parser.js",
-  "!packages/engine/Source/ThirdParty/_*",
-  // Don't export temporary file used for deprecated re-exports
-  "!packages/engine/Source/Core/Deprecated/_deprecatedCoreExport.js",
-];
-export const specGlobs = ["packages/engine/Specs/**/*Spec.js"];
+export const sourceGlobs = {
+  patterns: [
+    "Source/!(Workers|ThirdParty)/**/*.js",
+    "Source/ThirdParty/Shaders/*.js",
+    "Source/Workers/createTaskProcessorWorker.js",
+  ],
+  exclude: [
+    "Source/Core/globalTypes.js",
+    "Source/Core/Deprecated/_deprecatedCoreExport.js",
+  ],
+};
 
 // Excludes Deprecated/ shims from the combined CesiumJS build, since @cesium/core already exports those same names.
-export const combinedSourceGlobs = [
-  ...sourceGlobs,
-  "!packages/engine/Source/Core/Deprecated/**",
-];
+export const combinedSourceGlobs = {
+  patterns: sourceGlobs.patterns,
+  exclude: [...sourceGlobs.exclude, "Source/Core/Deprecated/**"],
+};
+
+export const specGlobs = { patterns: ["Specs/**/*Spec.js"] };
 
 /** Karma file patterns for runtime assets (workers, static assets, ThirdParty files, widget CSS). */
 export const runtimeTestAssetFiles = [
@@ -91,7 +89,7 @@ export const buildEngine = async (options) => {
   const write = options.write ?? true;
 
   // Create Build folder to place build artifacts.
-  mkdirp.sync("packages/engine/Build");
+  mkdirSync("packages/engine/Build", { recursive: true });
 
   // Convert GLSL files to JavaScript modules.
   await glslToJavaScript(
@@ -135,9 +133,9 @@ export const buildEngine = async (options) => {
   );
 
   // Create SpecList.js
-  const specFiles = await globby(specGlobs);
+  const specFiles = globSync(specGlobs.patterns, { cwd: "packages/engine" });
   const specListFile = path.join("packages/engine/Specs", "SpecList.js");
-  await createSpecListForWorkspace(specFiles, "engine", specListFile);
+  await createSpecListForWorkspace(specFiles, specListFile);
 
   await bundleSpecs({
     incremental: incremental,

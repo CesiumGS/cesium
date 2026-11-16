@@ -214,7 +214,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
    * True if offset/scale should be applied. If both offset/scale were
    * undefined, they default to identity so this property is set false
    *
-   * @memberof MetadataClassProperty.prototype
+   * @memberof MetadataTableProperty.prototype
    * @type {boolean}
    * @readonly
    * @private
@@ -228,7 +228,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
   /**
    * The offset to be added to property values as part of the value transform.
    *
-   * @memberof MetadataClassProperty.prototype
+   * @memberof MetadataTableProperty.prototype
    * @type {number|number[]|number[][]}
    * @readonly
    * @private
@@ -242,7 +242,7 @@ Object.defineProperties(MetadataTableProperty.prototype, {
   /**
    * The scale to be multiplied to property values as part of the value transform.
    *
-   * @memberof MetadataClassProperty.prototype
+   * @memberof MetadataTableProperty.prototype
    * @type {number|number[]|number[][]}
    * @readonly
    * @private

@@ -1,13 +1,12 @@
 import { createHash } from "node:crypto";
 import { globSync } from "node:fs";
-import { access, cp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { access, cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, relative } from "node:path";
 import { exit } from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { rimraf } from "rimraf";
 import { parse } from "yaml";
 import * as pagefind from "pagefind";
 import createGalleryRecord from "./createGalleryRecord.js";
@@ -348,7 +347,7 @@ export async function buildGalleryList(options = {}) {
     );
   }
 
-  await rimraf(outputDirectory);
+  await rm(outputDirectory, { recursive: true, force: true });
   await mkdir(outputDirectory, { recursive: true });
 
   await writeFile(join(outputDirectory, "list.json"), JSON.stringify(output));

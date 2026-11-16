@@ -303,6 +303,21 @@ describe(
       expect(c.isDestroyed()).toEqual(true);
     });
 
+    it("destroying Context loses the WebGL context", function () {
+      if (!!window.webglStub) {
+        pending("Context loss cannot be observed with the WebGL stub");
+      }
+
+      const contextToDestroy = createContext();
+      contextToDestroy.throwOnWebGLError = true;
+      // getContext returns the existing, unwrapped context for this canvas
+      const gl = contextToDestroy.canvas.getContext(
+        contextToDestroy.webgl2 ? "webgl2" : "webgl",
+      );
+      contextToDestroy.destroyForSpecs();
+      expect(gl.isContextLost()).toBe(true);
+    });
+
     it("destroying Context destroys objects in cache", function () {
       const c = createContext();
       const destroyableObject = jasmine.createSpyObj("destroyableObject", [

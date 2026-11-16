@@ -76,6 +76,18 @@ const float vectorCoverageRadius = 0.5;
 const float vectorCoverageRadius = 0.0;
 #endif
 
+// Straight-alpha "over". The base is translucent in a blended imagery pass.
+vec4 vectorAlphaOver(vec4 color, vec4 baseColor)
+{
+    float alpha = color.a + baseColor.a * (1.0 - color.a);
+    if (alpha <= 0.0)
+    {
+        return vec4(0.0);
+    }
+    vec3 rgb = (color.rgb * color.a + baseColor.rgb * baseColor.a * (1.0 - color.a)) / alpha;
+    return vec4(rgb, alpha);
+}
+
 // Drape vector polylines onto the terrain surface. The fragment's
 // tile UV picks a grid cell, then only that cell's line segments (packed in
 // tile-local UV space) are tested for proximity. Within the line width, the
@@ -158,7 +170,7 @@ vec4 vectorPolylineRender(vec2 vectorUv, vec3 positionEC, vec4 baseColor)
     ivec2 primitiveUv = vectorIndexToUv(nearestPrimitiveIndex, primitiveTextureSize);
     vec4 vectorColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
     vectorColor.a *= coverage;
-    return vectorColor * vec4(vectorColor.aaa, 1.0) + baseColor * (1.0 - vectorColor.a);
+    return vectorAlphaOver(vectorColor, baseColor);
 #else
     return baseColor;
 #endif
@@ -178,7 +190,7 @@ vec4 vectorCompositePolygonFill(vec4 baseColor, int primitiveIndex, bool inside,
 
     ivec2 primitiveUv = vectorIndexToUv(primitiveIndex, primitiveTextureSize);
     vec4 fillColor = texelFetch(u_vectorColorTexture, primitiveUv, 0);
-    return fillColor * vec4(fillColor.aaa, 1.0) + baseColor * (1.0 - fillColor.a);
+    return vectorAlphaOver(fillColor, baseColor);
 }
 
 // True if a horizontal +x ray from p crosses the edge. The half-open interval

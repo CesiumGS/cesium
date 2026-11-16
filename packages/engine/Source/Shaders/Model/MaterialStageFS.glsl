@@ -512,6 +512,10 @@ void materialStage(inout czm_modelMaterial material, ProcessedAttributes attribu
         material.emissive = u_emissiveFactor;
     #endif
 
+    #ifdef HAS_EMISSIVE_STRENGTH
+        material.emissive *= u_emissiveStrength;
+    #endif
+
     #if defined(LIGHTING_PBR) && defined(USE_SPECULAR_GLOSSINESS)
         setSpecularGlossiness(material);
     #elif defined(LIGHTING_PBR)
