@@ -158,6 +158,13 @@ class ModelPrimitiveReadSession {
   }
 
   /**
+   * @returns {number}
+   */
+  cornerCount() {
+    return this.#primitiveCount * this.#primitiveVertexCount;
+  }
+
+  /**
    * @returns {GeometryPrimitiveReader}
    */
   primitiveReader() {

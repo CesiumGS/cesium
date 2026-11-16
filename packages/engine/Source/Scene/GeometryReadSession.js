@@ -95,6 +95,16 @@ class GeometryReadSession {
   }
 
   /**
+   * Gets the number of corners in the geometry: the sum of every primitive's
+   * {@link GeometryReadSession#primitiveVertexCount}.
+   *
+   * @returns {number} The number of corners.
+   */
+  cornerCount() {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
    * Gets a function that reads the vertex indices of a primitive.
    *
    * @returns {GeometryPrimitiveReader} The primitive reader.
