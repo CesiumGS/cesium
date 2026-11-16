@@ -2,7 +2,7 @@
 id: CS-543
 title: CS-48's formula cases checked against the whole KHR_interactivity spec
 kind: work
-state: in-progress
+state: done
 created: 2026-11-15
 project: CS-10
 claimed_by: orch-5-CS-543

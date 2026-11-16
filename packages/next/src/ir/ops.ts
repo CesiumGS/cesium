@@ -270,8 +270,12 @@ export function applyValue(
       const l = Math.hypot(...v[0]!);
       return pack(v[0]!.map((x) => (l > 0 && Number.isFinite(l) ? x / l : 0)));
     }
-    case "math/dot":
-      return v[0]!.reduce((s, xi, i) => s + xi * v[1]![i]!, 0);
+    case "math/dot": {
+      // The spec's sum, a_x * b_x + a_y * b_y + ..., from the first product:
+      // starting at +0 would turn a sum of -0 products into +0.
+      const [x, y] = [v[0]!, v[1]!];
+      return x.slice(1).reduce((s, xi, i) => s + xi * y[i + 1]!, x[0]! * y[0]!);
+    }
     case "math/cross": {
       const [x, y] = [v[0]!, v[1]!];
       return [
@@ -283,7 +287,8 @@ export function applyValue(
     case "type/boolToFloat":
       return args[0] ? 1 : 0;
     case "type/intToFloat":
-      return args[0]!;
+      // "This operation MUST NOT produce negative zero."
+      return (args[0] as number) + 0;
     default:
       break;
   }

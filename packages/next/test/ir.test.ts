@@ -1,7 +1,8 @@
 // CS-48: Cesium IR's core. Conformance cases for ±0, ±∞ and NaN follow the
-// KHR_interactivity spec's per-op rules (read 2026-11-15, main at a7963af6dc);
-// where the spec states nothing for an input, the case is the stated formula
-// applied in IEEE 754 (marked "formula"). Plus the builder and its guarantees.
+// KHR_interactivity spec's per-op rules (main at a7963af6dc; every node the
+// vocabulary uses was read in full for CS-543, 2026-11-15); where the spec
+// states nothing for an input, the case is the stated formula applied in
+// IEEE 754 (marked "formula"). Plus the builder and its guarantees.
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import ts from "typescript";
@@ -30,7 +31,10 @@ const CASES: Case[] = [
   ["math/sign", [0], 0],
   ["math/sign", [-INF], -1],
   ["math/sign", [NaN], NaN],
-  // trunc, floor, ceil, round: formula for ±0, unchanged for ±∞
+  // trunc, floor, ceil, round: formula for ±0, unchanged for ±∞ ("If the
+  // argument is infinity, it is returned unchanged"). round: "Half-way cases
+  // MUST be rounded away from zero. Negative values greater than -0.5 MUST
+  // be rounded to negative zero."
   ["math/trunc", [-0], -0],
   ["math/trunc", [INF], INF],
   ["math/floor", [-0], -0],
@@ -80,7 +84,8 @@ const CASES: Case[] = [
   ["math/smoothStep", [1, 0, 0.25], 0.15625],
   ["math/smoothStep", [0, 1, INF], 1],
   ["math/smoothStep", [0, 1, NaN], NaN],
-  // rem: truncated
+  // rem: truncated. The spec's formula a - (b · trunc(a / b)) is exactly
+  // zero here; the sign is its tip's, "a % b", which keeps the dividend's.
   ["math/rem", [-0, 3], -0],
   ["math/rem", [-5, 3], -2],
   ["math/rem", [INF, 3], NaN],
@@ -104,6 +109,8 @@ const CASES: Case[] = [
   ["math/pow", [1, INF], NaN],
   ["math/pow", [-1, -INF], NaN],
   ["math/pow", [2, NaN], NaN],
+  // "±1 ^ NaN are NaN" (IEEE 754's pow gives 1 for +1).
+  ["math/pow", [1, NaN], NaN],
   ["math/pow", [2, 3], 8],
   // atan2: IEEE special cases
   ["math/atan2", [0, -0], Math.PI],
@@ -184,6 +191,17 @@ const CASES: Case[] = [
     ],
     NaN,
   ],
+  // "a_x * b_x + a_y * b_y": two -0 products sum to -0 (CS-543; the sum
+  // began at +0 and gave +0).
+  [
+    "math/dot",
+    [
+      [-0, -0],
+      [1, 1],
+    ],
+    -0,
+  ],
+  ["math/dot", [-1, 0], -0],
   [
     "math/cross",
     [
@@ -198,6 +216,8 @@ const CASES: Case[] = [
   ["math/combine4", [1, 2, 3, 4], [1, 2, 3, 4]],
   ["type/boolToFloat", [true], 1],
   ["type/intToFloat", [7], 7],
+  // "This operation MUST NOT produce negative zero." (CS-543)
+  ["type/intToFloat", [-0], 0],
 ];
 
 const lanesOf = (v: Value): unknown[] => (typeof v === "object" ? [...v] : [v]);
@@ -274,6 +294,8 @@ describe("the builder", () => {
     const x = b.input("x", "float", "feature");
     expect(b.op("math/add", [x, b.const(0)])).toBe(x);
     expect(b.op("math/sub", [x, b.const(0)])).toBe(x);
+    // x - (-0) is -0 - (-0) = +0 for x = -0: not rewritten (CS-543).
+    expect(b.eqns[b.op("math/sub", [x, b.const(-0)])]!.op).toBe("math/sub");
     expect(b.op("math/mul", [x, b.const(1)])).toBe(x);
     expect(b.op("math/div", [x, b.const(1)])).toBe(x);
     const nn = b.op("math/neg", [b.op("math/neg", [x])]);

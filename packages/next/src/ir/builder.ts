@@ -153,6 +153,15 @@ export class Builder {
     return v === 0 || (Array.isArray(v) && v.every((x) => x === 0));
   }
 
+  // +0 only: x - (-0) is x + 0, which turns -0 into +0.
+  private isPositiveZero(id: Id): boolean {
+    const v = this.constOf(id);
+    return (
+      Object.is(v, 0) ||
+      (Array.isArray(v) && v.every((x: number) => Object.is(x, 0)))
+    );
+  }
+
   private isOne(id: Id): boolean {
     const v = this.constOf(id);
     return v === 1 || (Array.isArray(v) && v.every((x) => x === 1));
@@ -170,7 +179,7 @@ export class Builder {
       case "math/add":
         return this.isZero(a) ? c : this.isZero(c) ? a : undefined;
       case "math/sub":
-        return this.isZero(c) ? a : undefined;
+        return this.isPositiveZero(c) ? a : undefined;
       case "math/mul":
         return this.isOne(a) ? c : this.isOne(c) ? a : undefined;
       case "math/div":
