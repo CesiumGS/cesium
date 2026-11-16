@@ -790,7 +790,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 1 of 13 done, 10 ready, 0 blocked, 2 proposed.
+[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 1 of 14 done, 11 ready, 0 blocked, 2 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host ([CS-485](./milestones/CS-485-dyno-and-the-gallery-are-safe-to-build-and-host.md), Planned)
 
@@ -813,6 +813,7 @@ No milestone
 
 - [?] [CS-363](./items/CS-363-packaging-for-pages-without-a-build-step.md) Packaging for pages without a build step. Proposed. Needs nothing.
 - [?] [CS-364](./items/CS-364-the-gallery-shell-filters-editable-source.md) The gallery shell: filters, editable source, checked-in thumbnails, the playground's later list. Proposed. Needs nothing.
+- [ ] [CS-544](./items/CS-544-the-handbook-s-reel-runs-in-the-served-handbook.md) The handbook's reel runs in the served handbook as well as the static file. Needs nothing.
 
 ### Dyno as the development harness
 

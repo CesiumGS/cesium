@@ -96,7 +96,7 @@ CS-198 GPU-driven rendering and capacities [Planned], led by owner
   waits on: nothing open
   waited on by: nothing open
 CS-199 Dyno hardening, packaging and CI [Planned], led by owner
-  1 of 13 done, 10 ready, 0 blocked, 2 proposed
+  1 of 14 done, 11 ready, 0 blocked, 2 proposed
   waits on: nothing open
   waited on by: nothing open
 CS-389 Dyno as the development harness [Planned], led by owner
