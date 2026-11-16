@@ -2,10 +2,11 @@
 id: CS-523
 title: Dyno's board reads human-in-the-lead's read API
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-15
 project: CS-18
 needs: [CS-521]
+claimed_by: hitld-migration
 ---
 
 Dyno's Work page reads the tracker through `scripts/work/query.mjs`, the one adapter between the board and the tracker's files (its read API, version 2). Point it at human-in-the-lead's read API instead (`hitld work query --json`, version 3), as the board's design note planned.
