@@ -2,7 +2,7 @@
 id: CS-240
 title: "Frames 5b's carried-forward fixes: angular velocity, the ORION_NADIR fixture, ray targets and standing queries"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-189
 ---

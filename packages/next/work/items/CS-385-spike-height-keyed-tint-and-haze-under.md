@@ -2,7 +2,7 @@
 id: CS-385
 title: "Spike: height-keyed tint and haze under exaggeration, drawn against true height"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-17
 ---

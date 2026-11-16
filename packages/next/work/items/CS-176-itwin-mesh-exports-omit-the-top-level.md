@@ -2,10 +2,10 @@
 id: CS-176
 title: iTwin mesh exports omit the top-level `geometricError`
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-19
-party: iTwin mesh export
+waiting_on: iTwin mesh export
 ---
 
 ## Waiting on

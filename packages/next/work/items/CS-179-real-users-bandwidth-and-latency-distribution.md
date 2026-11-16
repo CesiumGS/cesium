@@ -2,10 +2,10 @@
 id: CS-179
 title: Real users' bandwidth and latency distribution
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
-party: Cesium ion / product
+waiting_on: Cesium ion / product
 ---
 
 ## Waiting on

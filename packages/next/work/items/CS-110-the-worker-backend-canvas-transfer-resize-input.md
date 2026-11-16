@@ -2,7 +2,7 @@
 id: CS-110
 title: The worker backend (canvas transfer, resize, input, built-in controllers)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-13
 needs: [CS-109]

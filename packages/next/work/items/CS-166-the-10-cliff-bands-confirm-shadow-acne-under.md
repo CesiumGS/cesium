@@ -2,7 +2,7 @@
 id: CS-166
 title: "The ×10 cliff bands: confirm shadow acne under the warp and fix it"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-17
 ---

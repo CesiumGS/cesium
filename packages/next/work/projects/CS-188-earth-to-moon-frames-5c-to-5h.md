@@ -2,10 +2,9 @@
 id: CS-188
 title: Earth to Moon (frames 5c to 5h)
 kind: project
-status: Planned
+state: planned
 created: 2026-11-13
-initiative: CS-5
-lead: owner
+owner: owner
 plan: docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md
 ---
 

@@ -2,7 +2,7 @@
 id: CS-206
 title: The impostor pass on the GPU
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-205]

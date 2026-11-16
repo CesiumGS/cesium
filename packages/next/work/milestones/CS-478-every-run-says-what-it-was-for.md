@@ -1,12 +1,12 @@
 ---
 id: CS-478
 title: Every run says what it was for
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-389
 outcome: "Each run carries its identity, purpose, branch, item and study under a machine-wide lock; runs are found from the terminal; recordings and test results are runs; and archives export and import them."
-needs: [CS-390 c?, CS-391 c?, CS-392 c?, CS-398 c?, CS-399 c?, CS-400 c?]
+constraints: [CS-390 c?, CS-391 c?, CS-392 c?, CS-398 c?, CS-399 c?, CS-400 c?]
 ---
 
 ## Done when

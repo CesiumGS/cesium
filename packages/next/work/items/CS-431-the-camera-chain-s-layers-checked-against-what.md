@@ -2,7 +2,7 @@
 id: CS-431
 title: The camera chain's layers checked against what each may know
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-437
 needs: [CS-101]

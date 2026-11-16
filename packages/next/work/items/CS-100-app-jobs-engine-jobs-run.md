@@ -2,7 +2,7 @@
 id: CS-100
 title: App jobs (`engine.jobs.run`)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-12
 needs: [CS-89, CS-108]

@@ -2,7 +2,7 @@
 id: CS-133
 title: Distance-driven morph factors for terrain
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-14
 needs: [CS-132]

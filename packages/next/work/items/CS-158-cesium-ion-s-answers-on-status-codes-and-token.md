@@ -2,10 +2,10 @@
 id: CS-158
 title: Cesium ion's answers on status codes and token lifetimes
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
-party: Cesium ion
+waiting_on: Cesium ion
 ---
 
 ## Waiting on

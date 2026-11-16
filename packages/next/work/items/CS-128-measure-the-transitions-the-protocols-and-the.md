@@ -2,7 +2,7 @@
 id: CS-128
 title: "Measure the transitions: the protocols and the report"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-14
 needs: [CS-127, CS-123, CS-124, CS-126]

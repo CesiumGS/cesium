@@ -2,7 +2,7 @@
 id: CS-401
 title: Lab pages and their results in the store
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
 needs: [CS-390, CS-394]

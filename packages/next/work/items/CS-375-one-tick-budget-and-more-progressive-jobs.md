@@ -2,7 +2,7 @@
 id: CS-375
 title: One tick budget, and more progressive jobs
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-12
 needs: [CS-90, CS-91, CS-93]

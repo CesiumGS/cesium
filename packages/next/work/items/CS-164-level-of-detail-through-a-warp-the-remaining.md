@@ -2,7 +2,7 @@
 id: CS-164
 title: "Level of detail through a warp: the remaining increments"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-17
 ---

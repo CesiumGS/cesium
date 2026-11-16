@@ -2,10 +2,10 @@
 id: CS-387
 title: "Slang and Tint: counted loops pay Tint's loop guard"
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-19
-party: Slang and Tint
+waiting_on: Slang and Tint
 ---
 
 ## Waiting on

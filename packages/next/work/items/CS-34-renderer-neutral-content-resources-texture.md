@@ -2,7 +2,7 @@
 id: CS-34
 title: Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-33]

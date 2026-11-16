@@ -1,12 +1,12 @@
 ---
 id: CS-419
 title: Cesium IR covers what materials need
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-10
 outcome: "Cesium IR has noise, textures and samplers, matrices, screen-space derivatives, bounded loops and structs, so the MaterialX and user programs that use them compile."
-needs: [CS-64 c?, CS-65 c?, CS-66 c?, CS-67 c?, CS-68 c?, CS-69 c?]
+constraints: [CS-64 c?, CS-65 c?, CS-66 c?, CS-67 c?, CS-68 c?, CS-69 c?]
 ---
 
 ## Done when

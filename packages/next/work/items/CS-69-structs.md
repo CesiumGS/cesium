@@ -2,7 +2,7 @@
 id: CS-69
 title: Structs
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-68]

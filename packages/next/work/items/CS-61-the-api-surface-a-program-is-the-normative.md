@@ -2,7 +2,7 @@
 id: CS-61
 title: The API surface (a program is the normative input; languages as entry points loaded on demand; `CustomShader` hooks take programs or WGSL functions)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-49, CS-55, CS-56, CS-58]

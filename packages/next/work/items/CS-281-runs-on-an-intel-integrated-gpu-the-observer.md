@@ -2,10 +2,10 @@
 id: CS-281
 title: "Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws"
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-192
-party: devices
+waiting_on: devices
 ---
 
 ## Waiting on

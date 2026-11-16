@@ -2,7 +2,7 @@
 id: CS-272
 title: "3D Tiles format gaps: implicit tiling, multiple contents, metadata, S2 and cylinder volumes"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-191
 ---

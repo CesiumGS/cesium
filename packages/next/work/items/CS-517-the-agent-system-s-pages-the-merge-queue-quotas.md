@@ -2,7 +2,7 @@
 id: CS-517
 title: "The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-15
 project: CS-389
 needs: [CS-523]

@@ -2,7 +2,7 @@
 id: CS-142
 title: Migrate the waits (bench, parity, scripts, examples, widgets, spikes)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-15
 needs: [CS-136, CS-137]

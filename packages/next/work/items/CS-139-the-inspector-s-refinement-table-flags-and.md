@@ -2,7 +2,7 @@
 id: CS-139
 title: The inspector's refinement table, flags and converge times
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-15
 needs: [CS-135, CS-138]

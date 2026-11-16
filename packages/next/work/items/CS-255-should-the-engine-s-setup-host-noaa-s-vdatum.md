@@ -2,10 +2,10 @@
 id: CS-255
 title: Should the engine's setup host NOAA's VDatum surfaces (MLLW, MHW)?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-189
-decided-by: owner
+decider: owner
 ---
 
 ## Question

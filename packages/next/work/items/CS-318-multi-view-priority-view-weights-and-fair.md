@@ -2,7 +2,7 @@
 id: CS-318
 title: Multi-view priority, view weights, and fair queueing of an origin across tilesets
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-194
 ---

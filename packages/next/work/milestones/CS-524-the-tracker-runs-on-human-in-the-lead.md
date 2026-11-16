@@ -1,12 +1,12 @@
 ---
 id: CS-524
 title: The tracker runs on human-in-the-lead
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-18
 outcome: Cesium's work is tracked in human-in-the-lead's format with its hitld commands, installed from a release tag, and Dyno's board reads it through human-in-the-lead's read API.
-needs: [CS-520 c?, CS-521 c?, CS-522 c?, CS-523 c?]
+constraints: [CS-520 c?, CS-521 c?, CS-522 c?, CS-523 c?]
 ---
 
 ## Why

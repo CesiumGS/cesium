@@ -2,7 +2,7 @@
 id: CS-125
 title: The dither in every pass; picks and height queries see the destination
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-14
 needs: [CS-121]

@@ -2,7 +2,7 @@
 id: CS-204
 title: The impostor's level of detail and surface tilesets
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-203]

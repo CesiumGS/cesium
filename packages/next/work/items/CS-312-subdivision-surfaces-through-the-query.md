@@ -2,7 +2,7 @@
 id: CS-312
 title: Subdivision surfaces through the query interface and the GPU path
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-193
 needs: [CS-300]

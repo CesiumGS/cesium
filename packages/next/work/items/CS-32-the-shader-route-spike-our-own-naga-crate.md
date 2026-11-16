@@ -2,7 +2,7 @@
 id: CS-32
 title: "The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-9
 ---

@@ -2,7 +2,7 @@
 id: CS-170
 title: A work board in Dyno
 kind: work
-status: Done
+state: done
 created: 2026-11-13
 project: CS-18
 needs: [CS-403]

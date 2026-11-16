@@ -1,12 +1,12 @@
 ---
 id: CS-474
 title: Steep warps draw without artifacts
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-17
 outcome: "The runaway at α 1 and the cliff bands under the ×10 warp are explained and fixed, and the owner decides whether shading and haze read the drawn or the true height."
-needs: [CS-165 c?, CS-166 c?, CS-385 c?, CS-386 c?]
+constraints: [CS-165 c?, CS-166 c?, CS-385 c?, CS-386 c?]
 ---
 
 ## Done when

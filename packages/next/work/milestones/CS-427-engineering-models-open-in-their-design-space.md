@@ -1,12 +1,12 @@
 ---
 id: CS-427
 title: Engineering models open in their design space
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-188
 outcome: "An engineering model opens in its design space, in engineering Cartesian coordinates (east, north and up as straight axes, in design units). It morphs to the global view and back, and its routes, picks and snaps agree with the published references."
-needs: [CS-223 c?, CS-224 c?, CS-225 c?, CS-226 c?]
+constraints: [CS-223 c?, CS-224 c?, CS-225 c?, CS-226 c?]
 ---
 
 ## Plan

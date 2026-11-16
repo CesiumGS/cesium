@@ -2,7 +2,7 @@
 id: CS-99
 title: "The worker-mode spike: a headed run on an otherwise idle GPU"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-12
 ---

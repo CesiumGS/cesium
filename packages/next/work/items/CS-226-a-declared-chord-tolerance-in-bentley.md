@@ -2,7 +2,7 @@
 id: CS-226
 title: A declared chord tolerance in `BENTLEY_engineering_frame`, and measured sag for tiles that declare none
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 ---

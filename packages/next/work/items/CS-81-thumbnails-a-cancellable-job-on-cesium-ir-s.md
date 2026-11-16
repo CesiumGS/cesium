@@ -2,7 +2,7 @@
 id: CS-81
 title: Thumbnails (a cancellable job on Cesium IR's evaluator) and picks
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-80]

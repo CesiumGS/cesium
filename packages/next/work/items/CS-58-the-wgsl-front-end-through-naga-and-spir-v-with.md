@@ -2,7 +2,7 @@
 id: CS-58
 title: The WGSL front end, through naga and SPIR-V, with diagnostics
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-48, CS-57]

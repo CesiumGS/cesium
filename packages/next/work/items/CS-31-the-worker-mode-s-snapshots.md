@@ -2,7 +2,7 @@
 id: CS-31
 title: The worker mode's snapshots
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-8
 needs: [CS-23, CS-99]

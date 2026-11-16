@@ -2,8 +2,8 @@
 id: CS-520
 title: Install human-in-the-lead v0.1.0-rc.1, pinned, with its first-run setup
 kind: work
-status: Done
-claimed: hitld-migration
+state: done
+claimed_by: hitld-migration
 created: 2026-11-15
 project: CS-18
 needs: [CS-516]

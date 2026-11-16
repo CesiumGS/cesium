@@ -2,7 +2,7 @@
 id: CS-523
 title: Dyno's board reads human-in-the-lead's read API
 kind: work
-status: Planned
+state: planned
 created: 2026-11-15
 project: CS-18
 needs: [CS-521]

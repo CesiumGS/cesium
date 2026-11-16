@@ -2,10 +2,10 @@
 id: CS-210
 title: Should a world clip cut the Moon's impostor?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
-decided-by: owner
+decider: owner
 ---
 
 ## Question

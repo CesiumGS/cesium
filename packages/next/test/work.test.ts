@@ -5,6 +5,7 @@ import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import {
@@ -624,8 +625,34 @@ describe("stale names", () => {
 });
 
 describe("the real items", () => {
-  it("pass check", () => {
-    expect(checkItems(loadWorkTree(repoRoot), { root: repoRoot })).toEqual([]);
+  // The tracker is in human-in-the-lead's format: its own check is the one
+  // that counts (hitld, pinned in devDependencies).
+  it("pass hitld work check", () => {
+    const hitld = join(
+      dirname(
+        createRequire(import.meta.url).resolve(
+          "human-in-the-lead/package.json",
+        ),
+      ),
+      "core/bin/hitld.mjs",
+    );
+    let out: string;
+    try {
+      out = execFileSync(process.execPath, [hitld, "work", "check"], {
+        cwd: repoRoot,
+        encoding: "utf8",
+      });
+    } catch (e) {
+      out = String((e as { stdout?: string }).stdout ?? e);
+    }
+    const result = JSON.parse(out) as {
+      ok: boolean;
+      files: number;
+      problems: string[];
+    };
+    expect(result.problems).toEqual([]);
+    expect(result.ok).toBe(true);
+    expect(result.files).toBeGreaterThan(500);
   });
 
   it("leave no old-style names or section references in the repository", () => {

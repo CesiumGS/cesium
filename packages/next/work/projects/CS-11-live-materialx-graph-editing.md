@@ -2,10 +2,9 @@
 id: CS-11
 title: Live MaterialX graph editing
 kind: project
-status: Planned
+state: planned
 created: 2026-11-13
-initiative: CS-2
-lead: owner
+owner: owner
 plan: docs/superpowers/plans/2026-11-13-materialx-live-graph.md
 ---
 

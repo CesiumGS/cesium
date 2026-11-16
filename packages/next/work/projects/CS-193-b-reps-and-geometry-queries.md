@@ -2,10 +2,9 @@
 id: CS-193
 title: B-reps and geometry queries
 kind: project
-status: Planned
+state: planned
 created: 2026-11-13
-initiative: CS-5
-lead: owner
+owner: owner
 plan: docs/design/breps-and-geometry-queries.md
 ---
 

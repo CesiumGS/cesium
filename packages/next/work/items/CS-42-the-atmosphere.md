@@ -2,7 +2,7 @@
 id: CS-42
 title: The atmosphere
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-38]

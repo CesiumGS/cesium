@@ -2,7 +2,7 @@
 id: CS-264
 title: "Overlay draw options: a no-depth-test flag, per-layer imagery saturation, tints above 1"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-190
 ---

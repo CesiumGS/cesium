@@ -2,7 +2,7 @@
 id: CS-434
 title: Stability tiers as TSDoc tags, with internal members stripped from the published types
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-437
 needs: [CS-438]

@@ -2,7 +2,7 @@
 id: CS-324
 title: "Benchmark suite v2: nightly and per-merge runs, a results store and a dashboard"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-195
 needs: [CS-323]

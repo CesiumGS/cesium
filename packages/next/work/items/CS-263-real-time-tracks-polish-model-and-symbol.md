@@ -2,7 +2,7 @@
 id: CS-263
 title: "Real-time tracks polish: model and symbol crossfade, MIL-STD-2525 symbols, wide-area clamping"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-190
 ---

@@ -2,10 +2,10 @@
 id: CS-265
 title: "The styling language: its form, where its spec lives, and when it goes to the 3D Tiles group?"
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-190
-decided-by: owner
+decider: owner
 ---
 
 ## Question

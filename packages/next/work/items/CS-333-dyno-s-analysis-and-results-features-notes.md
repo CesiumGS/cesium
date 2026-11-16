@@ -2,7 +2,7 @@
 id: CS-333
 title: "Dyno's analysis and results features: notes, saved views, authoring in the Explorer, deeper analysis"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-195
 ---

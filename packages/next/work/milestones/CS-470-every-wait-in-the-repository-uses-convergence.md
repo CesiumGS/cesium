@@ -1,12 +1,12 @@
 ---
 id: CS-470
 title: Every wait in the repository uses convergence
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-15
 outcome: "The inspector, the examples' indicator, the bench, parity, scripts and widgets wait on `converged()`, and the handbook explains that loading is refinement."
-needs: [CS-139 c?, CS-141 c?, CS-142 c?, CS-143 c?]
+constraints: [CS-139 c?, CS-141 c?, CS-142 c?, CS-143 c?]
 ---
 
 ## Done when

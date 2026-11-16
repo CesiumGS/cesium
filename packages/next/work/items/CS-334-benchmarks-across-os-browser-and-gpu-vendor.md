@@ -2,7 +2,7 @@
 id: CS-334
 title: Benchmarks across OS, browser and GPU vendor, with power and thermals
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-195
 needs: [CS-324]

@@ -2,7 +2,7 @@
 id: CS-124
 title: Retargeting as a `Jobs` job, and the dither fallback for terrain without morph data
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-14
 needs: [CS-122, CS-86]

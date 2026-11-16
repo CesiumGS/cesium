@@ -2,7 +2,7 @@
 id: CS-55
 title: Styles move onto Cesium IR, literals as uniforms
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-50, CS-51, CS-52]

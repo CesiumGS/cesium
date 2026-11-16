@@ -2,7 +2,7 @@
 id: CS-83
 title: Night windows and zinc roofs in the city places
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-82, CS-75]

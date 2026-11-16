@@ -2,7 +2,7 @@
 id: CS-80
 title: The node editor (React Flow) and rewiring, with compiles as cancellable jobs
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-79]

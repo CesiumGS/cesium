@@ -2,10 +2,10 @@
 id: CS-178
 title: `Timing-Allow-Origin` on the iTwin mesh-export CDN
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
-party: iTwin Platform
+waiting_on: iTwin Platform
 ---
 
 ## Waiting on

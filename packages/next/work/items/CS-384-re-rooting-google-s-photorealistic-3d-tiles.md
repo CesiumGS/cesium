@@ -2,7 +2,7 @@
 id: CS-384
 title: Re-rooting Google's Photorealistic 3D Tiles after its session window
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-16
 needs: [CS-150]

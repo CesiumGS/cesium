@@ -2,7 +2,7 @@
 id: CS-346
 title: GPU ray queries for user code, and a user compute slot
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-197
 needs: [CS-345]

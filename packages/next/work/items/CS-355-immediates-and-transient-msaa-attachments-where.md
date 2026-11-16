@@ -2,7 +2,7 @@
 id: CS-355
 title: Immediates and transient MSAA attachments, where measured to win
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-198
 ---

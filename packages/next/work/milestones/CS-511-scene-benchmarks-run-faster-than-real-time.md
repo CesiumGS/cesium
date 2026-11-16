@@ -1,12 +1,12 @@
 ---
 id: CS-511
 title: Scene benchmarks run faster than real time
-kind: capability
-status: Proposed
+kind: milestone
+state: proposed
 created: 2026-11-15
 project: CS-195
 outcome: The scene suite can run faster than real time on a simulated network, its results agree with real-time runs for every metric it reports, and any run can still choose real time on a simulated or a real network.
-needs: [CS-512 c?, CS-513 c?, CS-514 c?, CS-515 c?]
+constraints: [CS-512 c?, CS-513 c?, CS-514 c?, CS-515 c?]
 ---
 
 ## Why

@@ -2,7 +2,7 @@
 id: CS-279
 title: More terrain and imagery providers, and several imagery layers on one globe
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-191
 ---

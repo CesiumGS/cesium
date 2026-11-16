@@ -1,8 +1,8 @@
 ---
 id: CS-414
 title: Renderers plug in behind one seam
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-9
 outcome: "An app can ask for the WebGL 2 renderer and get an engine that runs on it, or a named reason it can't, while WebGPU apps draw exactly as before through the same seam."
@@ -10,7 +10,7 @@ done_when:
   - "c1: WebGPU apps see no change: every WebGPU parity suite gives the same results before and after the seam is extracted."
   - "c2: A second renderer reaches everything the WebGPU renderer draws (draw records, meshes, textures, imagery) without holding a WebGPU object: the import-boundary test has no content-tier exceptions for imagery, and a `webgl2` tier that may not import WebGPU code."
   - 'c3: An app gets an engine that clears to its background on WebGL 2, with the inspector naming the device and why, when it sets `renderer: "webgl2"`, when it leaves auto on a browser without WebGPU (with one warning), or when it emulates `webgl2-basic`; below the floor, `Engine.create` rejects naming what is missing, and WebGPU apps never download the WebGL 2 code.'
-needs: [CS-33 c1, CS-34 c2, CS-35 c3, CS-43 c3]
+constraints: [CS-33 c1, CS-34 c2, CS-35 c3, CS-43 c3]
 check: "demo a gallery page that clears on WebGL 2 three ways, and rejects below the floor"
 ---
 

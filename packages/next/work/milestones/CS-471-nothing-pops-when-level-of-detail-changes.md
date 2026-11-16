@@ -1,13 +1,12 @@
 ---
 id: CS-471
 title: Nothing pops when level of detail changes
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-14
 outcome: "Terrain morphs back when it coarsens, imagery fades to the destination's texels, 3D Tiles dither both ways in every pass while picks and heights see the destination, and the handbook shows it."
-needs:
-  [CS-121 c?, CS-122 c?, CS-123 c?, CS-124 c?, CS-125 c?, CS-126 c?, CS-379 c?]
+constraints: [CS-121 c?, CS-122 c?, CS-123 c?, CS-124 c?, CS-125 c?, CS-126 c?, CS-379 c?]
 ---
 
 ## Done when

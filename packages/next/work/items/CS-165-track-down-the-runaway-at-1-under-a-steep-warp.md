@@ -2,7 +2,7 @@
 id: CS-165
 title: Track down the runaway at α 1 under a steep warp
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-17
 ---

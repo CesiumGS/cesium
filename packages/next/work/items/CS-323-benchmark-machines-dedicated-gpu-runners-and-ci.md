@@ -2,10 +2,10 @@
 id: CS-323
 title: "Benchmark machines: dedicated GPU runners, and CI builds per commit"
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-195
-party: lab hardware and CI
+waiting_on: lab hardware and CI
 ---
 
 ## Waiting on

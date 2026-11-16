@@ -2,7 +2,7 @@
 id: CS-155
 title: Handbook and plan updates
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-152, CS-153]

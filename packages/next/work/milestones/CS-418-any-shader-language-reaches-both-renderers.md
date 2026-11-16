@@ -1,12 +1,12 @@
 ---
 id: CS-418
 title: Any shader language reaches both renderers
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-10
 outcome: "WGSL, MaterialX and `KHR_interactivity` graphs come into Cesium IR through one public API, with diagnostics and an inspector, so one program runs on both renderers and the CPU."
-needs: [CS-57 c?, CS-58 c?, CS-59 c?, CS-60 c?, CS-61 c?, CS-62 c?, CS-63 c?]
+constraints: [CS-57 c?, CS-58 c?, CS-59 c?, CS-60 c?, CS-61 c?, CS-62 c?, CS-63 c?]
 ---
 
 ## Done when

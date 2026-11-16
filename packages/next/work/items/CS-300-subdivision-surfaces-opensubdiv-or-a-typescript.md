@@ -2,10 +2,10 @@
 id: CS-300
 title: "Subdivision surfaces: OpenSubdiv, or a TypeScript patch conversion?"
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-193
-decided-by: owner
+decider: owner
 ---
 
 ## Question

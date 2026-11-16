@@ -2,7 +2,7 @@
 id: CS-122
 title: The leaving set, terrain morph-back for the common case, skip rules, chaining, the memory rule, `stats.transitions`
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-14
 needs: [CS-121]

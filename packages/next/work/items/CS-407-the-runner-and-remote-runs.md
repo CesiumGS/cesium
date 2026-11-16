@@ -2,7 +2,7 @@
 id: CS-407
 title: The runner and remote runs
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
 needs: [CS-390, CS-406]

@@ -2,7 +2,7 @@
 id: CS-352
 title: Cluster culling against the depth pyramid
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-198
 ---

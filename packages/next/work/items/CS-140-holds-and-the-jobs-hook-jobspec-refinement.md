@@ -2,7 +2,7 @@
 id: CS-140
 title: Holds and the jobs hook (`JobSpec.refinement`, `SliceSpec.refinement`)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-15
 needs: [CS-134, CS-86]

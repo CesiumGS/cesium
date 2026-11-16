@@ -2,7 +2,7 @@
 id: CS-65
 title: Textures and samplers
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-56, CS-64]

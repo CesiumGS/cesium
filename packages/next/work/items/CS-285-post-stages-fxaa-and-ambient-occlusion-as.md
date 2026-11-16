@@ -2,7 +2,7 @@
 id: CS-285
 title: "Post stages: FXAA and ambient occlusion as stages, and a slot before the opaque pass"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-192
 ---

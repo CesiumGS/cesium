@@ -2,7 +2,7 @@
 id: CS-293
 title: "Translucency pass costs: blended-draw rectangles, empty pixels, the frustum"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-192
 ---

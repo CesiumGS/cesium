@@ -2,7 +2,7 @@
 id: CS-444
 title: Ray artifacts in the lunar terrain's shadows
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-188
 ---

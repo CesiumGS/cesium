@@ -2,10 +2,10 @@
 id: CS-256
 title: When do the upstream proposals go to the 3D Tiles and glTF groups, and who takes them?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-189
-decided-by: owner
+decider: owner
 ---
 
 ## Question

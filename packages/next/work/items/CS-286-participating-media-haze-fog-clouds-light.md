@@ -2,7 +2,7 @@
 id: CS-286
 title: "Participating media: haze, fog, clouds, light shafts and aurora as one description"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-192
 ---

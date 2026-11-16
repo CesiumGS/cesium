@@ -2,7 +2,7 @@
 id: CS-85
 title: The comparison against MaterialX's own renderer
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-80, CS-75]

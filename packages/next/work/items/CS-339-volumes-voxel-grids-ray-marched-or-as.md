@@ -2,7 +2,7 @@
 id: CS-339
 title: "Volumes: voxel grids, ray-marched or as isosurfaces"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-196
 ---

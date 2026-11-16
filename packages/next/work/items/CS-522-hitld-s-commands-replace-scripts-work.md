@@ -2,7 +2,7 @@
 id: CS-522
 title: hitld's commands replace scripts/work
 kind: work
-status: Planned
+state: planned
 created: 2026-11-15
 project: CS-18
 needs: [CS-521]

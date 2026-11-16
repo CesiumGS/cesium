@@ -1,13 +1,12 @@
 ---
 id: CS-473
 title: Warped views draw without twins or stalls
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-17
 outcome: "Each view routes without twins, the camera branch takes eye steps, centre constants live on the GPU, a refused draw shows a stand-in at once, level of detail works through a warp, each warp family's fixes are in, and the inspector counts warped draws by how they are drawn."
-needs:
-  [CS-159 c?, CS-160 c?, CS-161 c?, CS-162 c?, CS-164 c?, CS-168 c?, CS-450 c?]
+constraints: [CS-159 c?, CS-160 c?, CS-161 c?, CS-162 c?, CS-164 c?, CS-168 c?, CS-450 c?]
 ---
 
 ## Done when

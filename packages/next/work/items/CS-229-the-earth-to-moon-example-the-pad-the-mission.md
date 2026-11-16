@@ -2,7 +2,7 @@
 id: CS-229
 title: "The earth-to-moon example: the pad, the mission clock, stage reference frames, cameras and the flight path"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-228, CS-221, CS-222, CS-220]

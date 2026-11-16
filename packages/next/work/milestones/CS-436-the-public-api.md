@@ -1,10 +1,11 @@
 ---
 id: CS-436
 title: The public API
-kind: initiative
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
-lead: owner
+owner: owner
+constraints: [CS-420 c?, CS-457 c?]
 ---
 
 ## Goal
@@ -12,3 +13,7 @@ lead: owner
 One public surface a host application can rely on: reviewed in rounds as the engine grows, each round proposing promotions, demotions, names and shape, the owner approving, and the approved changes made. Stability tiers say what may change. Each review is a milestone in The public API reviews (CS-437).
 
 Detail: `docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md`, section 15.2; `docs/design/bodies-frames-and-engineering-coordinates.md`, "A public API review".
+
+## Notes
+
+Made by `hitld work migrate` (tracker-structure) from the initiative CS-436: a long outcome is a milestone with no parent. Its constraints are the milestones of the projects that were under it, marked `c?`; shaping gives it an outcome, done-when clauses and a check, and links each constraint to a clause.

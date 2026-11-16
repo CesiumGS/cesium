@@ -2,7 +2,7 @@
 id: CS-73
 title: The globe surface's fragment hook (height, slope, aspect, water, latitude, camera distance)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 ---

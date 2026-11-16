@@ -1,12 +1,12 @@
 ---
 id: CS-476
 title: Shaders swap live on models, tilesets and the globe
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-11
 outcome: "Models and tilesets take a new shader while the last good one stays on screen, the globe exposes a fragment hook with a water mask, and the WebGL 2 renderer takes the same path."
-needs: [CS-71 c?, CS-72 c?, CS-73 c?, CS-74 c?, CS-84 c?]
+constraints: [CS-71 c?, CS-72 c?, CS-73 c?, CS-74 c?, CS-84 c?]
 ---
 
 ## Done when

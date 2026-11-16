@@ -2,7 +2,7 @@
 id: CS-363
 title: Packaging for pages without a build step
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-199
 ---

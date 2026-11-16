@@ -2,7 +2,7 @@
 id: CS-361
 title: CI runs `packages/next`'s tests on Node 24
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-199
 ---

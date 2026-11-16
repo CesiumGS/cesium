@@ -2,7 +2,7 @@
 id: CS-349
 title: A near-field bounded terrain trace, and terrain error over open water
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-197
 needs: [CS-344]

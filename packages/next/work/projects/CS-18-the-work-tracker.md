@@ -2,10 +2,9 @@
 id: CS-18
 title: The work tracker
 kind: project
-status: In progress
+state: planned
 created: 2026-11-13
-initiative: CS-6
-lead: owner
+owner: owner
 plan: docs/superpowers/plans/2026-11-13-work-tracker.md
 ---
 

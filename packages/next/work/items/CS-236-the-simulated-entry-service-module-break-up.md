@@ -2,7 +2,7 @@
 id: CS-236
 title: "The simulated entry: service module break-up, blackout, parachutes and splashdown"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-234, CS-229]

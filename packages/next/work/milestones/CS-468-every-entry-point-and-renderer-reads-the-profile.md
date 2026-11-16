@@ -1,8 +1,8 @@
 ---
 id: CS-468
 title: Every entry point and renderer reads the profile
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-8
 outcome: "Whichever way an app reaches the engine (the main entry, the advanced GPU entry, the Viewer or worker mode), it gets support reports and defaults from the same profile, the main API names no GPU type, and an app or a second renderer can give the engine's queries its own ray backends."
@@ -11,7 +11,7 @@ done_when:
   - "c2: A Viewer and a bare `Engine` give the same default look from one defaults table (shadows on as preferred, ambient occlusion on as extra); the Viewer's World capacities come from device limits, and any clamp is reported."
   - "c3: In worker mode, `view.support`, `view.effective` and `view.explain()` return what they return on the main thread, and under `strict` a pinned step that can't run throws synchronously on the main thread in both modes."
   - "c4: An app, or a second renderer, can give `Engine.queries` its own ray backends, and `castRays` and standing queries answer through them."
-needs: [CS-28 c1, CS-29 c2, CS-31 c3, CS-368 c4]
+constraints: [CS-28 c1, CS-29 c2, CS-31 c3, CS-368 c4]
 check: "integration-test test/profileEntryPoints.test.ts"
 ---
 

@@ -1,12 +1,12 @@
 ---
 id: CS-477
 title: A MaterialX graph is edited live on the stage
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-11
 outcome: "A MaterialX document loads into presets with live parameters, a node editor rewires it with cancellable compiles and thumbnails, the city and terrain places show it, and it compares with MaterialX's own renderer."
-needs: [CS-70 c?, CS-79 c?, CS-80 c?, CS-81 c?, CS-82 c?, CS-83 c?, CS-85 c?]
+constraints: [CS-70 c?, CS-79 c?, CS-80 c?, CS-81 c?, CS-82 c?, CS-83 c?, CS-85 c?]
 ---
 
 ## Done when

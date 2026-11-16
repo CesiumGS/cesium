@@ -1,12 +1,12 @@
 ---
 id: CS-489
 title: Satellite frames plug in as an add-on
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-189
 outcome: "TEME and SGP4 load as the first frames add-on provider."
-needs: [CS-242 c?]
+constraints: [CS-242 c?]
 ---
 
 ## Done when

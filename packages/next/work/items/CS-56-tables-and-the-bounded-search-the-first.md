@@ -2,7 +2,7 @@
 id: CS-56
 title: Tables and the bounded search, the first extensions, with the residual's row window
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-53, CS-54]

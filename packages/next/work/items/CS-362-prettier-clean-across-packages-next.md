@@ -2,7 +2,7 @@
 id: CS-362
 title: Prettier clean across `packages/next`
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-199
 ---

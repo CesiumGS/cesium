@@ -2,10 +2,10 @@
 id: CS-244
 title: Should Cesium ion host PROJ grids, with CORS and cropped tiles?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-189
-decided-by: owner
+decider: owner
 ---
 
 ## Question

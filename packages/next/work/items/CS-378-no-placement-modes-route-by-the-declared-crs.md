@@ -2,7 +2,7 @@
 id: CS-378
 title: "No placement modes: route by the declared CRS, and read the 3D Tiles 2.0 draft's CRS extensions"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-13
 needs: [CS-438]

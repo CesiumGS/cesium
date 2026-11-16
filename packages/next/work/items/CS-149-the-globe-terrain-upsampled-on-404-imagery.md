@@ -2,7 +2,7 @@
 id: CS-149
 title: The globe (terrain upsampled on 404, imagery recovery)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-147, CS-148]

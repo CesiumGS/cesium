@@ -2,7 +2,7 @@
 id: CS-261
 title: Wide lines, polygons and decals, with vector sources and vector tiles
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-190
 needs: [CS-258]

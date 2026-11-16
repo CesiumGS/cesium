@@ -1,12 +1,12 @@
 ---
 id: CS-500
 title: Real-time tracks stay cheap at scale
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-190
 outcome: "Shadow cascades skip casters too small to matter, and one glTF asset can be placed in several worlds."
-needs: [CS-262 c?]
+constraints: [CS-262 c?]
 ---
 
 ## Done when

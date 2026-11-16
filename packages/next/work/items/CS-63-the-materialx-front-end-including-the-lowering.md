@@ -2,7 +2,7 @@
 id: CS-63
 title: The MaterialX front end, including the lowering the MaterialX plan's task 9 had (no pre-IR emitter)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-50, CS-51, CS-55]

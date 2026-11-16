@@ -2,7 +2,7 @@
 id: CS-413
 title: The ion token for CLI runs and worktrees, without writing it into a build
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-199
 ---

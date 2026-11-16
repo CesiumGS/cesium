@@ -2,7 +2,7 @@
 id: CS-320
 title: "Paging: a thrash-rate metric, working-set eviction, a prefetch band sized by hit rate"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-194
 ---

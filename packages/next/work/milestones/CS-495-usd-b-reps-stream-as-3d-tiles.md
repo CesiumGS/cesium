@@ -1,12 +1,12 @@
 ---
 id: CS-495
 title: USD B-reps stream as 3D Tiles
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-193
 outcome: "The B-rep tile extension's schema is decided, Open Cascade's licence is checked, USD B-reps load and heal, a tiler writes them as 3D Tiles 2.0 with editing overrides, and trims and edges share the vector kernels."
-needs: [CS-299 c?, CS-310 c?, CS-304 c?, CS-305 c?, CS-306 c?, CS-309 c?]
+constraints: [CS-299 c?, CS-310 c?, CS-304 c?, CS-305 c?, CS-306 c?, CS-309 c?]
 ---
 
 ## Done when

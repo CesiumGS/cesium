@@ -2,7 +2,7 @@
 id: CS-151
 title: Online, hidden and offline
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-147]

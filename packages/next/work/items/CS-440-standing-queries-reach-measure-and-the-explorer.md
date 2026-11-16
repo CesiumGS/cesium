@@ -2,7 +2,7 @@
 id: CS-440
 title: Standing queries reach measure, and the explorer's re-trace subscribes to them
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-189
 ---

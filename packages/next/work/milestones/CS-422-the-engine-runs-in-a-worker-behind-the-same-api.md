@@ -1,8 +1,8 @@
 ---
 id: CS-422
 title: The engine runs in a worker behind the same API
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-13
 outcome: "The same app code runs with the engine on the main thread or in a worker, chosen by the host or by a probe, and errors, loss, modules, widgets and the inspector work in both."
@@ -12,18 +12,7 @@ done_when:
   - "c3: Engine errors reach the app as events with a code and, in development builds, the app's call stack; when the worker or the GPU device is lost, pending queries reject and the app is told, and `restart()` brings the engine back on a fresh canvas, with the opt-in rebuild returning the scene as it was, with the same handle ids."
   - "c4: A tick module loaded by URL changes the scene in the tick it runs, and a controller module drives the camera from forwarded input, with the engine on either thread."
   - "c5: The Viewer, the inspector and the recorder work in both modes, and a recording from a worker run has the same columns as a main-thread one."
-needs:
-  [
-    CS-108 c1,
-    CS-109 c1,
-    CS-110 c1,
-    CS-111 c2,
-    CS-112 c3,
-    CS-113 c3,
-    CS-114 c4,
-    CS-115 c4,
-    CS-116 c5,
-  ]
+constraints: [CS-108 c1, CS-109 c1, CS-110 c1, CS-111 c2, CS-112 c3, CS-113 c3, CS-114 c4, CS-115 c4, CS-116 c5]
 check: "integration-test bench/run.mjs worker suite, and test/api in both thread modes"
 ---
 

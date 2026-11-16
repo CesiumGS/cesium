@@ -2,7 +2,7 @@
 id: CS-367
 title: "Profiles later: measured step costs, a wider governor, a fidelity bias, host facts and storage"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-8
 needs: [CS-26]

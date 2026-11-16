@@ -2,10 +2,9 @@
 id: CS-195
 title: Benchmarks, parity and image regression
 kind: project
-status: Planned
+state: planned
 created: 2026-11-13
-initiative: CS-6
-lead: owner
+owner: owner
 plan: docs/design/benchmark-suite.md
 ---
 

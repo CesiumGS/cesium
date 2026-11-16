@@ -2,7 +2,7 @@
 id: CS-249
 title: "Time follow-ups: the sun at 1.x's exact algorithms, a zone boundary table, clocks per view, data bands"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-189
 ---

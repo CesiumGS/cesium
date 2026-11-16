@@ -2,7 +2,7 @@
 id: CS-382
 title: The sleeping loop's missed wakes, and the Viewer's clock listener
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-15
 ---

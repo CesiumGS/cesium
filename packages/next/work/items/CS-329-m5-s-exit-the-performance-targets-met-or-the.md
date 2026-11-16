@@ -2,7 +2,7 @@
 id: CS-329
 title: "M5's exit: the performance targets met or the gaps explained, including multi-view"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-195
 ---

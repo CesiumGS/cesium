@@ -1,12 +1,12 @@
 ---
 id: CS-493
 title: Planets show as points, then disks
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-192
 outcome: "The planets appear in the sky as points at their positions, and as disks when close enough to resolve."
-needs: [CS-446 c?]
+constraints: [CS-446 c?]
 ---
 
 ## Done when

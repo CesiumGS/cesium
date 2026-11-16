@@ -2,7 +2,7 @@
 id: CS-269
 title: "Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-191
 ---

@@ -2,7 +2,7 @@
 id: CS-71
 title: '`setShader(…, { swap: "whenReady" })` on models, so the last good material stays on screen'
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 ---

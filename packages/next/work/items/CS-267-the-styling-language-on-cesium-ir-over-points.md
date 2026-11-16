@@ -2,7 +2,7 @@
 id: CS-267
 title: The styling language on Cesium IR, over points, lines, polygons and B-rep faces
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-190
 needs: [CS-265, CS-55]

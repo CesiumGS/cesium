@@ -1,12 +1,12 @@
 ---
 id: CS-423
 title: Measurements set the default thread
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-13
 outcome: "Recorded runs in both modes decide which thread the engine uses by default, and the owner decides from that data."
-needs: [CS-117 c?, CS-118 c?, CS-119 c?]
+constraints: [CS-117 c?, CS-118 c?, CS-119 c?]
 ---
 
 ## Done when

@@ -2,11 +2,11 @@
 id: CS-118
 title: Do the façade's measurements ask for a shared snapshot?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-13
 needs: [CS-117]
-decided-by: owner
+decider: owner
 ---
 
 ## Question

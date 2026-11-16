@@ -2,7 +2,7 @@
 id: CS-43
 title: "Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have"
 kind: work
-status: Done
+state: done
 created: 2026-11-13
 project: CS-9
 ---

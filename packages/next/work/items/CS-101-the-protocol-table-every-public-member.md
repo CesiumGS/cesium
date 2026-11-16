@@ -2,7 +2,7 @@
 id: CS-101
 title: "The protocol table: every public member classified, checked against `api/surface.txt`"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-13
 ---

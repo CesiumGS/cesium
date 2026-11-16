@@ -2,10 +2,10 @@
 id: CS-175
 title: 1.x's children-bounds culling selects a very coarse tile
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-19
-party: CesiumJS 1.x
+waiting_on: CesiumJS 1.x
 ---
 
 ## Waiting on

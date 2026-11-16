@@ -2,7 +2,7 @@
 id: CS-239
 title: `accuracyOf` and the explorer's walk composed on `separationAccuracy`
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-189
 ---

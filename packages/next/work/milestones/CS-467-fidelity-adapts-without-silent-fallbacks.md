@@ -1,12 +1,12 @@
 ---
 id: CS-467
 title: Fidelity adapts without silent fallbacks
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-8
 outcome: "Resolution, MSAA and aerial perspective are steps the opt-in governor can take, limit-forced accuracy changes reach query results, no fallback is silent, and the inspector shows and emulates profiles."
-needs: [CS-24 c?, CS-25 c?, CS-26 c?, CS-27 c?, CS-365 c?, CS-366 c?]
+constraints: [CS-24 c?, CS-25 c?, CS-26 c?, CS-27 c?, CS-365 c?, CS-366 c?]
 ---
 
 ## Done when

@@ -2,7 +2,7 @@
 id: CS-245
 title: "Engineering references: rail alignments, MGRS and US National Grid, CE90 and LE90"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-189
 ---

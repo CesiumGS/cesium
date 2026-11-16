@@ -1,12 +1,12 @@
 ---
 id: CS-465
 title: Jobs share one tick budget and decode can't hang
-kind: capability
-status: Proposed
+kind: milestone
+state: proposed
 created: 2026-11-15
 project: CS-12
 outcome: "Jobs and slices share one tick budget, decode-only jobs use shared-memory rings, and a watchdog ends a hung decode."
-needs: [CS-375 c?, CS-376 c?, CS-377 c?]
+constraints: [CS-375 c?, CS-376 c?, CS-377 c?]
 ---
 
 ## Done when

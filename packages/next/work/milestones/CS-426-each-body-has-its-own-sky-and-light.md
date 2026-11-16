@@ -1,12 +1,12 @@
 ---
 id: CS-426
 title: Each body has its own sky and light
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-188
 outcome: "The sky follows what the camera is attached to: each body's atmosphere is evaluated physically from where the camera really is, with sunlight, body shadows and earthshine per body."
-needs: [CS-221 c?, CS-222 c?, CS-439 c?, CS-444 c?]
+constraints: [CS-221 c?, CS-222 c?, CS-439 c?, CS-444 c?]
 ---
 
 ## Done when

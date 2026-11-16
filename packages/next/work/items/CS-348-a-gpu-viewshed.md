@@ -2,7 +2,7 @@
 id: CS-348
 title: A GPU viewshed
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-197
 needs: [CS-344]

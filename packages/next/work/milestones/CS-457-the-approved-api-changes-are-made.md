@@ -1,12 +1,12 @@
 ---
 id: CS-457
 title: The approved API changes are made
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-437
 outcome: "The stability tiers the review approved are TSDoc tags, with internal members stripped from the published types, and measurement has its own module seam and entry point."
-needs: [CS-434 c?, CS-435 c?]
+constraints: [CS-434 c?, CS-435 c?]
 ---
 
 ## Done when

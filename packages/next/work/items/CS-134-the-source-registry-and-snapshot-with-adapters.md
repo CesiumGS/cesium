@@ -2,7 +2,7 @@
 id: CS-134
 title: The source registry and snapshot, with adapters and a check against today's `needsTicks`; no behaviour change
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-15
 ---

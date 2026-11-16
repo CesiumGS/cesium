@@ -2,7 +2,7 @@
 id: CS-328
 title: "Network profiles: a link-shaping content server and a throttled scenario"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-195
 ---

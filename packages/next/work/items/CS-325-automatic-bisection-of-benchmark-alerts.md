@@ -2,7 +2,7 @@
 id: CS-325
 title: Automatic bisection of benchmark alerts
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-195
 needs: [CS-324]

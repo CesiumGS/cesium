@@ -1,12 +1,12 @@
 ---
 id: CS-491
 title: Glare and the sky are checked on Intel integrated GPUs
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-192
 outcome: "The observer cost page, the glare check and indirect draws have run on an Intel integrated GPU, and its figures are in `glareTier` and the Intel tables."
-needs: [CS-281 c?, CS-282 c?]
+constraints: [CS-281 c?, CS-282 c?]
 ---
 
 ## Done when

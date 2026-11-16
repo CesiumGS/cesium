@@ -2,7 +2,7 @@
 id: CS-358
 title: Snyk findings in the dev server and the bench suite
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-199
 ---

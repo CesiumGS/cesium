@@ -2,10 +2,10 @@
 id: CS-454
 title: "What is the full version of scene items: references, groups, the globe as an item, and how close to USD?"
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-437
-decided-by: owner
+decider: owner
 ---
 
 ## Question

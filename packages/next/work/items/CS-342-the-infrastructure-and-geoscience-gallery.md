@@ -2,7 +2,7 @@
 id: CS-342
 title: The infrastructure and geoscience gallery examples
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-196
 ---

@@ -1,12 +1,12 @@
 ---
 id: CS-499
 title: Lines, polygons, labels and CAD styles draw on one path
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-190
 outcome: "One drawing path carries lines, polygons and CAD display styles, and labels and pins are drawn in the engine with GPU decluttering."
-needs: [CS-258 c?, CS-259 c?, CS-260 c?]
+constraints: [CS-258 c?, CS-259 c?, CS-260 c?]
 ---
 
 ## Done when

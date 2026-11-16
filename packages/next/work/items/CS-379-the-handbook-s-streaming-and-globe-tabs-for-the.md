@@ -2,7 +2,7 @@
 id: CS-379
 title: The handbook's streaming and globe tabs for the transitions
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-14
 needs: [CS-122, CS-126]

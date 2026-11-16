@@ -2,7 +2,7 @@
 id: CS-403
 title: Dyno's navigation rail, regrouped by what people come to do
 kind: work
-status: Done
+state: done
 created: 2026-11-13
 project: CS-389
 ---

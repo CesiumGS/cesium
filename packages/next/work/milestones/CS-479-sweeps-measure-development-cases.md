@@ -1,12 +1,12 @@
 ---
 id: CS-479
 title: Sweeps measure development cases
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-389
 outcome: "Example scenes with parameters and a pose are development cases, the settings registry sweeps them on several axes with reference images and image checks, and Lab pages keep their results in the store."
-needs: [CS-393 c?, CS-394 c?, CS-395 c?, CS-397 c?, CS-401 c?]
+constraints: [CS-393 c?, CS-394 c?, CS-395 c?, CS-397 c?, CS-401 c?]
 ---
 
 ## Done when

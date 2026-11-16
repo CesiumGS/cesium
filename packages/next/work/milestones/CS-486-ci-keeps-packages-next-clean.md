@@ -1,12 +1,12 @@
 ---
 id: CS-486
 title: CI keeps packages/next clean
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-199
 outcome: "CI runs the package's tests on Node 24, the package is Prettier-clean, a fresh worktree passes `npm test`, and the example runner's loose ends are closed."
-needs: [CS-361 c?, CS-362 c?, CS-412 c?, CS-445 c?]
+constraints: [CS-361 c?, CS-362 c?, CS-412 c?, CS-445 c?]
 ---
 
 ## Done when

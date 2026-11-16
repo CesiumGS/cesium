@@ -1,12 +1,12 @@
 ---
 id: CS-488
 title: Measurement tools ship as a module on standing queries
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-189
 outcome: "Standing queries reach `measure`, and the measurement tools and their UI are a module on the seam the API review approved."
-needs: [CS-440 c?, CS-243 c?]
+constraints: [CS-440 c?, CS-243 c?]
 ---
 
 ## Done when

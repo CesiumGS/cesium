@@ -2,7 +2,7 @@
 id: CS-373
 title: "Slang ahead of time for apps: a CLI and a bundler plugin"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-10
 needs: [CS-61]

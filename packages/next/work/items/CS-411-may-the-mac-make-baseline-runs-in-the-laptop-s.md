@@ -2,10 +2,10 @@
 id: CS-411
 title: May the Mac make baseline runs in the laptop's browser?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
-decided-by: owner
+decider: owner
 ---
 
 ## Question

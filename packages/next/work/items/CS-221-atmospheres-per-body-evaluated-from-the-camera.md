@@ -2,7 +2,7 @@
 id: CS-221
 title: Atmospheres per body, evaluated from the camera's true place and composited physically
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-209]

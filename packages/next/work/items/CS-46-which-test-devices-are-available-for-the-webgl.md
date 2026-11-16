@@ -2,10 +2,10 @@
 id: CS-46
 title: Which test devices are available for the WebGL 2 probe runs?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-9
-decided-by: owner
+decider: owner
 ---
 
 ## Question

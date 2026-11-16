@@ -2,7 +2,7 @@
 id: CS-162
 title: A non-blocking fit fallback
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-17
 ---

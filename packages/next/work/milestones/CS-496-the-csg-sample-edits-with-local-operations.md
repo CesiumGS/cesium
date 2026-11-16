@@ -1,12 +1,12 @@
 ---
 id: CS-496
 title: The CSG sample edits with local operations
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-193
 outcome: "The CSG sample's local operations are feature nodes, it has a four-view layout, and the owner decides whether it stops there."
-needs: [CS-301 c?, CS-307 c?, CS-308 c?]
+constraints: [CS-301 c?, CS-307 c?, CS-308 c?]
 ---
 
 ## Done when

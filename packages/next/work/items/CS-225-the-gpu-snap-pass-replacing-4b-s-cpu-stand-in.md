@@ -2,7 +2,7 @@
 id: CS-225
 title: The GPU snap pass, replacing 4b's CPU stand-in
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 ---

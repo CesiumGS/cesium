@@ -1,12 +1,12 @@
 ---
 id: CS-502
 title: Slang shaders pass the gate on Windows
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-198
 outcome: "The Slang kernels gate and the probes pass on Windows with two GPU vendors, which completes the Slang migration."
-needs: [CS-350 c?]
+constraints: [CS-350 c?]
 ---
 
 ## Done when

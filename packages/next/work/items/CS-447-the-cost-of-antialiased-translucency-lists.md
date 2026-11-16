@@ -2,7 +2,7 @@
 id: CS-447
 title: The cost of antialiased translucency lists, measured, then shading once and covering separately
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-198
 ---

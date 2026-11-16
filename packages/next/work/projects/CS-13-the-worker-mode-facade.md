@@ -2,10 +2,9 @@
 id: CS-13
 title: The worker-mode façade
 kind: project
-status: Planned
+state: planned
 created: 2026-11-13
-initiative: CS-3
-lead: owner
+owner: owner
 plan: docs/superpowers/plans/2026-11-13-worker-facade.md
 ---
 

@@ -2,7 +2,7 @@
 id: CS-297
 title: "Gallery: a black hole beside the Moon"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-192
 needs: [CS-296]

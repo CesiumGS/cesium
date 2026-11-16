@@ -2,10 +2,10 @@
 id: CS-321
 title: How should an engine-wide memory budget be sized without a VRAM query?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-194
-decided-by: owner
+decider: owner
 ---
 
 ## Question

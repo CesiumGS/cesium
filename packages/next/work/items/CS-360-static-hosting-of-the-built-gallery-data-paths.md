@@ -2,7 +2,7 @@
 id: CS-360
 title: "Static hosting of the built gallery: data paths, the error alert, the favicon"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-199
 ---

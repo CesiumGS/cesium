@@ -2,7 +2,7 @@
 id: CS-268
 title: "Style features through the IR: tiles culled by interval `show`, legends, explicit colour spaces"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-190
 needs: [CS-50, CS-55]

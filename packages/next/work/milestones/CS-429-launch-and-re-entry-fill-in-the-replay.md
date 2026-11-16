@@ -1,12 +1,12 @@
 ---
 id: CS-429
 title: Launch and re-entry fill in the replay
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-188
 outcome: "Where no published trajectory exists, the ascent, stage separations and entry through splashdown are simulated from public figures, with plumes, heating and plasma, and marked as simulated."
-needs: [CS-234 c?, CS-235 c?, CS-236 c?, CS-237 c?, CS-238 c?]
+constraints: [CS-234 c?, CS-235 c?, CS-236 c?, CS-237 c?, CS-238 c?]
 ---
 
 ## Done when

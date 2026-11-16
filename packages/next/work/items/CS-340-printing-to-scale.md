@@ -2,7 +2,7 @@
 id: CS-340
 title: Printing to scale
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-196
 needs: [CS-218]

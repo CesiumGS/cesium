@@ -2,7 +2,7 @@
 id: CS-105
 title: Functions reshaped, on the main thread
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-13
 needs: [CS-438]

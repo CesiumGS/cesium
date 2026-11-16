@@ -2,7 +2,7 @@
 id: CS-313
 title: F-reps drawn by ray marching
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-193
 ---

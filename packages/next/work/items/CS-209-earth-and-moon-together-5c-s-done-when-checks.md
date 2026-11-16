@@ -2,7 +2,7 @@
 id: CS-209
 title: "Earth and Moon together: 5c's done-when checks"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-208]

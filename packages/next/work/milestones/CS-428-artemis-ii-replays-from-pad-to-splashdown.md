@@ -1,12 +1,12 @@
 ---
 id: CS-428
 title: Artemis II replays from pad to splashdown
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-188
 outcome: "A hands-off replay of the whole mission plays every event on the mission clock, with reference frames, the communications overlay and accuracy readouts on toggles."
-needs: [CS-227 c?, CS-228 c?, CS-229 c?, CS-230 c?, CS-231 c?, CS-232 c?, CS-233 c?]
+constraints: [CS-227 c?, CS-228 c?, CS-229 c?, CS-230 c?, CS-231 c?, CS-232 c?, CS-233 c?]
 ---
 
 ## Done when

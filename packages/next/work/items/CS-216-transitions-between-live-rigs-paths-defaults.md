@@ -2,7 +2,7 @@
 id: CS-216
 title: "Transitions between live rigs: paths, defaults and interruption policies"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-215]

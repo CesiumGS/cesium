@@ -2,10 +2,10 @@
 id: CS-275
 title: "Which of M6's remaining showcases to build: splats, compute point clouds, WebXR, headless Dawn?"
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-191
-decided-by: owner
+decider: owner
 ---
 
 ## Question

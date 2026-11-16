@@ -2,7 +2,7 @@
 id: CS-357
 title: Quantized vertex storage and automatic per-instance levels of detail
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-198
 ---

@@ -2,7 +2,7 @@
 id: CS-59
 title: The writer and reader for `KHR_interactivity`'s graph JSON (vendor extension `BENTLEY_interactivity_ir`)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-49]

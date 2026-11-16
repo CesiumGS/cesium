@@ -2,7 +2,7 @@
 id: CS-214
 title: Gestures as bindings
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-213]

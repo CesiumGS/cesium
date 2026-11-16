@@ -2,7 +2,7 @@
 id: CS-238
 title: Approximations of launch smoke and the splashdown splash
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-237]

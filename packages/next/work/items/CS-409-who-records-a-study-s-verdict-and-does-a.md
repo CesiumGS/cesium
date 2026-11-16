@@ -2,10 +2,10 @@
 id: CS-409
 title: Who records a study's verdict, and does a verdict close a decision?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
-decided-by: owner
+decider: owner
 ---
 
 ## Question

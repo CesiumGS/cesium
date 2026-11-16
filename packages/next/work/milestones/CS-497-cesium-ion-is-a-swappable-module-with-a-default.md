@@ -1,12 +1,12 @@
 ---
 id: CS-497
 title: Cesium ion is a swappable module with a default token
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-191
 outcome: "ion sits behind a content-source interface in `@cesium/next/ion`, and a default evaluation token works with an on-screen notice."
-needs: [CS-269 c?, CS-270 c?, CS-271 c?]
+constraints: [CS-269 c?, CS-270 c?, CS-271 c?]
 ---
 
 ## Done when

@@ -2,7 +2,7 @@
 id: CS-381
 title: Accumulation sources and `view.capture`
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-15
 needs: [CS-136, CS-137]

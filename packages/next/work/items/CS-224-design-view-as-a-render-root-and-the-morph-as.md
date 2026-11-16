@@ -2,7 +2,7 @@
 id: CS-224
 title: Design view as a render root, and the morph as one transition
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-220]

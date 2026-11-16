@@ -2,10 +2,10 @@
 id: CS-455
 title: "Which release items should the tracker have: alphas, betas, release candidates, 2.0.0?"
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-18
-decided-by: owner
+decider: owner
 ---
 
 ## Question

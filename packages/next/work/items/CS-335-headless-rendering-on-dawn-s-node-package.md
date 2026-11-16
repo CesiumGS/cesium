@@ -2,7 +2,7 @@
 id: CS-335
 title: Headless rendering on Dawn's Node package
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-195
 needs: [CS-275]

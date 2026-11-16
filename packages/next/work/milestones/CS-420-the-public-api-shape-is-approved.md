@@ -1,22 +1,12 @@
 ---
 id: CS-420
 title: The public API shape is approved
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-437
 outcome: "Every public member is mapped and reviewed against the façade's constraints and other engines' idioms, and the owner has approved which changes to make."
-needs:
-  [
-    CS-101 c?,
-    CS-102 c?,
-    CS-430 c?,
-    CS-431 c?,
-    CS-432 c?,
-    CS-433 c?,
-    CS-438 c?,
-    CS-454 c?,
-  ]
+constraints: [CS-101 c?, CS-102 c?, CS-430 c?, CS-431 c?, CS-432 c?, CS-433 c?, CS-438 c?, CS-454 c?]
 ---
 
 ## Done when

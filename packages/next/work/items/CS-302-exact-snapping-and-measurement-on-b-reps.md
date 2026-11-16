@@ -2,7 +2,7 @@
 id: CS-302
 title: Exact snapping and measurement on B-reps
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-193
 ---

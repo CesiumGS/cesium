@@ -2,10 +2,10 @@
 id: CS-186
 title: Backport 2.0's worker and asset loading to 1.x for 1.148.0
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-19
-party: CesiumJS 1.x
+waiting_on: CesiumJS 1.x
 ---
 
 ## Waiting on

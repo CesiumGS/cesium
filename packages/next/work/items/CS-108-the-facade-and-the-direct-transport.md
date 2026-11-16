@@ -2,7 +2,7 @@
 id: CS-108
 title: The façade and the direct transport
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-13
 needs: [CS-103, CS-104, CS-107]

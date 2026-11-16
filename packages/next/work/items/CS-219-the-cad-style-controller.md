@@ -2,7 +2,7 @@
 id: CS-219
 title: The CAD-style controller
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-218]

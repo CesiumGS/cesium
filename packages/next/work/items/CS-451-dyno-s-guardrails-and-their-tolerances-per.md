@@ -2,7 +2,7 @@
 id: CS-451
 title: Dyno's guardrails and their tolerances per scene, revisited now Budgeted has settled
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-195
 ---

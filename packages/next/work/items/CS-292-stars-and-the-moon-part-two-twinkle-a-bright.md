@@ -2,7 +2,7 @@
 id: CS-292
 title: "Stars and the Moon, part two: twinkle, a bright-star catalog, a Moon albedo without baked shading"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-192
 needs: [CS-250]

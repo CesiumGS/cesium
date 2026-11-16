@@ -1,12 +1,12 @@
 ---
 id: CS-498
 title: glTF and 3D Tiles load at 1.x's coverage
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-191
 outcome: "The 3D Tiles and glTF extension gaps against 1.x are closed, and glTF 1.0 and deprecated extensions are upgraded on load or dropped, as the owner decides."
-needs: [CS-272 c?, CS-273 c?, CS-274 c?]
+constraints: [CS-272 c?, CS-273 c?, CS-274 c?]
 ---
 
 ## Done when

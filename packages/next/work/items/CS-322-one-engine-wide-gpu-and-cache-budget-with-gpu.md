@@ -2,7 +2,7 @@
 id: CS-322
 title: One engine-wide GPU and cache budget, with GPU texture transcoding
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-194
 needs: [CS-321]

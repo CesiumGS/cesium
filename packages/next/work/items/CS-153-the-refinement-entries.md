@@ -2,7 +2,7 @@
 id: CS-153
 title: The refinement entries
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-149, CS-134]
