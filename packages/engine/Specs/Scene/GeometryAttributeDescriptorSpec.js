@@ -1,10 +1,30 @@
-import { AttributeType } from "@cesium/core";
+import { AttributeType, ComponentDatatype } from "@cesium/core";
 import {
   GeometryAttributeDescriptor,
+  GeometryAttributeDomain,
   VertexAttributeSemantic,
 } from "../../index.js";
 
 describe("Scene/GeometryAttributeDescriptor", function () {
+  it("defaults to the vertex domain and no component datatype", function () {
+    const descriptor = new GeometryAttributeDescriptor({
+      semantic: VertexAttributeSemantic.POSITION,
+    });
+    expect(descriptor.domain).toBe(GeometryAttributeDomain.VERTEX);
+    expect(descriptor.componentDatatype).toBeUndefined();
+  });
+
+  it("stores the domain and component datatype", function () {
+    const descriptor = new GeometryAttributeDescriptor({
+      semantic: "_TEMPERATURE",
+      type: AttributeType.SCALAR,
+      domain: GeometryAttributeDomain.CORNER,
+      componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+    });
+    expect(descriptor.domain).toBe(GeometryAttributeDomain.CORNER);
+    expect(descriptor.componentDatatype).toBe(ComponentDatatype.UNSIGNED_SHORT);
+  });
+
   it("derives the type of built-in semantics", function () {
     const expected = {
       [VertexAttributeSemantic.POSITION]: AttributeType.VEC3,
@@ -129,6 +149,21 @@ describe("Scene/GeometryAttributeDescriptor", function () {
     expect(scalar.equals(vector)).toBe(true);
   });
 
+  it("equals ignores the domain and component datatype", function () {
+    const vertexFloat = new GeometryAttributeDescriptor({
+      semantic: "_TEMPERATURE",
+      type: AttributeType.SCALAR,
+      componentDatatype: ComponentDatatype.FLOAT,
+    });
+    const cornerShort = new GeometryAttributeDescriptor({
+      semantic: "_TEMPERATURE",
+      type: AttributeType.SCALAR,
+      domain: GeometryAttributeDomain.CORNER,
+      componentDatatype: ComponentDatatype.SHORT,
+    });
+    expect(vertexFloat.equals(cornerShort)).toBe(true);
+  });
+
   it("equals distinguishes custom semantics by their full name", function () {
     const temperature0 = new GeometryAttributeDescriptor({
       semantic: "_TEMPERATURE_0",
@@ -173,6 +208,24 @@ describe("Scene/GeometryAttributeDescriptor", function () {
       return new GeometryAttributeDescriptor({
         semantic: VertexAttributeSemantic.TEXCOORD,
         setIndex: -1,
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("throws if the domain is invalid", function () {
+    expect(function () {
+      return new GeometryAttributeDescriptor({
+        semantic: VertexAttributeSemantic.POSITION,
+        domain: "FACE",
+      });
+    }).toThrowDeveloperError();
+  });
+
+  it("throws if the component datatype is invalid", function () {
+    expect(function () {
+      return new GeometryAttributeDescriptor({
+        semantic: VertexAttributeSemantic.POSITION,
+        componentDatatype: 0,
       });
     }).toThrowDeveloperError();
   });

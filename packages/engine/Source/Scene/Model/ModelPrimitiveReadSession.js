@@ -17,7 +17,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 /** @import Buffer from "../../Renderer/Buffer.js"; */
 /** @import { Attribute, Primitive, Quantization } from "../ModelComponents.js"; */
 /** @import { GeometryReadSessionOptions } from "../GeometryReader.js"; */
-/** @import GeometryReadSession, { GeometryAttributeReader, GeometryPrimitiveReader } from "../GeometryReadSession.js"; */
+/** @import GeometryReadSession, { GeometryAttributeReader, GeometryCornerAttributeReader, GeometryPrimitiveReader } from "../GeometryReadSession.js"; */
 
 /**
  * An attribute's components as laid out in its buffer, starting at its first
@@ -211,6 +211,36 @@ class ModelPrimitiveReadSession {
     return reader;
   }
 
+  /**
+   * Note: Model attributes (being based on glTF) are all per-vertex, so reading a corner's attribute
+   * value simply reads the corresponding vertex's attribute value. This does redundant work,
+   * so you should always use {@link ModelPrimitiveReadSession#vertexAttributeReader} instead. This
+   * function exists for completeness, but its use is discouraged.
+   * @param {GeometryAttributeDescriptor} descriptor
+   * @returns {GeometryCornerAttributeReader}
+   */
+  cornerAttributeReader(descriptor) {
+    //>>includeStart('debug', pragmas.debug);
+    this.#checkNotDestroyed();
+    if (!defined(this.#primitiveReader)) {
+      throw new DeveloperError(
+        "Primitives were not requested for this session.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    const readVertex = this.vertexAttributeReader(descriptor);
+    const readPrimitive = /** @type {GeometryPrimitiveReader} */ (
+      this.#primitiveReader
+    );
+    const vertexIndices = new Array(this.#primitiveVertexCount);
+
+    return (primitiveIndex, cornerIndex, result, offset = 0) => {
+      readPrimitive(primitiveIndex, vertexIndices);
+      return readVertex(vertexIndices[cornerIndex], result, offset);
+    };
+  }
+
   destroy() {
     this.#requestedAttributes = [];
     this.#primitiveReader = undefined;
@@ -243,16 +273,23 @@ class ModelPrimitiveReadSession {
    * @ignore
    */
   static #getDescriptor(attribute) {
+    const componentDatatype =
+      defined(attribute.quantization) || attribute.normalized
+        ? ComponentDatatype.FLOAT
+        : attribute.componentDatatype;
+
     if (defined(attribute.semantic)) {
       return new GeometryAttributeDescriptor({
         semantic: /** @type {VertexAttributeSemantic} */ (attribute.semantic),
         setIndex: attribute.setIndex,
+        componentDatatype,
       });
     }
 
     return new GeometryAttributeDescriptor({
       semantic: attribute.name,
       type: attribute.type,
+      componentDatatype,
     });
   }
 

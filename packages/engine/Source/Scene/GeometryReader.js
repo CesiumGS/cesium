@@ -84,6 +84,8 @@ class GeometryReader {
    *
    * @exception {DeveloperError} A requested attribute is not available.
    * @exception {DeveloperError} A requested attribute's type doesn't match the available attribute.
+   * @exception {DeveloperError} A requested attribute's domain doesn't match the available attribute.
+   * @exception {DeveloperError} A requested attribute's component datatype doesn't match the available attribute.
    */
   withReadSession(options, callback) {
     //>>includeStart('debug', pragmas.debug);
@@ -112,6 +114,21 @@ class GeometryReader {
       if (available.type !== descriptor.type) {
         throw new DeveloperError(
           `Attribute ${descriptor.semantic}${setIndex} has type ${available.type}, but ${descriptor.type} was requested.`,
+        );
+      }
+
+      if (available.domain !== descriptor.domain) {
+        throw new DeveloperError(
+          `Attribute ${descriptor.semantic}${setIndex} has domain ${available.domain}, but ${descriptor.domain} was requested.`,
+        );
+      }
+
+      if (
+        defined(descriptor.componentDatatype) &&
+        available.componentDatatype !== descriptor.componentDatatype
+      ) {
+        throw new DeveloperError(
+          `Attribute ${descriptor.semantic}${setIndex} doesn't have the requested component datatype.`,
         );
       }
     }

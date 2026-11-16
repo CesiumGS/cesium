@@ -27,6 +27,18 @@ import { DeveloperError } from "@cesium/core";
  */
 
 /**
+ * Reads one corner's value of an attribute. Get one from
+ * {@link GeometryReadSession#cornerAttributeReader}.
+ *
+ * @callback GeometryCornerAttributeReader
+ * @param {number} primitiveIndex The index of the primitive.
+ * @param {number} cornerIndex The index of the corner within the primitive, in the order {@link GeometryPrimitiveReader} returns its vertices.
+ * @param {number[]|TypedArray} result The array to write the attribute's {@link GeometryAttributeDescriptor#componentCount} values into.
+ * @param {number} [offset=0] The index in <code>result</code> at which to write the first value.
+ * @returns {number[]|TypedArray} The result array.
+ */
+
+/**
  * Read access to a geometry's vertices and primitives, staged by
  * {@link GeometryReader#withReadSession} and valid only until that callback
  * returns.
@@ -100,8 +112,23 @@ class GeometryReadSession {
    * @returns {GeometryAttributeReader} The attribute reader.
    *
    * @exception {DeveloperError} The attribute was not requested for this session.
+   * @exception {DeveloperError} The attribute's domain isn't {@link GeometryAttributeDomain.VERTEX}.
    */
   vertexAttributeReader(descriptor) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Creates a function that reads an attribute's value for a corner of a primitive.
+   * While this can also be used to read vertex-domain attributes, it would perform redundant work in doing so.
+   *
+   * @param {GeometryAttributeDescriptor} descriptor The attribute to read. Must be one of the attributes requested for this session.
+   * @returns {GeometryCornerAttributeReader} The attribute reader.
+   *
+   * @exception {DeveloperError} The attribute was not requested for this session.
+   * @exception {DeveloperError} Primitives were not requested for this session.
+   */
+  cornerAttributeReader(descriptor) {
     DeveloperError.throwInstantiationError();
   }
 
