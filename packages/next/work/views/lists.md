@@ -729,7 +729,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-CS-199, Planned, led by owner: 0 of 10 done, 8 ready, 0 blocked, 2 proposed.
+CS-199, Planned, led by owner: 0 of 12 done, 10 ready, 0 blocked, 2 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host (CS-485, Planned)
 
@@ -744,6 +744,8 @@ Milestone: CI keeps packages/next clean (CS-486, Planned)
 - [ ] CS-362 Prettier clean across `packages/next`. Needs nothing.
 - [ ] CS-412 A fresh worktree runs npm test clean: build 1.x's generated shader modules, or skip volumes.test.ts with its precondition. Needs nothing.
 - [ ] CS-445 The example runner's loose ends: the search-parameter rollback, and dispose after viewer.destroy. Needs nothing.
+- [ ] CS-537 The tickSlices budget test holds under full-suite load. Needs nothing.
+- [ ] CS-538 The no-scene-gains glare test holds under full-suite load. Needs nothing.
 
 No milestone
 

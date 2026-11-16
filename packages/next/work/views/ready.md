@@ -168,6 +168,8 @@ CS-199 Dyno hardening, packaging and CI
   CS-412  A fresh worktree runs npm test clean: build 1.x's generated shader modules, or skip volumes.test.ts with its precondition
   CS-413  The ion token for CLI runs and worktrees, without writing it into a build
   CS-445  The example runner's loose ends: the search-parameter rollback, and dispose after viewer.destroy
+  CS-537  The tickSlices budget test holds under full-suite load
+  CS-538  The no-scene-gains glare test holds under full-suite load
 
 CS-389 Dyno as the development harness
   CS-390  Run identity and the machine-wide run lock
@@ -180,5 +182,5 @@ CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
   CS-454  decision: What is the full version of scene items: references, groups, the globe as an item, and how close to USD?
 
-131 ready
+133 ready
 ```

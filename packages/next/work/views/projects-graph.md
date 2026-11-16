@@ -27,7 +27,7 @@ graph LR
   CS_196["Infrastructure and geoscience capabilities<br/>0 of 7 done"]
   CS_197["Ray queries and path tracing<br/>0 of 6 done"]
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
-  CS_199["Dyno hardening, packaging and CI<br/>0 of 10 done"]
+  CS_199["Dyno hardening, packaging and CI<br/>0 of 12 done"]
   CS_389["Dyno as the development harness<br/>2 of 25 done"]
   CS_437["public API reviews<br/>0 of 9 done"]
   CS_9 -->|1| CS_8
