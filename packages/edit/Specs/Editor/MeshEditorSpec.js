@@ -8,6 +8,7 @@ import {
   Matrix4,
   OrientedBoundingBox,
   RuntimeError,
+  defined,
 } from "@cesium/core";
 import {
   GeometryAttributeDescriptor,
@@ -892,6 +893,42 @@ describe(
         expect(() =>
           mesh.showVerticesByAttribute("_ID", EQUAL, 7),
         ).toThrowDeveloperError();
+      });
+    });
+
+    describe("resolvePicks", function () {
+      it("lets a select tool select every vertex with the clicked vertex's ID", async function () {
+        const { editor, mesh } = await addSquareWithAttributes();
+        editor.setMeshActive(mesh);
+        editor.mode = EditMode.VERTEX;
+        const tool = SelectTool.addTo(editor);
+        tool.resolvePicks = function (picks) {
+          return picks.map(({ mesh, componentKeys }) => {
+            const vertexKey = componentKeys.verts?.[0];
+            const id = defined(vertexKey)
+              ? mesh.getVertexAttributeValue(vertexKey, "_ID")
+              : undefined;
+            if (!defined(id)) {
+              return { mesh, componentKeys };
+            }
+            const verts = mesh.queryVerticesByAttribute(
+              "_ID",
+              ComparisonOperator.EQUAL,
+              id,
+            );
+            return { mesh, componentKeys: { verts } };
+          });
+        };
+        editor.activeTool = tool;
+        scene.renderForSpecs();
+
+        const [corner0, corner1, corner2, corner3] = square.positions;
+        click(getWindowPosition(corner0));
+
+        expectPixel(corner0, selectedPointColor);
+        expectPixel(corner1, selectedPointColor);
+        expectPixel(corner2, pointColor);
+        expectPixel(corner3, pointColor);
       });
     });
 
