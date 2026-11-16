@@ -25,6 +25,7 @@ import {
   MeshEditor as WasmMeshEditor,
 } from "@cesium/mesh-editor";
 import {
+  ComparisonOperator,
   EditMode,
   Mesh,
   MeshEditor,
@@ -619,6 +620,155 @@ describe(
         });
 
         expect(() => editor.addMesh(source)).toThrowError(RuntimeError);
+      });
+    });
+
+    describe("attribute queries", function () {
+      const [corner0, corner1, corner2] = square.positions;
+
+      // A square whose vertices have IDs 7, 7, 8 and 9, and 2D offsets.
+      async function addSquareWithAttributes() {
+        const editor = await MeshEditor.addToScene(scene);
+        const id = new GeometryAttributeDescriptor({
+          semantic: "_ID",
+          type: AttributeType.SCALAR,
+          componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+        });
+        const offset = new GeometryAttributeDescriptor({
+          semantic: "_OFFSET",
+          type: AttributeType.VEC2,
+          componentDatatype: ComponentDatatype.SHORT,
+        });
+        const mesh = editor.addMesh(
+          createGeometrySource({
+            ...square,
+            attributes: [
+              { descriptor: id, values: [7, 7, 8, 9] },
+              {
+                descriptor: offset,
+                values: [
+                  [1, -1],
+                  [2, -2],
+                  [3, -3],
+                  [4, -4],
+                ],
+              },
+            ],
+          }),
+        );
+        return { editor, mesh };
+      }
+
+      function getValues(mesh, keys, name) {
+        return Array.from(keys, (key) =>
+          mesh.getVertexAttributeValue(key, name),
+        );
+      }
+
+      it("queries vertices by a scalar attribute, on an inactive mesh", async function () {
+        const { editor, mesh } = await addSquareWithAttributes();
+        expect(editor.isMeshActive(mesh)).toBe(false);
+
+        const equal = mesh.queryVerticesByAttribute(
+          "_ID",
+          ComparisonOperator.EQUAL,
+          7,
+        );
+        expect(equal).toBeInstanceOf(BigUint64Array);
+        expect(getValues(mesh, equal, "_ID")).toEqual([7, 7]);
+
+        const greater = mesh.queryVerticesByAttribute(
+          "_ID",
+          ComparisonOperator.GREATER,
+          7,
+        );
+        expect(getValues(mesh, greater, "_ID").sort()).toEqual([8, 9]);
+
+        expect(
+          mesh.queryVerticesByAttribute("_ID", ComparisonOperator.EQUAL, 1)
+            .length,
+        ).toBe(0);
+      });
+
+      it("queries vertices by a vector attribute", async function () {
+        const { mesh } = await addSquareWithAttributes();
+
+        const keys = mesh.queryVerticesByAttribute(
+          "_OFFSET",
+          ComparisonOperator.EQUAL,
+          [2, -2],
+        );
+
+        expect(getValues(mesh, keys, "_OFFSET")).toEqual([[2, -2]]);
+      });
+
+      it("gets undefined for an unknown vertex or attribute", async function () {
+        const { mesh } = await addSquareWithAttributes();
+        const [key] = mesh.queryVerticesByAttribute(
+          "_ID",
+          ComparisonOperator.EQUAL,
+          8,
+        );
+
+        expect(mesh.getVertexAttributeValue(key, "_UNKNOWN")).toBeUndefined();
+        expect(mesh.getVertexAttributeValue(123456n, "_ID")).toBeUndefined();
+      });
+
+      it("throws for an unknown attribute, a value of the wrong type, or an unsupported comparison", async function () {
+        const { mesh } = await addSquareWithAttributes();
+        const { EQUAL, LESS } = ComparisonOperator;
+
+        for (const method of [
+          "queryVerticesByAttribute",
+          "selectVerticesByAttribute",
+        ]) {
+          expect(() => mesh[method]("_UNKNOWN", EQUAL, 7))
+            .withContext(method)
+            .toThrowDeveloperError();
+          expect(() => mesh[method]("_ID", EQUAL, 1.5))
+            .withContext(method)
+            .toThrowDeveloperError();
+          expect(() => mesh[method]("_OFFSET", EQUAL, 2))
+            .withContext(method)
+            .toThrowDeveloperError();
+          expect(() => mesh[method]("_OFFSET", LESS, [2, -2]))
+            .withContext(method)
+            .toThrowDeveloperError();
+        }
+      });
+
+      it("selects matching vertices, adding to the selection", async function () {
+        const { editor, mesh } = await addSquareWithAttributes();
+        editor.setMeshActive(mesh);
+        editor.mode = EditMode.VERTEX;
+
+        mesh.selectVerticesByAttribute("_ID", ComparisonOperator.EQUAL, 8);
+        mesh.selectVerticesByAttribute("_ID", ComparisonOperator.EQUAL, 7);
+
+        expectPixel(corner0, selectedPointColor);
+        expectPixel(corner1, selectedPointColor);
+        expectPixel(corner2, selectedPointColor);
+        expectPixel(square.positions[3], pointColor);
+      });
+
+      it("selects nothing unless vertices are selectable", async function () {
+        const { editor, mesh } = await addSquareWithAttributes();
+        editor.setMeshActive(mesh);
+        editor.mode = EditMode.FACE;
+
+        mesh.selectVerticesByAttribute("_ID", ComparisonOperator.EQUAL, 7);
+        editor.mode = EditMode.VERTEX;
+
+        expectPixel(corner0, pointColor);
+      });
+
+      it("throws when selecting on an inactive mesh", async function () {
+        const { editor, mesh } = await addSquareWithAttributes();
+        editor.mode = EditMode.VERTEX;
+
+        expect(() =>
+          mesh.selectVerticesByAttribute("_ID", ComparisonOperator.EQUAL, 7),
+        ).toThrowDeveloperError();
       });
     });
 

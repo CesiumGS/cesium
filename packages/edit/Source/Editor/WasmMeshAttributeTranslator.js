@@ -1,6 +1,11 @@
 // @ts-check
 
-import { AttributeType, ComponentDatatype, defined } from "@cesium/core";
+import {
+  AttributeType,
+  ComponentDatatype,
+  DeveloperError,
+  defined,
+} from "@cesium/core";
 import {
   GeometryAttributeDescriptor,
   GeometryAttributeDomain,
@@ -10,6 +15,7 @@ import {
   AttributeComponentType,
   AttributeDomain,
   CustomAttribute,
+  VertsByAttributeResult,
 } from "@cesium/mesh-editor";
 
 /** @import { MeshAttribute } from "@cesium/mesh-editor"; */
@@ -164,6 +170,40 @@ WasmMeshAttributeTranslator.toDescriptor = function (attribute) {
     domain: DOMAINS[domain],
     componentDatatype: DATATYPES[componentType],
   });
+};
+
+/**
+ * Throws if a by-attribute operation on a mesh's vertices failed.
+ *
+ * @param {VertsByAttributeResult} result The operation's result.
+ * @param {string} name The attribute's name.
+ *
+ * @exception {DeveloperError} The operation failed.
+ */
+WasmMeshAttributeTranslator.debugCheckVertsByAttributeResult = function (
+  result,
+  name,
+) {
+  //>>includeStart('debug', pragmas.debug);
+  switch (result) {
+    case VertsByAttributeResult.Ok:
+      return;
+    case VertsByAttributeResult.MeshInactive:
+      throw new DeveloperError("The mesh isn't active.");
+    case VertsByAttributeResult.AttributeNotFound:
+      throw new DeveloperError(
+        `The mesh has no per-vertex attribute named ${name}.`,
+      );
+    case VertsByAttributeResult.WrongType:
+      throw new DeveloperError(
+        `The value doesn't fit the type of attribute ${name}.`,
+      );
+    case VertsByAttributeResult.UnsupportedComparison:
+      throw new DeveloperError(
+        `The comparison doesn't apply to the type of attribute ${name}.`,
+      );
+  }
+  //>>includeEnd('debug');
 };
 
 export default Object.freeze(WasmMeshAttributeTranslator);
