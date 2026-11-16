@@ -623,41 +623,41 @@ describe(
       });
     });
 
+    // A square whose vertices have IDs 7, 7, 8 and 9, and 2D offsets.
+    async function addSquareWithAttributes() {
+      const editor = await MeshEditor.addToScene(scene);
+      const id = new GeometryAttributeDescriptor({
+        semantic: "_ID",
+        type: AttributeType.SCALAR,
+        componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+      });
+      const offset = new GeometryAttributeDescriptor({
+        semantic: "_OFFSET",
+        type: AttributeType.VEC2,
+        componentDatatype: ComponentDatatype.SHORT,
+      });
+      const mesh = editor.addMesh(
+        createGeometrySource({
+          ...square,
+          attributes: [
+            { descriptor: id, values: [7, 7, 8, 9] },
+            {
+              descriptor: offset,
+              values: [
+                [1, -1],
+                [2, -2],
+                [3, -3],
+                [4, -4],
+              ],
+            },
+          ],
+        }),
+      );
+      return { editor, mesh };
+    }
+
     describe("attribute queries", function () {
       const [corner0, corner1, corner2] = square.positions;
-
-      // A square whose vertices have IDs 7, 7, 8 and 9, and 2D offsets.
-      async function addSquareWithAttributes() {
-        const editor = await MeshEditor.addToScene(scene);
-        const id = new GeometryAttributeDescriptor({
-          semantic: "_ID",
-          type: AttributeType.SCALAR,
-          componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
-        });
-        const offset = new GeometryAttributeDescriptor({
-          semantic: "_OFFSET",
-          type: AttributeType.VEC2,
-          componentDatatype: ComponentDatatype.SHORT,
-        });
-        const mesh = editor.addMesh(
-          createGeometrySource({
-            ...square,
-            attributes: [
-              { descriptor: id, values: [7, 7, 8, 9] },
-              {
-                descriptor: offset,
-                values: [
-                  [1, -1],
-                  [2, -2],
-                  [3, -3],
-                  [4, -4],
-                ],
-              },
-            ],
-          }),
-        );
-        return { editor, mesh };
-      }
 
       function getValues(mesh, keys, name) {
         return Array.from(keys, (key) =>
@@ -768,6 +768,129 @@ describe(
 
         expect(() =>
           mesh.selectVerticesByAttribute("_ID", ComparisonOperator.EQUAL, 7),
+        ).toThrowDeveloperError();
+      });
+    });
+
+    describe("hiding", function () {
+      const [corner0, corner1, corner2, corner3] = square.positions;
+      const { EQUAL } = ComparisonOperator;
+      const backgroundColor = [255, 255, 255, 255];
+      // Inside the face that uses corner3 but not corner1.
+      const otherFacePosition = [-0.5, 0.5, 0.0];
+
+      // Checks the pixel beside a corner, outside the square, where only the
+      // corner's vertex is drawn.
+      function expectVertex(corner, color) {
+        expectPixel(corner, color, corner[0] < 0.0 ? -2 : 2);
+      }
+
+      async function addActiveSquare(mode) {
+        const result = await addSquareWithAttributes();
+        // Large enough that expectVertex's pixel is well inside the vertex.
+        result.editor.style.pointSize = 12.0;
+        result.editor.setMeshActive(result.mesh);
+        result.editor.mode = mode;
+        return result;
+      }
+
+      function queryId(mesh, id) {
+        return mesh.queryVerticesByAttribute("_ID", EQUAL, id);
+      }
+
+      it("hides and shows components", async function () {
+        const { mesh } = await addActiveSquare(EditMode.VERTEX);
+        const verts = queryId(mesh, 7);
+
+        mesh.hideComponents({ verts });
+        expectVertex(corner0, backgroundColor);
+        expectVertex(corner1, backgroundColor);
+        expectVertex(corner2, pointColor);
+
+        mesh.showComponents({ verts });
+        expectVertex(corner0, pointColor);
+        expectVertex(corner1, pointColor);
+      });
+
+      it("deselects the components it hides", async function () {
+        const { mesh } = await addActiveSquare(EditMode.VERTEX);
+        mesh.selectVerticesByAttribute("_ID", EQUAL, 7);
+        expectVertex(corner0, selectedPointColor);
+
+        mesh.hideComponents({ verts: queryId(mesh, 7) });
+        mesh.showAllComponents();
+
+        expectVertex(corner0, pointColor);
+      });
+
+      it("hides and deselects the selection", async function () {
+        const { mesh } = await addActiveSquare(EditMode.VERTEX);
+        mesh.selectVerticesByAttribute("_ID", EQUAL, 7);
+
+        mesh.hideSelected();
+        expectVertex(corner0, backgroundColor);
+        expectVertex(corner1, backgroundColor);
+        expectVertex(corner3, pointColor);
+
+        mesh.showAllComponents();
+        expectVertex(corner0, pointColor);
+        expectVertex(corner1, pointColor);
+      });
+
+      it("hides, deselects and shows vertices by attribute", async function () {
+        const { mesh } = await addActiveSquare(EditMode.VERTEX);
+        mesh.selectVerticesByAttribute("_ID", EQUAL, 7);
+
+        mesh.hideVerticesByAttribute("_ID", EQUAL, 7);
+        expectVertex(corner0, backgroundColor);
+        expectVertex(corner2, pointColor);
+
+        mesh.showVerticesByAttribute("_ID", EQUAL, 7);
+        expectVertex(corner0, pointColor);
+      });
+
+      it("ignores components of types the edit mode excludes", async function () {
+        const { editor, mesh } = await addActiveSquare(EditMode.FACE);
+
+        mesh.hideComponents({ verts: queryId(mesh, 7) });
+        editor.mode = EditMode.VERTEX;
+
+        expectVertex(corner0, pointColor);
+      });
+
+      it("extends to connected faces", async function () {
+        const { mesh } = await addActiveSquare(EditMode.VERTEX);
+        const options = { extendToConnectedFaces: true };
+
+        mesh.hideVerticesByAttribute("_ID", EQUAL, 9, options);
+        scene.renderForSpecs();
+        expect(scene).toPickAndCall((result) => {
+          expect(result).toBeUndefined();
+        }, getWindowPosition(otherFacePosition));
+        expect(scene).toPickAndCall((result) => {
+          expect(result.primitive).toBe(mesh);
+        }, getWindowPosition(facePosition));
+
+        mesh.showVerticesByAttribute("_ID", EQUAL, 9, options);
+        scene.renderForSpecs();
+        expect(scene).toPickAndCall((result) => {
+          expect(result.primitive).toBe(mesh);
+        }, getWindowPosition(otherFacePosition));
+      });
+
+      it("throws for an inactive mesh", async function () {
+        const { mesh } = await addSquareWithAttributes();
+        const verts = queryId(mesh, 7);
+
+        expect(() => mesh.hideComponents({ verts })).toThrowDeveloperError();
+        expect(() => mesh.showComponents({ verts })).toThrowDeveloperError();
+        expect(() => mesh.hideSelected()).toThrowDeveloperError();
+        expect(() => mesh.showAllComponents()).toThrowDeveloperError();
+        expect(() =>
+          mesh.hideVerticesByAttribute("_ID", EQUAL, 7),
+        ).toThrowDeveloperError();
+        expect(() =>
+          mesh.showVerticesByAttribute("_ID", EQUAL, 7),
         ).toThrowDeveloperError();
       });
     });
