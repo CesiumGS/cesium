@@ -2,10 +2,11 @@
 id: CS-522
 title: hitld's commands replace scripts/work
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-15
 project: CS-18
 needs: [CS-521]
+claimed_by: hitld-migration
 ---
 
 Once the files are in human-in-the-lead's format, its `hitld work` commands do what `scripts/work` does now: `new`, `check`, the views, claims and the generated lists. The scripts retire, and the rules that name them follow.
