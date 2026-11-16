@@ -1,6 +1,12 @@
-import { AttributeType, Cartesian3, Matrix4 } from "@cesium/core";
+import {
+  AttributeType,
+  Cartesian3,
+  ComponentDatatype,
+  Matrix4,
+} from "@cesium/core";
 import {
   GeometryAttributeDescriptor,
+  GeometryAttributeDomain,
   ResourceCache,
   VertexAttributeSemantic,
 } from "../../../index.js";
@@ -17,6 +23,7 @@ describe(
     const boxWithLinesUrl = `${modelsUrl}/BoxWithLines/glTF-Draco/BoxWithLines.gltf`;
     const pointCloudWithRgbColorsUrl = `${modelsUrl}/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb`;
     const triangleWithoutIndicesUrl = `${modelsUrl}/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf`;
+    const simpleSkinUrl = `${modelsUrl}/SimpleSkin/glTF/SimpleSkin.gltf`;
 
     const position = new GeometryAttributeDescriptor({
       semantic: VertexAttributeSemantic.POSITION,
@@ -324,6 +331,92 @@ describe(
         const primitiveResult = new Uint32Array(5);
         session.primitiveReader()(0, primitiveResult, 2);
         expect(Array.from(primitiveResult)).toEqual([0, 0, 0, 1, 2]);
+
+        const cornerResult = [7, 7, 7, 7, 7];
+        const cornerReturned = session.cornerAttributeReader(position)(
+          0,
+          1,
+          cornerResult,
+          1,
+        );
+        expect(cornerReturned).toBe(cornerResult);
+        expect(cornerResult).toEqual([7, 1, 0, 0, 7]);
+      });
+    });
+
+    it("reports the datatype of each attribute's values, per vertex", async function () {
+      if (webglStub) {
+        return;
+      }
+      const getAttribute = async function (url, semantic) {
+        const [primitive] = await loadPrimitives(url);
+        return primitive.geometryReader
+          .getAvailableAttributes()
+          .find((attribute) => attribute.semantic === semantic);
+      };
+
+      const cases = [
+        // Float
+        [boxTexturedWithPropertyAttributesUrl, "POSITION", "FLOAT"],
+        // Normalized
+        [boxTexturedWithPropertyAttributesUrl, "_TEMPERATURES", "FLOAT"],
+        // Quantized
+        [`${unitSquareUrl}/unitSquare11x11_draco.glb`, "POSITION", "FLOAT"],
+        // Integer
+        [simpleSkinUrl, "JOINTS", "UNSIGNED_SHORT"],
+      ];
+      for (const [url, semantic, datatype] of cases) {
+        const attribute = await getAttribute(url, semantic);
+        expect(attribute.componentDatatype)
+          .withContext(semantic)
+          .toBe(ComponentDatatype[datatype]);
+        expect(attribute.domain)
+          .withContext(semantic)
+          .toBe(GeometryAttributeDomain.VERTEX);
+      }
+    });
+
+    it("reads corners as their vertices", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(
+        `${unitSquareUrl}/unitSquare11x2_triangleStrip.glb`,
+      );
+      const options = { attributes: [position], primitives: true };
+      primitive.geometryReader.withReadSession(options, function (session) {
+        const readVertex = session.vertexAttributeReader(position);
+        const readCorner = session.cornerAttributeReader(position);
+        const readPrimitive = session.primitiveReader();
+
+        for (let p = 0; p < session.primitiveCount(); ++p) {
+          const vertices = readPrimitive(p, []);
+          for (let c = 0; c < vertices.length; ++c) {
+            expect(readCorner(p, c, []))
+              .withContext(`primitive ${p}, corner ${c}`)
+              .toEqual(readVertex(vertices[c], []));
+          }
+        }
+      });
+    });
+
+    it("throws when reading corners without primitives", async function () {
+      const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
+      const options = { attributes: [position] };
+      primitive.geometryReader.withReadSession(options, function (session) {
+        expect(function () {
+          session.cornerAttributeReader(position);
+        }).toThrowDeveloperError();
+      });
+    });
+
+    it("throws when reading corners of an attribute that wasn't requested", async function () {
+      const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
+      const options = { primitives: true };
+      primitive.geometryReader.withReadSession(options, function (session) {
+        expect(function () {
+          session.cornerAttributeReader(position);
+        }).toThrowDeveloperError();
       });
     });
 
@@ -363,6 +456,9 @@ describe(
       }).toThrowDeveloperError();
       expect(function () {
         session.vertexAttributeReader(position);
+      }).toThrowDeveloperError();
+      expect(function () {
+        session.cornerAttributeReader(position);
       }).toThrowDeveloperError();
     });
   },

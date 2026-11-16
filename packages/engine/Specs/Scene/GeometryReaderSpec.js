@@ -1,6 +1,7 @@
-import { AttributeType } from "@cesium/core";
+import { AttributeType, ComponentDatatype } from "@cesium/core";
 import {
   GeometryAttributeDescriptor,
+  GeometryAttributeDomain,
   GeometryReader,
   VertexAttributeSemantic,
 } from "../../index.js";
@@ -143,6 +144,52 @@ describe("Scene/GeometryReader", function () {
       );
     }).toThrowDeveloperError();
     expect(createReadSession).not.toHaveBeenCalled();
+  });
+
+  it("withReadSession throws if an attribute's domain doesn't match", function () {
+    const cornerTemperature = new GeometryAttributeDescriptor({
+      semantic: "_TEMPERATURE",
+      type: AttributeType.SCALAR,
+      domain: GeometryAttributeDomain.CORNER,
+    });
+    expect(function () {
+      reader.withReadSession(
+        { attributes: [cornerTemperature] },
+        function () {},
+      );
+    }).toThrowDeveloperError();
+    expect(createReadSession).not.toHaveBeenCalled();
+  });
+
+  it("withReadSession checks the component datatype only if requested", function () {
+    const createTemperature = (componentDatatype) =>
+      new GeometryAttributeDescriptor({
+        semantic: "_TEMPERATURE",
+        type: AttributeType.SCALAR,
+        componentDatatype,
+      });
+    const reader = new GeometryReader({
+      availableAttributes: [createTemperature(ComponentDatatype.FLOAT)],
+      createReadSession,
+    });
+
+    reader.withReadSession(
+      { attributes: [createTemperature(undefined)] },
+      function () {},
+    );
+    reader.withReadSession(
+      { attributes: [createTemperature(ComponentDatatype.FLOAT)] },
+      function () {},
+    );
+    expect(createReadSession).toHaveBeenCalledTimes(2);
+
+    expect(function () {
+      reader.withReadSession(
+        { attributes: [createTemperature(ComponentDatatype.SHORT)] },
+        function () {},
+      );
+    }).toThrowDeveloperError();
+    expect(createReadSession).toHaveBeenCalledTimes(2);
   });
 
   it("withReadSession throws without options", function () {
