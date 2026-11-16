@@ -710,16 +710,23 @@ No milestone
 
 ### Development harness
 
-[CS-6](./initiatives/CS-6-development-harness.md), In progress: 6 of 62 done, 23 ready, 29 blocked, 10 proposed.
+[CS-6](./initiatives/CS-6-development-harness.md), In progress: 7 of 66 done, 23 ready, 32 blocked, 10 proposed.
 
 #### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), In progress, led by owner: 5 of 7 done, 2 ready, 0 blocked. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), In progress, led by owner: 5 of 11 done, 3 ready, 3 blocked. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled
 
 - [ ] [CS-388](./items/CS-388-do-frames-and-earth-to-moon-the-sky-b-reps-and.md) decision: Do frames and Earth to Moon, the sky, B-reps and the capabilities want initiatives of their own?. Needs nothing. Decided by owner.
-- [ ] [CS-455](./items/CS-455-which-release-milestones-should-the-tracker.md) decision: Which release milestones should the tracker have: alphas, betas, release candidates, 2.0.0?. Needs nothing. Decided by owner.
+- [ ] [CS-455](./items/CS-455-which-release-milestones-should-the-tracker.md) decision: Which release items should the tracker have: alphas, betas, release candidates, 2.0.0?. Needs nothing. Decided by owner.
+
+Milestone: The tracker runs on human-in-the-lead
+
+- [ ] [CS-520](./items/CS-520-install-human-in-the-lead-v0-1-0-rc-1-pinned.md) Install human-in-the-lead v0.1.0-rc.1, pinned, with its first-run setup. Needs CS-516 (Dyno as the development harness).
+- [ ] [CS-521](./items/CS-521-the-tracker-s-files-in-human-in-the-lead-s.md) The tracker's files in human-in-the-lead's format. Needs CS-520.
+- [ ] [CS-522](./items/CS-522-hitld-s-commands-replace-scripts-work.md) hitld's commands replace scripts/work. Needs CS-521.
+- [ ] [CS-523](./items/CS-523-dyno-s-board-reads-human-in-the-lead-s-read-api.md) Dyno's board reads human-in-the-lead's read API. Needs CS-521.
 
 No milestone
 
@@ -793,7 +800,7 @@ No milestone
 
 #### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 1 of 25 done, 5 ready, 19 blocked. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 2 of 25 done, 4 ready, 19 blocked. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for
 
@@ -830,13 +837,13 @@ Milestone: Other machines and devices run Dyno's scenes
 
 Milestone: Dyno switches between the engine and the work
 
-- [ ] [CS-517](./items/CS-517-the-agent-system-s-pages-the-merge-queue-quotas.md) The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers. Needs CS-516.
+- [ ] [CS-517](./items/CS-517-the-agent-system-s-pages-the-merge-queue-quotas.md) The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers. Needs CS-523 (work tracker).
 - [ ] [CS-518](./items/CS-518-a-space-switch-in-dyno-s-rail-the-engine-and.md) A space switch in Dyno's rail: the engine and the work. Needs CS-517.
 
 No milestone
 
 - [x] [CS-403](./items/CS-403-dyno-s-navigation-rail-regrouped-by-what-people.md) Dyno's navigation rail, regrouped by what people come to do. Done.
-- [ ] [CS-516](./items/CS-516-human-in-the-lead-v0-1-0-rc-1-is-released.md) external: human-in-the-lead v0.1.0-rc.1 is released. Needs nothing. Waiting on human-in-the-lead.
+- [x] [CS-516](./items/CS-516-human-in-the-lead-v0-1-0-rc-1-is-released.md) external: human-in-the-lead v0.1.0-rc.1 is released. Done.
 
 ### Upstream follow-ups
 
