@@ -1628,6 +1628,65 @@ describe(
       expect(shownPolylines.length).toBeGreaterThan(1);
     });
 
+    it("does not sample the hidden path polyline in PORTIONS materialMode", function () {
+      const times = [
+        JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:10Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
+      ];
+      const earlyTime = JulianDate.fromIso8601("2026-04-01T00:00:05Z");
+      const lateTime = JulianDate.fromIso8601("2026-04-01T00:00:15Z");
+      const switchTime = JulianDate.fromIso8601("2026-04-01T00:00:10Z");
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      position.addSamples(times, [
+        new Cartesian3(1234, 5678, 9101112),
+        new Cartesian3(5678, 1234, 1101112),
+        new Cartesian3(6789, 2345, 2101112),
+      ]);
+      testObject.position = position;
+
+      const path = (testObject.path = new PathGraphics());
+      path.show = new ConstantProperty(true);
+      path.materialMode = new CallbackProperty(function (time) {
+        return JulianDate.lessThan(time, switchTime)
+          ? PathMode.PORTIONS
+          : PathMode.WHOLE;
+      }, false);
+      path.leadTime = new ConstantProperty(10);
+      path.trailTime = new ConstantProperty(10);
+
+      const material = new CompositeMaterialProperty();
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:00Z/2026-04-01T00:00:10Z",
+          data: new ColorMaterialProperty(Color.RED),
+        }),
+      );
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:10Z/2026-04-01T00:00:20Z",
+          data: new ColorMaterialProperty(Color.BLUE),
+        }),
+      );
+      path.material = material;
+
+      visualizer.update(earlyTime);
+      const pathPolyline = scene.primitives.get(0).get(0);
+      expect(pathPolyline.show).toEqual(false);
+      expect(pathPolyline.positions.length).toEqual(0);
+      expect(getShownPolylines(scene).length).toBeGreaterThan(1);
+
+      visualizer.update(lateTime);
+      const shownPolylines = getShownPolylines(scene);
+      expect(shownPolylines).toEqual([pathPolyline]);
+      expect(pathPolyline.positions.length).toBeGreaterThan(1);
+    });
+
     it("shows no visible segments during uncovered material intervals", function () {
       const times = [
         JulianDate.fromIso8601("2026-04-01T00:00:00Z"),

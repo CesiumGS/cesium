@@ -1001,44 +1001,18 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     defaultResolution,
   );
 
-  const positions = subSample(
-    positionProperty,
-    sampleStart,
-    sampleStop,
-    time,
-    this._referenceFrame,
-    resolution,
-    polyline.positions.slice(),
-  );
-
-  // If the path only has one point, don't show it
-  // This can happen if the position is sampled at a time when it is only defined at a single point
-  if (positions.length < 2) {
-    polyline.show = false;
-    for (let j = 0; j < item.segmentPolylines.length; j++) {
-      item.segmentPolylines[j].show = false;
-    }
-    return;
-  }
-
-  polyline.show = true;
-  polyline.positions = positions;
-
-  polyline.material = MaterialProperty.getValue(
-    time,
-    pathGraphics.material,
-    polyline.material,
-  );
-
   const materialMode = Property.getValueOrUndefined(
     pathGraphics.materialMode,
     time,
   );
   const materialProp = pathGraphics.material;
   if (materialMode === PathMode.PORTIONS && !materialProp.isConstant) {
-    // Hide the single polyline if it exists
-    if (defined(polyline)) {
-      polyline.show = false;
+    // Segment polylines draw the path, so the single polyline is hidden. Clear
+    // its positions rather than sampling and uploading the whole path for a
+    // polyline that is never shown.
+    polyline.show = false;
+    if (polyline.positions.length > 0) {
+      polyline.positions = [];
     }
 
     // Prevent non-positive split steps from creating non-terminating loops.
@@ -1205,6 +1179,32 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     for (let j = 0; j < item.segmentPolylines.length; j++) {
       item.segmentPolylines[j].show = false;
     }
+
+    const positions = subSample(
+      positionProperty,
+      sampleStart,
+      sampleStop,
+      time,
+      this._referenceFrame,
+      resolution,
+      polyline.positions.slice(),
+    );
+
+    // If the path only has one point, don't show it
+    // This can happen if the position is sampled at a time when it is only defined at a single point
+    if (positions.length < 2) {
+      polyline.show = false;
+      return;
+    }
+
+    polyline.show = true;
+    polyline.positions = positions;
+
+    polyline.material = MaterialProperty.getValue(
+      time,
+      pathGraphics.material,
+      polyline.material,
+    );
   }
 
   polyline.width = Property.getValueOrDefault(
