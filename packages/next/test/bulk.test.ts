@@ -1,5 +1,5 @@
 // Bulk work in one shape (frames 5b, Task 9): slices, an AbortSignal, progress.
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { runBulk, tickSlices, timeSlices } from "../src/core/bulk.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
@@ -115,34 +115,44 @@ describe("tickSlices", () => {
   }
 
   it("registers nothing while idle, keeps the loop busy while queued, and spends its budget a tick", async () => {
-    const l = loop();
-    const bulk = tickSlices(l.onTick, 4);
-    expect(l.listeners.size).toBe(0);
-    let steps = 0;
-    const done = runBulk(
-      60,
-      () => {
-        burn(1);
-        steps++;
-      },
-      { scheduler: bulk },
-    );
-    expect(l.listeners.size).toBe(1);
-    const t0 = performance.now();
-    const busy = l.tick();
-    const spent = performance.now() - t0;
-    expect(busy).toBe(true);
-    expect(steps).toBeGreaterThan(0);
-    expect(steps).toBeLessThan(60);
-    expect(spent).toBeLessThan(4 + 3);
-    let ticks = 1;
-    while (l.tick()) {
-      ticks++;
-      expect(ticks).toBeLessThan(200);
+    // On a fake clock that each step moves 1 ms, so a tick's steps are counted
+    // exactly: a loaded machine's preemption can stretch wall time, but not
+    // this clock (CS-537). With a 4 ms budget, a tick runs 4 steps.
+    let clock = 0;
+    const now = vi.spyOn(performance, "now").mockImplementation(() => clock);
+    try {
+      const l = loop();
+      const bulk = tickSlices(l.onTick, 4);
+      expect(l.listeners.size).toBe(0);
+      let steps = 0;
+      const done = runBulk(
+        60,
+        () => {
+          clock += 1;
+          steps++;
+        },
+        { scheduler: bulk },
+      );
+      expect(l.listeners.size).toBe(1);
+      const perTick: number[] = [];
+      const tick = (): boolean => {
+        const before = steps;
+        const busy = l.tick();
+        perTick.push(steps - before);
+        return busy;
+      };
+      expect(tick()).toBe(true);
+      expect(perTick).toEqual([4]);
+      while (tick()) {
+        expect(perTick.length).toBeLessThan(200);
+      }
+      await done;
+      expect(steps).toBe(60);
+      expect(perTick).toEqual(Array<number>(15).fill(4));
+      expect(l.listeners.size).toBe(0);
+    } finally {
+      now.mockRestore();
     }
-    await done;
-    expect(steps).toBe(60);
-    expect(l.listeners.size).toBe(0);
   });
 
   it("an abort rejects the job and lets go of the tick listener", async () => {

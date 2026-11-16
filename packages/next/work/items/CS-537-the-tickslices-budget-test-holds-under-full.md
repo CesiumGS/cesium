@@ -2,7 +2,7 @@
 id: CS-537
 title: The tickSlices budget test holds under full-suite load
 kind: work
-state: planned
+state: done
 created: 2026-11-15
 project: CS-199
 touches: [packages/next/test/bulk.test.ts]
