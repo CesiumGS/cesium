@@ -1,0 +1,455 @@
+:root {
+  --panel-width: 34vw;
+  --transition: 0.6s ease;
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0b0e14;
+  color: #e8eaf0;
+  font:
+    20px/1.45 system-ui,
+    sans-serif;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+#viewer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: var(--panel-width);
+  transition:
+    right var(--transition),
+    filter var(--transition);
+}
+
+#panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: var(--panel-width);
+  box-sizing: border-box;
+  padding: 2rem 2rem 4.5rem;
+  overflow-y: auto;
+  background-color: #141925;
+  border-left: 1px solid #2a3142;
+  transition:
+    width var(--transition),
+    background-color var(--transition);
+}
+
+body[data-layout="text"] #viewer {
+  right: 0;
+  filter: brightness(0.35);
+  pointer-events: none;
+}
+
+body[data-layout="text"] #panel {
+  width: 100%;
+  padding: 7vh 10vw 5rem;
+  background-color: transparent;
+  border-left-color: transparent;
+}
+
+body[data-layout="text"] .slide {
+  max-width: 1200px;
+  margin: 0 auto;
+  font-size: 1.3rem;
+}
+
+h1 {
+  font-size: 2.4rem;
+  margin: 0 0 0.5rem;
+}
+
+h2 {
+  font-size: 1.5rem;
+  margin: 0 0 0.75rem;
+}
+
+.lead {
+  font-size: 1.35em;
+  color: #9fb4d8;
+  margin-top: 0;
+}
+
+code {
+  font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+  color: #8fd3ff;
+}
+
+pre {
+  background: #0d1117;
+  border: 1px solid #2a3142;
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+pre code {
+  color: #d6deeb;
+}
+
+/* Diagram shared by the 3D Tiles 1.1 and 2.0 slides. Each item has a position
+   per state (--x11, --y11, ... and --x20, --y20, ... in percent of the
+   diagram), so switching data-state animates items to their new place. */
+
+#diagram {
+  --tiles: #4f8fe0;
+  --gltf21: #d98cf5;
+  --gltf20: #7cc65a;
+  position: relative;
+  /* Text scales with height, but never past what a 16:9 diagram of the
+     same width would allow, so wide chips can't overflow. */
+  --u: min(1cqh, 0.5625cqw);
+  width: min(100%, 1200px);
+  height: calc(100vh - 16rem);
+  margin: 0 auto;
+  container-type: size;
+}
+
+.dg-item {
+  position: absolute;
+  box-sizing: border-box;
+  left: calc(var(--x) * 1%);
+  top: calc(var(--y) * 1%);
+  width: calc(var(--w) * 1%);
+  height: calc(var(--h) * 1%);
+  opacity: var(--o);
+  transition-property:
+    left, top, width, height, opacity, border-color, background-color;
+  transition-duration: 0.8s;
+  transition-timing-function: cubic-bezier(0.45, 0, 0.2, 1);
+}
+
+#diagram[data-state="v11"] .dg-item {
+  --x: var(--x11);
+  --y: var(--y11);
+  --w: var(--w11);
+  --h: var(--h11);
+  --o: var(--o11, 1);
+}
+
+#diagram[data-state="v20"] .dg-item {
+  --x: var(--x20);
+  --y: var(--y20);
+  --w: var(--w20);
+  --h: var(--h20);
+  --o: var(--o20, 1);
+}
+
+.dg-box {
+  border: 2px solid;
+  border-radius: calc(var(--u) * 2.1);
+  padding: calc(var(--u) * 2.1) calc(var(--u) * 2.8);
+}
+
+.dg-box.tiles {
+  border-color: var(--tiles);
+  background-color: rgba(79, 143, 224, 0.16);
+}
+
+.dg-box.gltf21 {
+  border-width: 3px;
+  border-color: var(--gltf21);
+  background-color: rgba(58, 30, 76, 0.85);
+  box-shadow: 0 0 0 1px rgba(217, 140, 245, 0.25);
+}
+
+.dg-box.gltf20 {
+  border-color: var(--gltf20);
+  background-color: rgba(20, 40, 20, 0.85);
+}
+
+.dg-title {
+  font-size: calc(var(--u) * 4.6);
+  font-weight: bold;
+  line-height: 1.2;
+  transition: color 0.8s;
+}
+
+.tiles .dg-title {
+  color: #9cc4ff;
+}
+
+.gltf21 .dg-title {
+  color: #f3d6ff;
+}
+
+.gltf20 .dg-title {
+  color: #b4e89c;
+}
+
+.swap {
+  display: inline-grid;
+}
+
+.swap > * {
+  grid-area: 1 / 1;
+}
+
+.dg-chip {
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--tiles);
+  border-radius: calc(var(--u) * 1.4);
+  background-color: #182235;
+  font-size: calc(var(--u) * 4.2);
+  line-height: 1.2;
+  text-align: center;
+  transition-property:
+    left, top, width, height, opacity, border-color, background-color, color;
+}
+
+.dg-chip.asset {
+  border-color: var(--gltf20);
+  background-color: #1b2a1b;
+}
+
+.dg-chip code {
+  display: block;
+  max-height: 0;
+  overflow: hidden;
+  font-size: calc(var(--u) * 3.1);
+  transition-property: max-height, opacity;
+  transition-duration: 0.5s;
+}
+
+#diagram[data-state="v20"] .dg-chip code {
+  max-height: 2em;
+}
+
+#diagram[data-state="v20"] .dg-chip.moves {
+  border-color: var(--gltf21);
+  background-color: #4a2a5e;
+  color: #ffffff;
+}
+
+/* On the 2.0 slide glTF 2.0 is background detail, so glTF 2.1 stands out. */
+
+#diagram[data-state="v20"] .dg-box.gltf20 {
+  border-color: rgba(124, 198, 90, 0.4);
+  background-color: rgba(24, 30, 26, 0.85);
+}
+
+#diagram[data-state="v20"] .gltf20 .dg-title {
+  color: #8fa587;
+}
+
+#diagram[data-state="v20"] .dg-chip.asset {
+  border-color: rgba(124, 198, 90, 0.35);
+  background-color: #1d231e;
+  color: #a9b5a6;
+}
+
+.dg-arrow {
+  border-top: 3px solid #d6deeb;
+}
+
+.dg-arrow::after {
+  content: "";
+  position: absolute;
+  right: -2px;
+  top: -9px;
+  border: 7.5px solid transparent;
+  border-left: 12px solid #d6deeb;
+  border-right: 0;
+}
+
+.dg-arrow code {
+  position: absolute;
+  bottom: calc(var(--u) * 0.7);
+  width: 100%;
+  font-size: calc(var(--u) * 2.6);
+  text-align: center;
+}
+
+#diagram[data-state="v11"] .v20,
+#diagram[data-state="v20"] .v11 {
+  opacity: 0;
+}
+
+.v11,
+.v20 {
+  transition: opacity 0.4s;
+}
+
+/* Going to 2.0: the glTF 2.0 box moves, glTF 2.1 grows around it, then the
+   tile structure moves into glTF 2.1. Going back reverses the order. */
+
+#diagram[data-state="v20"] .dg-arrow {
+  transition-duration: 0.3s;
+}
+
+#diagram[data-state="v20"] .gltf21 {
+  transition-delay: 0.4s;
+}
+
+#diagram[data-state="v20"] .dg-chip:not(.asset) {
+  transition-delay: 0.9s;
+}
+
+#diagram[data-state="v20"] .dg-chip code {
+  transition-delay: 1.7s;
+}
+
+#diagram[data-state="v11"] .dg-chip:not(.asset) {
+  transition-delay: 0.3s;
+}
+
+#diagram[data-state="v11"] .tiles,
+#diagram[data-state="v11"] .gltf21 {
+  transition-delay: 0.9s;
+}
+
+#diagram[data-state="v11"] .gltf20,
+#diagram[data-state="v11"] .dg-chip.asset {
+  transition-delay: 1.1s;
+}
+
+#diagram[data-state="v11"] .dg-arrow {
+  transition-delay: 1.9s;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, calc(100vh - 12rem));
+  gap: 2rem;
+  align-items: start;
+}
+
+.slide-image {
+  margin: 0;
+}
+
+.slide-image img {
+  display: block;
+  width: min(100%, calc(100vh - 12rem));
+  height: auto;
+  margin: 0 auto;
+  border-radius: 8px;
+}
+
+.legend {
+  font-size: 0.75rem;
+}
+
+.legend-title {
+  font-weight: bold;
+  margin-bottom: 0.3rem;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-row span {
+  display: inline-block;
+  width: 28px;
+}
+
+.controls {
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.controls label {
+  display: grid;
+  grid-template-columns: 8rem 1fr 3rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.controls label.checkbox {
+  display: flex;
+}
+
+#status {
+  margin-top: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  background: #2a3142;
+  font-size: 0.8rem;
+}
+
+#status.error {
+  background: #5a1f24;
+}
+
+#nav {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #9fb4d8;
+}
+
+#nav button {
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 1px solid #2a3142;
+  border-radius: 4px;
+  background: #141925;
+  color: inherit;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+#splitUi {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+#splitSlider {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 5px;
+  height: 100%;
+  background-color: #d3d3d3;
+  pointer-events: auto;
+  cursor: ew-resize;
+}
+
+.split-label {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 8px;
+  border-radius: 4px;
+  background: rgba(42, 42, 42, 0.8);
+  font-size: large;
+  font-weight: bold;
+  text-align: center;
+}
+
+.split-label.left {
+  left: 0;
+}
+
+.split-label.right {
+  right: 0;
+}
