@@ -129,11 +129,11 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 0 of 30 done, 4 ready, 24 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 2 of 30 done, 9 ready, 17 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
-- [ ] [CS-48](./items/CS-48-the-core-types-rates-equations-literal-slots.md) The core (types, rates, equations, literal slots, the builder). Needs nothing.
+- [x] [CS-48](./items/CS-48-the-core-types-rates-equations-literal-slots.md) The core (types, rates, equations, literal slots, the builder). Done.
 - [ ] [CS-49](./items/CS-49-the-versioned-json-format.md) The versioned JSON format. Needs CS-48.
 - [ ] [CS-50](./items/CS-50-the-passes-float64-evaluator-autodiff-intervals.md) The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms). Needs CS-48.
 - [ ] [CS-51](./items/CS-51-the-wgsl-emitter.md) The WGSL emitter. Needs CS-48.
@@ -167,7 +167,7 @@ No milestone
 
 - [?] [CS-372](./items/CS-372-custom-shading-and-styling-leftovers.md) Custom shading and styling leftovers. Proposed. Needs CS-61.
 - [?] [CS-373](./items/CS-373-slang-ahead-of-time-for-apps-a-cli-and-a.md) Slang ahead of time for apps: a CLI and a bundler plugin. Proposed. Needs CS-61.
-- [ ] [CS-543](./items/CS-543-cs-48-s-formula-cases-checked-against-the-whole.md) CS-48's formula cases checked against the whole KHR_interactivity spec. Needs nothing.
+- [x] [CS-543](./items/CS-543-cs-48-s-formula-cases-checked-against-the-whole.md) CS-48's formula cases checked against the whole KHR_interactivity spec. Done.
 - [ ] [CS-546](./items/CS-546-the-builder-s-x-0-rewrite-and-the-spec-s-signed.md) decision: The builder's x + 0 rewrite and the spec's signed zero. Needs nothing. Decided by owner.
 - [ ] [CS-548](./items/CS-548-the-ir-s-math-eq-covers-floatn-and-bool-as-khr.md) The IR's math/eq covers floatN and bool, as KHR_interactivity defines it. Needs CS-48.
 - [ ] [CS-549](./items/CS-549-the-ir-models-math-normalize-s-isvalid-output.md) The IR models math/normalize's isValid output. Needs CS-48.

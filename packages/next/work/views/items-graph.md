@@ -45,7 +45,7 @@ graph LR
     CS_370["CS-370 Scene rebuild after a WebGL 2 context loss"]:::proposed
   end
   subgraph CS_10["Cesium IR"]
-    CS_48["CS-48 The core (types, rates, equations, literal slots, the builder)"]:::open
+    CS_48["CS-48 The core (types, rates, equations, literal slots, the builder)"]:::done
     CS_49["CS-49 The versioned JSON format"]:::open
     CS_50["CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoi"]:::open
     CS_51["CS-51 The WGSL emitter"]:::open
@@ -70,7 +70,7 @@ graph LR
     CS_371["CS-371 Math ops the transform graph needs: 'atanh', 'asinh', 'acosh', "]:::open
     CS_372["CS-372 Custom shading and styling leftovers"]:::proposed
     CS_373["CS-373 Slang ahead of time for apps: a CLI and a bundler plugin"]:::proposed
-    CS_543["CS-543 CS-48's formula cases checked against the whole KHR_interactivi"]:::open
+    CS_543["CS-543 CS-48's formula cases checked against the whole KHR_interactivi"]:::done
     CS_546["CS-546 The builder's x + 0 rewrite and the spec's signed zero"]:::decision
     CS_548["CS-548 The IR's math/eq covers floatN and bool, as KHR_interactivity d"]:::open
     CS_549["CS-549 The IR models math/normalize's isValid output"]:::open

@@ -72,11 +72,11 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 0 of 30 done, 4 ready, 24 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 2 of 30 done, 9 ready, 17 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
-- [ ] CS-48 The core (types, rates, equations, literal slots, the builder). Needs nothing.
+- [x] CS-48 The core (types, rates, equations, literal slots, the builder). Done.
 - [ ] CS-49 The versioned JSON format. Needs CS-48.
 - [ ] CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms). Needs CS-48.
 - [ ] CS-51 The WGSL emitter. Needs CS-48.
@@ -110,7 +110,7 @@ No milestone
 
 - [?] CS-372 Custom shading and styling leftovers. Proposed. Needs CS-61.
 - [?] CS-373 Slang ahead of time for apps: a CLI and a bundler plugin. Proposed. Needs CS-61.
-- [ ] CS-543 CS-48's formula cases checked against the whole KHR_interactivity spec. Needs nothing.
+- [x] CS-543 CS-48's formula cases checked against the whole KHR_interactivity spec. Done.
 - [ ] CS-546 decision: The builder's x + 0 rewrite and the spec's signed zero. Needs nothing. Decided by owner.
 - [ ] CS-548 The IR's math/eq covers floatN and bool, as KHR_interactivity defines it. Needs CS-48.
 - [ ] CS-549 The IR models math/normalize's isValid output. Needs CS-48.

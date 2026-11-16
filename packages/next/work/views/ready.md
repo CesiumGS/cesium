@@ -13,10 +13,15 @@ CS-9 The WebGL 2 renderer
   CS-46  decision: Which test devices are available for the WebGL 2 probe runs?
 
 CS-10 Cesium IR
-  CS-48  The core (types, rates, equations, literal slots, the builder)
+  CS-49  The versioned JSON format
+  CS-50  The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
+  CS-51  The WGSL emitter
   CS-57  Our naga crate (Rust in development and CI only)
-  CS-543  CS-48's formula cases checked against the whole KHR_interactivity spec
+  CS-371  Math ops the transform graph needs: `atanh`, `asinh`, `acosh`, `expm1`, `log1p`, `%`, `hypot`
   CS-546  decision: The builder's x + 0 rewrite and the spec's signed zero
+  CS-548  The IR's math/eq covers floatN and bool, as KHR_interactivity defines it
+  CS-549  The IR models math/normalize's isValid output
+  CS-550  The core IR spike's evaluator gets dot and intToFloat's signed zero right
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -190,5 +195,5 @@ CS-18 The work tracker
   CS-545  Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it
   CS-547  Your move's In progress shows the live run: dispatches in flight and branches done but not merged
 
-139 ready
+144 ready
 ```
