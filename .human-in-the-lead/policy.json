@@ -19,6 +19,15 @@
       "packages/next/work/**"
     ]
   },
+  "env": {
+    "worktree_setup": [
+      "npm install --ignore-scripts --no-audit --no-fund --prefer-offline",
+      "npx gulp prepare",
+      "npx gulp build --workspace @cesium/core",
+      "npx gulp build --workspace @cesium/gltf",
+      "npx gulp build --workspace @cesium/engine"
+    ]
+  },
   "ids": {
     "blocks": [
       {
