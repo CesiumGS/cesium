@@ -4,6 +4,7 @@ import type { Plugin } from "vite";
 import { join } from "node:path";
 import {
   HitldUnavailable,
+  UNAVAILABLE_TEXT,
   claimsElsewhere,
   findItems,
   queryWork,
@@ -108,8 +109,13 @@ export function workApi(prefix = "/work-api"): Plugin {
             }
           } catch (e) {
             if (e instanceof HitldUnavailable) {
-              // hitld missing, or another read API version: the page says so.
-              send(res, 503, { error: e.message, hitld: false });
+              // hitld missing, another read API version, or failing: the
+              // page gets fixed words for the reason, the log the detail.
+              server.config.logger.error(`work-api: ${e.message}`);
+              send(res, 503, {
+                error: UNAVAILABLE_TEXT[e.reason],
+                hitld: false,
+              });
               return;
             }
             // The detail goes to the dev server's terminal, not the page.

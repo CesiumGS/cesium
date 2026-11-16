@@ -155,7 +155,12 @@ export interface WorkFound {
 }
 
 export const API_VERSION: 3;
-export class HitldUnavailable extends Error {}
+export type UnavailableReason = "missing" | "version" | "failed";
+export class HitldUnavailable extends Error {
+  constructor(reason: UnavailableReason, message: string);
+  reason: UnavailableReason;
+}
+export const UNAVAILABLE_TEXT: Record<UnavailableReason, string>;
 export function hitldPath(): string;
 export function checkVersion<T extends { api_version?: unknown }>(answer: T): T;
 export function findItems(

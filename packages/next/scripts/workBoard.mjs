@@ -14,13 +14,10 @@
 // hitld is the dev dependency pinned in package.json. Nothing read from it
 // is executed or evaluated; hitld and git run with fixed arguments only.
 
-import { execFile, execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import { existsSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
-import { promisify } from "node:util";
-
-const run = promisify(execFile);
 
 /** The read API version this adapter understands. */
 export const API_VERSION = 3;
@@ -28,14 +25,29 @@ export const API_VERSION = 3;
 /** The tracker's ID form: only these are looked up. */
 const ID_PATTERN = /^CS-[1-9]\d*$/;
 
-/** Raised when hitld is missing, or answers in another version. */
-export class HitldUnavailable extends Error {}
+/**
+ * Raised when hitld is missing, answers in another version, or fails.
+ * `reason` is "missing", "version" or "failed"; the message is the detail,
+ * for the dev server's log.
+ */
+export class HitldUnavailable extends Error {
+  constructor(reason, message) {
+    super(message);
+    this.reason = reason;
+  }
+}
+
+/** What the page may be told for each reason: fixed words, never hitld's output. */
+export const UNAVAILABLE_TEXT = {
+  missing:
+    "hitld isn't installed: run npm install in the repository (human-in-the-lead is a dev dependency of packages/next)",
+  version: `hitld's read API isn't version ${API_VERSION}, the version Dyno's board reads; install the release package.json pins`,
+  failed: "hitld couldn't read the tracker; see the dev server's log",
+};
 
 /** The pinned hitld's entry point, or a reason it can't be used. */
 export function hitldPath() {
-  const missing = new HitldUnavailable(
-    "hitld isn't installed: run npm install in the repository (human-in-the-lead is a dev dependency of packages/next)",
-  );
+  const missing = new HitldUnavailable("missing", UNAVAILABLE_TEXT.missing);
   let bin;
   try {
     const pkg = createRequire(import.meta.url).resolve(
@@ -52,30 +64,48 @@ export function hitldPath() {
   return bin;
 }
 
+/**
+ * Run one hitld command in `root`: its exit code, and what it wrote. hitld
+ * exits 1 when a command finds a problem, with its JSON answer on stdout
+ * all the same, so the code alone isn't a failure.
+ */
+function runHitld(bin, root, args) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(process.execPath, [bin, ...args], {
+      cwd: root,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    const out = [];
+    const err = [];
+    child.stdout.on("data", (d) => out.push(d));
+    child.stderr.on("data", (d) => err.push(d));
+    child.on("error", () =>
+      reject(new HitldUnavailable("failed", "hitld couldn't be started")),
+    );
+    child.on("close", (code) =>
+      resolve({
+        code,
+        stdout: Buffer.concat(out).toString("utf8"),
+        stderr: Buffer.concat(err).toString("utf8"),
+      }),
+    );
+  });
+}
+
 /** Run one hitld command in `root` and parse its JSON answer. */
 async function hitld(root, args) {
-  const bin = hitldPath();
-  let stdout;
-  try {
-    ({ stdout } = await run(process.execPath, [bin, ...args], {
-      cwd: root,
-      encoding: "utf8",
-      maxBuffer: 1 << 28,
-    }));
-  } catch (e) {
-    // hitld exits 1 when a command finds a problem, with its JSON on stdout.
-    stdout = e.stdout;
-    if (!stdout) {
-      // The first line says why; the rest is a stack for the terminal.
-      const why =
-        String(e.stderr || e.message)
-          .trim()
-          .split("\n")
-          .find((l) => /error/i.test(l)) ?? String(e.message).split("\n")[0];
-      throw new HitldUnavailable(
-        `hitld ${args.slice(0, 2).join(" ")} failed: ${why}`,
-      );
-    }
+  const { stdout, stderr } = await runHitld(hitldPath(), root, args);
+  if (!stdout.trim()) {
+    // The line that says why goes to the dev server's log; the rest is a stack.
+    const why =
+      stderr
+        .trim()
+        .split("\n")
+        .find((l) => /error/i.test(l)) ?? stderr.trim().split("\n")[0];
+    throw new HitldUnavailable(
+      "failed",
+      `hitld ${args.slice(0, 2).join(" ")} failed: ${why}`,
+    );
   }
   return JSON.parse(stdout);
 }
@@ -84,6 +114,7 @@ async function hitld(root, args) {
 export function checkVersion(answer) {
   if (answer.api_version !== API_VERSION) {
     throw new HitldUnavailable(
+      "version",
       `hitld's read API is version ${String(answer.api_version)}; Dyno's board reads version ${API_VERSION}`,
     );
   }
