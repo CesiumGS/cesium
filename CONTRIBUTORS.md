@@ -482,3 +482,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Yu Cheng](https://github.com/KtzeAbyss)
 - [Peter Mayrhofer](https://github.com/mapeGeoinfo)
 - [Mike](https://github.com/dev1837457)
+- [Samuel Estes](https://github.com/estes-sj)

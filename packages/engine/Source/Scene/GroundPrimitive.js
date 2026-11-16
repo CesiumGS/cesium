@@ -811,7 +811,6 @@ GroundPrimitive.prototype.update = function (frameState) {
             ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(
               boundingRectangle,
               textureCoordinateRotationPoints,
-              ellipsoid,
               frameState.mapProjection,
             );
         }
