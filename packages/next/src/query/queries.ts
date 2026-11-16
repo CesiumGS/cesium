@@ -60,7 +60,7 @@ export function targetName(target: RayTarget | undefined): string {
     : `${target.kind} ${target.body.name}`;
 }
 
-/** A segment, metres in the query's anchor's coordinates. */
+/** A segment, meters in the query's anchor's coordinates. */
 export interface QueryRay {
   readonly from: ArrayLike<number>;
   readonly to: ArrayLike<number>;
@@ -69,7 +69,7 @@ export interface QueryRay {
 /** The terrain's own error and the observers' ground (`terrainLineOfSight`'s options). */
 export interface TerrainQueryOptions {
   /**
-   * The terrain source's own vertical accuracy: metres and the statistic
+   * The terrain source's own vertical accuracy: meters and the statistic
    * they are (`"1σ"`, `"LE90"`), added to the drawn tiles' geometric error.
    */
   readonly sourceAccuracy?: {

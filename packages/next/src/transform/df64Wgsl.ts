@@ -1,9 +1,9 @@
 // Double-float (df64) arithmetic in WGSL and an IR emitter for it (plan
 // 2026-11-12, task 4): a value is a vec2f (hi, lo), hi + lo with |lo| at most
 // half an ulp of hi, about 48 bits of significand. The compiler's per-frame
-// centre-constant pass evaluates a smooth function there (a position on the
-// Earth to 1e-7 m, a projection's easting to a micrometre) where float32
-// would be off by metres. The same building blocks as shaders/exactSum.slang
+// center-constant pass evaluates a smooth function there (a position on the
+// Earth to 1e-7 m, a projection's easting to a micrometer) where float32
+// would be off by meters. The same building blocks as shaders/exactSum.slang
 // and warpFitDf64.slang (Knuth's two-sum, Veltkamp-split two-product, no fma),
 // which need the compiler to keep the order of float operations.
 //

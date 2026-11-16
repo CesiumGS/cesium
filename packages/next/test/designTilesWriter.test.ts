@@ -161,7 +161,7 @@ describe("writeGlb", () => {
     expect(table.columns.kind).toEqual(["bridge", "pier"]);
   });
 
-  it("writes per-vertex colours as COLOR_0, normalized bytes, that the loader reads back", async () => {
+  it("writes per-vertex colors as COLOR_0, normalized bytes, that the loader reads back", async () => {
     const colors = new Float32Array([
       1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 1, 0.5, 0.25, 0, 1, 0, 0, 0,
       1,
@@ -189,7 +189,7 @@ describe("writeGlb", () => {
         0.5 / 255 + 1e-6,
       );
     }
-    // Without colours, no COLOR_0.
+    // Without colors, no COLOR_0.
     expect(
       splitGlb(writeGlb(mesh())).json.meshes[0].primitives[0].attributes
         .COLOR_0,

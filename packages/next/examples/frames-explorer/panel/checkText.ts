@@ -1,5 +1,5 @@
 // What each check row says (the owner, 2026-11-06: check rows expand in
-// place, and each states its status in words as well as colour; Task 6c:
+// place, and each states its status in words as well as color; Task 6c:
 // and names its kind, apart from its status). Pure, so the words are
 // unit-tested (test/framesExplorerCheckText.test.ts): nothing reads as
 // verified that isn't (Review Focus 1).
@@ -59,7 +59,7 @@ export interface CheckRowText {
   kind: CheckKind;
   title: string;
   /**
-   * The status in a word or two, beside its icon: never colour alone, and
+   * The status in a word or two, beside its icon: never color alone, and
    * never the kind (the tag says what it compares with). "Checked" and
    * "Failed" only for a judged row whose setup is the current one.
    */
@@ -100,7 +100,7 @@ export function valueLine(r: StressResult): string {
 /**
  * A row's words. `freshness` is the shown evaluation's against the current
  * setup (model.ts): while it is the last setup's, no row carries a verdict,
- * a verdict's colour or a delta (Review Focus 1, R9). While the clock plays
+ * a verdict's color or a delta (Review Focus 1, R9). While the clock plays
  * the rows follow it in one steady state, their values updated in place.
  */
 export function checkRowText(

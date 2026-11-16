@@ -2,7 +2,7 @@
 // dish's near field): each 70 m antenna's receive limit, elevation against
 // azimuth, from DSN 810-005 Module 301's horizon mask spreadsheet
 // (references.json dsn-horizon-masks). The handbook builds them from the
-// terrain (SRTM) and the neighbouring antennas, or the mechanical lower limit
+// terrain (SRTM) and the neighboring antennas, or the mechanical lower limit
 // of about 6°. A dish hears Orion only above its mask.
 //
 // The masks are given every degree of azimuth; the handbook doesn't say how

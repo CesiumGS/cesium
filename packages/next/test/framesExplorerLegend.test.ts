@@ -18,7 +18,7 @@ const op = (
 });
 
 describe("a recorded operation's accuracy line", () => {
-  it("states a bounded operation in metres, 1σ", () => {
+  it("states a bounded operation in meters, 1σ", () => {
     const t = operationText(op(2, { grids: ["g.tif"] }));
     expect(t).toMatchObject({
       kind: "bounded",

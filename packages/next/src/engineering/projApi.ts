@@ -100,7 +100,7 @@ export interface PjAxisInfo {
   readonly name: string;
   readonly abbrev: string;
   readonly direction: string;
-  /** Metres (or radians) per axis unit. */
+  /** Meters (or radians) per axis unit. */
   readonly unit_conv_factor: number;
   readonly unit_name: string;
   readonly unit_auth_name: string;
@@ -199,7 +199,7 @@ export interface ProjApi {
   proj_coordoperation_is_instantiable(operation: PJ): boolean;
   proj_coordoperation_get_grid_used_count(operation: PJ): number;
   proj_coordoperation_get_grid_used(operation: PJ, index: number): PjGridUsed;
-  /** Metres; negative when PROJ reports none. */
+  /** Meters; negative when PROJ reports none. */
   proj_coordoperation_get_accuracy(operation: PJ): number;
   /**
    * [west, south, east, north] in degrees (-1000 for an unknown bound) and

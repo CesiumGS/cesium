@@ -11,7 +11,7 @@ import {
 } from "./viewMath.ts";
 
 /**
- * What a face is, in the sample's metres, from the b-rep form's analytic
+ * What a face is, in the sample's meters, from the b-rep form's analytic
  * identity (docs/design/breps-and-geometry-queries.md, direct manipulation): its outward normal at a point
  * and how far a point is from its surface. A free-form face has no identity
  * here and answers nothing. Surface kinds are the form's: 0 plane, 1

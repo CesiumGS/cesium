@@ -19,7 +19,7 @@
 //   EXT_geospatial_crs_wkt2  extends that object; format "wkt2":
 //                            { wkt2: string }  (required).
 //   EXT_georeference         on a node: { longitude, latitude (degrees),
-//                            height? (metres above the ellipsoid) }; the node
+//                            height? (meters above the ellipsoid) }; the node
 //                            is translated there and turned to the tangent
 //                            plane (-x east, +y up, +z north), after its own
 //                            transform. WGS 84 unless EXT_geospatial_crs says
@@ -57,7 +57,7 @@
 //   3DTILES_ellipsoid        3D Tiles 1.1, status Complete (CesiumGS/3d-tiles,
 //                            extensions/3DTILES_ellipsoid): on the tileset
 //                            { body: string (an IAU name such as "Earth" or
-//                            "Moon", or "none"), radii: [x, y, z] (metres,
+//                            "Moon", or "none"), radii: [x, y, z] (meters,
 //                            absent for "none") }. The radii pick EARTH or
 //                            MOON within 0.01 m per axis; anything else is
 //                            refused, and so is a body that names the other.
@@ -77,9 +77,9 @@
 // else `body`; both, disagreeing, are refused. The area of interest is
 // `areaOfInterest` when given (an override), else derived from the root
 // tile's bounding volume (`derivedArea`): a region's degrees, or a box's or
-// sphere's 27 points (centre, faces, edges, corners) through the root
+// sphere's 27 points (center, faces, edges, corners) through the root
 // transform onto the body, when they are near its surface (a volume in local
-// metres isn't: no area, and a warning) and span less than 180 degrees of
+// meters isn't: no area, and a warning) and span less than 180 degrees of
 // longitude; otherwise there is none, as before.
 //
 // What the draft lacks, and this design needs (spec section 7.2), is a
@@ -430,7 +430,7 @@ const SOURCE_PATH = "extensions.EXT_geospatial_crs_source";
 const ELLIPSOID_PATH = "extensions.3DTILES_ellipsoid";
 /** Where a derived area of interest comes from. */
 const VOLUME_PATH = "root.boundingVolume";
-/** Metres: how near 3DTILES_ellipsoid's radii must be a body's, per axis. */
+/** Meters: how near 3DTILES_ellipsoid's radii must be a body's, per axis. */
 const RADII_TOLERANCE = 0.01;
 /**
  * The largest EPSG code: Esri numbers its own CRSs above it (37xxx, 5xxxx,
@@ -438,7 +438,7 @@ const RADII_TOLERANCE = 0.01;
  * (an Esri code below it that isn't EPSG's) fails at PROJ's lookup, loudly.
  */
 const LAST_EPSG = 32_767;
-/** Metres: how near the body's surface a derived area's volume must come. */
+/** Meters: how near the body's surface a derived area's volume must come. */
 const SURFACE_TOLERANCE = 10_000;
 
 /** A tileset's placement as declared: the mode, and a rigid one's anchor. */
@@ -503,7 +503,7 @@ export interface TilesetGeoreference {
   readonly pipeline?: string;
   /** The geoid model design heights fall back to (never with `pipeline`). */
   readonly geoidFallback?: GeoidModel;
-  /** The fallback's stated accuracy, metres; only with `geoidFallback`. */
+  /** The fallback's stated accuracy, meters; only with `geoidFallback`. */
   readonly fallbackSigma?: number;
   readonly sources: GeoreferenceSources;
   /**
@@ -998,7 +998,7 @@ function readArea(value: unknown, path: string): AreaOfInterest {
 }
 
 /**
- * 3DTILES_ellipsoid's body: its radii (metres) within RADII_TOLERANCE per
+ * 3DTILES_ellipsoid's body: its radii (meters) within RADII_TOLERANCE per
  * axis of EARTH's or MOON's ellipsoid, and its `body`, if given, naming
  * that body (case aside). "none", other radii, or a body naming another is
  * refused, naming the field.
@@ -1054,15 +1054,15 @@ const wrapped = (degrees: number) =>
  * The area of interest the root tile's bounding volume covers on `body`: a
  * region's own degrees (a region is body-fixed by definition, and states its
  * own span, so a wide one is kept); or a box's or sphere's 27 points
- * (centre, face and edge middles, corners) through the root's transform,
+ * (center, face and edge middles, corners) through the root's transform,
  * when they span less than 180 degrees of longitude (27 points can't tell
  * a wider span, and a box over a pole is clipped to its sampled latitudes).
  * Undefined, with nothing to say, for no or a malformed volume or transform,
  * or a wide box. Undefined with a `problem` when the volume isn't plausibly
  * body-fixed: it doesn't come within 10 km of the body's surface (its
- * centre's height is more than 10 km plus its reach, the farthest sampled
- * point from the centre), as a box in local metres without a transform
- * doesn't (it sits near the body's centre). It only scopes PROJ's choice of
+ * center's height is more than 10 km plus its reach, the farthest sampled
+ * point from the center), as a box in local meters without a transform
+ * doesn't (it sits near the body's center). It only scopes PROJ's choice of
  * operation, as `areaOfInterest` does.
  */
 function derivedArea(
@@ -1090,15 +1090,15 @@ function derivedArea(
       ? { area: { west: west!, south: south!, east: east!, north: north! } }
       : none;
   }
-  let centre: number[];
+  let center: number[];
   let axes: number[][];
   if (isNumbers(volume.box, 12)) {
     const b = volume.box;
-    centre = b.slice(0, 3);
+    center = b.slice(0, 3);
     axes = [b.slice(3, 6), b.slice(6, 9), b.slice(9, 12)];
   } else if (isNumbers(volume.sphere, 4) && volume.sphere[3]! >= 0) {
     const r = volume.sphere[3]!;
-    centre = volume.sphere.slice(0, 3);
+    center = volume.sphere.slice(0, 3);
     axes = [
       [r, 0, 0],
       [0, r, 0],
@@ -1118,14 +1118,14 @@ function derivedArea(
   const offSurface = (how: string) => ({
     problem: `${VOLUME_PATH} isn't near the ${body.name}'s surface (${how}), so no area of interest is derived from it (declare ${GEOREFERENCE_PATH}.areaOfInterest)`,
   });
-  // The 27 points, the centre first.
+  // The 27 points, the center first.
   const points: Float64Array[] = [];
   for (const i of [0, -1, 1]) {
     for (const j of [0, -1, 1]) {
       for (const k of [0, -1, 1]) {
         const p = [0, 1, 2].map(
           (c) =>
-            centre[c]! + i * axes[0]![c]! + j * axes[1]![c]! + k * axes[2]![c]!,
+            center[c]! + i * axes[0]![c]! + j * axes[1]![c]! + k * axes[2]![c]!,
         );
         const point = new Float64Array(3);
         for (let r = 0; r < 3; r++) {
@@ -1157,21 +1157,21 @@ function derivedArea(
       !Number.isFinite(c.latitude) ||
       !Number.isFinite(c.height)
     ) {
-      return offSurface("a sampled point is at its centre");
+      return offSurface("a sampled point is at its center");
     }
     if (point === middlePoint) {
       // Body-fixed: the volume comes within SURFACE_TOLERANCE of the surface.
       const allowed = SURFACE_TOLERANCE + reach;
       if (!(Math.abs(c.height) <= allowed)) {
         return offSurface(
-          `its centre is ${(c.height / 1000).toFixed(1)} km from it, and it reaches ${(reach / 1000).toFixed(1)} km`,
+          `its center is ${(c.height / 1000).toFixed(1)} km from it, and it reaches ${(reach / 1000).toFixed(1)} km`,
         );
       }
     }
     lons.push(c.longitude * DEGREES);
     lats.push(c.latitude * DEGREES);
   }
-  // Longitudes about the centre's (the first point), so an area across the
+  // Longitudes about the center's (the first point), so an area across the
   // antimeridian stays one span (and west > east says so).
   const middle = lons[0]!;
   const offsets = lons.map((lon) => wrapped(lon - middle));

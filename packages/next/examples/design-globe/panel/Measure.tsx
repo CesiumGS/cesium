@@ -32,7 +32,7 @@ export interface MeasureLiveSource {
 export interface MeasureActions {
   setSnap(mode: SnapMode): void;
   clear(): void;
-  pointAtCentre(): void;
+  pointAtCenter(): void;
   show(id: OpenerId): void;
   /** Flies close to the ruler's far end, where its gap shows. */
   closeInOnRuler(): void;
@@ -112,7 +112,7 @@ function Row({ row }: { row: DetailRow }) {
   );
 }
 
-/** The design and true distances, side by side and labelled. */
+/** The design and true distances, side by side and labeled. */
 function Distances({
   design,
   designLabel = "Design distance",

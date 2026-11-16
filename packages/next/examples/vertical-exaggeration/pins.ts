@@ -11,7 +11,7 @@ import type { Site } from "./sites.ts";
 
 /** Pixels a pin stands tall. */
 const PIN_SIZE = { summit: 30, town: 24 } as const;
-/** Linear colours of the pins. */
+/** Linear colors of the pins. */
 const PIN_COLOR = {
   summit: [0.9, 0.12, 0.08, 1],
   town: [0.05, 0.45, 0.9, 1],
@@ -57,7 +57,7 @@ const element = <K extends keyof HTMLElementTagNameMap>(
   return e;
 };
 
-const metres = (m: number) => `${Math.round(m).toLocaleString("en-US")} m`;
+const meters = (m: number) => `${Math.round(m).toLocaleString("en-US")} m`;
 
 interface Pin {
   readonly site: Site;
@@ -116,7 +116,7 @@ export function createPins(
       overlay.append(label);
       pins.set(site, { site, transform, draw, label, height });
     }
-    pins.get(site)!.height.textContent = metres(site.height ?? 0);
+    pins.get(site)!.height.textContent = meters(site.height ?? 0);
   };
 
   const offTick = engine.onAfterTick(() => {

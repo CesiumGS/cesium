@@ -9,7 +9,7 @@ export interface Section {
   readonly traces: number;
   /** Samples a trace. */
   readonly samples: number;
-  /** Metres between traces. */
+  /** Meters between traces. */
   readonly spacing: number;
   /** Two-way time of the first sample, s, and the step, s. */
   readonly t0: number;

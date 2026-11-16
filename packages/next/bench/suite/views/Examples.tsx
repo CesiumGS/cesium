@@ -190,14 +190,14 @@ export function ExamplePage() {
     if (!exists) {
       return;
     }
-    let cancelled = false;
+    let canceled = false;
     const lease = engineKeeper.acquire();
     lease.ready.then(
-      (made) => !cancelled && setShared(made),
-      (e) => !cancelled && setError(message(e)),
+      (made) => !canceled && setShared(made),
+      (e) => !canceled && setError(message(e)),
     );
     return () => {
-      cancelled = true;
+      canceled = true;
       lease.release();
       setShared(undefined);
     };
@@ -207,15 +207,15 @@ export function ExamplePage() {
     if (!showSource || !info) {
       return;
     }
-    let cancelled = false;
+    let canceled = false;
     setSource(undefined);
     info.source().then(
-      (text) => !cancelled && setSource(text),
+      (text) => !canceled && setSource(text),
       (e) =>
-        !cancelled && setSource(`// Could not load the source: ${message(e)}`),
+        !canceled && setSource(`// Could not load the source: ${message(e)}`),
     );
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [showSource, info]);
 

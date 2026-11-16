@@ -14,7 +14,7 @@ export interface Recipe {
   distributable: boolean;
   sources: RecipeSource[];
   credits: string[];
-  modelled: string[];
+  modeled: string[];
 }
 export const RECIPES: Record<string, Recipe>;
 export const DEFAULT_RECIPE: string;

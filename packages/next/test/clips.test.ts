@@ -308,7 +308,7 @@ describe("the table", () => {
       // The same point for each space: the drawn one is the true one here.
       const gpu = tableKeeps(table, { true: rel, drawn: rel });
       const cpu = sets.every((s) => clipSetKeeps(s, apply(inverse, world)));
-      // Float32 rows: a point within a millimetre of a face may differ.
+      // Float32 rows: a point within a millimeter of a face may differ.
       if (gpu === cpu) {
         agree++;
       } else {
@@ -379,7 +379,7 @@ function invert(m: ArrayLike<number>): number[] {
   return out;
 }
 
-/** Whether a point is within `tolerance` of a shape's boundary, by sampling its neighbours. */
+/** Whether a point is within `tolerance` of a shape's boundary, by sampling its neighbors. */
 function nearBoundary(
   sets: readonly ClipSet[],
   p: number[],

@@ -95,7 +95,7 @@ function prefixed(x: number, units: Units, base: string, digits: number) {
 
 /**
  * A length in meters in the unit that reads best: 384,400 km, 2.0 m,
- * 31 mm, 3.4 nm; below a nanometre, meters with a power of ten.
+ * 31 mm, 3.4 nm; below a nanometer, meters with a power of ten.
  */
 export function length(meters: number, digits = 2): string {
   if (Math.abs(meters) >= 1e6) {

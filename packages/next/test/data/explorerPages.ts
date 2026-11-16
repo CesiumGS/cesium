@@ -261,7 +261,7 @@ export async function accuracyRows(): Promise<AccuracyRow[]> {
     ["orion-moon", orionPoint, moon],
     ["lunar-89.5S-earth", lunar, earth],
     ["earth-sites-1km", site(6378137, 0), site(6378137, 1000)],
-    ["barycentre-earth", framePoint(frames.icrf, [0, 0, 0]), earth],
+    ["barycenter-earth", framePoint(frames.icrf, [0, 0, 0]), earth],
     ["orion-dss14", orionPoint, station("DSS14", at)],
   ];
   for (const [name, a, b] of cases) {

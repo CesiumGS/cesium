@@ -101,7 +101,7 @@ export class OrbitController {
     }
   }
 
-  /** A cancelled pointer, or a mouse leaving (a finger's leave follows its up). */
+  /** A canceled pointer, or a mouse leaving (a finger's leave follows its up). */
   private onCancel(e: PointerEvent, leave = false): void {
     if (e.pointerType === "touch") {
       if (!leave) {

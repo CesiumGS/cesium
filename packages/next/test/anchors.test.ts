@@ -294,18 +294,18 @@ describe("anchors", () => {
     camera.up.set([0, 1, 0]);
     camera.right.set([1, 0, 0]);
     camera.version++;
-    const centre = [320, 180];
-    expect(Array.from(view.toPixel([0, 0, 0])!)).toEqual(centre);
+    const center = [320, 180];
+    expect(Array.from(view.toPixel([0, 0, 0])!)).toEqual(center);
     view.setAnchorPlacement(earth, translation(100, 0, 0));
     // The body anchor by default: its origin is now 100 m to the right.
     expect(view.toPixel([0, 0, 0])![0]).toBeGreaterThan(640);
-    expect(Array.from(view.toPixel([-100, 0, 0])!)).toEqual(centre);
+    expect(Array.from(view.toPixel([-100, 0, 0])!)).toEqual(center);
     // Another anchor, at the identity: render space's numbers.
     const site = world.addAnchor("site");
-    expect(Array.from(view.toPixel([0, 0, 0], site)!)).toEqual(centre);
+    expect(Array.from(view.toPixel([0, 0, 0], site)!)).toEqual(center);
     // The table's root differs from the placed body anchor.
     const atRoot = view.toPixel([0, 0, 0], world.root)!;
-    expect(Array.from(atRoot)).toEqual(centre);
+    expect(Array.from(atRoot)).toEqual(center);
     expect(Array.from(atRoot)).not.toEqual(
       Array.from(view.toPixel([0, 0, 0])!),
     );

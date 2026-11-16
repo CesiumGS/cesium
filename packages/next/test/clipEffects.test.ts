@@ -487,7 +487,7 @@ describe("the translucent passes' depth range", () => {
       { keep: "outside" },
     );
     const range = ghostRange([plan(pit)], camera)!;
-    // 100 m away, 13 m about the centre.
+    // 100 m away, 13 m about the center.
     expect(range.near).toBeCloseTo(87, 6);
     expect(range.far).toBeCloseTo(113, 6);
   });

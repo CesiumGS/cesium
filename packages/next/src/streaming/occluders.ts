@@ -40,7 +40,7 @@ export interface Occluder {
 
 /** An occluder that is a scaled copy of the body's ellipsoid (a depth pyramid can rasterize it). */
 export interface BodyShape {
-  readonly centre: Vec3;
+  readonly center: Vec3;
   /** The radii (x, y, z), m, of the ellipsoid that hides what is inside it. */
   readonly radii: Vec3;
 }

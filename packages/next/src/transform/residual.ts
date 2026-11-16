@@ -1,11 +1,11 @@
 // Residual evaluation of an IR program (plan 2026-11-12, task 4): the value
-// of every node at p = c + δ is held as its value at the draw centre c, a
+// of every node at p = c + δ is held as its value at the draw center c, a
 // float64 number computed on the CPU (or in df64), plus the float32 change
 // Δ = v(c + δ) - v(c). Each op has a rule giving Δ from its operands' Δ and
-// centre values with no subtraction of nearly equal numbers, so Δ is as
+// center values with no subtraction of nearly equal numbers, so Δ is as
 // accurate relative to itself as float32 allows whatever the size of the
-// centre values. A position 6.4e6 m from the origin moved by metres, or a
-// projection's easting, keeps millimetres:
+// center values. A position 6.4e6 m from the origin moved by meters, or a
+// projection's easting, keeps millimeters:
 //   Δ(a b) = a_c Δb + b_c Δa + Δa Δb          (exact algebra)
 //   Δ√a = Δa / (√a_c + √(a_c + Δa))
 //   Δ sin a = cos a_c sin Δa - 2 sin a_c sin²(Δa / 2)
@@ -15,13 +15,13 @@
 // sin, atan and exp) the rules use the helpers below: short polynomials for
 // the small arguments Δ has, and the builtin only when Δ is large.
 //
-// Centre values the rules read are per-draw constants ("stored"); values of
+// Center values the rules read are per-draw constants ("stored"); values of
 // nodes that depend on no position are per-view uniforms ("derived", float64
 // on the CPU). A stored value that is affine in separable parameters s
 // (displacement ∝ factor) is kept as v(0) and its derivative per s, so the
 // shader forms v(s) from the uniform s and no per-frame work follows a
 // slider move. Branches (select, min, max, abs, floor, comparisons) follow
-// the vertex's own side with the crossing term from the centre values.
+// the vertex's own side with the crossing term from the center values.
 import { f32Literal } from "./df64Wgsl.ts";
 import { expandComposite, Ir, type IrProgram, type NodeId } from "./ir.ts";
 
@@ -125,7 +125,7 @@ fn tg_abs(ac: f32, da: f32) -> f32 {
   return select(abs(v) - abs(ac), sign(ac) * da, ac != 0.0 && ((ac > 0.0) == (v > 0.0)));
 }
 
-// The change of select(cond, t, f) when cond is fv at the vertex and fc at the centre, e = t_c - f_c.
+// The change of select(cond, t, f) when cond is fv at the vertex and fc at the center, e = t_c - f_c.
 fn tg_select(fv: f32, fc: f32, dt: f32, df: f32, e: f32) -> f32 {
   let tv = fv != 0.0;
   let tc = fc != 0.0;
@@ -203,7 +203,7 @@ export interface PassHost {
   uniform(offset: number): string;
 }
 
-/** A per-draw value: node `node`'s centre value, then one derivative float per `terms` parameter. */
+/** A per-draw value: node `node`'s center value, then one derivative float per `terms` parameter. */
 export interface StoredValue {
   readonly node: NodeId;
   readonly offset: number;
@@ -219,14 +219,14 @@ export interface DerivedValue {
 export interface PassOutput {
   /** WGSL for the output's change Δ at the vertex ("0.0" when it has none). */
   readonly delta: string;
-  /** WGSL for the output's centre value. */
-  readonly centre: string;
+  /** WGSL for the output's center value. */
+  readonly center: string;
 }
 
 /**
  * One program's residual evaluation: `lines` define `d<id>` (the change of
  * each position-dependent node) from `dIn: vec3f`, the vertex's offset from
- * the centre, reading `c: DrawCentre` and `u: RouteUniforms`.
+ * the center, reading `c: DrawCenter` and `u: RouteUniforms`.
  */
 export class ResidualPass {
   readonly ir: Ir;
@@ -239,7 +239,7 @@ export class ResidualPass {
   readonly approximate = new Set<string>();
   readonly outputs: NodeId[];
   private readonly varyingMemo = new Map<NodeId, boolean>();
-  private centreMemo: IrProgram | undefined;
+  private centerMemo: IrProgram | undefined;
   private uniformMemo: IrProgram | undefined;
   private readonly storedExpr = new Map<NodeId, string>();
   private readonly derivedExpr = new Map<NodeId, string>();
@@ -257,7 +257,7 @@ export class ResidualPass {
     this.outputs = [...program.outputs];
   }
 
-  /** Emits the statements and returns each program output's change and centre value. */
+  /** Emits the statements and returns each program output's change and center value. */
   emit(): PassOutput[] {
     this.program.nodes.forEach((_, id) => {
       if (this.varying(id)) {
@@ -266,17 +266,17 @@ export class ResidualPass {
     });
     return this.outputs.map((id) => ({
       delta: this.varying(id) ? `d${id}` : "0.0",
-      centre: this.cv(id),
+      center: this.cv(id),
     }));
   }
 
   /** The program whose outputs are `this.outputs` followed by each stored value's node (after `emit`). */
-  centreProgram(): IrProgram {
-    this.centreMemo ??= this.ir.program([
+  centerProgram(): IrProgram {
+    this.centerMemo ??= this.ir.program([
       ...this.outputs,
       ...this.stored.map((s) => s.node),
     ]);
-    return this.centreMemo;
+    return this.centerMemo;
   }
 
   /** The program of the derived uniforms' nodes, in `derived` order (after `emit`). */
@@ -345,7 +345,7 @@ export class ResidualPass {
     return result;
   }
 
-  /** The WGSL expression of node `id`'s centre value. */
+  /** The WGSL expression of node `id`'s center value. */
   cv(id: NodeId): string {
     const node = this.ir.nodes[id]!;
     if (node.op === "const") {
@@ -387,7 +387,7 @@ export class ResidualPass {
     return expr;
   }
 
-  /** The vertex's value of a condition: the flag itself, or the centre value plus its change. */
+  /** The vertex's value of a condition: the flag itself, or the center value plus its change. */
   private flag(id: NodeId): string {
     if (!this.varying(id)) {
       return this.cv(id);

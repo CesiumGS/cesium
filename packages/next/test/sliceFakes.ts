@@ -115,7 +115,7 @@ const requests = {
   register: () => {},
   unregister: () => {},
   tryAcquire: () => false,
-  cancelled: () => {},
+  canceled: () => {},
   release: () => {},
 } as unknown as RequestScheduler;
 

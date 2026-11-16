@@ -77,7 +77,7 @@ const two = (a: number): string =>
 
 /**
  * A small quantity and its unit, never in e-notation (the page's rule):
- * metres in the SI prefix that keeps it readable ("4 nm", "0.3 µm",
+ * meters in the SI prefix that keeps it readable ("4 nm", "0.3 µm",
  * "0.0066 m"); another unit as a decimal to a millionth of it, below which
  * "under 0.000001 ftUS".
  */

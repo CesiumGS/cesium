@@ -10,7 +10,7 @@ import {
   type DrawHandle,
   type MeshHandle,
 } from "../../src/index.ts";
-import { KernelCancelled } from "../../src/brep/kernelClient.ts";
+import { KernelCanceled } from "../../src/brep/kernelClient.ts";
 import type { KernelName } from "../../src/brep/kernelProtocol.ts";
 import type { ExampleContext } from "../types.ts";
 import { KIND_NAMES, linearOf } from "../brep-first-look/analysis.ts";
@@ -44,7 +44,7 @@ import {
   PICK,
   PREVIEW_COLOR,
   SELECT,
-  leafColour,
+  leafColor,
   leafSwatch,
 } from "./look.ts";
 import { Manipulator, type FaceHandle } from "./manipulator.ts";
@@ -137,7 +137,7 @@ import { mad, makeRig, type Rig, type V3 } from "./viewMath.ts";
  *   leaf that made it from the kernel's face provenance, so pulling a hole's
  *   wall changes the hole's radius.
  * - A STEP leaf is an imported solid (`stepFiles.ts`). Open CASCADE's worker
- *   keeps the part (`registerStep`), centred on its bounds, and a recipe's
+ *   keeps the part (`registerStep`), centered on its bounds, and a recipe's
  *   `step` leaf is a copy of it with its own placement. Only Open CASCADE
  *   builds with it; with SMLib selected the sample says so and keeps the
  *   last solid.
@@ -218,7 +218,7 @@ export async function run({
   const settings = {
     kernel: (params.kernel === "smlib" ? "smlib" : "occt") as KernelName,
     edges: !uiFlags.has("noedges"),
-    byLeaf: !uiFlags.has("nocolour"),
+    byLeaf: !uiFlags.has("nocolor"),
     wire: uiFlags.has("wire"),
     xray: uiFlags.has("xray"),
     snap: !uiFlags.has("nosnap"),
@@ -234,7 +234,7 @@ export async function run({
       ui:
         [
           ...(settings.edges ? [] : ["noedges"]),
-          ...(settings.byLeaf ? [] : ["nocolour"]),
+          ...(settings.byLeaf ? [] : ["nocolor"]),
           ...(settings.wire ? ["wire"] : []),
           ...(settings.xray ? ["xray"] : []),
           ...(settings.snap ? [] : ["nosnap"]),
@@ -366,7 +366,7 @@ export async function run({
   /** Looks at the solid (or the bracket's place before there is one) from a standard view. */
   const goView = (name: StandardView | "iso") => {
     const bounds = shown?.result.bounds;
-    const centre: V3 = bounds
+    const center: V3 = bounds
       ? [
           (bounds.min[0] + bounds.max[0]) / 2,
           (bounds.min[1] + bounds.max[1]) / 2,
@@ -385,7 +385,7 @@ export async function run({
         )
       : 2.6;
     const { heading, pitch } = VIEW_ANGLES[name];
-    viewer.zoomTo({ center: ecef(centre), radius }, heading * DEG, pitch * DEG);
+    viewer.zoomTo({ center: ecef(center), radius }, heading * DEG, pitch * DEG);
   };
   viewer.setControls("orbit");
   applyLighting(viewer, lighting);
@@ -398,7 +398,7 @@ export async function run({
     /** Draw indices of the faces' draws, for picks. */
     faceDraws: Set<number>;
     /**
-     * Each face draw's colour shader, kept so a new palette replaces the
+     * Each face draw's color shader, kept so a new palette replaces the
      * texture in place: a new shader reads a stand-in until its texture
      * has loaded (a palette read before that was black).
      */
@@ -452,7 +452,7 @@ export async function run({
       refreshResult();
       refreshTree();
       refreshProperties();
-      applyColours();
+      applyColors();
       manipulator?.invalidate();
       engine.requestRender();
     },
@@ -496,7 +496,7 @@ export async function run({
             : true;
     for (let face = 0; face < faces; face++) {
       const tag = result.faceTags[face]!;
-      const colour =
+      const color =
         face === picked?.face
           ? PICK
           : hovering(face, tag)
@@ -504,18 +504,18 @@ export async function run({
             : chosen.has(tag)
               ? SELECT
               : settings.byLeaf && tag > 0
-                ? leafColour(tag)
+                ? leafColor(tag)
                 : PLAIN;
       image.data.set(
-        [colour[0], colour[1], colour[2], 1].map((v) => Math.round(v * 255)),
+        [color[0], color[1], color[2], 1].map((v) => Math.round(v * 255)),
         face * 4,
       );
     }
     return image;
   };
 
-  /** Colours a solid's faces by leaf; the selection's, the picked and the hovered face in their own colours. */
-  const colour = (solid: Shown) => {
+  /** Colors a solid's faces by leaf; the selection's, the picked and the hovered face in their own colors. */
+  const color = (solid: Shown) => {
     const palette = paletteOf(solid.result);
     for (const draw of faceDraws(solid.handle)) {
       const shader = solid.shaders.get(draw);
@@ -534,20 +534,20 @@ export async function run({
             clamp: true,
           },
         },
-        label: "CSG: face colours",
+        label: "CSG: face colors",
       });
       solid.shaders.set(draw, made);
       world.setDrawShader(draw, made);
     }
   };
 
-  /** Colours the solid shown, and the one waiting to replace it. */
-  const applyColours = () => {
+  /** Colors the solid shown, and the one waiting to replace it. */
+  const applyColors = () => {
     if (shown) {
-      colour(shown);
+      color(shown);
     }
     if (buffer.pending) {
-      colour(buffer.pending);
+      color(buffer.pending);
     }
     engine.requestRender();
   };
@@ -613,7 +613,7 @@ export async function run({
     if (settings.edges) {
       addEdges(next);
     }
-    colour(next);
+    color(next);
     setSolidVisible(next, false);
     engine.requestRender();
     void buffer.stage(next, (superseded) => settled(next, superseded));
@@ -854,7 +854,7 @@ export async function run({
         `csg: ${KERNEL_NAMES[kernel]}${final ? "" : " (preview)"}: kernel ${result.timings.kernelMs.toFixed(1)} ms (${result.booleans} booleans), convert ${result.timings.convertMs.toFixed(1)} ms, prepare ${ms(result.timings.prepareMs)}, ${result.form.faceSurface.length} faces`,
       );
     } catch (error) {
-      if (error instanceof KernelCancelled || mine !== sequence) {
+      if (error instanceof KernelCanceled || mine !== sequence) {
         return;
       }
       failure = error instanceof Error ? error.message : String(error);
@@ -938,7 +938,7 @@ export async function run({
     return undefined;
   };
 
-  /** Where the solid is at a pixel, in the sample's metres. */
+  /** Where the solid is at a pixel, in the sample's meters. */
   const pointAt = async (x: number, y: number): Promise<V3 | undefined> => {
     const scale = viewer.canvas.width / Math.max(1, viewer.canvas.clientWidth);
     const hit = await view.pickPosition(x * scale, y * scale);
@@ -1005,7 +1005,7 @@ export async function run({
   const hoverClear = () => {
     if (hoverFace !== undefined) {
       hoverFace = undefined;
-      applyColours();
+      applyColors();
     }
   };
   let hoverBusy = false;
@@ -1021,7 +1021,7 @@ export async function run({
       const hit = await facePick(x, y);
       if (!dragging && hit?.face !== hoverFace) {
         hoverFace = hit?.face;
-        applyColours();
+        applyColors();
       }
     } finally {
       hoverBusy = false;
@@ -1121,7 +1121,7 @@ export async function run({
     refreshTree();
     refreshProperties();
     refreshToolbar();
-    applyColours();
+    applyColors();
     manipulator?.invalidate();
   };
   /** A finished edit of the tree's structure or a node: one undo step, and the solid re-evaluates. */
@@ -1281,8 +1281,8 @@ export async function run({
     for (const id of ids) {
       removeNode(tree.current, id);
     }
-    const neighbour = parent.children[Math.min(at, parent.children.length - 1)];
-    selection = [neighbour?.id ?? parent.id];
+    const neighbor = parent.children[Math.min(at, parent.children.length - 1)];
+    selection = [neighbor?.id ?? parent.id];
     picked = undefined;
     changed(`Delete ${names}`);
   };
@@ -1349,7 +1349,7 @@ export async function run({
         `csg: ${file}: ${part.solids} solid${part.solids === 1 ? "" : "s"}, ${part.faces} faces, ${part.size.map((v) => v.toFixed(3)).join(" × ")} m`,
       );
     } catch (error) {
-      if (error instanceof KernelCancelled || signal.aborted) {
+      if (error instanceof KernelCanceled || signal.aborted) {
         return;
       }
       problem = `${file} couldn't be imported: ${error instanceof Error ? error.message : String(error)}`;
@@ -1655,7 +1655,7 @@ export async function run({
       }
       applyWire();
     } else if (key === "byLeaf") {
-      applyColours();
+      applyColors();
     }
     persistUi();
     refreshToolbar();
@@ -1842,9 +1842,9 @@ export async function run({
       shortcut: "W",
       onClick: () => toggle("wire", !settings.wire),
     }),
-    add("colour", {
+    add("color", {
       icon: "paint",
-      label: "Colour faces by the leaf that made them",
+      label: "Color faces by the leaf that made them",
       shortcut: "C",
       onClick: () => toggle("byLeaf", !settings.byLeaf),
     }),
@@ -1875,7 +1875,7 @@ export async function run({
     buttons.edges!.setPressed(settings.edges);
     buttons.wire!.setPressed(settings.wire);
     buttons.xray!.setPressed(settings.xray);
-    buttons.colour!.setPressed(settings.byLeaf);
+    buttons.color!.setPressed(settings.byLeaf);
     buttons.snap!.setPressed(settings.snap);
     const real = selection.filter((id) => id !== tree.current.root.id);
     for (const op of ["union", "difference", "intersection"] as const) {

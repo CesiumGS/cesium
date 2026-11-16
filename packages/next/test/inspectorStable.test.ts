@@ -158,7 +158,7 @@ function snapshot(scale: number): InspectorSnapshot {
         max: 128,
         adaptive: true,
         protocol: "h2",
-        cancelled: big(1),
+        canceled: big(1),
         uploadQueue: heavy ? 17 : 0,
       },
       cache: { bytes: heavy ? 580e6 : 1e6, budget: 512e6, overflow: 64e6 },
@@ -176,7 +176,7 @@ function snapshot(scale: number): InspectorSnapshot {
         bytes: heavy ? big(1e6) : 0,
         drawn: big(5),
         unused: heavy ? 3 : 0,
-        cancelled: 0,
+        canceled: 0,
       })),
       load: {
         phases: [

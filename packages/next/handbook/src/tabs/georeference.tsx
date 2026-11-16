@@ -30,7 +30,7 @@ const SECTIONS = [
   { id: "grid", title: "Grid and ground distance" },
   { id: "tilesets", title: "Tilesets under nodes" },
   { id: "bentley", title: "What may still need an extension" },
-  { id: "catalogue", title: "The frame catalogue" },
+  { id: "catalog", title: "The frame catalog" },
 ] as const;
 
 interface TreeNode {
@@ -287,7 +287,7 @@ const THREE = [
 const OPEN = [
   {
     what: "A declared coordinate operation and its accuracy",
-    why: "A CRS says where content is, not which operation the producer used to move it there. Two operations between the same CRSs can differ by metres (a ballpark transformation against a gridded one), so a producer who reprojected needs to say which, as WKT2's `COORDINATEOPERATION` or `BOUNDCRS`, for a consumer to reproduce the placement exactly.",
+    why: "A CRS says where content is, not which operation the producer used to move it there. Two operations between the same CRSs can differ by meters (a ballpark transformation against a gridded one), so a producer who reprojected needs to say which, as WKT2's `COORDINATEOPERATION` or `BOUNDCRS`, for a consumer to reproduce the placement exactly.",
   },
   {
     what: "`IfcMapConversionScaled`'s scale semantics",
@@ -346,19 +346,19 @@ export function Georeferencing() {
       <Sec id="placement" title="Frames and placement">
         <p>
           Two things sit near each other and are not the same. The{" "}
-          <strong>frame catalogue</strong> is the engine&apos;s knowledge of
+          <strong>frame catalog</strong> is the engine&apos;s knowledge of
           reference systems: ICRF, ITRF, the Moon&apos;s frames, with the
           ephemerides and Earth orientation that move them. It is data feeding
           the graph. <strong>Placement</strong> is about content: a model made
           in a CRS, and the route that takes it to a body&apos;s frame. The
-          catalogue is why the module is called <C>frames</C> and not{" "}
+          catalog is why the module is called <C>frames</C> and not{" "}
           <C>georeference</C>: georeferencing names placing <em>content</em>.
         </p>
         <DataTable
           label="Frames against placement"
           columns={[
             { head: "", cell: (r) => <strong>{r.what}</strong> },
-            { head: "Frame catalogue", cell: (r) => <Ticks text={r.frame} /> },
+            { head: "Frame catalog", cell: (r) => <Ticks text={r.frame} /> },
             {
               head: "Placement",
               cell: (r) => <Ticks text={r.placement} />,
@@ -383,7 +383,7 @@ export function Georeferencing() {
             <C>frameName</C>: the reference frame the design coordinates are in.
           </li>
           <li>
-            <C>displayed(design)</C>: body-fixed metres of a design point, as
+            <C>displayed(design)</C>: body-fixed meters of a design point, as
             this placement draws it.
           </li>
           <li>
@@ -393,7 +393,7 @@ export function Georeferencing() {
           </li>
           <li>
             <C>displayError(design)</C>: how far the placement draws a design
-            point from where it truly is, in metres. 0 when the route is the
+            point from where it truly is, in meters. 0 when the route is the
             projection itself.
           </li>
         </ul>
@@ -474,7 +474,7 @@ export function Georeferencing() {
         <p>
           The built-in projections run grid to geographic, each with its own IR
           source, so a node over projected content compiles: its vertices are
-          carried to body-fixed metres in the vertex stage, exact at any
+          carried to body-fixed meters in the vertex stage, exact at any
           distance from the anchor, where a single rigid transform sags away
           from it.
         </p>
@@ -531,7 +531,7 @@ export function Georeferencing() {
         <ul>
           <li>
             A tileset whose root <C>transform</C> carries body-fixed (ECEF)
-            metres, as most do, belongs in a frame whose local coordinates are
+            meters, as most do, belongs in a frame whose local coordinates are
             body-fixed: an exaggeration over ITRF, say.
           </li>
           <li>
@@ -583,7 +583,7 @@ export function Georeferencing() {
         />
       </Sec>
 
-      <Sec id="catalogue" title="The frame catalogue">
+      <Sec id="catalog" title="The frame catalog">
         <p>
           1.x keeps content and the camera in one Earth-fixed space. 2.0 has a
           tree of reference frames, so a question such as &quot;where is the
@@ -624,7 +624,7 @@ export function Georeferencing() {
           <C>&quot;precise&quot;</C>. The levels choose a model and its data, so
           they set accuracy; values are float64 at both. A reference frame runs
           at the highest level anyone has asked for. Loading is asynchronous and
-          cancellable, and queries stay synchronous.
+          cancelable, and queries stay synchronous.
         </p>
         <DataTable
           label="Providers"

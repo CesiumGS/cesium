@@ -58,8 +58,8 @@ class Wire {
     this.chain([a, b], false);
   }
 
-  /** A circle of `radius` about an axis through `centre`, in the plane across `u` and `v`. */
-  circle(centre: Vec3, u: Vec3, v: Vec3, radius: number): void {
+  /** A circle of `radius` about an axis through `center`, in the plane across `u` and `v`. */
+  circle(center: Vec3, u: Vec3, v: Vec3, radius: number): void {
     if (radius <= 0) {
       return;
     }
@@ -69,9 +69,9 @@ class Wire {
       const c = Math.cos(a) * radius;
       const s = Math.sin(a) * radius;
       points.push([
-        centre[0] + c * u[0] + s * v[0],
-        centre[1] + c * u[1] + s * v[1],
-        centre[2] + c * u[2] + s * v[2],
+        center[0] + c * u[0] + s * v[0],
+        center[1] + c * u[1] + s * v[1],
+        center[2] + c * u[2] + s * v[2],
       ]);
     }
     this.chain(points, true);
@@ -169,7 +169,7 @@ export function outlineOf(leaf: LeafNode): Outline {
       break;
     }
     case "sphere": {
-      const [cx, cy, cz] = primitive.centre;
+      const [cx, cy, cz] = primitive.center;
       const c: Vec3 = [cx, cy, cz];
       wire.circle(c, X, Y, primitive.radius);
       wire.circle(c, Y, Z, primitive.radius);
@@ -177,7 +177,7 @@ export function outlineOf(leaf: LeafNode): Outline {
       break;
     }
     case "torus": {
-      const [cx, cy, cz] = primitive.centre;
+      const [cx, cy, cz] = primitive.center;
       const { major, minor } = primitive;
       wire.circle([cx, cy, cz], X, Y, major + minor);
       wire.circle([cx, cy, cz], X, Y, Math.max(0, major - minor));

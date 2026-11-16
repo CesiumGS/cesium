@@ -1,9 +1,9 @@
 // The design globe's drawn evidence (plan 4b Task 18; DESIGN.md "Visuals in
 // the viewer"): the error whiskers and the anchor ring.
 //
-// - Whiskers: every 1,000 ft along the centreline, at the median barrier's
+// - Whiskers: every 1,000 ft along the centerline, at the median barrier's
 //   top, a leader from where the rigid placement draws the point to where it
-//   truly is, coloured by its length. They carry both ends as the tiles'
+//   truly is, colored by its length. They carry both ends as the tiles'
 //   vertices do, as a dual position, so the morph's parameter shrinks them to
 //   nothing as the geometry settles into the reprojected placement, and the
 //   exaggeration stretches them.
@@ -24,21 +24,21 @@ import { sectionSurface } from "./corridor.ts";
 import { REPROJECTED_SEMANTIC } from "./dualPosition.ts";
 import { morphParameter, type PlacementState } from "./morphDriver.ts";
 
-/** One sample along the centreline. */
+/** One sample along the centerline. */
 export interface SagSample {
   readonly station: number;
   /** E, N and the barrier top's elevation, design units. */
   readonly design: Float64Array;
-  /** Where rigid draws it, and where it truly is (Earth-fixed metres). */
+  /** Where rigid draws it, and where it truly is (Earth-fixed meters). */
   readonly rigid: Float64Array;
   readonly truth: Float64Array;
-  /** |rigid − truth|, metres. */
+  /** |rigid − truth|, meters. */
   readonly error: number;
 }
 
 /**
  * Samples every `every` design units of station from the alignment's start
- * to its end (both included), on the centreline at the median barrier's top.
+ * to its end (both included), on the centerline at the median barrier's top.
  */
 export function sagSamples(
   alignment: Alignment,
@@ -171,7 +171,7 @@ export function enuAt(p: ArrayLike<number>): {
   return { east, north, up };
 }
 
-/** How far the anchor ring stands over the road's profile, metres: clear of its median barrier (0.81 m), so it never shares the deck's depth. */
+/** How far the anchor ring stands over the road's profile, meters: clear of its median barrier (0.81 m), so it never shares the deck's depth. */
 export const RING_LIFT = 1;
 
 /**
@@ -253,7 +253,7 @@ export class AnchorRing extends Drawn {
 }
 
 /**
- * The error ribbon's columns across the centreline, design units: the paved
+ * The error ribbon's columns across the centerline, design units: the paved
  * section between its outer barriers (±39), at the strips' breaks so the
  * tint follows the crossfall, its outer edges soft (UX review S9: a band
  * on the road, not a flood over the ground either side).
@@ -264,10 +264,10 @@ const RIBBON_EDGE = [0, 1, 1, 1, 1, 1, 1, 1, 1, 0] as const;
 /** Over the road's surface, design units: clear of it at any range, under a car. */
 const RIBBON_LIFT = 0.5;
 
-/** The ribbon's opacity: enough to read on the grey road, the road's lines through it. */
+/** The ribbon's opacity: enough to read on the gray road, the road's lines through it. */
 const RIBBON_ALPHA = 0.5;
 
-/** No tint where rigid's error is under about half a metre: the ribbon shows where the story is. */
+/** No tint where rigid's error is under about half a meter: the ribbon shows where the story is. */
 const ribbonFade = (error: number) => {
   const x = Math.min(1, Math.max(0, (error - 0.3) / 0.7));
   return x * x * (3 - 2 * x);
@@ -284,7 +284,7 @@ const ribbonFade = (error: number) => {
 export class ErrorRibbon extends Drawn {
   private readonly draw: DrawHandle;
   private readonly material: number;
-  /** The largest error it is coloured against, metres. */
+  /** The largest error it is colored against, meters. */
   readonly max: number;
 
   constructor(

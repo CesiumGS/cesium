@@ -7,7 +7,7 @@
 // in circles. Everything else (a cone or torus cut obliquely, Bézier
 // patches) is marched on the surface's (u, v) grid, every crossing found
 // exactly along a grid edge, then refined by Newton onto the surface as
-// asked. Lengths are metres and angles are radians.
+// asked. Lengths are meters and angles are radians.
 import { evaluatePatch } from "./bezier.ts";
 import { frameOf } from "./bounds.ts";
 import {
@@ -242,14 +242,14 @@ export function analyticSection(
     f.origin[1] + z * f.z[1],
     f.origin[2] + z * f.z[2],
   ];
-  /** The circle of radius ρ about `centre` in the plane. */
-  const circle = (centre: V3, rho: number, method: string): SectionCurve =>
+  /** The circle of radius ρ about `center` in the plane. */
+  const circle = (center: V3, rho: number, method: string): SectionCurve =>
     makeEllipse(
       plane,
       form,
       surface,
       box,
-      toPlane(plane, centre),
+      toPlane(plane, center),
       [rho, 0],
       [0, rho],
       method,
@@ -309,7 +309,7 @@ export function analyticSection(
         // v(u) = −(D + r cos u N·x + r sin u N·y) / nz, so the section is an ellipse in u.
         const nx = dot(N, f.x);
         const ny = dot(N, f.y);
-        const centre: V3 = [0, 1, 2].map(
+        const center: V3 = [0, 1, 2].map(
           (k) => c0[k]! - (D / nz) * f.z[k]!,
         ) as V3;
         const e1: V3 = [0, 1, 2].map(
@@ -318,7 +318,7 @@ export function analyticSection(
         const e2: V3 = [0, 1, 2].map(
           (k) => r * (f.y[k]! - (ny / nz) * f.z[k]!),
         ) as V3;
-        const c2 = toPlane(plane, centre);
+        const c2 = toPlane(plane, center);
         const a2 = dirToPlane(plane, e1);
         const b2 = dirToPlane(plane, e2);
         const uvOf = (t: number): [number, number] => {
@@ -386,8 +386,8 @@ export function analyticSection(
         stats.coincident += rho2 > -1e-12 * r * r ? 1 : 0;
         return [];
       }
-      const centre: V3 = [0, 1, 2].map((k) => f.origin[k]! - h * N[k]!) as V3;
-      return [circle(centre, Math.sqrt(rho2), "plane ∩ sphere = circle")];
+      const center: V3 = [0, 1, 2].map((k) => f.origin[k]! - h * N[k]!) as V3;
+      return [circle(center, Math.sqrt(rho2), "plane ∩ sphere = circle")];
     }
     case SurfaceKind.Cone: {
       if (Math.abs(nz) < 1 - 1e-12) {
@@ -584,7 +584,7 @@ function edgeRoot(
 
 /**
  * The chains where the field's plane distance changes sign, on an n × m grid
- * (marching squares: saddles resolved by the cell centre). Each vertex is an
+ * (marching squares: saddles resolved by the cell center). Each vertex is an
  * exact root along a grid edge, so two patches that share a boundary agree on
  * where a chain meets it.
  */
@@ -665,14 +665,14 @@ export function marchField(field: Field, n: number, m: number): Chain[] {
       if (crossing.length === 2) {
         link(edges[crossing[0]!]!(), edges[crossing[1]!]!());
       } else {
-        const centre =
+        const center =
           (values[at(i, j)]! +
             values[at(i + 1, j)]! +
             values[at(i + 1, j + 1)]! +
             values[at(i, j + 1)]!) /
             4 >
           0;
-        if (centre === s[0]) {
+        if (center === s[0]) {
           link(edges[0]!(), edges[1]!());
           link(edges[2]!(), edges[3]!());
         } else {

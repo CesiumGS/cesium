@@ -171,7 +171,7 @@ export class PlacementTable {
 
   /**
    * A bind group for a compute pass that writes the buffer's rows (a
-   * compiled route's centre constants, scene/world/routes.ts): `entries`
+   * compiled route's center constants, scene/world/routes.ts): `entries`
    * and the buffer at `binding`. The buffer is replaced as it grows, so a
    * group is made for each pass.
    */

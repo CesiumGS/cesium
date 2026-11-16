@@ -831,7 +831,7 @@ describe("Trajectory accuracy inputs", () => {
     expect(traj.positionCovariance(at(60))).toBeUndefined();
   });
 
-  it("states its position sigma option as metres, a zero as exact, and nothing else as not stated", () => {
+  it("states its position sigma option as meters, a zero as exact, and nothing else as not stated", () => {
     expect(
       build(undefined, { positionSigma: 5 }).frame.accuracy(at(300)).meters,
     ).toBe(5);

@@ -40,8 +40,8 @@ const WGS84_3D: CrsRef = { format: "wkid", authority: "EPSG", wkid: 4979 };
 const EGM96_GRID = "us_nga_egm96_15.tif";
 const EGM2008_GRID = "us_nga_egm08_25.tif";
 
-/** Metres between two geodetic positions' horizontal parts, near enough. */
-function horizontalMetres(
+/** Meters between two geodetic positions' horizontal parts, near enough. */
+function horizontalMeters(
   a: { longitude: number; latitude: number },
   b: { longitude: number; latitude: number },
 ): number {
@@ -130,9 +130,9 @@ describe("geoid fallback: Jakarta, EPSG:9488+9471", () => {
     expect(frame.operation.pipeline).toBe(direct.operation.pipeline);
     const a = frame.toGeodetic(JAKARTA_POINT);
     const b = direct.toGeodetic(JAKARTA_POINT);
-    expect(horizontalMetres(a, b)).toBeLessThan(1e-9);
+    expect(horizontalMeters(a, b)).toBeLessThan(1e-9);
     expect(Math.abs(a.height - b.height)).toBeLessThan(1e-9);
-    // EGM96's separation at Jakarta is a few metres or more: a real geoid,
+    // EGM96's separation at Jakarta is a few meters or more: a real geoid,
     // not a ballpark's zero.
     expect(Math.abs(a.height)).toBeGreaterThan(1);
 
@@ -207,14 +207,14 @@ describe("geoid fallback: Jakarta, EPSG:9488+9471", () => {
       );
       const a = frame.toGeodetic(JAKARTA_POINT);
       const b = direct.toGeodetic(JAKARTA_POINT);
-      expect(horizontalMetres(a, b)).toBeLessThan(1e-9);
+      expect(horizontalMeters(a, b)).toBeLessThan(1e-9);
       expect(Math.abs(a.height - b.height)).toBeLessThan(1e-9);
     },
   );
 });
 
 // A fallback keeps the CRS's vertical unit and direction: the operation takes
-// the model's heights (metres, up). Before the DKLAT and GEOID18 grids are
+// the model's heights (meters, up). Before the DKLAT and GEOID18 grids are
 // loaded (this file's PROJ never loads GEOID18), with EGM96 loaded above.
 describe("geoid fallback: design depths and feet", () => {
   const DEPTH: CrsRef = {
@@ -262,7 +262,7 @@ describe("geoid fallback: design depths and feet", () => {
     }
   });
 
-  it("a ftUS CRS's fallback converts design feet to the model's metres", async () => {
+  it("a ftUS CRS's fallback converts design feet to the model's meters", async () => {
     const { P } = await setup();
     // SPCS83 California zone 3 (ftUS) + NAVD88 height (ftUS), without
     // GEOID18.

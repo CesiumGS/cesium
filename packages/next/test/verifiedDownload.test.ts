@@ -107,7 +107,7 @@ describe("verifiedDownload", () => {
   });
 
   it("aborts a body past the byte count", async () => {
-    let cancelled = false;
+    let canceled = false;
     const big = (async () =>
       new Response(
         new ReadableStream({
@@ -116,14 +116,14 @@ describe("verifiedDownload", () => {
             c.enqueue(new Uint8Array(6));
           },
           cancel() {
-            cancelled = true;
+            canceled = true;
           },
         }),
       )) as unknown as typeof fetch;
     await expect(
       verifiedDownload(URL_, path, expected, { fetch: big }),
     ).rejects.toThrow(/x\.tif.*more than 8 bytes/);
-    expect(cancelled).toBe(true);
+    expect(canceled).toBe(true);
     expect(readdirSync(dir)).toEqual([]);
   });
 

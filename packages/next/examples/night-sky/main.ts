@@ -270,7 +270,7 @@ export async function run({
       });
     };
     // Two posts, three beams across and two braces. The near post stands just
-    // right of the sun, so its disc is half behind it.
+    // right of the sun, so its disk is half behind it.
     beams.push(
       place(0.15, 4, 0.3, 0.3, 9),
       place(7, 4, 0.3, 0.3, 9),

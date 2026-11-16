@@ -509,30 +509,30 @@ export function Precision() {
         </ul>
       </Section>
 
-      <Section title="Compiled routes: a centre constant and an exact residual">
+      <Section title="Compiled routes: a center constant and an exact residual">
         <p>
           A route through smooth nodes (an exaggeration, a projection) is
           compiled to one GPU function. The{" "}
           <a href="#/transform-graph">Transform graph tab</a> has the compiler;
           what matters here is where the precision goes. A vertex is an offset δ
-          from its draw's centre c, and the route is F(c + δ) = F(c) + [F(c + δ)
+          from its draw's center c, and the route is F(c + δ) = F(c) + [F(c + δ)
           − F(c)].
         </p>
         <ul>
           <li>
-            <strong>The centre constant:</strong> F(c) is a double-float (df64)
+            <strong>The center constant:</strong> F(c) is a double-float (df64)
             value, held on the GPU as float32 high and low parts. It comes from
             float64 on the CPU, or from a df64 compute pass for a parameter that
             doesn't separate. The same hi/lo split carries each draw's position
-            and its warp centre to the cull.
+            and its warp center to the cull.
           </li>
           <li>
             <strong>The residual:</strong> the bracket is evaluated in float32
             by a rule for each op that gives the change from its operands'
-            changes and centre values, with no subtraction of nearly equal
+            changes and center values, with no subtraction of nearly equal
             numbers (<C>Δ(ab) = a_c·Δb + b_c·Δa + Δa·Δb</C>,{" "}
             <C>Δ log a = log1p(Δa / a_c)</C>). A position 6.4e6 m from the
-            origin, or a UTM easting, keeps its millimetres, where evaluating
+            origin, or a UTM easting, keeps its millimeters, where evaluating
             the function in float32 would lose them.
           </li>
           <li>
@@ -542,10 +542,10 @@ export function Precision() {
             route within 0.58 mm; normals within 3e-5°.
           </li>
           <li>
-            <strong>What's not covered:</strong> the exact centre sum was
+            <strong>What's not covered:</strong> the exact center sum was
             checked on NVIDIA under D3D12 only. A shader compiler that
             reassociates, as Dawn's relaxed math does on Apple GPUs, can lose
-            the centre's extra accuracy.
+            the center's extra accuracy.
           </li>
           <li>
             <strong>The fallback:</strong> a function the compiler refuses is
@@ -671,7 +671,7 @@ export function Precision() {
           </li>
           <li>
             Terms combine as a root sum square, taken as independent.
-            Correlations and error ellipsoids aren't modelled, and the result
+            Correlations and error ellipsoids aren't modeled, and the result
             says so.
           </li>
           <li>

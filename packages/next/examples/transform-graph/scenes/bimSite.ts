@@ -53,7 +53,7 @@ async function storeHasJakarta(signal: AbortSignal): Promise<boolean> {
   }
 }
 
-/** A port site authored in grid metres (x east, y north, z up from its datum): a quay, sheds, container stacks and cranes. */
+/** A port site authored in grid meters (x east, y north, z up from its datum): a quay, sheds, container stacks and cranes. */
 function siteMesh() {
   const b = new MeshBuilder();
   const concrete = hex("#8c8f93");
@@ -135,13 +135,13 @@ export const bimSite: Scene = {
   number: 3,
   title: "A BIM site in a projected CRS",
   caption:
-    "A port site authored in UTM 48S grid metres at Tanjung Priok, nested under the exaggeration: grid, then geographic, then geocentric, then the node that scales heights. Pick two points: the grid distance, the true ground distance and the drawn distance differ.",
+    "A port site authored in UTM 48S grid meters at Tanjung Priok, nested under the exaggeration: grid, then geographic, then geocentric, then the node that scales heights. Pick two points: the grid distance, the true ground distance and the drawn distance differ.",
   point:
     "Nesting is just parenting: the CRS node sits under the deformer, so the site is exaggerated with the terrain it stands on, and a measurement in any node is the same route read at that node.",
   sources: [
     {
       what: "The port site",
-      who: "The design-globe's generated Jakarta container port (EPSG:9488, SRGI2013 / UTM 48S), when `npm run setup` has made it; else synthetic buildings, cranes and container stacks generated for this page, authored in UTM 48S grid metres at Tanjung Priok",
+      who: "The design-globe's generated Jakarta container port (EPSG:9488, SRGI2013 / UTM 48S), when `npm run setup` has made it; else synthetic buildings, cranes and container stacks generated for this page, authored in UTM 48S grid meters at Tanjung Priok",
       terms:
         "No outside data. The generated tileset is drawn in its own CRS, through the UTM node, not at its rigid placement.",
     },
@@ -176,7 +176,7 @@ export const bimSite: Scene = {
       "Geographic to geocentric",
       deformer.frame,
       liveEdge(geographicToGeocentric(), {
-        description: "longitude, latitude, height to body-fixed metres",
+        description: "longitude, latitude, height to body-fixed meters",
       }),
     );
     host.catalog.add(geographic);
@@ -289,13 +289,13 @@ export const bimSite: Scene = {
     });
 
     // ------------------------------------------------------ the camera
-    const centre = Ellipsoid.WGS84.cartographicToCartesian(
+    const center = Ellipsoid.WGS84.cartographicToCartesian(
       fromDegrees(ORIGIN.longitude, ORIGIN.latitude, 3),
       vec3.vec3(),
     );
     const shot = () => {
       view.camera.lookAt(
-        deformer.drawn(centre),
+        deformer.drawn(center),
         200 * deg,
         -26 * deg,
         jakarta !== undefined ? 2_200 : 1_150,
@@ -342,7 +342,7 @@ export const bimSite: Scene = {
       {},
       el("dt", {}, "Grid distance (E, N)"),
       lengths.grid,
-      el("dt", {}, "Ground distance (true metres, below the deformer)"),
+      el("dt", {}, "Ground distance (true meters, below the deformer)"),
       lengths.ground,
       el("dt", {}, "Drawn distance (ITRF, as the view sees it)"),
       lengths.drawn,

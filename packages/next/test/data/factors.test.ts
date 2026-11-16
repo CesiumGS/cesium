@@ -177,7 +177,7 @@ describe("grid factors against pyproj Proj.get_factors", () => {
       row.factors.latitude * (Math.PI / 180),
     );
     const result = gridFactors(frame, design);
-    // h is metres above the ellipsoid: design feet converted by PROJ, plus
+    // h is meters above the ellipsoid: design feet converted by PROJ, plus
     // the geoid separation (about -33 m here).
     expect(
       Math.abs(result.elevationFactor - R / (R + geodetic.height)),
@@ -194,12 +194,12 @@ describe("grid factors against pyproj Proj.get_factors", () => {
 
   it("the scale 100 km off the central meridian differs by more than 1e-4", async () => {
     const frame = await utmFrame();
-    const centre = gridFactors(frame, [500000, 4_000_000, 0]);
+    const center = gridFactors(frame, [500000, 4_000_000, 0]);
     const off = gridFactors(frame, [600000, 4_000_000, 0]);
-    expect(centre.pointScale).toBeCloseTo(0.9996, 9);
-    expect(off.pointScale - centre.pointScale).toBeGreaterThan(1e-4);
+    expect(center.pointScale).toBeCloseTo(0.9996, 9);
+    expect(off.pointScale - center.pointScale).toBeGreaterThan(1e-4);
     // Convergence is 0 on the central meridian and well off zero 100 km east.
-    expect(Math.abs(centre.convergence)).toBeLessThan(1e-12);
+    expect(Math.abs(center.convergence)).toBeLessThan(1e-12);
     expect(Math.abs(off.convergence)).toBeGreaterThan(1e-3);
   });
 });

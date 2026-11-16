@@ -23,12 +23,12 @@ export type StandInName =
 const ARCSECOND = Math.PI / 648000;
 
 /**
- * HCRS's stand-in puts the Sun at the barycentre. The Sun circles it at up
+ * HCRS's stand-in puts the Sun at the barycenter. The Sun circles it at up
  * to about 1.5 million km (some 2.2 solar radii; 1.38 million km at most over
  * 2000 to 2050 in DE440). The stated 2.2 million km is a conservative bound
  * above that.
  */
-const SUN_BARYCENTRE_METERS = 2.2e9;
+const SUN_BARYCENTER_METERS = 2.2e9;
 /**
  * The Sun from the Earth by Meeus's low-precision formula, against DE440:
  * 32,277 km at most, sampled daily over 2000 to 2050 (0.0123°), rounded up
@@ -68,10 +68,10 @@ const MOON_AXES_RADIANS = 21 * ARCSECOND;
  */
 const ITRF_RADIANS = 18 * ARCSECOND;
 
-/** The Earth's stand-in: the barycentre's offset plus Meeus's Sun. */
-const EARTH_METERS = SUN_BARYCENTRE_METERS + MEEUS_SUN_METERS;
+/** The Earth's stand-in: the barycenter's offset plus Meeus's Sun. */
+const EARTH_METERS = SUN_BARYCENTER_METERS + MEEUS_SUN_METERS;
 const EARTH_NOTE =
-  "analytic stand-in: the Earth placed from Meeus's Sun (within 33,000 km of DE440, sampled daily over 2000 to 2050), with the Sun at the barycentre (which it circles at up to about 1.5 million km; 2.2 million km is stated as a conservative bound)";
+  "analytic stand-in: the Earth placed from Meeus's Sun (within 33,000 km of DE440, sampled daily over 2000 to 2050), with the Sun at the barycenter (which it circles at up to about 1.5 million km; 2.2 million km is stated as a conservative bound)";
 
 /**
  * Each stand-in's stated accuracy, stated as its 1σ figure (a conservative
@@ -80,14 +80,14 @@ const EARTH_NOTE =
  */
 export const ANALYTIC_ACCURACY = deepFreeze({
   HCRS: {
-    meters: SUN_BARYCENTRE_METERS,
-    note: "analytic stand-in: the Sun placed at the barycentre, which it circles at up to about 1.5 million km (1.38 million km over 2000 to 2050 in DE440); 2.2 million km is stated as a conservative bound",
+    meters: SUN_BARYCENTER_METERS,
+    note: "analytic stand-in: the Sun placed at the barycenter, which it circles at up to about 1.5 million km (1.38 million km over 2000 to 2050 in DE440); 2.2 million km is stated as a conservative bound",
   },
   GCRF: { meters: EARTH_METERS, note: EARTH_NOTE },
   EARTH_ICRF: { meters: EARTH_METERS, note: EARTH_NOTE },
   MOON_ICRF: {
     meters: EARTH_METERS + MEEUS_MOON_METERS,
-    note: "analytic stand-in: the Moon from the Earth by Meeus's chapter 47 (ELP-2000/82's main terms), within 16″ (27 km) of DE440, sampled daily over 2000 to 2050, on the Earth's stand-in (Meeus's Sun, the Sun at the barycentre)",
+    note: "analytic stand-in: the Moon from the Earth by Meeus's chapter 47 (ELP-2000/82's main terms), within 16″ (27 km) of DE440, sampled daily over 2000 to 2050, on the Earth's stand-in (Meeus's Sun, the Sun at the barycenter)",
   },
   ITRF: {
     radians: ITRF_RADIANS,
@@ -117,7 +117,7 @@ export const MOON_PA_TO_PARENT: Readonly<Mat4> = (() => {
   return toParentMatrix(meToPa, undefined, new Float64Array(16));
 })();
 
-/** Unix ms of 2000-01-01T12:00:00, J2000 read as if TT were UTC-labelled. */
+/** Unix ms of 2000-01-01T12:00:00, J2000 read as if TT were UTC-labeled. */
 const J2000_UNIX_MS = 946_728_000_000;
 const DAY_MS = 86_400_000;
 
@@ -143,7 +143,7 @@ export function analyticUtcMs(instant: Instant, leap: LeapSeconds): number {
  * The stand-in edges, each reading the leap-second table `leap()` returns
  * when it turns an instant into UTC:
  *
- * - HCRS at the barycentre (the identity to ICRF);
+ * - HCRS at the barycenter (the identity to ICRF);
  * - GCRF and EARTH_ICRF translated by `-sunPosition`, the Earth from
  *   Meeus's Sun, so the Sun's direction from the Earth is `sunDirection`'s;
  * - MOON_ICRF at the Earth's stand-in plus `moonPosition`;

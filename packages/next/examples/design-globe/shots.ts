@@ -19,7 +19,7 @@ const deg = Math.PI / 180;
  * anchor, 28° off its axis, from between the two levels: the true road on
  * the ground below, receding with its lanes and barriers, and the rigid copy
  * of it floating overhead, a whisker standing between the two in the
- * foreground. Centred `lift` of the way from where the centreline truly is
+ * foreground. Centered `lift` of the way from where the centerline truly is
  * up to where rigid draws it. (A camera at the rigid deck's own height sees
  * it edge-on; one above both reads as two parallel roads.) Heading relative
  * to the alignment's azimuth there.
@@ -30,16 +30,16 @@ export const OPENING_VIEW = {
   range: 120,
   lift: 0.4,
 };
-/** A model whose rigid error reaches this many metres is framed where it is largest. */
+/** A model whose rigid error reaches this many meters is framed where it is largest. */
 const VISIBLE_GAP = 3;
 
 /** "Fly along" looks across the road, relative to the alignment's azimuth. */
 const ALONG_HEADING = -75 * deg;
-/** "Fly along" keeps this many metres over the cuts' tops nearby. */
+/** "Fly along" keeps this many meters over the cuts' tops nearby. */
 const ALONG_CLEAR = 50;
 /** How far along the road "Fly along" looks for a cut, ftUS either way. */
 const ALONG_REACH = 2_000;
-/** Metres per US survey foot. */
+/** Meters per US survey foot. */
 const FT_US = 1200 / 3937;
 
 /**
@@ -69,7 +69,7 @@ function riseAt(station: number, side: Side): number | undefined {
 }
 
 /**
- * The deepest cut near `station`, metres above its hinge: each side's
+ * The deepest cut near `station`, meters above its hinge: each side's
  * daylight rise within ALONG_REACH (over a structure, between its ends'),
  * weighted down linearly with its distance, so it changes smoothly as the
  * station moves; 0 in fill.
@@ -108,8 +108,8 @@ export class CameraMoves {
   private token = 0;
   private flying_ = false;
   /**
-   * Where a framing's subject sits above the view's centre, as a share of
-   * its range (0: centred). The tour's card covers the lower middle of the
+   * Where a framing's subject sits above the view's center, as a share of
+   * its range (0: centered). The tour's card covers the lower middle of the
    * view, so its shots lift their subject clear of it (`cut`, `flyTo`).
    */
   lift = 0;
@@ -133,7 +133,7 @@ export class CameraMoves {
 
   /**
    * `to` from the same camera position, turned to look `atan(lift)` lower,
-   * so its subject shows that much above the view's centre. (Moving the look
+   * so its subject shows that much above the view's center. (Moving the look
    * point down instead lowered the camera with it, under the true road in
    * the opening shot: Task 20 fix 1.)
    */
@@ -324,7 +324,7 @@ export function createShots(deps: ShotsDeps): Shots {
   let alongStation: number | undefined;
 
   /**
-   * The opening shot at exaggeration `k`: the same view, centred and
+   * The opening shot at exaggeration `k`: the same view, centered and
    * pulled back with the drawn gap so the rigid deck stays in frame.
    */
   function openingShot(a: Answers, k = 1): Framing | undefined {
@@ -348,7 +348,7 @@ export function createShots(deps: ShotsDeps): Shots {
         range: v.range,
       };
     }
-    // Exaggerated: centred halfway up the drawn gap, pulled back to about
+    // Exaggerated: centered halfway up the drawn gap, pulled back to about
     // twice it, so the deck and the road below both stay in frame.
     const gap = p.displayError * k;
     return {
@@ -608,7 +608,7 @@ export function openerFraming(
 
 /**
  * The survey mark's shot (Task 20 fix 1, I5): from behind the disk, looking
- * at the road's two centrelines at the mark's nearest point (where it truly
+ * at the road's two centerlines at the mark's nearest point (where it truly
  * is and where rigid draws it, about 19 m apart), the disk in the
  * foreground: both ends of the measurement and the gap in one view.
  */

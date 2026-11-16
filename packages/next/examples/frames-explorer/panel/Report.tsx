@@ -26,7 +26,7 @@ export function Report({
   const failures = results.filter(isFailure);
   const fingerprinted = results.filter((r) => r.fingerprintCheck);
   const matched = fingerprinted.filter((r) => r.fingerprintCheck!.match);
-  const ready = model.run.state === "done" || model.run.state === "cancelled";
+  const ready = model.run.state === "done" || model.run.state === "canceled";
   return (
     <div className="fx-tab-body">
       <Section title="This run">

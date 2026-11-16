@@ -141,7 +141,7 @@ function buildGrid(t: TerrainHeights): TriangleGrid | null {
 }
 
 /**
- * The mesh's height (metres) at quantized (u, v) in 0..32767, interpolated in
+ * The mesh's height (meters) at quantized (u, v) in 0..32767, interpolated in
  * the triangle containing it; undefined if none does (a gap in the mesh).
  */
 function heightAt(t: TerrainHeights, u: number, v: number): number | undefined {
@@ -183,7 +183,7 @@ function heightAt(t: TerrainHeights, u: number, v: number): number | undefined {
 }
 
 /**
- * The parent mesh's height (metres) over the point at quantized (`u`, `v`) of
+ * The parent mesh's height (meters) over the point at quantized (`u`, `v`) of
  * its child's quadrant (`qx`, `qy` in {0, 1}, from the south-west); undefined
  * where the parent has no triangle (or is unmeasurable). `scale` (default 2)
  * generalizes the quadrant to cell (`qx`, `qy`) of a `scale` by `scale` grid
@@ -205,7 +205,7 @@ function parentHeightAt(
 }
 
 /**
- * An ancestor surface's height (metres) at each vertex of a descendant mesh,
+ * An ancestor surface's height (meters) at each vertex of a descendant mesh,
  * the same lookup the deviation measures (geomorphing starts a vertex
  * there). `u` and `v` are the descendant's quantized vertex coordinates;
  * `morph` places it in the ancestor (`MorphSource`). NaN where the ancestor
@@ -237,7 +237,7 @@ export function parentSurfaceHeights(
 }
 
 /**
- * The largest height difference (metres) between a child's mesh and its
+ * The largest height difference (meters) between a child's mesh and its
  * parent's, over the child's quadrant (`qx`, `qy` in {0, 1}, from the
  * south-west). Measured at the child's vertices against the parent's
  * triangles, and at the parent's vertices inside the quadrant against the

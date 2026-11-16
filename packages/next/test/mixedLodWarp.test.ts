@@ -1,6 +1,6 @@
 // Mixed LOD under a placement or warp: a tileset that moves vertices still
 // mixes (its placeholders' boxes are in the true frame), `mixedLod: "never"`
-// is still honoured, and a box is made from the tile's own, unmoved volume.
+// is still honored, and a box is made from the tile's own, unmoved volume.
 import { describe, expect, it } from "vitest";
 import { BudgetedSelection } from "../src/streaming/Budgeted.ts";
 import { clipBox } from "../src/streaming/tilesetUpdate.ts";

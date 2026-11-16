@@ -36,11 +36,11 @@ export interface Rig {
 
 /**
  * The orbits the example uses:
- * - `geocentric`: the Earth's centre, up its axis, heading 0 toward 0°
+ * - `geocentric`: the Earth's center, up its axis, heading 0 toward 0°
  *   longitude (earth-turns, the polar view whose clock plays at 3,600×);
  * - `earthMoon`: between the Earth and the Moon, up the normal of the Moon's
  *   orbit at the flyby, heading 0 toward the Moon (one-path; Orion);
- * - `moon`: the Moon's centre, up its pole, heading 0 toward the Earth's
+ * - `moon`: the Moon's center, up its pole, heading 0 toward the Earth's
  *   side (MOON_ME's x; the Moon's frames);
  * - `lunarSite`: the south-pole site, up its vertical, heading 0 its north
  *   (stand-on-moon; the site).
@@ -87,7 +87,7 @@ const unit = (v: ArrayLike<number>): number[] => {
 
 /**
  * The Moon's prograde orbit normal: `moonAt(ms)` is the Moon from the
- * Earth's centre `ms` from the instant (stop 5: GCRF, DE440, at the
+ * Earth's center `ms` from the instant (stop 5: GCRF, DE440, at the
  * flyby); the normal is r(−30 min) × r(+30 min), normalized, so the Moon
  * goes counter-clockwise seen from it.
  */

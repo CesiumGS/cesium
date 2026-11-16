@@ -38,9 +38,9 @@ interface Part {
   readonly form: BrepForm;
   /** The draw's model: scale and placement into the assembly's units. */
   readonly model: Float64Array;
-  /** Where the part sits at rest, from the assembly's centre, in those units. */
-  readonly centre: readonly [number, number, number];
-  /** Scale of the model: the file's metres to the assembly's units. */
+  /** Where the part sits at rest, from the assembly's center, in those units. */
+  readonly center: readonly [number, number, number];
+  /** Scale of the model: the file's meters to the assembly's units. */
   readonly scale: number;
 }
 
@@ -114,7 +114,7 @@ async function load(
         form: f.form,
         scale: s,
         model: modelOf(s, [-s * c[0], -s * c[1], -s * c[2]]),
-        centre: [s * (m[0] - c[0]), s * (m[1] - c[1]), s * (m[2] - c[2])],
+        center: [s * (m[0] - c[0]), s * (m[1] - c[1]), s * (m[2] - c[2])],
       };
     });
     return { loaded: { parts, source: "AS1" } };
@@ -138,12 +138,12 @@ async function load(
           form: f.form,
           scale: s,
           model: modelOf(s, [x - s * m[0], -s * m[1], -s * m[2]]),
-          centre: [x, 0, 0],
+          center: [x, 0, 0],
         });
       }
       return {
         loaded: { parts, source: "NIST" },
-        note: `The AS1 assembly did not load (${why}): four NIST parts, scaled to half a metre and set in a row, stand in. They are an arrangement, not an assembly: nothing mates.`,
+        note: `The AS1 assembly did not load (${why}): four NIST parts, scaled to half a meter and set in a row, stand in. They are an arrangement, not an assembly: nothing mates.`,
       };
     } catch (second) {
       return {
@@ -158,7 +158,7 @@ export const assembly: Scene = {
   number: 6,
   title: "Exploded assembly",
   caption:
-    "Each part of a STEP assembly sits under its own affine node, an offset along its direction from the assembly's centre times t. Every route is affine, so each collapses to one matrix; picks and measurements map back through it.",
+    "Each part of a STEP assembly sits under its own affine node, an offset along its direction from the assembly's center times t. Every route is affine, so each collapses to one matrix; picks and measurements map back through it.",
   point:
     "The true distance between two points is the same route read with the explode nodes at rest: in each part's own coordinates. The distance in the Assembly node is what is drawn, and it moves with t.",
   sources: [
@@ -166,13 +166,13 @@ export const assembly: Scene = {
       what: "AS1 assembly (plate, brackets, bolts, nuts, rods)",
       who: "CAx-IF's public AS1 test model, as distributed in pythonocc-demos; read at run time, not bundled",
       terms:
-        "Licence not stated by the repository: confirm before shipping. If it can't be read, NIST's parts stand in.",
+        "License not stated by the repository: confirm before shipping. If it can't be read, NIST's parts stand in.",
       href: "https://github.com/tpaviot/pythonocc-demos",
     },
     {
       what: "NIST PMI test parts (the stand-in)",
       who: "NIST, as served from the setup store",
-      terms: "NIST's open licence (public domain).",
+      terms: "NIST's open license (public domain).",
       href: "https://www.nist.gov/ctl/smart-connected-systems-division/smart-connected-manufacturing-systems-group/mbe-pmi-validation",
     },
   ],
@@ -214,7 +214,7 @@ export const assembly: Scene = {
     };
     const frames: Frame[] = parts.map((p, i) => {
       const lift =
-        Math.hypot(...p.centre) < 1e-3 ? [0, 0, 0.25 * (i + 1)] : p.centre;
+        Math.hypot(...p.center) < 1e-3 ? [0, 0, 0.25 * (i + 1)] : p.center;
       const frame = new Frame(
         `Explode: ${p.name}`,
         site,
@@ -267,7 +267,7 @@ export const assembly: Scene = {
       ],
       detail: (f) =>
         frames.includes(f)
-          ? `translate by ${(state.t * spread).toFixed(2)} × the part's offset from the centre`
+          ? `translate by ${(state.t * spread).toFixed(2)} × the part's offset from the center`
           : undefined,
     });
 

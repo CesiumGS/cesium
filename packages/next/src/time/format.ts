@@ -210,7 +210,7 @@ function knownZone(iana: string): boolean {
 
 /**
  * The zone of a place: civil when the application's `lookup` answers with a
- * name Intl knows; otherwise its solar time, labelled so (`zoneLong` says
+ * name Intl knows; otherwise its solar time, labeled so (`zoneLong` says
  * the civil zone isn't known). Without a lookup it is solar time.
  */
 export function placeZone(

@@ -40,7 +40,7 @@ export const taperDescriptor: TransformDescriptor = {
     ...vec3Specs("a", [0, 0, 1], "the axis direction (normalized)"),
     rate: {
       default: 0,
-      description: "the cross-section's scale change per metre along the axis",
+      description: "the cross-section's scale change per meter along the axis",
     },
   },
   forward(p, params, out, jacobian) {
@@ -81,7 +81,7 @@ export const taperDescriptor: TransformDescriptor = {
   slang: "taperParity",
 };
 
-/** A taper of `rate` per metre along the axis through `origin` along `axis` (default +z). */
+/** A taper of `rate` per meter along the axis through `origin` along `axis` (default +z). */
 export function taper(options: {
   axis?: ArrayLike<number>;
   rate: number;

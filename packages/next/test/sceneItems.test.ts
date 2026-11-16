@@ -47,7 +47,7 @@ const DUAL_EXTENSION = {
   CESIUM_dual_position: { position: SECOND, maxDistance: OFF },
 };
 
-/** A square slab of `half` metres, its second position `OFF` m to the north. */
+/** A square slab of `half` meters, its second position `OFF` m to the north. */
 function slab(half: number, withSecond = true): GltfAsset {
   const h = half;
   const positions = new Float32Array([0, -h, -h, 0, h, -h, 0, h, h, 0, -h, h]);
@@ -1145,7 +1145,7 @@ describe("scene items", () => {
     });
   });
 
-  describe("a setter the world can't honour", () => {
+  describe("a setter the world can't honor", () => {
     it("opacity stays as it was after a CapacityError, and can be asked again", async () => {
       serve([tile("a.gltf", [R, 0, 50])]);
       // Room for the content's material and no twin.

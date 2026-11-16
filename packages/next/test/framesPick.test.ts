@@ -171,7 +171,7 @@ describe("createFramesPickInterpreter", () => {
       const d = Math.fround(0.1 / 990);
       const step = 2 ** (Math.floor(Math.log2(d)) - 23);
       expect(depth.meters).toBeCloseTo((distance * step) / 2 / d, 15);
-      // About 30 µm at a kilometre: a float32 step is 2⁻²³ to 2⁻²⁴ of it.
+      // About 30 µm at a kilometer: a float32 step is 2⁻²³ to 2⁻²⁴ of it.
       expect(depth.meters).toBeGreaterThan(distance * 2 ** -25);
       expect(depth.meters).toBeLessThan(distance * 2 ** -24);
     });
@@ -185,7 +185,7 @@ describe("createFramesPickInterpreter", () => {
       expect(bare.terms.some((t) => t.kind === "content")).toBe(false);
     });
 
-    it("an Earth pick on the default analytic catalog: no reference frame term, so metres (the pick's and the content's)", () => {
+    it("an Earth pick on the default analytic catalog: no reference frame term, so meters (the pick's and the content's)", () => {
       for (const root of [gcrf, world.root]) {
         const { accuracy } = interpreter.interpret(corePick(root, site))!;
         // Tagged in ITRF, a catalog reference frame: no catalog-to-catalog
@@ -253,7 +253,7 @@ describe("createFramesPickInterpreter", () => {
       );
     });
 
-    it("a point with no body tagged in GCRF: no reference frame term, so metres", () => {
+    it("a point with no body tagged in GCRF: no reference frame term, so meters", () => {
       const point = interpreter.interpret(corePick(gcrf, undefined, "none"))!;
       expect(point.body).toBeUndefined();
       const { accuracy } = point;

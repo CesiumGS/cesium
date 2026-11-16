@@ -39,7 +39,7 @@ export interface CrsUnits {
   readonly projected: boolean;
   /** The first axis's unit (a projected CRS's easting). */
   readonly horizontalUnitName: string;
-  /** Metres per horizontal unit (radians per unit for a geographic CRS). */
+  /** Meters per horizontal unit (radians per unit for a geographic CRS). */
   readonly metersPerUnit: number;
   /** The height axis's unit, for a compound or 3D CRS. */
   readonly verticalUnitName?: string;
@@ -93,7 +93,7 @@ export interface GridFactors {
  *
  * `forward` takes the CRS's own coordinates in its own units (easting,
  * northing, height, such as US survey feet) and returns longitude and
- * latitude in degrees and the height above the body's ellipsoid in metres;
+ * latitude in degrees and the height above the body's ellipsoid in meters;
  * `inverse` takes that back. Both write into `out` when given, and return
  * it. An operation answers only finite numbers or throws; the engineering
  * frame refuses any non-finite answer with a `RangeError` all the same.
@@ -103,7 +103,7 @@ export interface CoordinateOperation {
   forward(xyz: ArrayLike<number>, out?: Float64Array): Float64Array;
   inverse(xyz: ArrayLike<number>, out?: Float64Array): Float64Array;
   /**
-   * The operation's stated accuracy in metres, 1σ; undefined when it states
+   * The operation's stated accuracy in meters, 1σ; undefined when it states
    * none (never 0 for "unknown").
    */
   readonly accuracy: number | undefined;
@@ -154,7 +154,7 @@ export interface ResolvedCoordinates {
  * its operation or its data came from, nor whether its stated accuracy is
  * right. Such content's design coordinates are the host's claim.
  *
- * `resolve` should honour `signal` (reject with an `AbortError` once it is
+ * `resolve` should honor `signal` (reject with an `AbortError` once it is
  * aborted); an engineering frame stops waiting at the abort either way, and
  * drops a late answer.
  */

@@ -1,5 +1,5 @@
 // USGS 3DEP ground heights for the design globe's one-off design steps
-// (scripts/corridorGround.mjs, scripts/corridorDaylight.mjs): NAVD88 metres
+// (scripts/corridorGround.mjs, scripts/corridorDaylight.mjs): NAVD88 meters
 // from the public 3DEP elevation service, no token. Plain `fetch` with a
 // timeout, a cap on the reply's size, no redirects, and retries.
 
@@ -38,7 +38,7 @@ async function cappedText(response) {
 
 /**
  * 3DEP's ground heights at `points` ({ longitude, latitude }, degrees),
- * NAVD88 metres, in order; at most MAX_BATCH points.
+ * NAVD88 meters, in order; at most MAX_BATCH points.
  */
 export async function groundHeights(points) {
   if (points.length === 0 || points.length > MAX_BATCH) {

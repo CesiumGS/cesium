@@ -54,7 +54,7 @@ import {
 import {
   angleBetween,
   azimuthElevation,
-  horizonGrey,
+  horizonGray,
   pointingByHand,
   pointingText,
 } from "./pointing.ts";
@@ -196,7 +196,7 @@ const windowsByOrion = new WeakMap<
  * Each dish's windows (behind the Moon; unavailable, the Moon or its
  * horizon in the way) and the network's (every dish unavailable at once),
  * from the stations' SPK places at the checked setup (plate motion over the
- * mission is millimetres).
+ * mission is millimeters).
  */
 export async function dishAndNetworkWindows(ctx: StressContext) {
   const o = orion(ctx);
@@ -396,9 +396,9 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
   const limb = Math.asin(MOON_RADIUS / moon.range);
   const fromMoon = angleBetween(moon.astrometric, hand.astrometric);
   const handMoon = fromMoon < limb && hand.range > moon.range;
-  // The capstone's rule (pointing.ts `horizonGrey`): the hand geometry's
+  // The capstone's rule (pointing.ts `horizonGray`): the hand geometry's
   // slack plus the horizon's dip from the dish's height.
-  const grey = horizonGrey(
+  const gray = horizonGray(
     Ellipsoid.WGS84.cartesianToCartographic(Float64Array.from(position), {
       longitude: 0,
       latitude: 0,
@@ -406,7 +406,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     })?.height ?? 0,
   );
   const handEarth =
-    elevation < -grey ? true : elevation > grey ? false : undefined;
+    elevation < -gray ? true : elevation > gray ? false : undefined;
   const sight = m.lineOfSight!;
   const by = sight.blockedBy?.name;
   const losPass =
@@ -430,7 +430,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
   const horizon = dishHorizon(id, azimuth, elevation);
   const belowHorizon = !behindMoon && (by === "Earth" || horizon.below);
   const edgeText = (w: MoonWindow) =>
-    `loss ${clockText(ctx, w.start)}, acquisition ${clockText(ctx, w.end)}; a kilometre of the real limb's relief (the Moon is taken as a 1,737.4 km sphere) moves them ${fmt(w.secondsPerKm.start, 2)} s and ${fmt(w.secondsPerKm.end, 2)} s`;
+    `loss ${clockText(ctx, w.start)}, acquisition ${clockText(ctx, w.end)}; a kilometer of the real limb's relief (the Moon is taken as a 1,737.4 km sphere) moves them ${fmt(w.secondsPerKm.start, 2)} s and ${fmt(w.secondsPerKm.end, 2)} s`;
   const networkText = (w: Window) =>
     `no 70 m dish can hear Orion from ${clockText(ctx, w.start)} to ${clockText(ctx, w.end)} (${fmt((w.end - w.start) / 60, 3)} min)`;
   // The library's line of sight (`measure`, the Earth and the Moon) just
@@ -535,7 +535,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
       group: "space",
       title: `${id} to Orion at the scenario's time: the library's line of sight (the Earth and the Moon) agrees with hand geometry (the angle to Orion against the Moon's angular radius, and the horizon)`,
       pass: losPass,
-      detail: `library: ${sight.clear ? "clear" : `blocked by ${by ?? "?"}`}; hand: Orion ${fmt(fromMoon / ARCSECOND / 3600, 6)}° from the Moon's centre, limb ${fmt(limb / ARCSECOND / 3600, 6)}°, Orion ${fmt(hand.range / 1000, 7)} km away and the Moon ${fmt(moon.range / 1000, 7)} km; elevation ${fmt(elevation, 5)}°${handEarth === undefined ? ` (within ${fmt(grey, 2)}° of the horizon: the Earth's verdict is the library's)` : ""}`,
+      detail: `library: ${sight.clear ? "clear" : `blocked by ${by ?? "?"}`}; hand: Orion ${fmt(fromMoon / ARCSECOND / 3600, 6)}° from the Moon's center, limb ${fmt(limb / ARCSECOND / 3600, 6)}°, Orion ${fmt(hand.range / 1000, 7)} km away and the Moon ${fmt(moon.range / 1000, 7)} km; elevation ${fmt(elevation, 5)}°${handEarth === undefined ? ` (within ${fmt(gray, 2)}° of the horizon: the Earth's verdict is the library's)` : ""}`,
       accuracyNote: "exact arithmetic: hand geometry",
       instant: instant.tdb(),
     },
@@ -564,7 +564,7 @@ export const evaluateDishTracks: ScenarioEvaluator = async (
     },
     {
       title: "Can it see it",
-      text: "The straight path is tested against the Earth and the Moon, each placed when the light passes it. The dish's horizon is its published receive mask (DSN 810-005 Module 301, from SRTM terrain and the neighbouring antennas, at least about 6°), linear between whole degrees of azimuth, compared with Orion's airless elevation: refraction lifts it by about 0.15° at 6°, which can move a mask edge by about half a minute. The page checks our drawn terrain against that mask at eight azimuths.",
+      text: "The straight path is tested against the Earth and the Moon, each placed when the light passes it. The dish's horizon is its published receive mask (DSN 810-005 Module 301, from SRTM terrain and the neighboring antennas, at least about 6°), linear between whole degrees of azimuth, compared with Orion's airless elevation: refraction lifts it by about 0.15° at 6°, which can move a mask edge by about half a minute. The page checks our drawn terrain against that mask at eight azimuths.",
     },
   ];
   const evaluation: ScenarioEvaluation = {

@@ -1,12 +1,12 @@
 // Jakarta's model on the scale ladder (plan 4b Task 17b): a container port,
 // about 3 km across, on one flat design plane. From the sea inward: a
-// breakwater, the harbour basin with two container ships at berth, the
+// breakwater, the harbor basin with two container ships at berth, the
 // quay wall with its fenders, the crane apron with ship-to-shore gantry
 // cranes on their rails, the container yard (blocks of stacks one to five
 // high, each block with its rubber-tyred gantry crane), and a back strip of
 // sheds, the gate and the port road. Seeded, so it is the same every run.
 //
-// Design units are the CRS's (metres, SRGI2013 / UTM zone 48S). The model's
+// Design units are the CRS's (meters, SRGI2013 / UTM zone 48S). The model's
 // frame: u along the quay (the model's `angle` from design east), v across,
 // toward the sea. The deck is the site's height; the sea is `deckHeight`
 // below it.
@@ -15,7 +15,7 @@ import {
   PORT_BREAKWATER as BREAKWATER,
 } from "../../examples/design-globe/sites.ts";
 import {
-  LAYER_METRES,
+  LAYER_METERS,
   between,
   frameAt,
   pick,
@@ -62,7 +62,7 @@ const GAUGE = 30;
 const SEA_RAIL = 3;
 
 /**
- * The layer stack (meshBuilder's LAYER_METRES steps) on the deck: the
+ * The layer stack (meshBuilder's LAYER_METERS steps) on the deck: the
  * apron, yard and back strip at layer 0, roads, lots and paint at 1, paint
  * on a lot at 2.
  */
@@ -78,10 +78,10 @@ export function portPlan(site, { metersPerUnit }) {
   const m = site.model;
   const rand = random(m.seed);
   const f = frameAt(m.angle);
-  const centre = [site.origin[0], site.origin[1]];
+  const center = [site.origin[0], site.origin[1]];
   const z0 = site.origin[2];
   const zw = z0 - m.deckHeight;
-  const layer = (k) => z0 + (k * LAYER_METRES) / metersPerUnit;
+  const layer = (k) => z0 + (k * LAYER_METERS) / metersPerUnit;
   const L = m.quayLength;
   const H = BREAKWATER + m.basinWidth + m.apronDepth + m.yardDepth + BACK_STRIP;
   // Across positions, from the sea (+v) inward.
@@ -89,10 +89,10 @@ export function portPlan(site, { metersPerUnit }) {
   const yardTop = quay - m.apronDepth;
   const yardBottom = yardTop - m.yardDepth;
   const at2 = (along, across) => {
-    const p = placeIn(f, centre, along, across, 0);
+    const p = placeIn(f, center, along, across, 0);
     return [p[0], p[1]];
   };
-  const spot = (along, across, z) => placeIn(f, centre, along, across, z);
+  const spot = (along, across, z) => placeIn(f, center, along, across, z);
   const parts = [];
   const grounds = [];
   const ground = (along, across, len, wid, z, color, name, kind) =>
@@ -124,7 +124,7 @@ export function portPlan(site, { metersPerUnit }) {
     m.basinWidth,
     zw,
     WATER,
-    "Harbour basin",
+    "Harbor basin",
     "water",
   );
   ground(

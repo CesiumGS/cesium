@@ -1,7 +1,7 @@
 // "A drone over the site" (Task 7): a drone hovers on a synthetic flight
 // line over the BIM site, its camera tilted down on a gimbal. The question
 // is what the camera is looking at on the design grid; the answer is where
-// its centre ray meets the terrain (Task 5's exact ray against the drawn
+// its center ray meets the terrain (Task 5's exact ray against the drawn
 // triangles, traced on the page: sightLines.ts), read off California zone
 // 3 and the BIM model's site grid.
 //
@@ -9,13 +9,13 @@
 // along the line, heading along it, level) and the camera mount under the
 // body (tilted by the knob), and California zone 3 under ITRF with the BIM
 // site grid under it, at the BIM site's checked map conversion. The camera's
-// centre ray is data, pinned beside the camera mount (its x axis); its
+// center ray is data, pinned beside the camera mount (its x axis); its
 // route runs up to ITRF and down to the site grid.
 //
 // The trace is the page's (PROJ is the worker's, R13), so the worker gives
 // the page a local placement ITRF to design units, exact at a point near
-// where the ray meets the ground and good to millimetres within a
-// kilometre of it (checked against PROJ here, and its error stated).
+// where the ray meets the ground and good to millimeters within a
+// kilometer of it (checked against PROJ here, and its error stated).
 //
 // The reported height's datum (the knob): the drone's 250 m is NAVD88, as
 // its receiver gives it through GEOID18; read as an ellipsoidal height
@@ -65,7 +65,7 @@ import { CAMERA_MOUNT_ACCURACY, DRONE_ACCURACY } from "./stated.ts";
 
 const CA = BIM_CRS["ca-zone-3"];
 
-/** How far the camera's centre ray is traced, m. */
+/** How far the camera's center ray is traced, m. */
 export const CAMERA_REACH = 3500;
 
 /**
@@ -112,11 +112,11 @@ export function geoidHeight(
  * and northing as a linear function of a point's Earth-fixed position once
  * it is moved along its own normal to `at`'s height (`height`, m). A 2D
  * CRS's grid doesn't depend on height, and an Earth-fixed linear map alone
- * would tilt with the normal (about a millimetre per 100 m across and 70 m
- * up); in longitude and latitude alone the grid's curve would be centimetres
- * a kilometre out. PROJ's derivative at `at`, by central differences over a
- * metre. And how far it drifts from PROJ: its worst a kilometre away at that
- * height, as a coefficient in metres per square metre of distance (it grows
+ * would tilt with the normal (about a millimeter per 100 m across and 70 m
+ * up); in longitude and latitude alone the grid's curve would be centimeters
+ * a kilometer out. PROJ's derivative at `at`, by central differences over a
+ * meter. And how far it drifts from PROJ: its worst a kilometer away at that
+ * height, as a coefficient in meters per square meter of distance (it grows
  * as d²).
  */
 export function localPlacement(
@@ -154,7 +154,7 @@ export function localPlacement(
     height: 0,
   })!;
   const placement = { toDesign, height: geo.height };
-  // Its drift a kilometre out, in eight directions.
+  // Its drift a kilometer out, in eight directions.
   const R = 6_371_000;
   let worst = 0;
   for (let k = 0; k < 8; k++) {
@@ -200,7 +200,7 @@ function method(): NonNullable<ScenarioAnswer["method"]> {
     },
     {
       title: "The camera",
-      text: `The camera mount hangs ${DRONE.gimbal} m below the body, tilted down about the body's y axis by the knob. Its centre ray is the mount's x axis.`,
+      text: `The camera mount hangs ${DRONE.gimbal} m below the body, tilted down about the body's y axis by the knob. Its center ray is the mount's x axis.`,
     },
     {
       title: "On the terrain",
@@ -208,7 +208,7 @@ function method(): NonNullable<ScenarioAnswer["method"]> {
     },
     {
       title: "On the design grid",
-      text: `That point goes through California zone 3's PROJ operation to its easting and northing, and through the BIM model's map conversion (θ = 12.5°, s = 1.0000375) to its x and y. The page reads them off a local placement the worker makes from PROJ at the spot, good to millimetres within a kilometre of it.`,
+      text: `That point goes through California zone 3's PROJ operation to its easting and northing, and through the BIM model's map conversion (θ = 12.5°, s = 1.0000375) to its x and y. The page reads them off a local placement the worker makes from PROJ at the spot, good to millimeters within a kilometer of it.`,
     },
   ];
 }
@@ -323,7 +323,7 @@ export const evaluateDrone: ScenarioEvaluator = async (
       ),
       tolerance: DESIGN_ROUND_TRIP,
       unit: "m",
-      detail: `9 points; the local placement drifts ${fmt(placement.perSquareMeter * 1e6 * 1000, 3)} mm from PROJ a kilometre from the spot`,
+      detail: `9 points; the local placement drifts ${fmt(placement.perSquareMeter * 1e6 * 1000, 3)} mm from PROJ a kilometer from the spot`,
       accuracyNote: "exact arithmetic: a round trip",
       instant: instant.tdb(),
     },
@@ -351,7 +351,7 @@ export const evaluateDrone: ScenarioEvaluator = async (
         parentId: "ITRF",
         edge: {
           kind: "trajectory",
-          detail: `from its synthetic flight line (labelled synthetic): ${along}% along it, heading along it, level; reported height ${DRONE.reportedHeight} m read as ${knobs.datum === "navd88" ? "NAVD88 through GEOID18" : "an ellipsoidal height"}`,
+          detail: `from its synthetic flight line (labeled synthetic): ${along}% along it, heading along it, level; reported height ${DRONE.reportedHeight} m read as ${knobs.datum === "navd88" ? "NAVD88 through GEOID18" : "an ellipsoidal height"}`,
           accuracy: DRONE_ACCURACY,
         },
         app: true,
@@ -362,14 +362,14 @@ export const evaluateDrone: ScenarioEvaluator = async (
         parentId: DRONE_BODY,
         edge: {
           kind: "constant",
-          detail: `the gimbal: ${DRONE.gimbal} m below the body's centre, tilted ${tilt}° down about its y axis`,
+          detail: `the gimbal: ${DRONE.gimbal} m below the body's center, tilted ${tilt}° down about its y axis`,
           accuracy: CAMERA_MOUNT_ACCURACY,
         },
         app: true,
       },
     ],
     data: {
-      label: "The camera's centre ray",
+      label: "The camera's center ray",
       frame: CAMERA_MOUNT,
       source: "the mount's x axis",
       describes: `the way the camera looks: the mount's x axis, ${tilt}° below the horizon`,
@@ -381,7 +381,7 @@ export const evaluateDrone: ScenarioEvaluator = async (
     answer: {
       label: "Tracing the camera's ray on the terrain",
       aside: `The drone ${along}% along its line, ${DRONE.reportedHeight} m reported (${knobs.datum === "navd88" ? "NAVD88, through GEOID18" : "read as ellipsoidal"}), the camera ${tilt}° down`,
-      headline: `The camera's centre ray leaves the mount ${tilt}° below the horizon, along the drone's heading. Where it first meets the terrain as drawn is what the camera looks at; California zone 3 and the BIM model's map conversion give its place on the design grid. ${datumMoves !== undefined ? `The reported height's datum matters: GEOID18 puts NAVD88's zero ${fmt(Math.abs(N), 4)} m ${N < 0 ? "below" : "above"} the ellipsoid here, so reading the ${DRONE.reportedHeight} m as the other moves the drone that far up or down, and on level ground the spot ${fmt(datumMoves, 4)} m along the ray's way.` : "Looking level, the ray only meets terrain that rises to the drone's height."}`,
+      headline: `The camera's center ray leaves the mount ${tilt}° below the horizon, along the drone's heading. Where it first meets the terrain as drawn is what the camera looks at; California zone 3 and the BIM model's map conversion give its place on the design grid. ${datumMoves !== undefined ? `The reported height's datum matters: GEOID18 puts NAVD88's zero ${fmt(Math.abs(N), 4)} m ${N < 0 ? "below" : "above"} the ellipsoid here, so reading the ${DRONE.reportedHeight} m as the other moves the drone that far up or down, and on level ground the spot ${fmt(datumMoves, 4)} m along the ray's way.` : "Looking level, the ray only meets terrain that rises to the drone's height."}`,
       accuracy: {
         note: "the terrain's, once the ray is traced: its error at the levels the ray crossed, along the ray, and the drone's own position and attitude at the spot",
         unbounded: true,
@@ -425,8 +425,8 @@ export const evaluateDrone: ScenarioEvaluator = async (
         key: JSON.stringify([tilt, along, knobs.datum]),
         from: origin,
         to,
-        label: "the camera's centre ray",
-        subject: "The camera's centre ray, traced on the terrain",
+        label: "the camera's center ray",
+        subject: "The camera's center ray, traced on the terrain",
         firstHit: true,
       },
     ],
@@ -444,7 +444,7 @@ export const evaluateDrone: ScenarioEvaluator = async (
     legend: [
       {
         key: "ray",
-        label: "The camera's centre ray, to where it meets the terrain",
+        label: "The camera's center ray, to where it meets the terrain",
         short: "Camera ray",
         accuracy: `${tilt}° below the horizon`,
         line: "solid",

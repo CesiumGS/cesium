@@ -43,7 +43,7 @@ export function itrfEdge(
  * `σ_t · ω` radians about +Z of ITRF (`axis`); polar motion tilts its axis
  * by `σ_p` radians, about no one axis. Each is flagged when predicted. A
  * point's error is the first times its distance from the spin axis, and the
- * second times its distance from the geocentre. Not known outside the EOP
+ * second times its distance from the geocenter. Not known outside the EOP
  * table.
  */
 export function itrfAccuracy(
@@ -81,6 +81,6 @@ export function itrfAccuracy(
         ...(sigma.predicted && { predicted: true }),
       },
     ],
-    note: `${note}. An angular bound, in two figures: the Earth's spin (UT1: its error about ITRF's +Z) and the tilt of its axis (polar motion), in radians; a point's error in metres is the first times its distance from the spin axis, the second times its distance from the geocentre`,
+    note: `${note}. An angular bound, in two figures: the Earth's spin (UT1: its error about ITRF's +Z) and the tilt of its axis (polar motion), in radians; a point's error in meters is the first times its distance from the spin axis, the second times its distance from the geocenter`,
   };
 }

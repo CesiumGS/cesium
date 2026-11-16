@@ -11,10 +11,10 @@ import {
 
 const MAX_SAMPLES = 1_000_000;
 
-/** A frame's origin along a span (`samplePath`). TDB seconds; metres in `inFrame`. */
+/** A frame's origin along a span (`samplePath`). TDB seconds; meters in `inFrame`. */
 export interface PathSamples {
   readonly tdb: Float64Array;
-  /** x, y, z of each sample in `tdb`, metres in `inFrame`. */
+  /** x, y, z of each sample in `tdb`, meters in `inFrame`. */
   readonly positions: Float64Array;
   /** Runs of time, marking where a simulated piece of a piecewise reference frame is in use. */
   readonly spans: readonly {

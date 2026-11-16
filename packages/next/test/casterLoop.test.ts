@@ -870,15 +870,15 @@ describe("casters on the on-demand loop", () => {
         }
       }
       expect(s.internals.inFlight).toBeGreaterThan(4);
-      const cancelled = s.stats.cancelled;
+      const canceled = s.stats.canceled;
       s.look(s.view, 150, 0, 0, 180, -15);
       await ticks(3);
       // All at once, not one a tick.
-      expect(s.stats.cancelled - cancelled).toBeGreaterThan(4);
+      expect(s.stats.canceled - canceled).toBeGreaterThan(4);
       s.remove();
     });
 
-    it("keeps a slow caster loading: a request longer than the cancel's grace isn't cancelled", async () => {
+    it("keeps a slow caster loading: a request longer than the cancel's grace isn't canceled", async () => {
       const s = await scene({
         root: group([floor(), roof()]),
         bytes: tileBytes(1),
@@ -887,7 +887,7 @@ describe("casters on the on-demand loop", () => {
       });
       s.look(s.view, 2, 0, 0, 0, 0);
       await ticks(300);
-      expect(s.stats.cancelled).toBe(0);
+      expect(s.stats.canceled).toBe(0);
       expect(fetched.get("roof.glb")).toBe(1);
       expect(s.tiles[1]!.casterMask).not.toBe(0);
       s.remove();

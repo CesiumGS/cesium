@@ -144,7 +144,7 @@ const FORM = [
     arrays:
       "edgeVertices, edgeCurve, edgeTolerance, vertexPosition, vertexTolerance",
     notes:
-      "Each edge has its exact 3D curve (rational Bézier, degree 3 at most) and a tolerance in metres.",
+      "Each edge has its exact 3D curve (rational Bézier, degree 3 at most) and a tolerance in meters.",
   },
   {
     group: "Names and version",
@@ -174,7 +174,7 @@ const TOLERANCES = [
     name: "Display tolerance",
     is: "How far the drawn triangles or patches may be from the form's surface.",
     where: "Tessellation, for each view.",
-    held: "A chordal tolerance in metres on the CPU (TessellateOptions.tolerance, reported back as BrepMesh.error), or an error in pixels on the GPU (setPatchErrorPixels). Trim curves are fitted to a ten-thousandth of the face's size.",
+    held: "A chordal tolerance in meters on the CPU (TessellateOptions.tolerance, reported back as BrepMesh.error), or an error in pixels on the GPU (setPatchErrorPixels). Trim curves are fitted to a ten-thousandth of the face's size.",
     accuracy:
       "No, except when an answer comes from a mesh, and then it says so",
   },
@@ -216,7 +216,7 @@ const KERNELS = [
   { what: "STEP", smlib: "Not built", occt: "Import and export" },
   { what: "Threads", smlib: "None needed", occt: "None needed" },
   {
-    what: "Licence",
+    what: "License",
     smlib: "Apache 2.0",
     occt: "LGPL 2.1 with an exception for OCCT",
   },
@@ -336,7 +336,7 @@ const TWO_BY_TWO = [
   {
     row: "Changes only how it's drawn",
     space: "A drawn map (exaggeration, flattening, the 2D morph)",
-    domain: "A drawn deformer (an analysis shape at ×50), colour fields",
+    domain: "A drawn deformer (an analysis shape at ×50), color fields",
   },
 ];
 
@@ -585,7 +585,7 @@ export function Breps() {
           The engine defines its own B-rep form, <C>BrepForm</C> in{" "}
           <C>src/brep/form.ts</C>: plain typed arrays, so it moves between
           workers without copying and a host with its own kernel can write it
-          directly. Lengths are metres and angles are radians.
+          directly. Lengths are meters and angles are radians.
         </p>
         <DataTable
           label="What the render form holds"
@@ -620,7 +620,7 @@ export function Breps() {
         <p>
           <strong>Representation error.</strong> <C>surfaceError</C> says how
           far a surface's stored geometry may be from the modeling surface, in
-          metres, and is zero when exact. The builder takes it with the identity
+          meters, and is zero when exact. The builder takes it with the identity
           (<C>BrepBuilder.nurbsSurface</C>), the validator checks it, and both
           tessellators treat it as slack in their bounds. No converter writes a
           value above zero yet, because both kernels' NURBS split exactly. The
@@ -683,8 +683,8 @@ export function Breps() {
         />
         <p>
           <strong>Visual against measured.</strong> A pixel is a property of a
-          view and a metre is a property of the geometry. A silhouette within
-          half a pixel is a different number of metres at every zoom, so a
+          view and a meter is a property of the geometry. A silhouette within
+          half a pixel is a different number of meters at every zoom, so a
           measurement can't inherit it. The rule is that a measured answer
           states the model tolerance plus the representation error. A display
           tolerance enters only when the answer came from a mesh, and then the
@@ -772,9 +772,9 @@ export function Breps() {
           <Cite id="replicadOcct" />
           ). Setup fetches it from npm and checks it against npm's integrity
           hash (<C>scripts/occtTools.mjs</C>). Open CASCADE is LGPL 2.1 with an
-          additional exception (<Cite id="occtLicence" />
+          additional exception (<Cite id="occtLicense" />
           ), unlike SMLib, so it stays a separate module for the examples and
-          its licence needs checking before anything built with it is
+          its license needs checking before anything built with it is
           distributed. Its plane, cylinder, sphere and torus match the form's
           parameterizations term for term, and its cone differs only in
           measuring v along the slant. So <C>occtToForm</C> keeps the kinds,
@@ -815,11 +815,11 @@ export function Breps() {
         <h3>STEP</h3>
         <p>
           <C>OcctKernel.importStep</C> reads the solids of a STEP file (AP203,
-          AP214 or AP242, as Open CASCADE reads them) in metres whatever the
+          AP214 or AP242, as Open CASCADE reads them) in meters whatever the
           file's units, with each solid's placement within compounds and
           assemblies. Free shells and surfaces aren't read. The bytes pass
           through the module's in-memory file system, as its reader only takes a
-          path. <C>exportStep</C> writes AP214 in metres. A box minus a
+          path. <C>exportStep</C> writes AP214 in meters. A box minus a
           cylinder, and a box with a sphere on its origin corner, round-trip
           with their faces, kinds and volume kept.
         </p>
@@ -844,7 +844,7 @@ export function Breps() {
           ). <C>scripts/stepSamples.mjs</C> fetches NIST's zip (about 14 MB)
           into the store, checks it against a pinned hash, and keeps four files,
           each pinned by its own SHA-256. They are never committed. The files
-          are in millimetres, and import converts them to metres: CTC-05 is
+          are in millimeters, and import converts them to meters: CTC-05 is
           0.527 by 0.559 by 0.483 m.
         </p>
         <DataTable
@@ -872,7 +872,7 @@ export function Breps() {
           and its conversion 569 ms. A form's bounds, read from the form itself,
           took 1 to 37 ms. CTC-05's problems are open loops and uses off their
           edge. The largest is 18.2 µm, on an edge whose tolerance is 0.6 µm, on
-          a part half a metre across, and Open CASCADE calls the solid valid.
+          a part half a meter across, and Open CASCADE calls the solid valid.
           The test holds them to under 20 µm rather than hide them. CTC-05's 208
           faces draw on the GPU. The CPU tessellator takes 768 ms for the same
           part at 1 mm.
@@ -907,8 +907,8 @@ export function Breps() {
           </li>
           <li>
             <strong>A newer request supersedes the older.</strong> The old
-            promise rejects with <C>KernelCancelled</C>, and the worker stops
-            the old request at its next stage. A kernel call itself can't be
+            promise rejects with <C>KernelCanceled</C>, and the worker stops the
+            old request at its next stage. A kernel call itself can't be
             interrupted, so a cancel waits for the call that is running.
           </li>
         </ul>
@@ -1032,7 +1032,7 @@ export function Breps() {
             field that runs out of steps says it couldn't decide.
           </li>
           <li>
-            Every answer carries its accuracy: metres, whether it's exact, and a
+            Every answer carries its accuracy: meters, whether it's exact, and a
             note in words. A tile's mesh carries its geometric error.
           </li>
           <li>
@@ -1108,13 +1108,13 @@ export function Breps() {
 
         <h3>Accuracy as composed terms</h3>
         <p>
-          Today an answer's accuracy is one number in metres, a flag for exact,
+          Today an answer's accuracy is one number in meters, a flag for exact,
           a note, and an optional <C>route</C>. The plan replaces it with terms,
           and the answer names the route it took: the source, the form, a mesh,
           or a server. The B-rep adapter moves toward that: its note lists the
           model tolerance (0.1 µm by default, Open CASCADE's confusion), the
           surface's representation error and the edge's tolerance, each in
-          placed metres, and its <C>route</C> field says how the answer was
+          placed meters, and its <C>route</C> field says how the answer was
           found, such as closed form, cylinder, or Newton on Bézier patch. The{" "}
           <C>meters</C> figure is their sum. Both converters write a surface
           error of 0, so the only representation error today is on edges, from
@@ -1161,7 +1161,7 @@ export function Breps() {
         <p>
           An embedding takes a domain point to true coordinates: exact on the
           CPU in float64, and evaluable on the GPU with a stated error.{" "}
-          <em>Fields</em> are values on the domain: colours, scalars, element
+          <em>Fields</em> are values on the domain: colors, scalars, element
           IDs, normals and displacements, as USD's primvars are, each with an
           interpolation class (constant, uniform, varying, vertex,
           face-varying). Queries, clipping and measurement apply only the
@@ -1514,7 +1514,7 @@ export function Breps() {
           whether tiles store NURBS or pre-split Bézier patches (size against
           loader work); how B-rep edges meet the vector design's exact circles
           and clothoids; both kernels on real trimmed models, in speed,
-          correctness and memory; Open CASCADE's licence before anything is
+          correctness and memory; Open CASCADE's license before anything is
           distributed; the USD input path; and F-rep drawing by ray marching
           with a step count.
         </p>
@@ -1524,7 +1524,7 @@ export function Breps() {
         ids={[
           "usdBrep",
           "replicadOcct",
-          "occtLicence",
+          "occtLicense",
           "occtIssue1652",
           "nistPmi",
         ]}

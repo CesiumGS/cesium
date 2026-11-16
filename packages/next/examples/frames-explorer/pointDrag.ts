@@ -90,7 +90,7 @@ export function createPointDrag(deps: {
   /** Each move's number: an answer older than the latest is dropped. */
   let moves = 0;
 
-  /** Where the pointer's ray meets the ellipsoid, Earth-fixed metres. */
+  /** Where the pointer's ray meets the ellipsoid, Earth-fixed meters. */
   function ellipsoidAt(e: PointerEvent): Float64Array | undefined {
     const rect = viewer.canvas.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) {
@@ -105,7 +105,7 @@ export function createPointDrag(deps: {
   }
 
   /**
-   * Where the pointer is on what is drawn there, Earth-fixed metres (the
+   * Where the pointer is on what is drawn there, Earth-fixed meters (the
    * pick, in ITRF); the ellipsoid's point over the sky or when the pick
    * can't say.
    */

@@ -35,9 +35,9 @@ export type SmoothInverse = (
  * A parallelepiped of a node's input coordinates: `center` ± the columns of
  * `axes` (column-major 3×3, the half axes), every point `center + axes · t`
  * with t in [-1, 1]³. Where the coordinates are geographic, `center` is
- * (longitude, latitude, height) as ever and `axes` is in local metres at the
- * centre: its rows are east, north and up, an east metre being
- * 1 / (RAD · (N + h) cos φ) degrees of longitude and a north metre
+ * (longitude, latitude, height) as ever and `axes` is in local meters at the
+ * center: its rows are east, north and up, an east meter being
+ * 1 / (RAD · (N + h) cos φ) degrees of longitude and a north meter
  * 1 / (RAD · (M + h)) degrees of latitude, with N and M the radii of
  * curvature. The box a bound gives is in the output's coordinates likewise.
  */
@@ -68,7 +68,7 @@ export interface SmoothSpec {
   params: Params;
   /** What the function is, in a route's `shapeKey`; the node's name when left out. */
   id?: string;
-  /** 1σ in metres, kept for accuracy propagation (a later task). */
+  /** 1σ in meters, kept for accuracy propagation (a later task). */
   accuracy?: number;
   /**
    * The function as restricted-JS text, for the compiler's IR (`parseTransform`),
@@ -97,8 +97,8 @@ export interface SmoothSpec {
   ) => DeclaredBound;
   /**
    * Which sides of the function are geographic coordinates (longitude and
-   * latitude in degrees, height in metres). A region there is in local
-   * metres: see `BoundRegion`.
+   * latitude in degrees, height in meters). A region there is in local
+   * meters: see `BoundRegion`.
    */
   geographic?: { readonly in?: boolean; readonly out?: boolean };
 }

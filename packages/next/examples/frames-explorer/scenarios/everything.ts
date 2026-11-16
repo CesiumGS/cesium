@@ -50,7 +50,7 @@ import {
   publishedLight,
   stationFrame,
 } from "./dishTracks.ts";
-import { HORIZON_GREY, azimuthElevation, horizonGrey } from "./pointing.ts";
+import { HORIZON_GRAY, azimuthElevation, horizonGray } from "./pointing.ts";
 import {
   registerScenario,
   type Moment,
@@ -103,11 +103,11 @@ const SHIP_DATUM: KnobState = { datum: "navd88" };
 
 /** Within this of a body's limb (degrees) the hand check leaves the verdict to the library. */
 /** The Earth's mean radius, m: a horizon's dip by hand. */
-const LIMB_GREY = 0.01;
+const LIMB_GRAY = 0.01;
 
-/** "0.12° of the Mast sensor's horizon and 0.01° of the Moon's limb": each grey item with its own band. */
-export const greyText = (grey: readonly { what: string; band: number }[]) =>
-  grey.map((g) => `${fmt(g.band, 2)}° of ${g.what}`).join(" and ");
+/** "0.12° of the Mast sensor's horizon and 0.01° of the Moon's limb": each gray item with its own band. */
+export const grayText = (gray: readonly { what: string; band: number }[]) =>
+  gray.map((g) => `${fmt(g.band, 2)}° of ${g.what}`).join(" and ");
 
 /** Each frame's origin in `to` at `instant`, m. */
 const originIn = (frame: Frame, to: Frame, instant: Instant): number[] => {
@@ -181,7 +181,7 @@ function addedFrames(
       parentId: "ITRF",
       edge: {
         kind: "trajectory",
-        detail: `from its synthetic track along 33 CFR 167's inbound lanes (labelled synthetic) at 12 knots, holding off Mile Rocks after it ends: heading along the lane; pitch and roll from a modelled sea state (synthetic, ±${SEA_STATE.pitch.amplitude}° and ±${SEA_STATE.roll.amplitude}°); its origin at the waterline, the sea at NAVD88 0 m through GEOID18`,
+        detail: `from its synthetic track along 33 CFR 167's inbound lanes (labeled synthetic) at 12 knots, holding off Mile Rocks after it ends: heading along the lane; pitch and roll from a modeled sea state (synthetic, ±${SEA_STATE.pitch.amplitude}° and ±${SEA_STATE.roll.amplitude}°); its origin at the waterline, the sea at NAVD88 0 m through GEOID18`,
         accuracy: SHIP_ACCURACY,
       },
       app: true,
@@ -460,7 +460,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
           obj === "lunar-site" ? f.moonMe : f.itrf,
         );
   // MOON_ME's estimated orientation (stated.ts) at the lunar site's lever,
-  // its distance from the Moon's centre: the walk's term for that edge.
+  // its distance from the Moon's center: the walk's term for that edge.
   const moonLever = Math.hypot(...originIn(x.site, f.moonMe, instant));
   const moonTurn = MOON_ME_RADIANS * moonLever;
   const ends = [from, to].map((obj) => {
@@ -510,7 +510,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
           ...(own.meters !== undefined && {
             meters: Math.hypot(own.meters, moonTurn),
           }),
-          note: `${MOON_ME_ACCURACY.note}; at the site, ${fmt(moonLever / 1000, 5)} km from the Moon's centre (its lever); the site itself is exact by definition`,
+          note: `${MOON_ME_ACCURACY.note}; at the site, ${fmt(moonLever / 1000, 5)} km from the Moon's center (its lever); the site itself is exact by definition`,
         };
     }
   };
@@ -640,13 +640,13 @@ export const evaluateEverything: ScenarioEvaluator = async (
             new Float64Array(3),
           )!,
         );
-  // Each grey item with its own band (degrees), so the detail prints the
+  // Each gray item with its own band (degrees), so the detail prints the
   // band that decided it, not the widest (Task 9).
   const hand: {
     blocked?: "Earth" | "Moon";
-    grey: { what: string; band: number }[];
+    gray: { what: string; band: number }[];
     words: string[];
-  } = { grey: [], words: [] };
+  } = { gray: [], words: [] };
   /** The other end's elevation from the lunar site, degrees, when it is an end. */
   let siteElevation: number | undefined;
   /** The tool's height above its pad, m. */
@@ -669,12 +669,12 @@ export const evaluateEverything: ScenarioEvaluator = async (
         obj === "ship" ? CAPSTONE_MAST : obj === "tool" ? toolUp : 0,
         0,
       );
-      const grey = horizonGrey(h);
+      const gray = horizonGray(h);
       hand.words.push(
-        `${CAPSTONE[obj].name} sees the other ${fmt(el, 4)}° up (its horizon's dip ${fmt(grey - HORIZON_GREY, 2)}°)`,
+        `${CAPSTONE[obj].name} sees the other ${fmt(el, 4)}° up (its horizon's dip ${fmt(gray - HORIZON_GRAY, 2)}°)`,
       );
-      if (Math.abs(el) <= grey) {
-        hand.grey.push({ what: `${CAPSTONE[obj].name}'s horizon`, band: grey });
+      if (Math.abs(el) <= gray) {
+        hand.gray.push({ what: `${CAPSTONE[obj].name}'s horizon`, band: gray });
       } else if (el < 0) {
         hand.blocked ??= "Earth";
       }
@@ -688,10 +688,10 @@ export const evaluateEverything: ScenarioEvaluator = async (
       const el = elevation(p, Array.from(q), p);
       siteElevation = el;
       hand.words.push(`the lunar site sees the other ${fmt(el, 4)}° up`);
-      if (Math.abs(el) <= HORIZON_GREY) {
-        hand.grey.push({
+      if (Math.abs(el) <= HORIZON_GRAY) {
+        hand.gray.push({
           what: "the lunar site's horizon",
-          band: HORIZON_GREY,
+          band: HORIZON_GRAY,
         });
       } else if (el < 0) {
         hand.blocked ??= "Moon";
@@ -710,18 +710,18 @@ export const evaluateEverything: ScenarioEvaluator = async (
     ) {
       continue;
     }
-    const centre = originIn(frame, f.icrf, instant);
-    const toBody = sub(centre, pa.icrf);
+    const center = originIn(frame, f.icrf, instant);
+    const toBody = sub(center, pa.icrf);
     const toB = sub(pb.icrf, pa.icrf);
     const angle =
       Math.acos(Math.min(1, dot(toBody, toB) / (norm(toBody) * norm(toB)))) *
       DEG_PER_RAD;
     const limb = Math.asin(Math.min(1, radius / norm(toBody))) * DEG_PER_RAD;
     hand.words.push(
-      `the ${body}'s centre ${fmt(angle, 6)}° from the line, its limb ${fmt(limb, 6)}°`,
+      `the ${body}'s center ${fmt(angle, 6)}° from the line, its limb ${fmt(limb, 6)}°`,
     );
-    if (Math.abs(angle - limb) <= LIMB_GREY) {
-      hand.grey.push({ what: `the ${body}'s limb`, band: LIMB_GREY });
+    if (Math.abs(angle - limb) <= LIMB_GRAY) {
+      hand.gray.push({ what: `the ${body}'s limb`, band: LIMB_GRAY });
     } else if (angle < limb && norm(toB) > norm(toBody)) {
       hand.blocked ??= body;
     }
@@ -741,7 +741,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
               : "In view: clear of the Earth and the Moon";
   const seen = sight.clear && !dishSees?.below;
   const losPass =
-    hand.grey.length > 0
+    hand.gray.length > 0
       ? true
       : hand.blocked === undefined
         ? sight.clear
@@ -768,7 +768,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
     {
       id: "everything.round-trip.live",
       group: "frame-tree",
-      title: `${A.title} and ${B.name}: points a kilometre out along each one's frame go to ICRF and back, within 1 mm per 10⁹ m of their distance from ICRF's origin`,
+      title: `${A.title} and ${B.name}: points a kilometer out along each one's frame go to ICRF and back, within 1 mm per 10⁹ m of their distance from ICRF's origin`,
       pass: true,
       ...(() => {
         let worst = 0;
@@ -811,7 +811,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
       group: "space",
       title: `${A.title} and ${B.name}: the library's line of sight (the Earth and the Moon) agrees with hand geometry (each end's horizon, and the bodies' limbs)`,
       pass: losPass,
-      detail: `library: ${sight.clear ? "clear" : `blocked by ${by ?? "?"}`}; hand: ${hand.blocked ? `blocked by the ${hand.blocked}` : "clear"} (${hand.words.join("; ")})${hand.grey.length > 0 ? `; within ${greyText(hand.grey)}: the library's verdict stands` : ""}`,
+      detail: `library: ${sight.clear ? "clear" : `blocked by ${by ?? "?"}`}; hand: ${hand.blocked ? `blocked by the ${hand.blocked}` : "clear"} (${hand.words.join("; ")})${hand.gray.length > 0 ? `; within ${grayText(hand.gray)}: the library's verdict stands` : ""}`,
       accuracyNote: "exact arithmetic: hand geometry",
       instant: epochTdb,
     },
@@ -876,7 +876,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
       },
       {
         title: "The distance",
-        text: `Both origins are taken to ICRF at the instant shown and differenced. ${Math.abs(scaled) > 1e-3 ? `Measured in ${fa.name}'s own frame (measure's distance) it reads ${fmt(Math.abs(scaled), 3)} m ${scaled > 0 ? "longer" : "shorter"}: GCRF's relativistic transformation (IERS 2010 eq. 11.19) is on the route there.` : "In From's own frame (measure's distance) it reads the same, to the millimetre."}`,
+        text: `Both origins are taken to ICRF at the instant shown and differenced. ${Math.abs(scaled) > 1e-3 ? `Measured in ${fa.name}'s own frame (measure's distance) it reads ${fmt(Math.abs(scaled), 3)} m ${scaled > 0 ? "longer" : "shorter"}: GCRF's relativistic transformation (IERS 2010 eq. 11.19) is on the route there.` : "In From's own frame (measure's distance) it reads the same, to the millimeter."}`,
       },
       {
         title: "The light time",
@@ -888,7 +888,7 @@ export const evaluateEverything: ScenarioEvaluator = async (
       },
       {
         title: "How sure",
-        text: "The library's statement for the two origins (accuracyOf: the Earth's orientation at an Earth end, Orion's covariance, DE440 where the two meet at ICRF, the Moon's relativistic terms), and for each end the app defines its frames' own stated accuracies (pointAccuracy): the dish's published position (DSN 810-005), the ship's estimated AIS position and heading, the arm's encoders, links and survey, and for the lunar site (exact by definition) MOON_ME's estimated orientation at its distance from the Moon's centre; root-sum-square, as the walk composes each end. A pair is bounded only where both ends are.",
+        text: "The library's statement for the two origins (accuracyOf: the Earth's orientation at an Earth end, Orion's covariance, DE440 where the two meet at ICRF, the Moon's relativistic terms), and for each end the app defines its frames' own stated accuracies (pointAccuracy): the dish's published position (DSN 810-005), the ship's estimated AIS position and heading, the arm's encoders, links and survey, and for the lunar site (exact by definition) MOON_ME's estimated orientation at its distance from the Moon's center; root-sum-square, as the walk composes each end. A pair is bounded only where both ends are.",
       },
     ],
   };

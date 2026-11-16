@@ -160,7 +160,7 @@ async function measure(
         vec3.vec3(),
         vec3.sub(vec3.vec3(), origin, eye as vec3.Vec3),
       );
-      const centre = vec3.add(
+      const center = vec3.add(
         vec3.vec3(),
         eye as vec3.Vec3,
         vec3.scale(vec3.vec3(), forward, distance),
@@ -183,7 +183,7 @@ async function measure(
       return world.addDraw({
         mesh: quad,
         material: glass,
-        origin: centre,
+        origin: center,
         model,
         ...(viewMask === undefined ? {} : { viewMask }),
       });

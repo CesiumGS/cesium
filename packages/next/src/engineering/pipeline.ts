@@ -68,7 +68,7 @@ function checkKey(key: string): void {
 }
 
 // What PROJ writes in a value (checked against every string proj.db 9.7.1
-// produces). An allowlist, not a blocklist: PROJ's tokenizer honours double
+// produces). An allowlist, not a blocklist: PROJ's tokenizer honors double
 // quotes, so a quote could hide a "+step" and make PROJ run another pipeline
 // than the one validated here.
 const VALUE = /^[A-Za-z0-9_.,@/:=-]+$/;

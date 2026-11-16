@@ -1,7 +1,7 @@
 // A builder for the b-rep render form (docs/design/breps-and-geometry-queries.md). A host writes
 // surfaces, vertices, edges and faces by name, and the builder does the
 // offset counting: it splits NURBS into rational Bézier segments and patches
-// exactly, and lays every array out as the form fixes. Lengths are metres and
+// exactly, and lays every array out as the form fixes. Lengths are meters and
 // angles are radians.
 import { SurfaceKind, type BezierCurves, type BrepForm } from "./form.ts";
 import {
@@ -240,7 +240,7 @@ export class BrepBuilder {
     }
     if (!(error >= 0 && Number.isFinite(error))) {
       throw new Error(
-        "BrepBuilder.nurbsSurface: error must be a finite number of metres, 0 or more",
+        "BrepBuilder.nurbsSurface: error must be a finite number of meters, 0 or more",
       );
     }
     const split = nurbsSurfaceToPatches(surface);

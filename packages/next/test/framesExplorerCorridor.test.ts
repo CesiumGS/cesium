@@ -1,5 +1,5 @@
 // The corridor's station lookup at the road's ends (Task 9): the trip
-// through the ground puts the point at station 0 a few nanometres before the
+// through the ground puts the point at station 0 a few nanometers before the
 // road's start, where the library's alignment rightly says "outside". The
 // scenario reads it on the end tangent's extension, within the round trip's
 // own tolerance, so its own knob's minimum answers.

@@ -5,18 +5,18 @@
 //  a. affine · verticalExaggeration ×10 · affine, tiles of 1, 2 and 8 km at
 //     the Earth's radius (and a tile across the lift's blend band);
 //  b. UTM zone 31 above geographic above ×3 exaggeration (nested smooth steps),
-//     with exact normals and with linear ones (J at the draw's centre and its
+//     with exact normals and with linear ones (J at the draw's center and its
 //     first-order change, for the steps with no kink: task 4b);
 //  c. a twist whose rate changes every frame: a dynamic parameter, the
-//     centre constants recomputed per frame by the df64 compute pass;
+//     center constants recomputed per frame by the df64 compute pass;
 //  d. Brown–Conrady lens distortion on a camera branch;
 //  e. the renderer's glue (`routeVertex`, scene/routeVariant.ts): a draw's
 //     block of the placements buffer, packed as the world packs it, read by
 //     the glue with a stand-in view (eye, shading axes), against float64.
 // Per case: the worst position error (mm) and normal angle error (degrees)
-// against float64, with the centre constants from the CPU (float64) and from
+// against float64, with the center constants from the CPU (float64) and from
 // the GPU's df64 pass. Timing: 1M vertices through `transformPoint` and
-// `transformVertex`, and the centre-constant pass for 1024 draws.
+// `transformVertex`, and the center-constant pass for 1024 draws.
 //
 // Run: node scripts/runSpike.mjs "http://127.0.0.1:5190/spikes/transformGraph.html?bench&nohmr" runTransformGraph
 import "../lab/harness.css";
@@ -51,7 +51,7 @@ import { radialDistortion, twist } from "../src/transforms/index.ts";
 const TEMPLATE = `
 <h1>Transform graph compiler</h1>
 <p>
-  Routes compiled to WGSL: centre constants in float64 (hi/lo), the residual
+  Routes compiled to WGSL: center constants in float64 (hi/lo), the residual
   F(c + δ) − F(c) in float32. Positions and normals against float64.
 </p>
 <div class="status">Run to measure on this GPU.</div>
@@ -111,8 +111,8 @@ function rigid(angle: number, t: ArrayLike<number>): Float64Array {
 interface Scenario {
   name: string;
   route: Route;
-  /** Draw centres in the route's local frame. */
-  centres: (count: number) => Float64Array[];
+  /** Draw centers in the route's local frame. */
+  centers: (count: number) => Float64Array[];
   /** Vertex offsets: horizontal radius and vertical half-extent. */
   radius: number;
   vertical: number;
@@ -124,7 +124,7 @@ interface Scenario {
   normals?: "exact" | "linear";
 }
 
-function tileCentres(
+function tileCenters(
   count: number,
   seed: number,
   spread: number,
@@ -164,10 +164,10 @@ function exaggerationScenario(radius: number, bandTile = false): Scenario {
       ? `a. ×10 exaggeration, ${radius / 1000} km tiles across the lift band`
       : `a. ×10 exaggeration, ${radius / 1000} km tiles`,
     route: routeBetween(content, world),
-    centres: (n) =>
+    centers: (n) =>
       bandTile
-        ? tileCentres(n, 11, 20000, 8300, 8700)
-        : tileCentres(n, 7, 30000, 0, 3000),
+        ? tileCenters(n, 11, 20000, 8300, 8700)
+        : tileCenters(n, 7, 30000, 0, 3000),
     radius,
     vertical: bandTile ? 800 : Math.min(radius, 1000),
     positionBudgetMm: 10,
@@ -194,7 +194,7 @@ function utmScenario(
   return {
     name: `b. UTM 31 · geographic · ×3 exaggeration, ${radius / 1000} km tiles${normals === "linear" ? ", linear normals" : ""}`,
     route: routeBetween(content, world),
-    centres: (n) => tileCentres(n, 3, 30000, 0, 3000),
+    centers: (n) => tileCenters(n, 3, 30000, 0, 3000),
     radius,
     vertical,
     positionBudgetMm: budgetMm,
@@ -220,7 +220,7 @@ function twistScenario(): Scenario {
   return {
     name: "c. twist, a rate that changes every frame",
     route: routeBetween(content, world),
-    centres: (n) => tileCentres(n, 5, 3000, -1000, 3000),
+    centers: (n) => tileCenters(n, 5, 3000, -1000, 3000),
     radius: 1000,
     vertical: 1000,
     positionBudgetMm: 1,
@@ -258,7 +258,7 @@ function lensScenario(): Scenario {
   return {
     name: "d. radial lens distortion on a camera branch",
     route: routeBetween(content, world),
-    centres: (n) => tileCentres(n, 9, 40, -20, 20),
+    centers: (n) => tileCenters(n, 9, 40, -20, 20),
     radius: 10,
     vertical: 10,
     positionBudgetMm: 1,
@@ -360,7 +360,7 @@ async function compileModule(
 
 const KERNEL = `
 @group(0) @binding(0) var<uniform> u: RouteUniforms;
-@group(0) @binding(1) var<storage, read> draws: array<DrawCentre>;
+@group(0) @binding(1) var<storage, read> draws: array<DrawCenter>;
 @group(0) @binding(2) var<storage, read> verts: array<vec4f>;
 @group(0) @binding(3) var<storage, read> nrms: array<vec4f>;
 @group(0) @binding(4) var<storage, read_write> outP: array<vec4f>;
@@ -395,8 +395,8 @@ interface Pipelines {
   layout: GPUBindGroupLayout;
   points: GPUComputePipeline;
   vertex: GPUComputePipeline | undefined;
-  centre: GPUComputePipeline | undefined;
-  centreLayout: GPUBindGroupLayout;
+  center: GPUComputePipeline | undefined;
+  centerLayout: GPUBindGroupLayout;
 }
 
 const pipelineCache = new Map<string, Pipelines>();
@@ -443,7 +443,7 @@ async function makePipelines(
       layout: device.createPipelineLayout({ bindGroupLayouts: [l] }),
       compute: { module: m, entryPoint },
     });
-  const centreLayout = device.createBindGroupLayout({
+  const centerLayout = device.createBindGroupLayout({
     entries: [
       entry(0, "uniform"),
       entry(1, "read-only-storage"),
@@ -451,23 +451,23 @@ async function makePipelines(
     ],
   });
   // A route with linear normals has per-draw CPU data and no compute pass.
-  const centreModule = compiled.centreConstantsWgsl
+  const centerModule = compiled.centerConstantsWgsl
     ? await compileModule(
         device,
-        compiled.centreConstantsWgsl,
-        `${label} centres`,
+        compiled.centerConstantsWgsl,
+        `${label} centers`,
       )
     : undefined;
-  const [points, vertex, centre] = await Promise.all([
+  const [points, vertex, center] = await Promise.all([
     make(module, layout, "pointsMain"),
     hasNormals
       ? make(module, layout, "vertexMain")
       : Promise.resolve(undefined),
-    centreModule
-      ? make(centreModule, centreLayout, "centreConstants")
+    centerModule
+      ? make(centerModule, centerLayout, "centerConstants")
       : Promise.resolve(undefined),
   ]);
-  const made = { layout, points, vertex, centre, centreLayout };
+  const made = { layout, points, vertex, center, centerLayout };
   pipelineCache.set(compiled.key, made);
   return made;
 }
@@ -483,7 +483,7 @@ interface Samples {
 }
 
 function sampleVertices(
-  centres: readonly Float64Array[],
+  centers: readonly Float64Array[],
   perDraw: number,
   radius: number,
   vertical: number,
@@ -491,14 +491,14 @@ function sampleVertices(
   truth: boolean,
 ): Samples {
   const next = rng(seed);
-  const count = centres.length * perDraw;
+  const count = centers.length * perDraw;
   const verts = new Float32Array(4 * count);
   const bits = new Uint32Array(verts.buffer);
   const normals = new Float32Array(4 * count);
   const local = truth ? new Float64Array(3 * count) : undefined;
   const unit = truth ? new Float64Array(3 * count) : undefined;
   let i = 0;
-  centres.forEach((c, d) => {
+  centers.forEach((c, d) => {
     for (let k = 0; k < perDraw; k++, i++) {
       let x: number;
       let y: number;
@@ -559,13 +559,13 @@ interface Errors {
   normalDeg: number;
 }
 
-/** The GPU's vertices against float64, each draw with its own eye (its centre's image). */
+/** The GPU's vertices against float64, each draw with its own eye (its center's image). */
 async function measure(
   gpu: Gpu,
   pipes: Pipelines,
   compiled: CompiledRoute,
   route: Route,
-  centres: readonly Float64Array[],
+  centers: readonly Float64Array[],
   samples: Samples,
   perDraw: number,
   records: Float32Array,
@@ -608,8 +608,8 @@ async function measure(
   const truth = new Float64Array(3);
   const eye = new Float64Array(3);
   const uniforms = new Float32Array(compiled.uniformsLayout.floats);
-  for (let d = 0; d < centres.length; d++) {
-    route.forward(centres[d]!, eye);
+  for (let d = 0; d < centers.length; d++) {
+    route.forward(centers[d]!, eye);
     compiled.fillUniforms(route, uniforms, eye);
     device.queue.writeBuffer(uniformsBuffer, 0, uniforms);
     const encoder = device.createCommandEncoder();
@@ -657,13 +657,13 @@ async function measure(
 function cpuRecords(
   compiled: CompiledRoute,
   route: Route,
-  centres: readonly Float64Array[],
+  centers: readonly Float64Array[],
   values?: ParamRecord,
 ): Float32Array {
   const stride = compiled.perDrawLayout.floats;
-  const records = new Float32Array(stride * centres.length);
-  centres.forEach((c, d) => {
-    compiled.centreConstants(
+  const records = new Float32Array(stride * centers.length);
+  centers.forEach((c, d) => {
+    compiled.centerConstants(
       c,
       values,
       route,
@@ -742,10 +742,10 @@ async function timeEncodes(
   return { gpuMs, wallMs };
 }
 
-/** The df64 centre-constant pass over `centres`, with its buffers. */
-class CentrePass {
+/** The df64 center-constant pass over `centers`, with its buffers. */
+class CenterPass {
   private readonly uniforms: GPUBuffer;
-  private readonly centreBuffer: GPUBuffer;
+  private readonly centerBuffer: GPUBuffer;
   private readonly records: GPUBuffer;
   private readonly group: GPUBindGroup;
   private readonly bytes: number;
@@ -755,17 +755,17 @@ class CentrePass {
     private readonly pipes: Pipelines,
     private readonly compiled: CompiledRoute,
     route: Route,
-    private readonly centres: readonly Float64Array[],
+    private readonly centers: readonly Float64Array[],
   ) {
     const { device } = gpu;
-    this.bytes = compiled.perDrawLayout.floats * 4 * centres.length;
+    this.bytes = compiled.perDrawLayout.floats * 4 * centers.length;
     this.uniforms = device.createBuffer({
-      size: compiled.centreUniforms(route, centres.length).byteLength,
+      size: compiled.centerUniforms(route, centers.length).byteLength,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
-    this.centreBuffer = upload(
+    this.centerBuffer = upload(
       device,
-      compiled.packCentres(centres),
+      compiled.packCenters(centers),
       GPUBufferUsage.STORAGE,
     );
     this.records = device.createBuffer({
@@ -773,8 +773,8 @@ class CentrePass {
       usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
     });
     this.group = device.createBindGroup({
-      layout: pipes.centreLayout,
-      entries: [this.uniforms, this.centreBuffer, this.records].map(
+      layout: pipes.centerLayout,
+      entries: [this.uniforms, this.centerBuffer, this.records].map(
         (buffer, binding) => ({ binding, resource: { buffer } }),
       ),
     });
@@ -787,9 +787,9 @@ class CentrePass {
     const pass = encoder.beginComputePass(
       stamps ? { timestampWrites: stamps } : undefined,
     );
-    pass.setPipeline(this.pipes.centre!);
+    pass.setPipeline(this.pipes.center!);
     pass.setBindGroup(0, this.group);
-    pass.dispatchWorkgroups(Math.ceil(this.centres.length / 64));
+    pass.dispatchWorkgroups(Math.ceil(this.centers.length / 64));
     pass.end();
   }
 
@@ -797,7 +797,7 @@ class CentrePass {
     this.gpu.device.queue.writeBuffer(
       this.uniforms,
       0,
-      this.compiled.centreUniforms(route, this.centres.length),
+      this.compiled.centerUniforms(route, this.centers.length),
     );
   }
 
@@ -816,13 +816,13 @@ class CentrePass {
 
   destroy() {
     this.uniforms.destroy();
-    this.centreBuffer.destroy();
+    this.centerBuffer.destroy();
     this.records.destroy();
   }
 }
 
-/** The worst difference between two record sets' route value at the centre (hi + lo), in mm. */
-function centreMismatchMm(
+/** The worst difference between two record sets' route value at the center (hi + lo), in mm. */
+function centerMismatchMm(
   compiled: CompiledRoute,
   a: Float32Array,
   b: Float32Array,
@@ -855,31 +855,31 @@ async function accuracy(
     throw new Error(`${scenario.name}: ${compiled.reason}`);
   }
   const pipes = await makePipelines(gpu.device, compiled, scenario.name);
-  const centres = scenario.centres(12);
+  const centers = scenario.centers(12);
   const perDraw = 64;
   const samples = sampleVertices(
-    centres,
+    centers,
     perDraw,
     scenario.radius,
     scenario.vertical,
     17,
     true,
   );
-  const pass = pipes.centre
-    ? new CentrePass(gpu, pipes, compiled, scenario.route, centres)
+  const pass = pipes.center
+    ? new CenterPass(gpu, pipes, compiled, scenario.route, centers)
     : undefined;
   let cpu: Errors = { positionMm: 0, normalDeg: 0 };
   let df64: Errors = { positionMm: 0, normalDeg: 0 };
   let mismatch = 0;
   for (let k = 0; k < scenario.frames; k++) {
     scenario.frame?.(k);
-    const cpuRec = cpuRecords(compiled, scenario.route, centres);
+    const cpuRec = cpuRecords(compiled, scenario.route, centers);
     const e = await measure(
       gpu,
       pipes,
       compiled,
       scenario.route,
-      centres,
+      centers,
       samples,
       perDraw,
       cpuRec,
@@ -897,7 +897,7 @@ async function accuracy(
       pipes,
       compiled,
       scenario.route,
-      centres,
+      centers,
       samples,
       perDraw,
       gpuRec,
@@ -906,12 +906,12 @@ async function accuracy(
       positionMm: Math.max(df64.positionMm, f.positionMm),
       normalDeg: Math.max(df64.normalDeg, f.normalDeg),
     };
-    mismatch = Math.max(mismatch, centreMismatchMm(compiled, cpuRec, gpuRec));
+    mismatch = Math.max(mismatch, centerMismatchMm(compiled, cpuRec, gpuRec));
   }
   pass?.destroy();
   const budget = scenario.positionBudgetMm;
   checks.push({
-    name: `${scenario.name}: float64 centre constants`,
+    name: `${scenario.name}: float64 center constants`,
     measured: {
       maxPositionMm: fixed(cpu.positionMm),
       budgetMm: budget,
@@ -926,12 +926,12 @@ async function accuracy(
     return;
   }
   checks.push({
-    name: `${scenario.name}: df64 GPU centre constants`,
+    name: `${scenario.name}: df64 GPU center constants`,
     measured: {
       maxPositionMm: fixed(df64.positionMm),
       budgetMm: budget,
       maxNormalDeg: fixed(df64.normalDeg, 6),
-      centreMismatchMm: fixed(mismatch, 4),
+      centerMismatchMm: fixed(mismatch, 4),
       frames: scenario.frames,
     },
     pass: df64.positionMm <= budget && df64.normalDeg <= 0.1,
@@ -953,13 +953,13 @@ async function timings(
   const pipes = await makePipelines(device, compiled, scenario.name);
   const draws = 1024;
   const perDraw = 1024;
-  const centres = scenario.centres(draws);
+  const centers = scenario.centers(draws);
   scenario.frame?.(1);
   const t0 = performance.now();
-  const records = cpuRecords(compiled, scenario.route, centres);
+  const records = cpuRecords(compiled, scenario.route, centers);
   const cpuMs = performance.now() - t0;
   const samples = sampleVertices(
-    centres,
+    centers,
     perDraw,
     scenario.radius,
     scenario.vertical,
@@ -976,7 +976,7 @@ async function timings(
     compiled.fillUniforms(
       scenario.route,
       undefined,
-      scenario.route.forward(centres[0]!),
+      scenario.route.forward(centers[0]!),
     ),
   );
   const recordBuffer = upload(device, records, GPUBufferUsage.STORAGE);
@@ -1014,13 +1014,13 @@ async function timings(
   const vertex = pipes.vertex
     ? await run(pipes.vertex)
     : { gpuMs: Number.NaN, wallMs: Number.NaN };
-  const centrePass = pipes.centre
-    ? new CentrePass(gpu, pipes, compiled, scenario.route, centres)
+  const centerPass = pipes.center
+    ? new CenterPass(gpu, pipes, compiled, scenario.route, centers)
     : undefined;
-  const centre = centrePass
-    ? await centrePass.time(scenario.route)
+  const center = centerPass
+    ? await centerPass.time(scenario.route)
     : { gpuMs: Number.NaN, wallMs: Number.NaN };
-  centrePass?.destroy();
+  centerPass?.destroy();
   for (const b of [uniforms, recordBuffer, vertBuffer, normalBuffer, ...out]) {
     b.destroy();
   }
@@ -1030,9 +1030,9 @@ async function timings(
       transformPointMs: fixed(points.gpuMs),
       transformPointWallMs: fixed(points.wallMs),
       transformVertexMs: fixed(vertex.gpuMs),
-      centrePass1024Ms: fixed(centre.gpuMs, 4),
-      centrePass1024WallMs: fixed(centre.wallMs, 4),
-      cpuCentres1024Ms: fixed(cpuMs, 1),
+      centerPass1024Ms: fixed(center.gpuMs, 4),
+      centerPass1024WallMs: fixed(center.wallMs, 4),
+      cpuCenters1024Ms: fixed(cpuMs, 1),
       wgslKB: fixed(compiled.wgsl.length / 1024, 1),
       perDrawFloats: compiled.perDrawLayout.floats,
     },
@@ -1171,7 +1171,7 @@ async function glue(
   const { device } = gpu;
   const compiled = compileRoute(scenario.route, {
     normals: scenario.normals ?? "exact",
-    centreRows: true,
+    centerRows: true,
   });
   if (!compiled.ok) {
     throw new Error(`${scenario.name}: ${compiled.reason}`);
@@ -1225,27 +1225,27 @@ async function glue(
   const L = mul3(mul3(rotZ(0.7), rotX(0.3)), [1.7, 0, 0, 0, 1.7, 0, 0, 0, 1.7]);
   const Linv = inv3(L);
   const R = mul3(rotZ(-0.4), rotY(0.5));
-  const centres = scenario.centres(8);
+  const centers = scenario.centers(8);
   const perDraw = 48;
   const uniformRows = compiled.uniformsLayout.floats / 4;
   const blockRows = routeBlockRows(compiled);
   // The uniforms, the pointer table (every view id at row 0: its zeros) and the draws' blocks.
   const rowWords = new ArrayBuffer(
-    (uniformRows + ROUTE_POINTER_ROWS + blockRows * centres.length) * 16,
+    (uniformRows + ROUTE_POINTER_ROWS + blockRows * centers.length) * 16,
   );
   const f32 = new Float32Array(rowWords);
   const u32 = new Uint32Array(rowWords);
   const next = rng(5);
   const samples = sampleVertices(
-    centres,
+    centers,
     perDraw,
     scenario.radius,
     scenario.vertical,
     31,
     true,
   );
-  // Model-space positions: the draw's centre in model space plus the sample's offset in the model.
-  const modelCentres = centres.map((c, d) => {
+  // Model-space positions: the draw's center in model space plus the sample's offset in the model.
+  const modelCenters = centers.map((c, d) => {
     const cm = Float64Array.of(
       Math.fround((next() * 2 - 1) * 100),
       Math.fround((next() * 2 - 1) * 100),
@@ -1260,7 +1260,7 @@ async function glue(
   const verts = new Float32Array(4 * samples.count);
   const vbits = new Uint32Array(verts.buffer);
   const anchorPoints = new Float64Array(3 * samples.count);
-  modelCentres.forEach(({ cm, t, d }) => {
+  modelCenters.forEach(({ cm, t, d }) => {
     const at = uniformRows + ROUTE_POINTER_ROWS + d * blockRows;
     const base = at * 4;
     u32[base] = 1;
@@ -1278,13 +1278,13 @@ async function glue(
       }
     }
     const start = base + (ROUTE_BODY + ROUTE_OWN_ROWS) * 4;
-    const anchorCentre = Float64Array.of(
+    const anchorCenter = Float64Array.of(
       L[0]! * cm[0]! + L[3]! * cm[1]! + L[6]! * cm[2]! + t[0]!,
       L[1]! * cm[0]! + L[4]! * cm[1]! + L[7]! * cm[2]! + t[1]!,
       L[2]! * cm[0]! + L[5]! * cm[1]! + L[8]! * cm[2]! + t[2]!,
     );
-    compiled.centreConstants(
-      anchorCentre,
+    compiled.centerConstants(
+      anchorCenter,
       undefined,
       route,
       f32.subarray(start, start + compiled.perDrawLayout.floats),
@@ -1293,7 +1293,7 @@ async function glue(
       const i = d * perDraw + k;
       // The sample's offset (anchor units) becomes a model-space offset.
       const off = [0, 1, 2].map(
-        (a) => samples.local![3 * i + a]! - centres[d]![a]!,
+        (a) => samples.local![3 * i + a]! - centers[d]![a]!,
       );
       const lo = [0, 1, 2].map(
         (r) =>
@@ -1346,8 +1346,8 @@ async function glue(
   let jacobianRel = 0;
   let normalDeg = 0;
   let unrouted = 0;
-  for (let d = 0; d < centres.length; d++) {
-    route.forward(centres[d]!, eye);
+  for (let d = 0; d < centers.length; d++) {
+    route.forward(centers[d]!, eye);
     compiled.fillUniforms(route, uniforms, eye);
     device.queue.writeBuffer(rowBuffer, 0, uniforms);
     const frame = new Float32Array(20);

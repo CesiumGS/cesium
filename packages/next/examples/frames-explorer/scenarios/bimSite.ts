@@ -91,7 +91,7 @@ function frameOf(
   );
 }
 
-const metres = (m: number, digits = 2) =>
+const meters = (m: number, digits = 2) =>
   `${m.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits })} m`;
 
 /** "6,000,000 ftUS", "549,095.540 m". */
@@ -190,7 +190,7 @@ function liveChecks(
     {
       id: "measurement.grid-to-ground.live",
       group: "measurement",
-      title: `A ${length.toLocaleString("en-US")} ${crs.unit} design line on the site grid at ${where}: design distance × site scale × metres per unit ÷ mean combined factor is the true distance, within 0.01 m`,
+      title: `A ${length.toLocaleString("en-US")} ${crs.unit} design line on the site grid at ${where}: design distance × site scale × meters per unit ÷ mean combined factor is the true distance, within 0.01 m`,
       pass: true,
       value: Math.abs(m.distance - predicted),
       tolerance: GRID_TO_GROUND,
@@ -231,7 +231,7 @@ function method(crs: BimCrs): NonNullable<ScenarioAnswer["method"]> {
   return [
     {
       title: "The model's site grid",
-      text: `A BIM model's coordinates are in its site grid: x east and y north on the building's own axes, in ${crs.unit === "ftUS" ? "US survey feet" : "metres"}. Its IFC map conversion places that grid in ${crs.name} (${crs.code}): an origin, a rotation and a scale.`,
+      text: `A BIM model's coordinates are in its site grid: x east and y north on the building's own axes, in ${crs.unit === "ftUS" ? "US survey feet" : "meters"}. Its IFC map conversion places that grid in ${crs.name} (${crs.code}): an origin, a rotation and a scale.`,
     },
     {
       title: "Exact placement",
@@ -239,7 +239,7 @@ function method(crs: BimCrs): NonNullable<ScenarioAnswer["method"]> {
     },
     {
       title: "Rigid placement",
-      text: "The whole model is placed once, flat, at its origin: x and y on the tangent plane there, a design unit taken as its length in metres. That is what an iModel's ecefLocation, or a glTF placed by one matrix, does.",
+      text: "The whole model is placed once, flat, at its origin: x and y on the tangent plane there, a design unit taken as its length in meters. That is what an iModel's ecefLocation, or a glTF placed by one matrix, does.",
     },
     {
       title: "The gap",
@@ -385,7 +385,7 @@ export const evaluateBimSite: ScenarioEvaluator = async (
     answer: {
       label: "rigid against exact, 20 km along the site grid",
       aside: `Site origin at ${degrees(lat, "N", "S")}, ${degrees(lon, "E", "W")} (${place.where}), to ${datum}`,
-      headline: `Placed exactly, every point of the model goes through its map conversion and ${crs.name}'s PROJ operation to the Earth. Placed rigidly, the model is laid flat at its origin, and ${BIM_LINE.mark / 1000} km out along its x axis it is ${metres(gap.gap)} off: ${metres(gap.drop)} above the ground as the Earth curves away, and ${metres(Math.abs(gap.short))} ${gap.short >= 0 ? "short" : "too far"} along the line, the site scale (${scale}) against ${crs.name}'s (${fmt(gap.gridScale, 8)} on average along it) and the flat plane's chord against the curved ground (${metres(gap.hand.chord, 3)}). At ${BIM_LINE.length / 1000} km the two lines are ${metres(far.gap / 1000, 1).replace(" m", " km")} apart.`,
+      headline: `Placed exactly, every point of the model goes through its map conversion and ${crs.name}'s PROJ operation to the Earth. Placed rigidly, the model is laid flat at its origin, and ${BIM_LINE.mark / 1000} km out along its x axis it is ${meters(gap.gap)} off: ${meters(gap.drop)} above the ground as the Earth curves away, and ${meters(Math.abs(gap.short))} ${gap.short >= 0 ? "short" : "too far"} along the line, the site scale (${scale}) against ${crs.name}'s (${fmt(gap.gridScale, 8)} on average along it) and the flat plane's chord against the curved ground (${meters(gap.hand.chord, 3)}). At ${BIM_LINE.length / 1000} km the two lines are ${meters(far.gap / 1000, 1).replace(" m", " km")} apart.`,
       value: gap.gap,
       unit: "m",
       accuracy: {

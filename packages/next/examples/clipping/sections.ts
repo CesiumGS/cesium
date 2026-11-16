@@ -16,7 +16,7 @@ import {
   type V3,
 } from "./site.ts";
 
-/** What the section plane, the clip box and their toggles are, in local metres (east, north, up at the site). */
+/** What the section plane, the clip box and their toggles are, in local meters (east, north, up at the site). */
 export interface SectionState {
   plane: {
     on: boolean;
@@ -56,7 +56,7 @@ export const initialState = (): SectionState => ({
 const RAD = Math.PI / 180;
 
 const tuple = (v: ArrayLike<number>): V3 => [v[0]!, v[1]!, v[2]!];
-/** The plane's axes in local metres: its normal `n` (pointing away from what `keep: "inside"` keeps) and two in the plane, `a` level. */
+/** The plane's axes in local meters: its normal `n` (pointing away from what `keep: "inside"` keeps) and two in the plane, `a` level. */
 export function planeAxes(heading: number, tilt: number) {
   const h = heading * RAD;
   const t = tilt * RAD;
@@ -73,7 +73,7 @@ export function planeOffset(state: SectionState, pivot: V3): number {
   return dot(sub(state.plane.center, pivot), n);
 }
 
-/** The shapes of the section planes, in Earth-fixed metres: ITRF, or the design frame's, the same numbers. */
+/** The shapes of the section planes, in Earth-fixed meters: ITRF, or the design frame's, the same numbers. */
 function planeShapes(site: Site, state: SectionState): ClipShape[] {
   const { n, a } = planeAxes(state.plane.heading, state.plane.tilt);
   const point = tuple(site.world(state.plane.center));
@@ -132,7 +132,7 @@ export interface CutPlane {
   readonly v: V3;
 }
 
-/** The planes the caps of the plane set (`"plane"`) or of the box set (`"box"`) lie on, in local metres. */
+/** The planes the caps of the plane set (`"plane"`) or of the box set (`"box"`) lie on, in local meters. */
 export function cutPlanes(
   state: SectionState,
   which: "plane" | "box",

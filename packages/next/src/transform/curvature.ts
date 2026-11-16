@@ -4,16 +4,16 @@
 // leaves the straight edge between its ends' images by at most M₂L²/8 (the
 // chord error of interpolating a curve of that acceleration). The tessellator
 // picks, per triangle, the subdivision n that brings M₂(L/n)²/8 under the
-// view's tolerance in metres.
+// view's tolerance in meters.
 //
 // M₂ is read from the route's Jacobian by central differences, not from the
 // Hessian programs: at Earth scale the AD Hessian of a height function (its
 // unrolled foot-point iteration) cancels terms of 1e13, leaving noise of
 // 1e-3 where the curvature is 1e-6, and the interval Hessian is wider still
 // (`taylorBounds`); the closed-form Jacobians of the built-ins are accurate
-// to rounding, so their difference over a step of metres is too. It is an
+// to rounding, so their difference over a step of meters is too. It is an
 // estimate, from the points given: sample the draw's box (corners, edge
-// midpoints, face centres, centre) as the drawn bounds do. Where the
+// midpoints, face centers, center) as the drawn bounds do. Where the
 // route's J jumps (a kink) the difference over a step across it reads the
 // jump, so use a step smaller than the kink's band.
 import type { Route } from "./route.ts";

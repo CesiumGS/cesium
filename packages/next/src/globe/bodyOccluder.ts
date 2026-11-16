@@ -3,7 +3,7 @@
 // is another shape, so this occluder takes its shape from the drawn terrain.
 //
 // Premise. The globe's drawn terrain (with the bare ellipsoid under it, which
-// counts as part of it) is a closed, opaque surface around the body's centre.
+// counts as part of it) is a closed, opaque surface around the body's center.
 // If the camera is outside it, whatever lies inside it is hidden. Scaled space
 // is the one where the body's ellipsoid is the unit sphere (x ⊘ radii, as
 // 1.x's EllipsoidalOccluder): the ellipsoid of scale s is the sphere of radius
@@ -108,14 +108,14 @@ interface ViewState {
  * The bound as a resumable job. `step(budgetMs)` runs it for at most about
  * that long and returns the best scale so far: `s` (set when a result is
  * ready, a sound lower bound the moment it is, never to be retracted while
- * the job isn't cancelled) and whether the walk is `done`. The results
+ * the job isn't canceled) and whether the walk is `done`. The results
  * rise: each is the largest radius found sound so far. `cancel()` abandons it
  * (a warp, camera-cell or unload change): its results are void. `place`
  * names what it was made for; `signature` the tiles it started from.
  */
 export class BoundJob {
   private readonly steps: Generator<void, void>;
-  private cancelled = false;
+  private canceled = false;
   private result: number | undefined;
   private fresh = false;
   private deadline = 0;
@@ -124,13 +124,13 @@ export class BoundJob {
     warp: TileWarp,
     readonly place: string,
     readonly signature: number,
-    centre: Vec3,
+    center: Vec3,
     top: number,
     start: number,
   ) {
     this.steps = owner.walk(
       warp,
-      centre,
+      center,
       top,
       start,
       (s) => {
@@ -142,7 +142,7 @@ export class BoundJob {
   }
 
   step(budgetMs: number): { s?: number; done: boolean } {
-    if (this.cancelled) {
+    if (this.canceled) {
       return { done: true };
     }
     this.deadline = performance.now() + budgetMs;
@@ -155,7 +155,7 @@ export class BoundJob {
   }
 
   cancel(): void {
-    this.cancelled = true;
+    this.canceled = true;
     this.steps.return();
   }
 }
@@ -214,7 +214,7 @@ export class BodyOccluder implements Occluder {
     return s === undefined
       ? undefined
       : {
-          centre: [0, 0, 0] as unknown as Vec3,
+          center: [0, 0, 0] as unknown as Vec3,
           radii: [
             RADII[0]! * s,
             RADII[1]! * s,
@@ -269,7 +269,7 @@ export class BodyOccluder implements Occluder {
       !state.job &&
       (!state.current || state.current.signature !== signature)
     ) {
-      const centre = [
+      const center = [
         Math.cos(lat * CELL) * Math.cos(lon * CELL),
         Math.cos(lat * CELL) * Math.sin(lon * CELL),
         Math.sin(lat * CELL),
@@ -279,7 +279,7 @@ export class BodyOccluder implements Occluder {
         warp,
         place,
         signature,
-        centre,
+        center,
         top,
         state.current?.place === place ? state.current.scale : 0,
       );
@@ -310,7 +310,7 @@ export class BodyOccluder implements Occluder {
    */
   *walk(
     warp: TileWarp,
-    centre: Vec3,
+    center: Vec3,
     top: number,
     start: number,
     publish: (s: number) => void,
@@ -319,13 +319,13 @@ export class BodyOccluder implements Occluder {
     this.keyNow = `${warp.version}:${warp.scaleVersion ?? 0}`;
     let low = 0;
     let high = top;
-    if (start > 0 && (yield* this.sound(start, warp, centre, top, expired))) {
+    if (start > 0 && (yield* this.sound(start, warp, center, top, expired))) {
       low = start;
       publish(start);
     }
     while (high - low > TOLERANCE) {
       const mid = (low + high) / 2;
-      if (yield* this.sound(mid, warp, centre, top, expired)) {
+      if (yield* this.sound(mid, warp, center, top, expired)) {
         low = mid;
         publish(mid);
       } else {
@@ -344,7 +344,7 @@ export class BodyOccluder implements Occluder {
   private *sound(
     radius: number,
     warp: TileWarp,
-    centre: Vec3,
+    center: Vec3,
     top: number,
     expired: () => boolean,
   ): Generator<void, boolean> {
@@ -357,7 +357,7 @@ export class BodyOccluder implements Occluder {
       Math.PI,
       Math.acos(Math.min(1, radius / top)) * 1.02 + 1e-4 + CELL * 1.5,
     );
-    const cap = { direction: centre, cos: Math.cos(angle) };
+    const cap = { direction: center, cos: Math.cos(angle) };
     for (;;) {
       const found = yield* this.peekBound(
         this.options.root,
@@ -520,7 +520,7 @@ function unit(p: ArrayLike<number>): Vec3 {
   return [p[0]! / n, p[1]! / n, p[2]! / n] as unknown as Vec3;
 }
 
-/** Whether the tile's volume can lie within the cap (a direction and the cosine of its angle): its bounding sphere, seen from the centre, padded. */
+/** Whether the tile's volume can lie within the cap (a direction and the cosine of its angle): its bounding sphere, seen from the center, padded. */
 function meetsCap(tile: Tile, cap: { direction: Vec3; cos: number }): boolean {
   const { center, radius } = tile.volume.sphere;
   const distance = Math.hypot(center[0]!, center[1]!, center[2]!);
@@ -533,7 +533,7 @@ function meetsCap(tile: Tile, cap: { direction: Vec3; cos: number }): boolean {
       center[2]! * cap.direction[2]!) /
     distance;
   const angle = Math.acos(Math.min(1, Math.max(-1, along)));
-  // The sphere's angular radius from the centre, as seen at its centre's
+  // The sphere's angular radius from the center, as seen at its center's
   // distance: asin(r / d), padded by the flattening's skew.
   const reach = Math.asin(Math.min(1, radius / distance)) * 1.02 + 1e-4;
   return angle - reach <= Math.acos(Math.min(1, Math.max(-1, cap.cos)));
@@ -584,7 +584,7 @@ function* exactBound(
   if (!Number.isFinite(lowest)) {
     return undefined;
   }
-  // The longest triangle edge, as an angle at the body's centre (an edge
+  // The longest triangle edge, as an angle at the body's center (an edge
   // runs at most that far along the surface), bounds how far the chord
   // between its ends dips under the shell they lie on: its middle is at
   // least cos(angle / 2) of the ends' radius.
@@ -634,7 +634,7 @@ function lowestAlong(
   return Math.hypot(ax + t * dx, ay + t * dy, az + t * dz);
 }
 
-/** A tile's horizon-occlusion point for an occluding ellipsoid of `radii`: from its volume's eight corners (a sphere's cube's), undefined where it can't be culled (near the centre, or facing all ways). */
+/** A tile's horizon-occlusion point for an occluding ellipsoid of `radii`: from its volume's eight corners (a sphere's cube's), undefined where it can't be culled (near the center, or facing all ways). */
 function occludeePoint(
   volume: TileVolume,
   radii: readonly number[],

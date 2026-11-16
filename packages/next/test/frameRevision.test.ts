@@ -89,33 +89,33 @@ describe("frame revision", () => {
 });
 
 describe("publishedAccuracy", () => {
-  const metres = (m: number) => ({ meters: m, note: "test" });
+  const meters = (m: number) => ({ meters: m, note: "test" });
   const radians = (r: number) => ({ radians: r, note: "test" });
   const drifting = (figure: { value: FrameAccuracy }) =>
     new Frame("F", root, (_i, out) => void identity(out), {
       accuracy: () => figure.value,
     });
 
-  it("publishes a drifting metre figure only past 1% or 1 mm", () => {
-    const fig = { value: metres(0.1) };
+  it("publishes a drifting meter figure only past 1% or 1 mm", () => {
+    const fig = { value: meters(0.1) };
     const f = drifting(fig);
     expect(f.publishedAccuracy(at).meters).toBe(0.1);
     expect(f.revision).toBe(0);
-    fig.value = metres(0.1009);
+    fig.value = meters(0.1009);
     expect(f.publishedAccuracy(at).meters).toBe(0.1);
     expect(f.revision).toBe(0);
-    fig.value = metres(0.1011);
+    fig.value = meters(0.1011);
     expect(f.publishedAccuracy(at).meters).toBe(0.1011);
     expect(f.revision).toBe(1);
   });
 
   it("uses 1% when that is above 1 mm", () => {
-    const fig = { value: metres(100) };
+    const fig = { value: meters(100) };
     const f = drifting(fig);
     f.publishedAccuracy(at);
-    fig.value = metres(100.9);
+    fig.value = meters(100.9);
     expect(f.publishedAccuracy(at).meters).toBe(100);
-    fig.value = metres(101.1);
+    fig.value = meters(101.1);
     expect(f.publishedAccuracy(at).meters).toBe(101.1);
   });
 
@@ -130,7 +130,7 @@ describe("publishedAccuracy", () => {
     expect(f.revision).toBe(1);
   });
 
-  it("publishes a metre figure moving while radians stays stated", () => {
+  it("publishes a meter figure moving while radians stays stated", () => {
     const fig = { value: { meters: 1, radians: 1e-6, note: "test" } };
     const f = drifting(fig);
     f.publishedAccuracy(at);
@@ -140,7 +140,7 @@ describe("publishedAccuracy", () => {
   });
 
   it("always publishes a change of kind", () => {
-    const fig = { value: metres(0.1) as FrameAccuracy };
+    const fig = { value: meters(0.1) as FrameAccuracy };
     const f = drifting(fig);
     f.publishedAccuracy(at);
     fig.value = radians(0.1);
@@ -152,7 +152,7 @@ describe("publishedAccuracy", () => {
 
   it("returns the stated figure of a fixed frame without a bump", () => {
     const f = Frame.constant("C", root, new Float64Array(16), {
-      accuracy: metres(2),
+      accuracy: meters(2),
     });
     expect(f.publishedAccuracy(at).meters).toBe(2);
     expect(f.publishedAccuracy(at).meters).toBe(2);

@@ -901,7 +901,7 @@ function expectPixel(p: Float64Array | undefined, x: number, y: number) {
   expect(p![1]).toBeCloseTo(y, 9);
 }
 
-/** A draw of `triangles` (local metres, nine per triangle) at (R, 0, 0). */
+/** A draw of `triangles` (local meters, nine per triangle) at (R, 0, 0). */
 function soup(triangles: number[]): TileGeometry {
   const matrix = m4.mat4();
   matrix[12] = R;

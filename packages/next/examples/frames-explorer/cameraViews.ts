@@ -88,7 +88,7 @@ export const surface = (f: Framing | undefined): CameraView | undefined =>
   f && { framing: f };
 
 export interface CameraViews {
-  /** The Moon's centre in ITRF at the clock's instant. */
+  /** The Moon's center in ITRF at the clock's instant. */
   moonCenter(): Float64Array | undefined;
   framing(camera: CameraName): Framing | undefined;
   /** A rig placed Earth-fixed at the clock's instant. */
@@ -120,7 +120,7 @@ export function createCameraViews(deps: {
 }): CameraViews {
   const { viewer, frames: framesNow, instantNow } = deps.core;
 
-  /** The Moon's centre in ITRF at the clock's instant. */
+  /** The Moon's center in ITRF at the clock's instant. */
   function moonCenter(): Float64Array | undefined {
     const frames = framesNow();
     const instant = instantNow();
@@ -137,7 +137,7 @@ export function createCameraViews(deps: {
         return OPENING;
       case "northPole":
         // Stop 2 (S-I10): straight down the pole, so both triads' x and y
-        // stay clear of the disc as GCRF's turn against ITRF's, and their
+        // stay clear of the disk as GCRF's turn against ITRF's, and their
         // z axes point at the camera.
         return framingAt(
           0,
@@ -218,7 +218,7 @@ export function createCameraViews(deps: {
       : undefined;
   };
 
-  /** Stop 2, the polar view: the Earth's centre, up its axis. */
+  /** Stop 2, the polar view: the Earth's center, up its axis. */
   function geocentricView(f: Framing): CameraView {
     const frames = framesNow();
     return {
@@ -229,7 +229,7 @@ export function createCameraViews(deps: {
     };
   }
 
-  /** The Moon's frames: its centre at 20,000 km, from the Earth's side, a little above its equator. */
+  /** The Moon's frames: its center at 20,000 km, from the Earth's side, a little above its equator. */
   function moonView(): CameraView | undefined {
     const frames = framesNow();
     const rig = frames && placed(AXES_RIG, frames.moonMe);
@@ -244,7 +244,7 @@ export function createCameraViews(deps: {
 
   /**
    * Stop 6 and the site: straight down its vertical from a few thousand
-   * kilometres, the whole lunar disk in view. The disk is the sky's
+   * kilometers, the whole lunar disk in view. The disk is the sky's
    * backdrop, right only along that vertical (lunar-pole-investigation.md),
    * so the triad sits on the imagery's pole region from here alone.
    */
@@ -269,7 +269,7 @@ export function createCameraViews(deps: {
    * Down on the orbit plane (tour stop 5): along the normal of the Moon's
    * orbit at the flyby, where Orion's free return lies, with the Earth–Moon
    * line across the screen, framing the Earth, the Moon and Orion's path as
-   * drawn. Its orbit turns about the framing's centre, between the Earth and
+   * drawn. Its orbit turns about the framing's center, between the Earth and
    * the Moon, up that normal and heading 0 toward the Moon at the flyby:
    * fixed in GCRF (DE440 through the frames), as Orion's path is.
    */
@@ -345,7 +345,7 @@ export function createCameraViews(deps: {
       aspect: canvas.clientWidth / Math.max(1, canvas.clientHeight),
     });
     // The focus back in GCRF (the transform is a rotation: GCRF and ITRF
-    // share the Earth's centre), with the Moon at the flyby.
+    // share the Earth's center), with the Moon at the flyby.
     const center = [0, 1, 2].map(
       (i) =>
         m[4 * i]! * f.center[0]! +

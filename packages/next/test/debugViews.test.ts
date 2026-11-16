@@ -72,7 +72,7 @@ describe("debug view words", () => {
 });
 
 describe("legends", () => {
-  it("has entries whose colours are hex, and none for off and tiles", () => {
+  it("has entries whose colors are hex, and none for off and tiles", () => {
     for (const mode of DEBUG_VIEWS) {
       const legend = debugLegend(mode);
       expect(legend.mode).toBe(mode);
@@ -102,7 +102,7 @@ describe("legends", () => {
   });
 });
 
-describe("the shader's colours", () => {
+describe("the shader's colors", () => {
   const source = readFileSync(
     fileURLToPath(new URL("../src/shaders/surface.slang", import.meta.url)),
     "utf8",

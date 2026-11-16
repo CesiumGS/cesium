@@ -188,7 +188,7 @@ describe("a stale evaluation's rows (fix 1, item 1)", () => {
     delta: { value: 1, unit: "°" },
   };
 
-  it("withholds every verdict, its colour and the delta while updating", () => {
+  it("withholds every verdict, its color and the delta while updating", () => {
     for (const row of [
       checked,
       { status: "live" as const, kind: "live" as const, result: result() },
@@ -328,7 +328,7 @@ describe("the published comparison under the headline (the owner, fix 1)", () =>
   });
 });
 
-describe("the accuracy's warning colour (fix 2; Task 4c item 4: a flag, not the note's words)", () => {
+describe("the accuracy's warning color (fix 2; Task 4c item 4: a flag, not the note's words)", () => {
   const a = (note: string, meters?: number, unbounded?: boolean) => ({
     label: "",
     headline: "",

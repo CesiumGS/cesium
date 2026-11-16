@@ -1,6 +1,6 @@
 // The transform graph compiler (plan 2026-11-12, task 4a), without a GPU:
 // the generated code's structure, the uniform and per-draw layouts, the
-// float64 centre constants against the route, which parameters are uniforms
+// float64 center constants against the route, which parameters are uniforms
 // and which force a recompute, refusals, and caching. The GPU's numbers are
 // spikes/transformGraph.ts's.
 import { beforeEach, describe, expect, it } from "vitest";
@@ -111,8 +111,8 @@ function compiled(route: Route, options?: Parameters<typeof compileRoute>[1]) {
   return result;
 }
 
-/** The record's value at the centre plus the separable terms, in float64. */
-function centreValue(
+/** The record's value at the center plus the separable terms, in float64. */
+function centerValue(
   c: CompiledRoute,
   record: Float32Array,
   values: Record<string, number>,
@@ -134,14 +134,14 @@ describe("generated code", () => {
   it("defines the point and normal functions on the stated signatures", () => {
     const c = compiled(exaggerationRoute().route);
     expect(c.wgsl).toContain(
-      "fn transformPoint(pLocal: vec3f, c: DrawCentre, u: RouteUniforms) -> vec3f",
+      "fn transformPoint(pLocal: vec3f, c: DrawCenter, u: RouteUniforms) -> vec3f",
     );
     expect(c.wgsl).toContain(
-      "fn transformNormal(nLocal: vec3f, pLocal: vec3f, c: DrawCentre, u: RouteUniforms) -> vec3f",
+      "fn transformNormal(nLocal: vec3f, pLocal: vec3f, c: DrawCenter, u: RouteUniforms) -> vec3f",
     );
     expect(c.wgsl).toContain("fn transformNormalTangent(");
     expect(c.wgsl).toContain("fn routeJacobian(");
-    expect(c.wgsl).toContain("struct DrawCentre {");
+    expect(c.wgsl).toContain("struct DrawCenter {");
     expect(c.wgsl).toContain("struct RouteUniforms {");
     expect(c.wgsl).toContain("fn transformVertex(");
     expect(c.wgsl).toContain("fn tgCofactor(");
@@ -179,7 +179,7 @@ describe("generated code", () => {
     expect(c.wgsl).toContain("fn tgJac0(");
     expect(c.positionWgsl).not.toContain("tgJac");
     expect(c.positionWgsl).not.toContain("transformNormal");
-    expect(c.positionWgsl).toContain("struct DrawCentre {");
+    expect(c.positionWgsl).toContain("struct DrawCenter {");
     expect(c.positionWgsl).toContain("struct RouteUniforms {");
     expect(c.positionWgsl).toContain("fn tgStep0(");
     expect(c.positionWgsl).toMatch(
@@ -208,29 +208,29 @@ describe("generated code", () => {
 
   it("emits a df64 compute pass with the stated bindings", () => {
     const c = compiled(twistRoute().route);
-    const text = c.centreConstantsWgsl!;
-    expect(text).toContain("fn centreConstants(");
+    const text = c.centerConstantsWgsl!;
+    expect(text).toContain("fn centerConstants(");
     expect(text).toContain("@group(0) @binding(0) var<uniform> cu");
     expect(text).toContain(
       "@group(0) @binding(2) var<storage, read_write> records",
     );
     expect(text).toContain("fn df_sincos(");
-    expect(c.centreBindings).toEqual({
+    expect(c.centerBindings).toEqual({
       uniforms: 0,
-      centres: 1,
+      centers: 1,
       records: 2,
       rows: 3,
     });
     expect(text).not.toContain("rows");
-    const rows = compiled(twistRoute().route, { centreRows: true });
-    expect(rows.centreConstantsWgsl).toContain(
+    const rows = compiled(twistRoute().route, { centerRows: true });
+    expect(rows.centerConstantsWgsl).toContain(
       "@group(0) @binding(3) var<storage, read> rows: array<u32>;",
     );
-    expect(rows.centreConstantsWgsl).toContain("let rb = rows[i];");
+    expect(rows.centerConstantsWgsl).toContain("let rb = rows[i];");
     expect(rows.key).not.toBe(c.key);
     expect(
-      compiled(twistRoute().route, { centreCompute: false })
-        .centreConstantsWgsl,
+      compiled(twistRoute().route, { centerCompute: false })
+        .centerConstantsWgsl,
     ).toBeUndefined();
   });
 });
@@ -277,7 +277,7 @@ describe("layouts", () => {
       "transverseMercator.falseNorthing",
       "transverseMercator.scaleFactor",
     ]);
-    // the exaggeration is not last: its factor feeds the next step's centre
+    // the exaggeration is not last: its factor feeds the next step's center
     expect(c.dynamicParams).toContain("verticalExaggeration.factor");
     expect(c.dynamicParams).toContain("transverseMercator.centralMeridian");
   });
@@ -330,18 +330,18 @@ describe("layouts", () => {
   });
 });
 
-describe("float64 centre constants", () => {
-  it("carry the route's value at the centre, in hi and lo", () => {
+describe("float64 center constants", () => {
+  it("carry the route's value at the center, in hi and lo", () => {
     const { route } = exaggerationRoute();
     const c = compiled(route);
-    for (const centre of [
+    for (const center of [
       [1234.5, -20000.25, 1500],
       [-30000, 4000, 0],
       [0.25, 0.5, 2999.75],
     ]) {
-      const record = c.centreConstants(centre);
-      const truth = route.forward(centre);
-      const got = centreValue(c, record, c.paramValues(route));
+      const record = c.centerConstants(center);
+      const truth = route.forward(center);
+      const got = centerValue(c, record, c.paramValues(route));
       for (let a = 0; a < 3; a++) {
         expect(Math.abs(got[a]! - truth[a]!)).toBeLessThan(1e-5);
       }
@@ -351,12 +351,12 @@ describe("float64 centre constants", () => {
   it("follow a separable parameter with no recompute", () => {
     const { graph, ex, route } = exaggerationRoute(10);
     const c = compiled(route);
-    const centre = [4000, -3000, 1200];
-    const record = c.centreConstants(centre);
+    const center = [4000, -3000, 1200];
+    const record = c.centerConstants(center);
     graph.setParams(ex, { factor: 3.5 });
     // same record, the factor read from the uniform's value
-    const got = centreValue(c, record, c.paramValues(route));
-    const truth = route.forward(centre);
+    const got = centerValue(c, record, c.paramValues(route));
+    const truth = route.forward(center);
     for (let a = 0; a < 3; a++) {
       expect(Math.abs(got[a]! - truth[a]!)).toBeLessThan(1e-5);
     }
@@ -365,13 +365,13 @@ describe("float64 centre constants", () => {
   it("follow a dynamic parameter when recomputed", () => {
     const { graph, tw, route } = twistRoute(0.001);
     const c = compiled(route);
-    const centre = [800, -1500, 2500];
-    const before = c.centreConstants(centre);
+    const center = [800, -1500, 2500];
+    const before = c.centerConstants(center);
     graph.setParams(tw, { rate: 0.0007 });
-    const after = c.centreConstants(centre);
+    const after = c.centerConstants(center);
     expect(Array.from(after)).not.toEqual(Array.from(before));
-    const got = centreValue(c, after, c.paramValues(route));
-    const truth = route.forward(centre);
+    const got = centerValue(c, after, c.paramValues(route));
+    const truth = route.forward(center);
     for (let a = 0; a < 3; a++) {
       expect(Math.abs(got[a]! - truth[a]!)).toBeLessThan(1e-5);
     }
@@ -380,9 +380,9 @@ describe("float64 centre constants", () => {
   it("agree with the route through nested smooth steps", () => {
     const { route } = utmRoute();
     const c = compiled(route);
-    const centre = [12000, -8000, 900];
-    const got = centreValue(c, c.centreConstants(centre), c.paramValues(route));
-    const truth = route.forward(centre);
+    const center = [12000, -8000, 900];
+    const got = centerValue(c, c.centerConstants(center), c.paramValues(route));
+    const truth = route.forward(center);
     for (let a = 0; a < 3; a++) {
       expect(Math.abs(got[a]! - truth[a]!)).toBeLessThan(1e-4);
     }
@@ -391,10 +391,10 @@ describe("float64 centre constants", () => {
   it("take parameter values given by name", () => {
     const { route } = twistRoute(0.001);
     const c = compiled(route);
-    const centre = [100, 200, 300];
+    const center = [100, 200, 300];
     const values = { ...c.paramValues(route), "twist.rate": 0.002 };
-    const record = c.centreConstants(centre, values);
-    const same = c.centreConstants(centre, c.paramValues(route));
+    const record = c.centerConstants(center, values);
+    const same = c.centerConstants(center, c.paramValues(route));
     expect(Array.from(record)).not.toEqual(Array.from(same));
   });
 
@@ -531,9 +531,9 @@ describe("normals' modes", () => {
     expect(auto.perDrawLayout.floats).toBeLessThan(exact.perDrawLayout.floats);
     expect(auto.wgsl.length).toBeLessThan(exact.wgsl.length * 0.7);
     expect(auto.key).not.toBe(exact.key);
-    // The centre's J and Hessian are per-draw CPU data: no compute pass.
-    expect(auto.centreConstantsWgsl).toBeUndefined();
-    // A last step with linear normals has no uniform parameters: all follow the centre.
+    // The center's J and Hessian are per-draw CPU data: no compute pass.
+    expect(auto.centerConstantsWgsl).toBeUndefined();
+    // A last step with linear normals has no uniform parameters: all follow the center.
     expect(auto.separableParams).toEqual([]);
     expect(auto.dynamicParams).toContain("transverseMercator.falseEasting");
   });
@@ -541,18 +541,18 @@ describe("normals' modes", () => {
   it("keep a cheap route exact when asked for auto, and refuse nothing", () => {
     const c = compiled(exaggerationRoute().route, { normals: "auto" });
     expect(c.normalModes).toEqual(["exact"]);
-    expect(c.centreConstantsWgsl).toBeDefined();
+    expect(c.centerConstantsWgsl).toBeDefined();
     expect(c.separableParams).toEqual(["verticalExaggeration.factor"]);
     expect(
       compiled(exaggerationRoute().route, { normals: "linear" }).normalModes,
     ).toEqual(["exact"]);
   });
 
-  it("write each linear step's J and H at its centre into the record", () => {
+  it("write each linear step's J and H at its center into the record", () => {
     const { route } = utmRoute();
     const c = compiled(route, { normals: "linear" });
-    const centre = [12000, -8000, 900];
-    const record = c.centreConstants(centre);
+    const center = [12000, -8000, 900];
+    const record = c.centerConstants(center);
     for (const name of ["s1.lj0", "s1.lh0", "s2.lj0", "s2.lh0"]) {
       const at = c.perDrawLayout.fields[name]!;
       expect(at % 4).toBe(0);
@@ -563,10 +563,10 @@ describe("normals' modes", () => {
     }
     // The positions are the exact route's, whatever the normals are.
     const exact = compiled(route);
-    const got = centreValue(c, record, c.paramValues(route));
-    const want = centreValue(
+    const got = centerValue(c, record, c.paramValues(route));
+    const want = centerValue(
       exact,
-      exact.centreConstants(centre),
+      exact.centerConstants(center),
       exact.paramValues(route),
     );
     for (let a = 0; a < 3; a++) {

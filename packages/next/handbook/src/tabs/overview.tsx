@@ -40,7 +40,7 @@ const MILESTONES = [
   },
   {
     work: "The transform graph",
-    what: "One tree of frames whose edges are affine or smooth: vertical exaggeration, projections, bends and lenses as nodes that content sits under. A route compiles to one GPU function with df64 centre constants; picks, measurements, accuracy and clips go through it; views take their own parameters or routes",
+    what: "One tree of frames whose edges are affine or smooth: vertical exaggeration, projections, bends and lenses as nodes that content sits under. A route compiles to one GPU function with df64 center constants; picks, measurements, accuracy and clips go through it; views take their own parameters or routes",
     state: "Built (tasks 1 to 8), with a gallery example; follow-ups open",
   },
   {
@@ -177,7 +177,7 @@ export function Overview() {
         <p>
           Fourteen targets. Each has a state today, and opens to show where 1.x
           stands, what 2.0 has, and the tab that goes deeper. 1.x is the visual
-          and behavioural reference the tests compare against, not an
+          and behavioral reference the tests compare against, not an
           architectural template, and the differences below come from when and
           for what each was designed.
         </p>

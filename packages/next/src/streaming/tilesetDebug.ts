@@ -108,7 +108,7 @@ export function updateDebug(tileset: TilesetDebug): void {
   tileset.state.contentVolumes?.update(content);
 }
 
-/** A running number per tile, so neighbours differ in the "tiles" view. */
+/** A running number per tile, so neighbors differ in the "tiles" view. */
 const tileNumbers = new WeakMap<Tile, number>();
 let nextTileNumber = 0;
 

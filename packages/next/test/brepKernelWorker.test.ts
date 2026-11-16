@@ -6,7 +6,7 @@
 // a view into a kernel's heap is copied, never detached.
 import { describe, expect, it } from "vitest";
 import { boxBrep } from "../examples/brep-first-look/fixtures.ts";
-import { KernelCancelled, KernelClient } from "../src/brep/kernelClient.ts";
+import { KernelCanceled, KernelClient } from "../src/brep/kernelClient.ts";
 import { transferable, type KernelForm } from "../src/brep/kernelProtocol.ts";
 import type { OcctKernel, OcctSolid } from "../src/brep/occt.ts";
 import type { SmlibKernel, SmlibSolid } from "../src/brep/smlib.ts";
@@ -204,7 +204,7 @@ describe("KernelClient over a loopback worker", () => {
       second = client.boolean("occt", job);
     };
     const first = client.importStep(new Uint8Array([1]));
-    await expect(first).rejects.toBeInstanceOf(KernelCancelled);
+    await expect(first).rejects.toBeInstanceOf(KernelCanceled);
     await expect(second).resolves.toMatchObject({
       result: { form: { faceSurface: { length: 6 } } },
     });
@@ -213,13 +213,13 @@ describe("KernelClient over a loopback worker", () => {
     client.dispose();
   });
 
-  it("skips a request cancelled while it waits", async () => {
+  it("skips a request canceled while it waits", async () => {
     const ledger = new Ledger();
     const { client } = setup(ledger);
     await client.load("occt");
     const doomed = client.boolean("occt", job);
     const replacement = client.boolean("occt", job);
-    await expect(doomed).rejects.toBeInstanceOf(KernelCancelled);
+    await expect(doomed).rejects.toBeInstanceOf(KernelCanceled);
     await replacement;
     // Only the replacement made solids: a, b and the result.
     expect(ledger.made).toBe(3);
@@ -283,10 +283,10 @@ describe("KernelClient over a loopback worker", () => {
     const { client, port } = setup(new Ledger());
     const pending = client.boolean("occt", job);
     client.dispose();
-    await expect(pending).rejects.toBeInstanceOf(KernelCancelled);
+    await expect(pending).rejects.toBeInstanceOf(KernelCanceled);
     expect(port().terminated).toBe(true);
     await expect(client.boolean("occt", job)).rejects.toBeInstanceOf(
-      KernelCancelled,
+      KernelCanceled,
     );
   });
 });

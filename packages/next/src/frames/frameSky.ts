@@ -3,7 +3,7 @@ import { createSkyState, skyState, type SkyState } from "./sky.ts";
 
 /**
  * The sky for one frames data (or none): `skyState` with the data held and
- * the last answer memoised by time. Changing the data drops the memo, so the
+ * the last answer memoized by time. Changing the data drops the memo, so the
  * next `at` is computed from the new data even at the same instant.
  */
 export class FrameSky {

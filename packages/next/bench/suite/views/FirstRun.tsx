@@ -68,9 +68,9 @@ function useChecks(): Record<"webgpu" | "repo", Check> {
     repo: checking,
   });
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     const set = (key: keyof typeof checks, check: Check) =>
-      !cancelled && setChecks((c) => ({ ...c, [key]: check }));
+      !canceled && setChecks((c) => ({ ...c, [key]: check }));
     void (async () => {
       const gpu = (navigator as { gpu?: GPU }).gpu;
       const adapter = await gpu?.requestAdapter().catch(() => null);
@@ -117,7 +117,7 @@ function useChecks(): Record<"webgpu" | "repo", Check> {
       ),
     );
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, []);
   return checks;

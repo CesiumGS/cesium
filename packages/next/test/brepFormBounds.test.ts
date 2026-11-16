@@ -284,7 +284,7 @@ describe("formBounds: analytic surfaces", () => {
     expect(bounds.min[1]).toBeCloseTo(-2 * Math.sin(0.3), 3);
   });
 
-  it("a whole sphere is its radius about its centre, in a turned frame", () => {
+  it("a whole sphere is its radius about its center, in a turned frame", () => {
     const bounds = formBounds(
       analytic(sphere, [0, 2 * Math.PI, -Math.PI / 2, Math.PI / 2], turned),
     );

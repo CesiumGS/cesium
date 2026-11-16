@@ -1,6 +1,6 @@
 // Glare's light list and spike sprites (docs/design/custom-post-processing.md, docs/design/sky-light-and-points-unifications.md). The
 // kernel `glareSources` runs on one thread once per view each tick: it writes the sun's
-// record, with what share of its disc is seen, then walks the bright stars. The veil
+// record, with what share of its disk is seen, then walks the bright stars. The veil
 // reads the sun's record (render/post/glare.ts); a lens's spikes are drawn from the rest by a
 // stage of the application's (the night-sky example's sprites.slang).
 //
@@ -18,7 +18,7 @@ static const float GLARE_SPRITE_MAX_RADIUS = 512.0;
 static const float GLARE_SPRITE_MIN_CELLS = 2.0;
 static const uint GLARE_RADII = 32u;
 
-// A Vogel spiral in the unit disc (glare.ts `discTaps`).
+// A Vogel spiral in the unit disk (glare.ts `discTaps`).
 static const float2 DISC_TAPS[32] = {
   float2(0.125000, 0.000000),
   float2(-0.159645, 0.146248),
@@ -112,7 +112,7 @@ bool missesBody(float3 direction) {
 }
 
 // Nothing was drawn in front of it; a direction off screen counts as seen. Then the ray
-// misses the body, and it isn't in the Moon's disc.
+// misses the body, and it isn't in the Moon's disk.
 bool tapVisible(float3 direction) {
   float z = dot(direction, frame.forward);
   if (z > 1e-4) {

@@ -13,7 +13,7 @@
 // across tiles is CPU anyway; the pass is the later step, behind the same
 // `TileSection` the assembly reads.
 //
-// Lengths are metres. The plane's normal is the cap's outward normal: an outer
+// Lengths are meters. The plane's normal is the cap's outward normal: an outer
 // loop is counter-clockwise viewed from it, which is the order a closed mesh
 // with outward winding gives.
 import type { MeshData } from "../meshes.ts";

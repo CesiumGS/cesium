@@ -155,7 +155,7 @@ const ENVIRONMENTS: Record<string, SkyOptions> = {
 const BACKGROUNDS: Record<string, string> = {
   Charcoal: "#24262b",
   Black: "#000000",
-  Grey: "#7a7d84",
+  Gray: "#7a7d84",
   White: "#f2f2f2",
 };
 

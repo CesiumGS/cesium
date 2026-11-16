@@ -49,7 +49,7 @@ import {
   closestOnLine,
   makeRig,
   multiply,
-  pixelsPerMetre,
+  pixelsPerMeter,
   project,
   rayAt,
   rayPlane,
@@ -384,7 +384,7 @@ describe("the view math", () => {
     expect(ray.origin[2] + ray.direction[2] * t).toBeCloseTo(0.25, 9);
     expect(project(RIG, [0, 0, 0])).toMatchObject({ x: 400, y: 300 });
     expect(project(RIG, [0, -6, 0])).toBeUndefined();
-    expect(pixelsPerMetre(RIG, [0, 0, 0])).toBeCloseTo(
+    expect(pixelsPerMeter(RIG, [0, 0, 0])).toBeCloseTo(
       600 / (2 * Math.tan(Math.PI / 6) * 5),
       9,
     );
@@ -418,7 +418,7 @@ describe("the view math", () => {
   it("finds where along an axis a ray comes closest, and where it meets a plane", () => {
     const ray = rayAt(RIG, 400 + 104, 300);
     const t = closestOnLine([0, 0, 0], [1, 0, 0], ray)!;
-    expect(t).toBeCloseTo(104 / pixelsPerMetre(RIG, [0, 0, 0]), 6);
+    expect(t).toBeCloseTo(104 / pixelsPerMeter(RIG, [0, 0, 0]), 6);
     expect(
       closestOnLine([0, 0, 0], [0, 1, 0], rayAt(RIG, 400, 300)),
     ).toBeUndefined();
@@ -488,14 +488,14 @@ describe("the view math", () => {
 });
 
 describe("the gizmo", () => {
-  const centre: V3 = [0, 0, 0];
-  const size = gizmoSize(RIG, centre);
+  const center: V3 = [0, 0, 0];
+  const size = gizmoSize(RIG, center);
   const px = (p: V3) => project(RIG, p)!;
 
   it("keeps its size on screen", () => {
-    expect(size * pixelsPerMetre(RIG, centre)).toBeCloseTo(110, 6);
+    expect(size * pixelsPerMeter(RIG, center)).toBeCloseTo(110, 6);
     const far = { ...RIG, eye: [0, -50, 0] as V3 };
-    expect(gizmoSize(far, centre) * pixelsPerMetre(far, centre)).toBeCloseTo(
+    expect(gizmoSize(far, center) * pixelsPerMeter(far, center)).toBeCloseTo(
       110,
       6,
     );
@@ -503,42 +503,42 @@ describe("the gizmo", () => {
 
   it("finds the handle under a pixel: arrows, squares, rings, and nothing away from them", () => {
     const xArrow = px([size * 0.8, 0, 0]);
-    expect(hitGizmo(RIG, centre, xArrow.x, xArrow.y)).toEqual({
+    expect(hitGizmo(RIG, center, xArrow.x, xArrow.y)).toEqual({
       kind: "axis",
       axis: 0,
     });
     const zArrow = px([0, 0, size * 0.85]);
-    expect(hitGizmo(RIG, centre, zArrow.x, zArrow.y)).toEqual({
+    expect(hitGizmo(RIG, center, zArrow.x, zArrow.y)).toEqual({
       kind: "axis",
       axis: 2,
     });
     // The square between x and z (normal y), seen face on.
     const square = px([size * 0.33, 0, size * 0.33]);
-    expect(hitGizmo(RIG, centre, square.x, square.y)).toEqual({
+    expect(hitGizmo(RIG, center, square.x, square.y)).toEqual({
       kind: "plane",
       axis: 1,
     });
     // The ring about y, a circle of 0.62 of the size, away from both arrows.
     const r = size * 0.62;
     const ring = px([r * Math.SQRT1_2, 0, r * Math.SQRT1_2]);
-    expect(hitGizmo(RIG, centre, ring.x, ring.y)).toEqual({
+    expect(hitGizmo(RIG, center, ring.x, ring.y)).toEqual({
       kind: "ring",
       axis: 1,
     });
-    expect(hitGizmo(RIG, centre, 20, 20)).toBeUndefined();
+    expect(hitGizmo(RIG, center, 20, 20)).toBeUndefined();
   });
 
   it("drags along an axis to where the pointer's ray comes closest, snapped to the grid", () => {
     const from = px([size * 0.8, 0, 0]);
-    const handle = hitGizmo(RIG, centre, from.x, from.y)!;
-    const start = beginDrag(RIG, handle, centre, from.x, from.y)!;
+    const handle = hitGizmo(RIG, center, from.x, from.y)!;
+    const start = beginDrag(RIG, handle, center, from.x, from.y)!;
     const to = px([size * 0.8 + 0.5, 0, 0]);
     const free = solveDrag(RIG, start, to.x, to.y, { grid: 0, angleStep: 0 })!;
     expect(free.kind).toBe("move");
     if (free.kind === "move") {
-      expect(free.centre[0]).toBeCloseTo(0.5, 6);
-      expect(free.centre[1]).toBe(0);
-      expect(free.centre[2]).toBe(0);
+      expect(free.center[0]).toBeCloseTo(0.5, 6);
+      expect(free.center[1]).toBe(0);
+      expect(free.center[2]).toBe(0);
     }
     const snapped = solveDrag(
       RIG,
@@ -551,14 +551,14 @@ describe("the gizmo", () => {
       },
     )!;
     if (snapped.kind === "move") {
-      expect(snapped.centre[0]).toBeCloseTo(0.5, 9);
+      expect(snapped.center[0]).toBeCloseTo(0.5, 9);
     }
   });
 
   it("drags in a plane, the pointer's ray met with the plane", () => {
     const from = px([size * 0.33, 0, size * 0.33]);
-    const handle = hitGizmo(RIG, centre, from.x, from.y)!;
-    const start = beginDrag(RIG, handle, centre, from.x, from.y)!;
+    const handle = hitGizmo(RIG, center, from.x, from.y)!;
+    const start = beginDrag(RIG, handle, center, from.x, from.y)!;
     const to = px([size * 0.33 + 0.4, 0, size * 0.33 - 0.3]);
     const result = solveDrag(RIG, start, to.x, to.y, {
       grid: 0,
@@ -566,9 +566,9 @@ describe("the gizmo", () => {
     })!;
     expect(result.kind).toBe("move");
     if (result.kind === "move") {
-      expect(result.centre[0]).toBeCloseTo(0.4, 6);
-      expect(result.centre[1]).toBeCloseTo(0, 9);
-      expect(result.centre[2]).toBeCloseTo(-0.3, 6);
+      expect(result.center[0]).toBeCloseTo(0.4, 6);
+      expect(result.center[1]).toBeCloseTo(0, 9);
+      expect(result.center[2]).toBeCloseTo(-0.3, 6);
     }
   });
 
@@ -581,9 +581,9 @@ describe("the gizmo", () => {
         r * Math.cos((degrees * Math.PI) / 180),
       ]);
     const from = at(40);
-    const handle = hitGizmo(RIG, centre, from.x, from.y)!;
+    const handle = hitGizmo(RIG, center, from.x, from.y)!;
     expect(handle).toEqual({ kind: "ring", axis: 1 });
-    const start = beginDrag(RIG, handle, centre, from.x, from.y)!;
+    const start = beginDrag(RIG, handle, center, from.x, from.y)!;
     const free = solveDrag(RIG, start, at(70).x, at(70).y, {
       grid: 0,
       angleStep: 0,

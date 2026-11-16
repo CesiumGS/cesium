@@ -201,7 +201,7 @@ const CASTER_CEILING = 50_000;
  * each fitted cascade's box in `position`'s coordinates, (nx, ny, nz, d)
  * with inward normals, `CASTER_PLANES` per box. A box's four sides and its
  * far side are the cull's; toward the light, where the cull has no plane
- * (the depth range bounds it, tens of kilometres), the box ends
+ * (the depth range bounds it, tens of kilometers), the box ends
  * `CASTER_CEILING` past its sphere. Selection narrows these to the light-space
  * rectangle around what the view draws.
  */

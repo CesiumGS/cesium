@@ -19,7 +19,7 @@ export interface LiveEdgeOptions {
   readonly sigma?: number;
   /** The edge writes no Jacobian: take it by central differences with this step (in the node's units; by default a millionth of the coordinate, at least a millionth). */
   readonly differences?: number;
-  /** Where the edge is defined, in the node's own coordinates: a centre and a radius. */
+  /** Where the edge is defined, in the node's own coordinates: a center and a radius. */
   readonly domain?: {
     readonly center: ArrayLike<number>;
     readonly radius: number;

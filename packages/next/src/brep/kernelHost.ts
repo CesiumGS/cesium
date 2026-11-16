@@ -3,7 +3,7 @@
 // whatever scope it is created in. `kernelWorker.ts` makes one in a Web
 // Worker; tests make one in-process. Provisional.
 //
-// Cancelling: a request waits its turn in a queue, and a running one reports
+// Canceling: a request waits its turn in a queue, and a running one reports
 // its stages and yields to the message loop at each, where a `cancel` for it
 // is seen and it stops, freeing what it holds. A kernel call itself (a
 // boolean, a STEP import) can't be interrupted, so a cancel waits for the
@@ -45,14 +45,14 @@ import { validateBrep, type BrepProblem } from "./validate.ts";
 interface Primitives<S> {
   box(origin: ArrayLike<number>, size: ArrayLike<number>): S;
   cylinder(base: ArrayLike<number>, radius: number, height: number): S;
-  sphere(centre: ArrayLike<number>, radius: number): S;
+  sphere(center: ArrayLike<number>, radius: number): S;
   cone(
     base: ArrayLike<number>,
     radiusBase: number,
     radiusTop: number,
     height: number,
   ): S;
-  torus(centre: ArrayLike<number>, major: number, minor: number): S;
+  torus(center: ArrayLike<number>, major: number, minor: number): S;
 }
 
 function makePrimitive<S>(kernel: Primitives<S>, p: Primitive): S {
@@ -62,11 +62,11 @@ function makePrimitive<S>(kernel: Primitives<S>, p: Primitive): S {
     case "cylinder":
       return kernel.cylinder(p.base, p.radius, p.height);
     case "sphere":
-      return kernel.sphere(p.centre, p.radius);
+      return kernel.sphere(p.center, p.radius);
     case "cone":
       return kernel.cone(p.base, p.radiusBase, p.radiusTop, p.height);
     case "torus":
-      return kernel.torus(p.centre, p.major, p.minor);
+      return kernel.torus(p.center, p.major, p.minor);
   }
 }
 
@@ -240,8 +240,8 @@ function occtEvaluator(
   };
 }
 
-/** Thrown at a stage when the request was cancelled. */
-class Cancelled extends Error {}
+/** Thrown at a stage when the request was canceled. */
+class Canceled extends Error {}
 
 export interface KernelHostOptions {
   /** Sends a reply, moving `transfer`'s buffers with it. */
@@ -293,12 +293,12 @@ const epochNow = () => performance.timeOrigin + performance.now();
 
 /**
  * Where a form's patches are anchored: the cache's last anchor while the
- * form's centre stays within one size of it (the faces prepared there are
- * still good), else the centre. Positions are float32 relative to it, so a
+ * form's center stays within one size of it (the faces prepared there are
+ * still good), else the center. Positions are float32 relative to it, so a
  * form's own size away costs nothing noticeable.
  */
 function anchorFor(bounds: FormBounds, cache: PrepareCache): Float64Array {
-  const centre = Float64Array.from(
+  const center = Float64Array.from(
     bounds.min,
     (low, k) => (low + bounds.max[k]!) / 2,
   );
@@ -310,17 +310,17 @@ function anchorFor(bounds: FormBounds, cache: PrepareCache): Float64Array {
   const last = cache.origin;
   return last &&
     Math.hypot(
-      last[0]! - centre[0]!,
-      last[1]! - centre[1]!,
-      last[2]! - centre[2]!,
+      last[0]! - center[0]!,
+      last[1]! - center[1]!,
+      last[2]! - center[2]!,
     ) <= size
     ? last
-    : centre;
+    : center;
 }
 
 export class KernelHost {
   private readonly queue: KernelRequest[] = [];
-  private readonly cancelled = new Set<number>();
+  private readonly canceled = new Set<number>();
   /** When each request arrived, epoch ms, and how long its stages waited on the message loop. */
   private readonly arrived = new Map<number, number>();
   private readonly stalled = new Map<number, number>();
@@ -342,7 +342,7 @@ export class KernelHost {
     }
     return cache;
   }
-  /** STEP parts kept for recipes' `step` leaves, centred, by key. */
+  /** STEP parts kept for recipes' `step` leaves, centered, by key. */
   private readonly steps = new Map<number, OcctSolid>();
   private running = false;
   private smlib: Promise<SmlibKernel> | undefined;
@@ -364,7 +364,7 @@ export class KernelHost {
   /** Takes a request from the page. */
   receive(request: KernelRequest): void {
     if (request.type === "cancel") {
-      this.cancelled.add(request.id);
+      this.canceled.add(request.id);
       return;
     }
     this.arrived.set(request.id, epochNow());
@@ -386,19 +386,19 @@ export class KernelHost {
           continue;
         }
         try {
-          if (this.cancelled.has(request.id)) {
-            throw new Cancelled();
+          if (this.canceled.has(request.id)) {
+            throw new Canceled();
           }
           await this.run(request);
         } catch (error) {
           this.options.post(
-            error instanceof Cancelled
-              ? { type: "cancelled", id: request.id }
+            error instanceof Canceled
+              ? { type: "canceled", id: request.id }
               : { type: "error", id: request.id, message: String(error) },
             [],
           );
         } finally {
-          this.cancelled.delete(request.id);
+          this.canceled.delete(request.id);
           this.arrived.delete(request.id);
           this.stalled.delete(request.id);
         }
@@ -417,8 +417,8 @@ export class KernelHost {
       id,
       (this.stalled.get(id) ?? 0) + performance.now() - start,
     );
-    if (this.cancelled.has(id)) {
-      throw new Cancelled();
+    if (this.canceled.has(id)) {
+      throw new Canceled();
     }
   }
 
@@ -588,7 +588,7 @@ export class KernelHost {
 
   /**
    * Imports a STEP file and keeps it as one solid (a file of several is
-   * fused), centred on the middle of its bounds, under `key`.
+   * fused), centered on the middle of its bounds, under `key`.
    */
   private async registerStep(
     id: number,

@@ -9,7 +9,7 @@ import type { FrameKey } from "./frameResolver.ts";
  * Where the camera is. `frame` is the position reference frame, and the
  * view's render root: render space's origin is `frame`'s own origin and
  * its axes are `frame`'s (plan 5a's call 25). With `offset`, the camera
- * sits at `anchor`'s origin (default `frame`'s) plus `offset`, in metres
+ * sits at `anchor`'s origin (default `frame`'s) plus `offset`, in meters
  * along `frame`'s axes. Without it, the camera's position is the
  * controller's (`view.camera.position`, in `frame`).
  */

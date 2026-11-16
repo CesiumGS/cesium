@@ -464,11 +464,11 @@ export interface DrawPlacement {
   at: number;
   /** The record's bounding radius without the placement (model units). */
   base: number;
-  /** The record's bounding sphere's centre without it: the record carries the moved one while placed. */
+  /** The record's bounding sphere's center without it: the record carries the moved one while placed. */
   center: readonly [number, number, number];
-  /** What the placement adds to the radius (`drawnSphere`), including the moved centre's float32 rounding. */
+  /** What the placement adds to the radius (`drawnSphere`), including the moved center's float32 rounding. */
   pad: number;
-  /** Each term's displacement at the centre and its residual over the sphere (`termBoundsOver`). */
+  /** Each term's displacement at the center and its residual over the sphere (`termBoundsOver`). */
   bounds: TermBounds[];
   /** The parameters it reads. */
   slots: ParameterSlot[];

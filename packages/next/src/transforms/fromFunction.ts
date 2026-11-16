@@ -15,7 +15,7 @@ import { parseTransform, TransformParseError } from "../transform/parse.ts";
 import { LiveWarp, NO_FRAME, type ChangeableWarp } from "./liveWarp.ts";
 
 /**
- * A point function, p to q in metres: it writes `q` into `out` (`out[0] = …`)
+ * A point function, p to q in meters: it writes `q` into `out` (`out[0] = …`)
  * or returns it as three numbers, and reads `p` and its declared `params` and
  * nothing else (`Math` aside). Restricted JS parses to the IR.
  */
@@ -35,7 +35,7 @@ export interface FromFunctionOptions {
   readonly identity?: Params;
   /** Words for reports (a `Warp`'s `description`). */
   readonly description?: string;
-  /** Where the function is defined, in the frame's own metres; everywhere when absent. The derivative's step scales with its radius. */
+  /** Where the function is defined, in the frame's own meters; everywhere when absent. The derivative's step scales with its radius. */
   readonly domain?: Warp["domain"];
   /** What the function is accurate to against what it models; exact when absent. It says nothing of the derivative. */
   readonly accuracy?: Warp["accuracy"];
@@ -47,9 +47,9 @@ export interface FromFunctionOptions {
     params: Params,
     out: Float64Array,
   ) => ArrayLike<number> | void;
-  /** The step of the numerical derivative, in metres, replacing the default, for a function outside the IR's subset. */
+  /** The step of the numerical derivative, in meters, replacing the default, for a function outside the IR's subset. */
   readonly step?: number;
-  /** The Newton inverse's tolerance, metres (the engine's default: 1e-9). */
+  /** The Newton inverse's tolerance, meters (the engine's default: 1e-9). */
   readonly tolerance?: number;
   /** The Newton inverse's iteration limit (the engine's default: 32). */
   readonly iterations?: number;
@@ -98,7 +98,7 @@ class FunctionWarpImpl extends LiveWarp implements FunctionWarp {
       !(Number.isFinite(options.step) && options.step > 0)
     ) {
       throw new RangeError(
-        `fromFunction: step must be a positive number of metres, got ${options.step}`,
+        `fromFunction: step must be a positive number of meters, got ${options.step}`,
       );
     }
     this.values = { ...options.params };
@@ -287,7 +287,7 @@ function checkValue(name: string, value: number): void {
 }
 
 /**
- * A smooth transform from a plain function, p to q in metres
+ * A smooth transform from a plain function, p to q in meters
  * (`PointFunction`: `(p, params) => [x, y, z]`, or writing `out`), so an
  * application writes the map and nothing else. The function is the CPU
  * path. Written in the restricted subset (`parseTransform`: `Math`, its
@@ -297,7 +297,7 @@ function checkValue(name: string, value: number): void {
  * the subset it is fitted (`compiled` false, `fitReason`), the Jacobian by central
  * differences and the draws by per-vertex fits.
  *
- * The step of the central differences is `(3·ε·R·L²)^(1/3)` metres (ε the
+ * The step of the central differences is `(3·ε·R·L²)^(1/3)` meters (ε the
  * float64 epsilon, R the larger of |p|, |q| and 1 m, and L the domain's
  * radius, else |p|), which balances rounding against truncation: about
  * 1e-5 of L. For a map that varies smoothly on the scale of L it is right

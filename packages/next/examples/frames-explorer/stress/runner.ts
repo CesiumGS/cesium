@@ -61,7 +61,7 @@ export interface StoreManifest {
 /**
  * What a recorded-operation case fixes, to show that the browser and Node
  * agree (R12): the PROJ pipeline, its grids with their pinned SHA-256 values
- * and the body-fixed coordinates (metres) of the case's points.
+ * and the body-fixed coordinates (meters) of the case's points.
  */
 export interface Fingerprint {
   readonly pipeline: string;
@@ -344,7 +344,7 @@ export async function expectThrow(
  * F34, F36): 16 ULP of the point's magnitude, about 1.5e-8 m at the Earth's
  * radius. The worst browser-against-Node difference seen was 3.75 ULP, so 16
  * leaves room for another browser or PROJ build; real pipeline or grid drift
- * shows at millimetres and more, far above it.
+ * shows at millimeters and more, far above it.
  */
 const COORDINATE_ULPS = 16;
 
@@ -361,7 +361,7 @@ function ulp(x: number): number {
  * when they agree (R12): the pipeline and grids exactly, and each coordinate
  * within 16 ULP of its point's magnitude (rulings F34a, F36). The magnitude is
  * the largest |coordinate| of the point's expected or actual triple, so a
- * component near 0 is held to the point's precision, not to a sub-picometre
+ * component near 0 is held to the point's precision, not to a sub-picometer
  * one of its own. WebAssembly PROJ (musl libm) and native PROJ differ in the
  * last bits; a flat 1e-9 m is about 1 ULP at the Earth's radius, which no two
  * builds can promise.

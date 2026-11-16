@@ -231,7 +231,7 @@ const CLIP_DEPTH = 3;
 
 /**
  * The parts of triangle `abc` that `keeps` holds, as triangles of a division
- * into 4 each time (down to `CLIP_DEPTH`): a piece whose corners and centre
+ * into 4 each time (down to `CLIP_DEPTH`): a piece whose corners and center
  * are all kept stays whole, one with none kept is dropped (a kept region
  * smaller than a piece can be missed), the others divide.
  */
@@ -243,12 +243,12 @@ function keptPieces(
   depth: number,
   out: Array<[V3, V3, V3]>,
 ): void {
-  const centre: V3 = [
+  const center: V3 = [
     (a[0] + b[0] + c[0]) / 3,
     (a[1] + b[1] + c[1]) / 3,
     (a[2] + b[2] + c[2]) / 3,
   ];
-  const samples = [keeps(a), keeps(b), keeps(c), keeps(centre)];
+  const samples = [keeps(a), keeps(b), keeps(c), keeps(center)];
   if (samples.every(Boolean)) {
     out.push([a, b, c]);
     return;

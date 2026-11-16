@@ -1,7 +1,7 @@
 // Mesh helpers of the B-reps gallery example: what the display modes draw
 // from a tessellation (its triangle edges, per-triangle normals) and how its
 // lines are lifted off the faces. Positions are relative to the mesh's own
-// origin, as the tessellator's are, and lengths are metres in the b-rep's own
+// origin, as the tessellator's are, and lengths are meters in the b-rep's own
 // units.
 import type { BrepForm, BrepMesh } from "../../src/brep/index.ts";
 

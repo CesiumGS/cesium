@@ -242,7 +242,7 @@ export function attachObserverPanel(
     return { node, body };
   };
 
-  /** A labelled row with a value on its right, whose width doesn't move. */
+  /** A labeled row with a value on its right, whose width doesn't move. */
   const head = (label: string, forId: string, width: string) => {
     const out = el("output", "co-value", { for: forId });
     out.style.minWidth = width;

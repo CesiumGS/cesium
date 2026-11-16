@@ -560,7 +560,7 @@ export class Trajectory<N extends string = string> {
       /**
        * Whether the coordinates are known to be TDB-compatible; default
        * "unknown", which adds the coordinate-scale term to an accuracy
-       * statement for data referenced to the Earth-centred inertial frames.
+       * statement for data referenced to the Earth-centered inertial frames.
        */
       coordinateScale?: CoordinateScale;
       /**
@@ -637,7 +637,7 @@ export class Trajectory<N extends string = string> {
       /**
        * Whether the coordinates are known to be TDB-compatible; default
        * "unknown", which adds the coordinate-scale term to an accuracy
-       * statement for data referenced to the Earth-centred inertial frames.
+       * statement for data referenced to the Earth-centered inertial frames.
        */
       coordinateScale?: CoordinateScale;
     },

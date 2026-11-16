@@ -1,5 +1,5 @@
 // Below the ellipsoid: elevation factors, a tunnel's ground distance and a
-// sight line from below the surface (mining and tunnelling).
+// sight line from below the surface (mining and tunneling).
 import { EngineeringFrame } from "../../../../src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../../../../src/engineering/factors.ts";
 import { framePoint } from "../../../../src/frames/local.ts";
@@ -161,14 +161,14 @@ const sightLineCase = stressCase(
       const station = framePoint(f.itrf, onEarth(lon, lat, h));
       // Straight up: the zenith direction never re-enters the ellipsoid.
       const overhead = framePoint(f.itrf, onEarth(lon, lat, 2e7));
-      // The antipode, 20,000 km up: the line passes through the Earth's centre.
+      // The antipode, 20,000 km up: the line passes through the Earth's center.
       const behind = framePoint(f.itrf, onEarth(lon - 180, -lat, 2e7));
       const up = measure(station, overhead, t, f);
       const down = measure(station, behind, t, f);
       results.push({
         ...base,
         id: `${base.id}.${-h}`,
-        title: `From ${h} m below the ellipsoid: clear to the zenith (hand: zenith angle 0, so the line leaves the body at once), blocked by the Earth toward the antipode (hand: the line passes the Earth's centre)`,
+        title: `From ${h} m below the ellipsoid: clear to the zenith (hand: zenith angle 0, so the line leaves the body at once), blocked by the Earth toward the antipode (hand: the line passes the Earth's center)`,
         pass:
           up.lineOfSight?.clear === true &&
           down.lineOfSight?.clear === false &&

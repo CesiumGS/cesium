@@ -13,7 +13,7 @@ const LIFECYCLE: BoardStep[] = [
     lane: 0,
     row: 0,
     title: "unloaded",
-    body: "Known to the tree, with no content. Where every tile starts, and where an evicted or cancelled tile returns.",
+    body: "Known to the tree, with no content. Where every tile starts, and where an evicted or canceled tile returns.",
   },
   {
     id: "wanted",
@@ -97,7 +97,7 @@ const LIFECYCLE_EDGES: BoardEdge[] = [
 const LIFECYCLE_BACK: BoardEdge[] = [
   { from: "decoded", to: "failed" },
   { from: "cold", to: "evicted" },
-  { from: "loading", to: "unloaded", label: "cancelled", vertical: true },
+  { from: "loading", to: "unloaded", label: "canceled", vertical: true },
 ];
 
 /** A tile from request to resident, and back. */

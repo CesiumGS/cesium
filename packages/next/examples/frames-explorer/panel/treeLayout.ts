@@ -20,12 +20,12 @@ export interface TreeLayoutOptions {
    * that and `gap`. A node it doesn't name takes `nodeWidth`.
    */
   nodeWidths?: ReadonlyMap<string, number>;
-  /** The space between neighbouring pills, px, with `nodeWidths` (default 0). */
+  /** The space between neighboring pills, px, with `nodeWidths` (default 0). */
   gap?: number;
 }
 
 export interface TreeLayout {
-  /** Parents before their children. `x` is a node's centre, `y` its row's middle. */
+  /** Parents before their children. `x` is a node's center, `y` its row's middle. */
   nodes: readonly { id: string; x: number; y: number; depth: number }[];
   edges: readonly { from: string; to: string }[];
   height: number;
@@ -38,11 +38,11 @@ export interface TreeLayout {
 /**
  * The layout of `root`. Each subtree takes a span as wide as its own node's
  * slot or its children's spans side by side, whichever is wider; children
- * sit side by side, centred in their parent's span, and a parent midway
+ * sit side by side, centered in their parent's span, and a parent midway
  * between its first and last child (moved in only where its own pill is
  * wider than that). So two nodes at one depth never come closer than their
  * slots: with `nodeWidths`, a constant `gap` between pills. A tree that fits
- * is centred in `width`. One that doesn't is laid out at its `neededWidth`
+ * is centered in `width`. One that doesn't is laid out at its `neededWidth`
  * (never squeezed, so spacing holds) with `fits` false, for the caller to
  * pan or switch to `layoutOutline`.
  */

@@ -1,9 +1,9 @@
 // Transverse Mercator on an ellipsoid of revolution, Karney's 6th-order
-// Krüger series (the one PROJ's `etmerc` uses, accurate to nanometres within
+// Krüger series (the one PROJ's `etmerc` uses, accurate to nanometers within
 // about 3900 km of the central meridian): a UTM zone or any central meridian.
 // The node's points are geographic (longitude and latitude in degrees,
-// ellipsoidal height in metres); its parent's are (easting, northing, the
-// same height). Compose with `geocentricToGeographic` for body-fixed metres.
+// ellipsoidal height in meters); its parent's are (easting, northing, the
+// same height). Compose with `geocentricToGeographic` for body-fixed meters.
 // The α series and `utmForm` are scene/warpForms.ts's (the spike's forms, in
 // ECEF); the inverse is the β series and Newton on τ. The Jacobian is left to
 // central differences (the graph's default): the IR's exact derivative is
@@ -191,9 +191,9 @@ export function transverseMercatorDescriptor(
     bound(region, ranges) {
       // The projection is conformal where it is defined: its horizontal
       // part is the point scale k times a rotation by the grid convergence γ
-      // of the surface's metric, so per east and north metre at the centre
-      // the columns are k · (N cos φ) / (the centre's distance from the axis)
-      // and k · M / (M + h at the centre) along grid directions γ off east
+      // of the surface's metric, so per east and north meter at the center
+      // the columns are k · (N cos φ) / (the center's distance from the axis)
+      // and k · M / (M + h at the center) along grid directions γ off east
       // and north, and 1 for up. The parallel's radius varies by at most the
       // largest M times the latitude reached, M by monotonicity in |φ|. k is
       // the sphere's k0 / √(1 − (cos φ sin Δλ)²), its excess over k0 widened

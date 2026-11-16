@@ -100,7 +100,7 @@ const TILES = [
   },
   {
     risk: "Reading what was just drawn",
-    why: "Sampling the depth or colour of the current pass forces the tile out to memory. Effects that read depth or colour mid-frame split passes.",
+    why: "Sampling the depth or color of the current pass forces the tile out to memory. Effects that read depth or color mid-frame split passes.",
     here: "Ambient occlusion, glare, aerial perspective and translucency all read earlier results. So do a clip's ghosts and a b-rep's translucent patches, which blend in the translucency passes.",
   },
   {
@@ -111,7 +111,7 @@ const TILES = [
   {
     risk: "Compute between draws",
     why: "A compute pass ends any render pass around it. GPU-driven culling and tessellation are compute-heavy by design.",
-    here: "Culling runs in compute each tick, and the b-rep dice is compute too, in a pass of its own each view. Every b-rep face, of degree 1 to 7, draws through it. A route with a parameter that doesn't separate adds a df64 compute pass for the draws' centre constants.",
+    here: "Culling runs in compute each tick, and the b-rep dice is compute too, in a pass of its own each view. Every b-rep face, of degree 1 to 7, draws through it. A route with a parameter that doesn't separate adds a df64 compute pass for the draws' center constants.",
   },
   {
     risk: "Memory",

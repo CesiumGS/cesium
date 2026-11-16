@@ -1,8 +1,8 @@
 // A box carried through a route by declared bounds (plan 2026-11-12, task
 // 12, fix 2; docs/design/transform-graph.md "Queries through routes", Bounds): in place of
 // sampling the route at 7 to 27 points per tile with its exact height solve,
-// each smooth step is evaluated once, at the box's centre. A parallelepiped
-// (centre c, half axes the columns of A) through a smooth step F with the
+// each smooth step is evaluated once, at the box's center. A parallelepiped
+// (center c, half axes the columns of A) through a smooth step F with the
 // declared bound (`SmoothSpec.bound`: J = R_out J' R_inᵀ, |J'| ≤ M entrywise
 // over the region) is, by the mean value theorem, inside the box about F(c)
 // whose half extent along R_out's axis i is Σ_j M_ij w_j, w_j = Σ_k |(R_inᵀA)_jk|
@@ -117,10 +117,10 @@ export function composeBox(
       ranges[name] = [value, value];
     }
     // F(x) - F(c) = ∫₀¹ J(c + s (x - c)) ds (x - c), and the point at s is
-    // in the region scaled by s about its centre, whose bound is no larger
+    // in the region scaled by s about its center, whose bound is no larger
     // than the full region's (it grows with the region): the integral is at
     // most the upper Riemann sum of the bound over scaled regions, which
-    // takes the part of J that grows with the distance from the centre (a
+    // takes the part of J that grows with the distance from the center (a
     // normal's tilt) at its mean, not its peak.
     let basisIn: ArrayLike<number> = a;
     let basisOut: ArrayLike<number> = a;
@@ -143,7 +143,7 @@ export function composeBox(
     // The warp at scale s is p + s (F(p) - p), F at scale 1: its Jacobian
     // (1 - s) I + s J, in the bound's bases (1 - s) Q + s J' with
     // Q = R_outᵀ R_in. An entry's magnitude is convex in s: the ends hold.
-    // The centre moves along its displacement with s.
+    // The center moves along its displacement with s.
     const next = new Float64Array(3);
     step.warp.forward([c[0]!, c[1]!, c[2]!], next);
     let drift: number[] | undefined;

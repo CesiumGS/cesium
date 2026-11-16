@@ -1,7 +1,7 @@
 import { tdbMinusTt } from "./erfa/dtdb.ts";
 import type { LeapSeconds } from "./leapSeconds.ts";
 
-/** Unix ms of 2000-01-01T12:00:00, J2000 read as if TT were UTC-labelled. */
+/** Unix ms of 2000-01-01T12:00:00, J2000 read as if TT were UTC-labeled. */
 const J2000_UNIX_MS = 946_728_000_000;
 /** TT - TAI, seconds (fixed by definition). */
 const TT_MINUS_TAI = 32.184;
@@ -54,7 +54,7 @@ export class Instant {
   /**
    * From TDB seconds past J2000 (SPICE's ET), inverting `tdb()`: Newton
    * steps on TT (TDB - TT is below 2 ms and its rate below 1e-9, so three
-   * converge), then a search of the float64 neighbours of TT for the one
+   * converge), then a search of the float64 neighbors of TT for the one
    * whose `tdb()` is nearest `et`. The result's `tdb()` is `et` exactly or
    * within an ulp: TT and TDB share a binade nearly everywhere, but not every
    * TDB is reachable from some TT.

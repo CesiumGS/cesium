@@ -13,11 +13,11 @@ import {
 import type { TransformNode, ViewId } from "./graph.ts";
 import { routeBetween, type Route } from "./route.ts";
 
-/** A point of a node's own coordinates (metres), with its own 1σ when known. */
+/** A point of a node's own coordinates (meters), with its own 1σ when known. */
 export interface NodePoint {
   readonly node: TransformNode;
   readonly position: ArrayLike<number>;
-  /** A magnitude in metres, a σ per axis, or a covariance: `accuracyAlong`'s `sigmaIn`. */
+  /** A magnitude in meters, a σ per axis, or a covariance: `accuracyAlong`'s `sigmaIn`. */
   readonly sigma?: SigmaIn;
 }
 
@@ -114,7 +114,7 @@ export function pointIn(
 
 export interface MeasureInOptions extends PointInOptions {
   /**
-   * Metres the routed path of a straight segment may stray from the polyline
+   * Meters the routed path of a straight segment may stray from the polyline
    * that measures it, in `node`; default 1 mm.
    */
   readonly pathTolerance?: number;

@@ -101,7 +101,7 @@ export function fingerprintOf(
 
 /**
  * A fingerprint (R12) for a recorded operation used without an engineering
- * frame: its pipeline and grids, and the case's results in metres (projected
+ * frame: its pipeline and grids, and the case's results in meters (projected
  * coordinates, or geocentric ones for geographic results).
  */
 export function operationFingerprint(
@@ -125,7 +125,7 @@ export const norm = (v: ArrayLike<number>): number =>
 export const distance = (a: ArrayLike<number>, b: ArrayLike<number>): number =>
   Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
 
-/** Metres between two design points of a frame (horizontal and height units apart). */
+/** Meters between two design points of a frame (horizontal and height units apart). */
 function designMeters(
   frame: EngineeringFrame,
   a: ArrayLike<number>,
@@ -138,7 +138,7 @@ function designMeters(
   );
 }
 
-/** The worst design round trip (design to body-fixed and back) of `designs`, metres. */
+/** The worst design round trip (design to body-fixed and back) of `designs`, meters. */
 export function worstRoundTrip(
   frame: EngineeringFrame,
   designs: readonly ArrayLike<number>[],

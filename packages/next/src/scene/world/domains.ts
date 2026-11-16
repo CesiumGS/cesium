@@ -22,7 +22,7 @@ export interface PatchPickSource {
   refinePick(face: number, hint: PickHint): RefinedPick | undefined;
   /**
    * The draw's model space is the geometry's placed coordinates less this
-   * (`addBrep` places the draw at the form's centre, so the GPU keeps
+   * (`addBrep` places the draw at the form's center, so the GPU keeps
    * float32 precision).
    */
   readonly origin: ArrayLike<number>;

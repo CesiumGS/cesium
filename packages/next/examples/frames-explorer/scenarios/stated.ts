@@ -5,7 +5,7 @@
 // (`pointAccuracy`, composed.ts) and the answer state the same thing.
 //
 // A published figure where one exists, cited; otherwise an estimate,
-// labelled "estimated, illustrative" with its reasoning in one line. A
+// labeled "estimated, illustrative" with its reasoning in one line. A
 // point the app chooses (a site at given coordinates, a knob's value) is
 // exact by definition: nothing measures it. Every figure is 1σ.
 //
@@ -111,13 +111,13 @@ export const MOON_ME_RADIANS = 3e-7;
  * al. 2021, AJ 161:105, §2.4). Estimated, illustrative, from the two
  * figures that bound its size: DE440's librations in DE421's mean-Earth
  * convention differ from DE421's own by up to 3.07 × 10⁻⁷ rad over
- * 2000–2040 (NAIF moon_de440_250416.tf; a maximum, taken as 1σ), and unmodelled tidal libration is a few
+ * 2000–2040 (NAIF moon_de440_250416.tf; a maximum, taken as 1σ), and unmodeled tidal libration is a few
  * milliarcseconds (the DE421 and DE430 memos; 1 mas is about 8 mm at the
  * surface). 3 × 10⁻⁷ rad is about 0.5 m at the surface. The explorer's
  * tree and walk state it; the library's MOON_ME still states none.
  */
 export const MOON_ME_ACCURACY: EdgeAccuracy = {
   radians: MOON_ME_RADIANS,
-  note: "estimated, illustrative: DE440 publishes no orientation uncertainty for its libration (Park et al. 2021, AJ 161:105, §2.4); its librations in DE421's mean-Earth convention differ from DE421's own by up to 3.07 × 10⁻⁷ rad over 2000–2040 (NAIF moon_de440_250416.tf; a maximum, taken as 1σ, so conservative) and unmodelled tidal libration is a few mas (about 8 mm per mas at the surface), so 3 × 10⁻⁷ rad, about 0.5 m at the surface",
+  note: "estimated, illustrative: DE440 publishes no orientation uncertainty for its libration (Park et al. 2021, AJ 161:105, §2.4); its librations in DE421's mean-Earth convention differ from DE421's own by up to 3.07 × 10⁻⁷ rad over 2000–2040 (NAIF moon_de440_250416.tf; a maximum, taken as 1σ, so conservative) and unmodeled tidal libration is a few mas (about 8 mm per mas at the surface), so 3 × 10⁻⁷ rad, about 0.5 m at the surface",
   short: "estimated, illustrative: 3 × 10⁻⁷ rad (about 0.5 m at the surface)",
 };

@@ -1,6 +1,6 @@
 // EngineeringFrame's site transform and placement over a stub PROJ whose
 // operation is the identity on (longitude, latitude, height) in degrees and
-// metres, so the design coordinates are the geographic ones.
+// meters, so the design coordinates are the geographic ones.
 import { describe, expect, it } from "vitest";
 import {
   EngineeringFrame,
@@ -206,7 +206,7 @@ describe("RigidPlacement over the stub", () => {
   });
 
   it("scales up by the vertical unit, not the horizontal one", () => {
-    // Metre horizontal, 0.3048 m vertical.
+    // Meter horizontal, 0.3048 m vertical.
     const frame = EngineeringFrame.create(definition(), stub(1, 0.3048));
     expect(frame.metersPerHeightUnit).toBe(0.3048);
     const anchor = [-75, 40, 10];
@@ -253,7 +253,7 @@ describe("depth axes over the stub", () => {
   });
 
   it("a rigid placement puts design depth 10 ten units below the anchor's surface normal", () => {
-    // Metre horizontal, 0.3048 m (foot) depth.
+    // Meter horizontal, 0.3048 m (foot) depth.
     const frame = EngineeringFrame.create(
       definition(),
       stub(1, 0.3048, "down"),
@@ -277,15 +277,15 @@ describe("depth axes over the stub", () => {
       expect(m[8 + r]! * 10 + m[12 + r]!).toBeCloseTo(deep[r]!, 6);
     }
     // And back, exactly: within 1e-9 m (the body-fixed coordinates' ulp is
-    // about 1e-9 m, so compare metres, not feet).
-    const metres = [1, 1, 0.3048];
+    // about 1e-9 m, so compare meters, not feet).
+    const meters = [1, 1, 0.3048];
     for (const design of [
       [0, 0, 10],
       [0.01, -0.02, -4],
     ]) {
       const back = placement.fromBodyFixed(placement.toBodyFixed(design));
       for (let i = 0; i < 3; i++) {
-        expect(Math.abs(back[i]! - design[i]!) * metres[i]!).toBeLessThan(1e-9);
+        expect(Math.abs(back[i]! - design[i]!) * meters[i]!).toBeLessThan(1e-9);
       }
     }
   });

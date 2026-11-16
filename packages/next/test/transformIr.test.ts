@@ -596,9 +596,9 @@ describe("intervals", () => {
           const max: number[] = [];
           domain.forEach(([lo, hi]) => {
             const half = (hi - lo) * widthFraction;
-            const centre = lo + half + (hi - lo - 2 * half) * random();
-            min.push(centre - half);
-            max.push(centre + half);
+            const center = lo + half + (hi - lo - 2 * half) * random();
+            min.push(center - half);
+            max.push(center + half);
           });
           const ranges: Record<string, ParamRange> = {};
           for (const [key, value] of Object.entries(params)) {

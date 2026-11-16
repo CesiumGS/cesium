@@ -61,7 +61,7 @@ export interface TileWarp {
   /**
    * `points` (n × 3, flat, in the tileset's coordinates) carried through
    * the map into the same coordinates, bounded, with its stretch there.
-   * `spacing`, the distance between neighbouring samples, pads the radius
+   * `spacing`, the distance between neighboring samples, pads the radius
    * by the image's bulge between them, (1/8)·M₂·spacing². Estimates, from
    * the samples only.
    */
@@ -107,9 +107,9 @@ export interface TileWarp {
 
 /** A tile's volume where its draws put it. */
 export interface DrawnTile {
-  /** The bounding sphere of its volume's image, as a volume. An estimate from its centre and corners. */
+  /** The bounding sphere of its volume's image, as a volume. An estimate from its center and corners. */
   readonly volume: TileVolume;
-  /** The largest singular value of the map's Jacobian over the volume, estimated at its centre and corners: how much the map stretches a geometric error. */
+  /** The largest singular value of the map's Jacobian over the volume, estimated at its center and corners: how much the map stretches a geometric error. */
   readonly sigmaMax: number;
   /**
    * Under a height profile only: the largest dh′/dh over the tile's heights
@@ -162,9 +162,9 @@ export interface DrawnCache {
 
 /**
  * The sample points of a volume, flat, and the largest distance between
- * neighbouring ones. A box (or a region's box): a 3 × 3 × 3 grid, its corners,
- * edge midpoints, face centres and centre, spaced by the half axes. A sphere:
- * its centre and 6 points on its axes, spaced by the radius.
+ * neighboring ones. A box (or a region's box): a 3 × 3 × 3 grid, its corners,
+ * edge midpoints, face centers and center, spaced by the half axes. A sphere:
+ * its center and 6 points on its axes, spaced by the radius.
  */
 function samples(volume: TileVolume): { points: number[]; spacing: number } {
   const box = volumeObb(volume);
@@ -208,7 +208,7 @@ function sphereVolume(center: Vec3, radius: number): TileVolume {
   return { kind: "sphere", sphere: { center, radius } };
 }
 
-/** The volume carried through `warp`: a box or region by its image's bounding sphere, a sphere by its centre's image and σ_max · radius. A map that fails on a sample (not finite) leaves the volume where it is. */
+/** The volume carried through `warp`: a box or region by its image's bounding sphere, a sphere by its center's image and σ_max · radius. A map that fails on a sample (not finite) leaves the volume where it is. */
 function carried(volume: TileVolume, warp: TileWarp, below = 0): Carried {
   const made = carry(volume, warp, below);
   const c = made.volume.sphere;
@@ -496,7 +496,7 @@ function up(longitude: number, latitude: number): Vec3 {
   ] as unknown as Vec3;
 }
 
-/** How far the tile's up differs across it: the largest angle from its centre's to a corner's or an edge midpoint's (cached on the tile's globe data). */
+/** How far the tile's up differs across it: the largest angle from its center's to a corner's or an edge midpoint's (cached on the tile's globe data). */
 const spreads = new WeakMap<object, { up: Vec3; spread: number }>();
 
 function upSpread(
@@ -512,14 +512,14 @@ function upSpread(
   if (!known) {
     const lon = (rectangle.west + rectangle.east) / 2;
     const lat = (rectangle.south + rectangle.north) / 2;
-    const centre = up(lon, lat);
+    const center = up(lon, lat);
     let spread = 0;
     for (const l of [rectangle.west, lon, rectangle.east]) {
       for (const t of [rectangle.south, lat, rectangle.north]) {
-        spread = Math.max(spread, angleBetween(centre, up(l, t)));
+        spread = Math.max(spread, angleBetween(center, up(l, t)));
       }
     }
-    known = { up: centre, spread };
+    known = { up: center, spread };
     spreads.set(key, known);
   }
   return known;
@@ -531,8 +531,8 @@ function upSpread(
  * length L at distance d seen at θ covers about L·sin θ / d of the view, so
  * this is how much of a vertical error shows. Conservative: the line to any
  * point of the tile lies within the angle the tile's bounding sphere
- * subtends of the line to its centre, and its up within the tile's angular
- * spread of its centre's, so θ lies within their sum of the centre's;
+ * subtends of the line to its center, and its up within the tile's angular
+ * spread of its center's, so θ lies within their sum of the center's;
  * 1 where the viewer is inside the sphere (or that sum reaches a right
  * angle).
  */

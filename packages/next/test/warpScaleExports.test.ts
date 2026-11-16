@@ -104,7 +104,7 @@ describe("the public warp functions", () => {
     expect(apart(routeInverse(back, p), drawn)).toBeLessThan(1e-9);
   });
 
-  it("honour the scale of a warp from a function and of a scale about a point, with their exact inverses", () => {
+  it("honor the scale of a warp from a function and of a scale about a point, with their exact inverses", () => {
     const state = { value: 0.6 };
     const scaled = scaleAbout(at(0, 0, 0), [1, 1, 3], { scale: state });
     const lifted = fromFunction(

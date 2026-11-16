@@ -230,7 +230,7 @@ function road(v: Values, t: Flags): Built {
     ),
     line(
       "cl",
-      "centreline",
+      "centerline",
       "corridor",
       [
         [
@@ -388,7 +388,7 @@ function road(v: Values, t: Flags): Built {
     measures: [
       {
         id: "cl",
-        label: "Centreline, station 100 to 800",
+        label: "Centerline, station 100 to 800",
         mode: "curve",
         a: { node: "corridor", p: [100, 0] },
         b: { node: "corridor", p: [800, 0] },
@@ -441,7 +441,7 @@ export const PLAN_PROFILE: SceneDef = {
   title: "Nested: plan and profile (civil)",
   short: "4 · Plan and profile",
   caption:
-    "A road alignment curves across hills. The corridor node is a function from (station, offset) to plan, so a camera inside it sees the corridor unrolled to a straight strip, while the hills, authored in plan, are carried through its inverse (Newton). The profile below is authored in (station, elevation) and its vertical ×V is affine, so it collapses into a matrix. Measure the edge of the road: station length and true length part company away from the centreline.",
+    "A road alignment curves across hills. The corridor node is a function from (station, offset) to plan, so a camera inside it sees the corridor unrolled to a straight strip, while the hills, authored in plan, are carried through its inverse (Newton). The profile below is authored in (station, elevation) and its vertical ×V is affine, so it collapses into a matrix. Measure the edge of the road: station length and true length part company away from the centerline.",
   controls: [
     {
       key: "V",

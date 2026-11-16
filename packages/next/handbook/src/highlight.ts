@@ -40,7 +40,7 @@ const MODES: Partial<Record<CodeLanguage, Mode>> = {
   shell: shell as unknown as Mode,
 };
 
-/** What a parser's tag is, for colour. Anything else is plain text. */
+/** What a parser's tag is, for color. Anything else is plain text. */
 const KINDS: Record<string, string> = {
   keyword: "keyword",
   comment: "comment",

@@ -7,7 +7,7 @@
 //
 // Design units are the CRS's: international feet (EPSG:6405 + 8228). The
 // rows run along design east.
-import { LAYER_METRES, srgb } from "./meshBuilder.mjs";
+import { LAYER_METERS, srgb } from "./meshBuilder.mjs";
 
 const GRAVEL = srgb("#c2ad88");
 const SOIL = srgb("#a88f6c");
@@ -45,22 +45,22 @@ export function solarFarmPlan(site, { metersPerUnit }) {
   ];
   // The substation takes the south-east block's place.
   const substation = [m.blocksEast - 1, 0];
-  const blockCentre = (i, j) => [
+  const blockCenter = (i, j) => [
     e0 - E / 2 + m.road + m.blockLength / 2 + i * (m.blockLength + m.road),
     n0 - N / 2 + m.road + m.blockWidth / 2 + j * (m.blockWidth + m.road),
   ];
 
   for (let i = 0; i < m.blocksEast; i++) {
     for (let j = 0; j < m.blocksNorth; j++) {
-      const [be, bn] = blockCentre(i, j);
+      const [be, bn] = blockCenter(i, j);
       const label = `Array block ${String.fromCharCode(65 + j)}${i + 1}`;
       grounds.push({
         at: [be, bn],
         length: m.blockLength,
         width: m.blockWidth,
         angle: 0,
-        // One layer (meshBuilder's LAYER_METRES) above the roads' gravel.
-        z: z0 + LAYER_METRES / metersPerUnit,
+        // One layer (meshBuilder's LAYER_METERS) above the roads' gravel.
+        z: z0 + LAYER_METERS / metersPerUnit,
         color: SOIL,
         feature: { name: `${label} ground`, kind: "ground" },
         lods: [{ error: 0, keep: true }],
@@ -146,7 +146,7 @@ export function solarFarmPlan(site, { metersPerUnit }) {
 
   // The substation: three main transformers, the bus's H-frame gantries,
   // the control house; and the operations building beside it.
-  const [se, sn] = blockCentre(...substation);
+  const [se, sn] = blockCenter(...substation);
   const yard = { name: "Substation", kind: "substation" };
   const ops = { name: "Operations building", kind: "building" };
   const transformer = (b, k) =>

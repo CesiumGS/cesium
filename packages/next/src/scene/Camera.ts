@@ -258,7 +258,7 @@ export interface CameraPose {
  * Projects an Earth-fixed point for a camera pose with vertical field of view
  * `fovy` onto a view of `width` × `height` pixels: writes x and y (from the
  * top-left, y down) into `out` and returns the point's depth along the view
- * direction, in metres. A depth that is not positive means the point is not in
+ * direction, in meters. A depth that is not positive means the point is not in
  * front of the camera, and `out` is then left as it was.
  */
 export function projectToPixel(

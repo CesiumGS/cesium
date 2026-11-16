@@ -156,7 +156,7 @@ export interface ClockView {
 
 /** A run of the catalog (R13): its progress and counts. */
 export interface RunView {
-  state: "idle" | "running" | "done" | "cancelled";
+  state: "idle" | "running" | "done" | "canceled";
   done: number;
   total: number;
   summary?: RunSummary;
@@ -396,7 +396,7 @@ export interface PanelModel {
   biasFactor: number;
   /**
    * F32: the design grid's true-north lines at true scale; otherwise their
-   * convergence is drawn ×`convergenceFactor` (labelled on the globe).
+   * convergence is drawn ×`convergenceFactor` (labeled on the globe).
    */
   trueScale: boolean;
   convergenceFactor: number;

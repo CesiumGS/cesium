@@ -54,7 +54,7 @@ export interface AccuracyFigure {
  * - `meters`, a position error: the whole frame may sit this far from where
  *   its edge puts it (a survey, a link's length tolerance);
  * - `radians`, a rotation error about the frame's own origin (an encoder,
- *   the Earth's orientation): a point `d` metres from that origin (or from
+ *   the Earth's orientation): a point `d` meters from that origin (or from
  *   its `axis`) moves by up to `radians × d`;
  * - `byDefinition`, the edge is a convention with no error to state (an
  *   adopted constant, a frame defined at a chosen point); `meters` and
@@ -213,7 +213,7 @@ const EPHEMERIS: FrameAccuracy = Object.freeze({
  * AJ 161:105, §2.4). Estimated from the two figures that bound its size:
  * DE440's librations in DE421's mean-Earth convention differ from DE421's own
  * by up to 3.07 × 10⁻⁷ rad over 2000–2040 (NAIF moon_de440_250416.tf; a
- * maximum, taken as 1σ), and unmodelled tidal libration is a few
+ * maximum, taken as 1σ), and unmodeled tidal libration is a few
  * milliarcseconds. 3 × 10⁻⁷ rad is about 0.5 m at the surface.
  */
 export const MOON_ME_ORIENTATION_RADIANS = 3e-7;
@@ -237,14 +237,14 @@ export const BUILT_IN_ACCURACY = deepFreeze({
   // Lunar orientation: DE440 publishes no angular uncertainty for its
   // libration angles (Park et al. 2021, AJ 161:105); its lunar laser ranging
   // range residual is never its orientation accuracy. The edge states an
-  // estimate, labelled so (plan 5b's call 20).
+  // estimate, labeled so (plan 5b's call 20).
   MOON_ME: {
     radians: MOON_ME_ORIENTATION_RADIANS,
     estimated: true,
-    note: "estimated, illustrative: DE440 publishes no orientation uncertainty for its libration (Park et al. 2021, AJ 161:105, §2.4); its librations in DE421's mean-Earth convention differ from DE421's own by up to 3.07 × 10⁻⁷ rad over 2000–2040 (NAIF moon_de440_250416.tf; a maximum, taken as 1σ, so conservative) and unmodelled tidal libration is a few mas (about 8 mm per mas at the surface), so 3 × 10⁻⁷ rad, about 0.5 m at the surface. Its recent lunar laser ranging range residuals are about 1.3 cm rms (Park et al. 2021, AJ 161:105, §5.1), a fit to ranges, not an orientation accuracy",
+    note: "estimated, illustrative: DE440 publishes no orientation uncertainty for its libration (Park et al. 2021, AJ 161:105, §2.4); its librations in DE421's mean-Earth convention differ from DE421's own by up to 3.07 × 10⁻⁷ rad over 2000–2040 (NAIF moon_de440_250416.tf; a maximum, taken as 1σ, so conservative) and unmodeled tidal libration is a few mas (about 8 mm per mas at the surface), so 3 × 10⁻⁷ rad, about 0.5 m at the surface. Its recent lunar laser ranging range residuals are about 1.3 cm rms (Park et al. 2021, AJ 161:105, §5.1), a fit to ranges, not an orientation accuracy",
   },
   MOON_PA: {
     byDefinition: true,
-    note: "exact by definition for DE440: adopted constants (Park et al. 2021 §2.4 eq. 19). Its realisation of the mean-Earth frame differs from DE421's by up to 0.53 m (2000–2040) (NAIF moon_de440_250416.tf); the longitude angle is gravity-field limited to about 1″ (about 8 m) (DE421 IOM 335-JW,DB,WF-20080314-001, p. 10)",
+    note: "exact by definition for DE440: adopted constants (Park et al. 2021 §2.4 eq. 19). Its realization of the mean-Earth frame differs from DE421's by up to 0.53 m (2000–2040) (NAIF moon_de440_250416.tf); the longitude angle is gravity-field limited to about 1″ (about 8 m) (DE421 IOM 335-JW,DB,WF-20080314-001, p. 10)",
   },
 } as const satisfies Record<string, FrameAccuracy>);

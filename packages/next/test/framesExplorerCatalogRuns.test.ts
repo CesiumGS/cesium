@@ -25,7 +25,7 @@ describe("wholeSummary", () => {
       skipped: 1,
       shown: 1,
       ms: 1234,
-      cancelled: false,
+      canceled: false,
     });
   });
 

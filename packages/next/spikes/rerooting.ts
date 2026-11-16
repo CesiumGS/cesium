@@ -9,7 +9,7 @@
 //    the globe's pixels differ (the Earth turns);
 // 3. re-rooting at a paused instant changes no pixel beyond the tolerance;
 // 4. a core-only scene follows a box on a node moved each tick with a rig,
-//    and the box stays at the view's centre within one pixel.
+//    and the box stays at the view's center within one pixel.
 //
 // Check 4 runs first, before the page loads anything of the frames module
 // (`@cesium/next/frames`) or the time library: its scene is the core's
@@ -38,7 +38,7 @@ const TEMPLATE = `
   A view's rig picks its render root: on ITRF the Earth's anchor sits at the
   identity, on GCRF it turns with the Earth. Either way the Earth's content
   is drawn with the camera in the Earth's anchor, so the image is the same.
-  The globe is drawn with a test pattern of 15° cells, coloured by
+  The globe is drawn with a test pattern of 15° cells, colored by
   longitude, so its turn shows. Images are compared with FLIP, within the
   bench gate's tolerances (mean 0.01, 95th percentile 0.05).
 </p>
@@ -55,7 +55,7 @@ const HEIGHT = 256;
 const DAY = 86_400_000;
 /** A day after a new Moon: the Moon sits near the sun, behind the camera. */
 const T0 = Date.UTC(2026, 2, 20, 14, 3, 7, 250);
-/** The camera's distance from the Earth's centre, m. */
+/** The camera's distance from the Earth's center, m. */
 const DISTANCE = 16_000_000;
 /** Scene seconds per real second while the clock plays (check 2). */
 const RATE = 3600;
@@ -282,7 +282,7 @@ function turn(a: Float64Array, b: Float64Array): number {
  * Check 4: a core-only scene. A box on a node of the transform table,
  * moved each tick across 10 km at the Earth's radius from the table's
  * origin; a rig 10 m behind it, aimed at it. Its pixels' centroid against
- * the view's centre.
+ * the view's center.
  */
 async function coreOnly(engine: Engine, lost: () => void): Promise<Check> {
   const loaded = framesModulesLoaded();
@@ -360,10 +360,10 @@ async function coreOnly(engine: Engine, lost: () => void): Promise<Check> {
       "resource timing entries": loaded.entries,
       ticks,
       "box pixels (fewest)": covered,
-      "centroid off centre (px, worst)": worst,
+      "centroid off center (px, worst)": worst,
     },
     limit:
-      "within 1 px of the centre each tick; nothing of /frames loaded (dev server, resource timing not full)",
+      "within 1 px of the center each tick; nothing of /frames loaded (dev server, resource timing not full)",
     pass: modules === 0 && covered > 50 && worst <= 1,
   };
 }
@@ -431,7 +431,7 @@ async function runRerooting(): Promise<RerootingResult> {
     night.view.enabled = false;
 
     // The pose, Earth-fixed: on the sun's side at T0, 20° north of it,
-    // looking at the Earth's centre.
+    // looking at the Earth's center.
     const sun = engine.sunDirection;
     const tilt = Math.tan((20 * Math.PI) / 180);
     const along = [sun[0]!, sun[1]!, sun[2]! + tilt];

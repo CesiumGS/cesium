@@ -15,7 +15,7 @@ export interface PanelActions {
   clipChanged(): void;
   /** A kind of cap was switched. */
   capsChanged(): void;
-  /** The cap colour changed. */
+  /** The cap color changed. */
   colorChanged(): void;
   sectionView(): void;
   resetView(): void;
@@ -308,7 +308,7 @@ export function createPanel(
       },
       "Geometry rebuilt as a handle moves (the b-rep in a worker): a frame or several behind it, but real faces and polygons that picks and measurements can ask. Under instant caps they lie behind them.",
     ),
-    el("label", {}, "Cap colour", colorInput),
+    el("label", {}, "Cap color", colorInput),
     capReadout.root,
     capNote,
 
@@ -330,7 +330,7 @@ export function createPanel(
     el(
       "p",
       {},
-      "Section view looks square at the cut from the removed side through a long, narrow lens (2°, from a few kilometres): the engine has no orthographic camera yet (plan 5d, tasks 14 and 15), and this differs from one by under a percent across the content. Reset view brings the normal lens back.",
+      "Section view looks square at the cut from the removed side through a long, narrow lens (2°, from a few kilometers): the engine has no orthographic camera yet (plan 5d, tasks 14 and 15), and this differs from one by under a percent across the content. Reset view brings the normal lens back.",
     ),
     toggle(
       "Split screen: a second view",

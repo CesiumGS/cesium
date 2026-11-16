@@ -42,13 +42,13 @@ export function gridTile(
   const u = new Uint16Array(count);
   const v = new Uint16Array(count);
   const h = new Uint16Array(count);
-  const metres = new Float64Array(count);
+  const meters = new Float64Array(count);
   for (let j = 0; j < n; j++) {
     for (let i = 0; i < n; i++) {
       const k = j * n + i;
       u[k] = line(i, n);
       v[k] = line(j, n);
-      metres[k] = height(
+      meters[k] = height(
         rectangle.west + (u[k]! / 32767) * (rectangle.east - rectangle.west),
         rectangle.south + (v[k]! / 32767) * (rectangle.north - rectangle.south),
       );
@@ -56,7 +56,7 @@ export function gridTile(
   }
   let minimumHeight = Infinity;
   let maximumHeight = -Infinity;
-  for (const m of metres) {
+  for (const m of meters) {
     minimumHeight = Math.min(minimumHeight, m);
     maximumHeight = Math.max(maximumHeight, m);
   }
@@ -64,7 +64,7 @@ export function gridTile(
   for (let k = 0; k < count; k++) {
     h[k] =
       range > 0
-        ? Math.round(((metres[k]! - minimumHeight) / range) * 32767)
+        ? Math.round(((meters[k]! - minimumHeight) / range) * 32767)
         : 0;
   }
   const triangles = new Uint32Array((n - 1) * (n - 1) * 6);

@@ -202,7 +202,7 @@ export function radii(a: number, e2: number, latitudeDegrees: number) {
   return { M, N, gaussian: Math.sqrt(M * N) };
 }
 
-/** Body-fixed metres of a longitude, latitude (degrees) and height on the Earth's ellipsoid. */
+/** Body-fixed meters of a longitude, latitude (degrees) and height on the Earth's ellipsoid. */
 export const onEarth = (lon: number, lat: number, h = 0): Float64Array =>
   EARTH.ellipsoid.cartographicToCartesian(
     fromDegrees(lon, lat, h),

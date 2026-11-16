@@ -21,7 +21,7 @@ describe("ray accuracy through the frames module", () => {
     engine.removeWorld(world);
   });
 
-  it("a ray from a lunar site carries MOON_ME's estimated term in its note and metres", async () => {
+  it("a ray from a lunar site carries MOON_ME's estimated term in its note and meters", async () => {
     world = engine.createWorld();
     // Synthetic data, precise: MOON_ME runs on its data and states the
     // library's estimate. (The synthetic GCRF is not rigid, so the route
@@ -40,7 +40,7 @@ describe("ray accuracy through the frames module", () => {
       world,
       frame: probe,
       seconds,
-      // At 1,737.4 km from the Moon's centre, outward.
+      // At 1,737.4 km from the Moon's center, outward.
       rays: [{ from: [1_737_400, 0, 0], to: [1_800_000, 0, 0] }],
       targets: [{ kind: "body", body: MOON }],
     });

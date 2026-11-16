@@ -40,7 +40,7 @@ import type { PanelModel, ScenarioPanelView } from "./model.ts";
 export { NARROW_VIEW } from "../content.ts";
 
 /**
- * Keeps the HUD clear of the viewer's time controls (bottom centre, one or
+ * Keeps the HUD clear of the viewer's time controls (bottom center, one or
  * two rows as the view's width allows): `--fx-hud-bottom` on the host is the
  * room they take, so the legend sits above them. Returns the view's width.
  */

@@ -12,7 +12,7 @@ import { sig } from "./panel/format.ts";
 import type { LabelBoard } from "./triadLayer.ts";
 import { pathToRoot, type TreeNode } from "./tree.ts";
 
-/** An origin farther than this from the geocentre is off the scene (the barycentre, the Sun), m. */
+/** An origin farther than this from the geocenter is off the scene (the barycenter, the Sun), m. */
 const FAR_ORIGIN = 1e10;
 /** The walk's stub toward an off-scene origin, m (past the Moon). */
 const WALK_STUB = 5e8;
@@ -59,7 +59,7 @@ export function createWalkPath(deps: {
 
   /**
    * The walk's origins on the globe, coincident ones merged. An origin far
-   * off the scene (the barycentre, the Sun) is drawn as a stub toward it
+   * off the scene (the barycenter, the Sun) is drawn as a stub toward it
    * from the first near origin, with a label naming it and its distance.
    */
   function walkOrigins(id: string): {
@@ -96,7 +96,7 @@ export function createWalkPath(deps: {
         continue;
       }
       if (Math.hypot(o[0]!, o[1]!, o[2]!) > FAR_ORIGIN) {
-        // The barycentre or the Sun: off the scene; pointed at, not drawn to.
+        // The barycenter or the Sun: off the scene; pointed at, not drawn to.
         far ??= { id: n.id, p: o };
         continue;
       }

@@ -68,7 +68,7 @@ function readyLine(ready: readonly LoadItem[], bytes: number): string {
 }
 
 /**
- * What is in while the rest loads, summarised (UX review P3): "Ready:
+ * What is in while the rest loads, summarized (UX review P3): "Ready:
  * PROJ, 2 grids, tiles for 1 site and 3 more." The rows are for what is
  * still loading.
  */

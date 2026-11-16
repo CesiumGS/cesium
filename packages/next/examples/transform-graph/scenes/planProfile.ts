@@ -73,8 +73,8 @@ export const planProfile: Scene = {
     const ellipsoid = Ellipsoid.WGS84;
 
     // ------------------------------------------------ the site and the road
-    const centre = { longitude: 7.765, latitude: 46.045 };
-    const origin = positionOf(centre, 1600);
+    const center = { longitude: 7.765, latitude: 46.045 };
+    const origin = positionOf(center, 1600);
     const site = eastNorthUpFrame(
       "Road site (ENU)",
       host.itrf,
@@ -344,7 +344,7 @@ export const planProfile: Scene = {
       add(ribbon.build(), "Corridor ribbon");
       add(curtain.build(), "Ground section");
       add(polylines(grid), "Section grid");
-      add(road, "Road centreline");
+      add(road, "Road centerline");
       stationMarks = [];
       for (let s = 0; s <= total; s += 1000) {
         stationMarks.push({ s, low: base });
@@ -544,8 +544,8 @@ export const planProfile: Scene = {
     host.scope.defer(() => clearInterval(timer));
     whenDrawn(host, {
       terrainAt: {
-        longitude: centre.longitude * deg,
-        latitude: centre.latitude * deg,
+        longitude: center.longitude * deg,
+        latitude: center.latitude * deg,
       },
     });
   },

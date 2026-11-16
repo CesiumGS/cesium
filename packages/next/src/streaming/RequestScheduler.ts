@@ -5,7 +5,7 @@
  *
  * - **Seed:** HTTP/1.1 about 6 (the browser's per-host connection limit:
  *   beyond it requests queue inside the browser, where they can be neither
- *   reprioritized nor cancelled); HTTP/2 and HTTP/3 about 24; unknown 16
+ *   reprioritized nor canceled); HTTP/2 and HTTP/3 about 24; unknown 16
  *   until a response reports its protocol (Resource Timing, which
  *   cross-origin servers may hide without `Timing-Allow-Origin`).
  * - **Smallest window that keeps the throughput.** Measured each period
@@ -40,8 +40,8 @@ export interface OriginStats {
   adaptive: boolean;
   /** Bytes per second delivered over the last full period. */
   throughput: number;
-  /** Requests cancelled because no view needed them any more. */
-  cancelled: number;
+  /** Requests canceled because no view needed them any more. */
+  canceled: number;
 }
 
 /** What a finished request reports back. */
@@ -77,7 +77,7 @@ interface Origin {
   phase: "startup" | "up" | "down" | "hold";
   hold: number;
   backlog: number;
-  cancelled: number;
+  canceled: number;
 }
 
 export class RequestScheduler {
@@ -105,7 +105,7 @@ export class RequestScheduler {
         phase: "startup",
         hold: 0,
         backlog: 0,
-        cancelled: 0,
+        canceled: 0,
       };
       this.origins.set(origin, o);
     }
@@ -157,11 +157,11 @@ export class RequestScheduler {
     }
   }
 
-  /** Counts a cancelled request (its slot is returned by `release`). */
-  cancelled(origin: string): void {
+  /** Counts a canceled request (its slot is returned by `release`). */
+  canceled(origin: string): void {
     const o = this.origins.get(origin);
     if (o) {
-      o.cancelled++;
+      o.canceled++;
     }
   }
 
@@ -183,7 +183,7 @@ export class RequestScheduler {
           inFlight: o.inFlight,
           adaptive: !o.fixed,
           throughput: o.throughput,
-          cancelled: o.cancelled,
+          canceled: o.canceled,
         }
       : undefined;
   }

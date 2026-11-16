@@ -337,7 +337,7 @@ function descriptorOf(
             s + Math.min(length, Math.max(0, (x - sx) * c + (y - sy) * n)),
           );
         } else {
-          // Centre of the circle; the angle swept from the start, in the turn's direction.
+          // Center of the circle; the angle swept from the start, in the turn's direction.
           const cx = sx - n / k;
           const cy = sy + c / k;
           const delta = Math.atan2(

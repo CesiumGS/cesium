@@ -10,7 +10,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { RECIPES } from "../../examples/brep-first-look/kernels.ts";
 import { formBounds } from "../../src/brep/formBounds.ts";
 import { prepareGpuPatches } from "../../src/brep/gpuPatches.ts";
-import { KernelCancelled, KernelClient } from "../../src/brep/kernelClient.ts";
+import { KernelCanceled, KernelClient } from "../../src/brep/kernelClient.ts";
 import { OcctKernel, type OcctModule } from "../../src/brep/occt.ts";
 import { SmlibKernel, type SmlibModule } from "../../src/brep/smlib.ts";
 import { validateBrep } from "../../src/brep/validate.ts";
@@ -118,7 +118,7 @@ describe("the kernel worker with the real kernels", () => {
       a: recipe.inputs[0],
       b: recipe.inputs[1],
     });
-    await expect(first).rejects.toBeInstanceOf(KernelCancelled);
+    await expect(first).rejects.toBeInstanceOf(KernelCanceled);
     await second;
     client.dispose();
     expect(handles.describe()).toEqual([]);

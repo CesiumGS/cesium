@@ -127,7 +127,7 @@ export function tourTarget(state: TourState): TourTarget {
 
 /** The page's figures the narration reads; any may be missing. */
 export interface TourFacts {
-  /** answers.json's marker: rigid's separation at its station, metres. */
+  /** answers.json's marker: rigid's separation at its station, meters. */
   readonly markerSeparation?: number;
   /** The marker's station (the self-check's, where the opening shot looks), design units. */
   readonly markerStation?: number;
@@ -138,22 +138,22 @@ export interface TourFacts {
   readonly mark?: {
     readonly pid: string;
     readonly name: string;
-    /** How far rigid draws the road from where it is, at the mark's nearest point, metres. */
+    /** How far rigid draws the road from where it is, at the mark's nearest point, meters. */
     readonly rigidOffset?: number;
   };
   readonly pair?: {
     /** The pair's horizontal design distance, design units. */
     readonly horizontal: number;
     readonly symbol: string;
-    /** How much shorter rigid draws the pair than its true distance, metres. */
+    /** How much shorter rigid draws the pair than its true distance, meters. */
     readonly rigidShort?: number;
-    /** How far rigid draws the pair's ends from where they are, metres (their mean). */
+    /** How far rigid draws the pair's ends from where they are, meters (their mean). */
     readonly rigidOffset?: number;
     /** The ruler at its far end: ground's last whole 1,000 ft and how far before design's it ends, design units. */
     readonly ruler?: { readonly feet: number; readonly gap: number };
   };
   /**
-   * Each ladder site's rigid error at its edge and its extent, metres, its
+   * Each ladder site's rigid error at its edge and its extent, meters, its
    * error's parts and its combined factor at the anchor (answers.json).
    */
   readonly ladder: ReadonlyMap<string, LadderFacts>;
@@ -204,9 +204,9 @@ function ladderStop(stop: number, f: LadderFacts | undefined): string {
       f.combinedFactor !== undefined && why.includes("scale")
         ? ` (${f.combinedFactor.toFixed(5)})`
         : "";
-    return `${what}, ${extentText(f.extent)} across: rigid is fine here, ${small(f.error)} off at its edge${why}${k}, under a centimetre.`;
+    return `${what}, ${extentText(f.extent)} across: rigid is fine here, ${small(f.error)} off at its edge${why}${k}, under a centimeter.`;
   }
-  return `${what}, ${extentText(f.extent)} across: rigid is ${small(f.error)} off at its edge${why}, more than a centimetre, so reproject it.`;
+  return `${what}, ${extentText(f.extent)} across: rigid is ${small(f.error)} off at its edge${why}, more than a centimeter, so reproject it.`;
 }
 
 function narration(state: TourState, f: TourFacts): string {
@@ -219,7 +219,7 @@ function narration(state: TourState, f: TourFacts): string {
       const off =
         f.markerSeparation !== undefined
           ? errorText(f.markerSeparation)
-          : "metres";
+          : "meters";
       return `Placed rigidly at one anchor, as most viewers place a model, ${where} is drawn ${off} from where its own design puts it.`;
     }
     case "morph":

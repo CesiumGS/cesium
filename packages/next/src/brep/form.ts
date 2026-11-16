@@ -1,13 +1,13 @@
 // The engine's own b-rep render form (docs/design/breps-and-geometry-queries.md): plain typed
 // arrays, so it moves between workers without copying and a host with its
 // own kernel can write it directly. Every surface is analytic, with a fixed
-// parameterization, or a list of rational Bézier patches. Lengths are metres
+// parameterization, or a list of rational Bézier patches. Lengths are meters
 // and angles are radians. A draft before the placement review.
 
 /**
  * Surface kinds. Analytic kinds use the parameterizations below; Bézier
  * surfaces are lists of patches. With the surface's origin `o`, axes `x` and
- * `y`, and `z = x × y` (u and v in radians where angular, metres otherwise):
+ * `y`, and `z = x × y` (u and v in radians where angular, meters otherwise):
  *
  * - Plane: `P = o + u·x + v·y`.
  * - Cylinder: `P = o + r(cos u·x + sin u·y) + v·z`.
@@ -56,7 +56,7 @@ export interface BrepForm {
   readonly surfaceError: Float32Array;
   /** 9 per surface: origin (3, m), x axis (3), y axis (3), unit and orthogonal; z = x × y. For the identity; 0 when it is `Bezier`. */
   readonly surfaceFrame: Float64Array;
-  /** 2 per surface, for the identity: Cylinder [r, 0]; Cone [r at v = 0, half-angle]; Sphere [r, 0]; Torus [major R, minor r]; else 0. Metres and radians. */
+  /** 2 per surface, for the identity: Cylinder [r, 0]; Cone [r at v = 0, half-angle]; Sphere [r, 0]; Torus [major R, minor r]; else 0. Meters and radians. */
   readonly surfaceParams: Float64Array;
   /** 2 per surface: [first patch, patch count]; Bézier only, else [0, 0]. */
   readonly surfacePatches: Uint32Array;
@@ -66,7 +66,7 @@ export interface BrepForm {
   readonly patchDegree: Uint8Array;
   /** Per patch: index of its first control point in patchPoints (in points, not floats). Points run u fastest. */
   readonly patchFirst: Uint32Array;
-  /** 4 per control point, homogeneous: x·w, y·w, z·w, w (w > 0). Metres. */
+  /** 4 per control point, homogeneous: x·w, y·w, z·w, w (w > 0). Meters. */
   readonly patchPoints: Float64Array;
   /** 4 per patch: u0, u1, v0, v1, its span in its surface's parameter space. */
   readonly patchDomain: Float64Array;

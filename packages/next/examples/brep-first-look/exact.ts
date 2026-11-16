@@ -1,7 +1,7 @@
 // What a pick on a face asks of the exact surface: the point of the surface
 // nearest a point near it, found by Gauss–Newton in (u, v) from the nearest
 // tessellation vertex. It previews the exact queries of the overall plan's
-// step 7. Lengths are metres in the b-rep's own units.
+// step 7. Lengths are meters in the b-rep's own units.
 import {
   evaluateSurface,
   faceNormal,

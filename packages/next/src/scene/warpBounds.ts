@@ -1,5 +1,5 @@
 // Bounds of warps (docs/design/geometry-through-placement-review.md, the second review's flaw 1 and 6; increment
-// 3). A draw's culling sphere MOVES by the displacement at its centre and
+// 3). A draw's culling sphere MOVES by the displacement at its center and
 // grows only by the residual, how far the displacement differs from that
 // over the sphere. Weights read parameters that may declare a range, so
 // the bounds hold for every value in it and a slider writes one float.
@@ -78,7 +78,7 @@ export function weightFollowsValue(weight: TermWeight): boolean {
 
 /** One term's bounds over a sphere, at weight 1. */
 export interface TermBounds {
-  /** The term's displacement at the sphere's centre, model units (zero for an attribute: it has none there). */
+  /** The term's displacement at the sphere's center, model units (zero for an attribute: it has none there). */
   readonly at: Float64Array;
   /**
    * The most it differs from `at` anywhere in the sphere, plus its fit's
@@ -225,7 +225,7 @@ export function latticeResidual(
 
 /**
  * `term`'s bounds over the sphere (`center`, `radius`, model units) at
- * weight 1: its displacement at the centre and the residual to pad by (plus a
+ * weight 1: its displacement at the center and the residual to pad by (plus a
  * lattice's `errorBound`). Compute once per draw: weights and parameters
  * only scale them.
  */
@@ -243,9 +243,9 @@ export function termBoundsOver(
   };
 }
 
-/** Where a draw's sphere goes: its centre moved by `shift` and its radius grown by `pad`. */
+/** Where a draw's sphere goes: its center moved by `shift` and its radius grown by `pad`. */
 export interface DrawnSphere {
-  /** What the centre moves by, model units: Σ (weights' middle) · (each term at the centre). */
+  /** What the center moves by, model units: Σ (weights' middle) · (each term at the center). */
   readonly shift: Float64Array;
   /** What the radius grows by, model units. */
   readonly pad: number;
@@ -255,7 +255,7 @@ export interface DrawnSphere {
  * The sphere `terms` draw a draw's bounding sphere as, for every value of
  * their parameters' ranges (a parameter without one, at its value now). A
  * term's weight w lies in [w₁, w₂], middle w̄ and half-width ω, so
- * |wD(p) − w̄D(c)| ≤ ω|D(c)| + max|w| · |D(p) − D(c)|, and the centre moves
+ * |wD(p) − w̄D(c)| ≤ ω|D(c)| + max|w| · |D(p) − D(c)|, and the center moves
  * by Σ w̄ᵢ D(c)ᵢ and the radius grows by Σ ωᵢ|D(c)ᵢ| + max|wᵢ| · residualᵢ.
  * `bounds[i]` is `termBoundsOver(terms[i].term, center, radius)`.
  */
@@ -355,7 +355,7 @@ function transform(m: ArrayLike<number>, p: Float64Array): void {
  * `route`'s forward map as a `DrawnMap`, then `after` (a 4×4 applied last:
  * an anchor's inverse place, which brings it to the anchor's coordinates,
  * where selection runs). The Jacobian composes the steps' (`warpForward`
- * honours scales); a route with an inverse step is differenced.
+ * honors scales); a route with an inverse step is differenced.
  */
 export function routeMap(route: Route, after?: ArrayLike<number>): DrawnMap {
   const differenced = route.steps.some((s) => s.kind === "warp" && s.inverse);
@@ -479,10 +479,10 @@ export interface DrawnBounds {
  * The bounding sphere of `points` (n × 3, flat) carried through every map
  * of `maps` (the ends of an interval of a map's scale: a spread map's image
  * is within their hull), with [σ_min, σ_max] of the Jacobians at them. The
- * sphere is centred in the images' box, so it is not the smallest.
+ * sphere is centered in the images' box, so it is not the smallest.
  *
  * The image of a volume bulges past the hull of its samples' images. With
- * `spacing`, the largest distance between neighbouring samples (a grid
+ * `spacing`, the largest distance between neighboring samples (a grid
  * cell's diagonal), the radius grows by (1/8)·M₂·spacing², the error of
  * interpolating a map of second derivative M₂ between samples that far apart,
  * with M₂ the estimate `secondDerivative`. An estimate, not a proof: it
@@ -585,9 +585,9 @@ export function drawnBounds(
  * interval of the scale from it, with no map evaluated again.
  */
 export interface ScaledImage {
-  /** The centre and radius of a sphere holding the images at scale 0. */
+  /** The center and radius of a sphere holding the images at scale 0. */
   readonly base: readonly [number, number, number, number];
-  /** The centre and radius of a sphere holding the displacements from scale 0 to 1. */
+  /** The center and radius of a sphere holding the displacements from scale 0 to 1. */
   readonly shift: readonly [number, number, number, number];
   /** [σ_min, σ_max] of the Jacobians at scale 0, then at scale 1, over the samples. */
   readonly sigma: readonly [number, number, number, number];
@@ -737,7 +737,7 @@ export function scaledBounds(
   };
 }
 
-/** A volume's sample points: with `halfAxes` (column-major 3×3) a 3 × 3 × 3 grid of the box (corners, edge midpoints, face centres, centre); else `center` and, with `radius`, 6 points on its axes. Flat, n × 3. */
+/** A volume's sample points: with `halfAxes` (column-major 3×3) a 3 × 3 × 3 grid of the box (corners, edge midpoints, face centers, center); else `center` and, with `radius`, 6 points on its axes. Flat, n × 3. */
 export function volumeSamples(volume: {
   readonly center: ArrayLike<number>;
   readonly halfAxes?: ArrayLike<number>;
@@ -776,7 +776,7 @@ export function volumeSamples(volume: {
 
 /**
  * [σ_min, σ_max] of `route`'s Jacobian over a volume, estimated at its
- * 3 × 3 × 3 samples (a sphere: centre and axis points). σ_max is how much
+ * 3 × 3 × 3 samples (a sphere: center and axis points). σ_max is how much
  * the route stretches the volume at most (selection's error scale), σ_min
  * the least: the Lipschitz constant of f∘W⁻¹ is 1/σ_min, which sets the
  * ray-march step and divides snap tolerances (the second review's flaw 6).

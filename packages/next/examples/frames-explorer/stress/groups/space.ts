@@ -67,7 +67,7 @@ function iersConstants(): Constants {
   };
 }
 
-/** DSS-43 at an instant: DSN 810-005 301's 2003.0 position moved by its site velocity, ITRF metres. */
+/** DSS-43 at an instant: DSN 810-005 301's 2003.0 position moved by its site velocity, ITRF meters. */
 function dss43(t: Instant): number[] {
   const s = cited<{
     xyz: string[];
@@ -117,7 +117,7 @@ const signalCase = stressCase(
       worstLight = Math.max(worstLight, Math.abs(leg.lightTime - lt) * c);
       // First-order Doppler by hand: ratio = 1 − n·(vO − vS)/c, n the unit
       // vector to Orion from SPICE (CN, ICRF axes), vO Orion's OEM velocity
-      // at emission, vS the station's, both Earth-centred in ICRF axes.
+      // at emission, vS the station's, both Earth-centered in ICRF axes.
       const n = scale3(row.dss43.CN.position, 1 / norm(row.dss43.CN.position));
       const emitted = Instant.fromTdb(row.tdb - lt);
       const state = o.state(emitted);
@@ -197,7 +197,7 @@ const lineOfSightCase = stressCase(
         frameTransform(f.itrf, f.earthIcrf, t),
         stationItrf,
       );
-      // Positions at emission, Earth-centred ICRF axes (two light-time passes).
+      // Positions at emission, Earth-centered ICRF axes (two light-time passes).
       const seen = (place: (at: Instant) => ArrayLike<number>) => {
         let p = place(t);
         for (let i = 0; i < 2; i++) {
@@ -224,7 +224,7 @@ const lineOfSightCase = stressCase(
         source: citation("naif-moon-radius"),
         title: `DSS-43 to Orion at ${iso} UTC: ${expectBlocked ? "hidden by the Moon" : "clear"}, by the library and by hand geometry`,
         pass: clear === !blocked && blocked === expectBlocked,
-        detail: `library: ${clear ? "clear" : `blocked by ${m.lineOfSight?.blockedBy?.name ?? "?"}`}; hand: Orion ${fmt(angle / DEGREE, 6)}° from the Moon's centre, limb ${fmt(limb / DEGREE, 6)}°, Orion ${fmt(norm(craft) / 1000, 7)} km away and the Moon ${fmt(norm(moon) / 1000, 7)} km`,
+        detail: `library: ${clear ? "clear" : `blocked by ${m.lineOfSight?.blockedBy?.name ?? "?"}`}; hand: Orion ${fmt(angle / DEGREE, 6)}° from the Moon's center, limb ${fmt(limb / DEGREE, 6)}°, Orion ${fmt(norm(craft) / 1000, 7)} km away and the Moon ${fmt(norm(moon) / 1000, 7)} km`,
         instant: t.tdb(),
       });
     }
@@ -391,7 +391,7 @@ const spaceEffectsCase = stressCase(
         "Earth orientation's uncertainty at the flyby as an angle toward Orion (display only)",
       pass: true,
       displayOnly: true,
-      detail: `${fmt(meters === undefined ? NaN : meters / norm(station) / ARCSECOND, 4)}″: the same uncertainty over DSS-43's ${fmt(norm(station) / 1000, 6)} km from the Earth's centre`,
+      detail: `${fmt(meters === undefined ? NaN : meters / norm(station) / ARCSECOND, 4)}″: the same uncertainty over DSS-43's ${fmt(norm(station) / 1000, 6)} km from the Earth's center`,
       effect: {
         value: meters === undefined ? NaN : meters / norm(station) / ARCSECOND,
         unit: "″",
@@ -477,7 +477,7 @@ const moonFromSacramentoCase = stressCase(
       f,
     );
     const leg = m.signal!.downlink;
-    // The astrometric direction: the Moon's centre at emission from the
+    // The astrometric direction: the Moon's center at emission from the
     // site at reception, ICRF axes (barycentric positions).
     const at = (frame: Frame, tdb: number) =>
       frameTransform(frame, f.icrf, Instant.fromTdb(tdb)).subarray(12, 15);

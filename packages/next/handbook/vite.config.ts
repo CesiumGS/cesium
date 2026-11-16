@@ -158,7 +158,7 @@ function reelData(): { index: string; block: string } {
   add("moon.pack", readFileSync(join(root, "moon-pa-de440-2000-2050.pack")));
   add("EOP-All.csv", readFileSync(join(root, "EOP-All.csv")));
 
-  // The corridor down to a level that reads well from a kilometre away.
+  // The corridor down to a level that reads well from a kilometer away.
   const corridor = join(root, "design-globe-dual/corridor");
   const description = JSON.parse(
     readFileSync(join(corridor, "tileset.json"), "utf8"),

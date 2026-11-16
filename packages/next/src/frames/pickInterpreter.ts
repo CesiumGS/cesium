@@ -51,7 +51,7 @@ export interface FramedPoint {
    * that want one number, and not a 1σ.
    *
    * - the pick's (`kind: "pick"`, a bound): one CSS pixel's footprint at the
-   *   hit (`pickDesign`'s tolerance; under a view warp in true metres,
+   *   hit (`pickDesign`'s tolerance; under a view warp in true meters,
    *   over σ_min of the route), and the rounding of the float32 depth the
    *   position was read from (half a step), likewise;
    * - the point's own (`kind: "content"`, a bound): where the pick variant
@@ -370,7 +370,7 @@ function vertexBound(vertex: Placement | undefined): number | undefined {
  * float32 step of the depth it was read from, carried along the ray. Each
  * is a worst-case bound (an error uniform over a width w has σ = w/√12,
  * which this does not claim). Under a view warp, where `trueFootprint` is
- * given (a pixel's drawn size over σ_min of the route, in true metres),
+ * given (a pixel's drawn size over σ_min of the route, in true meters),
  * both are scaled by the same factor: they were measured in what is drawn.
  */
 function pickTerms(
@@ -392,7 +392,7 @@ function pickTerms(
   const where =
     toTrue === 1
       ? ""
-      : ", in true metres (the drawn size over σ_min of the view's warp)";
+      : ", in true meters (the drawn size over σ_min of the view's warp)";
   const terms: PointAccuracyTerm[] = [
     {
       frame,
@@ -400,7 +400,7 @@ function pickTerms(
       part: "footprint",
       meters: ((distance * 2 * Math.tan(c.fovy / 2)) / c.height) * toTrue,
       basis: "bound",
-      note: `one CSS pixel's footprint at the hit${where}: the pick reads the pixel's centre, which may be this far from where the click was meant`,
+      note: `one CSS pixel's footprint at the hit${where}: the pick reads the pixel's center, which may be this far from where the click was meant`,
     },
   ];
   // Reverse-Z: the stored depth is near / z, z along the view axis; its

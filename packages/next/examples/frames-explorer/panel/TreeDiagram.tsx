@@ -1,6 +1,6 @@
 // The frame tree as a branching diagram (spec "The tree diagram"; the
 // owner's choice of a top-down tidy tree over the outline, ruling S6
-// overridden). Pills sized to their labels, coloured by family; the frames
+// overridden). Pills sized to their labels, colored by family; the frames
 // the scenario added are distinct (a diamond and a tinted, family-edged
 // pill). Docked, it draws the frames the scenario uses and folds the rest
 // into "+N" chips (`focusTree`); too wide or tall for its box, it pans,
@@ -161,7 +161,7 @@ const PAN_MARGIN = 16;
  * order, each [lo, hi] in the diagram's px. It takes as many of them, in
  * order, as fit `size` whole (the first always, from its start if it alone
  * is too big), and moves only if what it took isn't already in view,
- * centring it then.
+ * centering it then.
  */
 export function panWindow(
   spans: readonly (readonly [number, number])[],
@@ -357,7 +357,7 @@ export function diagramLayout(
         : textWidth(n.label, "pill") +
           PILL_EXTRA +
           (tag ? textWidth(tag, "tag") + TAG_EXTRA : 0);
-    // The full label sits right of the connector at the pill's centre.
+    // The full label sits right of the connector at the pill's center.
     const label =
       fullLabels && !isChip && !isData && parent
         ? 2 *
@@ -1240,7 +1240,7 @@ export const TreeDiagram = memo(function TreeDiagram({
               {tipText.text}
             </span>,
             // Inside StrataKit's root, as the Expand dialog is: its tokens and
-            // colour scheme reach the tip (Task 4c item 4).
+            // color scheme reach the tip (Task 4c item 4).
             designRoot(tip?.el, document.body),
           )}
       </div>

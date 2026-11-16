@@ -9,7 +9,7 @@
 // where dh'/dh = 1 + ∂D/∂h at fixed position and g = ∇ of D through the
 // foot's position (zero when D depends on h alone). This is the closed form
 // of georeference/heightWarps.ts (there as A⁻¹(I + h'S - n nᵀ) + (dh'/dh) n nᵀ).
-// The ellipsoid is a body's radii; the point must be away from its centre.
+// The ellipsoid is a body's radii; the point must be away from its center.
 import { ellipsoidFoot, type Radii } from "../scene/warpForms.ts";
 
 export type { Radii };
@@ -122,7 +122,7 @@ export function invert3(m: ArrayLike<number>, out: Float64Array): void {
   out[8] = (a * e - b * d) / det;
 }
 
-/** The normal and height at `p`; with `withShape`, also M. Throws at the body's centre. */
+/** The normal and height at `p`; with `withShape`, also M. Throws at the body's center. */
 export function locate(
   radii: Radii,
   p: ArrayLike<number>,
@@ -133,7 +133,7 @@ export function locate(
   const h = ellipsoidFoot(radii, p, n);
   if (!Number.isFinite(h)) {
     throw new RangeError(
-      "a point at the body's centre has no height above its surface",
+      "a point at the body's center has no height above its surface",
     );
   }
   frame.h = h;

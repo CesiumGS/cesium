@@ -189,7 +189,7 @@ const BUILT_IN: Record<
     accuracy: earthOrientationAccuracy(frames, instant),
   }),
   // The library states none for MOON_ME (DE440 publishes no orientation
-  // uncertainty); the explorer estimates one, labelled so (the owner's
+  // uncertainty); the explorer estimates one, labeled so (the owner's
   // follow-up, 2026-11-07, scenarios/stated.ts), and the walk composes it.
   MOON_ME: () => ({
     kind: "rotation",

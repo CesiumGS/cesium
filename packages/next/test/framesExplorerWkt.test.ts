@@ -9,8 +9,8 @@ import {
   siteFromIfcMapConversion,
 } from "../examples/frames-explorer/tests.ts";
 import {
-  axisMetres,
-  bboxCentre,
+  axisMeters,
+  bboxCenter,
   NotHelmertError,
   ellipsoidOfNode,
   epsgId,
@@ -52,7 +52,7 @@ describe("the WKT reader", () => {
     expect(1 / source.f).toBeCloseTo(299.3249646, 9);
   });
 
-  it("honours stated units, and reads coordinate-frame and geocentric methods", () => {
+  it("honors stated units, and reads coordinate-frame and geocentric methods", () => {
     const root =
       parseWkt(`BOUNDCRS[SOURCECRS[GEOGCRS["x",DATUM["d",ELLIPSOID["e",6378137,298.257223563]],CS[ellipsoidal,2]]],
       TARGETCRS[GEOGCRS["WGS 84",DATUM["w",ELLIPSOID["WGS 84",6378137,298.257223563]],CS[ellipsoidal,2]]],
@@ -69,10 +69,10 @@ describe("the WKT reader", () => {
     expect(t.parameters.ds).toBeCloseTo(3e-6, 18);
   });
 
-  it("finds no TOWGS84 in a plain CRS, and its area of use's centre", () => {
+  it("finds no TOWGS84 in a plain CRS, and its area of use's center", () => {
     const root = parseWkt(entries["input-wkt2-wgs84-utm31n"]!.wkt2);
     expect(towgs84Of(root)).toBeUndefined();
-    expect(bboxCentre(root)).toEqual([3, 42]);
+    expect(bboxCenter(root)).toEqual([3, 42]);
   });
 
   it("refuses a transformation that is not a Helmert", () => {
@@ -121,7 +121,7 @@ describe("the scale difference's units", () => {
 });
 
 describe("WKT1 (GDAL's TOWGS84)", () => {
-  it("reads TOWGS84 as a position-vector Helmert in metres, arc-seconds and ppm", () => {
+  it("reads TOWGS84 as a position-vector Helmert in meters, arc-seconds and ppm", () => {
     const seven = parseWkt(
       WKT1_ED50.replace(
         "TOWGS84[-87,-98,-121,0,0,0,0]",
@@ -154,7 +154,7 @@ describe("WKT1 (GDAL's TOWGS84)", () => {
       a: 6378388,
       f: 1 / 297,
     });
-    expect(axisMetres(crs)).toBe(1);
+    expect(axisMeters(crs)).toBe(1);
     expect(projectionOrigin(crs)).toEqual([3, 0]);
     expect(
       epsgId(

@@ -176,7 +176,7 @@ function evaluate(
       );
       if (surface === undefined) {
         throw new RangeError(
-          "a near-point vector has no direction at the ellipsoid's centre",
+          "a near-point vector has no direction at the ellipsoid's center",
         );
       }
       local[0] = surface[0]! - p[0]!;

@@ -80,13 +80,13 @@ export interface ScenarioAnswer {
   unit?: string;
   /**
    * The figure's decimals, where its unit's default would hide what its
-   * accuracy supports (the robot arm's 17 km to the millimetre, Task 7b).
+   * accuracy supports (the robot arm's 17 km to the millimeter, Task 7b).
    */
   digits?: number;
   /**
-   * Always stated (R8): metres where it is bounded, and in words either way.
+   * Always stated (R8): meters where it is bounded, and in words either way.
    * `unbounded` when it has no size (not bounded, not stated or not known):
-   * the panel says so in its warning colour, from this flag, never from the
+   * the panel says so in its warning color, from this flag, never from the
    * note's words (Task 4c item 4).
    */
   accuracy: {
@@ -183,7 +183,7 @@ export interface ScenarioAnswer {
 
 /**
  * A line of sight for the main thread to resolve against terrain (Task 5):
- * its ends Earth-fixed (ITRF), metres.
+ * its ends Earth-fixed (ITRF), meters.
  */
 export interface SightLine {
   id: string;
@@ -272,7 +272,7 @@ export interface ScenarioEvaluation {
   answer: ScenarioAnswer;
   overlays: readonly { id: string; geometry: OverlayGeometry }[];
   /**
-   * Labels the page puts on the globe at Earth-fixed points (ITRF, metres):
+   * Labels the page puts on the globe at Earth-fixed points (ITRF, meters):
    * the corridor's stations. `marker` draws Orion-now's dot with its halo.
    */
   labels?: readonly {
@@ -283,10 +283,10 @@ export interface ScenarioEvaluation {
   }[];
   /**
    * A point the user drags on the globe to set two knobs (the corridor's
-   * station and offset): where it is (ITRF, metres), and a local placement
+   * station and offset): where it is (ITRF, meters), and a local placement
    * that takes a point on the ground to the knobs' design plane, ITRF to
    * design units (a column-major 4×4, rigid at the point's road: good to a
-   * few centimetres there, finer than the knobs' steps). The page reads the
+   * few centimeters there, finer than the knobs' steps). The page reads the
    * knobs off the design point (`knobsAt`, scenes.ts); the worker answers at
    * them exactly.
    */

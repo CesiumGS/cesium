@@ -1,8 +1,8 @@
 // A placed draw's order-0 displacement against the float64 route, at the
-// millimetre (docs/design/geometry-through-placement-review.md, the second review's flaw 3; the Node test is
+// millimeter (docs/design/geometry-through-placement-review.md, the second review's flaw 3; the Node test is
 // test/warpPrecision.test.ts). The fit's constant term used to be added to
 // each vertex in model space, before the camera-relative transform, so two
-// large float32 numbers cancelled: 4 mm at a 36 km displacement, 0.25 to
+// large float32 numbers canceled: 4 mm at a 36 km displacement, 0.25 to
 // 0.5 m for a whole-world map at street level. The cull kernel now adds it
 // to the camera-relative translation, summed exactly (cullTables.slang
 // `drawnTranslation`).
@@ -403,7 +403,7 @@ function coverage(
 
 /**
  * One quad's corners measured from the image: each edge's points from
- * coverage across it, a line fitted through them, and neighbouring lines
+ * coverage across it, a line fitted through them, and neighboring lines
  * intersected. `expected` (the route's corners) says roughly where the
  * edges are and which side is inside.
  */

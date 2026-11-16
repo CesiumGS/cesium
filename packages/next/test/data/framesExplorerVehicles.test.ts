@@ -325,7 +325,7 @@ describe("the drone: what the camera looks at, on the design grid", () => {
         Math.hypot(ours.x - grid[0]!, ours.y - grid[1]!) / FTUS_PER_M,
       ).toBeLessThan(ours.drift + 1e-6);
     }
-    // Its drift a kilometre out is millimetres.
+    // Its drift a kilometer out is millimeters.
     expect(fp.perSquareMeter * 1e6).toBeLessThan(0.01);
     const again = localPlacement(ca, fp.at);
     expect(again.toDesign).toEqual(fp.placement.toDesign);

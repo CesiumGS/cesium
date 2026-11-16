@@ -1,10 +1,10 @@
 // Geographic and geocentric coordinates of an ellipsoid of revolution, the two
 // directions as nodes. `geographicToGeocentric`: (longitude, latitude in
-// degrees, height in metres) to body-fixed (x, y, z) metres, closed form:
+// degrees, height in meters) to body-fixed (x, y, z) meters, closed form:
 //   N = a / √(1 - e² sin² φ),
 //   (x, y, z) = ((N + h) cos φ cos λ, (N + h) cos φ sin λ, (N (1 - e²) + h) sin φ).
 // `geocentricToGeographic`: the other way, by the foot of the point on the
-// ellipsoid (Newton, as in ellipsoid.ts), valid away from the centre. The
+// ellipsoid (Newton, as in ellipsoid.ts), valid away from the center. The
 // Jacobians are closed form (the second is the first's inverse at the
 // result), and each node's inverse is the other's function.
 import type { SmoothEdge } from "../transform/graph.ts";
@@ -89,10 +89,10 @@ export function geographicToGeocentricDescriptor(
     },
     geographic: { in: true },
     bound(region) {
-      // Per east, north and up metre at the centre the columns of J are the
+      // Per east, north and up meter at the center the columns of J are the
       // axes of the frame at the point, scaled by (distance from the axis)
-      // over the centre's, (M + h) over the centre's, and 1: a rotation
-      // from the frame at the centre's image, scaled by column.
+      // over the center's, (M + h) over the center's, and 1: a rotation
+      // from the frame at the center's image, scaled by column.
       const c = region.center;
       const w = halfExtents(IDENTITY, region.axes);
       const { max, min } = curvatureRadii(radii);
@@ -168,10 +168,10 @@ export function geocentricToGeographicDescriptor(
     },
     geographic: { out: true },
     bound(region) {
-      // The rows of J, per east, north and up metre at the output's centre
+      // The rows of J, per east, north and up meter at the output's center
       // (`BoundRegion`), are the axes of the frame at the point scaled by
-      // (distance from the axis at the centre) over (at the point),
-      // (M + h at the centre) over (at the point), and 1.
+      // (distance from the axis at the center) over (at the point),
+      // (M + h at the center) over (at the point), and 1.
       const x = region.center[0]!;
       const y = region.center[1]!;
       try {
@@ -221,14 +221,14 @@ export function geocentricToGeographicDescriptor(
   };
 }
 
-/** Longitude, latitude (degrees) and height to body-fixed metres on the ellipsoid of `radii` (default WGS84). */
+/** Longitude, latitude (degrees) and height to body-fixed meters on the ellipsoid of `radii` (default WGS84). */
 export function geographicToGeocentric(
   options: { radii?: Radii } = {},
 ): SmoothEdge {
   return edgeOf(geographicToGeocentricDescriptor(options.radii));
 }
 
-/** Body-fixed metres to longitude, latitude (degrees) and height on the ellipsoid of `radii` (default WGS84). */
+/** Body-fixed meters to longitude, latitude (degrees) and height on the ellipsoid of `radii` (default WGS84). */
 export function geocentricToGeographic(
   options: { radii?: Radii } = {},
 ): SmoothEdge {

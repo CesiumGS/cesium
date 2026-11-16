@@ -555,13 +555,13 @@ describe("World placements", () => {
     expect(world.drawPlacement(draw)).toBeUndefined();
   });
 
-  it("a placement moves the draw's bounding sphere by its displacement at the centre and grows it by the residual", () => {
+  it("a placement moves the draw's bounding sphere by its displacement at the center and grows it by the residual", () => {
     const draw = addQuad();
     const base = words(draw).radius;
     expect(base).toBeCloseTo(Math.SQRT2, 6);
     const p = t(0.5);
     world.setPlacement(draw, dual(p, 2));
-    // A dual position has no displacement at the centre: it only grows, by
+    // A dual position has no displacement at the center: it only grows, by
     // |t| · maxDistance.
     expect(words(draw).radius).toBeCloseTo(base + 1, 6);
     expect(words(draw).center).toEqual([0, 0, 0]);
@@ -569,7 +569,7 @@ describe("World placements", () => {
     expect(words(draw).radius).toBeCloseTo(base + 6, 6);
     p.value = -0.25;
     expect(words(draw).radius).toBeCloseTo(base + 0.5, 6);
-    // A fitted operation: its constant moves the centre; the radius grows by
+    // A fitted operation: its constant moves the center; the radius grows by
     // what the rest does over the sphere (x² · (0, −2, 0) over |x| ≤ √2/2).
     const f = fitted({ 0: [1, 0, 0], 4: [0, -2, 0] }, { scale: 2 });
     world.setPlacement(draw, f);

@@ -9,7 +9,7 @@
 // engine's exact terrain path both call it. G does not depend on the factor
 // k, so the factor stays the weight a slider moves.
 
-/** G(h) and dG/dh for a profile of `base`, `ceiling` and `band` (all metres, heights above the ellipsoid). */
+/** G(h) and dG/dh for a profile of `base`, `ceiling` and `band` (all meters, heights above the ellipsoid). */
 export function liftedPart(
   h: number,
   base: number,

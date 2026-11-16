@@ -200,7 +200,7 @@ const FRAME: PyramidCamera = {
 interface Rect {
   name: string;
   /** Camera space: x right, y up, z forward. */
-  centre: [number, number, number];
+  center: [number, number, number];
   half: [number, number];
 }
 
@@ -208,7 +208,7 @@ interface Rect {
 function draw(rects: readonly Rect[]): Float32Array {
   const depth = new Float32Array(W * H);
   for (const r of rects) {
-    const [x, y, z] = r.centre;
+    const [x, y, z] = r.center;
     const px = (v: number) => ((v / z / FRAME.tanX) * 0.5 + 0.5) * W;
     const py = (v: number) => (0.5 - (v / z / FRAME.tanY) * 0.5) * H;
     const x0 = px(x - r.half[0]);
@@ -230,7 +230,7 @@ const pyramidOf = (depth: Float32Array) =>
   buildPyramid(W, H, (x, y) => depth[y * W + x]!);
 
 const hidden = (levels: PyramidLevel[], r: Rect) =>
-  sphereHidden(levels, FRAME, r.centre, Math.hypot(...r.half));
+  sphereHidden(levels, FRAME, r.center, Math.hypot(...r.half));
 
 /** One tick: what each phase drew, the image, and the pyramid it leaves. */
 function tick(rects: readonly Rect[], last: PyramidLevel[] | undefined) {
@@ -248,9 +248,9 @@ function tick(rects: readonly Rect[], last: PyramidLevel[] | undefined) {
 }
 
 describe("the two phases", () => {
-  const wall: Rect = { name: "wall", centre: [0, 0, 5], half: [2, 2] };
-  const behind: Rect = { name: "behind", centre: [0.5, 0, 40], half: [2, 2] };
-  const beside: Rect = { name: "beside", centre: [14, 0, 40], half: [2, 2] };
+  const wall: Rect = { name: "wall", center: [0, 0, 5], half: [2, 2] };
+  const behind: Rect = { name: "behind", center: [0.5, 0, 40], half: [2, 2] };
+  const beside: Rect = { name: "beside", center: [14, 0, 40], half: [2, 2] };
 
   it("culls what the last depth hid while it stays hidden", () => {
     const one = tick([wall, behind, beside], undefined);
@@ -266,7 +266,7 @@ describe("the two phases", () => {
     const one = tick([wall, behind, beside], undefined);
     const two = tick([wall, behind, beside], one.pyramid);
     // The wall moves aside: the last pyramid still hides `behind`.
-    const moved: Rect = { ...wall, centre: [-20, 0, 5] };
+    const moved: Rect = { ...wall, center: [-20, 0, 5] };
     const three = tick([moved, behind, beside], two.pyramid);
     expect(three.first).toEqual(["wall", "beside"]);
     // The second phase tests it against this tick's first depth: drawn.
@@ -298,18 +298,18 @@ describe("the two phases", () => {
 describe("the draws' test", () => {
   // A wall over the frame below row 14, 5 m away; sky above it.
   const levels = buildPyramid(W, H, (_x, y) => (y >= 14 ? 0.1 : 0));
-  const sphere = { centre: [0.3, -1, 20], radius: 2 };
+  const sphere = { center: [0.3, -1, 20], radius: 2 };
 
   it("reads a finer level than the tile queries: their 2 × 2 texels reach the sky", () => {
-    const { centre, radius } = sphere;
-    const box = { centre, axes: [radius, 0, 0, 0, radius, 0, 0, 0, radius] };
+    const { center, radius } = sphere;
+    const box = { center, axes: [radius, 0, 0, 0, radius, 0, 0, 0, radius] };
     expect(boxHidden(levels, FRAME, box)).toBe(false);
-    expect(sphereHidden(levels, FRAME, centre, radius)).toBe(true);
+    expect(sphereHidden(levels, FRAME, center, radius)).toBe(true);
   });
 
   it("is the same box test: a window of 2 is the tile queries'", () => {
-    const { centre, radius } = sphere;
-    const box = { centre, axes: [radius, 0, 0, 0, radius, 0, 0, 0, radius] };
+    const { center, radius } = sphere;
+    const box = { center, axes: [radius, 0, 0, 0, radius, 0, 0, 0, radius] };
     expect(boxHidden(levels, FRAME, box, undefined, 2)).toBe(false);
     expect(boxHidden(levels, FRAME, box, undefined, 8)).toBe(true);
     // In front of the wall, never.
@@ -318,10 +318,10 @@ describe("the draws' test", () => {
 });
 
 describe("the pyramid of a single-sampled depth", () => {
-  it("folds the ring round each block, so a sample past an edge isn't hidden by its centre", () => {
+  it("folds the ring round each block, so a sample past an edge isn't hidden by its center", () => {
     // A near wall over the pixels x < 8, sky beyond. Level-0 texel 3 covers
-    // pixels 6 and 7, all wall at their centres; but pixel 7's samples near
-    // its right edge may see past the wall's edge, as pixel 8's centre does.
+    // pixels 6 and 7, all wall at their centers; but pixel 7's samples near
+    // its right edge may see past the wall's edge, as pixel 8's center does.
     const edge = (x: number) => (x < 8 ? 0.5 : 0);
     expect(buildPyramid(W, H, edge)[0]!.texels[3]).toBe(0.5);
     // With the ring it takes pixel 8 too: it doesn't claim the wall.

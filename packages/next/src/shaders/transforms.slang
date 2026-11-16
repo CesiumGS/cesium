@@ -11,7 +11,7 @@
 // its order (the exaggeration struct adds the ellipsoid's radii, which the TS
 // descriptor bakes into its source instead).
 //
-// The centre constants (df64, for a draw's origin) come with the compiler in
+// The center constants (df64, for a draw's origin) come with the compiler in
 // task 4; here the arithmetic is plain float32, so a point's units should
 // keep the ellipsoid's radii small enough for it (the parity harness uses a
 // body of radius 1e3).
@@ -73,7 +73,7 @@ float3 bumpF(float3 p, BumpParams q)
 }
 PARITY_ENTRY(bumpParity, bumpF, bumpP)
 
-// Bend about the line through o along +x, towards +z, by the curvature.
+// Bend about the line through o along +x, toward +z, by the curvature.
 struct BendParams { float ox; float oz; float curvature; };
 [[vk::binding(4, 0)]] ConstantBuffer<BendParams> bendP;
 
@@ -93,7 +93,7 @@ float3 bendF(float3 p, BendParams q)
 }
 PARITY_ENTRY(bendParity, bendF, bendP)
 
-// Twist about the axis through o along a, by rate radians per metre along it.
+// Twist about the axis through o along a, by rate radians per meter along it.
 struct TwistParams
 {
     float ox; float oy; float oz;

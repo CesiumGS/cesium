@@ -376,7 +376,7 @@ export class SmlibKernel {
     );
   }
 
-  /** A cylinder up z from the centre of its base, m. */
+  /** A cylinder up z from the center of its base, m. */
   cylinder(
     base: ArrayLike<number>,
     radius: number,
@@ -388,7 +388,7 @@ export class SmlibKernel {
     );
   }
 
-  /** A cone or frustum up z from the centre of its base, m. */
+  /** A cone or frustum up z from the center of its base, m. */
   cone(
     base: ArrayLike<number>,
     radiusBase: number,
@@ -408,20 +408,20 @@ export class SmlibKernel {
     );
   }
 
-  sphere(centre: ArrayLike<number>, radius: number): SmlibSolid {
+  sphere(center: ArrayLike<number>, radius: number): SmlibSolid {
     return this.made(
-      this.module._smlib_sphere(centre[0]!, centre[1]!, centre[2]!, radius),
+      this.module._smlib_sphere(center[0]!, center[1]!, center[2]!, radius),
       "sphere",
     );
   }
 
   /** A torus about z, m. */
-  torus(centre: ArrayLike<number>, major: number, minor: number): SmlibSolid {
+  torus(center: ArrayLike<number>, major: number, minor: number): SmlibSolid {
     return this.made(
       this.module._smlib_torus(
-        centre[0]!,
-        centre[1]!,
-        centre[2]!,
+        center[0]!,
+        center[1]!,
+        center[2]!,
         major,
         minor,
       ),

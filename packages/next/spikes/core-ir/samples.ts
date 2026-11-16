@@ -15,7 +15,7 @@ export const STYLE_EDITED = {
   color: STYLE.color.replace("120", "150"),
 };
 
-/** Features to evaluate it on (Height in metres). */
+/** Features to evaluate it on (Height in meters). */
 export const FEATURES = [
   { Height: 0, Floors: 0 },
   { Height: 6, Floors: 1 },

@@ -4,7 +4,7 @@
 // question is how far the arm's tool is from a survey station, and how sure
 // that is. The answer is the straight-line distance from the tool to CCV6,
 // the nearest NOAA CORS station NGS publishes in both NAD83(2011) and ITRF
-// (17 km away: none is within a few kilometres), with the accuracy the
+// (17 km away: none is within a few kilometers), with the accuracy the
 // library composes along the chain (`pointAccuracy`) and the station's own.
 //
 // The tree adds the arm under ITRF (pad ENU, base, yaw, shoulder, elbow,
@@ -73,7 +73,7 @@ export function stationSigma(years: number): {
   return { meters: Math.hypot(datasheet, velocity), datasheet, velocity };
 }
 
-/** Millimetres, to a tenth. */
+/** Millimeters, to a tenth. */
 const mm = (m: number) => `${(m * 1000).toFixed(1)} mm`;
 
 /** An angle in degrees, with a true minus. */
@@ -141,7 +141,7 @@ export function armAdded(
       edge: appEdge(
         ARM.base,
         "constant",
-        `a fixed placement ${GEOMETRY.base[0]} m east of the pad's centre (synthetic)`,
+        `a fixed placement ${GEOMETRY.base[0]} m east of the pad's center (synthetic)`,
       ),
     },
     {
@@ -267,7 +267,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
       label: "PROJ NAD83(2011) → ITRF2020",
       ...(projMeters !== undefined && { meters: projMeters }),
       note: projExact
-        ? "exact by definition: PROJ states 0 m for EPSG's ITRF2020 to NAD83(2011) (1), the 14-parameter transformation that realises NAD83(2011) from ITRF2020"
+        ? "exact by definition: PROJ states 0 m for EPSG's ITRF2020 to NAD83(2011) (1), the 14-parameter transformation that realizes NAD83(2011) from ITRF2020"
         : projKnown
           ? "PROJ's stated accuracy for the operation"
           : "not stated: PROJ gives no accuracy for the operation",
@@ -311,9 +311,9 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
         accuracy: projExact
           ? {
               byDefinition: true,
-              note: "exact by definition: PROJ states 0 m for EPSG's ITRF2020 to NAD83(2011) (1), the 14-parameter transformation that realises NAD83(2011) from ITRF2020",
+              note: "exact by definition: PROJ states 0 m for EPSG's ITRF2020 to NAD83(2011) (1), the 14-parameter transformation that realizes NAD83(2011) from ITRF2020",
               short:
-                "exact by definition (the transformation realises NAD83(2011))",
+                "exact by definition (the transformation realizes NAD83(2011))",
             }
           : projMeters !== undefined
             ? {
@@ -388,7 +388,7 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
     answer: {
       label: `from the tool to ${MARK.name}`,
       aside: `The tool ${out.toFixed(1)} m out from the column and ${toolInBase[14]!.toFixed(1)} m up · ${MARK.name} ${fmt(distance / 1000, 3)} km away, at Cape Canaveral`,
-      headline: `A straight line from the arm's tool to ${MARK.long} (PID ${MARK.pid}), the NOAA CORS station nearest the pad that NGS publishes in both NAD83(2011) and ITRF: none is within a few kilometres, so it is ${fmt(distance / 1000, 3)} km away, at Cape Canaveral. The tool's place comes down the arm's frames, which the app defines; the station's comes from its datasheet, in NAD83(2011), through PROJ to ITRF2020 at ${year.toFixed(2)}. Each joint states its encoder and each link its length (a synthetic spec sheet), and the library composes them to the tool: the encoders' errors grow with the arm's reach.`,
+      headline: `A straight line from the arm's tool to ${MARK.long} (PID ${MARK.pid}), the NOAA CORS station nearest the pad that NGS publishes in both NAD83(2011) and ITRF: none is within a few kilometers, so it is ${fmt(distance / 1000, 3)} km away, at Cape Canaveral. The tool's place comes down the arm's frames, which the app defines; the station's comes from its datasheet, in NAD83(2011), through PROJ to ITRF2020 at ${year.toFixed(2)}. Each joint states its encoder and each link its length (a synthetic spec sheet), and the library composes them to the tool: the encoders' errors grow with the arm's reach.`,
       value: distance,
       unit: "m",
       digits: 3,
@@ -405,11 +405,11 @@ export const evaluateRobotArm: ScenarioEvaluator = async (
       method: [
         {
           title: "The arm",
-          text: `Synthetic, sized like a launch pad's service arm: its base ${GEOMETRY.base[0]} m east of LC-39A's centre, a ${GEOMETRY.column} m column to the slewing ring, an ${GEOMETRY.boom} m boom, a ${GEOMETRY.forearm} m forearm and a ${GEOMETRY.tool} m tool. Each joint is a frame the app builds with the public Frame API: a link offset in its parent, then a turn about its own axis by the knob.`,
+          text: `Synthetic, sized like a launch pad's service arm: its base ${GEOMETRY.base[0]} m east of LC-39A's center, a ${GEOMETRY.column} m column to the slewing ring, an ${GEOMETRY.boom} m boom, a ${GEOMETRY.forearm} m forearm and a ${GEOMETRY.tool} m tool. Each joint is a frame the app builds with the public Frame API: a link offset in its parent, then a turn about its own axis by the knob.`,
         },
         {
           title: "What each frame states",
-          text: `The spec sheet (synthetic, 1σ): each encoder ±${SPEC_SHEET.encoderDegrees}°, each link's length ±${SPEC_SHEET.linkMeters * 1000} mm, the base's survey in the pad frame ±${SPEC_SHEET.surveyMeters * 1000} mm. The pad's frame is exact by definition: it is defined at NGS mark ${PAD.mark}, a disk in LC-39A's pad, at its datasheet's position and height. So the ± covers the arm and the station from that point; it is not a survey of LC-39A or of where a real arm would stand. Moving the point moves the answer about 1 m per metre along the line to the station, 0.33 m per metre east and 3.4 mm per metre of height; ${PAD.mark}'s position is from a 1991 adjustment and the mark's stability is rated questionable.`,
+          text: `The spec sheet (synthetic, 1σ): each encoder ±${SPEC_SHEET.encoderDegrees}°, each link's length ±${SPEC_SHEET.linkMeters * 1000} mm, the base's survey in the pad frame ±${SPEC_SHEET.surveyMeters * 1000} mm. The pad's frame is exact by definition: it is defined at NGS mark ${PAD.mark}, a disk in LC-39A's pad, at its datasheet's position and height. So the ± covers the arm and the station from that point; it is not a survey of LC-39A or of where a real arm would stand. Moving the point moves the answer about 1 m per meter along the line to the station, 0.33 m per meter east and 3.4 mm per meter of height; ${PAD.mark}'s position is from a 1991 adjustment and the mark's stability is rated questionable.`,
         },
         {
           title: "How the library composes it",

@@ -6,9 +6,9 @@
 // a car park; the middle one is the core: a tower, a round library and a
 // plaza. Seeded, so the campus is the same every run.
 //
-// Design units are the CRS's (metres, WGS 84 / UTM zone 37S); the grid runs
+// Design units are the CRS's (meters, WGS 84 / UTM zone 37S); the grid runs
 // along design east and north.
-import { LAYER_METRES, between, pick, random, srgb } from "./meshBuilder.mjs";
+import { LAYER_METERS, between, pick, random, srgb } from "./meshBuilder.mjs";
 
 const LAND = srgb("#8e8a55");
 const ROAD = srgb("#3c3e40");
@@ -34,12 +34,12 @@ const FACADES = [
 const ROOFS = ["#7a6a5c", "#5d6062", "#9c4a36", "#6e7377"].map((c) => srgb(c));
 const GLASS = srgb("#58707f");
 
-/** Storey heights, metres: a hall's, a laboratory's (tall, for services), a residence's. */
-const STOREY = 4;
-const LAB_STOREY = 5.2;
-const HOME_STOREY = 3.1;
+/** Story heights, meters: a hall's, a laboratory's (tall, for services), a residence's. */
+const STORY = 4;
+const LAB_STORY = 5.2;
+const HOME_STORY = 3.1;
 /**
- * The layer stack (meshBuilder's LAYER_METRES steps): the site plan at 0;
+ * The layer stack (meshBuilder's LAYER_METERS steps): the site plan at 0;
  * roads, lawns and the plaza at 1; paths, ponds, the track, courts, car
  * parks and road paint at 2; the pitch and car-park bays at 3.
  */
@@ -52,7 +52,7 @@ export function campusPlan(site, { metersPerUnit }) {
   const m = site.model;
   const rand = random(m.seed);
   const [e0, n0, z0] = site.origin;
-  const layer = (k) => z0 + (k * LAYER_METRES) / metersPerUnit;
+  const layer = (k) => z0 + (k * LAYER_METERS) / metersPerUnit;
   const nE = Math.round(m.width / m.superBlock);
   const nN = Math.round(m.depth / m.superBlock);
   const W = nE * m.superBlock;
@@ -100,17 +100,17 @@ export function campusPlan(site, { metersPerUnit }) {
     });
   };
   /**
-   * A building of boxes [de, dn, length (east), width (north), storeys]
+   * A building of boxes [de, dn, length (east), width (north), stories]
    * about `at`, its roof plant on the first, dropped at coarse levels when
-   * low: below 3 storeys above level 2, below 5 above level 3.
+   * low: below 3 stories above level 2, below 5 above level 3.
    */
   let landmark;
-  const building = (at, masses, name, kind, storey = STOREY) => {
+  const building = (at, masses, name, kind, story = STORY) => {
     const feature = { name, kind };
     const facade = pick(rand, FACADES);
     const roof = pick(rand, ROOFS);
-    const storeys = Math.max(...masses.map((x) => x[4]));
-    const height = storeys * storey;
+    const stories = Math.max(...masses.map((x) => x[4]));
+    const height = stories * story;
     const draw = (plant) => (b) => {
       for (const [de, dn, len, wid, s] of masses) {
         b.box(
@@ -118,7 +118,7 @@ export function campusPlan(site, { metersPerUnit }) {
           z0,
           len,
           wid,
-          s * storey,
+          s * story,
           0,
           facade,
           feature,
@@ -131,7 +131,7 @@ export function campusPlan(site, { metersPerUnit }) {
         const [de, dn, len, wid, s] = masses[0];
         b.box(
           [at[0] + de, at[1] + dn],
-          z0 + s * storey,
+          z0 + s * story,
           len * 0.25,
           wid * 0.3,
           3,
@@ -146,10 +146,10 @@ export function campusPlan(site, { metersPerUnit }) {
       // The 3 m roof plant dropped.
       { error: 3, draw: draw(false) },
       { error: 3, draw: draw(false) },
-      storeys < 3
+      stories < 3
         ? { error: height, draw: null }
         : { error: 3, draw: draw(false) },
-      storeys < 5
+      stories < 5
         ? { error: height, draw: null }
         : { error: 3, draw: draw(false) },
     ];
@@ -158,7 +158,7 @@ export function campusPlan(site, { metersPerUnit }) {
       landmark = { at, height };
     }
   };
-  /** A footprint of the given shape, centred on `at`, `l` by `w`, `s` storeys. */
+  /** A footprint of the given shape, centered on `at`, `l` by `w`, `s` stories. */
   const shaped = (at, shape, l, w, s, name) => {
     const wing = Math.min(l, w) * 0.32;
     const masses =
@@ -185,8 +185,8 @@ export function campusPlan(site, { metersPerUnit }) {
   };
 
   ground([e0, n0], W, D, z0, LAND, "Site plan", "landscape");
-  // The road grid, and a dashed centreline along each road.
-  const roadLine = { name: "Road centrelines", kind: "road marking" };
+  // The road grid, and a dashed centerline along each road.
+  const roadLine = { name: "Road centerlines", kind: "road marking" };
   for (let i = 0; i <= nE; i++) {
     const e = west + i * m.superBlock;
     ground(
@@ -236,21 +236,21 @@ export function campusPlan(site, { metersPerUnit }) {
           "Administration tower",
           "tower",
         );
-        // The great hall, two faculty buildings and the student centre.
+        // The great hall, two faculty buildings and the student center.
         shaped(off(-150, -170), "U", 150, 90, 4, "Great Hall");
         shaped(off(170, 210), "court", 140, 110, 6, "Faculty of Engineering");
         shaped(off(-230, 10), "L", 90, 120, 5, "Faculty of Science");
         building(
           off(40, 250),
           [[0, 0, 110, 45, 3]],
-          "Student centre",
+          "Student center",
           "building",
         );
         const library = { name: "Library", kind: "library" };
         const libraryAt = off(120, -60);
         parts.push({
           at: libraryAt,
-          height: 6 * STOREY,
+          height: 6 * STORY,
           lods: [
             {
               error: 0,
@@ -258,7 +258,7 @@ export function campusPlan(site, { metersPerUnit }) {
                 b.cylinder(
                   libraryAt,
                   z0,
-                  6 * STOREY,
+                  6 * STORY,
                   60,
                   32,
                   FACADES[2],
@@ -267,8 +267,8 @@ export function campusPlan(site, { metersPerUnit }) {
                 );
                 b.cylinder(
                   libraryAt,
-                  z0 + 2 * STOREY,
-                  2 * STOREY,
+                  z0 + 2 * STORY,
+                  2 * STORY,
                   60.3,
                   32,
                   GLASS,
@@ -283,7 +283,7 @@ export function campusPlan(site, { metersPerUnit }) {
                 b.cylinder(
                   libraryAt,
                   z0,
-                  6 * STOREY,
+                  6 * STORY,
                   60,
                   32,
                   FACADES[2],
@@ -397,7 +397,7 @@ export function campusPlan(site, { metersPerUnit }) {
             ],
             `Laboratory ${label}-${k + 1}`,
             "laboratory",
-            LAB_STOREY,
+            LAB_STORY,
           );
         }
       } else if (kind === "housing") {
@@ -422,7 +422,7 @@ export function campusPlan(site, { metersPerUnit }) {
               ],
               `Residence ${label}-${6 * a + b + 1}`,
               "residence",
-              HOME_STOREY,
+              HOME_STORY,
             );
           }
         }

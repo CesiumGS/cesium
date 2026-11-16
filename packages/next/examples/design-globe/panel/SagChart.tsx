@@ -1,7 +1,7 @@
 // The rigid placement's error along the corridor (DESIGN.md principle 4,
 // "the sag is the story"): zero at the anchor, growing away from it; the
 // camera's station as it flies along. Drawn in the panel's own tokens; the
-// curve in the rigid colour.
+// curve in the rigid color.
 import { useSyncExternalStore } from "react";
 import { errorText } from "../page.ts";
 import type { LiveSource, SagView } from "./model.ts";

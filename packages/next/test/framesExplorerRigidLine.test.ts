@@ -40,7 +40,7 @@ describe("the long line", () => {
     expect(RIGID_LINE.markDesign).toBeCloseTo(20_000 * ft, 6);
   });
 
-  it("samples the exact line every kilometre and ticks the gap every 50 km", () => {
+  it("samples the exact line every kilometer and ticks the gap every 50 km", () => {
     expect(RIGID_LINE.lengthM / RIGID_LINE.samples).toBe(1000);
     expect(RIGID_LINE.lengthM / RIGID_LINE.ticks).toBe(50_000);
   });
@@ -309,7 +309,7 @@ describe("the inset's camera", () => {
       expect(p.y).toBeLessThan(1);
     }
     expect(a.y - b.y).toBeCloseTo(INSET.fill, 3);
-    // Close: a gap that fills the picture from about a hundred metres.
+    // Close: a gap that fills the picture from about a hundred meters.
     const range = Math.hypot(
       ...[0, 1, 2].map((i) => cam.position[i]! - (exact[i]! + rigid[i]!) / 2),
     );

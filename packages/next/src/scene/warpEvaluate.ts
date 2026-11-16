@@ -224,7 +224,7 @@ export function placeWithTerms(
   return out;
 }
 
-/** The exponent of `reach` for a lattice's local coordinate: `v` reaches this far from the cell's centre. */
+/** The exponent of `reach` for a lattice's local coordinate: `v` reaches this far from the cell's center. */
 function localReach(lattice: CubicLattice, reach: number): number {
   const r = Math.max(1, reach);
   // Past the cube the edge cells extrapolate, `cells` times as fast in `v`.

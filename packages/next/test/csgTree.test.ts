@@ -51,7 +51,7 @@ const ids = (tree: CsgTree) => {
 };
 
 describe("the tree and its recipe", () => {
-  it("makes the bracket's recipe: leaves tagged by id, centred, placed", () => {
+  it("makes the bracket's recipe: leaves tagged by id, centered, placed", () => {
     const tree = defaultBracket();
     const recipe = recipeOf(tree.root)!;
     expect(() => checkRecipe(recipe)).not.toThrow();
@@ -59,7 +59,7 @@ describe("the tree and its recipe", () => {
     expect(recipeLeaves(recipe).map((l) => l.tag)).toEqual(
       leavesOf(tree.root).map((l) => l.id),
     );
-    // A box is centred on the origin, then placed.
+    // A box is centered on the origin, then placed.
     const leaves = recipeLeaves(recipe).flatMap((l) =>
       l.type === "primitive" ? [l] : [],
     );
@@ -82,7 +82,7 @@ describe("the tree and its recipe", () => {
     expect(lone).toEqual({
       type: "primitive",
       tag: 2,
-      primitive: { kind: "sphere", centre: [0, 0, 0], radius: 0.5 },
+      primitive: { kind: "sphere", center: [0, 0, 0], radius: 0.5 },
     });
   });
 

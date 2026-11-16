@@ -1,6 +1,6 @@
 /* The knobs, the checked-setup chip and the moments (Knobs.tsx). Imported in order by panel.css. */
 /*
- * Under the question (Task 6c): a head with the chip, a labelled row per
+ * Under the question (Task 6c): a head with the chip, a labeled row per
  * knob, then "Jump to". Each row's label sits in a column of one width, so
  * the controls line up; at narrow widths a control wraps under its label.
  */
@@ -127,7 +127,7 @@
 .fx-pair-swap .MuiButton-root {
   color: var(--stratakit-color-text-neutral-secondary);
 }
-/* A greyed-out option still shows its tip (why it can't be chosen). */
+/* A grayed-out option still shows its tip (why it can't be chosen). */
 .fx-pair-choice .Mui-disabled {
   pointer-events: auto;
   cursor: not-allowed;

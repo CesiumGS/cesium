@@ -1,6 +1,6 @@
 // Shared geometry for the scale ladder's models (plan 4b Task 17b): a mesh
 // builder in design coordinates (E, N, U, float64) with flat-shaded faces,
-// per-vertex colours and feature ids, and the sag rule that keeps every
+// per-vertex colors and feature ids, and the sag rule that keeps every
 // reprojected face on the curved Earth.
 //
 // The sag rule (owner, 2026-11-07: "no polygon cuts through the ground"): a
@@ -14,29 +14,29 @@
 
 /**
  * The smallest radius of curvature on the WGS 84 ellipsoid, a(1 − e²), the
- * meridian's at the equator (metres): the sag rule's R, so the rule holds at
+ * meridian's at the equator (meters): the sag rule's R, so the rule holds at
  * every latitude and in every direction.
  */
 export const MIN_RADIUS = 6_378_137 * (1 - 1 / 298.257223563) ** 2;
 
 /**
- * The ground layer stack, metres: every flat surface that lies on another
+ * The ground layer stack, meters: every flat surface that lies on another
  * (a road on a site plan, paint on a road) is a whole number of layers
- * above it, never level with a surface of another colour. Each model
+ * above it, never level with a surface of another color. Each model
  * stacks its own grounds: layer 0 the base (grass, site plan, gravel),
  * then the surfaces on it, then the paint. 5 cm is far above the worst
  * sag (1 mm at the leaves, 2^l mm at level l) and invisible at any scale.
  */
-export const LAYER_METRES = 0.05;
+export const LAYER_METERS = 0.05;
 
-/** The sag at the middle of a chord this many metres long (d²/8R), metres. */
-export const edgeSag = (metres) => (metres * metres) / (8 * MIN_RADIUS);
+/** The sag at the middle of a chord this many meters long (d²/8R), meters. */
+export const edgeSag = (meters) => (meters * meters) / (8 * MIN_RADIUS);
 
-/** The longest chord whose sag is at most `errorMetres` (√(8R·e)), metres. */
-export const longestEdgeFor = (errorMetres) =>
-  Math.sqrt(8 * MIN_RADIUS * errorMetres);
+/** The longest chord whose sag is at most `errorMeters` (√(8R·e)), meters. */
+export const longestEdgeFor = (errorMeters) =>
+  Math.sqrt(8 * MIN_RADIUS * errorMeters);
 
-/** An sRGB colour ("#rrggbb") as linear RGBA, as glTF's COLOR_0 wants. */
+/** An sRGB color ("#rrggbb") as linear RGBA, as glTF's COLOR_0 wants. */
 export function srgb(hex, alpha = 1) {
   const value = Number.parseInt(hex.slice(1), 16);
   const channel = (shift) => {
@@ -99,7 +99,7 @@ export const placeIn = (frame, at, along, across, z) => [
 
 /**
  * Builds one tile's mesh. Every face is flat-shaded (its own vertices and
- * normal), coloured per vertex, and split until no edge is longer than
+ * normal), colored per vertex, and split until no edge is longer than
  * `maxEdge` design units. `feature` registers a feature once per tile.
  */
 export class MeshBuilder {
@@ -218,10 +218,10 @@ export class MeshBuilder {
   }
 
   /**
-   * A cuboid on axes u, v, w (orthonormal, u × v = w): `base` is the centre
+   * A cuboid on axes u, v, w (orthonormal, u × v = w): `base` is the center
    * of its bottom face, `size` its extent along each. `top` and `bottom`
    * choose the caps (a box standing on the ground needs no bottom), and
-   * `topColor` the top's colour (a roof). `topScale` shrinks the top face
+   * `topColor` the top's color (a roof). `topScale` shrinks the top face
    * about the axis (a tapered pole).
    */
   cuboid(
@@ -264,7 +264,7 @@ export class MeshBuilder {
   }
 
   /**
-   * A box standing on the ground: centre `at` ([e, n]) at height `z`,
+   * A box standing on the ground: center `at` ([e, n]) at height `z`,
    * `length` along `angle` (radians from design east), `width` across.
    */
   box(at, z, lengthAlong, width, height, angle, color, feature, options) {
@@ -315,7 +315,7 @@ export class MeshBuilder {
     this.quad(sub(p, h), sub(q, h), add(q, h), add(p, h), color, feature);
   }
 
-  /** A vertical prism of a regular `sides`-gon: centre `at`, from z0 up `height`. */
+  /** A vertical prism of a regular `sides`-gon: center `at`, from z0 up `height`. */
   cylinder(
     at,
     z0,
@@ -349,7 +349,7 @@ export class MeshBuilder {
     }
   }
 
-  /** A four-sided pyramid: base centre `at` at z0, `half` its base's half-width. */
+  /** A four-sided pyramid: base center `at` at z0, `half` its base's half-width. */
   pyramid(at, z0, height, half, color, feature) {
     const apex = [at[0], at[1], z0 + height];
     const c = [
@@ -363,7 +363,7 @@ export class MeshBuilder {
     }
   }
 
-  /** A flat rectangle facing up: centre `at` at z, `lengthAlong` along `angle`. */
+  /** A flat rectangle facing up: center `at` at z, `lengthAlong` along `angle`. */
   flat(at, z, lengthAlong, width, angle, color, feature) {
     const f = frameAt(angle);
     const p = (a, b) =>

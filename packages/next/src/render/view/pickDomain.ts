@@ -177,7 +177,7 @@ export function encodeDomainPick(
   const { device, pipelines } = engine.ctx;
   const resources = pickDomainResources(engine);
   const { width, height } = frame;
-  // The window, in NDC: its centre the pixel's, half a window's pixels each way.
+  // The window, in NDC: its center the pixel's, half a window's pixels each way.
   const cx = ((x + 0.5) / width) * 2 - 1;
   const cy = 1 - ((y + 0.5) / height) * 2;
   const hx = PICK_SIZE / width;

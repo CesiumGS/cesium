@@ -34,7 +34,7 @@ const distance = (a: Float64Array, b: Float64Array): number =>
 /**
  * GCRF to ICRF, IERS Conventions 2010 (TN36) eq. 11.19:
  * `p_icrf = earth + k·r - ½ (V · r) V / c²`, with `k = 1 - U/c² - L_C`, U
- * the Sun's and the Moon's potential at the geocentre and V the Earth's
+ * the Sun's and the Moon's potential at the geocenter and V the Earth's
  * barycentric velocity. The one affine, non-rigid edge, so its Mat4 is
  * written directly rather than through `toParentMatrix`.
  */
@@ -67,9 +67,9 @@ export function gcrfEdge(data: Pick<FrameData, "ephemeris">): FrameEdge {
 }
 
 /**
- * A body's centre in ICRF axes, from the ephemeris: the Sun (HCRS), the
+ * A body's center in ICRF axes, from the ephemeris: the Sun (HCRS), the
  * Earth (EARTH_ICRF, TDB-compatible) or the Moon (MOON_ICRF). A plain
- * translation from the barycentre.
+ * translation from the barycenter.
  */
 export function bodyEdge(
   name: "HCRS" | "EARTH_ICRF" | "MOON_ICRF",

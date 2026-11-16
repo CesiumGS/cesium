@@ -29,7 +29,7 @@ export interface SiteFactsInput {
   readonly along?: {
     readonly alignment: Alignment;
     readonly errors: readonly number[];
-    /** The error's parts at the far end, metres (`rigidErrorTerms`). */
+    /** The error's parts at the far end, meters (`rigidErrorTerms`). */
     readonly terms?: ErrorTerms;
   };
   /**
@@ -44,7 +44,7 @@ export interface SiteFactsInput {
   readonly answer?: {
     readonly extent: number;
     readonly displayError: number;
-    /** The error's parts there, metres (answers.ts `AnswerSite.terms`). */
+    /** The error's parts there, meters (answers.ts `AnswerSite.terms`). */
     readonly terms?: {
       readonly curvature: number;
       readonly scale: number;
@@ -53,7 +53,7 @@ export interface SiteFactsInput {
   };
 }
 
-/** A rigid error's three parts, metres (answers.ts `AnswerSite.terms`). */
+/** A rigid error's three parts, meters (answers.ts `AnswerSite.terms`). */
 export interface ErrorTerms {
   readonly curvature: number;
   readonly scale: number;
@@ -67,7 +67,7 @@ export function partsText(t: ErrorTerms): string {
 }
 
 /**
- * The parts of a rigid placement's error at a design point, metres, as the
+ * The parts of a rigid placement's error at a design point, meters, as the
  * generator finds them (scripts/designTiles.mjs `rigidErrorTerms`): the
  * curvature d²/2R (R the Gaussian radius √(MN) at the anchor), the scale
  * d·|1 − 1/k| (`k` the combined factor at the anchor) and the geoid's rise

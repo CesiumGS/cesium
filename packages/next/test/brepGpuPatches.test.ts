@@ -203,11 +203,11 @@ describe("prepareGpuPatches: records", () => {
     expect(spans.every((s) => s.kind === SurfaceKind.Cylinder)).toBe(true);
     expect(spans[0]!.rect[0]).toBe(0);
     expect(spans[3]!.rect[1]).toBeCloseTo(2 * Math.PI, 12);
-    // Neighbouring pieces share their edge exactly.
+    // Neighboring pieces share their edge exactly.
     for (let i = 1; i < 4; i++) {
       expect(spans[i]!.rect[0]).toBe(spans[i - 1]!.rect[1]);
     }
-    // The caps are discs: planar faces with a circular trim.
+    // The caps are disks: planar faces with a circular trim.
     for (const cap of [bottom!, top!]) {
       expect(cap.needsTrim).toBe(true);
       expect(cap.rect).toEqual([-1, 1, -1, 1]);

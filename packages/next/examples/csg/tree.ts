@@ -14,7 +14,7 @@ import {
  * faces keep through every boolean. Nothing here touches a kernel or the
  * engine.
  *
- * Primitives are centred on the origin before their placement turns them
+ * Primitives are centered on the origin before their placement turns them
  * about the world's x, then y, then z axes and moves them: a box by its
  * middle, a cylinder or cone by the middle of its axis, up z.
  */
@@ -116,7 +116,7 @@ export interface PrimitiveLeaf extends LeafBase {
   kind: PrimitiveKind;
 }
 
-/** An imported solid (Open CASCADE only), centred on its bounds like a primitive. */
+/** An imported solid (Open CASCADE only), centered on its bounds like a primitive. */
 export interface StepLeaf extends LeafBase {
   kind: "step";
   step: StepRef;
@@ -242,7 +242,7 @@ export function createOp(
   };
 }
 
-/** The primitive a leaf makes, centred on the origin, m. */
+/** The primitive a leaf makes, centered on the origin, m. */
 export function primitiveOf(leaf: PrimitiveLeaf): Primitive {
   const p = leaf.params;
   switch (leaf.kind) {
@@ -260,7 +260,7 @@ export function primitiveOf(leaf: PrimitiveLeaf): Primitive {
         height: p.height!,
       };
     case "sphere":
-      return { kind: "sphere", centre: [0, 0, 0], radius: p.radius! };
+      return { kind: "sphere", center: [0, 0, 0], radius: p.radius! };
     case "cone":
       return {
         kind: "cone",
@@ -272,7 +272,7 @@ export function primitiveOf(leaf: PrimitiveLeaf): Primitive {
     case "torus":
       return {
         kind: "torus",
-        centre: [0, 0, 0],
+        center: [0, 0, 0],
         major: p.major!,
         minor: p.minor!,
       };
@@ -325,7 +325,7 @@ export function recipeOf(node: TreeNode): SolidRecipe | undefined {
     : { type: "boolean", operation: node.operation, operands };
 }
 
-/** A leaf from a primitive in the convention `primitiveOf` makes (centred on the origin). */
+/** A leaf from a primitive in the convention `primitiveOf` makes (centered on the origin). */
 function leafOfPrimitive(
   recipe: Extract<SolidRecipe, { type: "primitive" }>,
 ): PrimitiveLeaf {
@@ -950,7 +950,7 @@ export function parseTree(data: unknown): CsgTree {
 // ---------------------------------------------------------- the default
 
 /**
- * A bracket, in metres, standing on the ground: a base plate and an upright
+ * A bracket, in meters, standing on the ground: a base plate and an upright
  * joined by a concave fillet (a block with a cylinder cut from its outside
  * corner), with two countersunk holes in the base and one through the
  * upright. It has every way a boolean goes: unions, nested differences, a

@@ -151,7 +151,7 @@
 /*
  * A frame the app defines itself through the public Frame API (the robot
  * arm's joints, Task 7b): the added tint, a hollow square glyph, and a bar
- * of its family's colour down its leading edge.
+ * of its family's color down its leading edge.
  */
 .fx-node.fx-app {
   box-shadow: inset 3px 0 0 var(--fx-family);
@@ -245,7 +245,7 @@
   stroke: var(--fx-trajectory);
   stroke-dasharray: 3 3;
 }
-/* The route's travelling dot (static at the destination under reduced motion). */
+/* The route's traveling dot (static at the destination under reduced motion). */
 .fx-route-dot {
   fill: var(--stratakit-color-border-accent-strong);
   stroke: var(--stratakit-color-bg-page-base);

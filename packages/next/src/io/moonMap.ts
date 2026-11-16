@@ -638,7 +638,7 @@ function copyIfNotOpaque(
  * The patch that has the point, if any; else the nearest within a pixel of
  * its edges (fitted edges leave sub-pixel gaps between tiles). A point
  * near a tile's edge inside the cap is its own tile's, not its
- * neighbour's clamped edge.
+ * neighbor's clamped edge.
  */
 function patchAt(
   patches: MoonPatch[],

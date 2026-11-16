@@ -338,7 +338,7 @@ export class SectionOverlay {
 
   // --------------------------------------------------------------- dragging
 
-  /** The pointer's ray in local metres. */
+  /** The pointer's ray in local meters. */
   private ray(layer: Layer, e: PointerEvent): { o: V3; d: V3 } {
     const rect = layer.root.getBoundingClientRect();
     const camera = layer.view.camera;
@@ -354,7 +354,7 @@ export class SectionOverlay {
     };
   }
 
-  /** The line a handle moves along in `state`, in local metres: a point on it and its direction. */
+  /** The line a handle moves along in `state`, in local meters: a point on it and its direction. */
   private lineOf(
     state: SectionState,
     kind: HandleKind,

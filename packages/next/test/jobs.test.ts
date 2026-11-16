@@ -217,7 +217,7 @@ describe("Jobs: cancellation", () => {
     });
     controller.abort();
     expect(await settled(job.promise)).toEqual({ error: "abort" });
-    expect(job.state).toBe("cancelled");
+    expect(job.state).toBe("canceled");
     reply("busy");
     expect(sent()).toEqual(["busy"]);
   });
@@ -257,7 +257,7 @@ describe("Jobs: cancellation", () => {
     expect(await settled(job.promise)).toEqual({ error: "abort" });
   });
 
-  it("discards the late result of a job cancelled while it ran", () => {
+  it("discards the late result of a job canceled while it ran", () => {
     const { jobs, reply } = setup();
     const discarded: unknown[] = [];
     const job = jobs.submit({
@@ -343,7 +343,7 @@ describe("Jobs: dependencies", () => {
     expect(sent()).toEqual(["a", "b"]);
   });
 
-  it("is cancelled with a job it runs after (a parent's tile evicted)", async () => {
+  it("is canceled with a job it runs after (a parent's tile evicted)", async () => {
     const { jobs, sent } = setup();
     const parent = jobs.submit({ type: "t", payload: { name: "parent" } });
     const child = jobs.submit({
@@ -378,7 +378,7 @@ describe("Jobs: dependencies", () => {
     });
   });
 
-  it("cancelling a dependent leaves the job it runs after alone", async () => {
+  it("canceling a dependent leaves the job it runs after alone", async () => {
     const { jobs, reply } = setup();
     const parent = jobs.submit({ type: "t", payload: { name: "parent" } });
     const child = jobs.submit({
@@ -409,9 +409,9 @@ describe("Jobs: progressive jobs on this thread (slice)", () => {
   /** A walk of `n` steps, 2 ms each; each step's partial is a bound that only tightens. */
   function walk(n: number, advance: (ms: number) => void, now: () => number) {
     let i = 0;
-    let cancelled = false;
+    let canceled = false;
     return {
-      cancelled: () => cancelled,
+      canceled: () => canceled,
       spec: {
         type: "walk",
         step(budgetMs: number) {
@@ -425,7 +425,7 @@ describe("Jobs: progressive jobs on this thread (slice)", () => {
           return { partial, done: i >= n };
         },
         cancel: () => {
-          cancelled = true;
+          canceled = true;
         },
       },
     };
@@ -484,7 +484,7 @@ describe("Jobs: progressive jobs on this thread (slice)", () => {
     expect(order).toEqual(["soon"]);
   });
 
-  it("is cancelled when its inputs change, and releases its walk", async () => {
+  it("is canceled when its inputs change, and releases its walk", async () => {
     const { jobs } = setup();
     jobs.phased = true;
     let clock = 0;
@@ -497,7 +497,7 @@ describe("Jobs: progressive jobs on this thread (slice)", () => {
     const job = jobs.slice({ ...w.spec, signal: controller.signal });
     controller.abort(); // a warp's signature changed
     expect(await settled(job.promise)).toEqual({ error: "abort" });
-    expect(w.cancelled()).toBe(true);
+    expect(w.canceled()).toBe(true);
     expect(jobs.waiting).toBe(0);
   });
 

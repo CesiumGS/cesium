@@ -48,7 +48,7 @@ const ref = (code: string): CrsRef => {
     : { format: "wkid", authority, wkid, vcsWkid };
 };
 
-// Metres between two geographic positions (degrees): the longitude difference
+// Meters between two geographic positions (degrees): the longitude difference
 // is wrapped and scaled by cos(latitude), so a point at a pole compares by
 // position, not by its arbitrary longitude; 111,320 m per degree is the
 // upper bound at the Earth's equator (the Moon's degree is shorter).

@@ -11,7 +11,7 @@ import type { TileVolume } from "./volumes.ts";
 
 /** Boxes a view asks about in one tick. */
 export const MAX_QUERIES = 8192;
-/** Floats a query takes: a centre and three half-axes, camera-relative. */
+/** Floats a query takes: a center and three half-axes, camera-relative. */
 export const QUERY_FLOATS = 12;
 /** Results in a row, each a tick's, before an occluded tile stops refining. */
 export const OCCLUDED_TICKS = 2;

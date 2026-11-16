@@ -125,7 +125,7 @@ export function imageryLevel(p: ImageryProvider, tile: Tile): number {
   );
 }
 
-/** Frames no wanted tile needs a loading source before it is cancelled. */
+/** Frames no wanted tile needs a loading source before it is canceled. */
 const CANCEL_AFTER_FRAMES = 30;
 
 /** Imagery requests (the inspector's purposes and run metrics). */
@@ -134,7 +134,7 @@ export interface ImageryStats {
   bytes: number;
   /** Sources composited into a drawn tile's slice. */
   drawn: number;
-  cancelled: number;
+  canceled: number;
 }
 
 interface Job {
@@ -156,7 +156,7 @@ export class GlobeImagery implements SliceUser {
     requests: 0,
     bytes: 0,
     drawn: 0,
-    cancelled: 0,
+    canceled: 0,
   };
   /** Slice per terrain tile, and the frame it was last wanted. */
   private readonly slices = new Map<Tile, { slice: number; used: number }>();
@@ -447,8 +447,8 @@ export class GlobeImagery implements SliceUser {
         source.used < frame - CANCEL_AFTER_FRAMES
       ) {
         source.controller.abort();
-        this.requests.cancelled(this.origin);
-        this.stats.cancelled++;
+        this.requests.canceled(this.origin);
+        this.stats.canceled++;
       }
     }
   }
@@ -673,7 +673,7 @@ export class GlobeImagery implements SliceUser {
         this.requests.release(this.origin);
         source.controller = undefined;
         if (error instanceof DOMException && error.name === "AbortError") {
-          // Cancelled: requested again if wanted later.
+          // Canceled: requested again if wanted later.
           if (this.sources.get(key) === source) {
             this.sources.delete(key);
           }

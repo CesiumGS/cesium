@@ -43,7 +43,7 @@ function check(root: TreeNode, opts: TreeLayoutOptions = options) {
 }
 
 describe("layoutTree", () => {
-  it("places a single node centred in the width", () => {
+  it("places a single node centered in the width", () => {
     const { layout } = check(node("only"));
     expect(layout.nodes).toHaveLength(1);
     expect(layout.nodes[0]!.id).toBe("only");
@@ -82,7 +82,7 @@ describe("layoutTree", () => {
     }
   });
 
-  it("centres each parent over its children within a pixel", () => {
+  it("centers each parent over its children within a pixel", () => {
     const root = lopsided(20);
     const { byId } = check(root);
     const visit = (n: TreeNode) => {
@@ -214,7 +214,7 @@ describe("layoutTree with pills sized to their labels (the owner's branching dia
     return out;
   };
 
-  it("keeps a constant gap between neighbouring pills at every depth, never overlapping", () => {
+  it("keeps a constant gap between neighboring pills at every depth, never overlapping", () => {
     const root = lopsided(16);
     const nodeWidths = widths(root, (id) => 40 + ((id.length * 37) % 90));
     const { layout } = check(root, {

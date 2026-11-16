@@ -5,9 +5,9 @@
 // replaces.
 //
 //  - Each part's full detail (its lods[0]) is split by feature. A feature
-//    is detail where its full detail lies within FLAT_METRES of one height
+//    is detail where its full detail lies within FLAT_METERS of one height
 //    everywhere (paint, a car park, a rail) or every triangle of it is a
-//    sliver under WIRE_METRES wide (a conductor). Detail is drawn as the
+//    sliver under WIRE_METERS wide (a conductor). Detail is drawn as the
 //    part's hand-made lod at the level draws it, or dropped where that lod
 //    leaves it out and the lod's own error is within the cell (markings,
 //    sub-pixel there; that error is then a floor), else kept as it is.
@@ -16,7 +16,7 @@
 //    span's conductors as chords), else its full detail: no lod leaves a
 //    solid out. All the tile's solid input is simplified together by vertex
 //    clustering on a grid of `cell` (each vertex moved to its cell's mean,
-//    collapsed triangles dropped, duplicates merged), so neighbours weld
+//    collapsed triangles dropped, duplicates merged), so neighbors weld
 //    together: a yard's stacks, a building's wings.
 //  - A solid piece (one part's one feature) that loses more than half its
 //    area has collapsed. Collapsed pieces near each other (within a cell,
@@ -27,14 +27,14 @@
 //    replaces and within `cell` of its full detail both ways, else the
 //    piece is drawn as its input unsimplified. Every solid piece keeps some
 //    triangles: no hole where an object was. A box's top is lifted a layer
-//    at a time off any differently coloured face it overlaps at its height,
+//    at a time off any differently colored face it overlaps at its height,
 //    so nothing z-fights.
 //  - Of a piece that keeps most of its area, an input triangle that
 //    collapsed is drawn back where it lay more than `cell` from what is
 //    drawn.
 //  - The error is measured, both ways (Hausdorff), between what is drawn
 //    and the full detail, with the whole ground on both sides (a tile draws
-//    its own cells of it; its neighbours, at whatever level, the rest):
+//    its own cells of it; its neighbors, at whatever level, the rest):
 //    samples at most `cell` / 4 apart, their largest distance to the other
 //    side plus that spacing (distance is 1-Lipschitz, so between samples it
 //    rises by at most the spacing). A sample within the error the tile
@@ -46,10 +46,10 @@
 // deterministic.
 import { MeshBuilder, frameAt } from "./meshBuilder.mjs";
 
-/** A feature within this many metres of one height everywhere is flat. */
-export const FLAT_METRES = 0.5;
-/** A feature whose every triangle is narrower than this, metres, is a wire. */
-export const WIRE_METRES = 0.1;
+/** A feature within this many meters of one height everywhere is flat. */
+export const FLAT_METERS = 0.5;
+/** A feature whose every triangle is narrower than this, meters, is a wire. */
+export const WIRE_METERS = 0.1;
 /** Merged pieces' own footprints fill at least this share of their block's. */
 const MERGE_FILL = 0.25;
 /** A solid piece keeping less than this share of its area takes a stand-in. */
@@ -323,7 +323,7 @@ export class TriangleGrid {
  * e2, a lattice of steps at most `spacing` / 2: every point of the triangle
  * lies in a lattice cell whose first corner is in the triangle, within
  * |e1|/n1 + |e2|/n2 ≤ `spacing` of it. A long thin triangle (a wire, a
- * kerb) takes few points across.
+ * curb) takes few points across.
  */
 function sample(p, spacing, visit) {
   const edge = (i, j) =>
@@ -475,7 +475,7 @@ function hull(points) {
 /**
  * A piece's stand-in: its bounding box, turned to its footprint's
  * smallest-area rectangle, from its lowest point to its highest; the top
- * in the colour of its largest up-facing area, the sides in that of its
+ * in the color of its largest up-facing area, the sides in that of its
  * largest other area; a bottom only where the piece faces down somewhere.
  */
 function standIn(triangles, feature = triangles[0].feature) {
@@ -514,7 +514,7 @@ function standIn(triangles, feature = triangles[0].feature) {
   const [c, s] = [Math.cos(best.angle), Math.sin(best.angle)];
   const mu = (u0 + u1) / 2;
   const mv = (v0 + v1) / 2;
-  const centre = [c * mu - s * mv, s * mu + c * mv, z0];
+  const center = [c * mu - s * mv, s * mu + c * mv, z0];
   // Never quite flat: a box's faces need a normal.
   const tiny = 1e-3 * Math.max(u1 - u0, v1 - v0, z1 - z0, 1e-3);
   const size = [
@@ -541,7 +541,7 @@ function standIn(triangles, feature = triangles[0].feature) {
     side = up;
   }
   const spec = {
-    centre,
+    center,
     angle: best.angle,
     size,
     sideColor: side.color,
@@ -556,10 +556,10 @@ function standIn(triangles, feature = triangles[0].feature) {
 
 /** A stand-in box's triangles, its top `lift` higher. */
 function boxTriangles(spec, lift = 0) {
-  const { centre, angle, size, sideColor, topColor, bottom, feature } = spec;
+  const { center, angle, size, sideColor, topColor, bottom, feature } = spec;
   return trianglesOf((b) =>
     b.cuboid(
-      centre,
+      center,
       frameAt(angle),
       [size[0], size[1], size[2] + lift],
       sideColor,
@@ -571,8 +571,8 @@ function boxTriangles(spec, lift = 0) {
 
 /**
  * Lifts boxes' tops a layer at a time until none lies within half a layer
- * of the height of a differently coloured up-facing face it overlaps (a
- * neighbour's roof, another box's top): no two of them z-fight. Returns
+ * of the height of a differently colored up-facing face it overlaps (a
+ * neighbor's roof, another box's top): no two of them z-fight. Returns
  * each box's triangles.
  */
 function liftBoxes(boxes, others, layer, cell) {
@@ -637,7 +637,7 @@ function liftBoxes(boxes, others, layer, cell) {
     const { spec } = box;
     const b = bounds(box, 0);
     const color = colorKey(spec.topColor);
-    const z0 = spec.centre[2] + spec.size[2];
+    const z0 = spec.center[2] + spec.size[2];
     let lift = 0;
     while (clash(b, z0 + lift, color) && lift < 64 * layer) {
       lift += layer;
@@ -665,7 +665,7 @@ function merged(list) {
 
 /**
  * A mesh with its repeated vertices shared: those with one position,
- * normal, colour and feature (a face's split pieces, a quad's halves).
+ * normal, color and feature (a face's split pieces, a quad's halves).
  */
 export function weld(mesh) {
   const { design, normals, colors, featureIds, indices } = mesh;
@@ -715,8 +715,8 @@ export function weld(mesh) {
 
 /**
  * The detail features of a model's full-detail triangles (`metersPerUnit`
- * its design unit): flat (within FLAT_METRES of one height) or wires
- * (every triangle narrower than WIRE_METRES: twice its area over its
+ * its design unit): flat (within FLAT_METERS of one height) or wires
+ * (every triangle narrower than WIRE_METERS: twice its area over its
  * longest edge).
  */
 export function detailFeatures(triangles, metersPerUnit) {
@@ -740,18 +740,18 @@ export function detailFeatures(triangles, metersPerUnit) {
     [...seen]
       .filter(
         ([, f]) =>
-          (f.hi - f.lo) * metersPerUnit <= FLAT_METRES ||
-          f.wide * metersPerUnit <= WIRE_METRES,
+          (f.hi - f.lo) * metersPerUnit <= FLAT_METERS ||
+          f.wide * metersPerUnit <= WIRE_METERS,
       )
       .map(([feature]) => feature),
   );
 }
 
 /**
- * Pieces in groups of neighbours: linked where their footprints' bounding
+ * Pieces in groups of neighbors: linked where their footprints' bounding
  * boxes come within `gap` of each other, in first-seen order.
  */
-function neighbours(pieces, gap) {
+function neighbors(pieces, gap) {
   const boxes = pieces.map((s) => bounds(s.input, gap / 2));
   const parent = [...pieces.keys()];
   const find = (i) => {
@@ -838,7 +838,7 @@ function within(a, b, spacing, limit) {
  *   its lod at the level and that lod's triangles (`hand`; the same array
  *   as `full` where the lod is the full detail, null where it draws
  *   nothing). `ground`: the whole ground at this level as triangles (the
- *   tile draws its own cells of it exactly; its neighbours, at whatever
+ *   tile draws its own cells of it exactly; its neighbors, at whatever
  *   level, draw the rest), on both sides of the measure. `cell` in design
  *   units; `layer` the ground layer stack's step, design units. `target`:
  *   an error the tile states anyway (twice its
@@ -969,7 +969,7 @@ export function coarsen({ pieces, ground, detail, cell, layer, target = 0 }) {
     replaced.push(...fulls);
     return true;
   };
-  // Collapsed neighbours (a street's trees, a lot's trucks, a run of poles)
+  // Collapsed neighbors (a street's trees, a lot's trucks, a run of poles)
   // merge into one block; the rest take a box each, or stay as they are.
   const buckets = new Map();
   const block = cell * MERGE_CELLS;
@@ -1011,7 +1011,7 @@ export function coarsen({ pieces, ground, detail, cell, layer, target = 0 }) {
     merge(order.slice(half));
   };
   for (const bucket of buckets.values()) {
-    for (const list of neighbours(bucket, cell)) {
+    for (const list of neighbors(bucket, cell)) {
       merge(list);
     }
   }

@@ -67,7 +67,7 @@ const MODULES: Record<string, () => ModuleWords> = {
     optional: true,
     path: "@cesium/next/proj",
     forWhat:
-      "PROJ for any coordinate operation the core's built-in reprojections don't cover (datum grids, the EPSG catalogue), plus snapping and alignments with stations.",
+      "PROJ for any coordinate operation the core's built-in reprojections don't cover (datum grids, the EPSG catalog), plus snapping and alignments with stations.",
     loads: <>With the page, if you import it. {entrySize("proj")}.</>,
     downloads: (
       <>
@@ -82,7 +82,7 @@ const MODULES: Record<string, () => ModuleWords> = {
     optional: true,
     path: "@cesium/next/frames",
     forWhat:
-      "The catalogue of reference frames (ICRF, ITRF, the bodies), Earth orientation, ephemerides and trajectories: data feeding the transform graph, answering where one frame is in another at a given time. smoothFrame and switchFrame put the graph's smooth and per-view nodes in it.",
+      "The catalog of reference frames (ICRF, ITRF, the bodies), Earth orientation, ephemerides and trajectories: data feeding the transform graph, answering where one frame is in another at a given time. smoothFrame and switchFrame put the graph's smooth and per-view nodes in it.",
     loads: <>With the page, if you import it. {entrySize("frames")}.</>,
     onDemand: (
       <>
@@ -106,7 +106,7 @@ const MODULES: Record<string, () => ModuleWords> = {
     optional: true,
     path: "@cesium/next/time",
     forWhat:
-      "Instant, time scales, leap seconds and the scene clock. An app with a timeline needs it, without the frames catalogue.",
+      "Instant, time scales, leap seconds and the scene clock. An app with a timeline needs it, without the frames catalog.",
     loads: <>With the page, if you import it. {entrySize("time")}.</>,
     downloads:
       "Nothing it must have: a leap-second table is built in, and a newer one is used only if it's supplied.",
@@ -237,7 +237,7 @@ const TIER_WORDS: Record<string, { title: string; is: string; rule: string }> =
 
 const TIER_ORDER = ["content", "scene", "renderer", "gpu"];
 
-/** The core's tiers, top to bottom, with the imports between neighbours. */
+/** The core's tiers, top to bottom, with the imports between neighbors. */
 export function CoreTiers({ deeper = true }: { deeper?: boolean } = {}) {
   const core = data.layers.core;
   const tiers = TIER_ORDER.map((id) => core.tiers.find((t) => t.id === id));

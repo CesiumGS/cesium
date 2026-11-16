@@ -395,7 +395,7 @@ const OLD_NEW = [
     next: "A window per origin, shared by its tilesets, that adapts to the link",
   },
   {
-    topic: "Cancelling",
+    topic: "Canceling",
     old: "Those not touched this tick",
     next: "Those untouched by any view for 30 ticks, which absorbs jitter",
   },
@@ -648,7 +648,7 @@ export function Selection() {
           though the state doesn't change: waiting for a slot, and waiting to
           upload.
         </p>
-        <Figure caption="Solid arrows are the normal path. Dashed ones are the ways out: a request no view has touched for 30 ticks is cancelled, and eviction frees what's cold. A format the engine can't decode is marked ready and draws nothing, so refinement behaves as in 1.x.">
+        <Figure caption="Solid arrows are the normal path. Dashed ones are the ways out: a request no view has touched for 30 ticks is canceled, and eviction frees what's cold. A format the engine can't decode is marked ready and draws nothing, so refinement behaves as in 1.x.">
           <TileLifecycle />
         </Figure>
       </Section>
@@ -820,7 +820,7 @@ export function Selection() {
           clamped to the provider's levels. Until its own slice is ready, a tile
           draws its nearest ancestor's, up to 8 levels up. Source tiles use the
           origin's request window, and a request no wanted tile needs is
-          cancelled. Slices are recycled least recently used.
+          canceled. Slices are recycled least recently used.
         </p>
         <h3>Past the last data level</h3>
         <ul>
@@ -944,7 +944,7 @@ export function Selection() {
           </li>
         </ul>
         <p>
-          The globe's stepwise selection honours the exponent too, and the debug
+          The globe's stepwise selection honors the exponent too, and the debug
           view <C>"stretch"</C> shows the factor each tile used. Request
           priority follows the error that is showing, so the largest visible
           errors close first.
@@ -1192,17 +1192,17 @@ export function Selection() {
 
       <Section title="Seeing the selection: debug views">
         <p>
-          <C>View.debug</C> turns the opaque pass into a diagnostic: flat
-          colours in place of lighting, with depth kept, for terrain and 3D
-          Tiles alike. Off costs one uniform read a fragment.
+          <C>View.debug</C> turns the opaque pass into a diagnostic: flat colors
+          in place of lighting, with depth kept, for terrain and 3D Tiles alike.
+          Off costs one uniform read a fragment.
         </p>
         <ul>
           <li>
             <C>"level"</C>: each tile by its level in its tree, in eight
-            colour-blind-safe colours that repeat.
+            color-blind-safe colors that repeat.
           </li>
           <li>
-            <C>"tiles"</C>: each tile its own colour, with terrain tiles' edges
+            <C>"tiles"</C>: each tile its own color, with terrain tiles' edges
             darkened.
           </li>
           <li>
@@ -1224,9 +1224,9 @@ export function Selection() {
           </li>
         </ul>
         <p>
-          <C>View.debugLegend()</C> returns what the colours mean, for an
+          <C>View.debugLegend()</C> returns what the colors mean, for an
           application to draw. The numbers are the first debug view's selection.
-          Translucent content, points and lines keep their colours. There is no
+          Translucent content, points and lines keep their colors. There is no
           wireframe mode: only b-reps have one.
         </p>
         <Written
@@ -1239,7 +1239,7 @@ export function Selection() {
         <p>
           A terrain tile replacing a coarser one used to jump to its own
           surface. Under a vertical exaggeration the jump is magnified, and
-          while loading coarse stand-ins sit beside finer neighbours. Each
+          while loading coarse stand-ins sit beside finer neighbors. Each
           terrain tile now carries, per vertex, the surface height of the
           nearest ancestor that was drawn, at the same (u, v): the ancestor
           mesh's height interpolated on its triangles, the lookup the error
@@ -1251,7 +1251,7 @@ export function Selection() {
         <ul>
           <li>
             <C>View.lodTransitions</C> is <C>"morph"</C> (the default) or{" "}
-            <C>"pop"</C>. Pop is the old behaviour: no per-vertex data is read,
+            <C>"pop"</C>. Pop is the old behavior: no per-vertex data is read,
             and a draw costs one record word compared with zero.
           </li>
           <li>

@@ -101,7 +101,7 @@ public struct FragmentInput {
   public uint instanceIndex;     // index among the draw's instances
   public InstanceValues instance;      // per-instance values (exact)
   // The view's clips (`ClipEffect`, `ClipSet.effect`): the nearest cut of a set
-  // that reports, positive on the side the set removes (metres; 3.4e38 with
+  // that reports, positive on the side the set removes (meters; 3.4e38 with
   // none), `clipFlags` bit 0 when that set removes this fragment (a ghost, or a
   // shade set's removed side) and bit 1 when it is a ghost, `clipId` its number
   // in the view's list (0xffffffff: none), `clipParams` the effect's params.

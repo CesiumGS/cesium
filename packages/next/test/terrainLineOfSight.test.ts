@@ -153,7 +153,7 @@ describe("terrainLineOfSight", () => {
 
   it("is not clear when the true terrain could block within its error", async () => {
     const { target } = hillTarget({}, 9);
-    // 300 m peak; the ray clears it by tens of metres, inside level 9's 150 m.
+    // 300 m peak; the ray clears it by tens of meters, inside level 9's 150 m.
     const r = await terrainLineOfSight(
       at(-HALF, 0, 360),
       at(HALF, 0, 360),
@@ -250,7 +250,7 @@ describe("terrainLineOfSight", () => {
     expect(r.accuracy.note).toMatch(/heuristic, not a bound/);
   });
 
-  it("is not clear across a triangle kilometres wide under the observer", async () => {
+  it("is not clear across a triangle kilometers wide under the observer", async () => {
     // A level-9 tile (±151 m) of 9×9 vertices: triangles about 5 km across.
     // From a vertex on the ground to 2 km up, 20 km off, the segment stays
     // under 151 m for about 1.5 km inside the observer's own triangle, then

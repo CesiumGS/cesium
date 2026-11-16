@@ -35,11 +35,11 @@ const rectangle = {
   south: LAT - 0.0005,
   north: LAT + 0.0005,
 };
-const centre = at(LON, LAT, 0);
-const sphere = { center: centre, radius: 4000 };
+const center = at(LON, LAT, 0);
+const sphere = { center: center, radius: 4000 };
 const east = [-Math.sin(LON), Math.cos(LON), 0];
 const beside = Float64Array.from(
-  [0, 1, 2].map((i) => centre[i]! + east[i]! * 200_000),
+  [0, 1, 2].map((i) => center[i]! + east[i]! * 200_000),
 );
 const tile = (error: number) =>
   ({ geometricError: error, globe: { rectangle } }) as unknown as Tile;

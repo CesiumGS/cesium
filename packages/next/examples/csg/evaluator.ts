@@ -106,7 +106,7 @@ export class KernelSession {
 
   /**
    * Evaluates a recipe in a kernel. A newer call on the same kernel
-   * supersedes this one (it rejects with `KernelCancelled`). A final
+   * supersedes this one (it rejects with `KernelCanceled`). A final
    * evaluation is also checked (`validateBrep`); a preview isn't. STEP
    * parts are Open CASCADE's: SMLib refuses a recipe that has one.
    */

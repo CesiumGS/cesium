@@ -31,7 +31,7 @@
  * A place's legal time zone needs a boundary table (a follow-up); local
  * solar time is what the light follows. An app that knows its place's zone
  * gives it (`zone: { iana: "Europe/London" }`): the controls then show that
- * civil time, daylight saving included, labelled with the zone's
+ * civil time, daylight saving included, labeled with the zone's
  * abbreviation ("BST"), as the browser's Intl knows it.
  */
 import {
@@ -69,7 +69,7 @@ export interface TimeControlsOptions {
   /**
    * The application's way to find a place's civil zone (its time-zone
    * database or service). With one, the controls offer `"place"` and open on
-   * it: the place's civil zone, else its solar time, labelled so. Without
+   * it: the place's civil zone, else its solar time, labeled so. Without
    * one they open on "nominal", as they always did.
    */
   zoneLookup?: ZoneLookup;
@@ -612,7 +612,7 @@ export function attachTimeControls(
   let marks: readonly TimeMark[] = [];
   const baseTitle = strip.title;
 
-  /** The long name of the place's zone: the civil zone it found, or solar time, labelled so. */
+  /** The long name of the place's zone: the civil zone it found, or solar time, labeled so. */
   function placeLong(ms: number): string {
     const resolved = zoneOf(zone, place(), options.zoneLookup);
     return resolved.kind === "civil"

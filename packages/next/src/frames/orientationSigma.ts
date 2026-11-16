@@ -1,7 +1,7 @@
 // The Earth-orientation sigma (R7): what the GCRF to ITRF edge can claim at
 // an instant, from the EOP table's measured or predicted rows. Here so the
 // built-in frame tree states it on its ITRF edge (frames.ts) and
-// `accuracyOf` scales it to metres (measure/accuracy.ts) from one source.
+// `accuracyOf` scales it to meters (measure/accuracy.ts) from one source.
 import type { FrameData } from "../ephemeris/loadFrameData.ts";
 import type { Instant } from "../time/Instant.ts";
 

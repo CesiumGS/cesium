@@ -180,7 +180,7 @@ describe("the worker protocol on the real catalog", () => {
       expect(streamed).toStrictEqual(direct);
       expect(summary.failed).toBe(0);
       expect(summary.skipped).toBe(0);
-      expect(summary.cancelled).toBe(false);
+      expect(summary.canceled).toBe(false);
       // A cancel waits for the case in progress: the longest case bounds it.
       const slowest = [...times].sort((a, b) => b[1] - a[1]).slice(0, 3);
       print(

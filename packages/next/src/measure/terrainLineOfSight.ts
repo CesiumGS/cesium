@@ -5,7 +5,7 @@ import type { AnchorHandle } from "../scene/world/types.ts";
 export interface TerrainLineOfSightOptions {
   /**
    * The terrain source's own vertical accuracy (e.g. from its
-   * documentation): metres and the statistic they are (`"1σ"`, `"LE90"`),
+   * documentation): meters and the statistic they are (`"1σ"`, `"LE90"`),
    * added to the drawn tiles' geometric error. Unstated, the accuracy
    * covers the drawn mesh's error alone and the note says so.
    */
@@ -61,7 +61,7 @@ export interface TerrainLineOfSight {
 }
 
 /**
- * Whether the straight segment `from`–`to` (metres, Earth-fixed under the
+ * Whether the straight segment `from`–`to` (meters, Earth-fixed under the
  * Earth's anchor: pass it, `options.anchor`) clears the terrain as drawn, answered through the query
  * interface (`queries`: `Engine.queries`, or `terrainQueries` over a
  * terrain the caller built) for the view the answer is shown in

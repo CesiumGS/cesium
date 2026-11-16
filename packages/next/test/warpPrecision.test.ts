@@ -265,7 +265,7 @@ describe("the order-0 term of a placement", () => {
     }
   });
 
-  it("drops the float32 error of a 37 km displacement from millimetres to below a tenth of one", () => {
+  it("drops the float32 error of a 37 km displacement from millimeters to below a tenth of one", () => {
     const l = lattice([31_000.77, -20_333.31, 5_555.55], 800, 2);
     const points = street(60, 20);
     for (const w of [1, 0.4]) {
@@ -278,7 +278,7 @@ describe("the order-0 term of a placement", () => {
     expect(after).toBeLessThan(1e-4);
   });
 
-  it("drops it from decimetres to below a tenth of a millimetre for a whole-world map at street level", () => {
+  it("drops it from decimeters to below a tenth of a millimeter for a whole-world map at street level", () => {
     const l = lattice([3_000_000.37, 2_000_000.61, 1_234.567], 0.001, 1, 1e7);
     const { before, after } = drawnErrors(l, 1, ORIGIN, street(60, 20));
     expect(before).toBeGreaterThan(0.05);

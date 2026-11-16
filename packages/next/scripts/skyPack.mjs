@@ -267,7 +267,7 @@ export function buildPack(options) {
           `Catalog supplied locally: ${basename(catalog)}`,
         ]
       : recipe.credits,
-    modelled: recipe.modelled,
+    modeled: recipe.modeled,
     points: {
       file: "points.bin",
       count: stars.length,

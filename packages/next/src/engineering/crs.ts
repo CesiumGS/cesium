@@ -107,7 +107,7 @@ export const MOON_GEOGRAPHIC_CRS = "IAU_2015:30100";
  * longitude before latitude (degrees), then height. Inputs and outputs use each
  * CRS's own units, so `forward` takes the source's (E, N, height) in its
  * units, such as US survey feet, and returns (lon, lat, height) in degrees and
- * metres; `inverse` takes that back to the source's units. `inverse` is the
+ * meters; `inverse` takes that back to the source's units. `inverse` is the
  * exact inverse of `forward` (refined against it, to 1e-6 m), at about three
  * times the PROJ calls of one raw inverse.
  */
@@ -117,7 +117,7 @@ export interface RecordedOperation extends CoordinateOperation {
   /** `pipeline`, as a `CoordinateOperation` describes itself. */
   readonly description: string;
   /**
-   * PROJ's stated accuracy in metres; undefined when PROJ reports none. For
+   * PROJ's stated accuracy in meters; undefined when PROJ reports none. For
    * a pinned pipeline, the figure PROJ states for the listed candidate it
    * matches (`matchedCandidate`); undefined when it matches none.
    */
@@ -159,7 +159,7 @@ export interface RecordedOperation extends CoordinateOperation {
 
 /** An operation as `betterThan` compares it. */
 export interface ComparedOperation {
-  /** PROJ's stated accuracy in metres; absent or undefined when it states none. */
+  /** PROJ's stated accuracy in meters; absent or undefined when it states none. */
   readonly accuracy?: number | undefined;
   /**
    * The grids its height step reads, with each step's direction and
@@ -216,7 +216,7 @@ function verticalShiftsOf(string: string): readonly string[] | undefined {
 export interface BetterCandidate {
   /** PROJ's name for it. */
   readonly name: string;
-  /** PROJ's stated accuracy in metres; absent when it states none. */
+  /** PROJ's stated accuracy in meters; absent when it states none. */
   readonly accuracy?: number;
   /** The grids it needs that `loadGrids` hasn't loaded. */
   readonly missingGrids: readonly string[];
@@ -467,7 +467,7 @@ function record(
 const MAX_REFINEMENTS = 3;
 // Stop when a correction is below this fraction of the coordinate's magnitude.
 const RELATIVE_STEP = 1e-12;
-// A forward residual above this (metres) after refining is an error.
+// A forward residual above this (meters) after refining is an error.
 const MAX_RESIDUAL_METERS = 1e-6;
 const METERS_PER_DEGREE = 111_319.49079327357;
 
@@ -477,7 +477,7 @@ const METERS_PER_DEGREE = 111_319.49079327357;
  * PROJ pushes the height around a 2D CRS's geocentric Helmert: the forward runs
  * the geocentric step at the input height on the source ellipsoid, the inverse
  * at the same height on WGS84, though the true height moved by dh. Raw, the
- * round trip is off by millimetres. So x0 = inverse(y), then
+ * round trip is off by millimeters. So x0 = inverse(y), then
  * x(k+1) = x(k) + (x0 - inverse(forward(x(k)))), until the correction is
  * negligible (relative to the coordinate's magnitude) or MAX_REFINEMENTS steps.
  * The forward result is never altered. If forward(x) still differs from y by
@@ -515,7 +515,7 @@ function refinedInverse(
         break;
       }
     }
-    // forward's output is (longitude, latitude) in degrees and height in metres.
+    // forward's output is (longitude, latitude) in degrees and height in meters.
     const check = forward(x);
     let dLon = check[0]! - target[0]!;
     dLon -= 360 * Math.round(dLon / 360);
@@ -957,7 +957,7 @@ export interface OperationCandidate {
    * records it; "" when PROJ cannot express it as one.
    */
   readonly pipeline: string;
-  /** PROJ's stated accuracy in metres; absent when it states none (ballparks state none). */
+  /** PROJ's stated accuracy in meters; absent when it states none (ballparks state none). */
   readonly accuracy?: number;
   /** Where it applies, degrees (west may exceed east across 180°); absent when PROJ has none. */
   readonly areaOfUse?: {

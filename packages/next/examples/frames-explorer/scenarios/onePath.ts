@@ -46,9 +46,9 @@ const SPEC = SCENARIOS.find((s) => s.id === "one-path")!;
 export type DrawnFrame = "GCRF" | "ITRF" | "MOON_ME";
 
 const ORIGIN_NAME: Record<DrawnFrame, string> = {
-  GCRF: "the Earth's centre",
-  ITRF: "the Earth's centre",
-  MOON_ME: "the Moon's centre",
+  GCRF: "the Earth's center",
+  ITRF: "the Earth's center",
+  MOON_ME: "the Moon's center",
 };
 
 const frameOf = (ctx: StressContext, name: DrawnFrame): Frame =>
@@ -121,7 +121,7 @@ export function speedAccuracy(
 
 /** The headline's words after the speed: what it's relative to (fix 1). */
 const RELATIVE: Record<DrawnFrame, string> = {
-  GCRF: "relative to the Earth's centre, not turning (GCRF)",
+  GCRF: "relative to the Earth's center, not turning (GCRF)",
   ITRF: "relative to the turning Earth (ITRF)",
   MOON_ME: "relative to the Moon (MOON_ME)",
 };

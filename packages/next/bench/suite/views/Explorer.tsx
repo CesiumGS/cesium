@@ -205,7 +205,7 @@ export function LiveView({ sceneId }: { sceneId: string }) {
     if (!scene) {
       return;
     }
-    let cancelled = false;
+    let canceled = false;
     void (async () => {
       if (problem) {
         setStatus({ text: problem, error: true });
@@ -221,7 +221,7 @@ export function LiveView({ sceneId }: { sceneId: string }) {
       }
       const wanted = [...builds][0];
       const same = wanted ? await ensureCesium(wanted) : true;
-      if (cancelled) {
+      if (canceled) {
         return;
       }
       if (!same) {
@@ -261,7 +261,7 @@ export function LiveView({ sceneId }: { sceneId: string }) {
           panes.current,
           scenario.motionSeconds,
         );
-        if (done && !cancelled) {
+        if (done && !canceled) {
           setStatus(undefined);
           if (wanted && search.cesium !== wanted) {
             void navigate({
@@ -271,7 +271,7 @@ export function LiveView({ sceneId }: { sceneId: string }) {
           }
         }
       } catch (e) {
-        if (!cancelled) {
+        if (!canceled) {
           setStatus({
             text: `Could not load the scene: ${e instanceof Error ? e.message : String(e)}. Check the browser console, or try one engine at a time.`,
             error: true,
@@ -280,7 +280,7 @@ export function LiveView({ sceneId }: { sceneId: string }) {
       }
     })();
     return () => {
-      cancelled = true;
+      canceled = true;
     };
     // Reload only when the scene or engines change.
   }, [session, loadKey]);

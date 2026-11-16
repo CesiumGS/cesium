@@ -62,7 +62,7 @@ export interface SiteView {
 
 /** The rigid error along the corridor, for the sag chart. */
 export interface SagView {
-  /** Station (design units) and error (metres), every 1,000 ft. */
+  /** Station (design units) and error (meters), every 1,000 ft. */
   readonly points: readonly (readonly [number, number])[];
   readonly anchorStation: number;
   readonly startStation: number;

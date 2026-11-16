@@ -3,7 +3,7 @@
 // that is lifted. Below `ceiling - band` g(h) = h - base, so heights scale
 // by k about `baseHeight`; above the ceiling g is constant, so h' = h + (k -
 // 1)(ceiling - base - band/2): a shift, never a stretch, and the sky is not
-// pulled apart. Between, a quadratic blend over `band` metres makes
+// pulled apart. Between, a quadratic blend over `band` meters makes
 // dh'/dh continuous (J is C⁰, H finite, jumping at the band's two edges):
 //   a = ceiling - band, u = clamp(h - a, 0, band)
 //   g = min(h, a) - base + u - u² / (2 band).
@@ -62,17 +62,17 @@ export function unliftProfile(h2: number, v: Named<K>): number {
 }
 
 /**
- * The lift's Jacobian over a box, in east, north and up at its centre. With
+ * The lift's Jacobian over a box, in east, north and up at its center. With
  * S the shape operator, J = I + (k - 1)(g S (I + hS)⁻¹ + g' n nᵀ) is
  * symmetric: along the normal 1 + (k - 1) g', and on the surface a 2 × 2
  * block with eigenvalues 1 + (k - 1) g / (ρ + h), ρ a radius of curvature.
  * Heights over the box: the height is convex above the surface with a unit
  * gradient n and a Hessian of at most 1 / (ρ_min + h), so it is within the
- * box's vertical half extent below the centre's and that plus the sag
+ * box's vertical half extent below the center's and that plus the sag
  * ½ (e² + n²) / (ρ_min + h) above. g is non-decreasing and g' falls from 1 to
  * 0, so their ranges follow from those heights, over the parameters'
  * (their corners: the profile is monotone in the ceiling and base height).
- * The frame at a point of the box is tilted from the centre's by at most
+ * The frame at a point of the box is tilted from the center's by at most
  * the normal's turn over the box, and turned about the vertical by at most
  * the longitude's.
  */
@@ -216,7 +216,7 @@ export function verticalExaggerationDescriptor(
 }
 
 /**
- * Heights above the ellipsoid of `radii` (default WGS84, body-fixed metres)
+ * Heights above the ellipsoid of `radii` (default WGS84, body-fixed meters)
  * multiplied by `factor` about `baseHeight` (default 0) below `ceiling`,
  * and shifted by a constant above it, blended over `band` (default a fifth
  * of the way from the base to the ceiling).

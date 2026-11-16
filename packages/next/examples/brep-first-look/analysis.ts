@@ -1,6 +1,6 @@
-// The CAD analysis views of the B-reps gallery example: colours by surface
+// The CAD analysis views of the B-reps gallery example: colors by surface
 // kind, iso lines and normal whiskers. Positions are relative to a mesh's
-// origin, as the tessellator's are, and lengths are metres in the b-rep's
+// origin, as the tessellator's are, and lengths are meters in the b-rep's
 // own units.
 import {
   evaluateSurface,
@@ -24,7 +24,7 @@ export const KIND_NAMES = [
 /**
  * The tint of each surface kind, by `SurfaceKind` value, from the Okabe–Ito
  * palette: a categorical palette chosen to stay distinguishable under the
- * common kinds of colour blindness, and to read on a light or a dark ground.
+ * common kinds of color blindness, and to read on a light or a dark ground.
  * The faces are lit, so lightness varies too, and the legend names each.
  */
 export const KIND_COLORS = [
@@ -36,7 +36,7 @@ export const KIND_COLORS = [
   "#D55E00", // Bézier: vermillion
 ] as const;
 
-/** A "#rrggbb" colour as linear RGB, the engine's tint space. */
+/** A "#rrggbb" color as linear RGB, the engine's tint space. */
 export function linearOf(hex: string): [number, number, number] {
   const channel = (at: number) => {
     const s = parseInt(hex.slice(at, at + 2), 16) / 255;

@@ -26,7 +26,7 @@ export function geodeticToGeocentric(
   ];
 }
 
-/** Seven Helmert parameters in SI units: translations in metres, rotations in radians, the scale difference unitless. */
+/** Seven Helmert parameters in SI units: translations in meters, rotations in radians, the scale difference unitless. */
 export interface HelmertParameters {
   readonly tx: number;
   readonly ty: number;
@@ -79,7 +79,7 @@ function atEpoch(
 }
 
 /**
- * The 7-parameter Helmert transformation of geocentric coordinates (metres),
+ * The 7-parameter Helmert transformation of geocentric coordinates (meters),
  * written from the EPSG method definitions in IOGP 373-7-2 §4.2.3 and §4.2.5,
  * not from PROJ:
  *
@@ -176,7 +176,7 @@ export function inverseHelmert(
 }
 
 /**
- * Geocentric to geographic coordinates (degrees, metres), the reverse of
+ * Geocentric to geographic coordinates (degrees, meters), the reverse of
  * `geodeticToGeocentric`, written from IOGP 373-7-2 §4.1.1 (EPSG method
  * 9602): Bowring's formula, φ = atan2(Z + ε b sin³ q, p − e² a cos³ q) with
  * q = atan2(Z a, p b) and ε = e² / (1 − e²), then refined by the fixed point

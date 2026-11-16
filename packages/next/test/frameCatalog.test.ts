@@ -222,7 +222,7 @@ describe("the frame catalog", () => {
           sky.sunDirection,
         ),
       );
-      // The Moon's centre in ITRF.
+      // The Moon's center in ITRF.
       const moon = translationOf(frameTransform(moonIcrf, itrf, instant, m));
       worst = Math.max(
         worst,
@@ -532,7 +532,7 @@ describe("the frame catalog", () => {
     expect(error.message).toContain("EOP table");
   });
 
-  it("ready waits for the asked precision and can be cancelled", async () => {
+  it("ready waits for the asked precision and can be canceled", async () => {
     const catalog = createFrameCatalog({ data: BASE });
     await expect(catalog.ready("GCRF", "analytic")).resolves.toBeUndefined();
     await expect(catalog.ready("EME2000", "precise")).resolves.toBeUndefined();

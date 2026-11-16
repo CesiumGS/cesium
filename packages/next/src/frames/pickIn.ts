@@ -5,7 +5,7 @@
 // step an affine node, each warp a smooth one, so the route's own steps are
 // its nodes: the content's node is "true", the view's render space is
 // "drawn") and carries the point to the node asked for, in float64, from the
-// point itself. A catalogue frame is a node of the frames' graph
+// point itself. A catalog frame is a node of the frames' graph
 // (`graphOfFrames`); the pick's anchor is where the two graphs meet.
 import type { FrameKey } from "../camera/frameResolver.ts";
 import {
@@ -107,14 +107,14 @@ export function graphOfCameraRoute(route: CameraRoute): RouteGraph {
   return { graph, true: nodes[0]!, drawn, nodes: [...nodes, drawn] };
 }
 
-/** What a pick needs to reach the catalogue's frames: their graph, and the frame a key (an anchor, the render root) names. */
+/** What a pick needs to reach the catalog's frames: their graph, and the frame a key (an anchor, the render root) names. */
 export interface PickFrames {
   readonly graph: FrameGraph;
   frameOf(key: FrameKey | undefined): Frame | undefined;
 }
 
 export interface PickInOptions extends PointInOptions {
-  /** The frames, to ask for a pick in a catalogue `Frame`. */
+  /** The frames, to ask for a pick in a catalog `Frame`. */
   readonly frames?: PickFrames;
   /**
    * The pick's route as a graph (`graphOfCameraRoute(pick.route)`), when the
@@ -137,7 +137,7 @@ export interface PickedIn extends PointIn {
   readonly note: string;
 }
 
-/** What a pick can be carried to: "true", "drawn", a node of the pick's own route graph, or a catalogue frame. */
+/** What a pick can be carried to: "true", "drawn", a node of the pick's own route graph, or a catalog frame. */
 export type PickTarget = "true" | "drawn" | TransformNode | Frame;
 
 function isFrame(target: PickTarget): target is Frame {
@@ -150,7 +150,7 @@ function isFrame(target: PickTarget): target is Frame {
  * route's inverse, provisional). "true" is the content's own node and
  * "drawn" the view's render space; a node of the pick's route (the space
  * between two steps, a node of `options.route`) is its own; a `Frame`
- * is the catalogue's, through `options.frames` and the graph route between
+ * is the catalog's, through `options.frames` and the graph route between
  * the pick's anchor and it. A graph-native point (`NodePoint`) is carried
  * to a node of its graph.
  */

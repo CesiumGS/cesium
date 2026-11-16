@@ -46,7 +46,7 @@ export const RECORD_COLUMNS = [
   "upload_queue", // decoded content waiting for an upload slot
   "requests", // content requests started, cumulative
   "bytes_received", // content bytes received, cumulative
-  "cancelled", // requests cancelled, cumulative
+  "canceled", // requests canceled, cumulative
   "evicted", // loads evicted undrawn, cumulative
   "cache_mb", // tile content held, MB
   "max_sse", // the coarsest screen-space error threshold, px
@@ -95,7 +95,7 @@ export interface TickSample {
   uploadQueue?: number;
   requests?: number;
   bytesReceived?: number;
-  cancelled?: number;
+  canceled?: number;
   evicted?: number;
   cacheBytes?: number;
   maxSse?: number;
@@ -171,7 +171,7 @@ export function tickRow(s: TickSample): string {
     upload_queue: formatNumber(s.uploadQueue),
     requests: formatNumber(s.requests),
     bytes_received: formatNumber(s.bytesReceived),
-    cancelled: formatNumber(s.cancelled),
+    canceled: formatNumber(s.canceled),
     evicted: formatNumber(s.evicted),
     cache_mb: formatNumber(
       s.cacheBytes === undefined ? undefined : s.cacheBytes / 1048576,
@@ -189,8 +189,8 @@ export function tickRow(s: TickSample): string {
     created_bytes: formatNumber(s.rendering ? s.work?.createdBytes : undefined),
     created_count: formatNumber(s.rendering ? s.work?.createdCount : undefined),
     map_calls: formatNumber(s.rendering ? s.work?.mapCalls : undefined),
-    upload_by: s.rendering && s.work ? labelled(s.work.uploadBy) : "",
-    created_by: s.rendering && s.work ? labelled(s.work.createdBy) : "",
+    upload_by: s.rendering && s.work ? labeled(s.work.uploadBy) : "",
+    created_by: s.rendering && s.work ? labeled(s.work.createdBy) : "",
     triangles: formatNumber(s.rendering ? s.triangles : undefined),
     draws: formatNumber(s.rendering ? s.draws : undefined),
     points: formatNumber(s.rendering ? s.points : undefined),
@@ -208,9 +208,7 @@ export function tickRow(s: TickSample): string {
 }
 
 /** Largest writers as "label=bytes label=bytes", safe in a cell. */
-function labelled(
-  by: ReadonlyArray<readonly [string, number, number]>,
-): string {
+function labeled(by: ReadonlyArray<readonly [string, number, number]>): string {
   return by
     .map(([label, bytes]) => `${safeText(label)}=${formatNumber(bytes)}`)
     .join(" ");

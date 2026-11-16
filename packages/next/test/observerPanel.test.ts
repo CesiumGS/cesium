@@ -488,7 +488,7 @@ describe("the sky section", () => {
       distributable: false,
       sources: [],
       credits: ["Star data <b>by</b> someone"],
-      modelled: [],
+      modeled: [],
       points: { file: "p", count: 1, floatsPerStar: 8 },
       background: {
         file: "b",

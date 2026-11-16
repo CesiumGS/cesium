@@ -13,7 +13,7 @@
 //
 // Error: a triangulated n_u × n_v grid over a span lies within
 //   C_u / n_u² + C_uv / (n_u n_v) + C_v / n_v²
-// metres of the surface (model space, before any placement). With h and k the
+// meters of the surface (model space, before any placement). With h and k the
 // cell's sides in (u, v), the constants come from a bound on the distance a
 // cell's triangles leave,
 //   D_u h² + D_uv h k + D_v k²,
@@ -33,8 +33,8 @@
 //   net's own degrees, up to 7 in each direction).
 // The GPU takes the face's densities, the largest D over its spans, and a
 // distance the same for all of them (the face's nearest), so every span of a
-// face puts the same number of cells per unit of (u, v) and neighbouring
-// spans meet on the same samples. Lengths are metres, angles radians.
+// face puts the same number of cells per unit of (u, v) and neighboring
+// spans meet on the same samples. Lengths are meters, angles radians.
 import {
   axisRadius,
   axisRates,
@@ -183,7 +183,7 @@ export interface PrepareOptions {
    * little at a time (`createPrepareCache`); the call leaves in it the faces
    * of this form, so it never holds more than one form's worth. The origin
    * must be the cache's own to reuse anything: pass `cache.origin` when the
-   * form's centre has moved only a little (`PrepareCache.origin`).
+   * form's center has moved only a little (`PrepareCache.origin`).
    */
   readonly cache?: PrepareCache;
 }
@@ -1044,12 +1044,12 @@ function pieceDensity(
   const sphere = ball(hull, 0);
 
   // Speeds, for the error a placement adds (and the sphere identity's chord).
-  const centre = hull[0]!;
+  const center = hull[0]!;
   const speeds = speedBounds(form, patch, {
     origin: [
-      centre[0]! + origin[0]!,
-      centre[1]! + origin[1]!,
-      centre[2]! + origin[2]!,
+      center[0]! + origin[0]!,
+      center[1]! + origin[1]!,
+      center[2]! + origin[2]!,
     ],
     x: [1, 0, 0],
     y: [0, 1, 0],
@@ -1165,7 +1165,7 @@ function maxAbsCos(v0: number, v1: number): number {
 /**
  * A ball around an analytic span's surface, grown by `pad`: the
  * (stepsU + 1) × (stepsV + 1) samples of its rect (`analyticPoint`'s, the
- * trigonometry once a column and a row, in one flat array), centred on their
+ * trigonometry once a column and a row, in one flat array), centered on their
  * box.
  */
 function analyticBall(
@@ -1246,22 +1246,22 @@ function analyticBall(
       }
     }
   }
-  const centre = low.map((l, k) => (l + high[k]!) / 2);
+  const center = low.map((l, k) => (l + high[k]!) / 2);
   let r = 0;
   for (let k = 0; k < points.length; k += 3) {
     r = Math.max(
       r,
       Math.hypot(
-        points[k]! - centre[0]!,
-        points[k + 1]! - centre[1]!,
-        points[k + 2]! - centre[2]!,
+        points[k]! - center[0]!,
+        points[k + 1]! - center[1]!,
+        points[k + 2]! - center[2]!,
       ),
     );
   }
-  return [centre[0]!, centre[1]!, centre[2]!, r + pad];
+  return [center[0]!, center[1]!, center[2]!, r + pad];
 }
 
-/** A ball around points, grown by `pad`: centred on their box. */
+/** A ball around points, grown by `pad`: centered on their box. */
 function ball(points: readonly (readonly number[])[], pad: number): Sphere {
   const low = [Infinity, Infinity, Infinity];
   const high = [-Infinity, -Infinity, -Infinity];

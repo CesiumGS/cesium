@@ -1,6 +1,6 @@
 // Lambert conformal conic with two standard parallels (EPSG 9802), on an
 // ellipsoid of revolution. The node's points are geographic (longitude and
-// latitude in degrees, ellipsoidal height in metres); its parent's are
+// latitude in degrees, ellipsoidal height in meters); its parent's are
 // (easting, northing, the same height). With m(φ) = cos φ / √(1 - e² sin² φ)
 // and t(φ) = tan(π/4 - φ/2) / ((1 - e sin φ) / (1 + e sin φ))^(e/2):
 //   n = (ln m₁ - ln m₂) / (ln t₁ - ln t₂),  F = m₁ / (n t₁ⁿ),  r = a F tⁿ,

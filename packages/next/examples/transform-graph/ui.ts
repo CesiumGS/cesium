@@ -12,8 +12,8 @@ export const el = <K extends keyof HTMLElementTagNameMap>(
 
 const NF = new Intl.NumberFormat("en-US");
 
-/** Metres, to a metre. */
-export const metres = (m: number): string => `${NF.format(Math.round(m))} m`;
+/** Meters, to a meter. */
+export const meters = (m: number): string => `${NF.format(Math.round(m))} m`;
 
 export const signed = (text: string, value: number): string =>
   value < 0 ? `−${text.replace("-", "")}` : text;
@@ -49,7 +49,7 @@ export const degrees = (rad: number, digits = 4): string =>
 export const number = (x: number, digits = 3): string =>
   Number.isFinite(x) ? x.toFixed(digits) : "–";
 
-/** A labelled range input with its value shown beside it. */
+/** A labeled range input with its value shown beside it. */
 export interface Slider {
   readonly root: HTMLLabelElement;
   readonly input: HTMLInputElement;

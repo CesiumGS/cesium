@@ -55,7 +55,7 @@ export const RECIPES = {
       "Gaia DR2: ESA/Gaia/DPAC",
       "HYG database v4.1 (astronexus)",
     ],
-    modelled: [
+    modeled: [
       "Magnitudes of stars fainter than 7 come from a curve fitted against the catalog's magnitudes, not measured.",
       "The background's absolute level rests on one fitted constant and on half of the layer being taken as the star map's share.",
       "The background holds faint stars; zodiacal light is not in it.",

@@ -221,7 +221,7 @@ export const GROUP_INFO: readonly GroupInfo[] = [
     accuracyNote: "exact arithmetic: the design geometry",
     compared: {
       kind: "formula",
-      text: "Design distance × site scale × metres per foot ÷ the combined factor, by hand.",
+      text: "Design distance × site scale × meters per foot ÷ the combined factor, by hand.",
     },
   },
   // 1b: the new groups.

@@ -84,7 +84,7 @@ function horizons(): NonNullable<ScenarioAnswer["published"]> {
 const km = (m: number) =>
   `${(m / 1000).toLocaleString("en-US", { maximumFractionDigits: 0 })} km`;
 
-/** The Moon from the site at `instant`: Newtonian light time, as Horizons' (its Shapiro delay is a few metres). */
+/** The Moon from the site at `instant`: Newtonian light time, as Horizons' (its Shapiro delay is a few meters). */
 function moonFrom(ctx: StressContext, instant: Instant) {
   const f = ctx.frames;
   const site = earthSiteFrame(f.itrf, SACRAMENTO);
@@ -171,7 +171,7 @@ export const evaluateMoonFromHere: ScenarioEvaluator = async (
   ];
   // The site's own stated accuracy (exact by definition, stated.ts), as
   // the walk composes it up to ITRF, root-sum-square with the library's
-  // statement for the Moon's centre from the site: one figure, the walk's.
+  // statement for the Moon's center from the site: one figure, the walk's.
   const own = pointAccuracy(framePoint(site, [0, 0, 0], instant), f.itrf);
   const statement = m.accuracy;
   const total =
@@ -180,7 +180,7 @@ export const evaluateMoonFromHere: ScenarioEvaluator = async (
       : Math.hypot(statement.meters, own.meters);
   const method: NonNullable<ScenarioAnswer["method"]> = [
     {
-      title: "The Moon's centre",
+      title: "The Moon's center",
       text: "DE440 places it (MOON_ICRF) at the moment its light left: the light time solved, 1.2 to 1.4 s.",
     },
     {
@@ -227,8 +227,8 @@ export const evaluateMoonFromHere: ScenarioEvaluator = async (
                 ? `In the sky, but behind ${blockedBy}`
                 : "Below the horizon: the Earth is in the way",
             },
-      aside: `the light left ${fmt(leg.lightTime, 4)} s ago · ${km(m.distance)} between centres now`,
-      headline: `From Sacramento the Moon is ${pointingText(azimuth, elevation)}, ${km(range)} away as the light travels: what you see left the Moon ${fmt(leg.lightTime, 4)} s ago, when it was there. At this instant its centre is ${km(m.distance)} from the site. Its centre comes down the tree from MOON_ICRF through ICRF and GCRF to ITRF and the site's east-north-up frame, where east, north and up give the azimuth and elevation.`,
+      aside: `the light left ${fmt(leg.lightTime, 4)} s ago · ${km(m.distance)} between centers now`,
+      headline: `From Sacramento the Moon is ${pointingText(azimuth, elevation)}, ${km(range)} away as the light travels: what you see left the Moon ${fmt(leg.lightTime, 4)} s ago, when it was there. At this instant its center is ${km(m.distance)} from the site. Its center comes down the tree from MOON_ICRF through ICRF and GCRF to ITRF and the site's east-north-up frame, where east, north and up give the azimuth and elevation.`,
       value: range / 1000,
       unit: "km",
       published: horizons(),
@@ -237,7 +237,7 @@ export const evaluateMoonFromHere: ScenarioEvaluator = async (
           ? {
               meters: total,
               walks: [{ frame: SACRAMENTO.name, meters: own.meters! }],
-              note: "the Moon's centre from the site, 1σ: DE440's Moon and the Earth's orientation (the site itself is exact by definition: the point Horizons was asked for); airless (refraction near the horizon is up to about half a degree)",
+              note: "the Moon's center from the site, 1σ: DE440's Moon and the Earth's orientation (the site itself is exact by definition: the point Horizons was asked for); airless (refraction near the horizon is up to about half a degree)",
             }
           : {
               note: `not bounded: ${statement.terms.find((t) => t.meters === undefined)?.note ?? "a term has no size"}`,
@@ -251,7 +251,7 @@ export const evaluateMoonFromHere: ScenarioEvaluator = async (
     legend: [
       {
         key: "ray",
-        label: "The line of sight to the Moon's centre, as it arrives",
+        label: "The line of sight to the Moon's center, as it arrives",
         short: "To the Moon",
         accuracy: pointingText(azimuth, elevation),
         line: "solid",

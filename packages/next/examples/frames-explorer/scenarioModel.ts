@@ -147,9 +147,9 @@ export function publishedView(
 /**
  * The drawn terrain's error above which an end's local horizon isn't
  * judged at all, m (the capstone, Task 8 fix 1): from the Earth–Moon view
- * the tiles at the ship or the tool are tens of kilometres coarse, and a
+ * the tiles at the ship or the tool are tens of kilometers coarse, and a
  * "may block it (±77 km)" says nothing. Zoomed to the end, the tiles there
- * are a few tens of metres, under it.
+ * are a few tens of meters, under it.
  */
 export const COARSE_TERRAIN_METERS = 100;
 

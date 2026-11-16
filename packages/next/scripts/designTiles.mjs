@@ -8,7 +8,7 @@
 //    space, its second position (`CESIUM_dual_position`), so a scene item's
 //    placement draws either (or anything between);
 //  - site-building/: the site-grid building, rigid at its footprint's
-//    centre, with no second position;
+//    center, with no second position;
 //  - portfolio-<id>/: the scale ladder (Task 17b), each portfolio site's model
 //    as the corridor's, rigid at the model's middle
 //    (scripts/designTiles/ladder.mjs);
@@ -19,10 +19,10 @@
 //    regenerates only when they change.
 //
 // Tiles are glTF Y-up: a tile-space (E, N, U) is written (E, U, −N). Tile
-// centres are whole design units, so the engine's sums of tile translations
+// centers are whole design units, so the engine's sums of tile translations
 // are exact; a vertex is the float32 nearest its design point less its tile's
-// centre, and its reprojected position is the frame's image of exactly that
-// design point (the centre plus the float32), taken back through the rigid
+// center, and its reprojected position is the frame's image of exactly that
+// design point (the center plus the float32), taken back through the rigid
 // placement's matrix to the float32 nearest in the tile's model space, so both
 // positions draw one set of design points.
 //
@@ -95,7 +95,7 @@ import {
 } from "./designTiles/corridorMesh.mjs";
 import { writeGlb } from "./designTiles/gltf.mjs";
 import {
-  LEAF_ERROR_METRES,
+  LEAF_ERROR_METERS,
   ladderPlan,
   ladderTree,
   planExtent,
@@ -116,11 +116,11 @@ const LEAF_LENGTH = 2_000;
 const CHORD_TOLERANCE = 0.003;
 /** Answer stations every this many design units, from the start. */
 const ANSWER_INTERVAL = 4_000;
-/** Answer offsets: the centreline (median), the lanes' middles and the outer barriers. */
+/** Answer offsets: the centerline (median), the lanes' middles and the outer barriers. */
 const ANSWER_OFFSETS = [0, -17, 17, -40, 40];
-/** Answer stations nearest these distances from the anchor, metres. */
+/** Answer stations nearest these distances from the anchor, meters. */
 const NEAR_DISTANCES = [10_000, 20_000];
-/** The opening self-check's station (owner, 2026-11-07), on the centreline. */
+/** The opening self-check's station (owner, 2026-11-07), on the centerline. */
 const MARKER_STATION = 170_000;
 /**
  * The pair across the first curve, on the tangents either side of it, on or
@@ -132,7 +132,7 @@ const CURVE_PAIR_STATIONS = [29_400, 38_400];
 const BUILDING_COLOR = [0.62, 0.5, 0.38, 1];
 /** The site-grid building's plinth: weathered concrete, linear RGBA. */
 const PLINTH_COLOR = [0.36, 0.35, 0.33, 1];
-/** The ladder's models colour every vertex (COLOR_0); the material is white. */
+/** The ladder's models color every vertex (COLOR_0); the material is white. */
 const WHITE = [1, 1, 1, 1];
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -262,9 +262,9 @@ const translation = (t) => [
 ];
 
 /**
- * The box with these (unit) axes, centred where it fits `points` (absolute
+ * The box with these (unit) axes, centered where it fits `points` (absolute
  * coordinates, flat [x, y, z, …]) and the corners of `boxes`, as
- * { centre, halfAxes } in absolute coordinates.
+ * { center, halfAxes } in absolute coordinates.
  */
 function fitBox(axes, points, boxes) {
   const lo = [Infinity, Infinity, Infinity];
@@ -281,7 +281,7 @@ function fitBox(axes, points, boxes) {
   }
   for (const box of boxes) {
     for (let corner = 0; corner < 8; corner++) {
-      const p = [...box.centre];
+      const p = [...box.center];
       for (let k = 0; k < 3; k++) {
         const sign = corner & (1 << k) ? 1 : -1;
         for (let j = 0; j < 3; j++) {
@@ -291,7 +291,7 @@ function fitBox(axes, points, boxes) {
       add(p);
     }
   }
-  const centre = [0, 0, 0];
+  const center = [0, 0, 0];
   const halfAxes = [];
   for (let k = 0; k < 3; k++) {
     const middle = (lo[k] + hi[k]) / 2;
@@ -299,16 +299,16 @@ function fitBox(axes, points, boxes) {
     // part per million more, so float noise never leaves a child outside.
     const half = Math.max((hi[k] - lo[k]) / 2, 1e-3) * (1 + 1e-6);
     for (let j = 0; j < 3; j++) {
-      centre[j] += axes[k][j] * middle;
+      center[j] += axes[k][j] * middle;
     }
     halfAxes.push(axes[k].map((v) => v * half));
   }
-  return { centre, halfAxes };
+  return { center, halfAxes };
 }
 
-/** A box relative to a tile centre, as 3D Tiles writes it. */
-const boxJson = (box, centre) => [
-  ...sub(box.centre, centre),
+/** A box relative to a tile center, as 3D Tiles writes it. */
+const boxJson = (box, center) => [
+  ...sub(box.center, center),
   ...box.halfAxes[0],
   ...box.halfAxes[1],
   ...box.halfAxes[2],
@@ -322,10 +322,10 @@ const DESIGN_AXES = [
 
 /**
  * One tile's content, from its design-coordinate mesh: its positions, the
- * float32 nearest each design point less the tile's centre (whole design
+ * float32 nearest each design point less the tile's center (whole design
  * units), and with `rigid` (the rigid placement's matrix) each vertex's second
  * position, the frame's image of exactly that point, in the same model space,
- * with how far apart the two stand along the vertex's normal, metres, and how
+ * with how far apart the two stand along the vertex's normal, meters, and how
  * far apart they are in design units.
  */
 function tileContents(mesh, frame, rigid) {
@@ -337,15 +337,15 @@ function tileContents(mesh, frame, rigid) {
     lo[i % 3] = Math.min(lo[i % 3], design[i]);
     hi[i % 3] = Math.max(hi[i % 3], design[i]);
   }
-  const centre = [0, 1, 2].map((k) => Math.round((lo[k] + hi[k]) / 2));
+  const center = [0, 1, 2].map((k) => Math.round((lo[k] + hi[k]) / 2));
   const local = new Float32Array(design.length);
   for (let i = 0; i < design.length; i++) {
-    local[i] = design[i] - centre[i % 3];
+    local[i] = design[i] - center[i % 3];
   }
-  // The design points the tiles draw: centre + float32, exact in float64.
+  // The design points the tiles draw: center + float32, exact in float64.
   const drawn = new Float64Array(design.length);
   for (let i = 0; i < design.length; i++) {
-    drawn[i] = centre[i % 3] + local[i];
+    drawn[i] = center[i % 3] + local[i];
   }
   const positions = new Float32Array(design.length);
   const yUpNormals = new Float32Array(design.length);
@@ -360,7 +360,7 @@ function tileContents(mesh, frame, rigid) {
     yUpNormals.set([ne, nu, -nn], 3 * i);
   }
   if (rigid === undefined) {
-    return { drawn, centre, positions, normals: yUpNormals };
+    return { drawn, center, positions, normals: yUpNormals };
   }
 
   const inverse = invertAffine(rigid);
@@ -371,7 +371,7 @@ function tileContents(mesh, frame, rigid) {
   for (let i = 0; i < count; i++) {
     frame.toBodyFixed(drawn.subarray(3 * i, 3 * i + 3), fixed);
     const back = transformPoint(inverse, fixed);
-    const [e, n, u] = [0, 1, 2].map((k) => back[k] - centre[k]);
+    const [e, n, u] = [0, 1, 2].map((k) => back[k] - center[k]);
     reprojected.set([e, u, -n], 3 * i);
     maxDistance = Math.max(
       maxDistance,
@@ -397,12 +397,12 @@ function tileContents(mesh, frame, rigid) {
   // The reprojected end keeps these rigid normals (a placed vertex moves but
   // isn't turned: 0.197 degrees at most on the corridor). Before scene items
   // the generator also wrote reprojected normals, from the frame's Jacobian at
-  // each tile's centre, inverse transpose; `git show b2f8c3ae0e:packages/next/
+  // each tile's center, inverse transpose; `git show b2f8c3ae0e:packages/next/
   // scripts/designTiles.mjs` has it (`tileContents`). Plan 5f's review
   // (docs/design/geometry-through-placement-review.md) decides where it comes back.
   return {
     drawn,
-    centre,
+    center,
     positions,
     normals: yUpNormals,
     reprojected,
@@ -522,7 +522,7 @@ const writeJson = (path, value) => {
  * tile, each node with `id`, `mesh()` (built on demand; null for a tile with
  * no content, placed between its children), `geometricError` (design units)
  * and `children`. Above it a contentless root holds the rigid placement's
- * matrix, so tile centres stay small enough for float32. With `dual`, each
+ * matrix, so tile centers stay small enough for float32. With `dual`, each
  * vertex carries its reprojected position too, and the tileset declares it
  * (`DUAL_POSITION_EXTENSION`). `normals: false` leaves NORMAL out (flat-shaded
  * content: glTF's reader computes the faces' normals). Returns the vertex
@@ -553,17 +553,17 @@ function writeTileset({
     const mesh = node.mesh();
     tiles++;
     if (mesh === null) {
-      // No content: centred among its children, its box holding theirs.
-      const centre = [0, 1, 2].map((k) =>
+      // No content: centered among its children, its box holding theirs.
+      const center = [0, 1, 2].map((k) =>
         Math.round(
-          children.reduce((sum, c) => sum + c.centre[k], 0) / children.length,
+          children.reduce((sum, c) => sum + c.center[k], 0) / children.length,
         ),
       );
       return {
         id: node.id,
         geometricError: node.geometricError,
         children,
-        centre,
+        center,
         box: fitBox(
           DESIGN_AXES,
           [],
@@ -601,7 +601,7 @@ function writeTileset({
       uri,
       geometricError: node.geometricError,
       children,
-      centre: contents.centre,
+      center: contents.center,
       box: fitBox(
         DESIGN_AXES,
         contents.drawn,
@@ -611,16 +611,16 @@ function writeTileset({
   };
   const built = visit(top);
 
-  // The tile JSON: translations from the parent's centre to the tile's.
-  const tileNode = (node, parentCentre) => ({
+  // The tile JSON: translations from the parent's center to the tile's.
+  const tileNode = (node, parentCenter) => ({
     id: node.id,
-    box: boxJson(node.box, node.centre),
+    box: boxJson(node.box, node.center),
     geometricError: node.geometricError,
-    transform: translation(sub(node.centre, parentCentre)),
+    transform: translation(sub(node.center, parentCenter)),
     content: node.uri,
-    children: node.children.map((c) => tileNode(c, node.centre)),
+    children: node.children.map((c) => tileNode(c, node.center)),
   });
-  // The root: contentless, centred on the origin of design space.
+  // The root: contentless, centered on the origin of design space.
   // Its error, in design units, is its box's diagonal, so the top tile is
   // drawn whenever the whole is more than a few pixels.
   const half = built.box.halfAxes.map((a) => Math.hypot(...a));
@@ -648,7 +648,7 @@ function writeTileset({
       },
     },
   );
-  // The tileset's own error isn't scaled by any transform: metres.
+  // The tileset's own error isn't scaled by any transform: meters.
   json.geometricError = rootError * frame.units.metersPerUnit;
   writeJson(join(dir, "tileset.json"), json);
   log(
@@ -672,7 +672,7 @@ function writeTileset({
 }
 
 /**
- * The parts of a rigid placement's error at a design point, metres (the
+ * The parts of a rigid placement's error at a design point, meters (the
  * placement at `anchor` ignores all three): the curvature d²/2R (R the
  * Gaussian radius √(MN) at the anchor), the scale d·|1 − 1/k| (k the
  * combined factor at the anchor: grid distance = ground distance × k), and
@@ -734,7 +734,7 @@ function siteAnswers(site, frame, placement, plan, tree, written) {
       count: written.tiles,
       levels: tree.levels,
       vertices: written.vertices,
-      leafError: LEAF_ERROR_METRES,
+      leafError: LEAF_ERROR_METERS,
     },
     whiskers: written.whiskers,
   };
@@ -960,11 +960,11 @@ function corridorAnswers(frame, alignment, placement, frames) {
     },
     notes: [
       "Design points are on the section's surface: the profile plus the cross slope at the offset (under the barriers at offsets 0 and ±40).",
-      "bodyFixed and rigidDisplayed are Earth-fixed metres; geodetic is radians and metres above the ellipsoid; convergence is radians.",
-      "distanceFromAnchor is the horizontal design distance from the anchor in metres; nearKm marks the whole stations nearest 10 and 20 km on either side.",
-      "Pairs: from and to index points; designDistance is 3D in design units (the height difference converted), horizontalDistance E and N alone, trueDistance the straight line in metres.",
-      "marker: station 170,000 on the centreline, its true position and the rigid placement's; separation is the distance between them, metres.",
-      "mark: an NGS survey mark from its datasheet. design is its published NAD83(2011) position through the frame's operation; bodyFixed is that position on the ellipsoid, independent of the pipeline; its distances are to the nearest centreline point (on the profile).",
+      "bodyFixed and rigidDisplayed are Earth-fixed meters; geodetic is radians and meters above the ellipsoid; convergence is radians.",
+      "distanceFromAnchor is the horizontal design distance from the anchor in meters; nearKm marks the whole stations nearest 10 and 20 km on either side.",
+      "Pairs: from and to index points; designDistance is 3D in design units (the height difference converted), horizontalDistance E and N alone, trueDistance the straight line in meters.",
+      "marker: station 170,000 on the centerline, its true position and the rigid placement's; separation is the distance between them, meters.",
+      "mark: an NGS survey mark from its datasheet. design is its published NAD83(2011) position through the frame's operation; bodyFixed is that position on the ellipsoid, independent of the pipeline; its distances are to the nearest centerline point (on the profile).",
     ],
     points,
     pairs,
@@ -1089,7 +1089,7 @@ export async function ensureDesignTiles(
     dir: join(partial, "corridor"),
     dual: true,
     name: "corridor (rigid and reprojected)",
-    // Each vertex's colour (corridorMesh.mjs `CORRIDOR_PALETTE`).
+    // Each vertex's color (corridorMesh.mjs `CORRIDOR_PALETTE`).
     color: WHITE,
     log: logger,
   });
@@ -1115,7 +1115,7 @@ export async function ensureDesignTiles(
     const siteFrame = await loadSite(SITE_BUILDING);
     const mesh = buildingMesh(SITE_BUILDING);
     // Exact boxes: a leaf errs only by float32 rounding, half an ulp of its
-    // largest coordinate from its centre.
+    // largest coordinate from its center.
     const { width, depth, stories, storyHeight, plinth } = SITE_BUILDING.model;
     const reach = Math.max(
       width,
@@ -1123,7 +1123,7 @@ export async function ensureDesignTiles(
       stories * storyHeight +
         (SITE_BUILDING.origin[2] - (plinth ?? SITE_BUILDING.origin[2])),
     );
-    // The plinth in concrete, the stories in the building's colour.
+    // The plinth in concrete, the stories in the building's color.
     const colors = new Float32Array(mesh.featureIds.length * 4);
     mesh.featureIds.forEach((id, v) => {
       colors.set(
@@ -1142,7 +1142,7 @@ export async function ensureDesignTiles(
       placement: placeRigid(siteFrame, buildingAnchor(SITE_BUILDING)),
       dir: join(partial, "site-building"),
       name: SITE_BUILDING.name,
-      // The vertices carry the colours; the material is white, or glTF
+      // The vertices carry the colors; the material is white, or glTF
       // multiplies them (the stories would read BUILDING_COLOR squared).
       color: WHITE,
       log: logger,
@@ -1158,7 +1158,7 @@ export async function ensureDesignTiles(
     const mpu = siteFrame.units.metersPerUnit;
     const plan = ladderPlan(site, { metersPerUnit: mpu });
     const tree = ladderTree(plan, {
-      leafError: LEAF_ERROR_METRES / mpu,
+      leafError: LEAF_ERROR_METERS / mpu,
       metersPerUnit: mpu,
     });
     const placement = placeRigid(siteFrame, modelAnchor(site));

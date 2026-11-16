@@ -2,7 +2,7 @@
 // increment 1, slice D; the Node test is test/warpWorld.test.ts). The
 // Earth's anchor is placed in `exaggerated`, a smooth frame under ITRF that
 // multiplies height over a sphere by 10 (and by a scale, a world's placement parameter: the
-// slider). Three quads anchored in ITRF at the north pole, a metre up, are
+// slider). Three quads anchored in ITRF at the north pole, a meter up, are
 // drawn unlit into an offscreen target. Nothing is set per item: the engine
 // fits the route over each draw and the shader displaces its vertices
 // (shaders/placement.slang).
@@ -11,7 +11,7 @@
 // measurement itself), at 1 (height × 10), and at 0.4 (height × 4.6), the last
 // two by writing one float, with no refit. Each vertex is measured from the
 // image (as spikes/placement.ts: each edge fitted from its pixels'
-// coverage, neighbouring edges intersected), and must land within half a
+// coverage, neighboring edges intersected), and must land within half a
 // pixel, plus the fit's own error in pixels, of where the float64 route
 // (`routeForward`) and the view's projection (`View.toPixel`) put it.
 import "../lab/harness.css";
@@ -433,7 +433,7 @@ function coverage(
 
 /**
  * One quad's corners measured from the image: each edge's points from
- * coverage across it, a line fitted through them, and neighbouring lines
+ * coverage across it, a line fitted through them, and neighboring lines
  * intersected. `expected` (the route's corners) says roughly where the
  * edges are and which side is inside.
  */

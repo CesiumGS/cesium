@@ -46,13 +46,13 @@ function forwardOf(edge: SmoothEdge, p: ArrayLike<number>): number[] {
   return [out[0]!, out[1]!, out[2]!];
 }
 
-/** Body-fixed metres at a longitude and latitude (degrees) and height. */
+/** Body-fixed meters at a longitude and latitude (degrees) and height. */
 function ecefOf(lon: number, lat: number, h: number): number[] {
   return forwardOf(geographicToGeocentric(), [lon, lat, h]);
 }
 
-/** Metres of a difference in degrees of longitude and latitude at `lat`. */
-function metres(dLon: number, dLat: number, lat: number): number {
+/** Meters of a difference in degrees of longitude and latitude at `lat`. */
+function meters(dLon: number, dLat: number, lat: number): number {
   return Math.hypot(
     dLon * 111_320 * Math.cos((lat * Math.PI) / 180),
     dLat * 110_574,
@@ -139,7 +139,7 @@ describe("the projected-to-geographic built-ins", () => {
         between(r, -100, 3000),
       ]);
 
-      it("undoes the projection to a micrometre, in TypeScript and in its IR source", () => {
+      it("undoes the projection to a micrometer, in TypeScript and in its IR source", () => {
         const program = parseTransform(s.back.spec.source!);
         for (const p of points) {
           const grid = forwardOf(s.forward, p);
@@ -147,7 +147,7 @@ describe("the projected-to-geographic built-ins", () => {
           const ir = evaluate(program, grid, s.back.spec.params);
           for (const got of [back, [...ir]]) {
             expect(
-              metres(got[0]! - p[0]!, got[1]! - p[1]!, p[1]!),
+              meters(got[0]! - p[0]!, got[1]! - p[1]!, p[1]!),
             ).toBeLessThan(1e-6);
             expect(got[2]).toBeCloseTo(p[2]!, 9);
           }
@@ -183,7 +183,7 @@ describe("the projected-to-geographic built-ins", () => {
     expect(back.spec.separable).toEqual([]);
   });
 
-  it("compiles in a route from grid to body-fixed metres, and routes back", () => {
+  it("compiles in a route from grid to body-fixed meters, and routes back", () => {
     const graph = new TransformGraph();
     const earth = graph.root("earth");
     const geographic = graph.add("geographic", earth, geographicToGeocentric());
@@ -346,7 +346,7 @@ describe("liveEdge", () => {
     const j = new Float64Array(9);
     const out = new Float64Array(3);
     grid.forward([500000, 5_300_000, 0], out, j);
-    // d(longitude)/d(easting) is about 1 / (111320 cos φ · k) degrees per metre.
+    // d(longitude)/d(easting) is about 1 / (111320 cos φ · k) degrees per meter.
     expect(j[0]).toBeGreaterThan(1e-5);
     expect(j[0]).toBeLessThan(2e-5);
     expect(j.some(Number.isNaN)).toBe(false);

@@ -211,7 +211,7 @@ export interface SceneSpec {
   focus: readonly string[];
   /** The triads drawn whatever is selected, at these knobs. */
   triads(knobs: KnobState): string[];
-  /** Its own frames' triads' length, as a fraction of the camera's distance (the default 0.06): the arm's joints sit metres apart. */
+  /** Its own frames' triads' length, as a fraction of the camera's distance (the default 0.06): the arm's joints sit meters apart. */
   triadScale?: number;
   /** Each geocentric axis named and kept clear of the declutter (stop 1's S-I1). */
   pinnedAxes?: boolean;
@@ -239,8 +239,8 @@ export interface SceneSpec {
   look?(knobs: KnobState): SceneLook;
   /**
    * The line of sight up from a site, placed every frame on the page's
-   * thread (skyRay.ts): to the Moon's centre or to Orion (its track), from
-   * the site at these knobs, labelled.
+   * thread (skyRay.ts): to the Moon's center or to Orion (its track), from
+   * the site at these knobs, labeled.
    */
   skyRay?: {
     target: "moon" | "orion";
@@ -358,7 +358,7 @@ export const CAPSTONE: Readonly<
     {
       node: string;
       name: string;
-      /** The answer's short name, capitalised as a sentence's start. */
+      /** The answer's short name, capitalized as a sentence's start. */
       title: string;
       place?: { longitude: number; latitude: number };
     }
@@ -515,7 +515,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     drawIn: SACRAMENTO.name,
     routeEnds: {
       start: {
-        title: "MOON_ICRF, the Moon's centre",
+        title: "MOON_ICRF, the Moon's center",
         does: "where DE440 puts the Moon, light time before you see it",
       },
       end: {
@@ -524,7 +524,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
       },
     },
     diagramNote:
-      "The Moon is a frame of the tree; its centre comes down the route to the site's east-north-up frame.",
+      "The Moon is a frame of the tree; its center comes down the route to the site's east-north-up frame.",
     calloutNote:
       "Airless, as Horizons' table: refraction near the horizon is left out.",
     note: "Airless, as Horizons' table: near the horizon the air lifts the Moon by up to about half a degree. The local horizon is the terrain as drawn.",
@@ -632,7 +632,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
   drone: {
     id: "drone",
     // Beside the site, looking north-west across the drone's line: the
-    // view's centre 150 m to the right of the site origin, so the drone and
+    // view's center 150 m to the right of the site origin, so the drone and
     // its spot sit left of the answer's callout.
     camera: "site",
     flight: 3,
@@ -716,7 +716,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     triads: () => ARM_FRAMES.filter((n) => n !== ARM.yaw),
     triadScale: 0.025,
     look: () => ({
-      // Centred 35 m to the arm's right as seen, so the arm sits left of
+      // Centered 35 m to the arm's right as seen, so the arm sits left of
       // the answer's callout.
       ...offsetPlace(PAD.longitude, PAD.latitude, 13, -12),
       range: 140,
@@ -731,7 +731,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
     },
     diagramNote: `The arm's frames are defined by your app with the public Frame API, each with its spec sheet's accuracy. ${MARK.name}'s position comes in NAD83(2011) and goes through PROJ to ITRF, then down the arm.`,
     calloutNote: "The arm, its spec sheet and its survey are synthetic.",
-    note: `The arm, its spec sheet and its survey are synthetic. Its pad frame is defined at NGS mark AK1155 on LC-39A's pad, at the datasheet's height (NAVD88 14.137 m, 16 m below the ellipsoid in ITRF2020): the ± is from that point, not a survey of LC-39A. About 1 m per metre along the line, 3.4 mm per metre of height, if the point moves. ${PAD_OUTSIDE}`,
+    note: `The arm, its spec sheet and its survey are synthetic. Its pad frame is defined at NGS mark AK1155 on LC-39A's pad, at the datasheet's height (NAVD88 14.137 m, 16 m below the ellipsoid in ITRF2020): the ± is from that point, not a survey of LC-39A. About 1 m per meter along the line, 3.4 mm per meter of height, if the point moves. ${PAD_OUTSIDE}`,
   },
   everything: {
     id: "everything",
@@ -750,7 +750,7 @@ export const SCENES: Readonly<Partial<Record<ScenarioId, SceneSpec>>> = {
         : { ...PAD, range: 2e7, heading: 0, pitch: -89.9 };
     },
     focus: ["ICRF", ...Object.values(CAPSTONE).map((o) => o.node)],
-    // Small: an Earth pair is framed from thousands of kilometres up.
+    // Small: an Earth pair is framed from thousands of kilometers up.
     triadScale: 0.03,
     // The two ends' own frames (Orion's is the worker's: no triad).
     triads: (k) => {

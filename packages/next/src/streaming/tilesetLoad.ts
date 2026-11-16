@@ -210,7 +210,7 @@ async function loadContent(
       : undefined;
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") {
-      tile.state = "unloaded"; // cancelled: request again when needed
+      tile.state = "unloaded"; // canceled: request again when needed
       return undefined;
     }
     const message = error instanceof Error ? error.message : String(error);
@@ -248,9 +248,9 @@ export function cancelLoad(
   controller: AbortController,
 ): void {
   controller.abort();
-  tileset.engine.requests.cancelled(tile.contentOrigin);
-  tileset.stats.cancelled++;
+  tileset.engine.requests.canceled(tile.contentOrigin);
+  tileset.stats.canceled++;
   if (tile.purpose) {
-    tileset.stats.purposes[tile.purpose].cancelled++;
+    tileset.stats.purposes[tile.purpose].canceled++;
   }
 }

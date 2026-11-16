@@ -33,7 +33,7 @@ export interface WarpScale {
  * blend, a constant above the ceiling. The displacement along n̂ is
  * D(h) = (factor − 1)·G(h), dh'/dh replaces `factor` where a derivative is
  * meant, and terrain carries (n̂, h) instead of `h·n̂`
- * (`HEIGHT_PROFILE_ATTRIBUTE`). Without one, behaviour is as above.
+ * (`HEIGHT_PROFILE_ATTRIBUTE`). Without one, behavior is as above.
  */
 export interface HeightScale {
   readonly kind: "heightScale";
@@ -54,7 +54,7 @@ export interface HeightScale {
 
 /**
  * A smooth edge of the frame tree: points in `from` (the node's own
- * coordinates, metres, its axes) map to `to` (its parent) by `forward`, the
+ * coordinates, meters, its axes) map to `to` (its parent) by `forward`, the
  * direction of the transform graph (src/transform): a deformer over some
  * content is a node whose forward is the deformation, so what is placed in it
  * keeps its true coordinates and is drawn through the edge. A coordinate
@@ -98,7 +98,7 @@ export interface Warp {
    * How much of the warp applies, read live (a `PlacementParameter` is one,
    * and a slider writes one float): `forward` is the warp at 1, and at `s`
    * the warp is `p + s·(forward(p) − p)`. Absent, always 1. Use
-   * `warpForward` and `warpInverse`, which honour it.
+   * `warpForward` and `warpInverse`, which honor it.
    */
   readonly scale?: WarpScale;
   /**
@@ -393,7 +393,7 @@ export function withScalesAt(
 /**
  * `q` in the warp's `to` back to its `from`: its own `inverse` when it has
  * one (at scale 1), else Newton from `q` with its Jacobian at its scale, to
- * `tolerance` metres. Throws when it doesn't converge (the warp isn't
+ * `tolerance` meters. Throws when it doesn't converge (the warp isn't
  * injective near `q`).
  */
 export function warpInverse(

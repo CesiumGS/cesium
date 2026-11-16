@@ -71,7 +71,7 @@ describe("rays through the frame tree", () => {
     engine.removeWorld(world);
   });
 
-  /** A ray from the station along +X, aimed at the Moon's centre offset by (0, y, 0). */
+  /** A ray from the station along +X, aimed at the Moon's center offset by (0, y, 0). */
   const toMoon = (y = 0): QueryRay => ({
     from: [0, 0, 0],
     to: [MOON_X - R_EARTH, y, 0],
@@ -89,7 +89,7 @@ describe("rays through the frame tree", () => {
     });
     const ray = answer.rays[0]!;
     expect(ray.verdict).toBe("blocked");
-    // The Moon's near side, 1,737.4 km short of its centre, in the station's frame.
+    // The Moon's near side, 1,737.4 km short of its center, in the station's frame.
     expect(ray.hit!.position[0]).toBeCloseTo(MOON_X - R_EARTH - MOON_R, 6);
     expect(ray.hit!.frame).toBe(station);
     expect(ray.hit!.target).toEqual({ kind: "body", body: MOON });
@@ -116,7 +116,7 @@ describe("rays through the frame tree", () => {
     const len = Math.hypot(dx, y);
     const ux = dx / len;
     const uy = y / len;
-    // The closest approach to the centre, then the half-chord about it:
+    // The closest approach to the center, then the half-chord about it:
     // the perpendicular distance is dx · uy, with no cancellation.
     const perpendicular = dx * uy;
     const s =
@@ -142,7 +142,7 @@ describe("rays through the frame tree", () => {
       });
     const geometric = (await ask("geometric")).rays[0]!.hit!;
     const timed = (await ask("lightTime")).rays[0]!.hit!;
-    // The light time to the Moon's centre, about 1.26 s.
+    // The light time to the Moon's center, about 1.26 s.
     const tau = Math.hypot(MOON_X - R_EARTH, y) / C;
     expect(geometric.seconds).toBe(100);
     expect(100 - timed.seconds!).toBeCloseTo(tau, 3);

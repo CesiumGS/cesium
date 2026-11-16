@@ -364,7 +364,7 @@ describe("selection on drawn volumes", () => {
     expect(calls.bounds).toBe(before + 1);
   });
 
-  it("carries a sphere volume's centre and stretches its radius", () => {
+  it("carries a sphere volume's center and stretches its radius", () => {
     const json: Json = {
       geometricError: 100,
       boundingVolume: { sphere: [R + 3000, 0, 0, 400] } as never,
@@ -417,7 +417,7 @@ describe("selection on drawn volumes", () => {
         );
       }
       expect(worst, `${across * 2} m tile`).toBeLessThanOrEqual(sphere.radius);
-      // Against the 9 points (centre and corners) it replaces.
+      // Against the 9 points (center and corners) it replaces.
       const box = root.volume.kind === "box" ? root.volume.obb : undefined;
       const h = box!.halfAxes;
       const c = box!.center;

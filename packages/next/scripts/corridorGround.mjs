@@ -1,5 +1,5 @@
 // The design globe's corridor against real ground: a one-off design step, not
-// part of setup. It samples USGS 3DEP ground heights (NAVD88 metres, from the
+// part of setup. It samples USGS 3DEP ground heights (NAVD88 meters, from the
 // public 3DEP elevation service, no token) along the corridor's
 // horizontal alignment, then fits a vertical alignment to them as a highway
 // designer would (grades from 0.3% to 6%, PVIs with parabolic vertical
@@ -40,7 +40,7 @@ const root = join(here, "..");
 
 /** Points per request. */
 const BATCH = 40;
-/** Metres per US survey foot. */
+/** Meters per US survey foot. */
 const FT_US = 1200 / 3937;
 
 function argument(name, fallback) {
@@ -100,7 +100,7 @@ async function sample(file, every) {
       );
     }
     const out = {
-      source: `USGS 3DEP (${SERVICE}), NAVD88 metres`,
+      source: `USGS 3DEP (${SERVICE}), NAVD88 meters`,
       // The local date, as the corridor's other records are.
       sampled: new Date().toLocaleDateString("en-CA"),
       every,
@@ -231,7 +231,7 @@ function curvesFor(at, z) {
   return curves;
 }
 
-/** Whether every curve fits between its neighbours' and every grade is from 0.3% to 6%. */
+/** Whether every curve fits between its neighbors' and every grade is from 0.3% to 6%. */
 function feasible(at, z, curves) {
   for (let k = 0; k < at.length - 1; k++) {
     const gap = at[k + 1] - at[k];
@@ -470,7 +470,7 @@ const cut = worstAt(-1);
 
 // Structures: a viaduct where the fill passes VIADUCT_FILL, a tunnel where the
 // cut passes TUNNEL_CUT; each sample stands for half the way to its
-// neighbours, and a structure's ends are rounded out to whole 100 ft.
+// neighbors, and a structure's ends are rounded out to whole 100 ft.
 const TUNNEL_CUT = Number(argument("--tunnel", "80"));
 const VIADUCT_FILL = Number(argument("--viaduct", "50"));
 /** Structures of a kind this close are one, over ground on their side. */
@@ -483,7 +483,7 @@ d.forEach((v, i) => {
   if (kind === undefined) {
     return;
   }
-  // Half the way to a neighbour; a viaduct reaches on to where the ground
+  // Half the way to a neighbor; a viaduct reaches on to where the ground
   // meets the road, if that is further (never ground through its deck).
   const toward = (j) => {
     const half = (stationsOf[i] + stationsOf[j]) / 2;

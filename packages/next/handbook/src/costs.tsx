@@ -349,10 +349,10 @@ export function Costs() {
       </div>
       <p>
         <strong>A choice, not a necessity:</strong> 2.0 doesn't match some of
-        1.x's rendering on purpose. Style colours blend in linear light, so{" "}
+        1.x's rendering on purpose. Style colors blend in linear light, so{" "}
         <C>colorBlendMode</C> <C>"mix"</C> and <C>"replace"</C> and translucent
-        colours differ, and shading follows physics over 1.x. Apps tuned to
-        1.x's look will see changes. The plan records why, and the{" "}
+        colors differ, and shading follows physics over 1.x. Apps tuned to 1.x's
+        look will see changes. The plan records why, and the{" "}
         <a href="#/differences">Differences</a> tab lists them.
       </p>
 

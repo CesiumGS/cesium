@@ -33,7 +33,7 @@ const orionGapCase = stressCase(
 const orionMoonCase = stressCase(
   "trajectory.moon-me",
   "trajectory",
-  "Orion at the lunar flyby (2026-04-06T23:00 UTC) in MOON_ME: its distance from the Moon's centre is kept, and it round-trips within 1 mm per 10⁹ m",
+  "Orion at the lunar flyby (2026-04-06T23:00 UTC) in MOON_ME: its distance from the Moon's center is kept, and it round-trips within 1 mm per 10⁹ m",
   ["orion"],
   async (ctx, base) => {
     const o = orion(ctx);
@@ -45,15 +45,15 @@ const orionMoonCase = stressCase(
     const back = convertPoint(inMe, o.reference);
     const toMe = frameTransform(o.reference, f.moonMe, instant);
     const fromMe = frameTransform(f.moonMe, o.reference, instant);
-    // The Moon's centre in Orion's reference frame: a rigid rotation about it
+    // The Moon's center in Orion's reference frame: a rigid rotation about it
     // keeps the distance.
-    const moonCentre = frameTransform(
+    const moonCenter = frameTransform(
       f.moonIcrf,
       o.reference,
       instant,
     ).subarray(12, 15);
-    const fromCentre = distance(p.position, moonCentre);
-    const kept = Math.abs(norm(inMe.position) - fromCentre);
+    const fromCenter = distance(p.position, moonCenter);
+    const kept = Math.abs(norm(inMe.position) - fromCenter);
     const tolerance = compositionTolerance(
       [translationOf(toMe), translationOf(fromMe)],
       [norm(p.position), norm(inMe.position)],
@@ -72,12 +72,12 @@ const orionMoonCase = stressCase(
         ...base,
         id: `${base.id}.distance`,
         title:
-          "Orion at the lunar flyby, converted to MOON_ME, keeps its distance from the Moon's centre (within 1 mm per 10⁹ m)",
+          "Orion at the lunar flyby, converted to MOON_ME, keeps its distance from the Moon's center (within 1 mm per 10⁹ m)",
         pass: true,
         value: kept,
         tolerance,
         unit: "m",
-        detail: `${fmt(fromCentre / 1000, 7)} km from the Moon's centre`,
+        detail: `${fmt(fromCenter / 1000, 7)} km from the Moon's center`,
         accuracy,
         instant: instant.tdb(),
       },

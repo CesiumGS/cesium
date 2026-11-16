@@ -341,7 +341,7 @@ describe("stop 4's long line (rigidLine.ts): 400 km east in California zone 3", 
     expect(Math.abs(sagAtEnd / formula - 1)).toBeLessThanOrEqual(0.01);
   });
 
-  it("the exact line is sampled every kilometre: each chord within 2 cm of the ellipsoid", () => {
+  it("the exact line is sampled every kilometer: each chord within 2 cm of the ellipsoid", () => {
     const { exact } = line();
     const f = california();
     for (const i of [0, 100, 399]) {
@@ -473,17 +473,17 @@ describe("distortion", () => {
       contoursPpm: [],
       tissotRadius: RADIUS,
     });
-    const centre = Array.from(f.toBodyFixed([0, n60, 0]));
+    const center = Array.from(f.toBodyFixed([0, n60, 0]));
     const sinPhi = Math.sin(Math.PI / 3);
     const w = 1 - E2 * sinPhi * sinPhi;
     const parallel = Math.sqrt(w) / Math.cos(Math.PI / 3);
     // Vertex 0 of the first ellipse (its first segment's start) is the
     // parallel axis's end.
-    const axis = norm(sub(vertex(d.tissot, 0), centre));
+    const axis = norm(sub(vertex(d.tissot, 0), center));
     expect(Math.abs(axis / (RADIUS * parallel) - 1)).toBeLessThan(1e-9);
     // The meridian axis (a quarter of the way round: vertex 8 of 32), against
     // the hand formula h = w^(3/2) / ((1 - e2) cos phi) for the same map.
-    const meridian = norm(sub(vertex(d.tissot, 2 * 8), centre));
+    const meridian = norm(sub(vertex(d.tissot, 2 * 8), center));
     const h = w ** 1.5 / ((1 - E2) * Math.cos(Math.PI / 3));
     expect(Math.abs(meridian / (RADIUS * h) - 1)).toBeLessThan(1e-9);
     // Pseudo-Mercator is not conformal on the ellipsoid: h differs from k.
@@ -504,17 +504,17 @@ describe("distortion", () => {
     let worstAngle = 0;
     for (let node = 0; node < 30; node++) {
       const i = node * 64;
-      // The ellipse's centre: the mean of the opposite vertices 0 and 16.
+      // The ellipse's center: the mean of the opposite vertices 0 and 16.
       const p0 = vertex(d.tissot, i);
       const p16 = vertex(d.tissot, i + 2 * 16);
-      const centre = p0.map((x, c) => (x + p16[c]!) / 2);
-      const k = norm(sub(p0, centre));
+      const center = p0.map((x, c) => (x + p16[c]!) / 2);
+      const k = norm(sub(p0, center));
       const pm = vertex(d.tissot, i + 2 * 8);
-      const hVec = sub(pm, centre);
+      const hVec = sub(pm, center);
       worstRatio = Math.max(worstRatio, Math.abs(norm(hVec) / k - 1));
       worstAngle = Math.max(
         worstAngle,
-        Math.abs(angle(sub(p0, centre), hVec) - Math.PI / 2),
+        Math.abs(angle(sub(p0, center), hVec) - Math.PI / 2),
       );
       expect(Math.abs(k / RADIUS - 1)).toBeLessThan(5e-3);
     }
@@ -641,8 +641,8 @@ describe("distortion skips only nodes PROJ has no scale at", () => {
     expect(d.tissot.positions.length / 3).toBe((3 - d.skipped) * 64);
     // The surviving node is the equator one, with a unit-sized ellipse.
     const first = vertex(d.tissot, 0);
-    const centre = Array.from(f.toBodyFixed([0, 0, 0]));
-    expect(norm(sub(first, centre))).toBeCloseTo(1000, 3);
+    const center = Array.from(f.toBodyFixed([0, 0, 0]));
+    expect(norm(sub(first, center))).toBeCloseTo(1000, 3);
   });
 
   // A frame whose first step throws the given RangeError at one node.

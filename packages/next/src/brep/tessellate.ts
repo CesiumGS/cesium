@@ -6,9 +6,9 @@
 // comes from a chordal-error bound: the sag of the analytic surface, or for a
 // Bézier surface with an analytic identity, of that identity from the
 // patches' angular or linear speed, or else from the net's second derivatives
-// (src/brep/bounds.ts). Triangles whose centre falls outside the face's trim
+// (src/brep/bounds.ts). Triangles whose center falls outside the face's trim
 // are dropped, and the edges drawn on top hide the jagged trim. Lengths are
-// metres and angles are radians.
+// meters and angles are radians.
 import {
   axisRadius,
   axisRates,
@@ -36,7 +36,7 @@ export interface TessellateOptions {
 }
 
 export interface BrepMesh {
-  /** Positions are relative to this, m (the centre of the mesh's bounds). */
+  /** Positions are relative to this, m (the center of the mesh's bounds). */
   readonly origin: Float64Array;
   /** Every face, unwelded between faces: featureIds holds each vertex's face index. */
   readonly faces: {
@@ -167,7 +167,7 @@ export function tessellateBrep(
     edgeVertexCount += count;
   }
 
-  // The origin is the centre of the bounds of every emitted point.
+  // The origin is the center of the bounds of every emitted point.
   const min = [Infinity, Infinity, Infinity];
   const max = [-Infinity, -Infinity, -Infinity];
   for (const chunks of [facePositions, edgePositions]) {
@@ -331,7 +331,7 @@ function tessellateFace(
   // along ∂u × ∂v, or the other way round for a reversed face.
   const reversed = form.faceReversed[face] === 1;
   const kept: number[] = [];
-  const centre = (a: number, b: number, c: number): [number, number] => [
+  const center = (a: number, b: number, c: number): [number, number] => [
     (us[a % stride]! + us[b % stride]! + us[c % stride]!) / 3,
     (vs[Math.floor(a / stride)]! +
       vs[Math.floor(b / stride)]! +
@@ -349,7 +349,7 @@ function tessellateFace(
         [a, c, d],
       ] as const) {
         if (trimmed) {
-          const [cu, cv] = centre(t[0], t[1], t[2]);
+          const [cu, cv] = center(t[0], t[1], t[2]);
           if (!insideEvenOdd(loops, cu, cv)) {
             continue;
           }
@@ -773,7 +773,7 @@ function identityDemand(
     case SurfaceKind.Sphere: {
       // Three corners on a sphere, whose edges are at most A, B (along u, v)
       // and C (across a cell): the triangle's points sit at distance √(r² −
-      // W) from the centre with W at most C² / 4 (C² ≥ A² + B², so the
+      // W) from the center with W at most C² / 4 (C² ≥ A² + B², so the
       // enclosing circle's diameter is C), and the cell's edges are at most
       // the speeds times the cell's sides.
       let speedU = 0;

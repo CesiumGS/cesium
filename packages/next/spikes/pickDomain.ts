@@ -230,7 +230,7 @@ function circle(cx: number, cy: number, r: number): NurbsCurve {
   };
 }
 
-/** The plate's half extent: 3.2 × 2.4 m, centred; `HOLE` its round hole's centre (u, v) and radius. */
+/** The plate's half extent: 3.2 × 2.4 m, centered; `HOLE` its round hole's center (u, v) and radius. */
 const PLATE = { x: 1.6, y: 1.2 };
 const HOLE = { u: 1, v: 1.2, r: 0.55 };
 
@@ -314,7 +314,7 @@ function rayTriangle(
   ];
 }
 
-/** The ray through pixel (x, y)'s centre: the camera's position in render space and a unit direction. */
+/** The ray through pixel (x, y)'s center: the camera's position in render space and a unit direction. */
 function pixelRay(
   view: View,
   x: number,

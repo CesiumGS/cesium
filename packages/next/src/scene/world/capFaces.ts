@@ -7,7 +7,7 @@ import { capPlanes, type PlannedClip, type Vec3Like } from "./clips.ts";
 
 /** Faces a view's caps hold at once: four to each of the two parity targets. */
 export const CAP_MAX_FACES = 8;
-/** Rows of the cap look, before the faces: the colour, then the hatch. */
+/** Rows of the cap look, before the faces: the color, then the hatch. */
 export const CAP_LOOK_ROWS = 2;
 /** Rows of a face: its plane, its origin and its set, its first in-plane axis. */
 export const CAP_FACE_ROWS = 3;
@@ -23,19 +23,19 @@ export interface CapHatch {
   readonly angle?: number;
   /** A line's width as a share of the spacing (default 0.12). */
   readonly width?: number;
-  /** How much a line darkens the colour, 0 to 1 (default 1). */
+  /** How much a line darkens the color, 0 to 1 (default 1). */
   readonly strength?: number;
 }
 
 /**
  * The section caps of a view (`View.clipCaps`): the cut of every solid draw
- * (`DrawOptions.solid`) closed by a flat colour, at once, on the GPU, with no
+ * (`DrawOptions.solid`) closed by a flat color, at once, on the GPU, with no
  * geometry to build as a clip moves.
  */
 export interface ClipCaps {
-  /** Linear RGBA (default a warm grey). */
+  /** Linear RGBA (default a warm gray). */
   readonly color?: CapRgba;
-  /** Lines over the colour; none by default. */
+  /** Lines over the color; none by default. */
   readonly hatch?: CapHatch;
 }
 

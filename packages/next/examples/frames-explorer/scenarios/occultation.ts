@@ -18,8 +18,8 @@
 // dish's windows (dishTracks.ts's live check): the edges are the library's
 // too.
 //
-// The real limb rises and falls by kilometres with the lunar terrain, which
-// isn't modelled: each Moon edge says how many seconds a kilometre of limb
+// The real limb rises and falls by kilometers with the lunar terrain, which
+// isn't modeled: each Moon edge says how many seconds a kilometer of limb
 // moves it (`secondsPerKm`), from the crossing's own rate.
 import { type Frame, frameTransform } from "../../../src/frames/Frame.ts";
 import type { Frames } from "../../../src/frames/frames.ts";
@@ -73,7 +73,7 @@ export interface Window {
 }
 
 export interface MoonWindow extends Window {
-  /** Seconds a kilometre of limb height moves each edge (from the crossing's rate). */
+  /** Seconds a kilometer of limb height moves each edge (from the crossing's rate). */
   secondsPerKm: { start: number; end: number };
 }
 
@@ -81,7 +81,7 @@ export interface MoonWindow extends Window {
 export interface Blocked {
   moon: boolean;
   earth: boolean;
-  /** The angle from the Moon's limb to Orion, radians (negative inside the disc). */
+  /** The angle from the Moon's limb to Orion, radians (negative inside the disk). */
   limb: number;
   /** The Moon's distance from the dish, m. */
   moonDistance: number;
@@ -149,7 +149,7 @@ function throughEarth(p0: readonly number[], p1: readonly number[]): boolean {
 /**
  * The sky at `tdb`, for every dish at once: ITRF to ICRF, and the Moon's and
  * Orion's barycentric places when their light left, light time from the
- * Earth's centre (a dish's own differs by at most 21 ms: Orion and the Moon
+ * Earth's center (a dish's own differs by at most 21 ms: Orion and the Moon
  * move about 20 m against each other in it, far inside an edge's 1 ms
  * bisection over a limb crossing of about 1.3 km/s, and the library is asked
  * at each edge anyway). Undefined outside Orion's data.
@@ -158,7 +158,7 @@ export interface Sky {
   toIcrf: Float64Array;
   moon: ArrayLike<number>;
   orion: ArrayLike<number>;
-  /** The Earth's centre's barycentric velocity, m/s. */
+  /** The Earth's center's barycentric velocity, m/s. */
   earthVelocity: number[];
   /**
    * A bound on Orion's angular rate seen from a dish on the turning Earth,
@@ -179,12 +179,12 @@ export function skyAt(
     return undefined;
   }
   const toIcrf = frameTransform(frames.itrf, frames.icrf, t);
-  const centre = toIcrf.subarray(12, 15);
+  const center = toIcrf.subarray(12, 15);
   const seen = (frame: Frame) => {
     const at = (x: number) =>
       frameTransform(frame, frames.icrf, Instant.fromTdb(x)).subarray(12, 15);
     const first = at(tdb);
-    return at(tdb - len(sub(first, centre)) / C);
+    return at(tdb - len(sub(first, center)) / C);
   };
   try {
     const e = (x: number) =>
@@ -240,7 +240,7 @@ export function blockedIn(sky: Sky, dish: Dish): Blocked {
   const limb =
     angleBetween(moon, craft) - Math.asin(MOON_RADIUS / moonDistance);
   // Where the dish sees Orion, as `measure` does (fix 2): the light-time
-  // direction aberrated by the dish's velocity (the Earth's centre's and the
+  // direction aberrated by the dish's velocity (the Earth's center's and the
   // Earth's turn at the dish), about 20″ at most; the mask and the
   // ellipsoid are tested along it.
   const axis = [toIcrf[8]!, toIcrf[9]!, toIcrf[10]!];

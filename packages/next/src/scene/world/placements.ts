@@ -108,9 +108,9 @@ export function createPlacementParameter(
 
 /**
  * Where the record's culling sphere is for `placed` at its parameters'
- * values now (`drawnSphere`): its base centre moved by the displacement at
+ * values now (`drawnSphere`): its base center moved by the displacement at
  * it, in float32 as the record holds it, and the base radius grown by the
- * residual and by what rounding the centre cost. Refused where float32
+ * residual and by what rounding the center cost. Refused where float32
  * can't hold it.
  */
 function placedSphere(
@@ -122,7 +122,7 @@ function placedSphere(
   let rounding = 0;
   for (let a = 0; a < 3; a++) {
     const exact = placed.center[a]! + shift[a]!;
-    finite32(caller, "the draw's moved bounding centre", exact);
+    finite32(caller, "the draw's moved bounding center", exact);
     center[a] = Math.fround(exact);
     rounding += (center[a]! - exact) ** 2;
   }
@@ -145,7 +145,7 @@ function writeSphere(
  * Sets a draw's warp (`World.setPlacement` for a public `Placement`,
  * converted by `termsOf`; `WarpTerms` directly, for the engine's own
  * routes): the same refusals. Its culling sphere moves by the displacement
- * at its centre and grows by the residual only (`drawnSphere`), for every
+ * at its center and grows by the residual only (`drawnSphere`), for every
  * value in its parameters' ranges.
  */
 export function setPlacement(

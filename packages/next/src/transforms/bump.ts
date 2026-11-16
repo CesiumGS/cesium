@@ -1,5 +1,5 @@
 // A Gaussian bump: every point moves along the unit direction u by
-// amplitude · exp(-|p - c|² / 2σ²), a lift (negative digs) about a centre.
+// amplitude · exp(-|p - c|² / 2σ²), a lift (negative digs) about a center.
 // Output is affine in the amplitude. No closed-form inverse: a route solves
 // by Newton with the Jacobian below.
 import type { SmoothEdge } from "../transform/graph.ts";
@@ -26,9 +26,9 @@ const source = `(p, params) => {
 export const bumpDescriptor: TransformDescriptor = {
   id: "bump",
   params: {
-    ...vec3Specs("c", [0, 0, 0], "the bump's centre"),
+    ...vec3Specs("c", [0, 0, 0], "the bump's center"),
     ...vec3Specs("u", [0, 0, 1], "the direction points move in (normalized)"),
-    amplitude: { default: 1, description: "the lift at the centre, m" },
+    amplitude: { default: 1, description: "the lift at the center, m" },
     sigma: {
       default: 1,
       min: 1e-9,
@@ -65,7 +65,7 @@ export const bumpDescriptor: TransformDescriptor = {
   slang: "bumpParity",
 };
 
-/** A bump of `amplitude` metres at `center`, `sigma` wide, along `direction` (default +z). */
+/** A bump of `amplitude` meters at `center`, `sigma` wide, along `direction` (default +z). */
 export function bump(options: {
   center: ArrayLike<number>;
   amplitude: number;

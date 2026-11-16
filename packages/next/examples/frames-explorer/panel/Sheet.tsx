@@ -118,7 +118,7 @@ export function SheetHead({
       }
     };
   }, [focusRef]);
-  // One labelled Close with a full hit target, and no separate fill
+  // One labeled Close with a full hit target, and no separate fill
   // toggle beside it (the owner, 2026-11-06: two tiny adjacent buttons).
   void controls;
   return (

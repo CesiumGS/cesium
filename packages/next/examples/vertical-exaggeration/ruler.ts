@@ -3,7 +3,7 @@ import type { Viewer } from "@cesium/next/widgets";
 
 /** Segments along the ruler: the map bends a straight line, so it is drawn in pieces. */
 const SEGMENTS = 64;
-/** Linear colour of the ruler. */
+/** Linear color of the ruler. */
 const COLOR = [1, 0.85, 0.1, 1] as const;
 
 /**

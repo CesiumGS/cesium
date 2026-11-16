@@ -90,7 +90,7 @@ function stop(engine: Engine | undefined): void {
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-/** An axis-aligned box's mesh, centred on the origin, `half` its half extents, outward winding. */
+/** An axis-aligned box's mesh, centered on the origin, `half` its half extents, outward winding. */
 function boxMesh(half: readonly [number, number, number]): MeshData {
   const corners: number[] = [];
   for (let i = 0; i < 8; i++) {
@@ -190,7 +190,7 @@ function look(view: View, eye: V3, direction: V3, up: V3): void {
   view.camera.version++;
 }
 
-/** The ray through the centre of pixel (px, py): origin and unit direction, in the root frame. */
+/** The ray through the center of pixel (px, py): origin and unit direction, in the root frame. */
 function pixelRay(view: View, px: number, py: number): { o: V3; d: V3 } {
   const c = view.camera;
   const t = Math.tan(view.camera.fovy(WIDTH / HEIGHT) / 2);
@@ -272,7 +272,7 @@ interface Comparison {
   stray: number;
 }
 
-/** Compares every pixel whose 3 × 3 neighbourhood agrees on `expected` (inside the section or not). */
+/** Compares every pixel whose 3 × 3 neighborhood agrees on `expected` (inside the section or not). */
 function compare(
   pixels: Uint8ClampedArray,
   expected: (px: number, py: number) => boolean,

@@ -8,8 +8,8 @@
 // Units: design values (`design`, stations, offsets, design distances) are
 // in the corridor CRS's own units, US survey feet (`frame.unitName`),
 // except a site's (`sites`), which are in that site's CRS's units;
-// body-fixed positions and true distances are Earth-fixed metres; angles
-// are radians; geodetic heights are metres above the ellipsoid.
+// body-fixed positions and true distances are Earth-fixed meters; angles
+// are radians; geodetic heights are meters above the ellipsoid.
 //
 // Erasable TypeScript only (no enums, no parameter properties): the Node
 // generator imports this file directly.
@@ -29,13 +29,13 @@ export interface AnswerPoint extends AnswerStationOffset {
   readonly nearKm?: number;
   /** E, N and the NAVD88 height, design units. */
   readonly design: readonly [number, number, number];
-  /** Where the point truly is, through the frame (Earth-fixed metres). */
+  /** Where the point truly is, through the frame (Earth-fixed meters). */
   readonly bodyFixed: readonly [number, number, number];
-  /** Where the rigid placement draws it (Earth-fixed metres). */
+  /** Where the rigid placement draws it (Earth-fixed meters). */
   readonly rigidDisplayed: readonly [number, number, number];
-  /** |rigidDisplayed − bodyFixed|, metres. */
+  /** |rigidDisplayed − bodyFixed|, meters. */
   readonly displayError: number;
-  /** Radians, and metres above the ellipsoid. */
+  /** Radians, and meters above the ellipsoid. */
   readonly geodetic: {
     readonly longitude: number;
     readonly latitude: number;
@@ -45,7 +45,7 @@ export interface AnswerPoint extends AnswerStationOffset {
   readonly combinedFactor: number;
   /** Grid convergence, radians. */
   readonly convergence: number;
-  /** The horizontal design distance from the anchor, metres. */
+  /** The horizontal design distance from the anchor, meters. */
   readonly distanceFromAnchor: number;
 }
 
@@ -60,7 +60,7 @@ export interface AnswerPair {
   readonly designDistance: number;
   /** E and N alone, design units. */
   readonly horizontalDistance: number;
-  /** The straight line between the true positions, metres. */
+  /** The straight line between the true positions, meters. */
   readonly trueDistance: number;
   readonly ends: {
     readonly a: AnswerStationOffset;
@@ -70,7 +70,7 @@ export interface AnswerPair {
 
 /**
  * The opening self-check (owner, 2026-11-07): station 170,000 on the
- * centreline, where it truly is and where the rigid placement draws it.
+ * centerline, where it truly is and where the rigid placement draws it.
  */
 export interface AnswerMarker extends AnswerStationOffset {
   /** Index into `points`. */
@@ -79,7 +79,7 @@ export interface AnswerMarker extends AnswerStationOffset {
   readonly bodyFixed: readonly [number, number, number];
   readonly rigidDisplayed: readonly [number, number, number];
   /**
-   * |rigidDisplayed − bodyFixed|, metres: the headline, about 34.4 m at
+   * |rigidDisplayed − bodyFixed|, meters: the headline, about 34.4 m at
    * station 170,000 (31.6 m is station 166,627, nearest 20 km from the anchor).
    */
   readonly separation: number;
@@ -87,7 +87,7 @@ export interface AnswerMarker extends AnswerStationOffset {
 
 /**
  * A real NGS survey mark near the corridor (owner, 2026-11-07), from its
- * datasheet, and its relation to the centreline.
+ * datasheet, and its relation to the centerline.
  */
 export interface AnswerMark {
   readonly pid: string;
@@ -98,7 +98,7 @@ export interface AnswerMark {
   /**
    * NAD83(2011), as NGS publishes it: radians (converted exactly from the
    * published degrees, minutes and seconds) and the ellipsoid height in
-   * metres.
+   * meters.
    */
   readonly geodetic: {
     readonly longitude: number;
@@ -123,21 +123,21 @@ export interface AnswerMark {
    */
   readonly design: readonly [number, number, number];
   /**
-   * Earth-fixed metres straight from the published position on the Earth's
+   * Earth-fixed meters straight from the published position on the Earth's
    * ellipsoid, independent of the design's pipeline (NAD83(2011) taken as
    * the frame's operation takes it, equal to WGS 84).
    */
   readonly bodyFixed: readonly [number, number, number];
-  /** The nearest centreline point's station, and the mark's offset from it. */
+  /** The nearest centerline point's station, and the mark's offset from it. */
   readonly nearest: AnswerStationOffset;
-  /** That centreline point (on the profile), design units. */
+  /** That centerline point (on the profile), design units. */
   readonly nearestDesign: readonly [number, number, number];
   /** Mark to that point, 3D, design units. */
   readonly designDistance: number;
   /** Mark to that point, E and N alone, design units (|offset|). */
   readonly horizontalDistance: number;
   /**
-   * Mark to that point, metres: `measure`'s true distance between the two
+   * Mark to that point, meters: `measure`'s true distance between the two
    * design points (the straight line between where they truly are), as the
    * page measures it.
    */
@@ -153,7 +153,7 @@ export interface AnswerFrame {
   readonly metersPerHeightUnit: number;
   /** PROJ's name for the frame's operation, when it is one of its candidates. */
   readonly operation: string | null;
-  /** That operation's stated accuracy, metres. */
+  /** That operation's stated accuracy, meters. */
   readonly operationAccuracy: number | null;
   readonly grids: readonly string[];
 }
@@ -164,13 +164,13 @@ export interface AnswerSitePoint {
   readonly label: string;
   /** In the site's CRS's units, easting first. */
   readonly design: readonly [number, number, number];
-  /** Where the point truly is, through the site's frame (Earth-fixed metres). */
+  /** Where the point truly is, through the site's frame (Earth-fixed meters). */
   readonly bodyFixed: readonly [number, number, number];
-  /** Where the rigid placement at the anchor draws it (Earth-fixed metres). */
+  /** Where the rigid placement at the anchor draws it (Earth-fixed meters). */
   readonly rigidDisplayed: readonly [number, number, number];
-  /** |rigidDisplayed − bodyFixed|, metres. */
+  /** |rigidDisplayed − bodyFixed|, meters. */
   readonly displayError: number;
-  /** The horizontal design distance from the anchor, metres. */
+  /** The horizontal design distance from the anchor, meters. */
   readonly distanceFromAnchor: number;
 }
 
@@ -182,16 +182,16 @@ export interface AnswerSite {
   readonly name: string;
   /** The model's kind ("airport", "poleLine", …). */
   readonly kind: string;
-  /** The largest horizontal distance between two of the model's points, metres. */
+  /** The largest horizontal distance between two of the model's points, meters. */
   readonly extent: number;
   /** The rigid placement's anchor: the model's middle, design units. */
   readonly anchor: readonly [number, number, number];
-  /** The rigid error at the model's point farthest from the anchor (`points[1]`), metres. */
+  /** The rigid error at the model's point farthest from the anchor (`points[1]`), meters. */
   readonly displayError: number;
-  /** That point's horizontal distance from the anchor, d, metres. */
+  /** That point's horizontal distance from the anchor, d, meters. */
   readonly distanceFromAnchor: number;
   /**
-   * The rigid error's parts there, metres: the curvature (d²/2R, R the
+   * The rigid error's parts there, meters: the curvature (d²/2R, R the
    * Gaussian radius at the anchor), the scale (d·|1 − 1/k|, k the combined
    * factor at the anchor, which rigid ignores), and the geoid's rise from
    * the anchor to the point (rigid keeps the anchor's). The error is about
@@ -210,7 +210,7 @@ export interface AnswerSite {
   readonly combinedFactor: number;
   /** The anchor, the farthest point and the model's landmark, in that order. */
   readonly points: readonly AnswerSitePoint[];
-  /** Both placements' one tile tree: its tiles, levels, vertices (one placement's) and leaf error (metres). */
+  /** Both placements' one tile tree: its tiles, levels, vertices (one placement's) and leaf error (meters). */
   readonly tiles: {
     readonly count: number;
     readonly levels: number;
@@ -229,7 +229,7 @@ export interface Answers {
   readonly version: number;
   /** The instant `measure` ran at (UTC, ISO 8601). */
   readonly instant: string;
-  /** The rigid placement's anchor, on the centreline. */
+  /** The rigid placement's anchor, on the centerline. */
   readonly anchorStation: number;
   /** The alignment the stations are on. */
   readonly alignment: string;

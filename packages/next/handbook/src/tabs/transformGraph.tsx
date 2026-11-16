@@ -199,7 +199,7 @@ const EDGES = [
   {
     kind: "Affine",
     edge: "A 4×4, constant or a function of time",
-    api: "Every reference frame of the catalogue (`Frame`)",
+    api: "Every reference frame of the catalog (`Frame`)",
     cost: "Runs of them collapse into one float64 matrix; no pipeline change",
   },
   {
@@ -232,7 +232,7 @@ const PRIOR = [
       "They deform one object's mesh. Here normals, picks, measurements, accuracy and tile selection follow from the one definition",
   },
   {
-    art: "Space warps in solid modelling (ACIS)",
+    art: "Space warps in solid modeling (ACIS)",
     has: "A smooth map applied to a whole solid, not to a mesh of it",
     takes: "The idea that a map of space is an operation on exact geometry",
     differs:
@@ -241,9 +241,9 @@ const PRIOR = [
   {
     art: "Unreal's World Position Offset and Large World Coordinates",
     has: "A material moves vertices; LWC keeps a position as a tile and a float offset",
-    takes: "LWC's split: a per-draw centre constant plus a float32 residual",
+    takes: "LWC's split: a per-draw center constant plus a float32 residual",
     differs:
-      "WPO leaves normals and picks to the author. Here the centre is a double-float (df64) value, and J gives the normals",
+      "WPO leaves normals and picks to the author. Here the center is a double-float (df64) value, and J gives the normals",
   },
   {
     art: "PROJ pipelines and ISO 19111 concatenated operations",
@@ -352,13 +352,13 @@ const ACCEPTED = [
 const PATHS = [
   {
     route: "Affine edges only",
-    path: "One matrix. No pipeline, no centre constant",
+    path: "One matrix. No pipeline, no center constant",
     why: "Nothing smooth is crossed",
   },
   {
     route:
       "Smooth edges going up, each with IR (a built-in, or a function in the subset)",
-    path: "Compiled: one pipeline per route shape, a centre constant per draw, a float32 residual per vertex",
+    path: "Compiled: one pipeline per route shape, a center constant per draw, a float32 residual per vertex",
     why: "The common case, and where the accuracy and speed below were measured",
   },
   {
@@ -425,7 +425,7 @@ const TAYLOR = [
 const MEASURES = [
   {
     check:
-      "The compiler against float64: the vertex stage's position from a draw's centre constant and float32 residual",
+      "The compiler against float64: the vertex stage's position from a draw's center constant and float32 residual",
     result:
       "×10 lift within 2.6, 3.3 and 9.1 mm on 1, 2 and 8 km tiles; nested UTM 0.58 mm; twist 0.59 mm; a lens 0.003 mm. Normals within 3e-5°.",
     where: "spikes/transformGraph.html, commit dfb2b88dde",
@@ -438,7 +438,7 @@ const MEASURES = [
   },
   {
     check:
-      "The df64 centre pass, for a parameter that doesn't separate (a moving centre, a time-varying field)",
+      "The df64 center pass, for a parameter that doesn't separate (a moving center, a time-varying field)",
     result: "About 4 µs for 1,024 draws.",
     where: "the compiler's GPU spike, docs/design/transform-graph.md",
   },
@@ -481,13 +481,13 @@ const FOLLOW_UPS = [
     task: "10: per-view routes without twins",
     limit:
       "Billboards, instanced draws and b-rep patch draws get no twin. A ray query with no view sees both a draw and its twin. A view whose route differs only in a draw's record data shows its group's first view. A 14 m slab at ×10 on the compiled route is drawn 3.6 px off, which predates the twins.",
-    fix: "Choose the program per (draw, view): a block of centre constants per route group, and each view's bundle binds that group's pipeline. One draw then serves every view, of every kind, and `variants.ts` goes. The 3.6 px is checked against float64 first.",
+    fix: "Choose the program per (draw, view): a block of center constants per route group, and each view's bundle binds that group's pipeline. One draw then serves every view, of every kind, and `variants.ts` goes. The 3.6 px is checked against float64 first.",
   },
   {
     task: "11: the camera branch",
     limit:
       "A lens on the camera: streaming tilesets through it draw nothing (selection goes through a map with z ≤ 0); moving the camera re-derives every draw's route at 250 to 400 ms a tick; routes through a smooth step's inverse don't compile.",
-    fix: "An “eye step”: a per-view smooth step after the view matrix, evaluated in the vertex stage from uniforms alone, needing no float64 centre because camera-space numbers are small. Selection uses the route without it, padded by its largest displacement at each depth. Partial work is saved to resume from.",
+    fix: "An “eye step”: a per-view smooth step after the view matrix, evaluated in the vertex stage from uniforms alone, needing no float64 center because camera-space numbers are small. Selection uses the route without it, padded by its largest displacement at each depth. Partial work is saved to resume from.",
   },
 ];
 
@@ -495,7 +495,7 @@ const ALSO = [
   {
     what: "Tessellation is a spike",
     state:
-      "`curvatureOver` and `subdivisionFor` give n per triangle and `spikes/routeTessellation.ts` runs the compute pass and indirect draw. Not wired: a mesh draw needs its own batch kind, every pass needs a vertex entry that decodes (triangle, n, sub-triangle), attributes need interpolating, and per-edge levels are needed, since one level per triangle leaves cracks between neighbours of different n.",
+      "`curvatureOver` and `subdivisionFor` give n per triangle and `spikes/routeTessellation.ts` runs the compute pass and indirect draw. Not wired: a mesh draw needs its own batch kind, every pass needs a vertex entry that decodes (triangle, n, sub-triangle), attributes need interpolating, and per-edge levels are needed, since one level per triangle leaves cracks between neighbors of different n.",
   },
   {
     what: "Selection keeps sampling",
@@ -510,7 +510,7 @@ const ALSO = [
   {
     what: "Exact sums rely on operation order",
     state:
-      "The exact centre sum was checked on NVIDIA under D3D12 only, and df64 also needs the shader compiler to keep the order of float operations. A platform that reassociates, as Dawn's relaxed math does on Apple GPUs, can lose the centre's extra accuracy.",
+      "The exact center sum was checked on NVIDIA under D3D12 only, and df64 also needs the shader compiler to keep the order of float operations. A platform that reassociates, as Dawn's relaxed math does on Apple GPUs, can lose the center's extra accuracy.",
   },
   {
     what: "The same content twice in one view",
@@ -602,7 +602,7 @@ export function TransformGraph() {
           <a href="#/georeferencing">Georeferencing tab</a>. Four modules split
           the work: <C>transform</C> (the graph, the compiler and IR, autodiff,
           routes, accuracy; core, with no geo knowledge), <C>frames</C> (the
-          reference-frame catalogue, which feeds the graph), <C>georeference</C>{" "}
+          reference-frame catalog, which feeds the graph), <C>georeference</C>{" "}
           (CRSs, reprojection, the height maps) and <C>transforms</C> (the
           generic built-ins).
         </p>
@@ -689,7 +689,7 @@ export function TransformGraph() {
         <h3>Your own function, and its rules</h3>
         <p>
           <C>fromFunction</C> takes a plain function from a point and named
-          parameters to a point in metres. The function <em>is</em> the CPU
+          parameters to a point in meters. The function <em>is</em> the CPU
           path, called as it is. For the GPU and the derivatives the engine
           reads its source (<C>Function.prototype.toString</C>) and parses it,
           without evaluating it, into the IR. A function outside the subset
@@ -756,7 +756,7 @@ export function TransformGraph() {
       <Sec id="compiler" title="The compiler">
         <p>
           The GPU can&apos;t call a closure, and float32 can&apos;t hold a
-          position on the Earth to a millimetre. The compiler solves both for a
+          position on the Earth to a millimeter. The compiler solves both for a
           route. For each route <em>shape</em> (the node kinds and the
           switch&apos;s choices, without their values) it emits one fused WGSL
           function, <C>transformPoint</C>.
@@ -790,10 +790,10 @@ export function TransformGraph() {
               ),
             },
             {
-              title: "A centre constant, per draw",
+              title: "A center constant, per draw",
               body: (
                 <>
-                  A vertex is an offset δ from its draw&apos;s centre c, so the
+                  A vertex is an offset δ from its draw&apos;s center c, so the
                   route is F(c + δ) = F(c) + [F(c + δ) − F(c)]. F(c) is held as
                   float32 high and low parts, from float64 on the CPU or from a
                   df64 compute pass.
@@ -805,11 +805,11 @@ export function TransformGraph() {
               body: (
                 <>
                   The bracket is evaluated in float32 by a rule for each op that
-                  gives the change from its operands&apos; changes and centre
+                  gives the change from its operands&apos; changes and center
                   values with no subtraction of nearly equal numbers (
                   <C>Δ(ab) = a_c·Δb + b_c·Δa + Δa·Δb</C>,{" "}
                   <C>Δ log a = log1p(Δa / a_c)</C>). A position 6.4e6 m from the
-                  origin, or a UTM easting, keeps its millimetres. Affine runs
+                  origin, or a UTM easting, keeps its millimeters. Affine runs
                   collapse to a float32 3×3 on δ.
                 </>
               ),
@@ -843,9 +843,9 @@ export function TransformGraph() {
           <strong>Parameters</strong> enter in one of two ways. A parameter the
           output is affine in, declared <C>separable</C> (an exaggeration&apos;s
           factor), stays a uniform in the residual, and a slider writes uniforms
-          only. Any other (a moving centre, a time-varying field) makes the
-          draws&apos; centre constants dynamic: each frame a compute pass
-          evaluates the function in df64 at every draw&apos;s centre, about 4 µs
+          only. Any other (a moving center, a time-varying field) makes the
+          draws&apos; center constants dynamic: each frame a compute pass
+          evaluates the function in df64 at every draw&apos;s center, about 4 µs
           for 1,024 draws. Selection&apos;s bounds don&apos;t come from the
           compiler (see Bounds and tessellation).
         </p>
@@ -941,7 +941,7 @@ export function TransformGraph() {
             },
             {
               call: "`graphOfFrames(catalog, resolver)` from `/frames`",
-              does: "The catalogue's tree as a graph: each `Frame` an affine node, each smooth frame a smooth node, so any frame can be a target.",
+              does: "The catalog's tree as a graph: each `Frame` an affine node, each smooth frame a smooth node, so any frame can be a target.",
             },
           ]}
         />
@@ -1011,7 +1011,7 @@ export function TransformGraph() {
           </li>
           <li>
             <strong>Heights stay true.</strong> A pick and a measurement report
-            true heights at ×1 to ×10. Shading that looks up by height (a colour
+            true heights at ×1 to ×10. Shading that looks up by height (a color
             ramp, a contour, the air&apos;s density) can read the true height
             through the route or the drawn one; the example&apos;s &quot;Height
             visuals&quot; puts the two side by side.
@@ -1118,7 +1118,7 @@ export function TransformGraph() {
         <p>
           Culling and tile selection ask about <em>drawn</em> volumes, since the
           camera is where things are drawn. Padding true bounds instead made a
-          tile&apos;s sphere tens of kilometres too big at ×10, and selection
+          tile&apos;s sphere tens of kilometers too big at ×10, and selection
           too coarse.
         </p>
         <ul>
@@ -1267,7 +1267,7 @@ export function TransformGraph() {
           Seven small 2D pictures of the model, drawn by its own arithmetic.
           Pick a scene, drag a slider, then move content or the camera to
           another node with the checkboxes and watch the picture and the route
-          change. Thin grey edges in the tree are affine; bold purple ones are
+          change. Thin gray edges in the tree are affine; bold purple ones are
           smooth. Units in the Earth scenes are schematic: the planet is drawn
           small and its relief large, so that k is visible. The{" "}
           <a href="/examples/transform-graph/">gallery example</a> is the same

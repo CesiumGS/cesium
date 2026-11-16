@@ -81,7 +81,7 @@ function nurbsFace(
   return b.build();
 }
 
-/** A sphere of r = 1.5 m centred on (0.5, -1, 2) as one NURBS face with uneven arcs, as SMLib holds one. */
+/** A sphere of r = 1.5 m centered on (0.5, -1, 2) as one NURBS face with uneven arcs, as SMLib holds one. */
 function rationalSphere(): BrepForm {
   const lat = [-Math.PI / 2, -Math.PI / 6, Math.PI / 3, Math.PI / 2];
   return nurbsFace((b) =>
@@ -137,14 +137,14 @@ describe("brepGeometry: against a dense tessellation", () => {
     });
 
     it(`${name}: a segment ending past the surface's far side crosses it, and its distance is 0`, () => {
-      const centre = [0, 1, 2].map((k) => (box.min[k]! + box.max[k]!) / 2);
-      const far = centre.map((c) => c + 5 * diagonal);
+      const center = [0, 1, 2].map((k) => (box.min[k]! + box.max[k]!) / 2);
+      const far = center.map((c) => c + 5 * diagonal);
       const nearHit = exact.rayHit({
         from: Float64Array.from(far),
-        to: Float64Array.from(centre),
+        to: Float64Array.from(center),
       });
       if (nearHit.verdict === "hit") {
-        expect(exact.segmentDistance(far, centre).distance).toBe(0);
+        expect(exact.segmentDistance(far, center).distance).toBe(0);
       }
     });
   }
@@ -359,7 +359,7 @@ describe("brepGeometry: trimmed faces", () => {
 
   it("a plate: the nearest point of a face is not in a hole", () => {
     const exact = brepGeometry(plateBrep());
-    // Above the hole's centre: the nearest face point is the hole's rim (an edge), or the wall.
+    // Above the hole's center: the nearest face point is the hole's rim (an edge), or the wall.
     const a = exact.closestPoint([0.5, 0.5, 0.2 + 0.5], { kinds: ["face"] })!;
     expect(a.distance).toBeGreaterThan(0.5);
     expect(a.distance).toBeLessThan(Math.hypot(0.5, 0.15) + 1e-6);
@@ -475,7 +475,7 @@ describe("brepGeometry: placement", () => {
   const home = brepGeometry(form);
   const placed = brepGeometry(form, { matrix, origin: t });
 
-  it("closest points and rays follow the placement, in metres, to a micrometre", () => {
+  it("closest points and rays follow the placement, in meters, to a micrometer", () => {
     const next = random(9);
     for (let i = 0; i < 60; i++) {
       const p = [next() * 6 - 1, next() * 5 - 1, next() * 2 - 0.8];

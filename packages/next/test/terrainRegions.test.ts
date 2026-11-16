@@ -1,6 +1,6 @@
 // A globe's terrain regions (Globe.terrain.addRegion): the one region type
 // with an opacity from 0 to 1, `ground` and `pickThrough`. What is tested
-// here is the API's behaviour as a whole: the types, the defaults, a sweep
+// here is the API's behavior as a whole: the types, the defaults, a sweep
 // of the opacity through 0 and through 1 (no recompile, no material churn),
 // `ground` through a fade, invisible ground, a cut's queries, overlapping
 // regions and "everywhere". CPU only (fakeGpu); the shader's opacity rules

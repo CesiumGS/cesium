@@ -13,8 +13,8 @@
 // tolerance, with the route in the note.
 //
 // Coordinates are placed: the form's, turned and moved by `matrix` (a
-// rotation, a translation and a uniform scale), and the arithmetic is centred
-// on `origin` as the mesh adapter's is. Lengths are metres.
+// rotation, a translation and a uniform scale), and the arithmetic is centered
+// on `origin` as the mesh adapter's is. Lengths are meters.
 import {
   analyticBounds,
   nearestCandidates,
@@ -59,7 +59,7 @@ import type {
 export interface BrepGeometryOptions {
   /** Column-major 4x4 placing the form: a rotation, a translation and a uniform scale (default identity). */
   readonly matrix?: Float64Array;
-  /** Where the arithmetic is centred unless a query gives its own, in placed coordinates (default the origin). */
+  /** Where the arithmetic is centered unless a query gives its own, in placed coordinates (default the origin). */
   readonly origin?: ArrayLike<number>;
   /** The model's tolerance, m: how far the stored surfaces may be from the model's (default 0.1 µm, Open CASCADE's confusion). */
   readonly modelTolerance?: number;
@@ -121,7 +121,7 @@ const distance3 = (a: ArrayLike<number>, b: ArrayLike<number>): number =>
   Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
 
 /** A length for a note, without e-notation. */
-function metres(m: number): string {
+function meters(m: number): string {
   if (m === 0) {
     return "0 m";
   }
@@ -250,7 +250,7 @@ export function brepGeometry(
   const modelTolerance = options.modelTolerance ?? MODEL_TOLERANCE;
   if (!(modelTolerance >= 0 && Number.isFinite(modelTolerance))) {
     throw new Error(
-      "brepGeometry: modelTolerance must be a finite number of metres, 0 or more",
+      "brepGeometry: modelTolerance must be a finite number of meters, 0 or more",
     );
   }
   const columns = [0, 4, 8].map((c) => [
@@ -308,7 +308,7 @@ export function brepGeometry(
         scale,
     );
 
-  /** The accuracy of an answer, in placed metres: the composed terms, with the route. */
+  /** The accuracy of an answer, in placed meters: the composed terms, with the route. */
   const accuracyOf = (
     route: string,
     terms: {
@@ -322,15 +322,15 @@ export function brepGeometry(
     const surface = terms.surface ?? 0;
     const edge = terms.edge ?? 0;
     const vertex = terms.vertex ?? 0;
-    const parts = [`model ${metres(modelTolerance * scale)}`];
+    const parts = [`model ${meters(modelTolerance * scale)}`];
     if (surface > 0) {
-      parts.push(`surface ${metres(surface * scale)}`);
+      parts.push(`surface ${meters(surface * scale)}`);
     }
     if (edge > 0) {
-      parts.push(`edge ${metres(edge * scale)}`);
+      parts.push(`edge ${meters(edge * scale)}`);
     }
     if (vertex > 0) {
-      parts.push(`vertex ${metres(vertex * scale)}`);
+      parts.push(`vertex ${meters(vertex * scale)}`);
     }
     return {
       meters: (modelTolerance + surface + edge + vertex) * scale,
@@ -1213,7 +1213,7 @@ export function brepGeometry(
         surface: prepare().maxSurfaceError,
         exact: false,
         // formBounds' own share of the part's size, 0.1%.
-        extra: `the box holds the faces within ${metres(1e-3 * diagonal * scale)} (0.1% of the part's size); a turned part has the box of the turned box`,
+        extra: `the box holds the faces within ${meters(1e-3 * diagonal * scale)} (0.1% of the part's size); a turned part has the box of the turned box`,
       }),
     };
   };

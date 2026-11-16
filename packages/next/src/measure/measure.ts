@@ -60,7 +60,7 @@ export type MeasurePoint = FramePoint | DesignPoint<CoordinateOperation>;
 
 /** What both ends being design points in one engineering frame adds (R7, R9). */
 export interface DesignMeasurement {
-  /** The design CRS's horizontal unit name and metres per unit (from PROJ). */
+  /** The design CRS's horizontal unit name and meters per unit (from PROJ). */
   readonly unitName: string;
   readonly metersPerUnit: number;
   /**
@@ -266,7 +266,7 @@ function checkInputs(
       !(Number.isFinite(tolerance) && tolerance >= 0)
     ) {
       throw new Error(
-        `${who}: point ${name}'s obtained.tolerance must be a finite number of metres, not negative, got ${tolerance}`,
+        `${who}: point ${name}'s obtained.tolerance must be a finite number of meters, not negative, got ${tolerance}`,
       );
     }
   }

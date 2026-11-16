@@ -763,14 +763,14 @@ def engine_proj_version(store):
 
 def proj(store):
     """PROJ transformations, from pyproj (the reference for plan 4a's CRS operations):
-    forward (design coordinates to geographic 3D, lon/lat in degrees, height in metres)
+    forward (design coordinates to geographic 3D, lon/lat in degrees, height in meters)
     and inverse (that result back) for four CRS pairs, twelve points each: the zone
     origin, points 50 km and 100 km east and west of it, 50 km north and south, and
     corners. Coordinates are in each source CRS's own units (feet for the two state
     plane zones). The compound NAD83(2011) / California zone 3 (ftUS) + NAVD88 (ftUS)
     height needs GEOID18, which pyproj finds through the store's proj/ directory added
     with append_data_dir (PROJ_DATA is not set, so pyproj keeps its own proj.db). The
-    Moon pair is IAU 2015 south polar (metres) to Moon (2015) sphere geographic, which
+    Moon pair is IAU 2015 south polar (meters) to Moon (2015) sphere geographic, which
     is the only Moon geographic CRS in the store's proj.db (it has no 3D one); heights
     pass through. Records pyproj's PROJ version and, per pair, the operation it chose
     (its PROJ string and accuracy) so a different choice in the engine's PROJ shows,
@@ -784,7 +784,7 @@ def proj(store):
     append_data_dir(str(store / "proj"))
 
     FT_US = 1200.0 / 3937.0
-    # Offsets from the origin, in metres: the origin, 50 and 100 km east and west,
+    # Offsets from the origin, in meters: the origin, 50 and 100 km east and west,
     # 50 km north and south, and four corners (100 km off the central meridian).
     offsets = [
         (0, 0), (50e3, 0), (-50e3, 0), (100e3, 0), (-100e3, 0), (0, 50e3), (0, -50e3),
@@ -794,7 +794,7 @@ def proj(store):
     assert len(offsets) == len(heights) == 12
 
     cases = [
-        # name, source definition, target, origin (E, N) in source units, unit in metres
+        # name, source definition, target, origin (E, N) in source units, unit in meters
         ("NAD83(2011) / California zone 3 (ftUS) + NAVD88 height (ftUS)", "EPSG:6420+6360", "EPSG:4979",
          (2000000.0001016 / FT_US, 500000.0001016 / FT_US), FT_US),
         ("NAD83 / Arizona Central (ft)", "EPSG:2223", "EPSG:4979", (213360.0 / 0.3048, 0.0), 0.3048),
@@ -841,7 +841,7 @@ def proj(store):
             "source": source,
             "target": target,
             "metersPerUnit": unit,
-            # The compound CRS's height is in ftUS; the others' z passes through in metres.
+            # The compound CRS's height is in ftUS; the others' z passes through in meters.
             "metersPerVerticalUnit": unit if source == "EPSG:6420+6360" else 1.0,
             "pyprojOperation": transformer.description,
             "pyprojPipeline": transformer.definition,

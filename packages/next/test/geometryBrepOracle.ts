@@ -182,8 +182,8 @@ export function checkAgainstMesh(
   for (let i = 0; i < rays; i++) {
     const dir = [next() - 0.5, next() - 0.5, next() - 0.5];
     const length = Math.hypot(...dir) || 1;
-    const centre = [0, 1, 2].map((k) => (box.min[k]! + box.max[k]!) / 2);
-    const from = centre.map((c, k) => c + (dir[k]! / length) * 1.5 * diagonal);
+    const center = [0, 1, 2].map((k) => (box.min[k]! + box.max[k]!) / 2);
+    const from = center.map((c, k) => c + (dir[k]! / length) * 1.5 * diagonal);
     const target = [0, 1, 2].map(
       (k) => box.min[k]! + next() * (box.max[k]! - box.min[k]!),
     );

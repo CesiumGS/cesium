@@ -131,7 +131,7 @@ describe("buildTree: the built-in frames", () => {
     expect(find(tree, "EARTH_ICRF")!.edge.kind).toBe("translation");
   });
 
-  it("states lunar orientation as the published sources allow: MOON_ME estimated and labelled (the library states none), MOON_PA exact by definition (fix 1, item 8; the coordinator's ruling, 2026-11-07)", () => {
+  it("states lunar orientation as the published sources allow: MOON_ME estimated and labeled (the library states none), MOON_PA exact by definition (fix 1, item 8; the coordinator's ruling, 2026-11-07)", () => {
     const tree = buildTree(frames, {}, Instant.fromTdb(0));
     const me = find(tree, "MOON_ME")!.edge.accuracy;
     expect(me.meters).toBeUndefined();

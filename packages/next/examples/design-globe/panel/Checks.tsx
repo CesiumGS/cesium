@@ -4,7 +4,7 @@
 // rows behind "Show the checks". Each group is what the page shows (the
 // marker, a measured pair with its ends, the mark); each row its kind's tag
 // (as the frames explorer's: Exact answer, NGS datasheet, never a status
-// colour), its label over the numbers worded once, and its status as an icon
+// color), its label over the numbers worded once, and its status as an icon
 // and a word. A value the page doesn't show says "Not shown", never Checked;
 // an answer pair the page doesn't show can be measured from here.
 import { Button, CircularProgress, Typography } from "@mui/material";

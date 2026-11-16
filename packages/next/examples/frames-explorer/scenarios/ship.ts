@@ -1,7 +1,7 @@
 // "A ship enters San Francisco Bay" (Task 7): a ship inbound on the Off San
 // Francisco traffic separation scheme (a synthetic track along the lanes of
-// 33 CFR 167.400–167.406, labelled synthetic: no AIS extract small enough to
-// pin exists, vehicles.ts), pitching and rolling in a modelled sea, with a
+// 33 CFR 167.400–167.406, labeled synthetic: no AIS extract small enough to
+// pin exists, vehicles.ts), pitching and rolling in a modeled sea, with a
 // sensor up its mast. The questions: where is the ship on the port's design
 // grid (California zone 3), and can the mast see Alcatraz Island's light
 // past the headlands of the Golden Gate? The time is the viewer's timeline.
@@ -94,11 +94,11 @@ function method(): NonNullable<ScenarioAnswer["method"]> {
   return [
     {
       title: "The track",
-      text: `Synthetic, labelled so: no public AIS extract of one vessel small enough to pin exists (NOAA's daily files are hundreds of megabytes). The ship follows the Off San Francisco traffic separation scheme's inbound lanes (33 CFR 167.400–167.406) at ${fmt(SHIP.speed / (1852 / 3600), 3)} knots: up the southern approach, across the precautionary area and along the main ship channel to Mile Rocks.`,
+      text: `Synthetic, labeled so: no public AIS extract of one vessel small enough to pin exists (NOAA's daily files are hundreds of megabytes). The ship follows the Off San Francisco traffic separation scheme's inbound lanes (33 CFR 167.400–167.406) at ${fmt(SHIP.speed / (1852 / 3600), 3)} knots: up the southern approach, across the precautionary area and along the main ship channel to Mile Rocks.`,
     },
     {
       title: "The ship's frame",
-      text: `Its body frame comes from the track: the place, the heading along the lane, and a modelled sea state (synthetic: pitch ±${SEA_STATE.pitch.amplitude}° over ${SEA_STATE.pitch.period} s, roll ±${SEA_STATE.roll.amplitude}° over ${SEA_STATE.roll.period} s). The mast sensor sits up the body's z axis, so it sways with the sea.`,
+      text: `Its body frame comes from the track: the place, the heading along the lane, and a modeled sea state (synthetic: pitch ±${SEA_STATE.pitch.amplitude}° over ${SEA_STATE.pitch.period} s, roll ±${SEA_STATE.roll.amplitude}° over ${SEA_STATE.roll.period} s). The mast sensor sits up the body's z axis, so it sways with the sea.`,
     },
     {
       title: "On the port's grid",
@@ -239,7 +239,7 @@ export const evaluateShip: ScenarioEvaluator = async (
         parentId: "ITRF",
         edge: {
           kind: "trajectory",
-          detail: `from its synthetic track along 33 CFR 167's inbound lanes (labelled synthetic) at 12 knots: heading along the lane; pitch and roll from a modelled sea state (synthetic, ±${SEA_STATE.pitch.amplitude}° and ±${SEA_STATE.roll.amplitude}°); its origin at the waterline, the sea at ${ellipsoidSea ? "the ellipsoid's 0 m" : "NAVD88 0 m through GEOID18"}`,
+          detail: `from its synthetic track along 33 CFR 167's inbound lanes (labeled synthetic) at 12 knots: heading along the lane; pitch and roll from a modeled sea state (synthetic, ±${SEA_STATE.pitch.amplitude}° and ±${SEA_STATE.roll.amplitude}°); its origin at the waterline, the sea at ${ellipsoidSea ? "the ellipsoid's 0 m" : "NAVD88 0 m through GEOID18"}`,
           accuracy: SHIP_ACCURACY,
         },
         app: true,

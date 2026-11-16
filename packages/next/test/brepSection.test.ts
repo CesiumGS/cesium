@@ -79,7 +79,7 @@ describe("sectionBrep: a box", () => {
 });
 
 describe("sectionBrep: a capped cylinder (r = 1, h = 3)", () => {
-  it("square to its axis is the disc, with exact circle edges", () => {
+  it("square to its axis is the disk, with exact circle edges", () => {
     const result = sectionBrep(cappedCylinderBrep(), [
       { point: [0, 0, 1.2], normal: Z },
     ]);
@@ -112,7 +112,7 @@ describe("sectionBrep: a capped cylinder (r = 1, h = 3)", () => {
     expect(result.report.openChains).toEqual([]);
     expect(result.report.methods["plane ∩ plane = line"]).toBeGreaterThan(0);
     expect(validateBrep(result.form!)).toEqual([]);
-    // The area below the chord: integrate numerically over the disc.
+    // The area below the chord: integrate numerically over the disk.
     let area = 0;
     const N = 4000;
     for (let i = 0; i < N; i++) {
@@ -121,7 +121,7 @@ describe("sectionBrep: a capped cylinder (r = 1, h = 3)", () => {
       // The plane: z = 2.9 − x tan(1.2); it stays within [0, 3] where valid.
       const z = 2.9 - x * Math.tan(1.2);
       const inside = z >= 0 && z <= 3;
-      // The plane's section at x is the segment of y over the disc, if its z is in range.
+      // The plane's section at x is the segment of y over the disk, if its z is in range.
       area += inside ? (span * (2 / N)) / Math.cos(1.2) : 0;
     }
     expect(result.faces[0]!.area).toBeCloseTo(area, 2);
@@ -136,7 +136,7 @@ describe("sectionBrep: a capped cylinder (r = 1, h = 3)", () => {
     expect(validateBrep(result.form!)).toEqual([]);
   });
 
-  it("through the cylinder face of NURBS patches (SMLib's form) is the same disc", () => {
+  it("through the cylinder face of NURBS patches (SMLib's form) is the same disk", () => {
     const result = sectionBrep(
       nurbsCylinderBrep(),
       [{ point: [0, 0, 0.7], normal: Z }],
@@ -148,7 +148,7 @@ describe("sectionBrep: a capped cylinder (r = 1, h = 3)", () => {
 });
 
 describe("sectionBrep: a sphere", () => {
-  it("is a circle: the disc, exact", () => {
+  it("is a circle: the disk, exact", () => {
     const r = 2;
     const result = sectionBrep(sphereBrep(r), [
       { point: [0, 0.3, 0.9], normal: [0, 0, 1] },
@@ -172,7 +172,7 @@ describe("sectionBrep: a sphere", () => {
 });
 
 describe("sectionBrep: a box minus a cylinder", () => {
-  it("makes a square with a hole: the area is the square less the disc", () => {
+  it("makes a square with a hole: the area is the square less the disk", () => {
     const result = sectionBrep(boxMinusCylinderBrep(), [
       { point: [0, 0, 1], normal: Z },
     ]);
@@ -199,7 +199,7 @@ describe("sectionBrep: a box minus a cylinder", () => {
 });
 
 describe("sectionBrep: curved sections cut by a clip box's sides", () => {
-  it("a disc limited to one side is a half disc, its edge a line and an arc", () => {
+  it("a disk limited to one side is a half disk, its edge a line and an arc", () => {
     const result = sectionBrep(cappedCylinderBrep(), [
       {
         point: [0, 0, 1.5],
@@ -213,7 +213,7 @@ describe("sectionBrep: curved sections cut by a clip box's sides", () => {
     expect(validateBrep(result.form!)).toEqual([]);
   });
 
-  it("limited on two sides is a quarter disc", () => {
+  it("limited on two sides is a quarter disk", () => {
     const result = sectionBrep(cappedCylinderBrep(), [
       {
         point: [0, 0, 1.5],

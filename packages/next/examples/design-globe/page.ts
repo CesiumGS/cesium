@@ -360,7 +360,7 @@ export interface SiteEntry {
   readonly grids: readonly string[];
   /** What the grids are, by the models' own names ("GEOID18"). */
   readonly models: readonly string[];
-  /** About how far across it is, metres, for the order (the shown extent comes from PROJ). */
+  /** About how far across it is, meters, for the order (the shown extent comes from PROJ). */
   readonly extent: number;
   /**
    * Its tileset in the store, under `/frames-data/design-globe-dual/`. One a
@@ -408,9 +408,9 @@ export const GRID_MODELS: Readonly<Record<string, string>> = {
 };
 
 /**
- * Metres per design unit for the order alone, by horizontal EPSG code:
+ * Meters per design unit for the order alone, by horizontal EPSG code:
  * California zone 3 in US survey feet, Arizona Central in international
- * feet, metres otherwise. What the page shows comes from PROJ.
+ * feet, meters otherwise. What the page shows comes from PROJ.
  */
 const ORDER_UNITS: Readonly<Record<number, number>> = {
   6420: 1200 / 3937,
@@ -549,7 +549,7 @@ export function errorText(meters: number): string {
 }
 
 /**
- * Below this, rigid is a fine approximation: a centimetre, about the
+ * Below this, rigid is a fine approximation: a centimeter, about the
  * placement accuracy of a good survey and finer than any national geoid's.
  */
 export const RIGID_ACCEPTABLE_M = 0.01;
@@ -562,13 +562,13 @@ export function rigidVerdict(edgeError: number): {
   if (edgeError < RIGID_ACCEPTABLE_M) {
     return {
       acceptable: true,
-      text: "Rigid is a fine approximation here: under a centimetre.",
+      text: "Rigid is a fine approximation here: under a centimeter.",
     };
   }
   if (edgeError < 1) {
     return {
       acceptable: false,
-      text: "More than a centimetre: rigid misplaces the edge; reproject it.",
+      text: "More than a centimeter: rigid misplaces the edge; reproject it.",
     };
   }
   return {

@@ -129,10 +129,10 @@ export function RunsLayout() {
 function useSummaries(): Summary[] {
   const [summaries, setSummaries] = useState<Summary[]>([]);
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     loadRuns().then(
       (runs) => {
-        if (!cancelled) {
+        if (!canceled) {
           setSummaries(runs.summaries);
         }
       },
@@ -141,7 +141,7 @@ function useSummaries(): Summary[] {
       },
     );
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, []);
   return summaries;
@@ -154,7 +154,7 @@ function useAttention(summaries: Summary[]): {
 } {
   const [counts, setCounts] = useState({ alerts: 0, images: 0 });
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     void (async () => {
       let triage: Record<string, { status: string }> = {};
       try {
@@ -192,12 +192,12 @@ function useAttention(summaries: Summary[]): {
             `${a.metric}|${a.config}|${a.range.from.commit}|${a.range.to.commit}`,
         ),
       );
-      if (!cancelled) {
+      if (!canceled) {
         setCounts({ alerts: groups.size, images });
       }
     })();
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [summaries]);
   return counts;

@@ -148,7 +148,7 @@ export interface MirrorMemo {
 /** What a frame's fits may cost by default, ms (`Engine.warpBudgetMs`). */
 export const WARP_BUDGET_MS = 4;
 
-/** The tolerance's floor, m: a fit is never asked to beat a millimetre. */
+/** The tolerance's floor, m: a fit is never asked to beat a millimeter. */
 const TOLERANCE_FLOOR = 1e-3;
 
 /** What a fit hears of the tile's geometric error: `geometricError / 64`, 0.25 px at a 16 px threshold. */
@@ -396,7 +396,7 @@ class AnchorTileWarp implements TileWarp {
       }
       return drawnBounds(this.#maps, points, spacing);
     } catch {
-      // A map undefined at a sample (a height warp at the body's centre,
+      // A map undefined at a sample (a height warp at the body's center,
       // which a hemisphere's box reaches): not finite, so the volume stays
       // where it is (`tileWarp.ts` carried).
       return {
@@ -518,7 +518,7 @@ class AnchorTileWarp implements TileWarp {
     try {
       return composeBox(route, this.#after, this.#spans, center, axes);
     } catch {
-      // A step undefined at the centre: sampled, as ever.
+      // A step undefined at the center: sampled, as ever.
       return undefined;
     }
   }
@@ -1972,7 +1972,7 @@ export class WorldWarps {
    * Terrain's exact term: the draw's `h·n̂` attribute times the factor's
    * weight, when the route is a height-scale warp on the ellipsoid the
    * attribute was made on and the draw's model is a translation (so the
-   * attribute's metres are the model's). Under a profile (a ceiling) the
+   * attribute's meters are the model's). Under a profile (a ceiling) the
    * attribute is `(n̂, h)` and the term is G(h)·n̂ (shaders/heightProfile.slang),
    * with the base, ceiling and band in the term, the factor still the weight.
    * Undefined otherwise: the draw is fitted like any.
@@ -2375,7 +2375,7 @@ function heightScaleOf(route: Route): HeightScale | undefined {
     : undefined;
 }
 
-/** Whether two ellipsoids' radii agree to a millimetre. */
+/** Whether two ellipsoids' radii agree to a millimeter. */
 function sameRadii(
   a: readonly [number, number, number],
   b: readonly [number, number, number],
@@ -2452,9 +2452,9 @@ function describeRoute(route: Route): string {
 
 /**
  * The fit of one draw: the route's displacement over its bounding sphere in
- * model space, to `tolerance` metres. `matrix` is the draw's model-to-anchor
+ * model space, to `tolerance` meters. `matrix` is the draw's model-to-anchor
  * matrix and `anchorAffine` the anchor's place; the lattice's error is
- * returned in metres, as it is measured in the model's units.
+ * returned in meters, as it is measured in the model's units.
  */
 function* fitDraw(
   route: Route,
@@ -2468,14 +2468,14 @@ function* fitDraw(
 ): FitSteps {
   const scale = Math.max(radius, 1e-3);
   try {
-    const metres = Math.hypot(matrix[0]!, matrix[1]!, matrix[2]!) || 1;
+    const meters = Math.hypot(matrix[0]!, matrix[1]!, matrix[2]!) || 1;
     const affine = multiply(mat4(), anchorAffine, matrix);
     const fit = yield* fitLatticeSteps(
       routeDisplacement(route, matrix, affine),
       { center, scale },
-      { tolerance: tolerance / metres, operation },
+      { tolerance: tolerance / meters, operation },
     );
-    return metres === 1 ? fit : { ...fit, errorBound: fit.errorBound * metres };
+    return meters === 1 ? fit : { ...fit, errorBound: fit.errorBound * meters };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     report(

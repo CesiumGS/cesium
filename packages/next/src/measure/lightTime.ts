@@ -110,7 +110,7 @@ function shapiroDelay(
  * It stops when a step changes the light time by less than 1e-14 s, or when
  * the light time no longer moves the other end's instant: TDB seconds are a
  * float64, 1.2e-7 s apart at today's epochs, so the next step would repeat
- * this one exactly (or alternate between two neighbouring instants). The
+ * this one exactly (or alternate between two neighboring instants). The
  * solution's instants are those its positions were evaluated at. It throws
  * after 10 steps without converging, and wherever an end's position throws,
  * such as when the other end's time falls outside a trajectory's data: it
@@ -137,11 +137,11 @@ export function solveLightTime(
   const icrf = frames.icrf;
   const receiving = fixed === "reception";
   const anchored = receiving ? receiver : transmitter;
-  const travelling = receiving ? transmitter : receiver;
+  const traveling = receiving ? transmitter : receiver;
   const sign = receiving ? -1 : 1;
   const t0 = at.tdb();
   const fixedPosition = positionIn(anchored, icrf, at);
-  const otherPosition = positionIn(travelling, icrf, at);
+  const otherPosition = positionIn(traveling, icrf, at);
   const emitted = receiving ? otherPosition : fixedPosition;
   const received = receiving ? fixedPosition : otherPosition;
 
@@ -150,7 +150,7 @@ export function solveLightTime(
   for (let step = 0; step < MAX_ITERATIONS; step++) {
     const time = t0 + sign * lightTime;
     const other = Instant.fromTdb(time);
-    positionIn(travelling, icrf, other, otherPosition);
+    positionIn(traveling, icrf, other, otherPosition);
     let next = distance(fixedPosition, otherPosition) / C;
     if (shapiro.length > 0) {
       const mid = Instant.fromTdb(0.5 * (t0 + time));

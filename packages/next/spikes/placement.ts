@@ -10,7 +10,7 @@
 // placement does between them. Along each edge (away from its corners),
 // a row or column of pixels across it gives the edge's position from its
 // pixels' coverage (4× multisampling: five levels, 0 to 1); a line fitted
-// through those positions, intersected with its neighbours', gives the
+// through those positions, intersected with its neighbors', gives the
 // vertices to a small fraction of a pixel. Each must land within half a
 // pixel of the twin's. The unplaced quad is checked the same way (the
 // measurement itself), and each placement must move its vertices by more
@@ -332,7 +332,7 @@ function coverage(
 
 /**
  * The quad's corners measured from the image: each edge's points from
- * coverage across it, a line fitted through them, and neighbouring lines
+ * coverage across it, a line fitted through them, and neighboring lines
  * intersected. `expected` (the twin's corners) says roughly where the
  * edges are and which side is inside.
  */

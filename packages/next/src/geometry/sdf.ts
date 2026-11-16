@@ -2,7 +2,7 @@
 // interface. Rays sphere-trace, closest points project down the gradient, and
 // segment distances are sampled. The field is evaluated in its own
 // coordinates as given: `origin` in the options is accepted and ignored, as
-// the field has no large coordinates of its own to centre on. `clips` apply to
+// the field has no large coordinates of its own to center on. `clips` apply to
 // rays (a hit they remove is marched past); closest points and segment
 // distances don't take them yet.
 import type { QueryRay } from "../query/queries.ts";
@@ -164,7 +164,7 @@ export function sdfGeometry(
       return miss;
     }
 
-    // Sphere-trace in metres along the segment: t += distance / length. A hit
+    // Sphere-trace in meters along the segment: t += distance / length. A hit
     // the clips remove isn't there: the march steps past it and goes on, by
     // |distance| from then on (inside the field the distance is negative, and
     // the next surface is where it comes back to zero).

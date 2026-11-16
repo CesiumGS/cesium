@@ -71,7 +71,7 @@ public export __extern_cpp struct CesiumFragment {
   public __extern_cpp float4 named2;
   public __extern_cpp float4 named3;
   // The view's clips, for custom shaders (`ClipEffect`): the nearest cut of a
-  // set that reports, signed (positive on the side the set removes, metres;
+  // set that reports, signed (positive on the side the set removes, meters;
   // 3.4e38 with none), bit 0 when that set removes this fragment (a ghost or
   // a shade set's removed side) and bit 1 when it is a ghost, the set's number
   // in the view's list (0xffffffff: none), and its `params`.

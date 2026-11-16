@@ -63,8 +63,8 @@ import {
 } from "../shared.ts";
 import {
   type WktNode,
-  axisMetres,
-  bboxCentre,
+  axisMeters,
+  bboxCenter,
   boundMethodName,
   ellipsoidOfNode,
   epsgId,
@@ -122,7 +122,7 @@ function pipelineHelmert(pipeline: string) {
   };
 }
 
-/** The largest difference between two parameter sets, in metres at the Earth's radius. */
+/** The largest difference between two parameter sets, in meters at the Earth's radius. */
 function parameterDifference(a: HelmertParameters, b: HelmertParameters) {
   const R = 6.4e6;
   return Math.max(
@@ -197,7 +197,7 @@ function locate(
     { name: label, body: EARTH, crs: { format: "wkt2", wkt2 } },
     P,
   );
-  const fromBox = bboxCentre(root);
+  const fromBox = bboxCenter(root);
   const fromOrigin = projectionOrigin(sourceCrsNode(root));
   const place = at ?? fromBox ?? fromOrigin;
   if (place === undefined) {
@@ -210,7 +210,7 @@ function locate(
     };
   }
   const projected = conversion.inverse([place[0], place[1], 0]);
-  const where = `${at ? "" : fromBox ? "the area of use's centre, " : "the projection's origin, "}${fmt(place[1], 7)}°, ${fmt(place[0], 7)}°`;
+  const where = `${at ? "" : fromBox ? "the area of use's center, " : "the projection's origin, "}${fmt(place[1], 7)}°, ${fmt(place[0], 7)}°`;
   return {
     frame,
     sourceWkt,
@@ -300,7 +300,7 @@ async function boundChecks(
       },
       P,
     );
-    const stated = axisMetres(sourceNode);
+    const stated = axisMeters(sourceNode);
     const a = gridFactors(frame, design);
     const b = gridFactors(sourceFrame, design);
     const factor = Math.max(
@@ -684,7 +684,7 @@ export async function boundCrsChecks(
 ): Promise<StressResult[]> {
   const idBase = `${GROUP}.user.${slug(label)}`;
   try {
-    // WKT1 is the user's own input: converted, and labelled so.
+    // WKT1 is the user's own input: converted, and labeled so.
     const converted = wkt1AsWkt2(ctx.proj ?? (await ctx.loadProj()), wkt2);
     const shown =
       converted === undefined ? label : `${label} (WKT1, converted)`;

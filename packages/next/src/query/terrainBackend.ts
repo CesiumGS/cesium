@@ -22,7 +22,7 @@ import {
 } from "./queries.ts";
 
 /**
- * The answer for the segment `from`–`to` (metres, in the coordinates of
+ * The answer for the segment `from`–`to` (meters, in the coordinates of
  * `target`'s tiles: Earth-fixed) against the terrain as drawn: blocked
  * where it meets a drawn triangle (a hit within 1 mm of either end is an
  * observer's own ground); clear when the whole segment is over drawn terrain

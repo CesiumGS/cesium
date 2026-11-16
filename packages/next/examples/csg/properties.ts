@@ -279,7 +279,7 @@ export function createProperties(host: PropertiesHost): Properties {
           el(
             "p",
             { className: "csg-note" },
-            `${leaf.step.file}: ${leaf.step.size.map((v) => v.toFixed(3)).join(" × ")} m, centred on its bounds. Open CASCADE only.`,
+            `${leaf.step.file}: ${leaf.step.size.map((v) => v.toFixed(3)).join(" × ")} m, centered on its bounds. Open CASCADE only.`,
           ),
         ),
       );

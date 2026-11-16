@@ -412,7 +412,7 @@ export class Tile {
 
   /**
    * `own` grown by `pad` model units, this tile's transform scaling them to
-   * metres: `kept` while it still is that.
+   * meters: `kept` while it still is that.
    */
   private grown(
     kept: PaddedVolume | undefined,

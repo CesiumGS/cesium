@@ -53,7 +53,7 @@
 }
 
 /* What is still refining once something has drawn: a small chip at the bottom
-   centre, fixed in size, taking no input. */
+   center, fixed in size, taking no input. */
 .tgx-refining {
   position: absolute;
   left: 50%;

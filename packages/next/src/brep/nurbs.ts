@@ -2,7 +2,7 @@
 // insertion in homogeneous coordinates (Piegl and Tiller, "The NURBS Book",
 // A5.1 for curves, applied in each direction for surfaces), up to full
 // multiplicity at every interior knot. The de Boor evaluators are for tests
-// and as a reference. Lengths are metres.
+// and as a reference. Lengths are meters.
 
 export interface NurbsSurface {
   readonly degreeU: number;
@@ -516,7 +516,7 @@ const APPROXIMATION_DEPTH = 12;
  * within the tolerance; matching by parameter bounds the distance between
  * the shapes. `distance` measures it (default: Euclidean in the curve's own
  * coordinates; a pcurve passes one through its surface, so the error is in
- * metres). Returns the cubic over the same parameter range and the largest
+ * meters). Returns the cubic over the same parameter range and the largest
  * error measured, which a converter adds to the edge's tolerance as the
  * representation error.
  */

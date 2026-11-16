@@ -186,7 +186,7 @@ const COMPAT_PIECES: { piece: string; today: ReactNode; change: ReactNode }[] =
         </>
       ),
       change:
-        "Write depth to an r32float colour target in the prepass, and read that. The default limit of 4 colour targets leaves room for one more beside the scene's three.",
+        "Write depth to an r32float color target in the prepass, and read that. The default limit of 4 color targets leaves room for one more beside the scene's three.",
     },
     {
       piece: "Texture views",
@@ -219,7 +219,7 @@ const COMPAT_PIECES: { piece: string; today: ReactNode; change: ReactNode }[] =
       today: (
         <>
           The composite, splat and translucent pipelines in{" "}
-          <C>scene/RenderContext.ts</C> differ per colour target.
+          <C>scene/RenderContext.ts</C> differ per color target.
         </>
       ),
       change: "All targets of a pipeline must match, so these split or change.",

@@ -34,7 +34,7 @@ export const SECTION_REACH = Math.max(
 /** Every structure's ends (the viaducts' and the tunnels' portals). */
 const STRUCTURE_ENDS = STRUCTURES.flatMap((s) => [s.fromStation, s.toStation]);
 
-/** The offsets a chord error is measured at: the centreline and both edges. */
+/** The offsets a chord error is measured at: the centerline and both edges. */
 const MEASURED_OFFSETS = [-SECTION_REACH, 0, SECTION_REACH];
 
 /**
@@ -55,9 +55,9 @@ function linear(hex) {
 }
 
 /**
- * The corridor's colours, linear RGBA, as each vertex's COLOR_0 (the
+ * The corridor's colors, linear RGBA, as each vertex's COLOR_0 (the
  * material is white): the pavement, barriers, decks, piers and ticks in
- * the 0.45 grey the corridor's one material had; a side slope in soil a
+ * the 0.45 gray the corridor's one material had; a side slope in soil a
  * grassed olive (sRGB #8a8f5c, a dry California hillside's grass); one in
  * rock a weathered sandstone (sRGB #8f8576); an abutment or a portal's
  * headwall a paler concrete (sRGB #b8b4aa); a tunnel's mouth near black
@@ -136,7 +136,7 @@ export function stationLabel(station) {
 
 /**
  * The 3D distance, in design units, between the section's edges and
- * centreline at the middle of [a, b] and the middle of their chords: the
+ * centerline at the middle of [a, b] and the middle of their chords: the
  * chord error there (exact for an arc's sagitta and a parabola's). On
  * earthwork, the side slopes' rock tops and daylight points too.
  */
@@ -258,7 +258,7 @@ export function sampleStations(alignment, from, to, chordTolerance) {
     if (curvature > 0) {
       // A chord subtending θ errs by R(1 − cos(θ/2)) at radius R, so at the
       // outer edge (R + reach) θ = 2 acos(1 − tol/(R + reach)); the
-      // centreline's arc length for that θ is θR.
+      // centerline's arc length for that θ is θR.
       const radius = 1 / curvature;
       const theta =
         2 * Math.acos(1 - chordTolerance / (radius + SECTION_REACH));
@@ -338,7 +338,7 @@ class MeshBuilder {
   #byName = new Map();
   #colors = [];
 
-  /** A feature's id, by name; `color` (linear RGBA) colours its vertices. */
+  /** A feature's id, by name; `color` (linear RGBA) colors its vertices. */
   feature(name, kind, color = CORRIDOR_PALETTE.pavement) {
     let id = this.#byName.get(name);
     if (id === undefined) {
@@ -443,7 +443,7 @@ function sectionPoint(alignment, station, offset, rise) {
  * facing up), or a function giving them at a station (the same count at
  * each). Each of its segments gets its own vertices, lit smoothly along
  * the alignment and sharply across it; a segment of no width at a station
- * (a slope with no rock there) takes its row's nearest lit neighbour's
+ * (a slope with no rock there) takes its row's nearest lit neighbor's
  * normal, or up.
  */
 function sweep(builder, alignment, stations, sections, id) {

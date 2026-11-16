@@ -44,8 +44,8 @@ export interface SceneItemOptions {
    */
   placement?: number;
   /**
-   * Linear RGB multiplied with the content's colour. Default white. Setting
-   * it writes a draw record per loaded draw: for a colour that changes every
+   * Linear RGB multiplied with the content's color. Default white. Setting
+   * it writes a draw record per loaded draw: for a color that changes every
    * tick, a custom shader's uniform costs less.
    */
   tint?: readonly [number, number, number];
@@ -700,7 +700,7 @@ export class SceneItem {
     }
   }
 
-  /** @internal Its tint and opacity, as a draw's colour. */
+  /** @internal Its tint and opacity, as a draw's color. */
   get drawColor(): ArrayLike<number> {
     return this.color;
   }

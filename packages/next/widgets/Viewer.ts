@@ -145,7 +145,7 @@ export interface ViewerOptions {
   /**
    * The application's way to find a place's civil time zone. With one the
    * time controls offer the place's civil zone and open on it (else its solar
-   * time, labelled so); without one they open on "nominal" as before.
+   * time, labeled so); without one they open on "nominal" as before.
    * `timeControls.zoneLookup` is the same thing, and takes precedence.
    */
   zoneLookup?: ZoneLookup;
@@ -285,7 +285,7 @@ export interface EarlyEndpoints {
 }
 
 export class Viewer {
-  /** @internal What the moved functions share (`viewerCamera.ts` and its neighbours). */
+  /** @internal What the moved functions share (`viewerCamera.ts` and its neighbors). */
   readonly state: ViewerState = new ViewerState();
 
   readonly engine: Engine;

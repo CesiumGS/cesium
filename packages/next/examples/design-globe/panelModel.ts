@@ -48,9 +48,9 @@ export interface PageSnapshot {
   /** The alignment's stations, for the sag chart. */
   readonly stations: { readonly start: number; readonly end: number };
   readonly cursor: CursorView;
-  /** Each ladder site's extent from the generator's answers, metres. */
+  /** Each ladder site's extent from the generator's answers, meters. */
   readonly extents?: ReadonlyMap<string, number>;
-  /** Each ladder site's rigid error at its edge (answers), metres: its whiskers' range. */
+  /** Each ladder site's rigid error at its edge (answers), meters: its whiskers' range. */
   readonly edgeErrors?: ReadonlyMap<string, number>;
   /** Where "Fly along" starts: the self-check's station (the opening shot's), station. */
   readonly alongFrom?: number;

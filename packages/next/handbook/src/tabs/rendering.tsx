@@ -112,7 +112,7 @@ const TICK: BoardStep[] = [
     body: (
       <>
         <C>prepareFrame</C> composes changed transforms in float64, writes
-        materials and each draw's route centre constants, and records bundles
+        materials and each draw's route center constants, and records bundles
         only if batches changed.
       </>
     ),
@@ -743,16 +743,16 @@ export function Rendering() {
           reprojection), the renderer compiles the route instead of fitting it.
           One pipeline variant exists per route shape, linked like a custom
           shader through <C>routeVertex</C> and compiled one at a time, so a
-          scene that adds many routes doesn't stall a frame. Each draw's centre
+          scene that adds many routes doesn't stall a frame. Each draw's center
           constants sit in its row of the placements buffer, as{" "}
           <C>WARP_ROUTE</C>. A parameter the route is affine in becomes a
           per-route uniform, so a slider writes a few floats. Any other makes
-          the centre constants dynamic, and a df64 compute pass evaluates them
+          the center constants dynamic, and a df64 compute pass evaluates them
           each frame.
         </p>
         <p>
           The depth, shadow, height, pick and line passes link a position-only
-          module with no Jacobian, so they draw where the colour pass does. A
+          module with no Jacobian, so they draw where the color pass does. A
           route the compiler refuses falls back to a fit per draw. Placement
           decides what is warped, and the{" "}
           <a href="#/transform-graph">Transform graph tab</a> has the compiler,
@@ -866,7 +866,7 @@ export function Rendering() {
           a pixel: its exposure, its tone mapping, glare and a list of post
           stages. Light stays in physical units, and exposure is in EV100, the
           unit of a camera's exposure value at ISO 100. The eye is the other
-          exposure: it adapts to the scene, loses colour in dim light, and shows
+          exposure: it adapts to the scene, loses color in dim light, and shows
           the stars the exposure lets through. Nothing in the scene is lifted
           for looks. A stage says what it is: <em>physics</em> follows from the
           light, a <em>model</em> is a stated model of an eye or a lens, and a{" "}

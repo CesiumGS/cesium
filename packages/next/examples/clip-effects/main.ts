@@ -20,7 +20,7 @@ import type { Dispose, ExampleContext } from "../types.ts";
  * Clip effects: what a clip does with what it doesn't keep.
  *
  * The scene is the classic underground one: a gas main, a water main, a duct
- * bank and a tank buried a few metres under a street's ground, and a clip box
+ * bank and a tank buried a few meters under a street's ground, and a clip box
  * (the excavation) around them. Cesium World Terrain is the ground, drawn with
  * a custom shader that reads what the clips tell it. Two clips:
  *
@@ -59,8 +59,8 @@ fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>)
   if (style == 1u && d > 0.0) {
     let reach = max(fsInput.clipParams.y, 0.1);
     let k = clamp(d / reach, 0.0, 1.0);
-    let grey = vec3f(dot((*material).baseColor, vec3f(0.2126, 0.7152, 0.0722)));
-    (*material).baseColor = mix((*material).baseColor, grey * vec3f(0.55, 0.75, 1.0), 0.35 + 0.5 * k);
+    let gray = vec3f(dot((*material).baseColor, vec3f(0.2126, 0.7152, 0.0722)));
+    (*material).baseColor = mix((*material).baseColor, gray * vec3f(0.55, 0.75, 1.0), 0.35 + 0.5 * k);
     let period = max(fsInput.clipParams.z, 2.0);
     if (fract((fsInput.screen.x + fsInput.screen.y) / period) < 0.4) {
       (*material).baseColor = (*material).baseColor * 0.45;
@@ -420,7 +420,7 @@ export async function run({
     };
     // A gas main along the street (east-west) and a water main across it, a
     // duct bank beside, a valve chamber at the crossing and a tank, deep enough
-    // that the terrain's few metres of relief don't uncover them.
+    // that the terrain's few meters of relief don't uncover them.
     addPart(cylinder(0.35, 110), materials.gas, [-55, 2, -5.2]);
     addPart(cylinder(0.55, 100), materials.water, [4, -50, -7.2], 90);
     addPart(box([45, 0.9, 0.5]), materials.duct, [0, -6, -3.6]);

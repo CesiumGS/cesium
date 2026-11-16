@@ -278,20 +278,20 @@ describe("the side slopes", () => {
         expect(found, `station ${station}, side ${side}`).toBe(true);
       }
     }
-    // Each slope vertex in the slopes' colours, the rest the pavement's.
+    // Each slope vertex in the slopes' colors, the rest the pavement's.
     const slopeIds = new Set(
       mesh.features.flatMap((f, i) => (f.kind === "side slope" ? [i] : [])),
     );
     expect(mesh.colors.length).toBe((mesh.design.length / 3) * 4);
     const f32 = (c: readonly number[]) => c.map((x) => Math.fround(x));
-    const slopeColours = [CORRIDOR_PALETTE.grass, CORRIDOR_PALETTE.rock].map(
+    const slopeColors = [CORRIDOR_PALETTE.grass, CORRIDOR_PALETTE.rock].map(
       f32,
     );
     for (let v = 0; v < mesh.featureIds.length; v++) {
       const c = Array.from(mesh.colors.subarray(v * 4, v * 4 + 4));
       expect(
         slopeIds.has(mesh.featureIds[v]!)
-          ? slopeColours
+          ? slopeColors
           : [
               f32(CORRIDOR_PALETTE.pavement),
               f32(CORRIDOR_PALETTE.concrete),

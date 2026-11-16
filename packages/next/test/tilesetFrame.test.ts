@@ -33,7 +33,7 @@ const BASE = "https://tiles.test/framed/";
 const ECEF_URL = `${BASE}ecef/tileset.json`;
 const PROJECTED_URL = `${BASE}projected/tileset.json`;
 
-/** Where a tile sits in UTM 48S grid metres: the port of Jakarta. */
+/** Where a tile sits in UTM 48S grid meters: the port of Jakarta. */
 const DESIGN = [709_000, 9_325_000, 29] as const;
 /** A rigid placement's matrix, as a design tileset's root transform: not the identity, not near the origin. */
 // prettier-ignore
@@ -143,7 +143,7 @@ function setup() {
   const geographic = smoothFrame(
     "Geographic to geocentric",
     itrf,
-    liveEdge(geographicToGeocentric(), { description: "to body-fixed metres" }),
+    liveEdge(geographicToGeocentric(), { description: "to body-fixed meters" }),
   );
   catalog.add(geographic);
   const utmFrame = smoothFrame(

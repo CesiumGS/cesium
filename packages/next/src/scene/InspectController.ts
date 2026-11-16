@@ -346,10 +346,10 @@ export class InspectController {
     ];
   }
 
-  private onUp(e: PointerEvent, cancelled = false): void {
+  private onUp(e: PointerEvent, canceled = false): void {
     if (e.pointerType === "touch") {
       this.touch.up(e);
-    } else if (!cancelled) {
+    } else if (!canceled) {
       this.end();
     }
   }

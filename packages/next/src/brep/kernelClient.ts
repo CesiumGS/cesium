@@ -4,7 +4,7 @@
 //
 // A client owns one Web Worker, made on its first call, and its calls run
 // there one at a time. A new `importStep` or `boolean` supersedes any still
-// pending on the client: the old one's promise rejects with `KernelCancelled`
+// pending on the client: the old one's promise rejects with `KernelCanceled`
 // and the worker is told to stop it at its next stage. Use a client per
 // kernel to run two at once (SMLib's context isn't thread-safe, and Open
 // CASCADE's is heavy: one worker each).
@@ -39,10 +39,10 @@ export interface KernelClientOptions {
 }
 
 /** A call that a newer one replaced, or that `dispose` ended. */
-export class KernelCancelled extends Error {
+export class KernelCanceled extends Error {
   constructor(reason = "the request was superseded") {
     super(reason);
-    this.name = "KernelCancelled";
+    this.name = "KernelCanceled";
   }
 }
 
@@ -135,7 +135,7 @@ export class KernelClient {
   }
 
   /**
-   * Imports a STEP file with Open CASCADE: one form per solid, in metres. The
+   * Imports a STEP file with Open CASCADE: one form per solid, in meters. The
    * bytes' buffer moves to the worker (a view of part of a larger buffer is
    * copied first), so `bytes` is detached afterwards.
    */
@@ -167,7 +167,7 @@ export class KernelClient {
   /**
    * Imports a STEP file with Open CASCADE and keeps its solid in the worker
    * under `key`, for `evaluate`'s recipes' `step` leaves (a file of several
-   * solids is fused; the part is centred on its bounds). Not superseded by
+   * solids is fused; the part is centered on its bounds). Not superseded by
    * evaluations. The bytes' buffer moves to the worker, as `importStep`'s.
    */
   async registerStep(
@@ -278,12 +278,12 @@ export class KernelClient {
     };
   }
 
-  /** Ends the worker; pending calls reject with `KernelCancelled`. */
+  /** Ends the worker; pending calls reject with `KernelCanceled`. */
   dispose(): void {
     this.disposed = true;
     this.worker?.terminate();
     this.worker = undefined;
-    this.failAll(new KernelCancelled("the kernel worker was ended"));
+    this.failAll(new KernelCanceled("the kernel worker was ended"));
   }
 
   private connect(): KernelWorkerLike {
@@ -317,7 +317,7 @@ export class KernelClient {
     transfer: ArrayBuffer[] = [],
   ): Promise<KernelReply> {
     if (this.disposed) {
-      return Promise.reject(new KernelCancelled("the kernel worker was ended"));
+      return Promise.reject(new KernelCanceled("the kernel worker was ended"));
     }
     const worker = this.connect();
     const id = this.nextId++;
@@ -326,7 +326,7 @@ export class KernelClient {
         if (call.supersedable) {
           this.pending.delete(other);
           worker.postMessage({ type: "cancel", id: other });
-          call.reject(new KernelCancelled());
+          call.reject(new KernelCanceled());
         }
       }
     }
@@ -355,9 +355,9 @@ export class KernelClient {
         this.pending.delete(reply.id);
         call.reject(new Error(reply.message));
         return;
-      case "cancelled":
+      case "canceled":
         this.pending.delete(reply.id);
-        call.reject(new KernelCancelled());
+        call.reject(new KernelCanceled());
         return;
       default:
         this.pending.delete(reply.id);

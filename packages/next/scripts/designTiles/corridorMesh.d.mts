@@ -2,7 +2,7 @@ import type { Alignment } from "../../src/engineering/alignment.ts";
 
 /** The most station spacing on a tangent, in design units (30). */
 export const TANGENT_SPACING: number;
-/** How far the section reaches either side of the centreline (41). */
+/** How far the section reaches either side of the centerline (41). */
 export const SECTION_REACH: number;
 /** A mesh in design coordinates (float64), before it is written as tiles. */
 export interface DesignTileMesh {
@@ -15,7 +15,7 @@ export interface DesignTileMesh {
   colors: Float32Array;
 }
 type Rgba = [number, number, number, number];
-/** The corridor's colours, linear RGBA, by what they colour. */
+/** The corridor's colors, linear RGBA, by what they color. */
 export const CORRIDOR_PALETTE: {
   pavement: Rgba;
   grass: Rgba;
@@ -30,7 +30,7 @@ export const ABUTMENT: { footing: number };
 /** "601+20": a station as engineers write it. */
 export function stationLabel(station: number): string;
 /**
- * The chord error at the middle of [a, b], at the centreline and both edges
+ * The chord error at the middle of [a, b], at the centerline and both edges
  * (and, on earthwork, the side slopes' rock tops and daylight points).
  */
 export function chordError(alignment: Alignment, a: number, b: number): number;

@@ -7,7 +7,7 @@
 import { describe, expect, it } from "vitest";
 import { boxBrep } from "../examples/brep-first-look/fixtures.ts";
 import { KernelSession, STEP_NEEDS_OCCT } from "../examples/csg/evaluator.ts";
-import { KernelCancelled, KernelClient } from "../src/brep/kernelClient.ts";
+import { KernelCanceled, KernelClient } from "../src/brep/kernelClient.ts";
 import type { Placement, SolidRecipe } from "../src/brep/kernelProtocol.ts";
 import type { OcctKernel, OcctSolid } from "../src/brep/occt.ts";
 import type { SmlibKernel, SmlibSolid } from "../src/brep/smlib.ts";
@@ -242,27 +242,27 @@ describe("the kernel worker's evaluate request", () => {
     const client = setup(log);
     const first = client.evaluate("occt", recipe);
     const second = client.evaluate("occt", box(9));
-    await expect(first).rejects.toBeInstanceOf(KernelCancelled);
+    await expect(first).rejects.toBeInstanceOf(KernelCanceled);
     const made = await second;
     expect(made.booleans).toBe(0);
     client.dispose();
     expect(log.live.size).toBe(0);
   });
 
-  it("stops at the next boolean when cancelled part way, freeing the solids it holds", async () => {
+  it("stops at the next boolean when canceled part way, freeing the solids it holds", async () => {
     const log = new Log();
     const client = setup(log);
-    let cancelled = false;
+    let canceled = false;
     const first = client.evaluate("smlib", recipe, {
       onStage: (stage) => {
-        if (!cancelled && stage.includes("(1 of 3)")) {
-          cancelled = true;
+        if (!canceled && stage.includes("(1 of 3)")) {
+          canceled = true;
           // A newer request cancels this one at its next stage (the worker is already past this one).
           void client.evaluate("smlib", box(8)).catch(() => undefined);
         }
       },
     });
-    await expect(first).rejects.toBeInstanceOf(KernelCancelled);
+    await expect(first).rejects.toBeInstanceOf(KernelCanceled);
     await new Promise((resolve) => setTimeout(resolve, 30));
     // The union's stage was past; the next stage stopped it before the last boolean and the conversion.
     expect(
@@ -287,11 +287,11 @@ describe("STEP parts in the kernel worker", () => {
     ],
   };
 
-  it("keeps an imported file as one centred part, and builds a recipe's step leaf from a copy of it", async () => {
+  it("keeps an imported file as one centered part, and builds a recipe's step leaf from a copy of it", async () => {
     const log = new Log();
     const client = setup(log);
     const made = await client.registerStep(5, bytes());
-    // Two solids are fused, then the part is centred (one placed solid is left).
+    // Two solids are fused, then the part is centered (one placed solid is left).
     expect(log.calls.slice(0, 2)).toEqual(["make step#1", "make step#2"]);
     expect(log.calls).toContain("union step#1 step#2");
     expect(made.part.solids).toBe(2);

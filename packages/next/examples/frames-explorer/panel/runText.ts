@@ -37,9 +37,9 @@ export function runLine(
       return "Not run yet";
     case "running":
       return `${run.done} of ${run.total} checks run`;
-    case "cancelled": {
+    case "canceled": {
       const why =
-        run.reason ?? (run.summary?.cancelled ? "you stopped it" : "unknown");
+        run.reason ?? (run.summary?.canceled ? "you stopped it" : "unknown");
       return `Stopped after ${run.done} of ${run.total} checks: ${why}`;
     }
     case "done": {

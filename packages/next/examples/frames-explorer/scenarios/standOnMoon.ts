@@ -65,7 +65,7 @@ export const LUNAR_SAMPLES = Math.round((SYNODIC_MONTH * DAY) / STEP);
 export const LUNAR_CLOCK_METHOD: NonNullable<ScenarioAnswer["method"]> = [
   {
     title: "Two clocks",
-    text: "One at rest on the Moon's surface at the lunar site; the other on the Earth at height 0 on the ellipsoid (within a few tens of metres of the geoid, the reference's sea level), at the California datasheet point (NGS GU2195).",
+    text: "One at rest on the Moon's surface at the lunar site; the other on the Earth at height 0 on the ellipsoid (within a few tens of meters of the geoid, the reference's sea level), at the California datasheet point (NGS GU2195).",
   },
   {
     title: "Where each clock is, and how fast it moves",
@@ -245,7 +245,7 @@ function roundTrip(
       [norm(p), norm(q)],
     ),
     unit: "m",
-    detail: `the site is ${fmt(norm(p) / 1000, 7)} km from the solar-system barycentre`,
+    detail: `the site is ${fmt(norm(p) / 1000, 7)} km from the solar-system barycenter`,
     accuracyNote: "exact arithmetic: a round trip",
     instant: instant.tdb(),
   };

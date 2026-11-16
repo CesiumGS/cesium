@@ -4,7 +4,7 @@
 // distance, named as one, scales with it; a measurement's lines are
 // sampled until the drawn polyline is within half a pixel of the routed
 // curve; a snap works in drawn space and answers with true points; a
-// pixel's tolerance goes to true metres by σ_min; a bound and a 1σ stay
+// pixel's tolerance goes to true meters by σ_min; a bound and a 1σ stay
 // apart. CPU only: fake views and picks, no engine.
 import { describe, expect, it, vi } from "vitest";
 import { routeForward, type Route, type Warp } from "../src/camera/route.ts";
@@ -290,7 +290,7 @@ function segmentDistance2d(
 
 describe("measurement graphics drawn through the route", () => {
   // 40 km across at 3 km up: ×10 bends the straight true segment by hundreds
-  // of metres against a pixel of tens.
+  // of meters against a pixel of tens.
   const a = at(0, 0, 0);
   const b = at(0.36, 0, 3000);
 
@@ -705,7 +705,7 @@ describe("snaps in true coordinates", () => {
     expect(result!.drawnPosition).toBeUndefined();
   });
 
-  it("converts a pixel to true metres by σ_min: a compression of 0.5 doubles the tolerance", async () => {
+  it("converts a pixel to true meters by σ_min: a compression of 0.5 doubles the tolerance", async () => {
     const client = new ClientSnapService([tileset()]);
     // Nothing within the aperture: a surface snap, tolerance = a pixel + the geometric error.
     const request = (warp: Warp | undefined) => ({
@@ -725,7 +725,7 @@ describe("snaps in true coordinates", () => {
       2 * pixel,
       6,
     );
-    // Exaggeration leaves σ_min at 1: the pixel is as many metres.
+    // Exaggeration leaves σ_min at 1: the pixel is as many meters.
     const exaggerated = await client.snap(request(stretchZ(10)));
     expect(exaggerated!.tolerance - GEOMETRIC_ERROR - 0.002).toBeCloseTo(
       pixel,
@@ -875,7 +875,7 @@ describe("accuracy keeps a bound and a σ apart", () => {
       12,
     );
     expect(accuracy.combination).toMatch(/never a 1σ|a bound is never a 1σ/);
-    // The pixel's true metres: its drawn size over σ_min ≈ 1 at ×10.
+    // The pixel's true meters: its drawn size over σ_min ≈ 1 at ×10.
     const footprint = accuracy.terms.find(
       (t) => t.kind === "pick" && t.part === "footprint",
     )!;

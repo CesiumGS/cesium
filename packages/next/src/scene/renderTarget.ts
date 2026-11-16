@@ -150,7 +150,7 @@ export class CanvasTarget implements RenderTarget {
 
 /**
  * Makes setting `object[key]` also call `changed`, with an own property
- * that keeps the inherited accessor's (or the data property's) behaviour.
+ * that keeps the inherited accessor's (or the data property's) behavior.
  * Leaves an object it can't redefine as it is.
  */
 function watchProperty(object: object, key: string, changed: () => void): void {

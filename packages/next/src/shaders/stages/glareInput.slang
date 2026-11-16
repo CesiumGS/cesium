@@ -1,5 +1,5 @@
 // The veil's input (render/post/glare.ts `pyramidPasses`): the image, 4 taps, finite and in
-// range, with the sun's disc left out so the closed-form veil carries it. Written to the
+// range, with the sun's disk left out so the closed-form veil carries it. Written to the
 // pyramid's level 0.
 import postApi;
 import glareSource;

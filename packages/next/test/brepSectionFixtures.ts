@@ -1,5 +1,5 @@
 // Fixtures for the section tests: solids with known cross sections. Lengths
-// are metres.
+// are meters.
 import { BrepBuilder } from "../src/brep/build.ts";
 import { SurfaceKind, type BrepForm } from "../src/brep/form.ts";
 import type { NurbsCurve } from "../src/brep/nurbs.ts";
@@ -147,7 +147,7 @@ export function sphereBrep(r: number): BrepForm {
 }
 
 /**
- * A block 4 × 4 × 2 m with a cylindrical hole of radius 0.5 m through it along z, centred
+ * A block 4 × 4 × 2 m with a cylindrical hole of radius 0.5 m through it along z, centered
  * (2, 2): the box minus a cylinder, its lower corner at the origin.
  */
 export function boxMinusCylinderBrep(): BrepForm {
@@ -304,7 +304,7 @@ export function boxMinusCylinderBrep(): BrepForm {
   return b.build();
 }
 
-/** A rational quadratic circle in 3D: centre `c`, in the plane of the unit axes `x` and `y`, counter-clockwise from x. */
+/** A rational quadratic circle in 3D: center `c`, in the plane of the unit axes `x` and `y`, counter-clockwise from x. */
 export function circle3(
   c: readonly number[],
   x: readonly number[],
@@ -341,7 +341,7 @@ export function circle3(
   };
 }
 
-/** A cone frustum on the z axis: radius 1 at z = 0, growing with half-angle 0.3, 2 m tall; discs at both ends. */
+/** A cone frustum on the z axis: radius 1 at z = 0, growing with half-angle 0.3, 2 m tall; disks at both ends. */
 export function coneFrustumBrep(): BrepForm {
   const b = new BrepBuilder();
   const r0 = 1;
@@ -457,7 +457,7 @@ export function torusBrep(R: number, r: number): BrepForm {
 
 /**
  * A capped cylinder of NURBS patches, as SMLib holds one: r = 0.5 m, 2 m tall, its
- * side three arcs (90�, 150�, 120�) with an analytic identity; the discs are planes.
+ * side three arcs (90�, 150�, 120�) with an analytic identity; the disks are planes.
  */
 export function nurbsCappedCylinderBrep(): BrepForm {
   const b = new BrepBuilder();

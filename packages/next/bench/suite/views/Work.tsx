@@ -187,9 +187,9 @@ function WorkHelp() {
 
 const DAY_MS = 86_400_000;
 
-/** What each stage's colour means, for the tooltip on anything coloured by stage. */
+/** What each stage's color means, for the tooltip on anything colored by stage. */
 const STAGE_MEANING: Record<Stage, string> = {
-  Proposed: "grey: proposed, not committed to yet",
+  Proposed: "gray: proposed, not committed to yet",
   Waiting: "red: blocked until the items it needs are done",
   Ready: "blue: ready, nothing it needs is open",
   "In flight": "violet: in progress, someone has it",
@@ -1405,7 +1405,7 @@ const LEVEL_NAMES: Record<Level, string> = {
  * What a line is, by shape, the same everywhere on the page: stacked
  * layers for an initiative (it holds projects), a clipboard for a project
  * (usually one plan), a diamond for a milestone (the roadmap's mark), a
- * ring for an item. Shape, not colour: colour already means a stage (the
+ * ring for an item. Shape, not color: color already means a stage (the
  * blue ramp) or "needs you" (amber). Items' IDs carry the ring by
  * themselves (`.work-id`).
  */
@@ -3602,8 +3602,8 @@ function ProposalRow({
 const GATE_REFS = 2;
 
 /**
- * What stands between a proposal and committing: a mark coloured as the
- * board colours stages (blue ready, amber your answer, red other items), a
+ * What stands between a proposal and committing: a mark colored as the
+ * board colors stages (blue ready, amber your answer, red other items), a
  * word, and the IDs of what it waits on, each with its title on hover.
  */
 function GateCell({
@@ -3698,7 +3698,7 @@ function ItemLink({
   className?: string;
   children: ReactNode;
   label?: string;
-  /** A quick tooltip (what its colour means). */
+  /** A quick tooltip (what its color means). */
   tip?: string;
 }) {
   return (
@@ -4359,7 +4359,7 @@ function ProjectLinks({
 
 /**
  * The longest chains, ranked: each a bar for how many items it runs in
- * order, labelled with where it starts and who moves that first item now.
+ * order, labeled with where it starts and who moves that first item now.
  * Choosing one lists the chain step by step.
  */
 function ChainBars({
@@ -5409,7 +5409,7 @@ function MilestoneGraph({
       );
     // A step's column, the same in every group, so steps line up.
     const COL = NODE_W + 48;
-    const centre = (step: number) => step * COL + NODE_W / 2;
+    const center = (step: number) => step * COL + NODE_W / 2;
     const GAP = 40;
     const nodes: Array<{ n: MapNode; x: number; y: number }> = [];
     const links: Array<{
@@ -5453,10 +5453,10 @@ function MilestoneGraph({
         const across = (ly: number) => {
           const i = layers.findIndex((l) => l >= ly);
           if (i <= 0) {
-            return centre(stepOf.get(layers[0]!)!) + (ly - layers[0]!);
+            return center(stepOf.get(layers[0]!)!) + (ly - layers[0]!);
           }
           const [l0, l1] = [layers[i - 1]!, layers[i]!];
-          const [x0, x1] = [centre(stepOf.get(l0)!), centre(stepOf.get(l1)!)];
+          const [x0, x1] = [center(stepOf.get(l0)!), center(stepOf.get(l1)!)];
           return x0 + ((x1 - x0) * (ly - l0)) / (l1 - l0);
         };
         const at = top;
@@ -5609,7 +5609,7 @@ function MilestoneGraph({
             {laid.links.map(({ e, points }) => {
               const on = !lit || (lit.has(e.from) && lit.has(e.to));
               const near = !!hover && (e.from === hover || e.to === hover);
-              // Ends at the bars' edges, not their centres.
+              // Ends at the bars' edges, not their centers.
               const pts = points.map(([x, y]) => [x, y] as [number, number]);
               pts[0]![0] += NODE_W / 2;
               pts[pts.length - 1]![0] -= NODE_W / 2 + 2;

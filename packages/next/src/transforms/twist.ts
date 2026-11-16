@@ -47,7 +47,7 @@ export const twistDescriptor: TransformDescriptor = {
     ...vec3Specs("a", [0, 0, 1], "the axis direction (normalized)"),
     rate: {
       default: 0,
-      description: "radians of twist per metre along the axis",
+      description: "radians of twist per meter along the axis",
     },
   },
   forward(p, params, out, jacobian) {
@@ -113,7 +113,7 @@ export const twistDescriptor: TransformDescriptor = {
   slang: "twistParity",
 };
 
-/** A twist of `rate` radians per metre about the axis through `origin` along `axis`. */
+/** A twist of `rate` radians per meter about the axis through `origin` along `axis`. */
 export function twist(options: {
   axis?: ArrayLike<number>;
   rate: number;

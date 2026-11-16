@@ -105,8 +105,8 @@ function nearestByBruteForce(
 }
 
 /**
- * The centre of curvature at a station, moved `dn` back toward the curve
- * (negative: past the centre) and `dt` along the tangent.
+ * The center of curvature at a station, moved `dn` back toward the curve
+ * (negative: past the center) and `dt` along the tangent.
  */
 function nearCenter(
   alignment: Alignment,
@@ -117,7 +117,7 @@ function nearCenter(
 ): [number, number] {
   const p = alignment.pointAt(station);
   const az = alignment.azimuthAt(station);
-  // Left normal (−cos α, sin α), tangent (sin α, cos α); centre = X + R·N_left.
+  // Left normal (−cos α, sin α), tangent (sin α, cos α); center = X + R·N_left.
   const r = radius - dn;
   return [
     p[0]! - r * Math.cos(az) + dt * Math.sin(az),
@@ -191,7 +191,7 @@ describe("a line, an arc of radius 1,000 and length 500, then a line", () => {
     ],
   };
   const alignment = new Alignment(definition);
-  // The analytic circle: a positive radius curves left, so the centre is to
+  // The analytic circle: a positive radius curves left, so the center is to
   // the left (azimuth − π/2) of the arc's start and the azimuth decreases.
   const A = [START[0] + 100 * Math.sin(AZ0), START[1] + 100 * Math.cos(AZ0)];
   const center = [A[0]! - 1000 * Math.cos(AZ0), A[1]! + 1000 * Math.sin(AZ0)];
@@ -236,7 +236,7 @@ describe("a line, an arc of radius 1,000 and length 500, then a line", () => {
       horizontal: [{ kind: "arc", length: 500, radius: -1000 }],
     });
     expect(right.azimuthAt(1500)).toBeCloseTo(AZ0 + 0.5, 14);
-    // The centre is to the right; the start is 1000 from it.
+    // The center is to the right; the start is 1000 from it.
     const c = [
       START[0] + 1000 * Math.cos(AZ0),
       START[1] - 1000 * Math.sin(AZ0),
@@ -519,12 +519,12 @@ describe("spirals that are hard to evaluate or to project onto", () => {
     const radiusAt = (r1: number, r2: number, L: number, s: number) =>
       1 / (1 / r1 + ((1 / r2 - 1 / r1) * s) / L);
 
-    it("300 → 60: 0.1 past the centre of curvature at the end", () => {
+    it("300 → 60: 0.1 past the center of curvature at the end", () => {
       const alignment = tight(300, 60, 400);
       expectNearest(alignment, nearCenter(alignment, 400, 60, -0.1));
     });
 
-    it("60 → 300: 0.3 either side of the centre of curvature at s = 7", () => {
+    it("60 → 300: 0.3 either side of the center of curvature at s = 7", () => {
       const alignment = tight(60, 300, 400);
       const R = radiusAt(60, 300, 400, 7);
       for (const dn of [0.3, -0.3]) {
@@ -743,7 +743,7 @@ describe("ends and the centerline", () => {
     }
   });
 
-  it("never rejects a pointAt output near the centre at a curved end (6e6, 2e6)", () => {
+  it("never rejects a pointAt output near the center at a curved end (6e6, 2e6)", () => {
     // The foot's station moves by the point's rounding × R/(R − |o|), so the
     // window in station must scale with it; the position test stays tight.
     for (const horizontal of [
@@ -758,7 +758,7 @@ describe("ends and the centerline", () => {
     ] as HorizontalElement[][]) {
       for (let k = 0; k < 150; k++) {
         const far = new Alignment({
-          name: "centre",
+          name: "center",
           start: [6_000_000, 2_000_000],
           startAzimuth: 0.3 + k * 0.0093,
           startStation: 1000,
@@ -771,7 +771,7 @@ describe("ends and the centerline", () => {
           const q = far.pointAt(r.station, r.offset);
           expect(Math.hypot(q[0]! - p[0]!, q[1]! - p[1]!)).toBeLessThan(2e-9);
         }
-        // 5e-9 beyond the end along its tangent still throws, near the centre too.
+        // 5e-9 beyond the end along its tangent still throws, near the center too.
         const az = far.azimuthAt(far.endStation);
         for (const o of [0, -90]) {
           const p = far.pointAt(far.endStation, o);
@@ -787,9 +787,9 @@ describe("ends and the centerline", () => {
     }
   });
 
-  it("never rejects a pointAt output within 1e-7 of the centre of a final arc (R 100)", () => {
+  it("never rejects a pointAt output within 1e-7 of the center of a final arc (R 100)", () => {
     // The end window is a position test, (s - L - eps)*slope <= slack, with no
-    // division by the slope: near the centre of curvature it must not throw.
+    // division by the slope: near the center of curvature it must not throw.
     const horizontal: HorizontalElement[] = [
       { kind: "line", length: 50 },
       { kind: "arc", length: 100, radius: 100 },

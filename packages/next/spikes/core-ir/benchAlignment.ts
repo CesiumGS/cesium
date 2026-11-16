@@ -1,7 +1,7 @@
 // Input 5 measured: a plan-and-profile alignment written with tables (a),
 // its ONNX form (b), and today's per-element corridor compile for scale
 // (the baseline in test/corridorUnrollCompiled.test.ts: map within
-// 1e-8 m, J within 1e-9, float32 change from the draw centre under 0.1 mm,
+// 1e-8 m, J within 1e-9, float32 change from the draw center under 0.1 mm,
 // offsets to ±1.5 km).
 
 import { ROAD } from "../../examples/transform-graph/data/road.ts";
@@ -131,7 +131,7 @@ export async function alignmentSection(
     }
   }
 
-  // The float32 change from a draw's centre, through the residual emulation.
+  // The float32 change from a draw's center, through the residual emulation.
   let resErr = 0;
   let crossed = 0;
   for (let i = 0; i < stations.length; i += 7) {

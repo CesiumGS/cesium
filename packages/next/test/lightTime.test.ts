@@ -29,7 +29,7 @@ const movingFrame = (
   );
 
 /**
- * An SSB-centred SPK (ICRF axes) from `start` km at `velocity` km/s and
+ * An SSB-centered SPK (ICRF axes) from `start` km at `velocity` km/s and
  * constant `acceleration` km/s² (t in TDB seconds), epochs TDB [from, to].
  */
 function constantVelocity(

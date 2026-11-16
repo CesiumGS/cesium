@@ -87,7 +87,7 @@ import {
  * the geometry queries in float64 (`rayHit`, with the view's clips and without
  * them), the mesh caps' polygons included.
  *
- * Section view looks square at the cut through a 2° lens from a few kilometres:
+ * Section view looks square at the cut through a 2° lens from a few kilometers:
  * the engine has no orthographic camera yet (plan 5d, tasks 14 and 15).
  *
  * Curved clip: the plane is named in a design frame under ITRF whose smooth
@@ -106,19 +106,19 @@ const TILESET = "/specs-data/Cesium3DTiles/Tilesets/Tileset/tileset.json";
 const STEP_FILE = "nist_ctc_05_asme1_rd.stp";
 /** The part's largest extent as drawn, m. */
 const PART_SIZE = 56;
-/** The torus model is 2.5 units across; drawn this many metres across. */
+/** The torus model is 2.5 units across; drawn this many meters across. */
 const TORUS_SIZE = 40;
-/** Where the part and the torus stand, local metres. */
+/** Where the part and the torus stand, local meters. */
 const PART_AT: V3 = [-75, -150, 0];
 const TORUS_AT: V3 = [60, -150, 0];
 const DEG = Math.PI / 180;
 const DEFAULT_CAP_COLOR = "#e8913a";
 /** The part's draws are named so a pick can tell them from the caps'. */
 const PART_NAME = "B-rep part";
-/** The camera frames the scene about here, local metres. */
+/** The camera frames the scene about here, local meters. */
 const MIDDLE: V3 = [0, -60, 18];
 
-/** A colour input's #rrggbb as linear RGBA. */
+/** A color input's #rrggbb as linear RGBA. */
 function linearColor(hex: string): CapColor {
   const channel = (i: number) => {
     const c = parseInt(hex.slice(1 + 2 * i, 3 + 2 * i), 16) / 255;
@@ -127,7 +127,7 @@ function linearColor(hex: string): CapColor {
   return [channel(0), channel(1), channel(2), 1];
 }
 
-const metres = (m: number) =>
+const meters = (m: number) =>
   Math.abs(m) >= 100 ? `${m.toFixed(0)} m` : `${m.toFixed(2)} m`;
 
 export async function run({
@@ -863,7 +863,7 @@ export async function run({
     const { pickReadout } = panelControls;
     const where = (p: ArrayLike<number>) => {
       const l = site.local(p);
-      return `east ${metres(l[0])}, north ${metres(l[1])}, up ${metres(l[2])}`;
+      return `east ${meters(l[0])}, north ${meters(l[1])}, up ${meters(l[2])}`;
     };
     // The draw that drew the pixel says what it is: a cap of one of the
     // sets, the part (its feature is a face), or something else (the
@@ -925,7 +925,7 @@ export async function run({
       const onCap = clipped?.target.includes("cap") ? clipped : undefined;
       pickReadout.set(
         "On the cap",
-        `${nearest.name}: u ${metres(dot(offset, nearest.u))}, v ${metres(dot(offset, nearest.v))} on the cut face; the depth read is ${(length(sub(l, exact)) * 1000).toFixed(0)} mm from it. ${
+        `${nearest.name}: u ${meters(dot(offset, nearest.u))}, v ${meters(dot(offset, nearest.v))} on the cut face; the depth read is ${(length(sub(l, exact)) * 1000).toFixed(0)} mm from it. ${
           onCap
             ? `The ${onCap.target} gives ${where(onCap.position)} (${onCap.entity}), ${(length(sub(site.local(onCap.position), l)) * 1000).toFixed(0)} mm from the depth read`
             : "The cap's own geometry is not met by the ray (it is still being built, or the ray runs along its edge)"

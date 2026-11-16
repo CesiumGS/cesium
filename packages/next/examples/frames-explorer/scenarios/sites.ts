@@ -22,7 +22,7 @@ import type { KnobState } from "./spec.ts";
 
 const deg = Math.PI / 180;
 
-/** US survey feet per metre (1200/3937 m to the foot, by definition). */
+/** US survey feet per meter (1200/3937 m to the foot, by definition). */
 import { FTUS_PER_M } from "../units.ts";
 export { FTUS_PER_M };
 
@@ -66,7 +66,7 @@ export interface BimCrs {
   code: string;
   /** Two-dimensional: heights are ellipsoidal, so the exact line lies on the ellipsoid. */
   crs: CrsRef;
-  /** Design units per metre. */
+  /** Design units per meter. */
   unitsPerMeter: number;
   unit: "ftUS" | "m";
   /**
@@ -82,7 +82,7 @@ export interface BimCrs {
   };
   /**
    * Each site's origin in the CRS (design E, N), the same ground point to
-   * the millimetre (test/data/framesExplorerScenarios checks through PROJ);
+   * the millimeter (test/data/framesExplorerScenarios checks through PROJ);
    * none for a site outside its area of use.
    */
   origins: Readonly<Partial<Record<BimSiteId, readonly [number, number]>>>;
@@ -186,7 +186,7 @@ export function crsEdge(frame: EngineeringFrame): AddedFrameSpec["edge"] {
 /** The site grid's frame name in the tree. */
 export const BIM_SITE_GRID = "BIM site grid";
 
-/** The rigid and exact line along the site grid's x axis: its length and the inset's mark, metres. */
+/** The rigid and exact line along the site grid's x axis: its length and the inset's mark, meters. */
 export const BIM_LINE = { length: 400_000, mark: 20_000 } as const;
 
 /**
@@ -255,7 +255,7 @@ export function normalRadius(
 }
 
 /**
- * The gap between rigid and exact placement `d` metres along a site grid's
+ * The gap between rigid and exact placement `d` meters along a site grid's
  * axis, by hand (R11), in its two parts at right angles (fix 1: each is
  * checked on its own):
  *
@@ -269,7 +269,7 @@ export function normalRadius(
  *    meets its level d³/6R² further on).
  *
  * The gap is their root sum square (the part across the line, the grid
- * line's own curve, is millimetres).
+ * line's own curve, is millimeters).
  */
 export function rigidGapByHand(input: {
   d: number;
@@ -329,17 +329,17 @@ export function stationText(station: number): string {
   return `${sign}${hundreds}+${rest}`;
 }
 
-/** "15.00 ft right", "2.50 ft left", "on the centreline". */
+/** "15.00 ft right", "2.50 ft left", "on the centerline". */
 export function offsetText(offset: number): string {
   const r = Math.round(offset * 100) / 100;
   if (r === 0) {
-    return "on the centreline";
+    return "on the centerline";
   }
   return `${Math.abs(r).toFixed(2)} ft ${r > 0 ? "right" : "left"}`;
 }
 
 /**
- * A point `e` metres east and `n` north of (`longitude`, `latitude`), degrees,
+ * A point `e` meters east and `n` north of (`longitude`, `latitude`), degrees,
  * on a sphere of the Earth's mean radius: for the camera only.
  */
 export function offsetPlace(
@@ -355,7 +355,7 @@ export function offsetPlace(
   };
 }
 
-/** Lines on a 10 km grid around `origin` (design units), `half` metres each way, snapped to the grid. */
+/** Lines on a 10 km grid around `origin` (design units), `half` meters each way, snapped to the grid. */
 function gridAround(
   origin: readonly [number, number],
   unitsPerMeter: number,
@@ -430,7 +430,7 @@ export function bimEngineering(knobs: KnobState): EngineeringSetup {
 /** The road's middle (station 1000) in the site grid, design units. */
 const ROAD_MIDDLE = new Alignment(CLOTHOID_ROAD).pointAt(1000, 0);
 
-/** The road's middle on WGS 84, degrees: for the camera only (to a few tens of metres). */
+/** The road's middle on WGS 84, degrees: for the camera only (to a few tens of meters). */
 export function corridorPlace(): { longitude: number; latitude: number } {
   const ca = BIM_CRS["ca-zone-3"];
   const sf = BIM_PLACES["san-francisco"];

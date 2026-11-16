@@ -207,7 +207,7 @@ export async function footprintResult(
   if (!reaches) {
     return {
       ...base,
-      title: `${where}: tilted ${tilt}° the camera's centre ray reaches flat ground ${fmt(d, 4)} m ahead by hand, beyond the ${reach} m it is traced: the library finds no ground within it`,
+      title: `${where}: tilted ${tilt}° the camera's center ray reaches flat ground ${fmt(d, 4)} m ahead by hand, beyond the ${reach} m it is traced: the library finds no ground within it`,
       pass: r.clear === true || r.clear === undefined,
       detail: `library: ${r.clear === false ? "met the ground" : "no ground"}`,
       accuracyNote: "exact arithmetic: a hand formula",
@@ -216,7 +216,7 @@ export async function footprintResult(
   const off = r.blockedAt ? dist(r.blockedAt, hand) : Infinity;
   return {
     ...base,
-    title: `${where}: tilted ${tilt}° the camera's centre ray meets flat ground ${fmt(h, 4)} m below where the hand ray–plane intersection puts it, (H − ${DRONE.gimbal} m)/tan(tilt) = ${fmt(d, 4)} m ahead, within 1 mm plus the plane's departure from the curved ground, d²/2R ÷ sin(tilt) along the ray`,
+    title: `${where}: tilted ${tilt}° the camera's center ray meets flat ground ${fmt(h, 4)} m below where the hand ray–plane intersection puts it, (H − ${DRONE.gimbal} m)/tan(tilt) = ${fmt(d, 4)} m ahead, within 1 mm plus the plane's departure from the curved ground, d²/2R ÷ sin(tilt) along the ray`,
     pass: r.clear === false,
     value: off,
     tolerance,
@@ -264,7 +264,7 @@ export function roundTripResult(
   }
   return {
     ...base,
-    title: `${where}: points a kilometre out along ${frames.map((f) => f.name).join(" and ")} go to ITRF and back within 1 µm`,
+    title: `${where}: points a kilometer out along ${frames.map((f) => f.name).join(" and ")} go to ITRF and back within 1 µm`,
     pass: true,
     value: worst,
     tolerance: 1e-6,

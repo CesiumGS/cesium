@@ -37,7 +37,7 @@ export interface MeasureLive {
     readonly y: number;
     readonly tone: "measure" | "truth";
   }[];
-  /** Station 170,000's true position, labelled. */
+  /** Station 170,000's true position, labeled. */
   readonly marker?: {
     readonly x: number;
     readonly y: number;
@@ -60,19 +60,19 @@ export interface MeasureLive {
     /** The client's snap, while the exact service is still asked. */
     readonly provisional: boolean;
   };
-  /** The view's centre is marked (keyboard measuring). */
+  /** The view's center is marked (keyboard measuring). */
   readonly crosshair: boolean;
   /** The openers' line as drawn now. */
   readonly figures: Readonly<Partial<Record<OpenerId, OpenerFigures>>>;
 }
 
-/** Labels farther than this from the camera are left out, metres. */
+/** Labels farther than this from the camera are left out, meters. */
 const LABEL_RANGE = 30_000;
 /** The ruler's note shows once its last ticks are this far apart on the screen, CSS px. */
 export const RULER_PX = 4;
-/** A quiet line's label shows within this of the camera, metres (not at the horizon). */
+/** A quiet line's label shows within this of the camera, meters (not at the horizon). */
 const QUIET_RANGE = 15_000;
-/** The user's pill shows within this of the camera, or three times its line's length, metres. */
+/** The user's pill shows within this of the camera, or three times its line's length, meters. */
 const USER_RANGE = 5_000;
 
 const distance = (p: ArrayLike<number>, q: ArrayLike<number>) =>
@@ -135,7 +135,7 @@ export function behindEarth(
   return closest < radius - EARTH_MARGIN;
 }
 
-/** How far under the lower end the line may dip before the Earth hides it, metres. */
+/** How far under the lower end the line may dip before the Earth hides it, meters. */
 const EARTH_MARGIN = 200;
 
 /** The labels and the openers' live figures, for this frame. */
@@ -161,7 +161,7 @@ export function placeLabels(input: LabelInput): MeasureLive {
     Float64Array.from([0, 1, 2].map((k) => (p[k]! + q[k]!) / 2));
   /**
    * A line's pill and end dots; none when the line is under 24 px on the
-   * screen (far off, it would only clutter). Whether it is labelled.
+   * screen (far off, it would only clutter). Whether it is labeled.
    */
   const label = (
     key: string,

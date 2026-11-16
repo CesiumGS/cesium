@@ -102,7 +102,7 @@
 }
 /*
  * The corridor's point's drag target (pointDrag.ts): a 32 px hit area
- * centred on its marker's dot, which stays the label board's. A thin ring
+ * centered on its marker's dot, which stays the label board's. A thin ring
  * on hover and while dragging says it can be moved.
  */
 .fx-drag-target {

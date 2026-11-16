@@ -147,7 +147,7 @@ const EFFECTS = [
   {
     effect: "`discard` (the default)",
     removed:
-      "Cut out of every pass: colour, depth, shadows, ambient occlusion and picks.",
+      "Cut out of every pass: color, depth, shadows, ambient occlusion and picks.",
     cost: "A compare in the fragment test. Nothing else.",
   },
   {
@@ -173,7 +173,7 @@ const SHADER_INPUTS = [
   {
     input: "`clipDistance`",
     value:
-      "Metres to the nearest cut among the sets that report, positive on the side the set removes and negative on the side it keeps. 3.4e38 where no set reports.",
+      "Meters to the nearest cut among the sets that report, positive on the side the set removes and negative on the side it keeps. 3.4e38 where no set reports.",
   },
   {
     input: "`clipFlags`",
@@ -273,7 +273,7 @@ function TerrainTimings() {
 
 const PIPELINES = [
   {
-    pass: "Colour (opaque and translucent), depth, shadow casters, ambient occlusion's prepass",
+    pass: "Color (opaque and translucent), depth, shadow casters, ambient occlusion's prepass",
     state:
       "Made on first use by a view with clips: the same module with `clipsOn` set (pipeline constant 1). Their draw bundles are remade as `clippedBundle(kind)`.",
   },
@@ -371,7 +371,7 @@ const NUMBERS = [
     what: "Mesh cap bias",
     value:
       "2e-5 of the tiles' diagonal, rounded up to a power of two so growing content doesn't change it at every tile, at least 1e-6 m",
-    note: "The same idea as the b-rep's, with the size read from the tiles loaded. The clip test and the cap's vertices are float32, so a micrometre inside the plane is speckle at tens of metres.",
+    note: "The same idea as the b-rep's, with the size read from the tiles loaded. The clip test and the cap's vertices are float32, so a micrometer inside the plane is speckle at tens of meters.",
   },
   {
     what: "Nudge",
@@ -549,7 +549,7 @@ const NOT_BUILT = [
   {
     what: "Element styling of caps",
     state:
-      "Hatching is built for GPU caps. Hatching or a colour per material or element is the styling language's planar fill (docs/design/cad-display-extensions.md). An exact cap has a flat colour and a feature ID per element, and `style` is the hook.",
+      "Hatching is built for GPU caps. Hatching or a color per material or element is the styling language's planar fill (docs/design/cad-display-extensions.md). An exact cap has a flat color and a feature ID per element, and `style` is the hook.",
   },
   {
     what: "A section view from a plane, and printing to scale",
@@ -911,7 +911,7 @@ export function Clipping() {
 
       <Section title="The fragment test">
         <p>
-          Every fragment stage that writes colour, depth, a shadow, the
+          Every fragment stage that writes color, depth, a shadow, the
           ambient-occlusion prepass or a pick runs one loop over the view&apos;s
           table, and discards what a set removes. Every loop has a constant
           bound and every row index is clamped, so no clip configuration
@@ -1081,7 +1081,7 @@ export function Clipping() {
         </p>
         <h3>On the GPU: View.clipCaps</h3>
         <p>
-          Set <C>view.clipCaps</C> (a colour, and optionally a hatch) and the
+          Set <C>view.clipCaps</C> (a color, and optionally a hatch) and the
           view closes the cut of every draw marked <C>solid</C> (
           <C>DrawOptions.solid</C>, <C>World.setSolid</C>), wherever its clips
           pass through the inside. Nothing is built as the clip moves, so a
@@ -1104,7 +1104,7 @@ export function Clipping() {
           <li>
             <strong>Cap triangle.</strong> After the content, the opaque pass
             draws one triangle over the view that fills the pixels with an odd
-            count in the cap colour. A hatch is lines in the cut&apos;s plane,
+            count in the cap color. A hatch is lines in the cut&apos;s plane,
             anchored to it: spacing, angle, width and strength.
           </li>
         </ol>
@@ -1232,15 +1232,14 @@ export function Clipping() {
         </p>
         <h3>Styling</h3>
         <p>
-          A GPU cap has a flat colour (a warm grey by default, linear RGBA 0.78,
+          A GPU cap has a flat color (a warm gray by default, linear RGBA 0.78,
           0.74, 0.68) and optional hatching: lines in the cut&apos;s plane,
           anchored to it. Styling by element is the styling language&apos;s, by
           planar fill (docs/design/cad-display-extensions.md). An exact cap has
-          the same default colour, a section line is orange, a mesh cap carries
-          a feature ID per element, and <C>style</C> is the hook: a function
-          from the cap&apos;s kind and feature to a colour, called where the
-          language will say how a cap looks. Without a result the default
-          stands.
+          the same default color, a section line is orange, a mesh cap carries a
+          feature ID per element, and <C>style</C> is the hook: a function from
+          the cap&apos;s kind and feature to a color, called where the language
+          will say how a cap looks. Without a result the default stands.
         </p>
         <Written
           from="src/brep/section*.ts, src/scene/world/caps.ts, capFaces.ts, meshCaps.ts and clips.ts (capPlanes), src/render/view/capPasses.ts and src/shaders/sectionCap.slang, with the tests below"

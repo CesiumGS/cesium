@@ -94,7 +94,7 @@ const PATHS = [
     path: "CPU tessellator",
     how: (
       <>
-        Once, to a chordal error in metres, on a uniform grid for each face.
+        Once, to a chordal error in meters, on a uniform grid for each face.
         Trims by discarding cells. <C>tessellateBrep</C>.
       </>
     ),
@@ -221,7 +221,7 @@ const TOLERANCES = [
     which: "Display",
     what: "Pixels, for one view.",
     enters:
-      "The dice's target (0.5 px by default, errorPixels), and the trims' fit: 1e-4 of a face's size, a tenth of a pixel on a face that fills a thousand pixels. The CPU tessellator's tolerance, in metres, is the same kind.",
+      "The dice's target (0.5 px by default, errorPixels), and the trims' fit: 1e-4 of a face's size, a tenth of a pixel on a face that fills a thousand pixels. The CPU tessellator's tolerance, in meters, is the same kind.",
   },
 ];
 
@@ -369,11 +369,11 @@ const CHECKS = [
   },
 ];
 
-const FORMULA = `error(n_u, n_v)  <=  C_u / n_u²  +  C_uv / (n_u n_v)  +  C_v / n_v²     metres
+const FORMULA = `error(n_u, n_v)  <=  C_u / n_u²  +  C_uv / (n_u n_v)  +  C_v / n_v²     meters
 C_u = D_u (u width)²    C_uv = D_uv (u width)(v width)    C_v = D_v (v width)²`;
 
-const DICE = `pixels = rows · scale / depth        pixels per model metre, at the face's nearest point
-error  = target / pixels             metres a cell may leave
+const DICE = `pixels = rows · scale / depth        pixels per model meter, at the face's nearest point
+error  = target / pixels             meters a cell may leave
 D_u / ρ_u²  +  D_uv / (ρ_u ρ_v)  +  D_v / ρ_v²  <=  error      ρ: cells per unit of u and v
 n_u = clamp(ceil(ρ_u · u width), 1, 64)    n_v likewise`;
 
@@ -431,7 +431,7 @@ export function Tessellation() {
           rows={PATHS}
         />
         <p>
-          The CPU path takes metres in the source's units. The GPU path takes
+          The CPU path takes meters in the source's units. The GPU path takes
           pixels, for each view. That is why they aren't one function with two
           settings: the CPU can't know the view.
         </p>
@@ -503,7 +503,7 @@ export function Tessellation() {
         </p>
         <p>
           A trim is the even-odd rule over the loops' polygons: a triangle whose
-          centre is outside is dropped. The edge lines drawn on top hide the
+          center is outside is dropped. The edge lines drawn on top hide the
           jagged line this leaves. A grid can't do better than its cell, which
           is the sawtooth. The mesh states the error it can leave: the
           tolerance, or more where the grid cap binds, plus a surface's
@@ -603,7 +603,7 @@ export function Tessellation() {
               ),
             },
             {
-              title: "Pixels for a metre",
+              title: "Pixels for a meter",
               body: (
                 <>
                   From the view's projection rows and the depth of the{" "}
@@ -842,7 +842,7 @@ export function Tessellation() {
           about 66 pieces.
         </p>
         <p>
-          <strong>Dilation against seams.</strong> Neighbouring faces trim along
+          <strong>Dilation against seams.</strong> Neighboring faces trim along
           their own pcurve images of the same edge, so they meet within the
           edge's tolerance plus the tessellation error, and a pinhole can open
           between them. The fragment keeps a point whose winding isn't zero, or
@@ -1100,7 +1100,7 @@ export function Tessellation() {
           vertex entry in every pass&apos;s pipeline (depth, shadow, pick) that
           decodes the triangle, n and the sub-triangle, and attribute
           interpolation. It also needs per-edge levels from each edge&apos;s
-          length: one level for a triangle leaves cracks between neighbours of
+          length: one level for a triangle leaves cracks between neighbors of
           different n. The transform-graph plan lists these as its tessellation
           follow-ups, tasks 9 and 10.
         </p>

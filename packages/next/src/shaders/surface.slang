@@ -225,7 +225,7 @@ float2 airTransmittanceUv(float r, float mu, float bottom, float top) {
 // angle (radians). The Earth's shadow in the air is soft over about a
 // degree (the sun's disk, refraction near the horizon), and a step of the
 // march spans more from high up: a hard test drew a ladder of stripes
-// across the day/night line, neighbouring rays' steps crossing it apart.
+// across the day/night line, neighboring rays' steps crossing it apart.
 float sunAbove(float r, float mu, float bottom, float soft) {
   float horizon = -sqrt(max(0.0, 1.0 - (bottom / r) * (bottom / r)));
   float above = asin(clamp(mu, -1.0, 1.0)) - asin(horizon);
@@ -716,7 +716,7 @@ static uint4 patchChunk;
 
 // A patch draw's display bits, in its record's flags (RecordFlags.patchWire
 // and the rest, layout.ts; the iso lines' division count is in bits 16 to
-// 23), and the line colours: linear, display-referred as unlit lines are.
+// 23), and the line colors: linear, display-referred as unlit lines are.
 static const uint PATCH_WIRE_BIT = 256u;
 static const uint PATCH_ISO_BIT = 512u;
 static const uint PATCH_FLAT_BIT = 1024u;
@@ -785,7 +785,7 @@ PatchVertex patchVertex(DrawRecord r, uint vertexIndex) {
 // there less its own (globe/heightNormal.ts HEIGHT_MORPH_ATTRIBUTE). From the
 // time its draw record says it began (`DrawRecord.morph`), the vertex goes
 // from the parent's height to its own over `view.transition.x` seconds, eased with a
-// smoothstep. Returns the move so far, along n (xyz, metres), and the change
+// smoothstep. Returns the move so far, along n (xyz, meters), and the change
 // of height (w). MORPH_HASH is `attributeHash("_HEIGHT_MORPH")`;
 // test/geomorph.test.ts holds it to its twin. The duration is the view block's
 // `transition.x` (streaming/tileMorph.ts `transitionSeconds`, written each
@@ -1095,7 +1095,7 @@ export __extern_cpp SurfaceVertex surfacePatchDepthVertex(uint vertexIndex, uint
 //
 // The pick's block is the view's with a window and the terrain's stops in
 // the shading-only `iblFrame` (viewBlocks.ts / render/view/pickDomain.ts):
-// [0] the window's centre in NDC (xy) and half size (zw); [1] the masks of
+// [0] the window's center in NDC (xy) and half size (zw); [1] the masks of
 // the terrain regions a pick stops at (xy: low and high 16 bits) and goes
 // through (zw), as float values.
 [[vk::binding(8, 1)]] StructuredBuffer<uint> pickIndices;
@@ -1482,7 +1482,7 @@ bool insideClipShape(uint at, float3 p) {
   return inside;
 }
 
-// The shape's signed distance at `p` (camera-relative), metres: negative
+// The shape's signed distance at `p` (camera-relative), meters: negative
 // inside, positive outside. Exact for a plane and a polygon's ring; a box's is
 // the largest overshoot along its axes (exact outside a face, a lower bound
 // near an edge or corner). The rows hold a box's axes scaled by its half
@@ -1604,7 +1604,7 @@ bool clipsKeep(SurfaceVaryings in, DrawRecord r) {
 // Tells a custom shader about the fragment (`CesiumFragment.clipDistance`,
 // `clipFlags`, `clipId`, `clipParams`): of the sets that report, the one it is
 // farthest on the removed side of, or nearest to the cut on the kept one, with
-// the distance to it (positive on the removed side, metres), whether it removes
+// the distance to it (positive on the removed side, meters), whether it removes
 // the fragment and whether that is a ghost, its number in the view's list, and
 // its parameters.
 void clipsReport(SurfaceVaryings in, DrawRecord r) {
@@ -1883,8 +1883,8 @@ float2 patchLines(SurfaceVaryings in, uint display, PatchWidths w, uint division
   return cover;
 }
 
-// The colour of the lines at a fragment and their coverage: iso lines over
-// the grid's, in the lines-only view's darker colour for the grid.
+// The color of the lines at a fragment and their coverage: iso lines over
+// the grid's, in the lines-only view's darker color for the grid.
 float4 patchLineColor(float2 cover, uint display) {
   float3 wire = (display & PATCH_LINES_ONLY_BIT) != 0u ? WIRE_ONLY_COLOR : WIRE_COLOR;
   float total = 1.0 - (1.0 - cover.x) * (1.0 - cover.y);
@@ -2644,9 +2644,9 @@ Surface shadeSurface(SurfaceVaryings in, bool frontFacing, bool translucent) {
 }
 
 // --- debug views (`View.debug`, streaming/debugViews.ts) --------------------------
-// A flat colour in place of lighting, from the tile's `DrawRecord.debug` and
+// A flat color in place of lighting, from the tile's `DrawRecord.debug` and
 // the view's mode (`View.time.w`: 1 level, 2 tiles, 3 error, 4 state,
-// 5 stretch). The colours are sRGB bytes, the same numbers as debugViews.ts
+// 5 stretch). The colors are sRGB bytes, the same numbers as debugViews.ts
 // (test/debugViews.test.ts holds the two to each other); ramps are
 // interpolated as bytes, as the legend's samples are.
 
@@ -2682,7 +2682,7 @@ float3 debugStretchColor(float t) {
   return lerp(DEBUG_STRETCH_RAMP[i], DEBUG_STRETCH_RAMP[i + 1u], x - float(i));
 }
 
-// The display colour (linear) of a fragment in debug mode `mode` (1 to 5; 6, "skirts", is shadeOpaque's).
+// The display color (linear) of a fragment in debug mode `mode` (1 to 5; 6, "skirts", is shadeOpaque's).
 // Derivatives: call it in uniform control flow.
 float3 debugShade(SurfaceVaryings in, DrawRecord r, uint mode) {
   float2 edgeRate = fwidth(in.uv);
@@ -2736,7 +2736,7 @@ FsOut shadeOpaque(SurfaceVaryings in, bool frontFacing) {
   float lined = patchLine.w;
   uint debugMode = uint(view.time.w);
   if (debugMode != 0u && debugMode != 6u) {
-    // A debug view: a flat display-referred colour, the depth as drawn.
+    // A debug view: a flat display-referred color, the depth as drawn.
     // (The mode is uniform, so the derivatives in debugShade are too.)
     out.color = float4(0.0);
     out.display = float4(debugShade(in, drawRecord(in.ids.x), debugMode), 1.0);

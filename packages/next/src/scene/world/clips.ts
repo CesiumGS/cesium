@@ -94,7 +94,7 @@ export type Vec4Like = readonly [number, number, number, number];
  *
  * - `"discard"` (the default): they are cut out of every pass, picks included.
  * - `{ kind: "discard", params }`: the same, and a custom shader still sees
- *   the kept fragments' `clipDistance` (negative, metres to the cut), to glow
+ *   the kept fragments' `clipDistance` (negative, meters to the cut), to glow
  *   or fade near it.
  * - `{ kind: "translucent", alpha, … }`: a ghost. They are cut out of the opaque
  *   passes (no depth, shadow, ambient occlusion or pick), and drawn blended at

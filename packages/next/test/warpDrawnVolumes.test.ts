@@ -22,7 +22,7 @@ import {
 const R = 6_378_137;
 const ASPECT = 16 / 9;
 
-/** Moves a tile by `shift(its centre's y)`, whole: a map with σ = 1, and the image's bounding sphere. */
+/** Moves a tile by `shift(its center's y)`, whole: a map with σ = 1, and the image's bounding sphere. */
 function shiftWarp(shift: (y: number) => number[]): TileWarp & {
   version: number;
 } {
@@ -328,7 +328,7 @@ describe("the dynamic screen-space error on drawn volumes", () => {
       }
     ).computeDensity(root, view);
 
-  /** The 1.x falloff for a globe-sized root centred `up` m up (it spans 0 to 2 · up), seen from `height`. */
+  /** The 1.x falloff for a globe-sized root centered `up` m up (it spans 0 to 2 · up), seen from `height`. */
   function expected(up: number, height: number): number {
     const selection = policy();
     const close = 2 * up * selection.dynamicScreenSpaceErrorHeightFalloff;

@@ -1,7 +1,7 @@
 // The transform graph's CPU side (docs/design/transform-graph.md, task 1): nodes,
 // routes through the lowest common ancestor, collapsed affine runs, smooth
 // nodes inverted by declaration or by Newton, switches chosen per view, and
-// the frames catalogue as affine nodes.
+// the frames catalog as affine nodes.
 import { describe, expect, it } from "vitest";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { frameTransform } from "../src/frames/Frame.ts";
@@ -68,7 +68,7 @@ const near = (a: ArrayLike<number>, b: ArrayLike<number>, digits = 9) => {
   }
 };
 
-/** Twist about z by k·z radians per metre: a smooth map with a Jacobian and an exact inverse. */
+/** Twist about z by k·z radians per meter: a smooth map with a Jacobian and an exact inverse. */
 function twist(extra: Partial<SmoothSpec> = {}): SmoothSpec {
   const rotate = (
     p: ArrayLike<number>,
@@ -412,7 +412,7 @@ describe("placement decides what is warped", () => {
   });
 });
 
-describe("the frames catalogue as affine nodes", () => {
+describe("the frames catalog as affine nodes", () => {
   const catalog = createFrameCatalog();
   const resolver = createFramesResolver(catalog);
   const itrf = catalog.get("ITRF", { user: "application" });

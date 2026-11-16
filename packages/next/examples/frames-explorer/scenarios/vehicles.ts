@@ -1,6 +1,6 @@
 // The drone over the BIM site and the ship entering San Francisco Bay
 // (Task 7): their synthetic tracks, their body frames (bodyFrame.ts), the
-// drone's camera mount and the ship's mast sensor, the ship's modelled sea
+// drone's camera mount and the ship's mast sensor, the ship's modeled sea
 // state, and the lighthouse the mast looks for. Plain data and pure
 // functions: the worker's evaluators (drone.ts, ship.ts) and the page (the
 // triads, the lines placed every frame, the lighthouse's window) read the
@@ -62,7 +62,7 @@ export function legLengths(track: Pick<LegTrack, "vertices">): number[] {
 }
 
 /**
- * The point `s` metres along `track` (clamped to its ends): longitude,
+ * The point `s` meters along `track` (clamped to its ends): longitude,
  * latitude and height interpolated along its leg, and the leg's direction
  * (its chord's, Earth-fixed unit), which the body holds past either end.
  */
@@ -110,7 +110,7 @@ export function headingText(
  * 400 m west and 300 m south of the model's site origin to as far east and
  * north (a heading of about 53°), so halfway along it is over the origin.
  * Its reported height is 250 m, NAVD88 as its receiver gives it through
- * GEOID18 (synthetic, labelled so).
+ * GEOID18 (synthetic, labeled so).
  */
 export const DRONE = (() => {
   const o = BIM_PLACES["san-francisco"];
@@ -122,7 +122,7 @@ export const DRONE = (() => {
       [b.longitude, b.latitude],
     ] as const,
     reportedHeight: 250,
-    /** The camera's gimbal below the body's centre, m. */
+    /** The camera's gimbal below the body's center, m. */
     gimbal: 0.15,
   };
 })();
@@ -143,7 +143,7 @@ export function droneAt(heights: readonly number[], along: number): BodyTrack {
 
 /**
  * The drone's body (level: it hovers) and its camera mount, tilted down by
- * the knob about the body's y, its gimbal below the body's centre. Each
+ * the knob about the body's y, its gimbal below the body's center. Each
  * states its accuracy (stated.ts): the body's estimated GNSS position and
  * attitude, the mount exact as set.
  */
@@ -179,11 +179,11 @@ export const KNOT = 1852 / 3600;
  * differ by about 1.5 m here):
  *
  *  - up the Southern approach's northbound lane (167.403(b)), on its
- *    centreline at 122°39.80′W (between the separation zone's 122°40.40′
+ *    centerline at 122°39.80′W (between the separation zone's 122°40.40′
  *    and the lane's 122°39.20′), from 37°33.00′N to its end at 37°39.20′N;
  *  - across the precautionary area (167.401) to the main ship channel's
  *    eastbound lane (167.405(b));
- *  - along that lane's centreline (midway between the separation line,
+ *  - along that lane's centerline (midway between the separation line,
  *    167.405(a), and the lane's outer line) to its end at 122°30.90′W,
  *    off Mile Rocks, short of the Golden Gate.
  *
@@ -240,7 +240,7 @@ export function shipAt(
 }
 
 /**
- * The ship's modelled sea state (synthetic, labelled): a gentle swell
+ * The ship's modeled sea state (synthetic, labeled): a gentle swell
  * pitching it ±1° over 9 s and rolling it ±2.5° over 12 s.
  */
 export const SEA_STATE = {
@@ -319,7 +319,7 @@ export const LIGHTHOUSE = {
   /**
    * That offset's accuracy, m (estimated, illustrative): NOAA publishes
    * none for it. The station is 4 km from the island, and the bay's
-   * central tidal datums differ by centimetres over that.
+   * central tidal datums differ by centimeters over that.
    */
   offsetAccuracy: 0.05,
 } as const;

@@ -135,13 +135,13 @@
 /* ---------------------------------------------------------------- the dashboard */
 
 /*
- * The stages, each its own meaning: grey is proposed (not committed),
+ * The stages, each its own meaning: gray is proposed (not committed),
  * red is waiting on other items (blocked), blue is ready, violet is in
  * flight, green is done. Amber stays "needs you". Validated as a
  * categorical palette, all pairs, in both modes (2026-11-14): the hues
  * are also set apart in lightness, so red and green, and blue and
- * violet, stay apart for colour-blind readers. Red and blue sit under
- * 3:1 on the dark surface, so every stage colour is named beside it
+ * violet, stay apart for color-blind readers. Red and blue sit under
+ * 3:1 on the dark surface, so every stage color is named beside it
  * (legends, tooltips, readouts).
  *
  * --ramp is a count's one-hue ramp (the dependency matrix), validated
@@ -1465,7 +1465,7 @@ a.work-related-item:focus-visible {
 /* The measures that replace velocity. */
 
 /* The scope picker: the trail's last step, opening the whole tree. */
-/* The scope: StrataKit's outlined button, labelled, naming the scope. */
+/* The scope: StrataKit's outlined button, labeled, naming the scope. */
 .work-picker-button {
   gap: var(--stratakit-space-150);
   max-width: 100%;
@@ -1819,7 +1819,7 @@ button.work-mrow-big:focus-visible {
 }
 
 /*
- * A quick tooltip for anything coloured by meaning (data-tip): it shows
+ * A quick tooltip for anything colored by meaning (data-tip): it shows
  * at once on hover or focus, where a native title waits a second.
  */
 .work-page [data-tip],
@@ -2228,7 +2228,7 @@ button.work-mrow-big:focus-visible {
   color: var(--stratakit-color-text-critical-base, var(--stage-waiting));
 }
 
-/* A project's open items that no milestone holds yet: dashed and grey. */
+/* A project's open items that no milestone holds yet: dashed and gray. */
 .work-map-node.unshaped {
   background: transparent;
   border: 1px dashed var(--stratakit-color-border-neutral-base);

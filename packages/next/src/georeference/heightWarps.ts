@@ -14,7 +14,7 @@
 // h′ and steps back along n. The formula is a closed form that holds on an
 // ellipsoid with three different radii and has no singularity at a pole
 // (it uses no latitude or longitude); it fails only where 1 + hκ = 0, a
-// centre of curvature, deep inside the body.
+// center of curvature, deep inside the body.
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import type { HeightScale, WarpScale } from "../camera/route.ts";
 import type { SmoothSpec } from "../transform/graph.ts";
@@ -33,7 +33,7 @@ const UNBOUNDED_CEILING = 1e9;
  * The surface heights are measured from: the WGS84 ellipsoid by default,
  * `{ ellipsoid }` another, a sphere about the origin, or a plane. A plane's
  * `origin` (a point on it, default the origin) and `normal` (default
- * +z, the side heights are positive on) are in the parent frame's metres.
+ * +z, the side heights are positive on) are in the parent frame's meters.
  */
 export type ReferenceSurface =
   | "ellipsoid"
@@ -61,9 +61,9 @@ interface Surface {
  * p's foot on the ellipsoid: the point of the surface along its normal
  * through p, written to `foot` (the 1.x algorithm, Newton on the
  * multiplier λ of p = foot + λ·gradient). `Ellipsoid.scaleToGeodeticSurface`
- * stops at |f| ≤ 1e-12, which leaves a few micrometres at Earth scale, and
+ * stops at |f| ≤ 1e-12, which leaves a few micrometers at Earth scale, and
  * this keeps iterating to float64's rounding, as the exact warps are
- * checked to a micrometre or better. Near the centre it defers to the
+ * checked to a micrometer or better. Near the center it defers to the
  * ellipsoid's own.
  */
 const probe = new Float64Array(3);
@@ -125,7 +125,7 @@ function ellipsoidSurface(ellipsoid: Ellipsoid, name: string): Surface {
     locate(p, foot, n) {
       if (footOf(ellipsoid, p, foot) === undefined) {
         throw new RangeError(
-          "a point at the body's centre has no height above its surface",
+          "a point at the body's center has no height above its surface",
         );
       }
       const mx = foot[0]! * inv[0]!;
@@ -178,7 +178,7 @@ function sphereSurface(radius: number): Surface {
       const r = Math.hypot(x, y, z);
       if (!(r > 0)) {
         throw new RangeError(
-          "a point at the body's centre has no height above its surface",
+          "a point at the body's center has no height above its surface",
         );
       }
       n[0] = x / r;
@@ -255,7 +255,7 @@ function surfaceOf(reference: ReferenceSurface): Surface {
   if ("sphere" in reference) {
     if (!(Number.isFinite(reference.sphere) && reference.sphere > 0)) {
       throw new RangeError(
-        `a sphere's radius must be a positive number of metres, got ${reference.sphere}`,
+        `a sphere's radius must be a positive number of meters, got ${reference.sphere}`,
       );
     }
     return sphereSurface(reference.sphere);
@@ -266,7 +266,7 @@ function surfaceOf(reference: ReferenceSurface): Surface {
   );
 }
 
-/** Column-major 3×3 inverse; throws where it is singular (a centre of curvature). */
+/** Column-major 3×3 inverse; throws where it is singular (a center of curvature). */
 function invert3(m: Float64Array, out: Float64Array): void {
   const a = m[0]!;
   const d = m[1]!;
@@ -280,7 +280,7 @@ function invert3(m: Float64Array, out: Float64Array): void {
   const det = a * (e * i - f * h) - b * (d * i - f * g) + c * (d * h - e * g);
   if (!(Math.abs(det) > 0) || !Number.isFinite(det)) {
     throw new RangeError(
-      "the point is at a centre of curvature of the reference surface, where the warp has no Jacobian",
+      "the point is at a center of curvature of the reference surface, where the warp has no Jacobian",
     );
   }
   out[0] = (e * i - f * h) / det;
@@ -436,9 +436,9 @@ function checkFactor(factor: number): number {
   return factor;
 }
 
-function checkMetres(name: string, value: number): number {
+function checkMeters(name: string, value: number): number {
   if (!Number.isFinite(value)) {
-    throw new RangeError(`${name} must be a finite number of metres`);
+    throw new RangeError(`${name} must be a finite number of meters`);
   }
   return value;
 }
@@ -457,7 +457,7 @@ class VerticalExaggerationImpl
   constructor(options: VerticalExaggerationOptions) {
     super(surfaceOf(options.reference ?? "ellipsoid"), options.scale);
     this.k = checkFactor(options.factor);
-    this.base = checkMetres("baseHeight", options.baseHeight ?? 0);
+    this.base = checkMeters("baseHeight", options.baseHeight ?? 0);
     this.top = options.ceiling;
     this.width = options.band;
     this.checkCeiling();
@@ -465,7 +465,7 @@ class VerticalExaggerationImpl
 
   private checkCeiling(): void {
     if (this.top !== undefined) {
-      checkMetres("ceiling", this.top);
+      checkMeters("ceiling", this.top);
       if (!(this.top > this.base)) {
         throw new RangeError(
           "verticalExaggeration: the ceiling must be above the base height",
@@ -474,7 +474,7 @@ class VerticalExaggerationImpl
     }
     if (this.width !== undefined && !(this.width > 0)) {
       throw new RangeError(
-        `verticalExaggeration: band must be a positive number of metres, got ${this.width}`,
+        `verticalExaggeration: band must be a positive number of meters, got ${this.width}`,
       );
     }
   }
@@ -548,7 +548,7 @@ class VerticalExaggerationImpl
 
   set baseHeight(value: number) {
     const previous = this.base;
-    this.base = checkMetres("baseHeight", value);
+    this.base = checkMeters("baseHeight", value);
     try {
       this.checkCeiling();
     } catch (error) {
@@ -639,14 +639,14 @@ export function verticalExaggeration(
 export interface HeightOffsetOptions {
   /** What heights are above: the WGS84 ellipsoid by default. */
   readonly reference?: ReferenceSurface;
-  /** A live number for a slider: at scale `s` the offset is `s·metres`. */
+  /** A live number for a slider: at scale `s` the offset is `s·meters`. */
   readonly scale?: WarpScale;
 }
 
-/** A constant offset along the normal; set `metres` to change it. */
+/** A constant offset along the normal; set `meters` to change it. */
 export interface HeightOffset extends ChangeableWarp {
   /** The offset, m, along the normal (up is positive): setting it calls `changed()`. */
-  metres: number;
+  meters: number;
 }
 
 class HeightOffsetImpl extends HeightWarp implements HeightOffset {
@@ -654,17 +654,17 @@ class HeightOffsetImpl extends HeightWarp implements HeightOffset {
   private smoothRevision = -1;
   private smoothSpec: SmoothSpec | undefined;
 
-  constructor(metres: number, options: HeightOffsetOptions) {
+  constructor(meters: number, options: HeightOffsetOptions) {
     super(surfaceOf(options.reference ?? "ellipsoid"), options.scale);
-    this.offset = checkMetres("heightOffset: metres", metres);
+    this.offset = checkMeters("heightOffset: meters", meters);
   }
 
-  get metres(): number {
+  get meters(): number {
     return this.offset;
   }
 
-  set metres(value: number) {
-    this.offset = checkMetres("heightOffset: metres", value);
+  set meters(value: number) {
+    this.offset = checkMeters("heightOffset: meters", value);
     this.changed();
   }
 
@@ -699,14 +699,14 @@ class HeightOffsetImpl extends HeightWarp implements HeightOffset {
 }
 
 /**
- * Every point moved `metres` along the normal of a reference surface (up
+ * Every point moved `meters` along the normal of a reference surface (up
  * for positive): lifts content clear of terrain, or sinks it. The
  * Jacobian and the inverse are exact. Place it over the content it lifts
  * (`smoothFrame`).
  */
 export function heightOffset(
-  metres: number,
+  meters: number,
   options: HeightOffsetOptions = {},
 ): HeightOffset {
-  return new HeightOffsetImpl(metres, options);
+  return new HeightOffsetImpl(meters, options);
 }

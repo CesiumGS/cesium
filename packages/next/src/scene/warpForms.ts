@@ -1,7 +1,7 @@
 // Warps that are closed forms of the position, and so can be fitted (or
 // drawn) on the GPU: the CPU reference of each in float64, and the words the
 // fit kernel reads (shaders/warpFitGpu.slang; scene/warpFitGpu.ts is the
-// host). A form maps a point of its frame (body-fixed metres, for the
+// host). A form maps a point of its frame (body-fixed meters, for the
 // ellipsoidal ones) to a displaced point; `formDisplacement` is the
 // displacement function `fitLattice` takes, so the CPU fit of a form is the
 // reference and fallback of its GPU fit. Arbitrary JavaScript
@@ -11,9 +11,9 @@
 //   + offset`: the vertical exaggeration and the constant lift of
 //   georeference/heightWarps.ts, with the height reference an ellipsoid or sphere.
 // - `heightBump`: a Gaussian lift along the normal about a point, a warp
-//   whose shape (centre, amplitude, width) an application moves every frame.
+//   whose shape (center, amplitude, width) an application moves every frame.
 // - `scaleAbout`: `p' = c + S (p - c)`, S diagonal, in the form's axes.
-// - `transverseMercator`: body-fixed metres to (easting, northing, ellipsoidal
+// - `transverseMercator`: body-fixed meters to (easting, northing, ellipsoidal
 //   height), Karney's 6th-order series (the one PROJ's `etmerc` uses), a UTM
 //   zone or any central meridian: the map a design view in a projected CRS
 //   needs. Within about 10 degrees of the central meridian.
@@ -41,11 +41,11 @@ export interface HeightLiftForm {
 export interface HeightBumpForm {
   readonly kind: "heightBump";
   readonly radii?: Radii;
-  /** The bump's centre, body-fixed metres. */
+  /** The bump's center, body-fixed meters. */
   readonly center: ArrayLike<number>;
-  /** Its height at the centre, m (negative digs). */
+  /** Its height at the center, m (negative digs). */
   readonly amplitude: number;
-  /** The Gaussian's standard deviation, m, by straight-line distance from the centre. */
+  /** The Gaussian's standard deviation, m, by straight-line distance from the center. */
   readonly sigma: number;
 }
 

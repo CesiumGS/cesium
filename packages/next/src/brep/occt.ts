@@ -319,14 +319,14 @@ function analyticOf(
       form: (u, v) => add(o, add(scale(x, u), scale(y, v))),
     };
   }
-  // Around an axis: OCCT's u is the angle from x towards y about z.
-  // Returns the centre at v, x and y, and whether x × y is against z.
+  // Around an axis: OCCT's u is the angle from x toward y about z.
+  // Returns the center at v, x and y, and whether x × y is against z.
   const around = (v: number) => {
     const a = at(0, v);
-    const centre = scale(add(a, at(Math.PI, v)), 0.5);
-    const x = unit(sub(a, centre));
-    const y = unit(sub(at(h, v), centre));
-    return { centre, radius: length(sub(a, centre)), x, y };
+    const center = scale(add(a, at(Math.PI, v)), 0.5);
+    const x = unit(sub(a, center));
+    const y = unit(sub(at(h, v), center));
+    return { center, radius: length(sub(a, center)), x, y };
   };
   // A left-handed frame: turn y and u around, so z = x × y is the axis.
   const handed = (x: Vec3, y: Vec3, z: Vec3) =>
@@ -337,12 +337,12 @@ function analyticOf(
     const { y, su } = handed(base.x, base.y, z);
     const r = base.radius;
     return {
-      make: (b) => b.cylinder(base.centre, base.x, y, r),
+      make: (b) => b.cylinder(base.center, base.x, y, r),
       su,
       sv: 1,
       form: (u, v) =>
         add(
-          base.centre,
+          base.center,
           add(
             add(scale(base.x, r * Math.cos(u)), scale(y, r * Math.sin(u))),
             scale(cross(base.x, y), v),
@@ -352,17 +352,17 @@ function analyticOf(
   }
   if (type === T.GeomAbs_Sphere) {
     const eq = around(0);
-    const z = unit(sub(at(0, h), eq.centre));
+    const z = unit(sub(at(0, h), eq.center));
     const { y, su } = handed(eq.x, eq.y, z);
     const r = eq.radius;
     return {
-      make: (b) => b.sphere(eq.centre, eq.x, y, r),
+      make: (b) => b.sphere(eq.center, eq.x, y, r),
       su,
       // Latitude keeps its sign: z = x × y is the axis after the turn.
       sv: 1,
       form: (u, v) =>
         add(
-          eq.centre,
+          eq.center,
           add(
             scale(
               add(scale(eq.x, Math.cos(u)), scale(y, Math.sin(u))),
@@ -375,18 +375,18 @@ function analyticOf(
   }
   if (type === T.GeomAbs_Torus) {
     const ring = around(0);
-    const inner = length(sub(at(0, Math.PI), ring.centre));
+    const inner = length(sub(at(0, Math.PI), ring.center));
     const major = (ring.radius + inner) / 2;
     const minor = (ring.radius - inner) / 2;
-    const z = unit(sub(sub(at(0, h), ring.centre), scale(ring.x, major)));
+    const z = unit(sub(sub(at(0, h), ring.center), scale(ring.x, major)));
     const { y, su } = handed(ring.x, ring.y, z);
     return {
-      make: (b) => b.torus(ring.centre, ring.x, y, major, minor),
+      make: (b) => b.torus(ring.center, ring.x, y, major, minor),
       su,
       sv: 1,
       form: (u, v) =>
         add(
-          ring.centre,
+          ring.center,
           add(
             scale(
               add(scale(ring.x, Math.cos(u)), scale(y, Math.sin(u))),
@@ -406,7 +406,7 @@ function analyticOf(
       return undefined;
     }
     const top = scale(add(at(0, 1), at(Math.PI, 1)), 0.5);
-    const rise = sub(top, base.centre);
+    const rise = sub(top, base.center);
     const cosA = length(rise);
     const z = scale(rise, 1 / cosA);
     const sinA = dot(sub(at(0, 1), top), base.x) - base.radius;
@@ -414,12 +414,12 @@ function analyticOf(
     const { y, su } = handed(base.x, base.y, z);
     const r = base.radius;
     return {
-      make: (b) => b.cone(base.centre, base.x, y, r, halfAngle),
+      make: (b) => b.cone(base.center, base.x, y, r, halfAngle),
       su,
       sv: cosA,
       form: (u, v) =>
         add(
-          base.centre,
+          base.center,
           add(
             scale(
               add(scale(base.x, Math.cos(u)), scale(y, Math.sin(u))),
@@ -1276,7 +1276,7 @@ export class OcctKernel {
     );
   }
 
-  /** A cylinder up z from the centre of its base, m. */
+  /** A cylinder up z from the center of its base, m. */
   cylinder(base: ArrayLike<number>, radius: number, height: number): OcctSolid {
     return this.make(
       (keep) =>
@@ -1286,27 +1286,27 @@ export class OcctKernel {
     );
   }
 
-  sphere(centre: ArrayLike<number>, radius: number): OcctSolid {
+  sphere(center: ArrayLike<number>, radius: number): OcctSolid {
     return this.make(
       (keep) =>
         new this.oc.BRepPrimAPI_MakeSphere(
-          ...([this.point(keep, centre), radius] as never[]),
+          ...([this.point(keep, center), radius] as never[]),
         ),
     );
   }
 
   /** A torus about z, m. */
-  torus(centre: ArrayLike<number>, major: number, minor: number): OcctSolid {
+  torus(center: ArrayLike<number>, major: number, minor: number): OcctSolid {
     return this.make(
       (keep) =>
         new this.oc.BRepPrimAPI_MakeTorus(
-          ...([this.upAt(keep, centre), major, minor] as never[]),
+          ...([this.upAt(keep, center), major, minor] as never[]),
         ),
     );
   }
 
   /**
-   * A cone or frustum up z from the centre of its base, m: the revolution of
+   * A cone or frustum up z from the center of its base, m: the revolution of
    * its profile about z (this build has no cone maker), whose side is an
    * analytic cone. A top radius of 0 is a point.
    */
@@ -1523,7 +1523,7 @@ export class OcctKernel {
   }
 
   /**
-   * The solids of a STEP file (AP203/214/242, as OCCT reads), in metres: the
+   * The solids of a STEP file (AP203/214/242, as OCCT reads), in meters: the
    * file's own units are converted. Solids inside compounds and assemblies
    * count, each with its placement; free shells and surfaces don't. The
    * caller deletes the solids. Throws if the bytes aren't a readable STEP
@@ -1534,7 +1534,7 @@ export class OcctKernel {
     const oc = this.oc;
     return withScope((keep) => {
       const reader = keep(new oc.STEPControl_Reader());
-      this.useMetres();
+      this.useMeters();
       const status = this.throughFile(bytes, (path) => reader.ReadFile(path));
       if (status !== oc.IFSelect_ReturnStatus.IFSelect_RetDone) {
         throw new Error("OCCT: the STEP file can't be read");
@@ -1562,12 +1562,12 @@ export class OcctKernel {
     });
   }
 
-  /** The solids as a STEP file (AP214), in metres. The inverse of `importStep`. */
+  /** The solids as a STEP file (AP214), in meters. The inverse of `importStep`. */
   exportStep(solids: OcctSolid | readonly OcctSolid[]): Uint8Array {
     const oc = this.oc;
     return withScope((keep) => {
       const writer = keep(new oc.STEPControl_Writer());
-      this.useMetres();
+      this.useMeters();
       for (const solid of Array.isArray(solids) ? solids : [solids]) {
         const progress = keep(new oc.Message_ProgressRange());
         const status = writer.Transfer(
@@ -1591,8 +1591,8 @@ export class OcctKernel {
     });
   }
 
-  /** STEP's length unit, which the reader and writer convert to and from, as metres (a module-wide setting). */
-  private useMetres(): void {
+  /** STEP's length unit, which the reader and writer convert to and from, as meters (a module-wide setting). */
+  private useMeters(): void {
     const set = this.oc.Interface_Static.SetCVal;
     if (!set("xstep.cascade.unit", "M") || !set("write.step.unit", "M")) {
       throw new Error("OCCT: STEP unit parameters are missing");

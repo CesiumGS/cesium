@@ -108,7 +108,7 @@ function announcement(model: PanelModel, passed: number, failed: number) {
   if (run.state === "done") {
     return `Run done: ${passed} passed, ${failed} failed`;
   }
-  if (run.state === "cancelled") {
+  if (run.state === "canceled") {
     return run.reason !== undefined
       ? `Run stopped: ${run.reason}`
       : "Run stopped";
@@ -222,7 +222,7 @@ function StatusStripView({
             {run.state === "done" && run.summary && (
               <span className="fx-muted">in {duration(run.summary.ms)}</span>
             )}
-            {run.state === "cancelled" && run.reason !== undefined && (
+            {run.state === "canceled" && run.reason !== undefined && (
               <span className="fx-muted">stopped: {run.reason}</span>
             )}
           </>

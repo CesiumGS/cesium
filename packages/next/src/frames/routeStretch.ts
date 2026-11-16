@@ -1,8 +1,8 @@
 // The stretch of a route at a point: the extreme singular values [σ_min,
 // σ_max] of its Jacobian there (docs/design/geometry-through-placement-review.md, second review
 // flaw 6). A drawn distance is at least σ_min and at most σ_max times the
-// true one, so a pixel's worth of drawn metres is at most 1/σ_min true
-// metres: it is what divides a snap's or a pick's pixel tolerance. The same
+// true one, so a pixel's worth of drawn meters is at most 1/σ_min true
+// meters: it is what divides a snap's or a pick's pixel tolerance. The same
 // estimate `scene/warpBounds.ts` gives for a volume, kept here because the
 // frames layer imports no scene module: the Jacobian composes through the
 // route's steps (a rigid step's rotation, a warp's own Jacobian, an inverse

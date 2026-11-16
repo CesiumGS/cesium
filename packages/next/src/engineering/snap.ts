@@ -48,7 +48,7 @@ export interface SnapRequest {
 /** What a snap landed on (1.x `SnapService.Result`, and more). */
 export interface SnapResult {
   /**
-   * The snapped point, the one to use: body-fixed metres, where the content
+   * The snapped point, the one to use: body-fixed meters, where the content
    * is, as its placement displays it. A view that draws the content through
    * a warp draws it elsewhere (`drawn`, `drawnPosition`); this is the true
    * point, never inverted from the drawn one. With `design`, the exact
@@ -57,7 +57,7 @@ export interface SnapResult {
   readonly snapPoint: Float64Array;
   /**
    * Where the snap is shown and judged on the screen, when that isn't
-   * `snapPoint` (body-fixed metres, as displayed): the visible point on the
+   * `snapPoint` (body-fixed meters, as displayed): the visible point on the
    * drawn surface directly over, or nearest, an exact design point that
    * lies under it, such as an alignment's profile grade line under a median
    * barrier. `snapPoint` and `design` stay the exact design answer, and the
@@ -90,7 +90,7 @@ export interface SnapResult {
    * pick design coordinates.
    */
   readonly design?: DesignPoint<CoordinateOperation>;
-  /** Metres: how far `snapPoint` may be from the geometry it stands for. */
+  /** Meters: how far `snapPoint` may be from the geometry it stands for. */
   readonly tolerance: number;
   /** Whether `snapPoint` lies on the analytic geometry (tolerance 0). */
   readonly exact: boolean;
@@ -167,7 +167,7 @@ export interface ServiceSnapRequest {
    */
   readonly stretch?: readonly [number, number];
   /**
-   * `aperture` as the most true metres a point within it can be from the
+   * `aperture` as the most true meters a point within it can be from the
    * cursor's hit: the aperture's pixels at the hit, over σ_min. The same as
    * the aperture's size at the hit when drawn as it is.
    */
@@ -188,9 +188,9 @@ export interface SnapService {
 }
 
 /**
- * Metres: how far a result's `shownPoint` may be from its `snapPoint`. A
+ * Meters: how far a result's `shownPoint` may be from its `snapPoint`. A
  * shown point stands for the surface over a design point (a barrier, a
- * kerb, a deck's wearing course), so it is near; 2 m covers such a surface
+ * curb, a deck's wearing course), so it is near; 2 m covers such a surface
  * and refuses a shown point somewhere else on the screen.
  */
 export const SHOWN_POINT_REACH = 2;
@@ -403,7 +403,7 @@ export class ClientSnapService {
   /**
    * @internal Whether the hit draw, as it is drawn, hides `point` (a true
    * point) from the result's camera, by more than the tile's geometric
-   * error (drawn: at most σ_max times it) and a millimetre. False when that
+   * error (drawn: at most σ_max times it) and a millimeter. False when that
    * draw kept no geometry.
    */
   hides(result: SnapResult, point: ArrayLike<number>): boolean {
@@ -787,7 +787,7 @@ function refusal(
     Number.isFinite(r.tolerance) &&
     r.tolerance >= 0
   )) {
-    return "tolerance is not a finite number of metres, not negative";
+    return "tolerance is not a finite number of meters, not negative";
   }
   if (typeof r.exact !== "boolean") {
     return "exact is not a boolean";
@@ -896,7 +896,7 @@ function crossing(
 
 /**
  * Whether a triangle of `g` crosses the camera's line of sight to `point`
- * (body-fixed) beyond the near plane and more than `epsilon` metres (and a
+ * (body-fixed) beyond the near plane and more than `epsilon` meters (and a
  * millionth of the distance) before it.
  */
 function hiddenFrom(
@@ -1001,7 +1001,7 @@ function nearest(
   const { rel, pixel, depth, code, seen, projected, triangles } = s;
   const e = camera.position;
   // Relative to the eye: the translation's difference is taken once, in
-  // float64, so the projection and ray tests keep metre-scale precision.
+  // float64, so the projection and ray tests keep meter-scale precision.
   const tx = m[12]! - e[0]!,
     ty = m[13]! - e[1]!,
     tz = m[14]! - e[2]!;
@@ -1198,7 +1198,7 @@ function nearest(
   /**
    * Whether a triangle other than `skip`'s crosses the line of sight from
    * the eye to `p` (eye-relative) before it, by more than a millionth of the
-   * distance (and a millimetre), and beyond the near plane (nearer isn't
+   * distance (and a millimeter), and beyond the near plane (nearer isn't
    * drawn).
    */
   function hidden(p: Float64Array, skip: (t: number) => boolean): boolean {

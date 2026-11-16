@@ -1,7 +1,7 @@
 /* The scenario's checks (Checks.tsx). Imported in order by panel.css. */
 /*
  * The kinds' tags (tokens.css --fx-kind-*): a small tinted label, its text
- * at AA on its tint in both schemes. Never a status colour.
+ * at AA on its tint in both schemes. Never a status color.
  */
 .fx-kind {
   display: inline-block;
