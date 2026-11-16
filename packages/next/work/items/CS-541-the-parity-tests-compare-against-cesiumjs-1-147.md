@@ -14,9 +14,12 @@ The unit-level parity tests compare against this repository's own 1.x, through t
 
 The wrinkle: installed as dev dependencies inside this workspace, the release engine's own `import "@cesium/core"` would resolve to the workspace's `packages/core`, not the release's. The pinned packages have to be installed so they resolve each other, outside the workspace's links (for example under an alias, with the core dependency pinned too). The bench store's fetched releases (`~/.cesium-bench/cesium/<version>`) are another source, but they'd make the parity tests depend on `npm run setup`, which `npm test` avoids. A new pinned dependency is the owner's call: settle the packaging before adding one.
 
+One definition of the pin: today 1.147.0 appears in the Dyno catalog's `engines.baseline` (`bench/suite/catalog/public.json`) and, by coincidence, in the repository's own package versions, and the unit tests read neither. A small oracle record, read by everything that names the oracle, keeps them from drifting apart.
+
 ## Done when
 
+- One oracle record names the pin: CesiumJS 1.147.0, `@cesium/engine` 26.5.0, `@cesium/core` 0.1.1, `@cesium/gltf` 0.1.1. The Dyno catalog's baseline reads it or is checked against it, and a mismatch fails.
 - The oracle aliases resolve to the 1.147.0 packages, pinned to exact versions, and the release engine's own imports resolve to the same release.
-- A test fails when the oracle isn't 1.147.0: it checks the version the oracle reports.
-- Each parity result names the oracle it compared against, as far as the survey of the parity system (2026-11-15) finds is needed.
+- A test fails when the oracle isn't the pinned release: it checks the version the oracle reports against the record.
 - `env.worktree_setup` in `.human-in-the-lead/policy.json` drops the four `gulp` lines, and the full suite passes in a fresh worktree set up with `npm install` alone.
+- The rest of the parity system (pages, `bench/run.mjs`, image parity) is CS-542's.
