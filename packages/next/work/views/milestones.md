@@ -348,9 +348,9 @@ CS-485 Dyno and the gallery are safe to build and host [Planned], under CS-199 D
 
 CS-486 CI keeps packages/next clean [Planned], under CS-199 Dyno hardening, packaging and CI
   outcome: CI runs the package's tests on Node 24, the package is Prettier-clean, a fresh worktree passes `npm test`, and the example runner's loose ends are closed.
-  constraints: 1 of 6 done
-  unmet: not linked to a clause yet (open: CS-361, CS-362, CS-412, CS-445, CS-538; check not passed)
-  to shape: done_when; check; link CS-361, CS-362, CS-412, CS-445, CS-537, CS-538 to a clause
+  constraints: 1 of 7 done
+  unmet: not linked to a clause yet (open: CS-361, CS-362, CS-412, CS-445, CS-538, CS-540; check not passed)
+  to shape: done_when; check; link CS-361, CS-362, CS-412, CS-445, CS-537, CS-538, CS-540 to a clause
 
 CS-487 The frames plans' carried-forward fixes are closed [Planned], under CS-189 Frames and engineering coordinates follow-ups
   outcome: The fixes the frames plans carried forward are made, `accuracyOf` composes on `separationAccuracy`, and the owner decides whether a frame with both fallbacks takes the ballpark.

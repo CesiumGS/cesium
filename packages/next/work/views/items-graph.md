@@ -448,6 +448,7 @@ graph LR
     CS_445["CS-445 The example runner's loose ends: the search-parameter rollback,"]:::open
     CS_537["CS-537 The tickSlices budget test holds under full-suite load"]:::done
     CS_538["CS-538 The no-scene-gains glare test holds under full-suite load"]:::open
+    CS_540["CS-540 The hitld work check test finishes under full-suite load"]:::open
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::open

@@ -730,7 +730,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-CS-199, Planned, led by owner: 1 of 12 done, 9 ready, 0 blocked, 2 proposed.
+CS-199, Planned, led by owner: 1 of 13 done, 10 ready, 0 blocked, 2 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host (CS-485, Planned)
 
@@ -747,6 +747,7 @@ Milestone: CI keeps packages/next clean (CS-486, Planned)
 - [ ] CS-445 The example runner's loose ends: the search-parameter rollback, and dispose after viewer.destroy. Needs nothing.
 - [x] CS-537 The tickSlices budget test holds under full-suite load. Done.
 - [ ] CS-538 The no-scene-gains glare test holds under full-suite load. Needs nothing.
+- [ ] CS-540 The hitld work check test finishes under full-suite load. Needs nothing.
 
 No milestone
 
