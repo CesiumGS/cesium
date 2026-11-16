@@ -98,6 +98,21 @@ describe("Scene/GeometryAttributeDescriptor", function () {
     expect(temperature.componentCount).toBe(1);
   });
 
+  it("names the attribute by its semantic and set index", function () {
+    const names = [
+      [{ semantic: VertexAttributeSemantic.POSITION }, "POSITION"],
+      [{ semantic: VertexAttributeSemantic.TEXCOORD }, "TEXCOORD_0"],
+      [{ semantic: VertexAttributeSemantic.COLOR, setIndex: 1 }, "COLOR_1"],
+      [
+        { semantic: "_TEMPERATURE", type: AttributeType.SCALAR },
+        "_TEMPERATURE",
+      ],
+    ];
+    for (const [options, name] of names) {
+      expect(new GeometryAttributeDescriptor(options).name).toBe(name);
+    }
+  });
+
   it("ignores the set index of custom semantics", function () {
     const temperature = new GeometryAttributeDescriptor({
       semantic: "_TEMPERATURE",
