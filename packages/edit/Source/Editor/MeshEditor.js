@@ -6,17 +6,11 @@ import {
   Check,
   DeveloperError,
   Event,
-  RuntimeError,
   defined,
   destroyObject,
 } from "@cesium/core";
 import {
-  GeometryAttributeDescriptor,
-  VertexAttributeSemantic,
-} from "@cesium/engine";
-import {
   ComponentType,
-  Mesh as WasmMesh,
   MeshEditor as WasmMeshEditor,
   UpdateResult,
 } from "@cesium/mesh-editor";
@@ -26,18 +20,11 @@ import MeshEditorGroup from "./MeshEditorGroup.js";
 import MeshEditorModule from "./MeshEditorModule.js";
 import MeshEditorInputHandler from "./MeshEditorInputHandler.js";
 import MeshEditorStyle from "./MeshEditorStyle.js";
+import createWasmMesh from "./createWasmMesh.js";
 
-/** @import { FrameState, GeometryReadSession, GeometrySource, Scene } from "@cesium/engine"; */
+/** @import { FrameState, GeometrySource, Scene } from "@cesium/engine"; */
 /** @import { ComponentMask } from "@cesium/mesh-editor"; */
 /** @import MeshEditorTool from "./MeshEditorTool.js"; */
-
-// The attribute read from each source.
-const POSITION_ATTRIBUTE = new GeometryAttributeDescriptor({
-  semantic: VertexAttributeSemantic.POSITION,
-});
-
-// The data read from each source.
-const READ_OPTIONS = { attributes: [POSITION_ATTRIBUTE], primitives: true };
 
 // The components inactive meshes draw, so they stay visible. Wasm's policy
 // covers only active meshes.
@@ -258,7 +245,6 @@ class MeshEditor {
     return this.#root;
   }
 
-
   /**
    * The tool that receives pointer input, or <code>undefined</code> for none.
    *
@@ -373,6 +359,10 @@ class MeshEditor {
    * Adds a geometry source to the editor. If the source has a
    * <code>show</code> property, it's hidden while the mesh is in the editor.
    * The new mesh starts inactive.
+   * <p>
+   * Loads all of the source's attributes. Attributes the editor can't store
+   * are skipped with a warning.
+   * </p>
    *
    * @param {GeometrySource} source The geometry to edit.
    * @param {object} [options] Object with the following properties:
@@ -396,12 +386,13 @@ class MeshEditor {
     this.#checkOptions(options);
     //>>includeEnd('debug');
 
-    const key = this.#wasmEditor.addMesh(this.#createWasmMesh(source));
+    const key = this.#wasmEditor.addMesh(createWasmMesh(source));
 
     const mesh = new Mesh({
       source,
       name,
       parent,
+      wasmEditor: this.#wasmEditor,
       key,
       module: this.#module,
       style: this.#style,
@@ -700,70 +691,6 @@ class MeshEditor {
       throw new DeveloperError("options.parent isn't a group in this editor.");
     }
     //>>includeEnd('debug');
-  }
-
-  /**
-   * Reads a source's geometry into a new wasm mesh.
-   *
-   * @param {GeometrySource} source The geometry to read.
-   * @returns {WasmMesh} The wasm mesh.
-   * @exception {RuntimeError} The source's geometry can't be edited.
-   * @ignore
-   */
-  #createWasmMesh(source) {
-    const { positions, indices, faceVertexCounts } =
-      source.geometryReader.withReadSession(
-        READ_OPTIONS,
-        MeshEditor.#readBuffers,
-      );
-
-    try {
-      // At the moment, we have no use for normals or UVs in the wasm module, so don't read them or pass them in.
-      return WasmMesh.fromBuffers(
-        positions,
-        indices,
-        undefined,
-        undefined,
-        faceVertexCounts,
-      );
-    } catch (error) {
-      throw new RuntimeError(`The geometry can't be edited: ${error.message}`);
-    }
-  }
-
-  /**
-   * Reads a session's positions and primitives as wasm mesh buffers. Each
-   * primitive becomes a face.
-   *
-   * @param {GeometryReadSession} session The read session.
-   * @returns {{ positions: Float32Array, indices: Uint32Array, faceVertexCounts: Uint32Array }} The buffers.
-   * @ignore
-   */
-  static #readBuffers(session) {
-    const vertexCount = session.vertexCount();
-    const positions = new Float32Array(vertexCount * 3);
-    const readPosition = session.vertexAttributeReader(POSITION_ATTRIBUTE);
-    for (let i = 0; i < vertexCount; ++i) {
-      readPosition(i, positions, i * 3);
-    }
-
-    const primitiveCount = session.primitiveCount();
-    const faceVertexCounts = new Uint32Array(primitiveCount);
-    let indexCount = 0;
-    for (let i = 0; i < primitiveCount; ++i) {
-      faceVertexCounts[i] = session.primitiveVertexCount(i);
-      indexCount += faceVertexCounts[i];
-    }
-
-    const indices = new Uint32Array(indexCount);
-    const readPrimitive = session.primitiveReader();
-    let offset = 0;
-    for (let i = 0; i < primitiveCount; ++i) {
-      readPrimitive(i, indices, offset);
-      offset += faceVertexCounts[i];
-    }
-
-    return { positions, indices, faceVertexCounts };
   }
 
   /**
