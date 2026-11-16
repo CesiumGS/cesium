@@ -1,4 +1,7 @@
 {
+  "enabledPlugins": {
+    "human-in-the-lead@human-in-the-lead": true
+  },
   "extraKnownMarketplaces": {
     "human-in-the-lead": {
       "source": {
@@ -8,8 +11,5 @@
       },
       "autoUpdate": false
     }
-  },
-  "enabledPlugins": {
-    "human-in-the-lead@human-in-the-lead": true
   }
 }
