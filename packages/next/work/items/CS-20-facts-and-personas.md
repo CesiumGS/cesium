@@ -2,9 +2,10 @@
 id: CS-20
 title: Facts and personas
 kind: work
-state: planned
+state: done
 created: 2026-11-13
 project: CS-8
+claimed_by: D-1
 touches: [packages/next/src/gpu/device.ts, packages/next/test/fakeGpu.ts]
 ---
 

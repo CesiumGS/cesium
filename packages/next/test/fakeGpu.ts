@@ -140,14 +140,129 @@ export function checkTextureCopy(
   }
 }
 
+/** A synthetic device: what its adapter offers and says of itself. */
+export interface Persona {
+  /** Features the adapter offers (a device gets those that are requested). */
+  features: readonly string[];
+  limits: Record<string, number>;
+  info: {
+    vendor: string;
+    architecture: string;
+    isFallbackAdapter: boolean;
+  };
+  canvasFormat: GPUTextureFormat;
+}
+
+const ALL_FEATURES = [
+  "core-features-and-limits",
+  "indirect-first-instance",
+  "timestamp-query",
+  "texture-compression-bc",
+  "texture-compression-etc2",
+  "texture-compression-astc",
+  "shader-f16",
+  "float32-filterable",
+  "float32-blendable",
+  "subgroups",
+  "clip-distances",
+  "dual-source-blending",
+];
+
+/** The spec's default limits: the smallest device there is. */
+const SPEC_LIMITS: Record<string, number> = {
+  maxTextureDimension2D: 8192,
+  maxTextureArrayLayers: 256,
+  maxBindGroups: 4,
+  maxStorageBuffersPerShaderStage: 8,
+  maxStorageBufferBindingSize: 128 * 2 ** 20,
+  maxUniformBufferBindingSize: 64 * 2 ** 10,
+  maxBufferSize: 256 * 2 ** 20,
+};
+
+const without = (...names: string[]) =>
+  ALL_FEATURES.filter((f) => !names.includes(f));
+
+/** Named synthetic devices (docs/superpowers/plans/2026-11-13-engine-profiles.md, section 4). */
+export const personas = {
+  "m2-chrome": {
+    features: without(
+      "texture-compression-bc",
+      "clip-distances",
+      "dual-source-blending",
+    ),
+    limits: {
+      ...SPEC_LIMITS,
+      maxTextureDimension2D: 16384,
+      maxTextureArrayLayers: 2048,
+      maxStorageBufferBindingSize: 2 ** 31 - 1,
+      maxBufferSize: 2 ** 32,
+    },
+    info: {
+      vendor: "apple",
+      architecture: "metal-3",
+      isFallbackAdapter: false,
+    },
+    canvasFormat: "bgra8unorm",
+  },
+  "intel-uhd-4k": {
+    features: without("texture-compression-astc", "texture-compression-etc2"),
+    limits: {
+      ...SPEC_LIMITS,
+      maxTextureDimension2D: 16384,
+      maxTextureArrayLayers: 2048,
+      maxStorageBufferBindingSize: 2 ** 30,
+      maxBufferSize: 2 ** 31,
+    },
+    info: {
+      vendor: "intel",
+      architecture: "gen-12lp",
+      isFallbackAdapter: false,
+    },
+    canvasFormat: "bgra8unorm",
+  },
+  swiftshader: {
+    features: without("timestamp-query", "subgroups", "shader-f16"),
+    limits: { ...SPEC_LIMITS, maxStorageBufferBindingSize: 2 ** 30 },
+    info: {
+      vendor: "google",
+      architecture: "swiftshader",
+      isFallbackAdapter: true,
+    },
+    canvasFormat: "rgba8unorm",
+  },
+  "minimum-limits": {
+    features: ALL_FEATURES,
+    limits: SPEC_LIMITS,
+    info: { vendor: "fake", architecture: "fake", isFallbackAdapter: false },
+    canvasFormat: "bgra8unorm",
+  },
+  "no-optional-features": {
+    features: [],
+    limits: { ...SPEC_LIMITS, maxTextureDimension2D: 16384 },
+    info: { vendor: "fake", architecture: "fake", isFallbackAdapter: false },
+    canvasFormat: "bgra8unorm",
+  },
+  "no-float32-blendable": {
+    features: without("float32-blendable"),
+    limits: { ...SPEC_LIMITS, maxTextureDimension2D: 16384 },
+    info: { vendor: "fake", architecture: "fake", isFallbackAdapter: false },
+    canvasFormat: "bgra8unorm",
+  },
+} satisfies Record<string, Persona>;
+
+export type PersonaName = keyof typeof personas;
+
 /** A device with `limits` (any limit not given is large). */
-export function fakeDevice(limits: Record<string, number>): GPUDevice {
+export function fakeDevice(
+  limits: Record<string, number>,
+  features: Iterable<string> = [],
+): GPUDevice {
   const all = new Proxy(limits, {
     get: (t, key: string) => t[key] ?? 2 ** 30,
   });
   const device: Record<PropertyKey, unknown> = {
     limits: all,
-    features: new Set<string>(),
+    features: new Set<string>(features),
     lost: new Promise(() => {}),
     addEventListener: () => {},
     pushErrorScope: () => {},
@@ -231,23 +346,55 @@ export function installGpuGlobals(): void {
   };
 }
 
-/** `navigator.gpu` handing out `device`. */
-export function installFakeNavigator(device: GPUDevice): void {
+/**
+ * `navigator.gpu` handing out `device`. With a persona, the adapter offers
+ * its features, limits and info, and the device it hands out is granted the
+ * offered features among `requiredFeatures` (as WebGPU does; an unoffered
+ * one rejects).
+ */
+export function installFakeNavigator(
+  device: GPUDevice | undefined,
+  persona?: Persona,
+): void {
+  const offered = new Set(persona?.features ?? []);
+  const made = device ?? fakeDevice(persona?.limits ?? {}, []);
   const adapter = {
-    features: new Set<string>(),
-    limits: device.limits,
-    info: { vendor: "fake", architecture: "fake" },
-    requestDevice: () => Promise.resolve(device),
+    features: offered,
+    limits: persona ? fakeDevice(persona.limits).limits : made.limits,
+    info: persona?.info ?? { vendor: "fake", architecture: "fake" },
+    requestDevice: (descriptor?: GPUDeviceDescriptor) => {
+      const required = [...(descriptor?.requiredFeatures ?? [])] as string[];
+      if (persona) {
+        const missing = required.filter((f) => !offered.has(f));
+        if (missing.length > 0) {
+          return Promise.reject(
+            new TypeError(`Unsupported features: ${missing.join(", ")}`),
+          );
+        }
+        (made as unknown as { features: Set<string> }).features = new Set(
+          required,
+        );
+      }
+      return Promise.resolve(made);
+    },
   };
   const gpu = {
     requestAdapter: () => Promise.resolve(adapter),
-    getPreferredCanvasFormat: () => "bgra8unorm",
+    getPreferredCanvasFormat: () => persona?.canvasFormat ?? "bgra8unorm",
     wgslLanguageFeatures: new Set<string>(),
   };
   Object.defineProperty(globalThis, "navigator", {
     value: { gpu, userAgent: "node", hardwareConcurrency: 4 },
     configurable: true,
   });
+}
+
+/** Stands up the persona `name` as `navigator.gpu` (Node). */
+export function installPersona(name: PersonaName): Persona {
+  installGpuGlobals();
+  const persona: Persona = personas[name];
+  installFakeNavigator(fakeDevice(persona.limits), persona);
+  return persona;
 }
 
 /** An engine on the fake device (Node), for tests of CPU-side world logic. */
