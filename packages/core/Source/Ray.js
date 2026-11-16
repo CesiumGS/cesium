@@ -1,3 +1,5 @@
+// @ts-check
+
 import Cartesian3 from "./Cartesian3.js";
 import Check from "./Check.js";
 import defined from "./defined.js";

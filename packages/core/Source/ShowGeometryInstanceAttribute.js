@@ -5,12 +5,6 @@ import DeveloperError from "./DeveloperError.js";
 /**
  * Value and type information for per-instance geometry attribute that determines if the geometry instance will be shown.
  *
- * @alias ShowGeometryInstanceAttribute
- * @constructor
- *
- * @param {boolean} [show=true] Determines if the geometry instance will be shown.
- *
- *
  * @example
  * const instance = new Cesium.GeometryInstance({
  *   geometry : new Cesium.BoxGeometry({
@@ -29,94 +23,89 @@ import DeveloperError from "./DeveloperError.js";
  * @see GeometryInstance
  * @see GeometryInstanceAttribute
  */
-function ShowGeometryInstanceAttribute(show) {
-  show = show ?? true;
-
+class ShowGeometryInstanceAttribute {
   /**
-   * The values for the attributes stored in a typed array.
-   *
-   * @type Uint8Array
-   *
-   * @default [1.0]
+   * @param {boolean} [show=true] Determines if the geometry instance will be shown.
    */
-  this.value = ShowGeometryInstanceAttribute.toValue(show);
-}
+  constructor(show) {
+    show = show ?? true;
 
-Object.defineProperties(ShowGeometryInstanceAttribute.prototype, {
+    /**
+     * The values for the attributes stored in a typed array.
+     *
+     * @type Uint8Array
+     *
+     * @default [1.0]
+     */
+    this.value = ShowGeometryInstanceAttribute.toValue(show);
+  }
+
   /**
    * The datatype of each component in the attribute, e.g., individual elements in
    * {@link ColorGeometryInstanceAttribute#value}.
    *
-   * @memberof ShowGeometryInstanceAttribute.prototype
    *
    * @type {ComponentDatatype}
    * @readonly
    *
    * @default {@link ComponentDatatype.UNSIGNED_BYTE}
    */
-  componentDatatype: {
-    get: function () {
-      return ComponentDatatype.UNSIGNED_BYTE;
-    },
-  },
+  get componentDatatype() {
+    return ComponentDatatype.UNSIGNED_BYTE;
+  }
 
   /**
    * The number of components in the attributes, i.e., {@link ColorGeometryInstanceAttribute#value}.
    *
-   * @memberof ShowGeometryInstanceAttribute.prototype
    *
    * @type {number}
    * @readonly
    *
    * @default 1
    */
-  componentsPerAttribute: {
-    get: function () {
-      return 1;
-    },
-  },
+  get componentsPerAttribute() {
+    return 1;
+  }
 
   /**
    * When <code>true</code> and <code>componentDatatype</code> is an integer format,
    * indicate that the components should be mapped to the range [0, 1] (unsigned)
    * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
    *
-   * @memberof ShowGeometryInstanceAttribute.prototype
    *
    * @type {boolean}
    * @readonly
    *
    * @default true
    */
-  normalize: {
-    get: function () {
-      return false;
-    },
-  },
-});
-
-/**
- * Converts a boolean show to a typed array that can be used to assign a show attribute.
- *
- * @param {boolean} show The show value.
- * @param {Uint8Array} [result] The array to store the result in, if undefined a new instance will be created.
- * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
- *
- * @example
- * const attributes = primitive.getGeometryInstanceAttributes('an id');
- * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true, attributes.show);
- */
-ShowGeometryInstanceAttribute.toValue = function (show, result) {
-  //>>includeStart('debug', pragmas.debug);
-  if (!defined(show)) {
-    throw new DeveloperError("show is required.");
+  get normalize() {
+    return false;
   }
-  //>>includeEnd('debug');
 
-  if (!defined(result)) {
-    return new Uint8Array([show]);
+  /**
+   * Converts a boolean show to a typed array that can be used to assign a show attribute.
+   *
+   * @param {boolean} show The show value.
+   * @param {Uint8Array} [result] The array to store the result in, if undefined a new instance will be created.
+   * @returns {Uint8Array} The modified result parameter or a new instance if result was undefined.
+   *
+   * @example
+   * const attributes = primitive.getGeometryInstanceAttributes('an id');
+   * attributes.show = Cesium.ShowGeometryInstanceAttribute.toValue(true, attributes.show);
+   */
+  static toValue(show, result) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(show)) {
+      throw new DeveloperError("show is required.");
+    }
+    //>>includeEnd('debug');
+
+    if (!defined(result)) {
+      return new Uint8Array([show]);
+    }
+    result[0] = show;
+    return result;
   }
-  result[0] = show;
-  return result;
-};
+}
+
 export default ShowGeometryInstanceAttribute;
