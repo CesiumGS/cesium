@@ -446,7 +446,7 @@ graph LR
     CS_412["CS-412 A fresh worktree runs npm test clean: build 1.x's generated sha"]:::open
     CS_413["CS-413 The ion token for CLI runs and worktrees, without writing it in"]:::open
     CS_445["CS-445 The example runner's loose ends: the search-parameter rollback,"]:::open
-    CS_537["CS-537 The tickSlices budget test holds under full-suite load"]:::open
+    CS_537["CS-537 The tickSlices budget test holds under full-suite load"]:::done
     CS_538["CS-538 The no-scene-gains glare test holds under full-suite load"]:::open
   end
   subgraph CS_389["Dyno as the development harness"]

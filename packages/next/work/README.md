@@ -787,7 +787,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 0 of 12 done, 10 ready, 0 blocked, 2 proposed.
+[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 1 of 12 done, 9 ready, 0 blocked, 2 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host ([CS-485](./milestones/CS-485-dyno-and-the-gallery-are-safe-to-build-and-host.md), Planned)
 
@@ -802,7 +802,7 @@ Milestone: CI keeps packages/next clean ([CS-486](./milestones/CS-486-ci-keeps-p
 - [ ] [CS-362](./items/CS-362-prettier-clean-across-packages-next.md) Prettier clean across `packages/next`. Needs nothing.
 - [ ] [CS-412](./items/CS-412-a-fresh-worktree-runs-npm-test-clean-build-1-x.md) A fresh worktree runs npm test clean: build 1.x's generated shader modules, or skip volumes.test.ts with its precondition. Needs nothing.
 - [ ] [CS-445](./items/CS-445-the-example-runner-s-loose-ends-the-search.md) The example runner's loose ends: the search-parameter rollback, and dispose after viewer.destroy. Needs nothing.
-- [ ] [CS-537](./items/CS-537-the-tickslices-budget-test-holds-under-full.md) The tickSlices budget test holds under full-suite load. Needs nothing.
+- [x] [CS-537](./items/CS-537-the-tickslices-budget-test-holds-under-full.md) The tickSlices budget test holds under full-suite load. Done.
 - [ ] [CS-538](./items/CS-538-the-no-scene-gains-glare-test-holds-under-full.md) The no-scene-gains glare test holds under full-suite load. Needs nothing.
 
 No milestone
