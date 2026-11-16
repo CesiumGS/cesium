@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Checks that splitting the old overall plan kept its content (2026-11-13).
 //
-//   node scripts/work/splitCheck.mjs [--from <rev>] [--mode lines|tokens]
+//   node scripts/splitCheck.mjs [--from <rev>] [--mode lines|tokens]
 //
 // The old file is `git show <rev>:CESIUM2_WEBGPU_PLAN.md` (default: the last
 // commit before the split, found by its message). The new layout is the

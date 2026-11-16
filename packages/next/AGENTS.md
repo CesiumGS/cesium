@@ -68,25 +68,25 @@ Example pages are documentation and demos at once. They have to work as a visual
 
 ## Work items
 
-Work is tracked as files in `work/`: one file per item, grouped into projects and initiatives. Every item has a `CS-<n>` ID. The format and rules are in the tracker's design (`docs/superpowers/plans/2026-11-13-work-tracker.md`, at the repository root), and the `work-items` skill walks through it. The commands below run from `packages/next`.
+Work is tracked as files in `work/` in human-in-the-lead's format (its design, part 3.4), with its `hitld` commands. Every item, project and milestone has a `CS-<n>` ID; a milestone with no parent is a long outcome. The settings are in `.human-in-the-lead/` at the repository root, and the executor contract is in the root `AGENTS.md`. The `work-items` skill walks through the practice below. `hitld` is a dev dependency pinned to a release tag: run it as `npx hitld …` anywhere in the repository. Every command prints JSON.
 
-- **Finding work:** run `node scripts/work/views.mjs ready`. It lists Planned items whose `needs` are all Done. `blocked` shows what waits on what. Read the item, then the plan it points to.
-- **Claims first:** run `node scripts/work/views.mjs claims` at session start, before you choose. It lists items claimed in other worktrees and on other branches.
-- **Claiming:** do it in your branch's first commit. Set the item's `status: In progress` and `claimed:` to your session's name, and commit that before any work.
+- **Finding work:** `npx hitld work query --ready` lists planned items whose `needs` are all done; `--blocked` shows what waits. On the main branch, in the main checkout, `npx hitld ready` adds tiers and order. Read the item, then the plan it points to.
+- **Claims first:** run `npx hitld work claims` at session start, before you choose. It lists items claimed on other branches and in fetched bundles.
+- **Claiming:** `npx hitld work claim CS-<n> --dispatch <your session's name>` writes your branch's first commit: `state: in-progress` and `claimed_by`. Make it before any work.
 - **The limitation:** claims aren't atomic.
-  - Another worktree of this clone sees your claim as soon as the file is written.
+  - Another worktree of this clone sees your claim once the claim commit exists.
   - The other machine or a collaborator's clone sees it only after a bundle or a push carries it.
-  - Two claims on one item meet as a merge conflict on `claimed`. So check `claims`, claim early, and let the main session merge in order.
-- **Closing:** the branch that does the work sets its item to `status: Done` in the same change that finishes it, so that merging the branch closes the item. Don't leave it for a later commit.
-- **Creating items:** run `node scripts/work/new.mjs --kind work --project CS-<n> --title "…" [--needs CS-<n>,…]`.
-  - It takes the next free number across every worktree and branch. Never pick a number by hand. Never reuse, renumber or add a letter to one.
-  - It prints a repository-relative path. Never paste an absolute path into an item, a commit or a plan.
-  - Use `--kind external --party "…"` for a wait outside our control.
-- **Decisions go to the owner:** a question only the owner can answer becomes a `decision` item (`decided-by: owner`), with the options and a recommendation in its body. Work that depends on the answer `needs` the decision, and contingent work stays `Proposed`. `views.mjs decisions` lists what waits on the owner. Don't settle these in code.
-- **Never add a frontmatter key that runs code** (`onStatusChange` and the like). The schema is an allowlist, and `check` refuses any other key.
-- **Before committing a change to an item, run `node scripts/work/views.mjs check`.** `npm test` runs it too. It also fails on old-style milestone names and on section numbers that point into the old overall plan: name work by `CS-<n>`, and documents by their path.
-- **Across machines:** after fetching a bundle into a branch, run `check --branches` before merging. If a number was taken on both sides, the branch that arrives second gives its item a new number.
-- Leave the generated lists in `work/README.md` alone; the main session regenerates them after merges.
+  - Two claims on one item meet as a merge conflict on `claimed_by`. So check `claims`, claim early, and let the main session merge in order.
+- **Closing:** `npx hitld work close CS-<n> --no-commit` sets `state: done`; commit it with the change that finishes the work, so that merging the branch closes the item. Don't leave it for a later commit.
+- **Creating items:** only the main session creates items, on `cesium-2.0-webgpu-poc` in the main checkout (`hitld work new` refuses anywhere else). A session on a branch that finds new work lists it in its report, with the kind, project, title and needs, and the main session creates it.
+  - `npx hitld work new --kind work --parent CS-<n> --title "…" [--needs CS-<n>,…]`. Kinds: `work`, `decision` (`--decider owner`), `external` (`--waiting-on "…"`), `project` and `milestone` (with `--outcome`; no `--parent` makes a long outcome).
+  - It takes the next free number across every worktree, branch and bundle. Never pick a number by hand. Never reuse, renumber or add a letter to one. The other machine allocates from its reserved block: set `HITLD_ID_BLOCK=second-machine` there.
+  - Never paste an absolute path into an item, a commit or a plan.
+- **Decisions go to the owner:** a question only the owner can answer becomes a `decision` item (`decider: owner`), with the question, the options and a recommendation in its body. Work that depends on the answer `needs` the decision, and contingent work stays `proposed`. `npx hitld work query --kind decision --state planned` lists what waits on the owner. Don't settle these in code.
+- **Never add a front-matter key that runs code** (`onStatusChange` and the like). The format is an allowlist, and `hitld work check` refuses any other key.
+- **Before committing a change to an item, run `npx hitld work check`.** `npm test` runs it too, and `scripts/staleNames.mjs`, which fails on old-style milestone names and on section numbers that point into the old overall plan: name work by `CS-<n>`, and documents by their path.
+- **Across machines:** after fetching a bundle into a branch, run `npx hitld work check --branches` before merging. If a number was taken on both sides, the branch that arrives second gives its item a new number.
+- Leave the generated lists in `work/README.md` and the pages in `work/views/` alone; the main session regenerates them after merges with `npx hitld work views`.
 
 ## Coding agents
 

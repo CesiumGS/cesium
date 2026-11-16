@@ -204,7 +204,7 @@ Supported. (The reasoning, in prose.)
 - **A hypothesis on a run without a study** (`run --hypothesis "…"` with no `--study`) creates a study file for it, named from the item and the date, so no hypothesis is left without a home (question 17).
 - **Writes are file writes,** and nothing commits them. The CLI writes study files in the current worktree. Dyno's dev server writes them through the same validation (`POST /bench-results/studies/<id>` validates, then writes the file into its own worktree). An agent commits study changes with its work, as it does tracker items; the owner commits changes made in Dyno.
   - Dyno marks a study with uncommitted changes.
-  - The tracker's `check` (`scripts/work/views.mjs check`) validates study files beside items.
+  - The tracker's check validates study files beside items (`scripts/work/views.mjs check` when this was written; `hitld work check` since CS-522, which leaves study files to Dyno until CS-404 decides where they live).
 - **Studies on other branches.** Dyno and the CLI read studies from the current branch's files. `studies --all-branches` and Dyno's Studies page also list studies that exist only on other local branches (read through git, read-only, labelled with their branch). The main session can therefore see an agent's study before it merges.
 - **Conflicts** are ordinary merge conflicts in a Markdown file. One branch owns a study at a time, the way a claimed item is owned: the study's `item` is claimed by that branch in the tracker.
 - **Archives don't carry studies.** They travel with the branch.
@@ -781,7 +781,7 @@ How they are run:
 - **Checks.** Each milestone runs typecheck, eslint and prettier on its files, plus its own tests. The full `npm test` runs once at the end of CS-395, CS-401, CS-405, CS-407 and CS-408.
 - **UI milestones** (CS-391, CS-395, CS-398, CS-399, CS-403, CS-405) follow DESIGN.md and StrataKit. They are checked in both themes, at 380 px, by keyboard and with a clean console, and the owner reviews them by clicking around.
 - **No durations:** order and dependencies only.
-- **Items:** each row is a work item in `packages/next/work/` (project CS-389). The item files hold the same text; `node packages/next/scripts/work/views.mjs ready` shows which can start.
+- **Items:** each row is a work item in `packages/next/work/` (project CS-389). The item files hold the same text; `npx hitld work query --ready` shows which can start.
 
 | # | Milestone | Files | Done when | Needs |
 | --- | --- | --- | --- | --- |

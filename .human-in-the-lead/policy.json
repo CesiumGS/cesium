@@ -6,7 +6,20 @@
   },
   "merge": {
     "main_branch": "cesium-2.0-webgpu-poc",
-    "fast_checks": ["cd packages/next && npm run typecheck", "cd packages/next && npx hitld work check"],
-    "full_suite": ["cd packages/next && npm test"]
+    "fast_checks": [
+      "cd packages/next && npm run typecheck",
+      "cd packages/next && npx hitld work check"
+    ],
+    "full_suite": [
+      "cd packages/next && npm test"
+    ]
+  },
+  "ids": {
+    "blocks": [
+      {
+        "name": "second-machine",
+        "from": 100000
+      }
+    ]
   }
 }
