@@ -164,7 +164,7 @@ export function Work() {
 }
 
 const DESCRIPTION =
-  "The tracker as a running system, at a glance. Choose anything to see its items.";
+  "The agent system's work on 2.0, from the tracker: what waits on you, what comes next, and how it flows. Choose anything to see its items.";
 
 function WorkHelp() {
   return (

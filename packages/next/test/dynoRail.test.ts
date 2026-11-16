@@ -12,9 +12,10 @@ const suite = new URL("../bench/suite/", import.meta.url);
 const read = (file: string) => readFileSync(new URL(file, suite), "utf8");
 
 describe("Dyno's rail, grouped by what people come to do", () => {
-  it("orders the groups attention first, then results, looking, experimenting", () => {
+  it("puts the work apart from the engine, then the engine's attention, results, looking, experimenting", () => {
     expect(GROUPS.map((g) => g.map((d) => d.label))).toEqual([
-      ["Work", "Overview", "Alerts", "Images"],
+      ["Work"],
+      ["Overview", "Alerts", "Images"],
       ["Trends", "Runs", "Scenes"],
       ["Viewer", "Examples"],
       ["Analysis", "Lab"],

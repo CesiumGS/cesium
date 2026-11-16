@@ -10,32 +10,40 @@ gets in the way in [STRATAKIT_FEEDBACK.md](STRATAKIT_FEEDBACK.md).
 
 ## Who it is for, and what they come to do
 
-Engineers working on CesiumJS 2.0. They come to:
+Engineers working on CesiumJS 2.0. Dyno answers questions about two
+systems: the engine (2.0 measured against 1.x), and the work (the agent
+system building it: the tracker now; agents, the merge queue, quotas
+and ledgers as human-in-the-lead records them). They come to:
 
-1. **See what needs a look:** decisions waiting on the owner (Work),
-   where 2.0 stands against 1.x and on each machine (Overview),
-   regressions to triage (Alerts), images to approve (Images), failing
-   or flaky tests, open studies.
-2. **Read results:** one run or two compared (Runs, a run's report,
+1. **Steer the work:** decisions waiting on the owner, what is ready, in
+   progress and blocked, the roadmap and proposals (Work).
+2. **See what needs a look in the engine:** where 2.0 stands against
+   1.x and on each machine (Overview), regressions to triage (Alerts),
+   images to approve (Images), failing or flaky tests, open studies.
+3. **Read results:** one run or two compared (Runs, a run's report,
    Compare), metrics over time (Trends), one scene's history (Scenes).
-3. **Look at content live:** a scene in one or two engines (the top of its page),
+4. **Look at content live:** a scene in one or two engines (the top of its page),
    any content in one engine (Viewer), an example (Examples).
-4. **Find things out:** a sweep (Analysis, until Studies replace it) or
+5. **Find things out:** a sweep (Analysis, until Studies replace it) or
    a focused check (Lab).
-5. **Set up:** the first run, the ion token, the theme and shortcuts.
+6. **Set up:** the first run, the ion token, the theme and shortcuts.
 
 ## Information architecture
 
 The navigation rail (`NavigationRail` from `@stratakit/structures`)
-follows those jobs: four groups separated by dividers, then a footer.
+follows those jobs: the work's group, then the engine's four, separated
+by dividers, then a footer. The work stays first, apart from the
+engine's pages, because the owner's decisions are the most pressing;
+each side keeps its own landing page and count (Work's decisions,
+Alerts' regressions).
 The groups have names here, not on screen (the rail has no section
 headings; see STRATAKIT_FEEDBACK.md). `rail.ts` holds the rail as data
 and `test/dynoRail.test.ts` checks this table against it.
 
 | Group        | Item            | Key | Route                        | What it is                                          |
 | ------------ | --------------- | --- | ---------------------------- | --------------------------------------------------- |
-| Needs a look | Work            | w   | `/work`                      | The tracker as a running system; your decisions     |
-|              | Overview        | o   | `/overview`                  | The latest run's verdict, budgets, machines, to-dos |
+| The work     | Work            | w   | `/work`                      | The tracker as a running system; your decisions     |
+| Needs a look | Overview        | o   | `/overview`                  | The latest run's verdict, budgets, machines, to-dos |
 |              | Alerts          | a   | `/alerts`                    | Change points to triage (a count)                   |
 |              | Images          | i   | `/images`                    | Image checks to review (a count)                    |
 | Results      | Trends          | t   | `/trends`                    | Metrics run to run                                  |

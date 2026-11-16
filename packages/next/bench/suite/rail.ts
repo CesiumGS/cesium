@@ -5,8 +5,12 @@
  * The shell (shell.tsx) draws it; tests read it without a browser.
  */
 
-/** The jobs people come to Dyno for, in rail order (DESIGN.md's names). */
-export type RailGroup = "Needs a look" | "Results" | "Look" | "Experiment";
+/**
+ * The jobs people come to Dyno for, in rail order (DESIGN.md's names):
+ * the work (the agent system building 2.0), then the engine's four.
+ */
+export type RailGroup =
+  "The work" | "Needs a look" | "Results" | "Look" | "Experiment";
 
 export interface Destination {
   to: string;
@@ -26,7 +30,7 @@ export const DESTINATIONS: readonly Destination[] = [
   {
     to: "/work",
     label: "Work",
-    group: "Needs a look",
+    group: "The work",
     key: "w",
     hint: "The tracker's items on this branch: ready, blocked, decisions waiting on the owner",
   },
