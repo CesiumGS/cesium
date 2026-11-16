@@ -37,7 +37,7 @@ struct PyramidCamera_0
      bias_1 : f32,
 };
 
-fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  centre_0 : vec3<f32>,  a_0 : vec3<f32>,  b_0 : vec3<f32>,  c_0 : vec3<f32>,  window_0 : u32) -> bool
+fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  center_0 : vec3<f32>,  a_0 : vec3<f32>,  b_0 : vec3<f32>,  c_0 : vec3<f32>,  window_0 : u32) -> bool
 {
     var frameWidth_0 : f32 = f32(camera_0.width_1);
     var frameHeight_0 : f32 = f32(camera_0.height_1);
@@ -64,7 +64,7 @@ fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  centr
         {
             _S2 = a_0;
         }
-        var _S3 : vec3<f32> = centre_0 + _S2;
+        var _S3 : vec3<f32> = center_0 + _S2;
         var _S4 : vec3<f32>;
         if(((k_0 & (u32(2)))) == u32(0))
         {

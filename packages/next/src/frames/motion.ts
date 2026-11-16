@@ -16,11 +16,11 @@ interface Scratch {
 }
 const levels: Scratch[] = [];
 let depth = 0;
-/** The instant each active difference is centred on, by depth. */
+/** The instant each active difference is centered on, by depth. */
 const centers: Instant[] = [];
 
 /**
- * The instant the innermost difference in progress is centred on, when
+ * The instant the innermost difference in progress is centered on, when
  * `instant` is one of its samples (within its step), or undefined. A frame
  * that changes by jumps uses it to sample one piece across the step, so a
  * jump isn't read as speed.

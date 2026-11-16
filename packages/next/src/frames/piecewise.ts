@@ -108,7 +108,7 @@ export class PiecewiseFrame<N extends string = string> extends Frame<N> {
       name,
       hub,
       (instant, out) => {
-        // Inside a difference, the piece at its centre: across a declared
+        // Inside a difference, the piece at its center: across a declared
         // jump, a central difference spanning both pieces read the jump as
         // speed. A sample the piece can't give falls back one-sided.
         const piece = box.self!.pieceAt(differenceCenter(instant) ?? instant);

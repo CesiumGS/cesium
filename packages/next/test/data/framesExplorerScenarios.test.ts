@@ -604,7 +604,7 @@ describe("Orion's dot, placed on the page's own thread, on the worker's drawn pa
           off / Math.max(options.tolerance * fromOrigin, options.floor),
         );
       }
-      // The same point, to a millimetre; between samples, within the
+      // The same point, to a millimeter; between samples, within the
       // path's own tolerance (0.05% of the distance, or its 100 m floor).
       expect(worstSample, `${frame}: at the samples, m`).toBeLessThan(1e-3);
       expect(
@@ -808,7 +808,7 @@ describe("bim-site: a BIM model's site grid on the globe (Task 6a)", () => {
     print(`bim-site: ${drop.detail} | ${along.detail}`);
   }, 60_000);
 
-  it("holds each site's origin in each CRS that covers it at one ground point (to a millimetre), and each CRS's area of use as PROJ gives it", async () => {
+  it("holds each site's origin in each CRS that covers it at one ground point (to a millimeter), and each CRS's area of use as PROJ gives it", async () => {
     const P = await context().loadProj();
     const ground = (place: (typeof BIM_PLACES)[keyof typeof BIM_PLACES]) =>
       Ellipsoid.WGS84.cartographicToCartesian(
@@ -1206,7 +1206,7 @@ describe("Orion behind the Moon (Task 6b, the owner's ask)", () => {
     )!;
     expect(e.presets?.[0]?.utcMs).toBe(flyby.startUtc - 60_000);
     // Pinned (computed, not published: no NASA loss-of-signal time is cited
-    // here), within 1 s; a kilometre of the real limb's relief moves an edge
+    // here), within 1 s; a kilometer of the real limb's relief moves an edge
     // by about 0.8 s, which the Moon as a sphere leaves out.
     const near = (ms: number, iso: string) =>
       expect(Math.abs(ms - Date.parse(iso)), iso).toBeLessThan(1000);

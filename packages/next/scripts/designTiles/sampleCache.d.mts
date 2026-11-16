@@ -9,9 +9,9 @@ export function readSampleCache<T>(
   file: string,
   check: (json: unknown, path: string) => T,
 ): T | undefined;
-/** A lidar height, ODN metres. */
+/** A lidar height, ODN meters. */
 export function lidarHeight(v: unknown): v is number;
-/** A 3DEP height, NAVD88 metres. */
+/** A 3DEP height, NAVD88 meters. */
 export function groundHeight(v: unknown): v is number;
 /** poleLineGround.mjs's cache, checked; throws for anything else. */
 export function checkedCache(

@@ -3,7 +3,7 @@
 // the question (owner: "the knobs are hard to find"), in the approved
 // mockup's shape: a head with "Knobs" and the checked-setup chip, which says
 // whether the setting is the checked setup, where the references apply;
-// one labelled row per knob; then, where the scenario has moments, "Jump
+// one labeled row per knob; then, where the scenario has moments, "Jump
 // to": its moments ("Behind the Moon") as buttons, and "Back to the checked
 // setup" (goal 8); without moments, Back sits in the head beside the chip
 // (fix 1). Off the checked setup a line under the head says what moved. Each range knob's
@@ -138,7 +138,7 @@ function ChoiceKnob({
 /**
  * The capstone's pair (Task 8): From and To as two segmented controls,
  * a swap between them. To's option for the object From already is is
- * greyed out with a tip; picking From's for To's object turns the pair
+ * grayed out with a tip; picking From's for To's object turns the pair
  * round (spec.ts `withKnob`).
  */
 function PairKnobs({
@@ -178,7 +178,7 @@ function PairKnobs({
             }
           >
             {pair.options.map((o) => {
-              // To can't be From's object: greyed out, with why.
+              // To can't be From's object: grayed out, with why.
               const taken = end === "to" && o.value === other;
               return (
                 <ToggleButton

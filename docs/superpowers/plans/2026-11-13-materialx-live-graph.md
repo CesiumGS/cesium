@@ -46,8 +46,8 @@
 
 **MaterialX.**
 
-- The latest release is **1.39.5**, published 2026-05-22. The one before it was 1.39.4 (2025-09-15). Licence Apache-2.0.
-- **There is no official JSON form.** MaterialX documents are XML. JSON exists only in third-party tools: Bernard Kwok's `materialxjson` (Python, labelled for 1.39) and a QuiltiX plugin, with the mimetype `application/mtlx+json`. We read and write XML.
+- The latest release is **1.39.5**, published 2026-05-22. The one before it was 1.39.4 (2025-09-15). License Apache-2.0.
+- **There is no official JSON form.** MaterialX documents are XML. JSON exists only in third-party tools: Bernard Kwok's `materialxjson` (Python, labeled for 1.39) and a QuiltiX plugin, with the mimetype `application/mtlx+json`. We read and write XML.
 - **The standard library is large.** `stdlib_defs.mtlx` at v1.39.5 has 693 node definitions across 145 node categories. Groups by category count: math 47, procedural2d 23, compositing 18, adjustment 10, geometric 9, channel 8, conditional 8, procedural3d 7, texture2d 4, others smaller.
 - **44 of those categories are defined as node graphs of other stdlib nodes** (197 of the 693 definitions, in `stdlib_ng.mtlx`). Among them: `place2d`, `ramp4`, `colorcorrect`, `hsvadjust`, `noise2d`, `noise3d`, `fractal3d`, `checkerboard`, `tiledimage`, `triplanarprojection`, `smoothstep`, `range`, `switch`. Once their building blocks are supported, these come by expanding MaterialX's own graphs.
 - **Surface shaders** in `libraries/bxdf`: `open_pbr_surface`, `standard_surface`, `gltf_pbr`, `usd_preview_surface`, `disney_principled`, `lama`. Translation graphs: `standard_surface_to_open_pbr`, `open_pbr_to_standard_surface`, `standard_surface_to_gltf_pbr`, `standard_surface_to_usd`.
@@ -61,16 +61,16 @@
 - metal: GGX conductor with F82-tint Fresnel (`specular_color` as the edge tint);
 - dielectric specular: GGX, `specular_ior`; `specular_color` tints reflection only;
 - coat: GGX dielectric over an absorbing medium (`coat_color`, `coat_darkening`), with its own normal and tangent;
-- fuzz: a fibre microflake volume approximated with linearly transformed cosines (LTC), with tables of LTC coefficients and albedo over (μ, roughness);
+- fuzz: a fiber microflake volume approximated with linearly transformed cosines (LTC), with tables of LTC coefficients and albedo over (μ, roughness);
 - thin film: Belcour–Barla (2017), folded into both Fresnels;
-- transmission and subsurface: slabs over volumes (Beer–Lambert extinction from `transmission_color` and `transmission_depth`, Henyey–Greenstein anisotropy, dispersion by Abbe number; subsurface by radius and colour);
+- transmission and subsurface: slabs over volumes (Beer–Lambert extinction from `transmission_color` and `transmission_depth`, Henyey–Greenstein anisotropy, dispersion by Abbe number; subsurface by radius and color);
 - layering: albedo scaling, `f = f_coat + (1 − E_coat(ω_o)) · f_sub`, with E tabulated or estimated;
 - emission: `emission_luminance` in cd/m² (nits);
 - implementations may approximate layering and volumes, and may disable anisotropy for cost.
 
 **Node editor libraries.**
 
-| Library                      | Licence | Latest                                                                | Notes                                                                                                                                   |
+| Library                      | License | Latest                                                                | Notes                                                                                                                                   |
 | ---------------------------- | ------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | React Flow (`@xyflow/react`) | MIT     | 12.12.1, released 2026-11-02; repository pushed 2026-11-12; 39k stars | React, like the gallery. Dependencies: `zustand`, `classcat`, `@xyflow/system`. About 1.2 MB unpacked. Click-to-connect for touch.      |
 | Rete.js (`rete`)             | MIT     | core 2.0.6, released 2025-06-30 (last core commit the same day)       | Framework-neutral, with render plugins. Plugins are newer (Angular plugin 2.6.0, 2026-01-09); the core has had no release in 16 months. |
@@ -82,30 +82,30 @@ React Flow is chosen (owner, 2026-11-13). It loads only in the example's lazy ch
 
 **MaterialX's own shader generators** (checked 2026-11-13 on the repository's `main`; owner asked at review):
 
-- MaterialX has generators for GLSL, ESSL, MSL, OSL, MDL, Vulkan GLSL and **Slang** (`MaterialXGenSlang`, with `MaterialXRenderSlang`; the release notes first mention Slang at v1.39.5). Its **"WGSL" generator** is a flavour of the Vulkan GLSL generator ("WGSL Flavor of Vulkan GLSL shader generator"): GLSL meant to be translated to WGSL, not WGSL itself.
+- MaterialX has generators for GLSL, ESSL, MSL, OSL, MDL, Vulkan GLSL and **Slang** (`MaterialXGenSlang`, with `MaterialXRenderSlang`; the release notes first mention Slang at v1.39.5). Its **"WGSL" generator** is a flavor of the Vulkan GLSL generator ("WGSL Flavor of Vulkan GLSL shader generator"): GLSL meant to be translated to WGSL, not WGSL itself.
 - The JavaScript build exposes all of them (`JsMaterialXGenSlang`, `JsMaterialXGenWgsl`, `JsMaterialXGenEssl` and others in `source/JsMaterialX`).
 - **Not the runtime path,** for these reasons:
   - **Whole shaders with MaterialX's own lighting.** The generators emit complete shaders with MaterialX's closures and BSDF code. We need the pattern graph only, bound onto the engine's material and lighting (section 5), so the same graph lights like everything else in the scene.
   - **No CPU evaluation.** Thumbnails and picks need the graph evaluated in float64 on the CPU (section 6). Generated text gives none.
-  - **Compilers at runtime.** Live Slang would load the MaterialX generator wasm and the Slang compiler on every rewire, which the owner ruled out for styling ([investigations-2026-11-13.md](../../design/investigations-2026-11-13.md): compiler-free, Slang offline or for post stages only). The "WGSL" flavour would need a GLSL-to-WGSL translator in the browser.
+  - **Compilers at runtime.** Live Slang would load the MaterialX generator wasm and the Slang compiler on every rewire, which the owner ruled out for styling ([investigations-2026-11-13.md](../../design/investigations-2026-11-13.md): compiler-free, Slang offline or for post stages only). The "WGSL" flavor would need a GLSL-to-WGSL translator in the browser.
   - **One path for both renderers.** Cesium IR emits WGSL and GLSL ES from one program, with literals already turned into uniforms.
 - **Where they help:** as a reference. MaterialX's generated code is the authors' own implementation of each node, so it can check CS-63's per-node results offline (dev and CI only, with the native Slang compiler or the GLSL output), and task 11 compares whole materials against MaterialXView.
 
 **Prior art in the browser.**
 
-- **MaterialXLab** (Bernard Kwok): a web graph editor that wraps LiteGraph and runs the full MaterialX WebAssembly build. Its layout puts the graph on the left, the view and a property editor on the right. Its repository returned 404 on 2026-11-13, so its licence is unchecked. UX prior art only.
+- **MaterialXLab** (Bernard Kwok): a web graph editor that wraps LiteGraph and runs the full MaterialX WebAssembly build. Its layout puts the graph on the left, the view and a property editor on the right. Its repository returned 404 on 2026-11-13, so its license is unchecked. UX prior art only.
 - **three.js `MaterialXLoader`:** parses `.mtlx` in JS without the MaterialX library and maps nodes to three.js's own node system. A pull request (#33485, closed 2026-07-20) added `open_pbr_surface` and `gltf_pbr`. Evidence that a subset parser without the library is practical.
 - **Needle Engine** uses the official MaterialX JS library (`@needle-tools/materialx`) for OpenPBR, Standard Surface, UsdPreviewSurface and unlit.
 
 **The engine today.**
 
-- **`CustomShader`** (`src/scene/CustomShader.ts`): WGSL `vertexMain` and `fragmentMain` against the contract, with typed uniforms, at most 4 textures (`MAX_TEXTURES`), and `setUniform` writing the uniform buffer with no new module or pipeline. The fragment stage gets `positionMC` (the design position), `positionEC`, `positionWC` (float32: about a metre at Earth scale), `normal`, `texCoord0`, `color0`, `time`, named attributes and metadata.
+- **`CustomShader`** (`src/scene/CustomShader.ts`): WGSL `vertexMain` and `fragmentMain` against the contract, with typed uniforms, at most 4 textures (`MAX_TEXTURES`), and `setUniform` writing the uniform buffer with no new module or pipeline. The fragment stage gets `positionMC` (the design position), `positionEC`, `positionWC` (float32: about a meter at Earth scale), `normal`, `texCoord0`, `color0`, `time`, named attributes and metadata.
 - **`MaterialOutput`** (`src/shaders/cesium.slang`): `baseColor`, `alpha`, `metallic`, `roughness`, `normal`, `occlusion`, `emissive`, `unlit`. Lighting is GGX plus Lambert, with prefiltered image-based lighting and Fdez-Agüera multiple scattering (`surface.slang`). `gltfParse.ts` supports only `KHR_materials_unlit` among material extensions. Emission is display-relative: not exposed, not metered.
 - **Pipelines** (`src/scene/ShaderCache.ts`): one entry per distinct shader source, kept for the device's life, so returning to an earlier graph costs nothing. The code says 50–110 ms per new shader in the background. Opaque one-sided content with shadows and AO needs 4 of 19 pipelines. Until a pipeline is ready, **content draws with the engine's default material**, not the previous shader. `Engine.compileShader` compiles all 19 (seconds on a cold engine, says `examples/csg`); `Engine.whenReady(view, { draws })` waits for only the pipelines in use, and `examples/csg` adds a new solid hidden and swaps it in after that wait.
 - **Where shaders attach:** `ModelPlacement.setShader` changes a model's shader at any time. `Tileset3D` takes `customShader` only as a constructor option. The globe has no custom-shader hook.
 - **Picks** carry a `PickDomain` for meshes: the triangle and its barycentrics (`src/scene/pickDomain.ts`), so a material input (texture coordinate, normal, position) can be interpolated exactly on the CPU, if the mesh's CPU attributes are still held.
 - **An IR already exists for transforms** (`src/transform/ir.ts`): a hash-consed scalar DAG with named parameters, float64 evaluation, autodiff, intervals and a WGSL back end. It has no textures, vectors as values, integers or loops. **Cesium IR** ([core-ir.md](../../design/core-ir.md), decided after this plan was drafted) replaces it and is the core IR every function goes through, MaterialX included (CS-63).
-- **Gallery:** examples are modules under `packages/next/examples/<slug>/` registered in `examples/index.ts`. `run` may return a React panel. The **Slang playground** (`examples/slang-playground`) is the closest sibling: a lookdev stage (no globe, a background colour, procedural studio light, a key light, orbit controls), a model list including Khronos samples loaded from GitHub, and "keep the last shader that compiled".
+- **Gallery:** examples are modules under `packages/next/examples/<slug>/` registered in `examples/index.ts`. `run` may return a React panel. The **Slang playground** (`examples/slang-playground`) is the closest sibling: a lookdev stage (no globe, a background color, procedural studio light, a key light, orbit controls), a model list including Khronos samples loaded from GitHub, and "keep the last shader that compiled".
 
 ## 1. The experience
 
@@ -119,9 +119,9 @@ React Flow is chosen (owner, 2026-11-13). It loads only in the example's lazy ch
 
 **Scenes** (picker at the top of the panel):
 
-1. **Stage.** MaterialX's shaderball on the Slang playground's stage: background colour, environment (Studio, Sunset, Overcast, Dark), key light, exposure. The model list from the playground (shapes, repository samples, Khronos samples) is one click away. Default scene.
+1. **Stage.** MaterialX's shaderball on the Slang playground's stage: background color, environment (Studio, Sunset, Overcast, Dark), key light, exposure. The model list from the playground (shapes, repository samples, Khronos samples) is one click away. Default scene.
 2. **City.** OSM Buildings (ion) over Cesium World Terrain, the material on every building, at four places (below). City graphs use local positions and triplanar projection, since OSM Buildings has no texture coordinates. Per-building inputs (`geompropvalue` of the feature ID and of OSM properties such as the building's height and kind) let a graph vary by building.
-3. **Terrain.** Cesium World Terrain with imagery, the material on the globe surface, at seven places (below). Graph inputs: `height` (m above the ellipsoid), `slope` (radians), `aspect` (radians from north), `water` (0 to 1, the water mask, filtered so its edge is soft), `latitude`, `camera_distance` (m, for detail that fades with distance), and the imagery's colour.
+3. **Terrain.** Cesium World Terrain with imagery, the material on the globe surface, at seven places (below). Graph inputs: `height` (m above the ellipsoid), `slope` (radians), `aspect` (radians from north), `water` (0 to 1, the water mask, filtered so its edge is soft), `latitude`, `camera_distance` (m, for detail that fades with distance), and the imagery's color.
 
 **Scene controls are graph inputs.** Each place's preset exposes a few interface inputs as large sliders over the view: season, snow line, flood level, wind, wetness, time of day. Moving one is a uniform edit, so it is instant everywhere. Inputs the scene owns (the sun's elevation, the clock) are written once per frame by the example through the same `setUniform`.
 
@@ -135,7 +135,7 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 | --------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Seattle: the Space Needle         | 47.6205, −122.3493 | **Rain.** A wetness slider darkens walls, drops roughness on flat roofs (normal near up) and adds rain ripples there: animated noise in the normal. Wet ground meets dry walls where the slope turns vertical.                                                               |
 | Philadelphia: City Hall           | 39.9524, −75.1636  | **Night windows.** Brick and limestone by building (feature ID picks the palette), a window grid from local height (floors every 3.5 m) and position along the wall, and some windows lit at night: emission in nits, so exposure makes them glow as the sun sets (task 6a). |
-| Paris: from the Eiffel Tower east | 48.8584, 2.2945    | **Haussmann.** Cream limestone walls, zinc roofs (flat-ish normals get a blue-grey metal with F82 tint, task 6) and a golden-hour time-of-day slider.                                                                                                                        |
+| Paris: from the Eiffel Tower east | 48.8584, 2.2945    | **Haussmann.** Cream limestone walls, zinc roofs (flat-ish normals get a blue-gray metal with F82 tint, task 6) and a golden-hour time-of-day slider.                                                                                                                        |
 | Manhattan: Midtown                | 40.7549, −73.9840  | **Glass towers.** Tall buildings (by OSM height) get mirror-like curtain walls with a mullion grid, reflecting the sky through image-based lighting; low ones stay masonry. Lit floors at night as in Philadelphia.                                                          |
 
 **Terrain** (Cesium World Terrain):
@@ -144,10 +144,10 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 | --------------------------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Crete: Balos lagoon and the White Mountains   | 35.58, 23.59       | **Water.** The water mask drives a sea surface: animated wave normals from two scrolling noise layers, IOR 1.33, low roughness so the sun glints, turquoise in the shallows near the soft mask edge and deep blue away from it, a foam band at the shore. The White Mountains (2,453 m) inland get winter snow from the season slider. |
 | The Himalayas: Everest, Lhotse and Ama Dablam | 27.9881, 86.9250   | **Moving snow line.** Snow above a line that a season slider moves (or that plays a year in 30 seconds); north faces hold snow lower (aspect); slopes past about 50° shed it, so rock ribs stay dark; blue glacier ice on gentle slopes in a height band. Noise breaks the line up so it reads as real.                                |
-| Grand Canyon: Mather Point                    | 36.0617, −112.1077 | **Rock strata.** Bands by height after the canyon's real layers, rim to river: Kaibab limestone (cream grey), Toroweap, Coconino sandstone (pale), Hermit shale and Supai (red), Redwall limestone (grey stained red), Tonto, Vishnu schist (dark). Noise warps the band edges. A "Topographic" toggle overlays contour lines.         |
+| Grand Canyon: Mather Point                    | 36.0617, −112.1077 | **Rock strata.** Bands by height after the canyon's real layers, rim to river: Kaibab limestone (cream gray), Toroweap, Coconino sandstone (pale), Hermit shale and Supai (red), Redwall limestone (gray stained red), Tonto, Vishnu schist (dark). Noise warps the band edges. A "Topographic" toggle overlays contour lines.         |
 | Mount Fuji and Lake Kawaguchi                 | 35.3606, 138.7274  | **Seasons on a cone.** The symmetric snow cap grows and shrinks with the season slider; the lake below uses the water graph, calm (less wave height).                                                                                                                                                                                  |
-| The Matterhorn and Zermatt                    | 45.9763, 7.6586    | **Procedural grass.** Where the slope is gentle, the height is below the tree line and the imagery is green, close-up detail is added that imagery can't have: noise colour variation and a grassy normal, fading out by `camera_distance` (2 km). Rock above, snow on top.                                                            |
-| Geirangerfjord, Norway                        | 62.1049, 7.0947    | **Fjord.** Glassy dark green water reflecting the sky and the cliffs' colour, steep walls left as rock, meadows on the ledges (the grass graph), snow on the tops.                                                                                                                                                                     |
+| The Matterhorn and Zermatt                    | 45.9763, 7.6586    | **Procedural grass.** Where the slope is gentle, the height is below the tree line and the imagery is green, close-up detail is added that imagery can't have: noise color variation and a grassy normal, fading out by `camera_distance` (2 km). Rock above, snow on top.                                                            |
+| Geirangerfjord, Norway                        | 62.1049, 7.0947    | **Fjord.** Glassy dark green water reflecting the sky and the cliffs' color, steep walls left as rock, meadows on the ledges (the grass graph), snow on the tops.                                                                                                                                                                     |
 | The Netherlands: Flevoland and the IJsselmeer | 52.45, 5.50        | **Flood level.** A slider raises a water level; land below it (height under the level) turns to the water graph, with the shoreline foam moving as it rises. Flevoland lies about 5 m below sea level. To verify in task 5d: that Cesium World Terrain's heights there are good enough to show it.                                     |
 
 **A global snow line** is one more terrain preset that works anywhere: the snow line's height follows latitude (about 5,000 m near the equator, falling toward the poles) and the season slider, so flying anywhere shows plausible snow.
@@ -166,7 +166,7 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 - **Parameter edit:** select a node, change a value in the property panel, or drag a number directly on the node. The material updates on the next frame.
 - **Rewire:** drag from an output port to an input port; drop a node from the palette; delete; disconnect. The editor refuses a connection between types that don't match (the port lights red during the drag and names both types) rather than letting an error happen later.
 - **Material interface:** a node graph's interface inputs (MaterialX's `interfacename`, with `uiname`, `uifolder`, `uisoftmin` and `uisoftmax`) appear as a plain parameter list grouped by folder. This is the main editing mode on phones and for people who don't want to see wires.
-- **Palette:** press Tab or double-click the canvas for a search box over node names and categories (as MaterialX's editors do), plus a collapsible category list. Every stdlib node is listed with its real ports. Unsupported ones are listed too, greyed with "not supported yet", so the user learns what exists.
+- **Palette:** press Tab or double-click the canvas for a search box over node names and categories (as MaterialX's editors do), plus a collapsible category list. Every stdlib node is listed with its real ports. Unsupported ones are listed too, grayed with "not supported yet", so the user learns what exists.
 - **Subgraphs:** a nodegraph shows as one node; double-click enters it, with a breadcrumb back.
 - **Undo and redo:** every edit, including value drags (one step per drag, not per frame).
 - **Files:** open `.mtlx` (file picker or drop on the page), download `.mtlx`, copy a link. A link carries the preset name plus changed values while they fit in a URL; a rewired graph is downloaded rather than linked.
@@ -177,14 +177,14 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 - **Errors inline:** a node that can't be lowered (unsupported node, a type the back end can't express, past the 4-texture limit) gets a hatched header and a short reason. The graph's last good material stays on screen. A shader that fails to compile (an emitter bug, not a user error) shows a banner with the WGSL compiler's first message and keeps the last good material.
 - **Not drawn by this renderer:** inputs the renderer ignores (tier 3 lobes; on the WebGL 2 renderer, whatever it drops) stay editable, are written back to the file, and show a small "not drawn" mark with the reason on hover. This is the renderer's support report in the scene's terms ([investigations-2026-11-13.md](../../design/investigations-2026-11-13.md), renderer decisions).
 - **Node thumbnails:** each pattern node shows a small swatch of its output (section 6). Toggle off in the toolbar.
-- **Pick readout:** click the content and the panel lists, for that point, the selected node's output and the final material values (base colour, metalness, roughness, coat and so on), computed on the CPU (section 6).
+- **Pick readout:** click the content and the panel lists, for that point, the selected node's output and the final material values (base color, metalness, roughness, coat and so on), computed on the CPU (section 6).
 
 **Layout.**
 
 - **Desktop (≥ 1100 px):** the view takes the left part, at least 55% of the width. On the right, one resizable column split vertically: the graph editor on top (about 60%), the property panel below it. The scene picker, presets strip and toolbar (open, download, link, thumbnails, undo, redo, auto-layout) sit in a thin bar across the top of the right column. Dragging the divider between view and column trades space; double-clicking it maximizes the graph.
 - **Tablet (768–1099 px):** the view on top (about 50% of the height), the graph and property panel side by side below.
 - **Phone (< 768 px):** the view on top at 45% of the height, never smaller. Below it a sheet with three tabs: **Parameters** (the material interface, default), **Graph**, **Presets**. Graph: one-finger pan, pinch zoom, tap a node to select it (its properties slide up from the bottom), tap an output port then an input port to connect (React Flow's click-to-connect), long-press for delete and disconnect. The palette is a full-width search sheet. Thumbnails are off by default to save battery.
-- **Visual language:** follows the gallery's theme (Stratakit tokens) in light and dark. Node headers are coloured by group (math, procedural, texture, geometric, surface), ports by type (float, colour, vector, integer, boolean, surface shader), and wires take the colour of their type. Numbers use tabular figures. Fixed explanations sit behind an ⓘ tooltip (the inspector rules of 2026-11-13).
+- **Visual language:** follows the gallery's theme (Stratakit tokens) in light and dark. Node headers are colored by group (math, procedural, texture, geometric, surface), ports by type (float, color, vector, integer, boolean, surface shader), and wires take the color of their type. Numbers use tabular figures. Fixed explanations sit behind an ⓘ tooltip (the inspector rules of 2026-11-13).
 - **Design pass:** task 3 builds the layout in context; the owner reviews by clicking around, then one polish round.
 
 ## 2. Edit latency targets
@@ -201,7 +201,7 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 
 **The last good material stays on screen.** Today a new shader draws the engine's default material until its pipelines are ready, which would flash on every rewire. Task 2b adds `setShader(next, { swap: "whenReady" })`: the content keeps drawing with its current shader until `next`'s pipelines for the passes this content uses are ready, then switches in one frame. A newer `setShader` supersedes a pending one. The same option goes on `Tileset3D.setShader` and the globe hook.
 
-**Measured, not assumed.** Task 3 records the timings with the inspector recorder (CSV and sparklines, not snapshots), for the marble graph with one wire moved, on the stage and on the city. If the median misses 150 ms, the first suspects are pipelines made in series and the shadow and depth variants made before the colour pass.
+**Measured, not assumed.** Task 3 records the timings with the inspector recorder (CSV and sparklines, not snapshots), for the marble graph with one wire moved, on the stage and on the city. If the median misses 150 ms, the first suspects are pipelines made in series and the shadow and depth variants made before the color pass.
 
 ## 3. The node editor
 
@@ -218,7 +218,7 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 
 - `document → view model`: one pure function maps the document to React Flow nodes and edges (positions from `xpos`/`ypos`, or from auto-layout).
 - **Edits are commands** on the document (`connect`, `disconnect`, `addNode`, `removeNode`, `setValue`, `setPosition`), each invertible for undo. React Flow's change events become commands; nothing else writes the document.
-- **Custom node component:** a header (name, category colour, status), ports with type colours, inline value widgets for unconnected inputs (number scrubber, colour swatch, vector fields, enum menu, file for images), a thumbnail. Unsupported nodes keep their ports, so wires to them stay visible.
+- **Custom node component:** a header (name, category color, status), ports with type colors, inline value widgets for unconnected inputs (number scrubber, color swatch, vector fields, enum menu, file for images), a thumbnail. Unsupported nodes keep their ports, so wires to them stay visible.
 - **Auto-layout:** a layered layout of our own (columns by depth from the output, ordering to reduce crossings), after the idea of MaterialX's `Layout.cpp`. No layout dependency.
 
 ## 4. Format and parsing
@@ -230,7 +230,7 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 - **Writer:** writes the model back with stable attribute order. Round-trip tests: every example material at v1.39.5 reads and writes to a semantically equal document.
 - **Node definitions:** `scripts/materialxDefs.mjs` reads `stdlib_defs.mtlx`, `stdlib_ng.mtlx` and the bxdf definitions at the pinned tag v1.39.5 and writes a compact generated table: each nodedef's category, group, inputs (name, type, default, enum values) and outputs, plus the node graph implementations of the 44 categories that have them. Checked in as generated data with Apache-2.0 attribution. Estimated 60–80 KB, about 10 KB compressed. Node definitions resolve by MaterialX's rule (category, output type, input types).
 - **Versions:** 1.39 documents are read directly. Older versions are upgraded by JsMaterialXCore (the official library's WebAssembly build, about 1.1 MB), loaded on demand only for such a document and never in the main chunk; where it can't load, the document is refused with a message naming the version.
-- **Colour spaces:** values and images carry `colorspace` (document default, then per input). Supported: `lin_rec709` (the engine's), `srgb_texture`, `acescg`, `g22_rec709`, `lin_ap1`; conversion is folded into the lowering. Others are refused with a message.
+- **Color spaces:** values and images carry `colorspace` (document default, then per input). Supported: `lin_rec709` (the engine's), `srgb_texture`, `acescg`, `g22_rec709`, `lin_ap1`; conversion is folded into the lowering. Others are refused with a message.
 
 **Supported first** (subset A, task 2; about 70 categories counting those that expand from MaterialX's graphs):
 
@@ -246,7 +246,7 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 
 **Unsupported nodes** show in the editor with their real ports, a hatched header and "not supported yet". A graph that uses one keeps its last good material. The document keeps them, so a file opened and saved here loses nothing.
 
-**Where world space comes from.** MaterialX's `space="world"` would read `positionWC`, which is float32 Earth-fixed, about a metre of precision: patterns would swim. The lowering maps world space to a local east-north-up frame at the scene's anchor, which the example declares, and documents the departure. Object space reads the design position (`positionMC`), so a pattern stays on a surface a warp moves.
+**Where world space comes from.** MaterialX's `space="world"` would read `positionWC`, which is float32 Earth-fixed, about a meter of precision: patterns would swim. The lowering maps world space to a local east-north-up frame at the scene's anchor, which the example declares, and documents the departure. Object space reads the design position (`positionMC`), so a pattern stays on a surface a warp moves.
 
 ## 5. The runtime path
 
@@ -263,7 +263,7 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 
 1. Resolve each node's definition.
 2. Expand node graph references and the 44 categories implemented as stdlib graphs, binding `interfacename` inputs.
-3. Fold colour-space conversions and defaults in.
+3. Fold color-space conversions and defaults in.
 4. Type-check every connection.
 5. **Literals become uniform slots:** every unconnected input of a non-structural type gets a slot with a stable key (`nodegraph/node/input`). Its value goes in a values array. The key survives edits that don't touch that input, so a rewire elsewhere keeps the user's values.
 6. **Structural inputs** stay compile-time: enum strings (`space`, a `switch`'s `which` when it's an enum), types, and integers beyond loop caps.
@@ -272,7 +272,7 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 **Binding to the engine's material.** Closures never enter the core IR. The surface node maps onto the engine's material struct:
 
 - **`gltf_pbr`** maps one to one onto today's `MaterialOutput`, and onto the glTF extensions' fields after task 8.
-- **`open_pbr_surface`** maps onto the extended material of tasks 6–7, field by field. Until task 6 lands: base colour × weight, metalness, specular roughness, emission, opacity and normal reach today's fields, and the rest show "not drawn".
+- **`open_pbr_surface`** maps onto the extended material of tasks 6–7, field by field. Until task 6 lands: base color × weight, metalness, specular roughness, emission, opacity and normal reach today's fields, and the rest show "not drawn".
 - **`standard_surface`** goes through `standard_surface_to_open_pbr`, then as OpenPBR.
 - **`surface_unlit`** sets `unlit`.
 - **Emission:** physical (nits, exposed and metered) by default for OpenPBR, per the 2026-11-08 rule that a custom shader writes nits unless the material says `emission: "display"`. The example's toolbar has the switch, to show both.
@@ -292,13 +292,13 @@ Each place is a camera view plus a default graph. The picker shows them as cards
 
 Closures never enter the IR: the surface binding above maps the surface node onto the material struct, outside the program. MaterialX ops map onto the vocabulary through CS-63's table; noise is CS-64's library functions; images wait for CS-65. A node the IR can't express yet is refused with CS-63's diagnostic, shown on the node.
 
-**Compiles are jobs** ([job-system.md](../../design/job-system.md)): a rewire's pipeline build is a cancellable `Jobs` job, and a newer edit cancels an older one, as the Cesium IR plan says for live edits.
+**Compiles are jobs** ([job-system.md](../../design/job-system.md)): a rewire's pipeline build is a cancelable `Jobs` job, and a newer edit cancels an older one, as the Cesium IR plan says for live edits.
 
 ## 6. CPU evaluation: thumbnails and picks
 
 **Thumbnails per node.**
 
-- Each pattern node shows a 48 × 48 swatch (96 × 96 on high-DPI screens) of its output: a float as grey, a colour as itself, a vector as its components mapped to RGB.
+- Each pattern node shows a 48 × 48 swatch (96 × 96 on high-DPI screens) of its output: a float as gray, a color as itself, a vector as its components mapped to RGB.
 - **The swatch is a sphere:** each pixel has the sphere's analytic position, normal and texture coordinate, so 3D patterns read as they would on a ball and 2D ones as they would on its UVs. A toggle switches to a flat UV square.
 - **One evaluation fills every thumbnail:** Cesium IR's float64 evaluator (CS-50) runs the whole program once per pixel and records each node's value. 2,304 pixels (48²) per edit, as a `Jobs` job on a worker: a newer edit cancels an older thumbnail job, and its apply step updates the swatches.
 - **Budget:** under 30 ms for a 50-node graph on an M2, refreshed after the GPU update (thumbnails never delay the view). During a value drag, thumbnails downstream of the edited node refresh at 24 × 24 and sharpen when the drag ends.
@@ -308,8 +308,8 @@ Closures never enter the IR: the surface binding above maps the surface node ont
 
 **Picks.**
 
-- Click the content; the pick's `PickDomain` gives the triangle and its barycentrics. The example interpolates the inputs the graph reads (design position, normal, texture coordinate, vertex colour, named attributes) from the mesh's CPU attributes and evaluates the graph on the CPU in float64.
-- **The readout** lists the selected node's output and the final material fields at that point, with a small swatch for colours. The pick's point is marked in the view, and the thumbnail of the selected node shows a dot where the point would fall on the sphere when the point's inputs are 3D.
+- Click the content; the pick's `PickDomain` gives the triangle and its barycentrics. The example interpolates the inputs the graph reads (design position, normal, texture coordinate, vertex color, named attributes) from the mesh's CPU attributes and evaluates the graph on the CPU in float64.
+- **The readout** lists the selected node's output and the final material fields at that point, with a small swatch for colors. The pick's point is marked in the view, and the thumbnail of the selected node shows a dot where the point would fall on the sphere when the point's inputs are 3D.
 - **Check first (task 4):** whether the mesh's texture coordinates and normals are still held on the CPU after upload, for models and for tiles. `resolveDomain` reads stored positions, so positions are held. If other attributes aren't, task 4 adds an opt-in to keep them for content whose shader asks (`CustomShader` declares that it wants CPU picks).
 - **Terrain picks** evaluate at the picked point with height, slope and aspect computed from the tile's mesh and the water mask sampled from the tile's mask.
 - **Later:** a GPU readback of the material fields as an AOV (renderer decisions), which would check the CPU against the GPU per pick.
@@ -319,8 +319,8 @@ Closures never enter the IR: the surface binding above maps the surface node ont
 **Tier 1 (task 6):**
 
 - **Emission in nits and display-relative**, as decided on 2026-11-08 and not built: `KHR_materials_emissive_strength`, the `emission` override per item or material, metering, the playground presets that need `emission: "display"`. Task 6a, first.
-- **`MaterialOutput` grows** the OpenPBR fields, grouped: specular (weight, colour, IOR), coat (weight, colour, roughness, IOR, darkening, normal), thin film (weight, thickness, IOR), diffuse roughness, emission (luminance, colour). Defaults reproduce today's look exactly, so existing content and custom shaders don't change.
-- **Lobes:** F82-tint conductor Fresnel; dielectric F0 from IOR with specular colour and weight; EON diffuse; a coat GGX lobe with absorption and albedo scaling; thin-film iridescence (Belcour–Barla) on both Fresnels.
+- **`MaterialOutput` grows** the OpenPBR fields, grouped: specular (weight, color, IOR), coat (weight, color, roughness, IOR, darkening, normal), thin film (weight, thickness, IOR), diffuse roughness, emission (luminance, color). Defaults reproduce today's look exactly, so existing content and custom shaders don't change.
+- **Lobes:** F82-tint conductor Fresnel; dielectric F0 from IOR with specular color and weight; EON diffuse; a coat GGX lobe with absorption and albedo scaling; thin-film iridescence (Belcour–Barla) on both Fresnels.
 - **Tables:** directional albedo of the coat GGX over (μ, roughness, IOR), as a small texture in the lighting bind group; the existing multiple-scattering table stays for the base.
 - **Image-based lighting:** one more prefiltered fetch for the coat.
 - **Cost control:** per-lobe feature bits in the pipeline key. A material with coat weight 0 compiles no coat code. Weights are uniforms.
@@ -336,7 +336,7 @@ Closures never enter the IR: the surface binding above maps the surface node ont
 
 **Tier 3 (not in this plan; for its own plan):**
 
-- **Transmission:** refraction of the scene behind through a copy of the opaque colour, rough refraction from its mip chain, Beer–Lambert absorption from `transmission_color` and `transmission_depth`, thin-walled mode. It changes the render-pass order and meets the translucency path (order-independent transparency), so it needs its own design.
+- **Transmission:** refraction of the scene behind through a copy of the opaque color, rough refraction from its mip chain, Beer–Lambert absorption from `transmission_color` and `transmission_depth`, thin-walled mode. It changes the render-pass order and meets the translucency path (order-independent transparency), so it needs its own design.
 - **Volume scatter** (`transmission_scatter`, its anisotropy) and **dispersion** (Abbe number): approximations to choose.
 - **Subsurface:** a real-time approximation (wrapped or transmitted diffuse, or screen-space), radius in scene units.
 - **glTF's** `KHR_materials_transmission`, `volume`, `dispersion` and `diffuse_transmission` follow it.
@@ -352,7 +352,7 @@ No durations (owner, 2026-11-13): order and dependencies only.
 
 - `packages/next/materialx/`: XML reader and writer, document model, `scripts/materialxDefs.mjs` and its generated table, definition resolution, flattening (steps 1–7 of section 5) with no back end.
 - The package entry and the `checkBundle` rule that `src/` never imports it.
-- **Assets through `npm run setup`** (owner, 2026-11-13): `scripts/materialxAssets.mjs`, after `scripts/stepSamples.mjs`. It fetches MaterialX's v1.39.5 source archive from GitHub, pinned by SHA-256, and keeps only what the example and tests use: the example materials, their images and `shaderball.glb`, each pinned too, in a store outside the repository (`~/.cesium-bench/materialx/1.39.5`, or `MATERIALX_ASSETS_DIR`), with MaterialX's licence and NOTICE beside them. The dev server serves it at `/materialx-assets/` (`serveDirectory` in `vite.config.ts`). Never committed, never bundled. Without it the stage falls back to a sphere and the presets list says what to run.
+- **Assets through `npm run setup`** (owner, 2026-11-13): `scripts/materialxAssets.mjs`, after `scripts/stepSamples.mjs`. It fetches MaterialX's v1.39.5 source archive from GitHub, pinned by SHA-256, and keeps only what the example and tests use: the example materials, their images and `shaderball.glb`, each pinned too, in a store outside the repository (`~/.cesium-bench/materialx/1.39.5`, or `MATERIALX_ASSETS_DIR`), with MaterialX's license and NOTICE beside them. The dev server serves it at `/materialx-assets/` (`serveDirectory` in `vite.config.ts`). Never committed, never bundled. Without it the stage falls back to a sphere and the presets list says what to run.
 - Tests: round-trip of every v1.39.5 example material (from the store; skipped with a message when setup hasn't run), flattening of marble and brick to expected slot lists, refusal messages with line and column.
 
 ### Task 2: parameter edits on presets (needs CS-63 and CS-64)
@@ -371,13 +371,13 @@ No durations (owner, 2026-11-13): order and dependencies only.
 
 ### Task 4: thumbnails and picks
 
-- Thumbnails as a cancellable `Jobs` job on Cesium IR's float64 evaluator, with the drag-time resolution drop.
+- Thumbnails as a cancelable `Jobs` job on Cesium IR's float64 evaluator, with the drag-time resolution drop.
 - Picks: the CPU attribute check, the opt-in to keep attributes if needed, the readout.
 
 ### Task 5: city and terrain
 
 - **5a.** Engine: `Tileset3D.setShader(shader, { swap: "whenReady" })`.
-- **5b.** Engine: a fragment hook on the globe surface (`Globe.setShader`), with the model contract's inputs plus `height`, `slope`, `aspect`, `water`, `latitude`, `camera_distance` and the imagery colour as named inputs. The same `camera_distance` and `latitude` go to model and tileset shaders.
+- **5b.** Engine: a fragment hook on the globe surface (`Globe.setShader`), with the model contract's inputs plus `height`, `slope`, `aspect`, `water`, `latitude`, `camera_distance` and the imagery color as named inputs. The same `camera_distance` and `latitude` go to model and tileset shaders.
 - **5c.** Engine: the water mask. Request quantized-mesh extension 2 (`extensions=octvertexnormals-watermask` in the `Accept` header, as 1.x does), decode the per-tile mask (one byte for all land or all water, or 256 × 256), upload it as a per-tile texture, sample it in the hook. In the format, 0 is land and 255 is water; the graph input reads 0 to 1.
 - **5d.** The example's city and terrain scenes: the eleven places of section 1 with their cards, camera views and graphs, the scene-control sliders, and the frame-rate check per place. Night windows and zinc roofs wait for task 6 and show a "needs task 6" badge until then. Larger than the other parts: may split into city (5d) and terrain (5e) when it starts.
 
@@ -428,7 +428,7 @@ The first visible result (presets with live parameters on the stage) is task 2, 
 
 ## Risks
 
-- **Rewire latency:** the 50–110 ms figure is per shader in the code's comment, not re-measured. Four pipelines per opaque shader made in parallel may take longer on cold drivers. Task 3 measures; the fallback is to make the colour pass's pipeline first and swap as soon as it alone is ready, with shadows following.
+- **Rewire latency:** the 50–110 ms figure is per shader in the code's comment, not re-measured. Four pipelines per opaque shader made in parallel may take longer on cold drivers. Task 3 measures; the fallback is to make the color pass's pipeline first and swap as soon as it alone is ready, with shadows following.
 - **Uniform count:** a large graph may have hundreds of slots. 16 bytes each, 100 nodes × 4 inputs is 6.4 KB, well within WebGPU's 64 KB uniform binding minimum. Past that, slots move to a storage buffer.
 - **The 4-texture limit** bites the tiled-material presets (brass, wood have several images). If it does, raising `MAX_TEXTURES` for material shaders or packing channels is a small engine task.
 - **Noise parity** between float64 JS and float32 WGSL: the integer hash is exact, but gradients and fades round differently. Thumbnails and picks may differ from the view in the last bits; tests use tolerances.

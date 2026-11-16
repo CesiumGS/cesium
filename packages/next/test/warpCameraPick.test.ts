@@ -139,7 +139,7 @@ function scene(start = 0.5): Scene {
   };
 }
 
-/** The camera `h` metres above the equator at the prime meridian, looking straight down. */
+/** The camera `h` meters above the equator at the prime meridian, looking straight down. */
 function lookDown(camera: Camera, h: number): void {
   camera.position.set([R + h, 0, 0]);
   camera.direction.set([-1, 0, 0]);

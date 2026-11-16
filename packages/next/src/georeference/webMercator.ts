@@ -1,6 +1,6 @@
 // Web Mercator (EPSG 3857, the spherical "pseudo" Mercator) on a sphere of
 // the ellipsoid's semi-major axis a: geographic (longitude and latitude in
-// degrees, height in metres) to (easting, northing, the same height),
+// degrees, height in meters) to (easting, northing, the same height),
 //   E = a λ,  N = a asinh(tan φ).
 // Closed-form Jacobian and inverse; valid for |φ| < 90°, in practice the
 // ±85.0511° the web tiles cover.
@@ -45,7 +45,7 @@ export function webMercatorDescriptor(
     },
     geographic: { in: true },
     bound(region) {
-      // Per east, north and up metre at the centre: J is diagonal, a / (the
+      // Per east, north and up meter at the center: J is diagonal, a / (the
       // distance from the axis), a / (cos φ · (M + h)) with φ the highest
       // latitude in reach, and 1.
       const c = region.center;

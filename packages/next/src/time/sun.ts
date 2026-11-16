@@ -64,7 +64,7 @@ const AU = 149_597_870_700;
 const fixedScratch = new Float64Array(9);
 
 /**
- * The sun's center from the Earth's center at a time, metres, in the
+ * The sun's center from the Earth's center at a time, meters, in the
  * celestial frame's axes (ICRF): `sunDirection`'s direction turned back by
  * `icrfToFixed(ms)ᵀ`, times the distance from the same low-precision
  * formula (R = 1.00014 - 0.01671 cos g - 0.00014 cos 2g au, g the mean

@@ -109,7 +109,7 @@ export function rigidLayers(
   // The labels: the rigid line's near its start, above it (its
   // chord is the line itself); the exact line's at 60%, under it,
   // the chord's point dropped to the ellipsoid (on the line to
-  // metres); the sag above the far-end leader.
+  // meters); the sag above the far-end leader.
   const along3 = (
     p: ArrayLike<number> | undefined,
     q: ArrayLike<number> | undefined,

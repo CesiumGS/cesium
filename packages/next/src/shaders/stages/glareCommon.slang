@@ -7,7 +7,7 @@ import glareSource;
 
 /** The image's largest value in glare's chain, pre-exposed (glare.ts `GLARE_IMAGE_CLAMP`). */
 public static const float GLARE_IMAGE_CLAMP = 10000.0;
-/** How far past the sun's disc the veil's input is masked, the view's pixels. */
+/** How far past the sun's disk the veil's input is masked, the view's pixels. */
 static const float MASK_MARGIN = 1.5;
 /** A down pass's tap, source texels from its center (glare.ts `DOWN_REACH`). */
 public static const float DOWN_REACH = 1.2083;
@@ -39,7 +39,7 @@ public float4 glareImage(float4 c) {
   return float4(clamp(finite.rgb, float3(0.0), float3(GLARE_IMAGE_CLAMP)), finite.a);
 }
 
-// The pixel at `uv` is within the sun's disc, and the margin: by the sine of its angle from
+// The pixel at `uv` is within the sun's disk, and the margin: by the sine of its angle from
 // the sun, in the view's axes. One exit: an inlined early return makes a `loop` in the WGSL.
 [ForceInline]
 public bool glareInSun(float2 uv, GlareUniforms u, GlareSource sun, GlareSource head) {

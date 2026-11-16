@@ -8,10 +8,10 @@
 //  - per route (anchor): the compiled program, shared by every route of its
 //    shape, and a block of uniform rows (`RouteUniforms`: the affine 3×3s and
 //    the parameter values, rewritten when a slider moves and nothing else);
-//  - per draw: its centre in model space, its model-to-anchor linear part and
-//    the route's value at its centre in hi and lo (`DrawCentre`). The CPU
+//  - per draw: its center in model space, its model-to-anchor linear part and
+//    the route's value at its center in hi and lo (`DrawCenter`). The CPU
 //    makes it in float64, once per draw while the route's matrices and
-//    centre-dependent parameters stay as they are. When they change (a
+//    center-dependent parameters stay as they are. When they change (a
 //    parameter that is not a uniform, a time-varying place), a df64 compute
 //    pass in the frame's cull pass makes them for the draws the views show
 //    (`World.addFrameCompute`), the others when they come into view; a route
@@ -48,7 +48,7 @@ import {
   ROUTE_OWN_ROWS,
   ROUTE_POINTER_ROWS,
   routeBlockRows,
-  routeCentreRow,
+  routeCenterRow,
   routeVariantOf,
   type RouteVariant,
 } from "../routeVariant.ts";
@@ -62,7 +62,7 @@ import { affinePart } from "../warpFit.ts";
 import type { World } from "../World.ts";
 import { setDrawRoute } from "./draws.ts";
 import { setPlacement } from "./placements.ts";
-import { bridgeRoute, normalise, type BridgedRoute } from "./routeBridge.ts";
+import { bridgeRoute, normalize, type BridgedRoute } from "./routeBridge.ts";
 import type { DrawHandle } from "./types.ts";
 
 /** The pipelines a routed draw needs before it is shown: the opaque pass's and the depth prepass's, one- and double-sided. */
@@ -85,7 +85,7 @@ export interface ViewCamera {
 /**
  * What a routed anchor holds of one view: its route to the view's root, as
  * the compiled program reads it. Views of one anchor share the program and
- * the draws' records (the route's value at each draw's centre), and differ
+ * the draws' records (the route's value at each draw's center), and differ
  * in what is a uniform: the matrices after the last warp (a root) and the
  * values of parameters that are uniforms (a slider set per view).
  */
@@ -111,7 +111,7 @@ export interface RoutedView {
  * One routed anchor: the compiled route and the data its draws read. The
  * fields of the route's first view (`primaryView`) are the anchor's own;
  * `others` are the views whose route has the same shape and the same
- * data in a draw's record (`centreSignature`), with uniforms of their own.
+ * data in a draw's record (`centerSignature`), with uniforms of their own.
  */
 export interface RoutedAnchor {
   /** Names this route's shape and data: a draw requested for another is requested again. */
@@ -130,7 +130,7 @@ export interface RoutedAnchor {
   readonly uniforms: Float32Array;
   /** The parameter values the uniforms and the draws' records were made at. */
   values: ParamRecord;
-  /** Goes up when what a draw's record depends on changed: the route's matrices, or a centre-dependent parameter. */
+  /** Goes up when what a draw's record depends on changed: the route's matrices, or a center-dependent parameter. */
   version: number;
   /** Goes up when a draw's culling sphere changes with the route: `version`, or a parameter without a range. */
   sphereVersion: number;
@@ -177,7 +177,7 @@ export class WorldRoutes {
   readonly #queue = new Set<number>();
   readonly #said = new Set<string>();
   #nextId = 1;
-  #gpu: GpuCentres | undefined;
+  #gpu: GpuCenters | undefined;
 
   constructor(private readonly world: World) {}
 
@@ -218,7 +218,7 @@ export class WorldRoutes {
    * anchor by routes of one shape (`WorldVariants` groups them; a route of
    * another shape has an anchor key and draws of its own), the first one the
    * route is made from: a later view whose route has the same shape and the
-   * same data in a draw's record (`centreSignature`) is drawn by the same
+   * same data in a draw's record (`centerSignature`) is drawn by the same
    * program with uniforms of its own (its root, a parameter set for it), and
    * one that doesn't is reported once and drawn as the first is. Returns the
    * route, or undefined when it can't be compiled (`refusal` says why; said
@@ -470,7 +470,7 @@ export class WorldRoutes {
     }
     const compiled = compileRoute(bridged.route, {
       normals: "auto",
-      centreRows: true,
+      centerRows: true,
     });
     if (!compiled.ok) {
       return { reason: compiled.reason, say: true };
@@ -519,14 +519,14 @@ export class WorldRoutes {
     }
     const values = anchor.compiled.paramValues(anchor.bridged.route);
     const ranges = rangesOf(camera, anchor.compiled);
-    const centred = new Set(anchor.compiled.dynamicParams);
+    const centered = new Set(anchor.compiled.dynamicParams);
     let record = matrices;
     let sphere = matrices || !sameRanges(ranges, anchor.ranges);
     for (const key of Object.keys(values)) {
       if (values[key] === anchor.values[key]) {
         continue;
       }
-      record ||= centred.has(key);
+      record ||= centered.has(key);
       sphere ||= !(key in ranges);
     }
     anchor.values = values;
@@ -564,7 +564,7 @@ export class WorldRoutes {
         this.#dropView(anchor, id);
       }
     }
-    const primary = centreSignature(anchor.bridged, anchor.compiled);
+    const primary = centerSignature(anchor.bridged, anchor.compiled);
     for (const { id, camera } of views) {
       const held = anchor.others.get(id);
       if (held?.bridged.matches(camera)) {
@@ -604,12 +604,12 @@ export class WorldRoutes {
     }
     const compiled = compileRoute(bridged.route, {
       normals: "auto",
-      centreRows: true,
+      centerRows: true,
     });
     if (!compiled.ok || compiled.key !== anchor.compiled.key) {
       return "differs in structure";
     }
-    if (centreSignature(bridged, compiled) !== primary) {
+    if (centerSignature(bridged, compiled) !== primary) {
       return "differs in what a draw's record is made from (a matrix before the last warp, or a parameter that isn't a uniform)";
     }
     const table = this.world.raster.placementTable;
@@ -639,7 +639,7 @@ export class WorldRoutes {
     if (!matrices && !params) {
       return;
     }
-    if (centreSignature(view.bridged, anchor.compiled) !== primary) {
+    if (centerSignature(view.bridged, anchor.compiled) !== primary) {
       // Its record would no longer be right for it: it is dropped (and made
       // again, or said, by the next frame's `#syncViews`).
       this.#dropView(anchor, view.id);
@@ -709,9 +709,9 @@ export class WorldRoutes {
     for (const d of this.#draws.values()) {
       count += d.anchor === anchor && d.at >= 0 ? 1 : 0;
     }
-    if (anchor.compiled.centreConstantsWgsl && count >= GPU_MIN_DRAWS) {
+    if (anchor.compiled.centerConstantsWgsl && count >= GPU_MIN_DRAWS) {
       if (!this.#gpu) {
-        this.#gpu = new GpuCentres(this.world);
+        this.#gpu = new GpuCenters(this.world);
         this.world.addFrameCompute((pass) => this.#encode(pass));
       }
       anchor.gpuStale = true;
@@ -725,7 +725,7 @@ export class WorldRoutes {
     }
   }
 
-  /** Writes the draw's block, its centre constants and sphere, and gives it its route's pipelines. */
+  /** Writes the draw's block, its center constants and sphere, and gives it its route's pipelines. */
   #place(d: RoutedDraw): void {
     const { world } = this;
     const handle = handleOf(d);
@@ -758,11 +758,11 @@ export class WorldRoutes {
         f32[body + 4 + 4 * c + r] = m[4 * c + r]!;
       }
     }
-    // The route's value at the draw's centre, in float64.
+    // The route's value at the draw's center, in float64.
     const at = new Float64Array(3);
     transformPoint(m, d.center, at);
     const start = (ROUTE_BODY + ROUTE_OWN_ROWS) * 4;
-    compiled.centreConstants(
+    compiled.centerConstants(
       at,
       anchor.values,
       anchor.bridged.route,
@@ -806,19 +806,19 @@ export class WorldRoutes {
       }
       views.push(view);
     }
-    const centre = new Float64Array(3);
-    transformPoint(m, d.center, centre);
-    // The ball's centre and its six axis points, carried through the route's maps (at the ends of the scale's range): an estimate from samples, as selection's drawn volumes are.
+    const center = new Float64Array(3);
+    transformPoint(m, d.center, center);
+    // The ball's center and its six axis points, carried through the route's maps (at the ends of the scale's range): an estimate from samples, as selection's drawn volumes are.
     const r = d.radius * scale;
-    const points = [centre[0]!, centre[1]!, centre[2]!];
+    const points = [center[0]!, center[1]!, center[2]!];
     for (let a = 0; a < 3; a++) {
       for (const s of [-1, 1]) {
-        const p = [centre[0]!, centre[1]!, centre[2]!];
+        const p = [center[0]!, center[1]!, center[2]!];
         p[a] = p[a]! + s * r;
         points.push(p[0]!, p[1]!, p[2]!);
       }
     }
-    // Each view's image, as a ball in model space: its centre's offset from the draw's own, and its radius.
+    // Each view's image, as a ball in model space: its center's offset from the draw's own, and its radius.
     const balls: Array<{ shift: Float64Array; radius: number }> = [];
     for (const view of views) {
       let ball: { center: Float64Array; radius: number } | undefined;
@@ -827,9 +827,9 @@ export class WorldRoutes {
       } catch {
         ball = undefined;
       }
-      // Where the transform alone puts the centre, and the drawn centre's offset from it, in model space.
+      // Where the transform alone puts the center, and the drawn center's offset from it, in model space.
       const placed = new Float64Array(3);
-      transformPoint(view.affine, centre, placed);
+      transformPoint(view.affine, center, placed);
       const shift = ball
         ? solve3(
             multiply3(view.affine, m),
@@ -848,7 +848,7 @@ export class WorldRoutes {
     }
     const index = d.index;
     if (balls.length === 0) {
-      // Undefined somewhere in a ball (a height at the body's centre): no sphere that holds, so none culls it.
+      // Undefined somewhere in a ball (a height at the body's center): no sphere that holds, so none culls it.
       world.raster.drawConstants.setBounds(index, d.center, 3e38);
       world.raster.uploadsPending = true;
       return;
@@ -975,11 +975,11 @@ export class WorldRoutes {
 }
 
 /**
- * The df64 compute pass that remakes records (`CompiledRoute.centreConstantsWgsl`):
+ * The df64 compute pass that remakes records (`CompiledRoute.centerConstantsWgsl`):
  * one pipeline for each route key, buffers made for a dispatch and freed when
  * the queue has run it (a pass is rare: a parameter or a place that changed).
  */
-class GpuCentres {
+class GpuCenters {
   readonly #pipelines = new Map<string, GPUComputePipeline>();
   readonly #making = new Set<string>();
   #layout: GPUBindGroupLayout | undefined;
@@ -996,7 +996,7 @@ class GpuCentres {
     const compiled = anchor.compiled;
     const compute = GPUShaderStage.COMPUTE;
     const layout = (this.#layout ??= device.createBindGroupLayout({
-      label: "route.centres",
+      label: "route.centers",
       entries: [
         { binding: 0, visibility: compute, buffer: { type: "uniform" } },
         {
@@ -1017,7 +1017,7 @@ class GpuCentres {
       this.#make(anchor, layout);
       return false;
     }
-    const centres = draws.map((d) => {
+    const centers = draws.map((d) => {
       const at = new Float64Array(3);
       transformPoint(d.matrix, d.center, at);
       return at;
@@ -1025,7 +1025,7 @@ class GpuCentres {
     const buffers = [
       this.#upload(
         "uniforms",
-        compiled.centreUniforms(
+        compiled.centerUniforms(
           anchor.bridged.route,
           draws.length,
           anchor.values,
@@ -1033,18 +1033,18 @@ class GpuCentres {
         GPUBufferUsage.UNIFORM,
       ),
       this.#upload(
-        "centres",
-        compiled.packCentres(centres),
+        "centers",
+        compiled.packCenters(centers),
         GPUBufferUsage.STORAGE,
       ),
       this.#upload(
         "rows",
-        Uint32Array.from(draws, (d) => routeCentreRow(d.at) * 4),
+        Uint32Array.from(draws, (d) => routeCenterRow(d.at) * 4),
         GPUBufferUsage.STORAGE,
       ),
     ];
     const group = this.world.raster.placementTable.computeGroup(
-      "route.centres",
+      "route.centers",
       layout,
       2,
       [
@@ -1076,7 +1076,7 @@ class GpuCentres {
       return;
     }
     this.#making.add(key);
-    const label = `route.centres ${anchor.variant.label}`;
+    const label = `route.centers ${anchor.variant.label}`;
     device
       .createComputePipelineAsync({
         label,
@@ -1084,9 +1084,9 @@ class GpuCentres {
         compute: {
           module: device.createShaderModule({
             label,
-            code: anchor.compiled.centreConstantsWgsl!,
+            code: anchor.compiled.centerConstantsWgsl!,
           }),
-          entryPoint: "centreConstants",
+          entryPoint: "centerConstants",
         },
       })
       .then(
@@ -1105,7 +1105,7 @@ class GpuCentres {
   ): GPUBuffer {
     const { device } = this.world.ctx;
     const buffer = device.createBuffer({
-      label: `route.centres.${label}`,
+      label: `route.centers.${label}`,
       size: Math.max(16, Math.ceil(data.byteLength / 4) * 4),
       usage: usage | GPUBufferUsage.COPY_DST,
     });
@@ -1118,9 +1118,9 @@ function handleOf(d: RoutedDraw): DrawHandle {
   return { index: d.index, generation: d.generation, name: undefined };
 }
 
-/** What a camera route's compiled form depends on in its shape: its steps' kinds (rigid steps at each end and between warps, as `normalise` has them) and its warps' functions. */
+/** What a camera route's compiled form depends on in its shape: its steps' kinds (rigid steps at each end and between warps, as `normalize` has them) and its warps' functions. */
 function shapeOf(camera: CameraRoute): string {
-  return normalise(camera.steps)
+  return normalize(camera.steps)
     .map((s) =>
       s.kind === "rigid"
         ? "r"
@@ -1130,13 +1130,13 @@ function shapeOf(camera: CameraRoute): string {
 }
 
 /**
- * What a draw's record (its centre constants) is made from, which views of
+ * What a draw's record (its center constants) is made from, which views of
  * one route must share: the rigid matrices before the last warp, and the
  * values of the parameters that aren't uniforms. What differs per view
  * without it is a uniform: the matrices after the last warp (a root) and
  * the values of the parameters that are.
  */
-function centreSignature(
+function centerSignature(
   bridged: BridgedRoute,
   compiled: CompiledRoute,
 ): string {
@@ -1147,7 +1147,7 @@ function centreSignature(
   ]);
 }
 
-/** The smallest ball holding both: centres as offsets in model space. */
+/** The smallest ball holding both: centers as offsets in model space. */
 function mergeBalls(
   a: { shift: Float64Array; radius: number },
   b: { shift: Float64Array; radius: number },

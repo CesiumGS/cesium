@@ -106,7 +106,7 @@ Read on 2026-11-13. Many doc pages carry no date: they're marked "undated". Wher
   - `Jobs.submit(JobSpec)` runs a job on a worker. A job has a `priority` (a number or a function read each time the queue is ordered), `after` (dependencies), a `signal`, and an `apply` step for the main thread.
   - `Jobs.slice(SliceSpec)` runs a progressive job on the main thread: `step(budgetMs) → { partial?, done }`, with `onPartial`, `priority`, `signal` and `cancel`.
   - `Jobs.apply(budgetMs)` is the engine loop's apply phase. It runs arrived results' apply steps, then shares what is left of the budget among the slices.
-  - A `Job` is in one `JobState`: `waiting`, `queued`, `running`, `done` (arrived, waiting for the apply phase), `applied`, `cancelled` or `failed`. `Job.cancel()` or the signal's abort cancels it wherever it is.
+  - A `Job` is in one `JobState`: `waiting`, `queued`, `running`, `done` (arrived, waiting for the apply phase), `applied`, `canceled` or `failed`. `Job.cancel()` or the signal's abort cancels it wherever it is.
   - `JobStats` (in `FrameStats.jobs`) counts `queued`, `running`, `waiting` and `slicing`. `onReady` wakes the engine when results arrive. `Jobs.waiting > 0` keeps the loop ticking (the `jobs` reason).
   - Nothing reports progress or refinement yet. CS-90 says the occluder walk will report as a refinement source; [job-system.md](../../design/job-system.md)'s inspector section lists progressive jobs "with their progress, the same items the refinement API reports".
 - **Two ways the loop stays awake:**
@@ -136,7 +136,7 @@ type RefinementKind =
   | "tessellation" // patch draws not yet diced; vectors and splats being built
   | "fits" // warp fits pending
   | "clamping" // heights not yet applied to clamped content
-  | "transitions" // geomorph in and out, imagery fades, 3D Tiles dithers, view transitions (exposure, colour)
+  | "transitions" // geomorph in and out, imagery fades, 3D Tiles dithers, view transitions (exposure, color)
   | "occlusion" // occlusion feedback reaching its fixed point
   | "adaptation" // exposure adapting to the metered image
   | "accumulation" // TAA history, still-frame supersampling, a path tracer's samples
@@ -266,14 +266,14 @@ interface JobRefinement {
 | `applied`, or a slice whose `step` returned `done` | done |
 | a slice still taking slices (`JobStats.slicing`) | pending, with `progress()` as its estimate |
 | `failed` | failed: it stops counting as pending |
-| `cancelled` | neither: it leaves the counts, and isn't a failure |
+| `canceled` | neither: it leaves the counts, and isn't a failure |
 
 **What it wants:** a slice wants ticks, because it needs the apply phase each tick. A worker job waits for events: `Jobs.onReady` wakes the loop when its result arrives, and the apply backlog then ticks the loop as it does today.
 
 **Cancellation is a job cancellation.** The refinement API never cancels anything.
 
 - When the camera changes, the view starts a new epoch. A workload whose inputs changed aborts its job's `signal` (or calls `Job.cancel()`), as CS-87 does for a deselected tile and the occluder walk does when the camera moves. Then it submits a new job, which counts from zero in the new epoch.
-- `JobStats.cancelledTotal` counts these. The refinement entry doesn't count them as failed.
+- `JobStats.canceledTotal` counts these. The refinement entry doesn't count them as failed.
 
 **One owner per item, never counted twice.** Either the owner counts an item itself, or the owner's jobs declare `refinement`.
 
@@ -530,7 +530,7 @@ One page, "Loading is refinement":
 - **Requests that never answer:** fetches have no timeout yet (follow-up 7, closed by project CS-16). Until they do, `stalledMs` shows them and `timeoutMs` ends the wait.
 - **Memory pressure:** `Budgeted`'s memory-adjusted SSE counts as streaming until it stops moving. If the cache can't hold the view at the target SSE, the view converges at the adjusted SSE, and `detail.sseLimited` says so.
 - **Jobs:**
-  - A job cancelled because its inputs changed (`signal` aborted, or `Job.cancel()`) leaves the counts without failing. Its replacement counts in the new epoch.
+  - A job canceled because its inputs changed (`signal` aborted, or `Job.cancel()`) leaves the counts without failing. Its replacement counts in the new epoch.
   - A slice's partial result (`onPartial`) counts as progress.
   - A job with effect "cost" never blocks.
   - A job that waits on `after` counts as pending from submission. A dependency's cancellation cancels it, and its failure fails it, as the Jobs API already does.
@@ -545,13 +545,13 @@ Sized for one agent each; the overall plan lists them in project CS-15. Per the 
 
 | # | Milestone | Files | Done when |
 | --- | --- | --- | --- |
-| CS-134 | **Source registry and snapshot, no behaviour change.** Types, the writer, the pooled snapshot; adapters for tilesets (streaming, transitions), imagery, clamping, warp fits, the world's stand-ins (compiles, textures, tessellation), exposure adaptation and occlusion feedback. `Jobs` registers as a source; it reports nothing until a job declares `refinement`. | new `src/scene/refinement.ts`; `Tileset3D.ts`, `GlobeImagery.ts`, `HeightClamping.ts`, `world/warps.ts`, `World.ts`, `occlusionFeedback.ts`, `io/Jobs.ts`, the exposure code in `Engine.ts` | A test-only check holds on the fake-device scenarios (`onDemandIdle`, `geomorph`, `casterLoop`, `frameLoopSleep`): `needsTicks()` agrees with "a change, a request, or an entry that wants ticks", the `jobs` reason included. Per-view streaming counts are tested with two views. A tile stays pending until its decode job's `apply` step runs. |
+| CS-134 | **Source registry and snapshot, no behavior change.** Types, the writer, the pooled snapshot; adapters for tilesets (streaming, transitions), imagery, clamping, warp fits, the world's stand-ins (compiles, textures, tessellation), exposure adaptation and occlusion feedback. `Jobs` registers as a source; it reports nothing until a job declares `refinement`. | new `src/scene/refinement.ts`; `Tileset3D.ts`, `GlobeImagery.ts`, `HeightClamping.ts`, `world/warps.ts`, `World.ts`, `occlusionFeedback.ts`, `io/Jobs.ts`, the exposure code in `Engine.ts` | A test-only check holds on the fake-device scenarios (`onDemandIdle`, `geomorph`, `casterLoop`, `frameLoopSleep`): `needsTicks()` agrees with "a change, a request, or an entry that wants ticks", the `jobs` reason included. Per-view streaming counts are tested with two views. A tile stays pending until its decode job's `apply` step runs. |
 | CS-135 | **Public reads.** `view.refinement`, `engine.refinement`, `onRefinement`, `stats.loop`. | `View.ts`, `Engine.ts`, `index.ts`, `api/` | The API reference test passes; the levels are tested on a fake scene (drawn, then correct after a compile, then converged after streaming). |
 | CS-136 | **`converged()`.** Levels, include and exclude, `draws`, `within`, `timeoutMs`, `signal`, the GPU-done step, evaluation in `renderFrame`. `whenReady` removed, its tests ported. | new `src/scene/converged.ts`; `engineReady.ts` removed; `test/engineReady.test.ts` → `converged.test.ts` | Tests: resolves only after a frame showing the state; already converged resolves on the next tick; timeout reports `pending` and `changing`; abort rejects; `within` cuts; failures counted. |
 | CS-137 | **`freeze`.** A per-view selection hold for the length of a wait. | `Tileset3D.ts` (`freezeSelection` per view), `converged.ts` | A test: after the deadline nothing new is selected, transitions finish, the hold is released when the promise settles. |
 | CS-138 | **The loop switch.** `needsTicks` from the registry; `wake(kind)` through the callers; `FrameStats.why` in place of `tickReasons` and `TICK_REASONS`; warp fits recorded as `fits`. | `Engine.ts`, the `wake` callers (`engineContent.ts`, `ShaderBindings.ts`, `world/caps.ts`, `HeightClamping.ts`, `routes.ts`, `bundles.ts`, `DrawSink.ts`…), `widgets/recorder.ts`, `recorderRows.ts`, `bench/suite` readers | CS-134's check is removed because it's now true by construction. The power tests pass unchanged on `stats.loop`. Unattributed wakes are zero in the fake-device scenarios. |
 | CS-139 | **Inspector.** The chip, the fixed-slot refinement table, converge times per epoch, the busy-loop and stall flags, the pending series. | `widgets/inspector.ts`, `widgets/engine.ts`, `widgets/inspectable.ts` | The DOM-skeleton test holds (layout fixed across states). The owner reviews it by clicking around, per the UI quality bar. |
-| CS-140 | **Holds and the jobs hook.** `engine.refinement.hold()` and its handle, as commands. `JobSpec.refinement` and `SliceSpec.refinement`, counted by `Jobs.report`. Each JP item (CS-88 to CS-92, compositing) declares its `refinement` when it lands under project CS-12, not here. | `refinement.ts`, `Engine.ts`, `io/Jobs.ts`, `test/jobs.test.ts` | Tests: a hold blocks, shows progress, wakes the loop, and its release resolves a waiter. On the fake port: waiting, queued, running and arrived jobs count as pending; applied counts as done; a cancelled job leaves the counts without failing; a failed one counts as failed; `effect` and `views` are read at report time; a slice's `progress` is its estimate. |
+| CS-140 | **Holds and the jobs hook.** `engine.refinement.hold()` and its handle, as commands. `JobSpec.refinement` and `SliceSpec.refinement`, counted by `Jobs.report`. Each JP item (CS-88 to CS-92, compositing) declares its `refinement` when it lands under project CS-12, not here. | `refinement.ts`, `Engine.ts`, `io/Jobs.ts`, `test/jobs.test.ts` | Tests: a hold blocks, shows progress, wakes the loop, and its release resolves a waiter. On the fake port: waiting, queued, running and arrived jobs count as pending; applied counts as done; a canceled job leaves the counts without failing; a failed one counts as failed; `effect` and `views` are read at report time; a slice's `progress` is its estimate. |
 | CS-141 | **The examples' indicator.** `widgets/refinementIndicator.ts`; the transform-graph and vertical-exaggeration scenes move to it. | `widgets/`, `examples/transform-graph`, `examples/vertical-exaggeration` | The indicator never changes size; the hysteresis is tested; coordinated with `dev/analytic-warps`. |
 | CS-142 | **Migrate the waits** in section 7's table, one area per commit: bench, parity, scripts, examples, widgets, then spikes as they're touched. | as listed | Each page's settle code is gone; bench results record the new `settleMs` meaning in their schema (`bench/suite/schema.ts`). |
 | CS-143 | **Handbook page.** | `handbook/` | Reviewed by the owner. |

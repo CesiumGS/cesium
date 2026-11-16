@@ -21,7 +21,7 @@ const STATE_LABEL: Record<GoalState, string> = {
   idea: "An idea",
 };
 
-/** Each state's colours, shared with the 1.x comparison's badges. */
+/** Each state's colors, shared with the 1.x comparison's badges. */
 const STATE_CLASS: Record<GoalState, string> = {
   measured: "api-same",
   built: "api-renamed",
@@ -93,7 +93,7 @@ const goals = (): readonly Goal[] => [
       <>
         Each tick, 1.x's primitives rebuild a command list and set uniforms per
         draw. WebGL 2 has no compute or render bundles, so that follows the API
-        it was built on. On a matched flat-coloured workload of 5,000 draws, it
+        it was built on. On a matched flat-colored workload of 5,000 draws, it
         measured 21.4 ms of CPU and 30,140 API calls per tick. One hypothesis
         wasn't shown: log depth made no difference there, because that workload
         is limited by CPU, not fill.
@@ -150,7 +150,7 @@ const goals = (): readonly Goal[] => [
     id: "visual",
     title: "Visual quality",
     sentence:
-      "Physically based, in linear colour, with exact translucency available and a sky built from the atmosphere. It may differ from 1.x on purpose.",
+      "Physically based, in linear color, with exact translucency available and a sky built from the atmosphere. It may differ from 1.x on purpose.",
     state: "partly",
     oneX: (
       <>
@@ -171,7 +171,7 @@ const goals = (): readonly Goal[] => [
       ],
       [
         "target",
-        "Which looks better is a judgement so far. No study has compared how the two look.",
+        "Which looks better is a judgment so far. No study has compared how the two look.",
       ],
     ],
     tab: "shading",
@@ -330,7 +330,7 @@ const goals = (): readonly Goal[] => [
     title: "Open standards",
     sentence: (
       <>
-        3D Tiles and glTF at the centre, with proposed extensions offered back
+        3D Tiles and glTF at the center, with proposed extensions offered back
         to the community in the open: see <a href="#/specs">Spec extensions</a>.
       </>
     ),

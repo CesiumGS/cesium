@@ -88,7 +88,7 @@ export function orionLegend(
       : (statement.warnings[0] ?? "a term has no size");
     return {
       accuracy: `not bounded: ${why}`,
-      detail: `At ${when}, against the Earth's centre: not bounded, ${why}. ${drawn}`,
+      detail: `At ${when}, against the Earth's center: not bounded, ${why}. ${drawn}`,
       ...extra,
       caution: false,
       unbounded: true,
@@ -108,7 +108,7 @@ export function orionLegend(
     accuracy: lead
       ? `${total}, ${TERM_SHORT[lead.source] ?? lead.source}`
       : total,
-    detail: `At ${when}, against the Earth's centre${lead ? `: mostly ${TERM_NAME[lead.source] ?? lead.source}` : ""}. ${drawn}`,
+    detail: `At ${when}, against the Earth's center${lead ? `: mostly ${TERM_NAME[lead.source] ?? lead.source}` : ""}. ${drawn}`,
     ...extra,
     caution: statement.terms.some((t) => t.source === "coordinateScale"),
     unbounded: false,

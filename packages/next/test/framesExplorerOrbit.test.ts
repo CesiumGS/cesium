@@ -79,7 +79,7 @@ describe("which views orbit (the owner: stuck out in space)", () => {
   });
 
   it("keeps the globe controls for Earth-surface frames and the opening view", () => {
-    // ICRF and HCRS show the opening shot: their origins (the barycentre,
+    // ICRF and HCRS show the opening shot: their origins (the barycenter,
     // the Sun) aren't on the scene.
     // The Earth's own frames show the opening shot too, with the ground a
     // zoom away.
@@ -323,7 +323,7 @@ describe("stop 6 from straight above the site", () => {
     }
   });
 
-  it("is a backdrop distance: thousands of kilometres, not the 100 m that put the triad 400 km off", () => {
+  it("is a backdrop distance: thousands of kilometers, not the 100 m that put the triad 400 km off", () => {
     expect(lunarSiteRange(fov, 1)).toBeGreaterThan(1.5e6);
   });
 });

@@ -1,7 +1,7 @@
 // The corridor unroll on the GPU path: the restricted-JS source the route
 // compiler reads, against the float64 map the CPU runs, over a long
 // alignment (the Täsch to Zermatt road's 39 lines, and a mixed one of lines
-// and arcs), at stations across every join and offsets out to kilometres.
+// and arcs), at stations across every join and offsets out to kilometers.
 // The compiled route is exact closed-form code, never a fit: this pins its
 // map, its Jacobian and its size.
 import { describe, expect, it } from "vitest";
@@ -22,7 +22,7 @@ import {
 } from "../src/transforms/index.ts";
 import { defaultParams } from "../src/transforms/descriptor.ts";
 
-/** The road in plan metres about its middle (an equirectangular scale is enough for a shape). */
+/** The road in plan meters about its middle (an equirectangular scale is enough for a shape). */
 const road = ROAD.map(
   ([lon, lat]) => [(lon - 7.765) * 77_000, (lat - 46.045) * 111_000] as const,
 );
@@ -110,7 +110,7 @@ describe("corridorUnroll's compiled source", () => {
           );
         }
       }
-      // The same arithmetic in two places: float64 rounding of kilometres.
+      // The same arithmetic in two places: float64 rounding of kilometers.
       expect(worst).toBeLessThan(1e-8);
     });
 
@@ -138,17 +138,17 @@ describe("corridorUnroll's compiled source", () => {
       expect(worst).toBeLessThan(1e-9);
     });
 
-    it(`${name}: a float32 evaluation about the draw's own centre keeps millimetres at kilometre offsets`, () => {
-      // The compiled route works on the change from a draw's centre, so what
+    it(`${name}: a float32 evaluation about the draw's own center keeps millimeters at kilometer offsets`, () => {
+      // The compiled route works on the change from a draw's center, so what
       // float32 has to hold is the offset from it, not the plan coordinate.
       const out = new Float64Array(3);
-      const centre = new Float64Array(3);
+      const center = new Float64Array(3);
       const f32 = Math.fround;
       let worst = 0;
       for (let i = 0; i < stations.length; i += 7) {
         for (const o of offsets) {
           const c = [stations[i]!, o, 0];
-          descriptor.forward(c, params, centre);
+          descriptor.forward(c, params, center);
           for (const [ds, dOff] of [
             [3, 0.5],
             [-8, -2],
@@ -158,11 +158,11 @@ describe("corridorUnroll's compiled source", () => {
             const p = [c[0]! + ds, c[1]! + dOff, 0];
             descriptor.forward(p, params, out);
             // The change in the output, float64, then through float32 as the residual pass stores it.
-            const exact = [out[0]! - centre[0]!, out[1]! - centre[1]!];
+            const exact = [out[0]! - center[0]!, out[1]! - center[1]!];
             const q = evaluate(program, p, params);
             const viaSource = [
-              f32(q[0]! - centre[0]!),
-              f32(q[1]! - centre[1]!),
+              f32(q[0]! - center[0]!),
+              f32(q[1]! - center[1]!),
             ];
             worst = Math.max(
               worst,

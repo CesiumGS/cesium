@@ -70,7 +70,7 @@ const offsetsCase = stressCase(
 const leapCase = stressCase(
   "time-scales.gps-utc-leap",
   "time-scales",
-  "Across 2016-12-31T23:59:60 UTC (IERS Bulletin C 52): GPS − UTC steps from 17 s to 18 s, and GPS time (TAI − 19 s) stays continuous, advancing 2 s over the one labelled UTC second",
+  "Across 2016-12-31T23:59:60 UTC (IERS Bulletin C 52): GPS − UTC steps from 17 s to 18 s, and GPS time (TAI − 19 s) stays continuous, advancing 2 s over the one labeled UTC second",
   ["frames"],
   async (ctx, base) => {
     const bulletin = cited<{ before: string; after: string }>(
@@ -117,7 +117,7 @@ const leapCase = stressCase(
         id: `${base.id}.continuous`,
         source: citation("iers-bulletin-c-52"),
         title:
-          "GPS time through the leap second in 0.5 s UTC labels advances in 0.5 s steps, 2 s over the one labelled second from 23:59:59 to 00:00:00",
+          "GPS time through the leap second in 0.5 s UTC labels advances in 0.5 s steps, 2 s over the one labeled second from 23:59:59 to 00:00:00",
         pass: Math.abs(g[4]! - g[0]! - 2) <= TT_STEP,
         value: steps,
         tolerance: TT_STEP,

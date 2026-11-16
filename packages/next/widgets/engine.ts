@@ -380,7 +380,7 @@ export function engineSnapshot(
         max: widest.stats.maxInFlight,
         adaptive: widest.stats.adaptive,
         ...(widest.stats.protocol ? { protocol: widest.stats.protocol } : {}),
-        cancelled: sum((t) => t.stats.cancelled),
+        canceled: sum((t) => t.stats.canceled),
         uploadQueue: sum((t) => t.stats.uploadQueue),
       },
       cache: {
@@ -408,7 +408,7 @@ export function engineSnapshot(
           bytes: sum((t) => t.stats.purposes[p].bytes),
           drawn: sum((t) => t.stats.purposes[p].drawn),
           unused: sum((t) => t.stats.purposes[p].unused),
-          cancelled: sum((t) => t.stats.purposes[p].cancelled),
+          canceled: sum((t) => t.stats.purposes[p].canceled),
         }))
         .filter((p, i) => p.requests > 0 || i < 4) // samples when any
         .concat(
@@ -420,7 +420,7 @@ export function engineSnapshot(
                   bytes: sum((t) => t.imagery?.stats.bytes ?? 0),
                   drawn: sum((t) => t.imagery?.stats.drawn ?? 0),
                   unused: 0,
-                  cancelled: sum((t) => t.imagery?.stats.cancelled ?? 0),
+                  canceled: sum((t) => t.imagery?.stats.canceled ?? 0),
                 },
               ]
             : [],

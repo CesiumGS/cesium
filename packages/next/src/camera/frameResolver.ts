@@ -2,7 +2,7 @@
 // names reference frames only through these; the frames module implements
 // them over its catalog, and the core's own resolver over its transform
 // table. Plan 5a's call 14: `FrameUnavailableError` lives here, so the camera
-// layer recognises "not ready" from any resolver.
+// layer recognizes "not ready" from any resolver.
 import type { AnchorHandle } from "../scene/world/types.ts";
 import type { ViewId } from "../transform/graph.ts";
 import type { Route } from "./route.ts";
@@ -69,7 +69,7 @@ export interface FrameMotion {
 export interface FrameResolver {
   /**
    * `frame`'s place in `base` at scene `seconds` (UTC seconds since 1970):
-   * `out` such that p_base = out · p_frame, column-major float64, metres.
+   * `out` such that p_base = out · p_frame, column-major float64, meters.
    * Throws `FrameUnavailableError` when it can't answer yet, and
    * `NonRigidRouteError` when the route crosses a warp (a non-rigid edge
    * has no 4×4; ask `route`).
@@ -115,7 +115,7 @@ export interface FrameResolver {
     out: FrameMotion,
   ): FrameMotion;
   /**
-   * How accurately a point in `frame` (metres, in its axes) is placed in
+   * How accurately a point in `frame` (meters, in its axes) is placed in
    * `base` at `seconds`, 1σ: `meters` is `undefined` when the route states
    * none, and `note` says why or from what. Without it a route is taken as
    * exact: "the transform table states no error". Across a warp, the warp's

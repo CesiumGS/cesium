@@ -16,7 +16,7 @@ export type JobState =
   | "done"
   /** Applied (or, without an apply step, arrived): its promise resolved. */
   | "applied"
-  | "cancelled"
+  | "canceled"
   | "failed";
 
 /**
@@ -46,7 +46,7 @@ export interface JobSpec<R = unknown, A = R> {
   signal?: AbortSignal;
   /**
    * Jobs this one runs after: it is posted once they all applied, and is
-   * cancelled (or fails) when one of them is.
+   * canceled (or fails) when one of them is.
    */
   after?: readonly Job[];
   /**
@@ -70,12 +70,12 @@ export interface Job<A = unknown> {
   readonly id: number;
   readonly type: string;
   readonly state: JobState;
-  /** Resolves with the apply step's value; rejects with an AbortError when cancelled. */
+  /** Resolves with the apply step's value; rejects with an AbortError when canceled. */
   readonly promise: Promise<A>;
   /**
    * Cancels it: a queued job never runs, a running one is told to stop
    * (its fetches abort), an arrived result is discarded, and the jobs that
-   * run after it are cancelled too. Nothing once applied.
+   * run after it are canceled too. Nothing once applied.
    */
   cancel(): void;
 }
@@ -101,7 +101,7 @@ export interface SliceSpec<P> {
   priority?: number | (() => number);
   /** Aborting it cancels the walk (its inputs changed: start a new one). */
   signal?: AbortSignal;
-  /** Called once when it is cancelled: release the walk (a generator's `return`). */
+  /** Called once when it is canceled: release the walk (a generator's `return`). */
   cancel?: () => void;
 }
 
@@ -145,8 +145,8 @@ export interface JobStats {
   applyMs: number;
   /** Applied since start. */
   appliedTotal: number;
-  /** Cancelled since start. */
-  cancelledTotal: number;
+  /** Canceled since start. */
+  canceledTotal: number;
 }
 
 /** CPU jobs one worker holds at once: one runs, the next waits in its queue. */
@@ -204,7 +204,7 @@ export class Jobs {
   private readonly done: Entry[] = [];
   /** Progressive jobs on this thread (`slice`), in submission order. */
   private readonly slices: SliceEntry[] = [];
-  /** Cancelled while running: kept until the worker replies (its load holds). */
+  /** Canceled while running: kept until the worker replies (its load holds). */
   private readonly orphans = new Map<number, Entry>();
   private readonly cpuLoad: number[] = [];
   private readonly ioLoad: number[] = [];
@@ -223,7 +223,7 @@ export class Jobs {
     applied: 0,
     applyMs: 0,
     appliedTotal: 0,
-    cancelledTotal: 0,
+    canceledTotal: 0,
   };
 
   constructor(
@@ -280,7 +280,7 @@ export class Jobs {
       if (job.state === "applied") {
         continue;
       }
-      if (job.state === "cancelled" || !before) {
+      if (job.state === "canceled" || !before) {
         this.cancel(entry);
         return entry.job as Job<A>;
       }
@@ -354,7 +354,7 @@ export class Jobs {
   reply(reply: JobReply): void {
     const orphan = this.orphans.get(reply.id);
     if (orphan) {
-      // Cancelled while it ran: its worker is free now.
+      // Canceled while it ran: its worker is free now.
       this.orphans.delete(reply.id);
       this.release(orphan);
       if (reply.ok) {
@@ -590,7 +590,7 @@ export class Jobs {
         return;
       }
       if (slice.state !== "running") {
-        return; // cancelled from inside its step or a listener
+        return; // canceled from inside its step or a listener
       }
       if ("partial" in out && out.partial !== undefined) {
         slice.last = out.partial;
@@ -618,20 +618,20 @@ export class Jobs {
   private cancelSlice(slice: SliceEntry): void {
     if (
       slice.state === "applied" ||
-      slice.state === "cancelled" ||
+      slice.state === "canceled" ||
       slice.state === "failed"
     ) {
       return;
     }
-    this.endSlice(slice, "cancelled");
-    this.counts.cancelledTotal++;
+    this.endSlice(slice, "canceled");
+    this.counts.canceledTotal++;
     slice.spec.cancel?.();
     slice.reject(abortError());
   }
 
   private cancel(entry: Entry): void {
     const state = entry.state;
-    if (state === "applied" || state === "cancelled" || state === "failed") {
+    if (state === "applied" || state === "canceled" || state === "failed") {
       return;
     }
     if (state === "queued") {
@@ -644,8 +644,8 @@ export class Jobs {
       entry.spec.discard?.(entry.result);
       entry.result = undefined;
     }
-    entry.state = "cancelled";
-    this.counts.cancelledTotal++;
+    entry.state = "canceled";
+    this.counts.canceledTotal++;
     this.settle(entry);
     entry.reject(abortError());
     for (const dependent of entry.dependents.splice(0)) {

@@ -23,10 +23,10 @@ export type { Rgba } from "./colors.ts";
 
 /** How the two placements look. */
 export interface PlacementLook {
-  /** Tints of the solid surface (multiplied with the content's colours). */
+  /** Tints of the solid surface (multiplied with the content's colors). */
   readonly rigidTint: Rgba;
   readonly reprojectedTint: Rgba;
-  /** The ghost's tints (multiplied with the content's colours). */
+  /** The ghost's tints (multiplied with the content's colors). */
   readonly rigidGhost: Rgba;
   readonly reprojectedGhost: Rgba;
   /**
@@ -52,7 +52,7 @@ const HATCH_COVER = 0.34;
 
 /**
  * How far the ghost must stand off the solid surface, along that surface's
- * normal, to be drawn, metres (feedback F4): nearer than this it would share
+ * normal, to be drawn, meters (feedback F4): nearer than this it would share
  * the solid's depth, passing the depth test on some pixels and not others
  * (z-fighting). Faded in from 0.05 m to 0.5 m.
  */
@@ -74,7 +74,7 @@ fn ghostApart(standOff: f32) -> f32 {
 /**
  * The ghost, translucent: drawn only where it stands clear of the solid
  * surface (`STANDOFF_SEMANTIC`, `GHOST_APART`), and only as far as the morph
- * has moved the surface off it (`presence`), so the translucent colour is
+ * has moved the surface off it (`presence`), so the translucent color is
  * never laid on the moving surface itself.
  */
 const GHOST_WGSL = /* wgsl */ `${APART_WGSL}

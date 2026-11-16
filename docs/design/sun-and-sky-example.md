@@ -4,7 +4,7 @@
 
 A Dyno example of beauty shots with presets, showing off the physical sky and driving the features it needs. A sketch, not a plan.
 
-**A preset is data:** a place, a time, a lens and camera, the air (aerosol type and visibility), a look (eye or camera), and content. Times are solved rather than typed where they can be: the Sun's azimuth along Manhattan's grid gives Manhattanhenge's dates, checked against published ones. Each preset shows what's real about it, what's modelled and what isn't, in keeping with the handbook's rule.
+**A preset is data:** a place, a time, a lens and camera, the air (aerosol type and visibility), a look (eye or camera), and content. Times are solved rather than typed where they can be: the Sun's azimuth along Manhattan's grid gives Manhattanhenge's dates, checked against published ones. Each preset shows what's real about it, what's modeled and what isn't, in keeping with the handbook's rule.
 
 **Shots to try (dates and facts to confirm from sources):**
 

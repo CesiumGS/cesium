@@ -147,16 +147,16 @@ describe("compiled routes in the renderer", () => {
       ROUTE_POINTER_ROWS,
     ).u32;
     expect(pointers[engine.scene.viewIds.get(s.view)!]).toBe(anchor.uniformRow);
-    // Its centre record is the compiler's, made in float64 for the route's value at the draw's centre.
+    // Its center record is the compiler's, made in float64 for the route's value at the draw's center.
     const body = ROUTE_BODY * 4;
-    const centre = [0, 1, 2].map((a) => block.f32[body + a]!);
+    const center = [0, 1, 2].map((a) => block.f32[body + a]!);
     const placed = m4.transformPoint(
       new Float64Array(3),
       s.world.drawMatrix(s.draw)!,
-      Float64Array.from(centre),
+      Float64Array.from(center),
     );
     const want = new Float32Array(anchor.compiled.perDrawLayout.floats);
-    anchor.compiled.centreConstants(
+    anchor.compiled.centerConstants(
       placed,
       anchor.values,
       anchor.bridged.route,
@@ -208,7 +208,7 @@ describe("compiled routes in the renderer", () => {
     expect(height).toBeCloseTo(1000 * (1 + 0.4 * 9), 2);
   });
 
-  it("remakes the draw's centre record when a dynamic parameter changes", async () => {
+  it("remakes the draw's center record when a dynamic parameter changes", async () => {
     const warp = verticalExaggeration({ factor: 10 });
     const s = await setup(() => warp);
     const before = blockOf(s.world, s.draw);
@@ -255,7 +255,7 @@ describe("compiled routes in the renderer", () => {
         Math.hypot(to[4]!, to[5]!, to[6]!),
         Math.hypot(to[8]!, to[9]!, to[10]!),
       );
-      const centreOut = m4.transformPoint(
+      const centerOut = m4.transformPoint(
         new Float64Array(3),
         to,
         Float64Array.from(c),
@@ -268,9 +268,9 @@ describe("compiled routes in the renderer", () => {
         const q = m4.transformPoint(new Float64Array(3), m, v);
         anchor.bridged.route.forward(q, out);
         const d = Math.hypot(
-          out[0]! - centreOut[0]!,
-          out[1]! - centreOut[1]!,
-          out[2]! - centreOut[2]!,
+          out[0]! - centerOut[0]!,
+          out[1]! - centerOut[1]!,
+          out[2]! - centerOut[2]!,
         );
         expect(d).toBeLessThanOrEqual(radius * scale);
       }

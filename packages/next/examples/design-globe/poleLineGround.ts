@@ -1,5 +1,5 @@
 // London's pole line on the ground (UX review M1): each pole's ground
-// height, ODN metres, in the order poleLineMesh.mjs `poleLinePoles` gives
+// height, ODN meters, in the order poleLineMesh.mjs `poleLinePoles` gives
 // them (615 poles, 15.0 to 85.2 m).
 // Written by scripts/poleLineGround.mjs from the Environment Agency's
 // lidar composite DTM (1 m), the median of its cells within 2 m of each

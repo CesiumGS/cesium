@@ -3,7 +3,7 @@
 // Earth scale (the positions are 6.4e6 m and the box 1e2 to 1e5 m: the
 // dependency between a point's own occurrences swells the result ×67 to
 // ×2400), so the value is not evaluated over the box. Instead, for a box
-// with centre c, F(c + δ) lies in F(c) + J(c)·δ + R, and only the remainder
+// with center c, F(c + δ) lies in F(c) + J(c)·δ + R, and only the remainder
 // R, which is second order, is bounded by an interval evaluation, of the
 // Hessian program (or, past a kink, of J) over the box: whatever
 // the swell, it multiplies r², not r.
@@ -38,7 +38,7 @@ import type { IrProgram } from "./ir.ts";
 import type { Route } from "./route.ts";
 import { adJacobian, stepIr } from "./stepIr.ts";
 
-/** A box of the route's input: its centre and either half axes (column-major 3×3, an oriented box) or a half-extent (axis-aligned). */
+/** A box of the route's input: its center and either half axes (column-major 3×3, an oriented box) or a half-extent (axis-aligned). */
 export interface BoundsBox {
   readonly center: ArrayLike<number>;
   readonly halfAxes?: ArrayLike<number>;
@@ -64,7 +64,7 @@ export interface TaylorOptions {
 
 export interface TaylorBounds {
   readonly ok: true;
-  /** F(c): the image of the box's centre. */
+  /** F(c): the image of the box's center. */
   readonly center: Float64Array;
   /** J(c)·(half axes), column-major: the image of each half axis. */
   readonly linear: Float64Array;
@@ -100,7 +100,7 @@ const norm = (m: ArrayLike<number>): number => {
 const reach = (i: Interval): number => Math.max(Math.abs(i.lo), Math.abs(i.hi));
 
 /**
- * The reach (largest |value|) and deviation (largest |value − centre|) of
+ * The reach (largest |value|) and deviation (largest |value − center|) of
  * each output of `program` over `hull`, taken over `cells` per axis (a cell's
  * interval is tighter than the hull's: the swell of an interval grows
  * faster than the cell's size). A non-finite interval makes Infinity.
@@ -110,7 +110,7 @@ function intervalReaches(
   hull: { min: number[]; max: number[] },
   ranges: Readonly<Record<string, ParamRange>>,
   cells: number,
-  centre?: readonly number[],
+  center?: readonly number[],
 ): { reach: number[]; deviation: number[] } {
   const n = program.outputs.length;
   const reachOut = new Array<number>(n).fill(0);
@@ -131,10 +131,10 @@ function intervalReaches(
             : Infinity;
           reachOut[o] = Math.max(reachOut[o]!, r);
           const d =
-            centre && Number.isFinite(value.lo + value.hi)
+            center && Number.isFinite(value.lo + value.hi)
               ? Math.max(
-                  Math.abs(value.lo - centre[o]!),
-                  Math.abs(value.hi - centre[o]!),
+                  Math.abs(value.lo - center[o]!),
+                  Math.abs(value.hi - center[o]!),
                 )
               : r;
           deviationOut[o] = Math.max(deviationOut[o]!, d);
@@ -264,12 +264,12 @@ export function taylorBounds(
       max: [0, 1, 2].map((j) => input[j]! + s[j]!),
     };
     const j = adJacobian(spec, input, held, new Float64Array(9))!;
-    const centreJ = Array.from(
+    const centerJ = Array.from(
       { length: 9 },
       (_, k) => j[3 * (k % 3) + Math.floor(k / 3)]!,
     );
     const cells = options.cells ?? 1;
-    const jOver = intervalReaches(ir.jacobian, hull, ranges, cells, centreJ);
+    const jOver = intervalReaches(ir.jacobian, hull, ranges, cells, centerJ);
     const hOver = intervalReaches(ir.hessian(), hull, ranges, cells);
     if (
       jOver.reach.some((x) => !Number.isFinite(x)) ||

@@ -343,7 +343,7 @@ export interface RunMetrics {
     bytes: number;
     drawn: number;
     unused?: number;
-    cancelled?: number;
+    canceled?: number;
   }>;
   /** Requests and bytes received during the whole run. */
   requests?: number;

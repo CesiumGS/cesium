@@ -29,7 +29,7 @@
    * dark. StrataKit has no categorical palette (its hues are its statuses),
    * so these are the approved mockup's, none of them a pass, fail or warning
    * hue: purple published, teal measured, pink hand formula, blue round
-   * trip, warm grey live. Each text is 6.3:1 or more on its tint (AA).
+   * trip, warm gray live. Each text is 6.3:1 or more on its tint (AA).
    */
   --fx-kind-published-bg: light-dark(#eeedfe, #3c3489);
   --fx-kind-published-fg: light-dark(#3c3489, #cecbf6);

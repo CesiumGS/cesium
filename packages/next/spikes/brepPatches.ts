@@ -11,7 +11,7 @@
 //   a. every interior pixel's drawn point is within the stated pixel error of
 //      the true surface: a closed form for the analytic faces, the float64
 //      CPU reference (`evaluateSpan`) at the pixel's own (u, v) for the
-//      patch, over the pixels' depth (pixels per metre), against the
+//      patch, over the pixels' depth (pixels per meter), against the
 //      target (default half a pixel);
 //   b. the cells grow as the camera approaches, and each span's counts, read
 //      from the draw's chunk list, are the CPU twin's (`diceCounts`);
@@ -400,8 +400,8 @@ function placeCamera(view: View, target: Vec3, distance: number): void {
   view.camera.version++;
 }
 
-/** Pixels per metre at `depth` m along the view axis. */
-function pixelsPerMetre(view: View, depth: number): number {
+/** Pixels per meter at `depth` m along the view axis. */
+function pixelsPerMeter(view: View, depth: number): number {
   const fovy = view.camera.fovy(WIDTH / HEIGHT);
   return HEIGHT / 2 / (Math.tan(fovy / 2) * depth);
 }
@@ -444,7 +444,7 @@ async function capture(
   return out;
 }
 
-/** The pixels whose 3 × 3 neighbourhood the mask covers entirely. */
+/** The pixels whose 3 × 3 neighborhood the mask covers entirely. */
 function interior(mask: Uint8ClampedArray): number[] {
   const full = (x: number, y: number) => mask[(y * WIDTH + x) * 4 + 1]! >= 250;
   const out: number[] = [];
@@ -836,7 +836,7 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
             (k) => p.model[k]! + origin[k]!,
           ) as unknown as Vec3;
           const depth = eye[2]! - (ORIGIN[2] + p.model[2]! + origin[2]!);
-          const ppm = pixelsPerMetre(view, depth);
+          const ppm = pixelsPerMeter(view, depth);
           const span = spanAt(setup.patches, p.face, p.u, p.v);
           if (!span || p.face !== 0) {
             faceWrong++;
@@ -866,7 +866,7 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
           const sphere = span.faceSphere;
           const w = worldOf(sphere);
           const near = eye[2]! - w[2] - sphere[3];
-          const error = TARGET / pixelsPerMetre(view, near);
+          const error = TARGET / pixelsPerMeter(view, near);
           const twin = diceCounts(span, error);
           apart = Math.max(
             apart,
@@ -1004,7 +1004,7 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
           (k) => ORIGIN[k]! + origin[k]! + placed[k]! - eye[k]!,
         );
         const depth = -twin[2]!;
-        const ppm = pixelsPerMetre(view, depth);
+        const ppm = pixelsPerMeter(view, depth);
         worstPx = Math.max(
           worstPx,
           Math.hypot(
@@ -1049,7 +1049,7 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
       world.destroy();
     }
 
-    // The passes that aren't the colour: shadows, ambient occlusion (the depth and normal prepass), a pick.
+    // The passes that aren't the color: shadows, ambient occlusion (the depth and normal prepass), a pick.
     {
       const scene = scenes()[0]!;
       const world = engine.createWorld({

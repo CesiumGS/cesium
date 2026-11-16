@@ -27,7 +27,7 @@ export const RESULT_LABELS: Readonly<Record<string, string>> = {
   "frame-tree.compositions.itrf-hcrs": "ITRF and HCRS, every route",
   "frame-tree.compositions.itrf-moon-icrf": "ITRF and MOON_ICRF, every route",
   "time.leap-second.monotonic": "TT increases through the 2016 leap second",
-  "time.leap-second.two-seconds": "One labelled second, two of TT",
+  "time.leap-second.two-seconds": "One labeled second, two of TT",
   "time.eop-end": "Past the EOP table: throws with its dates",
   "trajectory.gap": "In an OEM gap: throws with the spans",
   "trajectory.moon-me.distance": "Orion's distance from the Moon in MOON_ME",
@@ -213,7 +213,7 @@ const RESULT_COMPARED: Readonly<Record<string, Comparison>> = {
   },
   "trajectory.moon-me.distance": {
     kind: "independent",
-    text: "Orion's distance from the Moon's centre before the conversion to MOON_ME: a rotation about the centre keeps it.",
+    text: "Orion's distance from the Moon's center before the conversion to MOON_ME: a rotation about the center keeps it.",
   },
   "trajectory.moon-me.round-trip": {
     kind: "roundTrip",

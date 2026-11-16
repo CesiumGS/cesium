@@ -18,8 +18,8 @@ import { RIGID_FRAME, RIGID_LINE } from "./rigidLine.ts";
 
 const deg = Math.PI / 180;
 
-/** US survey feet per metre: EPSG:6420 is in ftUS. */
-/** US survey feet in a metre. */
+/** US survey feet per meter: EPSG:6420 is in ftUS. */
+/** US survey feet in a meter. */
 export const FT = FTUS_PER_M;
 export const CALIFORNIA: CrsRef = {
   format: "wkid",
@@ -41,7 +41,7 @@ export const SITE: SiteTransform = {
 export const CONVERGENCE_FACTOR = 20;
 
 /**
- * Stop 4's camera: centred this share of the way along the line and this
+ * Stop 4's camera: centered this share of the way along the line and this
  * many degrees south of it, at this range (m) and pitch (degrees).
  */
 export const RIGID_FRAMING = {
@@ -130,7 +130,7 @@ export interface EngineeringSetup {
   /** The design CRS's frame name ("California zone 3"). */
   name: string;
   crs: CrsRef;
-  /** Design units per metre: the grid's 10 km lines and its segments are given in metres. */
+  /** Design units per meter: the grid's 10 km lines and its segments are given in meters. */
   unitsPerMeter: number;
   /** The design grid's extent, design units. */
   gridExtent: Extent;

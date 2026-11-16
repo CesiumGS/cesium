@@ -5,7 +5,7 @@
 // refitted on a budget, and until its new fit lands the stale one is drawn.
 //
 // Main thread for now. Warps are JS closures, which a worker can't be sent,
-// so fitting off-thread needs serialisable warps (later).
+// so fitting off-thread needs serializable warps (later).
 import type { CubicLattice } from "./warpTerms.ts";
 
 /** A fit made for a key, as `WarpFitCache.take` hands it back. */

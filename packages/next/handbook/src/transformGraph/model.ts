@@ -23,7 +23,7 @@ import {
 
 export type Tone = "ink" | "muted" | "accent" | "good" | "warm" | "bad";
 
-/** px per unit, and the unit at the centre of the panel. A negative `sy` draws y down. */
+/** px per unit, and the unit at the center of the panel. A negative `sy` draws y down. */
 export interface View {
   cx: number;
   cy: number;

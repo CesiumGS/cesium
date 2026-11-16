@@ -473,7 +473,7 @@ function SceneDetail({
   const [loaded, setLoaded] =
     useState<Array<{ run: Summary; results: Json }>>();
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     void Promise.all(
       [...runs]
         .reverse()
@@ -486,12 +486,12 @@ function SceneDetail({
           }
         }),
     ).then((list) => {
-      if (!cancelled) {
+      if (!canceled) {
         setLoaded(list.filter((x) => !!x));
       }
     });
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [runs]);
 

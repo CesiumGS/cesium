@@ -5,7 +5,7 @@ const ARCSEC_TO_RAD = Math.PI / (180 * 3600);
 const MS_PER_DAY = 86_400_000;
 /** MJD of the Unix epoch (1970-01-01). */
 const MJD_UNIX_EPOCH = 40_587;
-/** Unix ms of 2000-01-01T12:00:00, J2000 read as if TAI were UTC-labelled. */
+/** Unix ms of 2000-01-01T12:00:00, J2000 read as if TAI were UTC-labeled. */
 const J2000_UNIX_MS = 946_728_000_000;
 
 /** Earth orientation values at one instant, in radians and seconds. */

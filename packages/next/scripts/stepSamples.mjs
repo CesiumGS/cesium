@@ -4,7 +4,7 @@
 // geometry-only AP203 files are kept, each pinned too, in a store outside the
 // repo (~/.cesium-bench/step/nist-pmi/<version>), never committed and never
 // bundled. The dev server serves it at /step-samples/. The models are works
-// of the US government (17 U.S.C. § 105; NIST open licence), with NIST's
+// of the US government (17 U.S.C. § 105; NIST open license), with NIST's
 // attribution asked for: a NOTICE.txt is written next to them.
 //
 //   node scripts/stepSamples.mjs     fetch and unpack, print the folder
@@ -37,7 +37,7 @@ export const STEP_DATASET = {
   url: "https://www.nist.gov/system/files/documents/noindex/2024/06/19/NIST-PMI-STEP-Files.zip",
   bytes: 13_976_599,
   sha256: "8fa78429e6d8d9b0d7681d223b6aa9ec98c3772185c55b1a0e3679b21c181911",
-  licence: "https://www.nist.gov/open/license",
+  license: "https://www.nist.gov/open/license",
   landing:
     "https://www.nist.gov/ctl/smart-connected-systems-division/smart-connected-manufacturing-systems-group/mbe-pmi-validation",
 };
@@ -105,7 +105,7 @@ These STEP files are NIST's MBE PMI Validation and Conformance Testing test
 models (geometry only, STEP AP203), as published by the National Institute of
 Standards and Technology. They are works of the United States government,
 not subject to copyright protection in the United States (17 U.S.C. 105), 
-and are offered under the NIST open licence, ${dataset.licence}
+and are offered under the NIST open license, ${dataset.license}
 Attribution to NIST is requested. NIST's disclaimer applies:
 https://www.nist.gov/disclaimer
 

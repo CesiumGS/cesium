@@ -1,6 +1,6 @@
 // A checker for the b-rep render form (docs/design/breps-and-geometry-queries.md). It reports what
 // is wrong and where, and never throws: a host can run it on a form it did
-// not write. Lengths are metres.
+// not write. Lengths are meters.
 import { evaluateCurve2, evaluateCurve3, evaluateSurface } from "./evaluate.ts";
 import { SurfaceKind, type BezierCurves, type BrepForm } from "./form.ts";
 

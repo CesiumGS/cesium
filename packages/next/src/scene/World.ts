@@ -1765,7 +1765,7 @@ export class World {
    * their ranges), so a change within it writes the one float and walks no
    * draw. A value outside the range throws a `RangeError` and keeps the old
    * one: declare the range you drag over. Without a range a change
-   * recomputes its draws' bounds at the value it has (the sphere's centre
+   * recomputes its draws' bounds at the value it has (the sphere's center
    * moves by the displacement there, and its radius grows by the residual:
    * `drawnSphere`), as it always did.
    */

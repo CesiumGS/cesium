@@ -4,14 +4,14 @@ type Vec3 = [number, number, number];
 type Rgba = [number, number, number, number];
 type Feature = { name: string; kind: string };
 
-/** WGS 84's smallest radius of curvature, a(1 − e²), metres: the sag rule's R. */
+/** WGS 84's smallest radius of curvature, a(1 − e²), meters: the sag rule's R. */
 export const MIN_RADIUS: number;
-/** The ground layer stack's step, metres (5 cm). */
-export const LAYER_METRES: number;
-/** The sag at the middle of a chord this many metres long (d²/8R), metres. */
-export function edgeSag(metres: number): number;
-/** The longest chord whose sag is at most `errorMetres`, metres. */
-export function longestEdgeFor(errorMetres: number): number;
+/** The ground layer stack's step, meters (5 cm). */
+export const LAYER_METERS: number;
+/** The sag at the middle of a chord this many meters long (d²/8R), meters. */
+export function edgeSag(meters: number): number;
+/** The longest chord whose sag is at most `errorMeters`, meters. */
+export function longestEdgeFor(errorMeters: number): number;
 /** An sRGB "#rrggbb" as linear RGBA. */
 export function srgb(hex: string, alpha?: number): Rgba;
 /** A seeded generator of numbers in [0, 1) (mulberry32). */
@@ -45,7 +45,7 @@ export class MeshBuilder {
     color: Rgba,
     feature: Feature,
   ): void;
-  /** A box standing on the ground: centre `at`, base at `z`, turned `angle`. */
+  /** A box standing on the ground: center `at`, base at `z`, turned `angle`. */
   box(
     at: readonly [number, number],
     z: number,
@@ -56,7 +56,7 @@ export class MeshBuilder {
     color: Rgba,
     feature: Feature,
   ): void;
-  /** A vertical prism of a regular `sides`-gon: centre `at`, from z0 up `height`. */
+  /** A vertical prism of a regular `sides`-gon: center `at`, from z0 up `height`. */
   cylinder(
     at: readonly [number, number],
     z0: number,

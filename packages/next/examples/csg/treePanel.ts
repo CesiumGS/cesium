@@ -17,7 +17,7 @@ import { el } from "./ui.ts";
 
 /**
  * The feature tree (docs/design/breps-and-geometry-queries.md): compact rows with a twisty, an icon for
- * the node's kind, the leaf's colour, its name (double-click to rename), a
+ * the node's kind, the leaf's color, its name (double-click to rename), a
  * badge for its role among a difference's operands (the first is the base,
  * the rest are cut from it) and an eye that leaves it out of the model
  * (suppresses it). Drag a row to reorder among its siblings or into another

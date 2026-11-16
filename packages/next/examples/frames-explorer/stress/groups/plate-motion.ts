@@ -67,7 +67,7 @@ const halfOf = (b: readonly Printed[]) => Math.max(...b.map((p) => p.half));
 const HELMERT_PATH = 1e-6;
 
 /** The library against the hand formula: 1 mm (the plan's coordinate tolerance). */
-const MILLIMETRE = 1e-3;
+const MILLIMETER = 1e-3;
 
 interface Gda94Example {
   parameters: Record<string, string>;
@@ -135,7 +135,7 @@ const gda94Case = stressCase(
         "resolveOperation from GDA94 (EPSG:4939) to GDA2020 (EPSG:7843) takes ALIC's printed latitude, longitude and height to the hand Helmert's position within 1 mm (the library picks the 7-parameter transformation, not the conformal grid)",
       pass: op.grids.length === 0 && !op.ballpark,
       value: distance(library, handFromGeographic),
-      tolerance: MILLIMETRE,
+      tolerance: MILLIMETER,
       unit: "m",
       detail: `${grids}; accuracy ${op.accuracy ?? "not stated"} m; ${op.pipeline}`,
       fingerprint: operationFingerprint(ctx, op, [library]),

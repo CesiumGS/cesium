@@ -187,7 +187,7 @@ export function createRecorder(
       sample.uploadQueue = sum((t) => t.stats.uploadQueue);
       sample.requests = sum((t) => t.stats.requestsTotal);
       sample.bytesReceived = sum((t) => t.stats.bytesReceived);
-      sample.cancelled = sum((t) => t.stats.cancelled);
+      sample.canceled = sum((t) => t.stats.canceled);
       sample.evicted = sum((t) =>
         Object.values(t.stats.purposes).reduce((n, p) => n + p.unused, 0),
       );

@@ -328,7 +328,7 @@ describe("View.pickPoint", () => {
     expect(
       distance(pick.anchorPosition, intoAnchor(placement, pick.position)),
     ).toBeLessThan(1e-6);
-    // Mixed with tick n + 3's placement it would be kilometres off.
+    // Mixed with tick n + 3's placement it would be kilometers off.
     expect(
       distance(pick.anchorPosition, intoAnchor(later, pick.position)),
     ).toBeGreaterThan(1000);

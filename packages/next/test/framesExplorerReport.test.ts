@@ -108,7 +108,7 @@ const env: ReportEnvironment = {
     skipped: 1,
     shown: 0,
     ms: 4230,
-    cancelled: false,
+    canceled: false,
   },
 };
 

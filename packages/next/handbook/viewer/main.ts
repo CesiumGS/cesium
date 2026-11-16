@@ -139,7 +139,7 @@ interface CorridorPoint {
   s: number;
   lon: number;
   lat: number;
-  /** Reprojected position, Earth-fixed metres. */
+  /** Reprojected position, Earth-fixed meters. */
   p: [number, number, number];
   /** How far the rigid placement has it from there, m. */
   e: number;
@@ -342,7 +342,7 @@ export async function startReel(
     }
   };
   const polygon = () => {
-    // The centre line across the tunnel, between the points the data has.
+    // The center line across the tunnel, between the points the data has.
     const line = [...points].sort((x, y) => x.s - y.s);
     const along = Array.from({ length: 13 }, (_, i) => {
       const s = TUNNEL.from + ((TUNNEL.to - TUNNEL.from) * i) / 12;

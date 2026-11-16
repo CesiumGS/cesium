@@ -16,7 +16,7 @@
 - Branch `brep-4-render-form`, cut from `cesium-2.0-webgpu-poc`. Commit by pathspec only (`git add <paths> && git commit -m … -- <paths>`). Never push.
 - Commit trailer: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - Words: never "master", "competitors", "ghost" or "presentation" in `src/`; never "frame" alone for a reference frame or a tick. Comments use the house style of `src/query/*.ts` and `src/geometry/*.ts`: plain sentences, with units.
-- All geometry arithmetic is float64. Lengths are metres, angles radians.
+- All geometry arithmetic is float64. Lengths are meters, angles radians.
 - Tests are tiered: each task runs its own test files and the type check. The full suite runs once, in Task 5.
 
 ## The form (fixed by this plan)
@@ -104,7 +104,7 @@ export function vertexCount(form: BrepForm): number;
 export function surfaceCount(form: BrepForm): number;
 ```
 
-Parameterizations, with frame origin `o`, axes `x`, `y` and `z = x × y`. Units: u and v in radians where angular, metres otherwise.
+Parameterizations, with frame origin `o`, axes `x`, `y` and `z = x × y`. Units: u and v in radians where angular, meters otherwise.
 
 - Plane: `P = o + u·x + v·y`.
 - Cylinder: `P = o + r(cos u·x + sin u·y) + v·z`.
@@ -215,7 +215,7 @@ export function evaluateCurve3(form: BrepForm, segment: number, t: number): { po
   - A biquadratic surface: degree 2 in the output.
   - A circle as a rational quadratic NURBS curve (9 points, weights 1 and √2/2, knots `[0,0,0,¼,¼,½,½,¾,¾,1,1,1]`) splits into 4 segments. At 100 points every point is at radius 1 within 1e-12.
   - A degree-4 curve throws.
-  - A Bézier-kind surface in a form: `evaluateSurface` at a shared patch boundary equals both neighbours' values within 1e-12, and takes the lower patch's derivatives. At the domain's corners, nothing is NaN.
+  - A Bézier-kind surface in a form: `evaluateSurface` at a shared patch boundary equals both neighbors' values within 1e-12, and takes the lower patch's derivatives. At the domain's corners, nothing is NaN.
   - Derivatives of `evaluatePatch` and `evaluateSegment` agree with central differences within 1e-6 relative.
 - [ ] **Step 2: Run and see it fail.** Expected: FAIL, module not found.
 - [ ] **Step 3: Implement.** Use Boehm knot insertion (Piegl and Tiller, "The NURBS Book", A5.1 for curves, and A5.3 applied in each direction for surfaces) in homogeneous coordinates, up to multiplicity = degree at every interior knot. Evaluate rational Bézier by de Casteljau in homogeneous coordinates, and get derivatives from the quotient rule on the homogeneous derivatives. Skip knot spans of zero width.
@@ -272,7 +272,7 @@ export function validateBrep(form: BrepForm): BrepProblem[];
 - [ ] **Step 1: Write the failing tests.**
   - `validateBrep` on each fixture gives `[]`.
   - The box has 6 faces, 12 edges and 8 vertices, and every edge has 2 uses.
-  - Each face of the box, at its loop's (u, v) centroid, has a `faceNormal` pointing away from the box's centre.
+  - Each face of the box, at its loop's (u, v) centroid, has a `faceNormal` pointing away from the box's center.
   - Breaking things, one at a time on a copy of the box's arrays:
     - `useEdge` out of range gives an `index` problem naming the use.
     - Swapping two uses' order gives `openLoop`.

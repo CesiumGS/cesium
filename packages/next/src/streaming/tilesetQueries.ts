@@ -29,7 +29,7 @@ function crossesSphere(
 
 /**
  * Serves ray queries for one frame: wanted tiles go first in `requests`;
- * pinned tiles count as touched (not evicted or cancelled).
+ * pinned tiles count as touched (not evicted or canceled).
  */
 export function serveQueries(
   tileset: TilesetQueries,

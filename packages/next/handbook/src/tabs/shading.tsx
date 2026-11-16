@@ -215,10 +215,10 @@ export function Shading() {
           tests. Only the columns a style reads are uploaded, so an unstyled
           scene pays nothing for its strings.
         </p>
-        <h3>Colours</h3>
+        <h3>Colors</h3>
         <p>
           CSS notation (<C>#ff8800</C>, <C>rgb()</C>, <C>hsl()</C> and named
-          colours) is sRGB as written, and converts to linear with gamma 2.2
+          colors) is sRGB as written, and converts to linear with gamma 2.2
           where it becomes a value. <C>vec4</C> and plain numbers stay as they
           are, so they're linear in 2.0 and plain numbers in 1.x. Replace and
           mix blend in linear light, so they differ from 1.x on purpose, and 1.x
@@ -252,7 +252,7 @@ export function Shading() {
           <li>
             <strong>Properties:</strong> <C>show</C> can read any number, since
             it runs per vertex and passes nothing on. <C>color</C> shares 16
-            float components between stages, with its colours' own alpha, and
+            float components between stages, with its colors' own alpha, and
             beyond that the style is refused when it compiles.
           </li>
           <li>
@@ -333,7 +333,7 @@ export function Shading() {
           </li>
           <li>
             <strong>Clip effects.</strong> A clip set's effect tells a shader
-            what the cut did, through <C>clipDistance</C> (metres to the cut,
+            what the cut did, through <C>clipDistance</C> (meters to the cut,
             negative on the kept side), <C>clipFlags</C> (whether this fragment
             is removed or a ghost), <C>clipId</C> (which set reports) and{" "}
             <C>clipParams</C> (the set&apos;s own four numbers). A shader can
@@ -347,8 +347,8 @@ export function Shading() {
           panel keys a tint, contours and a height haze to true height or to
           drawn height, side by side. Keyed to true height, the tint and the
           haze match the legend, at ×1 to ×10. Keyed to drawn height they
-          don&apos;t: at ×10 the colour reads ten times the height the legend
-          names. So a shader that colours by height reads <C>truePositionEC</C>.
+          don&apos;t: at ×10 the color reads ten times the height the legend
+          names. So a shader that colors by height reads <C>truePositionEC</C>.
           The <a href="#/transform-graph">Transform graph tab</a> has the
           exaggeration.
         </p>
@@ -468,7 +468,7 @@ export function Shading() {
           A gallery example, reviewed and not built (CS-11). A MaterialX graph
           is edited live on a lookdev stage, in four city places and seven
           terrain places. Value edits are instant, because literals are
-          uniforms. Rewiring recompiles in the background as a cancellable job
+          uniforms. Rewiring recompiles in the background as a cancelable job
           while the last good material stays on screen. MaterialX stays at the
           edge, in <C>packages/next/materialx/</C>, which the engine never
           imports. At review there is no emitter of its own before the IR: the

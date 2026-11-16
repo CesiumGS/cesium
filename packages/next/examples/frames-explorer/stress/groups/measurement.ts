@@ -31,7 +31,7 @@ const MEASUREMENT_SITE: SiteTransform = {
 const gridToGroundCase = stressCase(
   "measurement.grid-to-ground",
   "measurement",
-  "A 10,000 ftUS design line on California zone 3 (site scale 1.0000375): design distance × site scale × metres per foot ÷ mean combined factor is the true distance, within 0.01 m",
+  "A 10,000 ftUS design line on California zone 3 (site scale 1.0000375): design distance × site scale × meters per foot ÷ mean combined factor is the true distance, within 0.01 m",
   ["frames", "proj", "geoid"],
   async (ctx, base) => {
     const frame = EngineeringFrame.create(
@@ -81,7 +81,7 @@ const gridToGroundCase = stressCase(
           },
           {
             kind: "step",
-            label: "× metres per US survey foot",
+            label: "× meters per US survey foot",
             value: `${US_SURVEY_FOOT} m`,
             note: "1200/3937, by definition",
           },

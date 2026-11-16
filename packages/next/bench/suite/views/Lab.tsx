@@ -156,7 +156,7 @@ export function LabPage() {
     if (!info) {
       return;
     }
-    let cancelled = false;
+    let canceled = false;
     let mounted: ReturnType<Harness["mount"]> | undefined;
     setHandle(undefined);
     setError(undefined);
@@ -168,7 +168,7 @@ export function LabPage() {
           return;
         }
         const harness = await info.load();
-        if (cancelled || !host.current) {
+        if (canceled || !host.current) {
           return;
         }
         host.current.replaceChildren();
@@ -178,13 +178,13 @@ export function LabPage() {
         );
         setHandle(mounted);
       } catch (e) {
-        if (!cancelled) {
+        if (!canceled) {
           setError(loadError(e, !!info.cesium1x));
         }
       }
     })();
     return () => {
-      cancelled = true;
+      canceled = true;
       mounted?.dispose?.();
     };
     // The page's options apply when it mounts.

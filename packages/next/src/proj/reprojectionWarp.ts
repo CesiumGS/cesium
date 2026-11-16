@@ -53,15 +53,15 @@ function finite3(a: ArrayLike<number>, what: string): void {
 /**
  * A coordinate operation as the smooth edge between a design CRS's frame and
  * its parent, the body-fixed frame: `forward` takes design coordinates to
- * body-fixed metres, the exact inverse the other way. `source` is a PROJ `RecordedOperation` or any `CoordinateOperation`
+ * body-fixed meters, the exact inverse the other way. `source` is a PROJ `RecordedOperation` or any `CoordinateOperation`
  * (the CRS's own coordinates, in its own units, to longitude and latitude in
- * degrees and metres of height), a `ResolvedCoordinates` (a coordinate
+ * degrees and meters of height), a `ResolvedCoordinates` (a coordinate
  * service's answer), or an `EngineeringFrame` (whose `toBodyFixed` and
  * `fromBodyFixed` it is, a site transform included).
  *
  * Use it as `smoothFrame("design", bodyFixed, reprojectionWarp(source))`: the
  * frame's points are the design CRS's coordinates in its own units, and its
- * parent's are body-fixed metres. The map to the body is the operation
+ * parent's are body-fixed meters. The map to the body is the operation
  * followed by the body's ellipsoid and the map back is its exact reverse;
  * the Jacobian is numerical (`fromFunction`), as the operation is a black
  * box, and its draws are fitted.
@@ -116,7 +116,7 @@ export function reprojectionWarp(
       );
       if (c === undefined) {
         throw new RangeError(
-          "reprojectionWarp: a position at the body's centre has no design coordinates",
+          "reprojectionWarp: a position at the body's center has no design coordinates",
         );
       }
       const design = op.inverse(
@@ -169,8 +169,8 @@ export function reprojectionWarp(
 
 /**
  * A circle over an area of interest in the design frame's coordinates: its
- * centre's, and the farthest of its corners and edge midpoints. `toDesign`
- * takes body-fixed metres to design coordinates.
+ * center's, and the farthest of its corners and edge midpoints. `toDesign`
+ * takes body-fixed meters to design coordinates.
  */
 function domainOf(
   area: AreaOfInterest,
@@ -194,7 +194,7 @@ function domainOf(
   const center = at(lons[1]!, lats[1]!);
   if (center === undefined) {
     throw new RangeError(
-      "reprojectionWarp: the area of interest's centre is outside the operation's domain",
+      "reprojectionWarp: the area of interest's center is outside the operation's domain",
     );
   }
   const planar = toDesign !== undefined;

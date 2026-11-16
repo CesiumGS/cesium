@@ -136,9 +136,9 @@ export function judgePick(
 }
 
 /**
- * Where the globe draws a point (body-fixed metres): latitude and
+ * Where the globe draws a point (body-fixed meters): latitude and
  * longitude to 0.000001° (about 0.1 m), and height above the WGS 84
- * ellipsoid to the centimetre.
+ * ellipsoid to the centimeter.
  */
 export function globeBlock(p: ArrayLike<number>): CoordinateBlock | undefined {
   const c = Ellipsoid.WGS84.cartesianToCartographic(Float64Array.from(p), {

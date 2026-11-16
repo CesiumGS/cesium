@@ -79,7 +79,7 @@ describe("the fixtures", () => {
     expect([...uses]).toEqual(Array(12).fill(2));
   });
 
-  it("point each box face's normal away from the box's centre", () => {
+  it("point each box face's normal away from the box's center", () => {
     const box = boxBrep();
     for (let f = 0; f < 6; f++) {
       const [u, v] = centroid(box, f);

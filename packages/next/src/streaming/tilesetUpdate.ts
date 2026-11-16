@@ -120,7 +120,7 @@ export interface TilesetUpdate extends Pick<
 
 /** Imagery priority offset of loading tiles: after drawn and waiting ones. */
 const LOADING_IMAGERY = 1e15;
-/** Frames without any view touching an in-flight tile before it is cancelled. */
+/** Frames without any view touching an in-flight tile before it is canceled. */
 const CANCEL_AFTER_FRAMES = 30;
 
 export function countTiles(tile: Tile): number {
@@ -403,7 +403,7 @@ export function update(
         nowCasters.add(tile);
       }
       for (const [tile, priority] of found.wanted) {
-        // Kept from cancelling while it loads, as a view's tile is.
+        // Kept from canceling while it loads, as a view's tile is.
         tileset.state.order.touch(tile, frame);
         if (tile.state === "unloaded") {
           addRequest(tile, priority, "caster");

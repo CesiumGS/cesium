@@ -7,7 +7,7 @@
 //   view B   the identity: the true place      (a twin of each draw, unwarped)
 //   view C   a height offset of 60 m           (a twin of each draw, its own compiled route)
 //
-// Near the north pole, unlit and in flat colours:
+// Near the north pole, unlit and in flat colors:
 //
 //   green    a terrain tile carrying h·n̂ (exact in height in A, no fit)
 //   blue     the same tile without it (drawn by a compiled route in A and C)
@@ -163,7 +163,7 @@ const TIME_LIMIT_MS = 60_000;
 
 type Item = keyof typeof AT;
 const ITEMS = ["green", "blue", "yellow"] as const;
-const COLOURS: Record<Item, Rgb> = {
+const COLORS: Record<Item, Rgb> = {
   green: GREEN,
   blue: BLUE,
   yellow: YELLOW,
@@ -332,7 +332,7 @@ async function runWarpViews(): Promise<WarpViewsResult> {
         await engine.gpu.device.queue.onSubmittedWorkDone();
         const pixels = await targets[i]!.read();
         lost();
-        const got = measureBox(pixels, COLOURS[key]);
+        const got = measureBox(pixels, COLORS[key]);
         const want = boxes[key];
         const e = got
           ? Math.max(...got.map((v, k) => Math.abs(v - want[k]!)))

@@ -40,7 +40,7 @@ export function warpForward(
 /**
  * `q` in the warp's `to` back to its `from`, at the scale now: the warp's
  * own `inverse` at scale 1, else Newton on `warpForward` and its Jacobian, to
- * `tolerance` metres (default 1e-9, 32 iterations). Throws when it doesn't
+ * `tolerance` meters (default 1e-9, 32 iterations). Throws when it doesn't
  * converge. A warp's own `inverse` is at scale 1 whatever its `scale` says:
  * use this for the point that was drawn at the scale in force.
  */

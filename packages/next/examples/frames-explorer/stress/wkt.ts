@@ -194,8 +194,8 @@ export function ellipsoidOfNode(n: WktNode | undefined) {
   return { name: text(e, 0) ?? "", a: a * unit, f: rf === 0 ? 0 : 1 / rf };
 }
 
-/** Metres per unit of a projected CRS's first axis, as its WKT states it. */
-export function axisMetres(crs: WktNode): number | undefined {
+/** Meters per unit of a projected CRS's first axis, as its WKT states it. */
+export function axisMeters(crs: WktNode): number | undefined {
   const cs = crs.args.filter((a): a is WktNode => typeof a === "object");
   for (const axis of cs.filter((a) => a.keyword === "AXIS")) {
     const unit = number(children(axis, "LENGTHUNIT")[0], 1);
@@ -271,7 +271,7 @@ function scaleDifference(value: number, unit: number | undefined): number {
 
 /**
  * WKT1's TOWGS84[dx, dy, dz(, rx, ry, rz, ds)]: OGC 01-009 and GDAL read it
- * as EPSG 9606, the position vector convention, in metres, arc-seconds and
+ * as EPSG 9606, the position vector convention, in meters, arc-seconds and
  * ppm, to WGS 84.
  */
 function wkt1Towgs84(node: WktNode): Towgs84 {
@@ -411,8 +411,8 @@ export function boundMethodName(root: WktNode): string | undefined {
   return text(method, 0);
 }
 
-/** A USAGE BBOX's centre (longitude, latitude), when the WKT has one. */
-export function bboxCentre(root: WktNode): [number, number] | undefined {
+/** A USAGE BBOX's center (longitude, latitude), when the WKT has one. */
+export function bboxCenter(root: WktNode): [number, number] | undefined {
   const box = find(root, "BBOX");
   const [south, west, north, east] = [0, 1, 2, 3].map((k) => number(box, k));
   if (

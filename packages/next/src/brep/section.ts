@@ -15,7 +15,7 @@
 //
 // The cap plane's normal is the cap's outward normal: outer loops are counter-
 // clockwise in the plane's (u, v), holes clockwise, and the face is not
-// reversed. Lengths are metres.
+// reversed. Lengths are meters.
 import { polynomialRoots } from "./analyticQueries.ts";
 import { evaluateSegment } from "./bezier.ts";
 import { BrepBuilder } from "./build.ts";
@@ -551,7 +551,7 @@ export class SectionJob {
     const tolerance = options.tolerance ?? Math.max(1e-7, 1e-5 * size);
     if (!(tolerance > 0 && Number.isFinite(tolerance))) {
       throw new RangeError(
-        "sectionBrep: tolerance must be a positive finite number of metres",
+        "sectionBrep: tolerance must be a positive finite number of meters",
       );
     }
     this.steps = sectionSteps(form, planes, options, size, tolerance);

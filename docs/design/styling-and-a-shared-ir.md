@@ -9,13 +9,13 @@
 
 **Short answers.** Brainstorm, nothing decided.
 
-1. _JS is already the 1.x answer, as a subset._ The 3D Tiles 1.x styling language is, in the spec's words, "a small subset of JavaScript (ECMAScript 5), plus native vector and regular expression types" ([3D Tiles Styling](https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling)). The real choice is how far to widen that subset (expressions in JSON strings, to functions and statements, to TypeScript), and what the _normative artefact_ is. Recommended: the spec defines the language and an IR with a JSON form, and JS/TS is one front end onto it, not the definition.
+1. _JS is already the 1.x answer, as a subset._ The 3D Tiles 1.x styling language is, in the spec's words, "a small subset of JavaScript (ECMAScript 5), plus native vector and regular expression types" ([3D Tiles Styling](https://github.com/CesiumGS/3d-tiles/tree/main/specification/Styling)). The real choice is how far to widen that subset (expressions in JSON strings, to functions and statements, to TypeScript), and what the _normative artifact_ is. Recommended: the spec defines the language and an IR with a JSON form, and JS/TS is one front end onto it, not the definition.
 2. _No library replaces our own small IR; none gives us AD, intervals or df64._ Keep `src/transform/ir.ts` as the semantic core. _(Taken further on 2026-11-13: `ir.ts` becomes Cesium IR, with `KHR_interactivity`'s vocabulary; [core-ir.md](core-ir.md).)_ Use Naga (a 2 MB WASM build) or the browser's own compiler to validate and translate the WGSL we emit, in CI and at build time. Revisit e-graph rewriting only if a measure asks for it.
 
 ## What 3D Tiles 1.x styling is
 
 - **Shape:** JSON whose leaves are expression strings. `show`, `color`, `pointSize` and `meta` each take an expression or a `conditions` array (ordered `[test, value]` pairs, like `if`/`else if`). `defines` names reusable expressions (they can't reference each other).
-- **Language:** operators and precedence from JS, with `${property}` access to the feature's metadata, vector types (`vec2`–`vec4`, colours as `vec4`), CSS colours, regular expressions, and built-in functions. Dropped from ES5: bitwise operators, `~`. Added: `=~`, `!~`.
+- **Language:** operators and precedence from JS, with `${property}` access to the feature's metadata, vector types (`vec2`–`vec4`, colors as `vec4`), CSS colors, regular expressions, and built-in functions. Dropped from ES5: bitwise operators, `~`. Added: `=~`, `!~`.
 - **Implementation:** CesiumJS parses it with [jsep](https://ericsmekens.github.io/jsep/), a JS expression parser, into an AST and evaluates that per feature on the CPU (as the spec's informative note describes the parser; the evaluation is from memory, unverified). Ours compiles it to WGSL (`src/scene/styleExpression.ts`, about 970 lines, with no IR between the parse and the WGSL) so nothing is evaluated per feature on the CPU ([architecture.md](architecture.md), "Compute shaders: where they pay off": "No CPU style evaluation" is the win over 1.x). That leaves picks, legends and queries without a CPU form of a style.
 
 **Why the spec avoids general JS.** The spec doesn't state its reasons, so these are inferred (unverified):
@@ -37,7 +37,7 @@
 
 **What we have to build on.** `ir.ts` (379 lines) is a hash-consed scalar DAG of 42 float ops (arithmetic, trig, `select`, `clamp`, `mix`, `smoothstep`), with forward-mode AD, interval evaluation, and WGSL and df64 emitters beside it. For styling it lacks:
 
-- typed values (booleans as 0/1 today; no vectors or colours as first-class types, as vector ops lower to scalars);
+- typed values (booleans as 0/1 today; no vectors or colors as first-class types, as vector ops lower to scalars);
 - named, typed feature-property inputs and string and enum ids;
 - `match`, conditions, and units (`14px`, `2km`, `90deg`);
 - evaluation rates. [infrastructure-and-geoscience-capabilities.md](infrastructure-and-geoscience-capabilities.md) item 5 wants a style evaluated per feature when its inputs change, and per vertex or fragment only where it must, so an input's kind (uniform, per feature, per vertex) has to be part of the IR.
@@ -60,19 +60,19 @@ None of these changes the core: they add types and input kinds to it.
 
 **Recommended direction.**
 
-1. **One IR; its JSON form is the spec artefact.** The spec defines a formal language (grammar, types, semantics, numeric tolerance) as a _profile_ of a small op set, serialized as JSON, with conformance vectors (inputs and expected outputs). A runtime without a JS engine implements an interpreter or compiler for the IR, a few dozen ops, not a JS parser.
+1. **One IR; its JSON form is the spec artifact.** The spec defines a formal language (grammar, types, semantics, numeric tolerance) as a _profile_ of a small op set, serialized as JSON, with conformance vectors (inputs and expected outputs). A runtime without a JS engine implements an interpreter or compiler for the IR, a few dozen ops, not a JS parser.
 2. **Front ends, all lowering to that IR:**
    - the 1.x expression language (compatibility; tileset JSON as written);
    - restricted JS/TS functions (authoring in web applications, [transform-graph.md](transform-graph.md)'s rules: parsed, never evaluated, pure, refused with a named construct);
    - later, maybe MapLibre expressions (vector-tile interop) and a builder or node graph.
 3. **Back ends:** WGSL (and df64 where needed); a CPU float64 evaluator (picks, queries, legends, tests); and, for other runtimes, the IR's interpreter in cesium-native's language. Naga can translate the emitted WGSL to HLSL, MSL, GLSL or SPIR-V at build time ([naga-wasm README](https://github.com/kekkon-nexus/naga-wasm)), which is a route to GPU code in Unreal or Unity without hand-written back ends (untested here).
-4. **Profiles and versioning, like glTF's extensions:** `core` (scalars, vectors, colour, comparison, `match`), then `geometry` (position, normal, UV, for warps and vertex styling) and `differentiable` (AD, intervals). A document names the profile it needs, so a runtime refuses cleanly what it can't do.
+4. **Profiles and versioning, like glTF's extensions:** `core` (scalars, vectors, color, comparison, `match`), then `geometry` (position, normal, UV, for warps and vertex styling) and `differentiable` (AD, intervals). A document names the profile it needs, so a runtime refuses cleanly what it can't do.
 5. **Extra gifts of an IR over a string compiler:** interval evaluation of `show` over a tile's property ranges could cull whole tiles by style, and legends can be derived by evaluating over a range (ideas, untested). `Math.*` and `${property}` access are the only inputs; everything else is refused.
 6. **Don't make "JavaScript" the spec's word.** Say "a language with JavaScript-compatible syntax, defined here", so ECMAScript's coercions don't leak into the semantics.
 
 **Spike first (each bounded, in this order).**
 
-1. _Types and inputs on the IR._ Extend `ir.ts` with typed vec and colour values and input kinds; lower `styleExpression.ts`'s AST to it and emit WGSL. Gate: its existing tests pass through the IR path, and compiled shaders agree on the 1.x conformance cases ([modular-renderer.md](modular-renderer.md)).
+1. _Types and inputs on the IR._ Extend `ir.ts` with typed vec and color values and input kinds; lower `styleExpression.ts`'s AST to it and emit WGSL. Gate: its existing tests pass through the IR path, and compiled shaders agree on the 1.x conformance cases ([modular-renderer.md](modular-renderer.md)).
 2. _CPU evaluator._ Evaluate `show` and `color` in float64 and compare them with the GPU's readback. Gate: they agree within f32 tolerance, and a legend and a pick-time query use it.
 3. _JS front end for styles._ Point `parse.ts` at `(feature) => …`. Gate: the same style written as a 1.x string and as a function hashes to the same IR (hash-consing makes this a pointer comparison).
 4. _JSON round trip and a second implementation._ Serialize the IR and run the conformance vectors in an independent interpreter in another language (for example Python or C++). Gate: all vectors pass. Worth showing the cesium-native team early (unverified who).
@@ -83,14 +83,14 @@ None of these changes the core: they add types and input kinds to it.
 - Is the interchange a JSON IR, a text grammar, or both, with one normative?
 - Numeric semantics: do we define f32 results, or f64 with a tolerance? 1.x's `undefined` and `NaN` rules need an answer (today's compiler gives `a ?? b` a GPU-friendly meaning).
 - Are strings in the language (ids only, as now) or out, and how do 64-bit element IDs enter ([infrastructure-and-geoscience-capabilities.md](infrastructure-and-geoscience-capabilities.md) item 5)?
-- Does the colour model ([colour-in-the-styling-language.md](colour-in-the-styling-language.md)) go into the spec's profile, with CSS Color 4 spaces?
+- Does the color model ([color-in-the-styling-language.md](color-in-the-styling-language.md)) go into the spec's profile, with CSS Color 4 spaces?
 - Who takes the spec proposal to the 3D Tiles working group, and does the style language ship with 2.0 or after?
 
 ## IR libraries: a survey
 
-Sizes and licences marked _checked_ come from the npm registry and jsDelivr file listings on 2026-11-12 (package versions in the notes). The rest are from memory and unverified.
+Sizes and licenses marked _checked_ come from the npm registry and jsDelivr file listings on 2026-11-12 (package versions in the notes). The rest are from memory and unverified.
 
-| Candidate                                                                                                                                               | Size                                                                                                         | Licence                                                                                            | JS / WASM                                                                                                                             | Fit                                                                                                                                                              |
+| Candidate                                                                                                                                               | Size                                                                                                         | License                                                                                            | JS / WASM                                                                                                                             | Fit                                                                                                                                                              |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | [LLVM](https://llvm.org/docs/LangRef.html)                                                                                                              | `@live-codes/llvm-wasm` 0.1.0 (libLLVM 20.1.8): 59.5 MB unpacked of static libraries (checked)               | Apache-2.0 with LLVM exceptions (unverified)                                                       | No maintained TS IR-builder bindings found. That package is libraries "to link a wasm compiler against", not an API                   | Wrong level (SSA with memory, built for CPUs), no WGSL back end, no interval or AD tooling in JS. Build-time tooling at most. Not recommended                    |
 | [MLIR](https://mlir.llvm.org/)                                                                                                                          | Part of LLVM                                                                                                 | Apache-2.0 with LLVM exceptions (unverified)                                                       | None found (only syntax-highlighting packages on npm)                                                                                 | Extensible dialects are the right idea, with nothing to use from TS. Out                                                                                         |

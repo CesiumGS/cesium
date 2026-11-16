@@ -19,7 +19,7 @@ export function wholeSummary(
     skipped: 0,
     shown: 0,
     ms,
-    cancelled: false,
+    canceled: false,
   };
   for (const r of results) {
     if (r.missing !== undefined) {
@@ -112,7 +112,7 @@ export function createCatalogRuns(deps: {
       }
       lastRun = { startedAt: startedAt.iso, summary };
       runView = {
-        state: summary.cancelled ? "cancelled" : "done",
+        state: summary.canceled ? "canceled" : "done",
         done: results.length - before,
         total: results.length - before,
         summary: wholeSummary(results, summary.ms),
@@ -124,7 +124,7 @@ export function createCatalogRuns(deps: {
         return "the example was left";
       }
       runView = {
-        state: "cancelled",
+        state: "canceled",
         done: results.length - before,
         total: runView.total,
         reason: scrub(messageOf(error)),
@@ -133,7 +133,7 @@ export function createCatalogRuns(deps: {
         startedAt: startedAt.iso,
         summary: {
           ...wholeSummary(results, performance.now() - startedAt.ms),
-          cancelled: true,
+          canceled: true,
         },
       };
       invalidate();

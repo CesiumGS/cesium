@@ -1,5 +1,5 @@
 // Fixtures for the b-rep tests: a box, a capped cylinder and a trimmed NURBS
-// face (Spike B's surface). Lengths are metres.
+// face (Spike B's surface). Lengths are meters.
 import { BrepBuilder } from "../src/brep/build.ts";
 import { SurfaceKind, type BrepForm } from "../src/brep/form.ts";
 import {

@@ -214,7 +214,7 @@ describe("BrepCaps", () => {
 
   it("follows the form's placement: a form scaled and moved into the frame", () => {
     const world = engine.createWorld(options);
-    // The form in metres is drawn at twice the size, at x + 10.
+    // The form in meters is drawn at twice the size, at x + 10.
     const m = Float64Array.from([
       2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 2, 0, 10, 0, 0, 1,
     ]);

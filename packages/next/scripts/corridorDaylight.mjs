@@ -1,5 +1,5 @@
 // The design globe's corridor's daylight lines: a one-off design step, not
-// part of setup. It samples USGS 3DEP ground heights (NAVD88 metres, from
+// part of setup. It samples USGS 3DEP ground heights (NAVD88 meters, from
 // the public 3DEP elevation service, no token) in cross-sections along the
 // corridor's earthwork, then finds where each side slope
 // (examples/design-globe/sideSlopes.ts) meets the ground, and writes each
@@ -36,7 +36,7 @@ import { MAX_BATCH, SERVICE, groundHeights } from "./threeDep.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "..");
-/** Metres per US survey foot. */
+/** Meters per US survey foot. */
 const FT_US = 1200 / 3937;
 /** Requests in flight at once. */
 const PARALLEL = 3;
@@ -79,9 +79,9 @@ try {
   const frame = await EngineeringFrame.load(corridorFrame(), { proj, grids });
   const alignment = new Alignment(CORRIDOR_ALIGNMENT);
 
-  // The cache: ground heights by "station,offset", NAVD88 metres.
+  // The cache: ground heights by "station,offset", NAVD88 meters.
   const cache = {
-    source: `USGS 3DEP (${SERVICE}), NAVD88 metres`,
+    source: `USGS 3DEP (${SERVICE}), NAVD88 meters`,
     ...(readSampleCache(file, checkedCorridorSections) ?? {
       sampled: new Date().toLocaleDateString("en-CA"),
       ground: {},
@@ -269,15 +269,15 @@ try {
   );
 
   // Each stretch's ends: the ground across the section between the daylight
-  // lines (the centre too, under the road), as its upper and lower convex
+  // lines (the center too, under the road), as its upper and lower convex
   // hulls, for the end's cap: a portal's headwall stands over the upper
   // hull, an abutment's foot under the lower one. Offsets to 0.1 ftUS,
   // heights rounded outward to 0.1 ftUS.
-  const CENTRE = [-30, -20, -10, 0, 10, 20, 30];
+  const CENTER = [-30, -20, -10, 0, 10, 20, 30];
   const ends = [
     ...new Set(EARTHWORK.flatMap((r) => [r.fromStation, r.toStation])),
   ];
-  await sample(ends.flatMap((s) => CENTRE.map((o) => [s, o])));
+  await sample(ends.flatMap((s) => CENTER.map((o) => [s, o])));
   /** The hull of points sorted by offset, above (`sign` 1) or below (−1). */
   const hull = (points, sign) => {
     const out = [];
@@ -316,7 +316,7 @@ try {
         }
       }
     }
-    for (const o of CENTRE) {
+    for (const o of CENTER) {
       points.push([o, cache.ground[key(s, o)] / FT_US]);
     }
     points.sort((p, q) => p[0] - q[0]);
@@ -360,7 +360,7 @@ ${body}
  * the section between the daylight lines and under the road as its upper
  * and lower convex hulls, each [offset, height] from left to right
  * (offsets in ftUS to 0.1, NAVD88 heights in ftUS rounded outward to 0.1;
- * sampled at ${across} ftUS and at offsets ${CENTRE.join(", ")}): a
+ * sampled at ${across} ftUS and at offsets ${CENTER.join(", ")}): a
  * portal's headwall stands over the upper hull, an abutment's foot under
  * the lower one.
  */

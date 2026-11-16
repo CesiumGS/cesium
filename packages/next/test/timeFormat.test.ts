@@ -109,7 +109,7 @@ describe("timeParts", () => {
     expect(east.zoneLong).toMatch(/whole hours from UTC/);
   });
 
-  it("finds a place's zone through the application's lookup, else solar time, labelled so", () => {
+  it("finds a place's zone through the application's lookup, else solar time, labeled so", () => {
     const place = { longitude: 139.7 * deg, latitude: 35.7 * deg };
     const lookup = { zoneAt: () => "Asia/Tokyo" };
     expect(placeZone(place, lookup)).toEqual({

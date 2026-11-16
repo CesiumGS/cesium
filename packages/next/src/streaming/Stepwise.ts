@@ -629,7 +629,7 @@ export class StepwiseSelection implements TileSelection {
         : rootError
       : tile.geometricError;
     if (view.warp) {
-      // A geometric error is a length in the tile's own metres: the map
+      // A geometric error is a length in the tile's own meters: the map
       // stretches it by at most σ_max over the volume (an estimate), and its
       // fit adds its own error.
       const drawn = drawnTile(source, view.warp);

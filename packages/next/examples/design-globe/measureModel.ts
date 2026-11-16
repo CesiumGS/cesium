@@ -6,7 +6,7 @@
 // never instead of it, and "±" on every accuracy, a 1σ.
 //
 // Design lengths are given to 0.001 design units and true lengths to the
-// millimetre, the generator's answers' own precision for a checked
+// millimeter, the generator's answers' own precision for a checked
 // distance; the combined factor in ppm to 3 significant figures (the
 // panel's details, as the explorer's inspector) and tolerances and accuracy
 // to 2. Heights are written in the horizontal unit's symbol: `Measurement`
@@ -112,8 +112,8 @@ const LENGTH_UNITS: readonly (readonly [number, string])[] = [
 ];
 
 /**
- * A length in metres to 2 significant figures in the unit that reads best,
- * as the explorer's: km, m, mm, µm, nm (below a nanometre, nm still).
+ * A length in meters to 2 significant figures in the unit that reads best,
+ * as the explorer's: km, m, mm, µm, nm (below a nanometer, nm still).
  */
 export function meters(x: number): string {
   const a = Math.abs(x);
@@ -199,7 +199,7 @@ function end(
  * "—", and the ends have no station, offset or elevation).
  *
  * The design distances and deltas are in the design CRS's unit (its
- * symbol, from `unitSymbol`), the true distance in metres, the combined
+ * symbol, from `unitSymbol`), the true distance in meters, the combined
  * factor as the line's mean less 1 in ppm, the convergence at each end, and
  * the accuracy as the measurement's 1σ. Stations and offsets come from the
  * measurement's `alignment`; the elevation is the design point's height (in

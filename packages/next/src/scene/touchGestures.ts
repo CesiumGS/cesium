@@ -288,7 +288,7 @@ export class TouchGestures {
     }
   }
 
-  /** A touch pointer lifted or was cancelled. */
+  /** A touch pointer lifted or was canceled. */
   up(e: TouchEventLike): void {
     if (e.pointerType !== "touch") {
       return;

@@ -385,7 +385,7 @@ export function Scene() {
         <p>
           So a further item costs little: after the first, about 550 bytes a
           draw, by the code's reckoning, with nothing loaded twice. Tint and
-          opacity write a draw record per loaded draw, so a colour that changes
+          opacity write a draw record per loaded draw, so a color that changes
           every tick costs less as a custom shader's uniform.
         </p>
         <h3>How items behave</h3>
@@ -432,7 +432,7 @@ export function Scene() {
           </li>
           <li>
             <C>TilesetOptions.anchor</C> gives a tileset its anchor, fixed at
-            load. Content with body-fixed (ECEF) metres, as most is, belongs in
+            load. Content with body-fixed (ECEF) meters, as most is, belongs in
             a frame whose coordinates are body-fixed, such as one under ITRF.
           </li>
           <li>
@@ -522,7 +522,7 @@ export function Scene() {
           <li>
             <strong>OpenUSD.</strong> Its glossary calls a prim "the primary
             container object in USD", and a payload a composition arc that gives
-            a "deferred reference" behaviour (<Cite id="usdGlossary" />
+            a "deferred reference" behavior (<Cite id="usdGlossary" />
             ). The Alliance for OpenUSD promotes interoperability through it (
             <Cite id="aousd" />
             ).

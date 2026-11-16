@@ -163,7 +163,7 @@ function ShadowTick() {
   );
 }
 
-/** Metres, as a reader would say them. */
+/** Meters, as a reader would say them. */
 function distance(m: number) {
   const digits = (x: number) =>
     x >= 100 ? x.toFixed(0) : x >= 10 ? x.toFixed(1) : x.toFixed(2);
@@ -452,7 +452,7 @@ const COMPARE: [string, string, string][] = [
   [
     "Tiles off screen",
     "Only tiles the camera selected cast",
-    "A budgeted tileset selects casters. Stepwise keeps 1.x's behaviour",
+    "A budgeted tileset selects casters. Stepwise keeps 1.x's behavior",
   ],
 ];
 
@@ -505,7 +505,7 @@ export function Shadows() {
           Splits blend logarithmic and uniform at 0.9, which is Zhang et al.'s
           practical scheme. Two more choices keep the edges still. Each cascade
           is a sphere, so its size doesn't change as the camera turns. And its
-          centre snaps to a grid of texels in absolute light coordinates, so the
+          center snaps to a grid of texels in absolute light coordinates, so the
           grid stays on the ground as the camera moves. A cascade's texel size
           comes from the sphere, so it gives up some resolution for that.
         </p>

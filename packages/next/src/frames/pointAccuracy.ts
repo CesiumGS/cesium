@@ -60,7 +60,7 @@ interface TermFlags {
  *
  * - `pick`: how the pick itself places the point: `part` `"footprint"`,
  *   one CSS pixel's footprint at the hit (the pick reads the pixel's
- *   centre, which may be this far from where the click was meant);
+ *   center, which may be this far from where the click was meant);
  *   `"depth"`, the rounding of the depth buffer's float32 depth at the hit.
  * - `content`: how far the content's placement draws its design from where
  *   it truly is (`Georeference.displayError`; 0 m when reprojected).
@@ -71,7 +71,7 @@ export type PointAccuracyTerm =
       readonly frame: string;
       readonly kind: "pick";
       readonly part: "footprint" | "depth";
-      /** A worst-case bound, m (in true metres under a view warp). */
+      /** A worst-case bound, m (in true meters under a view warp). */
       readonly meters: number;
       readonly basis?: "bound";
       readonly note: string;
@@ -150,7 +150,7 @@ export interface PointAccuracy {
    * A picked point: the worst case, the sum of the terms that are bounds
    * (`basis: "bound"`: the pick's pixel footprint and depth rounding, the
    * content's displayed error, a fit's error bound, a domain point's own,
-   * an inverse's residual), in metres. Never converted to a 1σ nor added to
+   * an inverse's residual), in meters. Never converted to a 1σ nor added to
    * `sigma`: a bound and a σ answer different questions.
    */
   readonly bound?: number;
@@ -200,7 +200,7 @@ const COMBINATION =
   "root-sum-square of independent 1σ terms; each rotation error times the point's distance from that frame's origin (an upper bound: the accuracy names no axis)";
 
 const BEYOND =
-  "the root of the trace of a composed 1σ covariance: each figure becomes a covariance at the point (metres m: m²/3 in every axis; an angle about an axis: its size times the distance from the axis, across it; an angle with no axis: its size times the distance from the origin, across the line to the origin), rotated into the result's axes; independent figures add, shared sources combine by their rules";
+  "the root of the trace of a composed 1σ covariance: each figure becomes a covariance at the point (meters m: m²/3 in every axis; an angle about an axis: its size times the distance from the axis, across it; an angle with no axis: its size times the distance from the origin, across the line to the origin), rotated into the result's axes; independent figures add, shared sources combine by their rules";
 
 /** The radius holding 95% of a 3D normal, in σ (χ² with 3 degrees of freedom). */
 const BALL_95 = 2.7955;

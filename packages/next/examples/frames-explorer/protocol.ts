@@ -234,7 +234,7 @@ export interface RunSummary {
   shown: number;
   ms: number;
   /** Whether a `cancel` stopped the run before its last case. */
-  cancelled: boolean;
+  canceled: boolean;
 }
 
 /**

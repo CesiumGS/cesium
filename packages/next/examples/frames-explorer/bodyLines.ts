@@ -4,7 +4,7 @@
 // track, vehicles.ts), as the sky ray is (skyRay.ts): never from a worker
 // reply, which comes on the evaluation's cadence.
 //
-//  - The drone: its flight line; the camera's centre ray from the mount to
+//  - The drone: its flight line; the camera's center ray from the mount to
 //    where the page's trace met the terrain (sightLines.ts), with a ring and
 //    "Camera looks here · E, N" there; dashed to the trace's end when it met
 //    nothing, or before it is traced.
@@ -16,7 +16,7 @@
 //
 //  - The robot arm (Task 7b): its links joint to joint from the page's own
 //    joint frames (the knobs move them), a ring at the tool, and the
-//    straight line from the tool to the station, labelled with its length
+//    straight line from the tool to the station, labeled with its length
 //    and accuracy: the tool's composed here by the library (pointAccuracy)
 //    from the page's frames, the station's and PROJ's from the worker.
 //
@@ -53,7 +53,7 @@ import {
 
 const OVERLAY = "scenario:body";
 
-/** The lines' colours (the HUD exception: canvas colours). */
+/** The lines' colors (the HUD exception: canvas colors). */
 const COLOR = {
   white: "#ffffff",
   clear: "#3fb950",
@@ -240,7 +240,7 @@ export function createBodyLines(deps: {
   orionTrack?(): OrionTrack | undefined;
 }): BodyLines {
   const { globe } = deps;
-  /** Each segment overlay drawn, by id, and how (its colour and dash). */
+  /** Each segment overlay drawn, by id, and how (its color and dash). */
   const shown = new Map<string, string>();
   /** The static overlays (the track, the ring) and what they were drawn from. */
   const fixed = new Map<string, string>();

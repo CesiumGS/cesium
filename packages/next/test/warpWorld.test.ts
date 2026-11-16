@@ -76,7 +76,7 @@ function exaggerate(
   return out;
 }
 
-/** A quad `half` metres across in its xy plane, with a partner position 2 m up in z. */
+/** A quad `half` meters across in its xy plane, with a partner position 2 m up in z. */
 function quad(half = 1): MeshData {
   const h = half;
   return {
@@ -650,7 +650,7 @@ describe("draws across a warp", () => {
     const radius =
       s.world.raster.recordsF32[draw.index * RECORD_WORDS + RADIUS_WORD]!;
     const center = [0, 1, 2].map((i) => s.world.raster.recordsF32[o + i]!);
-    // The centre moved by the displacement there (tens of kilometres at
+    // The center moved by the displacement there (tens of kilometers at
     // k = 10), and the radius grew by the residual alone: the old padding
     // by the whole displacement would be over 20 km. Every displaced vertex
     // is inside the sphere the cull kernel tests.

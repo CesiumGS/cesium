@@ -1,6 +1,6 @@
 // A box against a view's depth pyramid (hzb.slang): the test the tile queries
 // (occlusionQuery.slang) and the draws' occlusion cull (cull.slang) share. A
-// box is a centre and three half-axes in the pyramid's camera space (x right,
+// box is a center and three half-axes in the pyramid's camera space (x right,
 // y up, z forward), relative to its eye. The test is conservative at every
 // step: any corner at or behind the near plane, or a rectangle off the screen,
 // leaves the box visible, and so does anything that doesn't add up (a NaN
@@ -38,14 +38,14 @@ public static const uint MAX_WINDOW = 8u;
 
 // Whether the box is certainly hidden by `pyramid`, reading at most
 // `window` x `window` texels (2, 4 or 8).
-public bool boxHidden(Texture2D<float> pyramid, PyramidCamera camera, float3 centre, float3 a, float3 b, float3 c, uint window) {
+public bool boxHidden(Texture2D<float> pyramid, PyramidCamera camera, float3 center, float3 a, float3 b, float3 c, uint window) {
   float frameWidth = float(camera.width);
   float frameHeight = float(camera.height);
   float nearestZ = 3.4e38;
   float2 low = float2(3.4e38, 3.4e38);
   float2 high = float2(-3.4e38, -3.4e38);
   for (uint k = 0u; k < 8u; k++) {
-    float3 p = centre +
+    float3 p = center +
                ((k & 1u) == 0u ? -a : a) +
                ((k & 2u) == 0u ? -b : b) +
                ((k & 4u) == 0u ? -c : c);

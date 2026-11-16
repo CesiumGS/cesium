@@ -58,7 +58,7 @@ interface ReferencedCase {
   readonly kind: "geographic" | "projected";
   readonly grids: readonly string[];
   readonly source: Source;
-  /** Metres. */
+  /** Meters. */
   readonly precision: number;
   readonly note?: string;
   readonly points: readonly GeoidPoint[];
@@ -90,8 +90,8 @@ const setup = () =>
 const RADIANS_PER_DEGREE = Math.PI / 180;
 const A = EARTH.ellipsoid.maximumRadius;
 
-/** Metres east and north between two longitude, latitude pairs (degrees), near enough at the mm level. */
-function horizontalMetres(
+/** Meters east and north between two longitude, latitude pairs (degrees), near enough at the mm level. */
+function horizontalMeters(
   lon: number,
   lat: number,
   lon0: number,
@@ -163,7 +163,7 @@ async function geographic(c: ReferencedCase): Promise<void> {
     const at = `${c.id} point ${i} (${lat}, ${lon})`;
     // Forward: H = 0 lands at h = N, with latitude and longitude unchanged.
     const forward = operation.forward([lon, lat, 0]);
-    const [east, north] = horizontalMetres(forward[0]!, forward[1]!, lon, lat);
+    const [east, north] = horizontalMeters(forward[0]!, forward[1]!, lon, lat);
     expect(Math.hypot(east, north), `${at}: forward moved`).toBeLessThan(
       c.precision,
     );
@@ -198,15 +198,15 @@ async function projected(c: ReferencedCase): Promise<void> {
     sameGrids(frame.operation.grids, c.grids),
     `${c.id} reads ${frame.operation.grids.join(", ")}`,
   ).toBe(true);
-  const metres = frame.units.metersPerUnit;
-  const heightMetres = frame.metersPerHeightUnit;
+  const meters = frame.units.metersPerUnit;
+  const heightMeters = frame.metersPerHeightUnit;
   let worst = 0;
   for (const { id, input, expected } of c.points) {
     const [lat, lon, h] = input as [number, number, number];
     const at = `${c.id} ${id ?? ""}`;
     // Forward: the published design point lands on the published position.
     const geodetic = frame.toGeodetic(expected);
-    const [east, north] = horizontalMetres(
+    const [east, north] = horizontalMeters(
       geodetic.longitude / RADIANS_PER_DEGREE,
       geodetic.latitude / RADIANS_PER_DEGREE,
       lon,
@@ -225,9 +225,9 @@ async function projected(c: ReferencedCase): Promise<void> {
       ),
     );
     const inverse = [
-      (design[0]! - expected[0]!) * metres,
-      (design[1]! - expected[1]!) * metres,
-      (design[2]! - expected[2]!) * heightMetres,
+      (design[0]! - expected[0]!) * meters,
+      (design[1]! - expected[1]!) * meters,
+      (design[2]! - expected[2]!) * heightMeters,
     ];
     for (const [axis, value] of ["E", "N", "H"].entries()) {
       expect(

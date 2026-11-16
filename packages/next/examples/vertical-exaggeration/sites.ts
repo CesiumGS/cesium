@@ -4,13 +4,13 @@ import { positionOf, type Place } from "./places.ts";
 /** A place with the true height of the ground there, as far as the terrain has loaded. */
 export interface Site {
   readonly place: Place;
-  /** Metres above the WGS84 ellipsoid: the terrain's, true, whatever is drawn. Undefined until it loads. */
+  /** Meters above the WGS84 ellipsoid: the terrain's, true, whatever is drawn. Undefined until it loads. */
   height: number | undefined;
   /** Where it is in ITRF (m), at `height` (the ellipsoid's surface until it loads). */
   position: Float64Array;
 }
 
-/** Heights that differ by less than this, m, are the same: refinement under a metre moves nothing. */
+/** Heights that differ by less than this, m, are the same: refinement under a meter moves nothing. */
 const SETTLED = 0.25;
 
 export function createSites(places: readonly Place[]): Site[] {

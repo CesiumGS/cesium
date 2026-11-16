@@ -137,7 +137,7 @@ export interface PyramidCamera {
 
 /** A box in camera space (x right, y up, z forward), relative to the eye. */
 export interface CameraBox {
-  readonly centre: ArrayLike<number>;
+  readonly center: ArrayLike<number>;
   /** Three half-axes, 9 numbers. */
   readonly axes: ArrayLike<number>;
 }
@@ -163,7 +163,7 @@ export function boxHidden(
   window = 2,
 ): boolean {
   const { frameWidth, frameHeight } = camera;
-  const c = box.centre;
+  const c = box.center;
   const a = box.axes;
   let nearestZ = Infinity;
   let lowX = Infinity;
@@ -240,14 +240,14 @@ export function boxHidden(
 /**
  * Whether a draw's culling sphere is certainly hidden by the pyramid: the
  * occlusion cull's test (cull.slang `sphereHidden`), the box around the
- * sphere along the camera's axes, through the widest window. `centre` is in camera space (x right, y
+ * sphere along the camera's axes, through the widest window. `center` is in camera space (x right, y
  * up, z forward), relative to the eye. A sphere with no bound (a radius of
  * 10³⁰ or more) never is.
  */
 export function sphereHidden(
   levels: readonly PyramidLevel[],
   camera: PyramidCamera,
-  centre: ArrayLike<number>,
+  center: ArrayLike<number>,
   radius: number,
   bias = OCCLUSION_BIAS,
 ): boolean {
@@ -257,7 +257,7 @@ export function sphereHidden(
   return boxHidden(
     levels,
     camera,
-    { centre, axes: [radius, 0, 0, 0, radius, 0, 0, 0, radius] },
+    { center, axes: [radius, 0, 0, 0, radius, 0, 0, 0, radius] },
     bias,
     MAX_WINDOW,
   );

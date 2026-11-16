@@ -72,7 +72,7 @@ function measurement(o: { accuracy?: number } = {}): Measurement {
 }
 
 describe("measurementModel", () => {
-  it("shows answers.pairs[0]: the horizontal and 3D design distances, labelled, and the true distance to the millimetre", () => {
+  it("shows answers.pairs[0]: the horizontal and 3D design distances, labeled, and the true distance to the millimeter", () => {
     const view = measurementModel(snap(A), snap(B), measurement());
     expect(view.horizontalDistance).toBe("10,000.000 ftUS");
     expect(view.designDistance).toBe("10,002.000 ftUS");

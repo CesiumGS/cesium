@@ -251,7 +251,7 @@ describe("the corridor's words and its point", () => {
     expect(stationText(1234.5)).toBe("12+34.50");
     expect(offsetText(15)).toBe("15.00 ft right");
     expect(offsetText(-2.5)).toBe("2.50 ft left");
-    expect(offsetText(0.001)).toBe("on the centreline");
+    expect(offsetText(0.001)).toBe("on the centerline");
   });
 
   it("reads the knobs off a dragged point through the local placement, snapped to their steps, and nothing off the road's ends", () => {

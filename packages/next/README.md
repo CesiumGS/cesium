@@ -53,7 +53,7 @@ integrity hash, about 20 MB) into `~/.cesium-bench/occt`. Only the
 single-threaded build is kept, since the threaded one needs cross-origin
 isolation. It is LGPL 2.1, so it is never bundled: the dev server serves it at
 `/occt/`, and `src/brep/occt.ts` loads it on request and converts its solids
-to `BrepForm`. Check the licence before distributing anything built with it.
+to `BrepForm`. Check the license before distributing anything built with it.
 `node scripts/occtTools.mjs` fetches it alone, and `OCCT_DIR` points at
 another copy.
 
@@ -64,7 +64,7 @@ NIST's official zip on nist.gov (about 14 MB to fetch, `scripts/stepSamples.mjs`
 pins its URL and SHA-256, and each kept file's) into
 `~/.cesium-bench/step/nist-pmi/<version>`, with a `NOTICE.txt`. The dev server
 serves them at `/step-samples/`, and the example imports them with Open CASCADE.
-They are a US government work (17 U.S.C. § 105, NIST open licence,
+They are a US government work (17 U.S.C. § 105, NIST open license,
 https://www.nist.gov/open/license), public domain in the US; NIST asks for
 credit, which the scene and `NOTICE.txt` give: "NIST MBE PMI test model",
 doi:10.18434/mds2-1452. Without them the scene says setup hasn't been run.
@@ -181,7 +181,7 @@ convertPoint(framePoint(orion.frame, [0, 0, 0], instant), frames.moonMe);
 Artemis OEM's segments) and names the covered spans; it never extrapolates.
 `orion.frame` is a child of `orion.reference` that sits on the object.
 
-**Two Earth-centred frames.** Time scales make the Earth's center two
+**Two Earth-centered frames.** Time scales make the Earth's center two
 frames. ITRF coordinates (stations, terrain) are TT-compatible. SPK and OEM
 data are TDB-compatible: SPICE subtracts barycentric positions and never
 scales them. IERS Conventions 2010 eq. 11.19 joins the two:
@@ -549,7 +549,7 @@ license and PROJ-data version of each grid the operation reads.
   then read as that model's heights, `frame.fallback` says which model
   replaced which vertical CRS and why, and the operation is the fallback
   CRS's. The `geoidFallback` accuracy term is undefined, never small, unless
-  you give `fallbackSigma` (metres), and a measurement warns
+  you give `fallbackSigma` (meters), and a measurement warns
   `geoid-fallback`. EGM2008's grid is 80.6 MB and loads whole.
 - **A height system with no grid** throws, naming the vertical CRS and what
   was checked: for example "no PROJ-data grid relates it to the ellipsoid"
@@ -573,7 +573,7 @@ back:
 - `placeReprojected(frame)`: every vertex through the frame's recorded
   operation, with no sag.
 
-Each has `displayed(design)` (body-fixed metres, as drawn), `designOf(position)`
+Each has `displayed(design)` (body-fixed meters, as drawn), `designOf(position)`
 (its exact inverse, so a measurement agrees with the design data in either
 mode) and `displayError(design)` (how far the placement draws the point from
 where it truly is; 0 when reprojected).
@@ -598,7 +598,7 @@ that tileset has a placement. Design coordinates come only when the position,
 the feature and the camera all come from one frame and the hit tile's bounds
 contain the position; if the camera moved during the pick it is tried once
 more, then only the position returns. Over the sky it resolves undefined.
-`tolerance` is one CSS pixel's footprint at the hit, in metres.
+`tolerance` is one CSS pixel's footprint at the hit, in meters.
 
 **Snapping**, split as CesiumJS 1.x splits it (`src/engineering/snap.ts`):
 
@@ -732,7 +732,7 @@ generated twice by setup (rigid and reprojected, with identical tile trees and
 vertex order), which the placement switch morphs between, the other placement
 ghosted. It opens with two measurements: station 1700+00 against its own true
 position (30.586 m apart when rigid, 0.000 m reprojected) and NGS mark HS5109
-against the centreline. A scale ladder of sites in seven countries' height
+against the centerline. A scale ladder of sites in seven countries' height
 systems (a building, a city block, a port, an airport, a solar farm, a campus
 and a 30 km pole line) shows the rigid error growing from 2.6 mm to 18 m, with
 its parts (curvature, scale factor, geoid). The measure tool snaps to the
@@ -913,7 +913,7 @@ options)` builds two-vector reference frames, adds them to the catalog as
 - **Showing time.** `timeParts(instant, zone)` gives the wall clock in UTC (a
   leap second reads 23:59:60), a civil zone, solar or nominal time, or the
   computer's zone. `placeZone(place, lookup)` gives a civil zone through an
-  application's `ZoneLookup`, else solar time, labelled so. The time controls
+  application's `ZoneLookup`, else solar time, labeled so. The time controls
   use it: with `zoneLookup` they offer and open on the place's civil zone.
 
 ## Recording the inspector's numbers
@@ -922,6 +922,6 @@ For performance debugging without reading the panel: the dev server can write th
 
 Start it with `record` in the page's URL (`#/examples/transform-graph?scene=exaggeration&record`) or the Record switch in the inspector. Rows are posted every 500 ms to `/__record` and appended to `~/.cesium-bench/inspector/<start>-<page>.csv` (`INSPECTOR_RECORD_DIR` moves it). `latest.csv` there points at the newest file: `tail -F ~/.cesium-bench/inspector/latest.csv`.
 
-Columns (`widgets/recorderRows.ts`): `kind` (`tick` or `gpu`), `t_ms`, `tick`, `state` (rendering or idle), `why` (what ran the tick, joined by `+`: camera, global, requested, uniforms, tiles, world, pick, wake, animation, continuous, loading), `cpu_ms`, `gpu_ms`, `views`, `drawn`, `known`, `in_flight`, `upload_queue`, `requests`, `bytes_received`, `cancelled`, `evicted`, `cache_mb`, `max_sse`, `occ_queries`, `occ_hidden`, `occ_flips`, `passes`, `frame`. GPU times arrive a few ticks late, so each is its own `gpu` row, filed under the tick that drew it, with every pass as `name=ms` in `passes`.
+Columns (`widgets/recorderRows.ts`): `kind` (`tick` or `gpu`), `t_ms`, `tick`, `state` (rendering or idle), `why` (what ran the tick, joined by `+`: camera, global, requested, uniforms, tiles, world, pick, wake, animation, continuous, loading), `cpu_ms`, `gpu_ms`, `views`, `drawn`, `known`, `in_flight`, `upload_queue`, `requests`, `bytes_received`, `canceled`, `evicted`, `cache_mb`, `max_sse`, `occ_queries`, `occ_hidden`, `occ_flips`, `passes`, `frame`. GPU times arrive a few ticks late, so each is its own `gpu` row, filed under the tick that drew it, with every pass as `name=ms` in `passes`.
 
 Images: `&frames=every:10` or `&frames=at:120,240` saves the view's final image as `<start>-<page>/frame-<tick>.png` beside the CSV (the row's `frame` is 1); the inspector's "Save the next tick's image" does one on demand.

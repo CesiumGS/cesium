@@ -7,14 +7,14 @@ import type { Scene, SceneHost, ScenePick } from "../scene.ts";
 import { button, checkbox, el, length, slider, trueDrawnTable } from "../ui.ts";
 
 const deg = Math.PI / 180;
-/** The synthetic rate at the bowl's centre, m a year: the order of Jakarta's reported 10 to 25 cm a year. */
+/** The synthetic rate at the bowl's center, m a year: the order of Jakarta's reported 10 to 25 cm a year. */
 const RATE = 0.15;
 /** The longest time the slider reaches, years. */
 const YEARS = 10;
 /** The strongest exaggeration of the subsidence the slider reaches. */
 const MAX = 300;
-/** The bowl's centre, near Muara Baru on Jakarta's north coast, and its width (σ), m. */
-const CENTRE = { longitude: 106.79, latitude: -6.11 };
+/** The bowl's center, near Muara Baru on Jakarta's north coast, and its width (σ), m. */
+const CENTER = { longitude: 106.79, latitude: -6.11 };
 const SIGMA = 2_500;
 
 export const subsidence: Scene = {
@@ -34,7 +34,7 @@ export const subsidence: Scene = {
     },
     {
       what: "Subsidence field",
-      who: "Synthetic: one Gaussian bowl, 2.5 km wide (σ), at Muara Baru, 15 cm a year at its centre",
+      who: "Synthetic: one Gaussian bowl, 2.5 km wide (σ), at Muara Baru, 15 cm a year at its center",
       terms:
         "Made up for this page; the rate is of the order reported for north Jakarta (Abidin et al. 2011, Natural Hazards 59; Chaussard et al. 2013, Remote Sensing of Environment 128), not read from their data.",
     },
@@ -43,18 +43,18 @@ export const subsidence: Scene = {
   async start(host: SceneHost) {
     const { viewer } = host;
     const { engine, world, view } = viewer;
-    const centre = Ellipsoid.WGS84.cartographicToCartesian(
-      fromDegrees(CENTRE.longitude, CENTRE.latitude, 0),
+    const center = Ellipsoid.WGS84.cartographicToCartesian(
+      fromDegrees(CENTER.longitude, CENTER.latitude, 0),
       vec3.vec3(),
     );
     const up = Ellipsoid.WGS84.geodeticSurfaceNormal(
-      centre,
+      center,
       new Float64Array(3),
     )!;
     // The one float of the node: time over the longest time, times the exaggeration over its largest.
     const scale = world.createPlacementParameter(0, { range: [0, 1] });
     const bowl = bump({
-      center: centre,
+      center: center,
       direction: up,
       amplitude: -RATE * YEARS * MAX,
       sigma: SIGMA,
@@ -101,14 +101,14 @@ export const subsidence: Scene = {
       ],
       detail: (f) =>
         f === frame
-          ? `bump along up, centre Muara Baru, σ ${SIGMA / 1000} km, amplitude × ${scale.value.toFixed(3)} of ${(RATE * YEARS * MAX).toFixed(0)} m`
+          ? `bump along up, center Muara Baru, σ ${SIGMA / 1000} km, amplitude × ${scale.value.toFixed(3)} of ${(RATE * YEARS * MAX).toFixed(0)} m`
           : undefined,
     });
 
     // ------------------------------------------------------- readouts
     const table = trueDrawnTable([
       "Subsidence here",
-      "Peak, at the bowl's centre",
+      "Peak, at the bowl's center",
     ]);
     const note = el(
       "p",
@@ -130,7 +130,7 @@ export const subsidence: Scene = {
       host.graph.refresh();
       const peakTrue = -RATE * state.years;
       table.set(
-        "Peak, at the bowl's centre",
+        "Peak, at the bowl's center",
         length(peakTrue, 2),
         length(peakTrue * state.factor, 1),
       );
@@ -234,7 +234,7 @@ export const subsidence: Scene = {
       el(
         "p",
         { className: "tgx-small" },
-        `Synthetic field: ${RATE * 100} cm a year at the centre, ${SIGMA / 1000} km wide (σ). Not InSAR.`,
+        `Synthetic field: ${RATE * 100} cm a year at the center, ${SIGMA / 1000} km wide (σ). Not InSAR.`,
       ),
       table.root,
       note,
@@ -243,8 +243,8 @@ export const subsidence: Scene = {
     const buildings = addOsmBuildings(host);
     whenDrawn(host, {
       terrainAt: {
-        longitude: CENTRE.longitude * deg,
-        latitude: CENTRE.latitude * deg,
+        longitude: CENTER.longitude * deg,
+        latitude: CENTER.latitude * deg,
       },
       tilesets: [{ name: "Cesium OSM Buildings", tileset: buildings }],
     });

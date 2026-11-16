@@ -1,4 +1,4 @@
-// Bend: the x axis curves about a centre at (ox, ·, oz + 1/κ) in the x–z
+// Bend: the x axis curves about a center at (ox, ·, oz + 1/κ) in the x–z
 // plane, y unchanged (Barr 1984's bend with a constant curvature): a
 // point at distance dz above the neutral line and dx along it goes to
 // angle θ = κ dx on the circle of radius 1/κ - dz. Orient it with an affine
@@ -29,7 +29,7 @@ export const bendDescriptor: TransformDescriptor = {
     oz: { default: 0, description: "a point on the neutral line, z" },
     curvature: {
       default: 0,
-      description: "1/radius, 1/m, positive curving towards +z",
+      description: "1/radius, 1/m, positive curving toward +z",
     },
   },
   forward(p, params, out, jacobian) {
@@ -122,7 +122,7 @@ export const bendDescriptor: TransformDescriptor = {
   slang: "bendParity",
 };
 
-/** A bend of constant `curvature` (1/m) about the line through `origin` (its x and z) along +x, towards +z. */
+/** A bend of constant `curvature` (1/m) about the line through `origin` (its x and z) along +x, toward +z. */
 export function bend(options: {
   curvature: number;
   origin?: ArrayLike<number>;

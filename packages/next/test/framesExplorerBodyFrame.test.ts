@@ -196,7 +196,7 @@ describe("the ship's sight line to the buoy over a hill", () => {
   });
 
   it("finds the mast height where it opens within the terrain's error, by hand", async () => {
-    // Bisect the hand clearance's zero and check both sides a metre off.
+    // Bisect the hand clearance's zero and check both sides a meter off.
     let lo = 25;
     let hi = 80;
     for (let i = 0; i < 40; i++) {

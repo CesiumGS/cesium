@@ -62,7 +62,7 @@ const road = new Alignment(CLOTHOID_ROAD);
 /**
  * The station and offset of `p` (design feet), as `alignment.stationOffset`
  * gives them; where a trip through the ground puts a point at the road's
- * very start or end a hair beyond it (station 0: the foot nanometres before
+ * very start or end a hair beyond it (station 0: the foot nanometers before
  * the start, Task 9), read on that end tangent's extension instead (the
  * station held to the road's ends, as the library holds its own). Only
  * within `within` (design units) of `design`, the point it set out from:
@@ -135,7 +135,7 @@ function framesOf(ctx: StressContext, cache: FrameCache<EngineeringFrame>) {
   };
 }
 
-/** The colours the page tints by layer (main.ts): the road engineering, the offset white. */
+/** The colors the page tints by layer (main.ts): the road engineering, the offset white. */
 const WHITE = [255, 255, 255, 255] as const;
 
 /** The road, its station ticks and the point's offset, Earth-fixed (ITRF). */
@@ -147,9 +147,9 @@ function roadOverlays(
   const at = (s: number, o: number) =>
     site.toBodyFixed([...road.pointAt(s, o), 0]);
   const steps = 200;
-  const centre = new Float64Array(3 * (steps + 1));
+  const center = new Float64Array(3 * (steps + 1));
   for (let i = 0; i <= steps; i++) {
-    centre.set(at((i * road.length) / steps, 0), 3 * i);
+    center.set(at((i * road.length) / steps, 0), 3 * i);
   }
   // A tick across the road every 100 ft, longer every 500 ft: long enough
   // to read from the scene's 1,600 m (fix 1).
@@ -170,7 +170,7 @@ function roadOverlays(
       geometry: {
         kind: "scenario",
         layers: [
-          layer("centreline", polyline(centre, [...WHITE])),
+          layer("centerline", polyline(center, [...WHITE])),
           layer("ticks", segments(Float64Array.from(ticks), [...WHITE])),
         ],
         ms: 0,
@@ -334,7 +334,7 @@ export const evaluateCorridor: ScenarioEvaluator = async (
   const method: NonNullable<ScenarioAnswer["method"]> = [
     {
       title: "The road",
-      text: "A tangent, a clothoid spiral, an arc of radius 800 ft, a spiral and a tangent: 2,000 ft of centreline in the site grid's design feet, as a road design file gives it.",
+      text: "A tangent, a clothoid spiral, an arc of radius 800 ft, a spiral and a tangent: 2,000 ft of centerline in the site grid's design feet, as a road design file gives it.",
     },
     {
       title: "From the ground to the site grid",
@@ -342,7 +342,7 @@ export const evaluateCorridor: ScenarioEvaluator = async (
     },
     {
       title: "Station and offset",
-      text: "The nearest foot of the perpendicular on the centreline: its station is the distance along the road from its start, and the offset the distance out to the point, positive to the right of the direction of travel.",
+      text: "The nearest foot of the perpendicular on the centerline: its station is the distance along the road from its start, and the offset the distance out to the point, positive to the right of the direction of travel.",
     },
   ];
   return {
@@ -376,7 +376,7 @@ export const evaluateCorridor: ScenarioEvaluator = async (
     answer: {
       label: `along the road, ${offsetText(found.offset)}`,
       aside: `Station ${stationText(found.station)}, ${elementAt(found.station)} · ${Math.abs(lat).toFixed(6)}° ${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(6)}° ${lon >= 0 ? "E" : "W"}`,
-      headline: `The point is at station ${stationText(found.station)}, ${offsetText(found.offset)} of the centreline, ${elementAt(found.station)}. Its place on the ground goes back through PROJ into ${CA.name} and the site grid, then a perpendicular dropped onto the road finds the nearest point on it: how far along the road that is, and how far out.`,
+      headline: `The point is at station ${stationText(found.station)}, ${offsetText(found.offset)} of the centerline, ${elementAt(found.station)}. Its place on the ground goes back through PROJ into ${CA.name} and the site grid, then a perpendicular dropped onto the road finds the nearest point on it: how far along the road that is, and how far out.`,
       value: found.station,
       unit: "ft",
       accuracy:
@@ -410,7 +410,7 @@ export const evaluateCorridor: ScenarioEvaluator = async (
     legend: [
       {
         key: "road",
-        label: "The clothoid road's centreline, with a tick every 100 ft",
+        label: "The clothoid road's centerline, with a tick every 100 ft",
         short: "Road",
         accuracy: "stations 0+00 to 20+00; longer ticks every 500 ft",
         line: "solid",

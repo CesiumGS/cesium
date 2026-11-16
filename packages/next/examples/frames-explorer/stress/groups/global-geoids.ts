@@ -77,7 +77,7 @@ export interface ReferencedGeoidCase {
   readonly kind: "geographic" | "projected";
   readonly grids: readonly string[];
   readonly source: GeoidSource;
-  /** The publisher's stated precision, metres. */
+  /** The publisher's stated precision, meters. */
   readonly precision: number;
   readonly note?: string;
   readonly points: readonly GeoidPoint[];
@@ -138,8 +138,8 @@ export const catalogGridsFrom =
 const DEGREE = Math.PI / 180;
 const A = EARTH.ellipsoid.maximumRadius;
 
-/** Metres east and north between two longitude, latitude pairs (degrees), near enough at the millimetre level. */
-function horizontalMetres(
+/** Meters east and north between two longitude, latitude pairs (degrees), near enough at the millimeter level. */
+function horizontalMeters(
   lon: number,
   lat: number,
   lon0: number,
@@ -233,7 +233,7 @@ async function geographic(
         new Float64Array(3),
       ),
     );
-    const [east, north] = horizontalMetres(forward[0]!, forward[1]!, lon, lat);
+    const [east, north] = horizontalMeters(forward[0]!, forward[1]!, lon, lat);
     worse(worst, Math.hypot(east, north), `${at}, moved horizontally`);
     worse(worst, forward[2]! - n, `${at}, N`);
     worse(worst, operation.inverse([lon, lat, n])[2]!, `${at}, H back`);
@@ -266,15 +266,15 @@ async function projected(
     },
     proj(ctx),
   );
-  const metres = frame.units.metersPerUnit;
-  const heightMetres = frame.metersPerHeightUnit;
+  const meters = frame.units.metersPerUnit;
+  const heightMeters = frame.metersPerHeightUnit;
   const worst: Worst = { value: 0, at: "" };
   for (const [i, { id, input, expected }] of c.points.entries()) {
     const [lat, lon, h] = input as [number, number, number];
     const at = id ?? `point ${i + 1}`;
     // Forward: the published design point lands on the published position.
     const geodetic = frame.toGeodetic(expected);
-    const [east, north] = horizontalMetres(
+    const [east, north] = horizontalMeters(
       geodetic.longitude / DEGREE,
       geodetic.latitude / DEGREE,
       lon,
@@ -291,9 +291,9 @@ async function projected(
       [east, "forward east"],
       [north, "forward north"],
       [geodetic.height - h, "forward height"],
-      [(design[0]! - expected[0]!) * metres, "inverse easting"],
-      [(design[1]! - expected[1]!) * metres, "inverse northing"],
-      [(design[2]! - expected[2]!) * heightMetres, "inverse height"],
+      [(design[0]! - expected[0]!) * meters, "inverse easting"],
+      [(design[1]! - expected[1]!) * meters, "inverse northing"],
+      [(design[2]! - expected[2]!) * heightMeters, "inverse height"],
     ];
     for (const [value, what] of deviations) {
       worse(worst, value, `${at}, ${what}`);

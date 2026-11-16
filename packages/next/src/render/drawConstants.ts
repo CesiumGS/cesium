@@ -176,8 +176,8 @@ export class DrawConstants {
   }
 
   /**
-   * The record's bounding sphere's centre and radius (model units): a
-   * placement moves it by the displacement at the centre
+   * The record's bounding sphere's center and radius (model units): a
+   * placement moves it by the displacement at the center
    * (`World.setPlacement`), which the cull kernel then tests.
    */
   setBounds(index: number, center: ArrayLike<number>, radius: number): void {

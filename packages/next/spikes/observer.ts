@@ -1718,7 +1718,7 @@ const groundSun = (degrees: number, fov = 3): SkyPose => {
   };
 };
 
-/** The share of a disc of radius `r` a disc of radius `m` covers, `d` from it. */
+/** The share of a disk of radius `r` a disk of radius `m` covers, `d` from it. */
 function discOverlap(r: number, m: number, d: number): number {
   if (d >= r + m) {
     return 0;
@@ -2128,7 +2128,7 @@ async function veilGroup(engine: Engine, say: Say): Promise<void> {
     const scene = glareScene(engine, { ev100: 15 });
     scene.aim(pose(0));
     await veilReady(engine, scene.view);
-    // A ring around the sun: what the veil moves, with no disc's pixels.
+    // A ring around the sun: what the veil moves, with no disk's pixels.
     const patch: number[] = [];
     let bad = 0;
     for (let i = 0; i <= 64; i++) {

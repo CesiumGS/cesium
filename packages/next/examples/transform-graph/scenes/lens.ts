@@ -26,7 +26,7 @@ const LENS = { k1: -0.264, k2: 0.108, k3: -0.031 };
 const HALF_WIDTH = 0.743;
 const SITE = { longitude: -122.3995, latitude: 37.7946 };
 
-/** A synthetic city in local metres (east, north, up): blocks and towers on a street grid, so every edge is straight. */
+/** A synthetic city in local meters (east, north, up): blocks and towers on a street grid, so every edge is straight. */
 function cityMeshes() {
   const city = new MeshBuilder();
   const streets: Array<{ points: number[][]; color: ReturnType<typeof hex> }> =
@@ -267,7 +267,7 @@ export const lens: Scene = {
       const drawn = host.queries.pickIn(pick, "drawn");
       const a = toCamera(truth.position);
       const b = toCamera(drawn.position);
-      // Pixels from the centre: the larger viewport dimension spans fov.
+      // Pixels from the center: the larger viewport dimension spans fov.
       const rect = v.pixelRect();
       const f =
         Math.max(rect.width, rect.height) / 2 / Math.tan(camera.fov / 2);

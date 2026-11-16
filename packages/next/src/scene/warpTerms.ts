@@ -19,7 +19,7 @@ export const LATTICE_CELLS = [1, 2, 4, 8] as const;
  * A scalar fitted over a lattice's cells, in the free fourth channel of its
  * rows (`.w`): a curved clip's signed distance (docs/design/geometry-through-placement-review.md, increment 8c).
  * The same cells and local coordinates as the displacement, 20 monomials a
- * cell: coefficient `cell · 20 + term`, metres, the sign
+ * cell: coefficient `cell · 20 + term`, meters, the sign
  * being the clip's keep rule (kept where it is ≤ 0).
  */
 export interface ClipField {
@@ -48,7 +48,7 @@ export interface ClipField {
  */
 export interface CubicLattice {
   readonly kind: "cubic";
-  /** The tile's centre in model coordinates (3). */
+  /** The tile's center in model coordinates (3). */
   readonly center: ArrayLike<number>;
   /** The tile's radius in model units (> 0). */
   readonly scale: number;
@@ -82,7 +82,7 @@ export interface AttributeTerm {
   /**
    * The attribute holds `(n̂, h)` (4 components: a unit normal and a signed
    * height, `HEIGHT_PROFILE_ATTRIBUTE`) and the displacement is `G(h)·n̂`,
-   * G the lift profile of `base`, `ceiling` and `band` (metres;
+   * G the lift profile of `base`, `ceiling` and `band` (meters;
    * camera/heightProfile.ts), not the attribute itself. `absolute` is false.
    * `maxDistance` then bounds |G(h)|.
    */

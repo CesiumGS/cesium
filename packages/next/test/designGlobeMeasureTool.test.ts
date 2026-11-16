@@ -295,7 +295,7 @@ function answers(): Answers {
 
 /**
  * Placements a test can see through: reprojected draws a design point at
- * metres (E·u, N·u, H·u), its true place; rigid draws it 31 m off (a fixed
+ * meters (E·u, N·u, H·u), its true place; rigid draws it 31 m off (a fixed
  * sag), as a rigid placement far from its anchor does.
  */
 function placements(): OpenerPlacements {
@@ -422,10 +422,10 @@ describe("the measurements the page opens with", () => {
       expect(v.designLabel).toBe("Design distance, horizontal");
       expect(v.slope).toBe("608.429 ftUS");
       expect(v.trueDistance).toBe("185.464 m");
-      expect(v.title).toBe("HS5109 GOLD CREEK to the centreline");
+      expect(v.title).toBe("HS5109 GOLD CREEK to the centerline");
     }
     // The headline: how far rigid draws the road from where it is, to the
-    // millimetre, shrinking through the morph.
+    // millimeter, shrinking through the morph.
     const hero = (t: number) =>
       openerView(mark!, a, { t, exaggeration: 1, morphing: t > 0 && t < 1 })
         .hero;

@@ -227,7 +227,7 @@ describe("findPeaks", () => {
     }
   });
 
-  it("counts a flat-topped disc once", () => {
+  it("counts a flat-topped disk once", () => {
     const lum = new Float32Array(W * H);
     for (let y = 40; y <= 46; y++) {
       for (let x = 100; x <= 106; x++) {
@@ -237,7 +237,7 @@ describe("findPeaks", () => {
     expect(findPeaks(lum, W, H)).toHaveLength(1);
   });
 
-  it("counts a disc stretched in x at Dec 85 once, two peaks 3 texels apart at the equator twice", () => {
+  it("counts a disk stretched in x at Dec 85 once, two peaks 3 texels apart at the equator twice", () => {
     const stretched = new Float32Array(W * H);
     blob(stretched, W, H, 120, yOfDec(85, H), 0.5, 11.5, 0.8);
     expect(findPeaks(stretched, W, H)).toHaveLength(1);

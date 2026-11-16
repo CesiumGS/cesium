@@ -87,7 +87,7 @@ export function createTriadLayer(deps: {
     for (const id of ids) {
       const frame = byName.get(id);
       if (frame === undefined || id === "ICRF" || id === "HCRS") {
-        // The barycentre's and the Sun's origins are far off the scene.
+        // The barycenter's and the Sun's origins are far off the scene.
         continue;
       }
       const geocentric = id === "ITRF" || id === "GCRF" || id === "EME2000";

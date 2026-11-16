@@ -549,7 +549,7 @@ describe("the design globe's generated tiles", () => {
     }
     const stated = rigidJson.extensions[DUAL_POSITION_EXTENSION];
     expect(stated.position).toBe(REPROJECTED_SEMANTIC);
-    // float32 rounding of the two positions apart, a millimetre at most.
+    // float32 rounding of the two positions apart, a millimeter at most.
     expect(Math.abs(stated.maxDistance - farthest)).toBeLessThan(1e-2);
     // The corridor's largest rigid error, about 38 m, in US survey feet.
     expect(stated.maxDistance * frame.units.metersPerUnit).toBeGreaterThan(30);
@@ -618,8 +618,8 @@ describe("the design globe's generated tiles", () => {
       if (r.json.children || !r.json.content) {
         continue;
       }
-      // The tile's centre in design units: its translations from the root.
-      const centre = [0, 1, 2].map((k) =>
+      // The tile's center in design units: its translations from the root.
+      const center = [0, 1, 2].map((k) =>
         r.chain.slice(1).reduce((sum, m) => sum + m[12 + k]!, 0),
       );
       const bytes = read("corridor", r.json.content.uri);
@@ -627,7 +627,7 @@ describe("the design globe's generated tiles", () => {
       const b = seconds(bytes);
       for (let i = 0; i < a.length / 3; i += 50) {
         const local = zUp(a, i);
-        const design = local.map((v, k) => centre[k]! + v);
+        const design = local.map((v, k) => center[k]! + v);
         const gap = (got: ArrayLike<number>) =>
           Math.hypot(
             (got[0]! - design[0]!) * mpu,
@@ -767,7 +767,7 @@ describe("the design globe's generated tiles", () => {
     // in every table since 2017).
     const instant = Instant.fromUtc(Date.parse(DESIGN_TILES_INSTANT), builtIn);
 
-    // A point at 10 km, and one off the centreline on the bridge.
+    // A point at 10 km, and one off the centerline on the bridge.
     for (const point of [
       answers.points.find((p: Json) => p.nearKm === 10),
       answers.points.find(
@@ -891,11 +891,11 @@ describe("the design globe's generated tiles", () => {
     expect(reprojected.displayError(marker.design)).toBe(0);
   });
 
-  it("places the NGS mark: PROJ's zone 3 against the datasheet, and its distances to the centreline", () => {
+  it("places the NGS mark: PROJ's zone 3 against the datasheet, and its distances to the centerline", () => {
     const mark = answers.mark;
     expect(mark.pid).toBe(SURVEY_MARK.pid);
     // The published position on the ellipsoid against the datasheet's own
-    // X, Y, Z (to the millimetre it publishes; the GRS80 and WGS 84
+    // X, Y, Z (to the millimeter it publishes; the GRS80 and WGS 84
     // ellipsoids differ by about 0.1 mm here).
     for (let k = 0; k < 3; k++) {
       expect(
@@ -919,7 +919,7 @@ describe("the design globe's generated tiles", () => {
         "pass",
       );
     }
-    // Its nearest centreline point and the distances to it.
+    // Its nearest centerline point and the distances to it.
     const at = alignment.stationOffset(mark.design);
     expect([at.station, at.offset]).toEqual([
       mark.nearest.station,
@@ -947,7 +947,7 @@ describe("the design globe's generated tiles", () => {
   });
 });
 
-/** The ladder (owner, 2026-11-07), smallest first: each model's extent, metres. */
+/** The ladder (owner, 2026-11-07), smallest first: each model's extent, meters. */
 const LADDER_EXTENTS: Record<string, number> = {
   amsterdam: 60,
   tokyo: 1_000,
@@ -1041,7 +1041,7 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
         const pa = positions(ra);
         const pb = seconds(ra);
         expect(pb.length, uri).toBe(pa.length);
-        const centre = [0, 1, 2].map((k) =>
+        const center = [0, 1, 2].map((k) =>
           r.chain.slice(1).reduce((sum, m) => sum + m[12 + k]!, 0),
         );
         const leaf = !r.json.children;
@@ -1051,7 +1051,7 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
         const step = leaf ? 1 : 7;
         for (let i = 0; i < pa.length / 3; i += step) {
           const local = zUp(pa, i);
-          const design = local.map((v, k) => centre[k]! + v);
+          const design = local.map((v, k) => center[k]! + v);
           const gap = (got: ArrayLike<number>) =>
             Math.hypot(
               (got[0]! - design[0]!) * mpu,
@@ -1069,7 +1069,7 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
             );
             checked++;
           } else {
-            // A parent's float32 offsets span its whole box: a millimetre.
+            // A parent's float32 offsets span its whole box: a millimeter.
             worstPartner = Math.max(worstPartner, partner);
           }
         }
@@ -1107,7 +1107,7 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
           const [i, j, k] = [index[t]!, index[t + 1]!, index[t + 2]!];
           longest = Math.max(longest, edge(i, j), edge(j, k), edge(k, i));
         }
-        // Metres, from design units; the tile's error is in design units too.
+        // Meters, from design units; the tile's error is in design units too.
         const sag = (longest * mpu * longest * mpu) / (8 * MIN_RADIUS);
         const error = json.geometricError * mpu;
         expect(sag, json.content.uri).toBeLessThanOrEqual(error);
@@ -1131,10 +1131,10 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
         names: string[];
       };
       const all: Read[] = [];
-      const visit = (json: Json, centre: number[]): Read[] => {
+      const visit = (json: Json, center: number[]): Read[] => {
         const here = json.transform
-          ? centre.map((v, k) => v + json.transform[12 + k])
-          : centre;
+          ? center.map((v, k) => v + json.transform[12 + k])
+          : center;
         const below: Read[] = (json.children ?? []).flatMap((c: Json) =>
           visit(c, here),
         );
@@ -1299,9 +1299,9 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
     for (const site of LADDER) {
       const a = answers.sites[site.id];
       const { frame, rigid, rigidJson } = loaded.get(site.id)!;
-      const metres = LADDER_EXTENTS[site.id]!;
+      const meters = LADDER_EXTENTS[site.id]!;
       expect(a.kind).toBe(site.model.kind);
-      expect(Math.abs(a.extent - metres) / metres, site.id).toBeLessThan(0.1);
+      expect(Math.abs(a.extent - meters) / meters, site.id).toBeLessThan(0.1);
       expect(a.anchor).toEqual(modelAnchor(site));
       expect(a.points.map((p: Json) => p.label).slice(0, 2)).toEqual([
         "Anchor",
@@ -1364,9 +1364,9 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
     expect(corridor).toBeGreaterThan(previous);
   });
 
-  it("colours the site-grid building once: by vertex, on a white material (UX review M-a)", () => {
-    // glTF multiplies baseColorFactor by COLOR_0, so a coloured material
-    // over coloured vertices would square the building's colour.
+  it("colors the site-grid building once: by vertex, on a white material (UX review M-a)", () => {
+    // glTF multiplies baseColorFactor by COLOR_0, so a colored material
+    // over colored vertices would square the building's color.
     const json = tileset("site-building");
     const uris: string[] = [];
     const visit = (tile: Json) => {
@@ -1410,7 +1410,7 @@ describe("the scale ladder's tilesets (Task 17b)", () => {
     );
     expect(far[2]).toBeGreaterThan(m.ground![nearest]! - 3);
     expect(far[2]).toBeLessThanOrEqual(m.ground![nearest]!);
-    // The shot's centre is among the poles: within a pole's height of the
+    // The shot's center is among the poles: within a pole's height of the
     // top of one, as it truly is or as rigid draws it.
     const { rigid, reprojected } = loaded.get("london")!;
     const shot = poleLineShot(a.points[2], a.points[0]);

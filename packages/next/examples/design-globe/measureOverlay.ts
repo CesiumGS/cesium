@@ -2,7 +2,7 @@
 // in the viewer"): each measurement's line, the other placement's line
 // ghosted beside it (dashed), the ruler's ticks and the small crosses at the
 // marker and the survey mark. Drawn as the explorer draws its overlays:
-// unlit, depth-tested line lists in the engine's Earth-fixed metres, the
+// unlit, depth-tested line lists in the engine's Earth-fixed meters, the
 // labels HTML (measureTool.ts, panel/Measure.tsx).
 //
 // Every vertex carries both placements' positions, as the whiskers do
@@ -45,22 +45,22 @@ export interface OverlayLine {
   /** Draw the other placement's line, dashed. */
   readonly ghost: boolean;
   /**
-   * Metres: draw each segment as a level strip this wide instead of a 1 px
+   * Meters: draw each segment as a level strip this wide instead of a 1 px
    * line (the engine has no wide lines), so a mark close up has real width.
    */
   readonly width?: number;
 }
 
 /**
- * How far a line stands over the ends it joins, metres, along the vertical:
+ * How far a line stands over the ends it joins, meters, along the vertical:
  * a 1 px line in the plane of the surface it marks (the median barrier's top,
  * a lane between two clicks) fights it for depth, dashing as the camera
- * moves. Five centimetres clears a surface at any range the line reads.
+ * moves. Five centimeters clears a surface at any range the line reads.
  */
 export const LINE_LIFT = 0.05;
 /** Dashes per ghost segment. */
 const DASHES = 24;
-/** A ghost's colour, of its line's (lines can't blend: darker instead). */
+/** A ghost's color, of its line's (lines can't blend: darker instead). */
 const GHOST_SHADE = 0.5;
 
 interface Drawn {
@@ -255,7 +255,7 @@ export class MeasureOverlay {
     return draw;
   }
 
-  /** A line's segments as level strips `line.width` metres wide (two triangles each). */
+  /** A line's segments as level strips `line.width` meters wide (two triangles each). */
   private strips(
     line: OverlayLine,
     colors: readonly (readonly number[])[],
@@ -385,10 +385,10 @@ export function measureLines(
   return lines;
 }
 
-/** The ruler's ticks and bracket as strips, metres wide: about 4 px at "Close in on the ruler". */
+/** The ruler's ticks and bracket as strips, meters wide: about 4 px at "Close in on the ruler". */
 const RULER_WIDTH = 0.05;
 
-/** How far a ruler tick reaches from the line, metres: every 1,000 ft, every 5,000, and the end's. */
+/** How far a ruler tick reaches from the line, meters: every 1,000 ft, every 5,000, and the end's. */
 const TICK = { minor: 1.5, major: 2.5, end: 4 } as const;
 
 /**
@@ -401,7 +401,7 @@ const TICK = { minor: 1.5, major: 2.5, end: 4 } as const;
 export function rulerLine(o: Opener, end: RulerEnd): OverlayLine {
   const segments: { a: DrawnEnd; b: DrawnEnd }[] = [];
   const colors: string[] = [];
-  /** A point `f` of the way along the line, `side × reach` metres square to it. */
+  /** A point `f` of the way along the line, `side × reach` meters square to it. */
   const along = (f: number, side: number, reach: number): DrawnEnd => {
     const at = (p: "rigid" | "reprojected") => {
       const x = o.shown.a[p];
@@ -457,7 +457,7 @@ export function rulerTips(o: Opener, end: RulerEnd): [DrawnEnd, DrawnEnd] {
   return [line.segments[n - 1]!.a, line.segments[n - 1]!.b];
 }
 
-/** The farthest apart a line's ends are in the two placements, metres. */
+/** The farthest apart a line's ends are in the two placements, meters. */
 function farthest(line: OverlayLine): number {
   let reach = 0;
   for (const s of line.segments) {
@@ -485,7 +485,7 @@ function enu(p: ArrayLike<number>): {
   return { east, north, up };
 }
 
-/** A small level cross on the ground at `p`, `r` metres each way. */
+/** A small level cross on the ground at `p`, `r` meters each way. */
 function groundCross(
   p: ArrayLike<number>,
   r: number,

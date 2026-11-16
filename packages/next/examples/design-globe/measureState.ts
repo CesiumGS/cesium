@@ -23,13 +23,13 @@ export interface MeasureEnd {
   readonly site: string;
   /** The design point, in the site's CRS's units. */
   readonly design: Float64Array;
-  /** Where the end is marked in each placement (body-fixed metres). */
+  /** Where the end is marked in each placement (body-fixed meters). */
   readonly rigid: Float64Array;
   readonly reprojected: Float64Array;
   readonly how: MeasureHow;
   /** What a snap landed on. */
   readonly kind?: SnapKind;
-  /** Metres: 0 for an exact snap or a linked point. */
+  /** Meters: 0 for an exact snap or a linked point. */
   readonly tolerance: number;
   /** Marked on the visible surface above the exact point (the barrier's top). */
   readonly shownAbove?: boolean;

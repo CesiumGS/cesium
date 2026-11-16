@@ -345,7 +345,7 @@ function look(view: View, eye: V3, direction: V3, up: V3): void {
   view.camera.version++;
 }
 
-/** The ray through the centre of pixel (px, py): origin and unit direction, in the root frame. */
+/** The ray through the center of pixel (px, py): origin and unit direction, in the root frame. */
 function pixelRay(view: View, px: number, py: number): { o: V3; d: V3 } {
   const c = view.camera;
   const t = Math.tan(view.camera.fovy(WIDTH / HEIGHT) / 2);
@@ -392,7 +392,7 @@ interface Comparison {
 /**
  * Compares the image's green channel (white above the midpoint of the
  * brightest value and the background's) with `expected`, over the pixels
- * whose 3 × 3 neighbourhood agrees.
+ * whose 3 × 3 neighborhood agrees.
  */
 function compare(
   pixels: Uint8ClampedArray,
@@ -403,7 +403,7 @@ function compare(
   let brightest = 0;
   for (let py = 0; py < HEIGHT; py++) {
     for (let px = 0; px < WIDTH; px++) {
-      // A pixel the field's stated error can't classify is its own class, left out with its neighbours.
+      // A pixel the field's stated error can't classify is its own class, left out with its neighbors.
       e[py * WIDTH + px] = uncertain?.(px, py) ? 2 : expected(px, py) ? 1 : 0;
       brightest = Math.max(brightest, pixels[(py * WIDTH + px) * 4 + 1]!);
     }

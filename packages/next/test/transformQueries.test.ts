@@ -134,7 +134,7 @@ function utmRoute() {
   return { graph, world, content, route: routeBetween(content, world) };
 }
 
-/** A route with a twist (rate per metre) under a large rigid offset. */
+/** A route with a twist (rate per meter) under a large rigid offset. */
 function twistRoute(rate = 1e-5) {
   const graph = new TransformGraph();
   const world = graph.root("world");
@@ -346,7 +346,7 @@ describe("accuracy along a route", () => {
       near(got.covariance, want.covariance!, 1e-12);
     });
 
-    it("agrees across the catalogue's own edges (ITRF to GCRF)", () => {
+    it("agrees across the catalog's own edges (ITRF to GCRF)", () => {
       const p = [6378137 + 30, -40, 12];
       const want = pointAccuracy(framePoint(itrf, p, instant), gcrf, instant);
       const got = accuracyAlong(
@@ -581,7 +581,7 @@ describe("a core pick in any node", () => {
     expect(t.footprint).toBeGreaterThan(0);
   });
 
-  it("carries a pick to a catalogue frame through the frames' graph", () => {
+  it("carries a pick to a catalog frame through the frames' graph", () => {
     const plain = createFrameCatalog({ data: syntheticFrameData() });
     const plainItrf = plain.get("ITRF", { user: "application" });
     const plainPad = eastNorthUpFrame(
@@ -910,7 +910,7 @@ describe("chord error and subdivision", () => {
     const { route } = exaggerationRoute(10);
     // ENU frame at 46.5° N: a point 1.5 km up is 4 km above the ellipsoid, and
     // one 7.4 km up (51 km out along the tangent plane) is in the blend band
-    // (7.2 to 9 km), where the lift's slope changes by 9/1800 per metre.
+    // (7.2 to 9 km), where the lift's slope changes by 9/1800 per meter.
     const below = curvatureOver(route, [1200, -800, 1500], 10);
     expect(below).toBeGreaterThan(1e-6);
     expect(below).toBeLessThan(1e-5);
@@ -921,7 +921,7 @@ describe("chord error and subdivision", () => {
     );
     const band = curvatureOver(route, [51200, 49200, 3000], 10);
     expect(band / (9 / 1800)).toBeCloseTo(1, 2);
-    // The chord error of a 50 km edge is then hundreds of metres: far past a pixel.
+    // The chord error of a 50 km edge is then hundreds of meters: far past a pixel.
     expect(chordError(below, 5e4)).toBeGreaterThan(100);
   });
 });

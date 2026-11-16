@@ -128,7 +128,7 @@ await Promise.all(
   }),
 );
 
-// Elevation as float32 metres above NAVD88, from an uncompressed TIFF.
+// Elevation as float32 meters above NAVD88, from an uncompressed TIFF.
 const demPath = join(STORE, "dem.f32");
 if (!existsSync(demPath)) {
   const width = 1200;

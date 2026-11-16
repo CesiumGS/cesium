@@ -158,7 +158,7 @@ describe("London: EPSG:27700+5701 with an area of interest", () => {
     expect(frame.gridCredits).toEqual([
       "Ordnance Survey (BSD-2-Clause), via PROJ-data 1.25.0",
     ]);
-    // The design point at the area's centre lands in London.
+    // The design point at the area's center lands in London.
     const at = frame.toGeodetic([530_000, 180_000, 10]);
     expect((at.longitude * 180) / Math.PI).toBeCloseTo(-0.13, 1);
     expect((at.latitude * 180) / Math.PI).toBeCloseTo(51.5, 1);
@@ -219,7 +219,7 @@ describe("EPSG:26741 (plan 4a's case), NADCON not loaded", () => {
     expect(frame.operation.accuracy).toBe(2.15);
     expect(frame.operation.grids).toEqual([CNHPGN, CONUS]);
     expect(frame.operation.betterCandidates).toEqual([]);
-    // Better than the Helmert it took before: NADCON moves the point by metres.
+    // Better than the Helmert it took before: NADCON moves the point by meters.
     const helmert = listOperations(P, CS27, WGS84_3D).find(
       (c) => c.name === CS27_HELMERT,
     );

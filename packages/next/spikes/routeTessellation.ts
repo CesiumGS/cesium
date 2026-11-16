@@ -7,10 +7,10 @@
 // the draw, `src/transform/curvature.ts`, L the edge's length), which falls
 // as 1/n² under n-fold subdivision. So:
 //   - per draw (CPU, float64): M₂ from the route's Jacobian over the draw's
-//     box (27 samples, ×1.25 for an estimate) and the tolerance in metres, a
+//     box (27 samples, ×1.25 for an estimate) and the tolerance in meters, a
 //     fraction of a pixel at the draw's nearest distance;
 //   - per triangle (GPU, `subdivide`): n = ceil(√(M₂L²/8 / tolerance)), 1 to
-//     64, uniform over the triangle, from its longest edge in local metres;
+//     64, uniform over the triangle, from its longest edge in local meters;
 //   - the draw's one indirect draw (`writeArgs`): n² sub-triangles per
 //     triangle in chunks of 16 (48 vertices, one instance each), written
 //     the way dice.slang's `dicePatches` and `writePatchArgs` write a b-rep
@@ -109,8 +109,8 @@ function rigid(angle: number, t: ArrayLike<number>): Float64Array {
 interface Scenario {
   name: string;
   route: Route;
-  /** The draw's centre in the route's local frame, and the half extents of its box. */
-  centre: Float64Array;
+  /** The draw's center in the route's local frame, and the half extents of its box. */
+  center: Float64Array;
   half: readonly [number, number, number];
   /** A grid of `cells` × `cells` squares across the box's top face, two triangles each. */
   cells: number;
@@ -144,7 +144,7 @@ function exaggerationScenario(cells: number): Scenario {
   return {
     name: `×10 exaggeration over a 50 km tile, ${cells === 1 ? "2 triangles" : `${2 * cells * cells} triangles`}`,
     route: routeBetween(content, world),
-    centre: Float64Array.of(0, 0, 1500),
+    center: Float64Array.of(0, 0, 1500),
     half: [25000, 25000, 1],
     cells,
     distance: 10000,
@@ -167,7 +167,7 @@ function utmScenario(cells: number): Scenario {
   return {
     name: `UTM 31 · ×3 exaggeration over a 50 km tile, ${2 * cells * cells} triangles`,
     route: routeBetween(content, world),
-    centre: Float64Array.of(0, 0, 1500),
+    center: Float64Array.of(0, 0, 1500),
     half: [25000, 25000, 1],
     cells,
     distance: 10000,
@@ -203,7 +203,7 @@ function lensScenario(cells: number): Scenario {
   return {
     name: `radial lens distortion across the frame (±50° of a 60 m plane), ${cells === 1 ? "2 triangles" : `${2 * cells * cells} triangles`}`,
     route: routeBetween(content, world),
-    centre: Float64Array.of(0, 0, 60),
+    center: Float64Array.of(0, 0, 60),
     half: [70, 45, 1],
     cells,
     distance: 40,
@@ -303,7 +303,7 @@ async function compileModule(
   return module;
 }
 
-// The kernels. The route's fragment (`DrawCentre`, `RouteUniforms`,
+// The kernels. The route's fragment (`DrawCenter`, `RouteUniforms`,
 // `transformPoint`) comes first.
 const KERNELS = `
 struct TessParams {
@@ -321,8 +321,8 @@ const SUBS_PER_CHUNK = ${SUBS_PER_CHUNK}u;
 const VERTS_PER_CHUNK = ${3 * SUBS_PER_CHUNK}u;
 
 @group(0) @binding(0) var<uniform> u: RouteUniforms;
-@group(0) @binding(1) var<storage, read> draws: array<DrawCentre>;
-// Three corners per triangle, offsets from the draw's centre.
+@group(0) @binding(1) var<storage, read> draws: array<DrawCenter>;
+// Three corners per triangle, offsets from the draw's center.
 @group(0) @binding(2) var<storage, read> tris: array<vec4f>;
 @group(0) @binding(3) var<uniform> tess: TessParams;
 // (triangle, level, first sub-triangle, 0), one per chunk (instance).
@@ -479,7 +479,7 @@ async function makePipelines(
   return { layout, subdivide, writeArgs, evaluate };
 }
 
-/** A grid of `cells` × `cells` squares over the box's top face, two triangles each, as offsets from the centre (float32). */
+/** A grid of `cells` × `cells` squares over the box's top face, two triangles each, as offsets from the center (float32). */
 function gridTriangles(scenario: Scenario): Float32Array {
   const { cells, half } = scenario;
   const out: number[] = [];
@@ -503,15 +503,15 @@ function gridTriangles(scenario: Scenario): Float32Array {
 
 /** The corners of a box, for sampling M₂: a 3 × 3 × 3 grid. */
 function boxSamples(scenario: Scenario): number[] {
-  const { centre, half } = scenario;
+  const { center, half } = scenario;
   const out: number[] = [];
   for (const i of [-1, 0, 1]) {
     for (const j of [-1, 0, 1]) {
       for (const k of [-1, 0, 1]) {
         out.push(
-          centre[0]! + i * half[0],
-          centre[1]! + j * half[1],
-          centre[2]! + k * half[2],
+          center[0]! + i * half[0],
+          center[1]! + j * half[1],
+          center[2]! + k * half[2],
         );
       }
     }
@@ -561,7 +561,7 @@ async function tessellate(
   const { route } = scenario;
   const compiled = compileRoute(route, {
     normals: false,
-    centreCompute: false,
+    centerCompute: false,
   });
   if (!compiled.ok) {
     throw new Error(compiled.reason);
@@ -575,11 +575,11 @@ async function tessellate(
     curvatureOver(route, boxSamples(scenario), scenario.step);
   const tolerance = TOLERANCE_PIXELS * pixel;
 
-  const eye = route.forward(scenario.centre, new Float64Array(3));
+  const eye = route.forward(scenario.center, new Float64Array(3));
   const uniforms = new Float32Array(compiled.uniformsLayout.floats);
   compiled.fillUniforms(route, uniforms, eye);
   const record = new Float32Array(compiled.perDrawLayout.floats);
-  compiled.centreConstants(scenario.centre, undefined, route, record);
+  compiled.centerConstants(scenario.center, undefined, route, record);
   const params = new ArrayBuffer(32);
   new Float32Array(params, 0, 2).set([curvature, tolerance]);
   new Uint32Array(params, 8, 3).set([MAX_LEVEL, count, CAPACITY]);
@@ -702,8 +702,8 @@ async function tessellate(
   const local = new Float64Array(3);
   const truthAt = (t: number, k0: number, k1: number, s: number) => {
     for (let a = 0; a < 3; a++) {
-      const p0 = scenario.centre[a]! + triangles[12 * t + 4 * k0 + a]!;
-      const p1 = scenario.centre[a]! + triangles[12 * t + 4 * k1 + a]!;
+      const p0 = scenario.center[a]! + triangles[12 * t + 4 * k0 + a]!;
+      const p1 = scenario.center[a]! + triangles[12 * t + 4 * k1 + a]!;
       local[a] = p0 + s * (p1 - p0);
     }
     const q = route.forward(local, new Float64Array(3));
@@ -767,8 +767,8 @@ async function tessellate(
     measured: {
       triangles: count,
       curvature: Number(curvature.toExponential(2)),
-      pixelMetres: Number(pixel.toFixed(3)),
-      toleranceMetres: Number(tolerance.toFixed(3)),
+      pixelMeters: Number(pixel.toFixed(3)),
+      toleranceMeters: Number(tolerance.toFixed(3)),
       levels: [...histogram]
         .sort((a, b) => a[0] - b[0])
         .map(([n, c]) => `${n}×${c}`)

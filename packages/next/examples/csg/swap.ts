@@ -2,7 +2,7 @@
  * Changing the solid without a bad frame (docs/design/breps-and-geometry-queries.md, editing). A new
  * solid's draws aren't right the moment `addBrep` returns: their custom
  * shader's pipelines compile and their textures load in the frames that
- * follow, and until then a draw uses a stand-in (the colour palette, read
+ * follow, and until then a draw uses a stand-in (the color palette, read
  * before its texture exists, gave black). So the new solid is added hidden,
  * drawn for a few frames where nobody sees it, until `Engine.whenReady` says
  * its draws use no stand-in, and only then shown, in the same step that

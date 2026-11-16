@@ -6,7 +6,7 @@ export type Rgba = readonly [number, number, number, number];
 const lin = (c: number) =>
   c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
 
-/** A linear RGBA colour from a CSS hex colour (sRGB). */
+/** A linear RGBA color from a CSS hex color (sRGB). */
 export function hex(color: string, alpha = 1): Rgba {
   const n = Number.parseInt(color.replace("#", ""), 16);
   return [
@@ -17,7 +17,7 @@ export function hex(color: string, alpha = 1): Rgba {
   ];
 }
 
-/** Triangles and their per-vertex colours, built up and turned into mesh data. */
+/** Triangles and their per-vertex colors, built up and turned into mesh data. */
 export class MeshBuilder {
   private readonly positions: number[] = [];
   private readonly normals: number[] = [];
@@ -63,17 +63,17 @@ export class MeshBuilder {
     this.quad([x0, y1, z0], [x1, y1, z0], [x1, y0, z0], [x0, y0, z0], color);
   }
 
-  /** A box with horizontal sides: centre, size, and rotation about z. */
-  orientedBox(centre: V3, size: V3, yaw: number, color: Rgba): void {
+  /** A box with horizontal sides: center, size, and rotation about z. */
+  orientedBox(center: V3, size: V3, yaw: number, color: Rgba): void {
     const c = Math.cos(yaw);
     const s = Math.sin(yaw);
     const corner = (sx: number, sy: number, z: number): V3 => {
       const x = (sx * size[0]) / 2;
       const y = (sy * size[1]) / 2;
-      return [centre[0] + c * x - s * y, centre[1] + s * x + c * y, z];
+      return [center[0] + c * x - s * y, center[1] + s * x + c * y, z];
     };
-    const z0 = centre[2] - size[2] / 2;
-    const z1 = centre[2] + size[2] / 2;
+    const z0 = center[2] - size[2] / 2;
+    const z1 = center[2] + size[2] / 2;
     const pts = [
       [1, -1],
       [1, 1],
@@ -107,9 +107,9 @@ export class MeshBuilder {
     );
   }
 
-  /** A UV sphere about `centre`, its colour a function of longitude and latitude (radians). */
+  /** A UV sphere about `center`, its color a function of longitude and latitude (radians). */
   sphere(
-    centre: V3,
+    center: V3,
     radius: number,
     segments: number,
     colorAt: (longitude: number, latitude: number) => Rgba,
@@ -127,9 +127,9 @@ export class MeshBuilder {
         ];
         this.vertex(
           [
-            centre[0] + radius * n[0],
-            centre[1] + radius * n[1],
-            centre[2] + radius * n[2],
+            center[0] + radius * n[0],
+            center[1] + radius * n[1],
+            center[2] + radius * n[2],
           ],
           n,
           colorAt(lon, lat),
@@ -151,24 +151,24 @@ export class MeshBuilder {
 
   /** A closed cylinder along z. */
   cylinder(
-    centre: V3,
+    center: V3,
     radius: number,
     height: number,
     sides: number,
     color: Rgba,
   ): void {
-    const z0 = centre[2] - height / 2;
-    const z1 = centre[2] + height / 2;
+    const z0 = center[2] - height / 2;
+    const z1 = center[2] + height / 2;
     const ring = (z: number, k: number): V3 => [
-      centre[0] + radius * Math.cos((k * 2 * Math.PI) / sides),
-      centre[1] + radius * Math.sin((k * 2 * Math.PI) / sides),
+      center[0] + radius * Math.cos((k * 2 * Math.PI) / sides),
+      center[1] + radius * Math.sin((k * 2 * Math.PI) / sides),
       z,
     ];
     for (let k = 0; k < sides; k++) {
       const a = k;
       const b = k + 1;
       this.quad(ring(z0, a), ring(z0, b), ring(z1, b), ring(z1, a), color);
-      const top = this.vertex([centre[0], centre[1], z1], [0, 0, 1], color);
+      const top = this.vertex([center[0], center[1], z1], [0, 0, 1], color);
       const i = this.vertex(ring(z1, a), [0, 0, 1], color);
       const j = this.vertex(ring(z1, b), [0, 0, 1], color);
       this.triangle(top, i, j);

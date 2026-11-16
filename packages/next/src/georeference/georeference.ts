@@ -20,8 +20,8 @@ export interface Georeference {
   /** The name of the reference frame the design coordinates are in. */
   readonly frameName: string;
   /**
-   * Body-fixed metres of a design point, as this placement draws it. A
-   * hosted placement's content is already in body-fixed metres: `displayed`
+   * Body-fixed meters of a design point, as this placement draws it. A
+   * hosted placement's content is already in body-fixed meters: `displayed`
    * is the identity on them.
    */
   displayed(
@@ -41,7 +41,7 @@ export interface Georeference {
   ): Float64Array;
   /**
    * How far this placement draws a design point from where it truly is, in
-   * metres. 0 when reprojected, and when hosted (drawn as delivered: the
+   * meters. 0 when reprojected, and when hosted (drawn as delivered: the
    * host's reprojection is the host's, not counted here).
    */
   displayError(design: ArrayLike<number>): number;

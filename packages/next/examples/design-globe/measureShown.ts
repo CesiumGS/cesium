@@ -12,14 +12,14 @@ export interface ShownMeasurement {
   /** Design units. */
   readonly designDistance: number;
   readonly horizontalDistance: number;
-  /** Metres, between where the design points truly are. */
+  /** Meters, between where the design points truly are. */
   readonly trueDistance: number;
   /** Each end's station and offset, when on the alignment. */
   readonly a?: { readonly station: number; readonly offset: number };
   readonly b?: { readonly station: number; readonly offset: number };
 }
 
-/** An end's check basis and stated tolerance (metres) from how it was obtained. */
+/** An end's check basis and stated tolerance (meters) from how it was obtained. */
 function basisOf(end: MeasureEnd): {
   basis: CheckBasis;
   tolerance?: number;
@@ -51,14 +51,14 @@ export function shownValues(
   answers: Answers,
   shown: {
     readonly pair?: ShownMeasurement;
-    /** The marker's drawn separation (metres), settled at true scale. */
+    /** The marker's drawn separation (meters), settled at true scale. */
     readonly marker?: {
       readonly separation: number;
       readonly mode: "rigid" | "reprojected";
     };
     /** PROJ's zone 3 E and N for the mark, design units. */
     readonly mark?: ArrayLike<number>;
-    /** The page's measured horizontal distance from the mark to the centreline, design units. */
+    /** The page's measured horizontal distance from the mark to the centerline, design units. */
     readonly markOffset?: number;
     readonly user?: {
       readonly a: MeasureEnd;

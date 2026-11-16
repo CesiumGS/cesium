@@ -181,7 +181,7 @@ export function findUnembeddedImages(html) {
 
 /**
  * What the Dyno tab shows of the public catalog: its shape and one scene.
- * Dataset entries stay out: the page needs no asset IDs or licence notes.
+ * Dataset entries stay out: the page needs no asset IDs or license notes.
  */
 export function readCatalog(root = packageRoot) {
   const catalog = JSON.parse(

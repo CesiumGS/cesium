@@ -21,7 +21,7 @@ const base = `${join(framesDataDirectory(), "proj")}/`;
 /** The grids this file's PROJ loads: none (Node, like the browser, loads only grids it names; Task 21). */
 const GRIDS: string[] = [];
 
-// California zone 3 (NAD83, GRS80), metres: grid (1900000, 600000) → lon/lat in radians.
+// California zone 3 (NAD83, GRS80), meters: grid (1900000, 600000) → lon/lat in radians.
 const PIPELINE =
   "+proj=pipeline +step +inv +proj=lcc +lat_0=36.5 +lon_0=-120.5 +lat_1=38.4333333333333 +lat_2=37.0666666666667 +x_0=2000000 +y_0=500000 +ellps=GRS80";
 // uv run --with pyproj python -c "from pyproj import Transformer; print(Transformer.from_pipeline('<PIPELINE>').transform(1900000.0, 600000.0, 0.0, 0.0, radians=True))"

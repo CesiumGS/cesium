@@ -638,14 +638,14 @@ export const SOURCES = {
     url: "https://registry.npmjs.org/replicad-opencascadejs",
     pageDate: "version 1.2.1, published 6 Nov 2026",
     checked: "2026-11-11",
-    note: "Read from the registry's metadata: the version, its date, its licence field (LGPL-2.1-only) and its integrity hash. The package's own page wasn't read.",
+    note: "Read from the registry's metadata: the version, its date, its license field (LGPL-2.1-only) and its integrity hash. The package's own page wasn't read.",
   },
-  occtLicence: {
+  occtLicense: {
     short: "Open CASCADE Technology",
     title: "Open CASCADE Technology: open-source C++ platform",
     url: "https://occt3d.com/open-cascade-technology/index.html",
     checked: "2026-11-11",
-    note: "Reached from the old licensing page's redirect. It says OCCT is LGPL 2.1 with an additional exception. The licence and the exception's own texts weren't read.",
+    note: "Reached from the old licensing page's redirect. It says OCCT is LGPL 2.1 with an additional exception. The license and the exception's own texts weren't read.",
   },
   occtIssue1652: {
     short: "OCCT issue 1652",
@@ -661,7 +661,7 @@ export const SOURCES = {
     title: "NIST: MBE PMI Validation and Conformance Testing",
     url: "https://www.nist.gov/ctl/smart-connected-systems-division/smart-connected-manufacturing-systems-group/mbe-pmi-validation",
     checked: "2026-11-11",
-    note: "The page describes the test cases and the CAD models and STEP files made from them. The page states no date, and its licence page wasn't re-read: the terms are as scripts/stepSamples.mjs records them.",
+    note: "The page describes the test cases and the CAD models and STEP files made from them. The page states no date, and its license page wasn't re-read: the terms are as scripts/stepSamples.mjs records them.",
   },
 } as const satisfies Record<string, Source>;
 

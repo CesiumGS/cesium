@@ -14,7 +14,7 @@ const base = `${join(framesDataDirectory(), "proj")}/`;
 /** The grids this file's PROJ loads: none (Node, like the browser, loads only grids it names; Task 21). */
 const GRIDS: string[] = [];
 // Lambert-93 (EPSG:2154) with a TOWGS84 translation that makes the datum
-// operation visible (a real one is metres; this one is ~11 m).
+// operation visible (a real one is meters; this one is ~11 m).
 const LAMBERT93 =
   "+proj=lcc +lat_0=46.5 +lon_0=3 +lat_1=49 +lat_2=44 +x_0=700000 +y_0=6600000 +ellps=GRS80 +units=m +no_defs +type=crs";
 const SHIFT = [10, 5, 2];
@@ -98,7 +98,7 @@ describe("WKT2 BOUNDCRS reference", () => {
 // PROJ pushes the height around a geocentric Helmert in a 2D CRS: the forward
 // runs the geocentric step at the input height on the source ellipsoid, the
 // inverse at the same height on WGS84, though the height moved by dh. Left
-// alone the round trip is off by millimetres; the recorded inverse refines
+// alone the round trip is off by millimeters; the recorded inverse refines
 // itself against the forward.
 describe("realistic datum shifts round-trip exactly", () => {
   const heights = [0, 100, 1000];

@@ -4,7 +4,7 @@
 // differences), plus what each edge declares of itself: a smooth edge's
 // `accuracy` (1σ, m) and, through a callback, an affine edge's (a reference
 // frame's `FrameAccuracy`). Conventions are the frames composer's
-// (frames/pointAccuracy.ts): a figure in metres is the 1σ of the position
+// (frames/pointAccuracy.ts): a figure in meters is the 1σ of the position
 // error's magnitude, so its covariance is σ²/3 in each axis and its trace
 // σ²; the total is the root of the composed trace; independent terms add.
 //
@@ -40,13 +40,13 @@ export function congruence(
   return out;
 }
 
-/** The isotropic covariance of a 1σ magnitude in metres: σ²/3 in each axis. */
+/** The isotropic covariance of a 1σ magnitude in meters: σ²/3 in each axis. */
 export function isotropic(meters: number): Float64Array {
   const k = (meters * meters) / 3;
   return Float64Array.of(k, 0, 0, 0, k, 0, 0, 0, k);
 }
 
-/** What an input's 1σ is: a magnitude in metres, a σ per axis, or a covariance (row-major 3×3, m²). */
+/** What an input's 1σ is: a magnitude in meters, a σ per axis, or a covariance (row-major 3×3, m²). */
 export type SigmaIn = number | ArrayLike<number>;
 
 function covarianceOf(sigma: SigmaIn): Float64Array {
@@ -89,7 +89,7 @@ export interface EdgeQuery {
 
 /**
  * What an edge adds to the error at its output, in the axes of the output:
- * a 1σ magnitude in metres, a row-major covariance (m²), or undefined for
+ * a 1σ magnitude in meters, a row-major covariance (m²), or undefined for
  * nothing. Asked of affine edges (a frame's stated accuracy) and, to
  * override `spec.accuracy`, of smooth ones.
  */

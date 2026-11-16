@@ -360,7 +360,7 @@ describe("the frames explorer's stress tests, headless", () => {
       "measurement.design-vs-itrf": /design point fixed in ITRF/,
       "rigid-placement-budget.site-gap.drop": /d²\/2R/,
       "rigid-placement-budget.site-gap.along": /d\(s\/k̄ − 1\) \+ d³\/3R²/,
-      "trajectory.moon-me.distance": /distance from the Moon's centre/,
+      "trajectory.moon-me.distance": /distance from the Moon's center/,
       "trajectory.moon-me.round-trip": /MOON_ME/,
       "space.moon-from-sacramento.direction": /R\.A\. and DEC/,
       "space.moon-from-sacramento.range": /Horizons' delta/,
@@ -675,7 +675,7 @@ describe('boundCrsChecks, R18\'s "Try your own"', () => {
     "+proj=tmerc +lat_0=49 +lon_0=-2 +k=0.9996012717 +x_0=400000 +y_0=-100000 +ellps=airy +towgs84=446.448,-125.157,542.06,0.15,0.247,0.842,-20.489 +units=m +no_defs +type=crs",
   ];
 
-  it("reads WKT1's TOWGS84 and checks it by hand, converted to WKT2 and labelled so (the user's own input; Task 21 fix 1)", async () => {
+  it("reads WKT1's TOWGS84 and checks it by hand, converted to WKT2 and labeled so (the user's own input; Task 21 fix 1)", async () => {
     const P = await loadProj({ base, grids: GRIDS });
     for (const definition of TOWGS84_DEFINITIONS) {
       const wkt1 = P.proj_as_wkt(

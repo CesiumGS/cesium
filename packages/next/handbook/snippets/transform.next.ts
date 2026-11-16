@@ -68,7 +68,7 @@ export const either = switchFrame("Plan or exaggerated", catalog.get("ITRF"), {
 
 // A built-in as a live edge, for content authored in a projected CRS: UTM
 // 48S, run from the grid to geographic. The nodes above it carry the rest
-// of the way to body-fixed metres.
+// of the way to body-fixed meters.
 export const grid = smoothFrame(
   "UTM 48S",
   catalog.get("ITRF"),
@@ -78,7 +78,7 @@ export const grid = smoothFrame(
 );
 
 // Your own map, as restricted JavaScript from a point and named parameters to
-// a point in metres. The engine reads the source, never evaluating it, into
+// a point in meters. The engine reads the source, never evaluating it, into
 // the graph's IR: the Jacobian is exact, the draw is compiled, and the
 // parameters are uniforms. A function outside the subset still works,
 // fitted, and `compiled` and `fitReason` say so.

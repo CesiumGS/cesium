@@ -3,13 +3,13 @@
 // not its rect tests the pixel against its loops' pcurves (src/brep/gpuTrims.ts,
 // shaders/coverage.slang) in the fragment stage, which discards outside it
 // (kept within half a pixel, so seams between faces close). Shown as a flat
-// colour, read back:
+// color, read back:
 //   a. a plate with circular, rectangular and triangular holes, a cylinder
 //      drilled across, and a B-spline face with a curved outer edge and a
 //      hole, each at two distances: every pixel inside the face's projected
 //      region is drawn where the CPU's classification (`faceTrim`) says the
 //      whole pixel is inside, and not drawn where it says the pixel and its
-//      3 Ã— 3 neighbourhood are outside: they differ only within 1 px of a
+//      3 Ã— 3 neighborhood are outside: they differ only within 1 px of a
 //      boundary;
 //   b. closed solids, a box minus a cylinder built here, the same from Open
 //      CASCADE and the NIST CTC-05 part (STEP, from the dev server's
@@ -81,7 +81,7 @@ const TAU = 2 * Math.PI;
 type Vec3 = readonly [number, number, number];
 type Pair = readonly [number, number];
 
-/** A flat colour for the mask; the feature for a pick's check. */
+/** A flat color for the mask; the feature for a pick's check. */
 const FRAGMENT = `fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
   (*material).baseColor = vec3f(1.0, 1.0, 0.5);
   (*material).alpha = 1.0;
@@ -542,7 +542,7 @@ async function capture(env: Environment): Promise<Uint8ClampedArray> {
       env.target.read(),
     );
     env.lost();
-    // The mask's blue is 188 after the flat colour's encoding, the default material's 255.
+    // The mask's blue is 188 after the flat color's encoding, the default material's 255.
     let ready = false;
     for (let i = 0; i < WIDTH * HEIGHT && !ready; i++) {
       if (pixels[i * 4 + 1]! >= 250) {
@@ -655,7 +655,7 @@ function environment(
   return { engine, world, view, target, shader, lost };
 }
 
-function pixelsPerMetre(view: View, depth: number): number {
+function pixelsPerMeter(view: View, depth: number): number {
   const fovy = view.camera.fovy(WIDTH / HEIGHT);
   return HEIGHT / 2 / (Math.tan(fovy / 2) * depth);
 }
@@ -955,7 +955,7 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
         ] as unknown as Vec3;
         const fy = env.view.camera.fovy(WIDTH / HEIGHT);
         const measured = compare(mask, project(scene.form, patches, eye, fy));
-        const ppm = pixelsPerMetre(env.view, distance);
+        const ppm = pixelsPerMeter(env.view, distance);
         checks.push({
           id: id++,
           name: `${scene.name}, ${distance} m`,
@@ -964,11 +964,11 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
             "trim pieces": stats?.pieces ?? 0,
             bands: stats?.bands ?? 0,
             "most pieces in a band": stats?.maxPerBand ?? 0,
-            "pixels per metre": ppm,
+            "pixels per meter": ppm,
             "faces drawn from a CPU mesh": brep.cpuFaces.length,
           },
           limit:
-            "every pixel the CPU puts wholly inside is drawn, none is drawn that the CPU puts, with its neighbours, outside: they differ only within 1 px of a boundary",
+            "every pixel the CPU puts wholly inside is drawn, none is drawn that the CPU puts, with its neighbors, outside: they differ only within 1 px of a boundary",
           pass:
             brep.cpuFaces.length === 0 &&
             measured["pixels inside the trim"]! > 500 &&
@@ -1095,7 +1095,7 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
         env.world.scene.drawFeatureFirst[brep.trimmed!.index]!;
       const firstBehind =
         env.world.scene.drawFeatureFirst[brep.patches!.index]!;
-      const ppm = pixelsPerMetre(env.view, 6);
+      const ppm = pixelsPerMeter(env.view, 6);
       const atPixel = (u: number, v: number): Pair => [
         WIDTH / 2 + u * ppm,
         HEIGHT / 2 - v * ppm,
@@ -1152,7 +1152,7 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
           translucencyMethod: method,
         });
         placeCamera(env.view, [0, 0, 0], 6);
-        const ppm = pixelsPerMetre(env.view, 6);
+        const ppm = pixelsPerMeter(env.view, 6);
         const at = (u: number, v: number): Pair => [
           WIDTH / 2 + u * ppm,
           HEIGHT / 2 - v * ppm,
@@ -1366,11 +1366,11 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
       const all = await measure("unsupported");
       const split = await measure("trimmed");
       // The tessellator at the error the pixels allow at the form's nearest depth.
-      const perMetre =
+      const perMeter =
         384 /
         2 /
         (Math.tan(all.fovy / 2) * Math.max(all.distance - radius, 1e-3));
-      const tolerance = TARGET / perMetre;
+      const tolerance = TARGET / perMeter;
       const tessellateStart = globalThis.performance.now();
       const tessellated = tessellateBrep(form, { tolerance });
       const mesh = {

@@ -16,10 +16,10 @@ import { framePoint } from "./local.ts";
 import { pointAccuracy } from "./pointAccuracy.ts";
 import { isSwitchFrame, isSmoothFrame } from "./smoothFrame.ts";
 
-/** A catalogue's reference frames as affine nodes of a transform graph. */
+/** A catalog's reference frames as affine nodes of a transform graph. */
 export interface FrameGraph {
   readonly graph: TransformGraph;
-  /** The node of `frame`, once it is in the catalogue's tree in use. */
+  /** The node of `frame`, once it is in the catalog's tree in use. */
   node(frame: Frame): TransformNode | undefined;
   /** The frame a node stands for. */
   frameOf(node: TransformNode): Frame | undefined;
@@ -41,7 +41,7 @@ export interface FrameGraph {
 }
 
 /**
- * Represents the catalogue's tree in use in a transform graph: each `Frame`
+ * Represents the catalog's tree in use in a transform graph: each `Frame`
  * edge is an affine node whose matrix is `frame.toParent` at the route's
  * seconds (as `resolver.instant` reads them), a smooth frame a smooth node
  * with the same direction (up to its parent) and a switch frame a switch

@@ -362,7 +362,7 @@ describe("checkRows", () => {
 
   it("checks the design's horizontal offset from the mark against NGS's own zone 3 (Task 20 fix 1, I6)", () => {
     const a = answers();
-    // NGS's zone 3 to the nearest centreline point, horizontally.
+    // NGS's zone 3 to the nearest centerline point, horizontally.
     const published = Math.hypot(
       a.mark.publishedSpc.easting - a.mark.nearestDesign[0],
       a.mark.publishedSpc.northing - a.mark.nearestDesign[1],
@@ -389,7 +389,7 @@ describe("checkRows", () => {
       a.mark.publishedSpc.northing - a.mark.nearestDesign[1],
     );
     // Each coordinate's precision with the datasheet's double rounding
-    // (metric to the millimetre, then to 0.01 ftUS), along the line: √2.
+    // (metric to the millimeter, then to 0.01 ftUS), along the line: √2.
     expect(MARK_OFFSET_TOLERANCE).toBe(MARK_SPC_TOLERANCE * Math.SQRT2);
     expect(amount(MARK_OFFSET_TOLERANCE, "ftUS")).toBe("0.0094 ftUS");
     // Either side of the bound, and between the old headline's 0.0071

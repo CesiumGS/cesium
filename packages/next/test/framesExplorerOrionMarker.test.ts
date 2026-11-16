@@ -114,7 +114,7 @@ function page() {
     camera.position = apply(m, EYE);
     camera.axes = [turn(m, [1, 0, 0]), turn(m, [0, 1, 0]), turn(m, [0, 0, 1])];
   };
-  /** A point's screen position, px from the view's centre. */
+  /** A point's screen position, px from the view's center. */
   const screen = (cam: Camera, p: ArrayLike<number>) => {
     const d = [0, 1, 2].map((i) => p[i]! - cam.position[i]!);
     const z = -dot(d, cam.axes[2]!);

@@ -13,7 +13,7 @@ import { Instant } from "../src/time/Instant.ts";
 
 const at = Instant.fromTdb(10);
 
-/** A target on a circular orbit about the Earth's centre: 7,000 km, one radian per 1,000 s, tilted 0.4 rad. */
+/** A target on a circular orbit about the Earth's center: 7,000 km, one radian per 1,000 s, tilted 0.4 rad. */
 function target(catalog: FrameCatalog, name = "T"): Frame {
   const parent = catalog.get("EARTH_ICRF", { precision: "analytic" });
   return new Frame(
@@ -67,7 +67,7 @@ describe("rigPreset", () => {
     }
   });
 
-  it("orbital's +Z points away from the Earth's centre and its third axis completes the set", () => {
+  it("orbital's +Z points away from the Earth's center and its third axis completes the set", () => {
     const catalog = createFrameCatalog();
     const t = target(catalog);
     const orbital = rigPreset("orbital", options(catalog, t)).frames[1]!;

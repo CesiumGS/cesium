@@ -5,9 +5,9 @@
 
 /** A texel must stand above this to count as a peak. */
 export const PEAK_THRESHOLD = 0.0035;
-/** Texels brighter than this belong to a clipped disc, counted once. */
+/** Texels brighter than this belong to a clipped disk, counted once. */
 const SATURATED = 0.85;
-/** Apertures, in rows: an ordinary star, and a clipped disc. */
+/** Apertures, in rows: an ordinary star, and a clipped disk. */
 const RADIUS = 3;
 const RADIUS_SATURATED = 14;
 
@@ -115,7 +115,7 @@ export function findPeaks(luminance, width, height, rgb) {
   };
   const maxima = groups((i) => mask[i] === 1);
   const clipped = groups((i) => luminance[i] > SATURATED);
-  // One peak per clipped disc (at its center), in place of the maxima in it.
+  // One peak per clipped disk (at its center), in place of the maxima in it.
   const peaks = [];
   for (const [cx, cy] of maxima.found) {
     const x = ((Math.round(cx) % W) + W) % W;

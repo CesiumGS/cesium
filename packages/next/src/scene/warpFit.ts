@@ -366,7 +366,7 @@ export function* fitLatticeSteps(
  * last fit, so a caller reads from its `errorBound` whether it missed. The
  * bound is the largest residual at a grid of 9³ points per cell, an estimate
  * and no proof (`estimate` is true); a caller wanting the plan's
- * `geometricError / 64` with a millimetre floor passes `max(1e-3,
+ * `geometricError / 64` with a millimeter floor passes `max(1e-3,
  * geometricError / 64)`.
  */
 export function fitLattice(

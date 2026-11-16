@@ -44,7 +44,7 @@ const leapSecondCase = stressCase(
         ...base,
         id: `${base.id}.two-seconds`,
         title:
-          "From 2016-12-31T23:59:59 to 2017-01-01T00:00:00 UTC, one labelled second, TT advances 2 s",
+          "From 2016-12-31T23:59:59 to 2017-01-01T00:00:00 UTC, one labeled second, TT advances 2 s",
         pass: true,
         value: Math.abs(across - 2),
         tolerance: TT_STEP,
@@ -56,7 +56,7 @@ const leapSecondCase = stressCase(
   },
 );
 
-/** DSS-43's site (Canberra), ITRF metres, rounded: any Earth-fixed point does. */
+/** DSS-43's site (Canberra), ITRF meters, rounded: any Earth-fixed point does. */
 const CANBERRA = [-4_460_894.9, 2_682_361.5, -3_674_748.2];
 
 const eopEndCase = stressCase(

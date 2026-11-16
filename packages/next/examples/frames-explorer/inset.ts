@@ -147,7 +147,7 @@ const fovy = (fov: number, aspect: number) =>
  * The inset's camera: side-on to the line at the mark, level (up the
  * ellipsoid's normal there), looking across the line so that `along` points
  * right (from the south for a line heading east), at the range where the gap
- * between `exact` and `rigid` takes `fill` of the picture's height, centred
+ * between `exact` and `rigid` takes `fill` of the picture's height, centered
  * on the gap.
  */
 export function insetCamera(
@@ -164,7 +164,7 @@ export function insetCamera(
     new Float64Array(3),
   );
   if (up === undefined) {
-    throw new RangeError("insetCamera: the mark is at the body's centre");
+    throw new RangeError("insetCamera: the mark is at the body's center");
   }
   const level = sub(
     along,
@@ -190,7 +190,7 @@ export function insetCamera(
  * The gap between the exact and rigid placements at the mark, split as the
  * inset sees it (`insetCamera`'s axes): `drop`, the rigid point's height
  * over the exact one along the ellipsoid's normal there (the curvature);
- * `along`, its offset along the line levelled there (the grid's scale
+ * `along`, its offset along the line leveled there (the grid's scale
  * factor, which rigid placement ignores: why the leader leans); `across`,
  * the rest, square to both. Meters; `apart` is the whole gap.
  */
@@ -205,7 +205,7 @@ export function gapParts(
     new Float64Array(3),
   );
   if (up === undefined) {
-    throw new RangeError("gapParts: the mark is at the body's centre");
+    throw new RangeError("gapParts: the mark is at the body's center");
   }
   const right = unit(
     sub(

@@ -551,7 +551,7 @@ function OverlayOptions({
       );
     case "designGrid":
       // F32: the convergence is about a pixel at the tour's framing, so the
-      // true-north lines lean ×20 by default, labelled; this shows them true.
+      // true-north lines lean ×20 by default, labeled; this shows them true.
       return (
         <div className="fx-overlay-options">
           <FormControlLabel

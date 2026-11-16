@@ -102,7 +102,7 @@ export function stationValues(s: CorsStation) {
 }
 
 /**
- * The station in ITRF2020 at decimal year `year`, Earth-fixed metres:
+ * The station in ITRF2020 at decimal year `year`, Earth-fixed meters:
  * its NAD83(2011) position carried from the datasheet's epoch by its
  * NAD83(2011) velocity, then PROJ's NAD83(2011) to ITRF2020 operation at
  * `year`. Also its NAD83(2011) geocentric position at `year`, by the same
@@ -120,10 +120,10 @@ export function stationInItrf(
     ITRF2020_XYZ,
   );
   const at2010 = operation.forward([v.lon.value, v.lat.value, v.h.value]);
-  // Carry by the NAD83(2011) velocity in geocentric metres: the operation
+  // Carry by the NAD83(2011) velocity in geocentric meters: the operation
   // itself is time-dependent, so convert at the epoch, then add the plate's
   // drift (about 3 mm/yr here) in XYZ. The drift is applied after: at these
-  // rates the difference between the two orders is far below a micrometre.
+  // rates the difference between the two orders is far below a micrometer.
   const dt = year - v.epoch;
   const itrf = [0, 1, 2].map((i) => at2010[i]! + v.velocity[i]!.value * dt);
   return { itrf, operation };

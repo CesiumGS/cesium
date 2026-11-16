@@ -466,7 +466,7 @@ export class Engine {
       applied: 0,
       applyMs: 0,
       appliedTotal: 0,
-      cancelledTotal: 0,
+      canceledTotal: 0,
     },
     tickReasons: 0,
   };

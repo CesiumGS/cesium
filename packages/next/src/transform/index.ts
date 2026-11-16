@@ -86,7 +86,7 @@ export {
 } from "./interval.ts";
 export { toWgsl, type WgslOptions } from "./wgsl.ts";
 export type { IrProgram } from "./ir.ts";
-// The compiler: a route's shape to fused WGSL with float64 centre constants.
+// The compiler: a route's shape to fused WGSL with float64 center constants.
 export {
   clearCompileCache,
   compileRoute,

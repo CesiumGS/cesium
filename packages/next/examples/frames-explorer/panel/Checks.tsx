@@ -2,14 +2,14 @@
 // overclaimed), a compact list (scenarios/checks.ts's rows) under a legend
 // of the five kinds. The owner, 2026-11-06: no sheet. Each row is one
 // full-width button, at least 40 px tall, in three columns: its kind's
-// colour-coded tag (what it compares with), its title over one line of
+// color-coded tag (what it compares with), its title over one line of
 // detail, and its status as an icon and a word (Checked, Failed, Not judged
 // here, Loading, Updating, Following), then a chevron. Kind and status stay
-// apart: the kind colours are none of the status colours, and neither is
-// colour alone. It expands in place into its details (`aria-expanded`): the
+// apart: the kind colors are none of the status colors, and neither is
+// color alone. It expands in place into its details (`aria-expanded`): the
 // computed value and the tolerance, what it is compared against and the
 // reference's source, its accuracy. A result with more to it than fits
-// opens in Verification by one labelled link.
+// opens in Verification by one labeled link.
 import { CircularProgress, Link, Typography } from "@mui/material";
 import { svgChevronRight } from "@stratakit/icons/chevron-right";
 import { svgClock } from "@stratakit/icons/clock";
@@ -38,7 +38,7 @@ import {
   type CheckRowText,
 } from "./checkText.ts";
 
-/** A kind's tag: its short name (the legend's full one) on its colour. */
+/** A kind's tag: its short name (the legend's full one) on its color. */
 export function KindTag({
   kind,
   full = false,

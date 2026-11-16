@@ -256,7 +256,7 @@ describe("terrain clip regions", () => {
         expect(fitted.shapes[k]!.maxCellEdges).toBeLessThanOrEqual(
           MAX_CLIP_CELL_EDGES,
         );
-        // Neighbours touch in a structure's middle, where both are slivers.
+        // Neighbors touch in a structure's middle, where both are slivers.
         if (k > 0) {
           expect(r.fromStation).toBe(fitted.regions[k - 1]!.toStation);
         }
@@ -420,7 +420,7 @@ describe("see underground", () => {
     expect(polygon.length).toBeLessThanOrEqual(MAX_TERRAIN_CLIP_VERTICES);
     const shape = compileTerrainClip({ polygon }, Ellipsoid.WGS84);
     expect(shape.maxCellEdges).toBeLessThanOrEqual(MAX_CLIP_CELL_EDGES);
-    // Each side stands off the centreline by the half-width.
+    // Each side stands off the centerline by the half-width.
     for (const [i, s] of [
       [0, alignment.startStation],
       [stations, alignment.endStation],

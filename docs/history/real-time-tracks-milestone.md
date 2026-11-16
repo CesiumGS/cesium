@@ -116,7 +116,7 @@ switchDistance, delay, clock })`: tracks as instance data. Positions
 - Harness, 2 new cases (8 of 8 pass), against exact ray casts: 1,000
   tracks on ±40 m hills (a 20 m mesh), 2 m texels: error at most 5 mm,
   mean 1 mm; 6,400 tracks over `BatchedColors`' buildings, 0.15 m
-  texels: the 128 on roofs within half a millimetre. The 100,000-track
+  texels: the 128 on roofs within half a millimeter. The 100,000-track
   update read 2.3 to 8.8 ms across runs (to watch on the benchmark).
   Parity, models and translucency unchanged (318 image metrics) but for
   the near-opaque scene's order reading (0.0045 in 1 of 7 runs here);
@@ -265,7 +265,7 @@ example's name:
 - _`Tracks` is gone_: its harness (the Lab's "Live points and styled
   layers", 8 of 8) and the benchmark against 1.x run on a `PointSource`
   and a `VectorLayer`. Clamping errors are unchanged (hills within 5 mm,
-  roofs within half a millimetre); a 100,000-point feed update is 1.0 ms
+  roofs within half a millimeter); a 100,000-point feed update is 1.0 ms
   on the CPU (2.7 with `Tracks`, which shuffled samples per track there).
   With a delay of 0 a point shows its latest sample; interpolation needs a
   delay (the feed's interval), since points move from where they're shown.

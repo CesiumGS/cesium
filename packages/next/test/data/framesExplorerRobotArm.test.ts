@@ -255,7 +255,7 @@ describe("the robot arm (Task 7b) through the worker's host", () => {
     expect(e.answer.breakdown!.length).toBeGreaterThan(5);
   }, 120_000);
 
-  it("puts the station where NGS's ITRF2020 position and velocity put it at the coordinate epoch, within the check's millimetres", async () => {
+  it("puts the station where NGS's ITRF2020 position and velocity put it at the coordinate epoch, within the check's millimeters", async () => {
     const s = spec(ID);
     const e = await client.scenario(ID, s.checked.knobs, checkedTdb(ID));
     const m = (

@@ -402,7 +402,7 @@ describe("the grid endpoint", () => {
   });
 
   it("aborts upstream past the catalog's byte count", async () => {
-    let cancelled = false;
+    let canceled = false;
     let sent = 0;
     const endless = () =>
       new Response(
@@ -412,7 +412,7 @@ describe("the grid endpoint", () => {
             c.enqueue(filled(1024, 7));
           },
           cancel() {
-            cancelled = true;
+            canceled = true;
           },
         }),
       );
@@ -421,7 +421,7 @@ describe("the grid endpoint", () => {
     const response = await fetch(`${base}/good.tif`);
     expect(response.status).toBe(502);
     expect(await response.text()).toBe("grid unavailable");
-    expect(cancelled).toBe(true);
+    expect(canceled).toBe(true);
     expect(sent).toBeLessThan(GOOD.length + 4 * 1024);
     expect(readdirSync(dir)).toEqual([]);
   });

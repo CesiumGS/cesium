@@ -270,7 +270,7 @@ describe("run", () => {
       failed: 2,
       skipped: 1,
       shown: 1,
-      cancelled: false,
+      canceled: false,
     });
     expect(summary.ms).toBeGreaterThanOrEqual(0);
   });
@@ -315,7 +315,7 @@ describe("run", () => {
       passed: 1,
       failed: 0,
       skipped: 0,
-      cancelled: true,
+      canceled: true,
     });
   });
 
@@ -338,7 +338,7 @@ describe("run", () => {
     cancel = () => client.cancel();
     const summary = await client.run();
     expect(later).not.toHaveBeenCalled();
-    expect(summary).toMatchObject({ passed: 1, cancelled: true });
+    expect(summary).toMatchObject({ passed: 1, canceled: true });
   });
 
   it("keeps a case's optional needs through the host: the frames reach a case that reads them where it can (F44)", async () => {
@@ -397,7 +397,7 @@ describe("run", () => {
     expect(byId.get("stub.leap")!.pass).toBe(true);
     expect(byId.get("stub.display")!.displayOnly).toBe(true);
     expect(byId.get("stub.pass")!.pass).toBe(true);
-    expect(summary).toMatchObject({ skipped: 2, cancelled: false });
+    expect(summary).toMatchObject({ skipped: 2, canceled: false });
     expect(loadFrames).toHaveBeenCalledTimes(1);
   });
 });
@@ -760,7 +760,7 @@ describe("scenario", () => {
     expect(sent.map((s) => s.message.type).slice(-1)).toEqual(["scenario"]);
   });
 
-  it("stops a run that waits in the queue on cancel: it sends its done, cancelled, and runs nothing", async () => {
+  it("stops a run that waits in the queue on cancel: it sends its done, canceled, and runs nothing", async () => {
     let release = () => {};
     const gate = new Promise<void>((resolve) => {
       release = resolve;
@@ -780,11 +780,11 @@ describe("scenario", () => {
     await sleep(10);
     release();
     await scenario;
-    expect(await run).toMatchObject({ passed: 0, cancelled: true });
+    expect(await run).toMatchObject({ passed: 0, canceled: true });
     expect(later).not.toHaveBeenCalled();
   });
 
-  it("ends a run cancelled while its data context is made with done, cancelled, not an error", async () => {
+  it("ends a run canceled while its data context is made with done, canceled, not an error", async () => {
     let fail = () => {};
     const made = new Promise<never>((_, reject) => {
       fail = () => reject(new MissingDataError("no store"));
@@ -799,7 +799,7 @@ describe("scenario", () => {
       passed: 0,
       failed: 0,
       skipped: 0,
-      cancelled: true,
+      canceled: true,
     });
   });
 

@@ -130,7 +130,7 @@ export class ViewLink {
    * Where a viewport ray meets the ground, continuously: a ray that misses
    * the ellipsoid (above the horizon) or hits beyond a cap (20× the camera's
    * altitude, at least 5 km) uses the point at the cap dropped onto the surface.
-   * Grazing rays would otherwise jump thousands of kilometres between
+   * Grazing rays would otherwise jump thousands of kilometers between
    * frames (or drop out), making the footprint and the follow target flicker.
    */
   private groundPoint(ndcX: number, ndcY: number, out: Vec3): Vec3 {

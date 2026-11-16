@@ -213,7 +213,7 @@ async function parseComposite(
     }
     const { index, reason } = first.failure;
     if (reason instanceof DOMException) {
-      throw reason; // a cancelled load stays a cancelled load
+      throw reason; // a canceled load stays a canceled load
     }
     throw new Error(
       `composite inner tile ${index}: ${reason instanceof Error ? reason.message : String(reason)}`,

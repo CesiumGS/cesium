@@ -457,7 +457,7 @@ export const API_ROWS: readonly ApiRow[] = [
     old: ["OpenStreetMapImageryProvider"],
     next: ["UrlTemplateImagery"],
     status: "covered",
-    note: '`new UrlTemplateImagery("OpenStreetMap", "https://tile.openstreetmap.org/{z}/{x}/{y}.png", { credit })`, with the credit its licence asks for.',
+    note: '`new UrlTemplateImagery("OpenStreetMap", "https://tile.openstreetmap.org/{z}/{x}/{y}.png", { credit })`, with the credit its license asks for.',
   },
   {
     group: "imagery",
@@ -662,8 +662,8 @@ export const API_ROWS: readonly ApiRow[] = [
     old: ["Color"],
     nextLabel: "Numbers, and strings in styles",
     status: "changed",
-    note: 'No `Color` class: colours are numbers, and strings in styles. CSS notation such as `#ff8800` is sRGB in both, so an opaque, unlit colour matches. Blending happens in linear, so `colorBlendMode` `"mix"` and `"replace"` and translucent colours differ, and `vec4` colours are linear in 2.0 and plain numbers in 1.x.',
-    source: "The design note docs/design/colour-in-the-styling-language.md",
+    note: 'No `Color` class: colors are numbers, and strings in styles. CSS notation such as `#ff8800` is sRGB in both, so an opaque, unlit color matches. Blending happens in linear, so `colorBlendMode` `"mix"` and `"replace"` and translucent colors differ, and `vec4` colors are linear in 2.0 and plain numbers in 1.x.',
+    source: "The design note docs/design/color-in-the-styling-language.md",
   },
   {
     group: "tiles",
@@ -980,7 +980,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "scaleToEv100",
     ],
     status: "renamed",
-    note: "`view.observer` sets these per view. HDR with tone mapping is the default for lit colour.",
+    note: "`view.observer` sets these per view. HDR with tone mapping is the default for lit color.",
   },
   {
     group: "light",

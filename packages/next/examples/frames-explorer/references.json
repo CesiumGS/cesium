@@ -251,7 +251,7 @@
         "retrievalLine": "1    National Geodetic Survey, Retrieval Date = NOVEMBER  7, 2026 05:00:46 EST",
         "retrieved": "2026-11-07"
       },
-      "description": "The NOAA CORS station nearest LC-39A that NGS publishes in both NAD83(2011) and ITRF: about 17 km south-south-east of the pad (NGS's radial search for CORS within 30 miles of N283630 W0803615: Cape Canaveral 1 to 6 at 10.8 to 10.9 miles, Titusville at 13.3). None is within a few kilometres. The datasheet gives NAD83(2011) only; the coordinate file gives both, the NAD83(2011) position transformed by NGS from ITRF2020 in April 2025. geodesy.noaa.gov/corsdata/ answered HTTP 410 (retired 2026-11-01), so the coordinate file is read from NGS's NOAA Open Data Dissemination bucket, the location NGS's data page gives. The two positions are not independent: NGS transformed the NAD83(2011) one from the ITRF2020 one, so a check between them tests PROJ's transformation against NGS's own computation (a published reference), not a measurement. The datasheet prints the ellipsoid height's adjustment date as \"(04/??/25)\": the \"??\" is NGS's own (no day), copied as printed.",
+      "description": "The NOAA CORS station nearest LC-39A that NGS publishes in both NAD83(2011) and ITRF: about 17 km south-south-east of the pad (NGS's radial search for CORS within 30 miles of N283630 W0803615: Cape Canaveral 1 to 6 at 10.8 to 10.9 miles, Titusville at 13.3). None is within a few kilometers. The datasheet gives NAD83(2011) only; the coordinate file gives both, the NAD83(2011) position transformed by NGS from ITRF2020 in April 2025. geodesy.noaa.gov/corsdata/ answered HTTP 410 (retired 2026-11-01), so the coordinate file is read from NGS's NOAA Open Data Dissemination bucket, the location NGS's data page gives. The two positions are not independent: NGS transformed the NAD83(2011) one from the ITRF2020 one, so a check between them tests PROJ's transformation against NGS's own computation (a published reference), not a measurement. The datasheet prints the ellipsoid height's adjustment date as \"(04/??/25)\": the \"??\" is NGS's own (no day), copied as printed.",
       "designation": "CAPE CANAVERAL 6 CORS ARP",
       "corsId": "CCV6",
       "nad83": {
@@ -824,9 +824,9 @@
       "deltaAu": "0.00255716451757",
       "au": "1 au= 149597870.700 km",
       "notes": {
-        "astrometric": "Horizons' column notes, paraphrased: the Moon's centre from the site in ICRF axes, corrected for the down-leg light time only",
+        "astrometric": "Horizons' column notes, paraphrased: the Moon's center from the site in ICRF axes, corrected for the down-leg light time only",
         "azimuthElevation": "paraphrased: airless apparent direction (light time, the Sun's light bending, stellar aberration, precession and nutation), azimuth clockwise from north, elevation from the plane square to the reference surface's zenith",
-        "delta": "paraphrased: the light-time (apparent) range of the Moon's centre from the site"
+        "delta": "paraphrased: the light-time (apparent) range of the Moon's center from the site"
       }
     },
     "dsn-station-location-uncertainties": {
@@ -855,7 +855,7 @@
         "handbook": "https://deepspace.jpl.nasa.gov/dsndocs/810-005/301/301P.pdf",
         "retrieved": "2026-11-06"
       },
-      "notes": "Receive masks: elevation limits (degrees) against azimuth (degrees, 0 to 360 by 1), copied as the spreadsheet stores each cell. The handbook: the receive limits come from the terrain (SRTM, about 1 m in height, 1 arc-second posting) and neighbouring antennas, or the mechanical lower limit of about 6 degrees. It doesn't say how to interpolate between azimuths.",
+      "notes": "Receive masks: elevation limits (degrees) against azimuth (degrees, 0 to 360 by 1), copied as the spreadsheet stores each cell. The handbook: the receive limits come from the terrain (SRTM, about 1 m in height, 1 arc-second posting) and neighboring antennas, or the mechanical lower limit of about 6 degrees. It doesn't say how to interpolate between azimuths.",
       "north": "Each sheet has rows for 0 and 360 degrees. DSS-63's differ (RCV 6 at 0, 6.1 at 360; DSS-14's and DSS-43's agree); the explorer takes the 0-degree value for north, so 6 for DSS-63.",
       "azimuth": {
         "from": "0",
@@ -2503,9 +2503,9 @@
         "url": "https://www.law.cornell.edu/cfr/text/33/167.403",
         "retrieved": "2026-11-07"
       },
-      "description": "The inbound lanes the ship's synthetic track follows (scenarios/vehicles.ts SHIP): an input, not an expected value (ruling F6). No AIS extract of one vessel small enough to pin (20 MB) was found: NOAA's daily AIS files are hundreds of megabytes, so the track is synthetic and labelled so.",
+      "description": "The inbound lanes the ship's synthetic track follows (scenarios/vehicles.ts SHIP): an input, not an expected value (ruling F6). No AIS extract of one vessel small enough to pin (20 MB) was found: NOAA's daily AIS files are hundreds of megabytes, so the track is synthetic and labeled so.",
       "precautionaryArea": {
-        "centre": "37-45.00N 122-41.50W",
+        "center": "37-45.00N 122-41.50W",
         "radius": "6 miles",
         "eastBoundary": [
           "37-42.70N 122-34.60W",
@@ -2536,7 +2536,7 @@
           "37-47.80N 122-30.80W"
         ]
       },
-      "track": "The explorer's track: the northbound lane's centreline (122-39.80W) from 37-33.00N to 37-39.20N; across the precautionary area to the eastbound lane's start (37-45.85N 122-37.85W, midway between its two lines); along the lane's centreline through 37-46.893N 122-34.30W to 37-47.95N 122-30.90W; at 12 knots."
+      "track": "The explorer's track: the northbound lane's centerline (122-39.80W) from 37-33.00N to 37-39.20N; across the precautionary area to the eastbound lane's start (37-45.85N 122-37.85W, midway between its two lines); along the lane's centerline through 37-46.893N 122-34.30W to 37-47.95N 122-30.90W; at 12 knots."
     },
     "noaa-coast-pilot-7-alcatraz-light": {
       "kind": "input",
@@ -2564,7 +2564,7 @@
         "url": "https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/9414290/datums.json?units=metric",
         "retrieved": "2026-11-07"
       },
-      "description": "Carries the lighthouse's height from mean high water to NAVD88 (scenarios/vehicles.ts LIGHTHOUSE.mhwAboveNavd88: MHW − NAVD88 = 1.612 m): an input, not an expected value. NOAA states no accuracy for the offset; the example estimates ±0.05 m (Alcatraz is 4 km from the gauge, and mean high water drifts by centimetres across the central bay), labelled as an estimate. The Coast Pilot says heights are \"usually\" above mean high water; were this light's above mean higher high water, it would sit 0.186 m higher (the station's DHQ), beyond that estimate.",
+      "description": "Carries the lighthouse's height from mean high water to NAVD88 (scenarios/vehicles.ts LIGHTHOUSE.mhwAboveNavd88: MHW − NAVD88 = 1.612 m): an input, not an expected value. NOAA states no accuracy for the offset; the example estimates ±0.05 m (Alcatraz is 4 km from the gauge, and mean high water drifts by centimeters across the central bay), labeled as an estimate. The Coast Pilot says heights are \"usually\" above mean high water; were this light's above mean higher high water, it would sit 0.186 m higher (the station's DHQ), beyond that estimate.",
       "MHW": "3.416",
       "NAVD88": "1.804",
       "units": "m above STND"

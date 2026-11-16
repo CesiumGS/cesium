@@ -2,7 +2,7 @@
 // "can the box clips replace terrain clipping, and show the terrain inside a
 // clip volume translucent, or shaded by a custom shader?").
 //
-// Content is unlit and flat-coloured, drawn into an offscreen target, and
+// Content is unlit and flat-colored, drawn into an offscreen target, and
 // pixels are read back where the classification is known. The scene is an
 // excavation seen from above: a ground slab (red), a pipe buried under it
 // (blue, exempt from clips), and a clip box that removes the slab over the
@@ -18,7 +18,7 @@
 //   4. the same ghost on a pipe that is not exempt: the clip ghosts the pipe
 //      too (nothing is exempt by default);
 //   5. a custom shader reading `fsInput.clipDistance` on a "shade" set (a
-//      plane across a wall): every pixel's colour is the sign of the
+//      plane across a wall): every pixel's color is the sign of the
 //      distance, as float64 classifies the surface point it shows;
 //   6. a "discard" set that reports: the kept side sees its distance (<= 0),
 //      and the removed side is gone;
@@ -218,7 +218,7 @@ function pixelOf(view: View, p: V3): { x: number; y: number } {
   };
 }
 
-/** The mean colour of the (2r + 1)² pixels about (x, y), 0 to 255. */
+/** The mean color of the (2r + 1)² pixels about (x, y), 0 to 255. */
 function mean(pixels: Uint8ClampedArray, x: number, y: number, r = 3): Rgb {
   const sum = [0, 0, 0];
   let n = 0;
@@ -364,7 +364,7 @@ function describe(engine: Engine): string {
   return `${info.vendor} ${info.architecture} ${info.description}`;
 }
 
-/** A custom shader that colours by the clip's distance: green kept, magenta removed, bands within 1 m. */
+/** A custom shader that colors by the clip's distance: green kept, magenta removed, bands within 1 m. */
 const DISTANCE_SHADER = /* wgsl */ `
 fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
   (*material).unlit = true;
@@ -652,7 +652,7 @@ async function runClipEffects(): Promise<ClipEffectsResult> {
       const { world, view } = s;
       const shader = new CustomShader({
         fragment: DISTANCE_SHADER,
-        label: "clip distance colours",
+        label: "clip distance colors",
       });
       await engine.compileShader(shader);
       // A thin wall facing the camera, cut across by a plane at x = 0 (the
@@ -731,7 +731,7 @@ async function runClipEffects(): Promise<ClipEffectsResult> {
       const { world, view } = s;
       const shader = new CustomShader({
         fragment: DISTANCE_SHADER,
-        label: "clip distance colours",
+        label: "clip distance colors",
       });
       await engine.compileShader(shader);
       world.addDraw({
@@ -758,7 +758,7 @@ async function runClipEffects(): Promise<ClipEffectsResult> {
       const kept = mean(pixels, left.x, left.y);
       const gone = mean(pixels, right.x, right.y);
       add(
-        "a discard set that reports: the kept side is coloured by its distance",
+        "a discard set that reports: the kept side is colored by its distance",
         { "kept (rgb)": rgb(kept), "removed (rgb)": rgb(gone) },
         "the kept side (distance < 0) is green; the removed side shows the background",
         kept[1]! > 120 &&

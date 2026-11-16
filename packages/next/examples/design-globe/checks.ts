@@ -44,7 +44,7 @@ export interface ShownValues {
       readonly station?: number;
       readonly offset?: number;
       readonly basis: CheckBasis;
-      /** Metres; a pick's stated tolerance. */
+      /** Meters; a pick's stated tolerance. */
       readonly tolerance?: number;
     }
   >;
@@ -55,15 +55,15 @@ export interface ShownValues {
       /** Design units. */
       readonly designDistance?: number;
       readonly horizontalDistance?: number;
-      /** Metres. */
+      /** Meters. */
       readonly trueDistance?: number;
       readonly basis: CheckBasis;
-      /** Metres; a pick's stated tolerance (for the distance, both ends'). */
+      /** Meters; a pick's stated tolerance (for the distance, both ends'). */
       readonly tolerance?: number;
     }
   >;
   /**
-   * The station 170,000 marker's separation as shown, in metres, and the
+   * The station 170,000 marker's separation as shown, in meters, and the
    * placement it is shown in: the rigid one's is `answers.marker.separation`,
    * the reprojected one's 0.
    */
@@ -75,7 +75,7 @@ export interface ShownValues {
   };
   /**
    * PROJ's zone 3 easting and northing for the survey mark, and the page's
-   * measured horizontal distance from the mark to the nearest centreline
+   * measured horizontal distance from the mark to the nearest centerline
    * point, design units.
    */
   mark?: {
@@ -87,13 +87,13 @@ export interface ShownValues {
 
 /** An exact snap's tolerance, design units (Global Constraints). */
 export const EXACT_TOLERANCE = 1e-6;
-/** A vertex's tolerance, metres (spec §10's round trip). */
+/** A vertex's tolerance, meters (spec §10's round trip). */
 export const VERTEX_TOLERANCE_M = 1e-4;
 /**
  * The datasheet's stated precision for its zone 3 coordinates in US survey
  * feet, ftUS: they are published to 0.01 sFT (half of it, 0.005), and are
- * converted from the metric ones, which are rounded to the millimetre first
- * (half a millimetre, 0.00164 ftUS). HS5109's northing shows it: 632,517.990
+ * converted from the metric ones, which are rounded to the millimeter first
+ * (half a millimeter, 0.00164 ftUS). HS5109's northing shows it: 632,517.990
  * m is 2,075,186.1055 sFT, published as .11, where the unrounded northing
  * (PROJ's, 632,517.98982 m) is 2,075,186.1049.
  */
@@ -107,12 +107,12 @@ export const MARK_SPC_TOLERANCE = 0.005 + (0.0005 * 3937) / 1200;
 export const MARK_OFFSET_TOLERANCE = MARK_SPC_TOLERANCE * Math.SQRT2;
 
 /**
- * A tolerance in metres for a basis (a pick's must be stated), for a value
+ * A tolerance in meters for a basis (a pick's must be stated), for a value
  * from `ends` points: a vertex distance may be off by each end's 1e-4 m. An
  * exact snap's 1e-6 design units bound float64 noise, not an end's error,
  * so it isn't doubled; a pick's stated tolerance already covers both ends.
  */
-function metres(
+function meters(
   basis: CheckBasis,
   stated: number | undefined,
   mpu: number,
@@ -127,14 +127,14 @@ function metres(
     case "pick":
       if (!(stated !== undefined && Number.isFinite(stated) && stated >= 0)) {
         throw new Error(
-          `checkRows: ${id} is a pick with no stated tolerance (metres)`,
+          `checkRows: ${id} is a pick with no stated tolerance (meters)`,
         );
       }
       return stated;
   }
 }
 
-/** The tolerance in design units (exact: 1e-6 itself, not via metres). */
+/** The tolerance in design units (exact: 1e-6 itself, not via meters). */
 function design(
   basis: CheckBasis,
   stated: number | undefined,
@@ -144,7 +144,7 @@ function design(
 ): number {
   return basis === "exact"
     ? EXACT_TOLERANCE
-    : metres(basis, stated, mpu, id, ends) / mpu;
+    : meters(basis, stated, mpu, id, ends) / mpu;
 }
 
 function compare(
@@ -165,7 +165,7 @@ function compare(
 
 /** "Sta. 450+00.000, 35.000 ftUS right", as the measure panel writes it. */
 function where(station: number, offset: number, symbol: string): string {
-  const side = offset === 0 ? "on the centreline" : offsetText(offset, symbol);
+  const side = offset === 0 ? "on the centerline" : offsetText(offset, symbol);
   return `Sta. ${stationText(station)}, ${side}`;
 }
 
@@ -179,7 +179,7 @@ function where(station: number, offset: number, symbol: string): string {
  *
  * Tolerances by basis: exact, 1e-6 design units; vertex, 1e-4 m (2e-4 m
  * for a pair's distances, one per end); pick, the stated tolerance
- * (metres). The mark's rows have basis "published" and the datasheet's
+ * (meters). The mark's rows have basis "published" and the datasheet's
  * stated precision (`MARK_SPC_TOLERANCE`). Throws for a shown point or pair that isn't an
  * answer, and for a pick with no stated tolerance.
  */
@@ -236,7 +236,7 @@ export function checkRows(answers: Answers, shown: ShownValues): CheckRow[] {
     const basis = value?.basis ?? "exact";
     const id = `pair.${pair.id}`;
     const inDesign = design(basis, value?.tolerance, mpu, id, 2);
-    const inMetres = metres(basis, value?.tolerance, mpu, id, 2);
+    const inMeters = meters(basis, value?.tolerance, mpu, id, 2);
     const common = { basis, kind } as const;
     rows.push(
       compare(
@@ -268,7 +268,7 @@ export function checkRows(answers: Answers, shown: ShownValues): CheckRow[] {
           label: `${pair.label}: true distance`,
           unit: "m",
           expected: pair.trueDistance,
-          tolerance: inMetres,
+          tolerance: inMeters,
         },
         value?.trueDistance,
       ),
@@ -285,7 +285,7 @@ export function checkRows(answers: Answers, shown: ShownValues): CheckRow[] {
         label: `Sta. ${stationText(answers.marker.station)} marker: drawn to true, ${mode}`,
         unit: "m",
         expected: mode === "rigid" ? answers.marker.separation : 0,
-        tolerance: metres(markerBasis, marker?.tolerance, mpu, "marker"),
+        tolerance: meters(markerBasis, marker?.tolerance, mpu, "marker"),
         basis: markerBasis,
         kind,
       },
@@ -331,7 +331,7 @@ export function checkRows(answers: Answers, shown: ShownValues): CheckRow[] {
       {
         ...published,
         id: "mark.offset",
-        label: `${mark.pid} ${mark.name}: horizontal offset to the centreline against NGS's own zone 3`,
+        label: `${mark.pid} ${mark.name}: horizontal offset to the centerline against NGS's own zone 3`,
         unit: symbol,
         expected: Math.hypot(
           mark.publishedSpc.easting - mark.nearestDesign[0],

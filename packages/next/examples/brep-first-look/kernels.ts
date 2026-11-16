@@ -59,7 +59,7 @@ export const RECIPES: readonly Recipe[] = [
     b: "the sphere",
     inputs: [
       { kind: "box", origin: [-0.8, -0.8, 0], size: [1.6, 1.6, 1.6] },
-      { kind: "sphere", centre: [0.8, 0.8, 1.6], radius: 0.7 },
+      { kind: "sphere", center: [0.8, 0.8, 1.6], radius: 0.7 },
     ],
     scale: 0.8,
   },
@@ -70,7 +70,7 @@ export const RECIPES: readonly Recipe[] = [
     b: "the sphere",
     inputs: [
       { kind: "box", origin: [-0.8, -0.8, 0], size: [1.6, 1.6, 1.6] },
-      { kind: "sphere", centre: [0, 0, 0.8], radius: 1.05 },
+      { kind: "sphere", center: [0, 0, 0.8], radius: 1.05 },
     ],
     scale: 1.1,
   },
@@ -211,7 +211,7 @@ export class KernelSession {
   /**
    * Fetches a NIST model from /step-samples/ and imports it with Open
    * CASCADE in its worker (the module loads on first use): the file's solids
-   * come back as render forms, in metres whatever the file's units, already
+   * come back as render forms, in meters whatever the file's units, already
    * measured and checked.
    */
   async loadStep(

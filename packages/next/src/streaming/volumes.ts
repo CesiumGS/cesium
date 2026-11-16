@@ -809,7 +809,7 @@ export function volumeSpan(
 }
 
 /**
- * `volume` grown by `pad` metres on every side: what a per-vertex placement
+ * `volume` grown by `pad` meters on every side: what a per-vertex placement
  * can move its content by (`SceneItem.placement`). A region comes
  * back as its box grown, since a region can't reach past its own edges in a
  * way a plane test keeps exact. A box's flat axis grows along the normal of

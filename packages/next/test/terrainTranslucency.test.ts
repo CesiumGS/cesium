@@ -63,7 +63,7 @@ describe("a terrain tile's skirts", () => {
   it("still face outward (the rotation kept their winding)", () => {
     const p = mesh.positions;
     const v = (i: number) => [p[3 * i]!, p[3 * i + 1]!, p[3 * i + 2]!];
-    // The tile's middle, in the mesh's own (centre-relative) coordinates.
+    // The tile's middle, in the mesh's own (center-relative) coordinates.
     const middle = [0, 0, 0];
     for (let i = 0; i < start; i++) {
       for (let k = 0; k < 3; k++) {
@@ -928,7 +928,7 @@ describe("the shader's opacity rules (surface.slang terrainOpacity and terrainAl
     expect(o([A, B, clip], 0b111, inClip, true)).toBe(0);
   });
 
-  it("honours `ground` in height captures, whatever the opacity: all four combinations", () => {
+  it("honors `ground` in height captures, whatever the opacity: all four combinations", () => {
     const at = (opacity: number, ground: boolean): ShaderRegion => ({
       ...A,
       opacity,

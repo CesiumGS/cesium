@@ -258,7 +258,7 @@ const layer = (
 });
 
 /**
- * Orion's path in chunks of up to 1e7 m (`overlayMesh`): half-metre float32
+ * Orion's path in chunks of up to 1e7 m (`overlayMesh`): half-meter float32
  * steps against the path's own ±10 m, and a few thousand draws for the whole
  * mission even in ITRF (whose path winds about 2e10 m), not hundreds of
  * thousands. Only the adaptive path takes it; the uniform one keeps the default.
@@ -571,7 +571,7 @@ export function createHost(
 
   /**
    * Queues `body` as a run: from now on a `cancel` stops it, so one stopped
-   * while it waits runs nothing and sends its `done`, cancelled.
+   * while it waits runs nothing and sends its `done`, canceled.
    */
   function queueStream(id: number, body: StreamBody): void {
     const controller = new AbortController();
@@ -592,7 +592,7 @@ export function createHost(
       skipped: 0,
       shown: 0,
       ms: 0,
-      cancelled: false,
+      canceled: false,
     };
     try {
       let loaded: Loaded;
@@ -602,9 +602,9 @@ export function createHost(
         if (!controller.signal.aborted) {
           throw error;
         }
-        // Cancelled while the context was made: the run ran nothing.
+        // Canceled while the context was made: the run ran nothing.
         summary.ms = performance.now() - start;
-        summary.cancelled = true;
+        summary.canceled = true;
         post({ type: "done", id, summary });
         return;
       }
@@ -615,7 +615,7 @@ export function createHost(
         });
       }
       summary.ms = performance.now() - start;
-      summary.cancelled = controller.signal.aborted;
+      summary.canceled = controller.signal.aborted;
       post({ type: "done", id, summary });
     } catch (error) {
       post({

@@ -3,7 +3,7 @@
 How the design-globe page looks, reads and behaves. It applies
 [Dyno's design guide](../../bench/suite/DESIGN.md) and StrataKit, and borrows
 the frames explorer's conventions ([its DESIGN.md](../frames-explorer/DESIGN.md)):
-Checks with colour-coded kinds, honest numbers stated once, designed states.
+Checks with color-coded kinds, honest numbers stated once, designed states.
 The mockup is [design-mocks/page.html](design-mocks/page.html) (plan 4b,
 Task 0; for the owner's review, 2026-11-07). Screenshots are taken locally
 into `design-screenshots/`, which git ignores.
@@ -43,13 +43,13 @@ the second audience: every number is there and honest, but quieter.
      on. Any other step turns it off again if the step turned it on; leaving
      the tour keeps it, as it keeps the view.
   6. Down the ladder: the single building (rigid is fine), the airport
-     (metres), the pole line (tens of metres).
+     (meters), the pole line (tens of meters).
   7. Hand-off: the panel, the flight list and the measure toolbar, yours.
 
   The tour respects reduced motion: steps cut instead of flying.
 
 - **True scale by default.** The error is never exaggerated unless the viewer
-  asks: an "Exaggerate the error" toggle, off by default and labelled with
+  asks: an "Exaggerate the error" toggle, off by default and labeled with
   its factor while on, because exaggeration "confuses the accuracy story"
   (owner). The opening shot is at true scale, low and oblique near the far
   end of the corridor (about 21 km from the anchor), where the rigid
@@ -62,14 +62,14 @@ the second audience: every number is there and honest, but quieter.
   "really highlights the importance of using the different frames for
   measurement"; "show both so as to demonstrate both use cases"):
   1. **The design against itself:** a ground marker at station 170,000's
-     true position (placed through the design CRS by PROJ, and labelled as
+     true position (placed through the design CRS by PROJ, and labeled as
      the design's own point, not a survey), measured to the drawn station.
      Rigid: about 35 m apart (the page reads the figure from `answers.json`).
      Reprojected: 0.000 m. The morph shrinks it live.
   2. **The design against a real survey mark:** an NGS mark near the far end,
      placed from NGS's published NAD83(2011) position, independent of the
      design's pipeline, measured to the nearest point on the drawn
-     centreline. Reprojected matches the distance from NGS's published zone 3
+     centerline. Reprojected matches the distance from NGS's published zone 3
      coordinates; rigid is off by about 23 m there (HS5109 "GOLD CREEK"). The surveyor's question:
      does the design line up with the control it was surveyed from?
      Reprojected, the drawn offset is 0.000 m by construction, so the
@@ -86,7 +86,7 @@ the second audience: every number is there and honest, but quieter.
 
 - **The panel's headline and details** (owner, 2026-11-07). Up front: the
   placement and the morph; each opening measurement's headline number; the
-  design distance and the true (ground) distance side by side, labelled.
+  design distance and the true (ground) distance side by side, labeled.
   Behind "Details": the ellipsoid distance, the combined scale factor in ppm,
   each end's station, offset, elevation and design coordinates in the CRS's
   own units, the snap kind and its tolerance, the accuracy statement, and the
@@ -94,7 +94,7 @@ the second audience: every number is there and honest, but quieter.
 - **Visuals in the viewer carry the story** ("the more we can augment that
   with visuals in the viewer the better"). First version:
   1. **Error whiskers:** a leader every 1,000 ft along the corridor from each
-     rigid position to its reprojected partner, coloured by length: zero at
+     rigid position to its reprojected partner, colored by length: zero at
      the anchor, about 38 m at the far end, shrinking to nothing as the morph
      completes.
   2. **The anchor ring:** "the placements agree here".
@@ -141,7 +141,7 @@ and that a measurement on the globe gives the number their CAD gives.
    and one legend. Nothing else.
 2. **The design number first, the true number beside it.** A distance reads
    in the design CRS's units, as CAD reports it. The ground and ellipsoid
-   distances and the combined scale factor sit beside it, labelled; never
+   distances and the combined scale factor sit beside it, labeled; never
    instead of it.
 3. **Units and datums always named.** "ftUS", not "ft"; "NAVD88 via
    GEOID18", not "height". The corridor, the site-grid building and the
@@ -211,7 +211,7 @@ number stays in the sidebar, next to that number.
    - **the evidence**: on the corridor, the three opening measurements as
      rows, each a headline number and one caption line, with Show (fly
      there) and a Details disclosure holding the rest (both distances
-     labelled, the line as the globe draws it, Close in on the ruler, each
+     labeled, the line as the globe draws it, Close in on the ruler, each
      end's rows, NGS's datasheet). Elsewhere, the site's story: its
      extent, rigid's error at its edge and whether rigid is acceptable
      there;
@@ -223,7 +223,7 @@ number stays in the sidebar, next to that number.
    the combined factor, rigid's error in its three parts, a site grid,
    the grids' credits, a fallback.
 4. **Your measurement**, only once there is one: the design and true
-   distances side by side, labelled; the line as drawn; "How exact this
+   distances side by side, labeled; the line as drawn; "How exact this
    is" folded: the ellipsoid distance, the combined factor, the accuracy
    with its parts and what it is the accuracy of, each end's station,
    offset and elevation. This is the measurement error explanation the
@@ -269,7 +269,7 @@ engine's `accuracyOf`).
   solid `Toolbar` of ghost icon buttons, each with a tooltip, in two groups
   as CAD tools group them:
   - **Measure**: the snap mode as three exclusive buttons (Alignment,
-    exact; Geometry; None, a plain pick), Point at the view's centre (the
+    exact; Geometry; None, a plain pick), Point at the view's center (the
     keyboard's way), Clear (Escape too). A click on a model always
     measures; under the toolbar a one-line prompt appears while a
     measurement is under way or a click was refused ("Click a second
@@ -282,7 +282,7 @@ engine's `accuracyOf`).
     ribbon, See underground; each a toggle (`active`), disabled with why
     where it can't apply.
 - **See underground** (owner, 2026-11-08), as civil design tools show
-  buried work: the ground within 500 ftUS of the corridor's centreline draws
+  buried work: the ground within 500 ftUS of the corridor's centerline draws
   at 30% opacity, through a terrain region
   (`Globe.terrain.addRegion`). Its tunnels show in place under their
   hills, drawn as ever, with depth, so what is in front still hides them.
@@ -306,7 +306,7 @@ engine's `accuracyOf`).
   put, so its controls can be reached.
 - **The legend**, under the cursor card in the top right rail: the bottom
   is the tour's card and the time controls'.
-- **The tour's card**, bottom centre above the time controls. Its step
+- **The tour's card**, bottom center above the time controls. Its step
   segments are one Tab stop, the arrow keys moving between them.
 - **Narrow windows**: at 900 px or less the page stacks, the view over
   the panel, the page scrolling (it opts in with Dyno's `stackNarrow`).
@@ -322,14 +322,14 @@ engine's `accuracyOf`).
 
 ## On the globe
 
-- Reprojected: solid, the repro colour (cyan family); rigid: the rigid
-  colour (orange family). Neither reuses a status colour. The other
+- Reprojected: solid, the repro color (cyan family); rigid: the rigid
+  color (orange family). Neither reuses a status color. The other
   placement is the ghost, a second scene item of the same tileset: translucent
-  and tinted, drawn unlit in the content's colours.
+  and tinted, drawn unlit in the content's colors.
 - The ghost never tints the solid placement (F4): where the two placements
   coincide, the ghost isn't drawn, and during a morph the moving surface is
   the only one drawn at either end (see "The ghost" below).
-- The anchor: a white ring, labelled.
+- The anchor: a white ring, labeled.
 - The measure line and its points: yellow, with a dark label pill giving
   the design distance.
 - **The globe is Cesium World Terrain** (owner, F3), with the ion token
@@ -352,7 +352,7 @@ engine's `accuracyOf`).
   cut and fill). The hills are crossed against their grain, so no road
   within 6% can follow them: 18 viaducts and 19 tunnels carry 66% of it,
   and its earthwork stays within 48 ftUS of fill and 80 ftUS of cut at
-  the centreline.
+  the centerline.
 - **The corridor meets the ground through side slopes** (round 3). On
   earthwork, a slope runs from each edge of the paved section (±41 ftUS)
   down to the ground in fill or up to it in cut, ending at the daylight

@@ -218,7 +218,7 @@ export function writeViewBlock(
 /**
  * A pick's block from a view's (render/view/pickDomain.ts), in place: the
  * planes of the pick window's frustum (the cull's), and in the shading-only
- * `iblFrame`, which a pick doesn't shade, the window's centre in NDC (xy)
+ * `iblFrame`, which a pick doesn't shade, the window's center in NDC (xy)
  * and half size (zw) in [0], and in [1] the masks of the terrain regions
  * the pick stops at (xy: low and high 16 bits) and goes through (zw), as
  * floats (shaders/surface.slang, "the pick variant").

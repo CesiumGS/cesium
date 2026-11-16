@@ -17,16 +17,16 @@ type Vec3 = readonly [number, number, number];
 export type Primitive =
   | { kind: "box"; origin: Vec3; size: Vec3 }
   | { kind: "cylinder"; base: Vec3; radius: number; height: number }
-  | { kind: "sphere"; centre: Vec3; radius: number }
+  | { kind: "sphere"; center: Vec3; radius: number }
   | {
-      /** A frustum up z from the centre of its base; a top radius of 0 is a cone. */
+      /** A frustum up z from the center of its base; a top radius of 0 is a cone. */
       kind: "cone";
       base: Vec3;
       radiusBase: number;
       radiusTop: number;
       height: number;
     }
-  | { kind: "torus"; centre: Vec3; major: number; minor: number };
+  | { kind: "torus"; center: Vec3; major: number; minor: number };
 
 /**
  * A rigid placement, applied after a primitive is made: a turn about the
@@ -49,7 +49,7 @@ export type BooleanOperation = "union" | "difference" | "intersection";
  * rest. A node with one operand is that operand; with none it is an error.
  *
  * A `step` leaf is a solid imported earlier (`registerStep`) under `step`'s
- * key, centred on the middle of its bounds and placed like a primitive. Only
+ * key, centered on the middle of its bounds and placed like a primitive. Only
  * Open CASCADE reads it.
  */
 export type SolidRecipe =
@@ -81,7 +81,7 @@ export interface StepPart {
   solids: number;
   /** The part's faces. */
   faces: number;
-  /** Its extent along x, y and z, m. The part is centred on the middle of its bounds. */
+  /** Its extent along x, y and z, m. The part is centered on the middle of its bounds. */
   size: Vec3;
 }
 
@@ -157,7 +157,7 @@ export type KernelReply =
   | {
       type: "imported";
       id: number;
-      /** One per solid of the file, in metres whatever the file's units. */
+      /** One per solid of the file, in meters whatever the file's units. */
       forms: KernelForm[];
       /** Loading the module, when this request did: 0 once it was loaded. */
       loadMs: number;
@@ -173,7 +173,7 @@ export type KernelReply =
       /** Loading the module, when this request did: 0 once it was loaded. */
       loadMs: number;
       importMs: number;
-      /** Fusing the solids, centring the part and measuring it. */
+      /** Fusing the solids, centering the part and measuring it. */
       convertMs: number;
     }
   | { type: "stepReleased"; id: number; key: number }
@@ -206,7 +206,7 @@ export type KernelReply =
       startedAt: number;
       sentAt: number;
     }
-  | { type: "cancelled"; id: number }
+  | { type: "canceled"; id: number }
   | { type: "error"; id: number; message: string };
 
 type TypedArray = ArrayBufferView & { readonly buffer: ArrayBufferLike };

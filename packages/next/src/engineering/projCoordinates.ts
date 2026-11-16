@@ -53,7 +53,7 @@ export interface EngineeringFrameFallback {
   readonly model: GeoidModel;
   /** The EPSG code of the vertical CRS the model replaced (`crs.vcsWkid`). */
   readonly replacedVertical: number;
-  /** `fallbackSigma`, metres; absent when none was given (accuracy undefined). */
+  /** `fallbackSigma`, meters; absent when none was given (accuracy undefined). */
   readonly sigma?: number;
   /** Who states `sigma` (`fallbackSigmaSource`); present with it. */
   readonly sigmaSource?: FallbackSigmaSource;
@@ -118,7 +118,7 @@ export function projRequestOptions(
 
 /**
  * PROJ's answer. `operation` is the recorded operation, with heights in
- * metres as `CoordinateOperation` has them: where PROJ leaves a height in
+ * meters as `CoordinateOperation` has them: where PROJ leaves a height in
  * the CRS's own unit (a CRS with no vertical axis, or the Moon's target,
  * which passes heights through) or a geoid fallback's model takes another
  * unit or direction, its `forward` and `inverse` convert the height and
@@ -485,7 +485,7 @@ function checked(proj: ProjApi, wanted: Wanted): Checked {
   if (fallbackSigma !== undefined) {
     if (!(fallbackSigma > 0 && Number.isFinite(fallbackSigma))) {
       throw new RangeError(
-        `EngineeringFrame: fallbackSigma must be a positive number of metres, got ${fallbackSigma}`,
+        `EngineeringFrame: fallbackSigma must be a positive number of meters, got ${fallbackSigma}`,
       );
     }
     if (geoidFallback === undefined) {
@@ -620,15 +620,15 @@ function resolveProj(
     );
     credits = [...new Set(credited.map((name) => catalog.credit(name)))];
   }
-  const inMetres = withHeights(operation, heightScale, operationHeight);
+  const inMeters = withHeights(operation, heightScale, operationHeight);
   const answer: ProjResolvedCoordinates = {
-    operation: inMetres,
+    operation: inMeters,
     units,
     gridFactors: projGridFactors(
       proj,
       wanted.crs,
       units.metersPerUnit,
-      (projected) => inMetres.forward(projected)[2]!,
+      (projected) => inMeters.forward(projected)[2]!,
     ),
     credits,
     proj,
@@ -639,10 +639,10 @@ function resolveProj(
 }
 
 /**
- * `operation` with its heights in metres: the input height times
+ * `operation` with its heights in meters: the input height times
  * `operationHeight` (a fallback model's unit and direction per design
  * height unit) on the way in, and the output height times `heightScale`
- * (metres per height PROJ passes through) on the way out; `inverse` the
+ * (meters per height PROJ passes through) on the way out; `inverse` the
  * reverse. `operation` itself when both are 1.
  */
 function withHeights(

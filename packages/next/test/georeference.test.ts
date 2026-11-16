@@ -1282,14 +1282,14 @@ describe("composed with ESRI_crs, EXT_geospatial_crs_source, 3DTILES_ellipsoid a
 
     it("derives it from a root box through the root transform", () => {
       // A 10 km box (half axes 5 km) at (-122°, 37.8°), placed by a translation.
-      const centre = at(-122, 37.8);
+      const center = at(-122, 37.8);
       const g = readGeoreference(
         composed(
           withoutArea(),
           {},
           {
             geometricError: 0,
-            transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, ...centre, 1],
+            transform: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, ...center, 1],
             boundingVolume: {
               box: [0, 0, 0, 5000, 0, 0, 0, 5000, 0, 0, 0, 5000],
             },
@@ -1329,7 +1329,7 @@ describe("composed with ESRI_crs, EXT_geospatial_crs_source, 3DTILES_ellipsoid a
       expect(global.sources.areaOfInterest).toBeUndefined();
     });
 
-    it("derives none from a box in local metres without a transform, and warns once", () => {
+    it("derives none from a box in local meters without a transform, and warns once", () => {
       const g = readGeoreference(
         composed(
           withoutArea(),

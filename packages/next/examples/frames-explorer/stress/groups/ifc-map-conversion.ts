@@ -133,7 +133,7 @@ const ifcCase = stressCase(
     const elevation = printed(ex.siteRefElevation!);
     const wgs84 = ellipsoidOf("epsg-ellipsoid-wgs84");
     const { M, N } = radii(wgs84.a, wgs84.e2, lat.value);
-    // Metres on the ground between a geodetic position and the IfcSite's.
+    // Meters on the ground between a geodetic position and the IfcSite's.
     const apart = (g: { longitude: number; latitude: number }) =>
       Math.hypot(
         (g.latitude / DEGREE - lat.value) * DEGREE * M,
@@ -211,7 +211,7 @@ const ifcCase = stressCase(
       tolerance: DESIGN_ROUND_TRIP,
       unit: "m",
       detail:
-        "the example's project unit is the millimetre but its Scale is omitted (1.0 by IFC's rule), so these points are placed as metres; the checks above do not depend on the scale",
+        "the example's project unit is the millimeter but its Scale is omitted (1.0 by IFC's rule), so these points are placed as meters; the checks above do not depend on the scale",
     });
 
     // The same site in the E.7.1 example, on DHDN / 3-degree Gauss-Krüger

@@ -155,7 +155,7 @@ export interface TerrainRayResult {
   unknown: { notDrawn: number; notRefined: number };
   /**
    * Where it is unknown: spans of the segment (fractions `from` to `to`),
-   * nearest first, neighbours of one reason merged. A zero-length segment
+   * nearest first, neighbors of one reason merged. A zero-length segment
    * over unknown terrain has one span of no width.
    */
   unknownSpans: {
@@ -636,8 +636,8 @@ export function castTerrainRay(
       if (!c) {
         return false;
       }
-      // Outside by more than OUTSIDE metres: near the polar axis a sliver
-      // of a metre turns the longitude by a lot.
+      // Outside by more than OUTSIDE meters: near the polar axis a sliver
+      // of a meter turns the longitude by a lot.
       const lon = unwrap(c.longitude, r);
       const rho = Math.sqrt(point[0]! * point[0]! + point[1]! * point[1]!);
       const across = Math.max(r.west - lon, lon - r.east, 0) * rho;
@@ -813,7 +813,7 @@ function unknownSpan(
  * (or target), but no further than `startCap` / `endCap` (the fractions at
  * `groundRadius` from each end; ∓Infinity where the end isn't on the
  * ground). Past that the terrain's error counts in full, however low the
- * segment runs: a triangle kilometres wide is not the observer's ground.
+ * segment runs: a triangle kilometers wide is not the observer's ground.
  */
 function margin(
   count: number,

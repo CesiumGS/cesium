@@ -235,7 +235,7 @@ interface Comparison {
   last: [number, number];
 }
 
-/** Red against `expected` over the pixels whose 3 × 3 neighbourhood agrees. */
+/** Red against `expected` over the pixels whose 3 × 3 neighborhood agrees. */
 function compare(
   pixels: Uint8ClampedArray,
   expected: (px: number, py: number) => boolean,
@@ -383,7 +383,7 @@ async function runSectionCaps(): Promise<SectionCapsResult> {
     "last wrong x": c.last[0],
     "last wrong y": c.last[1],
   });
-  // The parity is counted at the pixel's centre and the opaque pass is
+  // The parity is counted at the pixel's center and the opaque pass is
   // multisampled, so a row along the cap's edge may differ: a hundredth of the
   // cap's pixels at most.
   const agrees = (c: Comparison) =>

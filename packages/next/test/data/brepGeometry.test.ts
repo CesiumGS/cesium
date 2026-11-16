@@ -105,21 +105,21 @@ describe("brepGeometry on NIST's STEP models through Open CASCADE", () => {
       box.max[2] - box.min[2],
     );
     const next = random(5);
-    const centre = [0, 1, 2].map((k) => (box.min[k]! + box.max[k]!) / 2);
+    const center = [0, 1, 2].map((k) => (box.min[k]! + box.max[k]!) / 2);
     const inside = () =>
       [0, 1, 2].map((k) => box.min[k]! + next() * (box.max[k]! - box.min[k]!));
     const around = () =>
-      inside().map((x, k) => x + (next() - 0.5) * 0.4 * (centre[k]! - x));
+      inside().map((x, k) => x + (next() - 0.5) * 0.4 * (center[k]! - x));
 
     // The first query builds the hierarchy.
     const first = performance.now();
-    exact.closestPoint(centre);
+    exact.closestPoint(center);
     const build = performance.now() - first;
 
     const rays = Array.from({ length: 200 }, () => {
       const dir = [next() - 0.5, next() - 0.5, next() - 0.5];
       const length = Math.hypot(...dir);
-      const from = centre.map((c, k) => c + (dir[k]! / length) * diagonal);
+      const from = center.map((c, k) => c + (dir[k]! / length) * diagonal);
       const target = inside();
       return {
         from: Float64Array.from(from),
@@ -165,7 +165,7 @@ describe("brepGeometry on NIST's STEP models through Open CASCADE", () => {
     expect(timings.segment).toBeLessThan(500);
   });
 
-  it("CTC-05: every answer names its route and states its terms, in metres", () => {
+  it("CTC-05: every answer names its route and states its terms, in meters", () => {
     const form = stepForm("nist_ctc_05_asme1_rd.stp");
     const exact = brepGeometry(form);
     const box = formBounds(form);
@@ -180,7 +180,7 @@ describe("brepGeometry on NIST's STEP models through Open CASCADE", () => {
       expect(a.accuracy.exact).toBe(true);
       expect(a.accuracy.note).toContain(a.accuracy.route!);
       expect(a.accuracy.note).toContain("model 0.10 µm");
-      // CAD tolerances: a model of half a metre is good to well under a millimetre.
+      // CAD tolerances: a model of half a meter is good to well under a millimeter.
       expect(a.accuracy.meters).toBeLessThan(1e-3);
       expect(a.accuracy.meters).toBeGreaterThan(1e-7);
     }
@@ -201,11 +201,11 @@ describe("brepGeometry on SMLib's solids (Bézier patches)", () => {
     for (let i = 0; i < 60; i++) {
       const dir = [next() - 0.5, next() - 0.5, next() - 0.5];
       const length = Math.hypot(...dir);
-      const centre = [0.5, -1, 2];
-      const from = centre.map((c, k) => c + (dir[k]! / length) * 6);
+      const center = [0.5, -1, 2];
+      const from = center.map((c, k) => c + (dir[k]! / length) * 6);
       const a = exact.rayHit({
         from: Float64Array.from(from),
-        to: Float64Array.from(centre),
+        to: Float64Array.from(center),
       });
       expect(a.verdict).toBe("hit");
       if (a.verdict === "hit") {

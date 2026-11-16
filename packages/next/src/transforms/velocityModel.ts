@@ -2,7 +2,7 @@
 // closed form. The one-way time to depth z is (1/g) ln(1 + g z / v0), so
 //   t = (2/g) ln(1 + g z / v0)   and   z = (v0/g) (exp(g t / 2) - 1).
 // The node is the time section (x, y, two-way time in seconds); its parent
-// is depth in metres (x, y, z, down positive). g = 0 is the constant
+// is depth in meters (x, y, z, down positive). g = 0 is the constant
 // velocity z = v0 t / 2, taken through a series near it. Output is affine
 // in v0 (z ∝ v0).
 import type { SmoothEdge } from "../transform/graph.ts";

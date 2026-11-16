@@ -127,18 +127,18 @@ export function createHeightPanel(
 
   const refresh = () => {
     const k = factor();
-    const metres = (m: number) =>
+    const meters = (m: number) =>
       `${(Math.round(m * 10) / 10).toLocaleString("en-US")} m`;
     legendNote.textContent =
       state.lookup === "true"
-        ? "The legend's metres are above the ellipsoid, true: the 1,000 m band is at 1,000 m at every exaggeration."
-        : `The legend's metres are drawn: at ×${k.toFixed(1)}, the 1,000 m band is at ${metres(1000 / k)} true, and everything above ${metres(RAMP_TOP / k)} true is white.`;
+        ? "The legend's meters are above the ellipsoid, true: the 1,000 m band is at 1,000 m at every exaggeration."
+        : `The legend's meters are drawn: at ×${k.toFixed(1)}, the 1,000 m band is at ${meters(1000 / k)} true, and everything above ${meters(RAMP_TOP / k)} true is white.`;
     legendNote.hidden = !state.tint && state.contours === 0;
     legend.hidden = !state.tint;
     hazeNote.textContent =
       state.hazeKey === "true"
         ? `The density thins with true height (to 1/e in ${HAZE.scaleHeight.toLocaleString("en-US")} m): the same air over the same ground at every exaggeration, along a path drawn ×${k.toFixed(1)} as long.`
-        : `The density thins with drawn height: at ×${k.toFixed(1)} the air above ${metres(HAZE.scaleHeight / k)} true height is as thin as ${HAZE.scaleHeight.toLocaleString("en-US")} m above the valley floor was, and the summits stand in near-vacuum.`;
+        : `The density thins with drawn height: at ×${k.toFixed(1)} the air above ${meters(HAZE.scaleHeight / k)} true height is as thin as ${HAZE.scaleHeight.toLocaleString("en-US")} m above the valley floor was, and the summits stand in near-vacuum.`;
     hazeNote.hidden = !state.haze;
   };
 
@@ -149,7 +149,7 @@ export function createHeightPanel(
     el(
       "p",
       { className: "vex-note" },
-      "A colour ramp, a contour line and the air's density are lookups by height, and a height is a fact about the ground, not about the picture. Set the exaggeration to ×5 to ×10 and switch each key.",
+      "A color ramp, a contour line and the air's density are lookups by height, and a height is a fact about the ground, not about the picture. Set the exaggeration to ×5 to ×10 and switch each key.",
     ),
     el("label", {}, "Hypsometric tint", tintBox),
     keyed(

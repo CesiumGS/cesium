@@ -11,7 +11,7 @@
 // The bridged route always has a rigid step at each end and between two warps
 // (an identity where the camera route has none), so the routes of different
 // views to different roots, which differ in their rigid steps only, have one
-// shape and one compiled program (`normalise`).
+// shape and one compiled program (`normalize`).
 import {
   smoothValuesOf,
   type Route as CameraRoute,
@@ -73,7 +73,7 @@ const IDENTITY = Float64Array.of(
  * (an identity where the route has none): the shape every view's route to
  * its own root takes.
  */
-export function normalise(steps: readonly CameraStep[]): CameraStep[] {
+export function normalize(steps: readonly CameraStep[]): CameraStep[] {
   const out: CameraStep[] = [];
   const pad = () =>
     out.push({ kind: "rigid", matrix: Float64Array.from(IDENTITY) });
@@ -106,7 +106,7 @@ function same(a: Params, b: Params): boolean {
 
 /** The bridged route, or why the camera route can't take the compiled path. */
 export function bridgeRoute(input: CameraRoute): BridgedRoute | BridgeRefusal {
-  const camera = { ...input, steps: normalise(input.steps) };
+  const camera = { ...input, steps: normalize(input.steps) };
   let warps = 0;
   for (const step of camera.steps) {
     if (step.kind === "rigid") {
@@ -181,7 +181,7 @@ export function bridgeRoute(input: CameraRoute): BridgedRoute | BridgeRefusal {
       return out;
     },
     matches(raw) {
-      const next = { ...raw, steps: normalise(raw.steps) };
+      const next = { ...raw, steps: normalize(raw.steps) };
       return (
         next.steps.length === nodes.length &&
         next.steps.every((s, i) =>
@@ -194,7 +194,7 @@ export function bridgeRoute(input: CameraRoute): BridgedRoute | BridgeRefusal {
       );
     },
     refresh(raw) {
-      const next = { ...raw, steps: normalise(raw.steps) };
+      const next = { ...raw, steps: normalize(raw.steps) };
       let changedMatrices = false;
       let changedParams = false;
       next.steps.forEach((s, i) => {

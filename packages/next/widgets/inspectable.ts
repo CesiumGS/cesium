@@ -146,7 +146,7 @@ export interface InspectorSnapshot {
       max: number;
       adaptive: boolean;
       protocol?: string;
-      cancelled?: number;
+      canceled?: number;
       uploadQueue?: number;
     };
     /** Content in memory, against the cache budget and its overflow. */
@@ -158,7 +158,7 @@ export interface InspectorSnapshot {
     /**
      * Requests since loading began by what they were for, in a fixed order
      * (base, intermediate, view, prefetch, height samples): started, bytes
-     * received, loads a view drew, loads evicted undrawn, cancelled.
+     * received, loads a view drew, loads evicted undrawn, canceled.
      */
     purposes?: Array<{
       label: string;
@@ -166,7 +166,7 @@ export interface InspectorSnapshot {
       bytes: number;
       drawn: number;
       unused?: number;
-      cancelled?: number;
+      canceled?: number;
     }>;
     /**
      * Loading in phases (resolve, root, to first content, to settled), ms;

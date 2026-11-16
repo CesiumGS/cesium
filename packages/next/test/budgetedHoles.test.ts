@@ -1,7 +1,7 @@
 // A placeholder's clip region is exactly the area nothing else draws (mixed
 // LOD, `result.placeholders`): no clip tile may hold a drawn tile, or the
 // coarse surface is drawn through finer content (at x4 vertical exaggeration
-// the two surfaces are metres apart and show as interpenetrating sheets).
+// the two surfaces are meters apart and show as interpenetrating sheets).
 import { describe, expect, it } from "vitest";
 import { Camera } from "../src/scene/Camera.ts";
 import { BudgetedSelection } from "../src/streaming/Budgeted.ts";
@@ -93,7 +93,7 @@ function select(root: Tile, height: number): SelectionResult {
   }).select(root, 8000, view(height));
 }
 
-/** Twenty narrow children of a tile centred at `east` (half-size 1000). */
+/** Twenty narrow children of a tile centered at `east` (half-size 1000). */
 const twenty = (east: number, error: number): Json[] =>
   Array.from({ length: 20 }, (_, i) => box(east - 950 + i * 100, 50, error));
 

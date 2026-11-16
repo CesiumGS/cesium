@@ -249,7 +249,7 @@ describe("OCCT STEP files", () => {
     return { solid: back, brep };
   }
 
-  it("round-trips a box minus a cylinder in metres, faces and volume kept", () => {
+  it("round-trips a box minus a cylinder in meters, faces and volume kept", () => {
     const cut = own(
       kernel.boolean(
         "difference",

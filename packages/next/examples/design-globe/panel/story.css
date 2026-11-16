@@ -4,7 +4,7 @@
  * with the frames explorer's two check-kind tints (its tokens.css: the
  * explorer's second exception to StrataKit, which has no categorical
  * palette; neither tint is a status hue, each 6.3:1 or more in both
- * schemes) and the placements' colours.
+ * schemes) and the placements' colors.
  */
 .dg-panel {
   --dg-kind-exact-bg: light-dark(#fbeaf0, #72243e);
@@ -230,7 +230,7 @@
 /* ------------------------------------------------------------ the tour */
 
 /*
- * Over the globe, bottom centre, above the time controls: main.ts sets
+ * Over the globe, bottom center, above the time controls: main.ts sets
  * --dg-time-clear from their real top, as they wrap.
  */
 .dg-tour {

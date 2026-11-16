@@ -233,11 +233,11 @@ export function evaluateRows(
 
 /**
  * How the compiler's residual pass (src/transform/residual.ts) would carry a
- * table lookup, emulated in float32. A draw stores, per table, its centre's
+ * table lookup, emulated in float32. A draw stores, per table, its center's
  * row and the rows either side (a window), and for each window row the
- * centre values the rules read, the change of the output from the centre's
- * row to that row at the centre (a float64 difference, stored in float32),
- * and the window's breakpoints relative to the centre. A vertex picks its
+ * center values the rules read, the change of the output from the center's
+ * row to that row at the center (a float64 difference, stored in float32),
+ * and the window's breakpoints relative to the center. A vertex picks its
  * row by comparing its float32 offset with those breakpoints (no search over
  * the table per vertex), then adds that row's crossing term to the change
  * the residual rules give within the row: Δ = [v_i(c) - v_ic(c)] + Δ_i(δ).
@@ -248,7 +248,7 @@ export function evaluateRows(
 export function residualDelta(
   p: Program,
   tables: Readonly<Record<string, readonly number[]>>,
-  centre: readonly number[],
+  center: readonly number[],
   delta: readonly number[],
   window = 1,
 ): { delta: number[]; rows: Record<string, number> } {
@@ -256,9 +256,9 @@ export function residualDelta(
     p: [...x],
     ...tables,
   });
-  const c = centre;
+  const c = center;
   const d32 = delta.map(f);
-  // The centre's row per table, and the vertex's row within the window.
+  // The center's row per table, and the vertex's row within the window.
   const rowsC: Record<string, number> = {};
   const rowsV: Record<string, number> = {};
   for (const t of p.tables ?? []) {
@@ -272,19 +272,19 @@ export function residualDelta(
       r <= Math.min(ic + window, t.rows - 1);
       r++
     ) {
-      // The breakpoint relative to the centre, float64 on the CPU, stored as float32.
+      // The breakpoint relative to the center, float64 on the CPU, stored as float32.
       if (r === 0 || f(data[r * t.columns.length + sCol]! - c[0]!) <= d32[0]!) {
         iv = r;
       }
     }
     rowsV[t.name] = iv;
   }
-  const centreAtVertexRows = evaluateRows(p, inputsAt(c), rowsV);
-  const centreAtCentreRows = evaluateRows(p, inputsAt(c), rowsC);
-  const vc = centreAtVertexRows.values;
+  const centerAtVertexRows = evaluateRows(p, inputsAt(c), rowsV);
+  const centerAtCenterRows = evaluateRows(p, inputsAt(c), rowsC);
+  const vc = centerAtVertexRows.values;
   // Δ within the vertex's rows, by the residual rules, every operation in float32.
   const dl: Lanes[] = [];
-  const stored = (id: number) => lanesOf(vc[id]!).map(f); // stored centre values (float32)
+  const stored = (id: number) => lanesOf(vc[id]!).map(f); // stored center values (float32)
   p.eqns.forEach((e, id) => {
     const a = e.args.map((x) => dl[x]!);
     const zero = () => Array<number>(width(e.type)).fill(0);
@@ -356,13 +356,13 @@ export function residualDelta(
     }
   });
   const out = p.outputs[0]!;
-  const crossing = lanesOf(centreAtVertexRows.out[out.name]!).map((x, l) =>
-    f(x - lanesOf(centreAtCentreRows.out[out.name]!)[l]!),
+  const crossing = lanesOf(centerAtVertexRows.out[out.name]!).map((x, l) =>
+    f(x - lanesOf(centerAtCenterRows.out[out.name]!)[l]!),
   );
   return { delta: dl[out.id]!.map((x, l) => f(crossing[l]! + x)), rows: rowsV };
 }
 
-/** Per-draw floats the residual form would store, by the count of centre values its rules read. */
+/** Per-draw floats the residual form would store, by the count of center values its rules read. */
 export function perDrawEstimate(
   p: Program,
   window = 1,
@@ -386,18 +386,18 @@ export function perDrawEstimate(
     }
   });
   const rows = 2 * window + 1;
-  let centreValues = 0;
+  let centerValues = 0;
   for (const id of read) {
     const per = p.eqns[id]!.type === "float" ? 1 : width(p.eqns[id]!.type);
-    centreValues += per * rows ** tablesOf[id]!.size;
+    centerValues += per * rows ** tablesOf[id]!.size;
   }
   const tables = p.tables?.length ?? 0;
   const detail = {
     "F(c), hi and lo": 6,
-    "centre values the rules read, per window row": centreValues,
+    "center values the rules read, per window row": centerValues,
     "crossing terms (3 lanes per window row per table)": 3 * rows * tables,
-    "window breakpoints, relative to the centre": (rows - 1) * tables,
-    "centre rows (as floats)": tables,
+    "window breakpoints, relative to the center": (rows - 1) * tables,
+    "center rows (as floats)": tables,
   };
   return { floats: Object.values(detail).reduce((s, x) => s + x, 0), detail };
 }

@@ -13,7 +13,7 @@
 // A minute over terrain not drawn, or drawn only coarsely, is in no window,
 // and nothing is "in sight" within the terrain's error (Review Focus 2).
 // Each slice asks its minutes through the engine's query interface as one
-// batch, answered asynchronously; a scan cancelled or replaced meanwhile
+// batch, answered asynchronously; a scan canceled or replaced meanwhile
 // (its generation) publishes nothing. It runs on demand, in slices of
 // about 8 ms so no tick waits long: when the mast's height or the datum
 // changes (what was found for the old one goes at once), and 1.5 s after
@@ -85,7 +85,7 @@ export const sampleOf = (r: {
 /**
  * The spans where the drawn terrain doesn't block the line (samples each
  * `step` s from `startMs`: clear, or within the terrain's error), each
- * labelled by what the terrain says there; and the moment the drawn
+ * labeled by what the terrain says there; and the moment the drawn
  * headland stops blocking it: the first such span that follows a minute
  * where the drawn terrain blocked it, named "comes into view" only when the
  * whole span traced clear (pure). A span after terrain not drawn is no moment:
@@ -311,7 +311,7 @@ export function createLighthouseWindow(deps: {
       clearTimeout(probe);
       const resumed = performance.now();
       if (mine !== generation) {
-        return; // cancelled, or a newer scan began: this one publishes nothing
+        return; // canceled, or a newer scan began: this one publishes nothing
       }
       out.push(...answers.map(sampleOf));
       const main = free

@@ -3,7 +3,7 @@
 // checked against its integrity hash, unpacked into a store outside the repo
 // (~/.cesium-bench/occt/<version>), never committed and never bundled. It is
 // LGPL 2.1 (unlike SMLib's Apache 2.0), so it stays a separate module that an
-// example loads on request from the dev server's /occt/; check the licence
+// example loads on request from the dev server's /occt/; check the license
 // before distributing anything built with it. Only the single-threaded build
 // is kept: the threaded one needs cross-origin isolation.
 //

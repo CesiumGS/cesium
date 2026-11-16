@@ -39,7 +39,7 @@ const norm = (a: ArrayLike<number>) => Math.hypot(a[0]!, a[1]!, a[2]!);
 const dist = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
 
-/** A point lon, lat (degrees) and height (m) above `ellipsoid`, in metres. */
+/** A point lon, lat (degrees) and height (m) above `ellipsoid`, in meters. */
 function at(lon: number, lat: number, h: number, ellipsoid = WGS84) {
   return ellipsoid.cartographicToCartesian(
     fromDegrees(lon, lat, h),
@@ -124,7 +124,7 @@ describe("verticalExaggeration", () => {
       warp,
       SAMPLES.map(([lon, lat, h]) => at(lon, lat, h)),
     );
-    // A high point and a deep one (7 × 300 km below is still above the centre).
+    // A high point and a deep one (7 × 300 km below is still above the center).
     checkWarp(warp, [at(20, 20, 400_000), at(20, 20, -300_000)]);
   });
 
@@ -197,7 +197,7 @@ describe("verticalExaggeration", () => {
     );
   });
 
-  it("rejects a factor that is not positive and a point at the centre", () => {
+  it("rejects a factor that is not positive and a point at the center", () => {
     expect(() => verticalExaggeration({ factor: 0 })).toThrow(RangeError);
     expect(() => verticalExaggeration({ factor: -2 })).toThrow(RangeError);
     expect(() => verticalExaggeration({ factor: Infinity })).toThrow(
@@ -205,7 +205,7 @@ describe("verticalExaggeration", () => {
     );
     const warp = verticalExaggeration({ factor: 2 });
     expect(() => warp.forward([0, 0, 0], new Float64Array(3))).toThrow(
-      /centre/,
+      /center/,
     );
   });
 
@@ -244,7 +244,7 @@ describe("verticalExaggeration", () => {
 });
 
 describe("heightOffset", () => {
-  it("lifts along the normal: height plus metres, latitude and longitude kept", () => {
+  it("lifts along the normal: height plus meters, latitude and longitude kept", () => {
     const warp = heightOffset(250);
     for (const [lon, lat, h] of SAMPLES) {
       const q = warp.forward(at(lon, lat, h), new Float64Array(3));
@@ -264,10 +264,10 @@ describe("heightOffset", () => {
     ]);
   });
 
-  it("changes through `metres`", () => {
+  it("changes through `meters`", () => {
     const warp = heightOffset(10);
     const before = warp.revision;
-    warp.metres = 20;
+    warp.meters = 20;
     expect(warp.revision).toBe(before + 1);
     const q = warp.forward(at(0, 0, 0), new Float64Array(3));
     expect(
@@ -279,28 +279,28 @@ describe("heightOffset", () => {
 
 describe("scaleAbout", () => {
   it("scales along east, north and up at the point, and is affine", () => {
-    const centre = at(-75, 40, 0);
-    const warp = scaleAbout(centre, [2, 3, 5]);
-    // A point 100 m east of the centre goes 200 m east.
+    const center = at(-75, 40, 0);
+    const warp = scaleAbout(center, [2, 3, 5]);
+    // A point 100 m east of the center goes 200 m east.
     const east = [
       -Math.sin((-75 * Math.PI) / 180),
       Math.cos((-75 * Math.PI) / 180),
       0,
     ];
     const p = [
-      centre[0]! + 100 * east[0]!,
-      centre[1]! + 100 * east[1]!,
-      centre[2]! + 100 * east[2]!,
+      center[0]! + 100 * east[0]!,
+      center[1]! + 100 * east[1]!,
+      center[2]! + 100 * east[2]!,
     ];
     const q = warp.forward(p, new Float64Array(3));
-    expect(dist(q, centre)).toBeCloseTo(200, 8);
+    expect(dist(q, center)).toBeCloseTo(200, 8);
     expect(
-      ((q[0]! - centre[0]!) * east[0]! + (q[1]! - centre[1]!) * east[1]!) / 200,
+      ((q[0]! - center[0]!) * east[0]! + (q[1]! - center[1]!) * east[1]!) / 200,
     ).toBeCloseTo(1, 10);
-    expect(dist(warp.forward(centre, new Float64Array(3)), centre)).toBe(0);
+    expect(dist(warp.forward(center, new Float64Array(3)), center)).toBe(0);
     checkWarp(
       warp,
-      [p, [centre[0]! + 5e5, centre[1]! - 2e5, centre[2]! + 9e4]],
+      [p, [center[0]! + 5e5, center[1]! - 2e5, center[2]! + 9e4]],
       {
         jacobian: 1e-9,
         trip: 1e-7,
@@ -309,11 +309,11 @@ describe("scaleAbout", () => {
   });
 
   it("takes one factor, rejects bad ones, and changes through `factors`", () => {
-    const centre = at(10, 10, 0);
-    const warp = scaleAbout(centre, 2);
+    const center = at(10, 10, 0);
+    const warp = scaleAbout(center, 2);
     expect(warp.factors).toEqual([2, 2, 2]);
-    expect(() => scaleAbout(centre, [1, 0, 1])).toThrow(RangeError);
-    expect(() => scaleAbout(centre, [1, NaN, 1])).toThrow(RangeError);
+    expect(() => scaleAbout(center, [1, 0, 1])).toThrow(RangeError);
+    expect(() => scaleAbout(center, [1, NaN, 1])).toThrow(RangeError);
     const before = warp.revision;
     warp.factors = [1, 1, 4];
     expect(warp.revision).toBe(before + 1);
@@ -390,7 +390,7 @@ describe("fromFunction", () => {
     expect(maxDiff(jt, exact)).toBeLessThan(1e-6);
   });
 
-  it("inverts by Newton, from the engine's warpInverse, to a micrometre at Earth scale", () => {
+  it("inverts by Newton, from the engine's warpInverse, to a micrometer at Earth scale", () => {
     const warp = fromFunction(exaggerate);
     for (const [lon, lat, h] of SAMPLES) {
       const p = at(lon, lat, h, Ellipsoid.WGS84);
@@ -490,7 +490,7 @@ describe("blend", () => {
 
 describe("reprojectionWarp", () => {
   const RADIUS = 6_378_137;
-  /** Spherical Mercator: (x, y, z) metres to degrees and height. */
+  /** Spherical Mercator: (x, y, z) meters to degrees and height. */
   const mercator = (accuracy: number | undefined): CoordinateOperation => ({
     forward: (xyz, out = new Float64Array(3)) => {
       out[0] = ((xyz[0]! / RADIUS) * 180) / Math.PI;
@@ -518,7 +518,7 @@ describe("reprojectionWarp", () => {
     [-13_600_000, -4_000_000, -20],
   ];
 
-  it("is the operation then the ellipsoid, with a Jacobian and an exact inverse: design coordinates to body-fixed metres", () => {
+  it("is the operation then the ellipsoid, with a Jacobian and an exact inverse: design coordinates to body-fixed meters", () => {
     const warp = reprojectionWarp(mercator(0.5));
     for (const design of DESIGN) {
       const q = warp.forward(design, new Float64Array(3));
@@ -567,7 +567,7 @@ describe("reprojectionWarp", () => {
     expect(llh[1]).toBeCloseTo(40, 3);
     expect(warp.domain!.radius).toBeGreaterThan(5e5);
     expect(warp.domain!.radius).toBeLessThan(2e6);
-    // An area across 180° has its centre there.
+    // An area across 180° has its center there.
     const across = reprojectionWarp(operation, {
       areaOfInterest: { west: 170, south: -10, east: -170, north: 10 },
     });

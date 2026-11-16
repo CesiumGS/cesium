@@ -15,5 +15,5 @@ const points = new PointSource(viewer.engine, viewer.world, {
   anchor: viewer.world.bodyAnchor(EARTH),
 });
 points.count = 1;
-// x, y, z from the origin in metres, then heading.
+// x, y, z from the origin in meters, then heading.
 points.update(0, new Float32Array([0, 0, 0, 0]));

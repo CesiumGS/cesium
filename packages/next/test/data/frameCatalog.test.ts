@@ -288,10 +288,10 @@ describe("the frame catalog over the store", () => {
       ANALYTIC_ACCURACY.MOON_ICRF.meters,
       km,
     );
-    // The parts the notes state: the Sun's offset from the barycentre (about
+    // The parts the notes state: the Sun's offset from the barycenter (about
     // 1.5 million km), Meeus's Sun (33,000 km) and Meeus's Moon (27 km,
     // 16″) from the Earth.
-    within("the barycentre's offset", worst.HCRS!, 1.5e9, km);
+    within("the barycenter's offset", worst.HCRS!, 1.5e9, km);
     within("Meeus's Sun", worst.sunFromEarth!, 3.3e7, km);
     within("Meeus's Moon", worst.moonFromEarth!, MEEUS_MOON_METERS, km);
     within(

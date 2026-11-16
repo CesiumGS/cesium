@@ -37,15 +37,16 @@ The GPU is shared with every other app on the machine. A hung shader resets it f
 ## Seams and boundaries
 
 - The dependency rule between entry points (core, `/time`, `/frames`, `/proj`, `/measure`, `/widgets`) is enforced by `test/importBoundary.test.ts`. The widgets import the other entry points by the package's name and nothing under `src/`.
-- Per-draw constants, draw arguments, geometry submission, bindless resources and ray queries each go through one seam, and a bypass test fails naming the line (`test/seams.test.ts` and its neighbours). Add to the seam; don't go around it.
+- Per-draw constants, draw arguments, geometry submission, bindless resources and ray queries each go through one seam, and a bypass test fails naming the line (`test/seams.test.ts` and its neighbors). Add to the seam; don't go around it.
 - Examples use the public API only. Where an example has to reach past it, record that for the API review.
 
 ## Wording
 
+- Write American English in prose, comments, UI strings, test names, code names and commit messages. Quoted outside sources and outside names (EPSG's and PROJ's "metre", the Open Government Licence) keep their spelling.
 - Plain, short sentences. Name units and datums. No e-notation in prose ("10⁻⁹", not "1e-9").
 - Use inclusive terms: "overall plan" or "main", not "master"; "allowlist", not "whitelist".
 - In frames and camera code, never write "frame" alone: say reference frame, tick (one pass of the engine loop, never "per frame"), render space or render root. Code names (`Frame`, `FrameData`) keep their names.
-- "Opacity" is the value from 0 to 1, "translucent" is an adjective in prose, and "alpha" means a colour's channel.
+- "Opacity" is the value from 0 to 1, "translucent" is an adjective in prose, and "alpha" means a color's channel.
 - A stated accuracy never claims more than its inputs support. "Can't tell" is an honest answer.
 
 ## UI and examples
@@ -94,4 +95,4 @@ Work is tracked as files in `work/` in human-in-the-lead's format (its design, p
 - Choose the model per role: a fast model for well-specified implementation and scoped re-reviews, the most capable one for design-heavy tasks and risky reviews.
 - Send back only Important review findings as fix rounds; fix Minor ones in one pass or fold them into the next task.
 - Leave generated shader output out of review diffs.
-- Read pages as text; take screenshots only for visual judgements.
+- Read pages as text; take screenshots only for visual judgments.

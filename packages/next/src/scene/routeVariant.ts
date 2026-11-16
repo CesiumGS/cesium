@@ -11,9 +11,9 @@
 //   at       [1, 0, 0, 0]              one term (the buffer's header)
 //   at + 1   [ROUTE_KIND, 1.0f, ROUTE_BODY, pointer row]   the term's row
 //   at + 2,3 zero                      (its weight factors: none)
-//   at + 4   [centre xyz, 0]           the draw's centre in model space
+//   at + 4   [center xyz, 0]           the draw's center in model space
 //   at + 5…7 the model-to-anchor linear part L, one column a row, xyz
-//   at + 8…  `DrawCentre` (`perDrawLayout.floats / 4` rows), from `centreRow`
+//   at + 8…  `DrawCenter` (`perDrawLayout.floats / 4` rows), from `centerRow`
 // The route's per-view uniforms (`RouteUniforms`) are blocks of their own,
 // one for each view the route differs in (its matrices to the view's root,
 // its parameters' values in the view): `ROUTE_POINTER_ROWS` rows at the
@@ -27,7 +27,7 @@ import { wgslUnit, type ShaderUnit } from "../shaders/link/unit.ts";
 export const ROUTE_KIND = 3;
 /** Rows from a block's header to its body: the header and one term's three. */
 export const ROUTE_BODY = 4;
-/** Rows of a draw's own data before its `DrawCentre`: the centre and L's three columns. */
+/** Rows of a draw's own data before its `DrawCenter`: the center and L's three columns. */
 export const ROUTE_OWN_ROWS = 4;
 /** Rows of a route's pointer table: a u32 for each of 32 view ids. */
 export const ROUTE_POINTER_ROWS = 8;
@@ -45,13 +45,13 @@ export interface RouteVariant {
   readonly compiled: CompiledRoute;
 }
 
-/** Rows of a draw's block: the header, the term, the draw's data and its `DrawCentre`. */
+/** Rows of a draw's block: the header, the term, the draw's data and its `DrawCenter`. */
 export function routeBlockRows(compiled: CompiledRoute): number {
   return ROUTE_BODY + ROUTE_OWN_ROWS + compiled.perDrawLayout.floats / 4;
 }
 
-/** The row a draw's `DrawCentre` starts at, for its block at `at`. */
-export function routeCentreRow(at: number): number {
+/** The row a draw's `DrawCenter` starts at, for its block at `at`. */
+export function routeCenterRow(at: number): number {
   return at + ROUTE_BODY + ROUTE_OWN_ROWS;
 }
 
@@ -85,7 +85,7 @@ export function routeUnitWgsl(
   positions = false,
 ): string {
   const uniformRows = compiled.uniformsLayout.floats / 4;
-  const centreRows = compiled.perDrawLayout.floats / 4;
+  const centerRows = compiled.perDrawLayout.floats / 4;
   const { eyeHi, eyeLo } = compiled.uniformsLayout.fields;
   if (eyeHi === undefined || eyeLo === undefined) {
     throw new Error("routeUnitWgsl: the compiled route has no eye fields");
@@ -107,9 +107,9 @@ export function routeUnitWgsl(
     `  return u;`,
     `}`,
     ``,
-    `fn tgLoadCentre(row: u32) -> DrawCentre {`,
-    `  var c: DrawCentre;`,
-    ...loads("c", centreRows, "row"),
+    `fn tgLoadCenter(row: u32) -> DrawCenter {`,
+    `  var c: DrawCenter;`,
+    ...loads("c", centerRows, "row"),
     `  return c;`,
     `}`,
     ``,
@@ -120,7 +120,7 @@ export function routeUnitWgsl(
     `  return transpose(mat3x3f(a, b, c)) * (1.0 / dot(m[0], a));`,
     `}`,
     ``,
-    `// The route's vertex: its block's data, the route evaluated at the draw's centre plus the offset, the shading axes.`,
+    `// The route's vertex: its block's data, the route evaluated at the draw's center plus the offset, the shading axes.`,
     `fn routeVertex(placement: u32, position: vec3f, truePosition: vec3f, m0: vec3f, m1: vec3f, m2: vec3f) -> RoutedVertex {`,
     `  var out: RoutedVertex;`,
     `  let term = bitcast<vec4u>(routeRow(placement + 1u));`,
@@ -128,14 +128,14 @@ export function routeUnitWgsl(
     `    return out;`,
     `  }`,
     `  let body = placement + term.z;`,
-    `  let centre = routeRow(body).xyz;`,
+    `  let center = routeRow(body).xyz;`,
     `  let l = mat3x3f(routeRow(body + 1u).xyz, routeRow(body + 2u).xyz, routeRow(body + 3u).xyz);`,
     `  let viewId = countTrailingZeros(routeViewBit());`,
     `  let pointer = bitcast<vec4u>(routeRow(term.w + viewId / 4u));`,
     `  let u = tgLoadUniforms(pointer[viewId % 4u]);`,
-    `  let c = tgLoadCentre(body + ${ROUTE_OWN_ROWS}u);`,
+    `  let c = tgLoadCenter(body + ${ROUTE_OWN_ROWS}u);`,
     `  var j: mat3x3f;`,
-    `  let relative = tgRoute(l * (position - centre), c, u, &j);`,
+    `  let relative = tgRoute(l * (position - center), c, u, &j);`,
     `  let axes = transpose(mat3x3f(routeAxisRow(0u), routeAxisRow(1u), routeAxisRow(2u)));`,
     `  let world = axes * relative;`,
     `  let inverse = tgInverse3(mat3x3f(m0, m1, m2));`,

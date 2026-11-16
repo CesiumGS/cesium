@@ -43,7 +43,7 @@ export function formatAnswer(
 }
 
 /**
- * The accuracy needs the warning colour: the evaluator flagged it as having
+ * The accuracy needs the warning color: the evaluator flagged it as having
  * no size (not bounded, not stated or not known). A bounded relative figure
  * ("within 2% of the method") isn't a warning (fix 2). The flag, not the
  * note's words, decides (Task 4c item 4).

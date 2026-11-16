@@ -143,11 +143,11 @@ describe("sectionBrep on NIST's STEP models through Open CASCADE", () => {
     const form = stepForm("nist_ctc_05_asme1_rd.stp");
     expect(form.faceSurface.length).toBe(208);
     const { min, max } = box(form);
-    const centre = [0, 1, 2].map((k) => (min[k]! + max[k]!) / 2);
+    const center = [0, 1, 2].map((k) => (min[k]! + max[k]!) / 2);
     const results: string[] = [];
     for (const axis of [0, 1, 2]) {
       for (const share of [0.3, 0.5, 0.7]) {
-        const point = [...centre];
+        const point = [...center];
         point[axis] = min[axis]! + share * (max[axis]! - min[axis]!);
         const normal = [0, 0, 0];
         normal[axis] = 1;

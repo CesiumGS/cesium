@@ -1,17 +1,17 @@
 // Sydney's model on the scale ladder (plan 4b Task 17b): an airport, about
 // 4 km across, on one flat design plane. Two parallel runways with their
 // shoulders and ICAO-style markings (threshold stripes, designations, the
-// aiming point, touchdown-zone bars, side stripes and centreline dashes);
-// parallel taxiways with their links, rapid exits, yellow centrelines and
+// aiming point, touchdown-zone bars, side stripes and centerline dashes);
+// parallel taxiways with their links, rapid exits, yellow centerlines and
 // holding-position markings; and between the runways the apron, the
 // terminal with its piers, jet bridges and parked aircraft, the control
 // tower, hangars and the car park, on grass.
 //
-// Design units are the CRS's (metres, GDA2020 / MGA zone 56). The model's
+// Design units are the CRS's (meters, GDA2020 / MGA zone 56). The model's
 // frame: u along the runways, in the direction a "16" runway is flown
 // (`azimuth`, clockwise from grid north), v across, to the left of u.
 import {
-  LAYER_METRES,
+  LAYER_METERS,
   between,
   frameAt,
   placeIn,
@@ -38,9 +38,9 @@ const TAIL = ["#c8312b", "#1f4f8f", "#e07b1a", "#2b2b2b"].map((c) => srgb(c));
 
 const SHOULDER_WIDTH = 7.5;
 /**
- * The layer stack (meshBuilder's LAYER_METRES steps): the grass, then the
+ * The layer stack (meshBuilder's LAYER_METERS steps): the grass, then the
  * shoulders, then the pavement (runways, taxiways, links, exits, apron),
- * then the paint. Paint never crosses paint of another colour: the yellow
+ * then the paint. Paint never crosses paint of another color: the yellow
  * taxiway lines start beyond the runway's shoulder.
  */
 const GRASS_LAYER = 0;
@@ -71,7 +71,7 @@ const GLYPH_WIDTH = 3;
 /**
  * A designation's strokes, as [along, across, length, width] rectangles in
  * a reader's frame (along: away from the reader; across: to the reader's
- * left), the text's bottom edge at along 0 and centred across.
+ * left), the text's bottom edge at along 0 and centered across.
  */
 function designationStrokes(text) {
   const pitch = GLYPH_WIDTH + 1.5;
@@ -118,11 +118,11 @@ export function airportPlan(site, { metersPerUnit }) {
   const rand = random(m.seed);
   const angle = Math.PI / 2 - m.azimuth;
   const f = frameAt(angle);
-  const centre = [site.origin[0], site.origin[1]];
+  const center = [site.origin[0], site.origin[1]];
   const z0 = site.origin[2];
-  const layer = (k) => z0 + (k * LAYER_METRES) / metersPerUnit;
+  const layer = (k) => z0 + (k * LAYER_METERS) / metersPerUnit;
   const zPaint = layer(PAINT_LAYER);
-  const spot = (along, across, z) => placeIn(f, centre, along, across, z);
+  const spot = (along, across, z) => placeIn(f, center, along, across, z);
   const at2 = (along, across) => {
     const p = spot(along, across, 0);
     return [p[0], p[1]];
@@ -143,7 +143,7 @@ export function airportPlan(site, { metersPerUnit }) {
   /**
    * A painted rectangle, kept up to level `through` and dropped above it,
    * where it counts half its width: the distance from any of its points to
-   * the bare pavement's edge of colour.
+   * the bare pavement's edge of color.
    */
   const paint = (
     along,
@@ -216,7 +216,7 @@ export function airportPlan(site, { metersPerUnit }) {
     const taxiway = { name: `Taxiway parallel to ${label}`, kind: "taxiway" };
     ground(r.along, tv, r.length, m.taxiwayWidth, zp, ASPHALT, taxiway);
     const taxiLine = {
-      name: `${taxiway.name}, centreline`,
+      name: `${taxiway.name}, centerline`,
       kind: "taxiway marking",
     };
     for (let a = r.along - r.length / 2; a < r.along + r.length / 2; a += 200) {
@@ -239,7 +239,7 @@ export function airportPlan(site, { metersPerUnit }) {
         ASPHALT,
         feature,
       );
-      // Its centreline from beyond the shoulder to the taxiway's.
+      // Its centerline from beyond the shoulder to the taxiway's.
       const from = r.across + toward * (r.width / 2 + SHOULDER_WIDTH + 1);
       paint(a, (from + tv) / 2, 0.3, Math.abs(tv - from), YELLOW, feature, 1);
       // Holding position: two solid and two dashed lines across the link.
@@ -275,7 +275,7 @@ export function airportPlan(site, { metersPerUnit }) {
         kind: "taxiway",
       };
       ground(a, v, length, m.taxiwayWidth, zp, ASPHALT, feature, toward * turn);
-      // Its centreline from beyond the shoulder (s from the exit's middle,
+      // Its centerline from beyond the shoulder (s from the exit's middle,
       // toward the taxiway, along its axis) to its end.
       const sin = Math.sin(Math.PI / 6);
       const cos = Math.cos(Math.PI / 6);
@@ -343,7 +343,7 @@ export function airportPlan(site, { metersPerUnit }) {
         }
       }
     });
-    // Centreline dashes, 30 m on and 20 m off, between the designations.
+    // Centerline dashes, 30 m on and 20 m off, between the designations.
     for (let a = 90; a + 30 <= r.length - 90; a += 50) {
       paint(
         r.along - r.length / 2 + a + 15,
@@ -574,7 +574,7 @@ export function airportPlan(site, { metersPerUnit }) {
     parts,
     grounds,
     landmark: {
-      label: `Runway ${first.designations[0]} threshold, on the centreline`,
+      label: `Runway ${first.designations[0]} threshold, on the centerline`,
       design: spot(first.along - first.length / 2, first.across, zPaint),
     },
   };

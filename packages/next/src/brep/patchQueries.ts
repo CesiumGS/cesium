@@ -227,7 +227,7 @@ export function rayPatch(
       box[5]! - box[2]!,
     );
     if (size <= leaf || depth >= MAX_DEPTH) {
-      // The cell's centre, in the patch's own (s, t).
+      // The cell's center, in the patch's own (s, t).
       const found = newton((a0 + a1) / 2, (b0 + b1) / 2);
       if (found && (best === undefined || found.t < best.t)) {
         best = found;
@@ -371,7 +371,7 @@ export function nearestNewton(
     if (newton.a > 0 && newton.a * newton.c - newton.b * newton.b > 0) {
       ({ a, b, c } = newton);
     } else {
-      // Not a minimum's neighbourhood: take Gauss–Newton's, damped for a pole.
+      // Not a minimum's neighborhood: take Gauss–Newton's, damped for a pole.
       const damping = 1e-9 * Math.max(a, c, 1e-300);
       a += damping;
       c += damping;

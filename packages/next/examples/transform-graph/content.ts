@@ -24,7 +24,7 @@ import type { SceneHost } from "./scene.ts";
 /** The name of the application's reference frame over the Earth's content. */
 export const EXAGGERATED = "Earth content (exaggerated)";
 
-/** A geodetic position: radians, and metres above the WGS84 ellipsoid. */
+/** A geodetic position: radians, and meters above the WGS84 ellipsoid. */
 export interface Geodetic {
   readonly longitude: number;
   readonly latitude: number;
@@ -37,7 +37,7 @@ export const geodeticOf = (point: ArrayLike<number>): Geodetic => {
     cartographic(),
   );
   if (!c) {
-    throw new RangeError("a point at the Earth's centre has no height");
+    throw new RangeError("a point at the Earth's center has no height");
   }
   return { longitude: c.longitude, latitude: c.latitude, height: c.height };
 };
@@ -174,7 +174,7 @@ export function addOsmBuildings(
 }
 
 /**
- * A plain studio for scenes with no globe: a light grey background, a
+ * A plain studio for scenes with no globe: a light gray background, a
  * procedural environment for ambient light and an exposure to match, in
  * every view of the viewer; undone with the scene. (With no globe there is
  * no sky to light the content or fill the background.)

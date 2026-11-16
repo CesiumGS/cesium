@@ -60,7 +60,7 @@ export class DepthPyramid {
    * Each writes, per texel, the nearer (larger, reverse-Z) of what is there
    * and its own depth, for a shape that is certainly opaque where it is: the
    * body occluder's ellipsoid (`streaming/occluders.ts` `BodyShape`, inside
-   * the drawn terrain) would be one, from its centre and radii seen from
+   * the drawn terrain) would be one, from its center and radii seen from
    * `built`'s camera. Both phases of the draws' occlusion cull and the tile
    * queries then read it, so a shape hidden in the drawn depth adds nothing
    * and one the depth lacks (terrain not loaded yet) hides what it proves.

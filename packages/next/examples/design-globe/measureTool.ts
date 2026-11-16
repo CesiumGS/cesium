@@ -6,7 +6,7 @@
 //
 // What a measurement says, in both placements:
 //   - the design distance (design units, what CAD reports) and the true
-//     distance (metres, between where the design points truly are), side by
+//     distance (meters, between where the design points truly are), side by
 //     side: from the design, so the same whichever placement is drawn;
 //   - "on the globe": the straight line between the two points as they are
 //     drawn now, which is the true distance when the drawing is true
@@ -92,7 +92,7 @@ export const HOVER_INTERVAL_MS = 50;
 
 /**
  * The pointer while snapping: a ring of the snap's reach (`APERTURE`) with
- * a dot at its centre, as CAD tools draw their aperture (feedback F5).
+ * a dot at its center, as CAD tools draw their aperture (feedback F5).
  */
 const SNAP_CURSOR = (() => {
   const r = APERTURE;
@@ -151,8 +151,8 @@ export interface MeasureTool {
   placementsChanged(): void;
   /** The answers are in. */
   answersChanged(): void;
-  /** A point at the view's centre (keyboard). */
-  pointAtCentre(): void;
+  /** A point at the view's center (keyboard). */
+  pointAtCenter(): void;
   clear(): void;
   /** A link's measurement (deep link, back or forward). */
   applyLink(params: Readonly<Record<string, string | undefined>>): void;
@@ -586,7 +586,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     deps.changed();
   }
 
-  /** A point where the user clicked (or the view's centre). */
+  /** A point where the user clicked (or the view's center). */
   function pointAt(x: number, y: number): void {
     clickAbort?.abort();
     const ctl = new AbortController();
@@ -783,7 +783,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     { signal },
   );
   syncCursor();
-  // Keyboard: the canvas takes focus; Enter places a point at the centre
+  // Keyboard: the canvas takes focus; Enter places a point at the center
   // (the crosshair marks it), Escape clears.
   const priorTabIndex = canvas.getAttribute("tabindex");
   if (priorTabIndex === null) {
@@ -794,7 +794,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     (e) => {
       if (e.key === "Enter") {
         e.preventDefault();
-        pointAtCentre();
+        pointAtCenter();
       } else if (e.key === "Escape") {
         clear();
       }
@@ -818,7 +818,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     { signal },
   );
 
-  function pointAtCentre(): void {
+  function pointAtCenter(): void {
     const r = canvas.getBoundingClientRect();
     pointAt(r.width / 2, r.height / 2);
   }
@@ -955,7 +955,7 @@ export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
     answersChanged() {
       buildOpeners();
     },
-    pointAtCentre,
+    pointAtCenter,
     clear,
     applyLink,
     retry: () => frames.retry(),

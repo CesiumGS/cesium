@@ -23,7 +23,7 @@ export const FRAME_NAME = "Earth content (exaggerated)";
 export const scaleOf = (factor: number): number =>
   (factor - 1) / (MAX_EXAGGERATION - 1);
 
-/** A point's geodetic position: radians, and metres above the WGS84 ellipsoid. */
+/** A point's geodetic position: radians, and meters above the WGS84 ellipsoid. */
 export interface Geodetic {
   readonly longitude: number;
   readonly latitude: number;
@@ -101,7 +101,7 @@ export function createExaggeration(
         cartographic(),
       );
       if (!c) {
-        throw new RangeError("a point at the Earth's centre has no height");
+        throw new RangeError("a point at the Earth's center has no height");
       }
       return { longitude: c.longitude, latitude: c.latitude, height: c.height };
     },

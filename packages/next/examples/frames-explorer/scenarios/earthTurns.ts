@@ -42,7 +42,7 @@ import { SCENARIOS } from "./specs.ts";
 
 const SPEC = SCENARIOS.find((s) => s.id === "earth-turns")!;
 
-/** WGS 84's equatorial radius, m: where Earth orientation's angle becomes metres on the ground. */
+/** WGS 84's equatorial radius, m: where Earth orientation's angle becomes meters on the ground. */
 const EQUATOR = 6_378_137;
 
 /** The sidereal day, s: one turn of the Earth against the stars. */
@@ -179,7 +179,7 @@ export function compositionsAt(
  * Earth orientation's accuracy at `instant`, as the answer states it (R8):
  * the library's composition (`pointAccuracy`, Task 7b) for a point on the
  * equator carried from ITRF into GCRF, the ITRF edge's angular sigma times
- * its distance from the geocentre.
+ * its distance from the geocenter.
  */
 export function orientation(
   ctx: StressContext,

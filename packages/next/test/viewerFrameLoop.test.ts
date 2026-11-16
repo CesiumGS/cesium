@@ -176,7 +176,7 @@ describe("the Viewer in the engine's frame loop", () => {
         seen.push(camera.version);
       }
     });
-    // A wheel notch at the view's centre (the element listens on a real DOM).
+    // A wheel notch at the view's center (the element listens on a real DOM).
     (v.controller as unknown as { onWheel(e: unknown): void }).onWheel({
       clientX: 150,
       clientY: 75,

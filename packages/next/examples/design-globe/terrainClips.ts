@@ -19,7 +19,7 @@ export interface ClipVertex {
   readonly latitude: number;
 }
 
-/** Design point to body-fixed metres, as a placement draws it. */
+/** Design point to body-fixed meters, as a placement draws it. */
 export type Displayed = (design: ArrayLike<number>) => ArrayLike<number>;
 
 const DEG = 180 / Math.PI;
@@ -32,7 +32,7 @@ export function geodeticOf(p: ArrayLike<number>): ClipVertex {
     height: 0,
   });
   if (c === undefined) {
-    throw new Error("terrain clip: a point at the Earth's centre");
+    throw new Error("terrain clip: a point at the Earth's center");
   }
   return { longitude: c.longitude * DEG, latitude: c.latitude * DEG };
 }
@@ -79,7 +79,7 @@ export interface SiteClipShape {
  * poles, the site-grid building on its plinth: UX review M1, M5); around a
  * line model's route (a vertex every 500 design units); else over its
  * footprint. Each is padded by rigid's error there (`rigidAcross` across
- * the ground and `rigidError` in all, metres) and `margin` metres, so the
+ * the ground and `rigidError` in all, meters) and `margin` meters, so the
  * ground never pokes through a flat design surface in either placement.
  */
 export function siteClipRegion(
@@ -180,7 +180,7 @@ export function routeRegion(
 
 /**
  * How far apart two body-fixed points are across the ground: their
- * separation less its part along the ellipsoid's normal at `b` (metres).
+ * separation less its part along the ellipsoid's normal at `b` (meters).
  * The part of rigid's error a terrain clip must reach past; the rest is up
  * or down.
  */
@@ -201,7 +201,7 @@ export function horizontalApart(
 }
 
 /**
- * How far either side of the centreline the corridor's clip reaches over a
+ * How far either side of the centerline the corridor's clip reaches over a
  * structure, design units: a sliver (about 3 mm across in US survey feet),
  * so that one simple polygon clips the earthwork either side and, in
  * effect, none of the ground under a viaduct or over a tunnel. (A region is
@@ -212,7 +212,7 @@ export const STRIP_SLIVER = 0.005;
 
 /**
  * An earthwork stretch's daylight lines: each side's, as [station, distance
- * out from the centreline] in design units, in order of station from the
+ * out from the centerline] in design units, in order of station from the
  * stretch's start to its end, exact (linear in station between points).
  */
 export interface DaylightStretch {
@@ -649,7 +649,7 @@ export function clearTerrainClips(globe: Globe): void {
 /**
  * "See underground" (owner, 2026-11-08: "is it possible to use some
  * transparency to visualize the underground portions?"): the ground this
- * far either side of the corridor's centreline, ftUS, made translucent so
+ * far either side of the corridor's centerline, ftUS, made translucent so
  * its tunnels show in place, as civil design tools show buried work. Wider
  * than the side slopes reach (332 ftUS), so a tunnel's hill reads around
  * it.
@@ -661,7 +661,7 @@ export const UNDERGROUND_OPACITY = 0.3;
 
 /**
  * The corridor's see-underground strip from station `from` to `to`: its
- * centreline ±`halfWidth` design units, a vertex each `step` along each
+ * centerline ±`halfWidth` design units, a vertex each `step` along each
  * side and at both ends, through the reprojected placement. The edges are
  * chords: on the tightest curve (radius 3,000 ftUS) a 500 ftUS chord sags
  * 12 ftUS inside the inner side's line, which a region can take.

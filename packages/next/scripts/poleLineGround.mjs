@@ -10,7 +10,7 @@
 // A pole's ground is the median of the lidar's cells within 2 m of it (a
 // 4 m square), so a fence post or a ditch under one cell doesn't stand in
 // for the field; a pole with no lidar cells there takes the heights of its
-// neighbours, linear between them. The samples are cached in <file>
+// neighbors, linear between them. The samples are cached in <file>
 // (default: samples/pole-line-ground.json in the frames data directory,
 // ~/.cesium-bench/frames, private to the user), never in the repo: only the
 // poles' heights, which are design data, are committed. The cache is
@@ -41,7 +41,7 @@ const root = join(here, "..");
 const DATASET = "13787b9a-26a4-4775-8523-806d13af58fc";
 export const SERVICE = `https://environment.data.gov.uk/geoservices/datasets/${DATASET}/wcs`;
 const COVERAGE = `${DATASET}__Lidar_Composite_Elevation_DTM_1m`;
-/** Half the square sampled around a pole, metres. */
+/** Half the square sampled around a pole, meters. */
 const HALF = 2;
 /** Per request. */
 const TIMEOUT_MS = 60_000;
@@ -80,7 +80,7 @@ async function cappedText(response) {
 
 /**
  * The lidar's cells in the square within `HALF` of [e, n] (British
- * National Grid metres), ODN metres; the coverage's no-data cells left out.
+ * National Grid meters), ODN meters; the coverage's no-data cells left out.
  */
 async function cells(e, n) {
   const url = new URL(SERVICE);
@@ -142,7 +142,7 @@ try {
   const { poles } = poleLinePoles(site);
   const key = ([e, n]) => `${e.toFixed(2)},${n.toFixed(2)}`;
   const cache = {
-    source: `Environment Agency lidar composite DTM 1 m (${SERVICE}), ODN metres`,
+    source: `Environment Agency lidar composite DTM 1 m (${SERVICE}), ODN meters`,
     ...(readSampleCache(file, checkedCache) ?? {
       sampled: new Date().toLocaleDateString("en-CA"),
       cells: {},
@@ -166,7 +166,7 @@ try {
     throw new Error(`poleLineGround: a sampled date that isn't YYYY-MM-DD`);
   }
 
-  // Each pole's ground; a pole without cells, linear between its neighbours.
+  // Each pole's ground; a pole without cells, linear between its neighbors.
   const ground = poles.map((p) => {
     const c = cache.cells[key(p)];
     return c.length > 0 ? median(c) : undefined;
@@ -210,8 +210,8 @@ try {
   writeFileSync(
     out,
     `// London's pole line on the ground (UX review M1): each pole's ground
-// height, ODN metres, in the order poleLineMesh.mjs \`poleLinePoles\` gives
-// them (${filled.length} poles, ${low.toFixed(1)} to ${high.toFixed(1)} m${gaps > 0 ? `; ${gaps} without lidar there, linear between their neighbours` : ""}).
+// height, ODN meters, in the order poleLineMesh.mjs \`poleLinePoles\` gives
+// them (${filled.length} poles, ${low.toFixed(1)} to ${high.toFixed(1)} m${gaps > 0 ? `; ${gaps} without lidar there, linear between their neighbors` : ""}).
 // Written by scripts/poleLineGround.mjs from the Environment Agency's
 // lidar composite DTM (1 m), the median of its cells within 2 m of each
 // pole, sampled ${cache.sampled}. Do not edit by hand.

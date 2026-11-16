@@ -2,7 +2,7 @@
 // owner's feedback F8: "turn that into a small toolbar over the viewer,
 // like a cad tool"). StrataKit's solid toolbar of ghost icon buttons, as
 // Dyno's Viewer has, in two groups: Measure (the snap mode, a point at the
-// view's centre, Clear) and View (the ghost, the exaggeration, the
+// view's center, Clear) and View (the ghost, the exaggeration, the
 // compass, the error ribbon, see underground). Under it, while a measurement is under way or
 // a click was refused, one line saying what to do next.
 import { Divider, IconButton } from "@stratakit/bricks";
@@ -110,12 +110,12 @@ export function MeasureToolbar({
             <IconButton
               label={
                 u.phase === "first"
-                  ? "Second point at the view's centre (Enter)"
-                  : "Point at the view's centre (Enter)"
+                  ? "Second point at the view's center (Enter)"
+                  : "Point at the view's center (Enter)"
               }
               icon={svgMeasureLocation}
               variant="ghost"
-              onClick={() => measureActions.pointAtCentre()}
+              onClick={() => measureActions.pointAtCenter()}
             />
           }
         />

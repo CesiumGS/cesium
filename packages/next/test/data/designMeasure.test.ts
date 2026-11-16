@@ -320,7 +320,7 @@ describe("measure in design terms", () => {
     expect(bodyTerms(m)).toEqual(bodyTerms(r));
   });
 
-  it("converts a differing vertical unit in the 3D distance (metre horizontal, ftUS vertical)", async () => {
+  it("converts a differing vertical unit in the 3D distance (meter horizontal, ftUS vertical)", async () => {
     const P = await loadProj({ base, grids: GRIDS });
     const f = EngineeringFrame.create(
       {
@@ -345,7 +345,7 @@ describe("measure in design terms", () => {
     expect(Math.abs(d.distance - Math.hypot(300, 400, vertical))).toBeLessThan(
       1e-9,
     );
-    // The naive value (feet taken as metres) is far off.
+    // The naive value (feet taken as meters) is far off.
     expect(Math.abs(d.distance - Math.hypot(300, 400, 1000))).toBeGreaterThan(
       100,
     );

@@ -77,7 +77,7 @@ export interface BrepOptions extends Pick<
   /**
    * The form's `prepareGpuPatches` result when it was made elsewhere (the
    * kernel worker does): from the same form with the same `trimTolerance`
-   * and the origin this call would use (the form's centre, or [0, 0, 0] with
+   * and the origin this call would use (the form's center, or [0, 0, 0] with
    * `transform`). Saves the main thread the preparing, which is most of
    * `addBrep`'s time on a part of hundreds of faces.
    */

@@ -1,7 +1,7 @@
 // The design globe's corridor, as data (plan 4b Task 12; the plan's call 16):
 // a 164,042 ftUS (50 km) highway in NAD83(2011) / California zone 3 (ftUS)
 // with NAVD88 heights in ftUS, EPSG:6420+6360. Its alignment has three
-// spiralled curves and a profile of grades and parabolas fitted to the real
+// spiraled curves and a profile of grades and parabolas fitted to the real
 // ground, with viaducts and tunnels where the ground is too far from it. The
 // generator (scripts/designTiles.mjs) builds the tilesets and the exact
 // answers from these values.
@@ -32,7 +32,7 @@ export const CORRIDOR_CRS: CrsRef = {
  * +8,000 (left), each entered and left by a clothoid spiral.
  *
  * Its profile is a design vertical alignment fitted to the real ground:
- * USGS 3DEP ground heights (NAVD88 metres, from 3DEP's elevation service,
+ * USGS 3DEP ground heights (NAVD88 meters, from 3DEP's elevation service,
  * no token) at 330 points every 500 ftUS along the horizontal alignment,
  * sampled 2026-11-07 by scripts/corridorGround.mjs, which also made the fit
  * (the samples are not in the repo). The fit, as a highway designer would
@@ -207,7 +207,7 @@ export interface SectionStrip {
   readonly from: number;
   readonly to: number;
   /**
-   * Rise per unit of distance away from the centreline: −0.02 falls 2%
+   * Rise per unit of distance away from the centerline: −0.02 falls 2%
    * outward, on either side.
    */
   readonly crossSlope: number;
@@ -215,7 +215,7 @@ export interface SectionStrip {
 
 /**
  * A concrete barrier: a symmetric trapezoid standing level on the surface
- * at its base, centred on `offset`.
+ * at its base, centered on `offset`.
  */
 export interface SectionBarrier {
   readonly name: string;
@@ -379,7 +379,7 @@ const tunnel = (from: number, to: number): Structure => ({
  * The mainline's structures (scripts/corridorGround.mjs, with the profile):
  * a viaduct where the profile is more than 50 ftUS over the sampled ground
  * and a tunnel where it is more than 80 ftUS under it. Each sample stands
- * for half the way to its neighbours, and a viaduct reaches on to where the
+ * for half the way to its neighbors, and a viaduct reaches on to where the
  * ground meets the road; structures of a kind within 1,500 ft are joined
  * over ground on their own side of the road; their ends are in whole
  * 100 ft. 18 viaducts (58,300 ft) and 19 tunnels (50,500 ft): 66% of the
@@ -440,7 +440,7 @@ export const BRIDGE: Bridge = VIADUCTS.find((v) => v.fromStation === 43_700)!;
  * Station ticks: a mark every 100 ft of station, on each outer shoulder at
  * offset ±35, 0.5 ft along the alignment by 4 ft across it, drawn 0.03 ft
  * above the surface (so it doesn't fight the surface for depth). A tick's
- * point, the one exact snapping gives, is its centre on that raised face.
+ * point, the one exact snapping gives, is its center on that raised face.
  */
 export const TICKS = {
   interval: 100,
@@ -537,9 +537,9 @@ const dmsRadians = (
  * position was adjusted by NGS in June 2012 (epoch 2010.00); its network
  * accuracy is 0.68 cm horizontal and 2.78 cm ellipsoidal (95%). It is the
  * only mark with a NAD83(2011) position within 1,500 ftUS of the
- * centreline from station 137,000 to the end (NGS Data Explorer's radial
+ * centerline from station 137,000 to the end (NGS Data Explorer's radial
  * searches, 2026-11-07; the others there are NAD 83(1986) bench marks with
- * scaled or hand-held positions). It lies about 501 ftUS left of the centreline at about
+ * scaled or hand-held positions). It lies about 501 ftUS left of the centerline at about
  * station 154,395, some 19,650 ftUS before the end.
  *
  * The values are the datasheet's, verbatim in `published`; `geodetic` is
@@ -558,7 +558,7 @@ export const SURVEY_MARK = {
   },
   /** Zone 3, US survey feet ("sFT" on the datasheet). */
   publishedSpc: { easting: 6_146_924.9, northing: 2_075_186.11 },
-  /** NAD83(2011) X, Y and Z (metres), as the datasheet computes them. */
+  /** NAD83(2011) X, Y and Z (meters), as the datasheet computes them. */
   publishedXyz: [-2_673_203.826, -4_289_120.954, 3_877_949.143],
   published: {
     position:

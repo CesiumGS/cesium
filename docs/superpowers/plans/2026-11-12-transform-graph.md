@@ -60,7 +60,7 @@
   - `parse.ts`: restricted JS source to IR.
   - `ad.ts`: forward-mode duals for J, and hyper-duals for H.
   - `interval.ts`: bounds over a box of positions and parameter ranges.
-  - `codegen.ts`: IR to WGSL, with df64 variants for centre constants.
+  - `codegen.ts`: IR to WGSL, with df64 variants for center constants.
   - `compile.ts`: a route shape to a cached GPU program.
   - `accuracy.ts`: Σ propagation, taking over `frames/pointAccuracy.ts`'s quadrature.
 - **`src/transforms/`** (built-ins): Slang sources with `[Differentiable]` (`transforms.slang`), TS mirrors, and descriptors that give the compiler an IR or an intrinsic.
@@ -71,9 +71,9 @@
   - reprojection nodes, absorbing `src/proj`'s operations;
   - CRS readers (`EXT_geospatial_crs`, WKID, WKT2, `EXT_georeference`);
   - `Georeference`, replacing `DesignPlacement`.
-- **`src/frames/`** keeps the reference-frame catalogue (ICRF, ITRF, bodies, EOP, ephemerides) and feeds the graph. `warpFrame`, `heightWarps.ts` and `warps.ts` move to `transforms` or `georeference`, or are deleted.
+- **`src/frames/`** keeps the reference-frame catalog (ICRF, ITRF, bodies, EOP, ephemerides) and feeds the graph. `warpFrame`, `heightWarps.ts` and `warps.ts` move to `transforms` or `georeference`, or are deleted.
 - **The renderer** consumes compiled route programs:
-  - per draw, a centre constant (CPU float64, or a df64 compute pass for parameters that don't separate);
+  - per draw, a center constant (CPU float64, or a df64 compute pass for parameters that don't separate);
   - per view, the parameter uniforms;
   - per vertex, the residual. Today's `WorldWarps` becomes the scheduler for this, and its fits stay as the fallback for functions the compiler refuses.
 
@@ -84,7 +84,7 @@
 - **Build:** `src/transform/graph.ts` and `route.ts`.
   - **Node kinds:** `affine({ matrix | at(seconds) })`, `smooth({ forward, inverse?, params, accuracy? })` and `switch({ byView })`.
   - **Routes:** up or down through the lowest common ancestor. Collapsed affine runs become one float64 matrix. `route.forward(p)` and `route.inverse(q)` evaluate in float64. `route.shapeKey` is the node kinds and the switch choices, without values.
-  - **Adapter:** today's `Frame` catalogue maps onto it (each `Frame` edge is an affine node), so `FrameResolver` can delegate.
+  - **Adapter:** today's `Frame` catalog maps onto it (each `Frame` edge is an affine node), so `FrameResolver` can delegate.
 - **Tests:** composition and inverse round trips (affine, smooth, mixed), the switch chosen by view, shape keys stable under parameter changes, and the Moon unwarped when the deformer sits over Earth content.
 
 ### Task 2: IR, restricted JS parser, autodiff and intervals
@@ -108,9 +108,9 @@
 
 - **`compile.ts`:** for a route shape, emit one WGSL function `transformPoint(p_local, draw, view) -> vec3`.
   - Collapsed affine runs become matrices.
-  - Each smooth node becomes the centre constant (per draw, hi/lo) plus the residual in float32 offsets: the full function on (c + δ) − f(c), or the Taylor polynomial when the draw is small (the compiler chooses by draw size and declared error).
+  - Each smooth node becomes the center constant (per draw, hi/lo) plus the residual in float32 offsets: the full function on (c + δ) − f(c), or the Taylor polynomial when the draw is small (the compiler chooses by draw size and declared error).
   - Normals come from the cofactor of the composed J (AD-generated WGSL), followed by Gram–Schmidt against the tangent.
-- **Parameters:** those that enter linearly are uniforms (detected on the IR). Others mark the node "centre-dynamic", which adds a per-frame df64 compute pass for the centre constants (from `warpFitDirect.slang`).
+- **Parameters:** those that enter linearly are uniforms (detected on the IR). Others mark the node "center-dynamic", which adds a per-frame df64 compute pass for the center constants (from `warpFitDirect.slang`).
 - **Caching:** pipelines are keyed by `shapeKey` plus the material variant. Reuse `ShaderCache`'s async compile and the `whenReady` gate.
 - **Fallback:** the fitted lattice path, unchanged, for smooth nodes whose functions the compiler refuses (JS outside the subset).
 - **Check:** a spike `spikes/transformGraph.ts` against float64 (positions within the stated error, normals within 0.1°), and one route with a time-varying parameter at 60 fps of GPU time.
@@ -168,10 +168,10 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 
 **Per-family fixes:**
 
-- **Flatten:** today's distance is a local planar approximation. Measure distance to the polygon in a gnomonic frame centred on it, where geodesics are straight lines. Edges are then exact segments, and the planar distance agrees with the geodesic one to second order. Polygons wider than about 500 km are split into tiles.
+- **Flatten:** today's distance is a local planar approximation. Measure distance to the polygon in a gnomonic frame centered on it, where geodesics are straight lines. Edges are then exact segments, and the planar distance agrees with the geodesic one to second order. Polygons wider than about 500 km are split into tiles.
 - **Corridor unroll:** a polyline's outer corners leave gaps. Use C¹ alignment geometry (lines, circular arcs and clothoids, as IFC 4.3's `IfcAlignment` does), or fillet polyline corners with arcs of radius at least the strip's maximum offset.
   - An offset curve is regular while |offset| < 1/κ, so the strip has no gaps or folds.
-  - The inverse becomes closed form per element (dot product, `atan2` about the centre, bounded Newton on a clothoid) and compiles.
+  - The inverse becomes closed form per element (dot product, `atan2` about the center, bounded Newton on a clothoid) and compiles.
 - **Bend:** its inverse needs |θ| < π. Injectivity gives a parameter's `valid` range: det J > 0 and no global overlap. Bend derives it, the engine clamps animated values to it and refuses a direct set outside it. Every built-in declares its `valid` range the same way.
 - **TM Jacobian:** central differences today. Use the IR's AD Jacobian, now exact, and drop the difference.
 
@@ -185,7 +185,7 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 
 **General fix: choose the program per (draw, view), not per draw.** Bundles are already recorded per view.
 
-- A draw keeps one record per route group it needs: centre constants in a per-view-group block of the placements buffer, indexed by a small per-view table.
+- A draw keeps one record per route group it needs: center constants in a per-view-group block of the placements buffer, indexed by a small per-view table.
 - Each view's bundle binds that group's pipeline for the draw. The vertex stage reads the block for the view being drawn.
 - That makes one draw serve every view with no twins. Every draw kind gets it, because instances, billboards and patches all read the same per-draw block; patches through `vsPatch`'s route call.
 - Ray queries see one draw and route it per view, or per the view they name. A view-less query uses the true route.
@@ -200,10 +200,10 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - Streaming tilesets through a lens on the camera branch draw nothing, because selection is done through a map with z ≤ 0.
   - Moving the camera re-derives routes for every draw, at 250–400 ms a tick.
   - Routes through a smooth step's inverse don't compile.
-- **The general fix:** a camera-branch smooth node acts in camera space after the view matrix. Call it an "eye step": a per-view post-view smooth step evaluated in the vertex stage from uniforms only, needing no float64 centre because camera-space coordinates are small.
+- **The general fix:** a camera-branch smooth node acts in camera space after the view matrix. Call it an "eye step": a per-view post-view smooth step evaluated in the vertex stage from uniforms only, needing no float64 center because camera-space coordinates are small.
   - Selection uses the route without the eye step, padded by the eye step's largest displacement at each depth.
   - Inverse steps compile when they carry an `inverseSource`.
-- **Partial work exists:** a cancelled agent got part of this done (`compileEye.ts`, `cameraEffect.ts`, `inverseSource`, and selection changes). It was reverted because it broke two tests (the frame loop's sleep, a translucent-terrain pick). It is saved in the session files (`lens-wip/`) to resume from.
+- **Partial work exists:** a canceled agent got part of this done (`compileEye.ts`, `cameraEffect.ts`, `inverseSource`, and selection changes). It was reverted because it broke two tests (the frame loop's sleep, a translucent-terrain pick). It is saved in the session files (`lens-wip/`) to resume from.
 
 ### Task 12: streamed content under smooth nodes as cheap as under affine ones (owner, 2026-11-12)
 
@@ -214,7 +214,7 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
 1. **Drawn bounds for selection.** Selection needs each tile's bounding volume after the warp before the GPU sees the tile. It samples the route at 7–27 points per tile in float64, with the exact height solve (`drawnTile` → `scaledImage` → `footOf`).
    - That was the exaggeration example's remaining long task (about 1 s).
    - Exaggeration also refines more tiles, so more tiles pay.
-2. **Centre constants on the CPU.** A static route's F(c) is computed once per draw in float64. A lift is microseconds, but the nested UTM route is about 183 ms per 1,024 draws.
+2. **Center constants on the CPU.** A static route's F(c) is computed once per draw in float64. A lift is microseconds, but the nested UTM route is about 183 ms per 1,024 draws.
 3. **Per-route-shape pipeline compiles.** Generated WGSL of up to about 280 KB takes 2.3–4.3 s per pipeline in the GPU process, compiled one at a time. A routed draw stays hidden until its pipelines exist, so content appears late on first load.
 4. **Terrain loses its exact path under a ceiling.** `verticalExaggeration` with a `ceiling` drops `heightScale` (src/georeference/heightWarps.ts), so the globe's exact `h·n̂` path turns off. Terrain then pays costs 1–3, as in the gallery's scene 1.
 
@@ -271,7 +271,7 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - **The exponent's default is found empirically,** not chosen. Increment 4 sweeps α over 0, 0.25, 0.5, 0.75 and 1 at several factors and views, and reports tiles, GPU time and the largest transition error. The owner picks from the curves.
   - **More than 1,000 tiles for this view is suspect.** Before tuning anything, find out why with debug views (below), tile by tile: which level each tile is, why it was refined, and what it shows as.
   - **Debug views, built into the engine as public, documented API, so application developers can debug their own scenes:** `View.debug` (or one family of debug shaders) with the following views:
-    - colour by tile level;
+    - color by tile level;
     - tile boundaries;
     - screen-space error as a heat map, against the threshold;
     - each tile's state (drawn, a placeholder, a stand-in, held, hidden by occlusion);
@@ -305,7 +305,7 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - No loops beyond a constant bound, and every load is clamped.
   - A debug view shows a chosen level.
 - **Increment 2: tile queries** (a compute pass after `hzb`, plus a readback).
-  - Selection hands each opaque view a list of up to `MAX_QUERIES` (8,192) boxes: the drawn tiles and the children it would refine to. Each is a centre relative to the eye (float64 on the CPU, float32 on the GPU) and three half-axes, with the tile's slot.
+  - Selection hands each opaque view a list of up to `MAX_QUERIES` (8,192) boxes: the drawn tiles and the children it would refine to. Each is a center relative to the eye (float64 on the CPU, float32 on the GPU) and three half-axes, with the tile's slot.
   - The kernel projects the 8 corners with the pyramid's view-projection. Any corner behind the near plane, or outside the pyramid's camera, means visible.
   - It picks the level where the screen rectangle spans at most 2 × 2 texels and reads those 4 texels. The tile is occluded if its nearest depth is farther than all 4.
   - It writes one bit per query. The readback goes through a pool of buffers like `GpuTimer`'s, about one tick late, and a tick is dropped when every buffer is in flight.
@@ -338,7 +338,7 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - **A cheaper pyramid:** start from a lower-resolution level, or build only the levels the tests read.
   - **Done (2026-11-14):**
     - **The fold:** with ambient occlusion on in the view this tick, the prepass draws the first phase, the pyramid is built from its single-sampled depth, the second phase runs, and the prepass draws its draws into the same targets. The opaque pass draws both phases' depth and shades them in one pass again: no `occlusion-depth`, no reload of the multisampled depth. Without the prepass, the earlier split stays (`occlusion-depth`, then the opaque pass loading its depth).
-    - **Exactness from one sample:** a level-0 texel built from the prepass also takes the ring of pixels round its block (hzb.slang `level0Pixels`, 5 × 5 loads at most), so no multisample in its pixels sees farther than it says when a surface's edge passes between a centre and a sample.
+    - **Exactness from one sample:** a level-0 texel built from the prepass also takes the ring of pixels round its block (hzb.slang `level0Pixels`, 5 × 5 loads at most), so no multisample in its pixels sees farther than it says when a surface's edge passes between a center and a sample.
     - **A cheaper pyramid:** built once a tick, not twice: the tile queries read the cull's pyramid instead of building their own after the opaque pass (it lacks what the second phase drew, which only leaves a box visible), and the next tick's first phase reads it too. From the prepass it reads one sample a pixel instead of four. Folding several levels into one dispatch was left: level 0's reads are most of the cost, and it needs the pyramid's sizes rounded up (a texture padded to powers of 2).
     - **Measured** (1718 × 1406 window, headless Edge on this M-series Mac, the only page rendering; three rounds of 20 renders each way, alternating, medians of each round):
       - ×1, settled (311 tiles, nothing to cull): before, GPU 50.5 ms on against 50.0 ms off (+0.45 ms; `occlusion-depth` 1.37 ms, `hzb` 0.65 ms, against 0.43 ms for the queries' own build off). After, 49.6 ms on against 49.5 ms off (+0.02 ms; `hzb` 0.27 ms, no `occlusion-depth`).
@@ -405,7 +405,7 @@ The IR has no arrays, no data-dependent loops, and no `atanh`, `asinh`, `%` or `
   - **Not skirts:** with `&debug=skirts` (skirt fragments in magenta, keyed on the provoking vertex, which is the skirt vertex in both triangles of every skirt quad) the streaked cliffs at `vertical-exaggeration?x=10&view=zermatt-close` show no magenta; a coarse view shows only thin skirt slivers at tile edges.
   - **Probably not tile borders:** overlaid on `&debug=level`, one tile border crosses the streaked region and the streaks don't follow it.
   - **Probably not stretched imagery** (first guess, withdrawn): the dark streaks are straight, hard-edged bands of constant width that cross each other at different angles. Stretched texels would give soft streaks parallel to the fall line.
-  - **Found (2026-11-13): they're sun shadows.** With `view.shadows = false`, or the sun off, the bands vanish; ambient occlusion off changes nothing; at ×4 they're fainter and fewer, at ×1 absent; with exposure locked the pair shows hard bands with shadows and smooth imagery without. The casters go through the same warped vertex stage as the colour pass (`vsDepth` → `surfaceDepthVertex` → `vertexOut`), and the cascades are fitted to the drawn depth range (`fitShadowCascades`, `shadowRange`). Most likely real shadows of ten-times-taller ridges on a grazing-lit wall.
+  - **Found (2026-11-13): they're sun shadows.** With `view.shadows = false`, or the sun off, the bands vanish; ambient occlusion off changes nothing; at ×4 they're fainter and fewer, at ×1 absent; with exposure locked the pair shows hard bands with shadows and smooth imagery without. The casters go through the same warped vertex stage as the color pass (`vsDepth` → `surfaceDepthVertex` → `vertexOut`), and the cascades are fitted to the drawn depth range (`fitShadowCascades`, `shadowRange`). Most likely real shadows of ten-times-taller ridges on a grazing-lit wall.
   - **An artifact, not ridges (owner, 2026-11-13):** the bands form a regular grid viewed obliquely, which real ridge shadows wouldn't. Most likely shadow acne: the shadow map's texel grid projected onto a ×10 wall at grazing incidence, where the bias is too small. First suspects: the receiver's normal offset (2 cascade texels along `in.normal`) using a normal that isn't the drawn (warped) one, and a slope-scaled bias that doesn't see the wall's drawn slope; the 1-pixel hatch on lit patches fits the same cause. Check by sweeping the normal offset and slope bias at ×10 and tinting by cascade.
   - **Earlier checks, kept for the record.** To check: vary the sun's elevation and the depth bias at ×10 and see whether band edges move physically or crawl; tint by cascade index; the receiver offsets along the geometric normal while the sun term is gated by the shading normal (a mismatch that's sensitive at grazing incidence); a fine 1-pixel hatch on the lit patches; whether caster selection (`casterPlanes`, `CASTER_CEILING`) uses exaggerated bounds. 1.x has no ×10 parity page yet; one would need `scene.verticalExaggeration = 10` at the example's `CLOSE_UP` camera and sun time.
   - **Tests:** the same view with shadows off, unlit, with triangle edges shown, and in 1.x with `terrainExaggeration` 10. 1.x samples globe imagery as we do (clamp to edge, generated mips, maximum anisotropy, and an in-shader mask outside the imagery rectangle: `ImageryLayer.js`, `GlobeFS.glsl`), so sampling isn't where the two differ.
@@ -429,9 +429,9 @@ Built on branches `dev/horizon` (the interface and the body occluder) and the "O
    - Selection composes these along the route: a sphere moves by the bound and scales by the Lipschitz constant. That's a few flops per tile per node.
    - Sampling stays only for user functions with no declared bound, and for those, task 9's bounded loops make interval bounds on the converged map usable.
    - Check: on the exaggeration and UTM routes the composed bound must stay conservative against dense sampling, within about 1.5× of its radius.
-3. **Centre constants on the GPU for every draw.** Run the existing df64 centre pass (`centreConstantsWgsl`) for newly added draws as well as dynamic parameters: one dispatch per frame over that frame's new draws, writing the WARP_ROUTE blocks directly. The CPU float64 path stays for picks and queries, which evaluate the route on demand, not per draw.
+3. **Center constants on the GPU for every draw.** Run the existing df64 center pass (`centerConstantsWgsl`) for newly added draws as well as dynamic parameters: one dispatch per frame over that frame's new draws, writing the WARP_ROUTE blocks directly. The CPU float64 path stays for picks and queries, which evaluate the route on demand, not per draw.
 4. **No compile before first draw.**
-   - **An interpreter pipeline:** one surface pipeline per pass whose vertex stage evaluates any chain of built-in node families from a small per-route program in a storage buffer (node kinds, parameter offsets, the collapsed affine matrices), switching on node kind. It's the residual form, with the same centre constants.
+   - **An interpreter pipeline:** one surface pipeline per pass whose vertex stage evaluates any chain of built-in node families from a small per-route program in a storage buffer (node kinds, parameter offsets, the collapsed affine matrices), switching on node kind. It's the residual form, with the same center constants.
    - **Swap in specialized code:** content draws through it at once, the per-shape specialized pipeline compiles in the background, and draws switch when it's ready (OptiX-style: a general kernel first, specialized when ready).
    - **Pre-warm** the common shapes at engine start: a lift alone, a lift over a projection, and the geocentric ↔ geographic pair.
    - **Measure:** the interpreter's per-vertex cost against the specialized code, with an aim of within 2× for one or two nodes.
@@ -464,7 +464,7 @@ It depends on nothing else in tasks 9–11, but item 2's interval fallback uses 
 **Fixes:**
 
 1. **In the controller:** with no globe drawn, or when the target is the ellipsoid but there's content near the camera, take the zoom target from the content. Use the last content pick, the nearest content along the cursor ray (`RayQuery` against the world), or the visible content's bounds. Cap a zoom-out step at a few times the distance to the nearest visible content.
-2. **In the example:** object-scale scenes (the assembly, the seismic section, the lens's synthetic city) should use an orbit or CAD controller centred on their content rather than the globe controller.
+2. **In the example:** object-scale scenes (the assembly, the seismic section, the lens's synthetic city) should use an orbit or CAD controller centered on their content rather than the globe controller.
    - Plan 5d's controllers (the CAD controller orbiting about `pick.drawnPosition`) are the long-term home.
-   - Until 5d lands, the example can set the globe controller's zoom target to the scene's centre and clamp its range per scene.
+   - Until 5d lands, the example can set the globe controller's zoom target to the scene's center and clamp its range per scene.
 3. **Check:** a test drives wheel events with the cursor over the background in a globe-less scene and asserts each notch changes the distance to the content by at most the wheel's per-notch factor.

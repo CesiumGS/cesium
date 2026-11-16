@@ -1,5 +1,5 @@
 // Bounds of warps (docs/design/geometry-through-placement-review.md, increment 3): a draw's sphere moves by the
-// displacement at its centre and pads by the residual, for every value in
+// displacement at its center and pads by the residual, for every value in
 // its parameters' ranges; a map's drawn bounding sphere and [σ_min, σ_max].
 import { describe, expect, it } from "vitest";
 import type { FrameKey } from "../src/camera/frameResolver.ts";
@@ -160,7 +160,7 @@ describe("weightInterval", () => {
 });
 
 describe("a draw's moved sphere", () => {
-  /** Where the sphere (centre moved by `shift`, radius `r + pad`) fails to hold a placed point; the worst ratio. */
+  /** Where the sphere (center moved by `shift`, radius `r + pad`) fails to hold a placed point; the worst ratio. */
   function worstRatio(
     terms: WarpTerms,
     center: number[],
@@ -263,7 +263,7 @@ describe("a draw's moved sphere", () => {
     }
   });
 
-  it("holds an attribute term's moves, which have no displacement at the centre", () => {
+  it("holds an attribute term's moves, which have no displacement at the center", () => {
     const t = parameter(0, [-1, 2]);
     const terms: WarpTerms = [
       {
@@ -307,7 +307,7 @@ describe("a draw's moved sphere", () => {
     const residual = latticeResidual(l, [10, 20, 30], radius);
     expect(residual).toBeGreaterThanOrEqual(s * radius - 1e-9);
     expect(residual).toBeLessThan(1.01 * s * radius);
-    // Off-centre in a finer lattice it is no looser than the same bound.
+    // Off-center in a finer lattice it is no looser than the same bound.
     const fine = { ...l, cells: 1 };
     expect(latticeResidual(fine, [10, 20, 30], radius / 2)).toBeLessThan(
       0.51 * s * radius,
@@ -401,7 +401,7 @@ describe("σ over a volume", () => {
     );
     expect(cLow).toBeCloseTo(0.2, 9);
     expect(cHigh).toBeLessThan(1);
-    // A sphere volume: its centre and axis points.
+    // A sphere volume: its center and axis points.
     const [sLow, sHigh] = routeSingularRange(
       route({ kind: "warp", warp: exaggeration(10), inverse: false }),
       { center: box.center, radius: 500 },

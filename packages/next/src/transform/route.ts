@@ -522,7 +522,7 @@ function smoothJacobian(
 /**
  * `q` in the parent back to the node: the spec's own inverse when it has
  * one, else Newton from `q` with the Jacobian (as `warpInverse` does in
- * camera/route.ts), to a metre-scale tolerance of 1e-9. Throws when it
+ * camera/route.ts), to a meter-scale tolerance of 1e-9. Throws when it
  * doesn't converge.
  */
 function solveInverse(

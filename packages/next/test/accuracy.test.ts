@@ -322,7 +322,7 @@ describe("accuracyOf", () => {
     }
   });
 
-  it("adds a light-time term when signalling", () => {
+  it("adds a light-time term when signaling", () => {
     const frames = framesWith(SAMPLE);
     const a = framePoint(frames.itrf, [6378137, 0, 0]);
     const r = accuracyOf(a, a, instant, frames, { signal: true });

@@ -334,7 +334,7 @@ async function runOcclusion() {
     for (let i = 0; i < list.count; i++) {
       const at = i * QUERY_FLOATS;
       const cpu = boxHidden(levels, camera, {
-        centre: Array.from(list.data.slice(at, at + 3)),
+        center: Array.from(list.data.slice(at, at + 3)),
         axes: Array.from(list.data.slice(at + 3, at + 12)),
       });
       const gpu = ((bits[i >> 5]! >>> (i & 31)) & 1) === 1;

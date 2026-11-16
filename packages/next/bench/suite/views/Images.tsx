@@ -115,21 +115,21 @@ export function Images() {
   const [outcomes, setOutcomes] = useState<Record<string, Outcome>>({});
 
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     json("/bench-results/images/index.json").then(
       (i: { runs: string[] }) => {
-        if (!cancelled) {
+        if (!canceled) {
           setIndex({ key: "", value: i.runs });
         }
       },
       (e: unknown) => {
-        if (!cancelled) {
+        if (!canceled) {
           setIndex({ key: "", error: String(e) });
         }
       },
     );
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, []);
 
@@ -141,21 +141,21 @@ export function Images() {
     if (!runName) {
       return;
     }
-    let cancelled = false;
+    let canceled = false;
     json(`/bench-results/images/${runName}`).then(
       (run) => {
-        if (!cancelled) {
+        if (!canceled) {
           setLoaded({ key: runName, value: run });
         }
       },
       (e: unknown) => {
-        if (!cancelled) {
+        if (!canceled) {
           setLoaded({ key: runName, error: String(e) });
         }
       },
     );
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [runName]);
 

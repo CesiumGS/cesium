@@ -2,7 +2,7 @@
 // float64 TS function against the IR parsed from its source (values, and the
 // analytic Jacobian against the IR's automatic one), inverse round trips,
 // the declared linear parameters, known projection values, the frames
-// catalogue's height warps, and the Slang side (src/shaders/transforms.slang)
+// catalog's height warps, and the Slang side (src/shaders/transforms.slang)
 // through the generated WGSL's structure.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
@@ -82,7 +82,7 @@ const box =
     between(r, lo[2]!, hi[2]!),
   ];
 
-/** Body-fixed metres at a longitude and latitude (degrees) and height. */
+/** Body-fixed meters at a longitude and latitude (degrees) and height. */
 function ecef(lon: number, lat: number, h: number): [number, number, number] {
   const out = new Float64Array(3);
   geographicToGeocentricDescriptor(WGS84).forward([lon, lat, h], {}, out);
@@ -703,7 +703,7 @@ describe("projections against published values", () => {
     ).toBe(1e7);
   });
 
-  it("the transverse Mercator inverse undoes the forward to a micrometre across 10 degrees of the meridian", () => {
+  it("the transverse Mercator inverse undoes the forward to a micrometer across 10 degrees of the meridian", () => {
     const d = transverseMercatorDescriptor(WGS84);
     const params = { ...defaultParams(d), centralMeridian: 9 };
     const r = rng(5);
@@ -775,7 +775,7 @@ describe("projections against published values", () => {
   });
 });
 
-describe("the height transforms against the frames catalogue's warps", () => {
+describe("the height transforms against the frames catalog's warps", () => {
   const r = rng(21);
   const points = Array.from({ length: 30 }, () =>
     ecef(between(r, -180, 180), between(r, -89, 89), between(r, -400, 8000)),

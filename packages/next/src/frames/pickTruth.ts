@@ -47,9 +47,9 @@ export interface TruePick {
   /** The size of one CSS pixel at the hit in what is drawn, m. */
   readonly footprint: number;
   /**
-   * The size of one CSS pixel at the hit in true metres, at most:
+   * The size of one CSS pixel at the hit in true meters, at most:
    * `footprint` over σ_min of the route (the second review's flaw 6: a
-   * pixel's worth of drawn metres is at most 1/σ_min of true ones). Equal to
+   * pixel's worth of drawn meters is at most 1/σ_min of true ones). Equal to
    * `footprint` where nothing is drawn through a warp.
    */
   readonly trueFootprint: number;
@@ -150,7 +150,7 @@ export function locatePick(pick: CorePick): LocatedPick {
  * `pick` as a true point: its domain point where the pick variant resolved
  * one (exact, nothing inverted), else the route's inverse of the drawn
  * position, else (no warp) the depth's position. The footprint of a pixel is
- * converted to true metres by the route's σ_min. `pickIn` (frames/pickIn.ts)
+ * converted to true meters by the route's σ_min. `pickIn` (frames/pickIn.ts)
  * answers in any node from the same located point (`locatePick`).
  */
 export function truePick(pick: CorePick): TruePick {

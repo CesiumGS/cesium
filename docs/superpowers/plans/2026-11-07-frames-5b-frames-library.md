@@ -4,7 +4,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking. The owner chose subagent-driven execution: a fresh implementer per task, a fresh reviewer after each, and a whole-branch review at the end.
 
-**Goal:** Give `packages/next`'s frames module what plan 5's cameras, replay and measurements stand on: two-vector reference frames with freezing, rig presets on them, piecewise reference frames that change at an instant, accuracy composed beyond first order, rays carried through the frame tree behind 5a's query interface, bulk operations that can be cancelled and report progress, and a time formatter, while closing 5b's carried-forward items.
+**Goal:** Give `packages/next`'s frames module what plan 5's cameras, replay and measurements stand on: two-vector reference frames with freezing, rig presets on them, piecewise reference frames that change at an instant, accuracy composed beyond first order, rays carried through the frame tree behind 5a's query interface, bulk operations that can be canceled and report progress, and a time formatter, while closing 5b's carried-forward items.
 
 **Architecture:**
 
@@ -37,9 +37,9 @@ Each is marked "(plan's call)" where it is used. One line each, then what undoin
 10. **Presets are memoized** per catalog, preset, target, body and central body, except `inertial`, which freezes anew on each call. *Undo:* a map.
 11. **`CameraLayer.held(view)`** returns the reference frame and the reason while the layer keeps a view's last good pose. *Undo:* additive.
 12. **A figure's confidence** is `"1σ"` (the default), `"95%"` or `"max"`, with an optional distribution, `"normal"` or `"uniform"`. *Undo:* a type.
-13. **Conversions to 1σ:** metres at 95% (normal) are a 3D radius: × √3 / 2.7955. Metres at a maximum (uniform) are a ball: × √(3/5). Radians at 95% (normal): ÷ 1.95996. Radians at a maximum (uniform): ÷ √3. Any other non-1σ figure is refused, naming the edge. *Undo:* a table.
+13. **Conversions to 1σ:** meters at 95% (normal) are a 3D radius: × √3 / 2.7955. Meters at a maximum (uniform) are a ball: × √(3/5). Radians at 95% (normal): ÷ 1.95996. Radians at a maximum (uniform): ÷ √3. Any other non-1σ figure is refused, naming the edge. *Undo:* a table.
 14. **A composed total is √(trace C)** of the composed 1σ covariance C. For independent terms that is today's root-sum-square exactly. *Undo:* one line.
-15. **Covariances per figure:** metres m give (m²/3)·I; an angle σ about axis a gives σ²(a × r)(a × r)ᵀ; an angle with no axis gives σ²|r|²(I − r̂r̂ᵀ)/2; a stated covariance is used as given. Each is rotated into the target's axes by the route's rotation part. *Undo:* four formulas.
+15. **Covariances per figure:** meters m give (m²/3)·I; an angle σ about axis a gives σ²(a × r)(a × r)ᵀ; an angle with no axis gives σ²|r|²(I − r̂r̂ᵀ)/2; a stated covariance is used as given. Each is rotated into the target's axes by the route's rotation part. *Undo:* four formulas.
 16. **Shared sources** are `{ id, rule }`. `"linear"` (the spec's): same-id figures on one leg add their signed square-root factors, and on opposite legs subtract. `"difference"`: the figure bounds a difference between two edges; a route that crosses such edges on both legs counts the largest once, and one that crosses them on one leg only is not stated, saying why. *Undo:* one rule.
 17. **The ephemeris edges** (GCRF, EARTH_ICRF, MOON_ICRF) share the source `DE440 Earth–Moon` with the `"difference"` rule. *Undo:* three declarations.
 18. **The "95%" output** is 2.7955 × the 1σ ellipsoid's longest semi-axis (χ² with 3 degrees of freedom), a bound in every direction. *Undo:* a constant.
@@ -63,7 +63,7 @@ Each is marked "(plan's call)" where it is used. One line each, then what undoin
 36. **`measureSpan` becomes asynchronous** with the bulk shape; only tests call it. *Undo:* keep a synchronous twin.
 37. **PROJ batches** are `EngineeringFrame.toBodyFixedBatch` and `fromBodyFixedBatch`, on flat xyz arrays. *Undo:* two methods.
 38. **The formatter's zone kinds** are `utc`, `civil`, `solar`, `nominal` and `local`, with longitudes in radians, east positive. The solar offset is fractional minutes; its label rounds to the minute. *Undo:* a type.
-39. **`placeZone`** gives a civil zone when the lookup answers with a name Intl knows, and solar time otherwise, labelled so. *Undo:* one function.
+39. **`placeZone`** gives a civil zone when the lookup answers with a name Intl knows, and solar time otherwise, labeled so. *Undo:* one function.
 40. **The time controls keep "nominal" as their default** unless the application gives a `zoneLookup`; then the new `"place"` choice is the default. *Undo:* one default.
 41. **`ianaOffsetMinutes` and `ianaAbbreviation` move to `src/time/format.ts`;** `widgets/timeControls.ts` re-exports them. *Undo:* a move.
 42. **Explicit timeouts on the three slow data tests are 30 s.** *Undo:* constants.
@@ -150,7 +150,7 @@ New files, by responsibility (modified files are listed in each task):
   - `test/data/explorerPages.ts`: the page helpers `test/data/framesExplorerStated.test.ts` builds today, moved unchanged: `frames`, `orion`, `context()`, `connect()`, `pageFrames(id, knobs, e)`, `pageTree(id, knobs, e, instant)`, `checkedTdb(id)`, `spec(id)`.
   - `accuracyRows(): Promise<AccuracyRow[]>`, also in `test/data/explorerPages.ts` (Task 5's moves test reads it), with `interface AccuracyRow { readonly key: string; readonly meters: number | null }`:
     - for every scenario in `SCENARIOS` at its checked setup, on `pageTree`, each `composedAccuracy(tree, frames, instant)` view: key `scenario/<id>/<reference>/<node>`;
-    - `measure(a, b, instant, frames).accuracy.meters` for six cases at 2026-04-06T12:00:00 UTC: DSS-43 to Orion, Orion to the Moon's centre, a lunar site at 89.5° S to the Earth's centre, two Earth sites 1 km apart, the barycentre to the Earth's centre, and Orion to DSS-14: key `measure/<case>`.
+    - `measure(a, b, instant, frames).accuracy.meters` for six cases at 2026-04-06T12:00:00 UTC: DSS-43 to Orion, Orion to the Moon's center, a lunar site at 89.5° S to the Earth's center, two Earth sites 1 km apart, the barycenter to the Earth's center, and Orion to DSS-14: key `measure/<case>`.
   - The baseline file: `{ "commit": "<base>", "rows": AccuracyRow[] }`, sorted by key.
 
 - [ ] **Step 1: Move the helpers.** Cut them from `test/data/framesExplorerStated.test.ts` into `test/data/explorerPages.ts` and import them back. Run `FRAMES_DATA=1 npx vitest run test/data/framesExplorerStated.test.ts`; it passes as before.
@@ -181,7 +181,7 @@ it("today's composed accuracies equal the baseline (regenerate only at a commit 
 
 - Consumes: 5a's `Frame.revision`, `invalidate()`, `routeRevision(from, to)`; `FrameUnavailableError`; `createFramesResolver(catalog).motion`.
 - Produces:
-  - `src/frames/motion.ts` (ruling 5): `positionIn`, `derivative`, `velocityIn` and `type Sampler`, moved from `src/measure/motion.ts` with their behaviour and doc comments unchanged; `src/measure/motion.ts` re-exports them. New:
+  - `src/frames/motion.ts` (ruling 5): `positionIn`, `derivative`, `velocityIn` and `type Sampler`, moved from `src/measure/motion.ts` with their behavior and doc comments unchanged; `src/measure/motion.ts` re-exports them. New:
     - `frameVelocity(frame: Frame, base: Frame, instant: Instant, out?: Float64Array): Float64Array`: the velocity (m/s, `base`'s axes) of `frame`'s origin, by `derivative`;
     - `angularVelocity(frame: Frame, base: Frame, instant: Instant, out?: Float64Array): Float64Array`: rad/s in `base`'s axes, from the skew part of `Ṙ Rᵀ`, with `R` the rotation part of `frameTransform(frame, base, ·)` differenced over ±0.5 s TDB (one-sided at a data edge, as `derivative`).
   - `createFramesResolver(…).motion` returns `frameVelocity` and `angularVelocity` at `instant(seconds)`.
@@ -264,7 +264,7 @@ it("the resolver's motion reports the two-vector frame's angular velocity", ...)
 - [ ] **Step 1: Write the failing tests:**
   - `test/presets.test.ts` (the catalog on 5a's stubbed data, a synthetic target):
     - each preset names the frames above and its rig's position reference frame is its own;
-    - `orbital`'s third axis completes the set, and its +Z column points away from the Earth's centre;
+    - `orbital`'s third axis completes the set, and its +Z column points away from the Earth's center;
     - `inertial` at two instants is the same matrix; two calls give two frames;
     - `cockpit` without `body` throws naming "cockpit";
     - the rig is data: `engine.cameras.setRig(view, { ...p.rig, orientation: { ...p.rig.orientation, up: [0, 1, 0] } })` is accepted and read back;
@@ -365,7 +365,7 @@ it("publishedAccuracy publishes when any part moves past 1% or 1 mm", ...);
     - ITRF: two figures, UT1 (`σ_t · ω` rad, `axis: [0, 0, 1]`, `term: "UT1"`) and polar motion (`σ_p` rad, `term: "polar motion"`), each `predicted` as `earthOrientationSigma` says (plan's call 19); outside the EOP table, not known, as today;
     - MOON_ME: `MOON_ME_ORIENTATION_RADIANS = 3e-7` rad, `estimated: true`, with the note of today's `MOON_ME_ACCURACY` in `scenarios/stated.ts` (plan's call 20).
   - `Trajectory.positionCovariance(instant: Instant): Float64Array | undefined`: the 3×3 position block (m², reference axes) at the covariance epoch `positionSigma` uses (the larger trace of the two around the instant); never throws.
-  - A trajectory's `frame` states (plan's call 21): the covariance (or `positionSigma` as metres, or exact by definition at 0, or not stated, with today's notes), `term: "trajectory"`, plus a `coordinateScale` figure of 2.5 × 10⁻⁸ of the geocentric distance where `coordinateScale` is `"unknown"` and the reference is under EARTH_ICRF.
+  - A trajectory's `frame` states (plan's call 21): the covariance (or `positionSigma` as meters, or exact by definition at 0, or not stated, with today's notes), `term: "trajectory"`, plus a `coordinateScale` figure of 2.5 × 10⁻⁸ of the geocentric distance where `coordinateScale` is `"unknown"` and the reference is under EARTH_ICRF.
   - `accuracyOf(a, b, instant, frames, options)` keeps its signature and `AccuracyStatement`. It is `separationAccuracy(a, b, instant, { routeTerms })` mapped to terms: the ITRF figures of one leg → one `earthOrientation` term per end (root-sum-square of the two, today's note); the ephemeris source → `ephemeris` (today's notes for both outcomes); a trajectory's figures → `trajectory` and `coordinateScale`; any other edge → the new source `"frame"`. Route terms (plan's call 22): `lightTime` with a signal, `relativity` (0.03 m) when `routeLegs` crosses MOON_ICRF's edge, and each design end's `projection`, `geoidFallback` and `pick`. Every term carries `edge` (plan's call 23) where it has one. Warnings unchanged.
   - The explorer's `separationView` ties terms to edges by `edge`, and its own turned-rotation patch for edges "the statement has no term for" (`leverAt`) is removed. `scenarios/stated.ts`'s `MOON_ME_RADIANS` is the library's `MOON_ME_ORIENTATION_RADIANS`.
   - `accuracyMoves.json`: `{ moves: { key, before, after, kind: "tightened" | "correction", why }[] }`, one entry per row of Task 1's baseline whose `meters` changed by more than 1 × 10⁻⁹ of itself (ruling 2).
@@ -373,7 +373,7 @@ it("publishedAccuracy publishes when any part moves past 1% or 1 mm", ...);
 - [ ] **Step 1: Write the failing tests:**
   - `test/trajectoryAccuracy.test.ts`: a synthetic OEM with a covariance gives its reference frame's covariance and `meters` = `positionSigma`; without one and without `positionSigma`, not stated with today's note; an `"unknown"` scale adds the coordinate-scale figure.
   - `test/data/accuracyMoves.test.ts`: every row of the baseline either keeps its value within 1 × 10⁻⁹ of it, or is in `accuracyMoves.json` with its new value; a `"tightened"` move is smaller; a `"correction"` names its reason; no listed move is missing; no row appears or disappears.
-  - `test/data/measure.test.ts`, new cases: DSS-43 to Orion gives today's `earthOrientation` metres exactly from the ITRF edge's two figures; two Earth sites carry no `earthOrientation` term (the route doesn't cross ITRF's edge); a lunar site to the Earth carries `ephemeris` 0.01 m once, `relativity` 0.03 m and MOON_ME's estimated term.
+  - `test/data/measure.test.ts`, new cases: DSS-43 to Orion gives today's `earthOrientation` meters exactly from the ITRF edge's two figures; two Earth sites carry no `earthOrientation` term (the route doesn't cross ITRF's edge); a lunar site to the Earth carries `ephemeris` 0.01 m once, `relativity` 0.03 m and MOON_ME's estimated term.
 - [ ] **Step 2: Run** and confirm they fail.
 - [ ] **Step 3: Implement** the edges and the trajectory first; then `accuracyOf`; then the explorer. Run the moves test, read each move, and write `accuracyMoves.json` only for moves explained by this task's rules, each with its kind and why. Any other move is a bug to fix here.
 - [ ] **Step 4: Run** the tests, `npm test`, `npm run test:data`, tsc, eslint, prettier.
@@ -457,7 +457,7 @@ it("refuses a change it can't evaluate yet, with the reference frame's own error
   - `test/frameRays.test.ts` (`fakeEngine`, a stub `FrameResolver` placing a "station" reference frame on the Earth's anchor and the Moon's anchor 384,400 km away, moving at 1 km/s):
 
 ```ts
-it("carries rays from their reference frame into each target's anchor", ...);  // a ray from the station to the Moon's centre hits the Moon's near side
+it("carries rays from their reference frame into each target's anchor", ...);  // a ray from the station to the Moon's center hits the Moon's near side
 it("reports the hit in the reference frame asked for, at float64 precision", ...);  // within 1e-6 m of the analytic hit
 it("light-time correction places the target where it was when the light left it", () => {
   // the hit moves by about 1.28 km along the Moon's velocity against the geometric one
@@ -468,7 +468,7 @@ it("5a's anchor queries answer as before", ...);
 it("answers stay asynchronous", ...);
 ```
 
-And `test/framesRayAccuracy.test.ts` (the frames module, stubbed data as 5a's tests): a ray from a lunar site to the Earth carries MOON_ME's estimated term in its accuracy note and metres.
+And `test/framesRayAccuracy.test.ts` (the frames module, stubbed data as 5a's tests): a ray from a lunar site to the Earth carries MOON_ME's estimated term in its accuracy note and meters.
 
 - [ ] **Step 2: Run** and confirm they fail.
 - [ ] **Step 3: Implement** `terrainBand`, the resolver's `accuracy`, the ellipsoid backend, `frameRays.ts`, then the dispatch in `Engine.queries`.
@@ -527,7 +527,7 @@ A browser check (port 5192).
     - `runBulk<T>(total: number, step: (index: number) => T, options?: BulkOptions): Promise<T[]>`: in order, checking `signal` after every step; aborting rejects with the signal's reason (an `AbortError` by default) and calls no further `step` or `onProgress`. Progress after each slice and at the end.
   - `Engine.bulk: SliceScheduler`: slices in one `onTick` listener, 4 ms per tick (plan's call 35), keeping the loop awake while work is queued, and unregistering when the queue empties; `dispose()` rejects queued work with an `AbortError`.
   - In `src/frames/bulk.ts`:
-    - `interface PathSamples { readonly tdb: Float64Array; readonly positions: Float64Array; readonly spans: readonly { readonly start: number; readonly end: number; readonly simulated: boolean }[]; readonly gaps: readonly { readonly start: number; readonly end: number; readonly reason: string }[] }` (TDB seconds; xyz metres in `inFrame`);
+    - `interface PathSamples { readonly tdb: Float64Array; readonly positions: Float64Array; readonly spans: readonly { readonly start: number; readonly end: number; readonly simulated: boolean }[]; readonly gaps: readonly { readonly start: number; readonly end: number; readonly reason: string }[] }` (TDB seconds; xyz meters in `inFrame`);
     - `samplePath(frame: Frame, inFrame: Frame, start: Instant, stop: Instant, step: number, options?: BulkOptions): Promise<PathSamples>`: `frame`'s origin every `step` TDB seconds, plus each piecewise change inside the span; a sample that throws is a gap with its message (a `TypeError` or `ReferenceError` propagates); at most 1,000,000 samples, as `measureSpan`;
     - `accuracySpan(point: FramePoint, to: Frame, start: Instant, stop: Instant, step: number, options?: BulkOptions & PointAccuracyOptions): Promise<{ instant: Instant; accuracy?: PointAccuracy; error?: string }[]>`.
   - Plan's call 34: every plan-5 bulk operation runs in slices.
@@ -610,7 +610,7 @@ it("gives solar time on both sides of the date line", () => {
   expect([west.day, west.hour, west.minute, west.second]).toEqual([1, 12, 0, 24]);
 });
 it("gives nominal time in whole hours from the longitude", ...);  // the same two places: 2 April 12:00 and 1 April 12:00
-it("finds a place's zone through the application's lookup, else solar time, labelled so", ...);
+it("finds a place's zone through the application's lookup, else solar time, labeled so", ...);
 it("names zones as the time controls do today", ...);
 ```
 
@@ -632,7 +632,7 @@ A browser check (port 5191).
 
 - Consumes: Task 11's `timeParts`, `TimeZone`, `ZoneLookup`, `placeZone`.
 - Produces:
-  - `TimeZoneChoice` gains `"place"`: the place's civil zone through the lookup, else its solar time, labelled so.
+  - `TimeZoneChoice` gains `"place"`: the place's civil zone through the lookup, else its solar time, labeled so.
   - `TimeControlsOptions.zoneLookup?: ZoneLookup` and `ViewerOptions.zoneLookup?: ZoneLookup`. With a lookup, the controls open on `"place"`; without one, on `"nominal"` as today (plan's call 40, ruling 11).
   - `zoneOf(choice: TimeZoneChoice, place: { longitude: number; latitude: number } | undefined, lookup?: ZoneLookup): TimeZone` (exported for tests): `"utc"`, `"local"` and `{ iana }` map directly; `"solar"` and `"nominal"` take the place's longitude (UTC without a place, as today); `"place"` is `placeZone`.
   - The controls take every offset, day start, clock text and zone label from `timeParts(clock.instant(), zoneOf(…))`. What a page shows is unchanged for every choice it had.

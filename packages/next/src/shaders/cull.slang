@@ -98,11 +98,11 @@ float4x4 instanceMatrix(Instance inst, DrawRecord r, Transform t, out float4x4 l
   return mul(relativeMatrix(t), local);
 }
 
-// Whether a sphere (`centre` camera-relative, in render space) is certainly
+// Whether a sphere (`center` camera-relative, in render space) is certainly
 // hidden by the pyramid seen from a camera's axes (w: the offset of this
 // tick's eye along each) and lens. A sphere with no bound (a radius past
 // float32's reach, `routes.ts`) never is.
-bool sphereHidden(float3 centre, float radius, float4 right, float4 up, float4 forward, float4 lens) {
+bool sphereHidden(float3 center, float radius, float4 right, float4 up, float4 forward, float4 lens) {
   if (!(radius < 1.0e30)) {
     return false;
   }
@@ -114,9 +114,9 @@ bool sphereHidden(float3 centre, float radius, float4 right, float4 up, float4 f
   camera.tanY = lens.y;
   camera.near = lens.z;
   camera.bias = lens.w;
-  float3 c = float3(dot(right.xyz, centre) + right.w,
-                    dot(up.xyz, centre) + up.w,
-                    dot(forward.xyz, centre) + forward.w);
+  float3 c = float3(dot(right.xyz, center) + right.w,
+                    dot(up.xyz, center) + up.w,
+                    dot(forward.xyz, center) + forward.w);
   // The box around the sphere along the camera's axes, read through the
   // widest window: a draw's cull has the finest level's verdict.
   return boxHidden(pyramid, camera, c, float3(radius, 0.0, 0.0),
@@ -135,9 +135,9 @@ uint trianglesOf(uint batch) {
 
 // The first phase's verdict for an item the frustum keeps: its batch's
 // arguments, or the retest list when the last pyramid hides it.
-void place(uint batch, uint item, float3 centre, float radius) {
+void place(uint batch, uint item, float3 center, float radius) {
   if (occlusion.test != 0u && occludable(batch) &&
-      sphereHidden(centre, radius, occlusion.lastRight, occlusion.lastUp,
+      sphereHidden(center, radius, occlusion.lastRight, occlusion.lastUp,
                    occlusion.lastForward, occlusion.lastLens)) {
     uint k = addToCounter(occlusion.counters + LISTED, 1u);
     addToCounter(occlusion.counters + LISTED_TRIANGLES, trianglesOf(batch));

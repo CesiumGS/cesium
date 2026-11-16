@@ -19,7 +19,7 @@ import type { StressResult } from "../examples/frames-explorer/tests.ts";
 
 describe("a portal's place (the tree's edge tips)", () => {
   const body = { id: "body" } as unknown as HTMLElement;
-  it("goes inside StrataKit's root, where its tokens and colour scheme apply", () => {
+  it("goes inside StrataKit's root, where its tokens and color scheme apply", () => {
     const root = { id: "root" } as unknown as HTMLElement;
     const from = {
       closest: (s: string) => (s === ".🥝Root" ? root : null),

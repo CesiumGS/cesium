@@ -1,4 +1,4 @@
-/** How the CSG sample colours its solid: the face palette's shader, and the colours of a leaf, the selection, a picked face and a hovered one. */
+/** How the CSG sample colors its solid: the face palette's shader, and the colors of a leaf, the selection, a picked face and a hovered one. */
 export const PALETTE_WIDTH = 256;
 export const PALETTE_WGSL = /* wgsl */ `
 fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
@@ -6,7 +6,7 @@ fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>)
     return;
   }
   // Until the palette has loaded the engine binds a 1 x 1 stand-in, and
-  // reading a face's texel from it gives black: the plain colour then.
+  // reading a face's texel from it gives black: the plain color then.
   if (textureDimensions(palette, 0).x < ${PALETTE_WIDTH}u) {
     return;
   }
@@ -24,7 +24,7 @@ export const SELECT = [1, 0.01, 0.26] as const;
 export const PICK = [1, 0.85, 0.02] as const;
 export const HOVER = [0.75, 0.9, 1] as const;
 
-/** A leaf's colour in sRGB hue steps of the golden angle, so neighbours differ. */
+/** A leaf's color in sRGB hue steps of the golden angle, so neighbors differ. */
 function leafHsl(id: number): [number, number, number] {
   return [(id * 137.508) % 360, 0.6, 0.5];
 }
@@ -32,8 +32,8 @@ export function leafSwatch(id: number): string {
   const [h, s, l] = leafHsl(id);
   return `hsl(${h.toFixed(0)} ${s * 100}% ${l * 100}%)`;
 }
-/** Linear RGB of a leaf's colour. */
-export function leafColour(id: number): [number, number, number] {
+/** Linear RGB of a leaf's color. */
+export function leafColor(id: number): [number, number, number] {
   const [h, s, l] = leafHsl(id);
   const a = s * Math.min(l, 1 - l);
   const f = (n: number) => {

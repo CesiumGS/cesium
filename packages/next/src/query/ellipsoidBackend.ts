@@ -20,8 +20,8 @@ export function crossing(
   radii: ArrayLike<number>,
 ): Crossing | undefined {
   // In the ellipsoid's own scaled space it is the unit sphere. The closest
-  // approach to the centre first, then the half-chord about it: stable where
-  // the quadratic's discriminant, millions of metres squared, is not.
+  // approach to the center first, then the half-chord about it: stable where
+  // the quadratic's discriminant, millions of meters squared, is not.
   const f = [0, 0, 0];
   const d = [0, 0, 0];
   let dd = 0;

@@ -87,7 +87,7 @@ consecutive frames with a static camera as a popping metric.
   there. Unknown protocol: start low and infer it (time to first byte jumps
   once requests exceed the browser's connection limit). On HTTP/1.1,
   requests beyond that limit queue inside the browser, where they can be
-  neither reprioritized nor cancelled. Keeping the queue on our side is the
+  neither reprioritized nor canceled. Keeping the queue on our side is the
   real purpose of a cap, which 1.x's fixed 18 only approximates.
 - **Implemented (r23): `RequestScheduler`,** one window per origin shared
   by its tilesets. Seeded by the protocol, then modeled as TCP BBR does:

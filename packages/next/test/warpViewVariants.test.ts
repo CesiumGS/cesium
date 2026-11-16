@@ -223,8 +223,8 @@ describe("a switch frame with structurally different choices", () => {
     const warp = s.world.tileWarp(s.earth, ida!);
     expect(warp).toBeDefined();
     expect(s.world.tileWarp(s.earth, idb!)).toBeUndefined();
-    const centre = warp!.bounds([R + 1000, 0, 0]).center;
-    expect(centre[0]! - R).toBeCloseTo(10_000, 1);
+    const center = warp!.bounds([R + 1000, 0, 0]).center;
+    expect(center[0]! - R).toBeCloseTo(10_000, 1);
   });
 
   it("draws two different smooth edges, each view by the compiled route of its own", async () => {
@@ -493,11 +493,11 @@ describe("terrain's exact height term, per view", () => {
   ) {
     const s = await setup(a, b, { draw: false });
     const { asset, mesh } = terrain(mode);
-    const centre = asset.draws[0]!.matrix;
+    const center = asset.draws[0]!.matrix;
     const tile = s.world.addDraw({
       mesh: s.world.addMesh(mesh),
       parent: s.earth,
-      origin: Float64Array.of(centre[12]!, centre[13]!, centre[14]!),
+      origin: Float64Array.of(center[12]!, center[13]!, center[14]!),
     });
     s.world.setDrawHeightNormal(tile, heightNormalInfo(asset)!);
     await s.settle();

@@ -1,16 +1,16 @@
-// The design globe's colours on the globe (plan 4b Task 18): linear RGBA
+// The design globe's colors on the globe (plan 4b Task 18): linear RGBA
 // from sRGB, and the whiskers' ramp, short (pale) to long (red).
 
 /** Linear RGBA. */
 export type Rgba = readonly [number, number, number, number];
 
-/** The whiskers' colour ramp, short to long (sRGB hex; dark HUD tones). */
+/** The whiskers' color ramp, short to long (sRGB hex; dark HUD tones). */
 export const WHISKER_RAMP = ["#fff1b8", "#ffc46b", "#ff8a3d", "#f2552c"];
 
 const srgbToLinear = (c: number) =>
   c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
 
-/** Linear RGBA of an sRGB hex colour. */
+/** Linear RGBA of an sRGB hex color. */
 export function hexLinear(hex: string, alpha = 1): Rgba {
   const v = Number.parseInt(hex.slice(1), 16);
   return [
@@ -21,7 +21,7 @@ export function hexLinear(hex: string, alpha = 1): Rgba {
   ];
 }
 
-/** The ramp's colour at `u` (0 to 1), linear RGBA. */
+/** The ramp's color at `u` (0 to 1), linear RGBA. */
 export function rampAt(u: number): Rgba {
   const stops = WHISKER_RAMP.map((h) => hexLinear(h));
   const x = Math.min(1, Math.max(0, u)) * (stops.length - 1);

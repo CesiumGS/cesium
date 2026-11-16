@@ -1,6 +1,6 @@
 type Feature = { name: string; kind: string };
 
-/** A triangle: its corners (9 numbers, design units), colour and feature. */
+/** A triangle: its corners (9 numbers, design units), color and feature. */
 export interface CoarseTriangle {
   p: number[];
   color: [number, number, number, number];
@@ -17,10 +17,10 @@ export interface CoarsenStats {
   back?: number;
 }
 
-/** A feature within this many metres of one height everywhere is flat. */
-export const FLAT_METRES: number;
-/** A feature whose every triangle is narrower than this, metres, is a wire. */
-export const WIRE_METRES: number;
+/** A feature within this many meters of one height everywhere is flat. */
+export const FLAT_METERS: number;
+/** A feature whose every triangle is narrower than this, meters, is a wire. */
+export const WIRE_METERS: number;
 
 /** A drawing's triangles (no subdivision). */
 export function trianglesOf(draw: (builder: unknown) => void): CoarseTriangle[];

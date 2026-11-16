@@ -90,7 +90,7 @@ export interface AttachSkyOptions {
  * `engine.icrfToFixed`, `sunDirection`, `moonPosition` and `moonAxes`, in
  * the Earth's anchor axes (ITRF), from GCRF, ITRF, HCRS, MOON_ICRF and
  * MOON_ME at `options.precision`, which are marked as used by the sky.
- * Positions are the Sun and the Moon from the Earth's centre in ICRF axes
+ * Positions are the Sun and the Moon from the Earth's center in ICRF axes
  * (their origins' difference, as `skyState` takes them), turned by ITRF's
  * rotation from GCRF.
  *

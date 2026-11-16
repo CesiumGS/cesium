@@ -17,7 +17,7 @@ import {
 import {
   dist,
   drawnAt,
-  metres3,
+  meters3,
   openerView,
   type DrawState,
   type GlobeTone,
@@ -205,7 +205,7 @@ export function measurePanel(input: MeasurePanelInput): MeasurePanel {
         : "No snapping: the point under the pointer.";
   const next =
     state.phase === "empty"
-      ? "Click a point on a model, or press Enter on the focused view to use its centre."
+      ? "Click a point on a model, or press Enter on the focused view to use its center."
       : state.phase === "first"
         ? "Now the second point. Esc clears."
         : "Click again to start another. Esc clears.";
@@ -305,10 +305,10 @@ export function userResult(
   const globe = exaggerated
     ? `Errors drawn ×${s.exaggeration}: no measurement on the globe until true scale.`
     : s.morphing
-      ? `Moving between placements: drawn ${metres3(length)} now.`
+      ? `Moving between placements: drawn ${meters3(length)} now.`
       : Math.abs(off) < 5e-4
         ? "Drawn at its true length."
-        : `${paired ? "Rigid draws it" : "Drawn rigidly, this model's line is"} ${metres3(length)}, ${metres3(Math.abs(off))} ${off >= 0 ? "long" : "short"}.`;
+        : `${paired ? "Rigid draws it" : "Drawn rigidly, this model's line is"} ${meters3(length)}, ${meters3(Math.abs(off))} ${off >= 0 ? "long" : "short"}.`;
   const details: DetailRow[] = [
     { label: "Horizontal design distance", value: v.horizontalDistance },
     { label: "Rise, design", value: v.delta[2] },
@@ -316,7 +316,7 @@ export function userResult(
   if (m.m.overBody !== undefined) {
     details.push({
       label: "On the ellipsoid",
-      value: metres3(m.m.overBody.distance),
+      value: meters3(m.m.overBody.distance),
     });
   }
   details.push(

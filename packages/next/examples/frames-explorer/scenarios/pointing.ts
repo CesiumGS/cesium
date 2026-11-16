@@ -18,15 +18,15 @@ import { Instant } from "../../../src/time/Instant.ts";
  * horizon's dip (the final review, finding 4: one rule for the dish and the
  * capstone).
  */
-export const HORIZON_GREY = 0.1;
+export const HORIZON_GRAY = 0.1;
 
 /**
- * The hand check's grey band at an end `h` m above the ellipsoid or its own
- * ground (degrees): `HORIZON_GREY` plus the horizon's dip √(2h/R). The dish
+ * The hand check's gray band at an end `h` m above the ellipsoid or its own
+ * ground (degrees): `HORIZON_GRAY` plus the horizon's dip √(2h/R). The dish
  * at about 690 m gets about 0.94°; a ship's mast at 25 m about 0.26°.
  */
-export const horizonGrey = (h: number): number =>
-  HORIZON_GREY +
+export const horizonGray = (h: number): number =>
+  HORIZON_GRAY +
   Math.sqrt((2 * Math.max(h, 0)) / EARTH_MEAN_RADIUS) * DEG_PER_RAD;
 
 /** Azimuth (degrees clockwise from north, in [0, 360)) and elevation (degrees) of an east-north-up vector. */
@@ -168,7 +168,7 @@ export function pointingByHand(
  * never stepping with the worker's evaluations): the light-time-corrected
  * direction from `site`'s origin to `targetIcrf` (its barycentric place at
  * a TDB time, m), with stellar aberration by the site's velocity (the
- * Earth's centre's, from the ephemeris, plus the Earth's turn at the site),
+ * Earth's center's, from the ephemeris, plus the Earth's turn at the site),
  * turned into the site's axes by the rotation part of ICRF to the site, as
  * `measure`'s apparent direction is. `latitude` is the site's geodetic
  * latitude, degrees: the Earth's axis lies in its meridian plane at that
@@ -202,14 +202,14 @@ export function rayFrom(
   }
   const range = len(v);
   const u = v.map((x) => x / range);
-  // The site's velocity: the Earth's centre's (±0.5 s of the ephemeris)
+  // The site's velocity: the Earth's center's (±0.5 s of the ephemeris)
   // plus Ω × r about the Earth's axis, cos φ north + sin φ up.
   const earth = (tdb: number) =>
     frameTransform(frames.earthIcrf, icrf, Instant.fromTdb(tdb)).subarray(
       12,
       15,
     );
-  const centre = earth(t);
+  const center = earth(t);
   const ve = sub(earth(t + 0.5), earth(t - 0.5));
   const phi = (latitude * Math.PI) / 180;
   const col = (j: number) => {
@@ -220,7 +220,7 @@ export function rayFrom(
   const north = col(1);
   const up = col(2);
   const axis = north.map((x, i) => Math.cos(phi) * x + Math.sin(phi) * up[i]!);
-  const r = sub(observer, centre);
+  const r = sub(observer, center);
   const spin = [
     axis[1]! * r[2]! - axis[2]! * r[1]!,
     axis[2]! * r[0]! - axis[0]! * r[2]!,

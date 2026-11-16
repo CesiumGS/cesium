@@ -14,7 +14,7 @@ import {
 
 const GROUP_COMPARED: Comparison = {
   kind: "formula",
-  text: "Design distance × site scale × metres per foot ÷ the combined factor, by hand.",
+  text: "Design distance × site scale × meters per foot ÷ the combined factor, by hand.",
 };
 
 describe("what a result is compared against (R10, R16)", () => {
@@ -45,7 +45,7 @@ describe("what a result is compared against (R10, R16)", () => {
     };
     const distance = comparedFor("trajectory.moon-me.distance", group);
     expect(distance.kind).toBe("independent");
-    expect(distance.text).toMatch(/Moon's centre/);
+    expect(distance.text).toMatch(/Moon's center/);
     expect(comparedFor("trajectory.moon-me.round-trip", group).kind).toBe(
       "roundTrip",
     );
@@ -100,7 +100,7 @@ describe("what each overridden result is compared against, word for word", () =>
     },
     "trajectory.moon-me.distance": {
       kind: "independent",
-      text: "Orion's distance from the Moon's centre before the conversion to MOON_ME: a rotation about the centre keeps it.",
+      text: "Orion's distance from the Moon's center before the conversion to MOON_ME: a rotation about the center keeps it.",
     },
     "trajectory.moon-me.round-trip": {
       kind: "roundTrip",

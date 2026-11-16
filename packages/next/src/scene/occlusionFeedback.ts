@@ -52,7 +52,7 @@ export interface OcclusionCamera {
 }
 
 /**
- * One tick's boxes for a view: each a centre and three half-axes in camera
+ * One tick's boxes for a view: each a center and three half-axes in camera
  * space (x right, y up, z forward), relative to the eye (made in float64,
  * stored in float32), with the tile its result is for.
  */
@@ -87,10 +87,10 @@ export class OcclusionQueries {
     const at = this.count * QUERY_FLOATS;
     const p = camera.position;
     const box = volumeObb(volume);
-    const centre = box ? box.center : volume.sphere.center;
-    const dx = centre[0]! - p[0]!;
-    const dy = centre[1]! - p[1]!;
-    const dz = centre[2]! - p[2]!;
+    const center = box ? box.center : volume.sphere.center;
+    const dx = center[0]! - p[0]!;
+    const dy = center[1]! - p[1]!;
+    const dz = center[2]! - p[2]!;
     const r = camera.right;
     const u = camera.up;
     const f = camera.direction;

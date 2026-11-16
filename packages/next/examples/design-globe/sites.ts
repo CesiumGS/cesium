@@ -31,7 +31,7 @@ import {
 } from "./corridor.ts";
 import { POLE_LINE_GROUND } from "./poleLineGround.ts";
 
-/** One building, a box per storey (the site-grid building, and Amsterdam's). */
+/** One building, a box per story (the site-grid building, and Amsterdam's). */
 export interface BuildingModel {
   readonly kind: "building";
   /** Along design east and north, design units. */
@@ -108,7 +108,7 @@ export interface AirportRunway {
   readonly designations: readonly [string, string];
   readonly length: number;
   readonly width: number;
-  /** The centreline's offset to the left of the azimuth, and its middle along it. */
+  /** The centerline's offset to the left of the azimuth, and its middle along it. */
   readonly across: number;
   readonly along: number;
 }
@@ -334,7 +334,7 @@ export function modelRoute(site: PortfolioSite):
   };
 }
 
-/** The port's breakwater and back strip, across, metres (scripts/designTiles/portMesh.mjs). */
+/** The port's breakwater and back strip, across, meters (scripts/designTiles/portMesh.mjs). */
 export const PORT_BREAKWATER = 30;
 export const PORT_BACK_STRIP = 150;
 
@@ -612,7 +612,7 @@ export const PORTFOLIO: readonly PortfolioSite[] = [
       areaOfInterest: around(-111.917, 33.12),
     },
     // On the central meridian (the false easting, 700,000 ft), the zone's
-    // centre line, at 33.12° N.
+    // center line, at 33.12° N.
     origin: [700_000, 771_000, 1_250],
     // About 4 km (13,100 ft): eleven blocks by eight, tables tilted 25°.
     model: {

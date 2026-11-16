@@ -17,7 +17,7 @@ import {
   recipeOf,
 } from "../../examples/csg/tree.ts";
 import { outlineOf } from "../../examples/csg/preview.ts";
-import { KernelCancelled, KernelClient } from "../../src/brep/kernelClient.ts";
+import { KernelCanceled, KernelClient } from "../../src/brep/kernelClient.ts";
 import type { KernelName, SolidRecipe } from "../../src/brep/kernelProtocol.ts";
 import { OcctKernel, type OcctModule } from "../../src/brep/occt.ts";
 import { SmlibKernel, type SmlibModule } from "../../src/brep/smlib.ts";
@@ -255,7 +255,7 @@ describe.each(KERNELS)("%s: the default bracket", (kernel) => {
       operation: "intersection",
       operands: [
         leaf(7, { kind: "box", origin: [-1, -1, -1], size: [2, 2, 2] }),
-        leaf(9, { kind: "sphere", centre: [0, 0, 0], radius: 1.25 }),
+        leaf(9, { kind: "sphere", center: [0, 0, 0], radius: 1.25 }),
       ],
     });
     const tags = new Set(made.result.faceTags);
@@ -283,8 +283,8 @@ describe.each(KERNELS)("%s: the default bracket", (kernel) => {
         type: "boolean",
         operation: "union",
         operands: [
-          leaf(1, { kind: "sphere", centre: [0, 0, 0], radius: 1 }),
-          leaf(1, { kind: "sphere", centre: [0, 0, 0], radius: 1 }),
+          leaf(1, { kind: "sphere", center: [0, 0, 0], radius: 1 }),
+          leaf(1, { kind: "sphere", center: [0, 0, 0], radius: 1 }),
         ],
       }),
     ).rejects.toThrow(/isn't unique/);
@@ -298,7 +298,7 @@ describe.each(KERNELS)("%s: the default bracket", (kernel) => {
     const recipe = recipeOf(defaultBracket().root)!;
     const first = client.evaluate(kernel, recipe);
     const second = client.evaluate(kernel, recipe);
-    await expect(first).rejects.toBeInstanceOf(KernelCancelled);
+    await expect(first).rejects.toBeInstanceOf(KernelCanceled);
     await second;
     client.dispose();
     expect(handles.describe()).toEqual([]);
@@ -313,7 +313,7 @@ describe("occt: STEP parts as leaves", () => {
   const near = (actual: number, expected: number, tolerance: number) =>
     expect(Math.abs(actual - expected)).toBeLessThan(tolerance);
 
-  it("registers a NIST part centred on its bounds, and places it like a primitive", async () => {
+  it("registers a NIST part centered on its bounds, and places it like a primitive", async () => {
     const { client, handles } = setup();
     const { part } = await client.registerStep(3, sample());
     expect(part.solids).toBe(1);
@@ -322,17 +322,17 @@ describe("occt: STEP parts as leaves", () => {
     near(part.size[0], 0.3048, 1e-3);
     near(part.size[2], 0.24765, 1e-3);
 
-    const centred = await client.evaluate("occt", {
+    const centered = await client.evaluate("occt", {
       type: "step",
       tag: 5,
       step: 3,
     });
-    const { min, max } = centred.result.bounds;
+    const { min, max } = centered.result.bounds;
     for (let a = 0; a < 3; a++) {
       near(min[a]! + max[a]!, 0, 2e-3);
       near(max[a]! - min[a]!, part.size[a]!, 2e-3);
     }
-    expect(new Set(centred.result.faceTags)).toEqual(new Set([5]));
+    expect(new Set(centered.result.faceTags)).toEqual(new Set([5]));
 
     // Turned 90Â° about z, then moved: x and y swap, z is the same.
     const placed = await client.evaluate("occt", {

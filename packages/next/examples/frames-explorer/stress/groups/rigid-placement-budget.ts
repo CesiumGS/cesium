@@ -65,7 +65,7 @@ const rigidBudgetCase = stressCase(
         onEarth(site.longitude, site.latitude),
       );
       // Ground units: the site scale is the combined factor there (h = 0), so
-      // a design metre is a metre on the ground, as rigid placement assumes.
+      // a design meter is a meter on the ground, as rigid placement assumes.
       const scale = gridFactors(plain, origin).combinedFactor;
       const frame = EngineeringFrame.create(
         {

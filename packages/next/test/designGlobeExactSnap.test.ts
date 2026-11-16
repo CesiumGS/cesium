@@ -1,10 +1,10 @@
 // Plan 4b Task 17: the design globe's ExactSnapService, the server side of
 // Task 16's split. It snaps in design space, from the placement's design
-// coordinates of the client's hit, to a station tick, the centreline or a
+// coordinates of the client's hit, to a station tick, the centerline or a
 // section edge line, exactly; beyond the alignment's ends it gives nothing,
 // so the client's snap stands (Review Focus 4).
 //
-// The placement here is a fake: design units to metres, laid on the plane
+// The placement here is a fake: design units to meters, laid on the plane
 // x = R (E along +y, N along +z, height along +x), with the camera 100 m
 // above looking down −x. The alignment is the corridor's own.
 import { describe, expect, it } from "vitest";
@@ -119,7 +119,7 @@ function designOf(r: SnapResult | null | undefined): Float64Array {
 }
 
 describe("ExactSnapService", () => {
-  it("snaps a pick 0.4 ft from the centreline on the arc to the centreline, exactly", async () => {
+  it("snaps a pick 0.4 ft from the centerline on the arc to the centerline, exactly", async () => {
     // Station 31,000 is on the 5,000 ft arc (30,500 to 36,500).
     const ts = tileset();
     const raw = alignment.pointAt(31_000, 0.4);
@@ -139,7 +139,7 @@ describe("ExactSnapService", () => {
     const at = alignment.stationOffset(design);
     expect(Math.abs(at.offset)).toBeLessThanOrEqual(1e-9);
     expect(at.station).toBeCloseTo(31_000, 6);
-    // On the analytic centreline (the profile grade line): within 1e-6 ft.
+    // On the analytic centerline (the profile grade line): within 1e-6 ft.
     const truth = alignment.pointAt(at.station);
     expect(
       Math.hypot(design[0]! - truth[0]!, design[1]! - truth[1]!),
@@ -157,7 +157,7 @@ describe("ExactSnapService", () => {
     expect(
       Math.hypot(shown[0]! - design[0]!, shown[1]! - design[1]!),
     ).toBeLessThan(1e-6);
-    // The curve: 21 points over ±100 ft along the centreline.
+    // The curve: 21 points over ±100 ft along the centerline.
     expect(r!.curve).toHaveLength(21);
     const ends = [r!.curve![0]!, r!.curve![20]!].map(
       (p) => alignment.stationOffset(placement.designOf(p)).station,
@@ -219,7 +219,7 @@ describe("ExactSnapService", () => {
     expect(r).toBeUndefined();
   });
 
-  it("snaps to the centreline and the section's edge lines", () => {
+  it("snaps to the centerline and the section's edge lines", () => {
     // The strips' edges (median shoulders at ±1, lanes at ±5 and ±29, outer
     // shoulders to ±39) and the outer barriers' outer faces at ±41.
     const edges = new Set<number>([0, -41, 41]);
@@ -597,7 +597,7 @@ describe("ExactSnapService through refiningSnap, the barrier drawn", () => {
     const cursor = pixel(onTop(31_000, 0.2));
     const hit = await view.pickPosition(cursor[0]!, cursor[1]!);
     const station = alignment.stationOffset(placement.designOf(hit!)).station;
-    // Where the centreline is shown (the barrier's top) and where it is (the
+    // Where the centerline is shown (the barrier's top) and where it is (the
     // profile grade line, 0.81 m below), in pixels from the cursor.
     const shownAt = pixel(onTop(station, 0));
     const pgl = alignment.pointAt(station);
@@ -625,7 +625,7 @@ describe("ExactSnapService through refiningSnap, the barrier drawn", () => {
         () => {},
       ).then((r) => ({ r, tileset }));
 
-    // Just inside: the centreline, accepted, though its exact point is far
+    // Just inside: the centerline, accepted, though its exact point is far
     // outside the aperture on the screen.
     const inside = await run(shown + 0.5);
     expect([...inside.tileset.warnings]).toEqual([]);

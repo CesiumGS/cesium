@@ -42,7 +42,7 @@ const RADIANS = Math.PI / 180;
 /**
  * Degrees per design unit (about 1.1 m), and the offset of design (0, 0):
  * near 10° E, 40° N, where a longitude's rounding is a fifth of a
- * nanometre. (Near 122° W it is 1.6 nm, which alone would use up the
+ * nanometer. (Near 122° W it is 1.6 nm, which alone would use up the
  * round trip's 1e-9 m; near the equator the ellipsoid's own geodetic
  * height loses some 0.3 µm.)
  */
@@ -179,12 +179,12 @@ describe("an EngineeringFrame on a host's coordinate service", () => {
         { ...definition, body },
         { coordinates },
       );
-      const metres = SCALE * RADIANS * body.ellipsoid.maximumRadius;
+      const meters = SCALE * RADIANS * body.ellipsoid.maximumRadius;
       for (const design of DESIGNS) {
         const fixed = frame.toBodyFixed(design);
         const back = frame.fromBodyFixed(fixed);
         for (let i = 0; i < 3; i++) {
-          const unit = i < 2 ? metres : 1;
+          const unit = i < 2 ? meters : 1;
           expect(Math.abs(back[i]! - design[i]!) * unit).toBeLessThan(bound);
         }
         const again = frame.toBodyFixed(back);
@@ -531,7 +531,7 @@ describe("the hosted placement mode", () => {
   let earth: AnchorHandle;
   let view: View;
   let site: DrawHandle;
-  /** Where the host delivered the content: its body-fixed metres. */
+  /** Where the host delivered the content: its body-fixed meters. */
   let point: Float64Array;
 
   beforeAll(async () => {
@@ -583,7 +583,7 @@ describe("the hosted placement mode", () => {
     expect(placeHosted("host grid").mode).toBe(mode);
   });
 
-  it("draws the content as delivered: displayed is the identity on body-fixed metres, displayError 0", () => {
+  it("draws the content as delivered: displayed is the identity on body-fixed meters, displayError 0", () => {
     const hosted = placeHosted("host grid");
     expect(hosted.frameName).toBe("host grid");
     const shown = hosted.displayed([R, 20, 30]);

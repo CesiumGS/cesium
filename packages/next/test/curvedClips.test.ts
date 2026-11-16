@@ -420,7 +420,7 @@ describe("a plane in a design frame under a bending edge", () => {
     }
     expect(worst).toBeLessThanOrEqual(field.errorBound * 1.5);
     expect(cut).toBeGreaterThan(2900);
-    // The surface is bent by hundreds of metres: a straight plane through the tile misses it.
+    // The surface is bent by hundreds of meters: a straight plane through the tile misses it.
     const straight = (p: number[]) => p[2]! * TILE + (R + 1000) - (R + 1050);
     let farther = 0;
     for (let n = 0; n < 200; n++) {

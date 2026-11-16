@@ -6,7 +6,7 @@ export interface StepDataset {
   url: string;
   bytes: number;
   sha256: string;
-  licence: string;
+  license: string;
   landing: string;
 }
 export interface StepSample {

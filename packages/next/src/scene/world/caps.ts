@@ -17,7 +17,7 @@
 // itself, and a per-fragment test of the plane would drop half of it to
 // rounding. Styling is the styling language's (docs/design/cad-display-extensions.md: hatching per material
 // or element, by planar fill, not built yet): a cap has a feature ID per
-// element and a default flat colour, and `style` is where the language will
+// element and a default flat color, and `style` is where the language will
 // hook in.
 import {
   SectionJob,
@@ -49,9 +49,9 @@ import type { DrawHandle, DrawOptions, MeshHandle } from "./types.ts";
 /** Linear RGBA. */
 export type CapColor = readonly [number, number, number, number];
 
-/** The default flat colour of a cap. */
+/** The default flat color of a cap. */
 export const DEFAULT_CAP_COLOR: CapColor = [0.78, 0.74, 0.68, 1];
-/** The default colour of a section line (a chain that did not close). */
+/** The default color of a section line (a chain that did not close). */
 export const DEFAULT_SECTION_LINE_COLOR: CapColor = [1, 0.35, 0.1, 1];
 const WHITE: CapColor = [1, 1, 1, 1];
 
@@ -64,7 +64,7 @@ export interface CapStyleInput {
 
 /**
  * Where the styling language (docs/design/cad-display-extensions.md) will say how a cap looks, per element:
- * a colour for now. Undefined keeps the default.
+ * a color for now. Undefined keeps the default.
  */
 export type CapStyle = (input: CapStyleInput) => CapColor | undefined;
 
@@ -553,7 +553,7 @@ export class BrepCaps implements Rebuildable {
     const size = formSize(options.form) * scale;
     const bias = options.bias?.meters ?? Math.max(1e-6, 2e-5 * size);
     const biased = biasedCapPlanes(planes.planes, bias);
-    // In the form's own coordinates, lengths there are metres over the scale.
+    // In the form's own coordinates, lengths there are meters over the scale.
     const inForm = biased.map((p) => ({
       point: point(inverse, p.point),
       normal: direction(inverse, p.normal),
@@ -719,7 +719,7 @@ export interface MeshCapsOptions {
   readonly material?: number;
   /** Skip lighting on the caps (default: lit by the material). */
   readonly unlit?: boolean;
-  /** The colour of the section lines. */
+  /** The color of the section lines. */
   readonly lineColor?: CapColor;
   readonly style?: CapStyle;
   /** How far inside what the clip keeps the caps lie (default: as the b-rep caps': 2e-5 of the tiles' size, at least 1e-6 m). */
@@ -867,8 +867,8 @@ export class MeshCaps implements Rebuildable {
   /**
    * The bias that beats the clip test's float32 rounding at the content's
    * size (as the b-rep caps' does, 2e-5 of it): the clip test and the cap's
-   * vertices are float32, so a cap a micrometre inside the plane would be
-   * dropped to speckle at tens of metres or more.
+   * vertices are float32, so a cap a micrometer inside the plane would be
+   * dropped to speckle at tens of meters or more.
    */
   private defaultBias(): number {
     const lo = [Infinity, Infinity, Infinity];
@@ -1034,7 +1034,7 @@ export class MeshCaps implements Rebuildable {
     return true;
   }
 
-  /** The cap mesh with a colour per vertex where the style names an element's. */
+  /** The cap mesh with a color per vertex where the style names an element's. */
   private styled<
     T extends { featureIds?: Uint32Array; positions: Float32Array },
   >(mesh: T): T {

@@ -182,8 +182,8 @@ A `Frame` is a node with a parent and a float64 transform to its parent as a
 function of time (constant for rigid frames). Kinds:
 
 - **Inertial:** ICRF (BCRS axes, origin the solar system barycenter), the
-  root. Derived inertial frames for readouts: Earth-centred inertial (GCRF
-  axes at the geocenter), and a Sun-centred frame **(builder's call: ICRF
+  root. Derived inertial frames for readouts: Earth-centered inertial (GCRF
+  axes at the geocenter), and a Sun-centered frame **(builder's call: ICRF
   axes at the Sun; an ecliptic variant if the readout wants it)**.
 - **Body-fixed:** each `Body` gets its fixed frame: Earth ITRF (from §5's
   Earth orientation), Moon ME (from the lunar PCK). Placed under ICRF from
@@ -218,12 +218,12 @@ or methods sit beside them.
 A `Trajectory` is a frame member whose position is a function of time, read
 from published ephemerides:
 
-- **CCSDS OEM** (Artemis II BET rev F: EME2000, Earth-centred, 60 s steps,
+- **CCSDS OEM** (Artemis II BET rev F: EME2000, Earth-centered, 60 s steps,
   interpolation as the file's header says, Lagrange or Hermite).
 - **SPK** (the Artemis II SPK; LRO; DSN station SPKs for completeness).
 - EME2000 inputs get the frame-bias rotation to ICRF.
 - Each trajectory states its accuracy class: precise ephemeris, or
-  approximate (TLE/SGP4, km-class, labelled as such).
+  approximate (TLE/SGP4, km-class, labeled as such).
 
 ### 6.4 Rendering across bodies
 
@@ -362,7 +362,7 @@ design point must return the original to well under 1 mm, anywhere on a
 
 Design distances are grid distances in design units, as the CAD tool
 reports them. The true distance over the body is shown beside them and
-labelled, never substituted.
+labeled, never substituted.
 
 ### 7.4 PROJ
 
@@ -427,8 +427,8 @@ defines its alignment directly.
   under its assumptions (section 11); DSN station positions from DSN 810-005
   (cm-class) and the receive and transmit horizon masks; LRO from JPL
   Horizons (-85) as a real lunar orbiter. A hypothetical lunar south-pole
-  antenna structure in its own site grid (section 7.5), labelled
-  hypothetical; a hypothetical relay may be added, labelled the same way.
+  antenna structure in its own site grid (section 7.5), labeled
+  hypothetical; a hypothetical relay may be added, labeled the same way.
 - **Time:** a timeline from 2026-04-02 01:58 UTC (after the upper stage
   separated) to 2026-04-10 23:53 UTC (entry interface), scrubbable, with
   play rates.
@@ -437,9 +437,9 @@ defines its alignment directly.
   descent with its re-entry plasma (after entry interface). The builder
   first searches for published data (an ICPS trajectory; a descent or
   splashdown trajectory; NASA's airborne entry imagery). Where none exists,
-  these are modelled simply from published milestones (burn times and
+  these are modeled simply from published milestones (burn times and
   results, entry interface speed ~10.7 km/s, the six-minute blackout,
-  splashdown at 8:07 pm EDT) and labelled illustrative, kept apart from the
+  splashdown at 8:07 pm EDT) and labeled illustrative, kept apart from the
   exact data and excluded from measurements' accuracy claims.
 - **Cameras:**
   - follow: orbit freely around Orion as it moves;
@@ -453,7 +453,7 @@ defines its alignment directly.
 - **Flight path:** past and future, drawn in a chosen frame (the Earth's:
   the figure-eight; the Moon's: the swing around the far side).
 - **Coordinate readouts:** Orion and a picked point in Earth-fixed,
-  Moon-fixed, Earth-centred inertial and Sun-centred frames.
+  Moon-fixed, Earth-centered inertial and Sun-centered frames.
 - **Comms overlay (toggleable),** each quantity marked published, computed
   or assumed:
   - the network: DSN dishes at Goldstone, Canberra and Madrid; links drawn
@@ -473,7 +473,7 @@ defines its alignment directly.
 - **Models:** NASA's DSN 34 m and 70 m GLBs and LRO GLB (Draco); Orion with
   its service module from the CC-BY Sketchfab model (the owner downloads it;
   credited), or a fallback from NASA's crew-module mesh; the ICPS from an
-  SLS model or modelled simply.
+  SLS model or modeled simply.
 - **Effects (custom shaders), physical by default with a stated exaggeration
   control for the presets:**
   - plumes on proxy geometry, with a vacuum expansion density model
@@ -526,7 +526,7 @@ defines its alignment directly.
   heights are taken as published, despite a public report of ~2.5 km above
   LOLA. Both are stated in the example and are single settings to change.
 - **Orion's comms parameters** (EIRP, coding, uplink frequency) aren't
-  published; they're assumed and labelled.
+  published; they're assumed and labeled.
 - **ion terms** for an open-source demo with a user-supplied token: the
   normal Sandcastle pattern; not confirmed with Cesium.
 - **The EOP data's license** is unstated; cite IERS.
@@ -535,7 +535,7 @@ defines its alignment directly.
 - **The 3D Tiles 2.0 georeferencing draft's** current shape is to be checked
   when built.
 - **Published data before separation and after entry interface** is to be
-  searched for; modelled and labelled illustrative if absent.
+  searched for; modeled and labeled illustrative if absent.
 - **The Sketchfab Orion** needs a login to download.
 - **Bentley's export behavior** (rigid or reprojected) is unknown until a
   long projected iModel is exported.

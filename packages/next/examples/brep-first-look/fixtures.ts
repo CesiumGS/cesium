@@ -1,5 +1,5 @@
 // The three shapes of the B-reps gallery example, built with `BrepBuilder`
-// (the same shapes as the engine's tests). Lengths are metres.
+// (the same shapes as the engine's tests). Lengths are meters.
 import {
   BrepBuilder,
   evaluateSurface,
@@ -339,25 +339,25 @@ function arcCurve(
   };
 }
 
-/** An arc in 3D: from centre + r·ex, counter-clockwise towards ey, for q quarter turns. */
+/** An arc in 3D: from center + r·ex, counter-clockwise toward ey, for q quarter turns. */
 function arcCurve3(
-  centre: readonly number[],
+  center: readonly number[],
   ex: readonly number[],
   ey: readonly number[],
   r: number,
   quarters: number,
 ): NurbsCurve {
   return arcCurve(3, quarters, (x, y) =>
-    [0, 1, 2].map((k) => centre[k]! + r * (x * ex[k]! + y * ey[k]!)),
+    [0, 1, 2].map((k) => center[k]! + r * (x * ex[k]! + y * ey[k]!)),
   );
 }
 
 /**
- * An arc in (u, v): it starts at angle `start` from the centre and turns
+ * An arc in (u, v): it starts at angle `start` from the center and turns
  * counter-clockwise for sign 1 and clockwise for sign -1.
  */
 function arcCurve2(
-  centre: readonly [number, number],
+  center: readonly [number, number],
   r: number,
   start: number,
   sign: 1 | -1,
@@ -368,8 +368,8 @@ function arcCurve2(
   return arcCurve(2, quarters, (x, y) => {
     const yy = sign * y;
     return [
-      centre[0] + r * (c * x - sn * yy),
-      centre[1] + r * (sn * x + c * yy),
+      center[0] + r * (c * x - sn * yy),
+      center[1] + r * (sn * x + c * yy),
     ];
   });
 }

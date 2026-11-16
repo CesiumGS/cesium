@@ -33,9 +33,9 @@ import {
 } from "../shared.ts";
 
 /** NAVD88 height (m): the compound CRS's vertical part, through GEOID18. */
-const NAVD88_METRES = 5703;
+const NAVD88_METERS = 5703;
 
-/** The datasheet marks (PIDs) and the NAD83(2011) metre CRS of each one's SPCS 83 zone (EPSG registry names). */
+/** The datasheet marks (PIDs) and the NAD83(2011) meter CRS of each one's SPCS 83 zone (EPSG registry names). */
 const NGS_MARKS: readonly {
   readonly pid: string;
   readonly crs: number;
@@ -51,7 +51,7 @@ const NGS_MARKS: readonly {
 function ngsCase(mark: (typeof NGS_MARKS)[number]): StressCase {
   const m = cited<NgsMark>(`ngs-${mark.pid}`);
   const id = `reference-values.ngs-${mark.pid.toLowerCase()}`;
-  const title = `NGS datasheet ${mark.pid} (${m.designation}, SPC ${m.spc.zone}) through EPSG:${mark.crs}+${NAVD88_METRES} with GEOID18: northing and easting, convergence, scale factor, combined factor and orthometric height match the datasheet at its printed precision`;
+  const title = `NGS datasheet ${mark.pid} (${m.designation}, SPC ${m.spc.zone}) through EPSG:${mark.crs}+${NAVD88_METERS} with GEOID18: northing and easting, convergence, scale factor, combined factor and orthometric height match the datasheet at its printed precision`;
   return stressCase(
     id,
     "reference-values",
@@ -59,7 +59,7 @@ function ngsCase(mark: (typeof NGS_MARKS)[number]): StressCase {
     ["proj", "geoid"],
     async (ctx, base) => {
       const frame = EngineeringFrame.create(
-        { name: mark.name, body: EARTH, crs: epsg(mark.crs, NAVD88_METRES) },
+        { name: mark.name, body: EARTH, crs: epsg(mark.crs, NAVD88_METERS) },
         proj(ctx),
       );
       const lat = sexagesimal(m.latitude);
@@ -337,7 +337,7 @@ function workedExampleCase(
           tolerance: Math.max(lat.half, lon.half) * 3600 + ANGLE_PATH,
           unit: "″",
           detail: `computed ${fmt(back[1]!, 12)}°, ${fmt(back[0]!, 12)}°; pipeline ${op.pipeline}`,
-          // Geographic results as metres on the Earth's ellipsoid.
+          // Geographic results as meters on the Earth's ellipsoid.
           fingerprint: operationFingerprint(ctx, op, [
             onEarth(back[0]!, back[1]!),
           ]),

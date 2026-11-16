@@ -53,24 +53,24 @@ export function Report() {
     if (!s) {
       return;
     }
-    let cancelled = false;
+    let canceled = false;
     setHtml(undefined);
     setError(undefined);
     full(s.name)
       .then((results) => {
         // Runs before r33 carry no budgets: the catalog's apply.
         const report = renderReport(results, { budgets: catalog.budgets });
-        if (!cancelled) {
+        if (!canceled) {
           setHtml(report);
         }
       })
       .catch((e: unknown) => {
-        if (!cancelled) {
+        if (!canceled) {
           setError(e instanceof Error ? e.message : String(e));
         }
       });
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [s]);
 

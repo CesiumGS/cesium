@@ -62,7 +62,7 @@ export const kindsOf = (symbol, name) => {
   );
   if (kinds.length === 0) {
     throw new Error(
-      `surfaceMap: ${name} has an unrecognised kind (symbol flags ${symbol.flags})`,
+      `surfaceMap: ${name} has an unrecognized kind (symbol flags ${symbol.flags})`,
     );
   }
   return kinds;

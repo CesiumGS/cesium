@@ -11,9 +11,9 @@
 // Level 0 comes from the opaque pass's multisampled depth (`level0`), or from
 // the single-sampled depth of the ambient-occlusion prepass (`level0Pixels`),
 // which the view's occlusion cull builds it from when it has one
-// (render/view/occlusionCull.ts). A single sample is the pixel's centre, and
+// (render/view/occlusionCull.ts). A single sample is the pixel's center, and
 // the image's samples lie within it: so that no sample sees farther than its
-// texel says (a surface's edge passing between a centre and a sample), a
+// texel says (a surface's edge passing between a center and a sample), a
 // level-0 texel there takes the farthest over its block and the pixels all
 // round it, one deep.
 //

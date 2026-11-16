@@ -201,7 +201,7 @@ export function checkCrsAgreement(
   }
 }
 
-/** Metres: the drawn anchor's tolerance in `checkRigidTransform`. */
+/** Meters: the drawn anchor's tolerance in `checkRigidTransform`. */
 const ANCHOR_TOLERANCE = 1e-3;
 /**
  * Relative: a column's tolerance in `checkRigidTransform`. A producer and a

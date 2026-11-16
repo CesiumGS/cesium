@@ -542,7 +542,7 @@ describe("the pick's window", () => {
           -1e-9,
       );
     // The picked pixel and the window's edges (PICK_SIZE pixels across, so
-    // 1.5 each way from the pixel's centre).
+    // 1.5 each way from the pixel's center).
     expect(inside(along(px, py, 100))).toBe(true);
     expect(inside(along(px + 1.4, py - 1.4, 100))).toBe(true);
     expect(inside(along(px - 1.4, py + 1.4, 100))).toBe(true);

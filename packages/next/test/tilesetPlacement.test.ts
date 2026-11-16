@@ -184,7 +184,7 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
     ]);
   });
 
-  it("derives no area from a root box in local metres, with one warning", async () => {
+  it("derives no area from a root box in local meters, with one warning", async () => {
     const json = tilesetJson({ [ENGINEERING_FRAME_EXTENSION]: reprojected });
     delete (json.root as { transform?: number[] }).transform;
     const tileset = await load(json);

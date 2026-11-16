@@ -112,7 +112,7 @@ describe("checkRigidTransform", () => {
     expect(() => checkRigidTransform(placement, turned)).toThrow(
       /placement\.anchor/,
     );
-    // About the body's centre, the anchor moves by metres.
+    // About the body's center, the anchor moves by meters.
     expect(() =>
       checkRigidTransform(placement, rotatedAbout(matrix, [0, 0, 0], 1e-6)),
     ).toThrow(/placement\.anchor/);

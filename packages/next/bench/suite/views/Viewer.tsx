@@ -236,7 +236,7 @@ export function Viewer() {
 
   // The engine: one host at a time, rebuilt when the engine changes.
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     let made: ViewerHost | undefined;
     setHost(undefined);
     setState({ phase: "starting" });
@@ -254,7 +254,7 @@ export function Viewer() {
           Cesium.Ion.defaultAccessToken = tokenRef.current;
           made = await LegacyViewerHost.create(stage.current!);
         }
-        if (cancelled) {
+        if (canceled) {
           made.destroy();
           return;
         }
@@ -265,7 +265,7 @@ export function Viewer() {
         setHost(made);
       } catch (error) {
         console.error(error);
-        if (!cancelled) {
+        if (!canceled) {
           setState({
             phase: "failed",
             error: `Couldn't start ${engineName(engine, index.branch)}: ${message(error)}`,
@@ -274,7 +274,7 @@ export function Viewer() {
       }
     })();
     return () => {
-      cancelled = true;
+      canceled = true;
       setHost(undefined);
       made?.destroy();
     };
@@ -293,12 +293,12 @@ export function Viewer() {
     if (!host) {
       return;
     }
-    let cancelled = false;
+    let canceled = false;
     setState({ phase: "loading" });
     host
       .load(source, viewRef.current)
       .then((result) => {
-        if (cancelled) {
+        if (canceled) {
           return;
         }
         if (at) {
@@ -311,7 +311,7 @@ export function Viewer() {
         setState({ phase: "ready" });
       })
       .catch((error) => {
-        if (!cancelled && message(error) !== "superseded") {
+        if (!canceled && message(error) !== "superseded") {
           setState({
             phase: "failed",
             error: `Couldn't load ${sourceName(source)}: ${message(error)}`,
@@ -319,7 +319,7 @@ export function Viewer() {
         }
       });
     return () => {
-      cancelled = true;
+      canceled = true;
     };
     // `source` is keyed by its JSON; `at` only frames a new load.
   }, [host, sourceKey, token, attempt]);

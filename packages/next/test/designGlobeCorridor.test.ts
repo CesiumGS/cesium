@@ -80,7 +80,7 @@ describe("the corridor's alignment", () => {
     ]);
   });
 
-  it("has continuous curvature at every join (each spiral meets its neighbours' radii)", () => {
+  it("has continuous curvature at every join (each spiral meets its neighbors' radii)", () => {
     for (let i = 1; i < elements.length; i++) {
       const [, before] = curvatures(elements[i - 1]!);
       const [after] = curvatures(elements[i]!);
@@ -228,7 +228,7 @@ describe("the corridor's vertical profile", () => {
     }
   });
 
-  it("has continuous grades: each parabola joins its neighbours' grades", () => {
+  it("has continuous grades: each parabola joins its neighbors' grades", () => {
     const grades = profile.segments.map((s) =>
       s.kind === "grade" ? [s.grade, s.grade] : [s.startGrade, s.endGrade],
     );
@@ -280,7 +280,7 @@ describe("the structures", () => {
 });
 
 describe("the cross-section", () => {
-  it("is symmetric about the centreline", () => {
+  it("is symmetric about the centerline", () => {
     const { strips, barriers } = CROSS_SECTION;
     for (const strip of strips) {
       const mirror = strips.find(
@@ -321,7 +321,7 @@ describe("the cross-section", () => {
     expect(CROSS_SECTION.barriers).toHaveLength(3);
   });
 
-  it("falls outward from the centreline by its cross slopes", () => {
+  it("falls outward from the centerline by its cross slopes", () => {
     expect(sectionSurface(0)).toBe(0);
     expect(sectionSurface(1)).toBe(0);
     expect(sectionSurface(5)).toBeCloseTo(-0.16, 12);

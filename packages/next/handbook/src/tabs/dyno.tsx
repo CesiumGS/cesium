@@ -119,7 +119,7 @@ const PIECES: BoardStep[] = [
     lane: 0,
     row: 1,
     title: "Scenes",
-    body: `A catalog of content and camera paths, with its licences. Public, plus a private manifest if you have one.`,
+    body: `A catalog of content and camera paths, with its licenses. Public, plus a private manifest if you have one.`,
   },
   {
     id: "runner",
@@ -244,9 +244,9 @@ const GROUPS: readonly { title: string; views: readonly ViewNote[] }[] = [
         name: "Scenes",
         partly:
           "A scene an engine can't draw shows as not run for that engine: point clouds and splats in 2.0, and instancing at this scale in 1.x.",
-        what: "The catalog as cards, each with its best results per engine. A scene's page adds its history, the changes that moved it, a filmstrip over time, and its content and licences.",
+        what: "The catalog as cards, each with its best results per engine. A scene's page adds its history, the changes that moved it, a filmstrip over time, and its content and licenses.",
         when: "To see what's measured, or how one scene has changed.",
-        how: "Scenes in the rail, or g s. A scene's page opens with the scene live, then its content and licences, then its results.",
+        how: "Scenes in the rail, or g s. A scene's page opens with the scene live, then its content and licenses, then its results.",
       },
       {
         name: "A scene, live",
@@ -292,8 +292,8 @@ const GROUPS: readonly { title: string; views: readonly ViewNote[] }[] = [
       },
       {
         name: "Lab",
-        what: "Focused pages, one engine behaviour each: parity checks, costs, and spikes. These are the pages the scripted suites open, and in the app they're for looking.",
-        when: "To look closely at one behaviour.",
+        what: "Focused pages, one engine behavior each: parity checks, costs, and spikes. These are the pages the scripted suites open, and in the app they're for looking.",
+        when: "To look closely at one behavior.",
         how: "Lab in the rail, or g l.",
         shot: {
           name: "lab",
@@ -440,7 +440,7 @@ const FUTURE: BoardStep[] = [
     lane: 0,
     row: 2,
     title: "Catalog and pinned datasets",
-    body: "Built: scenes on datasets with hashes and licences.",
+    body: "Built: scenes on datasets with hashes and licenses.",
   },
   {
     id: "runners",
@@ -563,7 +563,7 @@ const NETWORK = [
     state: "Planned",
     badge: "goal-open",
     means:
-      "Content from the local store, through a server that shapes latency, bandwidth and HTTP/2 per connection, for main threads and workers in both engines, so a result doesn't depend on a live server. Only where licences allow mirroring: Google's tiles stay live.",
+      "Content from the local store, through a server that shapes latency, bandwidth and HTTP/2 per connection, for main threads and workers in both engines, so a result doesn't depend on a live server. Only where licenses allow mirroring: Google's tiles stay live.",
   },
   {
     what: "Network profiles from real users",
@@ -577,7 +577,7 @@ const NETWORK = [
     state: "An idea",
     badge: "goal-open",
     means:
-      "A recording could bring stream-only content into the simulated network too. The plan doesn't describe it, and those licences don't allow mirroring as they stand, so this would need clearing first.",
+      "A recording could bring stream-only content into the simulated network too. The plan doesn't describe it, and those licenses don't allow mirroring as they stand, so this would need clearing first.",
   },
 ];
 
@@ -668,7 +668,7 @@ export function Dyno() {
       <Section title="What a scene is">
         <p>
           Four things make a measurement. A <strong>dataset</strong> is one
-          piece of content, with its licence and hash. A <strong>scene</strong>{" "}
+          piece of content, with its license and hash. A <strong>scene</strong>{" "}
           places datasets on a globe with a camera path. A{" "}
           <strong>scenario</strong> says what happens: motion, cache state and
           how long to wait for it to settle. A <strong>setup</strong> is an
@@ -1052,9 +1052,9 @@ export function Dyno() {
             from a console or a script. It isn't in builds.
           </li>
           <li>
-            <strong>Debug views.</strong> <C>View.debug</C> colours the scene by
+            <strong>Debug views.</strong> <C>View.debug</C> colors the scene by
             tile level, tile, error, state or stretch, and{" "}
-            <C>View.debugLegend()</C> says what the colours mean. See the Tile
+            <C>View.debugLegend()</C> says what the colors mean. See the Tile
             selection tab.
           </li>
         </ul>
@@ -1211,7 +1211,7 @@ export function Dyno() {
             <li>
               Which of two different images is right. FLIP measures a
               difference, and 1.x isn't the reference for how light behaves or
-              colours blend.
+              colors blend.
             </li>
             <li>
               1.x's GPU time where the browser doesn't expose its timer query.

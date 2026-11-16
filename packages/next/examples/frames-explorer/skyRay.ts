@@ -190,7 +190,7 @@ export function createSkyRay(deps: {
   labels: LabelBoard;
   refreshLabels(): void;
   /**
-   * The camera now: where it is, and how many metres a pixel spans at a
+   * The camera now: where it is, and how many meters a pixel spans at a
    * point. Lines are widened to `LINE_PX` on screen with it; without it
    * they are 1 px.
    */
@@ -334,7 +334,7 @@ export function createSkyRay(deps: {
       clear();
       return;
     }
-    // The Moon's centre in ITRF now, for the picture's blocking.
+    // The Moon's center in ITRF now, for the picture's blocking.
     const moonNow = frameTransform(frames.moonIcrf, frames.itrf, instant);
     const moon = [moonNow[12]!, moonNow[13]!, moonNow[14]!];
     const lines: Drawn[] = [];

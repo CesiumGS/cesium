@@ -9,7 +9,7 @@
 // client's hit (`testPoint`): its station and offset. In order:
 //   1. a station tick's point (every 100 ft, at offsets ±35, on the tick's
 //      raised face), at the hit's station or 100 ft either side: `point`;
-//   2. the nearest of the centreline and the section's edge lines, at the
+//   2. the nearest of the centerline and the section's edge lines, at the
 //      hit's station: `segment` on a tangent, `arc` on an arc or a spiral,
 //      with `curve` as 21 points over ±100 ft of station;
 //   3. otherwise nothing, so the client's snap stands.
@@ -18,7 +18,7 @@
 // it: the aperture is judged where the snap is drawn, at that point's own
 // height and depth, not in plan at the hit's.
 //
-// The centreline is the profile grade line, offset 0 at the profile's
+// The centerline is the profile grade line, offset 0 at the profile's
 // elevation: the alignment's own 3D curve, as the generator's answers have
 // it, under the median barrier, whose top is 2.67 ft above it. The snap's
 // `snapPoint` and `design` are that exact point; its `shownPoint` is the
@@ -56,7 +56,7 @@ const CURVE_REACH = 100;
 /** Points in a line snap's `curve`. */
 const CURVE_POINTS = 21;
 
-/** The centreline (0) and the section's edge offsets, in order. */
+/** The centerline (0) and the section's edge offsets, in order. */
 function lineOffsets(): readonly number[] {
   const offsets = new Set<number>([0]);
   for (const strip of CROSS_SECTION.strips) {
@@ -117,7 +117,7 @@ interface Judge {
 }
 
 export class ExactSnapService implements SnapService {
-  /** The offsets of the lines it snaps to: the centreline and the section's edges. */
+  /** The offsets of the lines it snaps to: the centerline and the section's edges. */
   static readonly lineOffsets: readonly number[] = lineOffsets();
 
   constructor(

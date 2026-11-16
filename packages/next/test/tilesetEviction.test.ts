@@ -18,7 +18,7 @@ const R = 6_378_137;
 const BASE = "https://tiles.test/row/";
 const URL_ = `${BASE}tileset.json`;
 const CHILDREN = 24;
-/** Metres between the children, along y. */
+/** Meters between the children, along y. */
 const SPACING = 30;
 
 function triangle(): GltfAsset {

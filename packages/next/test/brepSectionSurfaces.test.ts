@@ -52,7 +52,7 @@ describe("sectionBrep: a cone frustum", () => {
     expect(validateBrep(result.form!)).toEqual([]);
   });
 
-  it("aslant through a disc end is the conic cut straight by the end", () => {
+  it("aslant through a disk end is the conic cut straight by the end", () => {
     const normal = [Math.sin(0.9), 0, Math.cos(0.9)];
     const point = [0, 0, 0.3];
     const result = sectionBrep(coneFrustumBrep(), [{ point, normal }], {
@@ -111,7 +111,7 @@ describe("sectionBrep: a torus (R = 3, r = 1)", () => {
 });
 
 describe("sectionBrep: a capped cylinder of NURBS patches", () => {
-  it("square to its axis is the disc, found by marching, within the tolerance", () => {
+  it("square to its axis is the disk, found by marching, within the tolerance", () => {
     const result = sectionBrep(
       nurbsCappedCylinderBrep(),
       [{ point: [0, 0, 0.7], normal: Z }],

@@ -156,7 +156,7 @@ describe("every frame states its accuracy, and the walk and the answer agree (th
 });
 
 describe("MOON_ME's orientation, estimated, at a point's lever (the coordinator's ruling, 2026-11-07)", () => {
-  it("adds its rotation error times the lunar site's distance from the Moon's centre to the site's walk, on MOON_ME's edge, and adds nothing at MOON_ME's own origin", async () => {
+  it("adds its rotation error times the lunar site's distance from the Moon's center to the site's walk, on MOON_ME's edge, and adds nothing at MOON_ME's own origin", async () => {
     const id: ScenarioId = "stand-on-moon";
     const knobs = spec(id).checked.knobs;
     const t = checkedTdb(id);
@@ -191,7 +191,7 @@ describe("MOON_ME's orientation, estimated, at a point's lever (the coordinator'
         `lunar site against ${r}: ±${v.statement.meters} m (MOON_ME ±${MOON_ME_RADIANS * lever} m at ${lever} m)`,
       );
     }
-    // At MOON_ME's own origin (the Moon's centre, MOON_PA's origin), its
+    // At MOON_ME's own origin (the Moon's center, MOON_PA's origin), its
     // rotation adds nothing, and the walk says why.
     const pa = composedView(tree, frames, instant, "ITRF", "MOON_PA");
     if (pa) {

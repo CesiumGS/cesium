@@ -133,7 +133,7 @@ export function Verify({
         ?.scrollIntoView({ block: "start" }),
     );
   };
-  // The inspector's neighbours: the selected result's card, in order.
+  // The inspector's neighbors: the selected result's card, in order.
   const siblings = result
     ? resultsOf(
         model.groups.find((g) => g.id === result.group) ?? {

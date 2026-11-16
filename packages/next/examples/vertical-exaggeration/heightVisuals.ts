@@ -19,8 +19,8 @@ import { CustomShader, type Globe } from "@cesium/next";
 /** How a height lookup reads a fragment: where the content is, or where it is drawn. */
 export type HeightKey = "true" | "drawn";
 
-/** The ramp's stops: a height in metres and an sRGB colour. */
-export const RAMP: ReadonlyArray<readonly [metres: number, rgb: string]> = [
+/** The ramp's stops: a height in meters and an sRGB color. */
+export const RAMP: ReadonlyArray<readonly [meters: number, rgb: string]> = [
   [0, "#3f7f3b"],
   [500, "#7aa53f"],
   [1000, "#c5cf55"],
@@ -37,7 +37,7 @@ export const RAMP_TOP = RAMP[RAMP.length - 1]![0];
 
 /** The haze at the ellipsoid: the density (1/m) at 1× the slider, and how far up it thins to 1/e (m). */
 export const HAZE = { density: 2.5e-4, scaleHeight: 1500 } as const;
-/** The haze's colour as shown (display-relative: it is emitted past the exposure). */
+/** The haze's color as shown (display-relative: it is emitted past the exposure). */
 const HAZE_COLOR = [0.62, 0.72, 0.86] as const;
 
 const hex = (rgb: string): [number, number, number] => [
@@ -54,7 +54,7 @@ export const rampGradient = (direction = "to right"): string =>
     ([m, rgb]) => `${rgb} ${((m / RAMP_TOP) * 100).toFixed(2)}%`,
   ).join(", ")})`;
 
-/** `ramp(h)`: the stops' colours (linear), each blended in over its band, as straight-line WGSL. */
+/** `ramp(h)`: the stops' colors (linear), each blended in over its band, as straight-line WGSL. */
 function rampWgsl(): string {
   const [first, ...rest] = RAMP;
   const vec = (rgb: string) =>
@@ -72,7 +72,7 @@ const WGSL = /* wgsl */ `
 const SEMI_MAJOR: f32 = 6378137.0;
 const SEMI_MINOR: f32 = 6356752.3142;
 
-// Metres above the WGS84 ellipsoid, along the radial: within centimetres of
+// Meters above the WGS84 ellipsoid, along the radial: within centimeters of
 // the geodetic height at the heights the terrain has, and no iteration.
 fn heightAbove(p: vec3f) -> f32 {
   let r = length(p);
@@ -83,7 +83,7 @@ fn heightAbove(p: vec3f) -> f32 {
 
 ${rampWgsl()}
 
-// How near a contour is, 0 to 1: a line about a pixel wide (w: metres of
+// How near a contour is, 0 to 1: a line about a pixel wide (w: meters of
 // height a pixel spans), gone where the lines would be closer than a few pixels.
 fn contourLine(h: f32, interval: f32, w: f32) -> f32 {
   let d = abs(fract(h / interval + 0.5) - 0.5) * interval;

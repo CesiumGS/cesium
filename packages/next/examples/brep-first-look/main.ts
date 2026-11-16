@@ -93,8 +93,8 @@ import { formBounds, type FormBounds } from "../../src/brep/formBounds.ts";
  *   each shape's faces in the engine, diced per view on the GPU to an error
  *   target in pixels (the slider, `setPatchErrorPixels`). Faces the GPU path
  *   can't draw yet are a CPU mesh inside `addBrep`; the panel counts both,
- *   from what `addBrep` returns. Colours by face come from a custom shader
- *   that reads a palette by the face's feature ID, so picks, colours and the
+ *   from what `addBrep` returns. Colors by face come from a custom shader
+ *   that reads a palette by the face's feature ID, so picks, colors and the
  *   CPU-meshed faces all go through the same feature IDs.
  * - CPU: `tessellateBrep` at a chordal tolerance, as before.
  *
@@ -110,22 +110,22 @@ import { formBounds, type FormBounds } from "../../src/brep/formBounds.ts";
  * lines of its own for all of them.
  *
  * The first frame is the right one: the host's start spinner, and the overlay
- * of scene, model, tessellator and colour changes, stay up until
+ * of scene, model, tessellator and color changes, stay up until
  * `Engine.whenReady` says the shaders' pipelines are compiled, their palettes
  * loaded and the faces diced, so nothing pops from the default material.
  *
  * A toolbar over the view switches the display mode (keys 1 to 4): shaded,
  * shaded + wireframe, flat + wireframe, wireframe. The panel's analysis views
- * colour faces by what their surface is, draw iso lines (kept inside each face's trim)
+ * color faces by what their surface is, draw iso lines (kept inside each face's trim)
  * and normal whiskers. A click picks a face or an edge: the face is
  * highlighted and the panel shows the exact point of the surface nearest the
  * pick, found by Gauss-Newton in (u, v), a preview of the exact queries to
  * come.
  *
  * The CPU tessellator is the small, kept one (`tessellateBrep`), not the
- * reference. Its slider is the chordal tolerance in millimetres in the scene:
+ * reference. Its slider is the chordal tolerance in millimeters in the scene:
  * each shape is drawn at a scale and tessellated at the tolerance divided by
- * it. A trimmed face's hole is cut by dropping triangles whose centre falls
+ * it. A trimmed face's hole is cut by dropping triangles whose center falls
  * outside the trim, so it reads jagged; the edges drawn on top hide that.
  *
  * `parseGltf` runs in the engine's worker and is not public, so the glTF
@@ -137,7 +137,7 @@ import { formBounds, type FormBounds } from "../../src/brep/formBounds.ts";
 
 const SITE = fromDegrees(-75.1652, 39.9526, 0);
 const DEG = Math.PI / 180;
-/** Between the middles of neighbouring shapes in the grid, m. */
+/** Between the middles of neighboring shapes in the grid, m. */
 const SPACING = 4;
 
 /** A shape in the row: its form, where it stands and how big it is drawn. */
@@ -197,7 +197,7 @@ const MODES: ReadonlyArray<{
   { id: "wire", label: "Wireframe", icon: iconOf("wire hidden") },
 ];
 
-/** A 20 px cube for a toolbar button, drawn in the button's own colour. */
+/** A 20 px cube for a toolbar button, drawn in the button's own color. */
 function iconOf(parts: string): string {
   const on = parts.split(" ");
   const top = "10,2 16.9,6 10,10 3.1,6";
@@ -391,9 +391,9 @@ function unionBounds(all: readonly FormBounds[]) {
   }
   return { min, max };
 }
-/** The palette's width in texels: a face's colour is at (id mod width, id div width). */
+/** The palette's width in texels: a face's color is at (id mod width, id div width). */
 const PALETTE_WIDTH = 256;
-/** Colours a face by its place in a palette (`uniforms.base`: the draw's first feature ID). */
+/** Colors a face by its place in a palette (`uniforms.base`: the draw's first feature ID). */
 const PALETTE_WGSL = /* wgsl */ `
 fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {
   if (fsInput.featureId < uniforms.base) {
@@ -404,12 +404,12 @@ fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>)
   (*material).baseColor *= textureLoad(palette, at, 0).rgb;
 }
 `;
-/** Linear colours of unlit lines: the B-rep edges, and the tessellation's wire. */
+/** Linear colors of unlit lines: the B-rep edges, and the tessellation's wire. */
 const EDGE_COLOR: [number, number, number, number] = [0, 0, 0, 1];
 const WIRE_MID: [number, number, number, number] = [0.2, 0.2, 0.22, 1];
 const WIRE_DARK: [number, number, number, number] = [0.09, 0.09, 0.1, 1];
 const ISO_COLOR: [number, number, number, number] = [0.02, 0.12, 0.55, 1];
-/** The selection's colour, linear: a hot pink, which none of the kind colours is. */
+/** The selection's color, linear: a hot pink, which none of the kind colors is. */
 const SELECT_COLOR: [number, number, number, number] = [1, 0.01, 0.26, 1];
 const WHISKER_COLOR: [number, number, number, number] = [0, 0.42, 0.12, 1];
 /** About this many normal whiskers in all, shared between the shapes. */
@@ -430,7 +430,7 @@ function translation(x: number, y: number, z: number) {
   return m;
 }
 
-/** The tint of face `i`, linear: a light grey, a little different each. */
+/** The tint of face `i`, linear: a light gray, a little different each. */
 function tint(i: number): [number, number, number] {
   const t = (i * 0.37) % 1;
   return [0.62 + 0.18 * t, 0.62 + 0.18 * ((t * 3) % 1), 0.66 + 0.16 * (1 - t)];
@@ -559,7 +559,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   view.background = "color";
   view.clearColor = [0.78, 0.82, 0.88];
   view.lighting.environment = "procedural";
-  // A camera set for daylight, so the sunlit shapes read as light grey.
+  // A camera set for daylight, so the sunlit shapes read as light gray.
   view.observer.exposure = { ev100: 15 };
 
   const settings = {
@@ -850,10 +850,10 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
 
   /** What each shape's draws are, rebuilt when the tolerance or the mode changes. */
   let draws: DrawHandle[] = [];
-  /** GPU mode: the shapes' b-reps in the world (`World.addBrep`), kept while their colours and the mode keep them. */
+  /** GPU mode: the shapes' b-reps in the world (`World.addBrep`), kept while their colors and the mode keep them. */
   type BrepHandle = ReturnType<typeof world.addBrep>;
   let breps: Array<{ shape: Shape; handle: BrepHandle }> = [];
-  /** What `breps` was made for: the colours it carries and the tolerance of its CPU mesh. */
+  /** What `breps` was made for: the colors it carries and the tolerance of its CPU mesh. */
   let brepsFor = "";
   const parts = new Map<number, Part>();
   const stats = {
@@ -931,7 +931,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           };
           return;
         }
-        // The slider is millimetres in the scene: the shape is drawn at
+        // The slider is millimeters in the scene: the shape is drawn at
         // `scale`, so its b-rep is tessellated at tolerance ÷ scale.
         const mesh = tessellateBrep(shape.form, {
           tolerance: settings.tolerance / shape.scale,
@@ -997,7 +997,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   /** Filled by the panel: shows the selection's readout. */
   let showSelection: () => void = () => undefined;
 
-  /** Draws the selected face as a recoloured overlay, or the selected edge in the selection colour. */
+  /** Draws the selected face as a recolored overlay, or the selected edge in the selection color. */
   const applySelection = () => {
     for (const d of selectionDraws) {
       world.removeDraw(d);
@@ -1098,12 +1098,12 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     engine.requestRender();
   };
 
-  /** The tint of a shape's face as drawn: by what its surface is, or a light grey each. */
+  /** The tint of a shape's face as drawn: by what its surface is, or a light gray each. */
   const faceColor = (shape: Shape, face: number) =>
     settings.byKind
       ? kindColors[shape.form.surfaceIdentity[shape.form.faceSurface[face]!]!]!
       : tint(face);
-  /** A shape's face colours as the GPU draws read them: texel `face` is its colour (linear, as stored). */
+  /** A shape's face colors as the GPU draws read them: texel `face` is its color (linear, as stored). */
   const paletteOf = (shape: Shape) => {
     const faces = shape.form.faceSurface.length;
     const image = new ImageData(
@@ -1119,7 +1119,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     }
     return image;
   };
-  /** Colours a draw of a b-rep by face: its feature IDs index the palette, from the draw's first one. */
+  /** Colors a draw of a b-rep by face: its feature IDs index the palette, from the draw's first one. */
   const paletteShader = (shape: Shape, draw: DrawHandle) =>
     new CustomShader({
       fragment: PALETTE_WGSL,
@@ -1132,7 +1132,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           clamp: true,
         },
       },
-      label: `${shape.name}: face colours`,
+      label: `${shape.name}: face colors`,
     });
   /** Takes a b-rep's draws, meshes and transforms out of the world. */
   const releaseBreps = () => {
@@ -1144,7 +1144,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     stats.gpu.prepareMs = 0;
     stats.gpu.failed = [];
   };
-  /** A shape's faces by `World.addBrep`, placed as the CPU draws are, and coloured by face. */
+  /** A shape's faces by `World.addBrep`, placed as the CPU draws are, and colored by face. */
   const addGpuFaces = (shape: Shape, stand: number) => {
     const start = performance.now();
     try {
@@ -1243,13 +1243,13 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         return;
       }
       const mesh = prep.mesh;
-      // Relative positions, then the mesh's own centre, then scaled, then
+      // Relative positions, then the mesh's own center, then scaled, then
       // stood on the ground at the shape's place.
-      const centre = mesh.origin;
+      const center = mesh.origin;
       const lift = -prep.floor * shape.scale;
       prep.stand = lift;
       const place = translation(shape.x, shape.y, lift);
-      // place · scale · translate(centre)
+      // place · scale · translate(center)
       const model = (prep.model = toWorld(
         mat4.multiply(
           mat4.mat4(),
@@ -1257,7 +1257,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           mat4.multiply(
             mat4.mat4(),
             mat4.fromScale(mat4.mat4(), shape.scale, shape.scale, shape.scale),
-            translation(centre[0]!, centre[1]!, centre[2]!),
+            translation(center[0]!, center[1]!, center[2]!),
           ),
         ),
       ));
@@ -1537,7 +1537,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     max: "1",
     step: "0.001",
     value: String(toleranceT(settings.tolerance)),
-    ariaLabel: "Chordal tolerance, millimetres in the scene",
+    ariaLabel: "Chordal tolerance, millimeters in the scene",
     oninput: () => {
       settings.tolerance = toleranceOf(Number(toleranceInput.value));
       toleranceOut.textContent = mm(settings.tolerance);
@@ -1551,7 +1551,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     {
       className: "slider bf-tolerance",
       title:
-        "Millimetres in the scene: each shape is tessellated at the tolerance divided by the scale it's drawn at.",
+        "Millimeters in the scene: each shape is tessellated at the tolerance divided by the scale it's drawn at.",
     },
     "Tolerance",
     toleranceInput,
@@ -1616,7 +1616,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       title:
         name === "GPU"
           ? "World.addBrep: every face diced per view on the GPU to an error in pixels."
-          : "tessellateBrep: one mesh on the CPU at a chordal tolerance in millimetres.",
+          : "tessellateBrep: one mesh on the CPU at a chordal tolerance in millimeters.",
       onclick: () => setTessellator(name === "GPU"),
     }),
   );
@@ -1889,9 +1889,9 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
           build();
           showStats();
         };
-        // New colours or blending are new draws, with palettes to load: behind the overlay.
+        // New colors or blending are new draws, with palettes to load: behind the overlay.
         if ((key === "byKind" || key === "xray") && settings.gpu) {
-          void settle("Colouring the faces…", change);
+          void settle("Coloring the faces…", change);
         } else {
           change();
         }
@@ -2145,7 +2145,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
               target: "_blank",
               rel: "noreferrer",
             },
-            "NIST open licence",
+            "NIST open license",
           ),
           "), ",
           el(
@@ -2445,9 +2445,9 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         "The faces drawn at 30% opacity, through the translucent passes (GPU-diced faces too, trims included), the exact edges on top.",
       ),
       toggle(
-        "Colour by kind",
+        "Color by kind",
         "byKind",
-        "Each face coloured by what its surface is, so a cylinder held as NURBS patches still reads as a cylinder (Okabe–Ito colours, which stay apart under colour blindness).",
+        "Each face colored by what its surface is, so a cylinder held as NURBS patches still reads as a cylinder (Okabe–Ito colors, which stay apart under color blindness).",
       ),
       toggle(
         "Iso lines",
@@ -2478,7 +2478,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       el(
         "p",
         {},
-        "CPU: the small tessellator, not the reference, on a grid in (u, v). A trimmed face's hole is cut by dropping the triangles whose centre falls outside it, so its rim is jagged.",
+        "CPU: the small tessellator, not the reference, on a grid in (u, v). A trimmed face's hole is cut by dropping the triangles whose center falls outside it, so its rim is jagged.",
       ),
     ),
   );
@@ -2502,7 +2502,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
         el(
           "p",
           {},
-          "Click a face or an edge. A face is highlighted and its exact point is worked out from the surface; an edge is drawn in the selection colour (edges are 1-pixel lines and hard to hit). Esc or a click on empty space clears it.",
+          "Click a face or an edge. A face is highlighted and its exact point is worked out from the surface; an edge is drawn in the selection color (edges are 1-pixel lines and hard to hit). Esc or a click on empty space clears it.",
         ),
       );
       return;
@@ -2673,7 +2673,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   viewer.container.addEventListener("pointerup", pointerUp);
 
   // The host keeps its start spinner up until `run` returns: the first frame it
-  // reveals shows the faces coloured, not in the default material. It holds
+  // reveals shows the faces colored, not in the default material. It holds
   // the view undrawn meanwhile (and the canvas hidden), so the view is drawn
   // here, unseen, for the pipelines to compile and the faces to dice.
   const drawnHidden =

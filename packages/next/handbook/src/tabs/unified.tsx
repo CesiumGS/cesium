@@ -205,7 +205,7 @@ const MECHANISMS: (Block & { short: string })[] = [
   {
     short: "Styling",
     name: "Styling and scalar fields",
-    what: "One language compiled to the GPU, per feature: colour ramps, run-time data by element ID, time, emphasis.",
+    what: "One language compiled to the GPU, per feature: color ramps, run-time data by element ID, time, emphasis.",
     state: "partly",
   },
   {
@@ -311,7 +311,7 @@ const EXAMPLES: {
   },
   {
     domain: "Design and engineering",
-    name: "A building by storey",
+    name: "A building by story",
     uses: [2, 3, 4, 5],
   },
   {
@@ -524,7 +524,7 @@ export function Unified() {
       }
     >
       <Section title="The tiers">
-        <Figure caption="The core's tiers with their folders, sizes and the imports between neighbours, as the boundary test counts them.">
+        <Figure caption="The core's tiers with their folders, sizes and the imports between neighbors, as the boundary test counts them.">
           <CoreTiers deeper={false} />
         </Figure>
         <p>
@@ -544,7 +544,7 @@ export function Unified() {
           <li>
             <C>DrawSink</C> (<C>streaming/DrawSink.ts</C>) is what content asks
             of the place it draws in: add and remove meshes, transforms, draws
-            and clips; set a draw&apos;s colour, material, collision and ground
+            and clips; set a draw&apos;s color, material, collision and ground
             flags; read how full the world&apos;s tables are (<C>pressure()</C>
             ). It has no GPU types, and a <C>World</C> is one as it is.
           </li>
@@ -677,7 +677,7 @@ export function Unified() {
                   <>
                     Content writes through <C>DrawSink</C>; the world writes a
                     record per draw and its placement, among them the{" "}
-                    <C>WARP_ROUTE</C> term and a compiled route&apos;s centre
+                    <C>WARP_ROUTE</C> term and a compiled route&apos;s center
                     constants.
                   </>
                 ),

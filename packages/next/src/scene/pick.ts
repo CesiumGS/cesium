@@ -33,7 +33,7 @@ export interface PickCamera extends CameraPose {
   readonly up: Float64Array;
   readonly right: Float64Array;
   readonly fovy: number;
-  /** Metres: nothing nearer is drawn. */
+  /** Meters: nothing nearer is drawn. */
   readonly near: number;
   /** The view's size in CSS pixels. */
   readonly width: number;
@@ -42,7 +42,7 @@ export interface PickCamera extends CameraPose {
 
 /** A point a pick reports, with the reference frame it is in (`CorePick.truePosition`). */
 export interface PickPoint {
-  /** Metres, float64. */
+  /** Meters, float64. */
   readonly position: Float64Array;
   /** The frame it is in: the hit anchor's (`CorePick.anchor`), or the render root's (`CorePick.root`). */
   readonly frame: FrameKey;
@@ -166,7 +166,7 @@ export interface PickTick {
   /** Tangents of the half fields of view, across and up. */
   readonly tanX: number;
   readonly tanY: number;
-  /** The pixel's centre in normalized device coordinates. */
+  /** The pixel's center in normalized device coordinates. */
   readonly ndcX: number;
   readonly ndcY: number;
 }

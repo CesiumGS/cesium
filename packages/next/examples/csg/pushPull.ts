@@ -60,7 +60,7 @@ export interface PushPull {
   normal: V3;
   /** The leaf as it was when the drag could start. */
   start: LeafPose;
-  /** What dragging the face `distance` metres along its normal (negative: into the solid) does. */
+  /** What dragging the face `distance` meters along its normal (negative: into the solid) does. */
   apply(distance: number): PushPullResult;
 }
 
@@ -69,7 +69,7 @@ const TOLERANCE = 0.01;
 
 /**
  * The parameter a face of `leaf` is, picked at `point` where the solid's
- * outward normal is `normal` (the sample's metres), or undefined.
+ * outward normal is `normal` (the sample's meters), or undefined.
  */
 export function pushPullFor(
   leaf: LeafNode,
@@ -93,7 +93,7 @@ export function pushPullFor(
 
   /**
    * The mapping once the leaf's own outward direction is known (local): the
-   * change of `key` per metre of the face's travel is ±1 by whether the
+   * change of `key` per meter of the face's travel is ±1 by whether the
    * leaf's direction and the solid's normal agree; `shift` moves the middle
    * by half the change along the leaf's direction (a face of a box or a
    * cap), and `alsoKeys` change by the same amount.
@@ -232,7 +232,7 @@ function explain(
 /**
  * Where a dragged face would sit relative to the planar faces of the solid
  * parallel to it: the distance along the drag that puts it on the nearest
- * one within `within` metres, with the face that plane is. `plane` is the
+ * one within `within` meters, with the face that plane is. `plane` is the
  * drag's start plane (a point and the unit normal it moves along).
  */
 export function snapToPlanes(

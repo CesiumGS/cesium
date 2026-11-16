@@ -671,7 +671,7 @@ class Catalog implements FrameCatalog {
     load.failed = true;
     load.failure = error;
     if (this.signal?.aborted && error === this.signal.reason) {
-      return; // cancelled, not failed: nothing to warn about
+      return; // canceled, not failed: nothing to warn about
     }
     const asked = [...this.entries.values()]
       .filter(

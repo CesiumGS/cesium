@@ -187,7 +187,7 @@ export const PASSES: Record<string, PassNote> = {
     kind: "render",
     summary: "Depth first, then shading where that depth is, at 4 × MSAA.",
     detail:
-      "The world's depth bundle draws first with no color, then its shading bundle shades where depth is equal, so each sample shades once. A draw under a transform-graph route is a pipeline variant of its own, linked like a custom shader, with the route's centre constants in its placements row; the depth bundle uses the position-only module. Clips cut here and hand a custom shader their distance, flags, id and parameters. Point symbols the cull rasterized draw next, then the section caps, then the sky. Lit color goes to rgba16float, unlit color to a separate display-referred target, and feature IDs to rg16uint.",
+      "The world's depth bundle draws first with no color, then its shading bundle shades where depth is equal, so each sample shades once. A draw under a transform-graph route is a pipeline variant of its own, linked like a custom shader, with the route's center constants in its placements row; the depth bundle uses the position-only module. Clips cut here and hand a custom shader their distance, flags, id and parameters. Point symbols the cull rasterized draw next, then the section caps, then the sky. Lit color goes to rgba16float, unlit color to a separate display-referred target, and feature IDs to rg16uint.",
     reads: [
       "view block",
       "draw records",

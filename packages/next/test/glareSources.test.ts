@@ -41,7 +41,7 @@ function discVisibility(
   return seen / GLARE_DISC_TAPS;
 }
 
-/** The share of a disc of radius `r` a second one covers, at `d`, of radius `k`. */
+/** The share of a disk of radius `r` a second one covers, at `d`, of radius `k`. */
 function discOverlap(r: number, k: number, d: number): number {
   if (d >= r + k) {
     return 0;
@@ -106,7 +106,7 @@ function walk(
 describe("discTaps", () => {
   const taps = discTaps(32);
 
-  it("stays in the unit disc, centered", () => {
+  it("stays in the unit disk, centered", () => {
     let [sx, sy] = [0, 0];
     for (const [x, y] of taps) {
       expect(Math.hypot(x, y)).toBeLessThanOrEqual(1);
@@ -116,7 +116,7 @@ describe("discTaps", () => {
     expect(Math.hypot(sx / 32, sy / 32)).toBeLessThan(0.05);
   });
 
-  it("spreads evenly: half the disc holds within 2 of 16, at 8 angles", () => {
+  it("spreads evenly: half the disk holds within 2 of 16, at 8 angles", () => {
     for (let k = 0; k < 8; k++) {
       const a = (k * Math.PI) / 8;
       const on = taps.filter(
@@ -152,13 +152,13 @@ describe("the constants", () => {
 });
 
 describe("what covers the sun", () => {
-  it("a half-covered disc reads 0.5 ± 0.07", () => {
+  it("a half-covered disk reads 0.5 ± 0.07", () => {
     expect(
       Math.abs(discVisibility(0, 0, 1, (x) => x < 0) - 0.5),
     ).toBeLessThanOrEqual(0.07);
   });
 
-  it("two discs' overlap follows the eclipse's fraction within 0.05, at 10 separations", () => {
+  it("two disks' overlap follows the eclipse's fraction within 0.05, at 10 separations", () => {
     for (let i = 0; i < 10; i++) {
       const d = 0.1 + (i / 9) * 2.1;
       const moon = 1.03;
@@ -277,7 +277,7 @@ describe("lightListFor", () => {
     expect(lightListFor(view({}), 2048)).toEqual({ sun: true, stars: 2048 });
   });
 
-  it("has no sun with no sky, or no disc", () => {
+  it("has no sun with no sky, or no disk", () => {
     expect(lightListFor(view({ background: "color" }), 9)).toEqual({
       sun: false,
       stars: 0,

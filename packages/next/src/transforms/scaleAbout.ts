@@ -1,5 +1,5 @@
 // Scale about a point: q = c + S (p - c), S diagonal. Output is affine in
-// each factor and each centre coordinate; the inverse is exact.
+// each factor and each center coordinate; the inverse is exact.
 import type { WarpScale } from "../camera/route.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
@@ -239,7 +239,7 @@ class ScaleAboutImpl extends LiveWarp implements ScaleAbout {
 }
 
 /**
- * An anisotropic scale about `point` (metres, in the parent frame; a
+ * An anisotropic scale about `point` (meters, in the parent frame; a
  * position on the body), along the local east, north and up there:
  * `q = point + E·diag(factors)·Eᵀ·(p − point)`. `factors` is one number or
  * three (east, north, up), each positive. Affine, so the Jacobian is the

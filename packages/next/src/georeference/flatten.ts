@@ -1,11 +1,11 @@
 // Flatten: heights inside a polygon (longitude/latitude, degrees) collapse
-// to `height`, and the collapse fades out over `falloff` metres outside it:
+// to `height`, and the collapse fades out over `falloff` meters outside it:
 //   h' = h + w (height - h),  w = 1 - smoothstep(0, falloff, d),
 // d the distance outside the polygon (0 inside), so w is 1 inside and the
 // profile is C¹ across the edge. Distances are planar in a local
-// equirectangular frame at the polygon's centroid (east-west metres are
+// equirectangular frame at the polygon's centroid (east-west meters are
 // R cos φ₀ per radian, R the mean radius), good to a percent or so over tens
-// of kilometres: use a polygon of that size. Output is affine in `height`.
+// of kilometers: use a polygon of that size. Output is affine in `height`.
 // The Jacobian is the closed form of ellipsoid.ts with g the gradient of the
 // weight through the foot's longitude and latitude. There is no closed-form
 // inverse (the weight depends on where the point is): a route solves by Newton.
@@ -36,10 +36,10 @@ interface Local {
   /** The centroid, radians. */
   readonly lon0: number;
   readonly lat0: number;
-  /** Metres per radian east and north. */
+  /** Meters per radian east and north. */
   readonly kx: number;
   readonly ky: number;
-  /** The polygon in metres about the centroid. */
+  /** The polygon in meters about the centroid. */
   readonly xy: readonly (readonly [number, number])[];
 }
 
@@ -235,8 +235,8 @@ export function flattenDescriptor(
 
 /**
  * Heights inside `polygon` ([longitude, latitude] pairs, degrees) set to
- * `height` metres on the ellipsoid of `radii` (default WGS84), fading out
- * over `falloff` metres outside it.
+ * `height` meters on the ellipsoid of `radii` (default WGS84), fading out
+ * over `falloff` meters outside it.
  */
 export function flatten(options: {
   polygon: readonly (readonly [number, number])[];

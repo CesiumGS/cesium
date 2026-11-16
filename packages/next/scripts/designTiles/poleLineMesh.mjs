@@ -7,7 +7,7 @@
 // stands on the ground at its place (the model's `ground`, ODN heights),
 // set 1.8 m into it.
 //
-// Design units are the CRS's (metres, OSGB36 / British National Grid). The
+// Design units are the CRS's (meters, OSGB36 / British National Grid). The
 // route is relative to the site's origin.
 import { srgb } from "./meshBuilder.mjs";
 
@@ -19,7 +19,7 @@ const TRANSFORMER = srgb("#5f6f5a");
 
 /** Segments per conductor between poles: a sag of s errs s/36 at most. */
 const SEGMENTS = 6;
-/** The conductors' positions across the arm, metres from the pole. */
+/** The conductors' positions across the arm, meters from the pole. */
 const PHASES = [-1, 0, 1];
 const WIRE = 0.03;
 
@@ -52,7 +52,7 @@ export function poleLinePoles(site) {
   return { route, poles, corners };
 }
 
-/** How far a pole is set into the ground, metres: about a sixth of it. */
+/** How far a pole is set into the ground, meters: about a sixth of it. */
 export const POLE_EMBED = 1.8;
 
 /** @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site */
@@ -60,7 +60,7 @@ export function poleLinePlan(site) {
   const m = site.model;
   const [e0, n0, z0] = site.origin;
   const { poles, corners } = poleLinePoles(site);
-  // Each pole stands on the ground there (ODN metres, sampled from the
+  // Each pole stands on the ground there (ODN meters, sampled from the
   // Environment Agency's lidar by scripts/poleLineGround.mjs), or on the
   // origin's plane where the model has none.
   if (m.ground !== undefined && m.ground.length !== poles.length) {

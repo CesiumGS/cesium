@@ -96,7 +96,7 @@ function stop(engine: Engine | undefined): void {
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-/** An axis-aligned box's mesh, centred on the origin, `half` its half extents. */
+/** An axis-aligned box's mesh, centered on the origin, `half` its half extents. */
 function boxMesh(half: readonly [number, number, number]): MeshData {
   const corners: number[] = [];
   for (let i = 0; i < 8; i++) {
@@ -267,7 +267,7 @@ function look(view: View, eye: V3, direction: V3, up: V3): void {
   view.camera.version++;
 }
 
-/** The ray through the centre of pixel (px, py): origin and unit direction, in the root frame. */
+/** The ray through the center of pixel (px, py): origin and unit direction, in the root frame. */
 function pixelRay(view: View, px: number, py: number): { o: V3; d: V3 } {
   const c = view.camera;
   const t = Math.tan(view.camera.fovy(WIDTH / HEIGHT) / 2);
@@ -322,7 +322,7 @@ interface Comparison {
 /**
  * Compares the image's green channel (white above the midpoint of the
  * silhouette's own value and the background's) with `expected`, a
- * classification per pixel, over the pixels whose 3 × 3 neighbourhood agrees.
+ * classification per pixel, over the pixels whose 3 × 3 neighborhood agrees.
  */
 function compare(
   pixels: Uint8ClampedArray,
@@ -732,7 +732,7 @@ async function runClips(): Promise<ClipsResult> {
       const inside = (px: number, py: number): boolean => {
         // The first surface the pixel's ray meets that the clip keeps: the
         // cylinder's two walls (x² + y² = 1, between z = 0 and 3 m) and its
-        // two discs.
+        // two disks.
         const { o, d } = pixelRay(view, px, py);
         const hits: number[] = [];
         const a = d[0] * d[0] + d[1] * d[1];

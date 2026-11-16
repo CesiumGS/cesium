@@ -115,7 +115,7 @@
   background: var(--stratakit-color-text-neutral-primary);
 }
 
-/* "not stated" in the warning colour, over the step's secondary ink (Task 9, minor 2). */
+/* "not stated" in the warning color, over the step's secondary ink (Task 9, minor 2). */
 .fx-route-acc.fx-unbounded {
   color: var(--stratakit-color-text-attention-base);
 }

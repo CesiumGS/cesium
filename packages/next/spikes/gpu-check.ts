@@ -601,7 +601,7 @@ interface Scene {
 
 /**
  * The real engine on a small procedural scene: boxes of a few sizes and
- * colours, one translucent, in a `side` by `side` grid near Philadelphia.
+ * colors, one translucent, in a `side` by `side` grid near Philadelphia.
  * No network, no token. Each of `modes` is timed in turn.
  */
 async function engineStep(

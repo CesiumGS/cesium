@@ -171,17 +171,17 @@ First entries (ladders to confirm per feature during CS-21):
 - **Steps:** `4x`, `1x+fxaa`.
 - **What changes at 1×:**
   - Translucency loses its per-sample path. `sampleRateProbe` chooses between `fsListSamples` (per-sample storage writes) and `fsList` today; at 1× only the per-pixel path exists, and the probe isn't needed.
-  - The four 4× targets shrink to a quarter of their memory, and their resolves go away. The targets are HDR colour (rgba16float), display colour (rgba8unorm-srgb), feature IDs (rg16uint) and depth (depth32float), about 20 bytes per sample. At the owner's 1718 × 1406 that's about 190 MB at 4× against about 48 MB at 1×, before resolve targets. The bandwidth falls with it.
-  - Edges alias. FXAA on the display colour smooths what is seen, but feature IDs and depth stay aliased, so picks at edges follow the 1× pixel.
+  - The four 4× targets shrink to a quarter of their memory, and their resolves go away. The targets are HDR color (rgba16float), display color (rgba8unorm-srgb), feature IDs (rg16uint) and depth (depth32float), about 20 bytes per sample. At the owner's 1718 × 1406 that's about 190 MB at 4× against about 48 MB at 1×, before resolve targets. The bandwidth falls with it.
+  - Edges alias. FXAA on the display color smooths what is seen, but feature IDs and depth stay aliased, so picks at edges follow the 1× pixel.
 - **Engine scope:** the sample count is fixed in every render pipeline, so a change rebuilds them all. That makes it a compile-time step. It is chosen at creation or on an explicit change, never by the governor or by a cost rule during a session.
 
 **`aerialPerspective` steps (view scope, appearance class).**
 
 The engine already computes aerial perspective three ways, and chooses between them by camera altitude (`src/atmosphere/Sky.ts`):
 
-- **`volume`:** the precomputed volume, 32 × 32 directions × 128 distances, read per pixel. It is cheap. From higher up, neighbouring rays in the volume are kilometres apart in height near the ground, where the haze changes fastest, so interpolating between them draws bands at the volume's row spacing.
+- **`volume`:** the precomputed volume, 32 × 32 directions × 128 distances, read per pixel. It is cheap. From higher up, neighboring rays in the volume are kilometers apart in height near the ground, where the haze changes fastest, so interpolating between them draws bands at the volume's row spacing.
 - **`march`:** a march per vertex along the vertex's own ray (the opaque pass's `aerialMarch`), interpolated across each triangle. It is exact at vertices. Per pixel it cost 4.5 ms at 2.6 megapixels, so it runs per vertex.
-- **`screen`:** a 640 × 400 screen grid, each texel marching its own ray to the ellipsoid (`aerialScreenFragment`). From very high up the per-vertex march spans triangles hundreds of kilometres wide and drew blocky streaks at the day/night line; the grid doesn't.
+- **`screen`:** a 640 × 400 screen grid, each texel marching its own ray to the ellipsoid (`aerialScreenFragment`). From very high up the per-vertex march spans triangles hundreds of kilometers wide and drew blocky streaks at the day/night line; the grid doesn't.
 
 Today the choice blends by altitude: from the volume to the march between `MARCH_FROM` and `MARCH_TO` (2 to 5 km), and from the march to the screen grid between `SCREEN_HAZE_FROM` and `SCREEN_HAZE_TO` (500 to 1000 km).
 
@@ -298,11 +298,11 @@ Device facts that need fixing on the way (CS-20):
   - The catalog, the rules and the personas are data: typed literals with no functions.
   - Predicates are a tiny typed language over facts and context (`equals`, `in`, `above`, `below`, `all`, `any`), so rules can be listed, checked for reachability, shown in the inspector and serialized.
   - One pure resolver.
-  - A seam test (`test/seams.test.ts` pattern) fails naming the line when anything outside `src/profile/` and `src/gpu/` reads `device.features`, `adapter.info`, `capabilities.` or `limits.` to choose behaviour. Render code reads `effective` and `paths`.
+  - A seam test (`test/seams.test.ts` pattern) fails naming the line when anything outside `src/profile/` and `src/gpu/` reads `device.features`, `adapter.info`, `capabilities.` or `limits.` to choose behavior. Render code reads `effective` and `paths`.
 - **Typed settings.** The catalog generates the option types. Unknown keys and out-of-range values throw at the API boundary. The Hydra failure (accepted, then ignored) can't happen.
 - **Personas: a matrix of synthetic devices.**
   - `src/profile/personas.ts` holds named fact sets: `m2-chrome`, `intel-uhd-4k`, `swiftshader` (fallback adapter), `minimum-limits`, `no-optional-features`, `no-float32-blendable`, `webgl2-basic` (with the WebGL 2 plan), and `worker` variants.
-  - `test/fakeGpu.ts` grows the means to fake them: a features set, adapter info including `isFallbackAdapter`, and a `requestDevice` that honours `requiredFeatures`. Today it can't.
+  - `test/fakeGpu.ts` grows the means to fake them: a features set, adapter info including `isFallbackAdapter`, and a `requestDevice` that honors `requiredFeatures`. Today it can't.
 - **Invariant tests over personas × looks × fidelity:**
   1. every feature resolves on every persona, with no exception and a documented fallback;
   2. every renderer persona supports the required content kinds (globe, terrain, imagery, meshes);
@@ -417,13 +417,13 @@ Sized for one agent each. Use Sonnet unless marked Opus. Each milestone runs typ
 
 | # | Milestone | Size | Depends on | Browser |
 | --- | --- | --- | --- | --- |
-| CS-20 | **Facts and personas.** `DeviceFacts` from `device.features` (not the adapter), limits, adapter info with `isFallbackAdapter`, probes as facts. `fakeGpu.ts` fakes features, adapter info and `requiredFeatures`. Persona fact sets. No behaviour change | S | – | none |
-| CS-21 | **Catalog, rules, resolver** (Opus). `src/profile/` types, the predicate language, the catalog's first entries, rules from today's behaviour, `resolve()` with explain trails, `support()`. The invariant tests 1–9 over personas. Node only, not wired in | M | CS-20 | none |
+| CS-20 | **Facts and personas.** `DeviceFacts` from `device.features` (not the adapter), limits, adapter info with `isFallbackAdapter`, probes as facts. `fakeGpu.ts` fakes features, adapter info and `requiredFeatures`. Persona fact sets. No behavior change | S | – | none |
+| CS-21 | **Catalog, rules, resolver** (Opus). `src/profile/` types, the predicate language, the catalog's first entries, rules from today's behavior, `resolve()` with explain trails, `support()`. The invariant tests 1–9 over personas. Node only, not wired in | M | CS-20 | none |
 | CS-22 | **Paths in one place.** Move every facts read (star submission, moments format, KTX2 target, sample-rate probe, timer) behind `paths(facts)` and `effective`. Add the seam test | S | CS-21 | one parity page per changed path |
 | CS-23 | **Wire into `Engine` and `View`** (Opus for review). `view.support`, `view.effective`, `view.explain`, the `support` notice kind, `warnOnce`, `strict`, `warnings`. Re-resolve on resize and device loss. Glare migrated. The ambient occlusion cap, World clamps, the slice pool, screen-space error and caster scale as limit notices | M | CS-22 | glare and translucency parity |
 | CS-24 | **`resolution` and `msaa`** (Opus for review). A scaled scene target and an upscaling output pass, with overlays, labels and UI at full resolution. Picks mapped from CSS coordinates to the scaled targets. `msaa: "1x+fxaa"` with the per-pixel translucency path and pipelines rebuilt on change. Measure each step's GPU time at the owner's 1718 × 1406 | M | CS-23 | parity at each step; one timing page |
 | CS-25 | **Aerial perspective steps.** `volume`, `march` and `screen` as steps, with the catalog's `rank` field and the altitude rule. Under `fixed` the output matches today's. Measure each method's cost per altitude band before any cost rule | S | CS-23 | aerial perspective parity at three altitudes |
-| CS-26 | **The resolution governor.** `EngineOptions.governor`, the timestamp and tick-spacing inputs, the hysteresis, a return to `1` when settled, `stepped` notices, and the scale series in the inspector's Frame section. A Node test with synthetic timings | S | CS-24 | one page to check the settle-and-restore behaviour |
+| CS-26 | **The resolution governor.** `EngineOptions.governor`, the timestamp and tick-spacing inputs, the hysteresis, a return to `1` when settled, `stepped` notices, and the scale series in the inspector's Frame section. A Node test with synthetic timings | S | CS-24 | one page to check the settle-and-restore behavior |
 | CS-27 | **Inspector and emulation.** The Profile section (DOM-skeleton test), notices in Problems, `emulate`, Dyno `?persona=` | M | CS-23 | one inspector page, both themes |
 | CS-28 | **`@cesium/next/gpu` entry point.** Move exports, update the surface and the import-boundary test. The main API keeps no GPU type | S | CS-23 | none |
 | CS-29 | **Viewer migration and defaults.** One defaults table, the Viewer's overrides removed, its capacities resolved (questions 1 and 6) | S | CS-23 | the Viewer example |

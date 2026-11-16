@@ -207,7 +207,7 @@ public struct Placed {
 // lattice that only carries it has weight 0).
 //
 // `morph` is a terrain tile's geomorph (surface.slang `morphOf`): its xyz the
-// vertex's move so far along the normal, in metres, and w the change of its
+// vertex's move so far along the normal, in meters, and w the change of its
 // height. The caller has moved `positionMC` by xyz; an h·n̂ term adds xyz to
 // its attribute, a profile term lifts the height plus w. Zero: no morph.
 public Placed placeVertex(uint placement, float3 positionMC, uint vertexIndex, uint directory, uint feature, float4 morph) {

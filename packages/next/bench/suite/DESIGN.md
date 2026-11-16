@@ -95,7 +95,7 @@ change as the harness's pages land.
 
 One page per scene (`/scenes/$scene`), top to bottom: the scene live in
 one or two engines side by side (the former Explorer), its content and
-licences, then its measured results (best results, history, changes,
+licenses, then its measured results (best results, history, changes,
 requests, filmstrip). The live view's engines and place on the camera
 path are in the page's search, so a report links to a moment. It loads
 with the page; the engines share one GPU and main thread, so its
@@ -122,7 +122,7 @@ milestones named by their outcome, each with an `outcome` sentence,
   behind Flow is the one read from git, since the read API has none yet.
   Long outcomes (milestones with no parent) take the place initiatives
   had; a project reaches one through its milestones.
-- **Scope, search and views.** At the top, a labelled Scope button names
+- **Scope, search and views.** At the top, a labeled Scope button names
   the scope (all work, a long outcome, a project, a milestone) and opens
   the picker; the lines above the scope follow it, to go back up, with a
   button back to all work. A Search field sits beside it; both narrow

@@ -1,7 +1,7 @@
 /*
  * The design globe's panel and HUD (examples/design-globe/DESIGN.md).
- * StrataKit tokens only, with one exception, the placements' colours (the
- * 3D viewport's colours, which Dyno's guide exempts), each with a tone for
+ * StrataKit tokens only, with one exception, the placements' colors (the
+ * 3D viewport's colors, which Dyno's guide exempts), each with a tone for
  * light surfaces and one for dark: orange for rigid, cyan for reprojected,
  * the frames explorer's trajectory and Earth-fixed tones (its DESIGN.md
  * "Frame families"), both at least 4.5:1 on StrataKit's surfaces.
@@ -105,7 +105,7 @@
   background: var(--stratakit-color-icon-info-base);
 }
 
-/* The placement switch: each option with its placement's colour. */
+/* The placement switch: each option with its placement's color. */
 .dg-switch {
   align-self: flex-start;
   flex-wrap: wrap;

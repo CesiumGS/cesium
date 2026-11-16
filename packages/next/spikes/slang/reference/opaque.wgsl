@@ -72,7 +72,7 @@ fn airTransmittanceUv(r: f32, mu: f32, bottom: f32, top: f32) -> vec2f {
 // angle (radians). The Earth's shadow in the air is soft over about a
 // degree (the sun's disk, refraction near the horizon), and a step of the
 // march spans more from high up: a hard test drew a ladder of stripes
-// across the day/night line, neighbouring rays' steps crossing it apart.
+// across the day/night line, neighboring rays' steps crossing it apart.
 fn sunAbove(r: f32, mu: f32, bottom: f32, soft: f32) -> f32 {
   let horizon = -sqrt(max(0.0, 1.0 - (bottom / r) * (bottom / r)));
   let above = asin(clamp(mu, -1.0, 1.0)) - asin(horizon);

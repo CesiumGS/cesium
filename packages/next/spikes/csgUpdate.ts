@@ -124,16 +124,16 @@ export async function runCsgUpdate(): Promise<{
             const edgesMs = performance.now() - edgeStart;
             // Aim the camera at the solid and draw until every draw is diced and shown.
             const { min, max } = result.bounds;
-            const centre = [0, 1, 2].map((k) => (min[k]! + max[k]!) / 2);
+            const center = [0, 1, 2].map((k) => (min[k]! + max[k]!) / 2);
             const size = Math.max(
               max[0]! - min[0]!,
               max[1]! - min[1]!,
               max[2]! - min[2]!,
             );
             view.camera.position.set([
-              centre[0]!,
-              centre[1]! - 2 * size,
-              centre[2]! + size,
+              center[0]!,
+              center[1]! - 2 * size,
+              center[2]! + size,
             ]);
             view.camera.direction.set([0, 2 * size, -size]);
             view.camera.orient(Float64Array.of(0, 0, 1));
@@ -159,7 +159,7 @@ export async function runCsgUpdate(): Promise<{
             if (i < WARM) {
               continue;
             }
-            put("modelling", done.kernelMs);
+            put("modeling", done.kernelMs);
             put("extract", done.convertMs);
             put("bounds", result.boundsMs ?? 0);
             put("prepare", result.prepareMs ?? 0);

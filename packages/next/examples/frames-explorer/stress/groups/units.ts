@@ -55,7 +55,7 @@ const unitsCase = stressCase(
     ) => distance(frame.toBodyFixed(to), frame.toBodyFixed(from));
 
     // 1. The same place: the zone's false origin, in each frame's numbers (the
-    //    false easting and northing are metres, so the international-foot
+    //    false easting and northing are meters, so the international-foot
     //    numbers are larger by the ratio). 3280.84 of each frame's feet east
     //    from it: the lengths differ by the ratio alone, since both lines lie
     //    where the scale factor is the same.

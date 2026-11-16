@@ -45,7 +45,7 @@ describe("orionLegend (R8: computed, not fixed text)", () => {
     // S-I7: one line, the figure, its 1σ and one qualifier.
     expect(l.accuracy).toBe("±10 m (1σ), taken as TDB");
     expect(l.detail).toContain("2026-04-06 23:00 UTC");
-    expect(l.detail).toMatch(/against the Earth's centre/);
+    expect(l.detail).toMatch(/against the Earth's center/);
     expect(l.detail).toMatch(/mostly the unstated time scale/);
     expect(l.detail).toMatch(/Drawn in GCRF/);
     // It rests on an assumption (TDB taken for an unstated scale).

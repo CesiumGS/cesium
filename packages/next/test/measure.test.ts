@@ -235,7 +235,7 @@ describe("measure", () => {
     );
   });
 
-  it("honours signal: false", () => {
+  it("honors signal: false", () => {
     const m = measure(
       station,
       framePoint(frames.itrf, [6378137, 6000, 8000]),

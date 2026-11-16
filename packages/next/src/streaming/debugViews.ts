@@ -1,12 +1,12 @@
-// The engine's debug views (`View.debug`): what each shows, the colours the
+// The engine's debug views (`View.debug`): what each shows, the colors the
 // shader draws them in, and the word a tile's draw carries for them.
 //
-// A debug view replaces the opaque pass's lighting with a flat colour and
+// A debug view replaces the opaque pass's lighting with a flat color and
 // keeps its depth. Per tile the CPU writes one word into the draw's record
 // (`DrawRecord.debug`, through the per-draw constants seam): the tile's
 // level, its state, and its screen-space error and stretch as log-scaled
 // bytes. The mode is the view's (`View.time.w`), so a view with debug off
-// reads one uniform and nothing else. The colours below are written again,
+// reads one uniform and nothing else. The colors below are written again,
 // as the same numbers, in shaders/surface.slang (`DEBUG_LEVEL_COLORS` and
 // the ramps); test/debugViews.test.ts holds the two to each other.
 
@@ -44,15 +44,15 @@ export const TileDebugState = {
 export type TileDebugState =
   (typeof TileDebugState)[keyof typeof TileDebugState];
 
-/** One colour of a legend, as the view draws it. */
+/** One color of a legend, as the view draws it. */
 export interface DebugLegendEntry {
-  /** What the colour means. */
+  /** What the color means. */
   readonly label: string;
-  /** The colour as displayed: `#rrggbb`. */
+  /** The color as displayed: `#rrggbb`. */
   readonly color: string;
 }
 
-/** What the colours of a debug view mean (`View.debugLegend`). */
+/** What the colors of a debug view mean (`View.debugLegend`). */
 export interface DebugLegend {
   readonly mode: DebugView;
   /** A short heading for the legend. */
@@ -71,7 +71,7 @@ type Rgb = readonly [number, number, number];
 
 /**
  * Tile levels, repeating every eight: the Okabe-Ito palette (distinguishable
- * with the common kinds of colour blindness), as sRGB bytes.
+ * with the common kinds of color blindness), as sRGB bytes.
  */
 export const DEBUG_LEVEL_COLORS: readonly Rgb[] = [
   [230, 159, 0],
@@ -102,7 +102,7 @@ export const DEBUG_STRETCH_RAMP: readonly Rgb[] = [
   [253, 231, 55],
 ];
 
-/** `TileDebugState`'s colours, by its value. */
+/** `TileDebugState`'s colors, by its value. */
 export const DEBUG_STATE_COLORS: readonly Rgb[] = [
   [0, 158, 115],
   [230, 159, 0],
@@ -110,7 +110,7 @@ export const DEBUG_STATE_COLORS: readonly Rgb[] = [
   [86, 180, 233],
 ];
 
-/** The colour of a tile with no data for the view (a tile not yet selected). */
+/** The color of a tile with no data for the view (a tile not yet selected). */
 export const DEBUG_NO_DATA: Rgb = [90, 90, 90];
 
 /** The error scale: log2 of (screen-space error ÷ threshold) from here to there. */
@@ -141,7 +141,7 @@ export interface TileDebug {
   /** The tile's level in its tree (past 255 it reads 255). */
   level: number;
   state: TileDebugState;
-  /** A number from 0 to 31 that tells the tile from its neighbours (the "tiles" view's colour). */
+  /** A number from 0 to 31 that tells the tile from its neighbors (the "tiles" view's color). */
   hash: number;
   /** Its screen-space error over the view's threshold; below 1/16 or above 4 clamps. */
   error: number;
@@ -197,7 +197,7 @@ export function debugLegend(mode: DebugView): DebugLegend {
         mode,
         title: "Tile level",
         description:
-          "Each tile is coloured by its level in its tree; the eight colours repeat. Level 0 is the first colour.",
+          "Each tile is colored by its level in its tree; the eight colors repeat. Level 0 is the first color.",
         kind: "categories",
         entries: DEBUG_LEVEL_COLORS.map((c, i) => ({
           label: `Level ${i}, ${i + 8}, ...`,
@@ -209,7 +209,7 @@ export function debugLegend(mode: DebugView): DebugLegend {
         mode,
         title: "Tiles",
         description:
-          "Each tile has its own colour. Terrain tiles show a dark edge along their boundary.",
+          "Each tile has its own color. Terrain tiles show a dark edge along their boundary.",
         kind: "none",
         entries: [],
       };

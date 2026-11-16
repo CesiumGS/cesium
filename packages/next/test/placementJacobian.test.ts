@@ -55,7 +55,7 @@ function lattice(cells: number, seed: number, scale = 2): CubicLattice {
 
 /**
  * Points in the tile and outside it that are not near a cell boundary of any
- * of `ls` (which share a centre and scale), `reach` tiles' radii out at most.
+ * of `ls` (which share a center and scale), `reach` tiles' radii out at most.
  */
 function points(
   ls: CubicLattice[],

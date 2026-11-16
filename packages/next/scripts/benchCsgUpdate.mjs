@@ -14,7 +14,7 @@
 // Needs `npm run setup` (both kernels and the NIST STEP samples). The
 // browser's share (World.addBrep, the first dice and draw) is `spikes/csgUpdate.html`.
 // Stages, per update, ms:
-//   modelling  primitives, placements and booleans in the kernel
+//   modeling  primitives, placements and booleans in the kernel
 //   extract    the kernel's solid to the render form (faces, trims, edges)
 //   bounds     formBounds, in the worker
 //   prepare    prepareGpuPatches (spans, trim curves and bands), in the worker
@@ -143,7 +143,7 @@ for (const [sceneName, scene] of Object.entries(SCENES)) {
             }),
           );
           samples.push({
-            modelling: done.kernelMs,
+            modeling: done.kernelMs,
             extract: done.convertMs,
             bounds: result.boundsMs ?? NaN,
             validate: result.validateMs ?? 0,
@@ -185,7 +185,7 @@ if (asJson) {
   console.log(JSON.stringify(rows, null, 2));
 } else {
   const columns = [
-    "modelling",
+    "modeling",
     "extract",
     "exReuse",
     "bounds",

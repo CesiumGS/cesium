@@ -33,7 +33,7 @@ const KINDS: { id: Kind; label: string; short: string; mark: string }[] = [
   { id: "design", label: "Gone by design", short: "By design", mark: "×" },
   {
     id: "changed",
-    label: "Changed behaviour",
+    label: "Changed behavior",
     short: "Changed",
     mark: "≠",
   },

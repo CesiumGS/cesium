@@ -48,7 +48,7 @@ export { GLARE_BRIGHT_STARS };
 
 /** Records in a view's list, the sun's among them (glare.slang `GLARE_SOURCES`). */
 export const GLARE_SOURCES = 256;
-/** Taps over the sun's disc (glare.slang `GLARE_DISC_TAPS`). */
+/** Taps over the sun's disk (glare.slang `GLARE_DISC_TAPS`). */
 export const GLARE_DISC_TAPS = 32;
 /** The pixels a view's sprites may cover. */
 export const GLARE_SPRITE_PIXELS = 4_000_000;
@@ -72,7 +72,7 @@ export const GLARE_SOURCES_BYTES = (GLARE_SOURCES + 1) * RECORD_BYTES;
 const FRAME_FLOATS = 88;
 
 /**
- * `n` points evenly spread in the unit disc: a Vogel spiral. glare.slang holds
+ * `n` points evenly spread in the unit disk: a Vogel spiral. glare.slang holds
  * `discTaps(32)` as a constant.
  */
 export function discTaps(n: number): [number, number][] {
@@ -488,7 +488,7 @@ export class GlareViewState {
  * a variance of 5/3 of a texel² per axis here.
  */
 export const DOWN_REACH = 1.2083;
-/** How far past the sun's disc the veil's input is masked, the view's pixels. */
+/** How far past the sun's disk the veil's input is masked, the view's pixels. */
 export const MASK_MARGIN = 1.5;
 
 /** The veil's passes, written in Slang (shaders/stages/glare*.slang, built by `npm run shaders`). */

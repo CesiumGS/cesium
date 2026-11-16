@@ -5,7 +5,7 @@
 // the Bernstein coefficients of a polynomial bound the polynomial. Bernstein
 // bounds tighten as the patch is cut, so each bound is the largest over a
 // grid of sub-patches (de Casteljau), scaled back to the whole patch's
-// parameters. Lengths are metres and angles are radians.
+// parameters. Lengths are meters and angles are radians.
 import type { BrepForm } from "./form.ts";
 
 /** Sub-patches per side: 2 puts a quarter circle's bounds within 0.1% of exact. */
@@ -408,7 +408,7 @@ function subNetBounds(net: Net): { ss: number; st: number; tt: number } {
     const o = index(i, j);
     return [h[o]! / h[o + 3]!, h[o + 1]! / h[o + 3]!, h[o + 2]! / h[o + 3]!];
   };
-  // The centre of the control points' box keeps R small.
+  // The center of the control points' box keeps R small.
   const low = [Infinity, Infinity, Infinity];
   const high = [-Infinity, -Infinity, -Infinity];
   let wmin = Infinity;
@@ -422,7 +422,7 @@ function subNetBounds(net: Net): { ss: number; st: number; tt: number } {
       wmin = Math.min(wmin, weight(i, j));
     }
   }
-  const centre = [0, 1, 2].map((k) => (low[k]! + high[k]!) / 2);
+  const center = [0, 1, 2].map((k) => (low[k]! + high[k]!) / 2);
   let reach = 0;
   for (let j = 0; j <= q; j++) {
     for (let i = 0; i <= p; i++) {
@@ -430,9 +430,9 @@ function subNetBounds(net: Net): { ss: number; st: number; tt: number } {
       reach = Math.max(
         reach,
         Math.hypot(
-          at[0]! - centre[0]!,
-          at[1]! - centre[1]!,
-          at[2]! - centre[2]!,
+          at[0]! - center[0]!,
+          at[1]! - center[1]!,
+          at[2]! - center[2]!,
         ),
       );
     }
@@ -455,7 +455,7 @@ function subNetBounds(net: Net): { ss: number; st: number; tt: number } {
             const w = weight(i + ii, j + jj);
             const at = point(i + ii, j + jj);
             for (let k = 0; k < 3; k++) {
-              sum[k]! += factor * w * (at[k]! - centre[k]!);
+              sum[k]! += factor * w * (at[k]! - center[k]!);
             }
             weights += factor * w;
           }

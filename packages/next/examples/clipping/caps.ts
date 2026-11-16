@@ -116,7 +116,7 @@ export class SectionCaps {
     this.mesh.setClip(set && mesh ? set : undefined);
   }
 
-  /** Makes the caps again from the same set (the colour changed). */
+  /** Makes the caps again from the same set (the color changed). */
   restyle(): void {
     this.follow(this.set, this.brepOn, this.meshOn);
   }

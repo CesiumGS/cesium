@@ -18,7 +18,7 @@ export function designTilesInputs(
   store: string,
 ): Promise<{ proj: ProjApi; grids: GridSource; frames: Frames }>;
 /**
- * The parts of a rigid placement's error at a design point, metres:
+ * The parts of a rigid placement's error at a design point, meters:
  * curvature d²/2R, scale d·|1 − 1/k| and the geoid's rise from the anchor.
  */
 export function rigidErrorTerms(

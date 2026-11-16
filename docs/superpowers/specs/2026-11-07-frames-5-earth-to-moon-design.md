@@ -28,7 +28,7 @@ engineering frames, placement modes and design picking. They did not touch
 how the engine draws. **Today the engine draws everything Earth-fixed:** plans
 2 and 3 decided "the world is not re-rooted" (R6), so that the frames work
 could land without changing the renderer. Every camera controller assumes the
-Earth. The sky shows the Earth's sunrise colours in orbit. A globe-only Viewer
+Earth. The sky shows the Earth's sunrise colors in orbit. A globe-only Viewer
 bundle carries the ERFA tables.
 
 **Plan 5 drops R6.** A view renders in its camera rig's position reference
@@ -106,7 +106,7 @@ What plan 5 builds on, as of 2026-11-07:
 ### Goals
 
 1. **A core that knows nothing about reference frames.** It draws in one flat
-   render space, in metres, with a transform per draw and a camera pose in it.
+   render space, in meters, with a transform per draw and a camera pose in it.
    Precision stays camera-relative, so one core serves a site, the Earth and
    the Moon.
 2. **A camera chain in layers,** each with one job and an interface to the
@@ -253,7 +253,7 @@ What plan 5 builds on, as of 2026-11-07:
 
 The owner's terms (2026-11-07), used throughout:
 
-- **Render space:** the core's one flat Cartesian space, in metres, with no
+- **Render space:** the core's one flat Cartesian space, in meters, with no
   meaning attached.
 - **Render root:** the reference frame a view's render space is, at a tick.
   It is the view's rig's position reference frame (section 7.5): ITRF for the
@@ -372,7 +372,7 @@ layer, for each view:
 **Without the frames module,** the resolver is the core's own transform
 table: its nodes and anchors are the only reference frames, so a rig can still
 follow a moving node. A rig on render space, with every anchor at the
-identity, is exactly today's behaviour.
+identity, is exactly today's behavior.
 
 **What "invisible" means.** Re-rooting is invisible to the application. It
 chooses the rig's reference frame, and that choice is visible, because it
@@ -414,7 +414,7 @@ and clocks are the animation core's (section 11).
 ### 7.3 What the owner decided
 
 - "The rendering core knows one flat space and nothing about frames: a
-  Cartesian render space in metres with no meaning attached, a transform per
+  Cartesian render space in meters with no meaning attached, a transform per
   draw, and a camera pose in it." The core's only reference-frame-adjacent
   feature is that a draw has a placement, affine or per vertex. Without the
   frames module, a draw's transform is a matrix the application sets.
@@ -566,7 +566,7 @@ A placement is one of:
     pick give content coordinates;
   - **fitted operation:** a coordinate operation fitted over one tile, as an
     affine map plus a low-order polynomial in tile-local coordinates, with a
-    stated error bound in metres. 5f uses it to lay the globe's tiles flat in
+    stated error bound in meters. 5f uses it to lay the globe's tiles flat in
     a design CRS.
 - **A blend of two placements** by `t`, for morphs (5f), driven by the
   animation core (5d).
@@ -638,7 +638,7 @@ highest precision anyone has asked for. While its precise data loads, it runs
 on its declared stand-in if it has one, stating the stand-in's accuracy, and
 its revision goes up when the data arrives. Without a stand-in, a query on it
 throws a named error until the data loads (plan 2 R3: reference frames throw,
-rendering falls back). Loading is async and cancellable (`AbortSignal`);
+rendering falls back). Loading is async and cancelable (`AbortSignal`);
 queries stay synchronous.
 
 **The sky in a globe-only app** asks for GCRF and the Sun at `"analytic"`. That
@@ -817,7 +817,7 @@ draw indirectly. "Plan 5 only keeps the seam open."
 - A placement is **data plus a Slang function**, not code inside one shader.
   A compute pass can evaluate it at sample points the content never had.
 - Each per-vertex kind states an **error bound** and enough about its local
-  behaviour (author's call: a bound on its second derivative over the tile) for
+  behavior (author's call: a bound on its second derivative over the tile) for
   a subdivider to choose a sampling rate by screen-space error.
 - The frames module answers, **per draw and per view, which placement applies
   and why** (the coordinate operation, the render root it was computed for, and
@@ -925,7 +925,7 @@ error in its own terms, and the library composes it. 5b builds the rest of
 - **A trajectory's covariance** becomes its reference frame's accuracy
   (Orion's).
 - **MOON_ME states an orientation accuracy.** Until a published figure is
-  found, it is the explorer's estimate, 3 × 10⁻⁷ rad, labelled "estimated".
+  found, it is the explorer's estimate, 3 × 10⁻⁷ rad, labeled "estimated".
 - **`accuracyOf` is rebuilt on `pointAccuracy`.** The explorer's catalog
   numbers may move only where a bound tightens, and a test lists each move.
 
@@ -950,7 +950,7 @@ behind section 7.10's query interface:
 ### 9.6 Bulk work
 
 The owner: "Plan 5 decides only whether the library offers them as
-cancellable (`AbortSignal`), progress-reporting operations that run in a
+cancelable (`AbortSignal`), progress-reporting operations that run in a
 worker or under the engine's per-frame budget." **Decided here (author's call):
 yes.** One shape for every bulk operation: options with `signal` and
 `onProgress`, and a promise of the result. An operation runs in a worker when
@@ -985,7 +985,7 @@ formatting inside the widget. Design **(author's calls)**:
   a small interface (a position in, an IANA name out). A boundary table may be
   offered later as a lazy provider, as other providers are; plan 5 ships none
   **(author's call)**. Without a lookup, a place's time is its solar time,
-  labelled so.
+  labeled so.
 - `timeControls` takes the formatter, and the design globe gives each site
   its IANA zone. The Artemis example shows UTC, with mission elapsed time
   beside it.
@@ -1337,7 +1337,7 @@ Design **(author's calls)**:
   attached to. What is seen through each is composited physically: the Moon
   seen through the Earth's air from the ground; the Earth's limb shell against
   a black sky from the Moon.
-- The explorer's orbit scenes showing the Earth's sunrise colours in space are
+- The explorer's orbit scenes showing the Earth's sunrise colors in space are
   "a bug in how the camera's position reaches the atmosphere, not a missing
   blend".
 - From [bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) "Other bodies": the Moon lit by the sun with a regolith BRDF
@@ -1388,7 +1388,7 @@ Design **(author's calls)**:
 - Sky radiance agrees with `AtmosphereReference` at altitudes from the ground
   to 1,000 km, and from the Moon's distance, at the gate's tolerances.
 - Above the atmosphere, the sky away from the Earth is black but for the stars
-  and the sun. The explorer's orbit scenes no longer show sunrise colours.
+  and the sun. The explorer's orbit scenes no longer show sunrise colors.
 - The Moon seen from the Earth's ground is attenuated by the air's
   transmittance at its elevation.
 - An Earth-only globe scene's pixels are unchanged.
@@ -1416,12 +1416,12 @@ Decided by the owner ([bodies-frames-and-engineering-coordinates.md](../../desig
 Design:
 
 - **The tree's ITRF is ITRF2020** **(author's call).** The frames spec treated
-  ITRF as WGS84 (they agree to centimetres). Naming the realization lets a route
+  ITRF as WGS84 (they agree to centimeters). Naming the realization lets a route
   end there. WGS84 (G2296) stays an alias, stated as agreeing to a few
-  centimetres.
+  centimeters.
 - **Epochs.** A design point is related at the engineering frame's coordinate
   epoch. Plate motion between that epoch and the scene's instant (a few
-  centimetres a year) is stated as an accuracy term when it exceeds 1 cm, never
+  centimeters a year) is stated as an accuracy term when it exceeds 1 cm, never
   ignored silently **(author's call)**.
 - **4b's pins** (`CORRIDOR_PIPELINE`, `PHOENIX_PIPELINE`) become unnecessary
   when the defaults pick GEOID18. They stay as tests that the defaults choose
@@ -1462,7 +1462,7 @@ Design **(author's calls)**:
   design end and the globe controller at the other.
 - **Its blend reference frame** is the rigid tangent frame at the
   engineering frame's anchor (4b's `RigidPlacement`). At `t = 0`, a draw's
-  position is its design position, in metres. At `t = 1`, it is its
+  position is its design position, in meters. At `t = 1`, it is its
   Earth-fixed position, carried into that tangent frame rigidly. Both ends are
   in one Cartesian space, so the blend is a per-vertex mix. While the morph
   runs, the tangent frame is the view's root; when it completes, the root is
@@ -1522,7 +1522,7 @@ d²/8R at its middle: 2 cm for 1 km, 2 m for 10 km.
 question 4):**
 
 - **State the rule.** `BENTLEY_engineering_frame` gains a declared chord
-  tolerance: the largest sag the producer allowed, in metres. 4b's generator
+  tolerance: the largest sag the producer allowed, in meters. 4b's generator
   writes it (it already subdivides to the tile's geometric error).
 - **Measure what wasn't declared.** For a reprojected tile that declares
   nothing, the decoder computes its largest face's sag in the worker and
@@ -1643,7 +1643,7 @@ to be tried and tuned. **Design (author's calls, to be tried):**
 - **Which rig and controller per reference frame** is a small table of data
   **(author's call)**: a stage's body-fixed frame gets an orbit rig about it
   with the orbit controller; ITRF and MOON_ME get their body's globe controls;
-  GCRF gets an orbit rig about the Earth's centre on the `"inertial"` preset;
+  GCRF gets an orbit rig about the Earth's center on the `"inertial"` preset;
   the pad's site frame gets the globe controls near the pad. The application
   can change the table.
 - **The widget is public.** The frames explorer's tree diagram is promoted
@@ -1656,7 +1656,7 @@ to be tried and tuned. **Design (author's calls, to be tried):**
   **(author's call)**. The self-directing replay (section 14.3) is its tour,
   and it can be left at any point for free exploration.
 - **Before 5h lands,** the stack stands on the pad until T−0, and the replay
-  then jumps, labelled as a jump, to the first state of the trajectory data
+  then jumps, labeled as a jump, to the first state of the trajectory data
   **(author's call)**. 5g ships without 5h.
 - **Data, from setup into the store:** the Artemis II OEM (primary, plan 2 R9)
   and SPK; DE440 and the lunar PCK; EOP; NAIF's DSN station SPK; the DSN
@@ -1669,13 +1669,13 @@ to be tried and tuned. **Design (author's calls, to be tried):**
   for SLS Block 1, Orion, the mobile launcher, Launch Complex 39B and the
   crawler, and credits each model it uses. Orion is the CC-BY Sketchfab model,
   which the owner downloads (it needs a login) and which is credited; NASA's
-  crew-module mesh is the fallback. A stage with no public model is modelled
+  crew-module mesh is the fallback. A stage with no public model is modeled
   simply, from published dimensions.
 - **The mission clock** shows T− and T+ mission elapsed time, with UTC beside
   it (section 9.7).
 - **The hypothetical lunar south-pole antenna** in its own site grid (IAU 2015
-  south polar stereographic, as 4a's Moon case), labelled hypothetical. A
-  hypothetical relay may be added, labelled the same way.
+  south polar stereographic, as 4a's Moon case), labeled hypothetical. A
+  hypothetical relay may be added, labeled the same way.
 - **Cameras:** the presets from §8.2 (departure after the TLI burn, the far-side
   flyby, Earthset over the lunar horizon, the loss of signal behind the Moon,
   closest approach, a DSN dish slewing to track Orion near a handover, and
@@ -1684,25 +1684,25 @@ to be tried and tuned. **Design (author's calls, to be tried):**
   are the camera director's shots. "Follow" is an orbit rig on any stage. Free
   flight is 5d's free-fly.
 - **The flight path,** sampled as a bulk operation (5b), drawn in a chosen
-  reference frame, with the simulated spans drawn and labelled differently
+  reference frame, with the simulated spans drawn and labeled differently
   from the data. **The "figure-eight" needs the Earth–Moon rotating frame**
   **(author's call):** the frames spec says "the Earth's: the figure-eight",
   but in GCRF the path is a loop, not a figure-eight. The figure-eight shows in
-  an Earth-centred reference frame with x toward the Moon and the Moon's orbit
+  an Earth-centered reference frame with x toward the Moon and the Moon's orbit
   in the xy plane, which is a two-vector frame (5b). The path offers GCRF,
   ITRF, MOON_ME and that rotating frame.
 - **Readouts** for any stage and a picked point in ITRF, MOON_ME, GCRF and a
-  Sun-centred reference frame (ICRF axes at the Sun), each with its accuracy,
+  Sun-centered reference frame (ICRF axes at the Sun), each with its accuracy,
   or "simulated" on a simulated span.
 - **The communications overlay,** as §8.2 lists it, on `measure`: the DSN
   links while they exist, range, light time, range rate, Doppler at 2216.5 MHz,
   free-space path loss, and received power, G/T, C/N0, Eb/N0 and margin from
   DSN 810-005's ground figures and assumed Orion figures (EIRP about 15 dBW,
-  labelled assumed). Visibility windows and handovers against each station's
+  labeled assumed). Visibility windows and handovers against each station's
   masks. The data rate as observed, and the O2O laser demo as an annotation.
   **Before the DSN acquires Orion** (launch and ascent go through the Near
   Space Network's relay satellites), the overlay says the links are the Near
-  Space Network's and aren't modelled: the relays' positions need TEME and
+  Space Network's and aren't modeled: the relays' positions need TEME and
   SGP4, an add-on outside plan 5 (section 3) **(author's call)**. If the add-on
   lands first, the relay links join the overlay.
 - **The Moon's occultation,** checked two ways: against the published
@@ -1774,7 +1774,7 @@ The frames spec §8.2's "phases outside the data" grow, with the owner's story
   the service module's separation and break-up, the crew module's entry,
   the six-minute blackout, the parachutes, and splashdown. The capsule then
   floats in place and the replay ends.
-- **Labelled and excluded.** Every simulated span is labelled simulated, kept
+- **Labeled and excluded.** Every simulated span is labeled simulated, kept
   apart from the exact data, and excluded from measurements' accuracy claims.
   The timeline marks the simulated spans as such.
 - **The launch time and event times** come from public sources, cited in the
@@ -1817,7 +1817,7 @@ interfaces"):
   patterns around async work.
 - **Demote** what is exported only because an example reaches into it, or
   exposes internals.
-- **Shape:** sync against async, `AbortSignal` wherever work can be cancelled,
+- **Shape:** sync against async, `AbortSignal` wherever work can be canceled,
   `dispose` lifetimes, events or subscriptions against polling, units and
   reference frames named in types, and errors that say what to do.
 - **Stability tiers:** which parts are stable and which experimental, how that
@@ -1961,7 +1961,7 @@ the default plan 5 follows if the owner says nothing.
   isn't, so the warning in section 10.4 names the right cause.
 - **The impostor's albedo map** is today's sky map; its source and credit are
   checked when the impostor gets its own credit (section 10.4).
-- **Orion's comms parameters** are assumed and labelled.
+- **Orion's comms parameters** are assumed and labeled.
 - **ion's terms** for an open-source demo with a user-supplied token are the
   normal Sandcastle pattern, not confirmed with Cesium.
 - **The Sketchfab Orion** needs the owner to download it.
@@ -1972,8 +1972,8 @@ the default plan 5 follows if the owner says nothing.
   (NASA's press kit and mission updates) and cited, before 5h fits the ascent.
 - **The models survey** (section 14.5): which public models of SLS Block 1,
   Orion, the mobile launcher, Launch Complex 39B and the crawler exist, their
-  licences and credits.
-- **The Near Space Network's links** during launch and ascent are not modelled
+  licenses and credits.
+- **The Near Space Network's links** during launch and ascent are not modeled
   in plan 5 (section 14.5) unless the TEME and SGP4 add-on lands first.
 - **The lunar reference systems** ([bodies-frames-and-engineering-coordinates.md](../../design/bodies-frames-and-engineering-coordinates.md) "Watch"): LunaNet's LRS standard,
   ILuRF2026 and a lunar height system are to be checked before 5g builds the

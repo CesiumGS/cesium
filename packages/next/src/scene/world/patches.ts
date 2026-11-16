@@ -308,7 +308,7 @@ export function placementBounds(
   for (const { term, weight } of placed?.terms ?? []) {
     const [lo, hi] = weightInterval(weight);
     const w = Math.max(Math.abs(lo), Math.abs(hi));
-    // How far the draw's points are from the lattice's centre, in its units.
+    // How far the draw's points are from the lattice's center, in its units.
     const reach =
       term.kind === "cubic"
         ? (Math.hypot(

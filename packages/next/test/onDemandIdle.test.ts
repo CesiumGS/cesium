@@ -115,8 +115,8 @@ describe("f16round (the test meter's fp16)", () => {
     [-2, -2],
     [0.1, 0.0999755859375],
     [17_188, 17_184], // halves are 16 apart in [16384, 32768)
-    [1 + 2 ** -11, 1], // a tie: to the even neighbour
-    [1 + 3 * 2 ** -11, 1 + 2 ** -9], // a tie: to the even neighbour
+    [1 + 2 ** -11, 1], // a tie: to the even neighbor
+    [1 + 3 * 2 ** -11, 1 + 2 ** -9], // a tie: to the even neighbor
     [65_504, 65_504], // the largest half
     [65_519, 65_504], // under the tie with 2^16
     [65_520, Infinity], // the tie rounds to even, 2^16: overflow

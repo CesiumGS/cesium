@@ -38,7 +38,7 @@ export const unit = (a: ArrayLike<number>): V3 => scale(a, 1 / length(a));
 /**
  * The site the scene stands on: the sample tileset's place (Philadelphia),
  * where the model and the part are put beside it. Everything the example
- * keeps is in local metres, east, north and up at the site; `Site` takes it
+ * keeps is in local meters, east, north and up at the site; `Site` takes it
  * to Earth-fixed coordinates, which is ITRF, the frame the clips are named
  * in, and back.
  */
@@ -57,7 +57,7 @@ export interface Site {
   worldDirection(local: ArrayLike<number>): Float64Array;
   /** An Earth-fixed direction, local. */
   localDirection(world: ArrayLike<number>): V3;
-  /** A column-major matrix in local metres, as an Earth-fixed one. */
+  /** A column-major matrix in local meters, as an Earth-fixed one. */
   matrix(local: ArrayLike<number>): Float64Array;
   /**
    * `matrix` without the site's translation: what `World.addBrep`'s `model`
@@ -131,8 +131,8 @@ export function createSite(): Site {
 }
 
 /**
- * A part placed at `at` (local metres), `size` times as big, as a
- * column-major matrix in local metres. `yUp` turns a glTF's Y-up axes to the
+ * A part placed at `at` (local meters), `size` times as big, as a
+ * column-major matrix in local meters. `yUp` turns a glTF's Y-up axes to the
  * site's Z-up first (a quarter turn about x).
  */
 export function placement(

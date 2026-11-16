@@ -117,7 +117,7 @@ export class Frame<N extends string = string> {
    * replaced (and `revision` bumped) only when the current one differs from
    * it by more than 1% of the published figure or 1 mm, whichever is
    * larger. For `radians`, 1 mm is 1 mm at 6,378,137 m. A change of kind
-   * (metres, radians, by definition, not stated) always publishes. The
+   * (meters, radians, by definition, not stated) always publishes. The
    * first call publishes without a bump: nothing has seen an earlier figure.
    */
   publishedAccuracy(instant: Instant): Readonly<FrameAccuracy> {

@@ -1,8 +1,8 @@
 /*
  * The measurements' details and their labels over the globe (DESIGN.md
- * "The sidebar", "The viewer"; the evidence rows are toolbar.css's). StrataKit tokens; the placements' colours from panel.css;
+ * "The sidebar", "The viewer"; the evidence rows are toolbar.css's). StrataKit tokens; the placements' colors from panel.css;
  * the measure line's yellow and the survey disk's bronze are the 3D view's
- * own colours (Dyno's guide exempts them), used over the dark HUD only.
+ * own colors (Dyno's guide exempts them), used over the dark HUD only.
  */
 .dg-measure {
   --dg-measure: #fde047;
@@ -207,7 +207,7 @@
   box-shadow: none;
 }
 
-/* Station 170,000 where it truly is: a cyan diamond, labelled. */
+/* Station 170,000 where it truly is: a cyan diamond, labeled. */
 .dg-m-pin {
   pointer-events: none;
 }
@@ -330,7 +330,7 @@
   white-space: pre;
 }
 
-/* The keyboard's crosshair at the view's centre. */
+/* The keyboard's crosshair at the view's center. */
 .dg-m-crosshair {
   position: absolute;
   inset-block-start: 50%;

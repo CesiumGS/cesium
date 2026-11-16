@@ -185,7 +185,7 @@ describe("design globe checks view", () => {
     expect(design.difference).toMatch(/within 0\.000001 ftUS \(exact\)$/);
   });
 
-  it("writes small amounts without e-notation: SI prefixes for metres, decimals otherwise", () => {
+  it("writes small amounts without e-notation: SI prefixes for meters, decimals otherwise", () => {
     expect(amount(3.5e-9, "m")).toBe("3.5 nm");
     expect(amount(3e-7, "m")).toBe("0.3 µm");
     expect(amount(-0.0066, "m")).toBe("0.0066 m");

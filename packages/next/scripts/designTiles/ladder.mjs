@@ -10,7 +10,7 @@
 //    and `draw(builder)`, or `draw: null` where the part is dropped.
 //  - A ground is a flat rectangle (a runway, a site plan, the water), cut
 //    into cells at each level small enough for the sag rule there, each
-//    cell in the tile holding its centre. `lods` as a part's, without draw:
+//    cell in the tile holding its center. `lods` as a part's, without draw:
 //    `{ error, keep }`.
 //  - The tree splits the footprint's box in two along every axis longer
 //    than `leafSize`, until none is, so every leaf is at one depth. A tile
@@ -32,7 +32,7 @@ import { blockPlan } from "./blockMesh.mjs";
 import { campusPlan } from "./campusMesh.mjs";
 import { coarsen, detailFeatures, trianglesOf, weld } from "./coarsen.mjs";
 import {
-  LAYER_METRES,
+  LAYER_METERS,
   MeshBuilder,
   edgeSag,
   longestEdge,
@@ -43,8 +43,8 @@ import { portPlan } from "./portMesh.mjs";
 import { buildingPlan } from "./siteMesh.mjs";
 import { solarFarmPlan } from "./solarFarmMesh.mjs";
 
-/** A leaf's geometric error, metres: the sag rule's tolerance at the leaves. */
-export const LEAF_ERROR_METRES = 0.001;
+/** A leaf's geometric error, meters: the sag rule's tolerance at the leaves. */
+export const LEAF_ERROR_METERS = 0.001;
 /** A coarse tile clusters its solids on cells of its larger side / this. */
 export const CELL_DIVISOR = 64;
 
@@ -312,7 +312,7 @@ export function ladderTree(plan, { leafError, metersPerUnit }) {
         ground: groundAt(level),
         detail: (feature) => details.has(feature),
         cell,
-        layer: LAYER_METRES / mpu,
+        layer: LAYER_METERS / mpu,
         // Half a cell at least: a bound found fast where it holds.
         target: Math.max(error, cell / 2),
       });

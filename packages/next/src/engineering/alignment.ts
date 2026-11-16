@@ -374,7 +374,7 @@ export class Alignment {
         const dy = py - y;
         // The slack is a bound on position; a position error δ moves the
         // foot's arc length by δ/|f'(s)|, f'(s) = −1 + κ(s)·(P − X)·N_left,
-        // which grows as R/(R − |o|) for a point offset toward the centre of
+        // which grows as R/(R − |o|) for a point offset toward the center of
         // curvature. Testing (s − L − eps)·|f'| ≤ slack (and the same at the
         // start) accepts exactly the points within the slack of the element's
         // ends in position, with no division by a slope that may vanish.
@@ -594,13 +594,13 @@ function feet(element: Placed, px: number, py: number): number[] {
     case "arc": {
       const k = element.k0;
       const r = 1 / k;
-      // Centre: the start moved r along the left normal (−ty, tx).
+      // Center: the start moved r along the left normal (−ty, tx).
       const vx = dx + r * ty;
       const vy = dy - r * tx;
       if (vx === 0 && vy === 0) {
-        return [0]; // at the centre every point is equidistant: the lowest station
+        return [0]; // at the center every point is equidistant: the lowest station
       }
-      // Unit radial from the centre to the start: −sgn(k)·(left normal).
+      // Unit radial from the center to the start: −sgn(k)·(left normal).
       const sg = Math.sign(k);
       const rx = sg * ty;
       const ry = -sg * tx;
@@ -660,13 +660,13 @@ function integrateHeading(element: Placed, s: number): [number, number] {
  * either end (within the join window) has no sign change inside, so Newton
  * also runs from each end. Converged to 1e-12 in arc length (or a few ulps
  * of the element's length if that is coarser), or to the rounding of f over
- * |f'| where that is coarser (a point near the centre of curvature).
+ * |f'| where that is coarser (a point near the center of curvature).
  */
 function spiralFeet(element: Placed, px: number, py: number): number[] {
   const L = element.length;
   const tolerance = Math.max(1e-12, 8 * Number.EPSILON * L);
   // f's rounding (P, X and their difference, relative to the start): near
-  // the centre of curvature |f'| is small, so the arc length is only
+  // the center of curvature |f'| is small, so the arc length is only
   // determined to noise/|f'| and Newton's steps settle there, not at 1e-12.
   const noise =
     4 *
@@ -810,7 +810,7 @@ function bracketed(
   return s;
 }
 
-/** Plain Newton from `start`; undefined if it stalls or leaves the element's neighbourhood. */
+/** Plain Newton from `start`; undefined if it stalls or leaves the element's neighborhood. */
 function newton(
   g: (s: number) => [number, number],
   start: number,

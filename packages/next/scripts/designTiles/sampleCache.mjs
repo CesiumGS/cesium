@@ -100,10 +100,10 @@ function sampledOf(json, refuse) {
 
 // ---------------------------------------------- London's pole line (EA lidar)
 
-/** A pole's key: its British National Grid easting and northing, metres, to the centimetre. */
+/** A pole's key: its British National Grid easting and northing, meters, to the centimeter. */
 const POLE_KEY = /^\d{1,7}\.\d{2},\d{1,7}\.\d{2}$/;
 
-/** A lidar height, ODN metres: finite, within what Great Britain's ground spans. */
+/** A lidar height, ODN meters: finite, within what Great Britain's ground spans. */
 export const lidarHeight = (v) =>
   typeof v === "number" && Number.isFinite(v) && v > -100 && v < 1_400;
 
@@ -133,7 +133,7 @@ export function checkedCache(json, path) {
 
 // ------------------------------------------------ the corridor (USGS 3DEP)
 
-/** A 3DEP height, NAVD88 metres, as threeDep.mjs `groundHeights` takes them. */
+/** A 3DEP height, NAVD88 meters, as threeDep.mjs `groundHeights` takes them. */
 export const groundHeight = (v) =>
   typeof v === "number" && Number.isFinite(v) && v > -100 && v < 9_000;
 

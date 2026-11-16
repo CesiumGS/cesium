@@ -154,13 +154,13 @@ describe("GlobeController wheel zoom", () => {
       world,
     });
     const ellipsoid = Ellipsoid.WGS84;
-    const centre = ellipsoid.cartographicToCartesian(
+    const center = ellipsoid.cartographicToCartesian(
       { longitude: 0.2, latitude: 0.8, height: 1_800 },
       v3.vec3(),
     );
     const radius = 0.5;
     const camera = view.camera;
-    camera.lookAt(centre, 0.5, -0.38, 3.4);
+    camera.lookAt(center, 0.5, -0.38, 3.4);
     const ticks: ((now: number) => boolean)[] = [];
     const element = new EventTarget() as EventTarget & Record<string, unknown>;
     element.getBoundingClientRect = () => ({
@@ -179,7 +179,7 @@ describe("GlobeController wheel zoom", () => {
         },
       },
     );
-    // Only the content is drawn: a ball at the centre, no globe.
+    // Only the content is drawn: a ball at the center, no globe.
     vi.spyOn(view, "pickPosition").mockImplementation((px, py) => {
       const d = camera.rayDirection(
         ((Math.floor(px) + 0.5) / WIDTH) * 2 - 1,
@@ -187,7 +187,7 @@ describe("GlobeController wheel zoom", () => {
         WIDTH / HEIGHT,
         v3.vec3(),
       );
-      const o = v3.sub(v3.vec3(), camera.position, centre);
+      const o = v3.sub(v3.vec3(), camera.position, center);
       const b = v3.dot(o, d);
       const disc = b * b - (v3.dot(o, o) - radius * radius);
       const t = -b - Math.sqrt(Math.max(disc, 0));
@@ -233,7 +233,7 @@ describe("GlobeController wheel zoom", () => {
         }
         await settle();
       }
-      distances.push(v3.distance(camera.position, centre));
+      distances.push(v3.distance(camera.position, center));
     }
     controller.dispose();
     return distances;

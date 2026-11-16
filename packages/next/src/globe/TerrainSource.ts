@@ -888,8 +888,8 @@ export class TerrainSource {
    * Measures a child's deviation from its parent as a job on a worker: at
    * once when both surfaces are resident, else after the parent's decode
    * job (a child that decoded first). Its main-thread step, in the apply
-   * phase, refits the errors upward. Cancelled when either tile's surface
-   * leaves (`unloadTile`) or the parent's decode is cancelled.
+   * phase, refits the errors upward. Canceled when either tile's surface
+   * leaves (`unloadTile`) or the parent's decode is canceled.
    */
   private measureInWorker(jobs: TerrainJobs, child: Tile, parent: Tile): void {
     const c = child.globe!;

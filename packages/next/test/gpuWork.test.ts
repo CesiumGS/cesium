@@ -51,9 +51,9 @@ describe("GPU work counters", () => {
     expect(enableGpuWork()).toBe(true);
     takeGpuWork();
     const queue = new Queue() as unknown as GPUQueue;
-    const labelled = { label: "world.records" } as GPUBuffer;
-    queue.writeBuffer(labelled, 0, new Float32Array(100), 0, 50);
-    queue.writeBuffer(labelled, 0, new Uint8Array(10));
+    const labeled = { label: "world.records" } as GPUBuffer;
+    queue.writeBuffer(labeled, 0, new Float32Array(100), 0, 50);
+    queue.writeBuffer(labeled, 0, new Uint8Array(10));
     queue.writeBuffer({ label: "" } as GPUBuffer, 0, new ArrayBuffer(8));
     queue.writeTexture(
       {} as GPUTexelCopyTextureInfo,

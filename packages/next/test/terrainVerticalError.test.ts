@@ -17,8 +17,8 @@ const rectangle = {
   south: LAT - 0.0005,
   north: LAT + 0.0005,
 };
-const centre = at(LON, LAT, 0);
-const sphere = { center: centre, radius: 4000 };
+const center = at(LON, LAT, 0);
+const sphere = { center: center, radius: 4000 };
 const key = {};
 
 const tile = (error: number) =>
@@ -37,7 +37,7 @@ describe("direction-aware vertical error", () => {
   // Level with the tile, along the local east.
   const east = [-Math.sin(LON), Math.cos(LON), 0];
   const beside = Float64Array.from(
-    [0, 1, 2].map((i) => centre[i]! + east[i]! * distance),
+    [0, 1, 2].map((i) => center[i]! + east[i]! * distance),
   );
 
   it("sees a top-down view far smaller than an edge-on one", () => {
@@ -54,9 +54,9 @@ describe("direction-aware vertical error", () => {
 
   it("is conservative: never below the sampled sin θ over the tile", () => {
     const view = Float64Array.from([
-      centre[0]! + 30_000,
-      centre[1]! + 40_000,
-      centre[2]! + 20_000,
+      center[0]! + 30_000,
+      center[1]! + 40_000,
+      center[2]! + 20_000,
     ]);
     const bound = sinThetaMax(view, sphere, rectangle, {});
     let worst = 0;
@@ -82,7 +82,7 @@ describe("direction-aware vertical error", () => {
   });
 
   it("is 1 with the viewer inside the tile's sphere", () => {
-    expect(sinThetaMax(centre, sphere, rectangle, {})).toBe(1);
+    expect(sinThetaMax(center, sphere, rectangle, {})).toBe(1);
   });
 
   it("without a height profile, is the isotropic σ_max formula as before", () => {

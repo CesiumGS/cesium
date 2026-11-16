@@ -329,7 +329,7 @@ describe("terrain under a ceiling", () => {
     });
     expect(weightOf(weight)).toBeCloseTo(K - 1, 9);
     // Every vertex, the ones below the ellipsoid and above the ceiling too,
-    // is at the profile's height (float32 vertices: centimetres).
+    // is at the profile's height (float32 vertices: centimeters).
     let below = 0;
     let above = 0;
     const out = new Float64Array(3);

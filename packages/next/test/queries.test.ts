@@ -122,7 +122,7 @@ describe("three-way answers with reasons and accuracy", () => {
   });
 
   it("unknown: within the terrain's error, at the deciding clearance", async () => {
-    // 300 m peak; the ray clears it by tens of metres, inside level 9's 150 m.
+    // 300 m peak; the ray clears it by tens of meters, inside level 9's 150 m.
     const r = await one(hillTarget({}, 9), at(-HALF, 0, 360), at(HALF, 0, 360));
     expect(r.verdict).toBe("unknown");
     expect(r.unknown).toHaveLength(1);

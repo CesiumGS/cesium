@@ -458,7 +458,7 @@ struct PyramidCamera_0
      bias_0 : f32,
 };
 
-fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  centre_0 : vec3<f32>,  a_4 : vec3<f32>,  b_4 : vec3<f32>,  c_1 : vec3<f32>,  window_0 : u32) -> bool
+fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  center_2 : vec3<f32>,  a_4 : vec3<f32>,  b_4 : vec3<f32>,  c_1 : vec3<f32>,  window_0 : u32) -> bool
 {
     var frameWidth_0 : f32 = f32(camera_0.width_1);
     var frameHeight_0 : f32 = f32(camera_0.height_1);
@@ -485,7 +485,7 @@ fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  centr
         {
             _S20 = a_4;
         }
-        var _S21 : vec3<f32> = centre_0 + _S20;
+        var _S21 : vec3<f32> = center_2 + _S20;
         var _S22 : vec3<f32>;
         if(((k_0 & (u32(2)))) == u32(0))
         {
@@ -650,7 +650,7 @@ fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  centr
     return (farthest_0 > (camera_0.near_1 / nearestZ_0 * (1.0f + camera_0.bias_0)));
 }
 
-fn sphereHidden_0( centre_1 : vec3<f32>,  radius_2 : f32,  right_1 : vec4<f32>,  up_1 : vec4<f32>,  forward_1 : vec4<f32>,  lens_1 : vec4<f32>) -> bool
+fn sphereHidden_0( center_3 : vec3<f32>,  radius_2 : f32,  right_1 : vec4<f32>,  up_1 : vec4<f32>,  forward_1 : vec4<f32>,  lens_1 : vec4<f32>) -> bool
 {
     if(!(radius_2 < 1.00000001504746622e+30f))
     {
@@ -664,7 +664,7 @@ fn sphereHidden_0( centre_1 : vec3<f32>,  radius_2 : f32,  right_1 : vec4<f32>, 
     camera_1.tanY_0 = lens_1.y;
     camera_1.near_1 = lens_1.z;
     camera_1.bias_0 = lens_1.w;
-    return boxHidden_0(pyramid_0, camera_1, vec3<f32>(dot(right_1.xyz, centre_1) + right_1.w, dot(up_1.xyz, centre_1) + up_1.w, dot(forward_1.xyz, centre_1) + forward_1.w), vec3<f32>(radius_2, 0.0f, 0.0f), vec3<f32>(0.0f, radius_2, 0.0f), vec3<f32>(0.0f, 0.0f, radius_2), u32(8));
+    return boxHidden_0(pyramid_0, camera_1, vec3<f32>(dot(right_1.xyz, center_3) + right_1.w, dot(up_1.xyz, center_3) + up_1.w, dot(forward_1.xyz, center_3) + forward_1.w), vec3<f32>(radius_2, 0.0f, 0.0f), vec3<f32>(0.0f, radius_2, 0.0f), vec3<f32>(0.0f, 0.0f, radius_2), u32(8));
 }
 
 fn trianglesOf_0( batch_2 : u32) -> u32
@@ -679,7 +679,7 @@ fn append_0( batch_3 : u32,  item_1 : u32)
     return;
 }
 
-fn place_0( batch_4 : u32,  item_2 : u32,  centre_2 : vec3<f32>,  radius_3 : f32)
+fn place_0( batch_4 : u32,  item_2 : u32,  center_4 : vec3<f32>,  radius_3 : f32)
 {
     var _S51 : bool;
     if((occlusion_0.test_0) != u32(0))
@@ -692,7 +692,7 @@ fn place_0( batch_4 : u32,  item_2 : u32,  centre_2 : vec3<f32>,  radius_3 : f32
     }
     if(_S51)
     {
-        _S51 = sphereHidden_0(centre_2, radius_3, occlusion_0.lastRight_0, occlusion_0.lastUp_0, occlusion_0.lastForward_0, occlusion_0.lastLens_0);
+        _S51 = sphereHidden_0(center_4, radius_3, occlusion_0.lastRight_0, occlusion_0.lastUp_0, occlusion_0.lastForward_0, occlusion_0.lastLens_0);
     }
     else
     {

@@ -88,13 +88,13 @@ function emptyPurposes(): Record<RequestPurpose, PurposeStats> {
   return Object.fromEntries(
     REQUEST_PURPOSES.map((p) => [
       p,
-      { requests: 0, bytes: 0, drawn: 0, unused: 0, cancelled: 0 },
+      { requests: 0, bytes: 0, drawn: 0, unused: 0, canceled: 0 },
     ]),
   ) as Record<RequestPurpose, PurposeStats>;
 }
 
 export class Tileset3D implements TileTree {
-  /** @internal What the streaming functions share (`tilesetUpdate.ts` and its neighbours). */
+  /** @internal What the streaming functions share (`tilesetUpdate.ts` and its neighbors). */
   readonly state: TilesetState = new TilesetState();
   /** @internal How far items can move a vertex (`TileTree.volumePad`). */
   volumePad = 0;
@@ -179,7 +179,7 @@ export class Tileset3D implements TileTree {
     inFlight: 0,
     maxInFlight: 0,
     adaptive: true,
-    cancelled: 0,
+    canceled: 0,
     uploadQueue: 0,
     requestsTotal: 0,
     bytesTotal: 0,

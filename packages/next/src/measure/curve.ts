@@ -25,7 +25,7 @@ export interface ScreenScale {
   readonly fovy: number;
   /** The view's height in CSS pixels. */
   readonly height: number;
-  /** Metres: nothing nearer is drawn (default 0.1). */
+  /** Meters: nothing nearer is drawn (default 0.1). */
   readonly near?: number;
 }
 
@@ -35,7 +35,7 @@ export interface CurveOptions {
   readonly tolerancePx?: number;
   /** Where pixels are measured. Without it, `toleranceMeters` is the tolerance. */
   readonly screen?: ScreenScale;
-  /** Metres, used without `screen`; default 1 mm. */
+  /** Meters, used without `screen`; default 1 mm. */
   readonly toleranceMeters?: number;
   /** The deepest a segment is halved; default 24. */
   readonly maxDepth?: number;
@@ -55,7 +55,7 @@ const TESTS = [0.25, 0.5, 0.75] as const;
 /** A piece is halved at least this many times when the route bends (a warp's curve may leave its chord at its middle only). */
 const MIN_DEPTH = 2;
 
-/** Metres one pixel measures at `q` for `screen`. */
+/** Meters one pixel measures at `q` for `screen`. */
 function pixelSize(screen: ScreenScale, q: ArrayLike<number>): number {
   const e = screen.position;
   const d = screen.direction;
@@ -154,7 +154,7 @@ export interface DrawnSamples {
   readonly positions: Float64Array;
   /** The first index (a point's number, not a float's) of each true vertex in `positions`. */
   readonly vertices: readonly number[];
-  /** Metres: the drawn polyline's length. */
+  /** Meters: the drawn polyline's length. */
   readonly length: number;
   /** The route's revision they were made for. */
   readonly revision: number;
@@ -236,7 +236,7 @@ export class DrawnCurve {
   }
 
   /**
-   * The polyline through `route`, drawn with `screen`'s pixels (metres
+   * The polyline through `route`, drawn with `screen`'s pixels (meters
    * without it). The same object while nothing it depends on changed.
    */
   samples(route: Route, screen?: ScreenScale): DrawnSamples {
@@ -338,7 +338,7 @@ export function anchorAlong(
     );
   const truePosition = at(f);
   const position = routeForward(route, truePosition);
-  // Along the segment: a step of a fraction of a millimetre in each direction,
+  // Along the segment: a step of a fraction of a millimeter in each direction,
   // clamped to the segment, so the tangent is the route's derivative there.
   const h = lengths[s]! > 0 ? Math.min(0.5, 1e-3 / lengths[s]!) : 0;
   const lo = routeForward(route, at(Math.max(0, f - h)));

@@ -11,7 +11,7 @@ export { BUILT_IN_ACCURACY, DE440_EARTH_MOON_METERS } from "./frameAccuracy.ts";
 /**
  * The built-in frame tree, from `createFrames`. Positions only (R11).
  *
- * Two Earth-centred inertial frames (frames 3, R1). `earthIcrf` is TDB-
+ * Two Earth-centered inertial frames (frames 3, R1). `earthIcrf` is TDB-
  * compatible, joined to `icrf` by a plain translation: SPK and OEM data are
  * barycentric differences, which SPICE subtracts and never scales. `gcrf` is
  * the true GCRS, TT-compatible, joined to `icrf` by the affine map of IERS

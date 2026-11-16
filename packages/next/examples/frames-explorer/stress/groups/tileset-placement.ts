@@ -27,14 +27,14 @@ const ID = `${GROUP}.site-building`;
 /**
  * A rigid placement's inverse of its own forward (the plan's accuracy
  * table): 4 ULPs of an Earth-radius coordinate. The round trip goes through
- * body-fixed metres, whose coordinates here are 4.2e6 to 8.4e6 m (2²² to
+ * body-fixed meters, whose coordinates here are 4.2e6 to 8.4e6 m (2²² to
  * 2²³), where one ULP is 2⁻³⁰ m, about 9.3e-10 m; the transform and its
  * inverse each round a few of them, so 1e-9 m (about one ULP) is no bound
  * float64 can promise.
  */
 const RIGID_INVERSE = 4 * 2 ** -30;
 
-/** How far out the sag is checked, metres along the site grid's x axis. */
+/** How far out the sag is checked, meters along the site grid's x axis. */
 const SAG_AT = 20_000;
 
 const site = SITE_BUILDING.frame.site!;
@@ -69,7 +69,7 @@ function designs(frame: EngineeringFrame): number[][] {
   return out;
 }
 
-/** The worst |designOf(displayed(d)) − d| over `points`, metres. */
+/** The worst |designOf(displayed(d)) − d| over `points`, meters. */
 function worstInverse(
   placement: TilesetPlacement,
   points: readonly number[][],

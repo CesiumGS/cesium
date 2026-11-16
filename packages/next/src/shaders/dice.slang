@@ -11,10 +11,10 @@
 // arguments: 0 where the cull dropped it. Per span, a thread:
 //   1. skips a span outside the frustum (not under a placement: a warp moves
 //      what the span's sphere bounds, the record's sphere carries the pad);
-//   2. finds the pixels a model metre covers at the face's nearest distance
+//   2. finds the pixels a model meter covers at the face's nearest distance
 //      (perspective and orthographic alike: the view's rows over the depth w,
 //      which is a constant 1 in an orthographic projection), the same for
-//      every span of the face, so neighbouring spans put matching samples on
+//      every span of the face, so neighboring spans put matching samples on
 //      their shared boundaries;
 //   3. takes the cells per unit of (u, v) that keep the error within the
 //      target in pixels, from the face's constants (src/brep/gpuPatches.ts
@@ -37,7 +37,7 @@ struct PatchDice {
   uint capacity;        // chunks its list holds
   float errorPixels;    // the target: the error a cell may leave, pixels
   float jacobian;       // a placement's Jacobian bound (1: none)
-  float curvature;      // its second derivative's bound, per model metre (0: none)
+  float curvature;      // its second derivative's bound, per model meter (0: none)
   uint pad;
 };
 
@@ -86,7 +86,7 @@ void dicePatches(uint3 gid : SV_DispatchThreadID) {
     return;
   }
 
-  // Pixels per model metre at the face's nearest depth.
+  // Pixels per model meter at the face's nearest depth.
   float3 center = mul(m, float4(s.faceSphere.xyz, 1.0)).xyz;
   float4 clip = mul(view.viewProj, float4(center, 1.0));
   float perspective = length(view.viewProj[3].xyz);

@@ -44,7 +44,7 @@ const R = 6_378_137;
 const BASE = "https://tiles.test/station/";
 const URL_ = `${BASE}tileset.json`;
 
-/** A square slab of `half` metres, across y and z (Earth-fixed, at lon 0). */
+/** A square slab of `half` meters, across y and z (Earth-fixed, at lon 0). */
 function slab(half: number): GltfAsset {
   const h = half;
   return {
@@ -447,7 +447,7 @@ describe("shadow casters off screen", () => {
         for (let k = 0; k < 3; k++) {
           expect(seen![i + k]).toBeCloseTo(expected[i + k]!, 5);
         }
-        // Offsets are about the camera's distance from the Earth's centre.
+        // Offsets are about the camera's distance from the Earth's center.
         expect(Math.abs(seen![i + 3]! - expected[i + 3]!)).toBeLessThan(3);
       }
     } finally {

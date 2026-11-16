@@ -10,7 +10,7 @@
 // projected coordinates, so k and the convergence belong to exactly the grid
 // point the engineer gave. They are not evaluated at `frame.toGeodetic`'s
 // position: that is on the target's datum (WGS84 for EPSG:4979) after the
-// datum operation, a metre or two away, which would change k by about 1e-10
+// datum operation, a meter or two away, which would change k by about 1e-10
 // (and the results would not match pyproj's Proj.get_factors at 1e-12).
 import type {
   CoordinateOperation,
@@ -214,9 +214,9 @@ const FACTOR_KEYS = [
 
 /**
  * @internal PROJ's grid factors for a projected CRS (`ref`, whose horizontal
- * unit is `metersPerUnit` metres), as `ResolvedCoordinates.gridFactors`:
+ * unit is `metersPerUnit` meters), as `ResolvedCoordinates.gridFactors`:
  * at projected coordinates (E, N, U) in the CRS's units, with the
- * ellipsoidal height in metres that `heightOf` gives for them (the
+ * ellipsoidal height in meters that `heightOf` gives for them (the
  * operation's). The CRS's projection is read from PROJ once, at the first
  * call.
  */

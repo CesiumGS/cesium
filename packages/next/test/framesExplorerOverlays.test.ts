@@ -1117,7 +1117,7 @@ describe("overlayMesh (what the adapter hands to World.addMesh)", () => {
           expect(Math.abs(x)).toBeLessThanOrEqual(5e6);
         }
       }
-      // float32 offsets of up to 5e6 m: half-metre steps, well within the
+      // float32 offsets of up to 5e6 m: half-meter steps, well within the
       // path's own ±10 m.
       const back = reassemble(chunks);
       let worst = 0;

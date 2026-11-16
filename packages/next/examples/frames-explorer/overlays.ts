@@ -904,8 +904,8 @@ export function contourSegments(
       if (hit.length === 2) {
         join(hit[0]!, hit[1]!);
       } else if (hit.length === 4) {
-        const centre = (v[0]! + v[1]! + v[2]! + v[3]!) / 4;
-        if (centre >= level === v[0]! >= level) {
+        const center = (v[0]! + v[1]! + v[2]! + v[3]!) / 4;
+        if (center >= level === v[0]! >= level) {
           join(0, 1);
           join(2, 3);
         } else {
@@ -992,7 +992,7 @@ export function distortion(
         throw error;
       }
       field[j * nx + i] = (factors.combinedFactor - 1) * 1e6;
-      const centre = frame.toBodyFixed(design);
+      const center = frame.toBodyFixed(design);
       const { longitude: lon, latitude: lat } = frame.toGeodetic(design);
       const east = [-Math.sin(lon), Math.cos(lon), 0];
       const north = [
@@ -1010,9 +1010,9 @@ export function distortion(
         const ex = r * (k * Math.cos(t) + h * Math.sin(t) * Math.cos(theta));
         const ny2 = r * h * Math.sin(t) * Math.sin(theta);
         ring.push([
-          centre[0]! + ex * east[0]! + ny2 * north[0]!,
-          centre[1]! + ex * east[1]! + ny2 * north[1]!,
-          centre[2]! + ex * east[2]! + ny2 * north[2]!,
+          center[0]! + ex * east[0]! + ny2 * north[0]!,
+          center[1]! + ex * east[1]! + ny2 * north[1]!,
+          center[2]! + ex * east[2]! + ny2 * north[2]!,
         ]);
       }
       for (let s = 0; s < TISSOT_SEGMENTS; s++) {
@@ -1110,7 +1110,7 @@ export function overlayMesh(
     /**
      * The largest chunk, meters per axis (default `CHUNK_EXTENT`). A long
      * path far from the Earth, whose own accuracy is meters (Orion's), can
-     * take 1e7 m: half-metre float32 steps, and a hundredth of the draws.
+     * take 1e7 m: half-meter float32 steps, and a hundredth of the draws.
      */
     extent?: number;
   } = {},

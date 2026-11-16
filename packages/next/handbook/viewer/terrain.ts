@@ -248,8 +248,8 @@ export function demTile(
   view.setUint8(o, 1);
   view.setUint32(o + 1, count * 2, true);
   o += 5;
-  const lonMetres = (dLon / (n - 1)) * DEG * WGS84_A * Math.cos(midLat) || 1;
-  const latMetres = (dLat / (n - 1)) * DEG * WGS84_A || 1;
+  const lonMeters = (dLon / (n - 1)) * DEG * WGS84_A * Math.cos(midLat) || 1;
+  const latMeters = (dLat / (n - 1)) * DEG * WGS84_A || 1;
   for (let k = 0; k < count; k++) {
     const v = backwards[k]!;
     const i = v % n;
@@ -258,8 +258,8 @@ export function demTile(
       heights[
         Math.min(n - 1, Math.max(0, b)) * n + Math.min(n - 1, Math.max(0, a))
       ]!;
-    const de = (h(i + 1, j) - h(i - 1, j)) / (2 * lonMetres);
-    const dn = (h(i, j + 1) - h(i, j - 1)) / (2 * latMetres);
+    const de = (h(i + 1, j) - h(i - 1, j)) / (2 * lonMeters);
+    const dn = (h(i, j + 1) - h(i, j - 1)) / (2 * latMeters);
     const lon = lonAt(i) * DEG;
     const lat = latAt(j) * DEG;
     const up: [number, number, number] = [

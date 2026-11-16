@@ -3,7 +3,7 @@
 // spikes/warpRoute.ts is the model). The Earth's anchor is placed in
 // `exaggerated`, a `verticalExaggeration` of 10 under ITRF with a scale the
 // page moves; the camera stays on ITRF. Near
-// the north pole, unlit and in flat colours:
+// the north pole, unlit and in flat colors:
 //
 //   green    a terrain tile carrying h·n̂ (exact in height, no fit)
 //   blue     the same tile without it (drawn by the compiled route: the
@@ -62,7 +62,7 @@ const EYE = POLE + 300;
 const TURN = (7 * Math.PI) / 180;
 /** Pixels a measured box may differ from the route's. */
 const LIMIT = 1.5;
-/** The tile: 8 × 8 cells over this many metres, its heights metres above the ellipsoid. */
+/** The tile: 8 × 8 cells over this many meters, its heights meters above the ellipsoid. */
 const TILE = 20;
 const GRID = 9;
 const height = (x: number, y: number): number =>
@@ -282,7 +282,7 @@ async function runWarpGlobe(): Promise<WarpGlobeResult> {
         (d) => world.warps.status(d)?.state === "fitted",
       );
     const keys = ["green", "blue", "red", "yellow"] as const;
-    const colours: Record<(typeof keys)[number], Rgb> = {
+    const colors: Record<(typeof keys)[number], Rgb> = {
       green: GREEN,
       blue: BLUE,
       red: RED,
@@ -325,7 +325,7 @@ async function runWarpGlobe(): Promise<WarpGlobeResult> {
         await engine.gpu.device.queue.onSubmittedWorkDone();
         const pixels = await target.read();
         lost();
-        const got = measureBox(pixels, colours[key]);
+        const got = measureBox(pixels, colors[key]);
         const want = boxes[key];
         const e = got
           ? Math.max(...got.map((v, i) => Math.abs(v - want[i]!)))

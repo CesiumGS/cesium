@@ -27,14 +27,14 @@ import {
   trianglesOf,
 } from "../scripts/designTiles/coarsen.mjs";
 import {
-  LEAF_ERROR_METRES,
+  LEAF_ERROR_METERS,
   type LadderPart,
   ladderPlan,
   ladderTree,
   planExtent,
 } from "../scripts/designTiles/ladder.mjs";
 import {
-  LAYER_METRES,
+  LAYER_METERS,
   MIN_RADIUS,
   edgeSag,
   longestEdge,
@@ -42,7 +42,7 @@ import {
 import type { DesignTileMesh } from "../scripts/designTiles/corridorMesh.mjs";
 
 /**
- * The ladder, smallest first: id, model kind and extent in metres (the
+ * The ladder, smallest first: id, model kind and extent in meters (the
  * airport and the solar farm are both about 4 km; the airport is the
  * smaller, 3.97 km to 4.00).
  */
@@ -56,7 +56,7 @@ const TABLE: [string, string, number][] = [
   ["london", "poleLine", 30_000],
 ];
 
-/** Metres per design unit: Phoenix's CRS is in international feet. */
+/** Meters per design unit: Phoenix's CRS is in international feet. */
 const unit = (site: PortfolioSite) =>
   site.frame.crs.format === "wkid" && site.frame.crs.wkid === 6405 ? 0.3048 : 1;
 
@@ -107,7 +107,7 @@ function build(s: PortfolioSite) {
   const plan = ladderPlan(s, { metersPerUnit: unit(s) });
   const mpu = unit(s);
   const tree = ladderTree(plan, {
-    leafError: LEAF_ERROR_METRES / mpu,
+    leafError: LEAF_ERROR_METERS / mpu,
     metersPerUnit: mpu,
   });
   return { plan, tree, mpu, top: tree.top as Node };
@@ -135,14 +135,14 @@ describe("the scale ladder", SLOW, () => {
     );
   });
 
-  for (const [id, kind, metres] of TABLE) {
-    it(`${id}: the ${kind}'s extent is within 10% of ${metres.toLocaleString("en-US")} m, about its anchor`, () => {
+  for (const [id, kind, meters] of TABLE) {
+    it(`${id}: the ${kind}'s extent is within 10% of ${meters.toLocaleString("en-US")} m, about its anchor`, () => {
       const s = site(id);
       const { plan, mpu } = built(s);
       const anchor = modelAnchor(s);
       expect(plan.anchor).toEqual(anchor);
       const { extent, reach } = planExtent(plan, anchor);
-      expect(Math.abs(extent * mpu - metres) / metres).toBeLessThan(0.1);
+      expect(Math.abs(extent * mpu - meters) / meters).toBeLessThan(0.1);
       // The anchor is the model's middle: its farthest point is about half
       // the extent away.
       expect(Math.abs((2 * reach) / extent - 1)).toBeLessThan(0.1);
@@ -153,7 +153,7 @@ describe("the scale ladder", SLOW, () => {
     it(`${id}: a tree by Task 14's rules, every leaf within the sag rule`, () => {
       const s = site(id);
       const { tree, top, mpu } = built(s);
-      const leafError = LEAF_ERROR_METRES / mpu;
+      const leafError = LEAF_ERROR_METERS / mpu;
       const extent = planExtent(built(s).plan, modelAnchor(s)).extent * mpu;
       if (extent > 1_000) {
         expect(tree.levels).toBeGreaterThanOrEqual(3);
@@ -168,7 +168,7 @@ describe("the scale ladder", SLOW, () => {
           expect(node.geometricError).toBe(leafError);
           const mesh = node.mesh()!;
           expect(mesh, node.id).not.toBeNull();
-          // d²/8R of the longest edge, metres, against the leaf's error.
+          // d²/8R of the longest edge, meters, against the leaf's error.
           const sag = edgeSag(longestEdge(mesh) * mpu);
           expect(sag, node.id).toBeLessThanOrEqual(leafError * mpu);
         }
@@ -340,7 +340,7 @@ describe("the scale ladder", SLOW, () => {
   it("uses the sag rule's R: the smallest radius on WGS 84, a(1 − e²)", () => {
     expect(MIN_RADIUS).toBeCloseTo(6_335_439.327, 2);
     // 1 mm of sag at the leaves: edges up to about 225 m.
-    expect(Math.sqrt(8 * MIN_RADIUS * LEAF_ERROR_METRES)).toBeCloseTo(225.1, 1);
+    expect(Math.sqrt(8 * MIN_RADIUS * LEAF_ERROR_METERS)).toBeCloseTo(225.1, 1);
   });
 });
 
@@ -375,7 +375,7 @@ function cellSides(
 
 type Flat = { z: number; color: string; xy: [number, number][] };
 
-/** The up-facing triangles of a mesh, with their height and colour. */
+/** The up-facing triangles of a mesh, with their height and color. */
 function flats(mesh: DesignTileMesh & { colors: Float32Array }): Flat[] {
   const out: Flat[] = [];
   const { design, normals, indices, colors } = mesh;
@@ -423,7 +423,7 @@ function overlap(p: [number, number][], q: [number, number][], depth: number) {
 }
 
 /**
- * Pairs of up-facing triangles of different colours within `near` of the
+ * Pairs of up-facing triangles of different colors within `near` of the
  * same height that overlap (by more than 1 cm): where a renderer z-fights.
  */
 function coplanarOverlaps(
@@ -486,11 +486,11 @@ function coplanarOverlaps(
 
 describe("no polygon z-fights another (fix round 1)", SLOW, () => {
   it("uses one layer stack of 5 cm", () => {
-    expect(LAYER_METRES).toBe(0.05);
+    expect(LAYER_METERS).toBe(0.05);
   });
 
   for (const [id] of TABLE) {
-    it(`${id}: no two differently coloured up-facing surfaces overlap within 2 cm of one height, at any level`, () => {
+    it(`${id}: no two differently colored up-facing surfaces overlap within 2 cm of one height, at any level`, () => {
       const s = site(id);
       const { top, mpu } = built(s);
       for (const node of nodes(top)) {

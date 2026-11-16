@@ -125,7 +125,7 @@ function lattice(
   };
 }
 
-/** Points in the tile, on its faces and outside it, for a centre and radius. */
+/** Points in the tile, on its faces and outside it, for a center and radius. */
 function points(
   center: ArrayLike<number>,
   scale: number,
@@ -349,7 +349,7 @@ describe("a lattice of cells", () => {
     for (let iz = 0; iz < cells; iz++) {
       for (let iy = 0; iy < cells; iy++) {
         for (let ix = 0; ix < cells; ix++) {
-          // The cell's centre: u = (2i + 1) / cells âˆ’ 1, p = u Â· scale.
+          // The cell's center: u = (2i + 1) / cells âˆ’ 1, p = u Â· scale.
           const p = [ix, iy, iz].map((i) => ((2 * i + 1) / cells - 1) * 4);
           expect(latticeDisplacement(l, p, new Float64Array(3))[0]).toBe(
             (iz * cells + iy) * cells + ix,

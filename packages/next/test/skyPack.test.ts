@@ -27,7 +27,7 @@ function manifestJson(over: Record<string, unknown> = {}) {
     distributable: false,
     sources: [{ name: "a", url: "https://x.test/a", credit: "A", terms: "t" }],
     credits: ["Made up"],
-    modelled: ["everything"],
+    modeled: ["everything"],
     points: { file: "points.bin", count: 10, floatsPerStar: 8 },
     background: {
       file: "background.bin",
@@ -245,13 +245,13 @@ describe("loadSkyPack", () => {
         }),
       ),
     ).rejects.toThrow("points.bin, length: Content-Length");
-    // No declared length: the stream is cancelled past the expected size.
-    let cancelled = false;
+    // No declared length: the stream is canceled past the expected size.
+    let canceled = false;
     const chunk = new Uint8Array(1000);
     const stream = new ReadableStream<Uint8Array>({
       pull: (c) => c.enqueue(chunk),
       cancel: () => {
-        cancelled = true;
+        canceled = true;
       },
     });
     await expect(
@@ -264,7 +264,7 @@ describe("loadSkyPack", () => {
         }),
       ),
     ).rejects.toThrow("longer than the expected");
-    expect(cancelled).toBe(true);
+    expect(canceled).toBe(true);
   });
 
   it("refuses a maximum-size manifest before fetching its files", async () => {

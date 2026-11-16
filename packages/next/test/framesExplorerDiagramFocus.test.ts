@@ -157,7 +157,7 @@ describe("the docked tree fits the lit route (Task 9, I6)", () => {
     const from = [0, 100] as const;
     const to = [500, 600] as const;
     const meet = [250, 350] as const;
-    // All fit in 700: centred on them, from wherever the view was.
+    // All fit in 700: centered on them, from wherever the view was.
     expect(panWindow([from, to, meet], 900, 700)).toBe((-16 + 616) / 2 - 350);
     // In 400 only From fits with the meeting frame, after To is skipped.
     const start = panWindow([from, to, meet], 900, 400);
@@ -175,7 +175,7 @@ describe("the docked tree fits the lit route (Task 9, I6)", () => {
       y: [y, y + 32] as const,
     });
     // From and To fit across, but the third is far below: it's dropped on
-    // both axes, so the vertical pan doesn't favour it.
+    // both axes, so the vertical pan doesn't favor it.
     const to = panView(
       [at(0, 0), at(200, 0), at(100, 900)],
       { x: 500, y: 500 },

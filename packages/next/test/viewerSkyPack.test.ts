@@ -49,7 +49,7 @@ function manifest(distributable = false): SkyPackManifest {
     distributable,
     sources: [],
     credits: CREDITS,
-    modelled: [],
+    modeled: [],
     points: { file: "points.bin", count: 1, floatsPerStar: 8 },
     background: {
       file: "background.bin",

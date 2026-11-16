@@ -262,7 +262,7 @@ describe("SMLib surface identities", () => {
     }
   });
 
-  it("names a sphere, with its centre and radius", () => {
+  it("names a sphere, with its center and radius", () => {
     const sphere = kernel.sphere([0.5, -1, 1], 1.5);
     try {
       const { form } = kernel.toForm(sphere);

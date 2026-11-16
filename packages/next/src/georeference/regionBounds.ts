@@ -1,7 +1,7 @@
 // What the declared bounds of the georeference built-ins share
 // (`TransformDescriptor.bound`): the ellipsoid's radii of curvature, and the
 // local metric of geographic coordinates at a point (a `Region`'s radius there
-// is in east, north and up metres), and the interval arithmetic that bounds
+// is in east, north and up meters), and the interval arithmetic that bounds
 // a Jacobian entry by entry in a local east-north-up basis. Every bound here
 // is sound over its region and not tight: selection draws a tile's volume
 // from them (`scene/routeBounds.ts`).
@@ -33,9 +33,9 @@ export function principalRadii(
 
 /**
  * The local metric at geographic (latitude `lat` degrees, height `h`): the
- * metres per radian of longitude (`east`, the distance from the axis) and of
+ * meters per radian of longitude (`east`, the distance from the axis) and of
  * latitude (`north`), and the largest the meridian radius gets within
- * `reach` metres of north (`meridianMax`, by its monotonicity in |φ|).
+ * `reach` meters of north (`meridianMax`, by its monotonicity in |φ|).
  */
 export function localMetric(
   a: number,
@@ -46,10 +46,10 @@ export function localMetric(
 ): {
   east: number;
   north: number;
-  /** The angle (radians) `reach` metres north span. */
+  /** The angle (radians) `reach` meters north span. */
   dphi: number;
   meridianMax: number;
-  /** Radius of the parallel through the centre, the surface's (N cos φ). */
+  /** Radius of the parallel through the center, the surface's (N cos φ). */
   parallel: number;
 } {
   const phi = lat * RAD;
@@ -158,7 +158,7 @@ export function absColumns(m: IntervalMatrix): Float64Array {
 
 /**
  * |J'| for J = I + D, D = [[T, 0], [0, dU]] in the east-north-up frame at
- * a point of a region, seen in the frame at its centre (`tilt`, `twist` off
+ * a point of a region, seen in the frame at its center (`tilt`, `twist` off
  * it): T is the 2 × 2 symmetric block along the surface with eigenvalues in
  * `dT` (so its diagonal is in `dT` and its off-diagonal within half the
  * width), `dU` the vertical entry. A height-based lift and offset are this.
@@ -187,7 +187,7 @@ export function liftBound(
 /**
  * |diag(s) · Rot| (`side` "rows") or |Rot · diag(s)| ("columns") for a frame
  * rotation: a map whose rows (or columns) are along a frame's own axes,
- * scaled by `s`, seen across a region from the frame at its centre.
+ * scaled by `s`, seen across a region from the frame at its center.
  */
 export function scaledRotation(
   s: readonly [Interval, Interval, Interval],

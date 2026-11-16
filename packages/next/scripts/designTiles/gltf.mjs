@@ -5,7 +5,7 @@
 // feature's `name` and `kind` (EXT_structural_metadata), so a pick reports
 // the feature's name through `World.feature`. With `colors`, each vertex's
 // linear RGBA as COLOR_0 (normalized unsigned bytes), which glTF multiplies
-// by the material's base colour. With `attributes`, named float attributes
+// by the material's base color. With `attributes`, named float attributes
 // by glTF semantic (a second position, a stand-off). Indices are 16-bit where
 // every vertex fits, 32-bit otherwise.
 

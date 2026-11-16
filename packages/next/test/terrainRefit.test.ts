@@ -241,7 +241,7 @@ describe("a tile's error refitted from its children", () => {
     // and 1,000 m at the other two corners. Child (south-west quadrant):
     // split along the other diagonal, matching the parent at all four of its
     // vertices (0, 500, 500, 0 m), so no vertex differs. The two diagonals
-    // cross at the quadrant's centre, where the child is 500 m and the
+    // cross at the quadrant's center, where the child is 500 m and the
     // parent 0.
     const Q = 32767;
     const parent: TerrainHeights = {
@@ -521,11 +521,11 @@ describe("the refit as jobs (TerrainSource.jobs)", () => {
     expect([a.state, b.state]).toEqual(["waiting", "waiting"]);
     // The first child is evicted: its measure goes.
     terrain.unloadTile(first!);
-    expect(a.state).toBe("cancelled");
+    expect(a.state).toBe("canceled");
     // The parent is deselected mid-decode: the second child's measure goes with it.
     parentAbort.abort();
     await expect(parentLoad).rejects.toThrow(/Aborted/);
-    expect(b.state).toBe("cancelled");
+    expect(b.state).toBe("canceled");
     await settle();
     expect(second!.globe!.refitJob).toBeUndefined();
     expect(manual.held.some((m) => m.type === "terrainDeviation")).toBe(false);

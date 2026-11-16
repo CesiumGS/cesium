@@ -93,7 +93,7 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
         label: "Draw Orion's path in",
         kind: "choice",
         options: [
-          { value: "GCRF", label: "GCRF (inertial, Earth-centred)" },
+          { value: "GCRF", label: "GCRF (inertial, Earth-centered)" },
           { value: "ITRF", label: "ITRF (turning with the Earth)" },
           { value: "MOON_ME", label: "MOON_ME (fixed to the Moon)" },
         ],
@@ -270,13 +270,13 @@ export const SCENARIOS: readonly ScenarioSpec[] = [
           },
           {
             value: "utm-10n",
-            label: "UTM zone 10N (EPSG:32610), metres; it covers both sites",
+            label: "UTM zone 10N (EPSG:32610), meters; it covers both sites",
             short: "UTM 10N",
           },
           {
             value: "low-distortion",
             label:
-              "Oregon's Portland zone (EPSG:6854), a low-distortion projection, metres; it covers Portland only",
+              "Oregon's Portland zone (EPSG:6854), a low-distortion projection, meters; it covers Portland only",
             short: "Portland LDP",
           },
         ],

@@ -1,27 +1,27 @@
 // The transform graph's compiler (plan 2026-11-12, task 4, part a): a route's
 // shape to one fused WGSL function, `transformPoint(pLocal, c, u)`, with a
 // float64 path for the data it reads. Vertices are offsets δ from a draw's
-// centre c (the content's local frame), so the route is
+// center c (the content's local frame), so the route is
 //   F(c + δ) = F(c) + [F(c + δ) - F(c)],
 // the first term per draw in hi/lo float32 (from float64 on the CPU, or a
 // df64 compute pass), the second per vertex in float32 and relative to
 // itself, by the residual rules of residual.ts: each smooth step's IR is
-// evaluated as (centre value, change) pairs, so a position 6.4e6 m from the
-// origin or a UTM coordinate keeps its millimetres. Affine runs collapse to
+// evaluated as (center value, change) pairs, so a position 6.4e6 m from the
+// origin or a UTM coordinate keeps its millimeters. Affine runs collapse to
 // a float32 3×3 on δ (the translation is in F(c)); the output is
 // `F(c) - eye + residual`, relative to the camera as the engine's RTC is.
 //
-// Per-draw data (`DrawCentre`): F(c) as hi and lo, the centre values the
+// Per-draw data (`DrawCenter`): F(c) as hi and lo, the center values the
 // rules read, and the derivative of each of those with respect to the
 // separable parameters. Per-view data (`RouteUniforms`): the eye as hi and
 // lo, the affine 3×3s, the parameter values, and values derived from the
 // parameters alone (float64 on the CPU). A parameter that enters affinely at
 // the last smooth step and declares itself `separable` is a uniform for
-// good: the shader forms the centre values from it, with no per-frame work.
-// Any other parameter that the centre values depend on is "dynamic": a
-// change recomputes every draw's centre constants, on the CPU
-// (`centreConstants`) or in a compute pass in df64 (`centreConstantsWgsl`).
-// The centre constants also depend on the route's affine matrices: recompute
+// good: the shader forms the center values from it, with no per-frame work.
+// Any other parameter that the center values depend on is "dynamic": a
+// change recomputes every draw's center constants, on the CPU
+// (`centerConstants`) or in a compute pass in df64 (`centerConstantsWgsl`).
+// The center constants also depend on the route's affine matrices: recompute
 // them when `route.revision` changes.
 //
 // Normals are the cofactor of the route's Jacobian at the vertex: each
@@ -37,7 +37,7 @@
 // the residual rules are exact algebra, so a draw of any size is as accurate
 // as float32 allows relative to its own offsets (spikes/transformGraph.ts:
 // 2.6 to 9 mm for ×10 exaggeration at 1 to 8 km, under 1.2 mm elsewhere, and
-// the blend band's kink included). A Taylor form (centre J, H, third
+// the blend band's kink included). A Taylor form (center J, H, third
 // derivatives in float64) would cost less per vertex for a smooth step
 // with no kinks and stays an option for the normals, whose exact Jacobian
 // is the expensive part of a nested route.
@@ -65,9 +65,9 @@ export interface CompileOptions {
   /**
    * The normals' Jacobian (default "exact", as `true`; `false` is "none"):
    * - "exact": each step's J, evaluated at the vertex by the residual rules;
-   * - "linear": J at the draw's centre and its first-order change in the
-   *   offset (the centre's J and Hessian are per-draw data, from the CPU
-   *   only, so the route has no centre compute pass), for each step whose
+   * - "linear": J at the draw's center and its first-order change in the
+   *   offset (the center's J and Hessian are per-draw data, from the CPU
+   *   only, so the route has no center compute pass), for each step whose
    *   function has no kink (min, max, abs, clamp, select, floor, fract: a
    *   Jacobian that jumps); a step with one stays exact;
    * - "auto": "linear" when the route's exact Jacobian costs a lot (the
@@ -76,15 +76,15 @@ export interface CompileOptions {
    *   positions' three Jacobian columns, which a linear model skips.
    */
   normals?: boolean | "exact" | "linear" | "auto" | "none";
-  /** Emit `centreConstantsWgsl`, the df64 compute pass for dynamic parameters (default true; never for a route with a linear step). */
-  centreCompute?: boolean;
+  /** Emit `centerConstantsWgsl`, the df64 compute pass for dynamic parameters (default true; never for a route with a linear step). */
+  centerCompute?: boolean;
   /**
    * The compute pass writes draw `i`'s record at float index `rows[i]` of
-   * `records` (a read-only `array<u32>` at binding 3, `centreBindings.rows`)
+   * `records` (a read-only `array<u32>` at binding 3, `centerBindings.rows`)
    * rather than `i * perDrawLayout.floats`: the records sit inside a larger
    * buffer (the engine's placements buffer).
    */
-  centreRows?: boolean;
+  centerRows?: boolean;
 }
 
 /** "auto" normals go linear for a route whose steps' Jacobian programs have more nodes than this together. */
@@ -129,7 +129,7 @@ export interface CompiledRoute {
   /** The route's `shapeKey`, a hash of the smooth steps' sources, and the options. */
   readonly key: string;
   /**
-   * A WGSL module fragment: `DrawCentre`, `RouteUniforms`, the helpers, and
+   * A WGSL module fragment: `DrawCenter`, `RouteUniforms`, the helpers, and
    * `transformPoint(pLocal, c, u) -> vec3f`, `transformNormal(nLocal, pLocal,
    * c, u) -> vec3f`, `transformNormalTangent(nLocal, tLocal, pLocal, c, u)`,
    * `routeJacobian(pLocal, c, u) -> mat3x3f` and `transformVertex(pLocal,
@@ -138,7 +138,7 @@ export interface CompiledRoute {
   readonly wgsl: string;
   /**
    * The same module for the passes that draw positions and not shading
-   * (depth, shadows, picks, lines): the same `DrawCentre`, `RouteUniforms`,
+   * (depth, shadows, picks, lines): the same `DrawCenter`, `RouteUniforms`,
    * `tgStep<j>` and `tgRoute`, whose Jacobian is the identity and which has
    * no Jacobian code, no normals. A pipeline's compile time grows with the
    * code its vertex stage reaches, and a nested or exact route's Jacobian
@@ -147,26 +147,26 @@ export interface CompiledRoute {
   readonly positionWgsl: string;
   /** The per-view uniforms (`RouteUniforms`, vec4f members `v0…`): `eyeHi`, `eyeLo`, `affine<i>` (3 columns of vec4), `param:<key>` (a df64 pair for separable parameters), derived values. */
   readonly uniformsLayout: RecordLayout;
-  /** The per-draw record (`DrawCentre`, vec4f members `v0…`): `outHi`, `outLo`, `outG:<key>` (hi then lo), and each centre value as `s<step>.<v|j><n>` (then its derivatives). */
+  /** The per-draw record (`DrawCenter`, vec4f members `v0…`): `outHi`, `outLo`, `outG:<key>` (hi then lo), and each center value as `s<step>.<v|j><n>` (then its derivatives). */
   readonly perDrawLayout: RecordLayout;
-  /** Parameters (as `<id>.<name>`) whose change needs the centre constants recomputed. */
+  /** Parameters (as `<id>.<name>`) whose change needs the center constants recomputed. */
   readonly dynamicParams: readonly string[];
-  /** Parameters that are plain uniforms: affine at the last smooth step, so no centre work. */
+  /** Parameters that are plain uniforms: affine at the last smooth step, so no center work. */
   readonly separableParams: readonly string[];
-  /** Parameters read by the route that no centre value depends on: uniforms with no centre work either. */
+  /** Parameters read by the route that no center value depends on: uniforms with no center work either. */
   readonly uniformParams: readonly string[];
   /** Ops whose residual rule is float32 on whole values (less accurate), if any. */
   readonly approximations: readonly string[];
-  /** A compute shader (`centreConstants`) for every draw's record in df64; bindings in `centreBindings`. */
-  readonly centreConstantsWgsl: string | undefined;
-  readonly centreBindings: {
-    /** group 0, binding 0 (uniform): `centreUniforms(...)`. */
+  /** A compute shader (`centerConstants`) for every draw's record in df64; bindings in `centerBindings`. */
+  readonly centerConstantsWgsl: string | undefined;
+  readonly centerBindings: {
+    /** group 0, binding 0 (uniform): `centerUniforms(...)`. */
     readonly uniforms: 0;
-    /** group 0, binding 1 (read-only storage array<f32>): `packCentres(...)`. */
-    readonly centres: 1;
-    /** group 0, binding 2 (storage array<f32>): `perDrawLayout.floats` per draw, or at `rows` (`centreRows`). */
+    /** group 0, binding 1 (read-only storage array<f32>): `packCenters(...)`. */
+    readonly centers: 1;
+    /** group 0, binding 2 (storage array<f32>): `perDrawLayout.floats` per draw, or at `rows` (`centerRows`). */
     readonly records: 2;
-    /** group 0, binding 3 (read-only storage array<u32>), with `centreRows`: each draw's record's first float. */
+    /** group 0, binding 3 (read-only storage array<u32>), with `centerRows`: each draw's record's first float. */
     readonly rows: 3;
   };
   /** How each smooth step's normals are made, in route order ("none" without normals). */
@@ -182,25 +182,25 @@ export interface CompiledRoute {
     eye?: ArrayLike<number>,
   ): Float32Array;
   /**
-   * One draw's record, in float64: the route's value at the draw centre
-   * (local coordinates) as hi and lo, and the centre values. `route`
+   * One draw's record, in float64: the route's value at the draw center
+   * (local coordinates) as hi and lo, and the center values. `route`
    * defaults to the one `compileRoute` was given.
    */
-  centreConstants(
-    drawCentreLocal: ArrayLike<number>,
+  centerConstants(
+    drawCenterLocal: ArrayLike<number>,
     paramValues?: ParamRecord,
     route?: Route,
     out?: Float32Array,
   ): Float32Array;
   /** The compute pass's uniform buffer for `count` draws. */
-  centreUniforms(
+  centerUniforms(
     route: Route,
     count: number,
     paramValues?: ParamRecord,
     out?: Float32Array,
   ): Float32Array;
-  /** Draw centres as the compute pass reads them: 8 floats each, hi then lo. */
-  packCentres(centres: readonly ArrayLike<number>[]): Float32Array;
+  /** Draw centers as the compute pass reads them: 8 floats each, hi then lo. */
+  packCenters(centers: readonly ArrayLike<number>[]): Float32Array;
 }
 
 export interface Refusal {
@@ -211,9 +211,9 @@ export interface Refusal {
 
 export type CompileResult = CompiledRoute | Refusal;
 
-type Core = Omit<CompiledRoute, "centreConstants"> & {
-  centreConstants(
-    drawCentreLocal: ArrayLike<number>,
+type Core = Omit<CompiledRoute, "centerConstants"> & {
+  centerConstants(
+    drawCenterLocal: ArrayLike<number>,
     paramValues: ParamRecord | undefined,
     route: Route,
     out?: Float32Array,
@@ -276,7 +276,7 @@ interface AffineLink {
   readonly uniform: number;
 }
 
-/** A linear step's per-draw floats: J at the centre (row-major) and the Hessian (`9 i + 3 j + k`, the same order). */
+/** A linear step's per-draw floats: J at the center (row-major) and the Hessian (`9 i + 3 j + k`, the same order). */
 interface LinearFields {
   readonly j0: number;
   readonly h0: number;
@@ -401,7 +401,7 @@ export function compileRoute(
         ? "none"
         : options.normals;
   const normals = requested !== "none";
-  const centreRows = options.centreRows ?? false;
+  const centerRows = options.centerRows ?? false;
   const steps = route.steps;
   const infos: SmoothInfo[] = [];
   const seen = new Map<string, number>();
@@ -466,19 +466,19 @@ export function compileRoute(
   chooseNormals(infos, requested);
   // Linear normals are per-draw CPU data: no df64 compute pass makes them.
   const linear = infos.some((info) => info.normal === "linear");
-  const centreCompute = (options.centreCompute ?? true) && !linear;
+  const centerCompute = (options.centerCompute ?? true) && !linear;
 
   const key = [
     route.shapeKey,
     hash(infos.map((info) => `${info.id}:${info.spec.source}`).join("\n")),
-    `n${normals ? (linear ? infos.map((info) => info.normal[0]).join("") : 1) : 0}c${centreCompute ? 1 : 0}${centreRows ? "r" : ""}`,
+    `n${normals ? (linear ? infos.map((info) => info.normal[0]).join("") : 1) : 0}c${centerCompute ? 1 : 0}${centerRows ? "r" : ""}`,
   ].join("|");
   let core = cache.get(key);
   if (!core) {
     const last = infos[infos.length - 1];
     // A last step with linear normals has its Jacobian frozen at the draw's
-    // centre, so none of its parameters is a uniform that changes with no
-    // centre work: they are all centre-dependent.
+    // center, so none of its parameters is a uniform that changes with no
+    // center work: they are all center-dependent.
     const candidates = new Set(
       last && last.normal !== "linear"
         ? (last.spec.separable ?? []).filter((p) => last.locals.includes(p))
@@ -496,7 +496,7 @@ export function compileRoute(
       plan = attempt;
       break;
     }
-    core = assemble(key, plan, infos, normals, centreCompute, centreRows);
+    core = assemble(key, plan, infos, normals, centerCompute, centerRows);
     cache.set(key, core);
   }
   return bind(core, route);
@@ -505,8 +505,8 @@ export function compileRoute(
 function bind(core: Core, route: Route): CompiledRoute {
   return {
     ...core,
-    centreConstants: (c, values, other, out) =>
-      core.centreConstants(c, values, other ?? route, out),
+    centerConstants: (c, values, other, out) =>
+      core.centerConstants(c, values, other ?? route, out),
   };
 }
 
@@ -550,7 +550,7 @@ function buildPlan(
         const key = info.keys.get(name)!;
         let offset = paramOffsets.get(key);
         if (offset === undefined) {
-          // A separable parameter is a df64 pair: it scales a centre value as large as the route's output.
+          // A separable parameter is a df64 pair: it scales a center value as large as the route's output.
           const wide = info === last && separable.has(name);
           offset = uniforms.alloc(wide ? 2 : 1, `param:${key}`);
           paramOffsets.set(key, offset);
@@ -606,10 +606,10 @@ function buildPlan(
 }
 
 const sum = (o: PassOutput) =>
-  o.delta === "0.0" ? o.centre : `(${o.centre} + ${o.delta})`;
+  o.delta === "0.0" ? o.center : `(${o.center} + ${o.delta})`;
 
 /**
- * Evaluates `pass`'s centre values at `x` in float64 into `record`: with the
+ * Evaluates `pass`'s center values at `x` in float64 into `record`: with the
  * separable parameters at 0 for the stored value, and at 1 for each
  * derivative. Returns the outputs (at 0) and each parameter's derivative of them.
  */
@@ -620,7 +620,7 @@ function fillPass(
   separable: readonly string[],
   record: Float32Array,
 ): { value: Float64Array; derivative: Map<string, Float64Array> } {
-  const program = pass.centreProgram();
+  const program = pass.centerProgram();
   const n = pass.outputs.length;
   const zeroed: Record<string, number> = { ...local };
   for (const name of separable) {
@@ -652,8 +652,8 @@ function assemble(
   plan: Plan,
   infos: readonly SmoothInfo[],
   normals: boolean,
-  centreCompute: boolean,
-  centreRows: boolean,
+  centerCompute: boolean,
+  centerRows: boolean,
 ): Core {
   const last = infos[infos.length - 1];
   const uniformLayout = plan.uniforms.layout();
@@ -668,17 +668,17 @@ function assemble(
     if (link.kind !== "smooth") {
       continue;
     }
-    const centred = new Set([
-      ...link.value.centreProgram().params,
-      ...(link.jac?.centreProgram().params ?? []),
-      // A linear step's J and H at the centre read what its function does.
+    const centered = new Set([
+      ...link.value.centerProgram().params,
+      ...(link.jac?.centerProgram().params ?? []),
+      // A linear step's J and H at the center read what its function does.
       ...(link.linear ? jacobianOf(link.info.value).params : []),
     ]);
     for (const name of link.info.locals) {
       if (link.info === last && plan.separable.includes(name)) {
         continue;
       }
-      (centred.has(name) ? dynamic : uniformOnly).push(keyOf(link.info, name));
+      (centered.has(name) ? dynamic : uniformOnly).push(keyOf(link.info, name));
     }
     for (const op of link.value.approximate) {
       approximate.add(op);
@@ -769,8 +769,8 @@ function assemble(
     return buffer;
   };
 
-  const centreConstants: Core["centreConstants"] = (
-    drawCentreLocal,
+  const centerConstants: Core["centerConstants"] = (
+    drawCenterLocal,
     given,
     route,
     into,
@@ -779,9 +779,9 @@ function assemble(
     const steps = route.steps;
     const values = given ?? paramValues(route);
     const x = new Float64Array([
-      drawCentreLocal[0]!,
-      drawCentreLocal[1]!,
-      drawCentreLocal[2]!,
+      drawCenterLocal[0]!,
+      drawCenterLocal[1]!,
+      drawCenterLocal[2]!,
     ]);
     const moved = new Float64Array(3);
     let g = new Map<string, Float64Array>();
@@ -811,7 +811,7 @@ function assemble(
         fillPass(link.jac, x, local, separable, record);
       }
       if (link.linear) {
-        // J and its change along each axis at the step's input centre, in float64.
+        // J and its change along each axis at the step's input center, in float64.
         const jv = evaluate(jacobianOf(link.info.value), x, local);
         const hv = evaluate(hessianOf(link.info.value), x, local);
         for (let k = 0; k < 9; k++) {
@@ -847,8 +847,8 @@ function assemble(
     return record;
   };
 
-  const compute = centreCompute
-    ? centreShader(plan, infos, drawLayout.floats, paramList, centreRows)
+  const compute = centerCompute
+    ? centerShader(plan, infos, drawLayout.floats, paramList, centerRows)
     : undefined;
 
   return {
@@ -862,8 +862,8 @@ function assemble(
     separableParams: separableKeys,
     uniformParams: uniformOnly,
     approximations: [...approximate].sort(),
-    centreConstantsWgsl: compute?.wgsl,
-    centreBindings: { uniforms: 0, centres: 1, records: 2, rows: 3 },
+    centerConstantsWgsl: compute?.wgsl,
+    centerBindings: { uniforms: 0, centers: 1, records: 2, rows: 3 },
     paramValues,
     steps: infos.map((info) => ({
       stepIndex: info.stepIndex,
@@ -875,10 +875,10 @@ function assemble(
     })),
     normalModes: infos.map((info) => info.normal),
     fillUniforms,
-    centreConstants,
-    centreUniforms(route, count, given, into) {
+    centerConstants,
+    centerUniforms(route, count, given, into) {
       if (!compute) {
-        throw new Error("compileRoute: built with centreCompute: false");
+        throw new Error("compileRoute: built with centerCompute: false");
       }
       const buffer = into ?? new Float32Array(compute.uniformFloats);
       new Uint32Array(buffer.buffer, buffer.byteOffset, 1)[0] = count;
@@ -902,9 +902,9 @@ function assemble(
       }
       return buffer;
     },
-    packCentres(centres) {
-      const buffer = new Float32Array(8 * centres.length);
-      centres.forEach((c, i) => {
+    packCenters(centers) {
+      const buffer = new Float32Array(8 * centers.length);
+      centers.forEach((c, i) => {
         for (let a = 0; a < 3; a++) {
           const [hi, lo] = splitDouble(c[a]!);
           buffer[8 * i + a] = hi;
@@ -925,7 +925,7 @@ function generateWgsl(
   positionsOnly = false,
 ): string {
   const out: string[] = [
-    `struct DrawCentre {`,
+    `struct DrawCenter {`,
     ...members(drawLayout.floats),
     `}`,
     ``,
@@ -954,13 +954,13 @@ function generateWgsl(
     return `${value}.x`;
   };
   out.push(
-    `// The route's value at the draw centre minus the eye, in float32 from df64 sums.`,
-    `fn tgCentre(c: DrawCentre, u: RouteUniforms) -> vec3f {`,
+    `// The route's value at the draw center minus the eye, in float32 from df64 sums.`,
+    `fn tgCenter(c: DrawCenter, u: RouteUniforms) -> vec3f {`,
     `  return vec3f(${component(0)}, ${component(1)}, ${component(2)});`,
     `}`,
     ``,
   );
-  const centre = "tgCentre(c, u)";
+  const center = "tgCenter(c, u)";
   for (const link of plan.links) {
     if (link.kind !== "smooth") {
       continue;
@@ -968,7 +968,7 @@ function generateWgsl(
     const { j } = link.info;
     out.push(
       `// step ${j}: ${link.info.id}`,
-      `fn tgStep${j}(dIn: vec3f, c: DrawCentre, u: RouteUniforms) -> vec3f {`,
+      `fn tgStep${j}(dIn: vec3f, c: DrawCenter, u: RouteUniforms) -> vec3f {`,
       ...link.value.lines,
       `  return vec3f(${link.valueOut.map((o) => o.delta).join(", ")});`,
       `}`,
@@ -982,14 +982,14 @@ function generateWgsl(
       const column = (col: number) =>
         `vec3f(${j9[col]}, ${j9[3 + col]}, ${j9[6 + col]})`;
       out.push(
-        `fn tgJac${j}(dIn: vec3f, c: DrawCentre, u: RouteUniforms) -> mat3x3f {`,
+        `fn tgJac${j}(dIn: vec3f, c: DrawCenter, u: RouteUniforms) -> mat3x3f {`,
         ...link.jac.lines,
         `  return mat3x3f(${column(0)}, ${column(1)}, ${column(2)});`,
         `}`,
         ``,
       );
     } else if (link.linear) {
-      // J at the draw centre and its first-order change in the offset `dIn`:
+      // J at the draw center and its first-order change in the offset `dIn`:
       // J0 + dIn.x dJ/dx + dIn.y dJ/dy + dIn.z dJ/dz, each row-major (row i, column k).
       const { j0, h0 } = link.linear;
       const entry = (i: number, k: number) =>
@@ -997,8 +997,8 @@ function generateWgsl(
       const column = (k: number) =>
         `vec3f(${entry(0, k)}, ${entry(1, k)}, ${entry(2, k)})`;
       out.push(
-        `// step ${j}'s Jacobian: linear in the offset from the draw centre.`,
-        `fn tgJacLinear${j}(dIn: vec3f, c: DrawCentre) -> mat3x3f {`,
+        `// step ${j}'s Jacobian: linear in the offset from the draw center.`,
+        `fn tgJacLinear${j}(dIn: vec3f, c: DrawCenter) -> mat3x3f {`,
         `  return mat3x3f(${column(0)}, ${column(1)}, ${column(2)});`,
         `}`,
         ``,
@@ -1029,30 +1029,30 @@ function generateWgsl(
     }
   }
   out.push(
-    `fn transformPoint(pLocal: vec3f, c: DrawCentre, u: RouteUniforms) -> vec3f {`,
+    `fn transformPoint(pLocal: vec3f, c: DrawCenter, u: RouteUniforms) -> vec3f {`,
     ...body,
-    `  return ${centre} + d;`,
+    `  return ${center} + d;`,
     `}`,
     ``,
   );
   if (positionsOnly) {
     out.push(
-      `fn tgRoute(pLocal: vec3f, c: DrawCentre, u: RouteUniforms, jOut: ptr<function, mat3x3f>) -> vec3f {`,
+      `fn tgRoute(pLocal: vec3f, c: DrawCenter, u: RouteUniforms, jOut: ptr<function, mat3x3f>) -> vec3f {`,
       ...body,
       `  *jOut = mat3x3f(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);`,
-      `  return ${centre} + d;`,
+      `  return ${center} + d;`,
       `}`,
       ``,
     );
   } else if (normals) {
     out.push(
-      `fn tgRoute(pLocal: vec3f, c: DrawCentre, u: RouteUniforms, jOut: ptr<function, mat3x3f>) -> vec3f {`,
+      `fn tgRoute(pLocal: vec3f, c: DrawCenter, u: RouteUniforms, jOut: ptr<function, mat3x3f>) -> vec3f {`,
       ...bodyJ,
       `  *jOut = jt;`,
-      `  return ${centre} + d;`,
+      `  return ${center} + d;`,
       `}`,
       ``,
-      `fn routeJacobian(pLocal: vec3f, c: DrawCentre, u: RouteUniforms) -> mat3x3f {`,
+      `fn routeJacobian(pLocal: vec3f, c: DrawCenter, u: RouteUniforms) -> mat3x3f {`,
       `  var j: mat3x3f;`,
       `  tgRoute(pLocal, c, u, &j);`,
       `  return j;`,
@@ -1063,12 +1063,12 @@ function generateWgsl(
       `  return mat3x3f(cross(m[1], m[2]), cross(m[2], m[0]), cross(m[0], m[1]));`,
       `}`,
       ``,
-      `fn transformNormal(nLocal: vec3f, pLocal: vec3f, c: DrawCentre, u: RouteUniforms) -> vec3f {`,
+      `fn transformNormal(nLocal: vec3f, pLocal: vec3f, c: DrawCenter, u: RouteUniforms) -> vec3f {`,
       `  return normalize(tgCofactor(routeJacobian(pLocal, c, u)) * nLocal);`,
       `}`,
       ``,
       `// The normal made perpendicular to the transformed tangent (Gram-Schmidt).`,
-      `fn transformNormalTangent(nLocal: vec3f, tLocal: vec3f, pLocal: vec3f, c: DrawCentre, u: RouteUniforms) -> vec3f {`,
+      `fn transformNormalTangent(nLocal: vec3f, tLocal: vec3f, pLocal: vec3f, c: DrawCenter, u: RouteUniforms) -> vec3f {`,
       `  let j = routeJacobian(pLocal, c, u);`,
       `  let t = normalize(j * tLocal);`,
       `  let n = tgCofactor(j) * nLocal;`,
@@ -1080,7 +1080,7 @@ function generateWgsl(
       `  normal: vec3f,`,
       `}`,
       ``,
-      `fn transformVertex(pLocal: vec3f, nLocal: vec3f, c: DrawCentre, u: RouteUniforms) -> TransformedVertex {`,
+      `fn transformVertex(pLocal: vec3f, nLocal: vec3f, c: DrawCenter, u: RouteUniforms) -> TransformedVertex {`,
       `  var j: mat3x3f;`,
       `  let position = tgRoute(pLocal, c, u, &j);`,
       `  return TransformedVertex(position, normalize(tgCofactor(j) * nLocal));`,
@@ -1091,7 +1091,7 @@ function generateWgsl(
   return out.join("\n");
 }
 
-interface CentreShader {
+interface CenterShader {
   readonly wgsl: string;
   readonly uniformFloats: number;
   readonly affine: ReadonlyMap<number, number>;
@@ -1099,15 +1099,15 @@ interface CentreShader {
 
 /**
  * The compute shader that fills every draw's record in df64: the same chain
- * as `centreConstants`, with each program's nodes emitted by `emitDf64`.
+ * as `centerConstants`, with each program's nodes emitted by `emitDf64`.
  */
-function centreShader(
+function centerShader(
   plan: Plan,
   infos: readonly SmoothInfo[],
   recordFloats: number,
   paramList: readonly { info: SmoothInfo; name: string; key: string }[],
-  centreRows: boolean,
-): CentreShader {
+  centerRows: boolean,
+): CenterShader {
   const last = infos[infos.length - 1];
   let cursor = Math.ceil((4 + 2 * paramList.length) / 4) * 4;
   const affine = new Map<number, number>();
@@ -1124,20 +1124,20 @@ function centreShader(
 
   const out: string[] = [
     DF64_WGSL,
-    `struct CentreUniforms {`,
+    `struct CenterUniforms {`,
     ...members(uniformFloats),
     `}`,
     ``,
-    `@group(0) @binding(0) var<uniform> cu: CentreUniforms;`,
-    `@group(0) @binding(1) var<storage, read> centres: array<f32>;`,
+    `@group(0) @binding(0) var<uniform> cu: CenterUniforms;`,
+    `@group(0) @binding(1) var<storage, read> centers: array<f32>;`,
     `@group(0) @binding(2) var<storage, read_write> records: array<f32>;`,
-    ...(centreRows
+    ...(centerRows
       ? [`@group(0) @binding(3) var<storage, read> rows: array<u32>;`]
       : []),
     ``,
   ];
   const evalFn = (name: string, pass: ResidualPass, info: SmoothInfo) => {
-    const program = pass.centreProgram();
+    const program = pass.centerProgram();
     const local = new Map(info.locals.map((n, i) => [n, i]));
     const { lines, ref } = emitDf64(
       program.nodes,
@@ -1167,15 +1167,15 @@ function centreShader(
 
   const main: string[] = [
     `@compute @workgroup_size(64)`,
-    `fn centreConstants(@builtin(global_invocation_id) gid: vec3u) {`,
+    `fn centerConstants(@builtin(global_invocation_id) gid: vec3u) {`,
     `  let i = gid.x;`,
     `  if (i >= bitcast<u32>(${uf(0)})) {`,
     `    return;`,
     `  }`,
-    centreRows ? `  let rb = rows[i];` : `  let rb = i * ${recordFloats}u;`,
-    `  var x0 = vec2f(centres[8u * i], centres[8u * i + 4u]);`,
-    `  var x1 = vec2f(centres[8u * i + 1u], centres[8u * i + 5u]);`,
-    `  var x2 = vec2f(centres[8u * i + 2u], centres[8u * i + 6u]);`,
+    centerRows ? `  let rb = rows[i];` : `  let rb = i * ${recordFloats}u;`,
+    `  var x0 = vec2f(centers[8u * i], centers[8u * i + 4u]);`,
+    `  var x1 = vec2f(centers[8u * i + 1u], centers[8u * i + 5u]);`,
+    `  var x2 = vec2f(centers[8u * i + 2u], centers[8u * i + 6u]);`,
   ];
   const zero = "vec2f(0.0)";
   for (const name of plan.separable) {

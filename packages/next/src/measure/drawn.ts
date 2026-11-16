@@ -29,7 +29,7 @@ export interface DrawnDistanceOptions {
   /** The anchor the points' content hangs under (a pick's `anchor`); default the table's root. */
   readonly anchor?: AnchorHandle | undefined;
   /**
-   * Metres the drawn path may stray from the routed curve, for
+   * Meters the drawn path may stray from the routed curve, for
    * `pathLength`; default 1 mm. (The distance between the drawn ends is
    * exact.)
    */

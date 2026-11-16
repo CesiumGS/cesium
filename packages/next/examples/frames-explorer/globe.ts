@@ -398,7 +398,7 @@ export class Globe {
 
   /**
    * Keeps the triads out of the views in `bits` (the gap inset: a triad
-   * sized for the main camera is kilometres long there); 0 draws them in
+   * sized for the main camera is kilometers long there); 0 draws them in
    * every view again.
    */
   hideTriadsFrom(bits: number): void {

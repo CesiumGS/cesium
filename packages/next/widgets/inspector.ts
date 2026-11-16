@@ -1581,7 +1581,7 @@ function prow(o: {
   }</div>`;
 }
 
-/** A group's colour token, and a shade of it for its `k`th pass. */
+/** A group's color token, and a shade of it for its `k`th pass. */
 const groupColor = (name: string) =>
   `var(--ci-series-${GPU_GROUPS.indexOf(name as never) + 1})`;
 const PASS_SHADES = [1, 0.72, 0.5, 0.34];
@@ -1606,7 +1606,7 @@ const plotOpen = (win: Win, n: number, w: number, h: number) =>
  * Bands stacked bottom up, as SVG polygons over `w` × `h`: each band's
  * values a sample, scaled so `top` is the full height. `share` divides each
  * sample by its column's sum (a 100% stack). A 1px gap in the panel's
- * colour separates the bands.
+ * color separates the bands.
  */
 function stackSvg(
   bands: ReadonlyArray<{
@@ -1706,7 +1706,7 @@ function niceCeil(v: number): number {
  * untimed remainder hatched on top and the 60 and 30 fps frame times as
  * reference lines; its legend, a fixed grid, gives each group's time at the
  * moment shown. Below, a table: a row a group (its passes stacked, in
- * shades of its colour, so their mix shows over time) and a row a pass (its
+ * shades of its color, so their mix shows over time) and a row a pass (its
  * own line, on its own scale, for shape), each with its time now, its mean
  * over the window, and a bar of its share of the frame on one common scale.
  */
@@ -1989,20 +1989,20 @@ function streamingHtml(v: InspectorView): string {
     }),
   );
   const wasted = (t.purposes ?? []).reduce(
-    (n, p) => n + (p.unused ?? 0) + (p.cancelled ?? 0),
+    (n, p) => n + (p.unused ?? 0) + (p.canceled ?? 0),
     0,
   );
   const values: string[] = [];
-  if (w?.cancelled !== undefined) {
+  if (w?.canceled !== undefined) {
     values.push(
-      valueRow("Cancelled", count(w.cancelled), { zero: w.cancelled === 0 }),
+      valueRow("Canceled", count(w.canceled), { zero: w.canceled === 0 }),
     );
   }
   if (t.purposes) {
     values.push(
-      valueRow("Evicted undrawn or cancelled", count(wasted), {
+      valueRow("Evicted undrawn or canceled", count(wasted), {
         zero: wasted === 0,
-        info: "Loads evicted without ever being drawn, or cancelled, since loading began.",
+        info: "Loads evicted without ever being drawn, or canceled, since loading began.",
       }),
     );
   }
@@ -2037,11 +2037,11 @@ function streamingHtml(v: InspectorView): string {
   }
   if (t.purposes) {
     // Bytes by what they were for; "drawn" is how many of those loads a
-    // view has drawn so far (the rest are in flight, waiting, cancelled or
+    // view has drawn so far (the rest are in flight, waiting, canceled or
     // evicted unused).
     html += stacked(
       "Requests by purpose",
-      "Bytes received by what the requests were for. Drawn: how many of those loads a view has drawn so far; the rest are in flight, waiting, cancelled or evicted unused.",
+      "Bytes received by what the requests were for. Drawn: how many of those loads a view has drawn so far; the rest are in flight, waiting, canceled or evicted unused.",
       "purposes",
       t.purposes.map((p) => ({
         label: p.label,

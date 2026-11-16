@@ -161,8 +161,8 @@ function earthOrientationTerm(
   };
 }
 
-/** Metres for a note, never in e-notation: "2.15 m", "0.0000001 m". */
-const metres = (v: number): string =>
+/** Meters for a note, never in e-notation: "2.15 m", "0.0000001 m". */
+const meters = (v: number): string =>
   `${v.toLocaleString("en-US", { maximumSignificantDigits: 4 })} m`;
 
 /** "±1.14 m each", "±2.15 m and ±5 m", "no stated accuracy": the candidates' figures. */
@@ -170,7 +170,7 @@ function statedText(candidates: readonly BetterCandidate[]): string {
   const stated = [
     ...new Set(
       candidates.flatMap((c) =>
-        c.accuracy !== undefined ? [`±${metres(c.accuracy)}`] : [],
+        c.accuracy !== undefined ? [`±${meters(c.accuracy)}`] : [],
       ),
     ),
   ];
@@ -320,7 +320,7 @@ function frameWarnings(
   if (operation !== undefined && better.length > 0) {
     const used =
       !operation.ballpark && operation.accuracy !== undefined
-        ? `states ±${metres(operation.accuracy)}`
+        ? `states ±${meters(operation.accuracy)}`
         : "states no accuracy";
     out.push({
       code: "coarser-operation",
@@ -328,7 +328,7 @@ function frameWarnings(
       detail: `${name}: PROJ's names for them: ${better
         .map(
           (c) =>
-            `"${c.name}" (${c.accuracy !== undefined ? `±${metres(c.accuracy)}` : "no stated accuracy"})`,
+            `"${c.name}" (${c.accuracy !== undefined ? `±${meters(c.accuracy)}` : "no stated accuracy"})`,
         )
         .join("; ")}.`,
     });
@@ -336,7 +336,7 @@ function frameWarnings(
   if (fallback !== undefined) {
     out.push({
       code: "geoid-fallback",
-      text: `${name} reads its design heights as ${fallback.model} heights in place of EPSG:${fallback.replacedVertical} (missing ${fallback.missingGrids.join(", ")}): ${fallback.sigma !== undefined ? `the gap between them is the ${metres(fallback.sigma)} ${sigmaStatedBy(fallback)} (fallbackSigma).` : "the gap between them is not known, so the accuracy is not bounded (no fallbackSigma)."}`,
+      text: `${name} reads its design heights as ${fallback.model} heights in place of EPSG:${fallback.replacedVertical} (missing ${fallback.missingGrids.join(", ")}): ${fallback.sigma !== undefined ? `the gap between them is the ${meters(fallback.sigma)} ${sigmaStatedBy(fallback)} (fallbackSigma).` : "the gap between them is not known, so the accuracy is not bounded (no fallbackSigma)."}`,
     });
   }
   return out;
@@ -371,7 +371,7 @@ export function accuracyOf(
   if (commonAncestor(a.frame, b.frame) === frames.icrf) {
     // 0.01 m is DE440's Earth-Moon fit, so it is claimed only when both ends
     // are in the Earth or Moon subtrees; anything else (a Sun- or
-    // barycentre-centred point) has no stated absolute accuracy here.
+    // barycenter-centered point) has no stated absolute accuracy here.
     const inEarthMoon = (f: Frame): boolean =>
       isUnder(f, frames.gcrf) ||
       isUnder(f, frames.earthIcrf) ||

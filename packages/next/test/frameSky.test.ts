@@ -41,7 +41,7 @@ describe("FrameSky", () => {
     expect(sky.data).toBe(data);
   });
 
-  it("memoises by time, and setData invalidates the memo", () => {
+  it("memoizes by time, and setData invalidates the memo", () => {
     let calls = 0;
     const data = stub();
     (data.ephemeris as unknown as { contains: () => boolean }).contains =

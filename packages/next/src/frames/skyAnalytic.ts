@@ -78,8 +78,8 @@ export function analyticSky(ms: number, out: SkyState): SkyState {
 
 /**
  * @internal The sky from its parts in ICRF axes, turned to Earth-fixed axes
- * by `out.icrfToFixed` (set first): the Sun from the Earth's centre (any
- * length), the Moon from the Earth's centre (metres) and the row-major
+ * by `out.icrfToFixed` (set first): the Sun from the Earth's center (any
+ * length), the Moon from the Earth's center (meters) and the row-major
  * ICRF to mean-Earth rotation. Sets `source` to `"ephemeris"`. `skyState`
  * and `attachSky` share it, so their arithmetic is the same.
  */

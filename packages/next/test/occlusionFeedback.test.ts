@@ -123,8 +123,8 @@ function wallPyramid() {
     return 0.01; // 100 m
   });
 }
-const box = (centre: number[], half: number[]) => ({
-  centre,
+const box = (center: number[], half: number[]) => ({
+  center,
   axes: [half[0]!, 0, 0, 0, half[1]!, 0, 0, 0, half[2]!],
 });
 
@@ -184,10 +184,10 @@ describe("the box test", () => {
     );
   });
 
-  it("tests the corners of a turned box, not its centre", () => {
+  it("tests the corners of a turned box, not its center", () => {
     // A long box turned across the view: its near end sticks out in front of the wall.
     const a = [30, 0, -30, 0, 0.5, 0, 1, 0, 1];
-    expect(boxHidden(levels, FRAME, { centre: [0, -0.4, 50], axes: a })).toBe(
+    expect(boxHidden(levels, FRAME, { center: [0, -0.4, 50], axes: a })).toBe(
       false,
     );
   });
@@ -229,11 +229,11 @@ describe("the queries", () => {
   it("are relative to the eye in float64 and rotated into camera space", () => {
     const list = new OcclusionQueries(0);
     // 1 mm to the right of the camera's axis, 1.5 km ahead and 1 km below: at
-    // 6.4 million m from the origin, where a float32 position has half a metre.
+    // 6.4 million m from the origin, where a float32 position has half a meter.
     const eye = camera();
-    const centre = Float64Array.of(R + 0, 1500, -0.001);
+    const center = Float64Array.of(R + 0, 1500, -0.001);
     expect(
-      list.add(tile, sphereOf(centre[0]!, centre[1]!, centre[2]!, 25), eye),
+      list.add(tile, sphereOf(center[0]!, center[1]!, center[2]!, 25), eye),
     ).toBe(true);
     expect(list.count).toBe(1);
     expect(list.tiles[0]).toBe(tile);

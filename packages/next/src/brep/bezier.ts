@@ -1,6 +1,6 @@
 // Rational Bézier evaluation in float64 (docs/design/breps-and-geometry-queries.md), by de Casteljau
 // in homogeneous coordinates. Derivatives come from the quotient rule on the
-// homogeneous derivatives. Positions are metres.
+// homogeneous derivatives. Positions are meters.
 import type { SurfaceSample } from "./evaluate.ts";
 
 /**

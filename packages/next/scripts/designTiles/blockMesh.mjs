@@ -5,10 +5,10 @@
 // courtyard block, a round tower, an old brick block or a small park, from a
 // seeded generator so the district is the same every run.
 //
-// Design units are the CRS's (metres, for JGD2011 / Japan Plane Rectangular
+// Design units are the CRS's (meters, for JGD2011 / Japan Plane Rectangular
 // CS IX); the model's `angle` turns the street grid from design east.
 import {
-  LAYER_METRES,
+  LAYER_METERS,
   between,
   frameAt,
   pick,
@@ -31,32 +31,32 @@ const BRICK = srgb("#8f4f3b");
 const BAND_DARK = srgb("#2f3a44");
 const BAND_LIGHT = srgb("#e6e4de");
 
-/** Storey height, metres. */
+/** Story height, meters. */
 const FLOOR = 4.2;
-/** Pavement height above the street (the kerb), and the sidewalk's width. */
-const KERB = 0.15;
+/** Pavement height above the street (the curb), and the sidewalk's width. */
+const CURB = 0.15;
 const SIDEWALK = 5;
 /**
- * The layer stack (meshBuilder's LAYER_METRES steps): paint one layer above
+ * The layer stack (meshBuilder's LAYER_METERS steps): paint one layer above
  * the street; a park's lawn one layer above its pavement's top.
  */
 const PAINT_LAYER = 1;
 const LAWN_LAYER = 1;
 
 /**
- * Sides and a roof of its own colour for a box in frame `f`: centre
- * (`along`, `across`) from `centre`, base at `z`.
+ * Sides and a roof of its own color for a box in frame `f`: center
+ * (`along`, `across`) from `center`, base at `z`.
  */
-function mass(b, f, centre, along, across, z, len, wid, h, facade, feature) {
-  const at = placeIn(f, centre, along, across, z);
+function mass(b, f, center, along, across, z, len, wid, h, facade, feature) {
+  const at = placeIn(f, center, along, across, z);
   b.cuboid(at, f, [len, wid, h], facade, feature, { topColor: ROOF });
 }
 
-/** A storey's spandrel band on each face of a box, just proud of the facade. */
-function bands(b, f, centre, along, across, z, len, wid, h, color, feature) {
+/** A story's spandrel band on each face of a box, just proud of the facade. */
+function bands(b, f, center, along, across, z, len, wid, h, color, feature) {
   const floors = Math.floor(h / FLOOR);
   for (let k = 1; k < floors; k++) {
-    const at = placeIn(f, centre, along, across, z + k * FLOOR - 0.6);
+    const at = placeIn(f, center, along, across, z + k * FLOOR - 0.6);
     b.cuboid(at, f, [len + 0.1, wid + 0.1, 1.2], color, feature, {
       top: false,
     });
@@ -68,24 +68,24 @@ function bands(b, f, centre, along, across, z, len, wid, h, color, feature) {
  * height] boxes in the block's frame (the first is the tallest), its facade,
  * and its roof plant.
  */
-function buildingPart(f, centre, z0, masses, facade, band, name, kind) {
+function buildingPart(f, center, z0, masses, facade, band, name, kind) {
   const feature = { name, kind };
   const tallest = masses.reduce((t, m) => Math.max(t, m[2] + m[5]), 0);
   const [along, across] = [masses[0][0], masses[0][1]];
-  const at = placeIn(f, centre, along, across, 0);
+  const at = placeIn(f, center, along, across, 0);
   const draw =
     ({ withBands, withPlant }) =>
     (b) => {
       for (const [a, c, z, len, wid, h] of masses) {
-        mass(b, f, centre, a, c, z0 + z, len, wid, h, facade, feature);
+        mass(b, f, center, a, c, z0 + z, len, wid, h, facade, feature);
         if (withBands && h > 2 * FLOOR) {
-          bands(b, f, centre, a, c, z0 + z, len, wid, h, band, feature);
+          bands(b, f, center, a, c, z0 + z, len, wid, h, band, feature);
         }
       }
       if (withPlant) {
         const [a, c, z, len, wid, h] = masses[0];
         for (const s of [-0.22, 0.2]) {
-          const p = placeIn(f, centre, a + s * len, c, z0 + z + h);
+          const p = placeIn(f, center, a + s * len, c, z0 + z + h);
           b.cuboid(p, f, [len * 0.18, wid * 0.3, 3], PLANT, feature);
         }
       }
@@ -102,12 +102,12 @@ function buildingPart(f, centre, z0, masses, facade, band, name, kind) {
 }
 
 /** A round tower: a 24-sided prism on a podium; 8 sides at the coarsest level. */
-function roundTowerPart(f, centre, z0, podium, radius, height, facade, name) {
+function roundTowerPart(f, center, z0, podium, radius, height, facade, name) {
   const feature = { name, kind: "tower" };
-  const at = placeIn(f, centre, 0, 0, 0);
+  const at = placeIn(f, center, 0, 0, 0);
   const draw = (sides, withPlant) => (b) => {
     const [len, wid, h] = podium;
-    mass(b, f, centre, 0, 0, z0, len, wid, h, STONE[2], feature);
+    mass(b, f, center, 0, 0, z0, len, wid, h, STONE[2], feature);
     b.cylinder(
       [at[0], at[1]],
       z0 + h,
@@ -155,9 +155,9 @@ export function blockPlan(site, { metersPerUnit }) {
   const m = site.model;
   const rand = random(m.seed);
   const f = frameAt(m.angle);
-  const centre = [site.origin[0], site.origin[1]];
+  const center = [site.origin[0], site.origin[1]];
   const z0 = site.origin[2];
-  const step = LAYER_METRES / metersPerUnit;
+  const step = LAYER_METERS / metersPerUnit;
   const zPaint = z0 + PAINT_LAYER * step;
   const pitchA = m.blockLength + m.street;
   const pitchX = m.blockWidth + m.street;
@@ -165,7 +165,7 @@ export function blockPlan(site, { metersPerUnit }) {
   const W = m.blocksAcross * m.blockWidth + (m.blocksAcross + 1) * m.street;
   const parts = [];
   const flat = (along, across, len, wid, z, color, feature, error) => {
-    const at = placeIn(f, centre, along, across, z);
+    const at = placeIn(f, center, along, across, z);
     const draw = (b) =>
       b.flat([at[0], at[1]], z, len, wid, m.angle, color, feature);
     parts.push({
@@ -181,7 +181,7 @@ export function blockPlan(site, { metersPerUnit }) {
   // and a zebra crossing on every approach to every crossing.
   const lines = { name: "Lane lines", kind: "road marking" };
   const zebra = { name: "Pedestrian crossings", kind: "road marking" };
-  // The streets' centrelines, along the grid and across it.
+  // The streets' centerlines, along the grid and across it.
   const streetsAlong = [];
   for (let j = 0; j <= m.blocksAcross; j++) {
     streetsAlong.push(-W / 2 + m.street / 2 + j * pitchX);
@@ -239,7 +239,7 @@ export function blockPlan(site, { metersPerUnit }) {
       const bx = -W / 2 + m.street + m.blockWidth / 2 + j * pitchX;
       const label = `Block ${String.fromCharCode(65 + j)}${i + 1}`;
       const pavement = { name: `${label} pavement`, kind: "pavement" };
-      const bc = placeIn(f, centre, ba, bx, z0);
+      const bc = placeIn(f, center, ba, bx, z0);
       parts.push({
         at: [bc[0], bc[1]],
         lods: [
@@ -249,26 +249,26 @@ export function blockPlan(site, { metersPerUnit }) {
               b.cuboid(
                 bc,
                 f,
-                [m.blockLength, m.blockWidth, KERB],
+                [m.blockLength, m.blockWidth, CURB],
                 PAVEMENT,
                 pavement,
               ),
           },
         ],
       });
-      // Street trees along the kerb, every 15 m.
+      // Street trees along the curb, every 15 m.
       const trees = { name: `${label} street trees`, kind: "tree" };
-      const kerbA = m.blockLength / 2 - 2;
-      const kerbX = m.blockWidth / 2 - 2;
+      const curbA = m.blockLength / 2 - 2;
+      const curbX = m.blockWidth / 2 - 2;
       const spots = [];
-      for (let a = -kerbA + 6; a <= kerbA - 6; a += 15) {
-        spots.push([a, -kerbX], [a, kerbX]);
+      for (let a = -curbA + 6; a <= curbA - 6; a += 15) {
+        spots.push([a, -curbX], [a, curbX]);
       }
-      for (let c = -kerbX + 10; c <= kerbX - 10; c += 15) {
-        spots.push([-kerbA, c], [kerbA, c]);
+      for (let c = -curbX + 10; c <= curbX - 10; c += 15) {
+        spots.push([-curbA, c], [curbA, c]);
       }
       for (const [a, c] of spots) {
-        const p = placeIn(f, centre, ba + a, bx + c, 0);
+        const p = placeIn(f, center, ba + a, bx + c, 0);
         const h = between(rand, 6, 9);
         parts.push({
           at: [p[0], p[1]],
@@ -278,7 +278,7 @@ export function blockPlan(site, { metersPerUnit }) {
               draw: (b) => {
                 b.box(
                   [p[0], p[1]],
-                  z0 + KERB,
+                  z0 + CURB,
                   0.35,
                   0.35,
                   h * 0.4,
@@ -288,7 +288,7 @@ export function blockPlan(site, { metersPerUnit }) {
                 );
                 b.pyramid(
                   [p[0], p[1]],
-                  z0 + KERB + h * 0.3,
+                  z0 + CURB + h * 0.3,
                   h * 0.7,
                   h * 0.28,
                   CANOPY,
@@ -302,7 +302,7 @@ export function blockPlan(site, { metersPerUnit }) {
       }
 
       // The block's buildings, on the pavement inside the sidewalk.
-      const z = z0 + KERB;
+      const z = z0 + CURB;
       const inL = m.blockLength - 2 * SIDEWALK;
       const inW = m.blockWidth - 2 * SIDEWALK;
       const kind = pick(rand, [
@@ -326,7 +326,7 @@ export function blockPlan(site, { metersPerUnit }) {
         here.push(
           buildingPart(
             f,
-            centre,
+            center,
             z,
             [
               [ba + ta, bx, 0, tl, tw, height - crown],
@@ -347,7 +347,7 @@ export function blockPlan(site, { metersPerUnit }) {
           here.push(
             buildingPart(
               f,
-              centre,
+              center,
               z,
               [[ba + (side * (len + gap)) / 2, bx, 0, len, inW, h]],
               pick(rand, [...GLASS, ...STONE]),
@@ -363,7 +363,7 @@ export function blockPlan(site, { metersPerUnit }) {
         here.push(
           buildingPart(
             f,
-            centre,
+            center,
             z,
             [
               [ba, bx - (inW - wing) / 2, 0, inL, wing, h],
@@ -380,11 +380,11 @@ export function blockPlan(site, { metersPerUnit }) {
       } else if (kind === "round") {
         const radius = Math.min(inL, inW) * between(rand, 0.28, 0.34);
         const height = Math.round(between(rand, 22, 36)) * FLOOR;
-        const bcentre = placeIn(f, centre, ba, bx, 0);
+        const bcenter = placeIn(f, center, ba, bx, 0);
         here.push(
           roundTowerPart(
             f,
-            [bcentre[0], bcentre[1]],
+            [bcenter[0], bcenter[1]],
             z,
             [inL, inW, 3 * FLOOR],
             radius,
@@ -394,11 +394,11 @@ export function blockPlan(site, { metersPerUnit }) {
           ),
         );
       } else if (kind === "brick") {
-        // An old three-storey brick block with a taller centre pavilion.
+        // An old three-story brick block with a taller center pavilion.
         here.push(
           buildingPart(
             f,
-            centre,
+            center,
             z,
             [
               [ba, bx, 0, inL * 0.3, inW * 0.6, 5 * FLOOR],
@@ -413,7 +413,7 @@ export function blockPlan(site, { metersPerUnit }) {
       } else {
         const lawn = { name: `${label} park`, kind: "park" };
         const zLawn = z + LAWN_LAYER * step;
-        const lc = placeIn(f, centre, ba, bx, zLawn);
+        const lc = placeIn(f, center, ba, bx, zLawn);
         parts.push({
           at: [lc[0], lc[1]],
           lods: [
@@ -427,7 +427,7 @@ export function blockPlan(site, { metersPerUnit }) {
         for (let t = 0; t < 14; t++) {
           const p = placeIn(
             f,
-            centre,
+            center,
             ba + between(rand, -0.42, 0.42) * inL,
             bx + between(rand, -0.4, 0.4) * inW,
             0,
@@ -471,7 +471,7 @@ export function blockPlan(site, { metersPerUnit }) {
     parts,
     grounds: [
       {
-        at: centre,
+        at: center,
         length: L,
         width: W,
         angle: m.angle,
@@ -483,7 +483,7 @@ export function blockPlan(site, { metersPerUnit }) {
     ],
     landmark: {
       label: "The tallest roof",
-      design: [tallest.at[0], tallest.at[1], z0 + KERB + tallest.height],
+      design: [tallest.at[0], tallest.at[1], z0 + CURB + tallest.height],
     },
   };
 }

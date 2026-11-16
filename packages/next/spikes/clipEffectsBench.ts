@@ -69,9 +69,9 @@ fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>)
     return;
   }
   let d = fsInput.clipDistance;
-  let grey = vec3f(dot((*material).baseColor, vec3f(0.2126, 0.7152, 0.0722)));
+  let gray = vec3f(dot((*material).baseColor, vec3f(0.2126, 0.7152, 0.0722)));
   let fade = clamp(d / 25.0 + 0.5, 0.0, 1.0);
-  (*material).baseColor = mix((*material).baseColor, grey * vec3f(0.6, 0.8, 1.0), fade * 0.85);
+  (*material).baseColor = mix((*material).baseColor, gray * vec3f(0.6, 0.8, 1.0), fade * 0.85);
   if (d > 0.0 && fract((fsInput.screen.x + fsInput.screen.y) / 8.0) < 0.35) {
     (*material).baseColor = (*material).baseColor * 0.6;
   }
@@ -120,7 +120,7 @@ export async function runBench(
       indexBytes: 256 << 20,
     });
     // Reference frames: the site's east-north-up (clip shapes are in local
-    // metres, polygons extrude along up).
+    // meters, polygons extrude along up).
     const catalog = createFrameCatalog();
     const itrf = catalog.get("ITRF");
     const origin = Ellipsoid.WGS84.cartographicToCartesian(
@@ -184,13 +184,13 @@ export async function runBench(
     await engine.ctx.pipelines.warmClipped();
     await wait(1000);
 
-    // --- shapes about the site, in its east-north-up metres ----------------
+    // --- shapes about the site, in its east-north-up meters ----------------
     const octagon = (cx: number, cy: number, r: number) =>
       Array.from({ length: 8 }, (_, i) => {
         const a = ((i + 0.5) / 8) * 2 * Math.PI;
         return [cx + r * Math.cos(a), cy + r * Math.sin(a)] as [number, number];
       });
-    /** `n` places in two rings about the site, east-north metres. */
+    /** `n` places in two rings about the site, east-north meters. */
     const places = (n: number): Array<[number, number]> =>
       Array.from({ length: n }, (_, i) => {
         const ring = n <= 4 ? 0 : i % 2;

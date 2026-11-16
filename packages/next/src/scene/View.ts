@@ -560,14 +560,14 @@ export class View {
     this.wake?.();
   }
   /**
-   * A debug shading of this view: the opaque pass draws flat colours in
+   * A debug shading of this view: the opaque pass draws flat colors in
    * place of lighting, and keeps its depth, so the picture shows how the
    * streamed tiles were chosen. Off ("off", the default) costs one uniform
    * read per fragment and nothing else.
    *
-   * - "level": each tile coloured by its level in its tree (eight colours,
-   *   repeating; colour-blind safe), for terrain and 3D Tiles alike.
-   * - "tiles": each tile its own colour, and terrain tiles' boundaries
+   * - "level": each tile colored by its level in its tree (eight colors,
+   *   repeating; color-blind safe), for terrain and 3D Tiles alike.
+   * - "tiles": each tile its own color, and terrain tiles' boundaries
    *   darkened.
    * - "error": each tile's screen-space error as a multiple of the
    *   threshold (viridis). Over 1 is detail the view still wants.
@@ -580,7 +580,7 @@ export class View {
    * A tile's numbers (error, state, stretch) are from this view's own
    * selection; when several views of one world have a mode on, the first
    * of them writes the tiles' numbers. Translucent content, points and
-   * lines are not recoloured. `debugLegend()` says what the colours mean.
+   * lines are not recolored. `debugLegend()` says what the colors mean.
    */
   get debug(): DebugView {
     return this.state.debug;
@@ -594,7 +594,7 @@ export class View {
     return debugModeId(this.state.debug);
   }
   /**
-   * What the colours of this view's current debug mode mean, for an
+   * What the colors of this view's current debug mode mean, for an
    * application to draw beside the view. "off" has no entries.
    */
   debugLegend(): DebugLegend {

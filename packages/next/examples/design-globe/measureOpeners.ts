@@ -3,7 +3,7 @@
 //   1. the design against itself: a marker at station 170,000's true
 //      position (through the design CRS by PROJ), to the drawn station;
 //   2. the design against a real survey mark: NGS's HS5109, placed from its
-//      published NAD83(2011) position, to the nearest drawn centreline point;
+//      published NAD83(2011) position, to the nearest drawn centerline point;
 //   3. quieter, two stations 10,000 ft apart: the design distance is the
 //      same in both placements, and only reprojected draws it true.
 // And `drawnAt`, the morph's dual position on the CPU, so the figures and the
@@ -24,7 +24,7 @@ import { amount } from "./checksView.ts";
 
 // --------------------------------------------------------- the openers
 
-/** An end as both placements draw it (body-fixed metres). */
+/** An end as both placements draw it (body-fixed meters). */
 export interface DrawnEnd {
   readonly rigid: Float64Array;
   readonly reprojected: Float64Array;
@@ -88,7 +88,7 @@ const designEnd = (
 /**
  * The three openers, from answers.json and the corridor's placements: the
  * station 170,000 marker (at its true position) to the drawn station; NGS's
- * mark (at its published position) to the nearest drawn centreline point;
+ * mark (at its published position) to the nearest drawn centerline point;
  * and `pairs[0]`, 10,000 ftUS on the last tangent.
  */
 export function openingMeasurements(
@@ -167,17 +167,17 @@ export interface OpenerFigures {
   readonly designLabel?: string;
   /** The slope (3D) design distance, beside a horizontal headline. */
   readonly slope?: string;
-  /** True distance, metres, from the page's `measure`; "…" until it has run. */
+  /** True distance, meters, from the page's `measure`; "…" until it has run. */
   readonly trueDistance: string;
   /**
-   * The card's headline, metres, absent while exaggerated: the self-check's
-   * drawn gap, the mark's rigid offset of the drawn centreline from where
+   * The card's headline, meters, absent while exaggerated: the self-check's
+   * drawn gap, the mark's rigid offset of the drawn centerline from where
    * it is. Both shrink to 0.000 m through the morph.
    */
   readonly hero?: string;
   /** What the headline is, beside it (the mark's); none for the self-check, whose sentence says. */
   readonly heroCaption?: string;
-  /** The line on the globe now, metres; absent while exaggerated. */
+  /** The line on the globe now, meters; absent while exaggerated. */
   readonly drawn?: string;
   /** One sentence on the line as drawn. */
   readonly globe: string;
@@ -190,13 +190,13 @@ export interface OpenerMeasured {
   readonly design: number;
   /** Design units: the horizontal design distance (what CAD reports). */
   readonly horizontal: number;
-  /** Metres. */
+  /** Meters. */
   readonly trueDistance: number;
 }
 
 export const dist = (p: ArrayLike<number>, q: ArrayLike<number>) =>
   Math.hypot(p[0]! - q[0]!, p[1]! - q[1]!, p[2]! - q[2]!);
-export const metres3 = (x: number) => `${fixed(x, 3)} m`;
+export const meters3 = (x: number) => `${fixed(x, 3)} m`;
 
 /** Shown in place of a figure the page's `measure` hasn't given yet. */
 export const PENDING = "…";
@@ -250,13 +250,13 @@ export function openerView(
   const design =
     measured === undefined ? PENDING : `${fixed(measured.design, 3)} ${symbol}`;
   const trueDistance =
-    measured === undefined ? PENDING : metres3(measured.trueDistance);
+    measured === undefined ? PENDING : meters3(measured.trueDistance);
   const exaggerated = s.exaggeration !== 1 && s.t < 1;
   const length = dist(
     drawnAt(o.a, s.t, s.exaggeration),
     drawnAt(o.b, s.t, s.exaggeration),
   );
-  const drawn = exaggerated ? undefined : metres3(length);
+  const drawn = exaggerated ? undefined : meters3(length);
   const tone: GlobeTone = s.morphing
     ? "moving"
     : exaggerated
@@ -271,7 +271,7 @@ export function openerView(
       return "";
     }
     const off = length - measured.trueDistance;
-    return `, ${metres3(Math.abs(off))} ${off >= 0 ? far : near}`;
+    return `, ${meters3(Math.abs(off))} ${off >= 0 ? far : near}`;
   };
   const isTrue =
     measured !== undefined && Math.abs(length - measured.trueDistance) < 5e-4;
@@ -293,7 +293,7 @@ export function openerView(
       // The caption follows the placement: rigid's gap is the headline
       // while rigid is drawn; once reprojected, the 0.000 m is where its
       // own design puts it, and rigid's figure is said beside it.
-      const rigidGap = metres3(dist(drawnAt(o.a, 0, 1), drawnAt(o.b, 0, 1)));
+      const rigidGap = meters3(dist(drawnAt(o.a, 0, 1), drawnAt(o.b, 0, 1)));
       const heroCaption = exaggerated
         ? `Errors drawn ×${s.exaggeration}: the figure comes back at true scale.`
         : s.morphing
@@ -313,12 +313,12 @@ export function openerView(
     }
     case "mark": {
       const m = answers.mark;
-      // Where the centreline is drawn against where it is: rigid's offset,
-      // to the millimetre, 0.000 m once reprojected.
-      const offset = metres3(
+      // Where the centerline is drawn against where it is: rigid's offset,
+      // to the millimeter, 0.000 m once reprojected.
+      const offset = meters3(
         dist(drawnAt(o.b, s.t, s.exaggeration), o.b.reprojected),
       );
-      const rigidOffset = metres3(dist(drawnAt(o.b, 0, 1), o.b.reprojected));
+      const rigidOffset = meters3(dist(drawnAt(o.b, 0, 1), o.b.reprojected));
       const globe = exaggerated
         ? notToScale
         : s.morphing
@@ -349,7 +349,7 @@ export function openerView(
             ? `The design's distance to the mark against the same from NGS's own zone 3, measuring…`
             : `The design's distance to the mark against the same from NGS's own zone 3, an independent test: ${test.within ? "within" : "outside"} the datasheet's precision, ±${amount(MARK_OFFSET_TOLERANCE, symbol)}. Rigid drew the road ${rigidOffset} from where it is, at the mark.`;
       return {
-        title: `${m.pid} ${m.name} to the centreline`,
+        title: `${m.pid} ${m.name} to the centerline`,
         // One figure for the line: the horizontal design distance, as CAD
         // reports it, here, on the globe's label and in the checks; the
         // slope distance beside it in Details.
@@ -412,7 +412,7 @@ export interface RulerEnd {
 /**
  * The ruler's far end from a measurement of its line (`measured`, from the
  * page's `measure`): a design foot is the design unit, a ground foot the
- * same length on the ground (metres per unit), and the two scales part by
+ * same length on the ground (meters per unit), and the two scales part by
  * the combined scale factor.
  */
 export function rulerEnd(
@@ -481,7 +481,7 @@ export function openerDetails(
       return [
         {
           label: "Design point",
-          value: `Sta. ${stationText(a.marker.station)} on the centreline: ${coords(a.marker.design)}`,
+          value: `Sta. ${stationText(a.marker.station)} on the centerline: ${coords(a.marker.design)}`,
         },
         {
           label: "The marker",
@@ -494,7 +494,7 @@ export function openerDetails(
       // The ends first, then the independent test, then how exact it is.
       const rows: DetailRow[] = [
         {
-          label: "Nearest centreline",
+          label: "Nearest centerline",
           value: `Sta. ${stationText(m.nearest.station)}, at ${coords(m.nearestDesign)}`,
         },
       ];
@@ -511,7 +511,7 @@ export function openerDetails(
         },
         {
           label: "From NGS's zone 3",
-          value: `${fixed(Math.hypot(m.publishedSpc.easting - m.nearestDesign[0], m.publishedSpc.northing - m.nearestDesign[1]), 3)} ${symbol} to the same centreline point: the independent test of the design's distance`,
+          value: `${fixed(Math.hypot(m.publishedSpc.easting - m.nearestDesign[0], m.publishedSpc.northing - m.nearestDesign[1]), 3)} ${symbol} to the same centerline point: the independent test of the design's distance`,
         },
       );
       if (measure !== undefined && v !== undefined) {
@@ -530,7 +530,7 @@ export function openerDetails(
       const rows: DetailRow[] = [
         {
           label: "Ends",
-          value: `Sta. ${stationText(pair.ends.a.station)} to ${stationText(pair.ends.b.station)}, on the centreline`,
+          value: `Sta. ${stationText(pair.ends.a.station)} to ${stationText(pair.ends.b.station)}, on the centerline`,
         },
       ];
       const measured = measuredOf(measure);

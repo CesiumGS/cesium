@@ -60,15 +60,15 @@ import { createSites, trackGround } from "./sites.ts";
 const ION_OSM_BUILDINGS = 96188;
 const TRUCK =
   "/specs-data/Models/glTF-2.0/CesiumMilkTruck/glTF-Draco/CesiumMilkTruck.gltf";
-/** The truck is a few metres long: drawn this much larger, it reads from the camera's range. */
+/** The truck is a few meters long: drawn this much larger, it reads from the camera's range. */
 const TRUCK_SCALE = 25;
 const DEFAULT_FACTOR = 4;
 const deg = Math.PI / 180;
 
-const metres = (m: number) => `${Math.round(m).toLocaleString("en-US")} m`;
-const signedMetres = (m: number) => `${m < 0 ? "−" : ""}${metres(Math.abs(m))}`;
+const meters = (m: number) => `${Math.round(m).toLocaleString("en-US")} m`;
+const signedMeters = (m: number) => `${m < 0 ? "−" : ""}${meters(Math.abs(m))}`;
 const distance = (m: number) =>
-  m >= 10_000 ? `${(m / 1000).toFixed(1)} km` : metres(m);
+  m >= 10_000 ? `${(m / 1000).toFixed(1)} km` : meters(m);
 
 /** An end of the measurement: a place, or a picked point. */
 interface End {
@@ -340,13 +340,13 @@ export async function run({
     );
     pickTable.set(
       "Height",
-      metres(picked.true.height),
-      metres(exaggeration.geodetic(exaggeration.drawn(picked.point)).height),
+      meters(picked.true.height),
+      meters(exaggeration.geodetic(exaggeration.drawn(picked.point)).height),
     );
     pickTable.set(
       "Terrain there",
-      ground === undefined ? "–" : metres(ground),
-      ground === undefined ? "–" : metres(ground * exaggeration.factor),
+      ground === undefined ? "–" : meters(ground),
+      ground === undefined ? "–" : meters(ground * exaggeration.factor),
     );
     pickFrame.textContent = `True: ${picked.frame}, heights above ${picked.heightsAbove}${picked.provisional ? "; estimated by taking the drawn point back through the map" : ""}.`;
   };
@@ -385,8 +385,8 @@ export async function run({
     measureTable.root.hidden = measureFrame.hidden = false;
     measureTable.set(
       "Height difference",
-      signedMetres(measured.heightDifference),
-      signedMetres(measured.drawnHeightDifference),
+      signedMeters(measured.heightDifference),
+      signedMeters(measured.drawnHeightDifference),
     );
     measureTable.set(
       "Straight line",
@@ -397,7 +397,7 @@ export async function run({
     ruler.set(
       ends.a.position,
       ends.b.position,
-      `${signedMetres(measured.heightDifference)} (true)`,
+      `${signedMeters(measured.heightDifference)} (true)`,
     );
   };
 
@@ -563,7 +563,7 @@ export async function run({
   slider.onchange = () => setParams({ x: Number(slider.value).toFixed(1) });
 
   // The error exponent α: how much of the exaggeration the choice of tile
-  // detail honours (`View.lodExponent`). Drag it to see tiles and triangles
+  // detail honors (`View.lodExponent`). Drag it to see tiles and triangles
   // fall as it drops, and the visible error rise.
   // The engine's default (0.3), read before the URL may change it, so the
   // link carries `alpha` only when it differs.

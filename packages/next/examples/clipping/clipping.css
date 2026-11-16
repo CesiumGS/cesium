@@ -155,7 +155,7 @@
   }
 }
 
-/* The panel: a labelled two-way switch, and the notes. */
+/* The panel: a labeled two-way switch, and the notes. */
 .cl-field {
   display: flex;
   align-items: center;

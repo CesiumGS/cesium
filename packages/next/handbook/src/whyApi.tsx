@@ -43,9 +43,8 @@ const REASONS: Reason[] = [
         see every write. <C>requestRenderMode</C> therefore watches the camera,
         loads and time, and leaves the rest to the application, which calls{" "}
         <C>scene.requestRender()</C>. 1.x's own rendering performance example
-        does that after changing a box's scale and colour. Forgetting it leaves
-        a stale image, so the mode is opt-in, and the default renders every
-        tick.
+        does that after changing a box's scale and color. Forgetting it leaves a
+        stale image, so the mode is opt-in, and the default renders every tick.
       </>
     ),
     next: (
@@ -209,7 +208,7 @@ const REASONS: Reason[] = [
     title: "Earth-fixed coordinates",
     shape: (
       <>
-        A position in 1.x means Earth-fixed metres, and about 100 lines read a
+        A position in 1.x means Earth-fixed meters, and about 100 lines read a
         global <C>Ellipsoid.default</C>. That was the right model for a globe.
         Another body, or a scene that moves with an orbit, works by changing
         that default or by converting by hand.

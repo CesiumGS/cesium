@@ -80,8 +80,8 @@ describe("tessellateBrep: the box", () => {
     expect(mesh.error).toBe(1e-3);
   });
 
-  it("winds every triangle away from the box's centre", () => {
-    const centre: Vec = [1, 1.5, 2];
+  it("winds every triangle away from the box's center", () => {
+    const center: Vec = [1, 1.5, 2];
     for (const t of triangles(mesh)) {
       const [a, b, c] = t.map((i) => facePoint(mesh, i)) as [Vec, Vec, Vec];
       const middle: Vec = [
@@ -90,7 +90,7 @@ describe("tessellateBrep: the box", () => {
         (a[2] + b[2] + c[2]) / 3,
       ];
       expect(
-        dot(geometricNormal(mesh, t), sub(middle, centre)),
+        dot(geometricNormal(mesh, t), sub(middle, center)),
       ).toBeGreaterThan(0);
     }
   });
@@ -236,18 +236,18 @@ describe("tessellateBrep: the trimmed NURBS face at 0.05 m", () => {
       t,
       pts,
       uvs,
-      centre: [
+      center: [
         (uvs[0]![0] + uvs[1]![0] + uvs[2]![0]) / 3,
         (uvs[0]![1] + uvs[1]![1] + uvs[2]![1]) / 3,
       ] as [number, number],
     };
   });
 
-  it("keeps no triangle whose centre is in the hole", () => {
+  it("keeps no triangle whose center is in the hole", () => {
     expect(cells.length).toBeGreaterThan(100);
     // The hole's polygon sits just inside its circle of r = 0.2.
     for (const cell of cells) {
-      const d = Math.hypot(cell.centre[0] - 0.5, cell.centre[1] - 0.5);
+      const d = Math.hypot(cell.center[0] - 0.5, cell.center[1] - 0.5);
       expect(d).toBeGreaterThan(0.1995);
     }
   });
@@ -278,8 +278,8 @@ describe("tessellateBrep: the trimmed NURBS face at 0.05 m", () => {
       const s = evaluateSurface(
         form,
         0,
-        cell.centre[0],
-        cell.centre[1],
+        cell.center[0],
+        cell.center[1],
       ).position;
       const n = cross(sub(b, a), sub(c, a));
       const unit = Math.hypot(n[0], n[1], n[2]);

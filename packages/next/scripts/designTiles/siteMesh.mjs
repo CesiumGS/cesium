@@ -11,7 +11,7 @@ import { srgb } from "./meshBuilder.mjs";
 const SETBACK = 0.004;
 
 /**
- * The building's anchor: its footprint's centre at its base, the point a
+ * The building's anchor: its footprint's center at its base, the point a
  * rigid placement of it is exact at.
  *
  * @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site
@@ -189,7 +189,7 @@ const ROOF = srgb("#4a4440");
 
 /**
  * The building as a ladder plan: one part (the building, every story) in a
- * single leaf, its faces coloured (walls, and the roof).
+ * single leaf, its faces colored (walls, and the roof).
  *
  * @param {import("../../examples/design-globe/sites.ts").PortfolioSite} site
  */

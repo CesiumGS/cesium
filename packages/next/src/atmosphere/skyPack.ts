@@ -59,8 +59,8 @@ export interface SkyPackManifest {
   }>;
   /** Shown by the Viewer, as text. */
   credits: readonly string[];
-  /** What is modelled rather than measured. */
-  modelled: readonly string[];
+  /** What is modeled rather than measured. */
+  modeled: readonly string[];
   points: { file: string; count: number; floatsPerStar: 8 };
   background: {
     file: string;
@@ -236,7 +236,7 @@ export function parseManifest(
     ...(clearance ? { clearance } : {}),
     sources,
     credits: strings(o, "credits"),
-    modelled: strings(o, "modelled"),
+    modeled: strings(o, "modeled"),
     points: {
       file: fileName(points, "points."),
       count: starCount,
@@ -431,7 +431,7 @@ export const MAX_MANIFEST_BYTES = 1 << 20;
  * Reads a body as a stream into a buffer of the expected length (`exact`:
  * the body must fill it) or up to a limit. A mismatched Content-Length is
  * refused before any byte is read, and a body that passes the length is
- * cancelled at once, so a response never grows past what the manifest says.
+ * canceled at once, so a response never grows past what the manifest says.
  */
 async function readLimited(
   response: Response,

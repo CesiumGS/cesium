@@ -6,8 +6,8 @@
 //
 //   design (site grid, design units)
 //     -> site transform (R6)            -> projected CRS coordinates, CRS units
-//     -> the coordinate operation       -> geographic: degrees, metres
-//     -> body.ellipsoid                 -> body-fixed metres
+//     -> the coordinate operation       -> geographic: degrees, meters
+//     -> body.ellipsoid                 -> body-fixed meters
 //
 // The operation comes from a `CoordinateService` (the frames module's
 // interface): PROJ's (`projCoordinateService`, R2 and R4: it ends at the
@@ -104,7 +104,7 @@ export interface EngineeringFrameDefinition {
    */
   readonly geoidFallback?: GeoidModel;
   /**
-   * PROJ's only. The fallback's standard uncertainty in metres, as the app
+   * PROJ's only. The fallback's standard uncertainty in meters, as the app
    * knows it (the gap between the replaced datum and the model). Without it
    * the fallback's accuracy is undefined, never small. Positive; only with
    * `geoidFallback`.
@@ -222,7 +222,7 @@ function checkAnswer(
   const { accuracy } = operation;
   if (accuracy !== undefined && !(Number.isFinite(accuracy) && accuracy >= 0)) {
     throw new RangeError(
-      `the operation's accuracy must be finite metres, not negative, or undefined; got ${accuracy}`,
+      `the operation's accuracy must be finite meters, not negative, or undefined; got ${accuracy}`,
     );
   }
   if (typeof units !== "object" || units === null) {
@@ -367,7 +367,7 @@ const RADIANS_PER_DEGREE = Math.PI / 180;
  * instead (see `SiteTransform`).
  *
  * Heights. A design height is in the CRS's vertical unit (its horizontal unit
- * when the CRS has no vertical axis) and the geodetic height is in metres above
+ * when the CRS has no vertical axis) and the geodetic height is in meters above
  * the body's ellipsoid: the coordinate operation takes one to the other. For
  * the Earth with a vertical axis PROJ converts the unit on the way to
  * EPSG:4979 (100 ftUS on EPSG:6420+6360 is 30.48 m above the geoid, plus the
@@ -389,7 +389,7 @@ export class EngineeringFrame<
   readonly units: CrsUnits;
   /**
    * The coordinate service's operation: the CRS's units to degrees and
-   * metres. PROJ's is its `RecordedOperation`, heights in metres
+   * meters. PROJ's is its `RecordedOperation`, heights in meters
    * (`ProjResolvedCoordinates`).
    */
   readonly operation: O;
@@ -400,7 +400,7 @@ export class EngineeringFrame<
   readonly proj?: ProjApi;
   /** The frame's alignments, built from `definition.alignments`. */
   readonly alignments: readonly Alignment[];
-  /** Metres per design height unit: the vertical unit, else the horizontal. */
+  /** Meters per design height unit: the vertical unit, else the horizontal. */
   readonly metersPerHeightUnit: number;
   /**
    * Credits for the data the operation reads (the service's `credits`): for
@@ -491,7 +491,7 @@ export class EngineeringFrame<
    * The service is asked once for the definition's CRS, body, area of
    * interest and pinned operation (`pipeline`); PROJ's also gets the
    * definition's PROJ options (`ProjCoordinateRequest`). A host's service
-   * can't honour those, so `load` refuses them with it; and it refuses a
+   * can't honor those, so `load` refuses them with it; and it refuses a
    * host's service for a definition with neither a `site` nor an
    * `areaOfInterest`, which leaves nowhere to check its operation.
    *
@@ -655,7 +655,7 @@ export class EngineeringFrame<
   }
 
   /**
-   * Geodetic position of a design point: radians and metres (R4). Throws a
+   * Geodetic position of a design point: radians and meters (R4). Throws a
    * RangeError naming the frame when the operation answers a non-finite
    * number (PROJ's refuses first, outside its domain).
    */
@@ -741,7 +741,7 @@ export class EngineeringFrame<
     ).then(() => out);
   }
 
-  /** Design units to body-fixed metres. */
+  /** Design units to body-fixed meters. */
   toBodyFixed(
     design: ArrayLike<number>,
     out = new Float64Array(3),
@@ -751,7 +751,7 @@ export class EngineeringFrame<
   }
 
   /**
-   * Body-fixed metres to design units: the exact reverse of `toBodyFixed`.
+   * Body-fixed meters to design units: the exact reverse of `toBodyFixed`.
    * Throws a RangeError naming the frame when the operation answers a
    * non-finite number.
    */
@@ -765,7 +765,7 @@ export class EngineeringFrame<
     );
     if (geodetic === undefined) {
       throw new RangeError(
-        "EngineeringFrame: a position at the body's centre has no design coordinates",
+        "EngineeringFrame: a position at the body's center has no design coordinates",
       );
     }
     const projected = this.operation.inverse([
@@ -787,12 +787,12 @@ export type SnapKind = "point" | "segment" | "arc" | "surface";
 
 /**
  * How a design point was obtained, when not typed in: picked on the screen
- * or snapped to geometry, within `tolerance` metres (its `pick` accuracy
+ * or snapped to geometry, within `tolerance` meters (its `pick` accuracy
  * term). `kind` is what a snap landed on.
  */
 export interface DesignPointObtained {
   readonly how: "pick" | "snap";
-  /** Metres; finite and not negative (an exact snap's is 0). */
+  /** Meters; finite and not negative (an exact snap's is 0). */
   readonly tolerance: number;
   readonly kind?: SnapKind;
 }
@@ -829,7 +829,7 @@ export function designPoint<O extends CoordinateOperation>(
     }
     if (!(Number.isFinite(tolerance) && tolerance >= 0)) {
       throw new Error(
-        `designPoint: obtained.tolerance must be a finite number of metres, not negative, got ${tolerance}`,
+        `designPoint: obtained.tolerance must be a finite number of meters, not negative, got ${tolerance}`,
       );
     }
     if (kind !== undefined && how !== "snap") {
@@ -854,7 +854,7 @@ export function designPoint<O extends CoordinateOperation>(
 /**
  * Rigid placement of design coordinates at one anchor, as an iModel's
  * `ecefLocation` does, matching `EXT_georeference`'s east-north-up semantics:
- * design (e, n, u) maps to body-fixed metres by one rotation, a uniform scale
+ * design (e, n, u) maps to body-fixed meters by one rotation, a uniform scale
  * and a translation. It is exact at the anchor and sags away from it (the
  * body curves away from the tangent plane: about 7.8 m at 10 km, spec 7.2).
  *
@@ -878,14 +878,14 @@ export function designPoint<O extends CoordinateOperation>(
 export class RigidPlacement<O extends CoordinateOperation = RecordedOperation> {
   readonly frame: EngineeringFrame<O>;
   readonly anchor: Float64Array;
-  /** Design units to body-fixed metres, column-major. */
+  /** Design units to body-fixed meters, column-major. */
   readonly matrix: Mat4;
   private readonly origin: Float64Array;
   private readonly east: Float64Array;
   private readonly north: Float64Array;
   private readonly up: Float64Array;
   private readonly scale: number;
-  // Metres along up per design height unit: negative for a depth CRS.
+  // Meters along up per design height unit: negative for a depth CRS.
   private readonly heightUnit: number;
 
   private constructor(frame: EngineeringFrame<O>, anchorDesign: Float64Array) {
@@ -905,7 +905,7 @@ export class RigidPlacement<O extends CoordinateOperation = RecordedOperation> {
       ellipsoid.geodeticSurfaceNormal(foot, up) === undefined
     ) {
       throw new RangeError(
-        "RigidPlacement: the anchor is at the body's centre",
+        "RigidPlacement: the anchor is at the body's center",
       );
     }
     const stepped = frame.toBodyFixed([

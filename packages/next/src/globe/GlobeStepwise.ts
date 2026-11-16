@@ -472,7 +472,7 @@ export class GlobeStepwiseSelection implements TileSelection {
   /** 1.x QuadtreePrimitive screenSpaceError (perspective) with fog. */
   private screenSpaceError(P: Pass, tile: Tile): number {
     const distance = tile.viewState(P.view.id).distance;
-    // A geometric error is a length in the tile's own metres: a warp
+    // A geometric error is a length in the tile's own meters: a warp
     // stretches it by at most σ_max over the tile, and its fit adds its own.
     const drawn = P.view.warp ? drawnTile(tile, P.view.warp) : undefined;
     const geometricError = drawn

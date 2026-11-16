@@ -7,7 +7,7 @@
 // The tree: ITRF → LC-39A pad ENU (the library's `eastNorthUpFrame` at the
 // pad, "up" the ellipsoid's normal at the point itself; 16 m below the
 // ellipsoid that differs from the normal at its foot by about 7 nrad, so the
-// explorer's two ENU conventions agree here to well under a micrometre at the
+// explorer's two ENU conventions agree here to well under a micrometer at the
 // arm's reach) → Arm base
 // (a fixed placement, its survey stated) → Base yaw → Shoulder → Elbow →
 // Wrist → Tool.
@@ -73,8 +73,8 @@ export const ARM_FRAMES: readonly string[] = [
 ];
 
 /**
- * The synthetic arm, sized like a launch pad's service arm (labelled
- * synthetic): the base 30 m east of the pad's centre, a 20 m column to the
+ * The synthetic arm, sized like a launch pad's service arm (labeled
+ * synthetic): the base 30 m east of the pad's center, a 20 m column to the
  * slewing ring (base yaw), an 18 m boom, a 14 m forearm and a 2 m tool.
  */
 export const GEOMETRY = {
@@ -85,7 +85,7 @@ export const GEOMETRY = {
   tool: 2,
 } as const;
 
-/** The synthetic spec sheet (1σ; labelled synthetic). */
+/** The synthetic spec sheet (1σ; labeled synthetic). */
 export const SPEC_SHEET = {
   /** Each joint's encoder, degrees. */
   encoderDegrees: 0.005,
@@ -171,7 +171,7 @@ export function armJoints(angles: Readonly<ArmAngles>): Joint[] {
   ];
 }
 
-/** The pad's place on the Earth, ITRF metres (pinned; see `PAD`). */
+/** The pad's place on the Earth, ITRF meters (pinned; see `PAD`). */
 export const padPosition = (): Float64Array => Float64Array.from(PAD.itrf);
 
 /** The arm's frames under `itrf`: the pad, the base, then the joints to the tool (last). */

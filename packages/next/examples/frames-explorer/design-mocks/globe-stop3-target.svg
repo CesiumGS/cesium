@@ -54,7 +54,7 @@
       <text y="18">Every line is WebGPU line-list: 1 device pixel,</text>
       <text y="34">no halo, no glow. Hierarchy is color strength.</text>
       <text y="64" font-weight="600" fill="#1f2328">Camera</text>
-      <text y="82">Over the grid's centre, 180 km range, 55° tilt,</text>
+      <text y="82">Over the grid's center, 180 km range, 55° tilt,</text>
       <text y="98">heading 0°: the grid fills about 70% of the view.</text>
       <text y="128" font-weight="600" fill="#1f2328">The darker ground</text>
       <text y="146">viewer.view.exposure = { eye: true,</text>
@@ -75,7 +75,7 @@
       <text y="434">1 px over the view's height at this range. The</text>
       <text y="450">mock leans it ×20 to show the idea; the caption</text>
       <text y="466">and label carry the number. 6b may add a ×10</text>
-      <text y="482">exaggeration control, labelled, as R4 does for</text>
+      <text y="482">exaggeration control, labeled, as R4 does for</text>
       <text y="498">the frame bias, if the real lean doesn't read.</text>
     </g>
   </g>

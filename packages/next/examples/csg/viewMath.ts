@@ -1,8 +1,8 @@
 /**
  * The sample's view math, apart from the engine and the page: a camera in
- * the sample's own metres (east, north, up at the site), and what a gizmo's
+ * the sample's own meters (east, north, up at the site), and what a gizmo's
  * handles need of it. A point's pixel, the ray through a pixel, how many
- * pixels a metre is at a point (so a handle keeps its size on screen), and
+ * pixels a meter is at a point (so a handle keeps its size on screen), and
  * the closest-point and ray-plane solutions that a drag along an axis or in
  * a plane is made of. Pixels are CSS pixels from the canvas's top-left.
  */
@@ -134,8 +134,8 @@ export function rayAt(rig: Rig, x: number, y: number): Ray {
   };
 }
 
-/** Pixels a metre spans across the view at a point's depth. */
-export function pixelsPerMetre(rig: Rig, p: ArrayLike<number>): number {
+/** Pixels a meter spans across the view at a point's depth. */
+export function pixelsPerMeter(rig: Rig, p: ArrayLike<number>): number {
   const depth = Math.max(1e-4, dot(sub(p, rig.eye), rig.forward));
   return rig.height / (2 * rig.tanY * depth);
 }

@@ -64,21 +64,21 @@ export function testHill(options: {
   const line = (i: number) => Math.round((i / (n - 1)) * Q);
   // The crest on the middle grid line, as quantized.
   const crestLon = lonOf(line((n - 1) / 2));
-  const metresPerRadian = R * Math.cos(lat);
+  const metersPerRadian = R * Math.cos(lat);
   const ridge = (lon: number) =>
     sea +
     options.height *
-      Math.max(0, 1 - (Math.abs(lon - crestLon) * metresPerRadian) / halfWidth);
+      Math.max(0, 1 - (Math.abs(lon - crestLon) * metersPerRadian) / halfWidth);
   const count = n * n;
   const u = new Uint16Array(count);
   const v = new Uint16Array(count);
-  const metres = new Float64Array(count);
+  const meters = new Float64Array(count);
   for (let j = 0; j < n; j++) {
     for (let i = 0; i < n; i++) {
       const k = j * n + i;
       u[k] = line(i);
       v[k] = line(j);
-      metres[k] = ridge(lonOf(u[k]!));
+      meters[k] = ridge(lonOf(u[k]!));
     }
   }
   const minimumHeight = sea;
@@ -87,7 +87,7 @@ export function testHill(options: {
   for (let k = 0; k < count; k++) {
     h[k] =
       options.height > 0
-        ? Math.round(((metres[k]! - minimumHeight) / options.height) * Q)
+        ? Math.round(((meters[k]! - minimumHeight) / options.height) * Q)
         : 0;
   }
   const triangles = new Uint32Array((n - 1) * (n - 1) * 6);
@@ -136,7 +136,7 @@ export function testHill(options: {
     at: (east, up) =>
       Ellipsoid.WGS84.cartographicToCartesian(
         {
-          longitude: crestLon + east / metresPerRadian,
+          longitude: crestLon + east / metersPerRadian,
           latitude: lat,
           height: sea + up,
         },

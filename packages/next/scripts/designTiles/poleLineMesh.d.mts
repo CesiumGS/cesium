@@ -1,6 +1,6 @@
 import type { PortfolioSite } from "../../examples/design-globe/sites.ts";
 
-/** How far a pole is set into the ground, metres. */
+/** How far a pole is set into the ground, meters. */
 export const POLE_EMBED: number;
 /**
  * The pole line's route and poles ([e, n], design units, absolute), and the

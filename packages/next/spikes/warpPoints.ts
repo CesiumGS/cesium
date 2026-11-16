@@ -5,7 +5,7 @@
 // kernel (vector/points.slang) evaluates the fit of its carrier draw at each
 // point before it writes the anchor the cull, the quads and a model pool
 // read. The anchors, read back from the vertex arena, must land within a
-// centimetre of the carrier's float64 twin (`placeWithTerms`), which the
+// centimeter of the carrier's float64 twin (`placeWithTerms`), which the
 // Node test puts on the route; and with the anchor left on ITRF itself they
 // must be the samples, unmoved.
 import "../lab/harness.css";
@@ -26,7 +26,7 @@ const TEMPLATE = `
   Points up to 15 km from a source's origin, 1 km above a sphere, in a frame
   whose edge to ITRF multiplies height by 10. Their anchors, as the frame
   kernel writes them, against the carrier draw's float64 twin: within a
-  centimetre. With the anchor on ITRF they are the samples.
+  centimeter. With the anchor on ITRF they are the samples.
 </p>
 <div class="status">Run to check on this GPU.</div>
 <div data-id="adapter"></div>
@@ -77,7 +77,7 @@ const SAMPLES = Float32Array.of(
   10,
 );
 const N = SAMPLES.length / 4;
-/** A centimetre. */
+/** A centimeter. */
 const LIMIT = 0.01;
 
 interface Check {

@@ -142,7 +142,7 @@ describe("Moon map polar caps", () => {
   });
 
   it("orients both caps to within a degree: longitude, the ±180° seam, latitude", () => {
-    // Each cap's pixels coloured by where they are on the Moon: longitude λ
+    // Each cap's pixels colored by where they are on the Moon: longitude λ
     // as green 128 + 100 cos λ and blue 128 + 100 sin λ, and the pole and
     // latitude as red (above 128 north, below it south). A cap frame
     // mirrored, turned or flipped puts the wrong longitude (or latitude)
@@ -407,7 +407,7 @@ function capToMoon(
 
 /**
  * A cap for the orientation test: four tiles of ±6° in its frame, in
- * 0.05° pixels, each coloured by where it is on the Moon (transparent short
+ * 0.05° pixels, each colored by where it is on the Moon (transparent short
  * of 85.5°, so the band's tones play no part).
  */
 function orientationCap(pole: "north" | "south", transform: number[]): MoonCap {

@@ -100,7 +100,7 @@ describe("heightBump and scaleAbout", () => {
     );
   });
 
-  it("scaleAbout fixes its centre", () => {
+  it("scaleAbout fixes its center", () => {
     const form: GpuWarpForm = {
       kind: "scaleAbout",
       center: [1, 2, 3],

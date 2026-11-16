@@ -175,7 +175,7 @@ copyright, redistributable unmodified only (Debian's reading, from the
 data center); SKY2000 (NASA Goddard) states no license and is compiled
 from the others. The Tycho star map 1.x ships stays; points would need
 ESA's permission for commercial use or a legal opinion on the Yale
-catalogue.
+catalog.
 
 Next for the stars (asked for after r44): they look soft, and at high
 brightness show visible edges. Both come from drawing a texture: 1.x's

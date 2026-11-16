@@ -15,7 +15,7 @@ export type Inside = (x: number, y: number, z: number) => boolean;
 const PROBE = 1e-3;
 
 /**
- * For every face, the share of its triangles whose centre, moved PROBE along
+ * For every face, the share of its triangles whose center, moved PROBE along
  * the face's normal, is outside the solid, and moved against it, inside.
  */
 export function outwardShares(form: BrepForm, inside: Inside): number[] {
@@ -60,7 +60,7 @@ export function expectBoundsHold(form: BrepForm): void {
   });
   const bounds = formBounds(form);
   const longest = Math.max(...[0, 1, 2].map((k) => max[k]! - min[k]!));
-  // The tessellator keeps a trimmed face's triangles whose centre is inside
+  // The tessellator keeps a trimmed face's triangles whose center is inside
   // the trim, so its mesh may overhang a trim by up to a triangle.
   const overhang = 0.03 * longest;
   for (let k = 0; k < 3; k++) {

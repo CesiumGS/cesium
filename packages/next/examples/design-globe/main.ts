@@ -104,12 +104,12 @@ const DAYLIGHT_STRETCHES: readonly DaylightStretch[] = (() => {
     right: daylightLine(range, 1, breaks),
   }));
 })();
-/** A site's clipped footprint reaches this far past rigid's error at its edge, metres. */
+/** A site's clipped footprint reaches this far past rigid's error at its edge, meters. */
 const CLIP_MARGIN = 3;
 /** How far the tour's shots lift their subject, as a share of the range (shots.ts `CameraMoves.lift`). */
 const TOUR_LIFT = 0.2;
 
-/** The placements' colours (DESIGN.md "On the globe"): orange rigid, cyan true. */
+/** The placements' colors (DESIGN.md "On the globe"): orange rigid, cyan true. */
 export const RIGID_HEX = "#fc9252";
 export const REPROJECTED_HEX = "#3bcddc";
 const LOOK: PlacementLook = {
@@ -1107,7 +1107,7 @@ export function run(context: ExampleContext): ExampleRun {
       refresh();
     },
     clear: () => tool.clear(),
-    pointAtCentre: () => tool.pointAtCentre(),
+    pointAtCenter: () => tool.pointAtCenter(),
     retryMeasure: () => tool.retryMeasure(),
     toCorridor: () => selectSite("corridor", true),
     closeInOnRuler() {

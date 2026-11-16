@@ -21,7 +21,7 @@ const summary = {
   skipped: 0,
   shown: 13,
   ms: 3800,
-  cancelled: false,
+  canceled: false,
 };
 const skipped = (
   id: string,
@@ -79,7 +79,7 @@ describe("the run line", () => {
     expect(
       runLine(
         {
-          state: "cancelled",
+          state: "canceled",
           done: 19,
           total: 225,
           reason: "the frames data store is not served at /frames-data/",
@@ -96,10 +96,10 @@ describe("the run line", () => {
     expect(
       runLine(
         {
-          state: "cancelled",
+          state: "canceled",
           done: 19,
           total: 225,
-          summary: { ...summary, passed: 19, cancelled: true },
+          summary: { ...summary, passed: 19, canceled: true },
         },
         [],
         LABEL,

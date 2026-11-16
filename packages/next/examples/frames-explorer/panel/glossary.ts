@@ -12,17 +12,17 @@ export const GLOSSARY = {
   itrf: {
     term: "ITRF",
     definition:
-      "The International Terrestrial Reference Frame: Earth-centred axes that turn with the Earth. GPS positions and survey coordinates live here (WGS 84 today agrees with it to a few centimetres).",
+      "The International Terrestrial Reference Frame: Earth-centered axes that turn with the Earth. GPS positions and survey coordinates live here (WGS 84 today agrees with it to a few centimeters).",
   },
   gcrf: {
     term: "GCRF",
     definition:
-      "The Geocentric Celestial Reference Frame: Earth-centred axes that don't turn with the Earth, aligned with distant quasars. Satellites and the Moon are computed here, then turned into ITRF.",
+      "The Geocentric Celestial Reference Frame: Earth-centered axes that don't turn with the Earth, aligned with distant quasars. Satellites and the Moon are computed here, then turned into ITRF.",
   },
   icrf: {
     term: "ICRF",
     definition:
-      "The International Celestial Reference Frame: the solar system's barycentre, with axes fixed on distant quasars. The root of the frame tree.",
+      "The International Celestial Reference Frame: the solar system's barycenter, with axes fixed on distant quasars. The root of the frame tree.",
   },
   eme2000: {
     term: "EME2000",
@@ -57,12 +57,12 @@ export const GLOSSARY = {
   epoch: {
     term: "Epoch",
     definition:
-      "The date a coordinate is valid at. The plates move centimetres a year, so a position in ITRF needs its epoch, such as 2010.0.",
+      "The date a coordinate is valid at. The plates move centimeters a year, so a position in ITRF needs its epoch, such as 2010.0.",
   },
   ballpark: {
     term: "Ballpark",
     definition:
-      "A datum operation PROJ falls back to when it knows no better one: it ignores the datum difference, so it can be off by metres to hundreds of metres. Shown in amber, never as a pass of accuracy.",
+      "A datum operation PROJ falls back to when it knows no better one: it ignores the datum difference, so it can be off by meters to hundreds of meters. Shown in amber, never as a pass of accuracy.",
   },
   boundCrs: {
     term: "Bound CRS",
@@ -72,7 +72,7 @@ export const GLOSSARY = {
   helmert: {
     term: "Helmert transformation",
     definition:
-      "Three shifts, three small rotations and a scale between two datums. Its sign convention (position vector or coordinate frame) matters: the wrong one moves points by metres.",
+      "Three shifts, three small rotations and a scale between two datums. Its sign convention (position vector or coordinate frame) matters: the wrong one moves points by meters.",
   },
   tolerance: {
     term: "Tolerance",

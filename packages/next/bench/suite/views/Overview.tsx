@@ -173,7 +173,7 @@ function useAttention(summaries: Summary[]) {
   const [alerts, setAlerts] = useState<AlertGroup[]>();
   const [images, setImages] = useState<ImageReview | null>();
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     void (async () => {
       let triage: Record<string, { status?: string }> = {};
       try {
@@ -184,7 +184,7 @@ function useAttention(summaries: Summary[]) {
       }
       // Change-point detection takes a moment: after the first paint.
       await new Promise((resolve) => setTimeout(resolve, 0));
-      if (cancelled) {
+      if (canceled) {
         return;
       }
       const groups = new Map<string, AlertGroup & { changes: number[] }>();
@@ -214,7 +214,7 @@ function useAttention(summaries: Summary[]) {
         g.scenes.push(a.title);
         groups.set(id, g);
       }
-      if (!cancelled) {
+      if (!canceled) {
         setAlerts(
           [...groups.values()].map(({ changes, ...g }) => ({
             ...g,
@@ -253,17 +253,17 @@ function useAttention(summaries: Summary[]) {
             title: c.title ?? c.key,
             status: c.status,
           }));
-        if (!cancelled) {
+        if (!canceled) {
           setImages({ run, date: data.date, checks });
         }
       } catch {
-        if (!cancelled) {
+        if (!canceled) {
           setImages(null);
         }
       }
     })();
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, [summaries]);
   return { alerts, images };

@@ -290,7 +290,7 @@ describe("heights across k = 1 to 10", () => {
       s.step();
       vertices.forEach((i, n) => {
         const at = drawn(s, tile, mesh, i);
-        // Drawn k times as tall: float32 vertices, so about a centimetre.
+        // Drawn k times as tall: float32 vertices, so about a centimeter.
         expect(height(at)).toBeCloseTo(k * trueHeights[n]!, 1);
         // The way back through the map is the vertex's true place.
         const back = s.exaggeration.truth(at);

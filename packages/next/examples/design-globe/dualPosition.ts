@@ -11,7 +11,7 @@ export const REPROJECTED_SEMANTIC = "_DG_REPROJECTED";
 
 /**
  * The attribute carrying how far each vertex's two positions stand apart
- * along its face's normal, metres: what keeps the ghost off the solid's depth.
+ * along its face's normal, meters: what keeps the ghost off the solid's depth.
  */
 export const STANDOFF_SEMANTIC = "_DG_STANDOFF";
 

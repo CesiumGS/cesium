@@ -13,7 +13,7 @@ import { EngineeringFrame, RigidPlacement } from "./EngineeringFrame.ts";
  * hosted placement's error without the host's coordinates).
  */
 export const DESIGN_NOT_INVERTED =
-  "a pick on this tileset has no design coordinates: its placement can't invert the hit (outside the operation's domain, or at the body's centre)";
+  "a pick on this tileset has no design coordinates: its placement can't invert the hit (outside the operation's domain, or at the body's center)";
 
 /**
  * Where a tileset's design coordinates are drawn, and the exact way back
@@ -102,7 +102,7 @@ const DEGREES_PER_RADIAN = 180 / Math.PI;
  * A hosted placement (spec section 7.9): the producer or the host
  * reprojected the content, and the engine doesn't reproduce the operation.
  * The content is drawn as delivered: `displayed` is the identity on its
- * body-fixed metres, and `displayError` is 0 (the host's reprojection
+ * body-fixed meters, and `displayError` is 0 (the host's reprojection
  * error is the host's to state).
  *
  * Design coordinates come only from the host's coordinate service: given

@@ -225,11 +225,11 @@ export function Specs() {
           transform functions and vector styling.
         </p>
         <p>
-          <strong>Proposed, not built:</strong> an explicit colour space in the
+          <strong>Proposed, not built:</strong> an explicit color space in the
           styling language, using CSS Color 4 syntax (
           <C>color(srgb-linear 1 0.5 0)</C>, <C>color(display-p3 ...)</C>)
           passed through the existing <C>color('...')</C> string (the design
-          note docs/design/colour-in-the-styling-language.md).
+          note docs/design/color-in-the-styling-language.md).
         </p>
         <p>
           <strong>What the engine reads today:</strong> a tileset's CRS from{" "}

@@ -325,7 +325,7 @@ describe("design globe portfolio and words", () => {
     expect(errorText(1.04)).toBe("1.0 m");
     expect(errorText(0.0844)).toBe("84 mm");
     expect(errorText(0.00031)).toBe("0.3 mm");
-    // Under a centimetre, to 0.1 mm: one figure for Amsterdam's 2.6 mm everywhere.
+    // Under a centimeter, to 0.1 mm: one figure for Amsterdam's 2.6 mm everywhere.
     expect(errorText(0.0025631575)).toBe("2.6 mm");
     expect(errorText(0.00001)).toBe("under 0.1 mm");
     expect(errorText(0)).toBe("0 mm");

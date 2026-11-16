@@ -195,7 +195,7 @@ CapOut fs(float4 frag : SV_Position) {
   float3 u = along.xyz;
   float3 v = cross(plane.xyz, u);
   float2 on = float2(dot(p - origin.xyz, u), dot(p - origin.xyz, v));
-  // A pixel in metres on the plane: the view's at this depth, stretched where the
+  // A pixel in meters on the plane: the view's at this depth, stretched where the
   // plane is oblique to the ray.
   float stretch = max(abs(dot(plane.xyz, ray)) / length(ray), 0.2);
   float pixel = 2.0 * best * view.viewport.w / length(up) / stretch;

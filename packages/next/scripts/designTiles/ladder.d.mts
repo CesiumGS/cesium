@@ -2,8 +2,8 @@ import type { PortfolioSite } from "../../examples/design-globe/sites.ts";
 import type { CoarsenStats } from "./coarsen.mjs";
 import type { DesignTileMesh } from "./corridorMesh.mjs";
 
-/** A leaf's geometric error, metres (1 mm). */
-export const LEAF_ERROR_METRES: number;
+/** A leaf's geometric error, meters (1 mm). */
+export const LEAF_ERROR_METERS: number;
 /** A coarse tile clusters its solids on cells of its larger side / this. */
 export const CELL_DIVISOR: number;
 

@@ -74,7 +74,7 @@ describe("covariance helpers", () => {
 });
 
 describe("pointAccuracy beyond first order", () => {
-  it("today's inputs give today's numbers: a root sum square of metres and radian levers", () => {
+  it("today's inputs give today's numbers: a root sum square of meters and radian levers", () => {
     const a = child("A", root, { meters: 0.3, note: "a" });
     const b = child("B", a, { radians: 1e-6, note: "b" });
     const p = pointAccuracy(at0(b, [3000, 4000, 0]), root);

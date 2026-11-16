@@ -117,7 +117,7 @@ describe("Frame's accuracy option", () => {
 });
 
 describe("pointAccuracy", () => {
-  it("adds metre terms as a root sum square, and says so", () => {
+  it("adds meter terms as a root sum square, and says so", () => {
     const root = Frame.root("R");
     const a = Frame.constant("A", root, shift([5, 0, 0]), {
       accuracy: { meters: 0.003, note: "a" },
@@ -150,7 +150,7 @@ describe("pointAccuracy", () => {
     expect(dominantTerm(r)?.frame).toBe("Joint");
   });
 
-  it("states both an edge's metres and its radians", () => {
+  it("states both an edge's meters and its radians", () => {
     const root = Frame.root("R");
     const f = Frame.constant("F", root, shift([0, 0, 0]), {
       accuracy: { meters: 3e-4, radians: 1e-4, note: "both" },

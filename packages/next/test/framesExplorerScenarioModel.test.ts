@@ -32,7 +32,7 @@ import {
 } from "../examples/frames-explorer/panel/answerText.ts";
 import { checkRowText } from "../examples/frames-explorer/panel/checkText.ts";
 import { checkRows } from "../examples/frames-explorer/scenarios/checks.ts";
-import { greyText } from "../examples/frames-explorer/scenarios/everything.ts";
+import { grayText } from "../examples/frames-explorer/scenarios/everything.ts";
 import type { ScenarioAnswer } from "../examples/frames-explorer/scenarios/evaluate.ts";
 import { READY } from "../examples/frames-explorer/scenarios/scenes.ts";
 import { SCENARIOS } from "../examples/frames-explorer/scenarios/specs.ts";
@@ -577,14 +577,14 @@ describe("the capstone's pair on the panel (Task 8 fix 1)", () => {
     expect(mark.text).not.toMatch(/looks here/);
   });
 
-  it("prints the band that decided each grey verdict, not the widest (Task 9)", () => {
+  it("prints the band that decided each gray verdict, not the widest (Task 9)", () => {
     expect(
-      greyText([
+      grayText([
         { what: "the Mast sensor's horizon", band: 0.1234 },
         { what: "the Moon's limb", band: 0.01 },
       ]),
     ).toBe("0.12° of the Mast sensor's horizon and 0.01° of the Moon's limb");
-    expect(greyText([{ what: "the Moon's limb", band: 0.01 }])).toBe(
+    expect(grayText([{ what: "the Moon's limb", band: 0.01 }])).toBe(
       "0.01° of the Moon's limb",
     );
   });

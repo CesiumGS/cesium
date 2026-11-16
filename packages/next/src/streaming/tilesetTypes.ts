@@ -141,7 +141,7 @@ export interface TilesetOptions extends BudgetedOptions {
    * To place a tileset in a reference frame, give an anchor bound to that
    * frame (`FramesResolver.bindAnchor`): tiles are then in the frame's own
    * coordinates, and drawn through its route to the camera, warps included.
-   * A tileset whose root `transform` carries body-fixed (ECEF) metres, as
+   * A tileset whose root `transform` carries body-fixed (ECEF) meters, as
    * most do, belongs in a frame whose local coordinates are body-fixed (an
    * exaggeration over ITRF, say). A tileset authored in a projected CRS
    * belongs in the frame of that CRS, with `rootTransform: "none"`.
@@ -193,8 +193,8 @@ export interface TilesetStats {
   /** Whether the window adapts, and the origin's negotiated protocol. */
   adaptive: boolean;
   protocol?: string;
-  /** Requests cancelled because no view needed them any more. */
-  cancelled: number;
+  /** Requests canceled because no view needed them any more. */
+  canceled: number;
   /** Decoded content waiting for its upload slot. */
   uploadQueue: number;
   /** Cumulative content requests started (L1′ measurements). */
@@ -225,8 +225,8 @@ export interface PurposeStats {
   drawn: number;
   /** Loads evicted before any view drew them. */
   unused: number;
-  /** Requests cancelled because no view needed them any more. */
-  cancelled: number;
+  /** Requests canceled because no view needed them any more. */
+  canceled: number;
 }
 
 export interface TilesetEvents {

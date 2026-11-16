@@ -91,7 +91,7 @@ const GRAPH_MODULES = [
   {
     module: "frames",
     holds:
-      "The catalogue of reference frames, Earth orientation and ephemerides: data feeding the graph, with smoothFrame and switchFrame putting nodes in it",
+      "The catalog of reference frames, Earth orientation and ephemerides: data feeding the graph, with smoothFrame and switchFrame putting nodes in it",
     rule: "Its own entry point, @cesium/next/frames",
   },
 ];
@@ -391,7 +391,7 @@ export function Architecture() {
             once. A card blocks only until something first draws. After that, a
             small chip of fixed size says what still refines. The warp examples
             show it now, for example "Refining · 12 tiles, 3 fits". It blocks
-            nothing. The plan generalises it: <C>view.refinement</C> lists the
+            nothing. The plan generalizes it: <C>view.refinement</C> lists the
             active sources (streaming, transitions, shader compiles, occlusion
             feedback, accumulation), and <C>view.converged()</C> resolves when
             they are done, for screenshots, tests and exports. It is reviewed
@@ -409,7 +409,7 @@ export function Architecture() {
             in the scene's terms (<C>view.support</C>): an unmet request warns
             once and falls back, or throws in a strict mode. Every renderer must
             draw the globe, terrain, imagery and meshes. Outputs are named
-            (colour, display colour, IDs, depth). <C>GpuDevice</C>,{" "}
+            (color, display color, IDs, depth). <C>GpuDevice</C>,{" "}
             <C>Capabilities</C> and <C>LimitsTier</C> move to an advanced entry
             point, so the main API doesn't name the GPU.
           </li>

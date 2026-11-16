@@ -75,7 +75,7 @@ describe("composedView", () => {
     expect(why.get("MOON_PA")).toBe(
       "exact by definition for DE440 (its adopted constants)",
     );
-    // MOON_PA's origin is the Moon's centre, MOON_ME's own: no lever.
+    // MOON_PA's origin is the Moon's center, MOON_ME's own: no lever.
     expect(why.get("MOON_ME")).toBe(
       "its rotation turns about this point: the lever arm is 0 m",
     );
@@ -222,7 +222,7 @@ describe("the walk's words for an edge that adds nothing (the follow-up review, 
     }
   });
 
-  it("says the lever arm is 0 m only where the point is at the rotation's origin (MOON_ME for MOON_PA, at the Moon's centre)", () => {
+  it("says the lever arm is 0 m only where the point is at the rotation's origin (MOON_ME for MOON_PA, at the Moon's center)", () => {
     const v = composedView(tree, frames, instant, "ITRF", "MOON_PA")!;
     expect(addsNothingText(node("MOON_ME"), v)).toBe(
       "Adds nothing at the origin: its rotation turns about this point: the lever arm is 0 m.",

@@ -18,7 +18,7 @@ import {
   dot,
   mad,
   multiply,
-  pixelsPerMetre,
+  pixelsPerMeter,
   project,
   rayAt,
   rotationOf,
@@ -42,7 +42,7 @@ export type Tool = "move" | "pushpull";
 /** A picked face, as a push-pull handle: where it was picked, the solid's normal there, and what dragging it changes. */
 export interface FaceHandle {
   leaf: LeafNode;
-  /** On the face, the sample's metres. */
+  /** On the face, the sample's meters. */
   point: V3;
   target: PushPull;
   /** The solid's planar faces, to snap the dragged face to one. */
@@ -61,7 +61,7 @@ export interface ManipulatorHost {
   grid(): number;
   /** A leaf's placement or parameters changed: the preview, the evaluation. */
   edited(leaf: LeafNode, phase: "drag" | "commit", label: string): void;
-  /** A push-pull of the picked face ended `moved` metres on. */
+  /** A push-pull of the picked face ended `moved` meters on. */
   pushed(moved: number): void;
   /** The pointer moved over the view with nothing held: what face is under it. */
   hovered(x: number, y: number): void;
@@ -162,7 +162,7 @@ export class Manipulator {
 
   // ------------------------------------------------------------ hit tests
   private arrowEnds(rig: Rig, face: FaceHandle, anchor = face.point) {
-    const ppm = pixelsPerMetre(rig, anchor);
+    const ppm = pixelsPerMeter(rig, anchor);
     const length = ARROW_PIXELS / ppm;
     const from = project(rig, anchor);
     const to = project(rig, mad(anchor, face.target.normal, length));
@@ -284,7 +284,7 @@ export class Manipulator {
         return;
       }
       if (result.kind === "move") {
-        s.leaf.translate = [...result.centre] as Vec3;
+        s.leaf.translate = [...result.center] as Vec3;
         const d = result.delta;
         const parts = AXIS_NAMES.flatMap((name, i) =>
           Math.abs(d[i]!) > 1e-9
@@ -293,7 +293,7 @@ export class Manipulator {
               ]
             : [],
         );
-        s.readout = `${parts.join("  ") || "Δ 0"}  →  (${result.centre.map((v) => v.toFixed(2)).join(", ")})`;
+        s.readout = `${parts.join("  ") || "Δ 0"}  →  (${result.center.map((v) => v.toFixed(2)).join(", ")})`;
       } else {
         const turned = multiply(
           axisAngle(
@@ -319,7 +319,7 @@ export class Manipulator {
       let note = "";
       if (!free) {
         const n = face.target.normal;
-        const ppm = pixelsPerMetre(rig, face.point);
+        const ppm = pixelsPerMeter(rig, face.point);
         const snap = snapToPlanes(
           face.planes,
           dot(face.point, n),
@@ -423,7 +423,7 @@ export class Manipulator {
       return;
     }
     const active = s?.kind === "push" || this.hoverArrow;
-    const colour = active ? "#ffc53d" : "#e8590c";
+    const color = active ? "#ffc53d" : "#e8590c";
     ctx.save();
     ctx.lineCap = "round";
     if (s?.kind === "push") {
@@ -444,8 +444,8 @@ export class Manipulator {
         ctx.fill();
       }
     }
-    ctx.strokeStyle = colour;
-    ctx.fillStyle = colour;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
     ctx.lineWidth = active ? 5 : 4;
     ctx.beginPath();
     ctx.moveTo(ends.from.x, ends.from.y);

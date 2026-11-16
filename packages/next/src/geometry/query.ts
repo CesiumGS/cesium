@@ -45,7 +45,7 @@ export interface RayHitOptions {
   /** The part of the segment searched, as fractions from `from` to `to` (defaults 0 and 1, inclusive). */
   readonly tMin?: number;
   readonly tMax?: number;
-  /** Where the arithmetic is centred, for precision far from the coordinates' origin. Inputs and outputs stay in placed coordinates. */
+  /** Where the arithmetic is centered, for precision far from the coordinates' origin. Inputs and outputs stay in placed coordinates. */
   readonly origin?: ArrayLike<number>;
   /** Stop at the first hit found, not the nearest. */
   readonly anyHit?: boolean;

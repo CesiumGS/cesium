@@ -23,7 +23,7 @@ const polar = (th: number, h: number): V2 => [
 /**
  * Heights scale by k below the ceiling and are lifted by a constant above it,
  * smoothed over a short blend so J is continuous and H finite. Radial about
- * the Earth's centre.
+ * the Earth's center.
  */
 function exaggerate(k: number): FnDef {
   return {

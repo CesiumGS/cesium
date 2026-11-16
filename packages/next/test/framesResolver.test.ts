@@ -348,7 +348,7 @@ describe("the frames resolver under the camera layer", () => {
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const earth = world.bodyAnchor(EARTH);
     const itrf = catalog.get("ITRF");
-    // An application's reference frame 1 km above the geocentre along z,
+    // An application's reference frame 1 km above the geocenter along z,
     // whose own data is still loading (it has no stand-in).
     let loaded = false;
     const site = new Frame("SITE", itrf, (_instant, out) => {

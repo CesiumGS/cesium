@@ -1,6 +1,6 @@
 // NIST's STEP test models through Open CASCADE (docs/design/breps-and-geometry-queries.md, the b-rep example's
 // "STEP file" scene): the files `npm run setup` keeps in the store are the
-// pinned ones, each imports in metres, converts to a render form, faces
+// pinned ones, each imports in meters, converts to a render form, faces
 // outward, and has the faces, kinds and size it is known to have. Three
 // validate clean; CTC-05, a real CAD part, has tolerance-level problems, which
 // are recorded below and held to a documented bound rather than hidden.
@@ -167,7 +167,7 @@ describe("NIST STEP samples", () => {
   });
 
   it.each(STEP_SAMPLES.map(({ file }) => file))(
-    "%s imports in metres, converts, and has its faces, kinds and size",
+    "%s imports in meters, converts, and has its faces, kinds and size",
     (file) => {
       const expected = EXPECTED[file]!;
       const solids = kernel.importStep(
@@ -186,7 +186,7 @@ describe("NIST STEP samples", () => {
       }
       expect(kinds).toEqual(expected.kinds);
 
-      // The file is in millimetres: metres here means a part of centimetres.
+      // The file is in millimeters: meters here means a part of centimeters.
       const mesh = tessellateBrep(form, { tolerance: 5e-5 });
       const min = [Infinity, Infinity, Infinity];
       const max = [-Infinity, -Infinity, -Infinity];

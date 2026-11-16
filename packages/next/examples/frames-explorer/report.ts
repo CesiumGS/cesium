@@ -43,7 +43,7 @@ export interface EnvironmentFile {
 
 /**
  * A file's SHA-256 as the report states it: "sha256 …" when the browser
- * checked the bytes, else labelled as the manifest's. `digits` shortens it
+ * checked the bytes, else labeled as the manifest's. `digits` shortens it
  * (the panel). Undefined when the file didn't load.
  */
 export function fileSha(

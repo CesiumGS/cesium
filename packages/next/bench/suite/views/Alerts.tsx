@@ -271,7 +271,7 @@ export function Alerts() {
   const [triage, setTriage] = useState<TriageFile>();
   const latest = useRef<TriageFile>({});
   useEffect(() => {
-    let cancelled = false;
+    let canceled = false;
     void (async () => {
       let loaded: TriageFile = {};
       try {
@@ -282,13 +282,13 @@ export function Alerts() {
       } catch {
         // Nothing triaged yet.
       }
-      if (!cancelled) {
+      if (!canceled) {
         latest.current = loaded;
         setTriage(loaded);
       }
     })();
     return () => {
-      cancelled = true;
+      canceled = true;
     };
   }, []);
 

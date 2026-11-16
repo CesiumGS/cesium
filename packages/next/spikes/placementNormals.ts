@@ -265,7 +265,7 @@ function hash(pixels: Uint8ClampedArray): string {
   return h.toString(16).padStart(8, "0");
 }
 
-/** The pixels whose 3 × 3 neighbourhood the mask (mode 3) covers entirely. */
+/** The pixels whose 3 × 3 neighborhood the mask (mode 3) covers entirely. */
 function interior(mask: Uint8ClampedArray): number[] {
   const full = (x: number, y: number) => mask[(y * WIDTH + x) * 4 + 1]! >= 250;
   const out: number[] = [];

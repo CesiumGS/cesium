@@ -19,7 +19,7 @@ export const RIGID_FRAME: FrameParams = {
   crs: { format: "wkid", authority: "EPSG", wkid: 6420 },
 };
 
-/** US survey feet per metre: EPSG:6420 is in ftUS. */
+/** US survey feet per meter: EPSG:6420 is in ftUS. */
 const FT = FTUS_PER_M;
 /** The catalog's California site origin (stress/shared.ts SITE_ORIGIN), ftUS. */
 const FROM = [6_000_000, 2_100_000] as const;
@@ -37,7 +37,7 @@ export const RIGID_LINE = {
   to: [FROM[0] + LENGTH * FT, FROM[1]] as const,
   /** Meters. */
   lengthM: LENGTH,
-  /** The exact line's segments: one a kilometre, each chord within 2 cm of the ellipsoid. */
+  /** The exact line's segments: one a kilometer, each chord within 2 cm of the ellipsoid. */
   samples: 400,
   /**
    * The rigid line's dash pieces: about 8 km each, about 10 px from the
@@ -78,9 +78,9 @@ export function rigidCopy(
 ) {
   const end = length(f.sagEnd, 3);
   const mark = length(f.gapAtMark, 3);
-  // The parts to the centimetre, a digit finer than the whole: they combine
+  // The parts to the centimeter, a digit finer than the whole: they combine
   // at right angles (in quadrature), and so shown they give the whole as
-  // shown (31.32 and 1.48 make 31.36, shown 31.4; to the decimetre, 31.3
+  // shown (31.32 and 1.48 make 31.36, shown 31.4; to the decimeter, 31.3
   // and 1.5 would make 31.34, shown 31.3).
   const cm = (meters: number) =>
     length(

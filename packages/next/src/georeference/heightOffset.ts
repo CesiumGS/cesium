@@ -34,7 +34,7 @@ export function heightOffsetDescriptor(
     params: {
       offset: {
         default: 0,
-        description: "metres along the normal, up positive",
+        description: "meters along the normal, up positive",
       },
     },
     forward(p, params, out, jacobian) {
@@ -100,7 +100,7 @@ export function heightOffsetDescriptor(
   };
 }
 
-/** Every point moved `offset` metres up the normal of the ellipsoid of `radii` (default WGS84). */
+/** Every point moved `offset` meters up the normal of the ellipsoid of `radii` (default WGS84). */
 export function heightOffsetEdge(options: {
   radii?: Radii;
   offset: number;

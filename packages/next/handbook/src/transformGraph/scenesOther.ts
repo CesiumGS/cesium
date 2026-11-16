@@ -78,7 +78,7 @@ const PARTS: Part[] = [
   },
 ];
 
-const centre = (p: Part): V2 => {
+const center = (p: Part): V2 => {
   const ys = p.poly.map((q) => q[1]);
   return [0, (Math.min(...ys) + Math.max(...ys)) / 2];
 };
@@ -109,8 +109,8 @@ function exploded(v: Values, t: Flags): Built {
         "asm",
         [
           [
-            centre(p),
-            [centre(p)[0] + p.dir[0] * e, centre(p)[1] + p.dir[1] * e],
+            center(p),
+            [center(p)[0] + p.dir[0] * e, center(p)[1] + p.dir[1] * e],
           ],
         ],
         "muted",
@@ -220,7 +220,7 @@ export const EXPLODED: SceneDef = {
 
 /* -------------------------------------------------------------------------- */
 
-/** Radial distortion about the image centre: p ↦ p·(1 + k₁r² + k₂r⁴). */
+/** Radial distortion about the image center: p ↦ p·(1 + k₁r² + k₂r⁴). */
 function lens(k1: number, k2: number): FnDef {
   return {
     name: "radial distortion",
@@ -264,7 +264,7 @@ function lensScene(v: Values, t: Flags): Built {
       id: "facade",
       label: "Building facade (m)",
       parent: "lens",
-      edge: aff("pose: metres → ideal image", {
+      edge: aff("pose: meters → ideal image", {
         a: 1 / 12,
         b: 0,
         c: 0,

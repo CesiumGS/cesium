@@ -68,8 +68,8 @@ function inside(
   );
 }
 
-/** Metres between a design point and its round trip through body-fixed. */
-function roundTripMetres(frame: EngineeringFrame, design: ArrayLike<number>) {
+/** Meters between a design point and its round trip through body-fixed. */
+function roundTripMeters(frame: EngineeringFrame, design: ArrayLike<number>) {
   const back = frame.fromBodyFixed(frame.toBodyFixed(design));
   const scale = frame.definition.site?.scale ?? 1;
   const horizontal = frame.units.metersPerUnit * scale;
@@ -95,14 +95,14 @@ async function checkSite(site: PortfolioSite): Promise<EngineeringFrame> {
   expect(inside(at, site.frame.areaOfInterest!), "origin in its area").toBe(
     true,
   );
-  expect(roundTripMetres(frame, site.origin)).toBeLessThan(1e-4);
+  expect(roundTripMeters(frame, site.origin)).toBeLessThan(1e-4);
   // The model's footprint's corners are in its area, and round-trip too.
   for (const corner of modelFootprint(site)) {
     expect(
       inside(frame.toGeodetic(corner), site.frame.areaOfInterest!),
       `${site.id}: corner ${corner.join(", ")} in its area`,
     ).toBe(true);
-    expect(roundTripMetres(frame, corner)).toBeLessThan(1e-4);
+    expect(roundTripMeters(frame, corner)).toBeLessThan(1e-4);
   }
   return frame;
 }

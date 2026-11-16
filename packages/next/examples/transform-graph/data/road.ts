@@ -55,7 +55,7 @@ export const ROAD: ReadonlyArray<readonly [number, number]> = [
 
 export const ROAD_CREDIT = {
   what: "The Täsch to Zermatt road",
-  who: "© swisstopo, swissTLM3D (road centrelines through the geo.admin.ch identify service), baked into 40 vertices; heights from Cesium World Terrain",
+  who: "© swisstopo, swissTLM3D (road centerlines through the geo.admin.ch identify service), baked into 40 vertices; heights from Cesium World Terrain",
   terms:
     "swisstopo's open government data, free with source attribution (terms as read from memory: check before shipping).",
   href: "https://www.swisstopo.admin.ch/en/landscape-model-swisstlm3d",

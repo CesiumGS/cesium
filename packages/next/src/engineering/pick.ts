@@ -47,7 +47,7 @@ export interface PickView {
     readonly direction: ArrayLike<number>;
     readonly up: ArrayLike<number>;
     readonly right: ArrayLike<number>;
-    /** Metres; nothing nearer is drawn (0 when absent). */
+    /** Meters; nothing nearer is drawn (0 when absent). */
     readonly near?: number;
     /** Bumped on every camera change. */
     readonly version: number;
@@ -73,7 +73,7 @@ export interface DesignPick {
    */
   readonly body: Body;
   /**
-   * Metres, in the hit anchor's coordinates (`CorePick.anchorPosition`'s
+   * Meters, in the hit anchor's coordinates (`CorePick.anchorPosition`'s
    * frame): body-fixed under a body anchor (Earth-fixed for content on the
    * Earth), else that anchor's own. Where the content is, as displayed by
    * its placement: under a warp the view draws it elsewhere (`drawn`), and
@@ -98,8 +98,8 @@ export interface DesignPick {
    */
   readonly design?: DesignPoint<CoordinateOperation>;
   /**
-   * Metres, a worst case: one CSS pixel's footprint at the hit, in true
-   * metres (the pixel's drawn size over σ_min of the route, where the view
+   * Meters, a worst case: one CSS pixel's footprint at the hit, in true
+   * meters (the pixel's drawn size over σ_min of the route, where the view
    * draws the content through a warp), plus the point's own bound where it
    * is one (an inverted drawn position's residual).
    */
@@ -150,7 +150,7 @@ function targetPixelRatio(target: PickView["target"]): number {
 
 export { DESIGN_NOT_INVERTED } from "./placement.ts";
 
-/** Whether `p` is within `margin` metres of the tile volume. */
+/** Whether `p` is within `margin` meters of the tile volume. */
 function nearVolume(
   volume: TileVolume,
   p: ArrayLike<number>,
@@ -227,8 +227,8 @@ export function designPickInterpreter(
  * `pickDesign`'s answer for a hit at `position` on `draw`, read with
  * `camera` (in `position`'s coordinates). With `truth` (a core pick's),
  * `position` is the true point and the tolerance is the pixel's in true
- * metres: the camera's coordinates are those the content is drawn in, and
- * a pixel there is at most 1/σ_min of that many true metres.
+ * meters: the camera's coordinates are those the content is drawn in, and
+ * a pixel there is at most 1/σ_min of that many true meters.
  */
 function framed(
   body: Body,
@@ -279,7 +279,7 @@ function framed(
       });
     } catch {
       // The placement can't invert this hit (EngineeringFrame.fromBodyFixed
-      // throws outside the operation's domain, or at the body's centre):
+      // throws outside the operation's domain, or at the body's center):
       // the true values stand, without design coordinates.
       tileset!.warnings.add(DESIGN_NOT_INVERTED);
     }

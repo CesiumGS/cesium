@@ -1,6 +1,6 @@
 // Tile boxes against the depth pyramid (hzb.slang; plan Task 12, fix 7).
 // One thread a query, 32 queries a group, one result bit a query: set when the
-// box is certainly hidden. A box is a centre and three half-axes in camera
+// box is certainly hidden. A box is a center and three half-axes in camera
 // space (x right, y up, z forward), relative to the eye, made on the CPU in
 // float64 and rounded here (selection's own camera, in the tileset's
 // coordinates). The test is conservative at every step: any corner at or
