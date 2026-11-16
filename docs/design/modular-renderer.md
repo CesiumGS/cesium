@@ -32,6 +32,8 @@
 - Data-only contracts between tiers: a draw's records, a `BrepForm`, a style's compiled form, a query request and its answer are plain data (typed arrays and objects), so a module can be loaded separately, run in a worker, or be replaced.
 - Don't introduce a module system, a package split or dynamic registration yet. A boundary that is only a rule in a test costs nothing to move.
 
+**Superseded in part (owner, 2026-11-16):** the content-source seam is built now, with the globe among the sources, rather than "not yet" above or "when a second consumer appears" below. The bundle measure stays, as a baseline. See [content sources as modules](../decisions/2026-11-16-content-sources-as-modules.md).
+
 **Later, when a second consumer appears.** The split into packages (or lazily loaded chunks) follows a real need: an application that doesn't want a part. The work then is mechanical: move files to a package per the tiers, export the contracts, and make the renderer register passes and pipelines instead of importing them (a plugin interface for passes). The entry points are a start; a `@cesium/next/tiles` entry could come before a separate package.
 
 **Should 3D Tiles be its own module?** Where the styling language lives: `src/scene/styleExpression.ts` (about 1,000 lines, "3D Tiles styling expressions (the 1.x `Cesium3DTileStyle` language) compiled to WGSL over a feature's metadata", Node-safe), with `src/scene/FeatureStyle.ts` (about 300 lines) binding it to tile features. `src/vector/VectorStyle.ts` and `src/vector/VectorLayer.ts` also import `styleExpression.ts`, so vectors already share it. The 3D Tiles code is `src/streaming`, plus the globe's tile use (`src/tiles` is 2.5 KB).
