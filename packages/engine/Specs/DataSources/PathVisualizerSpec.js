@@ -672,6 +672,62 @@ describe(
       ]);
     });
 
+    it("subSample takes sub-steps that straddle the window edges for sampled properties", function () {
+      const property = new SampledPositionProperty();
+      const epoch = new JulianDate(0, 0);
+      const at = (seconds) =>
+        JulianDate.addSeconds(epoch, seconds, new JulianDate());
+      for (let s = 0; s <= 1000; s += 100) {
+        property.addSample(at(s), new Cartesian3(s, 0, 0));
+      }
+
+      // A maximum step of 60 seconds splits each 100 second gap in half.
+      const result = PathVisualizer._subSample(
+        property,
+        at(230),
+        at(560),
+        at(400),
+        ReferenceFrame.FIXED,
+        60,
+        [],
+      );
+
+      expect(result.map((p) => p.x)).toEqual([
+        230, 250, 300, 350, 400, 450, 500, 550, 560,
+      ]);
+    });
+
+    it("subSample only steps through sampled property times near the window", function () {
+      const property = new SampledPositionProperty();
+      const epoch = new JulianDate(0, 0);
+      const times = [];
+      const positions = [];
+      for (let s = 0; s <= 1000000; s += 100) {
+        times.push(JulianDate.addSeconds(epoch, s, new JulianDate()));
+        positions.push(new Cartesian3(s, 0, 0));
+      }
+      property.addSamples(times, positions);
+      const start = JulianDate.addSeconds(epoch, 500030, new JulianDate());
+      const stop = JulianDate.addSeconds(epoch, 500360, new JulianDate());
+
+      spyOn(JulianDate, "addSeconds").and.callThrough();
+      const result = PathVisualizer._subSample(
+        property,
+        start,
+        stop,
+        undefined,
+        ReferenceFrame.FIXED,
+        60,
+        [],
+      );
+
+      expect(result.map((p) => p.x)).toEqual([
+        500030, 500050, 500100, 500150, 500200, 500250, 500300, 500350, 500360,
+      ]);
+      // Sub-steps are only taken for the gaps that overlap the window.
+      expect(JulianDate.addSeconds.calls.count()).toBeLessThan(10);
+    });
+
     it("subSample works for interval properties", function () {
       const t1 = new JulianDate(0, 0);
       const t2 = new JulianDate(1, 0);

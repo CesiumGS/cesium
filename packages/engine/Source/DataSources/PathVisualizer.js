@@ -10,6 +10,7 @@ import {
   ReferenceFrame,
   TimeInterval,
   arrayRemoveDuplicates,
+  binarySearch,
   defined,
   destroyObject,
 } from "@cesium/core";
@@ -273,11 +274,15 @@ function subSampleSampledProperty(
     JulianDate.lessThanOrEquals(updateTime, start) ||
     JulianDate.greaterThanOrEquals(updateTime, stop);
 
-  //Iterate over all interval times and add the ones that fall in our
-  //time range.  Note that times can contain data outside of
-  //the intervals range.  This is by design for use with interpolation.
-  let t = 0;
+  //Iterate over the interval times that overlap our time range.  Note that
+  //times can contain data outside of the intervals range.  This is by design
+  //for use with interpolation.  Begin at the last time at or before start so
+  //that sub-steps in the gap that straddles start are still taken.
   const len = times.length;
+  let t = binarySearch(times, start, JulianDate.compare);
+  if (t < 0) {
+    t = Math.max(~t - 1, 0);
+  }
   let current = times[t];
   const loopStop = stop;
   let sampling = false;
@@ -338,6 +343,11 @@ function subSampleSampledProperty(
           }
         }
       }
+    }
+
+    //Every remaining time is past the end of our time range.
+    if (JulianDate.greaterThanOrEquals(current, loopStop)) {
+      break;
     }
 
     if (t < len - 1) {
