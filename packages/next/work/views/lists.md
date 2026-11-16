@@ -642,7 +642,7 @@ No milestone
 
 ### Benchmarks, parity and image regression
 
-CS-195, Planned, led by owner: 0 of 20 done, 8 ready, 4 blocked, 8 proposed. Plan: [benchmark-suite.md](docs/design/benchmark-suite.md).
+CS-195, Planned, led by owner: 0 of 21 done, 9 ready, 4 blocked, 8 proposed. Plan: [benchmark-suite.md](docs/design/benchmark-suite.md).
 
 Milestone: Benchmarks run per merge on dedicated machines (CS-482, Planned)
 
@@ -678,6 +678,7 @@ No milestone
 - [?] CS-333 Dyno's analysis and results features: notes, saved views, authoring in the Explorer, deeper analysis. Proposed. Needs nothing.
 - [?] CS-334 Benchmarks across OS, browser and GPU vendor, with power and thermals. Proposed. Needs CS-324.
 - [?] CS-335 Headless rendering on Dawn's Node package. Proposed. Needs CS-275 (Content sources and formats).
+- [ ] CS-541 The parity tests compare against CesiumJS 1.147.0, pinned. Needs nothing.
 
 ### Infrastructure and geoscience capabilities
 

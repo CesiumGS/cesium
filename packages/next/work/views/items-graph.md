@@ -406,6 +406,7 @@ graph LR
     CS_513["CS-513 The simulated network runs on the virtual clock"]:::proposed
     CS_514["CS-514 Run modes: faster than real time, or real time on a simulated o"]:::proposed
     CS_515["CS-515 Faster-than-real-time runs against real-time runs: which metric"]:::proposed
+    CS_541["CS-541 The parity tests compare against CesiumJS 1.147.0, pinned"]:::open
   end
   subgraph CS_196["Infrastructure and geoscience capabilities"]
     CS_337["CS-337 Scalar fields on any geometry: values, colour ramps, legends an"]:::proposed

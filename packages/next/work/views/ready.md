@@ -153,6 +153,7 @@ CS-195 Benchmarks, parity and image regression
   CS-336  external: Clearance to publish benchmark results
   CS-448  Energy compensation for coloured metals, against a multiple-scattering reference
   CS-451  Dyno's guardrails and their tolerances per scene, revisited now Budgeted has settled
+  CS-541  The parity tests compare against CesiumJS 1.147.0, pinned
 
 CS-198 GPU-driven rendering and capacities
   CS-350  The Slang gate and probes on Windows (D3D12)
@@ -182,5 +183,5 @@ CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
   CS-454  decision: What is the full version of scene items: references, groups, the globe as an item, and how close to USD?
 
-133 ready
+134 ready
 ```
