@@ -15,6 +15,7 @@ CS-9 The WebGL 2 renderer
 CS-10 Cesium IR
   CS-48  The core (types, rates, equations, literal slots, the builder)
   CS-57  Our naga crate (Rust in development and CI only)
+  CS-543  CS-48's formula cases checked against the whole KHR_interactivity spec
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -183,5 +184,5 @@ CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
   CS-454  decision: What is the full version of scene items: references, groups, the globe as an item, and how close to USD?
 
-134 ready
+135 ready
 ```

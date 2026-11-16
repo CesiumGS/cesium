@@ -129,7 +129,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 0 of 25 done, 2 ready, 21 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 0 of 26 done, 3 ready, 21 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -167,6 +167,7 @@ No milestone
 
 - [?] [CS-372](./items/CS-372-custom-shading-and-styling-leftovers.md) Custom shading and styling leftovers. Proposed. Needs CS-61.
 - [?] [CS-373](./items/CS-373-slang-ahead-of-time-for-apps-a-cli-and-a.md) Slang ahead of time for apps: a CLI and a bundler plugin. Proposed. Needs CS-61.
+- [ ] [CS-543](./items/CS-543-cs-48-s-formula-cases-checked-against-the-whole.md) CS-48's formula cases checked against the whole KHR_interactivity spec. Needs nothing.
 
 ### Live MaterialX graph editing
 

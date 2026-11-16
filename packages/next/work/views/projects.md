@@ -12,7 +12,7 @@ CS-9 The WebGL 2 renderer [Planned], led by owner
   waits on: CS-8 Engine profiles (1); CS-10 Cesium IR (5); CS-13 The worker-mode façade (1)
   waited on by: CS-8 Engine profiles (1); CS-11 Live MaterialX graph editing (1)
 CS-10 Cesium IR [Planned], led by owner
-  0 of 25 done, 2 ready, 21 blocked, 2 proposed
+  0 of 26 done, 3 ready, 21 blocked, 2 proposed
   waits on: nothing open
   waited on by: CS-9 The WebGL 2 renderer (5); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (4); CS-17 The transform graph (2); CS-190 Vector drawing and the styling language (3)
 CS-11 Live MaterialX graph editing [Planned], led by owner

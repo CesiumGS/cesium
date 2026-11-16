@@ -70,6 +70,7 @@ graph LR
     CS_371["CS-371 Math ops the transform graph needs: 'atanh', 'asinh', 'acosh', "]:::open
     CS_372["CS-372 Custom shading and styling leftovers"]:::proposed
     CS_373["CS-373 Slang ahead of time for apps: a CLI and a bundler plugin"]:::proposed
+    CS_543["CS-543 CS-48's formula cases checked against the whole KHR_interactivi"]:::open
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open

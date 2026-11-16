@@ -6,7 +6,7 @@
 graph LR
   CS_8["Engine profiles<br/>2 of 19 done"]
   CS_9["WebGL 2 renderer<br/>1 of 17 done"]
-  CS_10["Cesium IR<br/>0 of 25 done"]
+  CS_10["Cesium IR<br/>0 of 26 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
   CS_13["worker-mode façade<br/>0 of 20 done"]

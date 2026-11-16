@@ -72,7 +72,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 0 of 25 done, 2 ready, 21 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 0 of 26 done, 3 ready, 21 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -110,6 +110,7 @@ No milestone
 
 - [?] CS-372 Custom shading and styling leftovers. Proposed. Needs CS-61.
 - [?] CS-373 Slang ahead of time for apps: a CLI and a bundler plugin. Proposed. Needs CS-61.
+- [ ] CS-543 CS-48's formula cases checked against the whole KHR_interactivity spec. Needs nothing.
 
 ### Live MaterialX graph editing
 
