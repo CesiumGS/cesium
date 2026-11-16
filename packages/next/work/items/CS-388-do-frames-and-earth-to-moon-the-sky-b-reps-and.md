@@ -21,3 +21,7 @@ The planning audit of 2026-11-13 added projects that none of the seven initiativ
 ## Answer
 
 Open.
+
+## Reframed on 2026-11-15
+
+Human-in-the-lead's first release candidate retires initiatives: moving the tracker to its format (CS-521) turns each of the seven into a long outcome, a milestone with no parent whose constraints are the milestones under it. The question stays the same in the new terms: which long outcomes should hold the newer projects' milestones (Earth to Moon and the frames follow-ups, B-reps, the sky, ray queries and the capabilities)? The options and the recommendation carry over, with "initiative" read as "long outcome", and answering it before CS-521 lets the migration land the answer at once.

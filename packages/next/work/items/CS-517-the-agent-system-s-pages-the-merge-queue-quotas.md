@@ -5,7 +5,7 @@ kind: work
 status: Planned
 created: 2026-11-15
 project: CS-389
-needs: [CS-516]
+needs: [CS-523]
 ---
 
 The pages for the agent system's records, which the Work page's Flow view promises "when HITLd records them": the merge queue, quotas, the controllers' steps, and tokens spent per item and milestone from the ledger. Read through human-in-the-lead's read API, never by parsing its files.

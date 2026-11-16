@@ -2,7 +2,7 @@
 id: CS-516
 title: human-in-the-lead v0.1.0-rc.1 is released
 kind: external
-status: Planned
+status: Done
 created: 2026-11-15
 project: CS-389
 party: human-in-the-lead
@@ -13,3 +13,5 @@ Cesium installs human-in-the-lead only from tagged releases. Its first release c
 ## Done when
 
 - The tag `v0.1.0-rc.1` exists on human-in-the-lead's repository, with its release record.
+
+Released on 2026-11-15: the tag `v0.1.0-rc.1` and its release record are on human-in-the-lead's main branch. It ships `hitld work migrate` for the files format and the read API at version 3.
