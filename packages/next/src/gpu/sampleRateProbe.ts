@@ -1,3 +1,15 @@
+/** What the probes found: a value, or `unknown` where one errored or hasn't run. */
+export interface ProbeResults {
+  storageWritesRunPerSample: boolean | "unknown";
+}
+
+const results = new WeakMap<GPUDevice, ProbeResults>();
+
+/** The probe results recorded so far for `device` (`DeviceFacts.probes`). */
+export function probeResultsFor(device: GPUDevice): ProbeResults {
+  return { storageWritesRunPerSample: "unknown", ...results.get(device) };
+}
+
 /**
  * Whether a multisampled fragment shader's storage writes run once per
  * covered sample rather than once per pixel. WebGPU doesn't say how many
@@ -76,9 +88,12 @@ export async function storageWritesRunPerSample(
     const count = new Uint32Array(readback.getMappedRange())[0]!;
     readback.unmap();
     // Every pixel fully covered: once a pixel is exactly one run each.
-    return count !== size * size;
+    const perSample = count !== size * size;
+    results.set(device, { storageWritesRunPerSample: perSample });
+    return perSample;
   } catch {
     // Unknown: per sample is right either way, only slower.
+    results.set(device, { storageWritesRunPerSample: "unknown" });
     return true;
   } finally {
     runs.destroy();

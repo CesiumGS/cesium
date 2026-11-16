@@ -2,7 +2,7 @@
 id: CS-20
 title: Facts and personas
 kind: work
-state: in-progress
+state: done
 created: 2026-11-13
 project: CS-8
 claimed_by: D-1

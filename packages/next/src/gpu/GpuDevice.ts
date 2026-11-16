@@ -4,6 +4,7 @@ import { trackTextures } from "./textureTracking.ts";
 import { Emitter } from "../core/Emitter.ts";
 import { checkLayouts, requiredLimitsFor, type LimitsTier } from "./limits.ts";
 import { describePipelineErrors } from "./pipelineErrors.ts";
+import { probeResultsFor, type ProbeResults } from "./sampleRateProbe.ts";
 
 /**
  * Optional WebGPU features, grouped by what they unlock. Every entry has a
@@ -33,6 +34,23 @@ export interface Capabilities {
   /** 32-bit float targets blend (translucency's moments; else 16-bit). */
   float32Blendable: boolean;
   textureCompression: { bc: boolean; etc2: boolean; astc: boolean };
+}
+
+/**
+ * Everything observed about the device, close to the standard's names: the
+ * features the device was granted (all of them, as WebGPU names them), the
+ * limits tier, the adapter's info and the probe results. After a loss it
+ * describes the replacement device.
+ */
+export interface DeviceFacts {
+  renderer: "webgpu";
+  /** Every feature the device was granted, sorted. */
+  features: readonly GPUFeatureName[];
+  limitsTier: LimitsTier;
+  adapter: GpuAdapterInfo;
+  /** Startup probe results (`unknown` where one hasn't run or errored). */
+  probes: ProbeResults;
+  canvasFormat: GPUTextureFormat;
 }
 
 export interface GpuDeviceOptions {
@@ -125,6 +143,18 @@ export class GpuDevice {
       };
     }
     return this.info!;
+  }
+
+  /** What was observed about the current device (see `DeviceFacts`). */
+  get facts(): DeviceFacts {
+    return {
+      renderer: "webgpu",
+      features: [...this._device.features].sort() as GPUFeatureName[],
+      limitsTier: this.options.limits,
+      adapter: { ...this.adapterInfo },
+      probes: probeResultsFor(this._device),
+      canvasFormat: this.preferredCanvasFormat,
+    };
   }
 
   get caps(): Capabilities {
