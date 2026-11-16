@@ -235,6 +235,40 @@ try {
       `no refusal of an uncleared sky pack (the build ${refused ? `failed with: ${refused.slice(0, 200)}` : "succeeded"})`,
     );
   }
+  // Cesium IR's core (src/ir): a page that builds and evaluates a program
+  // carries it in its main chunk, and the chunk holds nothing from outside
+  // src/ir/ (the core has no dependency, not even a package).
+  const ir = await buildPage(
+    work,
+    "irCore",
+    `import { Builder, evaluate } from ${JSON.stringify(join(root, "src/ir/index.ts"))};\n` +
+      `const b = new Builder();\n` +
+      `const x = b.input("x", "float", "feature");\n` +
+      `document.title = String(evaluate(b.program({ y: b.op("math/sin", [x]) }), { x: 1 }).y);\n`,
+  );
+  const irModules = Object.keys(ir.main.modules).filter(
+    (id) => !id.includes("\0"),
+  );
+  const irHere = irModules.filter((id) => /[\\/]src[\\/]ir[\\/]/.test(id));
+  // The page's own entry file sits in the work directory.
+  const irOutside = irModules.filter(
+    (id) => !/[\\/]src[\\/]ir[\\/]/.test(id) && !id.endsWith("irCore.js"),
+  );
+  if (irHere.length === 0) {
+    found.push("no Cesium IR core (src/ir) in the main chunk of its page");
+  } else if (
+    irOutside.length > 0 ||
+    ir.eager.length > 1 ||
+    ir.lazy.length > 0
+  ) {
+    found.push(
+      `Cesium IR's core with a dependency (${irOutside.join(", ") || "another chunk"})`,
+    );
+  } else {
+    console.log(
+      `checkBundle: Cesium IR's core is in the main chunk (${irHere.length} modules, ${kb(ir.main.code)} KB), with no dependency`,
+    );
+  }
   if (found.length > 0) {
     console.error(
       `checkBundle: what loads with the page holds ${found.join(", ")}; the precise providers and the Slang compiler must load by dynamic import()`,
