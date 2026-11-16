@@ -537,11 +537,11 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 0 of 13 done, 7 ready, 1 blocked, 5 proposed.
+CS-191, Planned, led by owner: 0 of 22 done, 8 ready, 3 blocked, 11 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
-- [ ] CS-269 Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`. Needs nothing.
+- [ ] CS-269 Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`. Needs CS-552.
 - [ ] CS-270 decision: Where does 2.0's default evaluation token come from?. Needs nothing. Decided by owner.
 - [ ] CS-271 A default evaluation token, with the on-screen notice. Needs CS-269, CS-270 and CS-150 (Streaming robustness).
 
@@ -550,6 +550,16 @@ Milestone: glTF and 3D Tiles load at 1.x's coverage (CS-498, Planned)
 - [ ] CS-272 3D Tiles format gaps: implicit tiling, multiple contents, metadata, S2 and cylinder volumes. Needs nothing.
 - [ ] CS-273 glTF extension gaps: texture transforms, primitive outlines, WebP, node visibility, specular-glossiness. Needs nothing.
 - [ ] CS-274 decision: glTF 1.0 and deprecated extensions: upgrade on load, or drop?. Needs nothing. Decided by owner.
+
+Milestone: Content from any source loads through one module seam (CS-560, Proposed)
+
+- [ ] CS-552 The content-source seam: one interface every source module implements, designed and planned. Needs CS-551.
+- [?] CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point. Proposed. Needs CS-552.
+- [?] CS-555 The globe's terrain and imagery load through the content-source seam. Proposed. Needs CS-552.
+- [?] CS-556 glTF files load through the content-source seam. Proposed. Needs CS-552.
+- [?] CS-557 MVT vector tiles load through the content-source seam. Proposed. Needs CS-552.
+- [?] CS-558 Esri services load through the content-source seam. Proposed. Needs CS-552.
+- [?] CS-559 USD loads through the content-source seam. Proposed. Needs CS-552.
 
 No milestone
 
@@ -560,6 +570,8 @@ No milestone
 - [?] CS-279 More terrain and imagery providers, and several imagery layers on one globe. Proposed. Needs nothing.
 - [?] CS-280 Thin wrappers for ion's REST API, including element metadata. Proposed. Needs CS-269.
 - [ ] CS-452 decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?. Needs nothing. Decided by owner.
+- [ ] CS-551 decision: Does content from every kind of source, the globe included, load through one module seam built now?. Needs nothing. Decided by owner.
+- [ ] CS-553 What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline. Needs nothing.
 
 ### Sky, light and atmosphere
 

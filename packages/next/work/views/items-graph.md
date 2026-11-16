@@ -341,6 +341,15 @@ graph LR
     CS_279["CS-279 More terrain and imagery providers, and several imagery layers "]:::proposed
     CS_280["CS-280 Thin wrappers for ion's REST API, including element metadata"]:::proposed
     CS_452["CS-452 How should semantic metadata reach the engine, and what does pi"]:::decision
+    CS_551["CS-551 Does content from every kind of source, the globe included, loa"]:::decision
+    CS_552["CS-552 The content-source seam: one interface every source module impl"]:::open
+    CS_553["CS-553 What 3D Tiles costs an application that doesn't use them, measu"]:::open
+    CS_554["CS-554 3D Tiles loads through the content-source seam, with a @cesium/"]:::proposed
+    CS_555["CS-555 The globe's terrain and imagery load through the content-source"]:::proposed
+    CS_556["CS-556 glTF files load through the content-source seam"]:::proposed
+    CS_557["CS-557 MVT vector tiles load through the content-source seam"]:::proposed
+    CS_558["CS-558 Esri services load through the content-source seam"]:::proposed
+    CS_559["CS-559 USD loads through the content-source seam"]:::proposed
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -742,6 +751,7 @@ graph LR
   CS_55 --> CS_267
   CS_50 --> CS_268
   CS_55 --> CS_268
+  CS_552 --> CS_269
   CS_269 --> CS_271
   CS_270 --> CS_271
   CS_150 --> CS_271
@@ -878,6 +888,13 @@ graph LR
   CS_48 --> CS_549
   CS_48 --> CS_550
   CS_543 --> CS_550
+  CS_551 --> CS_552
+  CS_552 --> CS_554
+  CS_552 --> CS_555
+  CS_552 --> CS_556
+  CS_552 --> CS_557
+  CS_552 --> CS_558
+  CS_552 --> CS_559
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

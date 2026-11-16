@@ -507,5 +507,11 @@ CS-535 Rays query the scene on the GPU [Proposed], under CS-197 Ray queries and 
   unmet: not linked to a clause yet (open: CS-344, CS-345, CS-346, CS-347, CS-348, CS-349; check not passed)
   to shape: done_when; check; link CS-344, CS-345, CS-346, CS-347, CS-348, CS-349 to a clause
 
-82 open milestone(s)
+CS-560 Content from any source loads through one module seam [Proposed], under CS-191 Content sources and formats
+  outcome: An application loads 3D Tiles, the globe's terrain and imagery, glTF files, MVT, Esri services and USD through one content-source interface, importing only the source modules it uses.
+  constraints: 0 of 7 done
+  unmet: not linked to a clause yet (open: CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559; check not passed)
+  to shape: done_when; check; link CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559 to a clause
+
+83 open milestone(s)
 ```

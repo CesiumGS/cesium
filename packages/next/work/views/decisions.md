@@ -45,6 +45,8 @@ CS-191 Content sources and formats
   CS-275  Which of M6's remaining showcases to build: splats, compute point clouds, WebXR, headless Dawn? (owner)
       waited on by CS-276, CS-277, CS-335, CS-341
   CS-452  How should semantic metadata reach the engine, and what does picking mean in splats and point clouds? (owner)
+  CS-551  Does content from every kind of source, the globe included, load through one module seam built now? (owner)
+      waited on by CS-552
 
 CS-192 Sky, light and atmosphere
   CS-296  Black hole visualization: how much physics, and an engine feature or a gallery example? (owner)
@@ -91,5 +93,5 @@ CS-18 The work tracker
 CS-10 Cesium IR
   CS-546  The builder's x + 0 rewrite and the spec's signed zero (owner)
 
-33 open decision(s) for owner
+34 open decision(s) for owner
 ```

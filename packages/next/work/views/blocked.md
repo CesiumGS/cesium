@@ -417,10 +417,14 @@ CS-190 Vector drawing and the styling language
       ← CS-258 The vector drawing design: lines, polygons, labels and CAD styles on one path
 
 CS-191 Content sources and formats
+  CS-269  Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
   CS-271  A default evaluation token, with the on-screen notice
       ← CS-269 Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`
         CS-270 Where does 2.0's default evaluation token come from?
         CS-150 ion tokens
+  CS-552  The content-source seam: one interface every source module implements, designed and planned
+      ← CS-551 Does content from every kind of source, the globe included, load through one module seam built now?
 
 CS-192 Sky, light and atmosphere
   CS-282  Intel figures into `glareTier` and the Intel tables
@@ -518,5 +522,5 @@ CS-18 The work tracker
       ← CS-529 Which milestones does 2.0.0 need?
         CS-532 Release 2.0.0-rc.1
 
-187 blocked
+189 blocked
 ```

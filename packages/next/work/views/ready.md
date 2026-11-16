@@ -121,13 +121,14 @@ CS-190 Vector drawing and the styling language
   CS-453  decision: What editing should the engine support, with vector data and GIS sources among it?
 
 CS-191 Content sources and formats
-  CS-269  Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`
   CS-270  decision: Where does 2.0's default evaluation token come from?
   CS-272  3D Tiles format gaps: implicit tiling, multiple contents, metadata, S2 and cylinder volumes
   CS-273  glTF extension gaps: texture transforms, primitive outlines, WebP, node visibility, specular-glossiness
   CS-274  decision: glTF 1.0 and deprecated extensions: upgrade on load, or drop?
   CS-275  decision: Which of M6's remaining showcases to build: splats, compute point clouds, WebXR, headless Dawn?
   CS-452  decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?
+  CS-551  decision: Does content from every kind of source, the globe included, load through one module seam built now?
+  CS-553  What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline
 
 CS-192 Sky, light and atmosphere
   CS-281  external: Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws
@@ -195,5 +196,5 @@ CS-18 The work tracker
   CS-545  Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it
   CS-547  Your move's In progress shows the live run: dispatches in flight and branches done but not merged
 
-144 ready
+145 ready
 ```
