@@ -2,10 +2,15 @@
 id: CS-551
 title: Does content from every kind of source, the globe included, load through one module seam built now?
 kind: decision
-state: planned
+state: done
 created: 2026-11-16
 project: CS-191
 decider: owner
+answer: "A. Build the seam now, the globe among the sources: one content-source interface designed and planned first (CS-552), then each source moved or added behind it, with the bundle measure as a baseline (CS-553)."
+rationale: "the owner's words, 2026-11-16: i want the overall module system to support loading from heterogenous sources (3d tiles, MVT, esri, gltf files, USD, etc.) so we should build those seams anyway; and the globe is also probably one of those data sources"
+answered_at: 2026-11-16T23:07:34.000Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question
@@ -25,4 +30,4 @@ Recommended: A, as the owner directed.
 
 ## Answer
 
-Open.
+Recorded in the front matter: the owner's call in their own messages to the chief of staff on 2026-11-16, before this item was filed. It wasn't asked through `hitld rights ask`, so it has no check code or ledger entry.
