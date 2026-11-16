@@ -17,6 +17,8 @@ Options:
 
 Recommendation: the first, run only when the modules are missing; the third is worth doing anyway. CS-399's reporter records the test as environment-only until then.
 
+Progress (2026-11-15): `env.worktree_setup` in `.human-in-the-lead/policy.json` (004c72a98a) installs and builds 1.x in every worktree hitld makes, so a fresh worktree of that kind runs `npm test` clean (342 files, 5338 tests). A worktree made by hand or by the harness, and CI, still need it. CS-541 (the oracle pinned to CesiumJS 1.147.0) would remove the 1.x build altogether.
+
 ## Done when
 
 `npm test` in a fresh worktree of `cesium-2.0-webgpu-poc` passes with no failed file, and CI (CS-361) does too.
