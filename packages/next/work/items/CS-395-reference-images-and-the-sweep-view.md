@@ -2,7 +2,7 @@
 id: CS-395
 title: Reference images and the sweep view
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
 needs: [CS-393, CS-394]

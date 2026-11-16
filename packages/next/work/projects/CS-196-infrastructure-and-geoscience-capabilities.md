@@ -2,10 +2,9 @@
 id: CS-196
 title: Infrastructure and geoscience capabilities
 kind: project
-status: Planned
+state: planned
 created: 2026-11-13
-initiative: CS-1
-lead: owner
+owner: owner
 plan: docs/design/infrastructure-and-geoscience-capabilities.md
 ---
 

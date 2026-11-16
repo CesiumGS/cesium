@@ -2,7 +2,7 @@
 id: CS-159
 title: Per-view routes without twins
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-17
 ---

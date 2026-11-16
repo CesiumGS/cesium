@@ -2,7 +2,7 @@
 id: CS-380
 title: A loading cover for the Viewer
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-15
 needs: [CS-136]

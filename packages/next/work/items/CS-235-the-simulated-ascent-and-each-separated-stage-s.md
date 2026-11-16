@@ -2,7 +2,7 @@
 id: CS-235
 title: The simulated ascent and each separated stage's path
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-234, CS-229]

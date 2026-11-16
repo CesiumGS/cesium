@@ -2,7 +2,7 @@
 id: CS-262
 title: "Real-time tracks: cull small shadow casters, and one glTF asset in several worlds"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-190
 ---

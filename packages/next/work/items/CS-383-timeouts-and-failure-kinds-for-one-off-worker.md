@@ -2,7 +2,7 @@
 id: CS-383
 title: Timeouts and failure kinds for one-off worker loads
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-145]

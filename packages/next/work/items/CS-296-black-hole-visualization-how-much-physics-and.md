@@ -2,10 +2,10 @@
 id: CS-296
 title: "Black hole visualization: how much physics, and an engine feature or a gallery example?"
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-192
-decided-by: owner
+decider: owner
 ---
 
 ## Question

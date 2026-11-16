@@ -2,11 +2,11 @@
 id: CS-386
 title: Under exaggeration, do shading and haze read the drawn or the true height?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-17
 needs: [CS-385]
-decided-by: owner
+decider: owner
 ---
 
 ## Question

@@ -2,7 +2,7 @@
 id: CS-507
 title: Silent fallbacks become support notices
 kind: work
-status: Planned
+state: planned
 created: 2026-11-15
 project: CS-8
 needs: [CS-23]

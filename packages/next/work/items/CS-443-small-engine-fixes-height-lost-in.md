@@ -2,7 +2,7 @@
 id: CS-443
 title: "Small engine fixes: height lost in cartesianToCartographic, clip tests for tile load and slot reuse, the snap run reset on a server error"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-189
 ---

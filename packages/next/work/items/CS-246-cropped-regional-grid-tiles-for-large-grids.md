@@ -2,7 +2,7 @@
 id: CS-246
 title: Cropped regional grid tiles for large grids
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-189
 needs: [CS-244]

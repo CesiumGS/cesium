@@ -2,7 +2,7 @@
 id: CS-338
 title: Per-element overrides at scale, through the styling language
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-196
 needs: [CS-266]

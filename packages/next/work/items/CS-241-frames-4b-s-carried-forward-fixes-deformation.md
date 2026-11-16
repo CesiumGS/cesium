@@ -2,7 +2,7 @@
 id: CS-241
 title: "Frames 4b's carried-forward fixes: deformation models, stale store files, Mercator (Spherical), vertical datums by code"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-189
 ---

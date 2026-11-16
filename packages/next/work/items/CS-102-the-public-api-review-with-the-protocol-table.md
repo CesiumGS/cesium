@@ -2,7 +2,7 @@
 id: CS-102
 title: The public API review, with the protocol table and the façade's constraints
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-437
 needs: [CS-101, CS-430, CS-431, CS-432, CS-433, CS-454]

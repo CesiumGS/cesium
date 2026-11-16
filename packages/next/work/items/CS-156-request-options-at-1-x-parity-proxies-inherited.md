@@ -2,7 +2,7 @@
 id: CS-156
 title: "Request options at 1.x parity: proxies, inherited query parameters and headers, credentials for trusted origins"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-145]

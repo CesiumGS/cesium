@@ -2,10 +2,10 @@
 id: CS-351
 title: "WebGPU features after V1: resource tables, 64-bit atomics, subgroups everywhere, ray queries, view instancing"
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-198
-party: WebGPU working group and browsers
+waiting_on: WebGPU working group and browsers
 ---
 
 ## Waiting on

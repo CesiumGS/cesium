@@ -1,14 +1,14 @@
 ---
 id: CS-509
 title: Apps run their own jobs
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-12
 outcome: "An app runs its own work from a module on the engine's job system, below visible content, with the engine on either thread."
 done_when:
   - "c1: An app runs its own job from a module URL with `engine.jobs.run`, in its own worker group, below visible content by default; a slow or failing app job doesn't delay content, and the same call works in both thread modes."
-needs: [CS-100 c1, CS-463 c1, CS-464 c1]
+constraints: [CS-100 c1, CS-463 c1, CS-464 c1]
 check: "integration-test test/engineJobs.test.ts"
 ---
 

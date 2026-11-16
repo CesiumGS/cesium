@@ -2,7 +2,7 @@
 id: CS-369
 title: Importing an outside renderer's colour and depth
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-8
 needs: [CS-23]

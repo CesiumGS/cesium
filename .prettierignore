@@ -45,3 +45,8 @@ Specs/jasmine/**
 Tools/jsdoc/cesium_template/static/javascript/prism.js
 Tools/jsdoc/cesium_template/static/styles/prism.css
 **/LICENSE.md
+
+# The tracker's files are human-in-the-lead's format, written by hitld, not prettier.
+packages/next/work/
+# The contract block in AGENTS.md is written by hitld install; a reformat fails hitld check contract.
+/AGENTS.md

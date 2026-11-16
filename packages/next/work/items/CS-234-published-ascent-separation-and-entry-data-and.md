@@ -2,7 +2,7 @@
 id: CS-234
 title: Published ascent, separation and entry data, and the event times, found and cited
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 ---

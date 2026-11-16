@@ -2,7 +2,7 @@
 id: CS-319
 title: Silhouette weighting for design models, and pixel coverage as tile importance
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-194
 ---

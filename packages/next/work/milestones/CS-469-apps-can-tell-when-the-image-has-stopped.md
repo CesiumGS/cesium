@@ -1,13 +1,12 @@
 ---
 id: CS-469
 title: Apps can tell when the image has stopped improving
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-15
 outcome: "Refinement sources per view feed `view.refinement`, `converged()` replaces `whenReady`, `freeze` holds a view, the loop wakes and sleeps for named reasons, and jobs declare their holds."
-needs:
-  [CS-134 c?, CS-135 c?, CS-136 c?, CS-137 c?, CS-138 c?, CS-140 c?, CS-382 c?]
+constraints: [CS-134 c?, CS-135 c?, CS-136 c?, CS-137 c?, CS-138 c?, CS-140 c?, CS-382 c?]
 ---
 
 ## Done when

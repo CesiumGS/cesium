@@ -2,10 +2,9 @@
 id: CS-192
 title: Sky, light and atmosphere
 kind: project
-status: Planned
+state: planned
 created: 2026-11-13
-initiative: CS-1
-lead: owner
+owner: owner
 plan: docs/design/lighting-and-shading.md
 ---
 

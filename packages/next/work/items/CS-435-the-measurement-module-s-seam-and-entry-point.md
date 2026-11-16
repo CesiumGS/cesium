@@ -2,7 +2,7 @@
 id: CS-435
 title: The measurement module's seam and entry point
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-437
 needs: [CS-438]

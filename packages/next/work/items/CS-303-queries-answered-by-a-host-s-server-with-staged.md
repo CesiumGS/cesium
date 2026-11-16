@@ -2,7 +2,7 @@
 id: CS-303
 title: Queries answered by a host's server, with staged answers
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-193
 needs: [CS-438]

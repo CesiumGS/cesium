@@ -2,7 +2,7 @@
 id: CS-332
 title: Benchmark catalog growth
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-195
 ---

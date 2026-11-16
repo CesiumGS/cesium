@@ -1,8 +1,8 @@
 ---
 id: CS-466
 title: Each view knows what the device supports and why
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-8
 outcome: "An app can ask any view what the device supports, what each feature was given and why, and no fallback happens without being reported."
@@ -11,7 +11,7 @@ done_when:
   - "c2: The path `view.support.paths` names is the path that runs (star submission, the moments format, the KTX2 transcode target, the sample-rate path and GPU timing), and no code outside the profile and device layers reads device features, adapter info or limits to choose behaviour; a test names any line that does."
   - "c3: On a live view, an app reads `view.support`, `view.effective` and `view.explain(feature)` and gets, for each feature, what it asked for, what it was given, and the rule and reason behind it; the values stay right after a resize and after device loss."
   - "c4: Each fallback that is silent today raises a support notice on `Engine.errors` (glare's auto, moments without `float32-blendable`, the ambient occlusion pixel cap, World capacity clamps, the imagery slice ceiling, and screen-space error raised over budget), warns once in the console where the notice table says to, and throws under `strict`."
-needs: [CS-20 c1, CS-21 c1, CS-22 c2, CS-23 c3, CS-507 c4]
+constraints: [CS-20 c1, CS-21 c1, CS-22 c2, CS-23 c3, CS-507 c4]
 check: "integration-test test/viewSupport.test.ts"
 ---
 

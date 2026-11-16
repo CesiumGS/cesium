@@ -2,7 +2,7 @@
 id: CS-29
 title: The Viewer's defaults migrated
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-8
 needs: [CS-23]

@@ -2,7 +2,7 @@
 id: CS-290
 title: "Shadow follow-ups: cascades fitted to what the sun sees, cached far cascades, virtual shadow maps"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-192
 ---

@@ -2,7 +2,7 @@
 id: CS-376
 title: Shared-memory rings and decode-only jobs
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-12
 needs: [CS-87]

@@ -1,25 +1,26 @@
-// Types for query.mjs: the tracker's read API, version 2. Adding a field
-// keeps the version; removing or retyping one raises it.
+// Types for workBoard.mjs: the board's snapshot, built from
+// human-in-the-lead's read API at version 3, in its names.
 
-export type Status =
-  "Proposed" | "Planned" | "In progress" | "Done" | "Dropped";
+/** Human-in-the-lead's lifecycle: only a work item is ever in progress. */
+export type State = "proposed" | "planned" | "in-progress" | "done" | "dropped";
 export type ItemKind = "work" | "decision" | "external";
 
 export interface WorkItem {
   id: string;
   title: string;
   kind: ItemKind;
-  status: Status;
+  state: State;
+  /** Its project (the read API's `parent`). */
   project?: string;
   needs: string[];
-  /** Who holds it, while In progress. */
-  claimed?: string;
+  /** Who holds it, while in progress. */
+  claimed_by?: string;
   /** Why it was dropped, or the like. */
   reason?: string;
   /** Decisions: who answers ("owner"). */
-  decided_by?: string;
-  /** External waits: who we wait on. */
-  party?: string;
+  decider?: string;
+  /** External items: who we wait on. */
+  waiting_on?: string;
   created?: string;
   /** The tokens it is expected to take (human-in-the-lead's estimate_tokens). */
   estimate_tokens?: number;
@@ -29,9 +30,9 @@ export interface WorkItem {
   release?: string;
   /** Repository-relative. */
   path: string;
-  /** Planned, with every need Done. */
+  /** hitld's ready: planned, with every need done. */
   ready: boolean;
-  /** Proposed or Planned, with a need not Done. */
+  /** Planned or proposed, with a need not done. */
   blocked: boolean;
   open_needs: string[];
   /** Open items that need this one. */
@@ -40,21 +41,23 @@ export interface WorkItem {
   milestones: string[];
 }
 
-/** A milestone (human-in-the-lead's format): a checkable future state. */
+/** A milestone under a project: a checkable future state. */
 export interface WorkMilestone {
   id: string;
   title: string;
-  kind: "capability" | "learning";
-  status: Status;
+  kind: "milestone";
+  /** A learning milestone: its check is a study. */
+  learning: boolean;
+  state: State;
   project?: string;
-  /** Its own, or its project's. */
-  initiative?: string;
+  /** The long outcome whose constraints name it. */
+  long_outcome?: string;
   /** One sentence: the state for users, or the question answered. */
   outcome?: string;
   done_when: Array<{ clause: string; text: string }>;
   /** Items (or milestones) without which a clause can't be true; "c?" until shaped. */
   constraints: Array<{ id: string; clause: string }>;
-  serves: Array<{ id: string; value: number; confidence: number }>;
+  contributions: Array<{ id: string; value: number; confidence: number }>;
   check?: string;
   check_results: string[];
   /** The most tokens it should take, set at shaping. */
@@ -62,7 +65,7 @@ export interface WorkMilestone {
   path: string;
   /** Its item constraints done, of all. */
   progress: { done: number; total: number };
-  /** Every constraint done and the check not yet passed. */
+  /** Every item constraint done and the check not yet passed. */
   check_due: boolean;
   /** What shaping still owes it: "outcome", "clauses", "check", "links". */
   to_shape: string[];
@@ -78,37 +81,40 @@ export interface WorkProgress {
   proposed: number;
 }
 
+/** A project, or a long outcome (a milestone with no parent). */
 export interface WorkContainer {
   id: string;
   title: string;
-  status: Status;
-  lead?: string;
+  state: State;
+  owner?: string;
   plan?: string;
-  /** Projects: the initiative they belong to. */
-  initiative?: string;
+  /** Projects: the long outcome their milestones serve, if any. */
+  long_outcome?: string;
   reason?: string;
   path: string;
   progress: WorkProgress;
 }
 
 export interface WorkSnapshot {
-  api_version: 2;
+  /** Human-in-the-lead's read API version it was built from. */
+  api_version: 3;
   /** Where it was read from. */
   source: string;
+  hitld_version?: string;
   branch?: string;
   commit?: string;
   generated: string;
   items: WorkItem[];
   milestones: WorkMilestone[];
   projects: WorkContainer[];
-  initiatives: WorkContainer[];
+  long_outcomes: WorkContainer[];
   /** `from` waits on `to` through `count` open needs. */
   project_deps: Array<{ from: string; to: string; count: number }>;
-  /** What `views.mjs check` reports. */
+  /** What `hitld work check` reports. */
   problems: string[];
-  /** Work in flight in other worktrees and on other local branches. */
+  /** Work in flight on other branches and in fetched bundles. */
   elsewhere: WorkElsewhere[];
-  /** Every committed status change on this branch, oldest first. */
+  /** Every committed state change on this branch, oldest first. */
   history: WorkEvent[];
 }
 
@@ -116,12 +122,12 @@ export interface WorkEvent {
   id: string;
   /** The commit's date (ISO 8601). */
   at: string;
-  status: Status;
+  state: State;
 }
 
 export interface WorkElsewhere {
   id: string;
-  claimed?: string;
+  claimed_by?: string;
   /** The branch. */
   where: string;
   /** Checked out in a worktree on this machine. */
@@ -129,15 +135,15 @@ export interface WorkElsewhere {
 }
 
 export interface WorkItemText {
-  api_version: 2;
+  api_version: 3;
   id: string;
   path: string;
-  /** Markdown, without the frontmatter. */
+  /** Markdown, without the front matter. */
   body: string;
 }
 
 export interface WorkFound {
-  api_version: 2;
+  api_version: 3;
   q: string;
   matches: Array<{
     id: string;
@@ -148,12 +154,27 @@ export interface WorkFound {
   }>;
 }
 
-export const API_VERSION: 2;
-export function findItems(root: string, q: string, limit?: number): WorkFound;
+export const API_VERSION: 3;
+export type UnavailableReason = "missing" | "version" | "failed";
+export class HitldUnavailable extends Error {
+  constructor(reason: UnavailableReason, message: string);
+  reason: UnavailableReason;
+}
+export const UNAVAILABLE_TEXT: Record<UnavailableReason, string>;
+export function hitldPath(): string;
+export function checkVersion<T extends { api_version?: unknown }>(answer: T): T;
+export function findItems(
+  root: string,
+  q: string,
+  limit?: number,
+): Promise<WorkFound>;
 export function queryWork(
   root: string,
   options?: { elsewhere?: WorkElsewhere[]; history?: WorkEvent[] },
-): WorkSnapshot;
-export function statusHistory(root: string): WorkEvent[];
-export function claimsElsewhere(root: string): WorkElsewhere[];
-export function showItem(root: string, id: string): WorkItemText | undefined;
+): Promise<WorkSnapshot>;
+export function stateHistory(root: string): WorkEvent[];
+export function claimsElsewhere(root: string): Promise<WorkElsewhere[]>;
+export function showItem(
+  root: string,
+  id: string,
+): Promise<WorkItemText | undefined>;

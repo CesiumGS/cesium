@@ -2,11 +2,11 @@
 id: CS-438
 title: Which of the first public API review's proposed changes do you approve?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-437
 needs: [CS-102]
-decided-by: owner
+decider: owner
 ---
 
 ## Question

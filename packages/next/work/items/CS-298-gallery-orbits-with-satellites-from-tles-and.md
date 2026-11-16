@@ -2,7 +2,7 @@
 id: CS-298
 title: "Gallery: orbits, with satellites from TLEs and near-Earth objects"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-192
 needs: [CS-242]

@@ -2,7 +2,7 @@
 id: CS-508
 title: Retries for the one-off worker loads
 kind: work
-status: Planned
+state: planned
 created: 2026-11-15
 project: CS-16
 needs: [CS-383, CS-88, CS-147]

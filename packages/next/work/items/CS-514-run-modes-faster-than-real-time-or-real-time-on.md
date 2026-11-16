@@ -2,7 +2,7 @@
 id: CS-514
 title: "Run modes: faster than real time, or real time on a simulated or real network"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-15
 project: CS-195
 needs: [CS-512, CS-513]

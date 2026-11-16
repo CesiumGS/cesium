@@ -2,7 +2,7 @@
 id: CS-354
 title: Bindless textures and a visibility buffer
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-198
 needs: [CS-351]

@@ -2,7 +2,7 @@
 id: CS-305
 title: "The B-rep tiler: USD to 3D Tiles 2.0, coarse levels as meshes"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-193
 needs: [CS-304]

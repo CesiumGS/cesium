@@ -2,7 +2,7 @@
 id: CS-201
 title: Clamping, heights, models, point sources and picks per body
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-200]

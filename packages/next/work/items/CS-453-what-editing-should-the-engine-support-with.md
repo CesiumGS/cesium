@@ -2,10 +2,10 @@
 id: CS-453
 title: What editing should the engine support, with vector data and GIS sources among it?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-190
-decided-by: owner
+decider: owner
 ---
 
 ## Question

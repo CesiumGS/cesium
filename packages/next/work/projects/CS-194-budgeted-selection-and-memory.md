@@ -2,10 +2,9 @@
 id: CS-194
 title: Budgeted selection and memory
 kind: project
-status: Planned
+state: planned
 created: 2026-11-13
-initiative: CS-4
-lead: owner
+owner: owner
 plan: docs/design/tile-selection-and-memory.md
 ---
 

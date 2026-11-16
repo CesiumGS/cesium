@@ -1,12 +1,12 @@
 ---
 id: CS-481
 title: Other machines and devices run Dyno's scenes
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-389
 outcome: "A local certificate authority pairs machines with the hub, runners take remote runs, and the device lab runs scenes on phones and other machines."
-needs: [CS-406 c?, CS-407 c?, CS-408 c?, CS-411 c?]
+constraints: [CS-406 c?, CS-407 c?, CS-408 c?, CS-411 c?]
 ---
 
 ## Done when

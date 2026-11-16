@@ -2,7 +2,7 @@
 id: CS-147
 title: Retries for 3D Tiles content (episodes owned by the tile)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-146]

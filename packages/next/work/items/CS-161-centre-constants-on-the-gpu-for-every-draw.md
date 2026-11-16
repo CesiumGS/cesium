@@ -2,7 +2,7 @@
 id: CS-161
 title: Centre constants on the GPU for every draw
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-17
 ---

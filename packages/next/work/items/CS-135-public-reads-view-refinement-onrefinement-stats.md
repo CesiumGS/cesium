@@ -2,7 +2,7 @@
 id: CS-135
 title: Public reads (`view.refinement`, `onRefinement`, `stats.loop`)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-15
 needs: [CS-134]

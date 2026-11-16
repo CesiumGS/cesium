@@ -2,7 +2,7 @@
 id: CS-146
 title: Origin health (latency samples, derived timeouts, the retry bucket, throttling, `Retry-After` pauses)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-145]

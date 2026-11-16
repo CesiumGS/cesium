@@ -2,7 +2,7 @@
 id: CS-86
 title: "The first slice: `Jobs` behind `WorkerPool`"
 kind: work
-status: Done
+state: done
 created: 2026-11-13
 project: CS-12
 ---

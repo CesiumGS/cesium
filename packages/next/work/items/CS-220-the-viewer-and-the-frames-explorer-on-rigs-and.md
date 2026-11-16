@@ -2,7 +2,7 @@
 id: CS-220
 title: The Viewer and the frames explorer on rigs and controllers; 5d's done-when checks
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-217, CS-219]

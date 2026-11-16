@@ -2,7 +2,7 @@
 id: CS-84
 title: The WebGL 2 renderer's path
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-39]

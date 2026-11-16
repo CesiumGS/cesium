@@ -2,7 +2,7 @@
 id: CS-75
 title: OpenPBR tier 1 in the engine material, starting with emission in nits; lobes registered as profile features
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 ---

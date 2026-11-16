@@ -2,7 +2,7 @@
 id: CS-365
 title: Limit-forced accuracy changes carried into query results
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-8
 needs: [CS-23]

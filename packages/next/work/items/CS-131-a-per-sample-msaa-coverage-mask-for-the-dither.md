@@ -2,7 +2,7 @@
 id: CS-131
 title: A per-sample MSAA coverage mask for the dither
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-14
 needs: [CS-129]

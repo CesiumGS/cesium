@@ -2,7 +2,7 @@
 id: CS-449
 title: "Main-thread selection made cheaper before it moves: display and updateVisibility cut"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-12
 needs: [CS-96]

@@ -2,7 +2,7 @@
 id: CS-372
 title: Custom shading and styling leftovers
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-10
 needs: [CS-61]

@@ -2,7 +2,7 @@
 id: CS-364
 title: "The gallery shell: filters, editable source, checked-in thumbnails, the playground's later list"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-199
 ---

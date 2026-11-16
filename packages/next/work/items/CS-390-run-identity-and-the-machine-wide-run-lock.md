@@ -2,7 +2,7 @@
 id: CS-390
 title: Run identity and the machine-wide run lock
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
 ---

@@ -2,7 +2,7 @@
 id: CS-208
 title: View links and the Viewer per body; the Viewer's Moon
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-207]

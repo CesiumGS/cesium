@@ -2,7 +2,7 @@
 id: CS-370
 title: Scene rebuild after a WebGL 2 context loss
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-9
 needs: [CS-113, CS-36]

@@ -2,7 +2,7 @@
 id: CS-123
 title: Imagery coarsening, including the two suspected slice bugs (shown by tests first)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-14
 needs: [CS-122]

@@ -2,7 +2,7 @@
 id: CS-30
 title: The WebGL 2 renderer's facts and support rules
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-8
 needs: [CS-21, CS-35]

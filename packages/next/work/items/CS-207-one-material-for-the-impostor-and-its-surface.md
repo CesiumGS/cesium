@@ -2,7 +2,7 @@
 id: CS-207
 title: One material for the impostor and its surface tiles
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-206]

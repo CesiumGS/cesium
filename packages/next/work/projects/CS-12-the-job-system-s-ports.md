@@ -2,10 +2,9 @@
 id: CS-12
 title: The job system's ports
 kind: project
-status: In progress
+state: planned
 created: 2026-11-13
-initiative: CS-3
-lead: owner
+owner: owner
 plan: docs/design/job-system.md
 ---
 

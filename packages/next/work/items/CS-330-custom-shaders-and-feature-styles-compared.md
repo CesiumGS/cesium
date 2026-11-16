@@ -2,7 +2,7 @@
 id: CS-330
 title: Custom shaders and feature styles compared against 1.x
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-195
 ---

@@ -2,7 +2,7 @@
 id: CS-211
 title: "The animation core: easing, springs, keyframes, timelines and time-varying values"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 ---

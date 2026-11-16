@@ -2,7 +2,7 @@
 id: CS-39
 title: Styles and warps through Cesium IR
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-38, CS-52, CS-54, CS-55]

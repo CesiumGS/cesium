@@ -2,7 +2,7 @@
 id: CS-45
 title: The runner suite, the gallery's renderer switch, the handbook
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-36]

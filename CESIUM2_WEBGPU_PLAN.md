@@ -53,8 +53,8 @@ The public API is open to breaking changes. 1.x serves two roles only: it is the
 
 | Question                                               | Look in                                                                                               |
 | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| What can I work on now?                                | `node packages/next/scripts/work/views.mjs ready`, and [the work lists](packages/next/work/README.md) |
-| What is waiting on the owner?                          | `views.mjs decisions`                                                                                 |
+| What can I work on now?                                | `npx hitld work query --ready`, and [the work lists](packages/next/work/README.md)                    |
+| What is waiting on the owner?                          | `npx hitld work query --kind decision --state planned`, or `packages/next/work/views/decisions.md`    |
 | Why was something decided?                             | [`docs/decisions/`](#decisions), then the design note on the topic                                    |
 | How does a part of the engine work, or how should it?  | [`docs/design/`](#design)                                                                             |
 | What was measured, and when?                           | [`docs/history/`](#history) for milestones and logs; `packages/next/bench/results` for benchmark runs |

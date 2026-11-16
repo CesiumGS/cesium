@@ -2,7 +2,7 @@
 id: CS-260
 title: "CAD display extensions: planar fill, line and point styles, edge visibility"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-190
 needs: [CS-258]

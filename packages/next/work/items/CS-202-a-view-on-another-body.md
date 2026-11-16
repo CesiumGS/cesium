@@ -2,7 +2,7 @@
 id: CS-202
 title: A view on another body
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-201]

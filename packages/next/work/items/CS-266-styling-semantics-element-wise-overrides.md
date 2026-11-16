@@ -2,10 +2,10 @@
 id: CS-266
 title: "Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order?"
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-190
-decided-by: owner
+decider: owner
 ---
 
 ## Question

@@ -2,7 +2,7 @@
 id: CS-405
 title: The Studies page
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
 needs: [CS-395, CS-403, CS-404]

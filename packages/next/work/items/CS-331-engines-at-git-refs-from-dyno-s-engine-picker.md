@@ -2,7 +2,7 @@
 id: CS-331
 title: Engines at git refs from Dyno's engine picker
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-195
 ---

@@ -2,10 +2,10 @@
 id: CS-171
 title: Are these the right initiatives?
 kind: decision
-status: Done
+state: done
 created: 2026-11-13
 project: CS-18
-decided-by: owner
+decider: owner
 ---
 
 ## Question

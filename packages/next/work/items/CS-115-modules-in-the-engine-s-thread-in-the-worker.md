@@ -2,7 +2,7 @@
 id: CS-115
 title: Modules in the engine's thread, in the worker
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-13
 needs: [CS-114, CS-110]

@@ -2,7 +2,7 @@
 id: CS-167
 title: Imagery levels chosen by drawn footprint
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-17
 ---

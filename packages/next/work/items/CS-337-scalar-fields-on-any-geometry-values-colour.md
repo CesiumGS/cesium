@@ -2,7 +2,7 @@
 id: CS-337
 title: "Scalar fields on any geometry: values, colour ramps, legends and picks"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-196
 needs: [CS-265]

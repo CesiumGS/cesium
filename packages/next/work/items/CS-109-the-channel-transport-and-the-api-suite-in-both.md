@@ -2,7 +2,7 @@
 id: CS-109
 title: The channel transport, and the API suite in both modes
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-13
 needs: [CS-108]

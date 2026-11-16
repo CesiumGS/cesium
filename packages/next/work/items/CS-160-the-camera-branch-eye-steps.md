@@ -2,7 +2,7 @@
 id: CS-160
 title: "The camera branch: eye steps"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-17
 ---

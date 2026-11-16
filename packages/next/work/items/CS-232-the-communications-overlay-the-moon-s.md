@@ -2,7 +2,7 @@
 id: CS-232
 title: The communications overlay, the Moon's occultation checks and the lunar antenna
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-229]

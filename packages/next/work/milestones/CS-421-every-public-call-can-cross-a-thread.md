@@ -1,8 +1,8 @@
 ---
 id: CS-421
 title: Every public call can cross a thread
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-13
 outcome: "On the main thread, reads are promises, per-tick snapshots or tracked points, writes are commands, functions the engine runs are modules or programs, and engine internals are out of the main entry, and content is placed by its declared CRS, with no placement mode."
@@ -12,7 +12,7 @@ done_when:
   - "c3: Every function the engine runs on its own thread (warps, smooth edges, frame resolvers, standing queries, tick compute) is passed as a module by URL or as a Cesium IR program; a closure passed there is refused in both modes with a diagnostic naming the captured variable, while callbacks that run on the page still take closures."
   - "c4: The main entry exports nothing that can't cross a thread; GPU internals are reachable only through `@cesium/next/gpu`, and the night-sky and translucency examples still run."
   - "c5: Content is placed by its declared CRS's type, with no placement mode: the 3D Tiles draft's `EXT_geospatial_crs` and node `EXT_georeference` are read, and the design globe draws on the warp path."
-needs: [CS-103 c1, CS-104 c2, CS-105 c3, CS-106 c3, CS-107 c4, CS-378 c5]
+constraints: [CS-103 c1, CS-104 c2, CS-105 c3, CS-106 c3, CS-107 c4, CS-378 c5]
 check: "integration-test test/threadProtocol.test.ts"
 ---
 

@@ -2,7 +2,7 @@
 id: CS-289
 title: "Global illumination: bent normals, terrain sky visibility, one bounce, probes"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-192
 ---

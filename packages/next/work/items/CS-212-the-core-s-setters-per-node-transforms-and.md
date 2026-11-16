@@ -2,7 +2,7 @@
 id: CS-212
 title: The core's setters, per-node transforms and tracks
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-211]

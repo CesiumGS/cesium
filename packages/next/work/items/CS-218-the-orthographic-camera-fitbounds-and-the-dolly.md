@@ -2,7 +2,7 @@
 id: CS-218
 title: The orthographic camera, `fitBounds` and the dolly between projections
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-216]

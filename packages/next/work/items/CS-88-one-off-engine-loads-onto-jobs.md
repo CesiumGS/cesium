@@ -2,7 +2,7 @@
 id: CS-88
 title: One-off engine loads onto `Jobs`
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-12
 needs: [CS-86]

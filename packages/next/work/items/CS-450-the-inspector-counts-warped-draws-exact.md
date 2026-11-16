@@ -2,7 +2,7 @@
 id: CS-450
 title: "The inspector counts warped draws: exact, compiled and fitted"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-17
 ---

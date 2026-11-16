@@ -2,10 +2,10 @@
 id: CS-336
 title: Clearance to publish benchmark results
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-195
-party: legal review
+waiting_on: legal review
 ---
 
 ## Waiting on

@@ -456,7 +456,7 @@ export default defineConfig({
     skyPackDevRoute(),
     // The inspector's recorder posts its rows here (dev server only).
     recordEndpoint(),
-    // The tracker's read API for Dyno's Work board (scripts/work/query.mjs).
+    // The tracker's read API for Dyno's Work board (scripts/workBoard.mjs, over hitld's).
     workApi(),
     serveDirectory("/cesium1x", cesium1x),
     serveDirectory("/specs-data", specsData),

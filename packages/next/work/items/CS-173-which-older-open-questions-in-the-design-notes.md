@@ -2,10 +2,10 @@
 id: CS-173
 title: Which older open questions in the design notes are still open?
 kind: decision
-status: Done
+state: done
 created: 2026-11-13
 project: CS-18
-decided-by: owner
+decider: owner
 ---
 
 ## Question

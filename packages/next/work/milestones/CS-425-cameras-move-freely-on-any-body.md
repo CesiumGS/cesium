@@ -1,12 +1,12 @@
 ---
 id: CS-425
 title: Cameras move freely on any body
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-188
 outcome: "Every camera controller works on any body or reference frame, gestures are bindings, and moving between rigs is an animated transition, not a jump."
-needs: [CS-211 c?, CS-212 c?, CS-213 c?, CS-214 c?, CS-215 c?, CS-216 c?, CS-217 c?, CS-218 c?, CS-219 c?, CS-220 c?]
+constraints: [CS-211 c?, CS-212 c?, CS-213 c?, CS-214 c?, CS-215 c?, CS-216 c?, CS-217 c?, CS-218 c?, CS-219 c?, CS-220 c?]
 ---
 
 ## Done when

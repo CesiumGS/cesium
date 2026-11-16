@@ -2,7 +2,7 @@
 id: CS-222
 title: "Light per body: sunlight per draw, body shadows, earthshine and the Moon's reflectance"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-207]

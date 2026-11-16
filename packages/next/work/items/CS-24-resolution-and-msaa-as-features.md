@@ -2,7 +2,7 @@
 id: CS-24
 title: `resolution` and `msaa` as features
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-8
 needs: [CS-23]

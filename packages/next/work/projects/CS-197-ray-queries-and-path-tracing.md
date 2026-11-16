@@ -2,10 +2,9 @@
 id: CS-197
 title: Ray queries and path tracing
 kind: project
-status: Planned
+state: planned
 created: 2026-11-13
-initiative: CS-1
-lead: owner
+owner: owner
 plan: docs/design/ray-queries-where-they-run.md
 ---
 

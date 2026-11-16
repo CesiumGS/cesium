@@ -1,12 +1,12 @@
 ---
 id: CS-494
 title: B-reps snap and measure exactly
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-193
 outcome: "Snapping and measurement on B-reps are exact, and a host's server can answer queries with staged answers."
-needs: [CS-302 c?, CS-303 c?]
+constraints: [CS-302 c?, CS-303 c?]
 ---
 
 ## Done when

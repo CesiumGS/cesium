@@ -2,10 +2,9 @@
 id: CS-19
 title: Follow-ups for other teams
 kind: project
-status: In progress
+state: planned
 created: 2026-11-13
-initiative: CS-7
-lead: owner
+owner: owner
 ---
 
 ## Summary

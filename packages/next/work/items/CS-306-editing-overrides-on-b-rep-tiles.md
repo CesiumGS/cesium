@@ -2,7 +2,7 @@
 id: CS-306
 title: Editing overrides on B-rep tiles
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-193
 needs: [CS-305]

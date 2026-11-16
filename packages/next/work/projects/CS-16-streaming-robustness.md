@@ -2,10 +2,9 @@
 id: CS-16
 title: Streaming robustness
 kind: project
-status: Planned
+state: planned
 created: 2026-11-13
-initiative: CS-4
-lead: owner
+owner: owner
 plan: docs/superpowers/plans/2026-11-13-streaming-robustness.md
 ---
 

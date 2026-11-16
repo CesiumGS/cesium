@@ -2,7 +2,7 @@
 id: CS-433
 title: "Promotions and demotions proposed: what every app needs, and what is exported only for examples"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-437
 needs: [CS-101]

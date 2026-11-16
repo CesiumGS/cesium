@@ -2,7 +2,7 @@
 id: CS-36
 title: First draws, unlit (glTF and 3D Tiles meshes)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-32, CS-34, CS-35]

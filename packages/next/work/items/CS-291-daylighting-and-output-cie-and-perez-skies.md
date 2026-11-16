@@ -2,7 +2,7 @@
 id: CS-291
 title: "Daylighting and output: CIE and Perez skies, illuminance readouts, false colour, HDR displays"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-192
 ---

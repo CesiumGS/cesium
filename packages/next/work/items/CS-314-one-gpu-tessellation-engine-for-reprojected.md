@@ -2,7 +2,7 @@
 id: CS-314
 title: One GPU tessellation engine for reprojected models, B-reps and meshes under smooth routes
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-193
 ---

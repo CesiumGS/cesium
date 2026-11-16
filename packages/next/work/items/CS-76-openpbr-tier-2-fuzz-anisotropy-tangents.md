@@ -2,7 +2,7 @@
 id: CS-76
 title: OpenPBR tier 2 (fuzz, anisotropy, tangents)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-75]

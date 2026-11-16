@@ -1,5 +1,14 @@
 # The work tracker: one file per item
 
+**Status (2026-11-15):** superseded in its format and tooling. The tracker now runs on human-in-the-lead (milestone CS-524): the files are in its format (CS-521; its design, part 3.4, "The files backend"), and its `hitld` commands replaced `packages/next/scripts/work/` (CS-522). The day-to-day rules are in `packages/next/AGENTS.md`, "Work items", and the `work-items` skill. What changed from this design:
+
+- The lifecycle key is `state`, with `proposed`, `planned`, `in-progress`, `done` and `dropped`; `claimed` is `claimed_by`, `decided-by` is `decider`, `lead` is `owner`, `party` is `waiting_on`, and a milestone's `needs` are its `constraints`.
+- Initiatives retired: each is a long outcome, a milestone with no parent whose constraints are the milestones of its projects. Projects have no parent.
+- Only the main session creates items, on `cesium-2.0-webgpu-poc` in the main checkout (`hitld work new`); a session on a branch reports new work. The other machine allocates from a reserved ID block.
+- Views are `hitld work views`, written to `packages/next/work/views/` and the lists in `work/README.md` after merges. The check for old-style names stays Cesium's own: `packages/next/scripts/staleNames.mjs`.
+
+The rest of this document is the original design, kept as the record of the decisions behind it.
+
 **Status (2026-11-13):** design, recording the owner's decisions of 2026-11-13. Built on branch `claude/work-tracker-f930da` with the tooling (`packages/next/scripts/work/`), the items (`packages/next/work/`) and the split of `CESIUM2_WEBGPU_PLAN.md`.
 
 **Why our own:** two spikes tried tools on our real items. Beads (branch `claude/spike-beads-c838ce`) keeps its state in a per-clone database, not in files on the branch. Backlog.md (branch `claude/spike-backlog-md-32b869`) has the right shape (markdown files on the branch, one per item, merging closes), but its numeric IDs collide across machines and are repaired by renumbering, and a task file can carry a key (`onStatusChange`) that runs a shell command. So we keep Backlog.md's shape and write about 600 lines of our own: a file format, `new.mjs` and `views.mjs`.
@@ -136,7 +145,7 @@ Our second machine is reached by `git bundle`, and collaborators clone. Two clon
 - Every open milestone after M6 in the overall plan's milestone list, the job-system ports and the transform graph's open tasks became work items. Open owner questions became decision items, and outside dependencies (devices, ion's answers, the follow-ups for other teams) became external items. Finished work (M0 to M6 and the increments) stays as history prose in `docs/history/`, not as items.
 - Every old milestone name and every section-number reference into the overall plan was rewritten to the new IDs and file paths across the plans, the new documents, the handbook, AGENTS.md, scripts and code comments. There are no aliases: the tools accept only `CS-<n>`.
 - `check` fails on a stale old-style name: a plan-scoped milestone name of the old kind (the IR, JP, LT, MX, SR and WF series, the WebGL 2 and refinement series, the engine profiles' series and the overall milestone names after M6) or a bare section-number reference into the old plan. Two files are exempt: `docs/history/2026-11-13-work-items-renumbered.md`, the table from old names and section numbers to new IDs and files, kept so that commit messages and session notes written before the migration stay readable; and `test/work.test.ts`, whose fixtures hold old names on purpose.
-- `scripts/work/splitCheck.mjs` compared the old plan with the new documents: every heading, every table row and every number of the old file is accounted for in the new layout, in both its modes: exact lines, and numbers and code spans once references were rewritten. The section-6 milestones and the follow-ups table, which became items, are checked by numbers and code spans.
+- `scripts/splitCheck.mjs` (then in `scripts/work/`) compared the old plan with the new documents: every heading, every table row and every number of the old file is accounted for in the new layout, in both its modes: exact lines, and numbers and code spans once references were rewritten. The section-6 milestones and the follow-ups table, which became items, are checked by numbers and code spans.
 
 ## 9. Later: a board in Dyno
 

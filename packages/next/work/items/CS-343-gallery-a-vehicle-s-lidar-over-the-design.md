@@ -2,7 +2,7 @@
 id: CS-343
 title: "Gallery: a vehicle's lidar over the design"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-196
 needs: [CS-276]

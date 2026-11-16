@@ -2,7 +2,7 @@
 id: CS-307
 title: "The CSG sample, phase 3: local operations as feature nodes"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-193
 ---

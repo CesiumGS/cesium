@@ -2,7 +2,7 @@
 id: CS-399
 title: "Test results in Dyno: the vitest reporter and the Tests view"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
 needs: [CS-390]

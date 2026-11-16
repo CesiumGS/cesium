@@ -2,7 +2,7 @@
 id: CS-231
 title: The live frame-tree widget, public, with the frames explorer on it
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-229]

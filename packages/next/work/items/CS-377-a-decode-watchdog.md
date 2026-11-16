@@ -2,7 +2,7 @@
 id: CS-377
 title: A decode watchdog
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-12
 needs: [CS-87]

@@ -2,7 +2,7 @@
 id: CS-98
 title: Tile selection off the main thread
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-12
 needs: [CS-96, CS-97, CS-449]

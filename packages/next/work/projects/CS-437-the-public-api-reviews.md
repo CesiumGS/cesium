@@ -2,10 +2,9 @@
 id: CS-437
 title: The public API reviews
 kind: project
-status: Planned
+state: planned
 created: 2026-11-14
-initiative: CS-436
-lead: owner
+owner: owner
 plan: docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md
 ---
 

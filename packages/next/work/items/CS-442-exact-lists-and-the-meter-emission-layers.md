@@ -2,7 +2,7 @@
 id: CS-442
 title: "Exact lists and the meter: emission layers against the 32-node cap, and a Node port for the moments branch"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-192
 ---

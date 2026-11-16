@@ -2,7 +2,7 @@
 id: CS-127
 title: The frame-jump script (`scripts/frameJumps.mjs`, reading recorder dumps)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-14
 ---

@@ -114,12 +114,16 @@ milestones named by their outcome, each with an `outcome` sentence,
 "Done when" clauses and a check.
 
 - **It reads one API.** `/work-api/query.json` and
-  `/work-api/item/CS-<n>.json` on the dev server, versioned, built by
-  `scripts/work/query.mjs`, the only adapter between the page and the
-  tracker's files. When the human-in-the-lead plugin's `hitld work query
---json` and its readouts exist, that file changes and nothing here.
+  `/work-api/item/CS-<n>.json` on the dev server, built by
+  `scripts/workBoard.mjs`, the only adapter between the page and
+  human-in-the-lead's read API (`hitld work query --json`, version 3, and
+  `hitld work claims`, `check` and `show`). The page checks the version and
+  says so when hitld is missing or answers in another. The state history
+  behind Flow is the one read from git, since the read API has none yet.
+  Long outcomes (milestones with no parent) take the place initiatives
+  had; a project reaches one through its milestones.
 - **Scope, search and views.** At the top, a labelled Scope button names
-  the scope (all work, an initiative, a project, a milestone) and opens
+  the scope (all work, a long outcome, a project, a milestone) and opens
   the picker; the lines above the scope follow it, to go back up, with a
   button back to all work. A Search field sits beside it; both narrow
   every view. Below them, the views are tabs, whose rule runs into the
@@ -145,7 +149,7 @@ milestones named by their outcome, each with an `outcome` sentence,
     How they change is Flow's. The rail's count is the owner's, and it
     is the only count outside the view.
   - **Roadmap**: what comes after what, without dates. By milestones (a
-    map or a list), by initiatives or projects, or as the projects'
+    map or a list), by long outcomes or projects, or as the projects'
     waits on each other. The milestone map runs across in steps or in
     tokens left; each milestone starts once everything it waits on is
     done, and a milestone waits on another when one of its items needs

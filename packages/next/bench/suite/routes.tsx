@@ -52,7 +52,8 @@ export const runsLayoutRoute = createRoute({
 export interface WorkSearch {
   /** The question the page answers: "roadmap", "proposals" or "flow" ("Your move" by default). */
   view?: string;
-  initiative?: string;
+  /** A long outcome (a milestone with no parent) in scope. */
+  outcome?: string;
   project?: string;
   /** A milestone's constraints as the scope. */
   milestone?: string;
@@ -73,7 +74,7 @@ export interface WorkSearch {
   release?: string;
   /** The milestone map as project lanes (default) or a "graph" with the fewest crossings. */
   shape?: string;
-  /** The roadmap by "groups" (initiatives, or an initiative's projects) or "matrix" (milestones by default). */
+  /** The roadmap by "groups" (long outcomes, or a long outcome's projects) or "matrix" (milestones by default). */
   roadmap?: string;
   /** The Proposals view narrowed to what can be committed now ("free"), or what waits on a "decision" or on other "items". */
   gate?: string;
@@ -88,7 +89,7 @@ export const workRoute = createRoute({
         s.view === "roadmap" || s.view === "proposals" || s.view === "flow"
           ? s.view
           : undefined,
-      initiative: str(s.initiative),
+      outcome: str(s.outcome),
       project: str(s.project),
       milestone: str(s.milestone),
       q: str(s.q),

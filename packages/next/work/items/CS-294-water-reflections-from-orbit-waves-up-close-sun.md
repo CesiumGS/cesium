@@ -2,7 +2,7 @@
 id: CS-294
 title: "Water: reflections from orbit, waves up close, sun glint as a light source"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-192
 needs: [CS-74]

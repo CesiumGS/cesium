@@ -1,12 +1,12 @@
 ---
 id: CS-480
 title: Studies turn runs into verdicts
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-389
 outcome: "Studies have a model, files, commands and a page, the α study runs through Dyno end to end, and AGENTS.md and its skill teach measuring with Dyno."
-needs: [CS-404 c?, CS-405 c?, CS-396 c?, CS-402 c?, CS-409 c?, CS-410 c?]
+constraints: [CS-404 c?, CS-405 c?, CS-396 c?, CS-402 c?, CS-409 c?, CS-410 c?]
 ---
 
 ## Done when

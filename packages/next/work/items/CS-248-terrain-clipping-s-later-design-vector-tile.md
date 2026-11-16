@@ -2,7 +2,7 @@
 id: CS-248
 title: "Terrain clipping's later design: vector-tile boundaries, holes, and the 0.1 ms budget"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-189
 ---

@@ -2,7 +2,7 @@
 id: CS-97
 title: The transferable tile table
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-12
 needs: [CS-96]

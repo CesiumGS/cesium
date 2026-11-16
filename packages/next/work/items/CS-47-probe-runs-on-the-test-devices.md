@@ -2,7 +2,7 @@
 id: CS-47
 title: Probe runs on the test devices
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-35, CS-46]

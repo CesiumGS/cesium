@@ -2,10 +2,10 @@
 id: CS-227
 title: "Lunar reference systems: LunaNet's standard, ILuRF2026 and a lunar height system"
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
-party: NASA, IAU and IAG
+waiting_on: NASA, IAU and IAG
 ---
 
 ## Waiting on

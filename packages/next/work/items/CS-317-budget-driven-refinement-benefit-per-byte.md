@@ -2,7 +2,7 @@
 id: CS-317
 title: "Budget-driven refinement: benefit per byte"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-194
 ---

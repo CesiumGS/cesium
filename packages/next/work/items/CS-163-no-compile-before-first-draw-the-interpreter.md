@@ -2,7 +2,7 @@
 id: CS-163
 title: "No compile before first draw: the interpreter pipeline"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-17
 ---

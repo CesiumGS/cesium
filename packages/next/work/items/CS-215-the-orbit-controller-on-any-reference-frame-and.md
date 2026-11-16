@@ -2,7 +2,7 @@
 id: CS-215
 title: The orbit controller on any reference frame, and the globe controller on any body
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-214]

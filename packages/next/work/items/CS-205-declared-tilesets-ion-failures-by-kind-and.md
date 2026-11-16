@@ -2,7 +2,7 @@
 id: CS-205
 title: Declared tilesets, ion failures by kind, and header refresh
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-204]

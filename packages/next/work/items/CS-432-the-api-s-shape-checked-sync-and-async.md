@@ -2,7 +2,7 @@
 id: CS-432
 title: "The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-437
 needs: [CS-101]

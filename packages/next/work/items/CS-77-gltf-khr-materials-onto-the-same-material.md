@@ -2,7 +2,7 @@
 id: CS-77
 title: glTF `KHR_materials_*` onto the same material
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-75]

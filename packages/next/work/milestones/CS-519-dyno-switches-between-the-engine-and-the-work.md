@@ -1,12 +1,12 @@
 ---
 id: CS-519
 title: Dyno switches between the engine and the work
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-389
 outcome: Dyno's rail switches between two spaces, the engine and the work, each with its own pages, so the agent system's pages can grow without crowding the engine's.
-needs: [CS-517 c?, CS-518 c?]
+constraints: [CS-517 c?, CS-518 c?]
 ---
 
 ## Why

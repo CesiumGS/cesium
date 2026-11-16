@@ -2,7 +2,7 @@
 id: CS-515
 title: "Faster-than-real-time runs against real-time runs: which metrics agree"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-15
 project: CS-195
 needs: [CS-514]

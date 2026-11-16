@@ -2,7 +2,7 @@
 id: CS-391
 title: Purpose, branch, item and study in Trends, Runs, Compare and Alerts
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
 needs: [CS-390]

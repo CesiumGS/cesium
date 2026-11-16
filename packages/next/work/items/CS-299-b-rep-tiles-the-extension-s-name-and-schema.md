@@ -2,10 +2,10 @@
 id: CS-299
 title: "B-rep tiles: the extension's name and schema, NURBS or Bézier storage, and the USD input path?"
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-193
-decided-by: owner
+decider: owner
 ---
 
 ## Question

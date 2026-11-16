@@ -2,7 +2,7 @@
 id: CS-117
 title: Measurements and the default
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-13
 needs: [CS-111, CS-116, CS-99]

@@ -2,7 +2,7 @@
 id: CS-259
 title: Labels with GPU decluttering, and labels and pins drawn in the engine
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-190
 needs: [CS-258]

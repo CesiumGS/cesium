@@ -2,11 +2,11 @@
 id: CS-132
 title: Do the transition measurements ask for distance-driven morph factors?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-14
 needs: [CS-128]
-decided-by: owner
+decider: owner
 ---
 
 ## Question

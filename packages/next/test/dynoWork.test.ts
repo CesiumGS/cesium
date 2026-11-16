@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
   boardStatus,
   filterItems,
@@ -18,43 +18,119 @@ import {
   type WorkMilestone,
   type WorkSnapshot,
 } from "../bench/suite/work.ts";
-import { buildGraph, loadWorkTree, progress } from "../scripts/work/lib.mjs";
-import { API_VERSION, queryWork, showItem } from "../scripts/work/query.mjs";
+import {
+  API_VERSION,
+  HitldUnavailable,
+  checkVersion,
+  hitldPath,
+  queryWork,
+  showItem,
+  stateHistory,
+} from "../scripts/workBoard.mjs";
 
 const root = execFileSync("git", ["rev-parse", "--show-toplevel"], {
   encoding: "utf8",
 }).trim();
 
-describe("the tracker's read API (scripts/work/query.mjs)", () => {
-  const s = queryWork(root);
-  const g = buildGraph(loadWorkTree(root));
+/** hitld's own answer, for the adapter to agree with. */
+const hitld = (...args: string[]) =>
+  JSON.parse(
+    execFileSync(process.execPath, [hitldPath(), ...args], {
+      cwd: root,
+      encoding: "utf8",
+      maxBuffer: 1 << 28,
+    }),
+  ) as { api_version: number; entities: Array<{ id: string; entity: string }> };
 
-  it("is versioned and names its branch", () => {
+describe("the board's adapter (scripts/workBoard.mjs) over hitld's read API", () => {
+  let s: WorkSnapshot;
+  beforeAll(async () => {
+    s = await queryWork(root);
+  }, 60_000);
+
+  it("reads version 3 and names its branch and its source", () => {
     expect(s.api_version).toBe(API_VERSION);
+    expect(API_VERSION).toBe(3);
     expect(s.branch).toBeTruthy();
+    expect(s.source).toMatch(/^hitld work query --json/);
   });
 
-  it("agrees with views.mjs: every item, the ready list, the rollups", () => {
-    expect(s.items.map((i) => i.id)).toEqual(g.items.map((i) => i.data!.id));
+  it("refuses an answer in another read API version, saying so", () => {
+    expect(() => checkVersion({ api_version: 2 })).toThrow(HitldUnavailable);
+    expect(() => checkVersion({ api_version: 2 })).toThrow(/version 2/);
+    expect(checkVersion({ api_version: 3 })).toEqual({ api_version: 3 });
+  });
+
+  it("agrees with hitld: every item, the ready list, the long outcomes", () => {
+    const all = hitld("work", "query", "--json");
+    const ids = (kind: string) =>
+      all.entities
+        .filter((e) => e.entity === kind)
+        .map((e) => e.id)
+        .sort((a, b) => Number(a.slice(3)) - Number(b.slice(3)));
+    expect(s.items.map((i) => i.id)).toEqual(ids("item"));
+    const ready = hitld("work", "query", "--ready", "--json").entities;
     expect(s.items.filter((i) => i.ready).map((i) => i.id)).toEqual(
-      g.items.filter(g.isReady).map((i) => i.data!.id),
+      ready
+        .map((e) => e.id)
+        .sort((a, b) => Number(a.slice(3)) - Number(b.slice(3))),
     );
-    for (const ini of s.initiatives) {
-      const all = g
-        .projectsOf(ini.id)
-        .flatMap((p) => g.itemsOf(p.data!.id as string));
-      expect(ini.progress.ready).toBe(progress(g, all).ready);
-      expect(ini.progress.done).toBe(progress(g, all).done);
+    // A long outcome's progress is its projects' together.
+    for (const lo of s.long_outcomes) {
+      const ps = s.projects.filter((p) => p.long_outcome === lo.id);
+      expect(lo.progress.total).toBe(
+        ps.reduce((n, p) => n + p.progress.total, 0),
+      );
+      expect(lo.progress.done).toBe(
+        ps.reduce((n, p) => n + p.progress.done, 0),
+      );
     }
+    expect(s.long_outcomes.length).toBeGreaterThan(0);
+    expect(s.milestones.every((m) => m.project)).toBe(true);
   });
 
-  it("shows one item's text, and only for an ID of the tracker's form", () => {
+  it("shows one item's text, and only for an ID of the tracker's form", async () => {
     const first = s.items[0]!;
-    const text = showItem(root, first.id)!;
+    const text = (await showItem(root, first.id))!;
     expect(text.path).toBe(first.path);
     expect(text.body).not.toMatch(/^---/);
-    expect(showItem(root, "../../package.json")).toBeUndefined();
-    expect(showItem(root, "CS-999999")).toBeUndefined();
+    expect(await showItem(root, "../../package.json")).toBeUndefined();
+    expect(await showItem(root, "CS-999999")).toBeUndefined();
+  });
+
+  it("reads the state history in hitld's names, the migration adding no event", () => {
+    const events = stateHistory(root);
+    expect(events.length).toBeGreaterThan(0);
+    const states = new Set(events.map((e) => e.state));
+    for (const st of states) {
+      expect([
+        "proposed",
+        "planned",
+        "in-progress",
+        "done",
+        "dropped",
+      ]).toContain(st);
+    }
+    // The migration's commit renamed every item's state; only CS-174
+    // (an external item that was in progress) and CS-388 and CS-521 changed.
+    const at = execFileSync(
+      "git",
+      [
+        "log",
+        "-1",
+        "--format=%cI",
+        "--grep=^The tracker's files in human-in-the-lead's format",
+      ],
+      { cwd: root, encoding: "utf8" },
+    ).trim();
+    if (at) {
+      expect(
+        events
+          .filter((e) => e.at === at)
+          .map((e) => e.id)
+          .sort(),
+      ).toEqual(["CS-174", "CS-388", "CS-521"]);
+    }
   });
 });
 
@@ -63,7 +139,7 @@ const item = (id: string, over: Partial<WorkItem> = {}): WorkItem => ({
   id,
   title: `Item ${id}`,
   kind: "work",
-  status: "Planned",
+  state: "planned",
   project: "CS-2",
   needs: [],
   path: `packages/next/work/items/${id}.md`,
@@ -75,13 +151,13 @@ const item = (id: string, over: Partial<WorkItem> = {}): WorkItem => ({
   ...over,
 });
 const snapshot: WorkSnapshot = {
-  api_version: 2,
+  api_version: 3,
   source: "test",
   generated: "2026-11-14T00:00:00Z",
   items: [
     item("CS-10", {
       kind: "decision",
-      decided_by: "owner",
+      decider: "owner",
       needed_by: ["CS-11"],
     }),
     item("CS-11", {
@@ -90,17 +166,17 @@ const snapshot: WorkSnapshot = {
       blocked: true,
       open_needs: ["CS-10"],
     }),
-    item("CS-12", { status: "In progress", claimed: "s1", ready: false }),
-    item("CS-13", { status: "Done", ready: false, project: "CS-3" }),
+    item("CS-12", { state: "in-progress", claimed_by: "s1", ready: false }),
+    item("CS-13", { state: "done", ready: false, project: "CS-3" }),
     item("CS-14", { title: "Fix the `rail`" }),
-    item("CS-15", { status: "Dropped", ready: false, reason: "not needed" }),
+    item("CS-15", { state: "dropped", ready: false, reason: "not needed" }),
   ],
   projects: [
     {
       id: "CS-2",
       title: "Two",
-      status: "Planned",
-      initiative: "CS-1",
+      state: "planned",
+      long_outcome: "CS-1",
       path: "p2",
       progress: {
         total: 0,
@@ -115,8 +191,8 @@ const snapshot: WorkSnapshot = {
     {
       id: "CS-3",
       title: "Three",
-      status: "Planned",
-      initiative: "CS-9",
+      state: "planned",
+      long_outcome: "CS-9",
       path: "p3",
       progress: {
         total: 0,
@@ -129,7 +205,7 @@ const snapshot: WorkSnapshot = {
       },
     },
   ],
-  initiatives: [],
+  long_outcomes: [],
   project_deps: [],
   problems: [],
   milestones: [],
@@ -142,10 +218,10 @@ describe("the Work board's model (bench/suite/work.ts)", () => {
     expect([...waitingOnOwner(snapshot)].sort()).toEqual(["CS-10", "CS-11"]);
   });
 
-  it("filters by initiative, project, kind, owner and words", () => {
+  it("filters by long outcome, project, kind, owner and words", () => {
     const ids = (f: Parameters<typeof filterItems>[1]) =>
       filterItems(snapshot, f).map((i) => i.id);
-    expect(ids({ initiative: "CS-9" })).toEqual(["CS-13"]);
+    expect(ids({ long_outcome: "CS-9" })).toEqual(["CS-13"]);
     expect(ids({ project: "CS-3" })).toEqual(["CS-13"]);
     expect(ids({ kinds: ["decision"] })).toEqual(["CS-10"]);
     expect(ids({ owner: true })).toEqual(["CS-10", "CS-11"]);
@@ -193,24 +269,24 @@ describe("the Work board's model (bench/suite/work.ts)", () => {
   });
 });
 
-describe("flow, replayed from the status history", () => {
+describe("flow, replayed from the state history", () => {
   const day = (d: number, h = 12) =>
     new Date(2026, 10, 13 + d, h).toISOString();
   const history: WorkSnapshot = {
     ...snapshot,
     items: [
-      item("CS-1", { status: "Done", ready: false }),
-      item("CS-2", { status: "In progress", ready: false }),
+      item("CS-1", { state: "done", ready: false }),
+      item("CS-2", { state: "in-progress", ready: false }),
       item("CS-3"),
     ],
     history: [
       // The import, on the first day.
-      { id: "CS-1", at: day(0, 9), status: "Planned" },
-      { id: "CS-2", at: day(0, 9), status: "Planned" },
+      { id: "CS-1", at: day(0, 9), state: "planned" },
+      { id: "CS-2", at: day(0, 9), state: "planned" },
       // CS-1 done the same day; CS-2 claimed the next; CS-3 made the next.
-      { id: "CS-1", at: day(0, 15), status: "Done" },
-      { id: "CS-2", at: day(1), status: "In progress" },
-      { id: "CS-3", at: day(1, 13), status: "Planned" },
+      { id: "CS-1", at: day(0, 15), state: "done" },
+      { id: "CS-2", at: day(1), state: "in-progress" },
+      { id: "CS-3", at: day(1, 13), state: "planned" },
     ],
   };
   const flow = flowOf(history, history.items, {
@@ -236,12 +312,12 @@ describe("flow, replayed from the status history", () => {
 describe("work in flight on other branches", () => {
   const flight = inFlightOf({
     ...snapshot,
-    elsewhere: [{ id: "CS-14", claimed: "s2", where: "ui", worktree: true }],
+    elsewhere: [{ id: "CS-14", claimed_by: "s2", where: "ui", worktree: true }],
   });
 
   it("shows a claim elsewhere as in flight, not ready", () => {
     const it14 = snapshot.items.find((i) => i.id === "CS-14")!;
-    expect(boardStatus(it14, flight)).toBe("In progress");
+    expect(boardStatus(it14, flight)).toBe("in-progress");
     expect(stageOf(it14, flight)).toBe("In flight");
     expect(nextActor(it14, flight)).toBe("agents");
   });
@@ -256,7 +332,7 @@ describe("work in flight on other branches", () => {
           elsewhere: [{ id: "CS-13", where: "old", worktree: false }],
         }),
       ),
-    ).toBe("Done");
+    ).toBe("done");
   });
 });
 
@@ -276,11 +352,12 @@ describe("the milestone map shows committed work", () => {
     over: Partial<Omit<WorkMilestone, "constraints">> = {},
   ): WorkMilestone => ({
     title: `Milestone ${id}`,
-    kind: "capability",
-    status: "Planned",
+    kind: "milestone",
+    learning: false,
+    state: "planned",
     project: "CS-2",
     done_when: [],
-    serves: [],
+    contributions: [],
     check_results: [],
     path: `m/${id}`,
     progress: { done: 0, total: constraints.length },
@@ -298,19 +375,19 @@ describe("the milestone map shows committed work", () => {
         needs: ["CS-22", "CS-23"],
         open_needs: ["CS-22", "CS-23"],
       }),
-      item("CS-22", { kind: "decision", decided_by: "owner" }),
-      item("CS-23", { kind: "external", party: "Someone" }),
-      item("CS-24", { kind: "decision", decided_by: "owner" }),
-      item("CS-30", { status: "Proposed" }),
-      item("CS-31", { kind: "decision", decided_by: "owner" }),
-      item("CS-32", { kind: "external", party: "Someone" }),
+      item("CS-22", { kind: "decision", decider: "owner" }),
+      item("CS-23", { kind: "external", waiting_on: "Someone" }),
+      item("CS-24", { kind: "decision", decider: "owner" }),
+      item("CS-30", { state: "proposed" }),
+      item("CS-31", { kind: "decision", decider: "owner" }),
+      item("CS-32", { kind: "external", waiting_on: "Someone" }),
       item("CS-33"),
-      item("CS-34", { status: "Proposed" }),
+      item("CS-34", { state: "proposed" }),
     ],
     milestones: [
       ms("CS-50", ["CS-20", "CS-21", "CS-22"]),
-      ms("CS-51", ["CS-24"], { kind: "learning" }),
-      ms("CS-52", ["CS-34"], { status: "Proposed" }),
+      ms("CS-51", ["CS-24"], { learning: true }),
+      ms("CS-52", ["CS-34"], { state: "proposed" }),
     ],
   };
 
@@ -342,33 +419,34 @@ describe("the proposals", () => {
     ...snapshot,
     items: [
       item("CS-20"),
-      item("CS-21", { kind: "decision", decided_by: "owner" }),
-      item("CS-22", { status: "Proposed" }),
+      item("CS-21", { kind: "decision", decider: "owner" }),
+      item("CS-22", { state: "proposed" }),
       item("CS-23", {
-        status: "Proposed",
+        state: "proposed",
         needs: ["CS-21"],
         open_needs: ["CS-21"],
       }),
       item("CS-24", {
-        status: "Proposed",
+        state: "proposed",
         needs: ["CS-20"],
         open_needs: ["CS-20"],
       }),
-      item("CS-25", { status: "Proposed" }),
-      item("CS-26", { status: "Proposed" }),
-      item("CS-30", { status: "Proposed", project: "CS-3" }),
-      item("CS-31", { status: "Done", project: "CS-3" }),
+      item("CS-25", { state: "proposed" }),
+      item("CS-26", { state: "proposed" }),
+      item("CS-30", { state: "proposed", project: "CS-3" }),
+      item("CS-31", { state: "done", project: "CS-3" }),
     ],
     milestones: [
       {
         id: "CS-40",
         title: "A bet",
-        kind: "capability",
-        status: "Proposed",
+        kind: "milestone",
+        learning: false,
+        state: "proposed",
         project: "CS-2",
         done_when: [],
         constraints: [{ id: "CS-26", clause: "c?" }],
-        serves: [],
+        contributions: [],
         check_results: [],
         path: "m/CS-40",
         progress: { done: 0, total: 1 },
@@ -422,12 +500,16 @@ describe("the proposals", () => {
 describe("work in progress", () => {
   it("is work someone holds, not a decision or an outside wait in progress", () => {
     const items = [
-      item("CS-60", { status: "In progress", claimed: "s1" }),
-      item("CS-61", { status: "In progress", kind: "external", party: "1.x" }),
+      item("CS-60", { state: "in-progress", claimed_by: "s1" }),
+      item("CS-61", {
+        state: "in-progress",
+        kind: "external",
+        waiting_on: "1.x",
+      }),
       item("CS-62", {
-        status: "In progress",
+        state: "in-progress",
         kind: "decision",
-        decided_by: "owner",
+        decider: "owner",
       }),
       item("CS-63"),
     ];
@@ -439,12 +521,13 @@ describe("release items are the map's gates", () => {
   const ms = (id: string, constraints: string[]): WorkMilestone => ({
     id,
     title: `Milestone ${id}`,
-    kind: "capability",
-    status: "Planned",
+    kind: "milestone",
+    learning: false,
+    state: "planned",
     project: "CS-2",
     done_when: [],
     constraints: constraints.map((c) => ({ id: c, clause: "c?" })),
-    serves: [],
+    contributions: [],
     check_results: [],
     path: `m/${id}`,
     progress: { done: 0, total: constraints.length },

@@ -2,10 +2,10 @@
 id: CS-270
 title: Where does 2.0's default evaluation token come from?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-191
-decided-by: owner
+decider: owner
 ---
 
 ## Question

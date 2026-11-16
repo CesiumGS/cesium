@@ -2,10 +2,9 @@
 id: CS-198
 title: GPU-driven rendering and capacities
 kind: project
-status: Planned
+state: planned
 created: 2026-11-13
-initiative: CS-1
-lead: owner
+owner: owner
 plan: docs/design/gpu-limits-and-capacities.md
 ---
 

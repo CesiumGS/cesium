@@ -2,7 +2,7 @@
 id: CS-242
 title: TEME and SGP4 as the first frames add-on provider
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-189
 ---

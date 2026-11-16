@@ -2,7 +2,7 @@
 id: CS-169
 title: "The tracker: format, scripts, items and the plan's split"
 kind: work
-status: Done
+state: done
 created: 2026-11-13
 project: CS-18
 ---

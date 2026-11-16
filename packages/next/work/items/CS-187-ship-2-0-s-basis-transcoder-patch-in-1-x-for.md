@@ -2,10 +2,10 @@
 id: CS-187
 title: Ship 2.0's Basis transcoder patch in 1.x for strict CSP
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-19
-party: CesiumJS 1.x
+waiting_on: CesiumJS 1.x
 ---
 
 ## Waiting on

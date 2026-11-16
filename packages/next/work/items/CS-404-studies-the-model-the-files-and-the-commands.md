@@ -2,7 +2,7 @@
 id: CS-404
 title: "Studies: the model, the files and the commands"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
 needs: [CS-390]

@@ -2,7 +2,7 @@
 id: CS-253
 title: 2D, Columbus view and the 2D/3D morph through a world-spanning CRS root
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-189
 ---

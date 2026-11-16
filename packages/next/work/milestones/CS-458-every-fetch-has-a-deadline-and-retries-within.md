@@ -1,8 +1,8 @@
 ---
 id: CS-458
 title: Every fetch has a deadline and retries within its origin's budget
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-16
 outcome: "Every request the engine makes has a deadline set from what its origin has delivered and fails with a kind an app can read; transient failures retry with backoff inside per-origin budgets, and apps can route requests with 1.x's proxies, query parameters, headers and credentials."
@@ -11,8 +11,7 @@ done_when:
   - "c2: A slow but healthy origin is not timed out (on the recorded full profile and the 20 Mbit/s, 80 ms profile, no request times out); a 429, a 503 or a timeout halves an adaptive request window and leaves a pinned one alone, and a Retry-After of up to 60 s pauses every request to that origin."
   - "c3: A transient failure on 3D Tiles content retries with jittered backoff and loads, and with 200 tiles wanted from a dead origin the attempts stay bounded: retries hold at most a quarter of the window, an empty retry bucket stops them, and a tile's first request is never refused."
   - "c4: An app can give a tileset, terrain or imagery source a proxy (a prefix or a function), query parameters, headers and trusted-origin credentials, and every request that source makes carries them; cookies go only to trusted origins, and no option value appears in any diagnostic."
-needs:
-  [CS-144 c1, CS-145 c1, CS-383 c1, CS-146 c2, CS-156 c4, CS-147 c3, CS-508 c3]
+constraints: [CS-144 c1, CS-145 c1, CS-383 c1, CS-146 c2, CS-156 c4, CS-147 c3, CS-508 c3]
 check: "integration-test test/networkFaults.test.ts"
 ---
 

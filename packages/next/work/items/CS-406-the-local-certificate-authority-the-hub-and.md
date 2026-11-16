@@ -2,7 +2,7 @@
 id: CS-406
 title: The local certificate authority, the hub and pairing
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
 needs: [CS-390]

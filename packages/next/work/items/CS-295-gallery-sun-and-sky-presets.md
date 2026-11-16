@@ -2,7 +2,7 @@
 id: CS-295
 title: "Gallery: sun and sky presets"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-192
 needs: [CS-221, CS-222]

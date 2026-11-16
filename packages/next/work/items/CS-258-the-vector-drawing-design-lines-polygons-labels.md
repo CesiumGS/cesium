@@ -2,7 +2,7 @@
 id: CS-258
 title: "The vector drawing design: lines, polygons, labels and CAD styles on one path"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-190
 ---

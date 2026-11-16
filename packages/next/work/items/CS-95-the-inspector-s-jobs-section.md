@@ -2,7 +2,7 @@
 id: CS-95
 title: The inspector's Jobs section
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-12
 needs: [CS-87, CS-88, CS-89]

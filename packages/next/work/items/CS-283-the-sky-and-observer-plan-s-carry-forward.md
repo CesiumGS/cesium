@@ -2,7 +2,7 @@
 id: CS-283
 title: The sky and observer plan's carry-forward
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-192
 ---

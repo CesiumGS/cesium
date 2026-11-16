@@ -2,7 +2,7 @@
 id: CS-353
 title: Software rasterization in compute with 64-bit atomics
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-198
 needs: [CS-351]

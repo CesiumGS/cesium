@@ -2,10 +2,10 @@
 id: CS-254
 title: Which long models fill the design globe's ion slots?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-189
-decided-by: owner
+decider: owner
 ---
 
 ## Question

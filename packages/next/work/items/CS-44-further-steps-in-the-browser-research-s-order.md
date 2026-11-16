@@ -2,7 +2,7 @@
 id: CS-44
 title: Further steps, in the browser research's order (FXAA, clips, the depth-range readback, shadows, ambient occlusion, `moments16`, `moments32`)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-42, CS-43]

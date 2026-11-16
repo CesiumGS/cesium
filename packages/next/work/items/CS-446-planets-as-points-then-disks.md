@@ -2,7 +2,7 @@
 id: CS-446
 title: Planets as points, then disks
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-192
 needs: [CS-206, CS-222]

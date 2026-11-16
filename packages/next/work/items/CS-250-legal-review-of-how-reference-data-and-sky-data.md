@@ -2,10 +2,10 @@
 id: CS-250
 title: Legal review of how reference data and sky data may ship
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-189
-party: legal review
+waiting_on: legal review
 ---
 
 ## Waiting on

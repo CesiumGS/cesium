@@ -2,7 +2,7 @@
 id: CS-252
 title: Frames explorer and design globe polish
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-189
 ---

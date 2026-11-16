@@ -2,7 +2,7 @@
 id: CS-82
 title: The city and terrain places
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-80, CS-72, CS-73, CS-74]

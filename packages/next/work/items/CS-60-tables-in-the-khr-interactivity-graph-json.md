@@ -2,7 +2,7 @@
 id: CS-60
 title: Tables in the `KHR_interactivity` graph JSON
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-59, CS-56]

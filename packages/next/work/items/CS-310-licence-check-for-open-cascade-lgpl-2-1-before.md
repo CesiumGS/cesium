@@ -2,10 +2,10 @@
 id: CS-310
 title: Licence check for Open Cascade (LGPL 2.1) before distribution
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-193
-party: legal review
+waiting_on: legal review
 ---
 
 ## Waiting on

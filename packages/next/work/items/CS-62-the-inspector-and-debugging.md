@@ -2,7 +2,7 @@
 id: CS-62
 title: The inspector and debugging
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-51, CS-55]

@@ -1,1 +1,15 @@
-npx lint-staged
+# Every worktree runs the main checkout's hooks (core.hooksPath), from its own
+# top level. Tools come from this worktree's node_modules, or the main
+# checkout's when the worktree has none.
+main="$(cd "$(git rev-parse --git-common-dir)/.." && pwd)"
+PATH="$PWD/node_modules/.bin:$PWD/packages/next/node_modules/.bin:$main/node_modules/.bin:$PATH"
+
+# --no-stash: lint-staged's backup is a stash, and every worktree shares one
+# stash list, so a backup could sweep another session's work into a commit.
+npx --yes lint-staged@17.6.1 --no-stash
+
+# human-in-the-lead's commit guard, on branches that use it.
+if [ -f .human-in-the-lead/policy.json ]; then
+  command -v hitld >/dev/null || { echo "hitld isn't installed: run npm install"; exit 1; }
+  out="$(hitld check classification --staged)" || { echo "$out"; exit 1; }
+fi

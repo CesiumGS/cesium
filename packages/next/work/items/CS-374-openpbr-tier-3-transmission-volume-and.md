@@ -2,7 +2,7 @@
 id: CS-374
 title: "OpenPBR tier 3: transmission, volume and subsurface"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-11
 needs: [CS-76]

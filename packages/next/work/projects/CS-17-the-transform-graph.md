@@ -2,10 +2,9 @@
 id: CS-17
 title: The transform graph
 kind: project
-status: In progress
+state: planned
 created: 2026-11-13
-initiative: CS-5
-lead: owner
+owner: owner
 plan: docs/superpowers/plans/2026-11-12-transform-graph.md
 ---
 

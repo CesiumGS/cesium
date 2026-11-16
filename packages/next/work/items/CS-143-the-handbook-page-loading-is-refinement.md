@@ -2,7 +2,7 @@
 id: CS-143
 title: The handbook page "Loading is refinement"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-15
 needs: [CS-136]

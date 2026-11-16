@@ -2,7 +2,7 @@
 id: CS-368
 title: `Engine.queries` takes the application's backends
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-8
 ---

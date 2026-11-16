@@ -2,7 +2,7 @@
 id: CS-67
 title: Screen-space derivatives
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-66]

@@ -2,7 +2,7 @@
 id: CS-282
 title: Intel figures into `glareTier` and the Intel tables
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-192
 needs: [CS-281]

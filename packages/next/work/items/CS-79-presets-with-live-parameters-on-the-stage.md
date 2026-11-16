@@ -2,7 +2,7 @@
 id: CS-79
 title: Presets with live parameters on the stage
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-70, CS-71, CS-63, CS-64]

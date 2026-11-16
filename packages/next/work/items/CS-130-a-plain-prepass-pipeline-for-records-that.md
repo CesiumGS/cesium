@@ -2,7 +2,7 @@
 id: CS-130
 title: A plain prepass pipeline for records that neither clip, cut out nor fade
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-14
 needs: [CS-129]

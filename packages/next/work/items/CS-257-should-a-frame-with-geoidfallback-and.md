@@ -2,10 +2,10 @@
 id: CS-257
 title: Should a frame with `geoidFallback` and `allowBallpark` take the ballpark?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-189
-decided-by: owner
+decider: owner
 ---
 
 ## Question

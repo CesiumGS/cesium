@@ -2,7 +2,7 @@
 id: CS-371
 title: "Math ops the transform graph needs: `atanh`, `asinh`, `acosh`, `expm1`, `log1p`, `%`, `hypot`"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-48]

@@ -2,7 +2,7 @@
 id: CS-392
 title: Finding runs from the terminal (`runs`, `show`, `pin`)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
 needs: [CS-390]

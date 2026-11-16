@@ -2,7 +2,7 @@
 id: CS-448
 title: Energy compensation for coloured metals, against a multiple-scattering reference
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-195
 ---

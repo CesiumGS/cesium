@@ -2,7 +2,7 @@
 id: CS-37
 title: The globe, terrain and imagery
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-9
 needs: [CS-36]

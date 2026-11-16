@@ -1,12 +1,12 @@
 ---
 id: CS-492
 title: The sky plan's carry-forward is closed
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-192
 outcome: "The sky and observer plan's carried-forward items are done, East Antarctica draws as land from far out, and emission layers no longer halve what the exact lists hold."
-needs: [CS-283 c?, CS-284 c?, CS-442 c?]
+constraints: [CS-283 c?, CS-284 c?, CS-442 c?]
 ---
 
 ## Done when

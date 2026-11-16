@@ -2,7 +2,7 @@
 id: CS-78
 title: glTF sheen and anisotropy onto the tier 2 lobes
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-11
 needs: [CS-77, CS-76]

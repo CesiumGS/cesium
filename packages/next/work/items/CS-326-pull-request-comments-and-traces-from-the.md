@@ -2,7 +2,7 @@
 id: CS-326
 title: Pull-request comments and traces from the benchmark report
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-195
 needs: [CS-324]

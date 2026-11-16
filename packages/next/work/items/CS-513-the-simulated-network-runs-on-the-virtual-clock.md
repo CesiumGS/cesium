@@ -2,7 +2,7 @@
 id: CS-513
 title: The simulated network runs on the virtual clock
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-15
 project: CS-195
 needs: [CS-328]

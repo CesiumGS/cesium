@@ -2,7 +2,7 @@
 id: CS-230
 title: "The self-directing replay: the time director and the camera director"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-229]

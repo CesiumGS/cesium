@@ -2,7 +2,7 @@
 id: CS-441
 title: "Upsampling follow-ups: a local imagery stop, child refetches inside the terrain request window, imagery slices in the byte budget"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-16
 ---

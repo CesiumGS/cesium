@@ -2,7 +2,7 @@
 id: CS-106
 title: Functions as Cesium IR programs; closures refused
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-13
 needs: [CS-105, CS-53, CS-55, CS-56, CS-61]

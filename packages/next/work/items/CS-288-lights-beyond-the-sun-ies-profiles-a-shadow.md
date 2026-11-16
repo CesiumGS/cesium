@@ -2,7 +2,7 @@
 id: CS-288
 title: "Lights beyond the sun: IES profiles, a shadow atlas, area lights, many lights"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-192
 ---

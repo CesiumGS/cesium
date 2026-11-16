@@ -2,7 +2,7 @@
 id: CS-168
 title: "The per-family warp fixes: flatten, corridor, bend, the TM Jacobian"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-17
 needs: [CS-53, CS-56]

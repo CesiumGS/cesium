@@ -2,7 +2,7 @@
 id: CS-247
 title: "iModel and IFC inputs: real alignments, an iModel's frame from the iTwin Platform, an ion snap adapter"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-189
 ---

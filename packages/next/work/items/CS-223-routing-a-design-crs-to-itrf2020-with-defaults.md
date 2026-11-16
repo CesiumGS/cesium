@@ -2,7 +2,7 @@
 id: CS-223
 title: Routing a design CRS to ITRF2020, with defaults as data and the route recorded
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 ---

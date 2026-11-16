@@ -1,12 +1,12 @@
 ---
 id: CS-456
 title: Refinement, profiles and streaming work in worker mode
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-15
 project: CS-13
 outcome: "Refinement's reads and `converged()`, the profiles' snapshots and streaming's network state behave the same in worker mode, the examples run through the façade, and the handbook explains the choice of thread."
-needs: [CS-120 c?]
+constraints: [CS-120 c?]
 ---
 
 ## Done when

@@ -2,7 +2,7 @@
 id: CS-48
 title: The core (types, rates, equations, literal slots, the builder)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 ---

@@ -2,7 +2,7 @@
 id: CS-121
 title: 'The signed `transition` word, the dither flag, `View.lodTransitions: "smooth" | "pop"`, the clock''s epoch rebase'
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-14
 ---

@@ -2,7 +2,7 @@
 id: CS-237
 title: Plumes with ambient pressure, and re-entry heating and plasma, in Slang
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-188
 needs: [CS-235, CS-236]

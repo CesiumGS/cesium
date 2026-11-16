@@ -2,7 +2,7 @@
 id: CS-157
 title: The app's auth-refresh hook
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-156, CS-150]

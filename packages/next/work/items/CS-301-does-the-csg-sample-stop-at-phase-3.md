@@ -2,10 +2,10 @@
 id: CS-301
 title: Does the CSG sample stop at phase 3?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-193
-decided-by: owner
+decider: owner
 ---
 
 ## Question

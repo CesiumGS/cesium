@@ -2,10 +2,10 @@
 id: CS-452
 title: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-191
-decided-by: owner
+decider: owner
 ---
 
 ## Question

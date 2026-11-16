@@ -2,7 +2,7 @@
 id: CS-119
 title: A shared snapshot
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-13
 needs: [CS-118]

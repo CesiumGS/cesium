@@ -2,7 +2,7 @@
 id: CS-251
 title: Reference data as an optional bundled package
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-189
 needs: [CS-250]

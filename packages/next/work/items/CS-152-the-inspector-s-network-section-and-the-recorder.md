@@ -2,7 +2,7 @@
 id: CS-152
 title: The inspector's Network section and the recorder
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-16
 needs: [CS-149, CS-150, CS-151]

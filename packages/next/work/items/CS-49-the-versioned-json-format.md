@@ -2,7 +2,7 @@
 id: CS-49
 title: The versioned JSON format
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-10
 needs: [CS-48]

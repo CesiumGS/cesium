@@ -2,7 +2,7 @@
 id: CS-138
 title: The loop switch (`wake(kind)`, `FrameStats.why`)
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-15
 needs: [CS-134]

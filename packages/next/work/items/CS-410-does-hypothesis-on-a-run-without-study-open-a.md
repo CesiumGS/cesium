@@ -2,10 +2,10 @@
 id: CS-410
 title: Does `--hypothesis` on a run without `--study` open a study?
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-389
-decided-by: owner
+decider: owner
 ---
 
 ## Question

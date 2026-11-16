@@ -2,7 +2,7 @@
 id: CS-356
 title: "Capacity follow-ups: a size-class allocator, material texture arrays, one packed record buffer"
 kind: work
-status: Proposed
+state: proposed
 created: 2026-11-13
 project: CS-198
 ---

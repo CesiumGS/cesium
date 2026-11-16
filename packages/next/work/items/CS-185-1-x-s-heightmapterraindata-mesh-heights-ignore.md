@@ -2,10 +2,10 @@
 id: CS-185
 title: 1.x's `HeightmapTerrainData` mesh heights ignore `heightScale` and `heightOffset`
 kind: external
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-19
-party: CesiumJS 1.x
+waiting_on: CesiumJS 1.x
 ---
 
 ## Waiting on

@@ -2,7 +2,7 @@
 id: CS-412
 title: "A fresh worktree runs npm test clean: build 1.x's generated shader modules, or skip volumes.test.ts with its precondition"
 kind: work
-status: Planned
+state: planned
 created: 2026-11-14
 project: CS-199
 ---

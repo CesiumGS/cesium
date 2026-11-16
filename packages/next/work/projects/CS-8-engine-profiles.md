@@ -2,10 +2,9 @@
 id: CS-8
 title: Engine profiles
 kind: project
-status: Planned
+state: planned
 created: 2026-11-13
-initiative: CS-1
-lead: owner
+owner: owner
 plan: docs/superpowers/plans/2026-11-13-engine-profiles.md
 ---
 

@@ -2,7 +2,7 @@
 id: CS-27
 title: The inspector's Profile section and emulation
 kind: work
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-8
 needs: [CS-23]

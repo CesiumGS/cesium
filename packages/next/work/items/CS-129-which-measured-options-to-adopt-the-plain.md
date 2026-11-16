@@ -2,11 +2,11 @@
 id: CS-129
 title: "Which measured options to adopt: the plain prepass pipeline, the per-sample MSAA mask?"
 kind: decision
-status: Planned
+state: planned
 created: 2026-11-13
 project: CS-14
 needs: [CS-128]
-decided-by: owner
+decider: owner
 ---
 
 ## Question

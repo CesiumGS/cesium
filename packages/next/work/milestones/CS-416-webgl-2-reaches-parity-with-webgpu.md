@@ -1,22 +1,12 @@
 ---
 id: CS-416
 title: WebGL 2 reaches parity with WebGPU
-kind: capability
-status: Planned
+kind: milestone
+state: planned
 created: 2026-11-14
 project: CS-9
 outcome: "On WebGL 2, styles, warps, picks, outputs, user code, the atmosphere and the further effects match WebGPU within the agreed tolerances, shown on the test devices."
-needs:
-  [
-    CS-39 c?,
-    CS-40 c?,
-    CS-41 c?,
-    CS-42 c?,
-    CS-44 c?,
-    CS-45 c?,
-    CS-47 c?,
-    CS-46 c?,
-  ]
+constraints: [CS-39 c?, CS-40 c?, CS-41 c?, CS-42 c?, CS-44 c?, CS-45 c?, CS-47 c?, CS-46 c?]
 ---
 
 ## Done when
