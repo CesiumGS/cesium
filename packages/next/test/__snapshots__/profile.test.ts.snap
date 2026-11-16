@@ -1,0 +1,1632 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`profile invariants > 9. snapshots > intel-uhd-4k: effective, auto, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+    ],
+    "given": "on",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+      "*glare.intel.pixels",
+      " glare.intel.start",
+    ],
+    "given": "sources",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+    ],
+    "given": "exact",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > intel-uhd-4k: effective, auto, glare on 2`] = `
+[
+  {
+    "asked": "full",
+    "feature": "glare",
+    "given": "sources",
+    "kind": "stepped",
+    "reason": "an Intel GPU above 3.7 million pixels",
+    "rule": "glare.intel.pixels",
+  },
+]
+`;
+
+exports[`profile invariants > 9. snapshots > intel-uhd-4k: effective, fixed, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+    ],
+    "given": "on",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+    ],
+    "given": "full",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+    ],
+    "given": "exact",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > intel-uhd-4k: effective, fixed, glare on 2`] = `[]`;
+
+exports[`profile invariants > 9. snapshots > intel-uhd-4k: support 1`] = `
+{
+  "content": {
+    "optional": {
+      "advancedTranslucency": true,
+      "brep": true,
+      "labels": true,
+      "points": true,
+      "splats": true,
+      "vectors": true,
+    },
+    "required": [
+      "globe",
+      "terrain",
+      "imagery",
+      "meshes",
+    ],
+  },
+  "features": {
+    "aerialPerspective": [
+      "march",
+      "screen",
+      "volume",
+    ],
+    "ambientOcclusion": [
+      "full",
+    ],
+    "cityLights": [
+      "on",
+    ],
+    "fxaa": [
+      "on",
+    ],
+    "glare": [
+      "full",
+      "reduced",
+      "sources",
+    ],
+    "lodTransitions": [
+      "morph",
+      "pop",
+    ],
+    "msaa": [
+      "4x",
+      "1x+fxaa",
+    ],
+    "normals": [
+      "exact",
+      "linear",
+    ],
+    "resolution": [
+      1,
+      0.75,
+      0.5,
+    ],
+    "shadows": [
+      "full",
+    ],
+    "sunDisk": [
+      "on",
+    ],
+    "translucency": [
+      "exact",
+      "moments32",
+      "moments16",
+    ],
+  },
+  "outputs": [
+    "color",
+    "depth",
+    "featureId",
+  ],
+  "paths": [],
+  "queries": [
+    {
+      "backend": "id-targets",
+      "kind": "pick",
+    },
+  ],
+  "renderer": "webgpu",
+  "updates": "each-tick",
+}
+`;
+
+exports[`profile invariants > 9. snapshots > m2-chrome: effective, auto, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+    ],
+    "given": "on",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+    ],
+    "given": "full",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+    ],
+    "given": "exact",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > m2-chrome: effective, auto, glare on 2`] = `[]`;
+
+exports[`profile invariants > 9. snapshots > m2-chrome: effective, fixed, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+    ],
+    "given": "on",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+    ],
+    "given": "full",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+    ],
+    "given": "exact",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > m2-chrome: effective, fixed, glare on 2`] = `[]`;
+
+exports[`profile invariants > 9. snapshots > m2-chrome: support 1`] = `
+{
+  "content": {
+    "optional": {
+      "advancedTranslucency": true,
+      "brep": true,
+      "labels": true,
+      "points": true,
+      "splats": true,
+      "vectors": true,
+    },
+    "required": [
+      "globe",
+      "terrain",
+      "imagery",
+      "meshes",
+    ],
+  },
+  "features": {
+    "aerialPerspective": [
+      "march",
+      "screen",
+      "volume",
+    ],
+    "ambientOcclusion": [
+      "full",
+    ],
+    "cityLights": [
+      "on",
+    ],
+    "fxaa": [
+      "on",
+    ],
+    "glare": [
+      "full",
+      "reduced",
+      "sources",
+    ],
+    "lodTransitions": [
+      "morph",
+      "pop",
+    ],
+    "msaa": [
+      "4x",
+      "1x+fxaa",
+    ],
+    "normals": [
+      "exact",
+      "linear",
+    ],
+    "resolution": [
+      1,
+      0.75,
+      0.5,
+    ],
+    "shadows": [
+      "full",
+    ],
+    "sunDisk": [
+      "on",
+    ],
+    "translucency": [
+      "exact",
+      "moments32",
+      "moments16",
+    ],
+  },
+  "outputs": [
+    "color",
+    "depth",
+    "featureId",
+  ],
+  "paths": [],
+  "queries": [
+    {
+      "backend": "id-targets",
+      "kind": "pick",
+    },
+  ],
+  "renderer": "webgpu",
+  "updates": "each-tick",
+}
+`;
+
+exports[`profile invariants > 9. snapshots > minimum-limits: effective, auto, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+    ],
+    "given": "on",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+    ],
+    "given": "full",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+    ],
+    "given": "exact",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > minimum-limits: effective, auto, glare on 2`] = `[]`;
+
+exports[`profile invariants > 9. snapshots > minimum-limits: effective, fixed, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+    ],
+    "given": "on",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+    ],
+    "given": "full",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+    ],
+    "given": "exact",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > minimum-limits: effective, fixed, glare on 2`] = `[]`;
+
+exports[`profile invariants > 9. snapshots > minimum-limits: support 1`] = `
+{
+  "content": {
+    "optional": {
+      "advancedTranslucency": true,
+      "brep": true,
+      "labels": true,
+      "points": true,
+      "splats": true,
+      "vectors": true,
+    },
+    "required": [
+      "globe",
+      "terrain",
+      "imagery",
+      "meshes",
+    ],
+  },
+  "features": {
+    "aerialPerspective": [
+      "march",
+      "screen",
+      "volume",
+    ],
+    "ambientOcclusion": [
+      "full",
+    ],
+    "cityLights": [
+      "on",
+    ],
+    "fxaa": [
+      "on",
+    ],
+    "glare": [
+      "full",
+      "reduced",
+      "sources",
+    ],
+    "lodTransitions": [
+      "morph",
+      "pop",
+    ],
+    "msaa": [
+      "4x",
+      "1x+fxaa",
+    ],
+    "normals": [
+      "exact",
+      "linear",
+    ],
+    "resolution": [
+      1,
+      0.75,
+      0.5,
+    ],
+    "shadows": [
+      "full",
+    ],
+    "sunDisk": [
+      "on",
+    ],
+    "translucency": [
+      "exact",
+      "moments32",
+      "moments16",
+    ],
+  },
+  "outputs": [
+    "color",
+    "depth",
+    "featureId",
+  ],
+  "paths": [],
+  "queries": [
+    {
+      "backend": "id-targets",
+      "kind": "pick",
+    },
+  ],
+  "renderer": "webgpu",
+  "updates": "each-tick",
+}
+`;
+
+exports[`profile invariants > 9. snapshots > no-float32-blendable: effective, auto, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+    ],
+    "given": "on",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+    ],
+    "given": "full",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+    ],
+    "given": "exact",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > no-float32-blendable: effective, auto, glare on 2`] = `[]`;
+
+exports[`profile invariants > 9. snapshots > no-float32-blendable: effective, fixed, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+    ],
+    "given": "on",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+    ],
+    "given": "full",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+    ],
+    "given": "exact",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > no-float32-blendable: effective, fixed, glare on 2`] = `[]`;
+
+exports[`profile invariants > 9. snapshots > no-float32-blendable: support 1`] = `
+{
+  "content": {
+    "optional": {
+      "advancedTranslucency": true,
+      "brep": true,
+      "labels": true,
+      "points": true,
+      "splats": true,
+      "vectors": true,
+    },
+    "required": [
+      "globe",
+      "terrain",
+      "imagery",
+      "meshes",
+    ],
+  },
+  "features": {
+    "aerialPerspective": [
+      "march",
+      "screen",
+      "volume",
+    ],
+    "ambientOcclusion": [
+      "full",
+    ],
+    "cityLights": [
+      "on",
+    ],
+    "fxaa": [
+      "on",
+    ],
+    "glare": [
+      "full",
+      "reduced",
+      "sources",
+    ],
+    "lodTransitions": [
+      "morph",
+      "pop",
+    ],
+    "msaa": [
+      "4x",
+      "1x+fxaa",
+    ],
+    "normals": [
+      "exact",
+      "linear",
+    ],
+    "resolution": [
+      1,
+      0.75,
+      0.5,
+    ],
+    "shadows": [
+      "full",
+    ],
+    "sunDisk": [
+      "on",
+    ],
+    "translucency": [
+      "exact",
+      "moments16",
+    ],
+  },
+  "outputs": [
+    "color",
+    "depth",
+    "featureId",
+  ],
+  "paths": [],
+  "queries": [
+    {
+      "backend": "id-targets",
+      "kind": "pick",
+    },
+  ],
+  "renderer": "webgpu",
+  "updates": "each-tick",
+}
+`;
+
+exports[`profile invariants > 9. snapshots > no-optional-features: effective, auto, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+    ],
+    "given": "on",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+    ],
+    "given": "full",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+    ],
+    "given": "exact",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > no-optional-features: effective, auto, glare on 2`] = `[]`;
+
+exports[`profile invariants > 9. snapshots > no-optional-features: effective, fixed, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+    ],
+    "given": "on",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+    ],
+    "given": "full",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+    ],
+    "given": "exact",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > no-optional-features: effective, fixed, glare on 2`] = `[]`;
+
+exports[`profile invariants > 9. snapshots > no-optional-features: support 1`] = `
+{
+  "content": {
+    "optional": {
+      "advancedTranslucency": true,
+      "brep": true,
+      "labels": true,
+      "points": true,
+      "splats": true,
+      "vectors": true,
+    },
+    "required": [
+      "globe",
+      "terrain",
+      "imagery",
+      "meshes",
+    ],
+  },
+  "features": {
+    "aerialPerspective": [
+      "march",
+      "screen",
+      "volume",
+    ],
+    "ambientOcclusion": [
+      "full",
+    ],
+    "cityLights": [
+      "on",
+    ],
+    "fxaa": [
+      "on",
+    ],
+    "glare": [
+      "full",
+      "reduced",
+      "sources",
+    ],
+    "lodTransitions": [
+      "morph",
+      "pop",
+    ],
+    "msaa": [
+      "4x",
+      "1x+fxaa",
+    ],
+    "normals": [
+      "exact",
+      "linear",
+    ],
+    "resolution": [
+      1,
+      0.75,
+      0.5,
+    ],
+    "shadows": [
+      "full",
+    ],
+    "sunDisk": [
+      "on",
+    ],
+    "translucency": [
+      "exact",
+      "moments16",
+    ],
+  },
+  "outputs": [
+    "color",
+    "depth",
+    "featureId",
+  ],
+  "paths": [],
+  "queries": [
+    {
+      "backend": "id-targets",
+      "kind": "pick",
+    },
+  ],
+  "renderer": "webgpu",
+  "updates": "each-tick",
+}
+`;
+
+exports[`profile invariants > 9. snapshots > swiftshader: effective, auto, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+    ],
+    "given": "on",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+      "*glare.fallbackAdapter",
+    ],
+    "given": "off",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+    ],
+    "given": "exact",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > swiftshader: effective, auto, glare on 2`] = `
+[
+  {
+    "asked": "full",
+    "feature": "glare",
+    "given": "off",
+    "kind": "dropped",
+    "reason": "this GPU is a software fallback",
+    "rule": "glare.fallbackAdapter",
+  },
+]
+`;
+
+exports[`profile invariants > 9. snapshots > swiftshader: effective, fixed, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+    ],
+    "given": "on",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+    ],
+    "given": "full",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+    ],
+    "given": "exact",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > swiftshader: effective, fixed, glare on 2`] = `[]`;
+
+exports[`profile invariants > 9. snapshots > swiftshader: support 1`] = `
+{
+  "content": {
+    "optional": {
+      "advancedTranslucency": true,
+      "brep": true,
+      "labels": true,
+      "points": true,
+      "splats": true,
+      "vectors": true,
+    },
+    "required": [
+      "globe",
+      "terrain",
+      "imagery",
+      "meshes",
+    ],
+  },
+  "features": {
+    "aerialPerspective": [
+      "march",
+      "screen",
+      "volume",
+    ],
+    "ambientOcclusion": [
+      "full",
+    ],
+    "cityLights": [
+      "on",
+    ],
+    "fxaa": [
+      "on",
+    ],
+    "glare": [
+      "full",
+      "reduced",
+      "sources",
+    ],
+    "lodTransitions": [
+      "morph",
+      "pop",
+    ],
+    "msaa": [
+      "4x",
+      "1x+fxaa",
+    ],
+    "normals": [
+      "exact",
+      "linear",
+    ],
+    "resolution": [
+      1,
+      0.75,
+      0.5,
+    ],
+    "shadows": [
+      "full",
+    ],
+    "sunDisk": [
+      "on",
+    ],
+    "translucency": [
+      "exact",
+      "moments32",
+      "moments16",
+    ],
+  },
+  "outputs": [
+    "color",
+    "depth",
+    "featureId",
+  ],
+  "paths": [],
+  "queries": [
+    {
+      "backend": "id-targets",
+      "kind": "pick",
+    },
+  ],
+  "renderer": "webgpu",
+  "updates": "each-tick",
+}
+`;

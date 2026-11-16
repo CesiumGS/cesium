@@ -2,7 +2,7 @@
 id: CS-21
 title: The catalog, rules and resolver
 kind: work
-state: in-progress
+state: done
 created: 2026-11-13
 project: CS-8
 needs: [CS-20]
