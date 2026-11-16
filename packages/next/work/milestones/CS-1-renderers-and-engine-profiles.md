@@ -5,7 +5,7 @@ kind: milestone
 state: planned
 created: 2026-11-13
 owner: owner
-constraints: [CS-414 c?, CS-415 c?, CS-416 c?, CS-466 c?, CS-467 c?, CS-468 c?, CS-491 c?, CS-492 c?, CS-493 c?, CS-502 c?, CS-503 c?]
+constraints: [CS-414 c?, CS-415 c?, CS-416 c?, CS-466 c?, CS-467 c?, CS-468 c?, CS-491 c?, CS-492 c?, CS-493 c?, CS-502 c?, CS-503 c?, CS-534 c?, CS-535 c?]
 ---
 
 ## Goal
