@@ -192,6 +192,7 @@ class MeshEditor {
       scene: options.scene,
       wasmEditor: this.#wasmEditor,
       meshes: this.#meshes,
+      getActiveTool: () => this.activeTool,
     });
   }
 
