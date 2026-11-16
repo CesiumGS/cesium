@@ -31,6 +31,7 @@ import {
   VertexArray,
 } from "@cesium/engine";
 import { ComponentType } from "@cesium/mesh-editor";
+import ComponentKeys from "./ComponentKeys.js";
 import MeshEditorStyle from "./MeshEditorStyle.js";
 import TopologyOverlayHooksFS from "../Shaders/TopologyOverlayHooksFS.js";
 import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
@@ -89,7 +90,6 @@ import TopologyOverlayHooksVS from "../Shaders/TopologyOverlayHooksVS.js";
  * @property {object} renderStateOptions The options of the component type's render state.
  * @property {RenderState} renderState The component type's render state, from the render state cache.
  * @property {"edges" | "triangles" | undefined} topologyViewName The overlay view with the component type's edges or triangles. Undefined for points.
- * @property {"verts" | "edges" | "faces"} componentName The name of a view into the overlay's flag and component key arrays.
  * @property {boolean} shown Whether to draw the component type.
  * @property {boolean} pickable Whether to draw the component type in the pick pass, if shown.
  * @property {BufferTexture | undefined} topologyTexture The edges or triangles. Undefined for points.
@@ -318,7 +318,6 @@ class OverlayRenderer {
       },
       renderStateOptions: POINT_EDGE_RENDER_STATE,
       topologyViewName: undefined,
-      componentName: "verts",
     });
 
     this.#edgeOverlay = this.#createComponentOverlay({
@@ -339,7 +338,6 @@ class OverlayRenderer {
       },
       renderStateOptions: POINT_EDGE_RENDER_STATE,
       topologyViewName: "edges",
-      componentName: "edges",
     });
 
     this.#faceOverlay = this.#createComponentOverlay({
@@ -357,7 +355,6 @@ class OverlayRenderer {
       renderStateOptions: FACE_RENDER_STATE,
       // Faces draw one instance per triangle, but select by face.
       topologyViewName: "triangles",
-      componentName: "faces",
     });
 
     this.#componentOverlays = [
@@ -552,7 +549,8 @@ class OverlayRenderer {
     this.#uploadView(context, this.#positionTexture, positions, fullRefresh);
 
     for (const componentOverlay of this.#componentOverlays) {
-      const { topologyViewName, componentName } = componentOverlay;
+      const { topologyViewName, componentType } = componentOverlay;
+      const componentName = ComponentKeys.getName(componentType);
 
       const topologyView = defined(topologyViewName)
         ? overlayViews[topologyViewName]
@@ -711,7 +709,6 @@ class OverlayRenderer {
    * @param {Object<string, function(): *> | undefined} options.outlineUniforms The style uniforms to override to draw the outline. Undefined for faces.
    * @param {object} options.renderStateOptions The options of the component type's render state.
    * @param {"edges" | "triangles" | undefined} options.topologyViewName The overlay view with the component type's edges or triangles. Undefined for points.
-   * @param {"verts" | "edges" | "faces"} options.componentName The name of a view into the overlay's flag and component key arrays.
    * @returns {ComponentOverlay}
    * @ignore
    */
