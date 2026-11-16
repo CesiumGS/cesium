@@ -2,10 +2,11 @@
 
 import { destroyObject } from "@cesium/core";
 import OverlayRenderer from "./OverlayRenderer.js";
+import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
 
 /** @import { Matrix4, OrientedBoundingBox } from "@cesium/core"; */
-/** @import { FrameState, GeometrySource } from "@cesium/engine"; */
-/** @import { OverlayViews } from "@cesium/mesh-editor"; */
+/** @import { FrameState, GeometryAttributeDescriptor, GeometrySource } from "@cesium/engine"; */
+/** @import { MeshEditor as WasmMeshEditor, OverlayViews } from "@cesium/mesh-editor"; */
 /** @import MeshEditorGroup from "./MeshEditorGroup.js"; */
 /** @import MeshEditorStyle from "./MeshEditorStyle.js"; */
 
@@ -31,6 +32,9 @@ class Mesh {
   /** @type {MeshEditorGroup} */
   #parent;
 
+  /** @type {WasmMeshEditor} */
+  #wasmEditor;
+
   /**
    * Hides the source, if it has a <code>show</code> property, and creates the
    * mesh's overlay renderer.
@@ -39,6 +43,7 @@ class Mesh {
    * @param {GeometrySource} options.source The geometry being edited.
    * @param {string} [options.name] The mesh's name.
    * @param {MeshEditorGroup} options.parent The group holding the mesh.
+   * @param {WasmMeshEditor} options.wasmEditor The wasm editor holding the mesh.
    * @param {bigint} options.key The mesh's key in its editor's wasm.
    * @param {*} options.module The loaded wasm module.
    * @param {MeshEditorStyle} options.style The editor's style, shared by its meshes.
@@ -54,6 +59,7 @@ class Mesh {
 
     this.#name = options.name;
     this.#parent = options.parent;
+    this.#wasmEditor = options.wasmEditor;
 
     /**
      * Whether to draw the mesh's vertices, edges and faces.
@@ -110,6 +116,18 @@ class Mesh {
    */
   get parent() {
     return this.#parent;
+  }
+
+  /**
+   * Gets the list of attributes on the mesh, such as <code>POSITION</code>, or
+   * any custom attributes added to the mesh.
+   *
+   * @returns {GeometryAttributeDescriptor[]} The attributes.
+   */
+  getAttributes() {
+    return this.#wasmEditor
+      .meshAttributes(this._key)
+      .map(WasmMeshAttributeTranslator.toDescriptor);
   }
 
   /**

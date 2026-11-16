@@ -1,15 +1,27 @@
 import {
+  AttributeType,
   Cartesian2,
   Cartesian3,
   Color,
+  ComponentDatatype,
   Matrix3,
   Matrix4,
   OrientedBoundingBox,
   RuntimeError,
 } from "@cesium/core";
-import { SceneTransforms, StencilFunction } from "@cesium/engine";
 import {
+  GeometryAttributeDescriptor,
+  GeometryAttributeDomain,
+  GeometryReader,
+  SceneTransforms,
+  StencilFunction,
+  VertexAttributeSemantic,
+} from "@cesium/engine";
+import {
+  AttributeDomain,
   ComponentType,
+  CustomAttribute,
+  Mesh as WasmMesh,
   MeshEditor as WasmMeshEditor,
 } from "@cesium/mesh-editor";
 import {
@@ -320,6 +332,293 @@ describe(
         );
         expect(editor.root.children).toEqual([]);
         expect(listener).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("attributes", function () {
+      function createAttribute(options, values) {
+        return { descriptor: new GeometryAttributeDescriptor(options), values };
+      }
+
+      function addSquare(editor, attributes) {
+        return editor.addMesh(createGeometrySource({ ...square, attributes }));
+      }
+
+      function getAttribute(mesh, name) {
+        return mesh
+          .getAttributes()
+          .find((attribute) => attribute.name === name);
+      }
+
+      it("lists positions and normals for a source without other attributes", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+
+        const mesh = addSquare(editor, []);
+
+        expect(mesh.getAttributes().map((attribute) => attribute.name)).toEqual(
+          ["POSITION", "NORMAL"],
+        );
+        const position = getAttribute(mesh, "POSITION");
+        expect(position.semantic).toBe(VertexAttributeSemantic.POSITION);
+        expect(position.type).toBe(AttributeType.VEC3);
+        expect(position.domain).toBe(GeometryAttributeDomain.VERTEX);
+        expect(position.componentDatatype).toBe(ComponentDatatype.FLOAT);
+      });
+
+      it("loads custom attributes, storing integers as 32-bit integers", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        spyOn(CustomAttribute, "float32").and.callThrough();
+        spyOn(CustomAttribute, "int32").and.callThrough();
+        spyOn(CustomAttribute, "uint32").and.callThrough();
+
+        const mesh = addSquare(editor, [
+          createAttribute(
+            {
+              semantic: "_TEMPERATURE",
+              type: AttributeType.SCALAR,
+              componentDatatype: ComponentDatatype.FLOAT,
+            },
+            [0.5, 1.5, 2.5, 3.5],
+          ),
+          createAttribute(
+            {
+              semantic: "_ID",
+              type: AttributeType.SCALAR,
+              componentDatatype: ComponentDatatype.UNSIGNED_SHORT,
+            },
+            [7, 7, 8, 9],
+          ),
+          createAttribute(
+            {
+              semantic: "_OFFSET",
+              type: AttributeType.VEC2,
+              componentDatatype: ComponentDatatype.SHORT,
+            },
+            [
+              [1, -1],
+              [2, -2],
+              [3, -3],
+              [4, -4],
+            ],
+          ),
+        ]);
+
+        expect(CustomAttribute.float32).toHaveBeenCalledOnceWith(
+          "_TEMPERATURE",
+          AttributeDomain.Vertex,
+          1,
+          new Float32Array([0.5, 1.5, 2.5, 3.5]),
+        );
+        expect(CustomAttribute.uint32).toHaveBeenCalledOnceWith(
+          "_ID",
+          AttributeDomain.Vertex,
+          1,
+          new Uint32Array([7, 7, 8, 9]),
+        );
+        expect(CustomAttribute.int32).toHaveBeenCalledOnceWith(
+          "_OFFSET",
+          AttributeDomain.Vertex,
+          2,
+          new Int32Array([1, -1, 2, -2, 3, -3, 4, -4]),
+        );
+
+        const id = getAttribute(mesh, "_ID");
+        expect(id.type).toBe(AttributeType.SCALAR);
+        expect(id.domain).toBe(GeometryAttributeDomain.VERTEX);
+        expect(id.componentDatatype).toBe(ComponentDatatype.UNSIGNED_INT);
+        const offset = getAttribute(mesh, "_OFFSET");
+        expect(offset.type).toBe(AttributeType.VEC2);
+        expect(offset.componentDatatype).toBe(ComponentDatatype.INT);
+        expect(getAttribute(mesh, "_TEMPERATURE").componentDatatype).toBe(
+          ComponentDatatype.FLOAT,
+        );
+      });
+
+      it("loads built-in attributes by name, with their set index", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        spyOn(CustomAttribute, "float32").and.callThrough();
+
+        const mesh = addSquare(editor, [
+          createAttribute(
+            {
+              semantic: VertexAttributeSemantic.COLOR,
+              setIndex: 1,
+              componentDatatype: ComponentDatatype.FLOAT,
+            },
+            square.positions.map(() => [1, 0, 0, 1]),
+          ),
+        ]);
+
+        expect(CustomAttribute.float32).toHaveBeenCalledOnceWith(
+          "COLOR_1",
+          AttributeDomain.Vertex,
+          4,
+          jasmine.any(Float32Array),
+        );
+        const color = getAttribute(mesh, "COLOR_1");
+        expect(color.semantic).toBe(VertexAttributeSemantic.COLOR);
+        expect(color.setIndex).toBe(1);
+        expect(color.type).toBe(AttributeType.VEC4);
+
+        spyOn(WasmMeshEditor.prototype, "meshAttributes").and.callThrough();
+        const names = mesh.getAttributes().map((attribute) => attribute.name);
+        const wasmNames = WasmMeshEditor.prototype.meshAttributes.calls
+          .mostRecent()
+          .returnValue.map((attribute) => attribute.name);
+        expect(names).toEqual(wasmNames);
+      });
+
+      it("loads normals and the first texture coordinates as buffers", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        spyOn(WasmMesh, "fromBuffers").and.callThrough();
+        spyOn(CustomAttribute, "float32").and.callThrough();
+
+        const mesh = addSquare(editor, [
+          createAttribute(
+            {
+              semantic: VertexAttributeSemantic.NORMAL,
+              componentDatatype: ComponentDatatype.FLOAT,
+            },
+            square.positions.map(() => [0, 0, 1]),
+          ),
+          createAttribute(
+            {
+              semantic: VertexAttributeSemantic.TEXCOORD,
+              componentDatatype: ComponentDatatype.FLOAT,
+            },
+            [
+              [0, 0],
+              [1, 0],
+              [1, 1],
+              [0, 1],
+            ],
+          ),
+        ]);
+
+        const [, , normals, uvs] = WasmMesh.fromBuffers.calls.mostRecent().args;
+        expect(normals).toEqual(
+          new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1]),
+        );
+        expect(uvs).toEqual(new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]));
+        expect(CustomAttribute.float32).not.toHaveBeenCalled();
+        expect(mesh.getAttributes().map((attribute) => attribute.name)).toEqual(
+          ["POSITION", "NORMAL", "TEXCOORD_0"],
+        );
+      });
+
+      it("loads per-corner attributes in the order of the primitives' corners", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        spyOn(CustomAttribute, "uint32").and.callThrough();
+
+        const mesh = addSquare(editor, [
+          createAttribute(
+            {
+              semantic: "_CORNER_ID",
+              type: AttributeType.SCALAR,
+              domain: GeometryAttributeDomain.CORNER,
+              componentDatatype: ComponentDatatype.UNSIGNED_INT,
+            },
+            [
+              [10, 11, 12],
+              [20, 21, 22],
+            ],
+          ),
+        ]);
+
+        expect(CustomAttribute.uint32).toHaveBeenCalledOnceWith(
+          "_CORNER_ID",
+          AttributeDomain.Corner,
+          1,
+          new Uint32Array([10, 11, 12, 20, 21, 22]),
+        );
+        expect(getAttribute(mesh, "_CORNER_ID").domain).toBe(
+          GeometryAttributeDomain.CORNER,
+        );
+      });
+
+      it("skips attributes it can't store, with a warning", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        spyOn(console, "warn");
+
+        const mesh = addSquare(editor, [
+          createAttribute(
+            {
+              semantic: "_SKIPPED_DOUBLE",
+              type: AttributeType.SCALAR,
+              componentDatatype: ComponentDatatype.DOUBLE,
+            },
+            [1, 2, 3, 4],
+          ),
+          createAttribute(
+            {
+              semantic: "_SKIPPED_MATRIX",
+              type: AttributeType.MAT2,
+              componentDatatype: ComponentDatatype.FLOAT,
+            },
+            square.positions.map(() => [1, 0, 0, 1]),
+          ),
+          createAttribute(
+            {
+              semantic: "_SKIPPED_UNKNOWN_DATATYPE",
+              type: AttributeType.SCALAR,
+            },
+            [1, 2, 3, 4],
+          ),
+          createAttribute(
+            {
+              semantic: VertexAttributeSemantic.NORMAL,
+              domain: GeometryAttributeDomain.CORNER,
+              componentDatatype: ComponentDatatype.FLOAT,
+            },
+            square.primitives.map((primitive) =>
+              primitive.map(() => [0, 0, 1]),
+            ),
+          ),
+        ]);
+
+        expect(mesh.getAttributes().map((attribute) => attribute.name)).toEqual(
+          ["POSITION", "NORMAL"],
+        );
+        const warnings = console.warn.calls.allArgs().flat().join("\n");
+        expect(warnings).toContain(
+          "skipped attribute _SKIPPED_DOUBLE: expected component datatype FLOAT or an integer of 32 bits or fewer, but got DOUBLE",
+        );
+        expect(warnings).toContain(
+          "skipped attribute _SKIPPED_MATRIX: expected type SCALAR, VEC2, VEC3 or VEC4, but got MAT2",
+        );
+        expect(warnings).toContain(
+          "skipped attribute _SKIPPED_UNKNOWN_DATATYPE: expected component datatype FLOAT or an integer of 32 bits or fewer, but got none",
+        );
+        expect(warnings).toContain(
+          "skipped attribute NORMAL: expected domain VERTEX, but got CORNER",
+        );
+      });
+
+      it("throws a RuntimeError if positions aren't per vertex", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const source = createGeometrySource(square);
+        source.geometryReader = new GeometryReader({
+          availableAttributes: [
+            new GeometryAttributeDescriptor({
+              semantic: VertexAttributeSemantic.POSITION,
+              domain: GeometryAttributeDomain.CORNER,
+            }),
+          ],
+          createReadSession: jasmine.createSpy("createReadSession"),
+        });
+
+        expect(() => editor.addMesh(source)).toThrowError(RuntimeError);
+      });
+
+      it("throws a RuntimeError without positions", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const source = createGeometrySource(square);
+        source.geometryReader = new GeometryReader({
+          availableAttributes: [],
+          createReadSession: jasmine.createSpy("createReadSession"),
+        });
+
+        expect(() => editor.addMesh(source)).toThrowError(RuntimeError);
       });
     });
 
