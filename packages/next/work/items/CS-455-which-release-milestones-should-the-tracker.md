@@ -2,7 +2,7 @@
 id: CS-455
 title: "Which release items should the tracker have: alphas, betas, release candidates, 2.0.0?"
 kind: decision
-state: planned
+state: done
 created: 2026-11-14
 project: CS-18
 decider: owner
@@ -24,6 +24,8 @@ Recommendation: the ladder. It gives each public API review a place (the first b
 
 ## Answer
 
-Open.
+The owner, 2026-11-15: the ladder. Four release items, each a work item with a `release` version that needs the one before it: 2.0.0-alpha.1 (a host can build on it; the API may still change), 2.0.0-beta.1 (feature complete for 2.0; the API changes only through a review the owner approves), 2.0.0-rc.1 (only fixes after it; parity and the docs done), and 2.0.0. Alphas and release candidates may repeat (alpha.2, rc.2), each with a release item of its own. Which milestones each gate needs is a decision per gate, one for each of the four.
+
+The main session creates the four release items and the four decisions with `hitld work new` (only it creates items, since CS-522).
 
 Reworded on 2026-11-15 for human-in-the-lead's release items (HITLD-129): the question and the recommendation are unchanged; a gate is now a release item rather than a milestone that needs only milestones.
