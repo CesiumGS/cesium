@@ -403,7 +403,7 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 11 of 19 done, 0 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 12 of 20 done, 0 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
@@ -432,6 +432,7 @@ No milestone
 - [ ] [CS-531](./items/CS-531-release-2-0-0-beta-1.md) Release 2.0.0-beta.1. Needs CS-527 and CS-530.
 - [ ] [CS-532](./items/CS-532-release-2-0-0-rc-1.md) Release 2.0.0-rc.1. Needs CS-528 and CS-531.
 - [ ] [CS-533](./items/CS-533-release-2-0-0.md) Release 2.0.0. Needs CS-529 and CS-532.
+- [x] [CS-536](./items/CS-536-approve-a-store-device.md) decision: Approve a store device. Done.
 
 ### Follow-ups for other teams
 
