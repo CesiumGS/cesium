@@ -18,7 +18,7 @@ import {
  * How wasm stores the values of one datatype.
  *
  * @typedef {object} Storage
- * @property {new (length: number) => Float32Array | Int32Array | Uint32Array} ArrayType
+ * @property {function(new:(Float32Array|Int32Array|Uint32Array), number)} ArrayType
  * @property {function(string, AttributeDomain, number, *): CustomAttribute} create
  * @ignore
  */
@@ -108,7 +108,7 @@ WasmMeshAttributeTranslator.getUnsupportedReason = function (descriptor) {
  * Gets the array type wasm takes an attribute's values in.
  *
  * @param {GeometryAttributeDescriptor} descriptor A supported attribute.
- * @returns {new (length: number) => Float32Array | Int32Array | Uint32Array} The array type.
+ * @returns {function(new:(Float32Array|Int32Array|Uint32Array), number)} The array type.
  */
 WasmMeshAttributeTranslator.getArrayType = function (descriptor) {
   return STORAGE[descriptor.componentDatatype].ArrayType;
