@@ -6,7 +6,7 @@
 graph LR
   CS_8["Engine profiles<br/>3 of 19 done"]
   CS_9["WebGL 2 renderer<br/>1 of 17 done"]
-  CS_10["Cesium IR<br/>0 of 26 done"]
+  CS_10["Cesium IR<br/>0 of 27 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
   CS_13["worker-mode façade<br/>0 of 20 done"]
@@ -14,7 +14,7 @@ graph LR
   CS_15["Refinement and convergence<br/>0 of 13 done"]
   CS_16["Streaming robustness<br/>0 of 22 done"]
   CS_17["transform graph<br/>0 of 13 done"]
-  CS_18["work tracker<br/>12 of 21 done"]
+  CS_18["work tracker<br/>12 of 22 done"]
   CS_19["Follow-ups for other teams<br/>0 of 12 done"]
   CS_188["Earth to Moon (frames 5c to 5h)<br/>0 of 41 done"]
   CS_189["Frames and engineering coordinates follow-ups<br/>0 of 21 done"]

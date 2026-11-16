@@ -16,6 +16,7 @@ CS-10 Cesium IR
   CS-48  The core (types, rates, equations, literal slots, the builder)
   CS-57  Our naga crate (Rust in development and CI only)
   CS-543  CS-48's formula cases checked against the whole KHR_interactivity spec
+  CS-546  decision: The builder's x + 0 rewrite and the spec's signed zero
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -187,6 +188,7 @@ CS-437 The public API reviews
 
 CS-18 The work tracker
   CS-545  Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it
+  CS-547  Your move's In progress shows the live run: dispatches in flight and branches done but not merged
 
-137 ready
+139 ready
 ```

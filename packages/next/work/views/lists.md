@@ -72,7 +72,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 0 of 26 done, 3 ready, 21 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 0 of 27 done, 4 ready, 21 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -111,6 +111,7 @@ No milestone
 - [?] CS-372 Custom shading and styling leftovers. Proposed. Needs CS-61.
 - [?] CS-373 Slang ahead of time for apps: a CLI and a bundler plugin. Proposed. Needs CS-61.
 - [ ] CS-543 CS-48's formula cases checked against the whole KHR_interactivity spec. Needs nothing.
+- [ ] CS-546 decision: The builder's x + 0 rewrite and the spec's signed zero. Needs nothing. Decided by owner.
 
 ### Live MaterialX graph editing
 
@@ -348,7 +349,7 @@ No milestone
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 12 of 21 done, 1 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 12 of 22 done, 2 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
@@ -379,6 +380,7 @@ No milestone
 - [ ] CS-533 Release 2.0.0. Needs CS-529 and CS-532.
 - [x] CS-536 decision: Approve a store device. Done.
 - [ ] CS-545 Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it. Needs nothing.
+- [ ] CS-547 Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Needs nothing.
 
 ### Follow-ups for other teams
 

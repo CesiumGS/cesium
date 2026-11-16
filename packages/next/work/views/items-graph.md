@@ -71,6 +71,7 @@ graph LR
     CS_372["CS-372 Custom shading and styling leftovers"]:::proposed
     CS_373["CS-373 Slang ahead of time for apps: a CLI and a bundler plugin"]:::proposed
     CS_543["CS-543 CS-48's formula cases checked against the whole KHR_interactivi"]:::open
+    CS_546["CS-546 The builder's x + 0 rewrite and the spec's signed zero"]:::decision
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -227,6 +228,7 @@ graph LR
     CS_533["CS-533 Release 2.0.0"]:::open
     CS_536["CS-536 Approve a store device"]:::done
     CS_545["CS-545 Dyno's roadmap shows each release as a flag above the grid, aft"]:::open
+    CS_547["CS-547 Your move's In progress shows the live run: dispatches in fligh"]:::open
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external

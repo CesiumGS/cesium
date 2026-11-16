@@ -88,5 +88,8 @@ CS-18 The work tracker
   CS-529  Which milestones does 2.0.0 need? (owner)
       waited on by CS-533
 
-32 open decision(s) for owner
+CS-10 Cesium IR
+  CS-546  The builder's x + 0 rewrite and the spec's signed zero (owner)
+
+33 open decision(s) for owner
 ```
