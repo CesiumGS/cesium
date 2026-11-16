@@ -105,6 +105,9 @@ Milestone: Cesium IR covers what materials need (CS-419, Planned)
 - [ ] CS-67 Screen-space derivatives. Needs CS-66.
 - [ ] CS-68 General bounded loops. Needs CS-67.
 - [ ] CS-69 Structs. Needs CS-68.
+- [ ] CS-548 The IR's math/eq covers floatN and bool, as KHR_interactivity defines it. Needs CS-48.
+- [ ] CS-549 The IR models math/normalize's isValid output. Needs CS-48.
+- [ ] CS-550 The core IR spike's evaluator gets dot and intToFloat's signed zero right. Needs CS-48 and CS-543.
 
 No milestone
 
@@ -112,9 +115,6 @@ No milestone
 - [?] CS-373 Slang ahead of time for apps: a CLI and a bundler plugin. Proposed. Needs CS-61.
 - [x] CS-543 CS-48's formula cases checked against the whole KHR_interactivity spec. Done.
 - [ ] CS-546 decision: The builder's x + 0 rewrite and the spec's signed zero. Needs nothing. Decided by owner.
-- [ ] CS-548 The IR's math/eq covers floatN and bool, as KHR_interactivity defines it. Needs CS-48.
-- [ ] CS-549 The IR models math/normalize's isValid output. Needs CS-48.
-- [ ] CS-550 The core IR spike's evaluator gets dot and intToFloat's signed zero right. Needs CS-48 and CS-543.
 
 ### Live MaterialX graph editing
 
@@ -352,7 +352,7 @@ No milestone
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 12 of 22 done, 2 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 12 of 23 done, 3 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
@@ -365,6 +365,12 @@ Milestone: The tracker runs on human-in-the-lead (CS-524, Planned)
 - [x] CS-521 The tracker's files in human-in-the-lead's format. Done.
 - [x] CS-522 hitld's commands replace scripts/work. Done.
 - [x] CS-523 Dyno's board reads human-in-the-lead's read API. Done.
+
+Milestone: Dyno's Work page shows the live system and the release plan (CS-561, Proposed)
+
+- [ ] CS-545 Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it. Needs nothing.
+- [ ] CS-547 Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Needs nothing.
+- [ ] CS-562 Dyno's Work page lists the items in no milestone, filterable by kind and state. Needs nothing.
 
 No milestone
 
@@ -382,8 +388,6 @@ No milestone
 - [ ] CS-532 Release 2.0.0-rc.1. Needs CS-528 and CS-531.
 - [ ] CS-533 Release 2.0.0. Needs CS-529 and CS-532.
 - [x] CS-536 decision: Approve a store device. Done.
-- [ ] CS-545 Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it. Needs nothing.
-- [ ] CS-547 Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Needs nothing.
 
 ### Follow-ups for other teams
 
@@ -554,6 +558,7 @@ Milestone: glTF and 3D Tiles load at 1.x's coverage (CS-498, Planned)
 Milestone: Content from any source loads through one module seam (CS-560, Proposed)
 
 - [ ] CS-552 The content-source seam: one interface every source module implements, designed and planned. Needs CS-551.
+- [ ] CS-553 What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline. Needs nothing.
 - [?] CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point. Proposed. Needs CS-552.
 - [?] CS-555 The globe's terrain and imagery load through the content-source seam. Proposed. Needs CS-552.
 - [?] CS-556 glTF files load through the content-source seam. Proposed. Needs CS-552.
@@ -571,7 +576,6 @@ No milestone
 - [?] CS-280 Thin wrappers for ion's REST API, including element metadata. Proposed. Needs CS-269.
 - [ ] CS-452 decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?. Needs nothing. Decided by owner.
 - [x] CS-551 decision: Does content from every kind of source, the globe included, load through one module seam built now?. Done.
-- [ ] CS-553 What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline. Needs nothing.
 
 ### Sky, light and atmosphere
 
@@ -677,6 +681,8 @@ Milestone: Image regression and parity are checked in CI (CS-483, Planned)
 - [ ] CS-327 Image regression in CI on SwiftShader, with saved checks and the parity pages as checks. Needs CS-323, CS-397 (Dyno as the development harness) and CS-401 (Dyno as the development harness).
 - [ ] CS-330 Custom shaders and feature styles compared against 1.x. Needs nothing.
 - [ ] CS-448 Energy compensation for coloured metals, against a multiple-scattering reference. Needs nothing.
+- [ ] CS-541 The parity tests compare against CesiumJS 1.147.0, pinned. Needs nothing.
+- [ ] CS-542 Every parity result names its oracle. Needs CS-541.
 
 Milestone: The performance targets are met or the gaps explained (CS-484, Planned)
 
@@ -697,8 +703,6 @@ No milestone
 - [?] CS-333 Dyno's analysis and results features: notes, saved views, authoring in the Explorer, deeper analysis. Proposed. Needs nothing.
 - [?] CS-334 Benchmarks across OS, browser and GPU vendor, with power and thermals. Proposed. Needs CS-324.
 - [?] CS-335 Headless rendering on Dawn's Node package. Proposed. Needs CS-275 (Content sources and formats).
-- [ ] CS-541 The parity tests compare against CesiumJS 1.147.0, pinned. Needs nothing.
-- [ ] CS-542 Every parity result names its oracle. Needs CS-541.
 
 ### Infrastructure and geoscience capabilities
 
@@ -759,6 +763,7 @@ Milestone: Dyno and the gallery are safe to build and host (CS-485, Planned)
 - [ ] CS-359 Keep the Google Maps and iTwin share keys out of builds. Needs nothing.
 - [ ] CS-360 Static hosting of the built gallery: data paths, the error alert, the favicon. Needs nothing.
 - [ ] CS-413 The ion token for CLI runs and worktrees, without writing it into a build. Needs nothing.
+- [ ] CS-544 The handbook's reel runs in the served handbook as well as the static file. Needs nothing.
 
 Milestone: CI keeps packages/next clean (CS-486, Planned)
 
@@ -774,7 +779,6 @@ No milestone
 
 - [?] CS-363 Packaging for pages without a build step. Proposed. Needs nothing.
 - [?] CS-364 The gallery shell: filters, editable source, checked-in thumbnails, the playground's later list. Proposed. Needs nothing.
-- [ ] CS-544 The handbook's reel runs in the served handbook as well as the static file. Needs nothing.
 
 ### Dyno as the development harness
 

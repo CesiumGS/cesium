@@ -81,9 +81,9 @@ CS-418 Any shader language reaches both renderers [Planned], under CS-10 Cesium 
 
 CS-419 Cesium IR covers what materials need [Planned], under CS-10 Cesium IR
   outcome: Cesium IR has noise, textures and samplers, matrices, screen-space derivatives, bounded loops and structs, so the MaterialX and user programs that use them compile.
-  constraints: 0 of 6 done
-  unmet: not linked to a clause yet (open: CS-64, CS-65, CS-66, CS-67, CS-68, CS-69; check not passed)
-  to shape: done_when; check; link CS-64, CS-65, CS-66, CS-67, CS-68, CS-69 to a clause
+  constraints: 0 of 9 done
+  unmet: not linked to a clause yet (open: CS-64, CS-65, CS-66, CS-67, CS-68, CS-69, CS-548, CS-549, CS-550; check not passed)
+  to shape: done_when; check; link CS-64, CS-65, CS-66, CS-67, CS-68, CS-69, CS-548, CS-549, CS-550 to a clause
 
 CS-420 The public API shape is approved [Planned], under CS-437 The public API reviews
   outcome: Every public member is mapped and reviewed against the façade's constraints and other engines' idioms, and the owner has approved which changes to make.
@@ -330,9 +330,9 @@ CS-482 Benchmarks run per merge on dedicated machines [Planned], under CS-195 Be
 
 CS-483 Image regression and parity are checked in CI [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: SwiftShader runs image checks and the parity pages in CI, custom shaders and feature styles match 1.x, and coloured metals match a multiple-scattering reference.
-  constraints: 0 of 3 done
-  unmet: not linked to a clause yet (open: CS-327, CS-330, CS-448; check not passed)
-  to shape: done_when; check; link CS-327, CS-330, CS-448 to a clause
+  constraints: 0 of 5 done
+  unmet: not linked to a clause yet (open: CS-327, CS-330, CS-448, CS-541, CS-542; check not passed)
+  to shape: done_when; check; link CS-327, CS-330, CS-448, CS-541, CS-542 to a clause
 
 CS-484 The performance targets are met or the gaps explained [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: Throttled network scenarios run against a link-shaping server, Dyno's guardrails are revisited per scene, and every performance target, multi-view included, is met or its gap explained.
@@ -342,9 +342,9 @@ CS-484 The performance targets are met or the gaps explained [Planned], under CS
 
 CS-485 Dyno and the gallery are safe to build and host [Planned], under CS-199 Dyno hardening, packaging and CI
   outcome: The dev server and bench suite have no open Snyk findings, share keys and ion tokens stay out of builds, and the built gallery runs from static hosting.
-  constraints: 0 of 4 done
-  unmet: not linked to a clause yet (open: CS-358, CS-359, CS-360, CS-413; check not passed)
-  to shape: done_when; check; link CS-358, CS-359, CS-360, CS-413 to a clause
+  constraints: 0 of 5 done
+  unmet: not linked to a clause yet (open: CS-358, CS-359, CS-360, CS-413, CS-544; check not passed)
+  to shape: done_when; check; link CS-358, CS-359, CS-360, CS-413, CS-544 to a clause
 
 CS-486 CI keeps packages/next clean [Planned], under CS-199 Dyno hardening, packaging and CI
   outcome: CI runs the package's tests on Node 24, the package is Prettier-clean, a fresh worktree passes `npm test`, and the example runner's loose ends are closed.
@@ -509,9 +509,15 @@ CS-535 Rays query the scene on the GPU [Proposed], under CS-197 Ray queries and 
 
 CS-560 Content from any source loads through one module seam [Proposed], under CS-191 Content sources and formats
   outcome: An application loads 3D Tiles, the globe's terrain and imagery, glTF files, MVT, Esri services and USD through one content-source interface, importing only the source modules it uses.
-  constraints: 0 of 7 done
-  unmet: not linked to a clause yet (open: CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559; check not passed)
-  to shape: done_when; check; link CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559 to a clause
+  constraints: 0 of 8 done
+  unmet: not linked to a clause yet (open: CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553; check not passed)
+  to shape: done_when; check; link CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553 to a clause
 
-83 open milestone(s)
+CS-561 Dyno's Work page shows the live system and the release plan [Proposed], under CS-18 The work tracker
+  outcome: A reader of Dyno's Work page sees what's moving now (dispatches, branches waiting to merge, the active run) and where each release falls among the milestones that feed it.
+  constraints: 0 of 3 done
+  unmet: not linked to a clause yet (open: CS-545, CS-547, CS-562; check not passed)
+  to shape: done_when; check; link CS-545, CS-547, CS-562 to a clause
+
+84 open milestone(s)
 ```

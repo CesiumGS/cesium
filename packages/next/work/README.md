@@ -162,6 +162,9 @@ Milestone: Cesium IR covers what materials need ([CS-419](./milestones/CS-419-ce
 - [ ] [CS-67](./items/CS-67-screen-space-derivatives.md) Screen-space derivatives. Needs CS-66.
 - [ ] [CS-68](./items/CS-68-general-bounded-loops.md) General bounded loops. Needs CS-67.
 - [ ] [CS-69](./items/CS-69-structs.md) Structs. Needs CS-68.
+- [ ] [CS-548](./items/CS-548-the-ir-s-math-eq-covers-floatn-and-bool-as-khr.md) The IR's math/eq covers floatN and bool, as KHR_interactivity defines it. Needs CS-48.
+- [ ] [CS-549](./items/CS-549-the-ir-models-math-normalize-s-isvalid-output.md) The IR models math/normalize's isValid output. Needs CS-48.
+- [ ] [CS-550](./items/CS-550-the-core-ir-spike-s-evaluator-gets-dot-and.md) The core IR spike's evaluator gets dot and intToFloat's signed zero right. Needs CS-48 and CS-543.
 
 No milestone
 
@@ -169,9 +172,6 @@ No milestone
 - [?] [CS-373](./items/CS-373-slang-ahead-of-time-for-apps-a-cli-and-a.md) Slang ahead of time for apps: a CLI and a bundler plugin. Proposed. Needs CS-61.
 - [x] [CS-543](./items/CS-543-cs-48-s-formula-cases-checked-against-the-whole.md) CS-48's formula cases checked against the whole KHR_interactivity spec. Done.
 - [ ] [CS-546](./items/CS-546-the-builder-s-x-0-rewrite-and-the-spec-s-signed.md) decision: The builder's x + 0 rewrite and the spec's signed zero. Needs nothing. Decided by owner.
-- [ ] [CS-548](./items/CS-548-the-ir-s-math-eq-covers-floatn-and-bool-as-khr.md) The IR's math/eq covers floatN and bool, as KHR_interactivity defines it. Needs CS-48.
-- [ ] [CS-549](./items/CS-549-the-ir-models-math-normalize-s-isvalid-output.md) The IR models math/normalize's isValid output. Needs CS-48.
-- [ ] [CS-550](./items/CS-550-the-core-ir-spike-s-evaluator-gets-dot-and.md) The core IR spike's evaluator gets dot and intToFloat's signed zero right. Needs CS-48 and CS-543.
 
 ### Live MaterialX graph editing
 
@@ -409,7 +409,7 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 12 of 22 done, 2 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 12 of 23 done, 3 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
@@ -422,6 +422,12 @@ Milestone: The tracker runs on human-in-the-lead ([CS-524](./milestones/CS-524-t
 - [x] [CS-521](./items/CS-521-the-tracker-s-files-in-human-in-the-lead-s.md) The tracker's files in human-in-the-lead's format. Done.
 - [x] [CS-522](./items/CS-522-hitld-s-commands-replace-scripts-work.md) hitld's commands replace scripts/work. Done.
 - [x] [CS-523](./items/CS-523-dyno-s-board-reads-human-in-the-lead-s-read-api.md) Dyno's board reads human-in-the-lead's read API. Done.
+
+Milestone: Dyno's Work page shows the live system and the release plan ([CS-561](./milestones/CS-561-dyno-s-work-page-shows-the-live-system-and-the.md), Proposed)
+
+- [ ] [CS-545](./items/CS-545-dyno-s-roadmap-shows-each-release-as-a-flag.md) Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it. Needs nothing.
+- [ ] [CS-547](./items/CS-547-your-move-s-in-progress-shows-the-live-run.md) Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Needs nothing.
+- [ ] [CS-562](./items/CS-562-dyno-s-work-page-lists-the-items-in-no.md) Dyno's Work page lists the items in no milestone, filterable by kind and state. Needs nothing.
 
 No milestone
 
@@ -439,8 +445,6 @@ No milestone
 - [ ] [CS-532](./items/CS-532-release-2-0-0-rc-1.md) Release 2.0.0-rc.1. Needs CS-528 and CS-531.
 - [ ] [CS-533](./items/CS-533-release-2-0-0.md) Release 2.0.0. Needs CS-529 and CS-532.
 - [x] [CS-536](./items/CS-536-approve-a-store-device.md) decision: Approve a store device. Done.
-- [ ] [CS-545](./items/CS-545-dyno-s-roadmap-shows-each-release-as-a-flag.md) Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it. Needs nothing.
-- [ ] [CS-547](./items/CS-547-your-move-s-in-progress-shows-the-live-run.md) Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Needs nothing.
 
 ### Follow-ups for other teams
 
@@ -611,6 +615,7 @@ Milestone: glTF and 3D Tiles load at 1.x's coverage ([CS-498](./milestones/CS-49
 Milestone: Content from any source loads through one module seam ([CS-560](./milestones/CS-560-content-from-any-source-loads-through-one.md), Proposed)
 
 - [ ] [CS-552](./items/CS-552-the-content-source-seam-one-interface-every.md) The content-source seam: one interface every source module implements, designed and planned. Needs CS-551.
+- [ ] [CS-553](./items/CS-553-what-3d-tiles-costs-an-application-that-doesn-t.md) What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline. Needs nothing.
 - [?] [CS-554](./items/CS-554-3d-tiles-loads-through-the-content-source-seam.md) 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point. Proposed. Needs CS-552.
 - [?] [CS-555](./items/CS-555-the-globe-s-terrain-and-imagery-load-through.md) The globe's terrain and imagery load through the content-source seam. Proposed. Needs CS-552.
 - [?] [CS-556](./items/CS-556-gltf-files-load-through-the-content-source-seam.md) glTF files load through the content-source seam. Proposed. Needs CS-552.
@@ -628,7 +633,6 @@ No milestone
 - [?] [CS-280](./items/CS-280-thin-wrappers-for-ion-s-rest-api-including.md) Thin wrappers for ion's REST API, including element metadata. Proposed. Needs CS-269.
 - [ ] [CS-452](./items/CS-452-how-should-semantic-metadata-reach-the-engine.md) decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?. Needs nothing. Decided by owner.
 - [x] [CS-551](./items/CS-551-does-content-from-every-kind-of-source-the.md) decision: Does content from every kind of source, the globe included, load through one module seam built now?. Done.
-- [ ] [CS-553](./items/CS-553-what-3d-tiles-costs-an-application-that-doesn-t.md) What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline. Needs nothing.
 
 ### Sky, light and atmosphere
 
@@ -734,6 +738,8 @@ Milestone: Image regression and parity are checked in CI ([CS-483](./milestones/
 - [ ] [CS-327](./items/CS-327-image-regression-in-ci-on-swiftshader-with.md) Image regression in CI on SwiftShader, with saved checks and the parity pages as checks. Needs CS-323, CS-397 (Dyno as the development harness) and CS-401 (Dyno as the development harness).
 - [ ] [CS-330](./items/CS-330-custom-shaders-and-feature-styles-compared.md) Custom shaders and feature styles compared against 1.x. Needs nothing.
 - [ ] [CS-448](./items/CS-448-energy-compensation-for-coloured-metals-against.md) Energy compensation for coloured metals, against a multiple-scattering reference. Needs nothing.
+- [ ] [CS-541](./items/CS-541-the-parity-tests-compare-against-cesiumjs-1-147.md) The parity tests compare against CesiumJS 1.147.0, pinned. Needs nothing.
+- [ ] [CS-542](./items/CS-542-every-parity-result-names-its-oracle.md) Every parity result names its oracle. Needs CS-541.
 
 Milestone: The performance targets are met or the gaps explained ([CS-484](./milestones/CS-484-the-performance-targets-are-met-or-the-gaps.md), Planned)
 
@@ -754,8 +760,6 @@ No milestone
 - [?] [CS-333](./items/CS-333-dyno-s-analysis-and-results-features-notes.md) Dyno's analysis and results features: notes, saved views, authoring in the Explorer, deeper analysis. Proposed. Needs nothing.
 - [?] [CS-334](./items/CS-334-benchmarks-across-os-browser-and-gpu-vendor.md) Benchmarks across OS, browser and GPU vendor, with power and thermals. Proposed. Needs CS-324.
 - [?] [CS-335](./items/CS-335-headless-rendering-on-dawn-s-node-package.md) Headless rendering on Dawn's Node package. Proposed. Needs CS-275 (Content sources and formats).
-- [ ] [CS-541](./items/CS-541-the-parity-tests-compare-against-cesiumjs-1-147.md) The parity tests compare against CesiumJS 1.147.0, pinned. Needs nothing.
-- [ ] [CS-542](./items/CS-542-every-parity-result-names-its-oracle.md) Every parity result names its oracle. Needs CS-541.
 
 ### Infrastructure and geoscience capabilities
 
@@ -816,6 +820,7 @@ Milestone: Dyno and the gallery are safe to build and host ([CS-485](./milestone
 - [ ] [CS-359](./items/CS-359-keep-the-google-maps-and-itwin-share-keys-out.md) Keep the Google Maps and iTwin share keys out of builds. Needs nothing.
 - [ ] [CS-360](./items/CS-360-static-hosting-of-the-built-gallery-data-paths.md) Static hosting of the built gallery: data paths, the error alert, the favicon. Needs nothing.
 - [ ] [CS-413](./items/CS-413-the-ion-token-for-cli-runs-and-worktrees.md) The ion token for CLI runs and worktrees, without writing it into a build. Needs nothing.
+- [ ] [CS-544](./items/CS-544-the-handbook-s-reel-runs-in-the-served-handbook.md) The handbook's reel runs in the served handbook as well as the static file. Needs nothing.
 
 Milestone: CI keeps packages/next clean ([CS-486](./milestones/CS-486-ci-keeps-packages-next-clean.md), Planned)
 
@@ -831,7 +836,6 @@ No milestone
 
 - [?] [CS-363](./items/CS-363-packaging-for-pages-without-a-build-step.md) Packaging for pages without a build step. Proposed. Needs nothing.
 - [?] [CS-364](./items/CS-364-the-gallery-shell-filters-editable-source.md) The gallery shell: filters, editable source, checked-in thumbnails, the playground's later list. Proposed. Needs nothing.
-- [ ] [CS-544](./items/CS-544-the-handbook-s-reel-runs-in-the-served-handbook.md) The handbook's reel runs in the served handbook as well as the static file. Needs nothing.
 
 ### Dyno as the development harness
 
