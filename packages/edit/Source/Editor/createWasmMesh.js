@@ -146,7 +146,7 @@ function readBuffers(session, attributes) {
  * @template {TypedArray} T
  * @param {GeometryReadSession} session The read session.
  * @param {GeometryAttributeDescriptor} descriptor A per-vertex attribute.
- * @param {new (length: number) => T} ArrayType The array type to read into.
+ * @param {function(new:T, number)} ArrayType The array type to read into.
  * @returns {T} The values, in vertex order.
  * @ignore
  */
@@ -165,7 +165,7 @@ function readVertexValues(session, descriptor, ArrayType) {
  * @template {TypedArray} T
  * @param {GeometryReadSession} session The read session.
  * @param {GeometryAttributeDescriptor} descriptor An attribute.
- * @param {new (length: number) => T} ArrayType The array type to read into.
+ * @param {function(new:T, number)} ArrayType The array type to read into.
  * @param {Uint32Array} faceVertexCounts The number of corners in each primitive.
  * @returns {T} The values, in the order of the primitives' indices.
  * @ignore

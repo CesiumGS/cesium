@@ -43,7 +43,7 @@ class Mesh {
    * @param {GeometrySource} options.source The geometry being edited.
    * @param {string} [options.name] The mesh's name.
    * @param {MeshEditorGroup} options.parent The group holding the mesh.
-   * @param {WasmMeshEditor} options.wasmEditor The wasm editor holding the mesh.
+   * @param {*} options.wasmEditor The wasm editor holding the mesh.
    * @param {bigint} options.key The mesh's key in its editor's wasm.
    * @param {*} options.module The loaded wasm module.
    * @param {MeshEditorStyle} options.style The editor's style, shared by its meshes.
