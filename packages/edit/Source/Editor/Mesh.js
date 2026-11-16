@@ -1,12 +1,13 @@
 // @ts-check
 
-import { destroyObject } from "@cesium/core";
+import { Check, destroyObject } from "@cesium/core";
 import OverlayRenderer from "./OverlayRenderer.js";
 import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
 
 /** @import { OrientedBoundingBox } from "@cesium/core"; */
 /** @import { FrameState, GeometryAttributeDescriptor, GeometrySource } from "@cesium/engine"; */
 /** @import { MeshEditor as WasmMeshEditor, OverlayViews } from "@cesium/mesh-editor"; */
+/** @import ComparisonOperator from "./ComparisonOperator.js"; */
 /** @import MeshEditorGroup from "./MeshEditorGroup.js"; */
 /** @import MeshEditorStyle from "./MeshEditorStyle.js"; */
 
@@ -128,6 +129,91 @@ class Mesh {
     return this.#wasmEditor
       .meshAttributes(this._key)
       .map(WasmMeshAttributeTranslator.toDescriptor);
+  }
+
+  /**
+   * Gets a vertex's value of a per-vertex attribute.
+   *
+   * @param {bigint} vertexKey The vertex's key.
+   * @param {string} name The attribute's name.
+   * @returns {number|number[]|undefined} The value: a number for scalar attributes and an array for vector attributes. <code>undefined</code> if the mesh has no such vertex or per-vertex attribute.
+   */
+  getVertexAttributeValue(vertexKey, name) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.bigint("vertexKey", vertexKey);
+    Check.typeOf.string("name", name);
+    //>>includeEnd('debug');
+
+    return this.#wasmEditor.vertexAttributeValue(this._key, vertexKey, name);
+  }
+
+  /**
+   * Finds the vertices whose value of a per-vertex attribute compares to a
+   * value. Includes hidden vertices, and works whether or not the mesh is
+   * active.
+   *
+   * @param {string} name The attribute's name.
+   * @param {ComparisonOperator} comparison How to compare each vertex's value to <code>value</code>.
+   * @param {number|number[]} value A number for scalar attributes, or an array for vector attributes.
+   * @returns {BigUint64Array} The matching vertices' keys.
+   *
+   * @exception {DeveloperError} The mesh has no per-vertex attribute with that name.
+   * @exception {DeveloperError} The value doesn't fit the attribute's type.
+   * @exception {DeveloperError} The comparison doesn't apply to the attribute's type.
+   */
+  queryVerticesByAttribute(name, comparison, value) {
+    Mesh.#debugCheckAttributeQuery(name, comparison, value);
+
+    const { status, verts } = this.#wasmEditor.queryVertsByAttribute(
+      this._key,
+      name,
+      comparison,
+      value,
+    );
+
+    WasmMeshAttributeTranslator.debugCheckVertsByAttributeResult(status, name);
+    return verts;
+  }
+
+  /**
+   * Adds the vertices whose value of a per-vertex attribute compares to a
+   * value to the selection. Skips hidden vertices. Does nothing unless the
+   * editor's mode includes {@link EditMode.VERTEX}.
+   *
+   * @param {string} name The attribute's name.
+   * @param {ComparisonOperator} comparison How to compare each vertex's value to <code>value</code>.
+   * @param {number|number[]} value A number for scalar attributes, or an array for vector attributes.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   * @exception {DeveloperError} The mesh has no per-vertex attribute with that name.
+   * @exception {DeveloperError} The value doesn't fit the attribute's type.
+   * @exception {DeveloperError} The comparison doesn't apply to the attribute's type.
+   */
+  selectVerticesByAttribute(name, comparison, value) {
+    Mesh.#debugCheckAttributeQuery(name, comparison, value);
+
+    const status = this.#wasmEditor.selectVertsByAttribute(
+      this._key,
+      name,
+      comparison,
+      value,
+    );
+
+    WasmMeshAttributeTranslator.debugCheckVertsByAttributeResult(status, name);
+  }
+
+  /**
+   * @param {string} name The attribute's name.
+   * @param {ComparisonOperator} comparison The comparison.
+   * @param {number|number[]} value The value to compare to.
+   * @ignore
+   */
+  static #debugCheckAttributeQuery(name, comparison, value) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("name", name);
+    Check.typeOf.number("comparison", comparison);
+    Check.defined("value", value);
+    //>>includeEnd('debug');
   }
 
   /**
