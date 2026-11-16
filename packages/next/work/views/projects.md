@@ -80,7 +80,7 @@ CS-194 Budgeted selection and memory [Planned], led by owner
   waits on: nothing open
   waited on by: nothing open
 CS-195 Benchmarks, parity and image regression [Planned], led by owner
-  0 of 21 done, 9 ready, 4 blocked, 8 proposed
+  0 of 22 done, 9 ready, 5 blocked, 8 proposed
   waits on: CS-389 Dyno as the development harness (2); CS-191 Content sources and formats (1)
   waited on by: nothing open
 CS-196 Infrastructure and geoscience capabilities [Planned], led by owner

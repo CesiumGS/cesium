@@ -407,6 +407,7 @@ graph LR
     CS_514["CS-514 Run modes: faster than real time, or real time on a simulated o"]:::proposed
     CS_515["CS-515 Faster-than-real-time runs against real-time runs: which metric"]:::proposed
     CS_541["CS-541 The parity tests compare against CesiumJS 1.147.0, pinned"]:::open
+    CS_542["CS-542 Every parity result names its oracle"]:::open
   end
   subgraph CS_196["Infrastructure and geoscience capabilities"]
     CS_337["CS-337 Scalar fields on any geometry: values, colour ramps, legends an"]:::proposed
@@ -864,6 +865,7 @@ graph LR
   CS_531 --> CS_532
   CS_529 --> CS_533
   CS_532 --> CS_533
+  CS_541 --> CS_542
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

@@ -699,7 +699,7 @@ No milestone
 
 ### Benchmarks, parity and image regression
 
-[CS-195](./projects/CS-195-benchmarks-parity-and-image-regression.md), Planned, led by owner: 0 of 21 done, 9 ready, 4 blocked, 8 proposed. Plan: [benchmark-suite.md](../../../docs/design/benchmark-suite.md).
+[CS-195](./projects/CS-195-benchmarks-parity-and-image-regression.md), Planned, led by owner: 0 of 22 done, 9 ready, 5 blocked, 8 proposed. Plan: [benchmark-suite.md](../../../docs/design/benchmark-suite.md).
 
 Milestone: Benchmarks run per merge on dedicated machines ([CS-482](./milestones/CS-482-benchmarks-run-per-merge-on-dedicated-machines.md), Planned)
 
@@ -736,6 +736,7 @@ No milestone
 - [?] [CS-334](./items/CS-334-benchmarks-across-os-browser-and-gpu-vendor.md) Benchmarks across OS, browser and GPU vendor, with power and thermals. Proposed. Needs CS-324.
 - [?] [CS-335](./items/CS-335-headless-rendering-on-dawn-s-node-package.md) Headless rendering on Dawn's Node package. Proposed. Needs CS-275 (Content sources and formats).
 - [ ] [CS-541](./items/CS-541-the-parity-tests-compare-against-cesiumjs-1-147.md) The parity tests compare against CesiumJS 1.147.0, pinned. Needs nothing.
+- [ ] [CS-542](./items/CS-542-every-parity-result-names-its-oracle.md) Every parity result names its oracle. Needs CS-541.
 
 ### Infrastructure and geoscience capabilities
 

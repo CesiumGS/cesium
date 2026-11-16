@@ -23,7 +23,7 @@ graph LR
   CS_192["Sky, light and atmosphere<br/>0 of 20 done"]
   CS_193["B-reps and geometry queries<br/>0 of 18 done"]
   CS_194["Budgeted selection and memory<br/>0 of 6 done"]
-  CS_195["Benchmarks, parity and image regression<br/>0 of 21 done"]
+  CS_195["Benchmarks, parity and image regression<br/>0 of 22 done"]
   CS_196["Infrastructure and geoscience capabilities<br/>0 of 7 done"]
   CS_197["Ray queries and path tracing<br/>0 of 6 done"]
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]

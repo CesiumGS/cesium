@@ -468,6 +468,8 @@ CS-195 Benchmarks, parity and image regression
       ← CS-323 Benchmark machines: dedicated GPU runners, and CI builds per commit
         CS-397 Image checks for development scenes and sweeps
         CS-401 Lab pages and their results in the store
+  CS-542  Every parity result names its oracle
+      ← CS-541 The parity tests compare against CesiumJS 1.147.0, pinned
 
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
@@ -530,5 +532,5 @@ CS-18 The work tracker
       ← CS-529 Which milestones does 2.0.0 need?
         CS-532 Release 2.0.0-rc.1
 
-191 blocked
+192 blocked
 ```
