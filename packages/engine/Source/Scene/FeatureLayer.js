@@ -1,3 +1,5 @@
+// @ts-check
+
 import { Check, Event, defined } from "@cesium/core";
 import MetadataSemantic from "./MetadataSemantic.js";
 
@@ -5,12 +7,20 @@ import MetadataSemantic from "./MetadataSemantic.js";
 /** @import GroupMetadata from "./GroupMetadata.js"; */
 
 /**
+ * @typedef {object} FeatureLayerOptions
+ * @property {string} [name]
+ * @property {GroupMetadata} [metadata]
+ * @property {number} [index]
+ * @private
+ */
+
+/**
  * A named set of features defined by source data. It neither renders nor styles its
  * features. Created from 3D Tiles 1.1 groups or from GeoJSON.
  * <p>
- * Do not construct this directly. Access tileset layers through
- * {@link Cesium3DTileset#featureLayers}, or create a layer from GeoJSON with
- * {@link GeoJsonFeatureLoader}.
+ * Do not construct this directly. Access layers through a
+ * {@link Cesium3DTileset#featureLayers} or a {@link FeatureLayerProvider}, such as
+ * {@link GeoJsonFeatureLayerProvider#featureLayers}.
  * </p>
  *
  * @internalConstructor
@@ -23,33 +33,31 @@ class FeatureLayer {
    * @privateParam {string} [options.name] The layer name. Defaults to a name from <code>options.metadata</code>.
    * @privateParam {GroupMetadata} [options.metadata] Tileset layers only. The group metadata backing this layer.
    * @privateParam {number} [options.index] Tileset layers only. The index of the group in its tileset JSON.
-   * @privateParam {object} [options.geoJson] Standalone GeoJSON layers only. The GeoJSON defining the layer's features.
    */
-  constructor(options) {
+  constructor(/** @type {FeatureLayerOptions} */ options) {
     this._metadata = options.metadata;
     this._index = options.index;
-    this._geoJson = options.geoJson;
     this._name = options.name ?? getDefaultName(options.metadata);
     this._show = true;
 
     /**
      * Raised when a tile with features in this layer is loaded. Tileset layers only.
      *
-     * @type {Event<function(Cesium3DTile)>}
+     * @type {Event<function(Cesium3DTile): void>}
      */
     this.tileLoaded = new Event();
 
     /**
      * Raised when a tile with features in this layer is unloaded. Tileset layers only.
      *
-     * @type {Event<function(Cesium3DTile)>}
+     * @type {Event<function(Cesium3DTile): void>}
      */
     this.tileUnloaded = new Event();
   }
 
   /**
    * Whether the layer is shown. In a {@link Cesium3DTileset}, tiles in a hidden
-   * layer are not requested or rendered.
+   * layer are not requested or rendered. Tiles with multiple contents are not yet affected.
    *
    * @type {boolean}
    * @default true
@@ -103,6 +111,10 @@ class FeatureLayer {
   }
 }
 
+/**
+ * @param {*} metadata A {@link GroupMetadata}, typed loosely because its accessors are <code>@private</code>.
+ * @returns {string|undefined}
+ */
 function getDefaultName(metadata) {
   if (!defined(metadata)) {
     return undefined;

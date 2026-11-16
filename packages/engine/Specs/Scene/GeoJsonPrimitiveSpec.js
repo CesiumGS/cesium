@@ -3,8 +3,7 @@ import {
   BufferPoint,
   BufferPolygon,
   BufferPolyline,
-  FeatureLayer,
-  GeoJsonFeatureLoader,
+  GeoJsonFeatureLayerProvider,
   GeoJsonPrimitive,
   GeographicTilingScheme,
   HeightReference,
@@ -237,16 +236,17 @@ describe("Scene/GeoJsonPrimitive", function () {
 
     context.destroyForSpecs();
   });
-  describe("fromFeatureLayer", function () {
+  describe("fromProvider", function () {
     const geoJson = {
       type: "Feature",
       properties: { kind: "tower" },
       geometry: { type: "Point", coordinates: [0.0, 0.0] },
     };
 
-    it("draws the features of a layer", function () {
-      const layer = GeoJsonFeatureLoader.fromJson(geoJson);
-      const primitive = GeoJsonPrimitive.fromFeatureLayer(layer);
+    it("draws the features of a provider", function () {
+      const provider = GeoJsonFeatureLayerProvider.fromGeoJson(geoJson);
+      const layer = provider.featureLayers.get(0);
+      const primitive = GeoJsonPrimitive.fromProvider(provider);
       expect(primitive.featureCount).toBe(1);
       expect(primitive.points.get(0, new BufferPoint()).pickObject).toEqual(
         jasmine.objectContaining({
@@ -257,8 +257,9 @@ describe("Scene/GeoJsonPrimitive", function () {
     });
 
     it("draws nothing while the layer is hidden", function () {
-      const layer = GeoJsonFeatureLoader.fromJson(geoJson);
-      const primitive = GeoJsonPrimitive.fromFeatureLayer(layer);
+      const provider = GeoJsonFeatureLayerProvider.fromGeoJson(geoJson);
+      const layer = provider.featureLayers.get(0);
+      const primitive = GeoJsonPrimitive.fromProvider(provider);
       const update = spyOn(primitive.points, "update");
 
       layer.show = false;
@@ -270,9 +271,9 @@ describe("Scene/GeoJsonPrimitive", function () {
       expect(update).toHaveBeenCalled();
     });
 
-    it("throws for a layer without GeoJSON", function () {
+    it("throws for a provider without GeoJSON", function () {
       expect(function () {
-        GeoJsonPrimitive.fromFeatureLayer(new FeatureLayer({}));
+        GeoJsonPrimitive.fromProvider({});
       }).toThrowDeveloperError();
     });
   });

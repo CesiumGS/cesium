@@ -1494,9 +1494,9 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 
   /**
    * The tileset's feature layers: named sets of features defined by its data. Hide a
-   * layer to skip loading and rendering its tiles. Currently created from 3D Tiles 1.1
-   * groups. A tile belongs to its parent tile's layer, including across external
-   * tilesets, else to its content's group.
+   * layer to skip loading and rendering its tiles. Currently created from the root
+   * tileset JSON's 3D Tiles 1.1 groups. A tile belongs to its parent tile's layer,
+   * including across external tilesets, else to its content's group.
    *
    * @memberof Cesium3DTileset.prototype
    * @type {FeatureLayerCollection}

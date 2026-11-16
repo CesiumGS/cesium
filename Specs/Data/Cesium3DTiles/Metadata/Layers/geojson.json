@@ -16,8 +16,8 @@
   "geometricError": 70,
   "root": {
     "boundingVolume": { "region": [-1.3197004795898053, 0.6988582109, -1.3196595204101946, 0.6988897891, 0, 20] },
-    "geometricError": 70,
+    "geometricError": 0,
     "refine": "ADD",
-    "content": { "uri": "geojsonLayer.json", "group": 0 }
+    "content": { "uri": "../../GeoJson/Polygon/polygon.geojson", "group": 0 }
   }
 }
