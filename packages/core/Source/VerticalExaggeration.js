@@ -1,7 +1,11 @@
+// @ts-check
+
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
 import DeveloperError from "./DeveloperError.js";
 import defined from "./defined.js";
+
+/** @import Ellipsoid from "./Ellipsoid.js"; */
 
 /**
  * Functions for computing vertically-exaggerated heights and positions.
