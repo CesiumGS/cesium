@@ -4,8 +4,6 @@
 
 ```text
 CS-8 Engine profiles
-  CS-22  Paths in one place, with the seam test
-      ← CS-21 The catalog, rules and resolver
   CS-23  Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
       ← CS-22 Paths in one place, with the seam test
   CS-24  `resolution` and `msaa` as features
@@ -21,8 +19,7 @@ CS-8 Engine profiles
   CS-29  The Viewer's defaults migrated
       ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
   CS-30  The WebGL 2 renderer's facts and support rules
-      ← CS-21 The catalog, rules and resolver
-        CS-35 The probe, the `renderer` option and an empty WebGL 2 device
+      ← CS-35 The probe, the `renderer` option and an empty WebGL 2 device
   CS-31  The worker mode's snapshots
       ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
         CS-99 The worker-mode spike: a headed run on an otherwise idle GPU
@@ -39,7 +36,6 @@ CS-9 The WebGL 2 renderer
       ← CS-33 The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves
   CS-35  The probe, the `renderer` option and an empty WebGL 2 device
       ← CS-33 The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves
-        CS-21 The catalog, rules and resolver
   CS-36  First draws, unlit (glTF and 3D Tiles meshes)
       ← CS-32 The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points
         CS-34 Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`)
@@ -532,5 +528,5 @@ CS-18 The work tracker
       ← CS-529 Which milestones does 2.0.0 need?
         CS-532 Release 2.0.0-rc.1
 
-192 blocked
+191 blocked
 ```

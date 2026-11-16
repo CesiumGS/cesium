@@ -6,7 +6,7 @@
 graph LR
   subgraph CS_8["Engine profiles"]
     CS_20["CS-20 Facts and personas"]:::done
-    CS_21["CS-21 The catalog, rules and resolver"]:::open
+    CS_21["CS-21 The catalog, rules and resolver"]:::done
     CS_22["CS-22 Paths in one place, with the seam test"]:::open
     CS_23["CS-23 Support reports on 'Engine' and 'View' ('view.support', 'view.ef"]:::open
     CS_24["CS-24 'resolution' and 'msaa' as features"]:::open

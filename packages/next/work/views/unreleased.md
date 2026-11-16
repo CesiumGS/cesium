@@ -5,6 +5,7 @@
 ```text
 CS-8 Engine profiles
   CS-20  Facts and personas
+  CS-21  The catalog, rules and resolver
 
 CS-9 The WebGL 2 renderer
   CS-43  Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have
@@ -26,5 +27,5 @@ CS-389 Dyno as the development harness
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
 
-11 merged item(s) not in a release
+12 merged item(s) not in a release
 ```

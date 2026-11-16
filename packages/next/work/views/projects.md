@@ -4,12 +4,12 @@
 
 ```text
 CS-8 Engine profiles [Planned], led by owner
-  2 of 19 done, 2 ready, 13 blocked, 2 proposed
+  3 of 19 done, 2 ready, 12 blocked, 2 proposed
   waits on: CS-9 The WebGL 2 renderer (1); CS-12 The job system's ports (1); CS-15 Refinement and convergence (1)
-  waited on by: CS-9 The WebGL 2 renderer (1); CS-13 The worker-mode façade (1)
+  waited on by: CS-13 The worker-mode façade (1)
 CS-9 The WebGL 2 renderer [Planned], led by owner
   1 of 17 done, 3 ready, 12 blocked, 1 proposed
-  waits on: CS-8 Engine profiles (1); CS-10 Cesium IR (5); CS-13 The worker-mode façade (1)
+  waits on: CS-10 Cesium IR (5); CS-13 The worker-mode façade (1)
   waited on by: CS-8 Engine profiles (1); CS-11 Live MaterialX graph editing (1)
 CS-10 Cesium IR [Planned], led by owner
   0 of 26 done, 3 ready, 21 blocked, 2 proposed

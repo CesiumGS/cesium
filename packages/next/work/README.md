@@ -61,12 +61,12 @@ Generated from the item files by `npx hitld work views` (its marker keeps the ol
 
 ### Engine profiles
 
-[CS-8](./projects/CS-8-engine-profiles.md), Planned, led by owner: 2 of 19 done, 2 ready, 13 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](../../../docs/superpowers/plans/2026-11-13-engine-profiles.md).
+[CS-8](./projects/CS-8-engine-profiles.md), Planned, led by owner: 3 of 19 done, 2 ready, 12 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](../../../docs/superpowers/plans/2026-11-13-engine-profiles.md).
 
 Milestone: Each view knows what the device supports and why ([CS-466](./milestones/CS-466-each-view-knows-what-the-device-supports-and-why.md), Planned)
 
 - [x] [CS-20](./items/CS-20-facts-and-personas.md) Facts and personas. Done.
-- [ ] [CS-21](./items/CS-21-the-catalog-rules-and-resolver.md) The catalog, rules and resolver. Needs CS-20.
+- [x] [CS-21](./items/CS-21-the-catalog-rules-and-resolver.md) The catalog, rules and resolver. Done.
 - [ ] [CS-22](./items/CS-22-paths-in-one-place-with-the-seam-test.md) Paths in one place, with the seam test. Needs CS-21.
 - [ ] [CS-23](./items/CS-23-wired-into-engine-and-view-view-support-view.md) Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`). Needs CS-22.
 - [ ] [CS-507](./items/CS-507-silent-fallbacks-become-support-notices.md) Silent fallbacks become support notices. Needs CS-23.

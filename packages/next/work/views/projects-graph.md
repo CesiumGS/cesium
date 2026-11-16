@@ -4,7 +4,7 @@
 
 ```mermaid
 graph LR
-  CS_8["Engine profiles<br/>2 of 19 done"]
+  CS_8["Engine profiles<br/>3 of 19 done"]
   CS_9["WebGL 2 renderer<br/>1 of 17 done"]
   CS_10["Cesium IR<br/>0 of 26 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
@@ -32,7 +32,6 @@ graph LR
   CS_437["public API reviews<br/>0 of 9 done"]
   CS_9 -->|1| CS_8
   CS_12 -->|1| CS_8
-  CS_8 -->|1| CS_9
   CS_10 -->|5| CS_9
   CS_10 -->|2| CS_11
   CS_9 -->|1| CS_11
