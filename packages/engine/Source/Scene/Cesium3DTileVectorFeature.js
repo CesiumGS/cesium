@@ -303,9 +303,16 @@ class Cesium3DTileVectorFeature {
    * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    */
   get featureLayer() {
-    return Cesium3DTileFeature.getFeatureLayer(
-      // @ts-expect-error Requires type checking in Cesium3DTileContent.
-      this._content,
+    const content = this._content;
+    const [collectionIndex] = this._primitivesByCollection.keys();
+    return (
+      content._collectionFeatureLayers.get(
+        content._collections[collectionIndex],
+      ) ??
+      Cesium3DTileFeature.getFeatureLayer(
+        // @ts-expect-error Requires type checking in Cesium3DTileContent.
+        content,
+      )
     );
   }
 

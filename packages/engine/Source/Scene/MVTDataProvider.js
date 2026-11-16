@@ -10,6 +10,8 @@ import decodeMVT from "./decodeMVT.js";
 
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
+/** @import FeatureLayerCollection from "./FeatureLayerCollection.js"; */
+/** @import FeatureLayerProvider from "./FeatureLayerProvider.js"; */
 /** @import HeightReference from "./HeightReference.js"; */
 /** @import { Rectangle } from "@cesium/core"; */
 /** @import Resource from "../Core/Resource.js"; */
@@ -24,6 +26,7 @@ import decodeMVT from "./decodeMVT.js";
  * </div>
  *
  * @extends UrlTemplate3DTilesDataProvider
+ * @implements {FeatureLayerProvider}
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
@@ -48,6 +51,17 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
     return /** @type {Promise<MVTDataProvider>} */ (
       super.fromUrl(url, options)
     );
+  }
+
+  /**
+   * The feature layers provided by this instance, one per MVT source layer. A layer is
+   * added when the first tile containing its features loads.
+   *
+   * @type {FeatureLayerCollection}
+   * @readonly
+   */
+  get featureLayers() {
+    return this._tileset._featureLayers;
   }
 
   /**
@@ -95,6 +109,11 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
        */
       createContent: async (tileset, tile, resource, arrayBuffer) => {
         const decodedTile = decodeMVT(arrayBuffer);
+        for (const layer of decodedTile.layers) {
+          if (layer.features.length > 0) {
+            tileset._featureLayers._getOrAddByName(layer.name);
+          }
+        }
         const tileCoordinates = parseTileCoordinates(
           resource.getUrlComponent(true),
         );

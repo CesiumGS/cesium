@@ -17,9 +17,13 @@ import {
   BufferPolygonCollection,
   BufferPolygonMaterial,
   Cesium3DTileStyle,
+  Cesium3DTileVectorFeature,
+  FeatureLayer,
   GeographicTilingScheme,
   HeightReference,
+  MVTDataProvider,
   Model3DTileContent,
+  Resource,
   SceneMode,
   VectorGltf3DTileContent,
   VectorProvider,
@@ -27,6 +31,7 @@ import {
 import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
 import createContext from "../../../../Specs/createContext.js";
 import createScene from "../../../../Specs/createScene.js";
+import pollToPromise from "../../../../Specs/pollToPromise.js";
 
 const scratchPoint = new BufferPoint();
 const scratchPolyline = new BufferPolyline();
@@ -316,6 +321,47 @@ describe("Scene/VectorGltf3DTileContent", () => {
     tileset._vectorBlendOption = BlendOption.TRANSLUCENT;
     content.update(tileset, frameState);
     expect(points.blendOption).toBe(BlendOption.TRANSLUCENT);
+  });
+
+  it("update skips collections of hidden feature layers", () => {
+    const tileset = { _vectorBlendOption: BlendOption.OPAQUE };
+    const tile = { computedTransform: Matrix4.clone(Matrix4.IDENTITY) };
+    content = new VectorGltf3DTileContent(tileset, tile, {});
+    content._ready = true;
+
+    const roads = createBufferPointCollection();
+    const water = createBufferPointCollection();
+    const roadsLayer = new FeatureLayer({ name: "roads" });
+    content._collections = [roads, water];
+    content._collectionLocalMatrices = [
+      Matrix4.clone(Matrix4.IDENTITY),
+      Matrix4.clone(Matrix4.IDENTITY),
+    ];
+    content._collectionFeatureLayers = new Map([[roads, roadsLayer]]);
+    const roadsUpdate = spyOn(roads, "update");
+    const waterUpdate = spyOn(water, "update");
+
+    const frameState = { mode: SceneMode.SCENE3D, passes: {}, frameNumber: 0 };
+    roadsLayer.show = false;
+    content.update(tileset, frameState);
+    expect(roadsUpdate).not.toHaveBeenCalled();
+    expect(waterUpdate).toHaveBeenCalled();
+
+    roadsLayer.show = true;
+    content.update(tileset, frameState);
+    expect(roadsUpdate).toHaveBeenCalled();
+  });
+
+  it("gives features the feature layer of their collection", () => {
+    const roads = createBufferPointCollection();
+    const water = createBufferPointCollection();
+    const waterLayer = new FeatureLayer({ name: "water" });
+    content._collections = [roads, water];
+    content._collectionFeatureLayers = new Map([[water, waterLayer]]);
+
+    const feature = new Cesium3DTileVectorFeature(content, 0, 0);
+    feature.addPrimitiveByCollection(1, 0);
+    expect(feature.featureLayer).toBe(waterLayer);
   });
 
   it("update assigns pick IDs to draped collections", () => {
@@ -620,6 +666,102 @@ describe(
         expect(result.getProperty("name")).toBe("UL");
         expect(result.getProperty("code")).toBe(12);
       });
+    });
+  },
+  "WebGL",
+);
+
+describe(
+  "Scene/VectorGltf3DTileContent MVT source layers",
+  () => {
+    let scene;
+
+    beforeAll(() => {
+      scene = createScene();
+    });
+
+    afterAll(() => {
+      scene.destroyForSpecs();
+    });
+
+    function encodeVarint(value) {
+      const bytes = [];
+      let n = value >>> 0;
+      while (n >= 0x80) {
+        bytes.push((n & 0x7f) | 0x80);
+        n >>>= 7;
+      }
+      bytes.push(n);
+      return bytes;
+    }
+
+    function encodeBytes(fieldNumber, valueBytes) {
+      return [
+        ...encodeVarint((fieldNumber << 3) | 2),
+        ...encodeVarint(valueBytes.length),
+        ...valueBytes,
+      ];
+    }
+
+    function encodeUInt(fieldNumber, value) {
+      return [...encodeVarint(fieldNumber << 3), ...encodeVarint(value)];
+    }
+
+    function encodePointLayer(name) {
+      const nameBytes = Array.from(name, (c) => c.charCodeAt(0));
+      const feature = [
+        ...encodeUInt(3, 1), // POINT
+        ...encodeBytes(4, [9, 50, 34]), // MoveTo(1), dx=25, dy=17
+      ];
+      return [
+        ...encodeBytes(1, nameBytes),
+        ...encodeBytes(2, feature),
+        ...encodeUInt(5, 4096),
+        ...encodeUInt(15, 2),
+      ];
+    }
+
+    it("maps each source layer to a feature layer", async () => {
+      const provider = await MVTDataProvider.fromUrl("Data/{z}/{x}/{y}.mvt", {
+        maxZoom: 0,
+      });
+      const tileset = provider.tileset;
+      const tile = new Uint8Array([
+        ...encodeBytes(3, encodePointLayer("roads")),
+        ...encodeBytes(3, encodePointLayer("water")),
+      ]).buffer;
+
+      const content = await tileset._runtimeContentCodec.createContent(
+        tileset,
+        tileset.root,
+        new Resource({ url: "Data/0/0/0.mvt" }),
+        tile,
+      );
+      await pollToPromise(() => {
+        scene.renderForSpecs();
+        content.update(tileset, scene.frameState);
+        return content._ready;
+      });
+
+      const roadsLayer = provider.featureLayers.getByName("roads")[0];
+      const waterLayer = provider.featureLayers.getByName("water")[0];
+      expect(provider.featureLayers.length).toBe(2);
+
+      const [roads, water] = content._collections;
+      const point = new BufferPoint();
+      const roadsFeature = content.getFeature(
+        roads.get(0, point).featureId,
+        content._collectionFeatureTableIds.get(roads),
+      );
+      const waterFeature = content.getFeature(
+        water.get(0, point).featureId,
+        content._collectionFeatureTableIds.get(water),
+      );
+      expect(roadsFeature.featureLayer).toBe(roadsLayer);
+      expect(waterFeature.featureLayer).toBe(waterLayer);
+
+      content.destroy();
+      provider.destroy();
     });
   },
   "WebGL",
