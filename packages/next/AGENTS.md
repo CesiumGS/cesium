@@ -57,6 +57,7 @@ Example pages are documentation and demos at once. They have to work as a visual
 - Don't gate building on a mockup. Make the design call and build it in the real page, because the design is judged by clicking around in context. Describe structure in words, or a simple wireframe, if it helps beforehand.
 - Do a design pass while implementing: write the page's `DESIGN.md` (its story, audience and layout), then run a UX review on the real page and fix what it finds.
 - Check every page in both themes, at desktop and at 380 px wide, with the keyboard only, with reduced motion, and with a clean console.
+- Ports 5190 (Dyno, `npm run dyno`) and 5199 (the handbook, `npm run handbook:serve`) are the owner's, for interactive use. To look at them, open a browser tab of your own. For your own work, start your own server in your worktree, on another port: the `dyno-own` and `handbook-own` entries in the local `.claude/launch.json` do that.
 
 ## The handbook
 
