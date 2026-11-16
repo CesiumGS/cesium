@@ -6,6 +6,7 @@ import {
   ScreenSpaceEventHandler,
   ScreenSpaceEventType,
 } from "@cesium/engine";
+import ComponentKeys from "./ComponentKeys.js";
 
 /** @import { Cartesian2 } from "@cesium/core"; */
 /** @import { Controller, ControllerHost, Scene, ScreenSpaceCameraController } from "@cesium/engine"; */
@@ -228,7 +229,7 @@ class MeshEditorInputHandler {
    * Picks a component of one of the editor's meshes.
    *
    * @param {Cartesian2} position The window position to pick at.
-   * @returns {PickHit | null} The picked component, or <code>null</code> if no mesh in the editor is there.
+   * @returns {PickHit[]} The picked component, or an empty array if no mesh in the editor is there.
    * @ignore
    */
   #pick(position) {
@@ -236,14 +237,18 @@ class MeshEditorInputHandler {
     const picked = this.#scene.pick(position);
     const mesh = /** @type {Mesh | undefined} */ (picked?.primitive);
     if (!defined(picked) || !this.#meshes.has(mesh)) {
-      return null;
+      return [];
     }
 
-    return {
-      mesh: mesh._key,
-      componentType: picked.componentType,
-      componentKey: picked.componentKey,
-    };
+    const componentName = ComponentKeys.getName(picked.componentType);
+    return [
+      {
+        mesh: mesh._key,
+        componentKeys: {
+          [componentName]: BigUint64Array.of(picked.componentKey),
+        },
+      },
+    ];
   }
 
   /**

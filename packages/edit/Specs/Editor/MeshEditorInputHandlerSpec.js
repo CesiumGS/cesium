@@ -1,9 +1,6 @@
 import { Cartesian2, Cartesian3, Color, Matrix4 } from "@cesium/core";
 import { SceneTransforms } from "@cesium/engine";
-import {
-  ComponentType,
-  MeshEditor as WasmMeshEditor,
-} from "@cesium/mesh-editor";
+import { MeshEditor as WasmMeshEditor } from "@cesium/mesh-editor";
 import {
   EditMode,
   MeshEditor,
@@ -309,16 +306,18 @@ describe(
         // The WebGL stub doesn't pick, so like the renderer matchers, skip the check.
         if (!window.webglStub) {
           const { pick } = mostRecentInput("pointerClick");
-          expect(pick.mesh).toBe(mesh._key);
-          expect(pick.componentType).toBe(ComponentType.Vertex);
-          expect(typeof pick.componentKey).toBe("bigint");
+          expect(pick.length).toBe(1);
+          expect(pick[0].mesh).toBe(mesh._key);
+          expect(Object.keys(pick[0].componentKeys)).toEqual(["verts"]);
+          expect(pick[0].componentKeys.verts).toBeInstanceOf(BigUint64Array);
+          expect(pick[0].componentKeys.verts.length).toBe(1);
         }
       });
 
       it("sends a miss for empty space", function () {
         click(emptyWindowPosition);
 
-        expect(mostRecentInput("pointerClick").pick).toBeNull();
+        expect(mostRecentInput("pointerClick").pick).toEqual([]);
       });
 
       it("sends a pick of a component the mode can't select", function () {
@@ -327,9 +326,10 @@ describe(
         // The WebGL stub doesn't pick, so like the renderer matchers, skip the check.
         if (!window.webglStub) {
           const { pick } = mostRecentInput("pointerClick");
-          expect(pick.mesh).toBe(mesh._key);
-          expect(pick.componentType).toBe(ComponentType.Face);
-          expect(typeof pick.componentKey).toBe("bigint");
+          expect(pick.length).toBe(1);
+          expect(pick[0].mesh).toBe(mesh._key);
+          expect(Object.keys(pick[0].componentKeys)).toEqual(["faces"]);
+          expect(pick[0].componentKeys.faces.length).toBe(1);
         }
       });
 
@@ -340,7 +340,7 @@ describe(
         click(getWindowPosition(facePosition));
 
         if (!window.webglStub) {
-          expect(mostRecentInput("pointerClick").pick.mesh).toBe(mesh._key);
+          expect(mostRecentInput("pointerClick").pick[0].mesh).toBe(mesh._key);
         }
       });
 
