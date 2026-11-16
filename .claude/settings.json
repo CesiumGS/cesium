@@ -1,0 +1,15 @@
+{
+  "extraKnownMarketplaces": {
+    "human-in-the-lead": {
+      "source": {
+        "source": "github",
+        "repo": "arobison/human-in-the-lead",
+        "ref": "v0.1.0-rc.1"
+      },
+      "autoUpdate": false
+    }
+  },
+  "enabledPlugins": {
+    "human-in-the-lead@human-in-the-lead": true
+  }
+}

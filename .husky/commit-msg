@@ -1,0 +1,9 @@
+# See pre-commit: the main checkout's hooks, tools from node_modules.
+main="$(cd "$(git rev-parse --git-common-dir)/.." && pwd)"
+PATH="$PWD/node_modules/.bin:$PWD/packages/next/node_modules/.bin:$main/node_modules/.bin:$PATH"
+
+# human-in-the-lead's commit message guard, on branches that use it.
+if [ -f .human-in-the-lead/policy.json ]; then
+  command -v hitld >/dev/null || { echo "hitld isn't installed: run npm install"; exit 1; }
+  out="$(hitld check commit-message "$1")" || { echo "$out"; exit 1; }
+fi

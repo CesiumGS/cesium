@@ -46,7 +46,8 @@
     "handbook": "node scripts/handbookData.mjs && tsc -p handbook && vite build --config handbook/vite.config.ts",
     "handbook:dev": "node scripts/handbookData.mjs --no-bundles && vite --config handbook/vite.config.ts",
     "setup": "node scripts/setup.mjs",
-    "sky": "node scripts/skyPack.mjs"
+    "sky": "node scripts/skyPack.mjs",
+    "hitld:setup": "claude plugin marketplace add arobison/human-in-the-lead#v0.1.0-rc.1 --scope project && hitld install --ref v0.1.0-rc.1 --repo arobison/human-in-the-lead && claude plugin install human-in-the-lead@human-in-the-lead --scope project"
   },
   "dependencies": {
     "@codemirror/autocomplete": "6.20.4",
@@ -83,6 +84,7 @@
     "@vitejs/plugin-basic-ssl": "2.3.0",
     "@webgpu/types": "^0.1.74",
     "d3-dag": "1.2.2",
+    "human-in-the-lead": "git+https://github.com/arobison/human-in-the-lead.git#v0.1.0-rc.1",
     "typescript": "^6.0.2",
     "vite": "8.0.16",
     "vitest": "^5.0.5"

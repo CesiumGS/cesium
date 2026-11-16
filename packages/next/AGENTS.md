@@ -5,8 +5,9 @@ Rules for anyone working in this package, people and coding agents alike. The RE
 ## Repository practice
 
 - Commit by path only: `git add -- <paths>`, then `git commit -- <paths>`. Never `git add -A`, `git stash`, `git reset` or `git checkout --` on files you didn't change. Several people or agents may share a checkout.
-- The lint-staged pre-commit hook can sweep someone else's unfinished work into your commit. It has happened with files that were staged and with one that wasn't: its backup and restore steps run across the whole working tree. So when several people or agents are working at once:
-  - Work in your own `git worktree` whenever you can. It removes most of the risk, but not all: lint-staged's backup is a stash, and every worktree shares one stash list. So don't leave stashes behind, and don't commit while someone else's hook is running.
+- Git hooks: every worktree runs the main checkout's hooks in `.husky/`: lint-staged (eslint, markdownlint, prettier) and human-in-the-lead's commit guard. A worktree points at them with `git config --worktree core.hooksPath "$(git rev-parse --path-format=absolute --git-common-dir)/../.husky/_"`, run once in it; a root `npm install` resets only the main checkout's setting.
+- lint-staged runs with `--no-stash`, because every worktree shares one stash list and its backup stash once swept other people's work into commits. Without the backup, it rewrites staged files in place, and a partly staged file goes in whole. So when several people or agents are working at once:
+  - Work in your own `git worktree` whenever you can, and don't leave stashes behind.
   - In a shared checkout, check that `git diff --cached --name-only` is empty first, stage and commit in one command, and never leave files staged.
   - Afterwards, check `git show --stat HEAD`. If another person's file went in, tell them rather than amending or reverting it: their working copy is still intact, and their next commit carries the rest.
 - If `.git/index.lock` exists, wait and retry rather than removing it.
