@@ -6370,6 +6370,31 @@ describe(
           expect(selected).not.toContain(contentB);
         });
 
+        it("raises tileLoaded and tileUnloaded on the tile's layer", async function () {
+          const tileset = await Cesium3DTileset.fromUrl(tilesetWithLayersUrl);
+          const [layerA, layerB] = [
+            tileset.featureLayers.get(0),
+            tileset.featureLayers.get(1),
+          ];
+          const loadedA = [];
+          const loadedB = [];
+          const unloadedA = [];
+          layerA.tileLoaded.addEventListener((tile) => loadedA.push(tile));
+          layerB.tileLoaded.addEventListener((tile) => loadedB.push(tile));
+          layerA.tileUnloaded.addEventListener((tile) => unloadedA.push(tile));
+          scene.primitives.add(tileset);
+          await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+
+          const [tileA, tileB] = tileset.root.children;
+          expect(loadedA).toEqual([tileA.children[0]]);
+          expect(loadedB).toEqual([tileB.children[0]]);
+
+          tileset.cacheBytes = 0;
+          layerA.show = false;
+          scene.renderForSpecs();
+          expect(unloadedA).toEqual([tileA.children[0]]);
+        });
+
         it("gives features the layer of the tile referencing their external tileset", async function () {
           const tileset = await Cesium3DTilesTester.loadTileset(
             scene,

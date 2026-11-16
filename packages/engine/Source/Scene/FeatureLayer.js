@@ -1,6 +1,7 @@
-import { Check, defined } from "@cesium/core";
+import { Check, Event, defined } from "@cesium/core";
 import MetadataSemantic from "./MetadataSemantic.js";
 
+/** @import Cesium3DTile from "./Cesium3DTile.js"; */
 /** @import GroupMetadata from "./GroupMetadata.js"; */
 
 /**
@@ -30,6 +31,20 @@ class FeatureLayer {
     this._geoJson = options.geoJson;
     this._name = options.name ?? getDefaultName(options.metadata);
     this._show = true;
+
+    /**
+     * Raised when a tile with features in this layer is loaded. Tileset layers only.
+     *
+     * @type {Event<function(Cesium3DTile)>}
+     */
+    this.tileLoaded = new Event();
+
+    /**
+     * Raised when a tile with features in this layer is unloaded. Tileset layers only.
+     *
+     * @type {Event<function(Cesium3DTile)>}
+     */
+    this.tileUnloaded = new Event();
   }
 
   /**

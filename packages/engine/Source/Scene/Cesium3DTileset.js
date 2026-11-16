@@ -3388,6 +3388,9 @@ function processTiles(tileset, frameState) {
       if (tile.contentReady) {
         --statistics.numberOfTilesProcessing;
         tileset.tileLoad.raiseEvent(tile);
+        if (tile.hasRenderableContent) {
+          tile._featureLayer?.tileLoaded.raiseEvent(tile);
+        }
       }
     } catch (error) {
       --statistics.numberOfTilesProcessing;
@@ -3875,6 +3878,9 @@ function releaseImplicitTiles(tileset, frameState) {
  */
 function unloadTile(tileset, tile) {
   tileset.tileUnload.raiseEvent(tile);
+  if (tile.hasRenderableContent) {
+    tile._featureLayer?.tileUnloaded.raiseEvent(tile);
+  }
   tileset._statistics.decrementLoadCounts(tile.content);
   --tileset._statistics.numberOfTilesWithContentReady;
   tile.unloadContent();
