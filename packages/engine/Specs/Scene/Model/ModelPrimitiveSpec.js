@@ -247,6 +247,22 @@ describe(
       }
     });
 
+    it("counts the corners of every primitive", async function () {
+      const files = [
+        // Strips and fans share vertices between triangles, so they have
+        // more corners than indices.
+        ["unitSquare11x2_triangleStrip.glb", 20 * 3],
+        ["unitSquare5_triangleFan.glb", 4 * 3],
+        ["unitSquare11x11_plain.glb", 200 * 3],
+      ];
+      for (const [name, cornerCount] of files) {
+        const [primitive] = await loadPrimitives(`${unitSquareUrl}/${name}`);
+        primitive.geometryReader.withReadSession({}, function (session) {
+          expect(session.cornerCount()).withContext(name).toBe(cornerCount);
+        });
+      }
+    });
+
     it("reads lines", async function () {
       if (webglStub) {
         return;
