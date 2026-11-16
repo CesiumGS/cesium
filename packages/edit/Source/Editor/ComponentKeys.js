@@ -2,13 +2,11 @@
 
 import { ComponentType } from "@cesium/mesh-editor";
 
-/** @import { ComponentKeys as WasmComponentKeys } from "@cesium/mesh-editor"; */
-
 /**
  * The property for each component type in the wasm mesh editor's component
  * keys and flags, which group their arrays by type.
  *
- * @type {Readonly<Record<ComponentType, keyof WasmComponentKeys>>}
+ * @type {Record<ComponentType, "verts" | "edges" | "faces">}
  * @ignore
  */
 const NAMES = Object.freeze({
@@ -33,7 +31,7 @@ const ComponentKeys = {};
  * <code>OverlayViews.flags</code>.
  *
  * @param {ComponentType} componentType The component type.
- * @returns {keyof WasmComponentKeys} The property name: <code>"verts"</code>, <code>"edges"</code> or <code>"faces"</code>.
+ * @returns {"verts" | "edges" | "faces"} The property name.
  */
 ComponentKeys.getName = function (componentType) {
   return NAMES[componentType];
