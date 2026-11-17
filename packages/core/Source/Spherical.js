@@ -1,5 +1,9 @@
+// @ts-check
+
 import Check from "./Check.js";
 import defined from "./defined.js";
+
+/** @import Cartesian3 from "./Cartesian3.js"; */
 
 /**
  * A set of curvilinear 3-dimensional coordinates.
