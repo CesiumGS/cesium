@@ -34,9 +34,10 @@ class VectorPrimitiveCollection {
   /**
    * Adds a vector primitive to the collection.
    *
-   * @param {VectorPrimitive} primitive The vector primitive to add.
+   * @template {VectorPrimitive} T
+   * @param {T} primitive The vector primitive to add.
    * @param {number} [index] The index to add the vector primitive at. If omitted, it is added after all existing vector primitives.
-   * @returns {VectorPrimitive} The added vector primitive.
+   * @returns {T} The added vector primitive.
    *
    * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of vector primitives.
    */
