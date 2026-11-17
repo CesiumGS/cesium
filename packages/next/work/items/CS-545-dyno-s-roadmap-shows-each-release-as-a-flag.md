@@ -5,6 +5,7 @@ kind: work
 state: planned
 created: 2026-11-15
 project: CS-18
+needs: [CS-564]
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/work.ts]
 ---
 
