@@ -2,10 +2,11 @@
 id: CS-545
 title: Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-15
 project: CS-18
 needs: [CS-564]
+claimed_by: orch-6-CS-545
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/work.ts]
 ---
 
