@@ -22,6 +22,7 @@ import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import MetadataPickingPipelineStage from "./MetadataPickingPipelineStage.js";
 import MetadataPipelineStage from "./MetadataPipelineStage.js";
+import ModelDeformerPipelineStage from "./ModelDeformerPipelineStage.js";
 import ModelUtility from "./ModelUtility.js";
 import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
@@ -191,6 +192,16 @@ function ModelRuntimePrimitive(options) {
    * @private
    */
   this.updateStages = [];
+
+  /**
+   * The bindings that deform this primitive.
+   *
+   * @type {Set<DeformerBinding>}
+   * @readonly
+   *
+   * @private
+   */
+  this.deformerBindings = new Set();
 }
 
 /**
@@ -289,6 +300,10 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   if (hasSkinning) {
     pipelineStages.push(SkinningPipelineStage);
+  }
+
+  if (this.deformerBindings.size > 0) {
+    pipelineStages.push(ModelDeformerPipelineStage);
   }
 
   if (hasPointCloudStyle) {

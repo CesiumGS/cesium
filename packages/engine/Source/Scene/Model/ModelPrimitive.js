@@ -1,5 +1,7 @@
-import { Check, defined, Matrix4 } from "@cesium/core";
+import { Check, DeveloperError, defined, Matrix4 } from "@cesium/core";
+import Deformable from "../Deformable.js";
 import ModelPrimitiveAccessSession from "./ModelPrimitiveAccessSession.js";
+/** @import DeformerBinding from "../DeformerBinding.js"; */
 
 /**
  * <div class="notice">
@@ -176,5 +178,47 @@ Object.defineProperties(ModelPrimitive.prototype, {
     },
   },
 });
+
+/**
+ * Implements {@link Deformable#addDeformerBinding}.
+ *
+ * @param {DeformerBinding} binding The binding to add.
+ *
+ * @exception {DeveloperError} Skinned and morphed primitives can't be deformed.
+ *
+ * @internal
+ */
+ModelPrimitive.prototype.addDeformerBinding = function (binding) {
+  const runtimePrimitive = this._runtimePrimitive;
+  //>>includeStart('debug', pragmas.debug);
+  Check.typeOf.object("binding", binding);
+  if (
+    defined(runtimePrimitive.node.skin) ||
+    runtimePrimitive.primitive.morphTargets.length > 0
+  ) {
+    throw new DeveloperError(
+      "Skinned and morphed primitives can't be deformed.",
+    );
+  }
+  //>>includeEnd('debug');
+
+  runtimePrimitive.deformerBindings.add(binding);
+  this._model.resetDrawCommands();
+};
+
+/**
+ * Implements {@link Deformable#removeDeformerBinding}.
+ *
+ * @param {DeformerBinding} binding The binding to remove.
+ *
+ * @internal
+ */
+ModelPrimitive.prototype.removeDeformerBinding = function (binding) {
+  if (this._runtimePrimitive.deformerBindings.delete(binding)) {
+    this._model.resetDrawCommands();
+  }
+};
+
+ModelPrimitive.prototype[Deformable.symbol] = true;
 
 export default ModelPrimitive;
