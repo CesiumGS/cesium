@@ -15,6 +15,7 @@ import defer from "../Core/defer.js";
 /** @import Cesium3DTile from "./Cesium3DTile.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
 /** @import Cesium3DTileFeature from "./Cesium3DTileFeature.js"; */
+/** @import Cesium3DTileStyle from "./Cesium3DTileStyle.js"; */
 /** @import Cesium3DContentGroup from "./Cesium3DContentGroup.js"; */
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
@@ -233,7 +234,7 @@ class LRUCache {
    * @returns {Iterator<any>} The iterator
    */
   [Symbol.iterator]() {
-    return this._map[Symbol.iterator];
+    return this._map[Symbol.iterator]();
   }
 }
 
@@ -475,7 +476,7 @@ class RequestHandle {
     // an 'undefined' error), it may always have been cancelled. No
     // matter where the cancellation appears, reject the result promise
     // with the CANCELLED state.
-    const onFulfilled = (arrayBuffer) => {
+    const onFulfilled = (/** @type {ArrayBuffer} */ arrayBuffer) => {
       if (request.state === RequestState.CANCELLED) {
         if (CONDITIONAL_CONTENT_LOGGING) {
           console.log(
@@ -483,8 +484,11 @@ class RequestHandle {
           );
         }
         this._requestPromise = undefined;
+
+        // Note: The nonstandard "_code" property is added here,
+        // so that it can be checked in "onRequestRejected"
         const rejectionError = new Error("Request was cancelled");
-        rejectionError.code = RequestState.CANCELLED;
+        rejectionError._code = RequestState.CANCELLED;
         this._deferred.reject(rejectionError);
         this._fireRequestCancelled();
         this._fireRequestAttempted();
@@ -515,7 +519,9 @@ class RequestHandle {
         }
         this._requestPromise = undefined;
         const rejectionError = new Error("Request was cancelled internally");
-        rejectionError.code = RequestState.CANCELLED;
+        // Note: The nonstandard "_code" property is added here,
+        // so that it can be checked in "onRequestRejected"
+        rejectionError._code = RequestState.CANCELLED;
         this._deferred.reject(rejectionError);
         this._fireRequestCancelled();
         this._fireRequestAttempted();
@@ -566,7 +572,9 @@ class RequestHandle {
       this._request.cancel();
     }
     const rejectionError = new Error("Request was cancelled");
-    rejectionError.code = RequestState.CANCELLED;
+    // Note: The nonstandard "_code" property is added here,
+    // so that it can be checked in "onRequestRejected"
+    rejectionError._code = RequestState.CANCELLED;
     this._deferred.reject(rejectionError);
     if (defined(this._request)) {
       this._fireRequestCancelled();
@@ -959,7 +967,9 @@ class ContentHandle {
     // When the request succeeds, try to create the content
     // and store it as 'this._content'. If the content
     // creation fails, store this as 'this._failed'.
-    const onRequestFulfilled = async (arrayBuffer) => {
+    const onRequestFulfilled = async (
+      /** @type {ArrayBuffer} */ arrayBuffer,
+    ) => {
       if (CONDITIONAL_CONTENT_LOGGING) {
         console.log(`ContentHandle: Request was fulfilled for ${uri}`);
       }
@@ -988,7 +998,7 @@ class ContentHandle {
     // It might really have failed. It may just have been
     // cancelled. It may count as cancelled because it was
     // not scheduled at all. Try to handle each case here:
-    const onRequestRejected = (error) => {
+    const onRequestRejected = (/** @type {Error} */ error) => {
       if (CONDITIONAL_CONTENT_LOGGING) {
         console.log(
           `ContentHandle: Request was rejected for ${uri} with error ${error}`,
@@ -999,7 +1009,7 @@ class ContentHandle {
       // the request handle is discarded, so that it
       // will be re-created during the next call to
       // _ensureRequestPending
-      if (defined(error) && error.code === RequestState.CANCELLED) {
+      if (defined(error) && error._code === RequestState.CANCELLED) {
         if (CONDITIONAL_CONTENT_LOGGING) {
           console.log(
             `ContentHandle: Request was rejected for ${uri}, but actually only cancelled. Better luck next time!`,
@@ -1017,7 +1027,7 @@ class ContentHandle {
       // to be marked as "failed"
       this._failed = true;
 
-      // The promise is only intended for testign, and may not be awaited,
+      // The promise is only intended for testing, and may not be awaited,
       // so it cannot be rejected without causing an uncaught error.
       this._deferred.resolve(error);
     };
@@ -1272,7 +1282,7 @@ class Conditional3DTileContent {
      * are used for selecting the "active" content at any
      * point in time.
      *
-     * @type {object[]}
+     * @type {any[]}
      * @readonly
      */
     this._conditionalContents = contentJson.conditionalContents;
