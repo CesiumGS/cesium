@@ -408,6 +408,59 @@ describe("Scene/VectorGltf3DTileContent", () => {
     context.destroyForSpecs();
   });
 
+  it("update stops draping collections of hidden feature layers in the next frame", () => {
+    const context = createContext();
+    const vectorProvider = new VectorProvider({
+      tilingScheme: new GeographicTilingScheme(),
+    });
+    const tileset = {
+      _vectorBlendOption: BlendOption.OPAQUE,
+      _heightReference: HeightReference.CLAMP_TO_GROUND,
+      _scene: { vectorProvider },
+    };
+    const tile = {
+      computedTransform: Matrix4.clone(Matrix4.IDENTITY),
+      _selectedFrame: 0,
+    };
+    content = new VectorGltf3DTileContent(tileset, tile, {});
+    content._ready = true;
+
+    const lines = new BufferPolylineCollection({ allowPicking: true });
+    lines.add(
+      {
+        positions: new Float64Array([
+          ...Cartesian3.pack(Cartesian3.fromDegrees(-95.0, 40.0), []),
+          ...Cartesian3.pack(Cartesian3.fromDegrees(-90.0, 40.0), []),
+        ]),
+      },
+      scratchPolyline,
+    );
+    const roadsLayer = new FeatureLayer({ name: "roads" });
+    content._collections = [lines];
+    content._collectionLocalMatrices = [Matrix4.clone(Matrix4.IDENTITY)];
+    content._collectionFeatureLayers = new Map([[lines, roadsLayer]]);
+    const frameState = {
+      mode: SceneMode.SCENE3D,
+      passes: { render: true },
+      frameNumber: 0,
+      context,
+    };
+
+    content.update(tileset, frameState);
+    expect(vectorProvider.has(lines)).toBe(true);
+
+    vectorProvider.update(1);
+    tile._selectedFrame = 1;
+    roadsLayer.show = false;
+    content.update(tileset, { ...frameState, frameNumber: 1 });
+    expect(vectorProvider.changedDuringFrame(1)).toBe(true);
+
+    vectorProvider.update(2);
+    expect(vectorProvider.has(lines)).toBe(false);
+
+    context.destroyForSpecs();
+  });
+
   describe("fromGeoJson", () => {
     const geoJson = {
       type: "FeatureCollection",
