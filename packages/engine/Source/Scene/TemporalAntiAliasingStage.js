@@ -49,7 +49,7 @@ function computeRelativeDistance(a, b) {
  *
  * @param {object} [options]
  * @param {string} [options.name=createGuid()] The unique name of this stage.
- * @param {number} [options.feedback=0.96] History weight in [0, 1]. Higher = smoother but more ghosting.
+ * @param {number} [options.feedback=0.98] History weight in [0, 1]. Higher = smoother but more ghosting.
  * @param {number} [options.resetDistance=0.001] Relative camera-position threshold to reset history.
  * @param {number} [options.resetDot=0.995] Camera-direction dot threshold to reset history.
  *

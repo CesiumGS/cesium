@@ -1709,6 +1709,11 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   if (stochastic) {
     renderStateOptions.depthMask = true;
     renderStateOptions.blending = BlendingState.DISABLED;
+    shaderBuilder.addDefine(
+      "STOCHASTIC_TRANSPARENCY",
+      undefined,
+      ShaderDestination.FRAGMENT,
+    );
   }
 
   // Splats are inherently translucent, so TRANSLUCENT (like INHERIT) keeps the
@@ -1739,12 +1744,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
     "highp usampler2D",
     "u_splatAttributeTexture",
     ShaderDestination.VERTEX,
-  );
-  shaderBuilder.addUniform("float", "u_stochastic", ShaderDestination.FRAGMENT);
-  shaderBuilder.addUniform(
-    "float",
-    "u_stochasticSteady",
-    ShaderDestination.FRAGMENT,
   );
 
   shaderBuilder.addUniform(
@@ -1787,18 +1786,6 @@ GaussianSplatPrimitive.buildGSplatDrawCommand = function (
   };
   uniformMap.u_splatRowShift = function () {
     return primitive._splatRowShift;
-  };
-  uniformMap.u_stochastic = function () {
-    const tileset = primitive._tileset;
-    return defined(tileset) && tileset._gaussianSplatStochastic === true
-      ? 1.0
-      : 0.0;
-  };
-  uniformMap.u_stochasticSteady = function () {
-    const tileset = primitive._tileset;
-    return defined(tileset) && tileset._gaussianSplatStochasticSteady === true
-      ? 1.0
-      : 0.0;
   };
 
   if (primitive._sphericalHarmonicsDegree > 0) {
