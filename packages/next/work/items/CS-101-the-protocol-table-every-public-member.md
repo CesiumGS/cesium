@@ -2,7 +2,7 @@
 id: CS-101
 title: "The protocol table: every public member classified, checked against `api/surface.txt`"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-13
 project: CS-13
 claimed_by: D-13
