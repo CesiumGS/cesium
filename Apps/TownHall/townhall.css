@@ -225,6 +225,10 @@ pre code {
   background-color: #1b2a1b;
 }
 
+.dg-chip > span {
+  padding: 0 calc(var(--u) * 1.2);
+}
+
 .dg-chip code {
   display: block;
   max-height: 0;
@@ -277,41 +281,23 @@ pre code {
   transition: opacity 0.4s;
 }
 
-/* Going to 2.0: the glTF 2.0 box moves, glTF 2.1 grows around it, then the
-   tile structure moves into glTF 2.1. Going back reverses the order. */
+/* Going to 2.0: the arrow fades, then the boxes reshape around the chips.
+   Going back: the boxes reshape, then the arrow returns. */
 
 #diagram[data-state="v20"] .dg-arrow {
   transition-duration: 0.3s;
 }
 
-#diagram[data-state="v20"] .gltf21 {
-  transition-delay: 0.4s;
-}
-
-#diagram[data-state="v20"] .dg-chip:not(.asset) {
-  transition-delay: 0.9s;
-}
-
-#diagram[data-state="v20"] .dg-chip code {
-  transition-delay: 1.7s;
-}
-
-#diagram[data-state="v11"] .dg-chip:not(.asset) {
+#diagram[data-state="v20"] .dg-item:not(.dg-arrow) {
   transition-delay: 0.3s;
 }
 
-#diagram[data-state="v11"] .tiles,
-#diagram[data-state="v11"] .gltf21 {
-  transition-delay: 0.9s;
-}
-
-#diagram[data-state="v11"] .gltf20,
-#diagram[data-state="v11"] .dg-chip.asset {
+#diagram[data-state="v20"] .dg-chip code {
   transition-delay: 1.1s;
 }
 
 #diagram[data-state="v11"] .dg-arrow {
-  transition-delay: 1.9s;
+  transition-delay: 0.8s;
 }
 
 /* Overlays on the Viewer, shown only on their slide. */
