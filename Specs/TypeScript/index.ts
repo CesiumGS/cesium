@@ -80,6 +80,7 @@ import {
   RectangleGeometry,
   RectangleOutlineGeometry,
   ReferenceProperty,
+  Resource,
   SampledPositionProperty,
   SampledProperty,
   Scene,
@@ -157,6 +158,18 @@ dataSource = new KmlDataSource({
 });
 dataSource = new GpxDataSource();
 dataSource = new CustomDataSource();
+
+// KML relative resources can be resolved through a custom Resource.
+const kmlDataSource = new KmlDataSource();
+const kmlDocument = new DOMParser().parseFromString(
+  '<kml xmlns="http://www.opengis.net/kml/2.2"><Document/></kml>',
+  "text/xml",
+);
+const kmlSourceUri = new Resource({
+  url: "https://example.invalid/data/doc.kml",
+});
+KmlDataSource.load(kmlDocument, { sourceUri: kmlSourceUri });
+kmlDataSource.load(kmlDocument, { sourceUri: kmlSourceUri });
 
 // Verify Property instances conform to the expected interface
 let property: Property;

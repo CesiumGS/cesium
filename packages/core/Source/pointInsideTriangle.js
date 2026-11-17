@@ -1,6 +1,10 @@
+// @ts-check
+
 import barycentricCoordinates from "./barycentricCoordinates.js";
 import Cartesian3 from "./Cartesian3.js";
 import defined from "./defined.js";
+
+/** @import Cartesian2 from "./Cartesian2.js"; */
 
 const scratchBarycentricCoords = new Cartesian3();
 
