@@ -125,6 +125,25 @@ describe(
       expect(scene).toRender([0, 0, 255, 255]);
     });
 
+    it("renders points after GPU resources are destroyed", function () {
+      collection = new BufferPointCollection({
+        blendOption: BlendOption.OPAQUE,
+      });
+
+      const point = new BufferPoint();
+      const material = new BufferPointMaterial({ color: Color.RED, size: 8 });
+      collection.add(
+        { position: new Cartesian3(0, -1000, 0), material },
+        point,
+      );
+
+      scene.primitives.add(collection);
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      collection.destroy();
+      expect(scene).toRender([255, 0, 0, 255]);
+    });
+
     it("renders points with sort order", function () {
       collection = new BufferPointCollection({
         blendOption: BlendOption.OPAQUE,
