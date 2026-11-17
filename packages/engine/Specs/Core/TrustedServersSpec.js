@@ -101,4 +101,44 @@ describe("Core/TrustedServers", function () {
       true,
     );
   });
+
+  it("pack returns an empty array when the registry is empty", function () {
+    expect(TrustedServers.pack()).toEqual([]);
+  });
+
+  it("pack returns the registered authorities", function () {
+    TrustedServers.add("cesiumjs.org", 80);
+    TrustedServers.add("cesium.com", 443);
+
+    expect(TrustedServers.pack().sort()).toEqual(
+      ["cesiumjs.org:80", "cesium.com:443"].sort(),
+    );
+  });
+
+  it("unpack replaces the registry with the packed authorities", function () {
+    TrustedServers.add("stale.example.com", 80);
+
+    TrustedServers.unpack(["cesiumjs.org:80"]);
+
+    expect(TrustedServers.contains("http://cesiumjs.org/index.html")).toBe(
+      true,
+    );
+    expect(TrustedServers.contains("http://stale.example.com/index.html")).toBe(
+      false,
+    );
+  });
+
+  it("unpack round-trips with pack", function () {
+    TrustedServers.add("cesiumjs.org", 80);
+    TrustedServers.add("cesium.com", 443);
+
+    const packed = TrustedServers.pack();
+    TrustedServers.clear();
+    TrustedServers.unpack(packed);
+
+    expect(TrustedServers.contains("http://cesiumjs.org/index.html")).toBe(
+      true,
+    );
+    expect(TrustedServers.contains("https://cesium.com/index.html")).toBe(true);
+  });
 });
