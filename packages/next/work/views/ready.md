@@ -193,10 +193,9 @@ CS-437 The public API reviews
   CS-454  decision: What is the full version of scene items: references, groups, the globe as an item, and how close to USD?
 
 CS-18 The work tracker
-  CS-545  Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it
   CS-547  Your move's In progress shows the live run: dispatches in flight and branches done but not merged
   CS-562  Dyno's Work page lists the items in no milestone, filterable by kind and state
   CS-563  Dyno's roadmap shows proposed milestones with dashed outlines
 
-147 ready
+146 ready
 ```

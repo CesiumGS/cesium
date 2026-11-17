@@ -515,8 +515,8 @@ CS-560 Content from any source loads through one module seam [Proposed], under C
 
 CS-561 Dyno's Work page shows the live system and the release plan [Proposed], under CS-18 The work tracker
   outcome: A reader of Dyno's Work page sees what's moving now (dispatches, branches waiting to merge, the active run) and where each release falls among the milestones that feed it.
-  constraints: 0 of 4 done
-  unmet: not linked to a clause yet (open: CS-545, CS-547, CS-562, CS-563; check not passed)
+  constraints: 1 of 4 done
+  unmet: not linked to a clause yet (open: CS-547, CS-562, CS-563; check not passed)
   to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563 to a clause
 
 84 open milestone(s)

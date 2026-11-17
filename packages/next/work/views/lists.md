@@ -352,7 +352,7 @@ No milestone
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 12 of 24 done, 4 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 15 of 26 done, 3 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
@@ -368,7 +368,7 @@ Milestone: The tracker runs on human-in-the-lead (CS-524, Planned)
 
 Milestone: Dyno's Work page shows the live system and the release plan (CS-561, Proposed)
 
-- [ ] CS-545 Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it. Needs nothing.
+- [x] CS-545 Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it. Done.
 - [ ] CS-547 Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Needs nothing.
 - [ ] CS-562 Dyno's Work page lists the items in no milestone, filterable by kind and state. Needs nothing.
 - [ ] CS-563 Dyno's roadmap shows proposed milestones with dashed outlines. Needs nothing.
@@ -389,6 +389,8 @@ No milestone
 - [ ] CS-532 Release 2.0.0-rc.1. Needs CS-528 and CS-531.
 - [ ] CS-533 Release 2.0.0. Needs CS-529 and CS-532.
 - [x] CS-536 decision: Approve a store device. Done.
+- [x] CS-564 decision: How CS-545's branch reaches main without a hitld dispatch. Done.
+- [x] CS-565 decision: Fast-forward main to CS-545's checked branch. Done.
 
 ### Follow-ups for other teams
 

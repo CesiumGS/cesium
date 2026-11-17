@@ -24,6 +24,7 @@ CS-18 The work tracker
   CS-521  The tracker's files in human-in-the-lead's format
   CS-522  hitld's commands replace scripts/work
   CS-523  Dyno's board reads human-in-the-lead's read API
+  CS-545  Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it
 
 CS-389 Dyno as the development harness
   CS-403  Dyno's navigation rail, regrouped by what people come to do
@@ -31,5 +32,5 @@ CS-389 Dyno as the development harness
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
 
-14 merged item(s) not in a release
+15 merged item(s) not in a release
 ```
