@@ -88,11 +88,14 @@ vec4 getStepSize(in SampleData sampleData, in Ray viewRay, in RayShapeIntersecti
     return vec4(entry.xyz, stepSize);
 }
 
-vec2 packIntToVec2(int value) {
-    float shifted = float(value) / 255.0;
-    float lowBits = fract(shifted);
-    float highBits = floor(shifted) / 255.0;
-    return vec2(highBits, lowBits);
+// Packs tileIndex * samplesPerTile + sampleIndex + 1 into 4 bytes, most significant first.
+// 0 is left for "nothing picked". See Scene.prototype.pickVoxel for the decoding.
+// The megatexture size limit in VoxelTraversal keeps the id within a signed 32-bit int.
+vec4 packVoxelPickId(int tileIndex, int sampleIndex) {
+    int samplesPerTile = u_inputDimensions.x * u_inputDimensions.y * u_inputDimensions.z;
+    int pickId = tileIndex * samplesPerTile + sampleIndex + 1;
+    ivec4 bytes = (ivec4(pickId) >> ivec4(24, 16, 8, 0)) & 0xFF;
+    return vec4(bytes) / 255.0;
 }
 
 vec2 packFloatToVec2(float value) {
@@ -258,9 +261,7 @@ void main()
         if (colorAccum.a == 0.0) {
             discard;
         }
-        vec2 megatextureId = packIntToVec2(sampleDatas[0].megatextureIndex);
-        vec2 sampleIndex = packIntToVec2(getSampleIndex(sampleDatas[0]));
-        out_FragColor = vec4(megatextureId, sampleIndex);
+        out_FragColor = packVoxelPickId(sampleDatas[0].megatextureIndex, getSampleIndex(sampleDatas[0]));
     #else
         out_FragColor = colorAccum;
     #endif

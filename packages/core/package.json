@@ -1,6 +1,6 @@
 {
   "name": "@cesium/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Math, geometry, time, and utility primitives for CesiumJS.",
   "keywords": [
     "3D",

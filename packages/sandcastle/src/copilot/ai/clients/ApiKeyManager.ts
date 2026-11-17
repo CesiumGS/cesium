@@ -62,9 +62,10 @@ export class ApiKeyManager {
     }
   }
 
-  /** Basic prefix/length check; real validation happens on first API call. */
+  /** Check for a nonempty token; the API validates key format and access. */
   static validateApiKeyFormat(apiKey: string): boolean {
-    return apiKey.startsWith("AI") && apiKey.trim().length >= 30;
+    const trimmed = apiKey.trim();
+    return trimmed.length > 0 && !/\s/.test(trimmed);
   }
 
   static saveAnthropicApiKey(apiKey: string): void {

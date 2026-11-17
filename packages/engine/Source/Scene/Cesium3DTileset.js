@@ -124,6 +124,7 @@ import ImageryLayerCollection from "./ImageryLayerCollection.js";
  * @property {boolean} [vectorClassificationOnly=false] Indicates that only the tileset's vector tiles should be used for classification.
  * @property {boolean} [vectorKeepDecodedPositions=false] Whether vector tiles should keep decoded positions in memory. This is used with {@link Cesium3DTileFeature.getPolylinePositions}.
  * @property {BlendOption} [vectorBlendOption=BlendOption.TRANSLUCENT] Determines how vector primitives in the tileset are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+ * @property {boolean} [vectorGeoJson=false] Whether GeoJSON content is loaded as vector primitives instead of as a model. Vector primitives fill polygons, where the model draws only their outlines.
  * @property {string|number} [featureIdLabel="featureId_0"] Label of the feature ID set to use for picking and styling. For EXT_mesh_features, this is the feature ID's label property, or "featureId_N" (where N is the index in the featureIds array) when not specified. EXT_feature_metadata did not have a label field, so such feature ID sets are always labeled "featureId_N" where N is the index in the list of all feature Ids, where feature ID attributes are listed before feature ID textures. If featureIdLabel is an integer N, it is converted to the string "featureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {string|number} [instanceFeatureIdLabel="instanceFeatureId_0"] Label of the instance feature ID set used for picking and styling. If instanceFeatureIdLabel is set to an integer N, it is converted to the string "instanceFeatureId_N" automatically. If both per-primitive and per-instance feature IDs are present, the instance feature IDs take priority.
  * @property {boolean} [showCreditsOnScreen=false] Whether to display the credits of this tileset on screen.
@@ -255,6 +256,10 @@ function Cesium3DTileset(options) {
 
   this._maximumScreenSpaceError = options.maximumScreenSpaceError ?? 16;
   this._memoryAdjustedScreenSpaceError = this._maximumScreenSpaceError;
+  // Set when memoryAdjustedScreenSpaceError is raised to fit the memory limit, along with the
+  // view matrix at that time. See processTiles.
+  this._memoryAdjustedScreenSpaceErrorHeld = false;
+  this._memoryAdjustedScreenSpaceErrorViewMatrix = new Matrix4();
 
   this._cacheBytes = options.cacheBytes ?? 512 * 1024 * 1024;
   //>>includeStart('debug', pragmas.debug);
@@ -375,6 +380,8 @@ function Cesium3DTileset(options) {
 
   this._vectorBlendOption =
     options.vectorBlendOption ?? BlendOption.TRANSLUCENT;
+
+  this._vectorGeoJson = options.vectorGeoJson ?? false;
 
   /**
    * The collection of <code>ImageryLayer</code> objects providing 2D georeferenced
@@ -1578,6 +1585,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
 
       this._maximumScreenSpaceError = value;
       this._memoryAdjustedScreenSpaceError = value;
+      this._memoryAdjustedScreenSpaceErrorHeld = false;
     },
   },
 
@@ -1620,6 +1628,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       //>>includeEnd('debug');
 
       this._cacheBytes = value;
+      this._memoryAdjustedScreenSpaceErrorHeld = false;
     },
   },
 
@@ -1652,6 +1661,7 @@ Object.defineProperties(Cesium3DTileset.prototype, {
       //>>includeEnd('debug');
 
       this._maximumCacheOverflowBytes = value;
+      this._memoryAdjustedScreenSpaceErrorHeld = false;
     },
   },
 
@@ -2098,6 +2108,23 @@ Object.defineProperties(Cesium3DTileset.prototype, {
     },
     set: function (value) {
       this._vectorBlendOption = value;
+    },
+  },
+
+  /**
+   * Whether GeoJSON content is loaded as vector primitives instead of as a model.
+   *
+   * @memberof Cesium3DTileset.prototype
+   *
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+   *
+   * @type {boolean}
+   * @default false
+   * @readonly
+   */
+  vectorGeoJson: {
+    get: function () {
+      return this._vectorGeoJson;
     },
   },
 
@@ -3115,7 +3142,8 @@ Cesium3DTileset.prototype.prePassesUpdate = function (frameState) {
     return;
   }
 
-  processTiles(this, frameState);
+  const memoryExceeded = processTiles(this, frameState);
+  updateMemoryAdjustedScreenSpaceError(this, frameState, memoryExceeded);
 
   // Update clipping planes
   const clippingPlanes = this._clippingPlanes;
@@ -3313,8 +3341,9 @@ function processUpdateHeight(tileset, tile, frameState) {
 /**
  * Process tiles in the PROCESSING state so they will eventually move to the READY state.
  * @private
- * @param {Cesium3DTileset} tileset
- * @param {Cesium3DTile} tile
+ * @param {Cesium3DTileset} tileset The tileset whose tiles are processed.
+ * @param {FrameState} frameState The current frame state.
+ * @returns {boolean} <code>true</code> if processing stopped because the tileset ran out of memory.
  */
 function processTiles(tileset, frameState) {
   filterProcessingQueue(tileset);
@@ -3323,11 +3352,9 @@ function processTiles(tileset, frameState) {
   const { cacheBytes, maximumCacheOverflowBytes, statistics } = tileset;
   const cacheByteLimit = cacheBytes + maximumCacheOverflowBytes;
 
-  let memoryExceeded = false;
   for (let i = 0; i < tiles.length; ++i) {
     if (tileset.totalMemoryUsageInBytes > cacheByteLimit) {
-      memoryExceeded = true;
-      break;
+      return true;
     }
 
     const tile = tiles[i];
@@ -3344,14 +3371,46 @@ function processTiles(tileset, frameState) {
     }
   }
 
-  if (tileset.totalMemoryUsageInBytes < cacheBytes) {
+  return false;
+}
+
+/**
+ * Adjusts the screen space error so the number of tiles needed fits in memory.
+ *
+ * @private
+ * @param {Cesium3DTileset} tileset The tileset whose screen space error is adjusted.
+ * @param {FrameState} frameState The current frame state.
+ * @param {boolean} memoryExceeded Whether tile processing stopped because the tileset ran out of memory.
+ */
+function updateMemoryAdjustedScreenSpaceError(
+  tileset,
+  frameState,
+  memoryExceeded,
+) {
+  if (tileset._memoryAdjustedScreenSpaceErrorHeld) {
+    const viewChanged = !Matrix4.equals(
+      frameState.camera.viewMatrix,
+      tileset._memoryAdjustedScreenSpaceErrorViewMatrix,
+    );
+    if (viewChanged || tileset._modelMatrixChanged) {
+      tileset._memoryAdjustedScreenSpaceErrorHeld = false;
+    }
+  }
+
+  const memoryAvailable = tileset.totalMemoryUsageInBytes < tileset.cacheBytes;
+  if (memoryAvailable && !tileset._memoryAdjustedScreenSpaceErrorHeld) {
     decreaseScreenSpaceError(tileset);
-  } else if (memoryExceeded && tiles.length > 0) {
-    increaseScreenSpaceError(tileset);
+  } else if (memoryExceeded) {
+    increaseScreenSpaceError(tileset, frameState);
   }
 }
 
-function increaseScreenSpaceError(tileset) {
+/**
+ * @private
+ * @param {Cesium3DTileset} tileset
+ * @param {FrameState} frameState
+ */
+function increaseScreenSpaceError(tileset, frameState) {
   //>>includeStart('debug', pragmas.debug);
   oneTimeWarning(
     "increase-screenSpaceError",
@@ -3362,6 +3421,11 @@ function increaseScreenSpaceError(tileset) {
   //>>includeEnd('debug');
 
   tileset._memoryAdjustedScreenSpaceError *= 1.02;
+  tileset._memoryAdjustedScreenSpaceErrorHeld = true;
+  Matrix4.clone(
+    frameState.camera.viewMatrix,
+    tileset._memoryAdjustedScreenSpaceErrorViewMatrix,
+  );
   const tiles = tileset._processingQueue;
   for (let i = 0; i < tiles.length; ++i) {
     tiles[i].updatePriority();

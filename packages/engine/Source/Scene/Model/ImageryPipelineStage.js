@@ -740,7 +740,7 @@ class ImageryPipelineStage {
    * their value will just be a function that returns the respective
    * property value.
    *
-   * @param {UniformMap} uniformMap The uniform map
+   * @param {Object<string, Function>} uniformMap The uniform map
    * @param {object} uniforms The uniforms
    */
   static _setImageryUniforms(uniformMap, uniforms) {

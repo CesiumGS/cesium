@@ -1,0 +1,7 @@
+title: Design Model – Element Properties
+description: Click any element of a structural design model to fetch and display its full property set from the Cesium ion Asset Elements API using Cesium.IonAssetElementService.
+labels:
+  - Showcases
+  - 3D Tiles
+  - Metadata
+thumbnail: thumbnail.jpg
