@@ -38,9 +38,11 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import {
+  type CSSProperties,
   Fragment,
   type ReactNode,
   type RefObject,
+  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -75,6 +77,7 @@ import {
   median,
   percentile,
   type MapEdge,
+  type MapFlag,
   type MapNode,
   type MilestoneMap as MilestoneMapData,
   mapEntityItems,
@@ -87,6 +90,9 @@ import {
   type ProposalGroup,
   proposalGate,
   proposalsOf,
+  type ReleaseFlag,
+  releaseFlagsOf,
+  isReleaseItem,
   type RoadmapRow,
   roadmapOf,
   ownerQueue,
@@ -746,6 +752,9 @@ function Board({
                     <MatrixView
                       s={s}
                       items={items}
+                      flight={flight}
+                      release={search.release}
+                      onRelease={(id) => set({ release: id }, true)}
                       onCell={(from, to) => open(`dep:${from}:${to}`)}
                       onProject={(id) => scopeTo({ project: id })}
                     />
@@ -815,6 +824,8 @@ function Board({
                           `${roadmapBy === "groups" ? "idep" : "mdep"}:${from}:${to}`,
                         )
                       }
+                      release={search.release}
+                      onRelease={(id) => set({ release: id }, true)}
                     />
                   )}
                 </Card>
@@ -4122,11 +4133,18 @@ function Fact({ name, children }: { name: string; children: ReactNode }) {
 function MatrixView({
   s,
   items,
+  flight,
+  release,
+  onRelease,
   onCell,
   onProject,
 }: {
   s: WorkSnapshot;
   items: WorkItem[];
+  flight: InFlight;
+  /** The release in focus: the projects that feed it stand out. */
+  release?: string;
+  onRelease: (id: string | undefined) => void;
   onCell: (from: string, to: string) => void;
   /** Zooms the dashboard into a project. */
   onProject: (id: string) => void;
@@ -4134,6 +4152,26 @@ function MatrixView({
   const m = useMemo(() => dependencyMatrix(s, items), [s, items]);
   const title = (id: string) =>
     s.projects.find((p) => p.id === id)?.title ?? id;
+  // The releases, with no steps to place them by: each names what feeds it.
+  const flags = useMemo(
+    () => releaseFlagsOf(s, milestoneRoadmapOf(s, s.items, flight), () => 0),
+    [s, flight],
+  );
+  const [hoverFlag, setHoverFlag] = useState<string>();
+  const fed = useMemo(() => {
+    const f =
+      flags.find((x) => x.id === hoverFlag) ??
+      flags.find((x) => x.id === release && !x.unplaced);
+    return f
+      ? new Set(
+          f.feeds.map((id) => s.milestones.find((x) => x.id === id)?.project),
+        )
+      : undefined;
+  }, [flags, hoverFlag, release, s.milestones]);
+  const flagTitle = (id: string) =>
+    s.milestones.find((x) => x.id === id)?.title ??
+    s.items.find((x) => x.id === id)?.title ??
+    id;
   const max = Math.max(1, ...[...m.cells.values()].map((v) => v.length));
   const level = (n: number) => Math.min(4, Math.ceil((4 * n) / max));
   const [hot, setHot] = useState<{ r: number; c: number }>();
@@ -4146,6 +4184,20 @@ function MatrixView({
   }
   return (
     <div className="work-matrix">
+      <ReleaseStrip
+        flags={flags}
+        label="Releases"
+        note={
+          flags.some((f) => !f.unplaced)
+            ? "Point at one to mark the projects whose milestones feed it."
+            : unplacedNote(flags.map((f) => ({ ...f, at: undefined })))
+        }
+        titleOf={flagTitle}
+        steps={false}
+        release={release}
+        onHover={setHoverFlag}
+        onSelect={onRelease}
+      />
       <Typography
         variant="body-sm"
         color="textSecondary"
@@ -4200,7 +4252,7 @@ function MatrixView({
                 <th
                   key={id}
                   scope="col"
-                  className={`work-matrix-col${hot?.c === c ? " hot" : ""}`}
+                  className={`work-matrix-col${hot?.c === c ? " hot" : ""}${fed ? (fed.has(id) ? " fed" : " unfed") : ""}`}
                   title={`${id} ${title(id)}`}
                 >
                   <span className="work-matrix-col-label">
@@ -4215,7 +4267,7 @@ function MatrixView({
               <tr key={from}>
                 <th
                   scope="row"
-                  className={`work-matrix-row${hot?.r === r ? " hot" : ""}`}
+                  className={`work-matrix-row${hot?.r === r ? " hot" : ""}${fed ? (fed.has(from) ? " fed" : " unfed") : ""}`}
                   title={`${from} ${title(from)}`}
                 >
                   <span className="work-matrix-n">{r + 1}</span>{" "}
@@ -4701,6 +4753,7 @@ function MilestoneMap({
   const box = useRef<HTMLDivElement>(null);
   const width = useWidth(box);
   const [hover, setHover] = useState<string>();
+  const [hoverFlag, setHoverFlag] = useState<string>();
   const map = useMemo(
     () => milestoneMapOf(s, flight, unit, release),
     [s, flight, unit, release],
@@ -4726,7 +4779,25 @@ function MilestoneMap({
   const span = Math.max(1e-9, map.total);
   const x = (v: number) => laneW + (v / span) * plotW;
   const PAD = 10;
-  const AXIS = unit === "steps" ? 44 : 28;
+  // The flags along the top, each on the line where its release falls;
+  // flags too close to share a row stack.
+  const FLAG_ROW = 30;
+  const placed = map.flags.filter((f) => f.at !== undefined);
+  const flagW = (f: MapFlag) => 40 + 7.5 * f.version.length;
+  const flagRow = new Map<string, number>();
+  const rowEnds: number[] = [];
+  for (const f of placed) {
+    const at = x(f.at!);
+    let r = rowEnds.findIndex((e) => e + 8 <= at);
+    if (r < 0) {
+      r = rowEnds.length;
+      rowEnds.push(0);
+    }
+    rowEnds[r] = at + flagW(f);
+    flagRow.set(f.id, r);
+  }
+  const FLAGS = placed.length ? rowEnds.length * FLAG_ROW + 6 : 0;
+  const AXIS = FLAGS + (unit === "steps" ? 44 : 28);
   // A lane with milestones has full rows; one with only unshaped work, slim ones.
   const shapedLanes = new Set(
     map.nodes.filter((n) => !n.unshaped).map((n) => n.lane),
@@ -4777,8 +4848,18 @@ function MilestoneMap({
     const x2 = left(b) - 2;
     return { x1, y1: p.out, x2, y2: p.in };
   };
+  // The release pointed at, or else the one in focus, lights what feeds it.
+  const flagLit = useMemo(() => {
+    const f =
+      map.flags.find((x) => x.id === hoverFlag) ??
+      (hover ? undefined : map.flags.find((x) => x.id === map.focus));
+    return f && !f.unplaced ? new Set(f.feeds) : undefined;
+  }, [map, hoverFlag, hover]);
   // What feeds the hovered milestone, and what it unblocks.
   const lit = useMemo(() => {
+    if (flagLit) {
+      return flagLit;
+    }
     if (!hover) {
       return undefined;
     }
@@ -4801,7 +4882,7 @@ function MilestoneMap({
     walk(hover, true);
     walk(hover, false);
     return set;
-  }, [hover, map.edges]);
+  }, [hover, map.edges, flagLit]);
   // Steps: a header over each column (what is in it); tokens: round ticks.
   const columns =
     unit === "steps"
@@ -4829,6 +4910,12 @@ function MilestoneMap({
     );
   }
   const focusTitle = map.focus ? titleOf(map.focus) : undefined;
+  const focusFlag = map.flags.find((f) => f.id === map.focus);
+  const flagProps = {
+    titleOf,
+    onHover: setHoverFlag,
+    onSelect: onRelease,
+  };
   return (
     <div>
       <div className="work-map-focus">
@@ -4907,6 +4994,24 @@ function MilestoneMap({
           ))}
         </p>
       )}
+      <ReleaseStrip
+        flags={map.flags.filter((f) => f.at === undefined)}
+        label="Releases not placed yet"
+        note={unplacedNote(map.flags)}
+        release={map.focus}
+        {...flagProps}
+      />
+      {focusFlag?.unplaced && (
+        <Typography
+          variant="caption-md"
+          color="textSecondary"
+          render={<p />}
+          className="work-flag-focus-note"
+        >
+          {focusFlag.title} has no place yet, so nothing is set apart: its
+          milestones aren't chosen.
+        </Typography>
+      )}
       {shape === "graph" ? (
         <MilestoneGraph
           s={s}
@@ -4914,6 +5019,7 @@ function MilestoneMap({
           selected={selected}
           onOpen={onOpen}
           onWait={onWait}
+          onRelease={onRelease}
         />
       ) : (
         <div className="work-map-wrap" ref={box}>
@@ -4925,7 +5031,7 @@ function MilestoneMap({
             {map.lanes.map((l, i) => (
               <div
                 key={l.id}
-                className={`work-map-lane${i % 2 ? " odd" : ""}${l.outside ? " outside" : ""}${l.id === "releases" ? " releases" : ""}`}
+                className={`work-map-lane${i % 2 ? " odd" : ""}${l.outside ? " outside" : ""}`}
                 style={{ top: laneTop.get(l.id), height: laneH.get(l.id) }}
               >
                 {l.outside && !map.lanes[i - 1]?.outside && (
@@ -4937,11 +5043,7 @@ function MilestoneMap({
                   className="work-map-lane-name"
                   style={{ width: laneW - 12 }}
                 >
-                  {l.id === "releases" ? (
-                    <Icon href={svgFlag} />
-                  ) : (
-                    <LevelMark level="project" />
-                  )}
+                  <LevelMark level="project" />
                   <span className="work-outline-label">{l.title}</span>
                 </span>
               </div>
@@ -4950,21 +5052,37 @@ function MilestoneMap({
               <span
                 key={t.v}
                 className="work-map-tick"
-                style={{ left: x(t.v), height }}
+                style={{ left: x(t.v), top: FLAGS, height: height - FLAGS }}
               >
                 {t.label && (
                   <span className="work-map-tick-label">{t.label}</span>
                 )}
               </span>
             ))}
-            <span className="work-map-corner" style={{ width: laneW - 12 }}>
+            {FLAGS > 0 && (
+              <span
+                className="work-map-corner work-flag-corner"
+                style={{ width: laneW - 12 }}
+              >
+                <Icon href={svgFlag} />
+                Releases
+              </span>
+            )}
+            <span
+              className="work-map-corner"
+              style={{ width: laneW - 12, top: FLAGS + 8 }}
+            >
               Project
             </span>
             {columns.map((c) => (
               <span
                 key={`h${c.i}`}
                 className="work-map-col"
-                style={{ left: x(c.i), width: x(c.i + 1) - x(c.i) }}
+                style={{
+                  left: x(c.i),
+                  top: FLAGS + 2,
+                  width: x(c.i + 1) - x(c.i),
+                }}
                 data-tip={`${
                   c.i === 0
                     ? "Now: these wait on no other milestone; those with an item done or in progress are filled"
@@ -5026,11 +5144,52 @@ function MilestoneMap({
                 );
               })}
             </svg>
+            {placed.map((f) => {
+              const at = x(f.at!);
+              const row = flagRow.get(f.id)!;
+              const on = f.id === hoverFlag || f.id === map.focus;
+              // Near the right edge, the flag flies the other way.
+              const flip = at + flagW(f) > laneW + plotW + 8;
+              return (
+                <Fragment key={f.id}>
+                  <span
+                    className={`work-flag-pole${on ? " on" : ""}`}
+                    style={{
+                      left: at,
+                      top: row * FLAG_ROW + 4,
+                      height: height - row * FLAG_ROW - 4,
+                    }}
+                    aria-hidden="true"
+                  />
+                  <ReleaseFlagButton
+                    flag={f}
+                    where={
+                      unit === "steps"
+                        ? betweenSteps(f.at!, steps)
+                        : `${tokenText(f.at!)} tokens in`
+                    }
+                    selected={map.focus === f.id}
+                    dim={!!hoverFlag && !on}
+                    className={`on-grid${flip ? " flip" : ""}`}
+                    style={{
+                      top: row * FLAG_ROW + 4,
+                      ...(flip
+                        ? { left: at - flagW(f) + 1 }
+                        : { left: at - 1 }),
+                    }}
+                    {...flagProps}
+                  />
+                </Fragment>
+              );
+            })}
             {map.nodes.map((n) => {
               const m = msOf.get(n.id);
               const total = STAGES.reduce((k, st) => k + n.counts[st], 0);
               const out = inScope && m ? !inScope(m) : false;
-              const dim = (lit && !lit.has(n.id)) || out;
+              const dim =
+                (lit && !lit.has(n.id)) ||
+                out ||
+                (!!map.focus && n.lane.startsWith("outside-"));
               const waits = map.edges.filter((e) => e.to === n.id);
               return (
                 <Tooltip
@@ -5044,26 +5203,6 @@ function MilestoneMap({
                           Open items of this project that no milestone holds
                           yet; choose to list them
                         </span>
-                      )}
-                      {n.gate && (
-                        <>
-                          <span>
-                            A release gate: it needs {n.gate.milestones}{" "}
-                            milestones, {n.gate.milestonesDone} done
-                          </span>
-                          <span>
-                            {n.gate.itemsDone} of {n.gate.items} of their items
-                            done
-                            {n.gate.tokensLeft > 0 &&
-                              `; ${tokenText(n.gate.tokensLeft)} tokens left on them`}
-                          </span>
-                          {n.gate.decisions > 0 && (
-                            <span>
-                              {n.gate.decisions} of your decisions hold it up
-                            </span>
-                          )}
-                          <span>Choose "Measure to" above to focus on it</span>
-                        </>
                       )}
                       <span>
                         {msOf.get(n.id)?.project &&
@@ -5144,7 +5283,7 @@ function MilestoneMap({
                 >
                   <button
                     type="button"
-                    className={`work-map-node${n.gate ? " gate" : n.unshaped ? " unshaped" : n.started ? " started" : " idle"}${unit === "tokens" && over(n) ? " over" : ""}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
+                    className={`work-map-node${n.unshaped ? " unshaped" : n.started ? " started" : " idle"}${unit === "tokens" && over(n) ? " over" : ""}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
                     style={{
                       left: left(n),
                       top: top(n),
@@ -5156,11 +5295,7 @@ function MilestoneMap({
                     onClick={() => onOpen(n.id)}
                   >
                     <span className="work-map-node-title">
-                      {n.gate ? (
-                        <Icon href={svgFlag} />
-                      ) : (
-                        <LevelMark level={n.unshaped ? "item" : "milestone"} />
-                      )}
+                      <LevelMark level={n.unshaped ? "item" : "milestone"} />
                       <span className="work-outline-label">{n.title}</span>
                       <HoldBadges n={n} />
                     </span>
@@ -5188,9 +5323,7 @@ function MilestoneMap({
                     <span
                       className={`work-map-node-meta${over(n) ? " over" : ""}`}
                     >
-                      {n.gate ? (
-                        `${n.gate.milestonesDone} of ${n.gate.milestones} milestones · ${n.gate.itemsDone} of ${n.gate.items} items done`
-                      ) : n.unshaped && unit === "steps" ? (
+                      {n.unshaped && unit === "steps" ? (
                         `${n.tokens.open} open items${n.after.length ? ` · after ${n.after.map(titleOf).join(" and ")}` : ""}`
                       ) : unit === "tokens" && n.tokens.budget !== undefined ? (
                         n.tokens.spent === undefined ? (
@@ -5361,14 +5494,17 @@ function MilestoneGraph({
   selected,
   onOpen,
   onWait,
+  onRelease,
 }: {
   s: WorkSnapshot;
   map: MilestoneMapData;
   selected?: string;
   onOpen: (milestone: string) => void;
   onWait: (from: string, to: string) => void;
+  onRelease: (id: string | undefined) => void;
 }) {
   const [hover, setHover] = useState<string>();
+  const [hoverFlag, setHoverFlag] = useState<string>();
   const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
   const projectTitle = (id: string) => {
     const m = msOf.get(id);
@@ -5499,6 +5635,7 @@ function MilestoneGraph({
       }
     } catch (error) {
       return {
+        col: COL,
         width: 0,
         height: 0,
         nodes: [],
@@ -5532,6 +5669,7 @@ function MilestoneGraph({
     }
     const width = nodes.reduce((w, p) => Math.max(w, p.x + NODE_W), 0);
     return {
+      col: COL,
       width,
       height: top,
       nodes,
@@ -5543,7 +5681,17 @@ function MilestoneGraph({
     };
     // projectTitle reads the snapshot, which `map` follows.
   }, [map, avail]);
+  // The release pointed at, or else the one in focus, lights what feeds it.
+  const flagLit = useMemo(() => {
+    const f =
+      map.flags.find((x) => x.id === hoverFlag) ??
+      (hover ? undefined : map.flags.find((x) => x.id === map.focus));
+    return f && !f.unplaced ? new Set(f.feeds) : undefined;
+  }, [map, hoverFlag, hover]);
   const lit = useMemo(() => {
+    if (flagLit) {
+      return flagLit;
+    }
     if (!hover) {
       return undefined;
     }
@@ -5566,7 +5714,7 @@ function MilestoneGraph({
     walk(hover, true);
     walk(hover, false);
     return set;
-  }, [hover, laid.links]);
+  }, [hover, laid.links, flagLit]);
   if (laid.error) {
     return (
       <Alert severity="warning">
@@ -5586,20 +5734,68 @@ function MilestoneGraph({
         return `C${px + dx},${py} ${x - dx},${y} ${x},${y}`;
       })
       .join(" ");
+  // Flags along the top, each on the gap after the last step its
+  // release needs; the steps' columns are the same in every group.
+  const placed = map.flags.filter((f) => f.at !== undefined);
+  const flagW = (f: MapFlag) => 40 + 7.5 * f.version.length;
+  const gapAt = (step: number) => step * laid.col - (laid.col - NODE_W) / 2;
+  const FLAG_ROW = 30;
+  const flagRow = new Map<string, number>();
+  const rowEnds: number[] = [];
+  for (const f of placed) {
+    let r = rowEnds.findIndex((e) => e + 8 <= gapAt(f.at!));
+    if (r < 0) {
+      r = rowEnds.length;
+      rowEnds.push(-Infinity);
+    }
+    rowEnds[r] = gapAt(f.at!) + flagW(f);
+    flagRow.set(f.id, r);
+  }
+  const FLAGS = placed.length ? rowEnds.length * FLAG_ROW + 10 : 0;
+  // The poles stop where the milestones that wait on nothing begin.
+  const poleEnd = laid.aloneAt ?? laid.height;
   const PAD = 8;
+  const W = Math.max(laid.width, ...rowEnds.map((e) => e + 4)) + PAD * 2;
+  const H = laid.height + PAD * 2 + FLAGS;
+  const titleOf = (id: string) => msOf.get(id)?.title ?? mapEntityTitle(s, id);
+  const steps = Math.max(1, ...map.nodes.map((n) => Math.round(n.x1)));
   return (
     <div className="work-map-wrap" ref={box}>
       <div
         className="work-map work-graph"
-        style={{ width: laid.width + PAD * 2, height: laid.height + PAD * 2 }}
+        style={{ width: W, height: H }}
         onPointerLeave={() => setHover(undefined)}
       >
-        <svg
-          className="work-map-edges"
-          width={laid.width + PAD * 2}
-          height={laid.height + PAD * 2}
-          aria-hidden="true"
-        >
+        {placed.map((f) => {
+          const at = gapAt(f.at!) + PAD;
+          const row = flagRow.get(f.id)!;
+          const on = f.id === hoverFlag || f.id === map.focus;
+          return (
+            <Fragment key={f.id}>
+              <span
+                className={`work-flag-pole${on ? " on" : ""}`}
+                style={{
+                  left: at,
+                  top: row * FLAG_ROW + 4,
+                  height: FLAGS + PAD + poleEnd - row * FLAG_ROW - 4,
+                }}
+                aria-hidden="true"
+              />
+              <ReleaseFlagButton
+                flag={f}
+                titleOf={titleOf}
+                where={betweenSteps(f.at!, steps)}
+                selected={map.focus === f.id}
+                dim={!!hoverFlag && !on}
+                className="on-grid"
+                style={{ top: row * FLAG_ROW + 4, left: at - 1 }}
+                onHover={setHoverFlag}
+                onSelect={onRelease}
+              />
+            </Fragment>
+          );
+        })}
+        <svg className="work-map-edges" width={W} height={H} aria-hidden="true">
           <defs>
             <marker
               id="work-graph-arrow"
@@ -5614,7 +5810,7 @@ function MilestoneGraph({
               <path d="M0,0 L8,4 L0,8 Z" className="work-map-arrowhead" />
             </marker>
           </defs>
-          <g transform={`translate(${PAD},${PAD})`}>
+          <g transform={`translate(${PAD},${PAD + FLAGS})`}>
             {laid.dividers.map((y) => (
               <line
                 key={y}
@@ -5651,7 +5847,7 @@ function MilestoneGraph({
             color="textSecondary"
             render={<p />}
             className="work-graph-section"
-            style={{ top: laid.aloneAt + PAD, left: PAD }}
+            style={{ top: laid.aloneAt + PAD + FLAGS, left: PAD }}
           >
             {laid.aloneCount === 1
               ? "One milestone waits on nothing, and nothing waits on it"
@@ -5665,10 +5861,10 @@ function MilestoneGraph({
             <button
               key={n.id}
               type="button"
-              className={`work-map-node${n.gate ? " gate" : n.started ? " started" : " idle"}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
+              className={`work-map-node${n.started ? " started" : " idle"}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
               style={{
                 left: x + PAD,
-                top: y + PAD,
+                top: y + PAD + FLAGS,
                 width: NODE_W,
                 height: NODE_H,
               }}
@@ -5679,11 +5875,7 @@ function MilestoneGraph({
               onClick={() => onOpen(n.id)}
             >
               <span className="work-map-node-title">
-                {n.gate ? (
-                  <Icon href={svgFlag} />
-                ) : (
-                  <LevelMark level="milestone" />
-                )}
+                <LevelMark level="milestone" />
                 <span className="work-outline-label">{n.title}</span>
                 <HoldBadges n={n} />
               </span>
@@ -5699,9 +5891,7 @@ function MilestoneGraph({
                 )}
               </span>
               <span className="work-map-node-meta">
-                {n.gate
-                  ? `${n.gate.milestonesDone} of ${n.gate.milestones} milestones`
-                  : `${n.counts["In flight"] ? `${n.counts["In flight"]} in progress · ` : ""}${n.counts.Done} of ${total} done · ${projectTitle(n.id)}`}
+                {`${n.counts["In flight"] ? `${n.counts["In flight"]} in progress · ` : ""}${n.counts.Done} of ${total} done · ${projectTitle(n.id)}`}
               </span>
             </button>
           );
@@ -5755,6 +5945,185 @@ function niceTicks(top: number): number[] {
   return out;
 }
 
+// ------------------------------------------------------------ release flags
+
+const andList = (xs: readonly string[]) =>
+  xs.length < 2
+    ? xs.join("")
+    : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`;
+
+/** Why a release has no place yet, in a sentence. */
+function unplacedText(f: ReleaseFlag, titleOf: (id: string) => string): string {
+  const u = f.unplaced!;
+  const why = [
+    ...u.decisions.map((d) => `your decision ${d}, “${titleOf(d)}”`),
+    ...u.releases.map((r) => `${titleOf(r)}, which has no place yet either`),
+  ];
+  if (!why.length) {
+    return "Not placed yet: it names no milestone.";
+  }
+  const text = `Not placed yet: its milestones aren't chosen. It waits on ${andList(why)}`;
+  return /[?”]$/.test(text) ? text : `${text}.`;
+}
+
+/**
+ * A release's flag, labeled with its version. Pointing at it or focusing
+ * it lights the milestones that feed it; choosing it measures to it (the
+ * release focus), and choosing it again lets go.
+ */
+function ReleaseFlagButton({
+  flag,
+  titleOf,
+  where,
+  steps = true,
+  selected,
+  dim,
+  onHover,
+  onSelect,
+  style,
+  className,
+}: {
+  flag: ReleaseFlag & { progress?: MapFlag["progress"] };
+  titleOf: (id: string) => string;
+  /** Where the view places it, in words ("between steps 2 and 3"). */
+  where?: string;
+  /** False in a view with no steps: it names what feeds it, not where it falls. */
+  steps?: boolean;
+  selected: boolean;
+  dim?: boolean;
+  onHover: (id: string | undefined) => void;
+  onSelect: (id: string | undefined) => void;
+  style?: CSSProperties;
+  className?: string;
+}) {
+  const p = flag.progress;
+  const feeds = `${flag.feeds.length} ${flag.feeds.length === 1 ? "milestone feeds" : "milestones feed"} it`;
+  return (
+    <Tooltip
+      placement="top"
+      title={
+        <span className="work-map-tip">
+          <b>{flag.title}</b>
+          {flag.unplaced ? (
+            <span>{unplacedText(flag, titleOf)}</span>
+          ) : !steps ? (
+            <span>
+              {feeds}: {andList(flag.feeds.map(titleOf))}
+            </span>
+          ) : flag.at === undefined ? (
+            <span>The milestones that place it are outside this view</span>
+          ) : (
+            <>
+              <span>
+                After {andList(flag.last.map(titleOf))}
+                {where ? `, ${where}` : ""}
+              </span>
+              <span>{feeds}</span>
+            </>
+          )}
+          {p && !flag.unplaced && (
+            <span>
+              {p.milestonesDone} of {p.milestones} milestones and {p.itemsDone}{" "}
+              of {p.items} of their items done
+              {p.tokensLeft > 0 && `; ${tokenText(p.tokensLeft)} tokens left`}
+            </span>
+          )}
+          {p && p.decisions > 0 && !flag.unplaced && (
+            <span>{p.decisions} of your decisions hold it up</span>
+          )}
+          <span>
+            {selected
+              ? "Choose it again to measure to everything"
+              : "Choose it to measure to it"}
+          </span>
+        </span>
+      }
+    >
+      <button
+        type="button"
+        className={`work-flag${flag.unplaced ? " unplaced" : ""}${selected ? " selected" : ""}${dim ? " dim" : ""}${className ? ` ${className}` : ""}`}
+        style={style}
+        aria-pressed={selected}
+        aria-label={`Release ${flag.version}${flag.unplaced ? ", not placed yet" : ""}`}
+        onPointerEnter={() => onHover(flag.id)}
+        onPointerLeave={() => onHover(undefined)}
+        onFocus={() => onHover(flag.id)}
+        onBlur={() => onHover(undefined)}
+        onClick={() => onSelect(selected ? undefined : flag.id)}
+      >
+        <Icon href={svgFlag} />
+        <span className="work-flag-label">{flag.version}</span>
+      </button>
+    </Tooltip>
+  );
+}
+
+/**
+ * A row of flags apart from the grid: the releases with no place yet, or,
+ * in a view with no steps, every release.
+ */
+function ReleaseStrip({
+  flags,
+  label,
+  note,
+  ...common
+}: {
+  flags: readonly (ReleaseFlag & { progress?: MapFlag["progress"] })[];
+  label: string;
+  note?: string;
+  titleOf: (id: string) => string;
+  steps?: boolean;
+  release?: string;
+  onHover: (id: string | undefined) => void;
+  onSelect: (id: string | undefined) => void;
+}) {
+  if (!flags.length) {
+    return null;
+  }
+  return (
+    <div className="work-flag-strip" role="group" aria-label={label}>
+      <Typography variant="caption-lg" color="textSecondary">
+        {label}
+      </Typography>
+      {flags.map((f) => (
+        <ReleaseFlagButton
+          key={f.id}
+          flag={f}
+          titleOf={common.titleOf}
+          steps={common.steps}
+          selected={common.release === f.id}
+          onHover={common.onHover}
+          onSelect={common.onSelect}
+        />
+      ))}
+      {note && (
+        <Typography
+          variant="caption-md"
+          color="textSecondary"
+          className="work-flag-note"
+        >
+          {note}
+        </Typography>
+      )}
+    </div>
+  );
+}
+
+/** What the strip of unplaced flags says under them. */
+const unplacedNote = (flags: readonly ReleaseFlag[]) => {
+  const off = flags.filter((f) => f.at === undefined);
+  const one = off.length === 1;
+  return off.every((f) => f.unplaced)
+    ? `${one ? "Its" : "Their"} milestones aren't chosen yet: point at ${one ? "it" : "one"} for what ${one ? "it waits" : "each waits"} on.`
+    : `Point at ${one ? "it" : "one"} for why.`;
+};
+
+/** Where a flag falls, in words, for a view laid out in steps. */
+const betweenSteps = (at: number, steps: number) =>
+  at >= steps
+    ? `after step ${at}, the last`
+    : `between steps ${at} and ${at + 1}`;
+
 // ------------------------------------------------------------ the roadmap
 
 /**
@@ -5774,10 +6143,15 @@ function Roadmap({
   onOpen,
   onZoom,
   onWait,
+  release,
+  onRelease,
 }: {
   s: WorkSnapshot;
   flight: InFlight;
   by: "milestones" | "outcomes";
+  /** The release in focus: what feeds it stands out. */
+  release?: string;
+  onRelease: (id: string | undefined) => void;
   /** Only the milestones in the scope. */
   inScope?: (m: WorkMilestone) => boolean;
   selected?: string;
@@ -5794,13 +6168,52 @@ function Roadmap({
     [s, flight, by],
   );
   const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
-  const rows =
-    by === "milestones" && inScope
-      ? all.filter((r) => {
-          const m = msOf.get(r.id);
-          return !!m && inScope(m);
-        })
-      : all;
+  const itemOf = useMemo(() => new Map(s.items.map((i) => [i.id, i])), [s]);
+  // Release items are flags between the steps, not lines.
+  const rows = all.filter((r) => {
+    if (by !== "milestones") {
+      return true;
+    }
+    if (isReleaseItem(itemOf.get(r.id))) {
+      return false;
+    }
+    const m = msOf.get(r.id);
+    return !inScope || (!!m && inScope(m));
+  });
+  // A milestone's line: itself, or its long outcome's.
+  const lineOf = useCallback(
+    (milestone: string) => {
+      if (by === "milestones") {
+        return milestone;
+      }
+      const m = msOf.get(milestone);
+      const project = s.projects.find((p) => p.id === m?.project);
+      return m?.long_outcome ?? project?.long_outcome ?? NO_LONG_OUTCOME;
+    },
+    [by, msOf, s.projects],
+  );
+  const flags = useMemo(() => {
+    const stepOf = new Map(rows.map((r) => [r.id, r.step]));
+    return releaseFlagsOf(
+      s,
+      by === "milestones" ? all : milestoneRoadmapOf(s, s.items, flight),
+      (id) => stepOf.get(lineOf(id)),
+    );
+  }, [s, flight, by, all, rows, lineOf]);
+  const [hoverFlag, setHoverFlag] = useState<string>();
+  // What the flag pointed at, or else the release in focus, is fed by.
+  const lit = useMemo(() => {
+    const f =
+      flags.find((x) => x.id === hoverFlag) ??
+      flags.find((x) => x.id === release && !x.unplaced);
+    return f && new Set(f.feeds.map(lineOf));
+  }, [flags, hoverFlag, release, lineOf]);
+  const lastStep = Math.max(0, ...rows.map((r) => r.step));
+  const flagProps = {
+    titleOf: (id: string) => msOf.get(id)?.title ?? itemOf.get(id)?.title ?? id,
+    onHover: setHoverFlag,
+    onSelect: onRelease,
+  };
   const title = (id: string) =>
     msOf.get(id)?.title ??
     s.long_outcomes.find((i) => i.id === id)?.title ??
@@ -5829,84 +6242,116 @@ function Roadmap({
   }
   return (
     <>
+      <ReleaseStrip
+        flags={flags.filter((f) => f.at === undefined)}
+        label="Releases not placed yet"
+        note={unplacedNote(flags)}
+        release={release}
+        {...flagProps}
+      />
       <div className="work-roadmap">
         {steps.map((step) => {
           const here = rows.filter((r) => r.step === step);
           const groups = [...new Set(here.map((r) => r.group))];
+          const after = flags.filter((f) => f.at === step);
           return (
-            <section
-              key={step}
-              className="work-roadmap-step"
-              aria-label={
-                step === 1 ? "Can move now" : `After step ${step - 1}`
-              }
-            >
-              <Typography
-                variant="caption-lg"
-                color="textSecondary"
-                render={<h3 />}
-                className="work-roadmap-step-head"
-              >
-                <span className="work-roadmap-step-n">{step}</span>
-                {step === 1 ? "Can move now" : `After step ${step - 1}`}
-              </Typography>
-              {groups.map((group) => {
-                const members = here.filter((r) => r.group === group);
-                const lines = (
-                  <ul className="work-rm-lines">
-                    {members.map((r) => (
-                      <RoadmapLine
-                        key={r.id}
-                        row={r}
-                        milestone={msOf.get(r.id)}
-                        selected={r.id === selected}
-                        title={title}
-                        onOpen={() =>
-                          by === "milestones" ? onOpen(r.id) : onZoom(r.id)
-                        }
-                        onWait={onWait}
-                      />
-                    ))}
-                  </ul>
-                );
-                if (group.length < 2) {
-                  return <div key={group.join()}>{lines}</div>;
+            <Fragment key={step}>
+              <section
+                className="work-roadmap-step"
+                aria-label={
+                  step === 1 ? "Can move now" : `After step ${step - 1}`
                 }
-                const ties = loopTies(rows, group);
-                return (
-                  <div key={group.join()} className="work-roadmap-loop">
-                    <Typography
-                      variant="caption-md"
-                      render={<p />}
-                      className="work-roadmap-loop-head"
-                    >
-                      These {group.length} wait on each other
-                      {ties.length > 0 && (
-                        <>
-                          , tied by{" "}
-                          {ties.map((t, i) => (
-                            <span key={`${t.from}${t.to}`}>
-                              {i > 0 &&
-                                (i === ties.length - 1 ? " and " : ", ")}
-                              <Link
-                                component="button"
-                                type="button"
-                                onClick={() => onWait(t.from, t.to)}
-                                title={`Items: ${t.items.join(", ")}`}
-                              >
-                                {title(t.from)} on {title(t.to)}
-                              </Link>
-                            </span>
-                          ))}
-                        </>
-                      )}
-                      .
-                    </Typography>
-                    {lines}
-                  </div>
-                );
-              })}
-            </section>
+              >
+                <Typography
+                  variant="caption-lg"
+                  color="textSecondary"
+                  render={<h3 />}
+                  className="work-roadmap-step-head"
+                >
+                  <span className="work-roadmap-step-n">{step}</span>
+                  {step === 1 ? "Can move now" : `After step ${step - 1}`}
+                </Typography>
+                {groups.map((group) => {
+                  const members = here.filter((r) => r.group === group);
+                  const lines = (
+                    <ul className="work-rm-lines">
+                      {members.map((r) => (
+                        <RoadmapLine
+                          key={r.id}
+                          row={r}
+                          milestone={msOf.get(r.id)}
+                          selected={r.id === selected}
+                          dim={!!lit && !lit.has(r.id)}
+                          title={title}
+                          onOpen={() =>
+                            by === "milestones" ? onOpen(r.id) : onZoom(r.id)
+                          }
+                          onWait={onWait}
+                        />
+                      ))}
+                    </ul>
+                  );
+                  if (group.length < 2) {
+                    return <div key={group.join()}>{lines}</div>;
+                  }
+                  const ties = loopTies(rows, group);
+                  return (
+                    <div key={group.join()} className="work-roadmap-loop">
+                      <Typography
+                        variant="caption-md"
+                        render={<p />}
+                        className="work-roadmap-loop-head"
+                      >
+                        These {group.length} wait on each other
+                        {ties.length > 0 && (
+                          <>
+                            , tied by{" "}
+                            {ties.map((t, i) => (
+                              <span key={`${t.from}${t.to}`}>
+                                {i > 0 &&
+                                  (i === ties.length - 1 ? " and " : ", ")}
+                                <Link
+                                  component="button"
+                                  type="button"
+                                  onClick={() => onWait(t.from, t.to)}
+                                  title={`Items: ${t.items.join(", ")}`}
+                                >
+                                  {title(t.from)} on {title(t.to)}
+                                </Link>
+                              </span>
+                            ))}
+                          </>
+                        )}
+                        .
+                      </Typography>
+                      {lines}
+                    </div>
+                  );
+                })}
+              </section>
+              {after.length > 0 && (
+                <div
+                  className="work-roadmap-flags"
+                  role="group"
+                  aria-label={`Releases after step ${step}`}
+                >
+                  {after.map((f) => (
+                    <div key={f.id} className="work-roadmap-flag">
+                      <ReleaseFlagButton
+                        flag={f}
+                        where={betweenSteps(step, lastStep)}
+                        selected={release === f.id}
+                        dim={!!hoverFlag && hoverFlag !== f.id}
+                        {...flagProps}
+                      />
+                      <Typography variant="caption-md" color="textSecondary">
+                        after {andList(f.last.map(flagProps.titleOf))}
+                      </Typography>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Fragment>
           );
         })}
       </div>
@@ -5950,6 +6395,7 @@ function RoadmapLine({
   row,
   milestone,
   selected,
+  dim,
   title,
   onOpen,
   onWait,
@@ -5957,6 +6403,8 @@ function RoadmapLine({
   row: RoadmapRow;
   milestone?: WorkMilestone;
   selected: boolean;
+  /** Not what feeds the release pointed at or in focus. */
+  dim?: boolean;
   title: (id: string) => string;
   onOpen: () => void;
   onWait: (from: string, to: string) => void;
@@ -5966,7 +6414,9 @@ function RoadmapLine({
     (a, b) => b.items.length - a.items.length,
   );
   return (
-    <li className={`work-rm-line${selected ? " selected" : ""}`}>
+    <li
+      className={`work-rm-line${selected ? " selected" : ""}${dim ? " dim" : ""}`}
+    >
       <button
         type="button"
         className="work-rm-name"

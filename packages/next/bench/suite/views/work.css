@@ -2018,7 +2018,9 @@ button.work-mrow-big:focus-visible {
 }
 @media (prefers-reduced-motion: reduce) {
   .work-map-edge,
-  .work-map-node {
+  .work-map-node,
+  .work-flag,
+  .work-rm-line {
     transition: none;
   }
 }
@@ -2269,18 +2271,9 @@ button.work-mrow-big:focus-visible {
 .work-map-focus .MuiButton-root {
   gap: var(--stratakit-space-150);
 }
-.work-map-node.gate {
-  background: var(--stratakit-color-bg-elevation-level-1);
-  border: 2px solid var(--stratakit-color-text-neutral-primary);
-}
-.work-map-node.gate .work-map-node-title svg,
-.work-map-lane.releases .work-map-lane-name svg,
 .work-map-focus svg {
   width: 14px;
   height: 14px;
-}
-.work-map-lane.releases {
-  border-top: 2px solid var(--stratakit-color-border-neutral-base);
 }
 .work-map-lane.outside {
   background: var(--stratakit-color-bg-page-depth);
@@ -2604,4 +2597,139 @@ button.work-mrow-big:focus-visible {
 .work-graph-section {
   position: absolute;
   margin: 0;
+}
+
+/*
+ * Releases as flags: each on the line after the last milestone it needs,
+ * with its pole down the grid; one with no place yet sits apart, dashed.
+ */
+.work-flag {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  height: 24px;
+  padding: 0 var(--stratakit-space-300) 0 var(--stratakit-space-200);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-inline-start: 2px solid var(--stratakit-color-text-neutral-primary);
+  border-radius: 0 var(--stratakit-radius-md) var(--stratakit-radius-md) 0;
+  background: var(--stratakit-color-bg-elevation-level-1);
+  color: var(--stratakit-color-text-neutral-primary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: opacity 120ms;
+}
+.work-flag svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+.work-flag:hover {
+  border-color: var(--stratakit-color-text-neutral-primary);
+}
+.work-flag:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.work-flag.selected {
+  border-color: var(--stratakit-color-border-accent-strong);
+  background: var(--stratakit-color-bg-glow-on-surface-accent-pressed);
+}
+.work-flag.unplaced {
+  border-style: dashed;
+  background: transparent;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-flag.unplaced.selected {
+  border-color: var(--stratakit-color-border-accent-strong);
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-flag.dim {
+  opacity: 0.45;
+}
+.work-map .work-flag.on-grid {
+  position: absolute;
+  z-index: 2;
+}
+/* Near the grid's right edge the flag flies left of its pole. */
+.work-flag.flip {
+  flex-direction: row-reverse;
+  padding: 0 var(--stratakit-space-200) 0 var(--stratakit-space-300);
+  border-inline-start-width: 1px;
+  border-inline-end: 2px solid var(--stratakit-color-text-neutral-primary);
+  border-radius: var(--stratakit-radius-md) 0 0 var(--stratakit-radius-md);
+}
+.work-flag-pole {
+  position: absolute;
+  z-index: 1;
+  width: 0;
+  border-inline-start: 2px dashed var(--stratakit-color-text-neutral-secondary);
+  opacity: 0.45;
+  pointer-events: none;
+}
+.work-flag-pole.on {
+  border-inline-start-style: solid;
+  border-color: var(--stratakit-color-border-accent-strong);
+  opacity: 1;
+}
+.work-map .work-flag-corner {
+  top: 8px;
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+}
+.work-flag-corner svg {
+  width: 14px;
+  height: 14px;
+}
+.work-flag-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-200) var(--stratakit-space-300);
+  margin-bottom: var(--stratakit-space-300);
+}
+.work-flag-note {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+.work-flag-focus-note {
+  margin: 0 0 var(--stratakit-space-300);
+}
+/* The list's flags: a line between two steps. */
+.work-roadmap-flags {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+  padding-inline-start: var(--stratakit-space-200);
+}
+.work-roadmap-flag {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-100) var(--stratakit-space-300);
+  min-width: 0;
+}
+.work-rm-line {
+  transition: opacity 120ms;
+}
+.work-rm-line.dim {
+  opacity: 0.35;
+}
+/* The matrix: the projects whose milestones feed the release in view. */
+.work-matrix-row.fed,
+.work-matrix-col.fed .work-matrix-col-label {
+  color: var(--stratakit-color-text-neutral-primary);
+  font-weight: 600;
+}
+.work-matrix-row.fed {
+  box-shadow: inset 3px 0 0 var(--stratakit-color-border-accent-strong);
+}
+.work-matrix-row.unfed,
+.work-matrix-col.unfed {
+  opacity: 0.4;
 }

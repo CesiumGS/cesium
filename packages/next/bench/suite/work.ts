@@ -1267,10 +1267,135 @@ export function milestoneRoadmapOf(
   );
 }
 
+// ------------------------------------------------------------ releases
+
+/**
+ * A release on the roadmap: a flag placed after the last milestone it
+ * needs. A release whose milestones aren't chosen yet has no place, and
+ * says why, rather than a guessed one.
+ */
+export interface ReleaseFlag {
+  /** The release item. */
+  id: string;
+  /** The version it makes ("2.0.0-alpha.1"). */
+  version: string;
+  title: string;
+  /**
+   * The open milestones that feed it: those it needs, directly or through
+   * the items and releases it needs, and everything they wait on.
+   */
+  feeds: string[];
+  /** The milestones that place it: those of its feeds that finish last. */
+  last: string[];
+  /**
+   * Where it falls: the end of the last milestone it needs, in the view's
+   * measure (a step, or tokens). Absent when it has no place, or when the
+   * milestones that place it are outside the view.
+   */
+  at?: number;
+  /**
+   * Why it has no place yet: the open decisions it needs (which
+   * milestones it needs, say), and the releases it needs that have none
+   * either. Both empty: it names no milestone at all yet.
+   */
+  unplaced?: { decisions: string[]; releases: string[] };
+}
+
+/**
+ * The open release items as flags, in the order they fall. `rows` is the
+ * milestone roadmap with its release gates (`milestoneRoadmapOf`), which
+ * says what each waits on; `endOf` gives where a milestone ends in the
+ * view (undefined for one the view leaves out).
+ */
+export function releaseFlagsOf(
+  s: WorkSnapshot,
+  rows: readonly RoadmapRow[],
+  endOf: (milestone: string) => number | undefined,
+): ReleaseFlag[] {
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const msIds = new Set(s.milestones.map((m) => m.id));
+  const rowOf = new Map(rows.map((r) => [r.id, r]));
+  const upstreamOf = (id: string) => {
+    const seen = new Set<string>();
+    const stack = [id];
+    while (stack.length) {
+      for (const w of rowOf.get(stack.pop()!)?.waitsOn ?? []) {
+        if (!seen.has(w.id) && w.id !== id) {
+          seen.add(w.id);
+          stack.push(w.id);
+        }
+      }
+    }
+    return seen;
+  };
+  const unplacedMemo = new Map<string, ReleaseFlag["unplaced"]>();
+  const unplacedOf = (id: string, feeds: string[]): ReleaseFlag["unplaced"] => {
+    if (unplacedMemo.has(id)) {
+      return unplacedMemo.get(id);
+    }
+    unplacedMemo.set(id, undefined); // a loop of releases ends here
+    const it = itemOf.get(id)!;
+    const open = it.needs
+      .map((n) => itemOf.get(n))
+      .filter((n): n is WorkItem => !!n && isOpen(n));
+    const decisions = open
+      .filter((n) => n.kind === "decision")
+      .map((n) => n.id);
+    const releases = open
+      .filter(
+        (n) =>
+          isReleaseItem(n) &&
+          !!unplacedOf(
+            n.id,
+            [...upstreamOf(n.id)].filter((x) => msIds.has(x)),
+          ),
+      )
+      .map((n) => n.id);
+    const out =
+      decisions.length || releases.length || !feeds.length
+        ? { decisions, releases }
+        : undefined;
+    unplacedMemo.set(id, out);
+    return out;
+  };
+  const flags = rows
+    .filter((r) => isReleaseItem(itemOf.get(r.id)))
+    .map((r): ReleaseFlag => {
+      const it = itemOf.get(r.id)!;
+      const feeds = [...upstreamOf(r.id)]
+        .filter((x) => msIds.has(x))
+        .sort((a, b) => idNumber(a) - idNumber(b));
+      const unplaced = unplacedOf(r.id, feeds);
+      const ends = feeds
+        .map((f) => [f, endOf(f)] as const)
+        .filter((e): e is readonly [string, number] => e[1] !== undefined);
+      const at =
+        unplaced || !ends.length
+          ? undefined
+          : Math.max(...ends.map(([, e]) => e));
+      return {
+        id: r.id,
+        version: it.release ?? r.title,
+        title: r.title,
+        feeds,
+        last:
+          at === undefined
+            ? []
+            : ends.filter(([, e]) => e === at).map(([f]) => f),
+        at,
+        unplaced,
+      };
+    });
+  return flags.sort(
+    (a, b) =>
+      (a.at ?? Infinity) - (b.at ?? Infinity) ||
+      idNumber(a.id) - idNumber(b.id),
+  );
+}
+
 /** The map's id prefix for a project's items that no milestone holds. */
 export const UNSHAPED = "unshaped-";
-/** The map's lane for release gates, and the prefix for lanes outside a focused release. */
-const RELEASES = "releases";
+/** The prefix for lanes outside a focused release. */
 const OUTSIDE = "outside-";
 
 /**
@@ -1351,15 +1476,6 @@ export interface MapNode {
   started: boolean;
   /** A project's open items that no milestone holds yet. */
   unshaped: boolean;
-  /** A release gate (it needs only milestones), with its progress over them. */
-  gate?: {
-    milestones: number;
-    milestonesDone: number;
-    items: number;
-    itemsDone: number;
-    tokensLeft: number;
-    decisions: number;
-  };
 }
 
 export interface MapEdge {
@@ -1390,8 +1506,22 @@ export interface MilestoneMap {
   done: Array<{ id: string; title: string }>;
   /** The release gates, to focus on. */
   gates: Array<{ id: string; title: string }>;
+  /** The releases as flags along the top, after the milestones that feed each. */
+  flags: MapFlag[];
   /** The release in focus, if any. */
   focus?: string;
+}
+
+/** A release's flag on the map, with its progress over what it needs. */
+export interface MapFlag extends ReleaseFlag {
+  progress: {
+    milestones: number;
+    milestonesDone: number;
+    items: number;
+    itemsDone: number;
+    tokensLeft: number;
+    decisions: number;
+  };
 }
 
 /**
@@ -1510,6 +1640,10 @@ export function milestoneMapOf(
     return t.estimated > 0 || t.appetite !== undefined || t.spent !== undefined;
   });
   const cost = (id: string) => (unit === "steps" ? 1 : tokensOf(id).left);
+  // Release gates are release items (human-in-the-lead's format): each
+  // one waits on the milestones and items it needs. They take no room of
+  // their own: each is a flag at the end of what it needs.
+  const isGate = (id: string) => isReleaseItem(itemOf.get(id));
   // Groups (loops) in step order: a group's waits are its members' waits outside it.
   const groupOf = new Map<string, string>();
   for (const r of rows) {
@@ -1530,8 +1664,12 @@ export function milestoneMapOf(
       ),
     ),
   ];
-  const gCost = (g: string) =>
-    unit === "steps" ? 1 : membersOf(g).reduce((n, r) => n + cost(r.id), 0);
+  const gCost = (g: string) => {
+    const real = membersOf(g).filter((r) => !isGate(r.id));
+    return unit === "steps"
+      ? Math.min(1, real.length)
+      : real.reduce((n, r) => n + cost(r.id), 0);
+  };
   const es = new Map<string, number>();
   const ef = new Map<string, number>();
   for (const g of groups) {
@@ -1540,9 +1678,8 @@ export function milestoneMapOf(
     ef.set(g, start + gCost(g));
   }
   const total = Math.max(0, ...ef.values());
-  // Release gates: milestones that need only other milestones. Each one's
-  // cone is everything upstream of it, the milestones it needs to be
-  // feature complete.
+  // A release's cone is everything upstream of it, the milestones it
+  // needs to be feature complete.
   const upstreamOf = (id: string) => {
     const seen = new Set<string>();
     const stack = [id];
@@ -1558,9 +1695,6 @@ export function milestoneMapOf(
     }
     return seen;
   };
-  // Release gates are release items (human-in-the-lead's format): each
-  // one waits on the milestones and items it needs.
-  const isGate = (id: string) => isReleaseItem(itemOf.get(id));
   // A gate's progress: over the milestones it needs, their items, and the
   // items it needs directly.
   const gateStats = (id: string) => {
@@ -1598,13 +1732,23 @@ export function milestoneMapOf(
       decisions: decisions.size,
     };
   };
+  // Where each milestone ends, and so where each release falls.
+  const flags: MapFlag[] = releaseFlagsOf(s, rows, (id) => {
+    const g = groupOf.get(id);
+    return g === undefined
+      ? undefined
+      : es.get(g)! + (unit === "steps" ? 1 : cost(id));
+  }).map((f) => ({ ...f, progress: gateStats(f.id) }));
   const focusId = focus && rows.some((r) => r.id === focus) ? focus : undefined;
-  const cone = focusId ? new Set([focusId, ...upstreamOf(focusId)]) : undefined;
+  // A release with no place yet sets nothing apart: what it needs isn't chosen.
+  const placed = !flags.find((f) => f.id === focusId)?.unplaced;
+  const cone =
+    focusId && placed ? new Set([focusId, ...upstreamOf(focusId)]) : undefined;
   const coneGroups = cone
     ? new Set([...cone].map((id) => groupOf.get(id)!))
     : undefined;
   // The end the slack is measured to: the release, or the last of all.
-  const end = focusId ? ef.get(groupOf.get(focusId)!)! : total;
+  const end = cone ? ef.get(groupOf.get(focusId!)!)! : total;
   const succsOf = (g: string) =>
     groups.filter(
       (x) => predsOf(x).includes(g) && (!coneGroups || coneGroups.has(x)),
@@ -1627,13 +1771,17 @@ export function milestoneMapOf(
   const eps = unit === "steps" ? 0 : 1e-6 * Math.max(1, total);
   // The critical path: from the end back along waits that leave no slack.
   const path: string[] = [];
-  let at = focusId
-    ? groupOf.get(focusId)
+  let at = cone
+    ? groupOf.get(focusId!)
     : groups.find(
         (g) => Math.abs(ef.get(g)! - total) <= eps && slackOf(g) <= eps,
       );
   while (at) {
-    path.unshift(...membersOf(at).map((r) => r.id));
+    path.unshift(
+      ...membersOf(at)
+        .map((r) => r.id)
+        .filter((id) => !isGate(id)),
+    );
     const here = at;
     at = predsOf(here).find(
       (p) => Math.abs(ef.get(p)! - es.get(here)!) <= eps && slackOf(p) <= eps,
@@ -1645,59 +1793,55 @@ export function milestoneMapOf(
     if (id.startsWith(UNSHAPED)) {
       return id.slice(UNSHAPED.length);
     }
-    if (isGate(id)) {
-      return RELEASES;
-    }
     const m = msOf.get(id)!;
     const base = m.project ?? m.long_outcome ?? "";
     // With a release in focus, what it doesn't need moves to its own band.
     return cone && !cone.has(id) ? `${OUTSIDE}${base}` : base;
   };
   const laneTitle = (id: string): string =>
-    id === RELEASES
-      ? "Releases"
-      : id.startsWith(OUTSIDE)
-        ? laneTitle(id.slice(OUTSIDE.length))
-        : (projectOf.get(id)?.title ??
-          s.long_outcomes.find((i) => i.id === id)?.title ??
-          "No project");
-  const nodes: MapNode[] = rows.map((r) => {
-    const g = groupOf.get(r.id)!;
-    const start = es.get(g)!;
-    const own = unit === "steps" ? 1 : cost(r.id);
-    const { decisions, outside } = holdsOf(itemsIn(r.id));
-    return {
-      id: r.id,
-      title: r.title,
-      lane: laneOf(r.id),
-      sub: 0,
-      x0: start,
-      x1: start + own,
-      slack: slackOf(g),
-      critical: onPath.has(r.id),
-      counts: r.counts,
-      decisions: decisions.size,
-      outside: outside.size,
-      tokens: tokensOf(r.id),
-      loop: r.group.length > 1 ? r.group : undefined,
-      started: r.counts.Done > 0 || r.counts["In flight"] > 0,
-      unshaped: r.id.startsWith(UNSHAPED),
-      gate: isGate(r.id) ? gateStats(r.id) : undefined,
-      // The waits that finish last set its start: those name why it is here.
-      after: start
-        ? r.waitsOn
-            .map((w) => w.id)
-            .filter((id) => {
-              const pg = groupOf.get(id);
-              return (
-                pg !== undefined &&
-                pg !== g &&
-                Math.abs(ef.get(pg)! - start) <= eps
-              );
-            })
-        : [],
-    };
-  });
+    id.startsWith(OUTSIDE)
+      ? laneTitle(id.slice(OUTSIDE.length))
+      : (projectOf.get(id)?.title ??
+        s.long_outcomes.find((i) => i.id === id)?.title ??
+        "No project");
+  const nodes: MapNode[] = rows
+    .filter((r) => !isGate(r.id))
+    .map((r) => {
+      const g = groupOf.get(r.id)!;
+      const start = es.get(g)!;
+      const own = unit === "steps" ? 1 : cost(r.id);
+      const { decisions, outside } = holdsOf(itemsIn(r.id));
+      return {
+        id: r.id,
+        title: r.title,
+        lane: laneOf(r.id),
+        sub: 0,
+        x0: start,
+        x1: start + own,
+        slack: slackOf(g),
+        critical: onPath.has(r.id),
+        counts: r.counts,
+        decisions: decisions.size,
+        outside: outside.size,
+        tokens: tokensOf(r.id),
+        loop: r.group.length > 1 ? r.group : undefined,
+        started: r.counts.Done > 0 || r.counts["In flight"] > 0,
+        unshaped: r.id.startsWith(UNSHAPED),
+        // The waits that finish last set its start: those name why it is here.
+        after: start
+          ? r.waitsOn
+              .map((w) => w.id)
+              .filter((id) => {
+                const pg = groupOf.get(id);
+                return (
+                  pg !== undefined &&
+                  pg !== g &&
+                  Math.abs(ef.get(pg)! - start) <= eps
+                );
+              })
+          : [],
+      };
+    });
   // The unshaped bars: after the milestones their items wait on.
   const msItems = new Map(
     rows.map((r) => [
@@ -1781,10 +1925,9 @@ export function milestoneMapOf(
   }
   // Lanes: projects with milestones first (by their first start), then
   // those not yet shaped into milestones, in their long outcomes' order;
-  // then the releases; then, with a release in focus, what it doesn't need.
+  // then, with a release in focus, what it doesn't need.
   const shaped = new Set(nodes.filter((n) => !n.unshaped).map((n) => n.lane));
-  const band = (lane: string) =>
-    lane.startsWith(OUTSIDE) ? 2 : lane === RELEASES ? 1 : 0;
+  const band = (lane: string) => (lane.startsWith(OUTSIDE) ? 1 : 0);
   const iniRank = (lane: string) =>
     s.long_outcomes.findIndex(
       (i) => i.id === projectOf.get(lane)?.long_outcome,
@@ -1826,19 +1969,21 @@ export function milestoneMapOf(
       outside: id.startsWith(OUTSIDE),
     };
   });
-  const edges: MapEdge[] = rows.flatMap((r): MapEdge[] =>
-    r.waitsOn
-      .filter((w) => shown.has(w.id))
-      .map((w) => ({
-        from: w.id,
-        to: r.id,
-        items: w.items,
-        critical:
-          onPath.has(w.id) &&
-          onPath.has(r.id) &&
-          path.indexOf(w.id) < path.indexOf(r.id),
-      })),
-  );
+  const edges: MapEdge[] = rows
+    .filter((r) => !isGate(r.id))
+    .flatMap((r): MapEdge[] =>
+      r.waitsOn
+        .filter((w) => shown.has(w.id) && !isGate(w.id))
+        .map((w) => ({
+          from: w.id,
+          to: r.id,
+          items: w.items,
+          critical:
+            onPath.has(w.id) &&
+            onPath.has(r.id) &&
+            path.indexOf(w.id) < path.indexOf(r.id),
+        })),
+    );
   edges.push(...softEdges);
   const done = s.milestones
     .filter((m) => m.state === "done")
@@ -1856,6 +2001,7 @@ export function milestoneMapOf(
     gates: rows
       .filter((r) => isGate(r.id))
       .map((r) => ({ id: r.id, title: r.title })),
+    flags,
     focus: focusId,
   };
 }

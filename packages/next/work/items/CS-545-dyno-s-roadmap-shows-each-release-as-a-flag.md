@@ -2,7 +2,7 @@
 id: CS-545
 title: Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it
 kind: work
-state: in-progress
+state: done
 created: 2026-11-15
 project: CS-18
 needs: [CS-564]

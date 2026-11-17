@@ -555,20 +555,101 @@ describe("release items are the map's gates", () => {
     ],
   };
 
-  it("draws a release item as a gate after what it needs, not as loose work", () => {
+  it("flags a release after the last milestone it needs, not as a bar", () => {
     const m = milestoneMapOf(s, undefined, "steps");
     expect(m.gates).toEqual([{ id: "CS-80", title: "Release 2.0.0-alpha.1" }]);
-    const gate = m.nodes.find((n) => n.id === "CS-80")!;
-    expect(gate.gate).toBeDefined();
-    expect(gate.x0).toBeGreaterThan(m.nodes.find((n) => n.id === "CS-90")!.x0);
+    // No bar and no lane of its own: the release is a flag.
+    expect(m.nodes.find((n) => n.id === "CS-80")).toBeUndefined();
+    expect(m.edges.some((e) => e.to === "CS-80")).toBe(false);
+    const flag = m.flags.find((f) => f.id === "CS-80")!;
+    expect(flag.version).toBe("2.0.0-alpha.1");
+    expect(flag.unplaced).toBeUndefined();
     // CS-72, needed directly and in no milestone, waits on CS-91's item,
-    // so the gate comes after CS-91 too.
-    expect(gate.x0).toBeGreaterThan(m.nodes.find((n) => n.id === "CS-91")!.x0);
-    // The gate counts the items of what it waits on (CS-70, CS-71) and
+    // so CS-91 feeds the release too.
+    expect(flag.feeds).toEqual(["CS-90", "CS-91"]);
+    // Both are in step 1: the flag falls between steps 1 and 2.
+    expect(flag.at).toBe(1);
+    expect(flag.last).toEqual(["CS-90", "CS-91"]);
+    // The release takes no step of its own.
+    expect(m.total).toBe(1);
+    // Its progress counts the items of what it waits on (CS-70, CS-71) and
     // CS-72, needed directly; CS-80 itself is no project's loose work.
-    expect(gate.gate!.items).toBe(3);
+    expect(flag.progress.items).toBe(3);
     const loose = m.nodes.find((n) => n.unshaped);
     expect(Object.values(loose!.counts).reduce((a, b) => a + b, 0)).toBe(1);
+  });
+
+  it("leaves a release unplaced while its milestones aren't chosen, and those after it", () => {
+    const open: WorkSnapshot = {
+      ...s,
+      items: [
+        ...s.items,
+        item("CS-81", {
+          kind: "decision",
+          decider: "owner",
+          state: "proposed",
+        }),
+        item("CS-82", {
+          title: "Release 2.0.0-beta.1",
+          release: "2.0.0-beta.1",
+          needs: ["CS-81"],
+          open_needs: ["CS-81"],
+        }),
+        item("CS-83", {
+          title: "Release 2.0.0",
+          release: "2.0.0",
+          needs: ["CS-82", "CS-92"],
+          open_needs: ["CS-82"],
+        }),
+        item("CS-85", {
+          title: "Release 2.0.0-alpha.3",
+          release: "2.0.0-alpha.3",
+          needs: ["CS-90", "CS-81"],
+          open_needs: ["CS-81"],
+        }),
+        item("CS-84", {
+          title: "Release 2.0.0-alpha.2",
+          release: "2.0.0-alpha.2",
+          needs: [],
+          open_needs: [],
+        }),
+      ],
+    };
+    const m = milestoneMapOf(open, undefined, "steps");
+    const flag = (id: string) => m.flags.find((f) => f.id === id)!;
+    expect(flag("CS-82").at).toBeUndefined();
+    expect(flag("CS-82").unplaced).toEqual({
+      decisions: ["CS-81"],
+      releases: [],
+    });
+    // CS-83 names a milestone, but it needs CS-82, which has no place.
+    expect(flag("CS-83").at).toBeUndefined();
+    expect(flag("CS-83").unplaced).toEqual({
+      decisions: [],
+      releases: ["CS-82"],
+    });
+    // Naming a milestone isn't enough while a decision on it is open.
+    expect(flag("CS-85").at).toBeUndefined();
+    expect(flag("CS-85").unplaced).toEqual({
+      decisions: ["CS-81"],
+      releases: [],
+    });
+    // A release that names nothing has no place either.
+    expect(flag("CS-84").unplaced).toEqual({ decisions: [], releases: [] });
+    // Placed flags first, then the unplaced ones by number.
+    expect(m.flags.map((f) => f.id)).toEqual([
+      "CS-80",
+      "CS-82",
+      "CS-83",
+      "CS-84",
+      "CS-85",
+    ]);
+    // Focusing on one with no place sets nothing apart.
+    const focused = milestoneMapOf(open, undefined, "steps", "CS-82");
+    expect(focused.focus).toBe("CS-82");
+    expect(focused.nodes.some((n) => n.lane.startsWith("outside-"))).toBe(
+      false,
+    );
   });
 
   it("measures to a release: what it doesn't need moves apart", () => {

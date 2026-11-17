@@ -161,10 +161,26 @@ milestones named by their outcome, each with an `outcome` sentence,
     that wait on nothing and that nothing waits on sit apart below, in a
     grid by project. The critical path is drawn in the accent; hovering a
     milestone lights what feeds it and what it unblocks; choosing a wait
-    lists the items behind it. Release gates are release items (HITLd's
+    lists the items behind it. Releases are release items (HITLd's
     format: a work item with a `release` version, needing the milestones
-    and items the release waits for), drawn as flags in a Releases lane;
-    "Measure to" keeps a gate and what it needs. A milestone with an
+    and items the release waits for), each a flag labeled with its
+    version along the top of the grid, on the line after the step of the
+    last milestone it needs, its pole dashed down the grid. They take no
+    step of their own. Pointing at a flag, or focusing it, lights the
+    milestones that feed it (those it needs, through the items and
+    releases it needs too, and what they wait on) and dims the rest;
+    choosing it measures to it, the same focus as "Measure to", which
+    keeps the release and what it needs and moves the rest apart. A
+    release whose milestones aren't chosen yet (it needs an open
+    decision, or a release with no place, or names no milestone) gets no
+    guessed place: its flag sits dashed in "Releases not placed yet"
+    above the grid, and its tip says what it waits on. The fewest
+    crossings layout flies the flags over the gaps between step columns.
+    The list puts each flag between the steps it falls between, and the
+    long outcomes' steps place a release after the last outcome that
+    holds a milestone it needs. The project waits matrix has no steps:
+    it lists the flags above the table, and one in view marks the
+    projects whose milestones feed it. A milestone with an
     item done or in progress is filled; a milestone's pane gives its
     longest chain of items that must happen in order. The roadmap is
     committed work only;
