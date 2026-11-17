@@ -79,7 +79,6 @@ import StencilConstants from "./StencilConstants.js";
 import SunLight from "./SunLight.js";
 import SunPostProcess from "./SunPostProcess.js";
 import TweenCollection from "./TweenCollection.js";
-import VectorPrimitiveCollection from "./VectorPrimitiveCollection.js";
 import View from "./View.js";
 import DebugInspector from "./DebugInspector.js";
 import VoxelCell from "./VoxelCell.js";
@@ -189,7 +188,6 @@ function Scene(options) {
   this._globeTranslucencyState = new GlobeTranslucencyState();
   this._primitives = new PrimitiveCollection({ countReferences });
   this._groundPrimitives = new PrimitiveCollection({ countReferences });
-  this._vectorPrimitives = new VectorPrimitiveCollection();
 
   this._globeHeight = undefined;
   this._globeHeightDirty = true;
@@ -798,6 +796,7 @@ function Scene(options) {
 /**
  * Use this to set the default value for {@link Scene#logarithmicDepthBuffer} in newly constructed Scenes
  * This property relies on fragmentDepth being supported.
+ * @type {boolean}
  */
 Scene.defaultLogDepthBuffer = true;
 
@@ -1029,20 +1028,6 @@ Object.defineProperties(Scene.prototype, {
   groundPrimitives: {
     get: function () {
       return this._groundPrimitives;
-    },
-  },
-
-  /**
-   * Gets the collection of vector primitives.
-   * @memberof Scene.prototype
-   *
-   * @type {VectorPrimitiveCollection}
-   * @readonly
-   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
-   */
-  vectorPrimitives: {
-    get: function () {
-      return this._vectorPrimitives;
     },
   },
 
@@ -1628,7 +1613,7 @@ Object.defineProperties(Scene.prototype, {
   },
 
   /**
-   * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for less frustums in the multi-frustum,
+   * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for fewer frustums in the multi-frustum,
    * increasing performance. This property relies on fragmentDepth being supported.
    * @memberof Scene.prototype
    * @type {boolean}
@@ -3949,7 +3934,6 @@ function updateAndRenderPrimitives(scene) {
 
   scene._groundPrimitives.update(frameState);
   scene._primitives.update(frameState);
-  scene._vectorPrimitives.update(frameState);
 
   // If any primitive requested edge visibility this frame, flip the scene flag lazily.
   if (
@@ -4900,8 +4884,21 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     width,
     height,
   );
+  // The pick pass writes tileIndex * samplesPerTile + sampleIndex + 1,
+  // most significant byte first. 0 means no voxel sample was rendered there.
+  const pickId =
+    voxelCoordinate[0] * 16777216 +
+    voxelCoordinate[1] * 65536 +
+    voxelCoordinate[2] * 256 +
+    voxelCoordinate[3];
+  if (pickId === 0) {
+    return;
+  }
+  const { inputDimensions } = voxelPrimitive;
+  const samplesPerTile =
+    inputDimensions.x * inputDimensions.y * inputDimensions.z;
   // Look up the keyframeNode containing this picked cell
-  const tileIndex = 255 * voxelCoordinate[0] + voxelCoordinate[1];
+  const tileIndex = Math.floor((pickId - 1) / samplesPerTile);
   const keyframeNode = voxelPrimitive._traversal.findKeyframeNode(tileIndex);
   if (!defined(keyframeNode)) {
     // The tile rendered at the pick position has since been discarded by
@@ -4909,7 +4906,7 @@ Scene.prototype.pickVoxel = function (windowPosition, width, height) {
     return;
   }
   // Look up the metadata for the picked cell
-  const sampleIndex = 255 * voxelCoordinate[2] + voxelCoordinate[3];
+  const sampleIndex = (pickId - 1) % samplesPerTile;
   return VoxelCell.fromKeyframeNode(
     voxelPrimitive,
     tileIndex,
@@ -5540,8 +5537,6 @@ Scene.prototype.destroy = function () {
   this._primitives = this._primitives && this._primitives.destroy();
   this._groundPrimitives =
     this._groundPrimitives && this._groundPrimitives.destroy();
-  this._vectorPrimitives =
-    this._vectorPrimitives && this._vectorPrimitives.destroy();
   this._globe = this._globe && this._globe.destroy();
   this._removeTerrainProviderReadyListener =
     this._removeTerrainProviderReadyListener &&

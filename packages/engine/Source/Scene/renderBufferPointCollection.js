@@ -393,6 +393,8 @@ function renderBufferPointCollection(
           ? BlendingState.DISABLED
           : BlendingState.ALPHA_BLEND,
       depthTest: { enabled: true },
+      // Without OIT, depth writes would hide later translucent commands at the same depth.
+      depthMask: pass === Pass.OPAQUE,
     });
   }
 

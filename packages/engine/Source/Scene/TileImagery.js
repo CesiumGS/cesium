@@ -36,7 +36,7 @@ TileImagery.prototype.freeResources = function () {
 /**
  * Processes the load state machine for this instance.
  *
- * @param {Tile} tile The tile to which this instance belongs.
+ * @param {QuadtreeTile} tile The tile to which this instance belongs.
  * @param {FrameState} frameState The frameState.
  * @param {boolean} skipLoading True to skip loading, e.g. new requests, creating textures. This function will
  *                  still synchronously process imagery that's already mostly ready to go, e.g. use textures

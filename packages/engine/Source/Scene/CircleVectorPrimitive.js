@@ -11,15 +11,15 @@ import renderBufferPointCollection from "./renderBufferPointCollection.js";
 /** @import { BufferPointStyleResult } from "./renderBufferPointCollection.js"; */
 
 /**
- * @typedef {object} CircleLayerOptions
- * @property {BufferPointCollection} collection The points drawn by the layer.
+ * @typedef {object} CircleVectorPrimitiveOptions
+ * @property {BufferPointCollection} collection The points drawn by the vector primitive.
  * @property {number|function(BufferPoint): number} [radius=5.0] Radius of each circle, in pixels.
  * @property {Color|function(BufferPoint): Color} [color=Color.WHITE] Fill color of each circle.
  * @property {Color|function(BufferPoint): Color} [outlineColor=Color.BLACK] Outline color of each circle.
  * @property {number|function(BufferPoint): number} [outlineWidth=0.0] Outline width of each circle, in pixels.
  * @property {function(BufferPoint): boolean} [filter] Whether each point is drawn. Points hidden with {@link BufferPrimitive#show} are never drawn.
  * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how the circles are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}.
- * @property {boolean} [show=true] Whether the layer is drawn.
+ * @property {boolean} [show=true] Whether the vector primitive is drawn.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -38,8 +38,8 @@ import renderBufferPointCollection from "./renderBufferPointCollection.js";
  * const collection = new Cesium.BufferPointCollection();
  * collection.add({ position: Cesium.Cartesian3.fromDegrees(-75.16, 39.95) });
  *
- * viewer.scene.vectorPrimitives.add(
- *   new Cesium.CircleLayer({
+ * viewer.scene.primitives.add(
+ *   new Cesium.CircleVectorPrimitive({
  *     collection,
  *     radius: 8,
  *     color: Cesium.Color.ORANGE,
@@ -51,8 +51,8 @@ import renderBufferPointCollection from "./renderBufferPointCollection.js";
  * @example
  * const properties = [{ population: 12000 }, { population: 450000 }];
  *
- * viewer.scene.vectorPrimitives.add(
- *   new Cesium.CircleLayer({
+ * viewer.scene.primitives.add(
+ *   new Cesium.CircleVectorPrimitive({
  *     collection,
  *     radius: (point) => Math.sqrt(properties[point.featureId].population) / 50,
  *     color: (point) =>
@@ -66,9 +66,9 @@ import renderBufferPointCollection from "./renderBufferPointCollection.js";
  * @extends VectorPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-class CircleLayer extends VectorPrimitive {
+class CircleVectorPrimitive extends VectorPrimitive {
   /**
-   * @param {CircleLayerOptions} options
+   * @param {CircleVectorPrimitiveOptions} options
    */
   constructor(options) {
     super(options);
@@ -89,8 +89,8 @@ class CircleLayer extends VectorPrimitive {
   }
 
   /**
-   * The points drawn by the layer. The layer does not own the collection;
-   * destroying the layer leaves the collection intact.
+   * The points drawn by the vector primitive. The vector primitive does not own
+   * the collection; destroying it leaves the collection intact.
    *
    * @type {BufferPointCollection}
    * @readonly
@@ -211,4 +211,4 @@ function cloneColor(value) {
   return value instanceof Color ? /** @type {T} */ (Color.clone(value)) : value;
 }
 
-export default CircleLayer;
+export default CircleVectorPrimitive;

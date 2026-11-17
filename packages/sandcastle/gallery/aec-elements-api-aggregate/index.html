@@ -1,0 +1,58 @@
+<style>
+  @import url(../templates/bucket.css);
+
+  #resultPanel {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: max-content;
+    max-width: calc(100vw - 10px);
+    max-height: calc(100% - 20px);
+    overflow: auto;
+    display: none;
+    font-size: 16px;
+  }
+  #resultPanel h4 {
+    font-size: 18px;
+  }
+  #resultPanel table {
+    width: max-content;
+    max-width: 100%;
+    border-collapse: collapse;
+  }
+  #resultPanel th,
+  #resultPanel td {
+    padding: 7px 8px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  #resultPanel th:first-child,
+  #resultPanel td:first-child {
+    text-align: left;
+  }
+  #resultPanel th[colspan] {
+    text-align: center;
+  }
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="resultPanel" class="infoPanel">
+  <h4 id="resultHeader"></h4>
+  <table>
+    <thead>
+      <tr>
+        <th rowspan="2">IFC Class Name</th>
+        <th rowspan="2">Elements</th>
+        <th id="netVolumeHeader" colspan="4">Net Vol (m³)</th>
+      </tr>
+      <tr>
+        <th>Total</th>
+        <th>Min</th>
+        <th>Max</th>
+        <th>Avg</th>
+      </tr>
+    </thead>
+    <tbody id="resultsBody"></tbody>
+  </table>
+</div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>

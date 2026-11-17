@@ -1,25 +1,30 @@
+// @ts-check
+
 import DeveloperError from "./DeveloperError.js";
+
+/** @import Geometry from "./Geometry.js"; */
 
 /**
  * Base class for all geometry creation utility classes that can be passed to {@link GeometryInstance}
  * for asynchronous geometry creation.
  *
- * @constructor
  * @class
  * @abstract
  */
-function GeometryFactory() {
-  DeveloperError.throwInstantiationError();
-}
+class GeometryFactory {
+  constructor() {
+    DeveloperError.throwInstantiationError();
+  }
 
-/**
- * Returns a geometry.
- *
- * @param {GeometryFactory} geometryFactory A description of the circle.
- * @returns {Geometry|undefined} The computed vertices and indices.
- */
-GeometryFactory.createGeometry = function (geometryFactory) {
-  DeveloperError.throwInstantiationError();
-};
+  /**
+   * Returns a geometry.
+   *
+   * @param {GeometryFactory} geometryFactory A description of the circle.
+   * @returns {Geometry|undefined} The computed vertices and indices.
+   */
+  static createGeometry(geometryFactory) {
+    DeveloperError.throwInstantiationError();
+  }
+}
 
 export default GeometryFactory;

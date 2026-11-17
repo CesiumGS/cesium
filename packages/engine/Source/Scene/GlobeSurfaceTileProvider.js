@@ -30,6 +30,7 @@ import {
   destroyObject,
 } from "@cesium/core";
 import TerrainQuantization from "../Core/TerrainQuantization.js";
+import VectorProvider from "../Core/VectorProvider.js";
 import Buffer from "../Renderer/Buffer.js";
 import BufferUsage from "../Renderer/BufferUsage.js";
 import ContextLimits from "../Renderer/ContextLimits.js";
@@ -66,7 +67,7 @@ import TileSelectionResult from "./TileSelectionResult.js";
 /** @import TerrainMesh from "../Core/TerrainMesh.js"; */
 /** @import TerrainProvider from "../Core/TerrainProvider.js"; */
 /** @import TilingScheme from "../Core/TilingScheme.js"; */
-/** @import VectorProvider, { VectorTileData } from "../Core/VectorProvider.js"; */
+/** @import { VectorTileData } from "../Core/VectorProvider.js"; */
 /** @import { GlobeSurfaceShaderSetOptions } from "./GlobeSurfaceShaderSet.js"; */
 
 /**
@@ -2638,7 +2639,10 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     maxTextures -= 3;
   }
 
+  maxTextures -= VectorProvider.getTextureCount(surfaceTile.vectorData);
   maxTextures -= globeTranslucencyState.numberOfTextureUniforms;
+
+  maxTextures = Math.max(maxTextures, 1);
 
   const mesh = surfaceTile.renderedMesh;
   let rtc = mesh.center;
@@ -3181,6 +3185,9 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     // trim texture array to the used length so we don't end up using old textures
     // which might get destroyed eventually
     uniformMapProperties.dayTextures.length = numberOfDayTextures;
+    // Vectors draw over all imagery, so only the final blended pass applies them.
+    const applyVectors =
+      imageryIndex >= imageryLen && surfaceTile.vectorData?.show === true;
     uniformMapProperties.waterMask = waterMaskTexture;
     Cartesian4.clone(
       waterMaskTranslationAndScale,
@@ -3268,6 +3275,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
     surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
     surfaceShaderSetOptions.showUndergroundColor = showUndergroundColor;
     surfaceShaderSetOptions.translucent = translucent;
+    surfaceShaderSetOptions.applyVectors = applyVectors;
 
     let count = surfaceTile.renderedMesh.indices.length;
     if (!showSkirts) {
@@ -3278,7 +3286,7 @@ function addDrawCommandsForTile(tileProvider, tile, frameState) {
       surfaceShaderSetOptions,
     );
     // Draped vectors are picked through the surface; zero elsewhere keeps the globe unpickable.
-    command.pickId = surfaceTile.vectorData?.show
+    command.pickId = applyVectors
       ? "vectorPickColorOver(vec4(0.0))"
       : undefined;
     command.castShadows = castShadows;

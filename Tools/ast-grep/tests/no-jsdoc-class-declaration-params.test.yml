@@ -19,6 +19,11 @@ valid:
        */
       constructor(a, b) {}
     }
+  - >
+    class MyClass () {
+      /** @exception {DeveloperError} Fails during Mercury retrograde. */
+      constructor(a, b) {}
+    }
 invalid:
   - >
     /**
@@ -28,5 +33,10 @@ invalid:
      */
     class MyClass () {
       /** Constructor description. */
+      constructor(a, b) {}
+    }
+  - >
+    /** @exception {DeveloperError} Fails during Mercury retrograde. */
+    class MyClass () {
       constructor(a, b) {}
     }

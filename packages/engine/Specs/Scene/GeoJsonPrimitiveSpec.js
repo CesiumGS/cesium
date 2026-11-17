@@ -4,7 +4,12 @@ import {
   BufferPolygon,
   BufferPolyline,
   GeoJsonPrimitive,
+  GeographicTilingScheme,
+  HeightReference,
+  SceneMode,
+  VectorProvider,
 } from "../../index.js";
+import createContext from "../../../../Specs/createContext.js";
 
 describe("Scene/GeoJsonPrimitive", function () {
   it("builds buffer primitive collections from mixed feature geometries", function () {
@@ -165,5 +170,69 @@ describe("Scene/GeoJsonPrimitive", function () {
     await expectAsync(
       GeoJsonPrimitive.fromUrl(),
     ).toBeRejectedWithDeveloperError();
+  });
+
+  it("update assigns pick IDs to draped collections", function () {
+    const context = createContext();
+    const vectorProvider = new VectorProvider({
+      tilingScheme: new GeographicTilingScheme(),
+    });
+    const geoJson = {
+      type: "Feature",
+      properties: {},
+      geometry: {
+        type: "GeometryCollection",
+        geometries: [
+          {
+            type: "LineString",
+            coordinates: [
+              [-95.0, 40.0],
+              [-90.0, 40.0],
+            ],
+          },
+          {
+            type: "Polygon",
+            coordinates: [
+              [
+                [-95.0, 40.0],
+                [-90.0, 40.0],
+                [-90.0, 45.0],
+                [-95.0, 40.0],
+              ],
+            ],
+          },
+        ],
+      },
+    };
+
+    const loader = GeoJsonPrimitive.fromGeoJson(geoJson, {
+      heightReference: HeightReference.CLAMP_TO_GROUND,
+      scene: { vectorProvider },
+    });
+
+    loader.update({
+      mode: SceneMode.SCENE3D,
+      passes: { render: true },
+      frameNumber: 0,
+      context,
+    });
+
+    const polylines = loader.polylines;
+    const polylineId = polylines.get(0, new BufferPolyline())._pickId;
+    expect(vectorProvider.has(polylines)).toBe(true);
+    expect(context.getObjectByPickColor(polylineId)).toEqual(
+      jasmine.objectContaining({ collection: polylines, index: 0 }),
+    );
+    expect(polylines._renderContext).toBeNull();
+
+    const polygons = loader.polygons;
+    const polygonId = polygons.get(0, new BufferPolygon())._pickId;
+    expect(vectorProvider.has(polygons)).toBe(true);
+    expect(context.getObjectByPickColor(polygonId)).toEqual(
+      jasmine.objectContaining({ collection: polygons, index: 0 }),
+    );
+    expect(polygons._renderContext).toBeNull();
+
+    context.destroyForSpecs();
   });
 });

@@ -510,4 +510,116 @@ describe("DataSources/StaticGeometryColorBatch", function () {
         batch.removeAllPrimitives();
       });
   });
+
+  describe("updates translucency", function () {
+    let batch;
+    let colors;
+    let updaters;
+
+    beforeEach(function () {
+      batch = new StaticGeometryColorBatch(
+        scene.primitives,
+        PolylineColorAppearance,
+        PolylineColorAppearance,
+        false,
+        ShadowMode.DISABLED,
+      );
+
+      // Different depth fail colors put each polyline in a separate primitive.
+      colors = [];
+      updaters = [];
+      for (const depthFailColor of [Color.RED, Color.GREEN, Color.BLUE]) {
+        const color = Color.WHITE.clone();
+        const entity = new Entity({
+          polyline: {
+            positions: Cartesian3.fromDegreesArray([0.0, 0.0, 0.0, 1.0]),
+            material: new ColorMaterialProperty(
+              new CallbackProperty(() => color, false),
+            ),
+            depthFailMaterial: depthFailColor,
+          },
+        });
+        colors.push(color);
+        updaters.push(new PolylineGeometryUpdater(entity, scene));
+      }
+
+      // A failure can loop forever inside batch.update, so stop it with an
+      // error. Each polyline is added once, and again at most once when its
+      // translucency changes.
+      const add = batch.add;
+      spyOn(batch, "add").and.callFake(function (time, updater) {
+        if (batch.add.calls.count() > 2 * updaters.length) {
+          throw new Error("batch.add was called too many times");
+        }
+        return add.call(batch, time, updater);
+      });
+    });
+
+    afterEach(function () {
+      batch.removeAllPrimitives();
+    });
+
+    function renderUntilUpdated() {
+      return pollToPromise(function () {
+        const isUpdated = batch.update(time);
+        scene.renderForSpecs(time);
+        return isUpdated;
+      });
+    }
+
+    function countTranslucentPrimitives() {
+      let count = 0;
+      for (let i = 0; i < scene.primitives.length; i++) {
+        if (scene.primitives.get(i).appearance.translucent) {
+          count++;
+        }
+      }
+      return count;
+    }
+
+    it("when two colors become translucent at the same time", async function () {
+      for (const updater of updaters) {
+        batch.add(time, updater);
+      }
+      await renderUntilUpdated();
+
+      colors[0].alpha = 0.5;
+      colors[1].alpha = 0.5;
+      await renderUntilUpdated();
+
+      expect(scene.primitives.length).toEqual(3);
+      expect(countTranslucentPrimitives()).toEqual(2);
+    });
+
+    it("when only the last color becomes translucent", async function () {
+      for (const updater of updaters) {
+        batch.add(time, updater);
+      }
+      await renderUntilUpdated();
+
+      colors[2].alpha = 0.5;
+      await renderUntilUpdated();
+
+      expect(scene.primitives.length).toEqual(3);
+      expect(countTranslucentPrimitives()).toEqual(1);
+    });
+
+    it("when all colors become opaque at the same time", async function () {
+      for (const color of colors) {
+        color.alpha = 0.5;
+      }
+      for (const updater of updaters) {
+        batch.add(time, updater);
+      }
+      await renderUntilUpdated();
+
+      for (const color of colors) {
+        color.alpha = 1.0;
+      }
+      await renderUntilUpdated();
+
+      expect(scene.primitives.length).toEqual(3);
+      expect(countTranslucentPrimitives()).toEqual(0);
+    });
+  });
 });

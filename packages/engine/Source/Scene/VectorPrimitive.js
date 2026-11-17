@@ -17,13 +17,12 @@ import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
  * Draws the primitives of a {@link BufferPrimitiveCollection} with a style
  * held by the vector primitive. Several vector primitives may draw the same
  * collection. Vector primitives are drawn when added to
- * {@link Scene#vectorPrimitives}.
+ * {@link Scene#primitives}.
  *
  * @abstract
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
- * @see CircleLayer
- * @see VectorPrimitiveCollection
+ * @see CircleVectorPrimitive
  */
 class VectorPrimitive {
   /**

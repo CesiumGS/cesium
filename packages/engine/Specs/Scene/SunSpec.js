@@ -35,7 +35,7 @@ describe(
       expect(scene).toRender(backgroundColor);
       scene.sun = new Sun();
       scene.sun.glowFactor = 100;
-      scene.render();
+      scene.renderForSpecs();
 
       viewSun(scene.camera, scene.context.uniformState);
       expect(scene).notToRender(backgroundColor);
@@ -45,7 +45,7 @@ describe(
       expect(scene).toRender(backgroundColor);
       scene.mode = SceneMode.COLUMBUS_VIEW;
       scene.sun = new Sun();
-      scene.render();
+      scene.renderForSpecs();
 
       viewSun(scene.camera, scene.context.uniformState);
       expect(scene).notToRender(backgroundColor);
@@ -54,7 +54,7 @@ describe(
     it("does not render when show is false", function () {
       expect(scene).toRender(backgroundColor);
       scene.sun = new Sun();
-      scene.render();
+      scene.renderForSpecs();
       scene.sun.show = false;
 
       viewSun(scene.camera, scene.context.uniformState);
@@ -65,7 +65,7 @@ describe(
       expect(scene).toRender(backgroundColor);
       scene.mode = SceneMode.SCENE2D;
       scene.sun = new Sun();
-      scene.render();
+      scene.renderForSpecs();
 
       viewSun(scene.camera, scene.context.uniformState);
       expect(scene).toRender(backgroundColor);
@@ -73,7 +73,7 @@ describe(
 
     it("does not render without a render pass", function () {
       scene.sun = new Sun();
-      scene.render();
+      scene.renderForSpecs();
 
       viewSun(scene.camera, scene.context.uniformState);
       scene.frameState.passes.render = false;

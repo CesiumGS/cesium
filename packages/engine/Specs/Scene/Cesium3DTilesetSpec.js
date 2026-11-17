@@ -272,6 +272,16 @@ describe(
       scene.camera.moveDown(200.0);
     }
 
+    // Looks at the center of the tileset from slightly south, so the two southern child tiles
+    // are closer to the camera than the two northern child tiles.
+    function viewFromSouth() {
+      const center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
+      scene.camera.lookAt(
+        center,
+        new HeadingPitchRange(0.0, CesiumMath.toRadians(-82.0), 21.0),
+      );
+    }
+
     function viewInstances() {
       setZoom(30.0);
     }
@@ -1854,10 +1864,7 @@ describe(
       viewRootOnly();
       scene.renderForSpecs();
 
-      await pollToPromise(() => {
-        scene.renderForSpecs();
-        return tileset.tilesLoaded;
-      });
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       //Make sure tileset2.json was requested with query parameters and does not use parent tilesetVersion
       expectedUrl = getAbsoluteUri(
         `Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset2.json?v=1.2.3&${queryParams}`,
@@ -3474,15 +3481,81 @@ describe(
       expect(statistics.numberOfCommands).toEqual(1);
       expect(statistics.numberOfTilesWithContentReady).toEqual(3);
 
-      // Zoom back in and attempt to render all tiles
-      viewAllTiles();
+      // Zoom back in so all four children are needed, but only two fit in memory
+      viewFromSouth();
 
       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       // Only 3 tiles should have been actually loaded
       expect(statistics.numberOfCommands).toEqual(3);
       expect(statistics.numberOfTilesWithContentReady).toEqual(3); // Three loaded tiles
       // SSE should have been adjusted higher
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+      expect(screenSpaceError).toBeGreaterThan(16);
+
+      // The raised SSE should not be lowered again in the same view
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toEqual(screenSpaceError);
+    });
+
+    // Loads a tileset where the tiles needed for the view don't all fit in memory,
+    // so its memoryAdjustedScreenSpaceError is raised.
+    async function loadTilesetOverMemoryLimit() {
+      viewFromSouth();
+      const tileset = await Cesium3DTilesTester.loadTileset(scene, tilesetUrl, {
+        cacheBytes: 0.025 * 1024 * 1024,
+        maximumCacheOverflowBytes: 0,
+      });
       expect(tileset.memoryAdjustedScreenSpaceError).toBeGreaterThan(16);
+      return tileset;
+    }
+
+    it("lowers the memory-adjusted SSE again when the camera moves", async function () {
+      const tileset = await loadTilesetOverMemoryLimit();
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+
+      scene.camera.moveRight(0.1);
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toBeLessThan(
+        screenSpaceError,
+      );
+    });
+
+    it("lowers the memory-adjusted SSE again when the model matrix changes", async function () {
+      const tileset = await loadTilesetOverMemoryLimit();
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+
+      tileset.modelMatrix = Matrix4.fromTranslation(
+        new Cartesian3(0.1, 0.0, 0.0),
+      );
+      // Model matrix changes are detected after tiles are processed, so the hold is
+      // released on the frame after the change.
+      scene.renderForSpecs();
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toBeLessThan(
+        screenSpaceError,
+      );
+    });
+
+    it("lowers the memory-adjusted SSE again when cacheBytes changes", async function () {
+      const tileset = await loadTilesetOverMemoryLimit();
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+
+      tileset.cacheBytes = 2 * tileset.cacheBytes;
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toBeLessThan(
+        screenSpaceError,
+      );
+    });
+
+    it("lowers the memory-adjusted SSE again when maximumCacheOverflowBytes changes", async function () {
+      const tileset = await loadTilesetOverMemoryLimit();
+      const screenSpaceError = tileset.memoryAdjustedScreenSpaceError;
+
+      tileset.maximumCacheOverflowBytes = 1024 * 1024;
+      scene.renderForSpecs();
+      expect(tileset.memoryAdjustedScreenSpaceError).toBeLessThan(
+        screenSpaceError,
+      );
     });
 
     it("Unloads cached tiles outside of the view frustum using cacheBytes", async function () {
@@ -4207,10 +4280,7 @@ describe(
       // After update the tile is expired
       scene.renderForSpecs();
 
-      await pollToPromise(() => {
-        scene.renderForSpecs();
-        return tileset.tilesLoaded;
-      });
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
 
       expect(failedSpy).toHaveBeenCalledWith(
         jasmine.objectContaining({
@@ -4240,11 +4310,7 @@ describe(
 
       expect(tile.contentExpired).toBe(true);
 
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return tile.contentReady;
-      });
-      scene.renderForSpecs();
+      await Cesium3DTilesTester.waitForTileContentReady(scene, tile);
       expect(tile._expiredContent).toBeUndefined();
       expect(tile.expireDate).toBeUndefined();
     });
@@ -4730,7 +4796,7 @@ describe(
         });
       await pollToPromise(function () {
         // Scene requires manual updates in the tests to move along the promise
-        scene.render();
+        scene.renderForSpecs();
         return completed;
       });
       return result;
@@ -4747,7 +4813,7 @@ describe(
         });
       await pollToPromise(function () {
         // Scene requires manual updates in the tests to move along the promise
-        scene.render();
+        scene.renderForSpecs();
         return completed;
       });
       return result;
