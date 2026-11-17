@@ -20,6 +20,33 @@
           & glTF 2.1
         </div>
       </div>
+      <div class="viewer-overlay legend" data-slide="river" hidden>
+        <div>ORD_FLOW <span class="dim">(1 = largest rivers)</span></div>
+        <div class="legend-bar">
+          <span style="background: navy"></span>
+          <span style="background: blue"></span>
+          <span style="background: dodgerblue"></span>
+          <span style="background: cyan"></span>
+          <span style="background: limegreen"></span>
+          <span style="background: yellow"></span>
+          <span style="background: gold"></span>
+          <span style="background: orange"></span>
+          <span style="background: orangered"></span>
+          <span style="background: red"></span>
+        </div>
+        <div class="legend-ticks"><span>1</span><span>10</span></div>
+      </div>
+      <div class="viewer-overlay attribution" data-slide="nativeVector" hidden>
+        Bridge crack dataset courtesy of Collins Engineers
+      </div>
+      <div class="viewer-overlay attribution" data-slide="voxels" hidden>
+        SEISGLOB2 from Stephanie Durand et al.
+        <div class="dim">
+          Durand S., E. Debayle, Y. Ricard, C. Zaroli, S. Lambotte (2017),
+          Confirmation of a change in the global shear velocity pattern at
+          around 1,000 km depth, Geophys. J. Int., 211(3), 1628-1639
+        </div>
+      </div>
     </div>
 
     <aside id="panel">
@@ -87,6 +114,7 @@
             --y20: 26;
             --w20: 29;
             --h20: 66;
+            --o20: 0;
           "
         >
           <div class="dg-title">glTF 2.0</div>
@@ -137,7 +165,7 @@
           "
         >
           <span>Transforms</span>
-          <code class="v20">TRS</code>
+          <code class="v20">translation · rotation · scale</code>
         </div>
         <div
           class="dg-item dg-chip moves"
@@ -153,7 +181,7 @@
           "
         >
           <span>Bounding volumes</span>
-          <code class="v20">shapes</code>
+          <code class="v20">boundingVolume · shapes</code>
         </div>
         <div
           class="dg-item dg-chip moves"
@@ -177,56 +205,41 @@
             --x11: 4.5;
             --y11: 22;
             --w11: 26.5;
-            --h11: 13;
+            --h11: 17;
             --x20: 4.5;
             --y20: 22;
             --w20: 26.5;
-            --h20: 13;
+            --h20: 17;
           "
         >
-          <span>Geometric error · refine</span>
+          <span>Geometric error<br />Refinement strategy</span>
           <code class="v20">3DTILES_tileset</code>
         </div>
         <div
           class="dg-item dg-chip stays"
           style="
             --x11: 4.5;
-            --y11: 39;
+            --y11: 43;
             --w11: 26.5;
             --h11: 13;
             --x20: 4.5;
-            --y20: 39;
+            --y20: 43;
             --w20: 26.5;
             --h20: 13;
           "
         >
-          <span>Region bounding volume</span>
+          <span>Geospatial positioning</span>
+          <code class="v20">EXT_georeference</code>
         </div>
         <div
           class="dg-item dg-chip stays"
           style="
             --x11: 4.5;
-            --y11: 56;
+            --y11: 60;
             --w11: 26.5;
             --h11: 13;
             --x20: 4.5;
-            --y20: 56;
-            --w20: 26.5;
-            --h20: 13;
-          "
-        >
-          <span>CRS</span>
-          <code class="v20">EXT_geospatial_crs</code>
-        </div>
-        <div
-          class="dg-item dg-chip stays"
-          style="
-            --x11: 4.5;
-            --y11: 73;
-            --w11: 26.5;
-            --h11: 13;
-            --x20: 4.5;
-            --y20: 73;
+            --y20: 60;
             --w20: 26.5;
             --h20: 13;
           "
@@ -241,10 +254,10 @@
             --y11: 52;
             --w11: 22;
             --h11: 9;
-            --x20: 67.5;
-            --y20: 42;
-            --w20: 24;
-            --h20: 9;
+            --x20: 66;
+            --y20: 30;
+            --w20: 27;
+            --h20: 12;
           "
         >
           <span>Geometry</span>
@@ -256,10 +269,10 @@
             --y11: 63;
             --w11: 22;
             --h11: 9;
-            --x20: 67.5;
-            --y20: 53;
-            --w20: 24;
-            --h20: 9;
+            --x20: 66;
+            --y20: 45;
+            --w20: 27;
+            --h20: 12;
           "
         >
           <span>Materials</span>
@@ -271,10 +284,10 @@
             --y11: 74;
             --w11: 22;
             --h11: 9;
-            --x20: 67.5;
-            --y20: 64;
-            --w20: 24;
-            --h20: 9;
+            --x20: 66;
+            --y20: 60;
+            --w20: 27;
+            --h20: 12;
           "
         >
           <span>Textures</span>
@@ -286,10 +299,10 @@
             --y11: 85;
             --w11: 22;
             --h11: 9;
-            --x20: 67.5;
+            --x20: 66;
             --y20: 75;
-            --w20: 24;
-            --h20: 9;
+            --w20: 27;
+            --h20: 12;
           "
         >
           <span>Metadata</span>
@@ -305,7 +318,7 @@
         </p>
         <p>Each tile is a glTF node:</p>
         <pre><code>"nodes": [{
-  "translation": [858886.5, -4815266.7, 4080020.0],
+  "translation": [858886, -4815267, 4080020],
   "rotation": [0.418, -0.058, 0.281, 0.862],
   "boundingVolume": { "shape": 0 },
   "externalAsset": 0,
@@ -321,7 +334,6 @@
   "box": { "size": [74.2, 68.4, 29.6] } }],
 "externalAssets": [{ "file": 0 }],
 "files": [{ "uri": "tiles/0/0/0/0.gltf" }]</code></pre>
-        <pre><code>Cesium3DTileset.fromGltf("root.tileset.gltf")</code></pre>
       </section>
 
       <section class="slide" id="agi" data-layout="demo" hidden>
@@ -330,128 +342,72 @@
           AGI HQ as an implicit octree. One root node describes the whole tree
           with URI templates and subtree availability files.
         </p>
-        <pre><code>"nodes": [{
-  "boundingVolume": { "shape": 0 },
-  "extensions": {
-    "3DTILES_tileset": {
-      "geometricError": 14.08,
-      "refine": "REPLACE"
-    },
-    "3DTILES_implicit_tiling": {
-      "subdivisionScheme": "OCTREE",
-      "availableLevels": 6,
-      "subtreeLevels": 5,
-      "contentUri":
-        "tiles/{level}/{right}/{forward}/{up}.gltf",
-      "subtreeUri":
-        "subtrees/{level}/{right}/{forward}/{up}.subtree.glb"
-    }
-  }
-}]</code></pre>
+        <pre><code>"3DTILES_implicit_tiling": {
+  "subdivisionScheme": "OCTREE",
+  "availableLevels": 6,
+  "subtreeLevels": 5,
+  "contentUri":
+    "tiles/<wbr />{level}/<wbr />{right}/<wbr />{forward}/<wbr />{up}.gltf",
+  "subtreeUri":
+    "subtrees/<wbr />{level}/<wbr />{right}/<wbr />{forward}/<wbr />{up}.subtree.glb"
+}</code></pre>
       </section>
 
-      <section class="slide" id="georeference" data-layout="text" hidden>
-        <h1>Positioning with <code>EXT_georeference</code></h1>
-        <div class="columns">
-          <div>
-            <p>
-              The extension declares the coordinate reference system of the node
-              hierarchy. With ECEF (EPSG:4978), the root node's transform places
-              the model on the globe directly.
-            </p>
-            <p>No application-supplied model matrix is needed.</p>
-            <pre><code>"extensions": {
-  "EXT_geospatial_crs": {
-    "format": "wkid",
-    "extensions": {
-      "EXT_geospatial_crs_wkid": {
-        "authority": "EPSG",
-        "wkid": 4978
-      }
+      <section class="slide" id="georeference" data-layout="demo" hidden>
+        <h2>Positioning with <code>EXT_georeference</code></h2>
+        <p>
+          Longitude, latitude and height, with local axes aligned to east, up
+          and north. Simpler than a 3D Tiles 1.1 transform matrix, and available
+          to any glTF.
+        </p>
+        <pre><code>"nodes": [{
+  "mesh": 0,
+  "rotation": [0, -0.173648, 0, 0.984807],
+  "extensions": {
+    "EXT_georeference": {
+      "longitude": -75.158364,
+      "latitude": 39.950907,
+      "height": -21.67
     }
   }
-},
-"nodes": [{
-  "translation": [
-    3687499.6, 3687499.6, 3659924.7
-  ],
-  "rotation": [
-    0.176, 0.425, 0.820, 0.340
-  ],
-  ...
 }]</code></pre>
-          </div>
-          <figure class="slide-image">
-            <img src="images/georeference.png" alt="Georeferenced model" />
-          </figure>
-        </div>
+        <p class="note">Model and axes are not to scale.</p>
       </section>
 
       <section class="slide" id="river" data-layout="demo" hidden>
+        <p class="tag">New in 3D Tiles 2.0</p>
         <h2>Extending glTF with <code>3DTILES_tileset_vectors</code></h2>
         <p>
-          HydroRIVERS network streamed as vector tiles and draped on terrain.
-          Lines are styled by the <code>ORD_FLOW</code> property.
+          HydroRIVERS streamed as vector tiles, draped on terrain and styled by
+          the <code>ORD_FLOW</code> property.
         </p>
-        <pre><code>Cesium3DTileset.fromIonAssetId(5135960, {
-  heightReference:
-    HeightReference.CLAMP_TO_TERRAIN,
-  scene,
-});
+        <pre><code>const rivers = await Cesium3DTileset
+  .fromIonAssetId(5135960, {
+    heightReference:
+      HeightReference.CLAMP_TO_TERRAIN,
+    scene,
+  });
 
-tileset.style = new Cesium3DTileStyle({
+rivers.style = new Cesium3DTileStyle({
   color: { conditions: [
-    ["Number(${ORD_FLOW}) &lt;= 1", "color('navy')"],
+    ["Number(${ORD_FLOW}) &lt;= 1",
+      "color('navy')"],
     ...
   ]},
-  lineWidth:
-    "5.0 - clamp(Number(${ORD_FLOW}), 0.0, 10.0) * 0.4",
 });</code></pre>
-        <div class="legend">
-          <div class="legend-title">ORD_FLOW (smaller = bigger river)</div>
-          <div class="legend-row">
-            <span style="background: navy; height: 6px"></span>1
-          </div>
-          <div class="legend-row">
-            <span style="background: blue; height: 5.6px"></span>2
-          </div>
-          <div class="legend-row">
-            <span style="background: dodgerblue; height: 5.2px"></span>3
-          </div>
-          <div class="legend-row">
-            <span style="background: cyan; height: 4.8px"></span>4
-          </div>
-          <div class="legend-row">
-            <span style="background: limegreen; height: 4.4px"></span>5
-          </div>
-          <div class="legend-row">
-            <span style="background: yellow; height: 4px"></span>6
-          </div>
-          <div class="legend-row">
-            <span style="background: gold; height: 3.6px"></span>7
-          </div>
-          <div class="legend-row">
-            <span style="background: orange; height: 3.2px"></span>8
-          </div>
-          <div class="legend-row">
-            <span style="background: orangered; height: 2.8px"></span>9
-          </div>
-          <div class="legend-row">
-            <span style="background: red; height: 2.4px"></span>10
-          </div>
-        </div>
       </section>
 
       <section class="slide" id="nativeVector" data-layout="demo" hidden>
+        <p class="tag">New in 3D Tiles 2.0</p>
         <h2>True 3D vector data</h2>
         <p>
           <code>3DTILES_tileset_vectors</code> carries full 3D positions, so
           lines are placed in space rather than draped on terrain.
         </p>
-        <pre><code>const mesh =
-  await Cesium3DTileset.fromIonAssetId(5135767);
-const vectors =
-  await Cesium3DTileset.fromIonAssetId(5135764);
+        <pre><code>const mesh = await Cesium3DTileset
+  .fromIonAssetId(5135767);
+const vectors = await Cesium3DTileset
+  .fromIonAssetId(5135764);
 
 vectors.style = new Cesium3DTileStyle({
   color: "color('cyan')",
@@ -460,11 +416,11 @@ vectors.style = new Cesium3DTileStyle({
       </section>
 
       <section class="slide" id="voxels" data-layout="demo" hidden>
+        <p class="tag">New in 3D Tiles 2.0</p>
         <h2>Voxels with <code>EXT_voxels</code></h2>
         <p>
-          A volumetric dataset rendered with a custom shader on the
-          <code>dvs</code> metadata property. The globe is translucent and
-          clipped so the volume is visible below the surface.
+          Mantle velocity anomalies inverted from earthquake data, colored by a
+          custom shader on the <code>dvs</code> property.
         </p>
         <div class="controls">
           <label>

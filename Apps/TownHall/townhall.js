@@ -62,8 +62,12 @@ function loadOnce(key, factory) {
   return resourceCache.get(key);
 }
 
+// Primitives added by slides. Only these are hidden between slides, so
+// primitives owned by the Viewer (e.g. entity display) are left alone.
+const slidePrimitives = new Set();
 function addHidden(primitive) {
   primitive.show = false;
+  slidePrimitives.add(primitive);
   return scene.primitives.add(primitive);
 }
 
@@ -234,13 +238,13 @@ function loadRiver() {
 
 async function showRiver(context) {
   camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(86.859391, 26.907291, 73151.49),
+    destination: Cesium.Cartesian3.fromDegrees(-96.0, 25.0, 1.4e6),
     orientation: {
-      heading: Cesium.Math.toRadians(359.93),
+      heading: 0.0,
       pitch: Cesium.Math.toRadians(-38.55),
       roll: 0.0,
     },
-    duration: 2.0,
+    duration: 0.0,
   });
   const [terrain, tileset] = await Promise.all([
     loadWorldTerrain(),
@@ -416,6 +420,151 @@ async function showVoxels(context) {
   applyVoxelClipping();
 }
 
+// EXT_georeference: a model, its bounding box, and the local east-north-up
+// axes at the georeferenced location. Exaggerated in size so it reads at
+// globe scale.
+
+const georeferenceScale = 80000.0;
+// Cesium_Air main mesh bounds in glTF coordinates (x right, y up, z forward)
+const airMin = new Cesium.Cartesian3(-12.868, -2.296, -13.397);
+const airMax = new Cesium.Cartesian3(12.868, 5.464, 8.005);
+
+function loadGeoreference() {
+  return loadOnce("georeference", async function () {
+    const dataSource = new Cesium.CustomDataSource("georeference");
+    dataSource.show = false;
+    await viewer.dataSources.add(dataSource);
+
+    // Lift the origin so the exaggerated model rests on the surface.
+    const position = Cesium.Cartesian3.fromDegrees(
+      -75.15836368768382,
+      39.95090650840344,
+      -airMin.y * georeferenceScale,
+    );
+    // EXT_georeference puts glTF +z north. Cesium orients glTF +z east at
+    // heading 0, so turn by -90 degrees, then apply the node's 20 degree
+    // heading from the spec example.
+    const hpr = new Cesium.HeadingPitchRoll(
+      Cesium.Math.toRadians(-90.0 + 20.0),
+      0.0,
+      0.0,
+    );
+    const orientation = Cesium.Transforms.headingPitchRollQuaternion(
+      position,
+      hpr,
+    );
+    dataSource.entities.add({
+      position: position,
+      orientation: orientation,
+      model: {
+        uri: "../SampleData/models/CesiumAir/Cesium_Air.glb",
+        scale: georeferenceScale,
+      },
+    });
+
+    // In the entity's frame glTF (x, y, z) maps to (y, z, x).
+    const center = Cesium.Cartesian3.midpoint(
+      airMin,
+      airMax,
+      new Cesium.Cartesian3(),
+    );
+    const size = Cesium.Cartesian3.subtract(
+      airMax,
+      airMin,
+      new Cesium.Cartesian3(),
+    );
+    const modelFrame = Cesium.Transforms.headingPitchRollToFixedFrame(
+      position,
+      hpr,
+    );
+    const boxCenter = Cesium.Matrix4.multiplyByPoint(
+      modelFrame,
+      Cesium.Cartesian3.multiplyByScalar(
+        new Cesium.Cartesian3(center.z, center.x, center.y),
+        georeferenceScale,
+        new Cesium.Cartesian3(),
+      ),
+      new Cesium.Cartesian3(),
+    );
+    dataSource.entities.add({
+      position: boxCenter,
+      orientation: orientation,
+      box: {
+        dimensions: Cesium.Cartesian3.multiplyByScalar(
+          new Cesium.Cartesian3(size.z, size.x, size.y),
+          georeferenceScale,
+          new Cesium.Cartesian3(),
+        ),
+        fill: false,
+        outline: true,
+        outlineColor: Cesium.Color.WHITE,
+      },
+    });
+
+    const enu = Cesium.Transforms.eastNorthUpToFixedFrame(position);
+    const axisLength = 2.4e6;
+    const axes = [
+      { column: 0, color: Cesium.Color.RED, text: "East (−x)" },
+      { column: 1, color: Cesium.Color.LIME, text: "North (+z)" },
+      { column: 2, color: Cesium.Color.DODGERBLUE, text: "Up (+y)" },
+    ];
+    for (const axis of axes) {
+      const direction = Cesium.Matrix4.getColumn(
+        enu,
+        axis.column,
+        new Cesium.Cartesian4(),
+      );
+      const end = Cesium.Cartesian3.add(
+        position,
+        Cesium.Cartesian3.multiplyByScalar(
+          Cesium.Cartesian3.fromCartesian4(direction),
+          axisLength,
+          new Cesium.Cartesian3(),
+        ),
+        new Cesium.Cartesian3(),
+      );
+      const material = new Cesium.PolylineArrowMaterialProperty(axis.color);
+      dataSource.entities.add({
+        polyline: {
+          positions: [position, end],
+          width: 12,
+          arcType: Cesium.ArcType.NONE,
+          material: material,
+          depthFailMaterial: material,
+        },
+      });
+      dataSource.entities.add({
+        position: end,
+        label: {
+          text: axis.text,
+          font: "bold 22px system-ui, sans-serif",
+          fillColor: axis.color,
+          outlineColor: Cesium.Color.BLACK,
+          outlineWidth: 4,
+          style: Cesium.LabelStyle.FILL_AND_OUTLINE,
+          pixelOffset: new Cesium.Cartesian2(0, -18),
+          disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+      });
+    }
+    return dataSource;
+  });
+}
+
+async function showGeoreference(context) {
+  setTerrain(ellipsoidTerrain);
+  naturalEarth.show = true;
+  camera.flyTo({
+    destination: Cesium.Cartesian3.fromDegrees(-88.0, 27.0, 9.5e6),
+    duration: 2.0,
+  });
+  const dataSource = await loadGeoreference();
+  if (!context.isActive()) {
+    return;
+  }
+  dataSource.show = true;
+}
+
 // Slide engine
 
 const slideDemos = {
@@ -423,7 +572,7 @@ const slideDemos = {
   spec: showGlobeBackdrop,
   snowden: showSnowden,
   agi: showAgi,
-  georeference: showGlobeBackdrop,
+  georeference: showGeoreference,
   river: showRiver,
   nativeVector: showNativeVector,
   voxels: showVoxels,
@@ -434,6 +583,7 @@ const sections = Array.from(panel.querySelectorAll(".slide"));
 const counter = document.getElementById("counter");
 const status = document.getElementById("status");
 const diagram = document.getElementById("diagram");
+const viewerOverlays = document.querySelectorAll(".viewer-overlay");
 
 function setStatus(message, isError) {
   status.hidden = !Cesium.defined(message);
@@ -444,8 +594,11 @@ function setStatus(message, isError) {
 function resetScene() {
   spinning = false;
   camera.cancelFlight();
-  for (let i = 0; i < scene.primitives.length; i++) {
-    scene.primitives.get(i).show = false;
+  for (const primitive of slidePrimitives) {
+    primitive.show = false;
+  }
+  for (let i = 0; i < viewer.dataSources.length; i++) {
+    viewer.dataSources.get(i).show = false;
   }
   activeVoxelPrimitive = undefined;
   splitUi.hidden = true;
@@ -486,6 +639,9 @@ async function showSlide(index) {
   }
   counter.textContent = `${index + 1} / ${sections.length}`;
   panel.scrollTop = 0;
+  for (const overlay of viewerOverlays) {
+    overlay.hidden = overlay.dataset.slide !== section.id;
+  }
 
   resetScene();
   setStatus("Loading…");

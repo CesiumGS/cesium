@@ -1,5 +1,8 @@
+/* Everything is sized in rem, and rem scales with the window height, so the
+   deck looks the same at any 16:9 resolution (18px at 1080 tall). */
 :root {
-  --panel-width: 34vw;
+  font-size: 1.6667vh;
+  --panel-width: 38vw;
   --transition: 0.6s ease;
   color-scheme: dark;
 }
@@ -12,7 +15,7 @@ body {
   background: #0b0e14;
   color: #e8eaf0;
   font:
-    20px/1.45 system-ui,
+    1.1rem/1.45 system-ui,
     sans-serif;
 }
 
@@ -40,6 +43,7 @@ body {
   box-sizing: border-box;
   padding: 2rem 2rem 4.5rem;
   overflow-y: auto;
+  font-size: 1.65rem;
   background-color: #141925;
   border-left: 1px solid #2a3142;
   transition:
@@ -55,14 +59,12 @@ body[data-layout="text"] #viewer {
 
 body[data-layout="text"] #panel {
   width: 100%;
-  padding: 7vh 10vw 5rem;
+  padding: 5vh 4vw 4rem;
   background-color: transparent;
   border-left-color: transparent;
 }
 
 body[data-layout="text"] .slide {
-  max-width: 1200px;
-  margin: 0 auto;
   font-size: 1.3rem;
 }
 
@@ -71,8 +73,10 @@ h1 {
   margin: 0 0 0.5rem;
 }
 
+/* Demo panel text is in em, relative to the panel's font size. */
+
 h2 {
-  font-size: 1.5rem;
+  font-size: 1.4em;
   margin: 0 0 0.75rem;
 }
 
@@ -84,6 +88,7 @@ h2 {
 
 code {
   font-family: ui-monospace, "Cascadia Code", Menlo, monospace;
+  font-variant-ligatures: none;
   color: #8fd3ff;
 }
 
@@ -93,7 +98,8 @@ pre {
   border-radius: 6px;
   padding: 0.75rem 1rem;
   overflow-x: auto;
-  font-size: 0.7rem;
+  white-space: pre-wrap;
+  font-size: 0.75em;
   line-height: 1.4;
 }
 
@@ -112,10 +118,9 @@ pre code {
   position: relative;
   /* Text scales with height, but never past what a 16:9 diagram of the
      same width would allow, so wide chips can't overflow. */
-  --u: min(1cqh, 0.5625cqw);
-  width: min(100%, 1200px);
-  height: calc(100vh - 16rem);
-  margin: 0 auto;
+  --u: min(1cqh, 0.5cqw);
+  width: 100%;
+  height: calc(100vh - 17.5rem);
   container-type: size;
 }
 
@@ -224,7 +229,8 @@ pre code {
   display: block;
   max-height: 0;
   overflow: hidden;
-  font-size: calc(var(--u) * 3.1);
+  white-space: nowrap;
+  font-size: calc(var(--u) * 2.9);
   transition-property: max-height, opacity;
   transition-duration: 0.5s;
 }
@@ -237,23 +243,6 @@ pre code {
   border-color: var(--gltf21);
   background-color: #4a2a5e;
   color: #ffffff;
-}
-
-/* On the 2.0 slide glTF 2.0 is background detail, so glTF 2.1 stands out. */
-
-#diagram[data-state="v20"] .dg-box.gltf20 {
-  border-color: rgba(124, 198, 90, 0.4);
-  background-color: rgba(24, 30, 26, 0.85);
-}
-
-#diagram[data-state="v20"] .gltf20 .dg-title {
-  color: #8fa587;
-}
-
-#diagram[data-state="v20"] .dg-chip.asset {
-  border-color: rgba(124, 198, 90, 0.35);
-  background-color: #1d231e;
-  color: #a9b5a6;
 }
 
 .dg-arrow {
@@ -325,54 +314,68 @@ pre code {
   transition-delay: 1.9s;
 }
 
-.columns {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, calc(100vh - 12rem));
-  gap: 2rem;
-  align-items: start;
+/* Overlays on the Viewer, shown only on their slide. */
+
+.viewer-overlay {
+  position: absolute;
+  left: 1rem;
+  z-index: 5;
+  padding: 0.6rem 0.9rem;
+  border-radius: 6px;
+  background: rgba(11, 14, 20, 0.75);
+  font-size: 1.3rem;
 }
 
-.slide-image {
-  margin: 0;
-}
-
-.slide-image img {
-  display: block;
-  width: min(100%, calc(100vh - 12rem));
-  height: auto;
-  margin: 0 auto;
-  border-radius: 8px;
+.viewer-overlay .dim {
+  color: #9aa3b5;
+  font-size: 0.85em;
 }
 
 .legend {
-  font-size: 0.75rem;
+  top: 1rem;
 }
 
-.legend-title {
-  font-weight: bold;
-  margin-bottom: 0.3rem;
-}
-
-.legend-row {
+.legend-bar {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  margin-top: 0.4rem;
 }
 
-.legend-row span {
+.legend-bar span {
+  width: 2.2rem;
+  height: 0.8rem;
+}
+
+.legend-ticks {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85em;
+}
+
+/* Above the Cesium credits at the bottom of the Viewer. */
+.attribution {
+  bottom: 2.5rem;
+  max-width: 60%;
+}
+
+.tag {
   display: inline-block;
-  width: 28px;
+  margin: 0 0 0.6em;
+  padding: 0.15em 0.6em;
+  border-radius: 999px;
+  background: rgba(217, 140, 245, 0.2);
+  color: #f3d6ff;
+  font-size: 0.8em;
 }
 
 .controls {
   display: grid;
-  gap: 0.5rem;
-  font-size: 0.85rem;
+  gap: 0.5em;
+  font-size: 0.85em;
 }
 
 .controls label {
   display: grid;
-  grid-template-columns: 8rem 1fr 3rem;
+  grid-template-columns: 8em 1fr 3em;
   align-items: center;
   gap: 0.5rem;
 }
@@ -382,7 +385,10 @@ pre code {
 }
 
 #status {
-  margin-top: 1rem;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 20;
   padding: 0.5rem 0.75rem;
   border-radius: 4px;
   background: #2a3142;
@@ -438,10 +444,10 @@ pre code {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  padding: 8px;
+  padding: 0.5rem;
   border-radius: 4px;
   background: rgba(42, 42, 42, 0.8);
-  font-size: large;
+  font-size: 1.1rem;
   font-weight: bold;
   text-align: center;
 }
@@ -452,4 +458,9 @@ pre code {
 
 .split-label.right {
   right: 0;
+}
+
+.note {
+  font-size: 0.75em;
+  color: #8d97ad;
 }
