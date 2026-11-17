@@ -2,9 +2,10 @@
 id: CS-101
 title: "The protocol table: every public member classified, checked against `api/surface.txt`"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-13
+claimed_by: D-13
 touches: [packages/next/src/thread/protocol.ts, packages/next/scripts/surface.mjs, packages/next/test/threadProtocol.test.ts, packages/next/api/surface.txt]
 ---
 
