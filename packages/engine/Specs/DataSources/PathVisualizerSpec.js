@@ -1687,6 +1687,56 @@ describe(
       expect(pathPolyline.positions.length).toBeGreaterThan(1);
     });
 
+    it("updates segment polyline positions when the window moves in PORTIONS materialMode", function () {
+      const times = [
+        JulianDate.fromIso8601("2026-04-01T00:00:00Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:10Z"),
+        JulianDate.fromIso8601("2026-04-01T00:00:20Z"),
+      ];
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      position.addSamples(times, [
+        new Cartesian3(1234, 5678, 9101112),
+        new Cartesian3(5678, 1234, 1101112),
+        new Cartesian3(6789, 2345, 2101112),
+      ]);
+      testObject.position = position;
+
+      const path = (testObject.path = new PathGraphics());
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.leadTime = new ConstantProperty(5);
+      path.trailTime = new ConstantProperty(5);
+      const material = new CompositeMaterialProperty();
+      material.intervals.addInterval(
+        TimeInterval.fromIso8601({
+          iso8601: "2026-04-01T00:00:00Z/2026-04-01T00:00:20Z",
+          data: new ColorMaterialProperty(Color.RED),
+        }),
+      );
+      path.material = material;
+
+      visualizer.update(JulianDate.fromIso8601("2026-04-01T00:00:06Z"));
+
+      const secondTime = JulianDate.fromIso8601("2026-04-01T00:00:12Z");
+      visualizer.update(secondTime);
+      const shownPolylines = getShownPolylines(scene);
+      expect(shownPolylines.length).toEqual(1);
+      const positions = shownPolylines[0].positions;
+      expect(positions[0]).toEqual(
+        position.getValue(
+          JulianDate.addSeconds(secondTime, -5, new JulianDate()),
+        ),
+      );
+      expect(positions[positions.length - 1]).toEqual(
+        position.getValue(
+          JulianDate.addSeconds(secondTime, 5, new JulianDate()),
+        ),
+      );
+    });
+
     it("shows no visible segments during uncovered material intervals", function () {
       const times = [
         JulianDate.fromIso8601("2026-04-01T00:00:00Z"),

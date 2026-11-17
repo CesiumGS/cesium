@@ -40,6 +40,7 @@ const update3DCartesian3Scratch3 = new Cartesian3();
 const transformOrientationScratch = new Quaternion();
 const transformVvlhScratch = new Matrix4();
 const transformRotationScratch = new Matrix3();
+const vvlhDeltaTimeScratch = new JulianDate();
 
 /**
  * Transforms a path entity's position into the local frame of the reference entity.
@@ -114,7 +115,7 @@ function computeVvlhTransform(time, positionProperty, result) {
   if (defined(cartesian)) {
     // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
     // Slower moving vehicles will most likely default to east-north-up, while faster ones will be LVLH.
-    const deltaTime = JulianDate.addSeconds(time, 0.01, new JulianDate());
+    const deltaTime = JulianDate.addSeconds(time, 0.01, vvlhDeltaTimeScratch);
     const deltaCartesian = positionProperty.getValue(
       deltaTime,
       update3DCartesian3Scratch1,
@@ -224,6 +225,9 @@ function EntityData(entity) {
 }
 
 const sampleScratch = new Cartesian3();
+const sampleStepTimeScratch = new JulianDate();
+const callbackStepTimeScratch = new JulianDate();
+const genericStepTimeScratch = new JulianDate();
 function subSampleSampledProperty(
   property,
   start,
@@ -365,10 +369,12 @@ function subSampleSampledProperty(
       }
 
       if (sampling && sampleStepsTaken < sampleStepsToTake) {
+        // current is either an entry in times, which must not be modified,
+        // or this scratch from the previous step.
         current = JulianDate.addSeconds(
           current,
           sampleStepSize,
-          new JulianDate(),
+          sampleStepTimeScratch,
         );
         sampleStepsTaken++;
         continue;
@@ -443,7 +449,11 @@ function subSampleCallbackPositionProperty(
       index++;
     }
     i++;
-    time = JulianDate.addSeconds(start, maximumStep * i, new JulianDate());
+    time = JulianDate.addSeconds(
+      start,
+      maximumStep * i,
+      callbackStepTimeScratch,
+    );
   }
   //Always sample stop.
   tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -496,7 +506,7 @@ function subSampleGenericProperty(
       index++;
     }
     i++;
-    time = JulianDate.addSeconds(start, stepSize * i, new JulianDate());
+    time = JulianDate.addSeconds(start, stepSize * i, genericStepTimeScratch);
   }
   //Always sample stop.
   tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
@@ -755,6 +765,9 @@ const updateRotationScratch = new Matrix3();
 const portionsVisibleIntervalScratch = new TimeInterval();
 const portionsSegmentIntervalScratch = new TimeInterval();
 const portionsDynamicIntervalScratch = new TimeInterval();
+const splitMidTimeScratch = new JulianDate();
+const sampleStartScratch = new JulianDate();
+const sampleStopScratch = new JulianDate();
 
 function getDynamicMaterialProperties(materialData) {
   const dynamic = [];
@@ -815,10 +828,11 @@ function emitSegmentsForSplitTimes(
     const splitMidTime = JulianDate.addSeconds(
       splitStart,
       JulianDate.secondsDifference(splitStop, splitStart) / 2,
-      new JulianDate(),
+      splitMidTimeScratch,
     );
 
-    // Subsample positions
+    // Subsample positions, reusing this segment polyline's Cartesian3 instances if it exists
+    let segPolyline = item.segmentPolylines[segIndex];
     const subPositions = subSample(
       positionProperty,
       splitStart,
@@ -826,14 +840,13 @@ function emitSegmentsForSplitTimes(
       time,
       referenceFrame,
       resolution,
-      [],
+      defined(segPolyline) ? segPolyline.positions.slice() : [],
     );
     if (subPositions.length < 2) {
       continue;
     }
 
     // Get or create a polyline for this segment
-    let segPolyline = item.segmentPolylines[segIndex];
     if (!defined(segPolyline)) {
       segPolyline = polylineCollection.add();
       segPolyline.id = entity;
@@ -944,10 +957,14 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     //we won't have to draw anything anyway.
     if (show) {
       if (hasTrailTime) {
-        sampleStart = JulianDate.addSeconds(time, -trailTime, new JulianDate());
+        sampleStart = JulianDate.addSeconds(
+          time,
+          -trailTime,
+          sampleStartScratch,
+        );
       }
       if (hasLeadTime) {
-        sampleStop = JulianDate.addSeconds(time, leadTime, new JulianDate());
+        sampleStop = JulianDate.addSeconds(time, leadTime, sampleStopScratch);
       }
 
       if (hasAvailability) {
