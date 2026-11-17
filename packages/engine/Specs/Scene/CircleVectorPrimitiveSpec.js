@@ -180,6 +180,27 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
+    it("draws a later translucent primitive over an earlier one without OIT", function () {
+      const sceneWithoutOIT = createScene({
+        orderIndependentTranslucency: false,
+      });
+      sceneWithoutOIT.camera.position = new Cartesian3(10.0, 0.0, 0.0);
+      sceneWithoutOIT.camera.direction = new Cartesian3(-1.0, 0.0, 0.0);
+      sceneWithoutOIT.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+
+      collection.add({ position: Cartesian3.ZERO }, new BufferPoint());
+      sceneWithoutOIT.primitives.add(
+        new CircleVectorPrimitive({ collection, color: Color.RED }),
+      );
+      sceneWithoutOIT.primitives.add(
+        new CircleVectorPrimitive({ collection, color: Color.LIME }),
+      );
+
+      expect(sceneWithoutOIT).toRender([0, 255, 0, 255]);
+
+      sceneWithoutOIT.destroyForSpecs();
+    });
+
     it("renders a collection after another primitive is destroyed", function () {
       collection.add({ position }, new BufferPoint());
 
