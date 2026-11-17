@@ -25,6 +25,8 @@ import defer from "../Core/defer.js";
 /**
  * A compile time flag for excessive logging, as long as there is
  * active development and testing.
+ *
+ * @private
  */
 const CONDITIONAL_CONTENT_LOGGING = false;
 
@@ -246,6 +248,8 @@ class LRUCache {
  * more extensively, but their structure, the point where they
  * are called, and their purpose had to be reverse engineered
  * from the existing Request/Resource/RequestScheduler classes.
+ *
+ * @private
  */
 class RequestListener {
   /**
@@ -341,6 +345,8 @@ class LoggingRequestListener extends RequestListener {
 /**
  * A class serving as a convenience wrapper around a request for
  * a resource.
+ *
+ * @private
  */
 class RequestHandle {
   /**
@@ -637,6 +643,8 @@ class RequestHandle {
  * more extensively. But their structure and calling patterns
  * had to be reverse engineered from existing Cesium3DTIleContent
  * implementations.
+ *
+ * @private
  */
 class ContentListener {
   /**
@@ -1208,6 +1216,8 @@ class ContentHandle {
  * AND ADD the values from the inner contents. But if, at any point in time,
  * the implementation of the composite- and multiple content are fixed by
  * computing this sum on their own, such an implementation would break.
+ *
+ * @private
  */
 const CONDITIONAL_CONTENT_AGGREGATE_LOADED_VALUES = true;
 
@@ -1221,6 +1231,8 @@ const CONDITIONAL_CONTENT_AGGREGATE_LOADED_VALUES = true;
  *
  * getters instead, meaning that it aggregates the values for the
  * contents that are "rendered" ("active");
+ *
+ * @private
  */
 const CONDITIONAL_CONTENT_AGGREGATE_RENDERED_VALUES = false;
 
