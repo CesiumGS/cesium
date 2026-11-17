@@ -13,6 +13,8 @@ import type { ContentSummary } from "./pipeline.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
 import type { RequestPurpose } from "./Stepwise.ts";
 import type { DrawnCache } from "./tileWarp.ts";
+import { Ellipsoid } from "../math/ellipsoid.ts";
+import { TilesetBodyError, tilesetBody } from "./tilesetBody.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
@@ -98,6 +100,18 @@ export interface TileViewState {
   /** `Budgeted` coarsened it because it stayed hidden: shown again, it may not coarsen so again before `coarsenAfter` (ms). */
   coarsenedHidden: boolean;
   coarsenAfter: number;
+}
+
+/**
+ * The JSON path of the tile being built under `parent` (still adding its
+ * children, so its index is their count): "root" for a root.
+ */
+function tilePath(parent: Tile | undefined): string {
+  let path = parent ? `.children[${parent.children.length}]` : "";
+  for (let t = parent; t?.parent !== undefined; t = t.parent) {
+    path = `.children[${t.parent.children.length}]${path}`;
+  }
+  return `root${path}`;
 }
 
 /** A scheme or a protocol-relative URI: not relative to its base's origin. */
@@ -305,6 +319,20 @@ export class Tile {
     if (!bv?.box && !bv?.region && !bv?.sphere) {
       throw new Error("tile has no supported bounding volume");
     }
+    if (tileset.bodyless) {
+      for (const [what, volume] of [
+        ["boundingVolume", bv],
+        ["content.boundingVolume", json.content?.boundingVolume],
+        ["viewerRequestVolume", json.viewerRequestVolume],
+      ] as const) {
+        if (volume?.region) {
+          throw new TilesetBodyError(
+            `${tilePath(parent)}.${what}.region`,
+            'is a region, which needs a body, but the tileset has none (3DTILES_ellipsoid body "none")',
+          );
+        }
+      }
+    }
     this.volumeJson = bv;
     // 3D Tiles 1.1's `contents`, or 1.0's extension of it (earlier drafts
     // named its list `content`).
@@ -377,7 +405,7 @@ export class Tile {
   /** The volume as written, whatever the items do. */
   get ownVolume(): TileVolume {
     return (this.builtVolume ??= compactVolume(
-      volumeFromJson(this.volumeJson, this.transform)!,
+      volumeFromJson(this.volumeJson, this.transform, this.tileset.ellipsoid)!,
     ));
   }
 
@@ -404,6 +432,7 @@ export class Tile {
       this.builtContentVolume = volumeFromJson(
         this.contentVolumeJson,
         this.transform,
+        this.tileset.ellipsoid,
       );
       this.contentVolumeJson = undefined;
     }
@@ -436,6 +465,7 @@ export class Tile {
       this.builtRequestVolume = volumeFromJson(
         this.requestVolumeJson,
         this.transform,
+        this.tileset.ellipsoid,
       );
       this.requestVolumeJson = undefined;
     }
@@ -577,6 +607,16 @@ export class Tile {
 /** Shared by all tiles of one tileset (and its external tilesets). */
 export interface TileTree {
   readonly warnings: Set<string>;
+  /**
+   * The ellipsoid region volumes are on (the content's body's); WGS 84
+   * without it.
+   */
+  readonly ellipsoid?: Ellipsoid;
+  /**
+   * The tileset has no body (`3DTILES_ellipsoid` `body: "none"`): a tile with
+   * a region volume is refused (`TilesetBodyError`).
+   */
+  readonly bodyless?: boolean;
   /** Implicit trees (terrain) report tiles they create as they grow. */
   tilesAdded?(count: number): void;
   /** A tile that draws nothing, and why; counted with the others. */
@@ -739,6 +779,23 @@ export function treeFromJson(
   const up = json.asset?.gltfUpAxis;
   if (up && !["X", "Y", "Z"].includes(up.toUpperCase())) {
     tree.warnings.add(`gltfUpAxis ${up} is not an axis (treated as Y)`);
+  }
+  if (parent !== undefined) {
+    // An external tileset is on its parent's body; a declaration that
+    // disagrees (or can't be read) is ignored, once.
+    const ours = tree.bodyless ? null : (tree.ellipsoid ?? Ellipsoid.WGS84);
+    try {
+      const body = tilesetBody(json.extensions);
+      if (body !== undefined && (body?.ellipsoid ?? null) !== ours) {
+        tree.warnings.add(
+          "external tileset's 3DTILES_ellipsoid names another body than its parent's: ignored, it is on its parent's body",
+        );
+      }
+    } catch (error) {
+      tree.warnings.add(
+        `external tileset's 3DTILES_ellipsoid ignored (${(error as Error).message}); it is on its parent's body`,
+      );
+    }
   }
   for (const name of json.extensionsRequired ?? []) {
     if (!READ_TILESET_EXTENSIONS.has(name)) {

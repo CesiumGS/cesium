@@ -48,6 +48,8 @@ export class DebugVolumes {
   constructor(
     private readonly world: DrawSink,
     private readonly parent: TransformHandle,
+    /** The ellipsoid region outlines follow (WGS 84 by default). */
+    private readonly ellipsoid: Ellipsoid = Ellipsoid.WGS84,
   ) {}
 
   /** Draws exactly these tiles' volumes, in these colors. */
@@ -79,7 +81,7 @@ export class DebugVolumes {
   }
 
   private add(volume: TileVolume, color: DebugColor): Shown {
-    const { center, positions, indices } = volumeLines(volume);
+    const { center, positions, indices } = volumeLines(volume, this.ellipsoid);
     const mesh = this.world.addMesh({
       positions,
       indices,
@@ -112,7 +114,10 @@ export class DebugVolumes {
  * circles; a region's top and bottom outlines following the ellipsoid,
  * with its four vertical edges, as 1.x draws them.
  */
-export function volumeLines(volume: TileVolume): {
+export function volumeLines(
+  volume: TileVolume,
+  ellipsoid: Ellipsoid = Ellipsoid.WGS84,
+): {
   center: Vec3;
   positions: Float32Array;
   indices: Uint32Array;
@@ -185,10 +190,7 @@ export function volumeLines(volume: TileVolume): {
     for (const height of heights) {
       const first = points.length / 3;
       ring.forEach(([longitude, latitude], i) => {
-        Ellipsoid.WGS84.cartographicToCartesian(
-          { longitude, latitude, height },
-          p,
-        );
+        ellipsoid.cartographicToCartesian({ longitude, latitude, height }, p);
         points.push(p[0]! - center[0]!, p[1]! - center[1]!, p[2]! - center[2]!);
         line(first + i, first + ((i + 1) % ring.length));
       });

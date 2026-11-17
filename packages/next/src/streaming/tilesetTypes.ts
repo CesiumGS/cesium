@@ -5,6 +5,7 @@ import type { TerrainRayTarget, TerrainRayTile } from "../globe/terrainRay.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import type { Attribution } from "../io/ion.ts";
 import type { Mat4 } from "../math/mat4.ts";
+import type { Body } from "../scene/Body.ts";
 import type { CustomShader } from "../scene/CustomShader.ts";
 import type { FeatureStyle } from "../scene/FeatureStyle.ts";
 import type { AnchorHandle } from "../scene/world/types.ts";
@@ -147,6 +148,15 @@ export interface TilesetOptions extends BudgetedOptions {
    * belongs in the frame of that CRS, with `rootTransform: "none"`.
    */
   anchor?: AnchorHandle;
+  /**
+   * The body its content is on: tile volumes and horizon culling use its
+   * ellipsoid. Else the body its `3DTILES_ellipsoid` declares, else
+   * `anchor`'s, else the Earth. Null: no body (regions are refused, and
+   * nothing is horizon-culled). Two of these that differ are refused at
+   * load, naming both (`TilesetBodyError`). Without `anchor`, the content
+   * hangs under the body's anchor.
+   */
+  body?: Body | null;
   /**
    * What the root tile's `transform` means: `"declared"` (default) applies it,
    * as 3D Tiles says. `"none"` leaves it out, for a tileset authored in the

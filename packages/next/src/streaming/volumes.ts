@@ -98,7 +98,6 @@ export function compactVolume<T extends object>(volume: T): T {
   return volume;
 }
 
-const ellipsoid = Ellipsoid.WGS84;
 const TWO_PI = 2 * Math.PI;
 const EPSILON7 = 1e-7;
 
@@ -374,6 +373,7 @@ function rectangleCenter(
 }
 
 function toCartesian(
+  ellipsoid: Ellipsoid,
   longitude: number,
   latitude: number,
   height: number,
@@ -384,7 +384,7 @@ function toCartesian(
   );
 }
 
-/** `OrientedBoundingBox.fromRectangle` on WGS84. */
+/** `OrientedBoundingBox.fromRectangle` on `ellipsoid` (WGS84 by default). */
 export function obbFromRectangle(
   west: number,
   south: number,
@@ -392,10 +392,16 @@ export function obbFromRectangle(
   north: number,
   minimumHeight: number,
   maximumHeight: number,
+  ellipsoid: Ellipsoid = Ellipsoid.WGS84,
 ): Obb {
   if (rectangleWidth(west, east) <= Math.PI) {
     const center = rectangleCenter(west, south, east, north);
-    const tangentPoint = toCartesian(center.longitude, center.latitude, 0);
+    const tangentPoint = toCartesian(
+      ellipsoid,
+      center.longitude,
+      center.latitude,
+      0,
+    );
     // EllipsoidTangentPlane: origin on the surface, ENU axes.
     const origin = ellipsoid.scaleToGeodeticSurface(tangentPoint, v3.vec3())!;
     const enu = eastNorthUpToFixedFrame(
@@ -413,17 +419,17 @@ export function obbFromRectangle(
     };
     const lonCenter = center.longitude;
     const latCenter = south < 0 && north > 0 ? 0 : center.latitude;
-    const nc = project(toCartesian(lonCenter, north, maximumHeight));
-    const nw = project(toCartesian(west, north, maximumHeight));
-    const cw = project(toCartesian(west, latCenter, maximumHeight));
-    const sw = project(toCartesian(west, south, maximumHeight));
-    const sc = project(toCartesian(lonCenter, south, maximumHeight));
+    const nc = project(toCartesian(ellipsoid, lonCenter, north, maximumHeight));
+    const nw = project(toCartesian(ellipsoid, west, north, maximumHeight));
+    const cw = project(toCartesian(ellipsoid, west, latCenter, maximumHeight));
+    const sw = project(toCartesian(ellipsoid, west, south, maximumHeight));
+    const sc = project(toCartesian(ellipsoid, lonCenter, south, maximumHeight));
     const minX = Math.min(nw[0], cw[0], sw[0]);
     const maxX = -minX;
     const maxY = Math.max(nw[1], nc[1]);
     const minY = Math.min(sw[1], sc[1]);
-    const nwLow = toCartesian(west, north, minimumHeight);
-    const swLow = toCartesian(west, south, minimumHeight);
+    const nwLow = toCartesian(ellipsoid, west, north, minimumHeight);
+    const swLow = toCartesian(ellipsoid, west, south, minimumHeight);
     const minZ = Math.min(v3.dot(z, nwLow) + planeD, v3.dot(z, swLow) + planeD);
     const maxZ = maximumHeight;
     return fromPlaneExtents(
@@ -443,7 +449,12 @@ export function obbFromRectangle(
   const fullyBelow = north < 0;
   const latNearest = fullyAbove ? south : fullyBelow ? north : 0;
   const centerLon = rectangleCenter(west, south, east, north).longitude;
-  const planeOrigin = toCartesian(centerLon, latNearest, maximumHeight);
+  const planeOrigin = toCartesian(
+    ellipsoid,
+    centerLon,
+    latNearest,
+    maximumHeight,
+  );
   planeOrigin[2] = 0;
   const isPole =
     Math.abs(planeOrigin[0]!) < 1e-10 && Math.abs(planeOrigin[1]!) < 1e-10;
@@ -454,6 +465,7 @@ export function obbFromRectangle(
   const xAxis = v3.cross(v3.vec3(), normal, yAxis);
   const planeD = -v3.dot(normal, planeOrigin);
   const horizon = toCartesian(
+    ellipsoid,
     centerLon + Math.PI / 2,
     latNearest,
     maximumHeight,
@@ -464,16 +476,18 @@ export function obbFromRectangle(
   const maxX = v3.dot(projected, xAxis);
   const minX = -maxX;
   const maxY = toCartesian(
+    ellipsoid,
     0,
     north,
     fullyBelow ? minimumHeight : maximumHeight,
   )[2]!;
   const minY = toCartesian(
+    ellipsoid,
     0,
     south,
     fullyAbove ? minimumHeight : maximumHeight,
   )[2]!;
-  const farZ = toCartesian(east, latNearest, maximumHeight);
+  const farZ = toCartesian(ellipsoid, east, latNearest, maximumHeight);
   const minZ = v3.dot(normal, farZ) + planeD;
   return fromPlaneExtents(
     planeOrigin,
@@ -526,8 +540,14 @@ function fromPlaneExtents(
   return { center, halfAxes };
 }
 
-/** 3D Tiles `boundingVolume.region` (`TileBoundingRegion`, WGS84). */
-export function regionFromJson(r: ArrayLike<number>): Region {
+/**
+ * 3D Tiles `boundingVolume.region` (`TileBoundingRegion`) on `ellipsoid`
+ * (WGS84 by default).
+ */
+export function regionFromJson(
+  r: ArrayLike<number>,
+  ellipsoid: Ellipsoid = Ellipsoid.WGS84,
+): Region {
   const [west, south, east, north, minimumHeight, maximumHeight] = [
     r[0]!,
     r[1]!,
@@ -543,8 +563,8 @@ export function regionFromJson(r: ArrayLike<number>): Region {
     north,
     minimumHeight,
     maximumHeight,
-    southwestCorner: toCartesian(west, south, 0),
-    northeastCorner: toCartesian(east, north, 0),
+    southwestCorner: toCartesian(ellipsoid, west, south, 0),
+    northeastCorner: toCartesian(ellipsoid, east, north, 0),
     westNormal: v3.vec3(),
     eastNormal: v3.vec3(),
     southNormal: v3.vec3(),
@@ -556,20 +576,21 @@ export function regionFromJson(r: ArrayLike<number>): Region {
       north,
       minimumHeight,
       maximumHeight,
+      ellipsoid,
     ),
   };
-  computeRegionPlanes(region);
+  computeRegionPlanes(region, ellipsoid);
   return region;
 }
 
 const UNIT_Z = v3.vec3(0, 0, 1);
 
 /** `TileBoundingRegion` computeBox: edge planes for distance. */
-function computeRegionPlanes(r: Region): void {
+function computeRegionPlanes(r: Region, ellipsoid: Ellipsoid): void {
   const midLat = (r.south + r.north) * 0.5;
-  const western = toCartesian(r.west, midLat, 0);
+  const western = toCartesian(ellipsoid, r.west, midLat, 0);
   v3.normalize(r.westNormal, v3.cross(v3.vec3(), western, UNIT_Z));
-  const eastern = toCartesian(r.east, midLat, 0);
+  const eastern = toCartesian(ellipsoid, r.east, midLat, 0);
   v3.normalize(r.eastNormal, v3.cross(v3.vec3(), UNIT_Z, eastern));
   let westVector = v3.sub(v3.vec3(), western, eastern);
   if (v3.length(westVector) === 0) {
@@ -579,7 +600,12 @@ function computeRegionPlanes(r: Region): void {
 
   let southSurfaceNormal: Vec3;
   if (r.south > 0) {
-    const southCenter = toCartesian((r.west + r.east) * 0.5, r.south, 0);
+    const southCenter = toCartesian(
+      ellipsoid,
+      (r.west + r.east) * 0.5,
+      r.south,
+      0,
+    );
     // Move the SW corner onto the west plane along the east-west direction.
     const hit = rayPlane(
       southCenter,
@@ -607,7 +633,12 @@ function computeRegionPlanes(r: Region): void {
 
   let northSurfaceNormal: Vec3;
   if (r.north < 0) {
-    const northCenter = toCartesian((r.west + r.east) * 0.5, r.north, 0);
+    const northCenter = toCartesian(
+      ellipsoid,
+      (r.west + r.east) * 0.5,
+      r.north,
+      0,
+    );
     const hit = rayPlane(
       northCenter,
       v3.negate(v3.vec3(), eastWestNormal),
@@ -730,13 +761,14 @@ export function volumeFromJson(
     region?: number[];
   },
   transform: Mat4,
+  ellipsoid: Ellipsoid = Ellipsoid.WGS84,
 ): TileVolume | undefined {
   if (json.box) {
     const box = boxFromJson(json.box, transform);
     return { kind: "box", obb: box, sphere: sphereFromObb(box) };
   }
   if (json.region) {
-    const region = regionFromJson(json.region);
+    const region = regionFromJson(json.region, ellipsoid);
     return { kind: "region", region, sphere: sphereFromObb(region.obb) };
   }
   if (json.sphere) {
@@ -890,7 +922,10 @@ export interface Occludee {
  * regions; all eight corners for boxes). Spheres, and volumes near the
  * Earth's center (local coordinates), are never culled.
  */
-export function volumeOccludee(v: TileVolume): Occludee {
+export function volumeOccludee(
+  v: TileVolume,
+  ellipsoid: Ellipsoid = Ellipsoid.WGS84,
+): Occludee {
   const corners: number[] = [];
   let center: Vec3;
   let minimumHeight: number;
@@ -939,7 +974,12 @@ export function volumeOccludee(v: TileVolume): Occludee {
   ) {
     return { minimumHeight: 0 };
   }
-  const point = horizonCullingPoint(center, corners, minimumHeight);
+  const point = horizonCullingPoint(
+    center,
+    corners,
+    minimumHeight,
+    ellipsoid.radii,
+  );
   return point ? { point, minimumHeight } : { minimumHeight };
 }
 
@@ -951,13 +991,19 @@ export function volumeOccludee(v: TileVolume): Occludee {
 export function aboveHorizon(
   tile: { volume: TileVolume; occludee?: Occludee & { volume: TileVolume } },
   camera: Vec3,
+  ellipsoid: Ellipsoid = Ellipsoid.WGS84,
 ): boolean {
+  // A tile's ellipsoid never changes, so the cache is keyed by the volume.
   if (tile.occludee?.volume !== tile.volume) {
-    tile.occludee = { ...volumeOccludee(tile.volume), volume: tile.volume };
+    tile.occludee = {
+      ...volumeOccludee(tile.volume, ellipsoid),
+      volume: tile.volume,
+    };
   }
   const o = tile.occludee;
   return (
-    !o.point || isScaledSpacePointVisible(camera, o.point, o.minimumHeight)
+    !o.point ||
+    isScaledSpacePointVisible(camera, o.point, o.minimumHeight, ellipsoid.radii)
   );
 }
 

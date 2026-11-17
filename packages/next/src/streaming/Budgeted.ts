@@ -200,8 +200,11 @@ export class BudgetedSelection extends StepwiseSelection {
     if (!this.horizonCulling) {
       return false;
     }
+    if (view.noBody) {
+      return false;
+    }
     if (view.warp === undefined) {
-      return !aboveHorizon(tile, view.position);
+      return !aboveHorizon(tile, view.position, view.ellipsoid);
     }
     return (
       view.occluders !== undefined &&

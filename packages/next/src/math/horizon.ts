@@ -8,33 +8,38 @@
 import type { Vec3 } from "./vec3.ts";
 
 const RADII = [6378137.0, 6378137.0, 6356752.314245179] as const;
-const MINIMUM_RADIUS = RADII[2];
 
 /** WGS84's radii (x, y, z), m: the ellipsoid the horizon is tested on. */
 export const HORIZON_RADII = RADII;
 
 /** Radii of the (possibly shrunk) occluding ellipsoid. */
-function radiiFor(minimumHeight: number | undefined): readonly number[] {
+function radiiFor(
+  minimumHeight: number | undefined,
+  radii: ArrayLike<number> = RADII,
+): readonly number[] {
+  const all = [radii[0]!, radii[1]!, radii[2]!];
   return minimumHeight !== undefined &&
     minimumHeight < 0 &&
-    MINIMUM_RADIUS > -minimumHeight
-    ? RADII.map((r) => r + minimumHeight)
-    : RADII;
+    Math.min(...all) > -minimumHeight
+    ? all.map((r) => r + minimumHeight)
+    : all;
 }
 
 /**
  * The scaled-space point that is visible exactly when any of `positions`
  * may be, with the ellipsoid shrunk below sea level when `minimumHeight` is
  * negative (1.x computeHorizonCullingPointPossiblyUnderEllipsoid).
- * `positions` holds x, y, z triples. Undefined when no such point exists.
+ * `positions` holds x, y, z triples. `radii` (x, y, z) default to WGS84's:
+ * a body's ellipsoid goes here. Undefined when no such point exists.
  */
 export function horizonCullingPoint(
   directionToPoint: ArrayLike<number>,
   positions: ArrayLike<number>,
   minimumHeight: number | undefined,
+  radii?: ArrayLike<number>,
 ): Vec3 | undefined {
   return horizonCullingPointOn(
-    radiiFor(minimumHeight),
+    radiiFor(minimumHeight, radii),
     directionToPoint,
     positions,
   );
@@ -100,8 +105,13 @@ export function isScaledSpacePointVisible(
   camera: ArrayLike<number>,
   occludee: ArrayLike<number>,
   minimumHeight: number | undefined,
+  radii?: ArrayLike<number>,
 ): boolean {
-  return isScaledSpacePointVisibleOn(radiiFor(minimumHeight), camera, occludee);
+  return isScaledSpacePointVisibleOn(
+    radiiFor(minimumHeight, radii),
+    camera,
+    occludee,
+  );
 }
 
 /** `isScaledSpacePointVisible` for an occluding ellipsoid of any `radii`. */

@@ -1,6 +1,6 @@
 // What each tileset selects for: the views' cameras, ahead of motion, and the
 // shadow cascades' casters; and the tick's turn and upload budget for tilesets.
-import { type Cartographic, Ellipsoid } from "../math/ellipsoid.ts";
+import type { Cartographic } from "../math/ellipsoid.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Vec3 } from "../math/vec3.ts";
@@ -157,6 +157,8 @@ export function selectionViews(
   anchor: AnchorHandle,
 ): SelectionView[] {
   const out: SelectionView[] = [];
+  // The anchor's body's ellipsoid; an anchor with no body has none.
+  const ellipsoid = anchor?.body?.ellipsoid;
   for (const view of engine.views) {
     if (!view.enabled || view.world !== world) {
       continue;
@@ -216,11 +218,14 @@ export function selectionViews(
       id: engine.scene.viewIds.get(view)!,
       position: p,
       direction: d,
-      cartographic: Ellipsoid.WGS84.cartesianToCartographic(p, {
-        longitude: 0,
-        latitude: 0,
-        height: 0,
-      }) ?? { longitude: 0, latitude: 0, height: 0 },
+      cartographic: ellipsoid
+        ? (ellipsoid.cartesianToCartographic(p, {
+            longitude: 0,
+            latitude: 0,
+            height: 0,
+          }) ?? { longitude: 0, latitude: 0, height: 0 })
+        : { longitude: 0, latitude: 0, height: v3.length(p) },
+      ...(ellipsoid ? { ellipsoid } : { noBody: true }),
       planes,
       ...(casters ? { casterPlanes: casters } : {}),
       ...(occlusionOn(engine, view)

@@ -30,6 +30,7 @@ import type { TilesetState } from "./tilesetState.ts";
 export interface TilesetUpdate extends Pick<
   Tileset3D,
   | "anchor"
+  | "bodyless"
   | "changed"
   | "events"
   | "evict"
@@ -236,7 +237,10 @@ export function update(
   const views = tileset.show
     ? allViews
         .filter((view) => ((wanted >>> view.id) & 1) !== 0)
-        .map((view) => {
+        .map((own) => {
+          // A tileset with no body is never horizon-culled.
+          const view =
+            tileset.bodyless && !own.noBody ? { ...own, noBody: true } : own;
           const warp = tileset.world.tileWarp?.(tileset.anchor, view.id);
           if (!warp) {
             return view;

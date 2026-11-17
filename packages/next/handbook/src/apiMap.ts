@@ -543,6 +543,7 @@ export const API_ROWS: readonly ApiRow[] = [
     next: ["Tileset3D"],
     supporting: [
       "TilesetOptions",
+      "TilesetBodyError",
       "TilesetStats",
       "ContentSummary",
       "ContentTotals",

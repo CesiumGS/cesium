@@ -342,6 +342,7 @@ entry	name	kind	tier
 .	TileGeometry	interface	-
 .	TileSection	interface	-
 .	Tileset3D	class	-
+.	TilesetBodyError	class	-
 .	TilesetEvents	interface	-
 .	TilesetOptions	interface	-
 .	TilesetStats	interface	-

@@ -29,11 +29,15 @@ import {
 import { Emitter } from "../core/Emitter.ts";
 import { BudgetedSelection } from "./Budgeted.ts";
 import {
-  loadTilesetJson,
+  fetchTilesetJson,
+  treeFromJson,
   type Tile,
   type TileJson,
   type TileTree,
 } from "./Tile.ts";
+import { resolveTilesetBody, tilesetBody } from "./tilesetBody.ts";
+import { EARTH, type Body } from "../scene/Body.ts";
+import type { Ellipsoid } from "../math/ellipsoid.ts";
 import { transformVolume } from "./volumes.ts";
 import { DebugVolumes, type DebugColor } from "./debugVolumes.ts";
 import * as m4 from "../math/mat4.ts";
@@ -98,6 +102,20 @@ export class Tileset3D implements TileTree {
   readonly state: TilesetState = new TilesetState();
   /** @internal How far items can move a vertex (`TileTree.volumePad`). */
   volumePad = 0;
+  /**
+   * The body its content is on (`TilesetOptions.body`, else its
+   * `3DTILES_ellipsoid`, else its anchor's, else the Earth); undefined for
+   * a tileset with no body. Tile volumes are built on its ellipsoid.
+   */
+  readonly body: Body | undefined;
+  /** @internal `TileTree.ellipsoid`. */
+  get ellipsoid(): Ellipsoid | undefined {
+    return this.body?.ellipsoid;
+  }
+  /** @internal `TileTree.bodyless`. */
+  get bodyless(): boolean {
+    return this.body === undefined;
+  }
   /** @internal An item moves vertices (`TileTree.movesVertices`). */
   movesVertices = false;
   /** @internal */
@@ -468,7 +486,7 @@ export class Tileset3D implements TileTree {
     if (value !== this.debugShowBoundingVolume) {
       this.state.boundingVolumes?.clear();
       this.state.boundingVolumes = value
-        ? new DebugVolumes(this.world, this.state.transform)
+        ? new DebugVolumes(this.world, this.state.transform, this.ellipsoid)
         : undefined;
       updateDebug(this);
       this.changed();
@@ -482,7 +500,7 @@ export class Tileset3D implements TileTree {
     if (value !== this.debugShowContentBoundingVolume) {
       this.state.contentVolumes?.clear();
       this.state.contentVolumes = value
-        ? new DebugVolumes(this.world, this.state.transform)
+        ? new DebugVolumes(this.world, this.state.transform, this.ellipsoid)
         : undefined;
       updateDebug(this);
       this.changed();
@@ -532,6 +550,9 @@ export class Tileset3D implements TileTree {
       throw new Error("Tileset3D: give a customShader or a style, not both.");
     }
     this.state.options = options;
+    // Resolved by `load` before any tile was built; the others are the Earth's.
+    this.body =
+      options.body === undefined ? EARTH : (options.body ?? undefined);
     this.state.contentAxes = contentAxes(tilesetJson);
     this.state.collision = options.enableCollision ?? false;
     this.retainGeometry = options.retainGeometry ?? false;
@@ -652,7 +673,12 @@ export class Tileset3D implements TileTree {
   /** The world it draws in, from here on (`World.add`). */
   private bindWorld(world: World): void {
     this.world_ = world;
-    this.anchor_ = contentAnchor(world, this.state.options.anchor, "Tileset3D");
+    this.anchor_ = contentAnchor(
+      world,
+      this.state.options.anchor,
+      "Tileset3D",
+      this.body,
+    );
     this.state.transform = world.addTransform(this.state.delta, this.anchor);
   }
 
@@ -806,11 +832,21 @@ export class Tileset3D implements TileTree {
     options: TilesetOptions = {},
   ): Promise<Tileset3D> {
     const warnings = new Set<string>();
-    const { root, geometricError, json } = await loadTilesetJson(
+    const json = await fetchTilesetJson(url, options.headers);
+    // The body comes before any tile is built: volumes are on its ellipsoid.
+    const body = resolveTilesetBody({
+      option: options.body,
+      declared: tilesetBody(json.extensions),
+      anchor: options.anchor?.body,
+    });
+    const { root, geometricError } = treeFromJson(
+      json,
       url,
-      options.headers,
       undefined,
-      { warnings },
+      {
+        warnings,
+        ...(body === null ? { bodyless: true } : { ellipsoid: body.ellipsoid }),
+      },
       options.modelMatrix,
       options.rootTransform === "none",
     );
@@ -818,7 +854,7 @@ export class Tileset3D implements TileTree {
       engine,
       world,
       url,
-      options,
+      { ...options, body },
       root,
       geometricError,
       undefined,

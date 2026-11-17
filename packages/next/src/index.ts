@@ -265,6 +265,7 @@ export {
   type TileContent,
 } from "./tiles/fullDetail.ts";
 export { Tileset3D } from "./streaming/Tileset3D.ts";
+export { TilesetBodyError } from "./streaming/tilesetBody.ts";
 export {
   type PurposeStats,
   type TilesetEvents,

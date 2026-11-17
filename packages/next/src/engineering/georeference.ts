@@ -166,6 +166,7 @@
 // `checkRigidTransform`, which need the engineering modules.
 import type { Cartographic } from "../math/ellipsoid.ts";
 import type { Body } from "../scene/Body.ts";
+import { TilesetBodyError, tilesetBody } from "../streaming/tilesetBody.ts";
 import type {
   AlignmentDefinition,
   HorizontalElement,
@@ -430,8 +431,6 @@ const SOURCE_PATH = "extensions.EXT_geospatial_crs_source";
 const ELLIPSOID_PATH = "extensions.3DTILES_ellipsoid";
 /** Where a derived area of interest comes from. */
 const VOLUME_PATH = "root.boundingVolume";
-/** Meters: how near 3DTILES_ellipsoid's radii must be a body's, per axis. */
-const RADII_TOLERANCE = 0.01;
 /**
  * The largest EPSG code: Esri numbers its own CRSs above it (37xxx, 5xxxx,
  * 102xxx, 115xxx), and 32767 is its "user-defined" sentinel. A wrong guess
@@ -998,44 +997,40 @@ function readArea(value: unknown, path: string): AreaOfInterest {
 }
 
 /**
- * 3DTILES_ellipsoid's body: its radii (meters) within RADII_TOLERANCE per
- * axis of EARTH's or MOON's ellipsoid, and its `body`, if given, naming
- * that body (case aside). "none", other radii, or a body naming another is
- * refused, naming the field.
+ * 3DTILES_ellipsoid's body (`tilesetBody`, the core's reader): its radii
+ * (meters) within 0.01 m per axis of EARTH's or MOON's ellipsoid, and its
+ * `body`, if given, naming that body (case aside). "none", other radii, or a
+ * body naming another is refused, naming the field.
  */
 function readEllipsoid(
   value: unknown,
   path: string,
   bodies: GeoreferenceBodies,
 ): Body {
-  const ellipsoid = object(value, path);
-  const named =
-    ellipsoid.body === undefined
-      ? undefined
-      : name(ellipsoid.body, `${path}.body`);
-  if (named?.toLowerCase() === "none") {
+  let body: Body | null | undefined;
+  try {
+    body = tilesetBody({ [ELLIPSOID_EXTENSION]: value }, [
+      bodies.EARTH,
+      bodies.MOON,
+    ]);
+  } catch (error) {
+    if (error instanceof TilesetBodyError) {
+      // The reader names paths from the extensions object; ours start at `path`.
+      throw new GeoreferenceError(
+        `${path}${error.path.slice(`extensions.${ELLIPSOID_EXTENSION}`.length)}`,
+        error.reason,
+      );
+    }
+    throw error;
+  }
+  if (body === null) {
     throw new GeoreferenceError(
       `${path}.body`,
       'is "none": the tileset says it isn\'t referenced to a body, so it has no engineering frame to place',
     );
   }
-  const radii = numbers(ellipsoid.radii, 3, `${path}.radii`);
-  const body = [bodies.EARTH, bodies.MOON].find((b) =>
-    radii.every(
-      (r, i) => Math.abs(r - b.ellipsoid.radii[i]!) <= RADII_TOLERANCE,
-    ),
-  );
   if (body === undefined) {
-    throw new GeoreferenceError(
-      `${path}.radii`,
-      `[${radii.join(", ")}] m are neither the Earth's (WGS 84) nor the Moon's radii within ${RADII_TOLERANCE} m; only those bodies are placed`,
-    );
-  }
-  if (named !== undefined && named.toLowerCase() !== body.name.toLowerCase()) {
-    throw new GeoreferenceError(
-      `${path}.body`,
-      `names ${shown(named)}, but its radii are the ${body.name}'s`,
-    );
+    throw new GeoreferenceError(path, "is missing");
   }
   return body;
 }

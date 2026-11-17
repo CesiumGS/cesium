@@ -1,4 +1,4 @@
-import { EARTH, bodyKey } from "./Body.ts";
+import { EARTH, bodyKey, type Body } from "./Body.ts";
 import type { View } from "./View.ts";
 import type { World } from "./World.ts";
 import type { AnchorHandle } from "./world/types.ts";
@@ -7,15 +7,17 @@ import type { AnchorHandle } from "./world/types.ts";
  * The anchor content hangs under (plan 5a's call 19): `anchor` when given,
  * checked against `world` (throws, naming it and `caller`, for another
  * world's anchor or a removed one), else the Earth's (`World.bodyAnchor`,
- * made on first ask). Under the Earth's anchor, positions are Earth-fixed.
+ * made on first ask), or the anchor of `body` (default the Earth). Under
+ * the Earth's anchor, positions are Earth-fixed.
  */
 export function contentAnchor(
   world: World,
   anchor: AnchorHandle | undefined,
   caller: string,
+  body: Body = EARTH,
 ): AnchorHandle {
   if (anchor === undefined) {
-    return world.bodyAnchor(EARTH);
+    return world.bodyAnchor(body);
   }
   if (world.anchorOf(anchor) !== anchor) {
     throw new Error(

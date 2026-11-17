@@ -45,6 +45,18 @@ export interface SelectionView {
   position: Vec3;
   direction: Vec3;
   cartographic: Cartographic;
+  /**
+   * The ellipsoid of the selection anchor's body, which `cartographic` is
+   * on and horizon culling tests against (plan 5c's call 3); WGS 84
+   * without it.
+   */
+  ellipsoid?: Ellipsoid;
+  /**
+   * The anchor has no body (a trajectory's): `cartographic` is the eye's
+   * distance from the origin as its height, and nothing is horizon-culled
+   * (plan 5c's call 4).
+   */
+  noBody?: boolean;
   /** Culling planes, world space: (nx, ny, nz, d) per plane, inward normals. */
   planes: Float64Array;
   /**
@@ -259,8 +271,6 @@ export interface SelectionResult {
 const MASK_OUTSIDE = 0xffffffff;
 const MASK_INSIDE = 0;
 const MASK_INDETERMINATE = 0x7fffffff;
-
-const ellipsoid = Ellipsoid.WGS84;
 
 export interface StepwiseOptions {
   maximumScreenSpaceError?: number;
@@ -680,6 +690,7 @@ export class StepwiseSelection implements TileSelection {
       const center =
         volume.kind === "box" ? volume.obb.center : volume.sphere.center;
       const centerLocal = transformPoint(inverse, center);
+      const ellipsoid = view.ellipsoid ?? Ellipsoid.WGS84;
       if (v3.length(centerLocal) > ellipsoid.minimumRadius) {
         const carto = ellipsoid.cartesianToCartographic(centerLocal, {
           longitude: 0,
