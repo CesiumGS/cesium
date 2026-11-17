@@ -9,7 +9,7 @@ graph LR
   CS_10["Cesium IR<br/>2 of 30 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
-  CS_13["worker-mode façade<br/>0 of 20 done"]
+  CS_13["worker-mode façade<br/>1 of 20 done"]
   CS_14["Level-of-detail transitions<br/>0 of 14 done"]
   CS_15["Refinement and convergence<br/>0 of 13 done"]
   CS_16["Streaming robustness<br/>0 of 22 done"]
@@ -36,7 +36,6 @@ graph LR
   CS_10 -->|2| CS_11
   CS_9 -->|1| CS_11
   CS_13 -->|2| CS_12
-  CS_13 -->|4| CS_437
   CS_437 -->|5| CS_13
   CS_10 -->|4| CS_13
   CS_8 -->|1| CS_13

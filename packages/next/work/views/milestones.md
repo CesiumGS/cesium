@@ -87,8 +87,8 @@ CS-419 Cesium IR covers what materials need [Planned], under CS-10 Cesium IR
 
 CS-420 The public API shape is approved [Planned], under CS-437 The public API reviews
   outcome: Every public member is mapped and reviewed against the façade's constraints and other engines' idioms, and the owner has approved which changes to make.
-  constraints: 0 of 8 done
-  unmet: not linked to a clause yet (open: CS-101, CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-454; check not passed)
+  constraints: 1 of 8 done
+  unmet: not linked to a clause yet (open: CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-454; check not passed)
   to shape: done_when; check; link CS-101, CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-454 to a clause
 
 CS-421 Every public call can cross a thread [Planned], under CS-13 The worker-mode façade

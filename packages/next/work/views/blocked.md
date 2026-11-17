@@ -169,18 +169,11 @@ CS-12 The job system's ports
 
 CS-437 The public API reviews
   CS-102  The public API review, with the protocol table and the façade's constraints
-      ← CS-101 The protocol table: every public member classified, checked against `api/surface.txt`
-        CS-430 The WebGPU seams audited: each seam, its bypass test, and the seams still missing
+      ← CS-430 The WebGPU seams audited: each seam, its bypass test, and the seams still missing
         CS-431 The camera chain's layers checked against what each may know
         CS-432 The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors
         CS-433 Promotions and demotions proposed: what every app needs, and what is exported only for examples
         CS-454 What is the full version of scene items: references, groups, the globe as an item, and how close to USD?
-  CS-431  The camera chain's layers checked against what each may know
-      ← CS-101 The protocol table: every public member classified, checked against `api/surface.txt`
-  CS-432  The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors
-      ← CS-101 The protocol table: every public member classified, checked against `api/surface.txt`
-  CS-433  Promotions and demotions proposed: what every app needs, and what is exported only for examples
-      ← CS-101 The protocol table: every public member classified, checked against `api/surface.txt`
   CS-434  Stability tiers as TSDoc tags, with internal members stripped from the published types
       ← CS-438 Which of the first public API review's proposed changes do you approve?
   CS-435  The measurement module's seam and entry point
@@ -520,5 +513,5 @@ CS-18 The work tracker
       ← CS-529 Which milestones does 2.0.0 need?
         CS-532 Release 2.0.0-rc.1
 
-188 blocked
+185 blocked
 ```

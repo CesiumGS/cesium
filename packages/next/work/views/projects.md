@@ -24,9 +24,9 @@ CS-12 The job system's ports [Planned], led by owner
   waits on: CS-13 The worker-mode façade (2)
   waited on by: CS-8 Engine profiles (1); CS-13 The worker-mode façade (1); CS-16 Streaming robustness (1)
 CS-13 The worker-mode façade [Planned], led by owner
-  0 of 20 done, 1 ready, 18 blocked, 1 proposed
+  1 of 20 done, 0 ready, 18 blocked, 1 proposed
   waits on: CS-437 The public API reviews (5); CS-10 Cesium IR (4); CS-8 Engine profiles (1); CS-12 The job system's ports (1)
-  waited on by: CS-12 The job system's ports (2); CS-437 The public API reviews (4); CS-9 The WebGL 2 renderer (1)
+  waited on by: CS-12 The job system's ports (2); CS-9 The WebGL 2 renderer (1)
 CS-14 Level-of-detail transitions [Planned], led by owner
   0 of 14 done, 2 ready, 9 blocked, 3 proposed
   waits on: nothing open
@@ -104,7 +104,7 @@ CS-389 Dyno as the development harness [Planned], led by owner
   waits on: nothing open
   waited on by: CS-195 Benchmarks, parity and image regression (2)
 CS-437 The public API reviews [Planned], led by owner
-  0 of 9 done, 2 ready, 7 blocked
-  waits on: CS-13 The worker-mode façade (4)
+  0 of 9 done, 5 ready, 4 blocked
+  waits on: nothing open
   waited on by: CS-13 The worker-mode façade (5); CS-189 Frames and engineering coordinates follow-ups (1); CS-193 B-reps and geometry queries (1)
 ```

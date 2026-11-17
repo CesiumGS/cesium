@@ -17,6 +17,9 @@ CS-10 Cesium IR
 CS-12 The job system's ports
   CS-86  The first slice: `Jobs` behind `WorkerPool`
 
+CS-13 The worker-mode façade
+  CS-101  The protocol table: every public member classified, checked against `api/surface.txt`
+
 CS-18 The work tracker
   CS-169  The tracker: format, scripts, items and the plan's split
   CS-170  A work board in Dyno
@@ -32,5 +35,5 @@ CS-389 Dyno as the development harness
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
 
-15 merged item(s) not in a release
+16 merged item(s) not in a release
 ```

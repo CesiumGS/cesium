@@ -43,9 +43,6 @@ CS-12 The job system's ports
   CS-96  A fresh main-thread profile of tile selection
   CS-99  The worker-mode spike: a headed run on an otherwise idle GPU
 
-CS-13 The worker-mode façade
-  CS-101  The protocol table: every public member classified, checked against `api/surface.txt`
-
 CS-14 Level-of-detail transitions
   CS-121  The signed `transition` word, the dither flag, `View.lodTransitions: "smooth" | "pop"`, the clock's epoch rebase
   CS-127  The frame-jump script (`scripts/frameJumps.mjs`, reading recorder dumps)
@@ -190,6 +187,9 @@ CS-389 Dyno as the development harness
 
 CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
+  CS-431  The camera chain's layers checked against what each may know
+  CS-432  The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors
+  CS-433  Promotions and demotions proposed: what every app needs, and what is exported only for examples
   CS-454  decision: What is the full version of scene items: references, groups, the globe as an item, and how close to USD?
 
 CS-18 The work tracker
@@ -197,5 +197,5 @@ CS-18 The work tracker
   CS-562  Dyno's Work page lists the items in no milestone, filterable by kind and state
   CS-563  Dyno's roadmap shows proposed milestones with dashed outlines
 
-146 ready
+148 ready
 ```

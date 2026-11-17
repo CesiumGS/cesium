@@ -118,7 +118,7 @@ graph LR
     CS_510["CS-510 Program-form warp fits run off the main thread"]:::open
   end
   subgraph CS_13["worker-mode façade"]
-    CS_101["CS-101 The protocol table: every public member classified, checked aga"]:::open
+    CS_101["CS-101 The protocol table: every public member classified, checked aga"]:::done
     CS_103["CS-103 Reads reshaped, on the main thread"]:::open
     CS_104["CS-104 Writes reshaped, on the main thread"]:::open
     CS_105["CS-105 Functions reshaped, on the main thread"]:::open

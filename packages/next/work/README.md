@@ -253,7 +253,7 @@ No milestone
 
 ### The worker-mode façade
 
-[CS-13](./projects/CS-13-the-worker-mode-facade.md), Planned, led by owner: 0 of 20 done, 1 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-worker-facade.md](../../../docs/superpowers/plans/2026-11-13-worker-facade.md).
+[CS-13](./projects/CS-13-the-worker-mode-facade.md), Planned, led by owner: 1 of 20 done, 0 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-worker-facade.md](../../../docs/superpowers/plans/2026-11-13-worker-facade.md).
 
 Milestone: Every public call can cross a thread ([CS-421](./milestones/CS-421-every-public-call-can-cross-a-thread.md), Planned)
 
@@ -288,7 +288,7 @@ Milestone: Refinement, profiles and streaming work in worker mode ([CS-456](./mi
 
 No milestone
 
-- [ ] [CS-101](./items/CS-101-the-protocol-table-every-public-member.md) The protocol table: every public member classified, checked against `api/surface.txt`. Needs nothing.
+- [x] [CS-101](./items/CS-101-the-protocol-table-every-public-member.md) The protocol table: every public member classified, checked against `api/surface.txt`. Done.
 
 ### Level-of-detail transitions
 
@@ -889,7 +889,7 @@ No milestone
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 0 of 9 done, 2 ready, 7 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 0 of 9 done, 5 ready, 4 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
