@@ -773,6 +773,22 @@ class ContentHandle {
     this._content = undefined;
 
     /**
+     * The last style that was applied to the _content.
+     *
+     * This is tracked here, because the 'Cesium3DTileContent'
+     * implementations are generally not handling the case of
+     * the same style being applied multiple times. Calling
+     * 'applyStyle', e.g. on the 'Model3DTileContent', will
+     * cause the draw commands of the model to be rebuilt,
+     * even when the style is identical to the previous one.
+     * (We could argue about a concept for "equality" of
+     * styles, but a check for identity should be a baseline).
+     *
+     * @type {Cesium3DTileStyle|undefined}
+     */
+    this._lastStyle = undefined;
+
+    /**
      * Whether the content creation failed.
      *
      * See 'get failed()' for details.
@@ -930,6 +946,29 @@ class ContentHandle {
     }
     this._ensureRequestPending();
     return undefined;
+  }
+
+  /**
+   * Apply the given style to the content of this handle.
+   *
+   * This is a workaround the fact that calling 'applyStyle' on
+   * Cesium3DTileContent implementations may invalidate the
+   * draw commands, EVEN IF the style did not change: It will
+   * only forward the 'applyStyle' call to the content if it
+   * actually changed since the previous call.
+   *
+   * @param {Cesium3DTileStyle|undefined} style The style
+   */
+  applyStyle(style) {
+    const content = this._content;
+    if (!defined(content)) {
+      return;
+    }
+    if (this._lastStyle === style) {
+      return;
+    }
+    this._lastStyle = style;
+    content.applyStyle(style);
   }
 
   /**
@@ -1904,39 +1943,11 @@ class Conditional3DTileContent {
     // destroying the content and its associated resources.
     this._unloadOldContent();
 
-    // Call update for all contents
+    // Apply the current style and call update for all contents
     for (const contentHandle of this._contentHandles.values()) {
+      contentHandle.applyStyle(this._lastStyle);
       contentHandle.updateContent(tileset, frameState);
     }
-
-    // There is no way to show or hide contents.
-    // Whether something is shown or not eventually depends
-    // on whether draw commands are scheduled. This happens
-    // as part of the "update" call. The "update" does not
-    // differentiate between "doing random stuff that has
-    // to be done somewhere", and scheduling the draw commands.
-    // It could be called "doRandomStuff" at this point.
-    //
-    // But wait, there's more:
-    //
-    // Setting the style on a content unleashes a cascade
-    // of things being marked as "dirty" and being "updated".
-    // As part of these "updates", the draw commands of the
-    // model are reset, and the effect of changes is only
-    // visible in the next frame. So setting the style in
-    // each frame will cause the models to no longer be
-    // rendered.
-    // One could set the style once, and only evaluate the
-    // 'show' condition. This should work, except for
-    // https://github.com/CesiumGS/cesium/issues/13346
-    // and the fact that the style is not re-evaluated unless
-    // it is marked as "dirty", which causes the aforementioned
-    // updates.
-    //
-    // No time for idealism: If there's a model, then hide
-    // or show it with the 'show' property. Otherwise, wait
-    // for the issues to come in.
-    // Works for me.
 
     // Hide all contents.
     const allLoadedContents = this._allLoadedContents;
@@ -1948,16 +1959,6 @@ class Conditional3DTileContent {
     const activeContents = this._activeLoadedContents;
     for (const activeContent of activeContents) {
       activeContent.show = true;
-      // TODO This may trigger some rebuild of some draw commands or
-      // whatnot. It shouldn't, if the style is identical to the
-      // previous one, but assuming that 'applyStyle' is implemented
-      // properly for all content types is naive. It will likely be
-      // necessary to store and maintain the last style of each
-      // content somewhere else, and skip this call, working around
-      // the flaws of the existing implementations (and causing bugs
-      // and inconsistencies that will require further workarounds).
-      // Also see 'featurePropertiesDirty'.
-      activeContent.applyStyle(this._lastStyle);
     }
 
     // Assign debug settings to all active contents
