@@ -122,10 +122,13 @@ function reverseTriangleWindingOrder(geometry) {
         const values = attribute.values;
         const numberOfComponents = attribute.componentsPerAttribute;
         const numberOfVertices = values.length / numberOfComponents;
-        for (let i = 0, j = numberOfVertices - 1; i < j; ++i, --j) {
+        // Reverse the winding of each triangle in place. Reversing the whole
+        // vertex array would also reverse the order of the triangles, which
+        // changes the draw order of translucent geometry.
+        for (let i = 0; i + 2 < numberOfVertices; i += 3) {
           for (let k = 0; k < numberOfComponents; ++k) {
             const a = i * numberOfComponents + k;
-            const b = j * numberOfComponents + k;
+            const b = (i + 2) * numberOfComponents + k;
             const tmp = values[a];
             values[a] = values[b];
             values[b] = tmp;

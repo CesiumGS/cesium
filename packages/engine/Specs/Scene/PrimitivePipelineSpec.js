@@ -220,6 +220,39 @@ describe(
       expect(results.bakedModelMatrixSign).toBe(1);
     });
 
+    it("reverses each non-indexed triangle without reordering the triangles", function () {
+      const positions = [
+        0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 0.0, 3.0, 0.0,
+        0.0, 2.0, 1.0, 0.0,
+      ];
+      const mirrored = makeInstance(
+        positions.slice(),
+        undefined,
+        PrimitiveType.TRIANGLES,
+        MIRROR,
+      );
+      const normal = makeInstance(
+        positions.slice(),
+        undefined,
+        PrimitiveType.TRIANGLES,
+        OFFSET,
+      );
+
+      const results = combine([mirrored, normal], Matrix4.IDENTITY);
+      const geometry = results.geometries[0];
+
+      expect(geometry.indices).toBeUndefined();
+      expect(geometry.attributes.position.values).toEqual([
+        // The mirrored instance's triangles are each reversed in place, so the
+        // order of the two triangles is unchanged.
+        0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -2.0, 1.0, 0.0, -3.0, 0.0,
+        0.0, -2.0, 0.0, 0.0,
+        // The normal instance is translated by OFFSET.
+        100.0, 0.0, 0.0, 101.0, 0.0, 0.0, 100.0, 1.0, 0.0, 102.0, 0.0, 0.0,
+        103.0, 0.0, 0.0, 102.0, 1.0, 0.0,
+      ]);
+    });
+
     it("expands every strip in a batch when a mirrored strip is expanded", function () {
       const mirrored = makeInstance(
         [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0],

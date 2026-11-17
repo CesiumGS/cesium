@@ -1700,10 +1700,16 @@ function createVertexArray(primitive, frameState) {
 function createMirroredRenderState(renderState) {
   const mirrored = clone(renderState, false);
   if (defined(mirrored.cull)) {
+    let face = mirrored.cull.face;
+    if (face === CullFace.BACK) {
+      face = CullFace.FRONT;
+    } else if (face === CullFace.FRONT) {
+      face = CullFace.BACK;
+    }
+    // FRONT_AND_BACK is symmetric, so it stays as-is.
     mirrored.cull = {
       enabled: mirrored.cull.enabled,
-      face:
-        mirrored.cull.face === CullFace.FRONT ? CullFace.BACK : CullFace.FRONT,
+      face: face,
     };
   }
   return RenderState.fromCache(mirrored);
@@ -2075,7 +2081,10 @@ function usesMirroredRenderState(primitive, modelMatrix) {
   Matrix4.getMatrix3(modelMatrix, scratchMatrix3);
   const sign = Math.sign(Matrix3.determinant(scratchMatrix3));
   if (primitive._bakedToWorld) {
-    return sign !== primitive._bakedModelMatrixSign;
+    const bakedSign = primitive._bakedModelMatrixSign;
+    // A singular matrix has no orientation, and the winding order was not
+    // reversed for it when the geometry was baked, so never flip in that case.
+    return bakedSign !== 0 && sign !== 0 && sign !== bakedSign;
   }
   // On the un-baked path the combined matrix is applied to the draw command,
   // so a negative determinant mirrors the geometry without a winding change.
@@ -2114,6 +2123,10 @@ function updateAndQueueCommands(
         const mirroredRenderState = mirror.get(command.renderState);
         if (defined(mirroredRenderState)) {
           command.renderState = mirroredRenderState;
+          // Derived commands (depth, picking, OIT, ...) cache their render
+          // state by shader program, so they have to be recreated when the
+          // cull face changes.
+          command.derivedCommands = {};
         }
       }
     }
