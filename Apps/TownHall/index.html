@@ -50,13 +50,21 @@
     </div>
 
     <aside id="panel">
-      <section class="slide" id="intro" data-layout="text" data-diagram="v11">
+      <section
+        class="slide title-row"
+        id="intro"
+        data-layout="text"
+        data-diagram="v11"
+      >
         <h1>3D Tiles</h1>
-        <p class="lead">Streaming massive 3D geospatial content</p>
+        <p class="lead">
+          Streaming massive 3D geospatial content: photogrammetry, CAD/BIM,
+          point clouds, vectors
+        </p>
       </section>
 
       <section
-        class="slide"
+        class="slide title-row"
         id="spec"
         data-layout="text"
         data-diagram="v20"
@@ -70,13 +78,13 @@
         <div
           class="dg-item dg-box tiles"
           style="
-            --x11: 2;
-            --y11: 2;
-            --w11: 62;
-            --h11: 96;
-            --x20: 2;
-            --y20: 2;
-            --w20: 62;
+            --x11: 0;
+            --y11: 0;
+            --w11: 58.4;
+            --h11: 99.5;
+            --x20: 0;
+            --y20: 0;
+            --w20: 100;
             --h20: 33.5;
           "
         >
@@ -90,15 +98,15 @@
         <div
           class="dg-item dg-box gltf21"
           style="
-            --x11: 72;
-            --y11: 34;
-            --w11: 26;
-            --h11: 64;
+            --x11: 64.5;
+            --y11: 38;
+            --w11: 35.5;
+            --h11: 61.5;
             --o11: 0;
-            --x20: 2;
-            --y20: 37;
-            --w20: 96;
-            --h20: 61;
+            --x20: 0;
+            --y20: 38;
+            --w20: 100;
+            --h20: 61.5;
           "
         >
           <div class="dg-title">glTF 2.1</div>
@@ -106,14 +114,14 @@
         <div
           class="dg-item dg-box gltf20"
           style="
-            --x11: 72;
-            --y11: 34;
-            --w11: 26;
-            --h11: 64;
-            --x20: 2;
-            --y20: 37;
-            --w20: 96;
-            --h20: 61;
+            --x11: 64.5;
+            --y11: 38;
+            --w11: 35.5;
+            --h11: 61.5;
+            --x20: 0;
+            --y20: 38;
+            --w20: 100;
+            --h20: 61.5;
             --o20: 0;
           "
         >
@@ -122,94 +130,28 @@
         <div
           class="dg-item dg-arrow"
           style="
-            --x11: 62;
-            --y11: 84.5;
-            --w11: 10;
+            --x11: 57.2;
+            --y11: 86;
+            --w11: 7.3;
             --h11: 0;
-            --x20: 62;
-            --y20: 84.5;
-            --w20: 10;
+            --x20: 57.2;
+            --y20: 86;
+            --w20: 7.3;
             --h20: 0;
             --o20: 0;
           "
-        >
-          <code>content.uri</code>
-        </div>
-        <div
-          class="dg-item dg-chip moves"
-          style="
-            --x11: 4;
-            --y11: 46;
-            --w11: 28.25;
-            --h11: 23;
-            --x20: 4;
-            --y20: 46;
-            --w20: 28.25;
-            --h20: 23;
-          "
-        >
-          <span>Tile hierarchy</span>
-          <code class="v20">nodes · children</code>
-        </div>
-        <div
-          class="dg-item dg-chip moves"
-          style="
-            --x11: 33.75;
-            --y11: 46;
-            --w11: 28.25;
-            --h11: 23;
-            --x20: 33.75;
-            --y20: 46;
-            --w20: 28.25;
-            --h20: 23;
-          "
-        >
-          <span>Transforms</span>
-          <code class="v20">translation · rotation · scale</code>
-        </div>
-        <div
-          class="dg-item dg-chip moves"
-          style="
-            --x11: 4;
-            --y11: 73;
-            --w11: 28.25;
-            --h11: 23;
-            --x20: 4;
-            --y20: 73;
-            --w20: 28.25;
-            --h20: 23;
-          "
-        >
-          <span>Bounding volumes</span>
-          <code class="v20">boundingVolume · shapes</code>
-        </div>
-        <div
-          class="dg-item dg-chip moves"
-          style="
-            --x11: 33.75;
-            --y11: 73;
-            --w11: 28.25;
-            --h11: 23;
-            --x20: 33.75;
-            --y20: 73;
-            --w20: 28.25;
-            --h20: 23;
-          "
-        >
-          <span>Content URIs</span>
-          <code class="v20">externalAssets</code>
-        </div>
+        ></div>
         <div
           class="dg-item dg-chip stays"
           style="
-            --x11: 4;
+            --x11: 1.2;
             --y11: 11;
-            --w11: 18.33;
-            --h11: 22;
-            --x20: 4;
+            --w11: 21;
+            --h11: 21;
+            --x20: 1.2;
             --y20: 11;
-            --w20: 18.33;
-            --h20: 22;
+            --w20: 21;
+            --h20: 21;
           "
         >
           <span>Geometric error<br />Refinement strategy</span>
@@ -218,91 +160,189 @@
         <div
           class="dg-item dg-chip stays"
           style="
-            --x11: 23.83;
+            --x11: 23.2;
             --y11: 11;
-            --w11: 18.33;
-            --h11: 22;
-            --x20: 23.83;
+            --w11: 15.5;
+            --h11: 21;
+            --x20: 23.2;
             --y20: 11;
-            --w20: 18.33;
-            --h20: 22;
+            --w20: 15.5;
+            --h20: 21;
           "
         >
           <span>Geospatial positioning</span>
           <code class="v20">EXT_georeference</code>
         </div>
         <div
-          class="dg-item dg-chip stays"
+          class="dg-item dg-chip stays optional"
           style="
-            --x11: 43.67;
-            --y11: 11;
-            --w11: 18.33;
-            --h11: 22;
-            --x20: 43.67;
-            --y20: 11;
-            --w20: 18.33;
-            --h20: 22;
+            --x11: 39.7;
+            --y11: 12.5;
+            --w11: 17.5;
+            --h11: 18;
+            --x20: 39.7;
+            --y20: 12.5;
+            --w20: 17.5;
+            --h20: 18;
           "
         >
           <span>Implicit tiling</span>
-          <code class="v20">3DTILES_implicit_tiling</code>
+          <code class="v20">3DTILES_<wbr />implicit_tiling</code>
         </div>
         <div
-          class="dg-item dg-chip asset"
+          class="dg-item dg-chip stays optional new"
           style="
-            --x11: 73.5;
-            --y11: 46;
-            --w11: 11;
-            --h11: 23;
-            --x20: 65.5;
-            --y20: 46;
-            --w20: 15;
-            --h20: 23;
+            --x11: 58.2;
+            --y11: 12.5;
+            --w11: 17.5;
+            --h11: 18;
+            --o11: 0;
+            --x20: 58.2;
+            --y20: 12.5;
+            --w20: 17.5;
+            --h20: 18;
+          "
+        >
+          <span>Vector data</span>
+          <code class="v20">3DTILES_<wbr />tileset_vectors</code>
+        </div>
+        <div
+          class="dg-item dg-chip stays optional new"
+          style="
+            --x11: 76.7;
+            --y11: 12.5;
+            --w11: 17.5;
+            --h11: 18;
+            --o11: 0;
+            --x20: 76.7;
+            --y20: 12.5;
+            --w20: 17.5;
+            --h20: 18;
+          "
+        >
+          <span>Voxels</span>
+          <code class="v20">EXT_voxels</code>
+        </div>
+        <div
+          class="dg-item dg-chip grid to-gltf20"
+          style="
+            --x11: 29.7;
+            --y11: 49;
+            --w11: 27.5;
+            --h11: 24;
+            --x20: 29.7;
+            --y20: 49;
+            --w20: 27.5;
+            --h20: 24;
+          "
+        >
+          <span>Tile hierarchy</span>
+          <code class="v20">nodes · children</code>
+        </div>
+        <div
+          class="dg-item dg-chip grid to-gltf20"
+          style="
+            --x11: 1.2;
+            --y11: 49;
+            --w11: 27.5;
+            --h11: 24;
+            --x20: 1.2;
+            --y20: 49;
+            --w20: 27.5;
+            --h20: 24;
+          "
+        >
+          <span>Transforms</span>
+          <code class="v20">translation ·&nbsp;rotation ·&nbsp;scale</code>
+        </div>
+        <div
+          class="dg-item dg-chip grid to-gltf21"
+          style="
+            --x11: 1.2;
+            --y11: 74;
+            --w11: 27.5;
+            --h11: 24;
+            --x20: 1.2;
+            --y20: 74;
+            --w20: 27.5;
+            --h20: 24;
+          "
+        >
+          <span>Bounding volumes</span>
+          <code class="v20">boundingVolume · shapes</code>
+        </div>
+        <div
+          class="dg-item dg-chip grid to-gltf21"
+          style="
+            --x11: 29.7;
+            --y11: 74;
+            --w11: 27.5;
+            --h11: 24;
+            --x20: 29.7;
+            --y20: 74;
+            --w20: 27.5;
+            --h20: 24;
+          "
+        >
+          <span>Content URIs</span>
+          <code class="v20">externalAssets</code>
+        </div>
+        <div
+          class="dg-item dg-chip grid asset"
+          style="
+            --x11: 65.7;
+            --y11: 49;
+            --w11: 16.05;
+            --h11: 24;
+            --x20: 65.7;
+            --y20: 49;
+            --w20: 16.05;
+            --h20: 24;
           "
         >
           <span>Geometry</span>
         </div>
         <div
-          class="dg-item dg-chip asset"
+          class="dg-item dg-chip grid asset"
           style="
-            --x11: 85.5;
-            --y11: 46;
-            --w11: 11;
-            --h11: 23;
-            --x20: 81;
-            --y20: 46;
-            --w20: 15;
-            --h20: 23;
+            --x11: 82.75;
+            --y11: 49;
+            --w11: 16.05;
+            --h11: 24;
+            --x20: 82.75;
+            --y20: 49;
+            --w20: 16.05;
+            --h20: 24;
           "
         >
           <span>Materials</span>
         </div>
         <div
-          class="dg-item dg-chip asset"
+          class="dg-item dg-chip grid asset"
           style="
-            --x11: 73.5;
-            --y11: 73;
-            --w11: 11;
-            --h11: 23;
-            --x20: 65.5;
-            --y20: 73;
-            --w20: 15;
-            --h20: 23;
+            --x11: 65.7;
+            --y11: 74;
+            --w11: 16.05;
+            --h11: 24;
+            --x20: 65.7;
+            --y20: 74;
+            --w20: 16.05;
+            --h20: 24;
           "
         >
           <span>Textures</span>
         </div>
         <div
-          class="dg-item dg-chip asset"
+          class="dg-item dg-chip grid asset"
           style="
-            --x11: 85.5;
-            --y11: 73;
-            --w11: 11;
-            --h11: 23;
-            --x20: 81;
-            --y20: 73;
-            --w20: 15;
-            --h20: 23;
+            --x11: 82.75;
+            --y11: 74;
+            --w11: 16.05;
+            --h11: 24;
+            --x20: 82.75;
+            --y20: 74;
+            --w20: 16.05;
+            --h20: 24;
           "
         >
           <span>Metadata</span>

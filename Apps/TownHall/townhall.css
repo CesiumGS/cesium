@@ -41,7 +41,7 @@ body {
   bottom: 0;
   width: var(--panel-width);
   box-sizing: border-box;
-  padding: 2rem 2rem 4.5rem;
+  padding: 2rem;
   overflow-y: auto;
   font-size: 1.65rem;
   background-color: #141925;
@@ -59,13 +59,35 @@ body[data-layout="text"] #viewer {
 
 body[data-layout="text"] #panel {
   width: 100%;
-  padding: 5vh 4vw 4rem;
+  padding: 3vh 4vw;
   background-color: transparent;
   border-left-color: transparent;
 }
 
 body[data-layout="text"] .slide {
   font-size: 1.3rem;
+}
+
+.title-row {
+  margin-bottom: 2.5rem;
+}
+
+.title-row h1,
+.title-row .lead {
+  margin: 0;
+}
+
+.title-row h1 {
+  font-size: 3.6rem;
+}
+
+.title-row .lead {
+  font-size: 2rem;
+}
+
+/* The credits are for the dimmed backdrop globe, not the slide content. */
+body[data-layout="text"] .cesium-viewer-bottom {
+  display: none;
 }
 
 h1 {
@@ -115,12 +137,13 @@ pre code {
   --tiles: #4f8fe0;
   --gltf21: #d98cf5;
   --gltf20: #7cc65a;
+  --new: #f2b84b;
   position: relative;
   /* Text scales with height, but never past what a 16:9 diagram of the
      same width would allow, so wide chips can't overflow. */
   --u: min(1cqh, 0.5cqw);
   width: 100%;
-  height: calc(100vh - 17.5rem);
+  height: calc(94vh - 11rem);
   container-type: size;
 }
 
@@ -178,7 +201,7 @@ pre code {
 }
 
 .dg-title {
-  font-size: calc(var(--u) * 4.6);
+  font-size: calc(var(--u) * 5.4);
   font-weight: bold;
   line-height: 1.2;
   transition: color 0.8s;
@@ -213,7 +236,7 @@ pre code {
   border: 2px solid var(--tiles);
   border-radius: calc(var(--u) * 1.4);
   background-color: #182235;
-  font-size: calc(var(--u) * 4.2);
+  font-size: calc(var(--u) * 4.4);
   line-height: 1.2;
   text-align: center;
   transition-property:
@@ -226,49 +249,73 @@ pre code {
 }
 
 .dg-chip > span {
-  padding: 0 calc(var(--u) * 1.2);
+  padding: 0 calc(var(--u) * 0.6);
 }
 
 .dg-chip code {
   display: block;
   max-height: 0;
   overflow: hidden;
-  white-space: nowrap;
   font-size: calc(var(--u) * 2.9);
   transition-property: max-height, opacity;
   transition-duration: 0.5s;
 }
 
 #diagram[data-state="v20"] .dg-chip code {
-  max-height: 2em;
+  max-height: 3em;
 }
 
-#diagram[data-state="v20"] .dg-chip.moves {
+/* On the 2.0 slide: purple is new in glTF 2.1, green was already in glTF 2.0. */
+
+#diagram[data-state="v20"] .dg-chip.to-gltf21 {
   border-color: var(--gltf21);
   background-color: #4a2a5e;
   color: #ffffff;
 }
 
+#diagram[data-state="v20"] .dg-chip.to-gltf20 {
+  border-color: var(--gltf20);
+  background-color: #1b2a1b;
+}
+
+/* Optional extensions are dashed; the ones new in 3D Tiles 2.0 use --new. */
+
+/* The glTF 2.1 base reads larger than the 3D Tiles extensions above it. */
+.dg-chip.grid {
+  font-size: calc(var(--u) * 5);
+}
+
+.dg-chip.grid code {
+  font-size: calc(var(--u) * 3);
+}
+
+.dg-chip.optional {
+  border-style: dashed;
+  color: #9aa3b5;
+  font-size: calc(var(--u) * 3.4);
+}
+
+.dg-chip.optional code {
+  color: #7f9ab8;
+}
+
+.dg-chip.new {
+  border-color: var(--new);
+}
+
 .dg-arrow {
-  border-top: 3px solid #d6deeb;
+  margin-top: calc(var(--u) * -0.5);
+  border-top: calc(var(--u)) solid #e8eaf0;
 }
 
 .dg-arrow::after {
   content: "";
   position: absolute;
-  right: -2px;
-  top: -9px;
-  border: 7.5px solid transparent;
-  border-left: 12px solid #d6deeb;
+  right: calc(var(--u) * -0.5);
+  top: calc(var(--u) * -2.5);
+  border: calc(var(--u) * 2) solid transparent;
+  border-left: calc(var(--u) * 3) solid #e8eaf0;
   border-right: 0;
-}
-
-.dg-arrow code {
-  position: absolute;
-  bottom: calc(var(--u) * 0.7);
-  width: 100%;
-  font-size: calc(var(--u) * 2.6);
-  text-align: center;
 }
 
 #diagram[data-state="v11"] .v20,
@@ -292,7 +339,8 @@ pre code {
   transition-delay: 0.3s;
 }
 
-#diagram[data-state="v20"] .dg-chip code {
+#diagram[data-state="v20"] .dg-chip code,
+#diagram[data-state="v20"] .dg-chip.new {
   transition-delay: 1.1s;
 }
 
@@ -348,8 +396,8 @@ pre code {
   margin: 0 0 0.6em;
   padding: 0.15em 0.6em;
   border-radius: 999px;
-  background: rgba(217, 140, 245, 0.2);
-  color: #f3d6ff;
+  background: rgba(242, 184, 75, 0.2);
+  color: #ffe2a8;
   font-size: 0.8em;
 }
 
@@ -387,9 +435,10 @@ pre code {
 
 #nav {
   position: fixed;
-  right: 1rem;
-  bottom: 1rem;
+  top: 0.5rem;
+  right: 0.5rem;
   z-index: 20;
+  opacity: 0.6;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -397,9 +446,13 @@ pre code {
   color: #9fb4d8;
 }
 
+#nav:hover {
+  opacity: 1;
+}
+
 #nav button {
-  width: 2.2rem;
-  height: 2.2rem;
+  width: 1.8rem;
+  height: 1.8rem;
   border: 1px solid #2a3142;
   border-radius: 4px;
   background: #141925;
