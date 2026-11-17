@@ -26,8 +26,13 @@ const viewer = new Cesium.Viewer("viewer", {
 });
 const { scene, camera } = viewer;
 const { globe } = scene;
+camera.frustum.near = 1.0;
 
 const ellipsoidTerrain = scene.terrainProvider;
+
+scene.shadowMap.softShadows = true;
+scene.shadowMap.size = 4096;
+scene.shadowMap.darkness = 0.7;
 
 const naturalEarth = Cesium.ImageryLayer.fromProviderAsync(
   Cesium.TileMapServiceImageryProvider.fromUrl(
@@ -201,7 +206,12 @@ const agiGeoreference = Cesium.Matrix4.unpack([
   1216363.6111466389, -4736293.364982555, 4081329.7216236885, 1,
 ]);
 
+const snowdenMorning = Cesium.JulianDate.fromIso8601("2026-11-17T14:45:00Z");
+
 function showSnowden(context) {
+  viewer.clock.currentTime = Cesium.JulianDate.clone(snowdenMorning);
+  scene.shadowMap.enabled = true;
+  scene.postProcessStages.ambientOcclusion.enabled = true;
   const pair = loadSplitPair(
     "snowden",
     `${sampleData}snowden/tileset.json`,
@@ -653,6 +663,9 @@ function resetScene() {
   globe.translucency.enabled = globeDefaults.translucencyEnabled;
   globe.translucency.frontFaceAlpha = globeDefaults.frontFaceAlpha;
   scene.skyAtmosphere.show = globeDefaults.skyAtmosphereShow;
+  scene.shadowMap.enabled = false;
+  scene.postProcessStages.ambientOcclusion.enabled = false;
+  viewer.clock.currentTime = Cesium.JulianDate.now();
 }
 
 let currentIndex = -1;
