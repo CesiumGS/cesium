@@ -2,10 +2,14 @@
 id: CS-564
 title: How CS-545's branch reaches main without a hitld dispatch
 kind: decision
-state: planned
+state: done
 created: 2026-11-16
 project: CS-18
 decider: owner
+answer: "A. Merge by hand after the queue's checks: The orchestrator runs the queue's fast checks and full suite on the branch in a fresh worktree, shows you the result as a batch, and on your yes fast-forwards main to it, regenerates the views and logs the merge as a call."
+answered_at: 2026-11-17T03:14:25.531Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
