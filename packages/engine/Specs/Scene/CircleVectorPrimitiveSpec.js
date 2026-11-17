@@ -5,13 +5,13 @@ import {
   BufferPointCollection,
   BufferPointMaterial,
   Camera,
-  CircleLayer,
+  CircleVectorPrimitive,
   SceneMode,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
 describe(
-  "Scene/CircleLayer",
+  "Scene/CircleVectorPrimitive",
   () => {
     let scene;
     let collection;
@@ -33,20 +33,20 @@ describe(
     });
 
     afterEach(function () {
-      scene.vectorPrimitives.removeAll();
+      scene.primitives.removeAll();
       collection.destroy();
     });
 
     it("throws without a collection", function () {
-      expect(() => new CircleLayer({})).toThrowDeveloperError();
+      expect(() => new CircleVectorPrimitive({})).toThrowDeveloperError();
     });
 
-    it("renders points with the layer color", function () {
+    it("renders points with the primitive color", function () {
       const material = new BufferPointMaterial({ color: Color.RED, size: 8 });
       collection.add({ position, material }, new BufferPoint());
 
-      scene.vectorPrimitives.add(
-        new CircleLayer({
+      scene.primitives.add(
+        new CircleVectorPrimitive({
           collection,
           color: Color.LIME,
           blendOption: BlendOption.OPAQUE,
@@ -56,11 +56,11 @@ describe(
       expect(scene).toRender([0, 255, 0, 255]);
     });
 
-    it("renders points after the layer color changes", function () {
+    it("renders points after the primitive color changes", function () {
       collection.add({ position }, new BufferPoint());
 
-      const layer = scene.vectorPrimitives.add(
-        new CircleLayer({
+      const primitive = scene.primitives.add(
+        new CircleVectorPrimitive({
           collection,
           color: Color.LIME,
           blendOption: BlendOption.OPAQUE,
@@ -68,15 +68,15 @@ describe(
       );
       expect(scene).toRender([0, 255, 0, 255]);
 
-      layer.color = Color.BLUE;
+      primitive.color = Color.BLUE;
       expect(scene).toRender([0, 0, 255, 255]);
     });
 
     it("renders the outline color", function () {
       collection.add({ position }, new BufferPoint());
 
-      scene.vectorPrimitives.add(
-        new CircleLayer({
+      scene.primitives.add(
+        new CircleVectorPrimitive({
           collection,
           radius: 0.0,
           color: Color.RED,
@@ -92,8 +92,8 @@ describe(
     it("renders translucent points", function () {
       collection.add({ position }, new BufferPoint());
 
-      scene.vectorPrimitives.add(
-        new CircleLayer({
+      scene.primitives.add(
+        new CircleVectorPrimitive({
           collection,
           color: Color.RED.withAlpha(0.6),
           blendOption: BlendOption.TRANSLUCENT,
@@ -106,8 +106,8 @@ describe(
     it("renders points after blendOption changes", function () {
       collection.add({ position }, new BufferPoint());
 
-      const layer = scene.vectorPrimitives.add(
-        new CircleLayer({
+      const primitive = scene.primitives.add(
+        new CircleVectorPrimitive({
           collection,
           color: Color.RED.withAlpha(0.6),
           blendOption: BlendOption.OPAQUE,
@@ -115,15 +115,15 @@ describe(
       );
       expect(scene).toRender([255, 0, 0, 255]);
 
-      layer.blendOption = BlendOption.TRANSLUCENT;
+      primitive.blendOption = BlendOption.TRANSLUCENT;
       expect(scene).toRender([153, 0, 0, 255]);
     });
 
-    it("does not render if layer.show = false", function () {
+    it("does not render if primitive.show = false", function () {
       collection.add({ position }, new BufferPoint());
 
-      scene.vectorPrimitives.add(
-        new CircleLayer({
+      scene.primitives.add(
+        new CircleVectorPrimitive({
           collection,
           blendOption: BlendOption.OPAQUE,
           show: false,
@@ -136,8 +136,11 @@ describe(
     it("does not render if point.show = false", function () {
       const point = collection.add({ position }, new BufferPoint());
 
-      scene.vectorPrimitives.add(
-        new CircleLayer({ collection, blendOption: BlendOption.OPAQUE }),
+      scene.primitives.add(
+        new CircleVectorPrimitive({
+          collection,
+          blendOption: BlendOption.OPAQUE,
+        }),
       );
       expect(scene).toRender([255, 255, 255, 255]);
 
@@ -145,18 +148,18 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
-    it("renders one collection with two layers", function () {
+    it("renders one collection with two primitives", function () {
       const point = collection.add({ position }, new BufferPoint());
 
-      const red = scene.vectorPrimitives.add(
-        new CircleLayer({
+      const red = scene.primitives.add(
+        new CircleVectorPrimitive({
           collection,
           color: Color.RED,
           blendOption: BlendOption.OPAQUE,
         }),
       );
-      const blue = scene.vectorPrimitives.add(
-        new CircleLayer({
+      const blue = scene.primitives.add(
+        new CircleVectorPrimitive({
           collection,
           color: Color.BLUE,
           blendOption: BlendOption.OPAQUE,
@@ -177,11 +180,11 @@ describe(
       expect(scene).toRender([0, 0, 0, 255]);
     });
 
-    it("renders a collection after another layer is destroyed", function () {
+    it("renders a collection after another primitive is destroyed", function () {
       collection.add({ position }, new BufferPoint());
 
-      const red = scene.vectorPrimitives.add(
-        new CircleLayer({
+      const red = scene.primitives.add(
+        new CircleVectorPrimitive({
           collection,
           color: Color.RED,
           blendOption: BlendOption.OPAQUE,
@@ -189,12 +192,12 @@ describe(
       );
       expect(scene).toRender([255, 0, 0, 255]);
 
-      scene.vectorPrimitives.remove(red);
+      scene.primitives.remove(red);
       expect(red.isDestroyed()).toBe(true);
       expect(scene).toRender([0, 0, 0, 255]);
 
-      scene.vectorPrimitives.add(
-        new CircleLayer({
+      scene.primitives.add(
+        new CircleVectorPrimitive({
           collection,
           color: Color.BLUE,
           blendOption: BlendOption.OPAQUE,
@@ -206,7 +209,7 @@ describe(
     it("picks points", function () {
       collection.add({ position }, new BufferPoint());
 
-      scene.vectorPrimitives.add(new CircleLayer({ collection }));
+      scene.primitives.add(new CircleVectorPrimitive({ collection }));
 
       expect(scene).toPickAndCall((result) => {
         expect(result.collection).toBe(collection);
@@ -214,10 +217,12 @@ describe(
       });
     });
 
-    it("does not pick if layer.show = false", function () {
+    it("does not pick if primitive.show = false", function () {
       collection.add({ position }, new BufferPoint());
 
-      scene.vectorPrimitives.add(new CircleLayer({ collection, show: false }));
+      scene.primitives.add(
+        new CircleVectorPrimitive({ collection, show: false }),
+      );
 
       expect(scene).toPickAndCall((result) => {
         expect(result).toBeUndefined();

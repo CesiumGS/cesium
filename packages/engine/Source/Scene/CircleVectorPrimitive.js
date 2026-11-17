@@ -9,14 +9,14 @@ import renderBufferPointCollection from "./renderBufferPointCollection.js";
 /** @import BufferPointCollection from "./BufferPointCollection.js"; */
 
 /**
- * @typedef {object} CircleLayerOptions
- * @property {BufferPointCollection} collection The points drawn by the layer.
+ * @typedef {object} CircleVectorPrimitiveOptions
+ * @property {BufferPointCollection} collection The points drawn by the vector primitive.
  * @property {number} [radius=5.0] Radius of every circle, in pixels.
  * @property {Color} [color=Color.WHITE] Fill color of every circle.
  * @property {Color} [outlineColor=Color.BLACK] Outline color of every circle.
  * @property {number} [outlineWidth=0.0] Outline width of every circle, in pixels.
  * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how the circles are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}.
- * @property {boolean} [show=true] Whether the layer is drawn.
+ * @property {boolean} [show=true] Whether the vector primitive is drawn.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -28,8 +28,8 @@ import renderBufferPointCollection from "./renderBufferPointCollection.js";
  * const collection = new Cesium.BufferPointCollection();
  * collection.add({ position: Cesium.Cartesian3.fromDegrees(-75.16, 39.95) });
  *
- * viewer.scene.vectorPrimitives.add(
- *   new Cesium.CircleLayer({
+ * viewer.scene.primitives.add(
+ *   new Cesium.CircleVectorPrimitive({
  *     collection,
  *     radius: 8,
  *     color: Cesium.Color.ORANGE,
@@ -41,9 +41,9 @@ import renderBufferPointCollection from "./renderBufferPointCollection.js";
  * @extends VectorPrimitive
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
-class CircleLayer extends VectorPrimitive {
+class CircleVectorPrimitive extends VectorPrimitive {
   /**
-   * @param {CircleLayerOptions} options
+   * @param {CircleVectorPrimitiveOptions} options
    */
   constructor(options) {
     super(options);
@@ -86,8 +86,8 @@ class CircleLayer extends VectorPrimitive {
   }
 
   /**
-   * The points drawn by the layer. The layer does not own the collection;
-   * destroying the layer leaves the collection intact.
+   * The points drawn by the vector primitive. The vector primitive does not own
+   * the collection; destroying it leaves the collection intact.
    *
    * @type {BufferPointCollection}
    * @readonly
@@ -115,4 +115,4 @@ class CircleLayer extends VectorPrimitive {
   }
 }
 
-export default CircleLayer;
+export default CircleVectorPrimitive;
