@@ -22,6 +22,7 @@
 - Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
 - Added experimental `VectorPrimitive` and `CircleVectorPrimitive`. A vector primitive draws a `BufferPrimitiveCollection` with styling held by the vector primitive instead of per-primitive materials, and several vector primitives may draw the same collection. `CircleVectorPrimitive` draws points with a radius, fill color, and outline. [#13932](https://github.com/CesiumGS/cesium/pull/13932)
 - `CircleVectorPrimitive` can style each point individually, e.g. `radius: (point) => ...`, and `filter` selects which points are drawn. [#13942](https://github.com/CesiumGS/cesium/pull/13942)
+- Added experimental `VectorStyle`, `VectorStyleRule`, and `CircleSymbolizer`. A style creates vector primitives for a collection, drawing each feature with the first rule whose condition it matches. Conditions and symbolizer properties may be expressions in the 3D Tiles Styling language.
 
 #### Fixes :wrench:
 
