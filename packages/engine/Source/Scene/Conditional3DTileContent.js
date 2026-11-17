@@ -171,7 +171,7 @@ class LRUCache {
    * Returns whether an entry exists for the given key.
    *
    * @param {K} key The key
-   * @returns Whether the entry exists
+   * @returns {boolean} Whether the entry exists
    */
   has(key) {
     return this._map.has(key);
@@ -249,7 +249,7 @@ class LRUCache {
  * are called, and their purpose had to be reverse engineered
  * from the existing Request/Resource/RequestScheduler classes.
  *
- * @private
+ * @ignore
  */
 class RequestListener {
   /**
@@ -295,6 +295,7 @@ class RequestListener {
  * Implementation of a RequestListener that just logs the
  * request states to the console.
  *
+ * @ignore
  * @extends {RequestListener}
  */
 class LoggingRequestListener extends RequestListener {
@@ -346,7 +347,7 @@ class LoggingRequestListener extends RequestListener {
  * A class serving as a convenience wrapper around a request for
  * a resource.
  *
- * @private
+ * @ignore
  */
 class RequestHandle {
   /**
@@ -644,7 +645,7 @@ class RequestHandle {
  * had to be reverse engineered from existing Cesium3DTIleContent
  * implementations.
  *
- * @private
+ * @ignore
  */
 class ContentListener {
   /**
@@ -668,6 +669,7 @@ class ContentListener {
  * Implementation of a ContentListener that just logs the
  * states to the console.
  *
+ * @ignore
  * @extends {ContentListener}
  */
 class LoggingContentListener extends ContentListener {
@@ -717,6 +719,8 @@ class LoggingContentListener extends ContentListener {
  *   }
  *   console.log("Got content: ", content);
  * }
+ *
+ * @ignore
  */
 class ContentHandle {
   /**

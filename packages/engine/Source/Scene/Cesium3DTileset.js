@@ -250,6 +250,8 @@ function Cesium3DTileset(options) {
    *
    * Some of these tiles may also be moved into the '_requestedTiles'
    * as part of the traversal.
+   *
+   * @type {Cesium3DTile[]}
    */
   this._selectedTiles = [];
 
@@ -274,6 +276,8 @@ function Cesium3DTileset(options) {
    *
    * (Once the content is loaded, the tiles will be added to
    * the '_processingQueue');
+   *
+   * @type {Cesium3DTile[]}
    */
   this._requestedTiles = [];
 
@@ -287,6 +291,8 @@ function Cesium3DTileset(options) {
    *
    * So a tile being in this list roughly means that its content
    * is currently being loaded.
+   *
+   * @type {Cesium3DTile[]}
    */
   this._requestedTilesInFlight = [];
 
@@ -302,6 +308,8 @@ function Cesium3DTileset(options) {
    * of their content is called, loading data and creating WebGL
    * resources and doing other random stuff, which eventually leads
    * to the tile moving from the 'PROCESSING' state into the 'READY' state.
+   *
+   * @type {Cesium3DTile[]}
    */
   this._processingQueue = [];
 
