@@ -2,10 +2,11 @@
 id: CS-200
 title: Volumes, horizon culling and selection on the content's body
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-188
 needs: [CS-566]
+claimed_by: D-12
 ---
 
 ## Done when
