@@ -82,7 +82,7 @@ body[data-layout="text"] .slide {
 }
 
 .title-row .lead {
-  font-size: 2rem;
+  font-size: 1.75rem;
 }
 
 /* The credits are for the dimmed backdrop globe, not the slide content. */
@@ -299,6 +299,11 @@ pre code {
   color: #7f9ab8;
 }
 
+/* Optional glTF extension, e.g. EXT_structural_metadata. */
+.dg-chip.dashed {
+  border-style: dashed;
+}
+
 .dg-chip.new {
   border-color: var(--new);
 }
@@ -483,10 +488,10 @@ pre code {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  padding: 0.5rem;
+  padding: 0.6rem 0.9rem;
   border-radius: 4px;
   background: rgba(42, 42, 42, 0.8);
-  font-size: 1.1rem;
+  font-size: 1.7rem;
   font-weight: bold;
   text-align: center;
 }

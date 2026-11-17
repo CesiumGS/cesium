@@ -160,16 +160,30 @@ function loadSplitPair(key, legacyUrl, gltfUrl, modelMatrix) {
   });
 }
 
-async function showSplitComparison(context, pairPromise, heading) {
+async function showSplitComparison(
+  context,
+  pairPromise,
+  { heading = 0.0, terrainPromise, view } = {},
+) {
   setTerrain(ellipsoidTerrain);
-  const { left, right } = await pairPromise;
+  const [{ left, right }, terrain] = await Promise.all([
+    pairPromise,
+    terrainPromise,
+  ]);
   if (!context.isActive()) {
     return;
+  }
+  if (Cesium.defined(terrain)) {
+    setTerrain(terrain);
   }
   left.show = true;
   right.show = true;
   splitUi.hidden = false;
   setSplitPosition(0.5);
+  if (Cesium.defined(view)) {
+    camera.flyTo({ ...view, duration: 2.0 });
+    return;
+  }
   camera.flyToBoundingSphere(left.boundingSphere, {
     offset: new Cesium.HeadingPitchRange(
       heading,
@@ -193,17 +207,44 @@ function showSnowden(context) {
     `${sampleData}snowden/tileset.json`,
     `${sampleData}gltf-2.1/snowden/root.tileset.gltf`,
   );
-  return showSplitComparison(context, pair, 0.0);
+  return showSplitComparison(context, pair, {
+    terrainPromise: loadWorldTerrain(),
+  });
 }
 
-function showAgi(context) {
-  const pair = loadSplitPair(
+const agiBoundingVolumesInput = document.getElementById("agiBoundingVolumes");
+
+function loadAgi() {
+  return loadSplitPair(
     "agi",
     `${sampleData}AGI_HQ/tileset.json`,
     `${sampleData}gltf-2.1/AGI_HQ/root.tileset.gltf`,
     agiGeoreference,
   );
-  return showSplitComparison(context, pair, 0.0);
+}
+
+async function applyAgiBoundingVolumes() {
+  const { left, right } = await loadAgi();
+  for (const tileset of [left, right]) {
+    tileset.debugShowBoundingVolume = agiBoundingVolumesInput.checked;
+  }
+}
+
+agiBoundingVolumesInput.addEventListener("change", applyAgiBoundingVolumes);
+
+function showAgi(context) {
+  const pair = loadAgi();
+  applyAgiBoundingVolumes();
+  return showSplitComparison(context, pair, {
+    view: {
+      destination: Cesium.Cartesian3.fromDegrees(-75.59663, 40.0373, 104.8),
+      orientation: {
+        heading: Cesium.Math.toRadians(351.75),
+        pitch: Cesium.Math.toRadians(-25.24),
+        roll: 0.0,
+      },
+    },
+  });
 }
 
 // 3DTILES_tileset_vectors: river network draped on terrain
@@ -238,10 +279,10 @@ function loadRiver() {
 
 async function showRiver(context) {
   camera.flyTo({
-    destination: Cesium.Cartesian3.fromDegrees(-96.0, 25.0, 1.4e6),
+    destination: Cesium.Cartesian3.fromDegrees(-95.07, 26.88, 2.47e6),
     orientation: {
-      heading: 0.0,
-      pitch: Cesium.Math.toRadians(-38.55),
+      heading: Cesium.Math.toRadians(-1.06),
+      pitch: Cesium.Math.toRadians(-66.86),
       roll: 0.0,
     },
     duration: 0.0,

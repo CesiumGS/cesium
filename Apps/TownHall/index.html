@@ -59,7 +59,7 @@
         <h1>3D Tiles</h1>
         <p class="lead">
           Streaming massive 3D geospatial content: photogrammetry, CAD/BIM,
-          point clouds, vectors
+          point clouds, Gaussian splats, and more...
         </p>
       </section>
 
@@ -333,7 +333,7 @@
           <span>Textures</span>
         </div>
         <div
-          class="dg-item dg-chip grid asset"
+          class="dg-item dg-chip grid asset dashed"
           style="
             --x11: 82.75;
             --y11: 74;
@@ -353,8 +353,7 @@
         <h2>Demo: <code>3DTILES_tileset</code></h2>
         <p>
           Left: 3D Tiles 1.1 <code>tileset.json</code>. Right: the same data as
-          a glTF 2.1 <code>root.tileset.gltf</code>. Drag the divider to
-          compare.
+          a glTF 2.1 <code>root.tileset.gltf</code>.
         </p>
         <p>Each tile is a glTF node:</p>
         <pre><code>"nodes": [{
@@ -382,6 +381,12 @@
           AGI HQ as an implicit octree. One root node describes the whole tree
           with URI templates and subtree availability files.
         </p>
+        <div class="controls">
+          <label class="checkbox">
+            <input id="agiBoundingVolumes" type="checkbox" />
+            Show tile bounding volumes
+          </label>
+        </div>
         <pre><code>"3DTILES_implicit_tiling": {
   "subdivisionScheme": "OCTREE",
   "availableLevels": 6,
