@@ -7,6 +7,7 @@ import {
   ComponentDatatype,
   EncodedCartesian3,
   PrimitiveType,
+  WebGLConstants,
   defined,
 } from "@cesium/core";
 import BufferPoint from "./BufferPoint.js";
@@ -392,9 +393,11 @@ function renderBufferPointCollection(
         pass === Pass.OPAQUE
           ? BlendingState.DISABLED
           : BlendingState.ALPHA_BLEND,
-      depthTest: { enabled: true },
-      // Without OIT, depth writes would hide later translucent commands at the same depth.
-      depthMask: pass === Pass.OPAQUE,
+      depthTest: {
+        enabled: true,
+        // Vector primitives sharing a collection draw at equal depths; later ones draw on top.
+        func: defined(style) ? WebGLConstants.LEQUAL : WebGLConstants.LESS,
+      },
     });
   }
 
