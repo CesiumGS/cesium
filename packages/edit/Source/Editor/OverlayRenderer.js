@@ -405,6 +405,17 @@ class OverlayRenderer {
   }
 
   /**
+   * The mesh's vertex positions, in overlay order, or undefined before the
+   * first upload.
+   *
+   * @type {DataTexture | undefined}
+   * @readonly
+   */
+  get positionTexture() {
+    return this.#positionTexture?.texture;
+  }
+
+  /**
    * Sets the mesh's local-to-world transform.
    *
    * @param {Matrix4} matrix The transform.
