@@ -1,0 +1,4 @@
+{
+  "extends": "./tsconfig.types.base.json",
+  "files": ["Source/Cesium.d.ts"]
+}
