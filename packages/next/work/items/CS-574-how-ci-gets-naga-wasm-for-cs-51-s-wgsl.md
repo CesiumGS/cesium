@@ -2,10 +2,14 @@
 id: CS-574
 title: How CI gets naga-wasm for CS-51's WGSL validation
 kind: decision
-state: planned
+state: done
 created: 2026-11-17
 project: CS-10
 decider: owner
+answer: "A. devDependency of @cesium/next: A follow-up item adds naga-wasm 30.2.0 to packages/next's devDependencies and points the test at it; CI installs it with the rest."
+answered_at: 2026-11-18T03:09:21.048Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

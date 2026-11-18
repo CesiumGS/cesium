@@ -2,10 +2,14 @@
 id: CS-575
 title: Adding CS-51's irWgsl browser suite to the browser-suite gate
 kind: decision
-state: planned
+state: done
 created: 2026-11-17
 project: CS-10
 decider: owner
+answer: "A. Add it to the gate: A follow-up item registers irWgsl with the browser-suite gate, so every change under src/ir runs it."
+answered_at: 2026-11-18T03:09:21.586Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
