@@ -12,6 +12,7 @@ CS-9 The WebGL 2 renderer
 
 CS-10 Cesium IR
   CS-48  The core (types, rates, equations, literal slots, the builder)
+  CS-51  The WGSL emitter
   CS-543  CS-48's formula cases checked against the whole KHR_interactivity spec
 
 CS-12 The job system's ports
@@ -31,6 +32,7 @@ CS-18 The work tracker
 
 CS-188 Earth to Moon (frames 5c to 5h)
   CS-200  Volumes, horizon culling and selection on the content's body
+  CS-201  Clamping, heights, models, point sources and picks per body
 
 CS-389 Dyno as the development harness
   CS-403  Dyno's navigation rail, regrouped by what people come to do
@@ -38,5 +40,5 @@ CS-389 Dyno as the development harness
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
 
-17 merged item(s) not in a release
+19 merged item(s) not in a release
 ```

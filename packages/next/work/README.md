@@ -129,14 +129,14 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 2 of 30 done, 9 ready, 17 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 7 of 34 done, 9 ready, 16 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
 - [x] [CS-48](./items/CS-48-the-core-types-rates-equations-literal-slots.md) The core (types, rates, equations, literal slots, the builder). Done.
 - [ ] [CS-49](./items/CS-49-the-versioned-json-format.md) The versioned JSON format. Needs CS-48.
 - [ ] [CS-50](./items/CS-50-the-passes-float64-evaluator-autodiff-intervals.md) The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms). Needs CS-48.
-- [ ] [CS-51](./items/CS-51-the-wgsl-emitter.md) The WGSL emitter. Needs CS-48.
+- [x] [CS-51](./items/CS-51-the-wgsl-emitter.md) The WGSL emitter. Done.
 - [ ] [CS-52](./items/CS-52-the-glsl-es-3-00-emitter.md) The GLSL ES 3.00 emitter. Needs CS-51.
 - [ ] [CS-53](./items/CS-53-transforms-move-onto-cesium-ir-as-pure-moves.md) Transforms move onto Cesium IR, as pure moves. Needs CS-48, CS-50 and CS-51.
 - [ ] [CS-54](./items/CS-54-routes-on-both-emitters-with-the-residual-and.md) Routes on both emitters, with the residual and df64 forms. Needs CS-52 and CS-53.
@@ -165,13 +165,17 @@ Milestone: Cesium IR covers what materials need ([CS-419](./milestones/CS-419-ce
 - [ ] [CS-548](./items/CS-548-the-ir-s-math-eq-covers-floatn-and-bool-as-khr.md) The IR's math/eq covers floatN and bool, as KHR_interactivity defines it. Needs CS-48.
 - [ ] [CS-549](./items/CS-549-the-ir-models-math-normalize-s-isvalid-output.md) The IR models math/normalize's isValid output. Needs CS-48.
 - [ ] [CS-550](./items/CS-550-the-core-ir-spike-s-evaluator-gets-dot-and.md) The core IR spike's evaluator gets dot and intToFloat's signed zero right. Needs CS-48 and CS-543.
+- [ ] [CS-571](./items/CS-571-the-ir-builder-rewrites-x-c-to-x-only-when-c-is.md) The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires. Needs CS-546.
 
 No milestone
 
 - [?] [CS-372](./items/CS-372-custom-shading-and-styling-leftovers.md) Custom shading and styling leftovers. Proposed. Needs CS-61.
 - [?] [CS-373](./items/CS-373-slang-ahead-of-time-for-apps-a-cli-and-a.md) Slang ahead of time for apps: a CLI and a bundler plugin. Proposed. Needs CS-61.
 - [x] [CS-543](./items/CS-543-cs-48-s-formula-cases-checked-against-the-whole.md) CS-48's formula cases checked against the whole KHR_interactivity spec. Done.
-- [ ] [CS-546](./items/CS-546-the-builder-s-x-0-rewrite-and-the-spec-s-signed.md) decision: The builder's x + 0 rewrite and the spec's signed zero. Needs nothing. Decided by owner.
+- [x] [CS-546](./items/CS-546-the-builder-s-x-0-rewrite-and-the-spec-s-signed.md) decision: The builder's x + 0 rewrite and the spec's signed zero. Done.
+- [x] [CS-570](./items/CS-570-executors-blocked-by-the-bash-guard-s-match-on.md) decision: Executors blocked by the Bash guard's match on the word hitld. Done.
+- [x] [CS-574](./items/CS-574-how-ci-gets-naga-wasm-for-cs-51-s-wgsl.md) decision: How CI gets naga-wasm for CS-51's WGSL validation. Done.
+- [x] [CS-575](./items/CS-575-adding-cs-51-s-irwgsl-browser-suite-to-the.md) decision: Adding CS-51's irWgsl browser suite to the browser-suite gate. Done.
 
 ### Live MaterialX graph editing
 
@@ -410,7 +414,7 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 15 of 26 done, 3 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 15 of 27 done, 4 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
@@ -430,6 +434,7 @@ Milestone: Dyno's Work page shows the live system and the release plan ([CS-561]
 - [ ] [CS-547](./items/CS-547-your-move-s-in-progress-shows-the-live-run.md) Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Needs nothing.
 - [ ] [CS-562](./items/CS-562-dyno-s-work-page-lists-the-items-in-no.md) Dyno's Work page lists the items in no milestone, filterable by kind and state. Needs nothing.
 - [ ] [CS-563](./items/CS-563-dyno-s-roadmap-shows-proposed-milestones-with.md) Dyno's roadmap shows proposed milestones with dashed outlines. Needs nothing.
+- [ ] [CS-573](./items/CS-573-dyno-s-work-page-shows-each-kind-of-entity-the.md) Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at. Needs nothing.
 
 No milestone
 
@@ -471,12 +476,12 @@ Milestone: Issues found for other teams are filed and answered ([CS-505](./miles
 
 ### Earth to Moon (frames 5c to 5h)
 
-[CS-188](./projects/CS-188-earth-to-moon-frames-5c-to-5h.md), Planned, led by owner: 2 of 43 done, 11 ready, 30 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-188](./projects/CS-188-earth-to-moon-frames-5c-to-5h.md), Planned, led by owner: 3 of 43 done, 11 ready, 29 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The Earth and the Moon render together ([CS-424](./milestones/CS-424-the-earth-and-the-moon-render-together.md), Planned)
 
 - [x] [CS-200](./items/CS-200-volumes-horizon-culling-and-selection-on-the.md) Volumes, horizon culling and selection on the content's body. Done.
-- [ ] [CS-201](./items/CS-201-clamping-heights-models-point-sources-and-picks.md) Clamping, heights, models, point sources and picks per body. Needs CS-200.
+- [x] [CS-201](./items/CS-201-clamping-heights-models-point-sources-and-picks.md) Clamping, heights, models, point sources and picks per body. Done.
 - [ ] [CS-202](./items/CS-202-a-view-on-another-body.md) A view on another body. Needs CS-201.
 - [ ] [CS-203](./items/CS-203-depth-across-bodies.md) Depth across bodies. Needs CS-202.
 - [ ] [CS-204](./items/CS-204-the-impostor-s-level-of-detail-and-surface.md) The impostor's level of detail and surface tilesets. Needs CS-203.
@@ -579,7 +584,7 @@ No milestone
 
 ### Vector drawing and the styling language
 
-[CS-190](./projects/CS-190-vector-drawing-and-the-styling-language.md), Planned, led by owner: 0 of 12 done, 5 ready, 2 blocked, 5 proposed. Plan: [styling-language.md](../../../docs/design/styling-language.md).
+[CS-190](./projects/CS-190-vector-drawing-and-the-styling-language.md), Planned, led by owner: 0 of 11 done, 4 ready, 2 blocked, 5 proposed. Plan: [styling-language.md](../../../docs/design/styling-language.md).
 
 Milestone: Lines, polygons, labels and CAD styles draw on one path ([CS-499](./milestones/CS-499-lines-polygons-labels-and-cad-styles-draw-on.md), Planned)
 
@@ -595,7 +600,6 @@ Milestone: The styling language's form and semantics are decided ([CS-501](./mil
 
 - [ ] [CS-265](./items/CS-265-the-styling-language-its-form-where-its-spec.md) decision: The styling language: its form, where its spec lives, and when it goes to the 3D Tiles group?. Needs nothing. Decided by owner.
 - [ ] [CS-266](./items/CS-266-styling-semantics-element-wise-overrides.md) decision: Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order?. Needs nothing. Decided by owner.
-- [ ] [CS-453](./items/CS-453-what-editing-should-the-engine-support-with.md) decision: What editing should the engine support, with vector data and GIS sources among it?. Needs nothing. Decided by owner.
 
 No milestone
 
@@ -607,7 +611,7 @@ No milestone
 
 ### Content sources and formats
 
-[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 1 of 22 done, 8 ready, 2 blocked, 11 proposed.
+[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 2 of 22 done, 7 ready, 4 blocked, 9 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token ([CS-497](./milestones/CS-497-cesium-ion-is-a-swappable-module-with-a-default.md), Planned)
 
@@ -634,9 +638,9 @@ Milestone: Content from any source loads through one module seam ([CS-560](./mil
 
 No milestone
 
-- [ ] [CS-275](./items/CS-275-which-of-m6-s-remaining-showcases-to-build.md) decision: Which of M6's remaining showcases to build: splats, compute point clouds, WebXR, headless Dawn?. Needs nothing. Decided by owner.
-- [?] [CS-276](./items/CS-276-point-clouds-gltf-points-and-pnts-compute.md) Point clouds: glTF points and `pnts`, compute rendering with eye-dome lighting. Proposed. Needs CS-275.
-- [?] [CS-277](./items/CS-277-gaussian-splats-with-a-gpu-sort.md) Gaussian splats with a GPU sort. Proposed. Needs CS-275.
+- [x] [CS-275](./items/CS-275-which-of-m6-s-remaining-showcases-to-build.md) decision: Which of M6's remaining showcases to build: splats, compute point clouds, WebXR, headless Dawn?. Done.
+- [ ] [CS-276](./items/CS-276-point-clouds-gltf-points-and-pnts-compute.md) Point clouds: glTF points and `pnts`, compute rendering with eye-dome lighting. Needs CS-275 and CS-552.
+- [ ] [CS-277](./items/CS-277-gaussian-splats-with-a-gpu-sort.md) Gaussian splats with a GPU sort. Needs CS-275 and CS-552.
 - [?] [CS-278](./items/CS-278-gltf-animation-playback-skins-morph-targets-and.md) glTF animation playback: skins, morph targets and animated nodes. Proposed. Needs CS-212 (Earth to Moon (frames 5c to 5h)).
 - [?] [CS-279](./items/CS-279-more-terrain-and-imagery-providers-and-several.md) More terrain and imagery providers, and several imagery layers on one globe. Proposed. Needs nothing.
 - [?] [CS-280](./items/CS-280-thin-wrappers-for-ion-s-rest-api-including.md) Thin wrappers for ion's REST API, including element metadata. Proposed. Needs CS-269.
@@ -681,7 +685,7 @@ No milestone
 
 ### B-reps and geometry queries
 
-[CS-193](./projects/CS-193-b-reps-and-geometry-queries.md), Planned, led by owner: 0 of 18 done, 6 ready, 6 blocked, 6 proposed. Plan: [breps-and-geometry-queries.md](../../../docs/design/breps-and-geometry-queries.md).
+[CS-193](./projects/CS-193-b-reps-and-geometry-queries.md), Planned, led by owner: 3 of 19 done, 5 ready, 6 blocked, 5 proposed, 1 dropped. Plan: [breps-and-geometry-queries.md](../../../docs/design/breps-and-geometry-queries.md).
 
 Milestone: B-reps snap and measure exactly ([CS-494](./milestones/CS-494-b-reps-snap-and-measure-exactly.md), Planned)
 
@@ -690,28 +694,30 @@ Milestone: B-reps snap and measure exactly ([CS-494](./milestones/CS-494-b-reps-
 
 Milestone: USD B-reps stream as 3D Tiles ([CS-495](./milestones/CS-495-usd-b-reps-stream-as-3d-tiles.md), Planned)
 
-- [ ] [CS-299](./items/CS-299-b-rep-tiles-the-extension-s-name-and-schema.md) decision: B-rep tiles: the extension's name and schema, NURBS or Bézier storage, and the USD input path?. Needs nothing. Decided by owner.
-- [ ] [CS-304](./items/CS-304-brepsource-fromusd-and-healing-as-a-module.md) `BrepSource.fromUsd`, and healing as a module. Needs CS-299.
+- [x] [CS-299](./items/CS-299-b-rep-tiles-the-extension-s-name-and-schema.md) decision: B-rep tiles: the extension's name and schema, NURBS or Bézier storage, and the USD input path?. Done.
+- [ ] [CS-304](./items/CS-304-brepsource-fromusd-and-healing-as-a-module.md) `BrepSource.fromUsd`, and healing as a module. Needs CS-299 and CS-576.
 - [ ] [CS-305](./items/CS-305-the-b-rep-tiler-usd-to-3d-tiles-2-0-coarse.md) The B-rep tiler: USD to 3D Tiles 2.0, coarse levels as meshes. Needs CS-304.
 - [ ] [CS-306](./items/CS-306-editing-overrides-on-b-rep-tiles.md) Editing overrides on B-rep tiles. Needs CS-305.
 - [ ] [CS-309](./items/CS-309-b-rep-trims-and-edges-on-the-vector-design-s.md) B-rep trims and edges on the vector design's shared kernels. Needs CS-258 (Vector drawing and the styling language).
 - [ ] [CS-310](./items/CS-310-licence-check-for-open-cascade-lgpl-2-1-before.md) external: Licence check for Open Cascade (LGPL 2.1) before distribution. Needs nothing. Waiting on legal review.
+- [ ] [CS-576](./items/CS-576-spike-b-rep-tiles-as-nurbs-or-pre-split-bezier.md) Spike: B-rep tiles as NURBS or pre-split Bézier patches, and a way to read USD's B-reps. Needs CS-299.
 
 Milestone: The CSG sample edits with local operations ([CS-496](./milestones/CS-496-the-csg-sample-edits-with-local-operations.md), Planned)
 
-- [ ] [CS-301](./items/CS-301-does-the-csg-sample-stop-at-phase-3.md) decision: Does the CSG sample stop at phase 3?. Needs nothing. Decided by owner.
+- [x] [CS-301](./items/CS-301-does-the-csg-sample-stop-at-phase-3.md) decision: Does the CSG sample stop at phase 3?. Done.
 - [ ] [CS-307](./items/CS-307-the-csg-sample-phase-3-local-operations-as.md) The CSG sample, phase 3: local operations as feature nodes. Needs nothing.
 - [ ] [CS-308](./items/CS-308-the-csg-sample-s-four-view-layout.md) The CSG sample's four-view layout. Needs CS-218 (Earth to Moon (frames 5c to 5h)).
 
 No milestone
 
-- [ ] [CS-300](./items/CS-300-subdivision-surfaces-opensubdiv-or-a-typescript.md) decision: Subdivision surfaces: OpenSubdiv, or a TypeScript patch conversion?. Needs nothing. Decided by owner.
+- [x] [CS-300](./items/CS-300-subdivision-surfaces-opensubdiv-or-a-typescript.md) decision: Subdivision surfaces: OpenSubdiv, or a TypeScript patch conversion?. Done.
 - [?] [CS-311](./items/CS-311-distance-between-two-geometries-across.md) Distance between two geometries across representations and frames. Proposed. Needs nothing.
-- [?] [CS-312](./items/CS-312-subdivision-surfaces-through-the-query.md) Subdivision surfaces through the query interface and the GPU path. Proposed. Needs CS-300.
+- [?] [CS-312](./items/CS-312-subdivision-surfaces-through-the-query.md) Subdivision surfaces through the query interface and the GPU path. Proposed. Needs CS-300 and CS-577.
 - [?] [CS-313](./items/CS-313-f-reps-drawn-by-ray-marching.md) F-reps drawn by ray marching. Proposed. Needs nothing.
 - [?] [CS-314](./items/CS-314-one-gpu-tessellation-engine-for-reprojected.md) One GPU tessellation engine for reprojected models, B-reps and meshes under smooth routes. Proposed. Needs nothing.
 - [?] [CS-315](./items/CS-315-kernel-robustness-smlib-and-occt-on-real.md) Kernel robustness: SMLib and OCCT on real trimmed models. Proposed. Needs nothing.
-- [?] [CS-316](./items/CS-316-the-csg-sample-phases-4-and-5-sketches-and.md) The CSG sample, phases 4 and 5: sketches and parametric history. Proposed. Needs CS-301.
+- [-] [CS-316](./items/CS-316-the-csg-sample-phases-4-and-5-sketches-and.md) The CSG sample, phases 4 and 5: sketches and parametric history. Dropped: The owner answered CS-301 on 2026-11-18: the CSG sample stops at phase 3.
+- [ ] [CS-577](./items/CS-577-spike-subdivision-surfaces-through-opensubdiv.md) Spike: subdivision surfaces through OpenSubdiv in WebAssembly or a TypeScript patch conversion, measured. Needs CS-300.
 
 ### Budgeted selection and memory
 
@@ -731,7 +737,7 @@ No milestone
 
 ### Benchmarks, parity and image regression
 
-[CS-195](./projects/CS-195-benchmarks-parity-and-image-regression.md), Planned, led by owner: 0 of 23 done, 10 ready, 5 blocked, 8 proposed. Plan: [benchmark-suite.md](../../../docs/design/benchmark-suite.md).
+[CS-195](./projects/CS-195-benchmarks-parity-and-image-regression.md), Planned, led by owner: 0 of 23 done, 11 ready, 5 blocked, 7 proposed. Plan: [benchmark-suite.md](../../../docs/design/benchmark-suite.md).
 
 Milestone: Benchmarks run per merge on dedicated machines ([CS-482](./milestones/CS-482-benchmarks-run-per-merge-on-dedicated-machines.md), Planned)
 
@@ -769,11 +775,11 @@ No milestone
 - [?] [CS-332](./items/CS-332-benchmark-catalog-growth.md) Benchmark catalog growth. Proposed. Needs nothing.
 - [?] [CS-333](./items/CS-333-dyno-s-analysis-and-results-features-notes.md) Dyno's analysis and results features: notes, saved views, authoring in the Explorer, deeper analysis. Proposed. Needs nothing.
 - [?] [CS-334](./items/CS-334-benchmarks-across-os-browser-and-gpu-vendor.md) Benchmarks across OS, browser and GPU vendor, with power and thermals. Proposed. Needs CS-324.
-- [?] [CS-335](./items/CS-335-headless-rendering-on-dawn-s-node-package.md) Headless rendering on Dawn's Node package. Proposed. Needs CS-275 (Content sources and formats).
+- [ ] [CS-335](./items/CS-335-headless-rendering-on-dawn-s-node-package.md) Headless rendering on Dawn's Node package. Needs CS-275 (Content sources and formats).
 
 ### Infrastructure and geoscience capabilities
 
-[CS-196](./projects/CS-196-infrastructure-and-geoscience-capabilities.md), Planned, led by owner: 0 of 7 done, 0 ready, 0 blocked, 7 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](../../../docs/design/infrastructure-and-geoscience-capabilities.md).
+[CS-196](./projects/CS-196-infrastructure-and-geoscience-capabilities.md), Planned, led by owner: 0 of 7 done, 0 ready, 1 blocked, 6 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](../../../docs/design/infrastructure-and-geoscience-capabilities.md).
 
 Milestone: Infrastructure and geoscience data shows in 2.0 ([CS-534](./milestones/CS-534-infrastructure-and-geoscience-data-shows-in-2-0.md), Proposed)
 
@@ -781,7 +787,7 @@ Milestone: Infrastructure and geoscience data shows in 2.0 ([CS-534](./milestone
 - [?] [CS-338](./items/CS-338-per-element-overrides-at-scale-through-the.md) Per-element overrides at scale, through the styling language. Proposed. Needs CS-266 (Vector drawing and the styling language).
 - [?] [CS-339](./items/CS-339-volumes-voxel-grids-ray-marched-or-as.md) Volumes: voxel grids, ray-marched or as isosurfaces. Proposed. Needs nothing.
 - [?] [CS-340](./items/CS-340-printing-to-scale.md) Printing to scale. Proposed. Needs CS-218 (Earth to Moon (frames 5c to 5h)).
-- [?] [CS-341](./items/CS-341-webxr-including-aligning-a-model-with-its-site.md) WebXR, including aligning a model with its site. Proposed. Needs CS-275 (Content sources and formats) and CS-213 (Earth to Moon (frames 5c to 5h)).
+- [ ] [CS-341](./items/CS-341-webxr-including-aligning-a-model-with-its-site.md) WebXR, including aligning a model with its site. Needs CS-275 (Content sources and formats) and CS-213 (Earth to Moon (frames 5c to 5h)).
 - [?] [CS-342](./items/CS-342-the-infrastructure-and-geoscience-gallery.md) The infrastructure and geoscience gallery examples. Proposed. Needs nothing.
 - [?] [CS-343](./items/CS-343-gallery-a-vehicle-s-lidar-over-the-design.md) Gallery: a vehicle's lidar over the design. Proposed. Needs CS-276 (Content sources and formats).
 
@@ -849,7 +855,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 2 of 25 done, 5 ready, 18 blocked. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 5 of 25 done, 2 ready, 18 blocked. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -874,15 +880,15 @@ Milestone: Studies turn runs into verdicts ([CS-480](./milestones/CS-480-studies
 - [ ] [CS-402](./items/CS-402-measuring-with-dyno-in-agents-md-and-its-skill.md) "Measuring with Dyno" in AGENTS.md, and its skill. Needs CS-390, CS-392 and CS-404.
 - [ ] [CS-404](./items/CS-404-studies-the-model-the-files-and-the-commands.md) Studies: the model, the files and the commands. Needs CS-390.
 - [ ] [CS-405](./items/CS-405-the-studies-page.md) The Studies page. Needs CS-395, CS-403 and CS-404.
-- [ ] [CS-409](./items/CS-409-who-records-a-study-s-verdict-and-does-a.md) decision: Who records a study's verdict, and does a verdict close a decision?. Needs nothing. Decided by owner.
-- [ ] [CS-410](./items/CS-410-does-hypothesis-on-a-run-without-study-open-a.md) decision: Does `--hypothesis` on a run without `--study` open a study?. Needs nothing. Decided by owner.
+- [x] [CS-409](./items/CS-409-who-records-a-study-s-verdict-and-does-a.md) decision: Who records a study's verdict, and does a verdict close a decision?. Done.
+- [x] [CS-410](./items/CS-410-does-hypothesis-on-a-run-without-study-open-a.md) decision: Does `--hypothesis` on a run without `--study` open a study?. Done.
 
 Milestone: Other machines and devices run Dyno's scenes ([CS-481](./milestones/CS-481-other-machines-and-devices-run-dyno-s-scenes.md), Planned)
 
 - [ ] [CS-406](./items/CS-406-the-local-certificate-authority-the-hub-and.md) The local certificate authority, the hub and pairing. Needs CS-390.
 - [ ] [CS-407](./items/CS-407-the-runner-and-remote-runs.md) The runner and remote runs. Needs CS-390 and CS-406.
 - [ ] [CS-408](./items/CS-408-the-device-lab.md) The device lab. Needs CS-394, CS-404 and CS-407.
-- [ ] [CS-411](./items/CS-411-may-the-mac-make-baseline-runs-in-the-laptop-s.md) decision: May the Mac make baseline runs in the laptop's browser?. Needs nothing. Decided by owner.
+- [x] [CS-411](./items/CS-411-may-the-mac-make-baseline-runs-in-the-laptop-s.md) decision: May the Mac make baseline runs in the laptop's browser?. Done.
 
 Milestone: Dyno switches between the engine and the work ([CS-519](./milestones/CS-519-dyno-switches-between-the-engine-and-the-work.md), Planned)
 
@@ -896,21 +902,29 @@ No milestone
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 0 of 9 done, 5 ready, 4 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 1 of 10 done, 5 ready, 4 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
-- [ ] [CS-102](./items/CS-102-the-public-api-review-with-the-protocol-table.md) The public API review, with the protocol table and the façade's constraints. Needs CS-101 (worker-mode façade), CS-430, CS-431, CS-432, CS-433, CS-454 and CS-567 (worker-mode façade).
+- [ ] [CS-102](./items/CS-102-the-public-api-review-with-the-protocol-table.md) The public API review, with the protocol table and the façade's constraints. Needs CS-101 (worker-mode façade), CS-430, CS-431, CS-432, CS-433, CS-454, CS-567 (worker-mode façade) and CS-572.
 - [ ] [CS-430](./items/CS-430-the-webgpu-seams-audited-each-seam-its-bypass.md) The WebGPU seams audited: each seam, its bypass test, and the seams still missing. Needs nothing.
 - [ ] [CS-431](./items/CS-431-the-camera-chain-s-layers-checked-against-what.md) The camera chain's layers checked against what each may know. Needs CS-101 (worker-mode façade).
 - [ ] [CS-432](./items/CS-432-the-api-s-shape-checked-sync-and-async.md) The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors. Needs CS-101 (worker-mode façade).
 - [ ] [CS-433](./items/CS-433-promotions-and-demotions-proposed-what-every.md) Promotions and demotions proposed: what every app needs, and what is exported only for examples. Needs CS-101 (worker-mode façade).
 - [ ] [CS-438](./items/CS-438-which-of-the-first-public-api-review-s-proposed.md) decision: Which of the first public API review's proposed changes do you approve?. Needs CS-102. Decided by owner.
-- [ ] [CS-454](./items/CS-454-what-is-the-full-version-of-scene-items.md) decision: What is the full version of scene items: references, groups, the globe as an item, and how close to USD?. Needs nothing. Decided by owner.
+- [x] [CS-454](./items/CS-454-what-is-the-full-version-of-scene-items.md) decision: What is the full version of scene items: references, groups, the globe as an item, and how close to USD?. Done.
+- [ ] [CS-572](./items/CS-572-the-full-version-of-scene-items-designed-before.md) The full version of scene items, designed before the first public API review. Needs CS-454.
 
 Milestone: The approved API changes are made ([CS-457](./milestones/CS-457-the-approved-api-changes-are-made.md), Planned)
 
 - [ ] [CS-434](./items/CS-434-stability-tiers-as-tsdoc-tags-with-internal.md) Stability tiers as TSDoc tags, with internal members stripped from the published types. Needs CS-438.
 - [ ] [CS-435](./items/CS-435-the-measurement-module-s-seam-and-entry-point.md) The measurement module's seam and entry point. Needs CS-438.
+
+### Editing
+
+[CS-579](./projects/CS-579-editing.md), Planned, led by owner: 0 of 2 done, 2 ready, 0 blocked.
+
+- [ ] [CS-453](./items/CS-453-what-editing-should-the-engine-support-with.md) decision: What editing should the engine support, with vector data and GIS sources among it?. Needs nothing. Decided by owner.
+- [ ] [CS-578](./items/CS-578-a-mesh-editing-sample-drag-a-mesh-s-vertices.md) A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample. Needs nothing.
 
 <!-- work:lists:end -->

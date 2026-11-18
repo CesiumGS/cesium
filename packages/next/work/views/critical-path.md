@@ -3,8 +3,7 @@
 # Critical path
 
 ```text
-1. weight 20, 20 item(s)
-   CS-201  Clamping, heights, models, point sources and picks per body [Planned]
+1. weight 19, 19 item(s)
    CS-202  A view on another body [Planned]
    CS-203  Depth across bodies [Planned]
    CS-204  The impostor's level of detail and surface tilesets [Planned]
@@ -24,8 +23,7 @@
    CS-235  The simulated ascent and each separated stage's path [Planned]
    CS-237  Plumes with ambient pressure, and re-entry heating and plasma, in Slang [Planned]
    CS-238  Approximations of launch smoke and the splashdown splash [Planned]
-2. weight 19, 19 item(s)
-   CS-201  Clamping, heights, models, point sources and picks per body [Planned]
+2. weight 18, 18 item(s)
    CS-202  A view on another body [Planned]
    CS-203  Depth across bodies [Planned]
    CS-204  The impostor's level of detail and surface tilesets [Planned]
@@ -44,8 +42,7 @@
    CS-229  The earth-to-moon example: the pad, the mission clock, stage reference frames, cameras and the flight path [Planned]
    CS-230  The self-directing replay: the time director and the camera director [Planned]
    CS-233  The Artemis II replay's design pass and browser checks [Planned]
-3. weight 17, 17 item(s)
-   CS-201  Clamping, heights, models, point sources and picks per body [Planned]
+3. weight 16, 16 item(s)
    CS-202  A view on another body [Planned]
    CS-203  Depth across bodies [Planned]
    CS-204  The impostor's level of detail and surface tilesets [Planned]
@@ -62,8 +59,7 @@
    CS-219  The CAD-style controller [Planned]
    CS-220  The Viewer and the frames explorer on rigs and controllers; 5d's done-when checks [Planned]
    CS-224  Design view as a render root, and the morph as one transition [Planned]
-4. weight 15, 15 item(s)
-   CS-201  Clamping, heights, models, point sources and picks per body [Planned]
+4. weight 14, 14 item(s)
    CS-202  A view on another body [Planned]
    CS-203  Depth across bodies [Planned]
    CS-204  The impostor's level of detail and surface tilesets [Planned]
@@ -78,8 +74,7 @@
    CS-216  Transitions between live rigs: paths, defaults and interruption policies [Planned]
    CS-218  The orthographic camera, `fitBounds` and the dolly between projections [Planned]
    CS-308  The CSG sample's four-view layout [Planned]
-5. weight 15, 15 item(s)
-   CS-201  Clamping, heights, models, point sources and picks per body [Planned]
+5. weight 14, 14 item(s)
    CS-202  A view on another body [Planned]
    CS-203  Depth across bodies [Planned]
    CS-204  The impostor's level of detail and surface tilesets [Planned]

@@ -6,7 +6,7 @@
 graph LR
   CS_8["Engine profiles<br/>3 of 19 done"]
   CS_9["WebGL 2 renderer<br/>1 of 17 done"]
-  CS_10["Cesium IR<br/>2 of 30 done"]
+  CS_10["Cesium IR<br/>7 of 34 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
   CS_13["worker-mode façade<br/>1 of 21 done"]
@@ -14,22 +14,23 @@ graph LR
   CS_15["Refinement and convergence<br/>0 of 13 done"]
   CS_16["Streaming robustness<br/>0 of 22 done"]
   CS_17["transform graph<br/>0 of 13 done"]
-  CS_18["work tracker<br/>15 of 26 done"]
+  CS_18["work tracker<br/>15 of 27 done"]
   CS_19["Follow-ups for other teams<br/>0 of 12 done"]
-  CS_188["Earth to Moon (frames 5c to 5h)<br/>2 of 43 done"]
+  CS_188["Earth to Moon (frames 5c to 5h)<br/>3 of 43 done"]
   CS_189["Frames and engineering coordinates follow-ups<br/>0 of 21 done"]
-  CS_190["Vector drawing and the styling language<br/>0 of 12 done"]
-  CS_191["Content sources and formats<br/>1 of 22 done"]
+  CS_190["Vector drawing and the styling language<br/>0 of 11 done"]
+  CS_191["Content sources and formats<br/>2 of 22 done"]
   CS_192["Sky, light and atmosphere<br/>0 of 20 done"]
-  CS_193["B-reps and geometry queries<br/>0 of 18 done"]
+  CS_193["B-reps and geometry queries<br/>3 of 19 done"]
   CS_194["Budgeted selection and memory<br/>0 of 6 done"]
   CS_195["Benchmarks, parity and image regression<br/>0 of 23 done"]
   CS_196["Infrastructure and geoscience capabilities<br/>0 of 7 done"]
   CS_197["Ray queries and path tracing<br/>0 of 6 done"]
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
   CS_199["Dyno hardening, packaging and CI<br/>1 of 14 done"]
-  CS_389["Dyno as the development harness<br/>2 of 25 done"]
-  CS_437["public API reviews<br/>0 of 9 done"]
+  CS_389["Dyno as the development harness<br/>5 of 25 done"]
+  CS_437["public API reviews<br/>1 of 10 done"]
+  CS_579["Editing<br/>0 of 2 done"]
   CS_9 -->|1| CS_8
   CS_12 -->|1| CS_8
   CS_10 -->|5| CS_9
@@ -54,10 +55,9 @@ graph LR
   CS_188 -->|1| CS_193
   CS_190 -->|1| CS_193
   CS_389 -->|2| CS_195
-  CS_191 -->|1| CS_195
   CS_190 -->|2| CS_196
   CS_188 -->|2| CS_196
-  CS_191 -->|2| CS_196
+  CS_191 -->|1| CS_196
   CS_15 -->|1| CS_8
   CS_13 -->|1| CS_9
   CS_12 -->|1| CS_16

@@ -69,8 +69,8 @@ CS-416 WebGL 2 reaches parity with WebGPU [Planned], under CS-9 The WebGL 2 rend
 
 CS-417 Transforms and styles compile through Cesium IR [Planned], under CS-10 Cesium IR
   outcome: Styles, transforms and routes are Cesium IR programs that evaluate in float64 on the CPU and emit both WGSL and GLSL ES, with the same results as today.
-  constraints: 1 of 10 done
-  unmet: not linked to a clause yet (open: CS-49, CS-50, CS-51, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371; check not passed)
+  constraints: 2 of 10 done
+  unmet: not linked to a clause yet (open: CS-49, CS-50, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371; check not passed)
   to shape: done_when; check; link CS-48, CS-49, CS-50, CS-51, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371 to a clause
 
 CS-418 Any shader language reaches both renderers [Planned], under CS-10 Cesium IR
@@ -81,15 +81,15 @@ CS-418 Any shader language reaches both renderers [Planned], under CS-10 Cesium 
 
 CS-419 Cesium IR covers what materials need [Planned], under CS-10 Cesium IR
   outcome: Cesium IR has noise, textures and samplers, matrices, screen-space derivatives, bounded loops and structs, so the MaterialX and user programs that use them compile.
-  constraints: 0 of 9 done
-  unmet: not linked to a clause yet (open: CS-64, CS-65, CS-66, CS-67, CS-68, CS-69, CS-548, CS-549, CS-550; check not passed)
-  to shape: done_when; check; link CS-64, CS-65, CS-66, CS-67, CS-68, CS-69, CS-548, CS-549, CS-550 to a clause
+  constraints: 0 of 10 done
+  unmet: not linked to a clause yet (open: CS-64, CS-65, CS-66, CS-67, CS-68, CS-69, CS-548, CS-549, CS-550, CS-571; check not passed)
+  to shape: done_when; check; link CS-64, CS-65, CS-66, CS-67, CS-68, CS-69, CS-548, CS-549, CS-550, CS-571 to a clause
 
 CS-420 The public API shape is approved [Planned], under CS-437 The public API reviews
   outcome: Every public member is mapped and reviewed against the façade's constraints and other engines' idioms, and the owner has approved which changes to make.
-  constraints: 1 of 8 done
-  unmet: not linked to a clause yet (open: CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-454; check not passed)
-  to shape: done_when; check; link CS-101, CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-454 to a clause
+  constraints: 2 of 9 done
+  unmet: not linked to a clause yet (open: CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-572; check not passed)
+  to shape: done_when; check; link CS-101, CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-454, CS-572 to a clause
 
 CS-421 Every public call can cross a thread [Planned], under CS-13 The worker-mode façade
   outcome: On the main thread, reads are promises, per-tick snapshots or tracked points, writes are commands, functions the engine runs are modules or programs, and engine internals are out of the main entry, and content is placed by its declared CRS, with no placement mode.
@@ -117,8 +117,8 @@ CS-423 Measurements set the default thread [Planned], under CS-13 The worker-mod
 
 CS-424 The Earth and the Moon render together [Planned], under CS-188 Earth to Moon (frames 5c to 5h)
   outcome: One world draws the Earth and the Moon from either body or between. The Moon's impostor hands over to its tileset without a jump, and picks report each body's coordinates.
-  constraints: 1 of 11 done
-  unmet: not linked to a clause yet (open: CS-201, CS-202, CS-203, CS-204, CS-205, CS-206, CS-207, CS-208, CS-209, CS-210; check not passed)
+  constraints: 2 of 11 done
+  unmet: not linked to a clause yet (open: CS-202, CS-203, CS-204, CS-205, CS-206, CS-207, CS-208, CS-209, CS-210; check not passed)
   to shape: done_when; check; link CS-200, CS-201, CS-202, CS-203, CS-204, CS-205, CS-206, CS-207, CS-208, CS-209, CS-210 to a clause
 
 CS-425 Cameras move freely on any body [Planned], under CS-188 Earth to Moon (frames 5c to 5h)
@@ -312,14 +312,14 @@ CS-479 Sweeps measure development cases [Planned], under CS-389 Dyno as the deve
 
 CS-480 Studies turn runs into verdicts [Planned], under CS-389 Dyno as the development harness
   outcome: Studies have a model, files, commands and a page, the α study runs through Dyno end to end, and AGENTS.md and its skill teach measuring with Dyno.
-  constraints: 0 of 6 done
-  unmet: not linked to a clause yet (open: CS-404, CS-405, CS-396, CS-402, CS-409, CS-410; check not passed)
+  constraints: 2 of 6 done
+  unmet: not linked to a clause yet (open: CS-404, CS-405, CS-396, CS-402; check not passed)
   to shape: done_when; check; link CS-404, CS-405, CS-396, CS-402, CS-409, CS-410 to a clause
 
 CS-481 Other machines and devices run Dyno's scenes [Planned], under CS-389 Dyno as the development harness
   outcome: A local certificate authority pairs machines with the hub, runners take remote runs, and the device lab runs scenes on phones and other machines.
-  constraints: 0 of 4 done
-  unmet: not linked to a clause yet (open: CS-406, CS-407, CS-408, CS-411; check not passed)
+  constraints: 1 of 4 done
+  unmet: not linked to a clause yet (open: CS-406, CS-407, CS-408; check not passed)
   to shape: done_when; check; link CS-406, CS-407, CS-408, CS-411 to a clause
 
 CS-482 Benchmarks run per merge on dedicated machines [Planned], under CS-195 Benchmarks, parity and image regression
@@ -402,14 +402,14 @@ CS-494 B-reps snap and measure exactly [Planned], under CS-193 B-reps and geomet
 
 CS-495 USD B-reps stream as 3D Tiles [Planned], under CS-193 B-reps and geometry queries
   outcome: The B-rep tile extension's schema is decided, Open Cascade's licence is checked, USD B-reps load and heal, a tiler writes them as 3D Tiles 2.0 with editing overrides, and trims and edges share the vector kernels.
-  constraints: 0 of 6 done
-  unmet: not linked to a clause yet (open: CS-299, CS-310, CS-304, CS-305, CS-306, CS-309; check not passed)
-  to shape: done_when; check; link CS-299, CS-310, CS-304, CS-305, CS-306, CS-309 to a clause
+  constraints: 1 of 7 done
+  unmet: not linked to a clause yet (open: CS-310, CS-304, CS-305, CS-306, CS-309, CS-576; check not passed)
+  to shape: done_when; check; link CS-299, CS-310, CS-304, CS-305, CS-306, CS-309, CS-576 to a clause
 
 CS-496 The CSG sample edits with local operations [Planned], under CS-193 B-reps and geometry queries
   outcome: The CSG sample's local operations are feature nodes, it has a four-view layout, and the owner decides whether it stops there.
-  constraints: 0 of 3 done
-  unmet: not linked to a clause yet (open: CS-301, CS-307, CS-308; check not passed)
+  constraints: 1 of 3 done
+  unmet: not linked to a clause yet (open: CS-307, CS-308; check not passed)
   to shape: done_when; check; link CS-301, CS-307, CS-308 to a clause
 
 CS-497 Cesium ion is a swappable module with a default token [Planned], under CS-191 Content sources and formats
@@ -515,9 +515,9 @@ CS-560 Content from any source loads through one module seam [Proposed], under C
 
 CS-561 Dyno's Work page shows the live system and the release plan [Proposed], under CS-18 The work tracker
   outcome: A reader of Dyno's Work page sees what's moving now (dispatches, branches waiting to merge, the active run) and where each release falls among the milestones that feed it.
-  constraints: 1 of 4 done
-  unmet: not linked to a clause yet (open: CS-547, CS-562, CS-563; check not passed)
-  to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563 to a clause
+  constraints: 1 of 5 done
+  unmet: not linked to a clause yet (open: CS-547, CS-562, CS-563, CS-573; check not passed)
+  to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563, CS-573 to a clause
 
 84 open milestone(s)
 ```

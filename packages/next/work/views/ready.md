@@ -15,13 +15,13 @@ CS-9 The WebGL 2 renderer
 CS-10 Cesium IR
   CS-49  The versioned JSON format
   CS-50  The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
-  CS-51  The WGSL emitter
+  CS-52  The GLSL ES 3.00 emitter
   CS-57  Our naga crate (Rust in development and CI only)
   CS-371  Math ops the transform graph needs: `atanh`, `asinh`, `acosh`, `expm1`, `log1p`, `%`, `hypot`
-  CS-546  decision: The builder's x + 0 rewrite and the spec's signed zero
   CS-548  The IR's math/eq covers floatN and bool, as KHR_interactivity defines it
   CS-549  The IR models math/normalize's isValid output
   CS-550  The core IR spike's evaluator gets dot and intToFloat's signed zero right
+  CS-571  The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -85,7 +85,7 @@ CS-19 Follow-ups for other teams
   CS-387  external: Slang and Tint: counted loops pay Tint's loop guard
 
 CS-188 Earth to Moon (frames 5c to 5h)
-  CS-201  Clamping, heights, models, point sources and picks per body
+  CS-202  A view on another body
   CS-210  decision: Should a world clip cut the Moon's impostor?
   CS-211  The animation core: easing, springs, keyframes, timelines and time-varying values
   CS-223  Routing a design CRS to ITRF2020, with defaults as data and the route recorded
@@ -116,14 +116,12 @@ CS-190 Vector drawing and the styling language
   CS-262  Real-time tracks: cull small shadow casters, and one glTF asset in several worlds
   CS-265  decision: The styling language: its form, where its spec lives, and when it goes to the 3D Tiles group?
   CS-266  decision: Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order?
-  CS-453  decision: What editing should the engine support, with vector data and GIS sources among it?
 
 CS-191 Content sources and formats
   CS-270  decision: Where does 2.0's default evaluation token come from?
   CS-272  3D Tiles format gaps: implicit tiling, multiple contents, metadata, S2 and cylinder volumes
   CS-273  glTF extension gaps: texture transforms, primitive outlines, WebP, node visibility, specular-glossiness
   CS-274  decision: glTF 1.0 and deprecated extensions: upgrade on load, or drop?
-  CS-275  decision: Which of M6's remaining showcases to build: splats, compute point clouds, WebXR, headless Dawn?
   CS-452  decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?
   CS-552  The content-source seam: one interface every source module implements, designed and planned
   CS-553  What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline
@@ -136,12 +134,11 @@ CS-192 Sky, light and atmosphere
   CS-442  Exact lists and the meter: emission layers against the 32-node cap, and a Node port for the moments branch
 
 CS-193 B-reps and geometry queries
-  CS-299  decision: B-rep tiles: the extension's name and schema, NURBS or Bézier storage, and the USD input path?
-  CS-300  decision: Subdivision surfaces: OpenSubdiv, or a TypeScript patch conversion?
-  CS-301  decision: Does the CSG sample stop at phase 3?
   CS-302  Exact snapping and measurement on B-reps
   CS-307  The CSG sample, phase 3: local operations as feature nodes
   CS-310  external: Licence check for Open Cascade (LGPL 2.1) before distribution
+  CS-576  Spike: B-rep tiles as NURBS or pre-split Bézier patches, and a way to read USD's B-reps
+  CS-577  Spike: subdivision surfaces through OpenSubdiv in WebAssembly or a TypeScript patch conversion, measured
 
 CS-194 Budgeted selection and memory
   CS-317  Budget-driven refinement: benefit per byte
@@ -156,6 +153,7 @@ CS-195 Benchmarks, parity and image regression
   CS-329  M5's exit: the performance targets met or the gaps explained, including multi-view
   CS-330  Custom shaders and feature styles compared against 1.x
   CS-331  Engines at git refs from Dyno's engine picker
+  CS-335  Headless rendering on Dawn's Node package
   CS-336  external: Clearance to publish benchmark results
   CS-448  Energy compensation for coloured metals, against a multiple-scattering reference
   CS-451  Dyno's guardrails and their tolerances per scene, revisited now Budgeted has settled
@@ -182,9 +180,6 @@ CS-199 Dyno hardening, packaging and CI
 
 CS-389 Dyno as the development harness
   CS-390  Run identity and the machine-wide run lock
-  CS-409  decision: Who records a study's verdict, and does a verdict close a decision?
-  CS-410  decision: Does `--hypothesis` on a run without `--study` open a study?
-  CS-411  decision: May the Mac make baseline runs in the laptop's browser?
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
 
 CS-437 The public API reviews
@@ -192,15 +187,20 @@ CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
   CS-432  The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors
   CS-433  Promotions and demotions proposed: what every app needs, and what is exported only for examples
-  CS-454  decision: What is the full version of scene items: references, groups, the globe as an item, and how close to USD?
+  CS-572  The full version of scene items, designed before the first public API review
+
+CS-579 Editing
+  CS-453  decision: What editing should the engine support, with vector data and GIS sources among it?
+  CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
 
 CS-18 The work tracker
   CS-547  Your move's In progress shows the live run: dispatches in flight and branches done but not merged
   CS-562  Dyno's Work page lists the items in no milestone, filterable by kind and state
   CS-563  Dyno's roadmap shows proposed milestones with dashed outlines
+  CS-573  Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at
 
 CS-13 The worker-mode façade
   CS-567  The protocol table classifies every member of api/surface.txt, not only the exported names
 
-151 ready
+149 ready
 ```

@@ -36,27 +36,16 @@ CS-190 Vector drawing and the styling language
       waited on by CS-267, CS-337
   CS-266  Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order? (owner)
       waited on by CS-338
-  CS-453  What editing should the engine support, with vector data and GIS sources among it? (owner)
 
 CS-191 Content sources and formats
   CS-270  Where does 2.0's default evaluation token come from? (owner)
       waited on by CS-271
   CS-274  glTF 1.0 and deprecated extensions: upgrade on load, or drop? (owner)
-  CS-275  Which of M6's remaining showcases to build: splats, compute point clouds, WebXR, headless Dawn? (owner)
-      waited on by CS-276, CS-277, CS-335, CS-341
   CS-452  How should semantic metadata reach the engine, and what does picking mean in splats and point clouds? (owner)
 
 CS-192 Sky, light and atmosphere
   CS-296  Black hole visualization: how much physics, and an engine feature or a gallery example? (owner)
       waited on by CS-297
-
-CS-193 B-reps and geometry queries
-  CS-299  B-rep tiles: the extension's name and schema, NURBS or Bézier storage, and the USD input path? (owner)
-      waited on by CS-304
-  CS-300  Subdivision surfaces: OpenSubdiv, or a TypeScript patch conversion? (owner)
-      waited on by CS-312
-  CS-301  Does the CSG sample stop at phase 3? (owner)
-      waited on by CS-316
 
 CS-194 Budgeted selection and memory
   CS-321  How should an engine-wide memory budget be sized without a VRAM query? (owner)
@@ -66,17 +55,13 @@ CS-17 The transform graph
   CS-386  Under exaggeration, do shading and haze read the drawn or the true height? (owner)
       first needs CS-385
 
-CS-389 Dyno as the development harness
-  CS-409  Who records a study's verdict, and does a verdict close a decision? (owner)
-  CS-410  Does `--hypothesis` on a run without `--study` open a study? (owner)
-  CS-411  May the Mac make baseline runs in the laptop's browser? (owner)
-
 CS-437 The public API reviews
   CS-438  Which of the first public API review's proposed changes do you approve? (owner)
       first needs CS-102
       waited on by CS-103, CS-104, CS-105, CS-107, CS-243, CS-303, CS-378, CS-434, CS-435
-  CS-454  What is the full version of scene items: references, groups, the globe as an item, and how close to USD? (owner)
-      waited on by CS-102
+
+CS-579 Editing
+  CS-453  What editing should the engine support, with vector data and GIS sources among it? (owner)
 
 CS-18 The work tracker
   CS-526  Which milestones does 2.0.0-alpha.1 need? (owner)
@@ -88,8 +73,5 @@ CS-18 The work tracker
   CS-529  Which milestones does 2.0.0 need? (owner)
       waited on by CS-533
 
-CS-10 Cesium IR
-  CS-546  The builder's x + 0 rewrite and the spec's signed zero (owner)
-
-33 open decision(s) for owner
+24 open decision(s) for owner
 ```

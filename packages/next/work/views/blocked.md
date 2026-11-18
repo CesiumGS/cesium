@@ -66,17 +66,13 @@ CS-9 The WebGL 2 renderer
         CS-46 Which test devices are available for the WebGL 2 probe runs?
 
 CS-10 Cesium IR
-  CS-52  The GLSL ES 3.00 emitter
-      ← CS-51 The WGSL emitter
   CS-53  Transforms move onto Cesium IR, as pure moves
       ← CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
-        CS-51 The WGSL emitter
   CS-54  Routes on both emitters, with the residual and df64 forms
       ← CS-52 The GLSL ES 3.00 emitter
         CS-53 Transforms move onto Cesium IR, as pure moves
   CS-55  Styles move onto Cesium IR, literals as uniforms
       ← CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
-        CS-51 The WGSL emitter
         CS-52 The GLSL ES 3.00 emitter
   CS-56  Tables and the bounded search, the first extensions, with the residual's row window
       ← CS-53 Transforms move onto Cesium IR, as pure moves
@@ -94,15 +90,12 @@ CS-10 Cesium IR
         CS-56 Tables and the bounded search, the first extensions, with the residual's row window
         CS-58 The WGSL front end, through naga and SPIR-V, with diagnostics
   CS-62  The inspector and debugging
-      ← CS-51 The WGSL emitter
-        CS-55 Styles move onto Cesium IR, literals as uniforms
+      ← CS-55 Styles move onto Cesium IR, literals as uniforms
   CS-63  The MaterialX front end, including the lowering the MaterialX plan's task 9 had (no pre-IR emitter)
       ← CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
-        CS-51 The WGSL emitter
         CS-55 Styles move onto Cesium IR, literals as uniforms
   CS-64  Noise, first among the gaps
       ← CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
-        CS-51 The WGSL emitter
         CS-52 The GLSL ES 3.00 emitter
   CS-65  Textures and samplers
       ← CS-56 Tables and the bounded search, the first extensions, with the residual's row window
@@ -173,8 +166,8 @@ CS-437 The public API reviews
         CS-431 The camera chain's layers checked against what each may know
         CS-432 The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors
         CS-433 Promotions and demotions proposed: what every app needs, and what is exported only for examples
-        CS-454 What is the full version of scene items: references, groups, the globe as an item, and how close to USD?
         CS-567 The protocol table classifies every member of api/surface.txt, not only the exported names
+        CS-572 The full version of scene items, designed before the first public API review
   CS-434  Stability tiers as TSDoc tags, with internal members stripped from the published types
       ← CS-438 Which of the first public API review's proposed changes do you approve?
   CS-435  The measurement module's seam and entry point
@@ -327,8 +320,6 @@ CS-17 The transform graph
       ← CS-385 Spike: height-keyed tint and haze under exaggeration, drawn against true height
 
 CS-188 Earth to Moon (frames 5c to 5h)
-  CS-202  A view on another body
-      ← CS-201 Clamping, heights, models, point sources and picks per body
   CS-203  Depth across bodies
       ← CS-202 A view on another body
   CS-204  The impostor's level of detail and surface tilesets
@@ -415,6 +406,10 @@ CS-191 Content sources and formats
       ← CS-269 Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`
         CS-270 Where does 2.0's default evaluation token come from?
         CS-150 ion tokens
+  CS-276  Point clouds: glTF points and `pnts`, compute rendering with eye-dome lighting
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-277  Gaussian splats with a GPU sort
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
 
 CS-192 Sky, light and atmosphere
   CS-282  Intel figures into `glareTier` and the Intel tables
@@ -427,7 +422,7 @@ CS-193 B-reps and geometry queries
   CS-303  Queries answered by a host's server, with staged answers
       ← CS-438 Which of the first public API review's proposed changes do you approve?
   CS-304  `BrepSource.fromUsd`, and healing as a module
-      ← CS-299 B-rep tiles: the extension's name and schema, NURBS or Bézier storage, and the USD input path?
+      ← CS-576 Spike: B-rep tiles as NURBS or pre-split Bézier patches, and a way to read USD's B-reps
   CS-305  The B-rep tiler: USD to 3D Tiles 2.0, coarse levels as meshes
       ← CS-304 `BrepSource.fromUsd`, and healing as a module
   CS-306  Editing overrides on B-rep tiles
@@ -450,6 +445,10 @@ CS-195 Benchmarks, parity and image regression
         CS-401 Lab pages and their results in the store
   CS-542  Every parity result names its oracle
       ← CS-541 The parity tests compare against CesiumJS 1.147.0, pinned
+
+CS-196 Infrastructure and geoscience capabilities
+  CS-341  WebXR, including aligning a model with its site
+      ← CS-213 The rig and the controller seam
 
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
@@ -512,5 +511,5 @@ CS-18 The work tracker
       ← CS-529 Which milestones does 2.0.0 need?
         CS-532 Release 2.0.0-rc.1
 
-184 blocked
+185 blocked
 ```

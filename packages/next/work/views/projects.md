@@ -12,7 +12,7 @@ CS-9 The WebGL 2 renderer [Planned], led by owner
   waits on: CS-10 Cesium IR (5); CS-13 The worker-mode façade (1)
   waited on by: CS-8 Engine profiles (1); CS-11 Live MaterialX graph editing (1)
 CS-10 Cesium IR [Planned], led by owner
-  2 of 30 done, 9 ready, 17 blocked, 2 proposed
+  7 of 34 done, 9 ready, 16 blocked, 2 proposed
   waits on: nothing open
   waited on by: CS-9 The WebGL 2 renderer (5); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (4); CS-17 The transform graph (2); CS-190 Vector drawing and the styling language (3)
 CS-11 Live MaterialX graph editing [Planned], led by owner
@@ -44,7 +44,7 @@ CS-17 The transform graph [Planned], led by owner
   waits on: CS-10 Cesium IR (2)
   waited on by: nothing open
 CS-18 The work tracker [Planned], led by owner
-  15 of 26 done, 3 ready, 4 blocked, 4 proposed
+  15 of 27 done, 4 ready, 4 blocked, 4 proposed
   waits on: nothing open
   waited on by: nothing open
 CS-19 Follow-ups for other teams [Planned], led by owner
@@ -52,7 +52,7 @@ CS-19 Follow-ups for other teams [Planned], led by owner
   waits on: nothing open
   waited on by: nothing open
 CS-188 Earth to Moon (frames 5c to 5h) [Planned], led by owner
-  2 of 43 done, 11 ready, 30 blocked
+  3 of 43 done, 11 ready, 29 blocked
   waits on: nothing open
   waited on by: CS-191 Content sources and formats (1); CS-192 Sky, light and atmosphere (4); CS-193 B-reps and geometry queries (1); CS-196 Infrastructure and geoscience capabilities (2)
 CS-189 Frames and engineering coordinates follow-ups [Planned], led by owner
@@ -60,19 +60,19 @@ CS-189 Frames and engineering coordinates follow-ups [Planned], led by owner
   waits on: CS-437 The public API reviews (1)
   waited on by: CS-192 Sky, light and atmosphere (2)
 CS-190 Vector drawing and the styling language [Planned], led by owner
-  0 of 12 done, 5 ready, 2 blocked, 5 proposed
+  0 of 11 done, 4 ready, 2 blocked, 5 proposed
   waits on: CS-10 Cesium IR (3)
   waited on by: CS-193 B-reps and geometry queries (1); CS-196 Infrastructure and geoscience capabilities (2)
 CS-191 Content sources and formats [Planned], led by owner
-  1 of 22 done, 8 ready, 2 blocked, 11 proposed
+  2 of 22 done, 7 ready, 4 blocked, 9 proposed
   waits on: CS-16 Streaming robustness (1); CS-188 Earth to Moon (frames 5c to 5h) (1)
-  waited on by: CS-195 Benchmarks, parity and image regression (1); CS-196 Infrastructure and geoscience capabilities (2)
+  waited on by: CS-196 Infrastructure and geoscience capabilities (1)
 CS-192 Sky, light and atmosphere [Planned], led by owner
   0 of 20 done, 5 ready, 2 blocked, 13 proposed
   waits on: CS-189 Frames and engineering coordinates follow-ups (2); CS-11 Live MaterialX graph editing (1); CS-188 Earth to Moon (frames 5c to 5h) (4)
   waited on by: nothing open
 CS-193 B-reps and geometry queries [Planned], led by owner
-  0 of 18 done, 6 ready, 6 blocked, 6 proposed
+  3 of 19 done, 5 ready, 6 blocked, 5 proposed, 1 dropped
   waits on: CS-437 The public API reviews (1); CS-188 Earth to Moon (frames 5c to 5h) (1); CS-190 Vector drawing and the styling language (1)
   waited on by: nothing open
 CS-194 Budgeted selection and memory [Planned], led by owner
@@ -80,12 +80,12 @@ CS-194 Budgeted selection and memory [Planned], led by owner
   waits on: nothing open
   waited on by: nothing open
 CS-195 Benchmarks, parity and image regression [Planned], led by owner
-  0 of 23 done, 10 ready, 5 blocked, 8 proposed
-  waits on: CS-389 Dyno as the development harness (2); CS-191 Content sources and formats (1)
+  0 of 23 done, 11 ready, 5 blocked, 7 proposed
+  waits on: CS-389 Dyno as the development harness (2)
   waited on by: nothing open
 CS-196 Infrastructure and geoscience capabilities [Planned], led by owner
-  0 of 7 done, 0 ready, 0 blocked, 7 proposed
-  waits on: CS-190 Vector drawing and the styling language (2); CS-188 Earth to Moon (frames 5c to 5h) (2); CS-191 Content sources and formats (2)
+  0 of 7 done, 0 ready, 1 blocked, 6 proposed
+  waits on: CS-190 Vector drawing and the styling language (2); CS-188 Earth to Moon (frames 5c to 5h) (2); CS-191 Content sources and formats (1)
   waited on by: nothing open
 CS-197 Ray queries and path tracing [Planned], led by owner
   0 of 6 done, 0 ready, 0 blocked, 6 proposed
@@ -100,11 +100,15 @@ CS-199 Dyno hardening, packaging and CI [Planned], led by owner
   waits on: nothing open
   waited on by: nothing open
 CS-389 Dyno as the development harness [Planned], led by owner
-  2 of 25 done, 5 ready, 18 blocked
+  5 of 25 done, 2 ready, 18 blocked
   waits on: nothing open
   waited on by: CS-195 Benchmarks, parity and image regression (2)
 CS-437 The public API reviews [Planned], led by owner
-  0 of 9 done, 5 ready, 4 blocked
+  1 of 10 done, 5 ready, 4 blocked
   waits on: CS-13 The worker-mode façade (1)
   waited on by: CS-13 The worker-mode façade (5); CS-189 Frames and engineering coordinates follow-ups (1); CS-193 B-reps and geometry queries (1)
+CS-579 Editing [Planned], led by owner
+  0 of 2 done, 2 ready, 0 blocked
+  waits on: nothing open
+  waited on by: nothing open
 ```

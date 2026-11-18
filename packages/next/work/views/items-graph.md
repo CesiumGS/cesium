@@ -48,7 +48,7 @@ graph LR
     CS_48["CS-48 The core (types, rates, equations, literal slots, the builder)"]:::done
     CS_49["CS-49 The versioned JSON format"]:::open
     CS_50["CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoi"]:::open
-    CS_51["CS-51 The WGSL emitter"]:::open
+    CS_51["CS-51 The WGSL emitter"]:::done
     CS_52["CS-52 The GLSL ES 3.00 emitter"]:::open
     CS_53["CS-53 Transforms move onto Cesium IR, as pure moves"]:::open
     CS_54["CS-54 Routes on both emitters, with the residual and df64 forms"]:::open
@@ -71,10 +71,14 @@ graph LR
     CS_372["CS-372 Custom shading and styling leftovers"]:::proposed
     CS_373["CS-373 Slang ahead of time for apps: a CLI and a bundler plugin"]:::proposed
     CS_543["CS-543 CS-48's formula cases checked against the whole KHR_interactivi"]:::done
-    CS_546["CS-546 The builder's x + 0 rewrite and the spec's signed zero"]:::decision
+    CS_546["CS-546 The builder's x + 0 rewrite and the spec's signed zero"]:::done
     CS_548["CS-548 The IR's math/eq covers floatN and bool, as KHR_interactivity d"]:::open
     CS_549["CS-549 The IR models math/normalize's isValid output"]:::open
     CS_550["CS-550 The core IR spike's evaluator gets dot and intToFloat's signed "]:::open
+    CS_570["CS-570 Executors blocked by the Bash guard's match on the word hitld"]:::done
+    CS_571["CS-571 The IR builder rewrites x + c to x only when c is -0, as the sp"]:::open
+    CS_574["CS-574 How CI gets naga-wasm for CS-51's WGSL validation"]:::done
+    CS_575["CS-575 Adding CS-51's irWgsl browser suite to the browser-suite gate"]:::done
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -237,6 +241,7 @@ graph LR
     CS_563["CS-563 Dyno's roadmap shows proposed milestones with dashed outlines"]:::open
     CS_564["CS-564 How CS-545's branch reaches main without a hitld dispatch"]:::done
     CS_565["CS-565 Fast-forward main to CS-545's checked branch"]:::done
+    CS_573["CS-573 Dyno's Work page shows each kind of entity the same way everywh"]:::open
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external
@@ -254,7 +259,7 @@ graph LR
   end
   subgraph CS_188["Earth to Moon (frames 5c to 5h)"]
     CS_200["CS-200 Volumes, horizon culling and selection on the content's body"]:::done
-    CS_201["CS-201 Clamping, heights, models, point sources and picks per body"]:::open
+    CS_201["CS-201 Clamping, heights, models, point sources and picks per body"]:::done
     CS_202["CS-202 A view on another body"]:::open
     CS_203["CS-203 Depth across bodies"]:::open
     CS_204["CS-204 The impostor's level of detail and surface tilesets"]:::open
@@ -332,7 +337,6 @@ graph LR
     CS_266["CS-266 Styling semantics: element-wise overrides, strings and 64-bit I"]:::decision
     CS_267["CS-267 The styling language on Cesium IR, over points, lines, polygons"]:::proposed
     CS_268["CS-268 Style features through the IR: tiles culled by interval 'show',"]:::proposed
-    CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::decision
   end
   subgraph CS_191["Content sources and formats"]
     CS_269["CS-269 Cesium ion as a swappable module: a content-source interface an"]:::open
@@ -341,9 +345,9 @@ graph LR
     CS_272["CS-272 3D Tiles format gaps: implicit tiling, multiple contents, metad"]:::open
     CS_273["CS-273 glTF extension gaps: texture transforms, primitive outlines, We"]:::open
     CS_274["CS-274 glTF 1.0 and deprecated extensions: upgrade on load, or drop?"]:::decision
-    CS_275["CS-275 Which of M6's remaining showcases to build: splats, compute poi"]:::decision
-    CS_276["CS-276 Point clouds: glTF points and 'pnts', compute rendering with ey"]:::proposed
-    CS_277["CS-277 Gaussian splats with a GPU sort"]:::proposed
+    CS_275["CS-275 Which of M6's remaining showcases to build: splats, compute poi"]:::done
+    CS_276["CS-276 Point clouds: glTF points and 'pnts', compute rendering with ey"]:::open
+    CS_277["CS-277 Gaussian splats with a GPU sort"]:::open
     CS_278["CS-278 glTF animation playback: skins, morph targets and animated node"]:::proposed
     CS_279["CS-279 More terrain and imagery providers, and several imagery layers "]:::proposed
     CS_280["CS-280 Thin wrappers for ion's REST API, including element metadata"]:::proposed
@@ -381,9 +385,9 @@ graph LR
     CS_446["CS-446 Planets as points, then disks"]:::open
   end
   subgraph CS_193["B-reps and geometry queries"]
-    CS_299["CS-299 B-rep tiles: the extension's name and schema, NURBS or Bézier s"]:::decision
-    CS_300["CS-300 Subdivision surfaces: OpenSubdiv, or a TypeScript patch convers"]:::decision
-    CS_301["CS-301 Does the CSG sample stop at phase 3?"]:::decision
+    CS_299["CS-299 B-rep tiles: the extension's name and schema, NURBS or Bézier s"]:::done
+    CS_300["CS-300 Subdivision surfaces: OpenSubdiv, or a TypeScript patch convers"]:::done
+    CS_301["CS-301 Does the CSG sample stop at phase 3?"]:::done
     CS_302["CS-302 Exact snapping and measurement on B-reps"]:::open
     CS_303["CS-303 Queries answered by a host's server, with staged answers"]:::open
     CS_304["CS-304 'BrepSource.fromUsd', and healing as a module"]:::open
@@ -398,7 +402,9 @@ graph LR
     CS_313["CS-313 F-reps drawn by ray marching"]:::proposed
     CS_314["CS-314 One GPU tessellation engine for reprojected models, B-reps and "]:::proposed
     CS_315["CS-315 Kernel robustness: SMLib and OCCT on real trimmed models"]:::proposed
-    CS_316["CS-316 The CSG sample, phases 4 and 5: sketches and parametric history"]:::proposed
+    CS_316["CS-316 The CSG sample, phases 4 and 5: sketches and parametric history"]:::dropped
+    CS_576["CS-576 Spike: B-rep tiles as NURBS or pre-split Bézier patches, and a "]:::open
+    CS_577["CS-577 Spike: subdivision surfaces through OpenSubdiv in WebAssembly o"]:::open
   end
   subgraph CS_194["Budgeted selection and memory"]
     CS_317["CS-317 Budget-driven refinement: benefit per byte"]:::open
@@ -421,7 +427,7 @@ graph LR
     CS_332["CS-332 Benchmark catalog growth"]:::proposed
     CS_333["CS-333 Dyno's analysis and results features: notes, saved views, autho"]:::proposed
     CS_334["CS-334 Benchmarks across OS, browser and GPU vendor, with power and th"]:::proposed
-    CS_335["CS-335 Headless rendering on Dawn's Node package"]:::proposed
+    CS_335["CS-335 Headless rendering on Dawn's Node package"]:::open
     CS_336["CS-336 Clearance to publish benchmark results"]:::external
     CS_448["CS-448 Energy compensation for coloured metals, against a multiple-sca"]:::open
     CS_451["CS-451 Dyno's guardrails and their tolerances per scene, revisited now"]:::open
@@ -438,7 +444,7 @@ graph LR
     CS_338["CS-338 Per-element overrides at scale, through the styling language"]:::proposed
     CS_339["CS-339 Volumes: voxel grids, ray-marched or as isosurfaces"]:::proposed
     CS_340["CS-340 Printing to scale"]:::proposed
-    CS_341["CS-341 WebXR, including aligning a model with its site"]:::proposed
+    CS_341["CS-341 WebXR, including aligning a model with its site"]:::open
     CS_342["CS-342 The infrastructure and geoscience gallery examples"]:::proposed
     CS_343["CS-343 Gallery: a vehicle's lidar over the design"]:::proposed
   end
@@ -497,9 +503,9 @@ graph LR
     CS_406["CS-406 The local certificate authority, the hub and pairing"]:::open
     CS_407["CS-407 The runner and remote runs"]:::open
     CS_408["CS-408 The device lab"]:::open
-    CS_409["CS-409 Who records a study's verdict, and does a verdict close a decis"]:::decision
-    CS_410["CS-410 Does '--hypothesis' on a run without '--study' open a study?"]:::decision
-    CS_411["CS-411 May the Mac make baseline runs in the laptop's browser?"]:::decision
+    CS_409["CS-409 Who records a study's verdict, and does a verdict close a decis"]:::done
+    CS_410["CS-410 Does '--hypothesis' on a run without '--study' open a study?"]:::done
+    CS_411["CS-411 May the Mac make baseline runs in the laptop's browser?"]:::done
     CS_516["CS-516 human-in-the-lead v0.1.0-rc.1 is released"]:::done
     CS_517["CS-517 The agent system's pages: the merge queue, quotas, the controll"]:::open
     CS_518["CS-518 A space switch in Dyno's rail: the engine and the work"]:::open
@@ -513,7 +519,12 @@ graph LR
     CS_434["CS-434 Stability tiers as TSDoc tags, with internal members stripped f"]:::open
     CS_435["CS-435 The measurement module's seam and entry point"]:::open
     CS_438["CS-438 Which of the first public API review's proposed changes do you "]:::decision
-    CS_454["CS-454 What is the full version of scene items: references, groups, th"]:::decision
+    CS_454["CS-454 What is the full version of scene items: references, groups, th"]:::done
+    CS_572["CS-572 The full version of scene items, designed before the first publ"]:::open
+  end
+  subgraph CS_579["Editing"]
+    CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::decision
+    CS_578["CS-578 A mesh editing sample: drag a mesh's vertices, edges and faces,"]:::open
   end
   CS_20 --> CS_21
   CS_21 --> CS_22
@@ -553,6 +564,7 @@ graph LR
   CS_48 --> CS_49
   CS_48 --> CS_50
   CS_48 --> CS_51
+  CS_570 --> CS_51
   CS_51 --> CS_52
   CS_48 --> CS_53
   CS_50 --> CS_53
@@ -630,6 +642,7 @@ graph LR
   CS_433 --> CS_102
   CS_454 --> CS_102
   CS_567 --> CS_102
+  CS_572 --> CS_102
   CS_438 --> CS_103
   CS_438 --> CS_104
   CS_438 --> CS_105
@@ -766,7 +779,9 @@ graph LR
   CS_270 --> CS_271
   CS_150 --> CS_271
   CS_275 --> CS_276
+  CS_552 --> CS_276
   CS_275 --> CS_277
+  CS_552 --> CS_277
   CS_212 --> CS_278
   CS_269 --> CS_280
   CS_281 --> CS_282
@@ -778,11 +793,13 @@ graph LR
   CS_242 --> CS_298
   CS_438 --> CS_303
   CS_299 --> CS_304
+  CS_576 --> CS_304
   CS_304 --> CS_305
   CS_305 --> CS_306
   CS_218 --> CS_308
   CS_258 --> CS_309
   CS_300 --> CS_312
+  CS_577 --> CS_312
   CS_301 --> CS_316
   CS_321 --> CS_322
   CS_323 --> CS_324
@@ -907,6 +924,10 @@ graph LR
   CS_552 --> CS_558
   CS_552 --> CS_559
   CS_101 --> CS_567
+  CS_546 --> CS_571
+  CS_454 --> CS_572
+  CS_299 --> CS_576
+  CS_300 --> CS_577
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3
