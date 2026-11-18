@@ -2,7 +2,7 @@
 id: CS-573
 title: Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at
 kind: work
-state: in-progress
+state: done
 created: 2026-11-17
 project: CS-18
 claimed_by: orch-9-CS-573

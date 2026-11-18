@@ -5,12 +5,14 @@ import {
   filterItems,
   flowOf,
   inFlightOf,
+  kindsOf,
   milestoneMapOf,
   milestoneRoadmapOf,
   nextActor,
   ownerQueue,
   proposalGate,
   proposalsOf,
+  releasesGatedBy,
   stageOf,
   unblocksOf,
   waitingOnOwner,
@@ -216,6 +218,42 @@ const snapshot: WorkSnapshot = {
 describe("the Work board's model (bench/suite/work.ts)", () => {
   it("finds what waits on the owner: the decision and what needs it", () => {
     expect([...waitingOnOwner(snapshot)].sort()).toEqual(["CS-10", "CS-11"]);
+  });
+
+  it("names each ID's kind, a release item as a release", () => {
+    const s: WorkSnapshot = {
+      ...snapshot,
+      items: [
+        ...snapshot.items,
+        item("CS-20", { kind: "external" }),
+        item("CS-21", { release: "2.0.0", needs: ["CS-30", "CS-12"] }),
+      ],
+      milestones: [{ id: "CS-30" } as WorkMilestone],
+    };
+    const kinds = kindsOf(s);
+    expect(kinds.get("CS-2")).toBe("project");
+    expect(kinds.get("CS-30")).toBe("milestone");
+    expect(kinds.get("CS-10")).toBe("decision");
+    expect(kinds.get("CS-14")).toBe("work");
+    expect(kinds.get("CS-20")).toBe("external");
+    expect(kinds.get("CS-21")).toBe("release");
+  });
+
+  it("finds the releases an item gates, directly or through its milestone", () => {
+    const s: WorkSnapshot = {
+      ...snapshot,
+      items: [
+        ...snapshot.items,
+        item("CS-22", { milestones: ["CS-30"] }),
+        item("CS-21", { release: "2.0.0", needs: ["CS-30", "CS-12"] }),
+        item("CS-23", { release: "1.0.0", state: "done", needs: ["CS-12"] }),
+      ],
+    };
+    const ids = (id: string) => releasesGatedBy(s, id).map((r) => r.id);
+    expect(ids("CS-22")).toEqual(["CS-21"]);
+    expect(ids("CS-12")).toEqual(["CS-21"]);
+    expect(ids("CS-30")).toEqual(["CS-21"]);
+    expect(ids("CS-14")).toEqual([]);
   });
 
   it("filters by project, kind, owner and words", () => {

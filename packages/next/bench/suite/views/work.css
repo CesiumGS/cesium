@@ -15,6 +15,9 @@
   font-variant-numeric: tabular-nums;
 }
 .work-id {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: var(--stratakit-font-size-caption-lg);
   color: var(--stratakit-color-text-neutral-secondary);
   white-space: nowrap;
@@ -169,6 +172,49 @@
   --ramp-3: #3987e5;
   --ramp-4: #6da7ec;
 }
+/*
+ * The kinds (DESIGN.md, "Kinds"): each kind's color, drawn only as ink on
+ * its glyph and in its name, never as a filled area; fills belong to the
+ * stages above. Six hues set apart from each other in hue and lightness,
+ * each at least 4.5:1 on the page in its mode (checked 2026-11-18), so a
+ * kind's name in its color reads as text. The glyph's shape carries the
+ * kind alone; the color only repeats it.
+ */
+.viz {
+  --kind-project: #4a54b0;
+  --kind-milestone: #0b6f6b;
+  --kind-work: #5b626c;
+  --kind-decision: #a3266e;
+  --kind-external: #8a4f0c;
+  --kind-release: #3d6b12;
+}
+.viz.dark {
+  --kind-project: #a3abf2;
+  --kind-milestone: #4cc7bf;
+  --kind-work: #aab1bb;
+  --kind-decision: #f08cc6;
+  --kind-external: #e3a656;
+  --kind-release: #a4cf62;
+}
+.k-project {
+  --kind: var(--kind-project);
+}
+.k-milestone {
+  --kind: var(--kind-milestone);
+}
+.k-work {
+  --kind: var(--kind-work);
+}
+.k-decision {
+  --kind: var(--kind-decision);
+}
+.k-external {
+  --kind: var(--kind-external);
+}
+.k-release {
+  --kind: var(--kind-release);
+}
+
 .stage-proposed {
   --stage: var(--stage-proposed);
 }
@@ -460,6 +506,10 @@
   border-radius: 3px;
   background: var(--stage);
 }
+/* No stage: a milestone among items keeps their column. */
+.work-swatch.none {
+  background: transparent;
+}
 .work-cfd-svg {
   display: block;
   width: 100%;
@@ -534,19 +584,74 @@
   margin: var(--stratakit-space-600) 0 0;
 }
 
-/* A kind in words: decision (the owner's call) or external (a wait). */
-.work-kind {
-  font-size: var(--stratakit-font-size-caption-md);
-  padding: 0 var(--stratakit-space-200);
-  border-radius: var(--stratakit-radius-sm);
-  border: 1px solid currentColor;
+/*
+ * A kind's mark: its glyph stroked in its color (KindMark in Work.tsx),
+ * before every ID, on every milestone, project and release, and in the
+ * legend beside the views' tabs.
+ */
+.work-kind-mark {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: var(--kind, currentColor);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  vertical-align: -2px;
+  overflow: visible;
+}
+.work-kind-mark .dot {
+  fill: var(--kind, currentColor);
+  stroke: none;
+}
+/* A kind named: the pane's head. */
+.work-kind-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  height: 24px;
+  padding: 0 var(--stratakit-space-300) 0 var(--stratakit-space-200);
+  border: 1px solid var(--kind);
+  border-radius: var(--stratakit-radius-md);
+  color: var(--kind);
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
   white-space: nowrap;
 }
-.work-kind.decision {
-  color: var(--stratakit-color-text-attention-base);
+.work-kind-tag .work-kind-mark {
+  width: 16px;
+  height: 16px;
 }
-.work-kind.external {
-  color: var(--stratakit-color-text-info-base);
+/* The tabs and the kinds' legend share one rule. */
+.work-tabs-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 var(--stratakit-space-600);
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+  margin-bottom: var(--stratakit-space-500);
+}
+.work-tabs-row .work-tabs {
+  border-bottom: 0;
+  margin-bottom: 0;
+}
+.work-kind-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100) var(--stratakit-space-400);
+  margin: 0;
+  padding: var(--stratakit-space-200) 0;
+  list-style: none;
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-kind-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  white-space: nowrap;
 }
 
 /* ---------------------------------------------------------------- ready and blocked */
@@ -666,7 +771,73 @@
   display: flex;
   flex-wrap: wrap;
   gap: var(--stratakit-space-200);
-  margin-bottom: var(--stratakit-space-500);
+  margin-bottom: var(--stratakit-space-400);
+}
+/*
+ * The pane opens with what it is (kind, ID, title, state, where it sits),
+ * then its sections in one order for every kind, each under a heading and
+ * a rule (DESIGN.md, "The pane").
+ */
+.work-pane-what {
+  padding-bottom: var(--stratakit-space-400);
+}
+.work-where {
+  margin: 0;
+}
+.work-entity-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+}
+.work-entity-link {
+  align-items: baseline;
+}
+.work-entity-link .work-id {
+  align-self: center;
+}
+.work-pane-section {
+  padding: var(--stratakit-space-400) 0 var(--stratakit-space-200);
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+/* A section's label, set apart from the headings in the file's text. */
+.work-pane-label {
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-pane-section > h3 {
+  margin: 0 0 var(--stratakit-space-300);
+}
+.work-pane-section .work-facts {
+  margin-bottom: var(--stratakit-space-300);
+}
+.work-pane-section p {
+  margin: 0 0 var(--stratakit-space-300);
+}
+.work-pane-section .work-ms-clauses {
+  margin: 0 0 var(--stratakit-space-300);
+}
+.work-pane-section .item-text-heading:first-child {
+  margin-top: 0;
+}
+.work-pane-progress .work-pbar-track {
+  margin: var(--stratakit-space-200) 0;
+}
+.work-pane-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100) var(--stratakit-space-400);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-pane-stages li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
 }
 .work-facts {
   display: grid;
@@ -681,15 +852,6 @@
   margin: 0;
   min-width: 0;
   overflow-wrap: anywhere;
-}
-.work-related {
-  margin-bottom: var(--stratakit-space-500);
-}
-.work-related h3 {
-  margin: 0 0 var(--stratakit-space-200);
-}
-.work-related p {
-  margin: 0;
 }
 .work-related-list {
   list-style: none;
@@ -724,9 +886,6 @@ a.work-related-item:focus-visible {
 }
 .work-related-item.missing {
   color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-panel-divider {
-  margin: var(--stratakit-space-200) 0 var(--stratakit-space-500);
 }
 .work-panel-foot {
   display: flex;
@@ -1501,42 +1660,6 @@ a.work-related-item:focus-visible {
   border-top: 1px solid var(--stratakit-color-border-neutral-muted);
 }
 
-/* What a line is: the marks (LevelMark in Work.tsx), and the ring on every item's ID. */
-.work-level {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 14px;
-  height: 14px;
-  color: var(--stratakit-color-text-neutral-secondary);
-  vertical-align: -2px;
-}
-.work-level svg {
-  width: 14px;
-  height: 14px;
-}
-.work-level.milestone::before {
-  content: "";
-  width: 7px;
-  height: 7px;
-  border: 1.5px solid currentColor;
-  border-radius: 1px;
-  transform: rotate(45deg);
-}
-.work-level.item::before,
-.work-id::before {
-  content: "";
-  display: inline-block;
-  width: 7px;
-  height: 7px;
-  border: 1.5px solid var(--stratakit-color-text-neutral-secondary);
-  border-radius: 50%;
-}
-.work-id::before {
-  margin-inline-end: 5px;
-  vertical-align: 0;
-}
 .work-marked {
   display: inline-flex;
   align-items: center;
@@ -2230,6 +2353,18 @@ button.work-mrow-big:focus-visible {
   background: var(--stratakit-color-bg-neutral-base);
   color: var(--stratakit-color-text-neutral-secondary);
   box-shadow: inset 0 0 0 1px var(--stratakit-color-border-neutral-base);
+}
+/* What holds a milestone up, each with its kind's mark. */
+.work-count-badge.work-hold {
+  gap: 3px;
+  padding: 0 6px 0 4px;
+  background: var(--stratakit-color-bg-page-base);
+  color: var(--kind);
+  box-shadow: inset 0 0 0 1px var(--kind);
+}
+.work-count-badge.work-hold .work-kind-mark {
+  width: 12px;
+  height: 12px;
 }
 .work-count-badge + .work-count-badge {
   margin-left: 4px;

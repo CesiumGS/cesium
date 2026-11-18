@@ -158,6 +158,82 @@ export const isWork = (it: WorkItem) => it.kind === "work";
 export const isReleaseItem = (it: WorkItem | undefined): boolean =>
   !!it && it.kind === "work" && !!it.release;
 
+// ------------------------------------------------------------ kinds
+
+/**
+ * The six kinds of entity the board shows. Each has one encoding, a glyph
+ * and a color, drawn the same way in every view and in the pane
+ * (`KindMark` in views/Work.tsx, `--kind-*` in work.css; DESIGN.md,
+ * "Kinds"). The glyph alone carries the kind; the color repeats it. A
+ * release is a work item with a `release` version, shown as its own kind.
+ */
+export const ENTITY_KINDS = [
+  "project",
+  "milestone",
+  "work",
+  "decision",
+  "external",
+  "release",
+] as const;
+export type EntityKind = (typeof ENTITY_KINDS)[number];
+export const ENTITY_KIND_NAMES: Record<EntityKind, string> = {
+  project: "Project",
+  milestone: "Milestone",
+  work: "Work item",
+  decision: "Decision",
+  external: "External",
+  release: "Release",
+};
+/** What each kind is, in a sentence (the legend's tips). */
+export const ENTITY_KIND_TIPS: Record<EntityKind, string> = {
+  project: "A project: one plan's work, holding its milestones and items",
+  milestone: "A milestone: an outcome, true once the items it names are done",
+  work: "A work item: something an agent or a person does",
+  decision: "A decision: a question its decider answers",
+  external: "External: a wait on a party outside the project",
+  release:
+    "A release: the item that makes a version, once what it needs is done",
+};
+
+/** An item's kind on the board: a release item is a release. */
+export const itemKindOf = (it: WorkItem): EntityKind =>
+  isReleaseItem(it) ? "release" : it.kind;
+
+/** The kind of every ID in the snapshot: projects, milestones and items. */
+export function kindsOf(s: WorkSnapshot): Map<string, EntityKind> {
+  const out = new Map<string, EntityKind>();
+  for (const p of s.projects) {
+    out.set(p.id, "project");
+  }
+  for (const m of s.milestones) {
+    out.set(m.id, "milestone");
+  }
+  for (const it of s.items) {
+    out.set(it.id, itemKindOf(it));
+  }
+  return out;
+}
+
+/**
+ * The open releases that need an item or a milestone, directly or through
+ * the milestones it is in: what it gates. Ordered by number.
+ */
+export function releasesGatedBy(s: WorkSnapshot, id: string): WorkItem[] {
+  const via = new Set([
+    id,
+    ...(s.items.find((it) => it.id === id)?.milestones ?? []),
+  ]);
+  return s.items
+    .filter(
+      (it) =>
+        isReleaseItem(it) &&
+        isOpen(it) &&
+        it.id !== id &&
+        it.needs.some((n) => via.has(n)),
+    )
+    .sort((a, b) => idNumber(a.id) - idNumber(b.id));
+}
+
 /** "CS-170" → 170, for ordering by number. */
 export const idNumber = (id: string) => Number(id.replace(/^\D+-/, "")) || 0;
 
@@ -1420,6 +1496,7 @@ export function mapEntityTitle(s: WorkSnapshot, id: string): string {
   return (
     s.milestones.find((m) => m.id === id)?.title ??
     s.items.find((it) => it.id === id)?.title ??
+    s.projects.find((p) => p.id === id)?.title ??
     id
   );
 }

@@ -141,6 +141,67 @@ milestones named by their outcome, each with an `outcome` sentence,
   view they choose. An item or a list
   opens in a pane on the right (`?item=CS-<n>`, `?list=…`), beside the
   view when the window is wide enough and over it when not.
+- **Kinds (CS-573).** The board shows six kinds of entity, and each has
+  one encoding, a glyph and a color, drawn the same way in every view
+  (Your move, Roadmap, Proposals, Flow, the lists) and in the pane:
+
+  | Kind      | Glyph                   | Color (light, dark) |
+  | --------- | ----------------------- | ------------------- |
+  | Project   | clipboard (its plan)    | indigo              |
+  | Milestone | diamond (the roadmap's) | teal                |
+  | Work item | ring                    | gray                |
+  | Decision  | fork                    | magenta             |
+  | External  | arrow leaving a box     | bronze              |
+  | Release   | flag                    | olive green         |
+
+  The kinds are one definition in `work.ts` (`ENTITY_KINDS`,
+  `ENTITY_KIND_NAMES`, `kindsOf`; a release is a work item with a
+  `release` version), drawn by `KindMark` (the glyph), `KindId` (an ID
+  with its mark, how every ID on the page is drawn), `KindTag` (the kind
+  named, the pane's head) and `KindLegend` in `views/Work.tsx`, with the
+  colors as `--kind-*` in `work.css`. Later views reuse these, never their
+  own marks. A legend of all six sits beside the views' tabs, on the same
+  rule, on every view.
+  - **Kind and stage stay apart by channel.** Both use color, so each
+    keeps to its own mark: a kind's color is only ever ink, the stroke of
+    its glyph and its name in the pane's tag, never a filled area; a
+    stage's color is only ever a fill (bars, swatches, Flow's bands),
+    never a glyph. A dependency row shows both side by side: the stage's
+    filled square, then the kind's outlined glyph.
+  - **The glyph carries the kind alone.** The six shapes stay apart at
+    12 px and in grayscale, for readers who can't tell the colors apart;
+    the color only repeats the shape. Each color is at least 4.5:1 on the
+    page and on the roadmap's cards in its mode (5.6:1 or more, checked
+    2026-11-18), so the kind's name in its color reads as text.
+  - **What holds a milestone up** on the roadmap, the owner's decisions
+    and outside waits, are outlined badges with their kind's glyph and
+    count, in the kind's color.
+
+- **The pane (CS-573).** Any entity opens in it (`?item=CS-<n>` for an
+  item, a milestone or a project; a milestone chosen on the roadmap opens
+  as `?list=ms:CS-<n>`, the same pane), and it says first what you are
+  looking at, before any body text:
+  1. **What it is:** the kind's tag (glyph and name, outlined in its
+     color) and the ID, then the title, then the state (the tracker's
+     status and what it means now: Ready, Blocked, Owner decides, Check
+     due, To shape), then where it sits: its project, its milestones, the
+     version it makes (a release) and the releases it gates (directly or
+     through its milestones). Each of these opens in the pane; a
+     project's pane has the button that scopes the board to it.
+  2. Then the same sections in the same order for every kind, each under
+     a label set apart from the headings in the file's text, leaving out
+     what a kind doesn't have, never showing a field empty:
+     **The decision** (a decision's question, options and answer, its
+     file's text, first), **Outcome** (a milestone's outcome and its
+     done-when clauses), **Progress** (a milestone's constraints, a
+     project's items, a release's milestones and items, by stage and in
+     words), **Details** (who claims it, the decider, the party waited
+     on, the check, what shaping owes, the plan, dates, the reason),
+     **Waits on** and **Unblocks** (items as trees; a milestone's order,
+     the milestones it waits on and its longest chain), **Constraints**
+     (a milestone's items, by clause), and **Full text** (the file's
+     text, for every kind but a decision, whose text came first).
+  3. The file's path, with Copy path and Open in editor, at the foot.
 - **HITLd's names.** Statuses are the tracker's (Proposed, Planned, In
   progress, Done, Dropped); a Planned item with a need not Done is
   Blocked, and one with every need Done is Ready, as HITLd derives them.
@@ -195,8 +256,9 @@ milestones named by their outcome, each with an `outcome` sentence,
     committed work only;
     proposals have their own view. A milestone's bar counts its work;
     the owner's decisions and waits on other parties that hold it up are
-    badges beside its name. Decisions and outside waits no milestone
-    holds stay in Your move and Waiting outside.
+    badges beside its name, each with its kind's glyph. Decisions and
+    outside waits no milestone holds stay in Your move and Waiting
+    outside.
   - **Proposals**: what could be taken on next, as bets to commit or
     drop, in one table read top to bottom. Every row has the same
     columns: the idea, what stands between it and committing, and how

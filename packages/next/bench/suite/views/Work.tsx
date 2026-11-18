@@ -3,7 +3,6 @@ import {
   Alert,
   Button,
   CircularProgress,
-  Divider,
   Drawer,
   IconButton,
   Tab,
@@ -21,11 +20,9 @@ import {
 import { svgChevronDown } from "@stratakit/icons/chevron-down";
 import { svgCheckmark } from "@stratakit/icons/checkmark";
 import { svgChevronRight } from "@stratakit/icons/chevron-right";
-import { svgClipboard } from "@stratakit/icons/clipboard";
 import { svgCopy } from "@stratakit/icons/copy";
 import { svgDismiss } from "@stratakit/icons/dismiss";
 import { svgFilter } from "@stratakit/icons/filter";
-import { svgFlag } from "@stratakit/icons/flag";
 import { svgFolderOpen } from "@stratakit/icons/folder-open";
 import { svgGitBranch } from "@stratakit/icons/git-branch";
 import { svgInfo } from "@stratakit/icons/info";
@@ -37,6 +34,7 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import {
+  createContext,
   type CSSProperties,
   Fragment,
   type ReactNode,
@@ -45,6 +43,7 @@ import {
   useId,
   useLayoutEffect,
   useMemo,
+  useContext,
   useRef,
   useState,
 } from "react";
@@ -55,6 +54,10 @@ import {
   ageText,
   byProject,
   dependencyMatrix,
+  ENTITY_KIND_NAMES,
+  ENTITY_KIND_TIPS,
+  ENTITY_KINDS,
+  type EntityKind,
   type Flow,
   findWork,
   flowOf,
@@ -63,8 +66,7 @@ import {
   inFlightOf,
   isOpen,
   isOwnerDecision,
-  type ItemKind,
-  KIND_NAMES,
+  kindsOf,
   loadItemText,
   criticalPathOf,
   loopTies,
@@ -90,6 +92,7 @@ import {
   proposalsOf,
   type ReleaseFlag,
   releaseFlagsOf,
+  releasesGatedBy,
   isReleaseItem,
   type RoadmapRow,
   ownerQueue,
@@ -136,6 +139,10 @@ export function Work() {
   const search = route.useSearch();
   const navigate = useNavigate({ from: "/work" });
   const { snapshot, error } = useWork();
+  const kinds = useMemo(
+    () => (snapshot ? kindsOf(snapshot) : new Map<string, EntityKind>()),
+    [snapshot],
+  );
   const set = (patch: Partial<WorkSearch>, replace = false) =>
     void navigate({
       search: (prev) =>
@@ -164,7 +171,13 @@ export function Work() {
       </Page>
     );
   }
-  return <Board s={snapshot} search={search} set={set} />;
+  return (
+    <KindsContext.Provider value={kinds}>
+      <SnapshotContext.Provider value={snapshot}>
+        <Board s={snapshot} search={search} set={set} />
+      </SnapshotContext.Provider>
+    </KindsContext.Provider>
+  );
 }
 
 const DESCRIPTION =
@@ -447,24 +460,27 @@ function Board({
             />
             <FindField q={search.q} set={set} />
           </div>
-          <Tabs
-            value={view}
-            onChange={(_, v: View) =>
-              set({ view: v === "move" ? undefined : v })
-            }
-            aria-label="Views"
-            className="work-tabs"
-          >
-            {VIEWS.map((v) => (
-              <Tab
-                key={v.id}
-                value={v.id}
-                label={v.label}
-                id={`work-tab-${v.id}`}
-                aria-controls="work-view"
-              />
-            ))}
-          </Tabs>
+          <div className="work-tabs-row">
+            <Tabs
+              value={view}
+              onChange={(_, v: View) =>
+                set({ view: v === "move" ? undefined : v })
+              }
+              aria-label="Views"
+              className="work-tabs"
+            >
+              {VIEWS.map((v) => (
+                <Tab
+                  key={v.id}
+                  value={v.id}
+                  label={v.label}
+                  id={`work-tab-${v.id}`}
+                  aria-controls="work-view"
+                />
+              ))}
+            </Tabs>
+            <KindLegend />
+          </div>
           <div
             id="work-view"
             role="tabpanel"
@@ -690,7 +706,9 @@ function Board({
                           onChange={(_, v: string | null) =>
                             v &&
                             set(
-                              { roadmap: v === "milestones" ? undefined : v },
+                              {
+                                roadmap: v === "milestones" ? undefined : v,
+                              },
                               true,
                             )
                           }
@@ -856,6 +874,14 @@ function Board({
           scope={scope}
           onClose={() =>
             set({ list: undefined, item: undefined, q: undefined })
+          }
+          onProject={(id) =>
+            set({
+              project: id,
+              milestone: undefined,
+              item: undefined,
+              list: undefined,
+            })
           }
           onList={(l) => set({ list: l, item: undefined })}
           onQuery={(q: string) =>
@@ -1356,29 +1382,114 @@ function MiniChart({
 }
 
 type Level = "project" | "milestone" | "item";
-const LEVEL_NAMES: Record<Level, string> = {
-  project: "Project",
-  milestone: "Milestone",
-  item: "Item",
+const LEVEL_KINDS: Record<Level, EntityKind> = {
+  project: "project",
+  milestone: "milestone",
+  item: "work",
+};
+
+/** What a line is: a scope's level drawn as its kind (a line of items as a work item). */
+function LevelMark({ level }: { level: Level }) {
+  return <KindMark kind={LEVEL_KINDS[level]} />;
+}
+
+/**
+ * The kind of every ID on the board, so any ID drawn anywhere carries its
+ * kind's mark (`KindId`). Board provides it from the snapshot.
+ */
+const KindsContext = createContext<ReadonlyMap<string, EntityKind>>(new Map());
+/** The snapshot, for what a deep part needs to name (a milestone in a tree). */
+const SnapshotContext = createContext<WorkSnapshot | undefined>(undefined);
+
+/**
+ * Each kind's glyph, on a 16-unit grid, stroked in its color: a clipboard
+ * for a project (its plan), a diamond for a milestone (the roadmap's
+ * mark), a ring for a work item, a fork for a decision, an arrow leaving a
+ * box for an external wait, a flag for a release. Shapes that stay apart
+ * at 12 px, so the glyph carries the kind alone (DESIGN.md, "Kinds").
+ */
+const KIND_GLYPHS: Record<EntityKind, ReactNode> = {
+  project: (
+    <>
+      <rect x="3" y="3.25" width="10" height="11" rx="1.5" />
+      <path d="M6 3.25V1.75h4v1.5M5.75 7.5h4.5M5.75 10.5h3" />
+    </>
+  ),
+  milestone: <path d="M8 1.5 14.5 8 8 14.5 1.5 8Z" />,
+  work: <circle cx="8" cy="8" r="5.25" />,
+  decision: (
+    <>
+      <path d="M8 14.5V8.75M8 8.75 3.25 2.75M8 8.75l4.75-6" />
+      <circle cx="8" cy="8.75" r="1.6" className="dot" />
+    </>
+  ),
+  external: (
+    <path d="M9.25 1.75h5v5M14.25 1.75 7.5 8.5M12.25 9.5v4.75h-10.5V3.75H6.5" />
+  ),
+  release: <path d="M3.5 15V1.5M3.5 2.25h9.75l-2.5 3.5 2.5 3.5H3.5" />,
 };
 
 /**
- * What a line is, by shape, the same everywhere on the page: a clipboard
- * for a project (usually one plan), a diamond for a milestone (the
- * roadmap's mark), a ring for an item. Shape, not color: color already means a stage (the
- * blue ramp) or "needs you" (amber). Items' IDs carry the ring by
- * themselves (`.work-id`).
+ * A kind's mark: its glyph in its color, the same everywhere on the page.
+ * Named for assistive technology and on hover, unless the words beside it
+ * already name the kind.
  */
-function LevelMark({ level }: { level: Level }) {
+function KindMark({
+  kind,
+  named = true,
+}: {
+  kind: EntityKind;
+  /** False when the kind's name is written beside it. */
+  named?: boolean;
+}) {
   return (
-    <span
-      className={`work-level ${level}`}
-      role="img"
-      aria-label={LEVEL_NAMES[level]}
-      title={LEVEL_NAMES[level]}
+    <svg
+      className={`work-kind-mark k-${kind}`}
+      viewBox="0 0 16 16"
+      focusable="false"
+      role={named ? "img" : undefined}
+      aria-label={named ? ENTITY_KIND_NAMES[kind] : undefined}
+      aria-hidden={named ? undefined : true}
     >
-      {level === "project" ? <Icon href={svgClipboard} /> : null}
+      {named && <title>{ENTITY_KIND_NAMES[kind]}</title>}
+      {KIND_GLYPHS[kind]}
+    </svg>
+  );
+}
+
+/** A kind in words with its mark, outlined in its color (the pane's head). */
+function KindTag({ kind }: { kind: EntityKind }) {
+  return (
+    <span className={`work-kind-tag k-${kind}`}>
+      <KindMark kind={kind} named={false} />
+      {ENTITY_KIND_NAMES[kind]}
     </span>
+  );
+}
+
+/** An ID with its kind's mark before it: how every ID on the page is drawn. */
+function KindId({ id, kind }: { id: string; kind?: EntityKind }) {
+  const kinds = useContext(KindsContext);
+  const k = kind ?? kinds.get(id) ?? "work";
+  return (
+    <span className={`work-id k-${k}`}>
+      <KindMark kind={k} />
+      {id}
+    </span>
+  );
+}
+
+/** The kinds' legend, beside the views' tabs: every mark and its name. */
+function KindLegend() {
+  return (
+    <ul className="work-kind-legend" aria-label="Kinds of entity">
+      {ENTITY_KINDS.map((k) => (
+        <li key={k} className={`k-${k}`} title={ENTITY_KIND_TIPS[k]}>
+          <KindMark kind={k} named={false} />
+          {ENTITY_KIND_NAMES[k]}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -1485,7 +1596,7 @@ function InFlightRows({
           className={`work-row${it.id === selected ? " selected" : ""}`}
         >
           <ItemLink id={it.id} className="work-row-main">
-            <span className="work-id">{it.id}</span>
+            <KindId id={it.id} />
             <span className="work-row-title">
               <InlineText text={it.title} />
             </span>
@@ -1586,7 +1697,7 @@ function LeverageBars({
               label={`${it.id} ${it.title}: ${n} items wait behind it`}
             >
               <span className="work-bar-label">
-                <span className="work-id">{it.id}</span>{" "}
+                <KindId id={it.id} />{" "}
                 <InlineText
                   text={
                     party && it.waiting_on
@@ -1851,6 +1962,7 @@ function ListPanel({
   search,
   scope,
   onClose,
+  onProject,
   onList,
   onQuery,
 }: {
@@ -1869,16 +1981,14 @@ function ListPanel({
   /** The scope's name, for the lists it narrows. */
   scope?: string;
   onClose: () => void;
+  /** Scopes the board to a project. */
+  onProject: (id: string) => void;
   /** Opens another list (a milestone's waits). */
   onList: (list: string) => void;
   /** Changes Find's words. */
   onQuery: (q: string) => void;
 }) {
   const titleId = useId();
-  const msRows = useMemo(
-    () => milestoneRoadmapOf(s, s.items, flight, true),
-    [s, flight],
-  );
   const now = Date.now();
   let body: ReactNode = null;
   if (list === "owner") {
@@ -1960,7 +2070,7 @@ function ListPanel({
                 aria-hidden="true"
                 data-tip={stageTip(stageOf(it, flight) ?? "Waiting")}
               />
-              <span className="work-id">{it.id}</span>
+              <KindId id={it.id} />
               <span className="work-tree-title">
                 <InlineText text={it.title} />
               </span>
@@ -2024,110 +2134,6 @@ function ListPanel({
           projectOf={projectOf}
         />
       </>
-    );
-  } else if (list?.startsWith("ms:")) {
-    const m = s.milestones.find((x) => x.id === list.slice(3));
-    body = m ? (
-      <div className="work-ms">
-        <dl className="work-facts">
-          <Fact name="Outcome">{m.outcome ?? "To shape"}</Fact>
-          <Fact name="Kind">
-            {m.learning ? "Learning milestone" : "Milestone"}
-          </Fact>
-          <Fact name="State">{STATE_NAMES[m.state]}</Fact>
-          <Fact name="Check">{m.check ?? "To shape"}</Fact>
-          <Fact name="Progress">
-            {m.progress.done} of {m.progress.total} constraints done
-            {m.check_due ? " · check due" : ""}
-          </Fact>
-          {(() => {
-            const { path, done } = criticalPathOf(m, itemOf);
-            const next = path.find((it) => it.state !== "done");
-            return path.length > 1 ? (
-              <Fact name="Longest chain">
-                {path.length} items in order, {done} done
-                {next && (
-                  <>
-                    ; next{" "}
-                    <ItemLink id={next.id}>
-                      <span className="work-id">{next.id}</span>
-                    </ItemLink>
-                  </>
-                )}
-              </Fact>
-            ) : null;
-          })()}
-          {(() => {
-            const row = msRows.find((r) => r.id === m.id);
-            if (!row) {
-              return null;
-            }
-            return (
-              <>
-                <Fact name="Order">
-                  {row.step === 1
-                    ? "Can move now"
-                    : `After step ${row.step - 1} of the roadmap`}
-                </Fact>
-                {row.waitsOn.length > 0 && (
-                  <Fact name="Waits on">
-                    {[...row.waitsOn]
-                      .sort((a, b) => b.items.length - a.items.length)
-                      .map((w, i) => (
-                        <span key={w.id}>
-                          {i > 0 && ", "}
-                          <Link
-                            component="button"
-                            type="button"
-                            onClick={() => onList(`mdep:${m.id}:${w.id}`)}
-                          >
-                            {s.milestones.find((x) => x.id === w.id)?.title ??
-                              w.id}
-                          </Link>{" "}
-                          ({w.items.length})
-                        </span>
-                      ))}
-                  </Fact>
-                )}
-              </>
-            );
-          })()}
-          {m.to_shape.length > 0 && (
-            <Fact name="Shaping owes">
-              {m.to_shape.map((x) => SHAPE_NAMES[x] ?? x).join(", ")}
-            </Fact>
-          )}
-        </dl>
-        {m.done_when.length > 0 && (
-          <ol className="work-ms-clauses">
-            {m.done_when.map((c) => (
-              <li key={c.clause}>
-                <b>{c.clause}</b> {c.text}
-              </li>
-            ))}
-          </ol>
-        )}
-        <Grouped
-          s={s}
-          items={m.constraints
-            .map((c) => itemOf.get(c.id))
-            .filter((x): x is WorkItem => !!x)}
-          empty="No constraints yet."
-          selected={selected}
-          projectOf={projectOf}
-          line={(it) => {
-            const c = m.constraints.find((x) => x.id === it.id)?.clause;
-            return c === "c?" ? "Not linked to a clause yet" : `Clause ${c}`;
-          }}
-        />
-        <Typography variant="caption-md" color="textSecondary" render={<p />}>
-          {m.path}
-        </Typography>
-      </div>
-    ) : (
-      <Typography variant="body-md" render={<p />}>
-        No such milestone.
-      </Typography>
     );
   } else if (list?.startsWith("mdep:")) {
     const [, from, to] = list.split(":") as [string, string, string];
@@ -2199,6 +2205,31 @@ function ListPanel({
         />
       );
   }
+  // A milestone opens as itself, the same pane as any entity.
+  if (list?.startsWith("ms:") && !list.startsWith(`ms:${UNSHAPED}`)) {
+    return (
+      <Pane
+        inline={inline}
+        open={open}
+        onClose={onClose}
+        labelledBy={titleId}
+        className="work-list-panel"
+      >
+        <EntityPane
+          s={s}
+          id={list.slice(3)}
+          titleId={titleId}
+          projectOf={projectOf}
+          itemOf={itemOf}
+          flight={flight}
+          selected={selected}
+          onClose={onClose}
+          onProject={onProject}
+          onList={onList}
+        />
+      </Pane>
+    );
+  }
   // A wait between milestones goes back to the milestone it came from.
   const from = list?.startsWith("mdep:") ? list.split(":")[1] : undefined;
   return (
@@ -2226,7 +2257,7 @@ function ListPanel({
           id={titleId}
           className="work-marked"
         >
-          {list?.startsWith("ms:") && <LevelMark level="milestone" />}
+          {list?.startsWith("ms:") && <KindMark kind="milestone" />}
           {list ? listTitle(list, scope, s) : ""}
         </Typography>
         <IconButton label="Close" onClick={onClose}>
@@ -2278,7 +2309,7 @@ function Ranked({
               className={`work-row${it.id === selected ? " selected" : ""}`}
             >
               <ItemLink id={it.id} className="work-row-main">
-                <span className="work-id">{it.id}</span>
+                <KindId id={it.id} />
                 <span className="work-row-title">
                   <span>
                     <InlineText text={it.title} />
@@ -2907,7 +2938,7 @@ function FindResults({
               className={`work-row${m.id === selected ? " selected" : ""}`}
             >
               <ItemLink id={m.id} className="work-row-main">
-                <span className="work-id">{m.id}</span>
+                <KindId id={m.id} />
                 <span className="work-row-title">
                   <span>{it ? mark(it.title) : m.id}</span>
                   <Typography
@@ -2978,7 +3009,7 @@ function OwnerQueue({
           >
             <ItemLink id={d.id} className="work-queue-main">
               <span className="work-card-top">
-                <span className="work-id">{d.id}</span>
+                <KindId id={d.id} />
                 {d.ready ? (
                   <StatusBadge tone="warning">Ready to decide</StatusBadge>
                 ) : (
@@ -3007,7 +3038,7 @@ function OwnerQueue({
                   className="work-need"
                   label={`${w.id} ${w.title}`}
                 >
-                  <span className="work-id">{w.id}</span>
+                  <KindId id={w.id} />
                   <span className="work-need-title">
                     <InlineText text={w.title} />
                   </span>
@@ -3123,8 +3154,7 @@ function ProposalsCard({
         decision: id,
         head: (
           <ItemLink id={id} className="work-ptable-group-link">
-            <span className="work-id">{id}</span>{" "}
-            <InlineText text={itemOf.get(id)?.title ?? id} />
+            <KindId id={id} /> <InlineText text={itemOf.get(id)?.title ?? id} />
           </ItemLink>
         ),
         meta: `${its.length} ${its.length === 1 ? "proposal waits" : "proposals wait"} on it`,
@@ -3361,7 +3391,7 @@ function ProposalRow({
       className={`work-ptable-row${selected ? " selected" : ""}${inMilestone ? " in-ms" : ""}`}
     >
       <td className="c-id">
-        <span className="work-id">{it.id}</span>
+        <KindId id={it.id} />
       </td>
       <td className="c-title">
         <ItemLink id={it.id} className="work-ptable-link">
@@ -3452,7 +3482,7 @@ function GateRefs({ needs }: { needs: Array<WorkItem | string> }) {
         <span key={typeof n === "string" ? n : n.id}>
           {i > 0 && ", "}
           {typeof n === "string" ? (
-            <span className="work-id">{n}</span>
+            <KindId id={n} />
           ) : (
             <ItemLink
               id={n.id}
@@ -3507,10 +3537,6 @@ function ItemLink({
       {children}
     </RouterLink>
   );
-}
-
-function KindBadge({ kind }: { kind: ItemKind }) {
-  return <span className={`work-kind ${kind}`}>{KIND_NAMES[kind]}</span>;
 }
 
 // ------------------------------------------------------------ ready and blocked
@@ -3574,11 +3600,10 @@ function Grouped({
                       className={`work-row${it.id === selected ? " selected" : ""}`}
                     >
                       <ItemLink id={it.id} className="work-row-main">
-                        <span className="work-id">{it.id}</span>
+                        <KindId id={it.id} />
                         <span className="work-row-title">
                           <InlineText text={it.title} />
                         </span>
-                        {it.kind !== "work" && <KindBadge kind={it.kind} />}
                         {extra && (
                           <Typography
                             variant="caption-md"
@@ -3609,7 +3634,7 @@ function Grouped({
                                 className="work-need"
                                 label={`${n.id} ${n.title}, ${STATE_NAMES[n.state]}`}
                               >
-                                <span className="work-id">{n.id}</span>
+                                <KindId id={n.id} />
                                 <span className="work-need-title">
                                   <InlineText text={n.title} />
                                 </span>
@@ -3653,34 +3678,7 @@ function ItemPanel({
   onClose: () => void;
   onProject: (id: string) => void;
 }) {
-  const it = id ? itemOf.get(id) : undefined;
-  const [text, setText] = useState<{
-    id: string;
-    text?: WorkItemText;
-    error?: string;
-  }>();
-  useEffect(() => {
-    if (!id) {
-      return;
-    }
-    let live = true;
-    setText({ id });
-    loadItemText(id).then(
-      (t) => live && setText({ id, text: t }),
-      (e: Error) => live && setText({ id, error: e.message }),
-    );
-    return () => {
-      live = false;
-    };
-  }, [id, s.generated]);
-  const known = useMemo(() => new Set(s.items.map((x) => x.id)), [s]);
-  const loaded = text?.id === id ? text : undefined;
-  const project = it?.project ? projectOf.get(it.project) : undefined;
   const titleId = useId();
-  const path = it?.path;
-  // Vite's dev server opens a file in the editor, relative to its root.
-  const editorPath = path?.replace(/^packages\/next\//, "");
-
   return (
     <Pane inline={inline} open={!!id} onClose={onClose} labelledBy={titleId}>
       {back && (
@@ -3693,118 +3691,272 @@ function ItemPanel({
           ← {back}
         </Link>
       )}
+      {id && (
+        <EntityPane
+          s={s}
+          id={id}
+          titleId={titleId}
+          projectOf={projectOf}
+          itemOf={itemOf}
+          flight={flight}
+          onClose={onClose}
+          onProject={onProject}
+        />
+      )}
+    </Pane>
+  );
+}
+
+/**
+ * One entity in the pane, whatever its kind (DESIGN.md, "The pane"). It
+ * opens with what it is: the kind (marked and named), the ID and title,
+ * the state, and where it sits (its project, its milestones, the releases
+ * it gates). Then the same sections in the same order for every kind,
+ * each under a heading, leaving out what a kind doesn't have: a decision's
+ * question, options and answer, or a milestone's outcome; progress;
+ * details; what it waits on and unblocks; a milestone's constraints; and
+ * the file's full text.
+ */
+function EntityPane({
+  s,
+  id,
+  titleId,
+  projectOf,
+  itemOf,
+  flight,
+  selected,
+  onClose,
+  onProject,
+  onList,
+}: {
+  s: WorkSnapshot;
+  id: string;
+  titleId: string;
+  projectOf: Map<string, WorkContainer>;
+  itemOf: Map<string, WorkItem>;
+  flight: InFlight;
+  /** The item open beside it, marked in its lists. */
+  selected?: string;
+  onClose: () => void;
+  onProject: (id: string) => void;
+  /** Opens a list in the pane (a wait between milestones). */
+  onList?: (list: string) => void;
+}) {
+  const kinds = useContext(KindsContext);
+  const kind = kinds.get(id);
+  const it = itemOf.get(id);
+  const m =
+    kind === "milestone" ? s.milestones.find((x) => x.id === id) : undefined;
+  const p = kind === "project" ? projectOf.get(id) : undefined;
+  const [text, setText] = useState<{
+    id: string;
+    text?: WorkItemText;
+    error?: string;
+  }>();
+  useEffect(() => {
+    let live = true;
+    setText({ id });
+    loadItemText(id).then(
+      (t) => live && setText({ id, text: t }),
+      (e: Error) => live && setText({ id, error: e.message }),
+    );
+    return () => {
+      live = false;
+    };
+  }, [id, s.generated]);
+  const known = useMemo(() => new Set(kinds.keys()), [kinds]);
+  const loaded = text?.id === id ? text : undefined;
+  const path = (it ?? m ?? p)?.path;
+  // Vite's dev server opens a file in the editor, relative to its root.
+  const editorPath = path?.replace(/^packages\/next\//, "");
+  const projectId = it?.project ?? m?.project;
+  const project = projectId ? projectOf.get(projectId) : undefined;
+  const gates = useMemo(
+    () => (it || m ? releasesGatedBy(s, id) : []),
+    [s, id, it, m],
+  );
+  const msRows = useMemo(
+    () => (m ? milestoneRoadmapOf(s, s.items, flight, true) : []),
+    [s, flight, m],
+  );
+  const title = it?.title ?? m?.title ?? p?.title;
+
+  const body = (
+    <BodyText
+      loaded={loaded}
+      known={known}
+      empty={
+        kind === "decision" ? "The decision's file has no text." : undefined
+      }
+    />
+  );
+  return (
+    <>
       <div className="work-panel-head">
         <span className="work-card-top">
+          {kind && <KindTag kind={kind} />}
           <span className="work-id">{id}</span>
-          {it && it.kind !== "work" && <KindBadge kind={it.kind} />}
         </span>
         <IconButton label="Close" onClick={onClose}>
           <Icon href={svgDismiss} />
         </IconButton>
       </div>
-      {!it ? (
+      {!kind || !title ? (
         <div className="work-panel-body">
           <Typography variant="headline-sm" render={<h2 />} id={titleId}>
             Not on this branch
           </Typography>
           <Typography variant="body-md" color="textSecondary" render={<p />}>
-            {id} isn't among this branch's items. It may be on another branch,
-            or not made yet.
+            {id} isn't among this branch's items, milestones or projects. It may
+            be on another branch, or not made yet.
           </Typography>
         </div>
       ) : (
         <div className="work-panel-body">
-          <Typography variant="headline-sm" render={<h2 />} id={titleId}>
-            <InlineText text={it.title} />
-          </Typography>
-          <div className="work-panel-states">
-            <StatusBadge
-              tone={
-                it.state === "done"
-                  ? "success"
-                  : it.state === "in-progress"
-                    ? "info"
-                    : "secondary"
-              }
-            >
-              {STATE_NAMES[it.state]}
-            </StatusBadge>
-            {isOpen(it) && it.state !== "in-progress" && (
-              <StatusBadge tone={stateOf(it).tone}>
-                {stateOf(it).text}
-              </StatusBadge>
-            )}
-            {isOwnerDecision(it) && (
-              <StatusBadge tone="warning">Owner decides</StatusBadge>
-            )}
-          </div>
-          <dl className="work-facts">
-            {project && (
-              <Fact name="Project">
-                <Link
-                  component="button"
-                  type="button"
-                  onClick={() => onProject(project.id)}
-                  title="Scope to this project"
-                  className="work-marked"
-                >
-                  <LevelMark level="project" />
-                  {project.title}
-                </Link>
-              </Fact>
-            )}
-            {(it.state === "in-progress" || flight.has(it.id)) && (
-              <Fact name="Claimed">{whereOf(it, flight, s.branch)}</Fact>
-            )}
-            {it.decider && <Fact name="Decided by">{it.decider}</Fact>}
-            {it.waiting_on && <Fact name="Waits on">{it.waiting_on}</Fact>}
-            {it.milestones.length > 0 && (
-              <Fact
-                name={it.milestones.length === 1 ? "Milestone" : "Milestones"}
-              >
-                {it.milestones.map((m, i) => (
-                  <span key={m} className="work-marked">
-                    {i > 0 && ", "}
-                    <LevelMark level="milestone" />
-                    {s.milestones.find((x) => x.id === m)?.title ?? m}
-                  </span>
-                ))}
-              </Fact>
-            )}
-            {it.created && <Fact name="Created">{it.created}</Fact>}
-            {it.reason && <Fact name="Reason">{it.reason}</Fact>}
-          </dl>
-
-          <FocusTrees it={it} itemOf={itemOf} flight={flight} />
-
-          <Divider className="work-panel-divider" />
-          {!loaded || (!loaded.text && !loaded.error) ? (
-            <div className="work-loading" role="status">
-              <CircularProgress size={16} />
-              <Typography variant="body-sm">Reading the item…</Typography>
+          <header className="work-pane-what">
+            <Typography variant="headline-sm" render={<h2 />} id={titleId}>
+              <InlineText text={title} />
+            </Typography>
+            <div className="work-panel-states">
+              <EntityStates it={it} m={m} p={p} flight={flight} />
             </div>
-          ) : loaded.error ? (
-            <Alert severity="error">
-              The item's text didn't load ({loaded.error}).
-            </Alert>
-          ) : (
-            <ItemText
-              text={loaded.text!.body}
-              known={known}
-              itemLink={(ref, key) => (
-                <Link
-                  key={key}
-                  render={
-                    <RouterLink
-                      to="/work"
-                      search={(prev: WorkSearch) => ({ ...prev, item: ref })}
-                    />
-                  }
-                >
-                  {ref}
-                </Link>
+            {(project ||
+              (it && it.milestones.length > 0) ||
+              gates.length > 0 ||
+              it?.release) && (
+              <dl className="work-facts work-where">
+                {project && (
+                  <Fact name="Project">
+                    <EntityLinks ids={[project.id]} s={s} />
+                  </Fact>
+                )}
+                {it && it.milestones.length > 0 && (
+                  <Fact
+                    name={
+                      it.milestones.length === 1 ? "Milestone" : "Milestones"
+                    }
+                  >
+                    <EntityLinks ids={it.milestones} s={s} />
+                  </Fact>
+                )}
+                {it?.release && <Fact name="Makes">Version {it.release}</Fact>}
+                {gates.length > 0 && (
+                  <Fact name="Gates">
+                    <EntityLinks ids={gates.map((r) => r.id)} s={s} />
+                  </Fact>
+                )}
+              </dl>
+            )}
+            {p && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<Icon href={svgFilter} />}
+                onClick={() => onProject(p.id)}
+              >
+                Scope the board to this project
+              </Button>
+            )}
+          </header>
+
+          {kind === "decision" && (
+            <PaneSection title="The decision">{body}</PaneSection>
+          )}
+          {m && (
+            <PaneSection title="Outcome">
+              <Typography variant="body-md" render={<p />}>
+                {m.outcome ?? "Not written yet: shaping owes the outcome."}
+              </Typography>
+              {m.done_when.length > 0 && (
+                <ol className="work-ms-clauses">
+                  {m.done_when.map((c) => (
+                    <li key={c.clause}>
+                      <b>{c.clause}</b> {c.text}
+                    </li>
+                  ))}
+                </ol>
               )}
+            </PaneSection>
+          )}
+
+          {(m || p || kind === "release") && (
+            <PaneSection title="Progress">
+              {kind === "release" && it && (
+                <Typography variant="body-md" render={<p />}>
+                  {(() => {
+                    const ms = it.needs.filter(
+                      (n) => kinds.get(n) === "milestone",
+                    );
+                    const done = ms.filter(
+                      (n) =>
+                        s.milestones.find((x) => x.id === n)?.state === "done",
+                    ).length;
+                    return ms.length
+                      ? `${done} of ${ms.length} ${ms.length === 1 ? "milestone" : "milestones"} it needs done`
+                      : "It needs no milestone";
+                  })()}
+                </Typography>
+              )}
+              <StageProgress
+                items={
+                  m
+                    ? m.constraints
+                        .map((c) => itemOf.get(c.id))
+                        .filter((x): x is WorkItem => !!x)
+                    : p
+                      ? s.items.filter((x) => x.project === p.id)
+                      : (it?.needs ?? [])
+                          .map((n) => itemOf.get(n))
+                          .filter((x): x is WorkItem => !!x)
+                }
+                flight={flight}
+                noun={m ? "constraint" : p ? "item" : "item it needs"}
+                nouns={m ? "constraints" : p ? "items" : "items it needs"}
+                bar={kind !== "release"}
+              />
+              {m?.check_due && (
+                <Typography variant="body-sm" render={<p />}>
+                  Every constraint is done: its check is due.
+                </Typography>
+              )}
+            </PaneSection>
+          )}
+
+          <EntityDetails it={it} m={m} p={p} s={s} flight={flight} />
+
+          {it && <FocusTrees it={it} itemOf={itemOf} flight={flight} />}
+          {m && (
+            <MilestoneOrder
+              s={s}
+              m={m}
+              itemOf={itemOf}
+              rows={msRows}
+              onList={onList}
             />
+          )}
+
+          {m && (
+            <PaneSection title="Constraints">
+              <Grouped
+                s={s}
+                items={m.constraints
+                  .map((c) => itemOf.get(c.id))
+                  .filter((x): x is WorkItem => !!x)}
+                empty="No constraints yet."
+                selected={selected}
+                projectOf={projectOf}
+                line={(x) => {
+                  const c = m.constraints.find((y) => y.id === x.id)?.clause;
+                  return c === "c?"
+                    ? "Not linked to a clause yet"
+                    : `Clause ${c}`;
+                }}
+              />
+            </PaneSection>
+          )}
+
+          {kind !== "decision" && (
+            <PaneSection title="Full text">{body}</PaneSection>
           )}
         </div>
       )}
@@ -3825,7 +3977,7 @@ function ItemPanel({
               startIcon={<Icon href={svgCopy} />}
               onClick={() =>
                 navigator.clipboard.writeText(path).then(
-                  () => toast("Copied the item's path"),
+                  () => toast("Copied the file's path"),
                   () => toast("Couldn't copy: the browser refused", "bad"),
                 )
               }
@@ -3856,7 +4008,393 @@ function ItemPanel({
           </span>
         </div>
       )}
-    </Pane>
+    </>
+  );
+}
+
+/** A section of the pane, under its heading. */
+function PaneSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  const hid = useId();
+  return (
+    <section className="work-pane-section" aria-labelledby={hid}>
+      <Typography
+        variant="caption-lg"
+        render={<h3 />}
+        id={hid}
+        className="work-pane-label"
+      >
+        {title}
+      </Typography>
+      {children}
+    </section>
+  );
+}
+
+/** An entity's file text, as it loads. */
+function BodyText({
+  loaded,
+  known,
+  empty,
+}: {
+  loaded?: { text?: WorkItemText; error?: string };
+  known: ReadonlySet<string>;
+  empty?: string;
+}) {
+  if (!loaded || (!loaded.text && !loaded.error)) {
+    return (
+      <div className="work-loading" role="status">
+        <CircularProgress size={16} />
+        <Typography variant="body-sm">Reading the file…</Typography>
+      </div>
+    );
+  }
+  if (loaded.error) {
+    return (
+      <Alert severity="error">
+        The file's text didn't load ({loaded.error}).
+      </Alert>
+    );
+  }
+  if (!loaded.text!.body.trim()) {
+    return (
+      <Typography variant="body-sm" color="textSecondary" render={<p />}>
+        {empty ?? "The file has no text beyond its fields."}
+      </Typography>
+    );
+  }
+  return (
+    <ItemText
+      text={loaded.text!.body}
+      known={known}
+      itemLink={(ref, key) => (
+        <Link
+          key={key}
+          render={
+            <RouterLink
+              to="/work"
+              search={(prev: WorkSearch) => ({ ...prev, item: ref })}
+            />
+          }
+        >
+          {ref}
+        </Link>
+      )}
+    />
+  );
+}
+
+/** IDs as links that open each in the pane, each with its kind's mark and title. */
+function EntityLinks({ ids, s }: { ids: readonly string[]; s: WorkSnapshot }) {
+  return (
+    <span className="work-entity-links">
+      {ids.map((m) => (
+        <ItemLink key={m} id={m} className="work-marked work-entity-link">
+          <KindId id={m} />
+          <InlineText text={mapEntityTitle(s, m)} />
+        </ItemLink>
+      ))}
+    </span>
+  );
+}
+
+/** The state, in the tracker's words, and what it means now. */
+function EntityStates({
+  it,
+  m,
+  p,
+  flight,
+}: {
+  it?: WorkItem;
+  m?: WorkMilestone;
+  p?: WorkContainer;
+  flight: InFlight;
+}) {
+  if (it) {
+    return (
+      <>
+        <StatusBadge
+          tone={
+            it.state === "done"
+              ? "success"
+              : it.state === "in-progress"
+                ? "info"
+                : "secondary"
+          }
+        >
+          {STATE_NAMES[it.state]}
+        </StatusBadge>
+        {isOpen(it) && it.state !== "in-progress" && (
+          <StatusBadge tone={stateOf(it, flight).tone}>
+            {stateOf(it, flight).text}
+          </StatusBadge>
+        )}
+        {isOwnerDecision(it) && (
+          <StatusBadge tone="warning">Owner decides</StatusBadge>
+        )}
+      </>
+    );
+  }
+  const st = (m ?? p)!.state;
+  return (
+    <>
+      <StatusBadge tone={st === "done" ? "success" : "secondary"}>
+        {STATE_NAMES[st]}
+      </StatusBadge>
+      {m?.learning && <StatusBadge tone="info">Learning milestone</StatusBadge>}
+      {m?.check_due && <StatusBadge tone="info">Check due</StatusBadge>}
+      {m && m.to_shape.length > 0 && (
+        <StatusBadge tone="secondary">To shape</StatusBadge>
+      )}
+    </>
+  );
+}
+
+/** How a set of items stands, as one stage bar and in words. */
+function StageProgress({
+  items,
+  flight,
+  noun,
+  nouns,
+  bar = true,
+}: {
+  items: readonly WorkItem[];
+  flight: InFlight;
+  noun: string;
+  nouns: string;
+  /** False where the items are only part of the progress (a release's milestones aren't in it). */
+  bar?: boolean;
+}) {
+  const counts = Object.fromEntries(STAGES.map((st) => [st, 0])) as Record<
+    Stage,
+    number
+  >;
+  for (const x of items) {
+    const st = stageOf(x, flight);
+    if (st) {
+      counts[st]++;
+    }
+  }
+  const total = STAGES.reduce((n, st) => n + counts[st], 0);
+  if (!total) {
+    return (
+      <Typography variant="body-sm" color="textSecondary" render={<p />}>
+        No {nouns} yet.
+      </Typography>
+    );
+  }
+  return (
+    <div className="work-pane-progress">
+      <Typography variant="body-md" render={<p />}>
+        {counts.Done} of {total} {total === 1 ? noun : nouns} done
+        {counts["In flight"] ? `, ${counts["In flight"]} in progress` : ""}
+      </Typography>
+      {bar && (
+        <span className="work-pbar-track" aria-hidden="true">
+          {STAGES.map((st) =>
+            counts[st] ? (
+              <span
+                key={st}
+                className={`work-roadmap-seg stage-${slug(st)}`}
+                style={{ flexGrow: counts[st] }}
+              />
+            ) : null,
+          )}
+        </span>
+      )}
+      <ul className="work-pane-stages">
+        {STAGES.filter((st) => counts[st]).map((st) => (
+          <li key={st}>
+            <span
+              className={`work-swatch stage-${slug(st)}`}
+              aria-hidden="true"
+            />
+            {counts[st]} {STAGE_NAMES[st].toLowerCase()}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/** The fields a kind has, in one list; none shown empty. */
+function EntityDetails({
+  it,
+  m,
+  p,
+  s,
+  flight,
+}: {
+  it?: WorkItem;
+  m?: WorkMilestone;
+  p?: WorkContainer;
+  s: WorkSnapshot;
+  flight: InFlight;
+}) {
+  const facts: ReactNode[] = [];
+  if (it) {
+    if (it.state === "in-progress" || flight.has(it.id)) {
+      facts.push(
+        <Fact key="claimed" name="Claimed">
+          {whereOf(it, flight, s.branch)}
+        </Fact>,
+      );
+    }
+    if (it.decider) {
+      facts.push(
+        <Fact key="decider" name="Decided by">
+          {it.decider}
+        </Fact>,
+      );
+    }
+    if (it.waiting_on) {
+      facts.push(
+        <Fact key="waiting" name="Waits on">
+          {it.waiting_on}
+        </Fact>,
+      );
+    }
+    if (it.created) {
+      facts.push(
+        <Fact key="created" name="Created">
+          {it.created}
+        </Fact>,
+      );
+    }
+    if (it.reason) {
+      facts.push(
+        <Fact key="reason" name="Reason">
+          {it.reason}
+        </Fact>,
+      );
+    }
+  }
+  if (m) {
+    facts.push(
+      <Fact key="check" name="Check">
+        {m.check ?? "Not written yet"}
+      </Fact>,
+    );
+    if (m.check_results.length) {
+      facts.push(
+        <Fact key="result" name="Last check">
+          {m.check_results.at(-1)}
+        </Fact>,
+      );
+    }
+    if (m.to_shape.length) {
+      facts.push(
+        <Fact key="shape" name="Shaping owes">
+          {m.to_shape.map((x) => SHAPE_NAMES[x] ?? x).join(", ")}
+        </Fact>,
+      );
+    }
+  }
+  if (p) {
+    if (p.owner) {
+      facts.push(
+        <Fact key="owner" name="Owner">
+          {p.owner}
+        </Fact>,
+      );
+    }
+    if (p.plan) {
+      facts.push(
+        <Fact key="plan" name="Plan">
+          <span className="work-mono">{p.plan}</span>
+        </Fact>,
+      );
+    }
+    if (p.reason) {
+      facts.push(
+        <Fact key="reason" name="Reason">
+          {p.reason}
+        </Fact>,
+      );
+    }
+  }
+  return facts.length ? (
+    <PaneSection title="Details">
+      <dl className="work-facts">{facts}</dl>
+    </PaneSection>
+  ) : null;
+}
+
+/** A milestone's place in the order: when it can move, what it waits on, its longest chain. */
+function MilestoneOrder({
+  s,
+  m,
+  itemOf,
+  rows,
+  onList,
+}: {
+  s: WorkSnapshot;
+  m: WorkMilestone;
+  itemOf: Map<string, WorkItem>;
+  rows: readonly RoadmapRow[];
+  onList?: (list: string) => void;
+}) {
+  const row = rows.find((r) => r.id === m.id);
+  const { path, done } = criticalPathOf(m, itemOf);
+  const next = path.find((x) => x.state !== "done");
+  if (!row && path.length <= 1) {
+    return null;
+  }
+  return (
+    <PaneSection title="Waits on">
+      <dl className="work-facts">
+        {row && (
+          <Fact name="Order">
+            {row.step === 1
+              ? "Can move now"
+              : `After step ${row.step - 1} of the roadmap`}
+          </Fact>
+        )}
+        {row && row.waitsOn.length > 0 && (
+          <Fact name="Milestones">
+            {[...row.waitsOn]
+              .sort((a, b) => b.items.length - a.items.length)
+              .map((w, i) => (
+                <span key={w.id} className="work-marked">
+                  {i > 0 && ", "}
+                  <KindMark kind="milestone" />
+                  {onList ? (
+                    <Link
+                      component="button"
+                      type="button"
+                      onClick={() => onList(`mdep:${m.id}:${w.id}`)}
+                      title="List the items behind this wait"
+                    >
+                      {mapEntityTitle(s, w.id)}
+                    </Link>
+                  ) : (
+                    mapEntityTitle(s, w.id)
+                  )}{" "}
+                  ({w.items.length})
+                </span>
+              ))}
+          </Fact>
+        )}
+        {path.length > 1 && (
+          <Fact name="Longest chain">
+            {path.length} items in order, {done} done
+            {next && (
+              <>
+                ; next{" "}
+                <ItemLink id={next.id}>
+                  <KindId id={next.id} />
+                </ItemLink>
+              </>
+            )}
+          </Fact>
+        )}
+      </dl>
+    </PaneSection>
   );
 }
 
@@ -4230,8 +4768,7 @@ function ChainBars({
               aria-label={`${chain.length} items from ${head.id} ${head.title}`}
             >
               <span className="work-bar-label">
-                <span className="work-id">{head.id}</span>{" "}
-                <InlineText text={head.title} />
+                <KindId id={head.id} /> <InlineText text={head.title} />
                 <span className="work-chain-meta">
                   {where}
                   {projects.size > 1 && ` +${projects.size - 1}`} ·{" "}
@@ -4276,10 +4813,7 @@ function FocusTrees({
 }) {
   return (
     <>
-      <section className="work-related">
-        <Typography variant="subtitle-md" render={<h3 />}>
-          Waits on
-        </Typography>
+      <PaneSection title="Waits on">
         {it.needs.length ? (
           <DepTree
             ids={it.needs}
@@ -4294,11 +4828,8 @@ function FocusTrees({
             Nothing: it can start once planned.
           </Typography>
         )}
-      </section>
-      <section className="work-related">
-        <Typography variant="subtitle-md" render={<h3 />}>
-          Unblocks
-        </Typography>
+      </PaneSection>
+      <PaneSection title="Unblocks">
         {it.needed_by.length ? (
           <DepTree
             ids={it.needed_by}
@@ -4313,7 +4844,7 @@ function FocusTrees({
             No open item needs it.
           </Typography>
         )}
-      </section>
+      </PaneSection>
     </>
   );
 }
@@ -4379,6 +4910,8 @@ function DepNode({
   trail: string[];
 }) {
   const x = itemOf.get(id);
+  // A release needs milestones as well as items.
+  const ms = useContext(SnapshotContext)?.milestones.find((m) => m.id === id);
   const next = x
     ? (dir === "up" ? x.open_needs : x.needed_by).filter(
         (n) => !trail.includes(n),
@@ -4420,7 +4953,7 @@ function DepNode({
               aria-hidden="true"
               data-tip={stageTip(st ?? "Done")}
             />
-            <span className="work-id">{id}</span>
+            <KindId id={id} />
             <span className="work-tree-title">
               <InlineText text={x.title} />
             </span>
@@ -4438,10 +4971,25 @@ function DepNode({
                     : STAGE_NAMES[st ?? "Waiting"]}
             </span>
           </ItemLink>
+        ) : ms ? (
+          <ItemLink
+            id={id}
+            className={`work-tree-link${ms.state === "done" ? " closed" : ""}`}
+          >
+            <span className="work-swatch none" aria-hidden="true" />
+            <KindId id={id} />
+            <span className="work-tree-title">
+              <InlineText text={ms.title} />
+            </span>
+            <span className="work-tree-state">
+              {ms.state === "done"
+                ? STATE_NAMES.done
+                : `${ms.progress.done} of ${ms.progress.total} done`}
+            </span>
+          </ItemLink>
         ) : (
           <span className="work-tree-link missing">
-            <span className="work-id">{id}</span> not in the tracker on this
-            branch
+            <KindId id={id} /> not in the tracker on this branch
           </span>
         )}
       </div>
@@ -4723,7 +5271,7 @@ function MilestoneMap({
                 value={g.id}
                 render={<Button variant="outlined" size="small" />}
               >
-                <Icon href={svgFlag} />
+                <KindMark kind="release" named={false} />
                 {g.title}
               </ToggleButton>
             ))}
@@ -4818,7 +5366,7 @@ function MilestoneMap({
                 className="work-map-corner work-flag-corner"
                 style={{ width: laneW - 12 }}
               >
-                <Icon href={svgFlag} />
+                <KindMark kind="release" named={false} />
                 Releases
               </span>
             )}
@@ -5660,19 +6208,21 @@ function HoldBadges({ n }: { n: MapNode }) {
     <>
       {n.decisions > 0 && (
         <span
-          className="work-count-badge"
+          className="work-count-badge work-hold k-decision"
           title={`${n.decisions} of your ${n.decisions === 1 ? "decision holds" : "decisions hold"} it up`}
           aria-label={`${n.decisions} of your decisions`}
         >
+          <KindMark kind="decision" named={false} />
           {n.decisions}
         </span>
       )}
       {n.outside > 0 && (
         <span
-          className="work-count-badge outside"
+          className="work-count-badge work-hold outside k-external"
           title={`${n.outside} ${n.outside === 1 ? "wait" : "waits"} on other parties hold it up`}
           aria-label={`${n.outside} outside ${n.outside === 1 ? "wait" : "waits"}`}
         >
+          <KindMark kind="external" named={false} />
           {n.outside}
         </span>
       )}
@@ -5801,7 +6351,7 @@ function ReleaseFlagButton({
         onBlur={() => onHover(undefined)}
         onClick={() => onSelect(selected ? undefined : flag.id)}
       >
-        <Icon href={svgFlag} />
+        <KindMark kind="release" named={false} />
         <span className="work-flag-label">{flag.version}</span>
       </button>
     </Tooltip>
