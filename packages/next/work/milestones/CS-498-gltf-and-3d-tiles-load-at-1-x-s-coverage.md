@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-191
 outcome: "The 3D Tiles and glTF extension gaps against 1.x are closed, and glTF 1.0 and deprecated extensions are upgraded on load or dropped, as the owner decides."
-constraints: [CS-272 c?, CS-273 c?, CS-274 c?]
+constraints: [CS-272 c?, CS-273 c?, CS-274 c?, CS-682 c?]
 ---
 
 ## Done when
