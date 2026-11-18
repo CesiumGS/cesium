@@ -207,6 +207,8 @@ ModelUtility.getAttributeInfo = function (attribute) {
 
 const cartesianMaxScratch = new Cartesian3();
 const cartesianMinScratch = new Cartesian3();
+const paddedMaxScratch = new Cartesian3();
+const paddedMinScratch = new Cartesian3();
 
 /**
  * Get the minimum and maximum values for a primitive's POSITION attribute.
@@ -216,6 +218,7 @@ const cartesianMinScratch = new Cartesian3();
  * @param {ModelComponents.Primitive} primitive The primitive components.
  * @param {Cartesian3} [instancingTranslationMin] The component-wise minimum value of the instancing translation attribute.
  * @param {Cartesian3} [instancingTranslationMax] The component-wise maximum value of the instancing translation attribute.
+ * @param {number} [instancingScaleMax] The largest absolute instance scale component. Defined when the instances are rotated or scaled.
  *
  * @returns {object} An object containing the minimum and maximum position values.
  *
@@ -225,6 +228,7 @@ ModelUtility.getPositionMinMax = function (
   primitive,
   instancingTranslationMin,
   instancingTranslationMax,
+  instancingScaleMax,
 ) {
   const positionGltfAttribute = ModelUtility.getAttributeBySemantic(
     primitive,
@@ -235,6 +239,23 @@ ModelUtility.getPositionMinMax = function (
   let positionMin = positionGltfAttribute.min;
 
   if (defined(instancingTranslationMax) && defined(instancingTranslationMin)) {
+    if (defined(instancingScaleMax)) {
+      // A cube this size holds the primitive under any instance rotation.
+      const farthestCorner = Cartesian3.maximumByComponent(
+        Cartesian3.abs(positionMin, paddedMinScratch),
+        Cartesian3.abs(positionMax, paddedMaxScratch),
+        paddedMaxScratch,
+      );
+      const radius = Cartesian3.magnitude(farthestCorner) * instancingScaleMax;
+      positionMax = Cartesian3.fromElements(
+        radius,
+        radius,
+        radius,
+        paddedMaxScratch,
+      );
+      positionMin = Cartesian3.negate(positionMax, paddedMinScratch);
+    }
+
     positionMin = Cartesian3.add(
       positionMin,
       instancingTranslationMin,

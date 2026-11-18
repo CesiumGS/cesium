@@ -1,6 +1,7 @@
 import {
   AttributeType,
   Cartesian3,
+  Math as CesiumMath,
   Matrix4,
   PrimitiveType,
   Quaternion,
@@ -222,6 +223,36 @@ describe("Scene/Model/ModelUtility", function () {
     const expectedMax = new Cartesian3(5.5, 5.5, 5.5);
     expect(minMax.min).toEqual(expectedMin);
     expect(minMax.max).toEqual(expectedMax);
+  });
+
+  it("getPositionMinMax pads rotated or scaled instances by their largest scale", function () {
+    const attributes = [
+      {
+        semantic: "POSITION",
+        max: new Cartesian3(0.5, 0.5, 0.5),
+        min: new Cartesian3(-0.5, -0.5, -0.5),
+      },
+    ];
+    const mockPrimitive = {
+      attributes: attributes,
+    };
+
+    const minMax = ModelUtility.getPositionMinMax(
+      mockPrimitive,
+      new Cartesian3(-5, -5, -5),
+      new Cartesian3(5, 5, 5),
+      2.0,
+    );
+
+    const radius = Math.sqrt(0.75) * 2.0;
+    expect(minMax.min).toEqualEpsilon(
+      new Cartesian3(-5 - radius, -5 - radius, -5 - radius),
+      CesiumMath.EPSILON14,
+    );
+    expect(minMax.max).toEqualEpsilon(
+      new Cartesian3(5 + radius, 5 + radius, 5 + radius),
+      CesiumMath.EPSILON14,
+    );
   });
 
   it("getAxisCorrectionMatrix works", function () {

@@ -251,6 +251,7 @@ function PrimitiveRenderResources(nodeRenderResources, runtimePrimitive) {
     primitive,
     this.runtimeNode.instancingTranslationMin,
     this.runtimeNode.instancingTranslationMax,
+    this.runtimeNode.instancingScaleMax,
   );
 
   /**
