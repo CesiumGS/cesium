@@ -16,7 +16,7 @@ const ModelDeformerPipelineStage = {
 
   FUNCTION_ID_GET_DEFORMED_POSITION: "getDeformedPosition",
   FUNCTION_SIGNATURE_GET_DEFORMED_POSITION:
-    "vec3 getDeformedPosition(in vec3 positionMC)",
+    "vec3 getDeformedPosition(in vec3 positionMC, out mat3 jacobian)",
 };
 
 /**
@@ -24,7 +24,7 @@ const ModelDeformerPipelineStage = {
  * <ul>
  *  <li>adds the HAS_DEFORMERS define to the vertex shader</li>
  *  <li>adds each binding's vertex attributes and uniforms</li>
- *  <li>adds a function per binding, and getDeformedPosition, which adds each binding's offsets to the total deformed position</li>
+ *  <li>adds a function per binding, and getDeformedPosition, which adds each binding's offsets to the total deformed position, and combines their local linear transforms</li>
  *  <li>adds the deformer stage to the vertex shader</li>
  * </ul>
  *
@@ -36,7 +36,12 @@ ModelDeformerPipelineStage.process = function (renderResources) {
   const shaderBuilder = renderResources.shaderBuilder;
   shaderBuilder.addDefine("HAS_DEFORMERS", undefined, ShaderDestination.VERTEX);
 
-  const lines = ["vec3 deformedPosition = positionMC;"];
+  const lines = [
+    "vec3 deformedPosition = positionMC;",
+    "jacobian = mat3(1.0);",
+    "mat3 deformerJacobian;",
+  ];
+
   let index = 0;
   for (const binding of renderResources.runtimePrimitive.deformerBindings) {
     const names = {};
@@ -46,12 +51,15 @@ ModelDeformerPipelineStage.process = function (renderResources) {
     const functionId = `deformer${index}`;
     shaderBuilder.addFunction(
       functionId,
-      `vec3 ${functionId}(in vec3 positionMC)`,
+      `vec3 ${functionId}(in vec3 positionMC, out mat3 jacobian)`,
       ShaderDestination.VERTEX,
     );
 
     shaderBuilder.addFunctionLines(functionId, binding.getShaderLines(names));
-    lines.push(`deformedPosition += ${functionId}(positionMC) - positionMC;`);
+    lines.push(
+      `deformedPosition += ${functionId}(positionMC, deformerJacobian) - positionMC;`,
+      "jacobian += deformerJacobian - mat3(1.0);",
+    );
 
     index++;
   }

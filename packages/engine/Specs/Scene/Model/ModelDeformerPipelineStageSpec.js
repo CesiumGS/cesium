@@ -30,6 +30,7 @@ describe("Scene/Model/ModelDeformerPipelineStage", function () {
         offset: { type: UniformType.VEC3, value: () => offset },
       },
       getShaderLines: (names) => [
+        "jacobian = mat3(1.0);",
         `return positionMC + ${names.weight} * ${names.direction} + ${names.offset};`,
       ],
     };
@@ -103,7 +104,7 @@ describe("Scene/Model/ModelDeformerPipelineStage", function () {
     expect(renderResources.uniformMap.u_deformer1_offset()).toBe(second);
   });
 
-  it("adds each binding's offset from the rest position", function () {
+  it("adds each binding's offset from the rest position, and combines their jacobians", function () {
     const renderResources = createRenderResources([
       createBinding(),
       createBinding(),
@@ -117,8 +118,9 @@ describe("Scene/Model/ModelDeformerPipelineStage", function () {
     ShaderBuilderTester.expectHasVertexFunction(
       shaderBuilder,
       "deformer1",
-      "vec3 deformer1(in vec3 positionMC)",
+      "vec3 deformer1(in vec3 positionMC, out mat3 jacobian)",
       [
+        "    jacobian = mat3(1.0);",
         "    return positionMC + a_deformer1_weight * a_deformer1_direction + u_deformer1_offset;",
       ],
     );
@@ -128,8 +130,12 @@ describe("Scene/Model/ModelDeformerPipelineStage", function () {
       ModelDeformerPipelineStage.FUNCTION_SIGNATURE_GET_DEFORMED_POSITION,
       [
         "    vec3 deformedPosition = positionMC;",
-        "    deformedPosition += deformer0(positionMC) - positionMC;",
-        "    deformedPosition += deformer1(positionMC) - positionMC;",
+        "    jacobian = mat3(1.0);",
+        "    mat3 deformerJacobian;",
+        "    deformedPosition += deformer0(positionMC, deformerJacobian) - positionMC;",
+        "    jacobian += deformerJacobian - mat3(1.0);",
+        "    deformedPosition += deformer1(positionMC, deformerJacobian) - positionMC;",
+        "    jacobian += deformerJacobian - mat3(1.0);",
         "    return deformedPosition;",
       ],
     );
