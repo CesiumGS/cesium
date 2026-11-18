@@ -414,7 +414,7 @@ Milestone: Issues found for other teams are filed and answered (CS-505, Planned)
 
 ### Earth to Moon (frames 5c to 5h)
 
-CS-188, Planned, led by owner: 2 of 42 done, 10 ready, 30 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-188, Planned, led by owner: 2 of 43 done, 11 ready, 30 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The Earth and the Moon render together (CS-424, Planned)
 
@@ -478,6 +478,7 @@ Milestone: Launch and re-entry fill in the replay (CS-429, Planned)
 No milestone
 
 - [x] CS-566 decision: CS-200: the globe and lod parity suites need the ion token in executor worktrees. Done.
+- [ ] CS-569 Mars is a known body, so a Mars tileset loads on its own ellipsoid instead of refusing. Needs nothing.
 
 ### Frames and engineering coordinates follow-ups
 

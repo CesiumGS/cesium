@@ -471,7 +471,7 @@ Milestone: Issues found for other teams are filed and answered ([CS-505](./miles
 
 ### Earth to Moon (frames 5c to 5h)
 
-[CS-188](./projects/CS-188-earth-to-moon-frames-5c-to-5h.md), Planned, led by owner: 2 of 42 done, 10 ready, 30 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-188](./projects/CS-188-earth-to-moon-frames-5c-to-5h.md), Planned, led by owner: 2 of 43 done, 11 ready, 30 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The Earth and the Moon render together ([CS-424](./milestones/CS-424-the-earth-and-the-moon-render-together.md), Planned)
 
@@ -535,6 +535,7 @@ Milestone: Launch and re-entry fill in the replay ([CS-429](./milestones/CS-429-
 No milestone
 
 - [x] [CS-566](./items/CS-566-cs-200-the-globe-and-lod-parity-suites-need-the.md) decision: CS-200: the globe and lod parity suites need the ion token in executor worktrees. Done.
+- [ ] [CS-569](./items/CS-569-mars-is-a-known-body-so-a-mars-tileset-loads-on.md) Mars is a known body, so a Mars tileset loads on its own ellipsoid instead of refusing. Needs nothing.
 
 ### Frames and engineering coordinates follow-ups
 

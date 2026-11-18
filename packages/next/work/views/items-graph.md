@@ -295,6 +295,7 @@ graph LR
     CS_439["CS-439 The sky's fallback per route edge or for the whole sky, and exp"]:::open
     CS_444["CS-444 Ray artifacts in the lunar terrain's shadows"]:::open
     CS_566["CS-566 CS-200: the globe and lod parity suites need the ion token in e"]:::done
+    CS_569["CS-569 Mars is a known body, so a Mars tileset loads on its own ellips"]:::open
   end
   subgraph CS_189["Frames and engineering coordinates follow-ups"]
     CS_239["CS-239 'accuracyOf' and the explorer's walk composed on 'separationAcc"]:::open

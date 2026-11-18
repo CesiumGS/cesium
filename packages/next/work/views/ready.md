@@ -95,6 +95,7 @@ CS-188 Earth to Moon (frames 5c to 5h)
   CS-228  Artemis II data and models in setup
   CS-234  Published ascent, separation and entry data, and the event times, found and cited
   CS-444  Ray artifacts in the lunar terrain's shadows
+  CS-569  Mars is a known body, so a Mars tileset loads on its own ellipsoid instead of refusing
 
 CS-189 Frames and engineering coordinates follow-ups
   CS-239  `accuracyOf` and the explorer's walk composed on `separationAccuracy`
@@ -201,5 +202,5 @@ CS-18 The work tracker
 CS-13 The worker-mode façade
   CS-567  The protocol table classifies every member of api/surface.txt, not only the exported names
 
-150 ready
+151 ready
 ```

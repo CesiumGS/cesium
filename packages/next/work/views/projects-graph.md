@@ -16,7 +16,7 @@ graph LR
   CS_17["transform graph<br/>0 of 13 done"]
   CS_18["work tracker<br/>15 of 26 done"]
   CS_19["Follow-ups for other teams<br/>0 of 12 done"]
-  CS_188["Earth to Moon (frames 5c to 5h)<br/>2 of 42 done"]
+  CS_188["Earth to Moon (frames 5c to 5h)<br/>2 of 43 done"]
   CS_189["Frames and engineering coordinates follow-ups<br/>0 of 21 done"]
   CS_190["Vector drawing and the styling language<br/>0 of 12 done"]
   CS_191["Content sources and formats<br/>1 of 22 done"]
