@@ -109,7 +109,8 @@ const TABLE: Record<string, EntryTable> = {
       MAX_WORLD_CLIPS MESH_CAP_LINE_NAME MESH_CAP_NAME MOON MOON_ALBEDO
       MaterialFlags NO_ACCELERATION PLACEMENT_MONOMIALS PLACEMENT_TERMS
       PostStageError REQUEST_PURPOSES STAGES SectionJob SurfaceKind
-      TICK_REASONS TerrainRegionError UNITLESS_EXPOSURE UNITLESS_SKY
+      TICK_REASONS TerrainRegionError TilesetBodyError UNITLESS_EXPOSURE
+      UNITLESS_SKY
       UNITLESS_SUN_ILLUMINANCE UrlTemplateImagery accuracyAlong
       assembleMeshCaps bend brepGeometry bump cameraGlare cameraObserver
       capPlanes cartographic castTerrainRay clipFilter clipSetDistance

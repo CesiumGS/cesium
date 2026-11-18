@@ -22,7 +22,7 @@ const surface: SurfaceRow[] = readFileSync("api/surface.txt", "utf8")
 
 /** Section 1's table of exported names: type, local, engine, by entry point. */
 const SECTION_1: Record<string, [number, number, number]> = {
-  ".": [276, 176, 66],
+  ".": [276, 177, 66],
   frames: [66, 55, 5],
   measure: [20, 13, 1],
   proj: [68, 41, 5],
@@ -54,13 +54,13 @@ describe("the protocol table", () => {
     }
   });
 
-  it("matches section 1's totals: 465 types, 305 local, 86 engine, 856 names", () => {
+  it("matches section 1's totals: 465 types, 306 local, 86 engine, 857 names", () => {
     expect([count(undefined, "type"), count(undefined, "local")]).toEqual([
-      465, 305,
+      465, 306,
     ]);
     expect(count(undefined, "engine")).toBe(86);
-    expect(surface).toHaveLength(856);
-    expect(protocolRows()).toHaveLength(856);
+    expect(surface).toHaveLength(857);
+    expect(protocolRows()).toHaveLength(857);
   });
 
   it("answers by entry and name", () => {

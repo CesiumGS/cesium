@@ -43,13 +43,13 @@ Read on 2026-11-13 from `api/surface.txt` (856 names), the entry points and `wid
 
 | Entry | type | local | engine | Total |
 | --- | ---: | ---: | ---: | ---: |
-| core (`.`) | 276 | 176 | 66 | 518 |
+| core (`.`) | 276 | 177 | 66 | 519 |
 | `frames` | 66 | 55 | 5 | 126 |
 | `measure` | 20 | 13 | 1 | 34 |
 | `proj` | 68 | 41 | 5 | 114 |
 | `time` | 5 | 18 | 0 | 23 |
 | `widgets` | 30 | 2 | 9 | 41 |
-| **All** | **465** | **305** | **86** | **856** |
+| **All** | **465** | **306** | **86** | **857** |
 
 50 of the types carry a callback, a DOM type, a GPU object or an `AbortSignal`, so they matter where they appear as arguments. Several option types hold engine objects by reference: `TilesetOptions.customShader`, `style`, `placement` and `anchor` (`streaming/tilesetTypes.ts:101-149`), `GlobeOptions.imagery` and `lights` (`scene/Engine.ts:275-283`), and `ViewOptions.target`, `world` and `camera` (`scene/View.ts:103-105`). On the wire they become handle ids.
 
