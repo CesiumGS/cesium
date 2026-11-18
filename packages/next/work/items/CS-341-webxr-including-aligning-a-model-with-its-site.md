@@ -2,7 +2,7 @@
 id: CS-341
 title: WebXR, including aligning a model with its site
 kind: work
-state: proposed
+state: planned
 created: 2026-11-13
 project: CS-196
 needs: [CS-275, CS-213]

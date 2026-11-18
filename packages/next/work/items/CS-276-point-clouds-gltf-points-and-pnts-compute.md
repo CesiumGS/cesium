@@ -2,10 +2,10 @@
 id: CS-276
 title: "Point clouds: glTF points and `pnts`, compute rendering with eye-dome lighting"
 kind: work
-state: proposed
+state: planned
 created: 2026-11-13
 project: CS-191
-needs: [CS-275]
+needs: [CS-275, CS-552]
 ---
 
 ## Done when

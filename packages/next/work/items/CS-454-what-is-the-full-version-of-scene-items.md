@@ -2,10 +2,15 @@
 id: CS-454
 title: "What is the full version of scene items: references, groups, the globe as an item, and how close to USD?"
 kind: decision
-state: planned
+state: done
 created: 2026-11-14
 project: CS-437
 decider: owner
+answer: "Brainstorm it before the first public API review, so the review names the scene model once."
+rationale: "owner, 2026-11-18: before the API review, together with the content-source seam's design (CS-552)"
+answered_at: 2026-11-18T02:49:11.000Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question
@@ -24,4 +29,4 @@ Recommendation: before the first review: the review (CS-102) needs this answer, 
 
 ## Answer
 
-Open.
+Recorded in the front matter: the owner's answer through the question tool in the chief of staff's session. It wasn't asked through `hitld rights ask`, so it has no check code or ledger entry.

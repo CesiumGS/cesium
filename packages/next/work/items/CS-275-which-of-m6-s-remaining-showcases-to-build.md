@@ -2,10 +2,15 @@
 id: CS-275
 title: "Which of M6's remaining showcases to build: splats, compute point clouds, WebXR, headless Dawn?"
 kind: decision
-state: planned
+state: done
 created: 2026-11-13
 project: CS-191
 decider: owner
+answer: "Build all four: Gaussian splats, compute point clouds, headless rendering on Dawn, and WebXR."
+rationale: "owner, 2026-11-18: all four, beyond M6's pick 2 or 3"
+answered_at: 2026-11-18T02:49:11.000Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question
@@ -23,4 +28,4 @@ No recommendation is recorded; the risks note lists M6 first among what can be d
 
 ## Answer
 
-Open.
+Recorded in the front matter: the owner's answer through the question tool in the chief of staff's session. It wasn't asked through `hitld rights ask`, so it has no check code or ledger entry.
