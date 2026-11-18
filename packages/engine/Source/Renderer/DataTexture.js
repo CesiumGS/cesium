@@ -10,6 +10,7 @@ import {
   destroyObject,
 } from "@cesium/core";
 import ContextLimits from "./ContextLimits.js";
+import Framebuffer from "./Framebuffer.js";
 import Sampler from "./Sampler.js";
 import Texture from "./Texture.js";
 
@@ -123,6 +124,75 @@ class DataTexture {
   }
 
   /**
+   * Copies the texture on the GPU.
+   *
+   * @param {Context} context The context that owns the texture.
+   * @returns {DataTexture} A new data texture with the same elements.
+   *
+   * @exception {DeveloperError} The texture hasn't been uploaded.
+   * @exception {DeveloperError} The texture's pixel datatype is FLOAT and the WebGL implementation doesn't support {@link Context#colorBufferFloat}.
+   */
+  copy(context) {
+    /** @type {any} */
+    const source = this._texture;
+
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("context", context);
+    if (!defined(source)) {
+      throw new DeveloperError("The texture hasn't been uploaded.");
+    }
+    //>>includeEnd('debug');
+
+    const result = new DataTexture({
+      pixelFormat: this._pixelFormat,
+      pixelDatatype: this._pixelDatatype,
+    });
+
+    const { width, height } = source;
+    result.#setTexture(context, width, height);
+    result._elementCount = this._elementCount;
+
+    const read = new Framebuffer({
+      context,
+      colorTextures: [source],
+      destroyAttachments: false,
+    });
+
+    const draw = new Framebuffer({
+      context,
+      colorTextures: [result._texture],
+      destroyAttachments: false,
+    });
+
+    const gl = context._gl;
+
+    read.bindRead();
+    draw.bindDraw();
+
+    gl.blitFramebuffer(
+      0,
+      0,
+      width,
+      height,
+      0,
+      0,
+      width,
+      height,
+      gl.COLOR_BUFFER_BIT,
+      gl.NEAREST,
+    );
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    // Binding directly bypasses the context's framebuffer binding cache; update it to match.
+    context._currentFramebuffer = undefined;
+
+    read.destroy();
+    draw.destroy();
+
+    return result;
+  }
+
+  /**
    * @returns {boolean}
    */
   isDestroyed() {
@@ -159,6 +229,17 @@ class DataTexture {
       );
     }
 
+    this.#setTexture(context, width, height);
+  }
+
+  /**
+   * Replaces the texture with an empty one of the given size.
+   *
+   * @param {Context} context The context to create the texture in.
+   * @param {number} width The texture's width.
+   * @param {number} height The texture's height.
+   */
+  #setTexture(context, width, height) {
     this._texture?.destroy();
     this._texture = new Texture({
       context: context,

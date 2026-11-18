@@ -31,6 +31,9 @@ class SurfaceDeformerBinding {
   /** @type {Buffer} */
   #vertexBuffer;
 
+  /** @type {DataTexture} */
+  #restPositionTexture;
+
   /** @type {Object<string, {type: UniformType, value: function(): *}>} */
   #uniforms;
 
@@ -38,15 +41,22 @@ class SurfaceDeformerBinding {
    * @param {object} options
    * @param {Buffer} options.vertexBuffer The bound vertices, interleaved in {@link SurfaceDeformerBinding#vertexAttributes} order. The binding owns it.
    * @param {DataTexture} options.positionTexture The mesh's vertex positions.
+   * @param {DataTexture} options.restPositionTexture The mesh's vertex positions when bound. The binding owns it.
    * @param {Matrix4} options.bindMatrix The transform from the mesh's local space to the deformable's.
    */
   constructor(options) {
-    const { vertexBuffer, positionTexture, bindMatrix } = options;
+    const { vertexBuffer, positionTexture, restPositionTexture, bindMatrix } =
+      options;
     this.#vertexBuffer = vertexBuffer;
+    this.#restPositionTexture = restPositionTexture;
     this.#uniforms = {
       positions: {
         type: UniformType.SAMPLER_2D,
         value: () => positionTexture.texture,
+      },
+      restPositions: {
+        type: UniformType.SAMPLER_2D,
+        value: () => restPositionTexture.texture,
       },
       bindMatrix: { type: UniformType.MAT4, value: () => bindMatrix },
     };
@@ -94,6 +104,7 @@ class SurfaceDeformerBinding {
 
   destroy() {
     this.#vertexBuffer.destroy();
+    this.#restPositionTexture.destroy();
     return destroyObject(this);
   }
 }
