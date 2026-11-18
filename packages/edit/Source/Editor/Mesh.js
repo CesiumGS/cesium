@@ -1,6 +1,6 @@
 // @ts-check
 
-import { Check, DeveloperError, destroyObject } from "@cesium/core";
+import { Check, DeveloperError, Event, destroyObject } from "@cesium/core";
 import OverlayRenderer from "./OverlayRenderer.js";
 import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
 
@@ -11,7 +11,6 @@ import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
 /** @import { MeshComponentKeys } from "./ComponentKeys.js"; */
 /** @import MeshEditorGroup from "./MeshEditorGroup.js"; */
 /** @import MeshEditorStyle from "./MeshEditorStyle.js"; */
-/** @import Deformer from "./Deformer.js"; */
 
 /**
  * <div class="notice">
@@ -94,12 +93,30 @@ class Mesh {
     });
 
     /**
-     * The deformers that deform with this mesh.
+     * Raised on render passes when the mesh's topology changed since the
+     * previous update, before {@link Mesh#_afterUpdate}.
      *
-     * @type {Set<Deformer>}
+     * @type {Event<function(): void>}
      * @ignore
      */
-    this._deformers = new Set();
+    this._topologyChanged = new Event();
+
+    /**
+     * Raised on every render pass, after the overlay is uploaded, whether or
+     * not the mesh changed. The frame state is passed to listeners.
+     *
+     * @type {Event<function(FrameState): void>}
+     * @ignore
+     */
+    this._afterUpdate = new Event();
+
+    /**
+     * Raised when the mesh is destroyed, before its resources are released.
+     *
+     * @type {Event<function(): void>}
+     * @ignore
+     */
+    this._destroyed = new Event();
 
     // TODO: consider an interface that guarantees the source can be shown/hidden.
     const { source } = this;
@@ -395,9 +412,10 @@ class Mesh {
    */
   #postUpdate(frameState, topologyChanged) {
     if (frameState.passes.render) {
-      for (const deformer of this._deformers) {
-        deformer._update(frameState, topologyChanged);
+      if (topologyChanged) {
+        this._topologyChanged.raiseEvent();
       }
+      this._afterUpdate.raiseEvent(frameState);
     }
   }
 
@@ -415,10 +433,7 @@ class Mesh {
    * @ignore
    */
   _destroy() {
-    for (const deformer of this._deformers) {
-      deformer.destroy();
-    }
-
+    this._destroyed.raiseEvent();
     this._renderer.destroy();
 
     const { source } = this;
