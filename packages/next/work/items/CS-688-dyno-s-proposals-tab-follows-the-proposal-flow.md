@@ -17,4 +17,5 @@ The owner answered CS-686 on 2026-11-17: proposals are short-lived candidate com
 - The gate says what a commit needs (the decider, any open decision or study), not the state of the item's needs, which move to a secondary detail.
 - A proposed milestone shows all its constraints with their states, and the "milestone milestone" text is fixed.
 - The tab says how to commit one until hitld's dashboard intents exist ("ask the main session to commit it").
+- Your move shows the proposals waiting on the owner (the current "to discuss" batch and those ready for the owner's yes), each with its header and a link into the Proposals tab, beside the decisions it already shows; the owner, 2026-11-17: "also seems like maybe your move now should contain proposals?"
 - Checked on a Dyno server of the executor's own, never the owner's 5190, in both themes, at 380 px wide, with the keyboard only, with reduced motion and with a clean console (`packages/next/AGENTS.md`, "UI and examples").
