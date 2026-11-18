@@ -69,6 +69,7 @@ CS-17 The transform graph
   CS-166  The ×10 cliff bands: confirm shadow acne under the warp and fix it
   CS-385  Spike: height-keyed tint and haze under exaggeration, drawn against true height
   CS-450  The inspector counts warped draws: exact, compiled and fitted
+  CS-671  decision: What do smooth nodes get called instead?
 
 CS-19 Follow-ups for other teams
   CS-174  external: 1.x computes NaN for a root without the top-level `geometricError`
@@ -104,12 +105,14 @@ CS-189 Frames and engineering coordinates follow-ups
   CS-242  TEME and SGP4 as the first frames add-on provider
   CS-244  decision: Should Cesium ion host PROJ grids, with CORS and cropped tiles?
   CS-250  external: Legal review of how reference data and sky data may ship
+  CS-253  2D, Columbus view and the 2D/3D morph through a world-spanning CRS root
   CS-254  decision: Which long models fill the design globe's ion slots?
   CS-255  decision: Should the engine's setup host NOAA's VDatum surfaces (MLLW, MHW)?
   CS-256  decision: When do the upstream proposals go to the 3D Tiles and glTF groups, and who takes them?
   CS-257  decision: Should a frame with `geoidFallback` and `allowBallpark` take the ballpark?
   CS-440  Standing queries reach measure, and the explorer's re-trace subscribes to them
   CS-443  Small engine fixes: height lost in cartesianToCartographic, clip tests for tile load and slot reuse, the snap run reset on a server error
+  CS-643  Edge types shared across the engine: geodesic, rhumb and straight in a CRS
 
 CS-190 Vector drawing and the styling language
   CS-258  The vector drawing design: lines, polygons, labels and CAD styles on one path
@@ -121,10 +124,12 @@ CS-191 Content sources and formats
   CS-270  decision: Where does 2.0's default evaluation token come from?
   CS-272  3D Tiles format gaps: implicit tiling, multiple contents, metadata, S2 and cylinder volumes
   CS-273  glTF extension gaps: texture transforms, primitive outlines, WebP, node visibility, specular-glossiness
-  CS-274  decision: glTF 1.0 and deprecated extensions: upgrade on load, or drop?
+  CS-279  More terrain and imagery providers, and several imagery layers on one globe
   CS-452  decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?
   CS-552  The content-source seam: one interface every source module implements, designed and planned
   CS-553  What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline
+  CS-666  GPM metadata feeds measurement accuracy
+  CS-682  Audit every extension 1.x 1.147 reads against 2.0, and refresh the parity table
 
 CS-192 Sky, light and atmosphere
   CS-281  external: Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws
@@ -139,6 +144,8 @@ CS-193 B-reps and geometry queries
   CS-310  external: Licence check for Open Cascade (LGPL 2.1) before distribution
   CS-576  Spike: B-rep tiles as NURBS or pre-split Bézier patches, and a way to read USD's B-reps
   CS-577  Spike: subdivision surfaces through OpenSubdiv in WebAssembly or a TypeScript patch conversion, measured
+  CS-669  drillPick: every hit along a pixel's ray, or every layer drawn at it
+  CS-672  Physics representations across the geometry kinds: the design
 
 CS-194 Budgeted selection and memory
   CS-317  Budget-driven refinement: benefit per byte
@@ -159,6 +166,11 @@ CS-195 Benchmarks, parity and image regression
   CS-451  Dyno's guardrails and their tolerances per scene, revisited now Budgeted has settled
   CS-541  The parity tests compare against CesiumJS 1.147.0, pinned
   CS-568  The lod parity page reads the tileset's selection policy where it lives now
+  CS-581  The irWgsl browser suite joins the browser-suite gate for changes under src/ir
+  CS-582  The tracks parity suite's billboards draw on the first run after a cold server start
+
+CS-196 Infrastructure and geoscience capabilities
+  CS-339  Volumes: voxel grids, ray-marched or as isosurfaces
 
 CS-198 GPU-driven rendering and capacities
   CS-350  The Slang gate and probes on Windows (D3D12)
@@ -171,16 +183,20 @@ CS-199 Dyno hardening, packaging and CI
   CS-360  Static hosting of the built gallery: data paths, the error alert, the favicon
   CS-361  CI runs `packages/next`'s tests on Node 24
   CS-362  Prettier clean across `packages/next`
+  CS-363  Packaging for pages without a build step
   CS-412  A fresh worktree runs npm test clean: build 1.x's generated shader modules, or skip volumes.test.ts with its precondition
   CS-413  The ion token for CLI runs and worktrees, without writing it into a build
   CS-445  The example runner's loose ends: the search-parameter rollback, and dispose after viewer.destroy
   CS-538  The no-scene-gains glare test holds under full-suite load
   CS-540  The hitld work check test finishes under full-suite load
   CS-544  The handbook's reel runs in the served handbook as well as the static file
+  CS-580  naga-wasm is a dev dependency of @cesium/next, so CI validates the WGSL emitter's output
+  CS-583  The casterLoop slow-orbit test holds under full-suite load
 
 CS-389 Dyno as the development harness
   CS-390  Run identity and the machine-wide run lock
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
+  CS-687  decision: The study model: what kinds a study has, and how it draws on a set of instruments
 
 CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
@@ -188,6 +204,8 @@ CS-437 The public API reviews
   CS-432  The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors
   CS-433  Promotions and demotions proposed: what every app needs, and what is exported only for examples
   CS-572  The full version of scene items, designed before the first public API review
+  CS-670  Bounding volumes and their tests on the public API
+  CS-681  decision: Should 2.0 keep marking APIs experimental, and how?
 
 CS-579 Editing
   CS-453  decision: What editing should the engine support, with vector data and GIS sources among it?
@@ -198,9 +216,38 @@ CS-18 The work tracker
   CS-562  Dyno's Work page lists the items in no milestone, filterable by kind and state
   CS-563  Dyno's roadmap shows proposed milestones with dashed outlines
   CS-573  Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at
+  CS-677  Release notes and a security review for 2.0.0
+  CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
+  CS-680  Triage the open items that fit no release
+  CS-688  Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes
 
 CS-13 The worker-mode façade
   CS-567  The protocol table classifies every member of api/surface.txt, not only the exported names
 
-149 ready
+CS-584 The widgets library
+  CS-585  The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them
+
+CS-596 Trust and evals
+  CS-597  The evals design: what evidence the 1.x team needs, and how each piece is checked
+  CS-605  external: Extension users validate 2.0 with their own data
+
+CS-609 A clean 2.0 branch and a modern build
+  CS-610  The 2.0 repository's design: build system, CI/CD and release pipeline
+
+CS-615 Packaging and package names
+  CS-616  decision: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
+
+CS-622 The agent-first migration kit
+  CS-623  The 1.x-to-2.0 map in a form agents read, with worked patterns
+
+CS-628 Sandcastle as 2.0's gallery
+  CS-629  external: The 1.x team agrees on Sandcastle and on the @cesium/core and @cesium/gltf names
+
+CS-637 The particle system
+  CS-638  The particle system's design
+
+CS-647 Conditional content and motion
+  CS-649  Intervals and interval sets in /time
+
+178 ready
 ```

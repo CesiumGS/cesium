@@ -27,12 +27,12 @@ Milestone: Every entry point and renderer reads the profile (CS-468, Planned)
 
 - [ ] CS-28 The `@cesium/next/gpu` entry point. Needs CS-23.
 - [ ] CS-29 The Viewer's defaults migrated. Needs CS-23.
-- [ ] CS-31 The worker mode's snapshots. Needs CS-23 and CS-99 (job system's ports).
 - [ ] CS-368 `Engine.queries` takes the application's backends. Needs nothing.
 
 No milestone
 
 - [ ] CS-30 The WebGL 2 renderer's facts and support rules. Needs CS-21 and CS-35 (WebGL 2 renderer).
+- [ ] CS-31 The worker mode's snapshots. Needs CS-23 and CS-99 (job system's ports).
 - [?] CS-367 Profiles later: measured step costs, a wider governor, a fidelity bias, host facts and storage. Proposed. Needs CS-26.
 - [?] CS-369 Importing an outside renderer's colour and depth. Proposed. Needs CS-23.
 - [x] CS-539 decision: How CS-20 reaches main while the merge queue cannot verify it. Done.
@@ -184,7 +184,7 @@ Milestone: Tile selection runs off the main thread (CS-464, Planned)
 - [ ] CS-98 Tile selection off the main thread. Needs CS-96, CS-97 and CS-449.
 - [ ] CS-449 Main-thread selection made cheaper before it moves: display and updateVisibility cut. Needs CS-96.
 
-Milestone: Jobs share one tick budget and decode can't hang (CS-465, Proposed)
+Milestone: Jobs share one tick budget and decode can't hang (CS-465, Planned)
 
 - [?] CS-375 One tick budget, and more progressive jobs. Proposed. Needs CS-90, CS-91 and CS-93.
 - [?] CS-376 Shared-memory rings and decode-only jobs. Proposed. Needs CS-87.
@@ -331,7 +331,7 @@ No milestone
 
 ### The transform graph
 
-CS-17, Planned, led by owner: 0 of 13 done, 9 ready, 2 blocked, 2 proposed. Plan: [2026-11-12-transform-graph.md](docs/superpowers/plans/2026-11-12-transform-graph.md).
+CS-17, Planned, led by owner: 0 of 14 done, 10 ready, 2 blocked, 2 proposed. Plan: [2026-11-12-transform-graph.md](docs/superpowers/plans/2026-11-12-transform-graph.md).
 
 Milestone: Warped views draw without twins or stalls (CS-473, Planned)
 
@@ -354,15 +354,18 @@ No milestone
 
 - [?] CS-163 No compile before first draw: the interpreter pipeline. Proposed. Needs nothing.
 - [?] CS-167 Imagery levels chosen by drawn footprint. Proposed. Needs nothing.
+- [ ] CS-671 decision: What do smooth nodes get called instead?. Needs nothing. Decided by owner.
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 15 of 27 done, 4 ready, 4 blocked, 4 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 22 of 36 done, 8 ready, 6 blocked. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
 - [x] CS-388 decision: Do frames and Earth to Moon, the sky, B-reps and the capabilities want initiatives of their own?. Done.
 - [x] CS-455 decision: Which release items should the tracker have: alphas, betas, release candidates, 2.0.0?. Done.
+- [ ] CS-679 Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal. Needs nothing.
+- [ ] CS-680 Triage the open items that fit no release. Needs CS-686.
 
 Milestone: The tracker runs on human-in-the-lead (CS-524, Planned)
 
@@ -378,6 +381,14 @@ Milestone: Dyno's Work page shows the live system and the release plan (CS-561, 
 - [ ] CS-562 Dyno's Work page lists the items in no milestone, filterable by kind and state. Needs nothing.
 - [ ] CS-563 Dyno's roadmap shows proposed milestones with dashed outlines. Needs nothing.
 - [ ] CS-573 Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at. Needs nothing.
+- [ ] CS-683 Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question. Needs CS-563.
+- [x] CS-684 Dyno's Work page drops the retired long outcomes: no Long outcomes view, and dropped milestones out of every grouping. Done.
+- [ ] CS-685 Dyno's release flags list only the milestones a release needs, and flag items that cross a release. Needs CS-683.
+- [ ] CS-688 Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes. Needs nothing.
+
+Milestone: The final release is ready to publish (CS-678, Planned)
+
+- [ ] CS-677 Release notes and a security review for 2.0.0. Needs nothing.
 
 No milestone
 
@@ -386,17 +397,19 @@ No milestone
 - [x] CS-171 decision: Are these the right initiatives?. Done.
 - [x] CS-172 decision: Keep the renumbering table?. Done.
 - [x] CS-173 decision: Which older open questions in the design notes are still open?. Done.
-- [?] CS-526 decision: Which milestones does 2.0.0-alpha.1 need?. Proposed. Needs nothing. Decided by owner.
-- [?] CS-527 decision: Which milestones does 2.0.0-beta.1 need?. Proposed. Needs nothing. Decided by owner.
-- [?] CS-528 decision: Which milestones does 2.0.0-rc.1 need?. Proposed. Needs nothing. Decided by owner.
-- [?] CS-529 decision: Which milestones does 2.0.0 need?. Proposed. Needs nothing. Decided by owner.
-- [ ] CS-530 Release 2.0.0-alpha.1. Needs CS-526.
-- [ ] CS-531 Release 2.0.0-beta.1. Needs CS-527 and CS-530.
-- [ ] CS-532 Release 2.0.0-rc.1. Needs CS-528 and CS-531.
-- [ ] CS-533 Release 2.0.0. Needs CS-529 and CS-532.
+- [x] CS-526 decision: Which milestones does 2.0.0-alpha.1 need?. Done.
+- [x] CS-527 decision: Which milestones does 2.0.0-beta.1 need?. Done.
+- [x] CS-528 decision: Which milestones does 2.0.0-rc.1 need?. Done.
+- [x] CS-529 decision: Which milestones does 2.0.0 need?. Done.
+- [ ] CS-530 Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery) and CS-606 (Trust and evals).
+- [ ] CS-531 Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-657 (Vector drawing and the styling language), CS-668 (Content sources and formats) and CS-675 (public API reviews).
+- [ ] CS-532 Release 2.0.0-rc.1. Needs CS-528, CS-531, CS-416 (WebGL 2 renderer), CS-423 (worker-mode façade), CS-461 (job system's ports), CS-463 (job system's ports), CS-465 (job system's ports), CS-467 (Engine profiles), CS-471 (Level-of-detail transitions), CS-472 (Level-of-detail transitions), CS-474 (transform graph), CS-484 (Benchmarks, parity and image regression), CS-503 (GPU-driven rendering and capacities), CS-504 (Budgeted selection and memory), CS-511 (Benchmarks, parity and image regression), CS-491 (Sky, light and atmosphere), CS-502 (GPU-driven rendering and capacities), CS-481 (Dyno as the development harness), CS-482 (Benchmarks, parity and image regression), CS-478 (Dyno as the development harness), CS-479 (Dyno as the development harness), CS-480 (Dyno as the development harness), CS-483 (Benchmarks, parity and image regression), CS-470 (Refinement and convergence), CS-607 (Trust and evals), CS-614 (A clean 2.0 branch and a modern build), CS-627 (agent-first migration kit), CS-636 (Sandcastle as 2.0's gallery) and CS-619 (Packaging and package names).
+- [ ] CS-533 Release 2.0.0. Needs CS-529, CS-532, CS-608 (Trust and evals) and CS-678.
 - [x] CS-536 decision: Approve a store device. Done.
 - [x] CS-564 decision: How CS-545's branch reaches main without a hitld dispatch. Done.
 - [x] CS-565 decision: Fast-forward main to CS-545's checked branch. Done.
+- [x] CS-686 decision: How should we use proposals until hitld does it for us, and what should the Proposals tab show?. Done.
+- [x] CS-689 decision: Merge run 2026-11-18-2's green batches overnight. Done.
 
 ### Follow-ups for other teams
 
@@ -487,7 +500,7 @@ No milestone
 
 ### Frames and engineering coordinates follow-ups
 
-CS-189, Planned, led by owner: 0 of 21 done, 12 ready, 1 blocked, 8 proposed. Plan: [bodies-frames-and-engineering-coordinates.md](docs/design/bodies-frames-and-engineering-coordinates.md).
+CS-189, Planned, led by owner: 0 of 22 done, 14 ready, 1 blocked, 7 proposed. Plan: [bodies-frames-and-engineering-coordinates.md](docs/design/bodies-frames-and-engineering-coordinates.md).
 
 Milestone: The frames plans' carried-forward fixes are closed (CS-487, Planned)
 
@@ -521,13 +534,14 @@ No milestone
 - [?] CS-249 Time follow-ups: the sun at 1.x's exact algorithms, a zone boundary table, clocks per view, data bands. Proposed. Needs nothing.
 - [?] CS-251 Reference data as an optional bundled package. Proposed. Needs CS-250.
 - [?] CS-252 Frames explorer and design globe polish. Proposed. Needs nothing.
-- [?] CS-253 2D, Columbus view and the 2D/3D morph through a world-spanning CRS root. Proposed. Needs nothing.
+- [ ] CS-253 2D, Columbus view and the 2D/3D morph through a world-spanning CRS root. Needs nothing.
 - [ ] CS-254 decision: Which long models fill the design globe's ion slots?. Needs nothing. Decided by owner.
 - [ ] CS-256 decision: When do the upstream proposals go to the 3D Tiles and glTF groups, and who takes them?. Needs nothing. Decided by owner.
+- [ ] CS-643 Edge types shared across the engine: geodesic, rhumb and straight in a CRS. Needs nothing.
 
 ### Vector drawing and the styling language
 
-CS-190, Planned, led by owner: 0 of 11 done, 4 ready, 2 blocked, 5 proposed. Plan: [styling-language.md](docs/design/styling-language.md).
+CS-190, Planned, led by owner: 0 of 14 done, 4 ready, 6 blocked, 4 proposed. Plan: [styling-language.md](docs/design/styling-language.md).
 
 Milestone: Lines, polygons, labels and CAD styles draw on one path (CS-499, Planned)
 
@@ -544,9 +558,15 @@ Milestone: The styling language's form and semantics are decided (CS-501, Planne
 - [ ] CS-265 decision: The styling language: its form, where its spec lives, and when it goes to the 3D Tiles group?. Needs nothing. Decided by owner.
 - [ ] CS-266 decision: Styling semantics: element-wise overrides, strings and 64-bit IDs, the colour model, labels, porting order?. Needs nothing. Decided by owner.
 
+Milestone: Content projects onto any surface (CS-657, Planned)
+
+- [ ] CS-261 Wide lines, polygons and decals, with vector sources and vector tiles. Needs CS-258.
+- [ ] CS-654 The surface-projection design: classification, draping and decals. Needs CS-258.
+- [ ] CS-655 Classification of terrain, tilesets and models. Needs CS-654.
+- [ ] CS-656 Imagery draped on 3D Tiles and models. Needs CS-654.
+
 No milestone
 
-- [?] CS-261 Wide lines, polygons and decals, with vector sources and vector tiles. Proposed. Needs CS-258.
 - [?] CS-263 Real-time tracks polish: model and symbol crossfade, MIL-STD-2525 symbols, wide-area clamping. Proposed. Needs nothing.
 - [?] CS-264 Overlay draw options: a no-depth-test flag, per-layer imagery saturation, tints above 1. Proposed. Needs nothing.
 - [?] CS-267 The styling language on Cesium IR, over points, lines, polygons and B-rep faces. Proposed. Needs CS-265 and CS-55 (Cesium IR).
@@ -554,7 +574,7 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 2 of 22 done, 7 ready, 4 blocked, 9 proposed.
+CS-191, Planned, led by owner: 3 of 33 done, 9 ready, 20 blocked, 1 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -566,26 +586,43 @@ Milestone: glTF and 3D Tiles load at 1.x's coverage (CS-498, Planned)
 
 - [ ] CS-272 3D Tiles format gaps: implicit tiling, multiple contents, metadata, S2 and cylinder volumes. Needs nothing.
 - [ ] CS-273 glTF extension gaps: texture transforms, primitive outlines, WebP, node visibility, specular-glossiness. Needs nothing.
-- [ ] CS-274 decision: glTF 1.0 and deprecated extensions: upgrade on load, or drop?. Needs nothing. Decided by owner.
+- [x] CS-274 decision: glTF 1.0 and deprecated extensions: upgrade on load, or drop?. Done.
+- [ ] CS-682 Audit every extension 1.x 1.147 reads against 2.0, and refresh the parity table. Needs nothing.
 
-Milestone: Content from any source loads through one module seam (CS-560, Proposed)
+Milestone: Content from any source loads through one module seam (CS-560, Planned)
 
 - [ ] CS-552 The content-source seam: one interface every source module implements, designed and planned. Needs CS-551.
 - [ ] CS-553 What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline. Needs nothing.
-- [?] CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point. Proposed. Needs CS-552.
-- [?] CS-555 The globe's terrain and imagery load through the content-source seam. Proposed. Needs CS-552.
-- [?] CS-556 glTF files load through the content-source seam. Proposed. Needs CS-552.
-- [?] CS-557 MVT vector tiles load through the content-source seam. Proposed. Needs CS-552.
-- [?] CS-558 Esri services load through the content-source seam. Proposed. Needs CS-552.
-- [?] CS-559 USD loads through the content-source seam. Proposed. Needs CS-552.
+- [ ] CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point. Needs CS-552.
+- [ ] CS-555 The globe's terrain and imagery load through the content-source seam. Needs CS-552.
+- [ ] CS-556 glTF files load through the content-source seam. Needs CS-552.
+- [ ] CS-557 MVT vector tiles load through the content-source seam. Needs CS-552.
+- [ ] CS-558 Esri services load through the content-source seam. Needs CS-552.
+- [ ] CS-559 USD loads through the content-source seam. Needs CS-552.
+
+Milestone: 1.x's data formats load as modules (CS-668, Planned)
+
+- [ ] CS-276 Point clouds: glTF points and `pnts`, compute rendering with eye-dome lighting. Needs CS-275 and CS-552.
+- [ ] CS-277 Gaussian splats with a GPU sort. Needs CS-275 and CS-552.
+- [ ] CS-279 More terrain and imagery providers, and several imagery layers on one globe. Needs nothing.
+- [ ] CS-658 CZML loads through the content-source seam. Needs CS-552 and CS-648 (Conditional content and motion).
+- [ ] CS-659 KML and KMZ load through the content-source seam. Needs CS-552.
+- [ ] CS-660 GPX loads through the content-source seam. Needs CS-552.
+- [ ] CS-661 GeoJSON loads through the content-source seam. Needs CS-552.
+- [ ] CS-662 3D Tiles from servers other than Cesium ion load through the seam. Needs CS-554.
+- [ ] CS-663 PostGIS loads through the content-source seam. Needs CS-552.
+- [ ] CS-664 GeoParquet loads through the content-source seam. Needs CS-552.
+- [ ] CS-666 GPM metadata feeds measurement accuracy. Needs nothing.
+
+Milestone: Panoramas, sensors and legacy glTF ship as experimental modules (CS-674, Planned)
+
+- [ ] CS-665 The legacy-glTF module: glTF 1.0 and the deprecated extensions upgraded on load. Needs CS-556 and CS-274.
+- [ ] CS-667 Panoramas as a module. Needs CS-654 (Vector drawing and the styling language).
 
 No milestone
 
 - [x] CS-275 decision: Which of M6's remaining showcases to build: splats, compute point clouds, WebXR, headless Dawn?. Done.
-- [ ] CS-276 Point clouds: glTF points and `pnts`, compute rendering with eye-dome lighting. Needs CS-275 and CS-552.
-- [ ] CS-277 Gaussian splats with a GPU sort. Needs CS-275 and CS-552.
-- [?] CS-278 glTF animation playback: skins, morph targets and animated nodes. Proposed. Needs CS-212 (Earth to Moon (frames 5c to 5h)).
-- [?] CS-279 More terrain and imagery providers, and several imagery layers on one globe. Proposed. Needs nothing.
+- [ ] CS-278 glTF animation playback: skins, morph targets and animated nodes. Needs CS-212 (Earth to Moon (frames 5c to 5h)).
 - [?] CS-280 Thin wrappers for ion's REST API, including element metadata. Proposed. Needs CS-269.
 - [ ] CS-452 decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?. Needs nothing. Decided by owner.
 - [x] CS-551 decision: Does content from every kind of source, the globe included, load through one module seam built now?. Done.
@@ -628,7 +665,7 @@ No milestone
 
 ### B-reps and geometry queries
 
-CS-193, Planned, led by owner: 3 of 19 done, 5 ready, 6 blocked, 5 proposed, 1 dropped. Plan: [breps-and-geometry-queries.md](docs/design/breps-and-geometry-queries.md).
+CS-193, Planned, led by owner: 3 of 21 done, 7 ready, 6 blocked, 5 proposed, 1 dropped. Plan: [breps-and-geometry-queries.md](docs/design/breps-and-geometry-queries.md).
 
 Milestone: B-reps snap and measure exactly (CS-494, Planned)
 
@@ -651,6 +688,10 @@ Milestone: The CSG sample edits with local operations (CS-496, Planned)
 - [ ] CS-307 The CSG sample, phase 3: local operations as feature nodes. Needs nothing.
 - [ ] CS-308 The CSG sample's four-view layout. Needs CS-218 (Earth to Moon (frames 5c to 5h)).
 
+Milestone: Geometry has physics representations (CS-676, Planned)
+
+- [ ] CS-672 Physics representations across the geometry kinds: the design. Needs nothing.
+
 No milestone
 
 - [x] CS-300 decision: Subdivision surfaces: OpenSubdiv, or a TypeScript patch conversion?. Done.
@@ -661,6 +702,7 @@ No milestone
 - [?] CS-315 Kernel robustness: SMLib and OCCT on real trimmed models. Proposed. Needs nothing.
 - [-] CS-316 The CSG sample, phases 4 and 5: sketches and parametric history. Dropped: The owner answered CS-301 on 2026-11-18: the CSG sample stops at phase 3.
 - [ ] CS-577 Spike: subdivision surfaces through OpenSubdiv in WebAssembly or a TypeScript patch conversion, measured. Needs CS-300.
+- [ ] CS-669 drillPick: every hit along a pixel's ray, or every layer drawn at it. Needs nothing.
 
 ### Budgeted selection and memory
 
@@ -680,7 +722,7 @@ No milestone
 
 ### Benchmarks, parity and image regression
 
-CS-195, Planned, led by owner: 0 of 23 done, 11 ready, 5 blocked, 7 proposed. Plan: [benchmark-suite.md](docs/design/benchmark-suite.md).
+CS-195, Planned, led by owner: 0 of 25 done, 13 ready, 6 blocked, 6 proposed. Plan: [benchmark-suite.md](docs/design/benchmark-suite.md).
 
 Milestone: Benchmarks run per merge on dedicated machines (CS-482, Planned)
 
@@ -699,6 +741,8 @@ Milestone: Image regression and parity are checked in CI (CS-483, Planned)
 - [ ] CS-541 The parity tests compare against CesiumJS 1.147.0, pinned. Needs nothing.
 - [ ] CS-542 Every parity result names its oracle. Needs CS-541.
 - [ ] CS-568 The lod parity page reads the tileset's selection policy where it lives now. Needs nothing.
+- [ ] CS-581 The irWgsl browser suite joins the browser-suite gate for changes under src/ir. Needs CS-575 (Cesium IR).
+- [ ] CS-582 The tracks parity suite's billboards draw on the first run after a cold server start. Needs nothing.
 
 Milestone: The performance targets are met or the gaps explained (CS-484, Planned)
 
@@ -706,10 +750,10 @@ Milestone: The performance targets are met or the gaps explained (CS-484, Planne
 - [ ] CS-329 M5's exit: the performance targets met or the gaps explained, including multi-view. Needs nothing.
 - [ ] CS-451 Dyno's guardrails and their tolerances per scene, revisited now Budgeted has settled. Needs nothing.
 
-Milestone: Scene benchmarks run faster than real time (CS-511, Proposed)
+Milestone: Scene benchmarks run faster than real time (CS-511, Planned)
 
 - [?] CS-512 Scene runs on a virtual clock. Proposed. Needs CS-328.
-- [?] CS-513 The simulated network runs on the virtual clock. Proposed. Needs CS-328.
+- [ ] CS-513 The simulated network runs on the virtual clock. Needs CS-328.
 - [?] CS-514 Run modes: faster than real time, or real time on a simulated or real network. Proposed. Needs CS-512 and CS-513.
 - [?] CS-515 Faster-than-real-time runs against real-time runs: which metrics agree. Proposed. Needs CS-514.
 
@@ -722,13 +766,13 @@ No milestone
 
 ### Infrastructure and geoscience capabilities
 
-CS-196, Planned, led by owner: 0 of 7 done, 0 ready, 1 blocked, 6 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](docs/design/infrastructure-and-geoscience-capabilities.md).
+CS-196, Planned, led by owner: 0 of 7 done, 1 ready, 1 blocked, 5 proposed. Plan: [infrastructure-and-geoscience-capabilities.md](docs/design/infrastructure-and-geoscience-capabilities.md).
 
 Milestone: Infrastructure and geoscience data shows in 2.0 (CS-534, Proposed)
 
 - [?] CS-337 Scalar fields on any geometry: values, colour ramps, legends and picks. Proposed. Needs CS-265 (Vector drawing and the styling language).
 - [?] CS-338 Per-element overrides at scale, through the styling language. Proposed. Needs CS-266 (Vector drawing and the styling language).
-- [?] CS-339 Volumes: voxel grids, ray-marched or as isosurfaces. Proposed. Needs nothing.
+- [ ] CS-339 Volumes: voxel grids, ray-marched or as isosurfaces. Needs nothing.
 - [?] CS-340 Printing to scale. Proposed. Needs CS-218 (Earth to Moon (frames 5c to 5h)).
 - [ ] CS-341 WebXR, including aligning a model with its site. Needs CS-275 (Content sources and formats) and CS-213 (Earth to Moon (frames 5c to 5h)).
 - [?] CS-342 The infrastructure and geoscience gallery examples. Proposed. Needs nothing.
@@ -736,7 +780,7 @@ Milestone: Infrastructure and geoscience data shows in 2.0 (CS-534, Proposed)
 
 ### Ray queries and path tracing
 
-CS-197, Planned, led by owner: 0 of 6 done, 0 ready, 0 blocked, 6 proposed. Plan: [ray-queries-where-they-run.md](docs/design/ray-queries-where-they-run.md).
+CS-197, Planned, led by owner: 0 of 7 done, 0 ready, 2 blocked, 5 proposed. Plan: [ray-queries-where-they-run.md](docs/design/ray-queries-where-they-run.md).
 
 Milestone: Rays query the scene on the GPU (CS-535, Proposed)
 
@@ -744,8 +788,12 @@ Milestone: Rays query the scene on the GPU (CS-535, Proposed)
 - [?] CS-345 Acceleration structures behind `acceleration.ts`. Proposed. Needs CS-344.
 - [?] CS-346 GPU ray queries for user code, and a user compute slot. Proposed. Needs CS-345.
 - [?] CS-347 A progressive path-tracer view, sharing the device's tables. Proposed. Needs CS-346.
-- [?] CS-348 A GPU viewshed. Proposed. Needs CS-344.
+- [ ] CS-348 A GPU viewshed. Needs CS-344.
 - [?] CS-349 A near-field bounded terrain trace, and terrain error over open water. Proposed. Needs CS-344.
+
+No milestone
+
+- [ ] CS-673 A sensor module. Needs CS-654 (Vector drawing and the styling language) and CS-348.
 
 ### GPU-driven rendering and capacities
 
@@ -771,7 +819,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-CS-199, Planned, led by owner: 1 of 14 done, 11 ready, 0 blocked, 2 proposed.
+CS-199, Planned, led by owner: 1 of 16 done, 14 ready, 0 blocked, 1 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host (CS-485, Planned)
 
@@ -790,15 +838,17 @@ Milestone: CI keeps packages/next clean (CS-486, Planned)
 - [x] CS-537 The tickSlices budget test holds under full-suite load. Done.
 - [ ] CS-538 The no-scene-gains glare test holds under full-suite load. Needs nothing.
 - [ ] CS-540 The hitld work check test finishes under full-suite load. Needs nothing.
+- [ ] CS-580 naga-wasm is a dev dependency of @cesium/next, so CI validates the WGSL emitter's output. Needs CS-574 (Cesium IR).
+- [ ] CS-583 The casterLoop slow-orbit test holds under full-suite load. Needs nothing.
 
 No milestone
 
-- [?] CS-363 Packaging for pages without a build step. Proposed. Needs nothing.
+- [ ] CS-363 Packaging for pages without a build step. Needs nothing.
 - [?] CS-364 The gallery shell: filters, editable source, checked-in thumbnails, the playground's later list. Proposed. Needs nothing.
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 5 of 25 done, 2 ready, 18 blocked. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 5 of 26 done, 3 ready, 18 blocked. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -821,7 +871,7 @@ Milestone: Studies turn runs into verdicts (CS-480, Planned)
 
 - [ ] CS-396 The α study through Dyno (acceptance A). Needs CS-395 and CS-405.
 - [ ] CS-402 "Measuring with Dyno" in AGENTS.md, and its skill. Needs CS-390, CS-392 and CS-404.
-- [ ] CS-404 Studies: the model, the files and the commands. Needs CS-390.
+- [ ] CS-404 Studies: the model, the files and the commands. Needs CS-390 and CS-687.
 - [ ] CS-405 The Studies page. Needs CS-395, CS-403 and CS-404.
 - [x] CS-409 decision: Who records a study's verdict, and does a verdict close a decision?. Done.
 - [x] CS-410 decision: Does `--hypothesis` on a run without `--study` open a study?. Done.
@@ -842,10 +892,11 @@ No milestone
 
 - [x] CS-403 Dyno's navigation rail, regrouped by what people come to do. Done.
 - [x] CS-516 external: human-in-the-lead v0.1.0-rc.1 is released. Done.
+- [ ] CS-687 decision: The study model: what kinds a study has, and how it draws on a set of instruments. Needs nothing. Decided by owner.
 
 ### The public API reviews
 
-CS-437, Planned, led by owner: 1 of 10 done, 5 ready, 4 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-437, Planned, led by owner: 1 of 12 done, 7 ready, 4 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
@@ -860,8 +911,16 @@ Milestone: The public API shape is approved (CS-420, Planned)
 
 Milestone: The approved API changes are made (CS-457, Planned)
 
-- [ ] CS-434 Stability tiers as TSDoc tags, with internal members stripped from the published types. Needs CS-438.
+- [ ] CS-434 Stability tiers as TSDoc tags, with internal members stripped from the published types. Needs CS-438 and CS-681.
 - [ ] CS-435 The measurement module's seam and entry point. Needs CS-438.
+
+Milestone: 1.x's smaller tools have 2.0 homes (CS-675, Planned)
+
+- [ ] CS-670 Bounding volumes and their tests on the public API. Needs nothing.
+
+No milestone
+
+- [ ] CS-681 decision: Should 2.0 keep marking APIs experimental, and how?. Needs nothing. Decided by owner.
 
 ### Editing
 
@@ -869,3 +928,127 @@ CS-579, Planned, led by owner: 0 of 2 done, 2 ready, 0 blocked.
 
 - [ ] CS-453 decision: What editing should the engine support, with vector data and GIS sources among it?. Needs nothing. Decided by owner.
 - [ ] CS-578 A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample. Needs nothing.
+
+### The widgets library
+
+CS-584, Planned, led by owner: 0 of 9 done, 1 ready, 8 blocked.
+
+Milestone: Every 1.x widget's job has a StrataKit widget (CS-595, Planned)
+
+- [ ] CS-585 The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them. Needs nothing.
+- [ ] CS-586 The existing widgets move onto the library: time controls, credits, the inspector and the observer panel. Needs CS-585.
+- [ ] CS-587 The geocoder widget, with a pluggable geocoding service. Needs CS-585.
+- [ ] CS-588 The base layer picker widget. Needs CS-585 and CS-279 (Content sources and formats).
+- [ ] CS-589 The info box and selection indicator widgets. Needs CS-585.
+- [ ] CS-590 Home, fullscreen and navigation help widgets. Needs CS-585.
+- [ ] CS-591 The scene mode and projection picker widgets. Needs CS-585, CS-253 (Frames and engineering coordinates follow-ups) and CS-218 (Earth to Moon (frames 5c to 5h)).
+- [ ] CS-592 The VR button widget. Needs CS-585 and CS-341 (Infrastructure and geoscience capabilities).
+- [ ] CS-593 The Viewer composed from the widgets library. Needs CS-586, CS-587, CS-589 and CS-590.
+
+### Trust and evals
+
+CS-596, Planned, led by owner: 0 of 9 done, 2 ready, 7 blocked.
+
+Milestone: The evals are designed and running in CI (CS-606, Planned)
+
+- [ ] CS-597 The evals design: what evidence the 1.x team needs, and how each piece is checked. Needs nothing.
+- [ ] CS-598 Mutation scores per module, beside coverage. Needs CS-597.
+
+Milestone: Every module has a trust report the 1.x team can check (CS-607, Planned)
+
+- [ ] CS-599 Conformance runs on Khronos's glTF samples and the 3D Tiles samples, with coverage per extension. Needs CS-597.
+- [ ] CS-600 Accuracy against independent references: GeographicLib, SOFA and SPICE. Needs CS-597.
+- [ ] CS-601 Every stated accuracy is checked against measured error. Needs CS-597.
+- [ ] CS-602 Fuzzed loaders, GPU device-loss tests and soak runs. Needs CS-597 and CS-513 (Benchmarks, parity and image regression).
+- [ ] CS-603 A trust report per module and per release, from each merge's provenance. Needs CS-597.
+- [ ] CS-604 Cesium engineers review a random sample of merged changes. Needs CS-603.
+
+Milestone: Extension users have validated 2.0 with their own data (CS-608, Planned)
+
+- [ ] CS-605 external: Extension users validate 2.0 with their own data. Needs nothing. Waiting on Users of AGI_articulations, GPM and the legacy glTF formats.
+
+### A clean 2.0 branch and a modern build
+
+CS-609, Planned, led by owner: 0 of 4 done, 1 ready, 3 blocked.
+
+Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
+
+- [ ] CS-611 The 1.x code is replaced in the branch. Needs CS-610.
+- [ ] CS-612 The new build system. Needs CS-610.
+- [ ] CS-613 CI/CD on the new build, with the release pipeline. Needs CS-612.
+
+No milestone
+
+- [ ] CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline. Needs nothing.
+
+### Packaging and package names
+
+CS-615, Planned, led by owner: 0 of 4 done, 1 ready, 3 blocked.
+
+Milestone: The core installs alone, and the whole engine installs from one umbrella package (CS-621, Planned)
+
+- [ ] CS-616 decision: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?. Needs nothing. Decided by owner.
+- [ ] CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella. Needs CS-616 and CS-310 (B-reps and geometry queries).
+- [ ] CS-618 An embedding app installs the core alone, checked by an install and bundle test. Needs CS-617.
+
+No milestone
+
+- [ ] CS-619 The API reference for every package. Needs CS-617.
+
+### The agent-first migration kit
+
+CS-622, Planned, led by owner: 0 of 4 done, 1 ready, 3 blocked.
+
+Milestone: A 1.x app moves to 2.0 with the kit and is shown to match (CS-627, Planned)
+
+- [ ] CS-623 The 1.x-to-2.0 map in a form agents read, with worked patterns. Needs nothing.
+- [ ] CS-624 The migration skill. Needs CS-623.
+- [ ] CS-625 Parity proof for a migrated app. Needs CS-624.
+- [ ] CS-626 The migration guide generated from the map. Needs CS-623.
+
+### Sandcastle as 2.0's gallery
+
+CS-628, Planned, led by owner: 0 of 6 done, 1 ready, 5 blocked.
+
+Milestone: Sandcastle hosts 2.0's examples (CS-635, Planned)
+
+- [ ] CS-629 external: The 1.x team agrees on Sandcastle and on the @cesium/core and @cesium/gltf names. Needs nothing. Waiting on The 1.x team.
+- [ ] CS-630 Sandcastle hosts 2.0's examples. Needs CS-629 and CS-363 (Dyno hardening, packaging and CI).
+- [ ] CS-631 2.0's examples move into Sandcastle's format. Needs CS-630.
+
+Milestone: 1.x's Sandcastle examples run on the new engine (CS-636, Planned)
+
+- [ ] CS-632 1.x's Sandcastle examples are migrated with the kit and checked for parity. Needs CS-630 and CS-625 (agent-first migration kit).
+- [ ] CS-633 Examples that use dropped features are recorded in the API map. Needs CS-632.
+- [ ] CS-634 The 2.0 Sandcastle replaces 1.x's. Needs CS-632 and CS-611 (A clean 2.0 branch and a modern build).
+
+### The particle system
+
+CS-637, Planned, led by owner: 0 of 3 done, 1 ready, 2 blocked.
+
+Milestone: Particles run on the GPU for 1.x's uses and beyond (CS-641, Planned)
+
+- [ ] CS-638 The particle system's design. Needs nothing.
+- [ ] CS-639 Particles simulate on the GPU and draw through the point-source seam. Needs CS-638.
+- [ ] CS-640 Forces and emitters as Slang or Cesium IR functions, with emitters in the transform graph. Needs CS-639.
+
+### Geometry generators
+
+CS-642, Planned, led by owner: 0 of 2 done, 0 ready, 2 blocked.
+
+Milestone: Geometry generators make 1.x's shapes on the ellipsoid (CS-646, Planned)
+
+- [ ] CS-644 The geometry generators' design, with the vector pipeline's overlap. Needs CS-258 (Vector drawing and the styling language).
+- [ ] CS-645 The generators: box, ellipsoid, cylinder, frustum, wall, corridor, extruded polygon, polyline volume, rectangle, ellipse and outlines. Needs CS-644 and CS-643 (Frames and engineering coordinates follow-ups).
+
+### Conditional content and motion
+
+CS-647, Planned, led by owner: 0 of 5 done, 1 ready, 4 blocked.
+
+Milestone: Content and motion follow one time model (CS-653, Planned)
+
+- [ ] CS-648 The conditional content and motion design. Needs CS-552 (Content sources and formats).
+- [ ] CS-649 Intervals and interval sets in /time. Needs nothing.
+- [ ] CS-650 Public interpolation: one module for trajectories, glTF samplers, CZML and camera paths. Needs CS-648.
+- [ ] CS-651 Articulations as transform-graph nodes. Needs CS-648.
+- [ ] CS-652 Time-dynamic and conditional 3D Tiles content. Needs CS-648 and CS-554 (Content sources and formats).

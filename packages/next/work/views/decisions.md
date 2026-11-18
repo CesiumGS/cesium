@@ -40,7 +40,6 @@ CS-190 Vector drawing and the styling language
 CS-191 Content sources and formats
   CS-270  Where does 2.0's default evaluation token come from? (owner)
       waited on by CS-271
-  CS-274  glTF 1.0 and deprecated extensions: upgrade on load, or drop? (owner)
   CS-452  How should semantic metadata reach the engine, and what does picking mean in splats and point clouds? (owner)
 
 CS-192 Sky, light and atmosphere
@@ -54,24 +53,25 @@ CS-194 Budgeted selection and memory
 CS-17 The transform graph
   CS-386  Under exaggeration, do shading and haze read the drawn or the true height? (owner)
       first needs CS-385
+  CS-671  What do smooth nodes get called instead? (owner)
 
 CS-437 The public API reviews
   CS-438  Which of the first public API review's proposed changes do you approve? (owner)
       first needs CS-102
       waited on by CS-103, CS-104, CS-105, CS-107, CS-243, CS-303, CS-378, CS-434, CS-435
+  CS-681  Should 2.0 keep marking APIs experimental, and how? (owner)
+      waited on by CS-434
 
 CS-579 Editing
   CS-453  What editing should the engine support, with vector data and GIS sources among it? (owner)
 
-CS-18 The work tracker
-  CS-526  Which milestones does 2.0.0-alpha.1 need? (owner)
-      waited on by CS-530
-  CS-527  Which milestones does 2.0.0-beta.1 need? (owner)
-      waited on by CS-531
-  CS-528  Which milestones does 2.0.0-rc.1 need? (owner)
-      waited on by CS-532
-  CS-529  Which milestones does 2.0.0 need? (owner)
-      waited on by CS-533
+CS-615 Packaging and package names
+  CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
+      waited on by CS-617
 
-24 open decision(s) for owner
+CS-389 Dyno as the development harness
+  CS-687  The study model: what kinds a study has, and how it draws on a set of instruments (owner)
+      waited on by CS-404
+
+23 open decision(s) for owner
 ```

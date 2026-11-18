@@ -3,51 +3,6 @@
 # Milestones
 
 ```text
-CS-1 Renderers and engine profiles [Planned], a long outcome
-  constraints: 0 of 13 done
-  unmet: not linked to a clause yet (open: CS-414, CS-415, CS-416, CS-466, CS-467, CS-468, CS-491, CS-492, CS-493, CS-502, CS-503, CS-534, CS-535; check not passed)
-  to shape: outcome; done_when; check; link CS-414, CS-415, CS-416, CS-466, CS-467, CS-468, CS-491, CS-492, CS-493, CS-502, CS-503, CS-534, CS-535 to a clause
-
-CS-2 Cesium IR and materials [Planned], a long outcome
-  constraints: 0 of 9 done
-  unmet: not linked to a clause yet (open: CS-417, CS-418, CS-419, CS-475, CS-476, CS-477, CS-499, CS-500, CS-501; check not passed)
-  to shape: outcome; done_when; check; link CS-417, CS-418, CS-419, CS-475, CS-476, CS-477, CS-499, CS-500, CS-501 to a clause
-
-CS-3 Threading [Planned], a long outcome
-  constraints: 0 of 10 done
-  unmet: not linked to a clause yet (open: CS-421, CS-422, CS-423, CS-456, CS-461, CS-462, CS-463, CS-464, CS-465, CS-509; check not passed)
-  to shape: outcome; done_when; check; link CS-421, CS-422, CS-423, CS-456, CS-461, CS-462, CS-463, CS-464, CS-465, CS-509 to a clause
-
-CS-4 Loading and level of detail [Planned], a long outcome
-  constraints: 0 of 10 done
-  unmet: not linked to a clause yet (open: CS-458, CS-459, CS-460, CS-469, CS-470, CS-471, CS-472, CS-497, CS-498, CS-504; check not passed)
-  to shape: outcome; done_when; check; link CS-458, CS-459, CS-460, CS-469, CS-470, CS-471, CS-472, CS-497, CS-498, CS-504 to a clause
-
-CS-5 Warps and the transform graph [Planned], a long outcome
-  constraints: 0 of 2 done
-  unmet: not linked to a clause yet (open: CS-473, CS-474; check not passed)
-  to shape: outcome; done_when; check; link CS-473, CS-474 to a clause
-
-CS-6 Development harness [Planned], a long outcome
-  constraints: 0 of 13 done
-  unmet: not linked to a clause yet (open: CS-478, CS-479, CS-480, CS-481, CS-482, CS-483, CS-484, CS-485, CS-486, CS-506, CS-511, CS-519, CS-524; check not passed)
-  to shape: outcome; done_when; check; link CS-478, CS-479, CS-480, CS-481, CS-482, CS-483, CS-484, CS-485, CS-486, CS-506, CS-511, CS-519, CS-524 to a clause
-
-CS-7 Upstream follow-ups [Planned], a long outcome
-  constraints: 0 of 1 done
-  unmet: not linked to a clause yet (open: CS-505; check not passed)
-  to shape: outcome; done_when; check; link CS-505 to a clause
-
-CS-436 The public API [Planned], a long outcome
-  constraints: 0 of 2 done
-  unmet: not linked to a clause yet (open: CS-420, CS-457; check not passed)
-  to shape: outcome; done_when; check; link CS-420, CS-457 to a clause
-
-CS-525 Bodies, frames and engineering coordinates [Planned], a long outcome
-  constraints: 0 of 13 done
-  unmet: not linked to a clause yet (open: CS-424, CS-425, CS-426, CS-427, CS-428, CS-429, CS-487, CS-488, CS-489, CS-490, CS-494, CS-495, CS-496; check not passed)
-  to shape: outcome; done_when; check; link CS-424, CS-425, CS-426, CS-427, CS-428, CS-429, CS-487, CS-488, CS-489, CS-490, CS-494, CS-495, CS-496 to a clause
-
 CS-414 Renderers plug in behind one seam [Planned], under CS-9 The WebGL 2 renderer
   outcome: An app can ask for the WebGL 2 renderer and get an engine that runs on it, or a named reason it can't, while WebGPU apps draw exactly as before through the same seam.
   constraints: 1 of 4 done
@@ -153,9 +108,9 @@ CS-429 Launch and re-entry fill in the replay [Planned], under CS-188 Earth to M
 
 CS-456 Refinement, profiles and streaming work in worker mode [Planned], under CS-13 The worker-mode façade
   outcome: Refinement's reads and `converged()`, the profiles' snapshots and streaming's network state behave the same in worker mode, the examples run through the façade, and the handbook explains the choice of thread.
-  constraints: 0 of 1 done
-  unmet: not linked to a clause yet (open: CS-120; check not passed)
-  to shape: done_when; check; link CS-120 to a clause
+  constraints: 0 of 2 done
+  unmet: not linked to a clause yet (open: CS-120, CS-31; check not passed)
+  to shape: done_when; check; link CS-120, CS-31 to a clause
 
 CS-457 The approved API changes are made [Planned], under CS-437 The public API reviews
   outcome: The stability tiers the review approved are TSDoc tags, with internal members stripped from the published types, and measurement has its own module seam and entry point.
@@ -165,10 +120,10 @@ CS-457 The approved API changes are made [Planned], under CS-437 The public API 
 
 CS-458 Every fetch has a deadline and retries within its origin's budget [Planned], under CS-16 Streaming robustness
   outcome: Every request the engine makes has a deadline set from what its origin has delivered and fails with a kind an app can read; transient failures retry with backoff inside per-origin budgets, and apps can route requests with 1.x's proxies, query parameters, headers and credentials.
-  constraints: 0 of 7 done
+  constraints: 0 of 8 done
   unmet: c1 A request that gets no headers, stops between body chunks, or runs past its whole-body deadline fails within that deadline, frees its request slot, and fails with a kind (timeout and its phase, network, a status class, decode), while a cancel stays a cancel; this holds for content, terrain, imagery, tileset JSON and the one-off loads, and no failure message carries a URL, a query string or a header value. (open: CS-144, CS-145, CS-383; check not passed)
   unmet: c2 A slow but healthy origin is not timed out (on the recorded full profile and the 20 Mbit/s, 80 ms profile, no request times out); a 429, a 503 or a timeout halves an adaptive request window and leaves a pinned one alone, and a Retry-After of up to 60 s pauses every request to that origin. (open: CS-146; check not passed)
-  unmet: c3 A transient failure on 3D Tiles content retries with jittered backoff and loads, and with 200 tiles wanted from a dead origin the attempts stay bounded: retries hold at most a quarter of the window, an empty retry bucket stops them, and a tile's first request is never refused. (open: CS-147, CS-508; check not passed)
+  unmet: c3 A transient failure on 3D Tiles content retries with jittered backoff and loads, and with 200 tiles wanted from a dead origin the attempts stay bounded: retries hold at most a quarter of the window, an empty retry bucket stops them, and a tile's first request is never refused. (open: CS-147, CS-508, CS-88; check not passed)
   unmet: c4 An app can give a tileset, terrain or imagery source a proxy (a prefix or a function), query parameters, headers and trusted-origin credentials, and every request that source makes carries them; cookies go only to trusted origins, and no option value appears in any diagnostic. (open: CS-156; check not passed)
 
 CS-459 Failed content recovers on its own [Planned], under CS-16 Streaming robustness
@@ -216,7 +171,7 @@ CS-464 Tile selection runs off the main thread [Planned], under CS-12 The job sy
   unmet: not linked to a clause yet (open: CS-96, CS-449, CS-97, CS-98; check not passed)
   to shape: done_when; check; link CS-96, CS-449, CS-97, CS-98 to a clause
 
-CS-465 Jobs share one tick budget and decode can't hang [Proposed], under CS-12 The job system's ports
+CS-465 Jobs share one tick budget and decode can't hang [Planned], under CS-12 The job system's ports
   outcome: Jobs and slices share one tick budget, decode-only jobs use shared-memory rings, and a watchdog ends a hung decode.
   constraints: 0 of 3 done
   unmet: not linked to a clause yet (open: CS-375, CS-376, CS-377; check not passed)
@@ -238,10 +193,9 @@ CS-467 Fidelity adapts without silent fallbacks [Planned], under CS-8 Engine pro
 
 CS-468 Every entry point and renderer reads the profile [Planned], under CS-8 Engine profiles
   outcome: Whichever way an app reaches the engine (the main entry, the advanced GPU entry, the Viewer or worker mode), it gets support reports and defaults from the same profile, the main API names no GPU type, and an app or a second renderer can give the engine's queries its own ray backends.
-  constraints: 0 of 4 done
+  constraints: 0 of 3 done
   unmet: c1 An app that imports only `@cesium/next` sees no GPU type; hosts that share a device, tools and tests get `GpuDevice`, `DeviceFacts`, `LimitsTier` and the personas from `@cesium/next/gpu`, where `engine.facts` replaces `Engine.capabilities`. (open: CS-28; check not passed)
   unmet: c2 A Viewer and a bare `Engine` give the same default look from one defaults table (shadows on as preferred, ambient occlusion on as extra); the Viewer's World capacities come from device limits, and any clamp is reported. (open: CS-29; check not passed)
-  unmet: c3 In worker mode, `view.support`, `view.effective` and `view.explain()` return what they return on the main thread, and under `strict` a pinned step that can't run throws synchronously on the main thread in both modes. (open: CS-31; check not passed)
   unmet: c4 An app, or a second renderer, can give `Engine.queries` its own ray backends, and `castRays` and standing queries answer through them. (open: CS-368; check not passed)
 
 CS-469 Apps can tell when the image has stopped improving [Planned], under CS-15 Refinement and convergence
@@ -330,9 +284,9 @@ CS-482 Benchmarks run per merge on dedicated machines [Planned], under CS-195 Be
 
 CS-483 Image regression and parity are checked in CI [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: SwiftShader runs image checks and the parity pages in CI, custom shaders and feature styles match 1.x, and coloured metals match a multiple-scattering reference.
-  constraints: 0 of 6 done
-  unmet: not linked to a clause yet (open: CS-327, CS-330, CS-448, CS-541, CS-542, CS-568; check not passed)
-  to shape: done_when; check; link CS-327, CS-330, CS-448, CS-541, CS-542, CS-568 to a clause
+  constraints: 0 of 8 done
+  unmet: not linked to a clause yet (open: CS-327, CS-330, CS-448, CS-541, CS-542, CS-568, CS-581, CS-582; check not passed)
+  to shape: done_when; check; link CS-327, CS-330, CS-448, CS-541, CS-542, CS-568, CS-581, CS-582 to a clause
 
 CS-484 The performance targets are met or the gaps explained [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: Throttled network scenarios run against a link-shaping server, Dyno's guardrails are revisited per scene, and every performance target, multi-view included, is met or its gap explained.
@@ -348,9 +302,9 @@ CS-485 Dyno and the gallery are safe to build and host [Planned], under CS-199 D
 
 CS-486 CI keeps packages/next clean [Planned], under CS-199 Dyno hardening, packaging and CI
   outcome: CI runs the package's tests on Node 24, the package is Prettier-clean, a fresh worktree passes `npm test`, and the example runner's loose ends are closed.
-  constraints: 1 of 7 done
-  unmet: not linked to a clause yet (open: CS-361, CS-362, CS-412, CS-445, CS-538, CS-540; check not passed)
-  to shape: done_when; check; link CS-361, CS-362, CS-412, CS-445, CS-537, CS-538, CS-540 to a clause
+  constraints: 1 of 9 done
+  unmet: not linked to a clause yet (open: CS-361, CS-362, CS-412, CS-445, CS-538, CS-540, CS-580, CS-583; check not passed)
+  to shape: done_when; check; link CS-361, CS-362, CS-412, CS-445, CS-537, CS-538, CS-540, CS-580, CS-583 to a clause
 
 CS-487 The frames plans' carried-forward fixes are closed [Planned], under CS-189 Frames and engineering coordinates follow-ups
   outcome: The fixes the frames plans carried forward are made, `accuracyOf` composes on `separationAccuracy`, and the owner decides whether a frame with both fallbacks takes the ballpark.
@@ -420,9 +374,9 @@ CS-497 Cesium ion is a swappable module with a default token [Planned], under CS
 
 CS-498 glTF and 3D Tiles load at 1.x's coverage [Planned], under CS-191 Content sources and formats
   outcome: The 3D Tiles and glTF extension gaps against 1.x are closed, and glTF 1.0 and deprecated extensions are upgraded on load or dropped, as the owner decides.
-  constraints: 0 of 3 done
-  unmet: not linked to a clause yet (open: CS-272, CS-273, CS-274; check not passed)
-  to shape: done_when; check; link CS-272, CS-273, CS-274 to a clause
+  constraints: 1 of 4 done
+  unmet: not linked to a clause yet (open: CS-272, CS-273, CS-682; check not passed)
+  to shape: done_when; check; link CS-272, CS-273, CS-274, CS-682 to a clause
 
 CS-499 Lines, polygons, labels and CAD styles draw on one path [Planned], under CS-190 Vector drawing and the styling language
   outcome: One drawing path carries lines, polygons and CAD display styles, and labels and pins are drawn in the engine with GPU decluttering.
@@ -468,16 +422,16 @@ CS-505 Issues found for other teams are filed and answered [Planned], under CS-1
 
 CS-506 Initiatives and release gates are settled [Planned], under CS-18 The work tracker
   outcome: The owner has decided which projects get initiatives of their own and which release gates the tracker has.
-  constraints: 2 of 2 done
-  check due: every constraint is done; the check has not passed
-  to shape: done_when; check; link CS-388, CS-455 to a clause
+  constraints: 2 of 4 done
+  unmet: not linked to a clause yet (open: CS-679, CS-680; check not passed)
+  to shape: done_when; check; link CS-388, CS-455, CS-679, CS-680 to a clause
 
 CS-509 Apps run their own jobs [Planned], under CS-12 The job system's ports
   outcome: An app runs its own work from a module on the engine's job system, below visible content, with the engine on either thread.
   constraints: 0 of 3 done
   unmet: c1 An app runs its own job from a module URL with `engine.jobs.run`, in its own worker group, below visible content by default; a slow or failing app job doesn't delay content, and the same call works in both thread modes. (open: CS-100, CS-463, CS-464; check not passed)
 
-CS-511 Scene benchmarks run faster than real time [Proposed], under CS-195 Benchmarks, parity and image regression
+CS-511 Scene benchmarks run faster than real time [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: The scene suite can run faster than real time on a simulated network, its results agree with real-time runs for every metric it reports, and any run can still choose real time on a simulated or a real network.
   constraints: 0 of 4 done
   unmet: not linked to a clause yet (open: CS-512, CS-513, CS-514, CS-515; check not passed)
@@ -507,7 +461,7 @@ CS-535 Rays query the scene on the GPU [Proposed], under CS-197 Ray queries and 
   unmet: not linked to a clause yet (open: CS-344, CS-345, CS-346, CS-347, CS-348, CS-349; check not passed)
   to shape: done_when; check; link CS-344, CS-345, CS-346, CS-347, CS-348, CS-349 to a clause
 
-CS-560 Content from any source loads through one module seam [Proposed], under CS-191 Content sources and formats
+CS-560 Content from any source loads through one module seam [Planned], under CS-191 Content sources and formats
   outcome: An application loads 3D Tiles, the globe's terrain and imagery, glTF files, MVT, Esri services and USD through one content-source interface, importing only the source modules it uses.
   constraints: 0 of 8 done
   unmet: not linked to a clause yet (open: CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553; check not passed)
@@ -515,9 +469,127 @@ CS-560 Content from any source loads through one module seam [Proposed], under C
 
 CS-561 Dyno's Work page shows the live system and the release plan [Proposed], under CS-18 The work tracker
   outcome: A reader of Dyno's Work page sees what's moving now (dispatches, branches waiting to merge, the active run) and where each release falls among the milestones that feed it.
-  constraints: 1 of 5 done
-  unmet: not linked to a clause yet (open: CS-547, CS-562, CS-563, CS-573; check not passed)
-  to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563, CS-573 to a clause
+  constraints: 2 of 9 done
+  unmet: not linked to a clause yet (open: CS-547, CS-562, CS-563, CS-573, CS-683, CS-685, CS-688; check not passed)
+  to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563, CS-573, CS-683, CS-684, CS-685, CS-688 to a clause
 
-84 open milestone(s)
+CS-595 Every 1.x widget's job has a StrataKit widget [Planned], under CS-584 The widgets library
+  outcome: An app drops in StrataKit widgets for every job 1.x's widgets did, as React components or through DOM wrappers, and the Viewer is built from them.
+  constraints: 0 of 9 done
+  unmet: not linked to a clause yet (open: CS-585, CS-586, CS-587, CS-588, CS-589, CS-590, CS-591, CS-592, CS-593; check not passed)
+  to shape: done_when; check; link CS-585, CS-586, CS-587, CS-588, CS-589, CS-590, CS-591, CS-592, CS-593 to a clause
+
+CS-606 The evals are designed and running in CI [Planned], under CS-596 Trust and evals
+  outcome: The evals design is reviewed and mutation scores run in CI, so trust evidence accumulates from alpha.1 on.
+  constraints: 0 of 2 done
+  unmet: not linked to a clause yet (open: CS-597, CS-598; check not passed)
+  to shape: done_when; check; link CS-597, CS-598 to a clause
+
+CS-607 Every module has a trust report the 1.x team can check [Planned], under CS-596 Trust and evals
+  outcome: Each module's trust report shows conformance, accuracy against independent references, adversarial checks, provenance and audited defect rates.
+  constraints: 0 of 6 done
+  unmet: not linked to a clause yet (open: CS-599, CS-600, CS-601, CS-602, CS-603, CS-604; check not passed)
+  to shape: done_when; check; link CS-599, CS-600, CS-601, CS-602, CS-603, CS-604 to a clause
+
+CS-608 Extension users have validated 2.0 with their own data [Planned], under CS-596 Trust and evals
+  outcome: Users of the extensions 2.0 carries forward have confirmed it works for them before 2.0.0.
+  constraints: 0 of 1 done
+  unmet: not linked to a clause yet (open: CS-605; check not passed)
+  to shape: done_when; check; link CS-605 to a clause
+
+CS-614 The branch is a clean, modern 2.0 build [Planned], under CS-609 A clean 2.0 branch and a modern build
+  outcome: The branch holds 2.0 alone, built, tested and released by a modern pipeline.
+  constraints: 0 of 3 done
+  unmet: not linked to a clause yet (open: CS-611, CS-612, CS-613; check not passed)
+  to shape: done_when; check; link CS-611, CS-612, CS-613 to a clause
+
+CS-621 The core installs alone, and the whole engine installs from one umbrella package [Planned], under CS-615 Packaging and package names
+  outcome: A host installs only the core, or the whole engine through `cesium@2`, with every package at one version.
+  constraints: 0 of 5 done
+  unmet: not linked to a clause yet (open: CS-616, CS-617, CS-618, CS-363, CS-310; check not passed)
+  to shape: done_when; check; link CS-616, CS-617, CS-618, CS-363, CS-310 to a clause
+
+CS-627 A 1.x app moves to 2.0 with the kit and is shown to match [Planned], under CS-622 The agent-first migration kit
+  outcome: An agent moves a 1.x app with the kit, and the parity harness shows the result matches.
+  constraints: 0 of 4 done
+  unmet: not linked to a clause yet (open: CS-623, CS-624, CS-625, CS-626; check not passed)
+  to shape: done_when; check; link CS-623, CS-624, CS-625, CS-626 to a clause
+
+CS-635 Sandcastle hosts 2.0's examples [Planned], under CS-628 Sandcastle as 2.0's gallery
+  outcome: 2.0's examples run in Sandcastle, editable and shareable, for hosts building on alpha.1.
+  constraints: 0 of 3 done
+  unmet: not linked to a clause yet (open: CS-629, CS-630, CS-631; check not passed)
+  to shape: done_when; check; link CS-629, CS-630, CS-631 to a clause
+
+CS-636 1.x's Sandcastle examples run on the new engine [Planned], under CS-628 Sandcastle as 2.0's gallery
+  outcome: 1.x's Sandcastle examples run on 2.0, each shown to match or recorded as using a dropped feature.
+  constraints: 0 of 3 done
+  unmet: not linked to a clause yet (open: CS-632, CS-633, CS-634; check not passed)
+  to shape: done_when; check; link CS-632, CS-633, CS-634 to a clause
+
+CS-641 Particles run on the GPU for 1.x's uses and beyond [Planned], under CS-637 The particle system
+  outcome: Apps make smoke, fire, exhaust, precipitation and flow with GPU particles, far past 1.x's counts.
+  constraints: 0 of 3 done
+  unmet: not linked to a clause yet (open: CS-638, CS-639, CS-640; check not passed)
+  to shape: done_when; check; link CS-638, CS-639, CS-640 to a clause
+
+CS-646 Geometry generators make 1.x's shapes on the ellipsoid [Planned], under CS-642 Geometry generators
+  outcome: Apps make 1.x's shapes on the ellipsoid from one module, shared with the vector pipeline.
+  constraints: 0 of 3 done
+  unmet: not linked to a clause yet (open: CS-644, CS-645, CS-643; check not passed)
+  to shape: done_when; check; link CS-644, CS-645, CS-643 to a clause
+
+CS-653 Content and motion follow one time model [Planned], under CS-647 Conditional content and motion
+  outcome: Features, tiles, imagery and models change with time through one conditional-content model, and everything that moves shares one motion model.
+  constraints: 0 of 6 done
+  unmet: not linked to a clause yet (open: CS-648, CS-649, CS-650, CS-651, CS-652, CS-278; check not passed)
+  to shape: done_when; check; link CS-648, CS-649, CS-650, CS-651, CS-652, CS-278 to a clause
+
+CS-657 Content projects onto any surface [Planned], under CS-190 Vector drawing and the styling language
+  outcome: Vector features, imagery and classification volumes project onto terrain, tilesets and models through one design.
+  constraints: 0 of 4 done
+  unmet: not linked to a clause yet (open: CS-654, CS-655, CS-656, CS-261; check not passed)
+  to shape: done_when; check; link CS-654, CS-655, CS-656, CS-261 to a clause
+
+CS-668 1.x's data formats load as modules [Planned], under CS-191 Content sources and formats
+  outcome: CZML, KML, GPX, GeoJSON, other 3D Tiles servers, PostGIS, GeoParquet, voxels, point clouds and splats load through the content-source seam, and providers plug in through one interface.
+  constraints: 0 of 12 done
+  unmet: not linked to a clause yet (open: CS-658, CS-659, CS-660, CS-661, CS-662, CS-663, CS-664, CS-666, CS-279, CS-339, CS-276, CS-277; check not passed)
+  to shape: done_when; check; link CS-658, CS-659, CS-660, CS-661, CS-662, CS-663, CS-664, CS-666, CS-279, CS-339, CS-276, CS-277 to a clause
+
+CS-674 Panoramas, sensors and legacy glTF ship as experimental modules [Planned], under CS-191 Content sources and formats
+  outcome: The modules that may arrive after beta.1 ship in the experimental tier and graduate through an API review.
+  constraints: 0 of 3 done
+  unmet: not linked to a clause yet (open: CS-665, CS-667, CS-673; check not passed)
+  to shape: done_when; check; link CS-665, CS-667, CS-673 to a clause
+
+CS-675 1.x's smaller tools have 2.0 homes [Planned], under CS-437 The public API reviews
+  outcome: drillPick, intervals, bounding volumes, interpolation and edge types are public and reviewed.
+  constraints: 0 of 5 done
+  unmet: not linked to a clause yet (open: CS-669, CS-670, CS-649, CS-650, CS-643; check not passed)
+  to shape: done_when; check; link CS-669, CS-670, CS-649, CS-650, CS-643 to a clause
+
+CS-676 Geometry has physics representations [Planned], under CS-193 B-reps and geometry queries
+  outcome: Meshes, B-reps, SDFs, tiles and terrain offer physics representations to simulators through one seam.
+  constraints: 0 of 1 done
+  unmet: not linked to a clause yet (open: CS-672; check not passed)
+  to shape: done_when; check; link CS-672 to a clause
+
+CS-678 The final release is ready to publish [Planned], under CS-18 The work tracker
+  outcome: 2.0.0's notes are written and its security review is done.
+  constraints: 0 of 1 done
+  unmet: not linked to a clause yet (open: CS-677; check not passed)
+  to shape: done_when; check; link CS-677 to a clause
+
+CS-1 Renderers and engine profiles [Dropped]
+CS-2 Cesium IR and materials [Dropped]
+CS-3 Threading [Dropped]
+CS-4 Loading and level of detail [Dropped]
+CS-5 Warps and the transform graph [Dropped]
+CS-6 Development harness [Dropped]
+CS-7 Upstream follow-ups [Dropped]
+CS-436 The public API [Dropped]
+CS-525 Bodies, frames and engineering coordinates [Dropped]
+
+93 open milestone(s)
 ```

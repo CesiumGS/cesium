@@ -13,24 +13,33 @@ graph LR
   CS_14["Level-of-detail transitions<br/>0 of 14 done"]
   CS_15["Refinement and convergence<br/>0 of 13 done"]
   CS_16["Streaming robustness<br/>0 of 22 done"]
-  CS_17["transform graph<br/>0 of 13 done"]
-  CS_18["work tracker<br/>15 of 27 done"]
+  CS_17["transform graph<br/>0 of 14 done"]
+  CS_18["work tracker<br/>22 of 36 done"]
   CS_19["Follow-ups for other teams<br/>0 of 12 done"]
   CS_188["Earth to Moon (frames 5c to 5h)<br/>3 of 43 done"]
-  CS_189["Frames and engineering coordinates follow-ups<br/>0 of 21 done"]
-  CS_190["Vector drawing and the styling language<br/>0 of 11 done"]
-  CS_191["Content sources and formats<br/>2 of 22 done"]
+  CS_189["Frames and engineering coordinates follow-ups<br/>0 of 22 done"]
+  CS_190["Vector drawing and the styling language<br/>0 of 14 done"]
+  CS_191["Content sources and formats<br/>3 of 33 done"]
   CS_192["Sky, light and atmosphere<br/>0 of 20 done"]
-  CS_193["B-reps and geometry queries<br/>3 of 19 done"]
+  CS_193["B-reps and geometry queries<br/>3 of 21 done"]
   CS_194["Budgeted selection and memory<br/>0 of 6 done"]
-  CS_195["Benchmarks, parity and image regression<br/>0 of 23 done"]
+  CS_195["Benchmarks, parity and image regression<br/>0 of 25 done"]
   CS_196["Infrastructure and geoscience capabilities<br/>0 of 7 done"]
-  CS_197["Ray queries and path tracing<br/>0 of 6 done"]
+  CS_197["Ray queries and path tracing<br/>0 of 7 done"]
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
-  CS_199["Dyno hardening, packaging and CI<br/>1 of 14 done"]
-  CS_389["Dyno as the development harness<br/>5 of 25 done"]
-  CS_437["public API reviews<br/>1 of 10 done"]
+  CS_199["Dyno hardening, packaging and CI<br/>1 of 16 done"]
+  CS_389["Dyno as the development harness<br/>5 of 26 done"]
+  CS_437["public API reviews<br/>1 of 12 done"]
   CS_579["Editing<br/>0 of 2 done"]
+  CS_584["widgets library<br/>0 of 9 done"]
+  CS_596["Trust and evals<br/>0 of 9 done"]
+  CS_609["A clean 2.0 branch and a modern build<br/>0 of 4 done"]
+  CS_615["Packaging and package names<br/>0 of 4 done"]
+  CS_622["agent-first migration kit<br/>0 of 4 done"]
+  CS_628["Sandcastle as 2.0's gallery<br/>0 of 6 done"]
+  CS_637["particle system<br/>0 of 3 done"]
+  CS_642["Geometry generators<br/>0 of 2 done"]
+  CS_647["Conditional content and motion<br/>0 of 5 done"]
   CS_9 -->|1| CS_8
   CS_12 -->|1| CS_8
   CS_10 -->|5| CS_9
@@ -61,4 +70,50 @@ graph LR
   CS_15 -->|1| CS_8
   CS_13 -->|1| CS_9
   CS_12 -->|1| CS_16
+  CS_9 -->|3| CS_18
+  CS_191 -->|4| CS_18
+  CS_16 -->|3| CS_18
+  CS_8 -->|3| CS_18
+  CS_199 -->|2| CS_18
+  CS_615 -->|2| CS_18
+  CS_628 -->|2| CS_18
+  CS_596 -->|3| CS_18
+  CS_10 -->|3| CS_18
+  CS_437 -->|3| CS_18
+  CS_13 -->|4| CS_18
+  CS_12 -->|6| CS_18
+  CS_188 -->|4| CS_18
+  CS_189 -->|4| CS_18
+  CS_192 -->|2| CS_18
+  CS_193 -->|1| CS_18
+  CS_17 -->|2| CS_18
+  CS_11 -->|2| CS_18
+  CS_190 -->|4| CS_18
+  CS_15 -->|2| CS_18
+  CS_584 -->|1| CS_18
+  CS_637 -->|1| CS_18
+  CS_642 -->|1| CS_18
+  CS_647 -->|1| CS_18
+  CS_14 -->|2| CS_18
+  CS_195 -->|4| CS_18
+  CS_198 -->|2| CS_18
+  CS_194 -->|1| CS_18
+  CS_389 -->|4| CS_18
+  CS_609 -->|1| CS_18
+  CS_622 -->|1| CS_18
+  CS_191 -->|1| CS_584
+  CS_189 -->|1| CS_584
+  CS_188 -->|1| CS_584
+  CS_196 -->|1| CS_584
+  CS_195 -->|1| CS_596
+  CS_193 -->|1| CS_615
+  CS_199 -->|1| CS_628
+  CS_622 -->|1| CS_628
+  CS_609 -->|1| CS_628
+  CS_190 -->|1| CS_642
+  CS_189 -->|1| CS_642
+  CS_191 -->|2| CS_647
+  CS_647 -->|1| CS_191
+  CS_190 -->|1| CS_191
+  CS_190 -->|1| CS_197
 ```

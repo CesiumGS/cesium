@@ -213,6 +213,7 @@ graph LR
     CS_385["CS-385 Spike: height-keyed tint and haze under exaggeration, drawn aga"]:::open
     CS_386["CS-386 Under exaggeration, do shading and haze read the drawn or the t"]:::decision
     CS_450["CS-450 The inspector counts warped draws: exact, compiled and fitted"]:::open
+    CS_671["CS-671 What do smooth nodes get called instead?"]:::decision
   end
   subgraph CS_18["work tracker"]
     CS_169["CS-169 The tracker: format, scripts, items and the plan's split"]:::done
@@ -226,10 +227,10 @@ graph LR
     CS_521["CS-521 The tracker's files in human-in-the-lead's format"]:::done
     CS_522["CS-522 hitld's commands replace scripts/work"]:::done
     CS_523["CS-523 Dyno's board reads human-in-the-lead's read API"]:::done
-    CS_526["CS-526 Which milestones does 2.0.0-alpha.1 need?"]:::decision
-    CS_527["CS-527 Which milestones does 2.0.0-beta.1 need?"]:::decision
-    CS_528["CS-528 Which milestones does 2.0.0-rc.1 need?"]:::decision
-    CS_529["CS-529 Which milestones does 2.0.0 need?"]:::decision
+    CS_526["CS-526 Which milestones does 2.0.0-alpha.1 need?"]:::done
+    CS_527["CS-527 Which milestones does 2.0.0-beta.1 need?"]:::done
+    CS_528["CS-528 Which milestones does 2.0.0-rc.1 need?"]:::done
+    CS_529["CS-529 Which milestones does 2.0.0 need?"]:::done
     CS_530["CS-530 Release 2.0.0-alpha.1"]:::open
     CS_531["CS-531 Release 2.0.0-beta.1"]:::open
     CS_532["CS-532 Release 2.0.0-rc.1"]:::open
@@ -242,6 +243,15 @@ graph LR
     CS_564["CS-564 How CS-545's branch reaches main without a hitld dispatch"]:::done
     CS_565["CS-565 Fast-forward main to CS-545's checked branch"]:::done
     CS_573["CS-573 Dyno's Work page shows each kind of entity the same way everywh"]:::open
+    CS_677["CS-677 Release notes and a security review for 2.0.0"]:::open
+    CS_679["CS-679 Stale records: the API map's Entity and labels rows, costs.tsx'"]:::open
+    CS_680["CS-680 Triage the open items that fit no release"]:::open
+    CS_683["CS-683 Dyno's roadmap zooms like Figma, shows its legend on top, and d"]:::open
+    CS_684["CS-684 Dyno's Work page drops the retired long outcomes: no Long outco"]:::done
+    CS_685["CS-685 Dyno's release flags list only the milestones a release needs, "]:::open
+    CS_686["CS-686 How should we use proposals until hitld does it for us, and wha"]:::done
+    CS_688["CS-688 Dyno's Proposals tab follows the proposal flow: to discuss, bei"]:::open
+    CS_689["CS-689 Merge run 2026-11-18-2's green batches overnight"]:::done
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external
@@ -317,19 +327,20 @@ graph LR
     CS_250["CS-250 Legal review of how reference data and sky data may ship"]:::external
     CS_251["CS-251 Reference data as an optional bundled package"]:::proposed
     CS_252["CS-252 Frames explorer and design globe polish"]:::proposed
-    CS_253["CS-253 2D, Columbus view and the 2D/3D morph through a world-spanning "]:::proposed
+    CS_253["CS-253 2D, Columbus view and the 2D/3D morph through a world-spanning "]:::open
     CS_254["CS-254 Which long models fill the design globe's ion slots?"]:::decision
     CS_255["CS-255 Should the engine's setup host NOAA's VDatum surfaces (MLLW, MH"]:::decision
     CS_256["CS-256 When do the upstream proposals go to the 3D Tiles and glTF grou"]:::decision
     CS_257["CS-257 Should a frame with 'geoidFallback' and 'allowBallpark' take th"]:::decision
     CS_440["CS-440 Standing queries reach measure, and the explorer's re-trace sub"]:::open
     CS_443["CS-443 Small engine fixes: height lost in cartesianToCartographic, cli"]:::open
+    CS_643["CS-643 Edge types shared across the engine: geodesic, rhumb and straig"]:::open
   end
   subgraph CS_190["Vector drawing and the styling language"]
     CS_258["CS-258 The vector drawing design: lines, polygons, labels and CAD styl"]:::open
     CS_259["CS-259 Labels with GPU decluttering, and labels and pins drawn in the "]:::open
     CS_260["CS-260 CAD display extensions: planar fill, line and point styles, edg"]:::open
-    CS_261["CS-261 Wide lines, polygons and decals, with vector sources and vector"]:::proposed
+    CS_261["CS-261 Wide lines, polygons and decals, with vector sources and vector"]:::open
     CS_262["CS-262 Real-time tracks: cull small shadow casters, and one glTF asset"]:::open
     CS_263["CS-263 Real-time tracks polish: model and symbol crossfade, MIL-STD-25"]:::proposed
     CS_264["CS-264 Overlay draw options: a no-depth-test flag, per-layer imagery s"]:::proposed
@@ -337,6 +348,9 @@ graph LR
     CS_266["CS-266 Styling semantics: element-wise overrides, strings and 64-bit I"]:::decision
     CS_267["CS-267 The styling language on Cesium IR, over points, lines, polygons"]:::proposed
     CS_268["CS-268 Style features through the IR: tiles culled by interval 'show',"]:::proposed
+    CS_654["CS-654 The surface-projection design: classification, draping and deca"]:::open
+    CS_655["CS-655 Classification of terrain, tilesets and models"]:::open
+    CS_656["CS-656 Imagery draped on 3D Tiles and models"]:::open
   end
   subgraph CS_191["Content sources and formats"]
     CS_269["CS-269 Cesium ion as a swappable module: a content-source interface an"]:::open
@@ -344,23 +358,34 @@ graph LR
     CS_271["CS-271 A default evaluation token, with the on-screen notice"]:::open
     CS_272["CS-272 3D Tiles format gaps: implicit tiling, multiple contents, metad"]:::open
     CS_273["CS-273 glTF extension gaps: texture transforms, primitive outlines, We"]:::open
-    CS_274["CS-274 glTF 1.0 and deprecated extensions: upgrade on load, or drop?"]:::decision
+    CS_274["CS-274 glTF 1.0 and deprecated extensions: upgrade on load, or drop?"]:::done
     CS_275["CS-275 Which of M6's remaining showcases to build: splats, compute poi"]:::done
     CS_276["CS-276 Point clouds: glTF points and 'pnts', compute rendering with ey"]:::open
     CS_277["CS-277 Gaussian splats with a GPU sort"]:::open
-    CS_278["CS-278 glTF animation playback: skins, morph targets and animated node"]:::proposed
-    CS_279["CS-279 More terrain and imagery providers, and several imagery layers "]:::proposed
+    CS_278["CS-278 glTF animation playback: skins, morph targets and animated node"]:::open
+    CS_279["CS-279 More terrain and imagery providers, and several imagery layers "]:::open
     CS_280["CS-280 Thin wrappers for ion's REST API, including element metadata"]:::proposed
     CS_452["CS-452 How should semantic metadata reach the engine, and what does pi"]:::decision
     CS_551["CS-551 Does content from every kind of source, the globe included, loa"]:::done
     CS_552["CS-552 The content-source seam: one interface every source module impl"]:::open
     CS_553["CS-553 What 3D Tiles costs an application that doesn't use them, measu"]:::open
-    CS_554["CS-554 3D Tiles loads through the content-source seam, with a @cesium/"]:::proposed
-    CS_555["CS-555 The globe's terrain and imagery load through the content-source"]:::proposed
-    CS_556["CS-556 glTF files load through the content-source seam"]:::proposed
-    CS_557["CS-557 MVT vector tiles load through the content-source seam"]:::proposed
-    CS_558["CS-558 Esri services load through the content-source seam"]:::proposed
-    CS_559["CS-559 USD loads through the content-source seam"]:::proposed
+    CS_554["CS-554 3D Tiles loads through the content-source seam, with a @cesium/"]:::open
+    CS_555["CS-555 The globe's terrain and imagery load through the content-source"]:::open
+    CS_556["CS-556 glTF files load through the content-source seam"]:::open
+    CS_557["CS-557 MVT vector tiles load through the content-source seam"]:::open
+    CS_558["CS-558 Esri services load through the content-source seam"]:::open
+    CS_559["CS-559 USD loads through the content-source seam"]:::open
+    CS_658["CS-658 CZML loads through the content-source seam"]:::open
+    CS_659["CS-659 KML and KMZ load through the content-source seam"]:::open
+    CS_660["CS-660 GPX loads through the content-source seam"]:::open
+    CS_661["CS-661 GeoJSON loads through the content-source seam"]:::open
+    CS_662["CS-662 3D Tiles from servers other than Cesium ion load through the se"]:::open
+    CS_663["CS-663 PostGIS loads through the content-source seam"]:::open
+    CS_664["CS-664 GeoParquet loads through the content-source seam"]:::open
+    CS_665["CS-665 The legacy-glTF module: glTF 1.0 and the deprecated extensions "]:::open
+    CS_666["CS-666 GPM metadata feeds measurement accuracy"]:::open
+    CS_667["CS-667 Panoramas as a module"]:::open
+    CS_682["CS-682 Audit every extension 1.x 1.147 reads against 2.0, and refresh "]:::open
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -405,6 +430,8 @@ graph LR
     CS_316["CS-316 The CSG sample, phases 4 and 5: sketches and parametric history"]:::dropped
     CS_576["CS-576 Spike: B-rep tiles as NURBS or pre-split Bézier patches, and a "]:::open
     CS_577["CS-577 Spike: subdivision surfaces through OpenSubdiv in WebAssembly o"]:::open
+    CS_669["CS-669 drillPick: every hit along a pixel's ray, or every layer drawn "]:::open
+    CS_672["CS-672 Physics representations across the geometry kinds: the design"]:::open
   end
   subgraph CS_194["Budgeted selection and memory"]
     CS_317["CS-317 Budget-driven refinement: benefit per byte"]:::open
@@ -432,17 +459,19 @@ graph LR
     CS_448["CS-448 Energy compensation for coloured metals, against a multiple-sca"]:::open
     CS_451["CS-451 Dyno's guardrails and their tolerances per scene, revisited now"]:::open
     CS_512["CS-512 Scene runs on a virtual clock"]:::proposed
-    CS_513["CS-513 The simulated network runs on the virtual clock"]:::proposed
+    CS_513["CS-513 The simulated network runs on the virtual clock"]:::open
     CS_514["CS-514 Run modes: faster than real time, or real time on a simulated o"]:::proposed
     CS_515["CS-515 Faster-than-real-time runs against real-time runs: which metric"]:::proposed
     CS_541["CS-541 The parity tests compare against CesiumJS 1.147.0, pinned"]:::open
     CS_542["CS-542 Every parity result names its oracle"]:::open
     CS_568["CS-568 The lod parity page reads the tileset's selection policy where "]:::open
+    CS_581["CS-581 The irWgsl browser suite joins the browser-suite gate for chang"]:::open
+    CS_582["CS-582 The tracks parity suite's billboards draw on the first run afte"]:::open
   end
   subgraph CS_196["Infrastructure and geoscience capabilities"]
     CS_337["CS-337 Scalar fields on any geometry: values, colour ramps, legends an"]:::proposed
     CS_338["CS-338 Per-element overrides at scale, through the styling language"]:::proposed
-    CS_339["CS-339 Volumes: voxel grids, ray-marched or as isosurfaces"]:::proposed
+    CS_339["CS-339 Volumes: voxel grids, ray-marched or as isosurfaces"]:::open
     CS_340["CS-340 Printing to scale"]:::proposed
     CS_341["CS-341 WebXR, including aligning a model with its site"]:::open
     CS_342["CS-342 The infrastructure and geoscience gallery examples"]:::proposed
@@ -453,8 +482,9 @@ graph LR
     CS_345["CS-345 Acceleration structures behind 'acceleration.ts'"]:::proposed
     CS_346["CS-346 GPU ray queries for user code, and a user compute slot"]:::proposed
     CS_347["CS-347 A progressive path-tracer view, sharing the device's tables"]:::proposed
-    CS_348["CS-348 A GPU viewshed"]:::proposed
+    CS_348["CS-348 A GPU viewshed"]:::open
     CS_349["CS-349 A near-field bounded terrain trace, and terrain error over open"]:::proposed
+    CS_673["CS-673 A sensor module"]:::open
   end
   subgraph CS_198["GPU-driven rendering and capacities"]
     CS_350["CS-350 The Slang gate and probes on Windows (D3D12)"]:::open
@@ -473,7 +503,7 @@ graph LR
     CS_360["CS-360 Static hosting of the built gallery: data paths, the error aler"]:::open
     CS_361["CS-361 CI runs 'packages/next''s tests on Node 24"]:::open
     CS_362["CS-362 Prettier clean across 'packages/next'"]:::open
-    CS_363["CS-363 Packaging for pages without a build step"]:::proposed
+    CS_363["CS-363 Packaging for pages without a build step"]:::open
     CS_364["CS-364 The gallery shell: filters, editable source, checked-in thumbna"]:::proposed
     CS_412["CS-412 A fresh worktree runs npm test clean: build 1.x's generated sha"]:::open
     CS_413["CS-413 The ion token for CLI runs and worktrees, without writing it in"]:::open
@@ -482,6 +512,8 @@ graph LR
     CS_538["CS-538 The no-scene-gains glare test holds under full-suite load"]:::open
     CS_540["CS-540 The hitld work check test finishes under full-suite load"]:::open
     CS_544["CS-544 The handbook's reel runs in the served handbook as well as the "]:::open
+    CS_580["CS-580 naga-wasm is a dev dependency of @cesium/next, so CI validates "]:::open
+    CS_583["CS-583 The casterLoop slow-orbit test holds under full-suite load"]:::open
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::open
@@ -509,6 +541,7 @@ graph LR
     CS_516["CS-516 human-in-the-lead v0.1.0-rc.1 is released"]:::done
     CS_517["CS-517 The agent system's pages: the merge queue, quotas, the controll"]:::open
     CS_518["CS-518 A space switch in Dyno's rail: the engine and the work"]:::open
+    CS_687["CS-687 The study model: what kinds a study has, and how it draws on a "]:::decision
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -521,11 +554,155 @@ graph LR
     CS_438["CS-438 Which of the first public API review's proposed changes do you "]:::decision
     CS_454["CS-454 What is the full version of scene items: references, groups, th"]:::done
     CS_572["CS-572 The full version of scene items, designed before the first publ"]:::open
+    CS_670["CS-670 Bounding volumes and their tests on the public API"]:::open
+    CS_681["CS-681 Should 2.0 keep marking APIs experimental, and how?"]:::decision
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::decision
     CS_578["CS-578 A mesh editing sample: drag a mesh's vertices, edges and faces,"]:::open
   end
+  subgraph CS_584["widgets library"]
+    CS_585["CS-585 The widgets library's design: React components on StrataKit, DO"]:::open
+    CS_586["CS-586 The existing widgets move onto the library: time controls, cred"]:::open
+    CS_587["CS-587 The geocoder widget, with a pluggable geocoding service"]:::open
+    CS_588["CS-588 The base layer picker widget"]:::open
+    CS_589["CS-589 The info box and selection indicator widgets"]:::open
+    CS_590["CS-590 Home, fullscreen and navigation help widgets"]:::open
+    CS_591["CS-591 The scene mode and projection picker widgets"]:::open
+    CS_592["CS-592 The VR button widget"]:::open
+    CS_593["CS-593 The Viewer composed from the widgets library"]:::open
+  end
+  subgraph CS_596["Trust and evals"]
+    CS_597["CS-597 The evals design: what evidence the 1.x team needs, and how eac"]:::open
+    CS_598["CS-598 Mutation scores per module, beside coverage"]:::open
+    CS_599["CS-599 Conformance runs on Khronos's glTF samples and the 3D Tiles sam"]:::open
+    CS_600["CS-600 Accuracy against independent references: GeographicLib, SOFA an"]:::open
+    CS_601["CS-601 Every stated accuracy is checked against measured error"]:::open
+    CS_602["CS-602 Fuzzed loaders, GPU device-loss tests and soak runs"]:::open
+    CS_603["CS-603 A trust report per module and per release, from each merge's pr"]:::open
+    CS_604["CS-604 Cesium engineers review a random sample of merged changes"]:::open
+    CS_605["CS-605 Extension users validate 2.0 with their own data"]:::external
+  end
+  subgraph CS_609["A clean 2.0 branch and a modern build"]
+    CS_610["CS-610 The 2.0 repository's design: build system, CI/CD and release pi"]:::open
+    CS_611["CS-611 The 1.x code is replaced in the branch"]:::open
+    CS_612["CS-612 The new build system"]:::open
+    CS_613["CS-613 CI/CD on the new build, with the release pipeline"]:::open
+  end
+  subgraph CS_615["Packaging and package names"]
+    CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision
+    CS_617["CS-617 2.0 splits into scoped packages, released in lockstep, with ces"]:::open
+    CS_618["CS-618 An embedding app installs the core alone, checked by an install"]:::open
+    CS_619["CS-619 The API reference for every package"]:::open
+  end
+  subgraph CS_622["agent-first migration kit"]
+    CS_623["CS-623 The 1.x-to-2.0 map in a form agents read, with worked patterns"]:::open
+    CS_624["CS-624 The migration skill"]:::open
+    CS_625["CS-625 Parity proof for a migrated app"]:::open
+    CS_626["CS-626 The migration guide generated from the map"]:::open
+  end
+  subgraph CS_628["Sandcastle as 2.0's gallery"]
+    CS_629["CS-629 The 1.x team agrees on Sandcastle and on the @cesium/core and @"]:::external
+    CS_630["CS-630 Sandcastle hosts 2.0's examples"]:::open
+    CS_631["CS-631 2.0's examples move into Sandcastle's format"]:::open
+    CS_632["CS-632 1.x's Sandcastle examples are migrated with the kit and checked"]:::open
+    CS_633["CS-633 Examples that use dropped features are recorded in the API map"]:::open
+    CS_634["CS-634 The 2.0 Sandcastle replaces 1.x's"]:::open
+  end
+  subgraph CS_637["particle system"]
+    CS_638["CS-638 The particle system's design"]:::open
+    CS_639["CS-639 Particles simulate on the GPU and draw through the point-source"]:::open
+    CS_640["CS-640 Forces and emitters as Slang or Cesium IR functions, with emitt"]:::open
+  end
+  subgraph CS_642["Geometry generators"]
+    CS_644["CS-644 The geometry generators' design, with the vector pipeline's ove"]:::open
+    CS_645["CS-645 The generators: box, ellipsoid, cylinder, frustum, wall, corrid"]:::open
+  end
+  subgraph CS_647["Conditional content and motion"]
+    CS_648["CS-648 The conditional content and motion design"]:::open
+    CS_649["CS-649 Intervals and interval sets in /time"]:::open
+    CS_650["CS-650 Public interpolation: one module for trajectories, glTF sampler"]:::open
+    CS_651["CS-651 Articulations as transform-graph nodes"]:::open
+    CS_652["CS-652 Time-dynamic and conditional 3D Tiles content"]:::open
+  end
+  CS_414["CS-414 Renderers plug in behind one seam"]:::open
+  CS_560["CS-560 Content from any source loads through one module seam"]:::open
+  CS_458["CS-458 Every fetch has a deadline and retries within its origin's budg"]:::open
+  CS_459["CS-459 Failed content recovers on its own"]:::open
+  CS_466["CS-466 Each view knows what the device supports and why"]:::open
+  CS_468["CS-468 Every entry point and renderer reads the profile"]:::open
+  CS_485["CS-485 Dyno and the gallery are safe to build and host"]:::open
+  CS_486["CS-486 CI keeps packages/next clean"]:::open
+  CS_497["CS-497 Cesium ion is a swappable module with a default token"]:::open
+  CS_621["CS-621 The core installs alone, and the whole engine installs from one"]:::open
+  CS_635["CS-635 Sandcastle hosts 2.0's examples"]:::open
+  CS_606["CS-606 The evals are designed and running in CI"]:::open
+  CS_415["CS-415 WebGL 2 draws models, tiles and the globe"]:::open
+  CS_417["CS-417 Transforms and styles compile through Cesium IR"]:::open
+  CS_418["CS-418 Any shader language reaches both renderers"]:::open
+  CS_419["CS-419 Cesium IR covers what materials need"]:::open
+  CS_420["CS-420 The public API shape is approved"]:::open
+  CS_457["CS-457 The approved API changes are made"]:::open
+  CS_421["CS-421 Every public call can cross a thread"]:::open
+  CS_422["CS-422 The engine runs in a worker behind the same API"]:::open
+  CS_456["CS-456 Refinement, profiles and streaming work in worker mode"]:::open
+  CS_509["CS-509 Apps run their own jobs"]:::open
+  CS_462["CS-462 Loads and decodes run on Jobs"]:::open
+  CS_464["CS-464 Tile selection runs off the main thread"]:::open
+  CS_424["CS-424 The Earth and the Moon render together"]:::open
+  CS_425["CS-425 Cameras move freely on any body"]:::open
+  CS_426["CS-426 Each body has its own sky and light"]:::open
+  CS_427["CS-427 Engineering models open in their design space"]:::open
+  CS_487["CS-487 The frames plans' carried-forward fixes are closed"]:::open
+  CS_488["CS-488 Measurement tools ship as a module on standing queries"]:::open
+  CS_489["CS-489 Satellite frames plug in as an add-on"]:::open
+  CS_490["CS-490 Reference data's hosting and shipping are settled"]:::open
+  CS_492["CS-492 The sky plan's carry-forward is closed"]:::open
+  CS_494["CS-494 B-reps snap and measure exactly"]:::open
+  CS_473["CS-473 Warped views draw without twins or stalls"]:::open
+  CS_475["CS-475 The engine material speaks OpenPBR and glTF"]:::open
+  CS_476["CS-476 Shaders swap live on models, tilesets and the globe"]:::open
+  CS_498["CS-498 glTF and 3D Tiles load at 1.x's coverage"]:::open
+  CS_499["CS-499 Lines, polygons, labels and CAD styles draw on one path"]:::open
+  CS_500["CS-500 Real-time tracks stay cheap at scale"]:::open
+  CS_501["CS-501 The styling language's form and semantics are decided"]:::open
+  CS_460["CS-460 Network health is visible and guarded"]:::open
+  CS_469["CS-469 Apps can tell when the image has stopped improving"]:::open
+  CS_595["CS-595 Every 1.x widget's job has a StrataKit widget"]:::open
+  CS_641["CS-641 Particles run on the GPU for 1.x's uses and beyond"]:::open
+  CS_646["CS-646 Geometry generators make 1.x's shapes on the ellipsoid"]:::open
+  CS_653["CS-653 Content and motion follow one time model"]:::open
+  CS_657["CS-657 Content projects onto any surface"]:::open
+  CS_668["CS-668 1.x's data formats load as modules"]:::open
+  CS_675["CS-675 1.x's smaller tools have 2.0 homes"]:::open
+  CS_416["CS-416 WebGL 2 reaches parity with WebGPU"]:::open
+  CS_423["CS-423 Measurements set the default thread"]:::open
+  CS_461["CS-461 A headed run shows whether worker mode ticks smoother"]:::open
+  CS_463["CS-463 Main-thread work fits the tick's slices"]:::open
+  CS_465["CS-465 Jobs share one tick budget and decode can't hang"]:::open
+  CS_467["CS-467 Fidelity adapts without silent fallbacks"]:::open
+  CS_471["CS-471 Nothing pops when level of detail changes"]:::open
+  CS_472["CS-472 Transition costs are measured and the options decided"]:::open
+  CS_474["CS-474 Steep warps draw without artifacts"]:::open
+  CS_484["CS-484 The performance targets are met or the gaps explained"]:::open
+  CS_503["CS-503 Antialiased translucency's cost is known"]:::open
+  CS_504["CS-504 Tiles are chosen by benefit per byte across views"]:::open
+  CS_511["CS-511 Scene benchmarks run faster than real time"]:::open
+  CS_491["CS-491 Glare and the sky are checked on Intel integrated GPUs"]:::open
+  CS_502["CS-502 Slang shaders pass the gate on Windows"]:::open
+  CS_481["CS-481 Other machines and devices run Dyno's scenes"]:::open
+  CS_482["CS-482 Benchmarks run per merge on dedicated machines"]:::open
+  CS_478["CS-478 Every run says what it was for"]:::open
+  CS_479["CS-479 Sweeps measure development cases"]:::open
+  CS_480["CS-480 Studies turn runs into verdicts"]:::open
+  CS_483["CS-483 Image regression and parity are checked in CI"]:::open
+  CS_470["CS-470 Every wait in the repository uses convergence"]:::open
+  CS_607["CS-607 Every module has a trust report the 1.x team can check"]:::open
+  CS_614["CS-614 The branch is a clean, modern 2.0 build"]:::open
+  CS_627["CS-627 A 1.x app moves to 2.0 with the kit and is shown to match"]:::open
+  CS_636["CS-636 1.x's Sandcastle examples run on the new engine"]:::open
+  CS_608["CS-608 Extension users have validated 2.0 with their own data"]:::open
+  CS_678["CS-678 The final release is ready to publish"]:::open
   CS_20 --> CS_21
   CS_21 --> CS_22
   CS_22 --> CS_23
@@ -867,6 +1044,7 @@ graph LR
   CS_392 --> CS_402
   CS_404 --> CS_402
   CS_390 --> CS_404
+  CS_687 --> CS_404
   CS_395 --> CS_405
   CS_403 --> CS_405
   CS_404 --> CS_405
@@ -880,6 +1058,7 @@ graph LR
   CS_101 --> CS_432
   CS_101 --> CS_433
   CS_438 --> CS_434
+  CS_681 --> CS_434
   CS_438 --> CS_435
   CS_102 --> CS_438
   CS_221 --> CS_439
@@ -904,12 +1083,91 @@ graph LR
   CS_521 --> CS_522
   CS_521 --> CS_523
   CS_526 --> CS_530
+  CS_414 --> CS_530
+  CS_560 --> CS_530
+  CS_458 --> CS_530
+  CS_459 --> CS_530
+  CS_466 --> CS_530
+  CS_468 --> CS_530
+  CS_485 --> CS_530
+  CS_486 --> CS_530
+  CS_497 --> CS_530
+  CS_621 --> CS_530
+  CS_635 --> CS_530
+  CS_606 --> CS_530
   CS_527 --> CS_531
   CS_530 --> CS_531
+  CS_415 --> CS_531
+  CS_417 --> CS_531
+  CS_418 --> CS_531
+  CS_419 --> CS_531
+  CS_420 --> CS_531
+  CS_457 --> CS_531
+  CS_421 --> CS_531
+  CS_422 --> CS_531
+  CS_456 --> CS_531
+  CS_509 --> CS_531
+  CS_462 --> CS_531
+  CS_464 --> CS_531
+  CS_424 --> CS_531
+  CS_425 --> CS_531
+  CS_426 --> CS_531
+  CS_427 --> CS_531
+  CS_487 --> CS_531
+  CS_488 --> CS_531
+  CS_489 --> CS_531
+  CS_490 --> CS_531
+  CS_492 --> CS_531
+  CS_494 --> CS_531
+  CS_473 --> CS_531
+  CS_475 --> CS_531
+  CS_476 --> CS_531
+  CS_498 --> CS_531
+  CS_499 --> CS_531
+  CS_500 --> CS_531
+  CS_501 --> CS_531
+  CS_460 --> CS_531
+  CS_469 --> CS_531
+  CS_595 --> CS_531
+  CS_641 --> CS_531
+  CS_646 --> CS_531
+  CS_653 --> CS_531
+  CS_657 --> CS_531
+  CS_668 --> CS_531
+  CS_675 --> CS_531
   CS_528 --> CS_532
   CS_531 --> CS_532
+  CS_416 --> CS_532
+  CS_423 --> CS_532
+  CS_461 --> CS_532
+  CS_463 --> CS_532
+  CS_465 --> CS_532
+  CS_467 --> CS_532
+  CS_471 --> CS_532
+  CS_472 --> CS_532
+  CS_474 --> CS_532
+  CS_484 --> CS_532
+  CS_503 --> CS_532
+  CS_504 --> CS_532
+  CS_511 --> CS_532
+  CS_491 --> CS_532
+  CS_502 --> CS_532
+  CS_481 --> CS_532
+  CS_482 --> CS_532
+  CS_478 --> CS_532
+  CS_479 --> CS_532
+  CS_480 --> CS_532
+  CS_483 --> CS_532
+  CS_470 --> CS_532
+  CS_607 --> CS_532
+  CS_614 --> CS_532
+  CS_627 --> CS_532
+  CS_636 --> CS_532
+  CS_619 --> CS_532
   CS_529 --> CS_533
   CS_532 --> CS_533
+  CS_608 --> CS_533
+  CS_678 --> CS_533
   CS_541 --> CS_542
   CS_564 --> CS_545
   CS_48 --> CS_548
@@ -928,6 +1186,78 @@ graph LR
   CS_454 --> CS_572
   CS_299 --> CS_576
   CS_300 --> CS_577
+  CS_574 --> CS_580
+  CS_575 --> CS_581
+  CS_585 --> CS_586
+  CS_585 --> CS_587
+  CS_585 --> CS_588
+  CS_279 --> CS_588
+  CS_585 --> CS_589
+  CS_585 --> CS_590
+  CS_585 --> CS_591
+  CS_253 --> CS_591
+  CS_218 --> CS_591
+  CS_585 --> CS_592
+  CS_341 --> CS_592
+  CS_586 --> CS_593
+  CS_587 --> CS_593
+  CS_589 --> CS_593
+  CS_590 --> CS_593
+  CS_597 --> CS_598
+  CS_597 --> CS_599
+  CS_597 --> CS_600
+  CS_597 --> CS_601
+  CS_597 --> CS_602
+  CS_513 --> CS_602
+  CS_597 --> CS_603
+  CS_603 --> CS_604
+  CS_610 --> CS_611
+  CS_610 --> CS_612
+  CS_612 --> CS_613
+  CS_616 --> CS_617
+  CS_310 --> CS_617
+  CS_617 --> CS_618
+  CS_617 --> CS_619
+  CS_623 --> CS_624
+  CS_624 --> CS_625
+  CS_623 --> CS_626
+  CS_629 --> CS_630
+  CS_363 --> CS_630
+  CS_630 --> CS_631
+  CS_630 --> CS_632
+  CS_625 --> CS_632
+  CS_632 --> CS_633
+  CS_632 --> CS_634
+  CS_611 --> CS_634
+  CS_638 --> CS_639
+  CS_639 --> CS_640
+  CS_258 --> CS_644
+  CS_644 --> CS_645
+  CS_643 --> CS_645
+  CS_552 --> CS_648
+  CS_648 --> CS_650
+  CS_648 --> CS_651
+  CS_648 --> CS_652
+  CS_554 --> CS_652
+  CS_258 --> CS_654
+  CS_654 --> CS_655
+  CS_654 --> CS_656
+  CS_552 --> CS_658
+  CS_648 --> CS_658
+  CS_552 --> CS_659
+  CS_552 --> CS_660
+  CS_552 --> CS_661
+  CS_554 --> CS_662
+  CS_552 --> CS_663
+  CS_552 --> CS_664
+  CS_556 --> CS_665
+  CS_274 --> CS_665
+  CS_654 --> CS_667
+  CS_654 --> CS_673
+  CS_348 --> CS_673
+  CS_686 --> CS_680
+  CS_563 --> CS_683
+  CS_683 --> CS_685
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

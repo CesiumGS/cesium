@@ -6,46 +6,46 @@
 CS-8 Engine profiles [Planned], led by owner
   3 of 19 done, 2 ready, 12 blocked, 2 proposed
   waits on: CS-9 The WebGL 2 renderer (1); CS-12 The job system's ports (1); CS-15 Refinement and convergence (1)
-  waited on by: CS-13 The worker-mode façade (1)
+  waited on by: CS-13 The worker-mode façade (1); CS-18 The work tracker (3)
 CS-9 The WebGL 2 renderer [Planned], led by owner
   1 of 17 done, 3 ready, 12 blocked, 1 proposed
   waits on: CS-10 Cesium IR (5); CS-13 The worker-mode façade (1)
-  waited on by: CS-8 Engine profiles (1); CS-11 Live MaterialX graph editing (1)
+  waited on by: CS-8 Engine profiles (1); CS-11 Live MaterialX graph editing (1); CS-18 The work tracker (3)
 CS-10 Cesium IR [Planned], led by owner
   7 of 34 done, 9 ready, 16 blocked, 2 proposed
   waits on: nothing open
-  waited on by: CS-9 The WebGL 2 renderer (5); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (4); CS-17 The transform graph (2); CS-190 Vector drawing and the styling language (3)
+  waited on by: CS-9 The WebGL 2 renderer (5); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (4); CS-17 The transform graph (2); CS-190 Vector drawing and the styling language (3); CS-18 The work tracker (3)
 CS-11 Live MaterialX graph editing [Planned], led by owner
   0 of 17 done, 6 ready, 10 blocked, 1 proposed
   waits on: CS-10 Cesium IR (2); CS-9 The WebGL 2 renderer (1)
-  waited on by: CS-192 Sky, light and atmosphere (1)
+  waited on by: CS-192 Sky, light and atmosphere (1); CS-18 The work tracker (2)
 CS-12 The job system's ports [Planned], led by owner
   1 of 20 done, 10 ready, 6 blocked, 3 proposed
   waits on: CS-13 The worker-mode façade (2)
-  waited on by: CS-8 Engine profiles (1); CS-13 The worker-mode façade (1); CS-16 Streaming robustness (1)
+  waited on by: CS-8 Engine profiles (1); CS-13 The worker-mode façade (1); CS-16 Streaming robustness (1); CS-18 The work tracker (6)
 CS-13 The worker-mode façade [Planned], led by owner
   1 of 21 done, 1 ready, 18 blocked, 1 proposed
   waits on: CS-437 The public API reviews (5); CS-10 Cesium IR (4); CS-8 Engine profiles (1); CS-12 The job system's ports (1)
-  waited on by: CS-12 The job system's ports (2); CS-437 The public API reviews (1); CS-9 The WebGL 2 renderer (1)
+  waited on by: CS-12 The job system's ports (2); CS-437 The public API reviews (1); CS-9 The WebGL 2 renderer (1); CS-18 The work tracker (4)
 CS-14 Level-of-detail transitions [Planned], led by owner
   0 of 14 done, 2 ready, 9 blocked, 3 proposed
   waits on: nothing open
-  waited on by: nothing open
+  waited on by: CS-18 The work tracker (2)
 CS-15 Refinement and convergence [Planned], led by owner
   0 of 13 done, 2 ready, 9 blocked, 2 proposed
   waits on: nothing open
-  waited on by: CS-16 Streaming robustness (1); CS-8 Engine profiles (1)
+  waited on by: CS-16 Streaming robustness (1); CS-8 Engine profiles (1); CS-18 The work tracker (2)
 CS-16 Streaming robustness [Planned], led by owner
   0 of 22 done, 6 ready, 15 blocked, 1 proposed
   waits on: CS-15 Refinement and convergence (1); CS-12 The job system's ports (1)
-  waited on by: CS-191 Content sources and formats (1)
+  waited on by: CS-191 Content sources and formats (1); CS-18 The work tracker (3)
 CS-17 The transform graph [Planned], led by owner
-  0 of 13 done, 9 ready, 2 blocked, 2 proposed
+  0 of 14 done, 10 ready, 2 blocked, 2 proposed
   waits on: CS-10 Cesium IR (2)
-  waited on by: nothing open
+  waited on by: CS-18 The work tracker (2)
 CS-18 The work tracker [Planned], led by owner
-  15 of 27 done, 4 ready, 4 blocked, 4 proposed
-  waits on: nothing open
+  22 of 36 done, 8 ready, 6 blocked
+  waits on: CS-9 The WebGL 2 renderer (3); CS-191 Content sources and formats (4); CS-16 Streaming robustness (3); CS-8 Engine profiles (3); CS-199 Dyno hardening, packaging and CI (2); CS-615 Packaging and package names (2); CS-628 Sandcastle as 2.0's gallery (2); CS-596 Trust and evals (3); CS-10 Cesium IR (3); CS-437 The public API reviews (3); CS-13 The worker-mode façade (4); CS-12 The job system's ports (6); CS-188 Earth to Moon (frames 5c to 5h) (4); CS-189 Frames and engineering coordinates follow-ups (4); CS-192 Sky, light and atmosphere (2); CS-193 B-reps and geometry queries (1); CS-17 The transform graph (2); CS-11 Live MaterialX graph editing (2); CS-190 Vector drawing and the styling language (4); CS-15 Refinement and convergence (2); CS-584 The widgets library (1); CS-637 The particle system (1); CS-642 Geometry generators (1); CS-647 Conditional content and motion (1); CS-14 Level-of-detail transitions (2); CS-195 Benchmarks, parity and image regression (4); CS-198 GPU-driven rendering and capacities (2); CS-194 Budgeted selection and memory (1); CS-389 Dyno as the development harness (4); CS-609 A clean 2.0 branch and a modern build (1); CS-622 The agent-first migration kit (1)
   waited on by: nothing open
 CS-19 Follow-ups for other teams [Planned], led by owner
   0 of 12 done, 12 ready, 0 blocked
@@ -54,61 +54,97 @@ CS-19 Follow-ups for other teams [Planned], led by owner
 CS-188 Earth to Moon (frames 5c to 5h) [Planned], led by owner
   3 of 43 done, 11 ready, 29 blocked
   waits on: nothing open
-  waited on by: CS-191 Content sources and formats (1); CS-192 Sky, light and atmosphere (4); CS-193 B-reps and geometry queries (1); CS-196 Infrastructure and geoscience capabilities (2)
+  waited on by: CS-191 Content sources and formats (1); CS-192 Sky, light and atmosphere (4); CS-193 B-reps and geometry queries (1); CS-196 Infrastructure and geoscience capabilities (2); CS-18 The work tracker (4); CS-584 The widgets library (1)
 CS-189 Frames and engineering coordinates follow-ups [Planned], led by owner
-  0 of 21 done, 12 ready, 1 blocked, 8 proposed
+  0 of 22 done, 14 ready, 1 blocked, 7 proposed
   waits on: CS-437 The public API reviews (1)
-  waited on by: CS-192 Sky, light and atmosphere (2)
+  waited on by: CS-192 Sky, light and atmosphere (2); CS-18 The work tracker (4); CS-584 The widgets library (1); CS-642 Geometry generators (1)
 CS-190 Vector drawing and the styling language [Planned], led by owner
-  0 of 11 done, 4 ready, 2 blocked, 5 proposed
+  0 of 14 done, 4 ready, 6 blocked, 4 proposed
   waits on: CS-10 Cesium IR (3)
-  waited on by: CS-193 B-reps and geometry queries (1); CS-196 Infrastructure and geoscience capabilities (2)
+  waited on by: CS-193 B-reps and geometry queries (1); CS-196 Infrastructure and geoscience capabilities (2); CS-18 The work tracker (4); CS-642 Geometry generators (1); CS-191 Content sources and formats (1); CS-197 Ray queries and path tracing (1)
 CS-191 Content sources and formats [Planned], led by owner
-  2 of 22 done, 7 ready, 4 blocked, 9 proposed
-  waits on: CS-16 Streaming robustness (1); CS-188 Earth to Moon (frames 5c to 5h) (1)
-  waited on by: CS-196 Infrastructure and geoscience capabilities (1)
+  3 of 33 done, 9 ready, 20 blocked, 1 proposed
+  waits on: CS-16 Streaming robustness (1); CS-188 Earth to Moon (frames 5c to 5h) (1); CS-647 Conditional content and motion (1); CS-190 Vector drawing and the styling language (1)
+  waited on by: CS-196 Infrastructure and geoscience capabilities (1); CS-18 The work tracker (4); CS-584 The widgets library (1); CS-647 Conditional content and motion (2)
 CS-192 Sky, light and atmosphere [Planned], led by owner
   0 of 20 done, 5 ready, 2 blocked, 13 proposed
   waits on: CS-189 Frames and engineering coordinates follow-ups (2); CS-11 Live MaterialX graph editing (1); CS-188 Earth to Moon (frames 5c to 5h) (4)
-  waited on by: nothing open
+  waited on by: CS-18 The work tracker (2)
 CS-193 B-reps and geometry queries [Planned], led by owner
-  3 of 19 done, 5 ready, 6 blocked, 5 proposed, 1 dropped
+  3 of 21 done, 7 ready, 6 blocked, 5 proposed, 1 dropped
   waits on: CS-437 The public API reviews (1); CS-188 Earth to Moon (frames 5c to 5h) (1); CS-190 Vector drawing and the styling language (1)
-  waited on by: nothing open
+  waited on by: CS-18 The work tracker (1); CS-615 Packaging and package names (1)
 CS-194 Budgeted selection and memory [Planned], led by owner
   0 of 6 done, 5 ready, 0 blocked, 1 proposed
   waits on: nothing open
-  waited on by: nothing open
+  waited on by: CS-18 The work tracker (1)
 CS-195 Benchmarks, parity and image regression [Planned], led by owner
-  0 of 23 done, 11 ready, 5 blocked, 7 proposed
+  0 of 25 done, 13 ready, 6 blocked, 6 proposed
   waits on: CS-389 Dyno as the development harness (2)
-  waited on by: nothing open
+  waited on by: CS-18 The work tracker (4); CS-596 Trust and evals (1)
 CS-196 Infrastructure and geoscience capabilities [Planned], led by owner
-  0 of 7 done, 0 ready, 1 blocked, 6 proposed
+  0 of 7 done, 1 ready, 1 blocked, 5 proposed
   waits on: CS-190 Vector drawing and the styling language (2); CS-188 Earth to Moon (frames 5c to 5h) (2); CS-191 Content sources and formats (1)
-  waited on by: nothing open
+  waited on by: CS-584 The widgets library (1)
 CS-197 Ray queries and path tracing [Planned], led by owner
-  0 of 6 done, 0 ready, 0 blocked, 6 proposed
-  waits on: nothing open
+  0 of 7 done, 0 ready, 2 blocked, 5 proposed
+  waits on: CS-190 Vector drawing and the styling language (1)
   waited on by: nothing open
 CS-198 GPU-driven rendering and capacities [Planned], led by owner
   0 of 9 done, 3 ready, 0 blocked, 6 proposed
   waits on: nothing open
-  waited on by: nothing open
+  waited on by: CS-18 The work tracker (2)
 CS-199 Dyno hardening, packaging and CI [Planned], led by owner
-  1 of 14 done, 11 ready, 0 blocked, 2 proposed
+  1 of 16 done, 14 ready, 0 blocked, 1 proposed
   waits on: nothing open
-  waited on by: nothing open
+  waited on by: CS-18 The work tracker (2); CS-628 Sandcastle as 2.0's gallery (1)
 CS-389 Dyno as the development harness [Planned], led by owner
-  5 of 25 done, 2 ready, 18 blocked
+  5 of 26 done, 3 ready, 18 blocked
   waits on: nothing open
-  waited on by: CS-195 Benchmarks, parity and image regression (2)
+  waited on by: CS-195 Benchmarks, parity and image regression (2); CS-18 The work tracker (4)
 CS-437 The public API reviews [Planned], led by owner
-  1 of 10 done, 5 ready, 4 blocked
+  1 of 12 done, 7 ready, 4 blocked
   waits on: CS-13 The worker-mode façade (1)
-  waited on by: CS-13 The worker-mode façade (5); CS-189 Frames and engineering coordinates follow-ups (1); CS-193 B-reps and geometry queries (1)
+  waited on by: CS-13 The worker-mode façade (5); CS-189 Frames and engineering coordinates follow-ups (1); CS-193 B-reps and geometry queries (1); CS-18 The work tracker (3)
 CS-579 Editing [Planned], led by owner
   0 of 2 done, 2 ready, 0 blocked
   waits on: nothing open
   waited on by: nothing open
+CS-584 The widgets library [Planned], led by owner
+  0 of 9 done, 1 ready, 8 blocked
+  waits on: CS-191 Content sources and formats (1); CS-189 Frames and engineering coordinates follow-ups (1); CS-188 Earth to Moon (frames 5c to 5h) (1); CS-196 Infrastructure and geoscience capabilities (1)
+  waited on by: CS-18 The work tracker (1)
+CS-596 Trust and evals [Planned], led by owner
+  0 of 9 done, 2 ready, 7 blocked
+  waits on: CS-195 Benchmarks, parity and image regression (1)
+  waited on by: CS-18 The work tracker (3)
+CS-609 A clean 2.0 branch and a modern build [Planned], led by owner
+  0 of 4 done, 1 ready, 3 blocked
+  waits on: nothing open
+  waited on by: CS-18 The work tracker (1); CS-628 Sandcastle as 2.0's gallery (1)
+CS-615 Packaging and package names [Planned], led by owner
+  0 of 4 done, 1 ready, 3 blocked
+  waits on: CS-193 B-reps and geometry queries (1)
+  waited on by: CS-18 The work tracker (2)
+CS-622 The agent-first migration kit [Planned], led by owner
+  0 of 4 done, 1 ready, 3 blocked
+  waits on: nothing open
+  waited on by: CS-18 The work tracker (1); CS-628 Sandcastle as 2.0's gallery (1)
+CS-628 Sandcastle as 2.0's gallery [Planned], led by owner
+  0 of 6 done, 1 ready, 5 blocked
+  waits on: CS-199 Dyno hardening, packaging and CI (1); CS-622 The agent-first migration kit (1); CS-609 A clean 2.0 branch and a modern build (1)
+  waited on by: CS-18 The work tracker (2)
+CS-637 The particle system [Planned], led by owner
+  0 of 3 done, 1 ready, 2 blocked
+  waits on: nothing open
+  waited on by: CS-18 The work tracker (1)
+CS-642 Geometry generators [Planned], led by owner
+  0 of 2 done, 0 ready, 2 blocked
+  waits on: CS-190 Vector drawing and the styling language (1); CS-189 Frames and engineering coordinates follow-ups (1)
+  waited on by: CS-18 The work tracker (1)
+CS-647 Conditional content and motion [Planned], led by owner
+  0 of 5 done, 1 ready, 4 blocked
+  waits on: CS-191 Content sources and formats (2)
+  waited on by: CS-18 The work tracker (1); CS-191 Content sources and formats (1)
 ```

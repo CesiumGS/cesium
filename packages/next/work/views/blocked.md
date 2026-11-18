@@ -170,6 +170,7 @@ CS-437 The public API reviews
         CS-572 The full version of scene items, designed before the first public API review
   CS-434  Stability tiers as TSDoc tags, with internal members stripped from the published types
       ← CS-438 Which of the first public API review's proposed changes do you approve?
+        CS-681 Should 2.0 keep marking APIs experimental, and how?
   CS-435  The measurement module's seam and entry point
       ← CS-438 Which of the first public API review's proposed changes do you approve?
   CS-438  Which of the first public API review's proposed changes do you approve?
@@ -398,6 +399,14 @@ CS-190 Vector drawing and the styling language
       ← CS-258 The vector drawing design: lines, polygons, labels and CAD styles on one path
   CS-260  CAD display extensions: planar fill, line and point styles, edge visibility
       ← CS-258 The vector drawing design: lines, polygons, labels and CAD styles on one path
+  CS-261  Wide lines, polygons and decals, with vector sources and vector tiles
+      ← CS-258 The vector drawing design: lines, polygons, labels and CAD styles on one path
+  CS-654  The surface-projection design: classification, draping and decals
+      ← CS-258 The vector drawing design: lines, polygons, labels and CAD styles on one path
+  CS-655  Classification of terrain, tilesets and models
+      ← CS-654 The surface-projection design: classification, draping and decals
+  CS-656  Imagery draped on 3D Tiles and models
+      ← CS-654 The surface-projection design: classification, draping and decals
 
 CS-191 Content sources and formats
   CS-269  Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`
@@ -410,6 +419,39 @@ CS-191 Content sources and formats
       ← CS-552 The content-source seam: one interface every source module implements, designed and planned
   CS-277  Gaussian splats with a GPU sort
       ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-278  glTF animation playback: skins, morph targets and animated nodes
+      ← CS-212 The core's setters, per-node transforms and tracks
+  CS-554  3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-555  The globe's terrain and imagery load through the content-source seam
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-556  glTF files load through the content-source seam
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-557  MVT vector tiles load through the content-source seam
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-558  Esri services load through the content-source seam
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-559  USD loads through the content-source seam
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-658  CZML loads through the content-source seam
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+        CS-648 The conditional content and motion design
+  CS-659  KML and KMZ load through the content-source seam
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-660  GPX loads through the content-source seam
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-661  GeoJSON loads through the content-source seam
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-662  3D Tiles from servers other than Cesium ion load through the seam
+      ← CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
+  CS-663  PostGIS loads through the content-source seam
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-664  GeoParquet loads through the content-source seam
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-665  The legacy-glTF module: glTF 1.0 and the deprecated extensions upgraded on load
+      ← CS-556 glTF files load through the content-source seam
+  CS-667  Panoramas as a module
+      ← CS-654 The surface-projection design: classification, draping and decals
 
 CS-192 Sky, light and atmosphere
   CS-282  Intel figures into `glareTier` and the Intel tables
@@ -443,12 +485,21 @@ CS-195 Benchmarks, parity and image regression
       ← CS-323 Benchmark machines: dedicated GPU runners, and CI builds per commit
         CS-397 Image checks for development scenes and sweeps
         CS-401 Lab pages and their results in the store
+  CS-513  The simulated network runs on the virtual clock
+      ← CS-328 Network profiles: a link-shaping content server and a throttled scenario
   CS-542  Every parity result names its oracle
       ← CS-541 The parity tests compare against CesiumJS 1.147.0, pinned
 
 CS-196 Infrastructure and geoscience capabilities
   CS-341  WebXR, including aligning a model with its site
       ← CS-213 The rig and the controller seam
+
+CS-197 Ray queries and path tracing
+  CS-348  A GPU viewshed
+      ← CS-344 The ray-query design: when acceleration structures are built, which level of detail a ray sees
+  CS-673  A sensor module
+      ← CS-654 The surface-projection design: classification, draping and decals
+        CS-348 A GPU viewshed
 
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
@@ -483,6 +534,7 @@ CS-389 Dyno as the development harness
         CS-404 Studies: the model, the files and the commands
   CS-404  Studies: the model, the files and the commands
       ← CS-390 Run identity and the machine-wide run lock
+        CS-687 The study model: what kinds a study has, and how it draws on a set of instruments
   CS-405  The Studies page
       ← CS-395 Reference images and the sweep view
         CS-404 Studies: the model, the files and the commands
@@ -500,16 +552,201 @@ CS-389 Dyno as the development harness
 
 CS-18 The work tracker
   CS-530  Release 2.0.0-alpha.1
-      ← CS-526 Which milestones does 2.0.0-alpha.1 need?
+      ← CS-414 Renderers plug in behind one seam
+        CS-560 Content from any source loads through one module seam
+        CS-458 Every fetch has a deadline and retries within its origin's budget
+        CS-459 Failed content recovers on its own
+        CS-466 Each view knows what the device supports and why
+        CS-468 Every entry point and renderer reads the profile
+        CS-485 Dyno and the gallery are safe to build and host
+        CS-486 CI keeps packages/next clean
+        CS-497 Cesium ion is a swappable module with a default token
+        CS-621 The core installs alone, and the whole engine installs from one umbrella package
+        CS-635 Sandcastle hosts 2.0's examples
+        CS-606 The evals are designed and running in CI
   CS-531  Release 2.0.0-beta.1
-      ← CS-527 Which milestones does 2.0.0-beta.1 need?
-        CS-530 Release 2.0.0-alpha.1
+      ← CS-530 Release 2.0.0-alpha.1
+        CS-415 WebGL 2 draws models, tiles and the globe
+        CS-417 Transforms and styles compile through Cesium IR
+        CS-418 Any shader language reaches both renderers
+        CS-419 Cesium IR covers what materials need
+        CS-420 The public API shape is approved
+        CS-457 The approved API changes are made
+        CS-421 Every public call can cross a thread
+        CS-422 The engine runs in a worker behind the same API
+        CS-456 Refinement, profiles and streaming work in worker mode
+        CS-509 Apps run their own jobs
+        CS-462 Loads and decodes run on Jobs
+        CS-464 Tile selection runs off the main thread
+        CS-424 The Earth and the Moon render together
+        CS-425 Cameras move freely on any body
+        CS-426 Each body has its own sky and light
+        CS-427 Engineering models open in their design space
+        CS-487 The frames plans' carried-forward fixes are closed
+        CS-488 Measurement tools ship as a module on standing queries
+        CS-489 Satellite frames plug in as an add-on
+        CS-490 Reference data's hosting and shipping are settled
+        CS-492 The sky plan's carry-forward is closed
+        CS-494 B-reps snap and measure exactly
+        CS-473 Warped views draw without twins or stalls
+        CS-475 The engine material speaks OpenPBR and glTF
+        CS-476 Shaders swap live on models, tilesets and the globe
+        CS-498 glTF and 3D Tiles load at 1.x's coverage
+        CS-499 Lines, polygons, labels and CAD styles draw on one path
+        CS-500 Real-time tracks stay cheap at scale
+        CS-501 The styling language's form and semantics are decided
+        CS-460 Network health is visible and guarded
+        CS-469 Apps can tell when the image has stopped improving
+        CS-595 Every 1.x widget's job has a StrataKit widget
+        CS-641 Particles run on the GPU for 1.x's uses and beyond
+        CS-646 Geometry generators make 1.x's shapes on the ellipsoid
+        CS-653 Content and motion follow one time model
+        CS-657 Content projects onto any surface
+        CS-668 1.x's data formats load as modules
+        CS-675 1.x's smaller tools have 2.0 homes
   CS-532  Release 2.0.0-rc.1
-      ← CS-528 Which milestones does 2.0.0-rc.1 need?
-        CS-531 Release 2.0.0-beta.1
+      ← CS-531 Release 2.0.0-beta.1
+        CS-416 WebGL 2 reaches parity with WebGPU
+        CS-423 Measurements set the default thread
+        CS-461 A headed run shows whether worker mode ticks smoother
+        CS-463 Main-thread work fits the tick's slices
+        CS-465 Jobs share one tick budget and decode can't hang
+        CS-467 Fidelity adapts without silent fallbacks
+        CS-471 Nothing pops when level of detail changes
+        CS-472 Transition costs are measured and the options decided
+        CS-474 Steep warps draw without artifacts
+        CS-484 The performance targets are met or the gaps explained
+        CS-503 Antialiased translucency's cost is known
+        CS-504 Tiles are chosen by benefit per byte across views
+        CS-511 Scene benchmarks run faster than real time
+        CS-491 Glare and the sky are checked on Intel integrated GPUs
+        CS-502 Slang shaders pass the gate on Windows
+        CS-481 Other machines and devices run Dyno's scenes
+        CS-482 Benchmarks run per merge on dedicated machines
+        CS-478 Every run says what it was for
+        CS-479 Sweeps measure development cases
+        CS-480 Studies turn runs into verdicts
+        CS-483 Image regression and parity are checked in CI
+        CS-470 Every wait in the repository uses convergence
+        CS-607 Every module has a trust report the 1.x team can check
+        CS-614 The branch is a clean, modern 2.0 build
+        CS-627 A 1.x app moves to 2.0 with the kit and is shown to match
+        CS-636 1.x's Sandcastle examples run on the new engine
+        CS-619 The API reference for every package
   CS-533  Release 2.0.0
-      ← CS-529 Which milestones does 2.0.0 need?
-        CS-532 Release 2.0.0-rc.1
+      ← CS-532 Release 2.0.0-rc.1
+        CS-608 Extension users have validated 2.0 with their own data
+        CS-678 The final release is ready to publish
+  CS-683  Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question
+      ← CS-563 Dyno's roadmap shows proposed milestones with dashed outlines
+  CS-685  Dyno's release flags list only the milestones a release needs, and flag items that cross a release
+      ← CS-683 Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question
 
-185 blocked
+CS-584 The widgets library
+  CS-586  The existing widgets move onto the library: time controls, credits, the inspector and the observer panel
+      ← CS-585 The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them
+  CS-587  The geocoder widget, with a pluggable geocoding service
+      ← CS-585 The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them
+  CS-588  The base layer picker widget
+      ← CS-585 The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them
+        CS-279 More terrain and imagery providers, and several imagery layers on one globe
+  CS-589  The info box and selection indicator widgets
+      ← CS-585 The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them
+  CS-590  Home, fullscreen and navigation help widgets
+      ← CS-585 The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them
+  CS-591  The scene mode and projection picker widgets
+      ← CS-585 The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them
+        CS-253 2D, Columbus view and the 2D/3D morph through a world-spanning CRS root
+        CS-218 The orthographic camera, `fitBounds` and the dolly between projections
+  CS-592  The VR button widget
+      ← CS-585 The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them
+        CS-341 WebXR, including aligning a model with its site
+  CS-593  The Viewer composed from the widgets library
+      ← CS-586 The existing widgets move onto the library: time controls, credits, the inspector and the observer panel
+        CS-587 The geocoder widget, with a pluggable geocoding service
+        CS-589 The info box and selection indicator widgets
+        CS-590 Home, fullscreen and navigation help widgets
+
+CS-596 Trust and evals
+  CS-598  Mutation scores per module, beside coverage
+      ← CS-597 The evals design: what evidence the 1.x team needs, and how each piece is checked
+  CS-599  Conformance runs on Khronos's glTF samples and the 3D Tiles samples, with coverage per extension
+      ← CS-597 The evals design: what evidence the 1.x team needs, and how each piece is checked
+  CS-600  Accuracy against independent references: GeographicLib, SOFA and SPICE
+      ← CS-597 The evals design: what evidence the 1.x team needs, and how each piece is checked
+  CS-601  Every stated accuracy is checked against measured error
+      ← CS-597 The evals design: what evidence the 1.x team needs, and how each piece is checked
+  CS-602  Fuzzed loaders, GPU device-loss tests and soak runs
+      ← CS-597 The evals design: what evidence the 1.x team needs, and how each piece is checked
+        CS-513 The simulated network runs on the virtual clock
+  CS-603  A trust report per module and per release, from each merge's provenance
+      ← CS-597 The evals design: what evidence the 1.x team needs, and how each piece is checked
+  CS-604  Cesium engineers review a random sample of merged changes
+      ← CS-603 A trust report per module and per release, from each merge's provenance
+
+CS-609 A clean 2.0 branch and a modern build
+  CS-611  The 1.x code is replaced in the branch
+      ← CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline
+  CS-612  The new build system
+      ← CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline
+  CS-613  CI/CD on the new build, with the release pipeline
+      ← CS-612 The new build system
+
+CS-615 Packaging and package names
+  CS-617  2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
+      ← CS-616 Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
+        CS-310 Licence check for Open Cascade (LGPL 2.1) before distribution
+  CS-618  An embedding app installs the core alone, checked by an install and bundle test
+      ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
+  CS-619  The API reference for every package
+      ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
+
+CS-622 The agent-first migration kit
+  CS-624  The migration skill
+      ← CS-623 The 1.x-to-2.0 map in a form agents read, with worked patterns
+  CS-625  Parity proof for a migrated app
+      ← CS-624 The migration skill
+  CS-626  The migration guide generated from the map
+      ← CS-623 The 1.x-to-2.0 map in a form agents read, with worked patterns
+
+CS-628 Sandcastle as 2.0's gallery
+  CS-630  Sandcastle hosts 2.0's examples
+      ← CS-629 The 1.x team agrees on Sandcastle and on the @cesium/core and @cesium/gltf names
+        CS-363 Packaging for pages without a build step
+  CS-631  2.0's examples move into Sandcastle's format
+      ← CS-630 Sandcastle hosts 2.0's examples
+  CS-632  1.x's Sandcastle examples are migrated with the kit and checked for parity
+      ← CS-630 Sandcastle hosts 2.0's examples
+        CS-625 Parity proof for a migrated app
+  CS-633  Examples that use dropped features are recorded in the API map
+      ← CS-632 1.x's Sandcastle examples are migrated with the kit and checked for parity
+  CS-634  The 2.0 Sandcastle replaces 1.x's
+      ← CS-632 1.x's Sandcastle examples are migrated with the kit and checked for parity
+        CS-611 The 1.x code is replaced in the branch
+
+CS-637 The particle system
+  CS-639  Particles simulate on the GPU and draw through the point-source seam
+      ← CS-638 The particle system's design
+  CS-640  Forces and emitters as Slang or Cesium IR functions, with emitters in the transform graph
+      ← CS-639 Particles simulate on the GPU and draw through the point-source seam
+
+CS-642 Geometry generators
+  CS-644  The geometry generators' design, with the vector pipeline's overlap
+      ← CS-258 The vector drawing design: lines, polygons, labels and CAD styles on one path
+  CS-645  The generators: box, ellipsoid, cylinder, frustum, wall, corridor, extruded polygon, polyline volume, rectangle, ellipse and outlines
+      ← CS-644 The geometry generators' design, with the vector pipeline's overlap
+        CS-643 Edge types shared across the engine: geodesic, rhumb and straight in a CRS
+
+CS-647 Conditional content and motion
+  CS-648  The conditional content and motion design
+      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+  CS-650  Public interpolation: one module for trajectories, glTF samplers, CZML and camera paths
+      ← CS-648 The conditional content and motion design
+  CS-651  Articulations as transform-graph nodes
+      ← CS-648 The conditional content and motion design
+  CS-652  Time-dynamic and conditional 3D Tiles content
+      ← CS-648 The conditional content and motion design
+        CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
+
+247 blocked
 ```
