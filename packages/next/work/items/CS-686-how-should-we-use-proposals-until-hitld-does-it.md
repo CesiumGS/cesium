@@ -2,7 +2,7 @@
 id: CS-686
 title: How should we use proposals until hitld does it for us, and what should the Proposals tab show?
 kind: decision
-state: planned
+state: done
 created: 2026-11-18
 project: CS-18
 decider: owner
@@ -27,6 +27,11 @@ Recommendation: A. It follows hitld's design, so moving onto hitld's own triage 
 
 ## Answer
 
-Open.
+The owner, 2026-11-17: "A, but don't drop the later things, keep them as proposals so i can review."
+
+- Proposals are candidate commitments with a header: source, why now and what it unblocks, rough size, decider and date.
+- The chief of staff files every follow-up as `proposed`, never `planned`, and brings them to the owner in a "to discuss" part of each digest, about five at a time, grouped by project; the owner commits, drops or sends each to shaping. One untouched for about two weeks comes back once.
+- The "later" copies of design-document lists are **not** dropped: they stay `proposed`, each gains the header, and the owner reviews them in batches (CS-680). New ideas without a case for now stay in their design documents rather than becoming items.
+- The Proposals tab is redesigned around this flow (CS-688).
 
 From the owner's release planning on 2026-11-17: `docs/decisions/2026-11-17-release-plan-and-parity.md`.
