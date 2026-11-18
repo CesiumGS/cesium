@@ -75,6 +75,8 @@ class SurfaceDeformerBinding {
       `texelFetch(${positions}, ivec2(${i} % width, ${i} / width), 0).xyz`;
 
     return [
+      // TODO: the deformation's local linear transform.
+      "jacobian = mat3(1.0);",
       `ivec3 indices = ivec3(${triangle});`,
       `int width = textureSize(${positions}, 0).x;`,
       `vec3 p0 = ${fetchPosition("indices.x")};`,

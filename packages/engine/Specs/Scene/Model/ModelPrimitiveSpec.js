@@ -917,7 +917,10 @@ describe(
           uniforms: {
             offset: { type: UniformType.VEC3, value: () => offset },
           },
-          getShaderLines: (names) => [`return positionMC + ${names.offset};`],
+          getShaderLines: (names) => [
+            "jacobian = mat3(1.0);",
+            `return positionMC + ${names.offset};`,
+          ],
         };
       }
 
@@ -974,6 +977,7 @@ describe(
         ];
         binding.vertexBuffer = vertexBuffer;
         binding.getShaderLines = (names) => [
+          "jacobian = mat3(1.0);",
           `return positionMC + ${names.direction} + ${names.offset};`,
         ];
 
@@ -984,6 +988,30 @@ describe(
         expect(scene).notToRender([0, 0, 0, 255]);
 
         vertexBuffer.destroy();
+      });
+
+      it("transforms normals by the jacobian", async function () {
+        if (webglStub) {
+          return;
+        }
+        const [primitive] = await loadPrimitives(
+          `${modelsUrl}/BoxTextured/glTF-Binary/BoxTextured.glb`,
+        );
+        const binding = createBinding(Cartesian3.ZERO);
+        // Rotates by 90 degrees about x.
+        binding.getShaderLines = () => [
+          "jacobian = mat3(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, 0.0);",
+          "return positionMC;",
+        ];
+
+        let rest;
+        expect(scene).toRenderAndCall((rgba) => {
+          rest = rgba;
+        });
+        primitive.addDeformerBinding(binding);
+        expect(scene).toRenderAndCall((rgba) => {
+          expect(rgba).not.toEqual(rest);
+        });
       });
 
       it("throws when adding a binding to a skinned primitive", async function () {
