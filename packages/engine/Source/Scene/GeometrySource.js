@@ -3,18 +3,16 @@
 import { DeveloperError } from "@cesium/core";
 /** @import { Matrix4 } from "@cesium/core"; */
 /** @import GeometryReader from "./GeometryReader.js"; */
+/** @import GeometryWriter from "./GeometryWriter.js"; */
 
 /**
- * An object that owns geometry: a {@link GeometryReader} for its vertices and
- * primitives, and the transform that places them in the scene.
- * <p>
- * Implement it to let code that consumes geometry, such as a mesh editor, read
- * and place any geometry the same way, regardless of which class owns it.
- * </p>
+ * An object that owns geometry: a {@link GeometryReader} and
+ * {@link GeometryWriter} for it, and the transform that places the geometry in the scene.
  *
  * @interface
  *
  * @see GeometryReader
+ * @see GeometryWriter
  * @see ModelPrimitive
  */
 class GeometrySource {
@@ -29,6 +27,16 @@ class GeometrySource {
    * @readonly
    */
   get geometryReader() {
+    return DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Writes the geometry, in its local space.
+   *
+   * @type {GeometryWriter}
+   * @readonly
+   */
+  get geometryWriter() {
     return DeveloperError.throwInstantiationError();
   }
 

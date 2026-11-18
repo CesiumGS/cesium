@@ -16,7 +16,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 /** @import { TypedArray } from "@cesium/core"; */
 /** @import Buffer from "../../Renderer/Buffer.js"; */
 /** @import { Attribute, Primitive, Quantization } from "../ModelComponents.js"; */
-/** @import { GeometryReadSessionOptions } from "../GeometryReader.js"; */
+/** @import { GeometryAccessOptions } from "../GeometryReader.js"; */
 /** @import GeometryReadSession, { GeometryAttributeReader, GeometryCornerAttributeReader, GeometryPrimitiveReader } from "../GeometryReadSession.js"; */
 
 /**
@@ -84,7 +84,7 @@ class ModelPrimitiveReadSession {
 
   /**
    * @param {Primitive} primitive The primitive to read.
-   * @param {Required<GeometryReadSessionOptions>} options The data to stage. All requested attributes must be available.
+   * @param {Required<GeometryAccessOptions>} options The data to stage. All requested attributes must be available.
    */
   constructor(primitive, options) {
     const attributes = primitive.attributes;
