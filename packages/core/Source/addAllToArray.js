@@ -1,3 +1,5 @@
+// @ts-check
+
 import defined from "./defined.js";
 
 /**
@@ -14,8 +16,9 @@ import defined from "./defined.js";
  * @function
  * @internal
  *
- * @param {Array} target The target array
- * @param {Array|undefined} source The source array
+ * @template T
+ * @param {T[]} target The target array
+ * @param {T[]|undefined} source The source array
  *
  * @example
  * const target = [ 0, 1, 2 ];

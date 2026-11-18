@@ -1,3 +1,5 @@
+// @ts-check
+
 import Cartesian2 from "./Cartesian2.js";
 import Cartographic from "./Cartographic.js";
 import Check from "./Check.js";
@@ -6,6 +8,8 @@ import Ellipsoid from "./Ellipsoid.js";
 import GeographicProjection from "./GeographicProjection.js";
 import Intersect from "./Intersect.js";
 import Rectangle from "./Rectangle.js";
+
+/** @import MapProjection from "./MapProjection.js"; */
 
 const defaultProjection = new GeographicProjection();
 const fromRectangleLowerLeft = new Cartographic();
@@ -155,7 +159,7 @@ class BoundingRectangle {
    * Computes a bounding rectangle from a rectangle.
    *
    * @param {Rectangle} rectangle The valid rectangle used to create a bounding rectangle.
-   * @param {object} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
+   * @param {MapProjection} [projection=GeographicProjection] The projection used to project the rectangle into 2D.
    * @param {BoundingRectangle} [result] The object onto which to store the result.
    * @returns {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
    */

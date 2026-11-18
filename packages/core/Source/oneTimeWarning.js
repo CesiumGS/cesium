@@ -1,6 +1,9 @@
+// @ts-check
+
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
+/** @type {Object<string, boolean>} */
 const warnings = {};
 
 /**
