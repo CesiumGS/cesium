@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-18
 outcome: "The owner has decided which projects get initiatives of their own and which release gates the tracker has."
-constraints: [CS-388 c?, CS-455 c?]
+constraints: [CS-388 c?, CS-455 c?, CS-679 c?, CS-680 c?]
 ---
 
 ## Done when

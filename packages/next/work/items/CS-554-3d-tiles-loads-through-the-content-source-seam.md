@@ -2,7 +2,7 @@
 id: CS-554
 title: 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 kind: work
-state: proposed
+state: planned
 created: 2026-11-16
 project: CS-191
 needs: [CS-552]
@@ -16,3 +16,5 @@ Proposed under the owner's call to load every kind of source through one module 
 ## Done when
 
 - Set by CS-552's plan.
+
+Committed by the owner's release plan on 2026-11-17 (`docs/decisions/2026-11-17-release-plan-and-parity.md`).

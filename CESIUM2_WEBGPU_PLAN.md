@@ -70,6 +70,7 @@ The public API is open to breaking changes. 1.x serves two roles only: it is the
 - [Owner's calls for the later plans](docs/decisions/2026-11-08-owners-calls-for-later-plans.md): The owner's calls of 2026-11-08 and 2026-11-09 for the later plans: stars and sky data, deep-sky objects, planets, retiring Entity, and the follow-ups they set.
 - [Architecture decisions (2026-11-13)](docs/decisions/2026-11-13-architecture-decisions.md): The owner's architecture decisions from the 2026-11-13 discussion: threading, jobs, the core IR, warps, loading as refinement, inspector rules.
 - [Content sources as modules (2026-11-16)](docs/decisions/2026-11-16-content-sources-as-modules.md): The owner's call that content from many kinds of source (3D Tiles, MVT, Esri services, glTF files, USD, the globe) loads through one module seam, built now.
+- [The release plan and parity with 1.x (2026-11-17)](docs/decisions/2026-11-17-release-plan-and-parity.md): The owner's calls on what 2.0 drops from 1.x, what it keeps as modules, how it's packaged, and what each release on the ladder needs, with the trust and evals track.
 
 ### Design
 

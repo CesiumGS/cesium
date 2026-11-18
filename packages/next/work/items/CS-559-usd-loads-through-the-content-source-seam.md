@@ -2,7 +2,7 @@
 id: CS-559
 title: USD loads through the content-source seam
 kind: work
-state: proposed
+state: planned
 created: 2026-11-16
 project: CS-191
 needs: [CS-552]
@@ -16,3 +16,5 @@ USD loads as a source through the seam. Related: CS-304 (`BrepSource.fromUsd`) a
 ## Done when
 
 - Set by CS-552's plan.
+
+Committed by the owner's release plan on 2026-11-17 (`docs/decisions/2026-11-17-release-plan-and-parity.md`).

@@ -2,7 +2,7 @@
 id: CS-555
 title: The globe's terrain and imagery load through the content-source seam
 kind: work
-state: proposed
+state: planned
 created: 2026-11-16
 project: CS-191
 needs: [CS-552]
@@ -16,3 +16,5 @@ The globe's terrain and imagery load through the same content-source seam as oth
 ## Done when
 
 - Set by CS-552's plan.
+
+Committed by the owner's release plan on 2026-11-17 (`docs/decisions/2026-11-17-release-plan-and-parity.md`).

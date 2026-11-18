@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-15
 project: CS-18
-needs: [CS-529, CS-532]
+needs: [CS-529, CS-532, CS-608, CS-678]
 release: 2.0.0
 ---
 

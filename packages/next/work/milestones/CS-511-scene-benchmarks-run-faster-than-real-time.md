@@ -2,7 +2,7 @@
 id: CS-511
 title: Scene benchmarks run faster than real time
 kind: milestone
-state: proposed
+state: planned
 created: 2026-11-15
 project: CS-195
 outcome: The scene suite can run faster than real time on a simulated network, its results agree with real-time runs for every metric it reports, and any run can still choose real time on a simulated or a real network.
@@ -20,3 +20,5 @@ To shape: clauses (c1, c2…), each checkable, and the independent check. CS-515
 ## Notes
 
 Builds on CS-328's link-shaping content server (real-time network profiles).
+
+Committed by the owner's release plan on 2026-11-17 (`docs/decisions/2026-11-17-release-plan-and-parity.md`).
