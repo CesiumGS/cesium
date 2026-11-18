@@ -6,3 +6,13 @@ export * from "./types.ts";
 export { OPS, applyValue, typeOf, typeOfValue } from "./ops.ts";
 export { Builder, shapeKey } from "./builder.ts";
 export { evaluate, print } from "./evaluate.ts";
+export {
+  emitWgsl,
+  emitWgslKernel,
+  f32Literal,
+  packUniforms,
+  uniformSlots,
+  type EmitOptions,
+  type EmittedWgsl,
+  type UniformSlot,
+} from "./wgsl.ts";

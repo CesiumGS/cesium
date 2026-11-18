@@ -126,6 +126,9 @@ const suites = {
     `/parity/tileset.html?bench${process.env.ION_ASSET ? `&asset=${process.env.ION_ASSET}` : ""}${process.env.PICK_PROPERTY ? `&pick=${process.env.PICK_PROPERTY}` : ""}${process.env.TILESET_ZOOM ? `&zoom=${process.env.TILESET_ZOOM}` : ""}${process.env.TILESET_STYLES ? "&styles" : ""}`,
     "runTileset",
   ],
+  // Cesium IR's WGSL emitter: Chrome compiles every test module, and the GPU's
+  // answers are read back against the float64 evaluator (CS-51).
+  irWgsl: ["/bench/irWgsl.html?bench", "runIrWgsl"],
   // Driven through CDP by `allocSuite` below.
   alloc: ["/bench/alloc.html", "allocSetup"],
 };
