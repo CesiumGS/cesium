@@ -72,6 +72,13 @@ function Buffer(options) {
   this._sizeInBytes = sizeInBytes;
   this._usage = usage;
   this._buffer = buffer;
+
+  /**
+   * Whether a {@link VertexArray} that uses the buffer destroys it.
+   *
+   * @type {boolean}
+   * @default true
+   */
   this.vertexArrayDestroyable = true;
 }
 

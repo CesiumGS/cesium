@@ -19,6 +19,7 @@ import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
 /** @import { MeshComponentKeys } from "./ComponentKeys.js"; */
 /** @import MeshEditorGroup from "./MeshEditorGroup.js"; */
 /** @import MeshEditorStyle from "./MeshEditorStyle.js"; */
+/** @import Deformer from "./Deformer.js"; */
 
 /**
  * <div class="notice">
@@ -121,6 +122,14 @@ class Mesh {
       style: options.style,
       modelMatrix: this.source.worldMatrix,
     });
+
+    /**
+     * The deformers that deform with this mesh.
+     *
+     * @type {Set<Deformer>}
+     * @ignore
+     */
+    this._deformers = new Set();
 
     // TODO: consider an interface that guarantees the source can be shown/hidden.
     const { source } = this;
@@ -677,6 +686,17 @@ class Mesh {
   }
 
   /**
+   * The wasm editor holding the mesh.
+   *
+   * @type {WasmMeshEditor}
+   * @readonly
+   * @ignore
+   */
+  get _wasmEditor() {
+    return this.#wasmEditor;
+  }
+
+  /**
    * Updates the renderer. Draws nothing when <code>show</code> is false, but
    * still uploads the overlay views.
    *
@@ -688,6 +708,23 @@ class Mesh {
     const renderer = this._renderer;
     renderer.show = this.show;
     renderer.update(frameState, overlayViews);
+
+    this.#postUpdate(frameState, overlayViews?.fullRefresh ?? false);
+  }
+
+  /**
+   * Runs on render passes, after the overlay is uploaded.
+   *
+   * @param {FrameState} frameState The frame state.
+   * @param {boolean} [topologyChanged] Whether the mesh's topology changed since the previous update.
+   * @ignore
+   */
+  #postUpdate(frameState, topologyChanged) {
+    if (frameState.passes.render) {
+      for (const deformer of this._deformers) {
+        deformer._update(frameState, topologyChanged);
+      }
+    }
   }
 
   /**
@@ -698,12 +735,16 @@ class Mesh {
   }
 
   /**
-   * Destroys the overlay renderer and shows the source, if it has a
+   * Destroys the mesh's resources and shows the source, if it has a
    * <code>show</code> property. Called by the editor when it removes the mesh.
    *
    * @ignore
    */
   _destroy() {
+    for (const deformer of this._deformers) {
+      deformer.destroy();
+    }
+
     this._renderer.destroy();
 
     const { source } = this;
