@@ -20,6 +20,8 @@
 
 - Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
 - Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
+- Added experimental `VectorPrimitive` and `CircleVectorPrimitive`. A vector primitive draws a `BufferPrimitiveCollection` with styling held by the vector primitive instead of per-primitive materials, and several vector primitives may draw the same collection. `CircleVectorPrimitive` draws points with a radius, fill color, and outline. [#13932](https://github.com/CesiumGS/cesium/pull/13932)
+- `CircleVectorPrimitive` can style each point individually, e.g. `radius: (point) => ...`, and `filter` selects which points are drawn. [#13942](https://github.com/CesiumGS/cesium/pull/13942)
 - Added experimental feature layers for showing and hiding named sets of features: `Cesium3DTileset.featureLayers` for tilesets (using 3D Tiles 1.1 groups), and `GeoJsonFeatureLayerProvider` (a `FeatureLayerProvider`) for standalone GeoJSON layers. [#13921](https://github.com/CesiumGS/cesium/pull/13921)
 
 #### Fixes :wrench:
@@ -35,6 +37,11 @@
 - Fixed slow loading of models and tilesets using the `CESIUM_primitive_outline` extension, and reduced the size of their outline vertex buffers. [#12084](https://github.com/CesiumGS/cesium/pull/12084)
 - Fixed `Scene.pickVoxel` returning the wrong cell for tiles with more than 65,280 samples, and returning a cell when no voxel sample was rendered at the pick position. [#13950](https://github.com/CesiumGS/cesium/issues/13950)
 - Fixed a crash in `ImageryLayer` when computing tile imagery skeletons for rectangles that do not intersect the imagery provider's bounds. [#13964](https://github.com/CesiumGS/cesium/pull/13694)
+- Fixed GPX loading failing when descriptive fields contain URLs by using the current Autolinker replacement callback signature. [#13944](https://github.com/CesiumGS/cesium/pull/13944)
+- Fixed WebGL contexts not being released when a `Viewer` or `CesiumWidget` is destroyed. [#11533](https://github.com/CesiumGS/cesium/issues/11533)
+- Fixed tiles failing to load when their tile or content metadata uses a class missing from the root tileset's schema. The metadata is now ignored with a warning. [#14050](https://github.com/CesiumGS/cesium/pull/14050)
+- Fixed `MVTDataProvider` freezing or running out of memory on load when `maxZoom` is high. Tiles are now created as they come into view. [#13867](https://github.com/CesiumGS/cesium/pull/13867)
+- Fixed `BufferPrimitiveCollection` rendering nothing after `destroy()`. [#13895](https://github.com/CesiumGS/cesium/pull/13895)
 
 ## 1.147 - 2026-11-02
 

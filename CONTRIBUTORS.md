@@ -478,6 +478,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Silvi Kabra](https://github.com/silvikabra1)
 - [Mhayk Whandson](https://github.com/mhayk)
 - [TianHengZhuang](https://github.com/TianHengZhuang)
+- [Rayan Abdul Cader](https://github.com/minutechreview)
 - [Yu Cheng](https://github.com/KtzeAbyss)
 - [Peter Mayrhofer](https://github.com/mapeGeoinfo)
 - [Mike](https://github.com/dev1837457)
