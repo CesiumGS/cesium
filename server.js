@@ -18,11 +18,7 @@ import {
   createIndexJs,
   getWorkspaces,
 } from "./scripts/build-utilities.js";
-import {
-  createCesiumJs,
-  createCombinedSpecList,
-  buildCesium,
-} from "./scripts/build.js";
+import { createCombinedSpecList, buildCesium } from "./scripts/build.js";
 
 /** @import {BuildContext} from "esbuild"; */
 /** @import {CesiumBundles, FileGlobs, Workspace} from "./scripts/build-utilities.js"; */
@@ -356,7 +352,6 @@ const throttle = (callback) => {
           /** @type {Workspace} */ (workspace),
           contexts.packageSourceGlobs[workspace],
         );
-        await createCesiumJs();
       });
     }
 
