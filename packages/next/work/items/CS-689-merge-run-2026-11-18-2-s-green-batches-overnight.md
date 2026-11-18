@@ -2,10 +2,14 @@
 id: CS-689
 title: Merge run 2026-11-18-2's green batches overnight
 kind: decision
-state: planned
+state: done
 created: 2026-11-18
 project: CS-18
 decider: owner
+answer: "A. Merge green batches overnight: After each green check (typecheck, hitld work check, full suite, deviations named), the orchestrator fast-forwards main, regenerates the views, logs the merge as a call marked Claude reviewed, and lists it under merged overnight with its presentation file. It ends at 07:00 or when the run's scope is done."
+answered_at: 2026-11-18T12:30:14.443Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
