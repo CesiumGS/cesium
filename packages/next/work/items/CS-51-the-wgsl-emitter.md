@@ -2,10 +2,11 @@
 id: CS-51
 title: The WGSL emitter
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-10
 needs: [CS-48, CS-570]
+claimed_by: D-23
 touches: [packages/next/src/ir/**]
 ---
 
