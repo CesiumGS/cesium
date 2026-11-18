@@ -253,7 +253,7 @@ graph LR
     CS_387["CS-387 Slang and Tint: counted loops pay Tint's loop guard"]:::external
   end
   subgraph CS_188["Earth to Moon (frames 5c to 5h)"]
-    CS_200["CS-200 Volumes, horizon culling and selection on the content's body"]:::open
+    CS_200["CS-200 Volumes, horizon culling and selection on the content's body"]:::done
     CS_201["CS-201 Clamping, heights, models, point sources and picks per body"]:::open
     CS_202["CS-202 A view on another body"]:::open
     CS_203["CS-203 Depth across bodies"]:::open
@@ -294,7 +294,7 @@ graph LR
     CS_238["CS-238 Approximations of launch smoke and the splashdown splash"]:::open
     CS_439["CS-439 The sky's fallback per route edge or for the whole sky, and exp"]:::open
     CS_444["CS-444 Ray artifacts in the lunar terrain's shadows"]:::open
-    CS_566["CS-566 CS-200: the globe and lod parity suites need the ion token in e"]:::decision
+    CS_566["CS-566 CS-200: the globe and lod parity suites need the ion token in e"]:::done
   end
   subgraph CS_189["Frames and engineering coordinates follow-ups"]
     CS_239["CS-239 'accuracyOf' and the explorer's walk composed on 'separationAcc"]:::open
@@ -430,6 +430,7 @@ graph LR
     CS_515["CS-515 Faster-than-real-time runs against real-time runs: which metric"]:::proposed
     CS_541["CS-541 The parity tests compare against CesiumJS 1.147.0, pinned"]:::open
     CS_542["CS-542 Every parity result names its oracle"]:::open
+    CS_568["CS-568 The lod parity page reads the tileset's selection policy where "]:::open
   end
   subgraph CS_196["Infrastructure and geoscience capabilities"]
     CS_337["CS-337 Scalar fields on any geometry: values, colour ramps, legends an"]:::proposed

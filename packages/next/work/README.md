@@ -471,11 +471,11 @@ Milestone: Issues found for other teams are filed and answered ([CS-505](./miles
 
 ### Earth to Moon (frames 5c to 5h)
 
-[CS-188](./projects/CS-188-earth-to-moon-frames-5c-to-5h.md), Planned, led by owner: 0 of 42 done, 10 ready, 32 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-188](./projects/CS-188-earth-to-moon-frames-5c-to-5h.md), Planned, led by owner: 2 of 42 done, 10 ready, 30 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The Earth and the Moon render together ([CS-424](./milestones/CS-424-the-earth-and-the-moon-render-together.md), Planned)
 
-- [ ] [CS-200](./items/CS-200-volumes-horizon-culling-and-selection-on-the.md) Volumes, horizon culling and selection on the content's body. Needs CS-566.
+- [x] [CS-200](./items/CS-200-volumes-horizon-culling-and-selection-on-the.md) Volumes, horizon culling and selection on the content's body. Done.
 - [ ] [CS-201](./items/CS-201-clamping-heights-models-point-sources-and-picks.md) Clamping, heights, models, point sources and picks per body. Needs CS-200.
 - [ ] [CS-202](./items/CS-202-a-view-on-another-body.md) A view on another body. Needs CS-201.
 - [ ] [CS-203](./items/CS-203-depth-across-bodies.md) Depth across bodies. Needs CS-202.
@@ -534,7 +534,7 @@ Milestone: Launch and re-entry fill in the replay ([CS-429](./milestones/CS-429-
 
 No milestone
 
-- [ ] [CS-566](./items/CS-566-cs-200-the-globe-and-lod-parity-suites-need-the.md) decision: CS-200: the globe and lod parity suites need the ion token in executor worktrees. Needs nothing. Decided by owner.
+- [x] [CS-566](./items/CS-566-cs-200-the-globe-and-lod-parity-suites-need-the.md) decision: CS-200: the globe and lod parity suites need the ion token in executor worktrees. Done.
 
 ### Frames and engineering coordinates follow-ups
 
@@ -730,7 +730,7 @@ No milestone
 
 ### Benchmarks, parity and image regression
 
-[CS-195](./projects/CS-195-benchmarks-parity-and-image-regression.md), Planned, led by owner: 0 of 22 done, 9 ready, 5 blocked, 8 proposed. Plan: [benchmark-suite.md](../../../docs/design/benchmark-suite.md).
+[CS-195](./projects/CS-195-benchmarks-parity-and-image-regression.md), Planned, led by owner: 0 of 23 done, 10 ready, 5 blocked, 8 proposed. Plan: [benchmark-suite.md](../../../docs/design/benchmark-suite.md).
 
 Milestone: Benchmarks run per merge on dedicated machines ([CS-482](./milestones/CS-482-benchmarks-run-per-merge-on-dedicated-machines.md), Planned)
 
@@ -748,6 +748,7 @@ Milestone: Image regression and parity are checked in CI ([CS-483](./milestones/
 - [ ] [CS-448](./items/CS-448-energy-compensation-for-coloured-metals-against.md) Energy compensation for coloured metals, against a multiple-scattering reference. Needs nothing.
 - [ ] [CS-541](./items/CS-541-the-parity-tests-compare-against-cesiumjs-1-147.md) The parity tests compare against CesiumJS 1.147.0, pinned. Needs nothing.
 - [ ] [CS-542](./items/CS-542-every-parity-result-names-its-oracle.md) Every parity result names its oracle. Needs CS-541.
+- [ ] [CS-568](./items/CS-568-the-lod-parity-page-reads-the-tileset-s.md) The lod parity page reads the tileset's selection policy where it lives now. Needs nothing.
 
 Milestone: The performance targets are met or the gaps explained ([CS-484](./milestones/CS-484-the-performance-targets-are-met-or-the-gaps.md), Planned)
 

@@ -117,8 +117,8 @@ CS-423 Measurements set the default thread [Planned], under CS-13 The worker-mod
 
 CS-424 The Earth and the Moon render together [Planned], under CS-188 Earth to Moon (frames 5c to 5h)
   outcome: One world draws the Earth and the Moon from either body or between. The Moon's impostor hands over to its tileset without a jump, and picks report each body's coordinates.
-  constraints: 0 of 11 done
-  unmet: not linked to a clause yet (open: CS-200, CS-201, CS-202, CS-203, CS-204, CS-205, CS-206, CS-207, CS-208, CS-209, CS-210; check not passed)
+  constraints: 1 of 11 done
+  unmet: not linked to a clause yet (open: CS-201, CS-202, CS-203, CS-204, CS-205, CS-206, CS-207, CS-208, CS-209, CS-210; check not passed)
   to shape: done_when; check; link CS-200, CS-201, CS-202, CS-203, CS-204, CS-205, CS-206, CS-207, CS-208, CS-209, CS-210 to a clause
 
 CS-425 Cameras move freely on any body [Planned], under CS-188 Earth to Moon (frames 5c to 5h)
@@ -330,9 +330,9 @@ CS-482 Benchmarks run per merge on dedicated machines [Planned], under CS-195 Be
 
 CS-483 Image regression and parity are checked in CI [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: SwiftShader runs image checks and the parity pages in CI, custom shaders and feature styles match 1.x, and coloured metals match a multiple-scattering reference.
-  constraints: 0 of 5 done
-  unmet: not linked to a clause yet (open: CS-327, CS-330, CS-448, CS-541, CS-542; check not passed)
-  to shape: done_when; check; link CS-327, CS-330, CS-448, CS-541, CS-542 to a clause
+  constraints: 0 of 6 done
+  unmet: not linked to a clause yet (open: CS-327, CS-330, CS-448, CS-541, CS-542, CS-568; check not passed)
+  to shape: done_when; check; link CS-327, CS-330, CS-448, CS-541, CS-542, CS-568 to a clause
 
 CS-484 The performance targets are met or the gaps explained [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: Throttled network scenarios run against a link-shaping server, Dyno's guardrails are revisited per scene, and every performance target, multi-view included, is met or its gap explained.

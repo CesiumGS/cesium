@@ -22,8 +22,6 @@ CS-14 Level-of-detail transitions
 
 CS-188 Earth to Moon (frames 5c to 5h)
   CS-210  Should a world clip cut the Moon's impostor? (owner)
-  CS-566  CS-200: the globe and lod parity suites need the ion token in executor worktrees (owner)
-      waited on by CS-200
 
 CS-189 Frames and engineering coordinates follow-ups
   CS-244  Should Cesium ion host PROJ grids, with CORS and cropped tiles? (owner)
@@ -93,5 +91,5 @@ CS-18 The work tracker
 CS-10 Cesium IR
   CS-546  The builder's x + 0 rewrite and the spec's signed zero (owner)
 
-34 open decision(s) for owner
+33 open decision(s) for owner
 ```

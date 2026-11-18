@@ -52,7 +52,7 @@ CS-19 Follow-ups for other teams [Planned], led by owner
   waits on: nothing open
   waited on by: nothing open
 CS-188 Earth to Moon (frames 5c to 5h) [Planned], led by owner
-  0 of 42 done, 10 ready, 32 blocked
+  2 of 42 done, 10 ready, 30 blocked
   waits on: nothing open
   waited on by: CS-191 Content sources and formats (1); CS-192 Sky, light and atmosphere (4); CS-193 B-reps and geometry queries (1); CS-196 Infrastructure and geoscience capabilities (2)
 CS-189 Frames and engineering coordinates follow-ups [Planned], led by owner
@@ -80,7 +80,7 @@ CS-194 Budgeted selection and memory [Planned], led by owner
   waits on: nothing open
   waited on by: nothing open
 CS-195 Benchmarks, parity and image regression [Planned], led by owner
-  0 of 22 done, 9 ready, 5 blocked, 8 proposed
+  0 of 23 done, 10 ready, 5 blocked, 8 proposed
   waits on: CS-389 Dyno as the development harness (2); CS-191 Content sources and formats (1)
   waited on by: nothing open
 CS-196 Infrastructure and geoscience capabilities [Planned], led by owner

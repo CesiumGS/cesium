@@ -327,10 +327,6 @@ CS-17 The transform graph
       ← CS-385 Spike: height-keyed tint and haze under exaggeration, drawn against true height
 
 CS-188 Earth to Moon (frames 5c to 5h)
-  CS-200  Volumes, horizon culling and selection on the content's body
-      ← CS-566 CS-200: the globe and lod parity suites need the ion token in executor worktrees
-  CS-201  Clamping, heights, models, point sources and picks per body
-      ← CS-200 Volumes, horizon culling and selection on the content's body
   CS-202  A view on another body
       ← CS-201 Clamping, heights, models, point sources and picks per body
   CS-203  Depth across bodies
@@ -516,5 +512,5 @@ CS-18 The work tracker
       ← CS-529 Which milestones does 2.0.0 need?
         CS-532 Release 2.0.0-rc.1
 
-186 blocked
+184 blocked
 ```

@@ -414,11 +414,11 @@ Milestone: Issues found for other teams are filed and answered (CS-505, Planned)
 
 ### Earth to Moon (frames 5c to 5h)
 
-CS-188, Planned, led by owner: 0 of 42 done, 10 ready, 32 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-188, Planned, led by owner: 2 of 42 done, 10 ready, 30 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The Earth and the Moon render together (CS-424, Planned)
 
-- [ ] CS-200 Volumes, horizon culling and selection on the content's body. Needs CS-566.
+- [x] CS-200 Volumes, horizon culling and selection on the content's body. Done.
 - [ ] CS-201 Clamping, heights, models, point sources and picks per body. Needs CS-200.
 - [ ] CS-202 A view on another body. Needs CS-201.
 - [ ] CS-203 Depth across bodies. Needs CS-202.
@@ -477,7 +477,7 @@ Milestone: Launch and re-entry fill in the replay (CS-429, Planned)
 
 No milestone
 
-- [ ] CS-566 decision: CS-200: the globe and lod parity suites need the ion token in executor worktrees. Needs nothing. Decided by owner.
+- [x] CS-566 decision: CS-200: the globe and lod parity suites need the ion token in executor worktrees. Done.
 
 ### Frames and engineering coordinates follow-ups
 
@@ -673,7 +673,7 @@ No milestone
 
 ### Benchmarks, parity and image regression
 
-CS-195, Planned, led by owner: 0 of 22 done, 9 ready, 5 blocked, 8 proposed. Plan: [benchmark-suite.md](docs/design/benchmark-suite.md).
+CS-195, Planned, led by owner: 0 of 23 done, 10 ready, 5 blocked, 8 proposed. Plan: [benchmark-suite.md](docs/design/benchmark-suite.md).
 
 Milestone: Benchmarks run per merge on dedicated machines (CS-482, Planned)
 
@@ -691,6 +691,7 @@ Milestone: Image regression and parity are checked in CI (CS-483, Planned)
 - [ ] CS-448 Energy compensation for coloured metals, against a multiple-scattering reference. Needs nothing.
 - [ ] CS-541 The parity tests compare against CesiumJS 1.147.0, pinned. Needs nothing.
 - [ ] CS-542 Every parity result names its oracle. Needs CS-541.
+- [ ] CS-568 The lod parity page reads the tileset's selection policy where it lives now. Needs nothing.
 
 Milestone: The performance targets are met or the gaps explained (CS-484, Planned)
 
