@@ -9,9 +9,8 @@ outcome: "Whichever way an app reaches the engine (the main entry, the advanced 
 done_when:
   - "c1: An app that imports only `@cesium/next` sees no GPU type; hosts that share a device, tools and tests get `GpuDevice`, `DeviceFacts`, `LimitsTier` and the personas from `@cesium/next/gpu`, where `engine.facts` replaces `Engine.capabilities`."
   - "c2: A Viewer and a bare `Engine` give the same default look from one defaults table (shadows on as preferred, ambient occlusion on as extra); the Viewer's World capacities come from device limits, and any clamp is reported."
-  - "c3: In worker mode, `view.support`, `view.effective` and `view.explain()` return what they return on the main thread, and under `strict` a pinned step that can't run throws synchronously on the main thread in both modes."
   - "c4: An app, or a second renderer, can give `Engine.queries` its own ray backends, and `castRays` and standing queries answer through them."
-constraints: [CS-28 c1, CS-29 c2, CS-31 c3, CS-368 c4]
+constraints: [CS-28 c1, CS-29 c2, CS-368 c4]
 check: "integration-test test/profileEntryPoints.test.ts"
 ---
 
@@ -30,3 +29,5 @@ To be written: a view built three ways on the fake devices (a bare `Engine`, the
 ## Notes
 
 Proposed on 2026-11-15 for items no milestone held, and applied on the owner's answer. Its 5 items are constraints marked `c?` until shaping links each to a clause.
+
+On 2026-11-17 the owner moved CS-31 (the worker mode's snapshots) and its clause c3 to CS-456, with worker mode, so this milestone doesn't wait on worker-mode work.
