@@ -120,10 +120,21 @@ milestones named by their outcome, each with an `outcome` sentence,
   `hitld work claims`, `check` and `show`). The page checks the version and
   says so when hitld is missing or answers in another. The state history
   behind Flow is the one read from git, since the read API has none yet.
-  Long outcomes (milestones with no parent) take the place initiatives
-  had; a project reaches one through its milestones.
+- **No long outcomes, and nothing dropped.** The owner retired long
+  outcomes (milestones with no parent) on 2026-11-17
+  (`docs/decisions/2026-11-17-release-plan-and-parity.md`): human-in-the-lead's
+  next release has plain milestones only, and CS-1 to CS-7, CS-436 and
+  CS-525 are dropped. So the page no longer groups by them: the roadmap's
+  Long outcomes view, the scope's long-outcome lines and "No long outcome"
+  group, and the project pane's long outcome are gone, with the code that
+  grouped by them (CS-684). Grouping by work that won't happen made "No
+  long outcome" the biggest group and hid the projects' real order. The
+  page reads the snapshot without dropped milestones (`withoutDropped` in
+  `work.ts`), so none is in a roadmap, a lane, the scope or a count. The
+  adapter still passes on what hitld's read API reports about them; the
+  page reads none of it.
 - **Scope, search and views.** At the top, a labeled Scope button names
-  the scope (all work, a long outcome, a project, a milestone) and opens
+  the scope (all work, a project, a milestone) and opens
   the picker; the lines above the scope follow it, to go back up, with a
   button back to all work. A Search field sits beside it; both narrow
   every view. Below them, the views are tabs, whose rule runs into the
@@ -149,8 +160,7 @@ milestones named by their outcome, each with an `outcome` sentence,
     How they change is Flow's. The rail's count is the owner's, and it
     is the only count outside the view.
   - **Roadmap**: what comes after what, without dates. By milestones (a
-    map or a list), by long outcomes or projects, or as the projects'
-    waits on each other. The milestone map runs across in steps or in
+    map or a list), or as the projects' waits on each other. The milestone map runs across in steps or in
     tokens left; each milestone starts once everything it waits on is
     done, and a milestone waits on another when one of its items needs
     one of the other's. Two layouts: project lanes, or fewest crossings
@@ -176,9 +186,8 @@ milestones named by their outcome, each with an `outcome` sentence,
     guessed place: its flag sits dashed in "Releases not placed yet"
     above the grid, and its tip says what it waits on. The fewest
     crossings layout flies the flags over the gaps between step columns.
-    The list puts each flag between the steps it falls between, and the
-    long outcomes' steps place a release after the last outcome that
-    holds a milestone it needs. The project waits matrix has no steps:
+    The list puts each flag between the steps it falls between. The
+    project waits matrix has no steps:
     it lists the flags above the table, and one in view marks the
     projects whose milestones feed it. A milestone with an
     item done or in progress is filled; a milestone's pane gives its

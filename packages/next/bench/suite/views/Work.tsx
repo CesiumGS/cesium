@@ -29,7 +29,6 @@ import { svgFlag } from "@stratakit/icons/flag";
 import { svgFolderOpen } from "@stratakit/icons/folder-open";
 import { svgGitBranch } from "@stratakit/icons/git-branch";
 import { svgInfo } from "@stratakit/icons/info";
-import { svgLayers } from "@stratakit/icons/layers";
 import { svgSearch } from "@stratakit/icons/search";
 import { Icon } from "@stratakit/mui";
 import {
@@ -42,7 +41,6 @@ import {
   Fragment,
   type ReactNode,
   type RefObject,
-  useCallback,
   useEffect,
   useId,
   useLayoutEffect,
@@ -94,12 +92,10 @@ import {
   releaseFlagsOf,
   isReleaseItem,
   type RoadmapRow,
-  roadmapOf,
   ownerQueue,
   type Stage,
   STAGE_NAMES,
   STATE_NAMES,
-  NO_LONG_OUTCOME,
   UNSHAPED,
   STAGES,
   stageOf,
@@ -234,13 +230,12 @@ function useWidth(ref: RefObject<HTMLElement | null>): number {
   return width;
 }
 
-type ScopeKind = "outcome" | "project" | "milestone";
-/** The scope: any mix of long outcomes, projects and milestones; none is all work. */
+type ScopeKind = "project" | "milestone";
+/** The scope: any mix of projects and milestones; none is all work. */
 type ScopeSet = Record<ScopeKind, string[]>;
-const SCOPE_KINDS: ScopeKind[] = ["outcome", "project", "milestone"];
+const SCOPE_KINDS: ScopeKind[] = ["project", "milestone"];
 const listOf = (v?: string) => (v ? v.split(",").filter(Boolean) : []);
 const scopeSetOf = (search: WorkSearch): ScopeSet => ({
-  outcome: listOf(search.outcome),
   project: listOf(search.project),
   milestone: listOf(search.milestone),
 });
@@ -249,8 +244,7 @@ const scopeSearch = (set: ScopeSet): Partial<WorkSearch> =>
   Object.fromEntries(
     SCOPE_KINDS.map((k) => [k, set[k].join(",") || undefined]),
   );
-const scopeSize = (set: ScopeSet) =>
-  set.outcome.length + set.project.length + set.milestone.length;
+const scopeSize = (set: ScopeSet) => set.project.length + set.milestone.length;
 
 function Board({
   s,
@@ -277,13 +271,12 @@ function Board({
   );
   const chosen = useMemo(
     () => scopeSetOf(search),
-    [search.outcome, search.project, search.milestone],
+    [search.project, search.milestone],
   );
   const size = scopeSize(chosen);
   // One line chosen, of one kind: the views that read one scope's shape.
   const oneOf = (k: ScopeKind) =>
     size === 1 && chosen[k].length === 1 ? chosen[k][0] : undefined;
-  const oneOutcome = oneOf("outcome");
   const oneProject = oneOf("project");
   const milestoneId = oneOf("milestone");
   // Everything the scope's lines hold, together.
@@ -298,20 +291,13 @@ function Board({
     );
     return s.items.filter(
       (it) =>
-        chosen.project.includes(it.project ?? "") ||
-        chosen.outcome.includes(
-          projectOf.get(it.project ?? "")?.long_outcome ?? "",
-        ) ||
-        constraints.has(it.id),
+        chosen.project.includes(it.project ?? "") || constraints.has(it.id),
     );
-  }, [s, chosen, size, projectOf]);
+  }, [s, chosen, size]);
   const msInScope = (m: WorkMilestone) =>
     !size ||
     chosen.milestone.includes(m.id) ||
-    chosen.project.includes(m.project ?? "") ||
-    chosen.outcome.includes(
-      m.long_outcome ?? projectOf.get(m.project ?? "")?.long_outcome ?? "",
-    );
+    chosen.project.includes(m.project ?? "");
   const itemOf = useMemo(() => new Map(s.items.map((i) => [i.id, i])), [s]);
   const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
   const unblocks = useMemo(() => unblocksOf(s), [s]);
@@ -356,7 +342,6 @@ function Board({
   /** Scopes to one line (or all work), replacing the scope. */
   const scopeTo = (patch: Partial<WorkSearch>) =>
     set({
-      outcome: undefined,
       project: undefined,
       milestone: undefined,
       ...patch,
@@ -375,9 +360,7 @@ function Board({
   const scopeTitle = (kind: ScopeKind, id: string) =>
     (kind === "milestone"
       ? s.milestones.find((m) => m.id === id)?.title
-      : kind === "project"
-        ? projectOf.get(id)?.title
-        : s.long_outcomes.find((i) => i.id === id)?.title) ?? id;
+      : projectOf.get(id)?.title) ?? id;
   const scopeNames = SCOPE_KINDS.flatMap((k) =>
     chosen[k].map((id) => scopeTitle(k, id)),
   );
@@ -385,10 +368,7 @@ function Board({
     scopeNames.length > 2
       ? `${scopeNames[0]} and ${scopeNames.length - 1} more`
       : scopeNames.join(" and ") || undefined;
-  const roadmapBy =
-    search.roadmap === "groups" || search.roadmap === "matrix"
-      ? search.roadmap
-      : "milestones";
+  const roadmapBy = search.roadmap === "matrix" ? "matrix" : "milestones";
   const projectScope = !!oneProject;
   // The view's own width: the pane, when inline, takes 400 px of the layout.
   const mainWidth =
@@ -457,7 +437,6 @@ function Board({
               onScope={(go) =>
                 go.milestone
                   ? set({
-                      outcome: undefined,
                       project: undefined,
                       milestone: go.milestone,
                       list: `ms:${go.milestone}`,
@@ -620,9 +599,7 @@ function Board({
                       ? "What it waits on, and what waits on it"
                       : roadmapBy === "matrix"
                         ? "Each row's open items that wait on each column's"
-                        : roadmapBy === "groups" && oneOutcome
-                          ? "The most open work first; choose one to scope to it"
-                          : "In the order their work can happen, from the needs between their items"
+                        : "In the order their work can happen, from the needs between their items"
                   }
                   className="span-12"
                   tools={
@@ -726,12 +703,6 @@ function Board({
                             Milestones
                           </ToggleButton>
                           <ToggleButton
-                            value="groups"
-                            render={<Button variant="outlined" size="small" />}
-                          >
-                            {oneOutcome ? "Projects" : "Long outcomes"}
-                          </ToggleButton>
-                          <ToggleButton
                             value="matrix"
                             render={<Button variant="outlined" size="small" />}
                           >
@@ -758,21 +729,6 @@ function Board({
                       onCell={(from, to) => open(`dep:${from}:${to}`)}
                       onProject={(id) => scopeTo({ project: id })}
                     />
-                  ) : roadmapBy === "groups" && oneOutcome ? (
-                    <ProjectBars
-                      s={s}
-                      items={items}
-                      flight={flight}
-                      single={false}
-                      onProject={(id) => scopeTo({ project: id })}
-                      onSegment={(id, st) =>
-                        set({
-                          project: id,
-                          outcome: undefined,
-                          list: `stage:${st}`,
-                        })
-                      }
-                    />
                   ) : roadmapBy === "milestones" && asMap ? (
                     <MilestoneMap
                       s={s}
@@ -797,33 +753,14 @@ function Board({
                     <Roadmap
                       s={s}
                       flight={flight}
-                      by={roadmapBy === "groups" ? "outcomes" : "milestones"}
                       inScope={size ? msInScope : undefined}
                       selected={
                         search.list?.startsWith("ms:")
                           ? search.list.slice(3)
-                          : (milestoneId ?? oneOutcome)
+                          : milestoneId
                       }
                       onOpen={(id) => open(`ms:${id}`)}
-                      onZoom={(id) =>
-                        scopeTo(
-                          id === NO_LONG_OUTCOME
-                            ? {
-                                // No long outcome reaches these projects yet:
-                                // scope to the projects themselves.
-                                project: s.projects
-                                  .filter((p) => !p.long_outcome)
-                                  .map((p) => p.id)
-                                  .join(","),
-                              }
-                            : { outcome: id },
-                        )
-                      }
-                      onWait={(from, to) =>
-                        open(
-                          `${roadmapBy === "groups" ? "idep" : "mdep"}:${from}:${to}`,
-                        )
-                      }
+                      onWait={(from, to) => open(`mdep:${from}:${to}`)}
                       release={search.release}
                       onRelease={(id) => set({ release: id }, true)}
                     />
@@ -937,7 +874,6 @@ function Board({
           onProject={(id) =>
             set({
               project: id,
-              outcome: undefined,
               milestone: undefined,
               item: undefined,
               list: undefined,
@@ -1419,19 +1355,17 @@ function MiniChart({
   );
 }
 
-type Level = "outcome" | "project" | "milestone" | "item";
+type Level = "project" | "milestone" | "item";
 const LEVEL_NAMES: Record<Level, string> = {
-  outcome: "Long outcome",
   project: "Project",
   milestone: "Milestone",
   item: "Item",
 };
 
 /**
- * What a line is, by shape, the same everywhere on the page: stacked
- * layers for a long outcome (it holds projects), a clipboard for a project
- * (usually one plan), a diamond for a milestone (the roadmap's mark), a
- * ring for an item. Shape, not color: color already means a stage (the
+ * What a line is, by shape, the same everywhere on the page: a clipboard
+ * for a project (usually one plan), a diamond for a milestone (the
+ * roadmap's mark), a ring for an item. Shape, not color: color already means a stage (the
  * blue ramp) or "needs you" (amber). Items' IDs carry the ring by
  * themselves (`.work-id`).
  */
@@ -1443,11 +1377,7 @@ function LevelMark({ level }: { level: Level }) {
       aria-label={LEVEL_NAMES[level]}
       title={LEVEL_NAMES[level]}
     >
-      {level === "outcome" ? (
-        <Icon href={svgLayers} />
-      ) : level === "project" ? (
-        <Icon href={svgClipboard} />
-      ) : null}
+      {level === "project" ? <Icon href={svgClipboard} /> : null}
     </span>
   );
 }
@@ -1805,101 +1735,6 @@ function FlowChart({
 
 const slug = (st: Stage) => st.toLowerCase().replace(/\s+/g, "-");
 
-/**
- * Each project's items by stage, as one stacked bar each (small
- * multiples on one scale). Choosing a name zooms the page to it; choosing
- * a segment lists those items.
- */
-function ProjectBars({
-  s,
-  items,
-  flight,
-  single,
-  onProject,
-  onSegment,
-}: {
-  s: WorkSnapshot;
-  items: WorkItem[];
-  flight: InFlight;
-  single: boolean;
-  onProject: (id: string) => void;
-  onSegment: (id: string, st: Stage) => void;
-}) {
-  const [all, setAll] = useState(false);
-  const rows = s.projects
-    .map((p) => {
-      const mine = items.filter((it) => it.project === p.id);
-      const counts = Object.fromEntries(STAGES.map((st) => [st, 0])) as Record<
-        Stage,
-        number
-      >;
-      for (const it of mine) {
-        const st = stageOf(it, flight);
-        if (st) {
-          counts[st]++;
-        }
-      }
-      return {
-        p,
-        counts,
-        total: mine.length,
-        open: mine.filter(isOpen).length,
-      };
-    })
-    .filter((r) => r.total > 0)
-    .sort((a, b) => b.open - a.open);
-  const max = Math.max(1, ...rows.map((r) => r.total));
-  const shown = all || single ? rows : rows.slice(0, 8);
-  return (
-    <>
-      <ul className="work-pbars">
-        {shown.map(({ p, counts, total }) => (
-          <li key={p.id} className="work-pbar">
-            <button
-              type="button"
-              className="work-pbar-name"
-              onClick={() => onProject(p.id)}
-              title={`${p.id} ${p.title}: scope to it`}
-            >
-              <LevelMark level="project" />
-              <span className="work-outline-label">{p.title}</span>
-            </button>
-            <span
-              className="work-pbar-track"
-              style={{ width: `${(100 * total) / max}%` }}
-            >
-              {STAGES.map((st) =>
-                counts[st] ? (
-                  <button
-                    key={st}
-                    type="button"
-                    className={`work-pbar-seg stage-${slug(st)}`}
-                    style={{ flexGrow: counts[st] }}
-                    onClick={() => onSegment(p.id, st)}
-                    aria-label={`${p.title}: ${counts[st]} ${STAGE_NAMES[st].toLowerCase()}`}
-                    data-tip={stageTip(st, `${counts[st]}`)}
-                  />
-                ) : null,
-              )}
-            </span>
-            <span className="work-pbar-value">{counts.Ready} ready</span>
-          </li>
-        ))}
-      </ul>
-      {!single && rows.length > 8 && (
-        <Button
-          variant="text"
-          size="small"
-          className="work-more"
-          onClick={() => setAll(!all)}
-        >
-          {all ? "Show fewer" : `All ${rows.length} projects`}
-        </Button>
-      )}
-    </>
-  );
-}
-
 /** A list's name, for the panel's title and the item's way back. */
 function listTitle(
   list: string,
@@ -1908,8 +1743,6 @@ function listTitle(
 ): string {
   const titleOf = (id: string) =>
     s.projects.find((p) => p.id === id)?.title ?? id;
-  const outcomeTitle = (id: string) =>
-    s.long_outcomes.find((i) => i.id === id)?.title ?? id;
   if (list.startsWith("chain:")) {
     return `The chain from ${list.slice(6)}`;
   }
@@ -1919,10 +1752,6 @@ function listTitle(
   if (list.startsWith("mdep:")) {
     const [, from, to] = list.split(":") as [string, string, string];
     return `${mapEntityTitle(s, from)} waits on ${mapEntityTitle(s, to)}`;
-  }
-  if (list.startsWith("idep:")) {
-    const [, from, to] = list.split(":") as [string, string, string];
-    return `${outcomeTitle(from)} waits on ${outcomeTitle(to)}`;
   }
   if (list.startsWith("dep:")) {
     const [, from, to] = list.split(":") as [string, string, string];
@@ -2320,27 +2149,6 @@ function ListPanel({
         }
       />
     );
-  } else if (list?.startsWith("idep:")) {
-    const [, from, to] = list.split(":") as [string, string, string];
-    const iniOf = (id?: string) => projectOf.get(id ?? "")?.long_outcome;
-    const inTo = (n: string) => iniOf(itemOf.get(n)?.project) === to;
-    body = (
-      <Grouped
-        s={s}
-        items={s.items.filter(
-          (it) =>
-            iniOf(it.project) === from &&
-            isOpen(it) &&
-            it.open_needs.some(inTo),
-        )}
-        empty="Nothing waits there now."
-        selected={selected}
-        projectOf={projectOf}
-        needs={(it) =>
-          it.open_needs.filter(inTo).map((n) => itemOf.get(n) ?? n)
-        }
-      />
-    );
   } else if (list?.startsWith("dep:")) {
     const [, from, to] = list.split(":") as [string, string, string];
     const inTo = (n: string) => itemOf.get(n)?.project === to;
@@ -2528,7 +2336,7 @@ function whereOf(
   return parts.join("; ") || undefined;
 }
 
-/** The scope's chain: a long outcome, a project, a milestone, as far as chosen. */
+/** The scope's chain: a project, a milestone, as far as chosen. */
 function scopeChain(s: WorkSnapshot, search: WorkSearch) {
   const milestone = search.milestone
     ? s.milestones.find((m) => m.id === search.milestone)
@@ -2537,18 +2345,13 @@ function scopeChain(s: WorkSnapshot, search: WorkSearch) {
   const project = projectId
     ? s.projects.find((p) => p.id === projectId)
     : undefined;
-  const outcomeId =
-    search.outcome ?? project?.long_outcome ?? milestone?.long_outcome;
-  const longOutcome = outcomeId
-    ? s.long_outcomes.find((i) => i.id === outcomeId)
-    : undefined;
-  return { longOutcome, project, milestone };
+  return { project, milestone };
 }
 
-/** One line of the scope's tree: All work, a long outcome, a project, a milestone. */
+/** One line of the scope's tree: All work, a project, a milestone. */
 interface ScopeEntry {
   key: string;
-  /** What adding it to the scope adds; All work and "No long outcome" add nothing. */
+  /** What adding it to the scope adds; All work adds nothing. */
   kind?: ScopeKind;
   title: string;
   level: number;
@@ -2567,7 +2370,6 @@ interface ScopeEntry {
 function scopeEntries(s: WorkSnapshot, flight: InFlight): ScopeEntry[] {
   const decisions = new Map<string, number>();
   const open = new Map<string, number>();
-  const iniOf = new Map(s.projects.map((p) => [p.id, p.long_outcome ?? ""]));
   const add = (m: Map<string, number>, k: string) =>
     m.set(k, (m.get(k) ?? 0) + 1);
   for (const it of s.items) {
@@ -2576,7 +2378,7 @@ function scopeEntries(s: WorkSnapshot, flight: InFlight): ScopeEntry[] {
     }
     const p = it.project;
     const owner = nextActor(it, flight) === "owner" && isOwnerDecision(it);
-    for (const k of p ? [p, iniOf.get(p) ?? "", "*"] : ["*"]) {
+    for (const k of p ? [p, "*"] : ["*"]) {
       add(open, k);
       if (owner) {
         add(decisions, k);
@@ -2604,52 +2406,26 @@ function scopeEntries(s: WorkSnapshot, flight: InFlight): ScopeEntry[] {
     open: m.progress.total - m.progress.done,
     go: { milestone: m.id },
   });
-  const groups = [
-    ...s.long_outcomes.map((i) => ({ id: i.id, title: i.title })),
-    ...(s.projects.some((p) => !p.long_outcome)
-      ? [{ id: "", title: "No long outcome" }]
-      : []),
-  ];
-  for (const g of groups) {
+  for (const p of s.projects) {
     out.push({
-      key: g.id || "none",
-      kind: g.id ? "outcome" : undefined,
-      title: g.title,
+      key: p.id,
+      kind: "project",
+      title: p.title,
       level: 1,
       path: [],
-      decisions: decisions.get(g.id) ?? 0,
-      open: open.get(g.id) ?? 0,
-      go: g.id ? { outcome: g.id } : {},
+      decisions: decisions.get(p.id) ?? 0,
+      open: open.get(p.id) ?? 0,
+      go: { project: p.id },
     });
-    for (const p of s.projects.filter((x) => (x.long_outcome ?? "") === g.id)) {
-      out.push({
-        key: p.id,
-        kind: "project",
-        title: p.title,
-        level: 2,
-        path: [g.title],
-        decisions: decisions.get(p.id) ?? 0,
-        open: open.get(p.id) ?? 0,
-        go: { project: p.id },
-      });
-      for (const m of s.milestones.filter((x) => x.project === p.id)) {
-        out.push(milestone(m, 3, [g.title, p.title]));
-      }
-    }
-    if (g.id) {
-      for (const m of s.milestones.filter(
-        (x) => !x.project && x.long_outcome === g.id,
-      )) {
-        out.push(milestone(m, 2, [g.title]));
-      }
+    for (const m of s.milestones.filter((x) => x.project === p.id)) {
+      out.push(milestone(m, 2, [p.title]));
     }
   }
   return out;
 }
 
 /**
- * Where the page looks, as a trail: All work › a long outcome › a project ›
- * a milestone. Each step above goes back up; the last is the scope picker,
+ * Where the page looks, as a trail: All work › a project › a milestone. Each step above goes back up; the last is the scope picker,
  * which lists the whole tree and finds a line by typing, so any scope is
  * one choice away.
  */
@@ -2672,9 +2448,7 @@ function ScopeTrail({
   onToggle: (kind: ScopeKind, id: string) => void;
 }) {
   const several = scopeSize(chosen) > 1;
-  const { longOutcome, project, milestone } = several
-    ? {}
-    : scopeChain(s, search);
+  const { project, milestone } = several ? {} : scopeChain(s, search);
   const steps: Array<{
     label: string;
     go: Partial<WorkSearch>;
@@ -2682,15 +2456,6 @@ function ScopeTrail({
   }> = [
     { label: "All work", go: {} },
     ...(several ? [{ label: `${names.length} chosen`, go: {} }] : []),
-    ...(longOutcome
-      ? [
-          {
-            label: longOutcome.title,
-            go: { outcome: longOutcome.id },
-            mark: "outcome" as const,
-          },
-        ]
-      : []),
     ...(project
       ? [
           {
@@ -2779,7 +2544,7 @@ function ScopePicker({
   flight: InFlight;
   chosen: ScopeSet;
   label: string;
-  /** What the scope is: a long outcome, a project or a milestone. */
+  /** What the scope is: a project or a milestone. */
   mark?: Level;
   /** The chosen lines, when there are several. */
   title?: string;
@@ -2858,7 +2623,7 @@ function ScopePicker({
           size="small"
           fullWidth
           autoFocus
-          placeholder="Find a long outcome, project or milestone"
+          placeholder="Find a project or milestone"
           value={q}
           onChange={(e) => {
             setQ(e.target.value);
@@ -2939,7 +2704,7 @@ function ScopePicker({
               ) : (
                 <span className="work-picker-box none" aria-hidden="true" />
               )}
-              {e.key !== "*" && <LevelMark level={e.kind ?? "outcome"} />}
+              {e.kind && <LevelMark level={e.kind} />}
               <span className="work-picker-text">
                 <span className="work-outline-label">{e.title}</span>
                 {words.length > 0 && e.path.length > 0 && (
@@ -3911,9 +3676,6 @@ function ItemPanel({
   const known = useMemo(() => new Set(s.items.map((x) => x.id)), [s]);
   const loaded = text?.id === id ? text : undefined;
   const project = it?.project ? projectOf.get(it.project) : undefined;
-  const longOutcome = project?.long_outcome
-    ? s.long_outcomes.find((i) => i.id === project.long_outcome)
-    : undefined;
   const titleId = useId();
   const path = it?.path;
   // Vite's dev server opens a file in the editor, relative to its root.
@@ -3989,14 +3751,6 @@ function ItemPanel({
                   <LevelMark level="project" />
                   {project.title}
                 </Link>
-              </Fact>
-            )}
-            {longOutcome && (
-              <Fact name="Long outcome">
-                <span className="work-marked">
-                  <LevelMark level="outcome" />
-                  {longOutcome.title}
-                </span>
               </Fact>
             )}
             {(it.state === "in-progress" || flight.has(it.id)) && (
@@ -5508,11 +5262,7 @@ function MilestoneGraph({
   const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
   const projectTitle = (id: string) => {
     const m = msOf.get(id);
-    return (
-      s.projects.find((p) => p.id === m?.project)?.title ??
-      s.long_outcomes.find((i) => i.id === m?.long_outcome)?.title ??
-      ""
-    );
+    return s.projects.find((p) => p.id === m?.project)?.title ?? "";
   };
   const NODE_W = 216;
   const NODE_H = 80;
@@ -6127,9 +5877,8 @@ const betweenSteps = (at: number, steps: number) =>
 // ------------------------------------------------------------ the roadmap
 
 /**
- * The roadmap: milestones (human-in-the-lead's milestone graph) or
- * long outcomes, in the order their work can happen, step by step from the
- * top, a line each. Those that wait on each other are boxed together with the
+ * The roadmap's list: milestones (human-in-the-lead's milestone graph) in
+ * the order their work can happen, step by step from the top, a line each. Those that wait on each other are boxed together with the
  * fewest waits that tie them named, so the loop can be read and, if
  * wanted, broken. A milestone's outcome, shaping and waits are in its
  * pane.
@@ -6137,18 +5886,15 @@ const betweenSteps = (at: number, steps: number) =>
 function Roadmap({
   s,
   flight,
-  by,
   inScope,
   selected,
   onOpen,
-  onZoom,
   onWait,
   release,
   onRelease,
 }: {
   s: WorkSnapshot;
   flight: InFlight;
-  by: "milestones" | "outcomes";
   /** The release in focus: what feeds it stands out. */
   release?: string;
   onRelease: (id: string | undefined) => void;
@@ -6157,67 +5903,41 @@ function Roadmap({
   selected?: string;
   /** Opens a milestone in the pane. */
   onOpen: (milestone: string) => void;
-  onZoom: (outcome: string) => void;
   onWait: (from: string, to: string) => void;
 }) {
   const all = useMemo(
-    () =>
-      by === "milestones"
-        ? milestoneRoadmapOf(s, s.items, flight)
-        : roadmapOf(s, s.items, flight),
-    [s, flight, by],
+    () => milestoneRoadmapOf(s, s.items, flight),
+    [s, flight],
   );
   const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
   const itemOf = useMemo(() => new Map(s.items.map((i) => [i.id, i])), [s]);
   // Release items are flags between the steps, not lines.
   const rows = all.filter((r) => {
-    if (by !== "milestones") {
-      return true;
-    }
     if (isReleaseItem(itemOf.get(r.id))) {
       return false;
     }
     const m = msOf.get(r.id);
     return !inScope || (!!m && inScope(m));
   });
-  // A milestone's line: itself, or its long outcome's.
-  const lineOf = useCallback(
-    (milestone: string) => {
-      if (by === "milestones") {
-        return milestone;
-      }
-      const m = msOf.get(milestone);
-      const project = s.projects.find((p) => p.id === m?.project);
-      return m?.long_outcome ?? project?.long_outcome ?? NO_LONG_OUTCOME;
-    },
-    [by, msOf, s.projects],
-  );
   const flags = useMemo(() => {
     const stepOf = new Map(rows.map((r) => [r.id, r.step]));
-    return releaseFlagsOf(
-      s,
-      by === "milestones" ? all : milestoneRoadmapOf(s, s.items, flight),
-      (id) => stepOf.get(lineOf(id)),
-    );
-  }, [s, flight, by, all, rows, lineOf]);
+    return releaseFlagsOf(s, all, (id) => stepOf.get(id));
+  }, [s, all, rows]);
   const [hoverFlag, setHoverFlag] = useState<string>();
   // What the flag pointed at, or else the release in focus, is fed by.
   const lit = useMemo(() => {
     const f =
       flags.find((x) => x.id === hoverFlag) ??
       flags.find((x) => x.id === release && !x.unplaced);
-    return f && new Set(f.feeds.map(lineOf));
-  }, [flags, hoverFlag, release, lineOf]);
+    return f && new Set(f.feeds);
+  }, [flags, hoverFlag, release]);
   const lastStep = Math.max(0, ...rows.map((r) => r.step));
   const flagProps = {
     titleOf: (id: string) => msOf.get(id)?.title ?? itemOf.get(id)?.title ?? id,
     onHover: setHoverFlag,
     onSelect: onRelease,
   };
-  const title = (id: string) =>
-    msOf.get(id)?.title ??
-    s.long_outcomes.find((i) => i.id === id)?.title ??
-    id;
+  const title = (id: string) => msOf.get(id)?.title ?? id;
   const steps = [...new Set(rows.map((r) => r.step))].sort((a, b) => a - b);
   const covered = new Set(
     s.milestones.flatMap((m) => m.constraints.map((c) => c.id)),
@@ -6231,11 +5951,7 @@ function Roadmap({
         render={<p />}
         className="work-empty"
       >
-        {by === "milestones"
-          ? inScope
-            ? "No milestones in this scope yet."
-            : "No milestones yet."
-          : "No long outcomes."}{" "}
+        {inScope ? "No milestones in this scope yet." : "No milestones yet."}{" "}
         Make a milestone with <code>npx hitld work new --kind milestone</code>.
       </Typography>
     );
@@ -6283,9 +5999,7 @@ function Roadmap({
                           selected={r.id === selected}
                           dim={!!lit && !lit.has(r.id)}
                           title={title}
-                          onOpen={() =>
-                            by === "milestones" ? onOpen(r.id) : onZoom(r.id)
-                          }
+                          onOpen={() => onOpen(r.id)}
                           onWait={onWait}
                         />
                       ))}
@@ -6371,7 +6085,7 @@ function Roadmap({
             </span>
           ))}
         </span>
-        {by === "milestones" && !inScope && (
+        {!inScope && (
           <Typography variant="caption-md" color="textSecondary">
             {s.milestones.length} milestones hold {covered.size} items;{" "}
             {outside.length} open{" "}
@@ -6390,7 +6104,7 @@ const SHAPE_NAMES: Record<string, string> = {
   links: "links to clauses",
 };
 
-/** One milestone or long outcome: its name, a stage bar, done of all, what it waits on. */
+/** One milestone: its name, a stage bar, done of all, what it waits on. */
 function RoadmapLine({
   row,
   milestone,
@@ -6422,13 +6136,9 @@ function RoadmapLine({
         className="work-rm-name"
         onClick={onOpen}
         aria-current={selected ? "true" : undefined}
-        title={
-          milestone
-            ? `${row.title}: open it${milestone.to_shape.length ? ` (to shape: ${milestone.to_shape.map((x) => SHAPE_NAMES[x] ?? x).join(", ")})` : ""}`
-            : `${row.title}: scope to it`
-        }
+        title={`${row.title}: open it${milestone?.to_shape.length ? ` (to shape: ${milestone.to_shape.map((x) => SHAPE_NAMES[x] ?? x).join(", ")})` : ""}`}
       >
-        <LevelMark level={milestone ? "milestone" : "outcome"} />
+        <LevelMark level="milestone" />
         <span className="work-rm-title">{row.title}</span>
         {milestone?.check_due && (
           <StatusBadge tone="info">Check due</StatusBadge>

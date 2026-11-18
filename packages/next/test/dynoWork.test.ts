@@ -6,6 +6,7 @@ import {
   flowOf,
   inFlightOf,
   milestoneMapOf,
+  milestoneRoadmapOf,
   nextActor,
   ownerQueue,
   proposalGate,
@@ -13,6 +14,7 @@ import {
   stageOf,
   unblocksOf,
   waitingOnOwner,
+  withoutDropped,
   workInProgress,
   type WorkItem,
   type WorkMilestone,
@@ -176,7 +178,6 @@ const snapshot: WorkSnapshot = {
       id: "CS-2",
       title: "Two",
       state: "planned",
-      long_outcome: "CS-1",
       path: "p2",
       progress: {
         total: 0,
@@ -192,7 +193,6 @@ const snapshot: WorkSnapshot = {
       id: "CS-3",
       title: "Three",
       state: "planned",
-      long_outcome: "CS-9",
       path: "p3",
       progress: {
         total: 0,
@@ -218,10 +218,9 @@ describe("the Work board's model (bench/suite/work.ts)", () => {
     expect([...waitingOnOwner(snapshot)].sort()).toEqual(["CS-10", "CS-11"]);
   });
 
-  it("filters by long outcome, project, kind, owner and words", () => {
+  it("filters by project, kind, owner and words", () => {
     const ids = (f: Parameters<typeof filterItems>[1]) =>
       filterItems(snapshot, f).map((i) => i.id);
-    expect(ids({ long_outcome: "CS-9" })).toEqual(["CS-13"]);
     expect(ids({ project: "CS-3" })).toEqual(["CS-13"]);
     expect(ids({ kinds: ["decision"] })).toEqual(["CS-10"]);
     expect(ids({ owner: true })).toEqual(["CS-10", "CS-11"]);
@@ -411,6 +410,42 @@ describe("the milestone map shows committed work", () => {
     const n51 = m.nodes.find((n) => n.id === "CS-51")!;
     expect(Object.values(n51.counts).reduce((a, b) => a + b, 0)).toBe(1);
     expect(n51.decisions).toBe(1);
+  });
+
+  it("takes dropped milestones out of every roadmap, lane and count", () => {
+    const withDropped: WorkSnapshot = {
+      ...s,
+      items: s.items.map((it) =>
+        it.id === "CS-33" ? { ...it, milestones: ["CS-53", "CS-50"] } : it,
+      ),
+      milestones: [
+        ...s.milestones,
+        ms("CS-53", ["CS-33"], { state: "dropped" }),
+        // A retired long outcome: a milestone with no project, dropped.
+        ms("CS-1", ["CS-53"], { state: "dropped", project: undefined }),
+      ],
+    };
+    const shown = withoutDropped(withDropped);
+    expect(shown.milestones.map((m) => m.id)).toEqual([
+      "CS-50",
+      "CS-51",
+      "CS-52",
+    ]);
+    expect(shown.items.find((i) => i.id === "CS-33")!.milestones).toEqual([
+      "CS-50",
+    ]);
+    const map = milestoneMapOf(shown, undefined, "steps");
+    expect(map.nodes.map((n) => n.id).sort()).toEqual([
+      "CS-50",
+      "CS-51",
+      "unshaped-CS-2",
+    ]);
+    expect(map.lanes.map((l) => l.id)).toEqual(["CS-2"]);
+    expect(
+      milestoneRoadmapOf(shown, shown.items, undefined, true).map((r) => r.id),
+    ).not.toContain("CS-53");
+    // Nothing dropped: the same snapshot back.
+    expect(withoutDropped(s)).toBe(s);
   });
 });
 

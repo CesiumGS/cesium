@@ -52,8 +52,6 @@ export const runsLayoutRoute = createRoute({
 export interface WorkSearch {
   /** The question the page answers: "roadmap", "proposals" or "flow" ("Your move" by default). */
   view?: string;
-  /** A long outcome (a milestone with no parent) in scope. */
-  outcome?: string;
   project?: string;
   /** A milestone's constraints as the scope. */
   milestone?: string;
@@ -74,7 +72,7 @@ export interface WorkSearch {
   release?: string;
   /** The milestone map as project lanes (default) or a "graph" with the fewest crossings. */
   shape?: string;
-  /** The roadmap by "groups" (long outcomes, or a long outcome's projects) or "matrix" (milestones by default). */
+  /** The roadmap as the projects' waits on each other, "matrix" (milestones by default). */
   roadmap?: string;
   /** The Proposals view narrowed to what can be committed now ("free"), or what waits on a "decision" or on other "items". */
   gate?: string;
@@ -89,7 +87,6 @@ export const workRoute = createRoute({
         s.view === "roadmap" || s.view === "proposals" || s.view === "flow"
           ? s.view
           : undefined,
-      outcome: str(s.outcome),
       project: str(s.project),
       milestone: str(s.milestone),
       q: str(s.q),
@@ -99,10 +96,7 @@ export const workRoute = createRoute({
       layout: s.layout === "map" || s.layout === "list" ? s.layout : undefined,
       release: str(s.release),
       shape: s.shape === "graph" ? "graph" : undefined,
-      roadmap:
-        s.roadmap === "groups" || s.roadmap === "matrix"
-          ? s.roadmap
-          : undefined,
+      roadmap: s.roadmap === "matrix" ? "matrix" : undefined,
       gate:
         s.gate === "free" || s.gate === "decision" || s.gate === "items"
           ? s.gate

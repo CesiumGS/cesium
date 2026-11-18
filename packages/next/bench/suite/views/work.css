@@ -502,78 +502,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Projects as stacked bars on one scale. */
-.work-pbars {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-150);
-}
-.work-pbar {
-  display: grid;
-  grid-template-columns: 200px minmax(0, 1fr) 64px;
-  align-items: center;
-  gap: var(--stratakit-space-300);
-}
-.work-pbar-name {
-  all: unset;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--stratakit-font-size-body-sm);
-  cursor: pointer;
-  border-radius: var(--stratakit-radius-sm);
-}
-.work-pbar-name:hover {
-  text-decoration: underline;
-}
-.work-pbar-name:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 2px;
-}
+/* A stacked bar of stages, on one scale (the roadmap's lines, the map's milestones). */
 .work-pbar-track {
   display: flex;
   gap: 2px;
   height: 14px;
-}
-.work-pbar-seg {
-  all: unset;
-  flex-basis: 0;
-  min-width: 3px;
-  background: var(--stage);
-  cursor: pointer;
-}
-.work-pbar-seg:first-child {
-  border-radius: 4px 0 0 4px;
-}
-.work-pbar-seg:last-child {
-  border-radius: 0 4px 4px 0;
-}
-.work-pbar-seg:only-child {
-  border-radius: 4px;
-}
-.work-pbar-seg:hover {
-  opacity: 0.8;
-}
-.work-pbar-seg:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 1px;
-}
-.work-pbar-value {
-  text-align: end;
-  font-size: var(--stratakit-font-size-caption-lg);
-  color: var(--stratakit-color-text-neutral-secondary);
-  font-variant-numeric: tabular-nums;
-}
-@media (max-width: 600px) {
-  .work-pbar {
-    grid-template-columns: minmax(0, 1fr) 56px;
-  }
-  .work-pbar-name {
-    grid-column: 1 / -1;
-  }
 }
 
 /* The details panel: a list, wider for the dependencies. */
@@ -1511,14 +1444,13 @@ a.work-related-item:focus-visible {
 .work-picker-option.here {
   box-shadow: inset 3px 0 0 var(--stratakit-color-border-accent-strong);
 }
-.work-picker-option.level-0,
-.work-picker-option.level-1 {
+.work-picker-option.level-0 {
   font-weight: 600;
 }
-.work-picker-option.level-2 {
+.work-picker-option.level-1 {
   padding-inline-start: var(--stratakit-space-700);
 }
-.work-picker-option.level-3 {
+.work-picker-option.level-2 {
   padding-inline-start: var(--stratakit-space-1000);
   color: var(--stratakit-color-text-neutral-secondary);
 }
@@ -1610,7 +1542,6 @@ a.work-related-item:focus-visible {
   align-items: center;
   gap: var(--stratakit-space-150);
 }
-.work-pbar-name,
 .work-trail li {
   display: inline-flex;
   align-items: center;

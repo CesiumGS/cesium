@@ -68,11 +68,14 @@ function checkVersion(v: { api_version?: unknown }) {
   }
 }
 
-/** The snapshot of the tracker on the dev server's branch. */
+/**
+ * The snapshot of the tracker on the dev server's branch, as the board
+ * shows it: without dropped milestones (withoutDropped).
+ */
 export async function loadWork(): Promise<WorkSnapshot> {
   const snapshot = (await getJson("/work-api/query.json")) as WorkSnapshot;
   checkVersion(snapshot);
-  return snapshot;
+  return withoutDropped(snapshot);
 }
 
 /** Every item whose file or project mentions all the words. */
@@ -120,6 +123,30 @@ export const KIND_NAMES: Record<ItemKind, string> = {
 export const isOpen = (it: WorkItem) =>
   it.state !== "done" && it.state !== "dropped";
 
+/**
+ * The snapshot as the board shows it: dropped milestones taken out, so no
+ * roadmap, lane, scope or count holds one. Long outcomes (milestones with
+ * no parent) were retired on 2026-11-17 and are all dropped; the board
+ * reads none of them.
+ */
+export function withoutDropped(s: WorkSnapshot): WorkSnapshot {
+  const dropped = new Set(
+    s.milestones.filter((m) => m.state === "dropped").map((m) => m.id),
+  );
+  if (!dropped.size) {
+    return s;
+  }
+  return {
+    ...s,
+    milestones: s.milestones.filter((m) => !dropped.has(m.id)),
+    items: s.items.map((it) =>
+      it.milestones.some((m) => dropped.has(m))
+        ? { ...it, milestones: it.milestones.filter((m) => !dropped.has(m)) }
+        : it,
+    ),
+  };
+}
+
 /** Work to do, as against a decision or a wait on another party. */
 export const isWork = (it: WorkItem) => it.kind === "work";
 
@@ -158,7 +185,6 @@ export function waitingOnOwner(s: WorkSnapshot): Set<string> {
 // ------------------------------------------------------------ filters
 
 export interface WorkFilter {
-  long_outcome?: string;
   project?: string;
   /** Kinds shown; empty or absent shows every kind. */
   kinds?: readonly ItemKind[];
@@ -176,9 +202,6 @@ export function filterItems(s: WorkSnapshot, f: WorkFilter): WorkItem[] {
   return s.items.filter((it) => {
     const project = it.project ? projectOf.get(it.project) : undefined;
     if (f.project && it.project !== f.project) {
-      return false;
-    }
-    if (f.long_outcome && project?.long_outcome !== f.long_outcome) {
       return false;
     }
     if (f.kinds?.length && !f.kinds.includes(it.kind)) {
@@ -1012,7 +1035,7 @@ export function longestChains(items: readonly WorkItem[]): WorkItem[][] {
 // ------------------------------------------------------------ the roadmap
 
 export interface RoadmapRow {
-  /** The long outcome or milestone. */
+  /** The milestone or release gate. */
   id: string;
   title: string;
   /** Its items in each stage. */
@@ -1026,7 +1049,7 @@ export interface RoadmapRow {
 }
 
 /**
- * Orders groups of items (long outcomes, or milestones) by the needs between
+ * Orders groups of items (milestones, and release gates) by the needs between
  * their items, plus any explicit waits (a milestone that needs another).
  * Those that wait on each other, directly or round a loop, form one group
  * (a strongly connected component) and move together; a group's step is
@@ -1171,42 +1194,6 @@ export function orderOf(
         idNumber(a.group[0]!) - idNumber(b.group[0]!) ||
         idNumber(a.id) - idNumber(b.id),
     );
-}
-
-/** The roadmap group of projects that no long outcome reaches yet. */
-export const NO_LONG_OUTCOME = "no-long-outcome";
-
-/**
- * Long outcomes in the order their work can happen, and last, projects no
- * long outcome reaches (a project reaches one through its milestones, so a
- * project with none is here until it is shaped).
- */
-export function roadmapOf(
-  s: WorkSnapshot,
-  items: readonly WorkItem[],
-  flight?: InFlight,
-): RoadmapRow[] {
-  const projectsOf = (lo: string | undefined) =>
-    new Set(s.projects.filter((p) => p.long_outcome === lo).map((p) => p.id));
-  const groups = s.long_outcomes.map((l) => ({ id: l.id, title: l.title }));
-  if (s.projects.some((p) => !p.long_outcome)) {
-    groups.push({ id: NO_LONG_OUTCOME, title: "No long outcome" });
-  }
-  return orderOf(
-    groups.map((g) => {
-      const ps = projectsOf(g.id === NO_LONG_OUTCOME ? undefined : g.id);
-      return {
-        id: g.id,
-        title: g.title,
-        members: s.items
-          .filter((it) => ps.has(it.project ?? ""))
-          .map((it) => it.id),
-      };
-    }),
-    s,
-    items,
-    flight,
-  );
 }
 
 /**
@@ -1530,7 +1517,7 @@ export interface MapFlag extends ReleaseFlag {
  * path method), measured in steps or in the tokens left on the way. A
  * backward pass gives each one's slack; the critical path is where the
  * slack is none. Milestones in a loop move together as one. Lanes are
- * their projects (or long outcomes).
+ * their projects.
  */
 export function milestoneMapOf(
   snapshot: WorkSnapshot,
@@ -1788,22 +1775,20 @@ export function milestoneMapOf(
     );
   }
   const onPath = new Set(path);
-  // Lanes: projects (or long outcomes), in order of their first milestone.
+  // Lanes: projects, in order of their first milestone.
   const laneOf = (id: string) => {
     if (id.startsWith(UNSHAPED)) {
       return id.slice(UNSHAPED.length);
     }
     const m = msOf.get(id)!;
-    const base = m.project ?? m.long_outcome ?? "";
+    const base = m.project ?? "";
     // With a release in focus, what it doesn't need moves to its own band.
     return cone && !cone.has(id) ? `${OUTSIDE}${base}` : base;
   };
   const laneTitle = (id: string): string =>
     id.startsWith(OUTSIDE)
       ? laneTitle(id.slice(OUTSIDE.length))
-      : (projectOf.get(id)?.title ??
-        s.long_outcomes.find((i) => i.id === id)?.title ??
-        "No project");
+      : (projectOf.get(id)?.title ?? "No project");
   const nodes: MapNode[] = rows
     .filter((r) => !isGate(r.id))
     .map((r) => {
@@ -1924,14 +1909,10 @@ export function milestoneMapOf(
     });
   }
   // Lanes: projects with milestones first (by their first start), then
-  // those not yet shaped into milestones, in their long outcomes' order;
-  // then, with a release in focus, what it doesn't need.
+  // those not yet shaped into milestones, by project number; then, with a
+  // release in focus, what it doesn't need.
   const shaped = new Set(nodes.filter((n) => !n.unshaped).map((n) => n.lane));
   const band = (lane: string) => (lane.startsWith(OUTSIDE) ? 1 : 0);
-  const iniRank = (lane: string) =>
-    s.long_outcomes.findIndex(
-      (i) => i.id === projectOf.get(lane)?.long_outcome,
-    );
   const laneIds = [
     ...new Set(
       [...nodes]
@@ -1941,8 +1922,7 @@ export function milestoneMapOf(
             Number(!shaped.has(a.lane)) - Number(!shaped.has(b.lane)) ||
             (shaped.has(a.lane)
               ? a.x0 - b.x0
-              : iniRank(a.lane) - iniRank(b.lane) ||
-                a.lane.localeCompare(b.lane)),
+              : a.lane.localeCompare(b.lane, "en", { numeric: true })),
         )
         .map((n) => n.lane),
     ),
@@ -2007,7 +1987,7 @@ export function milestoneMapOf(
 }
 
 /**
- * The fewest waits that tie a group of long outcomes into a loop: removing
+ * The fewest waits that tie a group of milestones into a loop: removing
  * them, smallest first (by how many items make each wait), until what is
  * left of the group has an order. Each comes with the items behind it.
  */
