@@ -38,6 +38,13 @@ class FeatureLayer {
     this._index = options.index;
     this._name = options.name ?? getDefaultName(options.metadata);
     this._show = true;
+
+    /**
+     * PROTOTYPE. The style binding drawing this layer's vector features, if any.
+     * @type {*}
+     * @ignore
+     */
+    this._vectorStyleBinding = undefined;
   }
 
   /**

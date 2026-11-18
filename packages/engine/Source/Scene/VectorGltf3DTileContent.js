@@ -18,6 +18,7 @@ import BufferPolyline from "./BufferPolyline.js";
 import BufferPolylineCollection from "./BufferPolylineCollection.js";
 import BufferPolylineMaterial from "./BufferPolylineMaterial.js";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
+import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 import Cesium3DTileStyle from "./Cesium3DTileStyle.js";
 import Cesium3DTileVectorFeature from "./Cesium3DTileVectorFeature.js";
 import { createGeoJsonCollections } from "./GeoJsonPrimitive.js";
@@ -40,6 +41,7 @@ import createVectorTileBuffersFromModelComponents from "./Model/createVectorTile
 /** @import ImplicitMetadataView from "./ImplicitMetadataView.js"; */
 /** @import { Ray } from "@cesium/core"; */
 /** @import Resource from "../Core/Resource.js"; */
+/** @import VectorPrimitive from "./VectorPrimitive.js"; */
 
 /** @ignore */
 const point = new BufferPoint();
@@ -112,6 +114,17 @@ class VectorGltf3DTileContent {
      * @type {GeoJsonBatchTable[]}
      */
     this._batchTables = [];
+
+    /**
+     * PROTOTYPE. Vector primitives drawing each collection with the style
+     * bound to this content's feature layer, if any.
+     * @type {Map<BufferPrimitiveCollection<BufferPrimitive>, VectorPrimitive[]>|undefined}
+     */
+    this._stylePrimitives = undefined;
+    /** @type {*} */
+    this._styleBinding = undefined;
+    /** @type {number|undefined} */
+    this._styleBindingVersion = undefined;
 
     /** @type {ImplicitMetadataView} */
     this._metadata = undefined;
@@ -396,6 +409,8 @@ class VectorGltf3DTileContent {
       defined(vectorProvider) &&
       this._tile._selectedFrame === frameState.frameNumber;
 
+    const styleBinding = this._ready ? syncStylePrimitives(this) : undefined;
+
     for (let i = 0; i < this._collections.length; i++) {
       const collection = this._collections[i];
       collection.blendOption = tileset._vectorBlendOption;
@@ -404,6 +419,16 @@ class VectorGltf3DTileContent {
         this._collectionLocalMatrices[i],
         collection.modelMatrix,
       );
+
+      const stylePrimitives = this._stylePrimitives?.get(collection);
+      if (defined(stylePrimitives) && stylePrimitives.length > 0) {
+        if (this._show && styleBinding.show) {
+          for (const primitive of stylePrimitives) {
+            primitive.update(frameState);
+          }
+        }
+        continue;
+      }
 
       if (
         !isHeightReferenceClamp(tileset._heightReference) ||
@@ -439,6 +464,7 @@ class VectorGltf3DTileContent {
   destroy() {
     const vectorProvider = this._tileset._scene?.vectorProvider;
 
+    destroyStylePrimitives(this);
     this._model?.destroy();
     this._model = undefined;
     for (const collection of this._collections) {
@@ -509,6 +535,57 @@ class VectorGltf3DTileContent {
     content._ready = true;
     return content;
   }
+}
+
+/**
+ * PROTOTYPE. Creates, or recreates after a change, the vector primitives for
+ * the style bound to the content's feature layer.
+ *
+ * @param {VectorGltf3DTileContent} content
+ * @returns {*} The style binding, if any.
+ */
+function syncStylePrimitives(content) {
+  // @ts-expect-error Requires Cesium3DTileset conversion to ES6 class.
+  const binding = defined(content._tileset.featureLayers)
+    ? // @ts-expect-error Requires type checking in Cesium3DTileContent.
+      Cesium3DTileFeature.getFeatureLayer(content)?._vectorStyleBinding
+    : undefined;
+  const version = binding?._version;
+  if (
+    binding === content._styleBinding &&
+    version === content._styleBindingVersion
+  ) {
+    return binding;
+  }
+
+  destroyStylePrimitives(content);
+  content._styleBinding = binding;
+  content._styleBindingVersion = version;
+  if (defined(binding)) {
+    content._stylePrimitives = new Map();
+    for (const collection of content._collections) {
+      content._stylePrimitives.set(
+        collection,
+        binding.style.createPrimitives(collection),
+      );
+    }
+  }
+  return binding;
+}
+
+/**
+ * @param {VectorGltf3DTileContent} content
+ */
+function destroyStylePrimitives(content) {
+  if (!defined(content._stylePrimitives)) {
+    return;
+  }
+  for (const primitives of content._stylePrimitives.values()) {
+    for (const primitive of primitives) {
+      primitive.destroy();
+    }
+  }
+  content._stylePrimitives = undefined;
 }
 
 /**
