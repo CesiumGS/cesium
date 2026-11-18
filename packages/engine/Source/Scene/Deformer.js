@@ -1,24 +1,17 @@
 // @ts-check
 
-import { Check, DeveloperError, defined, destroyObject } from "@cesium/core";
-import { Deformable } from "@cesium/engine";
+import { DeveloperError, defined, destroyObject } from "@cesium/core";
+import Deformable from "./Deformable.js";
 
-/** @import { DeformerBinding, FrameState } from "@cesium/engine"; */
-/** @import Mesh from "./Mesh.js"; */
+/** @import DeformerBinding from "./DeformerBinding.js"; */
+/** @import FrameState from "./FrameState.js"; */
 
 /**
- * <div class="notice">
- * Use a deformer type's <code>fromMesh</code>, such as
- * {@link SurfaceDeformer.fromMesh}, to create a deformer. Do not call the
- * constructor directly.
- * </div>
- *
- * Deforms {@link Deformable}s as a {@link Mesh} is edited. The base class of
- * every deformer type, such as {@link SurfaceDeformer}.
+ * Deforms {@link Deformable}s. The base class of every deformer type.
  * <p>
- * Bindings take effect on the next frame. Editing the mesh's topology unbinds
- * every deformable, restoring its rest shape, until
- * {@link Deformer#rebind} is called. The deformer is destroyed with its mesh.
+ * Bindings take effect on the next update. If a deformer changes so that its
+ * bindings no longer apply, it unbinds every deformable, restoring its rest
+ * shape, until {@link Deformer#rebind} is called.
  * </p>
  *
  * @alias Deformer
@@ -28,9 +21,6 @@ import { Deformable } from "@cesium/engine";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 class Deformer {
-  /** @type {Mesh} */
-  #mesh;
-
   /** @type {Map<Deformable, DeformerBinding>} */
   #bindings = new Map();
 
@@ -42,36 +32,15 @@ class Deformer {
   #deformablesToBind = new Set();
 
   /**
-   * Deformables that a topology edit unbound, for {@link Deformer#rebind}.
+   * Deformables whose bindings no longer applied, for {@link Deformer#rebind}.
    *
    * @type {Set<Deformable>}
    */
   #deformablesToRebind = new Set();
 
   /**
-   * @param {Mesh} mesh The mesh that deforms.
-   */
-  constructor(mesh) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.object("mesh", mesh);
-    //>>includeEnd('debug');
-
-    this.#mesh = mesh;
-    mesh._deformers.add(this);
-  }
-
-  /**
-   * The mesh that deforms.
-   *
-   * @type {Mesh}
-   * @readonly
-   */
-  get mesh() {
-    return this.#mesh;
-  }
-
-  /**
-   * Whether a topology edit unbound deformables that haven't been rebound.
+   * Whether deformables were unbound because their bindings no longer applied,
+   * and haven't been rebound.
    *
    * @type {boolean}
    * @readonly
@@ -81,8 +50,8 @@ class Deformer {
   }
 
   /**
-   * Binds a deformable to the mesh as it is now. Rebinds it if it's already
-   * bound.
+   * Binds a deformable to the deformer as it is now. Rebinds it if it's
+   * already bound.
    *
    * @param {Deformable} deformable The deformable to bind.
    *
@@ -113,8 +82,8 @@ class Deformer {
   }
 
   /**
-   * Binds the deformables that a topology edit unbound again, to the mesh as
-   * it is now.
+   * Binds the deformables whose bindings no longer applied again, to the
+   * deformer as it is now.
    */
   rebind() {
     for (const deformable of this.#deformablesToRebind) {
@@ -124,33 +93,39 @@ class Deformer {
   }
 
   /**
-   * Creates a deformable's binding to the mesh as it is now.
+   * Creates a deformable's binding to the deformer as it is now.
    *
    * @param {FrameState} frameState The frame state.
    * @param {Deformable} deformable The deformable to bind.
    * @returns {DeformerBinding} The binding.
    * @abstract
-   * @ignore
+   * @internal
    */
   _createBinding(frameState, deformable) {
     return DeveloperError.throwInstantiationError();
   }
 
   /**
-   * Called by the mesh on render passes, after its overlay is uploaded.
+   * Unbinds every bound deformable until {@link Deformer#rebind} is called.
+   * Subclasses call this when their bindings no longer apply.
+   *
+   * @internal
+   */
+  _invalidateBindings() {
+    for (const deformable of this.#bindings.keys()) {
+      this.#removeBinding(deformable);
+      this.#deformablesToRebind.add(deformable);
+    }
+  }
+
+  /**
+   * Binds the deformables waiting to be bound. Subclasses call this on render
+   * passes.
    *
    * @param {FrameState} frameState The frame state.
-   * @param {boolean} topologyChanged Whether the mesh's topology changed since the previous update.
-   * @ignore
+   * @internal
    */
-  _update(frameState, topologyChanged) {
-    if (topologyChanged) {
-      for (const deformable of this.#bindings.keys()) {
-        this.#removeBinding(deformable);
-        this.#deformablesToRebind.add(deformable);
-      }
-    }
-
+  _update(frameState) {
     for (const deformable of this.#deformablesToBind) {
       // Removed first, so a deformable that fails to bind isn't retried every frame.
       this.#deformablesToBind.delete(deformable);
@@ -196,7 +171,6 @@ class Deformer {
     for (const deformable of this.#bindings.keys()) {
       this.#removeBinding(deformable);
     }
-    this.#mesh._deformers.delete(this);
 
     return destroyObject(this);
   }
