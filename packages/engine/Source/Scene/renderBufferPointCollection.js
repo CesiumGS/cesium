@@ -148,6 +148,9 @@ function renderBufferPointCollection(
     : BufferPointAttributeLocations;
   const useStyleUniforms = defined(style) && !style._hasStyleCallbacks;
   const useStyleAttributes = defined(style) && style._hasStyleCallbacks;
+  if (useStyleAttributes && tracker.flags & DirtyFlags.GEOMETRY) {
+    tracker.flags |= DirtyFlags.PROPERTIES;
+  }
 
   // Re-evaluates every point for this render context only; other consumers of
   // the collection keep their own change trackers.

@@ -32,7 +32,9 @@ import renderBufferPointCollection from "./renderBufferPointCollection.js";
  * reused between calls and must not be retained. Callbacks are evaluated when
  * a point is added or changed, or when a property is assigned, and the results
  * are cached; call {@link VectorPrimitive#makeStyleDirty} after changing data that
- * a callback reads.</p>
+ * a callback reads. While any property is a callback, the other values are cached
+ * too, so in-place changes such as <code>primitive.color.alpha = 0.5</code> also
+ * require {@link VectorPrimitive#makeStyleDirty}.</p>
  *
  * @example
  * const collection = new Cesium.BufferPointCollection();

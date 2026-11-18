@@ -382,6 +382,23 @@ describe(
       expect(scene).toRender([0, 0, 255, 255]);
     });
 
+    it("re-evaluates callbacks after a point moves", function () {
+      const point = collection.add({ position }, new BufferPoint());
+      const scratch = new Cartesian3();
+      scene.primitives.add(
+        new CircleVectorPrimitive({
+          collection,
+          color: (p) =>
+            p.getPosition(scratch).y < -1500 ? Color.BLUE : Color.RED,
+          blendOption: BlendOption.OPAQUE,
+        }),
+      );
+      expect(scene).toRender([255, 0, 0, 255]);
+
+      point.setPosition(new Cartesian3(0, -2000, 0));
+      expect(scene).toRender([0, 0, 255, 255]);
+    });
+
     it("evaluates callbacks only for changed points", function () {
       const point = collection.add({ position }, new BufferPoint());
       collection.add({ position }, new BufferPoint());
