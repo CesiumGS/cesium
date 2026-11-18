@@ -21,6 +21,7 @@
 - Added experimental `Cesium3DTileset` option `vectorGeoJson`, which loads `MAXAR_content_geojson` tile content as vector primitives with filled polygons, instead of as a model. [#14007](https://github.com/CesiumGS/cesium/pull/14007)
 - Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
 - Added experimental `VectorPrimitive` and `CircleVectorPrimitive`. A vector primitive draws a `BufferPrimitiveCollection` with styling held by the vector primitive instead of per-primitive materials, and several vector primitives may draw the same collection. `CircleVectorPrimitive` draws points with a radius, fill color, and outline. [#13932](https://github.com/CesiumGS/cesium/pull/13932)
+- `CircleVectorPrimitive` can style each point individually, e.g. `radius: (point) => ...`, and `filter` selects which points are drawn. [#13942](https://github.com/CesiumGS/cesium/pull/13942)
 
 #### Fixes :wrench:
 
