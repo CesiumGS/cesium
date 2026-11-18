@@ -2,10 +2,15 @@
 id: CS-409
 title: Who records a study's verdict, and does a verdict close a decision?
 kind: decision
-state: planned
+state: done
 created: 2026-11-13
 project: CS-389
 decider: owner
+answer: "Agents may record verdicts on studies; a verdict that informs a decision item is shown on it, and closing the decision stays the owner's step."
+rationale: "owner, 2026-11-18: the recommendation"
+answered_at: 2026-11-18T02:57:15.000Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question
@@ -23,4 +28,4 @@ Detail: `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, section 13.
 
 ## Answer
 
-Open.
+Recorded in the front matter: the owner's answer through the question tool in the chief of staff's session. It wasn't asked through `hitld rights ask`, so it has no check code or ledger entry.
