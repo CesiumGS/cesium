@@ -1,0 +1,7 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [],
+    "lib": ["ES2022", "DOM"]
+  }
+}

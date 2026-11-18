@@ -1291,7 +1291,7 @@ ${source}
   writeFileSync("Source/Cesium.d.ts", source);
 
   // Use tsc to compile it and make sure it is valid
-  execSync("npx tsc -p Tools/jsdoc/tsconfig.json", {
+  execSync("npx tsc -p tsconfig.types.json", {
     stdio: "inherit",
   });
 
