@@ -1040,7 +1040,7 @@ export async function test() {
 /**
  * Fix the typescript definitions output to match what we need.
  *
- * - Change declare => export since we are wrapping everything in a namespace
+ * - Change declare => export so each declaration is exported
  * - Change CesiumMath => Math to help avoid conflicts with the native Math class
  * - Fix up the WebGLConstants aliasing by simply unquoting the strings.
 
@@ -1148,13 +1148,6 @@ function generateWorkspaceTypeScriptDefinitions(
     });
     source = imports + source;
   }
-
-  // Wrap the source to actually be inside of a declared cesium module
-  // and add any workaround and private utility types.
-  source = `declare module "@${scope}/${workspaceName}" {
-${source}
-}
-`;
 
   // Write the final source file back out
   writeFileSync(definitionsPath, source);

@@ -173,6 +173,8 @@ function SandcastleEditor({
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
       target: monaco.languages.typescript.ScriptTarget.ESNext,
       allowNonTsExtensions: true,
+      // Resolves imports of the workspace packages to their types under file:///node_modules/
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
     });
 
     monaco.languages.registerDocumentFormattingEditProvider("javascript", {
@@ -244,7 +246,7 @@ function SandcastleEditor({
     for (const extraName of extraImportNames) {
       typeImports.push({
         url: typeImportPaths[extraName],
-        filename: `ts:${extraName.replace(/@\//, "-")}.d.ts`,
+        filename: `file:///node_modules/${extraName}/index.d.ts`,
       });
     }
 
