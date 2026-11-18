@@ -4,7 +4,7 @@ title: "A mesh editing sample: drag a mesh's vertices, edges and faces, beside t
 kind: work
 state: planned
 created: 2026-11-17
-project: CS-193
+project: CS-579
 touches: [packages/next/examples/**]
 tier_override: 3
 ---

@@ -4,7 +4,7 @@ title: What editing should the engine support, with vector data and GIS sources 
 kind: decision
 state: planned
 created: 2026-11-14
-project: CS-190
+project: CS-579
 decider: owner
 ---
 
