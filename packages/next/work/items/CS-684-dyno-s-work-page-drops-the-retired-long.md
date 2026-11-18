@@ -2,7 +2,7 @@
 id: CS-684
 title: "Dyno's Work page drops the retired long outcomes: no Long outcomes view, and dropped milestones out of every grouping"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-17
 project: CS-18
 claimed_by: orch-9-CS-684
