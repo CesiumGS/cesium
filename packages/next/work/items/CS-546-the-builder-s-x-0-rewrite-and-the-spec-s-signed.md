@@ -2,10 +2,14 @@
 id: CS-546
 title: The builder's x + 0 rewrite and the spec's signed zero
 kind: decision
-state: planned
+state: done
 created: 2026-11-15
 project: CS-10
 decider: owner
+answer: "A. A: Rewrite only x + (-0): The builder rewrites x + c to x only when c is -0, which matches the spec for every x, and the plan's wording is amended to say so. It lands as a small follow-up item after CS-48 merges."
+answered_at: 2026-11-18T02:47:27.692Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

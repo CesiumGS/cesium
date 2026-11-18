@@ -2,10 +2,14 @@
 id: CS-570
 title: Executors blocked by the Bash guard's match on the word hitld
 kind: decision
-state: planned
+state: done
 created: 2026-11-17
 project: CS-10
 decider: owner
+answer: "A. Orchestrator renames: Until the guard is fixed, the orchestrator renames each executor's worktree branch to its dispatch branch name from the main checkout right after launch and tells the executor to skip that step. The guard stays as it is for everything else."
+answered_at: 2026-11-18T02:47:27.174Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
