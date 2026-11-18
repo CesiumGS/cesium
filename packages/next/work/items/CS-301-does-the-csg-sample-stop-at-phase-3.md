@@ -2,10 +2,15 @@
 id: CS-301
 title: Does the CSG sample stop at phase 3?
 kind: decision
-state: planned
+state: done
 created: 2026-11-13
 project: CS-193
 decider: owner
+answer: "Stop at phase 3."
+rationale: "owner, 2026-11-18"
+answered_at: 2026-11-18T03:04:41.000Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question
@@ -21,4 +26,4 @@ The note makes no recommendation.
 
 ## Answer
 
-Open.
+Recorded in the front matter: the owner's answer through the question tool in the chief of staff's session. It wasn't asked through `hitld rights ask`, so it has no check code or ledger entry.
