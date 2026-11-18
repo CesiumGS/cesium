@@ -1,8 +1,9 @@
 // @ts-check
 
-import { DeveloperError, defined, destroyObject } from "@cesium/core";
+import { DeveloperError, Event, defined, destroyObject } from "@cesium/core";
 import Deformable from "./Deformable.js";
 
+/** @import { AxisAlignedBoundingBox } from "@cesium/core"; */
 /** @import DeformerBinding from "./DeformerBinding.js"; */
 /** @import FrameState from "./FrameState.js"; */
 
@@ -30,6 +31,18 @@ class Deformer {
    * @type {Set<Deformable>}
    */
   #deformablesToBind = new Set();
+
+  /** @type {AxisAlignedBoundingBox|undefined} */
+  #bounds;
+
+  /**
+   * Raised when {@link Deformer#_bounds} changes.
+   *
+   * @type {Event<function(): void>}
+   * @readonly
+   * @internal
+   */
+  _boundsChanged = new Event();
 
   /**
    * Deformables whose bindings no longer applied, for {@link Deformer#rebind}.
@@ -116,6 +129,31 @@ class Deformer {
       this.#removeBinding(deformable);
       this.#deformablesToRebind.add(deformable);
     }
+  }
+
+  /**
+   * The deformer's bounds in its local space, or undefined if they aren't
+   * known.
+   *
+   * @type {AxisAlignedBoundingBox|undefined}
+   * @readonly
+   * @internal
+   */
+  get _bounds() {
+    return this.#bounds;
+  }
+
+  /**
+   * Sets the deformer's local-space bounds, raising
+   * {@link Deformer#_boundsChanged}. Subclasses call this when their bounds
+   * change.
+   *
+   * @param {AxisAlignedBoundingBox|undefined} bounds The bounds.
+   * @internal
+   */
+  _setBounds(bounds) {
+    this.#bounds = bounds;
+    this._boundsChanged.raiseEvent();
   }
 
   /**

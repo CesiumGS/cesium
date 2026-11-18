@@ -64,8 +64,11 @@ class SurfaceDeformer extends Deformer {
 
     super();
     this.#mesh = mesh;
+    const setBounds = () => this._setBounds(mesh._renderer.localBounds);
+    setBounds();
     this.#removeMeshListeners = [
       mesh._topologyChanged.addEventListener(this._invalidateBindings, this),
+      mesh._geometryChanged.addEventListener(setBounds),
       mesh._afterUpdate.addEventListener(this._update, this),
       mesh._destroyed.addEventListener(this.destroy, this),
     ];
@@ -128,7 +131,7 @@ class SurfaceDeformer extends Deformer {
       (positions.length / 3) * FLOATS_PER_VERTEX,
     );
 
-    mesh._wasmEditor.bindSurfaceDeformer(
+    const boundsCoefficients = mesh._wasmEditor.bindSurfaceDeformer(
       mesh._key,
       positions,
       new Float64Array(Matrix4.toArray(deformableToDeformer)),
@@ -147,10 +150,12 @@ class SurfaceDeformer extends Deformer {
 
     const positionTexture = mesh._renderer.positionTexture;
     return new SurfaceDeformerBinding({
+      deformer: this,
       vertexBuffer,
       positionTexture,
       restPositionTexture: positionTexture.copy(context),
       bindMatrix: Matrix4.inverse(deformableToDeformer, new Matrix4()),
+      boundsCoefficients,
     });
   }
 }

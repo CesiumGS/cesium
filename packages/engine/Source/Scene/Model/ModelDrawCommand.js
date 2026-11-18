@@ -356,13 +356,7 @@ Object.defineProperties(ModelDrawCommand.prototype, {
     },
     set: function (value) {
       this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
-      this._modelMatrix2DDirty = true;
-
-      this._boundingVolume = BoundingSphere.transform(
-        this.runtimePrimitive.boundingSphere,
-        this._modelMatrix,
-        this._boundingVolume,
-      );
+      this.updateBoundingVolume();
     },
   },
 
@@ -552,6 +546,21 @@ function updateDebugShowBoundingVolume(drawCommand) {
     }
   }
 }
+
+/**
+ * Updates the bounding volume of the draw commands from the primitive's
+ * bounding sphere.
+ *
+ * @private
+ */
+ModelDrawCommand.prototype.updateBoundingVolume = function () {
+  this._modelMatrix2DDirty = true;
+  this._boundingVolume = BoundingSphere.transform(
+    this.runtimePrimitive.boundingSphere,
+    this._modelMatrix,
+    this._boundingVolume,
+  );
+};
 
 /**
  * Pushes the draw commands necessary to render the primitive.

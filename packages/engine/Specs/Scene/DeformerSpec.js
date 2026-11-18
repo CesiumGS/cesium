@@ -140,6 +140,17 @@ describe("Scene/Deformer", function () {
     expect(deformer.needsRebind).toBe(false);
   });
 
+  it("raises _boundsChanged when its bounds are set", function () {
+    const deformer = new TestDeformer();
+    const listener = jasmine.createSpy("listener");
+    deformer._boundsChanged.addEventListener(listener);
+
+    const bounds = {};
+    deformer._setBounds(bounds);
+    expect(deformer._bounds).toBe(bounds);
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+
   it("unbinds every deformable when destroyed", function () {
     const deformer = new TestDeformer();
     const deformable = createDeformable();

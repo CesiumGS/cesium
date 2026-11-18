@@ -1,6 +1,7 @@
 // @ts-check
 
 import { DeveloperError } from "@cesium/core";
+/** @import { AxisAlignedBoundingBox, Event } from "@cesium/core"; */
 /** @import Buffer from "../Renderer/Buffer.js"; */
 /** @import GeometryAttributeDescriptor from "./GeometryAttributeDescriptor.js"; */
 /** @import UniformType from "./Model/UniformType.js"; */
@@ -61,6 +62,27 @@ class DeformerBinding {
    * @returns {string[]} The lines of the function body.
    */
   getShaderLines(names) {
+    return DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Raised when the result of {@link DeformerBinding#computeDeformedBoundingBox} may
+   * have changed.
+   *
+   * @type {Event}
+   * @readonly
+   */
+  get deformedBoundingBoxChanged() {
+    return DeveloperError.throwInstantiationError();
+  }
+
+  /**
+   * Computes a box containing the deformable after deformation, in the deformable's local space.
+   *
+   * @param {AxisAlignedBoundingBox} result The object in which to store the result.
+   * @returns {AxisAlignedBoundingBox|undefined} The box, or undefined if it isn't known yet.
+   */
+  computeDeformedBoundingBox(result) {
     return DeveloperError.throwInstantiationError();
   }
 

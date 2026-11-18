@@ -422,12 +422,7 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
     },
     set: function (value) {
       this._modelMatrix = Matrix4.clone(value, this._modelMatrix);
-      const boundingSphere = this._runtimePrimitive.boundingSphere;
-      this._boundingVolume = BoundingSphere.transform(
-        boundingSphere,
-        this._modelMatrix,
-        this._boundingVolume,
-      );
+      this.updateBoundingVolume();
     },
   },
 
@@ -467,6 +462,20 @@ Object.defineProperties(ClassificationModelDrawCommand.prototype, {
     },
   },
 });
+
+/**
+ * Updates the bounding volume of the draw commands from the primitive's
+ * bounding sphere.
+ *
+ * @private
+ */
+ClassificationModelDrawCommand.prototype.updateBoundingVolume = function () {
+  this._boundingVolume = BoundingSphere.transform(
+    this._runtimePrimitive.boundingSphere,
+    this._modelMatrix,
+    this._boundingVolume,
+  );
+};
 
 /**
  * Pushes the draw commands necessary to render the primitive.

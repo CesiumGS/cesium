@@ -35,6 +35,11 @@ function ModelPrimitive(model, node, runtimePrimitive) {
   // Lazily created geometry reader and writer to avoid unnecessary allocation until they're needed.
   this._geometryReader = undefined;
   this._geometryWriter = undefined;
+  /**
+   * @type {Map<DeformerBinding, function(): void>}
+   * @private
+   */
+  this._removeDeformedBoundingBoxListeners = new Map();
 }
 
 Object.defineProperties(ModelPrimitive.prototype, {
@@ -203,6 +208,12 @@ ModelPrimitive.prototype.addDeformerBinding = function (binding) {
   //>>includeEnd('debug');
 
   runtimePrimitive.deformerBindings.add(binding);
+  this._removeDeformedBoundingBoxListeners.set(
+    binding,
+    binding.deformedBoundingBoxChanged.addEventListener(() => {
+      runtimePrimitive.deformedBoundsDirty = true;
+    }),
+  );
   this._model.resetDrawCommands();
 };
 
@@ -215,6 +226,8 @@ ModelPrimitive.prototype.addDeformerBinding = function (binding) {
  */
 ModelPrimitive.prototype.removeDeformerBinding = function (binding) {
   if (this._runtimePrimitive.deformerBindings.delete(binding)) {
+    this._removeDeformedBoundingBoxListeners.get(binding)();
+    this._removeDeformedBoundingBoxListeners.delete(binding);
     this._model.resetDrawCommands();
   }
 };

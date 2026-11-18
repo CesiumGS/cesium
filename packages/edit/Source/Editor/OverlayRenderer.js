@@ -394,6 +394,16 @@ class OverlayRenderer {
   }
 
   /**
+   * The mesh's local-space bounds, or undefined for a mesh without vertices.
+   *
+   * @type {AxisAlignedBoundingBox | undefined}
+   * @readonly
+   */
+  get localBounds() {
+    return this.#localBounds;
+  }
+
+  /**
    * The world-space bounding volume of the draw commands, or undefined without
    * local bounds.
    *

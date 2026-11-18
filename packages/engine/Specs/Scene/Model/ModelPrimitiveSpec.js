@@ -1,7 +1,10 @@
 import {
   AttributeType,
+  AxisAlignedBoundingBox,
+  BoundingSphere,
   Cartesian3,
   ComponentDatatype,
+  Event,
   Matrix4,
 } from "@cesium/core";
 import {
@@ -11,6 +14,7 @@ import {
   GeometryAttributeDescriptor,
   GeometryAttributeDomain,
   ModelDeformerPipelineStage,
+  ModelDeformerUpdateStage,
   ResourceCache,
   UniformType,
   VertexAttributeSemantic,
@@ -921,6 +925,8 @@ describe(
             "jacobian = mat3(1.0);",
             `return positionMC + ${names.offset};`,
           ],
+          deformedBoundingBoxChanged: new Event(),
+          computeDeformedBoundingBox: () => undefined,
         };
       }
 
@@ -946,6 +952,41 @@ describe(
         expect(runtimePrimitive.deformerBindings.size).toBe(0);
         expect(runtimePrimitive.pipelineStages).not.toContain(
           ModelDeformerPipelineStage,
+        );
+        expect(binding.deformedBoundingBoxChanged.numberOfListeners).toBe(0);
+      });
+
+      it("bounds its draw command by its bindings' boxes", async function () {
+        const [primitive] = await loadPrimitives(unitSquarePlainUrl);
+        const runtimePrimitive = primitive._runtimePrimitive;
+        const box = new AxisAlignedBoundingBox(
+          new Cartesian3(-10.0, -10.0, -10.0),
+          new Cartesian3(10.0, 10.0, 10.0),
+        );
+        const binding = createBinding(Cartesian3.ZERO);
+        binding.computeDeformedBoundingBox = (result) =>
+          AxisAlignedBoundingBox.clone(box, result);
+
+        primitive.addDeformerBinding(binding);
+        scene.renderForSpecs();
+        expect(runtimePrimitive.updateStages).toContain(
+          ModelDeformerUpdateStage,
+        );
+        const expected = BoundingSphere.fromCornerPoints(
+          box.minimum,
+          box.maximum,
+        );
+        expect(runtimePrimitive.boundingSphere).toEqual(expected);
+        const { drawCommand } = runtimePrimitive;
+        expect(drawCommand.boundingVolume).toEqual(
+          BoundingSphere.transform(expected, drawCommand.modelMatrix),
+        );
+
+        Cartesian3.multiplyByScalar(box.maximum, 2.0, box.maximum);
+        binding.deformedBoundingBoxChanged.raiseEvent();
+        scene.renderForSpecs();
+        expect(runtimePrimitive.boundingSphere).toEqual(
+          BoundingSphere.fromCornerPoints(box.minimum, box.maximum),
         );
       });
 
