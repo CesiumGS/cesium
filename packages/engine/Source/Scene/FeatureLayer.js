@@ -35,6 +35,8 @@ class FeatureLayer {
   /**
    * Whether the layer is shown. In a {@link Cesium3DTileset}, tiles in a hidden
    * layer are not requested or rendered. Tiles with multiple contents are not yet affected.
+   * In an {@link MVTDataProvider}, each tile holds every layer, so tiles are still
+   * requested and only the hidden layer's features are not rendered.
    *
    * @type {boolean}
    * @default true

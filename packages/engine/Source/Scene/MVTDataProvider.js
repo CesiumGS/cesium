@@ -55,7 +55,8 @@ class MVTDataProvider extends UrlTemplate3DTilesDataProvider {
 
   /**
    * The feature layers provided by this instance, one per MVT source layer. A layer is
-   * added when the first tile containing its features loads.
+   * added when the first tile containing its features loads, so layer order follows
+   * tile load order; use {@link FeatureLayerCollection#getByName} to find a layer.
    *
    * @type {FeatureLayerCollection}
    * @readonly
