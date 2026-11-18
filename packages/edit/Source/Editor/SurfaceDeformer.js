@@ -91,8 +91,9 @@ class SurfaceDeformer extends Deformer {
       bindingData,
     );
 
+    const { context } = frameState;
     const vertexBuffer = Buffer.createVertexBuffer({
-      context: frameState.context,
+      context,
       typedArray: bindingData,
       usage: BufferUsage.STATIC_DRAW,
     });
@@ -100,9 +101,11 @@ class SurfaceDeformer extends Deformer {
     // The binding owns the buffer, so the deformable's vertex arrays mustn't destroy it.
     vertexBuffer.vertexArrayDestroyable = false;
 
+    const positionTexture = mesh._renderer.positionTexture;
     return new SurfaceDeformerBinding({
       vertexBuffer,
-      positionTexture: mesh._renderer.positionTexture,
+      positionTexture,
+      restPositionTexture: positionTexture.copy(context),
       bindMatrix: Matrix4.inverse(deformableToDeformer, new Matrix4()),
     });
   }

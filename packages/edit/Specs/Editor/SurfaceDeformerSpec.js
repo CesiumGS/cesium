@@ -121,6 +121,24 @@ describe(
       );
     });
 
+    it("copies the mesh's positions when binding, until unbound", function () {
+      const deformer = SurfaceDeformer.fromMesh(addCage());
+      const deformable = createDeformable([[0.5, -0.5, 1.0]]);
+      deformer.bind(deformable);
+      scene.renderForSpecs();
+
+      const { positions, restPositions } = getBinding(deformable).uniforms;
+      const restTexture = restPositions.value();
+      expect(restTexture).toBeDefined();
+      expect(restTexture).not.toBe(positions.value());
+      expect(restTexture.width * restTexture.height).toBeGreaterThanOrEqual(
+        square.positions.length,
+      );
+
+      deformer.unbind(deformable);
+      expect(restTexture.isDestroyed()).toBe(true);
+    });
+
     it("replaces the binding when binding again", function () {
       const deformer = SurfaceDeformer.fromMesh(addCage());
       const deformable = createDeformable([[0.5, -0.5, 1.0]]);
@@ -182,6 +200,7 @@ describe(
     it("binds deformables bound after a topology change", function () {
       const deformer = SurfaceDeformer.fromMesh(addCage());
       const deformable = createDeformable([[0.5, -0.5, 1.0]]);
+      scene.renderForSpecs();
       deformer.bind(deformable);
 
       deformer._update(scene.frameState, true);

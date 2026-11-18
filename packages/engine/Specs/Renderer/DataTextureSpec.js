@@ -51,7 +51,7 @@ describe(
     }
 
     // Reads an element back on the GPU, indexing the texture as shaders do.
-    function expectElement(index, version) {
+    function expectElement(index, version, texture = dataTexture) {
       const fragmentShader =
         "uniform highp sampler2D u_texture;\n" +
         "uniform int u_index;\n" +
@@ -65,7 +65,7 @@ describe(
         fragmentShader: fragmentShader,
         uniformMap: {
           u_texture: function () {
-            return dataTexture.texture;
+            return texture.texture;
           },
           u_index: function () {
             return index;
@@ -240,6 +240,52 @@ describe(
       }).toThrowDeveloperError();
       expect(function () {
         dataTexture.upload(context, data, 0, 5);
+      }).toThrowDeveloperError();
+    });
+
+    it("copies every element into a new texture of the same size", function () {
+      useMaximumTextureSize(4);
+      dataTexture.upload(context, createElements(6, 1));
+      const copy = dataTexture.copy(context);
+
+      expect(copy.texture).not.toBe(dataTexture.texture);
+      expect(copy.texture.width).toBe(dataTexture.texture.width);
+      expect(copy.texture.height).toBe(dataTexture.texture.height);
+      expect(copy.elementCount).toBe(6);
+      for (let i = 0; i < 6; ++i) {
+        expectElement(i, 1, copy);
+      }
+
+      dataTexture.upload(context, createElements(6, 2));
+      expectElement(0, 1, copy);
+      copy.destroy();
+    });
+
+    it("copies float textures", function () {
+      if (!context.colorBufferFloat) {
+        return;
+      }
+
+      const floatTexture = new DataTexture({
+        pixelFormat: PixelFormat.RGBA,
+        pixelDatatype: PixelDatatype.FLOAT,
+      });
+      floatTexture.upload(
+        context,
+        Float32Array.from(createElements(3, 1), (value) => value / 255),
+      );
+      const copy = floatTexture.copy(context);
+
+      for (let i = 0; i < 3; ++i) {
+        expectElement(i, 1, copy);
+      }
+      floatTexture.destroy();
+      copy.destroy();
+    });
+
+    it("throws when copying before the first upload", function () {
+      expect(function () {
+        dataTexture.copy(context);
       }).toThrowDeveloperError();
     });
 
