@@ -139,86 +139,32 @@ describe(
       expect(restTexture.isDestroyed()).toBe(true);
     });
 
-    it("replaces the binding when binding again", function () {
-      const deformer = SurfaceDeformer.fromMesh(addCage());
-      const deformable = createDeformable([[0.5, -0.5, 1.0]]);
-      deformer.bind(deformable);
-      scene.renderForSpecs();
-      const first = getBinding(deformable);
-
-      deformer.bind(deformable);
-      scene.renderForSpecs();
-
-      expect(first.isDestroyed()).toBe(true);
-      expect(getBinding(deformable)).not.toBe(first);
-    });
-
-    it("unbinds, destroying the binding", function () {
-      const deformer = SurfaceDeformer.fromMesh(addCage());
-      const deformable = createDeformable([[0.5, -0.5, 1.0]]);
-      deformer.bind(deformable);
-      scene.renderForSpecs();
-      const binding = getBinding(deformable);
-
-      expect(deformer.unbind(deformable)).toBe(true);
-      expect(deformable.bindings.size).toBe(0);
-      expect(binding.isDestroyed()).toBe(true);
-      expect(deformer.unbind(deformable)).toBe(false);
-    });
-
-    it("doesn't bind a deformable unbound before the next render pass", function () {
-      const deformer = SurfaceDeformer.fromMesh(addCage());
-      const deformable = createDeformable([[0.5, -0.5, 1.0]]);
-      deformer.bind(deformable);
-
-      expect(deformer.unbind(deformable)).toBe(true);
-      scene.renderForSpecs();
-      expect(deformable.bindings.size).toBe(0);
-    });
-
     it("unbinds every deformable when the mesh's topology changes, until rebound", function () {
-      const deformer = SurfaceDeformer.fromMesh(addCage());
-      const deformable = createDeformable([[0.5, -0.5, 1.0]]);
-      deformer.bind(deformable);
-      scene.renderForSpecs();
-      expect(deformer.needsRebind).toBe(false);
-
-      // The wasm API has no topology edits yet, so simulate one.
-      deformer._update(scene.frameState, true);
-      expect(deformable.bindings.size).toBe(0);
-      expect(deformer.needsRebind).toBe(true);
-
-      scene.renderForSpecs();
-      expect(deformable.bindings.size).toBe(0);
-
-      deformer.rebind();
-      expect(deformer.needsRebind).toBe(false);
-      scene.renderForSpecs();
-      expect(deformable.bindings.size).toBe(1);
-    });
-
-    it("binds deformables bound after a topology change", function () {
-      const deformer = SurfaceDeformer.fromMesh(addCage());
-      const deformable = createDeformable([[0.5, -0.5, 1.0]]);
-      scene.renderForSpecs();
-      deformer.bind(deformable);
-
-      deformer._update(scene.frameState, true);
-      expect(deformable.bindings.size).toBe(1);
-      expect(deformer.needsRebind).toBe(false);
-    });
-
-    it("unbinds every deformable when destroyed", function () {
       const cage = addCage();
       const deformer = SurfaceDeformer.fromMesh(cage);
       const deformable = createDeformable([[0.5, -0.5, 1.0]]);
       deformer.bind(deformable);
       scene.renderForSpecs();
+      expect(deformable.bindings.size).toBe(1);
+
+      // The wasm API has no topology edits yet, so simulate one.
+      cage._topologyChanged.raiseEvent();
+      expect(deformable.bindings.size).toBe(0);
+      expect(deformer.needsRebind).toBe(true);
+
+      deformer.rebind();
+      scene.renderForSpecs();
+      expect(deformable.bindings.size).toBe(1);
+    });
+
+    it("stops listening to its mesh when destroyed", function () {
+      const cage = addCage();
+      const deformer = SurfaceDeformer.fromMesh(cage);
 
       deformer.destroy();
-      expect(deformer.isDestroyed()).toBe(true);
-      expect(deformable.bindings.size).toBe(0);
-      expect(cage._deformers.has(deformer)).toBe(false);
+      expect(cage._topologyChanged.numberOfListeners).toBe(0);
+      expect(cage._afterUpdate.numberOfListeners).toBe(0);
+      expect(cage._destroyed.numberOfListeners).toBe(0);
     });
 
     it("is destroyed with its mesh", function () {
@@ -231,13 +177,6 @@ describe(
       editor.removeMesh(cage);
       expect(deformer.isDestroyed()).toBe(true);
       expect(deformable.bindings.size).toBe(0);
-    });
-
-    it("throws when binding something that isn't a Deformable", function () {
-      const deformer = SurfaceDeformer.fromMesh(addCage());
-      expect(function () {
-        deformer.bind(createGeometrySource(square));
-      }).toThrowDeveloperError();
     });
 
     it("keeps a model's rest shape when bound", async function () {

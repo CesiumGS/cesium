@@ -4,10 +4,10 @@ import { Check, Matrix4 } from "@cesium/core";
 import {
   Buffer,
   BufferUsage,
+  Deformer,
   GeometryAttributeDescriptor,
   VertexAttributeSemantic,
 } from "@cesium/engine";
-import Deformer from "./Deformer.js";
 import SurfaceDeformerBinding from "./SurfaceDeformerBinding.js";
 import readVertexValues from "./readVertexValues.js";
 
@@ -30,7 +30,9 @@ const scratchDeformableToDeformer = new Matrix4();
  * </div>
  *
  * A {@link Deformer} whose deformables' vertices follow their closest
- * triangles of the mesh.
+ * triangles of a {@link Mesh}, as the mesh is edited. Editing the mesh's
+ * topology unbinds every deformable until {@link Deformer#rebind} is called.
+ * The deformer is destroyed with its mesh.
  *
  * @alias SurfaceDeformer
  * @internalConstructor
@@ -46,6 +48,52 @@ const scratchDeformableToDeformer = new Matrix4();
  * }
  */
 class SurfaceDeformer extends Deformer {
+  /** @type {Mesh} */
+  #mesh;
+
+  /** @type {Array<function(): void>} */
+  #removeMeshListeners;
+
+  /**
+   * @param {Mesh} mesh The mesh that deforms.
+   */
+  constructor(mesh) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("mesh", mesh);
+    //>>includeEnd('debug');
+
+    super();
+    this.#mesh = mesh;
+    this.#removeMeshListeners = [
+      mesh._topologyChanged.addEventListener(this._invalidateBindings, this),
+      mesh._afterUpdate.addEventListener(this._update, this),
+      mesh._destroyed.addEventListener(this.destroy, this),
+    ];
+  }
+
+  /**
+   * The mesh that deforms.
+   *
+   * @type {Mesh}
+   * @readonly
+   */
+  get mesh() {
+    return this.#mesh;
+  }
+
+  /**
+   * Unbinds every deformable and destroys the deformer. It can't be used
+   * afterwards.
+   *
+   * @returns {void}
+   */
+  destroy() {
+    for (const removeListener of this.#removeMeshListeners) {
+      removeListener();
+    }
+    return super.destroy();
+  }
+
   /**
    * Creates a deformer that deforms with a mesh.
    *
@@ -53,10 +101,6 @@ class SurfaceDeformer extends Deformer {
    * @returns {SurfaceDeformer} The new deformer.
    */
   static fromMesh(mesh) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.object("mesh", mesh);
-    //>>includeEnd('debug');
-
     return new SurfaceDeformer(mesh);
   }
 
