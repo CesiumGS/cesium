@@ -15,6 +15,7 @@ Related: CS-517 (the agent system's pages, the merge queue among them) shows the
 ## Done when
 
 - In progress lists every item a dispatch is working on (`hitld ledger in-flight`), with its dispatch and how long it's been running.
+- The age shown for an item in progress is measured from its dispatch's start (the ledger) or its claim commit, never from the day-bucketed stage history (`flowOf`'s `since`). On 2026-11-18 the box showed about 21 hours for items claimed ten minutes earlier.
 - It lists items done on a branch and not merged, each with its branch and whether the merge queue has it, is testing it, or waits for the owner's yes.
 - It names the active run and the orchestrator holding its lease (`hitld run status`), or says no run is active.
 - Stale claims on branches already merged (CS-174 today) don't show as in progress.
