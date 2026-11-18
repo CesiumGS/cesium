@@ -2,10 +2,15 @@
 id: CS-566
 title: "CS-200: the globe and lod parity suites need the ion token in executor worktrees"
 kind: decision
-state: planned
+state: done
 created: 2026-11-17
 project: CS-188
 decider: owner
+answer: "A. Owner provides the token: The owner makes the token available to executor worktrees (for example through env.worktree_setup or by placing .env.local in the CS-200 worktree and its base tree), and the same executor reruns globe and lod on both trees"
+rationale: you copy it
+answered_at: 2026-11-18T02:15:36.071Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question

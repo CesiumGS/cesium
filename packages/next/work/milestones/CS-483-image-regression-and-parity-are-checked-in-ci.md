@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-195
 outcome: "SwiftShader runs image checks and the parity pages in CI, custom shaders and feature styles match 1.x, and coloured metals match a multiple-scattering reference."
-constraints: [CS-327 c?, CS-330 c?, CS-448 c?, CS-541 c?, CS-542 c?]
+constraints: [CS-327 c?, CS-330 c?, CS-448 c?, CS-541 c?, CS-542 c?, CS-568 c?]
 ---
 
 ## Done when
