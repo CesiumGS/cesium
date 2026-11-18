@@ -1,4 +1,9 @@
-import { Cartesian3, Color, Matrix4 } from "@cesium/core";
+import {
+  AxisAlignedBoundingBox,
+  Cartesian3,
+  Color,
+  Matrix4,
+} from "@cesium/core";
 import { Deformable, Model } from "@cesium/engine";
 import { MeshEditor, SurfaceDeformer } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -121,6 +126,29 @@ describe(
       );
     });
 
+    it("bounds deformables by the mesh's bounds", function () {
+      const cage = addCage();
+      const deformer = SurfaceDeformer.fromMesh(cage);
+      const deformable = createDeformable([[0.5, -0.5, 1.0]]);
+      deformer.bind(deformable);
+      scene.renderForSpecs();
+
+      const binding = getBinding(deformable);
+      const box = binding.computeDeformedBoundingBox(
+        new AxisAlignedBoundingBox(),
+      );
+      expect(box).toBeDefined();
+      // The box contains the square and the deformable's vertex.
+      expect(box.minimum.x).toBeLessThanOrEqual(-1.0);
+      expect(box.maximum.x).toBeGreaterThanOrEqual(1.0);
+      expect(box.maximum.z).toBeGreaterThanOrEqual(1.0);
+
+      const listener = jasmine.createSpy("listener");
+      binding.deformedBoundingBoxChanged.addEventListener(listener);
+      cage._geometryChanged.raiseEvent();
+      expect(listener).toHaveBeenCalled();
+    });
+
     it("copies the mesh's positions when binding, until unbound", function () {
       const deformer = SurfaceDeformer.fromMesh(addCage());
       const deformable = createDeformable([[0.5, -0.5, 1.0]]);
@@ -164,6 +192,7 @@ describe(
       deformer.destroy();
       expect(cage._topologyChanged.numberOfListeners).toBe(0);
       expect(cage._afterUpdate.numberOfListeners).toBe(0);
+      expect(cage._geometryChanged.numberOfListeners).toBe(0);
       expect(cage._destroyed.numberOfListeners).toBe(0);
     });
 

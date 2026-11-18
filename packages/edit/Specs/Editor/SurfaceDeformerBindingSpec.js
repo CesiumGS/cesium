@@ -1,5 +1,7 @@
 import {
+  AxisAlignedBoundingBox,
   Cartesian3,
+  Event,
   Matrix3,
   Matrix4,
   PixelDatatype,
@@ -248,6 +250,77 @@ describe(
         bindMatrix: Matrix4.IDENTITY,
         expectedPosition: new Cartesian3(a + 2.0 * b, 0.0, 0.0),
         expectedJacobian: Matrix3.IDENTITY,
+      });
+    });
+
+    describe("bounding box", function () {
+      let deformer;
+
+      beforeEach(function () {
+        deformer = { _bounds: undefined, _boundsChanged: new Event() };
+      });
+
+      function createBinding(bindMatrix) {
+        return new SurfaceDeformerBinding({
+          deformer,
+          vertexBuffer: { destroy: () => {} },
+          positionTexture: {},
+          restPositionTexture: { destroy: () => {} },
+          bindMatrix,
+          boundsCoefficients: { maxOvershoot: 0.5, maxNormalDistance: 1.0 },
+        });
+      }
+
+      const meshBounds = new AxisAlignedBoundingBox(
+        new Cartesian3(0.0, 0.0, 0.0),
+        new Cartesian3(2.0, 4.0, 0.0),
+      );
+
+      it("is undefined until the mesh's bounds are set", function () {
+        const binding = createBinding(Matrix4.IDENTITY);
+        expect(
+          binding.computeDeformedBoundingBox(new AxisAlignedBoundingBox()),
+        ).toBeUndefined();
+      });
+
+      it("changes with its deformer's bounds", function () {
+        const binding = createBinding(Matrix4.IDENTITY);
+        expect(binding.deformedBoundingBoxChanged).toBe(
+          deformer._boundsChanged,
+        );
+      });
+
+      it("expands the mesh's bounds by its coefficients", function () {
+        const binding = createBinding(Matrix4.IDENTITY);
+        deformer._bounds = meshBounds;
+
+        // Each axis grows by 0.5 * extent + 1.0.
+        const box = binding.computeDeformedBoundingBox(
+          new AxisAlignedBoundingBox(),
+        );
+        expect(box.minimum).toEqual(new Cartesian3(-2.0, -3.0, -1.0));
+        expect(box.maximum).toEqual(new Cartesian3(4.0, 7.0, 1.0));
+      });
+
+      it("maps the box into the deformable's space", function () {
+        const bindMatrix = Matrix4.fromRotationTranslation(
+          Matrix3.fromRotationZ(Math.PI / 2.0),
+          new Cartesian3(10.0, 0.0, 0.0),
+        );
+        const binding = createBinding(bindMatrix);
+        deformer._bounds = meshBounds;
+
+        const box = binding.computeDeformedBoundingBox(
+          new AxisAlignedBoundingBox(),
+        );
+        expect(box.minimum).toEqualEpsilon(
+          new Cartesian3(3.0, -2.0, -1.0),
+          1e-12,
+        );
+        expect(box.maximum).toEqualEpsilon(
+          new Cartesian3(13.0, 4.0, 1.0),
+          1e-12,
+        );
       });
     });
   },

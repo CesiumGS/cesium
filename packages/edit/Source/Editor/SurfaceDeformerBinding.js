@@ -2,13 +2,22 @@
 
 import {
   AttributeType,
+  Cartesian3,
   ComponentDatatype,
+  Matrix3,
   Matrix4,
+  defined,
   destroyObject,
 } from "@cesium/core";
 import { GeometryAttributeDescriptor, UniformType } from "@cesium/engine";
 
-/** @import { Buffer, DataTexture, DeformerBinding } from "@cesium/engine"; */
+/** @import { AxisAlignedBoundingBox } from "@cesium/core"; */
+/** @import { Buffer, DataTexture, Deformer, DeformerBinding } from "@cesium/engine"; */
+/** @import { DeformedBoundsCoeffs } from "@cesium/mesh-editor"; */
+
+const scratchHalfExtent = new Cartesian3();
+const scratchNormalDistance = new Cartesian3();
+const scratchLinear = new Matrix3();
 
 /**
  * A deformable's binding to a {@link SurfaceDeformer}'s mesh. Each vertex is
@@ -41,19 +50,39 @@ class SurfaceDeformerBinding {
   /** @type {Object<string, {type: UniformType, value: function(): *}>} */
   #uniforms;
 
+  /** @type {Matrix4} */
+  #bindMatrix;
+
+  /** @type {DeformedBoundsCoeffs} */
+  #boundsCoefficients;
+
+  /** @type {Deformer} */
+  #deformer;
+
   /**
    * @param {object} options
+   * @param {Deformer} options.deformer The deformer that created the binding.
    * @param {Buffer} options.vertexBuffer The bound vertices, interleaved in {@link SurfaceDeformerBinding#vertexAttributes} order. The binding owns it.
    * @param {DataTexture} options.positionTexture The mesh's vertex positions.
    * @param {DataTexture} options.restPositionTexture The mesh's vertex positions when bound. The binding owns it.
    * @param {Matrix4} options.bindMatrix The transform from the mesh's local space to the deformable's.
+   * @param {DeformedBoundsCoeffs} options.boundsCoefficients How far deformed vertices can lie outside the mesh's bounds.
    */
   constructor(options) {
-    const { vertexBuffer, positionTexture, restPositionTexture, bindMatrix } =
-      options;
+    const {
+      deformer,
+      vertexBuffer,
+      positionTexture,
+      restPositionTexture,
+      bindMatrix,
+      boundsCoefficients,
+    } = options;
 
+    this.#deformer = deformer;
     this.#vertexBuffer = vertexBuffer;
     this.#restPositionTexture = restPositionTexture;
+    this.#bindMatrix = bindMatrix;
+    this.#boundsCoefficients = boundsCoefficients;
 
     const bindMatrixInverse = Matrix4.inverse(bindMatrix, new Matrix4());
     this.#uniforms = {
@@ -133,6 +162,60 @@ class SurfaceDeformerBinding {
 
       `return (${bindMatrix} * vec4(position, 1.0)).xyz;`,
     ];
+  }
+
+  get deformedBoundingBoxChanged() {
+    return this.#deformer._boundsChanged;
+  }
+
+  /**
+   * @param {AxisAlignedBoundingBox} result The object in which to store the result.
+   * @returns {AxisAlignedBoundingBox|undefined} The box, or undefined if the mesh's bounds aren't known.
+   */
+  computeDeformedBoundingBox(result) {
+    const bounds = this.#deformer._bounds;
+    if (!defined(bounds)) {
+      return undefined;
+    }
+
+    // Deformed vertices lie at most maxOvershoot * extent + maxNormalDistance
+    // outside the mesh's bounds, on each axis.
+    const { maxOvershoot, maxNormalDistance } = this.#boundsCoefficients;
+    const extent = Cartesian3.subtract(
+      bounds.maximum,
+      bounds.minimum,
+      scratchHalfExtent,
+    );
+
+    const halfExtent = Cartesian3.add(
+      Cartesian3.multiplyByScalar(extent, 0.5 + maxOvershoot, extent),
+      Cartesian3.fromElements(
+        maxNormalDistance,
+        maxNormalDistance,
+        maxNormalDistance,
+        scratchNormalDistance,
+      ),
+      extent,
+    );
+
+    // Bound the box in the deformable's space: its center moves with the bind
+    // matrix, and its half extent grows by the matrix's absolute linear part.
+    const bindMatrix = this.#bindMatrix;
+    const center = Matrix4.multiplyByPoint(
+      bindMatrix,
+      bounds.center,
+      result.center,
+    );
+
+    const linear = Matrix3.abs(
+      Matrix4.getMatrix3(bindMatrix, scratchLinear),
+      scratchLinear,
+    );
+
+    Matrix3.multiplyByVector(linear, halfExtent, halfExtent);
+    Cartesian3.subtract(center, halfExtent, result.minimum);
+    Cartesian3.add(center, halfExtent, result.maximum);
+    return result;
   }
 
   destroy() {

@@ -132,6 +132,15 @@ class Mesh {
     this._topologyChanged = new Event();
 
     /**
+     * Raised on render passes when the mesh's geometry changed since the
+     * previous update, before {@link Mesh#_afterUpdate}.
+     *
+     * @type {Event<function(): void>}
+     * @ignore
+     */
+    this._geometryChanged = new Event();
+
+    /**
      * Raised on every render pass, after the overlay is uploaded, whether or
      * not the mesh changed. The frame state is passed to listeners.
      *
@@ -726,21 +735,31 @@ class Mesh {
     renderer.show = this.show;
     renderer.update(frameState, overlayViews);
 
-    this.#postUpdate(frameState, overlayViews?.fullRefresh ?? false);
+    this.#postUpdate(
+      frameState,
+      overlayViews?.fullRefresh ?? false,
+      defined(overlayViews),
+    );
   }
 
   /**
    * Runs on render passes, after the overlay is uploaded.
    *
    * @param {FrameState} frameState The frame state.
-   * @param {boolean} [topologyChanged] Whether the mesh's topology changed since the previous update.
+   * @param {boolean} topologyChanged Whether the mesh's topology changed since the previous update.
+   * @param {boolean} geometryChanged Whether the mesh's geometry changed since the previous update.
    * @ignore
    */
-  #postUpdate(frameState, topologyChanged) {
+  #postUpdate(frameState, topologyChanged, geometryChanged) {
     if (frameState.passes.render) {
       if (topologyChanged) {
         this._topologyChanged.raiseEvent();
       }
+
+      if (geometryChanged) {
+        this._geometryChanged.raiseEvent();
+      }
+
       this._afterUpdate.raiseEvent(frameState);
     }
   }
