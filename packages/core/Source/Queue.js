@@ -1,12 +1,9 @@
-// @ts-check
-
 /**
  * A queue that can enqueue items at the end, and dequeue items from the front.
- * @template T = unknown
+ *
  */
 class Queue {
   constructor() {
-    /** @type {Array<T>} */
     this._array = [];
     this._offset = 0;
     this._length = 0;
@@ -26,7 +23,7 @@ class Queue {
   /**
    * Enqueues the specified item.
    *
-   * @param {T} item The item to enqueue.
+   * @param {*} item The item to enqueue.
    */
   enqueue(item) {
     this._array.push(item);
@@ -36,7 +33,7 @@ class Queue {
   /**
    * Dequeues an item.  Returns undefined if the queue is empty.
    *
-   * @returns {T} The the dequeued item.
+   * @returns {*} The the dequeued item.
    */
   dequeue() {
     if (this._length === 0) {
@@ -64,7 +61,7 @@ class Queue {
   /**
    * Returns the item at the front of the queue.  Returns undefined if the queue is empty.
    *
-   * @returns {T} The item at the front of the queue.
+   * @returns {*} The item at the front of the queue.
    */
   peek() {
     if (this._length === 0) {
@@ -77,7 +74,7 @@ class Queue {
   /**
    * Check whether this queue contains the specified item.
    *
-   * @param {T} item The item to search for.
+   * @param {*} item The item to search for.
    */
   contains(item) {
     return this._array.indexOf(item) !== -1;
@@ -93,10 +90,7 @@ class Queue {
   /**
    * Sort the items in the queue in-place.
    *
-   * @param {(a: T, b: T) => number} compareFunction A function that defines the sort order.
-   *  Returns a negative value if <code>a</code> is less than <code>b</code>, a positive
-   *  value if <code>a</code> is greater than <code>b</code>, or 0 if <code>a</code> is equal
-   *  to <code>b</code>.
+   * @param {Queue.Comparator} compareFunction A function that defines the sort order.
    */
   sort(compareFunction) {
     if (this._offset > 0) {
@@ -109,4 +103,19 @@ class Queue {
   }
 }
 
+/**
+ * A function used to compare two items while sorting a queue.
+ * @callback Queue.Comparator
+ *
+ * @param {*} a An item in the array.
+ * @param {*} b An item in the array.
+ * @returns {number} Returns a negative value if <code>a</code> is less than <code>b</code>,
+ *          a positive value if <code>a</code> is greater than <code>b</code>, or
+ *          0 if <code>a</code> is equal to <code>b</code>.
+ *
+ * @example
+ * function compareNumbers(a, b) {
+ *     return a - b;
+ * }
+ */
 export default Queue;
