@@ -1,6 +1,6 @@
 ---
 id: CS-685
-title: Dyno's release flags tell the milestones a release needs from single items it pulls in early
+title: "Dyno's release flags list only the milestones a release needs, and flag items that cross a release"
 kind: work
 state: planned
 created: 2026-11-17
@@ -9,11 +9,11 @@ needs: [CS-683]
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/work.ts, packages/next/bench/suite/DESIGN.md]
 ---
 
-On the roadmap, a release's flag says "after" and lists every milestone that holds any item the release needs, through the needs between items. So alpha.1's flag (owner's screenshot, 2026-11-17) listed "A headed run shows whether worker mode ticks smoother", "Loads and decodes run on Jobs", "USD B-reps stream as 3D Tiles" and "Lines, polygons, labels and CAD styles draw on one path" beside the milestones it really needs, when alpha.1 needed only one or two items from some of them. The plan reads more tangled than it is. The owner asked for "a nice solution to the display issue" in the current batch.
+On the roadmap, a release's flag says "after" and lists every milestone that holds any item the release needs, through the needs between items. So alpha.1's flag (owner's screenshot, 2026-11-17) listed milestones it needed only one item from. The owner, on 2026-11-17, called the partial milestone a smell rather than a display problem: "if a milestone crosses a release, it's not really a milestone, is it?" The rule the owner accepted, also sent to human-in-the-lead as feedback: a release gate needs milestones only, and every open item a gated milestone needs, directly or indirectly, belongs to a milestone the same gate needs (or to no milestone). A violation is fixed in the tracker, by splitting a milestone or moving an item, never explained on screen. Re-scoped on 2026-11-17, before work started.
 
 ## Done when
 
-- A release flag lists the milestones the release item needs, and, apart from them, the single items it pulls in early from other milestones, each named with the milestone it belongs to ("also needs early: One-off engine loads onto `Jobs`, from Loads and decodes run on Jobs").
-- On the roadmap, a milestone a release needs only in part shows how much (for example "1 of 4 items needed by alpha.1"), and hovering or focusing the flag highlights exactly the milestones and items it waits on, with a path for each pulled-in item back to the release item that needs it.
-- The counts come from the needs graph in `bench/suite/work.ts`, are covered by tests, and agree with `hitld`'s own needs for the release items (CS-530 to CS-533).
+- A release flag lists exactly the milestones its release item needs.
+- `bench/suite/work.ts` computes the closure rule for each release item (CS-530 to CS-533), with tests, and the Work page shows each violation as a problem to fix: the release, the item it pulls in, the milestone that item belongs to, the path of needs from the release to it, and the two fixes (move the item into a milestone the release needs, or split the milestone). With no violations, the roadmap says so.
+- Hovering or focusing a flag highlights the milestones it needs.
 - Checked on a Dyno server of the executor's own, never the owner's 5190, in both themes, at 380 px wide, with the keyboard only, with reduced motion and with a clean console (`packages/next/AGENTS.md`, "UI and examples").

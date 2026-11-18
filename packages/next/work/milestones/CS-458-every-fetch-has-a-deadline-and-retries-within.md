@@ -11,7 +11,7 @@ done_when:
   - "c2: A slow but healthy origin is not timed out (on the recorded full profile and the 20 Mbit/s, 80 ms profile, no request times out); a 429, a 503 or a timeout halves an adaptive request window and leaves a pinned one alone, and a Retry-After of up to 60 s pauses every request to that origin."
   - "c3: A transient failure on 3D Tiles content retries with jittered backoff and loads, and with 200 tiles wanted from a dead origin the attempts stay bounded: retries hold at most a quarter of the window, an empty retry bucket stops them, and a tile's first request is never refused."
   - "c4: An app can give a tileset, terrain or imagery source a proxy (a prefix or a function), query parameters, headers and trusted-origin credentials, and every request that source makes carries them; cookies go only to trusted origins, and no option value appears in any diagnostic."
-constraints: [CS-144 c1, CS-145 c1, CS-383 c1, CS-146 c2, CS-156 c4, CS-147 c3, CS-508 c3]
+constraints: [CS-144 c1, CS-145 c1, CS-383 c1, CS-146 c2, CS-156 c4, CS-147 c3, CS-508 c3, CS-88 c3]
 check: "integration-test test/networkFaults.test.ts"
 ---
 
@@ -30,3 +30,5 @@ To be written by someone other than the authors of CS-145, CS-146, CS-147 and CS
 ## Notes
 
 Proposed on 2026-11-15 for items no milestone held, and applied on the owner's answer. Its 6 items are constraints marked `c?` until shaping links each to a clause.
+
+CS-88 (one-off engine loads onto `Jobs`) joined on 2026-11-17 (owner) under c3: the retries for one-off worker loads (CS-508) need it, so this milestone holds it too, and alpha.1 needs no item outside the milestones it names. It also stays in CS-462 for that milestone's c2.

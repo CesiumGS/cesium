@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-389
-needs: [CS-390]
+needs: [CS-390, CS-687]
 ---
 
 The study file format (the tracker's frontmatter subset and sections) in `packages/next/work/studies/`, with its validator, shared with the tracker's `check`. `study new`, `note`, `attach`, `verdict`, `abandon`, `reopen`, `show`; `studies` (with `--all-branches`, reading other branches through git). `run --study`, inheriting item and expectations. A run with `--hypothesis` and no `--study` is refused, saying to run `study new` first (the owner's answer to CS-410, 2026-11-18; no implicit study). ID uniqueness across local branches. Retention keeping every run a study cites or attaches. The dev server's read endpoints and its validated write endpoint, which writes files into its own worktree.
