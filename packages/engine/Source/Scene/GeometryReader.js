@@ -5,10 +5,10 @@ import { Check, DeveloperError, defined } from "@cesium/core";
 /** @import GeometryReadSession from "./GeometryReadSession.js"; */
 
 /**
- * The data a read session stages for reading.
+ * The geometry data to access in a read or write session.
  *
- * @typedef {object} GeometryReadSessionOptions
- * @property {GeometryAttributeDescriptor[]} [attributes=[]] The attributes to read.
+ * @typedef {object} GeometryAccessOptions
+ * @property {GeometryAttributeDescriptor[]} [attributes=[]] The attributes to access.
  * @property {boolean} [primitives=false] Whether to read the vertex indices of the primitives.
  */
 
@@ -16,7 +16,7 @@ import { Check, DeveloperError, defined } from "@cesium/core";
  * Creates a read session that stages the requested data.
  *
  * @callback CreateGeometryReadSessionCallback
- * @param {Required<GeometryReadSessionOptions>} options The data to stage. All requested attributes are available.
+ * @param {Required<GeometryAccessOptions>} options The data to stage. All requested attributes are available.
  * @returns {GeometryReadSession} The new session.
  */
 
@@ -78,7 +78,7 @@ class GeometryReader {
    * it, then destroys the session, even if the callback throws.
    *
    * @template T
-   * @param {GeometryReadSessionOptions} options The data to stage for reading.
+   * @param {GeometryAccessOptions} options The data to stage for reading.
    * @param {function(GeometryReadSession): T} callback The function that reads from the session.
    * @returns {T} The value returned by the callback.
    *
@@ -88,6 +88,22 @@ class GeometryReader {
    * @exception {DeveloperError} A requested attribute's component datatype doesn't match the available attribute.
    */
   withReadSession(options, callback) {
+    return this._withSession(options, this.#createReadSession, callback);
+  }
+
+  /**
+   * Validates the requested data, creates a session for it, invokes the
+   * callback with it, then destroys the session, even if the callback throws.
+   *
+   * @template {GeometryReadSession} S
+   * @template T
+   * @param {GeometryAccessOptions} options The data to stage.
+   * @param {function(Required<GeometryAccessOptions>): S} createSession Creates the session.
+   * @param {function(S): T} callback The function that uses the session.
+   * @returns {T} The value returned by the callback.
+   * @ignore
+   */
+  _withSession(options, createSession, callback) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("options", options);
     Check.typeOf.func("callback", callback);
@@ -134,7 +150,7 @@ class GeometryReader {
     }
     //>>includeEnd('debug');
 
-    const session = this.#createReadSession({ attributes, primitives });
+    const session = createSession({ attributes, primitives });
     try {
       return callback(session);
     } finally {
