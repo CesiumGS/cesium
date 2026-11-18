@@ -27,7 +27,7 @@ import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
 import { RealtimeAtmosphere } from "../atmosphere/RealtimeAtmosphere.ts";
 import { Sky } from "../atmosphere/Sky.ts";
 import type { AerosolType } from "../atmosphere/model.ts";
-import { EARTH } from "./Body.ts";
+import { EARTH, type Body } from "./Body.ts";
 import type { LoadedSkyPack, SkyPackManifest } from "../atmosphere/skyPack.ts";
 import type { StarField } from "../atmosphere/stars.ts";
 import { Camera } from "./Camera.ts";
@@ -422,8 +422,8 @@ export class Engine {
       }
       return mask >>> 0;
     },
-    (world, positions, tilesets) =>
-      this.sampleHeightMostDetailed(world, positions, { tilesets }),
+    (world, positions, tilesets, body) =>
+      this.sampleHeightMostDetailed(world, positions, { tilesets, body }),
     () => this.wake(),
   );
   /**
@@ -1317,17 +1317,18 @@ export class Engine {
    * content at each longitude and latitude (radians), as 1.x
    * `Scene.sampleHeightMostDetailed`: the tiles under each point are loaded
    * down to the leaves whatever the views show, then ray cast on the GPU
-   * down the geodetic normal from 10 km (nearest hit), in the Earth's
-   * anchor. Tilesets: those given, else the shown collision tilesets of
-   * the world under the Earth's anchor (`Tileset3D.anchor`); a tileset
-   * given under another anchor throws, naming it. Undefined where nothing
+   * down the geodetic normal from 10 km (nearest hit), in `body`'s anchor
+   * (default the Earth's), on `body`'s ellipsoid. Tilesets: those given,
+   * else the shown collision tilesets of the world under that anchor
+   * (`Tileset3D.anchor`); a tileset given under another anchor throws,
+   * naming it. Undefined where nothing
    * is hit (a globe given here has none inside its terrain regions
    * that aren't ground, `Globe.terrain.addRegion`). Needs the frame loop running (`start`).
    */
   async sampleHeightMostDetailed(
     world: World,
     positions: ReadonlyArray<{ longitude: number; latitude: number }>,
-    options: { tilesets?: readonly Tileset3D[] } = {},
+    options: { tilesets?: readonly Tileset3D[]; body?: Body } = {},
   ): Promise<Array<number | undefined>> {
     return sampleHeightMostDetailed(this, world, positions, options);
   }
@@ -1609,7 +1610,7 @@ export class Engine {
    * texel: bottom + depth × (top − bottom); depth 0: no ground. For
    * clamping many things on the GPU (tracks). `origin` is in `anchor`'s
    * coordinates (default the Earth's: Earth-fixed), and its east, north
-   * and up are the WGS84 ellipsoid's there.
+   * and up are its body's ellipsoid's there (WGS84 on the Earth).
    */
   addHeightCapture(
     world: World,

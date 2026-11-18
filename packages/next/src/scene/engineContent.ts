@@ -8,6 +8,7 @@ import { Ellipsoid } from "../math/ellipsoid.ts";
 import type { CustomShader } from "./CustomShader.ts";
 import type { Engine, GlobeOptions } from "./Engine.ts";
 import type { World } from "./World.ts";
+import { requireEarthAnchor } from "./earthAnchor.ts";
 import {
   type ModelResourceOptions,
   type ModelResource,
@@ -125,6 +126,7 @@ export async function addTerrain(
   url: string | URL,
   options: GlobeOptions = {},
 ): Promise<Globe> {
+  requireEarthAnchor(options.anchor, "addTerrain", "a terrain globe");
   const base = new URL(url, globalThis.location?.href);
   const layer = base.pathname.endsWith(".json")
     ? base
@@ -145,6 +147,11 @@ export function addEllipsoid(
   world: World,
   options: GlobeOptions = {},
 ): Globe {
+  requireEarthAnchor(
+    options.anchor,
+    "addEllipsoid",
+    "the bare ellipsoid globe",
+  );
   const source = TerrainSource.ellipsoid(engine.scene.terrainLoader, {
     warnings: new Set(),
   });

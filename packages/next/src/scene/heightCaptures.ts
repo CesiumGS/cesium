@@ -1,5 +1,4 @@
 // Heights: most-detailed samples, and captures of the ground below a point.
-import { Ellipsoid } from "../math/ellipsoid.ts";
 import * as m4 from "../math/mat4.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import * as v3 from "../math/vec3.ts";
@@ -9,7 +8,8 @@ import type { Engine } from "./Engine.ts";
 import type { View } from "./View.ts";
 import type { World } from "./World.ts";
 import type { AnchorHandle } from "./world/types.ts";
-import { earthAnchor, contentAnchor } from "./earthAnchor.ts";
+import { EARTH, type Body } from "./Body.ts";
+import { contentAnchor } from "./earthAnchor.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { EngineRaster } from "../render/view/engineRaster.ts";
 
@@ -55,16 +55,18 @@ export async function sampleHeightMostDetailed(
   engine: HeightCaptureEngine,
   world: World,
   positions: ReadonlyArray<{ longitude: number; latitude: number }>,
-  options: { tilesets?: readonly Tileset3D[] } = {},
+  options: { tilesets?: readonly Tileset3D[]; body?: Body } = {},
 ): Promise<Array<number | undefined>> {
   const START = 10000;
-  // The rays are Earth-fixed: they meet the content under the Earth's
-  // anchor (`World.castRays` tests only the cast's anchor).
-  const earth = earthAnchor(world);
+  // The rays are body-fixed: they meet the content under the body's anchor
+  // (`World.castRays` tests only the cast's anchor).
+  const body = options.body ?? EARTH;
+  const { ellipsoid } = body;
+  const anchor = world.bodyAnchor(body);
   for (const t of options.tilesets ?? []) {
-    if (t.anchor !== earth) {
+    if (t.anchor !== anchor) {
       throw new Error(
-        `sampleHeightMostDetailed: the tileset ${t.url} is under ${t.anchor.name}, not the Earth's anchor; heights are the Earth's.`,
+        `sampleHeightMostDetailed: the tileset ${t.url} is under ${t.anchor.name}, not the ${body.name}'s anchor; heights are the ${body.name}'s.`,
       );
     }
   }
@@ -76,15 +78,15 @@ export async function sampleHeightMostDetailed(
         t.show &&
         t.enableCollision &&
         !t.isGlobe &&
-        t.anchor === earth,
+        t.anchor === anchor,
     );
   const rays = positions.map(({ longitude, latitude }) => {
-    const up = Ellipsoid.WGS84.geodeticSurfaceNormalCartographic(
+    const up = ellipsoid.geodeticSurfaceNormalCartographic(
       { longitude, latitude, height: 0 },
       v3.vec3(),
     );
     return {
-      origin: Ellipsoid.WGS84.cartographicToCartesian(
+      origin: ellipsoid.cartographicToCartesian(
         { longitude, latitude, height: START },
         v3.vec3(),
       ),
@@ -99,7 +101,7 @@ export async function sampleHeightMostDetailed(
       try {
         const hits = await world.castRays(rays, {
           draws: query.draws,
-          anchor: earth,
+          anchor,
         });
         hits.forEach((d, i) => {
           // Terrain that isn't ground there is a hole (`TerrainRegion.ground`): the ray
@@ -146,9 +148,10 @@ export function addHeightCapture(
     format: "depth32float",
     usage: GPUTextureUsage.RENDER_ATTACHMENT | GPUTextureUsage.TEXTURE_BINDING,
   });
+  // East, north and up on the anchor's body (the Earth's for an anchor with none).
   const frame = eastNorthUpToFixedFrame(
     options.origin,
-    Ellipsoid.WGS84,
+    (anchor.body ?? EARTH).ellipsoid,
     m4.mat4(),
   );
   const capture: HeightCapture = {

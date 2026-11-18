@@ -1,10 +1,11 @@
 import * as v3 from "../math/vec3.ts";
 import type { Vec3 } from "../math/vec3.ts";
-import { Ellipsoid } from "../math/ellipsoid.ts";
+import type { Ellipsoid } from "../math/ellipsoid.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { Rectangle } from "../globe/quantizedMesh.ts";
 import type { World } from "./World.ts";
-import type { TransformHandle } from "./world/types.ts";
+import type { AnchorHandle, TransformHandle } from "./world/types.ts";
+import { EARTH, type Body } from "./Body.ts";
 import { earthAnchor } from "./earthAnchor.ts";
 
 /**
@@ -36,13 +37,20 @@ export interface ClampOptions {
    * anchor's own `height`), and added to the "clamp" ones (default 0).
    */
   offset?: number;
+  /**
+   * The anchor the content hangs under (default the Earth's): the position
+   * is geodetic on its body's ellipsoid, and the ground is the collision
+   * tilesets under it, and the globe only on the Earth. An anchor with no
+   * body refuses every `heightReference` but `"none"`, naming the anchor.
+   */
+  anchor?: AnchorHandle;
 }
 
 export interface Clamp {
   readonly options: ClampOptions;
   /** Height of the anchor now (meters above the ellipsoid). */
   readonly height: number;
-  /** How far the content moved from where it was placed (Earth-fixed). */
+  /** How far the content moved from where it was placed (body-fixed). */
   readonly displacement: Vec3;
   /**
    * The content stands where it will: the ground's most detailed height
@@ -57,16 +65,24 @@ export interface Clamp {
   remove(): void;
 }
 
-/** The ground's most detailed heights at places, from these surfaces. */
+/**
+ * The ground's most detailed heights at places on `body`'s ellipsoid, from
+ * these surfaces.
+ */
 export type SampleHeights = (
   world: World,
   positions: ReadonlyArray<{ longitude: number; latitude: number }>,
   tilesets: readonly Tileset3D[],
+  body: Body,
 ) => Promise<Array<number | undefined>>;
 
 interface Entry extends Clamp {
   world: World;
   transform: TransformHandle;
+  /** The anchor its content hangs under. */
+  anchor: AnchorHandle;
+  /** Its body (the Earth's for an anchor with none, which only keeps `"none"`). */
+  body: Body;
   /** Where the anchor is now; the transform moves by the difference. */
   current: number;
   /** Settling: its most detailed ground is wanted, requested or applied. */
@@ -84,7 +100,6 @@ interface Entry extends Clamp {
   cast: boolean;
 }
 
-const ellipsoid = Ellipsoid.WGS84;
 /** Radians a degree (`Tileset3D.terrainClipped` takes degrees). */
 const DEGREES = Math.PI / 180;
 /** 3D Tiles rays start this far above the anchor (1.x: 9000 m, fixed). */
@@ -108,7 +123,7 @@ const CAST_INTERVAL = 10;
  *   anchored there is re-clamped, against the drawn surface (1.x
  *   `Globe.getHeight`).
  * - 3D Tiles with `enableCollision` are ray cast on the GPU
- *   (`World.castRays`, in the Earth's anchor) down the geodetic normal,
+ *   (`World.castRays`, in the content's anchor) down the geodetic normal,
  *   against the tiles the
  *   views drew, nearest hit from above (1.x: CPU picking of the first
  *   tile hit along a geocentric ray). Casts are batched for all anchors and
@@ -121,12 +136,12 @@ const CAST_INTERVAL = 10;
  *   re-clamps the content under it.
  *
  * Content moves along the local vertical only, as 1.x models do: its root
- * transform (Earth-fixed, under the Earth's anchor without a parent, e.g.
+ * transform (body-fixed, under the body's anchor without a parent, e.g.
  * `ModelPlacement.transform`) is translated, so everything placed by it
  * follows.
  *
- * The ground is the Earth's: only tilesets and globes under the Earth's
- * anchor (`Tileset3D.anchor`) give it.
+ * The ground is the content's anchor's: only tilesets under it
+ * (`Tileset3D.anchor`) give it, and globes only under the Earth's.
  */
 export class HeightClamping {
   private readonly entries = new Set<Entry>();
@@ -180,7 +195,7 @@ export class HeightClamping {
       if (
         usesTiles(e.options.heightReference) &&
         (e.cast || changed) &&
-        colliders.some((t) => t.world === e.world)
+        colliders.some((t) => under(t, e))
       ) {
         return true;
       }
@@ -196,10 +211,22 @@ export class HeightClamping {
       height: 0,
     };
     const none = options.heightReference === "none";
+    const anchor = options.anchor ?? earthAnchor(world);
+    // No `anchor`: the Earth's, whose body the world's anchor may not name
+    // (a stand-in world).
+    const body = options.anchor === undefined ? EARTH : options.anchor.body;
+    if (body === undefined && !none) {
+      throw new Error(
+        `HeightClamping: ${anchor.name} has no body, so a heightReference other than "none" has no ellipsoid to stand on.`,
+      );
+    }
+    const ellipsoid: Ellipsoid = (body ?? EARTH).ellipsoid;
     const entry: Entry = {
       options,
       world,
       transform,
+      anchor,
+      body: body ?? EARTH,
       current: options.height,
       phase: none ? "settled" : "wanted",
       waiters: [],
@@ -281,7 +308,7 @@ export class HeightClamping {
   private sampleWanted(tilesets: readonly Tileset3D[]): void {
     const groups = new Map<
       string,
-      { world: World; surfaces: Tileset3D[]; entries: Entry[] }
+      { world: World; body: Body; surfaces: Tileset3D[]; entries: Entry[] }
     >();
     for (const e of this.entries) {
       if (e.phase !== "wanted") {
@@ -293,7 +320,7 @@ export class HeightClamping {
         (t) =>
           t.world === e.world &&
           t.show &&
-          onEarth(t) &&
+          t.anchor === e.anchor &&
           (t.isGlobe
             ? !/3DTiles/.test(reference)
             : t.enableCollision && usesTiles(reference)),
@@ -328,16 +355,17 @@ export class HeightClamping {
         e.dirty = true;
         continue;
       }
-      const key = `${e.world.id}|${sampled.map((t) => t.url).join("|")}`;
+      const key = `${e.world.id}|${e.anchor.slot}|${sampled.map((t) => t.url).join("|")}`;
       const group = groups.get(key) ?? {
         world: e.world,
+        body: e.body,
         surfaces: sampled,
         entries: [],
       };
       group.entries.push(e);
       groups.set(key, group);
     }
-    for (const { world, surfaces, entries } of groups.values()) {
+    for (const { world, body, surfaces, entries } of groups.values()) {
       for (const e of entries) {
         e.phase = "sampling";
       }
@@ -345,6 +373,7 @@ export class HeightClamping {
         world,
         entries.map((e) => e.options),
         surfaces,
+        body,
       )
         .catch(() => entries.map(() => undefined))
         .then((heights) => {
@@ -371,6 +400,7 @@ export class HeightClamping {
       const { longitude, latitude } = e.options;
       if (
         e.world === tileset.world &&
+        e.anchor === tileset.anchor &&
         longitude >= r.west &&
         longitude <= r.east &&
         latitude >= r.south &&
@@ -393,28 +423,32 @@ export class HeightClamping {
     const colliders = tilesets.filter(isCollider);
     const signature = colliders.map((t) => t.changedAt).join("|");
     const changed = signature !== this.castSignature;
-    const byWorld = new Map<World, Entry[]>();
+    // One cast per world and anchor: its rays are in the anchor's body-fixed
+    // coordinates and meet only the draws under it.
+    const groups = new Map<string, { world: World; entries: Entry[] }>();
     for (const e of this.entries) {
       if (!usesTiles(e.options.heightReference)) {
         continue;
       }
-      if ((e.cast || changed) && colliders.some((t) => t.world === e.world)) {
+      if ((e.cast || changed) && colliders.some((t) => under(t, e))) {
         e.cast = false;
-        const list = byWorld.get(e.world) ?? [];
-        list.push(e);
-        byWorld.set(e.world, list);
+        const key = `${e.world.id}|${e.anchor.slot}`;
+        const group = groups.get(key) ?? { world: e.world, entries: [] };
+        group.entries.push(e);
+        groups.set(key, group);
       }
     }
     this.castSignature = signature;
-    if (byWorld.size === 0) {
+    if (groups.size === 0) {
       return;
     }
     this.casting = true;
     this.lastCast = this.frame;
-    const casts = [...byWorld].map(async ([world, entries]) => {
+    const casts = [...groups.values()].map(async ({ world, entries }) => {
+      const { anchor, body } = entries[0]!;
       const starts = entries.map((e) => Math.max(e.current, 0) + RAY_START);
       const rays = entries.map((e, i) => ({
-        origin: ellipsoid.cartographicToCartesian(
+        origin: body.ellipsoid.cartographicToCartesian(
           {
             longitude: e.options.longitude,
             latitude: e.options.latitude,
@@ -429,9 +463,11 @@ export class HeightClamping {
       // from `surfaceHeight`, which knows their clips; a cast would stand
       // content on the clipped terrain it can't see.
       const globes = tilesets.filter((t) => t.isGlobe && t.world === world);
+      // No `clips`: clamping asks about the world's ground, which a view's
+      // clips don't change (a cast applies none unless given).
       const hits = await world.castRays(rays, {
-        // The rays are Earth-fixed: the content under the Earth's anchor.
-        anchor: earthAnchor(world),
+        // The rays are body-fixed: the content under the body's anchor.
+        anchor,
         collisionOnly: true,
         viewMask: this.viewMask(world),
         exclude: (draw) => globes.some((t) => t.ownsDraw(draw)),
@@ -482,7 +518,7 @@ export class HeightClamping {
     if (!/3DTiles/.test(reference)) {
       // The globe: its drawn surface (1.x Globe.getHeight).
       for (const t of this.tilesets()) {
-        if (t.world === e.world && t.show && onEarth(t)) {
+        if (t.world === e.world && t.show && t.anchor === e.anchor) {
           const h = t.surfaceHeight(longitude, latitude);
           if (h !== undefined) {
             ground = Math.max(ground ?? -Infinity, h);
@@ -534,12 +570,12 @@ function settle(e: Entry): void {
  * clips and all.
  */
 function isCollider(t: Tileset3D): boolean {
-  return t.show && t.enableCollision && !t.isGlobe && onEarth(t);
+  return t.show && t.enableCollision && !t.isGlobe;
 }
 
-/** Under the Earth's anchor: its ground is the Earth's. */
-function onEarth(t: Tileset3D): boolean {
-  return t.anchor === earthAnchor(t.world);
+/** Whether the tileset is under the entry's anchor: its ground is the entry's. */
+function under(t: Tileset3D, e: Entry): boolean {
+  return t.world === e.world && t.anchor === e.anchor;
 }
 
 function usesTiles(reference: HeightReference): boolean {

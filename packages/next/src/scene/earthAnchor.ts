@@ -27,6 +27,24 @@ export function contentAnchor(
   return anchor;
 }
 
+/**
+ * Refuses an anchor on another body than the Earth, naming it (plan 5c's
+ * call 5): `what` is Earth-only by design. An anchor with no body (an
+ * application's own reference frame) passes; its coordinates are the
+ * application's to give.
+ */
+export function requireEarthAnchor(
+  anchor: AnchorHandle | undefined,
+  caller: string,
+  what: string,
+): void {
+  if (anchor?.body !== undefined && bodyKey(anchor.body) !== EARTH_KEY) {
+    throw new Error(
+      `${caller}: ${anchor.name} is an anchor on the ${anchor.body.name}, not the Earth; ${what} is the Earth's (WGS 84).`,
+    );
+  }
+}
+
 /** The Earth's anchor of `world` (made on first ask). */
 export function earthAnchor(world: World): AnchorHandle {
   return world.bodyAnchor(EARTH);

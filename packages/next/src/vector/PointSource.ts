@@ -1,8 +1,8 @@
 import pointsWgsl from "../shaders/generated/points.wgsl?raw";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
-import { Ellipsoid } from "../math/ellipsoid.ts";
 import * as m4 from "../math/mat4.ts";
 import type { Vec3 } from "../math/vec3.ts";
+import { EARTH } from "../scene/Body.ts";
 import type { Engine } from "../scene/Engine.ts";
 import type { HeightCapture } from "../scene/heightCaptures.ts";
 import type { MeshData } from "../scene/meshes.ts";
@@ -35,8 +35,9 @@ export interface PointSourceOptions {
   /** Points it holds (their GPU memory is made up front). */
   capacity: number;
   /**
-   * Origin of its frame (east, north, up), in `anchor`'s coordinates
-   * (Earth-fixed under the Earth's): positions are meters in it, so
+   * Origin of its frame (east, north, up on its anchor's body's ellipsoid),
+   * in `anchor`'s coordinates (Earth-fixed under the Earth's): positions
+   * are meters in it, so
    * float32 keeps centimeters within a few hundred kilometers.
    */
   origin: Vec3;
@@ -184,9 +185,10 @@ export class PointSource {
     this.origin = options.origin;
     this.clock = options.clock ?? (() => engine.time);
     this.delay = options.delay ?? 0;
+    // East, north and up on the anchor's body (the Earth's for an anchor with none).
     this.frame = eastNorthUpToFixedFrame(
       options.origin,
-      Ellipsoid.WGS84,
+      (this.anchor.body ?? EARTH).ellipsoid,
       m4.mat4(),
     );
     // Properties, then the heading the frame kernel writes.

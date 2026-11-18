@@ -8,6 +8,7 @@
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { Route } from "../camera/route.ts";
 import type { GeometryAccuracy } from "../geometry/query.ts";
+import type { Body } from "./Body.ts";
 import { UNDERLAY_DEPTH } from "../render/layout.ts";
 import type { CameraPose } from "./Camera.ts";
 import { type PickResult, type View } from "./View.ts";
@@ -68,6 +69,11 @@ export interface CorePick {
    * anchor.
    */
   readonly anchor: AnchorHandle | undefined;
+  /**
+   * The body the hit belongs to: its anchor's (`AnchorHandle.body`), undefined
+   * under an anchor with no body or under none (plan 5c's call 7).
+   */
+  readonly body?: Body;
   /**
    * `position` carried to `anchor`'s axes by the anchor's rigid placement
    * (Earth-fixed under the Earth's anchor), m: where the content is DRAWN,
@@ -281,6 +287,7 @@ export function corePick(
     position,
     root: tick.root,
     anchor,
+    ...(anchor?.body !== undefined && { body: anchor.body }),
     anchorPosition: alongRay(camera, tanX, tanY, tick.ndcX, tick.ndcY, z),
     ...(route && { route }),
     draw,

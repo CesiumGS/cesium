@@ -27,7 +27,7 @@ import type {
   HeightReference,
 } from "./HeightClamping.ts";
 import type { LightHandle } from "./lights.ts";
-import { contentAnchor, earthAnchor } from "./earthAnchor.ts";
+import { contentAnchor } from "./earthAnchor.ts";
 import type { World } from "./World.ts";
 import type {
   AnchorHandle,
@@ -155,7 +155,10 @@ type PlacementWhere =
       at?: never;
     }
   | {
-      /** An east-north-up frame there: degrees, and meters (default 0). */
+      /**
+       * An east-north-up frame there on the anchor's body's ellipsoid:
+       * degrees, and meters (default 0).
+       */
       at: { longitude: number; latitude: number; height?: number };
       modelMatrix?: never;
     };
@@ -187,8 +190,10 @@ interface PlacementCommon {
   /**
    * The anchor it hangs under (`World.addAnchor`, `World.bodyAnchor`):
    * default the Earth's, so `modelMatrix` and `at` are Earth-fixed. With a
-   * `parent`, the parent's anchor; one given must be it. A `heightReference`
-   * clamps to the Earth's ground, so only under the Earth's anchor.
+   * `parent`, the parent's anchor; one given must be it. `at` is geodetic on
+   * the ellipsoid of the anchor's body. A `heightReference` clamps to that
+   * body's ground (its collision tilesets, and its globe on the Earth), so
+   * only under an anchor that has a body.
    */
   anchor?: AnchorHandle;
   /** Unlit shading for every draw (1.x `LightingModel.UNLIT`). */
@@ -718,10 +723,10 @@ export function placeModel(
     } else if (
       both.heightReference &&
       both.heightReference !== "none" &&
-      anchor !== earthAnchor(world)
+      anchor.body === undefined
     ) {
       throw new Error(
-        `place: a heightReference clamps to the Earth's ground; ${anchor.name} is not the Earth's anchor.`,
+        `place: a heightReference clamps to its body's ground; ${anchor.name} is an anchor with no body.`,
       );
     }
   }
@@ -750,13 +755,19 @@ export function placeModel(
   }
 }
 
-/** The placement's matrix: `modelMatrix`, or east-north-up at `at`. */
-function placementMatrix(options: PlacementOptions): Mat4 {
+/**
+ * The placement's matrix: `modelMatrix`, or east-north-up at `at` on the
+ * ellipsoid of the anchor's body (the Earth's WGS 84 for an anchor with none).
+ */
+function placementMatrix(world: World, options: PlacementOptions): Mat4 {
   if (options.modelMatrix) {
     return options.modelMatrix;
   }
   const { longitude, latitude, height = 0 } = options.at!;
-  const ellipsoid = Ellipsoid.WGS84;
+  const anchor = options.parent
+    ? world.anchorOf(options.parent)
+    : contentAnchor(world, options.anchor, "place");
+  const ellipsoid = anchor?.body?.ellipsoid ?? Ellipsoid.WGS84;
   return eastNorthUpToFixedFrame(
     ellipsoid.cartographicToCartesian(
       fromDegrees(longitude, latitude, height),
@@ -774,7 +785,7 @@ function placeGltf(
   onRoot: (root: TransformHandle) => void,
 ): ModelPlacement {
   const { world, upload, template: asset } = model;
-  const modelMatrix = placementMatrix(options);
+  const modelMatrix = placementMatrix(world, options);
   const composite = asset.parts.length > 1;
   // i3dm content: its instances, relative to their origin in tile space.
   const contentInstances = (part: GltfAssetPart) =>
@@ -1230,21 +1241,22 @@ export class ModelPlacement implements Disposable {
 
   /** @internal Clamps it to the ground at its translation. */
   anchor(reference: HeightReference, offset: number | undefined): void {
-    const m = this.model.world.localMatrix(this.transform);
-    const anchor = Ellipsoid.WGS84.cartesianToCartographic(
+    const world = this.model.world;
+    const m = world.localMatrix(this.transform);
+    // On the ellipsoid of the body its anchor belongs to.
+    const under = world.anchorOf(this.transform);
+    const ellipsoid = under?.body?.ellipsoid ?? Ellipsoid.WGS84;
+    const at = ellipsoid.cartesianToCartographic(
       v3.vec3(m[12]!, m[13]!, m[14]!),
       { longitude: 0, latitude: 0, height: 0 },
     );
-    if (anchor) {
-      this.clamp_ = this.model.host.clamping.add(
-        this.model.world,
-        this.transform,
-        {
-          heightReference: reference,
-          ...anchor,
-          ...(offset !== undefined ? { offset } : {}),
-        },
-      );
+    if (at) {
+      this.clamp_ = this.model.host.clamping.add(world, this.transform, {
+        heightReference: reference,
+        ...at,
+        ...(under !== undefined ? { anchor: under } : {}),
+        ...(offset !== undefined ? { offset } : {}),
+      });
     }
   }
 

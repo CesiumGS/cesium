@@ -203,14 +203,15 @@ describe("the Earth's content under its anchor (plan 5a, Task 10)", () => {
         anchor: earth,
       }),
     ).toThrow(/place: the parent hangs under site, not Earth/);
-    // Clamped content stands on the Earth.
+    // Clamped content stands on its anchor's body: an anchor with none has
+    // no ground (`test/bodyContent.test.ts` clamps on the Moon).
     expect(() =>
       model.place({
         at: { longitude: 10, latitude: 20 },
         heightReference: "clampToGround",
         anchor: site,
       }),
-    ).toThrow(/place: a heightReference clamps to the Earth's ground/);
+    ).toThrow(/place: a heightReference clamps to its body's ground; site/);
     const clamped = model.place({
       at: { longitude: 10, latitude: 20 },
       heightReference: "clampToGround",

@@ -5,6 +5,7 @@ import type { Engine } from "../scene/Engine.ts";
 import type { World } from "../scene/World.ts";
 import type { AnchorHandle, DrawHandle } from "../scene/world/types.ts";
 import type { PointCuller } from "../scene/PointCuller.ts";
+import { requireEarthAnchor } from "../scene/earthAnchor.ts";
 import type { ModelResource } from "../scene/gltfModel.ts";
 import { ModelPool } from "./ModelPool.ts";
 import type { PointSource } from "./PointSource.ts";
@@ -105,6 +106,7 @@ export class VectorLayer {
     // The points are placed in their source's anchor: the layer's draws
     // hang there too.
     const anchor = options.anchor ?? first.anchor;
+    requireEarthAnchor(anchor, "VectorLayer", "a vector layer");
     const sources =
       "mesh" in options.source
         ? [options.source as PointSource]

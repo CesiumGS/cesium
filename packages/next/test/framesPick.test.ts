@@ -11,10 +11,19 @@ import {
   FrameUnavailableError,
   type FrameKey,
 } from "../src/camera/frameResolver.ts";
-import { EARTH } from "../src/scene/Body.ts";
+import { EARTH, MOON } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { createBox } from "../src/scene/meshes.ts";
-import type { CorePick } from "../src/scene/pick.ts";
+import {
+  corePick as readCorePick,
+  type CorePick,
+  type PickTick,
+} from "../src/scene/pick.ts";
+import { Ellipsoid } from "../src/math/ellipsoid.ts";
+import { routeForward } from "../src/camera/route.ts";
+import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
+import { pickIn } from "../src/frames/pickIn.ts";
 import { View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { World } from "../src/scene/World.ts";
@@ -443,5 +452,147 @@ describe("createFramesPickInterpreter", () => {
     expect(contentTerms(point)[0]!.meters).toBeCloseTo(0.25 * 0.03, 15);
     expect(contentTerms(point)[0]!.note).toMatch(/blend at t = 0.25/);
     world.removeDraw(morphed);
+  });
+});
+
+describe("a pick on another body (plan 5c, Task 2)", () => {
+  const MOON_R = 1_737_400;
+  const moonCatalog = createFrameCatalog();
+  const moonResolver = createFramesResolver(moonCatalog);
+  const moonInterpreter = createFramesPickInterpreter(
+    moonResolver,
+    moonCatalog,
+  );
+  /** A point on the Moon's ground, MOON_ME coordinates (m). */
+  const ON_MOON = [MOON_R + 5, 10, 20];
+
+  /** The pick pass's tick, with a camera 1 km above the Moon's equator. */
+  function tickAbove(under: AnchorHandle): PickTick {
+    return {
+      view,
+      world,
+      root: world.root,
+      seconds: SECONDS,
+      bodyAnchor: earth,
+      placements: new Map([
+        [earth, undefined],
+        [under, undefined],
+      ]),
+      camera: {
+        position: Float64Array.of(MOON_R + 1000, 0, 0),
+        direction: Float64Array.of(-1, 0, 0),
+        up: Float64Array.of(0, 0, 1),
+        right: Float64Array.of(0, 1, 0),
+      },
+      near: 0.1,
+      fovy: 1,
+      width: 64,
+      height: 48,
+      tanX: Math.tan(0.5),
+      tanY: Math.tan(0.5),
+      ndcX: 0,
+      ndcY: 0,
+    };
+  }
+
+  it("a core pick names its anchor's body: the Moon's on Moon content, the Earth's on Earth's", () => {
+    const moon = world.bodyAnchor(MOON);
+    const mesh = world.addMesh(createBox());
+    const onMoon = world.addDraw({
+      mesh,
+      origin: Float64Array.of(MOON_R, 0, 0),
+      parent: moon,
+    });
+    const feature = (draw: DrawHandle): number => {
+      for (let id = 1; id < 10_000; id++) {
+        if (world.feature(id)?.draw.index === draw.index) {
+          return id;
+        }
+      }
+      throw new Error("no feature for the draw");
+    };
+    // 1,000 m along the view axis: near / depth.
+    const depth = 0.1 / 1000;
+    const hit = readCorePick(tickAbove(moon), feature(onMoon), depth)!;
+    expect(hit.anchor).toBe(moon);
+    expect(hit.body).toBe(MOON);
+    expect(hit.anchorPosition[0]).toBeCloseTo(MOON_R, 6);
+    expect(readCorePick(tickAbove(moon), feature(other), depth)!.body).toBe(
+      EARTH,
+    );
+    world.removeDraw(onMoon);
+  });
+
+  it("the frames interpreter tags a Moon pick with MOON_ME, the Moon and its body-fixed position", () => {
+    const moon = world.bodyAnchor(MOON);
+    const pick = {
+      ...corePick(world.root, undefined),
+      anchor: moon,
+      body: MOON,
+      position: Float64Array.from(ON_MOON),
+      anchorPosition: Float64Array.from(ON_MOON),
+    };
+    const point = moonInterpreter.interpret(pick)!;
+    expect(point.frame.name).toBe("MOON_ME");
+    expect(point.frame).toBe(moonCatalog.bodyFixed(MOON));
+    expect(point.body).toBe(MOON);
+    expect(Array.from(point.bodyFixed!)).toEqual(ON_MOON);
+    // Where nothing bends the content, "true" is the body-fixed point, as drawn.
+    expect(Array.from(pickIn(pick, "true").position)).toEqual(ON_MOON);
+    expect(Array.from(pickIn(pick, "drawn").position)).toEqual(ON_MOON);
+  });
+
+  it("a ×10 lift over Earth content gives its true height, and leaves a Moon pick unchanged", () => {
+    const lifted = createFrameCatalog();
+    const liftedItrf = lifted.get("ITRF", { user: "application" });
+    const content = smoothFrame(
+      "Earth content (exaggerated)",
+      liftedItrf,
+      verticalExaggeration({ factor: 10 }),
+    );
+    lifted.add(content);
+    const liftedResolver = createFramesResolver(lifted);
+    const route = liftedResolver.route!(content, liftedItrf, 0);
+    const ground = Ellipsoid.WGS84.cartographicToCartesian(
+      { longitude: 0.2, latitude: 0.7, height: 900 },
+      new Float64Array(3),
+    );
+    const earthPick = {
+      view: { anchorRoute: () => route },
+      route,
+      position: routeForward(route, ground),
+      root: liftedItrf,
+      anchor: content,
+      body: EARTH,
+      anchorPosition: Float64Array.from(ground),
+      truePosition: { position: Float64Array.from(ground), frame: content },
+      accuracy: { exact: true, meters: 0 },
+      seconds: 0,
+      camera: {
+        position: Float64Array.of(ground[0]!, ground[1]!, ground[2]! + 500),
+        fovy: 1,
+        height: 600,
+      },
+    } as unknown as CorePick;
+    const heightOf = (p: ArrayLike<number>) =>
+      Ellipsoid.WGS84.cartesianToCartographic(Float64Array.from(p), {
+        longitude: 0,
+        latitude: 0,
+        height: 0,
+      })!.height;
+    // True: the height the content stands at. Drawn: lifted tenfold.
+    expect(heightOf(pickIn(earthPick, "true").position)).toBeCloseTo(900, 6);
+    expect(heightOf(pickIn(earthPick, "drawn").position)).toBeGreaterThan(8000);
+    // The Moon's anchor is not under the lift: its route stays rigid.
+    const moon = world.bodyAnchor(MOON);
+    const moonPick = {
+      ...corePick(world.root, undefined),
+      anchor: moon,
+      body: MOON,
+      position: Float64Array.from(ON_MOON),
+      anchorPosition: Float64Array.from(ON_MOON),
+    };
+    expect(Array.from(pickIn(moonPick, "true").position)).toEqual(ON_MOON);
+    expect(Array.from(pickIn(moonPick, "drawn").position)).toEqual(ON_MOON);
   });
 });
