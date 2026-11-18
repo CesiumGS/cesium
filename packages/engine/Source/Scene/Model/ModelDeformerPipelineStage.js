@@ -123,8 +123,13 @@ function addUniforms(renderResources, binding, index, names) {
   for (const [name, uniform] of Object.entries(binding.uniforms)) {
     const id = `u_deformer${index}_${name}`;
 
+    // Samplers default to lowp in vertex shaders, which can truncate data textures.
+    const type = uniform.type.startsWith("sampler")
+      ? `highp ${uniform.type}`
+      : uniform.type;
+
     renderResources.shaderBuilder.addUniform(
-      uniform.type,
+      type,
       id,
       ShaderDestination.VERTEX,
     );
