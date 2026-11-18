@@ -34,6 +34,7 @@ const scratchDeformableToDeformer = new Matrix4();
  *
  * @alias SurfaceDeformer
  * @internalConstructor
+ * @extends Deformer
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
