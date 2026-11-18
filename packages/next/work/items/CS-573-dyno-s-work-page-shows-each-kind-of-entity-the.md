@@ -2,9 +2,10 @@
 id: CS-573
 title: Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-17
 project: CS-18
+claimed_by: orch-9-CS-573
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/work.ts, packages/next/bench/suite/DESIGN.md]
 tier_override: 3
 ---
