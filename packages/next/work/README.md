@@ -253,7 +253,7 @@ No milestone
 
 ### The worker-mode façade
 
-[CS-13](./projects/CS-13-the-worker-mode-facade.md), Planned, led by owner: 1 of 20 done, 0 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-worker-facade.md](../../../docs/superpowers/plans/2026-11-13-worker-facade.md).
+[CS-13](./projects/CS-13-the-worker-mode-facade.md), Planned, led by owner: 1 of 21 done, 1 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-worker-facade.md](../../../docs/superpowers/plans/2026-11-13-worker-facade.md).
 
 Milestone: Every public call can cross a thread ([CS-421](./milestones/CS-421-every-public-call-can-cross-a-thread.md), Planned)
 
@@ -289,6 +289,7 @@ Milestone: Refinement, profiles and streaming work in worker mode ([CS-456](./mi
 No milestone
 
 - [x] [CS-101](./items/CS-101-the-protocol-table-every-public-member.md) The protocol table: every public member classified, checked against `api/surface.txt`. Done.
+- [ ] [CS-567](./items/CS-567-the-protocol-table-classifies-every-member-of.md) The protocol table classifies every member of api/surface.txt, not only the exported names. Needs CS-101.
 
 ### Level-of-detail transitions
 
@@ -470,11 +471,11 @@ Milestone: Issues found for other teams are filed and answered ([CS-505](./miles
 
 ### Earth to Moon (frames 5c to 5h)
 
-[CS-188](./projects/CS-188-earth-to-moon-frames-5c-to-5h.md), Planned, led by owner: 0 of 41 done, 10 ready, 31 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-188](./projects/CS-188-earth-to-moon-frames-5c-to-5h.md), Planned, led by owner: 0 of 42 done, 10 ready, 32 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The Earth and the Moon render together ([CS-424](./milestones/CS-424-the-earth-and-the-moon-render-together.md), Planned)
 
-- [ ] [CS-200](./items/CS-200-volumes-horizon-culling-and-selection-on-the.md) Volumes, horizon culling and selection on the content's body. Needs nothing.
+- [ ] [CS-200](./items/CS-200-volumes-horizon-culling-and-selection-on-the.md) Volumes, horizon culling and selection on the content's body. Needs CS-566.
 - [ ] [CS-201](./items/CS-201-clamping-heights-models-point-sources-and-picks.md) Clamping, heights, models, point sources and picks per body. Needs CS-200.
 - [ ] [CS-202](./items/CS-202-a-view-on-another-body.md) A view on another body. Needs CS-201.
 - [ ] [CS-203](./items/CS-203-depth-across-bodies.md) Depth across bodies. Needs CS-202.
@@ -530,6 +531,10 @@ Milestone: Launch and re-entry fill in the replay ([CS-429](./milestones/CS-429-
 - [ ] [CS-236](./items/CS-236-the-simulated-entry-service-module-break-up.md) The simulated entry: service module break-up, blackout, parachutes and splashdown. Needs CS-234 and CS-229.
 - [ ] [CS-237](./items/CS-237-plumes-with-ambient-pressure-and-re-entry.md) Plumes with ambient pressure, and re-entry heating and plasma, in Slang. Needs CS-235 and CS-236.
 - [ ] [CS-238](./items/CS-238-approximations-of-launch-smoke-and-the.md) Approximations of launch smoke and the splashdown splash. Needs CS-237.
+
+No milestone
+
+- [ ] [CS-566](./items/CS-566-cs-200-the-globe-and-lod-parity-suites-need-the.md) decision: CS-200: the globe and lod parity suites need the ion token in executor worktrees. Needs nothing. Decided by owner.
 
 ### Frames and engineering coordinates follow-ups
 
@@ -893,7 +898,7 @@ No milestone
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
-- [ ] [CS-102](./items/CS-102-the-public-api-review-with-the-protocol-table.md) The public API review, with the protocol table and the façade's constraints. Needs CS-101 (worker-mode façade), CS-430, CS-431, CS-432, CS-433 and CS-454.
+- [ ] [CS-102](./items/CS-102-the-public-api-review-with-the-protocol-table.md) The public API review, with the protocol table and the façade's constraints. Needs CS-101 (worker-mode façade), CS-430, CS-431, CS-432, CS-433, CS-454 and CS-567 (worker-mode façade).
 - [ ] [CS-430](./items/CS-430-the-webgpu-seams-audited-each-seam-its-bypass.md) The WebGPU seams audited: each seam, its bypass test, and the seams still missing. Needs nothing.
 - [ ] [CS-431](./items/CS-431-the-camera-chain-s-layers-checked-against-what.md) The camera chain's layers checked against what each may know. Needs CS-101 (worker-mode façade).
 - [ ] [CS-432](./items/CS-432-the-api-s-shape-checked-sync-and-async.md) The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors. Needs CS-101 (worker-mode façade).

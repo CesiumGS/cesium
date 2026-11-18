@@ -196,7 +196,7 @@ No milestone
 
 ### The worker-mode façade
 
-CS-13, Planned, led by owner: 1 of 20 done, 0 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-worker-facade.md](docs/superpowers/plans/2026-11-13-worker-facade.md).
+CS-13, Planned, led by owner: 1 of 21 done, 1 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-worker-facade.md](docs/superpowers/plans/2026-11-13-worker-facade.md).
 
 Milestone: Every public call can cross a thread (CS-421, Planned)
 
@@ -232,6 +232,7 @@ Milestone: Refinement, profiles and streaming work in worker mode (CS-456, Plann
 No milestone
 
 - [x] CS-101 The protocol table: every public member classified, checked against `api/surface.txt`. Done.
+- [ ] CS-567 The protocol table classifies every member of api/surface.txt, not only the exported names. Needs CS-101.
 
 ### Level-of-detail transitions
 
@@ -413,11 +414,11 @@ Milestone: Issues found for other teams are filed and answered (CS-505, Planned)
 
 ### Earth to Moon (frames 5c to 5h)
 
-CS-188, Planned, led by owner: 0 of 41 done, 10 ready, 31 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-188, Planned, led by owner: 0 of 42 done, 10 ready, 32 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The Earth and the Moon render together (CS-424, Planned)
 
-- [ ] CS-200 Volumes, horizon culling and selection on the content's body. Needs nothing.
+- [ ] CS-200 Volumes, horizon culling and selection on the content's body. Needs CS-566.
 - [ ] CS-201 Clamping, heights, models, point sources and picks per body. Needs CS-200.
 - [ ] CS-202 A view on another body. Needs CS-201.
 - [ ] CS-203 Depth across bodies. Needs CS-202.
@@ -473,6 +474,10 @@ Milestone: Launch and re-entry fill in the replay (CS-429, Planned)
 - [ ] CS-236 The simulated entry: service module break-up, blackout, parachutes and splashdown. Needs CS-234 and CS-229.
 - [ ] CS-237 Plumes with ambient pressure, and re-entry heating and plasma, in Slang. Needs CS-235 and CS-236.
 - [ ] CS-238 Approximations of launch smoke and the splashdown splash. Needs CS-237.
+
+No milestone
+
+- [ ] CS-566 decision: CS-200: the globe and lod parity suites need the ion token in executor worktrees. Needs nothing. Decided by owner.
 
 ### Frames and engineering coordinates follow-ups
 
@@ -836,7 +841,7 @@ CS-437, Planned, led by owner: 0 of 9 done, 5 ready, 4 blocked. Plan: [2026-11-0
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
-- [ ] CS-102 The public API review, with the protocol table and the façade's constraints. Needs CS-101 (worker-mode façade), CS-430, CS-431, CS-432, CS-433 and CS-454.
+- [ ] CS-102 The public API review, with the protocol table and the façade's constraints. Needs CS-101 (worker-mode façade), CS-430, CS-431, CS-432, CS-433, CS-454 and CS-567 (worker-mode façade).
 - [ ] CS-430 The WebGPU seams audited: each seam, its bypass test, and the seams still missing. Needs nothing.
 - [ ] CS-431 The camera chain's layers checked against what each may know. Needs CS-101 (worker-mode façade).
 - [ ] CS-432 The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors. Needs CS-101 (worker-mode façade).

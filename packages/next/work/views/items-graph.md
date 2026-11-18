@@ -138,6 +138,7 @@ graph LR
     CS_119["CS-119 A shared snapshot"]:::proposed
     CS_120["CS-120 The other plans plug in"]:::open
     CS_378["CS-378 No placement modes: route by the declared CRS, and read the 3D "]:::open
+    CS_567["CS-567 The protocol table classifies every member of api/surface.txt, "]:::open
   end
   subgraph CS_14["Level-of-detail transitions"]
     CS_121["CS-121 The signed 'transition' word, the dither flag, 'View.lodTransit"]:::open
@@ -293,6 +294,7 @@ graph LR
     CS_238["CS-238 Approximations of launch smoke and the splashdown splash"]:::open
     CS_439["CS-439 The sky's fallback per route edge or for the whole sky, and exp"]:::open
     CS_444["CS-444 Ray artifacts in the lunar terrain's shadows"]:::open
+    CS_566["CS-566 CS-200: the globe and lod parity suites need the ion token in e"]:::decision
   end
   subgraph CS_189["Frames and engineering coordinates follow-ups"]
     CS_239["CS-239 'accuracyOf' and the explorer's walk composed on 'separationAcc"]:::open
@@ -625,6 +627,7 @@ graph LR
   CS_432 --> CS_102
   CS_433 --> CS_102
   CS_454 --> CS_102
+  CS_567 --> CS_102
   CS_438 --> CS_103
   CS_438 --> CS_104
   CS_438 --> CS_105
@@ -705,6 +708,7 @@ graph LR
   CS_53 --> CS_168
   CS_56 --> CS_168
   CS_403 --> CS_170
+  CS_566 --> CS_200
   CS_200 --> CS_201
   CS_201 --> CS_202
   CS_202 --> CS_203
@@ -900,6 +904,7 @@ graph LR
   CS_552 --> CS_557
   CS_552 --> CS_558
   CS_552 --> CS_559
+  CS_101 --> CS_567
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

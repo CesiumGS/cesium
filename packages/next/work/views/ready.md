@@ -85,7 +85,6 @@ CS-19 Follow-ups for other teams
   CS-387  external: Slang and Tint: counted loops pay Tint's loop guard
 
 CS-188 Earth to Moon (frames 5c to 5h)
-  CS-200  Volumes, horizon culling and selection on the content's body
   CS-210  decision: Should a world clip cut the Moon's impostor?
   CS-211  The animation core: easing, springs, keyframes, timelines and time-varying values
   CS-223  Routing a design CRS to ITRF2020, with defaults as data and the route recorded
@@ -95,6 +94,7 @@ CS-188 Earth to Moon (frames 5c to 5h)
   CS-228  Artemis II data and models in setup
   CS-234  Published ascent, separation and entry data, and the event times, found and cited
   CS-444  Ray artifacts in the lunar terrain's shadows
+  CS-566  decision: CS-200: the globe and lod parity suites need the ion token in executor worktrees
 
 CS-189 Frames and engineering coordinates follow-ups
   CS-239  `accuracyOf` and the explorer's walk composed on `separationAccuracy`
@@ -197,5 +197,8 @@ CS-18 The work tracker
   CS-562  Dyno's Work page lists the items in no milestone, filterable by kind and state
   CS-563  Dyno's roadmap shows proposed milestones with dashed outlines
 
-148 ready
+CS-13 The worker-mode façade
+  CS-567  The protocol table classifies every member of api/surface.txt, not only the exported names
+
+149 ready
 ```

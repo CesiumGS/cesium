@@ -9,14 +9,14 @@ graph LR
   CS_10["Cesium IR<br/>2 of 30 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
-  CS_13["worker-mode façade<br/>1 of 20 done"]
+  CS_13["worker-mode façade<br/>1 of 21 done"]
   CS_14["Level-of-detail transitions<br/>0 of 14 done"]
   CS_15["Refinement and convergence<br/>0 of 13 done"]
   CS_16["Streaming robustness<br/>0 of 22 done"]
   CS_17["transform graph<br/>0 of 13 done"]
   CS_18["work tracker<br/>15 of 26 done"]
   CS_19["Follow-ups for other teams<br/>0 of 12 done"]
-  CS_188["Earth to Moon (frames 5c to 5h)<br/>0 of 41 done"]
+  CS_188["Earth to Moon (frames 5c to 5h)<br/>0 of 42 done"]
   CS_189["Frames and engineering coordinates follow-ups<br/>0 of 21 done"]
   CS_190["Vector drawing and the styling language<br/>0 of 12 done"]
   CS_191["Content sources and formats<br/>1 of 22 done"]
@@ -36,6 +36,7 @@ graph LR
   CS_10 -->|2| CS_11
   CS_9 -->|1| CS_11
   CS_13 -->|2| CS_12
+  CS_13 -->|1| CS_437
   CS_437 -->|5| CS_13
   CS_10 -->|4| CS_13
   CS_8 -->|1| CS_13

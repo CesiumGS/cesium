@@ -174,6 +174,7 @@ CS-437 The public API reviews
         CS-432 The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors
         CS-433 Promotions and demotions proposed: what every app needs, and what is exported only for examples
         CS-454 What is the full version of scene items: references, groups, the globe as an item, and how close to USD?
+        CS-567 The protocol table classifies every member of api/surface.txt, not only the exported names
   CS-434  Stability tiers as TSDoc tags, with internal members stripped from the published types
       ← CS-438 Which of the first public API review's proposed changes do you approve?
   CS-435  The measurement module's seam and entry point
@@ -326,6 +327,8 @@ CS-17 The transform graph
       ← CS-385 Spike: height-keyed tint and haze under exaggeration, drawn against true height
 
 CS-188 Earth to Moon (frames 5c to 5h)
+  CS-200  Volumes, horizon culling and selection on the content's body
+      ← CS-566 CS-200: the globe and lod parity suites need the ion token in executor worktrees
   CS-201  Clamping, heights, models, point sources and picks per body
       ← CS-200 Volumes, horizon culling and selection on the content's body
   CS-202  A view on another body
@@ -513,5 +516,5 @@ CS-18 The work tracker
       ← CS-529 Which milestones does 2.0.0 need?
         CS-532 Release 2.0.0-rc.1
 
-185 blocked
+186 blocked
 ```
