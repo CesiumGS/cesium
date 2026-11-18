@@ -1,3 +1,5 @@
+// @ts-check
+
 import Cartesian2 from "./Cartesian2.js";
 import Cartesian3 from "./Cartesian3.js";
 import Cartographic from "./Cartographic.js";
@@ -13,6 +15,23 @@ import PrimitiveType from "./PrimitiveType.js";
 import Quaternion from "./Quaternion.js";
 import Rectangle from "./Rectangle.js";
 import FixedFrameTransforms from "./FixedFrameTransforms.js";
+
+/** @import { KeyOf } from "./globalTypes.js"; */
+/** @import BoundingSphere from "./BoundingSphere.js"; */
+/** @import Ellipsoid from "./Ellipsoid.js"; */
+/** @import GeometryAttributes from "./GeometryAttributes.js"; */
+/** @import GeometryOffsetAttribute from "./GeometryOffsetAttribute.js"; */
+
+/**
+ * @typedef {object} GeometryConstructorOptions
+ * @property {GeometryAttributes} attributes Attributes, which make up the geometry's vertices.
+ * @property {PrimitiveType} [primitiveType=PrimitiveType.TRIANGLES] The type of primitives in the geometry.
+ * @property {Uint16Array|Uint32Array} [indices] Optional index data that determines the primitives in the geometry.
+ * @property {BoundingSphere} [boundingSphere] An optional bounding sphere that fully enclosed the geometry.
+ * @property {BoundingSphere} [boundingSphereCV] Internal.
+ * @property {unknown} [geometryType] Internal.
+ * @property {GeometryOffsetAttribute} [offsetAttribute] Internal.
+ */
 
 /**
  * A geometry representation with attributes forming vertices and optional index data
@@ -57,14 +76,12 @@ import FixedFrameTransforms from "./FixedFrameTransforms.js";
  */
 class Geometry {
   /**
-   * @param {object} options Object with the following properties:
-   * @param {GeometryAttributes} options.attributes Attributes, which make up the geometry's vertices.
-   * @param {PrimitiveType} [options.primitiveType=PrimitiveType.TRIANGLES] The type of primitives in the geometry.
-   * @param {Uint16Array|Uint32Array} [options.indices] Optional index data that determines the primitives in the geometry.
-   * @param {BoundingSphere} [options.boundingSphere] An optional bounding sphere that fully enclosed the geometry.
+   * @param {GeometryConstructorOptions} [options]
    */
   constructor(options) {
-    options = options ?? Frozen.EMPTY_OBJECT;
+    options =
+      options ??
+      /** @type {GeometryConstructorOptions} */ (Frozen.EMPTY_OBJECT);
 
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("options.attributes", options.attributes);
@@ -120,7 +137,7 @@ class Geometry {
      * Optional index data that - along with {@link Geometry#primitiveType} -
      * determines the primitives in the geometry.
      *
-     * @type {Array|undefined}
+     * @type {Uint16Array|Uint32Array|undefined}
      *
      * @default undefined
      */
@@ -147,17 +164,20 @@ class Geometry {
     this.boundingSphere = options.boundingSphere;
 
     /**
+     * @type {GeometryType}
      * @private
      */
     this.geometryType = options.geometryType ?? GeometryType.NONE;
 
     /**
+     * @type {BoundingSphere}
      * @private
      */
     this.boundingSphereCV = options.boundingSphereCV;
 
     /**
      * Used for computing the bounding sphere for geometry using the applyOffset vertex attribute
+     * @type {GeometryOffsetAttribute}
      * @private
      */
     this.offsetAttribute = options.offsetAttribute;
@@ -178,8 +198,12 @@ class Geometry {
     Check.typeOf.object("geometry", geometry);
     //>>includeEnd('debug');
 
+    const attributeKeys = /** @type {Array<KeyOf<GeometryAttributes>>} */ (
+      Object.keys(geometry.attributes)
+    );
+
     let numberOfVertices = -1;
-    for (const property in geometry.attributes) {
+    for (const property of attributeKeys) {
       if (
         geometry.attributes.hasOwnProperty(property) &&
         defined(geometry.attributes[property]) &&
