@@ -2,9 +2,10 @@
 id: CS-562
 title: Dyno's Work page lists the items in no milestone, filterable by kind and state
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-16
 project: CS-18
+claimed_by: orch-9-CS-562
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/work.ts]
 ---
 
