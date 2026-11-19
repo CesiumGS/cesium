@@ -2,10 +2,11 @@
 id: CS-692
 title: "Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-18
 project: CS-18
 needs: [CS-685]
+claimed_by: orch-9-CS-692
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/work.ts, packages/next/bench/suite/DESIGN.md]
 ---
 
