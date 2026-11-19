@@ -2,10 +2,14 @@
 id: CS-700
 title: Merge CS-693, the Projects view
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-18
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the tested commit (re-checked if main moves), regenerates the views and logs the merge; CS-696 is rebased onto it when it reports."
+answered_at: 2026-11-19T06:04:19.316Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
