@@ -17,6 +17,7 @@ The second of the three views the owner agreed on 2026-11-18 (Plan, CS-692; Depe
 - Each node shows its state and whether it's ready, and opens its pane; the tree's depth and counts say how far the chain goes when it's cut short.
 - Behind a toggle, the global structure for reshaping work: the depth layering, honestly labeled "earliest possible start", in **waves** (never "steps"), and the project matrix that CS-693 moves out of its default.
 - The always-on drawing of every wait is gone from the default views.
+- The roadmap's "Fewest crossings" layout is removed, with its d3-dag layering of the whole milestone graph; the global toggle keeps project lanes only. A crossing-minimizing layout may be used for the focused tree, at its small scale (the owner, 2026-11-18, dropping CS-691).
 - Direct labels and tooltips, no legend beyond one key line, per the brief.
 - Tests in `test/dynoWork.test.ts` cover the upstream and downstream trees, cycles and the depth cut.
 - Checked on a Dyno server of the executor's own, never the owner's 5190, in both themes, at 380 px wide, with the keyboard only, with reduced motion and with a clean console, with a UX review on the real page and its findings fixed.
