@@ -232,11 +232,32 @@ milestones named by their outcome, each with an `outcome` sentence,
     Your decisions and, beside them, the proposals for you (CS-688: the
     current batch to discuss, at most five, oldest filed first, and
     every one ready for your yes, each with its header and its stage,
-    linking into the Proposals view with it chosen); work in progress
-    (who holds each, on which branch, claims in other worktrees and
-    local branches included until they merge) across the page; then
-    ready to start and waiting outside, as they stand now; a decision
-    or an outside wait in progress stays in its own section.
+    linking into the Proposals view with it chosen); In progress
+    across the page (CS-547), which tells the truth about the live run;
+    then ready to start and waiting outside, as they stand now; a
+    decision or an outside wait in progress stays in its own section.
+  - **In progress** reads the live run, not just the item files: the
+    run and the orchestrator holding its lease (`hitld run status`);
+    "Working now", every dispatch in flight (`hitld ledger in-flight`)
+    and every other open claim (`hitld work claims`), each with who
+    holds it, its branch, and its age from the dispatch's start or the
+    claim commit, never from the stage history's day buckets; and
+    "Done, not merged", every item done on a local branch and not on
+    the main branch (git), with its branch and where the merge queue
+    has it: held for the owner's yes (hitld's `refs/hitld/merge-held`),
+    checked by hand on a `-merge-check` branch, in hitld's queue or
+    turned down by it (the ledger's `verified` and `merged` events,
+    folded as hitld folds them), or not in the queue. Each figure
+    names its source and when it was read (the dev server reads them
+    at most every 30 s). A claim on a branch the main branch has moved
+    past is stale: it is left out and named in a note. A claim with no
+    dispatch in flight (a session set up outside hitld dispatch, as in
+    run 2026-11-18-2) shows as a claim, and a note says so. When a
+    source can't be read, a warning names it and when it was tried, and
+    nothing reads as "Nothing is in progress"; an empty or missing
+    ledger counts as unread, since hitld answers a missing store as if
+    no run had ever started. Read-only: the board runs only hitld's
+    reading commands. No machine's name reaches the page.
     How they change is Flow's. The rail's count is the owner's, and it
     is the only count outside the view.
   - **Roadmap**: what comes after what, without dates. By milestones (a

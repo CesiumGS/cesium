@@ -7,15 +7,17 @@
 // needs, who needs what, the dependencies between projects) are derived
 // here from those answers, so the board needs no tracker logic of its own.
 //
-// The one read that isn't hitld's is the state history behind the Flow
-// view: the read API has none yet, so it comes from `git log` of the item
-// files' `state:` lines (and the `status:` lines from before CS-521).
+// The reads that aren't hitld's come from git: the state history behind
+// the Flow view (the read API has none yet), from `git log` of the item
+// files' `state:` lines (and the `status:` lines from before CS-521); and,
+// for the live run (readLive), which items are done on a branch and not on
+// the main branch, and whether hitld holds a batch for the owner.
 //
 // hitld is the dev dependency pinned in package.json. Nothing read from it
 // is executed or evaluated; hitld and git run with fixed arguments only.
 
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
@@ -184,10 +186,13 @@ function progressOf(items, ready, blocked) {
  * every item with its derived readiness and links, the milestones, the
  * projects and long outcomes with their progress, the dependencies between
  * projects, and the check's problems. `elsewhere` (claimsElsewhere's
- * answer) and `history` (stateHistory's) are read by the caller, which may
- * cache them.
+ * answer), `history` (stateHistory's) and `live` (readLive's) are read by
+ * the caller, which may cache them.
  */
-export async function queryWork(root, { elsewhere = [], history = [] } = {}) {
+export async function queryWork(
+  root,
+  { elsewhere = [], history = [], live } = {},
+) {
   const [all, readyAnswer, check, version] = await Promise.all([
     // With the bodies: a proposal's text carries its header (CS-686).
     hitld(root, ["work", "query", "--json", "--bodies"]),
@@ -392,6 +397,7 @@ export async function queryWork(root, { elsewhere = [], history = [] } = {}) {
     }),
     elsewhere,
     history,
+    live,
     problems: check.problems ?? [],
   };
 }
@@ -452,12 +458,18 @@ export function stateHistory(root) {
 }
 
 /**
- * Work in flight elsewhere: claims on other branches (and in fetched
- * bundles) that this branch's copy hasn't merged, from `hitld work claims`.
- * One entry per claim. Other machines' claims arrive only with a bundle.
+ * Every open claim, from `hitld work claims`, this branch's included, each
+ * with its claim commit's date. A claim hitld finds no claim commit for
+ * sits on a branch whose copy of the item main has already moved past (a
+ * branch merged long ago still showing the item in progress, as CS-174's
+ * did): it is stale, and kept apart, never shown as work in progress.
+ * Other machines' claims arrive only with a bundle.
  */
-export async function claimsElsewhere(root) {
+export async function readClaims(root) {
   const answer = await hitld(root, ["work", "claims"]);
+  if (!answer.ok) {
+    throw new HitldUnavailable("failed", "hitld work claims failed");
+  }
   const here = git(root, ["rev-parse", "--abbrev-ref", "HEAD"]);
   const inWorktree = new Set(
     (git(root, ["worktree", "list", "--porcelain"]) ?? "")
@@ -465,21 +477,305 @@ export async function claimsElsewhere(root) {
       .filter((l) => l.startsWith("branch refs/heads/"))
       .map((l) => l.slice("branch refs/heads/".length)),
   );
-  const out = [];
+  const list = [];
+  const stale = [];
   for (const c of answer.claims ?? []) {
     for (const claim of c.claims ?? []) {
-      if (claim.branch === here) {
-        continue;
-      }
-      out.push({
+      const where = claim.branch ?? claim.ref;
+      const entry = {
         id: c.id,
-        claimed_by: claim.claimant,
-        where: claim.branch ?? claim.ref,
+        claimed_by: claim.claimant === "?" ? undefined : claim.claimant,
+        where,
         worktree: inWorktree.has(claim.branch),
+        here: claim.branch === here,
+        at: claim.at ?? undefined,
+        source: claim.source,
+      };
+      (claim.commit ? list : stale).push(entry);
+    }
+  }
+  return { list, stale };
+}
+
+/** Claims on other branches, without this branch's or the stale ones. */
+export const elsewhereOf = (claims) =>
+  claims.list
+    .filter((c) => !c.here)
+    .map(({ id, claimed_by, where, worktree, at }) => ({
+      id,
+      claimed_by,
+      where,
+      worktree,
+      at,
+    }));
+
+/**
+ * Work in flight elsewhere: claims on other branches (and in fetched
+ * bundles) that this branch's copy hasn't merged, from `hitld work claims`.
+ * One entry per claim; stale claims (readClaims) aren't work in flight.
+ */
+export async function claimsElsewhere(root) {
+  return elsewhereOf(await readClaims(root));
+}
+
+// ------------------------------------------------------------ the live run
+
+/** The ledger is read whole: the merge queue is a fold over all of it. */
+const LEDGER_ALL = "1000000";
+
+/** The main branch, from the project's hitld policy; "main" without one. */
+export function mainBranchOf(root) {
+  try {
+    const policy = JSON.parse(
+      readFileSync(join(root, ".human-in-the-lead", "policy.json"), "utf8"),
+    );
+    const name = policy?.merge?.main_branch;
+    return typeof name === "string" && name ? name : "main";
+  } catch {
+    return "main";
+  }
+}
+
+/**
+ * The merge queue's view of each item, folded from the ledger's events:
+ * "queued" after a passing `verified` (the orchestrator queued its branch),
+ * "rejected" after a failing one, gone after `merged` or `reverted` (as
+ * hitld's own run state folds them).
+ */
+export function queueOf(events) {
+  const out = new Map();
+  for (const e of events ?? []) {
+    if (!e?.item) {
+      continue;
+    }
+    if (e.event === "verified") {
+      out.set(e.item, {
+        state: e.result === "pass" ? "queued" : "rejected",
+        at: e.at,
       });
+    } else if (e.event === "merged" || e.event === "reverted") {
+      out.delete(e.item);
     }
   }
   return out;
+}
+
+/** Commits that close an item (`+state: done`) in `range`, newest first. */
+function closesIn(root, range) {
+  const log = git(root, [
+    "log",
+    ...range,
+    "--no-merges",
+    "-p",
+    "-U0",
+    "--format=@@commit %H %cI",
+    "--",
+    "packages/next/work/items",
+  ]);
+  const out = [];
+  let commit;
+  let at;
+  let id;
+  for (const line of (log ?? "").split("\n")) {
+    if (line.startsWith("@@commit ")) {
+      [commit, at] = line.slice(9).trim().split(" ");
+    } else if (line.startsWith("diff --git ")) {
+      id = /\/(CS-[1-9]\d*)[-.][^/]*$/.exec(line)?.[1];
+    } else if (id && commit && line.trim() === "+state: done") {
+      out.push({ id, commit, at });
+    }
+  }
+  return out;
+}
+
+/** Each item's state on `ref`, from its file's `state:` line, in one read. */
+function statesOn(root, ref) {
+  const out = new Map();
+  const lines = git(root, [
+    "grep",
+    "-e",
+    "^state: ",
+    ref,
+    "--",
+    "packages/next/work/items",
+  ]);
+  for (const line of (lines ?? "").split("\n")) {
+    const m = /\/(CS-[1-9]\d*)[-.][^/:]*:state: (\S+)/.exec(line);
+    if (m) {
+      out.set(m[1], m[2]);
+    }
+  }
+  return out;
+}
+
+/** The ref that keeps a held batch while it waits for the owner (hitld's). */
+const HELD_REF = "refs/hitld/merge-held";
+
+/** A branch an orchestrator checks a finished branch on by hand. */
+const isCheckBranch = (b) => /-merge-check$/.test(b);
+
+/**
+ * Items done on a local branch and not on the main branch, each with the
+ * branches that close it and where the merge queue has it: "held" (in the
+ * batch hitld holds for the owner's yes), "checking" (on a merge-check
+ * branch), "queued" or "rejected" (the ledger's fold, queueOf), or "none".
+ * Read from git: the main branch's states, and the commits on branches
+ * that main doesn't have which set an item done. Main's copy decides, so a
+ * branch merged by a rebase (its own commits never reach main) drops out
+ * once main shows the item done.
+ */
+export function unmergedOf(root, main, queue = new Map()) {
+  const mainRef = `refs/heads/${main}`;
+  if (!git(root, ["rev-parse", "--verify", "-q", mainRef])) {
+    throw new Error(`no branch ${main}`);
+  }
+  const onMain = statesOn(root, mainRef);
+  const pending = closesIn(root, ["--branches", "--not", mainRef]).filter(
+    (c) => onMain.get(c.id) !== "done",
+  );
+  const held = git(root, ["rev-parse", "--verify", "-q", HELD_REF])
+    ? new Set(closesIn(root, [`${mainRef}..${HELD_REF}`]).map((c) => c.id))
+    : new Set();
+  const byId = new Map();
+  for (const c of pending) {
+    const branches = (
+      git(root, [
+        "for-each-ref",
+        "--contains",
+        c.commit,
+        "--format=%(refname:short)",
+        "refs/heads",
+      ]) ?? ""
+    )
+      .split("\n")
+      .filter(Boolean);
+    const known = byId.get(c.id);
+    if (known) {
+      known.branches = [...new Set([...known.branches, ...branches])];
+      continue;
+    }
+    byId.set(c.id, { id: c.id, closed_at: c.at, branches });
+  }
+  return [...byId.values()]
+    .filter((u) => u.branches.length)
+    .map((u) => {
+      const check = u.branches.find(isCheckBranch);
+      const q = queue.get(u.id);
+      return {
+        ...u,
+        branches: u.branches.filter((b) => !isCheckBranch(b)),
+        queue: held.has(u.id)
+          ? "held"
+          : check
+            ? "checking"
+            : (q?.state ?? "none"),
+        check_branch: check,
+      };
+    })
+    .sort(byNumber);
+}
+
+/** What the page may be told when a live source can't be read. */
+export const LIVE_UNREAD = {
+  run: "hitld run status couldn't be read",
+  ledger: "hitld's ledger couldn't be read",
+  empty:
+    "hitld's ledger is empty or wasn't found, so nothing it would record can be seen",
+  claims: "hitld work claims couldn't be read",
+  git: "the branches couldn't be compared with the main branch",
+};
+
+/**
+ * The live run, as hitld and git show it now, each source with when it was
+ * read, or why it couldn't be: the run and the orchestrator holding its
+ * lease (`hitld run status`), the dispatches in flight
+ * (`hitld ledger in-flight`), the merge queue folded from the ledger
+ * (`hitld ledger tail`), the claims (`hitld work claims`), and the items
+ * done on a branch and not merged (git). Reads only. `store` points hitld
+ * at another private store (tests point it at a missing one). The host
+ * names hitld records are left out: the page names sessions, not machines.
+ */
+export async function readLive(root, { store } = {}) {
+  const at = () => new Date().toISOString();
+  const withStore = (args) => (store ? [...args, "--store", store] : args);
+  const main = mainBranchOf(root);
+  const attempt = async (source, why, read) => {
+    try {
+      return { source, read_at: at(), ok: true, ...(await read()) };
+    } catch (e) {
+      if (e instanceof HitldUnavailable && e.reason !== "failed") {
+        throw e; // hitld missing or in another version: the board says so
+      }
+      return { source, read_at: at(), ok: false, why };
+    }
+  };
+  // The three hitld reads run at once; git's needs the ledger's events.
+  let events = [];
+  const [run, ledger, claims] = await Promise.all([
+    attempt("hitld run status", LIVE_UNREAD.run, async () => {
+      const a = await hitld(root, withStore(["run", "status"]));
+      if (!a.ok && a.error !== "no-run") {
+        throw new Error(a.error);
+      }
+      const lease = a.lease
+        ? {
+            session: a.lease.session,
+            renewed_at: a.lease.renewed_at,
+            expired: Boolean(a.lease.expired),
+            free: Boolean(a.lease.free),
+            released_at: a.lease.released?.at ?? undefined,
+          }
+        : undefined;
+      return {
+        run:
+          a.ok && a.run
+            ? { id: a.run.id, started_at: a.run.started_at }
+            : undefined,
+        lease,
+        in_flight: a.ok ? Number(a.in_flight ?? 0) : 0,
+        waiting_to_merge: a.ok ? Number(a.waiting_to_merge ?? 0) : 0,
+      };
+    }),
+    attempt(
+      "hitld ledger in-flight and ledger tail",
+      LIVE_UNREAD.ledger,
+      async () => {
+        const [flight, tail] = await Promise.all([
+          hitld(root, withStore(["ledger", "in-flight"])),
+          hitld(root, withStore(["ledger", "tail", "--limit", LEDGER_ALL])),
+        ]);
+        if (!flight.ok || !tail.ok) {
+          throw new Error("ledger");
+        }
+        events = tail.events ?? [];
+        return {
+          events: Number(tail.total ?? events.length),
+          problems: (flight.ledger_problems ?? []).length,
+          dispatches: (flight.in_flight ?? []).map((d) => ({
+            dispatch: d.dispatch,
+            item: d.item,
+            role: d.role ?? undefined,
+            tier: d.tier ?? undefined,
+            mode: d.mode ?? undefined,
+            branch: d.branch ?? undefined,
+            started_at: d.started_at,
+          })),
+        };
+      },
+    ),
+    attempt("hitld work claims", LIVE_UNREAD.claims, async () =>
+      readClaims(root),
+    ),
+  ]);
+  if (ledger.ok && ledger.events === 0) {
+    Object.assign(ledger, { ok: false, why: LIVE_UNREAD.empty });
+  }
+  const unmerged = await attempt(
+    `git: local branches against ${main}`,
+    LIVE_UNREAD.git,
+    async () => ({ list: unmergedOf(root, main, queueOf(events)) }),
+  );
+  return { read_at: at(), main_branch: main, run, ledger, claims, unmerged };
 }
 
 /**

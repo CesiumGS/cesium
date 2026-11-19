@@ -3543,3 +3543,102 @@ button.work-mrow-big:focus-visible {
     padding-inline-start: var(--stratakit-space-300);
   }
 }
+
+/*
+ * In progress, the live run (CS-547): the run line, two columns (working
+ * now, done and not merged) that stack when narrow, then what the figures
+ * leave out. Each figure's source and time sit quietly beside it.
+ */
+.work-live {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+}
+.work-live-run {
+  margin: 0;
+}
+.work-live-source {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-md);
+}
+.work-live-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+  gap: var(--stratakit-space-500) var(--stratakit-space-700);
+}
+.work-live-cols > section {
+  min-width: 0;
+}
+.work-live-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--stratakit-space-200);
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-live-head h3 {
+  margin: 0;
+  font-weight: 600;
+}
+.work-live .work-empty {
+  padding-top: var(--stratakit-space-300);
+}
+.work-live-extra {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--stratakit-space-100) var(--stratakit-space-300);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.work-live-tag,
+.work-live-queue {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  padding: 0 var(--stratakit-space-200);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.work-live-queue.attention {
+  color: var(--stratakit-color-text-attention-base);
+  border-color: var(--stratakit-color-border-attention-base);
+}
+.work-live-queue.info {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-live-queue-icon {
+  color: var(--stratakit-color-icon-attention-base);
+}
+/* A source that couldn't be read: a warning, never color alone. */
+.work-live-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  border-radius: 0 var(--stratakit-radius-md) var(--stratakit-radius-md) 0;
+  border-inline-start: 3px solid var(--stratakit-color-border-attention-base);
+  background: var(--stratakit-color-bg-attention-faded);
+}
+.work-live-alert p {
+  margin: 0;
+}
+.work-live-alert ul {
+  margin: var(--stratakit-space-200) 0 0;
+  padding-inline-start: var(--stratakit-space-500);
+}
+.work-live-alert .work-palert-icon {
+  flex: none;
+  margin-top: 2px;
+}
+.work-live-notes {
+  list-style: none;
+  margin: 0;
+  padding: var(--stratakit-space-300) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}

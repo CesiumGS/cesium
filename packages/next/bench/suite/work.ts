@@ -13,7 +13,9 @@ import type {
   WorkFound,
   WorkItem,
   WorkItemText,
+  WorkLive,
   WorkMilestone,
+  WorkQueueState,
   WorkSnapshot,
 } from "../../scripts/workBoard.mjs";
 
@@ -26,6 +28,8 @@ export type {
   WorkElsewhere,
   WorkItem,
   WorkItemText,
+  WorkLive,
+  WorkQueueState,
   WorkSnapshot,
 };
 
@@ -314,6 +318,307 @@ export function inFlightOf(s: WorkSnapshot): InFlight {
     out.set(c.id, [...(out.get(c.id) ?? []), c]);
   }
   return out;
+}
+
+// ------------------------------------------------------------ the live run
+
+/** One item being worked on now, and since when. */
+export interface LiveWork {
+  id: string;
+  item?: WorkItem;
+  /** The dispatch, or the claim's `claimed_by`. */
+  who?: string;
+  /** The branch. */
+  where?: string;
+  /** On the branch the board reads. */
+  here: boolean;
+  /**
+   * When the work started (ms): its dispatch's start in the ledger, or its
+   * claim commit; never the day-bucketed stage history.
+   */
+  since?: number;
+  /**
+   * "dispatch": a dispatch in flight in hitld's ledger. "claim": a claim
+   * commit with no dispatch in flight. "branch": in progress on this
+   * branch, with no claim commit found (not committed, or claims unread).
+   */
+  from: "dispatch" | "claim" | "branch";
+}
+
+/** One item done on a branch and not merged. */
+export interface LiveUnmerged {
+  id: string;
+  item?: WorkItem;
+  branches: string[];
+  queue: WorkQueueState;
+  checkBranch?: string;
+  /** When it was closed (ms). */
+  closed: number;
+}
+
+export interface LiveRun {
+  /**
+   * "active": a run whose lease an orchestrator holds. "free": its lease
+   * expired or was released. "none": no run state, and a ledger to trust
+   * that by. "unknown": no run state, and no ledger either (a missing
+   * store reads the same as no run). "unread": run status failed.
+   */
+  state: "active" | "free" | "none" | "unknown" | "unread";
+  id?: string;
+  started?: number;
+  session?: string;
+  renewed?: number;
+  released?: number;
+}
+
+export interface LiveSource {
+  source: string;
+  /** When it was read (ms). */
+  at: number;
+  ok: boolean;
+  why?: string;
+}
+
+/** The In progress box: what is moving now, and what the board can't see. */
+export interface LiveBox {
+  working: LiveWork[];
+  unmerged: LiveUnmerged[];
+  run: LiveRun;
+  /** What the figures leave out, or can't tell, in plain sentences. */
+  notes: string[];
+  /** Every source, with when it was read, or why it couldn't be. */
+  sources: LiveSource[];
+  /** A source couldn't be read: the box can't say nothing is in progress. */
+  blind: boolean;
+}
+
+const msOf = (iso?: string) => {
+  const t = iso ? Date.parse(iso) : NaN;
+  return Number.isFinite(t) ? t : undefined;
+};
+
+/** "CS-174" or "CS-174, CS-175 and 2 more". */
+const idsText = (ids: readonly string[]) => {
+  const u = [...new Set(ids)];
+  return u.length > 3
+    ? `${u.slice(0, 2).join(", ")} and ${u.length - 2} more`
+    : u.length > 1
+      ? `${u.slice(0, -1).join(", ")} and ${u.at(-1)}`
+      : (u[0] ?? "");
+};
+
+/**
+ * The In progress box from the snapshot's live read (scripts/workBoard.mjs
+ * readLive): every item a dispatch in flight works on, with its dispatch
+ * and how long since it started; every other open claim, timed from its
+ * claim commit; the items done on a branch and not merged, with where the
+ * merge queue has each; the active run and the orchestrator holding its
+ * lease. Stale claims (on branches main has moved past) are left out and
+ * counted in a note. `ids` limits the rows to a scope; the run and the
+ * notes about sources stay whole.
+ */
+export function liveBoxOf(s: WorkSnapshot, ids?: ReadonlySet<string>): LiveBox {
+  const live: WorkLive | undefined = s.live;
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const inScope = (id: string) => !ids || ids.has(id);
+  const notes: string[] = [];
+  const sources: LiveSource[] = [];
+  const source = (x: {
+    source: string;
+    read_at: string;
+    ok: boolean;
+    why?: string;
+  }) =>
+    sources.push({
+      source: x.source,
+      at: msOf(x.read_at) ?? 0,
+      ok: x.ok,
+      why: x.ok ? undefined : x.why,
+    });
+  if (!live) {
+    // A dev server from before CS-547: only the snapshot's claims.
+    const working: LiveWork[] = [
+      ...s.items
+        .filter((it) => it.state === "in-progress" && isWork(it))
+        .map((it) => ({
+          id: it.id,
+          item: it,
+          who: it.claimed_by,
+          where: s.branch,
+          here: true,
+          from: "branch" as const,
+        })),
+      ...(s.elsewhere ?? []).map((c) => ({
+        id: c.id,
+        item: itemOf.get(c.id),
+        who: c.claimed_by,
+        where: c.where,
+        here: false,
+        since: msOf(c.at),
+        from: "claim" as const,
+      })),
+    ].filter((w) => inScope(w.id));
+    return {
+      working,
+      unmerged: [],
+      run: { state: "unread" },
+      notes: [
+        "This dev server doesn't read hitld's ledger or run: restart it to see dispatches, the run and branches done but not merged.",
+      ],
+      sources: [],
+      blind: true,
+    };
+  }
+  for (const x of [live.run, live.ledger, live.claims, live.unmerged]) {
+    source(x);
+  }
+
+  // The run and the orchestrator holding its lease.
+  const r = live.run;
+  const run: LiveRun = !r.ok
+    ? { state: "unread" }
+    : !r.run
+      ? { state: live.ledger.ok ? "none" : "unknown" }
+      : {
+          state: r.lease && !r.lease.free ? "active" : "free",
+          id: r.run.id,
+          started: msOf(r.run.started_at),
+          session: r.lease?.session,
+          renewed: msOf(r.lease?.renewed_at),
+          released: msOf(r.lease?.released_at),
+        };
+
+  // Dispatches in flight, then claims with no dispatch, then this branch.
+  const working: LiveWork[] = [];
+  const dispatches = live.ledger.ok ? live.ledger.dispatches : [];
+  for (const d of dispatches) {
+    working.push({
+      id: d.item,
+      item: itemOf.get(d.item),
+      who: d.dispatch,
+      where: d.branch,
+      here: Boolean(d.branch && d.branch === s.branch),
+      since: msOf(d.started_at),
+      from: "dispatch",
+    });
+  }
+  const claims = live.claims.ok ? live.claims.list : [];
+  const undispatched: string[] = [];
+  for (const c of claims) {
+    const d = working.find(
+      (w) => w.from === "dispatch" && w.id === c.id && w.who === c.claimed_by,
+    );
+    if (d) {
+      d.where ??= c.where;
+      d.here ||= c.here;
+      continue;
+    }
+    working.push({
+      id: c.id,
+      item: itemOf.get(c.id),
+      who: c.claimed_by,
+      where: c.where,
+      here: c.here,
+      since: msOf(c.at),
+      from: "claim",
+    });
+    undispatched.push(c.id);
+  }
+  for (const it of s.items) {
+    if (
+      it.state === "in-progress" &&
+      isWork(it) &&
+      !working.some((w) => w.id === it.id && w.here)
+    ) {
+      working.push({
+        id: it.id,
+        item: it,
+        who: it.claimed_by,
+        where: s.branch,
+        here: true,
+        from: "branch",
+      });
+    }
+  }
+  const order = (t?: number) => t ?? Number.POSITIVE_INFINITY;
+  const shown = working
+    .filter((w) => inScope(w.id))
+    .sort((a, b) => order(a.since) - order(b.since));
+
+  const unmerged: LiveUnmerged[] = (live.unmerged.ok ? live.unmerged.list : [])
+    .filter((u) => inScope(u.id))
+    .map((u) => ({
+      id: u.id,
+      item: itemOf.get(u.id),
+      branches: u.branches,
+      queue: u.queue,
+      checkBranch: u.check_branch,
+      closed: msOf(u.closed_at) ?? 0,
+    }))
+    .sort((a, b) => a.closed - b.closed);
+
+  // What the figures leave out, or can't tell.
+  if (live.ledger.ok && undispatched.length) {
+    const n = undispatched.length;
+    notes.push(
+      `${idsText(undispatched)} ${n === 1 ? "has a claim" : "have claims"} with no dispatch in flight in hitld's ledger: a session set up outside hitld dispatch, or one whose dispatch has ended. ${n === 1 ? "Its age runs" : "Their ages run"} from the claim commit.`,
+    );
+  }
+  if (shown.some((w) => w.from === "branch") && live.claims.ok) {
+    notes.push(
+      "An item in progress on this branch with no claim commit hasn't been committed yet, so its age can't be told.",
+    );
+  }
+  if (live.claims.ok && live.claims.stale.length) {
+    const stale = live.claims.stale.map((c) => c.id);
+    const branches = new Set(live.claims.stale.map((c) => c.where)).size;
+    notes.push(
+      `Left out: ${idsText(stale)}, in progress only on ${branches === 1 ? "a branch" : `${branches} branches`} ${live.main_branch} has already moved past.`,
+    );
+  }
+  if (live.ledger.ok && live.ledger.problems) {
+    notes.push(
+      `hitld couldn't read ${live.ledger.problems} ${live.ledger.problems === 1 ? "line" : "lines"} of its ledger; a dispatch recorded there may be missing.`,
+    );
+  }
+  if (live.claims.ok) {
+    notes.push(
+      "Another machine's claims show only once its bundle is fetched.",
+    );
+  }
+  return {
+    working: shown,
+    unmerged,
+    run,
+    notes,
+    sources,
+    blind: sources.some((x) => !x.ok),
+  };
+}
+
+/** How the box names where the merge queue has a finished item. */
+export function queueText(u: Pick<LiveUnmerged, "queue" | "checkBranch">): {
+  text: string;
+  tone?: "attention" | "info";
+} {
+  switch (u.queue) {
+    case "held":
+      return { text: "waits for the owner's yes", tone: "attention" };
+    case "checking":
+      return {
+        text: `being checked on ${u.checkBranch ?? "a merge-check branch"}, outside hitld's merge queue`,
+        tone: "info",
+      };
+    case "queued":
+      return { text: "in hitld's merge queue", tone: "info" };
+    case "rejected":
+      return {
+        text: "turned down by the merge queue; see hitld ledger tail",
+        tone: "attention",
+      };
+    default:
+      return { text: "not in hitld's merge queue" };
+  }
 }
 
 /**
@@ -1012,6 +1317,27 @@ export function ageText(ms: number): string {
   return d < 1
     ? "under a day"
     : `${Math.floor(d)} ${Math.floor(d) === 1 ? "day" : "days"}`;
+}
+
+/**
+ * How long ago, to the minute while under a day: "just now", "12 minutes
+ * ago", "3 hours ago", "2 days ago". For live figures, where an hour's
+ * granularity would hide what just started.
+ */
+export function agoText(ms: number): string {
+  const m = Math.floor(Math.max(0, ms) / 60_000);
+  if (m < 1) {
+    return "just now";
+  }
+  if (m < 60) {
+    return `${m} ${m === 1 ? "minute" : "minutes"} ago`;
+  }
+  const h = Math.floor(m / 60);
+  if (h < 24) {
+    return `${h} ${h === 1 ? "hour" : "hours"} ago`;
+  }
+  const d = Math.floor(h / 24);
+  return `${d} ${d === 1 ? "day" : "days"} ago`;
 }
 
 export const median = (xs: readonly number[]): number | undefined => {

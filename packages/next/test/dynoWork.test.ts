@@ -1,6 +1,12 @@
 import { execFileSync } from "node:child_process";
-import { beforeAll, describe, expect, it } from "vitest";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  agoText,
+  liveBoxOf,
+  queueText,
   bandStepsOf,
   barCounts,
   boardStatus,
@@ -39,17 +45,23 @@ import {
   withoutDropped,
   workInProgress,
   type WorkItem,
+  type WorkLive,
   type WorkMilestone,
   type WorkSnapshot,
 } from "../bench/suite/work.ts";
 import {
   API_VERSION,
   HitldUnavailable,
+  LIVE_UNREAD,
   checkVersion,
+  elsewhereOf,
   hitldPath,
   queryWork,
+  queueOf,
+  readLive,
   showItem,
   stateHistory,
+  unmergedOf,
 } from "../scripts/workBoard.mjs";
 
 const root = execFileSync("git", ["rev-parse", "--show-toplevel"], {
@@ -1385,5 +1397,317 @@ describe("the roadmap's zoom (CS-683)", () => {
     expect(cardDetail(100, 36)).toBe("name");
     expect(cardDetail(200, 20)).toBe("mark");
     expect(cardDetail(40, 60)).toBe("mark");
+  });
+});
+
+describe("the live run in Your move's In progress (CS-547)", () => {
+  it("reads a missing store as unreadable, never as nothing in flight", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "dyno-live-"));
+    try {
+      const live = await readLive(root, { store: join(dir, "no-store") });
+      expect(live.ledger.ok).toBe(false);
+      expect(live.ledger.ok ? "" : live.ledger.why).toBe(LIVE_UNREAD.empty);
+      // run status answers "no run" for a missing store, as for no run.
+      expect(live.run.ok && live.run.run).toBeFalsy();
+      expect(live.claims.ok).toBe(true);
+      expect(live.unmerged.ok).toBe(true);
+      for (const x of [live.run, live.ledger, live.claims, live.unmerged]) {
+        expect(x.source).toBeTruthy();
+        expect(Number.isFinite(Date.parse(x.read_at))).toBe(true);
+      }
+      // No machine's name reaches the page.
+      expect(JSON.stringify(live)).not.toMatch(/"host"/);
+      // A claim the board counts has its claim commit's date; a stale one
+      // (no claim commit since main) is kept apart.
+      if (live.claims.ok) {
+        expect(live.claims.list.every((c) => c.at)).toBe(true);
+        expect(live.claims.stale.every((c) => !c.at)).toBe(true);
+        expect(elsewhereOf(live.claims).every((c) => c.where)).toBe(true);
+      }
+      const box = liveBoxOf({ ...snapshot, live });
+      expect(box.blind).toBe(true);
+      expect(box.run.state).toBe("unknown");
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 60_000);
+
+  it("folds the merge queue from the ledger as hitld's run state does", () => {
+    const q = queueOf([
+      { event: "verified", item: "CS-1", result: "pass", at: "a" },
+      { event: "verified", item: "CS-2", result: "pass", at: "b" },
+      { event: "merged", item: "CS-2", at: "c" },
+      { event: "verified", item: "CS-3", result: "fail", at: "d" },
+      { event: "verified", item: "CS-4", result: "fail", at: "e" },
+      { event: "verified", item: "CS-4", result: "pass", at: "f" },
+      { event: "logged", item: "CS-5", at: "g" },
+    ]);
+    expect(Object.fromEntries([...q].map(([k, v]) => [k, v.state]))).toEqual({
+      "CS-1": "queued",
+      "CS-3": "rejected",
+      "CS-4": "queued",
+    });
+  });
+
+  describe("items done on a branch and not merged, from git", () => {
+    let repo: string;
+    const g = (...args: string[]) =>
+      execFileSync("git", args, {
+        cwd: repo,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      }).trim();
+    const put = (id: string, state: string) => {
+      writeFileSync(
+        join(repo, "packages/next/work/items", `${id}-x.md`),
+        `---\nid: ${id}\ntitle: x\nkind: work\nstate: ${state}\n---\n`,
+      );
+    };
+    const commit = (msg: string) => {
+      g("add", "-A");
+      g("commit", "-q", "-m", msg);
+    };
+    beforeAll(() => {
+      repo = mkdtempSync(join(tmpdir(), "dyno-unmerged-"));
+      mkdirSync(join(repo, "packages/next/work/items"), { recursive: true });
+      g("init", "-q", "-b", "trunk");
+      g("config", "user.email", "test@example.com");
+      g("config", "user.name", "Test");
+      g("config", "commit.gpgsign", "false");
+      for (const id of ["CS-1", "CS-2", "CS-3", "CS-4", "CS-5"]) {
+        put(id, "planned");
+      }
+      commit("items");
+      // CS-1: done on its branch, not merged, queued in the ledger.
+      g("checkout", "-q", "-b", "exec/one");
+      put("CS-1", "done");
+      commit("work: CS-1");
+      // CS-2: done on a branch that was rebased onto trunk and merged.
+      g("checkout", "-q", "trunk");
+      g("checkout", "-q", "-b", "exec/two");
+      put("CS-2", "done");
+      commit("work: CS-2");
+      g("checkout", "-q", "trunk");
+      put("CS-2", "done");
+      commit("work: CS-2, rebased");
+      // CS-3: on its branch and checked by hand on a merge-check branch.
+      g("checkout", "-q", "-b", "exec/three");
+      put("CS-3", "done");
+      commit("work: CS-3");
+      g("checkout", "-q", "-b", "hitld/CS-3-merge-check");
+      g("checkout", "-q", "trunk");
+      // CS-4: held for the owner's yes.
+      g("checkout", "-q", "-b", "exec/four");
+      put("CS-4", "done");
+      commit("work: CS-4");
+      g("update-ref", "refs/hitld/merge-held", "exec/four");
+      g("checkout", "-q", "trunk");
+    });
+    afterAll(() => rmSync(repo, { recursive: true, force: true }));
+
+    it("lists each with its branches and where the merge queue has it", () => {
+      const queue = new Map([["CS-1", { state: "queued" as const, at: "x" }]]);
+      const got = unmergedOf(repo, "trunk", queue);
+      expect(
+        got.map((u) => [u.id, u.branches, u.queue, u.check_branch]),
+      ).toEqual([
+        ["CS-1", ["exec/one"], "queued", undefined],
+        ["CS-3", ["exec/three"], "checking", "hitld/CS-3-merge-check"],
+        ["CS-4", ["exec/four"], "held", undefined],
+      ]);
+      expect(got.every((u) => Number.isFinite(Date.parse(u.closed_at)))).toBe(
+        true,
+      );
+    });
+
+    it("refuses a main branch that doesn't exist, rather than finding nothing", () => {
+      expect(() => unmergedOf(repo, "no-such-branch")).toThrow();
+    });
+  });
+
+  const now = Date.parse("2026-11-18T23:10:00-05:00");
+  const live = (over: Partial<WorkLive> = {}): WorkLive => ({
+    read_at: "2026-11-19T04:10:00Z",
+    main_branch: "trunk",
+    run: {
+      source: "hitld run status",
+      read_at: "2026-11-19T04:10:00Z",
+      ok: true,
+      run: { id: "2026-11-18-2", started_at: "2026-11-18T04:55:44Z" },
+      lease: {
+        session: "orch-9",
+        renewed_at: "2026-11-19T03:57:41Z",
+        expired: false,
+        free: false,
+      },
+      in_flight: 1,
+      waiting_to_merge: 1,
+    },
+    ledger: {
+      source: "hitld ledger in-flight and ledger tail",
+      read_at: "2026-11-19T04:10:00Z",
+      ok: true,
+      events: 40,
+      problems: 0,
+      dispatches: [
+        {
+          dispatch: "D-7",
+          item: "CS-11",
+          branch: "exec/eleven",
+          started_at: "2026-11-19T03:40:00Z",
+        },
+      ],
+    },
+    claims: {
+      source: "hitld work claims",
+      read_at: "2026-11-19T04:10:00Z",
+      ok: true,
+      list: [
+        {
+          id: "CS-11",
+          claimed_by: "D-7",
+          where: "exec/eleven",
+          worktree: true,
+          here: false,
+          at: "2026-11-19T03:41:00Z",
+        },
+        {
+          id: "CS-14",
+          claimed_by: "orch-9-CS-14",
+          where: "hitld/CS-14-x",
+          worktree: true,
+          here: false,
+          at: "2026-11-19T04:00:00Z",
+        },
+      ],
+      stale: [
+        { id: "CS-15", where: "old/a", worktree: false, here: false },
+        { id: "CS-15", where: "old/b", worktree: false, here: false },
+      ],
+    },
+    unmerged: {
+      source: "git: local branches against trunk",
+      read_at: "2026-11-19T04:10:00Z",
+      ok: true,
+      list: [
+        {
+          id: "CS-13",
+          closed_at: "2026-11-19T02:00:00Z",
+          branches: ["exec/thirteen"],
+          queue: "held",
+        },
+      ],
+    },
+    ...over,
+  });
+
+  it("lists every dispatch in flight with its age from the ledger, never the stage history", () => {
+    const box = liveBoxOf({ ...snapshot, branch: "trunk", live: live() });
+    expect(box.blind).toBe(false);
+    const d = box.working.find((w) => w.id === "CS-11")!;
+    expect(d.from).toBe("dispatch");
+    expect(d.who).toBe("D-7");
+    // The dispatch's start, not its claim commit a minute later.
+    expect(d.since).toBe(Date.parse("2026-11-19T03:40:00Z"));
+    expect(agoText(now - d.since!)).toBe("30 minutes ago");
+    // A claim with no dispatch is timed from its claim commit, and said so.
+    const c = box.working.find((w) => w.id === "CS-14")!;
+    expect(c.from).toBe("claim");
+    expect(c.since).toBe(Date.parse("2026-11-19T04:00:00Z"));
+    expect(box.notes.join(" ")).toMatch(
+      /CS-14 has a claim with no dispatch in flight/,
+    );
+    // CS-12 is in progress on this branch with no claim commit found.
+    const here = box.working.find((w) => w.id === "CS-12")!;
+    expect(here.from).toBe("branch");
+    expect(here.since).toBeUndefined();
+    // Oldest first, the one with no age last.
+    expect(box.working.map((w) => w.id)).toEqual(["CS-11", "CS-14", "CS-12"]);
+  });
+
+  it("leaves stale claims out and says so", () => {
+    const box = liveBoxOf({ ...snapshot, live: live() });
+    expect(box.working.some((w) => w.id === "CS-15")).toBe(false);
+    expect(box.notes.join(" ")).toMatch(
+      /Left out: CS-15, in progress only on 2 branches trunk has already moved past/,
+    );
+  });
+
+  it("names the active run and the orchestrator holding its lease, or says there is none", () => {
+    expect(liveBoxOf({ ...snapshot, live: live() }).run).toMatchObject({
+      state: "active",
+      id: "2026-11-18-2",
+      session: "orch-9",
+    });
+    const free = live();
+    if (free.run.ok && free.run.lease) {
+      free.run.lease.free = true;
+    }
+    expect(liveBoxOf({ ...snapshot, live: free }).run.state).toBe("free");
+    const none = live({
+      run: {
+        source: "hitld run status",
+        read_at: "2026-11-19T04:10:00Z",
+        ok: true,
+        in_flight: 0,
+        waiting_to_merge: 0,
+      },
+    });
+    expect(liveBoxOf({ ...snapshot, live: none }).run.state).toBe("none");
+  });
+
+  it("lists items done and not merged with where the merge queue has them", () => {
+    const box = liveBoxOf({ ...snapshot, live: live() });
+    expect(box.unmerged.map((u) => [u.id, u.queue])).toEqual([
+      ["CS-13", "held"],
+    ]);
+    expect(queueText(box.unmerged[0]!).text).toBe("waits for the owner's yes");
+    expect(
+      queueText({ queue: "checking", checkBranch: "hitld/CS-3-merge-check" })
+        .text,
+    ).toMatch(/hitld\/CS-3-merge-check, outside hitld's merge queue/);
+    expect(queueText({ queue: "queued" }).text).toBe("in hitld's merge queue");
+    expect(queueText({ queue: "none" }).text).toBe(
+      "not in hitld's merge queue",
+    );
+  });
+
+  it("says when a source can't be read, with when it tried, instead of nothing", () => {
+    const box = liveBoxOf({
+      ...snapshot,
+      live: live({
+        ledger: {
+          source: "hitld ledger in-flight and ledger tail",
+          read_at: "2026-11-19T04:10:00Z",
+          ok: false,
+          why: LIVE_UNREAD.ledger,
+        },
+      }),
+    });
+    expect(box.blind).toBe(true);
+    const unread = box.sources.filter((x) => !x.ok);
+    expect(unread.map((x) => x.why)).toEqual([LIVE_UNREAD.ledger]);
+    expect(unread[0]!.at).toBe(Date.parse("2026-11-19T04:10:00Z"));
+    // The claims still show; nothing claims to be the whole picture.
+    expect(box.working.map((w) => w.id)).toContain("CS-14");
+    // A server without the live read is blind too.
+    expect(liveBoxOf(snapshot).blind).toBe(true);
+  });
+
+  it("keeps to the scope's items", () => {
+    const box = liveBoxOf(
+      { ...snapshot, live: live() },
+      new Set(["CS-14", "CS-13"]),
+    );
+    expect(box.working.map((w) => w.id)).toEqual(["CS-14"]);
+    expect(box.unmerged.map((u) => u.id)).toEqual(["CS-13"]);
+  });
+
+  it("tells ages to the minute under a day", () => {
+    expect(agoText(30_000)).toBe("just now");
+    expect(agoText(10 * 60_000)).toBe("10 minutes ago");
+    expect(agoText(61 * 60_000)).toBe("1 hour ago");
+    expect(agoText(21 * 3_600_000)).toBe("21 hours ago");
+    expect(agoText(50 * 3_600_000)).toBe("2 days ago");
   });
 });

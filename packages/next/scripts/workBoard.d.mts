@@ -120,6 +120,90 @@ export interface WorkSnapshot {
   elsewhere: WorkElsewhere[];
   /** Every committed state change on this branch, oldest first. */
   history: WorkEvent[];
+  /** The live run, from hitld's records and git; absent when not read. */
+  live?: WorkLive;
+}
+
+/** Where one live figure was read from and when, or why it couldn't be. */
+export type WorkSource<T> = { source: string; read_at: string } & (
+  ({ ok: true } & T) | ({ ok: false; why: string } & Partial<T>)
+);
+
+export interface WorkLease {
+  /** The orchestrator session holding the lease. */
+  session: string;
+  renewed_at: string;
+  expired: boolean;
+  /** Expired or released: a successor may take the run. */
+  free: boolean;
+  released_at?: string;
+}
+
+/** A dispatch with no terminal event in hitld's ledger. */
+export interface WorkDispatch {
+  dispatch: string;
+  item: string;
+  role?: string;
+  tier?: number;
+  mode?: "headless" | "interactive";
+  branch?: string;
+  /** When it was dispatched (ISO 8601). */
+  started_at: string;
+}
+
+export interface WorkClaim {
+  id: string;
+  /** The claim's `claimed_by`; absent when the branch's copy names none. */
+  claimed_by?: string;
+  /** The branch. */
+  where: string;
+  worktree: boolean;
+  /** On the branch the board reads. */
+  here: boolean;
+  /** The claim commit's date (ISO 8601), when hitld finds it. */
+  at?: string;
+  source?: "local" | "remote" | "bundle";
+}
+
+/** Where the merge queue has a finished branch's item. */
+export type WorkQueueState =
+  "held" | "checking" | "queued" | "rejected" | "none";
+
+/** An item done on a branch and not on the main branch. */
+export interface WorkUnmerged {
+  id: string;
+  /** The close commit's date (ISO 8601), the newest when several. */
+  closed_at: string;
+  /** The branches that close it, merge-check branches apart. */
+  branches: string[];
+  queue: WorkQueueState;
+  /** The merge-check branch it is checked on, if any. */
+  check_branch?: string;
+}
+
+export interface WorkLive {
+  read_at: string;
+  main_branch: string;
+  run: WorkSource<{
+    /** Absent when hitld has no run state. */
+    run?: { id: string; started_at: string };
+    lease?: WorkLease;
+    in_flight: number;
+    waiting_to_merge: number;
+  }>;
+  ledger: WorkSource<{
+    /** How many events the ledger holds. */
+    events: number;
+    /** Lines hitld couldn't read. */
+    problems: number;
+    dispatches: WorkDispatch[];
+  }>;
+  claims: WorkSource<{
+    list: WorkClaim[];
+    /** On branches main has moved past: not work in progress. */
+    stale: WorkClaim[];
+  }>;
+  unmerged: WorkSource<{ list: WorkUnmerged[] }>;
 }
 
 export interface WorkEvent {
@@ -136,6 +220,8 @@ export interface WorkElsewhere {
   where: string;
   /** Checked out in a worktree on this machine. */
   worktree: boolean;
+  /** The claim commit's date (ISO 8601), when hitld finds it. */
+  at?: string;
 }
 
 export interface WorkItemText {
@@ -174,10 +260,35 @@ export function findItems(
 ): Promise<WorkFound>;
 export function queryWork(
   root: string,
-  options?: { elsewhere?: WorkElsewhere[]; history?: WorkEvent[] },
+  options?: {
+    elsewhere?: WorkElsewhere[];
+    history?: WorkEvent[];
+    live?: WorkLive;
+  },
 ): Promise<WorkSnapshot>;
 export function stateHistory(root: string): WorkEvent[];
 export function claimsElsewhere(root: string): Promise<WorkElsewhere[]>;
+export function readClaims(
+  root: string,
+): Promise<{ list: WorkClaim[]; stale: WorkClaim[] }>;
+export function elsewhereOf(claims: { list: WorkClaim[] }): WorkElsewhere[];
+export function mainBranchOf(root: string): string;
+export function queueOf(
+  events: ReadonlyArray<Record<string, unknown>>,
+): Map<string, { state: "queued" | "rejected"; at: string }>;
+export function unmergedOf(
+  root: string,
+  main: string,
+  queue?: Map<string, { state: "queued" | "rejected"; at: string }>,
+): WorkUnmerged[];
+export const LIVE_UNREAD: Record<
+  "run" | "ledger" | "empty" | "claims" | "git",
+  string
+>;
+export function readLive(
+  root: string,
+  options?: { store?: string },
+): Promise<WorkLive>;
 export function showItem(
   root: string,
   id: string,

@@ -57,6 +57,12 @@ import {
   type Actor,
   type Arrange,
   ageText,
+  agoText,
+  type LiveBox,
+  type LiveUnmerged,
+  type LiveWork,
+  liveBoxOf,
+  queueText,
   bandStepsOf,
   type ClosureViolation,
   committedOnly,
@@ -80,6 +86,7 @@ import {
   type InFlight,
   inFlightOf,
   isOpen,
+  isWork,
   isOwnerDecision,
   kindsOf,
   LOOSE_KINDS,
@@ -130,7 +137,6 @@ import {
   stageOf,
   stateOf,
   unblocksOf,
-  workInProgress,
   ZOOM_MAX,
   ZOOM_MIN,
   zoomAbout,
@@ -378,7 +384,10 @@ function Board({
   const readyToStart = byActor.agents.filter(
     (it) => stageOf(it, flight) === "Ready",
   );
-  const inFlight = workInProgress(items, flight);
+  const live = useMemo(
+    () => liveBoxOf(s, size ? new Set(items.map((i) => i.id)) : undefined),
+    [s, items, size],
+  );
   const now = Date.now();
   const ageOf = (it: WorkItem) => now - (flow.since.get(it.id) ?? now);
   const doneDaily = useMemo(
@@ -608,18 +617,13 @@ function Board({
                   title="In progress"
                   className="span-12"
                   stat={{
-                    value: inFlight.length,
-                    detail: "Who holds each, and for how long",
+                    value: live.working.length,
+                    detail: liveDetail(live),
+                    tone: live.blind ? "attention" : undefined,
                     onOpen: () => open("working"),
                   }}
                 >
-                  <InFlightRows
-                    items={inFlight}
-                    flight={flight}
-                    branch={s.branch}
-                    since={flow.since}
-                    selected={search.item}
-                  />
+                  <LiveRun box={live} branch={s.branch} />
                 </Card>
 
                 <Card
@@ -1714,61 +1718,282 @@ function Card({
   );
 }
 
-/** Items in flight: who holds each, where, and since when. */
-function InFlightRows({
-  items,
-  flight,
-  branch,
-  since,
-  selected,
-}: {
-  items: WorkItem[];
-  flight: InFlight;
-  branch?: string;
-  since: Map<string, number>;
-  selected?: string;
-}) {
-  if (!items.length) {
-    return (
-      <Typography
-        variant="body-sm"
-        color="textSecondary"
-        render={<p />}
-        className="work-empty"
-      >
-        Nothing is in progress.
-      </Typography>
-    );
+/** The In progress card's line under its count. */
+function liveDetail(box: LiveBox): string {
+  if (box.blind) {
+    return "Not everything could be read: see below";
   }
-  const now = Date.now();
+  const n = box.unmerged.length;
+  return n
+    ? `Who works on each and since when; ${n} done, not merged`
+    : "Who works on each, and since when";
+}
+
+/** "11:06 PM", the reading's local time. */
+const clock = (t: number) =>
+  new Date(t).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+
+/** Where a live figure was read from, and when. */
+function SourceNote({ sources }: { sources: LiveBox["sources"] }) {
+  const read = sources.filter((x) => x.ok);
+  if (!read.length) {
+    return null;
+  }
+  const latest = Math.max(...read.map((x) => x.at));
   return (
-    <ul className="work-rows">
-      {items.map((it) => (
-        <li
-          key={it.id}
-          className={`work-row${it.id === selected ? " selected" : ""}`}
-        >
-          <ItemLink id={it.id} className="work-row-main">
-            <KindId id={it.id} />
-            <span className="work-row-title">
-              <InlineText text={it.title} />
-            </span>
-            <Typography
-              variant="caption-md"
-              color="textSecondary"
-              className="work-row-extra"
-            >
-              {[
-                whereOf(it, flight, branch),
-                since.has(it.id) ? ageText(now - since.get(it.id)!) : undefined,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
+    <span className="work-live-source">
+      From {read.map((x) => x.source).join("; ")}, read {clock(latest)}
+    </span>
+  );
+}
+
+/**
+ * The live run (CS-547): the run and its orchestrator, the items being
+ * worked on now and since when, and the items done on a branch and not
+ * merged, each figure with where it was read from and when. When a source
+ * can't be read, it says so instead of "nothing".
+ */
+function LiveRun({ box, branch }: { box: LiveBox; branch?: string }) {
+  const now = Date.now();
+  // readLive's order: the run, the ledger, the claims, the branches.
+  const known = box.sources.length > 0;
+  const runSource = box.sources[0];
+  const workSources = box.sources.slice(1, 3);
+  const mergeSources = box.sources.slice(3);
+  const unread = box.sources.filter((x) => !x.ok);
+  const r = box.run;
+  return (
+    <div className="work-live">
+      {!known && (
+        <div className="work-live-alert" role="note">
+          <Icon href={svgStatusWarning} className="work-palert-icon" />
+          <Typography variant="body-sm" render={<p />}>
+            {box.notes[0]}
+          </Typography>
+        </div>
+      )}
+      {unread.length > 0 && (
+        <div className="work-live-alert" role="note">
+          <Icon href={svgStatusWarning} className="work-palert-icon" />
+          <div>
+            <Typography variant="body-sm" render={<p />}>
+              Some of what this box reads couldn’t be read, so it may miss work
+              in progress:
             </Typography>
-          </ItemLink>
-        </li>
-      ))}
-    </ul>
+            <ul>
+              {unread.map((x) => (
+                <li key={x.source}>
+                  <Typography variant="body-sm">{x.why}</Typography>{" "}
+                  <Typography variant="caption-md" color="textSecondary">
+                    ({x.source}, tried {clock(x.at)})
+                  </Typography>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+
+      {r.state !== "unread" && (
+        <Typography variant="body-sm" render={<p />} className="work-live-run">
+          {r.state === "active" ? (
+            <>
+              <strong>Run {r.id}</strong>
+              {r.started !== undefined &&
+                `, started ${agoText(now - r.started)}`}
+              . <strong>{r.session}</strong> holds its lease
+              {r.renewed !== undefined &&
+                `, renewed ${agoText(now - r.renewed)}`}
+              .
+            </>
+          ) : r.state === "free" ? (
+            <>
+              <strong>Run {r.id}</strong> has no orchestrator: its lease{" "}
+              {r.released !== undefined
+                ? `was released ${agoText(now - r.released)}`
+                : "expired"}
+              {r.session ? `; ${r.session} held it last` : ""}.
+            </>
+          ) : r.state === "none" ? (
+            <>No run is active: hitld has no run state.</>
+          ) : (
+            <>
+              Whether a run is active can’t be told: hitld has no run state, and
+              its ledger couldn’t be read.
+            </>
+          )}{" "}
+          {runSource && <SourceNote sources={[runSource]} />}
+        </Typography>
+      )}
+
+      <div className="work-live-cols">
+        <section aria-labelledby="work-live-working-h">
+          <header className="work-live-head">
+            <Typography
+              variant="body-sm"
+              render={<h3 />}
+              id="work-live-working-h"
+            >
+              Working now{" "}
+              <span className="work-proposal-count">{box.working.length}</span>
+            </Typography>
+            <SourceNote sources={workSources} />
+          </header>
+          {box.working.length ? (
+            <ul className="work-rows">
+              {box.working.map((w) => (
+                <LiveWorkRow
+                  key={`${w.id} ${w.who ?? ""} ${w.where ?? ""}`}
+                  w={w}
+                  branch={branch}
+                  now={now}
+                />
+              ))}
+            </ul>
+          ) : (
+            <Typography
+              variant="body-sm"
+              color="textSecondary"
+              render={<p />}
+              className="work-empty"
+            >
+              {known && workSources.every((x) => x.ok)
+                ? "No dispatch in flight and no open claim."
+                : "None seen, but not everything could be read."}
+            </Typography>
+          )}
+        </section>
+
+        <section aria-labelledby="work-live-unmerged-h">
+          <header className="work-live-head">
+            <Typography
+              variant="body-sm"
+              render={<h3 />}
+              id="work-live-unmerged-h"
+            >
+              Done, not merged{" "}
+              <span className="work-proposal-count">{box.unmerged.length}</span>
+            </Typography>
+            <SourceNote sources={mergeSources} />
+          </header>
+          {box.unmerged.length ? (
+            <ul className="work-rows">
+              {box.unmerged.map((u) => (
+                <LiveUnmergedRow key={u.id} u={u} now={now} />
+              ))}
+            </ul>
+          ) : (
+            <Typography
+              variant="body-sm"
+              color="textSecondary"
+              render={<p />}
+              className="work-empty"
+            >
+              {known && mergeSources.every((x) => x.ok)
+                ? "No branch holds finished work that main lacks."
+                : "None seen, but the branches couldn’t be compared."}
+            </Typography>
+          )}
+        </section>
+      </div>
+
+      {known && box.notes.length > 0 && (
+        <ul
+          className="work-live-notes"
+          aria-label="What these figures leave out"
+        >
+          {box.notes.map((n) => (
+            <li key={n}>
+              <Typography variant="caption-md" color="textSecondary">
+                {n}
+              </Typography>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+/**
+ * "orch-9-CS-547 on hitld/CS-547-… (this branch) · claimed 12 minutes ago":
+ * who, where, and since when, by the record the age comes from.
+ */
+function liveLine(w: LiveWork, branch: string | undefined, now: number) {
+  const where = w.where
+    ? `${w.who && w.who !== w.where ? `${w.who} on ` : "on "}${w.where}${w.here && w.where === branch ? " (this branch)" : ""}`
+    : w.who;
+  const when =
+    w.since === undefined
+      ? w.from === "branch"
+        ? "not committed yet"
+        : undefined
+      : `${w.from === "dispatch" ? "dispatched" : "claimed"} ${agoText(now - w.since)}`;
+  return [where, when].filter(Boolean).join(" · ");
+}
+
+/** Who works on an item, where, and since when (and by which record). */
+function LiveWorkRow({
+  w,
+  branch,
+  now,
+}: {
+  w: LiveWork;
+  branch?: string;
+  now: number;
+}) {
+  return (
+    <li className="work-row">
+      <ItemLink id={w.id} className="work-row-main">
+        <KindId id={w.id} />
+        <span className="work-row-title">
+          {w.item ? <InlineText text={w.item.title} /> : w.id}
+        </span>
+        <Typography
+          variant="caption-md"
+          color="textSecondary"
+          className="work-live-extra"
+        >
+          {liveLine(w, branch, now)}
+          {w.from === "claim" && (
+            <span className="work-live-tag">no dispatch in the ledger</span>
+          )}
+        </Typography>
+      </ItemLink>
+    </li>
+  );
+}
+
+/** A finished item's branch, and where the merge queue has it. */
+function LiveUnmergedRow({ u, now }: { u: LiveUnmerged; now: number }) {
+  const q = queueText(u);
+  return (
+    <li className="work-row">
+      <ItemLink id={u.id} className="work-row-main">
+        <KindId id={u.id} />
+        <span className="work-row-title">
+          {u.item ? <InlineText text={u.item.title} /> : u.id}
+        </span>
+        <Typography
+          variant="caption-md"
+          color="textSecondary"
+          className="work-live-extra"
+        >
+          {[
+            u.branches.length ? `on ${u.branches.join(", ")}` : undefined,
+            u.closed ? `closed ${agoText(now - u.closed)}` : undefined,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+          <span className={`work-live-queue ${q.tone ?? ""}`}>
+            {q.tone === "attention" && (
+              <Icon href={svgStatusWarning} className="work-live-queue-icon" />
+            )}
+            {q.text}
+          </span>
+        </Typography>
+      </ItemLink>
+    </li>
   );
 }
 
@@ -2157,14 +2382,30 @@ function ListPanel({
       />
     );
   } else if (list === "working") {
+    // The same reading as Your move's In progress (CS-547).
+    const box = liveBoxOf(s, new Set(items.map((i) => i.id)));
+    const rowOf = new Map(box.working.map((w) => [w.id, w]));
     body = (
       <Grouped
         s={s}
-        items={workInProgress(items, flight)}
-        empty="Nothing is in progress."
+        items={[
+          ...new Set(
+            box.working.flatMap((w) =>
+              w.item && isWork(w.item) ? [w.item] : [],
+            ),
+          ),
+        ]}
+        empty={
+          box.blind
+            ? "None seen, but not everything could be read; Your move’s In progress says what."
+            : "Nothing is in progress: no dispatch in flight and no open claim."
+        }
         selected={selected}
         projectOf={projectOf}
-        line={(it) => whereOf(it, flight, s.branch)}
+        line={(it) => {
+          const w = rowOf.get(it.id);
+          return w ? liveLine(w, s.branch, now) : undefined;
+        }}
       />
     );
   } else if (list === "ready") {

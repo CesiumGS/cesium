@@ -5,16 +5,20 @@ import { join } from "node:path";
 import {
   HitldUnavailable,
   UNAVAILABLE_TEXT,
-  claimsElsewhere,
+  elsewhereOf,
   findItems,
   queryWork,
+  readLive,
   showItem,
   stateHistory,
-  type WorkElsewhere,
+  type WorkLive,
 } from "./workBoard.mjs";
 
-/** How long claims found elsewhere are reused (hitld reads every branch). */
-const ELSEWHERE_MS = 30_000;
+/**
+ * How long the live run's read is reused: hitld reads every branch for
+ * claims, and its ledger and run state, and git compares the branches.
+ */
+const LIVE_MS = 30_000;
 
 /**
  * The tracker's read API on Dyno's dev server (dev only; the board says
@@ -25,8 +29,9 @@ const ELSEWHERE_MS = 30_000;
  * When hitld is missing or answers in another version, the board says
  * so. Read-only, GET only, and only for the dev server's own pages.
  * When an item file changes, open pages hear `work:changed` and read
- * again; claims in other worktrees and branches are read at most every
- * 30 s.
+ * again; the live run (claims in other worktrees and branches, hitld's
+ * ledger and run, branches done and not merged) is read at most every
+ * 30 s, and each of its figures carries when it was read.
  */
 export function workApi(prefix = "/work-api"): Plugin {
   return {
@@ -37,12 +42,19 @@ export function workApi(prefix = "/work-api"): Plugin {
         cwd: server.config.root,
         encoding: "utf8",
       }).trim();
-      let elsewhere: { at: number; claims: WorkElsewhere[] } | undefined;
-      const claims = async () => {
-        if (!elsewhere || Date.now() - elsewhere.at > ELSEWHERE_MS) {
-          elsewhere = { at: Date.now(), claims: await claimsElsewhere(root) };
+      let lastLive: { at: number; live: Promise<WorkLive> } | undefined;
+      const live = () => {
+        if (!lastLive || Date.now() - lastLive.at > LIVE_MS) {
+          const read = readLive(root);
+          lastLive = { at: Date.now(), live: read };
+          // A failed read isn't kept: the next request tries again.
+          read.catch(() => {
+            if (lastLive?.live === read) {
+              lastLive = undefined;
+            }
+          });
         }
-        return elsewhere.claims;
+        return lastLive.live;
       };
       // The history changes only with a commit: kept per HEAD.
       let history:
@@ -84,12 +96,14 @@ export function workApi(prefix = "/work-api"): Plugin {
           const path = (req.url ?? "").split("?")[0] ?? "";
           try {
             if (path === "/query.json") {
+              const now = await live();
               send(
                 res,
                 200,
                 await queryWork(root, {
-                  elsewhere: await claims(),
+                  elsewhere: now.claims.ok ? elsewhereOf(now.claims) : [],
                   history: events(),
+                  live: now,
                 }),
               );
               return;
