@@ -2,10 +2,14 @@
 id: CS-709
 title: Merge CS-707, Dyno's scrollable tabs on StrataKit's supported API
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the tested commit (re-checked if main moves), regenerates the views and logs the merge."
+answered_at: 2026-11-19T21:50:20.102Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
