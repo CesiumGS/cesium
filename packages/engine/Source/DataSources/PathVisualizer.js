@@ -799,6 +799,66 @@ function getDynamicMaterialProperties(materialData) {
   return dynamic;
 }
 
+function addStepSplitTimes(start, stop, step, splitTimes) {
+  let splitTime = JulianDate.addSeconds(start, step, new JulianDate());
+  while (JulianDate.lessThan(splitTime, stop)) {
+    splitTimes.push(splitTime);
+    splitTime = JulianDate.addSeconds(splitTime, step, new JulianDate());
+  }
+}
+
+function addDynamicPropertySplitTimes(
+  dynamic,
+  interval,
+  splitResolution,
+  splitTimes,
+) {
+  const start = interval.start;
+  const stop = interval.stop;
+  for (let j = 0; j < dynamic.length; j++) {
+    const prop = dynamic[j];
+    const timeDynamicIntervals = prop.intervals;
+
+    if (defined(timeDynamicIntervals)) {
+      // Interval-based property: collect interval boundaries
+      for (let k = 0; k < timeDynamicIntervals.length; k++) {
+        const timeDynamicInterval = timeDynamicIntervals.get(k);
+
+        if (
+          !TimeInterval.intersect(
+            timeDynamicInterval,
+            interval,
+            portionsDynamicIntervalScratch,
+          )
+        ) {
+          continue;
+        }
+
+        if (
+          JulianDate.greaterThan(portionsDynamicIntervalScratch.start, start) &&
+          JulianDate.lessThan(portionsDynamicIntervalScratch.start, stop)
+        ) {
+          splitTimes.push(
+            JulianDate.clone(portionsDynamicIntervalScratch.start),
+          );
+        }
+
+        if (
+          JulianDate.greaterThan(portionsDynamicIntervalScratch.stop, start) &&
+          JulianDate.lessThan(portionsDynamicIntervalScratch.stop, stop)
+        ) {
+          splitTimes.push(
+            JulianDate.clone(portionsDynamicIntervalScratch.stop),
+          );
+        }
+      }
+    } else {
+      // Sampled or other time-varying property: step at the path resolution.
+      addStepSplitTimes(start, stop, splitResolution, splitTimes);
+    }
+  }
+}
+
 function emitSegmentsForSplitTimes(
   splitTimes,
   positionProperty,
@@ -1039,24 +1099,27 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
     const intervals = materialProp.intervals;
     let nextSegIndex = 0;
 
+    portionsVisibleIntervalScratch.start = sampleStart;
+    portionsVisibleIntervalScratch.stop = sampleStop;
+    portionsVisibleIntervalScratch.isStartIncluded = true;
+    portionsVisibleIntervalScratch.isStopIncluded = true;
+
     if (!defined(intervals)) {
-      // Sampled/interpolated root material - generate synthetic times at resolution intervals
+      // Sampled/interpolated root material
       const splitTimes = [
         JulianDate.clone(sampleStart),
         JulianDate.clone(sampleStop),
       ];
-      let splitTime = JulianDate.addSeconds(
-        sampleStart,
-        splitResolution,
-        new JulianDate(),
-      );
-      while (JulianDate.lessThan(splitTime, sampleStop)) {
-        splitTimes.push(JulianDate.clone(splitTime));
-        splitTime = JulianDate.addSeconds(
-          splitTime,
+      const dynamic = getDynamicMaterialProperties(materialProp);
+      if (dynamic.length > 0) {
+        addDynamicPropertySplitTimes(
+          dynamic,
+          portionsVisibleIntervalScratch,
           splitResolution,
-          new JulianDate(),
+          splitTimes,
         );
+      } else {
+        addStepSplitTimes(sampleStart, sampleStop, splitResolution, splitTimes);
       }
       nextSegIndex = emitSegmentsForSplitTimes(
         splitTimes,
@@ -1072,11 +1135,6 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
         nextSegIndex,
       );
     } else {
-      portionsVisibleIntervalScratch.start = sampleStart;
-      portionsVisibleIntervalScratch.stop = sampleStop;
-      portionsVisibleIntervalScratch.isStartIncluded = true;
-      portionsVisibleIntervalScratch.isStopIncluded = true;
-
       // Interval-based material - process each interval separately
       for (let i = 0; i < intervals.length; i++) {
         const interval = intervals.get(i);
@@ -1104,69 +1162,12 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
           JulianDate.clone(segStart),
           JulianDate.clone(segStop),
         ];
-
-        for (let j = 0; j < dynamic.length; j++) {
-          const prop = dynamic[j];
-          const timeDynamicIntervals = prop.intervals;
-
-          if (defined(timeDynamicIntervals)) {
-            // Interval-based property: collect interval boundaries
-            for (let k = 0; k < timeDynamicIntervals.length; k++) {
-              const timeDynamicInterval = timeDynamicIntervals.get(k);
-
-              if (
-                !TimeInterval.intersect(
-                  timeDynamicInterval,
-                  portionsSegmentIntervalScratch,
-                  portionsDynamicIntervalScratch,
-                )
-              ) {
-                continue;
-              }
-
-              if (
-                JulianDate.greaterThan(
-                  portionsDynamicIntervalScratch.start,
-                  segStart,
-                ) &&
-                JulianDate.lessThan(
-                  portionsDynamicIntervalScratch.start,
-                  segStop,
-                )
-              ) {
-                splitTimes.push(
-                  JulianDate.clone(portionsDynamicIntervalScratch.start),
-                );
-              }
-
-              if (
-                JulianDate.greaterThan(
-                  portionsDynamicIntervalScratch.stop,
-                  segStart,
-                ) &&
-                JulianDate.lessThan(
-                  portionsDynamicIntervalScratch.stop,
-                  segStop,
-                )
-              ) {
-                splitTimes.push(
-                  JulianDate.clone(portionsDynamicIntervalScratch.stop),
-                );
-              }
-            }
-          } else if (!Property.isConstant(prop)) {
-            // Sampled/interpolated property: add resolution-based split times
-            let sampledTime = JulianDate.clone(segStart);
-            while (JulianDate.lessThan(sampledTime, segStop)) {
-              splitTimes.push(JulianDate.clone(sampledTime));
-              sampledTime = JulianDate.addSeconds(
-                sampledTime,
-                splitResolution,
-                new JulianDate(),
-              );
-            }
-          }
-        }
+        addDynamicPropertySplitTimes(
+          dynamic,
+          portionsSegmentIntervalScratch,
+          splitResolution,
+          splitTimes,
+        );
 
         // Emit segments for this interval's split times
         nextSegIndex = emitSegmentsForSplitTimes(

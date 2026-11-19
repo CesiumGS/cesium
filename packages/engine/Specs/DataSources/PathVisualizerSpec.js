@@ -2,6 +2,7 @@ import {
   Cartesian3,
   Color,
   DistanceDisplayCondition,
+  Event,
   JulianDate,
   LinearSpline,
   Math as CesiumMath,
@@ -34,6 +35,7 @@ import {
   ScaledPositionProperty,
   CelestialFrameTransforms,
   TimeIntervalCollectionPositionProperty,
+  TimeIntervalCollectionProperty,
   SceneMode,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
@@ -1508,6 +1510,90 @@ describe(
       const firstColor = shownPolylines[0].material.uniforms.color;
       const secondColor = shownPolylines[1].material.uniforms.color;
       expect(Color.equals(firstColor, secondColor)).toEqual(false);
+    });
+
+    function createPortionsPathEntity(material, resolution) {
+      const epoch = JulianDate.fromIso8601("2026-04-01T00:00:00Z");
+      const times = [];
+      const positions = [];
+      for (let s = 0; s <= 400; s += 10) {
+        times.push(JulianDate.addSeconds(epoch, s, new JulianDate()));
+        positions.push(new Cartesian3(7000000.0, s * 1000.0, 0.0));
+      }
+
+      const entityCollection = new EntityCollection();
+      visualizer = new PathVisualizer(scene, entityCollection);
+      const testObject = entityCollection.getOrCreateEntity("test");
+      const position = new SampledPositionProperty();
+      position.addSamples(times, positions);
+      testObject.position = position;
+
+      const path = (testObject.path = new PathGraphics());
+      path.materialMode = new ConstantProperty(PathMode.PORTIONS);
+      path.resolution = new ConstantProperty(resolution);
+      path.leadTime = new ConstantProperty(200);
+      path.trailTime = new ConstantProperty(200);
+      path.material = material;
+
+      return JulianDate.addSeconds(epoch, 200, new JulianDate());
+    }
+
+    it("splits interval-based materials only at their interval boundaries in PORTIONS materialMode", function () {
+      const epoch = JulianDate.fromIso8601("2026-04-01T00:00:00Z");
+      const at = (seconds) =>
+        JulianDate.addSeconds(epoch, seconds, new JulianDate());
+      const color = new TimeIntervalCollectionProperty();
+      color.intervals.addInterval(
+        new TimeInterval({
+          start: at(0),
+          stop: at(100),
+          isStopIncluded: false,
+          data: Color.RED,
+        }),
+      );
+      color.intervals.addInterval(
+        new TimeInterval({
+          start: at(100),
+          stop: at(250),
+          isStopIncluded: false,
+          data: Color.BLUE,
+        }),
+      );
+      color.intervals.addInterval(
+        new TimeInterval({ start: at(250), stop: at(400), data: Color.GREEN }),
+      );
+      const time = createPortionsPathEntity(
+        new ColorMaterialProperty(color),
+        1.0,
+      );
+      visualizer.update(time);
+
+      const shownColors = getShownPolylines(scene).map(function (polyline) {
+        return polyline.material.uniforms.color;
+      });
+      expect(shownColors).toEqual([Color.RED, Color.BLUE, Color.GREEN]);
+    });
+
+    it("splits time-dynamic materials without inspectable properties every resolution step in PORTIONS materialMode", function () {
+      const material = {
+        isConstant: false,
+        definitionChanged: new Event(),
+        getType: function () {
+          return "Color";
+        },
+        getValue: function (time, result) {
+          result = result ?? {};
+          result.color = Color.clone(Color.RED, result.color);
+          return result;
+        },
+        equals: function (other) {
+          return this === other;
+        },
+      };
+      const time = createPortionsPathEntity(material, 50.0);
+      visualizer.update(time);
+
+      expect(getShownPolylines(scene).length).toEqual(8);
     });
 
     it("handles sampled properties within a time-dynamic material in PORTIONS materialMode", function () {
