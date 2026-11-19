@@ -43,13 +43,13 @@ TileBoundingVolume.prototype.distanceToCamera = function (frameState) {
 };
 
 /**
- * Determines which side of a plane this volume is located.
+ * Determines which side of a plane this volume is located:
+ * {@link Intersect.INSIDE} if the entire volume is on the side the plane's normal points to,
+ * {@link Intersect.OUTSIDE} if the entire volume is on the opposite side, or
+ * {@link Intersect.INTERSECTING} if the volume intersects the plane.
  *
  * @param {Plane} plane The plane to test against.
- * @returns {Intersect} {@link Intersect.INSIDE} if the entire volume is on the side of the plane
- *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire volume is
- *                      on the opposite side, and {@link Intersect.INTERSECTING} if the volume
- *                      intersects the plane.
+ * @returns {Intersect} The side of the plane the volume is on.
  */
 TileBoundingVolume.prototype.intersectPlane = function (plane) {
   DeveloperError.throwInstantiationError();

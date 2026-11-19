@@ -187,14 +187,14 @@ class AxisAlignedBoundingBox {
   }
 
   /**
-   * Determines which side of a plane a box is located.
+   * Determines which side of a plane a box is located:
+   * {@link Intersect.INSIDE} if the entire box is on the side the plane's normal points to,
+   * {@link Intersect.OUTSIDE} if the entire box is on the opposite side, or
+   * {@link Intersect.INTERSECTING} if the box intersects the plane.
    *
    * @param {AxisAlignedBoundingBox} box The bounding box to test.
    * @param {Plane} plane The plane to test against.
-   * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
-   *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
-   *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
-   *                      intersects the plane.
+   * @returns {Intersect} The side of the plane the box is on.
    */
   static intersectPlane(box, plane) {
     //>>includeStart('debug', pragmas.debug);
@@ -266,13 +266,13 @@ class AxisAlignedBoundingBox {
   }
 
   /**
-   * Determines which side of a plane this box is located.
+   * Determines which side of a plane this box is located:
+   * {@link Intersect.INSIDE} if the entire box is on the side the plane's normal points to,
+   * {@link Intersect.OUTSIDE} if the entire box is on the opposite side, or
+   * {@link Intersect.INTERSECTING} if the box intersects the plane.
    *
    * @param {Plane} plane The plane to test against.
-   * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
-   *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
-   *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
-   *                      intersects the plane.
+   * @returns {Intersect} The side of the plane the box is on.
    */
   intersectPlane(plane) {
     return AxisAlignedBoundingBox.intersectPlane(this, plane);
