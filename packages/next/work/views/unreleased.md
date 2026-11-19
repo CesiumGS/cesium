@@ -40,6 +40,7 @@ CS-18 The work tracker
   CS-692  Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it
   CS-693  Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle
   CS-694  Dyno's Dependencies view: what a chosen milestone or item waits on and unblocks, with the global structure behind a toggle
+  CS-696  One hover card for the Work page's views: state, progress with labeled colors, open blockers, room to slip, next step
 
 CS-188 Earth to Moon (frames 5c to 5h)
   CS-200  Volumes, horizon culling and selection on the content's body
@@ -51,5 +52,5 @@ CS-389 Dyno as the development harness
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
 
-30 merged item(s) not in a release
+31 merged item(s) not in a release
 ```

@@ -243,7 +243,7 @@ CS-18 The work tracker
   CS-677  Release notes and a security review for 2.0.0
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
-  CS-696  One hover card for the Work page's views: state, progress with labeled colors, open blockers, room to slip, next step
+  CS-698  The Flow page's cumulative flow chart reads a day in a hover card, with each stage's count and its change from the day before
 
 174 ready
 ```

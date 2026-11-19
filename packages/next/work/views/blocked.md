@@ -639,8 +639,6 @@ CS-18 The work tracker
       ← CS-532 Release 2.0.0-rc.1
         CS-608 Extension users have validated 2.0 with their own data
         CS-678 The final release is ready to publish
-  CS-698  The Flow page's cumulative flow chart reads a day in a hover card, with each stage's count and its change from the day before
-      ← CS-696 One hover card for the Work page's views: state, progress with labeled colors, open blockers, room to slip, next step
 
 CS-584 The widgets library
   CS-586  The existing widgets move onto the library: time controls, credits, the inspector and the observer panel
@@ -748,5 +746,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-246 blocked
+245 blocked
 ```
