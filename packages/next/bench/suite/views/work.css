@@ -3120,6 +3120,10 @@ button.work-mrow-big:focus-visible {
   border-radius: 2px;
   background: var(--stage);
 }
+/* A bar that opens its milestone, item or release in the pane (CS-696). */
+.work-plan .work-plan-track.opens {
+  cursor: pointer;
+}
 .work-plan-track.dim,
 .work-plan-seg.dim {
   opacity: 0.25;

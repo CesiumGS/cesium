@@ -53,6 +53,7 @@ import {
 } from "../work.ts";
 import { useChartTokens } from "./common.tsx";
 import { InlineText } from "./ItemText.tsx";
+import { WorkHoverCard } from "./HoverCard.tsx";
 import { KindId, KindMark } from "./Work.tsx";
 
 /**
@@ -735,24 +736,26 @@ function TreeNode({
         ) : (
           <span className="deps-toggle-spacer" aria-hidden="true" />
         )}
-        <button
-          type="button"
-          className="deps-node-link"
-          onClick={() => ctx.onOpen(n.id)}
-          aria-label={`${n.id} ${title}: ${stateText(n.id, ctx, dir)}${rel ? `, ${rel.name}` : ""}. Opens in the pane.`}
-        >
-          {st && (
-            <span
-              className={`deps-fill stage-${slug(st)}`}
-              aria-hidden="true"
-              data-tip={STAGE_TIPS[st]}
-            />
-          )}
-          <KindId id={n.id} />
-          <span className="deps-node-title">
-            <InlineText text={title} />
-          </span>
-        </button>
+        <WorkHoverCard id={n.id} onDeps={ctx.onCenter}>
+          <button
+            type="button"
+            className="deps-node-link"
+            onClick={() => ctx.onOpen(n.id)}
+            aria-label={`${n.id} ${title}: ${stateText(n.id, ctx, dir)}${rel ? `, ${rel.name}` : ""}. Opens in the pane.`}
+          >
+            {st && (
+              <span
+                className={`deps-fill stage-${slug(st)}`}
+                aria-hidden="true"
+                data-tip={STAGE_TIPS[st]}
+              />
+            )}
+            <KindId id={n.id} />
+            <span className="deps-node-title">
+              <InlineText text={title} />
+            </span>
+          </button>
+        </WorkHoverCard>
         <IconButton
           label={`Center on ${n.id}`}
           size="small"
@@ -1016,26 +1019,36 @@ function WholeStructure({
                               const blocked = (g.up.get(id) ?? []).length;
                               return (
                                 <li key={id}>
-                                  <button
-                                    type="button"
-                                    className={`deps-chip${m?.state === "proposed" ? " proposed" : ""}`}
-                                    onClick={() => onCenter(id)}
-                                    data-tip={`${m?.title ?? id}${loop ? ` · waits on ${loop.filter((x) => x !== id).join(", ")} and back` : ""}${blocked ? ` · waits on ${blocked}` : ""}`}
-                                    aria-label={`${id} ${m?.title ?? ""}, wave ${k + 1}${loop ? ", in a loop" : ""}. Center on it.`}
+                                  <WorkHoverCard
+                                    id={id}
+                                    click="Click to center on it"
+                                    onDeps={onCenter}
                                   >
-                                    <KindId id={id} />
-                                    <span className="deps-chip-title">
-                                      <InlineText text={m?.title ?? id} />
-                                    </span>
-                                    {loop && (
-                                      <span
-                                        className="deps-chip-loop"
-                                        aria-hidden="true"
-                                      >
-                                        ↻
+                                    <button
+                                      type="button"
+                                      className={`deps-chip${m?.state === "proposed" ? " proposed" : ""}`}
+                                      onClick={() => onCenter(id)}
+                                      data-tip={
+                                        loop
+                                          ? `Waits on ${loop.filter((x) => x !== id).join(", ")} and back${blocked ? `; waits on ${blocked} in all` : ""}`
+                                          : undefined
+                                      }
+                                      aria-label={`${id} ${m?.title ?? ""}, wave ${k + 1}${loop ? ", in a loop" : ""}. Center on it.`}
+                                    >
+                                      <KindId id={id} />
+                                      <span className="deps-chip-title">
+                                        <InlineText text={m?.title ?? id} />
                                       </span>
-                                    )}
-                                  </button>
+                                      {loop && (
+                                        <span
+                                          className="deps-chip-loop"
+                                          aria-hidden="true"
+                                        >
+                                          ↻
+                                        </span>
+                                      )}
+                                    </button>
+                                  </WorkHoverCard>
                                 </li>
                               );
                             })}

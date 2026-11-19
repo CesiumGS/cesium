@@ -42,6 +42,7 @@ import {
   type WorkItem,
   type WorkSnapshot,
 } from "../work.ts";
+import { StageBar, WorkHoverCard } from "./HoverCard.tsx";
 import { KindId, KindMark } from "./Work.tsx";
 
 /**
@@ -352,18 +353,20 @@ function ByRelease({
                     {c.id === NO_RELEASE ? (
                       <span className="projects-col-name">No release</span>
                     ) : (
-                      <button
-                        type="button"
-                        className="projects-col-name k-release"
-                        onClick={() => onItem(c.id)}
-                        title={`${c.id} ${titleOf(c.id)}${c.proposed ? " (proposed)" : ""}`}
-                      >
-                        <KindMark kind="release" />
-                        <span className="projects-col-full">{c.name}</span>
-                        <span className="projects-col-short">
-                          {shortName(c.name)}
-                        </span>
-                      </button>
+                      <WorkHoverCard id={c.id}>
+                        <button
+                          type="button"
+                          className="projects-col-name k-release"
+                          onClick={() => onItem(c.id)}
+                          aria-label={`${c.id} ${titleOf(c.id)}${c.proposed ? " (proposed)" : ""}`}
+                        >
+                          <KindMark kind="release" />
+                          <span className="projects-col-full">{c.name}</span>
+                          <span className="projects-col-short">
+                            {shortName(c.name)}
+                          </span>
+                        </button>
+                      </WorkHoverCard>
                     )}
                   </th>
                 ))}
@@ -375,15 +378,16 @@ function ByRelease({
                   <tr className={row.decisions.length ? "has-decisions" : ""}>
                     <th scope="row" className="projects-row">
                       {row.id ? (
-                        <button
-                          type="button"
-                          className="projects-row-name k-project"
-                          onClick={() => onItem(row.id)}
-                          title={`${row.id} ${row.title}`}
-                        >
-                          <KindMark kind="project" />
-                          <span>{row.title}</span>
-                        </button>
+                        <WorkHoverCard id={row.id}>
+                          <button
+                            type="button"
+                            className="projects-row-name k-project"
+                            onClick={() => onItem(row.id)}
+                          >
+                            <KindMark kind="project" />
+                            <span>{row.title}</span>
+                          </button>
+                        </WorkHoverCard>
                       ) : (
                         <span className="projects-row-name">{row.title}</span>
                       )}
@@ -575,23 +579,6 @@ function ProjectCards({
   );
 }
 
-/** A stacked bar of the cell's stages, on its own scale. */
-function StageBar({ counts }: { counts: Record<Stage, number> }) {
-  return (
-    <span className="work-pbar-track projects-bar-track" aria-hidden="true">
-      {CELL_STAGES.map(({ st }) =>
-        counts[st] ? (
-          <span
-            key={st}
-            className={`work-roadmap-seg stage-${slug(st)}`}
-            style={{ flexGrow: counts[st] }}
-          />
-        ) : null,
-      )}
-    </span>
-  );
-}
-
 /** The words for a cell's counts: "2 in progress · 3 blocked" (done is said first). */
 const countWords = (counts: Record<Stage, number>) =>
   CELL_STAGES.filter(({ st }) => st !== "Done" && counts[st] > 0).map(
@@ -644,48 +631,60 @@ function CellView({
     .filter(Boolean)
     .join("; ");
   return (
-    <button
-      type="button"
-      className={`projects-cell-btn${selected ? " selected" : ""}${cell.finishing.length ? " finishing" : ""}${cell.proposed.length === total ? " proposed" : ""}`}
-      aria-expanded={selected}
-      aria-controls={controls}
-      aria-label={label}
-      onClick={onChoose}
+    <WorkHoverCard
+      id={row.id}
+      title={row.title}
+      items={cell.items}
+      release={column.id}
+      click="Click for its items"
     >
-      <span className="projects-cell-head">
-        <b>{cell.counts.Done}</b> of {total} done
-      </span>
-      <StageBar counts={cell.counts} />
-      {words.length > 0 && (
-        <span className="projects-cell-counts">
-          {words.map((w) => (
-            <span key={w.st}>
-              <span className={`work-swatch stage-${slug(w.st)}`} />
-              {w.text}
-            </span>
-          ))}
+      <button
+        type="button"
+        className={`projects-cell-btn${selected ? " selected" : ""}${cell.finishing.length ? " finishing" : ""}${cell.proposed.length === total ? " proposed" : ""}`}
+        aria-expanded={selected}
+        aria-controls={controls}
+        aria-label={label}
+        onClick={onChoose}
+      >
+        <span className="projects-cell-head">
+          <b>{cell.counts.Done}</b> of {total} done
         </span>
-      )}
-      {shown.length > 0 && (
-        <span className="projects-cell-blockers">
-          <span className="projects-by">By</span>
-          {shown.map((b) => (
-            <KindId key={b.id} id={b.id} />
-          ))}
-          {more > 0 && <span className="projects-more">+{more}</span>}
-        </span>
-      )}
-      {cell.finishing.length > 0 && (
-        <span className="projects-finish-tag">
-          Sets the finish of {versionsOf(cell.finishes, columns).join(", ")}
-        </span>
-      )}
-      {cell.proposed.length > 0 && cell.proposed.length < total && (
-        <span className="projects-cell-proposed">
-          {cell.proposed.length} in proposed milestones
-        </span>
-      )}
-    </button>
+        <StageBar
+          items={cell.items}
+          counts={cell.counts}
+          className="projects-bar-track"
+        />
+        {words.length > 0 && (
+          <span className="projects-cell-counts">
+            {words.map((w) => (
+              <span key={w.st}>
+                <span className={`work-swatch stage-${slug(w.st)}`} />
+                {w.text}
+              </span>
+            ))}
+          </span>
+        )}
+        {shown.length > 0 && (
+          <span className="projects-cell-blockers">
+            <span className="projects-by">By</span>
+            {shown.map((b) => (
+              <KindId key={b.id} id={b.id} />
+            ))}
+            {more > 0 && <span className="projects-more">+{more}</span>}
+          </span>
+        )}
+        {cell.finishing.length > 0 && (
+          <span className="projects-finish-tag">
+            Sets the finish of {versionsOf(cell.finishes, columns).join(", ")}
+          </span>
+        )}
+        {cell.proposed.length > 0 && cell.proposed.length < total && (
+          <span className="projects-cell-proposed">
+            {cell.proposed.length} in proposed milestones
+          </span>
+        )}
+      </button>
+    </WorkHoverCard>
   );
 }
 

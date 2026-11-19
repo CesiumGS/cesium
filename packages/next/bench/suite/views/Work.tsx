@@ -130,6 +130,7 @@ import {
   UNSHAPED,
   STAGES,
   stageOf,
+  stageWords,
   stateOf,
   unblocksOf,
   ZOOM_MAX,
@@ -145,6 +146,12 @@ import {
 } from "../work.ts";
 import { Empty, Page, toast, useChartTokens } from "./common.tsx";
 import { DependenciesLink, DependenciesView } from "./Dependencies.tsx";
+import {
+  SegmentTip,
+  StageBar as LabeledStageBar,
+  WorkCardProvider,
+  WorkHoverCard,
+} from "./HoverCard.tsx";
 import { InlineText, ItemText } from "./ItemText.tsx";
 import { ProjectMatrixView, ProjectsView } from "./Projects.tsx";
 import { Status as StatusBadge } from "./runParts.tsx";
@@ -428,558 +435,581 @@ function Board({
     (m) => m.state === "proposed",
   ).length;
   const projectScope = !!oneProject;
+  // The hover card's scope (CS-696): the Plan view's sequence, with the
+  // same slots and proposals, so its slip line matches the Plan view.
+  const cardPlan = useMemo(
+    () => planOf(s, { slots, proposals: withProposed, flight }),
+    [s, slots, withProposed, flight],
+  );
+  const cardScope = useMemo(
+    () => ({
+      s,
+      flight,
+      plan: cardPlan,
+      onDeps: (id: string) =>
+        set({
+          view: "roadmap",
+          roadmap: "deps",
+          focus: id,
+          deps: undefined,
+        }),
+    }),
+    [s, flight, cardPlan, set],
+  );
 
   return (
-    <Page
-      title="Work"
-      description={DESCRIPTION}
-      help={<WorkHelp />}
-      className="work-page"
-      actions={
-        <span
-          className="work-branch"
-          title={`Read ${new Date(s.generated).toLocaleString()} from ${s.source}`}
-        >
-          <Icon href={svgGitBranch} />
-          <Typography variant="body-sm">
-            {s.branch ?? "this checkout"}
-          </Typography>
-          {s.commit && (
-            <Typography
-              variant="caption-md"
-              color="textSecondary"
-              className="work-mono"
-            >
-              {s.commit}
-            </Typography>
-          )}
-        </span>
-      }
-    >
-      {s.problems.length > 0 && (
-        <Alert severity="warning" className="work-gap">
-          The tracker's check reports{" "}
-          {s.problems.length === 1
-            ? "a problem"
-            : `${s.problems.length} problems`}
-          . Run <code>npx hitld work check</code>.
-        </Alert>
-      )}
-
-      <div
-        ref={layout}
-        className={`work-layout${inline && (search.list || search.item) ? " has-pane" : ""}`}
-      >
-        <div className="work-main">
-          <div className="work-main-bar">
-            <ScopeTrail
-              s={s}
-              search={search}
-              flight={flight}
-              chosen={chosen}
-              names={scopeNames}
-              onToggle={toggleScope}
-              onScope={(go) =>
-                go.milestone
-                  ? set({
-                      project: undefined,
-                      milestone: go.milestone,
-                      list: `ms:${go.milestone}`,
-                      item: undefined,
-                    })
-                  : scopeTo(go)
-              }
-            />
-            <FindField q={search.q} set={set} />
-          </div>
-          <div className="work-tabs-row">
-            <Tabs
-              value={view}
-              onChange={(_, v: View) =>
-                set({ view: v === "move" ? undefined : v })
-              }
-              aria-label="Views"
-              className="work-tabs"
-            >
-              {VIEWS.map((v) => (
-                <Tab
-                  key={v.id}
-                  value={v.id}
-                  label={v.label}
-                  id={`work-tab-${v.id}`}
-                  aria-controls="work-view"
-                />
-              ))}
-            </Tabs>
-            <KindLegend />
-          </div>
-          <div
-            id="work-view"
-            role="tabpanel"
-            aria-labelledby={`work-tab-${view}`}
-            className="work-view"
+    <WorkCardProvider value={cardScope}>
+      <Page
+        title="Work"
+        description={DESCRIPTION}
+        help={<WorkHelp />}
+        className="work-page"
+        actions={
+          <span
+            className="work-branch"
+            title={`Read ${new Date(s.generated).toLocaleString()} from ${s.source}`}
           >
-            {view === "move" && (
-              <div className="work-dash">
-                <Card
-                  id="work-needs-h"
-                  title="Your decisions"
-                  className="span-7"
-                  stat={{
-                    value: decisions.length,
-                    detail: decisions.length
-                      ? `Oldest waiting ${ageText(Math.max(...decisions.map(ageOf)))}`
-                      : "Nothing waits on you",
-                    tone: decisions.length ? "attention" : undefined,
-                    onOpen: () => open("owner"),
-                  }}
-                  foot={
-                    decisions.length > 8 && (
-                      <Link
-                        component="button"
-                        type="button"
-                        onClick={() => open("owner")}
-                      >
-                        All {decisions.length} decisions
-                      </Link>
-                    )
-                  }
-                >
-                  <LeverageBars
-                    items={mostWaitedOn(decisions)}
-                    unblocks={unblocks}
-                    limit={8}
-                    selected={search.item}
-                    empty="Nothing waits on you."
-                  />
-                </Card>
+            <Icon href={svgGitBranch} />
+            <Typography variant="body-sm">
+              {s.branch ?? "this checkout"}
+            </Typography>
+            {s.commit && (
+              <Typography
+                variant="caption-md"
+                color="textSecondary"
+                className="work-mono"
+              >
+                {s.commit}
+              </Typography>
+            )}
+          </span>
+        }
+      >
+        {s.problems.length > 0 && (
+          <Alert severity="warning" className="work-gap">
+            The tracker's check reports{" "}
+            {s.problems.length === 1
+              ? "a problem"
+              : `${s.problems.length} problems`}
+            . Run <code>npx hitld work check</code>.
+          </Alert>
+        )}
 
-                <Card
-                  id="work-yourprops-h"
-                  title="Proposals for you"
-                  className="span-5"
-                  stat={{
-                    value: forOwner.length,
-                    detail: forOwner.length
-                      ? `${forOwnerDiscuss} to discuss, ${forOwner.length - forOwnerDiscuss} ready for your yes`
-                      : "No proposal waits on you",
-                    tone: forOwner.length ? "attention" : undefined,
-                    onOpen: () =>
-                      set({
-                        view: "proposals",
-                        list: undefined,
-                        stage: undefined,
-                      }),
-                  }}
-                  foot={
-                    <Link
-                      component="button"
-                      type="button"
-                      onClick={() =>
+        <div
+          ref={layout}
+          className={`work-layout${inline && (search.list || search.item) ? " has-pane" : ""}`}
+        >
+          <div className="work-main">
+            <div className="work-main-bar">
+              <ScopeTrail
+                s={s}
+                search={search}
+                flight={flight}
+                chosen={chosen}
+                names={scopeNames}
+                onToggle={toggleScope}
+                onScope={(go) =>
+                  go.milestone
+                    ? set({
+                        project: undefined,
+                        milestone: go.milestone,
+                        list: `ms:${go.milestone}`,
+                        item: undefined,
+                      })
+                    : scopeTo(go)
+                }
+              />
+              <FindField q={search.q} set={set} />
+            </div>
+            <div className="work-tabs-row">
+              <Tabs
+                value={view}
+                onChange={(_, v: View) =>
+                  set({ view: v === "move" ? undefined : v })
+                }
+                aria-label="Views"
+                className="work-tabs"
+              >
+                {VIEWS.map((v) => (
+                  <Tab
+                    key={v.id}
+                    value={v.id}
+                    label={v.label}
+                    id={`work-tab-${v.id}`}
+                    aria-controls="work-view"
+                  />
+                ))}
+              </Tabs>
+              <KindLegend />
+            </div>
+            <div
+              id="work-view"
+              role="tabpanel"
+              aria-labelledby={`work-tab-${view}`}
+              className="work-view"
+            >
+              {view === "move" && (
+                <div className="work-dash">
+                  <Card
+                    id="work-needs-h"
+                    title="Your decisions"
+                    className="span-7"
+                    stat={{
+                      value: decisions.length,
+                      detail: decisions.length
+                        ? `Oldest waiting ${ageText(Math.max(...decisions.map(ageOf)))}`
+                        : "Nothing waits on you",
+                      tone: decisions.length ? "attention" : undefined,
+                      onOpen: () => open("owner"),
+                    }}
+                    foot={
+                      decisions.length > 8 && (
+                        <Link
+                          component="button"
+                          type="button"
+                          onClick={() => open("owner")}
+                        >
+                          All {decisions.length} decisions
+                        </Link>
+                      )
+                    }
+                  >
+                    <LeverageBars
+                      items={mostWaitedOn(decisions)}
+                      unblocks={unblocks}
+                      limit={8}
+                      selected={search.item}
+                      empty="Nothing waits on you."
+                    />
+                  </Card>
+
+                  <Card
+                    id="work-yourprops-h"
+                    title="Proposals for you"
+                    className="span-5"
+                    stat={{
+                      value: forOwner.length,
+                      detail: forOwner.length
+                        ? `${forOwnerDiscuss} to discuss, ${forOwner.length - forOwnerDiscuss} ready for your yes`
+                        : "No proposal waits on you",
+                      tone: forOwner.length ? "attention" : undefined,
+                      onOpen: () =>
                         set({
                           view: "proposals",
                           list: undefined,
                           stage: undefined,
-                        })
-                      }
-                    >
-                      All {proposals.length} proposals
-                    </Link>
-                  }
-                >
-                  <OwnerProposals
-                    proposals={forOwner}
-                    selected={search.item}
-                    limit={6}
-                  />
-                </Card>
-
-                <Card
-                  id="work-flight-h"
-                  title="In progress"
-                  className="span-12"
-                  stat={{
-                    value: live.working.length,
-                    detail: liveDetail(live),
-                    tone: live.blind ? "attention" : undefined,
-                    onOpen: () => open("working"),
-                  }}
-                >
-                  <LiveRun box={live} branch={s.branch} />
-                </Card>
-
-                <Card
-                  id="work-ready-h"
-                  title="Ready to start"
-                  className="span-7"
-                  stat={{
-                    value: readyToStart.length,
-                    onOpen: () => open("ready"),
-                  }}
-                  foot={
-                    readyToStart.length > 8 && (
+                        }),
+                    }}
+                    foot={
                       <Link
                         component="button"
                         type="button"
-                        onClick={() => open("ready")}
+                        onClick={() =>
+                          set({
+                            view: "proposals",
+                            list: undefined,
+                            stage: undefined,
+                          })
+                        }
                       >
-                        All {readyToStart.length} ready
+                        All {proposals.length} proposals
                       </Link>
-                    )
-                  }
-                >
-                  <LeverageBars
-                    items={mostWaitedOn(readyToStart)}
-                    unblocks={unblocks}
-                    limit={8}
-                    selected={search.item}
-                    empty="Nothing is ready to start."
-                  />
-                </Card>
+                    }
+                  >
+                    <OwnerProposals
+                      proposals={forOwner}
+                      selected={search.item}
+                      limit={6}
+                    />
+                  </Card>
 
-                <Card
-                  id="work-outside-h"
-                  title="Waiting outside"
-                  className="span-5"
-                  stat={{
-                    value: byActor.outside.length,
-                    detail: byActor.outside.length
-                      ? `On ${new Set(byActor.outside.map((it) => it.waiting_on ?? "")).size} other parties`
-                      : "Nothing waits outside",
-                    onOpen: () => open("outside"),
-                  }}
-                  foot={
-                    byActor.outside.length > 5 && (
-                      <Link
-                        component="button"
-                        type="button"
-                        onClick={() => open("outside")}
-                      >
-                        All {byActor.outside.length}
-                      </Link>
-                    )
-                  }
-                >
-                  <LeverageBars
-                    items={mostWaitedOn(byActor.outside)}
-                    unblocks={unblocks}
-                    limit={5}
-                    selected={search.item}
-                    empty="Nothing waits on other parties."
-                    party
-                  />
-                </Card>
-              </div>
-            )}
+                  <Card
+                    id="work-flight-h"
+                    title="In progress"
+                    className="span-12"
+                    stat={{
+                      value: live.working.length,
+                      detail: liveDetail(live),
+                      tone: live.blind ? "attention" : undefined,
+                      onOpen: () => open("working"),
+                    }}
+                  >
+                    <LiveRun box={live} branch={s.branch} />
+                  </Card>
 
-            {view === "roadmap" && (
-              <div className="work-dash">
-                <Card
-                  id="work-roadmap-h"
-                  title={projectScope ? "Linked projects" : "Roadmap"}
-                  caption={
-                    projectScope
-                      ? "What it waits on, and what waits on it"
-                      : roadmapBy === "plan"
-                        ? "What gets built when, as the run's executors would work through it: no dates, no durations"
-                        : roadmapBy === "projects"
-                          ? "How ready each project's work is for each release, and what it holds up"
-                          : "What one milestone or item waits on, and what it unblocks"
-                  }
-                  className="span-12"
-                  tools={
-                    !projectScope && (
-                      <span className="work-card-tools">
-                        <ToggleButton
-                          value="proposed"
-                          size="small"
-                          selected={withProposed}
-                          onChange={() =>
-                            set(
-                              { proposed: withProposed ? undefined : "show" },
-                              true,
-                            )
-                          }
-                          disabled={!proposedCount && !withProposed}
-                          render={
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              className="work-proposed-toggle"
-                              title={
-                                withProposed
-                                  ? "Hide the proposed milestones: committed work only"
-                                  : proposedCount
-                                    ? `Show the ${proposedCount} proposed ${proposedCount === 1 ? "milestone" : "milestones"} too, outlined dashed`
-                                    : "No proposed milestones"
-                              }
+                  <Card
+                    id="work-ready-h"
+                    title="Ready to start"
+                    className="span-7"
+                    stat={{
+                      value: readyToStart.length,
+                      onOpen: () => open("ready"),
+                    }}
+                    foot={
+                      readyToStart.length > 8 && (
+                        <Link
+                          component="button"
+                          type="button"
+                          onClick={() => open("ready")}
+                        >
+                          All {readyToStart.length} ready
+                        </Link>
+                      )
+                    }
+                  >
+                    <LeverageBars
+                      items={mostWaitedOn(readyToStart)}
+                      unblocks={unblocks}
+                      limit={8}
+                      selected={search.item}
+                      empty="Nothing is ready to start."
+                    />
+                  </Card>
+
+                  <Card
+                    id="work-outside-h"
+                    title="Waiting outside"
+                    className="span-5"
+                    stat={{
+                      value: byActor.outside.length,
+                      detail: byActor.outside.length
+                        ? `On ${new Set(byActor.outside.map((it) => it.waiting_on ?? "")).size} other parties`
+                        : "Nothing waits outside",
+                      onOpen: () => open("outside"),
+                    }}
+                    foot={
+                      byActor.outside.length > 5 && (
+                        <Link
+                          component="button"
+                          type="button"
+                          onClick={() => open("outside")}
+                        >
+                          All {byActor.outside.length}
+                        </Link>
+                      )
+                    }
+                  >
+                    <LeverageBars
+                      items={mostWaitedOn(byActor.outside)}
+                      unblocks={unblocks}
+                      limit={5}
+                      selected={search.item}
+                      empty="Nothing waits on other parties."
+                      party
+                    />
+                  </Card>
+                </div>
+              )}
+
+              {view === "roadmap" && (
+                <div className="work-dash">
+                  <Card
+                    id="work-roadmap-h"
+                    title={projectScope ? "Linked projects" : "Roadmap"}
+                    caption={
+                      projectScope
+                        ? "What it waits on, and what waits on it"
+                        : roadmapBy === "plan"
+                          ? "What gets built when, as the run's executors would work through it: no dates, no durations"
+                          : roadmapBy === "projects"
+                            ? "How ready each project's work is for each release, and what it holds up"
+                            : "What one milestone or item waits on, and what it unblocks"
+                    }
+                    className="span-12"
+                    tools={
+                      !projectScope && (
+                        <span className="work-card-tools">
+                          <ToggleButton
+                            value="proposed"
+                            size="small"
+                            selected={withProposed}
+                            onChange={() =>
+                              set(
+                                { proposed: withProposed ? undefined : "show" },
+                                true,
+                              )
+                            }
+                            disabled={!proposedCount && !withProposed}
+                            render={
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                className="work-proposed-toggle"
+                                title={
+                                  withProposed
+                                    ? "Hide the proposed milestones: committed work only"
+                                    : proposedCount
+                                      ? `Show the ${proposedCount} proposed ${proposedCount === 1 ? "milestone" : "milestones"} too, outlined dashed`
+                                      : "No proposed milestones"
+                                }
+                              />
+                            }
+                          >
+                            <span
+                              className="work-proposed-mark"
+                              aria-hidden="true"
                             />
-                          }
-                        >
-                          <span
-                            className="work-proposed-mark"
-                            aria-hidden="true"
+                            Proposed
+                            <span className="work-toggle-count">
+                              {proposedCount}
+                            </span>
+                          </ToggleButton>
+                          <ToggleButtonGroup
+                            size="small"
+                            exclusive
+                            value={roadmapBy}
+                            onChange={(_, v: string | null) =>
+                              v &&
+                              set(
+                                {
+                                  roadmap: v === "plan" ? undefined : v,
+                                },
+                                true,
+                              )
+                            }
+                            aria-label="Roadmap view"
+                          >
+                            <ToggleButton
+                              value="plan"
+                              render={
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  title="What gets built when, grouped by release"
+                                />
+                              }
+                            >
+                              Plan
+                            </ToggleButton>
+                            <ToggleButton
+                              value="deps"
+                              render={
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  title="What one milestone or item waits on and unblocks; the whole structure, earliest possible start in waves, behind its toggle"
+                                />
+                              }
+                            >
+                              Dependencies
+                            </ToggleButton>
+                            <ToggleButton
+                              value="projects"
+                              render={
+                                <Button
+                                  variant="outlined"
+                                  size="small"
+                                  title="How ready each project's work is for each release, and what it holds up"
+                                />
+                              }
+                            >
+                              Projects
+                            </ToggleButton>
+                          </ToggleButtonGroup>
+                        </span>
+                      )
+                    }
+                  >
+                    {projectScope ? (
+                      <ProjectLinks
+                        s={s}
+                        project={oneProject!}
+                        onCell={(from, to) => open(`dep:${from}:${to}`)}
+                      />
+                    ) : roadmapBy === "deps" ? (
+                      <DependenciesView
+                        s={s}
+                        flight={flight}
+                        search={search}
+                        set={set}
+                        proposals={withProposed}
+                        matrix={
+                          <ProjectMatrixView
+                            s={s}
+                            items={items}
+                            onCell={(from, to) => open(`dep:${from}:${to}`)}
                           />
-                          Proposed
-                          <span className="work-toggle-count">
-                            {proposedCount}
-                          </span>
-                        </ToggleButton>
-                        <ToggleButtonGroup
-                          size="small"
-                          exclusive
-                          value={roadmapBy}
-                          onChange={(_, v: string | null) =>
-                            v &&
-                            set(
-                              {
-                                roadmap: v === "plan" ? undefined : v,
-                              },
-                              true,
-                            )
-                          }
-                          aria-label="Roadmap view"
-                        >
-                          <ToggleButton
-                            value="plan"
-                            render={
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                title="What gets built when, grouped by release"
-                              />
-                            }
-                          >
-                            Plan
-                          </ToggleButton>
-                          <ToggleButton
-                            value="deps"
-                            render={
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                title="What one milestone or item waits on and unblocks; the whole structure, earliest possible start in waves, behind its toggle"
-                              />
-                            }
-                          >
-                            Dependencies
-                          </ToggleButton>
-                          <ToggleButton
-                            value="projects"
-                            render={
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                title="How ready each project's work is for each release, and what it holds up"
-                              />
-                            }
-                          >
-                            Projects
-                          </ToggleButton>
-                        </ToggleButtonGroup>
-                      </span>
-                    )
-                  }
-                >
-                  {projectScope ? (
-                    <ProjectLinks
-                      s={s}
-                      project={oneProject!}
-                      onCell={(from, to) => open(`dep:${from}:${to}`)}
-                    />
-                  ) : roadmapBy === "deps" ? (
-                    <DependenciesView
-                      s={s}
-                      flight={flight}
-                      search={search}
-                      set={set}
-                      proposals={withProposed}
-                      matrix={
-                        <ProjectMatrixView
-                          s={s}
-                          items={items}
-                          onCell={(from, to) => open(`dep:${from}:${to}`)}
-                        />
-                      }
-                    />
-                  ) : roadmapBy === "projects" ? (
-                    <ProjectsView
-                      s={s}
-                      flight={flight}
-                      items={items}
-                      scoped={size > 0}
-                      proposals={withProposed}
-                      search={search}
-                      set={set}
-                      onItem={(id) => set({ item: id, list: undefined })}
-                    />
-                  ) : (
-                    <PlanView
-                      s={s}
-                      flight={flight}
-                      proposals={withProposed}
-                      slots={slots}
-                      onSlots={(n) =>
-                        set({ slots: n === 1 ? undefined : String(n) }, true)
-                      }
-                      release={search.release}
-                      onRelease={(id) => set({ release: id }, true)}
-                      selected={
-                        search.list?.startsWith("ms:")
-                          ? search.list.slice(3)
-                          : milestoneId
-                      }
-                      onOpen={(id) => open(`ms:${id}`)}
-                      onItem={(id) => set({ item: id, list: undefined })}
-                      onDeps={(id) =>
-                        set({ roadmap: "deps", focus: id, deps: undefined })
-                      }
-                    />
-                  )}
-                </Card>
+                        }
+                      />
+                    ) : roadmapBy === "projects" ? (
+                      <ProjectsView
+                        s={s}
+                        flight={flight}
+                        items={items}
+                        scoped={size > 0}
+                        proposals={withProposed}
+                        search={search}
+                        set={set}
+                        onItem={(id) => set({ item: id, list: undefined })}
+                      />
+                    ) : (
+                      <PlanView
+                        s={s}
+                        flight={flight}
+                        proposals={withProposed}
+                        slots={slots}
+                        onSlots={(n) =>
+                          set({ slots: n === 1 ? undefined : String(n) }, true)
+                        }
+                        release={search.release}
+                        onRelease={(id) => set({ release: id }, true)}
+                        selected={
+                          search.list?.startsWith("ms:")
+                            ? search.list.slice(3)
+                            : milestoneId
+                        }
+                        onOpen={(id) => open(`ms:${id}`)}
+                        onItem={(id) => set({ item: id, list: undefined })}
+                        onDeps={(id) =>
+                          set({ roadmap: "deps", focus: id, deps: undefined })
+                        }
+                      />
+                    )}
+                  </Card>
 
-                <Card
-                  id="work-chain-h"
-                  title="Longest chains"
-                  caption="Items that must happen in order, by where they start"
-                  className="span-12"
-                >
-                  <ChainBars
-                    chains={chains}
+                  <Card
+                    id="work-chain-h"
+                    title="Longest chains"
+                    caption="Items that must happen in order, by where they start"
+                    className="span-12"
+                  >
+                    <ChainBars
+                      chains={chains}
+                      flight={flight}
+                      projectOf={projectOf}
+                      limit={6}
+                      onChain={(head) => open(`chain:${head}`)}
+                    />
+                  </Card>
+                </div>
+              )}
+
+              {view === "proposals" && (
+                <div className="work-dash">
+                  <ProposalsCard
+                    s={s}
+                    proposals={proposals}
+                    itemOf={itemOf}
+                    unblocks={unblocks}
+                    selected={
+                      search.item ??
+                      (search.list?.startsWith("ms:")
+                        ? search.list.slice(3)
+                        : undefined)
+                    }
+                    stage={
+                      PROPOSAL_STAGES.includes(search.stage as ProposalStage)
+                        ? (search.stage as ProposalStage)
+                        : undefined
+                    }
+                    onStage={(stage) => set({ stage }, true)}
+                    onMilestone={(id) => open(`ms:${id}`)}
+                    msOf={msOf}
+                  />
+                </div>
+              )}
+
+              {view === "no-milestone" && (
+                <div className="work-dash">
+                  <NoMilestoneCard
+                    s={s}
+                    items={items}
                     flight={flight}
-                    projectOf={projectOf}
-                    limit={6}
-                    onChain={(head) => open(`chain:${head}`)}
+                    scope={scope}
+                    selected={search.item}
+                    kinds={listOf(search.kind) as LooseKind[]}
+                    states={listOf(search.state) as OpenState[]}
+                    onFilter={(patch) => set(patch, true)}
                   />
-                </Card>
-              </div>
-            )}
+                </div>
+              )}
 
-            {view === "proposals" && (
-              <div className="work-dash">
-                <ProposalsCard
-                  s={s}
-                  proposals={proposals}
-                  itemOf={itemOf}
-                  unblocks={unblocks}
-                  selected={
-                    search.item ??
-                    (search.list?.startsWith("ms:")
-                      ? search.list.slice(3)
-                      : undefined)
-                  }
-                  stage={
-                    PROPOSAL_STAGES.includes(search.stage as ProposalStage)
-                      ? (search.stage as ProposalStage)
-                      : undefined
-                  }
-                  onStage={(stage) => set({ stage }, true)}
-                  onMilestone={(id) => open(`ms:${id}`)}
-                  msOf={msOf}
-                />
-              </div>
-            )}
-
-            {view === "no-milestone" && (
-              <div className="work-dash">
-                <NoMilestoneCard
-                  s={s}
-                  items={items}
-                  flight={flight}
-                  scope={scope}
-                  selected={search.item}
-                  kinds={listOf(search.kind) as LooseKind[]}
-                  states={listOf(search.state) as OpenState[]}
-                  onFilter={(patch) => set(patch, true)}
-                />
-              </div>
-            )}
-
-            {view === "flow" && (
-              <div className="work-dash">
-                <Card
-                  id="work-flow-h"
-                  title="Items in each stage, day by day"
-                  caption={`A band that widens is a queue growing; choose one to list it. ${flow.created} ${flow.created === 1 ? "item" : "items"} new in the last ${flow.window} days.`}
-                  className="span-12"
-                >
-                  <FlowChart
+              {view === "flow" && (
+                <div className="work-dash">
+                  <Card
+                    id="work-flow-h"
+                    title="Items in each stage, day by day"
+                    caption={`A band that widens is a queue growing; choose one to list it. ${flow.created} ${flow.created === 1 ? "item" : "items"} new in the last ${flow.window} days.`}
+                    className="span-12"
+                  >
+                    <FlowChart
+                      flow={flow}
+                      onStage={(st) => open(`stage:${st}`)}
+                    />
+                  </Card>
+                  <MeasuresCard
+                    s={s}
+                    items={items}
                     flow={flow}
-                    onStage={(st) => open(`stage:${st}`)}
+                    doneDaily={doneDaily}
+                    itemOf={itemOf}
+                    onOpen={open}
                   />
-                </Card>
-                <MeasuresCard
-                  s={s}
-                  items={items}
-                  flow={flow}
-                  doneDaily={doneDaily}
-                  itemOf={itemOf}
-                  onOpen={open}
-                />
-                <Typography
-                  variant="caption-md"
-                  color="textTertiary"
-                  render={<p />}
-                  className="work-later"
-                >
-                  The merge queue, quotas and what the controllers do join this
-                  view when HITLd records them.
-                </Typography>
-              </div>
-            )}
+                  <Typography
+                    variant="caption-md"
+                    color="textTertiary"
+                    render={<p />}
+                    className="work-later"
+                  >
+                    The merge queue, quotas and what the controllers do join
+                    this view when HITLd records them.
+                  </Typography>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
 
-        <ListPanel
-          s={s}
-          list={search.list}
-          open={!!search.list && !(inline && search.item)}
-          inline={inline}
-          items={items}
-          flight={flight}
-          flow={flow}
-          unblocks={unblocks}
-          projectOf={projectOf}
-          itemOf={itemOf}
-          selected={search.item}
-          search={search}
-          scope={scope}
-          onClose={() =>
-            set({ list: undefined, item: undefined, q: undefined })
-          }
-          onProject={(id) =>
-            set({
-              project: id,
-              milestone: undefined,
-              item: undefined,
-              list: undefined,
-            })
-          }
-          onList={(l) => set({ list: l, item: undefined })}
-          onQuery={(q: string) =>
-            set({ q: q || undefined, list: q ? "find" : undefined }, true)
-          }
-        />
-        <ItemPanel
-          s={s}
-          id={search.item}
-          inline={inline}
-          projectOf={projectOf}
-          itemOf={itemOf}
-          flight={flight}
-          back={search.list ? listTitle(search.list, scope, s) : undefined}
-          onClose={() => set({ item: undefined })}
-          onProject={(id) =>
-            set({
-              project: id,
-              milestone: undefined,
-              item: undefined,
-              list: undefined,
-            })
-          }
-        />
-      </div>
-    </Page>
+          <ListPanel
+            s={s}
+            list={search.list}
+            open={!!search.list && !(inline && search.item)}
+            inline={inline}
+            items={items}
+            flight={flight}
+            flow={flow}
+            unblocks={unblocks}
+            projectOf={projectOf}
+            itemOf={itemOf}
+            selected={search.item}
+            search={search}
+            scope={scope}
+            onClose={() =>
+              set({ list: undefined, item: undefined, q: undefined })
+            }
+            onProject={(id) =>
+              set({
+                project: id,
+                milestone: undefined,
+                item: undefined,
+                list: undefined,
+              })
+            }
+            onList={(l) => set({ list: l, item: undefined })}
+            onQuery={(q: string) =>
+              set({ q: q || undefined, list: q ? "find" : undefined }, true)
+            }
+          />
+          <ItemPanel
+            s={s}
+            id={search.item}
+            inline={inline}
+            projectOf={projectOf}
+            itemOf={itemOf}
+            flight={flight}
+            back={search.list ? listTitle(search.list, scope, s) : undefined}
+            onClose={() => set({ item: undefined })}
+            onProject={(id) =>
+              set({
+                project: id,
+                milestone: undefined,
+                item: undefined,
+                list: undefined,
+              })
+            }
+          />
+        </div>
+      </Page>
+    </WorkCardProvider>
   );
 }
 
@@ -1859,7 +1889,7 @@ function LiveWorkRow({
 }) {
   return (
     <li className="work-row">
-      <ItemLink id={w.id} className="work-row-main">
+      <ItemLink id={w.id} className="work-row-main" card>
         <KindId id={w.id} />
         <span className="work-row-title">
           {w.item ? <InlineText text={w.item.title} /> : w.id}
@@ -1884,7 +1914,7 @@ function LiveUnmergedRow({ u, now }: { u: LiveUnmerged; now: number }) {
   const q = queueText(u);
   return (
     <li className="work-row">
-      <ItemLink id={u.id} className="work-row-main">
+      <ItemLink id={u.id} className="work-row-main" card>
         <KindId id={u.id} />
         <span className="work-row-title">
           {u.item ? <InlineText text={u.item.title} /> : u.id}
@@ -1988,6 +2018,7 @@ function LeverageBars({
               id={it.id}
               className="work-bar"
               label={`${it.id} ${it.title}: ${n} items wait behind it`}
+              card
             >
               <span className="work-bar-label">
                 <KindId id={it.id} />{" "}
@@ -2373,7 +2404,7 @@ function ListPanel({
             className={it.id === selected ? "selected" : undefined}
           >
             <span className="work-step-n">{i + 1}</span>
-            <ItemLink id={it.id} className="work-step">
+            <ItemLink id={it.id} className="work-step" card>
               <span
                 className={`work-swatch stage-${slug(stageOf(it, flight) ?? "Waiting")}`}
                 aria-hidden="true"
@@ -2617,7 +2648,7 @@ function Ranked({
               key={it.id}
               className={`work-row${it.id === selected ? " selected" : ""}`}
             >
-              <ItemLink id={it.id} className="work-row-main">
+              <ItemLink id={it.id} className="work-row-main" card>
                 <KindId id={it.id} />
                 <span className="work-row-title">
                   <span>
@@ -3246,7 +3277,7 @@ function FindResults({
               key={m.id}
               className={`work-row${m.id === selected ? " selected" : ""}`}
             >
-              <ItemLink id={m.id} className="work-row-main">
+              <ItemLink id={m.id} className="work-row-main" card>
                 <KindId id={m.id} />
                 <span className="work-row-title">
                   <span>{it ? mark(it.title) : m.id}</span>
@@ -3316,7 +3347,7 @@ function OwnerQueue({
             key={d.id}
             className={`work-queue-item${d.id === selected ? " selected" : ""}`}
           >
-            <ItemLink id={d.id} className="work-queue-main">
+            <ItemLink id={d.id} className="work-queue-main" card>
               <span className="work-card-top">
                 <KindId id={d.id} />
                 {d.ready ? (
@@ -3678,7 +3709,7 @@ function ProposalRow({
             <InlineText text={p.title} />
           </button>
         ) : (
-          <ItemLink id={p.id} className="work-ptable-link">
+          <ItemLink id={p.id} className="work-ptable-link" card>
             <InlineText text={p.title} />
           </ItemLink>
         )}
@@ -4176,7 +4207,7 @@ function NoMilestoneRow({
         <KindId id={it.id} kind={kind} />
       </td>
       <td className="c-title">
-        <ItemLink id={it.id} className="work-ptable-link">
+        <ItemLink id={it.id} className="work-ptable-link" card>
           <InlineText text={it.title} />
         </ItemLink>
         {kind === "release" && (
@@ -4256,6 +4287,7 @@ function ItemLink({
   children,
   label,
   tip,
+  card = false,
 }: {
   id: string;
   className?: string;
@@ -4263,8 +4295,10 @@ function ItemLink({
   label?: string;
   /** A quick tooltip (what its color means). */
   tip?: string;
+  /** A list's row: the hover card describes it (CS-696). */
+  card?: boolean;
 }) {
-  return (
+  const link = (
     <RouterLink
       to="/work"
       search={(prev: WorkSearch) => ({ ...prev, item: id })}
@@ -4275,6 +4309,7 @@ function ItemLink({
       {children}
     </RouterLink>
   );
+  return card ? <WorkHoverCard id={id}>{link}</WorkHoverCard> : link;
 }
 
 // ------------------------------------------------------------ ready and blocked
@@ -4337,7 +4372,7 @@ function Grouped({
                       key={it.id}
                       className={`work-row${it.id === selected ? " selected" : ""}`}
                     >
-                      <ItemLink id={it.id} className="work-row-main">
+                      <ItemLink id={it.id} className="work-row-main" card>
                         <KindId id={it.id} />
                         <span className="work-row-title">
                           <InlineText text={it.title} />
@@ -4909,6 +4944,7 @@ function StageProgress({
   /** False where the items are only part of the progress (a release's milestones aren't in it). */
   bar?: boolean;
 }) {
+  const snap = useContext(SnapshotContext);
   const counts = Object.fromEntries(STAGES.map((st) => [st, 0])) as Record<
     Stage,
     number
@@ -4933,27 +4969,23 @@ function StageProgress({
         {counts.Done} of {total} {total === 1 ? noun : nouns} done
         {counts["In flight"] ? `, ${counts["In flight"]} in progress` : ""}
       </Typography>
-      {bar && (
-        <span className="work-pbar-track" aria-hidden="true">
-          {STAGES.map((st) =>
-            counts[st] ? (
-              <span
-                key={st}
-                className={`work-roadmap-seg stage-${slug(st)}`}
-                style={{ flexGrow: counts[st] }}
-              />
-            ) : null,
-          )}
-        </span>
+      {bar && snap && (
+        <LabeledStageBar
+          s={snap}
+          items={items.map((x) => x.id)}
+          flight={flight}
+          counts={counts}
+          focusable
+        />
       )}
       <ul className="work-pane-stages">
-        {STAGES.filter((st) => counts[st]).map((st) => (
+        {stageWords(counts).map(({ st, text }) => (
           <li key={st}>
             <span
               className={`work-swatch stage-${slug(st)}`}
               aria-hidden="true"
             />
-            {counts[st]} {STAGE_NAMES[st].toLowerCase()}
+            {text}
           </li>
         ))}
       </ul>
@@ -5470,6 +5502,7 @@ function DepNode({
           <ItemLink
             id={id}
             className={`work-tree-link${isOpen(x) ? "" : " closed"}`}
+            card
           >
             <span
               className={`work-swatch stage-${slug(st ?? "Done")}`}
@@ -5498,6 +5531,7 @@ function DepNode({
           <ItemLink
             id={id}
             className={`work-tree-link${ms.state === "done" ? " closed" : ""}`}
+            card
           >
             <span className="work-swatch none" aria-hidden="true" />
             <KindId id={id} />
@@ -6549,9 +6583,11 @@ function PlanBar({
   ids,
   x,
   span,
-  tip,
+  card,
+  onOpen,
   proposed,
   stageOf: stageFor,
+  segLabel,
   lit,
   needed,
 }: {
@@ -6559,7 +6595,12 @@ function PlanBar({
   ids: readonly string[];
   x: (v: number) => number;
   span: [number, number];
-  tip: string;
+  /** The mark the hover card describes (CS-696); none for a group of loose items. */
+  card?: string;
+  /** Opens it in the pane. */
+  onOpen?: () => void;
+  /** Each segment's own label, where the bar holds several items. */
+  segLabel: (id: string) => string;
   proposed?: boolean;
   stageOf: (id: string) => Stage | undefined;
   /** The chosen release's finishing chain. */
@@ -6569,16 +6610,16 @@ function PlanBar({
 }) {
   const left = x(span[0]);
   const w = Math.max(3, x(span[1]) - left);
-  return (
+  const track = (
     <span
-      className={`work-plan-track${proposed ? " proposed" : ""}${needed && !ids.some((id) => needed.has(id)) ? " dim" : ""}`}
+      className={`work-plan-track${proposed ? " proposed" : ""}${needed && !ids.some((id) => needed.has(id)) ? " dim" : ""}${onOpen ? " opens" : ""}`}
       style={{ left, width: w }}
-      data-tip={tip}
+      onClick={onOpen}
     >
       {ids.map((id) => {
         const p = plan.items.get(id)!;
         const st = stageFor(id);
-        return (
+        const seg = (
           <span
             key={id}
             className={`work-plan-seg${st ? ` stage-${slug(st)}` : ""}${lit?.has(id) ? " lit" : ""}${needed && !needed.has(id) ? " dim" : ""}`}
@@ -6588,9 +6629,17 @@ function PlanBar({
             }}
           />
         );
+        return ids.length > 1 ? (
+          <SegmentTip key={id} label={segLabel(id)}>
+            {seg}
+          </SegmentTip>
+        ) : (
+          seg
+        );
       })}
     </span>
   );
+  return card ? <WorkHoverCard id={card}>{track}</WorkHoverCard> : track;
 }
 
 /**
@@ -6811,15 +6860,25 @@ function PlanView({
     );
   }
 
-  const spanText = (a: number, b: number) =>
-    `from ${planAt(plan, a)} to ${planAt(plan, b)}`;
+  const segLabel = (id: string) => {
+    const it = itemOf.get(id);
+    const st = stageFor(id);
+    const t = it?.title ?? id;
+    const head = `${id} ${t.length > 48 ? `${t.slice(0, 45)}…` : t}`;
+    const waits = it?.open_needs ?? [];
+    return `${head} · ${st ? STAGE_NAMES[st] : "Dropped"}${
+      st === "Waiting" && waits.length
+        ? `: waiting on ${andList(waits.slice(0, 2))}${waits.length > 2 ? ` and ${waits.length - 2} more` : ""}`
+        : ""
+    }`;
+  };
   const label = (r: PlanRow) => {
     switch (r.kind) {
       case "band": {
         const key = `band:${r.band.id}`;
         const none = r.band.id === NO_RELEASE;
         const n = r.band.milestones.length + r.band.idle.length;
-        return (
+        const toggleButton = (
           <button
             type="button"
             className="work-plan-toggle band"
@@ -6838,6 +6897,16 @@ function PlanView({
             </span>
           </button>
         );
+        return none ? (
+          toggleButton
+        ) : (
+          <WorkHoverCard
+            id={r.band.id}
+            click={`Click to ${open.has(key) ? "hide" : "show"} its milestones`}
+          >
+            {toggleButton}
+          </WorkHoverCard>
+        );
       }
       case "ms": {
         const key = `ms:${r.band.id}:${r.ms.id}`;
@@ -6854,16 +6923,17 @@ function PlanView({
             >
               <Icon href={open.has(key) ? svgChevronDown : svgChevronRight} />
             </button>
-            <button
-              type="button"
-              className="work-plan-open k-milestone"
-              onClick={() => onOpen(r.ms.id)}
-              title={`${r.ms.id} ${r.ms.title}: open it`}
-            >
-              <KindMark kind="milestone" />
-              {r.ms.proposed && <ProposedLabel />}
-              <span className="work-plan-title">{r.ms.title}</span>
-            </button>
+            <WorkHoverCard id={r.ms.id}>
+              <button
+                type="button"
+                className="work-plan-open k-milestone"
+                onClick={() => onOpen(r.ms.id)}
+              >
+                <KindMark kind="milestone" />
+                {r.ms.proposed && <ProposedLabel />}
+                <span className="work-plan-title">{r.ms.title}</span>
+              </button>
+            </WorkHoverCard>
             {depsButton(r.ms.id, r.ms.title)}
           </span>
         );
@@ -6895,16 +6965,17 @@ function PlanView({
         const it = itemOf.get(r.id)!;
         return (
           <span className="work-plan-ms">
-            <button
-              type="button"
-              className="work-plan-open item"
-              onClick={() => onItem(r.id)}
-              title={`${r.id} ${it.title}: open it`}
-            >
-              <KindId id={r.id} kind="work" />
-              {it.state === "proposed" && <ProposedLabel />}
-              <span className="work-plan-title">{it.title}</span>
-            </button>
+            <WorkHoverCard id={r.id}>
+              <button
+                type="button"
+                className="work-plan-open item"
+                onClick={() => onItem(r.id)}
+              >
+                <KindId id={r.id} kind="work" />
+                {it.state === "proposed" && <ProposedLabel />}
+                <span className="work-plan-title">{it.title}</span>
+              </button>
+            </WorkHoverCard>
             {depsButton(r.id, it.title)}
           </span>
         );
@@ -6960,7 +7031,11 @@ function PlanView({
               ids={r.band.items}
               x={x}
               span={[r.band.start, r.band.finish]}
-              tip={`${r.band.id === NO_RELEASE ? "Work no release needs" : `${r.band.name}'s own work`}: ${r.band.items.length} items, ${spanText(r.band.start, r.band.finish)}`}
+              card={r.band.id === NO_RELEASE ? undefined : r.band.id}
+              onOpen={
+                r.band.id === NO_RELEASE ? undefined : () => onItem(r.band.id)
+              }
+              segLabel={segLabel}
               stageOf={stageFor}
               lit={lit}
               needed={needed}
@@ -6975,7 +7050,9 @@ function PlanView({
               ids={r.ms.items}
               x={x}
               span={[r.ms.start, r.ms.finish]}
-              tip={`${r.ms.title}: ${r.ms.items.length} ${r.ms.items.length === 1 ? "item" : "items"}, ${spanText(r.ms.start, r.ms.finish)}`}
+              card={r.ms.id}
+              onOpen={() => onOpen(r.ms.id)}
+              segLabel={segLabel}
               proposed={r.ms.proposed}
               stageOf={stageFor}
               lit={lit}
@@ -6994,7 +7071,7 @@ function PlanView({
               Math.min(...r.band.loose.map((id) => plan.items.get(id)!.start)),
               Math.max(...r.band.loose.map((id) => plan.items.get(id)!.finish)),
             ]}
-            tip={`${r.band.loose.length} ${r.band.loose.length === 1 ? "item" : "items"} worked in this release that none of its milestones holds`}
+            segLabel={segLabel}
             stageOf={stageFor}
             lit={lit}
             needed={needed}
@@ -7003,7 +7080,6 @@ function PlanView({
       case "item": {
         const p = plan.items.get(r.id)!;
         const it = itemOf.get(r.id)!;
-        const st = stageFor(r.id);
         return (
           <>
             <PlanBar
@@ -7011,7 +7087,9 @@ function PlanView({
               ids={[r.id]}
               x={x}
               span={[p.start, p.finish]}
-              tip={`${r.id} · ${st ? STAGE_NAMES[st] : ""} · ${spanText(p.start, p.finish)}${p.sized ? "" : plan.unit === "tokens" ? " · no estimate: counted at the median" : ""}${p.loop ? " · started before its needs: they wait on each other round a loop" : ""}`}
+              card={r.id}
+              onOpen={() => onItem(r.id)}
+              segLabel={segLabel}
               proposed={it.state === "proposed"}
               stageOf={stageFor}
               lit={lit}
@@ -7253,26 +7331,13 @@ function PlanView({
                 const at = labelAt.get(r.id)!;
                 const on = release === r.id;
                 return (
-                  <Tooltip
+                  <WorkHoverCard
                     key={r.id}
-                    placement="top"
-                    title={
-                      <span className="work-map-tip">
-                        <b>{r.title}</b>
-                        {r.proposed && <span>Proposed: not committed yet</span>}
-                        <span>
-                          {r.last
-                            ? `Its last needed item, ${r.last}, finishes at ${planAt(plan, r.at!)}`
-                            : "Everything it needs is done"}
-                          ; it needs {r.needed.length} open{" "}
-                          {r.needed.length === 1 ? "item" : "items"}
-                        </span>
-                        <span>
-                          {on
-                            ? "Choose it again to let go"
-                            : "Choose it to see what sets its finish"}
-                        </span>
-                      </span>
+                    id={r.id}
+                    click={
+                      on
+                        ? "Click to let go"
+                        : "Click to see what sets its finish"
                     }
                   >
                     <button
@@ -7290,7 +7355,7 @@ function PlanView({
                       <KindMark kind="release" named={false} />
                       <span className="work-flag-label">{versionOf(r)}</span>
                     </button>
-                  </Tooltip>
+                  </WorkHoverCard>
                 );
               })}
               {ticks.map((t) => (

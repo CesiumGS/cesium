@@ -28,6 +28,12 @@ import {
   noMilestoneOf,
   clampSlots,
   planOf,
+  planSlackOf,
+  cardBlockersOf,
+  segmentLabel,
+  slipText,
+  stageWords,
+  workCardOf,
   flowOf,
   inFlightOf,
   kindsOf,
@@ -1530,6 +1536,239 @@ describe("the Plan view's sequence (CS-692)", () => {
     expect(p.order).toEqual(["CS-700", "CS-701"]);
     expect(p.items.get("CS-700")!.loop).toBe(true);
     expect(p.items.get("CS-701")!.loop).toBeUndefined();
+  });
+});
+
+describe("the shared hover card (CS-696)", () => {
+  // The Plan view's fixture, again: alpha.1 (CS-501) needs CS-600's
+  // items and CS-120; beta.1 (CS-502) needs alpha.1 and CS-610; CS-111
+  // waits on CS-110 and the owner's decision CS-140.
+  const ms = (id: string, constraints: string[]): WorkMilestone => ({
+    id,
+    title: `Milestone ${id}`,
+    kind: "milestone",
+    learning: false,
+    state: "planned",
+    project: "CS-2",
+    done_when: [],
+    constraints: constraints.map((c) => ({ id: c, clause: "c?" })),
+    contributions: [],
+    check_results: [],
+    path: `m/${id}`,
+    progress: { done: 0, total: constraints.length },
+    check_due: false,
+    to_shape: [],
+  });
+  const needs = (...ids: string[]) => ({ needs: ids, open_needs: ids });
+  const s: WorkSnapshot = {
+    ...snapshot,
+    items: [
+      item("CS-100", { milestones: ["CS-600"] }),
+      item("CS-101", { milestones: ["CS-600"], ...needs("CS-100", "CS-120") }),
+      item("CS-102", { milestones: ["CS-600"] }),
+      item("CS-110", { milestones: ["CS-610"] }),
+      item("CS-111", { milestones: ["CS-610"], ...needs("CS-110", "CS-140") }),
+      item("CS-120"),
+      item("CS-130", { milestones: ["CS-620"], ...needs("CS-102") }),
+      item("CS-140", { kind: "decision", decider: "owner" }),
+      item("CS-150", { state: "done", milestones: ["CS-600"] }),
+      item("CS-501", {
+        title: "Release 2.0.0-alpha.1",
+        release: "2.0.0-alpha.1",
+        ...needs("CS-600"),
+      }),
+      item("CS-502", {
+        title: "Release 2.0.0-beta.1",
+        release: "2.0.0-beta.1",
+        ...needs("CS-501", "CS-610"),
+      }),
+    ],
+    milestones: [
+      ms("CS-600", ["CS-100", "CS-101", "CS-102", "CS-150"]),
+      ms("CS-610", ["CS-110", "CS-111"]),
+      ms("CS-620", ["CS-130"]),
+    ],
+  };
+
+  it("says an item sets its release's finish when the sequence leaves it no room", () => {
+    // One slot works everything in a row: any delay pushes alpha.1.
+    const plan = planOf(s);
+    const c = workCardOf(s, "CS-102", { plan })!;
+    expect(c.release).toEqual({ id: "CS-501", version: "2.0.0-alpha.1" });
+    expect(c.slip).toMatchObject({ sets: true, room: 0 });
+    expect(slipText(c.slip!)).toBe(
+      "Sets alpha.1's finish: any delay moves alpha.1",
+    );
+  });
+
+  it("measures room to slip in the Plan view's unit, over needs and slots", () => {
+    // Two slots: CS-100 and CS-102 start at once, CS-120 and CS-101
+    // follow CS-100 in its slot, so alpha.1 finishes at 3. CS-102
+    // finishes at 1 and only work alpha.1 doesn't need comes after it.
+    const plan = planOf(s, { slots: 2 });
+    const slack = planSlackOf(plan, s, "CS-501");
+    expect(slack.get("CS-102")).toBe(2);
+    expect(slack.get("CS-100")).toBe(0);
+    expect(slack.get("CS-101")).toBe(0);
+    // CS-130 can't move alpha.1 at all.
+    expect(slack.get("CS-130")).toBe(Infinity);
+    const c = workCardOf(s, "CS-102", { plan })!;
+    expect(slipText(c.slip!)).toBe(
+      "Room to slip: about 2 items before alpha.1 moves",
+    );
+    expect([c.slip!.finish, c.slip!.latest, c.slip!.at]).toEqual([1, 3, 3]);
+    // A milestone is as tight as its tightest item.
+    expect(workCardOf(s, "CS-600", { plan })!.slip!.sets).toBe(true);
+    // In tokens once items carry estimates.
+    const t = planOf(
+      {
+        ...s,
+        items: s.items.map((it) =>
+          it.release
+            ? it
+            : { ...it, estimate_tokens: it.id === "CS-102" ? 20_000 : 40_000 },
+        ),
+      },
+      { slots: 2 },
+    );
+    expect(t.unit).toBe("tokens");
+    // CS-102 goes first, being smaller; CS-100 finishes at 40k and
+    // CS-101, which needs it, starts at 60k.
+    const ct = workCardOf(s, "CS-100", { plan: t })!;
+    expect(slipText(ct.slip!)).toBe(
+      "Room to slip: about 20k tokens before alpha.1 moves",
+    );
+  });
+
+  it("never says critical path, and gives no time", () => {
+    for (const slots of [1, 2, 3]) {
+      const plan = planOf(s, { slots });
+      for (const id of ["CS-100", "CS-101", "CS-102", "CS-110", "CS-600"]) {
+        const c = workCardOf(s, id, { plan })!;
+        const text = c.slip ? slipText(c.slip) : "";
+        expect(text).not.toMatch(/critical path|day|week|hour/i);
+      }
+    }
+  });
+
+  it("names open blockers only, the owner's first, even up the chain", () => {
+    // CS-111 waits on CS-110 and the owner's CS-140.
+    expect(cardBlockersOf(s, ["CS-111"]).map((b) => [b.id, b.owner])).toEqual([
+      ["CS-140", true],
+      ["CS-110", false],
+    ]);
+    // CS-112 waits on CS-111 only, but CS-140 is up its chain.
+    const up: WorkSnapshot = {
+      ...s,
+      items: [...s.items, item("CS-112", needs("CS-111"))],
+    };
+    expect(cardBlockersOf(up, ["CS-112"]).map((b) => b.id)).toEqual([
+      "CS-140",
+      "CS-111",
+    ]);
+    // Done needs aren't blockers; a ready item has none.
+    const done: WorkSnapshot = {
+      ...s,
+      items: [
+        ...s.items,
+        item("CS-113", { needs: ["CS-150"], open_needs: [] }),
+      ],
+    };
+    expect(cardBlockersOf(done, ["CS-113"])).toEqual([]);
+    // In a set, what lies outside it comes before what it waits on of
+    // its own: CS-110 is CS-610's own item.
+    const c = workCardOf(s, "CS-610", { plan: planOf(s) })!;
+    expect(c.blockers.map((b) => b.id)).toEqual(["CS-140", "CS-110"]);
+    const x = cardBlockersOf(
+      { ...s, items: [...s.items, item("CS-114", needs("CS-120"))] },
+      ["CS-111", "CS-114", "CS-110"],
+    );
+    expect(x.map((b) => b.id)).toEqual(["CS-140", "CS-120", "CS-110"]);
+    expect(c.stage).toBe("Ready");
+  });
+
+  it("orders other blockers decisions, then outside waits, then work", () => {
+    const x: WorkSnapshot = {
+      ...s,
+      items: [
+        ...s.items,
+        item("CS-160"),
+        item("CS-161", { kind: "external", waiting_on: "a vendor" }),
+        item("CS-162", { kind: "decision", decider: "the team" }),
+        item("CS-163", needs("CS-160", "CS-161", "CS-162", "CS-140")),
+      ],
+    };
+    expect(cardBlockersOf(x, ["CS-163"]).map((b) => b.id)).toEqual([
+      "CS-140",
+      "CS-162",
+      "CS-161",
+      "CS-160",
+    ]);
+  });
+
+  it("hides what isn't known instead of spelling it out", () => {
+    // No plan: no slip line and no note.
+    const bare = workCardOf(s, "CS-102")!;
+    expect([bare.slip, bare.note]).toEqual([undefined, undefined]);
+    // Done work has no room to measure, so neither line shows.
+    const done = workCardOf(s, "CS-150", { plan: planOf(s) })!;
+    expect([done.stage, done.slip, done.note]).toEqual([
+      "Done",
+      undefined,
+      undefined,
+    ]);
+    // Counted in items: one muted note, no token line.
+    expect(workCardOf(s, "CS-102", { plan: planOf(s) })!.note).toBe(
+      "No item has a token estimate yet, so room is counted in items.",
+    );
+    // Work no release needs has no release to slip against.
+    const free = workCardOf(s, "CS-130", { plan: planOf(s) })!;
+    expect([free.release, free.slip, free.note]).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ]);
+    // Every item sized: nothing to say.
+    const sized = planOf({
+      ...s,
+      items: s.items.map((it) => ({ ...it, estimate_tokens: 1000 })),
+    });
+    expect(workCardOf(s, "CS-102", { plan: sized })!.note).toBeUndefined();
+  });
+
+  it("counts a set's stages and labels each color in words", () => {
+    const c = workCardOf(s, "CS-600", { plan: planOf(s) })!;
+    expect(c.counts).toMatchObject({ Done: 1, Ready: 2, Waiting: 1 });
+    expect(stageWords(c.counts!).map((w) => w.text)).toEqual([
+      "1 done",
+      "2 ready",
+      "1 blocked",
+    ]);
+    // An item has its chip, not a bar.
+    expect(workCardOf(s, "CS-101")!.counts).toBeUndefined();
+    expect(workCardOf(s, "CS-101")!.stage).toBe("Waiting");
+    // A Projects cell: the project's items one release needs.
+    const cell = workCardOf(s, "CS-2", {
+      items: ["CS-110", "CS-111"],
+      release: "CS-502",
+    })!;
+    expect([cell.kind, cell.release?.version, cell.counts?.Waiting]).toEqual([
+      "project",
+      "2.0.0-beta.1",
+      1,
+    ]);
+  });
+
+  it("labels each progress-bar segment, the blocked with what they wait on", () => {
+    const ids = ["CS-100", "CS-101", "CS-111", "CS-150"];
+    expect(segmentLabel(s, "Waiting", ids)).toBe(
+      "2 blocked: waiting on CS-100, CS-110 and 2 more",
+    );
+    expect(segmentLabel(s, "Waiting", ["CS-111"])).toBe(
+      "1 blocked: waiting on CS-110 and CS-140",
+    );
+    expect(segmentLabel(s, "Ready", ids)).toBe("1 ready");
+    expect(segmentLabel(s, "Done", ids)).toBe("1 done");
   });
 });
 

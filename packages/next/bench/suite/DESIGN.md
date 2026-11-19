@@ -586,13 +586,67 @@ the third toggle after Plan and Dependencies; the model is
   only ink on a glyph or name, stage color only a fill (CS-573); a
   dashed outline is proposed (CS-563): a proposed release's head, and a
   cell all in proposed milestones. Labels sit on the marks; the details
-  are in the cell's detail and simple tips until the shared hover card
-  (CS-696).
+  are in the cell's detail and in the shared hover card (CS-696).
 - **Narrow.** Below 560 px the table becomes a card per project: its
   name, Holds up, each release it has work for, the releases that need
   nothing from it on one line, and its decisions; a toggle sorts. The
   matrix scrolls inside its box. Nothing animates, so reduced motion
   changes nothing.
+
+### The hover card (CS-696)
+
+The Work page's one hover card, in place of the old map's seven plain
+lines of equal weight (the owner, 2026-11-18: hard to read, and the
+progress bars' colors unexplained). `HoverCard.tsx` beside `Work.tsx`;
+its content comes from `workCardOf` in `work.ts`.
+
+- **Where.** The same card on every mark that stands for work: a Plan
+  row's name and bar and each release marker, a Dependencies node and
+  waves chip, a Projects cell, project and release head, and every row
+  of the lists (Your move, the pane's trees, the chains, the tables). It
+  opens on hover after a short pause and on keyboard focus, beside its
+  mark and never over it: below by default, flipped or shifted along the
+  mark's edge near the screen's, never across it. Escape closes it. The
+  shell (`HoverCard`) takes any content, so the Flow chart's hover
+  (CS-698) mounts it with its own.
+- **What and how far.** The kind's glyph and the title; the ID, one
+  state chip (Ready, Blocked, In progress, Proposed or Done) and the
+  release it belongs to (its band in the Plan view, else the first
+  release it gates). A set of items (a milestone, a release, a project,
+  a cell) adds a small bar like its mark and the words under it, each
+  beside its color: "2 done · 1 ready · 2 blocked". A lone item has its
+  chip, not a bar.
+- **Held up by.** Only open blockers: the open needs of its blocked
+  items, and every open decision of the owner's up their chains. The
+  owner's come first, set apart in amber under "Needs your answer";
+  then what lies outside the set before its own items; decisions, then
+  outside waits, then work. Two by name, then "+N more".
+- **Slip.** One plain line against its release, read off the Plan
+  view's own sequence and units, with the page's slots
+  (`planSlackOf`): a backward pass over what follows each item, the
+  items that need it and the next item in its slot. "Sets beta.1's
+  finish: any delay moves beta.1", or "Room to slip: about 12 items
+  before beta.1 moves" (tokens once items carry estimates). A set is as
+  tight as its tightest item. A small bar shows the slack hatched
+  against the release's pole. It says "about": once something slips,
+  the planner refills a slot another way. No time and no "critical
+  path".
+- **Unknowns hidden.** No line says only that something is unknown. No
+  token or budget line: while across is item count, one muted note says
+  so; without a release to measure against, the slip section goes.
+- **Next step.** A muted footer: "Click for details · D for
+  dependencies". D opens the Dependencies view on it (in that view, it
+  centers there); a project or a cell has no D.
+- **Progress bars.** Every progress bar's segments name themselves on
+  hover, "2 blocked: waiting on CS-22 and CS-23", in CS-573's stage
+  colors. In the pane each segment is also a stop for the keyboard; in
+  a Projects cell, a button, the cell's card labels the colors instead.
+  A Plan bar's segments, one per item, name the item and its state.
+- **Size and motion.** About 320 px wide, never wider than the screen
+  less 16 px; short section labels; body text at full contrast, muted
+  only for the note and the footer. Below 480 px the slack's bar and the
+  note go, so the card fits beside a mark mid-screen. The card fades in;
+  under reduced motion it appears at once.
 
 ## Page anatomy
 

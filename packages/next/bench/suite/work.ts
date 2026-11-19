@@ -3756,3 +3756,438 @@ export function planOf(
     defaultSize,
   };
 }
+
+// ------------------------------------------------------------ the hover card (CS-696)
+
+const slackCache = new WeakMap<Plan, Map<string, Map<string, number>>>();
+
+/**
+ * How far each sequenced item's finish can slip before a release's
+ * finish moves, in the plan's unit, read off the Plan view's own
+ * sequence: a backward pass over what follows each item, the items that
+ * need it and the next item in its slot. Infinity where its delay can't
+ * reach the release. An approximation: the planner would refill a slot
+ * another way once something slips, hence "about" in the card's words.
+ */
+export function planSlackOf(
+  plan: Plan,
+  s: WorkSnapshot,
+  release: string,
+): Map<string, number> {
+  let byRelease = slackCache.get(plan);
+  if (!byRelease) {
+    byRelease = new Map();
+    slackCache.set(plan, byRelease);
+  }
+  const cached = byRelease.get(release);
+  if (cached) {
+    return cached;
+  }
+  const out = new Map<string, number>();
+  byRelease.set(release, out);
+  const r = plan.releases.find((x) => x.id === release);
+  if (!r || r.at === undefined) {
+    return out;
+  }
+  const needed = new Set(r.needed);
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const after = new Map<string, string[]>();
+  const add = (from: string, to: string) =>
+    after.set(from, [...(after.get(from) ?? []), to]);
+  for (const id of plan.items.keys()) {
+    for (const nd of itemOf.get(id)?.needs ?? []) {
+      if (nd !== id && plan.items.has(nd)) {
+        add(nd, id);
+      }
+    }
+  }
+  const bySlot = new Map<number, string[]>();
+  for (const id of plan.order) {
+    const k = plan.items.get(id)!.slot;
+    bySlot.set(k, [...(bySlot.get(k) ?? []), id]);
+  }
+  for (const ids of bySlot.values()) {
+    ids.forEach((id, k) => k > 0 && add(ids[k - 1]!, id));
+  }
+  // Latest finish, from the last start back.
+  const latest = new Map<string, number>();
+  const back = [...plan.order].sort(
+    (a, b) =>
+      plan.items.get(b)!.start - plan.items.get(a)!.start ||
+      plan.items.get(b)!.rank - plan.items.get(a)!.rank,
+  );
+  for (const id of back) {
+    let lf = needed.has(id) ? r.at : Infinity;
+    for (const j of after.get(id) ?? []) {
+      const lj = latest.get(j);
+      if (lj !== undefined) {
+        lf = Math.min(lf, lj - plan.items.get(j)!.size);
+      }
+    }
+    latest.set(id, lf);
+    out.set(id, Math.max(0, lf - plan.items.get(id)!.finish));
+  }
+  return out;
+}
+
+/** A blocker the card names: open, and the owner's decisions set apart. */
+export interface CardBlocker {
+  id: string;
+  title: string;
+  kind: EntityKind;
+  /** An open decision of the owner's, anywhere up the chain. */
+  owner: boolean;
+}
+
+/** How a mark stands against its release in the Plan view's sequence. */
+export interface CardSlip {
+  /** The release item, and its version. */
+  release: string;
+  version: string;
+  /** No room: any delay moves the release. */
+  sets: boolean;
+  /** The room, in the plan's unit. */
+  room: number;
+  unit: Plan["unit"];
+  /** For the small bar: where its tightest item finishes, the latest it may, and the release's finish. */
+  finish: number;
+  latest: number;
+  at: number;
+}
+
+/** What the shared hover card says about one mark (CS-696). */
+export interface WorkCard {
+  id: string;
+  kind: EntityKind;
+  title: string;
+  /** Its stage, one chip; undefined once dropped. */
+  stage?: Stage;
+  /** The release it belongs to. */
+  release?: { id: string; version: string };
+  /** For a set of items: how many are at each stage. */
+  counts?: Record<Stage, number>;
+  /** Open blockers, the owner's decisions first. */
+  blockers: CardBlocker[];
+  slip?: CardSlip;
+  /** One muted line for what isn't known, in place of lines that would only say so. */
+  note?: string;
+}
+
+/** How many blockers the card names before "+N more". */
+export const CARD_BLOCKERS = 2;
+
+const emptyCounts = (): Record<Stage, number> =>
+  Object.fromEntries(STAGES.map((st) => [st, 0])) as Record<Stage, number>;
+
+/** A set's one stage: done when all are, else the furthest along anything open is. */
+export function setStageOf(
+  counts: Record<Stage, number>,
+  proposed = false,
+): Stage | undefined {
+  const total = STAGES.reduce((n, st) => n + counts[st], 0);
+  if (!total) {
+    return proposed ? "Proposed" : undefined;
+  }
+  if (counts.Done === total) {
+    return "Done";
+  }
+  if (proposed) {
+    return "Proposed";
+  }
+  return (["In flight", "Ready", "Waiting", "Proposed"] as const).find(
+    (st) => counts[st] > 0,
+  );
+}
+
+/** "2.0.0-beta.1" → "beta.1": a prerelease by its tag. */
+export const shortVersion = (v: string) => v.replace(/^\d+\.\d+\.\d+-/, "");
+
+/** An amount in the plan's unit: "12 items", "40k tokens". */
+export function planAmountText(unit: Plan["unit"], v: number): string {
+  if (unit === "items") {
+    const n = Math.round(v);
+    return `${n} ${n === 1 ? "item" : "items"}`;
+  }
+  const t =
+    v >= 1e6
+      ? `${(v / 1e6).toFixed(v >= 1e7 ? 0 : 1)}M`
+      : v >= 1e3
+        ? `${Math.round(v / 1e3)}k`
+        : `${Math.round(v)}`;
+  return `${t} tokens`;
+}
+
+/** The card's slip line. Never "critical path", never a time. */
+export function slipText(slip: CardSlip): string {
+  const v = shortVersion(slip.version);
+  return slip.sets
+    ? `Sets ${v}'s finish: any delay moves ${v}`
+    : `Room to slip: about ${planAmountText(slip.unit, slip.room)} before ${v} moves`;
+}
+
+/** The words under a progress bar, each beside its color: "3 done · 2 ready". */
+export function stageWords(
+  counts: Record<Stage, number>,
+): Array<{ st: Stage; text: string }> {
+  return (["Done", "In flight", "Ready", "Waiting", "Proposed"] as const)
+    .filter((st) => counts[st] > 0)
+    .map((st) => ({
+      st,
+      text: `${counts[st]} ${STAGE_NAMES[st].toLowerCase()}`,
+    }));
+}
+
+/**
+ * Open blockers of a set of items: the open needs of its blocked items,
+ * and every open decision of the owner's up their chains. The owner's
+ * come first, by number; then what lies outside the set before what the
+ * set waits on of its own; each of those decisions others answer, then
+ * outside waits, then work, by number.
+ */
+export function cardBlockersOf(
+  s: WorkSnapshot,
+  members: readonly string[],
+  flight?: InFlight,
+): CardBlocker[] {
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const msOf = new Map(s.milestones.map((m) => [m.id, m]));
+  const inSet = new Set(members);
+  const direct = new Set<string>();
+  for (const id of members) {
+    const it = itemOf.get(id);
+    if (it && stageOf(it, flight) === "Waiting") {
+      for (const nd of it.open_needs) {
+        direct.add(nd);
+      }
+    }
+  }
+  // The owner's decisions anywhere up the blocked items' chains.
+  const owner = new Set<string>();
+  const seen = new Set<string>();
+  const stack = [...direct];
+  while (stack.length) {
+    const id = stack.pop()!;
+    if (seen.has(id)) {
+      continue;
+    }
+    seen.add(id);
+    const it = itemOf.get(id);
+    if (!it) {
+      continue;
+    }
+    if (isOwnerDecision(it)) {
+      owner.add(id);
+    }
+    if (isOpen(it)) {
+      stack.push(...it.open_needs);
+    }
+  }
+  const kindRank = (k: EntityKind) =>
+    k === "decision" ? 0 : k === "external" ? 1 : 2;
+  const blocker = (id: string): CardBlocker => {
+    const it = itemOf.get(id);
+    const m = msOf.get(id);
+    return {
+      id,
+      title: it?.title ?? m?.title ?? id,
+      kind: it ? itemKindOf(it) : m ? "milestone" : "work",
+      owner: owner.has(id),
+    };
+  };
+  const others = [...direct]
+    .filter((id) => !owner.has(id))
+    .map(blocker)
+    .sort(
+      (a, b) =>
+        Number(inSet.has(a.id)) - Number(inSet.has(b.id)) ||
+        kindRank(a.kind) - kindRank(b.kind) ||
+        idNumber(a.id) - idNumber(b.id),
+    );
+  return [
+    ...[...owner].sort((a, b) => idNumber(a) - idNumber(b)).map(blocker),
+    ...others,
+  ];
+}
+
+/**
+ * The label of one progress-bar segment: its count and stage in words,
+ * and for the blocked, what they wait on ("2 blocked: waiting on CS-118
+ * and CS-55").
+ */
+export function segmentLabel(
+  s: WorkSnapshot,
+  st: Stage,
+  members: readonly string[],
+  flight?: InFlight,
+): string {
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const here = members.filter((id) => {
+    const it = itemOf.get(id);
+    return it && stageOf(it, flight) === st;
+  });
+  const head = `${here.length} ${STAGE_NAMES[st].toLowerCase()}`;
+  if (st !== "Waiting") {
+    return head;
+  }
+  const waits = [
+    ...new Set(here.flatMap((id) => itemOf.get(id)!.open_needs)),
+  ].sort((a, b) => idNumber(a) - idNumber(b));
+  if (!waits.length) {
+    return head;
+  }
+  const named = waits.slice(0, CARD_BLOCKERS);
+  const more = waits.length - named.length;
+  const list =
+    more > 0
+      ? `${named.join(", ")} and ${more} more`
+      : named.length === 2
+        ? `${named[0]} and ${named[1]}`
+        : named[0]!;
+  return `${head}: waiting on ${list}`;
+}
+
+/**
+ * The hover card for any mark on the Work page (CS-696): a work item, a
+ * milestone, a release, a project, or a set of items given outright (a
+ * Projects cell). The plan is the Plan view's, so the slip line measures
+ * against the same sequence and units the Plan view draws.
+ */
+export function workCardOf(
+  s: WorkSnapshot,
+  id: string,
+  {
+    flight,
+    plan,
+    items,
+    release,
+    title: named,
+  }: {
+    flight?: InFlight;
+    plan?: Plan;
+    /** Its name, for a set given outright that the tracker has no entity for. */
+    title?: string;
+    /** The set the mark stands for, when not the entity's own (a Projects cell). */
+    items?: readonly string[];
+    /** The release it is measured against, when the mark says (a Projects column). */
+    release?: string;
+  } = {},
+): WorkCard | undefined {
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const it = itemOf.get(id);
+  const m = s.milestones.find((x) => x.id === id);
+  const p = s.projects.find((x) => x.id === id);
+  if (!it && !m && !p && !items) {
+    return undefined;
+  }
+  const kind: EntityKind = it ? itemKindOf(it) : m ? "milestone" : "project";
+  const title = named ?? (it ?? m ?? p)?.title ?? id;
+  const isItem = !!it && kind !== "release" && !items;
+  const workOf = (ids: Iterable<string>) =>
+    [...ids].filter((x) => {
+      const w = itemOf.get(x);
+      return !!w && !isReleaseItem(w);
+    });
+  const members: string[] = items
+    ? [...items]
+    : isItem
+      ? [id]
+      : m
+        ? workOf(m.constraints.map((c) => c.id))
+        : kind === "release"
+          ? workOf(
+              it!.needs.flatMap((nd) => {
+                const mm = s.milestones.find((x) => x.id === nd);
+                return mm ? mm.constraints.map((c) => c.id) : [nd];
+              }),
+            )
+          : workOf(s.items.filter((x) => x.project === id).map((x) => x.id));
+  const counts = emptyCounts();
+  for (const x of members) {
+    const st = stageOf(itemOf.get(x)!, flight);
+    if (st) {
+      counts[st]++;
+    }
+  }
+  const stage = isItem
+    ? stageOf(it!, flight)
+    : setStageOf(counts, m?.state === "proposed" || it?.state === "proposed");
+
+  // The release it belongs to: the mark's, its band in the plan, or the first it gates.
+  const bandName = (k: number | undefined) => {
+    const b = k === undefined ? undefined : plan?.bands[k];
+    return b && b.id !== NO_RELEASE ? { id: b.id, version: b.name } : undefined;
+  };
+  const versionOf = (rid: string) => {
+    const r = itemOf.get(rid);
+    return r ? { id: rid, version: r.release ?? r.title } : undefined;
+  };
+  const rel =
+    kind === "release"
+      ? undefined
+      : release
+        ? release === NO_RELEASE
+          ? undefined
+          : versionOf(release)
+        : (bandName(
+            isItem
+              ? plan?.items.get(id)?.band
+              : m
+                ? plan?.milestones.get(id)?.band
+                : undefined,
+          ) ??
+          (kind === "project"
+            ? undefined
+            : (() => {
+                const g = releasesGatedBy(s, id)[0];
+                return g && versionOf(g.id);
+              })()));
+
+  // Room to slip, against that release, from the set's tightest item.
+  let slip: CardSlip | undefined;
+  let tight: string | undefined;
+  const pr = rel && plan?.releases.find((r) => r.id === rel.id);
+  if (plan && pr && pr.at !== undefined) {
+    const slack = planSlackOf(plan, s, pr.id);
+    for (const x of members) {
+      const v = slack.get(x);
+      if (v !== undefined && Number.isFinite(v)) {
+        if (tight === undefined || v < slack.get(tight)!) {
+          tight = x;
+        }
+      }
+    }
+    if (tight) {
+      const room = slack.get(tight)!;
+      const fin = plan.items.get(tight)!.finish;
+      slip = {
+        release: pr.id,
+        version: pr.version,
+        sets: room <= 1e-9,
+        room,
+        unit: plan.unit,
+        finish: fin,
+        latest: fin + room,
+        at: pr.at,
+      };
+    }
+  }
+  const note = !slip
+    ? undefined
+    : plan!.unit === "items"
+      ? "No item has a token estimate yet, so room is counted in items."
+      : !plan!.items.get(tight!)!.sized
+        ? "No token estimate for its tightest item: sized at the median of the rest."
+        : undefined;
+
+  return {
+    id,
+    kind,
+    title,
+    stage,
+    release: rel,
+    counts: isItem ? undefined : counts,
+    blockers: cardBlockersOf(s, members, flight),
+    slip,
+    note,
+  };
+}

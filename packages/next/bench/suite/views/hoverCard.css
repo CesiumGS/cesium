@@ -1,0 +1,260 @@
+/*
+ * The Work page's one hover card (CS-696; HoverCard.tsx and DESIGN.md,
+ * "The hover card"). It renders in a portal, so it carries the page's
+ * theme classes itself (`viz` and the scheme) for the stage fills and
+ * kind inks. About 320 px wide, never wider than the screen less its
+ * gutters; short section labels, body text at full contrast, muted text
+ * only for the note and the footer.
+ */
+.hover-card-popper .MuiTooltip-tooltip.hover-card-shell {
+  box-sizing: border-box;
+  width: 320px;
+  max-width: calc(100vw - 16px);
+  margin: 0 !important;
+  padding: 0;
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-elevation-level-1);
+  color: var(--stratakit-color-text-neutral-primary);
+  box-shadow:
+    0 2px 4px rgb(0 0 0 / 0.12),
+    0 8px 24px rgb(0 0 0 / 0.18);
+  font-family: var(--stratakit-font-family-sans);
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 400;
+  line-height: 1.35;
+}
+.hover-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+}
+.hover-card p {
+  margin: 0;
+}
+
+/* What and how far: the glyph, the title, then the ID, one chip, the release. */
+.hover-card-head {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stratakit-space-200);
+}
+.hover-card-head .work-kind-mark {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+}
+.hover-card-title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  font-size: var(--stratakit-font-size-body-md);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.hover-card-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-150) var(--stratakit-space-300);
+}
+.hover-card-kind {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.hover-card-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  height: 20px;
+  padding: 0 var(--stratakit-space-200);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 10px;
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.hover-card-release {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+  white-space: nowrap;
+}
+
+/* Each section under a short label. */
+.hover-card-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  padding-top: var(--stratakit-space-200);
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.hover-card-section h4 {
+  margin: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.hover-card-bar {
+  height: 8px;
+}
+.hover-card-words {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-100) var(--stratakit-space-300);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hover-card-words li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+}
+.hover-card-words li + li::before {
+  content: "·";
+  margin-right: var(--stratakit-space-150);
+  color: var(--stratakit-color-text-neutral-tertiary);
+}
+
+/* What's holding it up: the owner's first, set apart in amber. */
+.hover-card-blockers {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hover-card-blockers li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.hover-card-blockers li.owner {
+  padding: var(--stratakit-space-150) var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-attention-muted);
+  box-shadow: inset 3px 0 0 var(--stratakit-color-border-attention-base);
+}
+.hover-card-blockers li.owner + li:not(.owner) {
+  margin-top: var(--stratakit-space-100);
+}
+.hover-card-lead {
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 600;
+}
+.hover-card-blocker {
+  display: flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+}
+.hover-card-blocker .work-id {
+  flex: none;
+}
+.hover-card-blocker-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hover-card-more {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+
+/* Room to slip: the words, then the slack against the release's pole. */
+.hover-slip {
+  position: relative;
+  display: block;
+  height: 8px;
+  margin: 2px 0 14px;
+  border-radius: 3px;
+  background: var(--stratakit-color-bg-neutral-base);
+}
+.hover-slip-done {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 3px 0 0 3px;
+  background: var(--stratakit-color-text-neutral-tertiary);
+}
+.hover-slip-room {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--stratakit-color-text-neutral-secondary) 0 2px,
+    transparent 2px 5px
+  );
+}
+.hover-slip-pole {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--kind-release);
+}
+.hover-slip-name {
+  position: absolute;
+  top: 12px;
+  color: var(--kind-release);
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 600;
+  white-space: nowrap;
+  transform: translateX(-50%);
+}
+.hover-slip-name.end {
+  transform: translateX(-100%);
+}
+
+.hover-card-note,
+.hover-card-foot {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.hover-card-foot {
+  padding-top: var(--stratakit-space-200);
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+
+/*
+ * On a phone a card beside a mark mid-screen has less than its height on
+ * either side: the slack's bar and the note go, the sentence stays.
+ */
+@media (max-width: 480px) {
+  .hover-slip,
+  .hover-card-note {
+    display: none;
+  }
+  .hover-card-blocker-title {
+    font-size: var(--stratakit-font-size-caption-lg);
+  }
+}
+
+/* A bar segment's own label: one short line. */
+.MuiTooltip-tooltip.hover-seg-tip {
+  max-width: 280px;
+  padding: 3px var(--stratakit-space-200);
+  border-radius: var(--stratakit-radius-sm);
+  background: var(--stratakit-color-bg-elevation-emphasis);
+  color: var(--stratakit-color-text-neutral-emphasis);
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 400;
+  line-height: 1.3;
+}
+/* Segments that take focus show where it is. */
+.work-roadmap-seg[tabindex]:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
