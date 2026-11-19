@@ -242,7 +242,7 @@ graph LR
     CS_563["CS-563 Dyno's roadmap shows proposed milestones with dashed outlines"]:::open
     CS_564["CS-564 How CS-545's branch reaches main without a hitld dispatch"]:::done
     CS_565["CS-565 Fast-forward main to CS-545's checked branch"]:::done
-    CS_573["CS-573 Dyno's Work page shows each kind of entity the same way everywh"]:::open
+    CS_573["CS-573 Dyno's Work page shows each kind of entity the same way everywh"]:::done
     CS_677["CS-677 Release notes and a security review for 2.0.0"]:::open
     CS_679["CS-679 Stale records: the API map's Entity and labels rows, costs.tsx'"]:::open
     CS_680["CS-680 Triage the open items that fit no release"]:::open
@@ -252,6 +252,7 @@ graph LR
     CS_686["CS-686 How should we use proposals until hitld does it for us, and wha"]:::done
     CS_688["CS-688 Dyno's Proposals tab follows the proposal flow: to discuss, bei"]:::open
     CS_689["CS-689 Merge run 2026-11-18-2's green batches overnight"]:::done
+    CS_690["CS-690 Merge the rest of run 2026-11-18-2's green batches as they pass"]:::done
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external

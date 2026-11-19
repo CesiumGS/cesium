@@ -415,7 +415,7 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 22 of 36 done, 8 ready, 6 blocked. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 24 of 37 done, 7 ready, 6 blocked. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
@@ -437,7 +437,7 @@ Milestone: Dyno's Work page shows the live system and the release plan ([CS-561]
 - [ ] [CS-547](./items/CS-547-your-move-s-in-progress-shows-the-live-run.md) Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Needs nothing.
 - [ ] [CS-562](./items/CS-562-dyno-s-work-page-lists-the-items-in-no.md) Dyno's Work page lists the items in no milestone, filterable by kind and state. Needs nothing.
 - [ ] [CS-563](./items/CS-563-dyno-s-roadmap-shows-proposed-milestones-with.md) Dyno's roadmap shows proposed milestones with dashed outlines. Needs nothing.
-- [ ] [CS-573](./items/CS-573-dyno-s-work-page-shows-each-kind-of-entity-the.md) Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at. Needs nothing.
+- [x] [CS-573](./items/CS-573-dyno-s-work-page-shows-each-kind-of-entity-the.md) Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at. Done.
 - [ ] [CS-683](./items/CS-683-dyno-s-roadmap-zooms-like-figma-shows-its.md) Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question. Needs CS-563.
 - [x] [CS-684](./items/CS-684-dyno-s-work-page-drops-the-retired-long.md) Dyno's Work page drops the retired long outcomes: no Long outcomes view, and dropped milestones out of every grouping. Done.
 - [ ] [CS-685](./items/CS-685-dyno-s-release-flags-tell-the-milestones-a.md) Dyno's release flags list only the milestones a release needs, and flag items that cross a release. Needs CS-683.
@@ -467,6 +467,7 @@ No milestone
 - [x] [CS-565](./items/CS-565-fast-forward-main-to-cs-545-s-checked-branch.md) decision: Fast-forward main to CS-545's checked branch. Done.
 - [x] [CS-686](./items/CS-686-how-should-we-use-proposals-until-hitld-does-it.md) decision: How should we use proposals until hitld does it for us, and what should the Proposals tab show?. Done.
 - [x] [CS-689](./items/CS-689-merge-run-2026-11-18-2-s-green-batches-overnight.md) decision: Merge run 2026-11-18-2's green batches overnight. Done.
+- [x] [CS-690](./items/CS-690-merge-the-rest-of-run-2026-11-18-2-s-green.md) decision: Merge the rest of run 2026-11-18-2's green batches as they pass. Done.
 
 ### Follow-ups for other teams
 

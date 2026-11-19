@@ -29,6 +29,7 @@ CS-18 The work tracker
   CS-522  hitld's commands replace scripts/work
   CS-523  Dyno's board reads human-in-the-lead's read API
   CS-545  Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it
+  CS-573  Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at
   CS-684  Dyno's Work page drops the retired long outcomes: no Long outcomes view, and dropped milestones out of every grouping
 
 CS-188 Earth to Moon (frames 5c to 5h)
@@ -41,5 +42,5 @@ CS-389 Dyno as the development harness
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
 
-20 merged item(s) not in a release
+21 merged item(s) not in a release
 ```
