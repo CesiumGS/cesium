@@ -166,6 +166,9 @@ Object.defineProperties(ModelPrimitive.prototype, {
         this._geometryWriter = ModelPrimitiveAccessSession.createGeometryWriter(
           this._runtimePrimitive.primitive,
           this.geometryReader,
+          // Rebuilds what's derived from the geometry, e.g. bounding volumes.
+          // If a use-case arises for frequent writes (e.g. per frame), consider optimizing to update only what changed.
+          () => this._model.resetDrawCommands(),
         );
       }
 

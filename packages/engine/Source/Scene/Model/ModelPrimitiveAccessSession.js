@@ -72,6 +72,8 @@ class ModelPrimitiveAccessSession {
   /** @type {GeometryPrimitiveReader | undefined} */
   #primitiveReader;
   #writable;
+  /** @type {function(): void} */
+  #onCommit;
   /** @type {Set<RequestedAttribute>} */
   #writtenAttributes = new Set();
   #destroyed = false;
@@ -97,13 +99,14 @@ class ModelPrimitiveAccessSession {
    *
    * @param {Primitive} primitive The primitive to write.
    * @param {GeometryReader} reader The primitive's reader.
+   * @param {function(): void} onCommit Called after a session's writes are applied.
    * @returns {GeometryWriter} The writer.
    */
-  static createGeometryWriter(primitive, reader) {
+  static createGeometryWriter(primitive, reader, onCommit) {
     return new GeometryWriter({
       reader,
       createWriteSession: (options) =>
-        new ModelPrimitiveAccessSession(primitive, options, true),
+        new ModelPrimitiveAccessSession(primitive, options, true, onCommit),
     });
   }
 
@@ -111,9 +114,11 @@ class ModelPrimitiveAccessSession {
    * @param {Primitive} primitive The primitive whose geometry is being accessed.
    * @param {Required<GeometryAccessOptions>} options The data to stage. All requested attributes must be available.
    * @param {boolean} [writable=false] Whether the session writes. Writable sessions stage copies of the attributes, so writes can be uploaded on commit.
+   * @param {function(): void} [onCommit] Called after the session's writes are applied.
    */
-  constructor(primitive, options, writable = false) {
+  constructor(primitive, options, writable = false, onCommit = () => {}) {
     this.#writable = writable;
+    this.#onCommit = onCommit;
     const attributes = primitive.attributes;
     const descriptors = attributes.map((attribute) =>
       ModelPrimitiveAccessSession.#getDescriptor(attribute),
@@ -290,6 +295,18 @@ class ModelPrimitiveAccessSession {
     for (const { attribute, attributeValues } of this.#writtenAttributes) {
       const { bufferBytes, values } = attributeValues;
 
+      // Positions bound the primitive, e.g. for culling.
+      // Note: currently, the min/max values of other attributes are not updated.
+      // The same function could be used for other attributes, but in some cases it's not possible
+      // to determine whether their min/max are in decoded or stored units: glTF stores them in stored
+      // units for normalized attributes, but the loader decodes them for KHR_mesh_quantization.
+      if (attribute.semantic === VertexAttributeSemantic.POSITION) {
+        ModelPrimitiveAccessSession.#updatePositionMinMax(
+          attribute,
+          attributeValues,
+        );
+      }
+
       // When defined, bufferBytes indicates that the attribute has been read back from the GPU.
       // So this check is for attributes that have _not_ been read-back, but rather written to directly via the existing CPU typed arrays.
       // We must update the GPU buffer with the CPU values, and _move_ our the CPU copy we made to the attribute's typed array.
@@ -315,6 +332,8 @@ class ModelPrimitiveAccessSession {
         );
       }
     }
+
+    this.#onCommit();
   }
 
   destroy() {
@@ -564,6 +583,35 @@ class ModelPrimitiveAccessSession {
       stride: byteStride / bytesPerComponent,
       bufferBytes: bytes,
     };
+  }
+
+  /**
+   * Sets a position attribute's min and max to the bounds of its staged
+   * values, decoded.
+   *
+   * @param {Attribute} attribute
+   * @param {AttributeValues} attributeValues
+   * @ignore
+   */
+  static #updatePositionMinMax(attribute, attributeValues) {
+    const read = ModelPrimitiveAccessSession.#createDecodedReader(
+      attribute,
+      attributeValues,
+    );
+    const min = Cartesian3.fromElements(Infinity, Infinity, Infinity);
+    const max = Cartesian3.fromElements(-Infinity, -Infinity, -Infinity);
+    const position = new Cartesian3();
+    const values = new Array(3);
+
+    for (let i = 0; i < attribute.count; ++i) {
+      read(i, values);
+      Cartesian3.fromArray(values, 0, position);
+      Cartesian3.minimumByComponent(min, position, min);
+      Cartesian3.maximumByComponent(max, position, max);
+    }
+
+    attribute.min = min;
+    attribute.max = max;
   }
 
   /**
