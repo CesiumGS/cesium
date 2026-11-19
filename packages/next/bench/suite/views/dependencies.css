@@ -533,3 +533,28 @@
     min-width: 168px;
   }
 }
+
+/* The waves' one key line, with its "?" (CS-694, per the brief). */
+.deps-waves-key {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px var(--stratakit-space-300);
+  margin: var(--stratakit-space-100) 0 var(--stratakit-space-300);
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.deps-key-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  white-space: nowrap;
+}
+.deps-key-dash {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 16px;
+  height: 10px;
+  border: 2px dashed var(--proposed-outline);
+  border-radius: 3px;
+}

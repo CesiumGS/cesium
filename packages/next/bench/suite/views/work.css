@@ -565,7 +565,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* A stacked bar of stages, on one scale (the roadmap's lines, the map's milestones). */
+/* A stacked bar of stages, on one scale. */
 .work-pbar-track {
   display: flex;
   gap: 2px;
@@ -1409,144 +1409,6 @@ a.work-related-item:focus-visible {
 .work-menu-count {
   margin-inline-start: var(--stratakit-space-600);
 }
-
-/* ---------------------------------------------------------------- the roadmap */
-
-.work-roadmap {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-400);
-}
-.work-roadmap-step {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-200);
-  min-width: 0;
-}
-.work-roadmap-step-head {
-  display: flex;
-  align-items: center;
-  gap: var(--stratakit-space-200);
-  margin: 0;
-  padding-bottom: var(--stratakit-space-100);
-  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-.work-roadmap-step-n {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 1px solid var(--stratakit-color-border-neutral-base);
-  font-size: var(--stratakit-font-size-caption-md);
-  font-variant-numeric: tabular-nums;
-}
-.work-roadmap-loop {
-  padding: var(--stratakit-space-200) var(--stratakit-space-300);
-  border: 1px solid var(--stratakit-color-border-attention-base);
-  border-radius: var(--stratakit-radius-md);
-}
-.work-roadmap-loop-head {
-  margin: 0 0 var(--stratakit-space-200);
-}
-.work-roadmap-seg {
-  flex-basis: 0;
-  min-width: 3px;
-  background: var(--stage);
-}
-.work-roadmap-seg:first-child {
-  border-radius: 3px 0 0 3px;
-}
-.work-roadmap-seg:last-child {
-  border-radius: 0 3px 3px 0;
-}
-.work-roadmap-seg:only-child {
-  border-radius: 3px;
-}
-.work-rm-lines {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.work-rm-line {
-  display: grid;
-  grid-template-columns: minmax(140px, 1fr) 120px 40px minmax(0, 1.2fr);
-  align-items: center;
-  column-gap: var(--stratakit-space-300);
-  padding: var(--stratakit-space-150) var(--stratakit-space-200);
-  border-radius: var(--stratakit-radius-md);
-}
-.work-rm-line:hover {
-  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
-}
-.work-rm-line.selected {
-  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
-  box-shadow: inset 3px 0 0 var(--stratakit-color-border-accent-strong);
-}
-/* A proposed milestone's line: outlined dashed in gray, its bar gray. */
-.work-rm-line.proposed {
-  outline: 2px dashed var(--proposed-outline);
-  outline-offset: -2px;
-}
-.work-rm-line + .work-rm-line.proposed,
-.work-rm-line.proposed + .work-rm-line {
-  margin-top: 2px;
-}
-.work-rm-name {
-  all: unset;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: var(--stratakit-space-200);
-  font-size: var(--stratakit-font-size-body-sm);
-  font-weight: 600;
-  cursor: pointer;
-  border-radius: var(--stratakit-radius-sm);
-}
-.work-rm-title {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.work-rm-name:hover .work-rm-title {
-  text-decoration: underline;
-}
-.work-rm-name:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 2px;
-}
-.work-rm-bar {
-  height: 8px;
-}
-.work-rm-count {
-  text-align: end;
-  font-size: var(--stratakit-font-size-caption-lg);
-  font-variant-numeric: tabular-nums;
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-rm-waits {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-@container (max-width: 620px) {
-  .work-rm-line {
-    grid-template-columns: minmax(0, 1fr) 80px 40px;
-  }
-  .work-rm-waits {
-    grid-column: 1 / -1;
-    white-space: normal;
-  }
-}
-.work-rm-waits .MuiLink-root {
-  font-size: inherit;
-}
 .work-legend-key {
   display: inline-flex;
   align-items: center;
@@ -1912,395 +1774,22 @@ button.work-mrow-big:focus-visible {
   z-index: 10;
 }
 
-/* The milestone map. */
+/* A card's tools, at its head. */
 .work-card-tools {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--stratakit-space-300);
 }
-.work-map {
-  position: relative;
-}
-.work-map-lane {
-  position: absolute;
-  box-sizing: border-box;
-  left: 0;
-  right: 0;
-  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-.work-map-lane.odd {
-  background: var(--stratakit-color-bg-control-table-zebra);
-}
-.work-map-lane-name {
-  position: absolute;
-  left: 0;
-  top: 10px;
-  display: flex;
-  align-items: flex-start;
-  gap: var(--stratakit-space-150);
-  font-size: var(--stratakit-font-size-caption-lg);
-  font-weight: 600;
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-map-tick {
-  position: absolute;
-  top: 0;
-  border-inline-start: 1px dashed var(--stratakit-color-border-neutral-muted);
-  pointer-events: none;
-}
-.work-map-tick-label {
-  position: absolute;
-  top: 4px;
-  left: 6px;
-  white-space: nowrap;
-  font-size: var(--stratakit-font-size-caption-md);
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-map-edges {
-  position: absolute;
-  inset: 0;
-  overflow: visible;
-  pointer-events: none;
-}
-.work-map-edge {
-  fill: none;
-  stroke: var(--stratakit-color-text-neutral-secondary);
-  opacity: 0.7;
-  transition: opacity 120ms;
-}
-.work-map-edge.direct {
-  stroke-dasharray: 4 3;
-}
-.work-map-edge.critical {
-  stroke: var(--stratakit-color-border-accent-strong);
-  opacity: 1;
-}
-.work-map-edge.dim {
-  opacity: 0.12;
-}
-.work-map-arrowhead {
-  fill: var(--stratakit-color-text-neutral-secondary);
-}
-.work-map-node {
-  all: unset;
-  box-sizing: border-box;
-  position: absolute;
-  height: 72px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  padding: 4px var(--stratakit-space-300);
-  border-radius: var(--stratakit-radius-md);
-  border: 1px solid var(--stratakit-color-border-neutral-base);
-  background: var(--stratakit-color-bg-page-base);
-  cursor: pointer;
-  transition: opacity 120ms;
-}
-.work-map-node:hover {
-  border-color: var(--stratakit-color-text-neutral-primary);
-}
-.work-map-node:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 2px;
-}
-.work-map-node.critical {
-  border: 2px solid var(--stratakit-color-border-accent-strong);
-}
-/* A loop is a double outline: on the roadmap, dashes mean proposed. */
-.work-map-node.loop {
-  border-style: double;
-  border-width: 3px;
-}
-/* A proposed milestone: hollow, outlined dashed in gray, its bar gray. */
-.work-map-node.proposed {
-  background: transparent;
-  border: 2px dashed var(--proposed-outline);
-}
-.work-map-node.proposed:hover {
-  border-color: var(--stratakit-color-text-neutral-primary);
-}
-.work-map-node.proposed.critical {
-  border-color: var(--stratakit-color-border-accent-strong);
-}
-.work-map-node.selected {
-  box-shadow: 0 0 0 3px var(--stratakit-color-bg-glow-on-surface-accent-pressed);
-}
-.work-map-node.dim {
-  opacity: 0.3;
-}
-.work-map-node-title {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--stratakit-space-150);
-  min-width: 0;
-  font-size: var(--stratakit-font-size-body-sm);
-  font-weight: 600;
-}
-/* Milestones are named by their outcome, so a name takes two lines. */
-.work-map-node-title .work-outline-label {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  white-space: normal;
-  line-height: 1.25;
-}
-.work-map-node.unshaped .work-map-node-title .work-outline-label {
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-}
-/* The names on a card of loose work: a project's items, or what waits on a decision. */
-.work-map-node-names {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-  font-size: var(--stratakit-font-size-caption-md);
-  line-height: 1.3;
-  color: var(--stratakit-color-text-neutral-primary);
-}
-.work-map-node.decision .work-map-node-names {
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-/*
- * An open decision of the owner's in no milestone (CS-683): its question
- * by the fork, outlined in the decision's ink, as its badges are.
- */
-.work-map-node.decision {
-  background: var(--stratakit-color-bg-page-base);
-  border: 1px solid var(--kind-decision);
-}
-.work-map-node.decision:hover {
-  border-color: var(--stratakit-color-text-neutral-primary);
-}
-/*
- * Semantic zoom (CS-683): a card's text is drawn at full size or not at
- * all. "name" keeps its name on one line, "mark" only its glyph and bar.
- */
-.work-map-node {
-  overflow: hidden;
-}
-.work-map-node.d-name,
-.work-map-node.d-mark {
-  gap: 3px;
-  padding: 2px var(--stratakit-space-200);
-}
-.work-map-node.d-name .work-outline-label {
-  -webkit-line-clamp: 1;
-  line-clamp: 1;
-}
-.work-map-node.d-name .work-map-node-meta,
-.work-map-node.d-name .work-map-node-names,
-.work-map-node.d-name .work-hold,
-.work-map-node.d-mark .work-outline-label,
-.work-map-node.d-mark .work-map-node-meta,
-.work-map-node.d-mark .work-map-node-names,
-.work-map-node.d-mark .work-hold,
-.work-map-node.no-bar .work-map-bar,
-.work-map-node.no-bar .work-meter,
-.work-map-node.d-tiny .work-kind-mark {
-  display: none;
-}
-.work-map-node.d-mark {
-  padding: 1px 3px;
-  justify-content: center;
-}
-.work-map-node.d-tiny .work-map-bar {
-  height: 4px;
-}
-.work-map-bar {
-  flex: none;
-  height: 6px;
-}
-.work-map-node-meta {
-  font-size: var(--stratakit-font-size-caption-md);
-  color: var(--stratakit-color-text-neutral-secondary);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.work-map-wait {
-  all: unset;
-  position: absolute;
-  width: 14px;
-  height: 16px;
-  cursor: pointer;
-  border-radius: var(--stratakit-radius-sm);
-}
-.work-map-wait:hover,
-.work-map-wait:focus-visible {
-  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
-  outline: 1px solid var(--stratakit-color-text-neutral-secondary);
-}
-.work-map-tip {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.work-map-tip-list {
-  display: flex;
-  flex-direction: column;
-  padding-inline-start: var(--stratakit-space-300);
-}
-/* The critical path, first in the key: what it is, then why it matters. */
-.work-map-path {
-  display: flex;
-  align-items: baseline;
-  gap: var(--stratakit-space-200);
-  margin: 0 0 var(--stratakit-space-300);
-  line-height: 1.45;
-}
-.work-map-path-key {
-  flex: none;
-  width: 22px;
-  height: 0;
-  border-top: 3px solid var(--stratakit-color-border-accent-strong);
-  transform: translateY(-4px);
-}
-.work-map-path-note {
-  color: var(--stratakit-color-text-neutral-secondary);
-}
 @media (prefers-reduced-motion: reduce) {
-  .work-map-edge,
-  .work-map-node,
-  .work-flag,
-  .work-rm-line {
+  .work-flag {
     transition: none;
   }
 }
-.work-map-lane-name .work-outline-label {
-  white-space: normal;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-/* A lane too thin for its name at this zoom: named on hover. */
-.work-map-lane-name.thin {
-  top: 0;
-  bottom: 0;
-}
-/* Placed by the map, ahead of the tooltip rule's position: relative. */
-.work-map .work-map-wait {
-  position: absolute;
-}
-
-/* The map's column headers (steps) and its corner. */
-.work-map-corner {
-  position: absolute;
-  left: 0;
-  top: 8px;
-  font-size: var(--stratakit-font-size-caption-md);
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-map .work-map-col {
-  position: absolute;
-  top: 2px;
-  height: 38px;
-  display: flex;
-  align-items: center;
-  gap: var(--stratakit-space-200);
-  padding-inline-start: var(--stratakit-space-200);
-  box-sizing: border-box;
-  cursor: default;
-}
-.work-map-col-n {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid var(--stratakit-color-border-neutral-base);
-  font-size: var(--stratakit-font-size-caption-md);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-.work-map-col-text {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  line-height: 1.25;
-}
-.work-map-col-text b {
-  font-size: var(--stratakit-font-size-caption-lg);
-}
-.work-map-col-text span {
-  font-size: var(--stratakit-font-size-caption-md);
-  color: var(--stratakit-color-text-neutral-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.work-map-edge.near {
-  stroke: var(--stratakit-color-text-neutral-primary);
-  opacity: 1;
-}
-.work-map-edge.critical.near {
-  stroke: var(--stratakit-color-border-accent-strong);
-}
-/* A hovered milestone's own waits, with how many items each carries. */
-.work-map-count {
-  position: absolute;
-  transform: translate(-50%, -50%);
-  padding: 1px 6px;
-  border-radius: 9px;
-  background: var(--stratakit-color-bg-elevation-emphasis);
-  color: var(--stratakit-color-text-neutral-emphasis);
-  font-size: var(--stratakit-font-size-caption-md);
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 2;
-}
-.work-map-node-meta {
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* Started milestones are solid, with the in-flight violet down their
-   leading edge; ones not started are hollow. */
-.work-map-node.started {
-  background: var(--stratakit-color-bg-neutral-base);
-  box-shadow: inset 4px 0 0 var(--stage-in-flight);
-}
-.work-map-node.idle {
-  background: transparent;
-  border-color: var(--stratakit-color-border-neutral-muted);
-}
-.work-map-node.idle .work-map-node-title {
-  font-weight: 500;
-}
-.work-map-node.started.selected {
-  box-shadow:
-    inset 4px 0 0 var(--stage-in-flight),
-    0 0 0 3px var(--stratakit-color-bg-glow-on-surface-accent-pressed);
-}
-
-/* Where the map begins: what is already done. */
-.work-map-done {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--stratakit-space-150);
-  margin: 0 0 var(--stratakit-space-300);
-  font-size: var(--stratakit-font-size-caption-lg);
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-map-done-mark {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  background: var(--stage-done);
-}
 
 /*
- * The roadmap's key (CS-683), above the map: the critical path first,
- * then each mark beside its meaning, in groups for cards, bars and waits.
+ * A key's groups (CS-683): each mark beside its meaning, as in the Plan's
+ * "?" popover.
  */
 .work-key {
   margin: 0 0 var(--stratakit-space-400);
@@ -2345,51 +1834,6 @@ button.work-mrow-big:focus-visible {
   align-items: center;
   justify-content: center;
   width: 26px;
-}
-.work-key-mark .work-meter {
-  width: 26px;
-}
-.work-map-key {
-  width: 22px;
-  height: 12px;
-  border-radius: 3px;
-  border: 1px solid var(--stratakit-color-border-neutral-base);
-}
-.work-map-key.started {
-  background: var(--stratakit-color-bg-neutral-base);
-  box-shadow: inset 3px 0 0 var(--stage-in-flight);
-}
-.work-map-key.idle {
-  border-color: var(--stratakit-color-border-neutral-muted);
-}
-.work-map-key.loop {
-  border-style: double;
-  border-width: 3px;
-}
-.work-map-key-line {
-  width: 22px;
-  border-top: 2px solid var(--stratakit-color-text-neutral-secondary);
-}
-.work-map-key-line.direct {
-  border-top-style: dashed;
-}
-.work-map-key-line.critical {
-  border-top: 3px solid var(--stratakit-color-border-accent-strong);
-}
-.work-map-key.unshaped {
-  background: var(--stratakit-color-bg-page-depth);
-  border-color: var(--stratakit-color-border-neutral-muted);
-}
-.work-map-key.decision {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-color: var(--kind-decision);
-  height: 16px;
-}
-.work-map-key.decision .work-kind-mark {
-  width: 11px;
-  height: 11px;
 }
 
 /*
@@ -2436,123 +1880,11 @@ button.work-mrow-big:focus-visible {
   cursor: grabbing;
 }
 
-/* Tokens spent against a budget. */
-.work-meter {
-  position: relative;
-  flex: none;
-  display: block;
-  height: 8px;
-}
-.work-meter-budget {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  border-radius: 3px;
-  background: var(--stratakit-color-bg-page-depth);
-  box-shadow: inset 0 0 0 1px var(--stratakit-color-border-neutral-muted);
-}
-.work-meter-fill {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  border-radius: 3px 0 0 3px;
-  background: var(--stage-in-flight);
-}
-.work-meter-over {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border-radius: 0 3px 3px 0;
-  background: var(--stage-waiting);
-}
-.work-meter-mark {
-  position: absolute;
-  top: -3px;
-  bottom: -3px;
-  width: 2px;
-  margin-left: -1px;
-  background: var(--stratakit-color-text-neutral-primary);
-}
-.work-map-node.over {
-  border-color: var(--stage-waiting);
-}
-.work-map-node-meta.over {
-  color: var(--stratakit-color-text-critical-base, var(--stage-waiting));
-}
-
-/*
- * A project's open items that no milestone holds yet: a gray tray with
- * their names (solid; on the roadmap, dashes mean proposed).
- */
-.work-map-node.unshaped {
-  background: var(--stratakit-color-bg-page-depth);
-  border: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-.work-map-node.unshaped .work-map-node-title {
-  font-weight: 400;
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-map-edge.soft {
-  stroke-dasharray: 2 3;
-  opacity: 0.45;
-}
-.work-map-edge.soft.near {
-  opacity: 1;
-}
-
-/* Releases: gates that need only milestones, and the focus on one. */
-.work-map-focus {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--stratakit-space-300);
-  margin-bottom: var(--stratakit-space-300);
-}
-.work-map-focus .MuiButton-root {
-  gap: var(--stratakit-space-150);
-}
-.work-map-focus svg {
-  width: 14px;
-  height: 14px;
-}
-.work-map-lane.outside {
-  background: var(--stratakit-color-bg-page-depth);
-}
-.work-map-lane.outside .work-map-lane-name {
-  opacity: 0.7;
-}
-.work-map-band {
-  position: absolute;
-  top: -1px;
-  left: 0;
-  right: 0;
-  padding: 2px var(--stratakit-space-200);
-  border-top: 2px dashed var(--stratakit-color-border-neutral-base);
-  font-size: var(--stratakit-font-size-caption-md);
-  font-weight: 600;
-  color: var(--stratakit-color-text-neutral-secondary);
-  transform: translateY(-100%);
-}
-
 /* Waits on other parties: beside the decisions badge, in a neutral tone. */
 .work-count-badge.outside {
   background: var(--stratakit-color-bg-neutral-base);
   color: var(--stratakit-color-text-neutral-secondary);
   box-shadow: inset 0 0 0 1px var(--stratakit-color-border-neutral-base);
-}
-/* What holds a milestone up, each with its kind's mark. */
-.work-count-badge.work-hold {
-  gap: 3px;
-  padding: 0 6px 0 4px;
-  background: var(--stratakit-color-bg-page-base);
-  color: var(--kind);
-  box-shadow: inset 0 0 0 1px var(--kind);
-}
-.work-count-badge.work-hold .work-kind-mark {
-  width: 12px;
-  height: 12px;
 }
 .work-count-badge + .work-count-badge {
   margin-left: 4px;
@@ -3091,18 +2423,6 @@ button.work-mrow-big:focus-visible {
   }
 }
 
-/* Fewest crossings: a rule between groups of linked milestones, and the
-   label over those that stand alone. */
-.work-graph-divider {
-  stroke: var(--stratakit-color-border-neutral-muted);
-  stroke-width: 1;
-  stroke-dasharray: 4 4;
-}
-.work-graph-section {
-  position: absolute;
-  margin: 0;
-}
-
 /*
  * Releases as flags: each on the line after the last milestone it needs,
  * with its pole down the grid; one with no place yet sits apart, dotted.
@@ -3161,10 +2481,6 @@ button.work-mrow-big:focus-visible {
 .work-flag.dim {
   opacity: 0.45;
 }
-.work-map .work-flag.on-grid {
-  position: absolute;
-  z-index: 2;
-}
 /* Near the grid's right edge the flag flies left of its pole. */
 .work-flag.flip {
   flex-direction: row-reverse;
@@ -3172,29 +2488,6 @@ button.work-mrow-big:focus-visible {
   border-inline-start-width: 1px;
   border-inline-end: 2px solid var(--stratakit-color-text-neutral-primary);
   border-radius: var(--stratakit-radius-md) 0 0 var(--stratakit-radius-md);
-}
-.work-flag-pole {
-  position: absolute;
-  z-index: 1;
-  width: 0;
-  border-inline-start: 2px dashed var(--stratakit-color-text-neutral-secondary);
-  opacity: 0.45;
-  pointer-events: none;
-}
-.work-flag-pole.on {
-  border-inline-start-style: solid;
-  border-color: var(--stratakit-color-border-accent-strong);
-  opacity: 1;
-}
-.work-map .work-flag-corner {
-  top: 8px;
-  display: flex;
-  align-items: center;
-  gap: var(--stratakit-space-150);
-}
-.work-flag-corner svg {
-  width: 14px;
-  height: 14px;
 }
 .work-flag-strip {
   display: flex;
@@ -3206,29 +2499,6 @@ button.work-mrow-big:focus-visible {
 .work-flag-note {
   flex: 1 1 16rem;
   min-width: 0;
-}
-.work-flag-focus-note {
-  margin: 0 0 var(--stratakit-space-300);
-}
-/* The list's flags: a line between two steps. */
-.work-roadmap-flags {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-150);
-  padding-inline-start: var(--stratakit-space-200);
-}
-.work-roadmap-flag {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--stratakit-space-100) var(--stratakit-space-300);
-  min-width: 0;
-}
-.work-rm-line {
-  transition: opacity 120ms;
-}
-.work-rm-line.dim {
-  opacity: 0.35;
 }
 /* The matrix: the projects whose milestones feed the release in view. */
 .work-matrix-row.fed,
@@ -3242,78 +2512,6 @@ button.work-mrow-big:focus-visible {
 .work-matrix-row.unfed,
 .work-matrix-col.unfed {
   opacity: 0.4;
-}
-
-/*
- * Release bands (CS-685; DESIGN.md, "Release bands"): the map in bands,
- * one per release in ladder order, each named in a row under the flags
- * and closed by its release's flag; the list grouped the same way.
- */
-.work-map-bandname {
-  position: absolute;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  gap: var(--stratakit-space-150);
-  padding-inline: var(--stratakit-space-200);
-  box-sizing: border-box;
-  border-bottom: 2px solid var(--kind-release);
-  font-size: var(--stratakit-font-size-caption-lg);
-  font-weight: 600;
-  color: var(--stratakit-color-text-neutral-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  cursor: default;
-}
-.work-map-bandname.none {
-  border-bottom-style: dashed;
-  border-bottom-color: var(--stratakit-color-border-neutral-base);
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-map-bandname.on {
-  border-bottom-color: var(--stratakit-color-border-accent-strong);
-}
-.work-map-bandname .work-kind-mark {
-  flex: none;
-  width: 13px;
-  height: 13px;
-}
-.work-map-bandname-text {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.work-map-bandname-n {
-  font-weight: 400;
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-map-key.flag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-bottom: 2px solid var(--kind-release);
-  border-radius: 0;
-}
-.work-map-key.flag .work-kind-mark {
-  width: 12px;
-  height: 12px;
-}
-/* A closure problem on a card: a warning, never color alone. */
-.work-count-badge.work-cross {
-  gap: 3px;
-  padding: 0 6px 0 4px;
-  background: var(--stratakit-color-bg-page-base);
-  color: var(--stratakit-color-text-attention-base);
-  box-shadow: inset 0 0 0 1px var(--stratakit-color-border-attention-base);
-}
-.work-count-badge.work-cross svg {
-  width: 12px;
-  height: 12px;
-}
-.work-map-node.d-name .work-cross,
-.work-map-node.d-mark .work-cross {
-  display: none;
 }
 
 /* The releases and their milestones, with the problems to fix. */
@@ -3500,47 +2698,12 @@ button.work-mrow-big:focus-visible {
   font-size: var(--stratakit-font-size-body-sm);
   line-height: 1.5;
 }
-
-/* The list in bands: each release's milestones, closed by its flag. */
-.work-roadmap-band {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-300);
-  padding: var(--stratakit-space-300) 0 var(--stratakit-space-300)
-    var(--stratakit-space-400);
-  border-inline-start: 3px solid var(--kind-release);
-}
-.work-roadmap-band.none {
-  border-inline-start-style: dashed;
-  border-inline-start-color: var(--stratakit-color-border-neutral-base);
-}
-.work-roadmap-band.on {
-  border-inline-start-color: var(--stratakit-color-border-accent-strong);
-}
-.work-roadmap-band-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--stratakit-space-100) var(--stratakit-space-200);
-  margin: 0;
-}
-.work-roadmap-band-head .work-kind-mark {
-  width: 14px;
-  height: 14px;
-}
-.work-roadmap-band-n {
-  color: var(--stratakit-color-text-neutral-secondary);
-  font-size: var(--stratakit-font-size-caption-lg);
-}
 @media (max-width: 480px) {
   .work-closure {
     padding: var(--stratakit-space-200) var(--stratakit-space-300);
   }
   .work-closure-body {
     padding-inline-start: var(--stratakit-space-200);
-  }
-  .work-roadmap-band {
-    padding-inline-start: var(--stratakit-space-300);
   }
 }
 
@@ -3934,6 +3097,20 @@ button.work-mrow-big:focus-visible {
   align-items: center;
   min-width: 0;
   width: 100%;
+}
+/* A row's way to its Dependencies view (CS-694): quiet until pointed at. */
+.work-plan-deps {
+  flex: none;
+  opacity: 0.45;
+}
+.work-plan-label:hover .work-plan-deps,
+.work-plan-deps:focus-visible {
+  opacity: 1;
+}
+@media (hover: none) {
+  .work-plan-deps {
+    opacity: 1;
+  }
 }
 .work-plan-ms.selected .work-plan-open {
   background: var(--stratakit-color-bg-glow-on-surface-accent-pressed);

@@ -64,17 +64,9 @@ export interface WorkSearch {
   list?: string;
   /** The item open in the details panel. */
   item?: string;
-  /** The milestone map across "tokens" (steps by default). */
-  across?: string;
-  /** Milestones as a "map" or a "list" (the map, unless the view is phone-narrow). */
-  layout?: string;
-  /** The release gate the milestone map measures to. */
+  /** The release chosen: the Plan view lights what sets its finish, and the project matrix marks what feeds it. */
   release?: string;
-  /** The milestone map as project lanes (default) or a "graph" with the fewest crossings. */
-  shape?: string;
-  /** Earliest possible start in release bands (default) or by "waves" alone, the pure dependency view (CS-685; "steps" before CS-692). */
-  arrange?: string;
-  /** The roadmap's view: the Plan (default, CS-692), "waves" (earliest possible start), "deps" (one thing's dependencies, CS-694) or "matrix" (the projects' waits on each other). */
+  /** The roadmap's view: the Plan (default, CS-692), "deps" (one thing's dependencies, with earliest possible start in its whole structure, CS-694) or "matrix" (the projects' waits on each other). */
   roadmap?: string;
   /** The Plan view's executor slots, 2 to 8 (one, the run's max_executors today, by default). */
   slots?: string;
@@ -124,20 +116,18 @@ export const workRoute = createRoute({
       q: str(s.q),
       list: str(s.list),
       item: str(s.item),
-      across: s.across === "tokens" ? "tokens" : undefined,
-      layout: s.layout === "map" || s.layout === "list" ? s.layout : undefined,
       release: str(s.release),
-      shape: s.shape === "graph" ? "graph" : undefined,
-      // "steps" is the old word for waves, kept so links still work.
-      arrange:
-        s.arrange === "waves" || s.arrange === "steps" ? "waves" : undefined,
+      // "waves" was the depth layering's own view before CS-694 moved it
+      // into the Dependencies view's whole structure: old links land there.
       roadmap:
-        s.roadmap === "matrix" || s.roadmap === "waves" || s.roadmap === "deps"
+        s.roadmap === "matrix" || s.roadmap === "deps"
           ? s.roadmap
-          : undefined,
+          : s.roadmap === "waves"
+            ? "deps"
+            : undefined,
       slots: slotsIn(s.slots),
       focus: str(s.focus),
-      deps: s.deps === "all" ? "all" : undefined,
+      deps: s.deps === "all" || s.roadmap === "waves" ? "all" : undefined,
       depth:
         typeof s.depth === "string" || typeof s.depth === "number"
           ? /^[1-6]$/.test(String(s.depth))

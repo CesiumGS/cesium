@@ -334,65 +334,25 @@ milestones named by their outcome, each with an `outcome` sentence,
     the width and fitted again when the slot count changes; the names
     stay at the left and the markers at the top while it pans. Nothing
     animates. "Releases and the milestones they need" follows the plot.
-  - **Earliest possible start** (the depth layering, until the
-    Dependencies view (CS-694) holds it): what comes after what, without
-    dates, by milestones (a map or a list), beside the Plan and Project
-    waits in the roadmap's view control (`&roadmap=waves`; `matrix` for
-    Project waits; the Plan when absent). The milestone map runs across
-    in waves or in tokens left; each milestone starts once everything it waits on is
-    done, and a milestone waits on another when one of its items needs
-    one of the other's. Two layouts: project lanes, or fewest crossings
-    (d3-dag's layered layout), which trades the lanes for fewer crossed
-    waits. There, milestones linked by waits are laid out as groups,
-    stacked with the most entangled first (the group of the longest chain of waits,
-    then the biggest), with waves lined up across the groups; milestones
-    that wait on nothing and that nothing waits on sit apart below, in a
-    grid by project. The longest chain of waits is drawn in the accent; hovering a
-    milestone lights what feeds it and what it unblocks; choosing a wait
-    lists the items behind it. Releases are release items (HITLd's
-    format: a work item with a `release` version, needing the milestones
-    and items the release waits for), each a flag labeled with its
-    version along the top of the grid, on the line after the wave of the
-    last milestone it needs, its pole dashed down the grid. They take no
-    wave of their own. A flag lists exactly the milestones its release
-    item names (CS-685), never those it reaches through their items, and
-    pointing at it or focusing it lights those and dims the rest;
-    choosing it measures to it, the same focus as "Measure to", which
-    keeps the release and what it needs and moves the rest apart. A
-    release whose milestones aren't chosen yet (it needs an open
-    decision, or a release with no place, or names no milestone) gets no
-    guessed place: its flag sits dotted in "Releases not placed yet"
-    above the grid, and its tip says what it waits on. The fewest
-    crossings layout flies the flags over the gaps between wave columns.
-    The list puts each flag between the waves it falls between. The
-    project waits matrix has no waves:
-    it lists the flags above the table, and one in view marks the
-    projects whose milestones feed it. A milestone with an
-    item done or in progress is filled; a milestone's pane gives its
-    longest chain of items that must happen in order. The roadmap is
-    committed work by default; proposals have their own view. The
-    Proposed toggle in the roadmap's tools (CS-563, `&proposed=show`,
-    off when absent, with the count of proposed milestones) adds the
-    proposed milestones, and proposed release items, alongside: in the
-    map (both layouts, waves or tokens) and the list each is placed by
-    its waits as a committed one is and outlined dashed, and the legend
-    gains the dashed outline's key (one piece, `ProposedKey`, so it can
-    move with the legend). Releases are placed with them too, so a
-    release that needs a proposed milestone falls after it. Project
-    waits has no milestones to draw: there the toggle counts proposed
-    milestones among what feeds a release, which the flags mark; its
-    cells count every open item either way. A milestone's bar counts its work;
-    the owner's decisions and waits on other parties that hold it up are
-    badges beside its name, each with its kind's glyph. In project
-    lanes (CS-683), each of the owner's open decisions that no milestone
-    holds is a card of its own in its project's lane: its kind's fork and
-    ink (the card outlined in it, as the badges are), its question, and
-    the names of the open items that wait on it; it opens in the pane.
-    A project's open work in no milestone is a gray tray that names its
-    items, the most waited on first. Both are placed after the
-    milestones they wait on and move none (their waits are soft), and
-    the fewest crossings layout leaves them out. Outside waits no
-    milestone holds stay in Waiting outside.
+  - **Earliest possible start** (the depth layering): each open
+    milestone in the first wave it could start, in project lanes. It
+    lives only in the Dependencies view's whole structure (CS-694,
+    `&roadmap=deps&deps=all`; the older `&roadmap=waves` lands there),
+    as that view's waves grid; "The roadmap's Dependencies view" below
+    describes it. The milestone map and list that showed it before, with
+    their legend block, flags, release-band arrangement, zoom and
+    long hover cards (CS-683, CS-685), were taken off the page with it
+    (the owner, 2026-11-19: the old map's legend and hover must not come
+    along), and the fewest crossings layout and its d3-dag layering went
+    too (the owner, dropping CS-691 on 2026-11-18). `milestoneMapOf` and
+    the other map helpers in `work.ts` stay, tested, until a later item
+    removes or reuses them. The roadmap is committed work by default;
+    the Proposed toggle in the roadmap's tools (CS-563,
+    `&proposed=show`, off when absent, with the count of proposed
+    milestones) adds the proposed milestones and release items to every
+    view, outlined dashed. Project waits has no milestones to draw:
+    there the toggle counts proposed milestones among what feeds a
+    release; its cells count every open item either way.
   - **Release bands (CS-685).** The owner's rule: a release needs whole
     milestones, and every open item a milestone it needs pulls in,
     directly or through other items, belongs to a milestone the same
@@ -401,62 +361,23 @@ milestones named by their outcome, each with an `outcome` sentence,
     each open release in ladder order (each after the releases it needs).
     A break is fixed in the tracker, by moving the item or splitting its
     milestone, never explained away on screen, so the roadmap shows each
-    as a problem to fix: "Releases and the milestones they need", above
-    the map and the list, gives each release with its milestones (folded
+    as a problem to fix: "Releases and the milestones they need", after
+    the Plan's plot, gives each release with its milestones (folded
     behind it) and, always open, its problems. Each problem names the
     release, what it pulls in, the milestone that holds it and that
     milestone's band, the path of needs from the release to it (IDs with
     their kind's mark, named on hover), and the two fixes. A release
     that needs an item itself, not through a milestone, is a problem
-    too. With none, the panel says so. A milestone holding a problem
-    carries a warning badge on the map. The roadmap is then arranged in
-    release bands by default ("a release is just a special milestone"):
-    one band per release in ladder order and a last band for the
-    milestones no release needs, each milestone in the band of the
-    earliest release that needs it. Inside a band, milestones are placed
-    by waves counted within the band: a wait on an earlier band is done
-    before the band begins, and a wait on a later band is a closure
-    break, which places nothing. Each band is named in a row under the
-    flags ("First needed by"), its waves numbered from 1, and its
-    release's flag closes it, so the flags spread along the top rather
-    than piling up at the last wave. The longest chain of waits runs on across
-    the bands through each release. Loose cards sit in the earliest band
-    of a milestone they feed, inside it. The list groups the same way: a
-    band at a time, its waves, then its flag. "By release" and "By
-    waves" are one control in the roadmap's tools (`&arrange=waves`, by
-    release when absent; the older `&arrange=steps` still works), so the
-    waves view, the pure dependency view, stays a click away; the word
-    is one entry in `ARRANGE_NAMES` (CS-692 renamed steps to waves, and
-    the critical path to the longest chain of waits). The fewest
-    crossings layout stays by waves.
-  - **The key sits above the roadmap (CS-683)**, so it is read before
-    the marks: the longest chain of waits first, in words with its accent line,
-    then each mark beside its meaning in three groups, Cards (under way,
-    not started, proposed, a loop, a decision, a project's loose items;
-    each shown only when the map has one), Bars (each stage's fill, and
-    the budget meter in tokens) and Waits (a wait, one the milestone
-    names, the longest chain of waits). The list keeps its stage key above it
-    too. `KeyGroup`, `KeyItem` and `StageKeys` draw it, and
-    `ProposedKey` joins the Cards group.
-  - **The map zooms and pans as Figma does (CS-683).** Both layouts sit
-    in one canvas (`ZoomCanvas`), most of the window high: pinch, or
-    Ctrl or ⌘ with the wheel, zooms about the pointer; the wheel and a
-    drag from anywhere pan (a drag that ends on a card opens nothing);
-    the keys + and − step through the levels (5% to 400%), Shift+1 fits
-    the whole map and Shift+0 goes back to 100%, anywhere in the canvas
-    or its bar. The bar over the canvas says so, shows the level
-    (choosing it goes back to 100%) and has zoom out, zoom in and Fit,
-    all reachable by keyboard; arrows scroll the focused canvas. The
-    zoom is semantic: it scales where things sit and how big the cards
-    are, never the text, so text is drawn at full size or not at all. A
-    card shows everything, then its name on one line, then only its
-    glyph and bar (`cardDetail`); a lane too thin for its name is named
-    on hover, and the wave headers drop their words, then their number.
-    Nothing animates, so reduced motion needs nothing more. The zoom
-    lives in the page, not the URL, and starts at 100%, the map as it
-    was drawn before. Zoomed out until the map is narrower than the
-    canvas, it rests at the left: the canvas scrolls natively, for the
-    keyboard and for focus, so it can't hold empty space beside it.
+    too. With none, the panel says so. Each open milestone sits in the
+    band of the earliest release that needs it ("a release is just a
+    special milestone"), and the Plan groups its rows by band.
+  - **The roadmap's canvas (CS-683)**, `ZoomCanvas`, holds the Plan's
+    plot: pinch, or Ctrl or ⌘ with the wheel, zooms about the pointer;
+    the wheel and a drag pan; the keys + and − step through the levels,
+    Shift+1 fits and Shift+0 goes back to 100%. The bar over it shows the
+    level and has zoom out, zoom in and Fit, all reachable by keyboard.
+    The zoom is semantic: text is drawn at full size or not at all.
+    Nothing animates, so reduced motion needs nothing more.
   - **Proposals (CS-688)**: candidate commitments (CS-686), laid out as
     the flow they go through: new to discuss, being shaped, ready for
     your yes, and the "later" copies awaiting review. A proposal is a
@@ -537,13 +458,15 @@ waiting on?" nor "what does this unblock?", so the view asks about one
 thing at a time and shows the rest on demand.
 
 - **Where it is.** `?view=roadmap&roadmap=deps`, the Dependencies toggle
-  beside Milestones and Project waits. `&focus=CS-<n>` is the center;
+  between Plan and Project waits. `&focus=CS-<n>` is the center;
   `&depth=` the levels shown, 1 to 6 (3 when absent); `&deps=all` the
   whole structure. It follows the roadmap's Proposed toggle: proposed
   milestones join only when asked for, outlined dashed (CS-563).
-- **Choosing the center.** From the pane (Its dependencies, on any
-  milestone or item, so from the Plan view, a list, Find or the map),
-  from its own search field (ID or words in the title, milestones
+- **Choosing the center.** From the Plan view directly (each milestone
+  and item row has a dependencies button beside its name, quiet until
+  pointed at or focused), from the pane (Its dependencies, on any
+  milestone or item, so from a list, Find or the map), from its own
+  search field (ID or words in the title, milestones
   first; the arrow keys walk the matches, Enter takes the first), or,
   with nothing chosen, from the milestones most work waits on, or the
   one open in the pane. A node's center button moves the center to it.
@@ -575,16 +498,20 @@ thing at a time and shows the rest on demand.
 - **A node's release** is CS-685's band: the earliest release that needs
   the milestone; for an item, the earliest of its milestones' and of a
   release that needs it directly; otherwise "No release".
-- **The whole structure, behind the toggle,** for reshaping work. First
-  every open milestone at its **earliest possible start, in waves**:
-  project lanes down, waves across. A milestone's wave is one more than
-  the latest wave of the milestones it waits on; it is the earliest it
-  could start with unlimited hands, never when it will (the Plan view
-  answers when), so the page says so. No wait is drawn; choosing a
-  milestone centers on it, and milestones that wait on each other carry
-  a loop mark. The grid scrolls sideways in its own box with the lanes'
-  names held. Then the project matrix, the one CS-693 moves out of its
-  default.
+- **The whole structure, behind the toggle,** for reshaping work, and
+  the depth layering's only home. First every open milestone at its
+  **earliest possible start, in waves** (`wavesOf` in
+  `dependencies.ts`): a grid with project lanes down and waves across,
+  each cell listing its milestones as small chips (the mark, the ID, the
+  title cut to fit). A milestone's wave is one more than the latest wave
+  of the milestones it waits on; it is the earliest it could start with
+  unlimited hands, never when it will (the Plan view answers when).
+  Release items take no wave. One key line (the lead sentence, dashed
+  for proposed, ↻ for a loop) carries a "?" whose popover explains the
+  rest, as the Plan's does. No wait is drawn; a chip's tip is short
+  (its title, its loop, how many it waits on), and choosing it centers
+  the view on it. The grid scrolls sideways in its own box, the lanes'
+  names held. Then the project matrix, the one CS-693 moves and renames.
 - **The key** is one line, worded for the layout (left and right, or
   under it when stacked); stages, kinds and proposed are explained in
   tooltips. Nothing animates.

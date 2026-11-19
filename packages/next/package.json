@@ -85,7 +85,6 @@
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-basic-ssl": "2.3.0",
     "@webgpu/types": "^0.1.74",
-    "d3-dag": "1.2.2",
     "human-in-the-lead": "git+https://github.com/arobison/human-in-the-lead.git#v0.1.0-rc.1",
     "typescript": "^6.0.2",
     "vite": "8.0.16",

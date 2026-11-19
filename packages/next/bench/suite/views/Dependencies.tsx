@@ -4,6 +4,7 @@ import {
   IconButton,
   InputAdornment,
   Link,
+  Popover,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -50,6 +51,7 @@ import {
   type WorkMilestone,
   type WorkSnapshot,
 } from "../work.ts";
+import { useChartTokens } from "./common.tsx";
 import { InlineText } from "./ItemText.tsx";
 import { KindId, KindMark } from "./Work.tsx";
 
@@ -959,17 +961,18 @@ function WholeStructure({
         >
           Earliest possible start, in waves
         </Typography>
-        <Typography
-          variant="body-sm"
-          color="textSecondary"
-          render={<p />}
-          className="deps-whole-note"
-        >
-          A milestone's wave is one more than the latest wave of the milestones
-          it waits on; wave 1 waits on none. It's the earliest it could start
-          with unlimited hands, not when it will: the Plan view answers that.
-          Choose a milestone to center on it.
-        </Typography>
+        <p className="deps-key deps-waves-key">
+          <span>
+            Each milestone in the first wave it could start, not when it will.
+          </span>
+          <span className="deps-key-item">
+            <span className="deps-key-dash" aria-hidden="true" /> proposed
+          </span>
+          <span className="deps-key-item">
+            <span aria-hidden="true">↻</span> waits round a loop
+          </span>
+          <WavesHelp />
+        </p>
         {w.count === 0 ? (
           <Typography variant="body-sm" color="textSecondary" render={<p />}>
             No open milestones.
@@ -1059,5 +1062,62 @@ function WholeStructure({
         {matrix}
       </section>
     </div>
+  );
+}
+
+/** How the waves are read: the "?" beside their key line. */
+function WavesHelp() {
+  const tokens = useChartTokens();
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const head = useId();
+  return (
+    <>
+      <IconButton
+        size="small"
+        label="How to read the waves"
+        aria-haspopup="dialog"
+        aria-expanded={!!anchor}
+        onClick={(e) => setAnchor(e.currentTarget)}
+        className="work-plan-help"
+      >
+        <span aria-hidden="true">?</span>
+      </IconButton>
+      <Popover
+        open={!!anchor}
+        anchorEl={anchor}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        slotProps={{
+          paper: {
+            className: `work-plan-pop ${tokens}`,
+            role: "dialog",
+            "aria-labelledby": head,
+          } as object,
+        }}
+      >
+        <Typography variant="body-md" render={<h3 />} id={head}>
+          Reading the waves
+        </Typography>
+        <Typography variant="body-sm" render={<p />}>
+          A milestone&apos;s wave is one more than the latest wave of the
+          milestones it waits on; wave 1 waits on none. It is the earliest it
+          could start with unlimited hands, not when it will: the Plan view
+          answers when.
+        </Typography>
+        <Typography variant="body-sm" render={<p />}>
+          Rows are projects, columns are waves. No wait is drawn: choose a
+          milestone to center the Dependencies view on it, with what it waits on
+          and what it unblocks. Hover one for its title and how many it waits
+          on.
+        </Typography>
+        <Typography variant="body-sm" render={<p />}>
+          A diamond in its kind&apos;s ink is a milestone; a dashed outline is
+          proposed (with Proposed on); ↻ marks milestones that wait on each
+          other round a loop, which share a wave. Releases take no wave of their
+          own.
+        </Typography>
+      </Popover>
+    </>
   );
 }

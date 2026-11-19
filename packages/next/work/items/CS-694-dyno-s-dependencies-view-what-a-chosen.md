@@ -2,7 +2,7 @@
 id: CS-694
 title: "Dyno's Dependencies view: what a chosen milestone or item waits on and unblocks, with the global structure behind a toggle"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-18
 project: CS-18
 claimed_by: orch-9-CS-694
