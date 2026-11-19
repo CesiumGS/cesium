@@ -22,7 +22,7 @@ const scratchLinear = new Matrix3();
 /**
  * A deformable's binding to a {@link SurfaceDeformer}'s mesh. Each vertex is
  * stored as its closest triangle's vertex indices, and its coordinates in that
- * triangle's frame.
+ * triangle's frame. It moves as the point at those coordinates moves.
  *
  * @implements {DeformerBinding}
  * @private
@@ -144,23 +144,28 @@ class SurfaceDeformerBinding {
       "vec3 normal = cross(e1, e2);",
       // An edit can collapse the triangle, which has no normal.
       "float normalLength = length(normal);",
-      "normal = normalLength > 0.0 ? normal / normalLength : vec3(0.0);",
+      "normal = normalLength > 0.0 ? normalize(normal) : vec3(0.0);",
       `vec3 coordinates = ${frameCoordinates};`,
-      "vec3 position = p0 + coordinates.x * e1 + coordinates.y * e2 + coordinates.z * normal;",
 
-      // The local transform maps the triangle's frame when bound to its current frame.
       `int restWidth = textureSize(${restPositions}, 0).x;`,
       `vec3 restP0 = ${fetch(restPositions, "restWidth", "indices.x")};`,
       `vec3 restE1 = ${fetch(restPositions, "restWidth", "indices.y")} - restP0;`,
       `vec3 restE2 = ${fetch(restPositions, "restWidth", "indices.z")} - restP0;`,
       "vec3 restNormal = normalize(cross(restE1, restE2));",
+
+      // The vertex moves as far as the point at its coordinates in the
+      // triangle's frame has moved since being bound.
+      "vec3 position = p0 + coordinates.x * e1 + coordinates.y * e2 + coordinates.z * normal;",
+      "vec3 restPosition = restP0 + coordinates.x * restE1 + coordinates.y * restE2 + coordinates.z * restNormal;",
+
+      // The local transform maps the triangle's frame when bound to its current frame.
       // The inverse of mat3(restE1, restE2, restNormal), whose rows are cross products of its columns.
       "mat3 restFrameInverse = transpose(mat3(cross(restE2, restNormal), cross(restNormal, restE1), cross(restE1, restE2))) / dot(restE1, cross(restE2, restNormal));",
       "jacobian = normalLength > 0.0",
       `    ? mat3(${bindMatrix}) * mat3(e1, e2, normal) * restFrameInverse * mat3(${bindMatrixInverse})`,
       "    : mat3(1.0);",
 
-      `return (${bindMatrix} * vec4(position, 1.0)).xyz;`,
+      `return positionMC + mat3(${bindMatrix}) * (position - restPosition);`,
     ];
   }
 
