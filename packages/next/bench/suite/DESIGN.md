@@ -350,9 +350,9 @@ milestones named by their outcome, each with an `outcome` sentence,
     the Proposed toggle in the roadmap's tools (CS-563,
     `&proposed=show`, off when absent, with the count of proposed
     milestones) adds the proposed milestones and release items to every
-    view, outlined dashed. Project waits has no milestones to draw:
-    there the toggle counts proposed milestones among what feeds a
-    release; its cells count every open item either way.
+    view, outlined dashed. In Projects, the proposed releases join as
+    columns and proposed milestones' items join their releases; the
+    project matrix counts every open item either way.
   - **Release bands (CS-685).** The owner's rule: a release needs whole
     milestones, and every open item a milestone it needs pulls in,
     directly or through other items, belongs to a milestone the same
@@ -458,7 +458,7 @@ waiting on?" nor "what does this unblock?", so the view asks about one
 thing at a time and shows the rest on demand.
 
 - **Where it is.** `?view=roadmap&roadmap=deps`, the Dependencies toggle
-  between Plan and Project waits. `&focus=CS-<n>` is the center;
+  between Plan and Projects. `&focus=CS-<n>` is the center;
   `&depth=` the levels shown, 1 to 6 (3 when absent); `&deps=all` the
   whole structure. It follows the roadmap's Proposed toggle: proposed
   milestones join only when asked for, outlined dashed (CS-563).
@@ -511,10 +511,87 @@ thing at a time and shows the rest on demand.
   rest, as the Plan's does. No wait is drawn; a chip's tip is short
   (its title, its loop, how many it waits on), and choosing it centers
   the view on it. The grid scrolls sideways in its own box, the lanes'
-  names held. Then the project matrix, the one CS-693 moves and renames.
+  names held. Then the project matrix, CS-693's, the roadmap's only
+  one (see "The roadmap's Projects view").
 - **The key** is one line, worded for the layout (left and right, or
   under it when stacked); stages, kinds and proposed are explained in
   tooltips. Nothing animates.
+
+### The roadmap's Projects view (CS-693)
+
+The third of the roadmap's three views (the owner, 2026-11-18): Plan
+answers when (CS-692), Dependencies why (CS-694), and Projects how
+ready. It replaces Project waits, a matrix that said which project
+waits on which but not what that means for the releases (the owner: "i
+also haven't found it super useful thus far"). It answers, for the
+owner and for whoever picks the next work: what does each release
+still need from each project, how far along is it, what holds it up,
+and which projects are the bottlenecks. `?view=roadmap&roadmap=projects`,
+the third toggle after Plan and Dependencies; the model is
+`bench/suite/projects.ts`, the view `views/Projects.tsx`.
+
+- **By release.** Projects are rows; releases are columns in ladder
+  order, as CS-685's release bands, then No release. An item belongs to
+  the earliest release whose milestones hold it; one no milestone holds
+  belongs to the earliest release that reaches it through needs, as
+  the closure rule allows; the rest are in no release. A cell is what
+  that release is the first to need from that project, every kind of
+  item: done of all, a stage bar, then each other stage's count by its
+  swatch (in progress, ready, blocked, proposed), and "By" with the IDs
+  of what holds the blocked ones up. Those are open decisions and
+  outside waits anywhere upstream, and the first open item of another
+  project on each way up (that project's own row says what holds it),
+  decisions first. An empty cell says "Needs nothing". Choosing a cell
+  opens it under its row: the items by stage, each blocked one with
+  what blocks it, each opening in the pane.
+- **Holds up**, the column beside the name and the default sort: how
+  many open items in other projects wait on the project's open work,
+  directly or through others, in how many projects and for which
+  releases. Sorted by it, the bottlenecks rise to the top; its head
+  sorts by it, the Project head by project number (`&psort=project`).
+  Choosing the figure lists what waits, by project.
+- **What sets a release's finish** is the Plan view's: the chain of
+  needs that ends at the last item the release needs, as `planOf`
+  sequences the work with the Plan's executor slots (`&slots=`). The
+  words "critical path" are not used. A cell holding items on it gets
+  the accent bar at its left and "Sets the finish of beta.1", as the
+  Plan outlines the chain; Holds up says which releases' finish the
+  project sets, and in the sort it breaks ties.
+- **Decisions in their row.** A project's open decisions of the
+  owner's that hold up release work sit under its row as cards (the
+  decision's mark, its question, and how many items wait on it for
+  which releases), as CS-683 drew them on the map. Each opens in the
+  pane. This settles the question CS-683's executor asked: this view
+  draws decisions.
+- **The project matrix lives in the Dependencies view's whole
+  structure** (`&roadmap=deps&deps=all`), under the waves, and is the
+  roadmap's only one; "Projects' waits on each other" above the
+  Projects view goes there. Old links to Project waits
+  (`&roadmap=matrix`) land there too. The cells are `dependencyMatrix`'s:
+  each row's open items that need the column's. The order
+  (`projectMatrixOf`) is upstream first, so marks sit below the
+  diagonal, and among the projects that can come next, the one most
+  coupled to those just placed, so tightly coupled projects sit
+  together. Loops, projects that wait on each other through their items
+  (strongly connected components), sit together in a double outline,
+  as the old map drew loops, labeled "Loop 1"; inside a loop, the order
+  puts as few marks above the diagonal as a greedy rule finds, so every
+  mark above it sits inside a loop. Pointing at or moving to a cell
+  names its row and column; choosing it lists the items behind it. The
+  old matrix's release strip is gone: which projects feed a release is
+  now a column of the Projects view.
+- **Encoding.** One key line above the view: the stage fills, the
+  decision and outside-wait marks, and the finish bar. Kind color is
+  only ink on a glyph or name, stage color only a fill (CS-573); a
+  dashed outline is proposed (CS-563): a proposed release's head, and a
+  cell all in proposed milestones. Labels sit on the marks; the details
+  are in the cell's detail and simple tips until the shared hover card
+  (CS-696).
+- **Narrow.** Below 560 px the table becomes a card per project: its
+  name, Holds up, each release it has work for, the releases that need
+  nothing from it on one line, and its decisions; a toggle sorts. The
+  matrix scrolls inside its box. Nothing animates, so reduced motion
+  changes nothing.
 
 ## Page anatomy
 

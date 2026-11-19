@@ -1226,49 +1226,6 @@ a.work-related-item:focus-visible {
 .work-matrix-cell.above .work-matrix-mark {
   box-shadow: inset 0 0 0 2px var(--stratakit-color-border-attention-base);
 }
-.work-alone {
-  margin-top: var(--stratakit-space-600);
-}
-.work-alone h3 {
-  margin: 0;
-}
-.work-alone p {
-  margin: var(--stratakit-space-100) 0 var(--stratakit-space-300);
-}
-.work-alone-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: var(--stratakit-space-300);
-}
-.work-alone-item {
-  all: unset;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-100);
-  width: 100%;
-  height: 100%;
-  padding: var(--stratakit-space-300) var(--stratakit-space-400);
-  border: 1px solid var(--stratakit-color-border-neutral-muted);
-  border-radius: var(--stratakit-radius-md);
-  cursor: pointer;
-}
-.work-alone-item:hover {
-  border-color: var(--stratakit-color-border-neutral-base);
-  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
-}
-.work-alone-item:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 1px;
-}
-.work-alone-title {
-  font-size: var(--stratakit-font-size-body-sm);
-  font-weight: 600;
-}
-
 /* A project's links (its matrix row and column as two lists). */
 .work-links {
   display: grid;
@@ -2489,31 +2446,6 @@ button.work-mrow-big:focus-visible {
   border-inline-end: 2px solid var(--stratakit-color-text-neutral-primary);
   border-radius: var(--stratakit-radius-md) 0 0 var(--stratakit-radius-md);
 }
-.work-flag-strip {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--stratakit-space-200) var(--stratakit-space-300);
-  margin-bottom: var(--stratakit-space-300);
-}
-.work-flag-note {
-  flex: 1 1 16rem;
-  min-width: 0;
-}
-/* The matrix: the projects whose milestones feed the release in view. */
-.work-matrix-row.fed,
-.work-matrix-col.fed .work-matrix-col-label {
-  color: var(--stratakit-color-text-neutral-primary);
-  font-weight: 600;
-}
-.work-matrix-row.fed {
-  box-shadow: inset 3px 0 0 var(--stratakit-color-border-accent-strong);
-}
-.work-matrix-row.unfed,
-.work-matrix-col.unfed {
-  opacity: 0.4;
-}
-
 /* The releases and their milestones, with the problems to fix. */
 .work-closure {
   margin: 0 0 var(--stratakit-space-400);

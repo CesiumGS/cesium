@@ -40,7 +40,6 @@ import {
 } from "@tanstack/react-router";
 import {
   createContext,
-  type CSSProperties,
   Fragment,
   type ReactNode,
   type RefObject,
@@ -99,7 +98,6 @@ import {
   measuresOf,
   median,
   percentile,
-  type MapFlag,
   mapEntityItems,
   mapEntityTitle,
   milestoneRoadmapOf,
@@ -121,8 +119,6 @@ import {
   type ProposalStage,
   proposalsForOwner,
   proposalsOf,
-  type ReleaseFlag,
-  releaseFlagsOf,
   releasesGatedBy,
   isReleaseItem,
   itemKindOf,
@@ -150,6 +146,7 @@ import {
 import { Empty, Page, toast, useChartTokens } from "./common.tsx";
 import { DependenciesLink, DependenciesView } from "./Dependencies.tsx";
 import { InlineText, ItemText } from "./ItemText.tsx";
+import { ProjectMatrixView, ProjectsView } from "./Projects.tsx";
 import { Status as StatusBadge } from "./runParts.tsx";
 
 /**
@@ -417,14 +414,13 @@ function Board({
       ? `${scopeNames[0]} and ${scopeNames.length - 1} more`
       : scopeNames.join(" and ") || undefined;
   // The Plan view by default (CS-692); the depth layering, "earliest
-  // possible start" in waves, lives in the Dependencies view's whole
-  // structure (CS-694).
-  const roadmapBy: "plan" | "matrix" | "deps" =
-    search.roadmap === "matrix"
-      ? "matrix"
-      : search.roadmap === "deps"
-        ? "deps"
-        : "plan";
+  // possible start" in waves, and the project matrix live in the
+  // Dependencies view's whole structure (CS-694); Projects is each
+  // project's readiness per release (CS-693).
+  const roadmapBy: "plan" | "deps" | "projects" =
+    search.roadmap === "deps" || search.roadmap === "projects"
+      ? search.roadmap
+      : "plan";
   const slots = clampSlots(search.slots ?? 1);
   // Proposed milestones join the roadmap only when asked for (CS-563).
   const withProposed = search.proposed === "show";
@@ -684,10 +680,10 @@ function Board({
                   caption={
                     projectScope
                       ? "What it waits on, and what waits on it"
-                      : roadmapBy === "matrix"
-                        ? "Each row's open items that wait on each column's"
-                        : roadmapBy === "plan"
-                          ? "What gets built when, as the run's executors would work through it: no dates, no durations"
+                      : roadmapBy === "plan"
+                        ? "What gets built when, as the run's executors would work through it: no dates, no durations"
+                        : roadmapBy === "projects"
+                          ? "How ready each project's work is for each release, and what it holds up"
                           : "What one milestone or item waits on, and what it unblocks"
                   }
                   className="span-12"
@@ -769,10 +765,16 @@ function Board({
                             Dependencies
                           </ToggleButton>
                           <ToggleButton
-                            value="matrix"
-                            render={<Button variant="outlined" size="small" />}
+                            value="projects"
+                            render={
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                title="How ready each project's work is for each release, and what it holds up"
+                              />
+                            }
                           >
-                            Project waits
+                            Projects
                           </ToggleButton>
                         </ToggleButtonGroup>
                       </span>
@@ -793,28 +795,23 @@ function Board({
                       set={set}
                       proposals={withProposed}
                       matrix={
-                        <MatrixView
+                        <ProjectMatrixView
                           s={s}
                           items={items}
-                          flight={flight}
-                          proposals={withProposed}
-                          release={search.release}
-                          onRelease={(id) => set({ release: id }, true)}
                           onCell={(from, to) => open(`dep:${from}:${to}`)}
-                          onProject={(id) => scopeTo({ project: id })}
                         />
                       }
                     />
-                  ) : roadmapBy === "matrix" ? (
-                    <MatrixView
+                  ) : roadmapBy === "projects" ? (
+                    <ProjectsView
                       s={s}
-                      items={items}
                       flight={flight}
+                      items={items}
+                      scoped={size > 0}
                       proposals={withProposed}
-                      release={search.release}
-                      onRelease={(id) => set({ release: id }, true)}
-                      onCell={(from, to) => open(`dep:${from}:${to}`)}
-                      onProject={(id) => scopeTo({ project: id })}
+                      search={search}
+                      set={set}
+                      onItem={(id) => set({ item: id, list: undefined })}
                     />
                   ) : (
                     <PlanView
@@ -925,7 +922,7 @@ function Board({
                   render={<p />}
                   className="work-later"
                 >
-                  The merge queue, quotas and the controllers' steps join this
+                  The merge queue, quotas and what the controllers do join this
                   view when HITLd records them.
                 </Typography>
               </div>
@@ -5158,230 +5155,6 @@ function Fact({ name, children }: { name: string; children: ReactNode }) {
 // ------------------------------------------------------------ dependencies
 
 /**
- * Projects against projects (a design structure matrix): row waits on
- * column, each cell the number of the row's open items that need the
- * column's. Ordered so what's needed comes first, marks sit below the
- * diagonal; one above it is a two-way wait. Choosing a cell lists the
- * items behind it.
- */
-function MatrixView({
-  s,
-  items,
-  flight,
-  proposals,
-  release,
-  onRelease,
-  onCell,
-  onProject,
-}: {
-  s: WorkSnapshot;
-  items: WorkItem[];
-  flight: InFlight;
-  /** Proposed milestones count among what feeds a release. */
-  proposals: boolean;
-  /** The release in focus: the projects that feed it stand out. */
-  release?: string;
-  onRelease: (id: string | undefined) => void;
-  onCell: (from: string, to: string) => void;
-  /** Zooms the dashboard into a project. */
-  onProject: (id: string) => void;
-}) {
-  const m = useMemo(() => dependencyMatrix(s, items), [s, items]);
-  const title = (id: string) =>
-    s.projects.find((p) => p.id === id)?.title ?? id;
-  // The releases, with no steps to place them by: each names what feeds it.
-  const flags = useMemo(
-    () =>
-      releaseFlagsOf(
-        s,
-        milestoneRoadmapOf(s, s.items, flight, proposals),
-        () => 0,
-      ),
-    [s, flight, proposals],
-  );
-  const [hoverFlag, setHoverFlag] = useState<string>();
-  const fed = useMemo(() => {
-    const f =
-      flags.find((x) => x.id === hoverFlag) ??
-      flags.find((x) => x.id === release && !x.unplaced);
-    return f
-      ? new Set(
-          f.feeds.map((id) => s.milestones.find((x) => x.id === id)?.project),
-        )
-      : undefined;
-  }, [flags, hoverFlag, release, s.milestones]);
-  const flagTitle = (id: string) =>
-    s.milestones.find((x) => x.id === id)?.title ??
-    s.items.find((x) => x.id === id)?.title ??
-    id;
-  const max = Math.max(1, ...[...m.cells.values()].map((v) => v.length));
-  const level = (n: number) => Math.min(4, Math.ceil((4 * n) / max));
-  const [hot, setHot] = useState<{ r: number; c: number }>();
-  if (!m.order.length) {
-    return (
-      <Typography variant="body-md" color="textSecondary" render={<p />}>
-        No project here waits on another.
-      </Typography>
-    );
-  }
-  return (
-    <div className="work-matrix">
-      <ReleaseStrip
-        flags={flags}
-        label="Releases"
-        note={
-          flags.some((f) => !f.unplaced)
-            ? `Point at one to mark the projects whose milestones feed it${proposals ? ", proposed milestones among them" : ""}.`
-            : unplacedNote(flags.map((f) => ({ ...f, at: undefined })))
-        }
-        titleOf={flagTitle}
-        steps={false}
-        release={release}
-        onHover={setHoverFlag}
-        onSelect={onRelease}
-      />
-      <Typography
-        variant="body-sm"
-        color="textSecondary"
-        render={<p />}
-        className="work-matrix-note"
-      >
-        Each row waits on the columns marked: the number is how many of the
-        row's open items need the column's. What's needed comes first, so marks
-        sit below the diagonal; one above it means two projects wait on each
-        other.
-      </Typography>
-      <Typography
-        variant="body-sm"
-        render={<p />}
-        className="work-matrix-read"
-        aria-live="polite"
-      >
-        {hot
-          ? (() => {
-              const from = m.order[hot.r]!;
-              const to = m.order[hot.c]!;
-              const n = m.cells.get(`${from}|${to}`)?.length ?? 0;
-              return hot.r === hot.c ? (
-                <>
-                  <b>{title(from)}</b> (the diagonal)
-                </>
-              ) : (
-                <>
-                  <b>{title(from)}</b> waits on <b>{title(to)}</b>:{" "}
-                  {n ? `${n} ${n === 1 ? "item" : "items"}` : "nothing"}
-                  {n > 0 && m.cells.has(`${to}|${from}`)
-                    ? `, and ${title(to)} waits on it too`
-                    : n > 0 && hot.c > hot.r
-                      ? ", part of a loop of waits through other projects"
-                      : ""}
-                </>
-              );
-            })()
-          : "Point at a cell to name its row and column."}
-      </Typography>
-      <div className="work-matrix-scroll">
-        <table
-          className="work-matrix-table"
-          onMouseLeave={() => setHot(undefined)}
-        >
-          <thead>
-            <tr>
-              <th scope="col" className="work-matrix-corner">
-                <span className="visually-hidden">Waiting project</span>
-              </th>
-              {m.order.map((id, c) => (
-                <th
-                  key={id}
-                  scope="col"
-                  className={`work-matrix-col${hot?.c === c ? " hot" : ""}${fed ? (fed.has(id) ? " fed" : " unfed") : ""}`}
-                  title={`${id} ${title(id)}`}
-                >
-                  <span className="work-matrix-col-label">
-                    <span className="work-matrix-n">{c + 1}</span> {title(id)}
-                  </span>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {m.order.map((from, r) => (
-              <tr key={from}>
-                <th
-                  scope="row"
-                  className={`work-matrix-row${hot?.r === r ? " hot" : ""}${fed ? (fed.has(from) ? " fed" : " unfed") : ""}`}
-                  title={`${from} ${title(from)}`}
-                >
-                  <span className="work-matrix-n">{r + 1}</span>{" "}
-                  <LevelMark level="project" /> {title(from)}
-                </th>
-                {m.order.map((to, c) => {
-                  const list = m.cells.get(`${from}|${to}`);
-                  const n = list?.length ?? 0;
-                  return (
-                    <td
-                      key={to}
-                      className={`work-matrix-cell${r === c ? " diag" : ""}${n && c > r ? " above" : ""}${hot && (hot.r === r || hot.c === c) ? " cross" : ""}${hot && hot.r === r && hot.c === c ? " at" : ""}`}
-                      onMouseEnter={() => setHot({ r, c })}
-                    >
-                      {n > 0 && (
-                        <button
-                          type="button"
-                          className={`work-matrix-mark l${level(n)}`}
-                          onClick={() => onCell(from, to)}
-                          aria-label={`${title(from)} waits on ${title(to)}: ${n} ${n === 1 ? "item" : "items"}`}
-                          title={`${title(from)} waits on ${title(to)}: ${n}`}
-                        >
-                          {n}
-                        </button>
-                      )}
-                    </td>
-                  );
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      {m.alone.length > 0 && (
-        <section className="work-alone">
-          <Typography variant="subtitle-md" render={<h3 />}>
-            Not linked to another project
-          </Typography>
-          <Typography variant="caption-md" color="textSecondary" render={<p />}>
-            Their items wait only on each other. Choose one to zoom in.
-          </Typography>
-          <ul className="work-alone-list">
-            {m.alone.map((id) => {
-              const mine = items.filter((it) => it.project === id);
-              const open = mine.filter(isOpen).length;
-              const ready = mine.filter((it) => it.ready).length;
-              return (
-                <li key={id}>
-                  <button
-                    type="button"
-                    className="work-alone-item"
-                    onClick={() => onProject(id)}
-                  >
-                    <span className="work-alone-title work-marked">
-                      <LevelMark level="project" />
-                      {title(id)}
-                    </span>
-                    <Typography variant="caption-md" color="textSecondary">
-                      {open} open · {ready} ready
-                    </Typography>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
-    </div>
-  );
-}
-
-/**
  * A project's place among the others: the projects it waits on and the
  * ones that wait on it, each with how many items (its row and column of
  * the matrix, as lists).
@@ -6266,189 +6039,6 @@ const andList = (xs: readonly string[]) =>
   xs.length < 2
     ? xs.join("")
     : `${xs.slice(0, -1).join(", ")} and ${xs.at(-1)}`;
-
-/** Why a release has no place yet, in a sentence. */
-function unplacedText(f: ReleaseFlag, titleOf: (id: string) => string): string {
-  const u = f.unplaced!;
-  const why = [
-    ...u.decisions.map((d) => `your decision ${d}, “${titleOf(d)}”`),
-    ...u.releases.map((r) => `${titleOf(r)}, which has no place yet either`),
-  ];
-  if (!why.length) {
-    return "Not placed yet: it names no milestone.";
-  }
-  const text = `Not placed yet: its milestones aren't chosen. It waits on ${andList(why)}`;
-  return /[?”]$/.test(text) ? text : `${text}.`;
-}
-
-/**
- * A release's flag, labeled with its version. Pointing at it or focusing
- * it lights the milestones that feed it; choosing it measures to it (the
- * release focus), and choosing it again lets go.
- */
-function ReleaseFlagButton({
-  flag,
-  titleOf,
-  where,
-  steps = true,
-  selected,
-  dim,
-  onHover,
-  onSelect,
-  style,
-  className,
-}: {
-  flag: ReleaseFlag & { progress?: MapFlag["progress"] };
-  titleOf: (id: string) => string;
-  /** Where the view places it, in words ("between waves 2 and 3"). */
-  where?: string;
-  /** False in a view with no steps: it names what feeds it, not where it falls. */
-  steps?: boolean;
-  selected: boolean;
-  dim?: boolean;
-  onHover: (id: string | undefined) => void;
-  onSelect: (id: string | undefined) => void;
-  style?: CSSProperties;
-  className?: string;
-}) {
-  const p = flag.progress;
-  // Exactly the milestones it names (CS-685), the first few by name.
-  const FEW = 6;
-  const named = flag.feeds.slice(0, FEW).map(titleOf);
-  const more = flag.feeds.length - named.length;
-  const needs = flag.feeds.length
-    ? `Needs ${flag.feeds.length} ${flag.feeds.length === 1 ? "milestone" : "milestones"}: ${more ? `${named.join(", ")} and ${more} more` : andList(named)}${steps ? ", lit on the map" : ""}`
-    : "Names no open milestone of its own";
-  return (
-    <Tooltip
-      placement="top"
-      title={
-        <span className="work-map-tip">
-          <b>{flag.title}</b>
-          {flag.proposed && (
-            <span>
-              Proposed: not committed yet; the owner commits it or not
-            </span>
-          )}
-          {flag.unplaced ? (
-            <span>{unplacedText(flag, titleOf)}</span>
-          ) : (
-            <>
-              <span>{needs}</span>
-              {flag.after.length > 0 && (
-                <span>After {andList(flag.after.map(titleOf))}</span>
-              )}
-              {steps &&
-                (flag.at === undefined ? (
-                  <span>
-                    The milestones that place it are outside this view
-                  </span>
-                ) : (
-                  flag.last.length > 0 && (
-                    <span>
-                      Placed after {andList(flag.last.map(titleOf))}
-                      {where ? `, ${where}` : ""}
-                    </span>
-                  )
-                ))}
-            </>
-          )}
-          {p && !flag.unplaced && (
-            <span>
-              {p.milestonesDone} of {p.milestones} milestones and {p.itemsDone}{" "}
-              of {p.items} of their items done
-              {p.tokensLeft > 0 && `; ${tokenText(p.tokensLeft)} tokens left`}
-            </span>
-          )}
-          {p && p.decisions > 0 && !flag.unplaced && (
-            <span>{p.decisions} of your decisions hold it up</span>
-          )}
-          <span>
-            {selected
-              ? "Choose it again to measure to everything"
-              : "Choose it to measure to it"}
-          </span>
-        </span>
-      }
-    >
-      <button
-        type="button"
-        className={`work-flag${flag.unplaced ? " unplaced" : ""}${flag.proposed ? " proposed" : ""}${selected ? " selected" : ""}${dim ? " dim" : ""}${className ? ` ${className}` : ""}`}
-        style={style}
-        aria-pressed={selected}
-        aria-label={`${flag.proposed ? "Proposed release" : "Release"} ${flag.version}${flag.unplaced ? ", not placed yet" : ""}`}
-        onPointerEnter={() => onHover(flag.id)}
-        onPointerLeave={() => onHover(undefined)}
-        onFocus={() => onHover(flag.id)}
-        onBlur={() => onHover(undefined)}
-        onClick={() => onSelect(selected ? undefined : flag.id)}
-      >
-        <KindMark kind="release" named={false} />
-        <span className="work-flag-label">{flag.version}</span>
-      </button>
-    </Tooltip>
-  );
-}
-
-/**
- * A row of flags apart from the grid: the releases with no place yet, or,
- * in a view with no steps, every release.
- */
-function ReleaseStrip({
-  flags,
-  label,
-  note,
-  ...common
-}: {
-  flags: readonly (ReleaseFlag & { progress?: MapFlag["progress"] })[];
-  label: string;
-  note?: string;
-  titleOf: (id: string) => string;
-  steps?: boolean;
-  release?: string;
-  onHover: (id: string | undefined) => void;
-  onSelect: (id: string | undefined) => void;
-}) {
-  if (!flags.length) {
-    return null;
-  }
-  return (
-    <div className="work-flag-strip" role="group" aria-label={label}>
-      <Typography variant="caption-lg" color="textSecondary">
-        {label}
-      </Typography>
-      {flags.map((f) => (
-        <ReleaseFlagButton
-          key={f.id}
-          flag={f}
-          titleOf={common.titleOf}
-          steps={common.steps}
-          selected={common.release === f.id}
-          onHover={common.onHover}
-          onSelect={common.onSelect}
-        />
-      ))}
-      {note && (
-        <Typography
-          variant="caption-md"
-          color="textSecondary"
-          className="work-flag-note"
-        >
-          {note}
-        </Typography>
-      )}
-    </div>
-  );
-}
-
-/** What the strip of unplaced flags says under them. */
-const unplacedNote = (flags: readonly ReleaseFlag[]) => {
-  const off = flags.filter((f) => f.at === undefined);
-  const one = off.length === 1;
-  return off.every((f) => f.unplaced)
-    ? `${one ? "Its" : "Their"} milestones aren't chosen yet: point at ${one ? "it" : "one"} for what ${one ? "it waits" : "each waits"} on.`
-    : `Point at ${one ? "it" : "one"} for why.`;
-};
 
 // ------------------------------------------------------------ release bands
 

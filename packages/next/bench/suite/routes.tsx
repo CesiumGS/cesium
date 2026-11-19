@@ -64,9 +64,9 @@ export interface WorkSearch {
   list?: string;
   /** The item open in the details panel. */
   item?: string;
-  /** The release chosen: the Plan view lights what sets its finish, and the project matrix marks what feeds it. */
+  /** The release chosen: the Plan view lights what sets its finish. */
   release?: string;
-  /** The roadmap's view: the Plan (default, CS-692), "deps" (one thing's dependencies, with earliest possible start in its whole structure, CS-694) or "matrix" (the projects' waits on each other). */
+  /** The roadmap's view: the Plan (default, CS-692), "deps" (one thing's dependencies, with earliest possible start and the project matrix in its whole structure, CS-694) or "projects" (each project's readiness per release, CS-693). */
   roadmap?: string;
   /** The Plan view's executor slots, 2 to 8 (one, the run's max_executors today, by default). */
   slots?: string;
@@ -84,6 +84,8 @@ export interface WorkSearch {
   kind?: string;
   /** The No milestone view's states, a comma-separated list of "proposed", "planned" and "in-progress" (every open state by default). */
   state?: string;
+  /** The Projects view's rows by project number, "project" (by what each holds up by default; CS-693). */
+  psort?: string;
 }
 /** Keeps the known words of a comma-separated list, in the order given. */
 const listIn = (v: unknown, known: readonly string[]): string | undefined =>
@@ -117,17 +119,22 @@ export const workRoute = createRoute({
       list: str(s.list),
       item: str(s.item),
       release: str(s.release),
-      // "waves" was the depth layering's own view before CS-694 moved it
-      // into the Dependencies view's whole structure: old links land there.
+      // "waves" was the depth layering's own view, and "matrix" the
+      // projects' waits on each other (Project waits), before CS-694 and
+      // CS-693 moved both into the Dependencies view's whole structure:
+      // old links land there.
       roadmap:
-        s.roadmap === "matrix" || s.roadmap === "deps"
+        s.roadmap === "deps" || s.roadmap === "projects"
           ? s.roadmap
-          : s.roadmap === "waves"
+          : s.roadmap === "waves" || s.roadmap === "matrix"
             ? "deps"
             : undefined,
       slots: slotsIn(s.slots),
       focus: str(s.focus),
-      deps: s.deps === "all" || s.roadmap === "waves" ? "all" : undefined,
+      deps:
+        s.deps === "all" || s.roadmap === "waves" || s.roadmap === "matrix"
+          ? "all"
+          : undefined,
       depth:
         typeof s.depth === "string" || typeof s.depth === "number"
           ? /^[1-6]$/.test(String(s.depth))
@@ -144,6 +151,7 @@ export const workRoute = createRoute({
           : undefined,
       kind: listIn(s.kind, ["work", "release", "decision", "external"]),
       state: listIn(s.state, ["proposed", "planned", "in-progress"]),
+      psort: s.psort === "project" ? "project" : undefined,
     }),
   component: lazyRouteComponent(() => import("./views/Work.tsx"), "Work"),
 });
