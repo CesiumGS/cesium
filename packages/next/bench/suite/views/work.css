@@ -571,6 +571,25 @@
   gap: 2px;
   height: 14px;
 }
+/*
+ * A stage's stretch in it, filled by its stage (the pane's progress, the
+ * Projects view's cells). CS-694's removal of the old roadmap took this
+ * rule with it; CS-693 restores it.
+ */
+.work-roadmap-seg {
+  flex-basis: 0;
+  min-width: 3px;
+  background: var(--stage);
+}
+.work-roadmap-seg:first-child {
+  border-radius: 3px 0 0 3px;
+}
+.work-roadmap-seg:last-child {
+  border-radius: 0 3px 3px 0;
+}
+.work-roadmap-seg:only-child {
+  border-radius: 3px;
+}
 
 /* The details panel: a list, wider for the dependencies. */
 .work-list-panel.wide {

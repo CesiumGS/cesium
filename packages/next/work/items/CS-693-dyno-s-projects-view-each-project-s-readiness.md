@@ -2,7 +2,7 @@
 id: CS-693
 title: "Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-18
 project: CS-18
 needs: [CS-685]

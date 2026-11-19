@@ -621,7 +621,7 @@ function CellView({
         {column.id === NO_RELEASE ? "Nothing open" : "Needs nothing"}
         <span className="visually-hidden">
           {column.id === NO_RELEASE
-            ? ` open in ${row.title} outside the releases`
+            ? ` in ${row.title} outside the releases`
             : ` from ${row.title}`}
         </span>
       </span>
@@ -1053,7 +1053,7 @@ export function ProjectMatrixView({
         What's needed comes first, so most marks sit below the diagonal, and
         projects that wait on each other the most sit side by side.{" "}
         {m.loops.length
-          ? `${m.loops.length === 1 ? "One loop" : `${m.loops.length} loops`}: projects that wait on each other, through their items. Each is boxed; the marks above the diagonal inside it close the loop.`
+          ? `${m.loops.length === 1 ? "One loop" : `${m.loops.length} loops`}: projects that wait on each other, through their items. Each is boxed and marked ↻; the marks above the diagonal inside it close the loop.`
           : "No projects wait on each other in a loop."}
       </Typography>
       <Typography
@@ -1098,13 +1098,21 @@ export function ProjectMatrixView({
                   className={`work-matrix-row${hot?.r === r ? " hot" : ""}${loopAt(from) !== undefined ? " in-loop" : ""}`}
                   title={`${from} ${title(from)}`}
                 >
-                  <span className="work-matrix-n">{r + 1}</span>{" "}
-                  <KindMark kind="project" /> {title(from)}
-                  {first(from) && (
-                    <span className="projects-loop-tag">
-                      Loop {loopAt(from)! + 1}
-                    </span>
-                  )}
+                  <span className="projects-matrix-head">
+                    <span className="work-matrix-n">{r + 1}</span>
+                    <KindMark kind="project" />
+                    <span className="projects-matrix-name">{title(from)}</span>
+                    {first(from) && (
+                      <span
+                        className="projects-loop-tag"
+                        title={`Loop ${loopAt(from)! + 1}: these projects wait on each other`}
+                      >
+                        <span aria-hidden="true">↻</span>
+                        <span className="visually-hidden">Loop</span>{" "}
+                        {loopAt(from)! + 1}
+                      </span>
+                    )}
+                  </span>
                 </th>
                 {m.order.map((to, c) => {
                   const list = m.cells.get(`${from}|${to}`);

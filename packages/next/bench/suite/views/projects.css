@@ -433,8 +433,23 @@
 .projects-matrix .work-matrix-cell.loop.br {
   border-right: 3px double var(--stratakit-color-text-neutral-primary);
 }
+/* A row's head: its number, mark and name, which gives way to the loop's tag. */
+.projects-matrix-head {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 250px;
+}
+.projects-matrix-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .projects-loop-tag {
-  margin-inline-start: 8px;
+  /* Holds its screen-reader word inside the matrix's scroller. */
+  position: relative;
+  flex: none;
+  margin-inline-start: 4px;
   padding: 0 6px;
   border: 3px double var(--stratakit-color-text-neutral-primary);
   border-radius: 3px;
@@ -492,4 +507,20 @@
 .projects-card .projects-detail {
   position: static;
   max-width: none;
+}
+
+/* A narrow matrix keeps its names short, so the cells start in view. */
+.projects-matrix {
+  container-type: inline-size;
+}
+@container (max-width: 560px) {
+  .projects-matrix .work-matrix-corner {
+    min-width: 0;
+  }
+  .projects-matrix .projects-matrix-head {
+    max-width: 132px;
+  }
+  .projects-matrix .work-matrix-n {
+    min-width: 16px;
+  }
 }

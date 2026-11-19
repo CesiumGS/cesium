@@ -574,7 +574,8 @@ the third toggle after Plan and Dependencies; the model is
   coupled to those just placed, so tightly coupled projects sit
   together. Loops, projects that wait on each other through their items
   (strongly connected components), sit together in a double outline,
-  as the old map drew loops, labeled "Loop 1"; inside a loop, the order
+  as the old map drew loops, its first row marked ↻ with its number, as
+  the waves grid marks a loop; inside a loop, the order
   puts as few marks above the diagonal as a greedy rule finds, so every
   mark above it sits inside a loop. Pointing at or moving to a cell
   names its row and column; choosing it lists the items behind it. The
