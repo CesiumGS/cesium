@@ -415,7 +415,7 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 30 of 41 done, 4 ready, 6 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 32 of 42 done, 5 ready, 5 blocked, 1 dropped. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
@@ -442,9 +442,10 @@ Milestone: Dyno's Work page shows the live system and the release plan ([CS-561]
 - [x] [CS-684](./items/CS-684-dyno-s-work-page-drops-the-retired-long.md) Dyno's Work page drops the retired long outcomes: no Long outcomes view, and dropped milestones out of every grouping. Done.
 - [x] [CS-685](./items/CS-685-dyno-s-release-flags-tell-the-milestones-a.md) Dyno's release flags list only the milestones a release needs, and flag items that cross a release. Done.
 - [x] [CS-688](./items/CS-688-dyno-s-proposals-tab-follows-the-proposal-flow.md) Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes. Done.
-- [ ] [CS-692](./items/CS-692-dyno-s-roadmap-has-a-sequence-view-the-planner.md) Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it. Needs CS-685.
-- [ ] [CS-693](./items/CS-693-dyno-s-projects-view-each-project-s-readiness.md) Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle. Needs CS-685 and CS-694.
-- [ ] [CS-694](./items/CS-694-dyno-s-dependencies-view-what-a-chosen.md) Dyno's Dependencies view: what a chosen milestone or item waits on and unblocks, with the global structure behind a toggle. Needs CS-692.
+- [x] [CS-692](./items/CS-692-dyno-s-roadmap-has-a-sequence-view-the-planner.md) Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it. Done.
+- [ ] [CS-693](./items/CS-693-dyno-s-projects-view-each-project-s-readiness.md) Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle. Needs CS-685.
+- [ ] [CS-694](./items/CS-694-dyno-s-dependencies-view-what-a-chosen.md) Dyno's Dependencies view: what a chosen milestone or item waits on and unblocks, with the global structure behind a toggle. Needs nothing.
+- [ ] [CS-696](./items/CS-696-one-hover-card-for-the-work-page-s-views-state.md) One hover card for the Work page's views: state, progress with labeled colors, open blockers, room to slip, next step. Needs CS-692, CS-694 and CS-693.
 
 Milestone: The final release is ready to publish ([CS-678](./milestones/CS-678-the-final-release-is-ready-to-publish.md), Planned)
 
@@ -471,7 +472,8 @@ No milestone
 - [x] [CS-686](./items/CS-686-how-should-we-use-proposals-until-hitld-does-it.md) decision: How should we use proposals until hitld does it for us, and what should the Proposals tab show?. Done.
 - [x] [CS-689](./items/CS-689-merge-run-2026-11-18-2-s-green-batches-overnight.md) decision: Merge run 2026-11-18-2's green batches overnight. Done.
 - [x] [CS-690](./items/CS-690-merge-the-rest-of-run-2026-11-18-2-s-green.md) decision: Merge the rest of run 2026-11-18-2's green batches as they pass. Done.
-- [?] [CS-691](./items/CS-691-dyno-s-fewest-crossings-roadmap-layout-places.md) Dyno's Fewest crossings roadmap layout places real milestones (d3-dag's simplex fails today). Proposed. Needs nothing.
+- [-] [CS-691](./items/CS-691-dyno-s-fewest-crossings-roadmap-layout-places.md) Dyno's Fewest crossings roadmap layout places real milestones (d3-dag's simplex fails today). Dropped: The owner, 2026-11-18: dropped with the three-view roadmap design; CS-694 removes the Fewest crossings layout rather than fixing it.
+- [x] [CS-697](./items/CS-697-merge-cs-692-the-plan-view.md) decision: Merge CS-692, the Plan view. Done.
 
 ### Follow-ups for other teams
 
@@ -522,6 +524,7 @@ Milestone: Cameras move freely on any body ([CS-425](./milestones/CS-425-cameras
 - [ ] [CS-218](./items/CS-218-the-orthographic-camera-fitbounds-and-the-dolly.md) The orthographic camera, `fitBounds` and the dolly between projections. Needs CS-216.
 - [ ] [CS-219](./items/CS-219-the-cad-style-controller.md) The CAD-style controller. Needs CS-218.
 - [ ] [CS-220](./items/CS-220-the-viewer-and-the-frames-explorer-on-rigs-and.md) The Viewer and the frames explorer on rigs and controllers; 5d's done-when checks. Needs CS-217 and CS-219.
+- [ ] [CS-569](./items/CS-569-mars-is-a-known-body-so-a-mars-tileset-loads-on.md) Mars is a known body, so a Mars tileset loads on its own ellipsoid instead of refusing. Needs nothing.
 
 Milestone: Each body has its own sky and light ([CS-426](./milestones/CS-426-each-body-has-its-own-sky-and-light.md), Planned)
 
@@ -558,7 +561,6 @@ Milestone: Launch and re-entry fill in the replay ([CS-429](./milestones/CS-429-
 No milestone
 
 - [x] [CS-566](./items/CS-566-cs-200-the-globe-and-lod-parity-suites-need-the.md) decision: CS-200: the globe and lod parity suites need the ion token in executor worktrees. Done.
-- [ ] [CS-569](./items/CS-569-mars-is-a-known-body-so-a-mars-tileset-loads-on.md) Mars is a known body, so a Mars tileset loads on its own ellipsoid instead of refusing. Needs nothing.
 
 ### Frames and engineering coordinates follow-ups
 
@@ -799,6 +801,7 @@ Milestone: Image regression and parity are checked in CI ([CS-483](./milestones/
 
 - [ ] [CS-327](./items/CS-327-image-regression-in-ci-on-swiftshader-with.md) Image regression in CI on SwiftShader, with saved checks and the parity pages as checks. Needs CS-323, CS-397 (Dyno as the development harness) and CS-401 (Dyno as the development harness).
 - [ ] [CS-330](./items/CS-330-custom-shaders-and-feature-styles-compared.md) Custom shaders and feature styles compared against 1.x. Needs nothing.
+- [ ] [CS-335](./items/CS-335-headless-rendering-on-dawn-s-node-package.md) Headless rendering on Dawn's Node package. Needs CS-275 (Content sources and formats).
 - [ ] [CS-448](./items/CS-448-energy-compensation-for-coloured-metals-against.md) Energy compensation for coloured metals, against a multiple-scattering reference. Needs nothing.
 - [ ] [CS-541](./items/CS-541-the-parity-tests-compare-against-cesiumjs-1-147.md) The parity tests compare against CesiumJS 1.147.0, pinned. Needs nothing.
 - [ ] [CS-542](./items/CS-542-every-parity-result-names-its-oracle.md) Every parity result names its oracle. Needs CS-541.
@@ -824,7 +827,6 @@ No milestone
 - [?] [CS-332](./items/CS-332-benchmark-catalog-growth.md) Benchmark catalog growth. Proposed. Needs nothing.
 - [?] [CS-333](./items/CS-333-dyno-s-analysis-and-results-features-notes.md) Dyno's analysis and results features: notes, saved views, authoring in the Explorer, deeper analysis. Proposed. Needs nothing.
 - [?] [CS-334](./items/CS-334-benchmarks-across-os-browser-and-gpu-vendor.md) Benchmarks across OS, browser and GPU vendor, with power and thermals. Proposed. Needs CS-324.
-- [ ] [CS-335](./items/CS-335-headless-rendering-on-dawn-s-node-package.md) Headless rendering on Dawn's Node package. Needs CS-275 (Content sources and formats).
 
 ### Infrastructure and geoscience capabilities
 
@@ -1035,13 +1037,10 @@ Milestone: Extension users have validated 2.0 with their own data ([CS-608](./mi
 
 Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614-the-branch-is-a-clean-modern-2-0-build.md), Planned)
 
+- [ ] [CS-610](./items/CS-610-the-2-0-repository-s-design-build-system-ci-cd.md) The 2.0 repository's design: build system, CI/CD and release pipeline. Needs nothing.
 - [ ] [CS-611](./items/CS-611-the-1-x-code-is-replaced-in-the-branch.md) The 1.x code is replaced in the branch. Needs CS-610.
 - [ ] [CS-612](./items/CS-612-the-new-build-system.md) The new build system. Needs CS-610.
 - [ ] [CS-613](./items/CS-613-ci-cd-on-the-new-build-with-the-release-pipeline.md) CI/CD on the new build, with the release pipeline. Needs CS-612.
-
-No milestone
-
-- [ ] [CS-610](./items/CS-610-the-2-0-repository-s-design-build-system-ci-cd.md) The 2.0 repository's design: build system, CI/CD and release pipeline. Needs nothing.
 
 ### Packaging and package names
 

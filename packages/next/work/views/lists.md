@@ -358,7 +358,7 @@ No milestone
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 30 of 41 done, 4 ready, 6 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 32 of 42 done, 5 ready, 5 blocked, 1 dropped. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
@@ -385,9 +385,10 @@ Milestone: Dyno's Work page shows the live system and the release plan (CS-561, 
 - [x] CS-684 Dyno's Work page drops the retired long outcomes: no Long outcomes view, and dropped milestones out of every grouping. Done.
 - [x] CS-685 Dyno's release flags list only the milestones a release needs, and flag items that cross a release. Done.
 - [x] CS-688 Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes. Done.
-- [ ] CS-692 Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it. Needs CS-685.
-- [ ] CS-693 Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle. Needs CS-685 and CS-694.
-- [ ] CS-694 Dyno's Dependencies view: what a chosen milestone or item waits on and unblocks, with the global structure behind a toggle. Needs CS-692.
+- [x] CS-692 Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it. Done.
+- [ ] CS-693 Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle. Needs CS-685.
+- [ ] CS-694 Dyno's Dependencies view: what a chosen milestone or item waits on and unblocks, with the global structure behind a toggle. Needs nothing.
+- [ ] CS-696 One hover card for the Work page's views: state, progress with labeled colors, open blockers, room to slip, next step. Needs CS-692, CS-694 and CS-693.
 
 Milestone: The final release is ready to publish (CS-678, Planned)
 
@@ -414,7 +415,8 @@ No milestone
 - [x] CS-686 decision: How should we use proposals until hitld does it for us, and what should the Proposals tab show?. Done.
 - [x] CS-689 decision: Merge run 2026-11-18-2's green batches overnight. Done.
 - [x] CS-690 decision: Merge the rest of run 2026-11-18-2's green batches as they pass. Done.
-- [?] CS-691 Dyno's Fewest crossings roadmap layout places real milestones (d3-dag's simplex fails today). Proposed. Needs nothing.
+- [-] CS-691 Dyno's Fewest crossings roadmap layout places real milestones (d3-dag's simplex fails today). Dropped: The owner, 2026-11-18: dropped with the three-view roadmap design; CS-694 removes the Fewest crossings layout rather than fixing it.
+- [x] CS-697 decision: Merge CS-692, the Plan view. Done.
 
 ### Follow-ups for other teams
 
@@ -465,6 +467,7 @@ Milestone: Cameras move freely on any body (CS-425, Planned)
 - [ ] CS-218 The orthographic camera, `fitBounds` and the dolly between projections. Needs CS-216.
 - [ ] CS-219 The CAD-style controller. Needs CS-218.
 - [ ] CS-220 The Viewer and the frames explorer on rigs and controllers; 5d's done-when checks. Needs CS-217 and CS-219.
+- [ ] CS-569 Mars is a known body, so a Mars tileset loads on its own ellipsoid instead of refusing. Needs nothing.
 
 Milestone: Each body has its own sky and light (CS-426, Planned)
 
@@ -501,7 +504,6 @@ Milestone: Launch and re-entry fill in the replay (CS-429, Planned)
 No milestone
 
 - [x] CS-566 decision: CS-200: the globe and lod parity suites need the ion token in executor worktrees. Done.
-- [ ] CS-569 Mars is a known body, so a Mars tileset loads on its own ellipsoid instead of refusing. Needs nothing.
 
 ### Frames and engineering coordinates follow-ups
 
@@ -742,6 +744,7 @@ Milestone: Image regression and parity are checked in CI (CS-483, Planned)
 
 - [ ] CS-327 Image regression in CI on SwiftShader, with saved checks and the parity pages as checks. Needs CS-323, CS-397 (Dyno as the development harness) and CS-401 (Dyno as the development harness).
 - [ ] CS-330 Custom shaders and feature styles compared against 1.x. Needs nothing.
+- [ ] CS-335 Headless rendering on Dawn's Node package. Needs CS-275 (Content sources and formats).
 - [ ] CS-448 Energy compensation for coloured metals, against a multiple-scattering reference. Needs nothing.
 - [ ] CS-541 The parity tests compare against CesiumJS 1.147.0, pinned. Needs nothing.
 - [ ] CS-542 Every parity result names its oracle. Needs CS-541.
@@ -767,7 +770,6 @@ No milestone
 - [?] CS-332 Benchmark catalog growth. Proposed. Needs nothing.
 - [?] CS-333 Dyno's analysis and results features: notes, saved views, authoring in the Explorer, deeper analysis. Proposed. Needs nothing.
 - [?] CS-334 Benchmarks across OS, browser and GPU vendor, with power and thermals. Proposed. Needs CS-324.
-- [ ] CS-335 Headless rendering on Dawn's Node package. Needs CS-275 (Content sources and formats).
 
 ### Infrastructure and geoscience capabilities
 
@@ -978,13 +980,10 @@ CS-609, Planned, led by owner: 0 of 4 done, 1 ready, 3 blocked.
 
 Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
 
+- [ ] CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline. Needs nothing.
 - [ ] CS-611 The 1.x code is replaced in the branch. Needs CS-610.
 - [ ] CS-612 The new build system. Needs CS-610.
 - [ ] CS-613 CI/CD on the new build, with the release pipeline. Needs CS-612.
-
-No milestone
-
-- [ ] CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline. Needs nothing.
 
 ### Packaging and package names
 

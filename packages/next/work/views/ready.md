@@ -243,7 +243,8 @@ CS-18 The work tracker
   CS-677  Release notes and a security review for 2.0.0
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
-  CS-692  Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it
+  CS-693  Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle
+  CS-694  Dyno's Dependencies view: what a chosen milestone or item waits on and unblocks, with the global structure behind a toggle
 
-174 ready
+175 ready
 ```

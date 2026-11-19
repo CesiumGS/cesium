@@ -42,9 +42,9 @@ CS-419 Cesium IR covers what materials need [Planned], under CS-10 Cesium IR
 
 CS-420 The public API shape is approved [Planned], under CS-437 The public API reviews
   outcome: Every public member is mapped and reviewed against the façade's constraints and other engines' idioms, and the owner has approved which changes to make.
-  constraints: 2 of 9 done
-  unmet: not linked to a clause yet (open: CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-572; check not passed)
-  to shape: done_when; check; link CS-101, CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-454, CS-572 to a clause
+  constraints: 2 of 10 done
+  unmet: not linked to a clause yet (open: CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-572, CS-567; check not passed)
+  to shape: done_when; check; link CS-101, CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-454, CS-572, CS-567 to a clause
 
 CS-421 Every public call can cross a thread [Planned], under CS-13 The worker-mode façade
   outcome: On the main thread, reads are promises, per-tick snapshots or tracked points, writes are commands, functions the engine runs are modules or programs, and engine internals are out of the main entry, and content is placed by its declared CRS, with no placement mode.
@@ -78,9 +78,9 @@ CS-424 The Earth and the Moon render together [Planned], under CS-188 Earth to M
 
 CS-425 Cameras move freely on any body [Planned], under CS-188 Earth to Moon (frames 5c to 5h)
   outcome: Every camera controller works on any body or reference frame, gestures are bindings, and moving between rigs is an animated transition, not a jump.
-  constraints: 0 of 10 done
-  unmet: not linked to a clause yet (open: CS-211, CS-212, CS-213, CS-214, CS-215, CS-216, CS-217, CS-218, CS-219, CS-220; check not passed)
-  to shape: done_when; check; link CS-211, CS-212, CS-213, CS-214, CS-215, CS-216, CS-217, CS-218, CS-219, CS-220 to a clause
+  constraints: 0 of 11 done
+  unmet: not linked to a clause yet (open: CS-211, CS-212, CS-213, CS-214, CS-215, CS-216, CS-217, CS-218, CS-219, CS-220, CS-569; check not passed)
+  to shape: done_when; check; link CS-211, CS-212, CS-213, CS-214, CS-215, CS-216, CS-217, CS-218, CS-219, CS-220, CS-569 to a clause
 
 CS-426 Each body has its own sky and light [Planned], under CS-188 Earth to Moon (frames 5c to 5h)
   outcome: The sky follows what the camera is attached to: each body's atmosphere is evaluated physically from where the camera really is, with sunlight, body shadows and earthshine per body.
@@ -224,9 +224,9 @@ CS-472 Transition costs are measured and the options decided [Planned], under CS
 
 CS-473 Warped views draw without twins or stalls [Planned], under CS-17 The transform graph
   outcome: Each view routes without twins, the camera branch takes eye steps, centre constants live on the GPU, a refused draw shows a stand-in at once, level of detail works through a warp, each warp family's fixes are in, and the inspector counts warped draws by how they are drawn.
-  constraints: 0 of 7 done
-  unmet: not linked to a clause yet (open: CS-159, CS-160, CS-161, CS-162, CS-164, CS-168, CS-450; check not passed)
-  to shape: done_when; check; link CS-159, CS-160, CS-161, CS-162, CS-164, CS-168, CS-450 to a clause
+  constraints: 0 of 8 done
+  unmet: not linked to a clause yet (open: CS-159, CS-160, CS-161, CS-162, CS-164, CS-168, CS-450, CS-253; check not passed)
+  to shape: done_when; check; link CS-159, CS-160, CS-161, CS-162, CS-164, CS-168, CS-450, CS-253 to a clause
 
 CS-474 Steep warps draw without artifacts [Planned], under CS-17 The transform graph
   outcome: The runaway at α 1 and the cliff bands under the ×10 warp are explained and fixed, and the owner decides whether shading and haze read the drawn or the true height.
@@ -284,9 +284,9 @@ CS-482 Benchmarks run per merge on dedicated machines [Planned], under CS-195 Be
 
 CS-483 Image regression and parity are checked in CI [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: SwiftShader runs image checks and the parity pages in CI, custom shaders and feature styles match 1.x, and coloured metals match a multiple-scattering reference.
-  constraints: 0 of 8 done
-  unmet: not linked to a clause yet (open: CS-327, CS-330, CS-448, CS-541, CS-542, CS-568, CS-581, CS-582; check not passed)
-  to shape: done_when; check; link CS-327, CS-330, CS-448, CS-541, CS-542, CS-568, CS-581, CS-582 to a clause
+  constraints: 0 of 9 done
+  unmet: not linked to a clause yet (open: CS-327, CS-330, CS-448, CS-541, CS-542, CS-568, CS-581, CS-582, CS-335; check not passed)
+  to shape: done_when; check; link CS-327, CS-330, CS-448, CS-541, CS-542, CS-568, CS-581, CS-582, CS-335 to a clause
 
 CS-484 The performance targets are met or the gaps explained [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: Throttled network scenarios run against a link-shaping server, Dyno's guardrails are revisited per scene, and every performance target, multi-view included, is met or its gap explained.
@@ -469,9 +469,9 @@ CS-560 Content from any source loads through one module seam [Planned], under CS
 
 CS-561 Dyno's Work page shows the live system and the release plan [Proposed], under CS-18 The work tracker
   outcome: A reader of Dyno's Work page sees what's moving now (dispatches, branches waiting to merge, the active run) and where each release falls among the milestones that feed it.
-  constraints: 9 of 12 done
-  unmet: not linked to a clause yet (open: CS-692, CS-693, CS-694; check not passed)
-  to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563, CS-573, CS-683, CS-684, CS-685, CS-688, CS-692, CS-693, CS-694 to a clause
+  constraints: 10 of 13 done
+  unmet: not linked to a clause yet (open: CS-693, CS-694, CS-696; check not passed)
+  to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563, CS-573, CS-683, CS-684, CS-685, CS-688, CS-692, CS-693, CS-694, CS-696 to a clause
 
 CS-595 Every 1.x widget's job has a StrataKit widget [Planned], under CS-584 The widgets library
   outcome: An app drops in StrataKit widgets for every job 1.x's widgets did, as React components or through DOM wrappers, and the Viewer is built from them.
@@ -499,9 +499,9 @@ CS-608 Extension users have validated 2.0 with their own data [Planned], under C
 
 CS-614 The branch is a clean, modern 2.0 build [Planned], under CS-609 A clean 2.0 branch and a modern build
   outcome: The branch holds 2.0 alone, built, tested and released by a modern pipeline.
-  constraints: 0 of 3 done
-  unmet: not linked to a clause yet (open: CS-611, CS-612, CS-613; check not passed)
-  to shape: done_when; check; link CS-611, CS-612, CS-613 to a clause
+  constraints: 0 of 4 done
+  unmet: not linked to a clause yet (open: CS-611, CS-612, CS-613, CS-610; check not passed)
+  to shape: done_when; check; link CS-611, CS-612, CS-613, CS-610 to a clause
 
 CS-621 The core installs alone, and the whole engine installs from one umbrella package [Planned], under CS-615 Packaging and package names
   outcome: A host installs only the core, or the whole engine through `cesium@2`, with every package at one version.
