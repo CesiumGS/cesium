@@ -38,9 +38,12 @@ describe("Scene/Model/ModelDeformerUpdateStage", function () {
   }
 
   function update(runtimePrimitive, runtimeNode = {}) {
-    ModelDeformerUpdateStage.update(runtimePrimitive, {
+    const sceneGraph = {
       _runtimeNodes: [runtimeNode],
-    });
+      expandBoundingSphere: jasmine.createSpy("expandBoundingSphere"),
+    };
+    ModelDeformerUpdateStage.update(runtimePrimitive, sceneGraph);
+    return sceneGraph;
   }
 
   function expectBounds(runtimePrimitive, minimum, maximum) {
@@ -59,10 +62,15 @@ describe("Scene/Model/ModelDeformerUpdateStage", function () {
     const runtimePrimitive = createRuntimePrimitive([
       createBinding([-1.0, 0.0, 0.0], [1.0, 2.0, 3.0]),
     ]);
-    update(runtimePrimitive);
+    const runtimeNode = {};
+    const sceneGraph = update(runtimePrimitive, runtimeNode);
 
     expectBounds(runtimePrimitive, [-1.0, 0.0, 0.0], [1.0, 2.0, 3.0]);
     expect(runtimePrimitive.deformedBoundsDirty).toBe(false);
+    expect(sceneGraph.expandBoundingSphere).toHaveBeenCalledOnceWith(
+      runtimePrimitive.boundingSphere,
+      runtimeNode,
+    );
   });
 
   it("adds the offsets of several bindings from the rest bounds", function () {
