@@ -2,10 +2,11 @@
 id: CS-698
 title: The Flow page's cumulative flow chart reads a day in a hover card, with each stage's count and its change from the day before
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-18
 needs: [CS-696]
+claimed_by: orch-9-CS-698
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/work.ts]
 ---
 
