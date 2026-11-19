@@ -216,9 +216,7 @@ CS-18 The work tracker
   CS-677  Release notes and a security review for 2.0.0
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
-  CS-688  Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes
-  CS-692  Dyno's roadmap has a sequence view: the planner's order played through the run's executor slots
-  CS-693  Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle
+  CS-692  Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it
 
 CS-13 The worker-mode façade
   CS-567  The protocol table classifies every member of api/surface.txt, not only the exported names
@@ -248,5 +246,5 @@ CS-637 The particle system
 CS-647 Conditional content and motion
   CS-649  Intervals and interval sets in /time
 
-177 ready
+175 ready
 ```

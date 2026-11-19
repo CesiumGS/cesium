@@ -18,15 +18,15 @@ CS-415 WebGL 2 draws models, tiles and the globe [Planned], under CS-9 The WebGL
 
 CS-416 WebGL 2 reaches parity with WebGPU [Planned], under CS-9 The WebGL 2 renderer
   outcome: On WebGL 2, styles, warps, picks, outputs, user code, the atmosphere and the further effects match WebGPU within the agreed tolerances, shown on the test devices.
-  constraints: 0 of 8 done
-  unmet: not linked to a clause yet (open: CS-39, CS-40, CS-41, CS-42, CS-44, CS-45, CS-47, CS-46; check not passed)
-  to shape: done_when; check; link CS-39, CS-40, CS-41, CS-42, CS-44, CS-45, CS-47, CS-46 to a clause
+  constraints: 0 of 7 done
+  unmet: not linked to a clause yet (open: CS-40, CS-41, CS-42, CS-44, CS-45, CS-47, CS-46; check not passed)
+  to shape: done_when; check; link CS-40, CS-41, CS-42, CS-44, CS-45, CS-47, CS-46 to a clause
 
 CS-417 Transforms and styles compile through Cesium IR [Planned], under CS-10 Cesium IR
   outcome: Styles, transforms and routes are Cesium IR programs that evaluate in float64 on the CPU and emit both WGSL and GLSL ES, with the same results as today.
-  constraints: 2 of 10 done
-  unmet: not linked to a clause yet (open: CS-49, CS-50, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371; check not passed)
-  to shape: done_when; check; link CS-48, CS-49, CS-50, CS-51, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371 to a clause
+  constraints: 2 of 11 done
+  unmet: not linked to a clause yet (open: CS-49, CS-50, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371, CS-39; check not passed)
+  to shape: done_when; check; link CS-48, CS-49, CS-50, CS-51, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371, CS-39 to a clause
 
 CS-418 Any shader language reaches both renderers [Planned], under CS-10 Cesium IR
   outcome: WGSL, MaterialX and `KHR_interactivity` graphs come into Cesium IR through one public API, with diagnostics and an inspector, so one program runs on both renderers and the CPU.
@@ -469,9 +469,9 @@ CS-560 Content from any source loads through one module seam [Planned], under CS
 
 CS-561 Dyno's Work page shows the live system and the release plan [Proposed], under CS-18 The work tracker
   outcome: A reader of Dyno's Work page sees what's moving now (dispatches, branches waiting to merge, the active run) and where each release falls among the milestones that feed it.
-  constraints: 7 of 11 done
-  unmet: not linked to a clause yet (open: CS-547, CS-688, CS-692, CS-693; check not passed)
-  to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563, CS-573, CS-683, CS-684, CS-685, CS-688, CS-692, CS-693 to a clause
+  constraints: 8 of 12 done
+  unmet: not linked to a clause yet (open: CS-547, CS-692, CS-693, CS-694; check not passed)
+  to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563, CS-573, CS-683, CS-684, CS-685, CS-688, CS-692, CS-693, CS-694 to a clause
 
 CS-595 Every 1.x widget's job has a StrataKit widget [Planned], under CS-584 The widgets library
   outcome: An app drops in StrataKit widgets for every job 1.x's widgets did, as React components or through DOM wrappers, and the Viewer is built from them.
@@ -581,6 +581,12 @@ CS-678 The final release is ready to publish [Planned], under CS-18 The work tra
   unmet: not linked to a clause yet (open: CS-677; check not passed)
   to shape: done_when; check; link CS-677 to a clause
 
+CS-695 Every package has its API reference [Planned], under CS-615 Packaging and package names
+  outcome: Every published package has a generated API reference with its tiers marked, published with the release.
+  constraints: 0 of 1 done
+  unmet: not linked to a clause yet (open: CS-619; check not passed)
+  to shape: done_when; check; link CS-619 to a clause
+
 CS-1 Renderers and engine profiles [Dropped]
 CS-2 Cesium IR and materials [Dropped]
 CS-3 Threading [Dropped]
@@ -591,5 +597,5 @@ CS-7 Upstream follow-ups [Dropped]
 CS-436 The public API [Dropped]
 CS-525 Bodies, frames and engineering coordinates [Dropped]
 
-93 open milestone(s)
+94 open milestone(s)
 ```

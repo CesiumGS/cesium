@@ -604,6 +604,8 @@ CS-18 The work tracker
         CS-657 Content projects onto any surface
         CS-668 1.x's data formats load as modules
         CS-675 1.x's smaller tools have 2.0 homes
+        CS-463 Main-thread work fits the tick's slices
+        CS-461 A headed run shows whether worker mode ticks smoother
   CS-532  Release 2.0.0-rc.1
       ← CS-531 Release 2.0.0-beta.1
         CS-416 WebGL 2 reaches parity with WebGPU
@@ -632,11 +634,15 @@ CS-18 The work tracker
         CS-614 The branch is a clean, modern 2.0 build
         CS-627 A 1.x app moves to 2.0 with the kit and is shown to match
         CS-636 1.x's Sandcastle examples run on the new engine
-        CS-619 The API reference for every package
+        CS-695 Every package has its API reference
   CS-533  Release 2.0.0
       ← CS-532 Release 2.0.0-rc.1
         CS-608 Extension users have validated 2.0 with their own data
         CS-678 The final release is ready to publish
+  CS-693  Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle
+      ← CS-694 Dyno's Dependencies view: what a chosen milestone or item waits on and unblocks, with the global structure behind a toggle
+  CS-694  Dyno's Dependencies view: what a chosen milestone or item waits on and unblocks, with the global structure behind a toggle
+      ← CS-692 Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it
 
 CS-584 The widgets library
   CS-586  The existing widgets move onto the library: time controls, credits, the inspector and the observer panel
@@ -744,5 +750,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-245 blocked
+247 blocked
 ```

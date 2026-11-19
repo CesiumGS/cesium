@@ -57,7 +57,6 @@ Milestone: WebGL 2 draws models, tiles and the globe (CS-415, Planned)
 
 Milestone: WebGL 2 reaches parity with WebGPU (CS-416, Planned)
 
-- [ ] CS-39 Styles and warps through Cesium IR. Needs CS-38, CS-52 (Cesium IR), CS-54 (Cesium IR) and CS-55 (Cesium IR).
 - [ ] CS-40 Picks and outputs. Needs CS-36.
 - [ ] CS-41 User code on the WebGL 2 renderer. Needs CS-40, CS-58 (Cesium IR) and CS-61 (Cesium IR).
 - [ ] CS-42 The atmosphere. Needs CS-38.
@@ -68,6 +67,7 @@ Milestone: WebGL 2 reaches parity with WebGPU (CS-416, Planned)
 
 No milestone
 
+- [ ] CS-39 Styles and warps through Cesium IR. Needs CS-38, CS-52 (Cesium IR), CS-54 (Cesium IR) and CS-55 (Cesium IR).
 - [?] CS-370 Scene rebuild after a WebGL 2 context loss. Proposed. Needs CS-113 (worker-mode façade) and CS-36.
 
 ### Cesium IR
@@ -358,7 +358,7 @@ No milestone
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 28 of 40 done, 7 ready, 4 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 29 of 41 done, 5 ready, 6 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
@@ -384,9 +384,10 @@ Milestone: Dyno's Work page shows the live system and the release plan (CS-561, 
 - [x] CS-683 Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question. Done.
 - [x] CS-684 Dyno's Work page drops the retired long outcomes: no Long outcomes view, and dropped milestones out of every grouping. Done.
 - [x] CS-685 Dyno's release flags list only the milestones a release needs, and flag items that cross a release. Done.
-- [ ] CS-688 Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes. Needs nothing.
-- [ ] CS-692 Dyno's roadmap has a sequence view: the planner's order played through the run's executor slots. Needs CS-685.
-- [ ] CS-693 Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle. Needs CS-685.
+- [x] CS-688 Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes. Done.
+- [ ] CS-692 Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it. Needs CS-685.
+- [ ] CS-693 Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle. Needs CS-685 and CS-694.
+- [ ] CS-694 Dyno's Dependencies view: what a chosen milestone or item waits on and unblocks, with the global structure behind a toggle. Needs CS-692.
 
 Milestone: The final release is ready to publish (CS-678, Planned)
 
@@ -404,8 +405,8 @@ No milestone
 - [x] CS-528 decision: Which milestones does 2.0.0-rc.1 need?. Done.
 - [x] CS-529 decision: Which milestones does 2.0.0 need?. Done.
 - [ ] CS-530 Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery) and CS-606 (Trust and evals).
-- [ ] CS-531 Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-657 (Vector drawing and the styling language), CS-668 (Content sources and formats) and CS-675 (public API reviews).
-- [ ] CS-532 Release 2.0.0-rc.1. Needs CS-528, CS-531, CS-416 (WebGL 2 renderer), CS-423 (worker-mode façade), CS-461 (job system's ports), CS-463 (job system's ports), CS-465 (job system's ports), CS-467 (Engine profiles), CS-471 (Level-of-detail transitions), CS-472 (Level-of-detail transitions), CS-474 (transform graph), CS-484 (Benchmarks, parity and image regression), CS-503 (GPU-driven rendering and capacities), CS-504 (Budgeted selection and memory), CS-511 (Benchmarks, parity and image regression), CS-491 (Sky, light and atmosphere), CS-502 (GPU-driven rendering and capacities), CS-481 (Dyno as the development harness), CS-482 (Benchmarks, parity and image regression), CS-478 (Dyno as the development harness), CS-479 (Dyno as the development harness), CS-480 (Dyno as the development harness), CS-483 (Benchmarks, parity and image regression), CS-470 (Refinement and convergence), CS-607 (Trust and evals), CS-614 (A clean 2.0 branch and a modern build), CS-627 (agent-first migration kit), CS-636 (Sandcastle as 2.0's gallery) and CS-619 (Packaging and package names).
+- [ ] CS-531 Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-657 (Vector drawing and the styling language), CS-668 (Content sources and formats), CS-675 (public API reviews), CS-463 (job system's ports) and CS-461 (job system's ports).
+- [ ] CS-532 Release 2.0.0-rc.1. Needs CS-528, CS-531, CS-416 (WebGL 2 renderer), CS-423 (worker-mode façade), CS-461 (job system's ports), CS-463 (job system's ports), CS-465 (job system's ports), CS-467 (Engine profiles), CS-471 (Level-of-detail transitions), CS-472 (Level-of-detail transitions), CS-474 (transform graph), CS-484 (Benchmarks, parity and image regression), CS-503 (GPU-driven rendering and capacities), CS-504 (Budgeted selection and memory), CS-511 (Benchmarks, parity and image regression), CS-491 (Sky, light and atmosphere), CS-502 (GPU-driven rendering and capacities), CS-481 (Dyno as the development harness), CS-482 (Benchmarks, parity and image regression), CS-478 (Dyno as the development harness), CS-479 (Dyno as the development harness), CS-480 (Dyno as the development harness), CS-483 (Benchmarks, parity and image regression), CS-470 (Refinement and convergence), CS-607 (Trust and evals), CS-614 (A clean 2.0 branch and a modern build), CS-627 (agent-first migration kit), CS-636 (Sandcastle as 2.0's gallery) and CS-695 (Packaging and package names).
 - [ ] CS-533 Release 2.0.0. Needs CS-529, CS-532, CS-608 (Trust and evals) and CS-678.
 - [x] CS-536 decision: Approve a store device. Done.
 - [x] CS-564 decision: How CS-545's branch reaches main without a hitld dispatch. Done.
@@ -995,7 +996,7 @@ Milestone: The core installs alone, and the whole engine installs from one umbre
 - [ ] CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella. Needs CS-616 and CS-310 (B-reps and geometry queries).
 - [ ] CS-618 An embedding app installs the core alone, checked by an install and bundle test. Needs CS-617.
 
-No milestone
+Milestone: Every package has its API reference (CS-695, Planned)
 
 - [ ] CS-619 The API reference for every package. Needs CS-617.
 

@@ -14,7 +14,7 @@ graph LR
   CS_15["Refinement and convergence<br/>0 of 13 done"]
   CS_16["Streaming robustness<br/>0 of 22 done"]
   CS_17["transform graph<br/>0 of 14 done"]
-  CS_18["work tracker<br/>28 of 40 done"]
+  CS_18["work tracker<br/>29 of 41 done"]
   CS_19["Follow-ups for other teams<br/>0 of 12 done"]
   CS_188["Earth to Moon (frames 5c to 5h)<br/>3 of 43 done"]
   CS_189["Frames and engineering coordinates follow-ups<br/>0 of 22 done"]
@@ -81,7 +81,7 @@ graph LR
   CS_10 -->|3| CS_18
   CS_437 -->|3| CS_18
   CS_13 -->|4| CS_18
-  CS_12 -->|6| CS_18
+  CS_12 -->|8| CS_18
   CS_188 -->|4| CS_18
   CS_189 -->|4| CS_18
   CS_192 -->|2| CS_18

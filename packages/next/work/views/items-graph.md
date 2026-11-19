@@ -250,12 +250,13 @@ graph LR
     CS_684["CS-684 Dyno's Work page drops the retired long outcomes: no Long outco"]:::done
     CS_685["CS-685 Dyno's release flags list only the milestones a release needs, "]:::done
     CS_686["CS-686 How should we use proposals until hitld does it for us, and wha"]:::done
-    CS_688["CS-688 Dyno's Proposals tab follows the proposal flow: to discuss, bei"]:::open
+    CS_688["CS-688 Dyno's Proposals tab follows the proposal flow: to discuss, bei"]:::done
     CS_689["CS-689 Merge run 2026-11-18-2's green batches overnight"]:::done
     CS_690["CS-690 Merge the rest of run 2026-11-18-2's green batches as they pass"]:::done
     CS_691["CS-691 Dyno's Fewest crossings roadmap layout places real milestones ("]:::proposed
-    CS_692["CS-692 Dyno's roadmap has a sequence view: the planner's order played "]:::open
+    CS_692["CS-692 Dyno's roadmap Plan view: what gets built when, grouped by rele"]:::open
     CS_693["CS-693 Dyno's Projects view: each project's readiness per release, wha"]:::open
+    CS_694["CS-694 Dyno's Dependencies view: what a chosen milestone or item waits"]:::open
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external
@@ -679,10 +680,10 @@ graph LR
   CS_657["CS-657 Content projects onto any surface"]:::open
   CS_668["CS-668 1.x's data formats load as modules"]:::open
   CS_675["CS-675 1.x's smaller tools have 2.0 homes"]:::open
+  CS_463["CS-463 Main-thread work fits the tick's slices"]:::open
+  CS_461["CS-461 A headed run shows whether worker mode ticks smoother"]:::open
   CS_416["CS-416 WebGL 2 reaches parity with WebGPU"]:::open
   CS_423["CS-423 Measurements set the default thread"]:::open
-  CS_461["CS-461 A headed run shows whether worker mode ticks smoother"]:::open
-  CS_463["CS-463 Main-thread work fits the tick's slices"]:::open
   CS_465["CS-465 Jobs share one tick budget and decode can't hang"]:::open
   CS_467["CS-467 Fidelity adapts without silent fallbacks"]:::open
   CS_471["CS-471 Nothing pops when level of detail changes"]:::open
@@ -705,6 +706,7 @@ graph LR
   CS_614["CS-614 The branch is a clean, modern 2.0 build"]:::open
   CS_627["CS-627 A 1.x app moves to 2.0 with the kit and is shown to match"]:::open
   CS_636["CS-636 1.x's Sandcastle examples run on the new engine"]:::open
+  CS_695["CS-695 Every package has its API reference"]:::open
   CS_608["CS-608 Extension users have validated 2.0 with their own data"]:::open
   CS_678["CS-678 The final release is ready to publish"]:::open
   CS_20 --> CS_21
@@ -1139,6 +1141,8 @@ graph LR
   CS_657 --> CS_531
   CS_668 --> CS_531
   CS_675 --> CS_531
+  CS_463 --> CS_531
+  CS_461 --> CS_531
   CS_528 --> CS_532
   CS_531 --> CS_532
   CS_416 --> CS_532
@@ -1167,7 +1171,7 @@ graph LR
   CS_614 --> CS_532
   CS_627 --> CS_532
   CS_636 --> CS_532
-  CS_619 --> CS_532
+  CS_695 --> CS_532
   CS_529 --> CS_533
   CS_532 --> CS_533
   CS_608 --> CS_533
@@ -1264,6 +1268,8 @@ graph LR
   CS_683 --> CS_685
   CS_685 --> CS_692
   CS_685 --> CS_693
+  CS_694 --> CS_693
+  CS_692 --> CS_694
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3
