@@ -3,6 +3,13 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   barCounts,
   boardStatus,
+  cardDetail,
+  clampZoom,
+  fitZoom,
+  ZOOM_MAX,
+  ZOOM_MIN,
+  zoomAbout,
+  zoomStep,
   committedOnly,
   filterItems,
   filterLoose,
@@ -433,14 +440,75 @@ describe("the milestone map shows committed work", () => {
     ],
   };
 
-  it("leaves out proposals, and decisions and waits no milestone holds", () => {
+  it("leaves out proposals and outside waits no milestone holds", () => {
     const ids = (m: ReturnType<typeof milestoneMapOf>) =>
       m.nodes.map((n) => n.id).sort();
     const committed = milestoneMapOf(s, undefined, "steps");
-    expect(ids(committed)).toEqual(["CS-50", "CS-51", "unshaped-CS-2"]);
+    // CS-31, a decision of the owner's in no milestone, is a card (CS-683).
+    expect(ids(committed)).toEqual([
+      "CS-31",
+      "CS-50",
+      "CS-51",
+      "unshaped-CS-2",
+    ]);
     const loose = committed.nodes.find((n) => n.unshaped)!;
     // Only CS-33: CS-30 is proposed, CS-31 and CS-32 aren't work.
     expect(Object.values(loose.counts).reduce((a, b) => a + b, 0)).toBe(1);
+    expect(loose.items).toEqual(["CS-33"]);
+    expect(loose.decision).toBe(false);
+  });
+
+  it("draws your decisions in no milestone with their question and what waits (CS-683)", () => {
+    const waits: WorkSnapshot = {
+      ...s,
+      items: [
+        ...s.items.map((it) =>
+          it.id === "CS-31"
+            ? {
+                ...it,
+                title: "Which way should it go?",
+                needed_by: ["CS-33", "CS-20"],
+              }
+            : it.id === "CS-20" || it.id === "CS-33"
+              ? { ...it, needs: ["CS-31"], open_needs: ["CS-31"] }
+              : it,
+        ),
+        // Waited on more, so named first among the project's loose items.
+        item("CS-35", { needed_by: ["CS-20"] }),
+        // Proposed, and in no project: neither is a card.
+        item("CS-36", {
+          kind: "decision",
+          decider: "owner",
+          state: "proposed",
+        }),
+        item("CS-37", {
+          kind: "decision",
+          decider: "owner",
+          project: undefined,
+        }),
+      ],
+    };
+    const m = milestoneMapOf(waits, undefined, "steps");
+    const d = m.nodes.find((n) => n.id === "CS-31")!;
+    expect(d).toMatchObject({
+      decision: true,
+      unshaped: false,
+      title: "Which way should it go?",
+      lane: "CS-2",
+      items: ["CS-20", "CS-33"],
+      x0: 0,
+    });
+    expect(m.nodes.some((n) => n.id === "CS-36" || n.id === "CS-37")).toBe(
+      false,
+    );
+    // Its wait to CS-50, whose CS-20 needs it, is soft: it moves nothing.
+    expect(
+      m.edges.find((e) => e.from === "CS-31" && e.to === "CS-50"),
+    ).toMatchObject({ soft: true, items: ["CS-20"] });
+    expect(m.nodes.find((n) => n.id === "CS-50")!.x0).toBe(0);
+    expect(m.nodes.find((n) => n.unshaped)!.items).toEqual(["CS-35", "CS-33"]);
+    // A milestone names nothing on its card; its items are in the pane.
+    expect(m.nodes.find((n) => n.id === "CS-50")!.items).toEqual([]);
   });
 
   it("counts work in the bar and marks what holds it up apart", () => {
@@ -479,6 +547,7 @@ describe("the milestone map shows committed work", () => {
     ]);
     const map = milestoneMapOf(shown, undefined, "steps");
     expect(map.nodes.map((n) => n.id).sort()).toEqual([
+      "CS-31",
       "CS-50",
       "CS-51",
       "unshaped-CS-2",
@@ -978,5 +1047,50 @@ describe("proposed milestones on the roadmap (CS-563)", () => {
     const committed = committedOnly(s);
     expect(committed.milestones.map((m) => m.id)).toEqual(["CS-100"]);
     expect(committedOnly(committed)).toBe(committed);
+  });
+});
+
+describe("the roadmap's zoom (CS-683)", () => {
+  it("steps through the levels and stays in range", () => {
+    expect(zoomStep(1, 1)).toBe(1.25);
+    expect(zoomStep(1, -1)).toBe(0.8);
+    // Between two levels, a step goes to the next one either way.
+    expect(zoomStep(0.9, 1)).toBe(1);
+    expect(zoomStep(0.9, -1)).toBe(0.8);
+    expect(zoomStep(ZOOM_MAX, 1)).toBe(ZOOM_MAX);
+    expect(zoomStep(ZOOM_MIN, -1)).toBe(ZOOM_MIN);
+    expect(clampZoom(100)).toBe(ZOOM_MAX);
+    expect(clampZoom(0)).toBe(ZOOM_MIN);
+    expect(clampZoom(Number.NaN)).toBe(1);
+    expect(clampZoom(0.41234)).toBe(0.412);
+  });
+
+  it("keeps the point under the pointer still, past what doesn't scale", () => {
+    // Lane names 170 wide keep their size: 200 past them at 100% is 600 past at 300%.
+    expect(zoomAbout(370, 170, 1, 3)).toBe(770);
+    // Over the lane names, a point stays put.
+    expect(zoomAbout(100, 170, 1, 3)).toBe(100);
+    // Out and back in lands where it began.
+    expect(zoomAbout(zoomAbout(500, 170, 1, 0.5), 170, 0.5, 1)).toBeCloseTo(
+      500,
+    );
+  });
+
+  it("fits the whole map, never past 100%, and never a pixel over", () => {
+    const fixed = { x: 170, y: 80 };
+    expect(fitZoom({ w: 1000, h: 600 }, { w: 800, h: 400 }, fixed)).toBe(1);
+    const z = fitZoom({ w: 1270, h: 646 }, { w: 1270, h: 6000 }, fixed);
+    expect(z).toBe(0.095);
+    expect(fixed.y + (6000 - fixed.y) * z).toBeLessThanOrEqual(646);
+    expect(fitZoom({ w: 100, h: 100 }, { w: 1e6, h: 1e6 }, fixed)).toBe(
+      ZOOM_MIN,
+    );
+  });
+
+  it("draws a card's text at full size or not at all", () => {
+    expect(cardDetail(200, 72)).toBe("full");
+    expect(cardDetail(100, 36)).toBe("name");
+    expect(cardDetail(200, 20)).toBe("mark");
+    expect(cardDetail(40, 60)).toBe("mark");
   });
 });

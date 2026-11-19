@@ -1547,17 +1547,6 @@ a.work-related-item:focus-visible {
 .work-rm-waits .MuiLink-root {
   font-size: inherit;
 }
-.work-roadmap-legend {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--stratakit-space-200) var(--stratakit-space-500);
-  margin-top: var(--stratakit-space-400);
-}
-.work-roadmap-legend .work-legend {
-  margin: 0;
-}
 .work-legend-key {
   display: inline-flex;
   align-items: center;
@@ -1930,15 +1919,12 @@ button.work-mrow-big:focus-visible {
   align-items: center;
   gap: var(--stratakit-space-300);
 }
-.work-map-wrap {
-  overflow-x: auto;
-  padding-bottom: var(--stratakit-space-200);
-}
 .work-map {
   position: relative;
 }
 .work-map-lane {
   position: absolute;
+  box-sizing: border-box;
   left: 0;
   right: 0;
   border-top: 1px solid var(--stratakit-color-border-neutral-muted);
@@ -2065,6 +2051,68 @@ button.work-mrow-big:focus-visible {
   -webkit-line-clamp: 1;
   line-clamp: 1;
 }
+/* The names on a card of loose work: a project's items, or what waits on a decision. */
+.work-map-node-names {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--stratakit-font-size-caption-md);
+  line-height: 1.3;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-map-node.decision .work-map-node-names {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/*
+ * An open decision of the owner's in no milestone (CS-683): its question
+ * by the fork, outlined in the decision's ink, as its badges are.
+ */
+.work-map-node.decision {
+  background: var(--stratakit-color-bg-page-base);
+  border: 1px solid var(--kind-decision);
+}
+.work-map-node.decision:hover {
+  border-color: var(--stratakit-color-text-neutral-primary);
+}
+/*
+ * Semantic zoom (CS-683): a card's text is drawn at full size or not at
+ * all. "name" keeps its name on one line, "mark" only its glyph and bar.
+ */
+.work-map-node {
+  overflow: hidden;
+}
+.work-map-node.d-name,
+.work-map-node.d-mark {
+  gap: 3px;
+  padding: 2px var(--stratakit-space-200);
+}
+.work-map-node.d-name .work-outline-label {
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+}
+.work-map-node.d-name .work-map-node-meta,
+.work-map-node.d-name .work-map-node-names,
+.work-map-node.d-name .work-hold,
+.work-map-node.d-mark .work-outline-label,
+.work-map-node.d-mark .work-map-node-meta,
+.work-map-node.d-mark .work-map-node-names,
+.work-map-node.d-mark .work-hold,
+.work-map-node.no-bar .work-map-bar,
+.work-map-node.no-bar .work-meter,
+.work-map-node.d-tiny .work-kind-mark {
+  display: none;
+}
+.work-map-node.d-mark {
+  padding: 1px 3px;
+  justify-content: center;
+}
+.work-map-node.d-tiny .work-map-bar {
+  height: 4px;
+}
 .work-map-bar {
   flex: none;
   height: 6px;
@@ -2093,17 +2141,28 @@ button.work-mrow-big:focus-visible {
   flex-direction: column;
   gap: 2px;
 }
+.work-map-tip-list {
+  display: flex;
+  flex-direction: column;
+  padding-inline-start: var(--stratakit-space-300);
+}
+/* The critical path, first in the key: what it is, then why it matters. */
 .work-map-path {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--stratakit-space-150);
-  margin: var(--stratakit-space-300) 0 0;
+  align-items: baseline;
+  gap: var(--stratakit-space-200);
+  margin: 0 0 var(--stratakit-space-300);
+  line-height: 1.45;
 }
 .work-map-path-key {
-  width: 18px;
+  flex: none;
+  width: 22px;
   height: 0;
-  border-top: 2px solid var(--stratakit-color-border-accent-strong);
+  border-top: 3px solid var(--stratakit-color-border-accent-strong);
+  transform: translateY(-4px);
+}
+.work-map-path-note {
+  color: var(--stratakit-color-text-neutral-secondary);
 }
 @media (prefers-reduced-motion: reduce) {
   .work-map-edge,
@@ -2118,6 +2177,12 @@ button.work-mrow-big:focus-visible {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* A lane too thin for its name at this zoom: named on hover. */
+.work-map-lane-name.thin {
+  top: 0;
+  bottom: 0;
 }
 /* Placed by the map, ahead of the tooltip rule's position: relative. */
 .work-map .work-map-wait {
@@ -2233,21 +2298,56 @@ button.work-mrow-big:focus-visible {
   background: var(--stage-done);
 }
 
-/* The key under the map. */
-.work-map-legend {
-  list-style: none;
+/*
+ * The roadmap's key (CS-683), above the map: the critical path first,
+ * then each mark beside its meaning, in groups for cards, bars and waits.
+ */
+.work-key {
+  margin: 0 0 var(--stratakit-space-400);
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.work-key > p:last-child {
   margin: var(--stratakit-space-300) 0 0;
+}
+.work-key-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--stratakit-space-300) var(--stratakit-space-600);
+}
+.work-key-head {
+  margin: 0 0 var(--stratakit-space-150);
+  font-weight: 600;
+  text-transform: none;
+}
+.work-key-group ul {
+  list-style: none;
+  margin: 0;
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: var(--stratakit-space-200) var(--stratakit-space-500);
-  font-size: var(--stratakit-font-size-caption-md);
-  color: var(--stratakit-color-text-neutral-secondary);
+  gap: var(--stratakit-space-150) var(--stratakit-space-400);
 }
-.work-map-legend li {
+/* Cards and waits read as a column of meanings; stages, a row of names. */
+.work-key-group:not(:has(.work-swatch)) ul {
+  flex-direction: column;
+}
+.work-key-group .work-legend-key {
+  align-items: center;
+  color: var(--stratakit-color-text-neutral-primary);
+  line-height: 1.3;
+}
+.work-key-mark {
+  flex: none;
   display: inline-flex;
   align-items: center;
-  gap: var(--stratakit-space-150);
+  justify-content: center;
+  width: 26px;
+}
+.work-key-mark .work-meter {
+  width: 26px;
 }
 .work-map-key {
   width: 22px;
@@ -2272,6 +2372,68 @@ button.work-mrow-big:focus-visible {
 }
 .work-map-key-line.direct {
   border-top-style: dashed;
+}
+.work-map-key-line.critical {
+  border-top: 3px solid var(--stratakit-color-border-accent-strong);
+}
+.work-map-key.unshaped {
+  background: var(--stratakit-color-bg-page-depth);
+  border-color: var(--stratakit-color-border-neutral-muted);
+}
+.work-map-key.decision {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-color: var(--kind-decision);
+  height: 16px;
+}
+.work-map-key.decision .work-kind-mark {
+  width: 11px;
+  height: 11px;
+}
+
+/*
+ * The roadmap's canvas (CS-683): zoom and pan as in Figma. It grabs: a
+ * drag anywhere pans, and touch goes to the canvas, not the page.
+ */
+.work-zoom-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200) var(--stratakit-space-400);
+  margin-bottom: var(--stratakit-space-200);
+}
+.work-zoom-tools {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  margin-inline-start: auto;
+}
+.work-zoom-tools .MuiButton-root {
+  gap: var(--stratakit-space-150);
+}
+.work-zoom-level {
+  min-width: 4.5em;
+  font-variant-numeric: tabular-nums;
+}
+.work-canvas {
+  position: relative;
+  overflow: auto;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-md);
+}
+.work-canvas:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.work-canvas.panning,
+.work-canvas.panning * {
+  cursor: grabbing;
 }
 
 /* Tokens spent against a budget. */
@@ -2321,8 +2483,8 @@ button.work-mrow-big:focus-visible {
 }
 
 /*
- * A project's open items that no milestone holds yet: a slim gray tray
- * (solid; on the roadmap, dashes mean proposed).
+ * A project's open items that no milestone holds yet: a gray tray with
+ * their names (solid; on the roadmap, dashes mean proposed).
  */
 .work-map-node.unshaped {
   background: var(--stratakit-color-bg-page-depth);
@@ -2331,19 +2493,6 @@ button.work-mrow-big:focus-visible {
 .work-map-node.unshaped .work-map-node-title {
   font-weight: 400;
   color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-map .work-map-node.unshaped {
-  height: 30px;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  gap: var(--stratakit-space-200);
-}
-.work-map-node.unshaped .work-map-bar {
-  display: none;
-}
-.work-map-node.unshaped .work-map-node-title {
-  flex: none;
 }
 .work-map-edge.soft {
   stroke-dasharray: 2 3;

@@ -1660,6 +1660,17 @@ export interface MapNode {
   started: boolean;
   /** A project's open items that no milestone holds yet. */
   unshaped: boolean;
+  /**
+   * An open decision of the owner's that no milestone holds (CS-683): its
+   * id is the decision's, its title the question.
+   */
+  decision: boolean;
+  /**
+   * The items to name on it, most waited on first: a project's items in
+   * no milestone, or the open items that wait on a decision. None for a
+   * milestone.
+   */
+  items: string[];
   /** A proposed milestone: not committed yet (shown only when asked for). */
   proposed: boolean;
 }
@@ -1738,25 +1749,36 @@ export function milestoneMapOf(
   // one bar ("not in a milestone yet"), for context: placed after the
   // milestones they wait on, they never move a milestone (lumping a
   // project's items together would make loops its items don't have).
-  // Decisions and outside waits no milestone holds stay off the map: they
-  // are in Your move and Waiting outside.
+  // Each of the owner's open decisions that no milestone holds is a card of
+  // its own in its project's lane, placed the same way (CS-683). Outside
+  // waits no milestone holds stay off the map, in Waiting outside.
   const covered = new Set(
     s.milestones.flatMap((m) => m.constraints.map((c) => c.id)),
   );
+  const loose = (it: WorkItem) =>
+    !!it.project &&
+    isOpen(it) &&
+    !isReleaseItem(it) &&
+    it.state !== "proposed" &&
+    !covered.has(it.id);
   const unshaped = new Map<string, string[]>();
+  const looseDecisions: WorkItem[] = [];
   for (const it of s.items) {
-    if (
-      it.project &&
-      isOpen(it) &&
-      isWork(it) &&
-      !isReleaseItem(it) &&
-      it.state !== "proposed" &&
-      !covered.has(it.id)
-    ) {
+    if (loose(it) && isWork(it)) {
       const key = `${UNSHAPED}${it.project}`;
       unshaped.set(key, [...(unshaped.get(key) ?? []), it.id]);
+    } else if (loose(it) && isOwnerDecision(it)) {
+      looseDecisions.push(it);
     }
   }
+  const decisionIds = new Set(looseDecisions.map((d) => d.id));
+  // Names on a card, the most waited on first.
+  const byWaiting = (ids: readonly string[]) =>
+    [...ids].sort(
+      (a, b) =>
+        (itemOf.get(b)?.needed_by.length ?? 0) -
+          (itemOf.get(a)?.needed_by.length ?? 0) || idNumber(a) - idNumber(b),
+    );
   // What holds a bar up besides its work: the owner's open decisions and
   // open waits on other parties, held or needed directly by its items.
   const holdsOf = (ids: readonly string[]) => {
@@ -1786,6 +1808,7 @@ export function milestoneMapOf(
   const rows = milestoneRoadmapOf(s, s.items, flight, proposals);
   const itemsIn = (id: string) =>
     unshaped.get(id) ??
+    (decisionIds.has(id) ? [id] : undefined) ??
     msOf.get(id)?.constraints.map((c) => c.id) ??
     (isReleaseItem(itemOf.get(id))
       ? itemOf.get(id)!.needs.filter((n) => !msOf.has(n))
@@ -1980,6 +2003,9 @@ export function milestoneMapOf(
     if (id.startsWith(UNSHAPED)) {
       return id.slice(UNSHAPED.length);
     }
+    if (decisionIds.has(id)) {
+      return itemOf.get(id)!.project!;
+    }
     const m = msOf.get(id)!;
     const base = m.project ?? "";
     // With a release in focus, what it doesn't need moves to its own band.
@@ -2012,6 +2038,8 @@ export function milestoneMapOf(
         loop: r.group.length > 1 ? r.group : undefined,
         started: r.counts.Done > 0 || r.counts["In flight"] > 0,
         unshaped: r.id.startsWith(UNSHAPED),
+        decision: false,
+        items: [],
         proposed: msOf.get(r.id)?.state === "proposed",
         // The waits that finish last set its start: those name why it is here.
         after: start
@@ -2043,7 +2071,9 @@ export function milestoneMapOf(
     ]),
   );
   const softEdges: MapEdge[] = [];
-  for (const [id, members] of unshaped) {
+  // A loose card starts after the milestones its items wait on, and its
+  // waits to and from milestones are soft: context, not order.
+  const placeLoose = (id: string, members: readonly string[]) => {
     const open = new Set(members);
     let start = 0;
     for (const r of rows) {
@@ -2076,6 +2106,15 @@ export function milestoneMapOf(
         });
       }
     }
+    return start;
+  };
+  // Outside a release in focus unless one of the milestones it feeds is in.
+  const looseLane = (id: string) =>
+    cone && !softEdges.some((e) => e.from === id && cone.has(e.to))
+      ? `${OUTSIDE}${laneOf(id)}`
+      : laneOf(id);
+  for (const [id, members] of unshaped) {
+    const start = placeLoose(id, members);
     const counts = Object.fromEntries(STAGES.map((st) => [st, 0])) as Record<
       Stage,
       number
@@ -2091,10 +2130,7 @@ export function milestoneMapOf(
     nodes.push({
       id,
       title: "Not in a milestone yet",
-      lane:
-        cone && !softEdges.some((e) => e.from === id && cone.has(e.to))
-          ? `${OUTSIDE}${laneOf(id)}`
-          : laneOf(id),
+      lane: looseLane(id),
       sub: 0,
       x0: start,
       x1: start + (unit === "steps" ? 1 : tokens.left),
@@ -2106,6 +2142,46 @@ export function milestoneMapOf(
       tokens,
       started: counts.Done > 0 || counts["In flight"] > 0,
       unshaped: true,
+      decision: false,
+      items: byWaiting(members),
+      proposed: false,
+      after: [],
+    });
+  }
+  // The owner's decisions in no milestone: the question, and what waits.
+  for (const d of looseDecisions) {
+    const start = placeLoose(d.id, [d.id]);
+    const counts = Object.fromEntries(STAGES.map((st) => [st, 0])) as Record<
+      Stage,
+      number
+    >;
+    const st = stageOf(d, flight);
+    if (st) {
+      counts[st]++;
+    }
+    const tokens = tokensOf(d.id);
+    nodes.push({
+      id: d.id,
+      title: d.title,
+      lane: looseLane(d.id),
+      sub: 0,
+      x0: start,
+      x1: start + (unit === "steps" ? 1 : tokens.left),
+      slack: 0,
+      critical: false,
+      counts,
+      decisions: 0,
+      outside: holdsOf(d.open_needs).outside.size,
+      tokens,
+      started: false,
+      unshaped: false,
+      decision: true,
+      items: byWaiting(
+        d.needed_by.filter((n) => {
+          const it = itemOf.get(n);
+          return !!it && isOpen(it);
+        }),
+      ),
       proposed: false,
       after: [],
     });
@@ -2113,7 +2189,9 @@ export function milestoneMapOf(
   // Lanes: projects with milestones first (by their first start), then
   // those not yet shaped into milestones, by project number; then, with a
   // release in focus, what it doesn't need.
-  const shaped = new Set(nodes.filter((n) => !n.unshaped).map((n) => n.lane));
+  const shaped = new Set(
+    nodes.filter((n) => !n.unshaped && !n.decision).map((n) => n.lane),
+  );
   const band = (lane: string) => (lane.startsWith(OUTSIDE) ? 1 : 0);
   const laneIds = [
     ...new Set(
@@ -2248,4 +2326,72 @@ export function loopTies(
     kept = kept.filter((_, j) => j !== i);
   }
   return removed;
+}
+
+/**
+ * The roadmap's zoom (CS-683), as Figma's: the levels the keys and buttons
+ * step through, from a whole map at a glance to a milestone up close.
+ * The zoom is semantic: it scales where things sit and how big they are,
+ * never the text, which keeps its size and drops detail as a card shrinks.
+ */
+export const ZOOM_LEVELS: readonly number[] = [
+  0.05, 0.1, 0.15, 0.25, 0.33, 0.5, 0.67, 0.8, 1, 1.25, 1.5, 2, 3, 4,
+];
+export const ZOOM_MIN = ZOOM_LEVELS[0]!;
+export const ZOOM_MAX = ZOOM_LEVELS[ZOOM_LEVELS.length - 1]!;
+
+/** A zoom kept in range, rounded so the level reads as a whole percent. */
+export function clampZoom(z: number): number {
+  if (!Number.isFinite(z)) {
+    return 1;
+  }
+  return Math.round(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z)) * 1000) / 1000;
+}
+
+/** The next level in or out from a zoom (the + and − keys). */
+export function zoomStep(z: number, dir: 1 | -1): number {
+  const eps = 1e-6;
+  const next =
+    dir > 0
+      ? ZOOM_LEVELS.find((l) => l > z + eps)
+      : [...ZOOM_LEVELS].reverse().find((l) => l < z - eps);
+  return next ?? (dir > 0 ? ZOOM_MAX : ZOOM_MIN);
+}
+
+/**
+ * Where a point of the content lands at another zoom, along one axis:
+ * what sits before `fixed` (the lane names, the step headers) keeps its
+ * place, and the rest scales from there.
+ */
+export function zoomAbout(
+  at: number,
+  fixed: number,
+  from: number,
+  to: number,
+): number {
+  return at <= fixed ? at : fixed + ((at - fixed) * to) / from;
+}
+
+/**
+ * The zoom that fits the whole content in the view: the content's size at
+ * zoom 1 against the view's, past the parts that don't scale.
+ */
+export function fitZoom(
+  view: { w: number; h: number },
+  content: { w: number; h: number },
+  fixed: { x: number; y: number },
+): number {
+  const across = (view.w - fixed.x) / Math.max(1, content.w - fixed.x);
+  const down = (view.h - fixed.y) / Math.max(1, content.h - fixed.y);
+  // Down to the next thousandth, so the content fits, never one pixel over.
+  return clampZoom(Math.floor(Math.min(1, across, down) * 1000) / 1000);
+}
+
+/**
+ * How much a card can show at its size on screen, so text is drawn at
+ * full size or not at all: everything, its name on one line, or only its
+ * mark and bar.
+ */
+export function cardDetail(w: number, h: number): "full" | "name" | "mark" {
+  return h >= 60 && w >= 120 ? "full" : h >= 24 && w >= 64 ? "name" : "mark";
 }

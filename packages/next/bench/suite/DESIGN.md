@@ -281,9 +281,44 @@ milestones named by their outcome, each with an `outcome` sentence,
     milestones among what feeds a release, which the flags mark; its
     cells count every open item either way. A milestone's bar counts its work;
     the owner's decisions and waits on other parties that hold it up are
-    badges beside its name, each with its kind's glyph. Decisions and
-    outside waits no milestone holds stay in Your move and Waiting
-    outside.
+    badges beside its name, each with its kind's glyph. In project
+    lanes (CS-683), each of the owner's open decisions that no milestone
+    holds is a card of its own in its project's lane: its kind's fork and
+    ink (the card outlined in it, as the badges are), its question, and
+    the names of the open items that wait on it; it opens in the pane.
+    A project's open work in no milestone is a gray tray that names its
+    items, the most waited on first. Both are placed after the
+    milestones they wait on and move none (their waits are soft), and
+    the fewest crossings layout leaves them out. Outside waits no
+    milestone holds stay in Waiting outside.
+  - **The key sits above the roadmap (CS-683)**, so it is read before
+    the marks: the critical path first, in words with its accent line,
+    then each mark beside its meaning in three groups, Cards (under way,
+    not started, proposed, a loop, a decision, a project's loose items;
+    each shown only when the map has one), Bars (each stage's fill, and
+    the budget meter in tokens) and Waits (a wait, one the milestone
+    names, the critical path). The list keeps its stage key above it
+    too. `KeyGroup`, `KeyItem` and `StageKeys` draw it, and
+    `ProposedKey` joins the Cards group.
+  - **The map zooms and pans as Figma does (CS-683).** Both layouts sit
+    in one canvas (`ZoomCanvas`), most of the window high: pinch, or
+    Ctrl or ⌘ with the wheel, zooms about the pointer; the wheel and a
+    drag from anywhere pan (a drag that ends on a card opens nothing);
+    the keys + and − step through the levels (5% to 400%), Shift+1 fits
+    the whole map and Shift+0 goes back to 100%, anywhere in the canvas
+    or its bar. The bar over the canvas says so, shows the level
+    (choosing it goes back to 100%) and has zoom out, zoom in and Fit,
+    all reachable by keyboard; arrows scroll the focused canvas. The
+    zoom is semantic: it scales where things sit and how big the cards
+    are, never the text, so text is drawn at full size or not at all. A
+    card shows everything, then its name on one line, then only its
+    glyph and bar (`cardDetail`); a lane too thin for its name is named
+    on hover, and the step headers drop their words, then their number.
+    Nothing animates, so reduced motion needs nothing more. The zoom
+    lives in the page, not the URL, and starts at 100%, the map as it
+    was drawn before. Zoomed out until the map is narrower than the
+    canvas, it rests at the left: the canvas scrolls natively, for the
+    keyboard and for focus, so it can't hold empty space beside it.
   - **Proposals**: what could be taken on next, as bets to commit or
     drop, in one table read top to bottom. Every row has the same
     columns: the idea, what stands between it and committing, and how
