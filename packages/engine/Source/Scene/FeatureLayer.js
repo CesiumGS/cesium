@@ -15,7 +15,8 @@ import MetadataSemantic from "./MetadataSemantic.js";
 
 /**
  * A named set of features defined by source data. It neither renders nor styles its
- * features. Created from 3D Tiles 1.1 groups or from GeoJSON.
+ * features. The source format does not matter to the layer. Currently, layers are
+ * created from 3D Tiles 1.1 groups or from GeoJSON.
  * <p>
  * Do not construct this directly. Access layers through a
  * {@link Cesium3DTileset#featureLayers} or a {@link FeatureLayerProvider}, such as
@@ -99,6 +100,7 @@ class FeatureLayer {
 /**
  * @param {*} metadata A {@link GroupMetadata}, typed loosely because its accessors are <code>@private</code>.
  * @returns {string|undefined}
+ * @private
  */
 function getDefaultName(metadata) {
   if (!defined(metadata)) {
