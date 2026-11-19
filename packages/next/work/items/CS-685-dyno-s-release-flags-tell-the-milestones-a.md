@@ -2,7 +2,7 @@
 id: CS-685
 title: Dyno's release flags list only the milestones a release needs, and flag items that cross a release
 kind: work
-state: in-progress
+state: done
 created: 2026-11-17
 project: CS-18
 needs: [CS-683]
