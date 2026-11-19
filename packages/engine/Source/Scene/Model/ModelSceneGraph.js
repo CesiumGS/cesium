@@ -610,8 +610,6 @@ ModelSceneGraph.prototype.buildRenderResources = function (frameState) {
 ModelSceneGraph.prototype.computeBoundingVolumes = function (
   modelRenderResources,
 ) {
-  const model = this._model;
-
   const modelPositionMin = Cartesian3.fromElements(
     Number.MAX_VALUE,
     Number.MAX_VALUE,
@@ -671,33 +669,85 @@ ModelSceneGraph.prototype.computeBoundingVolumes = function (
     }
   }
 
-  this._boundingSphere = BoundingSphere.fromCornerPoints(
-    modelPositionMin,
-    modelPositionMax,
-    new BoundingSphere(),
+  this._boundingSphere = transformToSceneGraph(
+    this,
+    BoundingSphere.fromCornerPoints(
+      modelPositionMin,
+      modelPositionMax,
+      new BoundingSphere(),
+    ),
   );
+  updateModelBoundingSphere(this);
+};
 
-  this._boundingSphere = BoundingSphere.transformWithoutScale(
+const scratchNodeBoundingSphere = new BoundingSphere();
+
+/**
+ * Grows the bounding spheres of the scene graph and the model to contain a
+ * bounding sphere in a node's space, e.g. when a primitive's bounds change. If a primitive's
+ * bounds shrink, rebuild the draw commands to refit to the primitives.
+ *
+ * @param {BoundingSphere} boundingSphere The bounding sphere, in the node's space.
+ * @param {ModelRuntimeNode} runtimeNode The node.
+ *
+ * @private
+ */
+ModelSceneGraph.prototype.expandBoundingSphere = function (
+  boundingSphere,
+  runtimeNode,
+) {
+  const sphere = BoundingSphere.transform(
+    boundingSphere,
+    runtimeNode.computedTransform,
+    scratchNodeBoundingSphere,
+  );
+  BoundingSphere.union(
     this._boundingSphere,
-    this._axisCorrectionMatrix,
+    transformToSceneGraph(this, sphere),
     this._boundingSphere,
   );
+  updateModelBoundingSphere(this);
+};
 
-  this._boundingSphere = BoundingSphere.transform(
-    this._boundingSphere,
-    this._components.transform,
-    this._boundingSphere,
+/**
+ * Transforms a bounding sphere, in place, from the space of the scene graph's
+ * nodes to the scene graph's space.
+ *
+ * @param {ModelSceneGraph} sceneGraph
+ * @param {BoundingSphere} sphere
+ * @returns {BoundingSphere}
+ * @private
+ */
+function transformToSceneGraph(sceneGraph, sphere) {
+  BoundingSphere.transformWithoutScale(
+    sphere,
+    sceneGraph._axisCorrectionMatrix,
+    sphere,
   );
+  return BoundingSphere.transform(
+    sphere,
+    sceneGraph._components.transform,
+    sphere,
+  );
+}
 
+/**
+ * Updates the model's bounding sphere from the scene graph's.
+ *
+ * @param {ModelSceneGraph} sceneGraph
+ * @private
+ */
+function updateModelBoundingSphere(sceneGraph) {
+  const model = sceneGraph._model;
   model._boundingSphere = BoundingSphere.transform(
-    this._boundingSphere,
+    sceneGraph._boundingSphere,
     model.modelMatrix,
     model._boundingSphere,
   );
 
   model._initialRadius = model._boundingSphere.radius;
   model._boundingSphere.radius *= model._clampedScale;
-};
+}
 
 /**
  * Creates the draw commands for the primitives in the scene graph.

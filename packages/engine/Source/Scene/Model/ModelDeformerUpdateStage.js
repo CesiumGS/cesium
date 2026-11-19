@@ -80,6 +80,7 @@ ModelDeformerUpdateStage.update = function (runtimePrimitive, sceneGraph) {
     runtimePrimitive.boundingSphere,
   );
   runtimePrimitive.drawCommand?.updateBoundingVolume();
+  sceneGraph.expandBoundingSphere(runtimePrimitive.boundingSphere, runtimeNode);
 };
 
 export default ModelDeformerUpdateStage;

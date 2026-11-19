@@ -990,6 +990,34 @@ describe(
         );
       });
 
+      it("grows the model's bounding sphere to contain the deformed primitives", async function () {
+        const [primitive] = await loadPrimitives(unitSquarePlainUrl);
+        const model = primitive._model;
+        const restRadius = model.boundingSphere.radius;
+        const binding = createBinding(Cartesian3.ZERO);
+        binding.computeDeformedBoundingBox = (result) =>
+          AxisAlignedBoundingBox.fromCorners(
+            new Cartesian3(-10.0, -10.0, -10.0),
+            new Cartesian3(10.0, 10.0, 10.0),
+            result,
+          );
+
+        primitive.addDeformerBinding(binding);
+        scene.renderForSpecs();
+        const deformed = BoundingSphere.transform(
+          primitive._runtimePrimitive.boundingSphere,
+          primitive._runtimePrimitive.drawCommand.modelMatrix,
+        );
+        expect(model.boundingSphere.radius).toBeGreaterThan(restRadius * 10.0);
+        expect(
+          BoundingSphere.union(model.boundingSphere, deformed),
+        ).toEqualEpsilon(model.boundingSphere, 1e-6);
+
+        primitive.removeDeformerBinding(binding);
+        scene.renderForSpecs();
+        expect(model.boundingSphere.radius).toEqualEpsilon(restRadius, 1e-6);
+      });
+
       it("renders deformed positions", async function () {
         if (webglStub) {
           return;
