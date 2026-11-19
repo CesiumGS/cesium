@@ -2,9 +2,10 @@
 id: CS-688
 title: "Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-18
 project: CS-18
+claimed_by: orch-9-CS-688
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/work.ts, packages/next/bench/suite/DESIGN.md]
 ---
 
