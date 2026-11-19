@@ -1264,6 +1264,30 @@ function generateCesiumTypeScriptDefinitions() {
     );
   }
 
+  // API Extractor adds a _2 suffix to declarations whose names match a global, such as
+  // DOM's Event, and exports them as `export { Event_2 as Event }`. Restore the names
+  // so hovers and error messages show them, unless the file refers to the global too.
+  let source = readFileSync("Source/Cesium.d.ts").toString();
+  const renamedExports = Array.from(
+    source.matchAll(/^export \{ (\w+)_2 as \1 \};?$/gm),
+  );
+  const codeLines = source
+    .split("\n")
+    .filter((line) => !/^\s*(\*|\/\*\*|\/\/)/.test(line));
+  for (const [exportLine, name] of renamedExports) {
+    const reference = new RegExp(`(^|[^\\w.$])${name}\\b`);
+    const otherReference = codeLines.find(
+      (line) => line !== exportLine && reference.test(line),
+    );
+    if (otherReference) {
+      throw new Error(
+        `Cannot restore the name ${name} in Source/Cesium.d.ts, which also refers to the global ${name}: ${otherReference}`,
+      );
+    }
+    source = source.replace(new RegExp(`\\b${name}_2\\b`, "g"), name);
+  }
+  writeFileSync("Source/Cesium.d.ts", source);
+
   // Use tsc to compile it and make sure it is valid
   execSync("npx tsc -p tsconfig.types.json", {
     stdio: "inherit",
