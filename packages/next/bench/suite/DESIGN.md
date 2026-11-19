@@ -229,10 +229,14 @@ milestones named by their outcome, each with an `outcome` sentence,
   - **Your move** (the default): the owner's attention is the
     constraint, so each section leads with its number and lists the
     most waited-on first, counting what waits through other items.
-    Your decisions, ready to start, work in progress (who holds each,
-    on which branch, claims in other worktrees and local branches
-    included until they merge) and waiting outside, as they stand now;
-    a decision or an outside wait in progress stays in its own section.
+    Your decisions and, beside them, the proposals for you (CS-688: the
+    current batch to discuss, at most five, oldest filed first, and
+    every one ready for your yes, each with its header and its stage,
+    linking into the Proposals view with it chosen); work in progress
+    (who holds each, on which branch, claims in other worktrees and
+    local branches included until they merge) across the page; then
+    ready to start and waiting outside, as they stand now; a decision
+    or an outside wait in progress stays in its own section.
     How they change is Flow's. The rail's count is the owner's, and it
     is the only count outside the view.
   - **Roadmap**: what comes after what, without dates. By milestones (a
@@ -353,20 +357,42 @@ milestones named by their outcome, each with an `outcome` sentence,
     was drawn before. Zoomed out until the map is narrower than the
     canvas, it rests at the left: the canvas scrolls natively, for the
     keyboard and for focus, so it can't hold empty space beside it.
-  - **Proposals**: what could be taken on next, as bets to commit or
-    drop, in one table read top to bottom. Every row has the same
-    columns: the idea, what stands between it and committing, and how
-    many open items wait on it. What stands in the way is one of three,
-    marked as the board marks stages: ready to commit (nothing it needs
-    is open), waits on your answer (an open decision of the owner's,
-    whose answer commits or drops it), or waits on other items; the
-    cell names what it waits on by ID, each title on hover. Projects
-    head their rows, whole projects of proposals first, and a proposed
-    milestone keeps its ideas under it; a committed milestone that needs
-    an idea is named under it. A toggle narrows the table to one of the
-    three; narrowed to your answers, the rows group by the decision they
-    wait on, the one that frees most first. The whole row opens the
-    idea's text, the why, in the pane. Narrow, each row stacks.
+  - **Proposals (CS-688)**: candidate commitments (CS-686), laid out as
+    the flow they go through: new to discuss, being shaped, ready for
+    your yes, and the "later" copies awaiting review. A proposal is a
+    proposed item or milestone. Its header (source, why now and what it
+    unblocks, rough size, decider, date) is the paragraph of its text
+    that starts `**Proposal**`, read field by field
+    (`proposalHeaderOf` in `work.ts`; the adapter passes on only the
+    proposals' text, from `hitld work query --bodies`). The stage
+    follows from the tracker (`proposalsOf`): being shaped when an open
+    decision or study (a learning milestone) comes before the commit;
+    later when it has no header yet, since nobody has made its case for
+    now (CS-680 gives each one); ready for your yes when it has a
+    header and is shaped (an item's text has a "Done when", a milestone
+    has nothing left to shape); to discuss when it has a header but
+    isn't shaped. A line under the title says how to commit one until
+    HITLd's dashboard can: ask the main session to commit it, drop it
+    or send it to shaping. An alert lane leads, with the proposals that
+    committed work (a planned item, or a committed milestone's
+    constraints) needs, and what needs each, named: commit it or take
+    the need away. Then a section per stage, each with its count and
+    the rule that puts a proposal there ("None now" when empty),
+    grouped by project, a proposed milestone first in its project.
+    Every row has the same columns: the proposal, what a commit needs,
+    and how many open items wait on it. Under the title, its header
+    (source and why now, why now cut to two lines, then size, decider
+    and date), or a line saying it has none yet. What a commit needs is
+    the decider's yes (the owner when the header names no one), after
+    any open decision or study; the needs that hold back only its start
+    ("Starts after") sit under it, smaller, since committing isn't
+    starting. A proposed milestone's row lists every one of its
+    constraints with its state, proposed ones with the dashed outline
+    the roadmap uses (CS-563); the row opens the milestone in the pane,
+    as an item's row opens the item. A toggle narrows the view to one
+    stage (`&stage=` discuss, shaping, ready or later; every stage when
+    absent). Narrow, each row stacks, with the column's name over what
+    a commit needs. Nothing animates.
   - **No milestone (CS-562)**: the open items that no milestone's
     constraints name (`noMilestoneOf` in `work.ts`), so nothing
     committed falls outside the plan unseen. Planned work here is

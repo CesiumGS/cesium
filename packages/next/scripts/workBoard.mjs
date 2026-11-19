@@ -139,6 +139,13 @@ const idNumber = (id) => Number(String(id).replace(/^\D+-/, "")) || 0;
 const byNumber = (a, b) => idNumber(a.id) - idNumber(b.id);
 
 const ITEM = "item";
+
+/**
+ * A proposal's text (its body), which holds its header (CS-686); only
+ * proposals carry theirs, to keep the snapshot small.
+ */
+const proposalText = (e) =>
+  e.state === "proposed" && e.body ? String(e.body).trim() : undefined;
 const isOpen = (e) => e.state !== "done" && e.state !== "dropped";
 
 /** Progress counts over a set of items. */
@@ -182,7 +189,8 @@ function progressOf(items, ready, blocked) {
  */
 export async function queryWork(root, { elsewhere = [], history = [] } = {}) {
   const [all, readyAnswer, check, version] = await Promise.all([
-    hitld(root, ["work", "query", "--json"]),
+    // With the bodies: a proposal's text carries its header (CS-686).
+    hitld(root, ["work", "query", "--json", "--bodies"]),
     hitld(root, ["work", "query", "--ready", "--json"]),
     hitld(root, ["work", "check"]),
     hitld(root, ["version"]),
@@ -263,6 +271,7 @@ export async function queryWork(root, { elsewhere = [], history = [] } = {}) {
     open_needs: openNeeds(e),
     needed_by: neededBy.get(e.id) ?? [],
     milestones: e.constraint_of ?? [],
+    text: proposalText(e),
   }));
   const itemsOf = (projectIds) =>
     items.filter((it) => projectIds.has(it.project));
@@ -314,6 +323,7 @@ export async function queryWork(root, { elsewhere = [], history = [] } = {}) {
         itemConstraints.length > 0 &&
         done === itemConstraints.length &&
         !passed,
+      text: proposalText(m),
       to_shape: [
         !m.outcome && "outcome",
         !doneWhen.length && "clauses",
@@ -353,7 +363,7 @@ export async function queryWork(root, { elsewhere = [], history = [] } = {}) {
 
   return {
     api_version: API_VERSION,
-    source: `hitld work query --json (human-in-the-lead ${version.version})`,
+    source: `hitld work query --json --bodies (human-in-the-lead ${version.version})`,
     hitld_version: version.version,
     branch: git(root, ["rev-parse", "--abbrev-ref", "HEAD"]),
     commit: git(root, ["rev-parse", "--short", "HEAD"]),

@@ -27,7 +27,10 @@ import {
   milestoneRoadmapOf,
   nextActor,
   ownerQueue,
-  proposalGate,
+  byProject,
+  possessive,
+  proposalHeaderOf,
+  proposalsForOwner,
   proposalsOf,
   releasesGatedBy,
   stageOf,
@@ -74,6 +77,12 @@ describe("the board's adapter (scripts/workBoard.mjs) over hitld's read API", ()
     expect(API_VERSION).toBe(3);
     expect(s.branch).toBeTruthy();
     expect(s.source).toMatch(/^hitld work query --json/);
+  });
+
+  it("carries a proposal's text, for its header, and no one else's", () => {
+    const withText = [...s.items, ...s.milestones].filter((e) => e.text);
+    expect(withText.length).toBeGreaterThan(0);
+    expect(withText.every((e) => e.state === "proposed")).toBe(true);
   });
 
   it("refuses an answer in another read API version, saying so", () => {
@@ -566,86 +575,173 @@ describe("the milestone map shows committed work", () => {
   });
 });
 
-describe("the proposals", () => {
+describe("the proposals (CS-688)", () => {
+  const HEADER =
+    "**Proposal** (CS-686). Source: the CS-563 executor's report, run 2026-11-18-2, 2026-11-18. Why now: the layout shows no milestones (`shape=graph`). It predates the run. Rough size: small to medium. Decider: the owner. Filed: 2026-11-18.";
+  const DONE_WHEN = "## Done when\n\n- It works.";
+  const ms = (
+    id: string,
+    over: Partial<WorkMilestone> = {},
+  ): WorkMilestone => ({
+    id,
+    title: `Milestone ${id}`,
+    kind: "milestone",
+    learning: false,
+    state: "proposed",
+    project: "CS-2",
+    done_when: [],
+    constraints: [],
+    contributions: [],
+    check_results: [],
+    path: `m/${id}`,
+    progress: { done: 0, total: 0 },
+    check_due: false,
+    to_shape: [],
+    ...over,
+  });
   const s: WorkSnapshot = {
     ...snapshot,
     items: [
       item("CS-20"),
       item("CS-21", { kind: "decision", decider: "owner" }),
-      item("CS-22", { state: "proposed" }),
+      // Ready: a header and a "Done when", nothing open before the commit.
+      item("CS-22", {
+        state: "proposed",
+        text: `${HEADER}\n\n${DONE_WHEN}`,
+      }),
+      // Being shaped: a decision comes first; its other need is the start's.
       item("CS-23", {
         state: "proposed",
-        needs: ["CS-21"],
-        open_needs: ["CS-21"],
+        text: HEADER,
+        needs: ["CS-21", "CS-20"],
+        open_needs: ["CS-21", "CS-20"],
       }),
+      // Later: no header; planned work needs it.
       item("CS-24", {
         state: "proposed",
+        text: `Kept from the design's list.\n\n${DONE_WHEN}`,
         needs: ["CS-20"],
         open_needs: ["CS-20"],
       }),
-      item("CS-25", { state: "proposed" }),
+      // To discuss: a header, no "Done when" yet.
+      item("CS-25", {
+        state: "proposed",
+        text: HEADER.replace("2026-11-18.", "2026-11-17."),
+      }),
       item("CS-26", { state: "proposed" }),
+      item("CS-27", {
+        needs: ["CS-24"],
+        open_needs: ["CS-24"],
+        ready: false,
+      }),
       item("CS-30", { state: "proposed", project: "CS-3" }),
       item("CS-31", { state: "done", project: "CS-3" }),
     ],
     milestones: [
-      {
-        id: "CS-40",
-        title: "A bet",
-        kind: "milestone",
-        learning: false,
-        state: "proposed",
-        project: "CS-2",
-        done_when: [],
-        constraints: [{ id: "CS-26", clause: "c?" }],
-        contributions: [],
-        check_results: [],
-        path: "m/CS-40",
-        progress: { done: 0, total: 1 },
-        check_due: false,
-        to_shape: [],
-      },
+      // A proposed milestone: every constraint, whatever its state.
+      ms("CS-40", {
+        constraints: [
+          { id: "CS-26", clause: "c1" },
+          { id: "CS-20", clause: "c1" },
+          { id: "CS-31", clause: "c2" },
+        ],
+      }),
+      // A committed milestone that names a proposal.
+      ms("CS-41", {
+        state: "planned",
+        constraints: [{ id: "CS-30", clause: "c1" }],
+      }),
+      // A proposed milestone waiting on a study.
+      ms("CS-42", { constraints: [{ id: "CS-43", clause: "c1" }] }),
+      ms("CS-43", { state: "planned", learning: true }),
     ],
   };
-  const itemOf = new Map(s.items.map((i) => [i.id, i]));
-  const byId = (id: string) => itemOf.get(id)!;
+  const all = proposalsOf(s, s.items, s.milestones, new Map([["CS-26", 3]]));
+  const of = (id: string) => all.find((p) => p.id === id)!;
 
-  it("says what stands between a proposal and committing to it", () => {
-    expect(proposalGate(byId("CS-22"), itemOf)).toBe("free");
-    expect(proposalGate(byId("CS-23"), itemOf)).toBe("decision");
-    expect(proposalGate(byId("CS-24"), itemOf)).toBe("items");
+  it("reads a proposal's header from its text, field by field", () => {
+    expect(proposalHeaderOf(HEADER)).toEqual({
+      source: "the CS-563 executor's report, run 2026-11-18-2, 2026-11-18",
+      why: "the layout shows no milestones (`shape=graph`). It predates the run",
+      size: "small to medium",
+      decider: "the owner",
+      date: "2026-11-18",
+    });
+    expect(
+      proposalHeaderOf(`An item.\n\n${HEADER}\n\n${DONE_WHEN}`)?.size,
+    ).toBe("small to medium");
+    // A header that leaves fields out has only the ones it gives.
+    expect(proposalHeaderOf("**Proposal**. Source: a review.")).toEqual({
+      source: "a review",
+    });
+    expect(proposalHeaderOf("Source: not a header.")).toBeUndefined();
+    expect(proposalHeaderOf(undefined)).toBeUndefined();
   });
 
-  it("groups by project, whole projects first, with proposed milestones apart", () => {
-    const groups = proposalsOf(
-      s,
-      s.items,
-      s.milestones,
-      new Map([["CS-25", 2]]),
-    );
-    expect(groups.map((g) => [g.project?.id, g.whole, g.count])).toEqual([
-      ["CS-3", true, 1],
-      ["CS-2", false, 5],
-    ]);
-    const two = groups[1]!;
-    expect(two.milestones.map((m) => m.milestone.id)).toEqual(["CS-40"]);
-    expect(two.milestones[0]!.items.map((it) => it.id)).toEqual(["CS-26"]);
-    // Free first (the most waited on first), then decisions, then items.
-    expect(two.items.map((it) => it.id)).toEqual([
+  it("puts each proposal in its stage of the flow", () => {
+    expect(Object.fromEntries(all.map((p) => [p.id, p.stage]))).toEqual({
+      "CS-22": "ready",
+      "CS-23": "shaping",
+      "CS-24": "later",
+      "CS-25": "discuss",
+      "CS-26": "later",
+      "CS-30": "later",
+      "CS-40": "later",
+      "CS-42": "shaping",
+    });
+    // By stage, milestones first, then the most waited on, then by ID.
+    expect(all.map((p) => p.id)).toEqual([
       "CS-25",
-      "CS-22",
+      "CS-42",
       "CS-23",
+      "CS-22",
+      "CS-40",
+      "CS-26",
       "CS-24",
+      "CS-30",
     ]);
+  });
+
+  it("says what a commit needs, apart from what the start waits for", () => {
+    expect(of("CS-23")).toMatchObject({
+      decider: "the owner",
+      first: ["CS-21"],
+      startsAfter: ["CS-20"],
+    });
+    // Planned work it needs holds back its start, never its commit.
+    expect(of("CS-24")).toMatchObject({ first: [], startsAfter: ["CS-20"] });
+    // A study among a milestone's constraints comes before its commit.
+    expect(of("CS-42").first).toEqual(["CS-43"]);
+    expect(of("CS-40")).toMatchObject({ first: [], startsAfter: [] });
+    expect(possessive(of("CS-23").decider)).toBe("the owner's");
+    expect(possessive("Ines")).toBe("Ines'");
+  });
+
+  it("names the committed work that needs a proposal: the alert lane", () => {
+    expect(
+      all.filter((p) => p.neededBy.length).map((p) => [p.id, p.neededBy]),
+    ).toEqual([
+      ["CS-24", ["CS-27"]],
+      ["CS-30", ["CS-41"]],
+    ]);
+  });
+
+  it("gives Your move the batch to discuss and those ready for a yes", () => {
+    expect(proposalsForOwner(all).map((p) => p.id)).toEqual(["CS-25", "CS-22"]);
+    expect(proposalsForOwner(all, 0).map((p) => p.id)).toEqual(["CS-22"]);
   });
 
   it("keeps to the items and milestones it is given", () => {
-    const groups = proposalsOf(
+    const some = proposalsOf(
       s,
       s.items.filter((it) => it.project === "CS-3"),
       [],
     );
-    expect(groups.map((g) => g.project?.id)).toEqual(["CS-3"]);
+    expect(some.map((p) => p.id)).toEqual(["CS-30"]);
+    expect(byProject(s, all).map((g) => g.project?.id)).toEqual([
+      "CS-2",
+      "CS-3",
+    ]);
   });
 });
 

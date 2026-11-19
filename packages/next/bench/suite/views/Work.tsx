@@ -109,10 +109,11 @@ import {
   OPEN_STATES,
   type OpenState,
   openStateOf,
-  PROPOSAL_GATES,
-  type ProposalGate,
-  type ProposalGroup,
-  proposalGate,
+  possessive,
+  PROPOSAL_STAGES,
+  type Proposal,
+  type ProposalStage,
+  proposalsForOwner,
   proposalsOf,
   type ReleaseFlag,
   releaseFlagsOf,
@@ -372,6 +373,8 @@ function Board({
     // msInScope reads only the scope, which `items` follows.
     [s, items, unblocks],
   );
+  const forOwner = useMemo(() => proposalsForOwner(proposals), [proposals]);
+  const forOwnerDiscuss = forOwner.filter((p) => p.stage === "discuss").length;
   const readyToStart = byActor.agents.filter(
     (it) => stageOf(it, flight) === "Ready",
   );
@@ -561,9 +564,68 @@ function Board({
                 </Card>
 
                 <Card
+                  id="work-yourprops-h"
+                  title="Proposals for you"
+                  className="span-5"
+                  stat={{
+                    value: forOwner.length,
+                    detail: forOwner.length
+                      ? `${forOwnerDiscuss} to discuss, ${forOwner.length - forOwnerDiscuss} ready for your yes`
+                      : "No proposal waits on you",
+                    tone: forOwner.length ? "attention" : undefined,
+                    onOpen: () =>
+                      set({
+                        view: "proposals",
+                        list: undefined,
+                        stage: undefined,
+                      }),
+                  }}
+                  foot={
+                    <Link
+                      component="button"
+                      type="button"
+                      onClick={() =>
+                        set({
+                          view: "proposals",
+                          list: undefined,
+                          stage: undefined,
+                        })
+                      }
+                    >
+                      All {proposals.length} proposals
+                    </Link>
+                  }
+                >
+                  <OwnerProposals
+                    proposals={forOwner}
+                    selected={search.item}
+                    limit={6}
+                  />
+                </Card>
+
+                <Card
+                  id="work-flight-h"
+                  title="In progress"
+                  className="span-12"
+                  stat={{
+                    value: inFlight.length,
+                    detail: "Who holds each, and for how long",
+                    onOpen: () => open("working"),
+                  }}
+                >
+                  <InFlightRows
+                    items={inFlight}
+                    flight={flight}
+                    branch={s.branch}
+                    since={flow.since}
+                    selected={search.item}
+                  />
+                </Card>
+
+                <Card
                   id="work-ready-h"
                   title="Ready to start"
-                  className="span-5"
+                  className="span-7"
                   stat={{
                     value: readyToStart.length,
                     onOpen: () => open("ready"),
@@ -586,25 +648,6 @@ function Board({
                     limit={8}
                     selected={search.item}
                     empty="Nothing is ready to start."
-                  />
-                </Card>
-
-                <Card
-                  id="work-flight-h"
-                  title="In progress"
-                  className="span-7"
-                  stat={{
-                    value: inFlight.length,
-                    detail: "Who holds each, and for how long",
-                    onOpen: () => open("working"),
-                  }}
-                >
-                  <InFlightRows
-                    items={inFlight}
-                    flight={flight}
-                    branch={s.branch}
-                    since={flow.since}
-                    selected={search.item}
                   />
                 </Card>
 
@@ -896,18 +939,22 @@ function Board({
             {view === "proposals" && (
               <div className="work-dash">
                 <ProposalsCard
-                  groups={proposals}
+                  s={s}
+                  proposals={proposals}
                   itemOf={itemOf}
                   unblocks={unblocks}
-                  selected={search.item}
-                  gate={
-                    search.gate === "free" ||
-                    search.gate === "decision" ||
-                    search.gate === "items"
-                      ? search.gate
+                  selected={
+                    search.item ??
+                    (search.list?.startsWith("ms:")
+                      ? search.list.slice(3)
+                      : undefined)
+                  }
+                  stage={
+                    PROPOSAL_STAGES.includes(search.stage as ProposalStage)
+                      ? (search.stage as ProposalStage)
                       : undefined
                   }
-                  onGate={(gate) => set({ gate }, true)}
+                  onStage={(stage) => set({ stage }, true)}
                   onMilestone={(id) => open(`ms:${id}`)}
                   msOf={msOf}
                 />
@@ -3160,118 +3207,80 @@ function OwnerQueue({
 
 // ------------------------------------------------------------ proposals
 
-/** What stands in a proposal's way: the toggle's words and the cell's. */
-const GATE_NAMES: Record<ProposalGate, string> = {
-  free: "Ready to commit",
-  decision: "Waits on your answer",
-  items: "Waits on other items",
+/** Each stage of the proposal flow (CS-686): its name and what puts a proposal there. */
+const PROPOSAL_STAGE_NAMES: Record<ProposalStage, string> = {
+  discuss: "To discuss",
+  shaping: "Being shaped",
+  ready: "Ready for your yes",
+  later: "Later, for review",
+};
+const PROPOSAL_STAGE_RULES: Record<ProposalStage, string> = {
+  discuss:
+    "New, with a header but no “Done when” yet: commit it, drop it or send it to shaping",
+  shaping: "An open decision or study comes before the commit",
+  ready:
+    "A header and a “Done when”, and nothing open before the commit but the decider’s yes",
+  later:
+    "No header yet: the “later” copies of design lists and older filings, kept for your review",
 };
 
-/** One group of the proposals table: a project, or a decision they wait on. */
-interface ProposalTableGroup {
-  key: string;
-  head: ReactNode;
-  meta: string;
-  milestones: Array<{ milestone: WorkMilestone; items: WorkItem[] }>;
-  items: WorkItem[];
-  /** The decision the group is about, which its rows needn't repeat. */
-  decision?: string;
-}
+/** "the owner's yes", capitalized to lead a sentence. */
+const yesOf = (p: Proposal) => {
+  const yes = `${possessive(p.decider)} yes`;
+  return yes.charAt(0).toUpperCase() + yes.slice(1);
+};
 
 /**
- * The Proposals view: ideas not committed to yet, as bets to commit or
- * drop, in one table read top to bottom. Every row has the same columns:
- * the idea, what stands between it and committing (nothing, one of the
- * owner's decisions, or other items, marked as the board marks stages),
- * and how much waits on it. Whole projects of proposals come first; a
- * proposed milestone keeps its ideas under it. Narrowed to decisions, the
- * ideas group by the decision they wait on, since answering it is the
- * owner's move. An idea's text, the why, opens beside the view.
+ * The Proposals view (CS-688): candidate commitments, laid out as the
+ * flow CS-686 settled. An alert lane leads with the proposals committed
+ * work needs; then a section per stage (to discuss, being shaped, ready
+ * for your yes, later), each grouped by project. Every row shows the
+ * proposal's header (or says it has none), what a commit needs, and how
+ * many open items wait on it. A proposal's text opens beside the view.
  */
 function ProposalsCard({
-  groups,
+  s,
+  proposals,
   itemOf,
   msOf,
   unblocks,
   selected,
-  gate,
-  onGate,
+  stage,
+  onStage,
   onMilestone,
 }: {
-  groups: ProposalGroup[];
+  s: WorkSnapshot;
+  proposals: Proposal[];
   itemOf: Map<string, WorkItem>;
   msOf: Map<string, WorkMilestone>;
   unblocks: Map<string, number>;
   selected?: string;
-  /** Only what can be committed now, or what waits on a decision or items. */
-  gate?: ProposalGate;
-  onGate: (gate: ProposalGate | undefined) => void;
+  /** Only one stage's section; all of them when absent. */
+  stage?: ProposalStage;
+  onStage: (stage: ProposalStage | undefined) => void;
   /** Opens a milestone in the pane. */
   onMilestone: (id: string) => void;
 }) {
-  const all = groups.flatMap((g) => [
-    ...g.milestones.flatMap((m) => m.items),
-    ...g.items,
-  ]);
-  const count = (k: ProposalGate) =>
-    all.filter((it) => proposalGate(it, itemOf) === k).length;
-  const keep = (it: WorkItem) => !gate || proposalGate(it, itemOf) === gate;
-  const shown = groups
-    .map((g) => ({
-      ...g,
-      milestones: g.milestones
-        .map((m) => ({ ...m, items: m.items.filter(keep) }))
-        .filter((m) => !gate || m.items.length),
-      items: g.items.filter(keep),
-    }))
-    .filter((g) => g.items.length || g.milestones.length);
-  const byProject = (list: typeof shown): ProposalTableGroup[] =>
-    list.map((g) => ({
-      key: g.project?.id ?? "none",
-      head: (
-        <>
-          {g.project && <LevelMark level="project" />}
-          {g.project?.title ?? "No project"}
-        </>
-      ),
-      meta: `${g.project ? `${g.project.id}, ` : ""}${g.count} proposed`,
-      milestones: g.milestones,
-      items: g.items,
-    }));
-  // Narrowed to decisions: a group per decision, the most waited on first.
-  const byDecision = (): ProposalTableGroup[] => {
-    const under = new Map<string, WorkItem[]>();
-    for (const g of shown) {
-      for (const it of [...g.milestones.flatMap((m) => m.items), ...g.items]) {
-        for (const n of it.open_needs) {
-          const need = itemOf.get(n);
-          if (need && isOwnerDecision(need)) {
-            under.set(n, [...(under.get(n) ?? []), it]);
-          }
-        }
-      }
+  const view = useRef<HTMLDivElement>(null);
+  // A proposal chosen elsewhere (Your move) comes into view here.
+  useEffect(() => {
+    if (!selected) {
+      return;
     }
-    return [...under]
-      .sort(
-        ([a, x], [b, y]) => y.length - x.length || idNumber(a) - idNumber(b),
-      )
-      .map(([id, its]) => ({
-        key: id,
-        decision: id,
-        head: (
-          <ItemLink id={id} className="work-ptable-group-link">
-            <KindId id={id} /> <InlineText text={itemOf.get(id)?.title ?? id} />
-          </ItemLink>
-        ),
-        meta: `${its.length} ${its.length === 1 ? "proposal waits" : "proposals wait"} on it`,
-        milestones: [],
-        items: its,
-      }));
-  };
-  const table = (list: ProposalTableGroup[], label: string) => (
+    view.current
+      ?.querySelector(`[data-proposal="${CSS.escape(selected)}"]`)
+      ?.scrollIntoView({ block: "nearest" });
+  }, [selected]);
+  const count = (k: ProposalStage) =>
+    proposals.filter((p) => p.stage === k).length;
+  const alerts = proposals.filter((p) => p.neededBy.length);
+  const stages = stage ? [stage] : PROPOSAL_STAGES;
+  const table = (list: Proposal[], label: string, alert = false) => (
     <ProposalTable
-      groups={list}
+      s={s}
+      proposals={list}
       label={label}
+      alert={alert}
       itemOf={itemOf}
       msOf={msOf}
       unblocks={unblocks}
@@ -3279,82 +3288,44 @@ function ProposalsCard({
       onMilestone={onMilestone}
     />
   );
-  const bets = shown.filter((g) => g.whole);
-  const rest = shown.filter((g) => !g.whole);
-  let body: ReactNode;
-  if (!all.length) {
-    body = (
-      <Typography variant="body-md" color="textSecondary" render={<p />}>
-        Nothing is proposed here. Proposed items and milestones show here until
-        they are committed or dropped.
-      </Typography>
-    );
-  } else if (gate === "decision") {
-    body = table(byDecision(), "Proposals by the decision they wait on");
-  } else if (bets.length && rest.length) {
-    body = (
-      <div className="work-proposal-sections">
-        <section aria-labelledby="work-bets-h">
-          <header className="work-proposal-section-head">
-            <Typography variant="subtitle-lg" render={<h3 />} id="work-bets-h">
-              Whole projects
-            </Typography>
-            <Typography variant="caption-md" color="textSecondary">
-              Every open item in these is proposed: committing to one is a bet
-              on the project
-            </Typography>
-          </header>
-          {table(byProject(bets), "Proposed whole projects")}
-        </section>
-        <section aria-labelledby="work-ideas-h">
-          <header className="work-proposal-section-head">
-            <Typography variant="subtitle-lg" render={<h3 />} id="work-ideas-h">
-              In projects under way
-            </Typography>
-            <Typography variant="caption-md" color="textSecondary">
-              Ideas beside work that is already committed
-            </Typography>
-          </header>
-          {table(byProject(rest), "Proposals in projects under way")}
-        </section>
-      </div>
-    );
-  } else {
-    body = table(byProject(shown), "Proposals");
-  }
   return (
     <Card
       id="work-proposals-h"
       title="Proposals"
-      caption="Ideas not committed to yet: commit one to put it on the roadmap, or drop it. Choose one to read why."
+      caption="Candidate commitments, in the order they come to you: discussed, shaped, then committed or dropped. Choose one to read it."
       className="span-12"
       tools={
-        all.length > 0 && (
+        proposals.length > 0 && (
           <ToggleButtonGroup
             size="small"
             exclusive
-            value={gate ?? "all"}
+            value={stage ?? "all"}
             onChange={(_, v: string | null) =>
-              v && onGate(v === "all" ? undefined : (v as ProposalGate))
+              v && onStage(v === "all" ? undefined : (v as ProposalStage))
             }
-            aria-label="Show"
+            aria-label="Stages shown"
             className="work-proposal-gates"
           >
             <ToggleButton
               value="all"
               render={<Button variant="outlined" size="small" />}
             >
-              All <span className="work-toggle-count">{all.length}</span>
+              All <span className="work-toggle-count">{proposals.length}</span>
             </ToggleButton>
-            {PROPOSAL_GATES.map((k) => (
+            {PROPOSAL_STAGES.map((k) => (
               <ToggleButton
                 key={k}
                 value={k}
-                disabled={!count(k)}
-                render={<Button variant="outlined" size="small" />}
+                disabled={!count(k) && stage !== k}
+                render={
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    title={PROPOSAL_STAGE_RULES[k]}
+                  />
+                }
               >
-                <span className={`work-gate-mark ${k}`} aria-hidden="true" />
-                {GATE_NAMES[k]}{" "}
+                {PROPOSAL_STAGE_NAMES[k]}{" "}
                 <span className="work-toggle-count">{count(k)}</span>
               </ToggleButton>
             ))}
@@ -3362,41 +3333,101 @@ function ProposalsCard({
         )
       }
     >
-      {body}
+      <p className="work-pnote">
+        <Icon href={svgInfo} className="work-pnote-icon" />
+        <span>
+          To commit one, ask the main session to commit it, or to drop it or
+          send it to shaping. This page only reads the tracker until HITLd’s
+          dashboard can change it.
+        </span>
+      </p>
+      {!proposals.length ? (
+        <Typography variant="body-md" color="textSecondary" render={<p />}>
+          Nothing is proposed here. Proposed items and milestones show here
+          until they are committed or dropped.
+        </Typography>
+      ) : (
+        <div className="work-proposal-sections" ref={view}>
+          {!stage && alerts.length > 0 && (
+            <section aria-labelledby="work-palert-h" className="work-palert">
+              <header className="work-proposal-section-head">
+                <Typography
+                  variant="subtitle-lg"
+                  render={<h3 />}
+                  id="work-palert-h"
+                >
+                  <Icon href={svgStatusWarning} className="work-palert-icon" />
+                  Committed work needs these{" "}
+                  <span className="work-proposal-count">{alerts.length}</span>
+                </Typography>
+                <Typography variant="caption-md" color="textSecondary">
+                  Planned work or a committed milestone needs a proposal that
+                  isn’t committed: commit it, or take the need away
+                </Typography>
+              </header>
+              {table(alerts, "Proposals that committed work needs", true)}
+            </section>
+          )}
+          {stages.map((k) => {
+            const list = proposals.filter((p) => p.stage === k);
+            return (
+              <section key={k} aria-labelledby={`work-pstage-${k}`}>
+                <header className="work-proposal-section-head">
+                  <Typography
+                    variant="subtitle-lg"
+                    render={<h3 />}
+                    id={`work-pstage-${k}`}
+                  >
+                    {PROPOSAL_STAGE_NAMES[k]}{" "}
+                    <span className="work-proposal-count">{list.length}</span>
+                  </Typography>
+                  <Typography variant="caption-md" color="textSecondary">
+                    {PROPOSAL_STAGE_RULES[k]}
+                  </Typography>
+                </header>
+                {list.length ? (
+                  table(list, PROPOSAL_STAGE_NAMES[k])
+                ) : (
+                  <Typography
+                    variant="body-sm"
+                    color="textSecondary"
+                    render={<p />}
+                    className="work-pnone"
+                  >
+                    None now.
+                  </Typography>
+                )}
+              </section>
+            );
+          })}
+        </div>
+      )}
     </Card>
   );
 }
 
 function ProposalTable({
-  groups,
+  s,
+  proposals,
   label,
+  alert,
   itemOf,
   msOf,
   unblocks,
   selected,
   onMilestone,
 }: {
-  groups: ProposalTableGroup[];
+  s: WorkSnapshot;
+  proposals: Proposal[];
   label: string;
+  /** The alert lane: what needs each, in place of what a commit needs. */
+  alert: boolean;
   itemOf: Map<string, WorkItem>;
   msOf: Map<string, WorkMilestone>;
   unblocks: Map<string, number>;
   selected?: string;
   onMilestone: (id: string) => void;
 }) {
-  const row = (it: WorkItem, g: ProposalTableGroup, inMs = false) => (
-    <ProposalRow
-      key={`${g.key}:${it.id}`}
-      it={it}
-      itemOf={itemOf}
-      msOf={msOf}
-      waiting={unblocks.get(it.id) ?? 0}
-      selected={it.id === selected}
-      except={g.decision}
-      inMilestone={inMs}
-      onMilestone={onMilestone}
-    />
-  );
   return (
     <table className="work-ptable" aria-label={label}>
       <colgroup>
@@ -3408,8 +3439,8 @@ function ProposalTable({
       <thead>
         <tr>
           <th scope="col">ID</th>
-          <th scope="col">Idea</th>
-          <th scope="col">What stands in the way</th>
+          <th scope="col">Proposal</th>
+          <th scope="col">{alert ? "Needed by" : "What a commit needs"}</th>
           <th
             scope="col"
             className="c-num"
@@ -3419,40 +3450,33 @@ function ProposalTable({
           </th>
         </tr>
       </thead>
-      {groups.map((g) => (
-        <tbody key={g.key}>
+      {byProject(s, proposals).map((g) => (
+        <tbody key={g.project?.id ?? "none"}>
           <tr className="work-ptable-group">
             <th colSpan={4} scope="rowgroup">
               <span className="work-ptable-group-name work-marked">
-                {g.head}
+                {g.project && <LevelMark level="project" />}
+                {g.project?.title ?? "No project"}
               </span>
-              <span className="work-ptable-group-meta">{g.meta}</span>
+              <span className="work-ptable-group-meta">
+                {g.project ? `${g.project.id}, ` : ""}
+                {g.items.length}{" "}
+                {g.items.length === 1 ? "proposal" : "proposals"}
+              </span>
             </th>
           </tr>
-          {g.milestones.map(({ milestone: m, items }) => (
-            <Fragment key={m.id}>
-              <tr className="work-ptable-ms">
-                <td colSpan={4}>
-                  <button
-                    type="button"
-                    className="work-ptable-ms-head"
-                    onClick={() => onMilestone(m.id)}
-                  >
-                    <span className="work-marked work-ptable-ms-title">
-                      <LevelMark level="milestone" />
-                      <InlineText text={m.title} />
-                    </span>
-                    <span className="work-ptable-ms-meta">
-                      Proposed {m.kind} milestone
-                      {m.outcome ? `: ${m.outcome}` : ""}
-                    </span>
-                  </button>
-                </td>
-              </tr>
-              {items.map((it) => row(it, g, true))}
-            </Fragment>
+          {g.items.map((p) => (
+            <ProposalRow
+              key={p.id}
+              p={p}
+              alert={alert}
+              itemOf={itemOf}
+              msOf={msOf}
+              waiting={unblocks.get(p.id) ?? 0}
+              selected={p.id === selected}
+              onMilestone={onMilestone}
+            />
           ))}
-          {g.items.map((it) => row(it, g))}
         </tbody>
       ))}
     </table>
@@ -3460,72 +3484,312 @@ function ProposalTable({
 }
 
 function ProposalRow({
-  it,
+  p,
+  alert,
   itemOf,
   msOf,
   waiting,
   selected,
-  except,
-  inMilestone,
   onMilestone,
 }: {
-  it: WorkItem;
+  p: Proposal;
+  alert: boolean;
   itemOf: Map<string, WorkItem>;
   msOf: Map<string, WorkMilestone>;
   /** Open items that wait on it, directly or through others. */
   waiting: number;
   selected: boolean;
-  /** The decision its group is about, left out of its cell. */
-  except?: string;
-  /** Under a proposed milestone in the table. */
-  inMilestone: boolean;
   onMilestone: (id: string) => void;
 }) {
-  const gate = proposalGate(it, itemOf);
-  // A committed milestone can't be done until this is committed.
-  const neededFor = it.milestones
-    .map((id) => msOf.get(id))
-    .filter(
-      (m): m is WorkMilestone =>
-        !!m &&
-        m.state !== "proposed" &&
-        m.state !== "done" &&
-        m.state !== "dropped",
-    );
+  const m = p.milestone;
+  const refs = (ids: string[]) =>
+    ids.map((id) => itemOf.get(id) ?? msOf.get(id) ?? id);
   return (
     <tr
-      className={`work-ptable-row${selected ? " selected" : ""}${inMilestone ? " in-ms" : ""}`}
+      className={`work-ptable-row${selected ? " selected" : ""}`}
+      data-proposal={alert ? undefined : p.id}
     >
       <td className="c-id">
-        <KindId id={it.id} />
+        <KindId id={p.id} />
       </td>
       <td className="c-title">
-        <ItemLink id={it.id} className="work-ptable-link">
-          <InlineText text={it.title} />
-        </ItemLink>
-        {neededFor.length > 0 && (
+        {m ? (
+          <button
+            type="button"
+            className="work-ptable-link work-ptable-btn"
+            onClick={() => onMilestone(m.id)}
+          >
+            <InlineText text={p.title} />
+          </button>
+        ) : (
+          <ItemLink id={p.id} className="work-ptable-link">
+            <InlineText text={p.title} />
+          </ItemLink>
+        )}
+        {m && (
           <span className="work-ptable-sub">
-            Needed for{" "}
-            {neededFor.map((m, i) => (
-              <span key={m.id}>
-                {i > 0 && ", "}
-                <button
-                  type="button"
-                  className="work-ptable-ms-link"
-                  onClick={() => onMilestone(m.id)}
-                >
-                  {m.title}
-                </button>
-              </span>
-            ))}
+            Proposed milestone{m.outcome ? `: ${m.outcome}` : ""}
           </span>
+        )}
+        {alert ? (
+          <span className="work-ptable-sub">
+            {PROPOSAL_STAGE_NAMES[p.stage]}
+          </span>
+        ) : (
+          <>
+            <ProposalHeaderLines p={p} />
+            {m && <MilestoneConstraints m={m} itemOf={itemOf} msOf={msOf} />}
+            {p.neededBy.length > 0 && (
+              <span className="work-ptable-sub work-pneeded">
+                Committed work needs it: <GateRefs needs={refs(p.neededBy)} />
+              </span>
+            )}
+          </>
         )}
       </td>
       <td className="c-gate">
-        <GateCell it={it} gate={gate} itemOf={itemOf} except={except} />
+        {alert ? (
+          <>
+            <span className="work-pcell-label" aria-hidden="true">
+              Needed by
+            </span>
+            <ul className="work-pneeds" aria-label={`What needs ${p.id}`}>
+              {p.neededBy.map((id) => {
+                const e = itemOf.get(id) ?? msOf.get(id);
+                const body = (
+                  <>
+                    <KindId id={id} />
+                    <span className="work-pneeds-title">
+                      {e ? <InlineText text={e.title} /> : id}
+                    </span>
+                  </>
+                );
+                return (
+                  <li key={id}>
+                    {msOf.has(id) ? (
+                      <button
+                        type="button"
+                        className="work-pneeds-link"
+                        onClick={() => onMilestone(id)}
+                      >
+                        {body}
+                      </button>
+                    ) : (
+                      <ItemLink id={id} className="work-pneeds-link">
+                        {body}
+                      </ItemLink>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </>
+        ) : (
+          <CommitGate p={p} refs={refs} />
+        )}
       </td>
       <td className="c-num">{waiting > 0 ? waiting : ""}</td>
     </tr>
+  );
+}
+
+/**
+ * A proposal's header, or a line saying it has none: where it came from
+ * and why now, then its size, decider and date on one line.
+ */
+function ProposalHeaderLines({ p }: { p: Proposal }) {
+  const h = p.header;
+  if (!h) {
+    return (
+      <span className="work-phead-none">
+        No header yet: no source, why now, size, decider or date
+      </span>
+    );
+  }
+  const facts: Array<[string, string | undefined]> = [
+    ["Size", h.size],
+    ["Decider", h.decider],
+    ["Filed", h.date],
+  ];
+  return (
+    <dl className="work-phead">
+      <div>
+        <dt>Source</dt>
+        <dd>{h.source ? <InlineText text={h.source} /> : "not given"}</dd>
+      </div>
+      <div className="work-phead-why">
+        <dt>Why now</dt>
+        <dd>{h.why ? <InlineText text={h.why} /> : "not given"}</dd>
+      </div>
+      <div className="work-phead-facts">
+        {facts.map(([k, v]) => (
+          <span key={k}>
+            <dt>{k}</dt>
+            <dd>{v ? <InlineText text={v} /> : "not given"}</dd>
+          </span>
+        ))}
+      </div>
+    </dl>
+  );
+}
+
+/**
+ * What committing a proposal needs: the decider's yes, after any open
+ * decision or study. What starting it waits for comes under it, smaller:
+ * it doesn't stand in the commit's way.
+ */
+function CommitGate({
+  p,
+  refs,
+}: {
+  p: Proposal;
+  refs: (ids: string[]) => Array<WorkItem | WorkMilestone | string>;
+}) {
+  const first = refs(p.first);
+  const allDecisions = first.every(
+    (n) => typeof n !== "string" && n.kind === "decision",
+  );
+  return (
+    <span className="work-commit">
+      <span className="work-pcell-label" aria-hidden="true">
+        What a commit needs
+      </span>
+      <span className="work-commit-main">
+        {yesOf(p)}
+        {first.length > 0 && (
+          <>
+            , once <GateRefs needs={first} />{" "}
+            {first.length === 1 ? "is" : "are"}{" "}
+            {allDecisions ? "answered" : "settled"}
+          </>
+        )}
+      </span>
+      {p.startsAfter.length > 0 && (
+        <span className="work-commit-start">
+          Starts after <GateRefs needs={refs(p.startsAfter)} />
+        </span>
+      )}
+    </span>
+  );
+}
+
+/** A proposed milestone's constraints, every one, each with its state. */
+function MilestoneConstraints({
+  m,
+  itemOf,
+  msOf,
+}: {
+  m: WorkMilestone;
+  itemOf: Map<string, WorkItem>;
+  msOf: Map<string, WorkMilestone>;
+}) {
+  if (!m.constraints.length) {
+    return <span className="work-ptable-sub">No constraints named yet</span>;
+  }
+  return (
+    <ul className="work-pcons" aria-label={`${m.title}: its constraints`}>
+      {m.constraints.map((c) => {
+        const it = itemOf.get(c.id);
+        const e = it ?? msOf.get(c.id);
+        const state = e?.state;
+        // Proposed is the dashed outline, as on the roadmap (CS-563); a
+        // stage's color is only a fill.
+        const swatch =
+          state === "proposed"
+            ? "proposed"
+            : it
+              ? `stage-${slug(stageOf(it) ?? "Waiting")}`
+              : state === "done"
+                ? "stage-done"
+                : state === "in-progress"
+                  ? "stage-in-flight"
+                  : "none";
+        return (
+          <li key={c.id}>
+            <span className={`work-swatch ${swatch}`} aria-hidden="true" />
+            {it ? (
+              <ItemLink
+                id={c.id}
+                className="work-pcons-link"
+                label={`${c.id} ${e?.title ?? ""}, ${state ? STATE_NAMES[state] : "not in the tracker"}`}
+              >
+                <KindId id={c.id} />
+              </ItemLink>
+            ) : (
+              <KindId id={c.id} />
+            )}
+            <span className="work-pcons-title">
+              {e ? <InlineText text={e.title} /> : "not in the tracker"}
+            </span>
+            <span className="work-pcons-state">
+              {state ? STATE_NAMES[state] : ""}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+/**
+ * Your move's proposals (CS-688): the current "to discuss" batch and every
+ * one ready for the owner's yes, each with its header and a link into the
+ * Proposals view, where it is chosen and opened.
+ */
+function OwnerProposals({
+  proposals,
+  selected,
+  limit,
+}: {
+  proposals: Proposal[];
+  selected?: string;
+  limit: number;
+}) {
+  if (!proposals.length) {
+    return (
+      <Typography
+        variant="body-sm"
+        color="textSecondary"
+        render={<p />}
+        className="work-empty"
+      >
+        No proposal waits on you.
+      </Typography>
+    );
+  }
+  return (
+    <ul className="work-rows work-yourprops">
+      {proposals.slice(0, limit).map((p) => (
+        <li
+          key={p.id}
+          className={`work-row${p.id === selected ? " selected" : ""}`}
+        >
+          <RouterLink
+            to="/work"
+            search={(prev: WorkSearch) => ({
+              ...prev,
+              view: "proposals",
+              stage: undefined,
+              list: undefined,
+              item: p.id,
+            })}
+            className="work-row-main"
+            aria-label={`${p.id} ${p.title}, ${PROPOSAL_STAGE_NAMES[p.stage]}: open it in Proposals`}
+          >
+            <KindId id={p.id} />
+            <span className="work-row-title">
+              <InlineText text={p.title} />
+            </span>
+            <span className={`work-pstage-tag ${p.stage}`}>
+              {PROPOSAL_STAGE_NAMES[p.stage]}
+            </span>
+          </RouterLink>
+          <div className="work-yourprops-head">
+            <ProposalHeaderLines p={p} />
+          </div>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -3784,57 +4048,14 @@ function NoMilestoneRow({
   );
 }
 
-/** How many of a proposal's open needs a cell names before "+ N more". */
+/** How many IDs a proposal's cell names before "+ N more". */
 const GATE_REFS = 2;
 
-/**
- * What stands between a proposal and committing: a mark colored as the
- * board colors stages (blue ready, amber your answer, red other items), a
- * word, and the IDs of what it waits on, each with its title on hover.
- */
-function GateCell({
-  it,
-  gate,
-  itemOf,
-  except,
+function GateRefs({
+  needs,
 }: {
-  it: WorkItem;
-  gate: ProposalGate;
-  itemOf: Map<string, WorkItem>;
-  except?: string;
+  needs: Array<WorkItem | WorkMilestone | string>;
 }) {
-  const needs = it.open_needs
-    .filter((n) => n !== except)
-    .map((n) => itemOf.get(n) ?? n)
-    // The owner's decisions first: they are the owner's to unblock.
-    .sort(
-      (a, b) =>
-        Number(typeof b !== "string" && isOwnerDecision(b)) -
-        Number(typeof a !== "string" && isOwnerDecision(a)),
-    );
-  if (except) {
-    // Grouped by a decision: say only what else it waits on.
-    return needs.length ? (
-      <span className="work-gate">
-        <span className="work-gate-word">Also</span>
-        <GateRefs needs={needs} />
-      </span>
-    ) : (
-      <span className="work-gate">
-        <span className="work-gate-word muted">Nothing else</span>
-      </span>
-    );
-  }
-  return (
-    <span className="work-gate">
-      <span className={`work-gate-mark ${gate}`} aria-hidden="true" />
-      <span className="work-gate-word">{GATE_NAMES[gate]}</span>
-      {needs.length > 0 && <GateRefs needs={needs} />}
-    </span>
-  );
-}
-
-function GateRefs({ needs }: { needs: Array<WorkItem | string> }) {
   const named = needs.slice(0, GATE_REFS);
   const more = needs.length - named.length;
   return (

@@ -2559,11 +2559,26 @@ button.work-mrow-big:focus-visible {
 }
 
 /*
- * The Proposals view: one table read top to bottom, each question in a
- * column of its own so the eye runs down it. Projects head their rows; a
- * proposed milestone holds its ideas under a rule. The whole row opens
- * the idea; the links inside it sit above that.
+ * The Proposals view (CS-688): the proposal flow, a section per stage,
+ * each one table read top to bottom, every question in a column of its
+ * own so the eye runs down it. Projects head their rows. The whole row
+ * opens the proposal; the links inside it sit above that.
  */
+.work-pnote {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stratakit-space-200);
+  margin: 0 0 var(--stratakit-space-500);
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  border-radius: var(--stratakit-radius-md);
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+  font-size: var(--stratakit-font-size-body-sm);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-pnote-icon {
+  flex: none;
+  margin-top: 1px;
+}
 .work-proposal-sections {
   display: flex;
   flex-direction: column;
@@ -2578,6 +2593,26 @@ button.work-mrow-big:focus-visible {
 .work-proposal-section-head h3 {
   margin: 0;
 }
+.work-proposal-count {
+  font-weight: 400;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.work-pnone {
+  margin: 0;
+}
+/* The alert lane: committed work needs these, so it reads as a warning. */
+.work-palert {
+  padding: var(--stratakit-space-400);
+  border-radius: var(--stratakit-radius-md);
+  border-inline-start: 3px solid var(--stratakit-color-border-attention-base);
+  background: var(--stratakit-color-bg-attention-faded);
+}
+.work-palert-icon {
+  vertical-align: -3px;
+  margin-inline-end: var(--stratakit-space-200);
+  color: var(--stratakit-color-icon-attention-base);
+}
 .work-ptable {
   width: 100%;
   table-layout: fixed;
@@ -2587,10 +2622,10 @@ button.work-mrow-big:focus-visible {
   width: 88px;
 }
 .work-ptable col.c-gate {
-  width: 340px;
+  width: 300px;
 }
 .work-ptable col.c-num {
-  width: 112px;
+  width: 96px;
 }
 .work-ptable thead th {
   padding: 0 var(--stratakit-space-300) var(--stratakit-space-200);
@@ -2623,13 +2658,6 @@ button.work-mrow-big:focus-visible {
   font-size: var(--stratakit-font-size-caption-md);
   color: var(--stratakit-color-text-neutral-secondary);
 }
-.work-ptable-group-link {
-  color: inherit;
-  text-decoration: none;
-}
-.work-ptable-group-link:hover {
-  text-decoration: underline;
-}
 .work-ptable-row {
   position: relative;
 }
@@ -2644,16 +2672,15 @@ button.work-mrow-big:focus-visible {
 .work-ptable-row.selected td:first-child {
   box-shadow: inset 3px 0 0 var(--stratakit-color-border-accent-strong);
 }
-.work-ptable-row.in-ms td:first-child {
-  padding-inline-start: var(--stratakit-space-500);
-  box-shadow: inset 2px 0 0 var(--stratakit-color-border-neutral-muted);
-}
-.work-ptable-row.in-ms.selected td:first-child {
-  box-shadow: inset 3px 0 0 var(--stratakit-color-border-accent-strong);
-}
 .work-ptable-link {
   color: inherit;
   text-decoration: none;
+}
+/* A proposed milestone's row opens it in the pane: a button, drawn as the link. */
+.work-ptable-btn {
+  all: unset;
+  cursor: pointer;
+  font-weight: 600;
 }
 /* The whole row is the link's target. */
 .work-ptable-link::before {
@@ -2679,79 +2706,169 @@ button.work-mrow-big:focus-visible {
   font-size: var(--stratakit-font-size-caption-md);
   color: var(--stratakit-color-text-neutral-secondary);
 }
-.work-ptable-ms-link,
 .work-gate-ref,
-.work-gate-more {
+.work-gate-more,
+.work-pcons-link {
   position: relative;
   z-index: 1;
 }
-.work-ptable-ms-link {
-  all: unset;
-  position: relative;
-  z-index: 1;
-  cursor: pointer;
-  color: var(--stratakit-color-text-neutral-primary);
-  text-decoration: underline;
-  text-decoration-color: var(--stratakit-color-border-neutral-base);
-}
-.work-ptable-ms-link:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 1px;
-}
-.work-ptable-ms td {
-  padding: var(--stratakit-space-400) var(--stratakit-space-300)
-    var(--stratakit-space-200);
-  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-.work-ptable-ms-head {
-  all: unset;
+
+/* A proposal's header: source and why now, then size, decider and date. */
+.work-phead {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  cursor: pointer;
-  border-radius: var(--stratakit-radius-sm);
-}
-.work-ptable-ms-head:hover .work-ptable-ms-title {
-  text-decoration: underline;
-}
-.work-ptable-ms-head:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 2px;
-}
-.work-ptable-ms-title {
-  font-weight: 600;
-}
-.work-ptable-ms-meta {
+  margin: var(--stratakit-space-200) 0 0;
   font-size: var(--stratakit-font-size-caption-md);
   color: var(--stratakit-color-text-neutral-secondary);
 }
+.work-phead > div {
+  display: flex;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+}
+.work-phead dt {
+  flex: none;
+  font-weight: 500;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-phead dd {
+  margin: 0;
+  min-width: 0;
+}
+/* Why now runs to two lines here; the whole text is in the pane. */
+.work-phead-why dd {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.work-phead > .work-phead-facts {
+  flex-wrap: wrap;
+  gap: 0 var(--stratakit-space-500);
+}
+.work-phead-facts > span {
+  display: inline-flex;
+  gap: var(--stratakit-space-200);
+}
+.work-phead-none {
+  display: block;
+  margin-top: var(--stratakit-space-100);
+  font-size: var(--stratakit-font-size-caption-md);
+  font-style: italic;
+  color: var(--stratakit-color-text-neutral-tertiary);
+}
 
-/* What stands in the way: marked as the board marks stages. */
+/* A proposed milestone's constraints, each with its state. */
+.work-pcons {
+  list-style: none;
+  margin: var(--stratakit-space-200) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--stratakit-font-size-caption-md);
+}
+.work-pcons li {
+  display: grid;
+  grid-template-columns: 10px auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+.work-pcons-link {
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--stratakit-radius-sm);
+}
+.work-pcons-link:hover {
+  text-decoration: underline;
+}
+.work-pcons-link:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 1px;
+}
+.work-pcons-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-pcons-state {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* Proposed is the dashed outline (CS-563), never a fill. */
+.work-pcons .work-swatch.proposed {
+  box-sizing: border-box;
+  background: transparent;
+  border: 1.5px dashed var(--proposed-outline);
+}
+.work-pcons .work-swatch.none {
+  box-sizing: border-box;
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+}
+/* The alert lane: what needs each proposal, named. */
+.work-pneeds {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.work-pneeds li {
+  min-width: 0;
+}
+.work-pneeds-link {
+  all: unset;
+  box-sizing: border-box;
+  max-width: 100%;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+  border-radius: var(--stratakit-radius-sm);
+}
+.work-pneeds-link:hover .work-pneeds-title {
+  text-decoration: underline;
+}
+.work-pneeds-link:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 1px;
+}
+.work-pneeds-title {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.work-pneeded {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+
+/* A cell's column header, shown only when the rows stack (narrow). */
+.work-pcell-label {
+  display: none;
+}
+/* What a commit needs: the decider's yes, then what starting waits for. */
 .work-gate {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 0 var(--stratakit-space-200);
 }
-.work-gate-mark {
-  flex: none;
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-inline-end: 2px;
+.work-commit {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-.work-gate-mark.free {
-  background: var(--stage-ready);
-}
-.work-gate-mark.decision {
-  background: var(--stratakit-color-bg-attention-base);
-}
-.work-gate-mark.items {
-  background: var(--stage-waiting);
-}
-.work-gate-word.muted,
-.work-gate-refs {
+.work-commit-start {
+  font-size: var(--stratakit-font-size-caption-md);
   color: var(--stratakit-color-text-neutral-secondary);
 }
 .work-gate-refs {
@@ -2765,8 +2882,21 @@ button.work-mrow-big:focus-visible {
 .work-gate-ref:hover {
   color: var(--stratakit-color-text-neutral-primary);
 }
-.work-proposal-gates .work-gate-mark {
-  margin-inline-end: 6px;
+
+/* Your move's proposals: each row with its header under it. */
+.work-yourprops .work-row-main {
+  padding-bottom: 0;
+}
+.work-yourprops-head {
+  padding: 0 0 var(--stratakit-space-300);
+}
+.work-yourprops-head .work-phead {
+  margin-top: var(--stratakit-space-100);
+}
+.work-pstage-tag {
+  font-size: var(--stratakit-font-size-caption-md);
+  white-space: nowrap;
+  color: var(--stratakit-color-text-neutral-secondary);
 }
 /* The dashed outline in small: the legend's key and the toggle's mark. */
 .work-proposed-mark {
@@ -2801,7 +2931,7 @@ button.work-mrow-big:focus-visible {
     width: 76px;
   }
   .work-ptable col.c-gate {
-    width: 250px;
+    width: 220px;
   }
   .work-ptable col.c-num {
     width: 64px;
@@ -2850,6 +2980,12 @@ button.work-mrow-big:focus-visible {
   }
   .work-ptable-row .c-num:not(:empty)::after {
     content: " waiting on it";
+  }
+  /* The column's header, which the stacked row no longer has. */
+  .work-ptable-row .work-pcell-label {
+    display: block;
+    font-size: var(--stratakit-font-size-caption-md);
+    color: var(--stratakit-color-text-neutral-secondary);
   }
 }
 

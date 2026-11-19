@@ -78,8 +78,8 @@ export interface WorkSearch {
   roadmap?: string;
   /** The roadmap with its proposed milestones too, "show" (committed work only by default). */
   proposed?: string;
-  /** The Proposals view narrowed to what can be committed now ("free"), or what waits on a "decision" or on other "items". */
-  gate?: string;
+  /** The Proposals view narrowed to one stage of the proposal flow (CS-688): "discuss", "shaping", "ready" or "later" (every stage by default). */
+  stage?: string;
   /** The No milestone view's kinds, a comma-separated list of "work", "release", "decision" and "external" (every kind by default). */
   kind?: string;
   /** The No milestone view's states, a comma-separated list of "proposed", "planned" and "in-progress" (every open state by default). */
@@ -118,9 +118,12 @@ export const workRoute = createRoute({
       arrange: s.arrange === "steps" ? "steps" : undefined,
       roadmap: s.roadmap === "matrix" ? "matrix" : undefined,
       proposed: s.proposed === "show" ? "show" : undefined,
-      gate:
-        s.gate === "free" || s.gate === "decision" || s.gate === "items"
-          ? s.gate
+      stage:
+        s.stage === "discuss" ||
+        s.stage === "shaping" ||
+        s.stage === "ready" ||
+        s.stage === "later"
+          ? s.stage
           : undefined,
       kind: listIn(s.kind, ["work", "release", "decision", "external"]),
       state: listIn(s.state, ["proposed", "planned", "in-progress"]),

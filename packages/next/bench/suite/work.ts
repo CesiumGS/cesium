@@ -349,12 +349,12 @@ export function ownerQueue(
     );
 }
 
-/** Items grouped by project, in the snapshot's project order. */
-export function byProject(
+/** Items (or proposals) grouped by project, in the snapshot's project order. */
+export function byProject<T extends { project?: string }>(
   s: WorkSnapshot,
-  items: readonly WorkItem[],
-): Array<{ project: WorkContainer | undefined; items: WorkItem[] }> {
-  const groups = new Map<string, WorkItem[]>();
+  items: readonly T[],
+): Array<{ project: WorkContainer | undefined; items: T[] }> {
+  const groups = new Map<string, T[]>();
   for (const it of items) {
     const key = it.project ?? "";
     groups.set(key, [...(groups.get(key) ?? []), it]);
@@ -375,50 +375,142 @@ export function byProject(
 // ------------------------------------------------------------ proposals
 
 /**
- * What stands between a proposal and committing to it: nothing ("free"),
- * an open decision of the owner's it needs ("decision"), or other open
- * items it needs ("items").
+ * A proposal's header (CS-686): where it came from, why now and what it
+ * unblocks, a rough size, who decides, and the date it was filed. An item
+ * keeps it in its text, as the paragraph that starts `**Proposal**`:
+ *
+ *   **Proposal** (CS-686). Source: … Why now: … Rough size: … Decider: …
+ *   Filed: 2026-11-18.
+ *
+ * A field the paragraph leaves out is absent.
  */
-export type ProposalGate = "free" | "decision" | "items";
-export const PROPOSAL_GATES: readonly ProposalGate[] = [
-  "free",
-  "decision",
-  "items",
-];
-
-export function proposalGate(
-  it: WorkItem,
-  itemOf: ReadonlyMap<string, WorkItem>,
-): ProposalGate {
-  if (
-    it.open_needs.some((n) => {
-      const need = itemOf.get(n);
-      return !!need && isOwnerDecision(need);
-    })
-  ) {
-    return "decision";
-  }
-  return it.open_needs.length ? "items" : "free";
+export interface ProposalHeader {
+  source?: string;
+  why?: string;
+  size?: string;
+  decider?: string;
+  date?: string;
 }
 
-/** One project's proposals, as the Proposals view groups them. */
-export interface ProposalGroup {
-  project?: WorkContainer;
-  /** Every open item in the project is proposed: the project is the bet. */
-  whole: boolean;
-  /** Its proposed milestones, each with the proposed items it holds. */
-  milestones: Array<{ milestone: WorkMilestone; items: WorkItem[] }>;
-  /** Its proposed items that no proposed milestone holds. */
-  items: WorkItem[];
-  /** Its proposed items, in all. */
-  count: number;
+/** The header's fields, each under the labels it is written with. */
+const HEADER_LABELS: Record<string, keyof ProposalHeader> = {
+  Source: "source",
+  "Why now": "why",
+  Why: "why",
+  "Rough size": "size",
+  Size: "size",
+  Decider: "decider",
+  Filed: "date",
+  Date: "date",
+};
+const HEADER_LABEL =
+  /(?<=^|[\s.;)])(Source|Why now|Why|Rough size|Size|Decider|Filed|Date):\s*/g;
+
+/**
+ * The header in a proposal's text, or undefined when it has none: the
+ * first paragraph that starts `**Proposal**`, read field by field. Each
+ * field runs to the next label; a trailing period is dropped.
+ */
+export function proposalHeaderOf(text?: string): ProposalHeader | undefined {
+  const para = (text ?? "")
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .find((p) => p.startsWith("**Proposal**"));
+  if (!para) {
+    return undefined;
+  }
+  const line = para.replace(/\s+/g, " ");
+  const marks = [...line.matchAll(HEADER_LABEL)];
+  const header: ProposalHeader = {};
+  marks.forEach((m, i) => {
+    const key = HEADER_LABELS[m[1]!]!;
+    const from = m.index! + m[0].length;
+    const to = marks[i + 1]?.index ?? line.length;
+    const value = line.slice(from, to).trim().replace(/\.$/, "").trim();
+    if (value && header[key] === undefined) {
+      header[key] = value;
+    }
+  });
+  return header;
+}
+
+/** A proposal's text says what done is: it has a "Done when" section. */
+export const saysDoneWhen = (text?: string) =>
+  /^#{2,3}\s+Done when\b/m.test(text ?? "");
+
+/**
+ * Where a proposal stands in the flow (CS-686): new to discuss, being
+ * shaped, ready for the owner's yes, or a "later" copy awaiting review.
+ *
+ * - **shaping**: an open decision or study comes before the commit.
+ * - **later**: no header yet, so nobody has made its case for now: the
+ *   "later" copies of design lists and older filings, kept for the owner's
+ *   review (CS-680 gives each the header).
+ * - **ready**: a header, and shaped (an item's text has a "Done when"; a
+ *   milestone has nothing left to shape), with nothing open before the
+ *   commit but the decider's yes.
+ * - **discuss**: a header but not shaped yet: the owner commits, drops or
+ *   sends it to shaping.
+ */
+export type ProposalStage = "discuss" | "shaping" | "ready" | "later";
+export const PROPOSAL_STAGES: readonly ProposalStage[] = [
+  "discuss",
+  "shaping",
+  "ready",
+  "later",
+];
+
+/** One proposed item or milestone, as the Proposals view shows it. */
+export interface Proposal {
+  id: string;
+  title: string;
+  project?: string;
+  /** The proposed item, or else the proposed milestone. */
+  item?: WorkItem;
+  milestone?: WorkMilestone;
+  header?: ProposalHeader;
+  stage: ProposalStage;
+  /** Who says yes: the header's decider, or the owner when it names none. */
+  decider: string;
+  /** The open decisions and studies a commit waits for, by ID. */
+  first: string[];
+  /**
+   * What starting it waits for, not committing it: an item's other open
+   * needs. A secondary detail.
+   */
+  startsAfter: string[];
+  /** Committed work (planned or in progress) that needs it, by ID. */
+  neededBy: string[];
+}
+
+/** The owner decides a proposal whose header names no decider. */
+export const DEFAULT_DECIDER = "the owner";
+
+const isCommitted = (st: State) => st === "planned" || st === "in-progress";
+
+/**
+ * A need that comes before a commit, not before the start: an open
+ * decision (anyone's) or an open study (a learning milestone). An item
+ * that is a study but not a learning milestone isn't marked as one in the
+ * tracker, so it counts as other work.
+ */
+function decidesFirst(
+  id: string,
+  itemOf: ReadonlyMap<string, WorkItem>,
+  msOf: ReadonlyMap<string, WorkMilestone>,
+): boolean {
+  const it = itemOf.get(id);
+  if (it) {
+    return it.kind === "decision" && isOpen(it);
+  }
+  const m = msOf.get(id);
+  return !!m && m.learning && m.state !== "done" && m.state !== "dropped";
 }
 
 /**
- * The proposals among `items`, by project: whole projects first (they are
- * the bigger bets), then the most proposals first. Inside a group, what
- * can be committed now comes first, then what waits on a decision, then
- * what waits on other items; the most waited on first within each.
+ * The proposals among `items` and `milestones`, each with its header, its
+ * stage, what a commit needs and what committed work needs it: by stage,
+ * milestones first, then the most waited on first, then by ID.
  */
 export function proposalsOf(
   s: WorkSnapshot,
@@ -427,64 +519,112 @@ export function proposalsOf(
   milestones: readonly WorkMilestone[] = s.milestones,
   /** How many open items wait on each, for the order. */
   weight?: ReadonlyMap<string, number>,
-): ProposalGroup[] {
+): Proposal[] {
   const itemOf = new Map(s.items.map((i) => [i.id, i]));
-  const proposed = items.filter((it) => isOpen(it) && it.state === "proposed");
-  const rank = (it: WorkItem) =>
-    PROPOSAL_GATES.indexOf(proposalGate(it, itemOf));
-  const order = (list: WorkItem[]) =>
-    list.sort(
-      (a, b) =>
-        rank(a) - rank(b) ||
-        (weight?.get(b.id) ?? 0) - (weight?.get(a.id) ?? 0) ||
-        idNumber(a.id) - idNumber(b.id),
-    );
-  const byKey = new Map<string, WorkItem[]>();
-  for (const it of proposed) {
-    const key = it.project ?? "";
-    byKey.set(key, [...(byKey.get(key) ?? []), it]);
+  const msOf = new Map(s.milestones.map((m) => [m.id, m]));
+  const openId = (id: string) => {
+    const e = itemOf.get(id) ?? msOf.get(id);
+    return !!e && e.state !== "done" && e.state !== "dropped";
+  };
+  // Committed work that names each: items by their needs, milestones by
+  // their constraints.
+  const committedBy = new Map<string, string[]>();
+  const add = (need: string, by: string) =>
+    committedBy.set(need, [...(committedBy.get(need) ?? []), by]);
+  for (const it of s.items) {
+    if (isCommitted(it.state)) {
+      for (const n of it.needs) {
+        add(n, it.id);
+      }
+    }
   }
-  const bets = milestones.filter((m) => m.state === "proposed");
-  for (const m of bets) {
-    const key = m.project ?? "";
-    byKey.set(key, byKey.get(key) ?? []);
+  for (const m of s.milestones) {
+    if (isCommitted(m.state)) {
+      for (const c of m.constraints) {
+        add(c.id, m.id);
+      }
+    }
   }
-  const groups: ProposalGroup[] = [];
-  for (const [key, group] of byKey) {
-    const project = s.projects.find((p) => p.id === key);
-    const inGroup = new Set(group.map((it) => it.id));
-    const held = new Set<string>();
-    const ms = bets
-      .filter((m) => (m.project ?? "") === key)
-      .sort((a, b) => idNumber(a.id) - idNumber(b.id))
-      .map((milestone) => {
-        const its = milestone.constraints
-          .map((c) => itemOf.get(c.id))
-          .filter((it): it is WorkItem => !!it && inGroup.has(it.id));
-        for (const it of its) {
-          held.add(it.id);
-        }
-        return { milestone, items: order(its) };
-      });
-    const open = s.items.filter((it) => it.project === key && isOpen(it));
-    groups.push({
-      project,
-      whole:
-        !!project &&
-        open.length > 0 &&
-        open.every((it) => it.state === "proposed"),
-      milestones: ms,
-      items: order(group.filter((it) => !held.has(it.id))),
-      count: group.length,
+  const stageOf = (
+    header: ProposalHeader | undefined,
+    first: string[],
+    shaped: boolean,
+  ): ProposalStage =>
+    first.length ? "shaping" : !header ? "later" : shaped ? "ready" : "discuss";
+  const out: Proposal[] = [];
+  for (const it of items) {
+    if (it.state !== "proposed") {
+      continue;
+    }
+    const header = proposalHeaderOf(it.text);
+    const first = it.open_needs.filter((n) => decidesFirst(n, itemOf, msOf));
+    out.push({
+      id: it.id,
+      title: it.title,
+      project: it.project,
+      item: it,
+      header,
+      stage: stageOf(header, first, saysDoneWhen(it.text)),
+      decider: header?.decider ?? DEFAULT_DECIDER,
+      first,
+      startsAfter: it.open_needs.filter((n) => !first.includes(n)),
+      neededBy: committedBy.get(it.id) ?? [],
     });
   }
-  return groups.sort(
+  for (const m of milestones) {
+    if (m.state !== "proposed") {
+      continue;
+    }
+    const header = proposalHeaderOf(m.text);
+    const first = m.constraints
+      .map((c) => c.id)
+      .filter((id) => openId(id) && decidesFirst(id, itemOf, msOf));
+    out.push({
+      id: m.id,
+      title: m.title,
+      project: m.project,
+      milestone: m,
+      header,
+      stage: stageOf(header, first, m.to_shape.length === 0),
+      decider: header?.decider ?? DEFAULT_DECIDER,
+      first,
+      startsAfter: [],
+      neededBy: committedBy.get(m.id) ?? [],
+    });
+  }
+  return out.sort(
     (a, b) =>
-      Number(b.whole) - Number(a.whole) ||
-      b.count - a.count ||
-      idNumber(a.project?.id ?? "") - idNumber(b.project?.id ?? ""),
+      PROPOSAL_STAGES.indexOf(a.stage) - PROPOSAL_STAGES.indexOf(b.stage) ||
+      // A proposed milestone heads its project's proposals: the bigger bet.
+      Number(!!b.milestone) - Number(!!a.milestone) ||
+      (weight?.get(b.id) ?? 0) - (weight?.get(a.id) ?? 0) ||
+      idNumber(a.id) - idNumber(b.id),
   );
 }
+
+/**
+ * The proposals waiting on the owner, for Your move: the current "to
+ * discuss" batch (the oldest filed first, at most `batch`, as CS-686
+ * brings about five at a time) and every one ready for a yes.
+ */
+export function proposalsForOwner(
+  proposals: readonly Proposal[],
+  batch = 5,
+): Proposal[] {
+  const filed = (p: Proposal) => p.header?.date ?? p.item?.created ?? "";
+  const discuss = proposals
+    .filter((p) => p.stage === "discuss")
+    .sort(
+      (a, b) =>
+        filed(a).localeCompare(filed(b)) || idNumber(a.id) - idNumber(b.id),
+    )
+    .slice(0, batch);
+  return [...discuss, ...proposals.filter((p) => p.stage === "ready")];
+}
+
+/** "the owner" → "the owner's"; "Ines" → "Ines'". */
+export const possessive = (who: string) =>
+  `${who}${who.endsWith("s") ? "'" : "'s"}`;
 
 // ------------------------------------------------------------ no milestone
 

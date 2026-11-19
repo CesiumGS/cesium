@@ -39,6 +39,8 @@ export interface WorkItem {
   needed_by: string[];
   /** Milestones whose constraints name it. */
   milestones: string[];
+  /** Proposals only: its text (body), which holds its header (CS-686). */
+  text?: string;
 }
 
 /** A milestone under a project: a checkable future state. */
@@ -67,6 +69,8 @@ export interface WorkMilestone {
   progress: { done: number; total: number };
   /** Every item constraint done and the check not yet passed. */
   check_due: boolean;
+  /** Proposals only: its text (body), which holds its header (CS-686). */
+  text?: string;
   /** What shaping still owes it: "outcome", "clauses", "check", "links". */
   to_shape: string[];
 }

@@ -2,7 +2,7 @@
 id: CS-688
 title: "Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-18
 project: CS-18
 claimed_by: orch-9-CS-688
