@@ -237,7 +237,7 @@ graph LR
     CS_533["CS-533 Release 2.0.0"]:::open
     CS_536["CS-536 Approve a store device"]:::done
     CS_545["CS-545 Dyno's roadmap shows each release as a flag above the grid, aft"]:::done
-    CS_547["CS-547 Your move's In progress shows the live run: dispatches in fligh"]:::open
+    CS_547["CS-547 Your move's In progress shows the live run: dispatches in fligh"]:::done
     CS_562["CS-562 Dyno's Work page lists the items in no milestone, filterable by"]:::done
     CS_563["CS-563 Dyno's roadmap shows proposed milestones with dashed outlines"]:::done
     CS_564["CS-564 How CS-545's branch reaches main without a hitld dispatch"]:::done

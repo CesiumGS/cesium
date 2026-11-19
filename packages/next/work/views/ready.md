@@ -211,13 +211,6 @@ CS-579 Editing
   CS-453  decision: What editing should the engine support, with vector data and GIS sources among it?
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
 
-CS-18 The work tracker
-  CS-547  Your move's In progress shows the live run: dispatches in flight and branches done but not merged
-  CS-677  Release notes and a security review for 2.0.0
-  CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
-  CS-680  Triage the open items that fit no release
-  CS-692  Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it
-
 CS-13 The worker-mode façade
   CS-567  The protocol table classifies every member of api/surface.txt, not only the exported names
 
@@ -246,5 +239,11 @@ CS-637 The particle system
 CS-647 Conditional content and motion
   CS-649  Intervals and interval sets in /time
 
-175 ready
+CS-18 The work tracker
+  CS-677  Release notes and a security review for 2.0.0
+  CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
+  CS-680  Triage the open items that fit no release
+  CS-692  Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it
+
+174 ready
 ```

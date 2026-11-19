@@ -358,7 +358,7 @@ No milestone
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 29 of 41 done, 5 ready, 6 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 30 of 41 done, 4 ready, 6 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
@@ -377,7 +377,7 @@ Milestone: The tracker runs on human-in-the-lead (CS-524, Planned)
 Milestone: Dyno's Work page shows the live system and the release plan (CS-561, Proposed)
 
 - [x] CS-545 Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it. Done.
-- [ ] CS-547 Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Needs nothing.
+- [x] CS-547 Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Done.
 - [x] CS-562 Dyno's Work page lists the items in no milestone, filterable by kind and state. Done.
 - [x] CS-563 Dyno's roadmap shows proposed milestones with dashed outlines. Done.
 - [x] CS-573 Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at. Done.
