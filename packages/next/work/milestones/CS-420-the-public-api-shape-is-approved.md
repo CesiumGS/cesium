@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-14
 project: CS-437
 outcome: "Every public member is mapped and reviewed against the façade's constraints and other engines' idioms, and the owner has approved which changes to make."
-constraints: [CS-101 c?, CS-102 c?, CS-430 c?, CS-431 c?, CS-432 c?, CS-433 c?, CS-438 c?, CS-454 c?, CS-572 c?]
+constraints: [CS-101 c?, CS-102 c?, CS-430 c?, CS-431 c?, CS-432 c?, CS-433 c?, CS-438 c?, CS-454 c?, CS-572 c?, CS-567 c?]
 ---
 
 ## Done when
@@ -24,3 +24,5 @@ Renamed on 2026-11-14 from "The first public API review" to its outcome, since H
 The two moves that follow the approval, the stability tiers (CS-434) and the measurement module's seam (CS-435), moved on 2026-11-15 to their own milestone, "The approved API changes are made" (CS-457), so this one closes at the owner's approval (CS-438) and what waits on the approval no longer waits on the moves.
 
 CS-454 joined this milestone on 2026-11-15, on the owner's answer: the review (CS-102) already needs it.
+
+CS-567 joined on 2026-11-18 (owner, placing committed work that sat in no milestone).
