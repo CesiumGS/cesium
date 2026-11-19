@@ -2,9 +2,10 @@
 id: CS-708
 title: "2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-437
+claimed_by: orch-10-CS-708
 touches: [packages/next/src/scene/**, packages/next/src/gpu/**, packages/next/src/streaming/**, packages/next/src/frames/**, packages/next/widgets/**, packages/next/test/**]
 ---
 
