@@ -2,10 +2,14 @@
 id: CS-702
 title: Merge CS-698, the Flow chart's hover card
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-18
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the tested commit (re-checked if main moves), regenerates the views and logs the merge; the run's scope is then done."
+answered_at: 2026-11-19T12:36:57.439Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
