@@ -87,6 +87,37 @@ describe(
       );
     }
 
+    function readValues(primitive, descriptor) {
+      return readGeometry(primitive, [descriptor]).values[0];
+    }
+
+    // Writes every vertex's value of an attribute from a flat array.
+    function writeValues(primitive, descriptor, values) {
+      primitive.geometryWriter.withWriteSession(
+        { attributes: [descriptor] },
+        function (session) {
+          const write = session.vertexAttributeWriter(descriptor);
+          const componentCount = descriptor.componentCount;
+          for (let i = 0; i < session.vertexCount(); ++i) {
+            write(i, values, i * componentCount);
+          }
+        },
+      );
+    }
+
+    // Reverses the order of the vertices in a flat array of their values.
+    function reverseVertices(values, componentCount) {
+      const vertexCount = values.length / componentCount;
+      const result = new Float64Array(values.length);
+      for (let i = 0; i < vertexCount; ++i) {
+        const source = (vertexCount - 1 - i) * componentCount;
+        for (let c = 0; c < componentCount; ++c) {
+          result[i * componentCount + c] = values[source + c];
+        }
+      }
+      return result;
+    }
+
     function getPosition(positions, index, result) {
       return Cartesian3.unpack(positions, index * 3, result);
     }
@@ -416,6 +447,187 @@ describe(
       });
     });
 
+    it("writes the same values to plain, interleaved, quantized, and compressed models", async function () {
+      if (webglStub) {
+        return;
+      }
+
+      const names = [
+        "unitSquare11x11_plain.glb",
+        "unitSquare11x11_plain_interleaved.glb",
+        "unitSquare11x11_quantized.glb",
+        "unitSquare11x11_quantized_interleaved.glb",
+        "unitSquare11x11_unsignedShortTexCoords.glb",
+        "unitSquare11x11_unsignedShortTexCoords_interleaved.glb",
+        "unitSquare11x11_unsignedShortTexCoords_quantized.glb",
+        "unitSquare11x11_unsignedShortTexCoords_quantized_interleaved.glb",
+        "unitSquare11x11_draco.glb",
+        "unitSquare11x11_meshopt.glb",
+      ];
+      for (const name of names) {
+        const [primitive] = await loadPrimitives(`${unitSquareUrl}/${name}`);
+        expect(primitive.geometryWriter).toBe(primitive.geometryWriter);
+
+        const positions = readValues(primitive, position);
+        const texCoords = readValues(primitive, texCoord);
+        const reversedPositions = reverseVertices(positions, 3);
+        const reversedTexCoords = reverseVertices(texCoords, 2);
+
+        // Writing one attribute leaves the others, which may be interleaved with it, unchanged.
+        writeValues(primitive, position, reversedPositions);
+        expect(readValues(primitive, position))
+          .withContext(name)
+          .toEqualEpsilon(reversedPositions, 1e-6);
+        expect(readValues(primitive, texCoord))
+          .withContext(name)
+          .toEqual(texCoords);
+
+        writeValues(primitive, texCoord, reversedTexCoords);
+        expect(readValues(primitive, texCoord))
+          .withContext(name)
+          .toEqualEpsilon(reversedTexCoords, 1e-6);
+        expect(readValues(primitive, position))
+          .withContext(name)
+          .toEqualEpsilon(reversedPositions, 1e-6);
+      }
+    });
+
+    it("writes oct-encoded normals", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(boxWithTangentsDracoUrl);
+      const negatedNormals = readValues(primitive, normal).map((n) => -n);
+
+      writeValues(primitive, normal, negatedNormals);
+      expect(readValues(primitive, normal)).toEqualEpsilon(
+        negatedNormals,
+        1e-2,
+      );
+    });
+
+    it("writes raw integers", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(simpleSkinUrl);
+      const joints = primitive.geometryReader
+        .getAvailableAttributes()
+        .find((attribute) => attribute.semantic === "JOINTS");
+      const values = readValues(primitive, joints).map((j) => j + 1);
+
+      writeValues(primitive, joints, values);
+      expect(readValues(primitive, joints)).toEqual(values);
+    });
+
+    it("clamps values outside the range of the stored type", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(
+        `${unitSquareUrl}/unitSquare11x11_draco.glb`,
+      );
+      const positions = readValues(primitive, position);
+      let min = Infinity;
+      let max = -Infinity;
+      for (const value of positions) {
+        min = Math.min(min, value);
+        max = Math.max(max, value);
+      }
+
+      primitive.geometryWriter.withWriteSession(
+        { attributes: [position] },
+        function (session) {
+          const write = session.vertexAttributeWriter(position);
+          write(0, [1e6, 1e6, 1e6]);
+          write(1, [-1e6, -1e6, -1e6]);
+        },
+      );
+
+      const written = readValues(primitive, position);
+      for (let i = 0; i < 3; ++i) {
+        expect(written[i]).toBeGreaterThan(max - 1e-6);
+        expect(written[i]).toBeLessThan(1e6);
+        expect(written[3 + i]).toBeLessThan(min + 1e-6);
+        expect(written[3 + i]).toBeGreaterThan(-1e6);
+      }
+    });
+
+    it("writes only the components of RGB colors", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(pointCloudWithRgbColorsUrl);
+      primitive.geometryWriter.withWriteSession(
+        { attributes: [color] },
+        function (session) {
+          session.vertexAttributeWriter(color)(0, [0.25, 0.5, 0.75, 0.5]);
+        },
+      );
+
+      const colors = readValues(primitive, color);
+      expect(Array.from(colors.subarray(0, 4))).toEqualEpsilon(
+        [0.25, 0.5, 0.75, 1.0],
+        1 / 255,
+      );
+    });
+
+    it("reads its own writes before they're applied", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
+      primitive.geometryWriter.withWriteSession(
+        { attributes: [position] },
+        function (session) {
+          session.vertexAttributeWriter(position)(0, [5, 6, 7]);
+          expect(session.vertexAttributeReader(position)(0, [])).toEqual([
+            5, 6, 7,
+          ]);
+        },
+      );
+    });
+
+    it("doesn't apply writes if the callback throws", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
+      expect(function () {
+        primitive.geometryWriter.withWriteSession(
+          { attributes: [position] },
+          function (session) {
+            session.vertexAttributeWriter(position)(0, [5, 6, 7]);
+            throw new Error("Callback failed.");
+          },
+        );
+      }).toThrowError("Callback failed.");
+
+      expect(Array.from(readValues(primitive, position))).toEqual([
+        0, 0, 0, 1, 0, 0, 0, 1, 0,
+      ]);
+    });
+
+    it("writes corners as their vertices", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(
+        `${unitSquareUrl}/unitSquare11x2_triangleStrip.glb`,
+      );
+      const options = { attributes: [position], primitives: true };
+      primitive.geometryWriter.withWriteSession(options, function (session) {
+        const writeCorner = session.cornerAttributeWriter(position);
+        const readVertex = session.vertexAttributeReader(position);
+        const vertices = session.primitiveReader()(1, []);
+
+        for (let c = 0; c < vertices.length; ++c) {
+          writeCorner(1, c, [c, c, c]);
+          expect(readVertex(vertices[c], [])).toEqual([c, c, c]);
+        }
+      });
+    });
+
     it("throws when reading corners without primitives", async function () {
       const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
       const options = { attributes: [position] };
@@ -475,6 +687,60 @@ describe(
       }).toThrowDeveloperError();
       expect(function () {
         session.cornerAttributeReader(position);
+      }).toThrowDeveloperError();
+    });
+
+    it("throws when writing an attribute that wasn't requested", async function () {
+      const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
+      primitive.geometryWriter.withWriteSession({}, function (session) {
+        expect(function () {
+          session.vertexAttributeWriter(position);
+        }).toThrowDeveloperError();
+      });
+    });
+
+    it("throws when writing in a read session", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
+      const options = { attributes: [position] };
+      primitive.geometryReader.withReadSession(options, function (session) {
+        expect(function () {
+          session.vertexAttributeWriter(position);
+        }).toThrowDeveloperError();
+      });
+    });
+
+    it("throws when writing corners without primitives", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
+      const options = { attributes: [position] };
+      primitive.geometryWriter.withWriteSession(options, function (session) {
+        expect(function () {
+          session.cornerAttributeWriter(position);
+        }).toThrowDeveloperError();
+      });
+    });
+
+    it("throws when writing after the session ends", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
+      let session;
+      const options = { attributes: [position], primitives: true };
+      primitive.geometryWriter.withWriteSession(options, function (s) {
+        session = s;
+      });
+
+      expect(function () {
+        session.vertexAttributeWriter(position);
+      }).toThrowDeveloperError();
+      expect(function () {
+        session.cornerAttributeWriter(position);
       }).toThrowDeveloperError();
     });
   },

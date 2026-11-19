@@ -3,21 +3,25 @@
 import {
   AttributeCompression,
   AttributeType,
+  Cartesian2,
   Cartesian3,
   ComponentDatatype,
   DeveloperError,
+  Math as CesiumMath,
   PrimitiveType,
   defined,
 } from "@cesium/core";
 import GeometryAttributeDescriptor from "../GeometryAttributeDescriptor.js";
 import GeometryReader from "../GeometryReader.js";
+import GeometryWriter from "../GeometryWriter.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /** @import { TypedArray } from "@cesium/core"; */
 /** @import Buffer from "../../Renderer/Buffer.js"; */
 /** @import { Attribute, Primitive, Quantization } from "../ModelComponents.js"; */
 /** @import { GeometryAccessOptions } from "../GeometryReader.js"; */
-/** @import GeometryReadSession, { GeometryAttributeReader, GeometryCornerAttributeReader, GeometryPrimitiveReader } from "../GeometryReadSession.js"; */
+/** @import { GeometryAttributeReader, GeometryCornerAttributeReader, GeometryPrimitiveReader } from "../GeometryReadSession.js"; */
+/** @import GeometryWriteSession, { GeometryAttributeWriter, GeometryCornerAttributeWriter } from "../GeometryWriteSession.js"; */
 
 /**
  * An attribute's components as laid out in its buffer, starting at its first
@@ -27,6 +31,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
  * @typedef {object} AttributeValues
  * @property {TypedArray|undefined} values
  * @property {number} stride The distance between vertices, in components.
+ * @property {Uint8Array} [bytes] The staged bytes of the attribute's buffer (which <code>values</code> is a view of). Undefined if <code>values</code> is a CPU copy or the attribute is constant.
  * @private
  */
 
@@ -42,18 +47,20 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
  */
 
 /**
- * A {@link GeometryReadSession} for a {@link Primitive} of a model. Provides access
- * to the primitive's vertex attributes and index data, decoding them as the GPU would.
+ * Provides read and write access to the primitive's vertex attributes and
+ * index data, decoding and encoding them as needed to translate to and from the GPU's format.
  *
  * Only the requested attributes are read back (unless the attribute buffer is interleaved).
- * Multiple interleaved attributes are read back together for efficiency.
- * Attributes that already have a CPU copy aren't read back. Indices are read only when
- * primitives are requested.
+ * If multiple interleaved attributes are requested, they are read back together for efficiency.
+ * Read sessions use an attribute's CPU copy if it has one. Write sessions don't,
+ * since writes are uploaded in the layout of the GPU buffer, which the CPU copy may not share. Indices are read only when
+ * primitives (points, lines, triangles) are requested.
  *
- * @implements {GeometryReadSession}
+ * @implements {GeometryWriteSession}
  * @private
  */
-class ModelPrimitiveReadSession {
+class ModelPrimitiveAccessSession {
+  static #scratchCartesian2 = new Cartesian2();
   static #scratchCartesian3 = new Cartesian3();
 
   /** @type {RequestedAttribute[]} */
@@ -64,6 +71,13 @@ class ModelPrimitiveReadSession {
   #primitiveVertexCount;
   /** @type {GeometryPrimitiveReader | undefined} */
   #primitiveReader;
+  #writable;
+  /**
+   * The staged bytes of each buffer that has been written to.
+   *
+   * @type {Map<Buffer, Uint8Array>}
+   */
+  #writtenBuffers = new Map();
   #destroyed = false;
 
   /**
@@ -75,21 +89,38 @@ class ModelPrimitiveReadSession {
   static createGeometryReader(primitive) {
     return new GeometryReader({
       availableAttributes: primitive.attributes.map((attribute) =>
-        ModelPrimitiveReadSession.#getDescriptor(attribute),
+        ModelPrimitiveAccessSession.#getDescriptor(attribute),
       ),
       createReadSession: (options) =>
-        new ModelPrimitiveReadSession(primitive, options),
+        new ModelPrimitiveAccessSession(primitive, options),
     });
   }
 
   /**
-   * @param {Primitive} primitive The primitive to read.
-   * @param {Required<GeometryAccessOptions>} options The data to stage. All requested attributes must be available.
+   * Creates a writer for the primitive's geometry.
+   *
+   * @param {Primitive} primitive The primitive to write.
+   * @param {GeometryReader} reader The primitive's reader.
+   * @returns {GeometryWriter} The writer.
    */
-  constructor(primitive, options) {
+  static createGeometryWriter(primitive, reader) {
+    return new GeometryWriter({
+      reader,
+      createWriteSession: (options) =>
+        new ModelPrimitiveAccessSession(primitive, options, true),
+    });
+  }
+
+  /**
+   * @param {Primitive} primitive The primitive whose geometry is being accessed.
+   * @param {Required<GeometryAccessOptions>} options The data to stage. All requested attributes must be available.
+   * @param {boolean} [writable=false] Whether the session writes. Writable sessions stage attributes directly from their GPU buffers, so writes can be uploaded.
+   */
+  constructor(primitive, options, writable = false) {
+    this.#writable = writable;
     const attributes = primitive.attributes;
     const descriptors = attributes.map((attribute) =>
-      ModelPrimitiveReadSession.#getDescriptor(attribute),
+      ModelPrimitiveAccessSession.#getDescriptor(attribute),
     );
 
     const requested = options.attributes.map((requestedDescriptor) => {
@@ -99,8 +130,9 @@ class ModelPrimitiveReadSession {
       return { descriptor: descriptors[index], attribute: attributes[index] };
     });
 
-    const attributeValues = ModelPrimitiveReadSession.#readAttributeValues(
+    const attributeValues = ModelPrimitiveAccessSession.#readAttributeValues(
       requested.map(({ attribute }) => attribute),
+      writable,
     );
 
     this.#requestedAttributes = requested.map(
@@ -130,7 +162,7 @@ class ModelPrimitiveReadSession {
       ).createPrimitiveReader(
         primitive.primitiveType,
         this.#indexCount,
-        ModelPrimitiveReadSession.#readIndices(primitive),
+        ModelPrimitiveAccessSession.#readIndices(primitive),
       );
     }
   }
@@ -185,24 +217,10 @@ class ModelPrimitiveReadSession {
    * @returns {GeometryAttributeReader}
    */
   vertexAttributeReader(descriptor) {
-    const requested = this.#requestedAttributes.find((requested) =>
-      requested.descriptor.equals(descriptor),
-    );
+    const { attribute, attributeValues } =
+      this.#getRequestedAttribute(descriptor);
 
-    //>>includeStart('debug', pragmas.debug);
-    this.#checkNotDestroyed();
-    if (!defined(requested)) {
-      throw new DeveloperError(
-        `Attribute ${descriptor.semantic} was not requested for this session.`,
-      );
-    }
-    //>>includeEnd('debug');
-
-    const { attribute, attributeValues } = /** @type {RequestedAttribute} */ (
-      requested
-    );
-
-    let reader = ModelPrimitiveReadSession.#createDecodedReader(
+    let reader = ModelPrimitiveAccessSession.#createDecodedReader(
       attribute,
       attributeValues,
     );
@@ -210,9 +228,9 @@ class ModelPrimitiveReadSession {
     // Colors always read as RGBA, so RGB colors get an alpha of 1, as in Cesium's shaders.
     if (
       attribute.semantic === VertexAttributeSemantic.COLOR &&
-      ModelPrimitiveReadSession.#getComponentCount(attribute.type) === 3
+      ModelPrimitiveAccessSession.#getComponentCount(attribute.type) === 3
     ) {
-      reader = ModelPrimitiveReadSession.#createRgbaReader(reader);
+      reader = ModelPrimitiveAccessSession.#createRgbaReader(reader);
     }
 
     return reader;
@@ -221,36 +239,69 @@ class ModelPrimitiveReadSession {
   /**
    * Note: Model attributes (being based on glTF) are all per-vertex, so reading a corner's attribute
    * value simply reads the corresponding vertex's attribute value. This does redundant work,
-   * so you should always use {@link ModelPrimitiveReadSession#vertexAttributeReader} instead. This
+   * so you should always use {@link ModelPrimitiveAccessSession#vertexAttributeReader} instead. This
    * function exists for completeness, but its use is discouraged.
    * @param {GeometryAttributeDescriptor} descriptor
    * @returns {GeometryCornerAttributeReader}
    */
   cornerAttributeReader(descriptor) {
+    return /** @type {GeometryCornerAttributeReader} */ (
+      this.#createCornerFunction(this.vertexAttributeReader(descriptor))
+    );
+  }
+
+  /**
+   * @param {GeometryAttributeDescriptor} descriptor
+   * @returns {GeometryAttributeWriter}
+   */
+  vertexAttributeWriter(descriptor) {
+    const { attribute, attributeValues } =
+      this.#getRequestedAttribute(descriptor);
+
     //>>includeStart('debug', pragmas.debug);
-    this.#checkNotDestroyed();
-    if (!defined(this.#primitiveReader)) {
+    if (!this.#writable) {
+      throw new DeveloperError("This session is read-only.");
+    }
+    if (!defined(attributeValues.bytes)) {
       throw new DeveloperError(
-        "Primitives were not requested for this session.",
+        `Attribute ${descriptor.semantic} has a constant value and can't be written.`,
       );
     }
     //>>includeEnd('debug');
 
-    const readVertex = this.vertexAttributeReader(descriptor);
-    const readPrimitive = /** @type {GeometryPrimitiveReader} */ (
-      this.#primitiveReader
+    this.#writtenBuffers.set(
+      attribute.buffer,
+      /** @type {Uint8Array} */ (attributeValues.bytes),
     );
-    const vertexIndices = new Array(this.#primitiveVertexCount);
 
-    return (primitiveIndex, cornerIndex, result, offset = 0) => {
-      readPrimitive(primitiveIndex, vertexIndices);
-      return readVertex(vertexIndices[cornerIndex], result, offset);
-    };
+    return ModelPrimitiveAccessSession.#createEncodedWriter(
+      attribute,
+      attributeValues,
+    );
+  }
+
+  /**
+   * Note: Model attributes are all per-vertex, so writing a corner's attribute
+   * value writes the corresponding vertex's value, which other corners may share.
+   * Thus, prefer the vertexAttributeWriter whenever possible; this method is for completeness.
+   *
+   * @param {GeometryAttributeDescriptor} descriptor
+   * @returns {GeometryCornerAttributeWriter}
+   */
+  cornerAttributeWriter(descriptor) {
+    return this.#createCornerFunction(this.vertexAttributeWriter(descriptor));
+  }
+
+  commit() {
+    for (const [buffer, bytes] of this.#writtenBuffers) {
+      buffer.copyFromArrayView(bytes);
+    }
   }
 
   destroy() {
     this.#requestedAttributes = [];
     this.#primitiveReader = undefined;
+    this.#writtenBuffers.clear();
     this.#destroyed = true;
   }
 
@@ -267,8 +318,59 @@ class ModelPrimitiveReadSession {
 
   #checkNotDestroyed() {
     if (this.#destroyed) {
-      throw new DeveloperError("The read session has ended.");
+      throw new DeveloperError("The session has ended.");
     }
+  }
+
+  /**
+   * @param {GeometryAttributeDescriptor} descriptor
+   * @returns {RequestedAttribute}
+   */
+  #getRequestedAttribute(descriptor) {
+    const requested = this.#requestedAttributes.find((requested) =>
+      requested.descriptor.equals(descriptor),
+    );
+
+    //>>includeStart('debug', pragmas.debug);
+    this.#checkNotDestroyed();
+    if (!defined(requested)) {
+      throw new DeveloperError(
+        `Attribute ${descriptor.semantic} was not requested for this session.`,
+      );
+    }
+    //>>includeEnd('debug');
+
+    return /** @type {RequestedAttribute} */ (requested);
+  }
+
+  /**
+   * Wraps a vertex attribute reader or writer to take a corner of a primitive
+   * instead of a vertex.
+   *
+   * @template {GeometryAttributeReader|GeometryAttributeWriter} F
+   * @param {F} vertexFunction
+   * @returns {function(number, number, (number[]|TypedArray), number=): ReturnType<F>}
+   */
+  #createCornerFunction(vertexFunction) {
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(this.#primitiveReader)) {
+      throw new DeveloperError(
+        "Primitives were not requested for this session.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    const readPrimitive = /** @type {GeometryPrimitiveReader} */ (
+      this.#primitiveReader
+    );
+    const vertexIndices = new Array(this.#primitiveVertexCount);
+
+    return (primitiveIndex, cornerIndex, values, offset = 0) => {
+      readPrimitive(primitiveIndex, vertexIndices);
+      return /** @type {ReturnType<F>} */ (
+        vertexFunction(vertexIndices[cornerIndex], values, offset)
+      );
+    };
   }
 
   /**
@@ -310,7 +412,7 @@ class ModelPrimitiveReadSession {
    */
   static #getAttributeLayout(attribute) {
     const { componentDatatype, type } = attribute.quantization ?? attribute;
-    const componentCount = ModelPrimitiveReadSession.#getComponentCount(type);
+    const componentCount = ModelPrimitiveAccessSession.#getComponentCount(type);
 
     const bytesPerComponent = /** @type {any} */ (
       ComponentDatatype
@@ -323,15 +425,16 @@ class ModelPrimitiveReadSession {
   }
 
   /**
-   * Gets the values of each attribute. Uses CPU copies where they exist.
-   * Otherwise, reads each GPU buffer once, even if several attributes are
-   * interleaved in it.
+   * Gets the values of each attribute. Uses CPU copies where they exist,
+   * unless the session is writable. Otherwise, reads each GPU buffer once,
+   * even if several attributes are interleaved in it.
    *
    * @param {Attribute[]} attributes
+   * @param {boolean} writable
    * @returns {AttributeValues[]}
    * @ignore
    */
-  static #readAttributeValues(attributes) {
+  static #readAttributeValues(attributes, writable) {
     /** @type {Map<Buffer, Uint8Array>} */
     const bufferBytes = new Map();
 
@@ -341,9 +444,9 @@ class ModelPrimitiveReadSession {
         componentCount,
         bytesPerComponent,
         byteStride,
-      } = ModelPrimitiveReadSession.#getAttributeLayout(attribute);
+      } = ModelPrimitiveAccessSession.#getAttributeLayout(attribute);
 
-      if (defined(attribute.typedArray)) {
+      if (!writable && defined(attribute.typedArray)) {
         return { values: attribute.typedArray, stride: componentCount };
       }
 
@@ -374,7 +477,7 @@ class ModelPrimitiveReadSession {
         ),
       );
 
-      return { values, stride: byteStride / bytesPerComponent };
+      return { values, stride: byteStride / bytesPerComponent, bytes };
     });
   }
 
@@ -390,31 +493,70 @@ class ModelPrimitiveReadSession {
    */
   static #createDecodedReader(attribute, attributeValues) {
     if (!defined(attributeValues.values)) {
-      return ModelPrimitiveReadSession.#createConstantReader(attribute);
+      return ModelPrimitiveAccessSession.#createConstantReader(attribute);
     }
 
     if (attribute.quantization?.octEncoded) {
-      return ModelPrimitiveReadSession.#createOctDecodedReader(
+      return ModelPrimitiveAccessSession.#createOctDecodedReader(
         attribute,
         attributeValues,
       );
     }
 
     if (defined(attribute.quantization)) {
-      return ModelPrimitiveReadSession.#createDequantizedReader(
+      return ModelPrimitiveAccessSession.#createDequantizedReader(
         attribute,
         attributeValues,
       );
     }
 
     if (attribute.normalized) {
-      return ModelPrimitiveReadSession.#createNormalizedReader(
+      return ModelPrimitiveAccessSession.#createNormalizedReader(
         attribute,
         attributeValues,
       );
     }
 
-    return ModelPrimitiveReadSession.#createRawReader(
+    return ModelPrimitiveAccessSession.#createRawReader(
+      attribute,
+      attributeValues,
+    );
+  }
+
+  /**
+   * Creates a writer that encodes values into how the attribute
+   * is stored via a specialized writer. The inverse of
+   * #createDecodedReader. Writes only the attribute's components, so RGB
+   * colors ignore alpha.
+   *
+   * @param {Attribute} attribute
+   * @param {AttributeValues} attributeValues
+   * @returns {GeometryAttributeWriter}
+   * @ignore
+   */
+  static #createEncodedWriter(attribute, attributeValues) {
+    if (attribute.quantization?.octEncoded) {
+      return ModelPrimitiveAccessSession.#createOctEncodedWriter(
+        attribute,
+        attributeValues,
+      );
+    }
+
+    if (defined(attribute.quantization)) {
+      return ModelPrimitiveAccessSession.#createQuantizedWriter(
+        attribute,
+        attributeValues,
+      );
+    }
+
+    if (attribute.normalized) {
+      return ModelPrimitiveAccessSession.#createNormalizedWriter(
+        attribute,
+        attributeValues,
+      );
+    }
+
+    return ModelPrimitiveAccessSession.#createRawWriter(
       attribute,
       attributeValues,
     );
@@ -446,7 +588,7 @@ class ModelPrimitiveReadSession {
   static #createRawReader(attribute, attributeValues) {
     const { values, stride } = attributeValues;
     const valuesArray = /** @type {TypedArray} */ (values);
-    const componentCount = ModelPrimitiveReadSession.#getComponentCount(
+    const componentCount = ModelPrimitiveAccessSession.#getComponentCount(
       attribute.type,
     );
 
@@ -456,6 +598,29 @@ class ModelPrimitiveReadSession {
         result[offset + i] = valuesArray[base + i];
       }
       return result;
+    };
+  }
+
+  /**
+   * Writes values that are stored ready to use.
+   *
+   * @param {Attribute} attribute
+   * @param {AttributeValues} attributeValues
+   * @returns {GeometryAttributeWriter}
+   * @ignore
+   */
+  static #createRawWriter(attribute, attributeValues) {
+    const { values, stride } = attributeValues;
+    const valuesArray = /** @type {TypedArray} */ (values);
+    const componentCount = ModelPrimitiveAccessSession.#getComponentCount(
+      attribute.type,
+    );
+
+    return (vertexIndex, source, offset = 0) => {
+      const base = vertexIndex * stride;
+      for (let i = 0; i < componentCount; ++i) {
+        valuesArray[base + i] = source[offset + i];
+      }
     };
   }
 
@@ -470,11 +635,11 @@ class ModelPrimitiveReadSession {
   static #createNormalizedReader(attribute, attributeValues) {
     const { values, stride } = attributeValues;
     const valuesArray = /** @type {TypedArray} */ (values);
-    const componentCount = ModelPrimitiveReadSession.#getComponentCount(
+    const componentCount = ModelPrimitiveAccessSession.#getComponentCount(
       attribute.type,
     );
     const { scale, min } =
-      ModelPrimitiveReadSession.#getNormalization(attribute);
+      ModelPrimitiveAccessSession.#getNormalization(attribute);
 
     return (vertexIndex, result, offset = 0) => {
       const base = vertexIndex * stride;
@@ -482,6 +647,33 @@ class ModelPrimitiveReadSession {
         result[offset + i] = Math.max(valuesArray[base + i] * scale, min);
       }
       return result;
+    };
+  }
+
+  /**
+   * Writes values as integers that the GPU normalizes, rounding and clamping
+   * them to the stored type.
+   *
+   * @param {Attribute} attribute
+   * @param {AttributeValues} attributeValues
+   * @returns {GeometryAttributeWriter}
+   * @ignore
+   */
+  static #createNormalizedWriter(attribute, attributeValues) {
+    const { values, stride } = attributeValues;
+    const valuesArray = /** @type {TypedArray} */ (values);
+    const componentCount = ModelPrimitiveAccessSession.#getComponentCount(
+      attribute.type,
+    );
+    const { scale } = ModelPrimitiveAccessSession.#getNormalization(attribute);
+    const toStored =
+      ModelPrimitiveAccessSession.#createIntegerEncoder(attribute);
+
+    return (vertexIndex, source, offset = 0) => {
+      const base = vertexIndex * stride;
+      for (let i = 0; i < componentCount; ++i) {
+        valuesArray[base + i] = toStored(source[offset + i] / scale);
+      }
     };
   }
 
@@ -496,18 +688,18 @@ class ModelPrimitiveReadSession {
   static #createDequantizedReader(attribute, attributeValues) {
     const { values, stride } = attributeValues;
     const valuesArray = /** @type {TypedArray} */ (values);
-    const componentCount = ModelPrimitiveReadSession.#getComponentCount(
+    const componentCount = ModelPrimitiveAccessSession.#getComponentCount(
       attribute.type,
     );
     const { scale, min } =
-      ModelPrimitiveReadSession.#getNormalization(attribute);
+      ModelPrimitiveAccessSession.#getNormalization(attribute);
 
     const quantization = /** @type {Quantization} */ (attribute.quantization);
-    const stepSizes = ModelPrimitiveReadSession.#pack(
+    const stepSizes = ModelPrimitiveAccessSession.#pack(
       quantization.quantizedVolumeStepSize,
       attribute.type,
     );
-    const offsets = ModelPrimitiveReadSession.#pack(
+    const offsets = ModelPrimitiveAccessSession.#pack(
       quantization.quantizedVolumeOffset,
       attribute.type,
     );
@@ -523,6 +715,44 @@ class ModelPrimitiveReadSession {
   }
 
   /**
+   * Writes values as quantized values, rounding and clamping them to the
+   * stored type.
+   *
+   * @param {Attribute} attribute
+   * @param {AttributeValues} attributeValues
+   * @returns {GeometryAttributeWriter}
+   * @ignore
+   */
+  static #createQuantizedWriter(attribute, attributeValues) {
+    const { values, stride } = attributeValues;
+    const valuesArray = /** @type {TypedArray} */ (values);
+    const componentCount = ModelPrimitiveAccessSession.#getComponentCount(
+      attribute.type,
+    );
+    const { scale } = ModelPrimitiveAccessSession.#getNormalization(attribute);
+    const toStored =
+      ModelPrimitiveAccessSession.#createIntegerEncoder(attribute);
+
+    const quantization = /** @type {Quantization} */ (attribute.quantization);
+    const stepSizes = ModelPrimitiveAccessSession.#pack(
+      quantization.quantizedVolumeStepSize,
+      attribute.type,
+    );
+    const offsets = ModelPrimitiveAccessSession.#pack(
+      quantization.quantizedVolumeOffset,
+      attribute.type,
+    );
+
+    return (vertexIndex, source, offset = 0) => {
+      const base = vertexIndex * stride;
+      for (let i = 0; i < componentCount; ++i) {
+        const value = (source[offset + i] - offsets[i]) / stepSizes[i];
+        valuesArray[base + i] = toStored(value / scale);
+      }
+    };
+  }
+
+  /**
    * Reads unit vectors, such as normals, stored as two oct-encoded components.
    *
    * @param {Attribute} attribute
@@ -534,12 +764,12 @@ class ModelPrimitiveReadSession {
     const { values, stride } = attributeValues;
     const valuesArray = /** @type {TypedArray} */ (values);
     const { scale, min } =
-      ModelPrimitiveReadSession.#getNormalization(attribute);
+      ModelPrimitiveAccessSession.#getNormalization(attribute);
 
     const quantization = /** @type {Quantization} */ (attribute.quantization);
     const range = /** @type {number} */ (quantization.normalizationRange);
     const zxy = quantization.octEncodedZXY;
-    const decoded = ModelPrimitiveReadSession.#scratchCartesian3;
+    const decoded = ModelPrimitiveAccessSession.#scratchCartesian3;
 
     return (vertexIndex, result, offset = 0) => {
       const base = vertexIndex * stride;
@@ -565,6 +795,52 @@ class ModelPrimitiveReadSession {
   }
 
   /**
+   * Writes vectors, such as normals, as two oct-encoded components. Vectors
+   * are normalized first.
+   *
+   * @param {Attribute} attribute
+   * @param {AttributeValues} attributeValues
+   * @returns {GeometryAttributeWriter}
+   * @ignore
+   */
+  static #createOctEncodedWriter(attribute, attributeValues) {
+    const { values, stride } = attributeValues;
+    const valuesArray = /** @type {TypedArray} */ (values);
+    const { scale } = ModelPrimitiveAccessSession.#getNormalization(attribute);
+    const toStored =
+      ModelPrimitiveAccessSession.#createIntegerEncoder(attribute);
+
+    const quantization = /** @type {Quantization} */ (attribute.quantization);
+    const range = /** @type {number} */ (quantization.normalizationRange);
+    const zxy = quantization.octEncodedZXY;
+    const vector = ModelPrimitiveAccessSession.#scratchCartesian3;
+    const encoded = ModelPrimitiveAccessSession.#scratchCartesian2;
+
+    return (vertexIndex, source, offset = 0) => {
+      // Undoes the reader's ZXY swizzle.
+      if (zxy) {
+        vector.x = source[offset + 1];
+        vector.y = source[offset + 2];
+        vector.z = source[offset];
+      } else {
+        vector.x = source[offset];
+        vector.y = source[offset + 1];
+        vector.z = source[offset + 2];
+      }
+
+      /** @type {any} */ (AttributeCompression).octEncodeInRange(
+        Cartesian3.normalize(vector, vector),
+        range,
+        encoded,
+      );
+
+      const base = vertexIndex * stride;
+      valuesArray[base] = toStored(encoded.x / scale);
+      valuesArray[base + 1] = toStored(encoded.y / scale);
+    };
+  }
+
+  /**
    * Reads an attribute that has no buffer, so every vertex has the same value.
    *
    * @param {Attribute} attribute
@@ -572,7 +848,7 @@ class ModelPrimitiveReadSession {
    * @ignore
    */
   static #createConstantReader(attribute) {
-    const values = ModelPrimitiveReadSession.#pack(
+    const values = ModelPrimitiveAccessSession.#pack(
       attribute.constant,
       attribute.type,
     );
@@ -620,13 +896,38 @@ class ModelPrimitiveReadSession {
     }
 
     const { componentDatatype } =
-      ModelPrimitiveReadSession.#getAttributeLayout(attribute);
+      ModelPrimitiveAccessSession.#getAttributeLayout(attribute);
 
     const divisor = /** @type {any} */ (
       ComponentDatatype
     ).getNormalizationDivisor(componentDatatype);
 
     return { scale: 1.0 / divisor, min: -1.0 };
+  }
+
+  /**
+   * Creates a function that rounds a value to the attribute's stored integer
+   * type, clamping it to the type's range so it doesn't wrap around.
+   *
+   * @param {Attribute} attribute
+   * @returns {function(number): number}
+   * @ignore
+   */
+  static #createIntegerEncoder(attribute) {
+    const { componentDatatype } =
+      ModelPrimitiveAccessSession.#getAttributeLayout(attribute);
+
+    const highest = /** @type {any} */ (
+      ComponentDatatype
+    ).getNormalizationDivisor(componentDatatype);
+
+    const signed =
+      componentDatatype === ComponentDatatype.BYTE ||
+      componentDatatype === ComponentDatatype.SHORT ||
+      componentDatatype === ComponentDatatype.INT;
+    const lowest = signed ? -highest - 1 : 0;
+
+    return (value) => CesiumMath.clamp(Math.round(value), lowest, highest);
   }
 
   /**
@@ -659,4 +960,4 @@ class ModelPrimitiveReadSession {
   }
 }
 
-export default ModelPrimitiveReadSession;
+export default ModelPrimitiveAccessSession;
