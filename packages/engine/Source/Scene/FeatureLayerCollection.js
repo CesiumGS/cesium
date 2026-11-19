@@ -41,10 +41,14 @@ class FeatureLayerCollection {
      * @private
      */
     this._layerByGroup = new Map();
+    /**
+     * @type {Map<string, FeatureLayer>}
+     * @private
+     */
+    this._layerByName = new Map();
 
     /**
-     * Raised synchronously when a layer is added, before any of its tiles are requested.
-     * Not raised yet: all current layers exist before listeners can be attached.
+     * Raised synchronously when a layer is added, before any of its features are rendered.
      *
      * @type {Event<function(FeatureLayer):void>}
      */
@@ -135,6 +139,34 @@ class FeatureLayerCollection {
     return defined(groupMetadata)
       ? this._layerByGroup.get(groupMetadata)
       : undefined;
+  }
+
+  /**
+   * Gets the layer for the given source layer name, adding it if needed.
+   *
+   * @param {string} name The source layer name.
+   * @returns {FeatureLayer} The layer.
+   * @ignore
+   */
+  _getOrAddByName(name) {
+    let layer = this._layerByName.get(name);
+    if (!defined(layer)) {
+      layer = new FeatureLayer({ name: name });
+      this._layerByName.set(name, layer);
+      this._add(layer);
+    }
+    return layer;
+  }
+
+  /**
+   * Gets the layer for the given source layer name.
+   *
+   * @param {string} [name] The source layer name.
+   * @returns {FeatureLayer|undefined} The layer, if any.
+   * @ignore
+   */
+  _getByName(name) {
+    return defined(name) ? this._layerByName.get(name) : undefined;
   }
 }
 
