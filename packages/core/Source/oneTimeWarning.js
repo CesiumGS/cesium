@@ -3,7 +3,10 @@
 import defined from "./defined.js";
 import DeveloperError from "./DeveloperError.js";
 
-/** @type {Object<string, boolean>} */
+/**
+ * @type {Object<string, boolean>}
+ * @ignore
+ */
 const warnings = {};
 
 /**
