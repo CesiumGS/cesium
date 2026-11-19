@@ -213,7 +213,6 @@ CS-579 Editing
 
 CS-18 The work tracker
   CS-547  Your move's In progress shows the live run: dispatches in flight and branches done but not merged
-  CS-562  Dyno's Work page lists the items in no milestone, filterable by kind and state
   CS-563  Dyno's roadmap shows proposed milestones with dashed outlines
   CS-677  Release notes and a security review for 2.0.0
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
@@ -248,5 +247,5 @@ CS-637 The particle system
 CS-647 Conditional content and motion
   CS-649  Intervals and interval sets in /time
 
-177 ready
+176 ready
 ```

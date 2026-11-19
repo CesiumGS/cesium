@@ -44,7 +44,7 @@ CS-17 The transform graph [Planned], led by owner
   waits on: CS-10 Cesium IR (2)
   waited on by: CS-18 The work tracker (2)
 CS-18 The work tracker [Planned], led by owner
-  24 of 37 done, 7 ready, 6 blocked
+  25 of 37 done, 6 ready, 6 blocked
   waits on: CS-9 The WebGL 2 renderer (3); CS-191 Content sources and formats (4); CS-16 Streaming robustness (3); CS-8 Engine profiles (3); CS-199 Dyno hardening, packaging and CI (2); CS-615 Packaging and package names (2); CS-628 Sandcastle as 2.0's gallery (2); CS-596 Trust and evals (3); CS-10 Cesium IR (3); CS-437 The public API reviews (3); CS-13 The worker-mode façade (4); CS-12 The job system's ports (6); CS-188 Earth to Moon (frames 5c to 5h) (4); CS-189 Frames and engineering coordinates follow-ups (4); CS-192 Sky, light and atmosphere (2); CS-193 B-reps and geometry queries (1); CS-17 The transform graph (2); CS-11 Live MaterialX graph editing (2); CS-190 Vector drawing and the styling language (4); CS-15 Refinement and convergence (2); CS-584 The widgets library (1); CS-637 The particle system (1); CS-642 Geometry generators (1); CS-647 Conditional content and motion (1); CS-14 Level-of-detail transitions (2); CS-195 Benchmarks, parity and image regression (4); CS-198 GPU-driven rendering and capacities (2); CS-194 Budgeted selection and memory (1); CS-389 Dyno as the development harness (4); CS-609 A clean 2.0 branch and a modern build (1); CS-622 The agent-first migration kit (1)
   waited on by: nothing open
 CS-19 Follow-ups for other teams [Planned], led by owner
