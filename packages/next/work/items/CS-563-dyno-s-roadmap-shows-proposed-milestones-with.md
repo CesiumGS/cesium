@@ -2,7 +2,7 @@
 id: CS-563
 title: Dyno's roadmap shows proposed milestones with dashed outlines
 kind: work
-state: in-progress
+state: done
 created: 2026-11-16
 project: CS-18
 claimed_by: orch-9-CS-563
