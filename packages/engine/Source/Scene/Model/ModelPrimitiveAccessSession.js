@@ -31,7 +31,7 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
  * @typedef {object} AttributeValues
  * @property {TypedArray|undefined} values
  * @property {number} stride The distance between vertices, in components.
- * @property {Uint8Array} [bytes] The staged bytes of the attribute's buffer (which <code>values</code> is a view of). Undefined if <code>values</code> is a CPU copy or the attribute is constant.
+ * @property {Uint8Array} [bufferBytes] The bytes read back from the attribute's GPU buffer, which <code>values</code> is a view of. Undefined if <code>values</code> was staged from the CPU copy, or the attribute is constant.
  * @private
  */
 
@@ -52,8 +52,8 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
  *
  * Only the requested attributes are read back (unless the attribute buffer is interleaved).
  * If multiple interleaved attributes are requested, they are read back together for efficiency.
- * Read sessions use an attribute's CPU copy if it has one. Write sessions don't,
- * since writes are uploaded in the layout of the GPU buffer, which the CPU copy may not share. Indices are read only when
+ * Read sessions use an attribute's CPU copy if it has one. Write sessions use it only if the attribute
+ * isn't interleaved, since writes are uploaded in the GPU buffer's layout. Indices are read only when
  * primitives (points, lines, triangles) are requested.
  *
  * @implements {GeometryWriteSession}
@@ -72,12 +72,8 @@ class ModelPrimitiveAccessSession {
   /** @type {GeometryPrimitiveReader | undefined} */
   #primitiveReader;
   #writable;
-  /**
-   * The staged bytes of each buffer that has been written to.
-   *
-   * @type {Map<Buffer, Uint8Array>}
-   */
-  #writtenBuffers = new Map();
+  /** @type {Set<RequestedAttribute>} */
+  #writtenAttributes = new Set();
   #destroyed = false;
 
   /**
@@ -114,7 +110,7 @@ class ModelPrimitiveAccessSession {
   /**
    * @param {Primitive} primitive The primitive whose geometry is being accessed.
    * @param {Required<GeometryAccessOptions>} options The data to stage. All requested attributes must be available.
-   * @param {boolean} [writable=false] Whether the session writes. Writable sessions stage attributes directly from their GPU buffers, so writes can be uploaded.
+   * @param {boolean} [writable=false] Whether the session writes. Writable sessions stage copies of the attributes, so writes can be uploaded on commit.
    */
   constructor(primitive, options, writable = false) {
     this.#writable = writable;
@@ -255,24 +251,21 @@ class ModelPrimitiveAccessSession {
    * @returns {GeometryAttributeWriter}
    */
   vertexAttributeWriter(descriptor) {
-    const { attribute, attributeValues } =
-      this.#getRequestedAttribute(descriptor);
+    const requested = this.#getRequestedAttribute(descriptor);
+    const { attribute, attributeValues } = requested;
 
     //>>includeStart('debug', pragmas.debug);
     if (!this.#writable) {
       throw new DeveloperError("This session is read-only.");
     }
-    if (!defined(attributeValues.bytes)) {
+    if (!defined(attributeValues.values)) {
       throw new DeveloperError(
         `Attribute ${descriptor.semantic} has a constant value and can't be written.`,
       );
     }
     //>>includeEnd('debug');
 
-    this.#writtenBuffers.set(
-      attribute.buffer,
-      /** @type {Uint8Array} */ (attributeValues.bytes),
-    );
+    this.#writtenAttributes.add(requested);
 
     return ModelPrimitiveAccessSession.#createEncodedWriter(
       attribute,
@@ -293,15 +286,41 @@ class ModelPrimitiveAccessSession {
   }
 
   commit() {
-    for (const [buffer, bytes] of this.#writtenBuffers) {
-      buffer.copyFromArrayView(bytes);
+    const uploadedBuffers = new Set();
+    for (const { attribute, attributeValues } of this.#writtenAttributes) {
+      const { bufferBytes, values } = attributeValues;
+
+      // When defined, bufferBytes indicates that the attribute has been read back from the GPU.
+      // So this check is for attributes that have _not_ been read-back, but rather written to directly via the existing CPU typed arrays.
+      // We must update the GPU buffer with the CPU values, and _move_ our the CPU copy we made to the attribute's typed array.
+      if (!defined(bufferBytes)) {
+        const cpuValues = /** @type {any} */ (values);
+        attribute.buffer?.copyFromArrayView(cpuValues, attribute.byteOffset);
+        attribute.typedArray = cpuValues;
+        continue;
+      }
+
+      // Read-back attributes.
+      // Staged from the GPU buffer, which may hold other attributes, so it's uploaded whole, once.
+      if (!uploadedBuffers.has(attribute.buffer)) {
+        attribute.buffer.copyFromArrayView(bufferBytes);
+        uploadedBuffers.add(attribute.buffer);
+      }
+
+      // Its CPU copy, if it has one (e.g. if it's interleaved), is updated too.
+      if (defined(attribute.typedArray)) {
+        ModelPrimitiveAccessSession.#packBufferValuesIntoTypedArray(
+          attribute,
+          attributeValues,
+        );
+      }
     }
   }
 
   destroy() {
     this.#requestedAttributes = [];
     this.#primitiveReader = undefined;
-    this.#writtenBuffers.clear();
+    this.#writtenAttributes.clear();
     this.#destroyed = true;
   }
 
@@ -425,9 +444,10 @@ class ModelPrimitiveAccessSession {
   }
 
   /**
-   * Gets the values of each attribute. Uses CPU copies where they exist,
-   * unless the session is writable. Otherwise, reads each GPU buffer once,
-   * even if several attributes are interleaved in it.
+   * Gets the values of each attribute, from its CPU copy if it can be used,
+   * otherwise from its GPU buffer. If any attribute is read from a GPU
+   * buffer, every attribute in that buffer is, so that each buffer is staged,
+   * and uploaded, in one piece.
    *
    * @param {Attribute[]} attributes
    * @param {boolean} writable
@@ -435,50 +455,137 @@ class ModelPrimitiveAccessSession {
    * @ignore
    */
   static #readAttributeValues(attributes, writable) {
+    const readBackBuffers = new Set(
+      attributes
+        .filter(
+          (attribute) =>
+            defined(attribute.buffer) &&
+            !ModelPrimitiveAccessSession.#canUseCpuCopy(attribute, writable),
+        )
+        .map((attribute) => attribute.buffer),
+    );
+
     /** @type {Map<Buffer, Uint8Array>} */
-    const bufferBytes = new Map();
+    const readBackBytes = new Map();
 
     return attributes.map((attribute) => {
-      const {
-        componentDatatype,
-        componentCount,
-        bytesPerComponent,
-        byteStride,
-      } = ModelPrimitiveAccessSession.#getAttributeLayout(attribute);
-
-      if (!writable && defined(attribute.typedArray)) {
-        return { values: attribute.typedArray, stride: componentCount };
+      if (readBackBuffers.has(attribute.buffer)) {
+        return ModelPrimitiveAccessSession.#readGpuValues(
+          attribute,
+          readBackBytes,
+        );
       }
 
-      // Attributes without a buffer have a constant value, e.g. a glTF
-      // accessor without a bufferView, whose values are all zero.
-      const buffer = attribute.buffer;
-      if (!defined(buffer)) {
-        return { values: undefined, stride: 0 };
+      if (defined(attribute.typedArray)) {
+        return ModelPrimitiveAccessSession.#readCpuValues(attribute, writable);
       }
 
-      let bytes = bufferBytes.get(buffer);
-      if (!defined(bytes)) {
-        bytes = new Uint8Array(/** @type {any} */ (buffer).sizeInBytes);
-        buffer.getBufferData(bytes);
-        bufferBytes.set(buffer, bytes);
-      }
-
-      // WebGL requires attribute offsets and strides to be multiples of the
-      // component size, so the attribute can be viewed in place.
-      const values = /** @type {any} */ (
-        ComponentDatatype
-      ).createArrayBufferView(
-        componentDatatype,
-        bytes.buffer,
-        attribute.byteOffset,
-        Math.floor(
-          (bytes.byteLength - attribute.byteOffset) / bytesPerComponent,
-        ),
-      );
-
-      return { values, stride: byteStride / bytesPerComponent, bytes };
+      // Attributes without a buffer or CPU copy have a constant value, e.g. a
+      // glTF accessor without a bufferView, whose values are all zero.
+      return { values: undefined, stride: 0 };
     });
+  }
+
+  /**
+   * Determines if an attribute's values can be staged from its CPU copy.
+   * Write sessions can't use the CPU copy of an interleaved attribute, since
+   * the CPU copy is de-interleaved and writes are uploaded in the GPU
+   * buffer's layout.
+   *
+   * @param {Attribute} attribute
+   * @param {boolean} writable
+   * @returns {boolean}
+   * @ignore
+   */
+  static #canUseCpuCopy(attribute, writable) {
+    if (!defined(attribute.typedArray)) {
+      return false;
+    }
+
+    const { componentCount, bytesPerComponent, byteStride } =
+      ModelPrimitiveAccessSession.#getAttributeLayout(attribute);
+    const interleaved = byteStride !== componentCount * bytesPerComponent;
+
+    return !(writable && interleaved);
+  }
+
+  /**
+   * Gets an attribute's values from its CPU copy. Writable sessions get a
+   * copy, so writes aren't applied until they're committed.
+   *
+   * @param {Attribute} attribute
+   * @param {boolean} writable
+   * @returns {AttributeValues}
+   * @ignore
+   */
+  static #readCpuValues(attribute, writable) {
+    const cpuCopy = /** @type {TypedArray} */ (attribute.typedArray);
+    const { componentCount } =
+      ModelPrimitiveAccessSession.#getAttributeLayout(attribute);
+
+    return {
+      values: writable ? cpuCopy.slice() : cpuCopy,
+      stride: componentCount,
+    };
+  }
+
+  /**
+   * Gets an attribute's values from its GPU buffer, reading back each buffer
+   * once, even if several attributes are interleaved in it.
+   *
+   * @param {Attribute} attribute
+   * @param {Map<Buffer, Uint8Array>} readBackBytes The bytes of the buffers read back so far.
+   * @returns {AttributeValues}
+   * @ignore
+   */
+  static #readGpuValues(attribute, readBackBytes) {
+    const { componentDatatype, bytesPerComponent, byteStride } =
+      ModelPrimitiveAccessSession.#getAttributeLayout(attribute);
+    const buffer = /** @type {Buffer} */ (attribute.buffer);
+
+    let bytes = readBackBytes.get(buffer);
+    if (!defined(bytes)) {
+      bytes = new Uint8Array(/** @type {any} */ (buffer).sizeInBytes);
+      buffer.getBufferData(bytes);
+      readBackBytes.set(buffer, bytes);
+    }
+
+    // WebGL requires attribute offsets and strides to be multiples of the
+    // component size, so the attribute can be viewed in place.
+    const values = /** @type {any} */ (ComponentDatatype).createArrayBufferView(
+      componentDatatype,
+      bytes.buffer,
+      attribute.byteOffset,
+      Math.floor((bytes.byteLength - attribute.byteOffset) / bytesPerComponent),
+    );
+
+    return {
+      values,
+      stride: byteStride / bytesPerComponent,
+      bufferBytes: bytes,
+    };
+  }
+
+  /**
+   * Packs an attribute's values, as staged from its GPU buffer where they may
+   * be interleaved with other attributes, into its CPU typed array.
+   *
+   * @param {Attribute} attribute
+   * @param {AttributeValues} attributeValues
+   * @ignore
+   */
+  static #packBufferValuesIntoTypedArray(attribute, attributeValues) {
+    const { values, stride } = attributeValues;
+    const valuesArray = /** @type {TypedArray} */ (values);
+    const cpuCopy = /** @type {TypedArray} */ (attribute.typedArray);
+    const { componentCount } =
+      ModelPrimitiveAccessSession.#getAttributeLayout(attribute);
+
+    for (let i = 0; i < attribute.count; ++i) {
+      for (let c = 0; c < componentCount; ++c) {
+        cpuCopy[i * componentCount + c] = valuesArray[i * stride + c];
+      }
+    }
   }
 
   /**
