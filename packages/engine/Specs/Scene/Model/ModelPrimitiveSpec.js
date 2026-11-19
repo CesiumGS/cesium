@@ -54,9 +54,38 @@ describe(
       ResourceCache.clearForSpecs();
     });
 
-    async function loadPrimitives(url) {
-      const model = await loadAndZoomToModelAsync({ gltf: url }, scene);
+    async function loadPrimitives(url, options) {
+      const model = await loadAndZoomToModelAsync(
+        { gltf: url, ...options },
+        scene,
+      );
       return model.nodes.flatMap((node) => node.primitives);
+    }
+
+    // Loads a primitive whose positions have a CPU copy, which models keep
+    // for projecting to 2D.
+    async function loadPrimitiveWithCpuPositions(url) {
+      const [primitive] = await loadPrimitives(url, { projectTo2D: true });
+      const attribute = primitive._runtimePrimitive.primitive.attributes.find(
+        (attribute) => attribute.semantic === VertexAttributeSemantic.POSITION,
+      );
+      expect(attribute.typedArray).toBeDefined();
+      return { primitive, attribute };
+    }
+
+    // Reads float positions directly from the GPU buffer.
+    function readGpuPositions(attribute) {
+      const bytes = new Uint8Array(attribute.buffer.sizeInBytes);
+      attribute.buffer.getBufferData(bytes);
+      const floats = new Float32Array(bytes.buffer, attribute.byteOffset);
+      const stride = (attribute.byteStride ?? 12) / 4;
+      const result = new Float64Array(attribute.count * 3);
+      for (let i = 0; i < attribute.count; ++i) {
+        for (let c = 0; c < 3; ++c) {
+          result[i * 3 + c] = floats[i * stride + c];
+        }
+      }
+      return result;
     }
 
     // Reads the given attributes of every vertex into flat arrays, and every
@@ -606,6 +635,124 @@ describe(
       expect(Array.from(readValues(primitive, position))).toEqual([
         0, 0, 0, 1, 0, 0, 0, 1, 0,
       ]);
+    });
+
+    it("writes attributes with a CPU copy, keeping it up to date", async function () {
+      if (webglStub) {
+        return;
+      }
+
+      const names = [
+        "unitSquare11x11_plain.glb",
+        "unitSquare11x11_plain_interleaved.glb",
+      ];
+      for (const name of names) {
+        const { primitive, attribute } = await loadPrimitiveWithCpuPositions(
+          `${unitSquareUrl}/${name}`,
+        );
+        const texCoords = readValues(primitive, texCoord);
+        const reversed = reverseVertices(readValues(primitive, position), 3);
+
+        writeValues(primitive, position, reversed);
+        // Read sessions read positions from the CPU copy.
+        expect(readValues(primitive, position))
+          .withContext(name)
+          .toEqual(reversed);
+        expect(readGpuPositions(attribute)).withContext(name).toEqual(reversed);
+        expect(readValues(primitive, texCoord))
+          .withContext(name)
+          .toEqual(texCoords);
+      }
+    });
+
+    it("writes attributes with a CPU copy together with others in the same buffer", async function () {
+      if (webglStub) {
+        return;
+      }
+      const { primitive, attribute } = await loadPrimitiveWithCpuPositions(
+        `${unitSquareUrl}/unitSquare11x11_plain.glb`,
+      );
+
+      // Both buffers hold the same bufferView, but models load attributes
+      // with and without CPU copies into separate buffers. Sharing one
+      // stages the positions with the texture coordinates, which have no CPU copy.
+      const texCoordAttribute =
+        primitive._runtimePrimitive.primitive.attributes.find(
+          (a) => a.semantic === VertexAttributeSemantic.TEXCOORD,
+        );
+      const texCoordBuffer = texCoordAttribute.buffer;
+      texCoordAttribute.buffer = attribute.buffer;
+
+      const reversedPositions = reverseVertices(
+        readValues(primitive, position),
+        3,
+      );
+      const reversedTexCoords = reverseVertices(
+        readValues(primitive, texCoord),
+        2,
+      );
+
+      primitive.geometryWriter.withWriteSession(
+        { attributes: [position, texCoord] },
+        function (session) {
+          const writePosition = session.vertexAttributeWriter(position);
+          const writeTexCoord = session.vertexAttributeWriter(texCoord);
+          for (let i = 0; i < session.vertexCount(); ++i) {
+            writePosition(i, reversedPositions, i * 3);
+            writeTexCoord(i, reversedTexCoords, i * 2);
+          }
+        },
+      );
+
+      expect(readValues(primitive, position)).toEqual(reversedPositions);
+      expect(readGpuPositions(attribute)).toEqual(reversedPositions);
+      expect(readValues(primitive, texCoord)).toEqualEpsilon(
+        reversedTexCoords,
+        1e-6,
+      );
+
+      texCoordAttribute.buffer = texCoordBuffer;
+    });
+
+    it("writes attributes that only have a CPU copy", async function () {
+      if (webglStub) {
+        return;
+      }
+      const { primitive, attribute } = await loadPrimitiveWithCpuPositions(
+        `${unitSquareUrl}/unitSquare11x11_plain.glb`,
+      );
+      const buffer = attribute.buffer;
+      attribute.buffer = undefined;
+
+      const reversed = reverseVertices(readValues(primitive, position), 3);
+      writeValues(primitive, position, reversed);
+      expect(readValues(primitive, position)).toEqual(reversed);
+
+      attribute.buffer = buffer;
+    });
+
+    it("doesn't change the CPU copy if the callback throws", async function () {
+      if (webglStub) {
+        return;
+      }
+      const { primitive, attribute } = await loadPrimitiveWithCpuPositions(
+        `${unitSquareUrl}/unitSquare11x11_plain.glb`,
+      );
+      const cpuCopy = attribute.typedArray;
+      const positions = Array.from(cpuCopy);
+
+      expect(function () {
+        primitive.geometryWriter.withWriteSession(
+          { attributes: [position] },
+          function (session) {
+            session.vertexAttributeWriter(position)(0, [5, 6, 7]);
+            throw new Error("Callback failed.");
+          },
+        );
+      }).toThrowError("Callback failed.");
+
+      expect(attribute.typedArray).toBe(cpuCopy);
+      expect(Array.from(cpuCopy)).toEqual(positions);
     });
 
     it("writes corners as their vertices", async function () {
