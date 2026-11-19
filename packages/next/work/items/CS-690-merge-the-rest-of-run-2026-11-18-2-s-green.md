@@ -2,10 +2,14 @@
 id: CS-690
 title: Merge the rest of run 2026-11-18-2's green batches as they pass
 kind: decision
-state: planned
+state: done
 created: 2026-11-18
 project: CS-18
 decider: owner
+answer: "A. Merge green batches as they pass: After each green check (typecheck, hitld work check, full suite, deviations named), the orchestrator fast-forwards main, regenerates the views, logs the merge as a call marked Claude reviewed, and lists it under merged with its presentation file. It ends when the run's scope is done."
+answered_at: 2026-11-19T01:54:02.075Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
