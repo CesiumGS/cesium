@@ -415,7 +415,7 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 38 of 46 done, 4 ready, 4 blocked, 1 dropped. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 40 of 47 done, 3 ready, 4 blocked, 1 dropped. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
@@ -446,7 +446,7 @@ Milestone: Dyno's Work page shows the live system and the release plan ([CS-561]
 - [x] [CS-693](./items/CS-693-dyno-s-projects-view-each-project-s-readiness.md) Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle. Done.
 - [x] [CS-694](./items/CS-694-dyno-s-dependencies-view-what-a-chosen.md) Dyno's Dependencies view: what a chosen milestone or item waits on and unblocks, with the global structure behind a toggle. Done.
 - [x] [CS-696](./items/CS-696-one-hover-card-for-the-work-page-s-views-state.md) One hover card for the Work page's views: state, progress with labeled colors, open blockers, room to slip, next step. Done.
-- [ ] [CS-698](./items/CS-698-the-flow-page-s-cumulative-flow-chart-reads-a.md) The Flow page's cumulative flow chart reads a day in a hover card, with each stage's count and its change from the day before. Needs CS-696.
+- [x] [CS-698](./items/CS-698-the-flow-page-s-cumulative-flow-chart-reads-a.md) The Flow page's cumulative flow chart reads a day in a hover card, with each stage's count and its change from the day before. Done.
 
 Milestone: The final release is ready to publish ([CS-678](./milestones/CS-678-the-final-release-is-ready-to-publish.md), Planned)
 
@@ -478,6 +478,7 @@ No milestone
 - [x] [CS-699](./items/CS-699-merge-cs-694-the-dependencies-view-without-the.md) decision: Merge CS-694, the Dependencies view, without the old map. Done.
 - [x] [CS-700](./items/CS-700-merge-cs-693-the-projects-view.md) decision: Merge CS-693, the Projects view. Done.
 - [x] [CS-701](./items/CS-701-merge-cs-696-the-shared-hover-card.md) decision: Merge CS-696, the shared hover card. Done.
+- [x] [CS-702](./items/CS-702-merge-cs-698-the-flow-chart-s-hover-card.md) decision: Merge CS-698, the Flow chart's hover card. Done.
 
 ### Follow-ups for other teams
 

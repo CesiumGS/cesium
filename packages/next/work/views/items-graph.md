@@ -259,10 +259,11 @@ graph LR
     CS_694["CS-694 Dyno's Dependencies view: what a chosen milestone or item waits"]:::done
     CS_696["CS-696 One hover card for the Work page's views: state, progress with "]:::done
     CS_697["CS-697 Merge CS-692, the Plan view"]:::done
-    CS_698["CS-698 The Flow page's cumulative flow chart reads a day in a hover ca"]:::open
+    CS_698["CS-698 The Flow page's cumulative flow chart reads a day in a hover ca"]:::done
     CS_699["CS-699 Merge CS-694, the Dependencies view, without the old map"]:::done
     CS_700["CS-700 Merge CS-693, the Projects view"]:::done
     CS_701["CS-701 Merge CS-696, the shared hover card"]:::done
+    CS_702["CS-702 Merge CS-698, the Flow chart's hover card"]:::done
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external
