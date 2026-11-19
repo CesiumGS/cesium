@@ -2,7 +2,7 @@
 id: CS-562
 title: Dyno's Work page lists the items in no milestone, filterable by kind and state
 kind: work
-state: in-progress
+state: done
 created: 2026-11-16
 project: CS-18
 claimed_by: orch-9-CS-562
