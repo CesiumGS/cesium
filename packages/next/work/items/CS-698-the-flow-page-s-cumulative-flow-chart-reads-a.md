@@ -2,7 +2,7 @@
 id: CS-698
 title: The Flow page's cumulative flow chart reads a day in a hover card, with each stage's count and its change from the day before
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-18
 needs: [CS-696]
