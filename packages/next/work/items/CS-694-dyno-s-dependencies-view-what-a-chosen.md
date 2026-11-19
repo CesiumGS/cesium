@@ -5,11 +5,15 @@ kind: work
 state: planned
 created: 2026-11-18
 project: CS-18
-needs: [CS-692]
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/work.ts, packages/next/bench/suite/DESIGN.md]
 ---
 
 The second of the three views the owner agreed on 2026-11-18 (Plan, CS-692; Dependencies, this item; Projects, CS-693), on the brief CS-692 records in `bench/suite/DESIGN.md`. The roadmap map draws every wait between 90-odd milestones at once, which at the owner's 7% zoom (screenshot, 2026-11-18) is unreadable, and answers neither "what is this waiting on?" nor "what does this unblock?". Those are asked about one thing at a time.
+
+Runs alongside CS-692 (the owner, 2026-11-18: "Yes, in parallel"). CS-692 records the brief in `bench/suite/DESIGN.md`; until it merges, read the brief from CS-692's item file. To keep the two branches apart:
+
+- Build the view in new files (a view component beside `views/Work.tsx`, and a model module beside `work.ts`), touching `Work.tsx` only to mount it and add its toggle.
+- Do the changes to existing map code last, after rebasing onto main once CS-692 has merged: removing the Fewest crossings layout and the always-on waits from the default views.
 
 ## Done when
 
