@@ -2,7 +2,7 @@
 id: CS-707
 title: Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 claimed_by: orch-10-CS-707
