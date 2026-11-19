@@ -317,8 +317,6 @@ export async function buildTs() {
       `packages/${directory}/tsd-conf.json`,
       // The engine package needs its own Viewer circular-dependency workaround.
       directory === "engine" ? processEngineSource : undefined,
-      // Add Math, which parseWorkspaceExports misses in core.
-      directory === "core" ? addMathExport : undefined,
       dependencyExports,
     );
     dependencyExports[directory] = workspaceExports;
@@ -1100,8 +1098,7 @@ function fixTypeScriptDefinitionsSource(source, includeKnockout) {
  * @param {string} workspaceName The workspace directory name, e.g. "core".
  * @param {string} definitionsPath The path of the .d.ts file to generate.
  * @param {string} configurationPath The path of the JSDoc configuration file that runs tsd-jsdoc for this workspace.
- * @param {function(string): string} [processSourceFunc] Transforms the generated source before its exports are collected. Receives the source and returns the new source.
- * @param {function(Set<string>): Set<string>} [processExportsFunc] Adjusts the collected export names, and returns the adjusted set.
+ * @param {function(string): string} [processSourceFunc] Transforms the source after fixTypeScriptDefinitionsSource, before its exports are collected. Receives the source and returns the new source.
  * @param {Object<string, Set<string>>} [dependencyExports] The export names of earlier workspaces, keyed by workspace directory name, used to generate this workspace's imports from them.
  * @returns {Promise<Set<string>>} The names this workspace exports.
  */
@@ -1110,7 +1107,6 @@ function generateWorkspaceTypeScriptDefinitions(
   definitionsPath,
   configurationPath,
   processSourceFunc,
-  processExportsFunc,
   dependencyExports,
 ) {
   // Run JSDoc with tsd-jsdoc to generate an initial definition file.
@@ -1120,18 +1116,14 @@ function generateWorkspaceTypeScriptDefinitions(
 
   let source = readFileSync(definitionsPath).toString();
 
+  source = fixTypeScriptDefinitionsSource(source, workspaceName === "widgets");
+
   if (processSourceFunc) {
     source = processSourceFunc(source);
   }
 
   // Collect the names this workspace exports, so that later workspaces can import them.
-  let workspaceExports = parseWorkspaceExports(source);
-
-  if (processExportsFunc) {
-    workspaceExports = processExportsFunc(workspaceExports);
-  }
-
-  source = fixTypeScriptDefinitionsSource(source, workspaceName === "widgets");
+  const workspaceExports = parseWorkspaceExports(source);
 
   if (dependencyExports) {
     let imports = "";
@@ -1197,18 +1189,6 @@ function readWorkspaceExports(workspaceName) {
 }
 
 /**
- * @param {Set<string>} exportNames The names exported by the core workspace.
- * @returns {Set<string>} The same set, with "Math" added.
- */
-function addMathExport(exportNames) {
-  // Math.js documents CesiumMath with @exports and @alias Math, so tsd-jsdoc emits it
-  // as `declare module "Math"`, which parseWorkspaceExports doesn't match. Add the
-  // name directly so later workspaces can import it.
-  exportNames.add("Math");
-  return exportNames;
-}
-
-/**
  * @param {string} source The engine definitions source.
  * @returns {string} The source, with the Viewer and Transforms workarounds added.
  */
@@ -1228,14 +1208,14 @@ function processEngineSource(source) {
   // The @borrows tags in Transforms.js can't resolve FixedFrameTransforms from another package.
   // Declare Transforms as the combined type.
   const transformsNamespace =
-    /(\/\*\*(?:[^*]|\*(?!\/))*\*\/\s*)?declare namespace Transforms \{/;
+    /(\/\*\*(?:[^*]|\*(?!\/))*\*\/\s*)?export namespace Transforms \{/;
   const transformsDoc = newSource.match(transformsNamespace)?.[1] ?? "";
   newSource = newSource.replace(
     transformsNamespace,
     "declare namespace _CelestialFrameTransforms {",
   );
   newSource += `
-${transformsDoc}declare const Transforms: typeof FixedFrameTransforms & typeof _CelestialFrameTransforms;
+${transformsDoc}export declare const Transforms: typeof FixedFrameTransforms & typeof _CelestialFrameTransforms;
 `;
 
   // Each name gets its own @deprecated tag; a plain re-export wouldn't show it in hover.
@@ -1256,6 +1236,10 @@ ${transformsDoc}declare const Transforms: typeof FixedFrameTransforms & typeof _
     })
     .join("\n");
   newSource = `${deprecatedExports}\n\n${newSource}`;
+
+  // A .d.ts module exports all its top-level declarations unless it contains an
+  // export statement. This empty one keeps _CelestialFrameTransforms private.
+  newSource += "\nexport {};\n";
 
   return newSource;
 }
