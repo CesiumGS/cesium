@@ -6316,8 +6316,7 @@ describe(
           const groups = tileset.metadataExtension.groups;
           expect(layers.length).toBe(2);
           expect(layers.get(0).name).toBe("Layer A");
-          expect(layers.get(0).metadata).toBe(groups[0]);
-          expect(layers.get(0).index).toBe(0);
+          expect(layers._getByGroup(groups[0])).toBe(layers.get(0));
           expect(layers.get(0).show).toBe(true);
           expect(layers.get(1).name).toBe("Layer B");
           expect(layers.getByName("Layer B")).toEqual([layers.get(1)]);

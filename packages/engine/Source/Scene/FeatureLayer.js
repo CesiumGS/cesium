@@ -1,15 +1,10 @@
 // @ts-check
 
-import { Check, defined } from "@cesium/core";
-import MetadataSemantic from "./MetadataSemantic.js";
-
-/** @import GroupMetadata from "./GroupMetadata.js"; */
+import { Check } from "@cesium/core";
 
 /**
  * @typedef {object} FeatureLayerOptions
  * @property {string} [name]
- * @property {GroupMetadata} [metadata]
- * @property {number} [index]
  * @private
  */
 
@@ -30,14 +25,10 @@ import MetadataSemantic from "./MetadataSemantic.js";
 class FeatureLayer {
   /**
    * @privateParam {object} options An object with the following properties:
-   * @privateParam {string} [options.name] The layer name. Defaults to a name from <code>options.metadata</code>.
-   * @privateParam {GroupMetadata} [options.metadata] Tileset layers only. The group metadata backing this layer.
-   * @privateParam {number} [options.index] Tileset layers only. The index of the group in its tileset JSON.
+   * @privateParam {string} [options.name] The layer name.
    */
   constructor(/** @type {FeatureLayerOptions} */ options) {
-    this._metadata = options.metadata;
-    this._index = options.index;
-    this._name = options.name ?? getDefaultName(options.metadata);
+    this._name = options.name;
     this._show = true;
   }
 
@@ -73,45 +64,6 @@ class FeatureLayer {
   set name(value) {
     this._name = value;
   }
-
-  /**
-   * The group metadata backing this layer, if any.
-   *
-   * @type {GroupMetadata|undefined}
-   * @readonly
-   * @private
-   */
-  get metadata() {
-    return this._metadata;
-  }
-
-  /**
-   * The index of the group in the tileset JSON that defines it, if any.
-   *
-   * @type {number|undefined}
-   * @readonly
-   * @private
-   */
-  get index() {
-    return this._index;
-  }
-}
-
-/**
- * @param {*} metadata A {@link GroupMetadata}, typed loosely because its accessors are <code>@private</code>.
- * @returns {string|undefined}
- * @private
- */
-function getDefaultName(metadata) {
-  if (!defined(metadata)) {
-    return undefined;
-  }
-  if (metadata.hasPropertyBySemantic(MetadataSemantic.NAME)) {
-    return metadata.getPropertyBySemantic(MetadataSemantic.NAME);
-  }
-  return metadata.hasProperty("name")
-    ? metadata.getProperty("name")
-    : undefined;
 }
 
 export default FeatureLayer;

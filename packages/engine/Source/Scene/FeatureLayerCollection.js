@@ -2,6 +2,7 @@
 
 import { Check, defined, Event } from "@cesium/core";
 import FeatureLayer from "./FeatureLayer.js";
+import MetadataSemantic from "./MetadataSemantic.js";
 
 /** @import Cesium3DTilesetMetadata from "./Cesium3DTilesetMetadata.js"; */
 /** @import GroupMetadata from "./GroupMetadata.js"; */
@@ -106,10 +107,7 @@ class FeatureLayerCollection {
     // @ts-expect-error Cesium3DTilesetMetadata defines groups with Object.defineProperties.
     const groups = metadataExtension.groups;
     for (let i = 0; i < groups.length; i++) {
-      const layer = new FeatureLayer({
-        metadata: groups[i],
-        index: i,
-      });
+      const layer = new FeatureLayer({ name: getDefaultName(groups[i]) });
       this._layerByGroup.set(groups[i], layer);
       this._add(layer);
     }
@@ -138,6 +136,20 @@ class FeatureLayerCollection {
       ? this._layerByGroup.get(groupMetadata)
       : undefined;
   }
+}
+
+/**
+ * @param {*} metadata A {@link GroupMetadata}, typed loosely because its accessors are <code>@private</code>.
+ * @returns {string|undefined} The group's layer name, if any.
+ * @private
+ */
+function getDefaultName(metadata) {
+  if (metadata.hasPropertyBySemantic(MetadataSemantic.NAME)) {
+    return metadata.getPropertyBySemantic(MetadataSemantic.NAME);
+  }
+  return metadata.hasProperty("name")
+    ? metadata.getProperty("name")
+    : undefined;
 }
 
 export default FeatureLayerCollection;
