@@ -2,10 +2,14 @@
 id: CS-701
 title: Merge CS-696, the shared hover card
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-18
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the tested commit (re-checked if main moves), regenerates the views and logs the merge; CS-698 is rebased onto it when it reports."
+answered_at: 2026-11-19T12:16:02.910Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
