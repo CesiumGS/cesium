@@ -1,6 +1,5 @@
 import {
   GeometryAttributeDescriptor,
-  GeometryReader,
   GeometryWriter,
   VertexAttributeSemantic,
 } from "../../index.js";
@@ -15,7 +14,6 @@ describe("Scene/GeometryWriter", function () {
 
   let session;
   let createWriteSession;
-  let reader;
   let writer;
 
   beforeEach(function () {
@@ -28,11 +26,10 @@ describe("Scene/GeometryWriter", function () {
     createWriteSession = jasmine
       .createSpy("createWriteSession")
       .and.returnValue(session);
-    reader = new GeometryReader({
+    writer = new GeometryWriter({
       availableAttributes: [position],
-      createReadSession: jasmine.createSpy("createReadSession"),
+      createWriteSession,
     });
-    writer = new GeometryWriter({ reader, createWriteSession });
   });
 
   it("throws without options", function () {
@@ -41,7 +38,7 @@ describe("Scene/GeometryWriter", function () {
     }).toThrowDeveloperError();
   });
 
-  it("throws without a reader", function () {
+  it("throws without available attributes", function () {
     expect(function () {
       return new GeometryWriter({ createWriteSession });
     }).toThrowDeveloperError();
@@ -49,8 +46,27 @@ describe("Scene/GeometryWriter", function () {
 
   it("throws without createWriteSession", function () {
     expect(function () {
-      return new GeometryWriter({ reader });
+      return new GeometryWriter({ availableAttributes: [] });
     }).toThrowDeveloperError();
+  });
+
+  it("gets the attributes that can be written", function () {
+    const available = writer.getAvailableAttributes();
+    expect(available).toEqual([position]);
+
+    available.length = 0;
+    expect(writer.getAvailableAttributes().length).toBe(1);
+  });
+
+  it("hasAttribute compares descriptors by value", function () {
+    expect(
+      writer.hasAttribute(
+        new GeometryAttributeDescriptor({
+          semantic: VertexAttributeSemantic.POSITION,
+        }),
+      ),
+    ).toBe(true);
+    expect(writer.hasAttribute(normal)).toBe(false);
   });
 
   it("withWriteSession creates a session for the requested data", function () {
@@ -95,7 +111,7 @@ describe("Scene/GeometryWriter", function () {
     expect(session.destroy).toHaveBeenCalledTimes(1);
   });
 
-  it("withWriteSession validates the requested data with the reader", function () {
+  it("withWriteSession throws if an attribute can't be written", function () {
     expect(function () {
       writer.withWriteSession({ attributes: [normal] }, function () {});
     }).toThrowDeveloperError();

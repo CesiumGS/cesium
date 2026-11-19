@@ -133,7 +133,8 @@ Object.defineProperties(ModelPrimitive.prototype, {
   /**
    * A writer for accessing this primitive's geometry: i.e. its vertex attributes.
    * Position values are in the primitive's local space and rest pose, so they don't
-   * include the node's transform.
+   * include the node's transform. Attributes that are stored compressed, e.g.
+   * quantized, cannot currently be written; see {@link GeometryWriter#hasAttribute}.
    *
    * @memberof ModelPrimitive.prototype
    *
@@ -165,7 +166,6 @@ Object.defineProperties(ModelPrimitive.prototype, {
       if (!defined(this._geometryWriter)) {
         this._geometryWriter = ModelPrimitiveAccessSession.createGeometryWriter(
           this._runtimePrimitive.primitive,
-          this.geometryReader,
           // Rebuilds what's derived from the geometry, e.g. bounding volumes.
           // If a use-case arises for frequent writes (e.g. per frame), consider optimizing to update only what changed.
           () => this._model.resetDrawCommands(),

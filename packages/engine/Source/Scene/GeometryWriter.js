@@ -1,7 +1,9 @@
 // @ts-check
 
 import { Check } from "@cesium/core";
-/** @import GeometryReader, { GeometryAccessOptions } from "./GeometryReader.js"; */
+import withGeometryAccessSession from "./withGeometryAccessSession.js";
+/** @import GeometryAttributeDescriptor from "./GeometryAttributeDescriptor.js"; */
+/** @import { GeometryAccessOptions } from "./GeometryReader.js"; */
 /** @import GeometryWriteSession from "./GeometryWriteSession.js"; */
 
 /**
@@ -10,30 +12,52 @@ import { Check } from "@cesium/core";
  * <p>
  * Data is written within a {@link GeometryWriteSession}, which can also read
  * it. Classes that own geometry implement {@link GeometryWriteSession} and
- * create a writer with it.
+ * create a writer with it. Some attributes may be readable, but may not support
+ * writing (e.g. compressed ones).
  * </p>
  *
  * @see GeometryWriteSession
  * @see GeometryReader
  */
 class GeometryWriter {
-  #reader;
+  #availableAttributes;
   #createWriteSession;
 
   /**
    * @param {object} options Object with the following properties:
-   * @param {GeometryReader} options.reader The reader of the same geometry.
+   * @param {GeometryAttributeDescriptor[]} options.availableAttributes The vertex attributes of the geometry that can be written.
    * @param {function(Required<GeometryAccessOptions>): GeometryWriteSession} options.createWriteSession Creates a session that stages the requested data. All requested attributes are available.
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("options", options);
-    Check.typeOf.object("options.reader", options.reader);
+    Check.defined("options.availableAttributes", options.availableAttributes);
     Check.typeOf.func("options.createWriteSession", options.createWriteSession);
     //>>includeEnd('debug');
 
-    this.#reader = options.reader;
+    this.#availableAttributes = options.availableAttributes.slice();
     this.#createWriteSession = options.createWriteSession;
+  }
+
+  /**
+   * Gets the vertex attributes of the geometry that can be written.
+   *
+   * @returns {GeometryAttributeDescriptor[]} The available attributes.
+   */
+  getAvailableAttributes() {
+    return this.#availableAttributes.slice();
+  }
+
+  /**
+   * Determines if the geometry has the given vertex attribute, and can write to it.
+   *
+   * @param {GeometryAttributeDescriptor} descriptor The attribute to look for.
+   * @returns {boolean} <code>true</code> if the attribute can be written, <code>false</code> otherwise.
+   */
+  hasAttribute(descriptor) {
+    return this.#availableAttributes.some((attribute) =>
+      attribute.equals(descriptor),
+    );
   }
 
   /**
@@ -46,14 +70,15 @@ class GeometryWriter {
    * @param {function(GeometryWriteSession): T} callback The function that reads from and writes to the session.
    * @returns {T} The value returned by the callback.
    *
-   * @exception {DeveloperError} A requested attribute is not available, or doesn't match the available attribute.
+   * @exception {DeveloperError} A requested attribute can't be written, or doesn't match the available attribute.
    */
   withWriteSession(options, callback) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.func("callback", callback);
     //>>includeEnd('debug');
 
-    return this.#reader._withSession(
+    return withGeometryAccessSession(
+      this.#availableAttributes,
       options,
       this.#createWriteSession,
       (session) => {
