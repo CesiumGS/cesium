@@ -606,15 +606,15 @@ ClippingPlaneCollection.prototype.update = function (frameState) {
 const scratchMatrix = new Matrix4();
 const scratchPlane = new Plane(Cartesian3.UNIT_X, 0.0);
 /**
- * Determines the type intersection with the planes of this ClippingPlaneCollection instance and the specified {@link TileBoundingVolume}.
+ * Determines the type intersection with the planes of this ClippingPlaneCollection instance and the specified {@link TileBoundingVolume}:
+ * {@link Intersect.INSIDE} if the entire volume is on the side of the planes the normal is pointing and should be entirely rendered,
+ * {@link Intersect.OUTSIDE} if the entire volume is on the opposite side and should be clipped, or
+ * {@link Intersect.INTERSECTING} if the volume intersects the planes.
  * @ignore
  *
  * @param {object} tileBoundingVolume The volume to determine the intersection with the planes.
  * @param {Matrix4} [transform] An optional, additional matrix to transform the plane to world coordinates.
- * @returns {Intersect} {@link Intersect.INSIDE} if the entire volume is on the side of the planes
- *                      the normal is pointing and should be entirely rendered, {@link Intersect.OUTSIDE}
- *                      if the entire volume is on the opposite side and should be clipped, and
- *                      {@link Intersect.INTERSECTING} if the volume intersects the planes.
+ * @returns {Intersect} The type of intersection.
  */
 ClippingPlaneCollection.prototype.computeIntersectionWithBoundingVolume =
   function (tileBoundingVolume, transform) {
