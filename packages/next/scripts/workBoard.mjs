@@ -10,16 +10,21 @@
 // The reads that aren't hitld's come from git: the state history behind
 // the Flow view (the read API has none yet), from `git log` of the item
 // files' `state:` lines (and the `status:` lines from before CS-521); and,
-// for the live run (readLive), which items are done on a branch and not on
-// the main branch, and whether hitld holds a batch for the owner.
+// for the live run (readLive), which items are done on an hitld/* branch
+// and not on the main branch, and whether hitld holds a batch for the owner.
+//
+// queryWork and readLive read everything, every time. The dev server reads
+// through boardReader instead (CS-704), which keeps each read until what it
+// reads changes, so a warm request runs no hitld process at all.
 //
 // hitld is the dev dependency pinned in package.json. Nothing read from it
 // is executed or evaluated; hitld and git run with fixed arguments only.
 
 import { execFileSync, spawn } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
+import { pathToFileURL } from "node:url";
 
 /** The read API version this adapter understands. */
 export const API_VERSION = 3;
@@ -144,11 +149,78 @@ const ITEM = "item";
 
 /**
  * A proposal's text (its body), which holds its header (CS-686); only
- * proposals carry theirs, to keep the snapshot small.
+ * proposals carry theirs, to keep the snapshot small. `bodies` holds the
+ * proposals' bodies by ID (readProposals).
  */
-const proposalText = (e) =>
-  e.state === "proposed" && e.body ? String(e.body).trim() : undefined;
+const proposalText = (e, bodies) =>
+  e.state === "proposed" && bodies.get(e.id)
+    ? String(bodies.get(e.id)).trim()
+    : undefined;
 const isOpen = (e) => e.state !== "done" && e.state !== "dropped";
+
+/** Every entity, without bodies: `hitld work query --json`. */
+export const readEntities = async (root) =>
+  checkVersion(await hitld(root, ["work", "query", "--json"]));
+
+/**
+ * The proposals with their bodies, the only text the board shows
+ * (`hitld work query --state proposed --bodies --json`).
+ */
+export const readProposals = async (root) =>
+  checkVersion(
+    await hitld(root, [
+      "work",
+      "query",
+      "--state",
+      "proposed",
+      "--bodies",
+      "--json",
+    ]),
+  );
+
+/**
+ * The items ready to start: `hitld work query --ready --json`. It reads
+ * every branch's claims, as `hitld work claims` does, so the board derives
+ * the same list from the claims it reads anyway (readyOf), and asks this
+ * only when those couldn't be read.
+ */
+export const readReady = async (root) =>
+  checkVersion(await hitld(root, ["work", "query", "--ready", "--json"]));
+
+/** hitld's version: `hitld version`. */
+export const readVersion = (root) => hitld(root, ["version"]);
+
+/**
+ * The check's problems (`hitld work check`): schema, references, cycles,
+ * and the classification of every file in the tree, which is most of its
+ * time.
+ */
+export const readCheck = async (root) =>
+  (await hitld(root, ["work", "check"])).problems ?? [];
+
+/**
+ * The items ready to start, as hitld's `work query --ready` finds them:
+ * planned, every need done, and claimed on no branch (`claimed`, the IDs
+ * `hitld work claims` lists, claimedOf).
+ */
+export function readyOf(all, claimed) {
+  const state = new Map(all.entities.map((e) => [e.id, e.state]));
+  return new Set(
+    all.entities
+      .filter(
+        (e) =>
+          e.entity === ITEM &&
+          e.state === "planned" &&
+          (e.needs ?? []).every((n) => state.get(n) === "done") &&
+          !claimed.has(e.id),
+      )
+      .map((e) => e.id),
+  );
+}
+
+/** Every item a branch claims (readClaims' answer), stale claims included. */
+export const claimedOf = (claims) =>
+  new Set([...claims.list, ...claims.stale].map((c) => c.id));
 
 /** Progress counts over a set of items. */
 function progressOf(items, ready, blocked) {
@@ -193,16 +265,35 @@ export async function queryWork(
   root,
   { elsewhere = [], history = [], live } = {},
 ) {
-  const [all, readyAnswer, check, version] = await Promise.all([
-    // With the bodies: a proposal's text carries its header (CS-686).
-    hitld(root, ["work", "query", "--json", "--bodies"]),
-    hitld(root, ["work", "query", "--ready", "--json"]),
-    hitld(root, ["work", "check"]),
-    hitld(root, ["version"]),
+  const [all, proposals, claims, problems, version] = await Promise.all([
+    readEntities(root),
+    readProposals(root),
+    live?.claims.ok ? live.claims : readClaims(root),
+    readCheck(root),
+    readVersion(root),
   ]);
-  checkVersion(all);
-  checkVersion(readyAnswer);
-  const ready = new Set(readyAnswer.entities.map((e) => e.id));
+  return boardOf(
+    root,
+    { all, proposals, ready: readyOf(all, claimedOf(claims)), problems, version },
+    { elsewhere, history, live },
+  );
+}
+
+/**
+ * The board's snapshot from hitld's answers (readEntities, readProposals,
+ * readCheck and readVersion), the ready items (readyOf, or readReady's
+ * IDs), and the reads the caller made of the rest (queryWork's). `pending`
+ * names the sources an answer goes without because they are still being
+ * read (boardReader).
+ */
+export function boardOf(
+  root,
+  { all, proposals, ready, problems, version },
+  { elsewhere = [], history = [], live, pending, branch, commit } = {},
+) {
+  const bodies = new Map(
+    proposals.entities.filter((e) => e.body).map((e) => [e.id, e.body]),
+  );
   const entities = [...all.entities].sort(byNumber);
   const byId = new Map(entities.map((e) => [e.id, e]));
   const rawItems = entities.filter((e) => e.entity === ITEM);
@@ -276,7 +367,7 @@ export async function queryWork(
     open_needs: openNeeds(e),
     needed_by: neededBy.get(e.id) ?? [],
     milestones: e.constraint_of ?? [],
-    text: proposalText(e),
+    text: proposalText(e, bodies),
   }));
   const itemsOf = (projectIds) =>
     items.filter((it) => projectIds.has(it.project));
@@ -328,7 +419,7 @@ export async function queryWork(
         itemConstraints.length > 0 &&
         done === itemConstraints.length &&
         !passed,
-      text: proposalText(m),
+      text: proposalText(m, bodies),
       to_shape: [
         !m.outcome && "outcome",
         !doneWhen.length && "clauses",
@@ -368,10 +459,10 @@ export async function queryWork(
 
   return {
     api_version: API_VERSION,
-    source: `hitld work query --json --bodies (human-in-the-lead ${version.version})`,
+    source: `hitld work query --json, the proposals with their bodies (human-in-the-lead ${version.version})`,
     hitld_version: version.version,
-    branch: git(root, ["rev-parse", "--abbrev-ref", "HEAD"]),
-    commit: git(root, ["rev-parse", "--short", "HEAD"]),
+    branch: branch ?? git(root, ["rev-parse", "--abbrev-ref", "HEAD"]),
+    commit: commit ?? git(root, ["rev-parse", "--short", "HEAD"]),
     generated: new Date().toISOString(),
     items,
     projects: projects.map((p) =>
@@ -398,7 +489,30 @@ export async function queryWork(
     elsewhere,
     history,
     live,
-    problems: check.problems ?? [],
+    problems: problems ?? [],
+    ...(pending?.length ? { pending } : {}),
+  };
+}
+
+/**
+ * The rail's count and the palette's list, from every entity without
+ * bodies (readEntities): the decisions the owner can answer now (open, and
+ * every need done, as the board counts them), and each item's ID, title
+ * and kind. One hitld read, none of the live run's.
+ */
+export function countOf(all) {
+  const byId = new Map(all.entities.map((e) => [e.id, e]));
+  const items = all.entities.filter((e) => e.entity === ITEM).sort(byNumber);
+  return {
+    api_version: API_VERSION,
+    owner_decisions: items.filter(
+      (e) =>
+        e.kind === "decision" &&
+        e.decider === "owner" &&
+        isOpen(e) &&
+        (e.needs ?? []).every((n) => byId.get(n)?.state === "done"),
+    ).length,
+    items: items.map((e) => ({ id: e.id, title: e.title, kind: e.kind })),
   };
 }
 
@@ -520,45 +634,78 @@ export async function claimsElsewhere(root) {
 
 // ------------------------------------------------------------ the live run
 
-/** The ledger is read whole: the merge queue is a fold over all of it. */
+/** The ledger is read whole the first time: the merge queue is a fold over all of it. */
 const LEDGER_ALL = "1000000";
+
+/**
+ * After that, only its latest events are asked for: when the event before
+ * the new ones is the last one read, only the new ones are folded in;
+ * otherwise (more new events than this, or a ledger that changed under
+ * them) it is read whole again.
+ */
+export const LEDGER_RECENT = 64;
 
 /** The main branch, from the project's hitld policy; "main" without one. */
 export function mainBranchOf(root) {
+  return policyOf(root)?.merge?.main_branch || "main";
+}
+
+/** The project's hitld policy, or undefined. */
+function policyOf(root) {
   try {
     const policy = JSON.parse(
       readFileSync(join(root, ".human-in-the-lead", "policy.json"), "utf8"),
     );
-    const name = policy?.merge?.main_branch;
-    return typeof name === "string" && name ? name : "main";
+    return policy && typeof policy === "object" ? policy : undefined;
   } catch {
-    return "main";
+    return undefined;
   }
 }
 
 /**
- * The merge queue's view of each item, folded from the ledger's events:
- * "queued" after a passing `verified` (the orchestrator queued its branch),
- * "rejected" after a failing one, gone after `merged` or `reverted` (as
- * hitld's own run state folds them).
+ * The project's private store, where hitld keeps its ledger and run
+ * state, as hitld finds it (its library's privateStorePath), or undefined.
  */
-export function queueOf(events) {
-  const out = new Map();
+async function storeOf(root) {
+  const id = policyOf(root)?.project?.id;
+  if (typeof id !== "string") {
+    return undefined;
+  }
+  try {
+    const lib = await import(
+      pathToFileURL(join(dirname(hitldPath()), "..", "lib", "index.mjs")).href
+    );
+    return lib.privateStorePath(id);
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Fold ledger events into `queue`, the merge queue's view of each item:
+ * "queued" after a passing `verified` (the orchestrator queued its
+ * branch), "rejected" after a failing one, gone after `merged` or
+ * `reverted` (as hitld's own run state folds them).
+ */
+export function foldQueue(queue, events) {
   for (const e of events ?? []) {
     if (!e?.item) {
       continue;
     }
     if (e.event === "verified") {
-      out.set(e.item, {
+      queue.set(e.item, {
         state: e.result === "pass" ? "queued" : "rejected",
         at: e.at,
       });
     } else if (e.event === "merged" || e.event === "reverted") {
-      out.delete(e.item);
+      queue.delete(e.item);
     }
   }
-  return out;
+  return queue;
 }
+
+/** The merge queue folded from all of the ledger's events (foldQueue). */
+export const queueOf = (events) => foldQueue(new Map(), events);
 
 /** Commits that close an item (`+state: done`) in `range`, newest first. */
 function closesIn(root, range) {
@@ -611,18 +758,23 @@ function statesOn(root, ref) {
 /** The ref that keeps a held batch while it waits for the owner (hitld's). */
 const HELD_REF = "refs/hitld/merge-held";
 
+/** The branches hitld's executors and merge checks work on. */
+const HITLD_BRANCHES = "refs/heads/hitld/";
+
 /** A branch an orchestrator checks a finished branch on by hand. */
 const isCheckBranch = (b) => /-merge-check$/.test(b);
 
 /**
- * Items done on a local branch and not on the main branch, each with the
- * branches that close it and where the merge queue has it: "held" (in the
- * batch hitld holds for the owner's yes), "checking" (on a merge-check
+ * Items done on an hitld/* branch and not on the main branch, each with
+ * the branches that close it and where the merge queue has it: "held" (in
+ * the batch hitld holds for the owner's yes), "checking" (on a merge-check
  * branch), "queued" or "rejected" (the ledger's fold, queueOf), or "none".
- * Read from git: the main branch's states, and the commits on branches
- * that main doesn't have which set an item done. Main's copy decides, so a
- * branch merged by a rebase (its own commits never reach main) drops out
- * once main shows the item done.
+ * Read from git: the main branch's states, and the commits on hitld/*
+ * branches that main doesn't have which set an item done. Only hitld/*
+ * branches: executors and merge checks work there, and other branches
+ * (sessions, backups, spikes) would make the scan grow with them. Main's
+ * copy decides, so a branch merged by a rebase (its own commits never
+ * reach main) drops out once main shows the item done.
  */
 export function unmergedOf(root, main, queue = new Map()) {
   const mainRef = `refs/heads/${main}`;
@@ -630,9 +782,11 @@ export function unmergedOf(root, main, queue = new Map()) {
     throw new Error(`no branch ${main}`);
   }
   const onMain = statesOn(root, mainRef);
-  const pending = closesIn(root, ["--branches", "--not", mainRef]).filter(
-    (c) => onMain.get(c.id) !== "done",
-  );
+  const pending = closesIn(root, [
+    `--glob=${HITLD_BRANCHES}*`,
+    "--not",
+    mainRef,
+  ]).filter((c) => onMain.get(c.id) !== "done");
   const held = git(root, ["rev-parse", "--verify", "-q", HELD_REF])
     ? new Set(closesIn(root, [`${mainRef}..${HELD_REF}`]).map((c) => c.id))
     : new Set();
@@ -644,7 +798,7 @@ export function unmergedOf(root, main, queue = new Map()) {
         "--contains",
         c.commit,
         "--format=%(refname:short)",
-        "refs/heads",
+        HITLD_BRANCHES,
       ]) ?? ""
     )
       .split("\n")
@@ -683,7 +837,153 @@ export const LIVE_UNREAD = {
     "hitld's ledger is empty or wasn't found, so nothing it would record can be seen",
   claims: "hitld work claims couldn't be read",
   git: "the branches couldn't be compared with the main branch",
+  reading:
+    "still being read for the first time since the dev server started; the board fills this in when it's in",
 };
+
+const withStore = (store, args) => (store ? [...args, "--store", store] : args);
+
+/** One live source, with when it was read, or why it couldn't be. */
+async function attempt(source, why, read) {
+  const at = () => new Date().toISOString();
+  try {
+    return { source, read_at: at(), ok: true, ...(await read()) };
+  } catch (e) {
+    if (e instanceof HitldUnavailable && e.reason !== "failed") {
+      throw e; // hitld missing or in another version: the board says so
+    }
+    return { source, read_at: at(), ok: false, why };
+  }
+}
+
+/**
+ * The run and the orchestrator holding its lease (`hitld run status`).
+ * The host names hitld records are left out: the page names sessions, not
+ * machines.
+ */
+export const liveRun = (root, store) =>
+  attempt("hitld run status", LIVE_UNREAD.run, async () => {
+    const a = await hitld(root, withStore(store, ["run", "status"]));
+    if (!a.ok && a.error !== "no-run") {
+      throw new Error(a.error);
+    }
+    const lease = a.lease
+      ? {
+          session: a.lease.session,
+          renewed_at: a.lease.renewed_at,
+          expired: Boolean(a.lease.expired),
+          free: Boolean(a.lease.free),
+          released_at: a.lease.released?.at ?? undefined,
+        }
+      : undefined;
+    return {
+      run:
+        a.ok && a.run
+          ? { id: a.run.id, started_at: a.run.started_at }
+          : undefined,
+      lease,
+      in_flight: a.ok ? Number(a.in_flight ?? 0) : 0,
+      waiting_to_merge: a.ok ? Number(a.waiting_to_merge ?? 0) : 0,
+    };
+  });
+
+/**
+ * The ledger's events folded into the merge queue (foldQueue): the whole
+ * ledger without `prev`; with `prev` (an earlier answer's `fold`), only
+ * the events after it, when the ledger still holds them as read
+ * (LEDGER_RECENT). `read` is how many events this read folded in.
+ */
+async function ledgerFold(root, store, prev) {
+  if (prev?.total) {
+    const tail = await hitld(
+      root,
+      withStore(store, ["ledger", "tail", "--limit", String(LEDGER_RECENT)]),
+    );
+    if (!tail.ok) {
+      throw new Error("ledger");
+    }
+    const events = tail.events ?? [];
+    const total = Number(tail.total ?? 0);
+    const fresh = total - prev.total;
+    if (
+      fresh >= 0 &&
+      fresh < events.length &&
+      events[events.length - fresh - 1]?.id === prev.lastId
+    ) {
+      return {
+        total,
+        lastId: events.at(-1)?.id,
+        queue: foldQueue(new Map(prev.queue), events.slice(events.length - fresh)),
+        read: fresh,
+      };
+    }
+  }
+  const tail = await hitld(
+    root,
+    withStore(store, ["ledger", "tail", "--limit", LEDGER_ALL]),
+  );
+  if (!tail.ok) {
+    throw new Error("ledger");
+  }
+  const events = tail.events ?? [];
+  return {
+    total: Number(tail.total ?? events.length),
+    lastId: events.at(-1)?.id,
+    queue: queueOf(events),
+    read: events.length,
+  };
+}
+
+/**
+ * The dispatches in flight (`hitld ledger in-flight`) and the merge queue
+ * folded from the ledger (`hitld ledger tail`, ledgerFold): `source` for
+ * the page, `fold` to fold the next read onto, undefined when the ledger
+ * couldn't be read.
+ */
+export async function liveLedger(root, store, prev) {
+  let fold;
+  const source = await attempt(
+    "hitld ledger in-flight and ledger tail",
+    LIVE_UNREAD.ledger,
+    async () => {
+      const [flight, folded] = await Promise.all([
+        hitld(root, withStore(store, ["ledger", "in-flight"])),
+        ledgerFold(root, store, prev),
+      ]);
+      if (!flight.ok) {
+        throw new Error("ledger");
+      }
+      fold = folded;
+      return {
+        events: folded.total,
+        problems: (flight.ledger_problems ?? []).length,
+        dispatches: (flight.in_flight ?? []).map((d) => ({
+          dispatch: d.dispatch,
+          item: d.item,
+          role: d.role ?? undefined,
+          tier: d.tier ?? undefined,
+          mode: d.mode ?? undefined,
+          branch: d.branch ?? undefined,
+          started_at: d.started_at,
+        })),
+      };
+    },
+  );
+  if (source.ok && source.events === 0) {
+    Object.assign(source, { ok: false, why: LIVE_UNREAD.empty });
+  }
+  return { source, fold };
+}
+
+/** The claims (`hitld work claims`, readClaims). */
+export const liveClaims = (root) =>
+  attempt("hitld work claims", LIVE_UNREAD.claims, () => readClaims(root));
+
+/** Items done on an hitld/* branch and not merged (git, unmergedOf). */
+export const liveUnmerged = (root, main, queue) =>
+  attempt(`git: hitld/* branches against ${main}`, LIVE_UNREAD.git, async () => ({
+    list: unmergedOf(root, main, queue),
+  }));
 
 /**
  * The live run, as hitld and git show it now, each source with when it was
@@ -691,91 +991,363 @@ export const LIVE_UNREAD = {
  * lease (`hitld run status`), the dispatches in flight
  * (`hitld ledger in-flight`), the merge queue folded from the ledger
  * (`hitld ledger tail`), the claims (`hitld work claims`), and the items
- * done on a branch and not merged (git). Reads only. `store` points hitld
- * at another private store (tests point it at a missing one). The host
- * names hitld records are left out: the page names sessions, not machines.
+ * done on an hitld/* branch and not merged (git). Reads only, all of it,
+ * every time (boardReader keeps them instead). `store` points hitld at
+ * another private store (tests point it at a missing one).
  */
 export async function readLive(root, { store } = {}) {
-  const at = () => new Date().toISOString();
-  const withStore = (args) => (store ? [...args, "--store", store] : args);
   const main = mainBranchOf(root);
-  const attempt = async (source, why, read) => {
-    try {
-      return { source, read_at: at(), ok: true, ...(await read()) };
-    } catch (e) {
-      if (e instanceof HitldUnavailable && e.reason !== "failed") {
-        throw e; // hitld missing or in another version: the board says so
-      }
-      return { source, read_at: at(), ok: false, why };
-    }
-  };
   // The three hitld reads run at once; git's needs the ledger's events.
-  let events = [];
   const [run, ledger, claims] = await Promise.all([
-    attempt("hitld run status", LIVE_UNREAD.run, async () => {
-      const a = await hitld(root, withStore(["run", "status"]));
-      if (!a.ok && a.error !== "no-run") {
-        throw new Error(a.error);
-      }
-      const lease = a.lease
-        ? {
-            session: a.lease.session,
-            renewed_at: a.lease.renewed_at,
-            expired: Boolean(a.lease.expired),
-            free: Boolean(a.lease.free),
-            released_at: a.lease.released?.at ?? undefined,
-          }
-        : undefined;
-      return {
-        run:
-          a.ok && a.run
-            ? { id: a.run.id, started_at: a.run.started_at }
-            : undefined,
-        lease,
-        in_flight: a.ok ? Number(a.in_flight ?? 0) : 0,
-        waiting_to_merge: a.ok ? Number(a.waiting_to_merge ?? 0) : 0,
-      };
-    }),
-    attempt(
-      "hitld ledger in-flight and ledger tail",
-      LIVE_UNREAD.ledger,
-      async () => {
-        const [flight, tail] = await Promise.all([
-          hitld(root, withStore(["ledger", "in-flight"])),
-          hitld(root, withStore(["ledger", "tail", "--limit", LEDGER_ALL])),
-        ]);
-        if (!flight.ok || !tail.ok) {
-          throw new Error("ledger");
-        }
-        events = tail.events ?? [];
-        return {
-          events: Number(tail.total ?? events.length),
-          problems: (flight.ledger_problems ?? []).length,
-          dispatches: (flight.in_flight ?? []).map((d) => ({
-            dispatch: d.dispatch,
-            item: d.item,
-            role: d.role ?? undefined,
-            tier: d.tier ?? undefined,
-            mode: d.mode ?? undefined,
-            branch: d.branch ?? undefined,
-            started_at: d.started_at,
-          })),
-        };
-      },
-    ),
-    attempt("hitld work claims", LIVE_UNREAD.claims, async () =>
-      readClaims(root),
-    ),
+    liveRun(root, store),
+    liveLedger(root, store),
+    liveClaims(root),
   ]);
-  if (ledger.ok && ledger.events === 0) {
-    Object.assign(ledger, { ok: false, why: LIVE_UNREAD.empty });
+  const unmerged = await liveUnmerged(root, main, ledger.fold?.queue);
+  return {
+    read_at: new Date().toISOString(),
+    main_branch: main,
+    run,
+    ledger: ledger.source,
+    claims,
+    unmerged,
+  };
+}
+
+// ------------------------------------------------------------ kept reads
+
+/**
+ * One read kept until what it reads changes. `key()` says so cheaply (a
+ * commit, a file's size and time, the tips of some branches); `read()`
+ * reads. `get()` answers at once with the kept value while its key holds
+ * and it is no older than `maxAgeMs`. When the key changes or the value
+ * ages, `get()` still answers with the kept value (`fresh: false`) while
+ * one read runs behind it, unless `wait` is set; with no value yet, it
+ * answers with the read's promise. `onChange` hears of each read whose
+ * answer differs from the one kept before it (`same` decides).
+ */
+export function keptRead({
+  key,
+  read,
+  maxAgeMs = Infinity,
+  wait = false,
+  same = (a, b) => JSON.stringify(a) === JSON.stringify(b),
+  onChange,
+}) {
+  let kept; // { key, value, at }
+  let running; // { key, promise }
+  const start = (k) => {
+    if (running?.key === k) {
+      return running.promise;
+    }
+    // A read behind a kept value starts after the answer goes out: some
+    // reads run git synchronously (unmergedOf, stateHistory).
+    const promise = new Promise((r) => setTimeout(r, 0))
+      .then(() => read(kept?.value))
+      .then((value) => {
+        const changed = !kept || !same(kept.value, value);
+        kept = { key: k, value, at: Date.now() };
+        if (running?.promise === promise) {
+          running = undefined;
+        }
+        if (changed) {
+          onChange?.();
+        }
+        return value;
+      })
+      .catch((e) => {
+        if (running?.promise === promise) {
+          running = undefined;
+        }
+        throw e;
+      });
+    // A failed read in the background is tried again on the next get().
+    promise.catch(() => {});
+    running = { key: k, promise };
+    return promise;
+  };
+  return {
+    get() {
+      const k = key();
+      if (kept && kept.key === k && Date.now() - kept.at <= maxAgeMs) {
+        return { value: kept.value, fresh: true };
+      }
+      const promise = start(k);
+      if (kept && !wait) {
+        return { value: kept.value, fresh: false };
+      }
+      return { promise };
+    },
+  };
+}
+
+/** A file's size and modification time, as a key: "" when it's missing. */
+function fileKey(path) {
+  try {
+    const s = statSync(path);
+    return `${s.size}:${s.mtimeMs}`;
+  } catch {
+    return "";
   }
-  const unmerged = await attempt(
-    `git: local branches against ${main}`,
-    LIVE_UNREAD.git,
-    async () => ({ list: unmergedOf(root, main, queueOf(events)) }),
-  );
-  return { read_at: at(), main_branch: main, run, ledger, claims, unmerged };
+}
+
+/** How long the run's status is kept at most: its lease ages by the clock. */
+const RUN_MS = 30_000;
+
+/** How long a git read behind a key is shared (boardReader). */
+const KEY_MS = 250;
+
+/** How long a first request waits for the slow sources before answering. */
+export const FIRST_WAIT_MS = 1500;
+
+/**
+ * The board's reads, each kept until what it reads changes (keptRead), for
+ * the dev server: the tracker's entities and ready list and hitld's
+ * version (per commit and change to an item file), the state history (per
+ * commit), the check (per commit and change to any file the dev server
+ * watches), the run's status (per change to the ledger or the run state,
+ * and every 30 s for its lease), the ledger (per change to it, read
+ * incrementally, ledgerFold), the claims (per change to any ref or
+ * worktree), and the unmerged items (per change to an hitld/* branch, the
+ * main branch, the held batch or the merge queue).
+ *
+ *   query({ waitMs })  the snapshot. Warm, every read is kept and no hitld
+ *                      process runs. A read whose key changed is answered
+ *                      from what was kept while it reads again behind it,
+ *                      except the tracker's own, which is waited for. On the
+ *                      first request, the slow sources (the check, the run,
+ *                      the ledger, the claims, the unmerged items) are waited
+ *                      for at most `waitMs` (later requests don't wait for
+ *                      them); any still reading then are named
+ *                      in the snapshot's `pending`, and their place says so.
+ *   count()            the rail's count and the palette's list (countOf):
+ *                      the entities' read only.
+ *   changed(file)      a file the dev server watches changed.
+ *
+ * `onChange` hears when a read behind an answer brings something new, so
+ * the dev server can tell open pages to read again.
+ */
+export function boardReader(root, { store: storeOption, onChange } = {}) {
+  const main = mainBranchOf(root);
+  let workGeneration = 0;
+  let treeGeneration = 0;
+  let store = storeOption;
+  const storeReady = storeOption ? Promise.resolve() : storeOf(root).then((s) => {
+    store = s;
+  });
+  // The keys' git reads, shared by every read of one request (and of any
+  // other within KEY_MS), so a warm request runs each git command once.
+  const keyReads = new Map();
+  const gitKey = (args) => {
+    const k = args.join("\0");
+    const hit = keyReads.get(k);
+    if (hit && Date.now() - hit.at < KEY_MS) {
+      return hit.value;
+    }
+    const value = git(root, args) ?? "";
+    keyReads.set(k, { value, at: Date.now() });
+    return value;
+  };
+  /** The commit checked out, then the branch's name. */
+  const where = () => gitKey(["rev-parse", "HEAD", "--abbrev-ref", "HEAD"]);
+  const head = () => where().split("\n")[0] ?? "";
+  const workKey = () => `${head()} ${workGeneration}`;
+  const ledgerKey = () =>
+    store ? fileKey(join(store, "ledger.jsonl")) : String(Math.random());
+  const changed = () => onChange?.();
+  let answered = false;
+
+  const entities = keptRead({ key: workKey, read: () => readEntities(root), wait: true });
+  const proposals = keptRead({ key: workKey, read: () => readProposals(root), wait: true });
+  const version = keptRead({ key: head, read: () => readVersion(root), wait: true });
+  const history = keptRead({ key: head, read: async () => stateHistory(root), wait: true });
+  const check = keptRead({
+    key: () => `${head()} ${treeGeneration}`,
+    read: () => readCheck(root),
+    onChange: changed,
+  });
+  /** Live sources compare without when they were read. */
+  const sameSource = (a, b) =>
+    JSON.stringify({ ...a, read_at: 0 }) === JSON.stringify({ ...b, read_at: 0 });
+  const run = keptRead({
+    key: () =>
+      `${ledgerKey()} ${store ? fileKey(join(store, "run-state.json")) : ""}`,
+    read: async () => {
+      await storeReady;
+      return liveRun(root, store);
+    },
+    maxAgeMs: RUN_MS,
+    same: sameSource,
+    onChange: changed,
+  });
+  const ledger = keptRead({
+    key: ledgerKey,
+    read: async (prev) => {
+      await storeReady;
+      return liveLedger(root, store, prev?.fold);
+    },
+    same: (a, b) => sameSource(a.source, b.source),
+    onChange: changed,
+  });
+  // Every ref (claims are read from local, remote-tracking and bundle refs)
+  // and every worktree's branch.
+  const refsKey = () =>
+    `${gitKey(["for-each-ref", "--format=%(objectname) %(refname)"])}\n${gitKey(["worktree", "list", "--porcelain"])}`;
+  const claims = keptRead({
+    key: refsKey,
+    read: () => liveClaims(root),
+    same: sameSource,
+    onChange: changed,
+  });
+  // hitld's own ready list, only when the claims couldn't be read.
+  const hitldReady = keptRead({
+    key: () => `${workKey()}\n${refsKey()}`,
+    read: () => readReady(root),
+    wait: true,
+  });
+  const unmerged = keptRead({
+    key: () =>
+      `${gitKey(["for-each-ref", "--format=%(objectname) %(refname)", HITLD_BRANCHES, `refs/heads/${main}`, HELD_REF])}\n${ledgerKey()}`,
+    read: async () => {
+      // The merge queue comes from the ledger's fold.
+      const l = ledger.get();
+      const folded = l.value ?? (await l.promise);
+      return liveUnmerged(root, main, folded.fold?.queue);
+    },
+    same: sameSource,
+    onChange: changed,
+  });
+
+  /**
+   * A live source kept while its key holds is current as of the key's
+   * check: its `read_at` says so (the ledger's read keeps its source in
+   * `source`).
+   */
+  const confirmed = (v) => {
+    const now = new Date().toISOString();
+    if (v && typeof v.source === "object") {
+      return { ...v, source: { ...v.source, read_at: now } };
+    }
+    return v && typeof v.read_at === "string" ? { ...v, read_at: now } : v;
+  };
+
+  /** A kept read's value now, or after at most `until` (ms since epoch), or `fallback`. */
+  const valueBy = async (got, until, fallback) => {
+    if ("value" in got) {
+      return got.fresh ? confirmed(got.value) : got.value;
+    }
+    const left = until - Date.now();
+    const timeout = Symbol("timeout");
+    const value = await Promise.race([
+      got.promise,
+      new Promise((r) => setTimeout(() => r(timeout), Math.max(0, left))),
+    ]);
+    return value === timeout ? fallback : value;
+  };
+
+  return {
+    changed(file) {
+      treeGeneration++;
+      if (/\/work\/.*\.md$/.test(file.split("\\").join("/"))) {
+        workGeneration++;
+      }
+    },
+    async count() {
+      const e = entities.get();
+      return countOf(e.value ?? (await e.promise));
+    },
+    async query({ waitMs = FIRST_WAIT_MS } = {}) {
+      await storeReady;
+      // Only the first request waits for the slow sources; a page reading
+      // again while they still read hears at once that they still are.
+      const until = Date.now() + (answered ? 0 : waitMs);
+      answered = true;
+      // The slow sources start first, so they read while the tracker does.
+      const slow = {
+        check: check.get(),
+        run: run.get(),
+        ledger: ledger.get(),
+        claims: claims.get(),
+      };
+      const fast = [entities, proposals, version, history].map((r) => {
+        const got = r.get();
+        return got.value ?? got.promise;
+      });
+      const [all, proposalsAnswer, versionAnswer, events] =
+        await Promise.all(fast);
+      const pending = [];
+      const reading = (source) => {
+        pending.push(source);
+        return {
+          source,
+          read_at: new Date().toISOString(),
+          ok: false,
+          why: LIVE_UNREAD.reading,
+        };
+      };
+      const NONE = Symbol("none");
+      const [problems, runSource, ledgerRead, claimsSource] = await Promise.all([
+        valueBy(slow.check, until, NONE),
+        valueBy(slow.run, until, NONE),
+        valueBy(slow.ledger, until, NONE),
+        valueBy(slow.claims, until, NONE),
+      ]);
+      const unmergedSource =
+        ledgerRead === NONE
+          ? NONE
+          : await valueBy(unmerged.get(), until, NONE);
+      if (problems === NONE) {
+        pending.push("hitld work check");
+      }
+      const live = {
+        read_at: new Date().toISOString(),
+        main_branch: main,
+        run: runSource === NONE ? reading("hitld run status") : runSource,
+        ledger:
+          ledgerRead === NONE
+            ? reading("hitld ledger in-flight and ledger tail")
+            : ledgerRead.source,
+        claims: claimsSource === NONE ? reading("hitld work claims") : claimsSource,
+        unmerged:
+          unmergedSource === NONE
+            ? reading(`git: hitld/* branches against ${main}`)
+            : unmergedSource,
+      };
+      // Ready: planned, every need done, claimed on no branch. While the
+      // claims are still being read, no claim takes an item out yet.
+      let ready;
+      if (claimsSource === NONE) {
+        ready = readyOf(all, new Set());
+      } else if (claimsSource.ok) {
+        ready = readyOf(all, claimedOf(claimsSource));
+      } else {
+        const got = hitldReady.get();
+        const answer = got.value ?? (await got.promise);
+        ready = new Set(answer.entities.map((e) => e.id));
+      }
+      return boardOf(
+        root,
+        {
+          all,
+          proposals: proposalsAnswer,
+          ready,
+          problems: problems === NONE ? [] : problems,
+          version: versionAnswer,
+        },
+        {
+          elsewhere:
+            claimsSource !== NONE && claimsSource.ok
+              ? elsewhereOf(claimsSource)
+              : [],
+          history: events,
+          live,
+          pending,
+          branch: where().split("\n")[1],
+          commit: gitKey(["rev-parse", "--short", "HEAD"]),
+        },
+      );
+    },
+  };
 }
 
 /**

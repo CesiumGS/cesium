@@ -122,9 +122,28 @@ export interface WorkSnapshot {
   history: WorkEvent[];
   /** The live run, from hitld's records and git; absent when not read. */
   live?: WorkLive;
+  /**
+   * The sources this answer goes without because they are still being
+   * read (the dev server's first request); the dev server says
+   * `work:changed` when they are in. Absent when every source was read.
+   */
+  pending?: string[];
 }
 
-/** Where one live figure was read from and when, or why it couldn't be. */
+/** The rail's count and the palette's list (`/work-api/count.json`). */
+export interface WorkCount {
+  api_version: 3;
+  /** Open owner decisions whose needs are all done: the rail's count. */
+  owner_decisions: number;
+  /** Every item, by number. */
+  items: Array<{ id: string; title: string; kind: ItemKind }>;
+}
+
+/**
+ * Where one live figure was read from and when, or why it couldn't be.
+ * `read_at` is when it was read, or when the dev server last found what it
+ * reads unchanged (boardReader keeps a read while its key holds).
+ */
 export type WorkSource<T> = { source: string; read_at: string } & (
   ({ ok: true } & T) | ({ ok: false; why: string } & Partial<T>)
 );
@@ -169,7 +188,7 @@ export interface WorkClaim {
 export type WorkQueueState =
   "held" | "checking" | "queued" | "rejected" | "none";
 
-/** An item done on a branch and not on the main branch. */
+/** An item done on an hitld/* branch and not on the main branch. */
 export interface WorkUnmerged {
   id: string;
   /** The close commit's date (ISO 8601), the newest when several. */
@@ -276,15 +295,69 @@ export function mainBranchOf(root: string): string;
 export function queueOf(
   events: ReadonlyArray<Record<string, unknown>>,
 ): Map<string, { state: "queued" | "rejected"; at: string }>;
+export function readyOf(
+  all: { entities: ReadonlyArray<Record<string, unknown>> },
+  claimed: ReadonlySet<string>,
+): Set<string>;
+export function claimedOf(claims: {
+  list: WorkClaim[];
+  stale: WorkClaim[];
+}): Set<string>;
+export function readEntities(root: string): Promise<{
+  api_version: number;
+  entities: Array<Record<string, unknown>>;
+}>;
 export function unmergedOf(
   root: string,
   main: string,
   queue?: Map<string, { state: "queued" | "rejected"; at: string }>,
 ): WorkUnmerged[];
 export const LIVE_UNREAD: Record<
-  "run" | "ledger" | "empty" | "claims" | "git",
+  "run" | "ledger" | "empty" | "claims" | "git" | "reading",
   string
 >;
+type Queue = Map<string, { state: "queued" | "rejected"; at: string }>;
+export function foldQueue(
+  queue: Queue,
+  events: ReadonlyArray<Record<string, unknown>>,
+): Queue;
+export const LEDGER_RECENT: number;
+export const FIRST_WAIT_MS: number;
+/** A ledger fold to fold the next read onto. */
+export interface LedgerFold {
+  total: number;
+  lastId?: string;
+  queue: Queue;
+  /** How many events this read folded in. */
+  read: number;
+}
+export function liveLedger(
+  root: string,
+  store?: string,
+  prev?: LedgerFold,
+): Promise<{ source: WorkLive["ledger"]; fold?: LedgerFold }>;
+export function countOf(all: {
+  entities: ReadonlyArray<Record<string, unknown>>;
+}): WorkCount;
+export function keptRead<T>(options: {
+  key: () => string;
+  read: (kept?: T) => Promise<T>;
+  maxAgeMs?: number;
+  wait?: boolean;
+  same?: (a: T, b: T) => boolean;
+  onChange?: () => void;
+}): {
+  get(): { value: T; fresh: boolean } | { promise: Promise<T> };
+};
+export interface BoardReader {
+  query(options?: { waitMs?: number }): Promise<WorkSnapshot>;
+  count(): Promise<WorkCount>;
+  changed(file: string): void;
+}
+export function boardReader(
+  root: string,
+  options?: { store?: string; onChange?: () => void },
+): BoardReader;
 export function readLive(
   root: string,
   options?: { store?: string },

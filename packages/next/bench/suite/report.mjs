@@ -62,6 +62,8 @@ const METRICS = [
   // Quality in motion: frames in motion against the same pose settled,
   // the engine's own (mean over the replay's frames).
   ["motionFlip", "quality in motion (FLIP, in motion vs settled)", "", 1],
+  // A dev server request's time to its whole answer (workApiRun.mjs).
+  ["requestMs", "request", "ms", 1],
 ];
 
 const escape = (s) =>

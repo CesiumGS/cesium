@@ -5,33 +5,38 @@ import { join } from "node:path";
 import {
   HitldUnavailable,
   UNAVAILABLE_TEXT,
-  elsewhereOf,
+  boardReader,
   findItems,
-  queryWork,
-  readLive,
   showItem,
-  stateHistory,
-  type WorkLive,
 } from "./workBoard.mjs";
 
-/**
- * How long the live run's read is reused: hitld reads every branch for
- * claims, and its ledger and run state, and git compares the branches.
- */
-const LIVE_MS = 30_000;
+/** Pages hear of reads that came in behind an answer at most this often. */
+const CHANGED_MS = 250;
 
 /**
  * The tracker's read API on Dyno's dev server (dev only; the board says
- * so when it is missing): `/work-api/query.json` is the snapshot and
- * `/work-api/item/CS-<n>.json` one item's text, both from
- * scripts/workBoard.mjs, the one adapter between the board and
- * human-in-the-lead's read API (`hitld work query --json`, version 3).
- * When hitld is missing or answers in another version, the board says
- * so. Read-only, GET only, and only for the dev server's own pages.
- * When an item file changes, open pages hear `work:changed` and read
- * again; the live run (claims in other worktrees and branches, hitld's
- * ledger and run, branches done and not merged) is read at most every
- * 30 s, and each of its figures carries when it was read.
+ * so when it is missing), from scripts/workBoard.mjs, the one adapter
+ * between the board and human-in-the-lead's read API
+ * (`hitld work query --json`, version 3). When hitld is missing or answers
+ * in another version, the board says so. Read-only, GET only, and only for
+ * the dev server's own pages.
+ *
+ *   /work-api/query.json      the board's snapshot (boardReader's query):
+ *                             each read is kept until what it reads changes,
+ *                             so a warm request runs no hitld process. On
+ *                             the first request the slow sources are waited
+ *                             for at most 1.5 s; the snapshot names any still
+ *                             reading in `pending`.
+ *   /work-api/count.json      the rail's count and the palette's list
+ *                             (countOf): `owner_decisions` and `items`
+ *                             ({ id, title, kind }), from one hitld read.
+ *                             Pages other than Work read only this.
+ *   /work-api/find.json?q=    full-text search over every item.
+ *   /work-api/item/CS-<n>.json  one item's text.
+ *
+ * Open pages hear `work:changed` when an item file changes, and when a read
+ * behind an answer brings something new (a slow source's first read, a
+ * claim on another branch, a ledger event), and read again.
  */
 export function workApi(prefix = "/work-api"): Plugin {
   return {
@@ -42,38 +47,20 @@ export function workApi(prefix = "/work-api"): Plugin {
         cwd: server.config.root,
         encoding: "utf8",
       }).trim();
-      let lastLive: { at: number; live: Promise<WorkLive> } | undefined;
-      const live = () => {
-        if (!lastLive || Date.now() - lastLive.at > LIVE_MS) {
-          const read = readLive(root);
-          lastLive = { at: Date.now(), live: read };
-          // A failed read isn't kept: the next request tries again.
-          read.catch(() => {
-            if (lastLive?.live === read) {
-              lastLive = undefined;
-            }
-          });
-        }
-        return lastLive.live;
+      let telling: ReturnType<typeof setTimeout> | undefined;
+      const tell = () => {
+        telling ??= setTimeout(() => {
+          telling = undefined;
+          server.ws.send({ type: "custom", event: "work:changed" });
+        }, CHANGED_MS);
       };
-      // The history changes only with a commit: kept per HEAD.
-      let history:
-        { head: string; events: ReturnType<typeof stateHistory> } | undefined;
-      const events = () => {
-        const head = execFileSync("git", ["rev-parse", "HEAD"], {
-          cwd: root,
-          encoding: "utf8",
-        }).trim();
-        if (history?.head !== head) {
-          history = { head, events: stateHistory(root) };
-        }
-        return history.events;
-      };
+      const board = boardReader(root, { onChange: tell });
       const workDir = join(root, "packages", "next", "work");
       server.watcher.add(workDir);
       const changed = (file: string) => {
+        board.changed(file);
         if (file.startsWith(workDir) && file.endsWith(".md")) {
-          server.ws.send({ type: "custom", event: "work:changed" });
+          tell();
         }
       };
       server.watcher.on("change", changed);
@@ -96,16 +83,11 @@ export function workApi(prefix = "/work-api"): Plugin {
           const path = (req.url ?? "").split("?")[0] ?? "";
           try {
             if (path === "/query.json") {
-              const now = await live();
-              send(
-                res,
-                200,
-                await queryWork(root, {
-                  elsewhere: now.claims.ok ? elsewhereOf(now.claims) : [],
-                  history: events(),
-                  live: now,
-                }),
-              );
+              send(res, 200, await board.query());
+              return;
+            }
+            if (path === "/count.json") {
+              send(res, 200, await board.count());
               return;
             }
             if (path === "/find.json") {

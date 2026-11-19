@@ -2,7 +2,7 @@
 id: CS-704
 title: "The Work board reads in under a second: incremental ledger reads, cached git scans, and a light count for the rail"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-18
 claimed_by: orch-10-CS-704

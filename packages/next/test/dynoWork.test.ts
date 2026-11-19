@@ -2026,7 +2026,7 @@ describe("the live run in Your move's In progress (CS-547)", () => {
     });
   });
 
-  describe("items done on a branch and not merged, from git", () => {
+  describe("items done on an hitld/* branch and not merged, from git", () => {
     let repo: string;
     const g = (...args: string[]) =>
       execFileSync("git", args, {
@@ -2056,41 +2056,46 @@ describe("the live run in Your move's In progress (CS-547)", () => {
       }
       commit("items");
       // CS-1: done on its branch, not merged, queued in the ledger.
-      g("checkout", "-q", "-b", "exec/one");
+      g("checkout", "-q", "-b", "hitld/one");
       put("CS-1", "done");
       commit("work: CS-1");
       // CS-2: done on a branch that was rebased onto trunk and merged.
       g("checkout", "-q", "trunk");
-      g("checkout", "-q", "-b", "exec/two");
+      g("checkout", "-q", "-b", "hitld/two");
       put("CS-2", "done");
       commit("work: CS-2");
       g("checkout", "-q", "trunk");
       put("CS-2", "done");
       commit("work: CS-2, rebased");
       // CS-3: on its branch and checked by hand on a merge-check branch.
-      g("checkout", "-q", "-b", "exec/three");
+      g("checkout", "-q", "-b", "hitld/three");
       put("CS-3", "done");
       commit("work: CS-3");
       g("checkout", "-q", "-b", "hitld/CS-3-merge-check");
       g("checkout", "-q", "trunk");
       // CS-4: held for the owner's yes.
-      g("checkout", "-q", "-b", "exec/four");
+      g("checkout", "-q", "-b", "hitld/four");
       put("CS-4", "done");
       commit("work: CS-4");
-      g("update-ref", "refs/hitld/merge-held", "exec/four");
+      g("update-ref", "refs/hitld/merge-held", "hitld/four");
+      g("checkout", "-q", "trunk");
+      // CS-5: done on a branch outside hitld/*, which the scan leaves out.
+      g("checkout", "-q", "-b", "claude/five");
+      put("CS-5", "done");
+      commit("work: CS-5");
       g("checkout", "-q", "trunk");
     });
     afterAll(() => rmSync(repo, { recursive: true, force: true }));
 
-    it("lists each with its branches and where the merge queue has it", () => {
+    it("lists each with its branches and where the merge queue has it, hitld/* branches only", () => {
       const queue = new Map([["CS-1", { state: "queued" as const, at: "x" }]]);
       const got = unmergedOf(repo, "trunk", queue);
       expect(
         got.map((u) => [u.id, u.branches, u.queue, u.check_branch]),
       ).toEqual([
-        ["CS-1", ["exec/one"], "queued", undefined],
-        ["CS-3", ["exec/three"], "checking", "hitld/CS-3-merge-check"],
-        ["CS-4", ["exec/four"], "held", undefined],
+        ["CS-1", ["hitld/one"], "queued", undefined],
+        ["CS-3", ["hitld/three"], "checking", "hitld/CS-3-merge-check"],
+        ["CS-4", ["hitld/four"], "held", undefined],
       ]);
       expect(got.every((u) => Number.isFinite(Date.parse(u.closed_at)))).toBe(
         true,

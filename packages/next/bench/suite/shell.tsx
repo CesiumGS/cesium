@@ -63,8 +63,8 @@ import {
   destinationOf,
 } from "./rail.ts";
 import { useTheme } from "./theme.tsx";
-import { useWork } from "./useWork.ts";
-import { isOwnerDecision, type WorkItem } from "./work.ts";
+import { useWorkCount } from "./useWork.ts";
+import type { WorkCount } from "../../scripts/workBoard.mjs";
 import { useRuns } from "./views/common.tsx";
 import { FirstRun } from "./views/FirstRun.tsx";
 import { worksWithoutRuns } from "./withoutRuns.ts";
@@ -242,14 +242,11 @@ export function Shell() {
   }>();
   const main = useRef<HTMLElement>(null);
   const attention = useAttention(summaries);
-  const work = useWork().snapshot;
-  const ownerDecisions = useMemo(
-    // Decisions the owner can answer now (none before them still open).
-    () =>
-      work?.items.filter((it) => isOwnerDecision(it) && !it.open_needs.length)
-        .length ?? 0,
-    [work],
-  );
+  // The light read (/work-api/count.json): every page shows the rail, and
+  // none but Work waits on or starts the board's whole read.
+  const work = useWorkCount().count;
+  // Decisions the owner can answer now (none before them still open).
+  const ownerDecisions = work?.owner_decisions ?? 0;
   const active = destinationOf(path);
 
   useEffect(() => {
@@ -577,7 +574,7 @@ function CommandPalette({
   open: boolean;
   onClose: () => void;
   summaries: Summary[];
-  workItems?: readonly WorkItem[];
+  workItems?: WorkCount["items"];
 }) {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
