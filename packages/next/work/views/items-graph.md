@@ -256,9 +256,11 @@ graph LR
     CS_691["CS-691 Dyno's Fewest crossings roadmap layout places real milestones ("]:::dropped
     CS_692["CS-692 Dyno's roadmap Plan view: what gets built when, grouped by rele"]:::done
     CS_693["CS-693 Dyno's Projects view: each project's readiness per release, wha"]:::open
-    CS_694["CS-694 Dyno's Dependencies view: what a chosen milestone or item waits"]:::open
+    CS_694["CS-694 Dyno's Dependencies view: what a chosen milestone or item waits"]:::done
     CS_696["CS-696 One hover card for the Work page's views: state, progress with "]:::open
     CS_697["CS-697 Merge CS-692, the Plan view"]:::done
+    CS_698["CS-698 The Flow page's cumulative flow chart reads a day in a hover ca"]:::open
+    CS_699["CS-699 Merge CS-694, the Dependencies view, without the old map"]:::done
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external
@@ -1273,6 +1275,7 @@ graph LR
   CS_692 --> CS_696
   CS_694 --> CS_696
   CS_693 --> CS_696
+  CS_696 --> CS_698
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

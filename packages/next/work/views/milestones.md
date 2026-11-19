@@ -469,9 +469,9 @@ CS-560 Content from any source loads through one module seam [Planned], under CS
 
 CS-561 Dyno's Work page shows the live system and the release plan [Proposed], under CS-18 The work tracker
   outcome: A reader of Dyno's Work page sees what's moving now (dispatches, branches waiting to merge, the active run) and where each release falls among the milestones that feed it.
-  constraints: 10 of 13 done
-  unmet: not linked to a clause yet (open: CS-693, CS-694, CS-696; check not passed)
-  to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563, CS-573, CS-683, CS-684, CS-685, CS-688, CS-692, CS-693, CS-694, CS-696 to a clause
+  constraints: 11 of 14 done
+  unmet: not linked to a clause yet (open: CS-693, CS-696, CS-698; check not passed)
+  to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563, CS-573, CS-683, CS-684, CS-685, CS-688, CS-692, CS-693, CS-694, CS-696, CS-698 to a clause
 
 CS-595 Every 1.x widget's job has a StrataKit widget [Planned], under CS-584 The widgets library
   outcome: An app drops in StrataKit widgets for every job 1.x's widgets did, as React components or through DOM wrappers, and the Viewer is built from them.

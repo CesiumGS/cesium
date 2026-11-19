@@ -38,6 +38,7 @@ CS-18 The work tracker
   CS-685  Dyno's release flags list only the milestones a release needs, and flag items that cross a release
   CS-688  Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes
   CS-692  Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it
+  CS-694  Dyno's Dependencies view: what a chosen milestone or item waits on and unblocks, with the global structure behind a toggle
 
 CS-188 Earth to Moon (frames 5c to 5h)
   CS-200  Volumes, horizon culling and selection on the content's body
@@ -49,5 +50,5 @@ CS-389 Dyno as the development harness
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
 
-28 merged item(s) not in a release
+29 merged item(s) not in a release
 ```
