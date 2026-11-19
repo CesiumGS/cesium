@@ -1,9 +1,139 @@
 import {
-  Math as CesiumMath,
   MVTDataProvider,
+  Math as CesiumMath,
   Rectangle,
+  Resource,
   WebMercatorTilingScheme,
 } from "../../index.js";
+import Cesium3DTilesTester from "../../../../Specs/Cesium3DTilesTester.js";
+import createScene from "../../../../Specs/createScene.js";
+
+describe(
+  "Scene/MVTDataProvider feature layers",
+  function () {
+    let scene;
+
+    function encodeVarint(value) {
+      const bytes = [];
+      let n = value >>> 0;
+      while (n >= 0x80) {
+        bytes.push((n & 0x7f) | 0x80);
+        n >>>= 7;
+      }
+      bytes.push(n);
+      return bytes;
+    }
+
+    function encodeBytes(fieldNumber, valueBytes) {
+      return [
+        ...encodeVarint((fieldNumber << 3) | 2),
+        ...encodeVarint(valueBytes.length),
+        ...valueBytes,
+      ];
+    }
+
+    function encodeString(fieldNumber, value) {
+      return encodeBytes(
+        fieldNumber,
+        Array.from(value, (c) => c.charCodeAt(0)),
+      );
+    }
+
+    function encodeUInt(fieldNumber, value) {
+      return [...encodeVarint(fieldNumber << 3), ...encodeVarint(value)];
+    }
+
+    function encodePointLayer(name, pointCount) {
+      const bytes = encodeString(1, name);
+      for (let i = 0; i < pointCount; i++) {
+        const feature = [
+          ...encodeUInt(3, 1), // POINT
+          ...encodeBytes(4, [9, 50 + i * 2, 34]), // MoveTo(1)
+        ];
+        bytes.push(...encodeBytes(2, feature));
+      }
+      bytes.push(...encodeUInt(5, 4096), ...encodeUInt(15, 2));
+      return bytes;
+    }
+
+    function encodeTile(layers) {
+      const bytes = [];
+      for (const layer of layers) {
+        bytes.push(...encodeBytes(3, layer));
+      }
+      return new Uint8Array(bytes).buffer;
+    }
+
+    async function loadProvider(tileBuffer) {
+      const provider = await MVTDataProvider.fromUrl(
+        "http://example.invalid/{z}/{x}/{y}.mvt",
+        { minZoom: 0, maxZoom: 0 },
+      );
+      // Refines past the content-less root on the 1x1 spec canvas.
+      provider.tileset.maximumScreenSpaceError = 0.0;
+      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+        function (url, responseType, method, data, headers, deferred) {
+          deferred.resolve(tileBuffer);
+        },
+      );
+      return provider;
+    }
+
+    beforeAll(function () {
+      scene = createScene();
+    });
+
+    afterAll(function () {
+      scene.destroyForSpecs();
+    });
+
+    afterEach(function () {
+      scene.primitives.removeAll();
+    });
+
+    it("adds a feature layer for each source layer with features", async function () {
+      const provider = await loadProvider(
+        encodeTile([
+          encodePointLayer("roads", 2),
+          encodePointLayer("water", 1),
+          encodePointLayer("empty", 0),
+        ]),
+      );
+      const added = [];
+      provider.featureLayers.layerAdded.addEventListener((layer) =>
+        added.push(layer.name),
+      );
+
+      scene.primitives.add(provider);
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, provider.tileset);
+
+      expect(added).toEqual(["roads", "water"]);
+      expect(provider.featureLayers.length).toBe(2);
+      expect(provider.featureLayers.getByName("roads").length).toBe(1);
+      expect(provider.featureLayers.getByName("water").length).toBe(1);
+      expect(provider.featureLayers.getByName("empty")).toEqual([]);
+    });
+
+    it("assigns each tile collection to the feature layer of its source layer", async function () {
+      const provider = await loadProvider(
+        encodeTile([
+          encodePointLayer("roads", 2),
+          encodePointLayer("water", 1),
+        ]),
+      );
+
+      scene.primitives.add(provider);
+      await Cesium3DTilesTester.waitForTilesLoaded(scene, provider.tileset);
+      const content = provider.tileset.root.children[0].content;
+      const layerNames = Array.from(
+        content._collectionFeatureLayers.values(),
+        (layer) => layer.name,
+      );
+      expect(layerNames.sort()).toEqual(["roads", "water"]);
+    });
+  },
+  "WebGL",
+);
 
 describe("Scene/MVTDataProvider", function () {
   const url = "https://example.com/tiles/{z}/{x}/{y}.pbf";

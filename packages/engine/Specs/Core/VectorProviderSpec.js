@@ -932,6 +932,57 @@ describe("Core/VectorProvider", function () {
     ).toBe(false);
   });
 
+  it("reports a change during a frame when a collection is first marked", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.update(0);
+
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    expect(provider.changedDuringFrame(0)).toBe(true);
+  });
+
+  it("reports no change during a frame when the same collections are marked again", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
+    provider.update(1);
+
+    provider.markForFrame(collection, 1, collection.heightReference);
+
+    expect(provider.changedDuringFrame(1)).toBe(false);
+  });
+
+  it("reports a change during a frame when a draped collection is not marked again", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    provider.update(1);
+
+    expect(provider.changedDuringFrame(1)).toBe(true);
+  });
+
+  it("reports a change during a frame when a collection is removed", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
+    provider.update(1);
+    provider.markForFrame(collection, 1, collection.heightReference);
+
+    provider.remove(collection);
+
+    expect(provider.changedDuringFrame(1)).toBe(true);
+  });
+
+  it("reports no change for a frame that has not begun", function () {
+    const provider = new VectorProvider({ tilingScheme });
+    const collection = createPolylineCollection();
+    provider.markForFrame(collection, 0, collection.heightReference);
+
+    expect(provider.changedDuringFrame(1)).toBe(false);
+  });
+
   // Rectangles around the polyline midpoint and the far point, standing in for
   // the bounding region a model bakes.
   const nearRectangle = Rectangle.fromDegrees(-105.0, 35.0, -85.0, 45.0);

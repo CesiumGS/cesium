@@ -22,6 +22,8 @@
 - Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
 - Added experimental `VectorPrimitive` and `CircleVectorPrimitive`. A vector primitive draws a `BufferPrimitiveCollection` with styling held by the vector primitive instead of per-primitive materials, and several vector primitives may draw the same collection. `CircleVectorPrimitive` draws points with a radius, fill color, and outline. [#13932](https://github.com/CesiumGS/cesium/pull/13932)
 - `CircleVectorPrimitive` can style each point individually, e.g. `radius: (point) => ...`, and `filter` selects which points are drawn. [#13942](https://github.com/CesiumGS/cesium/pull/13942)
+- Added experimental feature layers for showing and hiding named sets of features: `Cesium3DTileset.featureLayers` for tilesets (using 3D Tiles 1.1 groups), and `GeoJsonFeatureLayerProvider` (a `FeatureLayerProvider`) for standalone GeoJSON layers. [#13921](https://github.com/CesiumGS/cesium/pull/13921)
+- Added experimental `MVTDataProvider.featureLayers`, with one feature layer per MVT source layer. [#14055](https://github.com/CesiumGS/cesium/pull/14055)
 
 #### Fixes :wrench:
 
