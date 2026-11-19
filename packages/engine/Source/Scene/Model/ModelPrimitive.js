@@ -1,5 +1,5 @@
 import { Check, defined, Matrix4 } from "@cesium/core";
-import ModelPrimitiveReadSession from "./ModelPrimitiveReadSession.js";
+import ModelPrimitiveAccessSession from "./ModelPrimitiveAccessSession.js";
 
 /**
  * <div class="notice">
@@ -30,8 +30,9 @@ function ModelPrimitive(model, node, runtimePrimitive) {
   this._node = node;
   this._runtimePrimitive = runtimePrimitive;
   this._worldMatrix = new Matrix4();
-  // Lazily created geometry reader to avoid unnecessary allocation until it's needed.
+  // Lazily created geometry reader and writer to avoid unnecessary allocation until they're needed.
   this._geometryReader = undefined;
+  this._geometryWriter = undefined;
 }
 
 Object.defineProperties(ModelPrimitive.prototype, {
@@ -89,7 +90,7 @@ Object.defineProperties(ModelPrimitive.prototype, {
   },
 
   /**
-   * Reads this primitive's geometry: its vertices, their attributes, and the
+   * A reader for accessing this primitive's geometry: its vertices, their attributes, and the
    * points, lines, or triangles they form. Values are in the primitive's
    * local space and rest pose, so they don't include the node's transform.
    *
@@ -120,12 +121,55 @@ Object.defineProperties(ModelPrimitive.prototype, {
   geometryReader: {
     get: function () {
       if (!defined(this._geometryReader)) {
-        this._geometryReader = ModelPrimitiveReadSession.createGeometryReader(
+        this._geometryReader = ModelPrimitiveAccessSession.createGeometryReader(
           this._runtimePrimitive.primitive,
         );
       }
 
       return this._geometryReader;
+    },
+  },
+
+  /**
+   * A writer for accessing this primitive's geometry: i.e. its vertex attributes.
+   * Position values are in the primitive's local space and rest pose, so they don't
+   * include the node's transform.
+   *
+   * @memberof ModelPrimitive.prototype
+   *
+   * @type {GeometryWriter}
+   * @readonly
+   *
+   * @example
+   * const position = new Cesium.GeometryAttributeDescriptor({
+   *   semantic: Cesium.VertexAttributeSemantic.POSITION,
+   * });
+   *
+   * primitive.geometryWriter.withWriteSession(
+   *   { attributes: [position] },
+   *   (session) => {
+   *     const readPosition = session.vertexAttributeReader(position);
+   *     const writePosition = session.vertexAttributeWriter(position);
+   *     const value = new Array(3);
+   *
+   *     for (let i = 0; i < session.vertexCount(); ++i) {
+   *       readPosition(i, value);
+   *       value[2] += 10.0;
+   *       writePosition(i, value);
+   *     }
+   *   },
+   * );
+   */
+  geometryWriter: {
+    get: function () {
+      if (!defined(this._geometryWriter)) {
+        this._geometryWriter = ModelPrimitiveAccessSession.createGeometryWriter(
+          this._runtimePrimitive.primitive,
+          this.geometryReader,
+        );
+      }
+
+      return this._geometryWriter;
     },
   },
 });
