@@ -1,7 +1,9 @@
 import { execFileSync } from "node:child_process";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
+  barCounts,
   boardStatus,
+  committedOnly,
   filterItems,
   filterLoose,
   looseCounts,
@@ -860,5 +862,121 @@ describe("the items in no milestone (CS-562)", () => {
       kinds: { work: 2, release: 0, decision: 0, external: 0 },
       states: { proposed: 0, planned: 1, "in-progress": 0 },
     });
+  });
+});
+
+describe("proposed milestones on the roadmap (CS-563)", () => {
+  const ms = (
+    id: string,
+    constraints: string[],
+    state: WorkMilestone["state"] = "planned",
+  ): WorkMilestone => ({
+    id,
+    title: `Milestone ${id}`,
+    kind: "milestone",
+    learning: false,
+    state,
+    project: "CS-2",
+    done_when: [],
+    constraints: constraints.map((c) => ({ id: c, clause: "c?" })),
+    contributions: [],
+    check_results: [],
+    path: `m/${id}`,
+    progress: { done: 0, total: constraints.length },
+    check_due: false,
+    to_shape: [],
+  });
+  const s: WorkSnapshot = {
+    ...snapshot,
+    items: [
+      item("CS-110"),
+      item("CS-111", { needs: ["CS-110"], open_needs: ["CS-110"] }),
+      item("CS-112", { state: "done" }),
+      item("CS-120", {
+        title: "Release 2.0.0-alpha.1",
+        release: "2.0.0-alpha.1",
+        needs: ["CS-100", "CS-101"],
+        open_needs: [],
+      }),
+      item("CS-121", {
+        title: "Release 2.0.0-alpha.2",
+        release: "2.0.0-alpha.2",
+        state: "proposed",
+        needs: ["CS-100"],
+        open_needs: [],
+      }),
+    ],
+    milestones: [
+      ms("CS-100", ["CS-110"]),
+      ms("CS-101", ["CS-111", "CS-112"], "proposed"),
+    ],
+  };
+
+  it("leaves proposed milestones out by default, and shows them when asked", () => {
+    const off = milestoneMapOf(s, undefined, "steps");
+    expect(off.nodes.map((n) => n.id).sort()).toEqual([
+      "CS-100",
+      "unshaped-CS-2",
+    ]);
+    // CS-111 is held only by a proposed milestone: off, it is loose work.
+    expect(off.nodes.find((n) => n.unshaped)!.proposed).toBe(false);
+    const on = milestoneMapOf(s, undefined, "steps", undefined, true);
+    expect(on.nodes.map((n) => [n.id, n.proposed]).sort()).toEqual([
+      ["CS-100", false],
+      ["CS-101", true],
+    ]);
+    // Placed by its waits, as a committed one is: after CS-100.
+    const at = (m: typeof on, id: string) =>
+      m.nodes.find((n) => n.id === id)!.x0;
+    expect(at(on, "CS-101")).toBe(1);
+    expect(at(on, "CS-100")).toBe(at(off, "CS-100"));
+    expect(on.nodes.find((n) => n.id === "CS-101")!.after).toEqual(["CS-100"]);
+  });
+
+  it("lists them in the roadmap's list only when asked", () => {
+    const ids = (proposals: boolean) =>
+      milestoneRoadmapOf(s, s.items, undefined, proposals).map((r) => r.id);
+    expect(ids(false)).not.toContain("CS-101");
+    expect(ids(false)).not.toContain("CS-121");
+    expect(ids(true)).toContain("CS-101");
+    expect(ids(true)).toContain("CS-121");
+  });
+
+  it("flags proposed releases only when asked, and places releases after proposed milestones then", () => {
+    const off = milestoneMapOf(s, undefined, "steps");
+    expect(off.flags.map((f) => f.id)).toEqual(["CS-120"]);
+    expect(off.flags[0]!.feeds).not.toContain("CS-101");
+    const on = milestoneMapOf(s, undefined, "steps", undefined, true);
+    const flag = (id: string) => on.flags.find((f) => f.id === id)!;
+    expect(flag("CS-120").feeds).toEqual(["CS-100", "CS-101"]);
+    expect(flag("CS-120").last).toEqual(["CS-101"]);
+    expect(flag("CS-120").at).toBe(2);
+    expect(flag("CS-120").proposed).toBeUndefined();
+    expect(flag("CS-121").proposed).toBe(true);
+    expect(flag("CS-121").at).toBe(1);
+  });
+
+  it("draws a proposed milestone's bar all gray, and a committed one's as it is", () => {
+    const counts = {
+      Proposed: 1,
+      Waiting: 2,
+      Ready: 0,
+      "In flight": 1,
+      Done: 3,
+    };
+    expect(barCounts(counts, true)).toEqual({
+      Proposed: 7,
+      Waiting: 0,
+      Ready: 0,
+      "In flight": 0,
+      Done: 0,
+    });
+    expect(barCounts(counts, false)).toBe(counts);
+  });
+
+  it("keeps the snapshot as it is when nothing is proposed", () => {
+    const committed = committedOnly(s);
+    expect(committed.milestones.map((m) => m.id)).toEqual(["CS-100"]);
+    expect(committedOnly(committed)).toBe(committed);
   });
 });

@@ -1364,6 +1364,32 @@ export function orderOf(
 }
 
 /**
+ * The snapshot without its proposed milestones: committed work, which is
+ * what the roadmap shows unless proposals are asked for.
+ */
+export function committedOnly(s: WorkSnapshot): WorkSnapshot {
+  return s.milestones.some((m) => m.state === "proposed")
+    ? { ...s, milestones: s.milestones.filter((m) => m.state !== "proposed") }
+    : s;
+}
+
+/**
+ * A proposed milestone's bar: one gray stretch, all of it proposed, so it
+ * can't be read as committed work whatever its items' stages. A committed
+ * milestone's counts come back as they are.
+ */
+export function barCounts(
+  counts: Record<Stage, number>,
+  proposed: boolean,
+): Record<Stage, number> {
+  if (!proposed) {
+    return counts;
+  }
+  const all = STAGES.reduce((n, st) => n + counts[st], 0);
+  return { Proposed: all, Waiting: 0, Ready: 0, "In flight": 0, Done: 0 };
+}
+
+/**
  * Milestones in the order they can be reached (human-in-the-lead's
  * milestone graph), from their constraints' needs and their own needs on
  * other milestones. Done and dropped milestones are left out.
@@ -1434,6 +1460,8 @@ export interface ReleaseFlag {
   /** The version it makes ("2.0.0-alpha.1"). */
   version: string;
   title: string;
+  /** A proposed release, not committed yet (shown only with proposals). */
+  proposed?: boolean;
   /**
    * The open milestones that feed it: those it needs, directly or through
    * the items and releases it needs, and everything they wait on.
@@ -1531,6 +1559,7 @@ export function releaseFlagsOf(
         id: r.id,
         version: it.release ?? r.title,
         title: r.title,
+        ...(it.state === "proposed" ? { proposed: true } : {}),
         feeds,
         last:
           at === undefined
@@ -1631,6 +1660,8 @@ export interface MapNode {
   started: boolean;
   /** A project's open items that no milestone holds yet. */
   unshaped: boolean;
+  /** A proposed milestone: not committed yet (shown only when asked for). */
+  proposed: boolean;
 }
 
 export interface MapEdge {
@@ -1693,12 +1724,13 @@ export function milestoneMapOf(
   unit: "steps" | "tokens",
   /** A release gate to measure to: what it needs, and the rest apart. */
   focus?: string,
+  /**
+   * Proposed milestones (and release items) too, placed by their waits as
+   * committed ones are. The roadmap is committed work by default.
+   */
+  proposals = false,
 ): MilestoneMap {
-  // The roadmap is committed work; proposals are the Proposals view's.
-  const s = {
-    ...snapshot,
-    milestones: snapshot.milestones.filter((m) => m.state !== "proposed"),
-  };
+  const s = proposals ? snapshot : committedOnly(snapshot);
   const itemOf = new Map(s.items.map((i) => [i.id, i]));
   const msOf = new Map(s.milestones.map((m) => [m.id, m]));
   const projectOf = new Map(s.projects.map((p) => [p.id, p]));
@@ -1751,7 +1783,7 @@ export function milestoneMapOf(
     }
     return { decisions, outside };
   };
-  const rows = milestoneRoadmapOf(s, s.items, flight, true);
+  const rows = milestoneRoadmapOf(s, s.items, flight, proposals);
   const itemsIn = (id: string) =>
     unshaped.get(id) ??
     msOf.get(id)?.constraints.map((c) => c.id) ??
@@ -1980,6 +2012,7 @@ export function milestoneMapOf(
         loop: r.group.length > 1 ? r.group : undefined,
         started: r.counts.Done > 0 || r.counts["In flight"] > 0,
         unshaped: r.id.startsWith(UNSHAPED),
+        proposed: msOf.get(r.id)?.state === "proposed",
         // The waits that finish last set its start: those name why it is here.
         after: start
           ? r.waitsOn
@@ -2073,6 +2106,7 @@ export function milestoneMapOf(
       tokens,
       started: counts.Done > 0 || counts["In flight"] > 0,
       unshaped: true,
+      proposed: false,
       after: [],
     });
   }

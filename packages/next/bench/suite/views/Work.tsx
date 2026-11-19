@@ -88,6 +88,7 @@ import {
   mapEntityTitle,
   milestoneMapOf,
   milestoneRoadmapOf,
+  barCounts,
   nextActor,
   noMilestoneOf,
   OPEN_STATES,
@@ -393,6 +394,11 @@ function Board({
       ? `${scopeNames[0]} and ${scopeNames.length - 1} more`
       : scopeNames.join(" and ") || undefined;
   const roadmapBy = search.roadmap === "matrix" ? "matrix" : "milestones";
+  // Proposed milestones join the roadmap only when asked for (CS-563).
+  const withProposed = search.proposed === "show";
+  const proposedCount = s.milestones.filter(
+    (m) => m.state === "proposed",
+  ).length;
   const projectScope = !!oneProject;
   // The view's own width: the pane, when inline, takes 400 px of the layout.
   const mainWidth =
@@ -710,6 +716,41 @@ function Board({
                             </ToggleButton>
                           </ToggleButtonGroup>
                         )}
+                        <ToggleButton
+                          value="proposed"
+                          size="small"
+                          selected={withProposed}
+                          onChange={() =>
+                            set(
+                              { proposed: withProposed ? undefined : "show" },
+                              true,
+                            )
+                          }
+                          disabled={!proposedCount && !withProposed}
+                          render={
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              className="work-proposed-toggle"
+                              title={
+                                withProposed
+                                  ? "Hide the proposed milestones: committed work only"
+                                  : proposedCount
+                                    ? `Show the ${proposedCount} proposed ${proposedCount === 1 ? "milestone" : "milestones"} too, outlined dashed`
+                                    : "No proposed milestones"
+                              }
+                            />
+                          }
+                        >
+                          <span
+                            className="work-proposed-mark"
+                            aria-hidden="true"
+                          />
+                          Proposed
+                          <span className="work-toggle-count">
+                            {proposedCount}
+                          </span>
+                        </ToggleButton>
                         <ToggleButtonGroup
                           size="small"
                           exclusive
@@ -753,6 +794,7 @@ function Board({
                       s={s}
                       items={items}
                       flight={flight}
+                      proposals={withProposed}
                       release={search.release}
                       onRelease={(id) => set({ release: id }, true)}
                       onCell={(from, to) => open(`dep:${from}:${to}`)}
@@ -763,6 +805,7 @@ function Board({
                       s={s}
                       flight={flight}
                       unit={across}
+                      proposals={withProposed}
                       inScope={size ? msInScope : undefined}
                       selected={
                         search.list?.startsWith("ms:")
@@ -782,6 +825,7 @@ function Board({
                     <Roadmap
                       s={s}
                       flight={flight}
+                      proposals={withProposed}
                       inScope={size ? msInScope : undefined}
                       selected={
                         search.list?.startsWith("ms:")
@@ -4707,6 +4751,7 @@ function MatrixView({
   s,
   items,
   flight,
+  proposals,
   release,
   onRelease,
   onCell,
@@ -4715,6 +4760,8 @@ function MatrixView({
   s: WorkSnapshot;
   items: WorkItem[];
   flight: InFlight;
+  /** Proposed milestones count among what feeds a release. */
+  proposals: boolean;
   /** The release in focus: the projects that feed it stand out. */
   release?: string;
   onRelease: (id: string | undefined) => void;
@@ -4727,8 +4774,13 @@ function MatrixView({
     s.projects.find((p) => p.id === id)?.title ?? id;
   // The releases, with no steps to place them by: each names what feeds it.
   const flags = useMemo(
-    () => releaseFlagsOf(s, milestoneRoadmapOf(s, s.items, flight), () => 0),
-    [s, flight],
+    () =>
+      releaseFlagsOf(
+        s,
+        milestoneRoadmapOf(s, s.items, flight, proposals),
+        () => 0,
+      ),
+    [s, flight, proposals],
   );
   const [hoverFlag, setHoverFlag] = useState<string>();
   const fed = useMemo(() => {
@@ -4762,7 +4814,7 @@ function MatrixView({
         label="Releases"
         note={
           flags.some((f) => !f.unplaced)
-            ? "Point at one to mark the projects whose milestones feed it."
+            ? `Point at one to mark the projects whose milestones feed it${proposals ? ", proposed milestones among them" : ""}.`
             : unplacedNote(flags.map((f) => ({ ...f, at: undefined })))
         }
         titleOf={flagTitle}
@@ -5309,6 +5361,7 @@ function MilestoneMap({
   s,
   flight,
   unit,
+  proposals,
   inScope,
   selected,
   onOpen,
@@ -5321,6 +5374,8 @@ function MilestoneMap({
   s: WorkSnapshot;
   flight: InFlight;
   unit: "steps" | "tokens";
+  /** Proposed milestones too, placed by their waits and outlined dashed. */
+  proposals: boolean;
   /** Project lanes, or a layered graph that crosses fewer waits. */
   shape: "lanes" | "graph";
   onShape: (shape: "lanes" | "graph") => void;
@@ -5338,14 +5393,16 @@ function MilestoneMap({
   const [hover, setHover] = useState<string>();
   const [hoverFlag, setHoverFlag] = useState<string>();
   const map = useMemo(
-    () => milestoneMapOf(s, flight, unit, release),
-    [s, flight, unit, release],
+    () => milestoneMapOf(s, flight, unit, release, proposals),
+    [s, flight, unit, release, proposals],
   );
   // The graph places by steps whatever the axis: its layers are steps.
   const graphMap = useMemo(
     () =>
-      unit === "steps" ? map : milestoneMapOf(s, flight, "steps", release),
-    [map, s, flight, unit, release],
+      unit === "steps"
+        ? map
+        : milestoneMapOf(s, flight, "steps", release, proposals),
+    [map, s, flight, unit, release, proposals],
   );
   const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
   const titleOf = (id: string) => msOf.get(id)?.title ?? mapEntityTitle(s, id);
@@ -5781,6 +5838,7 @@ function MilestoneMap({
                   title={
                     <span className="work-map-tip">
                       <b>{n.title}</b>
+                      {n.proposed && <span>{PROPOSED_TIP}</span>}
                       {n.unshaped && (
                         <span>
                           Open items of this project that no milestone holds
@@ -5866,7 +5924,7 @@ function MilestoneMap({
                 >
                   <button
                     type="button"
-                    className={`work-map-node${n.unshaped ? " unshaped" : n.started ? " started" : " idle"}${unit === "tokens" && over(n) ? " over" : ""}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
+                    className={`work-map-node${n.unshaped ? " unshaped" : n.proposed ? " proposed" : n.started ? " started" : " idle"}${unit === "tokens" && over(n) ? " over" : ""}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
                     style={{
                       left: left(n),
                       top: top(n),
@@ -5879,7 +5937,10 @@ function MilestoneMap({
                   >
                     <span className="work-map-node-title">
                       <LevelMark level={n.unshaped ? "item" : "milestone"} />
-                      <span className="work-outline-label">{n.title}</span>
+                      <span className="work-outline-label">
+                        {n.proposed && <ProposedLabel />}
+                        {n.title}
+                      </span>
                       <HoldBadges n={n} />
                     </span>
                     {unit === "tokens" && n.tokens.budget !== undefined ? (
@@ -5888,20 +5949,10 @@ function MilestoneMap({
                         spent={n.tokens.spent}
                       />
                     ) : (
-                      <span
-                        className="work-pbar-track work-map-bar"
-                        aria-hidden="true"
-                      >
-                        {STAGES.map((st) =>
-                          n.counts[st] ? (
-                            <span
-                              key={st}
-                              className={`work-roadmap-seg stage-${slug(st)}`}
-                              style={{ flexGrow: n.counts[st] }}
-                            />
-                          ) : null,
-                        )}
-                      </span>
+                      <StageBar
+                        counts={barCounts(n.counts, n.proposed)}
+                        className="work-map-bar"
+                      />
                     )}
                     <span
                       className={`work-map-node-meta${over(n) ? " over" : ""}`}
@@ -5976,6 +6027,7 @@ function MilestoneMap({
         </div>
       )}
       <ul className="work-map-legend" aria-label="Key">
+        {proposals && <ProposedKey as="li" />}
         <li>
           <span className="work-map-key started" aria-hidden="true" />
           An item done or in progress
@@ -6440,14 +6492,14 @@ function MilestoneGraph({
             <button
               key={n.id}
               type="button"
-              className={`work-map-node${n.started ? " started" : " idle"}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
+              className={`work-map-node${n.proposed ? " proposed" : n.started ? " started" : " idle"}${n.critical ? " critical" : ""}${n.id === selected ? " selected" : ""}${dim ? " dim" : ""}${n.loop ? " loop" : ""}`}
               style={{
                 left: x + PAD,
                 top: y + PAD + FLAGS,
                 width: NODE_W,
                 height: NODE_H,
               }}
-              title={`${n.title}${projectTitle(n.id) ? ` (${projectTitle(n.id)})` : ""}`}
+              title={`${n.proposed ? "Proposed: " : ""}${n.title}${projectTitle(n.id) ? ` (${projectTitle(n.id)})` : ""}`}
               onPointerEnter={() => setHover(n.id)}
               onFocus={() => setHover(n.id)}
               onBlur={() => setHover(undefined)}
@@ -6455,20 +6507,16 @@ function MilestoneGraph({
             >
               <span className="work-map-node-title">
                 <LevelMark level="milestone" />
-                <span className="work-outline-label">{n.title}</span>
+                <span className="work-outline-label">
+                  {n.proposed && <ProposedLabel />}
+                  {n.title}
+                </span>
                 <HoldBadges n={n} />
               </span>
-              <span className="work-pbar-track work-map-bar" aria-hidden="true">
-                {STAGES.map((st) =>
-                  n.counts[st] ? (
-                    <span
-                      key={st}
-                      className={`work-roadmap-seg stage-${slug(st)}`}
-                      style={{ flexGrow: n.counts[st] }}
-                    />
-                  ) : null,
-                )}
-              </span>
+              <StageBar
+                counts={barCounts(n.counts, n.proposed)}
+                className="work-map-bar"
+              />
               <span className="work-map-node-meta">
                 {`${n.counts["In flight"] ? `${n.counts["In flight"]} in progress · ` : ""}${n.counts.Done} of ${total} done · ${projectTitle(n.id)}`}
               </span>
@@ -6585,6 +6633,11 @@ function ReleaseFlagButton({
       title={
         <span className="work-map-tip">
           <b>{flag.title}</b>
+          {flag.proposed && (
+            <span>
+              Proposed: not committed yet; the owner commits it or not
+            </span>
+          )}
           {flag.unplaced ? (
             <span>{unplacedText(flag, titleOf)}</span>
           ) : !steps ? (
@@ -6622,10 +6675,10 @@ function ReleaseFlagButton({
     >
       <button
         type="button"
-        className={`work-flag${flag.unplaced ? " unplaced" : ""}${selected ? " selected" : ""}${dim ? " dim" : ""}${className ? ` ${className}` : ""}`}
+        className={`work-flag${flag.unplaced ? " unplaced" : ""}${flag.proposed ? " proposed" : ""}${selected ? " selected" : ""}${dim ? " dim" : ""}${className ? ` ${className}` : ""}`}
         style={style}
         aria-pressed={selected}
-        aria-label={`Release ${flag.version}${flag.unplaced ? ", not placed yet" : ""}`}
+        aria-label={`${flag.proposed ? "Proposed release" : "Release"} ${flag.version}${flag.unplaced ? ", not placed yet" : ""}`}
         onPointerEnter={() => onHover(flag.id)}
         onPointerLeave={() => onHover(undefined)}
         onFocus={() => onHover(flag.id)}
@@ -6717,6 +6770,7 @@ const betweenSteps = (at: number, steps: number) =>
 function Roadmap({
   s,
   flight,
+  proposals,
   inScope,
   selected,
   onOpen,
@@ -6726,6 +6780,8 @@ function Roadmap({
 }: {
   s: WorkSnapshot;
   flight: InFlight;
+  /** Proposed milestones too, outlined dashed. */
+  proposals: boolean;
   /** The release in focus: what feeds it stands out. */
   release?: string;
   onRelease: (id: string | undefined) => void;
@@ -6737,8 +6793,8 @@ function Roadmap({
   onWait: (from: string, to: string) => void;
 }) {
   const all = useMemo(
-    () => milestoneRoadmapOf(s, s.items, flight),
-    [s, flight],
+    () => milestoneRoadmapOf(s, s.items, flight, proposals),
+    [s, flight, proposals],
   );
   const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
   const itemOf = useMemo(() => new Map(s.items.map((i) => [i.id, i])), [s]);
@@ -6827,6 +6883,7 @@ function Roadmap({
                           key={r.id}
                           row={r}
                           milestone={msOf.get(r.id)}
+                          proposed={msOf.get(r.id)?.state === "proposed"}
                           selected={r.id === selected}
                           dim={!!lit && !lit.has(r.id)}
                           title={title}
@@ -6915,6 +6972,7 @@ function Roadmap({
               {STAGE_NAMES[st]}
             </span>
           ))}
+          {proposals && <ProposedKey />}
         </span>
         {!inScope && (
           <Typography variant="caption-md" color="textSecondary">
@@ -6935,10 +6993,60 @@ const SHAPE_NAMES: Record<string, string> = {
   links: "links to clauses",
 };
 
+/** What a dashed outline means on the roadmap (CS-563). */
+const PROPOSED_TIP =
+  "Proposed milestone: not committed yet; the owner commits it or not";
+
+/** A proposed milestone's name, said to screen readers too. */
+function ProposedLabel() {
+  return <span className="visually-hidden">Proposed: </span>;
+}
+
+/** A stage bar for the map's bars: each stage's count as a stretch. */
+function StageBar({
+  counts,
+  className,
+}: {
+  counts: Record<Stage, number>;
+  className?: string;
+}) {
+  return (
+    <span
+      className={`work-pbar-track${className ? ` ${className}` : ""}`}
+      aria-hidden="true"
+    >
+      {STAGES.map((st) =>
+        counts[st] ? (
+          <span
+            key={st}
+            className={`work-roadmap-seg stage-${slug(st)}`}
+            style={{ flexGrow: counts[st] }}
+          />
+        ) : null,
+      )}
+    </span>
+  );
+}
+
+/**
+ * The legend's entry for the dashed outline, shown while proposed
+ * milestones are. One piece, so the legend can move it as a whole.
+ */
+function ProposedKey({ as = "span" }: { as?: "span" | "li" }) {
+  const Tag = as;
+  return (
+    <Tag className="work-legend-key work-proposed-key" data-tip={PROPOSED_TIP}>
+      <span className="work-proposed-mark" aria-hidden="true" />
+      Proposed, not committed yet
+    </Tag>
+  );
+}
+
 /** One milestone: its name, a stage bar, done of all, what it waits on. */
 function RoadmapLine({
   row,
   milestone,
+  proposed,
   selected,
   dim,
   title,
@@ -6947,6 +7055,8 @@ function RoadmapLine({
 }: {
   row: RoadmapRow;
   milestone?: WorkMilestone;
+  /** Not committed yet: outlined dashed, its bar gray. */
+  proposed: boolean;
   selected: boolean;
   /** Not what feeds the release pointed at or in focus. */
   dim?: boolean;
@@ -6955,22 +7065,26 @@ function RoadmapLine({
   onWait: (from: string, to: string) => void;
 }) {
   const total = STAGES.reduce((n, st) => n + row.counts[st], 0);
+  const bar = barCounts(row.counts, proposed);
   const waits = [...row.waitsOn].sort(
     (a, b) => b.items.length - a.items.length,
   );
   return (
     <li
-      className={`work-rm-line${selected ? " selected" : ""}${dim ? " dim" : ""}`}
+      className={`work-rm-line${proposed ? " proposed" : ""}${selected ? " selected" : ""}${dim ? " dim" : ""}`}
     >
       <button
         type="button"
         className="work-rm-name"
         onClick={onOpen}
         aria-current={selected ? "true" : undefined}
-        title={`${row.title}: open it${milestone?.to_shape.length ? ` (to shape: ${milestone.to_shape.map((x) => SHAPE_NAMES[x] ?? x).join(", ")})` : ""}`}
+        title={`${proposed ? `${PROPOSED_TIP}. ` : ""}${row.title}: open it${milestone?.to_shape.length ? ` (to shape: ${milestone.to_shape.map((x) => SHAPE_NAMES[x] ?? x).join(", ")})` : ""}`}
       >
         <LevelMark level="milestone" />
-        <span className="work-rm-title">{row.title}</span>
+        <span className="work-rm-title">
+          {proposed && <ProposedLabel />}
+          {row.title}
+        </span>
         {milestone?.check_due && (
           <StatusBadge tone="info">Check due</StatusBadge>
         )}
@@ -6978,17 +7092,28 @@ function RoadmapLine({
       <span
         className="work-pbar-track work-rm-bar"
         role="img"
-        aria-label={STAGES.filter((st) => row.counts[st])
+        aria-label={`${proposed ? "Proposed, not committed yet: " : ""}${STAGES.filter(
+          (st) => row.counts[st],
+        )
           .map((st) => `${row.counts[st]} ${STAGE_NAMES[st].toLowerCase()}`)
-          .join(", ")}
+          .join(", ")}`}
       >
         {STAGES.map((st) =>
-          row.counts[st] ? (
+          bar[st] ? (
             <span
               key={st}
               className={`work-roadmap-seg stage-${slug(st)}`}
-              style={{ flexGrow: row.counts[st] }}
-              data-tip={stageTip(st, `${row.counts[st]}`)}
+              style={{ flexGrow: bar[st] }}
+              data-tip={
+                proposed
+                  ? `${PROPOSED_TIP}: ${STAGES.filter((x) => row.counts[x])
+                      .map(
+                        (x) =>
+                          `${row.counts[x]} ${STAGE_NAMES[x].toLowerCase()}`,
+                      )
+                      .join(", ")}`
+                  : stageTip(st, `${row.counts[st]}`)
+              }
             />
           ) : null,
         )}

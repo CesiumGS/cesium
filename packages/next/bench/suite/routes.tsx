@@ -74,6 +74,8 @@ export interface WorkSearch {
   shape?: string;
   /** The roadmap as the projects' waits on each other, "matrix" (milestones by default). */
   roadmap?: string;
+  /** The roadmap with its proposed milestones too, "show" (committed work only by default). */
+  proposed?: string;
   /** The Proposals view narrowed to what can be committed now ("free"), or what waits on a "decision" or on other "items". */
   gate?: string;
   /** The No milestone view's kinds, a comma-separated list of "work", "release", "decision" and "external" (every kind by default). */
@@ -112,6 +114,7 @@ export const workRoute = createRoute({
       release: str(s.release),
       shape: s.shape === "graph" ? "graph" : undefined,
       roadmap: s.roadmap === "matrix" ? "matrix" : undefined,
+      proposed: s.proposed === "show" ? "show" : undefined,
       gate:
         s.gate === "free" || s.gate === "decision" || s.gate === "items"
           ? s.gate

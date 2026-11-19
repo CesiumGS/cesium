@@ -177,6 +177,20 @@ milestones named by their outcome, each with an `outcome` sentence,
   - **What holds a milestone up** on the roadmap, the owner's decisions
     and outside waits, are outlined badges with their kind's glyph and
     count, in the kind's color.
+  - **Proposed is a third channel (CS-563): a dashed gray outline.** On
+    the roadmap a dashed outline means proposed (not committed yet) and
+    nothing else, apart from a kind's ink and a stage's fill. A proposed
+    milestone is hollow, outlined 2 px dashed in `--proposed-outline` (a
+    gray at least 3:1 on the page in each mode), and its bar is one gray
+    stretch in the Proposed stage's fill whatever its items' stages, so
+    it can't be read as committed work; its counts stay in its words,
+    its tip and its pane. A proposed release's flag is dashed the same
+    way. Its name says "Proposed" to screen readers. So the dashes stay
+    unambiguous, nothing else on the roadmap is outlined dashed: a loop
+    is a double outline, a project's work in no milestone is a slim
+    solid tray, and a release with no place yet is dotted. Lines keep
+    their dashes (a flag's pole, a wait the milestone names itself,
+    tick marks): a dashed line is not an outline.
 
 - **The pane (CS-573).** Any entity opens in it (`?item=CS-<n>` for an
   item, a milestone or a project; a milestone chosen on the roadmap opens
@@ -245,7 +259,7 @@ milestones named by their outcome, each with an `outcome` sentence,
     keeps the release and what it needs and moves the rest apart. A
     release whose milestones aren't chosen yet (it needs an open
     decision, or a release with no place, or names no milestone) gets no
-    guessed place: its flag sits dashed in "Releases not placed yet"
+    guessed place: its flag sits dotted in "Releases not placed yet"
     above the grid, and its tip says what it waits on. The fewest
     crossings layout flies the flags over the gaps between step columns.
     The list puts each flag between the steps it falls between. The
@@ -254,8 +268,18 @@ milestones named by their outcome, each with an `outcome` sentence,
     projects whose milestones feed it. A milestone with an
     item done or in progress is filled; a milestone's pane gives its
     longest chain of items that must happen in order. The roadmap is
-    committed work only;
-    proposals have their own view. A milestone's bar counts its work;
+    committed work by default; proposals have their own view. The
+    Proposed toggle in the roadmap's tools (CS-563, `&proposed=show`,
+    off when absent, with the count of proposed milestones) adds the
+    proposed milestones, and proposed release items, alongside: in the
+    map (both layouts, steps or tokens) and the list each is placed by
+    its waits as a committed one is and outlined dashed, and the legend
+    gains the dashed outline's key (one piece, `ProposedKey`, so it can
+    move with the legend). Releases are placed with them too, so a
+    release that needs a proposed milestone falls after it. Project
+    waits has no milestones to draw: there the toggle counts proposed
+    milestones among what feeds a release, which the flags mark; its
+    cells count every open item either way. A milestone's bar counts its work;
     the owner's decisions and waits on other parties that hold it up are
     badges beside its name, each with its kind's glyph. Decisions and
     outside waits no milestone holds stay in Your move and Waiting

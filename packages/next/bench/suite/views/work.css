@@ -215,6 +215,19 @@
   --kind: var(--kind-release);
 }
 
+/*
+ * Proposed (DESIGN.md, "Proposed on the roadmap"): a third channel, apart
+ * from a kind's ink and a stage's fill. On the roadmap a dashed gray
+ * outline means proposed and nothing else; its gray is at least 3:1 on
+ * the page in its mode, so the dashes read without the bar.
+ */
+.viz {
+  --proposed-outline: #767c85;
+}
+.viz.dark {
+  --proposed-outline: #9aa0a8;
+}
+
 .stage-proposed {
   --stage: var(--stage-proposed);
 }
@@ -1474,6 +1487,15 @@ a.work-related-item:focus-visible {
   background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
   box-shadow: inset 3px 0 0 var(--stratakit-color-border-accent-strong);
 }
+/* A proposed milestone's line: outlined dashed in gray, its bar gray. */
+.work-rm-line.proposed {
+  outline: 2px dashed var(--proposed-outline);
+  outline-offset: -2px;
+}
+.work-rm-line + .work-rm-line.proposed,
+.work-rm-line.proposed + .work-rm-line {
+  margin-top: 2px;
+}
 .work-rm-name {
   all: unset;
   min-width: 0;
@@ -2000,8 +2022,21 @@ button.work-mrow-big:focus-visible {
 .work-map-node.critical {
   border: 2px solid var(--stratakit-color-border-accent-strong);
 }
+/* A loop is a double outline: on the roadmap, dashes mean proposed. */
 .work-map-node.loop {
-  border-style: dashed;
+  border-style: double;
+  border-width: 3px;
+}
+/* A proposed milestone: hollow, outlined dashed in gray, its bar gray. */
+.work-map-node.proposed {
+  background: transparent;
+  border: 2px dashed var(--proposed-outline);
+}
+.work-map-node.proposed:hover {
+  border-color: var(--stratakit-color-text-neutral-primary);
+}
+.work-map-node.proposed.critical {
+  border-color: var(--stratakit-color-border-accent-strong);
 }
 .work-map-node.selected {
   box-shadow: 0 0 0 3px var(--stratakit-color-bg-glow-on-surface-accent-pressed);
@@ -2228,7 +2263,8 @@ button.work-mrow-big:focus-visible {
   border-color: var(--stratakit-color-border-neutral-muted);
 }
 .work-map-key.loop {
-  border-style: dashed;
+  border-style: double;
+  border-width: 3px;
 }
 .work-map-key-line {
   width: 22px;
@@ -2284,10 +2320,13 @@ button.work-mrow-big:focus-visible {
   color: var(--stratakit-color-text-critical-base, var(--stage-waiting));
 }
 
-/* A project's open items that no milestone holds yet: dashed and gray. */
+/*
+ * A project's open items that no milestone holds yet: a slim gray tray
+ * (solid; on the roadmap, dashes mean proposed).
+ */
 .work-map-node.unshaped {
-  background: transparent;
-  border: 1px dashed var(--stratakit-color-border-neutral-base);
+  background: var(--stratakit-color-bg-page-depth);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
 }
 .work-map-node.unshaped .work-map-node-title {
   font-weight: 400;
@@ -2580,6 +2619,18 @@ button.work-mrow-big:focus-visible {
 .work-proposal-gates .work-gate-mark {
   margin-inline-end: 6px;
 }
+/* The dashed outline in small: the legend's key and the toggle's mark. */
+.work-proposed-mark {
+  flex: none;
+  box-sizing: border-box;
+  width: 18px;
+  height: 12px;
+  border: 2px dashed var(--proposed-outline);
+  border-radius: 3px;
+}
+.work-proposed-toggle {
+  gap: var(--stratakit-space-150);
+}
 .work-toggle-count {
   margin-inline-start: var(--stratakit-space-100);
   color: var(--stratakit-color-text-neutral-secondary);
@@ -2769,7 +2820,7 @@ button.work-mrow-big:focus-visible {
 
 /*
  * Releases as flags: each on the line after the last milestone it needs,
- * with its pole down the grid; one with no place yet sits apart, dashed.
+ * with its pole down the grid; one with no place yet sits apart, dotted.
  */
 .work-flag {
   all: unset;
@@ -2807,10 +2858,16 @@ button.work-mrow-big:focus-visible {
   border-color: var(--stratakit-color-border-accent-strong);
   background: var(--stratakit-color-bg-glow-on-surface-accent-pressed);
 }
+/* Dotted: on the roadmap, dashes mean proposed. */
 .work-flag.unplaced {
-  border-style: dashed;
+  border-style: dotted;
   background: transparent;
   color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-flag.proposed {
+  border-style: dashed;
+  border-color: var(--proposed-outline);
+  background: transparent;
 }
 .work-flag.unplaced.selected {
   border-color: var(--stratakit-color-border-accent-strong);
