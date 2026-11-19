@@ -3,11 +3,9 @@
 import {
   AttributeCompression,
   AttributeType,
-  Cartesian2,
   Cartesian3,
   ComponentDatatype,
   DeveloperError,
-  Math as CesiumMath,
   PrimitiveType,
   defined,
 } from "@cesium/core";
@@ -48,7 +46,8 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 
 /**
  * Provides read and write access to the primitive's vertex attributes and
- * index data, decoding and encoding them as needed to translate to and from the GPU's format.
+ * index data, decoding them as the GPU would. Only attributes stored without
+ * an encoding can be written, currently.
  *
  * Only the requested attributes are read back (unless the attribute buffer is interleaved).
  * If multiple interleaved attributes are requested, they are read back together for efficiency.
@@ -60,7 +59,6 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
  * @private
  */
 class ModelPrimitiveAccessSession {
-  static #scratchCartesian2 = new Cartesian2();
   static #scratchCartesian3 = new Cartesian3();
 
   /** @type {RequestedAttribute[]} */
@@ -95,16 +93,22 @@ class ModelPrimitiveAccessSession {
   }
 
   /**
-   * Creates a writer for the primitive's geometry.
+   * Creates a writer for the primitive's geometry. Only attributes stored
+   * without an encoding, e.g. quantization or normalization, can be written.
    *
    * @param {Primitive} primitive The primitive to write.
-   * @param {GeometryReader} reader The primitive's reader.
    * @param {function(): void} onCommit Called after a session's writes are applied.
    * @returns {GeometryWriter} The writer.
    */
-  static createGeometryWriter(primitive, reader, onCommit) {
+  static createGeometryWriter(primitive, onCommit) {
     return new GeometryWriter({
-      reader,
+      availableAttributes: primitive.attributes
+        .filter((attribute) =>
+          ModelPrimitiveAccessSession.#isWritable(attribute),
+        )
+        .map((attribute) =>
+          ModelPrimitiveAccessSession.#getDescriptor(attribute),
+        ),
       createWriteSession: (options) =>
         new ModelPrimitiveAccessSession(primitive, options, true, onCommit),
     });
@@ -263,16 +267,11 @@ class ModelPrimitiveAccessSession {
     if (!this.#writable) {
       throw new DeveloperError("This session is read-only.");
     }
-    if (!defined(attributeValues.values)) {
-      throw new DeveloperError(
-        `Attribute ${descriptor.semantic} has a constant value and can't be written.`,
-      );
-    }
     //>>includeEnd('debug');
 
     this.#writtenAttributes.add(requested);
 
-    return ModelPrimitiveAccessSession.#createEncodedWriter(
+    return ModelPrimitiveAccessSession.#createRawWriter(
       attribute,
       attributeValues,
     );
@@ -409,6 +408,22 @@ class ModelPrimitiveAccessSession {
         vertexFunction(vertexIndices[cornerIndex], values, offset)
       );
     };
+  }
+
+  /**
+   * Determines if an attribute can be written: it's stored without an
+   * encoding, e.g. quantization or normalization, and isn't constant.
+   *
+   * @param {Attribute} attribute
+   * @returns {boolean}
+   * @ignore
+   */
+  static #isWritable(attribute) {
+    return (
+      !defined(attribute.quantization) &&
+      !attribute.normalized &&
+      (defined(attribute.buffer) || defined(attribute.typedArray))
+    );
   }
 
   /**
@@ -679,45 +694,6 @@ class ModelPrimitiveAccessSession {
   }
 
   /**
-   * Creates a writer that encodes values into how the attribute
-   * is stored via a specialized writer. The inverse of
-   * #createDecodedReader. Writes only the attribute's components, so RGB
-   * colors ignore alpha.
-   *
-   * @param {Attribute} attribute
-   * @param {AttributeValues} attributeValues
-   * @returns {GeometryAttributeWriter}
-   * @ignore
-   */
-  static #createEncodedWriter(attribute, attributeValues) {
-    if (attribute.quantization?.octEncoded) {
-      return ModelPrimitiveAccessSession.#createOctEncodedWriter(
-        attribute,
-        attributeValues,
-      );
-    }
-
-    if (defined(attribute.quantization)) {
-      return ModelPrimitiveAccessSession.#createQuantizedWriter(
-        attribute,
-        attributeValues,
-      );
-    }
-
-    if (attribute.normalized) {
-      return ModelPrimitiveAccessSession.#createNormalizedWriter(
-        attribute,
-        attributeValues,
-      );
-    }
-
-    return ModelPrimitiveAccessSession.#createRawWriter(
-      attribute,
-      attributeValues,
-    );
-  }
-
-  /**
    * Wraps a reader of RGB colors to read RGBA, with an alpha of 1.
    *
    * @param {GeometryAttributeReader} rgbReader
@@ -806,33 +782,6 @@ class ModelPrimitiveAccessSession {
   }
 
   /**
-   * Writes values as integers that the GPU normalizes, rounding and clamping
-   * them to the stored type.
-   *
-   * @param {Attribute} attribute
-   * @param {AttributeValues} attributeValues
-   * @returns {GeometryAttributeWriter}
-   * @ignore
-   */
-  static #createNormalizedWriter(attribute, attributeValues) {
-    const { values, stride } = attributeValues;
-    const valuesArray = /** @type {TypedArray} */ (values);
-    const componentCount = ModelPrimitiveAccessSession.#getComponentCount(
-      attribute.type,
-    );
-    const { scale } = ModelPrimitiveAccessSession.#getNormalization(attribute);
-    const toStored =
-      ModelPrimitiveAccessSession.#createIntegerEncoder(attribute);
-
-    return (vertexIndex, source, offset = 0) => {
-      const base = vertexIndex * stride;
-      for (let i = 0; i < componentCount; ++i) {
-        valuesArray[base + i] = toStored(source[offset + i] / scale);
-      }
-    };
-  }
-
-  /**
    * Reads quantized values, scaling and offsetting them back to their original range.
    *
    * @param {Attribute} attribute
@@ -866,44 +815,6 @@ class ModelPrimitiveAccessSession {
         result[offset + i] = value * stepSizes[i] + offsets[i];
       }
       return result;
-    };
-  }
-
-  /**
-   * Writes values as quantized values, rounding and clamping them to the
-   * stored type.
-   *
-   * @param {Attribute} attribute
-   * @param {AttributeValues} attributeValues
-   * @returns {GeometryAttributeWriter}
-   * @ignore
-   */
-  static #createQuantizedWriter(attribute, attributeValues) {
-    const { values, stride } = attributeValues;
-    const valuesArray = /** @type {TypedArray} */ (values);
-    const componentCount = ModelPrimitiveAccessSession.#getComponentCount(
-      attribute.type,
-    );
-    const { scale } = ModelPrimitiveAccessSession.#getNormalization(attribute);
-    const toStored =
-      ModelPrimitiveAccessSession.#createIntegerEncoder(attribute);
-
-    const quantization = /** @type {Quantization} */ (attribute.quantization);
-    const stepSizes = ModelPrimitiveAccessSession.#pack(
-      quantization.quantizedVolumeStepSize,
-      attribute.type,
-    );
-    const offsets = ModelPrimitiveAccessSession.#pack(
-      quantization.quantizedVolumeOffset,
-      attribute.type,
-    );
-
-    return (vertexIndex, source, offset = 0) => {
-      const base = vertexIndex * stride;
-      for (let i = 0; i < componentCount; ++i) {
-        const value = (source[offset + i] - offsets[i]) / stepSizes[i];
-        valuesArray[base + i] = toStored(value / scale);
-      }
     };
   }
 
@@ -946,52 +857,6 @@ class ModelPrimitiveAccessSession {
         result[offset + 2] = decoded.z;
       }
       return result;
-    };
-  }
-
-  /**
-   * Writes vectors, such as normals, as two oct-encoded components. Vectors
-   * are normalized first.
-   *
-   * @param {Attribute} attribute
-   * @param {AttributeValues} attributeValues
-   * @returns {GeometryAttributeWriter}
-   * @ignore
-   */
-  static #createOctEncodedWriter(attribute, attributeValues) {
-    const { values, stride } = attributeValues;
-    const valuesArray = /** @type {TypedArray} */ (values);
-    const { scale } = ModelPrimitiveAccessSession.#getNormalization(attribute);
-    const toStored =
-      ModelPrimitiveAccessSession.#createIntegerEncoder(attribute);
-
-    const quantization = /** @type {Quantization} */ (attribute.quantization);
-    const range = /** @type {number} */ (quantization.normalizationRange);
-    const zxy = quantization.octEncodedZXY;
-    const vector = ModelPrimitiveAccessSession.#scratchCartesian3;
-    const encoded = ModelPrimitiveAccessSession.#scratchCartesian2;
-
-    return (vertexIndex, source, offset = 0) => {
-      // Undoes the reader's ZXY swizzle.
-      if (zxy) {
-        vector.x = source[offset + 1];
-        vector.y = source[offset + 2];
-        vector.z = source[offset];
-      } else {
-        vector.x = source[offset];
-        vector.y = source[offset + 1];
-        vector.z = source[offset + 2];
-      }
-
-      /** @type {any} */ (AttributeCompression).octEncodeInRange(
-        Cartesian3.normalize(vector, vector),
-        range,
-        encoded,
-      );
-
-      const base = vertexIndex * stride;
-      valuesArray[base] = toStored(encoded.x / scale);
-      valuesArray[base + 1] = toStored(encoded.y / scale);
     };
   }
 
@@ -1058,31 +923,6 @@ class ModelPrimitiveAccessSession {
     ).getNormalizationDivisor(componentDatatype);
 
     return { scale: 1.0 / divisor, min: -1.0 };
-  }
-
-  /**
-   * Creates a function that rounds a value to the attribute's stored integer
-   * type, clamping it to the type's range so it doesn't wrap around.
-   *
-   * @param {Attribute} attribute
-   * @returns {function(number): number}
-   * @ignore
-   */
-  static #createIntegerEncoder(attribute) {
-    const { componentDatatype } =
-      ModelPrimitiveAccessSession.#getAttributeLayout(attribute);
-
-    const highest = /** @type {any} */ (
-      ComponentDatatype
-    ).getNormalizationDivisor(componentDatatype);
-
-    const signed =
-      componentDatatype === ComponentDatatype.BYTE ||
-      componentDatatype === ComponentDatatype.SHORT ||
-      componentDatatype === ComponentDatatype.INT;
-    const lowest = signed ? -highest - 1 : 0;
-
-    return (value) => CesiumMath.clamp(Math.round(value), lowest, highest);
   }
 
   /**

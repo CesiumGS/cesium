@@ -476,7 +476,7 @@ describe(
       });
     });
 
-    it("writes the same values to plain, interleaved, quantized, and compressed models", async function () {
+    it("writes plain and interleaved attributes", async function () {
       if (webglStub) {
         return;
       }
@@ -484,14 +484,6 @@ describe(
       const names = [
         "unitSquare11x11_plain.glb",
         "unitSquare11x11_plain_interleaved.glb",
-        "unitSquare11x11_quantized.glb",
-        "unitSquare11x11_quantized_interleaved.glb",
-        "unitSquare11x11_unsignedShortTexCoords.glb",
-        "unitSquare11x11_unsignedShortTexCoords_interleaved.glb",
-        "unitSquare11x11_unsignedShortTexCoords_quantized.glb",
-        "unitSquare11x11_unsignedShortTexCoords_quantized_interleaved.glb",
-        "unitSquare11x11_draco.glb",
-        "unitSquare11x11_meshopt.glb",
       ];
       for (const name of names) {
         const [primitive] = await loadPrimitives(`${unitSquareUrl}/${name}`);
@@ -521,20 +513,6 @@ describe(
       }
     });
 
-    it("writes oct-encoded normals", async function () {
-      if (webglStub) {
-        return;
-      }
-      const [primitive] = await loadPrimitives(boxWithTangentsDracoUrl);
-      const negatedNormals = readValues(primitive, normal).map((n) => -n);
-
-      writeValues(primitive, normal, negatedNormals);
-      expect(readValues(primitive, normal)).toEqualEpsilon(
-        negatedNormals,
-        1e-2,
-      );
-    });
-
     it("writes raw integers", async function () {
       if (webglStub) {
         return;
@@ -549,56 +527,43 @@ describe(
       expect(readValues(primitive, joints)).toEqual(values);
     });
 
-    it("clamps values outside the range of the stored type", async function () {
-      if (webglStub) {
-        return;
-      }
-      const [primitive] = await loadPrimitives(
-        `${unitSquareUrl}/unitSquare11x11_draco.glb`,
-      );
-      const positions = readValues(primitive, position);
-      let min = Infinity;
-      let max = -Infinity;
-      for (const value of positions) {
-        min = Math.min(min, value);
-        max = Math.max(max, value);
-      }
-
-      primitive.geometryWriter.withWriteSession(
-        { attributes: [position] },
-        function (session) {
-          const write = session.vertexAttributeWriter(position);
-          write(0, [1e6, 1e6, 1e6]);
-          write(1, [-1e6, -1e6, -1e6]);
-        },
-      );
-
-      const written = readValues(primitive, position);
-      for (let i = 0; i < 3; ++i) {
-        expect(written[i]).toBeGreaterThan(max - 1e-6);
-        expect(written[i]).toBeLessThan(1e6);
-        expect(written[3 + i]).toBeLessThan(min + 1e-6);
-        expect(written[3 + i]).toBeGreaterThan(-1e6);
+    it("can only write attributes stored without an encoding", async function () {
+      const temperatures = new GeometryAttributeDescriptor({
+        semantic: "_TEMPERATURES",
+        type: AttributeType.VEC2,
+      });
+      const cases = [
+        [`${unitSquareUrl}/unitSquare11x11_plain.glb`, position, true],
+        // KHR_mesh_quantization, normalized
+        [`${unitSquareUrl}/unitSquare11x11_quantized.glb`, position, false],
+        // Draco, quantized
+        [`${unitSquareUrl}/unitSquare11x11_draco.glb`, position, false],
+        // Draco, oct-encoded
+        [boxWithTangentsDracoUrl, normal, false],
+        // Normalized
+        [boxTexturedWithPropertyAttributesUrl, temperatures, false],
+      ];
+      for (const [url, descriptor, writable] of cases) {
+        const [primitive] = await loadPrimitives(url);
+        expect(primitive.geometryReader.hasAttribute(descriptor))
+          .withContext(url)
+          .toBe(true);
+        expect(primitive.geometryWriter.hasAttribute(descriptor))
+          .withContext(url)
+          .toBe(writable);
       }
     });
 
-    it("writes only the components of RGB colors", async function () {
-      if (webglStub) {
-        return;
-      }
-      const [primitive] = await loadPrimitives(pointCloudWithRgbColorsUrl);
-      primitive.geometryWriter.withWriteSession(
-        { attributes: [color] },
-        function (session) {
-          session.vertexAttributeWriter(color)(0, [0.25, 0.5, 0.75, 0.5]);
-        },
+    it("throws when writing an attribute stored with an encoding", async function () {
+      const [primitive] = await loadPrimitives(
+        `${unitSquareUrl}/unitSquare11x11_draco.glb`,
       );
-
-      const colors = readValues(primitive, color);
-      expect(Array.from(colors.subarray(0, 4))).toEqualEpsilon(
-        [0.25, 0.5, 0.75, 1.0],
-        1 / 255,
-      );
+      expect(function () {
+        primitive.geometryWriter.withWriteSession(
+          { attributes: [position] },
+          function () {},
+        );
+      }).toThrowDeveloperError();
     });
 
     it("reads its own writes before they're applied", async function () {
