@@ -331,18 +331,6 @@ class LoggingRequestListener extends RequestListener {
   }
 }
 
-// TODO If something like the RequestHandle and RequestListener
-// had to be designed from scratch, then it could be possible
-// to come up with something that makes sense. Now, there's the
-// question about how to align the sought-for "nice" solution
-// with what is already there. A specific example is that
-// the "requestAttempted" function does not really make sense,
-// but has to be there, because this was once tracked in some
-// tileset statistics. (Otherwise, VERY roughly, there could
-// be the invariant of "cancelled+failed==attempted", but
-// "attempted" can also mean that nothing really happened
-// due to throttling, soooo... here we are...)
-
 /**
  * A class serving as a convenience wrapper around a request for
  * a resource.
