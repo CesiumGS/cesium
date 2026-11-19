@@ -556,7 +556,7 @@ class RequestHandle {
     const request = new Request({
       throttle: true,
       throttleByServer: true,
-      type: RequestType.TILES3D, // XXX_CONDITIONAL TODO Seems to be unused...
+      type: RequestType.TILES3D,
       priorityFunction: priorityFunction,
     });
     return request;
@@ -573,9 +573,6 @@ class RequestHandle {
    */
   cancel() {
     if (defined(this._request)) {
-      // XXX_CONDITIONAL For some reason, "cancel()" is
-      // marked as "private". So there is no valid
-      // way to cancel a request after all.
       this._request.cancel();
     }
     const rejectionError = new Error("Request was cancelled");
@@ -1180,8 +1177,6 @@ class ContentHandle {
 }
 
 /**
- * XXX_CONDITIONAL
- *
  * A compile-time flag to govern the behavior of the implementation of the
  * Cesium3DTileContent interface, by the Conditional3DTileContent class.
  *
@@ -1595,7 +1590,8 @@ class Conditional3DTileContent {
    * Returns ALL content URIs that have been found in the conditional
    * content JSON.
    *
-   * XXX_CONDITIONAL This is not really used, just exposed for tests.
+   * This is only exposed for tests! Clients (even CesiumJS itself)
+   * should not call this!
    *
    * @type {string[]}
    */
@@ -1607,16 +1603,12 @@ class Conditional3DTileContent {
   /**
    * Part of the {@link Cesium3DTileContent} interface. Checks if any of the inner contents have dirty featurePropertiesDirty.
    *
-   * XXX_CONDITIONAL: This is offered by each Cesium3DTileContent, with varying
-   * degrees of enthusiasm about how meaningful it is. It is only used in
-   * Cesium3DTilesetTraversal.selectTile, where it determines whether
-   * tiles go into the tileset._selectedTilesToStyle, which seems to be
-   * some sort of optimization attempt to only style "changed" tiles
-   * (and not all selected tiles). It's quickly getting convoluted from
-   * there. Some "styleDirty" flag seems to be important...
-   * TL;DR: Let's skip theoretical optimizations (otherwise: SHOW ME
-   * THE BENCHMARK!) - likely, this should just always return true
+   * This is offered by each Cesium3DTileContent, with varying
+   * degrees of enthusiasm about how meaningful it is. For the
+   * conditional content, This should probably always return true
    * or false, leaving optimizations to the applyStyle function.
+   * The current implementation is simply aligned with what
+   * Multiple3DTileContent does.
    *
    * @type {boolean}
    */

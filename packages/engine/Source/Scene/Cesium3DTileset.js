@@ -1236,6 +1236,23 @@ function Cesium3DTileset(options) {
    * @private
    */
   this._conditionalContentUriCondition = undefined;
+
+  /**
+   * The array that was fetched from the 3DTILES_content_conditional.dimensions
+   * extension, if the extension was present.
+   *
+   * Each object in the array has a `name:string` property for the name of
+   * the dimension, and a `keySet:string[]` property containing all values
+   * that appear in that dimension.
+   *
+   * For now, this only serves as an indicator of whether the extension was
+   * present. Functions for querying these dimensions (e.g. to display UI
+   * components for the available dimensions and their key set) may be
+   * added later.
+   *
+   * @type {object[]|undefined}
+   */
+  this._conditionalContentsDimensions = undefined;
 }
 
 Object.defineProperties(Cesium3DTileset.prototype, {
@@ -2496,10 +2513,6 @@ Cesium3DTileset.fromUrl = async function (url, options) {
 
   // Extract the information about the "dimensions" of the conditional contents,
   // if present.
-  // XXX_CONDITIONAL This should probably not be done here, but ...
-  // maybe in the constructor or so...? The lifecycle, though:
-  // The JSON is essentially "lost" after this function returns,
-  // because it is not passed to the constructor for some reason.
   const hasConditionalContents = hasExtension(
     tilesetJson,
     "3DTILES_content_conditional",

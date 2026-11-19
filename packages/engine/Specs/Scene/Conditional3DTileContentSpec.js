@@ -109,7 +109,8 @@ describe(
         conditionalContentTilesetUrl,
       );
 
-      // Pretend this was a unit test
+      // Fit the camera to the tileset, wait for the tiles to be
+      // loaded, and obtain the conditional content from the root
       fitCameraForSpec(scene.camera);
       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       const content = tileset.root.content;
@@ -139,7 +140,8 @@ describe(
       // For spec: No conditionalContentUriCondition
       tileset.conditionalContentUriCondition = undefined;
 
-      // Pretend this was a unit test
+      // Fit the camera to the tileset, wait for the tiles to be
+      // loaded, and obtain the conditional content from the root
       fitCameraForSpec(scene.camera);
       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       const content = tileset.root.content;
@@ -176,7 +178,8 @@ describe(
       };
       tileset.conditionalContentUriCondition = conditionalContentsUriCondition;
 
-      // Pretend this was a unit test
+      // Fit the camera to the tileset, wait for the tiles to be
+      // loaded, and obtain the conditional content from the root
       fitCameraForSpec(scene.camera);
       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       const content = tileset.root.content;
@@ -229,7 +232,8 @@ describe(
       };
       tileset.conditionalContentUriCondition = conditionalContentsUriCondition;
 
-      // Pretend this was a unit test
+      // Fit the camera to the tileset, wait for the tiles to be
+      // loaded, and obtain the conditional content from the root
       fitCameraForSpec(scene.camera);
       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       const content = tileset.root.content;
@@ -307,7 +311,8 @@ describe(
       };
       tileset.conditionalContentUriCondition = conditionalContentsUriCondition;
 
-      // Pretend this was a unit test
+      // Fit the camera to the tileset, wait for the tiles to be
+      // loaded, and obtain the conditional content from the root
       fitCameraForSpec(scene.camera);
       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       const content = tileset.root.content;
@@ -371,7 +376,8 @@ describe(
       };
       tileset.conditionalContentUriCondition = conditionalContentsUriCondition;
 
-      // Pretend this was a unit test
+      // Fit the camera to the tileset, wait for the tiles to be
+      // loaded, and obtain the conditional content from the root
       fitCameraForSpec(scene.camera);
       await Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
       const content = tileset.root.content;

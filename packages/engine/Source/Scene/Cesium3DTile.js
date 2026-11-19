@@ -42,7 +42,7 @@ import TileBoundingSphere from "./TileBoundingSphere.js";
 import TileOrientedBoundingBox from "./TileOrientedBoundingBox.js";
 import Pass from "../Renderer/Pass.js";
 import finishContent from "./finishContent.js";
-import Dynamic3DTileContent from "./Conditional3DTileContent.js";
+import Conditional3DTileContent from "./Conditional3DTileContent.js";
 
 /**
  * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -1531,12 +1531,9 @@ async function makeContent(tile, arrayBuffer) {
  * @private
  */
 Cesium3DTile.prototype.cancelRequests = function () {
-  // XXX_DYNAMIC: This actually happens sometimes, but only when the tile is
-  // in the "LOADING" state. Now... what do do with dynamic tiles?
-  console.log("Cesium3DTile.cancelRequests is called");
   if (this.hasMultipleContents) {
     this._content.cancelRequests();
-  } else if (this._content instanceof Dynamic3DTileContent) {
+  } else if (this._content instanceof Conditional3DTileContent) {
     this._content.cancelRequests();
   } else {
     this._request.cancel();
