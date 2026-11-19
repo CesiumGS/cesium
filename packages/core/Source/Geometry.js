@@ -167,7 +167,8 @@ class Geometry {
      * @type {GeometryType}
      * @private
      */
-    this.geometryType = options.geometryType ?? GeometryType.NONE;
+    this.geometryType =
+      /** @type {GeometryType} */ (options.geometryType) ?? GeometryType.NONE;
 
     /**
      * @type {BoundingSphere}
