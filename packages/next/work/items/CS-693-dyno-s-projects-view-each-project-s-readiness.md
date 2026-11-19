@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-18
 project: CS-18
-needs: [CS-685]
+needs: [CS-685, CS-694]
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/work.ts, packages/next/bench/suite/DESIGN.md]
 ---
 
@@ -18,5 +18,6 @@ The owner, 2026-11-18: "the project waits tab also seems misnamed. i also haven'
 - **Holds up:** a column, sortable, giving for each project how many open items in other projects, and which releases, wait on its unfinished work, and whether it's on the critical path, so the bottleneck projects rise to the top.
 - **Decisions:** a project's open owner decisions that hold up release work show in its row, with their question and what waits on them, as CS-683 draws them on the map.
 - **Dependencies, behind a toggle:** today's matrix, renamed, ordered so tightly coupled projects sit together, with loops between projects marked.
+- It follows the three-view brief CS-692 records in `bench/suite/DESIGN.md` (the owner, 2026-11-18): direct labels on the marks, details in tooltips, no legend beyond one key line.
 - Tests in `test/dynoWork.test.ts` cover the per-release counts, the holds-up count and the ordering.
 - Checked on a Dyno server of the executor's own, never the owner's 5190, in both themes, at 380 px wide, with the keyboard only, with reduced motion and with a clean console (`packages/next/AGENTS.md`, "UI and examples").
