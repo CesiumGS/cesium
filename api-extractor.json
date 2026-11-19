@@ -1,0 +1,50 @@
+{
+  "projectFolder": ".",
+  "mainEntryPointFilePath": "<projectFolder>/Build/Types/Cesium.entry.d.ts",
+  "bundledPackages": [
+    "@cesium/core",
+    "@cesium/gltf",
+    "@cesium/engine",
+    "@cesium/widgets"
+  ],
+  "compiler": {
+    "overrideTsconfig": {
+      "extends": "./tsconfig.types.base.json",
+      "files": ["./Build/Types/Cesium.entry.d.ts"]
+    }
+  },
+  "apiReport": {
+    "enabled": false
+  },
+  "docModel": {
+    "enabled": false
+  },
+  "dtsRollup": {
+    "enabled": true,
+    "publicTrimmedFilePath": "<projectFolder>/Source/Cesium.d.ts",
+    "untrimmedFilePath": "",
+    "omitTrimmingComments": true
+  },
+  "tsdocMetadata": {
+    "enabled": false
+  },
+  "newlineKind": "lf",
+  "messages": {
+    "extractorMessageReporting": {
+      "ae-missing-release-tag": {
+        "logLevel": "none"
+      },
+      "ae-unresolved-link": {
+        "logLevel": "none"
+      },
+      "ae-internal-missing-underscore": {
+        "logLevel": "none"
+      }
+    },
+    "tsdocMessageReporting": {
+      "default": {
+        "logLevel": "none"
+      }
+    }
+  }
+}

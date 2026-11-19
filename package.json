@@ -60,6 +60,7 @@
   "devDependencies": {
     "@ast-grep/cli": "^0.51.1",
     "@cesium/eslint-config": "^14.0.0",
+    "@microsoft/api-extractor": "^7.60.1",
     "@playwright/test": "^1.62.1",
     "@types/compression": "^1.8.1",
     "@types/express": "^5.0.6",

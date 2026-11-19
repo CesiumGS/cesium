@@ -6,6 +6,7 @@ import {
   readFileSync,
   existsSync,
   globSync,
+  mkdirSync,
 } from "fs";
 import { readFile, rm, writeFile } from "fs/promises";
 import { join, basename, resolve, dirname } from "path";
@@ -19,6 +20,7 @@ import karma from "karma";
 import yargs from "yargs";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
+import { Extractor, ExtractorConfig } from "@microsoft/api-extractor";
 
 import { buildCore } from "./packages/core/scripts/build.js";
 import { buildGltf } from "./packages/gltf/scripts/build.js";
@@ -36,6 +38,7 @@ import {
   buildCesium,
   bundleTestWorkers,
   createCombinedSpecList,
+  getCesiumReexports,
 } from "./scripts/build.js";
 import { readNeedsShimList } from "./scripts/readNeedsShimList.js";
 
@@ -1206,17 +1209,19 @@ function processEngineSource(source) {
   `;
 
   // The @borrows tags in Transforms.js can't resolve FixedFrameTransforms from another package.
-  // Declare Transforms as the combined type.
-  const transformsNamespace =
-    /(\/\*\*(?:[^*]|\*(?!\/))*\*\/\s*)?export namespace Transforms \{/;
-  const transformsDoc = newSource.match(transformsNamespace)?.[1] ?? "";
+  // Copy its members from core's declarations into the Transforms namespace.
+  const fixedFrameMembers = readFileSync("packages/core/index.d.ts")
+    .toString()
+    .match(/^export namespace FixedFrameTransforms \{\n([\s\S]*?)^\}$/m)?.[1];
+  if (!fixedFrameMembers) {
+    throw new Error(
+      "Could not find the FixedFrameTransforms namespace in packages/core/index.d.ts",
+    );
+  }
   newSource = newSource.replace(
-    transformsNamespace,
-    "declare namespace _CelestialFrameTransforms {",
+    "export namespace Transforms {\n",
+    `export namespace Transforms {\n${fixedFrameMembers}`,
   );
-  newSource += `
-${transformsDoc}export declare const Transforms: typeof FixedFrameTransforms & typeof _CelestialFrameTransforms;
-`;
 
   // Each name gets its own @deprecated tag; a plain re-export wouldn't show it in hover.
   // Renaming on export avoids conflicting with a plain import of the same name elsewhere in engine's declarations.
@@ -1237,35 +1242,27 @@ ${transformsDoc}export declare const Transforms: typeof FixedFrameTransforms & t
     .join("\n");
   newSource = `${deprecatedExports}\n\n${newSource}`;
 
-  // A .d.ts module exports all its top-level declarations unless it contains an
-  // export statement. This empty one keeps _CelestialFrameTransforms private.
-  newSource += "\nexport {};\n";
-
   return newSource;
 }
 
 function generateCesiumTypeScriptDefinitions() {
-  // Run jsdoc with tsd-jsdoc to generate an initial Cesium.d.ts file.
-  // @internal symbols must stay out of the combined "cesium" package's API.
-  execSync("npx jsdoc --configure Tools/jsdoc/ts-conf.json", {
-    stdio: "inherit",
-    env: { ...process.env, CESIUM_HIDE_INTERNAL: "true" },
-  });
+  // Engine's Viewer type stand-in collides with widgets' Viewer under export *,
+  // which drops names exported by two modules, so name widgets' Viewer explicitly.
+  mkdirSync("Build/Types", { recursive: true });
+  writeFileSync(
+    "Build/Types/Cesium.entry.d.ts",
+    `${getCesiumReexports()}export { Viewer } from "@${scope}/widgets";\n`,
+  );
 
-  let source = readFileSync("Source/Cesium.d.ts").toString();
-
-  source = fixTypeScriptDefinitionsSource(source, true);
-
-  // Wrap the source to actually be inside of a declared cesium module
-  // and add any workaround and private utility types.
-  source = `declare module "cesium" {
-${source}
-}
-
-`;
-
-  // Write the final source file back out
-  writeFileSync("Source/Cesium.d.ts", source);
+  const extractorResult = Extractor.invoke(
+    ExtractorConfig.loadFileAndPrepare("api-extractor.json"),
+    { localBuild: true },
+  );
+  if (!extractorResult.succeeded) {
+    throw new Error(
+      `API Extractor failed with ${extractorResult.errorCount} errors and ${extractorResult.warningCount} warnings`,
+    );
+  }
 
   // Use tsc to compile it and make sure it is valid
   execSync("npx tsc -p tsconfig.types.json", {
