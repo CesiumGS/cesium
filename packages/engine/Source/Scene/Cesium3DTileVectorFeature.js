@@ -17,6 +17,7 @@ import Cesium3DTileFeature from "./Cesium3DTileFeature.js";
 /** @import Cesium3DTileBatchTable from "./Cesium3DTileBatchTable.js"; */
 /** @import Cesium3DTileContent from "./Cesium3DTileContent.js"; */
 /** @import Cesium3DTileset from "./Cesium3DTileset.js"; */
+/** @import FeatureLayer from "./FeatureLayer.js"; */
 /** @import VectorGltf3DTileContent from "./VectorGltf3DTileContent.js"; */
 
 const point = new BufferPoint();
@@ -291,6 +292,21 @@ class Cesium3DTileVectorFeature {
    */
   get tileset() {
     return this._content.tileset;
+  }
+
+  /**
+   * Gets the feature layer containing the feature, if any.
+   *
+   * @type {FeatureLayer|undefined}
+   *
+   * @readonly
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+   */
+  get featureLayer() {
+    return Cesium3DTileFeature.getFeatureLayer(
+      // @ts-expect-error Requires type checking in Cesium3DTileContent.
+      this._content,
+    );
   }
 
   /**
