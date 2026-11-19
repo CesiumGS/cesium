@@ -114,6 +114,13 @@ import {
   nextActor,
   noMilestoneOf,
   OPEN_STATES,
+  type Plan,
+  type PlanBand,
+  type PlanMilestone,
+  type PlanRelease,
+  planOf,
+  clampSlots,
+  SLOTS_MAX,
   type OpenState,
   openStateOf,
   possessive,
@@ -424,7 +431,15 @@ function Board({
     scopeNames.length > 2
       ? `${scopeNames[0]} and ${scopeNames.length - 1} more`
       : scopeNames.join(" and ") || undefined;
-  const roadmapBy = search.roadmap === "matrix" ? "matrix" : "milestones";
+  // The Plan view by default (CS-692); the depth layering is "earliest
+  // possible start", in waves, until the Dependencies view (CS-694) holds it.
+  const roadmapBy: "plan" | "waves" | "matrix" =
+    search.roadmap === "matrix"
+      ? "matrix"
+      : search.roadmap === "waves"
+        ? "waves"
+        : "plan";
+  const slots = clampSlots(search.slots ?? 1);
   // Proposed milestones join the roadmap only when asked for (CS-563).
   const withProposed = search.proposed === "show";
   const proposedCount = s.milestones.filter(
@@ -444,8 +459,8 @@ function Board({
     search.layout === "map" || (search.layout !== "list" && !narrow);
   const across: "steps" | "tokens" =
     search.across === "tokens" && hasTokens ? "tokens" : "steps";
-  // Release bands by default; steps alone for the pure dependency view.
-  const arrange: Arrange = search.arrange === "steps" ? "steps" : "release";
+  // Release bands by default; waves alone for the pure dependency view.
+  const arrange: Arrange = search.arrange === "waves" ? "steps" : "release";
 
   return (
     <Page
@@ -700,24 +715,28 @@ function Board({
                       ? "What it waits on, and what waits on it"
                       : roadmapBy === "matrix"
                         ? "Each row's open items that wait on each column's"
-                        : "In the order their work can happen, from the needs between their items"
+                        : roadmapBy === "plan"
+                          ? "What gets built when, as the run's executors would work through it: no dates, no durations"
+                          : "Earliest possible start: each milestone in the first wave after everything it waits on"
                   }
                   className="span-12"
                   tools={
                     !projectScope && (
                       <span className="work-card-tools">
-                        {roadmapBy === "milestones" && (
+                        {roadmapBy === "waves" && (
                           <ArrangeToggle
                             value={arrange}
                             onChange={(v) =>
                               set(
-                                { arrange: v === "steps" ? v : undefined },
+                                {
+                                  arrange: v === "steps" ? "waves" : undefined,
+                                },
                                 true,
                               )
                             }
                           />
                         )}
-                        {roadmapBy === "milestones" && (
+                        {roadmapBy === "waves" && (
                           <ToggleButtonGroup
                             size="small"
                             exclusive
@@ -754,7 +773,7 @@ function Board({
                             </ToggleButton>
                           </ToggleButtonGroup>
                         )}
-                        {roadmapBy === "milestones" && asMap && (
+                        {roadmapBy === "waves" && asMap && (
                           <ToggleButtonGroup
                             size="small"
                             exclusive
@@ -774,7 +793,7 @@ function Board({
                                 <Button variant="outlined" size="small" />
                               }
                             >
-                              Steps
+                              Waves
                             </ToggleButton>
                             <ToggleButton
                               value="tokens"
@@ -838,18 +857,36 @@ function Board({
                             v &&
                             set(
                               {
-                                roadmap: v === "milestones" ? undefined : v,
+                                roadmap: v === "plan" ? undefined : v,
                               },
                               true,
                             )
                           }
-                          aria-label="Roadmap by"
+                          aria-label="Roadmap view"
                         >
                           <ToggleButton
-                            value="milestones"
-                            render={<Button variant="outlined" size="small" />}
+                            value="plan"
+                            render={
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                title="What gets built when, grouped by release"
+                              />
+                            }
                           >
-                            Milestones
+                            Plan
+                          </ToggleButton>
+                          <ToggleButton
+                            value="waves"
+                            render={
+                              <Button
+                                variant="outlined"
+                                size="small"
+                                title="The depth layering: each milestone in the first wave it could start, not an order of work"
+                              />
+                            }
+                          >
+                            Earliest possible start
                           </ToggleButton>
                           <ToggleButton
                             value="matrix"
@@ -879,7 +916,26 @@ function Board({
                       onCell={(from, to) => open(`dep:${from}:${to}`)}
                       onProject={(id) => scopeTo({ project: id })}
                     />
-                  ) : roadmapBy === "milestones" && asMap ? (
+                  ) : roadmapBy === "plan" ? (
+                    <PlanView
+                      s={s}
+                      flight={flight}
+                      proposals={withProposed}
+                      slots={slots}
+                      onSlots={(n) =>
+                        set({ slots: n === 1 ? undefined : String(n) }, true)
+                      }
+                      release={search.release}
+                      onRelease={(id) => set({ release: id }, true)}
+                      selected={
+                        search.list?.startsWith("ms:")
+                          ? search.list.slice(3)
+                          : milestoneId
+                      }
+                      onOpen={(id) => open(`ms:${id}`)}
+                      onItem={(id) => set({ item: id, list: undefined })}
+                    />
+                  ) : asMap ? (
                     <MilestoneMap
                       s={s}
                       flight={flight}
@@ -5175,7 +5231,7 @@ function MilestoneOrder({
           <Fact name="Order">
             {row.step === 1
               ? "Can move now"
-              : `After step ${row.step - 1} of the roadmap`}
+              : `Earliest in wave ${row.step}, after wave ${row.step - 1}`}
           </Fact>
         )}
         {row && row.waitsOn.length > 0 && (
@@ -5873,10 +5929,13 @@ function ZoomCanvas({
   fixed,
   size,
   label,
+  across = false,
   children,
 }: {
   zoom: number;
   onZoom: (zoom: number) => void;
+  /** Zooms across only: the rows keep their height (the Plan view). */
+  across?: boolean;
   /** What doesn't scale: the lane names' width, the headers' height. */
   fixed: { x: number; y: number };
   /** The content's size at this zoom. */
@@ -5958,12 +6017,20 @@ function ZoomCanvas({
     const el = view.current;
     if (el) {
       refit.current = again;
-      zoomTo(fitZoom({ w: el.clientWidth, h: el.clientHeight }, base, fixed), {
-        px: 0,
-        py: 0,
-        cx: 0,
-        cy: 0,
-      });
+      zoomTo(
+        fitZoom(
+          { w: el.clientWidth, h: el.clientHeight },
+          base,
+          fixed,
+          across ? "across" : "both",
+        ),
+        {
+          px: 0,
+          py: 0,
+          cx: 0,
+          cy: 0,
+        },
+      );
     }
   };
   const step = (dir: 1 | -1) => zoomTo(zoomStep(target.current, dir));
@@ -6703,9 +6770,9 @@ function MilestoneMap({
             <span className="work-map-path-key" aria-hidden="true" />
             <span>
               <b>
-                Critical path{focusTitle ? ` to ${focusTitle}` : ""},{" "}
+                Longest chain of waits{focusTitle ? ` to ${focusTitle}` : ""},{" "}
                 {unit === "steps"
-                  ? `${map.end} ${map.end === 1 ? "step" : "steps"}`
+                  ? `${map.end} ${map.end === 1 ? "wave" : "waves"}`
                   : `${tokenText(map.end)} tokens`}
                 :
               </b>{" "}
@@ -6775,7 +6842,7 @@ function MilestoneMap({
               Named by the milestone itself
             </KeyItem>
             <KeyItem mark={<span className="work-map-key-line critical" />}>
-              On the critical path
+              On the longest chain of waits
             </KeyItem>
           </KeyGroup>
           {map.flags.length > 0 && (
@@ -6988,8 +7055,8 @@ function MilestoneMap({
                       c.i === 0
                         ? "Now: these wait on no other milestone; those with an item done or in progress are filled"
                         : b
-                          ? `Step ${n} of ${b.id === NO_RELEASE ? "the milestones no release needs" : `${b.name}'s band`}: starts once ${n === 1 ? "the band before it is done" : `what it waits on in the band's ${n === 2 ? "step 1" : `steps 1 to ${n - 1}`} is done`}`
-                          : `Step ${c.i + 1}: starts once what it waits on in ${c.i === 1 ? "step 1" : `steps 1 to ${c.i}`} is done`
+                          ? `Wave ${n} of ${b.id === NO_RELEASE ? "the milestones no release needs" : `${b.name}'s band`}: can start once ${n === 1 ? "the band before it is done" : `what it waits on in the band's ${n === 2 ? "wave 1" : `waves 1 to ${n - 1}`} is done`}`
+                          : `Wave ${c.i + 1}: can start once what it waits on in ${c.i === 1 ? "wave 1" : `waves 1 to ${c.i}`} is done`
                     }; ${c.done} of ${c.all} items done`}
                   >
                     {x(c.i + 1) - x(c.i) >= 26 && (
@@ -7152,8 +7219,8 @@ function MilestoneMap({
                             {Number.isNaN(n.slack)
                               ? `Not needed for ${focusTitle}`
                               : n.critical
-                                ? `On the critical path: any delay here delays ${focusTitle ?? "the end"}`
-                                : `Can slip ${unit === "steps" ? `${n.slack} ${n.slack === 1 ? "step" : "steps"}` : `${tokenText(n.slack)} tokens`} before it delays ${focusTitle ?? "the last milestone"}`}
+                                ? `On the longest chain of waits: any delay here delays ${focusTitle ?? "the end"}`
+                                : `Can slip ${unit === "steps" ? `${n.slack} ${n.slack === 1 ? "wave" : "waves"}` : `${tokenText(n.slack)} tokens`} before it delays ${focusTitle ?? "the last milestone"}`}
                           </span>
                           <span>
                             {n.tokens.estimated
@@ -7951,7 +8018,7 @@ function ReleaseFlagButton({
 }: {
   flag: ReleaseFlag & { progress?: MapFlag["progress"] };
   titleOf: (id: string) => string;
-  /** Where the view places it, in words ("between steps 2 and 3"). */
+  /** Where the view places it, in words ("between waves 2 and 3"). */
   where?: string;
   /** False in a view with no steps: it names what feeds it, not where it falls. */
   steps?: boolean;
@@ -8104,14 +8171,14 @@ const unplacedNote = (flags: readonly ReleaseFlag[]) => {
 /** Where a flag falls, in words, for a view laid out in steps. */
 const betweenSteps = (at: number, steps: number) =>
   at >= steps
-    ? `after step ${at}, the last`
-    : `between steps ${at} and ${at + 1}`;
+    ? `after wave ${at}, the last`
+    : `between waves ${at} and ${at + 1}`;
 
 // ------------------------------------------------------------ release bands
 
 /**
  * The arrangements' names (CS-685). One control, so a later change can
- * rename "Steps" (to "Waves", CS-692) by a word.
+ * rename the arrangement by a word ("Steps" became "Waves" in CS-692).
  */
 const ARRANGE_NAMES: Record<Arrange, { label: string; tip: string }> = {
   release: {
@@ -8119,8 +8186,8 @@ const ARRANGE_NAMES: Record<Arrange, { label: string; tip: string }> = {
     tip: "In release bands: each release's milestones together, its flag closing them",
   },
   steps: {
-    label: "By steps",
-    tip: "By steps alone: the pure dependency view, each milestone after what it waits on",
+    label: "By waves",
+    tip: "By waves alone: the pure dependency view, each milestone in the wave after what it waits on",
   },
 };
 
@@ -8517,6 +8584,940 @@ function ReleaseClosures({
   );
 }
 
+// ------------------------------------------------------------ the Plan view
+
+/** The rows' heights: a release, a milestone or a group, an item. */
+const PLAN_ROW = { band: 44, ms: 32, item: 28 } as const;
+/** Pixels per item's worth of work at 100%, so an item's bar can be seen. */
+const PLAN_UNIT_PX = 8;
+
+/** A position across, in the plan's unit, for tips and sentences. */
+const planAt = (p: Plan, v: number) =>
+  p.unit === "tokens" ? tokenText(v) : String(Math.round(v));
+
+/** An amount of work in the plan's unit. */
+const planAmount = (p: Plan, v: number) =>
+  p.unit === "tokens"
+    ? `${tokenText(v)} tokens`
+    : `${Math.round(v)} ${Math.round(v) === 1 ? "item" : "items"}`;
+
+const slotsText = (n: number) => (n === 1 ? "one slot" : `${n} slots`);
+
+/** What across measures, in a few words. */
+const planAxisText = (p: Plan) =>
+  `${p.unit === "tokens" ? "Tokens of work" : "Items of work"}${p.slots > 1 ? " per slot" : ""}, ${slotsText(p.slots)}`;
+
+/** What the plan says about sizes: how many items it counted at a default. */
+function planSizeNote(p: Plan): string | undefined {
+  const n = p.items.size;
+  if (!n) {
+    return undefined;
+  }
+  if (p.unit === "items") {
+    return `No item has a token estimate yet, so across is item count: each of the ${n} ${n === 1 ? "item" : "items"} counts as one.`;
+  }
+  return p.defaulted
+    ? `${p.defaulted} of the ${n} items have no token estimate and count at the median of the rest, ${tokenText(p.defaultSize)} tokens.`
+    : undefined;
+}
+
+/** How the plan is read: the "?" beside the key line. */
+function PlanHelp({ plan }: { plan: Plan }) {
+  const tokens = useChartTokens();
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const head = useId();
+  return (
+    <>
+      <IconButton
+        size="small"
+        label="How to read the plan"
+        aria-haspopup="dialog"
+        aria-expanded={!!anchor}
+        onClick={(e) => setAnchor(e.currentTarget)}
+        className="work-plan-help"
+      >
+        <span aria-hidden="true">?</span>
+      </IconButton>
+      <Popover
+        open={!!anchor}
+        anchorEl={anchor}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        slotProps={{
+          paper: {
+            className: `work-plan-pop ${tokens}`,
+            role: "dialog",
+            "aria-labelledby": head,
+          } as object,
+        }}
+      >
+        <Typography variant="body-md" render={<h3 />} id={head}>
+          Reading the plan
+        </Typography>
+        <Typography variant="body-sm" render={<p />}>
+          Across is the work in the order the run would do it, in{" "}
+          {plan.unit === "tokens" ? "tokens" : "items"}
+          {plan.slots > 1 ? " per executor slot" : ""}. There are no dates and
+          no durations: a bar&apos;s place says how much work comes before it,
+          never when.
+        </Typography>
+        <Typography variant="body-sm" render={<p />}>
+          Rows are the releases in the order they ship, then the work no release
+          needs. Open a release for its milestones, and a milestone for its
+          items. A milestone&apos;s bar runs from its first item&apos;s start to
+          its last item&apos;s finish, with each item&apos;s stretch filled by
+          its stage.
+        </Typography>
+        <div className="work-key-groups">
+          <KeyGroup title="Fill: each item's stage now">
+            <StageKeys />
+          </KeyGroup>
+          <KeyGroup title="Marks">
+            <KeyItem mark={<KindMark kind="milestone" named={false} />}>
+              A milestone
+            </KeyItem>
+            <KeyItem mark={<KindMark kind="work" named={false} />}>
+              A work item
+            </KeyItem>
+            <KeyItem mark={<KindMark kind="decision" named={false} />}>
+              After a bar: it waits on a decision, assumed answered in time
+            </KeyItem>
+            <KeyItem mark={<KindMark kind="external" named={false} />}>
+              After a bar: it waits on another party, assumed in time
+            </KeyItem>
+            <KeyItem mark={<span className="work-plan-key-proposed" />}>
+              Dashed outline: proposed, not committed yet
+            </KeyItem>
+            <KeyItem mark={<span className="work-plan-key-pole" />}>
+              A release&apos;s marker: where its last needed item finishes
+            </KeyItem>
+            <KeyItem mark={<span className="work-plan-key-lit" />}>
+              Outlined: the chain that sets the chosen release&apos;s finish
+            </KeyItem>
+          </KeyGroup>
+        </div>
+        <Typography
+          variant="body-sm"
+          render={<h4 />}
+          className="work-plan-pop-h"
+        >
+          How it is sequenced
+        </Typography>
+        <Typography variant="body-sm" render={<p />}>
+          Each executor slot (the run&apos;s <code>max_executors</code>) takes
+          the next item in the planner&apos;s order whose needs are all
+          finished. The order is work already in progress first, then an earlier
+          release&apos;s work before a later one&apos;s, then hitld&apos;s queue
+          rule: the item that unblocks the most open work, then the smaller
+          estimate, then the lower ID. Work that a release&apos;s items need is
+          done in that release, wherever its milestone sits. Decisions and
+          outside waits take no slot.
+        </Typography>
+      </Popover>
+    </>
+  );
+}
+
+/** One row of the plan, in the order drawn. */
+type PlanRow =
+  | { key: string; kind: "band"; band: PlanBand; k: number }
+  | { key: string; kind: "ms"; ms: PlanMilestone; band: PlanBand }
+  | { key: string; kind: "loose"; band: PlanBand }
+  | { key: string; kind: "item"; id: string }
+  | { key: string; kind: "idle"; band: PlanBand };
+
+/** The Plan view's bar: a light track over a span, each item's stretch filled by its stage. */
+function PlanBar({
+  plan,
+  ids,
+  x,
+  span,
+  tip,
+  proposed,
+  stageOf: stageFor,
+  lit,
+  needed,
+}: {
+  plan: Plan;
+  ids: readonly string[];
+  x: (v: number) => number;
+  span: [number, number];
+  tip: string;
+  proposed?: boolean;
+  stageOf: (id: string) => Stage | undefined;
+  /** The chosen release's finishing chain. */
+  lit?: ReadonlySet<string>;
+  /** What the chosen release needs: the rest is dimmed. */
+  needed?: ReadonlySet<string>;
+}) {
+  const left = x(span[0]);
+  const w = Math.max(3, x(span[1]) - left);
+  return (
+    <span
+      className={`work-plan-track${proposed ? " proposed" : ""}${needed && !ids.some((id) => needed.has(id)) ? " dim" : ""}`}
+      style={{ left, width: w }}
+      data-tip={tip}
+    >
+      {ids.map((id) => {
+        const p = plan.items.get(id)!;
+        const st = stageFor(id);
+        return (
+          <span
+            key={id}
+            className={`work-plan-seg${st ? ` stage-${slug(st)}` : ""}${lit?.has(id) ? " lit" : ""}${needed && !needed.has(id) ? " dim" : ""}`}
+            style={{
+              left: x(p.start) - left,
+              width: Math.max(2, x(p.finish) - x(p.start) - 1),
+            }}
+          />
+        );
+      })}
+    </span>
+  );
+}
+
+/**
+ * The Plan view (CS-692), the roadmap's default: what gets built when, with
+ * no dates. Rows are releases in ladder order, opening to milestones and
+ * then items; across is the work in the planner's order as the run's
+ * executor slots would do it (`planOf`). Each release is a marker where
+ * its last needed item finishes; choosing one lights the chain that sets
+ * its finish. Text keeps its size at every zoom; only places and lengths
+ * scale, so nothing animates.
+ */
+function PlanView({
+  s,
+  flight,
+  proposals,
+  slots,
+  onSlots,
+  release,
+  onRelease,
+  selected,
+  onOpen,
+  onItem,
+}: {
+  s: WorkSnapshot;
+  flight: InFlight;
+  /** Proposed work too, outlined dashed. */
+  proposals: boolean;
+  slots: number;
+  onSlots: (n: number) => void;
+  /** The chosen release: what sets its finish is lit. */
+  release?: string;
+  onRelease: (id: string | undefined) => void;
+  /** The milestone open in the pane. */
+  selected?: string;
+  onOpen: (milestone: string) => void;
+  onItem: (id: string) => void;
+}) {
+  const box = useRef<HTMLDivElement>(null);
+  const width = useWidth(box);
+  const plan = useMemo(
+    () => planOf(s, { slots, proposals, flight }),
+    [s, slots, proposals, flight],
+  );
+  const closures = useMemo(
+    () => releaseClosuresOf(proposals ? s : committedOnly(s), proposals),
+    [s, proposals],
+  );
+  const itemOf = useMemo(() => new Map(s.items.map((i) => [i.id, i])), [s]);
+  const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
+  const titleOf = (id: string) =>
+    msOf.get(id)?.title ?? itemOf.get(id)?.title ?? id;
+  const stageFor = (id: string) => {
+    const it = itemOf.get(id);
+    return it && stageOf(it, flight);
+  };
+  // Releases start folded but the first with work, whose milestones show.
+  const [open, setOpen] = useState<ReadonlySet<string>>(
+    () =>
+      new Set(
+        plan.bands
+          .filter((b) => b.items.length)
+          .slice(0, 1)
+          .map((b) => `band:${b.id}`),
+      ),
+  );
+  const toggle = (key: string) =>
+    setOpen((was) => {
+      const next = new Set(was);
+      if (!next.delete(key)) {
+        next.add(key);
+      }
+      return next;
+    });
+  const everyKey = () =>
+    new Set(
+      plan.bands.flatMap((b) => [
+        `band:${b.id}`,
+        `loose:${b.id}`,
+        ...b.milestones.map((m) => `ms:${b.id}:${m}`),
+      ]),
+    );
+  // The zoom fits the whole plan until it is changed, and again when the
+  // plan's length changes (another slot count, say).
+  const [zoomAsked, setZoom] = useState<number>();
+  useEffect(() => setZoom(undefined), [plan.total]);
+  const laneW = width < 480 ? 116 : width < 820 ? 220 : 300;
+  const avail = Math.max(160, width - laneW - 14);
+  const perItem = plan.unit === "tokens" ? plan.defaultSize : 1;
+  const base = Math.max(
+    avail,
+    (plan.total / Math.max(1e-9, perItem)) * PLAN_UNIT_PX,
+  );
+  const zoom =
+    zoomAsked ??
+    fitZoom(
+      { w: laneW + avail, h: 1 },
+      { w: laneW + base, h: 1 },
+      { x: laneW, y: 0 },
+      "across",
+    );
+  const plotW = base * zoom;
+  const total = Math.max(1e-9, plan.total);
+  const x = (v: number) => (v / total) * plotW;
+
+  const chosen = plan.releases.find(
+    (r) => r.id === release && r.at !== undefined,
+  );
+  const lit = chosen && new Set(chosen.chain);
+  const needed = chosen && new Set(chosen.needed);
+  const [hoverMarker, setHoverMarker] = useState<string>();
+
+  // The markers' labels along the top, stacked where they would overlap.
+  const placed = plan.releases.filter((r) => r.at !== undefined);
+  const LABEL_ROW = 30;
+  // On a narrow plot a prerelease is named by its tag alone ("alpha.1").
+  const short = plotW < 640;
+  const versionOf = (r: PlanRelease) =>
+    short ? r.version.replace(/^\d+\.\d+\.\d+-/, "") : r.version;
+  const labelW = (r: PlanRelease) => 40 + 7.5 * versionOf(r).length;
+  const rowEnds: number[] = [];
+  const labelAt = new Map<
+    string,
+    { row: number; left: number; flip: boolean }
+  >();
+  for (const r of placed) {
+    const at = x(r.at!);
+    const w = labelW(r);
+    const flip = at + w > plotW + 4 && at - w >= 0;
+    const left = flip ? at - w : at;
+    let row = rowEnds.findIndex((e) => e + 6 <= left);
+    if (row < 0) {
+      row = rowEnds.length;
+      rowEnds.push(0);
+    }
+    rowEnds[row] = left + w;
+    labelAt.set(r.id, { row, left, flip });
+  }
+  const MARKERS = Math.max(1, rowEnds.length) * LABEL_ROW + 6;
+  const AXIS = 24;
+  const HEAD = MARKERS + AXIS;
+  const ticks = niceTicks(plan.total);
+
+  const rows: PlanRow[] = [];
+  plan.bands.forEach((b, k) => {
+    if (!b.items.length && !b.idle.length) {
+      return;
+    }
+    rows.push({ key: `band:${b.id}`, kind: "band", band: b, k });
+    if (!open.has(`band:${b.id}`)) {
+      return;
+    }
+    for (const m of b.milestones) {
+      const ms = plan.milestones.get(m)!;
+      const key = `ms:${b.id}:${m}`;
+      rows.push({ key, kind: "ms", ms, band: b });
+      if (open.has(key)) {
+        rows.push(
+          ...ms.items.map((id) => ({
+            key: `${key}:${id}`,
+            kind: "item" as const,
+            id,
+          })),
+        );
+      }
+    }
+    if (b.loose.length) {
+      const key = `loose:${b.id}`;
+      rows.push({ key, kind: "loose", band: b });
+      if (open.has(key)) {
+        rows.push(
+          ...b.loose.map((id) => ({
+            key: `${key}:${id}`,
+            kind: "item" as const,
+            id,
+          })),
+        );
+      }
+    }
+    if (b.idle.length) {
+      rows.push({ key: `idle:${b.id}`, kind: "idle", band: b });
+    }
+  });
+  const heightOf = (r: PlanRow) =>
+    r.kind === "band"
+      ? PLAN_ROW.band
+      : r.kind === "item"
+        ? PLAN_ROW.item
+        : PLAN_ROW.ms;
+  const bodyH = rows.reduce((h, r) => h + heightOf(r), 0);
+  const fullW = laneW + plotW + 16;
+
+  const sizeNote = planSizeNote(plan);
+  const unplaced = plan.releases.filter((r) => r.at === undefined);
+  const heldOf = (ids: readonly string[]) => [
+    ...new Set(ids.flatMap((id) => plan.items.get(id)!.held)),
+  ];
+
+  if (!plan.items.size) {
+    return (
+      <Typography variant="body-sm" color="textSecondary" render={<p />}>
+        No open work to sequence.
+      </Typography>
+    );
+  }
+
+  const spanText = (a: number, b: number) =>
+    `from ${planAt(plan, a)} to ${planAt(plan, b)}`;
+  const label = (r: PlanRow) => {
+    switch (r.kind) {
+      case "band": {
+        const key = `band:${r.band.id}`;
+        const none = r.band.id === NO_RELEASE;
+        const n = r.band.milestones.length + r.band.idle.length;
+        return (
+          <button
+            type="button"
+            className="work-plan-toggle band"
+            aria-expanded={open.has(key)}
+            onClick={() => toggle(key)}
+          >
+            <Icon href={open.has(key) ? svgChevronDown : svgChevronRight} />
+            {!none && <KindMark kind="release" named={false} />}
+            <span className="work-plan-name">
+              <b>{none ? "No release needs these" : r.band.name}</b>
+              <span className="work-plan-sub">
+                {n} {n === 1 ? "milestone" : "milestones"} ·{" "}
+                {r.band.items.length}{" "}
+                {r.band.items.length === 1 ? "item" : "items"}
+              </span>
+            </span>
+          </button>
+        );
+      }
+      case "ms": {
+        const key = `ms:${r.band.id}:${r.ms.id}`;
+        return (
+          <span
+            className={`work-plan-ms${r.ms.id === selected ? " selected" : ""}`}
+          >
+            <button
+              type="button"
+              className="work-plan-chevron"
+              aria-expanded={open.has(key)}
+              aria-label={`${open.has(key) ? "Hide" : "Show"} the items of ${r.ms.title}`}
+              onClick={() => toggle(key)}
+            >
+              <Icon href={open.has(key) ? svgChevronDown : svgChevronRight} />
+            </button>
+            <button
+              type="button"
+              className="work-plan-open k-milestone"
+              onClick={() => onOpen(r.ms.id)}
+              title={`${r.ms.id} ${r.ms.title}: open it`}
+            >
+              <KindMark kind="milestone" />
+              {r.ms.proposed && <ProposedLabel />}
+              <span className="work-plan-title">{r.ms.title}</span>
+            </button>
+          </span>
+        );
+      }
+      case "loose": {
+        const key = `loose:${r.band.id}`;
+        const none = r.band.id === NO_RELEASE;
+        return (
+          <button
+            type="button"
+            className="work-plan-toggle loose"
+            aria-expanded={open.has(key)}
+            onClick={() => toggle(key)}
+            data-tip={
+              none
+                ? "Open items no milestone holds"
+                : `Items no ${r.band.name} milestone holds: in no milestone, or in a later release's milestone that ${r.band.name}'s work needs`
+            }
+          >
+            <Icon href={open.has(key) ? svgChevronDown : svgChevronRight} />
+            <span className="work-plan-title">
+              {none ? "In no milestone" : `Not in a ${r.band.name} milestone`}{" "}
+              <span className="work-plan-sub">({r.band.loose.length})</span>
+            </span>
+          </button>
+        );
+      }
+      case "item": {
+        const it = itemOf.get(r.id)!;
+        return (
+          <button
+            type="button"
+            className="work-plan-open item"
+            onClick={() => onItem(r.id)}
+            title={`${r.id} ${it.title}: open it`}
+          >
+            <KindId id={r.id} kind="work" />
+            {it.state === "proposed" && <ProposedLabel />}
+            <span className="work-plan-title">{it.title}</span>
+          </button>
+        );
+      }
+      case "idle":
+        return (
+          <Typography
+            variant="caption-md"
+            color="textSecondary"
+            className="work-plan-idle"
+          >
+            Also needed, with no work to sequence:{" "}
+            {r.band.idle.map((m, i) => (
+              <span key={m}>
+                {i > 0 && ", "}
+                <Link
+                  component="button"
+                  type="button"
+                  onClick={() => onOpen(m)}
+                >
+                  {titleOf(m)}
+                </Link>
+              </span>
+            ))}
+          </Typography>
+        );
+    }
+  };
+  const heldMarks = (ids: readonly string[], after: number) => {
+    const held = heldOf(ids);
+    if (!held.length || after + 24 > plotW + 8) {
+      return null;
+    }
+    const kinds = new Set(held.map((h) => itemOf.get(h)?.kind));
+    return (
+      <span
+        className="work-plan-held"
+        style={{ left: after + 6 }}
+        data-tip={`Waits on ${andList(held.slice(0, 3).map((h) => `${h} “${titleOf(h)}”`))}${held.length > 3 ? ` and ${held.length - 3} more` : ""}; the plan assumes ${held.length === 1 ? "it is" : "they are"} answered in time`}
+      >
+        {kinds.has("decision") && <KindMark kind="decision" />}
+        {kinds.has("external") && <KindMark kind="external" />}
+      </span>
+    );
+  };
+  const bar = (r: PlanRow) => {
+    switch (r.kind) {
+      case "band":
+        return r.band.items.length ? (
+          <>
+            <PlanBar
+              plan={plan}
+              ids={r.band.items}
+              x={x}
+              span={[r.band.start, r.band.finish]}
+              tip={`${r.band.id === NO_RELEASE ? "Work no release needs" : `${r.band.name}'s own work`}: ${r.band.items.length} items, ${spanText(r.band.start, r.band.finish)}`}
+              stageOf={stageFor}
+              lit={lit}
+              needed={needed}
+            />
+          </>
+        ) : null;
+      case "ms":
+        return (
+          <>
+            <PlanBar
+              plan={plan}
+              ids={r.ms.items}
+              x={x}
+              span={[r.ms.start, r.ms.finish]}
+              tip={`${r.ms.title}: ${r.ms.items.length} ${r.ms.items.length === 1 ? "item" : "items"}, ${spanText(r.ms.start, r.ms.finish)}`}
+              proposed={r.ms.proposed}
+              stageOf={stageFor}
+              lit={lit}
+              needed={needed}
+            />
+            {heldMarks(r.ms.items, x(r.ms.finish))}
+          </>
+        );
+      case "loose":
+        return (
+          <PlanBar
+            plan={plan}
+            ids={r.band.loose}
+            x={x}
+            span={[
+              Math.min(...r.band.loose.map((id) => plan.items.get(id)!.start)),
+              Math.max(...r.band.loose.map((id) => plan.items.get(id)!.finish)),
+            ]}
+            tip={`${r.band.loose.length} ${r.band.loose.length === 1 ? "item" : "items"} worked in this release that none of its milestones holds`}
+            stageOf={stageFor}
+            lit={lit}
+            needed={needed}
+          />
+        );
+      case "item": {
+        const p = plan.items.get(r.id)!;
+        const it = itemOf.get(r.id)!;
+        const st = stageFor(r.id);
+        return (
+          <>
+            <PlanBar
+              plan={plan}
+              ids={[r.id]}
+              x={x}
+              span={[p.start, p.finish]}
+              tip={`${r.id} · ${st ? STAGE_NAMES[st] : ""} · ${spanText(p.start, p.finish)}${p.sized ? "" : plan.unit === "tokens" ? " · no estimate: counted at the median" : ""}${p.loop ? " · started before its needs: they wait on each other round a loop" : ""}`}
+              proposed={it.state === "proposed"}
+              stageOf={stageFor}
+              lit={lit}
+              needed={needed}
+            />
+            {heldMarks([r.id], x(p.finish))}
+          </>
+        );
+      }
+      case "idle":
+        return null;
+    }
+  };
+
+  // What sets the chosen release's finish, counted for its sentence.
+  const chainStart = chosen?.chain.length
+    ? plan.items.get(chosen.chain[0]!)!.start
+    : 0;
+  const before = chosen
+    ? plan.order.filter((id) => plan.items.get(id)!.finish <= chainStart)
+    : [];
+  const neededBefore = before.filter((id) => needed!.has(id)).length;
+  // Other work in the slots while the chain runs.
+  const between = chosen
+    ? plan.order.filter((id) => {
+        const p = plan.items.get(id)!;
+        return !lit!.has(id) && p.start >= chainStart && p.finish <= chosen.at!;
+      }).length
+    : 0;
+  const heldNeeded = chosen ? heldOf(chosen.needed).length : 0;
+  const why = chosen && (
+    <div className="work-plan-why" role="status">
+      <Typography variant="body-sm" render={<p />}>
+        <b>
+          {chosen.version} finishes at {planAt(plan, chosen.at!)}
+        </b>
+        {chosen.last ? (
+          <>
+            , when the last of the {chosen.needed.length} open items it needs is
+            done: <KindId id={chosen.last} kind="work" /> “
+            {titleOf(chosen.last)}”.{" "}
+            {chosen.chain.length === 1 ? (
+              <>
+                That item needs no other open item, so no chain of needs leads
+                to it
+              </>
+            ) : (
+              <>
+                It ends a chain of {chosen.chain.length} items that must go in
+                order, {planAmount(plan, chosen.chainSize)} of work:{" "}
+                {chosen.chain.map((id, k) => (
+                  <span key={id}>
+                    {k > 0 && " → "}
+                    <Link
+                      component="button"
+                      type="button"
+                      onClick={() => onItem(id)}
+                      title={titleOf(id)}
+                    >
+                      {id}
+                    </Link>
+                  </span>
+                ))}
+              </>
+            )}
+            .{" "}
+            {chainStart > 0 ? (
+              <>
+                Before {chosen.chain.length === 1 ? "it" : "the chain"} starts,
+                at {planAt(plan, chainStart)},{" "}
+                {plan.slots === 1
+                  ? "the slot works"
+                  : `the ${plan.slots} slots work`}{" "}
+                through {neededBefore} other{" "}
+                {neededBefore === 1 ? "item" : "items"} it needs
+                {before.length > neededBefore &&
+                  ` and ${before.length - neededBefore} it doesn't`}
+                {between > 0 &&
+                  `; from then to the finish, ${chosen.chain.length === 1 ? "it shares" : `its ${chosen.chain.length} items share`} the ${plan.slots === 1 ? "slot" : "slots"} with ${between} others`}
+                , in the planner&apos;s order
+                {chosen.chainSize * 2 < chosen.at! &&
+                  ". The amount of work sets its finish more than any chain"}
+                .
+              </>
+            ) : (
+              <>Nothing comes before it.</>
+            )}
+          </>
+        ) : (
+          <>: everything it needs is done, or waits only on decisions.</>
+        )}{" "}
+        {heldNeeded > 0 && (
+          <>
+            {heldNeeded} open{" "}
+            {heldNeeded === 1
+              ? "decision or outside wait holds"
+              : "decisions and outside waits hold"}{" "}
+            items it needs; the plan assumes{" "}
+            {heldNeeded === 1 ? "it is" : "they are"} answered in time.
+          </>
+        )}
+      </Typography>
+      <Button size="small" variant="text" onClick={() => onRelease(undefined)}>
+        Clear
+      </Button>
+    </div>
+  );
+
+  return (
+    <div className="work-plan" ref={box}>
+      <div className="work-plan-tools">
+        <span
+          className="work-plan-slots"
+          role="group"
+          aria-label="Executor slots"
+        >
+          <Typography variant="caption-lg" color="textSecondary">
+            Executor slots
+          </Typography>
+          <IconButton
+            size="small"
+            label="One slot fewer"
+            disabled={slots <= 1}
+            onClick={() => onSlots(slots - 1)}
+          >
+            <span aria-hidden="true" className="work-plan-pm">
+              −
+            </span>
+          </IconButton>
+          <Tooltip title="The run's max_executors: how many items it works at once. Change it to see the plan with more executors.">
+            <span className="work-plan-slot-n" aria-live="polite">
+              {slots}
+            </span>
+          </Tooltip>
+          <IconButton
+            size="small"
+            label="One slot more"
+            disabled={slots >= SLOTS_MAX}
+            onClick={() => onSlots(slots + 1)}
+          >
+            <span aria-hidden="true" className="work-plan-pm">
+              +
+            </span>
+          </IconButton>
+        </span>
+        <span className="work-plan-fold">
+          <Button
+            size="small"
+            variant="text"
+            onClick={() => setOpen(everyKey())}
+          >
+            Expand all
+          </Button>
+          <Button
+            size="small"
+            variant="text"
+            onClick={() => setOpen(new Set())}
+          >
+            Collapse all
+          </Button>
+        </span>
+      </div>
+      <div className="work-plan-keyline">
+        <Typography variant="caption-md" color="textSecondary" render={<p />}>
+          <span className="work-plan-key-swatches" aria-hidden="true">
+            {STAGES.map((st) => (
+              <span key={st} className={`work-swatch stage-${slug(st)}`} />
+            ))}
+          </span>
+          Fill: stage ·{" "}
+          <span className="work-plan-key-glyphs" aria-hidden="true">
+            <KindMark kind="milestone" named={false} />
+            <KindMark kind="work" named={false} />
+          </span>
+          Glyph: kind
+          {proposals && " · Dashed: proposed"} ·{" "}
+          <span className="work-plan-key-pole" aria-hidden="true" /> Line: a
+          release is done
+        </Typography>
+        <PlanHelp plan={plan} />
+      </div>
+      {sizeNote && (
+        <Typography
+          variant="caption-md"
+          color="textSecondary"
+          render={<p />}
+          className="work-plan-note"
+        >
+          {sizeNote}
+        </Typography>
+      )}
+      {why ??
+        (placed.length > 0 && (
+          <Typography
+            variant="caption-md"
+            color="textSecondary"
+            render={<p />}
+            className="work-plan-note"
+          >
+            Choose a release&apos;s marker to see what sets its finish.
+          </Typography>
+        ))}
+      {unplaced.length > 0 && (
+        <Typography
+          variant="caption-md"
+          color="textSecondary"
+          render={<p />}
+          className="work-plan-note"
+        >
+          Not placed yet, since{" "}
+          {unplaced.length === 1 ? "it names" : "they name"} no milestone:{" "}
+          {andList(unplaced.map((r) => r.version))}.
+        </Typography>
+      )}
+      <ZoomCanvas
+        zoom={zoom}
+        onZoom={setZoom}
+        fixed={{ x: laneW, y: HEAD + bodyH }}
+        size={{ w: fullW, h: HEAD + bodyH }}
+        label={`Plan: releases, milestones and items across ${planAxisText(plan).toLowerCase()}`}
+        across
+      >
+        <div className="work-plan-grid" style={{ width: fullW }}>
+          <div className="work-plan-head" style={{ height: HEAD }}>
+            <span
+              className="work-plan-corner"
+              style={{ width: laneW, height: HEAD }}
+            >
+              <span>
+                {width < 480 ? "Release ›" : "Release › milestone › item"}
+              </span>
+              <span className="work-plan-axis-name">{planAxisText(plan)}</span>
+            </span>
+            <span
+              className="work-plan-head-plot"
+              style={{ left: laneW, width: plotW, height: HEAD }}
+            >
+              {placed.map((r) => {
+                const at = labelAt.get(r.id)!;
+                const on = release === r.id;
+                return (
+                  <Tooltip
+                    key={r.id}
+                    placement="top"
+                    title={
+                      <span className="work-map-tip">
+                        <b>{r.title}</b>
+                        {r.proposed && <span>Proposed: not committed yet</span>}
+                        <span>
+                          {r.last
+                            ? `Its last needed item, ${r.last}, finishes at ${planAt(plan, r.at!)}`
+                            : "Everything it needs is done"}
+                          ; it needs {r.needed.length} open{" "}
+                          {r.needed.length === 1 ? "item" : "items"}
+                        </span>
+                        <span>
+                          {on
+                            ? "Choose it again to let go"
+                            : "Choose it to see what sets its finish"}
+                        </span>
+                      </span>
+                    }
+                  >
+                    <button
+                      type="button"
+                      className={`work-flag work-plan-marker${at.flip ? " flip" : ""}${on ? " selected" : ""}${r.proposed ? " proposed" : ""}${hoverMarker && hoverMarker !== r.id ? " dim" : ""}`}
+                      style={{ left: at.left, top: 4 + at.row * LABEL_ROW }}
+                      aria-pressed={on}
+                      aria-label={`${r.proposed ? "Proposed release" : "Release"} ${r.version}, finishes at ${planAt(plan, r.at!)}`}
+                      onPointerEnter={() => setHoverMarker(r.id)}
+                      onPointerLeave={() => setHoverMarker(undefined)}
+                      onFocus={() => setHoverMarker(r.id)}
+                      onBlur={() => setHoverMarker(undefined)}
+                      onClick={() => onRelease(on ? undefined : r.id)}
+                    >
+                      <KindMark kind="release" named={false} />
+                      <span className="work-flag-label">{versionOf(r)}</span>
+                    </button>
+                  </Tooltip>
+                );
+              })}
+              {ticks.map((t) => (
+                <span
+                  key={t}
+                  className={`work-plan-tick-label${t === 0 ? " first" : ""}`}
+                  style={{ left: x(t), top: MARKERS + 4 }}
+                >
+                  {planAt(plan, t)}
+                </span>
+              ))}
+            </span>
+          </div>
+          <div className="work-plan-body" style={{ height: bodyH }}>
+            <span
+              className="work-plan-lines"
+              style={{ left: laneW, width: plotW }}
+              aria-hidden="true"
+            >
+              {ticks.map((t) => (
+                <span
+                  key={t}
+                  className="work-plan-tick"
+                  style={{ left: x(t) }}
+                />
+              ))}
+              {placed.map((r) => (
+                <span
+                  key={r.id}
+                  className={`work-plan-pole${release === r.id || hoverMarker === r.id ? " on" : ""}${r.proposed ? " proposed" : ""}`}
+                  style={{ left: x(r.at!) }}
+                />
+              ))}
+            </span>
+            {rows.map((r) => (
+              <div
+                key={r.key}
+                className={`work-plan-row ${r.kind}`}
+                style={{ height: heightOf(r) }}
+              >
+                <span className="work-plan-label" style={{ width: laneW }}>
+                  {label(r)}
+                </span>
+                <span className="work-plan-plot" style={{ width: plotW }}>
+                  {bar(r)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </ZoomCanvas>
+      <ReleaseClosures
+        s={proposals ? s : committedOnly(s)}
+        closures={closures}
+        onHover={() => undefined}
+        onOpen={onOpen}
+        onItem={onItem}
+      />
+    </div>
+  );
+}
+
 // ------------------------------------------------------------ the roadmap
 
 /**
@@ -8795,7 +9796,7 @@ function Roadmap({
                     inBand.filter((r) => bandStep.get(r.id) === n),
                     n,
                     n > 1
-                      ? `After step ${n - 1}`
+                      ? `After wave ${n - 1}`
                       : before
                         ? `After ${before.name}'s band`
                         : "Can move now",
@@ -8831,13 +9832,13 @@ function Roadmap({
                   String(step),
                   rows.filter((r) => r.step === step),
                   step,
-                  step === 1 ? "Can move now" : `After step ${step - 1}`,
+                  step === 1 ? "Can move now" : `After wave ${step - 1}`,
                 )}
                 {after.length > 0 && (
                   <div
                     className="work-roadmap-flags"
                     role="group"
-                    aria-label={`Releases after step ${step}`}
+                    aria-label={`Releases after wave ${step}`}
                   >
                     {after.map((f) =>
                       flagLine(

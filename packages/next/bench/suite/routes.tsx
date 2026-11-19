@@ -72,10 +72,12 @@ export interface WorkSearch {
   release?: string;
   /** The milestone map as project lanes (default) or a "graph" with the fewest crossings. */
   shape?: string;
-  /** The roadmap in release bands (default) or by "steps" alone, the pure dependency view (CS-685). */
+  /** Earliest possible start in release bands (default) or by "waves" alone, the pure dependency view (CS-685; "steps" before CS-692). */
   arrange?: string;
-  /** The roadmap as the projects' waits on each other, "matrix" (milestones by default). */
+  /** The roadmap's view: the Plan (default, CS-692), "waves" (earliest possible start) or "matrix" (the projects' waits on each other). */
   roadmap?: string;
+  /** The Plan view's executor slots, 2 to 8 (one, the run's max_executors today, by default). */
+  slots?: string;
   /** The roadmap with its proposed milestones too, "show" (committed work only by default). */
   proposed?: string;
   /** The Proposals view narrowed to one stage of the proposal flow (CS-688): "discuss", "shaping", "ready" or "later" (every stage by default). */
@@ -93,6 +95,11 @@ const listIn = (v: unknown, known: readonly string[]): string | undefined =>
         .filter((w, i, all) => known.includes(w) && all.indexOf(w) === i)
         .join(",") || undefined
     : undefined;
+/** A slot count from 2 to 8, as text; one (the default) is left out. */
+const slotsIn = (v: unknown): string | undefined => {
+  const n = Math.round(Number(v));
+  return Number.isFinite(n) && n >= 2 && n <= 8 ? String(n) : undefined;
+};
 /** The tracker's board (CS-170): it reads the work items on this branch. */
 export const workRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -115,8 +122,12 @@ export const workRoute = createRoute({
       layout: s.layout === "map" || s.layout === "list" ? s.layout : undefined,
       release: str(s.release),
       shape: s.shape === "graph" ? "graph" : undefined,
-      arrange: s.arrange === "steps" ? "steps" : undefined,
-      roadmap: s.roadmap === "matrix" ? "matrix" : undefined,
+      // "steps" is the old word for waves, kept so links still work.
+      arrange:
+        s.arrange === "waves" || s.arrange === "steps" ? "waves" : undefined,
+      roadmap:
+        s.roadmap === "matrix" || s.roadmap === "waves" ? s.roadmap : undefined,
+      slots: slotsIn(s.slots),
       proposed: s.proposed === "show" ? "show" : undefined,
       stage:
         s.stage === "discuss" ||

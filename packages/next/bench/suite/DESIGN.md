@@ -260,24 +260,101 @@ milestones named by their outcome, each with an `outcome` sentence,
     reading commands. No machine's name reaches the page.
     How they change is Flow's. The rail's count is the owner's, and it
     is the only count outside the view.
-  - **Roadmap**: what comes after what, without dates. By milestones (a
-    map or a list), or as the projects' waits on each other. The milestone map runs across in steps or in
-    tokens left; each milestone starts once everything it waits on is
+  - **The roadmap's three views (CS-692; the owner, 2026-11-18).** The
+    owner asked to step back and present "what is getting built when and
+    what the dependencies are and what milestones are going into what
+    releases" from first principles. The roadmap answers three questions,
+    one view each: **Plan**, when things get built (CS-692, the default);
+    **Dependencies**, why something waits and what it unblocks, for one
+    chosen milestone or item (CS-694); and **Projects**, how ready each
+    project is for each release (CS-693). They rest on five principles,
+    which every roadmap view follows:
+    - Position carries the question being asked. Across is sequence,
+      never dependency depth, because a position always reads as an
+      order. Depth, where it is shown, is labeled "earliest possible
+      start" and counted in waves, never steps.
+    - One view per question: when (Plan), why (Dependencies), how ready
+      (Projects).
+    - Overview by aggregation, not by shrinking: release, then
+      milestone, then item, opened rather than zoomed out until
+      unreadable.
+    - Direct labels on the marks; at most one key line, the rest in a
+      "?" popover and tooltips.
+    - Dependencies on demand for the thing chosen, not every edge at
+      once.
+
+    The views share the encodings the page already has: stage only as a
+    fill, kind only as ink on a glyph or a name (CS-573), proposed only
+    as a dashed outline (CS-563), and the release bands (CS-685) as the
+    grouping. The words "critical path" are gone from the page: a
+    release's finish is set by the chain that ends last, or by the
+    amount of work, and the page says which.
+
+  - **Plan (CS-692)**: what gets built when, grouped by release, with no
+    dates and no durations. `planOf` in `work.ts` sequences the open work
+    items as the run would: each executor slot (the run's
+    `max_executors`; one in run 2026-11-18-2) takes the next item in the
+    planner's order whose needs are all finished. The order is work in
+    progress first, then the release bands in ladder order, then
+    hitld's queue rule (`orderQueue` in its `dispatch/queue.mjs`): most
+    open items unblocked, then the smaller estimate, then the ID. An item
+    a band's work needs is worked in that band, wherever its milestone
+    sits. Decisions and outside waits take no slot; the items behind
+    them carry their glyph after the bar, and the plan assumes they are
+    answered in time and says so. Across is cumulative tokens per slot;
+    the read API carries no estimates today, so it is item count, and
+    the view says so, naming how many items it counted as one (with
+    some estimates, the rest count at their median, and it says how
+    many). The slot count is a control above the plan (`&slots=`, 1 to
+    8, one when absent), so the owner can see the plan with more
+    executors. Rows are the releases in ladder order, then "No release
+    needs these"; a release folds to one summary bar and opens to one
+    bar per milestone, from its first item's start to its last item's
+    finish, each item's stretch filled by its stage; a milestone opens
+    to its items; items a band works that none of its milestones holds
+    sit in "Not in a … milestone" (or "In no milestone"), and milestones
+    with nothing left to sequence are named under the band. The first
+    release with work starts open; Expand all and Collapse all are
+    beside the slots. Each release is a marker on the axis, a labeled
+    flag along the top and a line down the plot, where the last item it
+    needs finishes (its milestones, their items and what those need,
+    and the releases before it). The markers are part of the plot: they
+    move with the zoom, their labels keep their size and stack where
+    they would overlap, and on a narrow plot a prerelease is named by
+    its tag ("alpha.1"). Choosing a marker (`&release=`) answers "what
+    sets its finish?": the chain of needs that ends at its last item is
+    outlined, what it doesn't need is dimmed, and a sentence above the
+    plot gives the finish, the last item, the chain and its length, the
+    other work the slots do before and during it, and how many open
+    decisions and outside waits it assumes answered. The key is one
+    line (fill: stage, glyph: kind, dashed: proposed, line: a release
+    is done) with a "?" popover that has the full key and how the plan
+    is sequenced. The plot sits in the roadmap's canvas (`ZoomCanvas`,
+    zooming across only: rows keep their height), starting fitted to
+    the width and fitted again when the slot count changes; the names
+    stay at the left and the markers at the top while it pans. Nothing
+    animates. "Releases and the milestones they need" follows the plot.
+  - **Earliest possible start** (the depth layering, until the
+    Dependencies view (CS-694) holds it): what comes after what, without
+    dates, by milestones (a map or a list), beside the Plan and Project
+    waits in the roadmap's view control (`&roadmap=waves`; `matrix` for
+    Project waits; the Plan when absent). The milestone map runs across
+    in waves or in tokens left; each milestone starts once everything it waits on is
     done, and a milestone waits on another when one of its items needs
     one of the other's. Two layouts: project lanes, or fewest crossings
     (d3-dag's layered layout), which trades the lanes for fewer crossed
     waits. There, milestones linked by waits are laid out as groups,
-    stacked with the most entangled first (the critical path's group,
-    then the biggest), with steps lined up across the groups; milestones
+    stacked with the most entangled first (the group of the longest chain of waits,
+    then the biggest), with waves lined up across the groups; milestones
     that wait on nothing and that nothing waits on sit apart below, in a
-    grid by project. The critical path is drawn in the accent; hovering a
+    grid by project. The longest chain of waits is drawn in the accent; hovering a
     milestone lights what feeds it and what it unblocks; choosing a wait
     lists the items behind it. Releases are release items (HITLd's
     format: a work item with a `release` version, needing the milestones
     and items the release waits for), each a flag labeled with its
-    version along the top of the grid, on the line after the step of the
+    version along the top of the grid, on the line after the wave of the
     last milestone it needs, its pole dashed down the grid. They take no
-    step of their own. A flag lists exactly the milestones its release
+    wave of their own. A flag lists exactly the milestones its release
     item names (CS-685), never those it reaches through their items, and
     pointing at it or focusing it lights those and dims the rest;
     choosing it measures to it, the same focus as "Measure to", which
@@ -286,9 +363,9 @@ milestones named by their outcome, each with an `outcome` sentence,
     decision, or a release with no place, or names no milestone) gets no
     guessed place: its flag sits dotted in "Releases not placed yet"
     above the grid, and its tip says what it waits on. The fewest
-    crossings layout flies the flags over the gaps between step columns.
-    The list puts each flag between the steps it falls between. The
-    project waits matrix has no steps:
+    crossings layout flies the flags over the gaps between wave columns.
+    The list puts each flag between the waves it falls between. The
+    project waits matrix has no waves:
     it lists the flags above the table, and one in view marks the
     projects whose milestones feed it. A milestone with an
     item done or in progress is filled; a milestone's pane gives its
@@ -297,7 +374,7 @@ milestones named by their outcome, each with an `outcome` sentence,
     Proposed toggle in the roadmap's tools (CS-563, `&proposed=show`,
     off when absent, with the count of proposed milestones) adds the
     proposed milestones, and proposed release items, alongside: in the
-    map (both layouts, steps or tokens) and the list each is placed by
+    map (both layouts, waves or tokens) and the list each is placed by
     its waits as a committed one is and outlined dashed, and the legend
     gains the dashed outline's key (one piece, `ProposedKey`, so it can
     move with the legend). Releases are placed with them too, so a
@@ -337,26 +414,28 @@ milestones named by their outcome, each with an `outcome` sentence,
     one band per release in ladder order and a last band for the
     milestones no release needs, each milestone in the band of the
     earliest release that needs it. Inside a band, milestones are placed
-    by steps counted within the band: a wait on an earlier band is done
+    by waves counted within the band: a wait on an earlier band is done
     before the band begins, and a wait on a later band is a closure
     break, which places nothing. Each band is named in a row under the
-    flags ("First needed by"), its steps numbered from 1, and its
+    flags ("First needed by"), its waves numbered from 1, and its
     release's flag closes it, so the flags spread along the top rather
-    than piling up at the last step. The critical path runs on across
+    than piling up at the last wave. The longest chain of waits runs on across
     the bands through each release. Loose cards sit in the earliest band
     of a milestone they feed, inside it. The list groups the same way: a
-    band at a time, its steps, then its flag. "By release" and "By
-    steps" are one control in the roadmap's tools (`&arrange=steps`, by
-    release when absent), so the steps view, the pure dependency view,
-    stays a click away; "Steps" is one word in `ARRANGE_NAMES`, for the
-    rename to waves (CS-692). The fewest crossings layout stays by steps.
+    band at a time, its waves, then its flag. "By release" and "By
+    waves" are one control in the roadmap's tools (`&arrange=waves`, by
+    release when absent; the older `&arrange=steps` still works), so the
+    waves view, the pure dependency view, stays a click away; the word
+    is one entry in `ARRANGE_NAMES` (CS-692 renamed steps to waves, and
+    the critical path to the longest chain of waits). The fewest
+    crossings layout stays by waves.
   - **The key sits above the roadmap (CS-683)**, so it is read before
-    the marks: the critical path first, in words with its accent line,
+    the marks: the longest chain of waits first, in words with its accent line,
     then each mark beside its meaning in three groups, Cards (under way,
     not started, proposed, a loop, a decision, a project's loose items;
     each shown only when the map has one), Bars (each stage's fill, and
     the budget meter in tokens) and Waits (a wait, one the milestone
-    names, the critical path). The list keeps its stage key above it
+    names, the longest chain of waits). The list keeps its stage key above it
     too. `KeyGroup`, `KeyItem` and `StageKeys` draw it, and
     `ProposedKey` joins the Cards group.
   - **The map zooms and pans as Figma does (CS-683).** Both layouts sit
@@ -372,7 +451,7 @@ milestones named by their outcome, each with an `outcome` sentence,
     are, never the text, so text is drawn at full size or not at all. A
     card shows everything, then its name on one line, then only its
     glyph and bar (`cardDetail`); a lane too thin for its name is named
-    on hover, and the step headers drop their words, then their number.
+    on hover, and the wave headers drop their words, then their number.
     Nothing animates, so reduced motion needs nothing more. The zoom
     lives in the page, not the URL, and starts at 100%, the map as it
     was drawn before. Zoomed out until the map is narrower than the

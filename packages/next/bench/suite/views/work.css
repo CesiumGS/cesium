@@ -3642,3 +3642,379 @@ button.work-mrow-big:focus-visible {
   gap: var(--stratakit-space-100);
   border-top: 1px solid var(--stratakit-color-border-neutral-muted);
 }
+
+/*
+ * The Plan view (CS-692): rows by release, milestone and item; across is
+ * the work in the planner's order. The names stay at the left and the
+ * markers at the top while the plan pans. Stage is only a fill, kind only
+ * ink on a glyph or a name, and proposed only a dashed outline (CS-573).
+ */
+.work-plan {
+  --plan-bg: var(--stratakit-color-bg-elevation-level-1);
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+}
+.work-plan-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-200) var(--stratakit-space-400);
+}
+.work-plan-slots,
+.work-plan-fold {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.work-plan-slots > :first-child {
+  margin-inline-end: var(--stratakit-space-150);
+}
+.work-plan-pm {
+  display: inline-block;
+  width: 1em;
+  font-size: 16px;
+  line-height: 1;
+  text-align: center;
+}
+.work-plan-slot-n {
+  min-width: 2ch;
+  text-align: center;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.work-plan-keyline {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+}
+.work-plan-keyline > p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--stratakit-space-150);
+  margin: 0;
+}
+.work-plan-key-swatches,
+.work-plan-key-glyphs {
+  display: inline-flex;
+  gap: 2px;
+}
+.work-plan-help {
+  font-weight: 700;
+}
+.work-plan-key-pole {
+  display: inline-block;
+  width: 0;
+  height: 14px;
+  border-inline-start: 2px solid var(--stratakit-color-text-neutral-primary);
+}
+.work-plan-key-proposed {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 18px;
+  height: 10px;
+  border: 2px dashed var(--proposed-outline);
+  border-radius: 3px;
+}
+.work-plan-key-lit {
+  display: inline-block;
+  box-sizing: border-box;
+  width: 18px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--stage-ready);
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 1px;
+}
+.work-plan-note {
+  margin: 0;
+}
+.work-plan-why {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stratakit-space-300);
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border-inline-start: 3px solid var(--stratakit-color-border-accent-strong);
+  border-radius: 0 var(--stratakit-radius-md) var(--stratakit-radius-md) 0;
+  background: var(--stratakit-color-bg-page-base);
+}
+.work-plan-why > p {
+  flex: 1;
+  margin: 0;
+}
+.work-plan-pop {
+  max-width: min(520px, calc(100vw - 32px));
+  padding: var(--stratakit-space-400);
+}
+.work-plan-pop h3,
+.work-plan-pop p {
+  margin: 0 0 var(--stratakit-space-200);
+}
+.work-plan-pop .work-key-groups {
+  margin-bottom: var(--stratakit-space-300);
+}
+.work-plan-pop-h {
+  margin: 0 0 var(--stratakit-space-100);
+  font-weight: 600;
+}
+
+/* The plot: a sticky head (markers, then ticks) over sticky-named rows. */
+.work-plan-grid {
+  position: relative;
+  background: var(--plan-bg);
+}
+.work-plan-head {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--plan-bg);
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-base);
+}
+.work-plan-corner {
+  position: sticky;
+  left: 0;
+  z-index: 5;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+  padding: 0 var(--stratakit-space-300) 6px;
+  background: var(--plan-bg);
+  border-inline-end: 1px solid var(--stratakit-color-border-neutral-muted);
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-plan-axis-name {
+  font-weight: 400;
+}
+.work-plan-head-plot {
+  position: absolute;
+  top: 0;
+}
+.work-plan-marker {
+  position: absolute;
+  z-index: 1;
+}
+/* A marker near the end hangs its label to the left of its pole. */
+.work-plan-marker.flip {
+  border-inline-start-width: 1px;
+  border-inline-end: 2px solid var(--stratakit-color-text-neutral-primary);
+  border-radius: var(--stratakit-radius-md) 0 0 var(--stratakit-radius-md);
+}
+.work-plan-marker.flip.selected {
+  border-inline-end-color: var(--stratakit-color-border-accent-strong);
+}
+.work-plan-tick-label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: var(--stratakit-font-size-caption-md);
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-secondary);
+  white-space: nowrap;
+}
+.work-plan-tick-label.first {
+  transform: none;
+}
+.work-plan-body {
+  position: relative;
+}
+.work-plan-lines {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+.work-plan-tick {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-inline-start: 1px dashed var(--stratakit-color-border-neutral-muted);
+}
+.work-plan-pole {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  border-inline-start: 2px solid var(--stratakit-color-text-neutral-primary);
+  opacity: 0.55;
+}
+.work-plan-pole.proposed {
+  border-inline-start-style: dashed;
+}
+.work-plan-pole.on {
+  border-inline-start-color: var(--stratakit-color-border-accent-strong);
+  opacity: 1;
+}
+.work-plan-row {
+  display: flex;
+  align-items: stretch;
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-plan-row.band {
+  border-top-color: var(--stratakit-color-border-neutral-base);
+}
+.work-plan-row.item,
+.work-plan-row.idle {
+  border-top-color: transparent;
+}
+.work-plan-label {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  flex: none;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  padding-inline-end: var(--stratakit-space-200);
+  background: var(--plan-bg);
+  border-inline-end: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-plan-row.ms .work-plan-label,
+.work-plan-row.loose .work-plan-label,
+.work-plan-row.idle .work-plan-label {
+  padding-inline-start: 20px;
+}
+.work-plan-row.item .work-plan-label {
+  padding-inline-start: 44px;
+}
+.work-plan-plot {
+  position: relative;
+  flex: none;
+}
+.work-plan-toggle,
+.work-plan-chevron,
+.work-plan-open {
+  all: unset;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  min-width: 0;
+  max-width: 100%;
+  padding: 2px var(--stratakit-space-100);
+  border-radius: var(--stratakit-radius-sm);
+  cursor: pointer;
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-plan-toggle:hover,
+.work-plan-chevron:hover,
+.work-plan-open:hover {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+}
+.work-plan-toggle:focus-visible,
+.work-plan-chevron:focus-visible,
+.work-plan-open:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: -2px;
+}
+.work-plan-toggle.band {
+  width: 100%;
+  padding-inline-start: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.work-plan-toggle svg:first-child,
+.work-plan-chevron svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+.work-plan-chevron {
+  flex: none;
+  padding: 2px;
+}
+.work-plan-ms {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  width: 100%;
+}
+.work-plan-ms.selected .work-plan-open {
+  background: var(--stratakit-color-bg-glow-on-surface-accent-pressed);
+}
+.work-plan-name {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.work-plan-name > * {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.work-plan-sub {
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 400;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-plan-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.work-plan-idle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* A bar: a light track over its span, each item's stretch filled by stage. */
+.work-plan .work-plan-track {
+  position: absolute;
+  top: 50%;
+  height: 14px;
+  transform: translateY(-50%);
+  box-sizing: border-box;
+  border-radius: 3px;
+  background: var(--stratakit-color-bg-neutral-base);
+}
+.work-plan-row.band .work-plan-track {
+  height: 18px;
+}
+.work-plan-row.item .work-plan-track {
+  height: 12px;
+  background: transparent;
+}
+.work-plan .work-plan-track.proposed {
+  border: 2px dashed var(--proposed-outline);
+}
+.work-plan-seg {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 2px;
+  background: var(--stage);
+}
+.work-plan-track.dim,
+.work-plan-seg.dim {
+  opacity: 0.25;
+}
+.work-plan-seg.lit {
+  z-index: 1;
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 1px;
+}
+.work-plan-held {
+  position: absolute;
+  top: 50%;
+  display: inline-flex;
+  gap: 2px;
+  transform: translateY(-50%);
+}
+@media (max-width: 480px) {
+  .work-plan-row.item .work-plan-label {
+    padding-inline-start: 28px;
+  }
+  .work-plan-row.ms .work-plan-label,
+  .work-plan-row.loose .work-plan-label,
+  .work-plan-row.idle .work-plan-label {
+    padding-inline-start: 10px;
+  }
+}

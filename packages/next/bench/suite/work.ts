@@ -3311,9 +3311,14 @@ export function fitZoom(
   view: { w: number; h: number },
   content: { w: number; h: number },
   fixed: { x: number; y: number },
+  /** "across" for content that zooms across only (the Plan view's rows keep their height). */
+  axes: "both" | "across" = "both",
 ): number {
   const across = (view.w - fixed.x) / Math.max(1, content.w - fixed.x);
-  const down = (view.h - fixed.y) / Math.max(1, content.h - fixed.y);
+  const down =
+    axes === "across"
+      ? 1
+      : (view.h - fixed.y) / Math.max(1, content.h - fixed.y);
   // Down to the next thousandth, so the content fits, never one pixel over.
   return clampZoom(Math.floor(Math.min(1, across, down) * 1000) / 1000);
 }
@@ -3325,4 +3330,429 @@ export function fitZoom(
  */
 export function cardDetail(w: number, h: number): "full" | "name" | "mark" {
   return h >= 60 && w >= 120 ? "full" : h >= 24 && w >= 64 ? "name" : "mark";
+}
+
+// ------------------------------------------------------------ the Plan view
+
+/** The most executor slots the Plan view will sequence for. */
+export const SLOTS_MAX = 8;
+
+/** A slot count from the URL, kept in range: 1 when it can't be read. */
+export function clampSlots(n: unknown): number {
+  const k = Math.round(Number(n));
+  return Number.isFinite(k) && k >= 1 ? Math.min(SLOTS_MAX, k) : 1;
+}
+
+/** One item as the Plan view sequences it (CS-692). */
+export interface PlanItem {
+  id: string;
+  /** Where its work starts and finishes across, in the plan's unit. */
+  start: number;
+  finish: number;
+  /** Its size in the plan's unit: its estimate, the default, or one. */
+  size: number;
+  /** False when it has no token estimate and took the default size. */
+  sized: boolean;
+  /** The executor slot that works it, from 0. */
+  slot: number;
+  /** The release band it is worked in: its milestone's, or earlier if work there needs it. */
+  band: number;
+  /** Its place in the planner's queue, from 0. */
+  rank: number;
+  /**
+   * Its open needs the plan doesn't sequence (decisions, outside waits,
+   * proposed work while proposals are hidden): assumed answered in time.
+   */
+  held: string[];
+  /** Started before its needs to break a loop of needs (a tracker error). */
+  loop?: boolean;
+}
+
+/** A milestone's bar: from its first item's start to its last item's finish. */
+export interface PlanMilestone {
+  id: string;
+  title: string;
+  band: number;
+  proposed: boolean;
+  /** Its items the plan sequences, in the order they start. */
+  items: string[];
+  start: number;
+  finish: number;
+}
+
+/** One release's rows, or the last band's: the milestones it is first to need. */
+export interface PlanBand {
+  /** The release item, or `NO_RELEASE`. */
+  id: string;
+  name: string;
+  /** Its milestones with work to sequence, in the order they start. */
+  milestones: string[];
+  /** Its open milestones with nothing left to sequence (only decisions or waits, say). */
+  idle: string[];
+  /**
+   * Items worked in this band that no milestone of the band holds: in no
+   * milestone, or pulled in by this band's work from a later band's
+   * milestone (a break of the closure rule).
+   */
+  loose: string[];
+  /** Every item worked in the band, in the order they start. */
+  items: string[];
+  /** The span of its items' work; both 0 when it has none. */
+  start: number;
+  finish: number;
+}
+
+/** A release's marker: where the last item it needs finishes, and why there. */
+export interface PlanRelease {
+  id: string;
+  version: string;
+  title: string;
+  /** Its band. */
+  band: number;
+  proposed: boolean;
+  /** Where its last needed item finishes; absent when it names no milestone yet. */
+  at?: number;
+  /** The open items it needs, through its milestones and the releases before it. */
+  needed: string[];
+  /** The needed item that finishes last. */
+  last?: string;
+  /**
+   * What sets its finish: the chain of needs that ends at `last`, each
+   * step back the need that finished latest, earliest first.
+   */
+  chain: string[];
+  /** The chain's own size; the rest of `at` is other work in the slots. */
+  chainSize: number;
+}
+
+export interface Plan {
+  /** Across: tokens when any item has an estimate; else item count. */
+  unit: "tokens" | "items";
+  slots: number;
+  items: Map<string, PlanItem>;
+  /** Every sequenced item, by start, then the queue's order. */
+  order: string[];
+  bands: PlanBand[];
+  milestones: Map<string, PlanMilestone>;
+  /** Open releases in ladder order. */
+  releases: PlanRelease[];
+  /** Where the last item finishes. */
+  total: number;
+  /** How many items took the default size, and that size in the unit. */
+  defaulted: number;
+  defaultSize: number;
+}
+
+/**
+ * The Plan view (CS-692): what gets built when, with no dates. The open
+ * work items are worked by `slots` executor slots (the run's
+ * `max_executors`) in the planner's order, each starting once the items
+ * it needs are finished. The planner's order is hitld's queue rule
+ * (`orderQueue` in its dispatch/queue.mjs): most open items unblocked
+ * first, then the smaller estimate, then the ID; work already in progress
+ * goes first, and the release bands (CS-685) come before all of it, so
+ * an earlier release's work is preferred over a later one's. An item a
+ * band's work needs is worked in that band. Across is cumulative tokens
+ * per slot, or item count when no item carries an estimate. Decisions
+ * and outside waits take no slot: the items behind them list them as
+ * `held`, and the plan assumes they are answered in time.
+ */
+export function planOf(
+  snap: WorkSnapshot,
+  {
+    slots = 1,
+    proposals = false,
+    flight,
+  }: { slots?: number; proposals?: boolean; flight?: InFlight } = {},
+): Plan {
+  const s = proposals ? snap : committedOnly(snap);
+  const n = clampSlots(slots);
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const sequenced = s.items.filter(
+    (it) =>
+      isOpen(it) &&
+      isWork(it) &&
+      !isReleaseItem(it) &&
+      (proposals || it.state !== "proposed"),
+  );
+  const inPlan = new Set(sequenced.map((i) => i.id));
+
+  // Sizes: tokens when any item has an estimate, the rest at the median.
+  const known = sequenced
+    .map((i) => i.estimate_tokens)
+    .filter((t): t is number => t !== undefined && t > 0);
+  const unit: Plan["unit"] = known.length ? "tokens" : "items";
+  const defaultSize =
+    unit === "tokens" ? Math.max(1, Math.round(median(known)!)) : 1;
+  const sizedOf = (it: WorkItem) =>
+    unit === "tokens" && !!it.estimate_tokens && it.estimate_tokens > 0;
+  const sizeOf = (it: WorkItem) =>
+    sizedOf(it) ? it.estimate_tokens! : defaultSize;
+
+  // hitld's unblocks: the open items behind an item, through needs.
+  const dependents = new Map<string, string[]>();
+  for (const it of s.items) {
+    if (isOpen(it)) {
+      for (const d of it.needs) {
+        dependents.set(d, [...(dependents.get(d) ?? []), it.id]);
+      }
+    }
+  }
+  const unblocks = new Map<string, number>();
+  for (const it of sequenced) {
+    const seen = new Set<string>();
+    const stack = [...(dependents.get(it.id) ?? [])];
+    while (stack.length) {
+      const d = stack.pop()!;
+      if (!seen.has(d)) {
+        seen.add(d);
+        stack.push(...(dependents.get(d) ?? []));
+      }
+    }
+    unblocks.set(it.id, seen.size);
+  }
+
+  // Bands: an item's milestone's, or earlier where earlier work needs it.
+  const closures = releaseClosuresOf(s, proposals);
+  const { bands: rawBands, bandOf } = releaseBandsOf(s, closures);
+  const lastBand = rawBands.length - 1;
+  const band = new Map<string, number>();
+  for (const it of sequenced) {
+    band.set(
+      it.id,
+      Math.min(
+        lastBand,
+        ...it.milestones.map((m) => bandOf.get(m) ?? lastBand),
+      ),
+    );
+  }
+  closures.forEach((c, k) => {
+    for (const nd of itemOf.get(c.id)?.needs ?? []) {
+      if (inPlan.has(nd)) {
+        band.set(nd, Math.min(band.get(nd)!, k));
+      }
+    }
+  });
+  const needsIn = new Map(
+    sequenced.map((it) => [
+      it.id,
+      it.needs.filter((nd) => inPlan.has(nd) && nd !== it.id),
+    ]),
+  );
+  for (let changed = true; changed;) {
+    changed = false;
+    for (const it of sequenced) {
+      for (const nd of needsIn.get(it.id)!) {
+        if (band.get(nd)! > band.get(it.id)!) {
+          band.set(nd, band.get(it.id)!);
+          changed = true;
+        }
+      }
+    }
+  }
+
+  // The queue: in progress first, then by band, then hitld's rule.
+  const running = (it: WorkItem) => boardStatus(it, flight) === "in-progress";
+  const queue = [...sequenced].sort(
+    (a, b) =>
+      Number(running(b)) - Number(running(a)) ||
+      band.get(a.id)! - band.get(b.id)! ||
+      unblocks.get(b.id)! - unblocks.get(a.id)! ||
+      sizeOf(a) - sizeOf(b) ||
+      idNumber(a.id) - idNumber(b.id),
+  );
+  const rank = new Map(queue.map((it, k) => [it.id, k]));
+
+  // List scheduling: whenever a slot is free, it takes the first item in
+  // the queue whose needs are all finished.
+  const items = new Map<string, PlanItem>();
+  const slotFree = Array.from({ length: n }, () => 0);
+  let pending = queue;
+  let t = 0;
+  const held = (it: WorkItem) =>
+    it.needs.filter((nd) => {
+      const x = itemOf.get(nd);
+      return !!x && isOpen(x) && !inPlan.has(nd) && !isReleaseItem(x);
+    });
+  const begin = (it: WorkItem, slot: number, loop: boolean) => {
+    const size = sizeOf(it);
+    items.set(it.id, {
+      id: it.id,
+      start: t,
+      finish: t + size,
+      size,
+      sized: sizedOf(it),
+      slot,
+      band: band.get(it.id)!,
+      rank: rank.get(it.id)!,
+      held: held(it),
+      ...(loop ? { loop: true } : {}),
+    });
+    slotFree[slot] = t + size;
+    pending = pending.filter((x) => x !== it);
+  };
+  const isReady = (it: WorkItem) =>
+    needsIn.get(it.id)!.every((nd) => {
+      const p = items.get(nd);
+      return !!p && p.finish <= t;
+    });
+  while (pending.length) {
+    for (let k = 0; k < n && pending.length; k++) {
+      if (slotFree[k]! <= t) {
+        const pick = pending.find(isReady);
+        if (!pick) {
+          break;
+        }
+        begin(pick, k, false);
+      }
+    }
+    if (!pending.length) {
+      break;
+    }
+    const now = t;
+    const later = slotFree.filter((f) => f > now);
+    if (later.length) {
+      t = Math.min(...later);
+    } else {
+      // Nothing running and nothing ready: a loop of needs. The first in
+      // the queue starts anyway, so the plan still covers it.
+      begin(pending[0]!, slotFree.indexOf(Math.min(...slotFree)), true);
+    }
+  }
+  const order = [...items.values()]
+    .sort((a, b) => a.start - b.start || a.rank - b.rank)
+    .map((p) => p.id);
+  const byStart = (ids: Iterable<string>) =>
+    [...ids].sort(
+      (a, b) =>
+        items.get(a)!.start - items.get(b)!.start ||
+        items.get(a)!.rank - items.get(b)!.rank,
+    );
+
+  // Milestones: each from its first item's start to its last item's finish.
+  const milestones = new Map<string, PlanMilestone>();
+  const open = s.milestones.filter(
+    (m) => m.state !== "done" && m.state !== "dropped",
+  );
+  for (const m of open) {
+    const here = byStart(
+      new Set(m.constraints.map((c) => c.id).filter((id) => inPlan.has(id))),
+    );
+    if (!here.length) {
+      continue;
+    }
+    milestones.set(m.id, {
+      id: m.id,
+      title: m.title,
+      band: bandOf.get(m.id) ?? lastBand,
+      proposed: m.state === "proposed",
+      items: here,
+      start: Math.min(...here.map((id) => items.get(id)!.start)),
+      finish: Math.max(...here.map((id) => items.get(id)!.finish)),
+    });
+  }
+  const bands: PlanBand[] = rawBands.map((b, k) => {
+    const worked = byStart(order.filter((id) => items.get(id)!.band === k));
+    const msHere = b.milestones.filter((m) => milestones.has(m));
+    const holds = new Set(msHere.flatMap((m) => milestones.get(m)!.items));
+    return {
+      id: b.id,
+      name: b.name,
+      milestones: msHere.sort(
+        (x, y) =>
+          milestones.get(x)!.start - milestones.get(y)!.start ||
+          milestones.get(x)!.finish - milestones.get(y)!.finish ||
+          idNumber(x) - idNumber(y),
+      ),
+      idle: b.milestones.filter((m) => !milestones.has(m)),
+      loose: worked.filter((id) => !holds.has(id)),
+      items: worked,
+      start: worked.length
+        ? Math.min(...worked.map((id) => items.get(id)!.start))
+        : 0,
+      finish: worked.length
+        ? Math.max(...worked.map((id) => items.get(id)!.finish))
+        : 0,
+    };
+  });
+
+  // Releases: each where the last item it needs finishes.
+  const msOf = new Map(s.milestones.map((m) => [m.id, m]));
+  const neededOf = (rid: string) => {
+    const out = new Set<string>();
+    const seen = new Set<string>();
+    const stack = [...(itemOf.get(rid)?.needs ?? [])];
+    while (stack.length) {
+      const id = stack.pop()!;
+      if (seen.has(id)) {
+        continue;
+      }
+      seen.add(id);
+      const m = msOf.get(id);
+      if (m) {
+        if (m.state !== "dropped") {
+          stack.push(...m.constraints.map((c) => c.id));
+        }
+        continue;
+      }
+      const it = itemOf.get(id);
+      if (!it || !isOpen(it)) {
+        continue;
+      }
+      if (inPlan.has(id)) {
+        out.add(id);
+      }
+      stack.push(...it.needs);
+    }
+    return byStart(out);
+  };
+  const releases = closures.map((c, k): PlanRelease => {
+    const needed = neededOf(c.id);
+    const base = {
+      id: c.id,
+      version: c.version,
+      title: c.title,
+      band: k,
+      proposed: c.proposed,
+      needed,
+    };
+    if (!needed.length) {
+      return c.milestones.length || c.after.length
+        ? { ...base, at: 0, chain: [], chainSize: 0 }
+        : { ...base, chain: [], chainSize: 0 };
+    }
+    const at = Math.max(...needed.map((id) => items.get(id)!.finish));
+    const last = needed.find((id) => items.get(id)!.finish === at)!;
+    const chain = [last];
+    for (let cur = last; ;) {
+      const before = needsIn.get(cur)!;
+      if (!before.length) {
+        break;
+      }
+      cur = before.reduce((a, b) =>
+        items.get(b)!.finish > items.get(a)!.finish ? b : a,
+      );
+      chain.unshift(cur);
+    }
+    return {
+      ...base,
+      at,
+      last,
+      chain,
+      chainSize: chain.reduce((sum, id) => sum + items.get(id)!.size, 0),
+    };
+  });
+
+  return {
+    unit,
+    slots: n,
+    items,
+    order,
+    bands,
+    milestones,
+    releases,
+    total: Math.max(0, ...[...items.values()].map((p) => p.finish)),
+    defaulted: sequenced.filter((it) => !sizedOf(it)).length,
+    defaultSize,
+  };
 }

@@ -2,7 +2,7 @@
 id: CS-692
 title: "Dyno's roadmap Plan view: what gets built when, grouped by release, as the run would work through it"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-18
 project: CS-18
 needs: [CS-685]

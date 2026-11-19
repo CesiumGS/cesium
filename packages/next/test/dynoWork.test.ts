@@ -26,6 +26,8 @@ import {
   filterLoose,
   looseCounts,
   noMilestoneOf,
+  clampSlots,
+  planOf,
   flowOf,
   inFlightOf,
   kindsOf,
@@ -1352,6 +1354,182 @@ describe("the closure rule and release bands (CS-685)", () => {
     expect(lane("CS-300")).toBe("CS-2");
     expect(lane("CS-311")).toBe("CS-2");
     expect(lane("CS-320")).toBe("outside-CS-2");
+  });
+});
+
+describe("the Plan view's sequence (CS-692)", () => {
+  const ms = (id: string, constraints: string[]): WorkMilestone => ({
+    id,
+    title: `Milestone ${id}`,
+    kind: "milestone",
+    learning: false,
+    state: "planned",
+    project: "CS-2",
+    done_when: [],
+    constraints: constraints.map((c) => ({ id: c, clause: "c?" })),
+    contributions: [],
+    check_results: [],
+    path: `m/${id}`,
+    progress: { done: 0, total: constraints.length },
+    check_due: false,
+    to_shape: [],
+  });
+  const needs = (...ids: string[]) => ({ needs: ids, open_needs: ids });
+  // alpha.1 (CS-501) needs CS-600; beta.1 (CS-502) needs alpha.1 and
+  // CS-610; CS-620 is in no release. CS-120 is in no milestone, but
+  // alpha.1's CS-101 needs it, so it is worked in alpha.1's band. CS-111
+  // waits on the owner's decision CS-140, which takes no slot.
+  const s: WorkSnapshot = {
+    ...snapshot,
+    items: [
+      item("CS-100", { milestones: ["CS-600"] }),
+      item("CS-101", { milestones: ["CS-600"], ...needs("CS-100", "CS-120") }),
+      item("CS-102", { milestones: ["CS-600"] }),
+      item("CS-110", { milestones: ["CS-610"] }),
+      item("CS-111", { milestones: ["CS-610"], ...needs("CS-110", "CS-140") }),
+      item("CS-120"),
+      item("CS-130", { milestones: ["CS-620"], ...needs("CS-102") }),
+      item("CS-140", { kind: "decision", decider: "owner" }),
+      item("CS-150", { state: "done", milestones: ["CS-600"] }),
+      item("CS-501", {
+        title: "Release 2.0.0-alpha.1",
+        release: "2.0.0-alpha.1",
+        ...needs("CS-600"),
+      }),
+      item("CS-502", {
+        title: "Release 2.0.0-beta.1",
+        release: "2.0.0-beta.1",
+        ...needs("CS-501", "CS-610"),
+      }),
+    ],
+    milestones: [
+      ms("CS-600", ["CS-100", "CS-101", "CS-102", "CS-150"]),
+      ms("CS-610", ["CS-110", "CS-111"]),
+      ms("CS-620", ["CS-130"]),
+    ],
+  };
+  const span = (p: ReturnType<typeof planOf>, id: string) => {
+    const it = p.items.get(id)!;
+    return [it.start, it.finish];
+  };
+
+  it("works the items in the planner's order, one slot, a release band at a time", () => {
+    const p = planOf(s);
+    expect(p.unit).toBe("items");
+    expect(p.slots).toBe(1);
+    // Decisions, release items and done work take no slot.
+    expect(p.order).toEqual([
+      "CS-100",
+      "CS-102",
+      "CS-120",
+      "CS-101",
+      "CS-110",
+      "CS-111",
+      "CS-130",
+    ]);
+    expect(span(p, "CS-101")).toEqual([3, 4]);
+    expect(span(p, "CS-130")).toEqual([6, 7]);
+    expect(p.total).toBe(7);
+    // CS-120 is in no milestone; alpha.1's work needs it.
+    expect(p.items.get("CS-120")!.band).toBe(0);
+    expect(p.items.get("CS-111")!.held).toEqual(["CS-140"]);
+    expect(p.defaulted).toBe(7);
+  });
+
+  it("fills several slots, each item starting once what it needs is finished", () => {
+    const p = planOf(s, { slots: 2 });
+    expect(p.slots).toBe(2);
+    expect(span(p, "CS-100")).toEqual([0, 1]);
+    expect(span(p, "CS-102")).toEqual([0, 1]);
+    // CS-101 waits for CS-120, so beta.1's CS-110 takes the free slot.
+    expect(span(p, "CS-120")).toEqual([1, 2]);
+    expect(span(p, "CS-110")).toEqual([1, 2]);
+    expect(span(p, "CS-101")).toEqual([2, 3]);
+    expect(span(p, "CS-111")).toEqual([2, 3]);
+    expect(span(p, "CS-130")).toEqual([3, 4]);
+    expect(new Set([...p.items.values()].map((i) => i.slot))).toEqual(
+      new Set([0, 1]),
+    );
+    expect(p.total).toBe(4);
+    expect(clampSlots("0")).toBe(1);
+    expect(clampSlots("3")).toBe(3);
+    expect(clampSlots(99)).toBe(8);
+    expect(clampSlots("x")).toBe(1);
+  });
+
+  it("groups the rows by release, a milestone spanning its items", () => {
+    const p = planOf(s);
+    expect(
+      p.bands.map((b) => [b.name, b.milestones, b.loose, b.start, b.finish]),
+    ).toEqual([
+      ["2.0.0-alpha.1", ["CS-600"], ["CS-120"], 0, 4],
+      ["2.0.0-beta.1", ["CS-610"], [], 4, 6],
+      ["No release", ["CS-620"], [], 6, 7],
+    ]);
+    const m = p.milestones.get("CS-600")!;
+    expect([m.start, m.finish, m.items]).toEqual([
+      0,
+      4,
+      ["CS-100", "CS-102", "CS-101"],
+    ]);
+  });
+
+  it("marks each release where its last needed item finishes, with the chain that sets it", () => {
+    const [alpha, beta] = planOf(s).releases;
+    expect([alpha!.version, alpha!.at, alpha!.last]).toEqual([
+      "2.0.0-alpha.1",
+      4,
+      "CS-101",
+    ]);
+    // CS-101 waits on CS-120, which finished last of its needs.
+    expect(alpha!.chain).toEqual(["CS-120", "CS-101"]);
+    expect(alpha!.chainSize).toBe(2);
+    // beta.1 needs alpha.1's work too.
+    expect(beta!.needed).toContain("CS-100");
+    expect([beta!.at, beta!.chain]).toEqual([6, ["CS-110", "CS-111"]]);
+    const two = planOf(s, { slots: 2 }).releases;
+    expect(two.map((r) => r.at)).toEqual([3, 3]);
+  });
+
+  it("puts work in progress first", () => {
+    const p = planOf({
+      ...s,
+      items: s.items.map((it) =>
+        it.id === "CS-110" ? { ...it, state: "in-progress" as const } : it,
+      ),
+    });
+    // beta.1's CS-110 is under way, so it goes before alpha.1's work.
+    expect(span(p, "CS-110")).toEqual([0, 1]);
+    expect(span(p, "CS-100")).toEqual([1, 2]);
+  });
+
+  it("goes across in tokens once items carry estimates, the rest at the median", () => {
+    const p = planOf({
+      ...s,
+      items: s.items.map((it) =>
+        it.id === "CS-100"
+          ? { ...it, estimate_tokens: 100 }
+          : it.id === "CS-102"
+            ? { ...it, estimate_tokens: 300 }
+            : it,
+      ),
+    });
+    expect([p.unit, p.defaultSize, p.defaulted]).toEqual(["tokens", 200, 5]);
+    expect(p.items.get("CS-100")).toMatchObject({ size: 100, sized: true });
+    expect(p.items.get("CS-110")).toMatchObject({ size: 200, sized: false });
+    // The smaller estimate goes first among equals.
+    expect(p.order.slice(0, 2)).toEqual(["CS-100", "CS-120"]);
+  });
+
+  it("still covers a loop of needs, flagging where it broke in", () => {
+    const p = planOf({
+      ...s,
+      items: [item("CS-700", needs("CS-701")), item("CS-701", needs("CS-700"))],
+      milestones: [],
+    });
+    expect(p.order).toEqual(["CS-700", "CS-701"]);
+    expect(p.items.get("CS-700")!.loop).toBe(true);
+    expect(p.items.get("CS-701")!.loop).toBeUndefined();
   });
 });
 
