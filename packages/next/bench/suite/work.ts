@@ -486,6 +486,97 @@ export function proposalsOf(
   );
 }
 
+// ------------------------------------------------------------ no milestone
+
+/**
+ * The open states, as the No milestone view filters by them. An item
+ * claimed on another branch counts as in progress (boardStatus).
+ */
+export const OPEN_STATES = ["proposed", "planned", "in-progress"] as const;
+export type OpenState = (typeof OPEN_STATES)[number];
+/**
+ * The kinds the No milestone view filters by: a release item is a work
+ * item, kept apart because it sits above milestones by design (it needs
+ * them), so leaving releases out leaves only what should find a milestone.
+ */
+export const LOOSE_KINDS = [
+  "work",
+  "release",
+  "decision",
+  "external",
+] as const satisfies readonly EntityKind[];
+export type LooseKind = (typeof LOOSE_KINDS)[number];
+
+/** What the No milestone view keeps; empty or absent keeps everything. */
+export interface LooseFilter {
+  kinds?: readonly LooseKind[];
+  states?: readonly OpenState[];
+}
+
+/** An open item's state on the board, as one of the open states. */
+export const openStateOf = (it: WorkItem, flight?: InFlight): OpenState =>
+  boardStatus(it, flight) as OpenState;
+
+/**
+ * The open items among `items` that no milestone's constraints name: no
+ * milestone of the snapshot (dropped ones are gone already, and long
+ * outcomes are none) holds them. In progress first, then planned, then
+ * proposed, each by number: committed work that has no milestone is the
+ * likeliest to be a gap in the plan.
+ */
+export function noMilestoneOf(
+  s: WorkSnapshot,
+  items: readonly WorkItem[],
+  flight?: InFlight,
+): WorkItem[] {
+  const milestones = new Set(s.milestones.map((m) => m.id));
+  const rank = (it: WorkItem) =>
+    OPEN_STATES.length - 1 - OPEN_STATES.indexOf(openStateOf(it, flight));
+  return items
+    .filter((it) => isOpen(it) && !it.milestones.some((m) => milestones.has(m)))
+    .sort((a, b) => rank(a) - rank(b) || idNumber(a.id) - idNumber(b.id));
+}
+
+/** The items a No milestone filter keeps, in their order. */
+export function filterLoose(
+  items: readonly WorkItem[],
+  f: LooseFilter,
+  flight?: InFlight,
+): WorkItem[] {
+  return items.filter(
+    (it) =>
+      (!f.kinds?.length || f.kinds.includes(itemKindOf(it) as LooseKind)) &&
+      (!f.states?.length || f.states.includes(openStateOf(it, flight))),
+  );
+}
+
+/**
+ * How many of `items` each filter choice would keep, given the other
+ * filter: a kind's count under the states chosen, a state's under the
+ * kinds chosen, so each count says what choosing it adds.
+ */
+export function looseCounts(
+  items: readonly WorkItem[],
+  f: LooseFilter,
+  flight?: InFlight,
+): { kinds: Record<LooseKind, number>; states: Record<OpenState, number> } {
+  const kinds = Object.fromEntries(LOOSE_KINDS.map((k) => [k, 0])) as Record<
+    LooseKind,
+    number
+  >;
+  const states = Object.fromEntries(OPEN_STATES.map((k) => [k, 0])) as Record<
+    OpenState,
+    number
+  >;
+  for (const it of filterLoose(items, { states: f.states }, flight)) {
+    kinds[itemKindOf(it) as LooseKind] += 1;
+  }
+  for (const it of filterLoose(items, { kinds: f.kinds }, flight)) {
+    states[openStateOf(it, flight)] += 1;
+  }
+  return { kinds, states };
+}
+
 // ------------------------------------------------------------ counts
 
 /** The badge's words for an item's state on a card. */

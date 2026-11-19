@@ -143,7 +143,8 @@ milestones named by their outcome, each with an `outcome` sentence,
   view when the window is wide enough and over it when not.
 - **Kinds (CS-573).** The board shows six kinds of entity, and each has
   one encoding, a glyph and a color, drawn the same way in every view
-  (Your move, Roadmap, Proposals, Flow, the lists) and in the pane:
+  (Your move, Roadmap, Proposals, No milestone, Flow, the lists) and in
+  the pane:
 
   | Kind      | Glyph                   | Color (light, dark) |
   | --------- | ----------------------- | ------------------- |
@@ -210,7 +211,7 @@ milestones named by their outcome, each with an `outcome` sentence,
   or Dropped.
 - **Each figure once.** A number belongs to the view whose question it
   answers; another view links there rather than repeating it.
-- **Four views, one question each:**
+- **Five views, one question each:**
   - **Your move** (the default): the owner's attention is the
     constraint, so each section leads with its number and lists the
     most waited-on first, counting what waits through other items.
@@ -273,6 +274,26 @@ milestones named by their outcome, each with an `outcome` sentence,
     three; narrowed to your answers, the rows group by the decision they
     wait on, the one that frees most first. The whole row opens the
     idea's text, the why, in the pane. Narrow, each row stacks.
+  - **No milestone (CS-562)**: the open items that no milestone's
+    constraints name (`noMilestoneOf` in `work.ts`), so nothing
+    committed falls outside the plan unseen. Planned work here is
+    likely a gap in the plan; proposals here are the backlog (CS-686:
+    candidate commitments, the later copies of design lists kept for
+    review). A count leads, saying what the filters leave out; then two
+    filters, by kind and by state, each a set of toggles with a count
+    under the other filter, kept in the URL (`?view=no-milestone`,
+    `&kind=` from work, release, decision and external, `&state=` from
+    proposed, planned and in-progress, each a comma-separated list; all
+    of them when absent). A release is its own kind here, not a work
+    item: it sits above milestones by design, since it needs them (and
+    every milestone it needs holds its items, CS-685), so its row says
+    so, and leaving releases out leaves only what should find a
+    milestone. The table is the Proposals view's layout, by project,
+    with the item, its kind in words and its state (with its stage's
+    swatch, and for planned work whether it is ready or what it waits
+    on); in progress first, then planned, then proposed. The whole row
+    opens the item in the pane. Narrow, each row stacks, kind and state
+    on a line under the title.
   - **Flow**: the stages (proposed, blocked, ready, in progress, done)
     as a band per stage, day by day since the history begins (replayed
     from the items' committed status changes); a band that widens is a

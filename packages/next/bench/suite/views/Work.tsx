@@ -67,6 +67,10 @@ import {
   isOpen,
   isOwnerDecision,
   kindsOf,
+  LOOSE_KINDS,
+  type LooseKind,
+  filterLoose,
+  looseCounts,
   loadItemText,
   criticalPathOf,
   loopTies,
@@ -85,6 +89,10 @@ import {
   milestoneMapOf,
   milestoneRoadmapOf,
   nextActor,
+  noMilestoneOf,
+  OPEN_STATES,
+  type OpenState,
+  openStateOf,
   PROPOSAL_GATES,
   type ProposalGate,
   type ProposalGroup,
@@ -94,6 +102,7 @@ import {
   releaseFlagsOf,
   releasesGatedBy,
   isReleaseItem,
+  itemKindOf,
   type RoadmapRow,
   ownerQueue,
   type Stage,
@@ -215,11 +224,12 @@ const STAGE_MEANING: Record<Stage, string> = {
 const stageTip = (st: Stage, lead?: string) =>
   `${lead ? `${lead} · ` : ""}${STAGE_NAMES[st]} (${STAGE_MEANING[st]})`;
 
-type View = "move" | "roadmap" | "proposals" | "flow";
+type View = "move" | "roadmap" | "proposals" | "no-milestone" | "flow";
 const VIEWS: Array<{ id: View; label: string }> = [
   { id: "move", label: "Your move" },
   { id: "roadmap", label: "Roadmap" },
   { id: "proposals", label: "Proposals" },
+  { id: "no-milestone", label: "No milestone" },
   { id: "flow", label: "Flow" },
 ];
 /** The layout's width at which the pane sits beside the view, not over it. */
@@ -274,6 +284,7 @@ function Board({
   const view: View =
     search.view === "roadmap" ||
     search.view === "proposals" ||
+    search.view === "no-milestone" ||
     search.view === "flow"
       ? search.view
       : "move";
@@ -819,6 +830,21 @@ function Board({
                   onGate={(gate) => set({ gate }, true)}
                   onMilestone={(id) => open(`ms:${id}`)}
                   msOf={msOf}
+                />
+              </div>
+            )}
+
+            {view === "no-milestone" && (
+              <div className="work-dash">
+                <NoMilestoneCard
+                  s={s}
+                  items={items}
+                  flight={flight}
+                  scope={scope}
+                  selected={search.item}
+                  kinds={listOf(search.kind) as LooseKind[]}
+                  states={listOf(search.state) as OpenState[]}
+                  onFilter={(patch) => set(patch, true)}
                 />
               </div>
             )}
@@ -3419,6 +3445,261 @@ function ProposalRow({
         <GateCell it={it} gate={gate} itemOf={itemOf} except={except} />
       </td>
       <td className="c-num">{waiting > 0 ? waiting : ""}</td>
+    </tr>
+  );
+}
+
+/** The No milestone view's state filter, in words. */
+const OPEN_STATE_NAMES: Record<OpenState, string> = {
+  proposed: STATE_NAMES.proposed,
+  planned: STATE_NAMES.planned,
+  "in-progress": STATE_NAMES["in-progress"],
+};
+
+/** What the No milestone count says a filter leaves out. */
+const LEFT_OUT_NAMES: Record<LooseKind | OpenState, string> = {
+  work: "work items",
+  release: "releases",
+  decision: "decisions",
+  external: "external waits",
+  proposed: "proposed items",
+  planned: "planned items",
+  "in-progress": "items in progress",
+};
+
+/**
+ * The No milestone view (CS-562): the open items that no milestone's
+ * constraints name, by project, filtered by kind and state (both kept in
+ * the URL). Planned work here is likely a gap in the plan; a release sits
+ * above milestones by design, since it needs them, and says so on its
+ * row. Choosing an item opens it in the pane.
+ */
+function NoMilestoneCard({
+  s,
+  items,
+  flight,
+  scope,
+  selected,
+  kinds,
+  states,
+  onFilter,
+}: {
+  s: WorkSnapshot;
+  /** The scope's items. */
+  items: readonly WorkItem[];
+  flight: InFlight;
+  /** The scope's name, when one is chosen. */
+  scope?: string;
+  selected?: string;
+  /** The kinds shown; empty shows every kind. */
+  kinds: readonly LooseKind[];
+  /** The states shown; empty shows every open state. */
+  states: readonly OpenState[];
+  onFilter: (patch: Partial<WorkSearch>) => void;
+}) {
+  const all = useMemo(
+    () => noMilestoneOf(s, items, flight),
+    [s, items, flight],
+  );
+  const f = { kinds, states };
+  const shown = filterLoose(all, f, flight);
+  const counts = looseCounts(all, f, flight);
+  const filtered = shown.length !== all.length;
+  // A filter writes the chosen words, or nothing once every one is chosen;
+  // the last chosen one can't be taken away (that would show nothing).
+  const choose = <K extends string>(
+    key: "kind" | "state",
+    every: readonly K[],
+    next: K[],
+  ) =>
+    next.length &&
+    onFilter({
+      [key]:
+        next.length === every.length
+          ? undefined
+          : every.filter((k) => next.includes(k)).join(","),
+    });
+  const kindsOn = kinds.length ? kinds : LOOSE_KINDS;
+  const statesOn = states.length ? states : OPEN_STATES;
+  const leftOut = [
+    ...LOOSE_KINDS.filter((k) => !kindsOn.includes(k)),
+    ...OPEN_STATES.filter((k) => !statesOn.includes(k)),
+  ].map((k) => LEFT_OUT_NAMES[k]);
+  const releases = all.filter(isReleaseItem).length;
+  return (
+    <Card
+      id="work-loose-h"
+      title="Items in no milestone"
+      caption={`Open items that no milestone's constraints name${scope ? `, in ${scope}` : ""}. Planned work here is likely a gap in the plan; a release sits above milestones by design. Choose one to read it.`}
+      className="span-12"
+    >
+      <div className="work-loose-bar">
+        <p className="work-loose-count" aria-live="polite">
+          <span className="work-loose-count-value">{shown.length}</span>
+          <span>
+            {filtered
+              ? `of ${all.length} open ${all.length === 1 ? "item" : "items"} in no milestone, leaving out ${andList(leftOut)}`
+              : `open ${all.length === 1 ? "item" : "items"} in no milestone${releases ? `, ${releases} of them ${releases === 1 ? "a release" : "releases"}` : ""}`}
+          </span>
+        </p>
+        {all.length > 0 && (
+          <div className="work-loose-filters">
+            <ToggleButtonGroup
+              size="small"
+              value={[...kindsOn]}
+              onChange={(_, v: LooseKind[]) => choose("kind", LOOSE_KINDS, v)}
+              aria-label="Kinds shown"
+              className="work-loose-filter"
+            >
+              {LOOSE_KINDS.map((k) => (
+                <ToggleButton
+                  key={k}
+                  value={k}
+                  title={ENTITY_KIND_TIPS[k]}
+                  disabled={!counts.kinds[k] && !kinds.includes(k)}
+                  render={<Button variant="outlined" size="small" />}
+                >
+                  <KindMark kind={k} named={false} />
+                  {ENTITY_KIND_NAMES[k]}
+                  <span className="work-toggle-count">{counts.kinds[k]}</span>
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+            <ToggleButtonGroup
+              size="small"
+              value={[...statesOn]}
+              onChange={(_, v: OpenState[]) => choose("state", OPEN_STATES, v)}
+              aria-label="States shown"
+              className="work-loose-filter"
+            >
+              {OPEN_STATES.map((k) => (
+                <ToggleButton
+                  key={k}
+                  value={k}
+                  disabled={!counts.states[k] && !states.includes(k)}
+                  render={<Button variant="outlined" size="small" />}
+                >
+                  {OPEN_STATE_NAMES[k]}
+                  <span className="work-toggle-count">{counts.states[k]}</span>
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          </div>
+        )}
+      </div>
+      {!all.length ? (
+        <Typography variant="body-md" color="textSecondary" render={<p />}>
+          Every open item{scope ? " here" : ""} is in a milestone.
+        </Typography>
+      ) : !shown.length ? (
+        <Typography variant="body-md" color="textSecondary" render={<p />}>
+          No item in no milestone is of the kinds and states chosen.{" "}
+          <Link
+            component="button"
+            type="button"
+            onClick={() => onFilter({ kind: undefined, state: undefined })}
+          >
+            Show them all
+          </Link>
+        </Typography>
+      ) : (
+        <table
+          className="work-ptable work-loose"
+          aria-label="Items in no milestone"
+        >
+          <colgroup>
+            <col className="c-id" />
+            <col />
+            <col className="c-kind" />
+            <col className="c-state" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Item</th>
+              <th scope="col">Kind</th>
+              <th scope="col">State</th>
+            </tr>
+          </thead>
+          {byProject(s, shown).map((g) => (
+            <tbody key={g.project?.id ?? "none"}>
+              <tr className="work-ptable-group">
+                <th colSpan={4} scope="rowgroup">
+                  <span className="work-ptable-group-name work-marked">
+                    {g.project && <LevelMark level="project" />}
+                    {g.project?.title ?? "No project"}
+                  </span>
+                  <span className="work-ptable-group-meta">
+                    {g.project ? `${g.project.id}, ` : ""}
+                    {g.items.length} {g.items.length === 1 ? "item" : "items"}
+                  </span>
+                </th>
+              </tr>
+              {g.items.map((it) => (
+                <NoMilestoneRow
+                  key={it.id}
+                  it={it}
+                  flight={flight}
+                  selected={it.id === selected}
+                />
+              ))}
+            </tbody>
+          ))}
+        </table>
+      )}
+    </Card>
+  );
+}
+
+function NoMilestoneRow({
+  it,
+  flight,
+  selected,
+}: {
+  it: WorkItem;
+  flight: InFlight;
+  selected: boolean;
+}) {
+  const kind = itemKindOf(it);
+  const state = openStateOf(it, flight);
+  const stage = stageOf(it, flight) ?? "Waiting";
+  // Planned: whether it could start, which is what a gap costs.
+  const detail =
+    state !== "planned"
+      ? undefined
+      : it.open_needs.length
+        ? `waits on ${it.open_needs.length}`
+        : "ready";
+  return (
+    <tr className={`work-ptable-row${selected ? " selected" : ""}`}>
+      <td className="c-id">
+        <KindId id={it.id} kind={kind} />
+      </td>
+      <td className="c-title">
+        <ItemLink id={it.id} className="work-ptable-link">
+          <InlineText text={it.title} />
+        </ItemLink>
+        {kind === "release" && (
+          <span className="work-ptable-sub">
+            Above milestones by design: a release needs them
+            {it.release && !it.title.includes(it.release)
+              ? ` (makes ${it.release})`
+              : ""}
+          </span>
+        )}
+      </td>
+      <td className={`c-kind k-${kind}`}>{ENTITY_KIND_NAMES[kind]}</td>
+      <td className="c-state">
+        <span className="work-loose-state">
+          <span
+            className={`work-swatch stage-${slug(stage)}`}
+            aria-hidden="true"
+            data-tip={stageTip(stage)}
+          />
+          {OPEN_STATE_NAMES[state]}
+          {detail && <span className="work-loose-state-detail">{detail}</span>}
+        </span>
+      </td>
     </tr>
   );
 }

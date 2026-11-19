@@ -2653,6 +2653,108 @@ button.work-mrow-big:focus-visible {
   }
 }
 
+/*
+ * No milestone (CS-562): the count and the two filters over the proposals
+ * table's layout, with Kind and State columns in place of the gate.
+ */
+.work-loose-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300) var(--stratakit-space-500);
+  margin-bottom: var(--stratakit-space-300);
+}
+.work-loose-count {
+  display: flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-200);
+  margin: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-loose-count-value {
+  font-size: var(--stratakit-font-size-headline-sm, 1.5rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-loose-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-300);
+  max-width: 100%;
+}
+/* Narrow: a filter scrolls sideways rather than squeeze its words. */
+.work-loose-filter {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.work-loose-filter button {
+  white-space: nowrap;
+  flex: none;
+}
+.work-loose-filter .work-kind-mark {
+  margin-inline-end: 6px;
+}
+.work-loose col.c-kind {
+  width: 112px;
+}
+.work-loose col.c-state {
+  width: 200px;
+}
+.work-loose .c-kind {
+  color: var(--kind);
+}
+.work-loose-state {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--stratakit-space-200);
+}
+.work-loose-state-detail {
+  white-space: nowrap;
+}
+.work-loose-state .work-swatch {
+  flex: none;
+  align-self: center;
+}
+.work-loose-state-detail {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-loose-state-detail::before {
+  content: "· ";
+}
+@container (max-width: 1000px) {
+  .work-loose col.c-kind {
+    width: 96px;
+  }
+  .work-loose col.c-state {
+    width: 188px;
+  }
+}
+/* Narrow: the kind and state sit on one line under the title. */
+@container (max-width: 720px) {
+  .work-loose tr.work-ptable-row {
+    grid-template-columns: auto auto minmax(0, 1fr);
+    grid-template-areas: "id title title" ". kind state";
+  }
+  .work-loose tr.work-ptable-row .c-kind {
+    grid-area: kind;
+    margin-top: var(--stratakit-space-100);
+  }
+  .work-loose tr.work-ptable-row .c-state {
+    grid-area: state;
+    margin-top: var(--stratakit-space-100);
+  }
+  .work-loose .work-ptable-group-meta {
+    white-space: nowrap;
+  }
+  .work-loose tr.work-ptable-row .c-kind,
+  .work-loose tr.work-ptable-row .c-state {
+    font-size: var(--stratakit-font-size-caption-md);
+  }
+}
+
 /* Fewest crossings: a rule between groups of linked milestones, and the
    label over those that stand alone. */
 .work-graph-divider {

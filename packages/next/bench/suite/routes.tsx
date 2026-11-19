@@ -50,7 +50,7 @@ export const runsLayoutRoute = createRoute({
 // ------------------------------------------------------------ needs a look
 
 export interface WorkSearch {
-  /** The question the page answers: "roadmap", "proposals" or "flow" ("Your move" by default). */
+  /** The question the page answers: "roadmap", "proposals", "flow" or "no-milestone" ("Your move" by default). */
   view?: string;
   project?: string;
   /** A milestone's constraints as the scope. */
@@ -76,7 +76,19 @@ export interface WorkSearch {
   roadmap?: string;
   /** The Proposals view narrowed to what can be committed now ("free"), or what waits on a "decision" or on other "items". */
   gate?: string;
+  /** The No milestone view's kinds, a comma-separated list of "work", "release", "decision" and "external" (every kind by default). */
+  kind?: string;
+  /** The No milestone view's states, a comma-separated list of "proposed", "planned" and "in-progress" (every open state by default). */
+  state?: string;
 }
+/** Keeps the known words of a comma-separated list, in the order given. */
+const listIn = (v: unknown, known: readonly string[]): string | undefined =>
+  typeof v === "string"
+    ? v
+        .split(",")
+        .filter((w, i, all) => known.includes(w) && all.indexOf(w) === i)
+        .join(",") || undefined
+    : undefined;
 /** The tracker's board (CS-170): it reads the work items on this branch. */
 export const workRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -84,7 +96,10 @@ export const workRoute = createRoute({
   validateSearch: (s: Record<string, unknown>): WorkSearch =>
     clean({
       view:
-        s.view === "roadmap" || s.view === "proposals" || s.view === "flow"
+        s.view === "roadmap" ||
+        s.view === "proposals" ||
+        s.view === "flow" ||
+        s.view === "no-milestone"
           ? s.view
           : undefined,
       project: str(s.project),
@@ -101,6 +116,8 @@ export const workRoute = createRoute({
         s.gate === "free" || s.gate === "decision" || s.gate === "items"
           ? s.gate
           : undefined,
+      kind: listIn(s.kind, ["work", "release", "decision", "external"]),
+      state: listIn(s.state, ["proposed", "planned", "in-progress"]),
     }),
   component: lazyRouteComponent(() => import("./views/Work.tsx"), "Work"),
 });

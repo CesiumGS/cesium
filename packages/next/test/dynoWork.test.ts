@@ -3,6 +3,9 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   boardStatus,
   filterItems,
+  filterLoose,
+  looseCounts,
+  noMilestoneOf,
   flowOf,
   inFlightOf,
   kindsOf,
@@ -732,5 +735,130 @@ describe("release items are the map's gates", () => {
     expect(lane("CS-92")).toMatch(/^outside-/);
     expect(lane("CS-91")).not.toMatch(/^outside-/);
     expect(lane("CS-90")).not.toMatch(/^outside-/);
+  });
+});
+
+describe("the items in no milestone (CS-562)", () => {
+  const ms = (
+    id: string,
+    constraints: string[],
+    state: WorkMilestone["state"] = "planned",
+  ): WorkMilestone => ({
+    id,
+    title: `Milestone ${id}`,
+    kind: "milestone",
+    learning: false,
+    state,
+    project: "CS-2",
+    done_when: [],
+    constraints: constraints.map((c) => ({ id: c, clause: "c?" })),
+    contributions: [],
+    check_results: [],
+    path: `m/${id}`,
+    progress: { done: 0, total: constraints.length },
+    check_due: false,
+    to_shape: [],
+  });
+  const s: WorkSnapshot = withoutDropped({
+    ...snapshot,
+    items: [
+      // In a milestone: not listed.
+      item("CS-70", { milestones: ["CS-90"] }),
+      // In a proposed milestone only: still named by one.
+      item("CS-71", { state: "proposed", milestones: ["CS-91"] }),
+      // Named only by a dropped milestone, or a long outcome: no milestone.
+      item("CS-72", { milestones: ["CS-92"] }),
+      item("CS-73", { state: "proposed", milestones: ["CS-1"] }),
+      // In no milestone, of each kind and state.
+      item("CS-74", { state: "proposed" }),
+      item("CS-75", { kind: "decision", decider: "owner" }),
+      item("CS-76", { kind: "external", waiting_on: "1.x" }),
+      item("CS-77", { release: "2.0.0", needs: ["CS-90"] }),
+      item("CS-78", { state: "in-progress", claimed_by: "s1" }),
+      item("CS-79", { project: "CS-3" }),
+      // Closed: never listed.
+      item("CS-80", { state: "done" }),
+      item("CS-81", { state: "dropped" }),
+    ],
+    milestones: [
+      ms("CS-90", ["CS-70"]),
+      ms("CS-91", ["CS-71"], "proposed"),
+      ms("CS-92", ["CS-72"], "dropped"),
+    ],
+  });
+  const ids = (list: readonly WorkItem[]) => list.map((it) => it.id);
+
+  it("lists the open items no milestone names, in progress first, then planned, then proposed", () => {
+    expect(ids(noMilestoneOf(s, s.items))).toEqual([
+      "CS-78",
+      "CS-72",
+      "CS-75",
+      "CS-76",
+      "CS-77",
+      "CS-79",
+      "CS-73",
+      "CS-74",
+    ]);
+  });
+
+  it("keeps to the scope's items", () => {
+    expect(
+      ids(
+        noMilestoneOf(
+          s,
+          s.items.filter((it) => it.project === "CS-3"),
+        ),
+      ),
+    ).toEqual(["CS-79"]);
+  });
+
+  it("counts a claim on another branch as in progress", () => {
+    const flight = inFlightOf({
+      ...s,
+      elsewhere: [
+        { id: "CS-74", claimed_by: "s2", where: "ui", worktree: true },
+      ],
+    });
+    const all = noMilestoneOf(s, s.items, flight);
+    expect(ids(all).slice(0, 2)).toEqual(["CS-74", "CS-78"]);
+    expect(ids(filterLoose(all, { states: ["proposed"] }, flight))).toEqual([
+      "CS-73",
+    ]);
+  });
+
+  it("filters by kind, a release apart from work, and by state", () => {
+    const all = noMilestoneOf(s, s.items);
+    expect(ids(filterLoose(all, {}))).toEqual(ids(all));
+    expect(ids(filterLoose(all, { kinds: ["release"] }))).toEqual(["CS-77"]);
+    expect(ids(filterLoose(all, { kinds: ["work"] }))).toEqual([
+      "CS-78",
+      "CS-72",
+      "CS-79",
+      "CS-73",
+      "CS-74",
+    ]);
+    // Leaving proposals and releases out: what should find a milestone.
+    expect(
+      ids(
+        filterLoose(all, {
+          kinds: ["work", "decision", "external"],
+          states: ["planned", "in-progress"],
+        }),
+      ),
+    ).toEqual(["CS-78", "CS-72", "CS-75", "CS-76", "CS-79"]);
+  });
+
+  it("counts each choice under the other filter", () => {
+    const all = noMilestoneOf(s, s.items);
+    expect(looseCounts(all, {})).toEqual({
+      kinds: { work: 5, release: 1, decision: 1, external: 1 },
+      states: { proposed: 2, planned: 5, "in-progress": 1 },
+    });
+    expect(
+      looseCounts(all, { kinds: ["decision"], states: ["proposed"] }),
+    ).toEqual({
+      kinds: { work: 2, release: 0, decision: 0, external: 0 },
+      states: { proposed: 0, planned: 1, "in-progress": 0 },
+    });
   });
 });
