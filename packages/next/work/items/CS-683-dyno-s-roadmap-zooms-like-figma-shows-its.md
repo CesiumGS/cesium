@@ -2,7 +2,7 @@
 id: CS-683
 title: Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question
 kind: work
-state: in-progress
+state: done
 created: 2026-11-17
 project: CS-18
 needs: [CS-563]
