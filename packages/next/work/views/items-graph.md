@@ -246,7 +246,7 @@ graph LR
     CS_677["CS-677 Release notes and a security review for 2.0.0"]:::open
     CS_679["CS-679 Stale records: the API map's Entity and labels rows, costs.tsx'"]:::open
     CS_680["CS-680 Triage the open items that fit no release"]:::open
-    CS_683["CS-683 Dyno's roadmap zooms like Figma, shows its legend on top, and d"]:::open
+    CS_683["CS-683 Dyno's roadmap zooms like Figma, shows its legend on top, and d"]:::done
     CS_684["CS-684 Dyno's Work page drops the retired long outcomes: no Long outco"]:::done
     CS_685["CS-685 Dyno's release flags list only the milestones a release needs, "]:::open
     CS_686["CS-686 How should we use proposals until hitld does it for us, and wha"]:::done
@@ -254,6 +254,7 @@ graph LR
     CS_689["CS-689 Merge run 2026-11-18-2's green batches overnight"]:::done
     CS_690["CS-690 Merge the rest of run 2026-11-18-2's green batches as they pass"]:::done
     CS_691["CS-691 Dyno's Fewest crossings roadmap layout places real milestones ("]:::proposed
+    CS_692["CS-692 Dyno's roadmap has a sequence view: the planner's order played "]:::open
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external
@@ -1260,6 +1261,7 @@ graph LR
   CS_686 --> CS_680
   CS_563 --> CS_683
   CS_683 --> CS_685
+  CS_685 --> CS_692
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

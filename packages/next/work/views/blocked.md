@@ -637,8 +637,8 @@ CS-18 The work tracker
       ← CS-532 Release 2.0.0-rc.1
         CS-608 Extension users have validated 2.0 with their own data
         CS-678 The final release is ready to publish
-  CS-685  Dyno's release flags list only the milestones a release needs, and flag items that cross a release
-      ← CS-683 Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question
+  CS-692  Dyno's roadmap has a sequence view: the planner's order played through the run's executor slots
+      ← CS-685 Dyno's release flags list only the milestones a release needs, and flag items that cross a release
 
 CS-584 The widgets library
   CS-586  The existing widgets move onto the library: time controls, credits, the inspector and the observer panel

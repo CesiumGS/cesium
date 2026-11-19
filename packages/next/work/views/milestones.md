@@ -356,9 +356,9 @@ CS-494 B-reps snap and measure exactly [Planned], under CS-193 B-reps and geomet
 
 CS-495 USD B-reps stream as 3D Tiles [Planned], under CS-193 B-reps and geometry queries
   outcome: The B-rep tile extension's schema is decided, Open Cascade's licence is checked, USD B-reps load and heal, a tiler writes them as 3D Tiles 2.0 with editing overrides, and trims and edges share the vector kernels.
-  constraints: 1 of 7 done
-  unmet: not linked to a clause yet (open: CS-310, CS-304, CS-305, CS-306, CS-309, CS-576; check not passed)
-  to shape: done_when; check; link CS-299, CS-310, CS-304, CS-305, CS-306, CS-309, CS-576 to a clause
+  constraints: 1 of 6 done
+  unmet: not linked to a clause yet (open: CS-304, CS-305, CS-306, CS-309, CS-576; check not passed)
+  to shape: done_when; check; link CS-299, CS-304, CS-305, CS-306, CS-309, CS-576 to a clause
 
 CS-496 The CSG sample edits with local operations [Planned], under CS-193 B-reps and geometry queries
   outcome: The CSG sample's local operations are feature nodes, it has a four-view layout, and the owner decides whether it stops there.
@@ -469,9 +469,9 @@ CS-560 Content from any source loads through one module seam [Planned], under CS
 
 CS-561 Dyno's Work page shows the live system and the release plan [Proposed], under CS-18 The work tracker
   outcome: A reader of Dyno's Work page sees what's moving now (dispatches, branches waiting to merge, the active run) and where each release falls among the milestones that feed it.
-  constraints: 5 of 9 done
-  unmet: not linked to a clause yet (open: CS-547, CS-683, CS-685, CS-688; check not passed)
-  to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563, CS-573, CS-683, CS-684, CS-685, CS-688 to a clause
+  constraints: 6 of 10 done
+  unmet: not linked to a clause yet (open: CS-547, CS-685, CS-688, CS-692; check not passed)
+  to shape: done_when; check; link CS-545, CS-547, CS-562, CS-563, CS-573, CS-683, CS-684, CS-685, CS-688, CS-692 to a clause
 
 CS-595 Every 1.x widget's job has a StrataKit widget [Planned], under CS-584 The widgets library
   outcome: An app drops in StrataKit widgets for every job 1.x's widgets did, as React components or through DOM wrappers, and the Viewer is built from them.

@@ -358,7 +358,7 @@ No milestone
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 26 of 38 done, 6 ready, 5 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 27 of 39 done, 6 ready, 5 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
@@ -381,10 +381,11 @@ Milestone: Dyno's Work page shows the live system and the release plan (CS-561, 
 - [x] CS-562 Dyno's Work page lists the items in no milestone, filterable by kind and state. Done.
 - [x] CS-563 Dyno's roadmap shows proposed milestones with dashed outlines. Done.
 - [x] CS-573 Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at. Done.
-- [ ] CS-683 Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question. Needs CS-563.
+- [x] CS-683 Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question. Done.
 - [x] CS-684 Dyno's Work page drops the retired long outcomes: no Long outcomes view, and dropped milestones out of every grouping. Done.
 - [ ] CS-685 Dyno's release flags list only the milestones a release needs, and flag items that cross a release. Needs CS-683.
 - [ ] CS-688 Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes. Needs nothing.
+- [ ] CS-692 Dyno's roadmap has a sequence view: the planner's order played through the run's executor slots. Needs CS-685.
 
 Milestone: The final release is ready to publish (CS-678, Planned)
 
@@ -681,7 +682,6 @@ Milestone: USD B-reps stream as 3D Tiles (CS-495, Planned)
 - [ ] CS-305 The B-rep tiler: USD to 3D Tiles 2.0, coarse levels as meshes. Needs CS-304.
 - [ ] CS-306 Editing overrides on B-rep tiles. Needs CS-305.
 - [ ] CS-309 B-rep trims and edges on the vector design's shared kernels. Needs CS-258 (Vector drawing and the styling language).
-- [ ] CS-310 external: Licence check for Open Cascade (LGPL 2.1) before distribution. Needs nothing. Waiting on legal review.
 - [ ] CS-576 Spike: B-rep tiles as NURBS or pre-split Bézier patches, and a way to read USD's B-reps. Needs CS-299.
 
 Milestone: The CSG sample edits with local operations (CS-496, Planned)
@@ -697,6 +697,7 @@ Milestone: Geometry has physics representations (CS-676, Planned)
 No milestone
 
 - [x] CS-300 decision: Subdivision surfaces: OpenSubdiv, or a TypeScript patch conversion?. Done.
+- [ ] CS-310 external: Licence check for Open Cascade (LGPL 2.1) before distribution. Needs nothing. Waiting on legal review.
 - [?] CS-311 Distance between two geometries across representations and frames. Proposed. Needs nothing.
 - [?] CS-312 Subdivision surfaces through the query interface and the GPU path. Proposed. Needs CS-300 and CS-577.
 - [?] CS-313 F-reps drawn by ray marching. Proposed. Needs nothing.
