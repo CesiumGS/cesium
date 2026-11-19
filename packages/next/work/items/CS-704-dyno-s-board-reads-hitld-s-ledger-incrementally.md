@@ -2,9 +2,10 @@
 id: CS-704
 title: "The Work board reads in under a second: incremental ledger reads, cached git scans, and a light count for the rail"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-18
+claimed_by: orch-10-CS-704
 touches: [packages/next/scripts/vitePluginWork.ts, packages/next/scripts/workBoard.mjs, packages/next/bench/suite/useWork.ts, packages/next/bench/suite/shell.tsx]
 ---
 
