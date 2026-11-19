@@ -8,6 +8,10 @@
 
 - CesiumJS builds now target ES2022 instead of ES2020. Class fields are no longer rewritten into helper functions, so browsers must support ES2022 syntax such as public and private class fields. [#14023](https://github.com/CesiumGS/cesium/pull/14023)
 
+#### Fixes :wrench:
+
+- TypeScript definitions are now ES modules, fixing "Duplicate identifier" errors in some editors. [#14069](https://github.com/CesiumGS/cesium/pull/14069)
+
 ### @cesium/core
 
 #### Fixes :wrench:
