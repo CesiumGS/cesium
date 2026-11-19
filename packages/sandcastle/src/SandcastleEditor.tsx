@@ -222,10 +222,10 @@ function SandcastleEditor({
     }[] = [
       {
         url: typeImportPaths["cesium"],
-        filename: "ts:cesium.d.ts",
+        filename: "file:///node_modules/cesium/index.d.ts",
         transformTypes(typesContent: string) {
           // define a "global" variable so types work even with out the import statement
-          return `${typesContent}\nvar Cesium: typeof import('cesium');`;
+          return `${typesContent}\ndeclare global {\n  var Cesium: typeof import('cesium');\n}`;
         },
       },
       {
