@@ -415,7 +415,7 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 27 of 39 done, 6 ready, 5 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 28 of 40 done, 7 ready, 4 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
@@ -440,9 +440,10 @@ Milestone: Dyno's Work page shows the live system and the release plan ([CS-561]
 - [x] [CS-573](./items/CS-573-dyno-s-work-page-shows-each-kind-of-entity-the.md) Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at. Done.
 - [x] [CS-683](./items/CS-683-dyno-s-roadmap-zooms-like-figma-shows-its.md) Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question. Done.
 - [x] [CS-684](./items/CS-684-dyno-s-work-page-drops-the-retired-long.md) Dyno's Work page drops the retired long outcomes: no Long outcomes view, and dropped milestones out of every grouping. Done.
-- [ ] [CS-685](./items/CS-685-dyno-s-release-flags-tell-the-milestones-a.md) Dyno's release flags list only the milestones a release needs, and flag items that cross a release. Needs CS-683.
+- [x] [CS-685](./items/CS-685-dyno-s-release-flags-tell-the-milestones-a.md) Dyno's release flags list only the milestones a release needs, and flag items that cross a release. Done.
 - [ ] [CS-688](./items/CS-688-dyno-s-proposals-tab-follows-the-proposal-flow.md) Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes. Needs nothing.
 - [ ] [CS-692](./items/CS-692-dyno-s-roadmap-has-a-sequence-view-the-planner.md) Dyno's roadmap has a sequence view: the planner's order played through the run's executor slots. Needs CS-685.
+- [ ] [CS-693](./items/CS-693-dyno-s-projects-view-each-project-s-readiness.md) Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle. Needs CS-685.
 
 Milestone: The final release is ready to publish ([CS-678](./milestones/CS-678-the-final-release-is-ready-to-publish.md), Planned)
 

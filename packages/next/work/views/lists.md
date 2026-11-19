@@ -358,7 +358,7 @@ No milestone
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 27 of 39 done, 6 ready, 5 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 28 of 40 done, 7 ready, 4 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
@@ -383,9 +383,10 @@ Milestone: Dyno's Work page shows the live system and the release plan (CS-561, 
 - [x] CS-573 Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at. Done.
 - [x] CS-683 Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question. Done.
 - [x] CS-684 Dyno's Work page drops the retired long outcomes: no Long outcomes view, and dropped milestones out of every grouping. Done.
-- [ ] CS-685 Dyno's release flags list only the milestones a release needs, and flag items that cross a release. Needs CS-683.
+- [x] CS-685 Dyno's release flags list only the milestones a release needs, and flag items that cross a release. Done.
 - [ ] CS-688 Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes. Needs nothing.
 - [ ] CS-692 Dyno's roadmap has a sequence view: the planner's order played through the run's executor slots. Needs CS-685.
+- [ ] CS-693 Dyno's Projects view: each project's readiness per release, what it holds up, and its dependencies behind a toggle. Needs CS-685.
 
 Milestone: The final release is ready to publish (CS-678, Planned)
 

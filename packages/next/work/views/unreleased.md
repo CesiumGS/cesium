@@ -34,6 +34,7 @@ CS-18 The work tracker
   CS-573  Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at
   CS-683  Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question
   CS-684  Dyno's Work page drops the retired long outcomes: no Long outcomes view, and dropped milestones out of every grouping
+  CS-685  Dyno's release flags list only the milestones a release needs, and flag items that cross a release
 
 CS-188 Earth to Moon (frames 5c to 5h)
   CS-200  Volumes, horizon culling and selection on the content's body
@@ -45,5 +46,5 @@ CS-389 Dyno as the development harness
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
 
-24 merged item(s) not in a release
+25 merged item(s) not in a release
 ```
