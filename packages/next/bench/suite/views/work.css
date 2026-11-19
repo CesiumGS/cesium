@@ -293,16 +293,12 @@
   border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
   margin-bottom: var(--stratakit-space-500);
 }
-/* Narrow: tighter tabs, so all four fit without scrolling (StrataKit's
-   scrollable tabs fade the first tab even unscrolled). */
-@container (max-width: 480px) {
-  .work-tabs .MuiTabs-list {
-    gap: 0;
-  }
-  .work-tabs .MuiTab-root {
-    min-width: 0;
-    padding-inline: var(--stratakit-space-150);
-  }
+/* Scrollable tabs that fit get no scroll buttons, and StrataKit's edge fade
+   then still covers the first tab (STRATAKIT_FEEDBACK.md, note 51). Nothing
+   is hidden past either edge, so no fade. */
+.work-tabs:not(:has(> .MuiTabScrollButton-root)) .MuiTabs-scroller {
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 .work-trail-path {
   display: inline-flex;

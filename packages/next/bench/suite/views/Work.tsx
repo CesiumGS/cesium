@@ -534,6 +534,7 @@ function Board({
                 }
                 aria-label="Views"
                 className="work-tabs"
+                variant="scrollable"
               >
                 {VIEWS.map((v) => (
                   <Tab

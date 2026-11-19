@@ -22,7 +22,7 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import {
-  type FormEvent,
+  type SubmitEvent,
   type ReactNode,
   useCallback,
   useEffect,
@@ -522,7 +522,7 @@ function AlertCard({
   }));
   const [saved, setSaved] = useState<"" | "saved" | "failed">("");
   const [saving, setSaving] = useState(false);
-  const submit = async (e: FormEvent) => {
+  const submit = async (e: SubmitEvent) => {
     e.preventDefault();
     const entry = {
       status: form.status,

@@ -201,12 +201,27 @@ Versions: `@stratakit/mui` 1.2.0, `@stratakit/foundations` 1.0.4,
     `primary.main` border on the notched outline. Both draw at once, as
     two concentric rings. Dyno keeps one (a 2 px accent border) in
     `dyno.css`.
-50. **Scrollable tabs fade the first tab when nothing has scrolled.**
-    `Tabs` with `variant="scrollable"` gets a fixed `mask-image` on the
-    scroller, transparent over the first 24 px, whatever the scroll
-    position, so the first tab's label is cut at rest. The edge cue
-    should show only when content is hidden past that edge. Dyno's Work
-    page uses the standard variant and tightens the tabs when narrow.
+50. **Scrollable tabs faded the first tab: our misuse, not StrataKit's.**
+    We reported (itwin/stratakit#2092) that `Tabs` with
+    `variant="scrollable"` cut the first tab's label at rest. Our
+    reproduction passed `scrollButtons={false}`, a prop StrataKit
+    deliberately doesn't support (their #1530) and marks deprecated in
+    `@stratakit/mui`'s types. The fade leaves room for the start scroll
+    button, so it is right when the buttons aren't forced off. The
+    maintainers closed the issue as incorrect usage, rightly. Dyno's Work
+    page now uses `variant="scrollable"` with the default scroll buttons,
+    and lint flags deprecated props in Dyno (typescript-eslint's
+    `no-deprecated`), so the editor's strike-through can't be missed
+    again.
+51. **Scrollable tabs that fit still fade the first tab.** With the
+    supported props, `scrollButtons` left at its default (`"auto"`), MUI
+    renders no scroll buttons when the tabs fit. StrataKit's scroller
+    fade only drops its start inset when a disabled start button is
+    present, so with a fine pointer the first 24 px stay transparent and
+    the first tab's label is cut ("our move" for "Your move"), though
+    nothing is hidden past either edge. Once the tabs overflow, the
+    buttons render and the fade is right. Dyno's Work page clears the
+    mask when its tabs have no scroll buttons (`work.css`).
 
 ## What worked well
 

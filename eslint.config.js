@@ -204,6 +204,34 @@ export default [
     },
   },
   {
+    // Dyno: flag deprecated APIs, such as MUI props @stratakit/mui marks
+    // unsupported (CS-707). The rule needs type information, so it's scoped
+    // to Dyno's suite to keep lint elsewhere fast. Uses that were already
+    // there are held in eslint.seatbelt.tsv, which only lets their count
+    // fall.
+    files: [
+      "packages/next/bench/suite/**/*.ts",
+      "packages/next/bench/suite/**/*.tsx",
+    ],
+    plugins: { "eslint-seatbelt": seatbelt },
+    processor: "eslint-seatbelt/seatbelt",
+    settings: {
+      seatbelt: {
+        seatbeltFile: join(__dirname, "eslint.seatbelt.tsv"),
+      },
+    },
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: __dirname,
+      },
+    },
+    rules: {
+      "eslint-seatbelt/configure": "error",
+      "@typescript-eslint/no-deprecated": "error",
+    },
+  },
+  {
     // Node scripts in the PoC (benchmark runner, shader build). The runner's
     // page.evaluate callbacks run in the browser, hence both global sets.
     files: ["packages/next/**/*.mjs"],
