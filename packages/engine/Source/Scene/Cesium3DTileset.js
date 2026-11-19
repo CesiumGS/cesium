@@ -2336,9 +2336,8 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * computations or queries.
    *
    * @memberof Cesium3DTileset.prototype
-   * @readonly
    * @type {Function|undefined}
-   * @private
+   * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
    */
   conditionalContentUriCondition: {
     get: function () {
