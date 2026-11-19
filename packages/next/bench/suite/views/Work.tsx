@@ -164,6 +164,7 @@ import {
   type MutGraphNode,
   sugiyama,
 } from "d3-dag";
+import { DependenciesLink, DependenciesView } from "./Dependencies.tsx";
 import { InlineText, ItemText } from "./ItemText.tsx";
 import { Status as StatusBadge } from "./runParts.tsx";
 
@@ -433,12 +434,14 @@ function Board({
       : scopeNames.join(" and ") || undefined;
   // The Plan view by default (CS-692); the depth layering is "earliest
   // possible start", in waves, until the Dependencies view (CS-694) holds it.
-  const roadmapBy: "plan" | "waves" | "matrix" =
+  const roadmapBy: "plan" | "waves" | "matrix" | "deps" =
     search.roadmap === "matrix"
       ? "matrix"
       : search.roadmap === "waves"
         ? "waves"
-        : "plan";
+        : search.roadmap === "deps"
+          ? "deps"
+          : "plan";
   const slots = clampSlots(search.slots ?? 1);
   // Proposed milestones join the roadmap only when asked for (CS-563).
   const withProposed = search.proposed === "show";
@@ -717,7 +720,9 @@ function Board({
                         ? "Each row's open items that wait on each column's"
                         : roadmapBy === "plan"
                           ? "What gets built when, as the run's executors would work through it: no dates, no durations"
-                          : "Earliest possible start: each milestone in the first wave after everything it waits on"
+                          : roadmapBy === "deps"
+                            ? "What one milestone or item waits on, and what it unblocks"
+                            : "Earliest possible start: each milestone in the first wave after everything it waits on"
                   }
                   className="span-12"
                   tools={
@@ -889,6 +894,12 @@ function Board({
                             Earliest possible start
                           </ToggleButton>
                           <ToggleButton
+                            value="deps"
+                            render={<Button variant="outlined" size="small" />}
+                          >
+                            Dependencies
+                          </ToggleButton>
+                          <ToggleButton
                             value="matrix"
                             render={<Button variant="outlined" size="small" />}
                           >
@@ -904,6 +915,26 @@ function Board({
                       s={s}
                       project={oneProject!}
                       onCell={(from, to) => open(`dep:${from}:${to}`)}
+                    />
+                  ) : roadmapBy === "deps" ? (
+                    <DependenciesView
+                      s={s}
+                      flight={flight}
+                      search={search}
+                      set={set}
+                      proposals={withProposed}
+                      matrix={
+                        <MatrixView
+                          s={s}
+                          items={items}
+                          flight={flight}
+                          proposals={withProposed}
+                          release={search.release}
+                          onRelease={(id) => set({ release: id }, true)}
+                          onCell={(from, to) => open(`dep:${from}:${to}`)}
+                          onProject={(id) => scopeTo({ project: id })}
+                        />
+                      }
                     />
                   ) : roadmapBy === "matrix" ? (
                     <MatrixView
@@ -1647,7 +1678,7 @@ const KIND_GLYPHS: Record<EntityKind, ReactNode> = {
  * Named for assistive technology and on hover, unless the words beside it
  * already name the kind.
  */
-function KindMark({
+export function KindMark({
   kind,
   named = true,
 }: {
@@ -1681,7 +1712,7 @@ function KindTag({ kind }: { kind: EntityKind }) {
 }
 
 /** An ID with its kind's mark before it: how every ID on the page is drawn. */
-function KindId({ id, kind }: { id: string; kind?: EntityKind }) {
+export function KindId({ id, kind }: { id: string; kind?: EntityKind }) {
   const kinds = useContext(KindsContext);
   const k = kind ?? kinds.get(id) ?? "work";
   return (
@@ -4726,6 +4757,7 @@ function EntityPane({
                 )}
               </dl>
             )}
+            {(it || m) && <DependenciesLink id={id} />}
             {p && (
               <Button
                 variant="outlined"

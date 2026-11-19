@@ -74,10 +74,16 @@ export interface WorkSearch {
   shape?: string;
   /** Earliest possible start in release bands (default) or by "waves" alone, the pure dependency view (CS-685; "steps" before CS-692). */
   arrange?: string;
-  /** The roadmap's view: the Plan (default, CS-692), "waves" (earliest possible start) or "matrix" (the projects' waits on each other). */
+  /** The roadmap's view: the Plan (default, CS-692), "waves" (earliest possible start), "deps" (one thing's dependencies, CS-694) or "matrix" (the projects' waits on each other). */
   roadmap?: string;
   /** The Plan view's executor slots, 2 to 8 (one, the run's max_executors today, by default). */
   slots?: string;
+  /** The Dependencies view's center: a milestone or item (CS-694). */
+  focus?: string;
+  /** The Dependencies view's whole structure, "all" (one at a time by default). */
+  deps?: string;
+  /** The levels the Dependencies view's trees show, 1 to 6 (3 by default). */
+  depth?: string;
   /** The roadmap with its proposed milestones too, "show" (committed work only by default). */
   proposed?: string;
   /** The Proposals view narrowed to one stage of the proposal flow (CS-688): "discuss", "shaping", "ready" or "later" (every stage by default). */
@@ -126,8 +132,18 @@ export const workRoute = createRoute({
       arrange:
         s.arrange === "waves" || s.arrange === "steps" ? "waves" : undefined,
       roadmap:
-        s.roadmap === "matrix" || s.roadmap === "waves" ? s.roadmap : undefined,
+        s.roadmap === "matrix" || s.roadmap === "waves" || s.roadmap === "deps"
+          ? s.roadmap
+          : undefined,
       slots: slotsIn(s.slots),
+      focus: str(s.focus),
+      deps: s.deps === "all" ? "all" : undefined,
+      depth:
+        typeof s.depth === "string" || typeof s.depth === "number"
+          ? /^[1-6]$/.test(String(s.depth))
+            ? String(s.depth)
+            : undefined
+          : undefined,
       proposed: s.proposed === "show" ? "show" : undefined,
       stage:
         s.stage === "discuss" ||

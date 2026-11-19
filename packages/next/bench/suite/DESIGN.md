@@ -527,6 +527,68 @@ milestones named by their outcome, each with an `outcome` sentence,
   minute (claims elsewhere are scanned at most every 30 s, the history
   once per commit).
 
+### The roadmap's Dependencies view (CS-694)
+
+The second of the roadmap's three views (the owner, 2026-11-18: Plan,
+CS-692; Dependencies; Projects, CS-693), on the three-view brief CS-692
+records: one view per question, and this one answers why. Every wait
+between 90-odd milestones drawn at once answers neither "what is this
+waiting on?" nor "what does this unblock?", so the view asks about one
+thing at a time and shows the rest on demand.
+
+- **Where it is.** `?view=roadmap&roadmap=deps`, the Dependencies toggle
+  beside Milestones and Project waits. `&focus=CS-<n>` is the center;
+  `&depth=` the levels shown, 1 to 6 (3 when absent); `&deps=all` the
+  whole structure. It follows the roadmap's Proposed toggle: proposed
+  milestones join only when asked for, outlined dashed (CS-563).
+- **Choosing the center.** From the pane (Its dependencies, on any
+  milestone or item, so from the Plan view, a list, Find or the map),
+  from its own search field (ID or words in the title, milestones
+  first; the arrow keys walk the matches, Enter takes the first), or,
+  with nothing chosen, from the milestones most work waits on, or the
+  one open in the pane. A node's center button moves the center to it.
+- **Layout.** What the center waits on to its left, the center, what it
+  unblocks to its right; narrower than 900 px they stack, the center
+  first. Each side is a small tree, expanded to the depth chosen. Its
+  head says how far its chain goes: how many open milestones and items,
+  up to how many levels, and how many of them are the owner's decisions
+  and outside waits, in their kinds' ink.
+- **A node** is one line: a stage fill, its ID with its kind's mark,
+  its title (which opens it in the pane), and the center button. Under
+  it, small: its state and whether it is ready (a milestone's items
+  ready and done; an owner decision as "Your decision" and an outside
+  wait as "Waits outside:" and the party, each in its kind's ink with its
+  mark), its release, and why it is there ("CS-200 needs CS-210", the
+  item needs behind a wait between milestones). A node cut short by the
+  depth says what lies beyond ("16 more, 7 levels") and opens one level
+  more. A node the tree reaches twice is expanded where it is nearest
+  the center and quiet elsewhere ("also elsewhere"); one that leads back
+  to a node on the way is a loop and ends there.
+- **Two levels, each read at its own** (`dependencies.ts`). An item
+  waits on its open needs, items and milestones. A milestone waits on
+  what holds it up besides its own work: the milestones (or items in
+  none) its open items need, the milestones it names, and its own open
+  decisions and outside waits; its own work is its content, listed in
+  the pane. Unblocks is the other way round, and an item also leads up
+  to the milestones that hold it, so the chain carries on there. Done
+  and dropped work isn't in the trees.
+- **A node's release** is CS-685's band: the earliest release that needs
+  the milestone; for an item, the earliest of its milestones' and of a
+  release that needs it directly; otherwise "No release".
+- **The whole structure, behind the toggle,** for reshaping work. First
+  every open milestone at its **earliest possible start, in waves**:
+  project lanes down, waves across. A milestone's wave is one more than
+  the latest wave of the milestones it waits on; it is the earliest it
+  could start with unlimited hands, never when it will (the Plan view
+  answers when), so the page says so. No wait is drawn; choosing a
+  milestone centers on it, and milestones that wait on each other carry
+  a loop mark. The grid scrolls sideways in its own box with the lanes'
+  names held. Then the project matrix, the one CS-693 moves out of its
+  default.
+- **The key** is one line, worded for the layout (left and right, or
+  under it when stacked); stages, kinds and proposed are explained in
+  tooltips. Nothing animates.
+
 ## Page anatomy
 
 Every view renders through `Page` (views/common.tsx):
