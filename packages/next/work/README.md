@@ -415,7 +415,7 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 40 of 47 done, 3 ready, 4 blocked, 1 dropped. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 40 of 50 done, 4 ready, 4 blocked, 2 proposed, 1 dropped. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
@@ -479,6 +479,9 @@ No milestone
 - [x] [CS-700](./items/CS-700-merge-cs-693-the-projects-view.md) decision: Merge CS-693, the Projects view. Done.
 - [x] [CS-701](./items/CS-701-merge-cs-696-the-shared-hover-card.md) decision: Merge CS-696, the shared hover card. Done.
 - [x] [CS-702](./items/CS-702-merge-cs-698-the-flow-chart-s-hover-card.md) decision: Merge CS-698, the Flow chart's hover card. Done.
+- [?] [CS-703](./items/CS-703-dyno-s-work-page-drops-the-old-map-s-helpers.md) Dyno's Work page drops the old map's helpers that nothing uses. Proposed. Needs nothing.
+- [ ] [CS-704](./items/CS-704-dyno-s-board-reads-hitld-s-ledger-incrementally.md) The Work board reads in under a second: incremental ledger reads, cached git scans, and a light count for the rail. Needs nothing.
+- [?] [CS-705](./items/CS-705-a-test-fails-when-a-class-used-on-the-work-page.md) A test fails when a class used on the Work page has no CSS rule. Proposed. Needs nothing.
 
 ### Follow-ups for other teams
 
@@ -917,7 +920,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 5 of 26 done, 3 ready, 18 blocked. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 7 of 29 done, 4 ready, 18 blocked. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -962,10 +965,13 @@ No milestone
 - [x] [CS-403](./items/CS-403-dyno-s-navigation-rail-regrouped-by-what-people.md) Dyno's navigation rail, regrouped by what people come to do. Done.
 - [x] [CS-516](./items/CS-516-human-in-the-lead-v0-1-0-rc-1-is-released.md) external: human-in-the-lead v0.1.0-rc.1 is released. Done.
 - [ ] [CS-687](./items/CS-687-the-study-model-what-kinds-a-study-has-and-how.md) decision: The study model: what kinds a study has, and how it draws on a set of instruments. Needs nothing. Decided by owner.
+- [ ] [CS-706](./items/CS-706-dyno-s-viewer-starts-drawing-within-half-a.md) Dyno's viewer starts drawing within half a second on a cold browser again. Needs nothing.
+- [x] [CS-707](./items/CS-707-dyno-s-scrollable-tabs-use-stratakit-s.md) Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected. Done.
+- [x] [CS-709](./items/CS-709-merge-cs-707-dyno-s-scrollable-tabs-on.md) decision: Merge CS-707, Dyno's scrollable tabs on StrataKit's supported API. Done.
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 1 of 12 done, 7 ready, 4 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 1 of 13 done, 8 ready, 4 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
@@ -982,6 +988,7 @@ Milestone: The approved API changes are made ([CS-457](./milestones/CS-457-the-a
 
 - [ ] [CS-434](./items/CS-434-stability-tiers-as-tsdoc-tags-with-internal.md) Stability tiers as TSDoc tags, with internal members stripped from the published types. Needs CS-438 and CS-681.
 - [ ] [CS-435](./items/CS-435-the-measurement-module-s-seam-and-entry-point.md) The measurement module's seam and entry point. Needs CS-438.
+- [ ] [CS-708](./items/CS-708-2-0-is-strict-mode-safe-a-canvas-the-engine.md) 2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything. Needs nothing.
 
 Milestone: 1.x's smaller tools have 2.0 homes ([CS-675](./milestones/CS-675-1-x-s-smaller-tools-have-2-0-homes.md), Planned)
 

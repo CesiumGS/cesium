@@ -114,9 +114,9 @@ CS-456 Refinement, profiles and streaming work in worker mode [Planned], under C
 
 CS-457 The approved API changes are made [Planned], under CS-437 The public API reviews
   outcome: The stability tiers the review approved are TSDoc tags, with internal members stripped from the published types, and measurement has its own module seam and entry point.
-  constraints: 0 of 2 done
-  unmet: not linked to a clause yet (open: CS-434, CS-435; check not passed)
-  to shape: done_when; check; link CS-434, CS-435 to a clause
+  constraints: 0 of 3 done
+  unmet: not linked to a clause yet (open: CS-434, CS-435, CS-708; check not passed)
+  to shape: done_when; check; link CS-434, CS-435, CS-708 to a clause
 
 CS-458 Every fetch has a deadline and retries within its origin's budget [Planned], under CS-16 Streaming robustness
   outcome: Every request the engine makes has a deadline set from what its origin has delivered and fails with a kind an app can read; transient failures retry with backoff inside per-origin budgets, and apps can route requests with 1.x's proxies, query parameters, headers and credentials.

@@ -49,9 +49,10 @@ CS-188 Earth to Moon (frames 5c to 5h)
 
 CS-389 Dyno as the development harness
   CS-403  Dyno's navigation rail, regrouped by what people come to do
+  CS-707  Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected
 
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
 
-32 merged item(s) not in a release
+33 merged item(s) not in a release
 ```

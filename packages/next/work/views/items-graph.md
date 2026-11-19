@@ -264,6 +264,9 @@ graph LR
     CS_700["CS-700 Merge CS-693, the Projects view"]:::done
     CS_701["CS-701 Merge CS-696, the shared hover card"]:::done
     CS_702["CS-702 Merge CS-698, the Flow chart's hover card"]:::done
+    CS_703["CS-703 Dyno's Work page drops the old map's helpers that nothing uses"]:::proposed
+    CS_704["CS-704 The Work board reads in under a second: incremental ledger read"]:::open
+    CS_705["CS-705 A test fails when a class used on the Work page has no CSS rule"]:::proposed
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external
@@ -554,6 +557,9 @@ graph LR
     CS_517["CS-517 The agent system's pages: the merge queue, quotas, the controll"]:::open
     CS_518["CS-518 A space switch in Dyno's rail: the engine and the work"]:::open
     CS_687["CS-687 The study model: what kinds a study has, and how it draws on a "]:::decision
+    CS_706["CS-706 Dyno's viewer starts drawing within half a second on a cold bro"]:::open
+    CS_707["CS-707 Dyno's scrollable tabs use StrataKit's supported API, and the S"]:::done
+    CS_709["CS-709 Merge CS-707, Dyno's scrollable tabs on StrataKit's supported A"]:::done
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -568,6 +574,7 @@ graph LR
     CS_572["CS-572 The full version of scene items, designed before the first publ"]:::open
     CS_670["CS-670 Bounding volumes and their tests on the public API"]:::open
     CS_681["CS-681 Should 2.0 keep marking APIs experimental, and how?"]:::decision
+    CS_708["CS-708 2.0 is strict-mode safe: a canvas the engine draws survives cre"]:::open
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::decision

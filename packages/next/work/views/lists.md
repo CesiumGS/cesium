@@ -358,7 +358,7 @@ No milestone
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 40 of 47 done, 3 ready, 4 blocked, 1 dropped. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 40 of 50 done, 4 ready, 4 blocked, 2 proposed, 1 dropped. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
@@ -422,6 +422,9 @@ No milestone
 - [x] CS-700 decision: Merge CS-693, the Projects view. Done.
 - [x] CS-701 decision: Merge CS-696, the shared hover card. Done.
 - [x] CS-702 decision: Merge CS-698, the Flow chart's hover card. Done.
+- [?] CS-703 Dyno's Work page drops the old map's helpers that nothing uses. Proposed. Needs nothing.
+- [ ] CS-704 The Work board reads in under a second: incremental ledger reads, cached git scans, and a light count for the rail. Needs nothing.
+- [?] CS-705 A test fails when a class used on the Work page has no CSS rule. Proposed. Needs nothing.
 
 ### Follow-ups for other teams
 
@@ -860,7 +863,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 5 of 26 done, 3 ready, 18 blocked. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 7 of 29 done, 4 ready, 18 blocked. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -905,10 +908,13 @@ No milestone
 - [x] CS-403 Dyno's navigation rail, regrouped by what people come to do. Done.
 - [x] CS-516 external: human-in-the-lead v0.1.0-rc.1 is released. Done.
 - [ ] CS-687 decision: The study model: what kinds a study has, and how it draws on a set of instruments. Needs nothing. Decided by owner.
+- [ ] CS-706 Dyno's viewer starts drawing within half a second on a cold browser again. Needs nothing.
+- [x] CS-707 Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected. Done.
+- [x] CS-709 decision: Merge CS-707, Dyno's scrollable tabs on StrataKit's supported API. Done.
 
 ### The public API reviews
 
-CS-437, Planned, led by owner: 1 of 12 done, 7 ready, 4 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-437, Planned, led by owner: 1 of 13 done, 8 ready, 4 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
@@ -925,6 +931,7 @@ Milestone: The approved API changes are made (CS-457, Planned)
 
 - [ ] CS-434 Stability tiers as TSDoc tags, with internal members stripped from the published types. Needs CS-438 and CS-681.
 - [ ] CS-435 The measurement module's seam and entry point. Needs CS-438.
+- [ ] CS-708 2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything. Needs nothing.
 
 Milestone: 1.x's smaller tools have 2.0 homes (CS-675, Planned)
 
