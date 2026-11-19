@@ -1,12 +1,15 @@
 import "./hoverCard.css";
-import { Tooltip, useMediaQuery } from "@mui/material";
+import { type PopperProps, Tooltip, useMediaQuery } from "@mui/material";
 import {
   createContext,
+  useCallback,
   type ReactElement,
   type ReactNode,
+  type Ref,
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import {
@@ -49,24 +52,60 @@ const slug = (st: Stage) => st.toLowerCase().replace(/\s+/g, "-");
 /** Placements the card falls back to near the screen's edges, in order. */
 const FALLBACKS = ["top-start", "right-start", "left-start", "bottom-end"];
 
+type Placement =
+  "bottom-start" | "top-start" | "right-start" | "left-start" | "top";
+
+/** The popper the card rides on: `update()` places it again. */
+type PopperInstance = PopperProps["popperRef"] extends Ref<infer I> | undefined
+  ? I
+  : never;
+
 /**
  * The shell: any content in a card about 320 px wide, beside its mark.
  * `keys` are single keys that act while the card is open (D for
  * dependencies); the child must take a ref and pointer and focus events.
+ *
+ * A chart that tracks its own pointer and keys (the Flow chart, CS-698)
+ * passes `open` and `onClose` (Escape) instead, with an anchor child that
+ * moves: `follow` changes whenever it does, and the card moves with it.
  */
 export function HoverCard({
   card,
   children,
   keys,
   placement = "bottom-start",
+  fallbacks = FALLBACKS,
+  open: given,
+  onClose,
+  follow,
 }: {
   card: ReactNode;
   children: ReactElement;
   /** Lower-case keys and what each does while the card is open. */
   keys?: Record<string, () => void>;
-  placement?: "bottom-start" | "top-start" | "right-start" | "top";
+  placement?: Placement;
+  /** Placements to fall back to near the screen's edges, in order. */
+  fallbacks?: readonly Placement[] | readonly string[];
+  /** Open or not, decided by the caller: the card's own hover and focus are off. */
+  open?: boolean;
+  /** Escape, when the caller decides `open`. */
+  onClose?: () => void;
+  /** Changes when the anchor moves, to place the card again. */
+  follow?: unknown;
 }) {
-  const [open, setOpen] = useState(false);
+  const [own, setOwn] = useState(false);
+  const controlled = given !== undefined;
+  const open = controlled ? given : own;
+  const close = useCallback(
+    () => (controlled ? onClose?.() : setOwn(false)),
+    [controlled, onClose],
+  );
+  const popper = useRef<PopperInstance | null>(null);
+  useEffect(() => {
+    if (open) {
+      popper.current?.update();
+    }
+  }, [follow, open]);
   const still = useMediaQuery("(prefers-reduced-motion: reduce)");
   // The card renders in a portal, outside the page's theme: it takes it along.
   const theme = useChartTokens();
@@ -76,7 +115,7 @@ export function HoverCard({
     }
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        setOpen(false);
+        close();
         return;
       }
       if (e.metaKey || e.ctrlKey || e.altKey || !keys) {
@@ -89,18 +128,18 @@ export function HoverCard({
       const act = keys[e.key.toLowerCase()];
       if (act) {
         e.preventDefault();
-        setOpen(false);
+        close();
         act();
       }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [open, keys]);
+  }, [open, keys, close]);
   return (
     <Tooltip
       open={open}
-      onOpen={() => setOpen(true)}
-      onClose={() => setOpen(false)}
+      onOpen={() => !controlled && setOwn(true)}
+      onClose={() => !controlled && setOwn(false)}
       title={card}
       placement={placement}
       enterDelay={300}
@@ -112,9 +151,10 @@ export function HoverCard({
         tooltip: { className: "hover-card-shell" },
         popper: {
           className: `hover-card-popper ${theme}`,
+          popperRef: popper,
           modifiers: [
             { name: "offset", options: { offset: [0, 8] } },
-            { name: "flip", options: { fallbackPlacements: FALLBACKS } },
+            { name: "flip", options: { fallbackPlacements: fallbacks } },
             {
               name: "preventOverflow",
               options: { padding: 8, altAxis: false, tether: true },

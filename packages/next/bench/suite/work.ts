@@ -1184,6 +1184,19 @@ export interface Flow {
   leadDays: number[];
   /** Items made in the window, after the tracker's first day (its import). */
   created: number;
+  /**
+   * Each day's moves against the day before, from the same day-end stages
+   * as `stocks` (so a stage's change is what entered it less what left);
+   * none on the first day, which has no day before.
+   */
+  moves: FlowMove[][];
+}
+
+/** One item's move between two day-ends: `from` absent is new, `to` absent dropped. */
+export interface FlowMove {
+  id: string;
+  from?: Stage;
+  to?: Stage;
 }
 
 /**
@@ -1246,6 +1259,7 @@ export function flowOf(
   const stocks = Object.fromEntries(
     STAGES.map((x) => [x, days.map(() => 0)]),
   ) as Record<Stage, number[]>;
+  const moves: FlowMove[][] = days.map(() => []);
   const arrived = empty();
   const left = empty();
   const since = new Map<string, number>();
@@ -1269,6 +1283,10 @@ export function flowOf(
     path.forEach((stage, i) => {
       if (stage) {
         stocks[stage][i]!++;
+      }
+      const prior = i ? path[i - 1] : stage;
+      if (prior !== stage) {
+        moves[i]!.push({ id: it.id, from: prior, to: stage });
       }
     });
     let before = stageAt(it, Math.max(first, cutoff));
@@ -1304,7 +1322,135 @@ export function flowOf(
       leadDays.push((done.t - planned.t) / DAY);
     }
   }
-  return { days, stocks, arrived, left, window, since, leadDays, created };
+  return {
+    days,
+    stocks,
+    arrived,
+    left,
+    window,
+    since,
+    leadDays,
+    created,
+    moves,
+  };
+}
+
+/** One stage's count at a day's end and its change from the day before. */
+export interface FlowDayRow {
+  st: Stage;
+  count: number;
+  /** Absent on the first day: there is no day before. */
+  change?: number;
+  /** The day's largest change (by size, not sign), when anything changed. */
+  largest: boolean;
+}
+
+/**
+ * Moves of one kind on one day: "Blocked → Ready", "New → Proposed", or
+ * "Finished" for work reaching Done from any stage (so `from` is absent
+ * there; each move in `flow.moves` keeps its own).
+ */
+export interface FlowMoveGroup {
+  from?: Stage;
+  to?: Stage;
+  label: string;
+  ids: string[];
+}
+
+/** A day of the cumulative flow chart, as its hover card reads it (CS-698). */
+export interface FlowDay {
+  index: number;
+  /** Its local midnight. */
+  day: number;
+  first: boolean;
+  /** The last day: now, from the snapshot. */
+  today: boolean;
+  /** Each stage in the chart's order from the top band down (`STAGES`). */
+  rows: FlowDayRow[];
+  total: number;
+  totalChange?: number;
+  /** What moved, finishes first, then the largest groups, then by stage order. */
+  groups: FlowMoveGroup[];
+  /** How many items moved. */
+  moved: number;
+}
+
+/** A move group's name: "Finished" for work reaching Done from a stage. */
+export function moveLabel(from?: Stage, to?: Stage): string {
+  if (from && to === "Done") {
+    return "Finished";
+  }
+  return `${from ? STAGE_NAMES[from] : "New"} → ${to ? STAGE_NAMES[to] : "Dropped"}`;
+}
+
+/** Day `i` of a flow: each stage's count and change, the total, and what moved. */
+export function flowDayOf(flow: Flow, i: number): FlowDay {
+  const first = i === 0;
+  const rows: FlowDayRow[] = STAGES.map((st) => ({
+    st,
+    count: flow.stocks[st][i] ?? 0,
+    change: first
+      ? undefined
+      : (flow.stocks[st][i] ?? 0) - (flow.stocks[st][i - 1] ?? 0),
+    largest: false,
+  }));
+  const top = Math.max(0, ...rows.map((r) => Math.abs(r.change ?? 0)));
+  for (const r of rows) {
+    r.largest = top > 0 && Math.abs(r.change ?? 0) === top;
+  }
+  const total = rows.reduce((n, r) => n + r.count, 0);
+  const before = first
+    ? undefined
+    : STAGES.reduce((n, st) => n + (flow.stocks[st][i - 1] ?? 0), 0);
+  const byKey = new Map<string, FlowMoveGroup>();
+  for (const m of flow.moves[i] ?? []) {
+    const label = moveLabel(m.from, m.to);
+    const g = byKey.get(label) ?? {
+      from: label === "Finished" ? undefined : m.from,
+      to: m.to,
+      label,
+      ids: [],
+    };
+    g.ids.push(m.id);
+    byKey.set(label, g);
+  }
+  const rank = (st?: Stage) => (st ? STAGES.indexOf(st) : -1);
+  const finished = (g: FlowMoveGroup) => (g.label === "Finished" ? 0 : 1);
+  const groups = [...byKey.values()]
+    .map((g) => ({
+      ...g,
+      ids: g.ids.sort((a, b) => idNumber(a) - idNumber(b)),
+    }))
+    .sort(
+      (a, b) =>
+        finished(a) - finished(b) ||
+        b.ids.length - a.ids.length ||
+        rank(a.to) - rank(b.to) ||
+        rank(a.from) - rank(b.from),
+    );
+  return {
+    index: i,
+    day: flow.days[i] ?? 0,
+    first,
+    today: i === flow.days.length - 1,
+    rows,
+    total,
+    totalChange: before === undefined ? undefined : total - before,
+    groups,
+    moved: flow.moves[i]?.length ?? 0,
+  };
+}
+
+/** A local day's key, "2026-11-16": a Flow day's name in the page's address. */
+export function dayKey(t: number): string {
+  const d = new Date(t);
+  const two = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${two(d.getMonth() + 1)}-${two(d.getDate())}`;
+}
+
+/** A change in a count, signed: "+3", "−2" (a true minus), "0". */
+export function changeText(n: number): string {
+  return n > 0 ? `+${n}` : n < 0 ? `−${-n}` : "0";
 }
 
 /** A duration in words: "3 days", "5 hours", "under an hour". */

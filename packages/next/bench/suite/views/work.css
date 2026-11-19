@@ -523,6 +523,27 @@
 .work-swatch.none {
   background: transparent;
 }
+/*
+ * The plot is one stop for the keyboard: arrow keys step through the
+ * days. The hover card's anchor spans the crosshair and the pointer, so
+ * the card (CS-698) sits beside both and never over the band pointed at.
+ */
+.work-cfd-plot {
+  position: relative;
+  border-radius: var(--stratakit-radius-sm);
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.work-cfd-plot:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.work-cfd-anchor {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+}
 .work-cfd-svg {
   display: block;
   width: 100%;
@@ -533,20 +554,9 @@
   stroke: var(--stratakit-color-bg-page-base);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
-  cursor: pointer;
 }
 .work-band:hover {
   opacity: 0.85;
-}
-.work-cfd-hit {
-  fill: transparent;
-  pointer-events: all;
-}
-.work-cfd-svg .work-cfd-hit {
-  pointer-events: none;
-}
-.work-cfd-svg:hover .work-cfd-hit {
-  pointer-events: all;
 }
 .work-cfd-cross {
   stroke: var(--stratakit-color-text-neutral-primary);
@@ -560,8 +570,99 @@
   color: var(--stratakit-color-text-neutral-secondary);
   margin-top: var(--stratakit-space-100);
 }
-.work-cfd-read {
+.work-cfd-note {
   margin: var(--stratakit-space-200) 0 0;
+}
+
+/*
+ * The Flow chart's hover card (CS-698), in the shared card's shell: each
+ * stage's count and change in columns, the largest change and its stage
+ * in bold, zeros quiet, and the total under a rule.
+ */
+.flow-card-head {
+  align-items: baseline;
+  justify-content: space-between;
+}
+.flow-card-against {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-md);
+  white-space: nowrap;
+}
+.flow-card-rows {
+  display: grid;
+  grid-template-columns: 10px 1fr auto 3.5em;
+  column-gap: var(--stratakit-space-200);
+  font-variant-numeric: tabular-nums;
+}
+.flow-card-row {
+  display: contents;
+}
+.flow-card-row > * {
+  padding: 1px 0;
+}
+.flow-card-row > .work-swatch {
+  align-self: center;
+  padding: 0;
+}
+.flow-card-row.under > .flow-card-name {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--stage);
+}
+.flow-card-count {
+  text-align: end;
+}
+.flow-card-change {
+  text-align: end;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.flow-card-change.zero {
+  color: var(--stratakit-color-text-neutral-tertiary);
+}
+.flow-card-change.largest {
+  font-weight: 700;
+}
+.flow-card-row.largest > .flow-card-name {
+  font-weight: 600;
+}
+.flow-card-rule {
+  grid-column: 1 / -1;
+  margin: var(--stratakit-space-100) 0 2px;
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.flow-card-row.total > * {
+  font-weight: 600;
+}
+.flow-card-moves {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.flow-card-moves li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.flow-card-move {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  font-weight: 600;
+}
+.flow-card-more {
+  flex: none;
+  margin-left: auto;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.flow-card-n {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
 

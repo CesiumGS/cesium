@@ -34,7 +34,11 @@ import {
   slipText,
   stageWords,
   workCardOf,
+  changeText,
+  dayKey,
+  flowDayOf,
   flowOf,
+  moveLabel,
   inFlightOf,
   kindsOf,
   milestoneMapOf,
@@ -389,6 +393,162 @@ describe("flow, replayed from the state history", () => {
     expect(flow.arrived["In flight"]).toBe(1);
     expect(flow.created).toBe(1); // CS-3; the first day's items are the import
     expect(flow.leadDays.map((d) => Math.round(d * 24))).toEqual([6]);
+  });
+});
+
+describe("a day of the flow chart, in its hover card (CS-698)", () => {
+  const day = (d: number, h = 12) =>
+    new Date(2026, 10, 13 + d, h).toISOString();
+  const s: WorkSnapshot = {
+    ...snapshot,
+    items: [
+      item("CS-1", { state: "done", ready: false, needed_by: ["CS-2"] }),
+      item("CS-2", { needs: ["CS-1"] }),
+      item("CS-3", { state: "done", ready: false }),
+      item("CS-4", { state: "proposed", ready: false }),
+      item("CS-5", { state: "in-progress", ready: false }),
+      item("CS-6", { state: "in-progress", ready: false }),
+    ],
+    history: [
+      // The import: CS-2 waits on CS-1; the rest are ready.
+      ...["CS-1", "CS-2", "CS-3", "CS-5", "CS-6"].map((id) => ({
+        id,
+        at: day(0, 9),
+        state: "planned" as const,
+      })),
+      // The next day CS-1 finishes (freeing CS-2), three start, CS-4 is made.
+      { id: "CS-1", at: day(1, 10), state: "done" },
+      { id: "CS-3", at: day(1, 11), state: "in-progress" },
+      { id: "CS-5", at: day(1, 11), state: "in-progress" },
+      { id: "CS-6", at: day(1, 11), state: "in-progress" },
+      { id: "CS-4", at: day(1, 12), state: "proposed" },
+      // Nothing the day after; CS-3 finishes today.
+      { id: "CS-3", at: day(3, 10), state: "done" },
+    ],
+  };
+  const flow = flowOf(s, s.items, {
+    now: new Date(2026, 10, 16, 18).getTime(),
+  });
+  const counts = (i: number) =>
+    Object.fromEntries(flowDayOf(flow, i).rows.map((r) => [r.st, r.count]));
+  const changes = (i: number) =>
+    Object.fromEntries(flowDayOf(flow, i).rows.map((r) => [r.st, r.change]));
+
+  it("reads each stage's count in the chart's order, top band first", () => {
+    expect(flow.days).toHaveLength(4);
+    const d = flowDayOf(flow, 1);
+    expect(d.rows.map((r) => r.st)).toEqual([
+      "Proposed",
+      "Waiting",
+      "Ready",
+      "In flight",
+      "Done",
+    ]);
+    expect(counts(1)).toEqual({
+      Proposed: 1,
+      Waiting: 0,
+      Ready: 1,
+      "In flight": 3,
+      Done: 1,
+    });
+    expect(d.total).toBe(6);
+  });
+
+  it("gives each stage's change from the day before, and the total's", () => {
+    const d = flowDayOf(flow, 1);
+    expect(changes(1)).toEqual({
+      Proposed: 1,
+      Waiting: -1,
+      Ready: -3,
+      "In flight": 3,
+      Done: 1,
+    });
+    expect(d.totalChange).toBe(1); // CS-4 is new
+    // The largest by size, either sign.
+    expect(d.rows.filter((r) => r.largest).map((r) => r.st)).toEqual([
+      "Ready",
+      "In flight",
+    ]);
+    expect(changes(3)).toMatchObject({ "In flight": -1, Done: 1 });
+  });
+
+  it("has no changes on the first day: there is no day before", () => {
+    const d = flowDayOf(flow, 0);
+    expect(d.first).toBe(true);
+    expect(d.rows.every((r) => r.change === undefined && !r.largest)).toBe(
+      true,
+    );
+    expect(d.totalChange).toBeUndefined();
+    expect(d.groups).toEqual([]);
+    expect(counts(0)).toMatchObject({ Waiting: 1, Ready: 4 });
+  });
+
+  it("reads a day with no change as zeros, none of them largest, nothing moved", () => {
+    const d = flowDayOf(flow, 2);
+    expect(d.rows.every((r) => r.change === 0 && !r.largest)).toBe(true);
+    expect(d.totalChange).toBe(0);
+    expect(d.groups).toEqual([]);
+    expect(d.moved).toBe(0);
+  });
+
+  it("says what moved: finishes first, then the largest groups", () => {
+    const d = flowDayOf(flow, 1);
+    expect(d.groups.map((g) => [g.label, g.ids])).toEqual([
+      ["Finished", ["CS-1"]],
+      ["Ready → In progress", ["CS-3", "CS-5", "CS-6"]],
+      ["New → Proposed", ["CS-4"]],
+      ["Blocked → Ready", ["CS-2"]],
+    ]);
+    expect(d.moved).toBe(6);
+    expect(flowDayOf(flow, 3).groups.map((g) => g.label)).toEqual(["Finished"]);
+    expect(flowDayOf(flow, 3).today).toBe(true);
+  });
+
+  it("matches each stage's change with what entered it less what left", () => {
+    for (let i = 1; i < flow.days.length; i++) {
+      const d = flowDayOf(flow, i);
+      const moves = flow.moves[i]!;
+      for (const r of d.rows) {
+        const into = moves.filter((m) => m.to === r.st).length;
+        const out = moves.filter((m) => m.from === r.st).length;
+        expect(r.change).toBe(into - out);
+      }
+      expect(d.groups.reduce((n, g) => n + g.ids.length, 0)).toBe(moves.length);
+    }
+  });
+
+  it("puts every finish in one group, whatever stage it left", () => {
+    const s2: WorkSnapshot = {
+      ...s,
+      items: [...s.items, item("CS-7", { state: "done", ready: false })],
+      history: [
+        ...s.history!,
+        // In progress from the first day, so it finishes from another stage.
+        { id: "CS-7", at: day(0, 9), state: "planned" },
+        { id: "CS-7", at: day(0, 10), state: "in-progress" },
+        { id: "CS-7", at: day(1, 10), state: "done" },
+      ],
+    };
+    const d = flowDayOf(
+      flowOf(s2, s2.items, { now: new Date(2026, 10, 16, 18).getTime() }),
+      1,
+    );
+    expect(d.groups[0]).toMatchObject({
+      label: "Finished",
+      ids: ["CS-1", "CS-7"],
+    });
+    expect(d.groups[0]!.from).toBeUndefined();
+    expect(d.groups.filter((g) => g.label === "Finished")).toHaveLength(1);
+  });
+
+  it("names moves and changes plainly", () => {
+    expect(moveLabel("In flight", "Done")).toBe("Finished");
+    expect(moveLabel(undefined, "Done")).toBe("New → Done");
+    expect(moveLabel("Ready", undefined)).toBe("Ready → Dropped");
+    expect(changeText(3)).toBe("+3");
+    expect(changeText(-2)).toBe("\u22122");
+    expect(changeText(0)).toBe("0");
+    expect(dayKey(flow.days[1]!)).toBe("2026-11-14");
   });
 });
 

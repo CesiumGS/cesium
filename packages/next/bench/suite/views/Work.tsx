@@ -77,6 +77,10 @@ import {
   ENTITY_KINDS,
   type EntityKind,
   type Flow,
+  type FlowDay,
+  changeText,
+  dayKey,
+  flowDayOf,
   findWork,
   flowOf,
   idNumber,
@@ -147,6 +151,7 @@ import {
 import { Empty, Page, toast, useChartTokens } from "./common.tsx";
 import { DependenciesLink, DependenciesView } from "./Dependencies.tsx";
 import {
+  HoverCard,
   SegmentTip,
   StageBar as LabeledStageBar,
   WorkCardProvider,
@@ -929,12 +934,14 @@ function Board({
                   <Card
                     id="work-flow-h"
                     title="Items in each stage, day by day"
-                    caption={`A band that widens is a queue growing; choose one to list it. ${flow.created} ${flow.created === 1 ? "item" : "items"} new in the last ${flow.window} days.`}
+                    caption={`A band that widens is a queue growing; choose a day to list what moved, or a stage to list it. ${flow.created} ${flow.created === 1 ? "item" : "items"} new in the last ${flow.window} days.`}
                     className="span-12"
                   >
                     <FlowChart
                       flow={flow}
+                      itemOf={itemOf}
                       onStage={(st) => open(`stage:${st}`)}
+                      onDay={(key) => open(`day:${key}`)}
                     />
                   </Card>
                   <MeasuresCard
@@ -2047,17 +2054,30 @@ function LeverageBars({
 
 /**
  * The cumulative flow diagram: each stage's count stacked, day by day, so
- * a band that widens is a queue growing. Hover reads a day's counts;
- * choosing a band lists its items.
+ * a band that widens is a queue growing. Hovering or focusing reads a day
+ * in the shared hover card (CS-698), beside the crosshair: each stage's
+ * count and its change from the day before, and what moved. Arrow keys
+ * step through the days; a click or Enter lists what moved in the pane.
  */
 function FlowChart({
   flow,
+  itemOf,
   onStage,
+  onDay,
 }: {
   flow: Flow;
+  itemOf: Map<string, WorkItem>;
   onStage: (st: Stage) => void;
+  /** Lists what moved on a day, by its key ("2026-11-16"). */
+  onDay: (key: string) => void;
 }) {
-  const [hover, setHover] = useState<number>();
+  const plot = useRef<HTMLDivElement>(null);
+  const [active, setActive] = useState<number>();
+  /** The pointer's place across the plot (0 to 1); none from the keyboard. */
+  const [px, setPx] = useState<number>();
+  const [hidden, setHidden] = useState(false);
+  const [keyboard, setKeyboard] = useState(false);
+  const [under, setUnder] = useState<Stage>();
   const w = 560;
   const h = 180;
   const order = [...STAGES].reverse(); // Done at the bottom
@@ -2082,12 +2102,58 @@ function FlowChart({
       .reverse()
       .map((i, j) => `L${x(i)},${y(lower[xs.length - 1 - j]!)}`)
       .join(" ")} Z`;
-    const mid = (upper.at(-1)! + lower.at(-1)!) / 2;
-    return { st, d, mid, thick: upper.at(-1)! - lower.at(-1)! };
+    return { st, d };
   });
-  const day = (t: number) =>
-    new Date(t).toLocaleDateString([], { month: "short", day: "numeric" });
-  const hi = hover ?? n - 1;
+  const first = dayName(flow.days[0] ?? Date.now());
+  const today = n - 1;
+  const shown = active ?? today;
+  const read = useMemo(
+    () => (n ? flowDayOf(flow, shown) : undefined),
+    [flow, shown, n],
+  );
+  const nearest = (clientX: number) => {
+    const r = plot.current?.getBoundingClientRect();
+    if (!r || !r.width) {
+      return undefined;
+    }
+    const f = Math.min(1, Math.max(0, (clientX - r.left) / r.width));
+    return { f, i: n < 2 ? 0 : Math.round(f * (n - 1)) };
+  };
+  const go = (i: number) => {
+    setActive(Math.min(today, Math.max(0, i)));
+    setPx(undefined);
+    setHidden(false);
+    setKeyboard(true);
+  };
+  // The card sits beside both the crosshair and the pointer, never over
+  // either: its anchor spans the gap between them, full height.
+  const cross = n < 2 ? (px ?? 0.5) : shown / (n - 1);
+  const from = Math.min(cross, px ?? cross);
+  const to = Math.max(cross, px ?? cross);
+  // Beside the crosshair where the screen has room, on the side with more
+  // of it; on a narrow screen, above or below the chart instead.
+  const box = plot.current?.getBoundingClientRect();
+  const room = box && {
+    left: box.left + from * box.width,
+    right: window.innerWidth - box.left - to * box.width,
+    above: box.top,
+    below: window.innerHeight - box.bottom,
+  };
+  const wide = (r: number) => r >= FLOW_CARD + 16;
+  const side: "right-start" | "left-start" | "top-start" | "bottom-start" =
+    !room
+      ? "right-start"
+      : wide(room.right) && (cross <= 0.5 || !wide(room.left))
+        ? "right-start"
+        : wide(room.left)
+          ? "left-start"
+          : room.above >= room.below
+            ? "top-start"
+            : "bottom-start";
+  const fallbacks = (
+    ["right-start", "left-start", "top-start", "bottom-start"] as const
+  ).filter((p) => p !== side);
+  const open = active !== undefined && !hidden && !!read;
   return (
     <div className="work-cfd">
       <ul className="work-legend" aria-label="Stages">
@@ -2108,62 +2174,279 @@ function FlowChart({
           </li>
         ))}
       </ul>
-      <svg
-        viewBox={`0 0 ${w} ${h}`}
-        className="work-cfd-svg"
-        role="img"
-        aria-label={`Items by stage since ${day(flow.days[0] ?? Date.now())}: ${STAGES.map((st) => `${STAGE_NAMES[st]} ${flow.stocks[st].at(-1)}`).join(", ")}`}
-        preserveAspectRatio="none"
-        onMouseLeave={() => setHover(undefined)}
+      <div
+        ref={plot}
+        className="work-cfd-plot"
+        role="slider"
+        tabIndex={n ? 0 : -1}
+        aria-label={`Items by stage, day by day since ${first}`}
+        aria-valuemin={0}
+        aria-valuemax={Math.max(0, today)}
+        aria-valuenow={shown}
+        aria-valuetext={read ? flowDayText(read) : undefined}
+        onPointerMove={(e) => {
+          const p = nearest(e.clientX);
+          if (!p) {
+            return;
+          }
+          if (p.i !== active) {
+            setHidden(false);
+          }
+          setActive(p.i);
+          setPx(p.f);
+          setKeyboard(false);
+        }}
+        onPointerLeave={() => {
+          setPx(undefined);
+          setUnder(undefined);
+          if (!keyboard) {
+            setActive(undefined);
+          }
+        }}
+        onClick={(e) => {
+          const p = nearest(e.clientX);
+          if (p) {
+            onDay(dayKey(flow.days[p.i]!));
+          }
+        }}
+        onFocus={(e) => {
+          if (e.currentTarget.matches(":focus-visible")) {
+            go(active ?? today);
+          }
+        }}
+        onBlur={() => {
+          setKeyboard(false);
+          setActive(undefined);
+        }}
+        onKeyDown={(e) => {
+          const step: Record<string, number> = {
+            ArrowLeft: shown - 1,
+            ArrowRight: shown + 1,
+            ArrowDown: shown - 1,
+            ArrowUp: shown + 1,
+            Home: 0,
+            End: today,
+          };
+          if (e.key in step) {
+            e.preventDefault();
+            go(step[e.key]!);
+          } else if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onDay(dayKey(flow.days[shown]!));
+          }
+        }}
       >
-        {bands.map((b) => (
-          <path
-            key={b.st}
-            d={b.d}
-            className={`work-band stage-${slug(b.st)}`}
-            onClick={() => onStage(b.st)}
-          >
-            <title>{`${stageTip(b.st)}; choose to list its items`}</title>
-          </path>
-        ))}
-        {n > 1 &&
-          flow.days.map((_, i) => (
-            <rect
-              key={i}
-              x={x(i) - w / (n - 1) / 2}
-              y={0}
-              width={w / (n - 1)}
-              height={h}
-              className="work-cfd-hit"
-              onMouseEnter={() => setHover(i)}
+        <svg
+          viewBox={`0 0 ${w} ${h}`}
+          className="work-cfd-svg"
+          aria-hidden="true"
+          preserveAspectRatio="none"
+        >
+          {bands.map((b) => (
+            <path
+              key={b.st}
+              d={b.d}
+              className={`work-band stage-${slug(b.st)}`}
+              onPointerEnter={() => setUnder(b.st)}
+              onPointerLeave={() => setUnder(undefined)}
             />
           ))}
-        {hover !== undefined && n > 1 && (
-          <line
-            x1={x(hover)}
-            x2={x(hover)}
-            y1={0}
-            y2={h}
-            className="work-cfd-cross"
+          {active !== undefined && n > 1 && (
+            <line
+              x1={x(active)}
+              x2={x(active)}
+              y1={0}
+              y2={h}
+              className="work-cfd-cross"
+            />
+          )}
+        </svg>
+        <HoverCard
+          card={
+            read && (
+              <FlowDayCard
+                d={read}
+                itemOf={itemOf}
+                under={px === undefined ? undefined : under}
+              />
+            )
+          }
+          open={open}
+          onClose={() => setHidden(true)}
+          placement={side}
+          fallbacks={fallbacks}
+          follow={`${shown}:${from}:${to}`}
+        >
+          <span
+            className="work-cfd-anchor"
+            aria-hidden="true"
+            style={{
+              left: `${from * 100}%`,
+              width: `max(1px, ${(to - from) * 100}%)`,
+            }}
           />
-        )}
-      </svg>
+        </HoverCard>
+      </div>
       <div className="work-cfd-axis" aria-hidden="true">
-        <span>{day(flow.days[0] ?? Date.now())}</span>
+        <span>{first}</span>
         <span>{n > 1 ? "Today" : ""}</span>
       </div>
-      <Typography
-        variant="caption-md"
-        color="textSecondary"
-        render={<p />}
-        className="work-cfd-read"
+      {n < 3 && (
+        <Typography
+          variant="caption-md"
+          color="textSecondary"
+          render={<p />}
+          className="work-cfd-note"
+        >
+          The history began {first}; the bands fill in as work moves.
+        </Typography>
+      )}
+    </div>
+  );
+}
+
+/** "Nov 16". */
+const dayName = (t: number) =>
+  new Date(t).toLocaleDateString([], { month: "short", day: "numeric" });
+
+/** A day of the flow in words, for a screen reader: the card's content. */
+function flowDayText(d: FlowDay): string {
+  const change = (c?: number) => (c === undefined ? "" : ` (${changeText(c)})`);
+  const stages = d.rows
+    .map((r) => `${STAGE_NAMES[r.st]} ${r.count}${change(r.change)}`)
+    .join(", ");
+  const moved = d.first
+    ? "the history's first day"
+    : `${d.moved} ${d.moved === 1 ? "item" : "items"} moved`;
+  return `${d.today ? "Today" : dayName(d.day)}: ${stages}; total ${d.total}${change(d.totalChange)}; ${moved}`;
+}
+
+/** The card's width and its gap from the anchor (hoverCard.css, the offset). */
+const FLOW_CARD = 320 + 8;
+/** Names shown in the card's "What moved", across its groups. */
+const FLOW_NAMES = 3;
+/** Groups shown by name; the rest are counted. */
+const FLOW_GROUPS = 2;
+
+/**
+ * The Flow chart's card: the day, each stage in the chart's order with
+ * its swatch, count and change (the largest stand out, zeros stay quiet),
+ * the total, and what moved, a few by name.
+ */
+function FlowDayCard({
+  d,
+  itemOf,
+  under,
+}: {
+  d: FlowDay;
+  itemOf: Map<string, WorkItem>;
+  /** The band under the pointer: its row is marked. */
+  under?: Stage;
+}) {
+  const groups = d.groups.slice(0, FLOW_GROUPS);
+  const rest = d.groups
+    .slice(FLOW_GROUPS)
+    .reduce((sum, g) => sum + g.ids.length, 0);
+  let budget = FLOW_NAMES;
+  const named = groups.map((g, k) => {
+    // The first group gets two names, the others one, while names last.
+    const take = Math.min(g.ids.length, budget, k ? 1 : 2);
+    budget -= take;
+    return { g, ids: g.ids.slice(0, take) };
+  });
+  const change = (c: number | undefined, largest = false) =>
+    c === undefined ? (
+      <span />
+    ) : (
+      <span
+        className={`flow-card-change${c === 0 ? " zero" : ""}${largest ? " largest" : ""}`}
       >
-        {hover !== undefined
-          ? `${day(flow.days[hi]!)}: ${STAGES.map((st) => `${STAGE_NAMES[st]} ${flow.stocks[st][hi]}`).join(", ")}`
-          : n < 3
-            ? `The history began ${day(flow.days[0] ?? Date.now())}; the bands fill in as work moves`
-            : " "}
-      </Typography>
+        {changeText(c)}
+      </span>
+    );
+  return (
+    <div className="hover-card flow-card">
+      <div className="hover-card-head flow-card-head">
+        <span className="hover-card-title">
+          {d.today ? `Today, ${dayName(d.day)}` : dayName(d.day)}
+        </span>
+        {!d.first && (
+          <span className="flow-card-against">from the day before</span>
+        )}
+      </div>
+      <div className="flow-card-rows">
+        {d.rows.map((r) => (
+          <div
+            key={r.st}
+            className={`flow-card-row${r.largest ? " largest" : ""}${r.st === under ? " under" : ""}`}
+          >
+            <span
+              className={`work-swatch stage-${slug(r.st)}`}
+              aria-hidden="true"
+            />
+            <span className="flow-card-name">{STAGE_NAMES[r.st]}</span>
+            <span className="flow-card-count">{r.count}</span>
+            {change(r.change, r.largest)}
+          </div>
+        ))}
+        <span className="flow-card-rule" aria-hidden="true" />
+        <div className="flow-card-row total">
+          <span />
+          <span className="flow-card-name">Total</span>
+          <span className="flow-card-count">{d.total}</span>
+          {change(d.totalChange)}
+        </div>
+      </div>
+      {d.first ? (
+        <p className="hover-card-note">
+          The history's first day: there's no day before it to compare.
+        </p>
+      ) : named.length ? (
+        <section className="hover-card-section">
+          <h4>What moved</h4>
+          <ul className="flow-card-moves">
+            {named.map(({ g, ids }) => (
+              <li key={g.label}>
+                <span className="flow-card-move">
+                  {g.to && (
+                    <span
+                      className={`work-swatch stage-${slug(g.to)}`}
+                      aria-hidden="true"
+                    />
+                  )}
+                  {g.label}
+                  <span className="flow-card-n">{g.ids.length}</span>
+                </span>
+                {ids.map((id, k) => (
+                  <span key={id} className="hover-card-blocker">
+                    <KindId id={id} />
+                    <span className="hover-card-blocker-title">
+                      {itemOf.get(id)?.title ?? id}
+                    </span>
+                    {k === ids.length - 1 && g.ids.length > ids.length && (
+                      <span className="flow-card-more">
+                        +{g.ids.length - ids.length} more
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </li>
+            ))}
+          </ul>
+          {rest > 0 && (
+            <p className="hover-card-more">
+              +{rest} more {rest === 1 ? "item" : "items"} in{" "}
+              {d.groups.length - FLOW_GROUPS} other{" "}
+              {d.groups.length - FLOW_GROUPS === 1 ? "move" : "moves"}
+            </p>
+          )}
+        </section>
+      ) : (
+        <p className="hover-card-note">Nothing moved.</p>
+      )}
+      <p className="hover-card-foot">
+        {d.moved ? "Click for what moved · " : ""}← → for other days
+      </p>
     </div>
   );
 }
@@ -2191,6 +2474,13 @@ function listTitle(
   if (list.startsWith("dep:")) {
     const [, from, to] = list.split(":") as [string, string, string];
     return `${titleOf(from)} waits on ${titleOf(to)}`;
+  }
+  if (list.startsWith("day:")) {
+    const [y, m, d] = list.slice(4).split("-").map(Number) as number[];
+    const t = new Date(y!, m! - 1, d).getTime();
+    return dayKey(t) === dayKey(Date.now())
+      ? "Moved today"
+      : `Moved on ${dayName(t)}`;
   }
   const base =
     list === "owner"
@@ -2512,6 +2802,16 @@ function ListPanel({
         }
       />
     );
+  } else if (list?.startsWith("day:")) {
+    const i = flow.days.findIndex((d) => dayKey(d) === list.slice(4));
+    body =
+      i < 0 ? (
+        <Typography variant="body-md" color="textSecondary" render={<p />}>
+          That day is outside the history.
+        </Typography>
+      ) : (
+        <DayMoves d={flowDayOf(flow, i)} itemOf={itemOf} selected={selected} />
+      );
   } else if (list?.startsWith("stage:")) {
     const st = list.slice(6) as Stage;
     const these = items.filter((it) => stageOf(it, flight) === st);
@@ -4310,6 +4610,73 @@ function ItemLink({
     </RouterLink>
   );
   return card ? <WorkHoverCard id={id}>{link}</WorkHoverCard> : link;
+}
+
+/** What moved on one day of the flow (CS-698), each move a group of rows. */
+function DayMoves({
+  d,
+  itemOf,
+  selected,
+}: {
+  d: FlowDay;
+  itemOf: Map<string, WorkItem>;
+  selected?: string;
+}) {
+  if (d.first || !d.groups.length) {
+    return (
+      <Typography variant="body-md" color="textSecondary" render={<p />}>
+        {d.first
+          ? "The history's first day: its items were all imported, so nothing moved."
+          : "Nothing moved that day."}
+      </Typography>
+    );
+  }
+  return (
+    <div className="work-groups">
+      <Typography variant="caption-md" color="textSecondary" render={<p />}>
+        {d.moved} {d.moved === 1 ? "item" : "items"} moved
+        {d.today ? " so far today" : ""}; the total changed by{" "}
+        {changeText(d.totalChange ?? 0)}.
+      </Typography>
+      {d.groups.map((g) => (
+        <section key={g.label} className="work-group">
+          <header className="work-group-header">
+            <Typography
+              variant="subtitle-md"
+              render={<h2 />}
+              className="work-marked"
+            >
+              {g.to && (
+                <span
+                  className={`work-swatch stage-${slug(g.to)}`}
+                  aria-hidden="true"
+                />
+              )}
+              {g.label}
+            </Typography>
+            <Typography variant="caption-md" color="textSecondary">
+              {g.ids.length} {g.ids.length === 1 ? "item" : "items"}
+            </Typography>
+          </header>
+          <ul className="work-rows">
+            {g.ids.map((id) => (
+              <li
+                key={id}
+                className={`work-row${id === selected ? " selected" : ""}`}
+              >
+                <ItemLink id={id} className="work-row-main" card>
+                  <KindId id={id} />
+                  <span className="work-row-title">
+                    <InlineText text={itemOf.get(id)?.title ?? id} />
+                  </span>
+                </ItemLink>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
 }
 
 // ------------------------------------------------------------ ready and blocked

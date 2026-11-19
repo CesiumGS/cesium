@@ -437,7 +437,8 @@ milestones named by their outcome, each with an `outcome` sentence,
   - **Flow**: the stages (proposed, blocked, ready, in progress, done)
     as a band per stage, day by day since the history begins (replayed
     from the items' committed status changes); a band that widens is a
-    queue growing, and hovering reads a day's counts. Then the measures,
+    queue growing, and hovering reads a day in the shared hover card
+    (below, "The Flow chart's card"). Then the measures,
     each with its pair: the measure that must not get worse when this
     one is pushed.
 - **Later, from HITLd's records:** tokens per item, verification, the
@@ -647,6 +648,42 @@ its content comes from `workCardOf` in `work.ts`.
   only for the note and the footer. Below 480 px the slack's bar and the
   note go, so the card fits beside a mark mid-screen. The card fades in;
   under reduced motion it appears at once.
+
+### The Flow chart's card (CS-698)
+
+The cumulative flow chart reads a day in the shared hover card, in
+place of the line of text that used to sit under the chart (the owner,
+2026-11-18: a hover card, and help with the day-to-day change). Its
+content is `flowDayOf` in `work.ts`, from `flowOf`'s days.
+
+- **Where.** Hovering the plot moves a crosshair to the nearest day and
+  opens the card beside it, on the side with more room. Its anchor spans
+  the crosshair and the pointer, so the card sits beside both and never
+  covers the band pointed at. On a narrow screen, with no room beside
+  the crosshair, the card goes above or below the chart, whichever has
+  more room. The band under the pointer is underlined in the card.
+- **The day.** Its date ("Today, Nov 19" for the last, read from the
+  snapshot), then each stage in the chart's stacking order, top band
+  first, with its swatch, its count and its change from the day before
+  ("+3", "−2"), and the total under a rule. The largest change, by size
+  and either sign, is bold with its stage; zeros are muted. The first
+  day has no day before it, so it shows counts only and says so. Changes
+  are day steps, never time.
+- **What moved.** Each move between two day-ends, grouped: "Finished"
+  (into Done from any stage) first, then the largest groups, "Blocked →
+  Ready", "New → Proposed", "Ready → Dropped". The card names three
+  items in its first two groups, with "+N more", and counts the rest. A
+  stage's change is what entered it less what left, so the groups and
+  the counts always agree.
+- **Keys and clicks.** The plot is one stop for the keyboard (a slider
+  whose value reads the day in words): ← and → step through the days
+  with the card following, Home and End jump to the first day and today,
+  Escape hides the card until the next step. A click or Enter lists the
+  day's moves in the pane, each item opening its own pane with the day's
+  list as its way back. The legend still lists a stage. The footer says
+  "Click for what moved · ← → for other days".
+- **Motion.** The shell's fade, dropped under reduced motion; the card
+  follows the crosshair without animating.
 
 ## Page anatomy
 
