@@ -72,6 +72,8 @@ export interface WorkSearch {
   release?: string;
   /** The milestone map as project lanes (default) or a "graph" with the fewest crossings. */
   shape?: string;
+  /** The roadmap in release bands (default) or by "steps" alone, the pure dependency view (CS-685). */
+  arrange?: string;
   /** The roadmap as the projects' waits on each other, "matrix" (milestones by default). */
   roadmap?: string;
   /** The roadmap with its proposed milestones too, "show" (committed work only by default). */
@@ -113,6 +115,7 @@ export const workRoute = createRoute({
       layout: s.layout === "map" || s.layout === "list" ? s.layout : undefined,
       release: str(s.release),
       shape: s.shape === "graph" ? "graph" : undefined,
+      arrange: s.arrange === "steps" ? "steps" : undefined,
       roadmap: s.roadmap === "matrix" ? "matrix" : undefined,
       proposed: s.proposed === "show" ? "show" : undefined,
       gate:

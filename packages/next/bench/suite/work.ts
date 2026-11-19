@@ -1463,11 +1463,17 @@ export interface ReleaseFlag {
   /** A proposed release, not committed yet (shown only with proposals). */
   proposed?: boolean;
   /**
-   * The open milestones that feed it: those it needs, directly or through
-   * the items and releases it needs, and everything they wait on.
+   * The open milestones its release item needs itself (CS-685): exactly
+   * the milestones it names, never those it reaches through their items.
    */
   feeds: string[];
-  /** The milestones that place it: those of its feeds that finish last. */
+  /** The releases it needs: those that come before it. */
+  after: string[];
+  /**
+   * The milestones that place it: those it waits on that finish last. In
+   * a view in steps, these can be milestones it doesn't need itself (a
+   * closure violation); with release bands, they close its band.
+   */
   last: string[];
   /**
    * Where it falls: the end of the last milestone it needs, in the view's
@@ -1540,15 +1546,23 @@ export function releaseFlagsOf(
     unplacedMemo.set(id, out);
     return out;
   };
+  const msOf = new Map(s.milestones.map((m) => [m.id, m]));
   const flags = rows
     .filter((r) => isReleaseItem(itemOf.get(r.id)))
     .map((r): ReleaseFlag => {
       const it = itemOf.get(r.id)!;
-      const feeds = [...upstreamOf(r.id)]
+      // Placed by everything it waits on; it lists only what it names.
+      const upstream = [...upstreamOf(r.id)]
         .filter((x) => msIds.has(x))
         .sort((a, b) => idNumber(a) - idNumber(b));
-      const unplaced = unplacedOf(r.id, feeds);
-      const ends = feeds
+      const feeds = it.needs
+        .filter((n) => {
+          const m = msOf.get(n);
+          return !!m && m.state !== "done" && m.state !== "dropped";
+        })
+        .sort((a, b) => idNumber(a) - idNumber(b));
+      const unplaced = unplacedOf(r.id, upstream);
+      const ends = upstream
         .map((f) => [f, endOf(f)] as const)
         .filter((e): e is readonly [string, number] => e[1] !== undefined);
       const at =
@@ -1561,6 +1575,9 @@ export function releaseFlagsOf(
         title: r.title,
         ...(it.state === "proposed" ? { proposed: true } : {}),
         feeds,
+        after: it.needs
+          .filter((n) => isReleaseItem(itemOf.get(n)))
+          .sort((a, b) => idNumber(a) - idNumber(b)),
         last:
           at === undefined
             ? []
@@ -1574,6 +1591,291 @@ export function releaseFlagsOf(
       (a.at ?? Infinity) - (b.at ?? Infinity) ||
       idNumber(a.id) - idNumber(b.id),
   );
+}
+
+// ------------------------------------------------------------ release closure
+
+/**
+ * The closure rule (CS-685; the owner, 2026-11-17): a release needs
+ * milestones only, and every open item a milestone it needs pulls in,
+ * directly or through other items, belongs to a milestone the same
+ * release needs, or to no milestone. A release needs what the releases
+ * before it need too. A break is fixed in the tracker, by moving the item
+ * or splitting its milestone, never explained away on screen.
+ */
+export interface ClosureViolation {
+  /** The release whose milestones pull it in. */
+  release: string;
+  /** What it pulls in: an item, or a milestone a milestone names. */
+  item: string;
+  /**
+   * How: "item", an item in a milestone the release doesn't need;
+   * "milestone", a milestone the release doesn't need named by one it
+   * does; "direct", an item the release needs itself rather than through
+   * a milestone.
+   */
+  kind: "item" | "milestone" | "direct";
+  /**
+   * The milestones that hold the item, none of them one the release
+   * needs (for "milestone", the milestone itself). Empty for a direct
+   * need on an item no milestone holds.
+   */
+  milestones: string[];
+  /** The needs from the release to it, the release first and it last. */
+  path: string[];
+}
+
+/** One release as the closure rule reads it. */
+export interface ReleaseClosure {
+  id: string;
+  version: string;
+  title: string;
+  proposed: boolean;
+  /** The open milestones it names. */
+  milestones: string[];
+  /** The releases it names: those that come before it. */
+  after: string[];
+  /** Its milestones and those of every release before it. */
+  closure: Set<string>;
+  violations: ClosureViolation[];
+}
+
+/**
+ * The open releases in ladder order (alpha.1, beta.1, rc.1, 2.0.0): each
+ * after the releases it needs, by number where nothing orders them.
+ */
+export function releaseLadderOf(
+  s: WorkSnapshot,
+  /** Proposed releases too. */
+  proposals = true,
+): WorkItem[] {
+  const open = s.items
+    .filter(
+      (it) =>
+        isReleaseItem(it) &&
+        isOpen(it) &&
+        (proposals || it.state !== "proposed"),
+    )
+    .sort((a, b) => idNumber(a.id) - idNumber(b.id));
+  const ids = new Set(open.map((it) => it.id));
+  const out: WorkItem[] = [];
+  const placed = new Set<string>();
+  while (out.length < open.length) {
+    // The first by number whose earlier releases are all placed; a loop
+    // of releases (a tracker error) breaks at its lowest number.
+    const next =
+      open.find(
+        (it) =>
+          !placed.has(it.id) &&
+          it.needs.every((n) => !ids.has(n) || placed.has(n)),
+      ) ?? open.find((it) => !placed.has(it.id))!;
+    placed.add(next.id);
+    out.push(next);
+  }
+  return out;
+}
+
+/**
+ * Each open release's milestones and the breaks of the closure rule
+ * below them, in ladder order. Reads the snapshot as given: pass
+ * `committedOnly(s)` for committed work alone, where a proposed
+ * milestone's items count as in no milestone.
+ */
+export function releaseClosuresOf(
+  s: WorkSnapshot,
+  proposals = true,
+): ReleaseClosure[] {
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const msOf = new Map(
+    s.milestones.filter((m) => m.state !== "dropped").map((m) => [m.id, m]),
+  );
+  const holders = new Map<string, string[]>();
+  for (const m of msOf.values()) {
+    for (const c of m.constraints) {
+      if (!msOf.has(c.id)) {
+        holders.set(c.id, [...(holders.get(c.id) ?? []), m.id]);
+      }
+    }
+  }
+  const openMs = (id: string) => {
+    const m = msOf.get(id);
+    return !!m && m.state !== "done";
+  };
+  const ladder = releaseLadderOf(s, proposals);
+  const closureOf = new Map<string, Set<string>>();
+  return ladder.map((r): ReleaseClosure => {
+    const own = r.needs.filter((n) => msOf.has(n));
+    const after = r.needs.filter((n) => isReleaseItem(itemOf.get(n)));
+    const closure = new Set(own);
+    for (const a of after) {
+      for (const m of closureOf.get(a) ?? []) {
+        closure.add(m);
+      }
+    }
+    closureOf.set(r.id, closure);
+    // Breadth first from the release, so each break comes with its
+    // shortest path of needs.
+    const violations: ClosureViolation[] = [];
+    const from = new Map<string, string>([[r.id, ""]]);
+    const queue: string[] = [];
+    const pathTo = (id: string) => {
+      const path = [id];
+      for (let at = from.get(id)!; at; at = from.get(at)!) {
+        path.unshift(at);
+      }
+      return path;
+    };
+    const visit = (id: string, via: string) => {
+      if (!from.has(id)) {
+        from.set(id, via);
+        queue.push(id);
+      }
+    };
+    for (const n of r.needs) {
+      visit(n, r.id);
+    }
+    while (queue.length) {
+      const id = queue.shift()!;
+      const direct = from.get(id) === r.id;
+      if (msOf.has(id)) {
+        if (!openMs(id)) {
+          continue;
+        }
+        if (!closure.has(id)) {
+          violations.push({
+            release: r.id,
+            item: id,
+            kind: "milestone",
+            milestones: [id],
+            path: pathTo(id),
+          });
+          continue;
+        }
+        for (const c of msOf.get(id)!.constraints) {
+          visit(c.id, id);
+        }
+        continue;
+      }
+      const it = itemOf.get(id);
+      // Done work pulls nothing in; an earlier release answers for its own.
+      if (!it || !isOpen(it) || isReleaseItem(it)) {
+        continue;
+      }
+      const held = holders.get(id) ?? [];
+      const inside = held.some((m) => closure.has(m));
+      if (direct) {
+        violations.push({
+          release: r.id,
+          item: id,
+          kind: "direct",
+          milestones: held.filter((m) => !closure.has(m)),
+          path: pathTo(id),
+        });
+        if (held.length && !inside) {
+          continue;
+        }
+      } else if (held.length && !inside) {
+        violations.push({
+          release: r.id,
+          item: id,
+          kind: "item",
+          milestones: held,
+          path: pathTo(id),
+        });
+        continue;
+      }
+      for (const n of it.open_needs) {
+        visit(n, id);
+      }
+    }
+    return {
+      id: r.id,
+      version: r.release ?? r.title,
+      title: r.title,
+      proposed: r.state === "proposed",
+      milestones: own.filter(openMs),
+      after,
+      closure,
+      violations,
+    };
+  });
+}
+
+/** The band of the milestones no release needs. */
+export const NO_RELEASE = "no-release";
+
+/** One release band: the milestones a release is the first to need. */
+export interface ReleaseBand {
+  /** The release item, or `NO_RELEASE`. */
+  id: string;
+  /** Its version ("2.0.0-alpha.1"); "No release" for the last band. */
+  name: string;
+  /** Its open milestones, by number. */
+  milestones: string[];
+}
+
+/**
+ * The roadmap's release bands (CS-685; the owner, 2026-11-18: "a release
+ * is just a special milestone"): one per release in ladder order, then
+ * one for the milestones no release needs. Each open milestone sits in
+ * the band of the earliest release that needs it.
+ */
+export function releaseBandsOf(
+  s: WorkSnapshot,
+  closures: readonly ReleaseClosure[],
+): { bands: ReleaseBand[]; bandOf: Map<string, number> } {
+  const bandOf = new Map<string, number>();
+  const open = s.milestones
+    .filter((m) => m.state !== "done" && m.state !== "dropped")
+    .sort((a, b) => idNumber(a.id) - idNumber(b.id));
+  for (const m of open) {
+    const k = closures.findIndex((c) => c.closure.has(m.id));
+    bandOf.set(m.id, k < 0 ? closures.length : k);
+  }
+  closures.forEach((c, k) => bandOf.set(c.id, k));
+  const bands: ReleaseBand[] = [
+    ...closures.map((c) => ({ id: c.id, name: c.version, milestones: [] })),
+    { id: NO_RELEASE, name: "No release", milestones: [] as string[] },
+  ];
+  for (const m of open) {
+    bands[bandOf.get(m.id)!]!.milestones.push(m.id);
+  }
+  return { bands, bandOf };
+}
+
+/**
+ * The steps inside each band: a milestone's step counts only the waits on
+ * milestones in its own band, since those in earlier bands are done by
+ * the time its band begins (a wait on a later band is a closure
+ * violation, and places nothing). Rows come from `orderOf`.
+ */
+export function bandStepsOf(
+  rows: readonly RoadmapRow[],
+  bandOf: ReadonlyMap<string, number>,
+): Map<string, number> {
+  const band = (id: string) => bandOf.get(id) ?? Infinity;
+  const keyOf = (r: RoadmapRow) => `${band(r.id)}:${r.group.join()}`;
+  const rowOf = new Map(rows.map((r) => [r.id, r]));
+  const memo = new Map<string, number>();
+  const stepOfKey = (key: string): number => {
+    const known = memo.get(key);
+    if (known !== undefined) {
+      return known;
+    }
+    memo.set(key, 1); // a loop ends here
+    let n = 1;
+    for (const r of rows.filter((x) => keyOf(x) === key)) {
+      for (const w of r.waitsOn) {
+        const other = rowOf.get(w.id);
+        if (other && band(w.id) === band(r.id) && keyOf(other) !== key) {
+          n = Math.max(n, stepOfKey(keyOf(other)) + 1);
+        }
+      }
+    }
+    memo.set(key, n);
+    return n;
+  };
+  return new Map(rows.map((r) => [r.id, stepOfKey(keyOf(r))]));
 }
 
 /** The map's id prefix for a project's items that no milestone holds. */
@@ -1673,6 +1975,8 @@ export interface MapNode {
   items: string[];
   /** A proposed milestone: not committed yet (shown only when asked for). */
   proposed: boolean;
+  /** Its release band (`MilestoneMap.bands`), when the map is in bands. */
+  band?: number;
 }
 
 export interface MapEdge {
@@ -1707,7 +2011,24 @@ export interface MilestoneMap {
   flags: MapFlag[];
   /** The release in focus, if any. */
   focus?: string;
+  /** How the map is arranged: in release bands, or by steps alone. */
+  arrange: Arrange;
+  /**
+   * The release bands, in ladder order, each with where it begins and
+   * ends; none when the map is arranged by steps alone. A band no
+   * milestone sits in is left out.
+   */
+  bands: Array<ReleaseBand & { x0: number; x1: number }>;
+  /** Each open release's milestones and the closure rule's breaks. */
+  closures: ReleaseClosure[];
 }
+
+/**
+ * How the roadmap is arranged (CS-685): in release bands, each release's
+ * milestones together and its flag closing them, or by steps alone, the
+ * pure dependency view.
+ */
+export type Arrange = "release" | "steps";
 
 /** A release's flag on the map, with its progress over what it needs. */
 export interface MapFlag extends ReleaseFlag {
@@ -1740,6 +2061,8 @@ export function milestoneMapOf(
    * committed ones are. The roadmap is committed work by default.
    */
   proposals = false,
+  /** In release bands, or by steps alone. */
+  arrange: Arrange = "steps",
 ): MilestoneMap {
   const s = proposals ? snapshot : committedOnly(snapshot);
   const itemOf = new Map(s.items.map((i) => [i.id, i]));
@@ -1806,6 +2129,12 @@ export function milestoneMapOf(
     return { decisions, outside };
   };
   const rows = milestoneRoadmapOf(s, s.items, flight, proposals);
+  const closures = releaseClosuresOf(s, proposals);
+  const { bands: bandList, bandOf } = releaseBandsOf(s, closures);
+  const banded = arrange === "release";
+  // The band a row sits in; one the bands don't know goes last.
+  const bandIx = (id: string) =>
+    banded ? (bandOf.get(id) ?? closures.length) : 0;
   const itemsIn = (id: string) =>
     unshaped.get(id) ??
     (decisionIds.has(id) ? [id] : undefined) ??
@@ -1854,23 +2183,34 @@ export function milestoneMapOf(
   // one waits on the milestones and items it needs. They take no room of
   // their own: each is a flag at the end of what it needs.
   const isGate = (id: string) => isReleaseItem(itemOf.get(id));
-  // Groups (loops) in step order: a group's waits are its members' waits outside it.
+  // Groups (loops) in step order: a group's waits are its members' waits
+  // outside it. In bands, a group is its loop's members in one band, and
+  // it waits only on groups in its own band: what is in an earlier band
+  // is done before its band begins, and a wait on a later band is a
+  // closure violation, which places nothing.
+  const keyOf = (r: RoadmapRow) => `${bandIx(r.id)}:${r.group.join()}`;
   const groupOf = new Map<string, string>();
+  const rowsOf = new Map<string, RoadmapRow[]>();
   for (const r of rows) {
-    groupOf.set(r.id, r.group.join());
+    groupOf.set(r.id, keyOf(r));
+    rowsOf.set(keyOf(r), [...(rowsOf.get(keyOf(r)) ?? []), r]);
   }
-  const groups = [...new Set(rows.map((r) => r.group.join()))].sort(
+  const bandOfGroup = (g: string) => Number(g.slice(0, g.indexOf(":")));
+  const groups = [...rowsOf.keys()].sort(
     (a, b) =>
-      rows.find((r) => r.group.join() === a)!.step -
-      rows.find((r) => r.group.join() === b)!.step,
+      bandOfGroup(a) - bandOfGroup(b) ||
+      rowsOf.get(a)![0]!.step - rowsOf.get(b)![0]!.step,
   );
-  const membersOf = (g: string) => rows.filter((r) => r.group.join() === g);
+  const membersOf = (g: string) => rowsOf.get(g) ?? [];
   const predsOf = (g: string) => [
     ...new Set(
       membersOf(g).flatMap((r) =>
         r.waitsOn
           .map((w) => groupOf.get(w.id))
-          .filter((x): x is string => !!x && x !== g),
+          .filter(
+            (x): x is string =>
+              !!x && x !== g && bandOfGroup(x) === bandOfGroup(g),
+          ),
       ),
     ),
   ];
@@ -1882,12 +2222,26 @@ export function milestoneMapOf(
   };
   const es = new Map<string, number>();
   const ef = new Map<string, number>();
+  // Each band begins where the one before it ends: its release.
+  const bandStart = new Map<number, number>();
+  const bandEnd = new Map<number, number>();
+  let cursor = 0;
   for (const g of groups) {
-    const start = Math.max(0, ...predsOf(g).map((p) => ef.get(p) ?? 0));
+    const b = bandOfGroup(g);
+    if (!bandStart.has(b)) {
+      bandStart.set(b, cursor);
+      bandEnd.set(b, cursor);
+    }
+    const start = Math.max(
+      bandStart.get(b)!,
+      ...predsOf(g).map((p) => ef.get(p) ?? 0),
+    );
     es.set(g, start);
     ef.set(g, start + gCost(g));
+    bandEnd.set(b, Math.max(bandEnd.get(b)!, ef.get(g)!));
+    cursor = bandEnd.get(b)!;
   }
-  const total = Math.max(0, ...ef.values());
+  let total = Math.max(0, ...ef.values());
   // A release's cone is everything upstream of it, the milestones it
   // needs to be feature complete.
   const upstreamOf = (id: string) => {
@@ -1905,10 +2259,10 @@ export function milestoneMapOf(
     }
     return seen;
   };
-  // A gate's progress: over the milestones it needs, their items, and the
+  // A gate's progress: over the milestones it names, their items, and the
   // items it needs directly.
   const gateStats = (id: string) => {
-    const ms = [...upstreamOf(id)].filter((x) => !isGate(x));
+    const ms = itemOf.get(id)!.needs.filter((x) => msOf.has(x));
     const items = new Set([...ms.flatMap((x) => itemsIn(x)), ...itemsIn(id)]);
     let done = 0;
     let left = 0;
@@ -1942,18 +2296,54 @@ export function milestoneMapOf(
       decisions: decisions.size,
     };
   };
-  // Where each milestone ends, and so where each release falls.
-  const flags: MapFlag[] = releaseFlagsOf(s, rows, (id) => {
+  // Where each milestone ends, and so where each release falls: by steps,
+  // after the last milestone it waits on; in bands, closing its band.
+  const endOf = (id: string) => {
     const g = groupOf.get(id);
     return g === undefined
       ? undefined
       : es.get(g)! + (unit === "steps" ? 1 : cost(id));
-  }).map((f) => ({ ...f, progress: gateStats(f.id) }));
+  };
+  const flags: MapFlag[] = releaseFlagsOf(s, rows, endOf).map((f) => {
+    const g = groupOf.get(f.id);
+    if (!banded || f.unplaced || g === undefined) {
+      return { ...f, progress: gateStats(f.id) };
+    }
+    const at = bandEnd.get(bandOfGroup(g))!;
+    const eps = unit === "steps" ? 0 : 1e-6 * Math.max(1, total);
+    return {
+      ...f,
+      at,
+      last: f.feeds.filter((m) => Math.abs((endOf(m) ?? -1) - at) <= eps),
+      progress: gateStats(f.id),
+    };
+  });
   const focusId = focus && rows.some((r) => r.id === focus) ? focus : undefined;
   // A release with no place yet sets nothing apart: what it needs isn't chosen.
   const placed = !flags.find((f) => f.id === focusId)?.unplaced;
+  // In bands, a release needs its closure: its milestones, and the
+  // releases before it with theirs.
+  const closureCone = (id: string) => {
+    const c = closures.find((x) => x.id === id);
+    const before = new Set<string>();
+    const walk = (r: string) => {
+      for (const a of closures.find((x) => x.id === r)?.after ?? []) {
+        if (!before.has(a)) {
+          before.add(a);
+          walk(a);
+        }
+      }
+    };
+    walk(id);
+    return [...(c?.closure ?? []), ...before];
+  };
   const cone =
-    focusId && placed ? new Set([focusId, ...upstreamOf(focusId)]) : undefined;
+    focusId && placed
+      ? new Set([
+          focusId,
+          ...(banded ? closureCone(focusId) : upstreamOf(focusId)),
+        ])
+      : undefined;
   const coneGroups = cone
     ? new Set([...cone].map((id) => groupOf.get(id)!))
     : undefined;
@@ -1965,6 +2355,7 @@ export function milestoneMapOf(
     );
   // Latest finish: the latest each can end without delaying the end
   // (total slack, not just the room before the next one starts).
+  // In bands, the end of a group's own band: past it, its release slips.
   const lf = new Map<string, number>();
   for (const g of [...groups].reverse()) {
     if (coneGroups && !coneGroups.has(g)) {
@@ -1973,7 +2364,11 @@ export function milestoneMapOf(
     const succ = succsOf(g);
     lf.set(
       g,
-      succ.length ? Math.min(...succ.map((x) => lf.get(x)! - gCost(x))) : end,
+      succ.length
+        ? Math.min(...succ.map((x) => lf.get(x)! - gCost(x)))
+        : banded
+          ? Math.min(end, bandEnd.get(bandOfGroup(g))!)
+          : end,
     );
   }
   const slackOf = (g: string) =>
@@ -1996,6 +2391,28 @@ export function milestoneMapOf(
     at = predsOf(here).find(
       (p) => Math.abs(ef.get(p)! - es.get(here)!) <= eps && slackOf(p) <= eps,
     );
+    // In bands, a path that reaches its band's start goes on from the end
+    // of the band before: its release, and what closes it.
+    if (!at && banded) {
+      const b = bandOfGroup(here);
+      const before = [...bandEnd.keys()]
+        .filter((k) => k < b)
+        .sort((x, y) => y - x)[0];
+      if (
+        before !== undefined &&
+        Math.abs(es.get(here)! - bandStart.get(b)!) <= eps
+      ) {
+        const close = groups.filter(
+          (g) =>
+            bandOfGroup(g) === before &&
+            Math.abs(ef.get(g)! - bandEnd.get(before)!) <= eps &&
+            slackOf(g) <= eps,
+        );
+        // Its release first, which leads back to what closes the band.
+        at =
+          close.find((g) => membersOf(g).some((r) => isGate(r.id))) ?? close[0];
+      }
+    }
   }
   const onPath = new Set(path);
   // Lanes: projects, in order of their first milestone.
@@ -2035,12 +2452,21 @@ export function milestoneMapOf(
         decisions: decisions.size,
         outside: outside.size,
         tokens: tokensOf(r.id),
-        loop: r.group.length > 1 ? r.group : undefined,
+        // In bands, a loop is its members in one band.
+        loop: (() => {
+          const loop = banded
+            ? membersOf(g)
+                .map((x) => x.id)
+                .filter((id) => !isGate(id))
+            : r.group;
+          return loop.length > 1 ? loop : undefined;
+        })(),
         started: r.counts.Done > 0 || r.counts["In flight"] > 0,
         unshaped: r.id.startsWith(UNSHAPED),
         decision: false,
         items: [],
         proposed: msOf.get(r.id)?.state === "proposed",
+        ...(banded ? { band: bandIx(r.id) } : {}),
         // The waits that finish last set its start: those name why it is here.
         after: start
           ? r.waitsOn
@@ -2106,8 +2532,31 @@ export function milestoneMapOf(
         });
       }
     }
+    if (!banded) {
+      return start;
+    }
+    // In bands, it sits in the earliest band of what it feeds (in no
+    // release's band when it feeds nothing), after what it waits on there.
+    const fed = softEdges.filter((e) => e.from === id).map((e) => bandIx(e.to));
+    const b = fed.length ? Math.min(...fed) : closures.length;
+    const waited = softEdges
+      .filter((e) => e.to === id && bandIx(e.from) <= b)
+      .map((e) => ef.get(groupOf.get(e.from)!)!);
+    const from = bandStart.get(b) ?? Math.max(0, ...bandEnd.values());
+    start = Math.max(from, ...waited);
+    // Inside its band, so it never crosses a release's line; the last
+    // band widens to hold it.
+    const own = unit === "steps" ? 1 : tokensOf(id).left;
+    if (b < closures.length && bandEnd.has(b)) {
+      start = Math.min(start, Math.max(from, bandEnd.get(b)! - own));
+    } else {
+      bandStart.set(b, bandStart.get(b) ?? from);
+      bandEnd.set(b, Math.max(bandEnd.get(b) ?? from, start + own));
+    }
+    looseBand.set(id, b);
     return start;
   };
+  const looseBand = new Map<string, number>();
   // Outside a release in focus unless one of the milestones it feeds is in.
   const looseLane = (id: string) =>
     cone && !softEdges.some((e) => e.from === id && cone.has(e.to))
@@ -2146,6 +2595,7 @@ export function milestoneMapOf(
       items: byWaiting(members),
       proposed: false,
       after: [],
+      ...(banded ? { band: looseBand.get(id) } : {}),
     });
   }
   // The owner's decisions in no milestone: the question, and what waits.
@@ -2176,6 +2626,7 @@ export function milestoneMapOf(
       started: false,
       unshaped: false,
       decision: true,
+      ...(banded ? { band: looseBand.get(d.id) } : {}),
       items: byWaiting(
         d.needed_by.filter((n) => {
           const it = itemOf.get(n);
@@ -2248,6 +2699,17 @@ export function milestoneMapOf(
   const done = s.milestones
     .filter((m) => m.state === "done")
     .map((m) => ({ id: m.id, title: m.title }));
+  // The last band may have widened for loose cards.
+  if (banded) {
+    total = Math.max(total, ...bandEnd.values());
+  }
+  const bands = banded
+    ? bandList.flatMap((b, k) =>
+        bandStart.has(k)
+          ? [{ ...b, x0: bandStart.get(k)!, x1: bandEnd.get(k)! }]
+          : [],
+      )
+    : [];
   return {
     nodes,
     edges,
@@ -2263,6 +2725,9 @@ export function milestoneMapOf(
       .map((r) => ({ id: r.id, title: r.title })),
     flags,
     focus: focusId,
+    arrange,
+    bands,
+    closures,
   };
 }
 

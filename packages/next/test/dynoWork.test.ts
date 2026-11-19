@@ -1,8 +1,13 @@
 import { execFileSync } from "node:child_process";
 import { beforeAll, describe, expect, it } from "vitest";
 import {
+  bandStepsOf,
   barCounts,
   boardStatus,
+  NO_RELEASE,
+  releaseBandsOf,
+  releaseClosuresOf,
+  releaseLadderOf,
   cardDetail,
   clampZoom,
   fitZoom,
@@ -711,17 +716,18 @@ describe("release items are the map's gates", () => {
     const flag = m.flags.find((f) => f.id === "CS-80")!;
     expect(flag.version).toBe("2.0.0-alpha.1");
     expect(flag.unplaced).toBeUndefined();
-    // CS-72, needed directly and in no milestone, waits on CS-91's item,
-    // so CS-91 feeds the release too.
-    expect(flag.feeds).toEqual(["CS-90", "CS-91"]);
+    // It lists only the milestone it names (CS-685). CS-72, needed
+    // directly and in no milestone, waits on CS-91's item: that places
+    // it, but CS-91 isn't one of its milestones.
+    expect(flag.feeds).toEqual(["CS-90"]);
     // Both are in step 1: the flag falls between steps 1 and 2.
     expect(flag.at).toBe(1);
     expect(flag.last).toEqual(["CS-90", "CS-91"]);
     // The release takes no step of its own.
     expect(m.total).toBe(1);
-    // Its progress counts the items of what it waits on (CS-70, CS-71) and
+    // Its progress counts the items of the milestone it names (CS-70) and
     // CS-72, needed directly; CS-80 itself is no project's loose work.
-    expect(flag.progress.items).toBe(3);
+    expect(flag.progress.items).toBe(2);
     const loose = m.nodes.find((n) => n.unshaped);
     expect(Object.values(loose!.counts).reduce((a, b) => a + b, 0)).toBe(1);
   });
@@ -1047,6 +1053,197 @@ describe("proposed milestones on the roadmap (CS-563)", () => {
     const committed = committedOnly(s);
     expect(committed.milestones.map((m) => m.id)).toEqual(["CS-100"]);
     expect(committedOnly(committed)).toBe(committed);
+  });
+});
+
+describe("the closure rule and release bands (CS-685)", () => {
+  const ms = (id: string, constraints: string[]): WorkMilestone => ({
+    id,
+    title: `Milestone ${id}`,
+    kind: "milestone",
+    learning: false,
+    state: "planned",
+    project: "CS-2",
+    done_when: [],
+    constraints: constraints.map((c) => ({ id: c, clause: "c?" })),
+    contributions: [],
+    check_results: [],
+    path: `m/${id}`,
+    progress: { done: 0, total: constraints.length },
+    check_due: false,
+    to_shape: [],
+  });
+  const needs = (...ids: string[]) => ({ needs: ids, open_needs: ids });
+  // alpha.1 (CS-401) needs CS-300; beta.1 (CS-400, a lower number) needs
+  // alpha.1, CS-310, CS-311 and an item, CS-214, itself. CS-320 is in no
+  // release.
+  const s: WorkSnapshot = {
+    ...snapshot,
+    items: [
+      item("CS-200", needs("CS-212")),
+      item("CS-201", needs("CS-210")),
+      item("CS-210"),
+      item("CS-211"),
+      item("CS-212", needs("CS-220")),
+      item("CS-213", needs("CS-200")),
+      item("CS-214"),
+      item("CS-216", { state: "done" }),
+      item("CS-220"),
+      item("CS-401", {
+        title: "Release 2.0.0-alpha.1",
+        release: "2.0.0-alpha.1",
+        ...needs("CS-300"),
+      }),
+      item("CS-400", {
+        title: "Release 2.0.0-beta.1",
+        release: "2.0.0-beta.1",
+        ...needs("CS-401", "CS-310", "CS-311", "CS-214"),
+      }),
+    ],
+    milestones: [
+      ms("CS-300", ["CS-200", "CS-201"]),
+      ms("CS-310", ["CS-210", "CS-211"]),
+      // A milestone that names another milestone: CS-320.
+      ms("CS-311", ["CS-213", "CS-320"]),
+      ms("CS-320", ["CS-220", "CS-216"]),
+    ],
+  };
+
+  it("orders the releases by what they need, not by number", () => {
+    expect(releaseLadderOf(s).map((r) => r.id)).toEqual(["CS-401", "CS-400"]);
+  });
+
+  it("finds each item a release pulls in from a milestone it doesn't need, with the path", () => {
+    const [alpha, beta] = releaseClosuresOf(s);
+    expect(alpha!.milestones).toEqual(["CS-300"]);
+    expect([...alpha!.closure]).toEqual(["CS-300"]);
+    expect(alpha!.violations).toEqual([
+      {
+        release: "CS-401",
+        item: "CS-210",
+        kind: "item",
+        milestones: ["CS-310"],
+        path: ["CS-401", "CS-300", "CS-201", "CS-210"],
+      },
+      // Through CS-212, which no milestone holds: that is allowed, but
+      // what it needs counts.
+      {
+        release: "CS-401",
+        item: "CS-220",
+        kind: "item",
+        milestones: ["CS-320"],
+        path: ["CS-401", "CS-300", "CS-200", "CS-212", "CS-220"],
+      },
+    ]);
+    // beta.1 needs alpha.1's milestones too: CS-213 may need CS-200.
+    expect([...beta!.closure].sort()).toEqual(["CS-300", "CS-310", "CS-311"]);
+    expect(beta!.after).toEqual(["CS-401"]);
+    expect(beta!.violations.map((v) => [v.kind, v.item, v.path])).toEqual([
+      // A release needs milestones only.
+      ["direct", "CS-214", ["CS-400", "CS-214"]],
+      // A milestone it needs names one it doesn't.
+      ["milestone", "CS-320", ["CS-400", "CS-311", "CS-320"]],
+      [
+        "item",
+        "CS-220",
+        ["CS-400", "CS-311", "CS-213", "CS-200", "CS-212", "CS-220"],
+      ],
+    ]);
+  });
+
+  it("finds nothing once the tracker is fixed, and ignores done work", () => {
+    const fixed: WorkSnapshot = {
+      ...s,
+      items: s.items.map((it) =>
+        it.id === "CS-201" || it.id === "CS-212"
+          ? { ...it, needs: [], open_needs: [] }
+          : it.id === "CS-400"
+            ? { ...it, ...needs("CS-401", "CS-310", "CS-311") }
+            : it,
+      ),
+      milestones: s.milestones.map((m) =>
+        m.id === "CS-311" ? ms("CS-311", ["CS-213", "CS-216"]) : m,
+      ),
+    };
+    expect(releaseClosuresOf(fixed).flatMap((c) => c.violations)).toEqual([]);
+  });
+
+  it("puts each milestone in the band of the earliest release that needs it", () => {
+    const { bands, bandOf } = releaseBandsOf(s, releaseClosuresOf(s));
+    expect(bands.map((b) => [b.id, b.name, b.milestones])).toEqual([
+      ["CS-401", "2.0.0-alpha.1", ["CS-300"]],
+      ["CS-400", "2.0.0-beta.1", ["CS-310", "CS-311"]],
+      [NO_RELEASE, "No release", ["CS-320"]],
+    ]);
+    expect(bandOf.get("CS-320")).toBe(2);
+  });
+
+  it("counts steps inside a band only", () => {
+    const rows = milestoneRoadmapOf(s, s.items);
+    const { bandOf } = releaseBandsOf(s, releaseClosuresOf(s));
+    const steps = bandStepsOf(rows, bandOf);
+    // By steps alone, CS-300 waits on CS-310 and CS-311 on CS-300.
+    const step = new Map(rows.map((r) => [r.id, r.step]));
+    expect([
+      step.get("CS-310"),
+      step.get("CS-300"),
+      step.get("CS-311"),
+    ]).toEqual([1, 2, 3]);
+    // In bands, each waits only on its own band: all three start their band.
+    expect([
+      steps.get("CS-300"),
+      steps.get("CS-310"),
+      steps.get("CS-311"),
+    ]).toEqual([1, 1, 1]);
+  });
+
+  it("lists exactly the milestones a release names on its flag", () => {
+    const m = milestoneMapOf(s, undefined, "steps");
+    const flag = (id: string) => m.flags.find((f) => f.id === id)!;
+    expect(flag("CS-401").feeds).toEqual(["CS-300"]);
+    expect(flag("CS-400").feeds).toEqual(["CS-310", "CS-311"]);
+    expect(flag("CS-400").after).toEqual(["CS-401"]);
+  });
+
+  it("lays the map out in bands, each release's flag closing its band", () => {
+    const m = milestoneMapOf(
+      s,
+      undefined,
+      "steps",
+      undefined,
+      false,
+      "release",
+    );
+    expect(m.arrange).toBe("release");
+    expect(m.bands.map((b) => [b.name, b.x0, b.x1])).toEqual([
+      ["2.0.0-alpha.1", 0, 1],
+      ["2.0.0-beta.1", 1, 2],
+      ["No release", 2, 3],
+    ]);
+    const x0 = (id: string) => m.nodes.find((n) => n.id === id)!.x0;
+    expect([x0("CS-300"), x0("CS-310"), x0("CS-311"), x0("CS-320")]).toEqual([
+      0, 1, 1, 2,
+    ]);
+    const flag = (id: string) => m.flags.find((f) => f.id === id)!;
+    expect([flag("CS-401").at, flag("CS-400").at]).toEqual([1, 2]);
+    expect(flag("CS-400").last).toEqual(["CS-310", "CS-311"]);
+    // The critical path runs on across the bands, through each release.
+    expect(m.path).toEqual(["CS-300", "CS-310", "CS-320"]);
+    expect(m.total).toBe(3);
+    // The loose card sits in the band of the milestone it feeds.
+    const loose = m.nodes.find((n) => n.unshaped)!;
+    expect([loose.band, loose.x0]).toEqual([0, 0]);
+    // By steps alone, the same map has no bands.
+    expect(milestoneMapOf(s, undefined, "steps").bands).toEqual([]);
+  });
+
+  it("measures to a release in bands over its closure", () => {
+    const m = milestoneMapOf(s, undefined, "steps", "CS-400", false, "release");
+    expect(m.end).toBe(2);
+    const lane = (id: string) => m.nodes.find((n) => n.id === id)!.lane;
+    expect(lane("CS-300")).toBe("CS-2");
+    expect(lane("CS-311")).toBe("CS-2");
+    expect(lane("CS-320")).toBe("outside-CS-2");
   });
 });
 

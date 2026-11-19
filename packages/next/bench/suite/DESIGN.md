@@ -252,9 +252,9 @@ milestones named by their outcome, each with an `outcome` sentence,
     and items the release waits for), each a flag labeled with its
     version along the top of the grid, on the line after the step of the
     last milestone it needs, its pole dashed down the grid. They take no
-    step of their own. Pointing at a flag, or focusing it, lights the
-    milestones that feed it (those it needs, through the items and
-    releases it needs too, and what they wait on) and dims the rest;
+    step of their own. A flag lists exactly the milestones its release
+    item names (CS-685), never those it reaches through their items, and
+    pointing at it or focusing it lights those and dims the rest;
     choosing it measures to it, the same focus as "Measure to", which
     keeps the release and what it needs and moves the rest apart. A
     release whose milestones aren't chosen yet (it needs an open
@@ -291,6 +291,40 @@ milestones named by their outcome, each with an `outcome` sentence,
     milestones they wait on and move none (their waits are soft), and
     the fewest crossings layout leaves them out. Outside waits no
     milestone holds stay in Waiting outside.
+  - **Release bands (CS-685).** The owner's rule: a release needs whole
+    milestones, and every open item a milestone it needs pulls in,
+    directly or through other items, belongs to a milestone the same
+    release needs, or to no milestone. A release needs what the releases
+    before it need too. `releaseClosuresOf` in `work.ts` checks it for
+    each open release in ladder order (each after the releases it needs).
+    A break is fixed in the tracker, by moving the item or splitting its
+    milestone, never explained away on screen, so the roadmap shows each
+    as a problem to fix: "Releases and the milestones they need", above
+    the map and the list, gives each release with its milestones (folded
+    behind it) and, always open, its problems. Each problem names the
+    release, what it pulls in, the milestone that holds it and that
+    milestone's band, the path of needs from the release to it (IDs with
+    their kind's mark, named on hover), and the two fixes. A release
+    that needs an item itself, not through a milestone, is a problem
+    too. With none, the panel says so. A milestone holding a problem
+    carries a warning badge on the map. The roadmap is then arranged in
+    release bands by default ("a release is just a special milestone"):
+    one band per release in ladder order and a last band for the
+    milestones no release needs, each milestone in the band of the
+    earliest release that needs it. Inside a band, milestones are placed
+    by steps counted within the band: a wait on an earlier band is done
+    before the band begins, and a wait on a later band is a closure
+    break, which places nothing. Each band is named in a row under the
+    flags ("First needed by"), its steps numbered from 1, and its
+    release's flag closes it, so the flags spread along the top rather
+    than piling up at the last step. The critical path runs on across
+    the bands through each release. Loose cards sit in the earliest band
+    of a milestone they feed, inside it. The list groups the same way: a
+    band at a time, its steps, then its flag. "By release" and "By
+    steps" are one control in the roadmap's tools (`&arrange=steps`, by
+    release when absent), so the steps view, the pure dependency view,
+    stays a click away; "Steps" is one word in `ARRANGE_NAMES`, for the
+    rename to waves (CS-692). The fewest crossings layout stays by steps.
   - **The key sits above the roadmap (CS-683)**, so it is read before
     the marks: the critical path first, in words with its accent line,
     then each mark beside its meaning in three groups, Cards (under way,

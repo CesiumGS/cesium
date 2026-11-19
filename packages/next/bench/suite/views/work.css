@@ -3107,3 +3107,303 @@ button.work-mrow-big:focus-visible {
 .work-matrix-col.unfed {
   opacity: 0.4;
 }
+
+/*
+ * Release bands (CS-685; DESIGN.md, "Release bands"): the map in bands,
+ * one per release in ladder order, each named in a row under the flags
+ * and closed by its release's flag; the list grouped the same way.
+ */
+.work-map-bandname {
+  position: absolute;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  padding-inline: var(--stratakit-space-200);
+  box-sizing: border-box;
+  border-bottom: 2px solid var(--kind-release);
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  cursor: default;
+}
+.work-map-bandname.none {
+  border-bottom-style: dashed;
+  border-bottom-color: var(--stratakit-color-border-neutral-base);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-map-bandname.on {
+  border-bottom-color: var(--stratakit-color-border-accent-strong);
+}
+.work-map-bandname .work-kind-mark {
+  flex: none;
+  width: 13px;
+  height: 13px;
+}
+.work-map-bandname-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.work-map-bandname-n {
+  font-weight: 400;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-map-key.flag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-bottom: 2px solid var(--kind-release);
+  border-radius: 0;
+}
+.work-map-key.flag .work-kind-mark {
+  width: 12px;
+  height: 12px;
+}
+/* A closure problem on a card: a warning, never color alone. */
+.work-count-badge.work-cross {
+  gap: 3px;
+  padding: 0 6px 0 4px;
+  background: var(--stratakit-color-bg-page-base);
+  color: var(--stratakit-color-text-attention-base);
+  box-shadow: inset 0 0 0 1px var(--stratakit-color-border-attention-base);
+}
+.work-count-badge.work-cross svg {
+  width: 12px;
+  height: 12px;
+}
+.work-map-node.d-name .work-cross,
+.work-map-node.d-mark .work-cross {
+  display: none;
+}
+
+/* The releases and their milestones, with the problems to fix. */
+.work-closure {
+  margin: 0 0 var(--stratakit-space-400);
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-md);
+}
+.work-closure-head h3 {
+  margin: 0;
+  font-weight: 600;
+}
+.work-closure-head p {
+  margin: var(--stratakit-space-100) 0 var(--stratakit-space-300);
+  max-width: 72ch;
+}
+.work-closure-whole {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+}
+.work-closure-whole svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--stratakit-color-text-positive-base);
+}
+.work-closure-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+}
+.work-closure-release {
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+  padding-top: var(--stratakit-space-150);
+}
+.work-closure-toggle {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-100) var(--stratakit-space-200);
+  width: 100%;
+  min-height: 28px;
+  padding: 2px var(--stratakit-space-100);
+  border-radius: var(--stratakit-radius-md);
+  font-size: var(--stratakit-font-size-body-sm);
+  cursor: pointer;
+}
+.work-closure-toggle:hover {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+}
+.work-closure-toggle:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 1px;
+}
+.work-closure-toggle svg {
+  flex: none;
+  width: 14px;
+  height: 14px;
+}
+.work-closure-toggle b {
+  font-variant-numeric: tabular-nums;
+}
+.work-closure-proposed {
+  text-decoration: underline dashed var(--proposed-outline);
+  text-underline-offset: 3px;
+}
+.work-closure-meta {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.work-closure-body {
+  padding: var(--stratakit-space-200) 0 var(--stratakit-space-200) 28px;
+}
+.work-closure-ms {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  columns: 18rem auto;
+  column-gap: var(--stratakit-space-600);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.work-closure-ms li {
+  break-inside: avoid;
+  padding: 1px 0;
+}
+.work-closure-ms button {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  text-align: start;
+}
+.work-closure-ms .work-kind-mark {
+  flex: none;
+  width: 11px;
+  height: 11px;
+  transform: translateY(1px);
+}
+.work-closure-earlier {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-problems {
+  list-style: none;
+  margin: var(--stratakit-space-300) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.work-problem {
+  padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  border-inline-start: 3px solid var(--stratakit-color-border-attention-base);
+  border-radius: 0 var(--stratakit-radius-md) var(--stratakit-radius-md) 0;
+  background: var(--stratakit-color-bg-page-depth);
+}
+.work-problem p {
+  margin: 0 0 var(--stratakit-space-150);
+}
+.work-problem-what {
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.5;
+}
+.work-problem-band {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* A link in running text: inline, so the sentence flows on after it. */
+.work-problem .work-closure-ref {
+  display: inline;
+  text-align: start;
+  vertical-align: baseline;
+}
+.work-closure-ref .work-id {
+  vertical-align: baseline;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.work-closure-ref:hover .work-id {
+  color: var(--stratakit-color-text-neutral-primary);
+  text-decoration-style: solid;
+}
+.work-problem-path {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-100) var(--stratakit-space-200);
+  margin: 0 0 var(--stratakit-space-150);
+}
+.work-problem-path ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.work-problem-path li + li::before {
+  content: "→";
+  margin-inline-end: var(--stratakit-space-100);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-problem-step {
+  all: unset;
+  cursor: pointer;
+  border-radius: var(--stratakit-radius-md);
+  padding: 0 3px;
+}
+.work-problem-step:hover .work-id {
+  color: var(--stratakit-color-text-neutral-primary);
+  text-decoration: underline;
+}
+.work-problem-step:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+}
+.work-problem-fixes {
+  margin: 0;
+  padding-inline-start: 1.25rem;
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.5;
+}
+
+/* The list in bands: each release's milestones, closed by its flag. */
+.work-roadmap-band {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+  padding: var(--stratakit-space-300) 0 var(--stratakit-space-300)
+    var(--stratakit-space-400);
+  border-inline-start: 3px solid var(--kind-release);
+}
+.work-roadmap-band.none {
+  border-inline-start-style: dashed;
+  border-inline-start-color: var(--stratakit-color-border-neutral-base);
+}
+.work-roadmap-band.on {
+  border-inline-start-color: var(--stratakit-color-border-accent-strong);
+}
+.work-roadmap-band-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-100) var(--stratakit-space-200);
+  margin: 0;
+}
+.work-roadmap-band-head .work-kind-mark {
+  width: 14px;
+  height: 14px;
+}
+.work-roadmap-band-n {
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+@media (max-width: 480px) {
+  .work-closure {
+    padding: var(--stratakit-space-200) var(--stratakit-space-300);
+  }
+  .work-closure-body {
+    padding-inline-start: var(--stratakit-space-200);
+  }
+  .work-roadmap-band {
+    padding-inline-start: var(--stratakit-space-300);
+  }
+}

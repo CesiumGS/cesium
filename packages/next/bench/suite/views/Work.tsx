@@ -28,6 +28,7 @@ import { svgFolderOpen } from "@stratakit/icons/folder-open";
 import { svgGitBranch } from "@stratakit/icons/git-branch";
 import { svgInfo } from "@stratakit/icons/info";
 import { svgSearch } from "@stratakit/icons/search";
+import { svgStatusWarning } from "@stratakit/icons/status-warning";
 import { svgZoomInMagnifier } from "@stratakit/icons/zoom-in-magnifier";
 import { svgZoomOutMagnifier } from "@stratakit/icons/zoom-out-magnifier";
 import { Icon } from "@stratakit/mui";
@@ -54,7 +55,15 @@ import type { WorkSearch } from "../routes.tsx";
 import { useWork } from "../useWork.ts";
 import {
   type Actor,
+  type Arrange,
   ageText,
+  bandStepsOf,
+  type ClosureViolation,
+  committedOnly,
+  NO_RELEASE,
+  type ReleaseClosure,
+  releaseBandsOf,
+  releaseClosuresOf,
   byProject,
   cardDetail,
   clampZoom,
@@ -423,6 +432,8 @@ function Board({
     search.layout === "map" || (search.layout !== "list" && !narrow);
   const across: "steps" | "tokens" =
     search.across === "tokens" && hasTokens ? "tokens" : "steps";
+  // Release bands by default; steps alone for the pure dependency view.
+  const arrange: Arrange = search.arrange === "steps" ? "steps" : "release";
 
   return (
     <Page
@@ -649,6 +660,17 @@ function Board({
                     !projectScope && (
                       <span className="work-card-tools">
                         {roadmapBy === "milestones" && (
+                          <ArrangeToggle
+                            value={arrange}
+                            onChange={(v) =>
+                              set(
+                                { arrange: v === "steps" ? v : undefined },
+                                true,
+                              )
+                            }
+                          />
+                        )}
+                        {roadmapBy === "milestones" && (
                           <ToggleButtonGroup
                             size="small"
                             exclusive
@@ -815,6 +837,7 @@ function Board({
                       s={s}
                       flight={flight}
                       unit={across}
+                      arrange={arrange}
                       proposals={withProposed}
                       inScope={size ? msInScope : undefined}
                       selected={
@@ -836,6 +859,8 @@ function Board({
                     <Roadmap
                       s={s}
                       flight={flight}
+                      arrange={arrange}
+                      onItem={(id) => set({ item: id, list: undefined })}
                       proposals={withProposed}
                       inScope={size ? msInScope : undefined}
                       selected={
@@ -5902,6 +5927,7 @@ function MilestoneMap({
   s,
   flight,
   unit,
+  arrange,
   proposals,
   inScope,
   selected,
@@ -5916,6 +5942,8 @@ function MilestoneMap({
   s: WorkSnapshot;
   flight: InFlight;
   unit: "steps" | "tokens";
+  /** In release bands, or by steps alone. */
+  arrange: Arrange;
   /** Proposed milestones too, placed by their waits and outlined dashed. */
   proposals: boolean;
   /** Project lanes, or a layered graph that crosses fewer waits. */
@@ -5939,17 +5967,34 @@ function MilestoneMap({
   const [hover, setHover] = useState<string>();
   const [hoverFlag, setHoverFlag] = useState<string>();
   const map = useMemo(
-    () => milestoneMapOf(s, flight, unit, release, proposals),
-    [s, flight, unit, release, proposals],
+    () => milestoneMapOf(s, flight, unit, release, proposals, arrange),
+    [s, flight, unit, release, proposals, arrange],
   );
-  // The graph places by steps whatever the axis: its layers are steps.
+  // The graph places by steps alone whatever the axis: its layers are steps.
   const graphMap = useMemo(
     () =>
-      unit === "steps"
+      unit === "steps" && arrange === "steps"
         ? map
         : milestoneMapOf(s, flight, "steps", release, proposals),
-    [map, s, flight, unit, release, proposals],
+    [map, s, flight, unit, arrange, release, proposals],
   );
+  // What each milestone holds that a release pulls in from outside its
+  // milestones (CS-685): a problem to fix in the tracker.
+  const crossing = useMemo(() => {
+    const out = new Map<
+      string,
+      Array<{ v: ClosureViolation; version: string }>
+    >();
+    for (const c of map.closures) {
+      for (const v of c.violations) {
+        for (const m of v.milestones) {
+          out.set(m, [...(out.get(m) ?? []), { v, version: c.version }]);
+        }
+      }
+    }
+    return out;
+  }, [map.closures]);
+  const banded = map.bands.length > 0;
   const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
   const itemOf = useMemo(() => new Map(s.items.map((i) => [i.id, i])), [s]);
   const titleOf = (id: string) => msOf.get(id)?.title ?? mapEntityTitle(s, id);
@@ -5986,7 +6031,12 @@ function MilestoneMap({
     flagRow.set(f.id, r);
   }
   const FLAGS = placed.length ? rowEnds.length * FLAG_ROW + 6 : 0;
-  const AXIS = FLAGS + (unit === "steps" ? 44 : 28);
+  // In bands, a row of the bands' names under the flags.
+  const BANDS = banded ? 26 : 0;
+  const AXIS = FLAGS + BANDS + (unit === "steps" ? 44 : 28);
+  // The band a step column is in, for its number inside the band.
+  const bandAt = (v: number) =>
+    map.bands.find((b) => v >= b.x0 - 1e-9 && v < b.x1 - 1e-9);
   // Every card is a full row, so a project's items and decisions can name
   // themselves (CS-683).
   const rowOf = (_lane: string) => 84 * zoom;
@@ -6266,8 +6316,36 @@ function MilestoneMap({
               On the critical path
             </KeyItem>
           </KeyGroup>
+          {map.flags.length > 0 && (
+            <KeyGroup title="Releases">
+              <KeyItem
+                mark={
+                  <span className="work-map-key flag">
+                    <KindMark kind="release" named={false} />
+                  </span>
+                }
+              >
+                {banded
+                  ? "A release's flag closes its band: the milestones it is first to need"
+                  : "A release's flag, after the last milestone it waits on"}
+              </KeyItem>
+              {crossing.size > 0 && (
+                <KeyItem mark={<CrossBadge count={1} />}>
+                  Holds work a release pulls in without needing the milestone:
+                  fix it in the tracker
+                </KeyItem>
+              )}
+            </KeyGroup>
+          )}
         </div>
       </div>
+      <ReleaseClosures
+        s={s}
+        closures={map.closures}
+        onHover={setHoverFlag}
+        onOpen={onOpen}
+        onItem={onItem}
+      />
       <ReleaseStrip
         flags={map.flags.filter((f) => f.at === undefined)}
         label="Releases not placed yet"
@@ -6361,7 +6439,11 @@ function MilestoneMap({
                 <span
                   key={t.v}
                   className="work-map-tick"
-                  style={{ left: x(t.v), top: FLAGS, height: height - FLAGS }}
+                  style={{
+                    left: x(t.v),
+                    top: FLAGS + BANDS,
+                    height: height - FLAGS - BANDS,
+                  }}
                 >
                   {t.label && (
                     <span className="work-map-tick-label">{t.label}</span>
@@ -6377,40 +6459,91 @@ function MilestoneMap({
                   Releases
                 </span>
               )}
+              {banded && (
+                <span
+                  className="work-map-corner"
+                  style={{ width: laneW - 12, top: FLAGS + 5 }}
+                >
+                  First needed by
+                </span>
+              )}
+              {map.bands.map((b) => {
+                const w = x(b.x1) - x(b.x0);
+                const none = b.id === NO_RELEASE;
+                const n = map.nodes.filter(
+                  (k) =>
+                    k.band === map.bands.indexOf(b) &&
+                    !k.unshaped &&
+                    !k.decision,
+                ).length;
+                const tip = none
+                  ? `No release needs these ${n} ${n === 1 ? "milestone" : "milestones"}`
+                  : `${b.name} is the first release to need these ${n} ${n === 1 ? "milestone" : "milestones"}; its flag closes the band`;
+                return (
+                  <span
+                    key={b.id}
+                    className={`work-map-bandname${none ? " none" : ""}${hoverFlag === b.id || map.focus === b.id ? " on" : ""}`}
+                    style={{ left: x(b.x0), top: FLAGS, width: w }}
+                    data-tip={tip}
+                  >
+                    {w >= 72 && (
+                      <>
+                        {!none && <KindMark kind="release" named={false} />}
+                        <span className="work-map-bandname-text">
+                          {b.name}
+                          {w >= 160 && (
+                            <span className="work-map-bandname-n">
+                              {" "}
+                              · {n} {n === 1 ? "milestone" : "milestones"}
+                            </span>
+                          )}
+                        </span>
+                      </>
+                    )}
+                  </span>
+                );
+              })}
               <span
                 className="work-map-corner"
-                style={{ width: laneW - 12, top: FLAGS + 8 }}
+                style={{ width: laneW - 12, top: FLAGS + BANDS + 8 }}
               >
                 Project
               </span>
-              {columns.map((c) => (
-                <span
-                  key={`h${c.i}`}
-                  className="work-map-col"
-                  style={{
-                    left: x(c.i),
-                    top: FLAGS + 2,
-                    width: x(c.i + 1) - x(c.i),
-                  }}
-                  data-tip={`${
-                    c.i === 0
-                      ? "Now: these wait on no other milestone; those with an item done or in progress are filled"
-                      : `Step ${c.i + 1}: starts once what it waits on in ${c.i === 1 ? "step 1" : `steps 1 to ${c.i}`} is done`
-                  }; ${c.done} of ${c.all} items done`}
-                >
-                  {x(c.i + 1) - x(c.i) >= 26 && (
-                    <span className="work-map-col-n">{c.i + 1}</span>
-                  )}
-                  {x(c.i + 1) - x(c.i) >= 120 && (
-                    <span className="work-map-col-text">
-                      {c.i === 0 && <b>Now</b>}
-                      <span>
-                        {`${c.count} ${c.count === 1 ? "milestone" : "milestones"}`}
+              {columns.map((c) => {
+                const b = banded ? bandAt(c.i) : undefined;
+                // In bands, steps count inside each band.
+                const n = b ? c.i - Math.round(b.x0) + 1 : c.i + 1;
+                return (
+                  <span
+                    key={`h${c.i}`}
+                    className="work-map-col"
+                    style={{
+                      left: x(c.i),
+                      top: FLAGS + BANDS + 2,
+                      width: x(c.i + 1) - x(c.i),
+                    }}
+                    data-tip={`${
+                      c.i === 0
+                        ? "Now: these wait on no other milestone; those with an item done or in progress are filled"
+                        : b
+                          ? `Step ${n} of ${b.id === NO_RELEASE ? "the milestones no release needs" : `${b.name}'s band`}: starts once ${n === 1 ? "the band before it is done" : `what it waits on in the band's ${n === 2 ? "step 1" : `steps 1 to ${n - 1}`} is done`}`
+                          : `Step ${c.i + 1}: starts once what it waits on in ${c.i === 1 ? "step 1" : `steps 1 to ${c.i}`} is done`
+                    }; ${c.done} of ${c.all} items done`}
+                  >
+                    {x(c.i + 1) - x(c.i) >= 26 && (
+                      <span className="work-map-col-n">{n}</span>
+                    )}
+                    {x(c.i + 1) - x(c.i) >= 120 && (
+                      <span className="work-map-col-text">
+                        {c.i === 0 && <b>Now</b>}
+                        <span>
+                          {`${c.count} ${c.count === 1 ? "milestone" : "milestones"}`}
+                        </span>
                       </span>
-                    </span>
-                  )}
-                </span>
-              ))}
+                    )}
+                  </span>
+                );
+              })}
               <svg
                 className="work-map-edges"
                 width={laneW + plotW + 8}
@@ -6479,9 +6612,11 @@ function MilestoneMap({
                     <ReleaseFlagButton
                       flag={f}
                       where={
-                        unit === "steps"
-                          ? betweenSteps(f.at!, steps)
-                          : `${tokenText(f.at!)} tokens in`
+                        banded
+                          ? "closing its band"
+                          : unit === "steps"
+                            ? betweenSteps(f.at!, steps)
+                            : `${tokenText(f.at!)} tokens in`
                       }
                       selected={map.focus === f.id}
                       dim={!!hoverFlag && !on}
@@ -6607,6 +6742,22 @@ function MilestoneMap({
                                 .join(", ")}
                             </span>
                           )}
+                          {n.band !== undefined && map.bands[n.band] && (
+                            <span>
+                              {map.bands[n.band]!.id === NO_RELEASE
+                                ? "No release needs it"
+                                : `First needed by ${map.bands[n.band]!.name}`}
+                            </span>
+                          )}
+                          {crossing.get(n.id)?.map(({ v, version }) => (
+                            <span key={`${v.release}${v.item}`}>
+                              To fix: {version} pulls in{" "}
+                              {v.kind === "milestone"
+                                ? "this milestone"
+                                : `${v.item}, “${itemTitle(v.item)}”`}{" "}
+                              through {v.path.at(-2)}
+                            </span>
+                          ))}
                         </span>
                       )
                     }
@@ -6645,6 +6796,9 @@ function MilestoneMap({
                           {n.unshaped ? looseName(n) : n.title}
                         </span>
                         {!n.decision && !n.unshaped && <HoldBadges n={n} />}
+                        {crossing.has(n.id) && (
+                          <CrossBadge count={crossing.get(n.id)!.length} />
+                        )}
                       </span>
                       {n.decision || n.unshaped ? (
                         <span className="work-map-node-names">
@@ -7263,6 +7417,23 @@ function HoldBadges({ n }: { n: MapNode }) {
   );
 }
 
+/**
+ * A milestone that holds work a release pulls in from outside its
+ * milestones: a closure problem to fix in the tracker (CS-685).
+ */
+function CrossBadge({ count }: { count: number }) {
+  return (
+    <span
+      className="work-count-badge work-cross"
+      title={`${count} closure ${count === 1 ? "problem" : "problems"} to fix: a release pulls work in from here without needing this milestone`}
+      aria-label={`${count} closure ${count === 1 ? "problem" : "problems"} to fix`}
+    >
+      <Icon href={svgStatusWarning} />
+      {count}
+    </span>
+  );
+}
+
 /** About five round values from zero to the top, for a token axis. */
 function niceTicks(top: number): number[] {
   if (top <= 0) {
@@ -7330,7 +7501,13 @@ function ReleaseFlagButton({
   className?: string;
 }) {
   const p = flag.progress;
-  const feeds = `${flag.feeds.length} ${flag.feeds.length === 1 ? "milestone feeds" : "milestones feed"} it`;
+  // Exactly the milestones it names (CS-685), the first few by name.
+  const FEW = 6;
+  const named = flag.feeds.slice(0, FEW).map(titleOf);
+  const more = flag.feeds.length - named.length;
+  const needs = flag.feeds.length
+    ? `Needs ${flag.feeds.length} ${flag.feeds.length === 1 ? "milestone" : "milestones"}: ${more ? `${named.join(", ")} and ${more} more` : andList(named)}${steps ? ", lit on the map" : ""}`
+    : "Names no open milestone of its own";
   return (
     <Tooltip
       placement="top"
@@ -7344,19 +7521,25 @@ function ReleaseFlagButton({
           )}
           {flag.unplaced ? (
             <span>{unplacedText(flag, titleOf)}</span>
-          ) : !steps ? (
-            <span>
-              {feeds}: {andList(flag.feeds.map(titleOf))}
-            </span>
-          ) : flag.at === undefined ? (
-            <span>The milestones that place it are outside this view</span>
           ) : (
             <>
-              <span>
-                After {andList(flag.last.map(titleOf))}
-                {where ? `, ${where}` : ""}
-              </span>
-              <span>{feeds}</span>
+              <span>{needs}</span>
+              {flag.after.length > 0 && (
+                <span>After {andList(flag.after.map(titleOf))}</span>
+              )}
+              {steps &&
+                (flag.at === undefined ? (
+                  <span>
+                    The milestones that place it are outside this view
+                  </span>
+                ) : (
+                  flag.last.length > 0 && (
+                    <span>
+                      Placed after {andList(flag.last.map(titleOf))}
+                      {where ? `, ${where}` : ""}
+                    </span>
+                  )
+                ))}
             </>
           )}
           {p && !flag.unplaced && (
@@ -7462,6 +7645,416 @@ const betweenSteps = (at: number, steps: number) =>
     ? `after step ${at}, the last`
     : `between steps ${at} and ${at + 1}`;
 
+// ------------------------------------------------------------ release bands
+
+/**
+ * The arrangements' names (CS-685). One control, so a later change can
+ * rename "Steps" (to "Waves", CS-692) by a word.
+ */
+const ARRANGE_NAMES: Record<Arrange, { label: string; tip: string }> = {
+  release: {
+    label: "By release",
+    tip: "In release bands: each release's milestones together, its flag closing them",
+  },
+  steps: {
+    label: "By steps",
+    tip: "By steps alone: the pure dependency view, each milestone after what it waits on",
+  },
+};
+
+/** Release bands or steps alone: the roadmap's arrangement. */
+function ArrangeToggle({
+  value,
+  onChange,
+}: {
+  value: Arrange;
+  onChange: (v: Arrange) => void;
+}) {
+  return (
+    <ToggleButtonGroup
+      size="small"
+      exclusive
+      value={value}
+      onChange={(_, v: Arrange | null) => v && onChange(v)}
+      aria-label="Arrange"
+    >
+      {(["release", "steps"] as const).map((a) => (
+        <ToggleButton
+          key={a}
+          value={a}
+          render={
+            <Button
+              variant="outlined"
+              size="small"
+              title={ARRANGE_NAMES[a].tip}
+            />
+          }
+        >
+          {ARRANGE_NAMES[a].label}
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
+  );
+}
+
+/** A milestone or an item named in a problem: its mark, its name, a link to open it. */
+function ClosureRef({
+  id,
+  titleOf,
+  onOpen,
+  short = false,
+}: {
+  id: string;
+  titleOf: (id: string) => string;
+  onOpen: (id: string) => void;
+  /** Its ID alone, named on hover: once the problem has named it in full. */
+  short?: boolean;
+}) {
+  // The button holds the ID alone: a button can't break across lines,
+  // so the name follows as text and the sentence flows on.
+  return (
+    <>
+      <Link
+        component="button"
+        type="button"
+        className="work-closure-ref"
+        onClick={() => onOpen(id)}
+        title={`${titleOf(id)}: open it`}
+        aria-label={`${id}, ${titleOf(id)}`}
+      >
+        <KindId id={id} />
+      </Link>
+      {!short && <> “{titleOf(id)}”</>}
+    </>
+  );
+}
+
+/** The two fixes for a break of the closure rule, in words. */
+function closureFixes(
+  v: ClosureViolation,
+  version: string,
+): Array<{ text: string; refs: string[] }> {
+  const pulls = v.path.length > 2 ? v.path[1]! : undefined;
+  const held = v.milestones[0];
+  if (v.kind === "milestone") {
+    return [
+      {
+        text: `Have ${version} need {0} itself, so it joins ${version}'s band.`,
+        refs: [v.item],
+      },
+      {
+        text: `Split {0}, so the part that needs {1} becomes a milestone of a later release.`,
+        refs: [v.path.at(-2)!, v.item],
+      },
+    ];
+  }
+  if (v.kind === "direct") {
+    return held
+      ? [
+          {
+            text: `Move {0} into a milestone ${version} needs, instead of naming it on the release.`,
+            refs: [v.item],
+          },
+          {
+            text: `Split {0}, so {1} is in a milestone of its own that ${version} needs.`,
+            refs: [held, v.item],
+          },
+        ]
+      : [
+          {
+            text: `Move {0} into a milestone ${version} needs, instead of naming it on the release.`,
+            refs: [v.item],
+          },
+          {
+            text: `Give {0} a milestone of its own, and have ${version} need that.`,
+            refs: [v.item],
+          },
+        ];
+  }
+  return [
+    {
+      text: pulls
+        ? `Move {0} into a milestone ${version} needs, such as {1}, which pulls it in.`
+        : `Move {0} into a milestone ${version} needs.`,
+      refs: pulls ? [v.item, pulls] : [v.item],
+    },
+    {
+      text: `Split {0}, so {1} is in a milestone of its own that ${version} needs.`,
+      refs: [held!, v.item],
+    },
+  ];
+}
+
+/** "{0} and {1}" with refs in place of the numbers. */
+function withRefs(
+  text: string,
+  refs: readonly string[],
+  ref: (id: string) => ReactNode,
+): ReactNode[] {
+  return text
+    .split(/(\{\d\})/)
+    .map((part, i) =>
+      /^\{\d\}$/.test(part) ? (
+        <Fragment key={i}>{ref(refs[Number(part.slice(1, -1))]!)}</Fragment>
+      ) : (
+        part
+      ),
+    );
+}
+
+/** One break of the closure rule: what, from where, the path, and the fixes. */
+function ClosureProblem({
+  v,
+  version,
+  band,
+  titleOf,
+  onOpen,
+}: {
+  v: ClosureViolation;
+  version: string;
+  /** Where the milestone that holds it sits: a later release's band, or none. */
+  band?: string;
+  titleOf: (id: string) => string;
+  onOpen: (id: string) => void;
+}) {
+  const kinds = useContext(KindsContext);
+  const ref = (id: string) => (
+    <ClosureRef id={id} titleOf={titleOf} onOpen={onOpen} />
+  );
+  const held = v.milestones[0];
+  return (
+    <li className="work-problem">
+      <p className="work-problem-what">
+        {v.kind === "milestone" ? (
+          <>
+            {ref(v.path.at(-2)!)} names {ref(v.item)}, a milestone {version}{" "}
+            doesn't need
+          </>
+        ) : v.kind === "direct" ? (
+          <>
+            {version} needs the item {ref(v.item)} itself
+            {held ? <>, which is in {ref(held)}</> : ", in no milestone"}: a
+            release needs milestones only
+          </>
+        ) : (
+          <>
+            {version} pulls in {ref(v.item)}, which is in {ref(held!)}
+          </>
+        )}
+        {band && v.kind !== "direct" && (
+          <span className="work-problem-band">
+            {" "}
+            ({band === "No release" ? "no release needs it" : `${band}'s band`})
+          </span>
+        )}
+        .
+      </p>
+      {v.path.length > 2 && (
+        <div className="work-problem-path">
+          <Typography variant="caption-md" color="textSecondary">
+            Through
+          </Typography>
+          <ol aria-label="The needs from the release to it">
+            {v.path.map((id) => (
+              <li key={id} data-tip={titleOf(id)}>
+                <button
+                  type="button"
+                  className="work-problem-step"
+                  aria-label={`${ENTITY_KIND_NAMES[kinds.get(id) ?? "work"]} ${id}, ${titleOf(id)}`}
+                  onClick={() => onOpen(id)}
+                >
+                  <KindId id={id} />
+                </button>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+      <Typography variant="caption-md" color="textSecondary" render={<p />}>
+        Fix it in the tracker, one of two ways:
+      </Typography>
+      <ul className="work-problem-fixes">
+        {closureFixes(v, version).map((f) => (
+          <li key={f.text}>
+            {withRefs(f.text, f.refs, (id) => (
+              <ClosureRef id={id} titleOf={titleOf} onOpen={onOpen} short />
+            ))}
+          </li>
+        ))}
+      </ul>
+    </li>
+  );
+}
+
+/**
+ * Each release and the milestones it needs, with the closure rule's
+ * breaks under it as problems to fix in the tracker (CS-685). The
+ * problems always show; a release's milestones fold away behind it.
+ * Pointing at a release lights its milestones.
+ */
+function ReleaseClosures({
+  s,
+  closures,
+  onHover,
+  onOpen,
+  onItem,
+}: {
+  s: WorkSnapshot;
+  closures: readonly ReleaseClosure[];
+  onHover: (id: string | undefined) => void;
+  /** Opens a milestone in the pane. */
+  onOpen: (id: string) => void;
+  /** Opens an item in the pane. */
+  onItem: (id: string) => void;
+}) {
+  const head = useId();
+  const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
+  const itemOf = useMemo(() => new Map(s.items.map((i) => [i.id, i])), [s]);
+  const titleOf = (id: string) =>
+    msOf.get(id)?.title ?? itemOf.get(id)?.title ?? id;
+  const open = (id: string) => (msOf.has(id) ? onOpen(id) : onItem(id));
+  const { bands, bandOf } = useMemo(
+    () => releaseBandsOf(s, closures),
+    [s, closures],
+  );
+  const problems = closures.reduce((n, c) => n + c.violations.length, 0);
+  const [shown, setShown] = useState<Record<string, boolean>>({});
+  if (!closures.length) {
+    return null;
+  }
+  return (
+    <section className="work-closure" aria-labelledby={head}>
+      <div className="work-closure-head">
+        <Typography variant="body-sm" render={<h3 id={head} />}>
+          Releases and the milestones they need
+        </Typography>
+        <Typography
+          variant="caption-md"
+          color="textSecondary"
+          render={<p />}
+          className={problems ? "work-closure-count" : "work-closure-whole"}
+        >
+          {problems ? (
+            <>
+              <b>
+                {problems} {problems === 1 ? "problem" : "problems"} to fix in
+                the tracker:
+              </b>{" "}
+              a release needs whole milestones, so each item its milestones pull
+              in belongs in one of them, or in none.
+            </>
+          ) : (
+            <>
+              <Icon href={svgCheckmark} />
+              No problems: each item a release's milestones pull in is in one of
+              its milestones, or in none.
+            </>
+          )}
+        </Typography>
+      </div>
+      <ul className="work-closure-list">
+        {closures.map((c) => {
+          const isOpen = !!shown[c.id];
+          const before = c.after
+            .map((a) => closures.find((x) => x.id === a)?.version)
+            .filter(Boolean);
+          return (
+            <li
+              key={c.id}
+              className={`work-closure-release${c.violations.length ? " broken" : ""}`}
+            >
+              <button
+                type="button"
+                className="work-closure-toggle"
+                aria-expanded={isOpen}
+                onClick={() => setShown({ ...shown, [c.id]: !isOpen })}
+                onPointerEnter={() => onHover(c.id)}
+                onPointerLeave={() => onHover(undefined)}
+                onFocus={() => onHover(c.id)}
+                onBlur={() => onHover(undefined)}
+              >
+                <Icon href={isOpen ? svgChevronDown : svgChevronRight} />
+                <KindMark kind="release" named={false} />
+                <b className={c.proposed ? "work-closure-proposed" : undefined}>
+                  {c.version}
+                </b>
+                <span className="work-closure-meta">
+                  {c.milestones.length}{" "}
+                  {c.milestones.length === 1 ? "milestone" : "milestones"}
+                  {before.length > 0 &&
+                    `, after ${andList(before as string[])}`}
+                </span>
+                {c.violations.length > 0 ? (
+                  <StatusBadge tone="warning">
+                    {c.violations.length} to fix
+                  </StatusBadge>
+                ) : (
+                  <StatusBadge tone="success">Whole</StatusBadge>
+                )}
+              </button>
+              {(isOpen || c.violations.length > 0) && (
+                <div className="work-closure-body">
+                  {!isOpen ? null : c.milestones.length > 0 ? (
+                    <ul
+                      className="work-closure-ms"
+                      aria-label={`The milestones ${c.version} needs`}
+                    >
+                      {c.milestones.map((m) => (
+                        <li key={m}>
+                          <Link
+                            component="button"
+                            type="button"
+                            onClick={() => onOpen(m)}
+                          >
+                            <KindMark kind="milestone" named={false} />
+                            {titleOf(m)}
+                          </Link>
+                          {bandOf.get(m) !== closures.indexOf(c) && (
+                            <span className="work-closure-earlier">
+                              {" "}
+                              (in {bands[bandOf.get(m)!]?.name}'s band)
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <Typography
+                      variant="caption-md"
+                      color="textSecondary"
+                      render={<p />}
+                    >
+                      It names no milestone of its own yet.
+                    </Typography>
+                  )}
+                  {c.violations.length > 0 && (
+                    <ol className="work-problems" aria-label="Problems to fix">
+                      {c.violations.map((v) => (
+                        <ClosureProblem
+                          key={v.item}
+                          v={v}
+                          version={c.version}
+                          band={
+                            v.milestones[0] !== undefined
+                              ? bands[bandOf.get(v.milestones[0])!]?.name
+                              : undefined
+                          }
+                          titleOf={titleOf}
+                          onOpen={open}
+                        />
+                      ))}
+                    </ol>
+                  )}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 // ------------------------------------------------------------ the roadmap
 
 /**
@@ -7474,16 +8067,20 @@ const betweenSteps = (at: number, steps: number) =>
 function Roadmap({
   s,
   flight,
+  arrange,
   proposals,
   inScope,
   selected,
   onOpen,
+  onItem,
   onWait,
   release,
   onRelease,
 }: {
   s: WorkSnapshot;
   flight: InFlight;
+  /** In release bands, or by steps alone. */
+  arrange: Arrange;
   /** Proposed milestones too, outlined dashed. */
   proposals: boolean;
   /** The release in focus: what feeds it stands out. */
@@ -7494,12 +8091,24 @@ function Roadmap({
   selected?: string;
   /** Opens a milestone in the pane. */
   onOpen: (milestone: string) => void;
+  /** Opens an item in the pane. */
+  onItem: (id: string) => void;
   onWait: (from: string, to: string) => void;
 }) {
   const all = useMemo(
     () => milestoneRoadmapOf(s, s.items, flight, proposals),
     [s, flight, proposals],
   );
+  const closures = useMemo(
+    () => releaseClosuresOf(proposals ? s : committedOnly(s), proposals),
+    [s, proposals],
+  );
+  const { bands, bandOf } = useMemo(
+    () => releaseBandsOf(proposals ? s : committedOnly(s), closures),
+    [s, proposals, closures],
+  );
+  const banded = arrange === "release";
+  const bandStep = useMemo(() => bandStepsOf(all, bandOf), [all, bandOf]);
   const msOf = useMemo(() => new Map(s.milestones.map((m) => [m.id, m])), [s]);
   const itemOf = useMemo(() => new Map(s.items.map((i) => [i.id, i])), [s]);
   // Release items are flags between the steps, not lines.
@@ -7529,7 +8138,6 @@ function Roadmap({
     onSelect: onRelease,
   };
   const title = (id: string) => msOf.get(id)?.title ?? id;
-  const steps = [...new Set(rows.map((r) => r.step))].sort((a, b) => a - b);
   const covered = new Set(
     s.milestones.flatMap((m) => m.constraints.map((c) => c.id)),
   );
@@ -7547,6 +8155,104 @@ function Roadmap({
       </Typography>
     );
   }
+  // One step's lines, a loop's boxed together with the waits that tie it.
+  const stepSection = (
+    key: string,
+    here: RoadmapRow[],
+    n: number,
+    head: string,
+    /** In bands, a loop is its members in this band: a wait on another band places nothing. */
+    inBand?: (id: string) => boolean,
+  ) => {
+    const groups = [
+      ...new Set(
+        here.map((r) => (inBand ? r.group.filter(inBand) : r.group).join()),
+      ),
+    ].map((g) => g.split(","));
+    return (
+      <section key={key} className="work-roadmap-step" aria-label={head}>
+        <Typography
+          variant="caption-lg"
+          color="textSecondary"
+          render={<h3 />}
+          className="work-roadmap-step-head"
+        >
+          <span className="work-roadmap-step-n">{n}</span>
+          {head}
+        </Typography>
+        {groups.map((group) => {
+          const members = here.filter((r) => group.includes(r.id));
+          const lines = (
+            <ul className="work-rm-lines">
+              {members.map((r) => (
+                <RoadmapLine
+                  key={r.id}
+                  row={r}
+                  milestone={msOf.get(r.id)}
+                  proposed={msOf.get(r.id)?.state === "proposed"}
+                  selected={r.id === selected}
+                  dim={!!lit && !lit.has(r.id)}
+                  title={title}
+                  onOpen={() => onOpen(r.id)}
+                  onWait={onWait}
+                />
+              ))}
+            </ul>
+          );
+          if (group.length < 2) {
+            return <div key={group.join()}>{lines}</div>;
+          }
+          const ties = loopTies(rows, group);
+          return (
+            <div key={group.join()} className="work-roadmap-loop">
+              <Typography
+                variant="caption-md"
+                render={<p />}
+                className="work-roadmap-loop-head"
+              >
+                These {group.length} wait on each other
+                {ties.length > 0 && (
+                  <>
+                    , tied by{" "}
+                    {ties.map((t, i) => (
+                      <span key={`${t.from}${t.to}`}>
+                        {i > 0 && (i === ties.length - 1 ? " and " : ", ")}
+                        <Link
+                          component="button"
+                          type="button"
+                          onClick={() => onWait(t.from, t.to)}
+                          title={`Items: ${t.items.join(", ")}`}
+                        >
+                          {title(t.from)} on {title(t.to)}
+                        </Link>
+                      </span>
+                    ))}
+                  </>
+                )}
+                .
+              </Typography>
+              {lines}
+            </div>
+          );
+        })}
+      </section>
+    );
+  };
+  const flagLine = (f: ReleaseFlag, where: string, caption: string) => (
+    <div key={f.id} className="work-roadmap-flag">
+      <ReleaseFlagButton
+        flag={f}
+        where={where}
+        selected={release === f.id}
+        dim={!!hoverFlag && hoverFlag !== f.id}
+        {...flagProps}
+      />
+      <Typography variant="caption-md" color="textSecondary">
+        {caption}
+      </Typography>
+    </div>
+  );
+  const steps = [...new Set(rows.map((r) => r.step))].sort((a, b) => a - b);
   return (
     <>
       <div className="work-key" role="group" aria-label="Key">
@@ -7564,6 +8270,13 @@ function Roadmap({
           </Typography>
         )}
       </div>
+      <ReleaseClosures
+        s={s}
+        closures={closures}
+        onHover={setHoverFlag}
+        onOpen={onOpen}
+        onItem={onItem}
+      />
       <ReleaseStrip
         flags={flags.filter((f) => f.at === undefined)}
         label="Releases not placed yet"
@@ -7571,111 +8284,113 @@ function Roadmap({
         release={release}
         {...flagProps}
       />
-      <div className="work-roadmap">
-        {steps.map((step) => {
-          const here = rows.filter((r) => r.step === step);
-          const groups = [...new Set(here.map((r) => r.group))];
-          const after = flags.filter((f) => f.at === step);
-          return (
-            <Fragment key={step}>
+      {banded ? (
+        <div className="work-roadmap">
+          {bands.map((b, k) => {
+            const inBand = rows.filter(
+              (r) => (bandOf.get(r.id) ?? bands.length - 1) === k,
+            );
+            const flag = flags.find((f) => f.id === b.id && !f.unplaced);
+            if (!inBand.length && !flag) {
+              return null;
+            }
+            const none = b.id === NO_RELEASE;
+            const local = [
+              ...new Set(inBand.map((r) => bandStep.get(r.id)!)),
+            ].sort((x, y) => x - y);
+            const before = bands
+              .slice(0, k)
+              .reverse()
+              .find((x) =>
+                rows.some((r) => bandOf.get(r.id) === bands.indexOf(x)),
+              );
+            return (
               <section
-                className="work-roadmap-step"
+                key={b.id}
+                className={`work-roadmap-band${none ? " none" : ""}${hoverFlag === b.id || release === b.id ? " on" : ""}`}
                 aria-label={
-                  step === 1 ? "Can move now" : `After step ${step - 1}`
+                  none
+                    ? "Milestones no release needs"
+                    : `First needed by ${b.name}`
                 }
               >
                 <Typography
-                  variant="caption-lg"
-                  color="textSecondary"
+                  variant="body-sm"
                   render={<h3 />}
-                  className="work-roadmap-step-head"
+                  className="work-roadmap-band-head"
                 >
-                  <span className="work-roadmap-step-n">{step}</span>
-                  {step === 1 ? "Can move now" : `After step ${step - 1}`}
+                  {!none && <KindMark kind="release" named={false} />}
+                  <b>{none ? "No release needs these" : b.name}</b>
+                  <span className="work-roadmap-band-n">
+                    {none
+                      ? `${inBand.length} ${inBand.length === 1 ? "milestone" : "milestones"}`
+                      : `first to need ${inBand.length} ${inBand.length === 1 ? "milestone" : "milestones"}`}
+                  </span>
                 </Typography>
-                {groups.map((group) => {
-                  const members = here.filter((r) => r.group === group);
-                  const lines = (
-                    <ul className="work-rm-lines">
-                      {members.map((r) => (
-                        <RoadmapLine
-                          key={r.id}
-                          row={r}
-                          milestone={msOf.get(r.id)}
-                          proposed={msOf.get(r.id)?.state === "proposed"}
-                          selected={r.id === selected}
-                          dim={!!lit && !lit.has(r.id)}
-                          title={title}
-                          onOpen={() => onOpen(r.id)}
-                          onWait={onWait}
-                        />
-                      ))}
-                    </ul>
-                  );
-                  if (group.length < 2) {
-                    return <div key={group.join()}>{lines}</div>;
-                  }
-                  const ties = loopTies(rows, group);
-                  return (
-                    <div key={group.join()} className="work-roadmap-loop">
-                      <Typography
-                        variant="caption-md"
-                        render={<p />}
-                        className="work-roadmap-loop-head"
-                      >
-                        These {group.length} wait on each other
-                        {ties.length > 0 && (
-                          <>
-                            , tied by{" "}
-                            {ties.map((t, i) => (
-                              <span key={`${t.from}${t.to}`}>
-                                {i > 0 &&
-                                  (i === ties.length - 1 ? " and " : ", ")}
-                                <Link
-                                  component="button"
-                                  type="button"
-                                  onClick={() => onWait(t.from, t.to)}
-                                  title={`Items: ${t.items.join(", ")}`}
-                                >
-                                  {title(t.from)} on {title(t.to)}
-                                </Link>
-                              </span>
-                            ))}
-                          </>
-                        )}
-                        .
-                      </Typography>
-                      {lines}
-                    </div>
-                  );
-                })}
+                {local.map((n) =>
+                  stepSection(
+                    `${b.id}:${n}`,
+                    inBand.filter((r) => bandStep.get(r.id) === n),
+                    n,
+                    n > 1
+                      ? `After step ${n - 1}`
+                      : before
+                        ? `After ${before.name}'s band`
+                        : "Can move now",
+                    (id) => bandOf.get(id) === k,
+                  ),
+                )}
+                {flag && (
+                  <div
+                    className="work-roadmap-flags"
+                    role="group"
+                    aria-label={`${b.name} closes the band`}
+                  >
+                    {flagLine(
+                      flag,
+                      "closing its band",
+                      flag.feeds.length
+                        ? `closes the band: it needs ${flag.feeds.length} ${flag.feeds.length === 1 ? "milestone" : "milestones"}${flag.feeds.length > inBand.length ? `, ${flag.feeds.length - inBand.length} of them in an earlier band` : ""}`
+                        : "closes the band: it names no milestone of its own",
+                    )}
+                  </div>
+                )}
               </section>
-              {after.length > 0 && (
-                <div
-                  className="work-roadmap-flags"
-                  role="group"
-                  aria-label={`Releases after step ${step}`}
-                >
-                  {after.map((f) => (
-                    <div key={f.id} className="work-roadmap-flag">
-                      <ReleaseFlagButton
-                        flag={f}
-                        where={betweenSteps(step, lastStep)}
-                        selected={release === f.id}
-                        dim={!!hoverFlag && hoverFlag !== f.id}
-                        {...flagProps}
-                      />
-                      <Typography variant="caption-md" color="textSecondary">
-                        after {andList(f.last.map(flagProps.titleOf))}
-                      </Typography>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Fragment>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="work-roadmap">
+          {steps.map((step) => {
+            const after = flags.filter((f) => f.at === step);
+            return (
+              <Fragment key={step}>
+                {stepSection(
+                  String(step),
+                  rows.filter((r) => r.step === step),
+                  step,
+                  step === 1 ? "Can move now" : `After step ${step - 1}`,
+                )}
+                {after.length > 0 && (
+                  <div
+                    className="work-roadmap-flags"
+                    role="group"
+                    aria-label={`Releases after step ${step}`}
+                  >
+                    {after.map((f) =>
+                      flagLine(
+                        f,
+                        betweenSteps(step, lastStep),
+                        `after ${andList(f.last.map(flagProps.titleOf))}`,
+                      ),
+                    )}
+                  </div>
+                )}
+              </Fragment>
+            );
+          })}
+        </div>
+      )}
     </>
   );
 }
