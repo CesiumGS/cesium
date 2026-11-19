@@ -2,10 +2,11 @@
 id: CS-696
 title: "One hover card for the Work page's views: state, progress with labeled colors, open blockers, room to slip, next step"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-18
 project: CS-18
 needs: [CS-692, CS-694, CS-693]
+claimed_by: orch-9-CS-696
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/work.ts, packages/next/bench/suite/DESIGN.md]
 ---
 
