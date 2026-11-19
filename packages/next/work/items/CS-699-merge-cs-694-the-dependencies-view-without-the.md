@@ -2,10 +2,14 @@
 id: CS-699
 title: Merge CS-694, the Dependencies view, without the old map
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-18
 decider: owner
+answer: "A. Merge it as it is: The orchestrator fast-forwards main to the tested commit (re-checked if main moves), regenerates the views, logs the merge, and sends CS-693's executor its follow-up."
+answered_at: 2026-11-19T05:43:26.138Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
