@@ -2,10 +2,14 @@
 id: CS-697
 title: Merge CS-692, the Plan view
 kind: decision
-state: planned
+state: done
 created: 2026-11-18
 project: CS-18
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to 030e66d4bd (re-checked if main moves), regenerates the views, logs the merge, and sends CS-694's executor its follow-up to rebase and finish."
+answered_at: 2026-11-19T05:14:34.326Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
