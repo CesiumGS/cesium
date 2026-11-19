@@ -57,6 +57,8 @@ class DeformerBinding {
    * <code>vec3 f(in vec3 positionMC, out mat3 jacobian)</code>, which returns
    * the deformed position and the deformation's local linear transform at
    * <code>positionMC</code>, used to transform normals and tangents.
+   * Deformations add up by their displacements, <code>f(positionMC) - positionMC</code>,
+   * and <code>positionMC</code> can change after binding, e.g. when another deformer is baked.
    *
    * @param {Object<string, string>} names The shader identifier of each vertex attribute and uniform, by name.
    * @returns {string[]} The lines of the function body.

@@ -45,10 +45,18 @@ describe(
     }
 
     // Evaluates the binding's shader for a vertex bound to the triangle, and
-    // expects its position and jacobian.
+    // expects its position and jacobian. The vertex is at its position when
+    // bound, unless positionMC is given.
     function expectDeformation(options) {
       const { current, bindMatrix, expectedPosition, expectedJacobian } =
         options;
+      const positionMC =
+        options.positionMC ??
+        Matrix4.multiplyByPoint(
+          bindMatrix,
+          computeFrame(rest).position,
+          new Cartesian3(),
+        );
       const positionTexture = createPositionTexture(current);
       const restPositionTexture = createPositionTexture(rest);
       const binding = new SurfaceDeformerBinding({
@@ -63,6 +71,7 @@ describe(
         frameCoordinates: `vec3(${coordinates.map((c) => c.toFixed(2))})`,
       };
       const uniformMap = {
+        u_positionMC: () => positionMC,
         u_expectedPosition: () => expectedPosition,
         u_expectedJacobian: () => expectedJacobian,
       };
@@ -78,6 +87,7 @@ describe(
 
       const fragmentShader =
         `${declarations}` +
+        "uniform vec3 u_positionMC;\n" +
         "uniform vec3 u_expectedPosition;\n" +
         "uniform mat3 u_expectedJacobian;\n" +
         "vec3 deform(in vec3 positionMC, out mat3 jacobian) {\n" +
@@ -85,7 +95,7 @@ describe(
         "}\n" +
         "void main() {\n" +
         "  mat3 jacobian;\n" +
-        "  vec3 position = deform(vec3(0.0), jacobian);\n" +
+        "  vec3 position = deform(u_positionMC, jacobian);\n" +
         "  mat3 difference = jacobian - u_expectedJacobian;\n" +
         "  float error = max(length(position - u_expectedPosition), max(length(difference[0]), max(length(difference[1]), length(difference[2]))));\n" +
         "  out_FragColor = error < 1e-5 ? vec4(0.0, 1.0, 0.0, 1.0) : vec4(1.0, 0.0, 0.0, 1.0);\n" +
@@ -235,6 +245,28 @@ describe(
         current,
         bindMatrix,
         ...computeExpected(current, bindMatrix),
+      });
+    });
+
+    it("moves a vertex whose rest position changed since it was bound", function () {
+      const current = rotate(rest, Matrix3.fromRotationZ(Math.PI / 2.0));
+      const expected = computeExpected(current, Matrix4.IDENTITY);
+      const restChange = new Cartesian3(5.0, -1.0, 2.0);
+
+      expectDeformation({
+        current,
+        bindMatrix: Matrix4.IDENTITY,
+        positionMC: Cartesian3.add(
+          computeFrame(rest).position,
+          restChange,
+          new Cartesian3(),
+        ),
+        expectedPosition: Cartesian3.add(
+          expected.expectedPosition,
+          restChange,
+          new Cartesian3(),
+        ),
+        expectedJacobian: expected.expectedJacobian,
       });
     });
 
