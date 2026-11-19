@@ -41,6 +41,7 @@
 - Fixed tiles failing to load when their tile or content metadata uses a class missing from the root tileset's schema. The metadata is now ignored with a warning. [#14050](https://github.com/CesiumGS/cesium/pull/14050)
 - Fixed `MVTDataProvider` freezing or running out of memory on load when `maxZoom` is high. Tiles are now created as they come into view. [#13867](https://github.com/CesiumGS/cesium/pull/13867)
 - Fixed `BufferPrimitiveCollection` rendering nothing after `destroy()`. [#13895](https://github.com/CesiumGS/cesium/pull/13895)
+- Improved performance of entity paths with long `leadTime` and `trailTime`, especially with `materialMode` set to `PathMode.PORTIONS`, and of `PolylineCollection` in 3D when its `modelMatrix` changes every frame, such as paths in the inertial frame or using `relativeTo`.
 
 ## 1.147 - 2026-11-02
 
