@@ -775,6 +775,51 @@ describe(
       });
     });
 
+    it("updates the bounds of written positions and the model", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(
+        `${unitSquareUrl}/unitSquare11x11_plain.glb`,
+      );
+      const model = primitive._model;
+      const attribute = primitive._runtimePrimitive.primitive.attributes.find(
+        (a) => a.semantic === VertexAttributeSemantic.POSITION,
+      );
+      const radius = model.boundingSphere.radius;
+
+      const scaled = readValues(primitive, position).map((p) => p * 3 - 1);
+      writeValues(primitive, position, scaled);
+
+      expect(attribute.min).toEqualEpsilon(new Cartesian3(-1, -1, -1), 1e-6);
+      expect(attribute.max).toEqualEpsilon(new Cartesian3(2, 2, -1), 1e-6);
+
+      scene.renderForSpecs();
+      expect(model.boundingSphere.radius).toBeGreaterThan(radius * 2);
+    });
+
+    it("doesn't reset the model's draw commands if the callback throws", async function () {
+      if (webglStub) {
+        return;
+      }
+      const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
+      spyOn(primitive._model, "resetDrawCommands");
+
+      expect(function () {
+        primitive.geometryWriter.withWriteSession(
+          { attributes: [position] },
+          function (session) {
+            session.vertexAttributeWriter(position)(0, [5, 6, 7]);
+            throw new Error("Callback failed.");
+          },
+        );
+      }).toThrowError("Callback failed.");
+      expect(primitive._model.resetDrawCommands).not.toHaveBeenCalled();
+
+      writeValues(primitive, position, [0, 0, 0, 1, 0, 0, 0, 1, 0]);
+      expect(primitive._model.resetDrawCommands).toHaveBeenCalledTimes(1);
+    });
+
     it("throws when reading corners without primitives", async function () {
       const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
       const options = { attributes: [position] };
