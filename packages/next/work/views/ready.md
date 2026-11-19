@@ -213,10 +213,10 @@ CS-579 Editing
 
 CS-18 The work tracker
   CS-547  Your move's In progress shows the live run: dispatches in flight and branches done but not merged
-  CS-563  Dyno's roadmap shows proposed milestones with dashed outlines
   CS-677  Release notes and a security review for 2.0.0
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
+  CS-683  Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question
   CS-688  Dyno's Proposals tab follows the proposal flow: to discuss, being shaped, ready for the owner's yes
 
 CS-13 The worker-mode façade

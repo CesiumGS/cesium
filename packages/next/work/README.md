@@ -415,7 +415,7 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 25 of 37 done, 6 ready, 6 blocked. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 26 of 38 done, 6 ready, 5 blocked, 1 proposed. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
@@ -436,7 +436,7 @@ Milestone: Dyno's Work page shows the live system and the release plan ([CS-561]
 - [x] [CS-545](./items/CS-545-dyno-s-roadmap-shows-each-release-as-a-flag.md) Dyno's roadmap shows each release as a flag above the grid, after the milestones that feed it. Done.
 - [ ] [CS-547](./items/CS-547-your-move-s-in-progress-shows-the-live-run.md) Your move's In progress shows the live run: dispatches in flight and branches done but not merged. Needs nothing.
 - [x] [CS-562](./items/CS-562-dyno-s-work-page-lists-the-items-in-no.md) Dyno's Work page lists the items in no milestone, filterable by kind and state. Done.
-- [ ] [CS-563](./items/CS-563-dyno-s-roadmap-shows-proposed-milestones-with.md) Dyno's roadmap shows proposed milestones with dashed outlines. Needs nothing.
+- [x] [CS-563](./items/CS-563-dyno-s-roadmap-shows-proposed-milestones-with.md) Dyno's roadmap shows proposed milestones with dashed outlines. Done.
 - [x] [CS-573](./items/CS-573-dyno-s-work-page-shows-each-kind-of-entity-the.md) Dyno's Work page shows each kind of entity the same way everywhere, and its detail pane says plainly what you're looking at. Done.
 - [ ] [CS-683](./items/CS-683-dyno-s-roadmap-zooms-like-figma-shows-its.md) Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question. Needs CS-563.
 - [x] [CS-684](./items/CS-684-dyno-s-work-page-drops-the-retired-long.md) Dyno's Work page drops the retired long outcomes: no Long outcomes view, and dropped milestones out of every grouping. Done.
@@ -468,6 +468,7 @@ No milestone
 - [x] [CS-686](./items/CS-686-how-should-we-use-proposals-until-hitld-does-it.md) decision: How should we use proposals until hitld does it for us, and what should the Proposals tab show?. Done.
 - [x] [CS-689](./items/CS-689-merge-run-2026-11-18-2-s-green-batches-overnight.md) decision: Merge run 2026-11-18-2's green batches overnight. Done.
 - [x] [CS-690](./items/CS-690-merge-the-rest-of-run-2026-11-18-2-s-green.md) decision: Merge the rest of run 2026-11-18-2's green batches as they pass. Done.
+- [?] [CS-691](./items/CS-691-dyno-s-fewest-crossings-roadmap-layout-places.md) Dyno's Fewest crossings roadmap layout places real milestones (d3-dag's simplex fails today). Proposed. Needs nothing.
 
 ### Follow-ups for other teams
 

@@ -637,8 +637,6 @@ CS-18 The work tracker
       ← CS-532 Release 2.0.0-rc.1
         CS-608 Extension users have validated 2.0 with their own data
         CS-678 The final release is ready to publish
-  CS-683  Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question
-      ← CS-563 Dyno's roadmap shows proposed milestones with dashed outlines
   CS-685  Dyno's release flags list only the milestones a release needs, and flag items that cross a release
       ← CS-683 Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question
 
@@ -748,5 +746,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-247 blocked
+246 blocked
 ```

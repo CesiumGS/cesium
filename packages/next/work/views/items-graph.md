@@ -239,7 +239,7 @@ graph LR
     CS_545["CS-545 Dyno's roadmap shows each release as a flag above the grid, aft"]:::done
     CS_547["CS-547 Your move's In progress shows the live run: dispatches in fligh"]:::open
     CS_562["CS-562 Dyno's Work page lists the items in no milestone, filterable by"]:::done
-    CS_563["CS-563 Dyno's roadmap shows proposed milestones with dashed outlines"]:::open
+    CS_563["CS-563 Dyno's roadmap shows proposed milestones with dashed outlines"]:::done
     CS_564["CS-564 How CS-545's branch reaches main without a hitld dispatch"]:::done
     CS_565["CS-565 Fast-forward main to CS-545's checked branch"]:::done
     CS_573["CS-573 Dyno's Work page shows each kind of entity the same way everywh"]:::done
@@ -253,6 +253,7 @@ graph LR
     CS_688["CS-688 Dyno's Proposals tab follows the proposal flow: to discuss, bei"]:::open
     CS_689["CS-689 Merge run 2026-11-18-2's green batches overnight"]:::done
     CS_690["CS-690 Merge the rest of run 2026-11-18-2's green batches as they pass"]:::done
+    CS_691["CS-691 Dyno's Fewest crossings roadmap layout places real milestones ("]:::proposed
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external
