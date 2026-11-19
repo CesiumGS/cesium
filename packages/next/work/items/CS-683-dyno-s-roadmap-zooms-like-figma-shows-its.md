@@ -2,10 +2,11 @@
 id: CS-683
 title: Dyno's roadmap zooms like Figma, shows its legend on top, and draws decisions with their question
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-17
 project: CS-18
 needs: [CS-563]
+claimed_by: orch-9-CS-683
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/work.ts, packages/next/bench/suite/DESIGN.md]
 ---
 
