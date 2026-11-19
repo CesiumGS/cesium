@@ -19,6 +19,6 @@ What changed is not known yet.
 ## Done when
 
 - The time from navigation to the first drawn frame on a cold browser is measured as a Dyno run (`packages/next/AGENTS.md`; measure in Dyno, read the time series), on the owner's kind of browser, at main's tip and at commits back to when it was under 500 ms, and the commit or commits that slowed it are named with their share.
-- The causes found are fixed, or each is explained with what fixing it would cost and sent back as a decision. The duplicate reference-data fetches are gone, and the viewer doesn't wait on, or compete with, the Work board's read.
+- The causes found are fixed, or each is explained with what fixing it would cost and sent back as a decision. The duplicate reference-data fetches are gone. The viewer not waiting on, or competing with, the Work board's read is CS-704's part; this item measures with and without it and says what it was worth.
 - A regression check holds the cold start to a stated budget from here on.
 - Checked on a server of the executor's own, never the owner's 5190.
