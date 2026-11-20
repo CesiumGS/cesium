@@ -24,6 +24,7 @@ const polylineScratch = new BufferPolyline();
  * @property {number} [featureId]
  * @property {object} [pickObject]
  * @property {TypedArray} [positions]
+ * @property {TypedArray} [normals] Normal vectors, in model coordinates, three components per vertex. Requires <code>hasNormals: true</code> on the collection.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -75,6 +76,7 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
    * @param {BoundingSphere} [options.boundingVolume] Bounding volume, in world space, for the collection.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+   * @param {boolean} [options.hasNormals=false] When <code>true</code>, the collection stores a normal vector, in model coordinates, for every vertex. Each polyline's normals must then be set.
    * @param {HeightReference} [options.heightReference=HeightReference.NONE]
    * @param {"pixels"|"meters"} [options.widthUnits="pixels"] Unit of polyline widths in this collection:
    *   <code>"pixels"</code> on the screen, or <code>"meters"</code> in world space. A clamped
@@ -165,6 +167,10 @@ class BufferPolylineCollection extends BufferPrimitiveCollection {
 
     if (defined(options.positions)) {
       result.setPositions(options.positions);
+    }
+
+    if (defined(options.normals)) {
+      result.setNormals(options.normals);
     }
 
     return result;

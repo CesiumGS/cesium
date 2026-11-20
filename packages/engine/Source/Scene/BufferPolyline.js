@@ -74,6 +74,9 @@ class BufferPolyline extends BufferPrimitive {
   static clone(polyline, result) {
     super.clone(polyline, result);
     result.setPositions(polyline.getPositions());
+    if (polyline._collection.hasNormals && result._collection.hasNormals) {
+      result.setNormals(polyline.getNormals());
+    }
     return result;
   }
 
@@ -166,6 +169,35 @@ class BufferPolyline extends BufferPrimitive {
 
     collection._makeDirty(DirtyFlags.GEOMETRY, this._index);
     collection._makeDirtyBoundingVolume();
+  }
+
+  /**
+   * Returns this polyline's unit normal vectors, in model coordinates, three
+   * components per vertex. Requires a collection constructed with
+   * <code>hasNormals: true</code>.
+   *
+   * @param {TypedArray} [result]
+   * @returns {TypedArray}
+   */
+  getNormals(result) {
+    return this._collection._getNormals(
+      this.vertexOffset,
+      this.vertexCount,
+      result,
+    );
+  }
+
+  /**
+   * Sets this polyline's normal vectors, in model coordinates, three components
+   * per vertex. Must be called after the positions are set. Requires a
+   * collection constructed with <code>hasNormals: true</code>.
+   *
+   * @param {TypedArray} normals
+   */
+  setNormals(normals) {
+    const collection = this._collection;
+    collection._setNormals(this.vertexOffset, this.vertexCount, normals);
+    collection._makeDirty(DirtyFlags.GEOMETRY, this._index);
   }
 
   /////////////////////////////////////////////////////////////////////////////

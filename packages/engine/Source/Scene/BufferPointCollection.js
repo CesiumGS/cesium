@@ -1,6 +1,6 @@
 // @ts-check
 
-import { assert, Cartesian3, Frozen } from "@cesium/core";
+import { assert, Cartesian3, Frozen, defined } from "@cesium/core";
 import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js";
 import BufferPoint from "./BufferPoint.js";
 import renderPoints from "./renderBufferPointCollection.js";
@@ -24,6 +24,7 @@ const { DirtyFlags } = BufferPrimitiveCollection;
  * @property {number} [featureId]
  * @property {object} [pickObject]
  * @property {Cartesian3} [position=Cartesian3.ZERO]
+ * @property {Cartesian3} [normal] Normal vector, in model coordinates. Requires <code>hasNormals: true</code> on the collection.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -73,6 +74,7 @@ class BufferPointCollection extends BufferPrimitiveCollection {
    *    manually, and updating it only as needed, will improve performance for larger dynamic collections.
    * @param {boolean} [options.debugShowBoundingVolume=false]
    * @param {BlendOption} [options.blendOption=BlendOption.TRANSLUCENT] Determines how primitives in the collection are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}; {@link BlendOption.OPAQUE_AND_TRANSLUCENT} is not supported.
+   * @param {boolean} [options.hasNormals=false] When <code>true</code>, the collection stores a normal vector, in model coordinates, for every point. Each point's normal must then be set.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     super({ ...options, vertexCountMax: options.primitiveCountMax });
@@ -126,6 +128,10 @@ class BufferPointCollection extends BufferPrimitiveCollection {
       this._positionCount++,
     );
     result.setPosition(options.position ?? Cartesian3.ZERO);
+
+    if (defined(options.normal)) {
+      result.setNormal(options.normal);
+    }
 
     return result;
   }
