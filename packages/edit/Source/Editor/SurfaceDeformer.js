@@ -1,6 +1,6 @@
 // @ts-check
 
-import { Check, Matrix4 } from "@cesium/core";
+import { Cartesian3, Check, Matrix3, Matrix4 } from "@cesium/core";
 import {
   Buffer,
   BufferUsage,
@@ -11,6 +11,7 @@ import {
 import SurfaceDeformerBinding from "./SurfaceDeformerBinding.js";
 import readVertexValues from "./readVertexValues.js";
 
+/** @import { TypedArray } from "@cesium/core"; */
 /** @import { Deformable, FrameState, GeometryReadSession } from "@cesium/engine"; */
 /** @import Mesh from "./Mesh.js"; */
 
@@ -22,6 +23,15 @@ const POSITION = new GeometryAttributeDescriptor({
 const FLOATS_PER_VERTEX = 6;
 
 const scratchDeformableToDeformer = new Matrix4();
+const scratchLinear = new Matrix3();
+const scratchLinearInverse = new Matrix3();
+const scratchCoordinates = new Cartesian3();
+const scratchOffset = new Cartesian3();
+const scratchJacobian = new Matrix3();
+const scratchNormal = new Cartesian3();
+const scratchScaled = new Cartesian3();
+const scratchFrame = createFrame();
+const scratchRestFrame = createFrame();
 
 /**
  * <div class="notice">
@@ -105,6 +115,70 @@ class SurfaceDeformer extends Deformer {
    */
   static fromMesh(mesh) {
     return new SurfaceDeformer(mesh);
+  }
+
+  /**
+   * (This could easily be a bottleneck for large meshes. Baking is a rare event, but if
+   * this becomes an issue, consider using workers or a GPU compute)
+   * @param {SurfaceDeformerBinding} binding The binding of the deformable the positions belong to.
+   * @param {Float64Array} positions The rest positions, xyz per vertex, replaced by the deformed positions.
+   * @param {Float64Array} jacobians Receives each vertex's jacobian, as a column-major 3x3 matrix.
+   * @ignore
+   */
+  _deformPositions(binding, positions, jacobians) {
+    const vertexCount = positions.length / 3;
+    const bindingData = new Float32Array(vertexCount * FLOATS_PER_VERTEX);
+    /** @type {any} */ (binding.vertexBuffer).getBufferData(bindingData);
+    const meshPositions = binding.positionTexture.read();
+    const restMeshPositions = binding.restPositionTexture.read();
+
+    const linear = Matrix4.getMatrix3(binding.bindMatrix, scratchLinear);
+    const linearInverse = Matrix3.inverse(linear, scratchLinearInverse);
+
+    for (let i = 0; i < vertexCount; ++i) {
+      const data = i * FLOATS_PER_VERTEX;
+      const coordinates = Cartesian3.fromElements(
+        bindingData[data + 3],
+        bindingData[data + 4],
+        bindingData[data + 5],
+        scratchCoordinates,
+      );
+      const frame = computeFrame(
+        meshPositions,
+        bindingData,
+        data,
+        coordinates,
+        scratchFrame,
+      );
+      const restFrame = computeFrame(
+        restMeshPositions,
+        bindingData,
+        data,
+        coordinates,
+        scratchRestFrame,
+      );
+
+      const offset = Matrix3.multiplyByVector(
+        linear,
+        Cartesian3.subtract(frame.position, restFrame.position, scratchOffset),
+        scratchOffset,
+      );
+      positions[i * 3] += offset.x;
+      positions[i * 3 + 1] += offset.y;
+      positions[i * 3 + 2] += offset.z;
+
+      let jacobian = Matrix3.IDENTITY;
+      if (!frame.collapsed) {
+        jacobian = Matrix3.multiply(
+          frame.matrix,
+          Matrix3.inverse(restFrame.matrix, scratchJacobian),
+          scratchJacobian,
+        );
+        Matrix3.multiply(linear, jacobian, jacobian);
+        Matrix3.multiply(jacobian, linearInverse, jacobian);
+      }
+      Matrix3.pack(jacobian, /** @type {any} */ (jacobians), i * 9);
+    }
   }
 
   /**
@@ -214,6 +288,99 @@ class SurfaceDeformer extends Deformer {
       boundsCoefficients,
     });
   }
+}
+
+/**
+ * @typedef {object} Frame
+ * @property {Cartesian3[]} vertices
+ * @property {Cartesian3} position
+ * @property {Matrix3} matrix
+ * @property {boolean} collapsed
+ * @ignore
+ */
+
+/**
+ * @returns {Frame}
+ * @ignore
+ */
+function createFrame() {
+  return {
+    vertices: [new Cartesian3(), new Cartesian3(), new Cartesian3()],
+    position: new Cartesian3(),
+    matrix: new Matrix3(),
+    collapsed: false,
+  };
+}
+
+/**
+ * Computes a bound vertex's triangle frame, as the shader does: the point at
+ * its coordinates, and the triangle's edges and unit normal as matrix columns.
+ * The normal is zero if the triangle collapsed.
+ *
+ * @param {TypedArray} meshPositions The mesh's positions, 4 values per vertex.
+ * @param {Float32Array} bindingData The binding's vertices.
+ * @param {number} data The index of the vertex in bindingData.
+ * @param {Cartesian3} coordinates The vertex's coordinates.
+ * @param {Frame} result
+ * @returns {Frame}
+ * @ignore
+ */
+function computeFrame(meshPositions, bindingData, data, coordinates, result) {
+  const [p0, e1, e2] = result.vertices;
+  readMeshPosition(meshPositions, bindingData[data], p0);
+  readMeshPosition(meshPositions, bindingData[data + 1], e1);
+  readMeshPosition(meshPositions, bindingData[data + 2], e2);
+  Cartesian3.subtract(e1, p0, e1);
+  Cartesian3.subtract(e2, p0, e2);
+
+  const normal = Cartesian3.cross(e1, e2, scratchNormal);
+  const normalLength = Cartesian3.magnitude(normal);
+  result.collapsed = normalLength === 0.0;
+  if (!result.collapsed) {
+    Cartesian3.divideByScalar(normal, normalLength, normal);
+  }
+
+  const position = Cartesian3.clone(p0, result.position);
+  addScaled(position, e1, coordinates.x);
+  addScaled(position, e2, coordinates.y);
+  addScaled(position, normal, coordinates.z);
+
+  const { matrix } = result;
+  Matrix3.setColumn(matrix, 0, e1, matrix);
+  Matrix3.setColumn(matrix, 1, e2, matrix);
+  Matrix3.setColumn(matrix, 2, normal, matrix);
+  return result;
+}
+
+/**
+ * @param {TypedArray} meshPositions The mesh's positions, 4 values per vertex.
+ * @param {number} vertexIndex
+ * @param {Cartesian3} result
+ * @returns {Cartesian3}
+ * @ignore
+ */
+function readMeshPosition(meshPositions, vertexIndex, result) {
+  const i = vertexIndex * 4;
+  return Cartesian3.fromElements(
+    meshPositions[i],
+    meshPositions[i + 1],
+    meshPositions[i + 2],
+    result,
+  );
+}
+
+/**
+ * @param {Cartesian3} result
+ * @param {Cartesian3} vector
+ * @param {number} scale
+ * @ignore
+ */
+function addScaled(result, vector, scale) {
+  Cartesian3.add(
+    result,
+    Cartesian3.multiplyByScalar(vector, scale, scratchScaled),
+    result,
+  );
 }
 
 export default SurfaceDeformer;

@@ -132,6 +132,20 @@ class Deformer {
   }
 
   /**
+   * Deforms positions on the CPU as {@link Deformer#_getShaderLines} does on
+   * the GPU.
+   *
+   * @param {DeformerBinding} binding The binding of the deformable the positions belong to.
+   * @param {Float64Array} positions The rest positions, xyz per vertex, replaced by the deformed positions.
+   * @param {Float64Array} jacobians Receives each vertex's jacobian, as a column-major 3x3 matrix.
+   * @abstract
+   * @internal
+   */
+  _deformPositions(binding, positions, jacobians) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
    * Unbinds every bound deformable until {@link Deformer#rebind} is called.
    * Subclasses call this when their bindings no longer apply.
    *
