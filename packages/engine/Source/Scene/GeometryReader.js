@@ -1,14 +1,15 @@
 // @ts-check
 
-import { Check, DeveloperError, defined } from "@cesium/core";
+import { Check } from "@cesium/core";
+import withGeometryAccessSession from "./withGeometryAccessSession.js";
 /** @import GeometryAttributeDescriptor from "./GeometryAttributeDescriptor.js"; */
 /** @import GeometryReadSession from "./GeometryReadSession.js"; */
 
 /**
- * The data a read session stages for reading.
+ * The geometry data to access in a read or write session.
  *
- * @typedef {object} GeometryReadSessionOptions
- * @property {GeometryAttributeDescriptor[]} [attributes=[]] The attributes to read.
+ * @typedef {object} GeometryAccessOptions
+ * @property {GeometryAttributeDescriptor[]} [attributes=[]] The attributes to access.
  * @property {boolean} [primitives=false] Whether to read the vertex indices of the primitives.
  */
 
@@ -16,7 +17,7 @@ import { Check, DeveloperError, defined } from "@cesium/core";
  * Creates a read session that stages the requested data.
  *
  * @callback CreateGeometryReadSessionCallback
- * @param {Required<GeometryReadSessionOptions>} options The data to stage. All requested attributes are available.
+ * @param {Required<GeometryAccessOptions>} options The data to stage. All requested attributes are available.
  * @returns {GeometryReadSession} The new session.
  */
 
@@ -78,51 +79,22 @@ class GeometryReader {
    * it, then destroys the session, even if the callback throws.
    *
    * @template T
-   * @param {GeometryReadSessionOptions} options The data to stage for reading.
+   * @param {GeometryAccessOptions} options The data to stage for reading.
    * @param {function(GeometryReadSession): T} callback The function that reads from the session.
    * @returns {T} The value returned by the callback.
    *
    * @exception {DeveloperError} A requested attribute is not available.
    * @exception {DeveloperError} A requested attribute's type doesn't match the available attribute.
+   * @exception {DeveloperError} A requested attribute's domain doesn't match the available attribute.
+   * @exception {DeveloperError} A requested attribute's component datatype doesn't match the available attribute.
    */
   withReadSession(options, callback) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.object("options", options);
-    Check.typeOf.func("callback", callback);
-    //>>includeEnd('debug');
-
-    const { attributes = [], primitives = false } = options;
-
-    //>>includeStart('debug', pragmas.debug);
-    for (const descriptor of attributes) {
-      const available = this.#availableAttributes.find((attribute) =>
-        attribute.equals(descriptor),
-      );
-
-      const setIndex = defined(descriptor.setIndex)
-        ? ` (set ${descriptor.setIndex})`
-        : "";
-
-      if (!defined(available)) {
-        throw new DeveloperError(
-          `Attribute ${descriptor.semantic}${setIndex} is not available.`,
-        );
-      }
-
-      if (available.type !== descriptor.type) {
-        throw new DeveloperError(
-          `Attribute ${descriptor.semantic}${setIndex} has type ${available.type}, but ${descriptor.type} was requested.`,
-        );
-      }
-    }
-    //>>includeEnd('debug');
-
-    const session = this.#createReadSession({ attributes, primitives });
-    try {
-      return callback(session);
-    } finally {
-      session.destroy();
-    }
+    return withGeometryAccessSession(
+      this.#availableAttributes,
+      options,
+      this.#createReadSession,
+      callback,
+    );
   }
 }
 

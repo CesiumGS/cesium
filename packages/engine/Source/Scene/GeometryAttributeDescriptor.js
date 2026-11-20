@@ -1,12 +1,19 @@
 // @ts-check
 
-import { AttributeType, Check, DeveloperError, defined } from "@cesium/core";
+import {
+  AttributeType,
+  Check,
+  ComponentDatatype,
+  DeveloperError,
+  defined,
+} from "@cesium/core";
+import GeometryAttributeDomain from "./GeometryAttributeDomain.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 /**
- * Identifies a vertex attribute of a geometry by its semantic and set index,
- * for example <code>TEXCOORD_1</code>, and describes the type of its values,
- * such as {@link AttributeType.VEC2}. Two descriptors are equal when their
+ * Identifies an attribute of a geometry by its semantic and set index,
+ * for example <code>TEXCOORD_1</code>, and describes its values, such as
+ * {@link AttributeType.VEC2} per vertex. Two descriptors are equal when their
  * semantic and set index match.
  *
  * <p>
@@ -34,15 +41,23 @@ class GeometryAttributeDescriptor {
   #semantic;
   #setIndex;
   #type;
+  /** @type {GeometryAttributeDomain} */
+  #domain;
+  /** @type {ComponentDatatype|undefined} */
+  #componentDatatype;
 
   /**
    * @param {object} options Object with the following properties:
    * @param {VertexAttributeSemantic|string} options.semantic The built-in or custom attribute semantic.
    * @param {number} [options.setIndex] The set index, for built-in semantics that have one, such as {@link VertexAttributeSemantic.TEXCOORD}. Defaults to 0. Ignored for other semantics, including custom semantics.
    * @param {AttributeType} [options.type] The type of the values. Required for custom semantics. Derived for built-in semantics.
+   * @param {GeometryAttributeDomain} [options.domain=GeometryAttributeDomain.VERTEX] What each value belongs to.
+   * @param {ComponentDatatype} [options.componentDatatype] The datatype of the values read.
    *
    * @exception {DeveloperError} options.type is required for custom semantics.
    * @exception {DeveloperError} options.type doesn't match the built-in semantic.
+   * @exception {DeveloperError} options.domain isn't a GeometryAttributeDomain.
+   * @exception {DeveloperError} options.componentDatatype isn't a ComponentDatatype.
    */
   constructor(options) {
     //>>includeStart('debug', pragmas.debug);
@@ -55,6 +70,26 @@ class GeometryAttributeDescriptor {
         0,
       );
     }
+    if (
+      defined(options.domain) &&
+      !Object.values(GeometryAttributeDomain).includes(options.domain)
+    ) {
+      throw new DeveloperError(
+        "options.domain isn't a GeometryAttributeDomain.",
+      );
+    }
+    if (
+      defined(options.componentDatatype) &&
+      !(
+        /** @type {any} */ (ComponentDatatype).validate(
+          options.componentDatatype,
+        )
+      )
+    ) {
+      throw new DeveloperError(
+        "options.componentDatatype isn't a ComponentDatatype.",
+      );
+    }
     //>>includeEnd('debug');
 
     const { semantic, setIndex, type } = options;
@@ -62,6 +97,8 @@ class GeometryAttributeDescriptor {
 
     this.#semantic = semantic;
     this.#setIndex = undefined;
+    this.#domain = options.domain ?? GeometryAttributeDomain.VERTEX;
+    this.#componentDatatype = options.componentDatatype;
 
     if (defined(builtInType)) {
       //>>includeStart('debug', pragmas.debug);
@@ -110,6 +147,20 @@ class GeometryAttributeDescriptor {
   }
 
   /**
+   * A name that identifies the attribute: the semantic, followed by
+   * <code>_</code> and the set index if it has one, such as
+   * <code>POSITION</code>, <code>TEXCOORD_1</code> or <code>_TEMPERATURE</code>.
+   *
+   * @type {string}
+   * @readonly
+   */
+  get name() {
+    return defined(this.#setIndex)
+      ? `${this.#semantic}_${this.#setIndex}`
+      : this.#semantic;
+  }
+
+  /**
    * The type of the values returned by a {@link GeometryAttributeReader} for
    * this attribute. For example, {@link AttributeType.VEC3} for positions and
    * {@link AttributeType.VEC2} for texture coordinates. Colors are always
@@ -123,8 +174,7 @@ class GeometryAttributeDescriptor {
   }
 
   /**
-   * The number of values per vertex returned by a {@link GeometryAttributeReader}
-   * for this attribute, derived from {@link GeometryAttributeDescriptor#type}.
+   * The number of values per element for this attribute, derived from {@link GeometryAttributeDescriptor#type}.
    * Matrices are read in column-major order.
    *
    * @type {number}
@@ -135,8 +185,32 @@ class GeometryAttributeDescriptor {
   }
 
   /**
+   * An attribute's domain. This indicates how the attribute should be interpreted:
+   * as a value for a given vertex, or as a value for a given vertex for a given primitive.
+   *
+   * @type {GeometryAttributeDomain}
+   * @readonly
+   * @default GeometryAttributeDomain.VERTEX
+   */
+  get domain() {
+    return this.#domain;
+  }
+
+  /**
+   * The datatype of the values read: {@link ComponentDatatype.FLOAT} for
+   * float (and normalized and quantized attributes), and the stored datatype for
+   * other integer attributes. <code>undefined</code> if not specified.
+   *
+   * @type {ComponentDatatype|undefined}
+   * @readonly
+   */
+  get componentDatatype() {
+    return this.#componentDatatype;
+  }
+
+  /**
    * Returns <code>true</code> if the other descriptor has the same semantic and
-   * set index. The type isn't compared, since a geometry can't have two
+   * set index. Nothing else is compared, since a geometry can't have two
    * attributes with the same semantic and set index.
    *
    * @param {GeometryAttributeDescriptor} [other] The descriptor to compare against.
