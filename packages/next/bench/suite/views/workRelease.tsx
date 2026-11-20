@@ -16,6 +16,7 @@ import {
   sizeText,
   tokensText,
 } from "../workModel.ts";
+import { HEALTH_RULE, healthOf, releaseExceptionsOf } from "../workHealth.ts";
 import { InlineText } from "./ItemText.tsx";
 import {
   ItemRef,
@@ -97,6 +98,14 @@ function ReleaseBody({
   const decisions = gates.filter((g) => g.kind === "decision").length;
   const waits = gates.length - decisions;
   const healthShown = p.hasView("health");
+  // Once the Health view is mounted, its exceptions are the count (CS-745).
+  const exceptions = useMemo(
+    () =>
+      healthShown
+        ? releaseExceptionsOf(healthOf(s), model.release.id).length
+        : model.exceptions.length,
+    [healthShown, s, model],
+  );
   const short = model.release.short;
   const total = model.milestones.length + model.done.length;
 
@@ -140,7 +149,7 @@ function ReleaseBody({
           <dd>
             <button
               type="button"
-              className={`work-release-stat-value is-button${model.exceptions.length ? " warn" : ""}`}
+              className={`work-release-stat-value is-button${exceptions ? " warn" : ""}`}
               aria-expanded={healthShown ? undefined : showExceptions}
               aria-controls={
                 healthShown ? undefined : "work-release-exceptions"
@@ -150,9 +159,9 @@ function ReleaseBody({
                   ? p.goView("health", { release: model.release.id })
                   : setShowExceptions((v) => !v)
               }
-              title={EXCEPTION_RULE}
+              title={healthShown ? HEALTH_RULE : EXCEPTION_RULE}
             >
-              {model.exceptions.length}
+              {exceptions}
             </button>
             <span className="work-release-stat-detail">
               {healthShown ? (

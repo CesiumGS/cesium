@@ -2,7 +2,7 @@
 id: CS-745
 title: A Health view lists the work graph's exceptions, each with a proposed fix
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]

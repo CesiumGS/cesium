@@ -558,12 +558,14 @@ owner's attention is what it saves.
   their median, labeled with how many are estimated. Never a time.
 - **Ready to start now.** The release's work with nothing open before
   it, in the Ready stage's blue swatch, most waiting behind first.
-- **Exceptions.** Until the Health view (CS-745) defines them, the
-  count follows one rule (`EXCEPTION_RULE` in `workModel.ts`): the
-  release's crossings (`releaseClosuresOf`'s violations) and the open
-  items two or more of its milestones name. The count opens a list in
-  place; once a view with ID `health` is mounted, it links there with
-  the release picked.
+- **Exceptions.** The Health view's exceptions that touch the release
+  (`releaseExceptionsOf` in `workHealth.ts`, `HEALTH_RULE`): its
+  crossings, and every other exception on its milestones or their
+  items. The count links to the Health view with the release picked.
+  Without a view with ID `health` it falls back to one rule
+  (`EXCEPTION_RULE` in `workModel.ts`: the release's crossings and the
+  open items two or more of its milestones name) and opens a list in
+  place.
 - **Layout.** The picker, the five tiles (three columns at tablet
   width, two narrow), then What holds it, Milestones left, and Ready to start now,
   each a card. Numbers are tabular, widths are reserved, and nothing
@@ -571,6 +573,73 @@ owner's attention is what it saves.
   gates' table and the milestones' rows stack, each number labeled.
 - **Model.** `releaseViewOf` in `bench/suite/workModel.ts`, tested in
   `test/dynoWorkRelease.test.ts`.
+
+### The Health view (CS-745)
+
+The page's third tab (`view=health`): what is wrong in the work graph,
+each with a proposed fix. It replaces the project matrix, whose one real
+job was spotting loops.
+
+- **Story.** The owner opens it to ask "is the plan sound?", and someone
+  above the project to ask "can we trust these figures?". The answer
+  leads: how many exceptions, how many need the owner, how many the run
+  can fix. Then each kind that finds something, the ones that need the
+  owner first; then one card naming every other check, clean or unread.
+  A clean graph says so in a heading, "Nothing is wrong in the graph".
+- **Two sorts of rule.** Graph rules make the graph wrong: milestone
+  loops, release crossings, items in two milestones. They belong in
+  `hitld work check` (human-in-the-lead #388 and #298), and this view shows
+  them until hitld enforces them; each section says which sort it is.
+  Judgment signals stay here: planned work in no milestone, decisions
+  due, proposals left waiting (over `PROPOSAL_AGE_DAYS`, 14), spend past
+  appetite, claims with no live dispatch, and work merged but still
+  open. What `hitld work check` itself reports leads, when it reports
+  anything.
+- **Whose move.** A kind whose fix changes scope or a release needs the
+  owner ("Needs you"); the claim kinds are the run's ("For the run").
+  `healthForOwner` gives Your move that subset and its count (CS-753
+  lays it out); the Release view's Exceptions count is
+  `releaseExceptionsOf`.
+- **A row.** The entity at fault with its kind's mark and title, and the
+  releases it touches; what is wrong, in a sentence; then the fix, in a
+  sentence. Every ID in a sentence is an `ItemRef`, with its title cut to
+  fit and whole in its hover card. Under the fix, the command that does
+  it, in full, with Copy command (when the browser refuses, the command
+  is selected for the keyboard's copy), and Open on the entity whose
+  file the fix changes, in the pane with its path and Open in editor.
+  Nothing is applied from the page. Every command is hitld 0.1.0-rc.1's
+  (`work check`, `work unclaim`) or git's (`branch -d`, which refuses an
+  unmerged branch).
+- **The fixes are the moves the owner made.** Tonight's loops ended by
+  keeping each item in one milestone, the one whose release needs it
+  first (CS-88 in CS-458, alpha.1); CS-341's crossing ended by moving it
+  into the milestone inside the release that needs it (CS-595, beta.1).
+  The words propose exactly that. A loop with no doubled item proposes
+  breaking its smallest wait (`loopTies`).
+- **It reads the whole graph,** proposed milestones and items included:
+  a proposal can make the graph wrong (CS-341's crossing ran through
+  CS-534, a proposal), so the shared Proposed switch doesn't apply. The
+  scope narrows it to exceptions that involve an item or milestone in
+  the scope, and a release filter (All, then each open release with its
+  count; `release=`) to those touching one release.
+- **What the board can't tell.** Decisions' defaults: hitld's read API
+  has no default or deadline field yet, so "Decisions due" is listed
+  under "Can't tell yet" with the reason, and works once the field
+  arrives. Spend past appetite waits on appetites, which shaping sets.
+  The claim kinds read the live run (`hitld work claims` and the
+  ledger); when either can't be read, they say so rather than read as
+  clean.
+- **Layout.** The figures, the filter and a line on what it reads, then
+  the cards, one surface level as the board's others. Numbers are
+  tabular, the figures' words are `ReservedText` (choosing a release
+  moves nothing), a chosen row is tinted, and nothing bolds on hover or
+  focus. Narrow (under 560 px of view), the releases go under the
+  entity and the indents go. The view has no motion of its own, so
+  reduced motion changes nothing in it.
+- **Model.** `healthOf` in `bench/suite/workHealth.ts`, tested in
+  `test/dynoWorkHealth.test.ts` on a fixture for each kind, with
+  tonight's two loops and the CS-341 crossing rebuilt from the tracker
+  before the owner fixed them.
 
 ### The roadmap's Dependencies view (CS-694)
 

@@ -1,0 +1,289 @@
+/*
+ * The Health view (views/workHealth.tsx; DESIGN.md, "The Health view").
+ * One surface level, as the board's other cards: rows are set apart by
+ * rules, numbers are tabular, and nothing changes width or weight on
+ * hover, selection or focus. It has no motion of its own.
+ */
+
+.work-health {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+}
+
+/* The head: three figures, the release filter, and a line on what it reads. */
+.work-health-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.work-health-figures {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: var(--stratakit-space-700, 32px);
+  row-gap: var(--stratakit-space-200);
+}
+.work-health-figure {
+  display: flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-200);
+  margin: 0;
+}
+.work-health-num {
+  min-width: 2ch;
+  font-size: var(--stratakit-font-size-headline-sm, 1.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-health-num.warn {
+  color: var(--stratakit-color-text-attention-strong, #a15c00);
+}
+.work-health-unit {
+  font-size: var(--stratakit-font-size-body-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-health-note {
+  margin: 0;
+  max-width: 72ch;
+}
+
+.work-health-filter {
+  flex-wrap: wrap;
+}
+.work-health-filter .work-kind-mark {
+  margin-inline-end: 6px;
+}
+.work-health-filter .proposed {
+  border-style: dashed;
+}
+.work-health-filter-n {
+  display: inline-block;
+  min-width: 2ch;
+  margin-inline-start: 6px;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* A kind's head: its count, its name, whose it is, and its rule. */
+.work-health-kind-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}
+.work-health-kind-line h2 {
+  margin: 0;
+}
+.work-health-count {
+  min-width: 3ch;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--stratakit-color-text-neutral-primary);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.work-health-who {
+  padding: 0 8px;
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 999px;
+  font-size: var(--stratakit-font-size-caption-md);
+  line-height: 18px;
+  white-space: nowrap;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-health-who.owner {
+  border-color: var(--stratakit-color-border-attention-base, #c27a00);
+  color: var(--stratakit-color-text-attention-strong, #a15c00);
+}
+.work-health-sort {
+  white-space: nowrap;
+}
+
+/* The rows. */
+.work-health-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.work-health-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150, 6px);
+  padding: var(--stratakit-space-400) var(--stratakit-space-300);
+  margin-inline: calc(-1 * var(--stratakit-space-300));
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-health-row:last-child {
+  border-bottom: 0;
+}
+.work-health-row.selected {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-accent-pressed,
+    rgba(64, 120, 220, 0.08)
+  );
+}
+.work-health-row-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--stratakit-space-400);
+  min-width: 0;
+}
+.work-health-entity {
+  min-width: 0;
+  font-size: var(--stratakit-font-size-body-md);
+  font-weight: 600;
+}
+.work-health-releases {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  flex: none;
+  font-size: var(--stratakit-font-size-caption-md);
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-secondary);
+  white-space: nowrap;
+}
+.work-health-releases .work-kind-mark {
+  align-self: center;
+}
+.work-health-what,
+.work-health-fix {
+  margin: 0;
+  max-width: 88ch;
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.55;
+}
+.work-health-what {
+  /* Its indent sits inside its width: the same measure as the fix's text. */
+  max-width: calc(88ch + 2.25rem + var(--stratakit-space-200));
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-health-fix {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  gap: var(--stratakit-space-200);
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-health-fix-label {
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 600;
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-health-what,
+.work-health-actions {
+  padding-inline-start: calc(2.25rem + var(--stratakit-space-200));
+}
+/* An ID in a sentence: its mark, its number and its title, cut to fit. */
+.work-health-inline {
+  max-width: min(36ch, 100%);
+  vertical-align: bottom;
+}
+.work-health-inline .work-ref-title {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+
+.work-health-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-200) var(--stratakit-space-300);
+}
+.work-health-command {
+  min-width: 0;
+  max-width: 100%;
+  padding: 3px 8px;
+  border-radius: var(--stratakit-radius-md);
+  font-family: var(--stratakit-font-family-code, ui-monospace, monospace);
+  font-size: var(--stratakit-font-size-caption-lg);
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  color: var(--stratakit-color-text-neutral-primary);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.work-health-copy,
+.work-health-open {
+  flex: none;
+}
+
+/* The checks: what is clean, and what can't be told yet. */
+.work-health-checks-h {
+  display: block;
+  margin: var(--stratakit-space-200) 0 var(--stratakit-space-200);
+  font-weight: 600;
+}
+.work-health-clean {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200) var(--stratakit-space-500);
+  margin: 0 0 var(--stratakit-space-300);
+  padding: 0;
+  list-style: none;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.work-health-clean li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.work-health-ok {
+  color: var(--stage-done);
+}
+.work-health-unread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.work-health-unread li {
+  display: grid;
+  grid-template-columns: minmax(10rem, 16rem) minmax(0, 1fr);
+  gap: var(--stratakit-space-400);
+}
+.work-health-unread-why {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-health-clean-all h2 {
+  margin: 0 0 var(--stratakit-space-200);
+}
+.work-health-clean-all p {
+  margin: 0;
+}
+
+/* Narrow: the release names go under the entity, and the indents go. */
+@container (max-width: 560px) {
+  .work-health-row-head {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .work-health-what,
+  .work-health-actions {
+    padding-inline-start: 0;
+  }
+  .work-health-fix {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .work-health-unread li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .work-health-inline {
+    max-width: 100%;
+  }
+}
