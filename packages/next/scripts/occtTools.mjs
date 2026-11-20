@@ -17,6 +17,12 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
 import { pathToFileURL } from "node:url";
+import {
+  adoptFormat1,
+  datasetStatus,
+  overrideStatus,
+  writeFormat,
+} from "./dataFormats.mjs";
 
 export const OCCT_PACKAGE = "replicad-opencascadejs";
 export const OCCT_VERSION = "1.2.1";
@@ -30,16 +36,33 @@ const store = join(homedir(), ".cesium-bench", "occt", OCCT_VERSION);
 const complete = (directory) =>
   FILES.every((file) => existsSync(join(directory, file)));
 
-/** The folder holding replicad_single.js, or undefined if it isn't fetched. */
+/**
+ * Whether the store's build is current, out of date (fetched before its
+ * format moved) or missing. An OCCT_DIR is the person's own: current.
+ */
+export function occtStatus() {
+  if (process.env.OCCT_DIR) {
+    return overrideStatus("occt");
+  }
+  return datasetStatus("occt", complete(store) ? store : undefined);
+}
+
+/**
+ * The folder holding replicad_single.js, or undefined if it isn't fetched or
+ * is out of date (`occtStatus` says which).
+ */
 export function occtDirectory() {
   if (process.env.OCCT_DIR) {
     return process.env.OCCT_DIR;
   }
-  return complete(store) ? store : undefined;
+  return occtStatus().state === "current" ? store : undefined;
 }
 
 /** The pinned build's folder, fetching it first if the store lacks it. */
 export function ensureOcct(log = console.log) {
+  if (!process.env.OCCT_DIR && complete(store)) {
+    adoptFormat1("occt", store);
+  }
   const found = occtDirectory();
   if (found) {
     return found;
@@ -75,6 +98,7 @@ export function ensureOcct(log = console.log) {
     copyFileSync(join(staging, "package", "dist", file), join(store, file));
   }
   copyFileSync(join(staging, "package", "LICENSE"), join(store, "LICENSE"));
+  writeFormat("occt", store);
   rmSync(staging, { recursive: true, force: true });
   log(`  ${OCCT_PACKAGE}@${OCCT_VERSION}: ready (${INTEGRITY.slice(0, 20)}…)`);
   return store;

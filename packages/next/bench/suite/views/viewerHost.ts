@@ -251,6 +251,29 @@ function sunToward(
   );
 }
 
+/**
+ * The stores setup built in an older format, one sentence each (the dev
+ * server's `/data-status.json`, scripts/dataFormats.mjs). Nothing if the
+ * server has no such list.
+ */
+async function outOfDateDatasets(): Promise<string[]> {
+  try {
+    const response = await fetch("/data-status.json");
+    if (!response.ok) {
+      return [];
+    }
+    const list = (await response.json()) as {
+      state: string;
+      message?: string;
+    }[];
+    return (Array.isArray(list) ? list : [])
+      .filter((status) => status.state === "outOfDate" && status.message)
+      .map((status) => status.message!.replaceAll("`", '"'));
+  } catch {
+    return [];
+  }
+}
+
 const message = (error: unknown) =>
   error instanceof Error ? error.message : String(error);
 
@@ -272,6 +295,11 @@ export class NextViewerHost implements ViewerHost {
    * `warnings`, these stay.
    */
   private readonly frameDataWarnings: string[] = [];
+  /**
+   * Stores setup built in an older format (the dev server's
+   * `/data-status.json`): `load` clears `warnings`, these stay.
+   */
+  private readonly outOfDateWarnings: string[] = [];
   private readonly warningListeners = new Set<(count: number) => void>();
 
   static async create(
@@ -325,6 +353,15 @@ export class NextViewerHost implements ViewerHost {
     viewer.ready.catch((error) =>
       host.warnings.add(`globe: ${message(error)}`),
     );
+    void outOfDateDatasets().then((texts) => {
+      for (const text of texts) {
+        host.outOfDateWarnings.push(text);
+        host.warnings.add(text);
+      }
+      if (texts.length > 0) {
+        notify();
+      }
+    });
     return host;
   }
 
@@ -335,7 +372,10 @@ export class NextViewerHost implements ViewerHost {
     const { engine, world } = viewer;
     const warnings = this.warnings;
     warnings.clear();
-    for (const warning of this.frameDataWarnings) {
+    for (const warning of [
+      ...this.frameDataWarnings,
+      ...this.outOfDateWarnings,
+    ]) {
       warnings.add(warning);
     }
     const info: NonNullable<NextViewerHost["load_"]> = {

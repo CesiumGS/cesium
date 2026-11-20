@@ -14,6 +14,7 @@ import {
   existsSync,
   mkdirSync,
   readdirSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
@@ -21,6 +22,12 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
 import { SLANG_VERSION } from "../src/scene/slangVersion.ts";
+import {
+  adoptFormat1,
+  datasetStatus,
+  overrideStatus,
+  writeFormat,
+} from "./dataFormats.mjs";
 
 /** The Slang release slangc and the WASM build are pinned to (one place). */
 export { SLANG_VERSION };
@@ -64,6 +71,31 @@ function nativeAsset() {
 
 const SLANGC = process.platform === "win32" ? "slangc.exe" : "slangc";
 
+/**
+ * Whether the store's WebAssembly build is current, out of date or missing
+ * (SLANG_WASM_DIR is the person's own, so current).
+ */
+export function slangWasmStatus() {
+  if (process.env.SLANG_WASM_DIR) {
+    return overrideStatus("slangWasm");
+  }
+  return datasetStatus(
+    "slangWasm",
+    find(store("wasm"), "slang-wasm.js") ? store("wasm") : undefined,
+  );
+}
+
+/** Whether the store's native slangc is current, out of date or missing (SLANGC is the person's own). */
+export function slangcStatus() {
+  if (process.env.SLANGC) {
+    return overrideStatus("slangc");
+  }
+  return datasetStatus(
+    "slangc",
+    find(store("native"), SLANGC) ? store("native") : undefined,
+  );
+}
+
 /** Where the WASM build is: the folder holding slang-wasm.js. */
 export function slangWasmDirectory() {
   return (
@@ -79,7 +111,9 @@ export function slangcPath() {
     return process.env.SLANGC;
   }
   const bin = find(store("native"), SLANGC);
-  return bin ? join(bin, SLANGC) : undefined;
+  return bin && slangcStatus().state === "current"
+    ? join(bin, SLANGC)
+    : undefined;
 }
 
 /** Downloads, verifies and unpacks a release asset into `root`. */
@@ -129,11 +163,18 @@ async function fetchAsset(name, root, log) {
 
 /** The WASM build's folder, fetching it first if the store lacks it. */
 export async function ensureSlangWasm(log = console.log) {
+  if (!process.env.SLANG_WASM_DIR && find(store("wasm"), "slang-wasm.js")) {
+    adoptFormat1("slangWasm", store("wasm"));
+  }
   const found =
-    process.env.SLANG_WASM_DIR ?? find(store("wasm"), "slang-wasm.js");
+    process.env.SLANG_WASM_DIR ??
+    (slangWasmStatus().state === "current"
+      ? find(store("wasm"), "slang-wasm.js")
+      : undefined);
   if (found) {
     return found;
   }
+  rmSync(store("wasm"), { recursive: true, force: true });
   const digest = await fetchAsset(
     `slang-${SLANG_VERSION}-wasm.zip`,
     store("wasm"),
@@ -143,16 +184,21 @@ export async function ensureSlangWasm(log = console.log) {
   if (!unpacked) {
     throw new Error("slang-wasm: no slang-wasm.js in the release's zip");
   }
+  writeFormat("slangWasm", store("wasm"));
   log(`  slang-wasm ${SLANG_VERSION}: ready (${digest})`);
   return unpacked;
 }
 
 /** The native slangc, fetching this platform's release first if needed. */
 export async function ensureSlangc(log = console.log) {
+  if (!process.env.SLANGC && find(store("native"), SLANGC)) {
+    adoptFormat1("slangc", store("native"));
+  }
   const found = slangcPath();
   if (found) {
     return found;
   }
+  rmSync(store("native"), { recursive: true, force: true });
   const digest = await fetchAsset(nativeAsset(), store("native"), log);
   const path = slangcPath();
   if (!path) {
@@ -170,6 +216,7 @@ export async function ensureSlangc(log = console.log) {
       // Nothing to clear.
     }
   }
+  writeFormat("slangc", store("native"));
   log(`  slangc ${SLANG_VERSION}: ready (${digest})`);
   return path;
 }

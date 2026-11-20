@@ -1,4 +1,5 @@
 // Types for stepSamples.mjs (NIST's public-domain STEP test models, pinned in the store).
+import type { DatasetStatus } from "./dataFormats.mjs";
 export interface StepDataset {
   doi: string;
   title: string;
@@ -17,6 +18,7 @@ export interface StepSample {
 }
 export const STEP_DATASET: StepDataset;
 export const STEP_SAMPLES: readonly StepSample[];
+export function stepSamplesStatus(): DatasetStatus;
 export function stepSamplesDirectory(): string | undefined;
 export function stepSamplesNotice(
   dataset?: StepDataset,

@@ -22,7 +22,12 @@ import { createHash } from "node:crypto";
 import { basename, dirname, join, resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { parseManifest } from "../src/atmosphere/skyPack.ts";
+import {
+  SKY_PACK_BUILD_COMMAND,
+  SKY_PACK_FORMAT,
+  parseManifest,
+  skyPackFormatProblem,
+} from "../src/atmosphere/skyPack.ts";
 import { STAR_FLOATS } from "../src/atmosphere/stars.ts";
 import {
   buildBackground,
@@ -252,7 +257,7 @@ export function buildPack(options) {
     }
   }
   const manifest = {
-    format: 1,
+    format: SKY_PACK_FORMAT,
     name: recipe.name,
     distributable: false,
     sources: sources.map(({ name, url, credit, terms }) => ({
@@ -362,8 +367,11 @@ async function main(args) {
       const m = JSON.parse(
         readFileSync(join(packs, name, "manifest.json"), "utf8"),
       );
+      const problem = skyPackFormatProblem(m);
       console.log(
-        `  ${name}: ${m.name}, ${m.points.count} stars, distributable ${m.distributable}`,
+        problem === undefined
+          ? `  ${name}: ${m.name}, ${m.points.count} stars, distributable ${m.distributable}`
+          : `  ${name}: out of date (${problem}); run \`${SKY_PACK_BUILD_COMMAND}\``,
       );
     }
   } else {

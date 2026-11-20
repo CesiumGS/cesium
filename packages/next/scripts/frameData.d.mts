@@ -52,3 +52,8 @@ export function extractTar(
 export function readPreviousFiles(
   dir: string,
 ): { file: string; role: string; sha256: string }[];
+/** The store's manifest.json: its format, span and files. */
+export function frameManifest<F>(
+  span: [number, number],
+  files: F[],
+): { format: number; span: [number, number]; files: F[] };

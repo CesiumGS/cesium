@@ -28,6 +28,12 @@ import process from "node:process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 import { brotliCompressSync, gzipSync } from "node:zlib";
+import {
+  adoptFormat1,
+  datasetStatus,
+  overrideStatus,
+  writeFormat,
+} from "./dataFormats.mjs";
 
 /** NVIDIA-Omniverse/usd-brep "Release 1.0.1" (2026-10-22). */
 export const SMLIB_COMMIT = "3fd5b9548d19aa8c12c29bc9637a96d42a06f8a5";
@@ -197,15 +203,31 @@ function buildPaths() {
 }
 
 /**
+ * Whether this build in the store is current, out of date (built before its
+ * format moved) or missing. SMLIB_DIR is the person's own: current.
+ */
+export function smlibStatus() {
+  if (process.env.SMLIB_DIR) {
+    return overrideStatus("smlib");
+  }
+  const { out } = buildPaths();
+  return datasetStatus(
+    "smlib",
+    existsSync(join(out, "smlib.wasm")) ? out : undefined,
+  );
+}
+
+/**
  * The folder holding this build's smlib.mjs (SMLIB_DIR, else the store's),
- * or undefined if it isn't built: the dev server serves it at /smlib/.
+ * or undefined if it isn't built or is out of date (`smlibStatus` says
+ * which): the dev server serves it at /smlib/.
  */
 export function smlibDirectory() {
   if (process.env.SMLIB_DIR) {
     return process.env.SMLIB_DIR;
   }
   const { out } = buildPaths();
-  return existsSync(join(out, "smlib.wasm")) ? out : undefined;
+  return smlibStatus().state === "current" ? out : undefined;
 }
 
 /**
@@ -221,7 +243,10 @@ export async function ensureSmlib(log = console.log) {
   ensureEmsdk(log);
   const { objects, out } = buildPaths();
   if (existsSync(join(out, "smlib.wasm"))) {
-    return out;
+    adoptFormat1("smlib", out);
+    if (smlibStatus().state === "current") {
+      return out;
+    }
   }
 
   mkdirSync(objects, { recursive: true });
@@ -304,6 +329,7 @@ export async function ensureSmlib(log = console.log) {
   });
   rmSync(bindingsObject);
   rmSync(response);
+  writeFormat("smlib", staging);
   writeFileSync(
     join(staging, "build.json"),
     `${JSON.stringify(

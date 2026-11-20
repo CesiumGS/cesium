@@ -21,6 +21,11 @@
 //  - NIST's public-domain STEP test models (scripts/stepSamples.mjs): four
 //    parts from NIST's official zip (about 14 MB to fetch, 0.9 MB kept), each
 //    pinned by SHA-256, for the b-rep example's "STEP file" scene.
+// Each derived dataset records the format it was built with, beside what it
+// built (scripts/dataFormats.mjs); a store built in an older format is built
+// again here, and the code that reads it says "out of date, run npm run setup"
+// until then. The sky pack is separate (`npm run sky -- build`); setup only
+// reports whether the local one is current.
 // Nothing here is committed: all of it lives outside version control.
 // Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span[ =]2000-2050] [--grids[ =]portfolio,tests]
 import { execFileSync } from "node:child_process";
@@ -35,6 +40,7 @@ import { ensureSlangc, ensureSlangWasm } from "./slangTools.mjs";
 import { ensureSmlib } from "./smlibTools.mjs";
 import { ensureOcct } from "./occtTools.mjs";
 import { ensureStepSamples } from "./stepSamples.mjs";
+import { datasetStatuses } from "./dataStatus.mjs";
 
 // `--frames-span y0-y1` or `--frames-span=y0-y1`, checked before any work.
 const spanArg = process.argv.findIndex(
@@ -131,4 +137,12 @@ try {
   await generator.ensureDesignTiles(directory, proj, grids, frames);
 } finally {
   await runner.close();
+}
+
+// What each store records now: all current, or the sentence that says what to run.
+console.log("data formats:");
+for (const status of datasetStatuses()) {
+  console.log(
+    `  ${status.name}: ${status.state === "current" ? `format ${status.found}, current` : status.message}`,
+  );
 }

@@ -21,13 +21,14 @@ import basicSsl from "@vitejs/plugin-basic-ssl";
 import { configDefaults, defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
 import { slangShaders } from "./scripts/vitePluginSlang.ts";
+import { dataStatus } from "./scripts/vitePluginDataStatus.ts";
 import { recordEndpoint } from "./scripts/vitePluginRecord.ts";
 import { workApi } from "./scripts/vitePluginWork.ts";
 import { keepEnvSecretsOut } from "./scripts/vitePluginEnvSecrets.ts";
 import { skyPackDevRoute, skyPackGuard } from "./scripts/vitePluginSkyPack.ts";
 import { framesDataDirectory } from "./scripts/frameData.mjs";
 import { framesDataExclusion, projGridsPlugin } from "./scripts/projGrids.mjs";
-import { slangWasmDirectory } from "./scripts/slangTools.mjs";
+import { slangWasmDirectory, slangWasmStatus } from "./scripts/slangTools.mjs";
 import { smlibDirectory } from "./scripts/smlibTools.mjs";
 import { occtDirectory } from "./scripts/occtTools.mjs";
 import { stepSamplesDirectory } from "./scripts/stepSamples.mjs";
@@ -364,9 +365,11 @@ const cesiumReleases =
 
 // The Slang WebAssembly build (runtime Slang): SLANG_WASM_DIR, or the store
 // `npm run setup` fills (scripts/slangTools.mjs).
-const slangWasm = existsSync(join(slangWasmDirectory(), "slang-wasm.js"))
-  ? slangWasmDirectory()
-  : undefined;
+const slangWasm =
+  existsSync(join(slangWasmDirectory(), "slang-wasm.js")) &&
+  slangWasmStatus().state !== "outOfDate"
+    ? slangWasmDirectory()
+    : undefined;
 // SMLib in WebAssembly (the b-rep examples' kernel): SMLIB_DIR, or the build
 // `npm run setup` makes in its store (scripts/smlibTools.mjs), looked up per
 // request, since editing the bindings moves the build.
@@ -454,6 +457,11 @@ export default defineConfig({
     // Sky data never ships uncleared (docs/decisions/2026-11-08-owners-calls-for-later-plans.md); the dev server offers the store's pack.
     skyPackGuard(),
     skyPackDevRoute(),
+    // Stores built in an older format: a notice, Dyno's list, skipped data tests.
+    dataStatus({
+      notify:
+        !process.env.VITEST || framesDataTests || process.env.SKY_DATA === "1",
+    }),
     // The inspector's recorder posts its rows here (dev server only).
     recordEndpoint(),
     // The tracker's read API for Dyno's Work board (scripts/workBoard.mjs, over hitld's).

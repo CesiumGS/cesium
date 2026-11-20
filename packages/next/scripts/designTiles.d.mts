@@ -8,6 +8,21 @@ import type { Frames } from "../src/frames/frames.ts";
 
 /** Where in the store the generator writes. */
 export const DESIGN_TILES_DIRECTORY: string;
+/**
+ * What the output's manifest must say to be current: its `version` (the
+ * format), instant, input hashes and the store's grids.
+ */
+export function wantedManifest(store: string): {
+  version: number;
+  instant: string;
+  sha256: Record<string, string>;
+  grids: Record<string, string>;
+};
+/** The manifest as written: `wanted` and each frame's resolved operation. */
+export function designManifest<W extends object, F>(
+  wanted: W,
+  frames: F,
+): W & { frames: F };
 /** The instant `measure` runs at for answers.json (2026-01-01T00:00:00 UTC). */
 export const DESIGN_TILES_INSTANT: string;
 /**

@@ -28,6 +28,7 @@ import {
 } from "../scripts/skyPack/calibrate.mjs";
 import { readExr } from "../scripts/skyPack/exr.mjs";
 import { findPeaks, xOfRa, yOfDec } from "../scripts/skyPack/peaks.mjs";
+import { keyPaths, PINNED_KEYS } from "./dataFormatKeys.ts";
 import { RECIPES } from "../scripts/skyPack/recipes.mjs";
 
 const work = mkdtempSync(join(tmpdir(), "sky-pack-build-"));
@@ -379,6 +380,19 @@ describe("buildPack", () => {
     const parsed = parseManifest(
       JSON.parse(readFileSync(join(outDir, "manifest.json"), "utf8")),
     );
+    expect(manifest.format).toBe(2);
+    // The builder writes the pinned keys of format 2 (what the reader takes
+    // plus `calibration`'s fitted numbers; the pack isn't cleared, so no
+    // `clearance`).
+    expect(
+      keyPaths(manifest).filter(
+        (path) =>
+          !path.startsWith("calibration.") && !path.startsWith("clearance"),
+      ),
+    ).toEqual(
+      PINNED_KEYS.sky![2]!.filter((path) => !path.startsWith("clearance")),
+    );
+    expect(parsed.format).toBe(2);
     expect(parsed.distributable).toBe(false);
     expect(parsed.clearance).toBeUndefined();
     expect(parsed.sources.length).toBeGreaterThanOrEqual(3);

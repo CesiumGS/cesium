@@ -26,6 +26,12 @@ import process from "node:process";
 import { pathToFileURL } from "node:url";
 import { inflateRawSync } from "node:zlib";
 import { verifiedDownload } from "./verifiedDownload.mjs";
+import {
+  adoptFormat1,
+  datasetStatus,
+  overrideStatus,
+  writeFormat,
+} from "./dataFormats.mjs";
 
 /** NIST CAD Models and STEP Files with PMI: the dataset, and the zip this pins. */
 export const STEP_DATASET = {
@@ -84,12 +90,29 @@ const complete = (directory, samples = STEP_SAMPLES) =>
   existsSync(join(directory, NOTICE_FILE)) &&
   samples.every(({ file }) => existsSync(join(directory, file)));
 
-/** The folder holding the sample files, or undefined if it isn't fetched. */
+/**
+ * Whether the store's samples are current, out of date (kept before their
+ * format moved) or missing. STEP_SAMPLES_DIR is the person's own: current.
+ */
+export function stepSamplesStatus() {
+  if (process.env.STEP_SAMPLES_DIR) {
+    return overrideStatus("step");
+  }
+  return datasetStatus(
+    "step",
+    complete(defaultStore) ? defaultStore : undefined,
+  );
+}
+
+/**
+ * The folder holding the sample files, or undefined if it isn't fetched or is
+ * out of date (`stepSamplesStatus` says which).
+ */
 export function stepSamplesDirectory() {
   if (process.env.STEP_SAMPLES_DIR) {
     return process.env.STEP_SAMPLES_DIR;
   }
-  return complete(defaultStore) ? defaultStore : undefined;
+  return stepSamplesStatus().state === "current" ? defaultStore : undefined;
 }
 
 /** The NOTICE.txt kept with the files: what they are, where from, and NIST's terms. */
@@ -249,7 +272,10 @@ export async function ensureStepSamples(log = console.log, options = {}) {
   }
   if (complete(store, samples)) {
     verifyStepSamples(store, samples);
-    return store;
+    adoptFormat1("step", store);
+    if (datasetStatus("step", store).state === "current") {
+      return store;
+    }
   }
   log(
     `${dataset.title} (doi:${dataset.doi}): downloading NIST's zip (about ${(dataset.bytes / 1e6).toFixed(0)} MB)…`,
@@ -273,6 +299,7 @@ export async function ensureStepSamples(log = console.log, options = {}) {
       join(staging, NOTICE_FILE),
       stepSamplesNotice(dataset, samples),
     );
+    writeFormat("step", staging);
   } catch (error) {
     rmSync(staging, { recursive: true, force: true });
     throw error;

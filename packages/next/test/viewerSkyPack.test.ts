@@ -44,7 +44,7 @@ const CREDITS = ["Made up by A", '<img src=x onerror="boom()">'];
 
 function manifest(distributable = false): SkyPackManifest {
   return {
-    format: 1,
+    format: 2,
     name: "synthetic",
     distributable,
     sources: [],

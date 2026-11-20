@@ -28,6 +28,7 @@
 // Its own module, typed by the little of Node it uses, so the library's
 // declaration build (tsconfig.lib.json, browser types only) checks it without
 // Node's types.
+import { framesDataFormatProblem } from "../ephemeris/framesDataFormat.ts";
 import type { ProjApi } from "./projApi.ts";
 import { verify } from "./projCheck.ts";
 
@@ -162,7 +163,12 @@ async function manifestFiles(): Promise<{
   } catch {
     throw new Error(`PROJ: the frames data store has no ${path}; ${SETUP}`);
   }
-  const files = (JSON.parse(text) as { files?: unknown }).files;
+  const parsed = JSON.parse(text) as { files?: unknown };
+  const problem = framesDataFormatProblem(parsed);
+  if (problem !== undefined) {
+    throw new Error(`PROJ: ${problem}`);
+  }
+  const files = parsed.files;
   return {
     path,
     files: Array.isArray(files)

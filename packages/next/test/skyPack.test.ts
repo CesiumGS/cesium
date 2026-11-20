@@ -6,7 +6,10 @@ import {
   BACKGROUND_MAGIC,
   MAX_PACK_STARS,
   POINTS_MAGIC,
+  SKY_PACK_BUILD_COMMAND,
+  SKY_PACK_FORMAT,
   SkyPackError,
+  SkyPackOutOfDateError,
   backgroundBytes,
   isPackBinary,
   loadSkyPack,
@@ -22,7 +25,7 @@ import { fakeEngine } from "./fakeGpu.ts";
 
 function manifestJson(over: Record<string, unknown> = {}) {
   return {
-    format: 1,
+    format: 2,
     name: "synthetic",
     distributable: false,
     sources: [{ name: "a", url: "https://x.test/a", credit: "A", terms: "t" }],
@@ -93,7 +96,6 @@ describe("parseManifest", () => {
   });
 
   it.each<[string, Record<string, unknown>, string]>([
-    ["a format of 2", { format: 2 }, "format"],
     [
       "a count of 5,000,000",
       { points: { file: "p.bin", count: 5_000_000, floatsPerStar: 8 } },
@@ -135,6 +137,45 @@ describe("parseManifest", () => {
     const call = () => parseManifest(manifestJson(over));
     expect(call).toThrow(SkyPackError);
     expect(call).toThrow(field);
+  });
+
+  it.each<[string, Record<string, unknown>]>([
+    ["format 1, as built before 2026-11-19", { format: 1 }],
+    ["no format at all", { format: undefined }],
+    ["a format from a newer build", { format: SKY_PACK_FORMAT + 1 }],
+  ])(
+    "reports a pack with %s as out of date, not as a parse error",
+    (_n, over) => {
+      // The old pack's key is the old spelling too, and is not read through an alias.
+      const old = {
+        ...manifestJson(over),
+        modeled: undefined,
+        modelled: ["x"],
+      };
+      const call = () => parseManifest(old);
+      expect(call).toThrow(SkyPackOutOfDateError);
+      expect(call).toThrow(SkyPackError);
+      try {
+        call();
+      } catch (error) {
+        const message = (error as Error).message;
+        expect(message).toMatch(
+          /^sky pack: out of date, run `npm run sky -- build` \(/,
+        );
+        expect(message).toContain(`run \`${SKY_PACK_BUILD_COMMAND}\``);
+        expect(message).not.toContain("expected a list of strings");
+      }
+    },
+  );
+
+  it("writes and reads format 2", () => {
+    expect(SKY_PACK_FORMAT).toBe(2);
+    expect(parseManifest(manifestJson()).format).toBe(2);
+  });
+
+  it("does not read the old key `modelled` after the format moved", () => {
+    const aliased = { ...manifestJson(), modeled: undefined, modelled: ["x"] };
+    expect(() => parseManifest(aliased)).toThrow("modeled");
   });
 
   it("caps the count at 4,000,000", () => {
@@ -226,6 +267,22 @@ describe("loadSkyPack", () => {
     expect(loaded.field.backgroundLevels[0]).toHaveLength(3);
     expect(loaded.field.holdsFaintStars).toBe(false);
     expect(loaded.field.meanBackground).toBeCloseTo(1e-4, 12);
+  });
+
+  it("says a manifest that isn't JSON, or is format 1, is out of date", async () => {
+    const asked = (body: string) =>
+      loadSkyPack(
+        "https://p.test/pack/",
+        fetcher({ "manifest.json": new Response(body) }),
+      );
+    await expect(asked("not json {")).rejects.toThrow(
+      /^sky pack: out of date, run `npm run sky -- build` \(manifest\.json is not valid JSON\)/,
+    );
+    await expect(
+      asked(JSON.stringify(manifestJson({ format: 1 }))),
+    ).rejects.toThrow(
+      "sky pack: out of date, run `npm run sky -- build` (built as format 1, this code reads format 2).",
+    );
   });
 
   it("refuses an oversized response early or while streaming", async () => {

@@ -2,11 +2,18 @@
 // here stands in for NIST's, so the extraction and the integrity checks run
 // without the network or the store.
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { deflateRawSync } from "node:zlib";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { DATASETS, recordedFormat } from "../scripts/dataFormats.mjs";
 import {
   STEP_DATASET,
   ensureStepSamples,
@@ -140,6 +147,36 @@ describe("ensureStepSamples", () => {
       samples,
       store,
       fetch: () => Promise.reject(new Error("must not fetch")),
+    });
+  });
+
+  it("records the format it kept them in, adopts an older store as format 1, and fetches again for another format", async () => {
+    const store = join(root, "store");
+    const options = { dataset, samples, store };
+    await ensureStepSamples(() => undefined, {
+      ...options,
+      fetch: serving(zip),
+    });
+    expect(
+      JSON.parse(readFileSync(join(store, "format.json"), "utf8")),
+    ).toEqual({ format: DATASETS.step.format });
+    // Kept before formats were recorded: no network, and the record appears.
+    rmSync(join(store, "format.json"));
+    await ensureStepSamples(() => undefined, {
+      ...options,
+      fetch: () => Promise.reject(new Error("must not fetch")),
+    });
+    expect(recordedFormat("step", store)).toEqual({ found: 1 });
+    // Kept in some other format: fetched again, and the record is current.
+    writeFileSync(join(store, "format.json"), '{"format":0}');
+    const log: string[] = [];
+    await ensureStepSamples((line) => log.push(line), {
+      ...options,
+      fetch: serving(zip),
+    });
+    expect(log.join("\n")).toContain("downloading");
+    expect(recordedFormat("step", store)).toEqual({
+      found: DATASETS.step.format,
     });
   });
 

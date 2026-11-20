@@ -31,6 +31,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
 import { gunzipSync } from "node:zlib";
+import { DATASETS } from "./dataFormats.mjs";
 import { GridCatalog } from "../src/engineering/gridCatalog.ts";
 import {
   PROJ_DATA_CATALOG,
@@ -598,6 +599,15 @@ function buildPack(source, bytes, wanted, frame, kind, span, leap) {
 }
 
 /**
+ * The store's `manifest.json`: the format it was built with (`DATASETS.frames`
+ * in scripts/dataFormats.mjs), the years covered and the files with their
+ * hashes. The readers check `format` first.
+ */
+export function frameManifest(span, files) {
+  return { format: DATASETS.frames.format, span, files };
+}
+
+/**
  * The previous manifest's `files` entries, or `[]` when there is no manifest,
  * it is unreadable, or it has no `files` array: everything is fetched again.
  */
@@ -735,7 +745,7 @@ export async function ensureFrameData(
   ];
   writeFileSync(
     join(dir, "manifest.json"),
-    JSON.stringify({ span: [y0, y1], files }, null, 2),
+    JSON.stringify(frameManifest([y0, y1], files), null, 2),
   );
   log(`  manifest.json: ${files.length} files`);
   return { directory: dir, files };

@@ -102,14 +102,16 @@ import {
 } from "./designTiles/ladder.mjs";
 import { buildingAnchor, buildingMesh } from "./designTiles/siteMesh.mjs";
 import { tilesetJson } from "./designTiles/tileset.mjs";
+import { DATASETS, DESIGN_TILES_DIRECTORY } from "./dataFormats.mjs";
 
 /** Where in the store this generator writes (one tileset a site). */
-export const DESIGN_TILES_DIRECTORY = "design-globe-dual";
+export { DESIGN_TILES_DIRECTORY };
 
 /** The instant `measure` runs at, recorded in answers.json. */
 export const DESIGN_TILES_INSTANT = "2026-01-01T00:00:00.000Z";
 
-const VERSION = 1;
+/** The manifest's `version`, the tiles' format (scripts/dataFormats.mjs). */
+const VERSION = DATASETS.designTiles.format;
 /** Station covered by a leaf tile, design units. */
 const LEAF_LENGTH = 2_000;
 /** A leaf's chord error, design units (0.003 ftUS, about 0.9 mm). */
@@ -179,7 +181,7 @@ const sha256 = (bytes) => createHash("sha256").update(bytes).digest("hex");
  * its manifest), since the unpinned frames resolve against whatever grids
  * the store holds.
  */
-function wantedManifest(store) {
+export function wantedManifest(store) {
   const files = JSON.parse(
     readFileSync(join(store, "manifest.json"), "utf8"),
   ).files;
@@ -197,6 +199,9 @@ function wantedManifest(store) {
     ),
   };
 }
+
+/** The manifest as written: what it must say to be current, and each frame's resolved operation. */
+export const designManifest = (wanted, frames) => ({ ...wanted, frames });
 
 /** The manifest's inputs, without what generation records (`frames`). */
 const inputsOf = ({ version, instant, sha256, grids }) =>
@@ -1202,7 +1207,7 @@ export async function ensureDesignTiles(
       sites,
     }),
   );
-  writeJson(join(partial, "manifest.json"), { ...wanted, frames: resolved });
+  writeJson(join(partial, "manifest.json"), designManifest(wanted, resolved));
   // Move the old output aside, the new one in, then remove the old.
   const old = `${out}.${tag}-old.partial`;
   if (existsSync(out)) {

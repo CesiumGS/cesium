@@ -44,8 +44,51 @@ export class SkyPackError extends Error {
   }
 }
 
+/**
+ * The manifest's `format`. Bump it with any change to what a pack holds or
+ * what its keys are called (a rename counts), and `npm run sky -- build`
+ * writes the new number; a pack built with an older one is reported as out of
+ * date, never read through an alias (test/dataFormats.test.ts pins the keys).
+ * 1 until 2026-11-19; 2 renamed `modelled` to `modeled`.
+ */
+export const SKY_PACK_FORMAT = 2;
+
+/** The command that builds a pack in the current format. */
+export const SKY_PACK_BUILD_COMMAND = "npm run sky -- build";
+
+/** A pack built before the current format: the message says what to run. */
+export class SkyPackOutOfDateError extends SkyPackError {
+  /** What the manifest said, if it said: `undefined` when unreadable. */
+  readonly found: number | undefined;
+  constructor(found: number | undefined, detail: string) {
+    super(MANIFEST, "format", detail);
+    this.name = "SkyPackOutOfDateError";
+    this.found = found;
+    // The message is one plain sentence naming the dataset and the command.
+    this.message = `sky pack: out of date, run \`${SKY_PACK_BUILD_COMMAND}\` (${detail}).`;
+  }
+}
+
+/**
+ * Whether a parsed manifest has the format this code reads: `undefined` if
+ * so, else the reason, as text for the out-of-date message. A format newer
+ * than ours is out of date too, from this checkout's side.
+ */
+export function skyPackFormatProblem(json: unknown): string | undefined {
+  const format =
+    typeof json === "object" && json !== null && !Array.isArray(json)
+      ? (json as { format?: unknown }).format
+      : undefined;
+  if (format === SKY_PACK_FORMAT) {
+    return undefined;
+  }
+  return typeof format === "number"
+    ? `built as format ${format}, this code reads format ${SKY_PACK_FORMAT}`
+    : `no format number in manifest.json, this code reads format ${SKY_PACK_FORMAT}`;
+}
+
 export interface SkyPackManifest {
-  format: 1;
+  format: typeof SKY_PACK_FORMAT;
   name: string;
   /** False unless a person cleared it. */
   distributable: boolean;
@@ -137,10 +180,15 @@ export function parseManifest(
   json: unknown,
   notes: string[] = [],
 ): SkyPackManifest {
-  const o = record(json, MANIFEST, "(root)");
-  if (o.format !== 1) {
-    throw new SkyPackError(MANIFEST, "format", "expected 1");
+  const problem = skyPackFormatProblem(json);
+  if (problem !== undefined) {
+    const format = (json as { format?: unknown } | null)?.format;
+    throw new SkyPackOutOfDateError(
+      typeof format === "number" ? format : undefined,
+      problem,
+    );
   }
+  const o = record(json, MANIFEST, "(root)");
   const name = text(o, "name", "");
   let distributable = false;
   if (typeof o.distributable === "boolean") {
@@ -230,7 +278,7 @@ export function parseManifest(
     }
   }
   return {
-    format: 1,
+    format: SKY_PACK_FORMAT,
     name,
     distributable,
     ...(clearance ? { clearance } : {}),
@@ -531,7 +579,12 @@ export async function loadSkyPack(
     if (error instanceof SkyPackError || signal?.aborted) {
       throw error;
     }
-    throw new SkyPackError(MANIFEST, "(root)", "not valid JSON");
+    // A manifest that doesn't parse at all is read as an old or damaged
+    // pack: the fix is the same, a rebuild.
+    throw new SkyPackOutOfDateError(
+      undefined,
+      "manifest.json is not valid JSON",
+    );
   }
   const notes: string[] = [];
   const manifest = parseManifest(json, notes);
