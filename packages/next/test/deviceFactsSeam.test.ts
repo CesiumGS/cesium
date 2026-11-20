@@ -19,6 +19,13 @@ const src = join(root, "src");
 /** The layers that may read device facts. */
 const LAYERS = ["gpu", "profile"].map((name) => join(src, name));
 
+/**
+ * Files that only name members and read nothing: the protocol table lists the
+ * members of `GpuDevice` (`adapterInfo`, `facts`...) as names, with the kind
+ * each has in the worker façade (CS-567).
+ */
+const NAMES_ONLY = [join(src, "thread", "protocol.ts")];
+
 function files(directory: string): string[] {
   return readdirSync(directory).flatMap((name) => {
     const path = join(directory, name);
@@ -140,7 +147,10 @@ describe("the device-facts seam", () => {
   it("finds no read outside the device and profile layers", () => {
     const reads: string[] = [];
     for (const path of files(src)) {
-      if (LAYERS.some((layer) => path.startsWith(`${layer}/`))) {
+      if (
+        LAYERS.some((layer) => path.startsWith(`${layer}/`)) ||
+        NAMES_ONLY.includes(path)
+      ) {
         continue;
       }
       const text = readFileSync(path, "utf8");

@@ -2,7 +2,7 @@
 id: CS-567
 title: The protocol table classifies every member of api/surface.txt, not only the exported names
 kind: work
-state: in-progress
+state: done
 created: 2026-11-17
 project: CS-13
 needs: [CS-101]

@@ -33,7 +33,7 @@ From [investigations-2026-11-13.md](../../design/investigations-2026-11-13.md) a
 
 ## 1. Inventory of the public API
 
-Read on 2026-11-13 from `api/surface.txt` (856 names), the entry points and `widgets/`. Members of engine types were listed with the TypeScript checker and classified by hand. The full table (one row per name and per member, with its file and line) is a working file and isn't committed. CS-101 turns it into the protocol table. Paths below are under `packages/next/src/` unless they start with `widgets/`.
+Read on 2026-11-13 from `api/surface.txt` (856 names), the entry points and `widgets/`. Members of engine types were listed with the TypeScript checker and classified by hand. The full table (one row per name and per member, with its file and line) is a working file and isn't committed. CS-101 turned the names into the protocol table and CS-567 the members. **The counts in this section are a snapshot of 2026-11-13.** The source now is the protocol table (`packages/next/src/thread/protocol.ts`; `protocolRows()` and `memberRows()` give the current counts), and `packages/next/test/threadProtocol.test.ts` checks it name by name against `api/surface.txt` and the TypeScript checker's member lists, with no pinned totals, so a change that adds or removes an export no longer has to bump a number here. Paths below are under `packages/next/src/` unless they start with `widgets/`.
 
 ### Exported names by entry point
 
@@ -56,6 +56,8 @@ Read on 2026-11-13 from `api/surface.txt` (856 names), the entry points and `wid
 ### Members of the engine types, by kind
 
 The 86 engine names have 1,062 public members across 82 owners.
+
+The table below is the 2026-11-13 hand count. On 2026-11-20 the protocol table classifies the members of the engine names that are classes or interfaces by rule (the 53 owners the checker lists, 1,006 members at that date; the hand count also took the fields of nested objects such as `tileset.selection`). Its totals differ from this table in the hard kinds, because the rule puts every engine-written bookkeeping field the app only reads under snapshot read, and every `@internal` member under can't cross. The rule is in the protocol table's header comment.
 
 | Kind | Members | What it becomes |
 | --- | ---: | --- |

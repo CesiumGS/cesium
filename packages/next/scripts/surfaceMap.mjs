@@ -1,6 +1,8 @@
 // The generated surface map of the public API: one line per export of each
 // entry point, with its kind and its tier, so a review of the API reads as a
-// diff of `api/surface.txt`.
+// diff of `api/surface.txt`. `memberRows` lists the public members of chosen
+// classes and interfaces the same way, for the protocol table's per-name
+// checks (src/thread/protocol.ts); it never changes the map's text.
 //
 //   node scripts/surfaceMap.mjs [--write]
 //
@@ -86,6 +88,25 @@ export const tierOf = (symbol, name) => {
   return [...found][0] ?? "-";
 };
 
+/** One TypeScript program over the entry files, and its type checker. */
+const openProgram = (root, files) => {
+  const program = ts.createProgram(
+    Object.values(files).map((file) => resolve(root, file)),
+    compilerOptions(root),
+  );
+  return { program, checker: program.getTypeChecker() };
+};
+
+/** The module symbol of an entry file. */
+const moduleOf = (program, checker, root, entry, file) => {
+  const source = program.getSourceFile(resolve(root, file));
+  const moduleSymbol = source && checker.getSymbolAtLocation(source);
+  if (!moduleSymbol) {
+    throw new Error(`surfaceMap: no module at ${file} (entry ${entry})`);
+  }
+  return moduleSymbol;
+};
+
 /**
  * The header line, then a tab-separated line per export, sorted by entry and
  * then name.
@@ -93,11 +114,7 @@ export const tierOf = (symbol, name) => {
  */
 export function surfaceLines({ root = defaultRoot, entries } = {}) {
   const files = entries ?? packageEntries(root);
-  const program = ts.createProgram(
-    Object.values(files).map((file) => resolve(root, file)),
-    compilerOptions(root),
-  );
-  const checker = program.getTypeChecker();
+  const { program, checker } = openProgram(root, files);
   const rows = [];
 
   const list = (entry, prefix, moduleSymbol, seen) => {
@@ -120,17 +137,98 @@ export function surfaceLines({ root = defaultRoot, entries } = {}) {
   };
 
   for (const [entry, file] of Object.entries(files)) {
-    const source = program.getSourceFile(resolve(root, file));
-    const moduleSymbol = source && checker.getSymbolAtLocation(source);
-    if (!moduleSymbol) {
-      throw new Error(`surfaceMap: no module at ${file}`);
-    }
+    const moduleSymbol = moduleOf(program, checker, root, entry, file);
     list(entry, "", moduleSymbol, new Set([moduleSymbol]));
   }
 
   const order = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
   rows.sort((a, b) => order(a.entry, b.entry) || order(a.name, b.name));
   return [HEADER, ...rows.map((row) => row.line)];
+}
+
+/** Whether a declaration is private, protected or a `#private` name. */
+const hidden = (declaration) =>
+  (ts.getCombinedModifierFlags(declaration) &
+    (ts.ModifierFlags.Private | ts.ModifierFlags.Protected)) !==
+    0 ||
+  (declaration.name !== undefined && ts.isPrivateIdentifier(declaration.name));
+
+/**
+ * The public members of the given classes and interfaces, one row each, sorted
+ * by entry, owner and name: the properties, accessors and methods of its
+ * instances (its own and inherited), and for a class its static members,
+ * written `static.name`. `callable` tells whether the member can be called (a
+ * method, or a property whose type is a function).
+ * @param {{ entry: string, name: string }[]} owners
+ * @param {{ root?: string, entries?: Record<string, string> }} [options]
+ */
+export function memberRows(owners, { root = defaultRoot, entries } = {}) {
+  const files = entries ?? packageEntries(root);
+  const { program, checker } = openProgram(root, files);
+  const modules = new Map();
+  const exportsOf = (entry) => {
+    if (!modules.has(entry)) {
+      const file = files[entry];
+      if (file === undefined) {
+        throw new Error(`surfaceMap: no entry ${entry}`);
+      }
+      const moduleSymbol = moduleOf(program, checker, root, entry, file);
+      modules.set(
+        entry,
+        new Map(
+          checker.getExportsOfModule(moduleSymbol).map((e) => [e.name, e]),
+        ),
+      );
+    }
+    return modules.get(entry);
+  };
+  const rows = [];
+  const describe = (entry, owner, symbol, prefix) => {
+    const declaration = symbol.declarations?.[0];
+    if (declaration === undefined || hidden(declaration)) {
+      return;
+    }
+    const type = checker.getTypeOfSymbolAtLocation(symbol, declaration);
+    rows.push({
+      entry,
+      owner,
+      name: `${prefix}${symbol.name}`,
+      callable: checker.getNonNullableType(type).getCallSignatures().length > 0,
+    });
+  };
+  for (const { entry, name } of owners) {
+    const exported = exportsOf(entry).get(name);
+    if (exported === undefined) {
+      continue;
+    }
+    const symbol =
+      exported.flags & ts.SymbolFlags.Alias
+        ? checker.getAliasedSymbol(exported)
+        : exported;
+    const declared = checker.getDeclaredTypeOfSymbol(symbol);
+    for (const property of checker.getPropertiesOfType(declared)) {
+      describe(entry, name, property, "");
+    }
+    const declaration = symbol.declarations?.[0];
+    if (symbol.flags & ts.SymbolFlags.Class && declaration !== undefined) {
+      const constructorType = checker.getTypeOfSymbolAtLocation(
+        symbol,
+        declaration,
+      );
+      for (const property of checker.getPropertiesOfType(constructorType)) {
+        if (property.name !== "prototype") {
+          describe(entry, name, property, "static.");
+        }
+      }
+    }
+  }
+  const order = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+  return rows.sort(
+    (a, b) =>
+      order(a.entry, b.entry) ||
+      order(a.owner, b.owner) ||
+      order(a.name, b.name),
+  );
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

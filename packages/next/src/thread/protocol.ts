@@ -1,10 +1,23 @@
-// The protocol table of the worker-mode façade: the thread kind of every name
-// in `api/surface.txt` (docs/superpowers/plans/2026-11-13-worker-facade.md,
-// section 1, "Exported names by entry point"). The encoder, the decoder and the
-// parity test read this table, and `test/threadProtocol.test.ts` compares it
-// with the surface map, so a new export can't skip the classification.
+// The protocol table of the worker-mode façade, in two parts
+// (docs/superpowers/plans/2026-11-13-worker-facade.md, section 1).
 //
-// There are three kinds:
+// 1. The thread kind of every exported name in `api/surface.txt` ("Exported
+//    names by entry point"). The encoder, the decoder and the parity test read
+//    this table, and `test/threadProtocol.test.ts` compares it with the surface
+//    map, so a new export can't skip the classification.
+// 2. The kind of every public member of the engine names that are classes or
+//    interfaces ("Members of the engine types, by kind"). The surface map
+//    lists exports, not members, so `scripts/surfaceMap.mjs`'s `memberRows`
+//    lists them with the TypeScript checker, and the same test compares that
+//    list with this table. A new member of an engine type, or one that is gone,
+//    fails it by name.
+//
+// No count is pinned anywhere: a change that adds or removes an export or a
+// member adds or removes one name here. `checkProtocol` finds a name with no
+// kind (unclassified), a name the code no longer has (stale), a name listed
+// twice (duplicated) and a kind the declaration can't have (misclassified).
+//
+// There are three kinds of exported name:
 //
 // - `type`: an interface or type alias that carries data or describes a shape.
 //   It crosses as data and needs nothing from the façade.
@@ -19,9 +32,43 @@
 //
 // A name is classified by what it touches, not by its declaration, so a few
 // interfaces are `engine` (the core has 20 of them) and no class is `type`.
-// The kinds of the members of the engine names (the plan's second table) and
-// each member's opcode, argument schema and transfer list come after this
-// table, member by member.
+//
+// A member of an engine type has one of ten kinds, by what the façade does
+// with it. A member is classified by its declaration and its documented use;
+// a closure an argument carries is the arguments' business (the schema that
+// follows this table), not a reason for a different kind.
+//
+// - `snapshot`: a read of a value the page mirrors (what the app wrote) or of
+//   a snapshot field (what the engine computed). Zero-argument methods that
+//   only read (`pixelRect()`) are snapshots too.
+// - `command`: a call with no reply, sent as an ordered message.
+// - `handle`: a call that makes something and returns a handle the page names
+//   itself (an `add...`, a `create...`, an index into a table).
+// - `query`: the answer is a promise, a promise property included.
+// - `event`: a notification delivered on the page after the tick (a listener
+//   registration, an emitter).
+// - `sync-read`: a read that takes arguments and can't be a snapshot (a
+//   lookup by handle, a computation against engine state); the page's mirror
+//   answers it, or it needs section 2.2's answer.
+// - `mutation`: written in place by the app (a setter, a field the app
+//   assigns, an object whose contents it changes, such as `Camera.position`),
+//   so a write sends a command.
+// - `callback`: a function or an object the app supplies that the engine
+//   calls inside the tick (`Engine.onTick`, `FrameResolver.resolve`, the
+//   members of an interface the engine calls), or a member that registers one.
+// - `dom`: bound to the page's DOM (a canvas, an element, a controller's
+//   input handling); it stays on the page.
+// - `cannot-cross`: can't cross as it stands: it holds or takes a GPU object
+//   or the render context, or it is an engine internal the package exports
+//   today (tagged `@internal`, or the tile graph's links). These move to an
+//   advanced, main-thread-only entry or become a module (CS-107).
+//
+// Where a member's kind is a call the plan doesn't settle, the rule above
+// decides: an engine-written counter or flag the app only reads is a
+// `snapshot` even when its declaration is writable; `GpuDevice` is wholly
+// `cannot-cross` (a device can't cross threads) while `Capabilities`, plain
+// data the device reports, is `snapshot`. The opcode, argument schema and
+// transfer list of each member come after this table.
 
 /** The three thread kinds of an exported name. */
 export type ThreadKind = "type" | "local" | "engine";
@@ -280,6 +327,795 @@ const TABLE: Record<string, EntryTable> = {
   },
 };
 
+/** The ten kinds of a member of an engine type. */
+export type MemberKind =
+  | "snapshot"
+  | "mutation"
+  | "command"
+  | "handle"
+  | "query"
+  | "event"
+  | "sync-read"
+  | "callback"
+  | "dom"
+  | "cannot-cross";
+
+/** Every member kind, in the table's order. */
+export const MEMBER_KINDS: readonly MemberKind[] = [
+  "snapshot",
+  "mutation",
+  "command",
+  "handle",
+  "query",
+  "event",
+  "sync-read",
+  "callback",
+  "dom",
+  "cannot-cross",
+];
+
+/** An owner's members by kind, each list written as space-separated names. */
+type MemberTable = Partial<Record<MemberKind, string>>;
+
+/**
+ * Every public member of the engine names that are classes or interfaces, by
+ * entry point, owner and member kind. A static member of a class is written
+ * `static.name`. The list is the TypeScript checker's own: the instance
+ * members (own and inherited) and the statics that aren't private or
+ * protected.
+ */
+const MEMBERS: Record<string, Record<string, MemberTable>> = {
+  ".": {
+    AccelerationStructures: {
+      callback: `
+        drawAdded drawRemoved tilePlaced tileUnloaded
+      `,
+    },
+    BrepCaps: {
+      snapshot: `
+        capForm changedAt dirty draw report waiting
+      `,
+      command: `
+        dispose setClip
+      `,
+      "sync-read": `
+        rebuild
+      `,
+      callback: `
+        onChange
+      `,
+    },
+    BudgetedSelection: {
+      snapshot: `
+        castsShadows expectedLoadSeconds memoryAdjustedScreenSpaceError
+        prefetchAfterVisible
+      `,
+      mutation: `
+        casterErrorScale cullWithChildrenBounds dynamicScreenSpaceError
+        dynamicScreenSpaceErrorDensity dynamicScreenSpaceErrorFactor
+        dynamicScreenSpaceErrorHeightFalloff horizonCulling
+        maximumScreenSpaceError mixedLod motionBenefit opportunisticRatio
+        prefetchErrorScale skipLevels
+      `,
+      "sync-read": `
+        purpose select selectCasters
+      `,
+    },
+    Camera: {
+      snapshot: `
+        version
+      `,
+      mutation: `
+        copyFrom direction fov lookAt lookAtInFrame near orient position
+        right rotateAroundCenter up
+      `,
+      event: `
+        watch
+      `,
+      "sync-read": `
+        fovy frustumPlanes projection rayDirection viewRotation
+      `,
+    },
+    CameraLayer: {
+      command: `
+        setClock setResolver setRig update
+      `,
+      "sync-read": `
+        clock held resolver rig root
+      `,
+      "cannot-cross": `
+        forget
+      `,
+    },
+    CanvasTarget: {
+      snapshot: `
+        kind
+      `,
+      dom: `
+        canvas destroy fixedPixelRatio height pixelRatio watch width
+      `,
+      "cannot-cross": `
+        acquire texture
+      `,
+    },
+    CapEngine: {
+      command: `
+        wake
+      `,
+      event: `
+        onAfterTick
+      `,
+    },
+    CapScheduler: {
+      command: `
+        add dispose remove tick
+      `,
+    },
+    Capabilities: {
+      snapshot: `
+        float32Blendable indirectFirstInstance shaderF16 subgroups
+        textureCompression timestampQuery
+      `,
+    },
+    ChainIo: {
+      snapshot: `
+        depth glare height ids output pixelAngle preExposure source
+        sources width
+      `,
+      "cannot-cross": `
+        device passWrites
+      `,
+    },
+    Engine: {
+      snapshot: `
+        bulk cameras capabilities clamping environment errors gpuPasses
+        gpuSample links occlusionCullStats occlusionStats queries
+        renderTargetMemory requests stats tilesets time views worlds
+      `,
+      mutation: `
+        aerosol curvilinearBudgetMs icrfToFixed jobBudgetMs
+        maximumUploadBytesPerFrame minimumUploadBytesPerFrame moonAxes
+        moonPosition occlusionCulling occlusionFeedback renderMode
+        sunDirection treeBuildMsPerFrame uploadBytesPerFrame visibility
+      `,
+      command: `
+        destroy removeHeightCapture removeTileset removeView removeWorld
+        renderFrame reportError requestRender setStarMap start stop
+        trackGpuWork unlink wake
+      `,
+      handle: `
+        addEllipsoid addHeightCapture addView createWorld link uploadModel
+      `,
+      query: `
+        addTerrain addTileset compileShader loadGltf loadModel loadTileset
+        setSkyPack static.create whenReady
+      `,
+      event: `
+        onAfterTick onError
+      `,
+      "sync-read": `
+        clipFilter sampleHeightMostDetailed viewBit
+      `,
+      callback: `
+        onTick
+      `,
+      dom: `
+        setMoonMap
+      `,
+      "cannot-cross": `
+        adoptTileset bodyCamera ctx gpu raster reportFarAnchors scene
+      `,
+    },
+    FrameResolver: {
+      "sync-read": `
+        accuracy
+      `,
+      callback: `
+        bindAnchor binding motion resolve route routeRevision watch
+      `,
+    },
+    GlareIo: {
+      snapshot: `
+        kernel
+      `,
+      "cannot-cross": `
+        sources
+      `,
+    },
+    Globe: {
+      snapshot: `
+        active anchor attributions body casterIdle changedAt createdAt
+        credits extensions firstContentAt geometricError idle
+        imageryPending isDestroyed isGlobe items lastSelected morphing
+        needsFrames pipeline resident retainGeometry root settledAt stats
+        terrain undrawnReasons url warnings world
+      `,
+      mutation: `
+        debugColorizeTiles debugShowBoundingVolume
+        debugShowContentBoundingVolume enableCollision frame
+        freezeSelection imagery lights modelMatrix placement selection
+        shader show
+      `,
+      command: `
+        destroy setPolicy tilesAdded undrawnTile update
+      `,
+      query: `
+        queryRays static.load
+      `,
+      event: `
+        events onHeightsChanged
+      `,
+      "sync-read": `
+        exactHeight sampleHeight stoppingTerrainHit surfaceHeight
+        terrainClipped terrainRayTarget tileOfDraw
+      `,
+      callback: `
+        debugTileColor
+      `,
+      "cannot-cross": `
+        addItem bodyless changed clips dualPosition ellipsoid engine evict
+        evictForCapacity imageryReady imageryRefines itemOfDraw
+        markCastsOnly moveVolumes movesVertices ownsDraw regionsChanged
+        shownViews sourceOfDraw state static.create surfaceChanged touched
+        updateVolumePad useOrigin volumePad
+      `,
+    },
+    GlobeController: {
+      snapshot: `
+        inputs moving target view
+      `,
+      mutation: `
+        enabled heading inertiaSpin maximumHeight minimumHeight pitch
+        range wheelZoomRate zoomKick zoomResponse
+      `,
+      command: `
+        focus stop
+      `,
+      callback: `
+        surfaceHeight update
+      `,
+      dom: `
+        dispose element ignore
+      `,
+    },
+    GlobeImagery: {
+      snapshot: `
+        busy fadeSeconds fading heldSlices needed provider role size stats
+      `,
+      command: `
+        credits destroy relocate update
+      `,
+      "sync-read": `
+        hasImagery refines
+      `,
+      callback: `
+        fadeStart
+      `,
+      "cannot-cross": `
+        texture
+      `,
+    },
+    GlobeStepwiseSelection: {
+      snapshot: `
+        memoryAdjustedScreenSpaceError
+      `,
+      mutation: `
+        fog loadingDescendantLimit maximumScreenSpaceError
+        preloadAncestors preloadSiblings
+      `,
+      "sync-read": `
+        purpose select
+      `,
+      callback: `
+        imageryReady
+      `,
+    },
+    GlobeTerrain: {
+      snapshot: `
+        regions
+      `,
+      handle: `
+        addRegion
+      `,
+      "cannot-cross": `
+        entryOf remove setGround setOpacity setPickThrough
+      `,
+    },
+    GpuDevice: {
+      "cannot-cross": `
+        adapter adapterInfo caps destroy device events facts limitsTier
+        preferredCanvasFormat static.create
+      `,
+    },
+    GraphStage: {
+      snapshot: `
+        kind label name shadowGain slot
+      `,
+      mutation: `
+        enabled
+      `,
+      callback: `
+        register
+      `,
+    },
+    ImageryProvider: {
+      snapshot: `
+        attributions headers maximumLevel minimumLevel name tileSize
+        tilingScheme
+      `,
+      callback: `
+        tileCredits tileUrl
+      `,
+    },
+    InspectController: {
+      snapshot: `
+        dragging target view
+      `,
+      mutation: `
+        frame heading maxRange minRange pitch range
+      `,
+      command: `
+        focus syncFromCamera
+      `,
+      callback: `
+        onChange
+      `,
+      dom: `
+        dispose element ignore
+      `,
+    },
+    LiveEdge: {
+      snapshot: `
+        accuracy curvilinear description domain params revision scale
+      `,
+      command: `
+        attach changed setParams
+      `,
+      callback: `
+        forward inverse
+      `,
+    },
+    MeshCaps: {
+      snapshot: `
+        changedAt dirty report surfaces
+      `,
+      command: `
+        dispose removeTile setClip setTile
+      `,
+      "sync-read": `
+        rayHit rebuild
+      `,
+      callback: `
+        onChange
+      `,
+    },
+    ModelPlacement: {
+      snapshot: `
+        bounds clamp draws geometry instanceCount lights model removed
+        transform
+      `,
+      command: `
+        remove setInstance setShader setTransform setVisible
+      `,
+      "cannot-cross": `
+        anchor instanceFrames
+      `,
+    },
+    ModelPool: {
+      snapshot: `
+        placement slots
+      `,
+      command: `
+        destroy setUniform
+      `,
+    },
+    ModelResource: {
+      snapshot: `
+        axes bytes colorTransfer freed name placementCount released world
+      `,
+      command: `
+        release releaseSourceData
+      `,
+      handle: `
+        place
+      `,
+      "cannot-cross": `
+        host placed retained template unplaced upload
+      `,
+    },
+    OffscreenTarget: {
+      snapshot: `
+        height kind width
+      `,
+      command: `
+        destroy
+      `,
+      query: `
+        read
+      `,
+      "cannot-cross": `
+        acquire texture
+      `,
+    },
+    OrbitController: {
+      snapshot: `
+        view
+      `,
+      mutation: `
+        camera
+      `,
+      dom: `
+        dispose element ignore
+      `,
+    },
+    PointSource: {
+      snapshot: `
+        anchor capacity frame heights layout mesh origin stride world
+      `,
+      mutation: `
+        count delay
+      `,
+      command: `
+        destroy setProperties update
+      `,
+      "sync-read": `
+        packProperties
+      `,
+      "cannot-cross": `
+        carrier
+      `,
+    },
+    PostStage: {
+      snapshot: `
+        error kind label name reads shadowGain slot
+      `,
+      mutation: `
+        enabled
+      `,
+      command: `
+        setUniform
+      `,
+      callback: `
+        perView
+      `,
+      "cannot-cross": `
+        fail passes textures uniformData uniformLayout uniformVersion
+        unwatch watch writeUniform
+      `,
+    },
+    QueryHost: {
+      callback: `
+        check frameRays loading onTick report revision
+      `,
+    },
+    RayBackend: {
+      callback: `
+        answer
+      `,
+    },
+    RenderTarget: {
+      snapshot: `
+        height kind width
+      `,
+      "cannot-cross": `
+        acquire texture
+      `,
+    },
+    SceneClock: {
+      callback: `
+        change paused rate seconds watch
+      `,
+    },
+    SceneItem: {
+      snapshot: `
+        anchor georeference removed tileset
+      `,
+      mutation: `
+        curvilinearAt opacity placement shader show tint viewMask
+      `,
+      command: `
+        remove
+      `,
+      "cannot-cross": `
+        applyCasterMask applyPlaceholder applyViewMask bytes castViews
+        destroyed discard drawColor drawsOf holdsBase moves place reach
+        setSurface shownIn surfaceRank unplace views
+      `,
+    },
+    SectionRunner: {
+      query: `
+        run
+      `,
+    },
+    SlicePool: {
+      snapshot: `
+        capacity ceiling mipLevelCount resizing size
+      `,
+      command: `
+        demand give release
+      `,
+      "sync-read": `
+        asked share static.usage take
+      `,
+      "cannot-cross": `
+        static.acquire texture
+      `,
+    },
+    SliceScheduler: {
+      callback: `
+        run
+      `,
+    },
+    SliceUser: {
+      callback: `
+        heldSlices needed relocate
+      `,
+    },
+    SpatialQueries: {
+      query: `
+        castRays
+      `,
+      callback: `
+        standing
+      `,
+    },
+    StepwiseSelection: {
+      snapshot: `
+        memoryAdjustedScreenSpaceError
+      `,
+      mutation: `
+        cullWithChildrenBounds dynamicScreenSpaceError
+        dynamicScreenSpaceErrorDensity dynamicScreenSpaceErrorFactor
+        dynamicScreenSpaceErrorHeightFalloff maximumScreenSpaceError
+      `,
+      "sync-read": `
+        select
+      `,
+    },
+    TerrainRayTarget: {
+      snapshot: `
+        ellipsoid maximumHeight
+      `,
+      callback: `
+        clipped patchAt
+      `,
+    },
+    TextureBinding: {
+      "cannot-cross": `
+        sampler view
+      `,
+    },
+    Tile: {
+      snapshot: `
+        appliedCasterMask appliedMask appliedPlaceholderMask baseUrl bytes
+        casterMask castsOnly childrenPartition childrenWithinParent clip
+        contentAvailable contentOrigin contentUrl contentVolume copyright
+        debugColor debugWord depth drawnOnce empty external fetchStartAt
+        fillFromParent geometricError geometry hasContent headerKey
+        lastBytes morphStart noFitAt ownContentVolume ownVolume
+        placeholderMask purpose refine renderable requestPriority
+        requestVolume residentBelow standInMask state summary touchSeq
+        touchedFrame transform viewMask viewedAt volume wantedAt
+      `,
+      "sync-read": `
+        viewState
+      `,
+      "cannot-cross": `
+        appliedHoles children drawnCache drawnOthers globe holes items
+        occludee parent placement tileset touchNext touchPrev views
+      `,
+    },
+    Tileset3D: {
+      snapshot: `
+        active anchor attributions body casterIdle changedAt createdAt
+        credits extensions firstContentAt geometricError idle
+        imageryPending isDestroyed isGlobe items lastSelected morphing
+        needsFrames pipeline resident retainGeometry root settledAt stats
+        undrawnReasons url warnings world
+      `,
+      mutation: `
+        debugColorizeTiles debugShowBoundingVolume
+        debugShowContentBoundingVolume enableCollision freezeSelection
+        imagery lights modelMatrix placement selection show
+      `,
+      command: `
+        destroy setPolicy tilesAdded undrawnTile update
+      `,
+      query: `
+        queryRays static.load
+      `,
+      event: `
+        events onHeightsChanged
+      `,
+      "sync-read": `
+        exactHeight sampleHeight surfaceHeight terrainClipped
+        terrainRayTarget tileOfDraw
+      `,
+      callback: `
+        debugTileColor
+      `,
+      "cannot-cross": `
+        addItem bodyless changed dualPosition ellipsoid engine evict
+        evictForCapacity imageryReady imageryRefines itemOfDraw
+        markCastsOnly moveVolumes movesVertices ownsDraw regionsChanged
+        shownViews sourceOfDraw state surfaceChanged updateVolumePad
+        useOrigin volumePad
+      `,
+    },
+    TransformNode: {
+      snapshot: `
+        depth edge graph name parent revision
+      `,
+    },
+    VectorLayer: {
+      snapshot: `
+        parameters
+      `,
+      command: `
+        destroy setParameter
+      `,
+      query: `
+        static.create
+      `,
+      "sync-read": `
+        getParameter
+      `,
+    },
+    View: {
+      snapshot: `
+        anchorRevision aspect body bodyAnchor capFaces capNote clipSets
+        debugLegend observerRevision pixelRect readout
+      `,
+      mutation: `
+        aerialPerspective ambientOcclusion ambientOcclusionRadius
+        background camera cityLights clearColor clipCaps clipMask debug
+        enabled fxaa lighting lodExponent lodTransitions observer
+        occlusionCulling occlusionFeedback occlusionState outputEncoding
+        overlays shadows sunDisk translucencyMethod viewport world
+      `,
+      command: `
+        setAnchorPlacement setCameraFromAnchor setClips setParameter
+      `,
+      query: `
+        pick pickPoint pickPosition readHdr
+      `,
+      "sync-read": `
+        anchorCamera anchorPlacement anchorRoute contains parameterValue
+        toPixel
+      `,
+      callback: `
+        renderRoot
+      `,
+      dom: `
+        target
+      `,
+      "cannot-cross": `
+        anchorRoutes anchorState autoExposure clipMaskRevision debugMode
+        exposureScale glareResolved hasParameterValue parameterRevision
+        pendingGlareReads pendingHdrReads pendingPicks pickPlacements
+        releaseParameters releaseStages setAnchorRoute stagesRevision wake
+      `,
+    },
+    ViewLink: {
+      snapshot: `
+        options source target
+      `,
+      command: `
+        dispose evaluate
+      `,
+    },
+    World: {
+      snapshot: `
+        anchorPlaceRevision anchors arenaBytes batchCount changedViews
+        clipsRevision contentRevision curvilinearStats destroyed id
+        instanceGeneration items lightCount materialsInUse maxDraws
+        maxInstances maxMaterials maxPointSets maxTransforms memory
+        pressure raysCast recordCount root slabs tableGeneration
+        transformRevision version
+      `,
+      mutation: `
+        submission
+      `,
+      command: `
+        destroy flushUploads freeClip placeAnchor rebind removeAnchor
+        removeClip removeDraw removeLight removeMaterial removeMesh
+        removeTextureSet removeTransform setCasterMask setClip
+        setClipExempt setCollision setColor setCurvilinearAt setDrawDebug
+        setDrawMorph setDrawShader setImagery setImageryFade setInstance
+        setInstanceStreams setLight setLights setPlaceholder setPlacement
+        setPointCuller setPointProperties setSolid setTransform
+        setTransformVisible setViewMask setVisible
+      `,
+      handle: `
+        add addAnchor addClip addDraw addLight addMaterial addMesh
+        addPointMesh addTransform allocateClip createPlacementParameter
+        createPointCuller createTextureSet
+      `,
+      query: `
+        castRays
+      `,
+      "sync-read": `
+        anchorMatrix anchorOf bodyAnchor clipOf drawAnchor
+        drawCurvilinearAt drawMatrix drawPlacement feature frameOf hasDraw
+        instanceFirst lightAlive localMatrix textureRefs transformAlive
+        translucentRange worldMatrix
+      `,
+      callback: `
+        acceleration addFrameCompute addOccluder
+      `,
+      "cannot-cross": `
+        addBrep addPatchMesh addTerrainClipRegion anchorRemovals
+        clipBuffer clipSets clippedBundle copyOcclusionCounters ctx
+        curvilinearMaps depthBundle drawForRoute drawHasPosition
+        drawMaterial drawOverheadBytes drawSplats encodeCull encodeRetest
+        encodeTranslucent featureIdOf findBodyAnchor forEachLight
+        heightBundle instanceBuffer itemBuffer itemOfDraw itemRemoved
+        markDirty markGpuInstances materialBuffer materialWithFlags
+        occluders occlusionLayout pickBundle pickSource placementBuffer
+        placementOf positionRefusal prepareFrame prepassBundle raster
+        readPatchStats ready recordBuffer releasePlacementParameter
+        removeBrep removeTerrainClipRegion retestBundle scene
+        setDrawGeometricError setDrawHeightNormal setDrawMaterial
+        setGround setImageryArray setPatchDisplay setPatchErrorPixels
+        setPickSource setTerrainClip setTerrainClipGround
+        setTerrainClipOpacity shaderReady shadowBundle
+        tileCurvilinearMap transformBuffer transformsF32Scale twinDraw
+        vertexBufferOf
+      `,
+    },
+  },
+  proj: {
+    ClientSnapService: {
+      snapshot: `
+        tilesets
+      `,
+      query: `
+        snap
+      `,
+      "cannot-cross": `
+        hides
+      `,
+    },
+  },
+  widgets: {
+    Viewer: {
+      snapshot: `
+        clock controls credits engine frames globe orbitDragging
+        orbitPivot presentationSuspended skyPackManifest view views
+        warnings world
+      `,
+      mutation: `
+        cityLights creditsShown overview policy showGlobe sky split
+        sunFromClock
+      `,
+      command: `
+        addAttributions destroy remove setFrameData setSun zoomTo
+      `,
+      query: `
+        addTileset frameData loadModel pick ready setGlobe setSkyPack
+        skyPackReady
+      `,
+      event: `
+        events
+      `,
+      "sync-read": `
+        inspectable
+      `,
+      callback: `
+        onOrbitChange onPresentationChange
+      `,
+      dom: `
+        canvas container controller resumePresentation setControls
+        static.create suspendPresentation
+        suspendPresentationUntil target timeControls
+      `,
+      "cannot-cross": `
+        applyClockSun state
+      `,
+    },
+  },
+};
+
 /** One row of the protocol table. */
 export interface ProtocolRow {
   readonly entry: string;
@@ -337,15 +1173,110 @@ export function threadKindOf(
   return kinds.get(key(entry, name));
 }
 
+/** One row of the member table. */
+export interface MemberRow {
+  readonly entry: string;
+  readonly owner: string;
+  readonly name: string;
+  readonly kind: MemberKind;
+}
+
+/** A public member found in the code: what the check needs of it. */
+export interface MemberSurfaceRow {
+  readonly entry: string;
+  readonly owner: string;
+  readonly name: string;
+  /** A method, or a property whose type is a function. */
+  readonly callable: boolean;
+}
+
+/** The member table, one row per member, in the order the table lists them. */
+export function memberRows(
+  table: Record<string, Record<string, MemberTable>> = MEMBERS,
+) {
+  const rows: MemberRow[] = [];
+  for (const [entry, owners] of Object.entries(table)) {
+    for (const [owner, kinds] of Object.entries(owners)) {
+      for (const kind of MEMBER_KINDS) {
+        for (const name of split(kinds[kind])) {
+          rows.push({ entry, owner, name, kind });
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+const memberKey = (entry: string, owner: string, name: string) =>
+  `${entry}\t${owner}.${name}`;
+
+const memberKinds = new Map<string, MemberKind>(
+  memberRows().map((row) => [
+    memberKey(row.entry, row.owner, row.name),
+    row.kind,
+  ]),
+);
+
+/** The kind of a member of an engine type, or `undefined` without one. */
+export function memberKindOf(
+  entry: string,
+  owner: string,
+  name: string,
+): MemberKind | undefined {
+  return memberKinds.get(memberKey(entry, owner, name));
+}
+
+/**
+ * The owners of the member table in the surface map: the exports that are
+ * classes or interfaces and have the `engine` kind. The code's member list
+ * (`memberRows` of `scripts/surfaceMap.mjs`) is made for these.
+ */
+export function engineOwners(
+  surface: readonly SurfaceRow[],
+  rows: readonly ProtocolRow[] = protocolRows(),
+): { entry: string; name: string }[] {
+  const engine = new Set(
+    rows
+      .filter((row) => row.kind === "engine")
+      .map((row) => key(row.entry, row.name)),
+  );
+  return surface
+    .filter((row) => {
+      const declared = row.kind.split("+");
+      return (
+        engine.has(key(row.entry, row.name)) &&
+        (declared.includes("class") || declared.includes("interface"))
+      );
+    })
+    .map(({ entry, name }) => ({ entry, name }));
+}
+
+/** The members the code has, and the member table to compare them with. */
+export interface MemberCheck {
+  readonly actual: readonly MemberSurfaceRow[];
+  readonly rows?: readonly MemberRow[];
+}
+
+/** Kinds whose member has to be callable. */
+const CALLABLE_KINDS: readonly MemberKind[] = [
+  "command",
+  "handle",
+  "sync-read",
+];
+
 /**
  * Compares the table with the surface map's rows. Every row needs exactly one
  * kind, nothing in the table may be missing from the surface map, and a name
  * the surface map declares as a class, function, constant, enum or namespace
- * is never a `type`.
+ * is never a `type`. With `members` it does the same for the members of the
+ * engine types: each member the code has needs exactly one kind, the table may
+ * not name a member the code doesn't have, and a `command`, `handle` or
+ * `sync-read` has to be callable.
  */
 export function checkProtocol(
   surface: readonly SurfaceRow[],
   rows: readonly ProtocolRow[] = protocolRows(),
+  members?: MemberCheck,
 ): ProtocolProblems {
   const listed = new Map<string, ThreadKind[]>();
   for (const row of rows) {
@@ -373,6 +1304,48 @@ export function checkProtocol(
   const stale = [...listed.keys()]
     .filter((k) => !seen.has(k))
     .map((k) => `${k.replace("\t", " ")} is not in the surface map`);
+  const duplicated = [...listed]
+    .filter(([, list]) => list.length > 1)
+    .map(
+      ([k, list]) =>
+        `${k.replace("\t", " ")} is listed ${list.length} times (${list.join(", ")})`,
+    );
+  if (members !== undefined) {
+    const found = checkMembers(members.actual, members.rows ?? memberRows());
+    unclassified.push(...found.unclassified);
+    stale.push(...found.stale);
+    duplicated.push(...found.duplicated);
+    misclassified.push(...found.misclassified);
+  }
+  return { unclassified, stale, duplicated, misclassified };
+}
+
+function checkMembers(
+  actual: readonly MemberSurfaceRow[],
+  rows: readonly MemberRow[],
+): ProtocolProblems {
+  const listed = new Map<string, MemberKind[]>();
+  for (const row of rows) {
+    const k = memberKey(row.entry, row.owner, row.name);
+    listed.set(k, [...(listed.get(k) ?? []), row.kind]);
+  }
+  const unclassified: string[] = [];
+  const misclassified: string[] = [];
+  const seen = new Set<string>();
+  for (const member of actual) {
+    const k = memberKey(member.entry, member.owner, member.name);
+    seen.add(k);
+    const kind = listed.get(k)?.[0];
+    const label = `${member.entry === "." ? "" : `${member.entry}:`}${member.owner}.${member.name}`;
+    if (kind === undefined) {
+      unclassified.push(`${label} has no thread kind`);
+    } else if (CALLABLE_KINDS.includes(kind) && !member.callable) {
+      misclassified.push(`${label} can't be called, so it is not a ${kind}`);
+    }
+  }
+  const stale = [...listed.keys()]
+    .filter((k) => !seen.has(k))
+    .map((k) => `${k.replace("\t", " ")} is not a public member`);
   const duplicated = [...listed]
     .filter(([, list]) => list.length > 1)
     .map(
