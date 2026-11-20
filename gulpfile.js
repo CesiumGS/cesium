@@ -286,15 +286,20 @@ export async function buildWatch() {
 }
 
 export async function buildTs() {
-  /** @type {string[]} */
-  let workspaces;
-  if (Array.isArray(argv.workspace)) {
-    workspaces = argv.workspace;
-  } else if (argv.workspace) {
-    workspaces = [argv.workspace];
-  } else {
-    workspaces = getWorkspaces(true);
+  if (!argv.workspace) {
+    for (const workspace of getWorkspaces(true)) {
+      execSync(`npm run build-ts --workspace @${scope}/${workspace}`, {
+        stdio: "inherit",
+      });
+    }
+    await generateCesiumTypeScriptDefinitions();
+    return;
   }
+
+  /** @type {string[]} */
+  const workspaces = Array.isArray(argv.workspace)
+    ? argv.workspace
+    : [argv.workspace];
 
   // Earlier workspaces that aren't regenerated in this run are imported using their existing declarations.
   /** @type {Object<string, Set<string>>} */
@@ -324,13 +329,6 @@ export async function buildTs() {
     );
     dependencyExports[directory] = workspaceExports;
   }
-
-  if (argv.workspace) {
-    return;
-  }
-
-  // Generate types for CesiumJS.
-  await generateCesiumTypeScriptDefinitions();
 }
 
 export async function tsc() {
