@@ -2,6 +2,7 @@
 
 import {
   AttributeType,
+  AxisAlignedBoundingBox,
   Cartesian3,
   ComponentDatatype,
   Matrix3,
@@ -11,7 +12,6 @@ import {
 } from "@cesium/core";
 import { GeometryAttributeDescriptor, UniformType } from "@cesium/engine";
 
-/** @import { AxisAlignedBoundingBox } from "@cesium/core"; */
 /** @import { Buffer, DataTexture, Deformer, DeformerBinding } from "@cesium/engine"; */
 /** @import { DeformedBoundsCoeffs } from "@cesium/mesh-editor"; */
 
@@ -55,6 +55,8 @@ class SurfaceDeformerBinding {
 
   /** @type {DeformedBoundsCoeffs} */
   #boundsCoefficients;
+
+  #restDisplacementBoundingBox = new AxisAlignedBoundingBox();
 
   /** @type {Deformer} */
   #deformer;
@@ -108,6 +110,26 @@ class SurfaceDeformerBinding {
 
   get vertexBuffer() {
     return this.#vertexBuffer;
+  }
+
+  /**
+   * The mesh's vertex positions when bound.
+   *
+   * @type {DataTexture}
+   * @readonly
+   */
+  get restPositionTexture() {
+    return this.#restPositionTexture;
+  }
+
+  /**
+   * The transform from the mesh's local space to the deformable's.
+   *
+   * @type {Matrix4}
+   * @readonly
+   */
+  get bindMatrix() {
+    return this.#bindMatrix;
   }
 
   get uniforms() {
@@ -173,7 +195,22 @@ class SurfaceDeformerBinding {
     Matrix3.multiplyByVector(linear, halfExtent, halfExtent);
     Cartesian3.subtract(center, halfExtent, result.minimum);
     Cartesian3.add(center, halfExtent, result.maximum);
+
+    // The mesh's bounds don't include how far the rest positions moved since binding.
+    const { minimum, maximum } = this.#restDisplacementBoundingBox;
+    Cartesian3.add(result.minimum, minimum, result.minimum);
+    Cartesian3.add(result.maximum, maximum, result.maximum);
+    Cartesian3.midpoint(result.minimum, result.maximum, result.center);
     return result;
+  }
+
+  /**
+   * @param {AxisAlignedBoundingBox} displacementBoundingBox A bounding box containing each vertex's displacement.
+   */
+  addRestDisplacement(displacementBoundingBox) {
+    const { minimum, maximum } = this.#restDisplacementBoundingBox;
+    Cartesian3.add(minimum, displacementBoundingBox.minimum, minimum);
+    Cartesian3.add(maximum, displacementBoundingBox.maximum, maximum);
   }
 
   destroy() {
