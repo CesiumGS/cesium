@@ -1,11 +1,11 @@
 // @ts-check
 
 import { Color } from "@cesium/core";
-import BlendOption from "./BlendOption.js";
 import BufferPointCollection from "./BufferPointCollection.js";
 import CircleVectorPrimitive from "./CircleVectorPrimitive.js";
 import Expression from "./Expression.js";
 
+/** @import BlendOption from "./BlendOption.js"; */
 /** @import BufferPoint from "./BufferPoint.js"; */
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
@@ -16,7 +16,6 @@ import Expression from "./Expression.js";
  * @property {Color|string} [color=Color.WHITE] Fill color of each circle.
  * @property {Color|string} [outlineColor=Color.BLACK] Outline color of each circle.
  * @property {number|string} [outlineWidth=0.0] Outline width of each circle, in pixels.
- * @property {BlendOption} [blendOption=BlendOption.TRANSLUCENT] Determines how the circles are blended with the scene. Must be {@link BlendOption.OPAQUE} or {@link BlendOption.TRANSLUCENT}.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
@@ -69,12 +68,6 @@ class CircleSymbolizer {
     this._outlineWidth = options.outlineWidth ?? 0.0;
 
     /**
-     * @type {BlendOption}
-     * @private
-     */
-    this._blendOption = options.blendOption ?? BlendOption.TRANSLUCENT;
-
-    /**
      * Shared by every primitive the symbolizer creates, so expressions are parsed once.
      * @private
      */
@@ -83,7 +76,6 @@ class CircleSymbolizer {
       color: createColorStyle(this._color),
       outlineColor: createColorStyle(this._outlineColor),
       outlineWidth: createNumberStyle(this._outlineWidth),
-      blendOption: this._blendOption,
     };
   }
 
@@ -124,24 +116,16 @@ class CircleSymbolizer {
   }
 
   /**
-   * Determines how the circles are blended with the scene.
-   * @type {BlendOption}
-   * @readonly
-   */
-  get blendOption() {
-    return this._blendOption;
-  }
-
-  /**
    * Creates a vector primitive that draws the collection, or returns undefined
    * if the collection does not hold points.
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
-   * @param {function(BufferPrimitive): boolean} [filter]
+   * @param {function(BufferPrimitive): boolean|undefined} filter
+   * @param {BlendOption} blendOption
    * @returns {CircleVectorPrimitive|undefined}
    * @ignore
    */
-  _createPrimitive(collection, filter) {
+  _createPrimitive(collection, filter, blendOption) {
     if (!(collection instanceof BufferPointCollection)) {
       return undefined;
     }
@@ -150,6 +134,7 @@ class CircleSymbolizer {
       ...this._primitiveOptions,
       collection,
       filter,
+      blendOption,
     });
   }
 }

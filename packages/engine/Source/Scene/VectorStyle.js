@@ -1,6 +1,8 @@
 // @ts-check
 
-import { Check, defined } from "@cesium/core";
+import { Check, DeveloperError, defined } from "@cesium/core";
+import SymbologyLayer from "./SymbologyLayer.js";
+import VectorPrimitiveGroup from "./VectorPrimitiveGroup.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
 /** @import BufferPrimitiveCollection from "./BufferPrimitiveCollection.js"; */
@@ -9,41 +11,68 @@ import { Check, defined } from "@cesium/core";
 
 /**
  * @typedef {object} VectorStyleOptions
- * @property {VectorStyleRule[]} [rules] The rules of the style, in order.
+ * @property {SymbologyLayer[]} [symbologyLayers] The layers of the style, in drawing order.
+ * @property {VectorStyleRule[]} [rules] The rules of a style with a single {@link SymbologyLayer}. Must not be combined with <code>symbologyLayers</code>.
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  */
 
 /**
- * An ordered list of {@link VectorStyleRule} instances that decides how vector
- * features are drawn. Each feature is drawn by the first rule whose condition
- * it matches; features that match no rule are not drawn. Expressions read the
+ * An ordered list of {@link SymbologyLayer} instances that decides how vector
+ * features are drawn. Later layers are drawn above earlier ones. Within a
+ * layer, each feature is drawn by the first rule whose condition it matches;
+ * features that match no rule of any layer are not drawn. Expressions read the
  * properties of each primitive's {@link BufferPrimitive#pickObject}, such as a
  * {@link Cesium3DTileFeature}.
  *
  * @example
- * const style = new Cesium.VectorStyle();
- * style.addRule(
- *   new Cesium.VectorStyleRule({
- *     condition: "${population} > 1000000",
- *     symbolizers: [
- *       new Cesium.CircleSymbolizer({ radius: 10, color: "color('red')" }),
- *     ],
- *   }),
- * );
- * style.addRule(
- *   new Cesium.VectorStyleRule({
- *     symbolizers: [
- *       new Cesium.CircleSymbolizer({ radius: 3, color: Cesium.Color.GRAY }),
- *     ],
- *   }),
- * );
+ * // A style with a single layer.
+ * const style = new Cesium.VectorStyle({
+ *   rules: [
+ *     new Cesium.VectorStyleRule({
+ *       condition: "${population} > 1000000",
+ *       symbolizers: [
+ *         new Cesium.CircleSymbolizer({ radius: 10, color: "color('red')" }),
+ *       ],
+ *     }),
+ *     new Cesium.VectorStyleRule({
+ *       symbolizers: [
+ *         new Cesium.CircleSymbolizer({ radius: 3, color: Cesium.Color.GRAY }),
+ *       ],
+ *     }),
+ *   ],
+ * });
  *
- * for (const primitive of style.createPrimitives(collection)) {
- *   viewer.scene.primitives.add(primitive);
- * }
+ * viewer.scene.primitives.add(style.createPrimitives(collection));
+ *
+ * @example
+ * // Selected features are drawn above every other feature.
+ * const style = new Cesium.VectorStyle({
+ *   symbologyLayers: [
+ *     new Cesium.SymbologyLayer({
+ *       name: "features",
+ *       rules: [
+ *         new Cesium.VectorStyleRule({
+ *           symbolizers: [new Cesium.CircleSymbolizer({ radius: 4 })],
+ *         }),
+ *       ],
+ *     }),
+ *     new Cesium.SymbologyLayer({
+ *       name: "selection",
+ *       rules: [
+ *         new Cesium.VectorStyleRule({
+ *           condition: "${selected} === true",
+ *           symbolizers: [
+ *             new Cesium.CircleSymbolizer({ radius: 8, color: Cesium.Color.RED }),
+ *           ],
+ *         }),
+ *       ],
+ *     }),
+ *   ],
+ * });
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
+ * @see SymbologyLayer
  * @see VectorStyleRule
  */
 class VectorStyle {
@@ -51,63 +80,96 @@ class VectorStyle {
    * @param {VectorStyleOptions} [options]
    */
   constructor(options = {}) {
-    /**
-     * @type {VectorStyleRule[]}
-     * @private
-     */
-    this._rules = [...(options.rules ?? [])];
-  }
-
-  /**
-   * The rules of the style, in order.
-   *
-   * @type {VectorStyleRule[]}
-   * @readonly
-   */
-  get rules() {
-    return this._rules;
-  }
-
-  /**
-   * Adds a rule after the existing rules. Primitives already created by the
-   * style are not affected.
-   *
-   * @param {VectorStyleRule} rule The rule to add.
-   */
-  addRule(rule) {
     //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.object("rule", rule);
+    if (defined(options.symbologyLayers) && defined(options.rules)) {
+      throw new DeveloperError(
+        "options.symbologyLayers and options.rules cannot both be defined.",
+      );
+    }
     //>>includeEnd('debug');
 
-    this._rules.push(rule);
+    /**
+     * @type {SymbologyLayer[]}
+     * @private
+     */
+    this._symbologyLayers = defined(options.rules)
+      ? [new SymbologyLayer({ rules: options.rules })]
+      : [...(options.symbologyLayers ?? [])];
   }
 
   /**
-   * Creates the vector primitives that draw a collection with this style, one
-   * for each symbolizer that applies to the collection, in rule and symbolizer
-   * order. The primitives are not added to the scene.
+   * The layers of the style, in drawing order.
+   *
+   * @type {SymbologyLayer[]}
+   * @readonly
+   */
+  get symbologyLayers() {
+    return this._symbologyLayers;
+  }
+
+  /**
+   * Adds a layer above the existing layers. Primitives already created by the
+   * style are not affected.
+   *
+   * @param {SymbologyLayer} symbologyLayer The layer to add.
+   */
+  addSymbologyLayer(symbologyLayer) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("symbologyLayer", symbologyLayer);
+    //>>includeEnd('debug');
+
+    this._symbologyLayers.push(symbologyLayer);
+  }
+
+  /**
+   * Creates the vector primitives that draw a collection with this style. The
+   * returned group holds one nested group per {@link SymbologyLayer}, in
+   * drawing order, each named after its layer. A nested group holds one vector
+   * primitive per symbolizer that applies to the collection, in rule and
+   * symbolizer order. The group is not added to the scene.
    *
    * @param {BufferPrimitiveCollection<BufferPrimitive>} collection The primitives to draw.
-   * @returns {VectorPrimitive[]} The created vector primitives.
+   * @returns {VectorPrimitiveGroup} The created vector primitives.
    */
   createPrimitives(collection) {
     //>>includeStart('debug', pragmas.debug);
     Check.typeOf.object("collection", collection);
     //>>includeEnd('debug');
 
-    const rules = [...this._rules];
-    const primitives = [];
-    for (let i = 0; i < rules.length; i++) {
-      const filter = createRuleFilter(rules, i);
-      for (const symbolizer of rules[i].symbolizers) {
-        const primitive = symbolizer._createPrimitive(collection, filter);
-        if (defined(primitive)) {
-          primitives.push(primitive);
-        }
+    const layerGroups = this._symbologyLayers.map(
+      (symbologyLayer) =>
+        new VectorPrimitiveGroup({
+          name: symbologyLayer.name,
+          primitives: createLayerPrimitives(symbologyLayer, collection),
+        }),
+    );
+    return new VectorPrimitiveGroup({ primitives: layerGroups });
+  }
+}
+
+/**
+ * @param {SymbologyLayer} symbologyLayer
+ * @param {BufferPrimitiveCollection<BufferPrimitive>} collection
+ * @returns {VectorPrimitive[]}
+ * @ignore
+ */
+function createLayerPrimitives(symbologyLayer, collection) {
+  const rules = [...symbologyLayer.rules];
+  const primitives = [];
+  for (let i = 0; i < rules.length; i++) {
+    const filter = createRuleFilter(rules, i);
+    for (const symbolizer of rules[i].symbolizers) {
+      const primitive = symbolizer._createPrimitive(
+        collection,
+        filter,
+        symbologyLayer.blendOption,
+      );
+      if (defined(primitive)) {
+        primitives.push(primitive);
       }
     }
-    return primitives;
   }
+  return primitives;
 }
 
 /**

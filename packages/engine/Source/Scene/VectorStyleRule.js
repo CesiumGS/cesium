@@ -14,8 +14,8 @@ import Expression from "./Expression.js";
 
 /**
  * A condition paired with the symbolizers that draw the features it selects.
- * Within a {@link VectorStyle}, each feature is drawn by the first rule whose
- * condition it matches.
+ * Within a {@link SymbologyLayer}, each feature is drawn by the first rule
+ * whose condition it matches.
  *
  * @example
  * const rule = new Cesium.VectorStyleRule({
@@ -25,6 +25,7 @@ import Expression from "./Expression.js";
  *
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
+ * @see SymbologyLayer
  * @see VectorStyle
  */
 class VectorStyleRule {
