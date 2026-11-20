@@ -6,6 +6,7 @@ import type { Batch } from "./types.ts";
 import type { DrawConstants } from "../../render/drawConstants.ts";
 import type { CpuTable } from "../CpuTable.ts";
 import type { RangeAllocator } from "../../gpu/RangeAllocator.ts";
+import type { PlacementRows } from "../placementTable.ts";
 
 /** One per world, made once with it, and filled by its constructor. */
 export class WorldDraws {
@@ -44,6 +45,11 @@ export class WorldDraws {
    * last copied them: its next tick uploads.
    */
   uploadsPending = false;
+  /**
+   * The placements' rows: parameters' floats and placed draws' blocks
+   * (`PlacementRows`), which a device copies as they are written.
+   */
+  placements!: PlacementRows;
   materialsF32!: Float32Array;
   materialsU32!: Uint32Array;
   /** The materials changed since the device last copied them. */

@@ -116,10 +116,15 @@ export class WebGpuWorldMirror implements WorldMirror {
     raster.splats = createSplats(world, 1);
 
     // The cull binds the placements too (its placed records' offsets).
-    raster.placementTable = new PlacementTable(device, () => {
-      tablesReplaced(world);
-      world.curvilinearMaps.routes.tableReplaced();
-    });
+    raster.placementTable = new PlacementTable(
+      device,
+      () => {
+        tablesReplaced(world);
+        world.curvilinearMaps.routes.tableReplaced();
+      },
+      draws.placements.capacity,
+      draws.placements,
+    );
     createCullBindGroup(world);
     this.imageryPlaceholder = device.createTexture({
       label: "world.imagery.placeholder",

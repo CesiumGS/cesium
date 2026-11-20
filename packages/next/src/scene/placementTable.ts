@@ -47,30 +47,30 @@ import type { CurvilinearTerms } from "./curvilinearTerms.ts";
  * (spec section 7.6).
  */
 export class PlacementTable {
-  private f32: Float32Array;
-  private u32: Uint32Array;
   private bufferRows: number;
   private gpu: GPUBuffer;
-  /** Rows handed out (blocks and parameter rows), from row 0. */
-  private used = 0;
-  /** Freed blocks by size in rows, for reuse. */
-  private readonly freeBlocks = new Map<number, number[]>();
-  /** Parameter floats not in use (word indices). */
-  private readonly freeSlots: number[] = [];
+  /** The rows on the CPU (`WorldDraws.placements`), which this table copies. */
+  readonly contents: PlacementRows;
 
   /**
    * `replaced` runs after the buffer is replaced by a larger one, so the
-   * groups binding it are rebuilt.
+   * groups binding it are rebuilt. `contents` are the rows it copies (its
+   * own, `rows` of them, when not given).
    */
   constructor(
     private readonly device: GPUDevice,
     private readonly replaced: () => void,
     rows = 64,
+    contents: PlacementRows = new PlacementRows(rows),
   ) {
-    this.bufferRows = rows;
-    this.f32 = new Float32Array(rows * 4);
-    this.u32 = new Uint32Array(this.f32.buffer);
-    this.gpu = this.create(rows);
+    this.contents = contents;
+    this.bufferRows = contents.capacity;
+    this.gpu = this.create(this.bufferRows);
+    contents.grown = () => this.grow();
+  }
+
+  private get f32(): Float32Array {
+    return this.contents.f32;
   }
 
   /** The GPU buffer (replaced as it grows: `replaced`). */
@@ -85,20 +85,14 @@ export class PlacementTable {
 
   /** A float for a parameter (its word index), set to `value`. */
   allocateParameter(value: number): number {
-    if (this.freeSlots.length === 0) {
-      const row = this.allocate(1);
-      for (let c = 3; c >= 0; c--) {
-        this.freeSlots.push(row * 4 + c);
-      }
-    }
-    const word = this.freeSlots.pop()!;
+    const word = this.contents.takeParameter();
     this.setParameter(word, value);
     return word;
   }
 
   /** A parameter's float is free for reuse. */
   releaseParameter(word: number): void {
-    this.freeSlots.push(word);
+    this.contents.releaseParameter(word);
   }
 
   /** A parameter's float: one 4-byte write. */
@@ -118,8 +112,8 @@ export class PlacementTable {
     slotOf: (p: { value: number }) => number,
   ): number {
     const rows = blockRows(terms);
-    const at = this.allocate(rows);
-    this.pack(terms, at, slotOf);
+    const at = this.contents.allocate(rows);
+    this.contents.pack(terms, at, slotOf);
     this.device.queue.writeBuffer(
       this.gpu,
       at * 16,
@@ -141,19 +135,14 @@ export class PlacementTable {
    * (scene/routeVariant.ts). Freed by `releaseRows`.
    */
   allocateRows(rows: number): number {
-    const at = this.allocate(rows);
+    const at = this.contents.allocate(rows);
     this.f32.fill(0, at * 4, (at + rows) * 4);
     return at;
   }
 
   /** Frees `rows` rows from `at` (`allocateRows`, or a block), for reuse. */
   releaseRows(at: number, rows: number): void {
-    let list = this.freeBlocks.get(rows);
-    if (!list) {
-      list = [];
-      this.freeBlocks.set(rows, list);
-    }
-    list.push(at);
+    this.contents.release(at, rows);
   }
 
   /** The words of rows `at` to `at + rows` to fill in place, then `upload` them. */
@@ -193,10 +182,7 @@ export class PlacementTable {
 
   /** The block's words as uploaded (for tests and the spike). */
   words(at: number, rows: number): { f32: Float32Array; u32: Uint32Array } {
-    return {
-      f32: this.f32.subarray(at * 4, (at + rows) * 4),
-      u32: this.u32.subarray(at * 4, (at + rows) * 4),
-    };
+    return this.contents.words(at, rows);
   }
 
   destroy(): void {
@@ -211,22 +197,98 @@ export class PlacementTable {
     });
   }
 
-  private allocate(rows: number): number {
+  /** The rows grew: a buffer for all of them, holding their words. */
+  private grow(): void {
+    this.gpu.destroy();
+    this.bufferRows = this.contents.capacity;
+    this.gpu = this.create(this.bufferRows);
+    this.device.queue.writeBuffer(
+      this.gpu,
+      0,
+      this.f32,
+      0,
+      this.contents.used * 4,
+    );
+    this.replaced();
+  }
+}
+
+/**
+ * The placements' rows on the CPU, renderer-neutral (`WorldDraws.placements`):
+ * the parameters' floats and the placed draws' blocks, laid out as
+ * `PlacementTable` describes, and which rows are in use. A device copies
+ * them as they are written (WebGPU's `PlacementTable` at once, each write).
+ */
+export class PlacementRows {
+  f32: Float32Array;
+  u32: Uint32Array;
+  /** Rows the arrays hold (doubling as blocks are added). */
+  capacity: number;
+  /** Rows handed out (blocks and parameter rows), from row 0. */
+  used = 0;
+  /** Freed blocks by size in rows, for reuse. */
+  private readonly freeBlocks = new Map<number, number[]>();
+  /** Parameter floats not in use (word indices). */
+  private readonly freeSlots: number[] = [];
+  /** Runs after the arrays grew (`f32` and `u32` replaced), for the device's copy. */
+  grown: () => void = () => {};
+
+  constructor(rows = 64) {
+    this.capacity = rows;
+    this.f32 = new Float32Array(rows * 4);
+    this.u32 = new Uint32Array(this.f32.buffer);
+  }
+
+  /** A parameter's word, not yet set (a new row of four when none is free). */
+  takeParameter(): number {
+    if (this.freeSlots.length === 0) {
+      const row = this.allocate(1);
+      for (let c = 3; c >= 0; c--) {
+        this.freeSlots.push(row * 4 + c);
+      }
+    }
+    return this.freeSlots.pop()!;
+  }
+
+  releaseParameter(word: number): void {
+    this.freeSlots.push(word);
+  }
+
+  /** `rows` rows: a freed block of that size, or new ones (growing). */
+  allocate(rows: number): number {
     const reused = this.freeBlocks.get(rows)?.pop();
     if (reused !== undefined) {
       return reused;
     }
     const at = this.used;
-    if (at + rows > this.bufferRows) {
+    if (at + rows > this.capacity) {
       this.grow(at + rows);
     }
     this.used += rows;
     return at;
   }
 
-  /** A buffer for at least `rows` rows, holding the old one's words. */
+  /** Frees `rows` rows from `at`, for reuse. */
+  release(at: number, rows: number): void {
+    let list = this.freeBlocks.get(rows);
+    if (!list) {
+      list = [];
+      this.freeBlocks.set(rows, list);
+    }
+    list.push(at);
+  }
+
+  /** The words of rows `at` to `at + rows`. */
+  words(at: number, rows: number): { f32: Float32Array; u32: Uint32Array } {
+    return {
+      f32: this.f32.subarray(at * 4, (at + rows) * 4),
+      u32: this.u32.subarray(at * 4, (at + rows) * 4),
+    };
+  }
+
+  /** Arrays for at least `rows` rows, holding the old ones' words. */
   private grow(rows: number): void {
-    let size = this.bufferRows;
+    let size = this.capacity;
     while (size < rows) {
       size *= 2;
     }
@@ -234,14 +296,12 @@ export class PlacementTable {
     f32.set(this.f32);
     this.f32 = f32;
     this.u32 = new Uint32Array(f32.buffer);
-    this.gpu.destroy();
-    this.bufferRows = size;
-    this.gpu = this.create(size);
-    this.device.queue.writeBuffer(this.gpu, 0, this.f32, 0, this.used * 4);
-    this.replaced();
+    this.capacity = size;
+    this.grown();
   }
 
-  private pack(
+  /** Writes `terms`' block at row `at`. `slotOf` gives a parameter's word. */
+  pack(
     terms: CurvilinearTerms,
     at: number,
     slotOf: (p: { value: number }) => number,

@@ -1,3 +1,4 @@
+import { PlacementRows } from "./placementTable.ts";
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
 import { Slabs } from "./Slabs.ts";
 import { CpuTable, INITIAL_ROWS } from "./CpuTable.ts";
@@ -368,6 +369,7 @@ export class World {
       Math.max(1, this.maxInstances),
     );
     this.draws.instanceAllocator = new RangeAllocator(this.maxInstances, 1);
+    this.draws.placements = new PlacementRows();
     const materials = new ArrayBuffer(
       Math.min(this.maxMaterials, INITIAL_ROWS) * MATERIAL_SIZE,
     );
