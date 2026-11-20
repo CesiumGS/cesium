@@ -2,10 +2,11 @@
 id: CS-745
 title: A Health view lists the work graph's exceptions, each with a proposed fix
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]
+claimed_by: orch-11-CS-745
 touches: [packages/next/bench/suite/views/workHealth.tsx, packages/next/bench/suite/views/workHealth.css, packages/next/bench/suite/workHealth.ts, packages/next/test/dynoWorkHealth.test.ts]
 ---
 
