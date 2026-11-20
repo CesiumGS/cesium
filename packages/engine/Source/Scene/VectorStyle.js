@@ -2,6 +2,7 @@
 
 import { Check, DeveloperError, defined } from "@cesium/core";
 import SymbologyLayer from "./SymbologyLayer.js";
+import SymbologyLayerCollection from "./SymbologyLayerCollection.js";
 import VectorPrimitiveGroup from "./VectorPrimitiveGroup.js";
 
 /** @import BufferPrimitive from "./BufferPrimitive.js"; */
@@ -73,6 +74,7 @@ import VectorPrimitiveGroup from "./VectorPrimitiveGroup.js";
  * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
  *
  * @see SymbologyLayer
+ * @see SymbologyLayerCollection
  * @see VectorStyleRule
  */
 class VectorStyle {
@@ -89,36 +91,24 @@ class VectorStyle {
     //>>includeEnd('debug');
 
     /**
-     * @type {SymbologyLayer[]}
+     * @type {SymbologyLayerCollection}
      * @private
      */
-    this._symbologyLayers = defined(options.rules)
-      ? [new SymbologyLayer({ rules: options.rules })]
-      : [...(options.symbologyLayers ?? [])];
+    this._symbologyLayers = new SymbologyLayerCollection(
+      defined(options.rules)
+        ? [new SymbologyLayer({ rules: options.rules })]
+        : options.symbologyLayers,
+    );
   }
 
   /**
    * The layers of the style, in drawing order.
    *
-   * @type {SymbologyLayer[]}
+   * @type {SymbologyLayerCollection}
    * @readonly
    */
   get symbologyLayers() {
     return this._symbologyLayers;
-  }
-
-  /**
-   * Adds a layer above the existing layers. Primitives already created by the
-   * style are not affected.
-   *
-   * @param {SymbologyLayer} symbologyLayer The layer to add.
-   */
-  addSymbologyLayer(symbologyLayer) {
-    //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.object("symbologyLayer", symbologyLayer);
-    //>>includeEnd('debug');
-
-    this._symbologyLayers.push(symbologyLayer);
   }
 
   /**
@@ -136,13 +126,17 @@ class VectorStyle {
     Check.typeOf.object("collection", collection);
     //>>includeEnd('debug');
 
-    const layerGroups = this._symbologyLayers.map(
-      (symbologyLayer) =>
+    const symbologyLayers = this._symbologyLayers;
+    const layerGroups = [];
+    for (let i = 0; i < symbologyLayers.length; i++) {
+      const symbologyLayer = symbologyLayers.get(i);
+      layerGroups.push(
         new VectorPrimitiveGroup({
           name: symbologyLayer.name,
           primitives: createLayerPrimitives(symbologyLayer, collection),
         }),
-    );
+      );
+    }
     return new VectorPrimitiveGroup({ primitives: layerGroups });
   }
 }

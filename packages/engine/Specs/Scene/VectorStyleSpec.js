@@ -46,7 +46,7 @@ describe(
       const style = new VectorStyle({ rules: [rule] });
 
       expect(style.symbologyLayers.length).toBe(1);
-      expect(style.symbologyLayers[0].rules).toEqual([rule]);
+      expect(style.symbologyLayers.get(0).rules).toEqual([rule]);
     });
 
     it("adds symbology layers in order", function () {
@@ -54,9 +54,11 @@ describe(
       const second = new SymbologyLayer({ rules: [] });
       const style = new VectorStyle({ symbologyLayers: [first] });
 
-      style.addSymbologyLayer(second);
+      style.symbologyLayers.add(second);
 
-      expect(style.symbologyLayers).toEqual([first, second]);
+      expect(style.symbologyLayers.length).toBe(2);
+      expect(style.symbologyLayers.get(0)).toBe(first);
+      expect(style.symbologyLayers.get(1)).toBe(second);
     });
 
     it("throws with both symbology layers and rules", function () {
