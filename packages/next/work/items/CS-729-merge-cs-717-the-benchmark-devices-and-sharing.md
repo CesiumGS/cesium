@@ -2,10 +2,14 @@
 id: CS-729
 title: Merge CS-717, the benchmark devices and sharing design
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays its two commits onto main's tip, reruns work check, fast-forwards main, regenerates the views and logs the merge; the build items and decisions follow it."
+answered_at: 2026-11-20T04:22:51.534Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

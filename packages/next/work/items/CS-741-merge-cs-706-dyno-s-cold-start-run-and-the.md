@@ -2,10 +2,14 @@
 id: CS-741
 title: Merge CS-706, Dyno's cold-start run and the viewer's fixes
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-389
 decider: owner
+answer: "A. Merge it: After CS-720 merges, the orchestrator replays it onto main's tip, reruns the type checks and work check, fast-forwards main, regenerates the views and logs the merge."
+answered_at: 2026-11-20T04:22:42.912Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
