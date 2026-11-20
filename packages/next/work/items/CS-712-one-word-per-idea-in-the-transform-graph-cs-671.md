@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-19
 project: CS-17
 needs: [CS-671]
+touches: [packages/next/src/**, packages/next/test/**, packages/next/examples/**, packages/next/spikes/**, packages/next/handbook/**, packages/next/widgets/**, packages/next/scripts/**, packages/next/api/surface.txt, packages/next/README.md, docs/design/transform-graph.md]
 ---
 
 ## Done when
