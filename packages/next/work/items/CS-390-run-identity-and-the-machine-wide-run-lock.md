@@ -5,6 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-389
+touches: [packages/next/bench/suite/cli.mjs, packages/next/bench/suite/identity.mjs, packages/next/bench/suite/runLock.mjs, packages/next/bench/suite/images.mjs, packages/next/bench/suite/report.mjs, packages/next/bench/suite/data.ts, packages/next/bench/suite/schema.ts, packages/next/bench/suite/commands/**, packages/next/vite.config.ts, packages/next/scripts/setup.mjs, packages/next/package.json, packages/next/test/**]
 ---
 
 `purpose`, `item` (`CS-<n>`), `study`, `worktree`, `base`, `machine`, `servedFrom` and the new `id` on every run kind (bench, images). The baseline guard and `--against-base`. The CLI's first and last lines, naming the run and its Dyno paths. The machine-wide run lock; `npm run dyno` on a free port. Old runs read as baseline runs. New commands get their own modules, so later milestones touch `cli.mjs` less.
