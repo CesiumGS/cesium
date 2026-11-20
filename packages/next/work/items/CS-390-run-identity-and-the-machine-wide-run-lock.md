@@ -2,9 +2,10 @@
 id: CS-390
 title: Run identity and the machine-wide run lock
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-389
+claimed_by: orch-10-CS-390
 touches: [packages/next/bench/suite/cli.mjs, packages/next/bench/suite/identity.mjs, packages/next/bench/suite/runLock.mjs, packages/next/bench/suite/images.mjs, packages/next/bench/suite/report.mjs, packages/next/bench/suite/data.ts, packages/next/bench/suite/schema.ts, packages/next/bench/suite/commands/**, packages/next/vite.config.ts, packages/next/scripts/setup.mjs, packages/next/package.json, packages/next/test/**]
 ---
 
