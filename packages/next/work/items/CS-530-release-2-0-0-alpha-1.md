@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-15
 project: CS-18
-needs: [CS-526, CS-414, CS-560, CS-458, CS-459, CS-466, CS-468, CS-485, CS-486, CS-497, CS-621, CS-635, CS-606]
+needs: [CS-526, CS-414, CS-560, CS-458, CS-459, CS-466, CS-468, CS-485, CS-486, CS-497, CS-621, CS-635, CS-606, CS-722]
 release: 2.0.0-alpha.1
 ---
 
