@@ -1,12 +1,8 @@
-import { onTextureDestroyed } from "../gpu/textureTracking.ts";
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
 import { Slabs } from "./Slabs.ts";
 import { CpuTable, INITIAL_ROWS } from "./CpuTable.ts";
-import { MirroredTable } from "./MirroredTable.ts";
 import { DrawConstants } from "../render/drawConstants.ts";
-import { DrawArguments } from "../render/drawArguments.ts";
 import type { Placement, PlacementParameter } from "./placement.ts";
-import { PlacementTable } from "./placementTable.ts";
 import type { SceneItem, SceneItemOptions } from "./SceneItem.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { TileCurvilinearMap } from "../streaming/tileCurvilinearMap.ts";
@@ -89,7 +85,6 @@ import {
   removeAnchor,
   frameOf,
 } from "./world/transforms.ts";
-import { flushUploads } from "./world/uploads.ts";
 import {
   addMesh,
   addPointMesh,
@@ -113,7 +108,6 @@ import {
   type BrepOptions,
 } from "./world/brep.ts";
 import {
-  textureDestroyed,
   addMaterial,
   removeMaterial,
   removeTextureSet,
@@ -146,7 +140,6 @@ import {
   drawPlacement,
 } from "./world/placements.ts";
 import {
-  createSplats,
   setPointCuller,
   createPointCuller,
   drawSplats,
@@ -160,36 +153,13 @@ import {
   setInstance,
   setInstanceStreams,
 } from "./world/draws.ts";
-import {
-  slabReplaced,
-  createBatchBuffer,
-  growPointSets,
-  createCullBindGroup,
-  tablesReplaced,
-  createDrawBindGroup,
-  rebind,
-  setImageryArray,
-} from "../render/world/tables.ts";
-import {
-  prepareFrame,
-  shadowBundle,
-  heightBundle,
-  prepassBundle,
-  depthBundle,
-  pickBundle,
-  clippedBundle,
-  retestBundle,
-  type BundleKind,
-  encodeCull,
-  encodeRetest,
-  translucentRange,
-  encodeTranslucent,
-} from "../render/world/bundles.ts";
+import type { BundleKind } from "../render/world/bundles.ts";
 import { WorldClips, type ClipSet, type WorldClip } from "./world/clips.ts";
 import { WorldScene } from "./world/worldScene.ts";
 import type { PatchPickSource } from "./world/domains.ts";
 import { WorldRaster } from "../render/world/worldRaster.ts";
 import { WorldDraws } from "./world/worldDraws.ts";
+import { WebGpuWorldMirror } from "../render/world/worldMirror.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -208,6 +178,8 @@ export class World {
   readonly scene: WorldScene = new WorldScene();
   /** @internal Draw data on the CPU, renderer-neutral: records, batches, transform, instance and material tables. */
   readonly draws: WorldDraws = new WorldDraws();
+  /** @internal The device's copy of this world (`WorldMirror`): the WebGPU tables, bundles and cull. */
+  readonly mirror: WebGpuWorldMirror;
   /**
    * @internal Draws under an anchor whose route to the render root crosses a
    * curvilinear map, drawn curvilinear by fits of it (scene/world/worldCurvilinearMaps.ts). The engine steps
@@ -308,15 +280,15 @@ export class World {
   private changedViews_ = 0;
 
   /** Replaced as the tables grow (`tableGeneration`). */
-  recordBuffer: GPUBuffer;
-  transformBuffer: GPUBuffer;
+  recordBuffer!: GPUBuffer;
+  transformBuffer!: GPUBuffer;
   /** Replaced when the instance table grows (`instanceGeneration`). */
-  instanceBuffer: GPUBuffer;
+  instanceBuffer!: GPUBuffer;
   /** Per draw item and view: its camera-relative matrix and record (cull). */
-  itemBuffer: GPUBuffer;
-  materialBuffer: GPUBuffer;
+  itemBuffer!: GPUBuffer;
+  materialBuffer!: GPUBuffer;
   /** Mixed-LOD clip boxes, `CLIP_BOXES` per block. */
-  clipBuffer: GPUBuffer;
+  clipBuffer!: GPUBuffer;
   /**
    * Counts table growths: whatever binds a world table's buffer (the
    * instance table, records, transforms, materials) rebinds when it
@@ -329,7 +301,6 @@ export class World {
     return this.instanceGeneration;
   }
   readonly maxPointSets: number;
-  private readonly stopTracking: () => void;
 
   constructor(
     /** @internal */ readonly ctx: RenderContext,
@@ -363,7 +334,6 @@ export class World {
       itemLimit - this.maxDraws,
     );
     const instanceRows = Math.max(1, Math.min(this.maxInstances, 16384));
-    const items = this.raster.drawRows + instanceRows;
     // A slab is one storage binding at most, and 256 MiB (growing to it).
     this.slabs = new Slabs(
       device,
@@ -374,25 +344,15 @@ export class World {
         bindingBytes: binding,
       },
       () => this.flushUploads(),
-      (slab) => slabReplaced(this, slab),
+      (slab) => this.mirror.slabReplaced(slab),
     );
 
     this.draws.drawConstants = new DrawConstants(this.maxDraws);
-    this.raster.records = this.draws.drawConstants.createMirror(
-      ctx,
-      this.raster.drawRows,
-    );
     this.draws.drawGeneration = new Uint32Array(this.draws.drawConstants.rows);
     this.draws.drawOwnedTransform = new Int32Array(
       this.draws.drawConstants.rows,
     ).fill(-1);
     this.draws.transforms = new CpuTable(TRANSFORM_WORDS, this.maxTransforms);
-    this.raster.transforms = new MirroredTable(
-      ctx,
-      "transforms",
-      this.draws.transforms,
-      Math.min(this.maxTransforms, INITIAL_ROWS),
-    );
     const t = this.draws.transforms.rows;
     this.scene.transformLocal = new Float64Array(t * 16);
     this.scene.transformWorld = new Float64Array(t * 16);
@@ -408,12 +368,6 @@ export class World {
       INSTANCE_WORDS,
       Math.max(1, this.maxInstances),
     );
-    this.raster.instances = new MirroredTable(
-      ctx,
-      "instances",
-      this.draws.instances,
-      instanceRows,
-    );
     this.draws.instanceAllocator = new RangeAllocator(this.maxInstances, 1);
     const materials = new ArrayBuffer(
       Math.min(this.maxMaterials, INITIAL_ROWS) * MATERIAL_SIZE,
@@ -421,24 +375,6 @@ export class World {
     this.draws.materialsF32 = new Float32Array(materials);
     this.draws.materialsU32 = new Uint32Array(materials);
 
-    const buffer = (label: string, size: number, usage: GPUBufferUsageFlags) =>
-      device.createBuffer({ label: `world.${label}`, size, usage });
-    const storage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST;
-    this.recordBuffer = this.raster.records.buffer;
-    this.transformBuffer = this.raster.transforms.buffer;
-    this.instanceBuffer = this.raster.instances.buffer;
-    // COPY_SRC lets precision tests read back the cull kernels' output.
-    this.itemBuffer = buffer(
-      "items",
-      items * DRAW_ITEM_SIZE,
-      GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-    );
-    // Grows with the CPU mirror (`addMaterial`), rewritten when changed.
-    this.materialBuffer = buffer(
-      "materials",
-      this.raster.materialRows * MATERIAL_SIZE,
-      storage,
-    );
     this.scene.maxClipBlocks = Math.max(
       2,
       Math.min(
@@ -453,60 +389,10 @@ export class World {
     this.scene.placeholderCapacity =
       this.scene.maxClipBlocks - 1 - this.scene.terrainClipBudget;
     this.raster.clipRows = Math.min(this.scene.maxClipBlocks, 256);
-    // COPY_SRC: copied into a larger buffer as it grows.
-    this.clipBuffer = buffer(
-      "clipBoxes",
-      this.raster.clipRows * this.raster.clipScratch.byteLength,
-      storage | GPUBufferUsage.COPY_SRC,
-    );
-    this.raster.drawArguments = new DrawArguments(
-      device,
-      this.draws.drawConstants,
-      (record) => this.draws.drawBatches[record] !== undefined,
-      (batch) => this.raster.batchChunks[batch],
-      this.raster.drawRows,
-      items,
-    );
-    this.raster.batchBuffer = createBatchBuffer(this, this.raster.drawRows);
-    this.raster.cullParams = buffer(
-      "cullParams",
-      16,
-      GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    );
-    this.raster.pointCounts = buffer("pointCounts", 64 * 4, storage);
-    growPointSets(this, 64);
-    this.raster.splats = createSplats(this, 1);
-
-    // The cull binds the placements too (its placed records' offsets).
-    this.raster.placementTable = new PlacementTable(device, () => {
-      tablesReplaced(this);
-      this.curvilinearMaps.routes.tableReplaced();
-    });
-    createCullBindGroup(this);
-    this.imageryPlaceholder = device.createTexture({
-      label: "world.imagery.placeholder",
-      size: [1, 1, 1],
-      format: "rgba8unorm",
-      usage: GPUTextureUsage.TEXTURE_BINDING,
-    });
-    this.raster.imageryPlaceholder = this.imageryPlaceholder.createView({
-      dimension: "2d-array",
-    });
-    this.raster.imageryView = this.raster.imageryPlaceholder;
-    this.raster.imagerySampler = device.createSampler({
-      label: "world.imagery",
-      magFilter: "linear",
-      minFilter: "linear",
-      mipmapFilter: "linear",
-      addressModeU: "clamp-to-edge",
-      addressModeV: "clamp-to-edge",
-      maxAnisotropy: 16,
-    });
-    createDrawBindGroup(this);
+    this.mirror = new WebGpuWorldMirror(this, instanceRows);
 
     this.addMaterial({}); // material 0: white, lit, untextured
     this.createTextureSet({}); // texture set 0: defaults
-    this.stopTracking = onTextureDestroyed((t) => textureDestroyed(this, t));
   }
 
   /**
@@ -515,7 +401,7 @@ export class World {
    * something since replaced.
    */
   rebind(): void {
-    rebind(this);
+    this.mirror.rebind();
   }
 
   /** Number of record slots in use, including hidden and freed-but-trailing slots. */
@@ -642,7 +528,7 @@ export class World {
    * any other write to them or a release of their ranges.
    */
   flushUploads(): void {
-    flushUploads(this);
+    this.mirror.sync();
   }
 
   /** Uploads geometry into the arena as separate attribute streams. */
@@ -1501,7 +1387,7 @@ export class World {
    * frame draws nothing).
    */
   setImageryArray(view: GPUTextureView | undefined): void {
-    setImageryArray(this, view);
+    this.mirror.setImageryArray(view);
   }
 
   /**
@@ -1927,7 +1813,7 @@ export class World {
    * bundle; table changes upload in the first view's cull pass.
    */
   prepareFrame(): GPURenderBundle {
-    return prepareFrame(this);
+    return this.mirror.prepareFrame();
   }
 
   /**
@@ -1935,7 +1821,7 @@ export class World {
    * cull for the shadow map's cascade), current with `prepareFrame`'s.
    */
   shadowBundle(): GPURenderBundle {
-    return shadowBundle(this);
+    return this.mirror.shadowBundle();
   }
 
   /**
@@ -1943,7 +1829,7 @@ export class World {
    * casters, without depth bias; Engine `addHeightCapture`).
    */
   heightBundle(): GPURenderBundle {
-    return heightBundle(this);
+    return this.mirror.heightBundle();
   }
 
   /**
@@ -1951,7 +1837,7 @@ export class World {
    * the view's cull), current with `prepareFrame`'s.
    */
   prepassBundle(): GPURenderBundle {
-    return prepassBundle(this);
+    return this.mirror.prepassBundle();
   }
 
   /**
@@ -1960,7 +1846,7 @@ export class World {
    * `prepareFrame`'s.
    */
   depthBundle(): GPURenderBundle {
-    return depthBundle(this);
+    return this.mirror.depthBundle();
   }
 
   /**
@@ -1969,7 +1855,7 @@ export class World {
    * before the world's first frame.
    */
   pickBundle(): GPURenderBundle | undefined {
-    return pickBundle(this);
+    return this.mirror.pickBundle();
   }
 
   /**
@@ -1977,7 +1863,7 @@ export class World {
    * has clips (`clippedBundle`); undefined before the world's first frame.
    */
   clippedBundle(kind: BundleKind): GPURenderBundle | undefined {
-    return clippedBundle(this, kind);
+    return this.mirror.clippedBundle(kind);
   }
 
   /**
@@ -1987,7 +1873,7 @@ export class World {
   retestBundle(
     kind: "opaque" | "depth" | "prepass",
   ): GPURenderBundle | undefined {
-    return retestBundle(this, kind);
+    return this.mirror.retestBundle(kind);
   }
 
   /**
@@ -2043,8 +1929,7 @@ export class World {
     diceWrites?: () => GPUComputePassTimestampWrites | undefined,
     occlusion?: GPUBindGroup,
   ): void {
-    encodeCull(
-      this,
+    this.mirror.encodeCull(
       encoder,
       timestampWrites,
       points,
@@ -2081,7 +1966,7 @@ export class World {
     occlusion: GPUBindGroup,
     timestampWrites?: GPUComputePassTimestampWrites,
   ): void {
-    encodeRetest(this, encoder, occlusion, timestampWrites);
+    this.mirror.encodeRetest(encoder, occlusion, timestampWrites);
   }
 
   /**
@@ -2137,7 +2022,7 @@ export class World {
     eye: ArrayLike<number>,
     viewBit: number = ALL_VIEWS,
   ): { near: number; far: number } | undefined {
-    return translucentRange(this, eye, viewBit);
+    return this.mirror.translucentRange(eye, viewBit);
   }
 
   /**
@@ -2153,7 +2038,7 @@ export class World {
     clipped = false,
     ghosts = false,
   ): void {
-    encodeTranslucent(this, pass, keyOf, group, clipped, ghosts);
+    this.mirror.encodeTranslucent(pass, keyOf, group, clipped, ghosts);
   }
 
   /** The vertex arena buffer holding `mesh` (its slab's, scene/Slabs.ts). */
@@ -2198,9 +2083,6 @@ export class World {
       this.draws.recordsU32[index * RECORD_WORDS + CASTER_MASK_WORD]!;
   }
 
-  /** What `raster.imageryPlaceholder` views: destroyed with the world. */
-  private readonly imageryPlaceholder: GPUTexture;
-
   /** The world was destroyed (`destroy`): its GPU resources are gone. */
   get destroyed(): boolean {
     return this.destroyed_;
@@ -2210,7 +2092,6 @@ export class World {
   destroy(): void {
     this.destroyed_ = true;
     this.curvilinearMaps.clear();
-    this.stopTracking();
     // Its tables' string ids go back to the shared table.
     for (const uploaded of this.scene.tableColumns.values()) {
       for (const value of uploaded.strings) {
@@ -2218,32 +2099,7 @@ export class World {
       }
     }
     this.scene.tableColumns.clear();
-    for (const chunk of this.raster.uploadChunks) {
-      chunk.buffer.destroy();
-    }
-    for (const draw of this.raster.pointDraws.values()) {
-      draw.params.destroy();
-    }
-    this.raster.splats.depth.destroy();
-    this.raster.splats.color.destroy();
-    this.raster.splats.feature.destroy();
-    this.raster.pointCounts.destroy();
-    this.raster.records.destroy();
-    this.raster.drawArguments.destroy();
-    this.raster.placementTable.destroy();
-    this.raster.transforms.destroy();
-    this.raster.instances.destroy();
+    this.mirror.destroy();
     this.slabs.destroy();
-    for (const buffer of [
-      this.itemBuffer,
-      this.materialBuffer,
-      this.clipBuffer,
-      this.raster.batchBuffer,
-      this.raster.cullParams,
-    ]) {
-      buffer.destroy();
-    }
-    // Not left on a device that lives on (a shared engine, a parked one).
-    this.imageryPlaceholder.destroy();
   }
 }
