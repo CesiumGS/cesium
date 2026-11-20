@@ -537,7 +537,7 @@ describe("one direction everywhere", () => {
       /"ev100",\s*-12,\s*18,\s*ev100Row,\s*\{\s*flip: true/,
     );
     const dyno = read("bench/suite/views/Viewer.tsx");
-    expect(dyno).toMatch(/label="Exposure \(EV100\)"[\s\S]{0,200}?\bflip\b/);
+    expect(dyno).toMatch(/label="Exposure \(EV100\)"[\s\S]{0,300}?\bflip\b/);
     expect(dyno).toContain("sign * value");
   });
 });

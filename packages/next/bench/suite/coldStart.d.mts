@@ -1,4 +1,5 @@
 /** A Dyno page's cold start (coldStart.mjs, CS-706). */
+export const COLD_START_GOAL_MS: number;
 export const COLD_START_BUDGET_MS: number;
 export const COLD_START_METRICS: Array<[string, string, string]>;
 

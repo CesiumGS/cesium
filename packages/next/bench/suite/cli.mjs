@@ -87,6 +87,7 @@ import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
 import { runImages } from "./images.mjs";
 import {
   COLD_START_BUDGET_MS,
+  COLD_START_GOAL_MS,
   measureColdStart,
   overBudget,
 } from "./coldStart.mjs";
@@ -333,6 +334,7 @@ async function coldStart() {
     coldStart: {
       route: String(opts.route ?? "/viewer"),
       budgetMs: Number.isFinite(budgetMs) ? budgetMs : null,
+      goalMs: COLD_START_GOAL_MS,
       commits: measured.configs,
       method:
         "each repetition a new browser and empty profile (no HTTP, code or pipeline cache) against a warm dev server; phases read from WebGPU and resource timing hooks in the page; board settings alternate within each repetition",
@@ -372,7 +374,9 @@ async function coldStart() {
     if (over.length) {
       process.exit(1);
     }
-    console.log(`within budget: median first frame ≤ ${budgetMs} ms`);
+    console.log(
+      `within budget: median first frame ≤ ${budgetMs} ms (the goal is ${COLD_START_GOAL_MS} ms)`,
+    );
   }
 }
 

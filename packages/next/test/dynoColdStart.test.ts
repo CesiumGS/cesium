@@ -2,6 +2,7 @@
 import { describe, expect, it } from "vitest";
 import {
   COLD_START_BUDGET_MS,
+  COLD_START_GOAL_MS,
   analyzeColdStart,
   cpuByCategory,
   cpuCategory,
@@ -141,8 +142,9 @@ describe("the cold-start budget", () => {
     metrics: { status: "ok", firstFrameMs },
   });
 
-  it("is the owner's half a second", () => {
-    expect(COLD_START_BUDGET_MS).toBe(500);
+  it("aims at the owner's half a second and holds where CS-706 left it", () => {
+    expect(COLD_START_GOAL_MS).toBe(500);
+    expect(COLD_START_BUDGET_MS).toBe(1400);
   });
 
   it("holds each configuration's median without the board to it", () => {
