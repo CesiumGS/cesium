@@ -6,3 +6,4 @@ export function renderReport(
   options?: { budgets?: unknown[] },
 ): string;
 export function summarizeRun(results: unknown): unknown;
+export function runPurpose(results: unknown): "baseline" | "dev";

@@ -1,8 +1,14 @@
-import { METRICS, summarizeRun } from "./report.mjs";
+import { METRICS, runPurpose, summarizeRun } from "./report.mjs";
 import { currentGpuTimerSummary } from "./gpuTimer.mjs";
 import publicCatalog from "./catalog/public.json";
 import methodNotes from "./annotations.json";
-import type { Budget, Dataset, EngineConfig, Scene } from "./schema.ts";
+import type {
+  Budget,
+  Dataset,
+  EngineConfig,
+  RunIdentity,
+  Scene,
+} from "./schema.ts";
 
 /**
  * Dyno's data (docs/design/benchmark-suite.md, "Interfaces: agents, scripts and people", docs/design/benchmark-analysis-and-experience.md): the results directory through the dev
@@ -28,8 +34,11 @@ export interface Cell {
   >;
 }
 
-export interface Summary {
+export interface Summary extends Partial<RunIdentity> {
+  /** The results file's name (`<id>.json`). */
   name: string;
+  /** What the run was for; runs from before identity read as baselines. */
+  purpose: NonNullable<RunIdentity["purpose"]>;
   date: string;
   commit: string;
   subject?: string;
@@ -155,7 +164,13 @@ export function loadRuns(): Promise<Runs> {
               ? await (await fetch(`/bench-results/${summaryName}`)).json()
               : summarizeRun(await full(name));
             // A summary stored before timer versions has no GPU time.
-            return { ...currentGpuTimerSummary(s), name } as Summary;
+            return {
+              ...currentGpuTimerSummary(s),
+              name,
+              // Runs written before identity (CS-390) are the history.
+              purpose: runPurpose(s),
+              id: s.id ?? name.replace(/\.json$/, ""),
+            } as Summary;
           } catch {
             return undefined;
           }

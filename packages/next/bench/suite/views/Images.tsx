@@ -59,11 +59,11 @@ async function json(url: string): Promise<Json> {
   return r.json();
 }
 
-/** A run's date from its file name ("2026-11-01T06-22-49-259Z.json"). */
+/** A run's date from its file name ("2026-11-01T06-22-49-259Z-mac.json"). */
 function runDate(name: string): Date | undefined {
   const iso = name
     .replace(/\.json$/, "")
-    .replace(/T(\d\d)-(\d\d)-(\d\d)-(\d{3})Z$/, "T$1:$2:$3.$4Z");
+    .replace(/T(\d\d)-(\d\d)-(\d\d)-(\d{3})Z(-[a-z0-9-]+)?$/, "T$1:$2:$3.$4Z");
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? undefined : d;
 }

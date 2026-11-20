@@ -27,12 +27,14 @@
 // until then. The sky pack is separate (`npm run sky -- build`); setup only
 // reports whether the local one is current.
 // Nothing here is committed: all of it lives outside version control.
+// A machine also gets its name in benchmark runs (BENCH_MACHINE).
 // Usage: npm run setup --workspace @cesium/next [-- --skip-build] [--frames-span[ =]2000-2050] [--grids[ =]portfolio,tests]
 import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
+import { machineAlias } from "../bench/suite/identity.mjs";
 import { ensureRelease, releasesDirectory } from "../bench/suite/release.mjs";
 import { ensureFrameData, parseGrids, parseSpan } from "./frameData.mjs";
 import { moduleRunner } from "./designTiles/moduleRunner.mjs";
@@ -68,6 +70,14 @@ const gridSets = parseGrids(
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repo = join(here, "..", "..", "..");
+
+// This machine's name in benchmark runs: their ids end with it
+// (bench/suite/identity.mjs). By default the operating system and the GPU's
+// vendor, never the host name; BENCH_MACHINE=<alias> picks another, which a
+// second machine with the same hardware needs.
+console.log(
+  `benchmark machine: ${machineAlias()} (BENCH_MACHINE=<alias> names it otherwise)`,
+);
 
 if (!process.argv.includes("--skip-build")) {
   if (existsSync(join(repo, "Build", "CesiumUnminified", "Cesium.js"))) {

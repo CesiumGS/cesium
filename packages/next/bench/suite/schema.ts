@@ -360,3 +360,27 @@ export interface RunMetrics {
     motion: Array<[number, number, number, number | null]>;
   };
 }
+
+/** What a run was for: the integration branch's history, or anything else. */
+export type RunPurpose = "baseline" | "dev";
+
+/**
+ * What every run kind records about itself (bench/suite/identity.mjs). Runs
+ * written before it have none of these, and read as baseline runs.
+ */
+export interface RunIdentity {
+  /** `<ISO stamp>-<machine>`: the results file's name without `.json`. */
+  id: string;
+  purpose: RunPurpose;
+  /** The tracker item, `CS-<n>`. */
+  item?: string;
+  study?: string;
+  /** The worktree's folder name, or "main checkout"; never a path. */
+  worktree: string;
+  /** The integration branch and the commit this tree branched from it. */
+  base: { ref: string; sha?: string };
+  /** The machine's alias: BENCH_MACHINE, else the platform and GPU vendor. */
+  machine: string;
+  /** The machine whose servers the pages came from (the same, locally). */
+  servedFrom: string;
+}

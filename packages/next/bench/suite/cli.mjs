@@ -19,6 +19,18 @@
 //        [--no-reuse] [--reuse-days 14] [--no-early-stop] [--min-reps 2]
 //        [--dev]  (the live tree on Vite's dev server instead of the
 //        working tree frozen and built for production, frozen.mjs)
+//        [--purpose dev|baseline] [--item CS-390] [--study <id>]
+//        [--against-base]  (what the run is for, and, with --against-base,
+//        this tree against its base commit: 2.0@<base> is the baseline
+//        engine, the working tree the candidate)
+//        [--no-wait]  (exit instead of waiting for another run's lock)
+//
+// Every run (run, images, coldstart) records an id (<stamp>-<machine>), its
+// purpose, item, study, worktree, base commit, machine and where its pages
+// were served from (identity.mjs), prints that first and the run's id and
+// Dyno paths last, and takes the machine-wide run lock (runLock.mjs): two
+// runs on one GPU would corrupt each other's timings. --purpose baseline is
+// refused from a dirty tree and from any branch but the integration branch.
 //
 // Engines (engines.mjs): a CesiumJS release ("1.146.0", "latest"), an
 // engine from the working tree ("2.0", "1.x", named by the branch in
@@ -82,6 +94,15 @@ import { releaseList } from "./release.mjs";
 import { describeBuild, resolveEngine, treeRef } from "./engineBuilds.mjs";
 import { parseEngine } from "./engines.mjs";
 import { renderReport, summarizeRun } from "./report.mjs";
+import {
+  closingLines,
+  identityLine,
+  isRunFile,
+  parseRunId,
+  resolveIdentity,
+  runFields,
+} from "./identity.mjs";
+import { acquireRunLock, defaultLockFile } from "./runLock.mjs";
 import { compareTable, defaultPlan, scorecard } from "./scorecard.mjs";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
 import { runImages } from "./images.mjs";
@@ -146,6 +167,84 @@ const [command = "list", ...rest] = process.argv.slice(2);
 const opts = options(rest);
 const catalog = loadCatalog();
 
+/** Says why a run can't go ahead, plainly, and exits 1. */
+function fail(message) {
+  console.error(`cli.mjs: ${message}`);
+  process.exit(1);
+}
+
+/**
+ * The start of every run (identity.mjs): works out what the run is,
+ * refusing a baseline that isn't one before any work, and prints that as
+ * the first line.
+ */
+function beginRun(kind) {
+  let identity;
+  try {
+    identity = resolveIdentity({ kind, opts, root });
+  } catch (error) {
+    fail(error.message);
+  }
+  for (const warning of identity.warnings) {
+    console.warn(`warning: ${warning}`);
+  }
+  console.log(identityLine(identity));
+  return identity;
+}
+
+/**
+ * Takes the machine-wide run lock (runLock.mjs) before anything that
+ * measures or builds, waiting for its holder unless --no-wait. The lock
+ * frees itself when the process ends.
+ */
+async function takeLock(identity) {
+  const { kind } = identity;
+  let lock;
+  try {
+    lock = await acquireRunLock({
+      file: defaultLockFile(),
+      wait: !opts["no-wait"],
+      info: {
+        worktree: identity.worktree,
+        command: `${command} ${rest.join(" ")}`.trim().slice(0, 160),
+        purpose: identity.purpose,
+        branch: identity.branch,
+        ...(identity.item ? { item: identity.item } : {}),
+      },
+      onWait: (holder, file) =>
+        console.log(
+          `waiting for another run on this machine: ${holder.command ?? "a run"} (${[
+            holder.item,
+            holder.branch ? `branch ${holder.branch}` : undefined,
+            holder.worktree ? `worktree ${holder.worktree}` : undefined,
+          ]
+            .filter(Boolean)
+            .join(
+              ", ",
+            )}; pid ${holder.pid}, since ${holder.start}). Two runs at once would corrupt each other's timings. If it is gone, delete ${file}.`,
+        ),
+    });
+  } catch (error) {
+    fail(error.message);
+  }
+  if (lock.waitedFor) {
+    console.log(
+      `the run lock is free: that run (${lock.waitedFor.item ?? lock.waitedFor.branch ?? `pid ${lock.waitedFor.pid}`}) is done; going on`,
+    );
+    // The tree may have changed while this run waited: a baseline is
+    // checked again against what it will measure.
+    if (identity.purpose === "baseline") {
+      try {
+        resolveIdentity({ kind, opts, root });
+      } catch (error) {
+        lock.release();
+        fail(error.message);
+      }
+    }
+  }
+  return lock;
+}
+
 if (command === "list") {
   for (const scene of catalog.scenes) {
     const gaps = ["1.x", "2.0"]
@@ -197,7 +296,11 @@ if (command === "list") {
   const directory =
     process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
   const summaries = readdirSync(directory)
-    .filter((f) => /Z\.summary\.json$/.test(f))
+    .filter(
+      (f) =>
+        f.endsWith(".summary.json") &&
+        parseRunId(f.replace(/\.summary\.json$/, "")),
+    )
     .map((f) => ({
       ...JSON.parse(readFileSync(join(directory, f), "utf8")),
       name: f.replace(".summary.json", ".json"),
@@ -231,13 +334,22 @@ if (command === "list") {
     process.exit(1);
   }
 } else if (command === "images") {
+  const identity = beginRun("images");
+  if (opts["against-base"]) {
+    fail(
+      "--against-base is for `run`: image checks run the working tree, not 2.0 at another commit",
+    );
+  }
+  const lock = await takeLock(identity);
   const failed = await runImages({
     catalog,
     opts,
     root,
+    identity,
     directory:
       process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results"),
   });
+  lock.release();
   if (failed > 0) {
     process.exit(1);
   }
@@ -271,7 +383,7 @@ if (command === "list") {
 } else if (command === "resummarize") {
   const directory =
     process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
-  const files = readdirSync(directory).filter((f) => /Z\.json$/.test(f));
+  const files = readdirSync(directory).filter(isRunFile);
   for (const f of files) {
     const results = JSON.parse(readFileSync(join(directory, f), "utf8"));
     writeFileSync(
@@ -307,6 +419,8 @@ if (command === "list") {
  */
 async function coldStart() {
   const budgetMs = Number(opts.budget ?? COLD_START_BUDGET_MS);
+  const identity = beginRun("coldstart");
+  const lock = await takeLock(identity);
   const started = new Date();
   const measured = await measureColdStart(opts, {
     root,
@@ -315,6 +429,7 @@ async function coldStart() {
   const ids = measured.configs.map((c) => c.id);
   const results = {
     date: started.toISOString(),
+    ...runFields(identity, started),
     commit: git("rev-parse HEAD"),
     subject: git("log -1 --format=%s"),
     branch: treeRef(root),
@@ -355,8 +470,7 @@ async function coldStart() {
   const directory =
     process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
   mkdirSync(directory, { recursive: true });
-  const stamp = started.toISOString().replace(/[:.]/g, "-");
-  const file = join(directory, `${stamp}.json`);
+  const file = join(directory, `${results.id}.json`);
   writeFileSync(file, JSON.stringify(results));
   writeFileSync(
     file.replace(/\.json$/, ".summary.json"),
@@ -364,8 +478,10 @@ async function coldStart() {
   );
   writeFileSync(file.replace(/\.json$/, ".html"), renderReport(results));
   console.log(file);
+  lock.release();
+  let over = [];
   if (Number.isFinite(budgetMs)) {
-    const over = overBudget(results, budgetMs);
+    over = overBudget(results, budgetMs);
     for (const o of over) {
       console.log(
         o.cantTell
@@ -373,16 +489,22 @@ async function coldStart() {
           : `over budget: ${o.config} first frame ${o.firstFrameMs ?? "never"} ms (median of the loads on a quiet machine, without the board) > ${budgetMs} ms`,
       );
     }
-    if (over.length) {
-      process.exit(1);
+    if (!over.length) {
+      console.log(
+        `within budget: median first frame ≤ ${budgetMs} ms (the goal is ${COLD_START_GOAL_MS} ms)`,
+      );
     }
-    console.log(
-      `within budget: median first frame ≤ ${budgetMs} ms (the goal is ${COLD_START_GOAL_MS} ms)`,
-    );
+  }
+  for (const line of closingLines(identity, results.id)) {
+    console.log(line);
+  }
+  if (over.length) {
+    process.exit(1);
   }
 }
 
 async function run() {
+  const identity = beginRun("bench");
   const pick = (list, key) =>
     opts[key]
       ? opts[key].split(",").map((id) => {
@@ -475,6 +597,35 @@ async function run() {
       engines: swept,
     };
   }
+  // --against-base: this tree against its base commit, in one run, where
+  // the configurations alternate. The base is 2.0 built at the commit this
+  // branch left the integration branch (an engine at a ref, built once into
+  // .bench/<sha>); the working tree is the candidate. In a sweep the base
+  // engine is added after the sweep, so it runs at the reference point only.
+  let againstBase;
+  if (opts["against-base"]) {
+    if (opts.baseline || opts.candidate) {
+      throw new Error(
+        "--against-base picks the baseline (2.0@<base>) and the candidate (2.0, the working tree); drop --baseline and --candidate",
+      );
+    }
+    if (!identity.base.sha) {
+      throw new Error(
+        `--against-base: no merge base with ${identity.base.ref} (is the branch there?)`,
+      );
+    }
+    againstBase = `2.0@${identity.base.sha.slice(0, 12)}`;
+    for (const spec of [againstBase, ...(sweep ? [] : ["2.0"])]) {
+      if (!specs.includes(spec)) {
+        specs.push(spec);
+      }
+    }
+    console.log(
+      `against base: ${againstBase} (${identity.base.ref}) is the baseline, this tree the candidate`,
+    );
+  }
+  // From here the run builds and measures: one at a time per machine.
+  const lock = await takeLock(identity);
   // What runs: the working tree frozen as a commit and built for
   // production (frozen.mjs), unless --dev serves the live tree.
   const frozen = opts.dev ? undefined : freezeTree(root);
@@ -591,12 +742,15 @@ async function run() {
   };
   const baseline = opts.baseline
     ? idOf(opts.baseline)
-    : (byspec.get(catalog.engines.baseline) ??
-      configs.find((c) => c.source.kind === "release")?.id ??
-      configs[0].id);
+    : againstBase
+      ? byspec.get(againstBase)
+      : (byspec.get(catalog.engines.baseline) ??
+        configs.find((c) => c.source.kind === "release")?.id ??
+        configs[0].id);
   const candidate = opts.candidate
     ? idOf(opts.candidate)
-    : (byspec.get(catalog.engines.candidate) ??
+    : ((againstBase && !sweep ? byspec.get("2.0") : undefined) ??
+      byspec.get(catalog.engines.candidate) ??
       configs.find((c) => c.engine === "2.0" && c.id !== baseline)?.id ??
       configs.at(-1).id);
   const scenarios =
@@ -699,6 +853,7 @@ async function run() {
   const started = new Date();
   const results = {
     date: started.toISOString(),
+    ...runFields(identity, started),
     commit: git("rev-parse HEAD"),
     subject: git("log -1 --format=%s"),
     branch: treeRef(root),
@@ -1044,7 +1199,7 @@ async function run() {
 
   const directory =
     process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
-  const stamp = started.toISOString().replace(/[:.]/g, "-");
+  const stamp = results.id;
   if (filmstrip.length) {
     process.stdout.write(
       `filmstrips and image parity (${filmstrip.length} frames)… `,
@@ -1124,6 +1279,10 @@ async function run() {
     console.log("");
   }
   console.log(`results: ${file}\nreport:  ${file.replace(/\.json$/, ".html")}`);
+  lock.release();
+  for (const line of closingLines(identity, results.id)) {
+    console.log(line);
+  }
   if (failed > 0) {
     process.exit(1);
   }

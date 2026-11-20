@@ -18,6 +18,7 @@ import { join } from "node:path";
 import process from "node:process";
 import { sceneDatasets, unsupportedReason } from "./manifest.mjs";
 import { resolveEngine } from "./engineBuilds.mjs";
+import { closingLines, runFields } from "./identity.mjs";
 
 /** Regression thresholds: the same engine on the same renderer class. */
 export const REGRESSION = { mean: 0.01, p95: 0.05 };
@@ -65,7 +66,11 @@ const xml = (s) =>
     (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" })[c],
   );
 
-export async function runImages({ catalog, opts, root, directory }) {
+/**
+ * `identity` is what the run is (identity.mjs); the CLI makes it, and takes
+ * the machine-wide run lock, before calling this.
+ */
+export async function runImages({ catalog, opts, root, directory, identity }) {
   const pick = (list, key) =>
     opts[key]
       ? list.filter((x) => opts[key].split(",").includes(x.id))
@@ -145,7 +150,8 @@ export async function runImages({ catalog, opts, root, directory }) {
   const manifest = readBaselines(baselines);
 
   const started = new Date();
-  const stamp = started.toISOString().replace(/[:.]/g, "-");
+  const fields = runFields(identity, started);
+  const stamp = fields.id;
   const out = join(directory, "images", stamp);
   mkdirSync(out, { recursive: true });
 
@@ -267,6 +273,8 @@ export async function runImages({ catalog, opts, root, directory }) {
 
   const run = {
     date: started.toISOString(),
+    ...fields,
+    branch: identity.branch,
     commit: git(root, "rev-parse HEAD"),
     subject: git(root, "log -1 --format=%s"),
     dirty: git(root, "status --porcelain").length > 0,
@@ -322,5 +330,8 @@ ${rows
 `,
   );
   console.log(`images: ${file}`);
+  for (const line of closingLines(identity, stamp)) {
+    console.log(line);
+  }
   return failed.length;
 }

@@ -2,7 +2,7 @@
 id: CS-390
 title: Run identity and the machine-wide run lock
 kind: work
-state: in-progress
+state: done
 created: 2026-11-13
 project: CS-389
 claimed_by: orch-10-CS-390

@@ -30,7 +30,8 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "dyno": "vite --host 127.0.0.1 --port 5190 --strictPort",
+    "dyno": "node bench/suite/commands/serve.mjs",
+    "dyno:serve": "vite --host 127.0.0.1 --port 5190 --strictPort",
     "build": "vite build",
     "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && tsc -p tsconfig.lib.widgets.json && node scripts/checkDeclarations.mjs --only engineering,measure,widgets dist-lib/types/proj/index.d.ts dist-lib/types/measure/index.d.ts dist-lib/types/widgets/index.d.ts",
     "typecheck": "tsc -p . --noEmit",

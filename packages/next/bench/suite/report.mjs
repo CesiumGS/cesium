@@ -960,6 +960,12 @@ const CONDITION_METRICS = [
  * configuration each metric's and condition's median and interval, and
  * how many of its runs were valid (no per-frame series or timeline).
  */
+/**
+ * What a run was for: "baseline" or "dev" (identity.mjs). Runs written
+ * before runs recorded a purpose are the history, so they are baselines.
+ */
+export const runPurpose = (results) => results?.purpose ?? "baseline";
+
 export function summarizeRun(results) {
   // GPU numbers only of the current timer; the cell records it.
   results = currentGpuTimer(results);
@@ -1028,6 +1034,15 @@ export function summarizeRun(results) {
   const verdicts = results.runs.map((r) => r.validity?.verdict).filter(Boolean);
   return {
     date: results.date,
+    // Identity (identity.mjs); runs from before it have only a purpose.
+    ...(results.id ? { id: results.id } : {}),
+    purpose: runPurpose(results),
+    ...(results.item ? { item: results.item } : {}),
+    ...(results.study ? { study: results.study } : {}),
+    ...(results.worktree ? { worktree: results.worktree } : {}),
+    ...(results.base ? { base: results.base } : {}),
+    ...(results.machine ? { machine: results.machine } : {}),
+    ...(results.servedFrom ? { servedFrom: results.servedFrom } : {}),
     commit: results.commit,
     subject: results.subject,
     baseline: results.baseline,

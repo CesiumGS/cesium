@@ -19,6 +19,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { parseRunId } from "./identity.mjs";
 
 const hash = (value) =>
   createHash("sha256")
@@ -108,13 +109,12 @@ export function storedRuns(directory, { machine, method, days }) {
   const since = Date.now() - days * 86400e3;
   const out = [];
   for (const name of readdirSync(directory)) {
-    const m = /^(\d{4}-\d\d-\d\dT\d\d)-(\d\d)-(\d\d)-(\d{3})Z\.json$/.exec(
-      name,
-    );
-    if (!m) {
+    // A run's file: <stamp>.json, or <stamp>-<machine>.json since CS-390.
+    const parsed = name.endsWith(".json") ? parseRunId(name) : undefined;
+    if (!parsed) {
       continue;
     }
-    const date = Date.parse(`${m[1]}:${m[2]}:${m[3]}.${m[4]}Z`);
+    const date = parsed.date.getTime();
     if (!(date >= since)) {
       continue;
     }

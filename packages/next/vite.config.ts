@@ -26,6 +26,7 @@ import { recordEndpoint } from "./scripts/vitePluginRecord.ts";
 import { workApi } from "./scripts/vitePluginWork.ts";
 import { keepEnvSecretsOut } from "./scripts/vitePluginEnvSecrets.ts";
 import { skyPackDevRoute, skyPackGuard } from "./scripts/vitePluginSkyPack.ts";
+import { isRunFile } from "./bench/suite/identity.mjs";
 import { framesDataDirectory } from "./scripts/frameData.mjs";
 import { framesDataExclusion, projGridsPlugin } from "./scripts/projGrids.mjs";
 import { slangWasmDirectory, slangWasmStatus } from "./scripts/slangTools.mjs";
@@ -221,10 +222,7 @@ function serveBenchResults(prefix: string, root: string): Plugin {
     configureServer(server) {
       server.middlewares.use(`${prefix}/index.json`, (_req, res) => {
         const names = existsSync(root) ? readdirSync(root) : [];
-        const runs = names
-          .filter((n) => /Z\.json$/.test(n))
-          .sort()
-          .reverse();
+        const runs = names.filter(isRunFile).sort().reverse();
         const summaries = names.filter((n) => n.endsWith(".summary.json"));
         res.setHeader("Content-Type", "application/json");
         // The working tree's branch names its engines ("2.0@<branch>").
@@ -243,7 +241,7 @@ function serveBenchResults(prefix: string, root: string): Plugin {
       const imagesDir = join(root, "images");
       server.middlewares.use(`${prefix}/images/index.json`, (_req, res) => {
         const names = existsSync(imagesDir)
-          ? readdirSync(imagesDir).filter((n) => /Z\.json$/.test(n))
+          ? readdirSync(imagesDir).filter(isRunFile)
           : [];
         res.setHeader("Content-Type", "application/json");
         res.end(JSON.stringify({ runs: names.sort().reverse() }));
@@ -264,7 +262,7 @@ function serveBenchResults(prefix: string, root: string): Plugin {
                 string,
                 string
               >;
-              if (!/^[\w-]+Z\.json$/.test(run ?? "")) {
+              if (!isRunFile(run ?? "")) {
                 throw new Error("bad run");
               }
               const file = join(imagesDir, run!);
