@@ -4,7 +4,7 @@ import type { AnchorHandle } from "./world/types.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { Route } from "../camera/route.ts";
 import type { FeatureValue } from "../io/gltfTypes.ts";
-import { type ViewLighting } from "../render/layout.ts";
+import type { ViewLighting } from "../render/layout.ts";
 import {
   debugLegend,
   debugModeId,

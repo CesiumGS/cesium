@@ -1,22 +1,11 @@
 import type { OcclusionSwitch } from "./occlusionFeedback.ts";
-import { MORPH_SECONDS } from "../streaming/tileMorph.ts";
 import type { EngineError, EngineErrorKind } from "../gpu/EngineErrors.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
-import { GpuDevice, type GpuDeviceOptions } from "../gpu/GpuDevice.ts";
-import { GpuTimer } from "../gpu/GpuTimer.ts";
-import { runStartupProbes } from "../gpu/sampleRateProbe.ts";
-import { deviceChoices } from "../profile/paths.ts";
-import { TexturePool } from "../render/FrameGraph.ts";
-import { VIEW_STRIDE } from "../render/layout.ts";
+import type { GpuDevice, GpuDeviceOptions } from "../gpu/GpuDevice.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
 import type { Vec3 } from "../math/vec3.ts";
-import {
-  createRenderContext,
-  SCENE_TARGETS,
-  type RenderContext,
-  type ShaderOverrides,
-} from "./RenderContext.ts";
+import type { RenderContext, ShaderOverrides } from "./RenderContext.ts";
 import { createBox } from "./meshes.ts";
 import { View, type ViewOptions } from "./View.ts";
 import { PostStage, PostStageError } from "./postStage.ts";
@@ -26,15 +15,11 @@ import {
   type RenderTarget,
 } from "./renderTarget.ts";
 import { ViewLink, type ViewLinkOptions } from "./ViewLink.ts";
-import { RealtimeAtmosphere } from "../atmosphere/RealtimeAtmosphere.ts";
-import { Sky } from "../atmosphere/Sky.ts";
 import type { AerosolType } from "../atmosphere/model.ts";
-import { EARTH, type Body } from "./Body.ts";
+import type { Body } from "./Body.ts";
 import type { LoadedSkyPack, SkyPackManifest } from "../atmosphere/skyPack.ts";
 import type { StarField } from "../atmosphere/stars.ts";
 import { Camera } from "./Camera.ts";
-import { SHADOW_CASCADES, SHADOWS_STRIDE } from "./shadows.ts";
-import { LIGHTS_SIZE } from "./lights.ts";
 import { World } from "./World.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { ClipFilter } from "../geometry/query.ts";
@@ -44,7 +29,7 @@ import {
   type ClipSet,
   type ClipsOption,
 } from "./world/clips.ts";
-import { curvilinearClipSets } from "../render/view/clipTable.ts";
+import { curvilinearClipSets } from "./world/clipPlacement.ts";
 import { CURVILINEAR_BUDGET_MS } from "./world/worldCurvilinearMaps.ts";
 import type { JobStats } from "../io/Jobs.ts";
 
@@ -76,18 +61,7 @@ import {
 } from "../core/bulk.ts";
 import { castFrameRays } from "../query/frameRays.ts";
 import { castTilesetRays } from "../query/geometryBackend.ts";
-import { GlareKernels } from "../render/post/glare.ts";
-import { destroyViewFrame } from "../render/view/viewFrameData.ts";
-import { serveIdlePick } from "../render/view/picks.ts";
-import { updateExposure } from "../render/view/exposure.ts";
-import { scratchFrame } from "../render/view/environment.ts";
 import { updateTilesets } from "./tileSelection.ts";
-import {
-  scratchViewProj,
-  scratchView,
-  scratchPlanes,
-} from "../render/view/viewBlocks.ts";
-import { dropPersistent, render } from "../render/view/renderTick.ts";
 import { whenReady, type WhenReadyOptions } from "./engineReady.ts";
 import {
   loadGltfFile,
@@ -107,9 +81,14 @@ import {
   addHeightCapture,
   removeHeightCapture,
 } from "./heightCaptures.ts";
-import { enableGpuWork, type GpuWork } from "../gpu/GpuWork.ts";
+import type { GpuWork } from "../gpu/GpuWork.ts";
 import { EngineScene } from "./engineScene.ts";
-import { EngineRaster } from "../render/view/engineRaster.ts";
+import type { EngineRaster } from "../render/view/engineRaster.ts";
+import {
+  WebGpuDevice,
+  type OpenedWebGpu,
+  type WebGpuViewRenderer,
+} from "../render/webgpuDevice.ts";
 import {
   emptyGeometry,
   type GeometryStats,
@@ -331,7 +310,11 @@ export interface GlobeOptions extends TilesetOptions {
  */
 export class Engine {
   /** @internal Rasterizer data: staging buffers, view targets, picks, pass descriptors. */
-  readonly raster: EngineRaster = new EngineRaster();
+  readonly raster: EngineRaster;
+  /** @internal The engine's device (`RenderDevice`): the WebGPU renderer is reached through it. */
+  readonly device: WebGpuDevice;
+  /** @internal What draws each view (`ViewRenderer`), made when the view is added. */
+  readonly renderers = new Map<View, WebGpuViewRenderer>();
   /** @internal Scene data: view ids and motion, tick timing, selection scratch. */
   readonly scene: EngineScene = new EngineScene();
 
@@ -523,7 +506,7 @@ export class Engine {
    * False where WebGPU's classes aren't available.
    */
   trackGpuWork(): boolean {
-    return enableGpuWork();
+    return WebGpuDevice.trackWork();
   }
   /**
    * Smoothed GPU time per pass, ms, by pass name (shadow cascades added
@@ -742,15 +725,12 @@ export class Engine {
   private readonly dirtyTargets = new Set<RenderTarget>();
   private readonly dirtyViews = new Set<View>();
 
-  private constructor(
-    gpu: GpuDevice,
-    ctx: RenderContext,
-    sky: Sky,
-    maxViews: number,
-  ) {
+  private constructor(opened: OpenedWebGpu, maxViews: number) {
+    const { gpu, ctx } = opened;
     this.gpu = gpu;
     this.ctx = ctx;
-    this.raster.sky = sky;
+    this.device = new WebGpuDevice(this, opened, maxViews);
+    this.raster = this.device.raster;
     ctx.wake = () => this.wake();
     ctx.shaderBindings.wake = ctx.wake;
     this.cameras = new CameraLayer({
@@ -781,117 +761,14 @@ export class Engine {
       );
     });
     this.maxViews = maxViews;
-    const device = ctx.device;
-    this.raster.pool = new TexturePool(device);
-    this.raster.timer = new GpuTimer(
-      device,
-      ctx.paths.gpuTiming === "timestamps",
-    );
-    this.raster.glareKernels = new GlareKernels(
-      device,
-      (aperture, size) =>
-        this.scene.workers.request("glareKernel", { aperture, size }),
-      () => this.requestRender(),
-      (message) => this.ctx.errors.report("frame", message),
-    );
-    this.raster.viewData = new Float32Array((maxViews * VIEW_STRIDE) / 4);
-    this.raster.viewDataU32 = new Uint32Array(this.raster.viewData.buffer);
     for (let id = Math.min(maxViews, 32) - 1; id >= 0; id--) {
       this.freeViewIds.push(id);
     }
-    this.raster.viewStaging = device.createBuffer({
-      label: "viewStaging",
-      size: maxViews * VIEW_STRIDE,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-    this.raster.cascadeData = new Float32Array(
-      (maxViews * SHADOW_CASCADES * VIEW_STRIDE) / 4,
-    );
-    this.raster.cascadeDataU32 = new Uint32Array(
-      this.raster.cascadeData.buffer,
-    );
-    this.raster.cascadeStaging = device.createBuffer({
-      label: "cascadeStaging",
-      size: maxViews * SHADOW_CASCADES * VIEW_STRIDE,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-    this.raster.shadowData = new Float32Array((maxViews * SHADOWS_STRIDE) / 4);
-    this.raster.shadowStaging = device.createBuffer({
-      label: "shadowStaging",
-      size: maxViews * SHADOWS_STRIDE,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-    this.raster.lightStaging = device.createBuffer({
-      label: "lightStaging",
-      size: maxViews * LIGHTS_SIZE,
-      usage: GPUBufferUsage.COPY_SRC | GPUBufferUsage.COPY_DST,
-    });
-    this.raster.viewBlock = {
-      viewProj: scratchViewProj,
-      viewRotation: scratchView,
-      cameraPosition: this.sunDirection,
-      near: 0,
-      aspect: 1,
-      planes: scratchPlanes,
-      sunDirection: this.sunDirection,
-      width: 1,
-      height: 1,
-      iblFrame: scratchFrame,
-      lighting: {
-        sunIlluminance: 0,
-        environment: "procedural",
-        diffuseIbl: 0,
-        specularIbl: 0,
-      },
-      specularMaxLod: 0,
-      exposure: 1,
-      body: EARTH,
-      aerial: undefined,
-      moon: undefined,
-      moonAir: 0,
-      cityLights: true,
-      time: 0,
-      transitionSeconds: MORPH_SECONDS,
-    };
-    this.raster.pickParams = device.createBuffer({
-      size: 16,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
-    this.raster.pickResult = device.createBuffer({
-      size: 16,
-      usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC,
-    });
   }
 
   static async create(options: EngineOptions = {}): Promise<Engine> {
-    const gpu = await GpuDevice.create(options);
-    // The startup probes record into the device's facts, which the paths
-    // are chosen from; they run while the atmosphere precomputes.
-    const probed = runStartupProbes(gpu.device);
-    const atmosphere = await RealtimeAtmosphere.create(gpu.device);
-    const sky = await Sky.create(gpu.device, atmosphere, SCENE_TARGETS);
-    await probed;
-    const ctx = await createRenderContext(
-      gpu.device,
-      deviceChoices(gpu.facts),
-      gpu.preferredCanvasFormat,
-      {
-        sunLight: sky.sunLight.createView(),
-        aerialVolume: sky.aerialVolume.createView({ dimension: "3d" }),
-        aerialScreen: sky.aerialScreen.createView({ dimension: "2d-array" }),
-        air: sky.air,
-        airTransmittance: sky.airTransmittance.createView({
-          dimension: "2d-array",
-        }),
-        airScattering: sky.airScattering.createView({
-          dimension: "2d-array",
-        }),
-      },
-      options.shaders,
-    );
-    // M0: device-loss recovery stops at the device. Rebuilding worlds from
-    // their CPU-side sources arrives with the streaming cache (M2).
-    const engine = new Engine(gpu, ctx, sky, options.maxViews ?? 16);
+    const opened = await WebGpuDevice.open(options);
+    const engine = new Engine(opened, options.maxViews ?? 16);
     engine.curvilinearBudgetMs =
       options.curvilinearBudgetMs ?? CURVILINEAR_BUDGET_MS;
     engine.jobBudgetMs = options.jobBudgetMs ?? JOB_BUDGET_MS;
@@ -1431,6 +1308,7 @@ export class Engine {
       );
     }
     this.views.push(view);
+    this.renderers.set(view, this.device.createRenderer(view));
     this.scene.viewIds.set(view, id);
     view.renderRoot = () => this.cameras.root(view);
     this.watchView(view);
@@ -1454,12 +1332,8 @@ export class Engine {
     view.wake = undefined;
     view.renderRoot = undefined;
     view.releaseStages();
-    dropPersistent(this, view);
-    const probe = this.raster.probes.get(view);
-    if (probe) {
-      this.ctx.environment.destroyProbe(probe.probe);
-      this.raster.probes.delete(view);
-    }
+    this.renderers.get(view)?.destroy();
+    this.renderers.delete(view);
     const index = this.views.indexOf(view);
     if (index >= 0) {
       this.views.splice(index, 1);
@@ -1475,14 +1349,6 @@ export class Engine {
       this.scene.viewMotion.delete(view);
       this.freeViewIds.push(id);
     }
-    const frame = this.raster.viewFrames.get(view);
-    if (frame) {
-      destroyViewFrame(frame);
-    }
-    this.raster.viewFrames.delete(view);
-    this.raster.overlayResources.get(view)?.buffer.destroy();
-    this.raster.overlayResources.get(view)?.params.destroy();
-    this.raster.overlayResources.delete(view);
     this.wake();
   }
 
@@ -2091,7 +1957,7 @@ export class Engine {
         dirtyViews.add(view);
       }
     }
-    serveIdlePick(this, dirtyViews);
+    this.device.servePicks(dirtyViews);
     if (dirty.size === 0) {
       for (let i = 0; i < this.worlds.length; i++) {
         this.worlds[i]!.changedViews = 0; // seen by no view
@@ -2099,7 +1965,11 @@ export class Engine {
       this.stats.idle = true;
       return;
     }
-    render(this, true, dirty, dirtyViews);
+    this.device.render({
+      tilesetsUpdated: true,
+      targets: dirty,
+      views: dirtyViews,
+    });
   }
 
   /** The sun and the set of enabled views changed (affects every view). */
@@ -2178,7 +2048,7 @@ export class Engine {
     }
     s[n++] = c.fov;
     s[n++] = c.near;
-    s[n++] = updateExposure(this, view);
+    s[n++] = this.renderers.get(view)!.exposure();
     s[n++] = view.clearColor[0];
     s[n++] = view.clearColor[1];
     s[n++] = view.clearColor[2];
@@ -2229,7 +2099,7 @@ export class Engine {
         this.raster.sky.advanceUpload();
       }
     }
-    render(this, false);
+    this.device.render({ tilesetsUpdated: false });
   }
 
   destroy(): void {
@@ -2243,13 +2113,7 @@ export class Engine {
       world.destroy();
     }
     this.bulkSlices.dispose();
-    this.raster.pool.destroy();
-    this.raster.lists?.destroy();
-    this.raster.timer.destroy();
-    this.raster.glareKernels.destroy();
-    this.raster.sky.atmosphere.destroy();
-    this.raster.sky.destroy();
     this.scene.workers.destroy();
-    this.gpu.destroy();
+    this.device.destroy();
   }
 }

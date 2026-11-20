@@ -51,14 +51,13 @@ export class WebGpuWorldMirror implements WorldMirror {
 
   /**
    * The GPU tables, groups and lists, sized from the world's rows
-   * (`WorldRaster.drawRows`, `materialRows`, `clipRows`) and `instanceRows`.
+   * (`WorldRaster.drawRows`, `materialRows`, `clipRows`) and the instance
+   * table's first rows.
    */
-  constructor(
-    private readonly world: World,
-    instanceRows: number,
-  ) {
+  constructor(private readonly world: World) {
     const { ctx, raster, draws } = world;
     const device = ctx.device;
+    const instanceRows = Math.max(1, Math.min(world.maxInstances, 16384));
     const items = raster.drawRows + instanceRows;
     raster.records = draws.drawConstants.createMirror(ctx, raster.drawRows);
     raster.transforms = new MirroredTable(

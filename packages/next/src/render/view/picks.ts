@@ -429,7 +429,10 @@ export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
  * the pick pass, no render (hovering picks on every pointer move).
  * @internal
  */
-export function serveIdlePick(engine: PickEngine, rendering: Set<View>): void {
+export function serveIdlePick(
+  engine: PickEngine,
+  rendering: ReadonlySet<View>,
+): void {
   const views = engine.views;
   for (let i = 0; i < views.length; i++) {
     const view = views[i]!;

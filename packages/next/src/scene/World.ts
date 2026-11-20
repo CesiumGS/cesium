@@ -159,7 +159,7 @@ import { WorldScene } from "./world/worldScene.ts";
 import type { PatchPickSource } from "./world/domains.ts";
 import { WorldRaster } from "../render/world/worldRaster.ts";
 import { WorldDraws } from "./world/worldDraws.ts";
-import { WebGpuWorldMirror } from "../render/world/worldMirror.ts";
+import type { WebGpuWorldMirror } from "../render/world/worldMirror.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -333,7 +333,6 @@ export class World {
       options.maxInstances ?? 16384,
       itemLimit - this.maxDraws,
     );
-    const instanceRows = Math.max(1, Math.min(this.maxInstances, 16384));
     // A slab is one storage binding at most, and 256 MiB (growing to it).
     this.slabs = new Slabs(
       device,
@@ -389,7 +388,7 @@ export class World {
     this.scene.placeholderCapacity =
       this.scene.maxClipBlocks - 1 - this.scene.terrainClipBudget;
     this.raster.clipRows = Math.min(this.scene.maxClipBlocks, 256);
-    this.mirror = new WebGpuWorldMirror(this, instanceRows);
+    this.mirror = ctx.createMirror!(this);
 
     this.addMaterial({}); // material 0: white, lit, untextured
     this.createTextureSet({}); // texture set 0: defaults

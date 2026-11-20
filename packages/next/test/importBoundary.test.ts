@@ -136,24 +136,19 @@ function edgesOf(file: string): Edge[] {
 /**
  * Each relative import in `text`, read as the file `file`: static imports
  * and re-exports, dynamic `import("…")`, and `import("…").T` type nodes.
+ * `lines`, when given, gets each edge's line.
  */
-function edgesOfText(file: string, text: string): Edge[] {
-  return importsOfText(file, text).map((i) => i.edge);
-}
-
-/** `edgesOfText`'s edges, each with the line (from 1) it is written on. */
-function importsOfText(
-  file: string,
-  text: string,
-): { edge: Edge; line: number }[] {
+function edgesOfText(file: string, text: string, lines?: number[]): Edge[] {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest);
-  const edges: { edge: Edge; line: number }[] = [];
+  const edges: Edge[] = [];
+  // The node being visited: `lines` gets the line (from 1) of each edge.
   let at: ts.Node = source;
-  const push = (edge: Edge) =>
-    edges.push({
-      edge,
-      line: source.getLineAndCharacterOfPosition(at.getStart(source)).line + 1,
-    });
+  const push = (edge: Edge) => {
+    edges.push(edge);
+    lines?.push(
+      source.getLineAndCharacterOfPosition(at.getStart(source)).line + 1,
+    );
+  };
   const add = (specifier: string, typeOnly: boolean, dynamic = false) => {
     if (specifier === SELF || specifier.startsWith(`${SELF}/`)) {
       // The package's own entry point, by name: the file its `exports` names.
@@ -694,7 +689,9 @@ it("the renderer reaches content only where named", () =>
  * content internals.
  */
 function webgl2Refusals(file: string, text: string): string[] {
-  return importsOfText(file, text)
+  const lines: number[] = [];
+  return edgesOfText(file, text, lines)
+    .map((edge, i) => ({ edge, line: lines[i]! }))
     .filter(({ edge }) => {
       const tier = tierOf(edge.to);
       return !(
@@ -762,6 +759,63 @@ it("refuses a webgl2 file that imports the WebGPU renderer, the GPU layer or con
   expect(webgpuTypeNames(file, text)).toEqual([
     "src/webgl2/sample.ts:8 GPUDevice",
   ]);
+});
+/**
+ * What the scene's holders (`Engine`, `World`, `View`) import from the
+ * WebGPU renderer and the GPU layer, each with why
+ * (docs/superpowers/plans/2026-11-13-webgl2-renderer.md, "The interfaces"):
+ * they reach the renderer through the seam (scene/renderSeam.ts), whose
+ * WebGPU implementation is the device (`WebGpuDevice`), each world's mirror
+ * and each view's renderer. "type:" edges must stay type-only. A stale entry
+ * fails too.
+ */
+const SEAM_EDGES: Readonly<Record<string, string>> = {
+  "src/scene/Engine.ts → src/render/webgpuDevice.ts":
+    "the device (RenderDevice), until CS-35 makes it the device choice",
+  "src/scene/Engine.ts → src/render/view/engineRaster.ts":
+    "type: the device's engine-wide state, read off the engine by the renderer's passes",
+  "src/scene/Engine.ts → src/render/view/geometryStats.ts":
+    "draw counts for FrameStats, renderer-neutral (they read World.draws)",
+  "src/scene/Engine.ts → src/gpu/GpuDevice.ts":
+    "type: Engine.gpu, public, and the device options",
+  "src/scene/Engine.ts → src/gpu/EngineErrors.ts": "type: the engine's errors",
+  "src/scene/Engine.ts → src/gpu/GpuWork.ts": "type: FrameStats.work",
+  "src/scene/World.ts → src/render/layout.ts":
+    "the record, transform, instance and material layouts' constants",
+  "src/scene/World.ts → src/render/drawConstants.ts":
+    "the records' writer, the per-draw constants seam (WorldDraws.drawConstants)",
+  "src/scene/World.ts → src/render/world/worldRaster.ts":
+    "the mirror's state, read off the world by the renderer's passes",
+  "src/scene/World.ts → src/render/world/worldMirror.ts": "type: World.mirror",
+  "src/scene/World.ts → src/render/world/bundles.ts": "type: BundleKind",
+  "src/scene/World.ts → src/gpu/RangeAllocator.ts":
+    "the instance table's allocator, a CPU range allocator",
+  "src/scene/View.ts → src/render/layout.ts": "type: ViewLighting",
+};
+
+it("the engine, worlds and views reach the WebGPU renderer only through the seam, and named edges", () => {
+  const holders = [
+    "src/scene/Engine.ts",
+    "src/scene/World.ts",
+    "src/scene/View.ts",
+  ];
+  const found = new Map<string, boolean>();
+  for (const file of holders) {
+    for (const edge of edgesOf(file)) {
+      const tier = tierOf(edge.to);
+      if (tier === "renderer" || tier === "gpu") {
+        const key = `${file} → ${edge.to}`;
+        found.set(key, (found.get(key) ?? true) && edge.typeOnly);
+      }
+    }
+  }
+  expect([...found.keys()].filter((key) => !(key in SEAM_EDGES))).toEqual([]);
+  expect(Object.keys(SEAM_EDGES).filter((key) => !found.has(key))).toEqual([]);
+  expect(
+    Object.entries(SEAM_EDGES)
+      .filter(([key, why]) => why.startsWith("type:") && !found.get(key))
+      .map(([key]) => key),
+  ).toEqual([]);
 });
 it("scene data doesn't import rasterizer data", () => {
   // Every file of the scene side's state: what its tick keeps of a world, an

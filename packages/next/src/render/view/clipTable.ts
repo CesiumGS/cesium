@@ -10,10 +10,9 @@ import {
   ghostRange,
   packClipTable,
   planClip,
-  type ClipSet,
-  type ClipViewPlacement,
   type PlannedClip,
 } from "../../scene/world/clips.ts";
+import { placementOf } from "../../scene/world/clipPlacement.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 import type { ViewFrame } from "./viewFrameData.ts";
@@ -22,49 +21,6 @@ import type { ViewFrame } from "./viewFrameData.ts";
 export type ClipTableEngine = Pick<Engine, "bodyCamera" | "cameras" | "ctx">;
 
 const scratch = new Float32Array(CLIP_TABLE_ROWS * 4);
-
-/** What a view's clips are placed by this tick. */
-function placementOf(
-  engine: Pick<ClipTableEngine, "cameras">,
-  view: View,
-): ClipViewPlacement {
-  const world = view.world;
-  const body = view.bodyAnchor;
-  return {
-    resolver: engine.cameras.resolver(world),
-    seconds: engine.cameras.clock(world)?.seconds ?? 0,
-    root: engine.cameras.root(view),
-    body: body ?? world.root,
-    bodyPlacement: view.anchorPlacement(body),
-  };
-}
-
-/**
- * The view's clip sets that are curved surfaces in it (planClip's `curvilinear`):
- * what the world fits a field for (`WorldCurvilinearClips.frame`). A set that
- * can't be placed is left to `writeClips` to report.
- */
-export function curvilinearClipSets(
-  engine: Pick<ClipTableEngine, "cameras">,
-  view: View,
-): ClipSet[] {
-  const sets = view.clipSets();
-  if (sets.length === 0) {
-    return [];
-  }
-  const placement = placementOf(engine, view);
-  const curvilinear: ClipSet[] = [];
-  for (const set of sets) {
-    try {
-      if (planClip(set, placement).space === "curvilinear") {
-        curvilinear.push(set);
-      }
-    } catch {
-      // reported by writeClips
-    }
-  }
-  return curvilinear;
-}
 
 /**
  * Places `view`'s clips for this tick and uploads its table; sets

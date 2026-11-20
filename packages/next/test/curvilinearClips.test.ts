@@ -25,7 +25,7 @@ import {
   type ClipShape,
   type PlannedClip,
 } from "../src/scene/world/clips.ts";
-import { curvilinearClipSets } from "../src/render/view/clipTable.ts";
+import { curvilinearClipSets } from "../src/scene/world/clipPlacement.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import { createBox } from "../src/scene/meshes.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";

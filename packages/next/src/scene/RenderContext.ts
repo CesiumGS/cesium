@@ -1,3 +1,4 @@
+import type { WebGpuDevice } from "../render/webgpuDevice.ts";
 import { EngineErrors } from "../gpu/EngineErrors.ts";
 import type { DeviceChoices, Paths } from "../profile/paths.ts";
 import { deviceCapacities, type DeviceCapacities } from "../gpu/limits.ts";
@@ -486,6 +487,11 @@ export interface RenderContext {
    * changes (`Engine.wake`): worlds and bindings call it on a change.
    */
   wake: () => void;
+  /**
+   * Makes a world's mirror on the device this context belongs to
+   * (`RenderDevice.createWorld`). Set when the engine is made.
+   */
+  createMirror?: WebGpuDevice["createWorld"];
   defaults: Defaults;
   mips: MipGenerator;
   environment: Environment;
