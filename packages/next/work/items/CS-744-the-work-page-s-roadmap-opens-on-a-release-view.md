@@ -2,9 +2,10 @@
 id: CS-744
 title: "The Work page's roadmap opens on a Release view: what's left in a release and what's holding it"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-389
+claimed_by: orch-10-CS-744
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/views/workRelease.tsx, packages/next/bench/suite/views/workRelease.css, packages/next/bench/suite/workModel.ts, packages/next/test/dynoWork*.test.ts]
 ---
 
