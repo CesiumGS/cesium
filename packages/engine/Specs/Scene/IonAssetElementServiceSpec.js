@@ -288,6 +288,26 @@ describe("Scene/IonAssetElementService", function () {
     ).toBeRejectedWithDeveloperError();
   });
 
+  it("getPropertyIndexStatus requests and adapts the status", async function () {
+    const getFetchedResource = mockFetchJson({
+      status: "Completed",
+      requestedAt: "2025-01-15T12:30:00.000Z",
+      updatedAt: "2025-01-15T12:35:00.000Z",
+      ignored: true,
+    });
+
+    const result = await service.getPropertyIndexStatus();
+
+    expect(getFetchedResource().getUrlComponent(false)).toBe(
+      `https://example.com/v1/assets/${assetId}/elements/property-index`,
+    );
+    expect(result).toEqual({
+      status: "Completed",
+      requestedAt: "2025-01-15T12:30:00.000Z",
+      updatedAt: "2025-01-15T12:35:00.000Z",
+    });
+  });
+
   it("getElementTreeChildren requests and adapts nodes", async function () {
     const getFetchedResource = mockFetchJson({
       nodes: [

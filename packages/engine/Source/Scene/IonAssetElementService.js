@@ -146,6 +146,16 @@ function treeNodeFromResponse(response) {
  */
 
 /**
+ * The state of an asset's element property indexing, as returned by
+ * {@link IonAssetElementService#getPropertyIndexStatus}.
+ *
+ * @typedef {object} IonAssetElementService.PropertyIndexStatus
+ * @property {"Requested"|"Scheduled"|"Started"|"Completed"|"Failed"} status The current indexing state.
+ * @property {string} requestedAt The date and time that indexing was requested, in RFC 3339 format.
+ * @property {string} updatedAt The date and time that the indexing state was last updated, in RFC 3339 format.
+ */
+
+/**
  * A node in a Cesium ion asset's element tree, as returned by
  * {@link IonAssetElementService#getElementTreeChildren}.
  *
@@ -470,6 +480,32 @@ class IonAssetElementService extends ElementService {
         };
       }),
       total: response.total,
+    };
+  }
+
+  /**
+   * Retrieves the state of this asset's element property indexing.
+   *
+   * @returns {Promise<IonAssetElementService.PropertyIndexStatus>} A promise that resolves to the indexing state. The promise rejects with a {@link RequestErrorEvent} if the request fails or indexing has not been requested for the asset.
+   *
+   * @example
+   * try {
+   *   const { status } = await elements.getPropertyIndexStatus();
+   *   console.log(status);
+   * } catch (error) {
+   *   console.error(error.statusCode, error.response);
+   * }
+   */
+  async getPropertyIndexStatus() {
+    const response = await this._resource
+      .getDerivedResource({
+        url: "elements/property-index",
+      })
+      .fetchJson();
+    return {
+      status: response.status,
+      requestedAt: response.requestedAt,
+      updatedAt: response.updatedAt,
     };
   }
 
