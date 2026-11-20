@@ -7,8 +7,10 @@ import type { FrameData } from "../../ephemeris/loadFrameData.ts";
 import {
   leapSecondsFrom,
   loadFrameRoles,
+  loadFrameRolesWith,
   stalenessWarnings,
   type FrameDataLoadOptions,
+  type FrameManifest,
   type FrameDataWarning,
 } from "../../ephemeris/frameRoles.ts";
 import { EarthOrientationParameters } from "../../time/eop.ts";
@@ -51,12 +53,11 @@ export function earthOrientationFrom(
 export async function loadEarthOrientation(
   baseUrl: string,
   options: FrameDataLoadOptions,
+  manifest?: Promise<FrameManifest>,
 ): Promise<EarthOrientation> {
-  const { eop, leapSeconds } = await loadFrameRoles(
-    baseUrl,
-    ["eop", "leapSeconds"],
-    options,
-  );
+  const { eop, leapSeconds } = await (manifest
+    ? loadFrameRolesWith(manifest, ["eop", "leapSeconds"], options)
+    : loadFrameRoles(baseUrl, ["eop", "leapSeconds"], options));
   const data = {
     leapSeconds: leapSecondsFrom(leapSeconds),
     eop: EarthOrientationParameters.fromCelestrakCsv(

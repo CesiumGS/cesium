@@ -21,7 +21,8 @@ export interface FrameDataWarning {
   frames?: readonly string[];
 }
 
-interface ManifestEntry {
+/** One file in a store's manifest. */
+export interface ManifestEntry {
   file: string;
   role: string;
   sha256: string;
@@ -145,6 +146,45 @@ async function loadFile(
 }
 
 /**
+ * A store's `manifest.json`, loaded (`loadFrameManifest`), so that loads of
+ * different roles from one store can share it (`loadFrameRolesWith`).
+ */
+export interface FrameManifest {
+  /** The store's URL, with a trailing slash. */
+  readonly base: string;
+  readonly entries: ReadonlyMap<FrameDataRole, Readonly<ManifestEntry>>;
+}
+
+const storeBase = (url: string) => (url.endsWith("/") ? url : `${url}/`);
+
+/** The store's manifest; `signal` cancels the fetch. */
+export async function loadFrameManifest(
+  baseUrl: string,
+  signal?: AbortSignal,
+): Promise<FrameManifest> {
+  const base = storeBase(baseUrl);
+  return { base, entries: await loadManifest(base, signal) };
+}
+
+/** `promise`, or `signal`'s reason as soon as it aborts. */
+function unlessAborted<T>(
+  promise: Promise<T>,
+  signal: AbortSignal | undefined,
+): Promise<T> {
+  if (!signal) {
+    return promise;
+  }
+  signal.throwIfAborted();
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(signal.reason);
+    signal.addEventListener("abort", onAbort, { once: true });
+    promise
+      .then(resolve, reject)
+      .finally(() => signal.removeEventListener("abort", onAbort));
+  });
+}
+
+/**
  * Load only the asked roles' files that `npm run setup` wrote: fetch
  * `manifest.json` once, then those files in parallel, each checked against its
  * SHA-256. Rejects with a message saying to run setup when the store is
@@ -159,9 +199,26 @@ export async function loadFrameRoles(
   roles: readonly FrameDataRole[],
   options: FrameDataLoadOptions = {},
 ): Promise<Partial<Record<FrameDataRole, ArrayBuffer>>> {
+  return loadFrameRolesWith(
+    loadFrameManifest(baseUrl, options.signal),
+    roles,
+    options,
+  );
+}
+
+/**
+ * `loadFrameRoles` over a manifest already loading (`loadFrameManifest`),
+ * so that loads of other roles from the same store fetch it once (CS-706).
+ * `options.signal` rejects the wait for the manifest too; the manifest's own
+ * fetch is its loader's to cancel.
+ */
+export async function loadFrameRolesWith(
+  manifestLoad: Promise<FrameManifest>,
+  roles: readonly FrameDataRole[],
+  options: FrameDataLoadOptions = {},
+): Promise<Partial<Record<FrameDataRole, ArrayBuffer>>> {
   const { signal, onProgress } = options;
-  const base = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
-  const manifest = await loadManifest(base, signal);
+  const { base, entries: manifest } = await unlessAborted(manifestLoad, signal);
   const wanted = [...new Set(roles)];
   const entries = wanted.flatMap((role) => {
     const entry = manifest.get(role);

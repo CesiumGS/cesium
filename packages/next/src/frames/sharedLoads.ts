@@ -15,7 +15,14 @@
 //
 // A catalog without a signal never releases a load, so it loads on its own,
 // as before: sharing with it would keep the data for the page's life.
-import type { FrameDataLoadOptions } from "../ephemeris/frameRoles.ts";
+//
+// The store's manifest.json is fetched once for the provider loads over it
+// (CS-706): it lives while any of them does, and its fetch stops with the
+// last of them. A failed manifest is not kept either.
+import type {
+  FrameDataLoadOptions,
+  FrameManifest,
+} from "../ephemeris/frameRoles.ts";
 import type { LoadProgress } from "../io/readWithProgress.ts";
 
 interface SharedLoad {
@@ -31,8 +38,62 @@ interface SharedLoad {
 
 const loads = new Map<string, SharedLoad>();
 
+interface StoreManifest {
+  readonly promise: Promise<FrameManifest>;
+  readonly abort: AbortController;
+  /** Provider loads over the store using it. */
+  users: number;
+}
+
+/** Manifests by store, while provider loads over the store use them. */
+const manifests = new Map<string, StoreManifest>();
+
+/** The store's manifest for a new provider load, and its release. */
+function useManifest(
+  store: string,
+  base: string,
+): { promise: Promise<FrameManifest>; release(): void } {
+  let manifest = manifests.get(store);
+  if (!manifest) {
+    const abort = new AbortController();
+    const entry: StoreManifest = {
+      // By dynamic import, as the providers that read it are loaded.
+      promise: import("../ephemeris/frameRoles.ts").then((m) =>
+        m.loadFrameManifest(base, abort.signal),
+      ),
+      abort,
+      users: 0,
+    };
+    entry.promise.catch(() => {
+      if (manifests.get(store) === entry) {
+        manifests.delete(store);
+      }
+    });
+    manifest = entry;
+    manifests.set(store, entry);
+  }
+  const mine = manifest;
+  mine.users++;
+  let released = false;
+  return {
+    promise: mine.promise,
+    release() {
+      if (released) {
+        return;
+      }
+      released = true;
+      if (--mine.users === 0) {
+        if (manifests.get(store) === mine) {
+          manifests.delete(store);
+        }
+        mine.abort.abort();
+      }
+    },
+  };
+}
+
 /** The store's URL made absolute where a page gives a base, so "./x/" and "/x/" meet. */
-function storeKey(provider: string, base: string): string {
+function storeUrl(base: string): string {
   let url = base;
   try {
     const page = (globalThis as { location?: { href?: string } }).location
@@ -41,7 +102,11 @@ function storeKey(provider: string, base: string): string {
   } catch {
     // Not a URL a page can resolve: the string as given.
   }
-  return `${provider} ${url.endsWith("/") ? url : `${url}/`}`;
+  return url.endsWith("/") ? url : `${url}/`;
+}
+
+function storeKey(provider: string, base: string): string {
+  return `${provider} ${storeUrl(base)}`;
 }
 
 /**
@@ -57,12 +122,16 @@ export function sharedProviderLoad<T>(
   base: string,
   signal: AbortSignal,
   onProgress: LoadProgress | undefined,
-  load: (options: FrameDataLoadOptions) => Promise<T>,
+  load: (
+    options: FrameDataLoadOptions,
+    manifest: Promise<FrameManifest>,
+  ) => Promise<T>,
 ): Promise<T> {
   signal.throwIfAborted();
   const key = storeKey(provider, base);
   let shared = loads.get(key);
   if (!shared) {
+    const manifest = useManifest(storeUrl(base), base);
     const abort = new AbortController();
     const progress = new Set<LoadProgress>();
     const options: FrameDataLoadOptions = { signal: abort.signal };
@@ -74,7 +143,7 @@ export function sharedProviderLoad<T>(
       };
     }
     const entry: SharedLoad = {
-      promise: load(options),
+      promise: load(options, manifest.promise),
       abort,
       holders: 0,
       release: undefined,
@@ -82,9 +151,14 @@ export function sharedProviderLoad<T>(
     };
     // A failure is the callers' to report; the next catalog loads afresh.
     entry.promise.catch(() => {
+      manifest.release();
       if (loads.get(key) === entry) {
         loads.delete(key);
       }
+    });
+    // Stopped (its last holder gone): the manifest is no longer its.
+    abort.signal.addEventListener("abort", () => manifest.release(), {
+      once: true,
     });
     shared = entry;
     loads.set(key, entry);
@@ -133,4 +207,9 @@ export function sharedProviderLoad<T>(
 /** Loads shared now, by provider and store (for tests). */
 export function sharedLoadCount(): number {
   return loads.size;
+}
+
+/** Store manifests held for provider loads now (for tests). */
+export function sharedManifestCount(): number {
+  return manifests.size;
 }

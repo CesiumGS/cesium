@@ -5,7 +5,9 @@
 import { Ephemeris } from "../../ephemeris/Ephemeris.ts";
 import {
   loadFrameRoles,
+  loadFrameRolesWith,
   type FrameDataLoadOptions,
+  type FrameManifest,
 } from "../../ephemeris/frameRoles.ts";
 import type { Instant } from "../../time/Instant.ts";
 import { bodyEdge, gcrfEdge, moonMeEdge, type PreciseEdge } from "../edges.ts";
@@ -61,11 +63,10 @@ export function ephemerisFrom(ephemeris: Ephemeris): EphemerisFrames {
 export async function loadEphemeris(
   baseUrl: string,
   options: FrameDataLoadOptions,
+  manifest?: Promise<FrameManifest>,
 ): Promise<EphemerisFrames> {
-  const { planets, moon } = await loadFrameRoles(
-    baseUrl,
-    ["planets", "moon"],
-    options,
-  );
+  const { planets, moon } = await (manifest
+    ? loadFrameRolesWith(manifest, ["planets", "moon"], options)
+    : loadFrameRoles(baseUrl, ["planets", "moon"], options));
   return ephemerisFrom(Ephemeris.fromPacks(planets!, moon!));
 }

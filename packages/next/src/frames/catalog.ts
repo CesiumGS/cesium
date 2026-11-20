@@ -14,6 +14,7 @@ import type {
   FrameDataLoadOptions,
   FrameDataWarning,
 } from "../ephemeris/loadFrameData.ts";
+import type { FrameManifest } from "../ephemeris/frameRoles.ts";
 import type { LoadProgress } from "../io/readWithProgress.ts";
 import { EARTH, MOON, type Body } from "../scene/Body.ts";
 import { LeapSeconds } from "../time/leapSeconds.ts";
@@ -281,6 +282,8 @@ class Catalog implements FrameCatalog {
   private readonly standIns: Readonly<Record<StandInName, FrameEdge>>;
   private readonly entries = new Map<CatalogFrameName, Entry>();
   private readonly loads = new Map<ProviderName, Load>();
+  /** The store's manifest, for a catalog without a signal (CS-706). */
+  private manifest?: Promise<FrameManifest>;
   /** Each used reference frame's users, in first-use order. */
   private readonly users = new Map<Frame, Set<FrameUser>>();
   private earthOrientation: EarthOrientation | undefined;
@@ -635,8 +638,14 @@ class Catalog implements FrameCatalog {
     // a signal (sharedLoads.ts): a viewer made again at once refetches
     // nothing.
     const signal = this.signal;
+    // Both providers read the store's manifest.json: fetched once, through
+    // the shared loads, or once for this catalog without a signal (CS-706).
     const fromStore = <T>(
-      load: (base: string, o: FrameDataLoadOptions) => Promise<T>,
+      load: (
+        base: string,
+        o: FrameDataLoadOptions,
+        manifest: Promise<FrameManifest>,
+      ) => Promise<T>,
     ): ((base: string) => Promise<T>) =>
       signal
         ? (base) =>
@@ -645,9 +654,16 @@ class Catalog implements FrameCatalog {
               base,
               signal,
               options.onProgress,
-              (o) => load(base, o),
+              (o, manifest) => load(base, o, manifest),
             )
-        : (base) => load(base, options);
+        : (base) =>
+            load(
+              base,
+              options,
+              (this.manifest ??= import("../ephemeris/frameRoles.ts").then(
+                (m) => m.loadFrameManifest(base),
+              )),
+            );
     if (provider === "earthOrientation") {
       const module = await import("./providers/earthOrientation.ts");
       const eo =
