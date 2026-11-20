@@ -50,7 +50,7 @@ export const runsLayoutRoute = createRoute({
 // ------------------------------------------------------------ needs a look
 
 export interface WorkSearch {
-  /** The question the page answers: "roadmap", "proposals", "flow" or "no-milestone" ("Your move" by default). */
+  /** The page's view, by its ID ("move", "roadmap", "proposals", "flow" or a mounted view's; "Your move" by default). */
   view?: string;
   project?: string;
   /** A milestone's constraints as the scope. */
@@ -66,7 +66,7 @@ export interface WorkSearch {
   item?: string;
   /** The release chosen: the Plan view lights what sets its finish. */
   release?: string;
-  /** The roadmap's view: the Plan (default, CS-692), "deps" (one thing's dependencies, with earliest possible start and the project matrix in its whole structure, CS-694) or "projects" (each project's readiness per release, CS-693). */
+  /** The roadmap's view, by its ID: the Release view by default (CS-744), a mounted view's, or an older one, "plan" (CS-692), "deps" (CS-694) or "projects" (CS-693). */
   roadmap?: string;
   /** The Plan view's executor slots, 2 to 8 (one, the run's max_executors today, by default). */
   slots?: string;
@@ -80,39 +80,26 @@ export interface WorkSearch {
   proposed?: string;
   /** The Proposals view narrowed to one stage of the proposal flow (CS-688): "discuss", "shaping", "ready" or "later" (every stage by default). */
   stage?: string;
-  /** The No milestone view's kinds, a comma-separated list of "work", "release", "decision" and "external" (every kind by default). */
-  kind?: string;
-  /** The No milestone view's states, a comma-separated list of "proposed", "planned" and "in-progress" (every open state by default). */
-  state?: string;
   /** The Projects view's rows by project number, "project" (by what each holds up by default; CS-693). */
   psort?: string;
 }
-/** Keeps the known words of a comma-separated list, in the order given. */
-const listIn = (v: unknown, known: readonly string[]): string | undefined =>
-  typeof v === "string"
-    ? v
-        .split(",")
-        .filter((w, i, all) => known.includes(w) && all.indexOf(w) === i)
-        .join(",") || undefined
-    : undefined;
 /** A slot count from 2 to 8, as text; one (the default) is left out. */
 const slotsIn = (v: unknown): string | undefined => {
   const n = Math.round(Number(v));
   return Number.isFinite(n) && n >= 2 && n <= 8 ? String(n) : undefined;
 };
+/** A view's ID on the Work page: a short lowercase slug (workModel.ts, VIEW_ID). */
+const viewIdIn = (v: unknown) =>
+  typeof v === "string" && /^[a-z][a-z0-9-]{0,23}$/.test(v) ? v : undefined;
 /** The tracker's board (CS-170): it reads the work items on this branch. */
 export const workRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/work",
   validateSearch: (s: Record<string, unknown>): WorkSearch =>
     clean({
-      view:
-        s.view === "roadmap" ||
-        s.view === "proposals" ||
-        s.view === "flow" ||
-        s.view === "no-milestone"
-          ? s.view
-          : undefined,
+      // A view's ID: the Work page's shell (CS-744) mounts views by file
+      // and shows the first when the ID names none of them.
+      view: viewIdIn(s.view),
       project: str(s.project),
       milestone: str(s.milestone),
       q: str(s.q),
@@ -124,11 +111,9 @@ export const workRoute = createRoute({
       // CS-693 moved both into the Dependencies view's whole structure:
       // old links land there.
       roadmap:
-        s.roadmap === "deps" || s.roadmap === "projects"
-          ? s.roadmap
-          : s.roadmap === "waves" || s.roadmap === "matrix"
-            ? "deps"
-            : undefined,
+        s.roadmap === "waves" || s.roadmap === "matrix"
+          ? "deps"
+          : viewIdIn(s.roadmap),
       slots: slotsIn(s.slots),
       focus: str(s.focus),
       deps:
@@ -149,8 +134,6 @@ export const workRoute = createRoute({
         s.stage === "later"
           ? s.stage
           : undefined,
-      kind: listIn(s.kind, ["work", "release", "decision", "external"]),
-      state: listIn(s.state, ["proposed", "planned", "in-progress"]),
       psort: s.psort === "project" ? "project" : undefined,
     }),
   component: lazyRouteComponent(() => import("./views/Work.tsx"), "Work"),

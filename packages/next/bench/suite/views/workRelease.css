@@ -1,0 +1,505 @@
+/*
+ * The Release view (views/workRelease.tsx; DESIGN.md, "The Release view").
+ * One surface level, as the board's other cards: rows are set apart by
+ * rules, numbers are tabular, and nothing changes width on hover,
+ * selection or a row opening.
+ */
+
+.work-release {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+}
+.work-release-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.work-release-earlier {
+  margin: calc(-1 * var(--stratakit-space-200)) 0 0;
+}
+
+/* The figures at a glance: five, each a number and a line under it. */
+.work-release-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--stratakit-space-300);
+  margin: 0;
+}
+@container (max-width: 760px) {
+  .work-release-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@container (max-width: 440px) {
+  .work-release-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.work-release-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  border-radius: var(--stratakit-radius-lg, 8px);
+  background: var(--stratakit-color-bg-elevation-level-1);
+}
+.work-release-stat dt {
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-release-stat dd {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+.work-release-stat-value {
+  font-size: var(--stratakit-font-size-headline-sm, 1.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-release-stat-value.attention {
+  color: var(--stratakit-color-text-attention-strong, #a15c00);
+}
+/* Ready's blue is a fill; as text it takes the accent ink, readable in both modes. */
+.work-release-stat-value.ready {
+  color: var(--stratakit-color-text-accent-strong);
+}
+.work-release-stat-value.warn {
+  color: var(--stratakit-color-text-attention-strong, #a15c00);
+}
+.work-release-stat-value.is-button {
+  all: unset;
+  align-self: flex-start;
+  font-size: var(--stratakit-font-size-headline-sm, 1.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  border-radius: 2px;
+}
+.work-release-stat-value.is-button:not(.warn) {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-release-stat-value.is-button:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.work-release-stat-detail {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* The exceptions, in place until the Health view lands. */
+.work-release-exceptions ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+  margin: var(--stratakit-space-300) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.work-release-exceptions li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.work-release-exceptions p {
+  margin: 0;
+}
+
+/* The gates: a table that folds into stacked rows when narrow. */
+.work-gates {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.work-gates th {
+  padding: 0 var(--stratakit-space-300) var(--stratakit-space-200) 0;
+  font-weight: normal;
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+  text-align: start;
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-gates th:nth-child(1) {
+  width: 46%;
+}
+.work-gates th:nth-child(2) {
+  width: 11ch;
+}
+.work-gates th:nth-child(4) {
+  width: 12ch;
+}
+.work-gates td {
+  padding: var(--stratakit-space-300) var(--stratakit-space-300)
+    var(--stratakit-space-300) 0;
+  vertical-align: top;
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+  min-width: 0;
+}
+.work-gates tr:last-child td {
+  border-bottom: 0;
+}
+.work-gates .c-num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.work-gates td.c-gate {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.work-gates tr.selected td {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-accent-pressed,
+    rgba(64, 120, 220, 0.08)
+  );
+}
+.work-gates ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.work-gates-sub {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-gates-now {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-gates-more {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-gates-note {
+  margin: var(--stratakit-space-300) 0 0;
+}
+@container (max-width: 640px) {
+  .work-gates,
+  .work-gates tbody,
+  .work-gates tr,
+  .work-gates td {
+    display: block;
+  }
+  .work-gates thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .work-gates tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: "gate gate" "holds holds" "age behind";
+    gap: var(--stratakit-space-150) var(--stratakit-space-300);
+    padding: var(--stratakit-space-300) 0;
+    border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+  }
+  .work-gates tr:last-child {
+    border-bottom: 0;
+  }
+  .work-gates td {
+    padding: 0;
+    border: 0;
+  }
+  .work-gates td.c-gate {
+    grid-area: gate;
+  }
+  .work-gates td.c-holds {
+    grid-area: holds;
+  }
+  .work-gates td:nth-child(2) {
+    grid-area: age;
+    text-align: start;
+    font-size: var(--stratakit-font-size-caption-md);
+    color: var(--stratakit-color-text-neutral-secondary);
+  }
+  .work-gates td:nth-child(2)::before {
+    content: "Open for ";
+  }
+  .work-gates td:nth-child(4) {
+    grid-area: behind;
+    font-size: var(--stratakit-font-size-caption-md);
+    color: var(--stratakit-color-text-neutral-secondary);
+  }
+  .work-gates td:nth-child(4)::after {
+    content: " behind";
+  }
+}
+
+/* The milestones: a row each, its clauses as pips, its numbers tabular. */
+.work-rms {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.work-rms-head,
+.work-rms-line {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 18ch 9ch 7ch 7ch;
+  align-items: center;
+  column-gap: var(--stratakit-space-300);
+}
+.work-rms-head {
+  padding-bottom: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-rms .c-num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.work-rms-row {
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-rms-row:last-child {
+  border-bottom: 0;
+}
+.work-rms-line {
+  min-height: 40px;
+  padding: var(--stratakit-space-150) 0;
+}
+.work-rms-row.selected > .work-rms-line {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-accent-pressed,
+    rgba(64, 120, 220, 0.08)
+  );
+}
+/* A proposed milestone: the roadmap's dashed outline, and its name says so. */
+.work-rms-row.proposed > .work-rms-line {
+  outline: 2px dashed var(--proposed-outline);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+.work-rms-proposed {
+  flex: none;
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-rms-toggle {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-rms-toggle:hover {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-neutral-hover,
+    rgba(127, 127, 127, 0.12)
+  );
+}
+.work-rms-toggle:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+}
+.work-rms-name {
+  display: flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+}
+.work-rms-clauses {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.work-rms-unshaped {
+  font-style: italic;
+}
+.work-rms .is-ready {
+  color: var(--stratakit-color-text-accent-strong);
+  font-weight: 600;
+}
+.work-rms .is-gated {
+  color: var(--kind-decision);
+  font-weight: 600;
+}
+.work-pips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  max-width: 60px;
+}
+.work-pip {
+  flex: none;
+  box-sizing: border-box;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  border: 1.5px solid var(--stratakit-color-text-neutral-tertiary, #8a9099);
+}
+.work-pip.checked {
+  border-color: var(--stage-done);
+  background: var(--stage-done);
+}
+.work-pip.check {
+  border-color: var(--stage-done);
+  background: linear-gradient(135deg, var(--stage-done) 50%, transparent 50%);
+}
+.work-pip.unlinked {
+  border-style: dotted;
+}
+.work-rms-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+  padding: var(--stratakit-space-200) 0 var(--stratakit-space-400)
+    calc(28px + var(--stratakit-space-300));
+}
+.work-rms-detail p {
+  margin: 0;
+}
+.work-rms-outcome {
+  max-width: 72ch;
+}
+.work-clauses {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.work-clauses li {
+  display: flex;
+  gap: var(--stratakit-space-200);
+}
+.work-clauses .work-pip {
+  margin-top: 5px;
+}
+.work-clause-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.work-clause-text {
+  max-width: 72ch;
+}
+.work-clause-state {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-clauses li.checked .work-clause-state {
+  color: var(--stratakit-color-text-positive-strong, var(--stage-done));
+}
+.work-clause-unlinked {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.work-reflist {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+/* Narrow: the numbers go under the name, each labeled. */
+@container (max-width: 640px) {
+  .work-rms-head {
+    display: none;
+  }
+  .work-rms-line {
+    grid-template-columns: 28px repeat(3, minmax(0, 1fr));
+    grid-template-areas: "toggle name name name" ". clauses clauses clauses" ". left ready gates";
+    row-gap: var(--stratakit-space-150);
+  }
+  .work-rms-toggle {
+    grid-area: toggle;
+  }
+  .work-rms-name {
+    grid-area: name;
+  }
+  .work-rms-clauses {
+    grid-area: clauses;
+  }
+  .work-rms-line > [data-label="Items left"] {
+    grid-area: left;
+  }
+  .work-rms-line > [data-label="Ready"] {
+    grid-area: ready;
+  }
+  .work-rms-line > [data-label="Gates"] {
+    grid-area: gates;
+  }
+  .work-rms-line > .c-num {
+    text-align: start;
+    font-size: var(--stratakit-font-size-caption-md);
+  }
+  .work-rms-line > .c-num::after {
+    content: " " attr(data-label);
+    font-weight: normal;
+    color: var(--stratakit-color-text-neutral-secondary);
+  }
+  .work-rms-detail {
+    padding-inline-start: 0;
+  }
+}
+.work-release-done {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+  margin-top: var(--stratakit-space-400);
+}
+.work-release-done ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Ready to start now: blue as the Ready stage, a row each. */
+.work-ready {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.work-ready li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+  min-height: 32px;
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-ready li:last-child {
+  border-bottom: 0;
+}
+.work-ready li.selected {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-accent-pressed,
+    rgba(64, 120, 220, 0.08)
+  );
+}
+.work-ready-behind {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}

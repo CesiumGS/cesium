@@ -752,19 +752,223 @@
   width: 16px;
   height: 16px;
 }
-/* The tabs and the kinds' legend share one rule. */
-.work-tabs-row {
+/*
+ * The view shell (CS-744; DESIGN.md, "The view shell"). The page's tabs
+ * and the roadmap's view row are each one line at every width: the tabs
+ * scroll sideways when they don't fit, with no scroll buttons to come and
+ * go, and what sits beside them (the Key, Older views, the Proposed
+ * switch) keeps its width. So nothing in either row moves when the window
+ * narrows or a tab is chosen.
+ */
+.work-tabs-row,
+.work-subtabs-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 0 var(--stratakit-space-600);
+  gap: var(--stratakit-space-300);
+  min-height: 48px;
   border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
   margin-bottom: var(--stratakit-space-500);
 }
-.work-tabs-row .work-tabs {
+.work-tabs-row .work-tabs,
+.work-subtabs-row .work-subtabs {
+  flex: 1 1 auto;
+  min-width: 0;
   border-bottom: 0;
   margin-bottom: 0;
+}
+.work-tabs .MuiTabs-scroller,
+.work-subtabs .MuiTabs-scroller {
+  scrollbar-width: none;
+}
+.work-tabs .MuiTabs-scroller::-webkit-scrollbar,
+.work-subtabs .MuiTabs-scroller::-webkit-scrollbar {
+  display: none;
+}
+/* No scroll buttons to come and go: the row would change as it narrowed. */
+.work-tabs > .MuiTabScrollButton-root,
+.work-subtabs > .MuiTabScrollButton-root {
+  display: none;
+}
+.work-subtabs .MuiTabs-scroller {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+.work-tabs-row > :not(.work-tabs),
+.work-subtabs-row > :not(.work-subtabs) {
+  flex: none;
+}
+/* The roadmap's views: a second, quieter row under the page's tabs. */
+.work-subtabs-row {
+  min-height: 40px;
+  margin-top: calc(-1 * var(--stratakit-space-300));
+}
+.work-subtabs {
+  min-height: 40px;
+}
+.work-subtabs .MuiTab-root {
+  min-height: 40px;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+/*
+ * Narrow (a phone, or the view beside the pane): tabs pad less, the Key
+ * keeps only its marks, and the Proposed switch takes its own line under
+ * the roadmap's tabs. Each is so at that width whatever the view, so the
+ * tabs still never move as views change.
+ */
+@container (max-width: 560px) {
+  .work-tabs .MuiTab-root,
+  .work-subtabs .MuiTab-root {
+    min-width: 0;
+    padding-inline: var(--stratakit-space-300);
+  }
+  .work-kind-key-word {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+  .work-subtabs-row {
+    flex-wrap: wrap;
+  }
+  .work-subtabs-row .work-subtabs {
+    flex: 1 1 0;
+  }
+  .work-subtabs-row .work-proposed-switch {
+    flex: 1 0 100%;
+    order: 3;
+    padding-bottom: var(--stratakit-space-200);
+  }
+}
+/* Reduced motion: the tab indicators and the switch move without sliding. */
+@media (prefers-reduced-motion: reduce) {
+  .work-tabs .MuiTabs-indicator,
+  .work-subtabs .MuiTabs-indicator,
+  .work-proposed-switch .MuiSwitch-thumb,
+  .work-proposed-switch .MuiSwitch-switchBase,
+  .work-proposed-switch .MuiSwitch-track {
+    transition: none;
+  }
+}
+/* The Key: the kinds' legend behind one button. */
+.work-kind-key {
+  gap: var(--stratakit-space-150);
+}
+.work-kind-key-marks {
+  display: inline-flex;
+  gap: 2px;
+}
+.work-kind-key-pop {
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+}
+.work-kind-key-pop .work-kind-legend {
+  flex-direction: column;
+  padding: 0;
+}
+/* Older views: marked like a chosen tab while one is open. */
+.work-older-views {
+  gap: var(--stratakit-space-100);
+  white-space: nowrap;
+  border-radius: 4px 4px 0 0;
+  box-shadow: inset 0 -2px 0 transparent;
+}
+.work-older-views.active {
+  color: var(--stratakit-color-text-accent-strong);
+  box-shadow: inset 0 -2px 0 var(--stratakit-color-border-accent-strong);
+}
+.work-older-item {
+  align-items: flex-start;
+  gap: var(--stratakit-space-200);
+  max-width: 340px;
+  white-space: normal;
+}
+.work-older-check {
+  display: inline-flex;
+  width: 16px;
+  flex: none;
+  padding-top: 2px;
+}
+.work-older-name {
+  display: block;
+}
+.work-older-question {
+  display: block;
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* The shared Proposed switch, its state in words beside it. */
+.work-proposed-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-150);
+  font-size: var(--stratakit-font-size-body-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+.work-proposed-switch.na {
+  cursor: default;
+  color: var(--stratakit-color-text-neutral-disabled);
+}
+.work-proposed-state {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+@container (max-width: 520px) {
+  .work-proposed-switch .work-proposed-mark {
+    display: none;
+  }
+}
+/*
+ * Words that change in place: every option in one grid cell, only the
+ * current one visible, so the widest sets the width.
+ */
+.work-reserved {
+  display: inline-grid;
+}
+.work-reserved > * {
+  grid-area: 1 / 1;
+}
+.work-reserved > [aria-hidden="true"] {
+  visibility: hidden;
+}
+/* An ID with its title, one line, cut with an ellipsis. */
+.work-ref {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+  max-width: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+.work-ref .work-id {
+  flex: none;
+}
+.work-ref-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.work-ref:hover .work-ref-title,
+.work-ref:focus-visible .work-ref-title {
+  text-decoration: underline;
+}
+.work-ref:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+/* The release picker the views share; a proposed release dashed. */
+.work-release-picker {
+  flex-wrap: wrap;
+}
+.work-release-picker .work-kind-mark {
+  margin-inline-end: 6px;
+}
+.work-release-picker .proposed {
+  border-style: dashed;
+  border-color: var(--proposed-outline);
 }
 .work-kind-legend {
   display: flex;
@@ -1847,13 +2051,6 @@ button.work-mrow-big:focus-visible {
   z-index: 10;
 }
 
-/* A card's tools, at its head. */
-.work-card-tools {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--stratakit-space-300);
-}
 @media (prefers-reduced-motion: reduce) {
   .work-flag {
     transition: none;
@@ -2303,7 +2500,7 @@ button.work-mrow-big:focus-visible {
   white-space: nowrap;
   color: var(--stratakit-color-text-neutral-secondary);
 }
-/* The dashed outline in small: the legend's key and the toggle's mark. */
+/* The dashed outline in small: the legend's key and the Proposed switch's mark. */
 .work-proposed-mark {
   flex: none;
   box-sizing: border-box;
@@ -2311,9 +2508,6 @@ button.work-mrow-big:focus-visible {
   height: 12px;
   border: 2px dashed var(--proposed-outline);
   border-radius: 3px;
-}
-.work-proposed-toggle {
-  gap: var(--stratakit-space-150);
 }
 .work-toggle-count {
   margin-inline-start: var(--stratakit-space-100);
@@ -2391,108 +2585,6 @@ button.work-mrow-big:focus-visible {
     display: block;
     font-size: var(--stratakit-font-size-caption-md);
     color: var(--stratakit-color-text-neutral-secondary);
-  }
-}
-
-/*
- * No milestone (CS-562): the count and the two filters over the proposals
- * table's layout, with Kind and State columns in place of the gate.
- */
-.work-loose-bar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--stratakit-space-300) var(--stratakit-space-500);
-  margin-bottom: var(--stratakit-space-300);
-}
-.work-loose-count {
-  display: flex;
-  align-items: baseline;
-  gap: var(--stratakit-space-200);
-  margin: 0;
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-loose-count-value {
-  font-size: var(--stratakit-font-size-headline-sm, 1.5rem);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--stratakit-color-text-neutral-primary);
-}
-.work-loose-filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--stratakit-space-300);
-  max-width: 100%;
-}
-/* Narrow: a filter scrolls sideways rather than squeeze its words. */
-.work-loose-filter {
-  max-width: 100%;
-  overflow-x: auto;
-}
-.work-loose-filter button {
-  white-space: nowrap;
-  flex: none;
-}
-.work-loose-filter .work-kind-mark {
-  margin-inline-end: 6px;
-}
-.work-loose col.c-kind {
-  width: 112px;
-}
-.work-loose col.c-state {
-  width: 200px;
-}
-.work-loose .c-kind {
-  color: var(--kind);
-}
-.work-loose-state {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0 var(--stratakit-space-200);
-}
-.work-loose-state-detail {
-  white-space: nowrap;
-}
-.work-loose-state .work-swatch {
-  flex: none;
-  align-self: center;
-}
-.work-loose-state-detail {
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-loose-state-detail::before {
-  content: "· ";
-}
-@container (max-width: 1000px) {
-  .work-loose col.c-kind {
-    width: 96px;
-  }
-  .work-loose col.c-state {
-    width: 188px;
-  }
-}
-/* Narrow: the kind and state sit on one line under the title. */
-@container (max-width: 720px) {
-  .work-loose tr.work-ptable-row {
-    grid-template-columns: auto auto minmax(0, 1fr);
-    grid-template-areas: "id title title" ". kind state";
-  }
-  .work-loose tr.work-ptable-row .c-kind {
-    grid-area: kind;
-    margin-top: var(--stratakit-space-100);
-  }
-  .work-loose tr.work-ptable-row .c-state {
-    grid-area: state;
-    margin-top: var(--stratakit-space-100);
-  }
-  .work-loose .work-ptable-group-meta {
-    white-space: nowrap;
-  }
-  .work-loose tr.work-ptable-row .c-kind,
-  .work-loose tr.work-ptable-row .c-state {
-    font-size: var(--stratakit-font-size-caption-md);
   }
 }
 

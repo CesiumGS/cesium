@@ -138,12 +138,13 @@ milestones named by their outcome, each with an `outcome` sentence,
   the picker; the lines above the scope follow it, to go back up, with a
   button back to all work. A Search field sits beside it; both narrow
   every view. Below them, the views are tabs, whose rule runs into the
-  view they choose. An item or a list
+  view they choose; the roadmap's own views are a second, quieter row
+  under it (below, "The view shell"). An item or a list
   opens in a pane on the right (`?item=CS-<n>`, `?list=…`), beside the
   view when the window is wide enough and over it when not.
 - **Kinds (CS-573).** The board shows six kinds of entity, and each has
   one encoding, a glyph and a color, drawn the same way in every view
-  (Your move, Roadmap, Proposals, No milestone, Flow, the lists) and in
+  (Your move, Roadmap, Proposals, Flow, the lists) and in
   the pane:
 
   | Kind      | Glyph                   | Color (light, dark) |
@@ -161,8 +162,9 @@ milestones named by their outcome, each with an `outcome` sentence,
   with its mark, how every ID on the page is drawn), `KindTag` (the kind
   named, the pane's head) and `KindLegend` in `views/Work.tsx`, with the
   colors as `--kind-*` in `work.css`. Later views reuse these, never their
-  own marks. A legend of all six sits beside the views' tabs, on the same
-  rule, on every view.
+  own marks. A legend of all six opens from the Key at the end of the
+  views' tab row, on every view (CS-744: beside the tabs it wrapped
+  under them at some widths, and the row changed height).
   - **Kind and stage stay apart by channel.** Both use color, so each
     keeps to its own mark: a kind's color is only ever ink, the stroke of
     its glyph and its name in the pane's tag, never a filled area; a
@@ -225,7 +227,8 @@ milestones named by their outcome, each with an `outcome` sentence,
   or Dropped.
 - **Each figure once.** A number belongs to the view whose question it
   answers; another view links there rather than repeating it.
-- **Five views, one question each:**
+- **Four views, one question each,** and the roadmap's own views
+  under it (below, "The view shell"):
   - **Your move** (the default): the owner's attention is the
     constraint, so each section leads with its number and lists the
     most waited-on first, counting what waits through other items.
@@ -264,7 +267,8 @@ milestones named by their outcome, each with an `outcome` sentence,
     owner asked to step back and present "what is getting built when and
     what the dependencies are and what milestones are going into what
     releases" from first principles. The roadmap answers three questions,
-    one view each: **Plan**, when things get built (CS-692, the default);
+    one view each: **Plan**, when things get built (CS-692, the default
+    until CS-744 made the Release view the roadmap's first, below);
     **Dependencies**, why something waits and what it unblocks, for one
     chosen milestone or item (CS-694); and **Projects**, how ready each
     project is for each release (CS-693). They rest on five principles,
@@ -347,10 +351,11 @@ milestones named by their outcome, each with an `outcome` sentence,
     too (the owner, dropping CS-691 on 2026-11-18). `milestoneMapOf` and
     the other map helpers in `work.ts` stay, tested, until a later item
     removes or reuses them. The roadmap is committed work by default;
-    the Proposed toggle in the roadmap's tools (CS-563,
-    `&proposed=show`, off when absent, with the count of proposed
-    milestones) adds the proposed milestones and release items to every
-    view, outlined dashed. In Projects, the proposed releases join as
+    the shared Proposed switch in the roadmap's view row (CS-563, a real
+    switch since CS-744, `&proposed=show`, off when absent, the count of
+    proposed milestones in its tip) adds the proposed milestones and
+    release items to every view that can include them, outlined dashed.
+    In Projects, the proposed releases join as
     columns and proposed milestones' items join their releases; the
     project matrix counts every open item either way.
   - **Release bands (CS-685).** The owner's rule: a release needs whole
@@ -414,26 +419,15 @@ milestones named by their outcome, each with an `outcome` sentence,
     stage (`&stage=` discuss, shaping, ready or later; every stage when
     absent). Narrow, each row stacks, with the column's name over what
     a commit needs. Nothing animates.
-  - **No milestone (CS-562)**: the open items that no milestone's
-    constraints name (`noMilestoneOf` in `work.ts`), so nothing
-    committed falls outside the plan unseen. Planned work here is
-    likely a gap in the plan; proposals here are the backlog (CS-686:
-    candidate commitments, the later copies of design lists kept for
-    review). A count leads, saying what the filters leave out; then two
-    filters, by kind and by state, each a set of toggles with a count
-    under the other filter, kept in the URL (`?view=no-milestone`,
-    `&kind=` from work, release, decision and external, `&state=` from
-    proposed, planned and in-progress, each a comma-separated list; all
-    of them when absent). A release is its own kind here, not a work
-    item: it sits above milestones by design, since it needs them (and
-    every milestone it needs holds its items, CS-685), so its row says
-    so, and leaving releases out leaves only what should find a
-    milestone. The table is the Proposals view's layout, by project,
-    with the item, its kind in words and its state (with its stage's
-    swatch, and for planned work whether it is ready or what it waits
-    on); in progress first, then planned, then proposed. The whole row
-    opens the item in the pane. Narrow, each row stacks, kind and state
-    on a line under the title.
+  - **No milestone** (CS-562) is gone (CS-744; the owner, 2026-11-20:
+    "what value is this tab adding? shouldn't this be stuff on your
+    move if it actually requires my attention?"). Of its 80 entries
+    that day, 58 were proposals (the Proposals view's, CS-750), 9
+    decisions and 6 outside waits (they gate items and need no
+    milestone), and 7 planned work items, the only real orphans: the
+    Health view (CS-745) lists those. `noMilestoneOf` stays in
+    `work.ts`, tested, for it. An old `?view=no-milestone` link opens
+    Your move.
   - **Flow**: the stages (proposed, blocked, ready, in progress, done)
     as a band per stage, day by day since the history begins (replayed
     from the items' committed status changes); a band that widens is a
@@ -448,6 +442,135 @@ milestones named by their outcome, each with an `outcome` sentence,
   changes; pages also read when the window comes to the front and every
   minute (claims elsewhere are scanned at most every 30 s, the history
   once per commit).
+
+### The view shell (CS-744)
+
+The tab shell the owner's views mount into (milestone CS-751: what
+needs me, what's on track, what's wrong). Its job is that adding a view
+is cheap and clashes with nothing, and that the tabs never move.
+
+- **Two rows.** The page's views are the first tab row (`view=`):
+  Your move, Roadmap, Proposals, Flow, and any mounted page view. The
+  Roadmap tab has its own row under it (`roadmap=`): its views as tabs,
+  the **Older views** menu, and the shared **Proposed switch**. The
+  roadmap opens on its first view, the Release view.
+- **How a view mounts.** A view is one file,
+  `bench/suite/views/work<Name>.tsx` (and its `work<Name>.css`), that
+  exports `workView: WorkViewDef`:
+
+  ```ts
+  export const workView: WorkViewDef = {
+    id: "health", // its URL value, a lowercase slug
+    label: "Health", // its tab: one or two words
+    question: "What is wrong in the work graph", // the tab's tip
+    place: "page", // "page", "roadmap" or "older"
+    order: 30, // its place in the row, lower first
+    proposals: false, // the Proposed switch applies to it
+    replaces: [], // views it retires, by ID
+    Component: HealthView, // (props: WorkViewProps) => ReactNode
+  };
+  ```
+
+  `Work.tsx` finds every such file with `import.meta.glob("./work*.tsx")`
+  and places it with `mountViews` (`bench/suite/workModel.ts`). Nothing
+  else changes: no table to edit, so views built in parallel never
+  conflict. A mounted view with a built-in view's ID takes its place
+  (CS-750's Proposals view takes `id: "proposals"`); `replaces` retires
+  others (CS-749's Order view retires `"plan"` from Older views, and
+  CS-748's Projects view `"projects"` when it moves to its own file). A
+  doubled ID or one that isn't a slug is left out and logged. Built-in
+  orders: page Your move 10, Roadmap 20, Proposals 60, Flow 70; roadmap
+  Release 10; older Plan 10, Dependencies 20, Projects 30. The route
+  takes any slug for `view=` and `roadmap=`, and the shell shows the
+  first view when the slug names none it has.
+
+- **What the shell gives a view** (`WorkViewProps` in `Work.tsx`): the
+  snapshot and the work in flight; the scope (`items`, `scoped`,
+  `msInScope`); the search and `set` to change it; the Proposed switch's
+  state (`proposals`); the release picked (`release`, alpha.1 by
+  default, from `releases` in ladder order, and `onRelease`); the
+  selection (`selected`, the item or milestone open in the pane;
+  `openItem`, `openList`); and `hasView`/`goView` to link to another
+  view only once it has landed. Parts to reuse, exported from
+  `Work.tsx`: `ItemRef` (an ID with its kind's mark and short title, a
+  link that opens the pane, with the hover card: how every ID is
+  shown), `ReleasePicker`, `ProposedSwitch`, `ReservedText`, `KindId`
+  and `KindMark`. The hover card comes from the page's
+  `WorkCardProvider`; a view needs nothing to get it.
+- **What a view must not touch.** The rows, the pane, the scope and the
+  Key are the shell's. A view draws inside its panel only: no second
+  Proposed switch on the roadmap, no tabs of its own in the rows, no
+  edits to `Work.tsx`'s layout, and its search fields only through
+  `set`. A view's CSS uses its own class prefix (`work-<name>-`), and
+  before removing any rule in `work.css`, grep the class across
+  `bench/suite`.
+- **No movement.** Each row is one line at every width: tabs that don't
+  fit scroll sideways under the edge fade, with no scroll buttons to
+  come and go, and what sits beside them keeps its width. The Older
+  views button keeps its words whichever older view is open, and is
+  marked like a chosen tab; the switch's state words share one cell
+  (`ReservedText`), so "shown" and "hidden" take the same room. Narrow
+  (under 560 px of view), tabs pad less, the Key keeps only its marks,
+  and the switch takes its own line under the roadmap's tabs, the same
+  for every view at that width. Checked at 380, 768, 1024 and 1440 px
+  across every view: neither row changes height and no tab moves.
+- **The Proposed switch** is a real switch (role `switch`), its state
+  in words beside it ("shown", "hidden"; "n/a" and disabled on a view
+  that shows committed work only), and one per page. Reduced motion
+  turns off its slide and the tab indicators'.
+
+### The Release view (CS-744)
+
+The roadmap's first view, and the one to share with a leadership team:
+pick a release, and one screen says what is left in it and what holds
+it. Exceptions lead, there are no dates and no priorities, and the
+owner's attention is what it saves.
+
+- **Story.** The owner, or someone above the project, asks "where is
+  alpha.1?". Five figures answer at a glance, each a number with a line
+  under it: milestones left (and how many are done), work left, gates
+  (decisions and outside waits), ready now, and exceptions. A sentence
+  restating them was tried and cut in review: each figure once.
+- **Releases.** The picker (`release=`) offers the open releases in
+  ladder order, alpha.1 first and by default; a proposed release joins,
+  dashed, with the switch on. A release's milestones are those it is
+  the first to need (`releaseBandsOf`); a later release says which
+  earlier ones come first and links to them.
+- **What holds it.** The gates: every open decision and outside wait on
+  the release's work, reached from its milestones through their items'
+  needs, never through another release's milestones. Each gives who
+  decides or whom it waits on, whether it can be answered now, how long
+  it has been open (from when it entered its state, else its creation),
+  the milestones it holds and the work behind it; most work behind
+  first. A default and a deadline show when the record has them;
+  hitld's read API has no field for either yet, and a note says so.
+- **Milestones left.** A row each, in the planner's order (`planOf`'s
+  bands): its title, its clauses as pips with "2 of 4 checked", its
+  work left in items (its items and the open work they need), what is
+  ready and the gates on its way. A clause is checked, as hitld reads
+  it, once every item linked to it is done and the milestone's check
+  has passed; "items done, check not passed" and "no item linked yet"
+  are named apart. A row opens to its outcome and its clauses, each
+  with its open items; items linked to no clause yet (`c?`) are listed
+  apart. A proposed milestone is outlined dashed and says so.
+- **Sizes.** Items now. Once estimates exist, tokens as a range: the
+  sum of the estimates there are, to that plus each unestimated item at
+  their median, labeled with how many are estimated. Never a time.
+- **Ready to start now.** The release's work with nothing open before
+  it, in the Ready stage's blue swatch, most waiting behind first.
+- **Exceptions.** Until the Health view (CS-745) defines them, the
+  count follows one rule (`EXCEPTION_RULE` in `workModel.ts`): the
+  release's crossings (`releaseClosuresOf`'s violations) and the open
+  items two or more of its milestones name. The count opens a list in
+  place; once a view with ID `health` is mounted, it links there with
+  the release picked.
+- **Layout.** The picker, the five tiles (three columns at tablet
+  width, two narrow), then What holds it, Milestones left, and Ready to start now,
+  each a card. Numbers are tabular, widths are reserved, and nothing
+  bolds on hover or selection: the chosen row is tinted. Narrow, the
+  gates' table and the milestones' rows stack, each number labeled.
+- **Model.** `releaseViewOf` in `bench/suite/workModel.ts`, tested in
+  `test/dynoWorkRelease.test.ts`.
 
 ### The roadmap's Dependencies view (CS-694)
 

@@ -2,7 +2,7 @@
 id: CS-744
 title: "The Work page's roadmap opens on a Release view: what's left in a release and what's holding it"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 claimed_by: orch-10-CS-744

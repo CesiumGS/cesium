@@ -2,6 +2,9 @@ import "./work.css";
 import {
   Alert,
   Button,
+  Menu,
+  MenuItem,
+  Switch,
   CircularProgress,
   Drawer,
   IconButton,
@@ -54,6 +57,14 @@ import {
 import type { WorkSearch } from "../routes.tsx";
 import { useWork } from "../useWork.ts";
 import {
+  mountViews,
+  pickRelease,
+  pickView,
+  type ReleaseChoice,
+  releaseChoicesOf,
+  type ViewEntry,
+} from "../workModel.ts";
+import {
   type Actor,
   ageText,
   agoText,
@@ -90,10 +101,6 @@ import {
   isWork,
   isOwnerDecision,
   kindsOf,
-  LOOSE_KINDS,
-  type LooseKind,
-  filterLoose,
-  looseCounts,
   loadItemText,
   criticalPathOf,
   longestChains,
@@ -106,8 +113,6 @@ import {
   mapEntityTitle,
   milestoneRoadmapOf,
   nextActor,
-  noMilestoneOf,
-  OPEN_STATES,
   type Plan,
   type PlanBand,
   type PlanMilestone,
@@ -115,8 +120,6 @@ import {
   planOf,
   clampSlots,
   SLOTS_MAX,
-  type OpenState,
-  openStateOf,
   possessive,
   PROPOSAL_STAGES,
   type Proposal,
@@ -124,8 +127,6 @@ import {
   proposalsForOwner,
   proposalsOf,
   releasesGatedBy,
-  isReleaseItem,
-  itemKindOf,
   type RoadmapRow,
   ownerQueue,
   type Stage,
@@ -252,14 +253,128 @@ const STAGE_MEANING: Record<Stage, string> = {
 const stageTip = (st: Stage, lead?: string) =>
   `${lead ? `${lead} · ` : ""}${STAGE_NAMES[st]} (${STAGE_MEANING[st]})`;
 
-type View = "move" | "roadmap" | "proposals" | "no-milestone" | "flow";
-const VIEWS: Array<{ id: View; label: string }> = [
-  { id: "move", label: "Your move" },
-  { id: "roadmap", label: "Roadmap" },
-  { id: "proposals", label: "Proposals" },
-  { id: "no-milestone", label: "No milestone" },
-  { id: "flow", label: "Flow" },
+/**
+ * What the shell gives every view it mounts (DESIGN.md, "The view shell";
+ * CS-744). A view reads the tracker, the scope and the shell's shared
+ * choices from here, and changes the URL only through `set`.
+ */
+export interface WorkViewProps {
+  s: WorkSnapshot;
+  flight: InFlight;
+  /** The items in the scope (every item when nothing is scoped). */
+  items: WorkItem[];
+  /** Something is scoped: a view narrows to `items` and `msInScope`. */
+  scoped: boolean;
+  msInScope: (id: string) => boolean;
+  search: WorkSearch;
+  /** Changes the URL's search; `replace` keeps the history entry. */
+  set: (patch: Partial<WorkSearch>, replace?: boolean) => void;
+  /** The shared Proposed switch's state: proposals join the view. */
+  proposals: boolean;
+  /** The open releases in ladder order, proposed ones only with the switch on. */
+  releases: ReleaseChoice[];
+  /** The release picked (`release=`), alpha.1 by default. */
+  release?: ReleaseChoice;
+  onRelease: (id: string) => void;
+  /** The item or milestone open in the pane. */
+  selected?: string;
+  /** Opens an item or a milestone in the pane, beside the view. */
+  openItem: (id: string) => void;
+  /** Opens a list in the pane (`list=`). */
+  openList: (list: string) => void;
+  /** Whether a view with this ID is shown (another view may not have landed yet). */
+  hasView: (id: string) => boolean;
+  /** Goes to another view by its ID, with more search fields if given. */
+  goView: (id: string, patch?: Partial<WorkSearch>) => void;
+}
+
+/**
+ * A view the shell mounts. A file `views/work<Name>.tsx` that exports one
+ * as `workView` is mounted: no other file changes (DESIGN.md, "The view
+ * shell").
+ */
+export interface WorkViewDef extends ViewEntry {
+  /** Its tab's name: one or two words. */
+  label: string;
+  /** The question it answers, in a sentence: its tab's tip. */
+  question: string;
+  /** It can include proposals: the shared Proposed switch applies to it. */
+  proposals?: boolean;
+  /** The view. Absent only for the built-in views, drawn by the board itself. */
+  Component?: (props: WorkViewProps) => ReactNode;
+}
+
+/** The views drawn by the board itself; mounted views may replace them. */
+const BUILT_IN_VIEWS: WorkViewDef[] = [
+  {
+    id: "move",
+    label: "Your move",
+    question: "What waits on you, what is moving and what can start",
+    place: "page",
+    order: 10,
+  },
+  {
+    id: "roadmap",
+    label: "Roadmap",
+    question:
+      "What is left in each release, what holds it, and how it connects",
+    place: "page",
+    order: 20,
+  },
+  {
+    id: "proposals",
+    label: "Proposals",
+    question: "What is proposed, and what each proposal waits on",
+    place: "page",
+    order: 60,
+  },
+  {
+    id: "flow",
+    label: "Flow",
+    question: "How the work flows, day by day",
+    place: "page",
+    order: 70,
+  },
+  {
+    id: "plan",
+    label: "Plan",
+    question: "What gets built when, grouped by release",
+    place: "older",
+    order: 10,
+    proposals: true,
+  },
+  {
+    id: "deps",
+    label: "Dependencies",
+    question: "What one milestone or item waits on and unblocks",
+    place: "older",
+    order: 20,
+    proposals: true,
+  },
+  {
+    id: "projects",
+    label: "Projects",
+    question: "How ready each project's work is for each release",
+    place: "older",
+    order: 30,
+    proposals: true,
+  },
 ];
+
+/** Every `views/work<Name>.tsx` with a `workView`: the mounted views. */
+const MOUNTED = Object.entries(
+  import.meta.glob<{ workView?: WorkViewDef }>("./work*.tsx", { eager: true }),
+)
+  .sort(([a], [b]) => a.localeCompare(b))
+  .flatMap(([, m]) => (m.workView ? [m.workView] : []));
+const VIEWS = mountViews(BUILT_IN_VIEWS, MOUNTED);
+if (VIEWS.problems.length) {
+  console.error(`The Work page's views: ${VIEWS.problems.join("; ")}`);
+}
+const VIEW_IDS = new Set(
+  [...VIEWS.page, ...VIEWS.roadmap, ...VIEWS.older].map((v) => v.id),
+);
+
 /** The layout's width at which the pane sits beside the view, not over it. */
 const PANE_MIN = 1000;
 
@@ -309,13 +424,8 @@ function Board({
   const layout = useRef<HTMLDivElement>(null);
   const width = useWidth(layout);
   const inline = width >= PANE_MIN;
-  const view: View =
-    search.view === "roadmap" ||
-    search.view === "proposals" ||
-    search.view === "no-milestone" ||
-    search.view === "flow"
-      ? search.view
-      : "move";
+  const pageView = pickView(VIEWS.page, search.view)!;
+  const view = pageView.id;
   const flight = useMemo(() => inFlightOf(s), [s]);
   const projectOf = useMemo(
     () => new Map(s.projects.map((p) => [p.id, p])),
@@ -425,14 +535,15 @@ function Board({
     scopeNames.length > 2
       ? `${scopeNames[0]} and ${scopeNames.length - 1} more`
       : scopeNames.join(" and ") || undefined;
-  // The Plan view by default (CS-692); the depth layering, "earliest
-  // possible start" in waves, and the project matrix live in the
-  // Dependencies view's whole structure (CS-694); Projects is each
-  // project's readiness per release (CS-693).
-  const roadmapBy: "plan" | "deps" | "projects" =
-    search.roadmap === "deps" || search.roadmap === "projects"
-      ? search.roadmap
-      : "plan";
+  // The roadmap opens on its first view, the Release view (CS-744); the
+  // Plan (CS-692), Dependencies (CS-694) and Projects (CS-693) views wait
+  // behind the Older views menu until their replacements land.
+  const roadmapView = pickView(
+    [...VIEWS.roadmap, ...VIEWS.older],
+    search.roadmap,
+  )!;
+  const roadmapBy = roadmapView.id;
+  const olderActive = VIEWS.older.includes(roadmapView);
   const slots = clampSlots(search.slots ?? 1);
   // Proposed milestones join the roadmap only when asked for (CS-563).
   const withProposed = search.proposed === "show";
@@ -440,6 +551,45 @@ function Board({
     (m) => m.state === "proposed",
   ).length;
   const projectScope = !!oneProject;
+  const releases = useMemo(
+    () => releaseChoicesOf(s, withProposed),
+    [s, withProposed],
+  );
+  const release = pickRelease(releases, search.release);
+  const goView = (id: string, patch: Partial<WorkSearch> = {}) =>
+    VIEWS.page.some((v) => v.id === id)
+      ? set({ view: id === VIEWS.page[0]!.id ? undefined : id, ...patch })
+      : set({
+          view: "roadmap",
+          roadmap: id === VIEWS.roadmap[0]?.id ? undefined : id,
+          ...patch,
+        });
+  const viewProps: WorkViewProps = {
+    s,
+    flight,
+    items,
+    scoped: size > 0,
+    msInScope: (id) => {
+      const m = msOf.get(id);
+      return !!m && msInScope(m);
+    },
+    search,
+    set,
+    proposals: withProposed,
+    releases,
+    release,
+    onRelease: (id) => set({ release: id }, true),
+    selected:
+      search.item ??
+      (search.list?.startsWith("ms:") ? search.list.slice(3) : undefined),
+    openItem: (id) =>
+      msOf.has(id)
+        ? set({ list: `ms:${id}`, item: undefined })
+        : set({ item: id, list: undefined }),
+    openList: open,
+    hasView: (id) => VIEW_IDS.has(id),
+    goView,
+  };
   // The hover card's scope (CS-696): the Plan view's sequence, with the
   // same slots and proposals, so its slip line matches the Plan view.
   const cardPlan = useMemo(
@@ -529,24 +679,25 @@ function Board({
             <div className="work-tabs-row">
               <Tabs
                 value={view}
-                onChange={(_, v: View) =>
-                  set({ view: v === "move" ? undefined : v })
+                onChange={(_, v: string) =>
+                  set({ view: v === VIEWS.page[0]!.id ? undefined : v })
                 }
                 aria-label="Views"
                 className="work-tabs"
                 variant="scrollable"
               >
-                {VIEWS.map((v) => (
+                {VIEWS.page.map((v) => (
                   <Tab
                     key={v.id}
                     value={v.id}
                     label={v.label}
+                    title={v.question}
                     id={`work-tab-${v.id}`}
                     aria-controls="work-view"
                   />
                 ))}
               </Tabs>
-              <KindLegend />
+              <KindKey />
             </div>
             <div
               id="work-view"
@@ -554,7 +705,8 @@ function Board({
               aria-labelledby={`work-tab-${view}`}
               className="work-view"
             >
-              {view === "move" && (
+              {pageView.Component && <pageView.Component {...viewProps} />}
+              {!pageView.Component && view === "move" && (
                 <div className="work-dash">
                   <Card
                     id="work-needs-h"
@@ -707,190 +859,165 @@ function Board({
                 </div>
               )}
 
-              {view === "roadmap" && (
-                <div className="work-dash">
-                  <Card
-                    id="work-roadmap-h"
-                    title={projectScope ? "Linked projects" : "Roadmap"}
-                    caption={
-                      projectScope
-                        ? "What it waits on, and what waits on it"
-                        : roadmapBy === "plan"
-                          ? "What gets built when, as the run's executors would work through it: no dates, no durations"
-                          : roadmapBy === "projects"
-                            ? "How ready each project's work is for each release, and what it holds up"
-                            : "What one milestone or item waits on, and what it unblocks"
-                    }
-                    className="span-12"
-                    tools={
-                      !projectScope && (
-                        <span className="work-card-tools">
-                          <ToggleButton
-                            value="proposed"
-                            size="small"
-                            selected={withProposed}
-                            onChange={() =>
-                              set(
-                                { proposed: withProposed ? undefined : "show" },
-                                true,
-                              )
-                            }
-                            disabled={!proposedCount && !withProposed}
-                            render={
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                className="work-proposed-toggle"
-                                title={
-                                  withProposed
-                                    ? "Hide the proposed milestones: committed work only"
-                                    : proposedCount
-                                      ? `Show the ${proposedCount} proposed ${proposedCount === 1 ? "milestone" : "milestones"} too, outlined dashed`
-                                      : "No proposed milestones"
-                                }
-                              />
-                            }
-                          >
-                            <span
-                              className="work-proposed-mark"
-                              aria-hidden="true"
-                            />
-                            Proposed
-                            <span className="work-toggle-count">
-                              {proposedCount}
-                            </span>
-                          </ToggleButton>
-                          <ToggleButtonGroup
-                            size="small"
-                            exclusive
-                            value={roadmapBy}
-                            onChange={(_, v: string | null) =>
-                              v &&
-                              set(
-                                {
-                                  roadmap: v === "plan" ? undefined : v,
-                                },
-                                true,
-                              )
-                            }
-                            aria-label="Roadmap view"
-                          >
-                            <ToggleButton
-                              value="plan"
-                              render={
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  title="What gets built when, grouped by release"
-                                />
-                              }
-                            >
-                              Plan
-                            </ToggleButton>
-                            <ToggleButton
-                              value="deps"
-                              render={
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  title="What one milestone or item waits on and unblocks; the whole structure, earliest possible start in waves, behind its toggle"
-                                />
-                              }
-                            >
-                              Dependencies
-                            </ToggleButton>
-                            <ToggleButton
-                              value="projects"
-                              render={
-                                <Button
-                                  variant="outlined"
-                                  size="small"
-                                  title="How ready each project's work is for each release, and what it holds up"
-                                />
-                              }
-                            >
-                              Projects
-                            </ToggleButton>
-                          </ToggleButtonGroup>
-                        </span>
-                      )
-                    }
-                  >
-                    {projectScope ? (
-                      <ProjectLinks
-                        s={s}
-                        project={oneProject!}
-                        onCell={(from, to) => open(`dep:${from}:${to}`)}
-                      />
-                    ) : roadmapBy === "deps" ? (
-                      <DependenciesView
-                        s={s}
-                        flight={flight}
-                        search={search}
-                        set={set}
-                        proposals={withProposed}
-                        matrix={
-                          <ProjectMatrixView
-                            s={s}
-                            items={items}
-                            onCell={(from, to) => open(`dep:${from}:${to}`)}
-                          />
-                        }
-                      />
-                    ) : roadmapBy === "projects" ? (
-                      <ProjectsView
-                        s={s}
-                        flight={flight}
-                        items={items}
-                        scoped={size > 0}
-                        proposals={withProposed}
-                        search={search}
-                        set={set}
-                        onItem={(id) => set({ item: id, list: undefined })}
-                      />
-                    ) : (
-                      <PlanView
-                        s={s}
-                        flight={flight}
-                        proposals={withProposed}
-                        slots={slots}
-                        onSlots={(n) =>
-                          set({ slots: n === 1 ? undefined : String(n) }, true)
-                        }
-                        release={search.release}
-                        onRelease={(id) => set({ release: id }, true)}
-                        selected={
-                          search.list?.startsWith("ms:")
-                            ? search.list.slice(3)
-                            : milestoneId
-                        }
-                        onOpen={(id) => open(`ms:${id}`)}
-                        onItem={(id) => set({ item: id, list: undefined })}
-                        onDeps={(id) =>
-                          set({ roadmap: "deps", focus: id, deps: undefined })
-                        }
-                      />
-                    )}
-                  </Card>
-
-                  <Card
-                    id="work-chain-h"
-                    title="Longest chains"
-                    caption="Items that must happen in order, by where they start"
-                    className="span-12"
-                  >
-                    <ChainBars
-                      chains={chains}
-                      flight={flight}
-                      projectOf={projectOf}
-                      limit={6}
-                      onChain={(head) => open(`chain:${head}`)}
+              {!pageView.Component && view === "roadmap" && (
+                <div className="work-roadmap">
+                  <div className="work-subtabs-row">
+                    <Tabs
+                      value={olderActive ? false : roadmapBy}
+                      onChange={(_, v: string) =>
+                        set({
+                          roadmap: v === VIEWS.roadmap[0]?.id ? undefined : v,
+                        })
+                      }
+                      aria-label="Roadmap views"
+                      className="work-subtabs"
+                      variant="scrollable"
+                    >
+                      {VIEWS.roadmap.map((v) => (
+                        <Tab
+                          key={v.id}
+                          value={v.id}
+                          label={v.label}
+                          title={v.question}
+                          id={`work-rtab-${v.id}`}
+                          aria-controls="work-roadmap-view"
+                        />
+                      ))}
+                    </Tabs>
+                    <OlderViews
+                      views={VIEWS.older}
+                      active={olderActive ? roadmapBy : undefined}
+                      onPick={(id) => set({ roadmap: id })}
                     />
-                  </Card>
+                    <ProposedSwitch
+                      on={withProposed}
+                      count={proposedCount}
+                      applies={!!roadmapView.proposals && !projectScope}
+                      onChange={(on) =>
+                        set({ proposed: on ? "show" : undefined }, true)
+                      }
+                    />
+                  </div>
+                  <div
+                    id="work-roadmap-view"
+                    role="tabpanel"
+                    aria-labelledby={
+                      olderActive
+                        ? "work-older-views"
+                        : `work-rtab-${roadmapBy}`
+                    }
+                  >
+                    {roadmapView.Component ? (
+                      <roadmapView.Component {...viewProps} />
+                    ) : (
+                      <div className="work-dash">
+                        <Card
+                          id="work-roadmap-h"
+                          title={
+                            projectScope ? "Linked projects" : roadmapView.label
+                          }
+                          caption={
+                            projectScope
+                              ? "What it waits on, and what waits on it"
+                              : roadmapBy === "plan"
+                                ? "What gets built when, as the run's executors would work through it: no dates, no durations"
+                                : roadmapBy === "projects"
+                                  ? "How ready each project's work is for each release, and what it holds up"
+                                  : "What one milestone or item waits on, and what it unblocks"
+                          }
+                          className="span-12"
+                        >
+                          {projectScope ? (
+                            <ProjectLinks
+                              s={s}
+                              project={oneProject!}
+                              onCell={(from, to) => open(`dep:${from}:${to}`)}
+                            />
+                          ) : roadmapBy === "deps" ? (
+                            <DependenciesView
+                              s={s}
+                              flight={flight}
+                              search={search}
+                              set={set}
+                              proposals={withProposed}
+                              matrix={
+                                <ProjectMatrixView
+                                  s={s}
+                                  items={items}
+                                  onCell={(from, to) =>
+                                    open(`dep:${from}:${to}`)
+                                  }
+                                />
+                              }
+                            />
+                          ) : roadmapBy === "projects" ? (
+                            <ProjectsView
+                              s={s}
+                              flight={flight}
+                              items={items}
+                              scoped={size > 0}
+                              proposals={withProposed}
+                              search={search}
+                              set={set}
+                              onItem={(id) =>
+                                set({ item: id, list: undefined })
+                              }
+                            />
+                          ) : (
+                            <PlanView
+                              s={s}
+                              flight={flight}
+                              proposals={withProposed}
+                              slots={slots}
+                              onSlots={(n) =>
+                                set(
+                                  { slots: n === 1 ? undefined : String(n) },
+                                  true,
+                                )
+                              }
+                              release={search.release}
+                              onRelease={(id) => set({ release: id }, true)}
+                              selected={
+                                search.list?.startsWith("ms:")
+                                  ? search.list.slice(3)
+                                  : milestoneId
+                              }
+                              onOpen={(id) => open(`ms:${id}`)}
+                              onItem={(id) =>
+                                set({ item: id, list: undefined })
+                              }
+                              onDeps={(id) =>
+                                set({
+                                  roadmap: "deps",
+                                  focus: id,
+                                  deps: undefined,
+                                })
+                              }
+                            />
+                          )}
+                        </Card>
+
+                        <Card
+                          id="work-chain-h"
+                          title="Longest chains"
+                          caption="Items that must happen in order, by where they start"
+                          className="span-12"
+                        >
+                          <ChainBars
+                            chains={chains}
+                            flight={flight}
+                            projectOf={projectOf}
+                            limit={6}
+                            onChain={(head) => open(`chain:${head}`)}
+                          />
+                        </Card>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
-              {view === "proposals" && (
+              {!pageView.Component && view === "proposals" && (
                 <div className="work-dash">
                   <ProposalsCard
                     s={s}
@@ -915,22 +1042,7 @@ function Board({
                 </div>
               )}
 
-              {view === "no-milestone" && (
-                <div className="work-dash">
-                  <NoMilestoneCard
-                    s={s}
-                    items={items}
-                    flight={flight}
-                    scope={scope}
-                    selected={search.item}
-                    kinds={listOf(search.kind) as LooseKind[]}
-                    states={listOf(search.state) as OpenState[]}
-                    onFilter={(patch) => set(patch, true)}
-                  />
-                </div>
-              )}
-
-              {view === "flow" && (
+              {!pageView.Component && view === "flow" && (
                 <div className="work-dash">
                   <Card
                     id="work-flow-h"
@@ -1600,6 +1712,278 @@ function KindLegend() {
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * The kinds' legend behind one button at the end of the tab row (CS-744):
+ * the row keeps one height at every width, so the tabs never move.
+ */
+function KindKey() {
+  const [at, setAt] = useState<HTMLElement | null>(null);
+  const id = useId();
+  return (
+    <>
+      <Button
+        variant="text"
+        size="small"
+        className="work-kind-key"
+        aria-haspopup="dialog"
+        aria-expanded={!!at}
+        aria-controls={at ? id : undefined}
+        onClick={(e) => setAt(at ? null : e.currentTarget)}
+        title="What each mark means"
+      >
+        <span className="work-kind-key-marks" aria-hidden="true">
+          <KindMark kind="milestone" named={false} />
+          <KindMark kind="work" named={false} />
+          <KindMark kind="decision" named={false} />
+        </span>
+        <span className="work-kind-key-word">Key</span>
+      </Button>
+      <Popover
+        id={id}
+        open={!!at}
+        anchorEl={at}
+        onClose={() => setAt(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        slotProps={{ paper: { className: "work-kind-key-pop" } }}
+      >
+        <KindLegend />
+      </Popover>
+    </>
+  );
+}
+
+/**
+ * Words that change in place without moving anything beside them: every
+ * option is laid out in one cell and only the current one shows, so the
+ * span is as wide as the widest (CS-744: no layout shift).
+ */
+export function ReservedText({
+  value,
+  options,
+  className,
+}: {
+  value: string;
+  options: readonly string[];
+  className?: string;
+}) {
+  return (
+    <span className={`work-reserved ${className ?? ""}`}>
+      {[...new Set([value, ...options])].map((o) => (
+        <span key={o} aria-hidden={o === value ? undefined : true}>
+          {o}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/**
+ * The shared Proposed switch (CS-744): one per page, in the roadmap's
+ * view row, and every view that can include proposals reads it
+ * (`proposed=show`). Its state is in words beside it, and a view that
+ * shows committed work only turns it off and says so.
+ */
+export function ProposedSwitch({
+  on,
+  count,
+  applies = true,
+  onChange,
+}: {
+  on: boolean;
+  /** Proposed milestones, for the tip. */
+  count: number;
+  /** The view can include proposals. */
+  applies?: boolean;
+  onChange: (on: boolean) => void;
+}) {
+  const shown = on && applies;
+  const tip = !applies
+    ? "This view shows committed work only"
+    : shown
+      ? "Proposed work shows, outlined dashed. Turn off for committed work only."
+      : `Show proposed work too: ${count} proposed ${count === 1 ? "milestone" : "milestones"} and their items, outlined dashed`;
+  return (
+    <label
+      className={`work-proposed-switch${applies ? "" : " na"}`}
+      title={tip}
+    >
+      <Switch
+        size="small"
+        checked={shown}
+        disabled={!applies}
+        onChange={(e) => onChange(e.target.checked)}
+      />
+      <span className="work-proposed-mark" aria-hidden="true" />
+      <span className="work-proposed-name">Proposed</span>
+      <span className="work-proposed-sep" aria-hidden="true">
+        ·
+      </span>
+      <ReservedText
+        className="work-proposed-state"
+        value={!applies ? "n/a" : shown ? "shown" : "hidden"}
+        options={["shown", "hidden", "n/a"]}
+      />
+    </label>
+  );
+}
+
+/**
+ * The roadmap's older views behind one menu (CS-744), until their
+ * replacements land. The button keeps its words whichever is open, and
+ * is marked like a chosen tab when one is.
+ */
+function OlderViews({
+  views,
+  active,
+  onPick,
+}: {
+  views: readonly WorkViewDef[];
+  active?: string;
+  onPick: (id: string) => void;
+}) {
+  const [at, setAt] = useState<HTMLElement | null>(null);
+  if (!views.length) {
+    return null;
+  }
+  return (
+    <>
+      <Button
+        id="work-older-views"
+        variant="text"
+        size="small"
+        className={`work-older-views${active ? " active" : ""}`}
+        aria-haspopup="menu"
+        aria-expanded={!!at}
+        aria-controls={at ? "work-older-menu" : undefined}
+        onClick={(e) => setAt(e.currentTarget)}
+        title={
+          active
+            ? `Showing the older ${views.find((v) => v.id === active)?.label} view`
+            : "The roadmap's earlier views, until their replacements land"
+        }
+      >
+        Older views
+        <Icon href={svgChevronDown} />
+      </Button>
+      <Menu
+        id="work-older-menu"
+        anchorEl={at}
+        open={!!at}
+        onClose={() => setAt(null)}
+        slotProps={{ list: { "aria-labelledby": "work-older-views" } }}
+      >
+        {views.map((v) => (
+          <MenuItem
+            key={v.id}
+            selected={v.id === active}
+            onClick={() => {
+              setAt(null);
+              onPick(v.id);
+            }}
+            className="work-older-item"
+          >
+            <span className="work-older-check" aria-hidden="true">
+              {v.id === active && <Icon href={svgCheckmark} />}
+            </span>
+            <span>
+              <span className="work-older-name">{v.label}</span>
+              <span className="work-older-question">{v.question}</span>
+            </span>
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
+  );
+}
+
+/**
+ * The release picker the views share (CS-744): the open releases in
+ * ladder order, a proposed one outlined dashed.
+ */
+export function ReleasePicker({
+  releases,
+  release,
+  onRelease,
+}: {
+  releases: readonly ReleaseChoice[];
+  release?: ReleaseChoice;
+  onRelease: (id: string) => void;
+}) {
+  return (
+    <ToggleButtonGroup
+      size="small"
+      exclusive
+      value={release?.id ?? null}
+      onChange={(_, v: string | null) => v && onRelease(v)}
+      aria-label="Release"
+      className="work-release-picker"
+    >
+      {releases.map((r) => (
+        <ToggleButton
+          key={r.id}
+          value={r.id}
+          className={r.proposed ? "proposed" : undefined}
+          aria-label={`${r.version}${r.proposed ? ", proposed" : ""}`}
+          render={
+            <Button
+              variant="outlined"
+              size="small"
+              title={`${r.id} ${r.title}${r.proposed ? " (proposed)" : ""}`}
+            />
+          }
+        >
+          <KindMark kind="release" named={false} />
+          {r.short}
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
+  );
+}
+
+/**
+ * An item, milestone or project by ID and short title, as a link that
+ * opens it in the pane, with its hover card (CS-744: every ID shown
+ * carries its title). The title is one line, cut with an ellipsis; the
+ * card and the link's name carry it whole.
+ */
+export function ItemRef({
+  id,
+  title,
+  className,
+  card = true,
+}: {
+  id: string;
+  /** Its title; read from the snapshot when absent. */
+  title?: string;
+  className?: string;
+  card?: boolean;
+}) {
+  const s = useContext(SnapshotContext);
+  const t =
+    title ??
+    (s &&
+      (s.items.find((x) => x.id === id)?.title ??
+        s.milestones.find((x) => x.id === id)?.title ??
+        s.projects.find((x) => x.id === id)?.title)) ??
+    "";
+  return (
+    <ItemLink
+      id={id}
+      className={`work-ref ${className ?? ""}`}
+      label={t ? `${id} ${t}` : id}
+      card={card}
+    >
+      <KindId id={id} />
+      {t && (
+        <span className="work-ref-title">
+          <InlineText text={t} />
+        </span>
+      )}
+    </ItemLink>
   );
 }
 
@@ -4278,261 +4662,6 @@ function OwnerProposals({
         </li>
       ))}
     </ul>
-  );
-}
-
-/** The No milestone view's state filter, in words. */
-const OPEN_STATE_NAMES: Record<OpenState, string> = {
-  proposed: STATE_NAMES.proposed,
-  planned: STATE_NAMES.planned,
-  "in-progress": STATE_NAMES["in-progress"],
-};
-
-/** What the No milestone count says a filter leaves out. */
-const LEFT_OUT_NAMES: Record<LooseKind | OpenState, string> = {
-  work: "work items",
-  release: "releases",
-  decision: "decisions",
-  external: "external waits",
-  proposed: "proposed items",
-  planned: "planned items",
-  "in-progress": "items in progress",
-};
-
-/**
- * The No milestone view (CS-562): the open items that no milestone's
- * constraints name, by project, filtered by kind and state (both kept in
- * the URL). Planned work here is likely a gap in the plan; a release sits
- * above milestones by design, since it needs them, and says so on its
- * row. Choosing an item opens it in the pane.
- */
-function NoMilestoneCard({
-  s,
-  items,
-  flight,
-  scope,
-  selected,
-  kinds,
-  states,
-  onFilter,
-}: {
-  s: WorkSnapshot;
-  /** The scope's items. */
-  items: readonly WorkItem[];
-  flight: InFlight;
-  /** The scope's name, when one is chosen. */
-  scope?: string;
-  selected?: string;
-  /** The kinds shown; empty shows every kind. */
-  kinds: readonly LooseKind[];
-  /** The states shown; empty shows every open state. */
-  states: readonly OpenState[];
-  onFilter: (patch: Partial<WorkSearch>) => void;
-}) {
-  const all = useMemo(
-    () => noMilestoneOf(s, items, flight),
-    [s, items, flight],
-  );
-  const f = { kinds, states };
-  const shown = filterLoose(all, f, flight);
-  const counts = looseCounts(all, f, flight);
-  const filtered = shown.length !== all.length;
-  // A filter writes the chosen words, or nothing once every one is chosen;
-  // the last chosen one can't be taken away (that would show nothing).
-  const choose = <K extends string>(
-    key: "kind" | "state",
-    every: readonly K[],
-    next: K[],
-  ) =>
-    next.length &&
-    onFilter({
-      [key]:
-        next.length === every.length
-          ? undefined
-          : every.filter((k) => next.includes(k)).join(","),
-    });
-  const kindsOn = kinds.length ? kinds : LOOSE_KINDS;
-  const statesOn = states.length ? states : OPEN_STATES;
-  const leftOut = [
-    ...LOOSE_KINDS.filter((k) => !kindsOn.includes(k)),
-    ...OPEN_STATES.filter((k) => !statesOn.includes(k)),
-  ].map((k) => LEFT_OUT_NAMES[k]);
-  const releases = all.filter(isReleaseItem).length;
-  return (
-    <Card
-      id="work-loose-h"
-      title="Items in no milestone"
-      caption={`Open items that no milestone's constraints name${scope ? `, in ${scope}` : ""}. Planned work here is likely a gap in the plan; a release sits above milestones by design. Choose one to read it.`}
-      className="span-12"
-    >
-      <div className="work-loose-bar">
-        <p className="work-loose-count" aria-live="polite">
-          <span className="work-loose-count-value">{shown.length}</span>
-          <span>
-            {filtered
-              ? `of ${all.length} open ${all.length === 1 ? "item" : "items"} in no milestone, leaving out ${andList(leftOut)}`
-              : `open ${all.length === 1 ? "item" : "items"} in no milestone${releases ? `, ${releases} of them ${releases === 1 ? "a release" : "releases"}` : ""}`}
-          </span>
-        </p>
-        {all.length > 0 && (
-          <div className="work-loose-filters">
-            <ToggleButtonGroup
-              size="small"
-              value={[...kindsOn]}
-              onChange={(_, v: LooseKind[]) => choose("kind", LOOSE_KINDS, v)}
-              aria-label="Kinds shown"
-              className="work-loose-filter"
-            >
-              {LOOSE_KINDS.map((k) => (
-                <ToggleButton
-                  key={k}
-                  value={k}
-                  title={ENTITY_KIND_TIPS[k]}
-                  disabled={!counts.kinds[k] && !kinds.includes(k)}
-                  render={<Button variant="outlined" size="small" />}
-                >
-                  <KindMark kind={k} named={false} />
-                  {ENTITY_KIND_NAMES[k]}
-                  <span className="work-toggle-count">{counts.kinds[k]}</span>
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
-            <ToggleButtonGroup
-              size="small"
-              value={[...statesOn]}
-              onChange={(_, v: OpenState[]) => choose("state", OPEN_STATES, v)}
-              aria-label="States shown"
-              className="work-loose-filter"
-            >
-              {OPEN_STATES.map((k) => (
-                <ToggleButton
-                  key={k}
-                  value={k}
-                  disabled={!counts.states[k] && !states.includes(k)}
-                  render={<Button variant="outlined" size="small" />}
-                >
-                  {OPEN_STATE_NAMES[k]}
-                  <span className="work-toggle-count">{counts.states[k]}</span>
-                </ToggleButton>
-              ))}
-            </ToggleButtonGroup>
-          </div>
-        )}
-      </div>
-      {!all.length ? (
-        <Typography variant="body-md" color="textSecondary" render={<p />}>
-          Every open item{scope ? " here" : ""} is in a milestone.
-        </Typography>
-      ) : !shown.length ? (
-        <Typography variant="body-md" color="textSecondary" render={<p />}>
-          No item in no milestone is of the kinds and states chosen.{" "}
-          <Link
-            component="button"
-            type="button"
-            onClick={() => onFilter({ kind: undefined, state: undefined })}
-          >
-            Show them all
-          </Link>
-        </Typography>
-      ) : (
-        <table
-          className="work-ptable work-loose"
-          aria-label="Items in no milestone"
-        >
-          <colgroup>
-            <col className="c-id" />
-            <col />
-            <col className="c-kind" />
-            <col className="c-state" />
-          </colgroup>
-          <thead>
-            <tr>
-              <th scope="col">ID</th>
-              <th scope="col">Item</th>
-              <th scope="col">Kind</th>
-              <th scope="col">State</th>
-            </tr>
-          </thead>
-          {byProject(s, shown).map((g) => (
-            <tbody key={g.project?.id ?? "none"}>
-              <tr className="work-ptable-group">
-                <th colSpan={4} scope="rowgroup">
-                  <span className="work-ptable-group-name work-marked">
-                    {g.project && <LevelMark level="project" />}
-                    {g.project?.title ?? "No project"}
-                  </span>
-                  <span className="work-ptable-group-meta">
-                    {g.project ? `${g.project.id}, ` : ""}
-                    {g.items.length} {g.items.length === 1 ? "item" : "items"}
-                  </span>
-                </th>
-              </tr>
-              {g.items.map((it) => (
-                <NoMilestoneRow
-                  key={it.id}
-                  it={it}
-                  flight={flight}
-                  selected={it.id === selected}
-                />
-              ))}
-            </tbody>
-          ))}
-        </table>
-      )}
-    </Card>
-  );
-}
-
-function NoMilestoneRow({
-  it,
-  flight,
-  selected,
-}: {
-  it: WorkItem;
-  flight: InFlight;
-  selected: boolean;
-}) {
-  const kind = itemKindOf(it);
-  const state = openStateOf(it, flight);
-  const stage = stageOf(it, flight) ?? "Waiting";
-  // Planned: whether it could start, which is what a gap costs.
-  const detail =
-    state !== "planned"
-      ? undefined
-      : it.open_needs.length
-        ? `waits on ${it.open_needs.length}`
-        : "ready";
-  return (
-    <tr className={`work-ptable-row${selected ? " selected" : ""}`}>
-      <td className="c-id">
-        <KindId id={it.id} kind={kind} />
-      </td>
-      <td className="c-title">
-        <ItemLink id={it.id} className="work-ptable-link" card>
-          <InlineText text={it.title} />
-        </ItemLink>
-        {kind === "release" && (
-          <span className="work-ptable-sub">
-            Above milestones by design: a release needs them
-            {it.release && !it.title.includes(it.release)
-              ? ` (makes ${it.release})`
-              : ""}
-          </span>
-        )}
-      </td>
-      <td className={`c-kind k-${kind}`}>{ENTITY_KIND_NAMES[kind]}</td>
-      <td className="c-state">
-        <span className="work-loose-state">
-          <span
-            className={`work-swatch stage-${slug(stage)}`}
-            aria-hidden="true"
-            data-tip={stageTip(stage)}
-          />
-          {OPEN_STATE_NAMES[state]}
-          {detail && <span className="work-loose-state-detail">{detail}</span>}
-        </span>
-      </td>
-    </tr>
   );
 }
 
