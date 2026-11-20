@@ -21,6 +21,7 @@ import {
   healthOf,
   type HealthException,
   releaseExceptionsOf,
+  shellWord,
   type Words,
   wordsText,
 } from "../bench/suite/workHealth.ts";
@@ -585,6 +586,29 @@ describe("healthOf", () => {
     expect(text(m[1]!.what)).toMatch(
       /^In progress on this branch, and no branch claims it/,
     );
+  });
+
+  it("quotes a branch name a shell would read as more than a word", () => {
+    expect(shellWord("hitld/CS-33-renderer-seam-extracted")).toBe(
+      "hitld/CS-33-renderer-seam-extracted",
+    );
+    expect(shellWord("x;rm -rf ~")).toBe("'x;rm -rf ~'");
+    expect(shellWord("a'b$(c)")).toBe("'a'\\''b$(c)'");
+    const s = snap([item("CS-60")], [], {
+      live: live({
+        claims: {
+          ok: true,
+          source: "c",
+          read_at: NOW,
+          list: [],
+          stale: [
+            { id: "CS-60", where: "b;`id`", worktree: false, here: false },
+          ],
+        },
+      }),
+    });
+    const [m] = ofKind(healthOf(s).exceptions, "merged-open");
+    expect(m!.command).toBe("git branch -d 'b;`id`'");
   });
 
   it("says it can't tell the live kinds when claims or the ledger can't be read", () => {

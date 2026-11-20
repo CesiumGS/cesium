@@ -243,6 +243,14 @@ const dayOf = (d?: string) => {
   return Number.isFinite(t) ? t : undefined;
 };
 const sentence = (s: string) => s.replace(/\.$/, "");
+
+/**
+ * A value as one shell word: as it is when only safe characters make it
+ * up, else in single quotes. Git allows `;`, `$` and backticks in a
+ * branch's name, and a copied command is pasted into a shell.
+ */
+export const shellWord = (v: string) =>
+  /^[A-Za-z0-9._/@:+=-]+$/.test(v) ? v : `'${v.replace(/'/g, `'\\''`)}'`;
 const unique = (ids: readonly string[]) =>
   ids.filter((x, i) => ids.indexOf(x) === i);
 
@@ -619,7 +627,7 @@ export function healthOf(
             ", and hitld's ledger has no dispatch in flight for it. A session set up by hand has none either.",
           ],
           fix: w`Check that its session is still working. If it has ended, give the claim up.`,
-          command: `npx hitld work unclaim ${c.id} --branch ${c.where} --reason "its session ended"`,
+          command: `npx hitld work unclaim ${shellWord(c.id)} --branch ${shellWord(c.where)} --reason "its session ended"`,
           edit: c.id,
           involves: [c.id],
         });
@@ -638,7 +646,7 @@ export function healthOf(
         id,
         what: w`Still claimed on ${branches.length === 1 ? "a branch" : `${branches.length} branches`} the main branch has moved past: ${branches}.`,
         fix: w`Delete ${branches.length === 1 ? "that branch" : "those branches"} if ${branches.length === 1 ? "its" : "their"} work merged (git refuses an unmerged one), so the claim stops showing.`,
-        command: `git branch -d ${branches.join(" ")}`,
+        command: `git branch -d ${branches.map(shellWord).join(" ")}`,
         edit: id,
         involves: [id],
       });
@@ -654,7 +662,7 @@ export function healthOf(
           id: it.id,
           what: w`In progress on this branch, and no branch claims it: its branch merged without closing it, or is gone.`,
           fix: w`If its work landed, close it on a branch; if not, give the claim up.`,
-          command: `npx hitld work unclaim ${it.id} --reason "its branch is gone"`,
+          command: `npx hitld work unclaim ${shellWord(it.id)} --reason "its branch is gone"`,
           edit: it.id,
           involves: [it.id],
         });
