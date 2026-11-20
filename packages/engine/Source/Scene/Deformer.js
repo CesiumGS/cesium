@@ -119,6 +119,19 @@ class Deformer {
   }
 
   /**
+   * Gets the shader lines of the deformer's bindings. See
+   * {@link DeformerBinding#getShaderLines}.
+   *
+   * @param {Object<string, string>} names The shader identifier of each vertex attribute and uniform of a binding, by name.
+   * @returns {string[]} The lines of the function body.
+   * @abstract
+   * @internal
+   */
+  _getShaderLines(names) {
+    return DeveloperError.throwInstantiationError();
+  }
+
+  /**
    * Unbinds every bound deformable until {@link Deformer#rebind} is called.
    * Subclasses call this when their bindings no longer apply.
    *
