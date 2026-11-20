@@ -1,4 +1,3 @@
-import { deviceCapacities } from "../gpu/limits.ts";
 import { MAX_IMAGERY_SLICES } from "../scene/contentLimits.ts";
 
 /**
@@ -90,7 +89,8 @@ export class SlicePool {
 
   /**
    * The world's pool, created on first use at `size` texels a side, with
-   * room for `slices` more for `user`.
+   * room for `slices` more for `user`. `layers` is the most a texture array
+   * may have on the device (`RenderContext.capacities`).
    */
   static acquire(
     device: GPUDevice,
@@ -98,10 +98,11 @@ export class SlicePool {
     size: number,
     slices: number,
     user: SliceUser,
+    layers: number,
   ): SlicePool {
     let pool = SlicePool.pools.get(world);
     if (!pool || pool.destroyed) {
-      pool = new SlicePool(device, world, size);
+      pool = new SlicePool(device, world, size, layers);
       SlicePool.pools.set(world, pool);
     }
     if (!Number.isInteger(slices) || slices <= 0) {
@@ -187,6 +188,7 @@ export class SlicePool {
     private readonly device: GPUDevice,
     private readonly world: SliceWorld,
     readonly size: number,
+    private readonly layers: number,
   ) {
     this.mipLevelCount = Math.log2(size) + 1;
     this.texture = this.create(1);
@@ -195,10 +197,7 @@ export class SlicePool {
 
   /** The most slices any pool can have on this device. */
   get ceiling(): number {
-    return Math.min(
-      deviceCapacities(this.device).textureArrayLayers,
-      MAX_IMAGERY_SLICES,
-    );
+    return Math.min(this.layers, MAX_IMAGERY_SLICES);
   }
 
   /** Slices the users asked for together (what the pool grows toward). */

@@ -130,7 +130,6 @@ import {
   setTerrainClipGround,
   setTerrainClip,
 } from "./world/terrainClips.ts";
-import { deviceCapacities } from "../gpu/limits.ts";
 import { castRays } from "./world/rays.ts";
 import {
   WorldCurvilinearMaps,
@@ -335,7 +334,7 @@ export class World {
     const device = ctx.device;
     // Ceilings: the option, and what one storage binding holds (the
     // device's capacity limits; the tables start small and grow to them).
-    const binding = deviceCapacities(ctx.device).storageBindingBytes;
+    const binding = ctx.capacities.storageBindingBytes;
     const fits = (rowBytes: number) => Math.floor(binding / rowBytes);
     // Rows the item buffer (80 bytes each, draws first) can address.
     const itemLimit = fits(DRAW_ITEM_SIZE);

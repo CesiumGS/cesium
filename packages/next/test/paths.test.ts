@@ -18,7 +18,8 @@ describe("paths(facts)", () => {
   it("chooses each path as the engine did from its capabilities", () => {
     for (const name of NAMES) {
       const facts = personas[name];
-      const has = (f: string) => facts.features.includes(f as GPUFeatureName);
+      const features: readonly string[] = facts.features;
+      const has = (f: string) => features.includes(f);
       const chosen = paths(facts);
       expect(chosen.starSubmission, name).toBe(
         has("indirect-first-instance") ? "indirect" : "direct",

@@ -1,5 +1,6 @@
 import { EngineErrors } from "../gpu/EngineErrors.ts";
 import type { DeviceChoices, Paths } from "../profile/paths.ts";
+import { deviceCapacities, type DeviceCapacities } from "../gpu/limits.ts";
 import { MipGenerator } from "../gpu/MipGenerator.ts";
 import { Environment } from "../gpu/Environment.ts";
 import {
@@ -472,6 +473,8 @@ export interface RenderContext {
   errors: EngineErrors;
   /** The engine's paths (src/profile/paths.ts): render code reads these, never the device's facts. */
   paths: Paths;
+  /** The device's capacities, which tables and pools grow into (src/gpu/limits.ts). */
+  capacities: DeviceCapacities;
   targets: typeof SCENE_TARGETS;
   pipelines: Pipelines;
   /** Custom shaders' pipelines, compiled in the background. */
@@ -663,6 +666,7 @@ export async function createRenderContext(
     device,
     errors,
     paths: choices.paths,
+    capacities: deviceCapacities(device),
     targets: SCENE_TARGETS,
     pipelines,
     shaders: new ShaderCache(

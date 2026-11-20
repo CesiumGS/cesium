@@ -1,6 +1,7 @@
 // Fakes for the imagery slice tests (test/sliceNeed.test.ts and
 // test/slicePoolShrink.test.ts): a world, a recording device, a layer that
 // holds slices, and GlobeImagery over a provider that never loads.
+import { deviceCapacities } from "../src/gpu/limits.ts";
 import {
   GlobeImagery,
   type GlobeImageryOptions,
@@ -96,7 +97,14 @@ export function holder(
   slices: number,
 ): Holder & { pool: SlicePool } {
   const h = new Holder();
-  h.pool = SlicePool.acquire(device, world, 256, slices, h);
+  h.pool = SlicePool.acquire(
+    device,
+    world,
+    256,
+    slices,
+    h,
+    deviceCapacities(device).textureArrayLayers,
+  );
   return h;
 }
 
@@ -125,7 +133,10 @@ export function layer(
   source: ImageryProvider = provider,
 ): GlobeImagery {
   return new GlobeImagery(
-    { device } as unknown as RenderContext,
+    {
+      device,
+      capacities: deviceCapacities(device),
+    } as unknown as RenderContext,
     world,
     source,
     requests,
@@ -165,7 +176,10 @@ export function compositingLayer(
   options: GlobeImageryOptions = {},
 ): GlobeImagery {
   const imagery = new GlobeImagery(
-    { device } as unknown as RenderContext,
+    {
+      device,
+      capacities: deviceCapacities(device),
+    } as unknown as RenderContext,
     world,
     { ...provider, maximumLevel: 0 },
     requests,

@@ -1,6 +1,5 @@
 // A view's translucency per tick: its parameters, its list buffer, and the bind
 // groups of its passes.
-import { deviceCapacities } from "../../gpu/limits.ts";
 import { LIST_HEADER, type ViewFrame } from "./viewFrameData.ts";
 import type { EngineRaster } from "./engineRaster.ts";
 import type { Engine } from "../../scene/Engine.ts";
@@ -60,9 +59,7 @@ export function writeTranslucency(
     // At most what one binding holds, and what a node's `next` can address
     // (translucent.wgsl LIST_SAMPLE_SHIFT: 28 bits, the node plus one).
     const most = Math.min(
-      Math.floor(
-        (deviceCapacities(engine.ctx.device).storageBindingBytes - heads) / 16,
-      ),
+      Math.floor((engine.ctx.capacities.storageBindingBytes - heads) / 16),
       LIST_NODES_MAX,
     );
     // Half a layer a pixel to start; more once a frame needs it.

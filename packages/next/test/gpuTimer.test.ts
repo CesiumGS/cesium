@@ -152,7 +152,7 @@ describe("GPU frame times", () => {
       queue: { onSubmittedWorkDone: () => Promise.resolve() },
     } as unknown as GPUDevice;
     installGpuGlobals();
-    const timer = new GpuTimer(device, "timestamps");
+    const timer = new GpuTimer(device, true);
     expect(timer.beginFrame()).toBe(true);
     for (const label of [
       "shadows",
@@ -202,7 +202,7 @@ describe("GPU timer groups", () => {
       queue: { onSubmittedWorkDone: () => Promise.resolve() },
     } as unknown as GPUDevice;
     installGpuGlobals();
-    const timer = new GpuTimer(device, "timestamps");
+    const timer = new GpuTimer(device, true);
     // The first pass of a group writes both ends, the rest only the end.
     const first = GpuTimer.groupWrites(device, "imagery")!;
     const next = GpuTimer.groupWrites(device, "imagery")!;
@@ -272,7 +272,7 @@ describe("GPU frame markers", () => {
       },
     } as unknown as GPUDevice;
     installGpuGlobals();
-    const timer = new GpuTimer(device, "timestamps");
+    const timer = new GpuTimer(device, true);
     const encoder = {
       beginComputePass: () => ({
         setPipeline: () => {},
@@ -327,7 +327,7 @@ describe("GPU frame interval", () => {
       },
     } as unknown as GPUDevice;
     installGpuGlobals();
-    const timer = new GpuTimer(device, "timestamps");
+    const timer = new GpuTimer(device, true);
     const encoder = {
       resolveQuerySet: () => {},
       copyBufferToBuffer: () => {},

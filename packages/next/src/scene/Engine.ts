@@ -783,7 +783,10 @@ export class Engine {
     this.maxViews = maxViews;
     const device = ctx.device;
     this.raster.pool = new TexturePool(device);
-    this.raster.timer = new GpuTimer(device, ctx.paths.gpuTiming);
+    this.raster.timer = new GpuTimer(
+      device,
+      ctx.paths.gpuTiming === "timestamps",
+    );
     this.raster.glareKernels = new GlareKernels(
       device,
       (aperture, size) =>

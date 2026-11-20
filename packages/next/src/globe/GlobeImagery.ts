@@ -231,6 +231,7 @@ export class GlobeImagery implements SliceUser {
       options.size ?? 256,
       this.requested,
       this,
+      ctx.capacities.textureArrayLayers,
     );
     this.size = this.pool.size;
     this.role = options.role ?? "surface";

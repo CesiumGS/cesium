@@ -1,5 +1,3 @@
-import type { GpuTimingPath } from "../profile/paths.ts";
-
 /**
  * Measures GPU time per frame with timestamp queries. Results arrive a few
  * frames late through `mapAsync`; while every readback buffer is in flight,
@@ -189,12 +187,12 @@ export class GpuTimer {
   };
   samples = 0;
 
-  /** `timing` is the engine's `gpuTiming` path (src/profile/paths.ts). */
+  /** `timestamps`: the engine's `gpuTiming` path is `timestamps` (src/profile/paths.ts). */
   constructor(
     private readonly device: GPUDevice,
-    timing: GpuTimingPath,
+    timestamps: boolean,
   ) {
-    if (timing !== "timestamps") {
+    if (!timestamps) {
       return;
     }
     GpuTimer.timers.set(device, this);
