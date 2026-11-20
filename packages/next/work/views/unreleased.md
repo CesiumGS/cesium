@@ -50,7 +50,9 @@ CS-188 Earth to Moon (frames 5c to 5h)
 
 CS-389 Dyno as the development harness
   CS-403  Dyno's navigation rail, regrouped by what people come to do
+  CS-706  Dyno's viewer starts drawing within half a second on a cold browser again
   CS-707  Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected
+  CS-717  Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability
 
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
@@ -62,5 +64,5 @@ CS-17 The transform graph
   CS-712  One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps
   CS-720  Route inverses invert general affine steps, not only rigid ones
 
-37 merged item(s) not in a release
+39 merged item(s) not in a release
 ```

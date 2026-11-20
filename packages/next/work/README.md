@@ -927,7 +927,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 8 of 51 done, 15 ready, 25 blocked, 3 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 12 of 51 done, 11 ready, 25 blocked, 3 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -969,7 +969,7 @@ Milestone: Dyno switches between the engine and the work ([CS-519](./milestones/
 
 Milestone: Benchmark results are shared across machines, and dyno is one command ([CS-722](./milestones/CS-722-benchmark-results-are-shared-across-machines.md), Planned)
 
-- [ ] [CS-717](./items/CS-717-design-one-benchmark-database-across-machines.md) Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability. Needs nothing.
+- [x] [CS-717](./items/CS-717-design-one-benchmark-database-across-machines.md) Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability. Done.
 - [ ] [CS-721](./items/CS-721-a-dyno-command-one-cli-for-dyno-s-runs-lab.md) A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices. Needs CS-390.
 - [ ] [CS-733](./items/CS-733-each-run-records-its-device-configuration-and.md) Each run records its device, configuration and state. Needs CS-390 and CS-721.
 - [ ] [CS-734](./items/CS-734-a-sealed-content-addressed-layout-for-benchmark.md) A sealed, content-addressed layout for benchmark results, local first. Needs CS-733 and CS-721.
@@ -983,7 +983,7 @@ No milestone
 - [x] [CS-403](./items/CS-403-dyno-s-navigation-rail-regrouped-by-what-people.md) Dyno's navigation rail, regrouped by what people come to do. Done.
 - [x] [CS-516](./items/CS-516-human-in-the-lead-v0-1-0-rc-1-is-released.md) external: human-in-the-lead v0.1.0-rc.1 is released. Done.
 - [x] [CS-687](./items/CS-687-the-study-model-what-kinds-a-study-has-and-how.md) decision: The study model: what kinds a study has, and how it draws on a set of instruments. Done.
-- [ ] [CS-706](./items/CS-706-dyno-s-viewer-starts-drawing-within-half-a.md) Dyno's viewer starts drawing within half a second on a cold browser again. Needs nothing.
+- [x] [CS-706](./items/CS-706-dyno-s-viewer-starts-drawing-within-half-a.md) Dyno's viewer starts drawing within half a second on a cold browser again. Done.
 - [x] [CS-707](./items/CS-707-dyno-s-scrollable-tabs-use-stratakit-s.md) Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected. Done.
 - [x] [CS-709](./items/CS-709-merge-cs-707-dyno-s-scrollable-tabs-on.md) decision: Merge CS-707, Dyno's scrollable tabs on StrataKit's supported API. Done.
 - [ ] [CS-714](./items/CS-714-reaching-a-500-ms-cold-start-which-engine-side.md) decision: Reaching a 500 ms cold start: which engine-side work. Needs nothing. Decided by owner.
@@ -993,13 +993,13 @@ No milestone
 - [ ] [CS-726](./items/CS-726-where-does-dyno-store-shared-benchmark-results.md) decision: Where does dyno store shared benchmark results, and what may it spend?. Needs nothing. Decided by owner.
 - [ ] [CS-727](./items/CS-727-who-holds-dyno-s-storage-keys-and-may-remote.md) decision: Who holds dyno's storage keys, and may remote and cloud sessions read results?. Needs nothing. Decided by owner.
 - [ ] [CS-728](./items/CS-728-what-classification-does-a-benchmark-result-get.md) decision: What classification does a benchmark result get by default?. Needs nothing. Decided by owner.
-- [ ] [CS-729](./items/CS-729-merge-cs-717-the-benchmark-devices-and-sharing.md) decision: Merge CS-717, the benchmark devices and sharing design. Needs nothing. Decided by owner.
+- [x] [CS-729](./items/CS-729-merge-cs-717-the-benchmark-devices-and-sharing.md) decision: Merge CS-717, the benchmark devices and sharing design. Done.
 - [ ] [CS-730](./items/CS-730-how-does-dyno-talk-to-the-bucket-its-own-small.md) decision: How does dyno talk to the bucket: its own small client or a dependency?. Needs nothing. Decided by owner.
 - [ ] [CS-731](./items/CS-731-do-inspector-recordings-upload-to-shared-storage.md) decision: Do inspector recordings upload to shared storage?. Needs nothing. Decided by owner.
 - [ ] [CS-732](./items/CS-732-do-the-study-side-device-items-join-alpha-1.md) decision: Do the study-side device items join alpha.1?. Needs nothing. Decided by owner.
 - [?] [CS-739](./items/CS-739-studies-across-devices-noise-floors-per.md) Studies across devices: noise floors per hardware class, pooling, and the health bar. Proposed. Needs CS-404, CS-733, CS-738 and CS-732.
 - [?] [CS-740](./items/CS-740-a-verdict-says-whether-it-carries-to-another.md) A verdict says whether it carries to another hardware class. Proposed. Needs CS-739, CS-394 and CS-732.
-- [ ] [CS-741](./items/CS-741-merge-cs-706-dyno-s-cold-start-run-and-the.md) decision: Merge CS-706, Dyno's cold-start run and the viewer's fixes. Needs nothing. Decided by owner.
+- [x] [CS-741](./items/CS-741-merge-cs-706-dyno-s-cold-start-run-and-the.md) decision: Merge CS-706, Dyno's cold-start run and the viewer's fixes. Done.
 
 ### The public API reviews
 

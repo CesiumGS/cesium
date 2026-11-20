@@ -564,19 +564,19 @@ graph LR
     CS_517["CS-517 The agent system's pages: the merge queue, quotas, the controll"]:::open
     CS_518["CS-518 A space switch in Dyno's rail: the engine and the work"]:::open
     CS_687["CS-687 The study model: what kinds a study has, and how it draws on a "]:::done
-    CS_706["CS-706 Dyno's viewer starts drawing within half a second on a cold bro"]:::open
+    CS_706["CS-706 Dyno's viewer starts drawing within half a second on a cold bro"]:::done
     CS_707["CS-707 Dyno's scrollable tabs use StrataKit's supported API, and the S"]:::done
     CS_709["CS-709 Merge CS-707, Dyno's scrollable tabs on StrataKit's supported A"]:::done
     CS_714["CS-714 Reaching a 500 ms cold start: which engine-side work"]:::decision
     CS_715["CS-715 How the cold-start check runs from here on"]:::decision
     CS_716["CS-716 Dyno's shell asks for triage.json and images/index.json once pe"]:::proposed
-    CS_717["CS-717 Design: one benchmark database across machines, with device fin"]:::open
+    CS_717["CS-717 Design: one benchmark database across machines, with device fin"]:::done
     CS_718["CS-718 hitld cites dyno's benchmark results by reference, reading them"]:::external
     CS_721["CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, st"]:::open
     CS_726["CS-726 Where does dyno store shared benchmark results, and what may it"]:::decision
     CS_727["CS-727 Who holds dyno's storage keys, and may remote and cloud session"]:::decision
     CS_728["CS-728 What classification does a benchmark result get by default?"]:::decision
-    CS_729["CS-729 Merge CS-717, the benchmark devices and sharing design"]:::decision
+    CS_729["CS-729 Merge CS-717, the benchmark devices and sharing design"]:::done
     CS_730["CS-730 How does dyno talk to the bucket: its own small client or a dep"]:::decision
     CS_731["CS-731 Do inspector recordings upload to shared storage?"]:::decision
     CS_732["CS-732 Do the study-side device items join alpha.1?"]:::decision
@@ -588,7 +588,7 @@ graph LR
     CS_738["CS-738 Trends, charts, baselines and alerts keep devices apart"]:::open
     CS_739["CS-739 Studies across devices: noise floors per hardware class, poolin"]:::proposed
     CS_740["CS-740 A verdict says whether it carries to another hardware class"]:::proposed
-    CS_741["CS-741 Merge CS-706, Dyno's cold-start run and the viewer's fixes"]:::decision
+    CS_741["CS-741 Merge CS-706, Dyno's cold-start run and the viewer's fixes"]:::done
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
