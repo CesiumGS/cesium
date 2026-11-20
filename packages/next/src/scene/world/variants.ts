@@ -468,15 +468,15 @@ export class WorldVariants {
   readonly #failed = new Set<ViewGroup>();
 
   #slotOfDraw(index: number): number {
-    const { raster, scene } = this.world;
+    const { scene } = this.world;
     return scene.transformAnchor[
-      raster.recordsU32[index * RECORD_WORDS + TRANSFORM_WORD]!
+      this.world.draws.recordsU32[index * RECORD_WORDS + TRANSFORM_WORD]!
     ]!;
   }
 
   /** Whether a draw can be twinned: a mesh, not a point set, patch draw, billboard or instanced draw. */
   #eligible(index: number): boolean {
-    const batch = this.world.raster.drawBatches[index];
+    const batch = this.world.draws.drawBatches[index];
     return (
       batch !== undefined &&
       !batch.points &&
@@ -488,7 +488,7 @@ export class WorldVariants {
 
   /** Says once that a draw of a kind with no per-view variant is drawn as the primary group's route draws it. */
   #unserved(index: number): void {
-    const batch = this.world.raster.drawBatches[index];
+    const batch = this.world.draws.drawBatches[index];
     if (batch && (batch.billboard || batch.instanced || batch.patches)) {
       this.curvilinearMaps.say(
         "variants:kinds",
@@ -499,17 +499,17 @@ export class WorldVariants {
 
   /** Notes a draw as a source under the anchor, with the masks it has. */
   #adopt(slot: number, state: SlotState, index: number): Source {
-    const { raster, scene } = this.world;
+    const { scene } = this.world;
     const o = index * RECORD_WORDS;
     const source: Source = {
       slot,
       handle: {
         index,
-        generation: raster.drawGeneration[index]!,
+        generation: this.world.draws.drawGeneration[index]!,
         name: scene.names[index],
       },
-      view: raster.recordsU32[o + VIEW_MASK_WORD]!,
-      caster: raster.recordsU32[o + CASTER_MASK_WORD]!,
+      view: this.world.draws.recordsU32[o + VIEW_MASK_WORD]!,
+      caster: this.world.draws.recordsU32[o + CASTER_MASK_WORD]!,
       twins: new Map(),
     };
     state.sources.add(source);
@@ -519,10 +519,9 @@ export class WorldVariants {
 
   /** The draws under the anchor now are sources. */
   #activate(slot: number, state: SlotState): void {
-    const { raster } = this.world;
-    for (let index = 0; index < raster.drawCount; index++) {
+    for (let index = 0; index < this.world.draws.drawCount; index++) {
       if (
-        raster.drawBatches[index] !== undefined &&
+        this.world.draws.drawBatches[index] !== undefined &&
         !this.#twins.has(index) &&
         !this.#sources.has(index) &&
         this.#slotOfDraw(index) === slot
@@ -602,9 +601,8 @@ export class WorldVariants {
 
   /** The twin draws what its source does: material, shader, record and what the curvilinear map scheduler holds of the draw. */
   #mirror(source: Source, twin: Twin): void {
-    const { raster } = this.world;
-    const from = raster.drawBatches[source.handle.index];
-    const to = raster.drawBatches[twin.handle.index];
+    const from = this.world.draws.drawBatches[source.handle.index];
+    const to = this.world.draws.drawBatches[twin.handle.index];
     if (!from || !to) {
       return;
     }
@@ -624,7 +622,7 @@ export class WorldVariants {
       this.world.setDrawShader(twin.handle, from.shader);
     }
     if (
-      raster.drawConstants.mirror(
+      this.world.draws.drawConstants.mirror(
         twin.handle.index,
         source.handle.index,
         OWNED,

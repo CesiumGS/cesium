@@ -96,7 +96,7 @@ describe("World.addBrep", () => {
     expect(brep.trimmed).toBeDefined();
     expect(brep.mesh).toBeUndefined();
     const o = brep.patches!.index * RECORD_WORDS;
-    const u = world.raster.recordsU32;
+    const u = world.draws.recordsU32;
     expect(u[o + FLAGS_WORD]! & RecordFlags.patches).toBe(RecordFlags.patches);
     // The side is four quarter-turn spans; the record counts them.
     expect(u[o + DrawRecordLayout.indexCount / 4]).toBe(4);
@@ -106,7 +106,7 @@ describe("World.addBrep", () => {
     // A patch draw batches alone, with its own chunk list.
     const draw = world.raster.patchDraws.get(brep.patches!.index)!;
     expect(draw.batch.patches).toBe(true);
-    expect(draw.batch.chunks).toBe(draw.chunks);
+    expect(world.raster.batchChunks[draw.batch.index]).toBe(draw.chunks);
     expect(draw.batch.items).toBe(1);
     expect(draw.mesh.patches.spans).toBe(4);
     expect(draw.mesh.patches.trimmed).toBe(false);
@@ -127,7 +127,7 @@ describe("World.addBrep", () => {
     expect(brep.trimmed).toBeUndefined();
     expect(brep.mesh).toBeDefined();
     expect(
-      world.raster.recordsU32[brep.mesh!.index * RECORD_WORDS + FLAGS_WORD]! &
+      world.draws.recordsU32[brep.mesh!.index * RECORD_WORDS + FLAGS_WORD]! &
         RecordFlags.patches,
     ).toBe(0);
     world.removeBrep(brep);
@@ -435,7 +435,7 @@ describe("World.addBrep", () => {
     const world = engine.createWorld(options);
     const brep = world.addBrep(boxBrep());
     const flagsOf = () =>
-      world.raster.recordsU32[brep.patches!.index * RECORD_WORDS + FLAGS_WORD]!;
+      world.draws.recordsU32[brep.patches!.index * RECORD_WORDS + FLAGS_WORD]!;
     const before = flagsOf();
     expect(before & RecordFlags.patches).toBeTruthy();
     world.setPatchDisplay(brep.patches!, { wire: true, iso: 4, flat: true });
@@ -472,7 +472,7 @@ describe("World.addBrep", () => {
     // A stand-in recorded for its batch holds it back, and a record again forgets it.
     world.raster.pipelineGaps.set(
       "opaque",
-      new Set([world.raster.drawBatches[brep.patches!.index]!]),
+      new Set([world.draws.drawBatches[brep.patches!.index]!]),
     );
     expect(world.ready([brep.patches!])).toBe(false);
     world.shaderReady();

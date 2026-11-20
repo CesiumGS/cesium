@@ -30,7 +30,8 @@ export interface PatchPickSource {
 
 /** What `instanceAffine` reads of a world. */
 export type InstanceWorld = Pick<World, "hasDraw"> & {
-  readonly raster: Pick<World["raster"], "instances" | "recordsU32">;
+  readonly raster: Pick<World["raster"], "instances">;
+  readonly draws: Pick<World["draws"], "instances" | "recordsU32">;
 };
 
 /**
@@ -47,11 +48,11 @@ export function instanceAffine(
     return undefined;
   }
   const o = draw.index * RECORD_WORDS;
-  const count = world.raster.recordsU32[o + INSTANCE_COUNT_WORD]!;
+  const count = world.draws.recordsU32[o + INSTANCE_COUNT_WORD]!;
   if (count === 0 || instance >= count) {
     return undefined;
   }
-  const first = world.raster.recordsU32[o + INSTANCE_FIRST_WORD]!;
+  const first = world.draws.recordsU32[o + INSTANCE_FIRST_WORD]!;
   const at = (first + instance) * INSTANCE_WORDS;
-  return world.raster.instances.f32.subarray(at, at + 12);
+  return world.draws.instances.f32.subarray(at, at + 12);
 }

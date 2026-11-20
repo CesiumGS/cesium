@@ -255,7 +255,7 @@ export function encodeDomainPick(
   // The kernels: the middle pixel, then the hit triangle's corners from the
   // slab that holds its mesh (each slab with meshes is tried).
   const slabs = new Set<number>();
-  const batches = world.raster.batchList;
+  const batches = world.draws.batchList;
   const owners = new Uint32Array(Math.max(1, batches.length));
   for (const batch of batches) {
     owners[batch.index] = batch.mesh.slab;
@@ -370,6 +370,6 @@ export function standsInForTerrain(
   ) {
     return false;
   }
-  const { recordsU32 } = domain.world.raster;
+  const { recordsU32 } = domain.world.draws;
   return recordsU32[sample.draw * RECORD_WORDS + TERRAIN_CLIP_WORD]! !== 0;
 }

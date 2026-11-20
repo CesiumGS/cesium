@@ -1,5 +1,6 @@
 // A world's transform tree and anchors: what exists where. Bookkeeping; the GPU
 // reads the table it writes.
+import type { WorldDraws } from "./worldDraws.ts";
 import { rigidMatrixError } from "../../math/transforms.ts";
 import {
   ALL_VIEWS,
@@ -49,6 +50,7 @@ export interface TransformWorld extends Pick<
 > {
   readonly raster: Pick<
     WorldRaster,
+    | "records"
     | "batchBuffer"
     | "bundle"
     | "clipRows"
@@ -56,9 +58,6 @@ export interface TransformWorld extends Pick<
     | "cullBindGroup"
     | "cullParams"
     | "drawArguments"
-    | "drawConstants"
-    | "drawGeneration"
-    | "drawOwnedTransform"
     | "drawRows"
     | "freePointCounters"
     | "imageryPlaceholder"
@@ -66,9 +65,6 @@ export interface TransformWorld extends Pick<
     | "imageryView"
     | "instances"
     | "materialRows"
-    | "materialsDirty"
-    | "materialsF32"
-    | "materialsU32"
     | "placementTable"
     | "pointCounts"
     | "patchDraws"
@@ -76,10 +72,21 @@ export interface TransformWorld extends Pick<
     | "pointCullBindGroup"
     | "pointDraws"
     | "pointSetCount"
-    | "recordsU32"
     | "splats"
     | "transforms"
     | "translucentDraws"
+  >;
+  readonly draws: Pick<
+    WorldDraws,
+    | "drawConstants"
+    | "drawGeneration"
+    | "drawOwnedTransform"
+    | "instances"
+    | "materialsDirty"
+    | "materialsF32"
+    | "materialsU32"
+    | "recordsU32"
+    | "transforms"
     | "uploadsPending"
   >;
   readonly scene: Pick<
@@ -121,8 +128,9 @@ export interface ResolveWorld extends Pick<
   | "transformAlive"
   | "version"
 > {
-  readonly raster: Pick<
-    WorldRaster,
+  readonly raster: Pick<WorldRaster, "transforms">;
+  readonly draws: Pick<
+    WorldDraws,
     "recordsU32" | "transforms" | "uploadsPending"
   >;
   readonly scene: Pick<
@@ -154,7 +162,7 @@ export interface AnchorWorld extends Pick<
   World,
   "addAnchor" | "hasDraw" | "transformAlive"
 > {
-  readonly raster: Pick<WorldRaster, "recordsU32">;
+  readonly draws: Pick<WorldDraws, "recordsU32">;
   readonly scene: Pick<
     WorldScene,
     "anchorSlots" | "bodyAnchors" | "transformAnchor"
@@ -311,7 +319,7 @@ export function drawMatrix<T extends Float64Array = Float64Array<ArrayBuffer>>(
     return undefined;
   }
   const t =
-    world.raster.recordsU32[handle.index * RECORD_WORDS + TRANSFORM_WORD]!;
+    world.draws.recordsU32[handle.index * RECORD_WORDS + TRANSFORM_WORD]!;
   resolveTransforms(world);
   out.set(world.scene.transformWorld.subarray(t * 16, t * 16 + 16));
   return out;
@@ -436,7 +444,7 @@ export function drawAnchor(
     return undefined;
   }
   const t =
-    world.raster.recordsU32[handle.index * RECORD_WORDS + TRANSFORM_WORD]!;
+    world.draws.recordsU32[handle.index * RECORD_WORDS + TRANSFORM_WORD]!;
   return world.scene.anchorSlots[world.scene.transformAnchor[t]!];
 }
 
@@ -622,15 +630,15 @@ function composeTransform(
     (parent >= 0 && owner.scene.transformHiddenWorld[parent] === 1);
   owner.scene.transformHiddenWorld[index] = hidden ? 1 : 0;
   writeTransform(
-    owner.raster.transforms.f32,
-    owner.raster.transforms.u32,
+    owner.draws.transforms.f32,
+    owner.draws.transforms.u32,
     index,
     world.subarray(index * 16, index * 16 + 16),
     hidden,
     owner.scene.transformAnchor[index],
   );
-  owner.raster.transforms.mark(index);
-  owner.raster.uploadsPending = true;
+  owner.draws.transforms.mark(index);
+  owner.draws.uploadsPending = true;
   for (const child of owner.scene.transformChildren[index] ?? []) {
     composeTransform(owner, child, stamp);
   }

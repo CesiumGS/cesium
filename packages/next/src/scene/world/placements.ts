@@ -1,4 +1,5 @@
 // A world's per-draw placements and the parameters that move them.
+import type { WorldDraws } from "./worldDraws.ts";
 import {
   RECORD_WORDS,
   FLAGS_WORD,
@@ -46,12 +47,11 @@ export interface PlacementWorld extends Pick<
   readonly curvilinearMaps?: {
     readonly curvilinearClips: Pick<WorldCurvilinearClips, "decorate">;
   };
-  readonly raster: Pick<
-    WorldRaster,
+  readonly raster: Pick<WorldRaster, "patchDraws" | "placementTable">;
+  readonly draws: Pick<
+    WorldDraws,
     | "drawBatches"
     | "drawConstants"
-    | "patchDraws"
-    | "placementTable"
     | "recordsF32"
     | "recordsU32"
     | "uploadsPending"
@@ -146,7 +146,7 @@ function writeSphere(
   center: readonly number[],
   radius: number,
 ): void {
-  world.raster.drawConstants.setBounds(index, center, radius);
+  world.draws.drawConstants.setBounds(index, center, radius);
 }
 
 /**
@@ -181,7 +181,7 @@ export function setPlacement(
   }
   const o = index * RECORD_WORDS;
   if (next) {
-    const flags = world.raster.recordsU32[o + FLAGS_WORD]!;
+    const flags = world.draws.recordsU32[o + FLAGS_WORD]!;
     if (flags & (RecordFlags.billboard | RecordFlags.points)) {
       if (
         !options.anchored ||
@@ -193,7 +193,7 @@ export function setPlacement(
         );
       }
     }
-    if (world.raster.recordsU32[o + INSTANCE_COUNT_WORD]! > 0) {
+    if (world.draws.recordsU32[o + INSTANCE_COUNT_WORD]! > 0) {
       throw new Error(
         "setPlacement: an instanced draw has no per-vertex placement: it would move a mesh's vertices before each instance's matrix, and not the instances.",
       );
@@ -207,7 +207,7 @@ export function setPlacement(
     }
     for (const { term } of next) {
       if (term.kind === "attribute") {
-        const mesh = world.raster.drawBatches[index]!.mesh;
+        const mesh = world.draws.drawBatches[index]!.mesh;
         const components = world.scene.meshRanges
           .get(mesh.id)
           ?.named?.get(term.semantic);
@@ -223,13 +223,13 @@ export function setPlacement(
   // A curvilinear clip's field rides on the draw's first lattice, or on one made to
   // carry it (curvilinearClips.ts): whichever way the terms were set.
   next = world.curvilinearMaps?.curvilinearClips.decorate(index, next) ?? next;
-  const base = old ? old.base : world.raster.recordsF32[o + RADIUS_WORD]!;
+  const base = old ? old.base : world.draws.recordsF32[o + RADIUS_WORD]!;
   const center: readonly [number, number, number] = old
     ? old.center
     : [
-        world.raster.recordsF32[o + CENTER_WORD]!,
-        world.raster.recordsF32[o + CENTER_WORD + 1]!,
-        world.raster.recordsF32[o + CENTER_WORD + 2]!,
+        world.draws.recordsF32[o + CENTER_WORD]!,
+        world.draws.recordsF32[o + CENTER_WORD + 1]!,
+        world.draws.recordsF32[o + CENTER_WORD + 2]!,
       ];
   let sphere: ReturnType<typeof placedSphere> | undefined;
   let bounds: TermBounds[] = [];
@@ -245,7 +245,7 @@ export function setPlacement(
   releasePlacement(world, index);
   if (!next || !sphere) {
     if (old) {
-      world.raster.drawConstants.setPlacement(index, NO_PLACEMENT);
+      world.draws.drawConstants.setPlacement(index, NO_PLACEMENT);
       writeSphere(world, index, old.center, base);
       updatePatchPlacement(world, index, undefined);
       world.scene.contentRevision_++;
@@ -275,7 +275,7 @@ export function setPlacement(
     bounds,
     slots,
   };
-  world.raster.drawConstants.setPlacement(index, at);
+  world.draws.drawConstants.setPlacement(index, at);
   writeSphere(world, index, sphere.center, sphere.radius);
   updatePatchPlacement(world, index, world.scene.drawPlacements[index]);
   world.scene.contentRevision_++;
@@ -340,8 +340,8 @@ function parameterChanged(
     placed.pad = sphere.pad;
     writeSphere(world, index, sphere.center, sphere.radius);
     updatePatchPlacement(world, index, placed);
-    world.raster.uploadsPending = true;
-    views |= world.raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
+    world.draws.uploadsPending = true;
+    views |= world.draws.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
   }
   world.version++;
   world.changedViews |= views;

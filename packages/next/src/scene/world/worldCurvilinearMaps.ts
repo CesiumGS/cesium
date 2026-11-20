@@ -896,7 +896,7 @@ export class WorldCurvilinearMaps {
     const own = this.world.scene.drawPlacements[source.index];
     const hidden = d
       ? d.userHidden
-      : (this.world.raster.recordsU32[
+      : (this.world.draws.recordsU32[
           source.index * RECORD_WORDS + FLAGS_WORD
         ]! &
           RecordFlags.hidden) !==
@@ -979,12 +979,12 @@ export class WorldCurvilinearMaps {
     if (!d || !state || instance >= state.base.length / 16) {
       return;
     }
-    const raster = this.world.raster;
     const slot =
-      raster.recordsU32[handle.index * RECORD_WORDS + INSTANCE_FIRST_WORD]! +
-      instance;
+      this.world.draws.recordsU32[
+        handle.index * RECORD_WORDS + INSTANCE_FIRST_WORD
+      ]! + instance;
     const m = readInstanceMatrix(
-      raster.instances.f32,
+      this.world.draws.instances.f32,
       slot,
       new Float64Array(16),
     );
@@ -1387,7 +1387,7 @@ export class WorldCurvilinearMaps {
       return false;
     }
     const flags =
-      this.world.raster.recordsU32[d.index * RECORD_WORDS + FLAGS_WORD]!;
+      this.world.draws.recordsU32[d.index * RECORD_WORDS + FLAGS_WORD]!;
     if (flags & (RecordFlags.patches | RecordFlags.points)) {
       return false;
     }
@@ -1634,13 +1634,15 @@ export class WorldCurvilinearMaps {
 
   /** Draws under the slots, not yet drawn curvilinear, are found. */
   #scan(slots: ReadonlySet<number>): void {
-    const raster = this.world.raster;
-    for (let index = 0; index < raster.drawCount; index++) {
-      if (raster.drawBatches[index] === undefined || this.#draws.has(index)) {
+    for (let index = 0; index < this.world.draws.drawCount; index++) {
+      if (
+        this.world.draws.drawBatches[index] === undefined ||
+        this.#draws.has(index)
+      ) {
         continue;
       }
       if (slots.has(this.#slotOf(index))) {
-        this.#register(index, raster.drawGeneration[index]!);
+        this.#register(index, this.world.draws.drawGeneration[index]!);
       }
     }
   }
@@ -1650,15 +1652,17 @@ export class WorldCurvilinearMaps {
     return (
       this.variants.slotOf(index) ??
       this.world.scene.transformAnchor[
-        this.world.raster.recordsU32[index * RECORD_WORDS + TRANSFORM_WORD]!
+        this.world.draws.recordsU32[index * RECORD_WORDS + TRANSFORM_WORD]!
       ]!
     );
   }
 
   /** Holds the draw hidden and notes it, when its anchor is curvilinear and it can be. */
   #register(index: number, generation: number): void {
-    const raster = this.world.raster;
-    if (this.#draws.has(index) || raster.drawBatches[index] === undefined) {
+    if (
+      this.#draws.has(index) ||
+      this.world.draws.drawBatches[index] === undefined
+    ) {
       return;
     }
     const o = index * RECORD_WORDS;
@@ -1666,8 +1670,8 @@ export class WorldCurvilinearMaps {
     if (!this.#anchors.has(slot)) {
       return;
     }
-    const flags = raster.recordsU32[o + FLAGS_WORD]!;
-    const count = raster.recordsU32[o + INSTANCE_COUNT_WORD]!;
+    const flags = this.world.draws.recordsU32[o + FLAGS_WORD]!;
+    const count = this.world.draws.recordsU32[o + INSTANCE_COUNT_WORD]!;
     // A point set's cull reads positions a placement doesn't reach, and a
     // pool's instances are written by the GPU: a `PointSource` carries its
     // points through the route in the pass that writes them (its carrier
@@ -1675,7 +1679,7 @@ export class WorldCurvilinearMaps {
     // placed. A point set no source owns is drawn at its anchor's affine
     // place, affine, and the engine says so once.
     if (flags & RecordFlags.points) {
-      const mesh = raster.drawBatches[index]!.mesh;
+      const mesh = this.world.draws.drawBatches[index]!.mesh;
       if (!this.#sources.has(mesh.id)) {
         this.#say(
           "points",
@@ -1757,13 +1761,12 @@ export class WorldCurvilinearMaps {
 
   /** An instanced draw's matrices as the application wrote them (the instance table's). */
   #captureInstances(index: number, count: number): Float32Array {
-    const raster = this.world.raster;
     const first =
-      raster.recordsU32[index * RECORD_WORDS + INSTANCE_FIRST_WORD]!;
+      this.world.draws.recordsU32[index * RECORD_WORDS + INSTANCE_FIRST_WORD]!;
     const base = new Float32Array(count * 16);
     const m = new Float64Array(16);
     for (let k = 0; k < count; k++) {
-      readInstanceMatrix(raster.instances.f32, first + k, m);
+      readInstanceMatrix(this.world.draws.instances.f32, first + k, m);
       base.set(m, k * 16);
     }
     return base;
@@ -1898,7 +1901,7 @@ export class WorldCurvilinearMaps {
       this.#instancePasses.add(index);
       return;
     }
-    const record = this.world.raster;
+    const record = this.world.draws;
     const o = index * RECORD_WORDS;
     const own = this.world.scene.drawPlacements[index];
     // A routed draw's record holds its drawn sphere: its own is the route's.
@@ -2038,7 +2041,7 @@ export class WorldCurvilinearMaps {
     ) {
       return undefined;
     }
-    const mesh = this.world.raster.drawBatches[index]!.mesh;
+    const mesh = this.world.draws.drawBatches[index]!.mesh;
     const components = this.world.scene.meshRanges
       .get(mesh.id)
       ?.named?.get(
@@ -2203,10 +2206,9 @@ export class WorldCurvilinearMaps {
     to: number,
   ): void {
     const state = d.instances!;
-    const raster = this.world.raster;
-    const { f32, u32 } = raster.instances;
+    const { f32, u32 } = this.world.draws.instances;
     const first =
-      raster.recordsU32[index * RECORD_WORDS + INSTANCE_FIRST_WORD]!;
+      this.world.draws.recordsU32[index * RECORD_WORDS + INSTANCE_FIRST_WORD]!;
     const wd = state.matrix;
     const l = linearPart(wd);
     const lInverse = invert3(l);
@@ -2245,20 +2247,19 @@ export class WorldCurvilinearMaps {
         u32[w + 14]!,
         u32[w + 15]!,
       );
-      raster.instances.mark(slot);
+      this.world.draws.instances.mark(slot);
     }
     this.world.version++;
     this.world.changedViews |=
-      raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
+      this.world.draws.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
   }
 
   /** An instanced draw's instances go back to the application's matrices. */
   #restoreInstances(index: number, d: DrawCurvilinearMap): void {
     const state = d.instances!;
-    const raster = this.world.raster;
-    const { f32, u32 } = raster.instances;
+    const { f32, u32 } = this.world.draws.instances;
     const first =
-      raster.recordsU32[index * RECORD_WORDS + INSTANCE_FIRST_WORD]!;
+      this.world.draws.recordsU32[index * RECORD_WORDS + INSTANCE_FIRST_WORD]!;
     const count = state.base.length / 16;
     const m = new Float64Array(16);
     for (let k = 0; k < count; k++) {
@@ -2276,23 +2277,22 @@ export class WorldCurvilinearMaps {
         u32[w + 14]!,
         u32[w + 15]!,
       );
-      raster.instances.mark(slot);
+      this.world.draws.instances.mark(slot);
     }
     this.#instancePasses.delete(index);
     this.world.version++;
     this.world.changedViews |=
-      raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
+      this.world.draws.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
   }
 
   #setHidden(index: number, hidden: boolean): void {
-    const raster = this.world.raster;
     const o = index * RECORD_WORDS + FLAGS_WORD;
-    const flags = raster.recordsU32[o]!;
+    const flags = this.world.draws.recordsU32[o]!;
     const next = hidden
       ? flags | RecordFlags.hidden
       : flags & ~RecordFlags.hidden;
     if (next !== flags) {
-      raster.drawConstants.setFlags(index, next);
+      this.world.draws.drawConstants.setFlags(index, next);
       this.world.markDirty(index);
     }
   }

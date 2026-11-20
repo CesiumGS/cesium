@@ -115,7 +115,7 @@ async function setup(
 /** The draw's block in the placements buffer: its rows as words, and the row it starts at. */
 function blockOf(world: World, draw: DrawHandle) {
   const row =
-    world.raster.recordsU32[draw.index * RECORD_WORDS + PLACEMENT_WORD]!;
+    world.draws.recordsU32[draw.index * RECORD_WORDS + PLACEMENT_WORD]!;
   const anchor = world.curvilinearMaps.routes.routeOf(draw.index)!;
   const rows = routeBlockRows(anchor.compiled);
   const { f32, u32 } = world.raster.placementTable.rowWords(row, rows);
@@ -190,7 +190,7 @@ describe("compiled routes in the renderer", () => {
     const recordOf = () =>
       Array.from(
         { length: RECORD_WORDS },
-        (_, k) => s.world.raster.recordsU32[s.draw.index * RECORD_WORDS + k]!,
+        (_, k) => s.world.draws.recordsU32[s.draw.index * RECORD_WORDS + k]!,
       );
     const record = recordOf();
     s.scale.value = 0.4;
@@ -248,7 +248,7 @@ describe("compiled routes in the renderer", () => {
       await s.settle();
       const sphere = s.world.curvilinearMaps.routes.base(s.draw.index);
       expect(sphere).toBeDefined();
-      const record = s.world.raster.recordsF32;
+      const record = s.world.draws.recordsF32;
       const c = Array.from(
         { length: 3 },
         (_, a) => record[o + CENTER_WORD + a]!,

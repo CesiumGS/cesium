@@ -247,9 +247,9 @@ describe("the engine side", () => {
   it("writes a draw's debug word through the constants seam", () => {
     const { world } = scene();
     const draw = world.addDraw({ mesh: world.addMesh(createBox()) });
-    expect(
-      world.raster.recordsU32[draw.index * RECORD_WORDS + DEBUG_WORD],
-    ).toBe(0);
+    expect(world.draws.recordsU32[draw.index * RECORD_WORDS + DEBUG_WORD]).toBe(
+      0,
+    );
     const word = packTileDebug({
       level: 5,
       state: 1,
@@ -258,8 +258,8 @@ describe("the engine side", () => {
       stretch: 1,
     });
     world.setDrawDebug(draw, word);
-    expect(
-      world.raster.recordsU32[draw.index * RECORD_WORDS + DEBUG_WORD],
-    ).toBe(word);
+    expect(world.draws.recordsU32[draw.index * RECORD_WORDS + DEBUG_WORD]).toBe(
+      word,
+    );
   });
 });

@@ -119,7 +119,7 @@ function firstFeature(w: World, d: DrawHandle): number {
 }
 
 /** The world's records, writable here (the tests set a record's words). */
-const records = () => world.raster.recordsU32 as Uint32Array;
+const records = () => world.draws.recordsU32 as Uint32Array;
 
 const distance = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);

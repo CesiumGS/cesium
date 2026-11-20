@@ -476,7 +476,7 @@ describe("the acceptance world", () => {
     const instanceError = (now: Route): number => {
       let e = 0;
       for (let k = 0; k < 3; k++) {
-        readInstanceMatrix(world.raster.instances.f32, first + k, m);
+        readInstanceMatrix(world.draws.instances.f32, first + k, m);
         const f = m4.transformPoint(
           new Float64Array(3),
           wd,
@@ -501,7 +501,7 @@ describe("the acceptance world", () => {
     };
     expect(instanceError(s.route())).toBeLessThan(0.02);
     // It moves more than 20 km: not at its anchor's affine place.
-    readInstanceMatrix(world.raster.instances.f32, first + 2, m);
+    readInstanceMatrix(world.draws.instances.f32, first + 2, m);
     expect(Math.hypot(m[12]!, m[13]!, m[14]!)).toBeGreaterThan(1000);
     // A scale change moves them again, and an instance written by the application is moved at once.
     s.scale.value = 0.5;
@@ -527,7 +527,7 @@ describe("the acceptance world", () => {
         1,
       ),
     });
-    readInstanceMatrix(world.raster.instances.f32, first + 1, m);
+    readInstanceMatrix(world.draws.instances.f32, first + 1, m);
     const f1 = m4.transformPoint(
       new Float64Array(3),
       wd,

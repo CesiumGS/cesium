@@ -459,14 +459,14 @@ async function runCurvilinearGlobe(): Promise<CurvilinearGlobeResult> {
 /** The draws of the world drawn curvilinear now, other than `except`. */
 function curvilinear(world: World, except: ReadonlySet<number>): DrawHandle[] {
   const out: DrawHandle[] = [];
-  const raster = world.raster;
-  for (let index = 0; index < raster.drawCount; index++) {
-    if (raster.drawBatches[index] === undefined || except.has(index)) {
+  const draws = world.draws;
+  for (let index = 0; index < draws.drawCount; index++) {
+    if (draws.drawBatches[index] === undefined || except.has(index)) {
       continue;
     }
     const handle: DrawHandle = {
       index,
-      generation: raster.drawGeneration[index]!,
+      generation: draws.drawGeneration[index]!,
       name: undefined,
     };
     if (world.curvilinearMaps.has(handle)) {

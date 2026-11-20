@@ -309,7 +309,7 @@ function addQuad(
 }
 
 const hidden = (s: Setup, draw: DrawHandle): boolean =>
-  (s.world.raster.recordsU32[draw.index * RECORD_WORDS + FLAGS_WORD]! &
+  (s.world.draws.recordsU32[draw.index * RECORD_WORDS + FLAGS_WORD]! &
     RecordFlags.hidden) !==
   0;
 
@@ -646,12 +646,12 @@ describe("draws across a curvilinear map", () => {
     const mesh = quad(200);
     const o = draw.index * RECORD_WORDS + CENTER_WORD;
     const base =
-      s.world.raster.recordsF32[draw.index * RECORD_WORDS + RADIUS_WORD]!;
-    const home = [0, 1, 2].map((i) => s.world.raster.recordsF32[o + i]!);
+      s.world.draws.recordsF32[draw.index * RECORD_WORDS + RADIUS_WORD]!;
+    const home = [0, 1, 2].map((i) => s.world.draws.recordsF32[o + i]!);
     s.step();
     const radius =
-      s.world.raster.recordsF32[draw.index * RECORD_WORDS + RADIUS_WORD]!;
-    const center = [0, 1, 2].map((i) => s.world.raster.recordsF32[o + i]!);
+      s.world.draws.recordsF32[draw.index * RECORD_WORDS + RADIUS_WORD]!;
+    const center = [0, 1, 2].map((i) => s.world.draws.recordsF32[o + i]!);
     // The center moved by the displacement there (tens of kilometers at
     // k = 10), and the radius grew by the residual alone: the old padding
     // by the whole displacement would be over 20 km. Every displaced vertex
@@ -1026,7 +1026,7 @@ describe("the render root", () => {
     const twin = s.world.drawForRoute(draw, other.anchorRoute(s.earth));
     expect(twin.index).not.toBe(draw.index);
     const maskOf = (d: DrawHandle) =>
-      s.world.raster.recordsU32[d.index * RECORD_WORDS + VIEW_MASK_WORD]!;
+      s.world.draws.recordsU32[d.index * RECORD_WORDS + VIEW_MASK_WORD]!;
     expect(maskOf(draw)).toBe(first >>> 0);
     expect(maskOf(twin)).toBe(second >>> 0);
     // The twin is drawn as it is, with no term; the source keeps its route's.
@@ -1181,7 +1181,7 @@ describe("a ranged scale", () => {
     const draws = [addQuad(s, { half: 200 }), addQuad(s, { half: 50 })];
     const meshes = [quad(200), quad(50)];
     s.step();
-    const bounds = vi.spyOn(s.world.raster.drawConstants, "setBounds");
+    const bounds = vi.spyOn(s.world.draws.drawConstants, "setBounds");
     const write = vi.spyOn(s.world.raster.placementTable, "setParameter");
     const scale = s.scale!;
     const out = new Float64Array(3);
@@ -1189,9 +1189,9 @@ describe("a ranged scale", () => {
       scale.value = v;
       draws.forEach((draw, i) => {
         const o = draw.index * RECORD_WORDS;
-        const radius = s.world.raster.recordsF32[o + RADIUS_WORD]!;
+        const radius = s.world.draws.recordsF32[o + RADIUS_WORD]!;
         const center = [0, 1, 2].map(
-          (a) => s.world.raster.recordsF32[o + CENTER_WORD + a]!,
+          (a) => s.world.draws.recordsF32[o + CENTER_WORD + a]!,
         );
         const terms = drawTerms(s.world, draw)!;
         const mesh = meshes[i]!;
@@ -1226,7 +1226,7 @@ describe("a ranged scale", () => {
     addQuad(s, { half: 200 });
     addQuad(s, { half: 50 });
     s.step();
-    const bounds = vi.spyOn(s.world.raster.drawConstants, "setBounds");
+    const bounds = vi.spyOn(s.world.draws.drawConstants, "setBounds");
     s.scale!.value = 0.5;
     expect(bounds).toHaveBeenCalledTimes(2);
     s.scale!.value = 2;

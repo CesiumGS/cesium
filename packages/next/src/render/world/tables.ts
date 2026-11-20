@@ -1,5 +1,6 @@
 // A world's GPU tables and the bind groups over them: growing them, and
 // rebuilding what referred to them.
+import type { WorldDraws } from "../../scene/world/worldDraws.ts";
 import { MATERIAL_SIZE, DRAW_ITEM_SIZE, ALL_VIEWS } from "../layout.ts";
 import { resized, grownSize } from "../../scene/CpuTable.ts";
 import type { Slab } from "../../scene/Slabs.ts";
@@ -38,7 +39,6 @@ export interface TableWorld extends Pick<
     | "cullBindGroup"
     | "cullParams"
     | "drawArguments"
-    | "drawConstants"
     | "drawRows"
     | "freePointCounters"
     | "imageryPlaceholder"
@@ -46,7 +46,6 @@ export interface TableWorld extends Pick<
     | "imageryView"
     | "instances"
     | "materialRows"
-    | "materialsDirty"
     | "placementTable"
     | "pointCounts"
     | "patchDraws"
@@ -54,9 +53,14 @@ export interface TableWorld extends Pick<
     | "pointCullBindGroup"
     | "pointDraws"
     | "pointSetCount"
+    | "records"
     | "splats"
     | "transforms"
     | "translucentDraws"
+  >;
+  readonly draws: Pick<
+    WorldDraws,
+    "drawConstants" | "instances" | "materialsDirty" | "transforms"
   >;
   readonly scene: Pick<WorldScene, "maxClipBlocks">;
 }
@@ -80,12 +84,14 @@ export interface SlabBindWorld extends Pick<
     | "instances"
     | "placementTable"
   >;
+  readonly draws: Pick<WorldDraws, "instances">;
 }
 
 /** Rasterizer side, growing the scene's arrays with its tables: room for more rows. */
 export interface ReserveWorld extends Pick<World, "maxMaterials"> {
-  readonly raster: Pick<
-    WorldRaster,
+  readonly raster: Pick<WorldRaster, "transforms">;
+  readonly draws: Pick<
+    WorldDraws,
     | "drawConstants"
     | "drawGeneration"
     | "drawOwnedTransform"
@@ -110,11 +116,11 @@ export interface ReserveWorld extends Pick<World, "maxMaterials"> {
 
 /** @internal CPU room for draw slots below `count`. */
 export function reserveDraws(world: ReserveWorld, count: number): void {
-  if (world.raster.drawConstants.reserve(count)) {
-    const rows = world.raster.drawConstants.rows;
-    world.raster.drawGeneration = resized(world.raster.drawGeneration, rows);
-    world.raster.drawOwnedTransform = resized(
-      world.raster.drawOwnedTransform,
+  if (world.draws.drawConstants.reserve(count)) {
+    const rows = world.draws.drawConstants.rows;
+    world.draws.drawGeneration = resized(world.draws.drawGeneration, rows);
+    world.draws.drawOwnedTransform = resized(
+      world.draws.drawOwnedTransform,
       rows,
       -1,
     );
@@ -123,8 +129,8 @@ export function reserveDraws(world: ReserveWorld, count: number): void {
 
 /** @internal CPU room for transforms below `count`. */
 export function reserveTransforms(world: ReserveWorld, count: number): void {
-  if (world.raster.transforms.reserve(count)) {
-    const t = world.raster.transforms.rows;
+  if (world.draws.transforms.reserve(count)) {
+    const t = world.draws.transforms.rows;
     world.scene.transformLocal = resized(world.scene.transformLocal, t * 16);
     world.scene.transformWorld = resized(world.scene.transformWorld, t * 16);
     world.scene.transformParent = resized(world.scene.transformParent, t, -1);
@@ -149,14 +155,14 @@ export function reserveTransforms(world: ReserveWorld, count: number): void {
 
 /** @internal CPU room for materials below `count`. */
 export function reserveMaterials(world: ReserveWorld, count: number): void {
-  const rows = world.raster.materialsF32.byteLength / MATERIAL_SIZE;
+  const rows = world.draws.materialsF32.byteLength / MATERIAL_SIZE;
   if (count > rows) {
     const data = new ArrayBuffer(
       grownSize(rows, count, world.maxMaterials) * MATERIAL_SIZE,
     );
-    new Uint32Array(data).set(world.raster.materialsU32);
-    world.raster.materialsF32 = new Float32Array(data);
-    world.raster.materialsU32 = new Uint32Array(data);
+    new Uint32Array(data).set(world.draws.materialsU32);
+    world.draws.materialsF32 = new Float32Array(data);
+    world.draws.materialsU32 = new Uint32Array(data);
   }
 }
 
@@ -185,8 +191,8 @@ export function growInstances(world: TableWorld, count: number): void {
  */
 export function growDraws(world: TableWorld, count: number): void {
   const rows = grownSize(world.raster.drawRows, count, world.maxDraws);
-  world.raster.drawConstants.growGpu(rows);
-  world.recordBuffer = world.raster.drawConstants.buffer;
+  world.raster.records.growGpu(rows);
+  world.recordBuffer = world.raster.records.buffer;
   world.raster.batchBuffer.destroy();
   world.raster.batchBuffer = createBatchBuffer(world, rows);
   world.raster.drawArguments.growBatches(rows);
@@ -218,7 +224,7 @@ export function growMaterials(world: TableWorld, count: number): void {
     usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST,
   });
   // The whole table is written with the next frame.
-  world.raster.materialsDirty = true;
+  world.draws.materialsDirty = true;
   tablesReplaced(world);
 }
 

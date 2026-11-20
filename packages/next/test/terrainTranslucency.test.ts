@@ -101,7 +101,7 @@ describe("a terrain tile's skirts", () => {
     });
     expect(handle.skirtStart).toBe(start);
     const draw = world.addDraw({ mesh: handle });
-    const u = world.raster.recordsU32;
+    const u = world.draws.recordsU32;
     const o = draw.index * RECORD_WORDS;
     const layout = await import("../src/render/generated/layouts.ts");
     expect(u[o + layout.DrawRecordLayout.skirtStart / 4]).toBe(start);
@@ -297,7 +297,7 @@ describe("a draw's material, changed in place", () => {
 });
 
 describe("setDrawMaterial's batches", () => {
-  const internals = (world: World) => world.raster;
+  const internals = (world: World) => world.draws;
 
   it("moves a draw's counts to the new batch: items, and shown unless hidden", async () => {
     const engine = await fakeEngine();
@@ -336,7 +336,7 @@ describe("setDrawMaterial's batches", () => {
     expect([...w.batches.values()]).not.toContain(first);
     expect(w.freeBatches).toContain(first);
     // Its record follows: the batch's index and the material's.
-    const u = world.raster.recordsU32;
+    const u = world.draws.recordsU32;
     expect(u[a.index * RECORD_WORDS + BATCH_WORD]).toBe(twin.index);
     expect(world.drawMaterial(b)).toBe(blended);
     // And back.
@@ -375,7 +375,7 @@ describe("setDrawMaterial's batches", () => {
       billboard: { size: 8 },
     });
     const w = internals(world);
-    const params = w.pointDraws.get(draw.index)!.params;
+    const params = world.raster.pointDraws.get(draw.index)!.params;
     const writes: Uint32Array[] = [];
     const device = engine.gpu.device as unknown as { queue: GPUQueue };
     const queue = device.queue;
@@ -395,7 +395,7 @@ describe("setDrawMaterial's batches", () => {
       device.queue = queue;
     }
     const batch = w.drawBatches[draw.index]!;
-    expect(w.pointDraws.get(draw.index)!.batch).toBe(batch);
+    expect(world.raster.pointDraws.get(draw.index)!.batch).toBe(batch);
     // pointCull.slang's params: word 3 the record, word 5 the batch.
     expect(writes.at(-1)![3]).toBe(draw.index);
     expect(writes.at(-1)![5]).toBe(batch.index);
@@ -408,7 +408,7 @@ describe("setDrawMaterial's batches", () => {
     const blended = world.materialWithFlags(opaque, MaterialFlags.alphaBlend);
     const mesh = world.addMesh(createBox());
     const draw = world.addDraw({ mesh, material: opaque });
-    const u = world.raster.recordsU32 as Uint32Array;
+    const u = world.draws.recordsU32 as Uint32Array;
     const o = draw.index * RECORD_WORDS;
     const before = Array.from(u.subarray(o, o + RECORD_WORDS));
     world.setDrawMaterial(draw, blended);
@@ -448,7 +448,7 @@ async function globeWithTiles() {
   const underTile = tile(7.4, under);
   loaded.add(underTile);
   loaded.add(tile(8.4, beside));
-  const u = world.raster.recordsU32;
+  const u = world.draws.recordsU32;
   const mask = (draw: DrawHandle) =>
     u[draw.index * RECORD_WORDS + TERRAIN_CLIP_WORD];
   const done = () => {

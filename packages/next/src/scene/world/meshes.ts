@@ -1,4 +1,5 @@
 // A world's meshes: geometry into its slabs, through the upload queue.
+import type { WorldDraws } from "./worldDraws.ts";
 import {
   TEXTURE_PROPERTY_WORDS,
   NO_STREAM,
@@ -31,13 +32,16 @@ export interface MeshWorld extends Pick<
 > {
   readonly raster: Pick<
     WorldRaster,
-    | "drawConstants"
+    | "records"
     | "frameComputes"
     | "instances"
     | "pendingUploads"
     | "transforms"
     | "uploadChunks"
-    | "uploadsPending"
+  >;
+  readonly draws: Pick<
+    WorldDraws,
+    "drawConstants" | "instances" | "transforms" | "uploadsPending"
   >;
   readonly scene: Pick<
     WorldScene,

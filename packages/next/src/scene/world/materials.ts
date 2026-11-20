@@ -1,4 +1,5 @@
 // A world's materials and texture sets.
+import type { WorldDraws } from "./worldDraws.ts";
 import { textureOf, isDestroyed } from "../../gpu/textureTracking.ts";
 import {
   writeMaterial,
@@ -38,6 +39,7 @@ export interface MaterialWorld extends Pick<
 > {
   readonly raster: Pick<
     WorldRaster,
+    | "records"
     | "batchBuffer"
     | "bundle"
     | "clipRows"
@@ -45,9 +47,6 @@ export interface MaterialWorld extends Pick<
     | "cullBindGroup"
     | "cullParams"
     | "drawArguments"
-    | "drawConstants"
-    | "drawGeneration"
-    | "drawOwnedTransform"
     | "drawRows"
     | "freePointCounters"
     | "imageryPlaceholder"
@@ -55,9 +54,6 @@ export interface MaterialWorld extends Pick<
     | "imageryView"
     | "instances"
     | "materialRows"
-    | "materialsDirty"
-    | "materialsF32"
-    | "materialsU32"
     | "placementTable"
     | "pointCounts"
     | "patchDraws"
@@ -68,6 +64,17 @@ export interface MaterialWorld extends Pick<
     | "splats"
     | "transforms"
     | "translucentDraws"
+  >;
+  readonly draws: Pick<
+    WorldDraws,
+    | "drawConstants"
+    | "drawGeneration"
+    | "drawOwnedTransform"
+    | "instances"
+    | "materialsDirty"
+    | "materialsF32"
+    | "materialsU32"
+    | "transforms"
   >;
   readonly scene: Pick<
     WorldScene,
@@ -149,11 +156,11 @@ function internMaterial(world: MaterialWorld, words: Uint32Array): number {
   if (index >= world.raster.materialRows) {
     growMaterials(world, index + 1);
   }
-  world.raster.materialsU32.set(words, index * MATERIAL_WORDS);
+  world.draws.materialsU32.set(words, index * MATERIAL_WORDS);
   world.scene.materialByKey.set(key, index);
   world.scene.materialKeys[index] = key;
   world.scene.materialReferences[index] = 1;
-  world.raster.materialsDirty = true;
+  world.draws.materialsDirty = true;
   world.version++;
   world.changedViews = ALL_VIEWS;
   return index;
@@ -187,7 +194,7 @@ export function materialWithFlags(
   }
   const scratch = world.scene.materialScratch;
   scratch.u32.set(
-    world.raster.materialsU32.subarray(
+    world.draws.materialsU32.subarray(
       material * MATERIAL_WORDS,
       (material + 1) * MATERIAL_WORDS,
     ),

@@ -263,7 +263,7 @@ export class WorldCurvilinearClips {
       this.#entries.delete(index);
       return terms;
     }
-    const generation = this.world.raster.drawGeneration[index]!;
+    const generation = this.world.draws.drawGeneration[index]!;
     let entry = this.#entries.get(index);
     if (!entry || entry.generation !== generation) {
       entry = {
@@ -378,9 +378,11 @@ export class WorldCurvilinearClips {
       this.#entries.clear();
       return;
     }
-    const raster = this.world.raster;
-    for (let index = 0; index < raster.drawCount; index++) {
-      if (raster.drawBatches[index] !== undefined && this.#eligible(index)) {
+    for (let index = 0; index < this.world.draws.drawCount; index++) {
+      if (
+        this.world.draws.drawBatches[index] !== undefined &&
+        this.#eligible(index)
+      ) {
         this.#pending.add(index);
       }
     }
@@ -418,11 +420,10 @@ export class WorldCurvilinearClips {
 
   /** Sets the draw's placement again: `decorate` puts the field on its terms. */
   #apply(index: number): void {
-    const raster = this.world.raster;
-    if (raster.drawBatches[index] === undefined) {
+    if (this.world.draws.drawBatches[index] === undefined) {
       return;
     }
-    const handle = this.#handle(index, raster.drawGeneration[index]!);
+    const handle = this.#handle(index, this.world.draws.drawGeneration[index]!);
     if (!this.world.hasDraw(handle)) {
       return;
     }
@@ -444,9 +445,8 @@ export class WorldCurvilinearClips {
 
   /** Whether the draw is a mesh a per-vertex placement reaches. */
   #eligible(index: number): boolean {
-    const raster = this.world.raster;
     const o = index * RECORD_WORDS;
-    const flags = raster.recordsU32[o + FLAGS_WORD]!;
+    const flags = this.world.draws.recordsU32[o + FLAGS_WORD]!;
     if (flags & (RecordFlags.billboard | RecordFlags.points)) {
       this.#say(
         "kind",
@@ -454,7 +454,7 @@ export class WorldCurvilinearClips {
       );
       return false;
     }
-    if (raster.recordsU32[o + INSTANCE_COUNT_WORD]! > 0) {
+    if (this.world.draws.recordsU32[o + INSTANCE_COUNT_WORD]! > 0) {
       this.#say(
         "instances",
         "clips: an instanced draw has no per-vertex placement to carry a curvilinear clip's field; it is not cut by one.",
@@ -467,12 +467,11 @@ export class WorldCurvilinearClips {
   /** The draw's bounding sphere without its placement, as the placement's own base. */
   #sphere(index: number): { center: number[]; scale: number } {
     const own = this.world.scene.drawPlacements[index];
-    const raster = this.world.raster;
     const o = index * RECORD_WORDS;
     const center = own
       ? [...own.center]
-      : [0, 1, 2].map((i) => raster.recordsF32[o + CENTER_WORD + i]!);
-    const radius = own?.base ?? raster.recordsF32[o + RADIUS_WORD]!;
+      : [0, 1, 2].map((i) => this.world.draws.recordsF32[o + CENTER_WORD + i]!);
+    const radius = own?.base ?? this.world.draws.recordsF32[o + RADIUS_WORD]!;
     return { center, scale: Math.max(radius, 1e-3) };
   }
 

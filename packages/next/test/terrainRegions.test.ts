@@ -63,7 +63,7 @@ async function globeWithTiles() {
   const loaded = globe.state.loaded as unknown as Set<unknown>;
   loaded.add(tile(7.4, under));
   loaded.add(tile(8.4, beside));
-  const u = world.raster.recordsU32;
+  const u = world.draws.recordsU32;
   const mask = (draw: DrawHandle) =>
     u[draw.index * RECORD_WORDS + TERRAIN_CLIP_WORD];
   const done = () => {

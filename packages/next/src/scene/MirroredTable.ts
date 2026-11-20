@@ -35,22 +35,16 @@ export class MirroredTable {
     this.paramsData[1] = table.words;
   }
 
-  /** The table's words as floats (`CpuTable.f32`). */
-  get f32(): Float32Array {
+  private get f32(): Float32Array {
     return this.table.f32;
   }
 
-  /** The table's words as unsigned integers (`CpuTable.u32`). */
-  get u32(): Uint32Array {
+  private get u32(): Uint32Array {
     return this.table.u32;
   }
 
-  get words(): number {
+  private get words(): number {
     return this.table.words;
-  }
-
-  get capacity(): number {
-    return this.table.capacity;
   }
 
   private createBuffer(rows: number): GPUBuffer {
@@ -78,21 +72,6 @@ export class MirroredTable {
     old.destroy();
     // The scatter's group binds the table.
     this.bindGroup = undefined;
-  }
-
-  /** Rows on the CPU (`CpuTable.rows`). */
-  get rows(): number {
-    return this.table.rows;
-  }
-
-  /** `CpuTable.reserve`. */
-  reserve(count: number): boolean {
-    return this.table.reserve(count);
-  }
-
-  /** `CpuTable.mark`. */
-  mark(index: number): void {
-    this.table.mark(index);
   }
 
   /** Uploads the changes; a scatter is encoded into `pass`. */

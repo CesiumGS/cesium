@@ -181,7 +181,7 @@ const bit = (view: View): number =>
   (1 << engine.scene.viewIds.get(view)!) >>> 0;
 
 const maskOf = (world: World, draw: DrawHandle): number =>
-  world.raster.recordsU32[draw.index * RECORD_WORDS + VIEW_MASK_WORD]!;
+  world.draws.recordsU32[draw.index * RECORD_WORDS + VIEW_MASK_WORD]!;
 
 const twinOf = (s: Setup, view: View, draw = s.draw): DrawHandle =>
   s.world.drawForRoute(draw, view.anchorRoute(s.earth));
@@ -214,7 +214,7 @@ describe("a switch frame with structurally different choices", () => {
     expect(heightAfter(undefined, 1000)).toBeCloseTo(1000, 6);
     // The twin is the source's draw otherwise: its feature IDs are the source's, so a pick in B finds the source.
     const featureOf = (d: DrawHandle) =>
-      s.world.raster.recordsU32[d.index * RECORD_WORDS + FEATURE_ID_WORD]!;
+      s.world.draws.recordsU32[d.index * RECORD_WORDS + FEATURE_ID_WORD]!;
     expect(featureOf(twin)).toBe(featureOf(s.draw));
     expect(s.world.feature(featureOf(twin))?.draw.index).toBe(s.draw.index);
   });
@@ -314,11 +314,11 @@ describe("a switch frame with structurally different choices", () => {
     s.world.setVisible(s.draw, false);
     s.step();
     const tint = (d: DrawHandle, k: number) =>
-      s.world.raster.recordsF32[d.index * RECORD_WORDS + COLOR_WORD + k]!;
+      s.world.draws.recordsF32[d.index * RECORD_WORDS + COLOR_WORD + k]!;
     expect(tint(twin, 0)).toBeCloseTo(0.25, 6);
     expect(tint(twin, 2)).toBeCloseTo(0.75, 6);
     const hidden = (d: DrawHandle) =>
-      (s.world.raster.recordsU32[d.index * RECORD_WORDS + FLAGS_WORD]! &
+      (s.world.draws.recordsU32[d.index * RECORD_WORDS + FLAGS_WORD]! &
         RecordFlags.hidden) !==
       0;
     expect(hidden(twin)).toBe(true);

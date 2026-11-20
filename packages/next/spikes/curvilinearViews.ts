@@ -404,17 +404,17 @@ async function runCurvilinearViews(): Promise<CurvilinearViewsResult> {
     // height term and in B and C by twins. Waited by frames until tiles have
     // loaded and none is pending for five frames in a row.
     const ownIndices = new Set<number>();
-    const raster = world.raster;
+    const worldDraws = world.draws;
     const sourcesNow = (): DrawHandle[] => {
       const out: DrawHandle[] = [];
-      for (let index = 0; index < raster.drawCount; index++) {
+      for (let index = 0; index < worldDraws.drawCount; index++) {
         const handle: DrawHandle = {
           index,
-          generation: raster.drawGeneration[index]!,
+          generation: worldDraws.drawGeneration[index]!,
           name: undefined,
         };
         if (
-          raster.drawBatches[index] !== undefined &&
+          worldDraws.drawBatches[index] !== undefined &&
           !ownIndices.has(index) &&
           world.curvilinearMaps.variants.sourceOf(handle) === undefined &&
           world.curvilinearMaps.has(handle)
@@ -448,7 +448,7 @@ async function runCurvilinearViews(): Promise<CurvilinearViewsResult> {
       await new Promise((resolve) => setTimeout(resolve, 2));
     }
     const maskOf = (d: DrawHandle) =>
-      raster.recordsU32[d.index * RECORD_WORDS + VIEW_MASK_WORD]!;
+      worldDraws.recordsU32[d.index * RECORD_WORDS + VIEW_MASK_WORD]!;
     const bits = views.map((v) => (1 << engine.scene.viewIds.get(v)!) >>> 0);
     const tiles = sourcesNow();
     let exactTiles = 0;

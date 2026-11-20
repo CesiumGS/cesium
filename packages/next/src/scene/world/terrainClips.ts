@@ -1,5 +1,6 @@
 // A world's clip boxes and terrain clip regions: their block and run allocation,
 // and the rows the shaders read.
+import type { WorldDraws } from "./worldDraws.ts";
 import { TerrainRegionError } from "../../globe/terrainClip.ts";
 import { splitVec3 } from "../../math/transforms.ts";
 import type { Vec3 } from "../../math/vec3.ts";
@@ -41,6 +42,7 @@ export interface ClipWorld extends Pick<
 > {
   readonly raster: Pick<
     WorldRaster,
+    | "records"
     | "batchBuffer"
     | "bundle"
     | "clipRows"
@@ -48,7 +50,6 @@ export interface ClipWorld extends Pick<
     | "cullBindGroup"
     | "cullParams"
     | "drawArguments"
-    | "drawConstants"
     | "drawRows"
     | "freePointCounters"
     | "imageryPlaceholder"
@@ -56,7 +57,6 @@ export interface ClipWorld extends Pick<
     | "imageryView"
     | "instances"
     | "materialRows"
-    | "materialsDirty"
     | "placementTable"
     | "pointCounts"
     | "patchDraws"
@@ -67,6 +67,10 @@ export interface ClipWorld extends Pick<
     | "splats"
     | "transforms"
     | "translucentDraws"
+  >;
+  readonly draws: Pick<
+    WorldDraws,
+    "drawConstants" | "instances" | "materialsDirty" | "transforms"
   >;
   readonly scene: Pick<
     WorldScene,
@@ -169,7 +173,7 @@ export function setPlaceholder(
   }
   const m = clip ? mask >>> 0 : 0;
   const packed = clip ? packClip(clip.block, clip.count) : 0;
-  if (world.raster.drawConstants.setPlaceholder(handle.index, m, packed)) {
+  if (world.draws.drawConstants.setPlaceholder(handle.index, m, packed)) {
     world.markDirty(handle.index);
   }
 }
@@ -412,7 +416,7 @@ export function setTerrainClip(
   if (!world.hasDraw(handle)) {
     return;
   }
-  if (world.raster.drawConstants.setTerrainClip(handle.index, mask)) {
+  if (world.draws.drawConstants.setTerrainClip(handle.index, mask)) {
     world.markDirty(handle.index);
   }
 }

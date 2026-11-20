@@ -1,4 +1,5 @@
 // A mesh's feature tables: their columns' layout, and their rows' upload.
+import type { WorldDraws } from "./worldDraws.ts";
 import type { FeatureTable } from "../../io/gltfTypes.ts";
 import {
   MAX_DIRECTORY_ENTRIES,
@@ -20,13 +21,16 @@ import type { WorldScene } from "./worldScene.ts";
 export interface FeatureTableWorld extends Pick<World, "ctx" | "slabs"> {
   readonly raster: Pick<
     WorldRaster,
-    | "drawConstants"
     | "frameComputes"
     | "instances"
     | "pendingUploads"
+    | "records"
     | "transforms"
     | "uploadChunks"
-    | "uploadsPending"
+  >;
+  readonly draws: Pick<
+    WorldDraws,
+    "drawConstants" | "instances" | "transforms" | "uploadsPending"
   >;
   readonly scene: Pick<
     WorldScene,
@@ -349,11 +353,11 @@ export function uploadTables(
   world: FeatureTableWorld,
   pass: GPUComputePassEncoder,
 ): void {
-  if (!world.raster.uploadsPending) {
+  if (!world.draws.uploadsPending) {
     return;
   }
-  world.raster.uploadsPending = false;
-  world.raster.drawConstants.upload(pass);
+  world.draws.uploadsPending = false;
+  world.raster.records.upload(pass);
   world.raster.transforms.upload(pass);
   world.raster.instances.upload(pass);
   // Kernels writing the tables each frame (tracks' instance rows), after

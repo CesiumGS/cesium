@@ -122,13 +122,13 @@ const cache = new WeakMap<object, { version: number; stats: GeometryStats }>();
 /** A world's counts, recounted only when its `version` changed. */
 export function worldGeometry(world: {
   readonly version: number;
-  readonly raster: { readonly batchList: readonly Batch[] };
+  readonly draws: { readonly batchList: readonly Batch[] };
 }): GeometryStats {
   let entry = cache.get(world);
   if (!entry || entry.version !== world.version) {
     const stats = entry?.stats ?? emptyGeometry();
     resetGeometry(stats);
-    addBatches(world.raster.batchList, stats);
+    addBatches(world.draws.batchList, stats);
     entry = { version: world.version, stats };
     cache.set(world, entry);
   }

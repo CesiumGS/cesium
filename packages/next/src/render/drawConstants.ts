@@ -39,20 +39,17 @@ import {
  * (docs/design/risks.md, "Bindless textures: not in the PoC, designed for in 2.0", "design for it; don't build it").
  *
  * The records are the layout's (`writeDrawRecord`, render/layout.ts): this
- * class changes no byte of them. Each write marks its row for the next
- * upload; what else a change means to the world (its version, the views to
- * draw again) stays the world's.
+ * class changes no byte of them. It holds them on the CPU, renderer-neutral
+ * (`WorldDraws.drawConstants`); each write logs its row for the device's
+ * next copy (`CpuTable.mark`), and a device mirrors them through `createMirror`.
+ * What else a change means to the world (its version, the views to draw
+ * again) stays the world's.
  */
 export class DrawConstants {
-  private readonly table: MirroredTable;
+  private readonly table: CpuTable;
 
-  constructor(ctx: RenderContext, capacity: number, gpuRows: number) {
-    this.table = new MirroredTable(
-      ctx,
-      "records",
-      new CpuTable(RECORD_WORDS, capacity),
-      gpuRows,
-    );
+  constructor(capacity: number) {
+    this.table = new CpuTable(RECORD_WORDS, capacity);
   }
 
   /** The records' words as unsigned integers, to read. */
@@ -65,11 +62,6 @@ export class DrawConstants {
     return this.table.f32;
   }
 
-  /** The GPU table (replaced by `growGpu`). */
-  get buffer(): GPUBuffer {
-    return this.table.buffer;
-  }
-
   /** Rows on the CPU. */
   get rows(): number {
     return this.table.rows;
@@ -80,23 +72,17 @@ export class DrawConstants {
     return this.table.reserve(count);
   }
 
-  /** A larger GPU table holding the old one's rows. */
-  growGpu(rows: number): void {
-    this.table.growGpu(rows);
-  }
-
-  /** Marks a row for the next upload. */
+  /** Logs a row for the device's next copy. */
   mark(index: number): void {
     this.table.mark(index);
   }
 
-  /** Uploads the marked rows; a scatter may be encoded into `pass`. */
-  upload(pass: GPUComputePassEncoder): void {
-    this.table.upload(pass);
-  }
-
-  destroy(): void {
-    this.table.destroy();
+  /**
+   * The records' GPU table (WebGPU's copy), `gpuRows` rows: made here, as
+   * the records are this seam's alone. It drains the records' change log.
+   */
+  createMirror(ctx: RenderContext, gpuRows: number): MirroredTable {
+    return new MirroredTable(ctx, "records", this.table, gpuRows);
   }
 
   /** Writes a whole record (`writeDrawRecord`). */

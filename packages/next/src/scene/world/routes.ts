@@ -771,7 +771,7 @@ export class WorldRoutes {
     table.upload(d.at, rows);
     d.gpu = false;
     d.recordVersion = anchor.version;
-    world.raster.drawConstants.setPlacement(d.index, d.at);
+    world.draws.drawConstants.setPlacement(d.index, d.at);
     this.#setSphere(d);
     setDrawRoute(world, handle, anchor.variant);
     world.scene.contentRevision_++;
@@ -849,8 +849,8 @@ export class WorldRoutes {
     const index = d.index;
     if (balls.length === 0) {
       // Undefined somewhere in a ball (a height at the body's center): no sphere that holds, so none culls it.
-      world.raster.drawConstants.setBounds(index, d.center, 3e38);
-      world.raster.uploadsPending = true;
+      world.draws.drawConstants.setBounds(index, d.center, 3e38);
+      world.draws.uploadsPending = true;
       return;
     }
     const merged = balls.reduce(mergeBalls);
@@ -862,11 +862,11 @@ export class WorldRoutes {
       return rounded;
     });
     const radius = roundUp32(merged.radius + Math.sqrt(rounding));
-    world.raster.drawConstants.setBounds(index, next, radius);
-    world.raster.uploadsPending = true;
+    world.draws.drawConstants.setBounds(index, next, radius);
+    world.draws.uploadsPending = true;
     world.version++;
     world.changedViews |=
-      world.raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
+      world.draws.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]!;
   }
 
   #freeBlock(d: RoutedDraw): void {
@@ -885,8 +885,8 @@ export class WorldRoutes {
     if (!world.hasDraw(handle)) {
       return;
     }
-    world.raster.drawConstants.setPlacement(d.index, NO_PLACEMENT);
-    world.raster.drawConstants.setBounds(d.index, d.center, d.radius);
+    world.draws.drawConstants.setPlacement(d.index, NO_PLACEMENT);
+    world.draws.drawConstants.setBounds(d.index, d.center, d.radius);
     setDrawRoute(world, handle, undefined);
     world.scene.contentRevision_++;
     world.markDirty(d.index);
@@ -931,7 +931,6 @@ export class WorldRoutes {
    * encodes); the others stay stale until they are shown.
    */
   #encode(pass: GPUComputePassEncoder): void {
-    const raster = this.world.raster;
     for (const anchor of this.#anchors.values()) {
       if (!anchor.gpuStale) {
         continue;
@@ -947,7 +946,10 @@ export class WorldRoutes {
         ) {
           continue;
         }
-        if (raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD] !== 0) {
+        if (
+          this.world.draws.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD] !==
+          0
+        ) {
           draws.push(d);
         } else {
           waiting++;

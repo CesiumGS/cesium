@@ -109,13 +109,13 @@ function addQuad(): DrawHandle {
 }
 
 const words = (draw: DrawHandle) => {
-  const internal = world.raster;
+  const internal = world.draws;
   const o = draw.index * RECORD_WORDS;
   return {
     placement: internal.recordsU32[o + PLACEMENT_WORD]!,
     radius: internal.recordsF32[o + RADIUS_WORD]!,
     center: [0, 1, 2].map((i) => internal.recordsF32[o + CENTER_WORD + i]!),
-    table: internal.placementTable,
+    table: world.raster.placementTable,
   };
 };
 
@@ -592,7 +592,7 @@ describe("World placements", () => {
     const record = (draw: DrawHandle) =>
       Array.from(
         { length: RECORD_WORDS },
-        (_, i) => world.raster.recordsU32[draw.index * RECORD_WORDS + i]!,
+        (_, i) => world.draws.recordsU32[draw.index * RECORD_WORDS + i]!,
       );
     const before = [record(placed), record(bystander)];
     const p = t(0);

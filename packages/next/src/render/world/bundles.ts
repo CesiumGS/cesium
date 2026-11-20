@@ -1,5 +1,6 @@
 // A world's GPU work for a tick: the cull, its render bundles and its translucent
 // draws.
+import type { WorldDraws } from "../../scene/world/worldDraws.ts";
 import {
   MATERIAL_SIZE,
   RECORD_WORDS,
@@ -48,7 +49,6 @@ export interface BundleWorld extends Pick<
   readonly raster: Pick<
     WorldRaster,
     | "_submission"
-    | "batchList"
     | "brokenTextureSets"
     | "bundle"
     | "casters"
@@ -57,29 +57,35 @@ export interface BundleWorld extends Pick<
     | "depthBundle_"
     | "depthFor"
     | "drawArguments"
-    | "drawBatches"
-    | "drawCount"
     | "drawRows"
     | "heights"
     | "heightsFor"
     | "imagerySampler"
     | "imageryView"
     | "instances"
-    | "materialsU32"
     | "pickBundle_"
     | "pickFor"
     | "pipelineGaps"
     | "placementTable"
     | "prepassBundle_"
     | "prepassFor"
-    | "recordsF32"
-    | "recordsU32"
     | "retestBundles"
     | "shaderGroups"
     | "textureSetEntries"
     | "textureSets"
     | "transforms"
     | "translucentDraws"
+  >;
+  readonly draws: Pick<
+    WorldDraws,
+    | "batchList"
+    | "drawBatches"
+    | "drawCount"
+    | "instances"
+    | "materialsU32"
+    | "recordsF32"
+    | "recordsU32"
+    | "transforms"
   >;
   readonly scene: Pick<WorldScene, "transformHiddenWorld" | "transformWorld">;
 }
@@ -88,30 +94,36 @@ export interface BundleWorld extends Pick<
 export interface CullWorld extends Pick<World, "ctx" | "hasDraw" | "slabs"> {
   readonly raster: Pick<
     WorldRaster,
+    | "records"
     | "batchBuffer"
-    | "batchList"
     | "cullBindGroup"
     | "cullPassDesc"
     | "dicePassDesc"
     | "drawArguments"
-    | "drawBatches"
-    | "drawConstants"
-    | "drawCount"
     | "drawRows"
     | "frameComputes"
-    | "instanceHighWater"
     | "instances"
-    | "materialsU32"
     | "patchDraws"
     | "patchWorldBindGroup"
     | "pendingUploads"
     | "pointCounts"
     | "pointCullBindGroup"
     | "pointDraws"
-    | "recordsU32"
     | "splats"
     | "transforms"
     | "uploadChunks"
+  >;
+  readonly draws: Pick<
+    WorldDraws,
+    | "batchList"
+    | "drawBatches"
+    | "drawConstants"
+    | "drawCount"
+    | "instanceHighWater"
+    | "instances"
+    | "materialsU32"
+    | "recordsU32"
+    | "transforms"
     | "uploadsPending"
   >;
   readonly scene: Pick<
@@ -139,10 +151,9 @@ export interface PrepareWorld extends Pick<
 > {
   readonly raster: Pick<
     WorldRaster,
+    | "records"
     | "_submission"
     | "batchBuffer"
-    | "batchList"
-    | "batchesShownChanged"
     | "bindingsGeneration"
     | "brokenTextureSets"
     | "bundle"
@@ -157,20 +168,13 @@ export interface PrepareWorld extends Pick<
     | "depthFor"
     | "dicePassDesc"
     | "drawArguments"
-    | "drawBatches"
-    | "drawConstants"
-    | "drawCount"
     | "drawRows"
     | "frameComputes"
     | "heights"
     | "heightsFor"
     | "imagerySampler"
     | "imageryView"
-    | "instanceHighWater"
     | "instances"
-    | "materialsDirty"
-    | "materialsF32"
-    | "materialsU32"
     | "patchDraws"
     | "patchWorldBindGroup"
     | "pendingUploads"
@@ -181,8 +185,6 @@ export interface PrepareWorld extends Pick<
     | "pointDraws"
     | "prepassBundle_"
     | "prepassFor"
-    | "recordsF32"
-    | "recordsU32"
     | "retestBundles"
     | "shaderGroups"
     | "splats"
@@ -191,6 +193,22 @@ export interface PrepareWorld extends Pick<
     | "transforms"
     | "translucentDraws"
     | "uploadChunks"
+  >;
+  readonly draws: Pick<
+    WorldDraws,
+    | "batchList"
+    | "batchesShownChanged"
+    | "drawBatches"
+    | "drawConstants"
+    | "drawCount"
+    | "instanceHighWater"
+    | "instances"
+    | "materialsDirty"
+    | "materialsF32"
+    | "materialsU32"
+    | "recordsF32"
+    | "recordsU32"
+    | "transforms"
     | "uploadsPending"
   >;
   readonly scene: Pick<
@@ -226,16 +244,16 @@ export function prepareFrame(world: PrepareWorld): GPURenderBundle {
   const queue = world.ctx.device.queue;
   world.flushUploads();
   resolveTransforms(world);
-  world.raster.uploadsPending = true;
-  if (world.raster.materialsDirty) {
+  world.draws.uploadsPending = true;
+  if (world.draws.materialsDirty) {
     queue.writeBuffer(
       world.materialBuffer,
       0,
-      world.raster.materialsF32.buffer,
+      world.draws.materialsF32.buffer,
       0,
       world.scene.materialCount * MATERIAL_SIZE,
     );
-    world.raster.materialsDirty = false;
+    world.draws.materialsDirty = false;
   }
   // A custom shader's texture loaded or changed: its groups are new.
   const generation = world.ctx.shaderBindings.generation;
@@ -248,14 +266,14 @@ export function prepareFrame(world: PrepareWorld): GPURenderBundle {
     world.raster.pipelineGaps.clear();
     writeBatches(world);
     world.raster.bundle = recordBundle(world);
-  } else if (world.raster.batchesShownChanged) {
+  } else if (world.draws.batchesShownChanged) {
     world.raster.pipelineGaps.clear();
     world.raster.bundle = recordBundle(world);
   }
-  world.raster.batchesShownChanged = false;
-  world.raster.cullParamsData[0] = world.raster.drawCount;
-  world.raster.cullParamsData[1] = world.raster.batchList.length;
-  world.raster.cullParamsData[2] = world.raster.instanceHighWater;
+  world.draws.batchesShownChanged = false;
+  world.raster.cullParamsData[0] = world.draws.drawCount;
+  world.raster.cullParamsData[1] = world.draws.batchList.length;
+  world.raster.cullParamsData[2] = world.draws.instanceHighWater;
   // Instance items follow the draw rows (cull.slang `firstInstanceItem`).
   world.raster.cullParamsData[3] = world.raster.drawRows;
   queue.writeBuffer(world.raster.cullParams, 0, world.raster.cullParamsData);
@@ -396,7 +414,7 @@ export function encodeCull(
   // counts into them); the rest of the arguments `writeDrawArgs` writes.
   world.raster.drawArguments.clear(
     encoder,
-    world.raster.batchList.length,
+    world.draws.batchList.length,
     occlusion !== undefined,
   );
   if (points && world.raster.pointDraws.size) {
@@ -431,13 +449,13 @@ export function encodeCull(
   pass.setPipeline(
     occlusion ? pipelines.cullRecordsOccluded : pipelines.cullRecords,
   );
-  pass.dispatchWorkgroups(Math.ceil(Math.max(world.raster.drawCount, 1) / 64));
-  if (world.raster.instanceHighWater > 0) {
+  pass.dispatchWorkgroups(Math.ceil(Math.max(world.draws.drawCount, 1) / 64));
+  if (world.draws.instanceHighWater > 0) {
     pass.setPipeline(
       occlusion ? pipelines.cullInstancesOccluded : pipelines.cullInstances,
     );
     // Two dimensions past 65,535 groups (`cullInstances` reads them).
-    const groups = Math.ceil(world.raster.instanceHighWater / 64);
+    const groups = Math.ceil(world.draws.instanceHighWater / 64);
     const x = Math.min(groups, 65535);
     pass.dispatchWorkgroups(x, Math.ceil(groups / x));
   }
@@ -445,7 +463,7 @@ export function encodeCull(
     occlusion ? pipelines.writeDrawArgsOccluded : pipelines.writeDrawArgs,
   );
   pass.dispatchWorkgroups(
-    Math.ceil(Math.max(world.raster.batchList.length, 1) / 64),
+    Math.ceil(Math.max(world.draws.batchList.length, 1) / 64),
   );
   // Point draws: their points in view into their lists (or splatted),
   // then their arguments (over `writeDrawArgs`'), with the narrower
@@ -519,7 +537,7 @@ export function encodeRetest(
   pass.setPipeline(pipelines.retestOccluded);
   // A thread an item at most: the list is never longer than the items.
   const groups = Math.ceil(
-    Math.max(world.raster.drawCount + world.raster.instanceHighWater, 1) / 64,
+    Math.max(world.draws.drawCount + world.draws.instanceHighWater, 1) / 64,
   );
   const x = Math.min(groups, 65535);
   pass.dispatchWorkgroups(x, Math.ceil(groups / x));
@@ -556,36 +574,36 @@ export function occludable(
 
 /** Assigns each batch its slice of the item list and uploads the batch table. */
 function writeBatches(world: CullWorld): void {
-  const table = new Uint32Array(Math.max(1, world.raster.batchList.length) * 4);
+  const table = new Uint32Array(Math.max(1, world.draws.batchList.length) * 4);
   let items = 0;
-  for (const batch of world.raster.batchList) {
+  for (const batch of world.draws.batchList) {
     items += batch.items;
   }
   const direct = new Uint32Array(Math.max(1, items));
-  const fill = new Uint32Array(world.raster.batchList.length);
+  const fill = new Uint32Array(world.draws.batchList.length);
   let base = 0;
-  for (const batch of world.raster.batchList) {
+  for (const batch of world.draws.batchList) {
     batch.itemBase = base;
     const o = batch.index * 4;
     table[o] = base;
     table[o + 1] = batch.mesh.indexCount;
     table[o + 2] = batch.mesh.firstIndex;
-    table[o + 3] = occludable(batch, world.raster.materialsU32) ? 1 : 0;
+    table[o + 3] = occludable(batch, world.draws.materialsU32) ? 1 : 0;
     base += batch.items;
   }
-  for (let i = 0; i < world.raster.drawCount; i++) {
-    const batch = world.raster.drawBatches[i];
+  for (let i = 0; i < world.draws.drawCount; i++) {
+    const batch = world.draws.drawBatches[i];
     if (!batch) {
       continue;
     }
     const o = i * RECORD_WORDS;
-    const count = world.raster.recordsU32[o + INSTANCE_COUNT_WORD]!;
+    const count = world.draws.recordsU32[o + INSTANCE_COUNT_WORD]!;
     if (count === 0) {
       direct[batch.itemBase + fill[batch.index]!++] = i;
     } else {
       const first =
         world.raster.drawRows +
-        world.raster.recordsU32[o + INSTANCE_FIRST_WORD]!;
+        world.draws.recordsU32[o + INSTANCE_FIRST_WORD]!;
       for (let k = 0; k < count; k++) {
         direct[batch.itemBase + fill[batch.index]!++] = first + k;
       }
@@ -659,7 +677,7 @@ export function recordBundle(
   // translucent (opaque.wgsl `cutOut`); the rest in the translucent
   // passes (`encodeTranslucent`). Glass lets the sun through.
   const masked = (batch: Batch) =>
-    (world.raster.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
+    (world.draws.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
       (MaterialFlags.alphaMask | MaterialFlags.alphaBlend)) !==
     0;
   // Patch draws: their own pipelines, with the chunk vertex stage; their
@@ -733,7 +751,7 @@ export function recordBundle(
   // Only batches some view draws (`Batch.shown`), and for shadows those
   // some view's cascades alone do: the cache's resident tiles that no
   // view selected cost nothing here.
-  const order = world.raster.batchList
+  const order = world.draws.batchList
     .filter(
       (batch) =>
         (batch.shown > 0 || (kind === "shadow" && batch.casters > 0)) &&
@@ -741,7 +759,7 @@ export function recordBundle(
         // can't blend, and stay here. A patch draw's blended faces have no
         // opaque part here either (the passes' patch stages don't cut by alpha).
         (batch.mesh.topology === "line-list" ||
-          ((world.raster.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
+          ((world.draws.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
             MaterialFlags.blendedOnly) ===
             0 &&
             !(batch.patches && translucent(world, batch)))),
@@ -762,7 +780,7 @@ export function recordBundle(
   for (const batch of order) {
     if (
       batch.items === 0 ||
-      (retest && !occludable(batch, world.raster.materialsU32)) ||
+      (retest && !occludable(batch, world.draws.materialsU32)) ||
       world.raster.brokenTextureSets.has(batch.textureSet) ||
       ((shadow || prepass || depth || pick || caps) &&
         batch.mesh.topology === "line-list") ||
@@ -962,7 +980,7 @@ function setGroup(
 function translucent(world: BundleWorld, batch: Batch): boolean {
   return (
     batch.mesh.topology !== "line-list" &&
-    (world.raster.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
+    (world.draws.materialsU32[batch.material * MATERIAL_WORDS + 12]! &
       MaterialFlags.alphaBlend) !==
       0
   );
@@ -975,8 +993,8 @@ export function translucentRange(
 ): { near: number; far: number } | undefined {
   if (!owner.raster.translucentDraws) {
     owner.raster.translucentDraws = [];
-    for (let i = 0; i < owner.raster.drawCount; i++) {
-      const batch = owner.raster.drawBatches[i];
+    for (let i = 0; i < owner.draws.drawCount; i++) {
+      const batch = owner.draws.drawBatches[i];
       if (batch && translucent(owner, batch)) {
         owner.raster.translucentDraws.push(i);
       }
@@ -985,8 +1003,8 @@ export function translucentRange(
   if (owner.raster.translucentDraws.length === 0) {
     return undefined;
   }
-  const u = owner.raster.recordsU32;
-  const f = owner.raster.recordsF32;
+  const u = owner.draws.recordsU32;
+  const f = owner.draws.recordsF32;
   const world = owner.scene.transformWorld;
   let near = Infinity;
   let far = 0;
@@ -1006,7 +1024,7 @@ export function translucentRange(
       continue;
     }
     const w = t * 16;
-    const scale = owner.raster.transforms.f32[t * TRANSFORM_WORDS + 3]!;
+    const scale = owner.draws.transforms.f32[t * TRANSFORM_WORDS + 3]!;
     const local = [f[o]!, f[o + 1]!, f[o + 2]!];
     const point = (p: readonly number[], k: number) =>
       world[w + k]! * p[0]! +
@@ -1024,10 +1042,10 @@ export function translucentRange(
       continue;
     }
     const first = u[o + INSTANCE_FIRST_WORD]!;
-    const it = owner.raster.instances.f32;
+    const it = owner.draws.instances.f32;
     for (let j = first; j < first + count; j++) {
       const a = j * INSTANCE_WORDS;
-      if (owner.raster.instances.u32[a + 14]! & 1) {
+      if (owner.draws.instances.u32[a + 14]! & 1) {
         continue;
       }
       const p = [0, 1, 2].map(
@@ -1067,7 +1085,7 @@ export function encodeTranslucent(
   let current: GPURenderPipeline | undefined;
   let bound: GPUBindGroup | undefined;
   let slab = -1;
-  for (const batch of world.raster.batchList) {
+  for (const batch of world.draws.batchList) {
     // `ghosts`: the view's clips ghost what they remove, which the
     // translucent passes draw from every opaque triangle batch too (the
     // fragment stage keeps only what is ghosted, surface.slang). A patch

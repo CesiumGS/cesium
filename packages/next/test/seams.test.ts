@@ -179,7 +179,7 @@ function blockEnd(source: string, offset: number): number {
 
 /** The seams' GPU buffers, as the world names them. */
 const SEAM_BUFFERS =
-  /\b(?:recordBuffer|drawConstants\.buffer|drawArguments\.(?:buffer|itemList))\b/;
+  /\b(?:recordBuffer|(?:drawConstants|records)\.buffer|drawArguments\.(?:buffer|itemList))\b/;
 
 /** The placements buffer, as the world and its table name it. */
 const PLACEMENT_BUFFERS =
@@ -414,14 +414,14 @@ function other() {
 
   it("record writes through a world's rasterizer data", () => {
     const module = `function moved(world: DrawWorld) {
-  const u = world.raster.recordsU32;
+  const u = world.draws.recordsU32;
   u[o] |= 4;
-  world.raster.recordsF32[o] -= 2;
+  world.draws.recordsF32[o] -= 2;
   const { recordsU32 } = world.raster;
   recordsU32[o] = 1;
   const { recordsF32: f } = world.raster;
   f[o] = 1;
-  const { u32 } = world.raster.drawConstants;
+  const { u32 } = world.draws.drawConstants;
   u32[o] = 3;
 }`;
     expect(recordWritesOutsideSeam(module)).toEqual([3, 4, 6, 8, 10]);
@@ -437,8 +437,9 @@ encoder.clearBuffer(
 );
 encoder.copyBufferToBuffer(old, 0, this.drawConstants.buffer, 0, n);
 queue.writeBuffer(this.drawArguments.itemList, 0, f(a, b));
-pass.setBindGroup(0, group(this.recordBuffer));`;
-    expect(seamBufferWrites(module)).toEqual([1, 3, 8, 9]);
+pass.setBindGroup(0, group(this.recordBuffer));
+queue.writeBuffer(world.raster.records.buffer, 0, data);`;
+    expect(seamBufferWrites(module)).toEqual([1, 3, 8, 9, 11]);
   });
 
   it("record reads in Slang", () => {

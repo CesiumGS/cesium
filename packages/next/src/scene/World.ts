@@ -189,6 +189,7 @@ import { WorldClips, type ClipSet, type WorldClip } from "./world/clips.ts";
 import { WorldScene } from "./world/worldScene.ts";
 import type { PatchPickSource } from "./world/domains.ts";
 import { WorldRaster } from "../render/world/worldRaster.ts";
+import { WorldDraws } from "./world/worldDraws.ts";
 
 /**
  * Scene content shared by any number of views: a geometry arena (separate
@@ -205,6 +206,8 @@ export class World {
   readonly raster: WorldRaster = new WorldRaster();
   /** @internal Scene data: transforms, anchors, material keys, placements, feature tables. */
   readonly scene: WorldScene = new WorldScene();
+  /** @internal Draw data on the CPU, renderer-neutral: records, batches, transform, instance and material tables. */
+  readonly draws: WorldDraws = new WorldDraws();
   /**
    * @internal Draws under an anchor whose route to the render root crosses a
    * curvilinear map, drawn curvilinear by fits of it (scene/world/worldCurvilinearMaps.ts). The engine steps
@@ -374,24 +377,23 @@ export class World {
       (slab) => slabReplaced(this, slab),
     );
 
-    this.raster.drawConstants = new DrawConstants(
+    this.draws.drawConstants = new DrawConstants(this.maxDraws);
+    this.raster.records = this.draws.drawConstants.createMirror(
       ctx,
-      this.maxDraws,
       this.raster.drawRows,
     );
-    this.raster.drawGeneration = new Uint32Array(
-      this.raster.drawConstants.rows,
-    );
-    this.raster.drawOwnedTransform = new Int32Array(
-      this.raster.drawConstants.rows,
+    this.draws.drawGeneration = new Uint32Array(this.draws.drawConstants.rows);
+    this.draws.drawOwnedTransform = new Int32Array(
+      this.draws.drawConstants.rows,
     ).fill(-1);
+    this.draws.transforms = new CpuTable(TRANSFORM_WORDS, this.maxTransforms);
     this.raster.transforms = new MirroredTable(
       ctx,
       "transforms",
-      new CpuTable(TRANSFORM_WORDS, this.maxTransforms),
+      this.draws.transforms,
       Math.min(this.maxTransforms, INITIAL_ROWS),
     );
-    const t = this.raster.transforms.rows;
+    const t = this.draws.transforms.rows;
     this.scene.transformLocal = new Float64Array(t * 16);
     this.scene.transformWorld = new Float64Array(t * 16);
     this.scene.transformParent = new Int32Array(t).fill(-1);
@@ -402,23 +404,27 @@ export class World {
     this.scene.transformAnchor = new Uint8Array(t);
     this.scene.transformPendingFlag = new Uint8Array(t);
     this.scene.transformStamp = new Uint32Array(t);
+    this.draws.instances = new CpuTable(
+      INSTANCE_WORDS,
+      Math.max(1, this.maxInstances),
+    );
     this.raster.instances = new MirroredTable(
       ctx,
       "instances",
-      new CpuTable(INSTANCE_WORDS, Math.max(1, this.maxInstances)),
+      this.draws.instances,
       instanceRows,
     );
-    this.raster.instanceAllocator = new RangeAllocator(this.maxInstances, 1);
+    this.draws.instanceAllocator = new RangeAllocator(this.maxInstances, 1);
     const materials = new ArrayBuffer(
       Math.min(this.maxMaterials, INITIAL_ROWS) * MATERIAL_SIZE,
     );
-    this.raster.materialsF32 = new Float32Array(materials);
-    this.raster.materialsU32 = new Uint32Array(materials);
+    this.draws.materialsF32 = new Float32Array(materials);
+    this.draws.materialsU32 = new Uint32Array(materials);
 
     const buffer = (label: string, size: number, usage: GPUBufferUsageFlags) =>
       device.createBuffer({ label: `world.${label}`, size, usage });
     const storage = GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST;
-    this.recordBuffer = this.raster.drawConstants.buffer;
+    this.recordBuffer = this.raster.records.buffer;
     this.transformBuffer = this.raster.transforms.buffer;
     this.instanceBuffer = this.raster.instances.buffer;
     // COPY_SRC lets precision tests read back the cull kernels' output.
@@ -455,8 +461,9 @@ export class World {
     );
     this.raster.drawArguments = new DrawArguments(
       device,
-      this.raster.drawConstants,
-      (record) => this.raster.drawBatches[record] !== undefined,
+      this.draws.drawConstants,
+      (record) => this.draws.drawBatches[record] !== undefined,
+      (batch) => this.raster.batchChunks[batch],
       this.raster.drawRows,
       items,
     );
@@ -513,7 +520,7 @@ export class World {
 
   /** Number of record slots in use, including hidden and freed-but-trailing slots. */
   get recordCount(): number {
-    return this.raster.drawCount;
+    return this.draws.drawCount;
   }
 
   /** Number of batches, i.e. indirect draw calls per view. */
@@ -529,7 +536,7 @@ export class World {
         capacity: this.slabs.options.indexBudget,
       },
       draws: {
-        used: this.raster.drawCount - this.raster.freeSlots.length,
+        used: this.draws.drawCount - this.draws.freeSlots.length,
         capacity: this.maxDraws,
       },
       transforms: {
@@ -537,7 +544,7 @@ export class World {
         capacity: this.maxTransforms,
       },
       instances: {
-        used: this.raster.instanceAllocator.used,
+        used: this.draws.instanceAllocator.used,
         capacity: this.maxInstances,
       },
       materials: {
@@ -556,7 +563,7 @@ export class World {
         used: this.raster.pointDraws.size,
         capacity: this.maxPointSets,
       },
-      batches: this.raster.batches.size,
+      batches: this.draws.batches.size,
       slabs: this.slabs.slabs
         .filter((x) => x !== undefined)
         .map((x) => ({
@@ -590,7 +597,7 @@ export class World {
     const pools: Array<[string, number, number]> = [
       [
         "draw table",
-        this.raster.drawCount - this.raster.freeSlots.length,
+        this.draws.drawCount - this.draws.freeSlots.length,
         this.maxDraws,
       ],
       [
@@ -598,7 +605,7 @@ export class World {
         this.scene.transformCount - this.scene.freeTransforms.length,
         this.maxTransforms,
       ],
-      ["instance table", this.raster.instanceAllocator.used, this.maxInstances],
+      ["instance table", this.draws.instanceAllocator.used, this.maxInstances],
       ["material table", this.scene.materialByKey.size, this.maxMaterials],
       ["vertex arena", this.slabs.vertexUsed, this.slabs.options.vertexBudget],
       ["index arena", this.slabs.indexUsed, this.slabs.options.indexBudget],
@@ -625,7 +632,7 @@ export class World {
 
   /** Live batches: indirect draws per view. */
   get batchCount(): number {
-    return this.raster.batches.size;
+    return this.draws.batches.size;
   }
 
   /**
@@ -722,14 +729,14 @@ export class World {
       throw new Error("setPatchDisplay: not a live patch draw");
     }
     const flags =
-      this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+      this.draws.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
     if (
-      this.raster.drawConstants.setFlags(
+      this.draws.drawConstants.setFlags(
         handle.index,
         withPatchDisplay(flags, display),
       )
     ) {
-      this.raster.uploadsPending = true;
+      this.draws.uploadsPending = true;
       this.version++;
       this.changedViews = 0xffffffff;
     }
@@ -890,7 +897,7 @@ export class World {
    */
   featureIdOf(handle: DrawHandle): number {
     return this.hasDraw(handle)
-      ? this.raster.recordsU32[handle.index * RECORD_WORDS + FEATURE_ID_WORD]!
+      ? this.draws.recordsU32[handle.index * RECORD_WORDS + FEATURE_ID_WORD]!
       : 0;
   }
 
@@ -900,7 +907,7 @@ export class World {
    */
   drawMaterial(handle: DrawHandle): number | undefined {
     return this.hasDraw(handle)
-      ? this.raster.drawBatches[handle.index]!.material
+      ? this.draws.drawBatches[handle.index]!.material
       : undefined;
   }
 
@@ -959,12 +966,12 @@ export class World {
     if (!this.hasDraw(handle)) {
       return "was removed";
     }
-    const { mesh, points, billboard } = this.raster.drawBatches[handle.index]!;
+    const { mesh, points, billboard } = this.draws.drawBatches[handle.index]!;
     if (points || billboard) {
       return "is a point set or a billboard";
     }
     if (
-      this.raster.recordsU32[
+      this.draws.recordsU32[
         handle.index * RECORD_WORDS + INSTANCE_COUNT_WORD
       ]! > 0
     ) {
@@ -1038,8 +1045,8 @@ export class World {
   /** Whether `handle` still names a live draw. */
   hasDraw(handle: DrawHandle): boolean {
     return (
-      this.raster.drawBatches[handle.index] !== undefined &&
-      this.raster.drawGeneration[handle.index] === handle.generation
+      this.draws.drawBatches[handle.index] !== undefined &&
+      this.draws.drawGeneration[handle.index] === handle.generation
     );
   }
 
@@ -1479,7 +1486,7 @@ export class World {
 
   /** @internal Largest axis scale of a composed transform. */
   transformsF32Scale(index: number): number {
-    return this.raster.transforms.f32[index * TRANSFORM_WORDS + 3]!;
+    return this.draws.transforms.f32[index * TRANSFORM_WORDS + 3]!;
   }
 
   /**
@@ -1506,7 +1513,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    if (this.raster.drawConstants.setLights(handle.index, packed)) {
+    if (this.draws.drawConstants.setLights(handle.index, packed)) {
       this.markDirty(handle.index);
     }
   }
@@ -1521,7 +1528,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    if (this.raster.drawConstants.setImagery(handle.index, packed, unlit)) {
+    if (this.draws.drawConstants.setImagery(handle.index, packed, unlit)) {
       this.markDirty(handle.index);
     }
   }
@@ -1534,7 +1541,7 @@ export class World {
   setImageryFade(handle: DrawHandle, from: number, seconds: number): void {
     if (
       this.hasDraw(handle) &&
-      this.raster.drawConstants.setImageryFade(handle.index, from, seconds)
+      this.draws.drawConstants.setImageryFade(handle.index, from, seconds)
     ) {
       this.markDirty(handle.index);
     }
@@ -1548,19 +1555,19 @@ export class World {
     // draw shows in its own group's views only (scene/world/variants.ts).
     mask = this.curvilinearMaps.variants.viewMask(handle, mask);
     const old =
-      this.raster.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
+      this.draws.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
     if (old !== mask >>> 0) {
       this.scene.contentRevision_++;
       this.changedViews |= old; // the views it left
-      this.raster.drawConstants.setViewMask(handle.index, mask);
+      this.draws.drawConstants.setViewMask(handle.index, mask);
       this.markDirty(handle.index);
       if ((old === 0) !== (mask === 0)) {
         // Its batch joins or leaves the bundles: they're recorded again
         // (the batch table and item list stay as they are).
-        const batch = this.raster.drawBatches[handle.index]!;
+        const batch = this.draws.drawBatches[handle.index]!;
         batch.shown += mask === 0 ? -1 : 1;
         if (batch.shown === (mask === 0 ? 0 : 1)) {
-          this.raster.batchesShownChanged = true;
+          this.draws.batchesShownChanged = true;
         }
       }
     }
@@ -1578,12 +1585,12 @@ export class World {
     }
     mask = this.curvilinearMaps.variants.casterMask(handle, mask);
     const old =
-      this.raster.recordsU32[handle.index * RECORD_WORDS + CASTER_MASK_WORD]!;
-    if (this.raster.drawConstants.setCasterMask(handle.index, mask)) {
+      this.draws.recordsU32[handle.index * RECORD_WORDS + CASTER_MASK_WORD]!;
+    if (this.draws.drawConstants.setCasterMask(handle.index, mask)) {
       this.changedViews |= old | (mask >>> 0);
       this.markDirty(handle.index);
       if ((old === 0) !== (mask === 0)) {
-        const batch = this.raster.drawBatches[handle.index]!;
+        const batch = this.draws.drawBatches[handle.index]!;
         batch.casters += mask === 0 ? -1 : 1;
         // Its first caster, or its last, with no view drawing it: it joins
         // the shadow bundle alone, or leaves it, and that is recorded again.
@@ -1676,12 +1683,12 @@ export class World {
       return;
     }
     const flags =
-      this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+      this.draws.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
     const next = ground
       ? flags & ~RecordFlags.notGround
       : flags | RecordFlags.notGround;
-    if (this.raster.drawConstants.setFlags(handle.index, next)) {
-      this.raster.uploadsPending = true;
+    if (this.draws.drawConstants.setFlags(handle.index, next)) {
+      this.draws.uploadsPending = true;
     }
   }
 
@@ -1694,12 +1701,12 @@ export class World {
       return;
     }
     const flags =
-      this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+      this.draws.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
     const next = exempt
       ? flags | RecordFlags.clipExempt
       : flags & ~RecordFlags.clipExempt;
-    if (this.raster.drawConstants.setFlags(handle.index, next)) {
-      this.raster.uploadsPending = true;
+    if (this.draws.drawConstants.setFlags(handle.index, next)) {
+      this.draws.uploadsPending = true;
     }
   }
 
@@ -1712,10 +1719,10 @@ export class World {
       return;
     }
     const flags =
-      this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+      this.draws.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
     const next = solid ? flags | RecordFlags.solid : flags & ~RecordFlags.solid;
-    if (this.raster.drawConstants.setFlags(handle.index, next)) {
-      this.raster.uploadsPending = true;
+    if (this.draws.drawConstants.setFlags(handle.index, next)) {
+      this.draws.uploadsPending = true;
     }
   }
 
@@ -1725,12 +1732,12 @@ export class World {
       return;
     }
     const flags =
-      this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+      this.draws.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
     const next = collision
       ? flags | RecordFlags.collision
       : flags & ~RecordFlags.collision;
-    if (this.raster.drawConstants.setFlags(handle.index, next)) {
-      this.raster.uploadsPending = true;
+    if (this.draws.drawConstants.setFlags(handle.index, next)) {
+      this.draws.uploadsPending = true;
     }
   }
 
@@ -1822,7 +1829,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    this.raster.drawConstants.setColor(handle.index, color);
+    this.draws.drawConstants.setColor(handle.index, color);
     this.markDirty(handle.index);
   }
 
@@ -1834,7 +1841,7 @@ export class World {
   setDrawDebug(handle: DrawHandle, word: number): void {
     if (
       this.hasDraw(handle) &&
-      this.raster.drawConstants.setDebug(handle.index, word)
+      this.draws.drawConstants.setDebug(handle.index, word)
     ) {
       this.markDirty(handle.index);
     }
@@ -1848,7 +1855,7 @@ export class World {
   setDrawMorph(handle: DrawHandle, seconds: number): void {
     if (
       this.hasDraw(handle) &&
-      this.raster.drawConstants.setMorph(handle.index, seconds)
+      this.draws.drawConstants.setMorph(handle.index, seconds)
     ) {
       this.markDirty(handle.index);
     }
@@ -1862,8 +1869,8 @@ export class World {
       return; // held hidden until its route's fit lands: remembered
     }
     const flags =
-      this.raster.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
-    this.raster.drawConstants.setFlags(
+      this.draws.recordsU32[handle.index * RECORD_WORDS + FLAGS_WORD]!;
+    this.draws.drawConstants.setFlags(
       handle.index,
       visible ? flags & ~RecordFlags.hidden : flags | RecordFlags.hidden,
     );
@@ -1894,7 +1901,7 @@ export class World {
     const table = this.scene.featureTables[index];
     const draw = {
       index,
-      generation: this.raster.drawGeneration[index]!,
+      generation: this.draws.drawGeneration[index]!,
       name: this.scene.names[index],
     };
     const item = this.itemOfDraw(draw);
@@ -2096,7 +2103,7 @@ export class World {
 
   /** A draw's first row in the instance table (`instanceBuffer`). */
   instanceFirst(handle: DrawHandle): number {
-    return this.raster.recordsU32[
+    return this.draws.recordsU32[
       handle.index * RECORD_WORDS + INSTANCE_FIRST_WORD
     ]!;
   }
@@ -2174,7 +2181,7 @@ export class World {
   placementOf(handle: DrawHandle): { row: number; held: boolean } {
     return {
       row: this.hasDraw(handle)
-        ? this.raster.recordsU32[handle.index * RECORD_WORDS + PLACEMENT_WORD]!
+        ? this.draws.recordsU32[handle.index * RECORD_WORDS + PLACEMENT_WORD]!
         : NO_PLACEMENT,
       held: this.curvilinearMaps.status(handle)?.state === "pending",
     };
@@ -2182,13 +2189,13 @@ export class World {
 
   /** @internal */
   markDirty(index: number): void {
-    this.raster.drawConstants.mark(index);
-    this.raster.uploadsPending = true;
+    this.draws.drawConstants.mark(index);
+    this.draws.uploadsPending = true;
     this.version++;
     // The views that draw it, and those whose cascades do.
     this.changedViews |=
-      this.raster.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]! |
-      this.raster.recordsU32[index * RECORD_WORDS + CASTER_MASK_WORD]!;
+      this.draws.recordsU32[index * RECORD_WORDS + VIEW_MASK_WORD]! |
+      this.draws.recordsU32[index * RECORD_WORDS + CASTER_MASK_WORD]!;
   }
 
   /** What `raster.imageryPlaceholder` views: destroyed with the world. */
@@ -2221,7 +2228,7 @@ export class World {
     this.raster.splats.color.destroy();
     this.raster.splats.feature.destroy();
     this.raster.pointCounts.destroy();
-    this.raster.drawConstants.destroy();
+    this.raster.records.destroy();
     this.raster.drawArguments.destroy();
     this.raster.placementTable.destroy();
     this.raster.transforms.destroy();

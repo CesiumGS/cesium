@@ -433,8 +433,6 @@ export interface Batch {
   points: boolean;
   /** A patch draw's (`PatchDraw`): its chunks, not an item list, are its instances. */
   patches: boolean;
-  /** A patch draw's chunk list, which the draw binds as its instances. */
-  chunks: GPUBuffer | undefined;
   /** Its draws have instances: outside the opaque pass's depth prepass. */
   instanced: boolean;
   /** Draw items: records without instances plus instances. */

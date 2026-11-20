@@ -162,7 +162,7 @@ describe("a point source across a curvilinear map", () => {
     expect(placed.row).not.toBe(NO_PLACEMENT);
     // Never drawn: no view, so no cull or selection cost either.
     expect(
-      s.world.raster.recordsU32[
+      s.world.draws.recordsU32[
         made.carrier.index * RECORD_WORDS + VIEW_MASK_WORD
       ],
     ).toBe(0);
@@ -270,7 +270,7 @@ describe("a point source across a curvilinear map", () => {
     expect(drawTerms(s.world, draw)).toBeUndefined();
     expect(s.world.curvilinearMaps.status(draw)).toBeUndefined();
     expect(
-      s.world.raster.recordsU32[draw.index * RECORD_WORDS + FLAGS_WORD]! &
+      s.world.draws.recordsU32[draw.index * RECORD_WORDS + FLAGS_WORD]! &
         RecordFlags.hidden,
     ).toBe(0);
     // The source's frame kernel is what moves its points.

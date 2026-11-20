@@ -1,4 +1,5 @@
 // Rays against a world's draws: `World.castRays` and the jobs it dispatches.
+import type { WorldDraws } from "./worldDraws.ts";
 import { splitHigh } from "../../math/transforms.ts";
 import {
   ALL_VIEWS,
@@ -26,8 +27,9 @@ export interface RayWorld extends Pick<
   World,
   "addAnchor" | "hasDraw" | "transformAlive"
 > {
-  readonly raster: Pick<
-    WorldRaster,
+  readonly raster: Pick<WorldRaster, "instances" | "transforms">;
+  readonly draws: Pick<
+    WorldDraws,
     | "drawBatches"
     | "drawCount"
     | "instances"
@@ -63,16 +65,22 @@ export interface CastWorld extends Pick<
 > {
   readonly raster: Pick<
     WorldRaster,
-    | "drawBatches"
-    | "drawConstants"
-    | "drawCount"
+    | "records"
     | "frameComputes"
     | "instances"
     | "pendingUploads"
+    | "transforms"
+    | "uploadChunks"
+  >;
+  readonly draws: Pick<
+    WorldDraws,
+    | "drawBatches"
+    | "drawConstants"
+    | "drawCount"
+    | "instances"
     | "recordsF32"
     | "recordsU32"
     | "transforms"
-    | "uploadChunks"
     | "uploadsPending"
   >;
   readonly scene: Pick<
@@ -307,8 +315,8 @@ export function rayJobs(
 ): Map<number, Uint32Array<ArrayBuffer>> {
   const bySlab = new Map<number, number[]>();
   let jobs: number[] = [];
-  const u = owner.raster.recordsU32;
-  const f = owner.raster.recordsF32;
+  const u = owner.draws.recordsU32;
+  const f = owner.draws.recordsF32;
   const mask = options.viewMask ?? ALL_VIEWS;
   let anchorSlot = 0;
   if (options.anchor) {
@@ -357,8 +365,8 @@ export function rayJobs(
       }
     });
   };
-  for (let i = 0; i < owner.raster.drawCount; i++) {
-    const batch = owner.raster.drawBatches[i];
+  for (let i = 0; i < owner.draws.drawCount; i++) {
+    const batch = owner.draws.drawBatches[i];
     if (
       !batch ||
       batch.mesh.topology !== "triangle-list" ||
@@ -390,7 +398,7 @@ export function rayJobs(
       continue;
     }
     const w = t * 16;
-    const scale = owner.raster.transforms.f32[t * TRANSFORM_WORDS + 3]!;
+    const scale = owner.draws.transforms.f32[t * TRANSFORM_WORDS + 3]!;
     const local = [f[o]!, f[o + 1]!, f[o + 2]!];
     const radius = f[o + 3]!;
     const count = u[o + INSTANCE_COUNT_WORD]!;
@@ -413,10 +421,10 @@ export function rayJobs(
       continue;
     }
     const first = u[o + INSTANCE_FIRST_WORD]!;
-    const it = owner.raster.instances.f32;
+    const it = owner.draws.instances.f32;
     for (let j = first; j < first + count; j++) {
       const a = j * INSTANCE_WORDS;
-      if (owner.raster.instances.u32[a + 14]! & 1) {
+      if (owner.draws.instances.u32[a + 14]! & 1) {
         continue;
       }
       // The instance's affine (rows), then the transform.

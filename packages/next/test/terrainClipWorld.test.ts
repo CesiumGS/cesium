@@ -36,7 +36,7 @@ const R = Math.PI / 180;
 const blocks = (world: World) => ({
   clipBlockCount: world.scene.clipBlockCount,
   clipBuffer: world.clipBuffer,
-  recordsU32: world.raster.recordsU32,
+  recordsU32: world.draws.recordsU32,
 });
 
 /** Rows of a region taking `n` clip blocks. */

@@ -574,7 +574,7 @@ describe("the engine side", () => {
     } as never);
     const draw = world.addDraw({ mesh });
     const word = () =>
-      world.raster.recordsF32[draw.index * RECORD_WORDS + MORPH_WORD]!;
+      world.draws.recordsF32[draw.index * RECORD_WORDS + MORPH_WORD]!;
     expect(word()).toBe(0);
     world.setDrawMorph(draw, 1.5);
     expect(word()).toBe(1.5);

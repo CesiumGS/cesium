@@ -3,6 +3,7 @@
 // control points (src/brep/gpuPatches.ts) in a slab's arena, and a draw of it
 // owns the per-view dice's parameters and chunk list. The dice and the vertex
 // stage are shaders/dice.slang and surface.slang `patchVertex`.
+import type { WorldDraws } from "./worldDraws.ts";
 import type { GpuPatchData } from "../../brep/gpuPatches.ts";
 import {
   NO_STREAM,
@@ -35,10 +36,8 @@ export const DEFAULT_MAX_CHUNKS = 65536;
 
 /** Scene side: a patch mesh's geometry into the world's slabs. */
 export interface PatchMeshWorld extends Pick<World, "ctx" | "slabs"> {
-  readonly raster: Pick<
-    WorldRaster,
-    "pendingUploads" | "uploadChunks" | "uploadsPending"
-  >;
+  readonly raster: Pick<WorldRaster, "pendingUploads" | "uploadChunks">;
+  readonly draws: Pick<WorldDraws, "uploadsPending">;
   readonly scene: Pick<WorldScene, "meshRanges" | "nextMeshId">;
 }
 

@@ -63,7 +63,7 @@ describe("geometry stats", () => {
 
   it("recounts a world only when its version changes", () => {
     const list = [batch({}, { indexCount: 9 })];
-    const world = { version: 1, raster: { batchList: list } };
+    const world = { version: 1, draws: { batchList: list } };
     expect(worldGeometry(world).meshes.triangles).toBe(3);
     list.push(batch({}, { indexCount: 9 }));
     expect(worldGeometry(world).meshes.triangles).toBe(3);

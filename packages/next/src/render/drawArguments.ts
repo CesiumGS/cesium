@@ -26,10 +26,9 @@ export interface ArgumentBatch {
   /**
    * A patch draw (`PatchDraw`): the arguments are an indexed draw's over
    * the patch chunk's indices (`patchIndices`), one instance a chunk of
-   * cells, which are `chunks`, the draw's own list.
+   * cells, the draw's own list (`chunksOf`).
    */
   readonly patches: boolean;
-  readonly chunks: GPUBuffer | undefined;
   readonly mesh: { readonly indexCount: number; readonly firstIndex: number };
 }
 
@@ -87,11 +86,13 @@ export class DrawArguments {
   /**
    * `live`: whether a record slot holds a draw (a removed draw's record
    * keeps its last batch word, which may name another batch by then).
+   * `chunksOf`: a patch batch's chunk list, by batch index.
    */
   constructor(
     private readonly device: GPUDevice,
     private readonly constants: DrawConstants,
     private readonly live: (record: number) => boolean,
+    private readonly chunksOf: (batch: number) => GPUBuffer | undefined,
     batchRows: number,
     items: number,
   ) {
@@ -252,8 +253,9 @@ export class DrawArguments {
       return false;
     }
     if (batch.patches) {
-      if (!direct && batch.chunks) {
-        pass.setVertexBuffer(0, batch.chunks);
+      const chunks = direct ? undefined : this.chunksOf(batch.index);
+      if (chunks) {
+        pass.setVertexBuffer(0, chunks);
         pass.setIndexBuffer(this.patchIndices, "uint16");
         pass.drawIndexedIndirect(this.arguments, batch.index * INDIRECT_SIZE);
         return true;

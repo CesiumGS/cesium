@@ -175,8 +175,8 @@ describe("shadow casters off screen", () => {
     const { planes } = engine.raster.cascades;
     const draws: readonly DrawHandle[] = tile.placement?.draws ?? [];
     return draws.some((draw) => {
-      const u = world.raster.recordsU32;
-      const f = world.raster.recordsF32;
+      const u = world.draws.recordsU32;
+      const f = world.draws.recordsF32;
       const o = draw.index * RECORD_WORDS;
       const mask = u[o + VIEW_MASK_WORD]! | u[o + CASTER_MASK_WORD]!;
       if ((mask & bit) === 0 || u[o + FLAGS_WORD]! & 1) {
@@ -194,7 +194,7 @@ describe("shadow casters off screen", () => {
       );
       const radius =
         f[o + RADIUS_WORD]! *
-        world.raster.transforms.f32[t * TRANSFORM_WORDS + 3]!;
+        world.draws.transforms.f32[t * TRANSFORM_WORDS + 3]!;
       return planes.some((p) => {
         for (let k = 0; k < 5; k++) {
           const d =
@@ -368,8 +368,8 @@ describe("shadow casters off screen", () => {
     try {
       const [, roof] = tiles(s) as [Tile, Tile];
       const draw = roof.placement!.draws[0]!;
-      const u = s.world.raster.recordsU32;
-      const f = s.world.raster.recordsF32;
+      const u = s.world.draws.recordsU32;
+      const f = s.world.draws.recordsF32;
       const o = draw.index * RECORD_WORDS;
       expect(u[o + PLACEMENT_WORD]).toBe(NO_PLACEMENT);
       const radius = f[o + RADIUS_WORD]!;

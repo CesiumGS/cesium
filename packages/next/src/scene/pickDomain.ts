@@ -89,7 +89,7 @@ export interface ResolvedDomain {
 /** @internal What `resolveDomain` reads of a world. */
 export type DomainWorld = Pick<
   World,
-  "drawMatrix" | "hasDraw" | "pickSource" | "raster"
+  "drawMatrix" | "hasDraw" | "pickSource" | "raster" | "draws"
 >;
 
 /**
@@ -117,8 +117,7 @@ export function resolveDomain(
   if (!world.hasDraw(draw) || sample.draw !== draw.index) {
     return undefined;
   }
-  const flags =
-    world.raster.recordsU32[draw.index * RECORD_WORDS + FLAGS_WORD]!;
+  const flags = world.draws.recordsU32[draw.index * RECORD_WORDS + FLAGS_WORD]!;
   if ((flags & NOT_CONTENT) !== 0) {
     return undefined;
   }

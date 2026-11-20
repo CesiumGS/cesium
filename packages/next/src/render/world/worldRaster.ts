@@ -1,5 +1,6 @@
-// A world's rasterizer data: draw records, batches, bundles, culling and the GPU
-// tables behind them. The scene's half is `WorldScene`.
+// A world's rasterizer data: bundles, culling and the GPU tables behind them,
+// the WebGPU device's copy of the world. The CPU data it mirrors is
+// `WorldDraws`; the scene's half is `WorldScene`.
 import { CLIP_BOXES, CLIP_BOX_FLOATS } from "../layout.ts";
 import type {
   SubmissionMode,
@@ -7,58 +8,30 @@ import type {
   PatchDraw,
   PointDraw,
 } from "../../scene/world/types.ts";
-import type { DrawConstants } from "../drawConstants.ts";
 import type { MirroredTable } from "../../scene/MirroredTable.ts";
-import type { RangeAllocator } from "../../gpu/RangeAllocator.ts";
 import type { PlacementTable } from "../../scene/placementTable.ts";
 import type { DrawArguments } from "../drawArguments.ts";
 
 /** One per world, made once with it, and filled by its constructor. */
 export class WorldRaster {
   _submission: SubmissionMode = "indirect";
-  // Per-slot CPU tables (records, transforms, instances, materials) start
-  // small and grow as slots are used; the GPU tables are full size (a
-  // 65536-draw world's CPU tables held 37 MB on NYC, r39).
-  /**
-   * The draw records (the per-draw constants seam): every
-   * record write goes through it.
-   */
-  drawConstants!: DrawConstants;
-  /** The records' words, to read (written through `drawConstants`). */
-  get recordsU32(): ArrayLike<number> {
-    return this.drawConstants.u32;
-  }
-  get recordsF32(): ArrayLike<number> {
-    return this.drawConstants.f32;
-  }
-  /** Generation per draw slot (`DrawHandle.generation`). */
-  drawGeneration!: Uint32Array;
-  /** Transform a draw owns (placed by origin and model), or -1. */
-  drawOwnedTransform!: Int32Array;
   /** Per-instance stream ranges in their mesh's slab, by draw slot. */
   readonly instanceStreamRanges: Array<
     [offset: number, size: number, dataBytes: number, slab: number] | undefined
   > = [];
 
-  // The transform table: float64 local and world matrices on the CPU,
-  // composed parents first; GPU entries mirror the world matrices.
+  /** The draw records' GPU table (`WorldDraws.drawConstants`'s rows). */
+  records!: MirroredTable;
+  /** The transform table's GPU copy (`WorldDraws.transforms`). */
   transforms!: MirroredTable;
-
-  // The instance table: ranges owned by instanced draws.
+  /** The instance table's GPU copy (`WorldDraws.instances`). */
   instances!: MirroredTable;
-  instanceAllocator!: RangeAllocator;
-  /** Instance slots in use or freed below the highest (cull dispatch size). */
-  instanceHighWater = 0;
-  uploadsPending = false;
   /**
    * The placements buffer (plan 5a's call 42): parameters and each placed
    * draw's block, bound in the draw group for the vertex stage.
    */
   placementTable!: PlacementTable;
   readonly frameComputes: Array<(pass: GPUComputePassEncoder) => void> = [];
-  materialsF32!: Float32Array;
-  materialsU32!: Uint32Array;
-  materialsDirty = false;
   readonly textureSets: Array<GPUBindGroup | undefined> = [];
   /** Each texture set's entries, for custom shaders' groups beside them. */
   readonly textureSetEntries: Array<GPUBindGroupEntry[] | undefined> = [];
@@ -71,20 +44,10 @@ export class WorldRaster {
   readonly shaderGroups = new Map<string, GPUBindGroup>();
   /** `ShaderBindings.generation` the bundles were recorded at. */
   bindingsGeneration = 0;
-  readonly batches = new Map<string, Batch>();
-  readonly batchList: Batch[] = [];
-  /** Emptied batches, reused (index kept) so live records stay valid. */
-  readonly freeBatches: Batch[] = [];
-  readonly drawBatches: Array<Batch | undefined> = [];
-  readonly freeSlots: number[] = [];
   readonly clipScratch = new Float32Array(CLIP_BOXES * CLIP_BOX_FLOATS);
-  drawCount = 0;
   bundle?: GPURenderBundle;
-  /**
-   * A batch gained its first shown record or lost its last (`Batch.shown`):
-   * the bundles are recorded again, without rewriting the batch table.
-   */
-  batchesShownChanged = false;
+  /** Patch draws' chunk lists, by batch index: their draws' instances. */
+  readonly batchChunks: Array<GPUBuffer | undefined> = [];
   /** Draws of blended surfaces (`translucentRange`), until draws change. */
   translucentDraws?: number[];
   /** The shadow casters' bundle, and the draw bundle it was recorded with. */
