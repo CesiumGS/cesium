@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-19
 project: CS-389
-needs: [CS-390]
+needs: [CS-390, CS-724]
 ---
 
 The owner, 2026-11-19: "right now we run dyno cli stuff through `node <scriptname>`, i think we need to turn that into a real 'dyno' cli tool to help manage some of this stuff."
@@ -23,6 +23,11 @@ Model: the most capable one (it sets the command surface others build on).
 ## Done when
 
 - One `dyno` command with subcommands and `--help` for each. It covers what `cli.mjs` and `bench/run.mjs` do today, plus `dyno serve` (start, stop, status and logs for Dyno and the handbook, a free port per worktree, and the owner's 5190 and 5199 detached), and room for `study`, `device`, `runner` and `store` as their items land.
+- **Setup data goes through dyno too** (the owner, 2026-11-20: "seems like this should all be pulled into the dyno cli when we get there"):
+  - `dyno setup`, for all of it or one dataset (`dyno setup sky`, `dyno setup frames`, and so on), takes over `npm run setup` and `npm run sky`;
+  - `dyno data status --json` reports each dataset's recorded format against what the code reads, and the command that fixes it. It's built on CS-724's format records and status, and it's the same list Dyno's Problems shows;
+  - `dyno status` and `measure start` refuse to measure on out-of-date data, naming the dataset and the fix;
+  - `npm run setup` and `npm run sky` keep working as thin wrappers.
 - It runs as `npx dyno` anywhere in the repository. Where the bin lives is settled first: the library package `@cesium/next` will be published (CS-616), so a bin in it would ship to users. A private workspace package is the likely home. If the choice is a public name or ships with the library, it goes to the owner as a decision item.
 - The old entry points keep working, as thin wrappers that say the new command, until the repository's docs, items and skills are updated (`AGENTS.md`, `packages/next/AGENTS.md`, the README, the work-items skill).
 - Every command prints a short human summary by default and JSON with `--json`, like `hitld`. Exit codes are documented.

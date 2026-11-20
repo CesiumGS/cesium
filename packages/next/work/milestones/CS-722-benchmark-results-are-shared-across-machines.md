@@ -8,7 +8,7 @@ project: CS-389
 outcome: Every run records its device, configuration and machine state; results from every machine sit in storage dyno manages, and Trends, charts and studies compare devices; and dyno is one non-interactive command that people and hitld call.
 done_when:
   - "c1: a dev run from a worktree records purpose, item, study, worktree, base, machine, servedFrom and ID. `--purpose baseline` is refused from a dirty tree or a feature branch. Two runs started together run one after the other."
-  - "c2: `npx dyno` covers what `cli.mjs` and `bench/run.mjs` do. Every command prints JSON with `api_version` under `--json`. `dyno status --json` reports busy, waiting-for-quiet or quiet. The old entry points still work."
+  - "c2: `npx dyno` covers what `cli.mjs` and `bench/run.mjs` do. Every command prints JSON with `api_version` under `--json`. `dyno status --json` reports busy, waiting-for-quiet or quiet. The old entry points still work, and `dyno setup` and `dyno data status` take over setup, naming any out-of-date dataset and its fix."
   - "c3: a run on any device records its device, configuration and state. A power-source switch changes neither the device nor its Trends series (tested). No identity field holds a host name, user name, serial number or network address (tested)."
   - "c4: runs made on two devices appear in each other's Dyno after one sync, with screenshots fetched when opened. No object is ever rewritten. Uploads never run during a measurement (tested; the owner checks once on two real devices)."
   - "c5: no credential, endpoint or bucket name appears in any output, log, result or repository file (a canary test). A removed device's later objects are ignored, and its keys are revoked by the checklist."
@@ -17,7 +17,7 @@ done_when:
   - "c8: the design `docs/design/benchmark-devices-and-sharing.md` is merged, and the filed items and clauses match it."
   - "c9: a study made with a kind and its instruments reads back with its verdict (CS-404). A study run on several devices pools them by hardware class, and each verdict lists, per class, measured or can't tell, never \"measured\" for a class without runs (CS-739)."
   - "c10: a sweep runs over several settings at once (CS-393), and `run --scenes` measures an example scene with the development metrics (CS-394). A verdict on one hardware class carries to another only when their work counters match within spread, the other class has a calibration study for that work, and both share a bottleneck; otherwise it says can't tell, naming the failed check and what to measure (CS-740)."
-constraints: [CS-390 c1, CS-721 c2, CS-733 c3, CS-734 c4, CS-735 c5, CS-736 c6, CS-737 c6, CS-738 c7, CS-717 c8, CS-404 c9, CS-739 c9, CS-393 c10, CS-394 c10, CS-740 c10]
+constraints: [CS-390 c1, CS-721 c2, CS-724 c2, CS-733 c3, CS-734 c4, CS-735 c5, CS-736 c6, CS-737 c6, CS-738 c7, CS-717 c8, CS-404 c9, CS-739 c9, CS-393 c10, CS-394 c10, CS-740 c10]
 check: "demo a baseline run on two devices, synced, read side by side in Trends and Overview"
 ---
 
