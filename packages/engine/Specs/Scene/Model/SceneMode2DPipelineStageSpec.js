@@ -1,12 +1,15 @@
 import { Cartesian3, Matrix4, combine } from "@cesium/core";
 import {
+  Buffer,
   GltfLoader,
   ModelStatistics,
   ModelType,
   ModelUtility,
   Resource,
   ResourceCache,
+  SceneMode,
   SceneMode2DPipelineStage,
+  SceneTransforms,
   ShaderBuilder,
   VertexAttributeSemantic,
 } from "../../../index.js";
@@ -142,6 +145,64 @@ describe(
         );
         expect(renderResources.uniformMap.u_modelView2D()).toEqual(expected);
       });
+    });
+
+    it("projects quantized integer positions to 2D", async function () {
+      const renderResources = mockRenderResources();
+      const gltfLoader = await loadGltf(boxTexturedUrl, {
+        loadAttributesFor2D: true,
+      });
+      const node = gltfLoader.components.nodes[1];
+      renderResources.runtimeNode.node = node;
+      const primitive = node.primitives[0];
+      const positionAttribute = ModelUtility.getAttributeBySemantic(
+        primitive,
+        VertexAttributeSemantic.POSITION,
+      );
+
+      // Two vertices stored as normalized UNSIGNED_SHORT VEC3, tightly packed as
+      // delivered by the loader.
+      const quantized = new Uint16Array([65535, 0, 32768, 0, 65535, 0]);
+      positionAttribute.typedArray = quantized;
+      positionAttribute.byteOffset = 0;
+      positionAttribute.byteStride = 8; // GPU layout; must be ignored
+      positionAttribute.normalized = true;
+      positionAttribute.count = 2;
+
+      spyOn(Buffer, "createVertexBuffer").and.callThrough();
+
+      SceneMode2DPipelineStage.process(
+        renderResources,
+        primitive,
+        scene.frameState,
+      );
+
+      const args = Buffer.createVertexBuffer.calls.mostRecent().args[0];
+      const data = args.typedArray;
+      expect(data instanceof Float32Array).toBe(true);
+      expect(data.length).toBe(6);
+
+      const center = renderResources.runtimePrimitive.boundingSphere2D.center;
+
+      // Each vertex must be projected from its dequantized position, not
+      // from the raw integer values.
+      for (let i = 0; i < 2; i++) {
+        const raw = quantized.subarray(i * 3, i * 3 + 3);
+        const dequantized = new Cartesian3(
+          raw[0] / 65535,
+          raw[1] / 65535,
+          raw[2] / 65535,
+        );
+        const expected = SceneTransforms.computeActualEllipsoidPosition(
+          { ...scene.frameState, mode: SceneMode.COLUMBUS_VIEW },
+          dequantized,
+          new Cartesian3(),
+        );
+        Cartesian3.subtract(expected, center, expected);
+        expect(data[i * 3]).toEqualEpsilon(expected.x, 2.0);
+        expect(data[i * 3 + 1]).toEqualEpsilon(expected.y, 2.0);
+        expect(data[i * 3 + 2]).toEqualEpsilon(expected.z, 2.0);
+      }
     });
 
     it("processes resources for 2D for primitive with draco compression", function () {
