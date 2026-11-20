@@ -6,6 +6,7 @@
 CS-8 Engine profiles
   CS-20  Facts and personas
   CS-21  The catalog, rules and resolver
+  CS-22  Paths in one place, with the seam test
 
 CS-9 The WebGL 2 renderer
   CS-43  Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have
@@ -68,5 +69,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-41 merged item(s) not in a release
+42 merged item(s) not in a release
 ```

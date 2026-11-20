@@ -4,8 +4,6 @@
 
 ```text
 CS-8 Engine profiles
-  CS-23  Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
-      ← CS-22 Paths in one place, with the seam test
   CS-24  `resolution` and `msaa` as features
       ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
   CS-25  Aerial perspective steps
@@ -788,5 +786,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-262 blocked
+261 blocked
 ```

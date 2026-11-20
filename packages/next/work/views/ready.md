@@ -4,7 +4,7 @@
 
 ```text
 CS-8 Engine profiles
-  CS-22  Paths in one place, with the seam test
+  CS-23  Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
   CS-368  `Engine.queries` takes the application's backends
 
 CS-9 The WebGL 2 renderer
