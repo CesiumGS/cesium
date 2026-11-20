@@ -1,0 +1,5 @@
+.user-profile {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-x1);
+}
