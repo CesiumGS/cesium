@@ -1,6 +1,8 @@
+import type { OpenAIReasoningEffort } from "../ai/types";
 import { createContext } from "react";
 
 export type CopilotSettings = {
+  openaiReasoningEffort: OpenAIReasoningEffort;
   extendedThinking: {
     enabled: boolean;
     budget: number;
@@ -10,6 +12,7 @@ export type CopilotSettings = {
 };
 
 export const initialCopilotSettings: CopilotSettings = {
+  openaiReasoningEffort: "medium",
   extendedThinking: {
     enabled: true,
     budget: 2048,

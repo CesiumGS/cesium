@@ -7,8 +7,10 @@ import { ChatMessage as ChatMessageComponent } from "./ChatMessage";
 import { ApiKeyDialog } from "./ApiKeyDialog";
 import { PromptInput } from "./PromptInput";
 import { SettingsPanel } from "./settings/SettingsPanel";
+import { OpenAIReasoningPicker } from "./OpenAIReasoningPicker";
 import { ModelPicker } from "./ModelPicker";
 import { ApiKeyManager } from "./ai/clients/ApiKeyManager";
+import { buildOpenAIHistory } from "./ai/clients/OpenAIClient";
 import { AIClientFactory } from "./ai/clients/AIClientFactory";
 import { buildGeminiFunctionCallPart } from "./ai/clients/geminiShared";
 import { buildDiffBasedPrompt } from "./ai/prompts/PromptBuilder";
@@ -20,6 +22,7 @@ import type {
   ToolCall,
   ImageAttachment,
   ModelSelection,
+  OpenAIModel,
 } from "./ai/types";
 import { CopilotSettingsContext } from "./settings/CopilotSettingsContext";
 import {
@@ -424,6 +427,7 @@ export function ChatPanel({
             thinkingBudgetTokens: thinkingBudget,
           },
           anthropicOptions: { thinkingBudgetTokens: thinkingBudget },
+          openaiOptions: { reasoningEffort: settings.openaiReasoningEffort },
         });
 
         const toolsToPass = getTools();
@@ -504,6 +508,8 @@ export function ChatPanel({
           return parts;
         };
 
+        const isOpenAI =
+          AIClientFactory.getProviderForModel(selectedModel.model) === "openai";
         const isGemini =
           AIClientFactory.getProviderForModel(selectedModel.model) === "gemini";
         // Filter empty messages and preserve attachments on both branches —
@@ -514,15 +520,17 @@ export function ChatPanel({
             (msg.content && msg.content.trim() !== "") ||
             (msg.attachments && msg.attachments.length > 0),
         );
-        const conversationHistory = isGemini
-          ? nonEmpty.map((msg) => ({
-              role: msg.role === "assistant" ? "model" : "user",
-              parts: buildGeminiPromptParts(msg.content, msg.attachments),
-            }))
-          : nonEmpty.map((msg) => ({
-              role: msg.role as "user" | "assistant",
-              content: buildMessageContent(msg),
-            }));
+        const conversationHistory: ConversationHistory = isOpenAI
+          ? buildOpenAIHistory(previousMessages)
+          : isGemini
+            ? nonEmpty.map((msg) => ({
+                role: msg.role === "assistant" ? "model" : "user",
+                parts: buildGeminiPromptParts(msg.content, msg.attachments),
+              }))
+            : nonEmpty.map((msg) => ({
+                role: msg.role as "user" | "assistant",
+                content: buildMessageContent(msg),
+              }));
 
         for await (const chunk of client.generateWithContext(
           messageContent,
@@ -534,6 +542,10 @@ export function ChatPanel({
           abortController.signal,
         )) {
           switch (chunk.type) {
+            case "openai_output":
+              updateMessage(assistantMessageId, { openAIOutput: chunk.output });
+              break;
+
             case "reasoning":
               reasoning += chunk.reasoning;
               break;
@@ -589,47 +601,49 @@ export function ChatPanel({
                     attachments,
                   );
 
-                  const initialHistory: ConversationHistory = isGemini
-                    ? [
-                        {
-                          role: "user" as const,
-                          parts: userPromptParts,
-                        },
-                        {
-                          role: "model" as const,
-                          parts: [
-                            ...(accumulatedText
-                              ? [{ text: accumulatedText }]
-                              : []),
-                            buildGeminiFunctionCallPart(chunk.toolCall),
-                          ],
-                        },
-                      ]
-                    : [
-                        {
-                          role: "user" as const,
-                          content: userPromptContent,
-                        },
-                        {
-                          role: "assistant" as const,
-                          content: [
-                            ...(accumulatedText
-                              ? [
-                                  {
-                                    type: "text" as const,
-                                    text: accumulatedText,
-                                  },
-                                ]
-                              : []),
-                            {
-                              type: "tool_use" as const,
-                              id: chunk.toolCall.id,
-                              name: chunk.toolCall.name,
-                              input: chunk.toolCall.input,
-                            },
-                          ],
-                        },
-                      ];
+                  const initialHistory: ConversationHistory = isOpenAI
+                    ? []
+                    : isGemini
+                      ? [
+                          {
+                            role: "user" as const,
+                            parts: userPromptParts,
+                          },
+                          {
+                            role: "model" as const,
+                            parts: [
+                              ...(accumulatedText
+                                ? [{ text: accumulatedText }]
+                                : []),
+                              buildGeminiFunctionCallPart(chunk.toolCall),
+                            ],
+                          },
+                        ]
+                      : [
+                          {
+                            role: "user" as const,
+                            content: userPromptContent,
+                          },
+                          {
+                            role: "assistant" as const,
+                            content: [
+                              ...(accumulatedText
+                                ? [
+                                    {
+                                      type: "text" as const,
+                                      text: accumulatedText,
+                                    },
+                                  ]
+                                : []),
+                              {
+                                type: "tool_use" as const,
+                                id: chunk.toolCall.id,
+                                name: chunk.toolCall.name,
+                                input: chunk.toolCall.input,
+                              },
+                            ],
+                          },
+                        ];
 
                   await continueToolChain(
                     chunk.toolCall,
@@ -752,6 +766,7 @@ export function ChatPanel({
       settings.customPromptAddendum,
       settings.extendedThinking.enabled,
       settings.extendedThinking.budget,
+      settings.openaiReasoningEffort,
       addMessage,
       updateMessage,
       appendToolCallToMessage,
@@ -1256,22 +1271,35 @@ Add a DOM-based overlay to the #toolbar showing the current sites's name, countr
               currentModel={currentModel}
               onModelChange={setCurrentModel}
             />
-            <label style={TOGGLE_LABEL_STYLE}>
-              <Switch
-                checked={settings.extendedThinking.enabled}
-                onChange={(e) =>
-                  updateSettings({
-                    extendedThinking: {
-                      ...settings.extendedThinking,
-                      enabled: e.target.checked,
-                    },
-                  })
+            {currentModel &&
+            AIClientFactory.getProviderForModel(currentModel.model) ===
+              "openai" ? (
+              <OpenAIReasoningPicker
+                model={currentModel.model as OpenAIModel}
+                effort={settings.openaiReasoningEffort}
+                onChange={(effort) =>
+                  updateSettings({ openaiReasoningEffort: effort })
                 }
                 disabled={isLoading}
-                aria-label="Toggle Extended Thinking"
               />
-              <Text variant="caption-md">Thinking</Text>
-            </label>
+            ) : (
+              <label style={TOGGLE_LABEL_STYLE}>
+                <Switch
+                  checked={settings.extendedThinking.enabled}
+                  onChange={(e) =>
+                    updateSettings({
+                      extendedThinking: {
+                        ...settings.extendedThinking,
+                        enabled: e.target.checked,
+                      },
+                    })
+                  }
+                  disabled={isLoading}
+                  aria-label="Toggle Extended Thinking"
+                />
+                <Text variant="caption-md">Thinking</Text>
+              </label>
+            )}
             <Tooltip content="When on, the copilot will automatically retry up to 3 times if code it applies produces runtime errors.">
               <label style={TOGGLE_LABEL_STYLE}>
                 <Switch
@@ -1296,6 +1324,7 @@ Add a DOM-based overlay to the #toolbar showing the current sites's name, countr
         open={showApiKeyDialog}
         onClose={handleApiKeyDialogClose}
         onSuccess={handleApiKeySuccess}
+        onBeforeRemoveOpenAIKey={handleStop}
       />
     </>
   );

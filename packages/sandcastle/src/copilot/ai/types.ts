@@ -10,15 +10,33 @@ export interface GeminiConversationMessage {
   role?: string;
 }
 
+export type OpenAIModel = "gpt-6-luna" | "gpt-6.1-sol" | "gpt-6-astra";
+export type OpenAIReasoningEffort =
+  "none" | "low" | "medium" | "high" | "xhigh" | "max";
+
+/** Responses API items, including opaque encrypted reasoning, kept only in memory. */
+export interface OpenAIConversationItem {
+  type?: string;
+  role?: string;
+  [key: string]: unknown;
+}
+
+export interface OpenAIClientOptions {
+  reasoningEffort?: OpenAIReasoningEffort;
+  maxOutputTokens?: number;
+}
+
 export type ConversationHistory =
-  AnthropicConversationMessage[] | GeminiConversationMessage[];
+  | AnthropicConversationMessage[]
+  | GeminiConversationMessage[]
+  | OpenAIConversationItem[];
 
 export type ClaudeModel =
   "claude-opus-4-8" | "claude-sonnet-4-6" | "claude-haiku-4-5-20251001";
 
-export type AIProvider = "gemini" | "anthropic";
+export type AIProvider = "gemini" | "anthropic" | "openai";
 
-export type AIModel = GeminiModel | ClaudeModel;
+export type AIModel = GeminiModel | ClaudeModel | OpenAIModel;
 
 export type AIRoute = "direct" | "vertex";
 
@@ -36,7 +54,7 @@ export interface ModelSelection {
 }
 
 /** Maps AIModel identifiers to the IDs expected by Vertex AI endpoints. */
-export const VERTEX_MODEL_IDS: Record<AIModel, string> = {
+export const VERTEX_MODEL_IDS: Record<GeminiModel | ClaudeModel, string> = {
   "claude-opus-4-8": "claude-opus-4-8",
   "claude-sonnet-4-6": "claude-sonnet-4-6",
   "claude-haiku-4-5-20251001": "claude-haiku-4-5@20251001",
@@ -77,6 +95,7 @@ export interface ChatMessage {
     originalCode?: { javascript: string; html: string };
   }>;
   attachments?: ImageAttachment[];
+  openAIOutput?: OpenAIConversationItem[];
   /** Present only when this message is part of an auto-fix loop */
   autoFix?: {
     attempt: number;
@@ -138,6 +157,7 @@ export interface ToolResult {
 }
 
 export type StreamChunk =
+  | { type: "openai_output"; output: OpenAIConversationItem[] }
   | { type: "reasoning"; reasoning: string }
   | { type: "text"; text: string }
   | { type: "tool_call"; toolCall: ToolCall }
