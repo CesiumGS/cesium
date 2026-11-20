@@ -173,6 +173,6 @@ export interface SupportReport {
   outputs: readonly string[];
   queries: readonly { kind: string; backend: string }[];
   updates: "each-tick" | "progressive";
-  /** Diagnostic strings, unstable. Filled in by the paths milestone (CS-22). */
+  /** The paths chosen and why (src/profile/paths.ts): diagnostic strings, unstable. */
   paths: readonly string[];
 }

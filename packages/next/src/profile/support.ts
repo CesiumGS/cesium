@@ -1,7 +1,9 @@
 // What a view can do on this device, in scene terms: a pure function of the
-// facts, so it can be replayed in tests. Its first shape; the paths milestone
-// (CS-22) fills `paths`, and wiring (CS-23) refines outputs and queries.
+// facts, so it can be replayed in tests. Its first shape: `paths` names the
+// paths chosen (src/profile/paths.ts), and wiring (CS-23) refines outputs and
+// queries.
 import type { DeviceFacts } from "../gpu/GpuDevice.ts";
+import { describePaths } from "./paths.ts";
 import { unmetSupport, PROFILE_DATA, type ProfileData } from "./resolve.ts";
 import type { Step, SupportReport } from "./types.ts";
 
@@ -54,6 +56,6 @@ export function support(
     outputs: ["color", "depth", "featureId"],
     queries: [{ kind: "pick", backend: "id-targets" }],
     updates: "each-tick",
-    paths: [],
+    paths: describePaths(facts),
   };
 }

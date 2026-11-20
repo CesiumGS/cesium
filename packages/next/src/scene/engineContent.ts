@@ -21,7 +21,7 @@ import type { EngineScene } from "./engineScene.ts";
 /** Scene side: loading models and adopting tilesets. */
 export interface ContentEngine extends Pick<
   Engine,
-  "clamping" | "ctx" | "gpu" | "loadGltf" | "tilesets" | "uploadModel" | "wake"
+  "clamping" | "ctx" | "loadGltf" | "tilesets" | "uploadModel" | "wake"
 > {
   readonly scene: Pick<EngineScene, "workers">;
 }
@@ -36,8 +36,9 @@ export function loadGltfFile(
     {
       url: new URL(url, globalThis.location?.href).href,
       headers: options.headers,
-      // KTX2/Basis textures are transcoded to a block format this device supports.
-      textureSupport: engine.gpu.caps.textureCompression,
+      // KTX2/Basis textures are transcoded to the engine's path: a block
+      // format this device samples, else RGBA8.
+      textureTarget: engine.ctx.paths.textureTranscode,
     },
     options.signal,
   );

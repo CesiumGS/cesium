@@ -4,6 +4,8 @@ import type { EngineError, EngineErrorKind } from "../gpu/EngineErrors.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import { GpuDevice, type GpuDeviceOptions } from "../gpu/GpuDevice.ts";
 import { GpuTimer } from "../gpu/GpuTimer.ts";
+import { runStartupProbes } from "../gpu/sampleRateProbe.ts";
+import { deviceChoices } from "../profile/paths.ts";
 import { TexturePool } from "../render/FrameGraph.ts";
 import { VIEW_STRIDE } from "../render/layout.ts";
 import * as m4 from "../math/mat4.ts";
@@ -781,7 +783,7 @@ export class Engine {
     this.maxViews = maxViews;
     const device = ctx.device;
     this.raster.pool = new TexturePool(device);
-    this.raster.timer = new GpuTimer(device);
+    this.raster.timer = new GpuTimer(device, ctx.paths.gpuTiming);
     this.raster.glareKernels = new GlareKernels(
       device,
       (aperture, size) =>
@@ -860,11 +862,15 @@ export class Engine {
 
   static async create(options: EngineOptions = {}): Promise<Engine> {
     const gpu = await GpuDevice.create(options);
+    // The startup probes record into the device's facts, which the paths
+    // are chosen from; they run while the atmosphere precomputes.
+    const probed = runStartupProbes(gpu.device);
     const atmosphere = await RealtimeAtmosphere.create(gpu.device);
     const sky = await Sky.create(gpu.device, atmosphere, SCENE_TARGETS);
+    await probed;
     const ctx = await createRenderContext(
       gpu.device,
-      gpu.caps,
+      deviceChoices(gpu.facts),
       gpu.preferredCanvasFormat,
       {
         sunLight: sky.sunLight.createView(),

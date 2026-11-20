@@ -25,11 +25,7 @@ import {
   trimmedNurbsBrep,
 } from "./brepFixtures.ts";
 
-const textures = {
-  bc7: false,
-  astc: false,
-  etc2: false,
-} as unknown as Parameters<typeof parseGltf>[1];
+const textures = "rgba8" as const;
 
 /** A view function over a written chunk, its bytes shifted `shift` bytes into memory. */
 function viewsOf(

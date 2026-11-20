@@ -3,9 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   glareFor,
   glareReason,
-  glareTier,
   resolveGlare,
 } from "../src/render/post/glare.ts";
+import { glareTier } from "../src/profile/glare.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import {
   cameraGlare,
@@ -19,9 +19,9 @@ import type { View } from "../src/scene/View.ts";
 import { STAR_FLOATS } from "../src/atmosphere/stars.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
-const apple = { vendor: "apple", isFallbackAdapter: false };
-const intel = { vendor: "Intel", isFallbackAdapter: false };
-const fallback = { vendor: "google", isFallbackAdapter: true };
+const apple = { adapter: { vendor: "apple", isFallbackAdapter: false } };
+const intel = { adapter: { vendor: "Intel", isFallbackAdapter: false } };
+const fallback = { adapter: { vendor: "google", isFallbackAdapter: true } };
 
 describe("glareTier", () => {
   it("has none on a fallback adapter", () => {
@@ -273,7 +273,7 @@ describe("in an engine", () => {
     const made = glareFor(
       {
         ...(engine as unknown as Parameters<typeof glareFor>[0]),
-        gpu: { adapterInfo: fallback },
+        gpu: { facts: fallback },
       },
       addView(null),
       512,

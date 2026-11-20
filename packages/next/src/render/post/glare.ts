@@ -4,6 +4,11 @@
 import type { Sky } from "../../atmosphere/Sky.ts";
 import { GLARE_BRIGHT_STARS } from "../../atmosphere/starCells.ts";
 import type { GpuTimer } from "../../gpu/GpuTimer.ts";
+import {
+  glareTier,
+  glareTierReason,
+  type GlareFacts,
+} from "../../profile/glare.ts";
 import type { Camera } from "../../scene/Camera.ts";
 import { lightListFor, type LightList } from "../../scene/lightList.ts";
 import type {
@@ -182,35 +187,15 @@ export interface GlareEngine {
     readonly timer: Pick<GpuTimer, "passWrites">;
     readonly glareKernels: GlareKernels;
   };
-  readonly gpu: { readonly adapterInfo: GlareAdapter };
+  /** The device's facts, handed to the profile layer (src/profile/glare.ts), never read here. */
+  readonly gpu: { readonly facts: GlareFacts };
   requestRender(): void;
 }
 
-/** What a tier goes by (`GpuDevice.adapterInfo`). */
-export interface GlareAdapter {
-  readonly vendor: string;
-  readonly isFallbackAdapter: boolean;
-}
-
-/**
- * The tier for an adapter at `pixels` of view: a fallback adapter has none; Intel starts
- * reduced, and only sources above 3.7 million pixels; anything else is full, and reduced
- * above 8.3 million. Starting values: nothing but an M2 has been measured.
- */
-export function glareTier(adapter: GlareAdapter, pixels: number): GlareTier {
-  if (adapter.isFallbackAdapter) {
-    return "off";
-  }
-  if (adapter.vendor.toLowerCase().includes("intel")) {
-    return pixels > 3_700_000 ? "sources" : "reduced";
-  }
-  return pixels > 8_300_000 ? "reduced" : "full";
-}
-
-/** Why `glareTier` chose, in a sentence, for a readout. */
+/** Why the tier is what it is, in a sentence, for a readout. */
 export function glareReason(
   settings: GlareSettings | null,
-  adapter: GlareAdapter,
+  facts: GlareFacts,
   pixels: number,
 ): string {
   if (!settings || (!settings.veil && !settings.spikes)) {
@@ -219,18 +204,7 @@ export function glareReason(
   if (settings.tier !== "auto") {
     return "chosen in the settings";
   }
-  if (adapter.isFallbackAdapter) {
-    return "this GPU is a software fallback";
-  }
-  const megapixels = (pixels / 1e6).toFixed(1);
-  if (adapter.vendor.toLowerCase().includes("intel")) {
-    return pixels > 3_700_000
-      ? `an Intel GPU at ${megapixels} million pixels`
-      : "an Intel GPU, which starts reduced until it is measured";
-  }
-  return pixels > 8_300_000
-    ? `${megapixels} million pixels is a lot for one view`
-    : "this GPU has room for all of it";
+  return glareTierReason(facts, pixels);
 }
 
 /** What a view's glare settings mean on its adapter. */
@@ -281,17 +255,17 @@ const TIERS: Readonly<
   sources: { levels: 0, basePixels: 2, sprites: 16, spritePixels: 1_000_000 },
 };
 
-/** What `settings` mean for this adapter at `pixels` of view. */
+/** What `settings` mean on this device at `pixels` of view. */
 export function resolveGlare(
   settings: GlareSettings | null,
-  adapter: GlareAdapter,
+  facts: GlareFacts,
   pixels: number,
 ): ResolvedGlare {
   if (!settings || (!settings.veil && !settings.spikes)) {
     return OFF;
   }
   const tier =
-    settings.tier === "auto" ? glareTier(adapter, pixels) : settings.tier;
+    settings.tier === "auto" ? glareTier(facts, pixels) : settings.tier;
   if (tier === "off") {
     return OFF;
   }
@@ -677,18 +651,11 @@ export function glareFor(
   if (width < 2 || height < 2) {
     return undefined;
   }
-  const resolved = resolveGlare(
-    view.observer.glare,
-    engine.gpu.adapterInfo,
-    width * height,
-  );
+  const { facts } = engine.gpu;
+  const resolved = resolveGlare(view.observer.glare, facts, width * height);
   view.glareResolved = {
     tier: resolved.tier,
-    reason: glareReason(
-      view.observer.glare,
-      engine.gpu.adapterInfo,
-      width * height,
-    ),
+    reason: glareReason(view.observer.glare, facts, width * height),
   };
   if (resolved.tier === "off") {
     return undefined;

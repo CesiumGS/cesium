@@ -610,7 +610,7 @@ async function measure(params: URLSearchParams): Promise<CostResults> {
     runs,
     samplesPerRun: SAMPLES,
     timestampQuery: device.features.has("timestamp-query"),
-    indirectFirstInstance: engine.ctx.caps.indirectFirstInstance,
+    indirectFirstInstance: engine.capabilities.indirectFirstInstance,
     stars: { source: local ? "pack" : "synthetic", count },
     rows: [],
     deviceLost: null,

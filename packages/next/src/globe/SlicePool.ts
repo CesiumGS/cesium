@@ -1,3 +1,4 @@
+import { deviceCapacities } from "../gpu/limits.ts";
 import { MAX_IMAGERY_SLICES } from "../scene/contentLimits.ts";
 
 /**
@@ -195,7 +196,7 @@ export class SlicePool {
   /** The most slices any pool can have on this device. */
   get ceiling(): number {
     return Math.min(
-      this.device.limits.maxTextureArrayLayers,
+      deviceCapacities(this.device).textureArrayLayers,
       MAX_IMAGERY_SLICES,
     );
   }

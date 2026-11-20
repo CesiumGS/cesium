@@ -4,7 +4,7 @@
 // resolver reads no GPU.
 import { describe, expect, it } from "vitest";
 import { GpuDevice } from "../src/gpu/GpuDevice.ts";
-import { glareTier } from "../src/render/post/glare.ts";
+import { glareTier } from "../src/profile/glare.ts";
 import {
   CATALOG,
   VARIANT_BUDGET,
@@ -338,7 +338,7 @@ describe("the first rules describe today's behavior", () => {
         8.3e6 + 1,
         2e7,
       ]) {
-        const today = glareTier(personas[name].adapter, pixels);
+        const today = glareTier(personas[name], pixels);
         const effective = resolve({
           facts: personas[name],
           look: { glare: true },

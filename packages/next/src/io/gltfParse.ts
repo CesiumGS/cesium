@@ -3,8 +3,8 @@ import {
   decodeDraco,
   transcodeKtx2,
   type DracoAttributeRequest,
-  type TextureFormatSupport,
 } from "./decoders.ts";
+import type { TextureTranscodePath } from "../profile/paths.ts";
 import {
   featureIdSource,
   isB3dm,
@@ -99,7 +99,7 @@ function dataUriResponse(uri: string): Response {
 
 export async function parseGltf(
   url: string,
-  textureSupport: TextureFormatSupport,
+  textureTarget: TextureTranscodePath,
   headers?: Record<string, string>,
   signal?: AbortSignal,
 ): Promise<{ asset: GltfAsset; transfer: Transferable[] }> {
@@ -122,8 +122,8 @@ export async function parseGltf(
     received: bytes.byteLength,
   };
   return isComposite(bytes)
-    ? parseComposite(bytes, url, init, textureSupport, arrival)
-    : parseTile(bytes, url, init, textureSupport, arrival);
+    ? parseComposite(bytes, url, init, textureTarget, arrival)
+    : parseTile(bytes, url, init, textureTarget, arrival);
 }
 
 /** Inner tiles of a composite parsed at once. */
@@ -149,7 +149,7 @@ async function parseComposite(
   bytes: Uint8Array,
   url: string,
   init: RequestInit,
-  textureSupport: TextureFormatSupport,
+  textureTarget: TextureTranscodePath,
   arrival: Arrival,
 ): Promise<Parsed> {
   const warnings: string[] = [];
@@ -184,7 +184,7 @@ async function parseComposite(
       const batch = inner.slice(start, start + COMPOSITE_BATCH);
       const results = await Promise.allSettled(
         batch.map((tile, i) =>
-          parseTile(tile, url, innerInit, textureSupport, arrival).catch(
+          parseTile(tile, url, innerInit, textureTarget, arrival).catch(
             (reason: unknown) => {
               first.failure ??= { index: start + i, reason };
               stop.abort(reason);
@@ -252,7 +252,7 @@ async function parseTile(
   tileBytes: Uint8Array,
   url: string,
   init: RequestInit,
-  textureSupport: TextureFormatSupport,
+  textureTarget: TextureTranscodePath,
   arrival: Arrival,
 ): Promise<Parsed> {
   // External resources resolve against the glTF (an i3dm may point at one).
@@ -531,7 +531,7 @@ async function parseTile(
           (/\.png$/i.test(image.uri ?? "") ? "image/png" : "image/jpeg"));
       imageTypes[type] = (imageTypes[type] ?? 0) + 1;
       if (ktx2) {
-        return transcodeKtx2(bytes, textureSupport);
+        return transcodeKtx2(bytes, textureTarget);
       }
       return createImageBitmap(new Blob([bytes], { type: image.mimeType }), {
         colorSpaceConversion: "none",

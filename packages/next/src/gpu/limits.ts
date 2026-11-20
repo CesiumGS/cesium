@@ -69,6 +69,30 @@ export function requiredLimitsFor(
   }
 }
 
+/** The capacities tables and pools grow into, as the engine sizes by them. */
+export interface DeviceCapacities {
+  /** The most bytes one storage binding addresses: the binding limit, within the buffer limit. */
+  storageBindingBytes: number;
+  /** The most layers a 2D texture array may have. */
+  textureArrayLayers: number;
+}
+
+/**
+ * `device`'s capacities. The limits are read here, in the device layer, so
+ * the code that sizes by them never reads the limits itself
+ * (test/deviceFactsSeam.test.ts).
+ */
+export function deviceCapacities(device: GPUDevice): DeviceCapacities {
+  const { limits } = device;
+  return {
+    storageBindingBytes: Math.min(
+      limits.maxStorageBufferBindingSize,
+      limits.maxBufferSize,
+    ),
+    textureArrayLayers: limits.maxTextureArrayLayers,
+  };
+}
+
 /** Per-stage counts of a pipeline layout's bindings. */
 export interface StageCounts {
   storageBuffers: number;

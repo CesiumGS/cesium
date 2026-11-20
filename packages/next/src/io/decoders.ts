@@ -14,6 +14,7 @@ import { read as readKtx2 } from "ktx-parse";
 import createBasisModule from "../../../engine/Source/ThirdParty/Workers/basis_transcoder.js?basis-esm";
 import basisWasmUrl from "../../../engine/Source/ThirdParty/basis_transcoder.wasm?url";
 import type { CompressedImage, CompressedFormat } from "./gltfTypes.ts";
+import type { TextureTranscodePath } from "../profile/paths.ts";
 
 /* eslint-disable @typescript-eslint/no-explicit-any -- Emscripten modules are untyped */
 
@@ -123,19 +124,15 @@ export async function decodeDraco(
   return { attributes, indices };
 }
 
-export interface TextureFormatSupport {
-  bc: boolean;
-  etc2: boolean;
-  astc: boolean;
-}
-
 /**
- * Transcodes a KTX2 (Basis ETC1S or UASTC) image to the best block format the
- * device supports: BC7, then ASTC 4×4, then ETC2, else uncompressed RGBA8.
+ * Transcodes a KTX2 (Basis ETC1S or UASTC) image to `target`, the engine's
+ * `textureTranscode` path (src/profile/paths.ts, chosen from the device's
+ * block formats). An image that isn't a whole number of 4 × 4 blocks is
+ * uncompressed RGBA8 whatever the target.
  */
 export async function transcodeKtx2(
   data: Uint8Array,
-  support: TextureFormatSupport,
+  target: TextureTranscodePath,
 ): Promise<CompressedImage> {
   const b = await basisModule();
   const header = readKtx2(data);
@@ -148,18 +145,13 @@ export async function transcodeKtx2(
     const height: number = file.getHeight();
     const blockAligned = width % 4 === 0 && height % 4 === 0;
     const formats = b.transcoder_texture_format;
-    let format: CompressedFormat = "rgba8";
-    let target = formats.cTFRGBA32;
-    if (blockAligned && support.bc) {
-      format = "bc7";
-      target = formats.cTFBC7_RGBA;
-    } else if (blockAligned && support.astc) {
-      format = "astc-4x4";
-      target = formats.cTFASTC_4x4_RGBA;
-    } else if (blockAligned && support.etc2) {
-      format = "etc2-rgba8";
-      target = formats.cTFETC2_RGBA;
-    }
+    const format: CompressedFormat = blockAligned ? target : "rgba8";
+    const transcodeTo = {
+      bc7: formats.cTFBC7_RGBA,
+      "astc-4x4": formats.cTFASTC_4x4_RGBA,
+      "etc2-rgba8": formats.cTFETC2_RGBA,
+      rgba8: formats.cTFRGBA32,
+    }[format];
     if (!file.startTranscoding()) {
       throw new Error("KTX2: startTranscoding failed.");
     }
@@ -169,10 +161,12 @@ export async function transcodeKtx2(
         level,
         0,
         0,
-        target.value,
+        transcodeTo.value,
       );
       const out = new Uint8Array(size);
-      if (!file.transcodeImage(out, level, 0, 0, target.value, 0, -1, -1)) {
+      if (
+        !file.transcodeImage(out, level, 0, 0, transcodeTo.value, 0, -1, -1)
+      ) {
         throw new Error(`KTX2: transcoding level ${level} failed.`);
       }
       levels.push(out);

@@ -1,6 +1,5 @@
-import { storageWritesRunPerSample } from "../gpu/sampleRateProbe.ts";
 import { EngineErrors } from "../gpu/EngineErrors.ts";
-import type { Capabilities } from "../gpu/GpuDevice.ts";
+import type { DeviceChoices, Paths } from "../profile/paths.ts";
 import { MipGenerator } from "../gpu/MipGenerator.ts";
 import { Environment } from "../gpu/Environment.ts";
 import {
@@ -453,8 +452,9 @@ export interface Pipelines extends SurfacePipelines {
   momentBias: number;
   /**
    * "exact": a fragment shader's storage writes run once a covered
-   * sample here (gpu/sampleRateProbe.ts), so the lists' pass runs per
-   * sample explicitly (surface.slang `fsListSamples`).
+   * sample here (the `translucencyLists` path, from gpu/sampleRateProbe.ts),
+   * so the lists' pass runs per sample explicitly (surface.slang
+   * `fsListSamples`).
    */
   listsPerSample: boolean;
 }
@@ -470,7 +470,8 @@ export interface RenderContext {
   device: GPUDevice;
   /** The engine's errors (`Engine.errors`), with what it did about each. */
   errors: EngineErrors;
-  caps: Capabilities;
+  /** The engine's paths (src/profile/paths.ts): render code reads these, never the device's facts. */
+  paths: Paths;
   targets: typeof SCENE_TARGETS;
   pipelines: Pipelines;
   /** Custom shaders' pipelines, compiled in the background. */
@@ -541,7 +542,7 @@ export interface ShaderOverrides {
 
 export async function createRenderContext(
   device: GPUDevice,
-  caps: Capabilities,
+  choices: DeviceChoices,
   outputFormat: GPUTextureFormat,
   sky: {
     sunLight: GPUTextureView;
@@ -559,7 +560,7 @@ export async function createRenderContext(
   // mip generator for the formats glTF textures use.
   const mips = new MipGenerator(device);
   const [pipelines, environment] = await Promise.all([
-    createPipelines(device, caps, outputFormat, overrides),
+    createPipelines(device, choices, outputFormat, overrides),
     Environment.create(device),
     mips.prepare("rgba8unorm"),
     mips.prepare("rgba8unorm-srgb"),
@@ -661,7 +662,7 @@ export async function createRenderContext(
   return {
     device,
     errors,
-    caps,
+    paths: choices.paths,
     targets: SCENE_TARGETS,
     pipelines,
     shaders: new ShaderCache(
@@ -727,12 +728,13 @@ function storage(
 
 async function createPipelines(
   device: GPUDevice,
-  caps: Capabilities,
+  choices: DeviceChoices,
   outputFormat: GPUTextureFormat,
   overrides: ShaderOverrides,
 ): Promise<Pipelines> {
   const { VERTEX, FRAGMENT, COMPUTE } = GPUShaderStage;
-  const perSample = storageWritesRunPerSample(device);
+  const moments32 = choices.moments === "moments32";
+  const perSample = choices.paths.translucencyLists === "per-sample";
   const viewLayout = device.createBindGroupLayout({
     label: "view",
     entries: [
@@ -946,9 +948,10 @@ async function createPipelines(
       storage(2, false, COMPUTE), // the table
     ],
   });
-  // The moments' targets: 32-bit floats where they blend, else 16-bit (the
-  // zeroth in four channels, a format storage textures may have).
-  const momentFormats = caps.float32Blendable
+  // The moments' targets: 32-bit floats where they blend (the profile's
+  // `moments32` step), else 16-bit (the zeroth in four channels, a format
+  // storage textures may have).
+  const momentFormats = moments32
     ? (["r32float", "rgba32float"] as const)
     : (["rgba16float", "rgba16float"] as const);
   // Group 3 adds one sampled texture to the opaque layout's, the opaque
@@ -1590,22 +1593,22 @@ async function createPipelines(
         depthPipeline(caster, name("depth.masked"), "back", true, o),
       depthMaskedDoubleSided: () =>
         depthPipeline(caster, name("depth.maskedDoubleSided"), "none", true, o),
-      translucentList: async () =>
+      translucentList: () =>
         translucentPipeline(
           translucent(),
           name("translucent.list"),
           "back",
-          (await perSample) ? "fsListSamples" : "fsList",
+          perSample ? "fsListSamples" : "fsList",
           listTargets,
           SCENE_TARGETS.sampleCount,
           t,
         ),
-      translucentListDoubleSided: async () =>
+      translucentListDoubleSided: () =>
         translucentPipeline(
           translucent(),
           name("translucent.list.doubleSided"),
           "none",
-          (await perSample) ? "fsListSamples" : "fsList",
+          perSample ? "fsListSamples" : "fsList",
           listTargets,
           SCENE_TARGETS.sampleCount,
           t,
@@ -1652,23 +1655,23 @@ async function createPipelines(
         ),
       // Patch draws in the translucent passes: the chunk vertex stage and
       // the entries with the trim test (`fsPatchList` and the others).
-      translucentListPatch: async () =>
+      translucentListPatch: () =>
         translucentPipeline(
           translucent(),
           name("translucent.list.patch"),
           "back",
-          (await perSample) ? "fsPatchListSamples" : "fsPatchList",
+          perSample ? "fsPatchListSamples" : "fsPatchList",
           listTargets,
           SCENE_TARGETS.sampleCount,
           t,
           true,
         ),
-      translucentListPatchDoubleSided: async () =>
+      translucentListPatchDoubleSided: () =>
         translucentPipeline(
           translucent(),
           name("translucent.list.patch.doubleSided"),
           "none",
-          (await perSample) ? "fsPatchListSamples" : "fsPatchList",
+          perSample ? "fsPatchListSamples" : "fsPatchList",
           listTargets,
           SCENE_TARGETS.sampleCount,
           t,
@@ -2623,7 +2626,7 @@ async function createPipelines(
     // reconstruction failing often enough to speckle (5·10⁻⁶: never in
     // 400,000 random stacks of one to four layers). In 16-bit (without
     // their quantization), more.
-    momentBias: caps.float32Blendable ? 5e-6 : 6e-4,
-    listsPerSample: await perSample,
+    momentBias: moments32 ? 5e-6 : 6e-4,
+    listsPerSample: perSample,
   };
 }

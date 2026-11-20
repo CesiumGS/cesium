@@ -70,7 +70,10 @@ export interface ViewBlockEngine extends Pick<
     | "viewFrames"
     | "viewStaging"
   >;
-  readonly scene: Pick<EngineScene, "anchorEyes" | "startTime" | "transitionSeconds">;
+  readonly scene: Pick<
+    EngineScene,
+    "anchorEyes" | "startTime" | "transitionSeconds"
+  >;
 }
 
 export const scratchView = m4.mat4();
@@ -251,7 +254,7 @@ export function writeView(
     engine.raster.sky.writeStars(
       sky,
       engine.icrfToFixed,
-      starSubmission(view.world.submission, engine.ctx.caps),
+      starSubmission(view.world.submission, engine.ctx.paths.starSubmission),
       observerShadowGain(view.observer),
     );
     engine.raster.viewFrames.get(view)!.glare?.writeFrame(camera);

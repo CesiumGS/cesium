@@ -1,7 +1,10 @@
+import type { GpuTimingPath } from "../profile/paths.ts";
+
 /**
  * Measures GPU time per frame with timestamp queries. Results arrive a few
  * frames late through `mapAsync`; while every readback buffer is in flight,
- * frames are simply not measured. A no-op when `timestamp-query` is missing.
+ * frames are simply not measured. A no-op without timestamps (the
+ * `gpuTiming` path: `timestamp-query` is missing).
  *
  * Chrome quantizes timestamps to 100 µs unless developer features are
  * enabled, so treat values as benchmark data, not a product feature. The
@@ -186,8 +189,12 @@ export class GpuTimer {
   };
   samples = 0;
 
-  constructor(private readonly device: GPUDevice) {
-    if (!device.features.has("timestamp-query")) {
+  /** `timing` is the engine's `gpuTiming` path (src/profile/paths.ts). */
+  constructor(
+    private readonly device: GPUDevice,
+    timing: GpuTimingPath,
+  ) {
+    if (timing !== "timestamps") {
       return;
     }
     GpuTimer.timers.set(device, this);

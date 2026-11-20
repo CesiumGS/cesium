@@ -14,7 +14,7 @@ import { deviationFromParent } from "../globe/terrainRefit.ts";
 /** Quantized-mesh with the extensions we decode, as 1.x requests it. */
 const TERRAIN_ACCEPT =
   "application/vnd.quantized-mesh;extensions=octvertexnormals-metadata,application/octet-stream;q=0.9,*/*;q=0.01";
-import type { TextureFormatSupport } from "./decoders.ts";
+import type { TextureTranscodePath } from "../profile/paths.ts";
 import { loadSkyPack } from "../atmosphere/skyPack.ts";
 import { withStarCells } from "../atmosphere/starCells.ts";
 import { computeKernel, kernelImage } from "../render/post/glareKernel.ts";
@@ -47,7 +47,8 @@ self.onmessage = async (
     type: string;
     url: string;
     headers?: Record<string, string>;
-    textureSupport: TextureFormatSupport;
+    /** What KTX2 textures are transcoded to: the engine's `textureTranscode` path. */
+    textureTarget: TextureTranscodePath;
     rect: Rectangle;
     skirtHeight: number | readonly number[];
     /** A terrain tile also carries `h·n̂` per vertex, or `(n̂, h)` for `"profile"` (`TerrainLoader`). */
@@ -280,7 +281,7 @@ self.onmessage = async (
     }
     const { asset, transfer } = await parseGltf(
       event.data.url,
-      event.data.textureSupport,
+      event.data.textureTarget,
       event.data.headers,
       controller.signal,
     );

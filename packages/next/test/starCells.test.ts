@@ -366,13 +366,11 @@ describe("with the star exposure rule gone", () => {
 });
 
 describe("how they're submitted", () => {
-  it("is direct with a direct world, or without indirect's first instance", () => {
-    const on = { indirectFirstInstance: true };
-    const off = { indirectFirstInstance: false };
-    expect(starSubmission("indirect", on)).toBe("indirect");
-    expect(starSubmission("direct", on)).toBe("direct");
-    expect(starSubmission("indirect", off)).toBe("direct");
-    expect(starSubmission("direct", off)).toBe("direct");
+  it("is direct with a direct world, or on the direct path", () => {
+    expect(starSubmission("indirect", "indirect")).toBe("indirect");
+    expect(starSubmission("direct", "indirect")).toBe("direct");
+    expect(starSubmission("indirect", "direct")).toBe("direct");
+    expect(starSubmission("direct", "direct")).toBe("direct");
   });
 
   async function scene() {
@@ -445,9 +443,7 @@ describe("how they're submitted", () => {
     expect(frame.sky.starMode).toBe("direct");
     world.submission = "indirect";
     engine.renderFrame();
-    expect(frame.sky.starMode).toBe(
-      engine.ctx.caps.indirectFirstInstance ? "indirect" : "direct",
-    );
+    expect(frame.sky.starMode).toBe(engine.ctx.paths.starSubmission);
   });
 
   it("two views have their own arguments, and neither's write touches the other's", async () => {

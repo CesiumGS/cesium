@@ -43,7 +43,7 @@ const mesh = () => ({
 
 const dataUrl = (bytes: Uint8Array) =>
   `data:model/gltf-binary;base64,${Buffer.from(bytes).toString("base64")}`;
-const textures = { bc7: false, astc: false, etc2: false } as never;
+const textures = "rgba8" as const;
 
 describe("writeGlb", () => {
   it("writes named float attributes the reader gives back", async () => {

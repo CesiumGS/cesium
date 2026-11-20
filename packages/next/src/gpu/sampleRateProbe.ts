@@ -101,3 +101,13 @@ export async function storageWritesRunPerSample(
     target.destroy();
   }
 }
+
+/**
+ * Runs the startup probes on `device`, recording each result in its facts
+ * (`DeviceFacts.probes`, `probeResultsFor`). The paths are chosen from those
+ * facts (src/profile/paths.ts), so nothing outside the device layer reads a
+ * probe's answer itself.
+ */
+export async function runStartupProbes(device: GPUDevice): Promise<void> {
+  await storageWritesRunPerSample(device);
+}

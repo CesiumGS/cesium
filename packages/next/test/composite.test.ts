@@ -409,11 +409,7 @@ function i3dmByUri(uri: string): Uint8Array {
 }
 
 describe("parseGltf on composites", () => {
-  const textures = {
-    bc7: false,
-    astc: false,
-    etc2: false,
-  } as unknown as Parameters<typeof parseGltf>[1];
+  const textures = "rgba8" as const;
 
   it("parses a b3dm and an i3dm into one asset of two parts", async () => {
     const { asset, transfer } = await parseGltf(

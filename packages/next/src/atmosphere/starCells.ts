@@ -361,14 +361,13 @@ export function starCullInputs(
 export type StarSubmission = "indirect" | "direct";
 
 /**
- * Indirect, unless the world submits directly, or an indirect draw's first
- * instance would be silently ignored.
+ * Indirect, unless the world submits directly, or the engine's
+ * `starSubmission` path is direct (src/profile/paths.ts: an indirect draw's
+ * first instance would be silently ignored).
  */
 export function starSubmission(
   mode: "indirect" | "direct",
-  capabilities: { readonly indirectFirstInstance: boolean },
+  path: StarSubmission,
 ): StarSubmission {
-  return mode === "direct" || !capabilities.indirectFirstInstance
-    ? "direct"
-    : "indirect";
+  return mode === "direct" || path === "direct" ? "direct" : "indirect";
 }

@@ -269,7 +269,12 @@ exports[`profile invariants > 9. snapshots > intel-uhd-4k: support 1`] = `
     "depth",
     "featureId",
   ],
-  "paths": [],
+  "paths": [
+    "starSubmission: indirect (an indirect draw's first instance is honored)",
+    "textureTranscode: bc7 (BC7 blocks sample on this device)",
+    "translucencyLists: per-pixel (a 4× fragment shader's storage writes run once a pixel)",
+    "gpuTiming: timestamps (timestamp queries time the passes)",
+  ],
   "queries": [
     {
       "backend": "id-targets",
@@ -537,7 +542,12 @@ exports[`profile invariants > 9. snapshots > m2-chrome: support 1`] = `
     "depth",
     "featureId",
   ],
-  "paths": [],
+  "paths": [
+    "starSubmission: indirect (an indirect draw's first instance is honored)",
+    "textureTranscode: astc-4x4 (ASTC 4 × 4 blocks sample on this device, and BC7 doesn't)",
+    "translucencyLists: per-sample (storage writes run once a covered sample, or the probe couldn't tell; per sample is right either way, only slower)",
+    "gpuTiming: timestamps (timestamp queries time the passes)",
+  ],
   "queries": [
     {
       "backend": "id-targets",
@@ -805,7 +815,12 @@ exports[`profile invariants > 9. snapshots > minimum-limits: support 1`] = `
     "depth",
     "featureId",
   ],
-  "paths": [],
+  "paths": [
+    "starSubmission: indirect (an indirect draw's first instance is honored)",
+    "textureTranscode: bc7 (BC7 blocks sample on this device)",
+    "translucencyLists: per-sample (storage writes run once a covered sample, or the probe couldn't tell; per sample is right either way, only slower)",
+    "gpuTiming: timestamps (timestamp queries time the passes)",
+  ],
   "queries": [
     {
       "backend": "id-targets",
@@ -1072,7 +1087,12 @@ exports[`profile invariants > 9. snapshots > no-float32-blendable: support 1`] =
     "depth",
     "featureId",
   ],
-  "paths": [],
+  "paths": [
+    "starSubmission: indirect (an indirect draw's first instance is honored)",
+    "textureTranscode: bc7 (BC7 blocks sample on this device)",
+    "translucencyLists: per-sample (storage writes run once a covered sample, or the probe couldn't tell; per sample is right either way, only slower)",
+    "gpuTiming: timestamps (timestamp queries time the passes)",
+  ],
   "queries": [
     {
       "backend": "id-targets",
@@ -1339,7 +1359,12 @@ exports[`profile invariants > 9. snapshots > no-optional-features: support 1`] =
     "depth",
     "featureId",
   ],
-  "paths": [],
+  "paths": [
+    "starSubmission: direct (without indirect-first-instance, an indirect draw's first instance would be silently ignored)",
+    "textureTranscode: rgba8 (no block format samples on this device, so textures are uncompressed, at four times BC7's memory)",
+    "translucencyLists: per-sample (storage writes run once a covered sample, or the probe couldn't tell; per sample is right either way, only slower)",
+    "gpuTiming: unavailable (without timestamp-query the GPU's time can't be measured)",
+  ],
   "queries": [
     {
       "backend": "id-targets",
@@ -1619,7 +1644,12 @@ exports[`profile invariants > 9. snapshots > swiftshader: support 1`] = `
     "depth",
     "featureId",
   ],
-  "paths": [],
+  "paths": [
+    "starSubmission: indirect (an indirect draw's first instance is honored)",
+    "textureTranscode: bc7 (BC7 blocks sample on this device)",
+    "translucencyLists: per-pixel (a 4× fragment shader's storage writes run once a pixel)",
+    "gpuTiming: unavailable (without timestamp-query the GPU's time can't be measured)",
+  ],
   "queries": [
     {
       "backend": "id-targets",
