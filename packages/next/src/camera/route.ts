@@ -7,6 +7,7 @@
 // edge and inverse where it goes down. What is placed in a frame has that
 // frame's coordinates, true or not as the application decides, and is drawn
 // through the edges between it and the camera's root.
+import { invertAffine } from "../math/mat4.ts";
 import type { Params, CurvilinearSpec, ViewId } from "../transform/graph.ts";
 import type { FrameKey, FrameResolver } from "./frameResolver.ts";
 
@@ -246,7 +247,10 @@ export function routeForward(
   return out;
 }
 
-/** A point of `route.base` carried back to `route.frame`, in float64: each step undone, last first, each curvilinear map at the scale it has now (`curvilinearInverse`). */
+/**
+ * A point of `route.base` carried back to `route.frame`, in float64: each step undone, last first, each curvilinear map at the scale it has now (`curvilinearInverse`).
+ * An affine step is inverted as a general affine matrix, so one that scales unevenly or shears comes back exact; a singular one (a zero scale) throws.
+ */
 export function routeInverse(
   route: Route,
   q: ArrayLike<number>,
@@ -257,7 +261,7 @@ export function routeInverse(
   for (let i = route.steps.length - 1; i >= 0; i--) {
     const step = route.steps[i]!;
     if (step.kind === "affine") {
-      invertRigid(step.matrix, inv);
+      invertAffineStep(step.matrix, inv, i);
       transformPoint(inv, at, at);
     } else if (step.inverse) {
       curvilinearForward(step.curvilinearMap, at.slice(), at);
@@ -457,24 +461,36 @@ function transformPoint(m: Float64Array, p: Float64Array, out: Float64Array) {
   out[2] = m[2]! * x + m[6]! * y + m[10]! * z + m[14]!;
 }
 
-/** The inverse of a rigid 4×4 (rotation and translation; no scale). */
-function invertRigid(m: Float64Array, out: Float64Array) {
-  for (let c = 0; c < 3; c++) {
-    for (let r = 0; r < 3; r++) {
-      out[c * 4 + r] = m[r * 4 + c]!;
+/**
+ * The inverse of an affine step's 4×4 (column-major, last row 0 0 0 1), which
+ * may scale unevenly and shear, not only rotate and translate. Throws for a
+ * matrix that is not finite or whose 3×3 is singular (a zero scale, or axes
+ * that are dependent), where an inverse would be NaN or meaningless.
+ */
+function invertAffineStep(m: Float64Array, out: Float64Array, index: number) {
+  for (let i = 0; i < 16; i++) {
+    if (!Number.isFinite(m[i]!)) {
+      throw new Error(
+        `routeInverse: step ${index} has a matrix that is not finite`,
+      );
     }
   }
-  for (let r = 0; r < 3; r++) {
-    out[12 + r] = -(
-      out[r]! * m[12]! +
-      out[4 + r]! * m[13]! +
-      out[8 + r]! * m[14]!
+  // The determinant against the product of the axes' lengths: 1 for orthogonal
+  // axes, 0 for dependent ones, whatever the units.
+  const det =
+    m[0]! * (m[5]! * m[10]! - m[9]! * m[6]!) -
+    m[4]! * (m[1]! * m[10]! - m[9]! * m[2]!) +
+    m[8]! * (m[1]! * m[6]! - m[5]! * m[2]!);
+  const axes =
+    Math.hypot(m[0]!, m[1]!, m[2]!) *
+    Math.hypot(m[4]!, m[5]!, m[6]!) *
+    Math.hypot(m[8]!, m[9]!, m[10]!);
+  if (!(Math.abs(det) > 1e-12 * axes)) {
+    throw new Error(
+      `routeInverse: step ${index} is a singular affine transform (its 3×3 has determinant ${det}), so it has no inverse`,
     );
   }
-  out[3] = 0;
-  out[7] = 0;
-  out[11] = 0;
-  out[15] = 1;
+  invertAffine(out, m);
 }
 
 /** x with J·x = r, J column-major 3×3 (Cramer's rule). */

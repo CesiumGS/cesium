@@ -189,3 +189,114 @@ describe("a curvilinear map's scale", () => {
     expect(() => routeForward(route, [1, 2, 3])).toThrow(/finite/);
   });
 });
+
+describe("routeInverse through a general affine step", () => {
+  /** Column-major 4×4: scales (2, 0.5, 3) unevenly, shears x by y and z by x, and translates. */
+  const scaleAndShear = Float64Array.of(
+    2,
+    0,
+    0.4,
+    0,
+    0.7,
+    0.5,
+    0,
+    0,
+    0,
+    0.3,
+    3,
+    0,
+    120,
+    -45,
+    8,
+    1,
+  );
+  const NANOMETER = 1e-9;
+  const apart = (a: ArrayLike<number>, b: ArrayLike<number>) =>
+    Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
+
+  it("brings a point up and back through an uneven scale and a shear to 1 nm", () => {
+    const route: Route = {
+      frame: content,
+      base: drawn,
+      seconds: 0,
+      steps: [{ kind: "affine", matrix: scaleAndShear }],
+      revision: 1,
+    };
+    expect(routeIsAffine(route)).toBe(true);
+    for (const p of [
+      [1, 2, 3],
+      [-250.125, 77.5, 900.75],
+      [0, 0, 0],
+    ]) {
+      const q = routeForward(route, p);
+      // The route moved the point: the test is not vacuous.
+      expect(apart(q, p)).toBeGreaterThan(1);
+      expect(apart(routeInverse(route, q), p)).toBeLessThan(NANOMETER);
+    }
+  });
+
+  it("undoes affine steps beside a curvilinear map and a rigid step, last first", () => {
+    const route: Route = {
+      frame: content,
+      base: drawn,
+      seconds: 0,
+      steps: [
+        { kind: "affine", matrix: scaleAndShear },
+        {
+          kind: "curvilinear",
+          curvilinearMap: heightScale(10),
+          inverse: false,
+        },
+        { kind: "affine", matrix: translation(0, -5, 0) },
+        { kind: "affine", matrix: scaleAndShear },
+      ],
+      revision: 1,
+    };
+    const p = [1.5, -2.25, 0.125];
+    const back = routeInverse(route, routeForward(route, p));
+    expect(apart(back, p)).toBeLessThan(NANOMETER);
+  });
+
+  it("throws a clear error for a singular step (zero scale), not NaN", () => {
+    const flat = Float64Array.of(
+      1,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      5,
+      6,
+      7,
+      1,
+    );
+    const route: Route = {
+      frame: content,
+      base: drawn,
+      seconds: 0,
+      steps: [{ kind: "affine", matrix: flat }],
+      revision: 1,
+    };
+    expect(() => routeInverse(route, [1, 2, 3])).toThrow(
+      /routeInverse.*step 0.*singular/,
+    );
+  });
+
+  it("throws for a step whose matrix is not finite", () => {
+    const bad = translation(Number.NaN, 0, 0);
+    const route: Route = {
+      frame: content,
+      base: drawn,
+      seconds: 0,
+      steps: [{ kind: "affine", matrix: bad }],
+      revision: 1,
+    };
+    expect(() => routeInverse(route, [1, 2, 3])).toThrow(/finite/);
+  });
+});

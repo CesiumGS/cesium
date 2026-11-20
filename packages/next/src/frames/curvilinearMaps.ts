@@ -66,7 +66,9 @@ export function routeForward(
  * A point of `route.base` carried back to `route.frame`, in float64: each
  * step undone, last first, each curvilinear map at its scale now. For a pick's true
  * point, give the route the pick carries (`CorePick.route`, scales as they
- * were when it was drawn), not the view's now.
+ * were when it was drawn), not the view's now. An affine step may scale
+ * unevenly or shear and is inverted as a general affine matrix; a singular one
+ * (a zero scale) throws.
  */
 export function routeInverse(
   route: Route,

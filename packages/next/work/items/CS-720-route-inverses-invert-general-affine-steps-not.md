@@ -2,7 +2,7 @@
 id: CS-720
 title: Route inverses invert general affine steps, not only rigid ones
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-17
 needs: [CS-719, CS-712]

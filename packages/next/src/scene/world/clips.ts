@@ -795,6 +795,12 @@ function multiplyRigid(
   return out;
 }
 
+/**
+ * The inverse of a rigid 4×4 (rotation and translation, no scale). Its one
+ * caller passes `view.bodyPlacement`, a view's anchor placement, which
+ * `setAnchorPlacement` refuses unless it is rigid, so the transpose is exact
+ * there; a general matrix must not come this way (use `invertAffine`).
+ */
 function invertRigid(m: ArrayLike<number>): Float64Array {
   const out = new Float64Array(16);
   for (let r = 0; r < 3; r++) {
