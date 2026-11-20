@@ -198,6 +198,8 @@ CS-389 Dyno as the development harness
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
   CS-687  decision: The study model: what kinds a study has, and how it draws on a set of instruments
   CS-706  Dyno's viewer starts drawing within half a second on a cold browser again
+  CS-714  decision: Reaching a 500 ms cold start: which engine-side work
+  CS-715  decision: How the cold-start check runs from here on
 
 CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
@@ -207,7 +209,7 @@ CS-437 The public API reviews
   CS-572  The full version of scene items, designed before the first public API review
   CS-670  Bounding volumes and their tests on the public API
   CS-681  decision: Should 2.0 keep marking APIs experimental, and how?
-  CS-708  2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything
+  CS-711  decision: Add a signal option to cancel an engine create in flight
 
 CS-579 Editing
   CS-453  decision: What editing should the engine support, with vector data and GIS sources among it?
@@ -245,7 +247,6 @@ CS-18 The work tracker
   CS-677  Release notes and a security review for 2.0.0
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
-  CS-704  The Work board reads in under a second: incremental ledger reads, cached git scans, and a light count for the rail
 
-176 ready
+177 ready
 ```

@@ -319,6 +319,8 @@ CS-17 The transform graph
         CS-56 Tables and the bounded search, the first extensions, with the residual's row window
   CS-386  Under exaggeration, do shading and haze read the drawn or the true height?
       ← CS-385 Spike: height-keyed tint and haze under exaggeration, drawn against true height
+  CS-712  One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps
+      ← CS-671 What do smooth nodes get called instead?
 
 CS-188 Earth to Moon (frames 5c to 5h)
   CS-203  Depth across bodies
@@ -746,5 +748,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-245 blocked
+246 blocked
 ```

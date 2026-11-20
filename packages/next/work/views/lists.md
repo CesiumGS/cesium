@@ -331,7 +331,7 @@ No milestone
 
 ### The transform graph
 
-CS-17, Planned, led by owner: 0 of 14 done, 10 ready, 2 blocked, 2 proposed. Plan: [2026-11-12-transform-graph.md](docs/superpowers/plans/2026-11-12-transform-graph.md).
+CS-17, Planned, led by owner: 0 of 15 done, 10 ready, 3 blocked, 2 proposed. Plan: [2026-11-12-transform-graph.md](docs/superpowers/plans/2026-11-12-transform-graph.md).
 
 Milestone: Warped views draw without twins or stalls (CS-473, Planned)
 
@@ -355,10 +355,11 @@ No milestone
 - [?] CS-163 No compile before first draw: the interpreter pipeline. Proposed. Needs nothing.
 - [?] CS-167 Imagery levels chosen by drawn footprint. Proposed. Needs nothing.
 - [ ] CS-671 decision: What do smooth nodes get called instead?. Needs nothing. Decided by owner.
+- [ ] CS-712 One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps. Needs CS-671.
 
 ### The work tracker
 
-CS-18, Planned, led by owner: 40 of 50 done, 4 ready, 4 blocked, 2 proposed, 1 dropped. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
+CS-18, Planned, led by owner: 42 of 51 done, 3 ready, 4 blocked, 2 proposed, 1 dropped. Plan: [2026-11-13-work-tracker.md](docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled (CS-506, Planned)
 
@@ -423,8 +424,9 @@ No milestone
 - [x] CS-701 decision: Merge CS-696, the shared hover card. Done.
 - [x] CS-702 decision: Merge CS-698, the Flow chart's hover card. Done.
 - [?] CS-703 Dyno's Work page drops the old map's helpers that nothing uses. Proposed. Needs nothing.
-- [ ] CS-704 The Work board reads in under a second: incremental ledger reads, cached git scans, and a light count for the rail. Needs nothing.
+- [x] CS-704 The Work board reads in under a second: incremental ledger reads, cached git scans, and a light count for the rail. Done.
 - [?] CS-705 A test fails when a class used on the Work page has no CSS rule. Proposed. Needs nothing.
+- [x] CS-710 decision: Merge CS-704, the Work board read in under a second. Done.
 
 ### Follow-ups for other teams
 
@@ -863,7 +865,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 7 of 29 done, 4 ready, 18 blocked. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 7 of 32 done, 6 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -911,10 +913,13 @@ No milestone
 - [ ] CS-706 Dyno's viewer starts drawing within half a second on a cold browser again. Needs nothing.
 - [x] CS-707 Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected. Done.
 - [x] CS-709 decision: Merge CS-707, Dyno's scrollable tabs on StrataKit's supported API. Done.
+- [ ] CS-714 decision: Reaching a 500 ms cold start: which engine-side work. Needs nothing. Decided by owner.
+- [ ] CS-715 decision: How the cold-start check runs from here on. Needs nothing. Decided by owner.
+- [?] CS-716 Dyno's shell asks for triage.json and images/index.json once per page load, not three times. Proposed. Needs nothing.
 
 ### The public API reviews
 
-CS-437, Planned, led by owner: 1 of 13 done, 8 ready, 4 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-437, Planned, led by owner: 3 of 15 done, 8 ready, 4 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
@@ -931,7 +936,7 @@ Milestone: The approved API changes are made (CS-457, Planned)
 
 - [ ] CS-434 Stability tiers as TSDoc tags, with internal members stripped from the published types. Needs CS-438 and CS-681.
 - [ ] CS-435 The measurement module's seam and entry point. Needs CS-438.
-- [ ] CS-708 2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything. Needs nothing.
+- [x] CS-708 2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything. Done.
 
 Milestone: 1.x's smaller tools have 2.0 homes (CS-675, Planned)
 
@@ -940,6 +945,8 @@ Milestone: 1.x's smaller tools have 2.0 homes (CS-675, Planned)
 No milestone
 
 - [ ] CS-681 decision: Should 2.0 keep marking APIs experimental, and how?. Needs nothing. Decided by owner.
+- [ ] CS-711 decision: Add a signal option to cancel an engine create in flight. Needs nothing. Decided by owner.
+- [x] CS-713 decision: Merge CS-708, 2.0 strict-mode safe. Done.
 
 ### Editing
 

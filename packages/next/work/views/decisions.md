@@ -54,6 +54,7 @@ CS-17 The transform graph
   CS-386  Under exaggeration, do shading and haze read the drawn or the true height? (owner)
       first needs CS-385
   CS-671  What do smooth nodes get called instead? (owner)
+      waited on by CS-712
 
 CS-437 The public API reviews
   CS-438  Which of the first public API review's proposed changes do you approve? (owner)
@@ -61,6 +62,7 @@ CS-437 The public API reviews
       waited on by CS-103, CS-104, CS-105, CS-107, CS-243, CS-303, CS-378, CS-434, CS-435
   CS-681  Should 2.0 keep marking APIs experimental, and how? (owner)
       waited on by CS-434
+  CS-711  Add a signal option to cancel an engine create in flight (owner)
 
 CS-579 Editing
   CS-453  What editing should the engine support, with vector data and GIS sources among it? (owner)
@@ -72,6 +74,8 @@ CS-615 Packaging and package names
 CS-389 Dyno as the development harness
   CS-687  The study model: what kinds a study has, and how it draws on a set of instruments (owner)
       waited on by CS-404
+  CS-714  Reaching a 500 ms cold start: which engine-side work (owner)
+  CS-715  How the cold-start check runs from here on (owner)
 
-23 open decision(s) for owner
+26 open decision(s) for owner
 ```

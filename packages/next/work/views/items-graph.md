@@ -214,6 +214,7 @@ graph LR
     CS_386["CS-386 Under exaggeration, do shading and haze read the drawn or the t"]:::decision
     CS_450["CS-450 The inspector counts warped draws: exact, compiled and fitted"]:::open
     CS_671["CS-671 What do smooth nodes get called instead?"]:::decision
+    CS_712["CS-712 One word per idea in the transform graph: CS-671's name for smo"]:::open
   end
   subgraph CS_18["work tracker"]
     CS_169["CS-169 The tracker: format, scripts, items and the plan's split"]:::done
@@ -265,8 +266,9 @@ graph LR
     CS_701["CS-701 Merge CS-696, the shared hover card"]:::done
     CS_702["CS-702 Merge CS-698, the Flow chart's hover card"]:::done
     CS_703["CS-703 Dyno's Work page drops the old map's helpers that nothing uses"]:::proposed
-    CS_704["CS-704 The Work board reads in under a second: incremental ledger read"]:::open
+    CS_704["CS-704 The Work board reads in under a second: incremental ledger read"]:::done
     CS_705["CS-705 A test fails when a class used on the Work page has no CSS rule"]:::proposed
+    CS_710["CS-710 Merge CS-704, the Work board read in under a second"]:::done
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external
@@ -560,6 +562,9 @@ graph LR
     CS_706["CS-706 Dyno's viewer starts drawing within half a second on a cold bro"]:::open
     CS_707["CS-707 Dyno's scrollable tabs use StrataKit's supported API, and the S"]:::done
     CS_709["CS-709 Merge CS-707, Dyno's scrollable tabs on StrataKit's supported A"]:::done
+    CS_714["CS-714 Reaching a 500 ms cold start: which engine-side work"]:::decision
+    CS_715["CS-715 How the cold-start check runs from here on"]:::decision
+    CS_716["CS-716 Dyno's shell asks for triage.json and images/index.json once pe"]:::proposed
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -574,7 +579,9 @@ graph LR
     CS_572["CS-572 The full version of scene items, designed before the first publ"]:::open
     CS_670["CS-670 Bounding volumes and their tests on the public API"]:::open
     CS_681["CS-681 Should 2.0 keep marking APIs experimental, and how?"]:::decision
-    CS_708["CS-708 2.0 is strict-mode safe: a canvas the engine draws survives cre"]:::open
+    CS_708["CS-708 2.0 is strict-mode safe: a canvas the engine draws survives cre"]:::done
+    CS_711["CS-711 Add a signal option to cancel an engine create in flight"]:::decision
+    CS_713["CS-713 Merge CS-708, 2.0 strict-mode safe"]:::done
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::decision
@@ -1286,6 +1293,7 @@ graph LR
   CS_694 --> CS_696
   CS_693 --> CS_696
   CS_696 --> CS_698
+  CS_671 --> CS_712
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3
