@@ -2,10 +2,14 @@
 id: CS-687
 title: "The study model: what kinds a study has, and how it draws on a set of instruments"
 kind: decision
-state: planned
+state: done
 created: 2026-11-18
 project: CS-389
 decider: owner
+answer: A
+answered_at: 2026-11-20T02:31:17.676Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
@@ -24,4 +28,4 @@ Recommendation: A. Questions worth a study usually need more than one instrument
 
 ## Answer
 
-Open.
+A, two axes: a kind and a set of instruments (owner, 2026-11-19). CS-404 builds the study file format on this model.
