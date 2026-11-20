@@ -89,6 +89,17 @@ class DeformerBinding {
   }
 
   /**
+   * Records that the deformable's rest positions moved after the binding was
+   * created, e.g. because another deformation was baked, so that
+   * {@link DeformerBinding#computeDeformedBoundingBox} includes it.
+   *
+   * @param {AxisAlignedBoundingBox} displacementBoundingBox A bounding box containing each vertex's displacement.
+   */
+  addRestDisplacement(displacementBoundingBox) {
+    DeveloperError.throwInstantiationError();
+  }
+
+  /**
    * Destroys the binding's resources. Remove it from its deformable first.
    */
   destroy() {

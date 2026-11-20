@@ -357,6 +357,31 @@ describe(
           1e-12,
         );
       });
+
+      it("includes how far the rest positions moved since binding", function () {
+        const binding = createBinding(Matrix4.IDENTITY);
+        deformer._bounds = meshBounds;
+
+        binding.addRestDisplacement(
+          new AxisAlignedBoundingBox(
+            new Cartesian3(-1.0, 0.0, 0.0),
+            new Cartesian3(0.0, 2.0, 0.0),
+          ),
+        );
+        binding.addRestDisplacement(
+          new AxisAlignedBoundingBox(
+            new Cartesian3(0.0, 0.0, 0.0),
+            new Cartesian3(0.0, 1.0, 3.0),
+          ),
+        );
+
+        const box = binding.computeDeformedBoundingBox(
+          new AxisAlignedBoundingBox(),
+        );
+        expect(box.minimum).toEqual(new Cartesian3(-3.0, -3.0, -1.0));
+        expect(box.maximum).toEqual(new Cartesian3(4.0, 10.0, 4.0));
+        expect(box.center).toEqual(new Cartesian3(0.5, 3.5, 1.5));
+      });
     });
   },
   "WebGL",
