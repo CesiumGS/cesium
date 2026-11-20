@@ -18,6 +18,7 @@ import {
   CzmlDataSource,
   CompositePositionProperty,
   CompositeMaterialProperty,
+  CompositeProperty,
   ConstantPositionProperty,
   ConstantProperty,
   ColorMaterialProperty,
@@ -1572,6 +1573,94 @@ describe(
         return polyline.material.uniforms.color;
       });
       expect(shownColors).toEqual([Color.RED, Color.BLUE, Color.GREEN]);
+    });
+
+    it("splits time-varying interval data every resolution step in PORTIONS materialMode", function () {
+      const epoch = JulianDate.fromIso8601("2026-04-01T00:00:00Z");
+      const at = (seconds) =>
+        JulianDate.addSeconds(epoch, seconds, new JulianDate());
+      const sampledColor = new SampledProperty(Color);
+      sampledColor.addSample(at(200), Color.RED);
+      sampledColor.addSample(at(400), Color.BLUE);
+      const color = new CompositeProperty();
+      color.intervals.addInterval(
+        new TimeInterval({
+          start: at(0),
+          stop: at(200),
+          isStopIncluded: false,
+          data: new ConstantProperty(Color.GREEN),
+        }),
+      );
+      color.intervals.addInterval(
+        new TimeInterval({ start: at(200), stop: at(400), data: sampledColor }),
+      );
+      const time = createPortionsPathEntity(
+        new ColorMaterialProperty(color),
+        50.0,
+      );
+      visualizer.update(time);
+
+      // One segment for the constant interval, then one per resolution step for the sampled interval.
+      const shownColors = getShownPolylines(scene).map(function (polyline) {
+        return polyline.material.uniforms.color;
+      });
+      expect(shownColors.length).toEqual(5);
+      expect(shownColors[0]).toEqual(Color.GREEN);
+      expect(shownColors[1].red).toBeGreaterThan(shownColors[4].red);
+      expect(shownColors[1].blue).toBeLessThan(shownColors[4].blue);
+    });
+
+    it("splits time-varying interval data within CZML material intervals in PORTIONS materialMode", async function () {
+      // CZML wraps the material in an interval (a CompositeMaterialProperty), and a color that
+      // mixes constant and sampled intervals loads as a CompositeProperty.
+      const cartesian = [];
+      for (let s = 0; s <= 400; s += 10) {
+        cartesian.push(s, 7000000.0, s * 1000.0, 0.0);
+      }
+      const dataSource = await CzmlDataSource.load([
+        { id: "document", version: "1.0" },
+        {
+          id: "satellite",
+          availability: "2026-04-01T00:00:00Z/2026-04-01T00:06:40Z",
+          position: { epoch: "2026-04-01T00:00:00Z", cartesian: cartesian },
+          path: {
+            materialMode: "PORTIONS",
+            resolution: 50,
+            leadTime: 200,
+            trailTime: 200,
+            material: [
+              {
+                interval: "2026-04-01T00:00:00Z/2026-04-01T00:06:40Z",
+                solidColor: {
+                  color: [
+                    {
+                      interval: "2026-04-01T00:00:00Z/2026-04-01T00:03:20Z",
+                      rgba: [0, 255, 0, 255],
+                    },
+                    {
+                      interval: "2026-04-01T00:03:20Z/2026-04-01T00:06:40Z",
+                      epoch: "2026-04-01T00:03:20Z",
+                      rgba: [0, 255, 0, 0, 255, 200, 0, 0, 255, 255],
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ]);
+
+      visualizer = new PathVisualizer(scene, dataSource.entities);
+      visualizer.update(JulianDate.fromIso8601("2026-04-01T00:03:20Z"));
+
+      // One segment for the constant interval, then one per resolution step for the sampled interval.
+      const shownColors = getShownPolylines(scene).map(function (polyline) {
+        return polyline.material.uniforms.color;
+      });
+      expect(shownColors.length).toEqual(5);
+      expect(shownColors[0]).toEqual(Color.LIME);
+      expect(shownColors[1].red).toBeGreaterThan(shownColors[4].red);
+      expect(shownColors[1].blue).toBeLessThan(shownColors[4].blue);
     });
 
     it("splits time-dynamic materials without inspectable properties every resolution step in PORTIONS materialMode", function () {

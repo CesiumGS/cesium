@@ -44,6 +44,7 @@
 - Fixed `MVTDataProvider` freezing or running out of memory on load when `maxZoom` is high. Tiles are now created as they come into view. [#13867](https://github.com/CesiumGS/cesium/pull/13867)
 - Fixed `BufferPrimitiveCollection` rendering nothing after `destroy()`. [#13895](https://github.com/CesiumGS/cesium/pull/13895)
 - Improved performance of entity paths with long `leadTime` and `trailTime`, especially with `materialMode` set to `PathMode.PORTIONS`, and of `PolylineCollection` in 3D when its `modelMatrix` changes every frame, such as paths in the inertial frame or using `relativeTo`.
+- Fixed paths with `materialMode` set to `PathMode.PORTIONS` and a material defined over intervals incorrectly drawing only one color per interval of a sampled material property, instead of following the sampled values.
 
 ## 1.147 - 2026-11-02
 

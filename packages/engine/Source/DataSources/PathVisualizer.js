@@ -764,7 +764,6 @@ const updateOrientationScratch = new Quaternion();
 const updateRotationScratch = new Matrix3();
 const portionsVisibleIntervalScratch = new TimeInterval();
 const portionsSegmentIntervalScratch = new TimeInterval();
-const portionsDynamicIntervalScratch = new TimeInterval();
 const splitMidTimeScratch = new JulianDate();
 const sampleStartScratch = new JulianDate();
 const sampleStopScratch = new JulianDate();
@@ -799,11 +798,83 @@ function getDynamicMaterialProperties(materialData) {
   return dynamic;
 }
 
-function addStepSplitTimes(start, stop, step, splitTimes) {
-  let splitTime = JulianDate.addSeconds(start, step, new JulianDate());
-  while (JulianDate.lessThan(splitTime, stop)) {
-    splitTimes.push(splitTime);
-    splitTime = JulianDate.addSeconds(splitTime, step, new JulianDate());
+// Adds a split time every step seconds after stepStart that falls strictly inside (rangeStart, rangeStop).
+// Steps are counted from stepStart rather than rangeStart so they fall at the same times as when the whole path is stepped.
+function addStepSplitTimes(stepStart, rangeStart, rangeStop, step, splitTimes) {
+  const offset = JulianDate.secondsDifference(rangeStart, stepStart);
+  for (let i = Math.max(Math.floor(offset / step) + 1, 1); ; i++) {
+    const splitTime = JulianDate.addSeconds(
+      stepStart,
+      i * step,
+      new JulianDate(),
+    );
+    if (!JulianDate.lessThan(splitTime, rangeStop)) {
+      return;
+    }
+    if (JulianDate.greaterThan(splitTime, rangeStart)) {
+      splitTimes.push(splitTime);
+    }
+  }
+}
+
+// Adds split times for a time-varying property over (rangeStart, rangeStop). Interval-based
+// properties split at their boundaries, recursing into interval data that is itself time-varying,
+// such as a SampledProperty or a nested TimeIntervalCollectionProperty inside a CompositeProperty.
+// Other properties step at the path resolution.
+function addPropertySplitTimes(
+  property,
+  rangeStart,
+  rangeStop,
+  stepStart,
+  splitResolution,
+  splitTimes,
+) {
+  const intervals = property.intervals;
+  if (!defined(intervals)) {
+    addStepSplitTimes(
+      stepStart,
+      rangeStart,
+      rangeStop,
+      splitResolution,
+      splitTimes,
+    );
+    return;
+  }
+
+  for (let i = 0; i < intervals.length; i++) {
+    const interval = intervals.get(i);
+    const start = JulianDate.greaterThan(interval.start, rangeStart)
+      ? interval.start
+      : rangeStart;
+    const stop = JulianDate.lessThan(interval.stop, rangeStop)
+      ? interval.stop
+      : rangeStop;
+    if (!JulianDate.lessThan(start, stop)) {
+      continue;
+    }
+
+    if (JulianDate.greaterThan(start, rangeStart)) {
+      splitTimes.push(JulianDate.clone(start));
+    }
+    if (JulianDate.lessThan(stop, rangeStop)) {
+      splitTimes.push(JulianDate.clone(stop));
+    }
+
+    const data = interval.data;
+    if (
+      defined(data) &&
+      typeof data.getValue === "function" &&
+      !Property.isConstant(data)
+    ) {
+      addPropertySplitTimes(
+        data,
+        start,
+        stop,
+        stepStart,
+        splitResolution,
+        splitTimes,
+      );
+    }
   }
 }
 
@@ -813,49 +884,15 @@ function addDynamicPropertySplitTimes(
   splitResolution,
   splitTimes,
 ) {
-  const start = interval.start;
-  const stop = interval.stop;
   for (let j = 0; j < dynamic.length; j++) {
-    const prop = dynamic[j];
-    const timeDynamicIntervals = prop.intervals;
-
-    if (defined(timeDynamicIntervals)) {
-      // Interval-based property: collect interval boundaries
-      for (let k = 0; k < timeDynamicIntervals.length; k++) {
-        const timeDynamicInterval = timeDynamicIntervals.get(k);
-
-        if (
-          !TimeInterval.intersect(
-            timeDynamicInterval,
-            interval,
-            portionsDynamicIntervalScratch,
-          )
-        ) {
-          continue;
-        }
-
-        if (
-          JulianDate.greaterThan(portionsDynamicIntervalScratch.start, start) &&
-          JulianDate.lessThan(portionsDynamicIntervalScratch.start, stop)
-        ) {
-          splitTimes.push(
-            JulianDate.clone(portionsDynamicIntervalScratch.start),
-          );
-        }
-
-        if (
-          JulianDate.greaterThan(portionsDynamicIntervalScratch.stop, start) &&
-          JulianDate.lessThan(portionsDynamicIntervalScratch.stop, stop)
-        ) {
-          splitTimes.push(
-            JulianDate.clone(portionsDynamicIntervalScratch.stop),
-          );
-        }
-      }
-    } else {
-      // Sampled or other time-varying property: step at the path resolution.
-      addStepSplitTimes(start, stop, splitResolution, splitTimes);
-    }
+    addPropertySplitTimes(
+      dynamic[j],
+      interval.start,
+      interval.stop,
+      interval.start,
+      splitResolution,
+      splitTimes,
+    );
   }
 }
 
@@ -1119,7 +1156,13 @@ PolylineUpdater.prototype.updateObject = function (time, item) {
           splitTimes,
         );
       } else {
-        addStepSplitTimes(sampleStart, sampleStop, splitResolution, splitTimes);
+        addStepSplitTimes(
+          sampleStart,
+          sampleStart,
+          sampleStop,
+          splitResolution,
+          splitTimes,
+        );
       }
       nextSegIndex = emitSegmentsForSplitTimes(
         splitTimes,
