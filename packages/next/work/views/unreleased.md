@@ -60,6 +60,7 @@ CS-437 The public API reviews
 
 CS-17 The transform graph
   CS-712  One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps
+  CS-720  Route inverses invert general affine steps, not only rigid ones
 
-36 merged item(s) not in a release
+37 merged item(s) not in a release
 ```

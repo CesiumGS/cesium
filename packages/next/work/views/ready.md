@@ -69,7 +69,6 @@ CS-17 The transform graph
   CS-166  The ×10 cliff bands: confirm shadow acne under the warp and fix it
   CS-385  Spike: height-keyed tint and haze under exaggeration, drawn against true height
   CS-450  The inspector counts warped draws: exact, compiled and fitted
-  CS-720  Route inverses invert general affine steps, not only rigid ones
 
 CS-19 Follow-ups for other teams
   CS-174  external: 1.x computes NaN for a root without the top-level `geometricError`
@@ -202,6 +201,14 @@ CS-389 Dyno as the development harness
   CS-715  decision: How the cold-start check runs from here on
   CS-717  Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability
   CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands
+  CS-726  decision: Where does dyno store shared benchmark results, and what may it spend?
+  CS-727  decision: Who holds dyno's storage keys, and may remote and cloud sessions read results?
+  CS-728  decision: What classification does a benchmark result get by default?
+  CS-729  decision: Merge CS-717, the benchmark devices and sharing design
+  CS-730  decision: How does dyno talk to the bucket: its own small client or a dependency?
+  CS-731  decision: Do inspector recordings upload to shared storage?
+  CS-732  decision: Do the study-side device items join alpha.1?
+  CS-741  decision: Merge CS-706, Dyno's cold-start run and the viewer's fixes
 
 CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
@@ -250,5 +257,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-179 ready
+186 ready
 ```

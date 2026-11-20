@@ -40,7 +40,7 @@ CS-16 Streaming robustness [Planned], led by owner
   waits on: CS-15 Refinement and convergence (1); CS-12 The job system's ports (1)
   waited on by: CS-191 Content sources and formats (1); CS-18 The work tracker (3)
 CS-17 The transform graph [Planned], led by owner
-  4 of 18 done, 10 ready, 2 blocked, 2 proposed
+  6 of 19 done, 9 ready, 2 blocked, 2 proposed
   waits on: CS-10 Cesium IR (2)
   waited on by: CS-18 The work tracker (2)
 CS-18 The work tracker [Planned], led by owner
@@ -100,7 +100,7 @@ CS-199 Dyno hardening, packaging and CI [Planned], led by owner
   waits on: nothing open
   waited on by: CS-18 The work tracker (2); CS-628 Sandcastle as 2.0's gallery (1)
 CS-389 Dyno as the development harness [Planned], led by owner
-  8 of 35 done, 7 ready, 19 blocked, 1 proposed
+  8 of 51 done, 15 ready, 25 blocked, 3 proposed
   waits on: nothing open
   waited on by: CS-195 Benchmarks, parity and image regression (2); CS-18 The work tracker (5)
 CS-437 The public API reviews [Planned], led by owner

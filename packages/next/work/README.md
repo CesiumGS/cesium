@@ -388,7 +388,7 @@ No milestone
 
 ### The transform graph
 
-[CS-17](./projects/CS-17-the-transform-graph.md), Planned, led by owner: 4 of 18 done, 10 ready, 2 blocked, 2 proposed. Plan: [2026-11-12-transform-graph.md](../../../docs/superpowers/plans/2026-11-12-transform-graph.md).
+[CS-17](./projects/CS-17-the-transform-graph.md), Planned, led by owner: 6 of 19 done, 9 ready, 2 blocked, 2 proposed. Plan: [2026-11-12-transform-graph.md](../../../docs/superpowers/plans/2026-11-12-transform-graph.md).
 
 Milestone: Warped views draw without twins or stalls ([CS-473](./milestones/CS-473-warped-views-draw-without-twins-or-stalls.md), Planned)
 
@@ -414,8 +414,9 @@ No milestone
 - [x] [CS-671](./items/CS-671-what-do-smooth-nodes-get-called-instead.md) decision: What do smooth nodes get called instead?. Done.
 - [x] [CS-712](./items/CS-712-one-word-per-idea-in-the-transform-graph-cs-671.md) One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps. Done.
 - [x] [CS-719](./items/CS-719-affine-route-steps-invert-them-in-general-or.md) decision: Affine route steps: invert them in general, or keep rigid-only. Done.
-- [ ] [CS-720](./items/CS-720-route-inverses-invert-general-affine-steps-not.md) Route inverses invert general affine steps, not only rigid ones. Needs CS-719 and CS-712.
+- [x] [CS-720](./items/CS-720-route-inverses-invert-general-affine-steps-not.md) Route inverses invert general affine steps, not only rigid ones. Done.
 - [x] [CS-723](./items/CS-723-merge-cs-712-the-affine-and-curvilinear-rename.md) decision: Merge CS-712, the affine and curvilinear rename. Done.
+- [x] [CS-725](./items/CS-725-merge-cs-720-route-inverses-for-general-affine.md) decision: Merge CS-720, route inverses for general affine steps. Done.
 
 ### The work tracker
 
@@ -926,7 +927,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 8 of 35 done, 7 ready, 19 blocked, 1 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 8 of 51 done, 15 ready, 25 blocked, 3 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -970,6 +971,12 @@ Milestone: Benchmark results are shared across machines, and dyno is one command
 
 - [ ] [CS-717](./items/CS-717-design-one-benchmark-database-across-machines.md) Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability. Needs nothing.
 - [ ] [CS-721](./items/CS-721-a-dyno-command-one-cli-for-dyno-s-runs-lab.md) A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices. Needs CS-390.
+- [ ] [CS-733](./items/CS-733-each-run-records-its-device-configuration-and.md) Each run records its device, configuration and state. Needs CS-390 and CS-721.
+- [ ] [CS-734](./items/CS-734-a-sealed-content-addressed-layout-for-benchmark.md) A sealed, content-addressed layout for benchmark results, local first. Needs CS-733 and CS-721.
+- [ ] [CS-735](./items/CS-735-dyno-syncs-results-with-shared-storage-with.md) Dyno syncs results with shared storage, with keys per device and role. Needs CS-734, CS-726, CS-727 and CS-730.
+- [ ] [CS-736](./items/CS-736-retention-pins-and-the-size-budget-for.md) Retention, pins and the size budget for benchmark storage. Needs CS-734 and CS-721.
+- [ ] [CS-737](./items/CS-737-a-classification-label-on-every-benchmark-result.md) A classification label on every benchmark result. Needs CS-734, CS-728 and CS-721.
+- [ ] [CS-738](./items/CS-738-trends-charts-baselines-and-alerts-keep-devices.md) Trends, charts, baselines and alerts keep devices apart. Needs CS-733 and CS-734.
 
 No milestone
 
@@ -983,6 +990,16 @@ No milestone
 - [ ] [CS-715](./items/CS-715-how-the-cold-start-check-runs-from-here-on.md) decision: How the cold-start check runs from here on. Needs nothing. Decided by owner.
 - [?] [CS-716](./items/CS-716-dyno-s-shell-asks-for-triage-json-and-images.md) Dyno's shell asks for triage.json and images/index.json once per page load, not three times. Proposed. Needs nothing.
 - [ ] [CS-718](./items/CS-718-hitld-s-private-store-holds-project-data-such.md) external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands. Needs nothing. Waiting on human-in-the-lead: the measurement-tool design (HITLD-609), per arobison/human-in-the-lead#363.
+- [ ] [CS-726](./items/CS-726-where-does-dyno-store-shared-benchmark-results.md) decision: Where does dyno store shared benchmark results, and what may it spend?. Needs nothing. Decided by owner.
+- [ ] [CS-727](./items/CS-727-who-holds-dyno-s-storage-keys-and-may-remote.md) decision: Who holds dyno's storage keys, and may remote and cloud sessions read results?. Needs nothing. Decided by owner.
+- [ ] [CS-728](./items/CS-728-what-classification-does-a-benchmark-result-get.md) decision: What classification does a benchmark result get by default?. Needs nothing. Decided by owner.
+- [ ] [CS-729](./items/CS-729-merge-cs-717-the-benchmark-devices-and-sharing.md) decision: Merge CS-717, the benchmark devices and sharing design. Needs nothing. Decided by owner.
+- [ ] [CS-730](./items/CS-730-how-does-dyno-talk-to-the-bucket-its-own-small.md) decision: How does dyno talk to the bucket: its own small client or a dependency?. Needs nothing. Decided by owner.
+- [ ] [CS-731](./items/CS-731-do-inspector-recordings-upload-to-shared-storage.md) decision: Do inspector recordings upload to shared storage?. Needs nothing. Decided by owner.
+- [ ] [CS-732](./items/CS-732-do-the-study-side-device-items-join-alpha-1.md) decision: Do the study-side device items join alpha.1?. Needs nothing. Decided by owner.
+- [?] [CS-739](./items/CS-739-studies-across-devices-noise-floors-per.md) Studies across devices: noise floors per hardware class, pooling, and the health bar. Proposed. Needs CS-404, CS-733, CS-738 and CS-732.
+- [?] [CS-740](./items/CS-740-a-verdict-says-whether-it-carries-to-another.md) A verdict says whether it carries to another hardware class. Proposed. Needs CS-739, CS-394 and CS-732.
+- [ ] [CS-741](./items/CS-741-merge-cs-706-dyno-s-cold-start-run-and-the.md) decision: Merge CS-706, Dyno's cold-start run and the viewer's fixes. Needs nothing. Decided by owner.
 
 ### The public API reviews
 

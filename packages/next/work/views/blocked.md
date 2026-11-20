@@ -550,6 +550,27 @@ CS-389 Dyno as the development harness
       ← CS-517 The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
   CS-721  A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
       ← CS-390 Run identity and the machine-wide run lock
+  CS-733  Each run records its device, configuration and state
+      ← CS-390 Run identity and the machine-wide run lock
+        CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
+  CS-734  A sealed, content-addressed layout for benchmark results, local first
+      ← CS-733 Each run records its device, configuration and state
+        CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
+  CS-735  Dyno syncs results with shared storage, with keys per device and role
+      ← CS-734 A sealed, content-addressed layout for benchmark results, local first
+        CS-726 Where does dyno store shared benchmark results, and what may it spend?
+        CS-727 Who holds dyno's storage keys, and may remote and cloud sessions read results?
+        CS-730 How does dyno talk to the bucket: its own small client or a dependency?
+  CS-736  Retention, pins and the size budget for benchmark storage
+      ← CS-734 A sealed, content-addressed layout for benchmark results, local first
+        CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
+  CS-737  A classification label on every benchmark result
+      ← CS-734 A sealed, content-addressed layout for benchmark results, local first
+        CS-728 What classification does a benchmark result get by default?
+        CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
+  CS-738  Trends, charts, baselines and alerts keep devices apart
+      ← CS-733 Each run records its device, configuration and state
+        CS-734 A sealed, content-addressed layout for benchmark results, local first
 
 CS-18 The work tracker
   CS-530  Release 2.0.0-alpha.1
@@ -748,5 +769,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-246 blocked
+252 blocked
 ```

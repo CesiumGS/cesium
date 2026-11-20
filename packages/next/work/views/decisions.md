@@ -72,6 +72,19 @@ CS-615 Packaging and package names
 CS-389 Dyno as the development harness
   CS-714  Reaching a 500 ms cold start: which engine-side work (owner)
   CS-715  How the cold-start check runs from here on (owner)
+  CS-726  Where does dyno store shared benchmark results, and what may it spend? (owner)
+      waited on by CS-735
+  CS-727  Who holds dyno's storage keys, and may remote and cloud sessions read results? (owner)
+      waited on by CS-735
+  CS-728  What classification does a benchmark result get by default? (owner)
+      waited on by CS-737
+  CS-729  Merge CS-717, the benchmark devices and sharing design (owner)
+  CS-730  How does dyno talk to the bucket: its own small client or a dependency? (owner)
+      waited on by CS-735
+  CS-731  Do inspector recordings upload to shared storage? (owner)
+  CS-732  Do the study-side device items join alpha.1? (owner)
+      waited on by CS-739, CS-740
+  CS-741  Merge CS-706, Dyno's cold-start run and the viewer's fixes (owner)
 
-24 open decision(s) for owner
+32 open decision(s) for owner
 ```
