@@ -11,7 +11,7 @@ done_when:
   - "c2: The glare kernel, the star field and the sky pack load below visible content, and are cancelled when the engine is disposed."
   - "c3: The Moon map, the Slang compiler and the B-rep kernels and sections keep their own workers but are scheduled through `Jobs` as dedicated groups, sharing its priorities and budget accounting."
   - "c4: The inspector's Jobs section shows, per job kind, running, queued, submit-to-applied latency, worker time and cancelled counts, and each worker's busy time by group (engine, dedicated, app); every value has a recorder column."
-constraints: [CS-87 c1, CS-88 c2, CS-89 c3, CS-95 c4]
+constraints: [CS-87 c1, CS-89 c3, CS-95 c4]
 check: "integration-test test/engineJobs.test.ts, with test/jobs.test.ts"
 ---
 
@@ -30,3 +30,5 @@ To be written: a tileset's decodes follow request priority and are cancelled on 
 ## Notes
 
 Proposed on 2026-11-15 for items no milestone held, and applied on the owner's answer. Its 5 items are constraints marked `c?` until shaping links each to a clause.
+
+- **One milestone per item** (the owner, 2026-11-20): CS-88 now lives only in CS-458. Clause c2 is met when CS-88 is done in CS-458, which is in an earlier release (alpha.1), so this milestone waits on that one item.
