@@ -1,4 +1,12 @@
-import { Deformable, Deformer } from "../../index.js";
+import { AxisAlignedBoundingBox, Cartesian3 } from "@cesium/core";
+import {
+  Deformable,
+  Deformer,
+  GeometryAttributeDescriptor,
+  GeometryReader,
+  GeometryWriter,
+  VertexAttributeSemantic,
+} from "../../index.js";
 
 describe("Scene/Deformer", function () {
   const frameState = {};
@@ -14,11 +22,21 @@ describe("Scene/Deformer", function () {
     _createBinding(frameState, deformable) {
       return this.createBinding(frameState, deformable);
     }
+
+    // Stretches x by 2 and moves y by 1.
+    _deformPositions(binding, positions, jacobians) {
+      for (let i = 0; i < positions.length / 3; ++i) {
+        positions[i * 3] *= 2.0;
+        positions[i * 3 + 1] += 1.0;
+        jacobians.set([2, 0, 0, 0, 1, 0, 0, 0, 1], i * 9);
+      }
+    }
   }
 
   function createBinding() {
     const binding = {
       destroyed: false,
+      addRestDisplacement: jasmine.createSpy("addRestDisplacement"),
       destroy: () => {
         binding.destroyed = true;
       },
@@ -32,9 +50,60 @@ describe("Scene/Deformer", function () {
     return {
       [Deformable.symbol]: true,
       bindings,
+      deformerBindings: bindings,
       addDeformerBinding: (binding) => bindings.add(binding),
       removeDeformerBinding: (binding) => bindings.delete(binding),
     };
+  }
+
+  const position = new GeometryAttributeDescriptor({
+    semantic: VertexAttributeSemantic.POSITION,
+  });
+  const normal = new GeometryAttributeDescriptor({
+    semantic: VertexAttributeSemantic.NORMAL,
+  });
+  const tangent = new GeometryAttributeDescriptor({
+    semantic: VertexAttributeSemantic.TANGENT,
+  });
+
+  // A deformable whose vertex attributes are arrays of values, by semantic,
+  // that sessions read and write directly.
+  function createBakeableDeformable(values, writable = Object.keys(values)) {
+    const createSession = () => ({
+      vertexCount: () => values.POSITION.length / 3,
+      vertexAttributeReader:
+        ({ semantic, componentCount: n }) =>
+        (i, result, offset = 0) => {
+          result.set(values[semantic].slice(i * n, (i + 1) * n), offset);
+          return result;
+        },
+      vertexAttributeWriter:
+        ({ semantic, componentCount: n }) =>
+        (i, source, offset = 0) => {
+          values[semantic].splice(
+            i * n,
+            n,
+            ...source.slice(offset, offset + n),
+          );
+        },
+      commit: () => {},
+      destroy: () => {},
+    });
+    const getDescriptors = (semantics) =>
+      [position, normal, tangent].filter((descriptor) =>
+        semantics.includes(descriptor.semantic),
+      );
+
+    const deformable = createDeformable();
+    deformable.geometryReader = new GeometryReader({
+      availableAttributes: getDescriptors(Object.keys(values)),
+      createReadSession: createSession,
+    });
+    deformable.geometryWriter = new GeometryWriter({
+      availableAttributes: getDescriptors(writable),
+      createWriteSession: createSession,
+    });
+    return deformable;
   }
 
   function getBinding(deformable) {
@@ -162,6 +231,99 @@ describe("Scene/Deformer", function () {
     expect(deformer.isDestroyed()).toBe(true);
     expect(deformable.bindings.size).toBe(0);
     expect(binding.destroyed).toBe(true);
+  });
+
+  describe("bake", function () {
+    // Two vertices, which TestDeformer stretches along x and moves along y.
+    function createValues() {
+      return {
+        POSITION: [1, 0, 0, 0, 1, 0],
+        NORMAL: [1, 1, 0, 0, 0, 1],
+        TANGENT: [1, 1, 0, -1, 0, 0, 1, 1],
+      };
+    }
+
+    function bind(deformer, deformable) {
+      deformer.bind(deformable);
+      deformer._update(frameState);
+      return deformer.createBinding.calls.mostRecent().returnValue;
+    }
+
+    // Bakes a deformable with the values, returning it and its binding.
+    function bake(values, writable) {
+      const deformable = createBakeableDeformable(values, writable);
+      const deformer = new TestDeformer();
+      const binding = bind(deformer, deformable);
+      deformer.bake(deformable);
+      return { deformable, binding };
+    }
+
+    it("writes the deformed positions", function () {
+      const values = createValues();
+      bake(values);
+      expect(values.POSITION).toEqual([2, 1, 0, 0, 2, 0]);
+    });
+
+    it("transforms normals by the jacobian's cofactor", function () {
+      const values = createValues();
+      bake(values);
+      // The cofactor of diag(2, 1, 1) is diag(1, 2, 2).
+      expect(values.NORMAL).toEqualEpsilon(
+        [1 / Math.sqrt(5), 2 / Math.sqrt(5), 0, 0, 0, 1],
+        1e-12,
+      );
+    });
+
+    it("transforms tangents by the jacobian, keeping their w", function () {
+      const values = createValues();
+      bake(values);
+      expect(values.TANGENT).toEqualEpsilon(
+        [2 / Math.sqrt(5), 1 / Math.sqrt(5), 0, -1, 0, 0, 1, 1],
+        1e-12,
+      );
+    });
+
+    it("unbinds the deformable", function () {
+      const { deformable, binding } = bake(createValues());
+      expect(deformable.bindings.size).toBe(0);
+      expect(binding.destroyed).toBe(true);
+    });
+
+    it("widens the deformable's other bindings by the displacements", function () {
+      const deformable = createBakeableDeformable(createValues());
+      const otherBinding = bind(new TestDeformer(), deformable);
+      const deformer = new TestDeformer();
+      bind(deformer, deformable);
+
+      deformer.bake(deformable);
+
+      expect(otherBinding.addRestDisplacement).toHaveBeenCalledOnceWith(
+        AxisAlignedBoundingBox.fromCorners(
+          new Cartesian3(0, 1, 0),
+          new Cartesian3(1, 1, 0),
+        ),
+      );
+    });
+
+    it("warns about and skips attributes that can't be written", function () {
+      spyOn(console, "warn");
+      const values = createValues();
+      bake(values, ["POSITION"]);
+
+      expect(console.warn).toHaveBeenCalled();
+      expect(values.NORMAL).toEqual(createValues().NORMAL);
+      expect(values.TANGENT).toEqual(createValues().TANGENT);
+    });
+
+    it("throws when the deformable isn't bound", function () {
+      const deformable = createBakeableDeformable(createValues());
+      const deformer = new TestDeformer();
+      deformer.bind(deformable);
+
+      expect(function () {
+        deformer.bake(deformable);
+      }).toThrowDeveloperError();
+    });
   });
 
   it("throws when binding something that isn't a Deformable", function () {

@@ -2,9 +2,15 @@ import {
   AxisAlignedBoundingBox,
   Cartesian3,
   Color,
+  Matrix3,
   Matrix4,
 } from "@cesium/core";
-import { Deformable, Model } from "@cesium/engine";
+import {
+  Deformable,
+  GeometryAttributeDescriptor,
+  Model,
+  VertexAttributeSemantic,
+} from "@cesium/engine";
 import { MeshEditor, SurfaceDeformer } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 import pollToPromise from "../../../../Specs/pollToPromise.js";
@@ -54,6 +60,49 @@ describe(
     function getBinding(deformable) {
       expect(deformable.bindings.size).toBe(1);
       return deformable.bindings.values().next().value;
+    }
+
+    async function loadModelPrimitive() {
+      const model = scene.primitives.add(
+        await Model.fromGltfAsync({
+          url: "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb",
+        }),
+      );
+      await pollToPromise(function () {
+        scene.renderForSpecs();
+        return model.ready;
+      });
+      return model.nodes.flatMap((node) => node.primitives)[0];
+    }
+
+    const position = new GeometryAttributeDescriptor({
+      semantic: VertexAttributeSemantic.POSITION,
+    });
+
+    function readPositions(primitive) {
+      return primitive.geometryReader.withReadSession(
+        { attributes: [position] },
+        (session) => {
+          const read = session.vertexAttributeReader(position);
+          const positions = [];
+          for (let i = 0; i < session.vertexCount(); ++i) {
+            positions.push(Cartesian3.fromArray(read(i, [])));
+          }
+          return positions;
+        },
+      );
+    }
+
+    // Moves the mesh a binding deforms with, as rendered, without editing it.
+    function moveMesh(binding, offset) {
+      const { positionTexture } = binding;
+      const positions = positionTexture.read();
+      for (let i = 0; i < positions.length; i += 4) {
+        positions[i] += offset.x;
+        positions[i + 1] += offset.y;
+        positions[i + 2] += offset.z;
+      }
+      positionTexture.upload(scene.context, positions);
     }
 
     it("binds on the next render pass", function () {
@@ -220,16 +269,7 @@ describe(
       camera.right = Cartesian3.clone(Cartesian3.UNIT_X);
       scene.backgroundColor = Color.BLACK;
 
-      const model = scene.primitives.add(
-        await Model.fromGltfAsync({
-          url: "./Data/Models/glTF-2.0/BoxTextured/glTF-Binary/BoxTextured.glb",
-        }),
-      );
-      await pollToPromise(function () {
-        scene.renderForSpecs();
-        return model.ready;
-      });
-
+      const primitive = await loadModelPrimitive();
       const cage = addCage();
       cage.show = false;
 
@@ -239,7 +279,6 @@ describe(
       });
       expect(rest).not.toEqual([0, 0, 0, 255]);
 
-      const [primitive] = model.nodes.flatMap((node) => node.primitives);
       SurfaceDeformer.fromMesh(cage).bind(primitive);
       scene.renderForSpecs();
       expect(primitive._runtimePrimitive.deformerBindings.size).toBe(1);
@@ -247,6 +286,39 @@ describe(
       expect(scene).toRenderAndCall(function (rgba) {
         expect(rgba).toEqualEpsilon(rest, 2);
       });
+    });
+
+    it("bakes the mesh's movement into a model's positions", async function () {
+      if (window.webglStub) {
+        return;
+      }
+
+      const primitive = await loadModelPrimitive();
+      const deformer = SurfaceDeformer.fromMesh(addCage());
+      deformer.bind(primitive);
+      scene.renderForSpecs();
+      const rest = readPositions(primitive);
+
+      moveMesh([...primitive.deformerBindings][0], Cartesian3.UNIT_Z);
+      deformer.bake(primitive);
+
+      // The mesh's movement, in the model's space.
+      const offset = Matrix3.multiplyByVector(
+        Matrix3.inverse(
+          Matrix4.getMatrix3(primitive.worldMatrix, new Matrix3()),
+          new Matrix3(),
+        ),
+        Cartesian3.UNIT_Z,
+        new Cartesian3(),
+      );
+      const baked = readPositions(primitive);
+      for (let i = 0; i < rest.length; ++i) {
+        expect(baked[i]).toEqualEpsilon(
+          Cartesian3.add(rest[i], offset, new Cartesian3()),
+          1e-5,
+        );
+      }
+      expect([...primitive.deformerBindings].length).toBe(0);
     });
   },
   "WebGL",
