@@ -85,6 +85,11 @@ import { renderReport, summarizeRun } from "./report.mjs";
 import { compareTable, defaultPlan, scorecard } from "./scorecard.mjs";
 import { ALERT_METRICS, detectAlerts } from "./changepoints.mjs";
 import { runImages } from "./images.mjs";
+import {
+  COLD_START_BUDGET_MS,
+  measureColdStart,
+  overBudget,
+} from "./coldStart.mjs";
 import { areasFor, changedFiles, scenesFor } from "./areas.mjs";
 import {
   checkoutFrozen,
@@ -176,6 +181,8 @@ if (command === "list") {
   await fetchDatasets(catalog.datasets);
 } else if (command === "run") {
   await run();
+} else if (command === "coldstart") {
+  await coldStart();
 } else if (command === "report") {
   const file = opts._?.[0];
   if (!file) {
@@ -291,6 +298,82 @@ if (command === "list") {
   );
 } else {
   throw new Error(`unknown command ${command}`);
+}
+
+/**
+ * A Dyno page's cold start (coldStart.mjs, CS-706): stored as a run, with
+ * its budget (COLD_START_BUDGET_MS, or --budget) as the regression check.
+ */
+async function coldStart() {
+  const budgetMs = Number(opts.budget ?? COLD_START_BUDGET_MS);
+  const started = new Date();
+  const measured = await measureColdStart(opts, {
+    root,
+    log: (line) => console.log(line),
+  });
+  const ids = measured.configs.map((c) => c.id);
+  const results = {
+    date: started.toISOString(),
+    commit: git("rev-parse HEAD"),
+    subject: git("log -1 --format=%s"),
+    branch: treeRef(root),
+    note: opts.note ?? "",
+    baseline: opts.baseline ?? ids[0],
+    candidate: opts.candidate ?? ids.at(-1),
+    tags: ["cold-start", ...(opts.tag ? String(opts.tag).split(",") : [])],
+    plan: {
+      primary: "firstFrameMs",
+      guardrails: ["moduleRequests", "duplicateFetches"],
+      ...(opts.hypothesis ? { hypothesis: opts.hypothesis } : {}),
+    },
+    dirty: git("status --porcelain").length > 0,
+    served: "dev",
+    command: ["node", "packages/next/bench/suite/cli.mjs", command, ...rest],
+    catalog: catalog.sources > 1 ? "public+private" : "public",
+    coldStart: {
+      route: String(opts.route ?? "/viewer"),
+      budgetMs: Number.isFinite(budgetMs) ? budgetMs : null,
+      commits: measured.configs,
+      method:
+        "each repetition a new browser and empty profile (no HTTP, code or pipeline cache) against a warm dev server; phases read from WebGPU and resource timing hooks in the page; board settings alternate within each repetition",
+    },
+    environment: {
+      os: `${osVersion()} (${platform()} ${release()}, ${arch()})`,
+      cpu: cpus()[0]?.model,
+      cores: cpus().length,
+      memoryGiB: Math.round(totalmem() / 2 ** 30),
+      browser: measured.browser,
+      browserMode: measured.headless ? "headless" : "headed",
+      cpuProfile: measured.cpuProfile,
+      viewport: "1400×900 CSS px",
+      ...conditions(),
+    },
+    runs: measured.runs,
+  };
+  const directory =
+    process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
+  mkdirSync(directory, { recursive: true });
+  const stamp = started.toISOString().replace(/[:.]/g, "-");
+  const file = join(directory, `${stamp}.json`);
+  writeFileSync(file, JSON.stringify(results));
+  writeFileSync(
+    file.replace(/\.json$/, ".summary.json"),
+    JSON.stringify(summarizeRun(results)),
+  );
+  writeFileSync(file.replace(/\.json$/, ".html"), renderReport(results));
+  console.log(file);
+  if (Number.isFinite(budgetMs)) {
+    const over = overBudget(results, budgetMs);
+    for (const o of over) {
+      console.log(
+        `over budget: ${o.config} first frame ${o.firstFrameMs ?? "never"} ms (median, without the board) > ${budgetMs} ms`,
+      );
+    }
+    if (over.length) {
+      process.exit(1);
+    }
+    console.log(`within budget: median first frame ≤ ${budgetMs} ms`);
+  }
 }
 
 async function run() {

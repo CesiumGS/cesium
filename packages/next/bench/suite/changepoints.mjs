@@ -216,6 +216,8 @@ export const ALERT_METRICS = [
   "frameP999",
   "over100",
   "firstContentMs",
+  // A Dyno page's cold start (coldStart.mjs).
+  "firstFrameMs",
   "settleMs",
   "requests",
   "bytes",

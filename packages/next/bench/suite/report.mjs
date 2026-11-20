@@ -39,6 +39,16 @@ import {
 /** Metrics shown, with units and whether lower is better. */
 const METRICS = [
   ["firstContentMs", "first content", "s", 1000],
+  // A Dyno page's cold start (coldStart.mjs): its phases end to end.
+  ["firstFrameMs", "first drawn frame, cold browser", "s", 1000],
+  ["modulesMs", "modules loaded", "s", 1000],
+  ["deviceMs", "WebGPU device ready", "s", 1000],
+  ["engineMs", "engine and viewer host made", "s", 1000],
+  ["contentMs", "content answered", "s", 1000],
+  ["frameDataMs", "reference data answered", "s", 1000],
+  ["moduleRequests", "module requests", "", 1],
+  ["duplicateFetches", "requests for a URL already asked for", "", 1],
+  ["devices", "WebGPU devices created", "", 1],
   ["settleMs", "settled", "s", 1000],
   ["frameP50", "frame p50", "ms", 1],
   ["frameP95", "frame p95", "ms", 1],
