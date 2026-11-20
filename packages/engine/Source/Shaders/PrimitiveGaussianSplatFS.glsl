@@ -61,4 +61,19 @@ void main() {
 #else
     out_FragColor = baseColor;
 #endif
+
+#ifdef STOCHASTIC_TRANSPARENCY
+    // Spark-style stochastic transparency: treat alpha as coverage and use a hash that
+    // includes per-splat entropy. This relies on depth writes + no blending.
+    uvec2 coord = uvec2(gl_FragCoord.xy);
+    uint state = floatBitsToUint(czm_frameNumber) + 0x9e3779b9u * coord.x + 0x85ebca6bu * coord.y + 0xc2b2ae35u * v_splatIndex;
+    state = state * 747796405u + 2891336453u;
+    uint hash = ((state >> ((state >> 28u) + 4u)) ^ state) * 277803737u;
+    hash = (hash >> 22u) ^ hash;
+    float rand = float(hash) / 4294967296.0;
+    if (rand >= out_FragColor.a) {
+        discard;
+    }
+    out_FragColor = vec4(out_FragColor.rgb / out_FragColor.a, 1.0);
+#endif
 }

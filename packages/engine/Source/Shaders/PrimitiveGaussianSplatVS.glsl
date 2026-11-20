@@ -142,6 +142,7 @@ highp vec4 discardVec = vec4(0.0, 0.0, 2.0, 1.0);
 
 void main() {
     uint texIdx = uint(a_splatIndex);
+    v_splatIndex = texIdx;
     // u_splatRowMask and u_splatRowShift encode the row width of the splat
     // attribute texture. The texture width is always maximumTextureSize, which
     // varies by GPU, so these are passed as uniforms rather than constants.
