@@ -8,7 +8,7 @@ import {
   PixelFormat,
 } from "@cesium/core";
 import { DataTexture } from "@cesium/engine";
-import { SurfaceDeformerBinding } from "../../index.js";
+import { SurfaceDeformer, SurfaceDeformerBinding } from "../../index.js";
 import createContext from "../../../../Specs/createContext.js";
 
 describe(
@@ -60,6 +60,9 @@ describe(
       const positionTexture = createPositionTexture(current);
       const restPositionTexture = createPositionTexture(rest);
       const binding = new SurfaceDeformerBinding({
+        deformer: {
+          _getShaderLines: SurfaceDeformer.prototype._getShaderLines,
+        },
         vertexBuffer: { destroy: () => {} },
         positionTexture,
         restPositionTexture,
