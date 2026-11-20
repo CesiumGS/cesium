@@ -2,10 +2,14 @@
 id: CS-755
 title: Merge CS-22, paths in one place with the seam test
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-8
 decider: owner
+answer: "A. Merge it: After CS-743, the orchestrator replays it onto main's tip, reruns the type checks and work check, fast-forwards main, regenerates the views and logs the merge; CS-33 is set up from it."
+answered_at: 2026-11-20T19:43:01.044Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

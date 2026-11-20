@@ -2,10 +2,14 @@
 id: CS-754
 title: Merge CS-743, main's npm test exits 0 again
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks and work check, fast-forwards main, regenerates the views and logs the merge; main's npm test exits 0 again."
+answered_at: 2026-11-20T19:42:59.330Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
