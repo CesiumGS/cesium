@@ -3,11 +3,14 @@ import {
   Ellipsoid,
   Math as CesiumMath,
   Matrix4,
+  RuntimeError,
+  clone,
 } from "@cesium/core";
 import {
   Cesium3DTilesVoxelProvider,
   MetadataComponentType,
   MetadataType,
+  Resource,
   ResourceCache,
   VoxelProvider,
   VoxelShapeType,
@@ -52,6 +55,103 @@ describe("Scene/Cesium3DTilesVoxelProvider", function () {
     expect(provider.componentTypes).toEqual([MetadataComponentType.FLOAT32]);
     expect(provider.minimumValues).toEqual([[0]]);
     expect(provider.maximumValues).toEqual([[1]]);
+  });
+
+  describe("fromUrl validates the metadata schema", function () {
+    const url = "./Data/Cesium3DTiles/Voxel/VoxelEllipsoid3DTiles/tileset.json";
+    let validTilesetJson;
+
+    beforeAll(async function () {
+      validTilesetJson = await Resource.fetchJson({ url });
+    });
+
+    function createTilesetJson(schemaClasses) {
+      const tilesetJson = clone(validTilesetJson, true);
+      delete tilesetJson.schemaUri;
+      // The statistics only describe property "a" from the original schema
+      delete tilesetJson.statistics;
+      tilesetJson.schema = { id: "voxel", classes: schemaClasses };
+      return tilesetJson;
+    }
+
+    // The test data only has valid schemas, so replace the fetched tileset
+    // JSON with one whose schema exercises the error handling
+    function fromTilesetJson(tilesetJson) {
+      spyOn(Resource.prototype, "fetchJson").and.returnValue(
+        Promise.resolve(tilesetJson),
+      );
+      return Cesium3DTilesVoxelProvider.fromUrl(url);
+    }
+
+    it("accepts supported types and component types", async function () {
+      const tilesetJson = createTilesetJson({
+        voxel: {
+          properties: {
+            a: { type: "SCALAR", componentType: "UINT8" },
+            b: { type: "VEC2", componentType: "FLOAT32" },
+            c: { type: "VEC3", componentType: "FLOAT64" },
+            d: { type: "VEC4", componentType: "FLOAT32" },
+          },
+        },
+      });
+      const provider = await fromTilesetJson(tilesetJson);
+      expect(provider.types).toEqual([
+        MetadataType.SCALAR,
+        MetadataType.VEC2,
+        MetadataType.VEC3,
+        MetadataType.VEC4,
+      ]);
+    });
+
+    it("throws if the voxel class is missing", async function () {
+      const tilesetJson = createTilesetJson({});
+      await expectAsync(fromTilesetJson(tilesetJson)).toBeRejectedWithError(
+        RuntimeError,
+        "Tileset does not contain any voxel metadata properties.",
+      );
+    });
+
+    it("throws if the voxel class has no properties", async function () {
+      const tilesetJson = createTilesetJson({ voxel: { properties: {} } });
+      await expectAsync(fromTilesetJson(tilesetJson)).toBeRejectedWithError(
+        RuntimeError,
+        "Tileset does not contain any voxel metadata properties.",
+      );
+    });
+
+    it("throws for an unsupported matrix type", async function () {
+      const tilesetJson = createTilesetJson({
+        voxel: {
+          properties: { a: { type: "MAT3", componentType: "FLOAT32" } },
+        },
+      });
+      await expectAsync(fromTilesetJson(tilesetJson)).toBeRejectedWithError(
+        RuntimeError,
+        /Unsupported voxel metadata type MAT3/,
+      );
+    });
+
+    it("throws for an unsupported non-numeric type", async function () {
+      const tilesetJson = createTilesetJson({
+        voxel: { properties: { a: { type: "BOOLEAN" } } },
+      });
+      await expectAsync(fromTilesetJson(tilesetJson)).toBeRejectedWithError(
+        RuntimeError,
+        /Unsupported voxel metadata type BOOLEAN/,
+      );
+    });
+
+    it("throws for an unsupported component type", async function () {
+      const tilesetJson = createTilesetJson({
+        voxel: {
+          properties: { a: { type: "SCALAR", componentType: "INT16" } },
+        },
+      });
+      await expectAsync(fromTilesetJson(tilesetJson)).toBeRejectedWithError(
+        RuntimeError,
+        /Unsupported voxel metadata component type INT16/,
+      );
+    });
   });
 
   it("requestData works for root tile of ellipsoid tileset", async function () {
