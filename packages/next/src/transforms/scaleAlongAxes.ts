@@ -2,7 +2,7 @@
 // s_k e_k (e_k . (p - o)). Output is affine in each factor `s_k`; the inverse
 // is exact. `scaleAbout` in `scaleAbout.ts` (east, north, up at a point) is
 // this, so that route's draws take the compiled path. TS only: no Slang entry.
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import {
   edgeOf,
   vec3Specs,
@@ -131,7 +131,7 @@ export function scaleAlongAxes(options: {
   center: ArrayLike<number>;
   factors: ArrayLike<number>;
   axes: ArrayLike<number>;
-}): SmoothEdge {
+}): CurvilinearEdge {
   const c = options.center;
   const f = options.factors;
   const e = options.axes;

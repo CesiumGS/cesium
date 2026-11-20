@@ -83,7 +83,7 @@ export interface FrameResolver {
   /**
    * The path from `frame` to `base` at scene `seconds`: rigid steps and warp
    * steps in order (`Route`), a warp step forward where the route goes up
-   * from a frame to its parent. A route that crosses no smooth edge is one
+   * from a frame to its parent. A route that crosses no curvilinear edge is one
    * rigid step with `resolve`'s matrix. `view` is the view the route is for,
    * which a switch frame chooses its edge by (any object, a name or a
    * number); without one a switch uses its default. Throws
@@ -98,7 +98,7 @@ export interface FrameResolver {
   ): Route;
   /**
    * Binds `anchor` to `frame`: content under the anchor is in `frame`'s
-   * coordinates (a frame of a smooth edge draws it through the edge). A
+   * coordinates (a frame of a curvilinear edge draws it through the edge). A
    * resolver over a frame catalog has it; the transform table's has not.
    */
   bindAnchor?(anchor: AnchorHandle, frame: FrameKey): void;

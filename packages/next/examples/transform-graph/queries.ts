@@ -30,7 +30,7 @@ export interface FramePoint {
  * Questions asked of the graph: a pick, or a point of any node, carried to
  * another node in float64 through the route between them, and distances in a
  * named node. The frames' own graph (`graphOfFrames`) is the one asked; it
- * holds the application's nodes, smooth ones included.
+ * holds the application's nodes, curvilinear ones included.
  */
 export interface Queries {
   readonly graph: FrameGraph;

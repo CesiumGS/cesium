@@ -68,14 +68,14 @@ function apply(
   return out;
 }
 
-/** A carrier of points between two frames (`carrier`); `smooth` when its route crosses a smooth edge. */
+/** A carrier of points between two frames (`carrier`); `curvilinear` when its route crosses a curvilinear edge. */
 type Carrier = ((p: ArrayLike<number>) => Float64Array) & {
-  smooth?: true;
+  curvilinear?: true;
 };
 
 /**
  * A carrier of points of `from` into `to` at `seconds`, in float64: a rigid
- * route by its matrix, a route across smooth edges point by point
+ * route by its matrix, a route across curvilinear edges point by point
  * (`routeForward`; a ray is carried by its two ends, so it stays straight in
  * `to`, which is the frame the query is answered in).
  */
@@ -92,7 +92,7 @@ function carrier(
     return (p) => apply(m, p);
   }
   const carry: Carrier = (p) => routeForward(route, p);
-  carry.smooth = true;
+  carry.curvilinear = true;
   return carry;
 }
 
@@ -178,7 +178,7 @@ async function inAnchor(
   let carriedPointwise = false;
   const rays: QueryRay[] = query.rays.map((ray, i) => {
     const carry = into(times[i]!);
-    carriedPointwise ||= carry.smooth === true;
+    carriedPointwise ||= carry.curvilinear === true;
     return { from: carry(ray.from), to: carry(ray.to) };
   });
   const answers = await answer(rays, times);
@@ -206,7 +206,7 @@ async function inAnchor(
           : Math.hypot(route.meters, own.meters);
     const accuracy = {
       ...(meters !== undefined && { meters }),
-      note: `route: ${route.note}; target: ${own.note}${carriedPointwise ? "; the route crosses a smooth edge, so each ray is carried by its ends and is straight in the target's frame" : ""}`,
+      note: `route: ${route.note}; target: ${own.note}${carriedPointwise ? "; the route crosses a curvilinear edge, so each ray is carried by its ends and is straight in the target's frame" : ""}`,
     };
     if (!a.hit) {
       return { ...a, accuracy };

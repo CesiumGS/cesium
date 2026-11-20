@@ -82,7 +82,7 @@ const MODULES: Record<string, () => ModuleWords> = {
     optional: true,
     path: "@cesium/next/frames",
     forWhat:
-      "The catalog of reference frames (ICRF, ITRF, the bodies), Earth orientation, ephemerides and trajectories: data feeding the transform graph, answering where one frame is in another at a given time. smoothFrame and switchFrame put the graph's smooth and per-view nodes in it.",
+      "The catalog of reference frames (ICRF, ITRF, the bodies), Earth orientation, ephemerides and trajectories: data feeding the transform graph, answering where one frame is in another at a given time. curvilinearFrame and switchFrame put the graph's curvilinear and per-view nodes in it.",
     loads: <>With the page, if you import it. {entrySize("frames")}.</>,
     onDemand: (
       <>

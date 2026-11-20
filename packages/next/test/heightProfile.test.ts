@@ -12,7 +12,7 @@ import {
 } from "../src/camera/heightProfile.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
 import {
   verticalExaggerationDescriptor,
@@ -166,7 +166,7 @@ function setup(): Setup {
   worlds.push(world);
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF");
-  const exaggerated = smoothFrame(
+  const exaggerated = curvilinearFrame(
     "exaggerated",
     itrf,
     verticalExaggeration({

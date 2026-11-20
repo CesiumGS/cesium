@@ -1,31 +1,31 @@
 // The transform graph (docs/design/transform-graph.md): a tree of nodes, each placed in
-// its parent by an affine matrix, a smooth function, or a switch that picks
+// its parent by an affine matrix, a curvilinear map, or a switch that picks
 // one of those per view. Content, cameras and lights sit at nodes; a route
 // between two nodes (route.ts) is what warps them. No geo knowledge here.
 
 /** A view's key, for a switch's choices and per-view parameter values: a name, a number, or the engine's own view object. */
 export type ViewId = string | number | object;
 
-/** A smooth function's parameter values: explicit scalars, never closures. */
+/** A curvilinear map's parameter values: explicit scalars, never closures. */
 export type Params = Readonly<Record<string, number>>;
 
 /**
- * A smooth node's function, in float64. `forward` maps a point of the node
+ * A curvilinear node's function, in float64. `forward` maps a point of the node
  * to its parent, writing the result to `out` and, when `jacobian` is given
  * and the function knows its derivative, the 3×3 Jacobian to it
  * (column-major). A function that leaves `jacobian` untouched gets central
  * differences. It must be a pure function of `p` and `params`, with no
  * free variables but `Math`: the IR parser reads its source.
  */
-export type SmoothForward = (
+export type CurvilinearForward = (
   p: ArrayLike<number>,
   params: Params,
   out: Float64Array,
   jacobian?: Float64Array,
 ) => void;
 
-/** The inverse of a smooth function: a point of the parent back to the node. */
-export type SmoothInverse = (
+/** The inverse of a curvilinear map: a point of the parent back to the node. */
+export type CurvilinearInverse = (
   q: ArrayLike<number>,
   params: Params,
   out: Float64Array,
@@ -60,10 +60,10 @@ export interface DeclaredBound {
   readonly absJ: ArrayLike<number>;
 }
 
-export interface SmoothSpec {
-  forward: SmoothForward;
+export interface CurvilinearSpec {
+  forward: CurvilinearForward;
   /** Left out, the route solves by Newton with the Jacobian. */
-  inverse?: SmoothInverse;
+  inverse?: CurvilinearInverse;
   /** The parameters' names and their starting values. */
   params: Params;
   /** What the function is, in a route's `shapeKey`; the node's name when left out. */
@@ -111,13 +111,13 @@ export interface AffineEdge {
   readonly at: ((seconds: number, out: Float64Array) => void) | undefined;
 }
 
-export interface SmoothEdge {
-  readonly kind: "smooth";
-  readonly spec: SmoothSpec;
+export interface CurvilinearEdge {
+  readonly kind: "curvilinear";
+  readonly spec: CurvilinearSpec;
 }
 
 /** What a switch may choose between: not another switch. */
-export type PlainEdge = AffineEdge | SmoothEdge;
+export type PlainEdge = AffineEdge | CurvilinearEdge;
 
 /** A transform chosen per view, like a variant set: every view still sees a tree. */
 export interface SwitchEdge {
@@ -147,8 +147,8 @@ export function affine(
   };
 }
 
-export function smooth(spec: SmoothSpec): SmoothEdge {
-  return { kind: "smooth", spec };
+export function curvilinear(spec: CurvilinearSpec): CurvilinearEdge {
+  return { kind: "curvilinear", spec };
 }
 
 export function switchEdge(spec: {
@@ -231,7 +231,7 @@ export class TransformGraph {
   ): void {
     this.own(node);
     const declared = new Set(
-      smoothSpecs(node).flatMap((s) => Object.keys(s.params)),
+      curvilinearSpecs(node).flatMap((s) => Object.keys(s.params)),
     );
     for (const name of Object.keys(patch)) {
       if (!declared.has(name)) {
@@ -253,12 +253,12 @@ export class TransformGraph {
   }
 
   /**
-   * The parameter values `node`'s smooth edge has for `view`: its declared
+   * The parameter values `node`'s curvilinear edge has for `view`: its declared
    * starting values, then what the graph holds, then the view's override.
    */
   values(node: TransformNode, view?: ViewId): Params {
     const chosen = this.edgeFor(node, view).edge;
-    if (chosen.kind !== "smooth") {
+    if (chosen.kind !== "curvilinear") {
       return {};
     }
     const declared = chosen.spec.params;
@@ -310,14 +310,14 @@ export class TransformGraph {
   }
 }
 
-function smoothSpecs(node: TransformNode): SmoothSpec[] {
+function curvilinearSpecs(node: TransformNode): CurvilinearSpec[] {
   const edge = node.edge;
   if (!edge) {
     return [];
   }
   const all =
     edge.kind === "switch" ? [...edge.byView.values(), edge.default] : [edge];
-  return all.flatMap((e) => (e?.kind === "smooth" ? [e.spec] : []));
+  return all.flatMap((e) => (e?.kind === "curvilinear" ? [e.spec] : []));
 }
 
 /** A copy of an edge, so a node's matrix is its own; a switch's shared alternatives stay shared. */

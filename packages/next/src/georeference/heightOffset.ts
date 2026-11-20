@@ -1,7 +1,7 @@
 // A constant lift along the ellipsoid's normals: q = p + offset · n. Raises
 // content clear of terrain, or sinks it. Output is affine in `offset`; the
 // inverse is exact, as p and q share a normal line.
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import {
   edgeOf,
   type Named,
@@ -104,7 +104,7 @@ export function heightOffsetDescriptor(
 export function heightOffsetEdge(options: {
   radii?: Radii;
   offset: number;
-}): SmoothEdge {
+}): CurvilinearEdge {
   return edgeOf(heightOffsetDescriptor(options.radii), {
     offset: options.offset,
   });

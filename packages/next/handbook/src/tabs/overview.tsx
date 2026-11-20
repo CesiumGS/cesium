@@ -40,7 +40,7 @@ const MILESTONES = [
   },
   {
     work: "The transform graph",
-    what: "One tree of frames whose edges are affine or smooth: vertical exaggeration, projections, bends and lenses as nodes that content sits under. A route compiles to one GPU function with df64 center constants; picks, measurements, accuracy and clips go through it; views take their own parameters or routes",
+    what: "One tree of frames whose edges are affine or curvilinear: vertical exaggeration, projections, bends and lenses as nodes that content sits under. A route compiles to one GPU function with df64 center constants; picks, measurements, accuracy and clips go through it; views take their own parameters or routes",
     state: "Built (tasks 1 to 8), with a gallery example; follow-ups open",
   },
   {

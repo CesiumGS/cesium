@@ -40,10 +40,10 @@ import { rotationPart } from "./matrix.ts";
 import { pointAccuracy } from "./pointAccuracy.ts";
 import {
   isNonRigidFrame,
-  smoothEdgeOf,
-  type SmoothFrame,
+  curvilinearEdgeOf,
+  type CurvilinearFrame,
   type SwitchFrame,
-} from "./smoothFrame.ts";
+} from "./curvilinearFrame.ts";
 
 /**
  * A reference frame drawn on its analytic stand-in because the instant is
@@ -129,8 +129,8 @@ class Resolver implements FramesResolver {
   private readonly watchers = new Set<() => void>();
   /** Frames asked for at "precise" (or found not to be the catalog's). */
   private readonly asked = new WeakSet<Frame>();
-  /** Smooth and switch frames whose changes wake the watchers. */
-  private readonly hooked = new WeakSet<SmoothFrame | SwitchFrame>();
+  /** Curvilinear and switch frames whose changes wake the watchers. */
+  private readonly hooked = new WeakSet<CurvilinearFrame | SwitchFrame>();
   /** Frames marked as a rig's. */
   private readonly rigFrames = new WeakSet<Frame>();
   /** The catalog's own stand-in reference frames, by frame. */
@@ -262,9 +262,9 @@ class Resolver implements FramesResolver {
   /**
    * The route from `frame` to `base` (for `view`, which a switch frame
    * chooses by): one rigid step (`resolve`'s matrix) when it crosses no
-   * smooth edge; else its rigid runs, each composed as `resolve` composes
+   * curvilinear edge; else its rigid runs, each composed as `resolve` composes
    * them (an anchor's node-relative matrix folded into the first and last),
-   * and a warp step for each smooth edge, forward where the route goes up
+   * and a warp step for each curvilinear edge, forward where the route goes up
    * from a frame to its parent and inverse where it goes down.
    */
   route(
@@ -549,7 +549,7 @@ class Resolver implements FramesResolver {
   }
 
   /**
-   * Whether the route from `a` to `b` crosses a smooth edge: for `view`, a
+   * Whether the route from `a` to `b` crosses a curvilinear edge: for `view`, a
    * switch frame by what it chose; without one, any switch frame counts (a
    * matrix across it would depend on the view).
    */
@@ -560,7 +560,7 @@ class Resolver implements FramesResolver {
         if (
           view === undefined
             ? isNonRigidFrame(f)
-            : smoothEdgeOf(f, view) !== undefined
+            : curvilinearEdgeOf(f, view) !== undefined
         ) {
           return true;
         }
@@ -571,7 +571,7 @@ class Resolver implements FramesResolver {
 
   /**
    * The route from `a` to `b` as legs in order: runs of tree edges (from
-   * one frame to another, composable by `compose`) and smooth edges, a smooth
+   * one frame to another, composable by `compose`) and curvilinear edges, a curvilinear
    * edge forward where the route goes up from a frame to its parent.
    */
   private legs(a: Frame, b: Frame, view?: ViewId): Leg[] {
@@ -579,7 +579,7 @@ class Resolver implements FramesResolver {
     const legs: Leg[] = [];
     let start = a;
     for (let f = a; f !== top; f = f.parent!) {
-      const warp = smoothEdgeOf(f, view);
+      const warp = curvilinearEdgeOf(f, view);
       if (warp) {
         if (start !== f) {
           legs.push({ kind: "tree", from: start, to: f });
@@ -594,7 +594,7 @@ class Resolver implements FramesResolver {
     }
     for (let i = down.length - 1; i >= 0; i--) {
       const f = down[i]!;
-      const warp = smoothEdgeOf(f, view);
+      const warp = curvilinearEdgeOf(f, view);
       if (warp) {
         if (start !== f.parent) {
           legs.push({ kind: "tree", from: start, to: f.parent! });
@@ -609,13 +609,13 @@ class Resolver implements FramesResolver {
     return legs;
   }
 
-  /** Makes the smooth and switch frames on the route from `a` to `b` wake the watchers when they change. */
+  /** Makes the curvilinear and switch frames on the route from `a` to `b` wake the watchers when they change. */
   private hookWarps(a: Frame, b: Frame): void {
     const top = commonAncestor(a, b);
     for (const start of [a, b]) {
       for (let f = start; f !== top; f = f.parent!) {
-        if (isNonRigidFrame(f) && !this.hooked.has(f as SmoothFrame)) {
-          const hooked = f as SmoothFrame | SwitchFrame;
+        if (isNonRigidFrame(f) && !this.hooked.has(f as CurvilinearFrame)) {
+          const hooked = f as CurvilinearFrame | SwitchFrame;
           this.hooked.add(hooked);
           hooked.onChange(() => {
             for (const listener of this.watchers) {
@@ -628,8 +628,8 @@ class Resolver implements FramesResolver {
   }
 
   /**
-   * `accuracy` over a route that crosses smooth edges: each rigid run through
-   * the frames' composition, each smooth edge by its `accuracy.sigma`, the
+   * `accuracy` over a route that crosses curvilinear edges: each rigid run through
+   * the frames' composition, each curvilinear edge by its `accuracy.sigma`, the
    * point carried through the route to place each term; the 1σ terms add in
    * quadrature. A warp stating only a `bound` is not stated (a bound is
    * not a σ).
@@ -831,7 +831,7 @@ function isNode(key: FrameKey): boolean {
   return "transform" in key && "world" in key;
 }
 
-/** A run of a route: tree edges from one frame to another, or one smooth edge. */
+/** A run of a route: tree edges from one frame to another, or one curvilinear edge. */
 type Leg =
   | { kind: "tree"; from: Frame; to: Frame }
   | { kind: "warp"; frame: Frame; warp: Warp; inverse: boolean };
@@ -917,7 +917,7 @@ function commonAncestor(from: Frame, to: Frame): Frame {
  *   that isn't rigid reaches the camera layer, which refuses it.
  * - The reference frames named directly (a rig's) are marked as used by
  *   `"rig"`; anchors' bindings as used by the application.
- * - A smooth frame (`smoothFrame`) is a non-rigid edge whose coordinates map
+ * - A curvilinear frame (`curvilinearFrame`) is a non-rigid edge whose coordinates map
  *   up to its parent's: content placed in it is drawn through the edge. A
  *   switch frame (`switchFrame`) chooses its edge per view. `route` carries
  *   each as a warp step, forward where the route goes up from the frame to

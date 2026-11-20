@@ -34,7 +34,7 @@
 // positions the placement doesn't reach.
 //
 // One context per world, which every view feeds: an anchor is warped by the
-// route of the first view that places it across a smooth edge, and the
+// route of the first view that places it across a curvilinear edge, and the
 // compiled path draws each view by its own route to its own root (a program
 // and its draws' records are shared, the uniforms are per view: routes.ts).
 // What one draw can't do is differ between views in structure (a switch frame
@@ -129,7 +129,7 @@ import { drawMatrix } from "./transforms.ts";
 import type { DrawHandle, TransformHandle } from "./types.ts";
 import { IDENTITY_SLOT, partitionViews, WorldVariants } from "./variants.ts";
 
-/** What a world's warps read of one view: the routes of its anchors placed across a smooth edge, to its own render root. */
+/** What a world's warps read of one view: the routes of its anchors placed across a curvilinear edge, to its own render root. */
 export interface WarpView {
   /** The view's id: the position of its bit in view masks (`Engine.viewBit`). */
   readonly id: number;
@@ -159,7 +159,7 @@ interface AnchorWarp {
   route: Route;
   /** The real slot of the anchor: this warp's own key, or for a per-view variant of it (`variants.ts`) the slot its draws are under. */
   readonly source: number;
-  /** The views that draw the anchor by this route (all that cross a smooth edge, or those of one shape of route): the first is the one its route is made from. */
+  /** The views that draw the anchor by this route (all that cross a curvilinear edge, or those of one shape of route): the first is the one its route is made from. */
   views: readonly WarpView[];
   /**
    * Names the fits this route's draws need: it changes when the warps'
@@ -195,7 +195,7 @@ interface AnchorWarp {
   pointRoute: Route;
   /** The route is one height-scale warp then rigid steps: terrain carrying `h·n̂` is exaggerated exactly. */
   height: HeightScale | undefined;
-  /** The route compiled (scene/world/routes.ts), when every warp has a smooth spec the compiler takes: draws it can serve are routed, not fitted. Reflects the last `frame`. */
+  /** The route compiled (scene/world/routes.ts), when every warp has a curvilinear spec the compiler takes: draws it can serve are routed, not fitted. Reflects the last `frame`. */
   routed: RoutedAnchor | undefined;
 }
 
@@ -1425,7 +1425,7 @@ export class WorldWarps {
       }
       seen.add(slot);
       // The anchors this slot is warped as: one, or when its views reach it
-      // by routes of different shape, one per shape that crosses a smooth edge
+      // by routes of different shape, one per shape that crosses a curvilinear edge
       // (the first the slot's own; the others are virtual, variants.ts).
       const groups = this.variants.sync(slot, parts);
       const keyed: Array<{

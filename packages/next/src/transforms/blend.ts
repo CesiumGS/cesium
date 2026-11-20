@@ -1,4 +1,4 @@
-// A blend of two smooth specs: the weighted mix of their maps (docs/design/transform-graph.md; the
+// A blend of two curvilinear specs: the weighted mix of their maps (docs/design/transform-graph.md; the
 // helper `blendWarps` of docs/design/geometry-through-placement-review.md). Both go from one frame to its parent, each
 // at its own `scale`; the Jacobian is the same blend of theirs, exact, and the
 // inverse is the engine's Newton. It is a function of two functions, not of
@@ -6,7 +6,7 @@
 import {
   warpForward,
   warpInverse,
-  type SmoothFrameSpec,
+  type CurvilinearFrameSpec,
   type Warp,
 } from "../camera/route.ts";
 import {
@@ -34,8 +34,8 @@ class BlendedWarpImpl extends LiveWarp implements BlendedWarp {
   private readonly qb = new Float64Array(3);
 
   constructor(
-    private readonly first: SmoothFrameSpec,
-    private readonly second: SmoothFrameSpec,
+    private readonly first: CurvilinearFrameSpec,
+    private readonly second: CurvilinearFrameSpec,
     t: number,
   ) {
     super();
@@ -64,7 +64,7 @@ class BlendedWarpImpl extends LiveWarp implements BlendedWarp {
   }
 
   get description(): string {
-    const name = (w: SmoothFrameSpec) => w.description ?? "a warp";
+    const name = (w: CurvilinearFrameSpec) => w.description ?? "a warp";
     return `blend of ${name(this.first)} and ${name(this.second)}, ${this.weight} of the way to the second`;
   }
 
@@ -132,8 +132,8 @@ function checkWeight(t: number): number {
  * `b`. To fade one in from nothing, give it a `scale` instead.
  */
 export function blend(
-  a: SmoothFrameSpec,
-  b: SmoothFrameSpec,
+  a: CurvilinearFrameSpec,
+  b: CurvilinearFrameSpec,
   t = 0.5,
 ): BlendedWarp {
   return new BlendedWarpImpl(a, b, t);

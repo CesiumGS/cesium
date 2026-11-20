@@ -17,7 +17,7 @@
 // center of curvature, deep inside the body.
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import type { HeightScale, WarpScale } from "../camera/route.ts";
-import type { SmoothSpec } from "../transform/graph.ts";
+import type { CurvilinearSpec } from "../transform/graph.ts";
 import { LiveWarp, type ChangeableWarp } from "../transforms/liveWarp.ts";
 import { heightOffsetEdge } from "./heightOffset.ts";
 import {
@@ -400,7 +400,7 @@ export interface VerticalExaggerationOptions {
    * The height, m above the reference, above which heights are lifted by a
    * constant instead of scaled (the sky is shifted, not stretched): by
    * default there is none, and heights are scaled at any height. Below it the
-   * lift blends into the constant over `band`, so the map is smooth. Must be
+   * lift blends into the constant over `band`, so the map is curvilinear. Must be
    * above `baseHeight`.
    */
   readonly ceiling?: number;
@@ -451,8 +451,8 @@ class VerticalExaggerationImpl
   private base: number;
   private top: number | undefined;
   private width: number | undefined;
-  private smoothRevision = -1;
-  private smoothSpec: SmoothSpec | undefined;
+  private curvilinearRevision = -1;
+  private curvilinearSpec: CurvilinearSpec | undefined;
 
   constructor(options: VerticalExaggerationOptions) {
     super(surfaceOf(options.reference ?? "ellipsoid"), options.scale);
@@ -519,14 +519,14 @@ class VerticalExaggerationImpl
    * route: with this warp's ceiling, or one so high that heights are scaled
    * everywhere content is. A plane reference has no built-in: fitted.
    */
-  get smooth(): SmoothSpec | undefined {
+  get curvilinear(): CurvilinearSpec | undefined {
     const radii = this.surfaceRadii;
     if (!radii) {
       return undefined;
     }
-    if (this.smoothRevision !== this.ownRevision) {
-      this.smoothRevision = this.ownRevision;
-      this.smoothSpec = verticalExaggerationEdge({
+    if (this.curvilinearRevision !== this.ownRevision) {
+      this.curvilinearRevision = this.ownRevision;
+      this.curvilinearSpec = verticalExaggerationEdge({
         radii,
         factor: this.k,
         ceiling: this.top ?? UNBOUNDED_CEILING,
@@ -534,7 +534,7 @@ class VerticalExaggerationImpl
         ...(this.width !== undefined && { band: this.width }),
       }).spec;
     }
-    return this.smoothSpec;
+    return this.curvilinearSpec;
   }
 
   set factor(value: number) {
@@ -623,7 +623,7 @@ class VerticalExaggerationImpl
  * longitude (on an ellipsoid) or its place along the surface. The Jacobian
  * and the inverse are exact closed forms (see the file's header), at any
  * height and at the poles. Place it over the content it exaggerates
- * (`smoothFrame(name, parent, verticalExaggeration(…))`): that content keeps
+ * (`curvilinearFrame(name, parent, verticalExaggeration(…))`): that content keeps
  * its true coordinates and is drawn through the edge.
  *
  * For a slider, give `scale` (a `PlacementParameter` in [0, 1]) and `factor`
@@ -651,8 +651,8 @@ export interface HeightOffset extends ChangeableWarp {
 
 class HeightOffsetImpl extends HeightWarp implements HeightOffset {
   private offset: number;
-  private smoothRevision = -1;
-  private smoothSpec: SmoothSpec | undefined;
+  private curvilinearRevision = -1;
+  private curvilinearSpec: CurvilinearSpec | undefined;
 
   constructor(meters: number, options: HeightOffsetOptions) {
     super(surfaceOf(options.reference ?? "ellipsoid"), options.scale);
@@ -669,16 +669,19 @@ class HeightOffsetImpl extends HeightWarp implements HeightOffset {
   }
 
   /** The georeference built-in over the same ellipsoid, for the compiled route; a plane reference is fitted. */
-  get smooth(): SmoothSpec | undefined {
+  get curvilinear(): CurvilinearSpec | undefined {
     const radii = this.surfaceRadii;
     if (!radii) {
       return undefined;
     }
-    if (this.smoothRevision !== this.ownRevision) {
-      this.smoothRevision = this.ownRevision;
-      this.smoothSpec = heightOffsetEdge({ radii, offset: this.offset }).spec;
+    if (this.curvilinearRevision !== this.ownRevision) {
+      this.curvilinearRevision = this.ownRevision;
+      this.curvilinearSpec = heightOffsetEdge({
+        radii,
+        offset: this.offset,
+      }).spec;
     }
-    return this.smoothSpec;
+    return this.curvilinearSpec;
   }
 
   get description(): string {
@@ -702,7 +705,7 @@ class HeightOffsetImpl extends HeightWarp implements HeightOffset {
  * Every point moved `meters` along the normal of a reference surface (up
  * for positive): lifts content clear of terrain, or sinks it. The
  * Jacobian and the inverse are exact. Place it over the content it lifts
- * (`smoothFrame`).
+ * (`curvilinearFrame`).
  */
 export function heightOffset(
   meters: number,

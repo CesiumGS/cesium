@@ -306,7 +306,7 @@
 .tgx-kind-affine {
   color: #3b6ea8;
 }
-.tgx-kind-smooth {
+.tgx-kind-curvilinear {
   color: #b5541c;
 }
 .tgx-kind-switch {
@@ -316,7 +316,7 @@
   .tgx-kind-affine {
     color: #7fb2e8;
   }
-  .tgx-kind-smooth {
+  .tgx-kind-curvilinear {
     color: #f0a06a;
   }
   .tgx-kind-switch {

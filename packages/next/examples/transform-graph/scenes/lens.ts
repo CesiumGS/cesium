@@ -7,7 +7,7 @@ import {
   radialDistortion,
   vec3,
 } from "@cesium/next";
-import { Frame, smoothFrame } from "@cesium/next/frames";
+import { Frame, curvilinearFrame } from "@cesium/next/frames";
 import { addMeshDraw, anchorIn, stage } from "../content.ts";
 import { hex, MeshBuilder, polylines } from "../geometry.ts";
 import { createMarker } from "../markers.ts";
@@ -142,7 +142,7 @@ export const lens: Scene = {
       // Camera space is defined in front of the camera only.
       domain: { center: [0, 0, 3000], radius: 3000 },
     });
-    const lensNode = smoothFrame(
+    const lensNode = curvilinearFrame(
       "Lens (radial distortion)",
       cameraNode,
       lensEdge,

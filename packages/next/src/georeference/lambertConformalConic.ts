@@ -8,7 +8,7 @@
 // With equal parallels it is the one-parallel form (n = sin φ₁). The
 // Jacobian is closed-form (d ln t / dφ = -(1 - e²) / (cos φ (1 - e² sin² φ)));
 // the inverse is exact (the latitude by fixed-point iteration).
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import {
   edgeOf,
   type Named,
@@ -226,7 +226,7 @@ export function lambertConformalConicToGeographicDescriptor(
 /** The unprojection of `lambertConformalConic`: projected (easting, northing, height) to longitude, latitude (degrees) and height. Takes the same options. */
 export function lambertConformalConicToGeographic(
   options: Parameters<typeof lambertConformalConic>[0],
-): SmoothEdge {
+): CurvilinearEdge {
   return edgeOf(lambertConformalConicToGeographicDescriptor(options.radii), {
     lon0: options.lon0,
     lat0: options.lat0,
@@ -250,7 +250,7 @@ export function lambertConformalConic(options: {
   falseEasting?: number;
   falseNorthing?: number;
   radii?: Radii;
-}): SmoothEdge {
+}): CurvilinearEdge {
   return edgeOf(lambertConformalConicDescriptor(options.radii), {
     lon0: options.lon0,
     lat0: options.lat0,

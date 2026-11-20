@@ -1,6 +1,6 @@
-// GPU tessellation of meshes under smooth routes (plan 2026-11-12, task 5):
+// GPU tessellation of meshes under curvilinear routes (plan 2026-11-12, task 5):
 // a prototype. A straight triangle edge of a mesh is drawn as a curve when a
-// smooth edge of the route bends it: a long edge across a 50 km tile under
+// curvilinear edge of the route bends it: a long edge across a 50 km tile under
 // ×10 vertical exaggeration, or across a lens-distorted image. Vertices are
 // transformed, so the pixels in between are interpolated along the chord, and
 // the chord's error is M₂L²/8 (M₂ the route's second-derivative bound over
@@ -48,7 +48,7 @@ import { radialDistortion } from "../src/transforms/index.ts";
 const TEMPLATE = `
 <h1>Route tessellation</h1>
 <p>
-  A mesh's long edges under a smooth route are curves; a compute pass picks
+  A mesh's long edges under a curvilinear route are curves; a compute pass picks
   each triangle's subdivision from the route's curvature and writes the
   indirect draw. Edges against the float64 curve, in pixels.
 </p>

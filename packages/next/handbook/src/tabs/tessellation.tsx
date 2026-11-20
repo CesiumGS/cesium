@@ -1084,7 +1084,7 @@ export function Tessellation() {
         </p>
         <p>
           A spike (<C>spikes/routeTessellation.ts</C>) shows how. Where a mesh
-          is drawn under a smooth route, the route&apos;s own bend sets how
+          is drawn under a curvilinear route, the route&apos;s own bend sets how
           finely each triangle is cut: <C>curvatureOver</C> takes the second
           derivative bound M₂ from the route&apos;s Jacobian by differences (the
           autodiff Hessian at Earth scale is rounding noise), and{" "}

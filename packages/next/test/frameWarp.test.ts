@@ -1,4 +1,4 @@
-// A smooth edge of the frame tree (docs/design/transform-graph.md): a frame whose coordinates
+// A curvilinear edge of the frame tree (docs/design/transform-graph.md): a frame whose coordinates
 // map up to its parent's. The frames resolver's `route()` carries it as a
 // warp step, forward going up and inverse going down, `resolve()` refuses
 // it, and a route that doesn't cross it is as it was. A switch frame chooses
@@ -16,13 +16,13 @@ import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { Frame, frameTransform } from "../src/frames/Frame.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
 import {
-  isSmoothFrame,
+  isCurvilinearFrame,
   isSwitchFrame,
-  smoothFrame,
+  curvilinearFrame,
   switchFrame,
-  type SmoothFrameSpec,
+  type CurvilinearFrameSpec,
   type SwitchChoice,
-} from "../src/frames/smoothFrame.ts";
+} from "../src/frames/curvilinearFrame.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
@@ -54,8 +54,8 @@ function placed(a: number, x: number, y: number, z: number): Float64Array {
  */
 function exaggeration(
   k: number,
-  options: Partial<SmoothFrameSpec> = {},
-): SmoothFrameSpec & { revision: number } {
+  options: Partial<CurvilinearFrameSpec> = {},
+): CurvilinearFrameSpec & { revision: number } {
   return {
     revision: 1,
     description: `height × ${k}`,
@@ -84,11 +84,11 @@ function exaggeration(
 }
 
 function setup(
-  spec: SmoothFrameSpec & { revision: number } = exaggeration(10),
+  spec: CurvilinearFrameSpec & { revision: number } = exaggeration(10),
 ) {
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF");
-  const exaggerated = smoothFrame("exaggerated", itrf, spec);
+  const exaggerated = curvilinearFrame("exaggerated", itrf, spec);
   catalog.add(exaggerated);
   const mast = Frame.constant("mast", exaggerated, placed(0.3, 100, -50, 20), {
     accuracy: { meters: 0.3, note: "survey" },
@@ -104,10 +104,10 @@ function setup(
 
 const POINT = [R * 0.6 + 1234.5, R * 0.7 - 987.6, R * 0.37 + 55.5];
 
-describe("a smooth edge of the frame tree", () => {
+describe("a curvilinear edge of the frame tree", () => {
   it("defines a frame whose warp runs from it to its parent", () => {
     const { itrf, exaggerated } = setup();
-    expect(isSmoothFrame(exaggerated)).toBe(true);
+    expect(isCurvilinearFrame(exaggerated)).toBe(true);
     expect(isSwitchFrame(exaggerated)).toBe(false);
     expect(exaggerated.parent).toBe(itrf);
     expect(exaggerated.warp.from).toBe(exaggerated);
@@ -199,7 +199,7 @@ describe("a smooth edge of the frame tree", () => {
       NonRigidRouteError,
     );
     expect(() => resolver.resolve(itrf, exaggerated, SECONDS, out)).toThrow(
-      /crosses a smooth edge/,
+      /crosses a curvilinear edge/,
     );
     expect(() =>
       resolver.motion(mast, site, SECONDS, {
@@ -245,13 +245,17 @@ describe("a smooth edge of the frame tree", () => {
     );
   });
 
-  it("watch hears a smooth frame defined and its revision changing", () => {
+  it("watch hears a curvilinear frame defined and its revision changing", () => {
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const resolver = createFramesResolver(catalog);
     const told = vi.fn();
     const unwatch = resolver.watch(told);
     const spec = exaggeration(3);
-    const exaggerated = smoothFrame("exaggerated", catalog.get("ITRF"), spec);
+    const exaggerated = curvilinearFrame(
+      "exaggerated",
+      catalog.get("ITRF"),
+      spec,
+    );
     catalog.add(exaggerated);
     expect(told).toHaveBeenCalledTimes(1);
     resolver.routeRevision(exaggerated, catalog.get("ITRF"));

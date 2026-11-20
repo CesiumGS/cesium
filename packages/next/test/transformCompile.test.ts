@@ -17,7 +17,7 @@ import {
 import {
   affine,
   routeBetween,
-  smooth,
+  curvilinear,
   TransformGraph,
   type Route,
 } from "../src/transform/index.ts";
@@ -147,10 +147,10 @@ describe("generated code", () => {
     expect(c.wgsl).toContain("fn tgCofactor(");
   });
 
-  it("collapses affine runs into 3×3s and gives each smooth step a function", () => {
+  it("collapses affine runs into 3×3s and gives each curvilinear step a function", () => {
     const c = compiled(exaggerationRoute().route);
     const point = /fn transformPoint[\s\S]*?\n}\n/.exec(c.wgsl)![0];
-    // affine, smooth, affine: two matrices around one step
+    // affine, curvilinear, affine: two matrices around one step
     expect(point.match(/mat3x3f\(/g)).toHaveLength(2);
     expect(point.match(/tgStep\d+\(/g)).toEqual(["tgStep0("]);
     expect(c.uniformsLayout.fields).toHaveProperty("affine0");
@@ -270,7 +270,7 @@ describe("layouts", () => {
     );
   });
 
-  it("takes only the last smooth step's separable parameters (the nested route)", () => {
+  it("takes only the last curvilinear step's separable parameters (the nested route)", () => {
     const c = compiled(utmRoute().route);
     expect([...c.separableParams].sort()).toEqual([
       "transverseMercator.falseEasting",
@@ -299,7 +299,7 @@ describe("layouts", () => {
     const graph = new TransformGraph();
     const world = graph.root("world");
     const make = (source: string) =>
-      smooth({
+      curvilinear({
         id: "custom",
         forward(p, params, out) {
           out[0] = p[0]! + params.k!;
@@ -377,7 +377,7 @@ describe("float64 center constants", () => {
     }
   });
 
-  it("agree with the route through nested smooth steps", () => {
+  it("agree with the route through nested curvilinear steps", () => {
     const { route } = utmRoute();
     const c = compiled(route);
     const center = [12000, -8000, 900];
@@ -436,7 +436,7 @@ describe("refusals and caching", () => {
     const node = graph.add(
       "custom",
       world,
-      smooth({
+      curvilinear({
         id: "custom",
         forward(p, _params, out) {
           out[0] = Math.tanh(p[0]!);
@@ -450,7 +450,7 @@ describe("refusals and caching", () => {
     return down ? routeBetween(world, node) : routeBetween(node, world);
   }
 
-  it("refuses a smooth step with no source, naming it", () => {
+  it("refuses a curvilinear step with no source, naming it", () => {
     const result = compileRoute(customRoute(undefined));
     expect(result.ok).toBe(false);
     expect(!result.ok && result.reason).toMatch(
@@ -520,7 +520,7 @@ describe("normals' modes", () => {
     expect(c.wgsl).not.toContain("tgJacLinear");
   });
 
-  it("go linear for the smooth steps of a heavy route, never a step with a kink", () => {
+  it("go linear for the curvilinear steps of a heavy route, never a step with a kink", () => {
     const exact = compiled(utmRoute().route);
     const auto = compiled(utmRoute().route, { normals: "auto" });
     // The exaggeration's lift has min and clamp: its Jacobian jumps, so it stays exact.

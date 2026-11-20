@@ -20,17 +20,17 @@ import { writeFileSync } from "node:fs";
 import { composeBox } from "../src/scene/routeBounds.ts";
 import { scaleAboutEdge } from "../src/transforms/scaleAbout.ts";
 import { bend } from "../src/transforms/bend.ts";
-import { smooth, type SmoothEdge } from "../src/transform/graph.ts";
+import { curvilinear, type CurvilinearEdge } from "../src/transform/graph.ts";
 
 const KEY = { name: "x" } as unknown as FrameKey;
 
-function warpOf(edge: SmoothEdge): Warp {
+function warpOf(edge: CurvilinearEdge): Warp {
   const spec = edge.spec;
   return {
     from: KEY,
     to: KEY,
     revision: 0,
-    smooth: spec,
+    curvilinear: spec,
     forward(p, out, jacobian) {
       spec.forward(p, spec.params, out, jacobian);
       return out;
@@ -38,7 +38,7 @@ function warpOf(edge: SmoothEdge): Warp {
   };
 }
 
-function routeOf(...edges: SmoothEdge[]): Route {
+function routeOf(...edges: CurvilinearEdge[]): Route {
   return {
     frame: KEY,
     base: KEY,
@@ -276,7 +276,7 @@ describe("composed boxes", () => {
   it("is undefined for a route with a step that has no bound, so it is sampled", () => {
     const route = routeOf(
       verticalExaggerationEdge({ factor: 3, ceiling: 9000 }),
-      smooth({
+      curvilinear({
         params: {},
         forward: (p, _params, out) => {
           out[0] = p[0]! * 1.5;

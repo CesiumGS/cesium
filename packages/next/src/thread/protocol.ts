@@ -82,7 +82,7 @@ const TABLE: Record<string, EntryTable> = {
       SectionPlaneInput SectionReport SectionRequest SectionResult
       SegmentDistance SelectionView ShaderControl ShaderOverrides ShaderUnit
       SigmaIn SkyOptions SkyPackManifest SlangCache SlangPostLayout
-      SlangPostShader SmoothEdge SmoothFrameSpec Stage StageInfo StageStats
+      SlangPostShader CurvilinearEdge CurvilinearFrameSpec Stage StageInfo StageStats
       StandingQuery StyleExpression StyleField StyleLayer StyleParameter
       StyleScale SubmissionMode SurfaceIdentity SurfacePatch SurfaceSample
       TerrainQueryOptions TerrainRayOptions TerrainRayPatch TerrainRayResult
@@ -177,15 +177,15 @@ const TABLE: Record<string, EntryTable> = {
     local: `
       EarthOrientationParameters Ephemeris FRAME_DATA_ROLES Frame
       MOON_ME_ORIENTATION_RADIANS PiecewiseFrame PiecewiseJumpError
-      SmoothFrame SwitchFrame Trajectory TwoVectorDegenerateError
+      CurvilinearFrame SwitchFrame Trajectory TwoVectorDegenerateError
       TwoVectorFrame accuracySpan angularVelocity axesAt
       celestialToTerrestrial convertPoint createFrameCatalog createFrames
       createFramesPickInterpreter createSkyState dominantTerm drawnThrough
       earthOrientationSigma eastNorthUpFrame frameBias framePoint
-      frameTransform frameVelocity isSmoothFrame isSwitchFrame loadFrameData
+      frameTransform frameVelocity isCurvilinearFrame isSwitchFrame loadFrameData
       loadFrameRoles parseOem pickIn piecewiseFrame pointAccuracy readSpk
       rigPreset rotationPart routeForward routeInverse routeLegs routeRevision
-      samplePath separationAccuracy skyState smoothEdgeOf smoothFrame
+      samplePath separationAccuracy skyState curvilinearEdgeOf curvilinearFrame
       switchFrame toParentMatrix truePick twoVectorFrame warpForward
       warpInverse
     `,

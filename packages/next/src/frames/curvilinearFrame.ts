@@ -1,5 +1,5 @@
-// A frame whose edge to its parent is smooth, not a 4×4 (docs/design/transform-graph.md, the
-// transform graph's `smooth` node): its coordinates map UP to the parent's by
+// A frame whose edge to its parent is curvilinear, not a 4×4 (docs/design/transform-graph.md, the
+// transform graph's `curvilinear` node): its coordinates map UP to the parent's by
 // `spec.forward`, the scene-graph direction. A deformer is placed over the
 // content it deforms: an "Earth content (exaggerated)" frame under ITRF whose
 // forward is the exaggeration, with terrain, tilesets, models and pins placed
@@ -11,11 +11,11 @@
 // `FrameResolver.resolve`) throws `NonRigidRouteError`.
 //
 // `switchFrame` is the same with the edge chosen per view (a variant set): a
-// smooth spec for each view, or none (the identity), so every view still sees
+// curvilinear spec for each view, or none (the identity), so every view still sees
 // a tree.
 import {
   NonRigidRouteError,
-  type SmoothFrameSpec,
+  type CurvilinearFrameSpec,
   type Warp,
 } from "../camera/route.ts";
 import { identity } from "../math/mat4.ts";
@@ -23,10 +23,10 @@ import type { ViewId } from "../transform/graph.ts";
 import { Frame } from "./Frame.ts";
 import type { FrameAccuracy } from "./frameAccuracy.ts";
 
-export type { SmoothFrameSpec };
+export type { CurvilinearFrameSpec };
 
 /**
- * A child of `parent` placed by a smooth edge: `p_parent = warp.forward(p)`,
+ * A child of `parent` placed by a curvilinear edge: `p_parent = warp.forward(p)`,
  * `p` in this frame. `warp` is live: it reads `spec` on every call, so
  * changing the spec's `revision` (a counter the application owns) is seen by
  * routes at once. Say so with `invalidate()` too, which also wakes whoever
@@ -35,12 +35,12 @@ export type { SmoothFrameSpec };
  * here, as a bound is not a σ; a warp stating neither is exact by definition
  * (an `accuracy` with only a note says the accuracy is unknown).
  */
-export class SmoothFrame<N extends string = string> extends Frame<N> {
+export class CurvilinearFrame<N extends string = string> extends Frame<N> {
   readonly warp: Warp;
   private readonly listeners = new Set<() => void>();
-  private readonly spec: SmoothFrameSpec;
+  private readonly spec: CurvilinearFrameSpec;
 
-  constructor(name: N, parent: Frame, spec: SmoothFrameSpec) {
+  constructor(name: N, parent: Frame, spec: CurvilinearFrameSpec) {
     super(
       name,
       parent,
@@ -80,27 +80,27 @@ export class SmoothFrame<N extends string = string> extends Frame<N> {
 }
 
 /**
- * A frame placed in `parent` by a smooth edge (`spec.forward`, this frame to
+ * A frame placed in `parent` by a curvilinear edge (`spec.forward`, this frame to
  * its parent), named `name`: `catalog.add(frame)` it, put content on it (an
  * anchor bound to it, a tileset, a globe) and routes through it carry the
  * warp as a step: forward from content up to the camera, inverse the other
  * way. Its `warp.from` is the frame and `warp.to` is `parent`.
  */
-export function smoothFrame<N extends string>(
+export function curvilinearFrame<N extends string>(
   name: N,
   parent: Frame,
-  spec: SmoothFrameSpec,
-): SmoothFrame<N> {
-  return new SmoothFrame(name, parent, spec);
+  spec: CurvilinearFrameSpec,
+): CurvilinearFrame<N> {
+  return new CurvilinearFrame(name, parent, spec);
 }
 
-/** Whether `f`'s edge to its parent is smooth. */
-export function isSmoothFrame(f: Frame): f is SmoothFrame {
-  return f instanceof SmoothFrame;
+/** Whether `f`'s edge to its parent is curvilinear. */
+export function isCurvilinearFrame(f: Frame): f is CurvilinearFrame {
+  return f instanceof CurvilinearFrame;
 }
 
-/** What a switch takes for a view: a smooth edge, or `"identity"` (the frame is its parent's coordinates, rigidly). */
-export type SwitchChoice = SmoothFrameSpec | "identity";
+/** What a switch takes for a view: a curvilinear edge, or `"identity"` (the frame is its parent's coordinates, rigidly). */
+export type SwitchChoice = CurvilinearFrameSpec | "identity";
 
 /** What `switchFrame` takes: a choice per view, and the one for a view not named. */
 export interface SwitchFrameOptions {
@@ -117,7 +117,7 @@ export interface SwitchFrameOptions {
 export class SwitchFrame<N extends string = string> extends Frame<N> {
   private readonly byView: ReadonlyMap<ViewId, SwitchChoice>;
   private readonly fallback: SwitchChoice | undefined;
-  private readonly warps = new Map<SmoothFrameSpec, Warp>();
+  private readonly warps = new Map<CurvilinearFrameSpec, Warp>();
   private readonly listeners = new Set<() => void>();
 
   constructor(name: N, parent: Frame, options: SwitchFrameOptions) {
@@ -212,25 +212,25 @@ export function isSwitchFrame(f: Frame): f is SwitchFrame {
 }
 
 /**
- * The warp `f`'s edge is for `view`: a smooth frame's, a switch's choice,
+ * The warp `f`'s edge is for `view`: a curvilinear frame's, a switch's choice,
  * undefined for any other frame and for a switch that chose the identity.
  */
-export function smoothEdgeOf(
+export function curvilinearEdgeOf(
   f: Frame,
   view: ViewId | undefined,
 ): Warp | undefined {
-  if (f instanceof SmoothFrame) {
+  if (f instanceof CurvilinearFrame) {
     return f.warp;
   }
   return f instanceof SwitchFrame ? f.edgeFor(view) : undefined;
 }
 
-/** Whether `f`'s edge can be non-rigid for some view: a smooth frame or a switch. */
+/** Whether `f`'s edge can be non-rigid for some view: a curvilinear frame or a switch. */
 export function isNonRigidFrame(f: Frame): boolean {
-  return f instanceof SmoothFrame || f instanceof SwitchFrame;
+  return f instanceof CurvilinearFrame || f instanceof SwitchFrame;
 }
 
-function firstSpec(options: SwitchFrameOptions): SmoothFrameSpec {
+function firstSpec(options: SwitchFrameOptions): CurvilinearFrameSpec {
   for (const choice of [...options.byView.values(), options.default]) {
     if (choice !== undefined && choice !== "identity") {
       return choice;
@@ -246,7 +246,7 @@ function firstSpec(options: SwitchFrameOptions): SmoothFrameSpec {
 }
 
 /** `spec` as a `Warp` from `from` to its parent `to`: it reads `spec` live. */
-function warpOf(spec: SmoothFrameSpec, from: Frame, to: Frame): Warp {
+function warpOf(spec: CurvilinearFrameSpec, from: Frame, to: Frame): Warp {
   const inverse = spec.inverse;
   return {
     from,
@@ -272,8 +272,8 @@ function warpOf(spec: SmoothFrameSpec, from: Frame, to: Frame): Warp {
     get lodExponent() {
       return spec.lodExponent;
     },
-    get smooth() {
-      return spec.smooth;
+    get curvilinear() {
+      return spec.curvilinear;
     },
     forward: (p, out, jacobian) => spec.forward(p, out, jacobian),
     ...(inverse !== undefined && {
@@ -282,7 +282,7 @@ function warpOf(spec: SmoothFrameSpec, from: Frame, to: Frame): Warp {
   };
 }
 
-function accuracyOf(spec: SmoothFrameSpec): FrameAccuracy {
+function accuracyOf(spec: CurvilinearFrameSpec): FrameAccuracy {
   const a = spec.accuracy;
   const what = spec.description ?? "a warp";
   if (a?.sigma !== undefined) {

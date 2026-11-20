@@ -6,15 +6,15 @@
 // The world keeps one draw per route shape instead:
 //
 //  - the views that draw the anchor are grouped by the shape of their route to
-//    their render root (`viewShape`: the smooth edges crossed, in order and
+//    their render root (`viewShape`: the curvilinear edges crossed, in order and
 //    direction, by the identity of the warp). One group is the common case and
 //    costs nothing: no draw is added and no mask touched;
 //  - with several, the anchor's own draws (the sources) belong to the primary
-//    group, the one of the first view that crosses a smooth edge, and each
+//    group, the one of the first view that crosses a curvilinear edge, and each
 //    other group gets a twin of every source its views show (`World.twinDraw`),
 //    made when a view of the group first shows it and removed when the group
 //    goes (its last view left, or its route changed shape) or the source does;
-//  - a twin of a group that crosses smooth edges is registered under a virtual
+//  - a twin of a group that crosses curvilinear edges is registered under a virtual
 //    anchor key of its own (`VIRTUAL_SLOT`), so the warp scheduler routes or
 //    fits it by the group's route as for any anchor (selection, fits, the
 //    compiled program, terrain's exact term); a twin of the identity group is
@@ -49,7 +49,7 @@ import type { World } from "../World.ts";
 import type { DrawHandle } from "./types.ts";
 import type { MirrorMemo, WarpView, WorldWarps } from "./warps.ts";
 
-/** The key a group's anchor has when its views cross no smooth edge: their twins are not warped. */
+/** The key a group's anchor has when its views cross no curvilinear edge: their twins are not warped. */
 export const IDENTITY_SLOT = -1;
 
 /** The first key of the virtual anchors a group other than the primary is warped as (real slots are far below). */
@@ -75,9 +75,9 @@ const shapes = new WeakMap<Route, string>();
 
 /**
  * What a route is made of apart from its rigid steps and its parameters'
- * values: the smooth edges it crosses, in order and direction, each by the
+ * values: the curvilinear edges it crosses, in order and direction, each by the
  * identity of its warp (a view that sets a slider for itself still reads the
- * same warp). "" for no route: the view crosses no smooth edge.
+ * same warp). "" for no route: the view crosses no curvilinear edge.
  */
 export function viewShape(route: Route | undefined): string {
   if (!route) {
@@ -90,7 +90,7 @@ export function viewShape(route: Route | undefined): string {
         if (s.kind !== "warp") {
           return [];
         }
-        const identity: object = s.warp.smooth ?? s.warp;
+        const identity: object = s.warp.curvilinear ?? s.warp;
         let id = ids.get(identity);
         if (id === undefined) {
           id = ++idCount;
@@ -112,7 +112,7 @@ export interface ViewGroup {
   mask: number;
   /** The views, the first the one whose route the group's anchor is made from. */
   views: readonly WarpView[];
-  /** The first view's route: undefined where the views cross no smooth edge. */
+  /** The first view's route: undefined where the views cross no curvilinear edge. */
   route: Route | undefined;
   /** The key of the group's anchor in the warp scheduler: the real slot for the primary group, a virtual one for another, `IDENTITY_SLOT` for none. */
   slot: number;
@@ -124,7 +124,7 @@ export interface ViewPart {
   readonly views: WarpView[];
 }
 
-/** Groups a slot's views by the shape of their routes: undefined when no view crosses a smooth edge. */
+/** Groups a slot's views by the shape of their routes: undefined when no view crosses a curvilinear edge. */
 export function partitionViews(
   slot: number,
   views: readonly WarpView[],
@@ -298,7 +298,7 @@ export class WorldVariants {
     ];
   }
 
-  /** The anchors whose views no longer cross smooth edges by routes of several shapes (all but `keep`) are dissolved. */
+  /** The anchors whose views no longer cross curvilinear edges by routes of several shapes (all but `keep`) are dissolved. */
   prune(keep: ReadonlySet<number>): void {
     for (const slot of [...this.#slots.keys()]) {
       if (!keep.has(slot)) {
@@ -309,7 +309,7 @@ export class WorldVariants {
 
   /**
    * The anchor key whose route the view draws the anchor by: undefined when
-   * its views cross no smooth edge. Selection of the view's tiles runs on it.
+   * its views cross no curvilinear edge. Selection of the view's tiles runs on it.
    */
   keyFor(slot: number, viewId: number): number | undefined {
     const state = this.#slots.get(slot);
@@ -327,7 +327,7 @@ export class WorldVariants {
 
   /**
    * The draw that shows `handle`'s content in the views whose route to the
-   * anchor has the shape of `route` (undefined: no smooth edge): the draw
+   * anchor has the shape of `route` (undefined: no curvilinear edge): the draw
    * itself, or its twin for that group.
    */
   drawFor(handle: DrawHandle, route: Route | undefined): DrawHandle {
@@ -487,7 +487,7 @@ export class WorldVariants {
     if (batch && (batch.billboard || batch.instanced || batch.patches)) {
       this.warps.say(
         "variants:kinds",
-        "warp: billboards, instanced draws and patch draws are drawn by the route of the first view that crosses a smooth edge, in every view of their anchor (only mesh draws have one draw for each shape of route).",
+        "warp: billboards, instanced draws and patch draws are drawn by the route of the first view that crosses a curvilinear edge, in every view of their anchor (only mesh draws have one draw for each shape of route).",
       );
     }
   }
@@ -537,7 +537,7 @@ export class WorldVariants {
     this.world.setCasterMask(source.handle, source.caster);
   }
 
-  /** The anchor's views agree again (or no view crosses a smooth edge): its twins go and its sources show what the owner asked. */
+  /** The anchor's views agree again (or no view crosses a curvilinear edge): its twins go and its sources show what the owner asked. */
   #dissolve(slot: number): void {
     const state = this.#slots.get(slot)!;
     this.#slots.delete(slot);

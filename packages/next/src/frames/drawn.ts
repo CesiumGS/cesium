@@ -1,6 +1,6 @@
 // True values and what was drawn (docs/design/geometry-through-placement-review.md, placement
 // increment 6; docs/design/transform-graph.md). A view may draw its content through a route that
-// crosses a smooth edge: a vertical exaggeration over the content's frame, a
+// crosses a curvilinear edge: a vertical exaggeration over the content's frame, a
 // reprojection. A pick, a snap or a measurement is about where the content
 // is, in the content's own frame, which names itself; this module says what
 // the view drew it through, so an answer can state "drawn ×10 vertically;

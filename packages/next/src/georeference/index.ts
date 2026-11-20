@@ -1,10 +1,10 @@
-// The geo smooth transforms (docs/design/transform-graph.md): the height-based
+// The geo curvilinear transforms (docs/design/transform-graph.md): the height-based
 // transforms of a body's ellipsoid (vertical exaggeration, height offset,
 // flatten) and the reprojection nodes between geographic, geocentric and
 // projected coordinates. Each is a descriptor like src/transforms/'s and a
-// constructor returning the `smooth` edge (`verticalExaggerationEdge`,
+// constructor returning the `curvilinear` edge (`verticalExaggerationEdge`,
 // `heightOffsetEdge`, `flatten`, …); `verticalExaggeration` and
-// `heightOffset` are the live helpers for a smooth frame (`smoothFrame`),
+// `heightOffset` are the live helpers for a curvilinear frame (`curvilinearFrame`),
 // and `Georeference` (placing a design model on a body) lives with the
 // tiles it places. The projections run geographic to projected (`utm`,
 // `transverseMercator`, `lambertConformalConic`, `webMercator`); the

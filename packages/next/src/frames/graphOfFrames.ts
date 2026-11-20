@@ -3,7 +3,7 @@ import type { Instant } from "../time/Instant.ts";
 import type { EdgeAccuracy } from "../transform/accuracy.ts";
 import {
   affine,
-  smooth,
+  curvilinear,
   switchEdge,
   TransformGraph,
   type Edge,
@@ -14,7 +14,7 @@ import type { FrameCatalog } from "./catalog.ts";
 import type { Frame } from "./Frame.ts";
 import { framePoint } from "./local.ts";
 import { pointAccuracy } from "./pointAccuracy.ts";
-import { isSwitchFrame, isSmoothFrame } from "./smoothFrame.ts";
+import { isSwitchFrame, isCurvilinearFrame } from "./curvilinearFrame.ts";
 
 /** A catalog's reference frames as affine nodes of a transform graph. */
 export interface FrameGraph {
@@ -43,7 +43,7 @@ export interface FrameGraph {
 /**
  * Represents the catalog's tree in use in a transform graph: each `Frame`
  * edge is an affine node whose matrix is `frame.toParent` at the route's
- * seconds (as `resolver.instant` reads them), a smooth frame a smooth node
+ * seconds (as `resolver.instant` reads them), a curvilinear frame a curvilinear node
  * with the same direction (up to its parent) and a switch frame a switch
  * node. The frames stay the source of truth and `FrameResolver` keeps
  * working; this is a view of them.
@@ -111,13 +111,13 @@ function edgeOfFrame(
   frame: Frame,
   resolver: { instant(seconds: number): Instant },
 ): Edge {
-  if (isSmoothFrame(frame)) {
-    return smoothEdgeOfWarp(frame.warp);
+  if (isCurvilinearFrame(frame)) {
+    return curvilinearEdgeOfWarp(frame.warp);
   }
   if (isSwitchFrame(frame)) {
     const { byView, default: fallback } = frame.edges();
     const plain = (warp: Warp | undefined): PlainEdge =>
-      warp ? smoothEdgeOfWarp(warp) : identityEdge();
+      warp ? curvilinearEdgeOfWarp(warp) : identityEdge();
     return switchEdge({
       byView: new Map([...byView].map(([view, warp]) => [view, plain(warp)])),
       ...(fallback !== null && { default: plain(fallback) }),
@@ -133,9 +133,9 @@ function edgeOfFrame(
 const identityEdge = () =>
   affine({ matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1] });
 
-/** A warp (local to parent, at the scale it has now) as a smooth node. */
-function smoothEdgeOfWarp(warp: Warp) {
-  return smooth({
+/** A warp (local to parent, at the scale it has now) as a curvilinear node. */
+function curvilinearEdgeOfWarp(warp: Warp) {
+  return curvilinear({
     id: warp.description ?? `${warp.from.name} to ${warp.to.name}`,
     params: {},
     forward: (p, _params, out, jacobian) => {

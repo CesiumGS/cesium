@@ -8,7 +8,7 @@ import { routeForward } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import type { Frame } from "../src/frames/Frame.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { boxBrep } from "./brepFixtures.ts";
 import { brepGeometry } from "../src/geometry/brep.ts";
 import { meshGeometry } from "../src/geometry/mesh.ts";
@@ -469,7 +469,7 @@ describe("which space a clip is tested in", () => {
 
   it("under a deformer over the content: a clip in the content's frame is true, one in the camera's root is drawn", () => {
     const s = scene((itrf) => {
-      const exaggerated = smoothFrame("exaggerated", itrf, {
+      const exaggerated = curvilinearFrame("exaggerated", itrf, {
         revision: 1,
         forward: (p, out, j) => exaggerate(10, p, out, j),
       });
@@ -489,7 +489,7 @@ describe("which space a clip is tested in", () => {
   it("under a datum shift of the content: a clip in the shifted frame is true, one in the root frame is drawn, one elsewhere is curved", () => {
     const s = scene((itrf) => {
       // The content's frame runs 100 m past ITRF in x.
-      const shifted = smoothFrame("shifted", itrf, {
+      const shifted = curvilinearFrame("shifted", itrf, {
         revision: 1,
         description: "datum shift",
         forward(p, out, jacobian) {
@@ -500,7 +500,7 @@ describe("which space a clip is tested in", () => {
           return out;
         },
       });
-      const elsewhere = smoothFrame("elsewhere", itrf, {
+      const elsewhere = curvilinearFrame("elsewhere", itrf, {
         revision: 1,
         description: "another deformer",
         forward(p, out, jacobian) {
@@ -524,7 +524,7 @@ describe("which space a clip is tested in", () => {
   });
   it("a view's table end to end: each set in its space, against float64 on the route", () => {
     const s = scene((itrf) => {
-      const exaggerated = smoothFrame("exaggerated", itrf, {
+      const exaggerated = curvilinearFrame("exaggerated", itrf, {
         revision: 1,
         forward: (p, out, j) => exaggerate(10, p, out, j),
       });
@@ -741,7 +741,7 @@ describe("queries", () => {
   it("points are routed into each set's own frame, in float64", () => {
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const itrf = catalog.get("ITRF");
-    const content = smoothFrame("content", itrf, {
+    const content = curvilinearFrame("content", itrf, {
       revision: 1,
       forward: (p, out, j) => exaggerate(10, p, out, j),
     });

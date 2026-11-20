@@ -1,5 +1,5 @@
-// A coordinate operation as a smooth edge (docs/design/geometry-through-placement-review.md, docs/design/transform-graph.md): a design
-// CRS's frame sits under the body-fixed frame (`smoothFrame(name, bodyFixed,
+// A coordinate operation as a curvilinear edge (docs/design/geometry-through-placement-review.md, docs/design/transform-graph.md): a design
+// CRS's frame sits under the body-fixed frame (`curvilinearFrame(name, bodyFixed,
 // spec)`), its coordinates map up to the body's through the operation, and
 // content placed in it keeps its design coordinates and is drawn at its true
 // place. It is built on `fromFunction`, so the Jacobian is numerical (see
@@ -51,7 +51,7 @@ function finite3(a: ArrayLike<number>, what: string): void {
 }
 
 /**
- * A coordinate operation as the smooth edge between a design CRS's frame and
+ * A coordinate operation as the curvilinear edge between a design CRS's frame and
  * its parent, the body-fixed frame: `forward` takes design coordinates to
  * body-fixed meters, the exact inverse the other way. `source` is a PROJ `RecordedOperation` or any `CoordinateOperation`
  * (the CRS's own coordinates, in its own units, to longitude and latitude in
@@ -59,7 +59,7 @@ function finite3(a: ArrayLike<number>, what: string): void {
  * service's answer), or an `EngineeringFrame` (whose `toBodyFixed` and
  * `fromBodyFixed` it is, a site transform included).
  *
- * Use it as `smoothFrame("design", bodyFixed, reprojectionWarp(source))`: the
+ * Use it as `curvilinearFrame("design", bodyFixed, reprojectionWarp(source))`: the
  * frame's points are the design CRS's coordinates in its own units, and its
  * parent's are body-fixed meters. The map to the body is the operation
  * followed by the body's ellipsoid and the map back is its exact reverse;

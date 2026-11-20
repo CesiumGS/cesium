@@ -149,7 +149,7 @@ export function Cameras() {
 
       <Section title="Under an exaggeration the camera stays still">
         <p>
-          A deformer, a smooth edge of the{" "}
+          A deformer, a curvilinear edge of the{" "}
           <a href="#/transform-graph">transform graph</a>, warps what sits under
           it, not the camera's frame. Vertical exaggeration puts the camera at
           ITRF and the deformer over the content's node, so the camera doesn't
@@ -164,9 +164,9 @@ export function Cameras() {
           scene in the transform graph gallery, with known gaps: streaming
           tilesets through it draw nothing, because selection works through a
           map with z ≤ 0; moving the camera re-derives every draw's route, at
-          250 to 400 ms a tick; and routes through a smooth step's inverse don't
-          compile. The general fix, an "eye step" evaluated in the vertex stage
-          from uniforms, is follow-up task 11 in the transform graph plan.
+          250 to 400 ms a tick; and routes through a curvilinear step's inverse
+          don't compile. The general fix, an "eye step" evaluated in the vertex
+          stage from uniforms, is follow-up task 11 in the transform graph plan.
         </p>
         <Written
           from="the design note docs/design/transform-graph.md, and the transform graph plan's task 11"

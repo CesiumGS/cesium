@@ -98,7 +98,7 @@ interface ViewState {
  * so a globe-only scene resolves nothing, and every placement stays at
  * the identity until `World.placeAnchor` is called.
  *
- * An anchor whose route to the root crosses a smooth edge (a smooth frame the
+ * An anchor whose route to the root crosses a curvilinear edge (a curvilinear frame the
  * anchor is bound to, or one between it and the root; `FrameResolver.route`) is placed by the route's affine part (its
  * rigid steps composed, the warps as identity) and marked with the route
  * (`View.anchorRoute`): its content is drawn warped, per vertex, by fits
@@ -595,7 +595,7 @@ export class CameraLayer {
 
   /**
    * An anchor's placement in `root`, or undefined after reporting why not.
-   * Rigid: the resolver's matrix, as ever. Across a smooth edge: the route's
+   * Rigid: the resolver's matrix, as ever. Across a curvilinear edge: the route's
    * affine part (its rigid steps composed, the warps as identity), the route
    * (for `view`, which a switch frame chooses by) left in `routed` for the
    * view to mark the anchor with; the warps are drawn per vertex
@@ -810,7 +810,7 @@ export class CameraLayer {
   ): void {
     const reason =
       error instanceof NonRigidRouteError
-        ? `${error.frame} to ${error.base} crosses a smooth edge, so it has no rigid placement: a rig's frames (position, anchor, orientation) must reach its render root rigidly (put the rig at a frame reached rigidly from them), and content across a smooth edge needs a resolver with route()`
+        ? `${error.frame} to ${error.base} crosses a curvilinear edge, so it has no rigid placement: a rig's frames (position, anchor, orientation) must reach its render root rigidly (put the rig at a frame reached rigidly from them), and content across a curvilinear edge needs a resolver with route()`
         : error instanceof Error
           ? error.message
           : String(error);

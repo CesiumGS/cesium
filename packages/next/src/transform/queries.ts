@@ -84,7 +84,7 @@ export function singularRange(j: ArrayLike<number>): [number, number] {
 
 /**
  * `point` in `node`: the route from the point's node, evaluated in float64
- * (a smooth edge by its function, an undone one by its inverse), with its
+ * (a curvilinear edge by its function, an undone one by its inverse), with its
  * Jacobian's stretch and the accuracy carried along it.
  */
 export function pointIn(
@@ -134,7 +134,7 @@ export interface MeasureIn {
   /**
    * The length of the polyline of the images of the straight segments
    * between consecutive points, where both ends are at one node (a straight
-   * segment of the content is a curve in `node` when a smooth edge is on the
+   * segment of the content is a curve in `node` when a curvilinear edge is on the
    * route); the chord where they are not. m.
    */
   readonly pathLength: number;

@@ -214,7 +214,7 @@ const KINDS = [
     what: "In the transform graph",
     frame: "Affine nodes (`graphOfFrames`), on demand",
     placement:
-      "A chain of nodes from the CRS to a body frame: affine for a site transform, smooth for a projection",
+      "A chain of nodes from the CRS to a body frame: affine for a site transform, curvilinear for a projection",
   },
 ];
 
@@ -231,14 +231,14 @@ const CRS_ROUTES = [
     crs: "Geographic (longitude, latitude, height)",
     route:
       "A datum shift when it isn't the body's, then geographic to geocentric",
-    edge: "Smooth, compiled",
+    edge: "Curvilinear, compiled",
     built:
       "`geographicToGeocentric`. A datum shift or any PROJ operation is `reprojectionWarp(operation)` from `/proj`, which is fitted",
   },
   {
     crs: "Projected (x, y, height in a 2D projection)",
     route: "The projection's inverse to geographic, then as above",
-    edge: "Smooth, compiled",
+    edge: "Curvilinear, compiled",
     built:
       "`utmToGeographic`, `transverseMercatorToGeographic`, `lambertConformalConicToGeographic` or `webMercatorToGeographic`, under `geographicToGeocentric`",
   },
@@ -246,7 +246,7 @@ const CRS_ROUTES = [
     crs: "Compound (horizontal plus vertical)",
     route:
       "The vertical CRS's step to ellipsoidal height, then as projected or geographic",
-    edge: "Smooth, compiled",
+    edge: "Curvilinear, compiled",
     built:
       "The nodes above take ellipsoidal heights. Geoid models (`GeoidModel`) are in `/proj`",
   },
@@ -256,7 +256,7 @@ const CRS_ROUTES = [
       "The node's translation, rotation and scale (the site transform), then the anchor's east-north-up frame, then geocentric",
     edge: "Rigid (affine)",
     built:
-      "An affine node: no smooth edge, so no warp and no pipeline. The site transform is what an engineering frame holds",
+      "An affine node: no curvilinear edge, so no warp and no pipeline. The site transform is what an engineering frame holds",
   },
   {
     crs: "Local, with neither",
@@ -319,7 +319,7 @@ export function Georeferencing() {
           declared CRS selects the route, so there is no placement mode. The
           route is a chain of nodes in the{" "}
           <a href="#/transform-graph">transform graph</a>: affine for a site
-          transform, smooth for a projection.
+          transform, curvilinear for a projection.
         </>
       }
     >
@@ -661,9 +661,9 @@ export function Georeferencing() {
           &quot;can&apos;t tell&quot; is an honest answer. Reference frames and
           points carry accuracy statements (<C>Frame.accuracy</C>,{" "}
           <C>pointAccuracy</C>), and revisions let anything that cached an
-          answer know when a route has changed. A smooth node adds its own, and{" "}
-          <C>accuracyAlong</C> carries a point&apos;s σ through the whole route:
-          see the <a href="#/transform-graph">Transform graph tab</a>.
+          answer know when a route has changed. A curvilinear node adds its own,
+          and <C>accuracyAlong</C> carries a point&apos;s σ through the whole
+          route: see the <a href="#/transform-graph">Transform graph tab</a>.
         </p>
 
         <h3>The data behind it</h3>

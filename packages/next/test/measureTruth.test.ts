@@ -21,7 +21,7 @@ import { framePoint } from "../src/frames/local.ts";
 import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
 import { createFramesPickInterpreter } from "../src/frames/pickInterpreter.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { fromFunction } from "../src/transforms/fromFunction.ts";
 import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
 import { accuracyOf } from "../src/measure/accuracy.ts";
@@ -57,7 +57,7 @@ function exaggerated(factor = 1, scale?: { value: number }) {
     factor,
     ...(scale && { scale }),
   });
-  const content = smoothFrame("content", itrf, spec);
+  const content = curvilinearFrame("content", itrf, spec);
   catalog.add(content);
   const resolver = createFramesResolver(catalog);
   return {

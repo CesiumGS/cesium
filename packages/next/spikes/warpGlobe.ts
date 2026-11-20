@@ -7,7 +7,7 @@
 //
 //   green    a terrain tile carrying h·n̂ (exact in height, no fit)
 //   blue     the same tile without it (drawn by the compiled route: the
-//            helper's warp has a smooth spec; a fit if the compiler refuses)
+//            helper's warp has a curvilinear spec; a fit if the compiler refuses)
 //   red      a billboard, anchored (its anchor goes through the route)
 //   yellow   a pole, `warpAt: "anchor"` (moved rigidly, not stretched)
 //
@@ -22,7 +22,7 @@ import { routeForward } from "../src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  smoothFrame,
+  curvilinearFrame,
 } from "../src/frames/index.ts";
 import { verticalExaggeration } from "../src/georeference/index.ts";
 import { HEIGHT_NORMAL_ATTRIBUTE } from "../src/globe/heightNormal.ts";
@@ -194,7 +194,7 @@ async function runWarpGlobe(): Promise<WarpGlobeResult> {
     const itrf = catalog.get("ITRF");
     const scale = world.createPlacementParameter(1, { range: [0, 1] });
     const exaggeration = verticalExaggeration({ factor: K, scale });
-    const exaggerated = smoothFrame("exaggerated", itrf, exaggeration);
+    const exaggerated = curvilinearFrame("exaggerated", itrf, exaggeration);
     catalog.add(exaggerated);
     const resolver = createFramesResolver(catalog);
     engine.cameras.setResolver(world, resolver);

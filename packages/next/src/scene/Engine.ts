@@ -262,7 +262,7 @@ const VIEW_KEY_LENGTH = 33;
 export interface GlobeOptions extends TilesetOptions {
   /**
    * The frame the globe's terrain and imagery are placed in (`Globe.frame`):
-   * its anchor is bound to it, so a smooth edge between it and the camera's
+   * its anchor is bound to it, so a curvilinear edge between it and the camera's
    * root draws the globe through it. Default the body-fixed frame. Needs a
    * frame resolver that binds anchors.
    */
@@ -1802,7 +1802,7 @@ export class Engine {
 
   /**
    * Steps each world's warp context (`WorldWarps.frame`): the routes of the
-   * anchors each of its views placed across a smooth edge, to that view's
+   * anchors each of its views placed across a curvilinear edge, to that view's
    * render root. True while fits are pending.
    */
   private warpTick(budgetMs: number): boolean {

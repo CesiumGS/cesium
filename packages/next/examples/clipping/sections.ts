@@ -1,9 +1,9 @@
 import type { ClipSet, ClipShape } from "@cesium/next";
 import {
-  smoothFrame,
+  curvilinearFrame,
   type Frame,
   type FrameCatalog,
-  type SmoothFrame,
+  type CurvilinearFrame,
 } from "@cesium/next/frames";
 import {
   add,
@@ -183,8 +183,8 @@ export const bendAt = (east: number, north: number): number =>
 
 /**
  * A design frame under ITRF whose heights wave along the site's up axis: a
- * node whose smooth edge takes its own coordinates (design) to ITRF's
- * (`smoothFrame`, with its Jacobian and its inverse written out). A plane
+ * node whose curvilinear edge takes its own coordinates (design) to ITRF's
+ * (`curvilinearFrame`, with its Jacobian and its inverse written out). A plane
  * named in it is a rigid plane in no frame the content or the view is in
  * (both are at ITRF), so the engine cuts it along a signed distance fitted
  * per draw (a curved clip), the route from the content down through the edge.
@@ -192,7 +192,7 @@ export const bendAt = (east: number, north: number): number =>
 export function createDesignFrame(
   catalog: FrameCatalog,
   site: Site,
-): SmoothFrame<"design"> {
+): CurvilinearFrame<"design"> {
   const [east, north, up] = site.axes;
   /** East and north of `p` about the site, m. */
   const horizontal = (p: ArrayLike<number>) => {
@@ -203,7 +203,7 @@ export function createDesignFrame(
     ];
     return [dot(d, east), dot(d, north)] as const;
   };
-  const frame = smoothFrame("design", catalog.get("ITRF") as Frame, {
+  const frame = curvilinearFrame("design", catalog.get("ITRF") as Frame, {
     revision: 1,
     description: "a design frame whose heights wave",
     forward(p, out, jacobian) {

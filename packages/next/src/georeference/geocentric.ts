@@ -7,7 +7,7 @@
 // ellipsoid (Newton, as in ellipsoid.ts), valid away from the center. The
 // Jacobians are closed form (the second is the first's inverse at the
 // result), and each node's inverse is the other's function.
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import { edgeOf, type TransformDescriptor } from "../transforms/descriptor.ts";
 import {
   footSource,
@@ -224,13 +224,13 @@ export function geocentricToGeographicDescriptor(
 /** Longitude, latitude (degrees) and height to body-fixed meters on the ellipsoid of `radii` (default WGS84). */
 export function geographicToGeocentric(
   options: { radii?: Radii } = {},
-): SmoothEdge {
+): CurvilinearEdge {
   return edgeOf(geographicToGeocentricDescriptor(options.radii));
 }
 
 /** Body-fixed meters to longitude, latitude (degrees) and height on the ellipsoid of `radii` (default WGS84). */
 export function geocentricToGeographic(
   options: { radii?: Radii } = {},
-): SmoothEdge {
+): CurvilinearEdge {
   return edgeOf(geocentricToGeographicDescriptor(options.radii));
 }

@@ -10,7 +10,7 @@
 // displacement. Outside the lattice the polynomial continues (Sederberg and
 // Parry define it inside, s, t, u in [0, 1]). No closed-form inverse: a
 // route solves by Newton with J = I + Σ d_ijk ⊗ ∇B_ijk.
-import type { Params, SmoothEdge } from "../transform/graph.ts";
+import type { Params, CurvilinearEdge } from "../transform/graph.ts";
 import {
   edgeOf,
   type ParamSpec,
@@ -252,7 +252,7 @@ export function lattice(options: {
   displacements?:
     | ArrayLike<number>
     | ((i: number, j: number, k: number) => ArrayLike<number>);
-}): SmoothEdge {
+}): CurvilinearEdge {
   const degree = options.degree ?? [2, 2, 2];
   const descriptor = latticeDescriptor(degree);
   const [l, m, n] = degree;

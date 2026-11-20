@@ -1,4 +1,8 @@
-import { isSmoothFrame, isSwitchFrame, type Frame } from "@cesium/next/frames";
+import {
+  isCurvilinearFrame,
+  isSwitchFrame,
+  type Frame,
+} from "@cesium/next/frames";
 import { el } from "./ui.ts";
 
 /** What sits at a node of the graph: content, or the camera. */
@@ -11,17 +15,17 @@ export interface Placement {
 /** What the panel draws: the nodes placements sit at, with their ancestors up to the root. */
 export interface GraphSpec {
   readonly placements: readonly Placement[];
-  /** Words for a node's edge, read again on `refresh()` (a slider's value); the smooth edge's own description when it returns nothing. */
+  /** Words for a node's edge, read again on `refresh()` (a slider's value); the curvilinear edge's own description when it returns nothing. */
   readonly detail?: (frame: Frame) => string | undefined;
 }
 
-export type NodeKind = "root" | "affine" | "smooth" | "switch";
+export type NodeKind = "root" | "affine" | "curvilinear" | "switch";
 
 export const kindOf = (frame: Frame): NodeKind =>
   frame.parent === undefined
     ? "root"
-    : isSmoothFrame(frame)
-      ? "smooth"
+    : isCurvilinearFrame(frame)
+      ? "curvilinear"
       : isSwitchFrame(frame)
         ? "switch"
         : "affine";
@@ -227,13 +231,13 @@ export function createGraphPanel(): GraphPanel {
         break;
       }
     }
-    const smooth = route.steps.filter((s) => s.kind === "smooth");
+    const curvilinear = route.steps.filter((s) => s.kind === "curvilinear");
     const switches = route.steps.filter((s) => s.kind === "switch");
     const affineEdges = route.steps.filter(
       (s) => s.kind === "affine" || s.kind === "root",
     ).length;
     const parts: string[] = [];
-    for (const s of smooth) {
+    for (const s of curvilinear) {
       parts.push(
         `${s.frame.name}, ${s.down ? "inverse (down, by its inverse or Newton)" : "forward (up)"}`,
       );
@@ -242,7 +246,7 @@ export function createGraphPanel(): GraphPanel {
       parts.push(`switch ${s.frame.name}, as this view chooses`);
     }
     routeLine.textContent = `${lastLabel ?? "The pick"}: ${
-      parts.length > 0 ? `${parts.join("; ")}` : "no smooth step"
+      parts.length > 0 ? `${parts.join("; ")}` : "no curvilinear step"
     }${
       affineEdges > 0
         ? `${parts.length > 0 ? "; " : ""}${affineEdges} affine ${affineEdges === 1 ? "edge" : "edges"}, collapsed to one matrix`
@@ -271,13 +275,13 @@ export function createGraphPanel(): GraphPanel {
 
 /** The words an edge says of itself. */
 function describe(frame: Frame): string | undefined {
-  if (isSmoothFrame(frame)) {
+  if (isCurvilinearFrame(frame)) {
     return frame.warp.description;
   }
   if (isSwitchFrame(frame)) {
     const edges = frame.edges();
     const name = (w: { description?: string } | undefined) =>
-      w ? (w.description ?? "smooth") : "identity";
+      w ? (w.description ?? "curvilinear") : "identity";
     const distinct = new Set<string>([
       ...[...edges.byView.values()].map(name),
       ...(edges.default !== null ? [name(edges.default)] : []),

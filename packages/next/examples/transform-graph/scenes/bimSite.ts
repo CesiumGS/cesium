@@ -10,7 +10,7 @@ import {
   type Tileset3D,
   type View,
 } from "@cesium/next";
-import { Frame, smoothFrame } from "@cesium/next/frames";
+import { Frame, curvilinearFrame } from "@cesium/next/frames";
 import {
   addMeshDraw,
   addOsmBuildings,
@@ -172,7 +172,7 @@ export const bimSite: Scene = {
       toUtm.spec.params,
       corner,
     );
-    const geographic = smoothFrame(
+    const geographic = curvilinearFrame(
       "Geographic to geocentric",
       deformer.frame,
       liveEdge(geographicToGeocentric(), {
@@ -180,7 +180,7 @@ export const bimSite: Scene = {
       }),
     );
     host.catalog.add(geographic);
-    const utmFrame = smoothFrame(
+    const utmFrame = curvilinearFrame(
       "UTM 48S (grid E, N, height)",
       geographic,
       liveEdge(utmToGeographic({ zone: 48, hemisphere: "south" }), {

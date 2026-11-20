@@ -1,4 +1,4 @@
-// The built-in smooth transforms (plan 2026-11-12, task 3): each descriptor's
+// The built-in curvilinear transforms (plan 2026-11-12, task 3): each descriptor's
 // float64 TS function against the IR parsed from its source (values, and the
 // analytic Jacobian against the IR's automatic one), inverse round trips,
 // the declared linear parameters, known projection values, the frames

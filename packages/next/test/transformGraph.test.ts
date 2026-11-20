@@ -1,5 +1,5 @@
 // The transform graph's CPU side (docs/design/transform-graph.md, task 1): nodes,
-// routes through the lowest common ancestor, collapsed affine runs, smooth
+// routes through the lowest common ancestor, collapsed affine runs, curvilinear
 // nodes inverted by declaration or by Newton, switches chosen per view, and
 // the frames catalog as affine nodes.
 import { describe, expect, it } from "vitest";
@@ -10,12 +10,12 @@ import { createFramesResolver } from "../src/frames/resolver.ts";
 import {
   affine,
   routeBetween,
-  smooth,
+  curvilinear,
   switchEdge,
   TransformGraph,
   type Params,
   type PlainEdge,
-  type SmoothSpec,
+  type CurvilinearSpec,
 } from "../src/transform/index.ts";
 
 const translate = (x: number, y: number, z: number): number[] => [
@@ -68,8 +68,8 @@ const near = (a: ArrayLike<number>, b: ArrayLike<number>, digits = 9) => {
   }
 };
 
-/** Twist about z by k·z radians per meter: a smooth map with a Jacobian and an exact inverse. */
-function twist(extra: Partial<SmoothSpec> = {}): SmoothSpec {
+/** Twist about z by k·z radians per meter: a curvilinear map with a Jacobian and an exact inverse. */
+function twist(extra: Partial<CurvilinearSpec> = {}): CurvilinearSpec {
   const rotate = (
     p: ArrayLike<number>,
     sign: number,
@@ -91,7 +91,7 @@ function twist(extra: Partial<SmoothSpec> = {}): SmoothSpec {
 }
 
 /** Scale heights about `h0` by `k`: the exaggeration of an Earth's content. */
-const exaggerate = (extra: Partial<SmoothSpec> = {}): SmoothSpec => ({
+const exaggerate = (extra: Partial<CurvilinearSpec> = {}): CurvilinearSpec => ({
   id: "exaggerate",
   params: { k: 3, h0: 100 },
   forward: (p, params, out, jacobian) => {
@@ -172,7 +172,7 @@ describe("affine routes", () => {
   });
 });
 
-describe("smooth routes", () => {
+describe("curvilinear routes", () => {
   const graph = new TransformGraph();
   const world = graph.root("world");
   const shear = graph.add(
@@ -180,11 +180,11 @@ describe("smooth routes", () => {
     world,
     affine({ matrix: turn(0.2, 1.5, 1, 2, 3) }),
   );
-  const declared = graph.add("declared", shear, smooth(twist()));
+  const declared = graph.add("declared", shear, curvilinear(twist()));
   const solved = graph.add(
     "solved",
     shear,
-    smooth(twist({ id: "twist", inverse: undefined })),
+    curvilinear(twist({ id: "twist", inverse: undefined })),
   );
   const leaf = graph.add(
     "leaf",
@@ -195,7 +195,7 @@ describe("smooth routes", () => {
 
   it("rotates by the parameter, and says so in its steps", () => {
     const route = routeBetween(declared, world);
-    expect(route.steps.map((s) => s.kind)).toEqual(["smooth", "affine"]);
+    expect(route.steps.map((s) => s.kind)).toEqual(["curvilinear", "affine"]);
     const out = new Float64Array(3);
     twist().forward([30, -20, 55], { k: 0.002 }, out);
     near(route.forward(p), routeBetween(shear, world).forward(out));
@@ -211,12 +211,12 @@ describe("smooth routes", () => {
     near(down.forward(routeBetween(solved, world).forward(p)), p, 8);
   });
 
-  it("round trips a mixed route up through one smooth node and down through another", () => {
+  it("round trips a mixed route up through one curvilinear node and down through another", () => {
     const route = routeBetween(leaf, solved);
     expect(route.steps.map((s) => s.kind)).toEqual([
       "affine",
-      "smooth",
-      "smooth",
+      "curvilinear",
+      "curvilinear",
     ]);
     near(route.inverse(route.forward(p)), p, 7);
     const back = routeBetween(solved, leaf);
@@ -251,7 +251,7 @@ describe("smooth routes", () => {
   it("uses a function's own Jacobian, and the inverse of it down a route", () => {
     const g = new TransformGraph();
     const root = g.root("root");
-    const node = g.add("node", root, smooth(exaggerate()));
+    const node = g.add("node", root, curvilinear(exaggerate()));
     const j = routeBetween(node, root).jacobian([1, 2, 3]);
     expect(Array.from(j)).toEqual([1, 0, 0, 0, 1, 0, 0, 0, 3]);
     const down = routeBetween(root, node).jacobian([1, 2, 103]);
@@ -264,7 +264,7 @@ describe("smooth routes", () => {
     const flat = g.add(
       "flat",
       root,
-      smooth({
+      curvilinear({
         id: "flat",
         params: {},
         forward: (p, _params, out) => {
@@ -284,7 +284,7 @@ describe("parameters", () => {
   it("are held by the graph, with a per-view override, and move the route's revision", () => {
     const g = new TransformGraph();
     const root = g.root("root");
-    const node = g.add("node", root, smooth(exaggerate()));
+    const node = g.add("node", root, curvilinear(exaggerate()));
     const main = routeBetween(node, root, { view: "main" });
     const inset = routeBetween(node, root, { view: "inset" });
     expect(main.forward([0, 0, 200])[2]).toBe(400);
@@ -310,7 +310,7 @@ describe("switch nodes", () => {
     switchEdge({
       byView: new Map<string, PlainEdge>([
         ["plan", affine({ matrix: translate(100, 0, 0) })],
-        ["profile", smooth(twist())],
+        ["profile", curvilinear(twist())],
       ]),
       default: affine({ matrix: translate(0, 0, 0) }),
     }),
@@ -359,8 +359,12 @@ describe("shape keys", () => {
   it("are the node kinds without values, and differ with structure", () => {
     const g = new TransformGraph();
     const root = g.root("root");
-    const warp = g.add("warp", root, smooth(exaggerate()));
-    const solved = g.add("solved", root, smooth(twist({ inverse: undefined })));
+    const warp = g.add("warp", root, curvilinear(exaggerate()));
+    const solved = g.add(
+      "solved",
+      root,
+      curvilinear(twist({ inverse: undefined })),
+    );
     const plain = g.add("plain", root, affine({ matrix: translate(1, 2, 3) }));
     expect(routeBetween(warp, root).shapeKey).toBe("+exaggerate");
     expect(routeBetween(root, warp).shapeKey).toBe("-exaggerate~");
@@ -376,7 +380,7 @@ describe("shape keys", () => {
 describe("placement decides what is warped", () => {
   const graph = new TransformGraph();
   const display = graph.root("display");
-  const earth = graph.add("earth", display, smooth(exaggerate()));
+  const earth = graph.add("earth", display, curvilinear(exaggerate()));
   const moon = graph.add(
     "moon",
     display,
@@ -456,7 +460,7 @@ describe("a switch's views", () => {
         byView: new Map<string, PlainEdge>([
           ["a", shared],
           ["b", shared],
-          ["c", smooth(twist())],
+          ["c", curvilinear(twist())],
         ]),
       }),
     );

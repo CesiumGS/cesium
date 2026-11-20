@@ -17,7 +17,7 @@ import { pickIn, graphOfCameraRoute } from "../src/frames/pickIn.ts";
 import { pointAccuracy } from "../src/frames/pointAccuracy.ts";
 import { locatePick, truePick } from "../src/frames/pickTruth.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import {
   geocentricToGeographic,
   utm,
@@ -45,7 +45,7 @@ import {
   measureIn,
   pointIn,
   routeBetween,
-  smooth,
+  curvilinear,
   subdivisionFor,
   taylorBounds,
   TransformGraph,
@@ -179,9 +179,9 @@ function lensRoute() {
   return { graph, route: routeBetween(content, world) };
 }
 
-/** A z-stretch by `k` with its IR source: the simplest smooth edge with a closed form. */
+/** A z-stretch by `k` with its IR source: the simplest curvilinear edge with a closed form. */
 function stretch(k: number, accuracy?: number) {
-  return smooth({
+  return curvilinear({
     id: "stretch",
     params: { k },
     forward: (p, params, out) => {
@@ -207,7 +207,7 @@ describe("Route.walk", () => {
     const end = route.walk(p, (edge) => {
       seen.push(`${edge.node.name}:${edge.kind}`);
     });
-    expect(seen).toEqual(["content:affine", "ex:smooth", "view:affine"]);
+    expect(seen).toEqual(["content:affine", "ex:curvilinear", "view:affine"]);
     near(end, route.forward(p), 1e-9);
   });
 
@@ -250,7 +250,7 @@ describe("accuracy along a route", () => {
     );
   });
 
-  it("adds a smooth node's declared σ at its output and carries it through the edges after", () => {
+  it("adds a curvilinear node's declared σ at its output and carries it through the edges after", () => {
     const g = new TransformGraph();
     const root = g.root("root");
     const outer = g.add("outer", root, stretch(2));
@@ -261,7 +261,7 @@ describe("accuracy along a route", () => {
     near(a.covariance, [0.75, 0, 0, 0, 0.75, 0, 0, 0, 3], 1e-12);
     expect(a.parts.map((p) => [p.node, p.kind])).toEqual([
       ["input", "input"],
-      ["inner", "smooth"],
+      ["inner", "curvilinear"],
     ]);
     expect(a.parts[1]!.meters).toBeCloseTo(Math.sqrt(0.75 * 2 + 3), 12);
   });
@@ -485,7 +485,7 @@ describe("a core pick in any node", () => {
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF", { user: "application" });
   const warp = frameExaggeration({ factor: 10 });
-  const content = smoothFrame("Earth content (exaggerated)", itrf, warp);
+  const content = curvilinearFrame("Earth content (exaggerated)", itrf, warp);
   catalog.add(content);
   const drawnFrame = itrf;
   const pad = eastNorthUpFrame(
@@ -670,7 +670,7 @@ describe("Taylor-model bounds against sampling", () => {
 
   const earth = [1200, -800, 1500];
 
-  /** Where the Taylor model is as tight as sampling: smooth maps whose interval derivatives don't swell. */
+  /** Where the Taylor model is as tight as sampling: curvilinear maps whose interval derivatives don't swell. */
   const tight: Array<[string, Route, number[], number[]]> = [
     ["twist", twistRoute().route, earth, [50, 500, 5000]],
     ["lens", lensRoute().route, [0, 0, 0], [1, 5]],
@@ -748,7 +748,7 @@ describe("Taylor-model bounds against sampling", () => {
     const folded = g.add(
       "folded",
       root,
-      smooth({
+      curvilinear({
         id: "fold",
         params: {},
         forward: (p, _params, out) => {
@@ -771,7 +771,7 @@ describe("Taylor-model bounds against sampling", () => {
     const stepped = g.add(
       "stepped",
       root,
-      smooth({
+      curvilinear({
         id: "floor",
         params: {},
         forward: (p, _params, out) => {
@@ -956,7 +956,7 @@ describe("clip sets placed at nodes", () => {
     shapes: [{ kind: "plane", point: [0, 0, 50], normal: [0, 0, 1] }],
   };
 
-  it("answers a rigid route with the matrix, and a smooth one with NonRigidRouteError", () => {
+  it("answers a rigid route with the matrix, and a curvilinear one with NonRigidRouteError", () => {
     const out = new Float64Array(16);
     resolver.resolve(design, world, 0, out);
     near(out, translate(100, 0, 0), 1e-12);

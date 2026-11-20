@@ -29,7 +29,7 @@
 // - **Accuracy.** A field's `errorBound` is the largest residual at 9³
 //   points per cell against the float64 distance (`status`), the distance's
 //   kinks (a box's edge, a union's crease) included: the cut is that
-//   accurate where the surface is smooth. The vertex stage's value is
+//   accurate where the surface is curvilinear. The vertex stage's value is
 //   interpolated between vertices, so the cut also follows the mesh's chords,
 //   as the drawn surface does.
 // - **Not covered.** Billboards, point sets and instanced draws (they have no

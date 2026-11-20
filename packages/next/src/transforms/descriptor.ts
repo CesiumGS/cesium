@@ -1,17 +1,17 @@
-// What a built-in smooth transform is (plan 2026-11-12, task 3): a
+// What a built-in curvilinear transform is (plan 2026-11-12, task 3): a
 // descriptor that carries the float64 TS function with its analytic
 // Jacobian, the same function as restricted-JS text (so the compiler can
 // use the IR, and a test checks the two agree), and which parameters enter
 // linearly. A constructor turns a descriptor and parameter values into the
-// `smooth` edge the graph takes.
+// `curvilinear` edge the graph takes.
 import {
-  smooth,
+  curvilinear,
   type BoundRegion,
   type DeclaredBound,
   type Params,
-  type SmoothEdge,
-  type SmoothForward,
-  type SmoothInverse,
+  type CurvilinearEdge,
+  type CurvilinearForward,
+  type CurvilinearInverse,
 } from "../transform/graph.ts";
 
 /** One parameter: its starting value and the range it is valid in. */
@@ -37,12 +37,12 @@ export interface TransformDescriptor {
   /** The parameters by name, in the order the Slang parameter struct lists them. */
   readonly params: Readonly<Record<string, ParamSpec>>;
   /** Float64, writing the 3×3 Jacobian (column-major) when asked. */
-  readonly forward: SmoothForward;
+  readonly forward: CurvilinearForward;
   /** The closed-form inverse; left out, a route solves by Newton. */
-  readonly inverse?: SmoothInverse;
+  readonly inverse?: CurvilinearInverse;
   /** The parameters the output is affine in (displacement ∝ parameter). */
   readonly separable: readonly string[];
-  /** The separable parameters' values at which the function is the identity (`SmoothSpec.identity`). */
+  /** The separable parameters' values at which the function is the identity (`CurvilinearSpec.identity`). */
   readonly identity?: Readonly<Record<string, number>>;
   /**
    * A closed-form bound on the Jacobian over a parallelepiped (`BoundRegion`),
@@ -52,7 +52,7 @@ export interface TransformDescriptor {
    * route through the transform is sampled.
    */
   readonly bound?: (region: BoundRegion, ranges: ParamRanges) => DeclaredBound;
-  /** Which sides are geographic coordinates (`SmoothSpec.geographic`). */
+  /** Which sides are geographic coordinates (`CurvilinearSpec.geographic`). */
   readonly geographic?: { readonly in?: boolean; readonly out?: boolean };
   /** `forward` as restricted-JS text: it parses with `parseTransform` to the same function. */
   readonly source: string;
@@ -98,13 +98,13 @@ export function checkParams(
   }
 }
 
-/** The `smooth` edge of a descriptor, with `values` over its defaults. */
+/** The `curvilinear` edge of a descriptor, with `values` over its defaults. */
 export function edgeOf(
   descriptor: TransformDescriptor,
   values: Params = {},
-): SmoothEdge {
+): CurvilinearEdge {
   checkParams(descriptor, values);
-  return smooth({
+  return curvilinear({
     id: descriptor.id,
     forward: descriptor.forward,
     ...(descriptor.inverse !== undefined && { inverse: descriptor.inverse }),

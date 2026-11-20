@@ -89,16 +89,16 @@ export {
 } from "./warpMaps.ts";
 export { truePick, type TruePick, type TruthHow } from "./pickTruth.ts";
 export {
-  smoothFrame,
-  SmoothFrame,
+  curvilinearFrame,
+  CurvilinearFrame,
   switchFrame,
   SwitchFrame,
-  isSmoothFrame,
+  isCurvilinearFrame,
   isSwitchFrame,
-  smoothEdgeOf,
+  curvilinearEdgeOf,
   type SwitchChoice,
   type SwitchFrameOptions,
-} from "./smoothFrame.ts";
+} from "./curvilinearFrame.ts";
 // The frame graph for a panel or a report, and a pick read in any node of it.
 export { graphOfFrames, type FrameGraph } from "./graphOfFrames.ts";
 export {

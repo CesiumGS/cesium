@@ -619,5 +619,5 @@ export const DECISIONS: readonly DecisionNote[] = [
 ];
 
 export const COMING = [
-  "Subdividing ordinary meshes: the dice serves b-reps only. A spike subdivides a mesh under a smooth route by the route's height, but it isn't wired in, so nothing subdivides a model under a route yet. The Tessellation tab lists what else isn't built.",
+  "Subdividing ordinary meshes: the dice serves b-reps only. A spike subdivides a mesh under a curvilinear route by the route's height, but it isn't wired in, so nothing subdivides a model under a route yet. The Tessellation tab lists what else isn't built.",
 ];

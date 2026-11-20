@@ -36,7 +36,7 @@ export const drawnDistance = measureIn(points, there, { view }).distance;
 const carried = pointIn({ ...points[0]!, sigma: 0.02 }, there, { view });
 export const stretch = carried.stretch;
 
-// Accuracy along the route: Σ_out = J Σ Jᵀ, plus each smooth node's own.
+// Accuracy along the route: Σ_out = J Σ Jᵀ, plus each curvilinear node's own.
 export const sigma = accuracyAlong(carried.route, points[0]!.position, 0.02, {
   affine: graph.accuracy(),
 });

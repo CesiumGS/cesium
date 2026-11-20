@@ -7,9 +7,9 @@
 // are nodes of one graph (a node itself, or a key `options.nodeOf` places at
 // one) it answers from the graph's route between them, in float64: a matrix
 // when the route is affine (the set is tested in the true or drawn space as
-// ever), `NonRigidRouteError` when it crosses a smooth edge, which makes the
+// ever), `NonRigidRouteError` when it crosses a curvilinear edge, which makes the
 // set curved (`planClip`), and `route()` as the camera layer's route, each
-// smooth edge a `Warp`, which is what `WorldCurvedClips` fits the signed
+// curvilinear edge a `Warp`, which is what `WorldCurvedClips` fits the signed
 // distance through (`resolveRoute`, `routeForward`). Every other key goes to
 // the resolver it wraps.
 import type { FrameKey, FrameResolver } from "../../camera/frameResolver.ts";
@@ -53,16 +53,16 @@ const IDENTITY = Float64Array.of(
   1,
 );
 
-/** A graph smooth edge as the camera layer's warp (up: its forward; a step down is `inverse: true` of the same warp). The parameters are as they are now: a route is a snapshot, and its revision says when to ask again. */
+/** A graph curvilinear edge as the camera layer's warp (up: its forward; a step down is `inverse: true` of the same warp). The parameters are as they are now: a route is a snapshot, and its revision says when to ask again. */
 function warpOf(
   route: Route,
-  step: Extract<Route["steps"][number], { kind: "smooth" }>,
+  step: Extract<Route["steps"][number], { kind: "curvilinear" }>,
 ): Warp {
   const graph = route.from.graph;
   const node = step.node;
   const edge = graph.edgeFor(node, route.view).edge;
-  if (edge.kind !== "smooth") {
-    throw new Error(`"${node.name}" is not a smooth node`);
+  if (edge.kind !== "curvilinear") {
+    throw new Error(`"${node.name}" is not a curvilinear node`);
   }
   const spec = edge.spec;
   const params = graph.values(node, route.view);
@@ -73,7 +73,7 @@ function warpOf(
     revision,
     description: node.name,
     ...(spec.accuracy !== undefined && { accuracy: { sigma: spec.accuracy } }),
-    smooth: { ...spec, params },
+    curvilinear: { ...spec, params },
     forward(p, out, jacobian) {
       spec.forward(p, params, out, jacobian);
       return out;
@@ -87,7 +87,7 @@ function warpOf(
   };
 }
 
-/** `route` as the camera layer's: its affine runs rigid steps, each smooth step a warp. */
+/** `route` as the camera layer's: its affine runs rigid steps, each curvilinear step a warp. */
 function cameraRoute(
   route: Route,
   frame: FrameKey,
@@ -153,7 +153,7 @@ export function nodeResolver(
         return inner.resolve(frame, base, seconds, out);
       }
       const steps = route.steps;
-      if (steps.some((s) => s.kind === "smooth")) {
+      if (steps.some((s) => s.kind === "curvilinear")) {
         throw new NonRigidRouteError(frame.name, base.name);
       }
       out.set(steps.length === 0 ? IDENTITY : (steps[0] as AffineStep).matrix);
@@ -193,7 +193,7 @@ export function nodeResolver(
       const a = accuracyAlong(route, point, 0);
       return {
         meters: a.meters,
-        note: `the transform graph's route from ${frame.name} to ${base.name}: smooth nodes' declared σ through the route's Jacobian`,
+        note: `the transform graph's route from ${frame.name} to ${base.name}: curvilinear nodes' declared σ through the route's Jacobian`,
       };
     },
     routeRevision(frame, base) {

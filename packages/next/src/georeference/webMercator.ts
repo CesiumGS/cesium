@@ -4,7 +4,7 @@
 //   E = a λ,  N = a asinh(tan φ).
 // Closed-form Jacobian and inverse; valid for |φ| < 90°, in practice the
 // ±85.0511° the web tiles cover.
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import { edgeOf, type TransformDescriptor } from "../transforms/descriptor.ts";
 import { checkRadii, WGS84_RADII, type Radii } from "./ellipsoid.ts";
 import {
@@ -85,7 +85,7 @@ export function webMercatorDescriptor(
 }
 
 /** Web Mercator on a sphere of the ellipsoid's semi-major axis (default WGS84's). */
-export function webMercator(options: { radii?: Radii } = {}): SmoothEdge {
+export function webMercator(options: { radii?: Radii } = {}): CurvilinearEdge {
   return edgeOf(webMercatorDescriptor(options.radii));
 }
 
@@ -127,6 +127,6 @@ export function webMercatorToGeographicDescriptor(
 /** The unprojection of `webMercator`: projected (easting, northing, height) to longitude, latitude (degrees) and height. */
 export function webMercatorToGeographic(
   options: { radii?: Radii } = {},
-): SmoothEdge {
+): CurvilinearEdge {
   return edgeOf(webMercatorToGeographicDescriptor(options.radii));
 }

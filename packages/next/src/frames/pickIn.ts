@@ -2,14 +2,14 @@
 // pick carries where the content is (its domain point, or the drawn position
 // carried back through the route: `locatePick`) and the camera route that
 // drew it. `pickIn` represents that route as a transform graph (each rigid
-// step an affine node, each warp a smooth one, so the route's own steps are
+// step an affine node, each warp a curvilinear one, so the route's own steps are
 // its nodes: the content's node is "true", the view's render space is
 // "drawn") and carries the point to the node asked for, in float64, from the
 // point itself. A catalog frame is a node of the frames' graph
 // (`graphOfFrames`); the pick's anchor is where the two graphs meet.
 import type { FrameKey } from "../camera/frameResolver.ts";
 import {
-  smoothValuesOf,
+  curvilinearValuesOf,
   warpForward,
   warpInverse,
   type Route as CameraRoute,
@@ -19,9 +19,9 @@ import type { CorePick } from "../scene/pick.ts";
 import type { SigmaIn } from "../transform/accuracy.ts";
 import {
   affine,
-  smooth,
+  curvilinear,
   TransformGraph,
-  type SmoothSpec,
+  type CurvilinearSpec,
   type TransformNode,
 } from "../transform/graph.ts";
 import {
@@ -45,15 +45,15 @@ export interface RouteGraph {
   readonly nodes: readonly TransformNode[];
 }
 
-/** One warp as a smooth edge: its IR spec where it has one, else its own function (float64 only). */
-function edgeOf(warp: Warp, inverse: boolean, index: number): SmoothSpec {
+/** One warp as a curvilinear edge: its IR spec where it has one, else its own function (float64 only). */
+function edgeOf(warp: Warp, inverse: boolean, index: number): CurvilinearSpec {
   const sigma = warp.accuracy?.sigma;
-  const spec = warp.smooth;
+  const spec = warp.curvilinear;
   if (spec && !inverse && (!warp.scale || spec.identity)) {
     return {
       ...spec,
       id: spec.id ?? `warp${index}`,
-      params: smoothValuesOf(warp),
+      params: curvilinearValuesOf(warp),
       ...(sigma !== undefined && { accuracy: sigma }),
     };
   }
@@ -81,7 +81,7 @@ function edgeOf(warp: Warp, inverse: boolean, index: number): SmoothSpec {
 /**
  * `route` as a transform graph rooted at its base: step `i`'s input space is
  * node `i`, so the content is the deepest node and the view's render space
- * the root. A warp with a `smooth` spec keeps it (with the parameter values
+ * the root. A warp with a `curvilinear` spec keeps it (with the parameter values
  * it has, its scale applied), so its IR and closed-form Jacobian are there;
  * any other warp (no spec, or run through its inverse) is its function,
  * evaluated in float64 with the Jacobian by differences. The warps' scales
@@ -100,7 +100,7 @@ export function graphOfCameraRoute(route: CameraRoute): RouteGraph {
       parent,
       step.kind === "rigid"
         ? affine({ matrix: step.matrix })
-        : smooth(edgeOf(step.warp, step.inverse, i)),
+        : curvilinear(edgeOf(step.warp, step.inverse, i)),
     );
     parent = nodes[i]!;
   }

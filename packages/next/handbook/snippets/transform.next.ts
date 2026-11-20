@@ -10,12 +10,12 @@ import {
   liveEdge,
   utmToGeographic,
   verticalExaggeration,
-  type SmoothFrameSpec,
+  type CurvilinearFrameSpec,
 } from "@cesium/next";
 import {
   createFrameCatalog,
   createFramesResolver,
-  smoothFrame,
+  curvilinearFrame,
   switchFrame,
 } from "@cesium/next/frames";
 
@@ -32,7 +32,7 @@ const exaggeration = verticalExaggeration({
 });
 
 const catalog = createFrameCatalog();
-const content = smoothFrame(
+const content = curvilinearFrame(
   "Earth content (exaggerated)",
   catalog.get("ITRF"),
   exaggeration,
@@ -69,7 +69,7 @@ export const either = switchFrame("Plan or exaggerated", catalog.get("ITRF"), {
 // A built-in as a live edge, for content authored in a projected CRS: UTM
 // 48S, run from the grid to geographic. The nodes above it carry the rest
 // of the way to body-fixed meters.
-export const grid = smoothFrame(
+export const grid = curvilinearFrame(
   "UTM 48S",
   catalog.get("ITRF"),
   liveEdge(utmToGeographic({ zone: 48, hemisphere: "south" }), {
@@ -119,7 +119,7 @@ function exaggerate(
   }
   return out;
 }
-export const byHand: SmoothFrameSpec = {
+export const byHand: CurvilinearFrameSpec = {
   revision: 1,
   description: `height × ${K}`,
   scale: slider,

@@ -11,7 +11,7 @@ import {
 } from "@cesium/next";
 import {
   eastNorthUpFrame,
-  smoothFrame,
+  curvilinearFrame,
   switchFrame,
   type SwitchChoice,
 } from "@cesium/next/frames";
@@ -142,7 +142,7 @@ export const planProfile: Scene = {
     });
     host.catalog.add(sheet);
     const verticalScale = world.createPlacementParameter(0, { range: [0, 1] });
-    const vertical = smoothFrame(
+    const vertical = curvilinearFrame(
       "Vertical ×k (a value per view)",
       sheet,
       liveEdge(
@@ -159,7 +159,7 @@ export const planProfile: Scene = {
     );
     host.catalog.add(vertical);
     // The strip in the corridor's plan, for readouts: the same strip coordinates, mapped by the corridor alone.
-    const surveyed = smoothFrame(
+    const surveyed = curvilinearFrame(
       "Corridor as surveyed (readouts)",
       site,
       corridor,

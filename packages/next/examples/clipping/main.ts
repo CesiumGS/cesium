@@ -90,7 +90,7 @@ import {
  * Section view looks square at the cut through a 2° lens from a few kilometers:
  * the engine has no orthographic camera yet (plan 5d, tasks 14 and 15).
  *
- * Curved clip: the plane is named in a design frame under ITRF whose smooth
+ * Curved clip: the plane is named in a design frame under ITRF whose curvilinear
  * edge waves heights (sections.ts), so no rigid test can draw it and the
  * engine cuts it
  * along a signed distance fitted per draw. Its cut is not a plane the GPU

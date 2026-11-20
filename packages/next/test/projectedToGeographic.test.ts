@@ -22,7 +22,7 @@ import {
   parseTransform,
   routeBetween,
   TransformGraph,
-  type SmoothEdge,
+  type CurvilinearEdge,
 } from "../src/transform/index.ts";
 import { liveEdge, twist } from "../src/transforms/index.ts";
 
@@ -40,7 +40,7 @@ function rng(seed: number): () => number {
 const between = (r: () => number, lo: number, hi: number) =>
   lo + (hi - lo) * r();
 
-function forwardOf(edge: SmoothEdge, p: ArrayLike<number>): number[] {
+function forwardOf(edge: CurvilinearEdge, p: ArrayLike<number>): number[] {
   const out = new Float64Array(3);
   edge.spec.forward(p, edge.spec.params, out);
   return [out[0]!, out[1]!, out[2]!];
@@ -61,8 +61,8 @@ function meters(dLon: number, dLat: number, lat: number): number {
 
 const sources: Array<{
   name: string;
-  forward: SmoothEdge;
-  back: SmoothEdge;
+  forward: CurvilinearEdge;
+  back: CurvilinearEdge;
   lon: [number, number];
   lat: [number, number];
 }> = [
@@ -273,22 +273,22 @@ describe("verticalExaggeration with a ceiling", () => {
 
   it("hands the compiler the built-in with its ceiling, and follows its setters", () => {
     const warp = verticalExaggeration(options);
-    const first = warp.smooth!;
+    const first = warp.curvilinear!;
     expect(first.params).toMatchObject(options);
     const revision = warp.revision;
     warp.ceiling = 9000;
     warp.factor = 2;
     expect(warp.revision).toBe(revision + 2);
-    expect(warp.smooth!.params).toMatchObject({
+    expect(warp.curvilinear!.params).toMatchObject({
       factor: 2,
       ceiling: 9000,
       baseHeight: 200,
       band: 1000,
     });
     warp.band = undefined;
-    expect(warp.smooth!.params.band).toBeCloseTo(0.2 * (9000 - 200), 9);
+    expect(warp.curvilinear!.params.band).toBeCloseTo(0.2 * (9000 - 200), 9);
     warp.ceiling = undefined;
-    expect(warp.smooth!.params.ceiling).toBeGreaterThan(1e8);
+    expect(warp.curvilinear!.params.ceiling).toBeGreaterThan(1e8);
     expect(warp.heightScale).toBeDefined();
   });
 
@@ -325,7 +325,8 @@ describe("verticalExaggeration with a ceiling", () => {
 });
 
 describe("liveEdge", () => {
-  const spec = (edge: SmoothEdge) => liveEdge(edge, { description: "a twist" });
+  const spec = (edge: CurvilinearEdge) =>
+    liveEdge(edge, { description: "a twist" });
 
   it("evaluates the edge with its parameters now, and says it changed when they do", () => {
     const live = spec(twist({ rate: 0.01 }));
@@ -337,7 +338,7 @@ describe("liveEdge", () => {
     expect(live.revision).toBe(revision + 1);
     live.forward([10, 0, 5], out);
     expect(out[1]).not.toBeCloseTo(before[1]!, 6);
-    expect(live.smooth.params.rate).toBe(0.02);
+    expect(live.curvilinear.params.rate).toBe(0.02);
     expect(() => live.setParams({ speed: 1 })).toThrow(/no parameter speed/);
   });
 

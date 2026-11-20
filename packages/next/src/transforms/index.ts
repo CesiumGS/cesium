@@ -1,7 +1,7 @@
-// The built-in generic smooth transforms (docs/design/transform-graph.md): each is a
+// The built-in generic curvilinear transforms (docs/design/transform-graph.md): each is a
 // descriptor (float64 TS with its analytic Jacobian, the restricted-JS
 // source the compiler parses, the linear parameters) and a constructor that
-// returns the `smooth` edge for the graph.
+// returns the `curvilinear` edge for the graph.
 export {
   checkParams,
   defaultParams,

@@ -1,4 +1,4 @@
-// A smooth transform from a plain function (docs/design/transform-graph.md, owner 2026-11-11:
+// A curvilinear transform from a plain function (docs/design/transform-graph.md, owner 2026-11-11:
 // application functions are restricted plain JS). The function is the CPU
 // path, called as it is; its source is parsed, never evaluated, into the IR
 // (`parseTransform`), which gives the engine an exact Jacobian by autodiff
@@ -10,7 +10,7 @@
 import { warpInverse, type Warp, type WarpScale } from "../camera/route.ts";
 import { jacobian as irJacobian } from "../transform/ad.ts";
 import type { IrProgram } from "../transform/ir.ts";
-import type { Params, SmoothSpec } from "../transform/graph.ts";
+import type { Params, CurvilinearSpec } from "../transform/graph.ts";
 import { parseTransform, TransformParseError } from "../transform/parse.ts";
 import { LiveWarp, NO_FRAME, type ChangeableWarp } from "./liveWarp.ts";
 
@@ -85,8 +85,8 @@ class FunctionWarpImpl extends LiveWarp implements FunctionWarp {
   private readonly plus = new Float64Array(3);
   private readonly minus = new Float64Array(3);
   private readonly core: Warp;
-  private smoothRevision = -1;
-  private smoothSpec: SmoothSpec | undefined;
+  private curvilinearRevision = -1;
+  private curvilinearSpec: CurvilinearSpec | undefined;
 
   constructor(
     private readonly map: PointFunction,
@@ -150,17 +150,17 @@ class FunctionWarpImpl extends LiveWarp implements FunctionWarp {
   }
 
   /**
-   * The function as a graph smooth step when it parsed (the compiler reads
+   * The function as a graph curvilinear step when it parsed (the compiler reads
    * its source); undefined when it didn't, which has it fitted.
    */
-  get smooth(): SmoothSpec | undefined {
+  get curvilinear(): CurvilinearSpec | undefined {
     if (!this.program) {
       return undefined;
     }
-    if (this.smoothRevision !== this.ownRevision) {
-      this.smoothRevision = this.ownRevision;
+    if (this.curvilinearRevision !== this.ownRevision) {
+      this.curvilinearRevision = this.ownRevision;
       const { options } = this;
-      this.smoothSpec = {
+      this.curvilinearSpec = {
         id: options.description ?? "function",
         params: { ...this.values },
         source: this.source,
@@ -176,7 +176,7 @@ class FunctionWarpImpl extends LiveWarp implements FunctionWarp {
         ...(options.identity !== undefined && { identity: options.identity }),
       };
     }
-    return this.smoothSpec;
+    return this.curvilinearSpec;
   }
 
   private evaluate(
@@ -287,7 +287,7 @@ function checkValue(name: string, value: number): void {
 }
 
 /**
- * A smooth transform from a plain function, p to q in meters
+ * A curvilinear transform from a plain function, p to q in meters
  * (`PointFunction`: `(p, params) => [x, y, z]`, or writing `out`), so an
  * application writes the map and nothing else. The function is the CPU
  * path. Written in the restricted subset (`parseTransform`: `Math`, its
@@ -310,7 +310,7 @@ function checkValue(name: string, value: number): void {
  * The inverse is the options' own, or the engine's Newton (`warpInverse`)
  * using the Jacobian. The function must be injective on its domain and
  * finite (a `RangeError` where it isn't). Place it over the content it
- * transforms (`smoothFrame`).
+ * transforms (`curvilinearFrame`).
  */
 export function fromFunction(
   map: PointFunction,

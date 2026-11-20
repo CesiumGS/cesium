@@ -1,11 +1,11 @@
 // A camera route (src/camera/route.ts: rigid steps and `Warp` steps) as a
 // transform-graph route (src/transform), for the compiler: the bridge between
-// the warps the engine has today and the smooth steps it compiles. Each rigid
-// step is an affine node and each warp with a `smooth` spec a smooth node,
+// the warps the engine has today and the curvilinear steps it compiles. Each rigid
+// step is an affine node and each warp with a `curvilinear` spec a curvilinear node,
 // under a root that is the route's base; the content's node is the deepest.
 // Only forward steps bridge (a warp run through its inverse is fitted), and a
 // warp with a `scale` (a slider) needs the spec to say which parameters it
-// scales (`SmoothSpec.identity`): at scale `s` each is
+// scales (`CurvilinearSpec.identity`): at scale `s` each is
 // `identity + s · (value − identity)`, the warp's `p + s · (f(p) − p)`.
 //
 // The bridged route always has a rigid step at each end and between two warps
@@ -13,14 +13,14 @@
 // views to different roots, which differ in their rigid steps only, have one
 // shape and one compiled program (`normalize`).
 import {
-  smoothValuesOf,
+  curvilinearValuesOf,
   type Route as CameraRoute,
   type RouteStep as CameraStep,
   type Warp,
 } from "../../camera/route.ts";
 import {
   affine,
-  smooth,
+  curvilinear,
   TransformGraph,
   type Params,
   type TransformNode,
@@ -31,7 +31,7 @@ export interface BridgedRoute {
   readonly graph: TransformGraph;
   /** The route from the content's node to the base's. */
   readonly route: Route;
-  /** What the route's smooth steps' functions are, for telling when a rebuild is due. */
+  /** What the route's curvilinear steps' functions are, for telling when a rebuild is due. */
   readonly sources: readonly (string | undefined)[];
   /**
    * Brings the graph to the camera route's rigid matrices and the warps'
@@ -92,9 +92,9 @@ export function normalize(steps: readonly CameraStep[]): CameraStep[] {
   return out;
 }
 
-/** The parameter values a warp's smooth step has now (`smoothValuesOf`). */
+/** The parameter values a warp's curvilinear step has now (`curvilinearValuesOf`). */
 export function valuesOf(warp: Warp): Params {
-  return smoothValuesOf(warp);
+  return curvilinearValuesOf(warp);
 }
 
 function same(a: Params, b: Params): boolean {
@@ -117,9 +117,9 @@ export function bridgeRoute(input: CameraRoute): BridgedRoute | BridgeRefusal {
     if (step.inverse) {
       return { reason: `${name} is run through its inverse` };
     }
-    const spec = step.warp.smooth;
+    const spec = step.warp.curvilinear;
     if (!spec) {
-      return { reason: `${name} has no smooth spec` };
+      return { reason: `${name} has no curvilinear spec` };
     }
     if (spec.source === undefined) {
       return { reason: `${name}'s function is not in the IR's subset` };
@@ -150,12 +150,12 @@ export function bridgeRoute(input: CameraRoute): BridgedRoute | BridgeRefusal {
       );
       matrices[i] = Float64Array.from(step.matrix);
     } else {
-      const spec = step.warp.smooth!;
+      const spec = step.warp.curvilinear!;
       const values = valuesOf(step.warp);
       nodes[i] = graph.add(
         `warp ${i}`,
         parent,
-        smooth({ ...spec, id: spec.id ?? `warp${i}`, params: values }),
+        curvilinear({ ...spec, id: spec.id ?? `warp${i}`, params: values }),
       );
       held[i] = values;
       sources[i] = spec.source;
@@ -189,7 +189,7 @@ export function bridgeRoute(input: CameraRoute): BridgedRoute | BridgeRefusal {
             ? matrices[i] !== undefined
             : held[i] !== undefined &&
               !s.inverse &&
-              s.warp.smooth?.source === sources[i],
+              s.warp.curvilinear?.source === sources[i],
         )
       );
     },

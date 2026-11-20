@@ -10,7 +10,7 @@ import { routeForward } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { placementOf } from "../src/frames/placementQuery.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import {
   geographicToGeocentric,
   utmToGeographic,
@@ -134,19 +134,19 @@ function setup() {
   worlds.push(world);
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF");
-  const exaggerated = smoothFrame(
+  const exaggerated = curvilinearFrame(
     "Earth content (exaggerated)",
     itrf,
     verticalExaggeration({ factor: 5, ceiling: 9000 }),
   );
   catalog.add(exaggerated);
-  const geographic = smoothFrame(
+  const geographic = curvilinearFrame(
     "Geographic to geocentric",
     itrf,
     liveEdge(geographicToGeocentric(), { description: "to body-fixed meters" }),
   );
   catalog.add(geographic);
-  const utmFrame = smoothFrame(
+  const utmFrame = curvilinearFrame(
     "UTM 48S",
     geographic,
     liveEdge(utmToGeographic({ zone: 48, hemisphere: "south" }), {

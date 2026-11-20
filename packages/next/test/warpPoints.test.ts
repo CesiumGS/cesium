@@ -10,7 +10,7 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { routeForward, type Route } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import * as m4 from "../src/math/mat4.ts";
 import {
   FLAGS_WORD,
@@ -102,7 +102,7 @@ function setup(options: { rigid?: boolean; prime?: boolean } = {}): Setup {
   worlds.push(world);
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF");
-  const exaggerated = smoothFrame("exaggerated", itrf, {
+  const exaggerated = curvilinearFrame("exaggerated", itrf, {
     revision: 1,
     description: `height × ${K}`,
     forward: (p, out, jacobian) => exaggerate(p, out, jacobian),

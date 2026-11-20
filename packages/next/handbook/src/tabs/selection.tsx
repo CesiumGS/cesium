@@ -610,7 +610,7 @@ export function Selection() {
             behind a switch node, are drawn through twins of the draws, and a
             tile keeps drawn volumes for the route last asked and three others,
             so views asking in turn remake nothing. A view whose route crosses
-            no smooth node selects on the plain bounds.
+            no curvilinear node selects on the plain bounds.
           </li>
           <li>
             <strong>Fits are stepped and budgeted:</strong> a route that can't

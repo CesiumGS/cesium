@@ -5,7 +5,7 @@
 // is depth in meters (x, y, z, down positive). g = 0 is the constant
 // velocity z = v0 t / 2, taken through a series near it. Output is affine
 // in v0 (z ∝ v0).
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import { edgeOf, type Named, type TransformDescriptor } from "./descriptor.ts";
 
 type K = "v0" | "g";
@@ -68,7 +68,7 @@ export const velocityModelDescriptor: TransformDescriptor = {
 export function velocityModel(options: {
   v0: number;
   gradient?: number;
-}): SmoothEdge {
+}): CurvilinearEdge {
   return edgeOf(velocityModelDescriptor, {
     v0: options.v0,
     g: options.gradient ?? 0,

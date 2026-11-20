@@ -404,7 +404,7 @@ export class Globe extends Tileset3D {
   /**
    * The frame the globe's terrain and imagery are placed in (docs/design/transform-graph.md):
    * the frame its anchor is bound to (`FrameResolver.bindAnchor`), by default
-   * the body-fixed one. A smooth frame under the camera's root (a vertical
+   * the body-fixed one. A curvilinear frame under the camera's root (a vertical
    * exaggeration over the Earth's content) draws the globe, and whatever else
    * hangs under the same anchor, through its edge while their coordinates stay
    * true; where the edge is a `verticalExaggeration` of the globe's own body,

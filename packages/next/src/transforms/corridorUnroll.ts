@@ -14,7 +14,7 @@
 // parameters named s0, x0, y0, c0, n0, k0, s1, ...: start station, start
 // point, cosine and sine of the start heading, curvature (0 on a line); se,
 // xe, ye, ce, ne is the end. The element kinds are the shape.
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import {
   edgeOf,
   type ParamSpec,
@@ -403,6 +403,6 @@ export function corridorUnrollDescriptor(
  * stations counted from `station` (default 0); or as a `polyline` of plan
  * points, stations by arc length.
  */
-export function corridorUnroll(options: CorridorOptions): SmoothEdge {
+export function corridorUnroll(options: CorridorOptions): CurvilinearEdge {
   return edgeOf(corridorUnrollDescriptor(options));
 }

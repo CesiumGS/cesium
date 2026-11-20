@@ -5,7 +5,7 @@ import {
   vec3,
   velocityModel,
 } from "@cesium/next";
-import { Frame, eastNorthUpFrame, smoothFrame } from "@cesium/next/frames";
+import { Frame, eastNorthUpFrame, curvilinearFrame } from "@cesium/next/frames";
 import {
   addMeshDraw,
   anchorIn,
@@ -122,7 +122,7 @@ export const seismic: Scene = {
     const velocity = liveEdge(velocityModel({ v0: V0, gradient: GRADIENT }), {
       description: "two-way time to depth for v(z) = v0 + g z",
     });
-    const time = smoothFrame("Two-way time (s)", depth, velocity);
+    const time = curvilinearFrame("Two-way time (s)", depth, velocity);
     host.catalog.add(time);
     const anchor = anchorIn(host, "Seismic section", time);
 

@@ -1,16 +1,16 @@
-// The base of the live smooth-frame helpers (docs/design/transform-graph.md): a revision, and the
+// The base of the live curvilinear-frame helpers (docs/design/transform-graph.md): a revision, and the
 // frames to invalidate when the helper changes. `verticalExaggeration`,
 // `heightOffset` (georeference), `scaleAbout`, `blend` and `fromFunction`
-// build on it; each returns a `SmoothFrameSpec` for `smoothFrame`.
-import type { SmoothFrameSpec, Warp } from "../camera/route.ts";
+// build on it; each returns a `CurvilinearFrameSpec` for `curvilinearFrame`.
+import type { CurvilinearFrameSpec, Warp } from "../camera/route.ts";
 
 /**
- * A `SmoothFrameSpec` that can change: `changed()` says its inputs did. It
+ * A `CurvilinearFrameSpec` that can change: `changed()` says its inputs did. It
  * bumps `revision`, so every route through it is refitted, and invalidates
- * the frames built on it (`smoothFrame(name, parent, spec)`), which wakes
+ * the frames built on it (`curvilinearFrame(name, parent, spec)`), which wakes
  * whoever watches the frames resolver.
  */
-export interface ChangeableWarp extends SmoothFrameSpec {
+export interface ChangeableWarp extends CurvilinearFrameSpec {
   changed(): void;
 }
 
@@ -50,7 +50,7 @@ export abstract class LiveWarp implements ChangeableWarp {
 }
 
 /** `spec` as a `Warp` between no frames, for `warpForward` and `warpInverse`: it reads `spec` live. */
-export function liveWarp(spec: SmoothFrameSpec): Warp {
+export function liveWarp(spec: CurvilinearFrameSpec): Warp {
   return {
     from: NO_FRAME,
     to: NO_FRAME,
@@ -69,8 +69,8 @@ export function liveWarp(spec: SmoothFrameSpec): Warp {
     get scale() {
       return spec.scale;
     },
-    get smooth() {
-      return spec.smooth;
+    get curvilinear() {
+      return spec.curvilinear;
     },
     forward: (p, out, jacobian) => spec.forward(p, out, jacobian),
     ...(spec.inverse !== undefined && {

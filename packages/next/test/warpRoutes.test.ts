@@ -1,17 +1,20 @@
 // Compiled routes in the renderer (plan 2026-11-12, task 4b): a draw whose
-// route crosses warps with smooth specs is drawn by the route's compiled
+// route crosses warps with curvilinear specs is drawn by the route's compiled
 // `transformVertex` (scene/world/routes.ts), not by fits. On the CPU, against
 // the route's own float64 map, as warpGlobe.test.ts does for fits; the GPU's
 // side of it is spikes/transformGraph.ts (`routeVertex`) and spikes/warpGlobe.ts.
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { routeForward, type SmoothFrameSpec } from "../src/camera/route.ts";
+import {
+  routeForward,
+  type CurvilinearFrameSpec,
+} from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import {
   heightOffset,
   verticalExaggeration,
 } from "../src/georeference/heightWarps.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { scaleAbout } from "../src/transforms/scaleAbout.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import * as m4 from "../src/math/mat4.ts";
@@ -24,7 +27,7 @@ import {
 import { EARTH } from "../src/scene/Body.ts";
 import { createBox } from "../src/scene/meshes.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
-import { smooth, TransformGraph } from "../src/transform/graph.ts";
+import { curvilinear, TransformGraph } from "../src/transform/graph.ts";
 import { routeBetween } from "../src/transform/route.ts";
 import {
   CENTER_WORD,
@@ -65,14 +68,14 @@ const at = (height: number) =>
 async function setup(
   make: (
     scale: ReturnType<World["createPlacementParameter"]>,
-  ) => SmoothFrameSpec,
+  ) => CurvilinearFrameSpec,
 ) {
   const world = engine.createWorld({ maxDraws: 8 });
   worlds.push(world);
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const scale = world.createPlacementParameter(1, { range: [0, 1] });
   const itrf = catalog.get("ITRF");
-  const frame = smoothFrame("x", itrf, make(scale));
+  const frame = curvilinearFrame("x", itrf, make(scale));
   catalog.add(frame);
   const resolver = createFramesResolver(catalog);
   const earth = world.bodyAnchor(EARTH);
@@ -126,7 +129,7 @@ const cart = (longitude: number, latitude: number, height: number) =>
   ) as Float64Array;
 
 describe("compiled routes in the renderer", () => {
-  it("draws a smooth warp's draw by its route, with no fit", async () => {
+  it("draws a curvilinear warp's draw by its route, with no fit", async () => {
     const s = await setup((scale) =>
       verticalExaggeration({ factor: 10, scale }),
     );
@@ -222,7 +225,7 @@ describe("compiled routes in the renderer", () => {
     expect(s.world.warpStats()).toMatchObject({ fitsRun: 0 });
   });
 
-  it("keeps a warp with no smooth spec on fits", async () => {
+  it("keeps a warp with no curvilinear spec on fits", async () => {
     const s = await setup((scale) =>
       fittedOnly(verticalExaggeration({ factor: 10, scale })),
     );
@@ -352,7 +355,7 @@ describe("compiled routes in the renderer", () => {
     }
     expect(stretch(other.anchorRoute(s.earth)!)).toBeCloseTo(10, 3);
   });
-  it("turns a warp helper's smooth spec into a route that matches its own function", () => {
+  it("turns a warp helper's curvilinear spec into a route that matches its own function", () => {
     const point = cart(0.13, 0.8, 0);
     const cases = [
       verticalExaggeration({ factor: 3, baseHeight: 200 }),
@@ -360,11 +363,11 @@ describe("compiled routes in the renderer", () => {
       scaleAbout(point, [1.5, 2, 3]),
     ];
     for (const warp of cases) {
-      const spec = warp.smooth!;
+      const spec = warp.curvilinear!;
       expect(spec.source).toBeDefined();
       const graph = new TransformGraph();
       const root = graph.root("parent");
-      const node = graph.add("warp", root, smooth({ ...spec, id: "w" }));
+      const node = graph.add("warp", root, curvilinear({ ...spec, id: "w" }));
       const route = routeBetween(node, root);
       const out = new Float64Array(3);
       for (const h of [-100, 0, 1500, 4800]) {

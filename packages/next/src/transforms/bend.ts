@@ -4,7 +4,7 @@
 // angle θ = κ dx on the circle of radius 1/κ - dz. Orient it with an affine
 // node. Curvature 0 is the identity. The inverse is exact while the point
 // stays within a half turn of the neutral line (|θ| < π).
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import { edgeOf, type Named, type TransformDescriptor } from "./descriptor.ts";
 
 type K = "ox" | "oz" | "curvature";
@@ -126,7 +126,7 @@ export const bendDescriptor: TransformDescriptor = {
 export function bend(options: {
   curvature: number;
   origin?: ArrayLike<number>;
-}): SmoothEdge {
+}): CurvilinearEdge {
   const o = options.origin ?? [0, 0, 0];
   return edgeOf(bendDescriptor, {
     ox: o[0]!,

@@ -45,7 +45,7 @@ interface Box {
   y: number;
   w: number;
   sub: string;
-  kind: "root" | "smooth" | "affine" | "content";
+  kind: "root" | "curvilinear" | "affine" | "content";
   parent?: string;
 }
 
@@ -58,8 +58,8 @@ const BOXES: Box[] = [
     x: 20,
     y: 120,
     w: 230,
-    sub: "smooth: heights × k",
-    kind: "smooth",
+    sub: "curvilinear: heights × k",
+    kind: "curvilinear",
     parent: "ITRF",
   },
   {
@@ -134,11 +134,11 @@ function GraphFigure() {
   return (
     <svg viewBox="0 0 900 330" role="img" aria-labelledby={titleId}>
       <title id={titleId}>
-        A transform graph. ITRF is the root. Under it are a smooth node called
-        Earth content, which multiplies heights, the camera, a satellite, and
-        the affine node MOON_ME. Terrain, buildings and models sit under Earth
-        content and are drawn exaggerated. The satellite, placed at ITRF, and
-        the Moon mesh, under MOON_ME, are not.
+        A transform graph. ITRF is the root. Under it are a curvilinear node
+        called Earth content, which multiplies heights, the camera, a satellite,
+        and the affine node MOON_ME. Terrain, buildings and models sit under
+        Earth content and are drawn exaggerated. The satellite, placed at ITRF,
+        and the Moon mesh, under MOON_ME, are not.
       </title>
       {BOXES.filter((b) => b.parent).map((b) => {
         const p = byId.get(b.parent!)!;
@@ -151,7 +151,7 @@ function GraphFigure() {
           <path
             key={b.id}
             className="d-edge"
-            strokeWidth={b.kind === "smooth" ? 3 : 1.5}
+            strokeWidth={b.kind === "curvilinear" ? 3 : 1.5}
             strokeDasharray={b.kind === "content" ? "5 4" : undefined}
             d={`M${x1} ${y1} C${x1} ${mid} ${x2} ${mid} ${x2} ${y2}`}
           />
@@ -161,7 +161,7 @@ function GraphFigure() {
         <g key={b.id}>
           <rect
             className={
-              b.kind === "smooth"
+              b.kind === "curvilinear"
                 ? "d-box d-box-accent"
                 : b.kind === "content"
                   ? "d-box-plain"
@@ -188,8 +188,8 @@ function GraphFigure() {
         </g>
       ))}
       <text className="d-text" x={20} y={320}>
-        Heavy edge: smooth. Thin: affine. Dashed: content, placed at the node
-        above it.
+        Heavy edge: curvilinear. Thin: affine. Dashed: content, placed at the
+        node above it.
       </text>
     </svg>
   );
@@ -203,9 +203,9 @@ const EDGES = [
     cost: "Runs of them collapse into one float64 matrix; no pipeline change",
   },
   {
-    kind: "Smooth",
+    kind: "Curvilinear",
     edge: "A differentiable function of the node's coordinates and named parameters (time, a slider, data), with an optional exact inverse and a declared accuracy",
-    api: "`smoothFrame(name, parent, spec)`",
+    api: "`curvilinearFrame(name, parent, spec)`",
     cost: "Compiled into the draw's vertex stage, or fitted when the compiler can't take it",
   },
   {
@@ -233,10 +233,10 @@ const PRIOR = [
   },
   {
     art: "Space warps in solid modeling (ACIS)",
-    has: "A smooth map applied to a whole solid, not to a mesh of it",
+    has: "A curvilinear map applied to a whole solid, not to a mesh of it",
     takes: "The idea that a map of space is an operation on exact geometry",
     differs:
-      "How exact b-rep geometry crosses a smooth node is the B-reps tab's question, not settled here",
+      "How exact b-rep geometry crosses a curvilinear node is the B-reps tab's question, not settled here",
   },
   {
     art: "Unreal's World Position Offset and Large World Coordinates",
@@ -263,12 +263,12 @@ const PRIOR = [
 
 const NAMES = [
   {
-    name: "`smoothFrame(name, parent, spec)`",
-    what: "A node whose edge maps its own coordinates up to its parent's. `spec` is a `SmoothFrameSpec`: `forward` (with an optional Jacobian), an optional `inverse`, a `revision` the application owns, `accuracy`, a `scale` for a slider, a `description`. Content under the node keeps its own coordinates and is drawn through the edge.",
+    name: "`curvilinearFrame(name, parent, spec)`",
+    what: "A node whose edge maps its own coordinates up to its parent's. `spec` is a `CurvilinearFrameSpec`: `forward` (with an optional Jacobian), an optional `inverse`, a `revision` the application owns, `accuracy`, a `scale` for a slider, a `description`. Content under the node keeps its own coordinates and is drawn through the edge.",
   },
   {
     name: "`switchFrame(name, parent, { byView, default })`",
-    what: 'A node whose edge is chosen per view: a smooth spec for each view, or `"identity"`. A route asked without a view can\'t cross it.',
+    what: 'A node whose edge is chosen per view: a curvilinear spec for each view, or `"identity"`. A route asked without a view can\'t cross it.',
   },
   {
     name: "`FramesResolver.bindAnchor(anchor, frame)`",
@@ -280,11 +280,11 @@ const NAMES = [
   },
   {
     name: "`verticalExaggeration`, `heightOffset`",
-    what: "Live helpers for a smooth frame, with exact Jacobians and inverses at any height and at the poles. `verticalExaggeration({ factor, ceiling, band, scale })` lifts by a constant above its ceiling, so a satellite is moved, not stretched. Setting `factor` says the edge changed.",
+    what: "Live helpers for a curvilinear frame, with exact Jacobians and inverses at any height and at the poles. `verticalExaggeration({ factor, ceiling, band, scale })` lifts by a constant above its ceiling, so a satellite is moved, not stretched. Setting `factor` says the edge changed.",
   },
   {
     name: "`liveEdge(edge, options)`",
-    what: "A built-in edge as the live spec a smooth frame takes: `setParams` by name, a `scale` for a slider (with the edge's `identity`, the parameter values at which it does nothing), a `sigma` for accuracy, and a domain.",
+    what: "A built-in edge as the live spec a curvilinear frame takes: `setParams` by name, a `scale` for a slider (with the edge's `identity`, the parameter values at which it does nothing), a `sigma` for accuracy, and a domain.",
   },
   {
     name: "`fromFunction(fn, options)`",
@@ -292,7 +292,7 @@ const NAMES = [
   },
   {
     name: "`FrameResolver.route(frame, base, seconds)`",
-    what: "The steps from content to the render root: one matrix for each rigid run, a step for each smooth edge, forward going up and inverse going down. `resolve` and `frameTransform` across a smooth edge throw `NonRigidRouteError`: there is no 4×4 to give.",
+    what: "The steps from content to the render root: one matrix for each rigid run, a step for each curvilinear edge, forward going up and inverse going down. `resolve` and `frameTransform` across a curvilinear edge throw `NonRigidRouteError`: there is no 4×4 to give.",
   },
 ];
 
@@ -353,16 +353,16 @@ const PATHS = [
   {
     route: "Affine edges only",
     path: "One matrix. No pipeline, no center constant",
-    why: "Nothing smooth is crossed",
+    why: "Nothing curvilinear is crossed",
   },
   {
     route:
-      "Smooth edges going up, each with IR (a built-in, or a function in the subset)",
+      "Curvilinear edges going up, each with IR (a built-in, or a function in the subset)",
     path: "Compiled: one pipeline per route shape, a center constant per draw, a float32 residual per vertex",
     why: "The common case, and where the accuracy and speed below were measured",
   },
   {
-    route: "A smooth edge crossed downward (a camera below a node)",
+    route: "A curvilinear edge crossed downward (a camera below a node)",
     path: "Fitted per tile, as a cubic lattice",
     why: "Routes through an inverse step don't compile yet (follow-up 11)",
   },
@@ -486,8 +486,8 @@ const FOLLOW_UPS = [
   {
     task: "11: the camera branch",
     limit:
-      "A lens on the camera: streaming tilesets through it draw nothing (selection goes through a map with z ≤ 0); moving the camera re-derives every draw's route at 250 to 400 ms a tick; routes through a smooth step's inverse don't compile.",
-    fix: "An “eye step”: a per-view smooth step after the view matrix, evaluated in the vertex stage from uniforms alone, needing no float64 center because camera-space numbers are small. Selection uses the route without it, padded by its largest displacement at each depth. Partial work is saved to resume from.",
+      "A lens on the camera: streaming tilesets through it draw nothing (selection goes through a map with z ≤ 0); moving the camera re-derives every draw's route at 250 to 400 ms a tick; routes through a curvilinear step's inverse don't compile.",
+    fix: "An “eye step”: a per-view curvilinear step after the view matrix, evaluated in the vertex stage from uniforms alone, needing no float64 center because camera-space numbers are small. Selection uses the route without it, padded by its largest displacement at each depth. Partial work is saved to resume from.",
   },
 ];
 
@@ -531,7 +531,7 @@ export function TransformGraph() {
       lede={
         <>
           One tree of nodes places everything: content, cameras and lights. Each
-          node&apos;s edge to its parent is a matrix or a smooth function, and
+          node&apos;s edge to its parent is a matrix or a curvilinear map, and
           where something sits decides what is warped. A reprojection, a
           vertical exaggeration, a plan-and-profile sheet and a camera lens are
           the same mechanism. See it on real data in the{" "}
@@ -551,7 +551,7 @@ export function TransformGraph() {
           Tasks 1 to 8 of the transform graph plan are built, and so is the
           per-view work that followed (6b): the graph and routes, the IR with
           its parser, autodiff and intervals, the built-ins, the compiler and
-          its renderer back end, queries through routes, smooth frames and
+          its renderer back end, queries through routes, curvilinear frames and
           per-view parameters, switch frames with twins, public exports, and the
           gallery example. The built-ins and queries are exported from the core
           entry point and <C>/frames</C>. What isn&apos;t: the IR&apos;s arrays
@@ -591,7 +591,7 @@ export function TransformGraph() {
         <Figure
           scroll
           label="A transform graph"
-          caption="A deformer over the Earth's content. The camera is at ITRF, so what it sees of each thing is decided by where that thing is placed: the terrain, buildings and models under the smooth node are drawn exaggerated, and the satellite and the Moon are not."
+          caption="A deformer over the Earth's content. The camera is at ITRF, so what it sees of each thing is decided by where that thing is placed: the terrain, buildings and models under the curvilinear node are drawn exaggerated, and the satellite and the Moon are not."
         >
           <GraphFigure />
         </Figure>
@@ -617,10 +617,11 @@ export function TransformGraph() {
           Three needs looked separate. A reprojection draws content in a
           coordinate system other than the one it was made in. A design view
           draws a region flat. Vertical exaggeration draws heights ten times as
-          tall. Each is a smooth map of space that is locally invertible where
-          content is, and each wanted its own machinery. Treating them as nodes
-          of one tree gives one compiler, one set of queries and one answer to
-          &quot;what is warped&quot;: whatever is placed below the node.
+          tall. Each is a curvilinear map of space that is locally invertible
+          where content is, and each wanted its own machinery. Treating them as
+          nodes of one tree gives one compiler, one set of queries and one
+          answer to &quot;what is warped&quot;: whatever is placed below the
+          node.
         </p>
         <p>
           A tree rather than a general graph, because every view then sees a
@@ -647,9 +648,9 @@ export function TransformGraph() {
 
       <Sec id="api" title="The API as built">
         <p>
-          Nodes are made with the frames module: a smooth node is a <C>Frame</C>{" "}
-          whose edge is a function. The names, then a snippet that compiles
-          against the real types.
+          Nodes are made with the frames module: a curvilinear node is a{" "}
+          <C>Frame</C> whose edge is a function. The names, then a snippet that
+          compiles against the real types.
         </p>
         <DataTable
           label="The transform graph's API"
@@ -677,7 +678,7 @@ export function TransformGraph() {
           checks the projections against published worked examples.
         </p>
         <DataTable
-          label="The built-in smooth transforms"
+          label="The built-in curvilinear transforms"
           columns={[
             { head: "Family", cell: (r) => <strong>{r.family}</strong> },
             { head: "Names", cell: (r) => <Ticks text={r.names} /> },
@@ -744,7 +745,7 @@ export function TransformGraph() {
         <Written
           from={
             <>
-              <C>src/frames/smoothFrame.ts</C>, <C>src/transforms/</C>,{" "}
+              <C>src/frames/curvilinearFrame.ts</C>, <C>src/transforms/</C>,{" "}
               <C>src/georeference/</C>, <C>src/transform/parse.ts</C> and{" "}
               <C>api/surface.txt</C>
             </>
@@ -929,27 +930,27 @@ export function TransformGraph() {
             },
             {
               call: "`measureIn(points, node, options)`",
-              does: "Distance, polyline length, the length of the images of straight segments (a straight line of the content is a curve where a smooth edge is crossed), and area, in a node. In the content's node it is a true measurement; in the camera's, a drawn one.",
+              does: "Distance, polyline length, the length of the images of straight segments (a straight line of the content is a curve where a curvilinear edge is crossed), and area, in a node. In the content's node it is a true measurement; in the camera's, a drawn one.",
             },
             {
               call: '`pickIn(pick, "true" | "drawn" | node | Frame)` from `/frames`',
-              does: "A core pick in any node. A pick carries the content's own point where it can (a triangle's barycentrics, a b-rep face's (u, v)), so true is exact with no inverse of a smooth edge; otherwise it is the drawn position through the route's inverse, marked provisional.",
+              does: "A core pick in any node. A pick carries the content's own point where it can (a triangle's barycentrics, a b-rep face's (u, v)), so true is exact with no inverse of a curvilinear edge; otherwise it is the drawn position through the route's inverse, marked provisional.",
             },
             {
               call: "`accuracyAlong(route, point, σ)`",
-              does: "Σ_out = J Σ Jᵀ, plus each smooth node's declared σ, with J chained edge by edge. Affine edges' figures come from `FrameGraph.accuracy`, which agrees with `pointAccuracy`.",
+              does: "Σ_out = J Σ Jᵀ, plus each curvilinear node's declared σ, with J chained edge by edge. Affine edges' figures come from `FrameGraph.accuracy`, which agrees with `pointAccuracy`.",
             },
             {
               call: "`graphOfFrames(catalog, resolver)` from `/frames`",
-              does: "The catalog's tree as a graph: each `Frame` an affine node, each smooth frame a smooth node, so any frame can be a target.",
+              does: "The catalog's tree as a graph: each `Frame` an affine node, each curvilinear frame a curvilinear node, so any frame can be a target.",
             },
           ]}
         />
         <CodeBlock language="ts" code={snippetText("queries.next.ts")} />
         <h3>Normals, and the bound against the σ</h3>
         <p>
-          A smooth edge that stretches unevenly has to turn normals with the
-          surface: at ×10, slopes are ten times as steep. The cofactor of J
+          A curvilinear edge that stretches unevenly has to turn normals with
+          the surface: at ×10, slopes are ten times as steep. The cofactor of J
           (det(J)·J⁻ᵀ) does it, and the same J gives the local distortion the
           tour draws as Tissot ellipses.
         </p>
@@ -959,7 +960,7 @@ export function TransformGraph() {
           worst-case <em>bound</em> (from fits, representation error,
           tessellation, float32 rounding), which composes linearly, and a{" "}
           <em>σ</em> (from the frames layer, surveys, ephemerides), which
-          composes in quadrature. A smooth node that states a σ joins the
+          composes in quadrature. A curvilinear node that states a σ joins the
           route&apos;s accuracy; one that states only a bound leaves it
           unstated, naming the bound; one that states nothing is exact by
           definition.
@@ -968,8 +969,8 @@ export function TransformGraph() {
         <p>
           A clip set is placed at a node, so <C>ClipSet.frame</C> may be one.
           Where its route to the content is rigid, the test is a matrix. Where
-          it crosses a smooth edge, <C>planClip</C> says &quot;curved&quot; and
-          the clip is cut along a signed distance fitted per draw, from the
+          it crosses a curvilinear edge, <C>planClip</C> says &quot;curved&quot;
+          and the clip is cut along a signed distance fitted per draw, from the
           route <C>nodeResolver</C> gives. The Clipping tab has how and what is
           left.
         </p>
@@ -990,9 +991,9 @@ export function TransformGraph() {
           The <a href="/examples/vertical-exaggeration/">example</a> is the
           model&apos;s test: an application can exaggerate everything through
           the graph, and the engine has no exaggeration feature.{" "}
-          <C>verticalExaggeration</C> is a helper over the same smooth node an
-          application could write by hand (the snippet above ends with one). The
-          Earth&apos;s anchor is bound to a node under ITRF, so terrain, the
+          <C>verticalExaggeration</C> is a helper over the same curvilinear node
+          an application could write by hand (the snippet above ends with one).
+          The Earth&apos;s anchor is bound to a node under ITRF, so terrain, the
           buildings, models and pins keep their true coordinates and are drawn
           through it. The camera stays at ITRF.
         </p>
@@ -1063,17 +1064,17 @@ export function TransformGraph() {
         <h3>Twins</h3>
         <p>
           A draw has one program and one record, so when views reach an anchor
-          by routes of different shape, they are grouped by shape (the smooth
-          edges crossed, in order and direction, by identity), and each group
-          past the first gets a <strong>twin</strong> of each mesh draw its
-          views show.
+          by routes of different shape, they are grouped by shape (the
+          curvilinear edges crossed, in order and direction, by identity), and
+          each group past the first gets a <strong>twin</strong> of each mesh
+          draw its views show.
         </p>
         <ul>
           <li>
-            The first group that crosses a smooth edge keeps the source draws. A
-            twin is routed as an anchor of its own, so its fits, its compiled
-            program, its bounds and the terrain&apos;s exact term all follow
-            that group&apos;s route.
+            The first group that crosses a curvilinear edge keeps the source
+            draws. A twin is routed as an anchor of its own, so its fits, its
+            compiled program, its bounds and the terrain&apos;s exact term all
+            follow that group&apos;s route.
           </li>
           <li>
             Masks the owner set are kept and narrowed to each group&apos;s
@@ -1097,9 +1098,9 @@ export function TransformGraph() {
           view, and the engine says so once. A ray query with no view sees a
           draw and its twin. A twin costs a draw record and its share of the
           draw table for each tile a second group shows. A view that differs
-          only in a draw&apos;s record data (a rigid step before the last smooth
-          one) shows its group&apos;s first view. Follow-up 10 removes the twins
-          by choosing the program per (draw, view). Checked by{" "}
+          only in a draw&apos;s record data (a rigid step before the last
+          curvilinear one) shows its group&apos;s first view. Follow-up 10
+          removes the twins by choosing the program per (draw, view). Checked by{" "}
           <C>test/warpViewVariants.test.ts</C> and a spike: three views of one
           world, each box within 1.5 px of its own route.
         </p>
@@ -1145,7 +1146,7 @@ export function TransformGraph() {
             selection tab has the details.
           </li>
           <li>
-            <strong>Exact where compilable.</strong> A built-in smooth node
+            <strong>Exact where compilable.</strong> A built-in curvilinear node
             compiles to exact GPU code, with its Jacobian by differentiation
             (audit, 2026-11-13). Only <C>blendWarps</C> and a user&apos;s opaque
             closure are fitted. The plan keeps fitting, narrowed, for opaque
@@ -1183,16 +1184,16 @@ export function TransformGraph() {
         />
         <p>
           <strong>Tessellation is a spike.</strong> A straight edge of the
-          content is a curve once a smooth edge is crossed, and a triangle that
-          spans one sags from its chord by about L²·‖H‖/8. The spike gives each
-          triangle n = ⌈√(M₂L²/8 / tolerance)⌉ (<C>curvatureOver</C> takes M₂
-          from the route&apos;s Jacobian by differences, because the AD Hessian
-          at Earth scale is rounding noise; <C>subdivisionFor</C> gives n) and
-          runs the subdivision as a compute pass with an indirect draw, as the
-          b-rep dicing does. A 50 km tile under ×10 at 10 km: two triangles take
-          n = 36 and fall from 102 px of chord error to 0.08 px; 128 triangles
-          take n = 5. It is not wired into drawing: what&apos;s missing is in
-          the last section.
+          content is a curve once a curvilinear edge is crossed, and a triangle
+          that spans one sags from its chord by about L²·‖H‖/8. The spike gives
+          each triangle n = ⌈√(M₂L²/8 / tolerance)⌉ (<C>curvatureOver</C> takes
+          M₂ from the route&apos;s Jacobian by differences, because the AD
+          Hessian at Earth scale is rounding noise; <C>subdivisionFor</C> gives
+          n) and runs the subdivision as a compute pass with an indirect draw,
+          as the b-rep dicing does. A 50 km tile under ×10 at 10 km: two
+          triangles take n = 36 and fall from 102 px of chord error to 0.08 px;
+          128 triangles take n = 5. It is not wired into drawing: what&apos;s
+          missing is in the last section.
         </p>
         <Written
           from={
@@ -1268,8 +1269,8 @@ export function TransformGraph() {
           Pick a scene, drag a slider, then move content or the camera to
           another node with the checkboxes and watch the picture and the route
           change. Thin gray edges in the tree are affine; bold purple ones are
-          smooth. Units in the Earth scenes are schematic: the planet is drawn
-          small and its relief large, so that k is visible. The{" "}
+          curvilinear. Units in the Earth scenes are schematic: the planet is
+          drawn small and its relief large, so that k is visible. The{" "}
           <a href="/examples/transform-graph/">gallery example</a> is the same
           idea in 3D, on real data.
         </p>

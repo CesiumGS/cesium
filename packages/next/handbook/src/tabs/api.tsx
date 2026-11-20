@@ -161,7 +161,7 @@ export function Api() {
           deformer is a node over the content it deforms: vertical exaggeration,
           a projection, a bend, a lens. The built-ins come from the core (
           <C>verticalExaggeration</C>, <C>utm</C>, <C>bend</C> and the rest),{" "}
-          <C>smoothFrame</C> and <C>switchFrame</C> in{" "}
+          <C>curvilinearFrame</C> and <C>switchFrame</C> in{" "}
           <C>@cesium/next/frames</C> put them in the tree, and your own is a
           restricted-JavaScript function the engine parses, never evaluates. The{" "}
           <a href="#/transform-graph">Transform graph tab</a> explains it.
@@ -171,8 +171,8 @@ export function Api() {
           <li>
             <C>pickIn</C> reads a pick, and <C>pointIn</C> and <C>measureIn</C>{" "}
             a point or a distance, in any node, in float64. <C>accuracyAlong</C>{" "}
-            gives the accuracy along a route, from the Jacobian of each smooth
-            node and its own stated figure.
+            gives the accuracy along a route, from the Jacobian of each
+            curvilinear node and its own stated figure.
           </li>
           <li>
             A slider is a <C>PlacementParameter</C>, one float. A view can hold
@@ -189,8 +189,8 @@ export function Api() {
           from={
             <>
               <C>src/transform</C>, <C>src/transforms</C>,{" "}
-              <C>src/georeference</C>, <C>src/frames/smoothFrame.ts</C> and the
-              design note docs/design/transform-graph.md
+              <C>src/georeference</C>, <C>src/frames/curvilinearFrame.ts</C> and
+              the design note docs/design/transform-graph.md
             </>
           }
           on="2026-11-12"

@@ -1,6 +1,6 @@
 // Compiled routes in the renderer (plan 2026-11-12, task 4, part b). A draw
-// under an anchor whose route to the render root crosses only smooth steps the
-// compiler takes (`Warp.smooth`, src/transform/compile.ts) is drawn by that
+// under an anchor whose route to the render root crosses only curvilinear steps the
+// compiler takes (`Warp.curvilinear`, src/transform/compile.ts) is drawn by that
 // compiled route instead of a fit (scene/warpFit.ts): its batch has the
 // route's pipeline variant (scene/routeVariant.ts), and its record's
 // placement block holds the draw's data for the route's `tgRoute`:
@@ -19,7 +19,7 @@
 //    again;
 //  - per vertex: the residual, in the route's pipeline variant.
 //
-// Fits stay for what the compiler refuses (a warp with no smooth spec, JS
+// Fits stay for what the compiler refuses (a warp with no curvilinear spec, JS
 // outside the subset, an inverse step), draws with terms of their own, patch
 // draws, point sets, billboards and instances, a world with curved clips, and
 // a route whose pipelines failed to compile. The draw's culling sphere is the
@@ -449,7 +449,7 @@ export class WorldRoutes {
 
   /**
    * The routed anchor made for the slot, or why it can't be: `say` when the
-   * route had smooth specs and the compiler still refused it (a warp with none
+   * route had curvilinear specs and the compiler still refused it (a warp with none
    * is the usual case, and fitted without a word).
    */
   #make(
@@ -1124,7 +1124,7 @@ function shapeOf(camera: CameraRoute): string {
     .map((s) =>
       s.kind === "rigid"
         ? "r"
-        : `${s.inverse ? "i" : "f"}${s.warp.smooth?.source ?? "?"}`,
+        : `${s.inverse ? "i" : "f"}${s.warp.curvilinear?.source ?? "?"}`,
     )
     .join(",");
 }
@@ -1198,13 +1198,13 @@ function rangesOf(
       continue;
     }
     for (const [name, identity] of Object.entries(
-      warp.smooth?.identity ?? {},
+      warp.curvilinear?.identity ?? {},
     )) {
       const key = info.keys.get(name);
       if (key === undefined) {
         continue;
       }
-      const value = warp.smooth!.params[name]!;
+      const value = warp.curvilinear!.params[name]!;
       const a = identity + range[0] * (value - identity);
       const b = identity + range[1] * (value - identity);
       ranges[key] = [Math.min(a, b), Math.max(a, b)];

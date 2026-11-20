@@ -1,6 +1,6 @@
 // Per-view variants of a draw (scene/world/variants.ts): a switch frame whose
 // choices differ in structure for different views (an exaggeration for one,
-// the identity or another smooth edge for another) is drawn by one draw per
+// the identity or another curvilinear edge for another) is drawn by one draw per
 // shape of route, each restricted to its views by the view masks. On the CPU,
 // against the routes' own float64 maps and the draws' records; the GPU's side
 // is spikes/warpViews.ts.
@@ -8,7 +8,10 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { routeForward, type Route } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { switchFrame, type SwitchChoice } from "../src/frames/smoothFrame.ts";
+import {
+  switchFrame,
+  type SwitchChoice,
+} from "../src/frames/curvilinearFrame.ts";
 import {
   heightOffset,
   verticalExaggeration,
@@ -202,7 +205,7 @@ describe("a switch frame with structurally different choices", () => {
     expect(drawTerms(s.world, twin)).toBeUndefined();
     expect(maskOf(s.world, s.draw)).toBe(bit(s.a));
     expect(maskOf(s.world, twin)).toBe(bit(s.b));
-    // Each view's route: A's takes 1000 m to 10 000 m, B's has no smooth edge.
+    // Each view's route: A's takes 1000 m to 10 000 m, B's has no curvilinear edge.
     expect(heightAfter(s.a.anchorRoute(s.earth), 1000)).toBeCloseTo(10_000, 2);
     expect(s.b.anchorRoute(s.earth)).toBeUndefined();
     expect(heightAfter(undefined, 1000)).toBeCloseTo(1000, 6);
@@ -227,7 +230,7 @@ describe("a switch frame with structurally different choices", () => {
     expect(center[0]! - R).toBeCloseTo(10_000, 1);
   });
 
-  it("draws two different smooth edges, each view by the compiled route of its own", async () => {
+  it("draws two different curvilinear edges, each view by the compiled route of its own", async () => {
     const s = await setup(
       verticalExaggeration({ factor: 10 }),
       heightOffset(500),

@@ -16,7 +16,7 @@
 //   side) is rigid: the table is tested on the content's point, the
 //   fragment's location 4 (`relPosition`: the draw's transform on the design
 //   position, before any placement or route). Where content sits decides
-//   this, not the route: a deformer over the content (a smooth edge between
+//   this, not the route: a deformer over the content (a curvilinear edge between
 //   the content's frame and the root) changes where it is drawn, not the
 //   coordinates it has in its own frame.
 // - **Drawn.** The set's route to the render root is rigid: the table is
@@ -1405,8 +1405,8 @@ export function clipSetsOf(
 /**
  * A filter over `sets` for points in `frame` at `seconds`: each point is
  * routed, in float64, into each set's own frame (a rigid route by its
- * matrix; across a smooth edge by the route's forward map) and tested there.
- * A route that crosses a smooth edge is followed: the point is tested where
+ * matrix; across a curvilinear edge by the route's forward map) and tested there.
+ * A route that crosses a curvilinear edge is followed: the point is tested where
  * it is drawn, in a set named in a drawn frame. Without a resolver the
  * points are taken to be in the sets' frames. Undefined for no sets.
  */

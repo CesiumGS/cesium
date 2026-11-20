@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import {
   routeForward,
   routeInverse,
-  smoothFrame,
+  curvilinearFrame,
   warpForward,
   warpInverse,
   createFrameCatalog,
@@ -35,10 +35,10 @@ const height = (p: ArrayLike<number>) =>
 const apart = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
 
-/** The smooth frame's warp of a ×10 exaggeration at the scale the box holds. */
+/** The curvilinear frame's warp of a ×10 exaggeration at the scale the box holds. */
 function exaggeration(scale: { value: number }): Warp {
   const catalog = createFrameCatalog();
-  return smoothFrame(
+  return curvilinearFrame(
     "exaggerated",
     catalog.get("ITRF"),
     verticalExaggeration({ factor: 10, scale }),

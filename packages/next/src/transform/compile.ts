@@ -5,7 +5,7 @@
 //   F(c + δ) = F(c) + [F(c + δ) - F(c)],
 // the first term per draw in hi/lo float32 (from float64 on the CPU, or a
 // df64 compute pass), the second per vertex in float32 and relative to
-// itself, by the residual rules of residual.ts: each smooth step's IR is
+// itself, by the residual rules of residual.ts: each curvilinear step's IR is
 // evaluated as (center value, change) pairs, so a position 6.4e6 m from the
 // origin or a UTM coordinate keeps its millimeters. Affine runs collapse to
 // a float32 3×3 on δ (the translation is in F(c)); the output is
@@ -16,7 +16,7 @@
 // separable parameters. Per-view data (`RouteUniforms`): the eye as hi and
 // lo, the affine 3×3s, the parameter values, and values derived from the
 // parameters alone (float64 on the CPU). A parameter that enters affinely at
-// the last smooth step and declares itself `separable` is a uniform for
+// the last curvilinear step and declares itself `separable` is a uniform for
 // good: the shader forms the center values from it, with no per-frame work.
 // Any other parameter that the center values depend on is "dynamic": a
 // change recomputes every draw's center constants, on the CPU
@@ -25,11 +25,11 @@
 // them when `route.revision` changes.
 //
 // Normals are the cofactor of the route's Jacobian at the vertex: each
-// smooth step's J (autodiff, ad.ts) is evaluated by the same residual rules
+// curvilinear step's J (autodiff, ad.ts) is evaluated by the same residual rules
 // and the steps' and affine runs' 3×3s are multiplied; `transformNormalTangent`
 // orthogonalizes against the transformed tangent.
 //
-// A route is refused (`ok: false`, with the reason) when a smooth step has no
+// A route is refused (`ok: false`, with the reason) when a curvilinear step has no
 // restricted-JS source, the source does not parse, or the step is an inverse:
 // the caller falls back to fitted lattices. Programs are cached by `key`.
 //
@@ -38,7 +38,7 @@
 // as float32 allows relative to its own offsets (spikes/transformGraph.ts:
 // 2.6 to 9 mm for ×10 exaggeration at 1 to 8 km, under 1.2 mm elsewhere, and
 // the blend band's kink included). A Taylor form (center J, H, third
-// derivatives in float64) would cost less per vertex for a smooth step
+// derivatives in float64) would cost less per vertex for a curvilinear step
 // with no kinks and stays an option for the normals, whose exact Jacobian
 // is the expensive part of a nested route.
 import { hessianProgram, jacobianProgram } from "./ad.ts";
@@ -49,7 +49,7 @@ import {
   splitDouble,
 } from "./df64Wgsl.ts";
 import { evaluate } from "./evaluate.ts";
-import type { SmoothSpec } from "./graph.ts";
+import type { CurvilinearSpec } from "./graph.ts";
 import type { IrProgram } from "./ir.ts";
 import { parseTransform } from "./parse.ts";
 import {
@@ -59,7 +59,7 @@ import {
   type PassHost,
   type PassOutput,
 } from "./residual.ts";
-import type { AffineStep, Route, SmoothStep } from "./route.ts";
+import type { AffineStep, Route, CurvilinearStep } from "./route.ts";
 
 export interface CompileOptions {
   /**
@@ -109,7 +109,7 @@ export interface RecordLayout {
 
 export type ParamRecord = Readonly<Record<string, number>>;
 
-/** A smooth step's IR, for what reads it besides the shader (bounds: intervals over a box). */
+/** A curvilinear step's IR, for what reads it besides the shader (bounds: intervals over a box). */
 export interface CompiledStep {
   /** Index among the route's collapsed steps (`route.steps`). */
   readonly stepIndex: number;
@@ -126,7 +126,7 @@ export interface CompiledStep {
 
 export interface CompiledRoute {
   readonly ok: true;
-  /** The route's `shapeKey`, a hash of the smooth steps' sources, and the options. */
+  /** The route's `shapeKey`, a hash of the curvilinear steps' sources, and the options. */
   readonly key: string;
   /**
    * A WGSL module fragment: `DrawCenter`, `RouteUniforms`, the helpers, and
@@ -151,7 +151,7 @@ export interface CompiledRoute {
   readonly perDrawLayout: RecordLayout;
   /** Parameters (as `<id>.<name>`) whose change needs the center constants recomputed. */
   readonly dynamicParams: readonly string[];
-  /** Parameters that are plain uniforms: affine at the last smooth step, so no center work. */
+  /** Parameters that are plain uniforms: affine at the last curvilinear step, so no center work. */
   readonly separableParams: readonly string[];
   /** Parameters read by the route that no center value depends on: uniforms with no center work either. */
   readonly uniformParams: readonly string[];
@@ -169,11 +169,11 @@ export interface CompiledRoute {
     /** group 0, binding 3 (read-only storage array<u32>), with `centerRows`: each draw's record's first float. */
     readonly rows: 3;
   };
-  /** How each smooth step's normals are made, in route order ("none" without normals). */
+  /** How each curvilinear step's normals are made, in route order ("none" without normals). */
   readonly normalModes: readonly ("exact" | "linear" | "none")[];
   /** The route's parameter values by `<id>.<name>`. */
   paramValues(route: Route): ParamRecord;
-  /** The smooth steps' IR in route order. */
+  /** The curvilinear steps' IR in route order. */
   readonly steps: readonly CompiledStep[];
   /** Fills the per-view uniforms for the route's current matrices and parameters; `eye` is in the route's output frame. */
   fillUniforms(
@@ -205,7 +205,7 @@ export interface CompiledRoute {
 
 export interface Refusal {
   readonly ok: false;
-  /** Why the route cannot be compiled, naming the smooth step. */
+  /** Why the route cannot be compiled, naming the curvilinear step. */
   readonly reason: string;
 }
 
@@ -255,15 +255,15 @@ const slot3 = (base: string, offset: number) => `${base}.v${offset >> 2}.xyz`;
 const members = (floats: number) =>
   Array.from({ length: floats / 4 }, (_, i) => `  v${i}: vec4f,`);
 
-interface SmoothInfo {
-  /** Ordinal among the route's smooth steps. */
+interface CurvilinearInfo {
+  /** Ordinal among the route's curvilinear steps. */
   readonly j: number;
   readonly stepIndex: number;
   readonly id: string;
   /** Parameter names the step's function reads, in the spec's order. */
   readonly locals: readonly string[];
   readonly keys: ReadonlyMap<string, string>;
-  readonly spec: SmoothSpec;
+  readonly spec: CurvilinearSpec;
   readonly value: IrProgram;
   readonly jacobian: IrProgram | undefined;
   /** How the step's Jacobian is made in the shader; set once the route's modes are chosen. */
@@ -282,9 +282,9 @@ interface LinearFields {
   readonly h0: number;
 }
 
-interface SmoothLink {
-  readonly kind: "smooth";
-  readonly info: SmoothInfo;
+interface CurvilinearLink {
+  readonly kind: "curvilinear";
+  readonly info: CurvilinearInfo;
   readonly value: ResidualPass;
   readonly valueOut: PassOutput[];
   readonly jac: ResidualPass | undefined;
@@ -292,14 +292,14 @@ interface SmoothLink {
   readonly linear: LinearFields | undefined;
 }
 
-type Link = AffineLink | SmoothLink;
+type Link = AffineLink | CurvilinearLink;
 
 interface Plan {
   readonly uniforms: Records;
   readonly draw: Records;
   readonly paramOffsets: ReadonlyMap<string, number>;
   readonly links: readonly Link[];
-  /** Separable parameters kept as uniforms: local names, at the last smooth step. */
+  /** Separable parameters kept as uniforms: local names, at the last curvilinear step. */
   readonly separable: readonly string[];
   readonly eyeHi: number;
   readonly eyeLo: number;
@@ -344,7 +344,7 @@ function hessianOf(value: IrProgram): IrProgram {
 
 /** Sets each step's `normal` from the mode asked for (`CompileOptions.normals`). */
 function chooseNormals(
-  infos: readonly SmoothInfo[],
+  infos: readonly CurvilinearInfo[],
   requested: "exact" | "linear" | "auto" | "none",
 ): void {
   if (requested === "none") {
@@ -353,20 +353,20 @@ function chooseNormals(
     }
     return;
   }
-  const smoothSteps = infos.map(
+  const curvilinearSteps = infos.map(
     (info) => !info.value.nodes.some((node) => KINK_OPS.has(node.op)),
   );
   // What linear normals would save: the Jacobian programs of the steps that may take them.
   const saved = infos.reduce(
     (sum, info, k) =>
-      sum + (smoothSteps[k] ? (info.jacobian?.nodes.length ?? 0) : 0),
+      sum + (curvilinearSteps[k] ? (info.jacobian?.nodes.length ?? 0) : 0),
     0,
   );
   const linear =
     requested === "linear" ||
     (requested === "auto" && saved > AUTO_LINEAR_NODES);
   infos.forEach((info, k) => {
-    info.normal = linear && smoothSteps[k] ? "linear" : "exact";
+    info.normal = linear && curvilinearSteps[k] ? "linear" : "exact";
   });
 }
 
@@ -378,10 +378,13 @@ function hash(text: string): string {
   return h.toString(16).padStart(8, "0");
 }
 
-function smoothSpecOf(route: Route, step: SmoothStep): SmoothSpec {
+function curvilinearSpecOf(
+  route: Route,
+  step: CurvilinearStep,
+): CurvilinearSpec {
   const edge = route.from.graph.edgeFor(step.node, route.view).edge;
-  if (edge.kind !== "smooth") {
-    throw new Error(`"${step.node.name}" is not a smooth node`);
+  if (edge.kind !== "curvilinear") {
+    throw new Error(`"${step.node.name}" is not a curvilinear node`);
   }
   return edge.spec;
 }
@@ -403,24 +406,24 @@ export function compileRoute(
   const normals = requested !== "none";
   const centerRows = options.centerRows ?? false;
   const steps = route.steps;
-  const infos: SmoothInfo[] = [];
+  const infos: CurvilinearInfo[] = [];
   const seen = new Map<string, number>();
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i]!;
-    if (step.kind !== "smooth") {
+    if (step.kind !== "curvilinear") {
       continue;
     }
-    const spec = smoothSpecOf(route, step);
+    const spec = curvilinearSpecOf(route, step);
     if (step.inverse) {
       return {
         ok: false,
-        reason: `smooth step "${step.id}" runs through its inverse; only forward steps compile (the fitted lattice path takes it)`,
+        reason: `curvilinear step "${step.id}" runs through its inverse; only forward steps compile (the fitted lattice path takes it)`,
       };
     }
     if (spec.source === undefined) {
       return {
         ok: false,
-        reason: `smooth step "${step.id}" has no restricted-JS source for the IR (its function is not in the subset); the fitted lattice path takes it`,
+        reason: `curvilinear step "${step.id}" has no restricted-JS source for the IR (its function is not in the subset); the fitted lattice path takes it`,
       };
     }
     let value: IrProgram;
@@ -434,7 +437,7 @@ export function compileRoute(
     } catch (error) {
       return {
         ok: false,
-        reason: `smooth step "${step.id}": ${error instanceof Error ? error.message : String(error)}`,
+        reason: `curvilinear step "${step.id}": ${error instanceof Error ? error.message : String(error)}`,
       };
     }
     const declared = new Set(Object.keys(spec.params));
@@ -442,7 +445,7 @@ export function compileRoute(
     if (undeclared !== undefined) {
       return {
         ok: false,
-        reason: `smooth step "${step.id}" reads parameter '${undeclared}', which its spec does not declare`,
+        reason: `curvilinear step "${step.id}" reads parameter '${undeclared}', which its spec does not declare`,
       };
     }
     const count = (seen.get(step.id) ?? 0) + 1;
@@ -512,7 +515,7 @@ function bind(core: Core, route: Route): CompiledRoute {
 
 function buildPlan(
   route: Route,
-  infos: readonly SmoothInfo[],
+  infos: readonly CurvilinearInfo[],
   separable: ReadonlySet<string>,
 ): Plan | Set<string> {
   const uniforms = new Records();
@@ -580,7 +583,15 @@ function buildPlan(
         demote.add(name);
       }
     }
-    links.push({ kind: "smooth", info, value, valueOut, jac, jacOut, linear });
+    links.push({
+      kind: "curvilinear",
+      info,
+      value,
+      valueOut,
+      jac,
+      jacOut,
+      linear,
+    });
   });
   if (demote.size > 0) {
     return demote;
@@ -650,7 +661,7 @@ function fillPass(
 function assemble(
   key: string,
   plan: Plan,
-  infos: readonly SmoothInfo[],
+  infos: readonly CurvilinearInfo[],
   normals: boolean,
   centerCompute: boolean,
   centerRows: boolean,
@@ -658,14 +669,14 @@ function assemble(
   const last = infos[infos.length - 1];
   const uniformLayout = plan.uniforms.layout();
   const drawLayout = plan.draw.layout();
-  const keyOf = (info: SmoothInfo, name: string) => info.keys.get(name)!;
+  const keyOf = (info: CurvilinearInfo, name: string) => info.keys.get(name)!;
 
   const separableKeys = last ? plan.separable.map((p) => keyOf(last, p)) : [];
   const dynamic: string[] = [];
   const uniformOnly: string[] = [];
   const approximate = new Set<string>();
   for (const link of plan.links) {
-    if (link.kind !== "smooth") {
+    if (link.kind !== "curvilinear") {
       continue;
     }
     const centered = new Set([
@@ -705,7 +716,7 @@ function assemble(
     const values: Record<string, number> = {};
     const graph = route.from.graph;
     for (const info of infos) {
-      const node = (route.steps[info.stepIndex] as SmoothStep).node;
+      const node = (route.steps[info.stepIndex] as CurvilinearStep).node;
       const held = graph.values(node, route.view);
       for (const name of info.locals) {
         values[keyOf(info, name)] = held[name] ?? info.spec.params[name]!;
@@ -713,7 +724,7 @@ function assemble(
     }
     return values;
   };
-  const localValues = (info: SmoothInfo, values: ParamRecord) => {
+  const localValues = (info: CurvilinearInfo, values: ParamRecord) => {
     const local: Record<string, number> = {};
     for (const name of info.locals) {
       local[name] = values[keyOf(info, name)]!;
@@ -753,7 +764,7 @@ function assemble(
       }
     }
     for (const link of plan.links) {
-      if (link.kind !== "smooth") {
+      if (link.kind !== "curvilinear") {
         continue;
       }
       const local = localValues(link.info, values);
@@ -918,7 +929,7 @@ function assemble(
 
 function generateWgsl(
   plan: Plan,
-  last: SmoothInfo | undefined,
+  last: CurvilinearInfo | undefined,
   uniformLayout: RecordLayout,
   drawLayout: RecordLayout,
   normals: boolean,
@@ -962,7 +973,7 @@ function generateWgsl(
   );
   const center = "tgCenter(c, u)";
   for (const link of plan.links) {
-    if (link.kind !== "smooth") {
+    if (link.kind !== "curvilinear") {
       continue;
     }
     const { j } = link.info;
@@ -1103,9 +1114,9 @@ interface CenterShader {
  */
 function centerShader(
   plan: Plan,
-  infos: readonly SmoothInfo[],
+  infos: readonly CurvilinearInfo[],
   recordFloats: number,
-  paramList: readonly { info: SmoothInfo; name: string; key: string }[],
+  paramList: readonly { info: CurvilinearInfo; name: string; key: string }[],
   centerRows: boolean,
 ): CenterShader {
   const last = infos[infos.length - 1];
@@ -1119,7 +1130,7 @@ function centerShader(
   }
   const uniformFloats = cursor;
   const uf = (offset: number) => slot("cu", offset);
-  const paramIndex = (info: SmoothInfo, name: string) =>
+  const paramIndex = (info: CurvilinearInfo, name: string) =>
     paramList.findIndex((p) => p.info === info && p.name === name);
 
   const out: string[] = [
@@ -1136,7 +1147,7 @@ function centerShader(
       : []),
     ``,
   ];
-  const evalFn = (name: string, pass: ResidualPass, info: SmoothInfo) => {
+  const evalFn = (name: string, pass: ResidualPass, info: CurvilinearInfo) => {
     const program = pass.centerProgram();
     const local = new Map(info.locals.map((n, i) => [n, i]));
     const { lines, ref } = emitDf64(
@@ -1157,7 +1168,7 @@ function centerShader(
     );
   };
   for (const link of plan.links) {
-    if (link.kind === "smooth") {
+    if (link.kind === "curvilinear") {
       evalFn(`tgcValue${link.info.j}`, link.value, link.info);
       if (link.jac) {
         evalFn(`tgcJac${link.info.j}`, link.jac, link.info);

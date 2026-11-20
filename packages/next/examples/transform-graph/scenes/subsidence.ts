@@ -1,5 +1,5 @@
 import { Ellipsoid, bump, fromDegrees, liveEdge, vec3 } from "@cesium/next";
-import { smoothFrame } from "@cesium/next/frames";
+import { curvilinearFrame } from "@cesium/next/frames";
 import { addOsmBuildings, bindEarth, geodeticOf } from "../content.ts";
 import { whenDrawn } from "../loading.ts";
 import { createMarker } from "../markers.ts";
@@ -22,7 +22,7 @@ export const subsidence: Scene = {
   number: 8,
   title: "Time-varying subsidence",
   caption:
-    "A synthetic subsidence bowl over Jakarta: one smooth node (a Gaussian bump, lifting down) over the Earth's content, its amplitude moving with time. Terrain and OSM Buildings sink together; play it, or drag the time and the exaggeration.",
+    "A synthetic subsidence bowl over Jakarta: one curvilinear node (a Gaussian bump, lifting down) over the Earth's content, its amplitude moving with time. Terrain and OSM Buildings sink together; play it, or drag the time and the exaggeration.",
   point:
     "A parameter that varies with time is one float of the node, so the whole city moves with no refit; true and drawn subsidence at a pick differ by exactly the exaggeration. The field is synthetic, not InSAR.",
   sources: [
@@ -64,7 +64,11 @@ export const subsidence: Scene = {
       scale,
       identity: { amplitude: 0 },
     });
-    const frame = smoothFrame("Earth content (subsiding)", host.itrf, edge);
+    const frame = curvilinearFrame(
+      "Earth content (subsiding)",
+      host.itrf,
+      edge,
+    );
     host.catalog.add(frame);
     const earth = bindEarth(host, frame);
 

@@ -18,7 +18,10 @@ import {
   type VerticalExaggeration,
 } from "../src/georeference/heightWarps.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame, type SmoothFrame } from "../src/frames/smoothFrame.ts";
+import {
+  curvilinearFrame,
+  type CurvilinearFrame,
+} from "../src/frames/curvilinearFrame.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import * as v3 from "../src/math/vec3.ts";
 import { EARTH } from "../src/scene/Body.ts";
@@ -96,20 +99,20 @@ interface Scene {
   box: DrawHandle;
   catalog: ReturnType<typeof createFrameCatalog>;
   resolver: ReturnType<typeof createFramesResolver>;
-  frame: SmoothFrame;
+  frame: CurvilinearFrame;
   scale: { value: number };
   warp: VerticalExaggeration;
   /** Heights are drawn this many times as tall at scale `s`: 1 + 9 s. */
   factor(): number;
 }
 
-/** A world with the Earth's anchor placed in the smooth frame `exaggerated` under ITRF, a box on it and a frames resolver; the view not yet rigged. */
+/** A world with the Earth's anchor placed in the curvilinear frame `exaggerated` under ITRF, a box on it and a frames resolver; the view not yet rigged. */
 function scene(start = 0.5): Scene {
   const world = engine.createWorld({ maxDraws: 16 });
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const scale = world.createPlacementParameter(start, { range: [0, 1] });
   const warp = fittedOnly(verticalExaggeration({ factor: 10, scale }));
-  const frame = smoothFrame("exaggerated", catalog.get("ITRF"), warp);
+  const frame = curvilinearFrame("exaggerated", catalog.get("ITRF"), warp);
   catalog.add(frame);
   const resolver = createFramesResolver(catalog);
   engine.cameras.setResolver(world, resolver);
@@ -307,7 +310,7 @@ describe("View.toPixel through the view's route", () => {
   });
 });
 
-describe("a view on ITRF re-roots onto a frame under a smooth edge", () => {
+describe("a view on ITRF re-roots onto a frame under a curvilinear edge", () => {
   it("carries the camera down through the edge's inverse, and back up", () => {
     const s = scene(0.5);
     const itrf = s.catalog.get("ITRF");

@@ -1,7 +1,7 @@
 // Accuracy along a route (plan 2026-11-12, task 5): a point's covariance
 // carried edge by edge, Σ_out = J Σ Jᵀ with J the chain's Jacobian (the IR's
-// autodiff for a smooth edge that has IR, else its function's own or central
-// differences), plus what each edge declares of itself: a smooth edge's
+// autodiff for a curvilinear edge that has IR, else its function's own or central
+// differences), plus what each edge declares of itself: a curvilinear edge's
 // `accuracy` (1σ, m) and, through a callback, an affine edge's (a reference
 // frame's `FrameAccuracy`). Conventions are the frames composer's
 // (frames/pointAccuracy.ts): a figure in meters is the 1σ of the position
@@ -10,7 +10,7 @@
 //
 // Matrices here are row-major 3×3 (m²) unless a name says column-major (the
 // route's Jacobians are).
-import type { Params, SmoothSpec, TransformNode } from "./graph.ts";
+import type { Params, CurvilinearSpec, TransformNode } from "./graph.ts";
 import type { Route } from "./route.ts";
 import { adJacobian } from "./stepIr.ts";
 
@@ -77,7 +77,7 @@ function covarianceOf(sigma: SigmaIn): Float64Array {
 /** An edge as the accuracy callback sees it. */
 export interface EdgeQuery {
   readonly node: TransformNode;
-  readonly kind: "affine" | "smooth";
+  readonly kind: "affine" | "curvilinear";
   /** The route goes down through the edge. */
   readonly down: boolean;
   /** An affine edge's 4×4 as applied, column-major. */
@@ -91,7 +91,7 @@ export interface EdgeQuery {
  * What an edge adds to the error at its output, in the axes of the output:
  * a 1σ magnitude in meters, a row-major covariance (m²), or undefined for
  * nothing. Asked of affine edges (a frame's stated accuracy) and, to
- * override `spec.accuracy`, of smooth ones.
+ * override `spec.accuracy`, of curvilinear ones.
  */
 export type EdgeAccuracy = (
   edge: EdgeQuery,
@@ -106,7 +106,7 @@ export interface AccuracyOptions {
 export interface AccuracyPart {
   /** The node whose edge it comes from, or "input". */
   readonly node: string;
-  readonly kind: "input" | "smooth" | "affine";
+  readonly kind: "input" | "curvilinear" | "affine";
   /** 1σ, m: the root of the trace of its covariance at the output. */
   readonly meters: number;
 }
@@ -135,7 +135,7 @@ function invert3(m: Float64Array): Float64Array {
     d! * (b! * i! - c! * h!) +
     g! * (b! * f! - c! * e!);
   if (!(Math.abs(det) > 0)) {
-    throw new Error("accuracy: a smooth edge's Jacobian is singular");
+    throw new Error("accuracy: a curvilinear edge's Jacobian is singular");
   }
   const s = 1 / det;
   return Float64Array.of(
@@ -153,7 +153,7 @@ function invert3(m: Float64Array): Float64Array {
 
 /** The edge's Jacobian, column-major: the IR's autodiff where the spec has IR. */
 function edgeJacobian(
-  spec: SmoothSpec,
+  spec: CurvilinearSpec,
   params: Params,
   down: boolean,
   input: Float64Array,
@@ -200,7 +200,7 @@ function multiplyColumns(a: Float64Array, b: Float64Array): Float64Array {
 /**
  * The accuracy of `point` (of `route.from`, with 1σ `sigmaIn`) once it is
  * carried to `route.to`: Σ_out = J Σ Jᵀ for the chain's Jacobian J, plus each
- * edge's own figure carried through the edges after it. A smooth edge's
+ * edge's own figure carried through the edges after it. A curvilinear edge's
  * `accuracy` is a 1σ magnitude at its output, forward or undone; an affine
  * edge adds what `options.affine` says. Independent parts add.
  */
@@ -218,7 +218,7 @@ export function accuracyAlong(
   let chain: Float64Array = Float64Array.of(1, 0, 0, 0, 1, 0, 0, 0, 1);
   const position = route.walk(point, (edge) => {
     const j =
-      edge.kind === "smooth"
+      edge.kind === "curvilinear"
         ? edgeJacobian(
             edge.spec!,
             edge.params!,
@@ -234,7 +234,7 @@ export function accuracyAlong(
     }
     chain = multiplyColumns(j, chain);
     let figure: number | ArrayLike<number> | undefined;
-    if (edge.kind === "smooth") {
+    if (edge.kind === "curvilinear") {
       figure = edge.spec!.accuracy;
     }
     const query: EdgeQuery = {

@@ -225,8 +225,8 @@ export function TourNotes() {
       <li>
         <strong>Tissot ellipses</strong> are the route&apos;s J applied to a
         small circle in the content&apos;s frame. A circle stays a circle where
-        the route is a similarity, stretches along the direction a smooth node
-        stretches, and shrinks where it compresses.
+        the route is a similarity, stretches along the direction a curvilinear
+        node stretches, and shrinks where it compresses.
       </li>
       <li>
         <strong>Subdivision points</strong> are added where H says an edge bends
@@ -236,8 +236,8 @@ export function TourNotes() {
       </li>
       <li>
         <strong>True against drawn</strong> is the same measurement in two
-        nodes. Affine edges change nothing a ratio can see; the smooth ones are
-        where the two readouts part.
+        nodes. Affine edges change nothing a ratio can see; the curvilinear ones
+        are where the two readouts part.
       </li>
       <li>
         <strong>Normals</strong> map by the cofactor of J (green). Mapping them

@@ -5,7 +5,7 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import { EARTH, MOON, type Body } from "../src/scene/Body.ts";
@@ -363,7 +363,7 @@ describe("selection views on the anchor's body", () => {
     const world = newWorld();
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const itrf = catalog.get("ITRF");
-    const lifted = smoothFrame(
+    const lifted = curvilinearFrame(
       "lifted",
       itrf,
       verticalExaggeration({ factor: 10 }),

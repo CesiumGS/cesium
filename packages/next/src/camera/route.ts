@@ -1,5 +1,5 @@
-// Routes through the frame tree, rigid edges and smooth edges (docs/design/transform-graph.md).
-// A warp is a smooth edge: a map from a frame's own coordinates up to its
+// Routes through the frame tree, rigid edges and curvilinear edges (docs/design/transform-graph.md).
+// A warp is a curvilinear edge: a map from a frame's own coordinates up to its
 // parent's, exact in float64, which the engine compiles or fits for the GPU.
 // A route is the path from a content frame to a base (ISO 19111's
 // concatenated coordinate operation, PROJ's pipeline): rigid steps and warp
@@ -7,7 +7,7 @@
 // edge and inverse where it goes down. What is placed in a frame has that
 // frame's coordinates, true or not as the application decides, and is drawn
 // through the edges between it and the camera's root.
-import type { Params, SmoothSpec, ViewId } from "../transform/graph.ts";
+import type { Params, CurvilinearSpec, ViewId } from "../transform/graph.ts";
 import type { FrameKey, FrameResolver } from "./frameResolver.ts";
 
 /** A number that is read live and moves a warp's strength; a `PlacementParameter` has this shape. */
@@ -53,7 +53,7 @@ export interface HeightScale {
 }
 
 /**
- * A smooth edge of the frame tree: points in `from` (the node's own
+ * A curvilinear edge of the frame tree: points in `from` (the node's own
  * coordinates, meters, its axes) map to `to` (its parent) by `forward`, the
  * direction of the transform graph (src/transform): a deformer over some
  * content is a node whose forward is the deformation, so what is placed in it
@@ -102,7 +102,7 @@ export interface Warp {
    */
   readonly scale?: WarpScale;
   /**
-   * The warp as a transform-graph smooth step (src/transform): its function
+   * The warp as a transform-graph curvilinear step (src/transform): its function
    * as restricted JS (`source`) with `params` read live and, for a warp with
    * a `scale`, the `identity` values the scale interpolates from. A draw
    * whose route crosses only warps that have one is drawn by the compiled
@@ -110,7 +110,7 @@ export interface Warp {
    * compiler, the warp is fitted as ever. Set by the helpers over the built-in
    * transforms; it must be the same map as `forward` where content is.
    */
-  readonly smooth?: SmoothSpec;
+  readonly curvilinear?: CurvilinearSpec;
   /**
    * `p` in `from` to `out` in `to`, at scale 1. With `jacobian` (9 numbers),
    * also writes ∂out/∂p there, column-major. Must be injective on its domain.
@@ -129,11 +129,11 @@ export interface Warp {
 }
 
 /**
- * A `Warp` without its ends, for a smooth frame (`smoothFrame`, in the frames
+ * A `Warp` without its ends, for a curvilinear frame (`curvilinearFrame`, in the frames
  * module): `from` is the new frame and `to` its parent. What the helpers
  * (`verticalExaggeration`, `scaleAbout`, `fromFunction`, …) return.
  */
-export type SmoothFrameSpec = Omit<Warp, "from" | "to"> & {
+export type CurvilinearFrameSpec = Omit<Warp, "from" | "to"> & {
   /**
    * Called once with each frame built on this spec: how a helper's
    * `changed()` finds the frames to `invalidate()`.
@@ -157,14 +157,14 @@ export interface Route {
   readonly revision: number;
 }
 
-/** Thrown by `FrameResolver.resolve` for a route that crosses a smooth edge: it has no 4×4. Use `route`. */
+/** Thrown by `FrameResolver.resolve` for a route that crosses a curvilinear edge: it has no 4×4. Use `route`. */
 export class NonRigidRouteError extends Error {
   readonly frame: string;
   readonly base: string;
 
   constructor(frame: string, base: string) {
     super(
-      `${frame} to ${base}: the route crosses a smooth edge, so it has no 4×4; use the resolver's route()`,
+      `${frame} to ${base}: the route crosses a curvilinear edge, so it has no 4×4; use the resolver's route()`,
     );
     this.name = "NonRigidRouteError";
     this.frame = frame;
@@ -277,12 +277,12 @@ export function warpScaleOf(warp: Warp): number {
 }
 
 /**
- * The parameter values a warp's smooth step has now: the spec's, at the
+ * The parameter values a warp's curvilinear step has now: the spec's, at the
  * warp's scale (each parameter named in `identity` at
  * `identity + s · (value − identity)`, the warp's `p + s · (f(p) − p)`).
  */
-export function smoothValuesOf(warp: Warp): Params {
-  const spec = warp.smooth!;
+export function curvilinearValuesOf(warp: Warp): Params {
+  const spec = warp.curvilinear!;
   const values: Record<string, number> = { ...spec.params };
   if (warp.scale) {
     const s = warpScaleOf(warp);

@@ -6,13 +6,13 @@ declare const resolver: import("@cesium/next/frames").FramesResolver;
 declare const geographicNode: import("@cesium/next/frames").Frame;
 // ---
 import { liveEdge, utmToGeographic } from "@cesium/next";
-import { smoothFrame } from "@cesium/next/frames";
+import { curvilinearFrame } from "@cesium/next/frames";
 
 // A tileset authored in a projected CRS (here UTM 48S, EPSG:32748) is placed
 // by that CRS's node, not by a mode. Its node's edge is the projection,
 // run from the grid to geographic; the node above it takes geographic to
 // body-fixed meters.
-const utm48s = smoothFrame(
+const utm48s = curvilinearFrame(
   "UTM 48S (grid E, N, height)",
   geographicNode,
   liveEdge(utmToGeographic({ zone: 48, hemisphere: "south" }), {

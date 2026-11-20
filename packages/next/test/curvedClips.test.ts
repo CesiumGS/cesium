@@ -1,5 +1,5 @@
 // Curved clips (docs/design/geometry-through-placement-review.md, increment 8c; docs/design/transform-graph.md): a plane named in a design
-// frame whose route to the content crosses a smooth edge that bends it. Its signed
+// frame whose route to the content crosses a curvilinear edge that bends it. Its signed
 // distance is fitted per draw into the lattice rows' `w` channel; these check
 // the fit against float64 on the route, what the table and the packed rows
 // hold, and how the world follows its views' clips. The GPU side is
@@ -10,7 +10,7 @@ import { routeForward } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import type { Frame } from "../src/frames/Frame.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import {
   CLIP_SET_CURVED,
   CLIP_TABLE_ROWS,
@@ -249,7 +249,7 @@ describe("a plane in a design frame under a bending edge", () => {
   /**
    * A 20 km tile over the pole in the Earth's anchor, placed in ITRF or,
    * when `exaggerated`, in a frame under ITRF that draws it ×10 as tall; a
-   * design frame under that whose smooth edge unbends it; and a view on ITRF.
+   * design frame under that whose curvilinear edge unbends it; and a view on ITRF.
    */
   function scene(exaggerated = false) {
     const world = engine.createWorld({ maxDraws: 8 });
@@ -258,13 +258,13 @@ describe("a plane in a design frame under a bending edge", () => {
     const itrf = catalog.get("ITRF");
     let content: Frame = itrf;
     if (exaggerated) {
-      content = smoothFrame("exaggerated", itrf, {
+      content = curvilinearFrame("exaggerated", itrf, {
         revision: 1,
         forward: (p, out, j) => exaggerate(10, p, out, j),
       });
       catalog.add(content);
     }
-    const design = smoothFrame("design", content, {
+    const design = curvilinearFrame("design", content, {
       revision: 1,
       description: "a bending design frame",
       forward: unbend,

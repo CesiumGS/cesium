@@ -9,7 +9,7 @@
 // The Jacobian is the closed form of ellipsoid.ts with g the gradient of the
 // weight through the foot's longitude and latitude. There is no closed-form
 // inverse (the weight depends on where the point is): a route solves by Newton.
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import {
   edgeOf,
   type Named,
@@ -243,7 +243,7 @@ export function flatten(options: {
   height: number;
   falloff: number;
   radii?: Radii;
-}): SmoothEdge {
+}): CurvilinearEdge {
   return edgeOf(flattenDescriptor(options.polygon, options.radii), {
     height: options.height,
     falloff: options.falloff,

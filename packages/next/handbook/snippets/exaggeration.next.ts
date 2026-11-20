@@ -7,7 +7,7 @@ import { verticalExaggeration } from "@cesium/next";
 import {
   createFrameCatalog,
   createFramesResolver,
-  smoothFrame,
+  curvilinearFrame,
 } from "@cesium/next/frames";
 
 // The exaggeration is a node over the content it exaggerates. Content placed
@@ -16,7 +16,7 @@ import {
 // whatever isn't under the node (the Moon) is untouched.
 const slider = world.createPlacementParameter(0.2, { range: [0, 1] });
 const catalog = createFrameCatalog();
-const exaggerated = smoothFrame(
+const exaggerated = curvilinearFrame(
   "Earth content (exaggerated)",
   catalog.get("ITRF"),
   verticalExaggeration({ factor: 10, ceiling: 9000, scale: slider }),

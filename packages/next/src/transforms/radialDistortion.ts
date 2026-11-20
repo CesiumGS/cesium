@@ -8,7 +8,7 @@
 // so projecting q with the ideal pinhole (and intrinsics) gives the
 // distorted pixel, and depth is preserved. Output is affine in each
 // coefficient. The inverse (undistortion) is Newton on (u, v).
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import { edgeOf, type Named, type TransformDescriptor } from "./descriptor.ts";
 
 type K = "k1" | "k2" | "k3" | "p1" | "p2";
@@ -117,6 +117,6 @@ export const radialDistortionDescriptor: TransformDescriptor = {
 /** Brown–Conrady distortion (radial k1, k2, k3; tangential p1, p2) of normalized camera space. */
 export function radialDistortion(
   options: Partial<Record<K, number>> = {},
-): SmoothEdge {
+): CurvilinearEdge {
   return edgeOf(radialDistortionDescriptor, options);
 }

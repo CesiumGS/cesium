@@ -1,6 +1,6 @@
 // A route across a warp on the GPU against the float64 route (docs/design/geometry-through-placement-review.md,
 // increment 1, slice D; the Node test is test/warpWorld.test.ts). The
-// Earth's anchor is placed in `exaggerated`, a smooth frame under ITRF that
+// Earth's anchor is placed in `exaggerated`, a curvilinear frame under ITRF that
 // multiplies height over a sphere by 10 (and by a scale, a world's placement parameter: the
 // slider). Three quads anchored in ITRF at the north pole, a meter up, are
 // drawn unlit into an offscreen target. Nothing is set per item: the engine
@@ -20,7 +20,7 @@ import { routeForward } from "../src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  smoothFrame,
+  curvilinearFrame,
 } from "../src/frames/index.ts";
 import {
   EARTH,
@@ -186,7 +186,7 @@ async function runWarpRoute(): Promise<WarpRouteResult> {
     const catalog = createFrameCatalog();
     const itrf = catalog.get("ITRF");
     const scale = world.createPlacementParameter(0);
-    const exaggerated = smoothFrame("exaggerated", itrf, {
+    const exaggerated = curvilinearFrame("exaggerated", itrf, {
       revision: 1,
       description: `height × ${K}`,
       scale,
@@ -330,7 +330,7 @@ function project(
   const route = view.anchorRoute(earth);
   if (!route) {
     throw new Error(
-      "the Earth's anchor has no route: it is not placed in a smooth frame",
+      "the Earth's anchor has no route: it is not placed in a curvilinear frame",
     );
   }
   const eye = view.camera.position;

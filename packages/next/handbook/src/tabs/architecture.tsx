@@ -41,7 +41,7 @@ const SEAMS = [
     default: "PROJ, through projCoordinateService",
   },
   {
-    seam: "Smooth transforms",
+    seam: "Curvilinear transforms",
     fills:
       "A deformation or a projection the engine doesn't ship, as a node of the transform graph",
     default:
@@ -73,13 +73,13 @@ const GRAPH_MODULES = [
   {
     module: "transform",
     holds:
-      "The graph (affine, smooth and switch nodes), routes, the IR with its parser, autodiff, intervals and WGSL, the compiler, accuracy along a route, and point and measurement queries in any node",
+      "The graph (affine, curvilinear and switch nodes), routes, the IR with its parser, autodiff, intervals and WGSL, the compiler, accuracy along a route, and point and measurement queries in any node",
     rule: "No geo knowledge, and it imports none of the modules below",
   },
   {
     module: "transforms",
     holds:
-      "Generic built-in smooth transforms: bend, twist, taper, lattice, scale-about, bump, radial distortion, corridor unroll, velocity model",
+      "Generic built-in curvilinear transforms: bend, twist, taper, lattice, scale-about, bump, radial distortion, corridor unroll, velocity model",
     rule: "Imports only the transform core, math and closed forms",
   },
   {
@@ -91,7 +91,7 @@ const GRAPH_MODULES = [
   {
     module: "frames",
     holds:
-      "The catalog of reference frames, Earth orientation and ephemerides: data feeding the graph, with smoothFrame and switchFrame putting nodes in it",
+      "The catalog of reference frames, Earth orientation and ephemerides: data feeding the graph, with curvilinearFrame and switchFrame putting nodes in it",
     rule: "Its own entry point, @cesium/next/frames",
   },
 ];
@@ -289,9 +289,9 @@ export function Architecture() {
           reaches the body: a geocentric CRS is the identity route, so content a
           host reprojected itself is drawn as delivered, with design coordinates
           from the host's coordinate service. A projected or geographic CRS is a
-          coordinate operation, a smooth edge fitted per tile. A local CRS with
-          a site transform is a rigid edge. The mode field is still in the code,
-          and goes with the public API review (CS-102).
+          coordinate operation, a curvilinear edge fitted per tile. A local CRS
+          with a site transform is a rigid edge. The mode field is still in the
+          code, and goes with the public API review (CS-102).
         </p>
         <Written
           from="the plan 5 spec, sections 7.2, 7.7, 7.9 and 7.10, and the design note docs/design/geometry-through-placement-review.md"
@@ -303,11 +303,12 @@ export function Architecture() {
         <p>
           Where content sits decides how it is drawn. A tree of nodes joins it
           to the camera, each edge either affine (a matrix, cheap to recompute
-          every frame) or smooth (a differentiable function with parameters,
-          such as vertical exaggeration or a projection). The core compiles each
-          route into one GPU function, and the same route answers picks,
-          measurements, accuracy and clips on the CPU, in float64. It is built,
-          and the <a href="#/transform-graph">Transform graph tab</a> tours it.
+          every frame) or curvilinear (a differentiable function with
+          parameters, such as vertical exaggeration or a projection). The core
+          compiles each route into one GPU function, and the same route answers
+          picks, measurements, accuracy and clips on the CPU, in float64. It is
+          built, and the <a href="#/transform-graph">Transform graph tab</a>{" "}
+          tours it.
         </p>
         <DataTable
           label="Modules of the transform graph"
@@ -322,9 +323,9 @@ export function Architecture() {
           These are folders of the core except <C>frames</C>, so one import
           reaches them. The boundary test fails when the transform core imports
           a built-in, or a built-in reaches past the transform core. Warps are
-          gone as a separate idea: a deformer is a smooth node over the content
-          it deforms, and a Moon beside it is not under that node, so it isn't
-          warped.
+          gone as a separate idea: a deformer is a curvilinear node over the
+          content it deforms, and a Moon beside it is not under that node, so it
+          isn't warped.
         </p>
       </Section>
 

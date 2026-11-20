@@ -1,10 +1,14 @@
-// A built-in smooth edge as the live spec a smooth frame takes (docs/design/transform-graph.md).
+// A built-in curvilinear edge as the live spec a curvilinear frame takes (docs/design/transform-graph.md).
 // The built-ins (`twist`, `bend`, `utm`, `radialDistortion`, …) return graph
 // edges, which are values: this puts one over content in the frames
-// (`smoothFrame(name, parent, liveEdge(edge, …))`), with its parameters
+// (`curvilinearFrame(name, parent, liveEdge(edge, …))`), with its parameters
 // changeable and one float a slider moves.
-import type { SmoothFrameSpec, WarpScale } from "../camera/route.ts";
-import type { Params, SmoothEdge, SmoothSpec } from "../transform/graph.ts";
+import type { CurvilinearFrameSpec, WarpScale } from "../camera/route.ts";
+import type {
+  Params,
+  CurvilinearEdge,
+  CurvilinearSpec,
+} from "../transform/graph.ts";
 import { LiveWarp } from "./liveWarp.ts";
 
 /** What `liveEdge` takes besides the edge. */
@@ -26,8 +30,8 @@ export interface LiveEdgeOptions {
   };
 }
 
-/** A built-in edge as a changeable `SmoothFrameSpec`: its function and inverse with the parameters it has now, and the same edge as a graph step for the compiler. */
-export class LiveEdge extends LiveWarp implements SmoothFrameSpec {
+/** A built-in edge as a changeable `CurvilinearFrameSpec`: its function and inverse with the parameters it has now, and the same edge as a graph step for the compiler. */
+export class LiveEdge extends LiveWarp implements CurvilinearFrameSpec {
   readonly description: string;
   readonly scale: WarpScale | undefined;
   readonly accuracy: { readonly sigma: number } | undefined;
@@ -35,13 +39,13 @@ export class LiveEdge extends LiveWarp implements SmoothFrameSpec {
     { readonly center: ArrayLike<number>; readonly radius: number } | undefined;
   /** The closed-form inverse, when the edge has one; else the engine solves by Newton. */
   readonly inverse?: (q: ArrayLike<number>, out: Float64Array) => Float64Array;
-  private readonly spec: SmoothSpec;
+  private readonly spec: CurvilinearSpec;
   private readonly step: number | undefined;
   private readonly values: Record<string, number>;
-  private smoothRevision = -1;
-  private smoothSpec: SmoothSpec | undefined;
+  private curvilinearRevision = -1;
+  private curvilinearSpec: CurvilinearSpec | undefined;
 
-  constructor(edge: SmoothEdge, options: LiveEdgeOptions) {
+  constructor(edge: CurvilinearEdge, options: LiveEdgeOptions) {
     super();
     this.step = options.differences;
     this.domain = options.domain;
@@ -77,13 +81,13 @@ export class LiveEdge extends LiveWarp implements SmoothFrameSpec {
     this.changed();
   }
 
-  /** The edge as the compiler's smooth step, with the parameters it has now. */
-  get smooth(): SmoothSpec {
-    if (this.smoothRevision !== this.ownRevision) {
-      this.smoothRevision = this.ownRevision;
-      this.smoothSpec = { ...this.spec, params: { ...this.values } };
+  /** The edge as the compiler's curvilinear step, with the parameters it has now. */
+  get curvilinear(): CurvilinearSpec {
+    if (this.curvilinearRevision !== this.ownRevision) {
+      this.curvilinearRevision = this.ownRevision;
+      this.curvilinearSpec = { ...this.spec, params: { ...this.values } };
     }
-    return this.smoothSpec!;
+    return this.curvilinearSpec!;
   }
 
   forward(
@@ -126,10 +130,13 @@ export class LiveEdge extends LiveWarp implements SmoothFrameSpec {
 }
 
 /**
- * `edge` (a built-in's `smooth` edge) as a spec for `smoothFrame`: put it
+ * `edge` (a built-in's `curvilinear` edge) as a spec for `curvilinearFrame`: put it
  * over the content it acts on, and move its parameters with `setParams` or
  * one float with `scale`.
  */
-export function liveEdge(edge: SmoothEdge, options: LiveEdgeOptions): LiveEdge {
+export function liveEdge(
+  edge: CurvilinearEdge,
+  options: LiveEdgeOptions,
+): LiveEdge {
   return new LiveEdge(edge, options);
 }

@@ -1,6 +1,6 @@
-// The smooth-frame helpers (docs/design/geometry-through-placement-review.md, docs/design/transform-graph.md): each helper's forward,
+// The curvilinear-frame helpers (docs/design/geometry-through-placement-review.md, docs/design/transform-graph.md): each helper's forward,
 // Jacobian and inverse at Earth scale, the exaggeration against its
-// definition, and the helpers through `smoothFrame`, the frames resolver's
+// definition, and the helpers through `curvilinearFrame`, the frames resolver's
 // `route()` and `routeForward`: forward going up from the frame to its
 // parent.
 import { describe, expect, it, vi } from "vitest";
@@ -9,7 +9,7 @@ import {
   routeInverse,
   warpForward,
   warpInverse,
-  type SmoothFrameSpec,
+  type CurvilinearFrameSpec,
   type Warp,
 } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
@@ -22,7 +22,7 @@ import { blend } from "../src/transforms/blend.ts";
 import { fromFunction } from "../src/transforms/fromFunction.ts";
 import { liveWarp } from "../src/transforms/liveWarp.ts";
 import { scaleAbout } from "../src/transforms/scaleAbout.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { EngineeringFrame } from "../src/engineering/EngineeringFrame.ts";
 import type { ProjApi } from "../src/engineering/projApi.ts";
 import { reprojectionWarp } from "../src/proj/reprojectionWarp.ts";
@@ -59,7 +59,7 @@ const SAMPLES: [number, number, number][] = [
 ];
 
 /** The Jacobian of `forward` by central differences at 1 m: an independent check of an analytic one. */
-function numerical(warp: SmoothFrameSpec, p: ArrayLike<number>, h = 1) {
+function numerical(warp: CurvilinearFrameSpec, p: ArrayLike<number>, h = 1) {
   const j = new Float64Array(9);
   const plus = new Float64Array(3);
   const minus = new Float64Array(3);
@@ -87,7 +87,7 @@ function maxDiff(a: ArrayLike<number>, b: ArrayLike<number>) {
 
 /** Forward, Jacobian against differences, and the inverse round trip. */
 function checkWarp(
-  warp: SmoothFrameSpec,
+  warp: CurvilinearFrameSpec,
   points: ArrayLike<number>[],
   { jacobian = 1e-7, trip = 1e-6 } = {},
 ) {
@@ -231,7 +231,7 @@ describe("verticalExaggeration", () => {
     const j = new Float64Array(9);
     warpForward(warp, p, q, j);
     // The scaled Jacobian is I + s(J − I): the differences of the scaled map.
-    const scaled: SmoothFrameSpec = {
+    const scaled: CurvilinearFrameSpec = {
       revision: 1,
       forward: (a, out) => warpForward(warp, a, out),
     };
@@ -527,7 +527,7 @@ describe("reprojectionWarp", () => {
       expect(dist(q, expected)).toBeLessThan(1e-6);
       const back = warp.inverse(q, new Float64Array(3));
       expect(dist(back, design)).toBeLessThan(1e-6);
-      // The Jacobian against differences at 1 design unit: Mercator is smooth.
+      // The Jacobian against differences at 1 design unit: Mercator is curvilinear.
       const j = new Float64Array(9);
       warp.forward(design, new Float64Array(3), j);
       expect(maxDiff(j, numerical(warp, design))).toBeLessThan(1e-7);
@@ -634,11 +634,11 @@ describe("reprojectionWarp", () => {
   });
 });
 
-describe("helpers through smoothFrame, route() and routeForward", () => {
-  const setup = (spec: SmoothFrameSpec) => {
+describe("helpers through curvilinearFrame, route() and routeForward", () => {
+  const setup = (spec: CurvilinearFrameSpec) => {
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const itrf = catalog.get("ITRF");
-    const frame = smoothFrame("content", itrf, spec);
+    const frame = curvilinearFrame("content", itrf, spec);
     catalog.add(frame);
     return { catalog, itrf, frame, resolver: createFramesResolver(catalog) };
   };
@@ -703,7 +703,7 @@ describe("helpers through smoothFrame, route() and routeForward", () => {
     });
     expect(spec.compiled).toBe(false);
     expect(spec.fitReason).toContain("free variable");
-    expect(spec.smooth).toBeUndefined();
+    expect(spec.curvilinear).toBeUndefined();
     const { itrf, frame, resolver } = setup(spec);
     const onChange = vi.fn();
     frame.onChange(onChange);
@@ -736,7 +736,7 @@ describe("helpers through smoothFrame, route() and routeForward", () => {
     expect(point.meters).toBeCloseTo(0.25, 12);
   });
 
-  it("the warp passed to smoothFrame is the same Jacobian-carrying spec", () => {
+  it("the warp passed to curvilinearFrame is the same Jacobian-carrying spec", () => {
     const spec = verticalExaggeration({ factor: 10 });
     const { frame } = setup(spec);
     const warp: Warp = frame.warp;
@@ -758,12 +758,12 @@ describe("fromFunction in the restricted subset", () => {
     ];
   };
 
-  it("parses to the IR: compiled, with a smooth spec the compiler can take", () => {
+  it("parses to the IR: compiled, with a curvilinear spec the compiler can take", () => {
     const warp = fromFunction(twist as never, { params: { rate: 0.01 } });
     expect(warp.compiled).toBe(true);
     expect(warp.fitReason).toBeUndefined();
-    expect(warp.smooth?.source).toContain("params.rate");
-    expect(warp.smooth?.params).toEqual({ rate: 0.01 });
+    expect(warp.curvilinear?.source).toContain("params.rate");
+    expect(warp.curvilinear?.params).toEqual({ rate: 0.01 });
   });
 
   it("has an exact Jacobian by autodiff, right where central differences are only near", () => {
@@ -778,12 +778,12 @@ describe("fromFunction in the restricted subset", () => {
     expect(j[6]).toBeCloseTo(-0.01 * (3 * Math.sin(a) + -2 * Math.cos(a)), 14);
   });
 
-  it("moves with setParams: the revision, the smooth spec's values and the frame's watchers", () => {
+  it("moves with setParams: the revision, the curvilinear spec's values and the frame's watchers", () => {
     const warp = fromFunction(twist as never, { params: { rate: 0.01 } });
     const before = warp.revision;
     warp.setParams({ rate: 0.02 });
     expect(warp.revision).toBe(before + 1);
-    expect(warp.smooth?.params).toEqual({ rate: 0.02 });
+    expect(warp.curvilinear?.params).toEqual({ rate: 0.02 });
     expect(() => warp.setParams({ nope: 1 })).toThrow(/no parameter 'nope'/);
     expect(() => warp.setParams({ rate: Number.NaN })).toThrow(RangeError);
     const q = warp.forward([1, 0, 50], new Float64Array(3));

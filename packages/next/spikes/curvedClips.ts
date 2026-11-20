@@ -9,7 +9,7 @@
 // silhouette) are left out, as the other spikes do.
 //
 // The clip is a plane named in a design frame under the content's frame, whose
-// smooth edge takes it to true coordinates (the inverse of z' = z + A sin(x /
+// curvilinear edge takes it to true coordinates (the inverse of z' = z + A sin(x /
 // L) sin(y / L)): on a flat plate it is a wavy contour no rigid test can draw. Its signed distance is
 // fitted per draw into the lattice rows' w channel; the vertex stage reads
 // it, the fragment stage discards by its sign.
@@ -31,7 +31,7 @@ import { routeForward, routeInverse } from "../src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  smoothFrame,
+  curvilinearFrame,
 } from "../src/frames/index.ts";
 import {
   EARTH,
@@ -264,7 +264,7 @@ function scene(
   const itrf = catalog.get("ITRF");
   let content: Frame = itrf;
   if (warped) {
-    content = smoothFrame("Earth content (exaggerated)", itrf, {
+    content = curvilinearFrame("Earth content (exaggerated)", itrf, {
       revision: 1,
       description: `height × ${K}`,
       forward: (p, out, jacobian) => exaggerate(K, p, out, jacobian),
@@ -272,7 +272,7 @@ function scene(
     });
     catalog.add(content);
   }
-  const design = smoothFrame("design", content, {
+  const design = curvilinearFrame("design", content, {
     revision: 1,
     description: "a bending reprojection",
     forward: unbend,

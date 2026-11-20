@@ -1,6 +1,6 @@
 // A point source's points through a warp on the GPU (docs/design/geometry-through-placement-review.md, increment
 // 4; the Node test is test/warpPoints.test.ts). The Earth's anchor is placed
-// in a smooth frame under ITRF that multiplies height over a sphere by 10. A `PointSource` 1 km
+// in a curvilinear frame under ITRF that multiplies height over a sphere by 10. A `PointSource` 1 km
 // above the sphere holds points up to 15 km from its origin; its frame
 // kernel (vector/points.slang) evaluates the fit of its carrier draw at each
 // point before it writes the anchor the cull, the quads and a model pool
@@ -13,7 +13,7 @@ import type { Harness } from "../lab/harness.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  smoothFrame,
+  curvilinearFrame,
 } from "../src/frames/index.ts";
 import { EARTH, Engine, OffscreenTarget } from "../src/index.ts";
 import { placeWithTerms } from "../src/scene/warpEvaluate.ts";
@@ -186,7 +186,7 @@ async function runWarpPoints(): Promise<WarpPointsResult> {
       });
       const catalog = createFrameCatalog();
       const itrf = catalog.get("ITRF");
-      const exaggerated = smoothFrame("exaggerated", itrf, {
+      const exaggerated = curvilinearFrame("exaggerated", itrf, {
         revision: 1,
         description: `height × ${K}`,
         forward: (p, out, jacobian) => exaggerate(p, out, jacobian),

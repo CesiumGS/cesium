@@ -47,7 +47,7 @@ const OWNS = [
   },
   {
     what: "Reference frame",
-    owns: "Where one frame is in another at a time, as a tree. Hierarchy lives here, and so does what's warped: an edge may be smooth.",
+    owns: "Where one frame is in another at a time, as a tree. Hierarchy lives here, and so does what's warped: an edge may be curvilinear.",
     relation: "The core's resolver answers, or the optional frames module.",
   },
 ];

@@ -21,7 +21,7 @@ import {
 } from "../src/scene/pick.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import { routeForward } from "../src/camera/route.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
 import { pickIn } from "../src/frames/pickIn.ts";
 import { View } from "../src/scene/View.ts";
@@ -545,7 +545,7 @@ describe("a pick on another body (plan 5c, Task 2)", () => {
   it("a ×10 lift over Earth content gives its true height, and leaves a Moon pick unchanged", () => {
     const lifted = createFrameCatalog();
     const liftedItrf = lifted.get("ITRF", { user: "application" });
-    const content = smoothFrame(
+    const content = curvilinearFrame(
       "Earth content (exaggerated)",
       liftedItrf,
       verticalExaggeration({ factor: 10 }),

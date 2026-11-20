@@ -1,6 +1,6 @@
 export {
   affine,
-  smooth,
+  curvilinear,
   switchEdge,
   TransformGraph,
   TransformNode,
@@ -9,10 +9,10 @@ export {
   type Edge,
   type Params,
   type PlainEdge,
-  type SmoothEdge,
-  type SmoothForward,
-  type SmoothInverse,
-  type SmoothSpec,
+  type CurvilinearEdge,
+  type CurvilinearForward,
+  type CurvilinearInverse,
+  type CurvilinearSpec,
   type SwitchEdge,
   type ViewId,
 } from "./graph.ts";
@@ -23,7 +23,7 @@ export {
   type EdgeVisit,
   type RouteOptions,
   type RouteStep,
-  type SmoothStep,
+  type CurvilinearStep,
 } from "./route.ts";
 // Queries on a route: accuracy along it, Taylor-model bounds over a box,
 // and the chord error of a straight edge.
@@ -62,7 +62,7 @@ export {
   type PointIn,
   type PointInOptions,
 } from "./queries.ts";
-// The IR a smooth edge's function is parsed into (never evaluated as
+// The IR a curvilinear edge's function is parsed into (never evaluated as
 // source): float64 evaluation, derivatives as programs, intervals, WGSL.
 export {
   parseTransform,

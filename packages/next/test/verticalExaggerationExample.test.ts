@@ -34,7 +34,7 @@ import {
 import { Frame } from "../src/frames/Frame.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
 import { truePick } from "../src/frames/pickTruth.ts";
-import { isSmoothFrame } from "../src/frames/smoothFrame.ts";
+import { isCurvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { heightNormalInfo } from "../src/globe/heightNormal.ts";
 import { upsampleTerrainTile } from "../src/globe/quantizedMesh.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
@@ -234,10 +234,10 @@ function pickAt(s: Setup, drawn: Float64Array, route?: Route): CorePick {
 }
 
 describe("the example's frame and rig", () => {
-  it("is one smooth frame under ITRF with a height-scale warp, and the Earth is drawn through it", () => {
+  it("is one curvilinear frame under ITRF with a height-scale warp, and the Earth is drawn through it", () => {
     const s = setup();
     expect(s.exaggeration.frame.name).toBe(FRAME_NAME);
-    expect(isSmoothFrame(s.exaggeration.frame)).toBe(true);
+    expect(isCurvilinearFrame(s.exaggeration.frame)).toBe(true);
     expect(s.exaggeration.frame.warp.heightScale).toMatchObject({
       kind: "heightScale",
       factor: MAX_EXAGGERATION,
@@ -395,7 +395,7 @@ describe("heights across k = 1 to 10", () => {
     const mesh = meshOf(asset);
     const center = asset.draws[0]!.matrix;
     // A tile without the height attribute is drawn by the compiled route: the
-    // helper's warp has a smooth spec, so nothing is fitted for it.
+    // helper's warp has a curvilinear spec, so nothing is fitted for it.
     const plain = s.world.addDraw({
       mesh: s.world.addMesh({
         positions: mesh.positions,

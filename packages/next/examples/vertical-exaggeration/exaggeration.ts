@@ -6,11 +6,11 @@ import {
   type VerticalExaggeration,
 } from "@cesium/next";
 import {
-  smoothFrame,
+  curvilinearFrame,
   warpForward,
   warpInverse,
   type FrameCatalog,
-  type SmoothFrame,
+  type CurvilinearFrame,
 } from "@cesium/next/frames";
 
 /** The strongest exaggeration the slider reaches: heights drawn ten times as tall. */
@@ -41,7 +41,7 @@ export interface Geodetic {
  */
 export interface Exaggeration {
   /** The frame the Earth's content is placed in: its coordinates are ITRF's, its edge to ITRF multiplies heights by `factor`. */
-  readonly frame: SmoothFrame<typeof FRAME_NAME>;
+  readonly frame: CurvilinearFrame<typeof FRAME_NAME>;
   /**
    * The helper at its full factor, `MAX_EXAGGERATION`: setting its `factor`
    * changes the warp itself and every route through it is refitted. The
@@ -77,7 +77,7 @@ export function createExaggeration(
     factor: MAX_EXAGGERATION,
     scale,
   });
-  const frame = smoothFrame(FRAME_NAME, catalog.get("ITRF"), warp);
+  const frame = curvilinearFrame(FRAME_NAME, catalog.get("ITRF"), warp);
   catalog.add(frame);
   // The multiplier in force: the warp's own factor at the slider's position.
   const factorNow = () => 1 + scale.value * (warp.factor - 1);

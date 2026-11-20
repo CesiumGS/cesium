@@ -277,7 +277,7 @@ const PICK_TERMS = [
   {
     term: "Content",
     kind: "Accuracy",
-    size: "A placement's display error, a fitted operation's stated bound, or a smooth node's declared accuracy",
+    size: "A placement's display error, a fitted operation's stated bound, or a curvilinear node's declared accuracy",
     why: "How far the content is drawn from where its design says it is. A hosted placement's reprojection is the host's to state.",
   },
   {
@@ -511,7 +511,7 @@ export function Precision() {
 
       <Section title="Compiled routes: a center constant and an exact residual">
         <p>
-          A route through smooth nodes (an exaggeration, a projection) is
+          A route through curvilinear nodes (an exaggeration, a projection) is
           compiled to one GPU function. The{" "}
           <a href="#/transform-graph">Transform graph tab</a> has the compiler;
           what matters here is where the precision goes. A vertex is an offset δ
@@ -581,9 +581,9 @@ export function Precision() {
           point with its reference frame and composes its accuracy from these
           terms, 1σ, as a root sum square. <C>accuracyAlong(route, point, σ)</C>{" "}
           does the same along any route of the graph: Σ_out = J Σ Jᵀ plus each
-          smooth node's declared <C>accuracy</C>, with J chained edge by edge.
-          The composed figure is an accuracy. Two of its terms are precision
-          limits feeding into it:
+          curvilinear node's declared <C>accuracy</C>, with J chained edge by
+          edge. The composed figure is an accuracy. Two of its terms are
+          precision limits feeding into it:
         </p>
         <DataTable
           label="Terms of a pick's accuracy"

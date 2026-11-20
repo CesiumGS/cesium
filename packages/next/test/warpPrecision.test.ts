@@ -52,7 +52,7 @@ const stubDevice = {
   queue: { writeBuffer() {} },
 } as unknown as GPUDevice;
 
-/** A lattice of smooth noise, `variation` m across `scale`, plus `constant`. */
+/** A lattice of curvilinear noise, `variation` m across `scale`, plus `constant`. */
 function lattice(
   constant: readonly number[],
   variation: number,

@@ -4,7 +4,7 @@
 //   p' = o + t a + r m,   J = r I + (1 - r) a aᵀ + rate m aᵀ.
 // Output is affine in `rate`. The inverse divides the cross-section by r(t):
 // exact where r > 0.
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import {
   edgeOf,
   nonzero3,
@@ -86,7 +86,7 @@ export function taper(options: {
   axis?: ArrayLike<number>;
   rate: number;
   origin?: ArrayLike<number>;
-}): SmoothEdge {
+}): CurvilinearEdge {
   const a = nonzero3(options.axis ?? [0, 0, 1], "taper: axis");
   const o = options.origin ?? [0, 0, 0];
   return edgeOf(taperDescriptor, {

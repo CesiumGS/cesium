@@ -4,7 +4,7 @@
 // Cases:
 //  a. affine · verticalExaggeration ×10 · affine, tiles of 1, 2 and 8 km at
 //     the Earth's radius (and a tile across the lift's blend band);
-//  b. UTM zone 31 above geographic above ×3 exaggeration (nested smooth steps),
+//  b. UTM zone 31 above geographic above ×3 exaggeration (nested curvilinear steps),
 //     with exact normals and with linear ones (J at the draw's center and its
 //     first-order change, for the steps with no kink: task 4b);
 //  c. a twist whose rate changes every frame: a dynamic parameter, the

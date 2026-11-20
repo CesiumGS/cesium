@@ -4,7 +4,7 @@
 // With q = p - o, a the unit axis, t = q·a, m = q - t a, w = a × m:
 //   p' = o + t a + m cos θ + w sin θ
 //   J  = a aᵀ + R (I - a aᵀ) + rate (dR/dθ m) aᵀ.
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import {
   edgeOf,
   nonzero3,
@@ -118,7 +118,7 @@ export function twist(options: {
   axis?: ArrayLike<number>;
   rate: number;
   origin?: ArrayLike<number>;
-}): SmoothEdge {
+}): CurvilinearEdge {
   const a = nonzero3(options.axis ?? [0, 0, 1], "twist: axis");
   const o = options.origin ?? [0, 0, 0];
   return edgeOf(twistDescriptor, {

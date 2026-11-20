@@ -2,7 +2,7 @@
 // amplitude · exp(-|p - c|² / 2σ²), a lift (negative digs) about a center.
 // Output is affine in the amplitude. No closed-form inverse: a route solves
 // by Newton with the Jacobian below.
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import {
   edgeOf,
   nonzero3,
@@ -71,7 +71,7 @@ export function bump(options: {
   amplitude: number;
   sigma: number;
   direction?: ArrayLike<number>;
-}): SmoothEdge {
+}): CurvilinearEdge {
   const c = options.center;
   const u = nonzero3(options.direction ?? [0, 0, 1], "bump: direction");
   return edgeOf(bumpDescriptor, {

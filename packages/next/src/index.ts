@@ -276,11 +276,11 @@ export type {
   Georeference,
   PlacementMode,
 } from "./georeference/georeference.ts";
-// The live helpers for a smooth frame (docs/design/transform-graph.md; `smoothFrame` is in
+// The live helpers for a curvilinear frame (docs/design/transform-graph.md; `curvilinearFrame` is in
 // `@cesium/next/frames`): geo transforms (`georeference`) and generic ones
 // (`transforms`). Each returns a spec to place over the content it deforms.
-// The built-ins below return a graph edge (`SmoothEdge`); `liveEdge` makes the
-// spec for `smoothFrame` of one, with its parameters changeable and a slider.
+// The built-ins below return a graph edge (`CurvilinearEdge`); `liveEdge` makes the
+// spec for `curvilinearFrame` of one, with its parameters changeable and a slider.
 export {
   verticalExaggeration,
   heightOffset,
@@ -346,10 +346,10 @@ export {
   type PointInOptions,
   type RouteAccuracy,
   type SigmaIn,
-  type SmoothEdge,
+  type CurvilinearEdge,
   type TransformNode,
 } from "./transform/index.ts";
-export type { SmoothFrameSpec, Warp, WarpScale } from "./camera/route.ts";
+export type { CurvilinearFrameSpec, Warp, WarpScale } from "./camera/route.ts";
 export {
   StepwiseSelection,
   REQUEST_PURPOSES,

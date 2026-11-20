@@ -3,7 +3,7 @@
 import type { WarpScale } from "../camera/route.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
-import type { SmoothEdge, SmoothSpec } from "../transform/graph.ts";
+import type { CurvilinearEdge, CurvilinearSpec } from "../transform/graph.ts";
 import {
   edgeOf,
   vec3Specs,
@@ -74,12 +74,12 @@ export const scaleAboutDescriptor: TransformDescriptor = {
 /**
  * Every point scaled about `center` (default the origin) by `factors`
  * (one number, or one per axis; nonzero for the inverse), as a graph edge.
- * For a smooth frame, `scaleAbout` below is the live helper.
+ * For a curvilinear frame, `scaleAbout` below is the live helper.
  */
 export function scaleAboutEdge(options: {
   center?: ArrayLike<number>;
   factors: number | ArrayLike<number>;
-}): SmoothEdge {
+}): CurvilinearEdge {
   const c = options.center ?? [0, 0, 0];
   const f =
     typeof options.factors === "number"
@@ -134,8 +134,8 @@ class ScaleAboutImpl extends LiveWarp implements ScaleAbout {
   private current: [number, number, number];
   private forwardMatrix = new Float64Array(9);
   private inverseMatrix = new Float64Array(9);
-  private smoothRevision = -1;
-  private smoothSpec: SmoothSpec | undefined;
+  private curvilinearRevision = -1;
+  private curvilinearSpec: CurvilinearSpec | undefined;
 
   constructor(
     point: ArrayLike<number>,
@@ -167,16 +167,16 @@ class ScaleAboutImpl extends LiveWarp implements ScaleAbout {
   }
 
   /** The built-in scale along the same axes, for the compiled route. */
-  get smooth(): SmoothSpec {
-    if (this.smoothRevision !== this.ownRevision) {
-      this.smoothRevision = this.ownRevision;
-      this.smoothSpec = scaleAlongAxes({
+  get curvilinear(): CurvilinearSpec {
+    if (this.curvilinearRevision !== this.ownRevision) {
+      this.curvilinearRevision = this.ownRevision;
+      this.curvilinearSpec = scaleAlongAxes({
         center: this.center,
         factors: this.current,
         axes: this.basis,
       }).spec;
     }
-    return this.smoothSpec!;
+    return this.curvilinearSpec!;
   }
 
   set factors(value: readonly [number, number, number]) {
@@ -244,7 +244,7 @@ class ScaleAboutImpl extends LiveWarp implements ScaleAbout {
  * `q = point + E·diag(factors)·Eᵀ·(p − point)`. `factors` is one number or
  * three (east, north, up), each positive. Affine, so the Jacobian is the
  * matrix, constant, and the inverse is exact. Give `scale` for a slider.
- * Place it over the content it scales (`smoothFrame`).
+ * Place it over the content it scales (`curvilinearFrame`).
  */
 export function scaleAbout(
   point: ArrayLike<number>,

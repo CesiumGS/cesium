@@ -8,7 +8,7 @@
 // ECEF); the inverse is the β series and Newton on τ. The Jacobian is left to
 // central differences (the graph's default): the IR's exact derivative is
 // the compiler's.
-import type { SmoothEdge } from "../transform/graph.ts";
+import type { CurvilinearEdge } from "../transform/graph.ts";
 import {
   defaultParams,
   edgeOf,
@@ -313,7 +313,7 @@ export function transverseMercatorToGeographicDescriptor(
 /** The unprojection of `transverseMercator`: projected (easting, northing, height) to longitude, latitude (degrees) and height. Takes the same options. */
 export function transverseMercatorToGeographic(
   options: Parameters<typeof transverseMercator>[0],
-): SmoothEdge {
+): CurvilinearEdge {
   return edgeOf(
     transverseMercatorToGeographicDescriptor(options.radii),
     transverseMercator(options).spec.params,
@@ -323,7 +323,7 @@ export function transverseMercatorToGeographic(
 /** The unprojection of `utm`: UTM zone 1 to 60, north or south, (easting, northing, height) to longitude, latitude (degrees) and height. */
 export function utmToGeographic(
   options: Parameters<typeof utm>[0],
-): SmoothEdge {
+): CurvilinearEdge {
   return edgeOf(
     transverseMercatorToGeographicDescriptor(options.radii),
     utm(options).spec.params,
@@ -342,7 +342,7 @@ export function transverseMercator(options: {
   falseEasting?: number;
   falseNorthing?: number;
   radii?: Radii;
-}): SmoothEdge {
+}): CurvilinearEdge {
   const descriptor = transverseMercatorDescriptor(options.radii);
   const values = {
     centralMeridian: options.centralMeridian,
@@ -376,7 +376,7 @@ export function utm(options: {
   zone: number;
   hemisphere?: "north" | "south";
   radii?: Radii;
-}): SmoothEdge {
+}): CurvilinearEdge {
   const form: TransverseMercatorForm = utmForm(
     options.zone,
     options.hemisphere,

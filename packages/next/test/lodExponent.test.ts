@@ -5,7 +5,7 @@ import { fakeEngine } from "./fakeGpu.ts";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
@@ -127,7 +127,7 @@ function exaggerated(factor: number, scaleValue?: number) {
       : world.createPlacementParameter(scaleValue, { range: [0, 1] });
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF");
-  const frame = smoothFrame(
+  const frame = curvilinearFrame(
     "exaggerated",
     itrf,
     verticalExaggeration({

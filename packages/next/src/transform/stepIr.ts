@@ -1,11 +1,11 @@
-// A smooth edge's function as IR programs, for the queries that read its
+// A curvilinear edge's function as IR programs, for the queries that read its
 // derivatives: J (accuracy, bounds), H (bounds, chord error) and the ranges
 // the parameters may take. Parsed from `spec.source` once per spec; a spec
 // with none, or a source outside the subset, has no IR and its queries fall
 // back on the function's own Jacobian or on sampling.
 import { hessianProgram, jacobianProgram, parameterProgram } from "./ad.ts";
 import { evaluate } from "./evaluate.ts";
-import type { Params, SmoothSpec } from "./graph.ts";
+import type { Params, CurvilinearSpec } from "./graph.ts";
 import type { IrProgram } from "./ir.ts";
 import { parseTransform } from "./parse.ts";
 
@@ -35,10 +35,10 @@ export interface StepIr {
   readonly discontinuous: boolean;
 }
 
-const cache = new WeakMap<SmoothSpec, StepIr | null>();
+const cache = new WeakMap<CurvilinearSpec, StepIr | null>();
 
-/** The IR of a smooth edge's function, or undefined when it has none to give. */
-export function stepIr(spec: SmoothSpec): StepIr | undefined {
+/** The IR of a curvilinear edge's function, or undefined when it has none to give. */
+export function stepIr(spec: CurvilinearSpec): StepIr | undefined {
   const known = cache.get(spec);
   if (known !== undefined) {
     return known ?? undefined;
@@ -77,7 +77,7 @@ export function stepIr(spec: SmoothSpec): StepIr | undefined {
 
 /** J of the spec's IR at `p`, column-major, or undefined without IR. */
 export function adJacobian(
-  spec: SmoothSpec,
+  spec: CurvilinearSpec,
   p: ArrayLike<number>,
   params: Params,
   out: Float64Array,

@@ -77,7 +77,7 @@ function pixelSize(screen: ScreenScale, q: ArrayLike<number>): number {
  * and the tested interior points are within the tolerance of their chords.
  * Between tested points a curve with a bend finer than a quarter of a piece
  * could leave a chord by more; the second derivative of a route over a
- * piece is smooth for the warps the engine fits (`secondDerivativeBound`).
+ * piece is curvilinear for the warps the engine fits (`secondDerivativeBound`).
  */
 export function sampleSegment(
   route: Route,

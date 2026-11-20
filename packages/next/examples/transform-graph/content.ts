@@ -13,11 +13,11 @@ import {
   type View,
 } from "@cesium/next";
 import {
-  smoothFrame,
+  curvilinearFrame,
   warpForward,
   warpInverse,
   type Frame,
-  type SmoothFrame,
+  type CurvilinearFrame,
 } from "@cesium/next/frames";
 import type { SceneHost } from "./scene.ts";
 
@@ -59,7 +59,7 @@ export interface DeformerOptions {
 }
 
 /**
- * The vertical exaggeration over the Earth's content: a smooth frame under
+ * The vertical exaggeration over the Earth's content: a curvilinear frame under
  * ITRF whose edge multiplies heights by the factor below a ceiling and lifts
  * what is above it by a constant. Its slider is one float of the world
  * (`PlacementParameter` over [0, 1]), or a value per view
@@ -67,7 +67,7 @@ export interface DeformerOptions {
  * another.
  */
 export interface Deformer {
-  readonly frame: SmoothFrame;
+  readonly frame: CurvilinearFrame;
   readonly edge: VerticalExaggeration;
   readonly scale: PlacementParameter;
   readonly max: number;
@@ -99,7 +99,7 @@ export function createDeformer(
     band: options.band ?? 0.2 * options.ceiling,
     scale,
   });
-  const frame = smoothFrame(
+  const frame = curvilinearFrame(
     options.name ?? EXAGGERATED,
     options.parent ?? host.itrf,
     edge,

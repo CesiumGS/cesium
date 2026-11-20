@@ -67,7 +67,7 @@ export interface DrawPlacementInfo {
     readonly absolute?: boolean;
   }[];
   /**
-   * Where the draw's anchor reaches the render root across smooth edges
+   * Where the draw's anchor reaches the render root across curvilinear edges
    * (plan 13.37): the warps crossed in order and the state of the draw's
    * fit. Its lattice, `terms`' last entry, has the cells, error and
    * estimate. Absent for a rigid route.

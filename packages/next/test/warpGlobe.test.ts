@@ -10,7 +10,7 @@ import { routeForward, type Route } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { GlobeBudgetedSelection } from "../src/globe/GlobeBudgeted.ts";
 import { GlobeStepwiseSelection } from "../src/globe/GlobeStepwise.ts";
 import {
@@ -130,7 +130,7 @@ function setup(): Setup {
   const itrf = catalog.get("ITRF");
   const scale = world.createPlacementParameter(1, { range: [0, 1] });
   const exaggeration = fittedOnly(verticalExaggeration({ factor: K, scale }));
-  const exaggerated = smoothFrame("exaggerated", itrf, exaggeration);
+  const exaggerated = curvilinearFrame("exaggerated", itrf, exaggeration);
   catalog.add(exaggerated);
   const resolver = createFramesResolver(catalog);
   const earth = world.bodyAnchor(EARTH);

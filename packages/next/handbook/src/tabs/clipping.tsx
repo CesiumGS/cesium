@@ -39,7 +39,7 @@ const SPACES = [
     scene: "The same scene",
     named: "A frame drawn with the deformer (its parent, where the camera is)",
     tested: "The drawn point, rebuilt per fragment",
-    why: "The route to the content's true side crosses the smooth node, but the route to the render root is rigid.",
+    why: "The route to the content's true side crosses the curvilinear node, but the route to the render root is rigid.",
   },
   {
     scene:
@@ -467,7 +467,7 @@ const SPACE_STEPS = [
       <p>
         The set&apos;s route to the content&apos;s own node (where its true
         coordinates are) is rigid, and the content reaches the render root up
-        through smooth nodes. The set is tested on fragment location 4, the
+        through curvilinear nodes. The set is tested on fragment location 4, the
         draw&apos;s true camera-relative position.
       </p>
     ),
@@ -715,9 +715,9 @@ export function Clipping() {
           <C>TransformNode</C> is a frame key). A node resolver wraps the
           world&apos;s frame resolver: a route between the set&apos;s node and
           the content&apos;s that is rigid gives a matrix, as any frame does,
-          and one that crosses a smooth edge makes the set curved, cut along a
-          fitted signed distance as below. The route is the graph&apos;s, in
-          float64.
+          and one that crosses a curvilinear edge makes the set curved, cut
+          along a fitted signed distance as below. The route is the
+          graph&apos;s, in float64.
         </p>
         <CodeBlock language="ts" code={snippetText("clip.next.ts")} />
         <p>That snippet compiles against the real types.</p>
@@ -1034,8 +1034,8 @@ export function Clipping() {
           frame cuts the true surface of an exaggerated tile, wherever that is
           drawn. A set placed at a transform-graph node is curved the same way
           when the graph&apos;s route from the node to the content crosses a
-          smooth edge. The clipping example hasn&apos;t moved to node-placed
-          clips yet.
+          curvilinear edge. The clipping example hasn&apos;t moved to
+          node-placed clips yet.
         </p>
         <ul>
           <li>

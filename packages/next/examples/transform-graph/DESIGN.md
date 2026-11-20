@@ -1,6 +1,6 @@
 # Transform graph: design
 
-**Story.** One example, eight scenes, one idea: _where content and the camera sit in a graph of nodes decides what is warped._ Each scene is a small tree of affine, smooth and switch nodes, built with the engine's own frames (`smoothFrame`, `switchFrame`, `bindAnchor`, `View.setParameter`) and the built-in transforms. The panel makes the tree visible.
+**Story.** One example, eight scenes, one idea: _where content and the camera sit in a graph of nodes decides what is warped._ Each scene is a small tree of affine, curvilinear and switch nodes, built with the engine's own frames (`curvilinearFrame`, `switchFrame`, `bindAnchor`, `View.setParameter`) and the built-in transforms. The panel makes the tree visible.
 
 **Audience.** Engine users who need to place a deformer, a CRS, a lens or a sheet, and subject-matter experts who need to trust a number. Every readout names the node it is in.
 
@@ -10,7 +10,7 @@
 2. the scene's caption and its design point;
 3. its controls (sliders, switches, shots);
 4. readouts, true beside drawn, from `pickIn`, `pointIn` and `measureIn` through the frames' graph;
-5. the graph: the nodes with their kinds, what sits at each, affine runs collapsed, and the route of the last pick lit, with its direction through each smooth node;
+5. the graph: the nodes with their kinds, what sits at each, affine runs collapsed, and the route of the last pick lit, with its direction through each curvilinear node;
 6. sources and credits.
 
 A card names what the first draw waits for, until something draws; after that the view is only refining, and a small fixed-size chip at the bottom center counts it ("Refining · 12 tiles, 3 fits"; `refinement.ts`, `loading.ts`). Neither blocks input. Scenes with no globe get a plain studio (background, procedural light).
@@ -19,7 +19,7 @@ A card names what the first draw waits for, until something draws; after that th
 
 | #   | Scene                           | Nodes                                                                                             | Data                                                                  |
 | --- | ------------------------------- | ------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| 1   | Exaggeration over Earth content | ITRF > exaggeration with a ceiling (smooth); satellite and Moon at other nodes                    | Cesium World Terrain, OSM Buildings; synthetic satellite and Moon     |
+| 1   | Exaggeration over Earth content | ITRF > exaggeration with a ceiling (curvilinear); satellite and Moon at other nodes               | Cesium World Terrain, OSM Buildings; synthetic satellite and Moon     |
 | 2   | Split view                      | the same node, a value per view (`View.setParameter`)                                             | as 1                                                                  |
 | 3   | BIM site in UTM                 | exaggeration > geographic to geocentric > UTM 48S (grid to geographic) > site grid                | design-globe Jakarta tileset (EPSG:9488); synthetic port as fallback  |
 | 4   | Plan and profile                | site (ENU) > switch (corridor unroll, or a translation, by view) > vertical ×k (a value per view) | swissTLM3D road, baked to 40 vertices; terrain heights from the globe |
@@ -28,4 +28,4 @@ A card names what the first draw waits for, until something draws; after that th
 | 7   | Lens on the camera              | camera pose > lens (Brown–Conrady) > world in camera space                                        | synthetic city; approximate Phantom 4 Pro coefficients                |
 | 8   | Time-varying subsidence         | ITRF > bump with a time-driven amplitude                                                          | synthetic bowl, Jakarta                                               |
 
-**Glue the example carries:** none. Everything it builds on is public: the built-in transforms and `liveEdge` (a built-in edge as the spec `smoothFrame` takes, with a slider float), `verticalExaggeration` with its ceiling, the `…ToGeographic` unprojections for a node over projected content, `pickIn`, `pointIn`, `measureIn`, `accuracyAlong` and `graphOfFrames`. A tileset is placed under a node by binding its anchor to the node's frame (`TilesetOptions.anchor`); one authored in a projected CRS also leaves out its rigid root transform (`rootTransform: "none"`), so the nodes are its projection.
+**Glue the example carries:** none. Everything it builds on is public: the built-in transforms and `liveEdge` (a built-in edge as the spec `curvilinearFrame` takes, with a slider float), `verticalExaggeration` with its ceiling, the `…ToGeographic` unprojections for a node over projected content, `pickIn`, `pointIn`, `measureIn`, `accuracyAlong` and `graphOfFrames`. A tileset is placed under a node by binding its anchor to the node's frame (`TilesetOptions.anchor`); one authored in a projected CRS also leaves out its rigid root transform (`rootTransform: "none"`), so the nodes are its projection.

@@ -1,5 +1,5 @@
 // A world's draws across a warp (docs/design/geometry-through-placement-review.md, increment 1, slice D; docs/design/transform-graph.md):
-// a view whose camera is on ITRF draws content placed in a smooth frame under
+// a view whose camera is on ITRF draws content placed in a curvilinear frame under
 // it (`exaggerated`, with the Earth's anchor bound to it) warped, per vertex,
 // by fits of the route, which the
 // engine makes within a budget. Checked on the CPU against the route's own
@@ -10,13 +10,13 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   routeForward,
   type Route,
-  type SmoothFrameSpec,
+  type CurvilinearFrameSpec,
 } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { Frame } from "../src/frames/Frame.ts";
 import { placementOf } from "../src/frames/placementQuery.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
 import {
@@ -170,7 +170,7 @@ interface Setup {
   drawn: Frame;
   /** A second deformer between `content` and `drawn` (`second`): the route is the exaggeration, then its lift. */
   flat: Frame | undefined;
-  spec: SmoothFrameSpec & { revision: number };
+  spec: CurvilinearFrameSpec & { revision: number };
   /** The exaggeration `spec.forward` applies, changed with a revision bump. */
   state: { k: number };
   /** The warp's scale, when it has one. */
@@ -185,7 +185,7 @@ interface Setup {
 
 /**
  * A world with a view whose rig sits on ITRF and the Earth's anchor placed
- * in `exaggerated`, a smooth frame under ITRF (or in `flat`, a second one
+ * in `exaggerated`, a curvilinear frame under ITRF (or in `flat`, a second one
  * under that, when `second`; left on ITRF itself when `rigid`). `scaled`: the
  * warp has a scale, a world's
  * parameter (a weight the GPU reads) or a `plain` number. The first frame
@@ -216,7 +216,7 @@ function setup(
         ? { value: 1 }
         : undefined;
   const state = { k: options.k ?? 10 };
-  const spec: SmoothFrameSpec & { revision: number } = {
+  const spec: CurvilinearFrameSpec & { revision: number } = {
     revision: 1,
     description: "height × k",
     ...(scale && { scale }),
@@ -225,7 +225,7 @@ function setup(
   // A second deformer sits between the exaggeration and ITRF: the route is the exaggeration, then the lift.
   let flat: Frame | undefined;
   if (options.second) {
-    flat = smoothFrame("flat", itrf, {
+    flat = curvilinearFrame("flat", itrf, {
       revision: 1,
       description: "lifted 1 m",
       forward(p, out, jacobian) {
@@ -238,7 +238,7 @@ function setup(
     });
     catalog.add(flat);
   }
-  const exaggerated = smoothFrame("exaggerated", flat ?? itrf, spec);
+  const exaggerated = curvilinearFrame("exaggerated", flat ?? itrf, spec);
   catalog.add(exaggerated);
   const placed: Frame = options.rigid ? itrf : exaggerated;
   const resolver = createFramesResolver(catalog);
@@ -421,7 +421,7 @@ describe("anchors across a warp", () => {
       orientation: { kind: "free" },
     });
     const held = engine.cameras.held(s.view);
-    expect(held?.reason).toMatch(/crosses a smooth edge/);
+    expect(held?.reason).toMatch(/crosses a curvilinear edge/);
     expect(held?.reason).toMatch(/rig's frames/);
   });
 });
@@ -993,10 +993,10 @@ describe("the render root", () => {
     ]);
   });
 
-  it("draws a view that crosses no smooth edge by a twin draw, unwarped, with no word", () => {
+  it("draws a view that crosses no curvilinear edge by a twin draw, unwarped, with no word", () => {
     const s = setup();
     const draw = addQuad(s);
-    // The second view's root is the deformer itself: no smooth edge for the anchor.
+    // The second view's root is the deformer itself: no curvilinear edge for the anchor.
     const other = engine.addView({
       target: new OffscreenTarget(32, 24),
       world: s.world,
@@ -1303,12 +1303,12 @@ describe("rays through a warp", () => {
   function frames() {
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const itrf = catalog.get("ITRF");
-    const drawn = smoothFrame("exaggerated", itrf, {
+    const drawn = curvilinearFrame("exaggerated", itrf, {
       revision: 1,
       forward: (p, out, jacobian) => exaggerate(10, p, out, jacobian),
     });
     // A frame whose x runs 100 m past ITRF's: its edge to ITRF takes 100 off.
-    const shifted = smoothFrame("shifted", itrf, {
+    const shifted = curvilinearFrame("shifted", itrf, {
       revision: 1,
       description: "datum shift",
       forward(p, out, jacobian) {
@@ -1346,7 +1346,7 @@ describe("rays through a warp", () => {
       targets: [{ kind: "body", body: EARTH }],
     });
     expect(answer.rays[0]!.accuracy.note).toMatch(
-      /crosses a smooth edge, so each ray is carried by its ends/,
+      /crosses a curvilinear edge, so each ray is carried by its ends/,
     );
   });
 

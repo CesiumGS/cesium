@@ -7,7 +7,7 @@
 // to the camera-relative translation, summed exactly (cullTables.slang
 // `drawnTranslation`).
 //
-// The Earth's anchor is placed in a smooth frame under ITRF, and the camera
+// The Earth's anchor is placed in a curvilinear frame under ITRF, and the camera
 // on ITRF is 3 m above a 0.6 m quad's drawn place, looking down through a 15° field of view (1.5 mm a pixel). Two
 // warps: height × 10 over a sphere, with the quad 4 km up (a 36 km
 // displacement), and a translation of (3,000, 2,000) km. Each of the four
@@ -20,7 +20,7 @@ import { routeForward } from "../src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  smoothFrame,
+  curvilinearFrame,
 } from "../src/frames/index.ts";
 import {
   EARTH,
@@ -212,7 +212,7 @@ async function runWarpPrecision(): Promise<WarpPrecisionResult> {
       });
       const catalog = createFrameCatalog();
       const itrf = catalog.get("ITRF");
-      const warped = smoothFrame("warped", itrf, {
+      const warped = curvilinearFrame("warped", itrf, {
         revision: 1,
         description: c.description,
         forward: c.forward,
@@ -335,7 +335,7 @@ function project(
   const route = view.anchorRoute(earth);
   if (!route) {
     throw new Error(
-      "the Earth's anchor has no route: it is not placed in a smooth frame",
+      "the Earth's anchor has no route: it is not placed in a curvilinear frame",
     );
   }
   const eye = view.camera.position;

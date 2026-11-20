@@ -11,7 +11,7 @@ import { el, messageOf } from "./ui.ts";
 
 /**
  * The transform graph, on real data: eight scenes, each a small graph of
- * nodes (affine, smooth, switch) with content and the camera placed at some of
+ * nodes (affine, curvilinear, switch) with content and the camera placed at some of
  * them. Where something sits decides what is warped; the panel lists the
  * nodes, lights the route of the last pick, and reads true values beside the
  * drawn ones through the graph. See DESIGN.md.

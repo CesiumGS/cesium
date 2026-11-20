@@ -30,7 +30,7 @@ function heightScale(k: number): Warp {
   };
 }
 
-/** A smooth non-linear warp, inverted only by Newton. */
+/** A curvilinear non-linear warp, inverted only by Newton. */
 const swirl: Warp = {
   from: content,
   to: drawn,

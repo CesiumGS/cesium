@@ -26,7 +26,7 @@ import { routeInverse } from "../src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
-  smoothFrame,
+  curvilinearFrame,
   type Frame,
 } from "../src/frames/index.ts";
 import {
@@ -202,7 +202,7 @@ function scene(
   const itrf = catalog.get("ITRF");
   let content: Frame = itrf;
   if (warped) {
-    content = smoothFrame("Earth content (exaggerated)", itrf, {
+    content = curvilinearFrame("Earth content (exaggerated)", itrf, {
       revision: 1,
       description: `height × ${K}`,
       forward: (p, out, jacobian) => exaggerate(K, p, out, jacobian),
@@ -674,7 +674,7 @@ async function runClips(): Promise<ClipsResult> {
       const route = view.anchorRoute(s.earth);
       if (!route) {
         throw new Error(
-          "the Earth's anchor has no route: it is not placed in a smooth frame",
+          "the Earth's anchor has no route: it is not placed in a curvilinear frame",
         );
       }
       const scratch = new Float64Array(3);

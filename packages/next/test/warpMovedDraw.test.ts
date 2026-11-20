@@ -2,7 +2,7 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
-import { smoothFrame } from "../src/frames/smoothFrame.ts";
+import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import * as m4 from "../src/math/mat4.ts";
 import { EARTH } from "../src/scene/Body.ts";
@@ -31,7 +31,7 @@ describe("scratch", () => {
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const scale = world.createPlacementParameter(1, { range: [0, 1] });
     const itrf = catalog.get("ITRF");
-    const frame = smoothFrame(
+    const frame = curvilinearFrame(
       "x",
       itrf,
       fittedOnly(verticalExaggeration({ factor: 10, scale })),

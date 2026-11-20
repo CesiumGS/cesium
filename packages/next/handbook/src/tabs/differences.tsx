@@ -65,12 +65,12 @@ const CONCEPTS = [
   {
     topic: "Vertical exaggeration",
     old: "scene.verticalExaggeration and a relative height: one setting for the whole scene",
-    next: "A node of the transform graph over the content it exaggerates, from verticalExaggeration and smoothFrame. What isn't under it (the Moon, the camera) isn't exaggerated, picks and measurements keep true heights, and a ceiling shifts the sky instead of stretching it. A slider is one float, and each view can hold its own value.",
+    next: "A node of the transform graph over the content it exaggerates, from verticalExaggeration and curvilinearFrame. What isn't under it (the Moon, the camera) isn't exaggerated, picks and measurements keep true heights, and a ceiling shifts the sky instead of stretching it. A slider is one float, and each view can hold its own value.",
   },
   {
     topic: "Placing and reprojecting content",
     old: "A tileset's transform and modelMatrix, with 3D Tiles' ECEF coordinates. Content authored in a projected CRS isn't reprojected",
-    next: "A tree of frames whose edges are affine or smooth. A tileset's declared CRS picks its route to the body: the identity for a geocentric one, a fitted coordinate operation for a projected one, a rigid site transform for a local one. There are no placement modes. The tree is compiled to one GPU function per route.",
+    next: "A tree of frames whose edges are affine or curvilinear. A tileset's declared CRS picks its route to the body: the identity for a geocentric one, a fitted coordinate operation for a projected one, a rigid site transform for a local one. There are no placement modes. The tree is compiled to one GPU function per route.",
   },
   {
     topic: "Clipping",

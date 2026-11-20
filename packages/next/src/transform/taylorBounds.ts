@@ -12,7 +12,7 @@
 // box's half axes) and a per-axis remainder ρ, so the image of the box is
 // inside c + L·[−1, 1]³ + [−ρ, ρ]:
 //   - an affine edge: c' = A c + t, L' = A L, ρ' = |A| ρ;
-//   - a smooth edge f, on the input's axis-aligned hull (half-extent
+//   - a curvilinear edge f, on the input's axis-aligned hull (half-extent
 //     s = |L|·1 + ρ about c), with parameters at the value they have or over
 //     the range given: L' = J(c) L, ρ' = |J(c)| ρ + ½ Σ |H|ₘₐₓ s s, and
 //     the change of the function with a ranged parameter p, ∂f/∂p over the
@@ -20,8 +20,8 @@
 //   A function with a kink (min, max, abs, clamp, select: J jumps or may)
 //   has the mean-value form instead of the Hessian's: J's interval over the
 //   hull minus J(c), times s. It holds for every Lipschitz map and is twice
-//   the Hessian's for a smooth one.
-// A route with a step down (a smooth edge undone), a smooth edge with no IR
+//   the Hessian's for a curvilinear one.
+// A route with a step down (a curvilinear edge undone), a curvilinear edge with no IR
 // or a function with a step (floor, fract) is refused: the caller samples.
 //
 // The same walk bounds ‖J‖, the oscillation of J and ‖D²F‖ over the box,
@@ -53,7 +53,7 @@ export interface TaylorOptions {
    */
   readonly cells?: number;
   /**
-   * Ranges that parameters of a smooth node may take (by name; a parameter
+   * Ranges that parameters of a curvilinear node may take (by name; a parameter
    * not named is taken at the value it has): a slider's `range`, so the
    * bound holds for every value in it.
    */
@@ -80,7 +80,7 @@ export interface TaylorBounds {
   readonly oscillation: number;
   /** A bound on the second derivative (‖D²F[u, u]‖ ≤ this·|u|²), from the Hessian. */
   readonly hessianNorm: number;
-  /** Every smooth edge's function has a continuous J (no kink): `hessianNorm` bounds the chord error as proven. */
+  /** Every curvilinear edge's function has a continuous J (no kink): `hessianNorm` bounds the chord error as proven. */
   readonly continuous: boolean;
 }
 

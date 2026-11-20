@@ -193,7 +193,7 @@ const MECHANISMS: (Block & { short: string })[] = [
   {
     short: "Transforms",
     name: "The transform graph",
-    what: "One tree of frames whose edges are affine or smooth: georeferencing, projections, exaggeration, bends and lenses. Content sits at a node, and where it sits decides what is deformed. One compiled GPU function per route, and picks, measurements, accuracy and clips answer through it in float64. A lens on the camera isn't wired for streamed tilesets.",
+    what: "One tree of frames whose edges are affine or curvilinear: georeferencing, projections, exaggeration, bends and lenses. Content sits at a node, and where it sits decides what is deformed. One compiled GPU function per route, and picks, measurements, accuracy and clips answer through it in float64. A lens on the camera isn't wired for streamed tilesets.",
     state: "partly",
   },
   {
@@ -846,16 +846,16 @@ export function Unified() {
             </strong>{" "}
             Georeferencing, a projection, vertical exaggeration, a bend, a plan
             and profile sheet and a lens are all nodes: an edge is an affine
-            matrix, or a smooth function with parameters. This replaces warps as
+            matrix, or a curvilinear map with parameters. This replaces warps as
             their own idea, regions that said which content a warp touched, and
             placement modes: a node's position in the tree and a tileset's
             declared CRS decide it.
           </li>
           <li>
             <strong>One compiler for every route.</strong> It collapses affine
-            runs, differentiates smooth nodes for normals and bounds, and emits
-            one GPU function per route shape. A built-in is written once in
-            Slang and mirrored in TypeScript; your own function is restricted
+            runs, differentiates curvilinear nodes for normals and bounds, and
+            emits one GPU function per route shape. A built-in is written once
+            in Slang and mirrored in TypeScript; your own function is restricted
             JavaScript that the engine parses and never evaluates.
           </li>
           <li>

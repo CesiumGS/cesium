@@ -1,6 +1,6 @@
 // A route between two nodes of a transform graph: up from `from` to the
 // lowest common ancestor through each edge's forward, down to `to` through
-// each edge's inverse (a smooth node's declared inverse, or Newton with its
+// each edge's inverse (a curvilinear node's declared inverse, or Newton with its
 // Jacobian). Adjacent affine edges collapse into one float64 matrix. The
 // CPU path is the truth the GPU compiler (a later task) is checked against.
 import { identity, invertAffine, multiply } from "../math/mat4.ts";
@@ -8,7 +8,7 @@ import type {
   AffineEdge,
   Params,
   PlainEdge,
-  SmoothSpec,
+  CurvilinearSpec,
   TransformNode,
   ViewId,
 } from "./graph.ts";
@@ -28,9 +28,9 @@ export interface AffineStep {
   readonly matrix: Float64Array;
 }
 
-/** One smooth edge, forward (up the tree) or its inverse (down it). */
-export interface SmoothStep {
-  readonly kind: "smooth";
+/** One curvilinear edge, forward (up the tree) or its inverse (down it). */
+export interface CurvilinearStep {
+  readonly kind: "curvilinear";
   readonly node: TransformNode;
   readonly id: string;
   /** The step applies the node's inverse. */
@@ -39,23 +39,23 @@ export interface SmoothStep {
   readonly newton: boolean;
 }
 
-export type RouteStep = AffineStep | SmoothStep;
+export type RouteStep = AffineStep | CurvilinearStep;
 
 /** One edge of a route as `Route.walk` visits it; the arrays are reused between visits. */
 export interface EdgeVisit {
   readonly node: TransformNode;
-  readonly kind: "affine" | "smooth";
+  readonly kind: "affine" | "curvilinear";
   /** The route goes down through the edge: it is undone. */
   readonly down: boolean;
-  readonly spec: SmoothSpec | undefined;
-  /** The smooth edge's parameter values for the route's view. */
+  readonly spec: CurvilinearSpec | undefined;
+  /** The curvilinear edge's parameter values for the route's view. */
   readonly params: Params | undefined;
   /** An affine edge's 4×4 as applied (the inverse when `down`), column-major. */
   readonly matrix: Float64Array | undefined;
   /** The point before the edge, and after it. */
   readonly input: Float64Array;
   readonly output: Float64Array;
-  /** The edge's own Jacobian at `input`, column-major: an affine edge's matrix part; a smooth edge's by its function's, else central differences (a down edge: the inverse of the function's at `output`). */
+  /** The edge's own Jacobian at `input`, column-major: an affine edge's matrix part; a curvilinear edge's by its function's, else central differences (a down edge: the inverse of the function's at `output`). */
   readonly jacobian: Float64Array;
 }
 
@@ -71,13 +71,13 @@ interface AffineRun extends AffineStep {
   readonly inverse: Float64Array;
 }
 
-interface SmoothRun extends SmoothStep {
-  readonly spec: SmoothSpec;
+interface CurvilinearRun extends CurvilinearStep {
+  readonly spec: CurvilinearSpec;
   readonly down: boolean;
   params: Params;
 }
 
-type Run = AffineRun | SmoothRun;
+type Run = AffineRun | CurvilinearRun;
 
 const NEWTON = { tolerance: 1e-9, iterations: 32 };
 
@@ -180,7 +180,7 @@ export class Route {
 
   /**
    * The 3×3 Jacobian of `forward` at `p` (column-major), by the chain rule:
-   * an affine step's matrix part, a smooth node's Jacobian (central
+   * an affine step's matrix part, a curvilinear node's Jacobian (central
    * differences when its function writes none), a down step's inverse.
    */
   jacobian(p: ArrayLike<number>, out = new Float64Array(9)): Float64Array {
@@ -209,9 +209,9 @@ export class Route {
     const graph = this.from.graph;
     const emit = (
       node: TransformNode,
-      kind: "affine" | "smooth",
+      kind: "affine" | "curvilinear",
       down: boolean,
-      spec: SmoothSpec | undefined,
+      spec: CurvilinearSpec | undefined,
       params: Params | undefined,
     ) =>
       visit({
@@ -249,12 +249,12 @@ export class Route {
       const params = graph.values(run.node, this.view);
       if (run.down) {
         solveInverse(run.spec, params, cur, next, run.node.name);
-        smoothJacobian(run.spec, params, next, jacobian);
+        curvilinearJacobian(run.spec, params, next, jacobian);
         invert3(jacobian, run.node.name);
       } else {
-        smoothJacobian(run.spec, params, cur, jacobian, next);
+        curvilinearJacobian(run.spec, params, cur, jacobian, next);
       }
-      emit(run.node, "smooth", run.down, run.spec, params);
+      emit(run.node, "curvilinear", run.down, run.spec, params);
       [cur, next] = [next, cur];
     }
     out.set(cur);
@@ -322,12 +322,12 @@ export class Route {
       } else if (run.inverse !== backwards) {
         solveInverse(run.spec, run.params, cur, next, run.node.name);
         if (jacobian) {
-          smoothJacobian(run.spec, run.params, next, this.step);
+          curvilinearJacobian(run.spec, run.params, next, this.step);
           invert3(this.step, run.node.name);
           multiply3(jacobian, this.step, jacobian, this.total);
         }
       } else if (jacobian) {
-        smoothJacobian(run.spec, run.params, cur, this.step, next);
+        curvilinearJacobian(run.spec, run.params, cur, this.step, next);
         multiply3(jacobian, this.step, jacobian, this.total);
       } else {
         run.spec.forward(cur, run.params, next);
@@ -395,7 +395,7 @@ function collapse(raws: readonly Raw[]): Run[] {
     flush();
     const spec = raw.edge.spec;
     runs.push({
-      kind: "smooth",
+      kind: "curvilinear",
       node: raw.node,
       id: spec.id ?? raw.node.name,
       inverse: raw.down,
@@ -493,8 +493,8 @@ const minus = new Float64Array(3);
  * `spec.forward` at `p`, with its Jacobian in `jacobian` (and the value in
  * `value`): the function's own when it writes one, else central differences.
  */
-function smoothJacobian(
-  spec: SmoothSpec,
+function curvilinearJacobian(
+  spec: CurvilinearSpec,
   params: Params,
   p: Float64Array,
   jacobian: Float64Array,
@@ -526,7 +526,7 @@ function smoothJacobian(
  * doesn't converge.
  */
 function solveInverse(
-  spec: SmoothSpec,
+  spec: CurvilinearSpec,
   params: Params,
   q: Float64Array,
   out: Float64Array,
@@ -541,7 +541,7 @@ function solveInverse(
   const f = new Float64Array(3);
   const j = new Float64Array(9);
   for (let k = 0; k < NEWTON.iterations; k++) {
-    smoothJacobian(spec, params, p, j, f);
+    curvilinearJacobian(spec, params, p, j, f);
     const r = [f[0]! - target[0]!, f[1]! - target[1]!, f[2]! - target[2]!];
     invert3(j, name);
     // The step J⁻¹·r, with J⁻¹ now in `j`.

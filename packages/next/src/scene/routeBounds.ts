@@ -1,9 +1,9 @@
 // A box carried through a route by declared bounds (plan 2026-11-12, task
 // 12, fix 2; docs/design/transform-graph.md "Queries through routes", Bounds): in place of
 // sampling the route at 7 to 27 points per tile with its exact height solve,
-// each smooth step is evaluated once, at the box's center. A parallelepiped
-// (center c, half axes the columns of A) through a smooth step F with the
-// declared bound (`SmoothSpec.bound`: J = R_out J' R_inᵀ, |J'| ≤ M entrywise
+// each curvilinear step is evaluated once, at the box's center. A parallelepiped
+// (center c, half axes the columns of A) through a curvilinear step F with the
+// declared bound (`CurvilinearSpec.bound`: J = R_out J' R_inᵀ, |J'| ≤ M entrywise
 // over the region) is, by the mean value theorem, inside the box about F(c)
 // whose half extent along R_out's axis i is Σ_j M_ij w_j, w_j = Σ_k |(R_inᵀA)_jk|
 // the region's half extent along R_in's axis j. Through an affine step the
@@ -99,7 +99,7 @@ export function composeBox(
       affine(step.matrix);
       continue;
     }
-    const spec = step.warp.smooth;
+    const spec = step.warp.curvilinear;
     if (step.inverse || spec?.bound === undefined) {
       return undefined;
     }

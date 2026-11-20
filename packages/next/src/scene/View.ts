@@ -876,7 +876,7 @@ export class View {
     }
   }
 
-  /** The route that places `anchor` (or the table's root) when it crosses a smooth edge: its warps, as this view draws them, and its revision. Undefined for a rigid anchor. */
+  /** The route that places `anchor` (or the table's root) when it crosses a curvilinear edge: its warps, as this view draws them, and its revision. Undefined for a rigid anchor. */
   anchorRoute(anchor: AnchorHandle | undefined): Route | undefined {
     if (anchor && this.world.anchorOf(anchor) !== anchor) {
       return undefined;

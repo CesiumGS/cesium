@@ -13,7 +13,7 @@ import { liftedPart } from "../camera/heightProfile.ts";
 import type {
   BoundRegion,
   DeclaredBound,
-  SmoothEdge,
+  CurvilinearEdge,
 } from "../transform/graph.ts";
 import {
   edgeOf,
@@ -227,7 +227,7 @@ export function verticalExaggerationEdge(options: {
   ceiling: number;
   baseHeight?: number;
   band?: number;
-}): SmoothEdge {
+}): CurvilinearEdge {
   const base = options.baseHeight ?? 0;
   if (!(options.ceiling > base)) {
     throw new RangeError(
