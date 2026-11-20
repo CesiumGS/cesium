@@ -659,6 +659,13 @@ function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
   let passState = defaultView.passState;
   passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
 
+  // The command list still holds the commands of the last rendered frame.
+  // They must not be executed again: compute commands are one-shot and free
+  // their resources when done, and draw commands may belong to primitives
+  // that were destroyed since. Primitives push their commands for this pass
+  // again in updateAndExecuteCommands.
+  frameState.commandList.length = 0;
+
   scene.clearPasses(frameState.passes);
   frameState.passes.pick = true;
   frameState.passes.depth = true;
