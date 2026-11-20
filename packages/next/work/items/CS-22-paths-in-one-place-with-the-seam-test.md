@@ -2,7 +2,7 @@
 id: CS-22
 title: Paths in one place, with the seam test
 kind: work
-state: in-progress
+state: done
 created: 2026-11-13
 project: CS-8
 needs: [CS-21]
