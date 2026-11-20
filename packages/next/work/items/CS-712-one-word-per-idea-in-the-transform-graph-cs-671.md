@@ -10,10 +10,10 @@ needs: [CS-671]
 
 ## Done when
 
-- The transform graph's differentiable, non-affine edge has one name everywhere, the one CS-671 settles, in place of these four:
+- The transform graph's differentiable, non-affine edge is **curvilinear** everywhere (CS-671): `curvilinear()`, kind `"curvilinear"`, `CurvilinearFrame`, `curvilinearFrame`, `isCurvilinearFrame`, `CurvilinearMap` in place of `Warp`, and so on. It replaces these four:
   - "smooth": `smooth()`, `SmoothEdge` (kind `"smooth"`), `SmoothSpec`, `SmoothForward`, `SmoothInverse`, `SmoothFrame`, `smoothFrame`, `isSmoothFrame`, `smoothEdgeOf`, `SmoothFrameSpec`;
   - "warp": `Warp`, `WarpScale`, `WarpStats`, `warpForward`, `warpInverse`, `DrawnWarp`, `BlendedWarp`, `ChangeableWarp`, `FunctionWarp`, `reprojectionWarp`, route steps of kind `"warp"`, and internal names such as `tileWarp` and `warpBounds`;
-  - "curved", where it means a route through such an edge (`planClip`'s "curved", `WorldCurvedClips`), but not B-rep curved surfaces or NURBS curves;
+  - "curved" in code names, where it means a route through such an edge (`WorldCurvedClips`), but not B-rep curved surfaces or NURBS curves. "Curved" stays as the plain-prose adjective ("a curved route");
   - "deformer", in prose.
 - Route steps say `"affine"`, not `"rigid"`, to match `AffineEdge`, since their matrices may scale. `NonRigidRouteError` is renamed to match, and so is `isRigid` if there is one.
 - `api/surface.txt`, the handbook (the frames module card, `apiMap.ts`, the georeference and transform graph tabs) and `docs/design/transform-graph.md` use the new names, and the agent-first migration kit maps 1.x's `scene.verticalExaggeration` to the new name.
