@@ -9,7 +9,8 @@ import ContextLimits from "./ContextLimits.js";
 import RenderbufferFormat from "./RenderbufferFormat.js";
 
 /**
- * @private
+ * @constructor
+ * @internal
  */
 function Renderbuffer(options) {
   options = options ?? Frozen.EMPTY_OBJECT;

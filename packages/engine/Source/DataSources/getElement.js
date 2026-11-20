@@ -5,6 +5,9 @@ import { DeveloperError } from "@cesium/core";
  *
  * @internal
  *
+ * @param {Element|string} element The element, or its ID.
+ * @returns {Element} The element.
+ *
  * @exception {DeveloperError} Element with id "id" does not exist in the document.
  */
 function getElement(element) {
