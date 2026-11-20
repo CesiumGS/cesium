@@ -94,6 +94,43 @@ function treeNodeFromResponse(response) {
 }
 
 /**
+ * An indexed property key and the primitive type of its values, as returned
+ * by {@link IonAssetElementService#listProperties}.
+ *
+ * @typedef {object} IonAssetElementService.PropertyInfo
+ * @property {string} propertyKey The property key.
+ * @property {string} type The property's primitive type.
+ */
+
+/**
+ * A page of results from {@link IonAssetElementService#listProperties}.
+ *
+ * @typedef {object} IonAssetElementService.PropertyPage
+ * @property {IonAssetElementService.PropertyInfo[]} items The properties on this page.
+ * @property {number} total The total number of properties across all pages.
+ * @property {string} [continuationToken] A token to pass as <code>options.continuationToken</code> to retrieve the next page, or <code>undefined</code> when there are no more results.
+ */
+
+/**
+ * A distinct value of an element property, as returned by
+ * {@link IonAssetElementService#listPropertyValues}.
+ *
+ * @typedef {object} IonAssetElementService.PropertyValue
+ * @property {string|number|boolean} value The raw value.
+ * @property {string} displayValue The human-readable, pre-formatted value.
+ * @property {string|null} units The unit of <code>value</code>, or <code>null</code> when the property is unitless.
+ * @property {string} type The primitive type of <code>value</code>.
+ */
+
+/**
+ * A page of results from {@link IonAssetElementService#listPropertyValues}.
+ *
+ * @typedef {object} IonAssetElementService.PropertyValuePage
+ * @property {IonAssetElementService.PropertyValue[]} items The distinct values on this page.
+ * @property {string} [continuationToken] A token to pass as <code>options.continuationToken</code> to retrieve the next page, or <code>undefined</code> when there are no more results.
+ */
+
+/**
  * A single property of an {@link IonAssetElementService.Element}.
  *
  * @typedef {object} IonAssetElementService.ElementProperty
@@ -548,6 +585,125 @@ class IonAssetElementService extends ElementService {
       path: response.path.map(function (entry) {
         return { kind: entry.kind, id: toIdString(entry.id) };
       }),
+    };
+  }
+
+  /**
+   * Retrieves a page of the property keys that exist across the elements of
+   * this asset, along with each property's type. Only top-level primitive
+   * properties (strings, numbers, booleans) are included.
+   *
+   * The returned keys can be passed to
+   * {@link IonAssetElementService#listPropertyValues}.
+   *
+   * Results are paginated with an opaque cursor. Request subsequent pages by
+   * passing the returned <code>continuationToken</code> as
+   * <code>options.continuationToken</code> until it is <code>undefined</code>.
+   *
+   * @param {object} [options] Object with the following properties:
+   * @param {number} [options.top=100] The maximum number of properties to return per page.
+   * @param {string} [options.continuationToken] A token returned from a previous call to retrieve the next page of results.
+   * @returns {Promise<IonAssetElementService.PropertyPage>} A promise that resolves to a page of properties. The promise rejects with a {@link RequestErrorEvent} if the request fails.
+   * @exception {DeveloperError} <code>options.top</code> must be a positive integer.
+   * @exception {DeveloperError} <code>options.continuationToken</code> must be a string.
+   */
+  async listProperties(options) {
+    options = options ?? Frozen.EMPTY_OBJECT;
+
+    //>>includeStart('debug', pragmas.debug);
+    checkPositiveInteger("options.top", options.top);
+    if (defined(options.continuationToken)) {
+      Check.typeOf.string(
+        "options.continuationToken",
+        options.continuationToken,
+      );
+    }
+    //>>includeEnd('debug');
+
+    const queryParameters = { top: options.top ?? 100 };
+    if (defined(options.continuationToken)) {
+      queryParameters.continuationToken = options.continuationToken;
+    }
+
+    const response = await this._resource
+      .getDerivedResource({
+        url: "elements/properties",
+        queryParameters: queryParameters,
+      })
+      .fetchJson();
+    return {
+      items: response.items.map(function (item) {
+        return { propertyKey: item.propertyKey, type: item.type };
+      }),
+      total: response.total,
+      continuationToken: response.continuationToken,
+    };
+  }
+
+  /**
+   * Retrieves a page of the distinct values for a single element property
+   * across the elements of this asset. Only top-level primitive values
+   * (strings, numbers, booleans) are included.
+   *
+   * Results are paginated with an opaque cursor. Request subsequent pages by
+   * passing the returned <code>continuationToken</code> as
+   * <code>options.continuationToken</code> until it is <code>undefined</code>,
+   * repeating the same <code>propertyKey</code> and <code>type</code> each time.
+   *
+   * @param {object} options Object with the following properties:
+   * @param {string} options.propertyKey A property key returned by {@link IonAssetElementService#listProperties}.
+   * @param {string} options.type The primitive type of the values to retrieve: <code>"boolean"</code>, <code>"number"</code>, or <code>"string"</code>.
+   * @param {number} [options.top=100] The maximum number of values to return per page.
+   * @param {string} [options.continuationToken] A token returned from a previous call to retrieve the next page of results.
+   * @returns {Promise<IonAssetElementService.PropertyValuePage>} A promise that resolves to a page of distinct values. The promise rejects with a {@link RequestErrorEvent} if the request fails.
+   * @exception {DeveloperError} <code>options.propertyKey</code> must be a string.
+   * @exception {DeveloperError} <code>options.type</code> must be <code>"boolean"</code>, <code>"number"</code>, or <code>"string"</code>.
+   * @exception {DeveloperError} <code>options.top</code> must be a positive integer.
+   * @exception {DeveloperError} <code>options.continuationToken</code> must be a string.
+   */
+  async listPropertyValues(options) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("options", options);
+    Check.typeOf.string("options.propertyKey", options.propertyKey);
+    if (!["boolean", "number", "string"].includes(options.type)) {
+      throw new DeveloperError(
+        'options.type must be "boolean", "number", or "string".',
+      );
+    }
+    checkPositiveInteger("options.top", options.top);
+    if (defined(options.continuationToken)) {
+      Check.typeOf.string(
+        "options.continuationToken",
+        options.continuationToken,
+      );
+    }
+    //>>includeEnd('debug');
+
+    const queryParameters = {
+      propertyKey: options.propertyKey,
+      type: options.type,
+      top: options.top ?? 100,
+    };
+    if (defined(options.continuationToken)) {
+      queryParameters.continuationToken = options.continuationToken;
+    }
+
+    const response = await this._resource
+      .getDerivedResource({
+        url: "elements/properties/values",
+        queryParameters: queryParameters,
+      })
+      .fetchJson();
+    return {
+      items: response.items.map(function (item) {
+        return {
+          value: item.value,
+          displayValue: item.displayValue,
+          units: item.units,
+          type: item.type,
+        };
+      }),
+      continuationToken: response.continuationToken,
     };
   }
 }
