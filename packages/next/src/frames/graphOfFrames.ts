@@ -1,4 +1,8 @@
-import { warpForward, warpInverse, type Warp } from "../camera/route.ts";
+import {
+  curvilinearForward,
+  curvilinearInverse,
+  type CurvilinearMap,
+} from "../camera/route.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { EdgeAccuracy } from "../transform/accuracy.ts";
 import {
@@ -112,14 +116,21 @@ function edgeOfFrame(
   resolver: { instant(seconds: number): Instant },
 ): Edge {
   if (isCurvilinearFrame(frame)) {
-    return curvilinearEdgeOfWarp(frame.warp);
+    return curvilinearEdgeOfCurvilinearMap(frame.curvilinearMap);
   }
   if (isSwitchFrame(frame)) {
     const { byView, default: fallback } = frame.edges();
-    const plain = (warp: Warp | undefined): PlainEdge =>
-      warp ? curvilinearEdgeOfWarp(warp) : identityEdge();
+    const plain = (curvilinearMap: CurvilinearMap | undefined): PlainEdge =>
+      curvilinearMap
+        ? curvilinearEdgeOfCurvilinearMap(curvilinearMap)
+        : identityEdge();
     return switchEdge({
-      byView: new Map([...byView].map(([view, warp]) => [view, plain(warp)])),
+      byView: new Map(
+        [...byView].map(([view, curvilinearMap]) => [
+          view,
+          plain(curvilinearMap),
+        ]),
+      ),
       ...(fallback !== null && { default: plain(fallback) }),
     });
   }
@@ -133,19 +144,21 @@ function edgeOfFrame(
 const identityEdge = () =>
   affine({ matrix: [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1] });
 
-/** A warp (local to parent, at the scale it has now) as a curvilinear node. */
-function curvilinearEdgeOfWarp(warp: Warp) {
+/** A curvilinear map (local to parent, at the scale it has now) as a curvilinear node. */
+function curvilinearEdgeOfCurvilinearMap(curvilinearMap: CurvilinearMap) {
   return curvilinear({
-    id: warp.description ?? `${warp.from.name} to ${warp.to.name}`,
+    id:
+      curvilinearMap.description ??
+      `${curvilinearMap.from.name} to ${curvilinearMap.to.name}`,
     params: {},
     forward: (p, _params, out, jacobian) => {
-      warpForward(warp, p, out, jacobian);
+      curvilinearForward(curvilinearMap, p, out, jacobian);
     },
     inverse: (q, _params, out) => {
-      warpInverse(warp, q, out);
+      curvilinearInverse(curvilinearMap, q, out);
     },
-    ...(warp.accuracy?.sigma !== undefined && {
-      accuracy: warp.accuracy.sigma,
+    ...(curvilinearMap.accuracy?.sigma !== undefined && {
+      accuracy: curvilinearMap.accuracy.sigma,
     }),
   });
 }

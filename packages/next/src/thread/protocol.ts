@@ -41,12 +41,12 @@ const TABLE: Record<string, EntryTable> = {
   ".": {
     type: `
       AccuracyOptions AccuracyPart AerosolType AffinePlacement AnchorHandle
-      Attribution BezierCurves BlendedWarp Body BrepCapsOptions BrepCapsReport
+      Attribution BezierCurves BlendedCurvilinearMap Body BrepCapsOptions BrepCapsReport
       BrepForm BrepGeometry BrepGeometryOptions BrepMesh BrepProblem BrepUse
       BudgetedOptions BulkOptions BulkProgress CameraExposure CameraPose
       CapBias CapColor CapDrawOptions CapDraws CapFace CapHatch CapPlacement
       CapPlane CapRgba CapSchedulerOptions CapStyle CapStyleInput CapTick
-      Cartographic CastOptions CastRay ChangeableWarp Clamp ClampOptions
+      Cartographic CastOptions CastRay ChangeableCurvilinearMap Clamp ClampOptions
       ClipCaps ClipEffect ClipFilter ClipSet ClipShape ClipsOption ClockChange
       ClosestPoint ClosestPointOptions CompiledSlangEntry CompiledStyle
       ContentSummary ContentTotals CorePick CorridorElement CorridorOptions
@@ -55,7 +55,7 @@ const TABLE: Record<string, EntryTable> = {
       EngineError EngineErrorKind EngineOptions EntityInfo EntityKind
       EntityRef Exposure EyeExposure FaceTrim FeatureStyleOptions FeatureTable
       FeatureValue FittedOperation FrameKey FrameMotion FrameStats
-      FromFunctionOptions FunctionWarp GeometryAccuracy GeometryBounds
+      FromFunctionOptions FunctionCurvilinearMap GeometryAccuracy GeometryBounds
       GeometryHit GeometryKind GeometryQueries GeometryRayAnswer Georeference
       GlareKernelHandle GlarePupil GlareSettings GlareTier GlobeImageryOptions
       GlobeOptions GltfAsset HdrImage HeightOffset HeightOffsetOptions
@@ -94,7 +94,7 @@ const TABLE: Record<string, EntryTable> = {
       UniformDeclaration UniformType UnknownReason UnknownSpan Usage
       ValueUniform VectorLayerOptions VectorStyleDocument VerticalExaggeration
       VerticalExaggerationOptions ViewBackground ViewLighting ViewLinkMode
-      ViewLinkOptions Viewport Warp WarpScale WarpStats WorldClip WorldMemory
+      ViewLinkOptions Viewport CurvilinearMap CurvilinearScale CurvilinearStats WorldClip WorldMemory
       mat4.Mat4 vec3.Vec3
     `,
     local: `
@@ -161,7 +161,7 @@ const TABLE: Record<string, EntryTable> = {
     type: `
       AccuracyFigure AreaOfInterest AttachSkyOptions Axis CatalogFrameName
       Confidence CoordinateOperation CoordinateRequest CoordinateService
-      CrsRef CrsUnits DrawPlacementInfo DrawnThrough DrawnWarp
+      CrsRef CrsUnits DrawPlacementInfo DrawnThrough DrawnCurvilinearMap
       EarthOrientationSigma EopSample FrameAccuracy FrameCatalog
       FrameCatalogOptions FrameData FrameDataLoadOptions FrameDataRole
       FrameDataWarning FrameGraph FrameInUse FrameLoadProgress FrameOptions
@@ -172,7 +172,7 @@ const TABLE: Record<string, EntryTable> = {
       Precision ResolvedCoordinates RigPreset RigPresetName RigPresetOptions
       Route RouteTerm SharedSource SkyInputs SkyState StateSegment
       SwitchChoice SwitchFrameOptions TrajectoryAccuracy TruePick TruthHow
-      TwoVectorDefinition VectorDefinition Warp WarpScale
+      TwoVectorDefinition VectorDefinition CurvilinearMap CurvilinearScale
     `,
     local: `
       EarthOrientationParameters Ephemeris FRAME_DATA_ROLES Frame
@@ -186,8 +186,8 @@ const TABLE: Record<string, EntryTable> = {
       loadFrameRoles parseOem pickIn piecewiseFrame pointAccuracy readSpk
       rigPreset rotationPart routeForward routeInverse routeLegs routeRevision
       samplePath separationAccuracy skyState curvilinearEdgeOf curvilinearFrame
-      switchFrame toParentMatrix truePick twoVectorFrame warpForward
-      warpInverse
+      switchFrame toParentMatrix truePick twoVectorFrame curvilinearForward
+      curvilinearInverse
     `,
     engine: `
       attachSky createFramesResolver graphOfFrames placementOf
@@ -226,7 +226,7 @@ const TABLE: Record<string, EntryTable> = {
       PjOperationFactoryContext PjProjStringType PjType PjWktType ProfileGrade
       ProfileParabola ProfileSegment ProjApi ProjCoordinateRequest
       ProjRequestOptions ProjResolvedCoordinates RecordedOperation
-      ReprojectionWarpOptions ResolveOptions ServiceSnapRequest SiteTransform
+      ReprojectionCurvilinearMapOptions ResolveOptions ServiceSnapRequest SiteTransform
       SnapCamera SnapKind SnapRequest SnapResult SnapService StationOffset
       TilesetGeoreference TilesetPlacement VerticalProfile
     `,
@@ -240,7 +240,7 @@ const TABLE: Record<string, EntryTable> = {
       engineeringPlacement formatPipeline fresnel gridFactors gridSource
       listOperations loadGrids loadProj loadedGrids parsePipeline
       pipelineGrids placeHosted placeReprojected placeRigid
-      projCoordinateService projTokenProblem readGeoreference reprojectionWarp
+      projCoordinateService projTokenProblem readGeoreference reprojectionCurvilinearMap
       resolveOperation strictWkt2 wkt2Problem
     `,
     engine: `

@@ -34,12 +34,12 @@ import {
 } from "../src/scene/placement.ts";
 import {
   TERM_ROWS,
-  WARP_KIND,
+  CURVILINEAR_KIND,
   blockRows,
   latticeRows,
   LATTICE_HEAD_ROWS,
 } from "../src/scene/placementTable.ts";
-import { termsOf } from "../src/scene/warpEvaluate.ts";
+import { termsOf } from "../src/scene/curvilinearEvaluate.ts";
 import { type View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { World } from "../src/scene/World.ts";
@@ -506,7 +506,7 @@ describe("World placements", () => {
     // The header, then one attribute term and its weight's one factor.
     let block = table.words(placement, 1 + TERM_ROWS);
     expect(block.u32[0]).toBe(1);
-    expect(block.u32[4]).toBe(WARP_KIND.attribute | (1 << 8));
+    expect(block.u32[4]).toBe(CURVILINEAR_KIND.attribute | (1 << 8));
     expect(block.f32[5]).toBe(1);
     expect(block.u32[6]).toBe(attributeHash(PARTNER));
     expect(block.u32[7]).toBe(1);
@@ -520,7 +520,7 @@ describe("World placements", () => {
     ({ placement, table } = words(draw));
     block = table.words(placement, blockRows(termsOf(f)!));
     expect(block.u32[0]).toBe(1);
-    expect(block.u32[4]).toBe(WARP_KIND.lattice);
+    expect(block.u32[4]).toBe(CURVILINEAR_KIND.lattice);
     expect(block.u32[6]).toBe(1 + TERM_ROWS); // its body, from the header
     expect(block.u32[7]).toBe(1);
     const body = (1 + TERM_ROWS) * 4;
@@ -548,7 +548,7 @@ describe("World placements", () => {
     ({ placement, table } = words(draw));
     block = table.words(placement, 1 + TERM_ROWS);
     expect(block.u32[0]).toBe(1);
-    expect(block.u32[4]).toBe(WARP_KIND.lattice | (1 << 8));
+    expect(block.u32[4]).toBe(CURVILINEAR_KIND.lattice | (1 << 8));
     expect(table.parameter(block.u32[8]!)).toBe(0.75);
     world.setPlacement(draw, { kind: "affine" });
     expect(words(draw).placement).toBe(NO_PLACEMENT);
@@ -797,8 +797,8 @@ describe("placement.slang and the TypeScript agree", () => {
     );
     expect(constant("PLACEMENT_TERMS")).toBe(PLACEMENT_TERMS);
     expect(constant("NO_PLACEMENT")).toBe(NO_PLACEMENT);
-    expect(constant("WARP_LATTICE")).toBe(WARP_KIND.lattice);
-    expect(constant("WARP_ATTRIBUTE")).toBe(WARP_KIND.attribute);
+    expect(constant("CURVILINEAR_LATTICE")).toBe(CURVILINEAR_KIND.lattice);
+    expect(constant("CURVILINEAR_ATTRIBUTE")).toBe(CURVILINEAR_KIND.attribute);
     expect(constant("TERM_ROWS")).toBe(TERM_ROWS);
     // A lattice body: its center row, then a row per cell and monomial.
     expect(slang).toMatch(/placementRow\(first \+ k\)/);

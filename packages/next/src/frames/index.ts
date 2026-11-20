@@ -81,12 +81,12 @@ export { createSkyState, skyState, type SkyState } from "./sky.ts";
 export {
   routeForward,
   routeInverse,
-  warpForward,
-  warpInverse,
+  curvilinearForward,
+  curvilinearInverse,
   type Route,
-  type Warp,
-  type WarpScale,
-} from "./warpMaps.ts";
+  type CurvilinearMap,
+  type CurvilinearScale,
+} from "./curvilinearMaps.ts";
 export { truePick, type TruePick, type TruthHow } from "./pickTruth.ts";
 export {
   curvilinearFrame,
@@ -131,7 +131,11 @@ export {
   type FramedPoint,
   type FramesPickInterpreterOptions,
 } from "./pickInterpreter.ts";
-export { drawnThrough, type DrawnThrough, type DrawnWarp } from "./drawn.ts";
+export {
+  drawnThrough,
+  type DrawnThrough,
+  type DrawnCurvilinearMap,
+} from "./drawn.ts";
 export type {
   AreaOfInterest,
   CoordinateOperation,

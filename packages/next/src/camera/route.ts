@@ -1,28 +1,28 @@
 // Routes through the frame tree, rigid edges and curvilinear edges (docs/design/transform-graph.md).
-// A warp is a curvilinear edge: a map from a frame's own coordinates up to its
+// A curvilinear map is a curvilinear edge: a map from a frame's own coordinates up to its
 // parent's, exact in float64, which the engine compiles or fits for the GPU.
 // A route is the path from a content frame to a base (ISO 19111's
-// concatenated coordinate operation, PROJ's pipeline): rigid steps and warp
-// steps in order, a warp step forward where the route goes up through the
+// concatenated coordinate operation, PROJ's pipeline): rigid steps and curvilinear map
+// steps in order, a curvilinear step forward where the route goes up through the
 // edge and inverse where it goes down. What is placed in a frame has that
 // frame's coordinates, true or not as the application decides, and is drawn
 // through the edges between it and the camera's root.
 import type { Params, CurvilinearSpec, ViewId } from "../transform/graph.ts";
 import type { FrameKey, FrameResolver } from "./frameResolver.ts";
 
-/** A number that is read live and moves a warp's strength; a `PlacementParameter` has this shape. */
-export interface WarpScale {
+/** A number that is read live and moves a curvilinear map's strength; a `PlacementParameter` has this shape. */
+export interface CurvilinearScale {
   readonly value: number;
   /** The values it will take, when it declares them (a `PlacementParameter`'s `range`): its draws' bounds then hold over all of it. */
   readonly range?: readonly [number, number];
 }
 
 /**
- * The marker of a warp that scales heights above a reference ellipsoid
+ * The marker of a curvilinear map that scales heights above a reference ellipsoid
  * (docs/design/geometry-through-placement-review.md, increment 4): `forward(p) = p + (factor − 1)·h·n̂`, with `h`
  * the geodetic height of `p` above the ellipsoid and `n̂` its normal there,
  * so a point keeps its longitude and latitude and its height becomes
- * `factor · h`. At warp scale `s` (`Warp.scale`) the factor in force is
+ * `factor · h`. At curvilinear map scale `s` (`CurvilinearMap.scale`) the factor in force is
  * `1 + s·(factor − 1)`. Terrain, whose vertices are (u, v, h) on that
  * ellipsoid, is exaggerated exactly from it: a vertex attribute `h·n̂`
  * times a weight, with no fit.
@@ -39,7 +39,7 @@ export interface HeightScale {
   readonly kind: "heightScale";
   /** The reference ellipsoid's radii (x, y, z), m: a sphere's all equal. */
   readonly radii: readonly [number, number, number];
-  /** What `forward` multiplies heights by (at warp scale 1). */
+  /** What `forward` multiplies heights by (at curvilinear map scale 1). */
   readonly factor: number;
   /** The height that stays put, m above the ellipsoid (default 0): terrain is exact only for 0, without a `profile`. */
   readonly baseHeight?: number;
@@ -60,28 +60,28 @@ export interface HeightScale {
  * keeps its true coordinates and is drawn through the edge. A coordinate
  * operation is the same kind of edge.
  */
-export interface Warp {
+export interface CurvilinearMap {
   /**
-   * Declares the warp a vertical exaggeration (`HeightScale`): the engine may
+   * Declares the curvilinear map a vertical exaggeration (`HeightScale`): the engine may
    * then take it exactly, in height, where content carries heights, instead
-   * of fitting it. Absent for any other warp.
+   * of fitting it. Absent for any other curvilinear map.
    */
   readonly heightScale?: HeightScale;
   /**
-   * The error policy for content drawn through this warp, in [0, 1]: terrain
-   * and tile selection use the warp's stretch s as s^α (default 0.3 where no
+   * The error policy for content drawn through this curvilinear map, in [0, 1]: terrain
+   * and tile selection use the curvilinear map's stretch s as s^α (default 0.3 where no
    * node or view says, `DEFAULT_LOD_EXPONENT`). 1 is exact in the drawn frame: a tile is refined
    * until its error is small as drawn. 0 measures the error in the content's
-   * own frame, as if unwarped, so a warp that stretches draws coarser tiles
+   * own frame, as if affine, so a curvilinear map that stretches draws coarser tiles
    * and its transitions show s times larger. A view's `lodExponent` is used
-   * where no warp on the route sets this; the warp's value wins where set.
+   * where no curvilinear map on the route sets this; the curvilinear map's value wins where set.
    */
   readonly lodExponent?: number;
   readonly from: FrameKey;
   readonly to: FrameKey;
   /** Goes up whenever `forward` changes; the fits of every route through it are redone. */
   readonly revision: number;
-  /** Where the warp is defined, in `from`, as a CRS's area of use; everywhere when absent. */
+  /** Where the curvilinear map is defined, in `from`, as a CRS's area of use; everywhere when absent. */
   readonly domain?: {
     readonly center: ArrayLike<number>;
     readonly radius: number;
@@ -95,19 +95,19 @@ export interface Warp {
   /** Words for reports (a PROJ pipeline, "vertical exaggeration × 10"). */
   readonly description?: string;
   /**
-   * How much of the warp applies, read live (a `PlacementParameter` is one,
-   * and a slider writes one float): `forward` is the warp at 1, and at `s`
-   * the warp is `p + s·(forward(p) − p)`. Absent, always 1. Use
-   * `warpForward` and `warpInverse`, which honor it.
+   * How much of the curvilinear map applies, read live (a `PlacementParameter` is one,
+   * and a slider writes one float): `forward` is the curvilinear map at 1, and at `s`
+   * the curvilinear map is `p + s·(forward(p) − p)`. Absent, always 1. Use
+   * `curvilinearForward` and `curvilinearInverse`, which honor it.
    */
-  readonly scale?: WarpScale;
+  readonly scale?: CurvilinearScale;
   /**
-   * The warp as a transform-graph curvilinear step (src/transform): its function
-   * as restricted JS (`source`) with `params` read live and, for a warp with
+   * The curvilinear map as a transform-graph curvilinear step (src/transform): its function
+   * as restricted JS (`source`) with `params` read live and, for a curvilinear map with
    * a `scale`, the `identity` values the scale interpolates from. A draw
-   * whose route crosses only warps that have one is drawn by the compiled
+   * whose route crosses only curvilinear maps that have one is drawn by the compiled
    * route (scene/world/routes.ts), with no fit; absent, or refused by the
-   * compiler, the warp is fitted as ever. Set by the helpers over the built-in
+   * compiler, the curvilinear map is fitted as ever. Set by the helpers over the built-in
    * transforms; it must be the same map as `forward` where content is.
    */
   readonly curvilinear?: CurvilinearSpec;
@@ -122,18 +122,18 @@ export interface Warp {
   ): Float64Array;
   /**
    * `q` in `to` back to `from`, at scale 1 (as `forward`). When absent, the
-   * engine solves by Newton (`warpInverse`). Call `warpInverse`, not this,
-   * to invert the warp as it is drawn: it takes the `scale` in force.
+   * engine solves by Newton (`curvilinearInverse`). Call `curvilinearInverse`, not this,
+   * to invert the curvilinear map as it is drawn: it takes the `scale` in force.
    */
   inverse?(q: ArrayLike<number>, out: Float64Array): Float64Array;
 }
 
 /**
- * A `Warp` without its ends, for a curvilinear frame (`curvilinearFrame`, in the frames
+ * A `CurvilinearMap` without its ends, for a curvilinear frame (`curvilinearFrame`, in the frames
  * module): `from` is the new frame and `to` its parent. What the helpers
  * (`verticalExaggeration`, `scaleAbout`, `fromFunction`, …) return.
  */
-export type CurvilinearFrameSpec = Omit<Warp, "from" | "to"> & {
+export type CurvilinearFrameSpec = Omit<CurvilinearMap, "from" | "to"> & {
   /**
    * Called once with each frame built on this spec: how a helper's
    * `changed()` finds the frames to `invalidate()`.
@@ -141,19 +141,23 @@ export type CurvilinearFrameSpec = Omit<Warp, "from" | "to"> & {
   readonly attach?: (frame: { invalidate(): void }) => void;
 };
 
-/** One step of a route: a rigid transform (column-major 4×4, p_next = m · p) or a warp, either way. */
+/** One step of a route: a rigid transform (column-major 4×4, p_next = m · p) or a curvilinear map, either way. */
 export type RouteStep =
   | { readonly kind: "rigid"; readonly matrix: Float64Array }
-  | { readonly kind: "warp"; readonly warp: Warp; readonly inverse: boolean };
+  | {
+      readonly kind: "curvilinear";
+      readonly curvilinearMap: CurvilinearMap;
+      readonly inverse: boolean;
+    };
 
 /** The path from `frame` to `base` at `seconds`: its steps in order, with adjacent rigid steps composed. */
 export interface Route {
   readonly frame: FrameKey;
   readonly base: FrameKey;
   readonly seconds: number;
-  /** At least one step; a route with no warp is one rigid step. */
+  /** At least one step; a route with no curvilinear map is one rigid step. */
   readonly steps: readonly RouteStep[];
-  /** The resolver's `routeRevision(frame, base)`, which counts its warps' revisions too. */
+  /** The resolver's `routeRevision(frame, base)`, which counts its curvilinear maps' revisions too. */
   readonly revision: number;
 }
 
@@ -180,7 +184,7 @@ export function routeIsRigid(route: Route): boolean {
 /**
  * `resolver`'s route from `frame` to `base`: its own `route`, or for a
  * resolver without one, a single rigid step from `resolve` (which then has
- * no warps to cross).
+ * no curvilinear maps to cross).
  */
 export function resolveRoute(
   resolver: FrameResolver,
@@ -210,13 +214,13 @@ const forwardAt = new Float64Array(3);
 const forwardFrom = new Float64Array(3);
 let forwarding = false;
 
-/** A point of `route.frame` carried to `route.base`, in float64, each warp at the scale it has now (`warpForward`). */
+/** A point of `route.frame` carried to `route.base`, in float64, each curvilinear map at the scale it has now (`curvilinearForward`). */
 export function routeForward(
   route: Route,
   p: ArrayLike<number>,
   out: Float64Array = new Float64Array(3),
 ): Float64Array {
-  // The scratch is shared unless a warp's own `forward` came back here.
+  // The scratch is shared unless a curvilinear map's own `forward` came back here.
   const shared = !forwarding;
   const at = shared ? forwardAt : new Float64Array(3);
   const from = shared ? forwardFrom : new Float64Array(3);
@@ -229,10 +233,10 @@ export function routeForward(
       if (step.kind === "rigid") {
         transformPoint(step.matrix, at, at);
       } else if (step.inverse) {
-        warpInverse(step.warp, at, at);
+        curvilinearInverse(step.curvilinearMap, at, at);
       } else {
         from.set(at);
-        warpForward(step.warp, from, at);
+        curvilinearForward(step.curvilinearMap, from, at);
       }
     }
   } finally {
@@ -242,7 +246,7 @@ export function routeForward(
   return out;
 }
 
-/** A point of `route.base` carried back to `route.frame`, in float64: each step undone, last first, each warp at the scale it has now (`warpInverse`). */
+/** A point of `route.base` carried back to `route.frame`, in float64: each step undone, last first, each curvilinear map at the scale it has now (`curvilinearInverse`). */
 export function routeInverse(
   route: Route,
   q: ArrayLike<number>,
@@ -256,36 +260,36 @@ export function routeInverse(
       invertRigid(step.matrix, inv);
       transformPoint(inv, at, at);
     } else if (step.inverse) {
-      warpForward(step.warp, at.slice(), at);
+      curvilinearForward(step.curvilinearMap, at.slice(), at);
     } else {
-      warpInverse(step.warp, at, at);
+      curvilinearInverse(step.curvilinearMap, at, at);
     }
   }
   out.set(at);
   return out;
 }
 
-/** A warp's scale now: 1 without one. Throws for a value that isn't finite. */
-export function warpScaleOf(warp: Warp): number {
-  const s = warp.scale?.value ?? 1;
+/** A curvilinear map's scale now: 1 without one. Throws for a value that isn't finite. */
+export function curvilinearScaleOf(curvilinearMap: CurvilinearMap): number {
+  const s = curvilinearMap.scale?.value ?? 1;
   if (!Number.isFinite(s)) {
     throw new RangeError(
-      `warp ${warp.description ?? `${warp.from.name} to ${warp.to.name}`}: its scale is ${s}; it takes a finite number`,
+      `curvilinear map ${curvilinearMap.description ?? `${curvilinearMap.from.name} to ${curvilinearMap.to.name}`}: its scale is ${s}; it takes a finite number`,
     );
   }
   return s;
 }
 
 /**
- * The parameter values a warp's curvilinear step has now: the spec's, at the
- * warp's scale (each parameter named in `identity` at
- * `identity + s · (value − identity)`, the warp's `p + s · (f(p) − p)`).
+ * The parameter values a curvilinear map's curvilinear step has now: the spec's, at the
+ * curvilinear map's scale (each parameter named in `identity` at
+ * `identity + s · (value − identity)`, the curvilinear map's `p + s · (f(p) − p)`).
  */
-export function curvilinearValuesOf(warp: Warp): Params {
-  const spec = warp.curvilinear!;
+export function curvilinearValuesOf(curvilinearMap: CurvilinearMap): Params {
+  const spec = curvilinearMap.curvilinear!;
   const values: Record<string, number> = { ...spec.params };
-  if (warp.scale) {
-    const s = warpScaleOf(warp);
+  if (curvilinearMap.scale) {
+    const s = curvilinearScaleOf(curvilinearMap);
     for (const [name, identity] of Object.entries(spec.identity ?? {})) {
       if (name in values) {
         values[name] = identity + s * (values[name]! - identity);
@@ -296,19 +300,19 @@ export function curvilinearValuesOf(warp: Warp): Params {
 }
 
 /**
- * `p` carried by the warp at its scale: `p + s·(forward(p) − p)` (`forward`
+ * `p` carried by the curvilinear map at its scale: `p + s·(forward(p) − p)` (`forward`
  * itself at 1, the identity at 0). With `jacobian`, ∂out/∂p likewise,
  * `I + s(J − I)`. `p` may be `out`.
  */
-export function warpForward(
-  warp: Warp,
+export function curvilinearForward(
+  curvilinearMap: CurvilinearMap,
   p: ArrayLike<number>,
   out: Float64Array,
   jacobian?: Float64Array,
 ): Float64Array {
-  const s = warpScaleOf(warp);
+  const s = curvilinearScaleOf(curvilinearMap);
   if (s === 1) {
-    return warp.forward(p, out, jacobian);
+    return curvilinearMap.forward(p, out, jacobian);
   }
   const x = p[0]!;
   const y = p[1]!;
@@ -320,7 +324,7 @@ export function warpForward(
     jacobian?.set([1, 0, 0, 0, 1, 0, 0, 0, 1]);
     return out;
   }
-  warp.forward([x, y, z], out, jacobian);
+  curvilinearMap.forward([x, y, z], out, jacobian);
   out[0] = x + s * (out[0]! - x);
   out[1] = y + s * (out[1]! - y);
   out[2] = z + s * (out[2]! - z);
@@ -336,23 +340,25 @@ export function warpForward(
   return out;
 }
 
-/** `route` with every warp's scale taken at `scaleOf` (undefined: scale 1, no scale). */
+/** `route` with every curvilinear map's scale taken at `scaleOf` (undefined: scale 1, no scale). */
 function mapScales(
   route: Route,
-  scaleOf: (warp: Warp) => WarpScale | undefined,
+  scaleOf: (curvilinearMap: CurvilinearMap) => CurvilinearScale | undefined,
 ): Route {
-  if (!route.steps.some((s) => s.kind === "warp" && s.warp.scale)) {
+  if (
+    !route.steps.some((s) => s.kind === "curvilinear" && s.curvilinearMap.scale)
+  ) {
     return route;
   }
   return {
     ...route,
     steps: route.steps.map((step) => {
-      if (step.kind === "rigid" || !step.warp.scale) {
+      if (step.kind === "rigid" || !step.curvilinearMap.scale) {
         return step;
       }
-      const w = step.warp;
+      const w = step.curvilinearMap;
       const scale = scaleOf(w);
-      const fixed: Warp = {
+      const fixed: CurvilinearMap = {
         from: w.from,
         to: w.to,
         revision: w.revision,
@@ -367,44 +373,48 @@ function mapScales(
             w.inverse!(q, out),
         }),
       };
-      return { kind: "warp", warp: fixed, inverse: step.inverse };
+      return {
+        kind: "curvilinear",
+        curvilinearMap: fixed,
+        inverse: step.inverse,
+      };
     }),
   };
 }
 
-/** `route` with every warp at scale 1: what its scaled warps fit as unit displacements. */
+/** `route` with every curvilinear map at scale 1: what its scaled curvilinear maps fit as unit displacements. */
 export function withoutScales(route: Route): Route {
   return mapScales(route, () => undefined);
 }
 
-/** `route` with each warp's scale fixed at its value now: a snapshot a fit can run on later. */
+/** `route` with each curvilinear map's scale fixed at its value now: a snapshot a fit can run on later. */
 export function withFrozenScales(route: Route): Route {
-  return mapScales(route, (w) => ({ value: warpScaleOf(w) }));
+  return mapScales(route, (w) => ({ value: curvilinearScaleOf(w) }));
 }
 
-/** `route` with each scaled warp's scale fixed at `valueOf(warp)`: the ends of an interval of a slider, to bound what it draws. */
+/** `route` with each scaled curvilinear map's scale fixed at `valueOf(curvilinearMap)`: the ends of an interval of a slider, to bound what it draws. */
 export function withScalesAt(
   route: Route,
-  valueOf: (warp: Warp) => number,
+  valueOf: (curvilinearMap: CurvilinearMap) => number,
 ): Route {
   return mapScales(route, (w) => ({ value: valueOf(w) }));
 }
 
 /**
- * `q` in the warp's `to` back to its `from`: its own `inverse` when it has
+ * `q` in the curvilinear map's `to` back to its `from`: its own `inverse` when it has
  * one (at scale 1), else Newton from `q` with its Jacobian at its scale, to
- * `tolerance` meters. Throws when it doesn't converge (the warp isn't
+ * `tolerance` meters. Throws when it doesn't converge (the curvilinear map isn't
  * injective near `q`).
  */
-export function warpInverse(
-  warp: Warp,
+export function curvilinearInverse(
+  curvilinearMap: CurvilinearMap,
   q: ArrayLike<number>,
   out: Float64Array = new Float64Array(3),
   { tolerance = 1e-9, iterations = 32 } = {},
 ): Float64Array {
-  const scale = warpScaleOf(warp);
-  if (scale === 1 && warp.inverse) {
-    return warp.inverse(q, out);
+  const scale = curvilinearScaleOf(curvilinearMap);
+  if (scale === 1 && curvilinearMap.inverse) {
+    return curvilinearMap.inverse(q, out);
   }
   const target = [q[0]!, q[1]!, q[2]!];
   if (scale === 0) {
@@ -415,7 +425,7 @@ export function warpInverse(
   const f = new Float64Array(3);
   const j = new Float64Array(9);
   for (let k = 0; k < iterations; k++) {
-    warpForward(warp, p, f, j);
+    curvilinearForward(curvilinearMap, p, f, j);
     const r = [f[0]! - target[0]!, f[1]! - target[1]!, f[2]! - target[2]!];
     const step = solve3(j, r);
     p[0] = p[0]! - step[0]!;
@@ -434,7 +444,7 @@ export function warpInverse(
     }
   }
   throw new Error(
-    `warpInverse: ${warp.description ?? `${warp.from.name} to ${warp.to.name}`} did not converge`,
+    `curvilinearInverse: ${curvilinearMap.description ?? `${curvilinearMap.from.name} to ${curvilinearMap.to.name}`} did not converge`,
   );
 }
 
@@ -476,7 +486,9 @@ function solve3(j: Float64Array, r: number[]): number[] {
     d! * (b! * i! - c! * h!) +
     g! * (b! * f! - c! * e!);
   if (!(Math.abs(det) > 0)) {
-    throw new Error("warpInverse: the warp's Jacobian is singular");
+    throw new Error(
+      "curvilinearInverse: the curvilinear map's Jacobian is singular",
+    );
   }
   const col = (x: number[], y: number[], z: number[]) =>
     x[0]! * (y[1]! * z[2]! - y[2]! * z[1]!) -

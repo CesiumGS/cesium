@@ -176,7 +176,7 @@ fn fsListSamples(
 
 // --- moments ---------------------------------------------------------------------
 
-// Distance from the camera warped to [-1, 1] (logarithmic, as the paper
+// Distance from the camera curvilinear to [-1, 1] (logarithmic, as the paper
 // recommends: layers far apart in depth stay apart in the moments).
 fn momentDepth(relPosition: vec3f) -> f32 {
   let t = (log(max(length(relPosition), 1e-6)) - translucency.logNear) * translucency.invLogRange;

@@ -10,7 +10,7 @@ import { projectToPixel } from "../scene/Camera.ts";
 import type { PickResult } from "../scene/View.ts";
 import type { CoordinateOperation } from "../frames/coordinates.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
-import { routeMap } from "../scene/warpBounds.ts";
+import { routeMap } from "../scene/curvilinearBounds.ts";
 import type { TileGeometry } from "../streaming/Tile.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import { routeForward, type Route } from "../camera/route.ts";
@@ -30,7 +30,7 @@ import { engineeringPlacement } from "./placement.ts";
  * The camera a snap's pick was read with, and its view's size in CSS
  * pixels: what a server needs to snap as the screen shows it (1.x passes the
  * `Camera` and the canvas size). In the hit's coordinates (body-fixed for
- * content on a body), from the tick the pick read. Under a view warp
+ * content on a body), from the tick the pick read. Under a view curvilinear map
  * (`SnapResult.drawn`) it sees content where the view draws it: a true
  * point is projected with it through `ServiceSnapRequest.toDrawn`.
  */
@@ -50,7 +50,7 @@ export interface SnapResult {
   /**
    * The snapped point, the one to use: body-fixed meters, where the content
    * is, as its placement displays it. A view that draws the content through
-   * a warp draws it elsewhere (`drawn`, `drawnPosition`); this is the true
+   * a curvilinear map draws it elsewhere (`drawn`, `drawnPosition`); this is the true
    * point, never inverted from the drawn one. With `design`, the exact
    * design answer, where the placement draws it.
    */
@@ -120,7 +120,7 @@ export interface SnapResult {
    */
   readonly serverOutOfSight?: string;
   /**
-   * What the view drew the content through, when through a warp
+   * What the view drew the content through, when through a curvilinear map
    * (`drawnThrough`: "drawn ×10 vertically; values are true"). The snap
    * worked in drawn space (the aperture is pixels on the screen, candidates
    * go forward through the route for their screen distance) and returns true
@@ -154,14 +154,14 @@ export interface ServiceSnapRequest {
   /** The snap tolerance in CSS pixels (1.x `snapAperture`). */
   readonly aperture: number;
   /**
-   * Where the view draws content through a warp: `camera` sees the content
+   * Where the view draws content through a curvilinear map: `camera` sees the content
    * where it is drawn, so a true point (`testPoint`, `closePoint`, a
    * candidate) is projected with `camera` after `toDrawn`. Absent when
    * drawn as it is, where a point is projected as it is.
    */
   readonly toDrawn?: (point: ArrayLike<number>) => Float64Array;
   /**
-   * [σ_min, σ_max] of the view's warp near the hit: a drawn distance over a
+   * [σ_min, σ_max] of the view's curvilinear map near the hit: a drawn distance over a
    * true one is at least σ_min and at most σ_max. Divide drawn tolerances
    * by σ_min to get true ones.
    */
@@ -258,7 +258,7 @@ function drawnGeometry(g: TileGeometry, item: SceneItem): TileGeometry {
 }
 
 /**
- * What a snap keeps of a view that draws content through a warp: the map
+ * What a snap keeps of a view that draws content through a curvilinear map: the map
  * from a true point (the anchor's coordinates) to where the pick's camera
  * sees it, and the route's stretch there.
  */
@@ -272,7 +272,7 @@ interface DrawnSnap {
   readonly render: (p: ArrayLike<number>) => Float64Array;
 }
 
-/** What each client result under a view warp was found with: read by `refiningSnap` and a server's check, whichever client made it. */
+/** What each client result under a view curvilinear map was found with: read by `refiningSnap` and a server's check, whichever client made it. */
 const DRAWN = new WeakMap<SnapResult, DrawnSnap>();
 
 /** Where the pick's camera sees `point` (a true point of the result's anchor): `point` itself when drawn as it is. */
@@ -283,7 +283,7 @@ function drawnPoint(
   return DRAWN.get(result)?.toDrawn(point) ?? point;
 }
 
-/** What a server is told of the view's warp: `toDrawn`, `stretch`, `apertureMeters`. */
+/** What a server is told of the view's curvilinear map: `toDrawn`, `stretch`, `apertureMeters`. */
 function drawnRequest(
   result: SnapResult,
 ): Pick<ServiceSnapRequest, "toDrawn" | "stretch" | "apertureMeters"> {
@@ -374,7 +374,7 @@ function geometryAsDrawn(
  * geometric error: that is the tolerance (a geometric error of 0 is taken at
  * its word), and no client snap is exact.
  *
- * Where the view draws the content through a warp (a vertical exaggeration,
+ * Where the view draws the content through a curvilinear map (a vertical exaggeration,
  * a reprojection) the snap works in what is drawn and answers in what is
  * true: the aperture is pixels on the screen, so each vertex goes forward
  * through the route for its screen distance and for the sight tests, and the
@@ -447,7 +447,7 @@ export class ClientSnapService {
       ...(camera !== undefined && { camera }),
       ...(drawn !== undefined && { drawn: drawn.through }),
     } as const;
-    /** A result, with where it is drawn when the view warps. */
+    /** A result, with where it is drawn when the view curvilinear maps. */
     const shown = (result: SnapResult): SnapResult => {
       const out =
         drawn === undefined

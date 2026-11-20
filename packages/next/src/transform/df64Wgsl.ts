@@ -4,7 +4,7 @@
 // center-constant pass evaluates a smooth function there (a position on the
 // Earth to 1e-7 m, a projection's easting to a micrometer) where float32
 // would be off by meters. The same building blocks as shaders/exactSum.slang
-// and warpFitDf64.slang (Knuth's two-sum, Veltkamp-split two-product, no fma),
+// and curvilinearFitDf64.slang (Knuth's two-sum, Veltkamp-split two-product, no fma),
 // which need the compiler to keep the order of float operations.
 //
 // Accuracy, with the range of arguments each is meant for:

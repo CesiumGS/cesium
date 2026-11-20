@@ -6,7 +6,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
 import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
-import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
+import { verticalExaggeration } from "../src/georeference/heightCurvilinearMaps.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import { EARTH, MOON, type Body } from "../src/scene/Body.ts";
 import { Camera } from "../src/scene/Camera.ts";
@@ -382,14 +382,18 @@ describe("selection views on the anchor's body", () => {
     });
     engine.cameras.update();
     const id = engine.scene.viewIds.get(view)!;
-    world.warps.frame([{ id, routes: view.anchorRoutes() }], Infinity, (m) => {
-      throw new Error(m);
-    });
+    world.curvilinearMaps.frame(
+      [{ id, routes: view.anchorRoutes() }],
+      Infinity,
+      (m) => {
+        throw new Error(m);
+      },
+    );
     // The Earth's anchor is across the lift: selected on drawn volumes, and
     // never horizon-culled. The Moon's is rigid: today's selection, horizon
     // culling on its own ellipsoid.
-    expect(world.tileWarp(earth, id)).toBeDefined();
-    expect(world.tileWarp(moon, id)).toBeUndefined();
+    expect(world.tileCurvilinearMap(earth, id)).toBeDefined();
+    expect(world.tileCurvilinearMap(moon, id)).toBeUndefined();
     const eye = new Camera();
     eye.position.set([6_378_137 + 2000, 0, 0]);
     eye.direction.set([-1, 0, 0]);

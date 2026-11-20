@@ -20,7 +20,7 @@ import {
 } from "./placement.ts";
 import type { World } from "./World.ts";
 import type { AnchorHandle, DrawHandle } from "./world/types.ts";
-import type { WarpAt } from "./warpAnchor.ts";
+import type { CurvilinearAt } from "./curvilinearAnchor.ts";
 import type { Georeference } from "../georeference/georeference.ts";
 import type { ItemDraws, Tile } from "../streaming/Tile.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
@@ -87,15 +87,15 @@ export interface SceneItemOptions {
   shader?: CustomShader;
   /**
    * Where the route that places its anchor is evaluated, when it crosses a
-   * warp (`World.setWarpAt`, docs/design/geometry-through-placement-review.md): `"vertex"`, the default, stretches
-   * its content with the warp, as a reprojection does; `"anchor"` moves each
+   * curvilinear map (`World.setCurvilinearAt`, docs/design/geometry-through-placement-review.md): `"vertex"`, the default, stretches
+   * its content with the curvilinear map, as a reprojection does; `"anchor"` moves each
    * tile of it rigidly by the route at the tile's origin, keeping its shape
    * (a vehicle, a symbol): translated, and turned by the rotation of the
    * route's Jacobian there, never scaled. Instanced content and billboards
    * are always anchored. Changing it refits the item's loaded tiles; it does
    * nothing under an anchor placed rigidly.
    */
-  warpAt?: WarpAt;
+  curvilinearAt?: CurvilinearAt;
 }
 
 /** @internal What an item needs of its tileset. */
@@ -149,8 +149,8 @@ export function checkItemOptions(
   if (options.tint !== undefined) {
     checkTint(options.tint);
   }
-  if (options.warpAt !== undefined) {
-    checkWarpAt(options.warpAt);
+  if (options.curvilinearAt !== undefined) {
+    checkCurvilinearAt(options.curvilinearAt);
   }
   if (options.placement !== undefined) {
     checkParameterValue("SceneItem.placement", options.placement);
@@ -163,10 +163,10 @@ export function checkItemOptions(
 }
 
 /** Throws unless `at` is "vertex" or "anchor". */
-function checkWarpAt(at: string): void {
+function checkCurvilinearAt(at: string): void {
   if (at !== "vertex" && at !== "anchor") {
     throw new RangeError(
-      `SceneItem: warpAt is "${at}"; it takes "vertex" or "anchor".`,
+      `SceneItem: curvilinearAt is "${at}"; it takes "vertex" or "anchor".`,
     );
   }
 }
@@ -203,7 +203,7 @@ export class SceneItem {
   private viewMask_: number;
   private show_: boolean;
   private shader_: CustomShader | undefined;
-  private warpAt_: WarpAt;
+  private curvilinearAt_: CurvilinearAt;
   private removed_ = false;
   /** The placement's value; with a second position, also its parameter. */
   private placementValue: number;
@@ -230,7 +230,7 @@ export class SceneItem {
     this.viewMask_ = (options.viewMask ?? ALL_VIEWS) >>> 0;
     this.show_ = options.show ?? true;
     this.shader_ = options.shader;
-    this.warpAt_ = options.warpAt ?? "vertex";
+    this.curvilinearAt_ = options.curvilinearAt ?? "vertex";
     this.setColorWords();
     this.makeDual();
     if (options.placement !== undefined) {
@@ -278,17 +278,17 @@ export class SceneItem {
     }
   }
 
-  /** See `SceneItemOptions.warpAt`. */
-  get warpAt(): WarpAt {
-    return this.warpAt_;
+  /** See `SceneItemOptions.curvilinearAt`. */
+  get curvilinearAt(): CurvilinearAt {
+    return this.curvilinearAt_;
   }
-  set warpAt(at: WarpAt) {
-    checkWarpAt(at);
-    if (at === this.warpAt_) {
+  set curvilinearAt(at: CurvilinearAt) {
+    checkCurvilinearAt(at);
+    if (at === this.curvilinearAt_) {
       return;
     }
-    this.warpAt_ = at;
-    this.forEachLoaded((_tile, entry) => this.applyWarpAt(entry));
+    this.curvilinearAt_ = at;
+    this.forEachLoaded((_tile, entry) => this.applyCurvilinearAt(entry));
     this.host.changed();
   }
 
@@ -481,7 +481,7 @@ export class SceneItem {
       this.opacity_ === 1 &&
       this.tint_ === WHITE &&
       this.shader_ === undefined &&
-      this.warpAt_ === "vertex"
+      this.curvilinearAt_ === "vertex"
     );
   }
 
@@ -550,7 +550,7 @@ export class SceneItem {
     this.applyMaterials(entry);
     this.applyColor(entry);
     this.applyPlacement(entry);
-    this.applyWarpAt(entry);
+    this.applyCurvilinearAt(entry);
     this.applyViewMask(tile);
     this.applyCasterMask(tile);
     if (tile.placeholderMask !== 0 || tile.clip !== undefined) {
@@ -638,7 +638,7 @@ export class SceneItem {
       const shader = this.host.contentShader;
       entry.draws.forEach((draw, i) => {
         world.setPlacement(draw, undefined);
-        world.setWarpAt(draw, "vertex");
+        world.setCurvilinearAt(draw, "vertex");
         world.setDrawShader(draw, shader);
         world.setDrawMaterial(draw, entry.materials[i]!);
         world.setColor(draw, [1, 1, 1, 1]);
@@ -818,13 +818,13 @@ export class SceneItem {
     }
   }
 
-  /** Where the route is evaluated for its draws (`SceneItemOptions.warpAt`), about the tile's origin. */
-  private applyWarpAt(entry: ItemDraws): void {
+  /** Where the route is evaluated for its draws (`SceneItemOptions.curvilinearAt`), about the tile's origin. */
+  private applyCurvilinearAt(entry: ItemDraws): void {
     for (const draw of entry.draws) {
-      this.host.world.setWarpAt(
+      this.host.world.setCurvilinearAt(
         draw,
-        this.warpAt_,
-        this.warpAt_ === "anchor" ? entry.origin : undefined,
+        this.curvilinearAt_,
+        this.curvilinearAt_ === "anchor" ? entry.origin : undefined,
       );
     }
   }

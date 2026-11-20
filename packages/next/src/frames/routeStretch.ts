@@ -3,11 +3,15 @@
 // flaw 6). A drawn distance is at least σ_min and at most σ_max times the
 // true one, so a pixel's worth of drawn meters is at most 1/σ_min true
 // meters: it is what divides a snap's or a pick's pixel tolerance. The same
-// estimate `scene/warpBounds.ts` gives for a volume, kept here because the
+// estimate `scene/curvilinearBounds.ts` gives for a volume, kept here because the
 // frames layer imports no scene module: the Jacobian composes through the
-// route's steps (a rigid step's rotation, a warp's own Jacobian, an inverse
+// route's steps (a rigid step's rotation, a curvilinear map's own Jacobian, an inverse
 // step's inverse) and σ are the roots of the eigenvalues of JᵀJ.
-import { warpForward, warpInverse, type Route } from "../camera/route.ts";
+import {
+  curvilinearForward,
+  curvilinearInverse,
+  type Route,
+} from "../camera/route.ts";
 import { eigenSymmetric } from "./covariance.ts";
 
 /** `a · b` for column-major 3 × 3. */
@@ -73,8 +77,8 @@ function jacobianAt(
       at[2] = m[2]! * x + m[6]! * y + m[10]! * z + m[14]!;
     } else if (s.inverse) {
       // From the image back to the preimage, whose forward Jacobian is inverted.
-      warpInverse(s.warp, at, out);
-      warpForward(s.warp, out, new Float64Array(3), step);
+      curvilinearInverse(s.curvilinearMap, at, out);
+      curvilinearForward(s.curvilinearMap, out, new Float64Array(3), step);
       const inverse = invert(step);
       if (inverse === undefined) {
         return undefined;
@@ -82,7 +86,7 @@ function jacobianAt(
       j = multiply(inverse, j);
       at.set(out);
     } else {
-      warpForward(s.warp, at.slice(), out, step);
+      curvilinearForward(s.curvilinearMap, at.slice(), out, step);
       j = multiply(step, j);
       at.set(out);
     }

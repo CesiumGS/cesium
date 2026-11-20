@@ -3,7 +3,7 @@
 // Earth's content under ITRF, where the camera stays; a terrain tile and a billboard drawn under it, and
 // the questions the page asks (a pick's way back through the map, the measure
 // module) answered in true coordinates while k goes from 1 to 10. Checked on
-// the CPU against the route's own float64 map, as warpGlobe.test.ts does; the
+// the CPU against the route's own float64 map, as curvilinearGlobe.test.ts does; the
 // example's page is examples/vertical-exaggeration (run in a browser).
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
@@ -47,9 +47,9 @@ import type { CorePick } from "../src/scene/pick.ts";
 import { createBillboard, type MeshData } from "../src/scene/meshes.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { View } from "../src/scene/View.ts";
-import { placeWithTerms } from "../src/scene/warpEvaluate.ts";
+import { placeWithTerms } from "../src/scene/curvilinearEvaluate.ts";
 import type { World } from "../src/scene/World.ts";
-import type { WarpStats } from "../src/scene/world/warps.ts";
+import type { CurvilinearStats } from "../src/scene/world/worldCurvilinearMaps.ts";
 import { drawTerms } from "../src/scene/world/placements.ts";
 import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
 import { Instant } from "../src/time/Instant.ts";
@@ -105,7 +105,7 @@ interface Setup {
   exaggeration: Exaggeration;
   catalog: FrameCatalog;
   itrf: Frame;
-  stats(): WarpStats;
+  stats(): CurvilinearStats;
   route(): Route;
   step(): boolean;
 }
@@ -136,11 +136,11 @@ function setup(factor = 4): Setup {
     exaggeration,
     catalog,
     itrf: catalog.get("ITRF"),
-    stats: () => world.warpStats(),
+    stats: () => world.curvilinearStats(),
     route: () => view.anchorRoute(earth)!,
     step() {
       engine.cameras.update();
-      return world.warps.frame(
+      return world.curvilinearMaps.frame(
         [{ id: engine.scene.viewIds.get(view)!, routes: view.anchorRoutes() }],
         Infinity,
         (message) => {
@@ -153,7 +153,7 @@ function setup(factor = 4): Setup {
   return s;
 }
 
-/** A tile of terrain over the Alps' latitude, heights 1,600 to 4,500 m, as the worker decodes it for a warped globe. */
+/** A tile of terrain over the Alps' latitude, heights 1,600 to 4,500 m, as the worker decodes it for a curvilinear globe. */
 function terrainAsset(): GltfAsset {
   const rect = { west: 0.1336, south: 0.8031, east: 0.134, north: 0.8035 };
   const { heights } = gridTile(
@@ -234,15 +234,15 @@ function pickAt(s: Setup, drawn: Float64Array, route?: Route): CorePick {
 }
 
 describe("the example's frame and rig", () => {
-  it("is one curvilinear frame under ITRF with a height-scale warp, and the Earth is drawn through it", () => {
+  it("is one curvilinear frame under ITRF with a height-scale curvilinear map, and the Earth is drawn through it", () => {
     const s = setup();
     expect(s.exaggeration.frame.name).toBe(FRAME_NAME);
     expect(isCurvilinearFrame(s.exaggeration.frame)).toBe(true);
-    expect(s.exaggeration.frame.warp.heightScale).toMatchObject({
+    expect(s.exaggeration.frame.curvilinearMap.heightScale).toMatchObject({
       kind: "heightScale",
       factor: MAX_EXAGGERATION,
     });
-    expect(s.route().steps.map((x) => x.kind)).toEqual(["warp"]);
+    expect(s.route().steps.map((x) => x.kind)).toEqual(["curvilinear"]);
     expect(engine.cameras.root(s.view)).toBe(s.itrf);
     expect(s.exaggeration.factor).toBeCloseTo(4, 12);
   });
@@ -272,7 +272,7 @@ describe("heights across k = 1 to 10", () => {
     s.world.setDrawGeometricError(tile, 5);
     s.world.setDrawHeightNormal(tile, heightNormalInfo(asset)!);
     s.step();
-    expect(s.world.warps.status(tile)).toMatchObject({
+    expect(s.world.curvilinearMaps.status(tile)).toMatchObject({
       state: "fitted",
       exact: true,
     });
@@ -395,7 +395,7 @@ describe("heights across k = 1 to 10", () => {
     const mesh = meshOf(asset);
     const center = asset.draws[0]!.matrix;
     // A tile without the height attribute is drawn by the compiled route: the
-    // helper's warp has a curvilinear spec, so nothing is fitted for it.
+    // helper's curvilinear map has a curvilinear spec, so nothing is fitted for it.
     const plain = s.world.addDraw({
       mesh: s.world.addMesh({
         positions: mesh.positions,
@@ -413,16 +413,16 @@ describe("heights across k = 1 to 10", () => {
       billboard: { size: 30 },
     });
     s.step();
-    expect(s.world.warps.status(plain)?.state).toBe("fitted");
-    expect(s.world.warps.status(plain)?.routed).toBe(true);
-    expect(s.world.warps.status(pin)?.state).toBe("fitted");
+    expect(s.world.curvilinearMaps.status(plain)?.state).toBe("fitted");
+    expect(s.world.curvilinearMaps.status(plain)?.routed).toBe(true);
+    expect(s.world.curvilinearMaps.status(pin)?.state).toBe("fitted");
     const revision = s.route().revision;
     expect(s.stats().fitsRun).toBe(0);
     expect(s.stats().draws.routed).toBe(1);
     for (const k of KS) {
       s.exaggeration.factor = k;
       s.step();
-      expect(s.world.warps.status(plain)?.state).toBe("fitted");
+      expect(s.world.curvilinearMaps.status(plain)?.state).toBe("fitted");
     }
     s.exaggeration.factor = 3;
     s.step();
@@ -433,11 +433,11 @@ describe("heights across k = 1 to 10", () => {
     expect(s.stats().refits).toBe(0);
     expect(s.stats().replaced).toBeGreaterThan(0);
     expect(s.stats().pending).toBe(0);
-    // Changing the warp itself is a parameter of the compiled route: nothing is refitted.
-    s.exaggeration.warp.factor = 20;
+    // Changing the curvilinear map itself is a parameter of the compiled route: nothing is refitted.
+    s.exaggeration.curvilinearMap.factor = 20;
     s.step();
     expect(s.route().revision).toBeGreaterThan(revision);
-    expect(s.world.warps.status(plain)?.routed).toBe(true);
+    expect(s.world.curvilinearMaps.status(plain)?.routed).toBe(true);
     expect(s.stats().fitsRun).toBe(0);
     expect(s.stats().refits).toBe(0);
     expect(s.exaggeration.factor).toBeCloseTo(1 + scaleOf(3) * 19, 9);

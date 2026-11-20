@@ -76,7 +76,7 @@ function layerOf(file: string): Layer {
 const FRAMES_CORE_VALUES = new Set([
   "src/scene/Body.ts",
   "src/camera/frameResolver.ts",
-  // Routes and warps (docs/design/geometry-through-placement-review.md): the resolver's contract, like frameResolver.ts.
+  // Routes and curvilinear maps (docs/design/geometry-through-placement-review.md): the resolver's contract, like frameResolver.ts.
   "src/camera/route.ts",
   // The bulk shape (5b): neutral, it imports nothing.
   "src/core/bulk.ts",
@@ -338,10 +338,10 @@ it("proj and measure follow their rules", () => {
   expect(violations("measure")).toEqual([]);
 });
 // The built-in transforms (docs/design/transform-graph.md) are core modules with no geo
-// or engine knowledge beyond the transform graph, the route and warp
+// or engine knowledge beyond the transform graph, the route and curvilinear map
 // contract (`camera/route.ts`, which the live helpers implement), the
 // exaggeration's height profile (`camera/heightProfile.ts`, a leaf) and the
-// spike's closed forms (`scene/warpForms.ts`, which imports nothing): they
+// spike's closed forms (`scene/curvilinearForms.ts`, which imports nothing): they
 // stay loadable on a worker and by the compiler, which imports them.
 it("the built-in transforms import only the transform core, math and the closed forms", () => {
   const ownFiles = files.filter(
@@ -359,13 +359,13 @@ it("the built-in transforms import only the transform core, math and the closed 
             edge.to.startsWith("src/math/") ||
             edge.to === "src/camera/route.ts" ||
             edge.to === "src/camera/heightProfile.ts" ||
-            edge.to === "src/scene/warpForms.ts"
+            edge.to === "src/scene/curvilinearForms.ts"
           ),
       )
       .map((edge) => `${file} → ${edge.to}`),
   );
   expect(found).toEqual([]);
-  expect(edgesOf("src/scene/warpForms.ts")).toEqual([]);
+  expect(edgesOf("src/scene/curvilinearForms.ts")).toEqual([]);
   // The exaggeration's height profile is a leaf both sides share.
   expect(edgesOf("src/camera/heightProfile.ts")).toEqual([]);
 });

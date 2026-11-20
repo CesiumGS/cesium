@@ -3,7 +3,7 @@
 // content on black, drawn into an offscreen target with a clip on, and every
 // pixel read back and compared with what float64 says the clip keeps there:
 // the pixel's ray carried to the surface, to the true point (the route's
-// inverse, where the content is drawn through a warp), routed into the clip's own
+// inverse, where the content is drawn through a curvilinear map), routed into the clip's own
 // frame by the reprojection that bends it (`routeForward`), and tested there
 // (`clipSetKeeps`). Pixels within 1 px of a boundary (of the clip or of the
 // silhouette) are left out, as the other spikes do.
@@ -18,7 +18,7 @@
 //   1. a plate (a 96 × 96 grid, so the interpolated distance follows the
 //      surface) under an ITRF root, cut by the curved plane: the draw has no
 //      lattice, so it carries the field on one of its own (a carrier);
-//   2. the same plate drawn under a ×10 height warp (its frame sits under the
+//   2. the same plate drawn under a ×10 height curvilinear map (its frame sits under the
 //      camera's root): the field rides on the route's lattice, and the cut is
 //      on the true surface;
 //   3. a curved plane and a rigid one in one view, together;
@@ -63,7 +63,7 @@ const TEMPLATE = `
 const WIDTH = 512;
 const HEIGHT = 512;
 const R = 6_378_137;
-/** The exaggeration the warped case draws at. */
+/** The exaggeration the curvilinear case draws at. */
 const K = 10;
 /** The reprojection's bend, m, and its length, m. */
 const AMPLITUDE = 6;
@@ -242,7 +242,7 @@ interface Scene {
 
 function scene(
   engine: Engine,
-  warped: boolean,
+  curvilinear: boolean,
   lost: () => void,
   extra: Partial<Parameters<Engine["addView"]>[0]> = {},
 ): Scene {
@@ -263,7 +263,7 @@ function scene(
   const catalog = createFrameCatalog();
   const itrf = catalog.get("ITRF");
   let content: Frame = itrf;
-  if (warped) {
+  if (curvilinear) {
     content = curvilinearFrame("Earth content (exaggerated)", itrf, {
       revision: 1,
       description: `height × ${K}`,
@@ -308,15 +308,15 @@ function scene(
       for (let i = 0; i < 300; i++) {
         await frames(1);
         const fits = draws.every((d) => {
-          const state = world.warps.status(d)?.state;
+          const state = world.curvilinearMaps.status(d)?.state;
           return state === undefined || state === "fitted";
         });
         const fields =
           !curved ||
-          (world.warps.curved.active &&
-            world.warps.curved.pending === 0 &&
+          (world.curvilinearMaps.curved.active &&
+            world.curvilinearMaps.curved.pending === 0 &&
             draws.every(
-              (d) => world.warps.curved.status(d)?.state === "fitted",
+              (d) => world.curvilinearMaps.curved.status(d)?.state === "fitted",
             ));
         if (fits && fields) {
           break;
@@ -607,7 +607,7 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
   };
   const onPlate = (p: V3) => Math.abs(p[0]) <= HALF && Math.abs(p[1]) <= HALF;
   const fieldOf = (s: Scene, d: DrawHandle) => {
-    const st = s.world.warps.curved.status(d);
+    const st = s.world.curvilinearMaps.curved.status(d);
     return {
       "field error, m": st?.errorBound ?? -1,
       "field cells per axis": st?.cells ?? 0,
@@ -619,13 +619,13 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
     lost();
 
     // --- 1 and 2. a plate cut by a curved plane, under an ITRF root and a ×10 root --
-    for (const warped of [false, true]) {
-      const s = scene(engine, warped, lost);
+    for (const curvilinear of [false, true]) {
+      const s = scene(engine, curvilinear, lost);
       const { world, view } = s;
       const draw = plate(s);
       look(
         view,
-        [0, 0, (warped ? R + (PLATE - R) * K : PLATE) + 40],
+        [0, 0, (curvilinear ? R + (PLATE - R) * K : PLATE) + 40],
         [0, 0, -1],
         [0, 1, 0],
       );
@@ -634,10 +634,10 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
       await s.settle([draw], true);
       const pixels = await s.capture();
       show(
-        `${warped ? 2 : 1}. a plate cut by a plane in a bent design frame, ${warped ? "drawn ×10 (the field rides on the route's lattice)" : "under an ITRF root (the field is on a carrier lattice)"}`,
+        `${curvilinear ? 2 : 1}. a plate cut by a plane in a bent design frame, ${curvilinear ? "drawn ×10 (the field rides on the route's lattice)" : "under an ITRF root (the field is on a carrier lattice)"}`,
         pixels,
       );
-      const point = trueOf(s, warped);
+      const point = trueOf(s, curvilinear);
       const inside = (px: number, py: number): boolean => {
         const p = point(px, py);
         return (
@@ -647,15 +647,16 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
       const result = compare(pixels, inside);
       const field = fieldOf(s, draw);
       add(
-        warped
-          ? "a plate drawn under a ×10 height warp, cut on its true surface by a plane in a bent design frame"
+        curvilinear
+          ? "a plate drawn under a ×10 height curvilinear map, cut on its true surface by a plane in a bent design frame"
           : "a plate under an ITRF root cut by a plane in a bent design frame (a wavy contour)",
         { ...comparison(result), ...field },
         `${MEANINGFUL}; the field's error is stated, under 0.1 m (a pixel is 9 cm here)`,
         agrees(result) &&
           field["field error, m"] >= 0 &&
           field["field error, m"] < 0.1 &&
-          field["carrier lattice (1: the draw had none)"] === (warped ? 0 : 1),
+          field["carrier lattice (1: the draw had none)"] ===
+            (curvilinear ? 0 : 1),
       );
       s.dispose();
     }
@@ -844,12 +845,14 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
       view.setClips([world.addClip(curvedPlane(s))]);
       await s.settle([draw], true);
       const cut = await s.capture();
-      const carrying = world.warps.curved.status(draw)?.carrier ? 1 : 0;
+      const carrying = world.curvilinearMaps.curved.status(draw)?.carrier
+        ? 1
+        : 0;
       view.clipMask = 0;
       await s.settle([draw]);
       await s.frames(3);
       const restored = await s.capture();
-      const stillActive = world.warps.curved.active ? 1 : 0;
+      const stillActive = world.curvilinearMaps.curved.active ? 1 : 0;
       const placedAfter = world.scene.drawPlacements[draw.index] !== undefined;
       add(
         "clearing the mask restores the image and removes the carrier",

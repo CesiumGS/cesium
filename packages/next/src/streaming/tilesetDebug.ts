@@ -8,7 +8,7 @@ import {
   geometryRefines,
   lodExponentOf,
   terrainStretch,
-} from "./tileWarp.ts";
+} from "./tileCurvilinearMap.ts";
 import { packTileDebug, TileDebugState } from "./debugViews.ts";
 import { type DebugColor, VOLUME_COLORS } from "./debugVolumes.ts";
 import type { TileVolume } from "./volumes.ts";
@@ -143,8 +143,8 @@ export function tileDebugWord(
         ? TileDebugState.held
         : TileDebugState.drawn;
   let stretch = 1;
-  if (view.warp) {
-    const drawn = drawnTile(tile, view.warp);
+  if (view.curvilinearMap) {
+    const drawn = drawnTile(tile, view.curvilinearMap);
     const alpha = geometryRefines(tile) ? lodExponentOf(view) : 0;
     stretch =
       tile.globe && drawn.slopeMax !== undefined

@@ -51,7 +51,7 @@ export interface FramedPoint {
    * that want one number, and not a 1σ.
    *
    * - the pick's (`kind: "pick"`, a bound): one CSS pixel's footprint at the
-   *   hit (`pickDesign`'s tolerance; under a view warp in true meters,
+   *   hit (`pickDesign`'s tolerance; under a view curvilinear map in true meters,
    *   over σ_min of the route), and the rounding of the float32 depth the
    *   position was read from (half a step), likewise;
    * - the point's own (`kind: "content"`, a bound): where the pick variant
@@ -101,7 +101,7 @@ export interface FramedPoint {
    */
   readonly accuracy: PointAccuracy;
   /**
-   * What the view drew the hit content through, when through a warp
+   * What the view drew the hit content through, when through a curvilinear map
    * ("drawn ×10 vertically; values are true"): `frame` and the point are
    * where the content is. Absent when drawn as it is. A measurement taken
    * from this point passes it on (`MeasureOptions.drawn`).
@@ -369,7 +369,7 @@ function vertexBound(vertex: Placement | undefined): number | undefined {
  * The pick's own terms: one CSS pixel's footprint at the hit, and half a
  * float32 step of the depth it was read from, carried along the ray. Each
  * is a worst-case bound (an error uniform over a width w has σ = w/√12,
- * which this does not claim). Under a view warp, where `trueFootprint` is
+ * which this does not claim). Under a view curvilinear map, where `trueFootprint` is
  * given (a pixel's drawn size over σ_min of the route, in true meters),
  * both are scaled by the same factor: they were measured in what is drawn.
  */
@@ -392,7 +392,7 @@ function pickTerms(
   const where =
     toTrue === 1
       ? ""
-      : ", in true meters (the drawn size over σ_min of the view's warp)";
+      : ", in true meters (the drawn size over σ_min of the view's curvilinear map)";
   const terms: PointAccuracyTerm[] = [
     {
       frame,

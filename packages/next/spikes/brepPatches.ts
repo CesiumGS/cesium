@@ -17,9 +17,9 @@
 //      from the draw's chunk list, are the CPU twin's (`diceCounts`);
 //   c. no pixel inside a face's silhouette (eroded by 2 px) is left
 //      uncovered: no cracks between a face's spans;
-//   d. under a warp (a fitted lattice) the drawn position at each pixel is
+//   d. under a curvilinear map (a fitted lattice) the drawn position at each pixel is
 //      the placed true surface's, the CPU twin (`placeWithTerms`) within the
-//      target, with the grid made finer for the warp's bends.
+//      target, with the grid made finer for the curvilinear map's bends.
 // And the feature a pick and the feature image read is the face, shadows,
 // ambient occlusion and the depth passes raise no GPU error, and, for 200
 // faces, the triangles and the GPU's time against `tessellateBrep` at the
@@ -45,10 +45,10 @@ import {
   type View,
   type World,
 } from "../src/index.ts";
-import { placeWithTerms } from "../src/scene/warpEvaluate.ts";
+import { placeWithTerms } from "../src/scene/curvilinearEvaluate.ts";
 import { PATCH_CHUNK_CELLS } from "../src/render/layout.ts";
-import { fitLattice } from "../src/scene/warpFit.ts";
-import type { WarpTerms } from "../src/scene/warpTerms.ts";
+import { fitLattice } from "../src/scene/curvilinearFit.ts";
+import type { CurvilinearTerms } from "../src/scene/curvilinearTerms.ts";
 import { setPlacement } from "../src/scene/world/placements.ts";
 import type { DrawHandle } from "../src/scene/world/types.ts";
 import type { BrepHandle } from "../src/scene/world/brep.ts";
@@ -61,7 +61,7 @@ const TEMPLATE = `
   degree 5 × 4 at two
   distances, read back as bytes the fragment stage writes: each pixel's drawn
   point against the true surface, the cells the dice chose against the CPU
-  twin, cracks between spans, and a warped patch against its CPU twin. Then 200
+  twin, cracks between spans, and a curvilinear patch against its CPU twin. Then 200
   faces against the CPU tessellator.
 </p>
 <div class="status">Run to check on this GPU.</div>
@@ -933,7 +933,7 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
       world.destroy();
     }
 
-    // d. a warped patch against its CPU twin.
+    // d. a curvilinear patch against its CPU twin.
     {
       const scene = scenes()[2]!;
       const world = engine.createWorld({
@@ -965,7 +965,7 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
         { center: [0, 0, 0], scale: 2.4 },
         { tolerance: 1e-4, operation: "wave" },
       );
-      const terms: WarpTerms = [
+      const terms: CurvilinearTerms = [
         { term: lattice, weight: { scale: 1, factors: [] } },
       ];
       const distance = 5.5;
@@ -980,13 +980,13 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
           distance,
         );
       place(scene.target);
-      const unwarped = await (async () => {
+      const affine = await (async () => {
         await capture(env, [MODE.mask]);
         return readCells(env, setup.draw);
       })();
       setPlacement(world, setup.draw, terms);
       const images = await capture(env, modes);
-      const warped = await readCells(env, setup.draw);
+      const curvilinear = await readCells(env, setup.draw);
       const inside = interior(images.get(MODE.mask)!);
       const { read: pixels } = decode(images, setup.patches, inside);
       const eye = view.camera.position;
@@ -1027,21 +1027,21 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
         sum(c.values(), (e) => e.nu * e.nv);
       checks.push({
         id: id++,
-        name: "weighted patch under a warp (fitted lattice), 5.5 m",
+        name: "weighted patch under a curvilinear map (fitted lattice), 5.5 m",
         measured: {
           "pixels measured": pixels.length,
           "drawn − placed true surface, worst, px": worstPx,
-          "the farthest the warp moves the surface, m": moved,
-          "cells without the warp": cellsOf(unwarped),
-          "cells with it": cellsOf(warped),
+          "the farthest the curvilinear map moves the surface, m": moved,
+          "cells without the curvilinear map": cellsOf(affine),
+          "cells with it": cellsOf(curvilinear),
           "uncovered pixels inside the silhouette": crack.cracks,
         },
-        limit: `within ${TARGET} px (+ ${SLACK}, + 0.1 for the position read back from the depth); more cells than unwarped; no cracks`,
+        limit: `within ${TARGET} px (+ ${SLACK}, + 0.1 for the position read back from the depth); more cells than affine; no cracks`,
         pass:
           pixels.length > 100 &&
           worstPx <= TARGET + SLACK + 0.1 &&
           moved > 0.02 &&
-          cellsOf(warped) > cellsOf(unwarped) &&
+          cellsOf(curvilinear) > cellsOf(affine) &&
           crack.cracks === 0,
       });
       engine.removeView(view);

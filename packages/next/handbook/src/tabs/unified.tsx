@@ -73,8 +73,8 @@ const SUBSYSTEMS: Subsystem[] = [
     seam: (
       <>
         <C>VectorLayer</C> adds its points and models as draws of a world (
-        <C>world.addDraw</C>); a <C>PointSource</C> gives a warp the frame
-        kernel that carries points the GPU writes.
+        <C>world.addDraw</C>); a <C>PointSource</C> gives a curvilinear map the
+        frame kernel that carries points the GPU writes.
       </>
     ),
     tabs: [{ href: "#/vector", label: "Vector rendering" }],
@@ -574,8 +574,8 @@ export function Unified() {
           <li>
             <C>World</C> is content shared by any number of views: geometry
             slabs, a material table, the transform tree and anchors, the draw
-            records and the clips, caps and warps that act on them. It has two
-            halves: <C>WorldScene</C> (what exists and where) and{" "}
+            records and the clips, caps and curvilinear maps that act on them.
+            It has two halves: <C>WorldScene</C> (what exists and where) and{" "}
             <C>WorldRaster</C> (records, batches, bundles and GPU tables, in{" "}
             <C>render/world</C>).
           </li>
@@ -591,7 +591,8 @@ export function Unified() {
           what the renderer owns. A test also holds content off a world&apos;s
           rasterizer data and an engine&apos;s GPU context. The scene&apos;s
           folder <C>scene/world</C> is the world&apos;s parts: draws,
-          placements, transforms, warps, routes, clips, caps, b-reps and rays.
+          placements, transforms, curvilinear maps, routes, clips, caps, b-reps
+          and rays.
         </p>
         <h3>Renderer: what it reads, and what it draws</h3>
         <p>
@@ -677,20 +678,20 @@ export function Unified() {
                   <>
                     Content writes through <C>DrawSink</C>; the world writes a
                     record per draw and its placement, among them the{" "}
-                    <C>WARP_ROUTE</C> term and a compiled route&apos;s center
-                    constants.
+                    <C>CURVILINEAR_ROUTE</C> term and a compiled route&apos;s
+                    center constants.
                   </>
                 ),
               },
               {
-                title: "Warps and routes",
+                title: "Curvilinear maps and routes",
                 body: (
                   <>
-                    <C>WorldWarps</C> ticks (it also did after the placements,
-                    in step 2): compiled routes get their uniforms, a fit covers
-                    what the compiler refuses, and a view whose route differs in
-                    shape gets twins of the draws. A draw is held hidden until
-                    its first fit.
+                    <C>WorldCurvilinearMaps</C> ticks (it also did after the
+                    placements, in step 2): compiled routes get their uniforms,
+                    a fit covers what the compiler refuses, and a view whose
+                    route differs in shape gets twins of the draws. A draw is
+                    held hidden until its first fit.
                   </>
                 ),
               },
@@ -846,10 +847,10 @@ export function Unified() {
             </strong>{" "}
             Georeferencing, a projection, vertical exaggeration, a bend, a plan
             and profile sheet and a lens are all nodes: an edge is an affine
-            matrix, or a curvilinear map with parameters. This replaces warps as
-            their own idea, regions that said which content a warp touched, and
-            placement modes: a node's position in the tree and a tileset's
-            declared CRS decide it.
+            matrix, or a curvilinear map with parameters. This replaces
+            curvilinear maps as their own idea, regions that said which content
+            a curvilinear map touched, and placement modes: a node's position in
+            the tree and a tileset's declared CRS decide it.
           </li>
           <li>
             <strong>One compiler for every route.</strong> It collapses affine

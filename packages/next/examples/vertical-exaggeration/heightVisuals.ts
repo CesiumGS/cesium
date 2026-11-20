@@ -10,7 +10,7 @@ import { CustomShader, type Globe } from "@cesium/next";
  * It is one custom fragment stage on the globe's tiles (`Globe.shader`). The
  * drawn height comes from the drawn position (`positionWC`), the true height
  * from the true position the engine now passes beside it
- * (`truePositionEC`, the camera-relative position before the warp), each as a
+ * (`truePositionEC`, the camera-relative position before the curvilinear map), each as a
  * height above the WGS84 ellipsoid. Lighting and the haze's path are
  * geometry, so they stay drawn; only the lookups (the ramp, the contour
  * levels, the density) take the key.

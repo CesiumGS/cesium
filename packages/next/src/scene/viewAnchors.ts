@@ -5,8 +5,8 @@ import {
   routeForward,
   withFrozenScales,
   type Route,
-  type Warp,
-  type WarpScale,
+  type CurvilinearMap,
+  type CurvilinearScale,
 } from "../camera/route.ts";
 import { rigidMatrixError } from "../math/transforms.ts";
 import { MAX_ANCHORS } from "../render/layout.ts";
@@ -170,7 +170,7 @@ export function setAnchorPlacement(
   view.wake?.();
 }
 
-/** Whether two routes make the same warp of the same content: nothing a fit depends on differs. */
+/** Whether two routes make the same curvilinear map of the same content: nothing a fit depends on differs. */
 function sameRoute(a: Route, b: Route): boolean {
   if (
     a.revision !== b.revision ||
@@ -190,9 +190,9 @@ function sameRoute(a: Route, b: Route): boolean {
         }
       }
     } else if (
-      x.kind !== "warp" ||
-      y.kind !== "warp" ||
-      x.warp !== y.warp ||
+      x.kind !== "curvilinear" ||
+      y.kind !== "curvilinear" ||
+      x.curvilinearMap !== y.curvilinearMap ||
       x.inverse !== y.inverse
     ) {
       return false;
@@ -202,7 +202,7 @@ function sameRoute(a: Route, b: Route): boolean {
 }
 
 /**
- * Marks `anchor` (or the table's root) as placed across a warp by `route`,
+ * Marks `anchor` (or the table's root) as placed across a curvilinear map by `route`,
  * or as rigid again (`undefined`). A route that is the same as the one held
  * keeps the held one and wakes nothing.
  */
@@ -221,8 +221,8 @@ export function setAnchorRoute(
 }
 
 /**
- * The routes of the anchors placed across a warp, by slot (slot 0: the
- * table's root), as this view draws them: a warp whose slider the view sets
+ * The routes of the anchors placed across a curvilinear map, by slot (slot 0: the
+ * table's root), as this view draws them: a curvilinear map whose slider the view sets
  * for itself (`View.setParameter`) reads the view's value, live.
  */
 export function anchorRoutes(
@@ -243,15 +243,17 @@ export function anchorRoutes(
   );
 }
 
-/** Whether a warp of `route` has a slider the view sets for itself. */
+/** Whether a curvilinear map of `route` has a slider the view sets for itself. */
 function sets(view: ViewAnchorContext, route: Route): boolean {
   return route.steps.some(
     (s) =>
-      s.kind === "warp" && s.warp.scale && view.hasParameterValue(s.warp.scale),
+      s.kind === "curvilinear" &&
+      s.curvilinearMap.scale &&
+      view.hasParameterValue(s.curvilinearMap.scale),
   );
 }
 
-/** `route` with each warp whose slider the view sets reading the view's value: made once for a route, so the same route is the same object. */
+/** `route` with each curvilinear map whose slider the view sets reading the view's value: made once for a route, so the same route is the same object. */
 function boundRoute(view: ViewAnchorContext, route: Route): Route {
   const state = view.anchorState;
   let bound = state.bound.routes.get(route);
@@ -259,10 +261,13 @@ function boundRoute(view: ViewAnchorContext, route: Route): Route {
     bound = {
       ...route,
       steps: route.steps.map((step) =>
-        step.kind === "warp" &&
-        step.warp.scale &&
-        view.hasParameterValue(step.warp.scale)
-          ? { ...step, warp: boundWarp(view, step.warp) }
+        step.kind === "curvilinear" &&
+        step.curvilinearMap.scale &&
+        view.hasParameterValue(step.curvilinearMap.scale)
+          ? {
+              ...step,
+              curvilinearMap: boundCurvilinearMap(view, step.curvilinearMap),
+            }
           : step,
       ),
     };
@@ -271,9 +276,12 @@ function boundRoute(view: ViewAnchorContext, route: Route): Route {
   return bound;
 }
 
-/** The warp, its slider read from the view: its own properties otherwise (its prototype is the warp, so a live spec stays live). */
-function boundWarp(view: ViewAnchorContext, warp: Warp): Warp {
-  const scale = warp.scale!;
+/** The curvilinear map, its slider read from the view: its own properties otherwise (its prototype is the curvilinear map, so a live spec stays live). */
+function boundCurvilinearMap(
+  view: ViewAnchorContext,
+  curvilinearMap: CurvilinearMap,
+): CurvilinearMap {
+  const scale = curvilinearMap.scale!;
   let own = view.anchorState.viewScales.get(scale);
   if (!own) {
     own = {
@@ -283,12 +291,12 @@ function boundWarp(view: ViewAnchorContext, warp: Warp): Warp {
       get range() {
         return scale.range;
       },
-    } satisfies WarpScale;
+    } satisfies CurvilinearScale;
     view.anchorState.viewScales.set(scale, own);
   }
-  return Object.create(warp, {
+  return Object.create(curvilinearMap, {
     scale: { value: own, enumerable: true },
-  }) as Warp;
+  }) as CurvilinearMap;
 }
 
 export function anchorCamera(
@@ -358,8 +366,8 @@ export function pickPlacements(view: ViewAnchorContext): Map<
 /**
  * `position`, a point in `anchor`'s coordinates (`undefined` or the world's
  * `root`: the table's root), as this view draws it, in render space: through
- * the anchor's route when it crosses a warp (each warp at its scale now),
- * else through its rigid placement. Undefined where a warp can't map it.
+ * the anchor's route when it crosses a curvilinear map (each curvilinear map at its scale now),
+ * else through its rigid placement. Undefined where a curvilinear map can't map it.
  */
 export function pointToRender(
   view: ViewAnchorContext,

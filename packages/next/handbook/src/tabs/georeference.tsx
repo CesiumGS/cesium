@@ -233,7 +233,7 @@ const CRS_ROUTES = [
       "A datum shift when it isn't the body's, then geographic to geocentric",
     edge: "Curvilinear, compiled",
     built:
-      "`geographicToGeocentric`. A datum shift or any PROJ operation is `reprojectionWarp(operation)` from `/proj`, which is fitted",
+      "`geographicToGeocentric`. A datum shift or any PROJ operation is `reprojectionCurvilinearMap(operation)` from `/proj`, which is fitted",
   },
   {
     crs: "Projected (x, y, height in a 2D projection)",
@@ -256,7 +256,7 @@ const CRS_ROUTES = [
       "The node's translation, rotation and scale (the site transform), then the anchor's east-north-up frame, then geocentric",
     edge: "Rigid (affine)",
     built:
-      "An affine node: no curvilinear edge, so no warp and no pipeline. The site transform is what an engineering frame holds",
+      "An affine node: no curvilinear edge, so no curvilinear map and no pipeline. The site transform is what an engineering frame holds",
   },
   {
     crs: "Local, with neither",

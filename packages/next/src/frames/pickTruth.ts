@@ -1,6 +1,6 @@
 // A pick as a true point (docs/design/geometry-through-placement-review.md, placement increment
 // 6). A core pick carries the depth's position, which is where the content is
-// drawn; under a warp that differs from where it is. When the pick variant
+// drawn; under a curvilinear map that differs from where it is. When the pick variant
 // resolved a domain point the content's own point is `CorePick.truePosition`
 // and nothing is inverted. When it didn't (a billboard, a point, the bare
 // ellipsoid, a face with no b-rep) the drawn position goes back through the
@@ -36,11 +36,11 @@ export interface TruePick {
   readonly how: TruthHow;
   /** Whether the point is an estimate (`how` is `inverse` or `drawn`). */
   readonly provisional: boolean;
-  /** What the view drew the content through; absent when through no warp. */
+  /** What the view drew the content through; absent when through no curvilinear map. */
   readonly drawn?: DrawnThrough;
-  /** Where it is drawn (render space), m, when through a warp. */
+  /** Where it is drawn (render space), m, when through a curvilinear map. */
   readonly drawnPosition?: Float64Array;
-  /** The route that draws the hit anchor's content, when it crosses a warp: the pick's own (`CorePick.route`, each scale as it was when drawn), else the view's now. */
+  /** The route that draws the hit anchor's content, when it crosses a curvilinear map: the pick's own (`CorePick.route`, each scale as it was when drawn), else the view's now. */
   readonly route?: Route;
   /** Render space ← the anchor, when the view gave it (a route's affine part). */
   readonly placement?: Float64Array;
@@ -50,7 +50,7 @@ export interface TruePick {
    * The size of one CSS pixel at the hit in true meters, at most:
    * `footprint` over σ_min of the route (the second review's flaw 6: a
    * pixel's worth of drawn meters is at most 1/σ_min of true ones). Equal to
-   * `footprint` where nothing is drawn through a warp.
+   * `footprint` where nothing is drawn through a curvilinear map.
    */
   readonly trueFootprint: number;
   /**
@@ -70,8 +70,8 @@ interface RouteView {
   anchorPlacement?(anchor: CorePick["anchor"]): Float64Array | undefined;
 }
 
-/** The warped route that draws the hit's content: the one kept with the pick, else the view's own now. */
-function warpedRoute(pick: CorePick): Route | undefined {
+/** The curvilinear route that draws the hit's content: the one kept with the pick, else the view's own now. */
+function curvilinearRoute(pick: CorePick): Route | undefined {
   if (pick.route !== undefined) {
     return pick.route;
   }
@@ -100,17 +100,17 @@ export interface LocatedPick {
   readonly how: TruthHow;
   readonly bound: number;
   readonly note: string;
-  /** The warped route that draws the hit anchor's content, when there is one (`TruePick.route`). */
+  /** The curvilinear route that draws the hit anchor's content, when there is one (`TruePick.route`). */
   readonly route: Route | undefined;
 }
 
 /**
  * The content's point under `pick`: its domain point where the pick variant
  * resolved one (exact, nothing inverted), else the route's inverse of the
- * drawn position, else (no warp) the depth's position.
+ * drawn position, else (no curvilinear map) the depth's position.
  */
 export function locatePick(pick: CorePick): LocatedPick {
-  const route = warpedRoute(pick);
+  const route = curvilinearRoute(pick);
   const frame = pick.truePosition?.frame ?? pick.anchor ?? pick.root;
   let position: Float64Array;
   let how: TruthHow;
@@ -149,7 +149,7 @@ export function locatePick(pick: CorePick): LocatedPick {
 /**
  * `pick` as a true point: its domain point where the pick variant resolved
  * one (exact, nothing inverted), else the route's inverse of the drawn
- * position, else (no warp) the depth's position. The footprint of a pixel is
+ * position, else (no curvilinear map) the depth's position. The footprint of a pixel is
  * converted to true meters by the route's σ_min. `pickIn` (frames/pickIn.ts)
  * answers in any node from the same located point (`locatePick`).
  */

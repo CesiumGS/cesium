@@ -3,19 +3,19 @@ import {
   routeForward,
   routeInverse,
   routeIsRigid,
-  warpForward,
-  warpInverse,
+  curvilinearForward,
+  curvilinearInverse,
   withFrozenScales,
   withoutScales,
   type Route,
-  type Warp,
+  type CurvilinearMap,
 } from "../src/camera/route.ts";
 
 const content = { name: "content" };
 const drawn = { name: "ITRF" };
 
 /** z scaled by `k`, as an exaggeration over a flat reference. */
-function heightScale(k: number): Warp {
+function heightScale(k: number): CurvilinearMap {
   return {
     from: content,
     to: drawn,
@@ -30,8 +30,8 @@ function heightScale(k: number): Warp {
   };
 }
 
-/** A curvilinear non-linear warp, inverted only by Newton. */
-const swirl: Warp = {
+/** A curvilinear non-linear curvilinear map, inverted only by Newton. */
+const swirl: CurvilinearMap = {
   from: content,
   to: drawn,
   revision: 1,
@@ -65,14 +65,18 @@ function translation(x: number, y: number, z: number): Float64Array {
 }
 
 describe("routes", () => {
-  it("carries a point through rigid steps and a warp, and back", () => {
+  it("carries a point through rigid steps and a curvilinear map, and back", () => {
     const route: Route = {
       frame: { name: "site" },
       base: drawn,
       seconds: 0,
       steps: [
         { kind: "rigid", matrix: translation(10, 0, 100) },
-        { kind: "warp", warp: heightScale(10), inverse: false },
+        {
+          kind: "curvilinear",
+          curvilinearMap: heightScale(10),
+          inverse: false,
+        },
         { kind: "rigid", matrix: translation(0, -5, 0) },
       ],
       revision: 1,
@@ -86,19 +90,22 @@ describe("routes", () => {
     expect(p[2]).toBeCloseTo(3, 9);
   });
 
-  it("inverts a warp without an inverse by Newton", () => {
+  it("inverts a curvilinear map without an inverse by Newton", () => {
     const p = [0.7, -0.4, 2];
     const q = swirl.forward(p, new Float64Array(3));
-    const back = warpInverse(swirl, q);
+    const back = curvilinearInverse(swirl, q);
     for (let i = 0; i < 3; i++) {
       expect(back[i]).toBeCloseTo(p[i]!, 9);
     }
   });
 });
 
-describe("a warp's scale", () => {
+describe("a curvilinear map's scale", () => {
   /** `heightScale(10)` at a live scale, with its own inverse when asked. */
-  function scaled(scale: { value: number }, withInverse = false): Warp {
+  function scaled(
+    scale: { value: number },
+    withInverse = false,
+  ): CurvilinearMap {
     return {
       ...heightScale(10),
       scale,
@@ -111,11 +118,11 @@ describe("a warp's scale", () => {
     };
   }
 
-  const step = (warp: Warp, inverse = false): Route => ({
+  const step = (curvilinearMap: CurvilinearMap, inverse = false): Route => ({
     frame: content,
     base: drawn,
     seconds: 0,
-    steps: [{ kind: "warp", warp, inverse }],
+    steps: [{ kind: "curvilinear", curvilinearMap, inverse }],
     revision: 1,
   });
 
@@ -136,24 +143,28 @@ describe("a warp's scale", () => {
   it("scales the Jacobian the same way: I + s(J − I)", () => {
     const s = { value: 0.25 };
     const j = new Float64Array(9);
-    warpForward(scaled(s), [1, 2, 3], new Float64Array(3), j);
+    curvilinearForward(scaled(s), [1, 2, 3], new Float64Array(3), j);
     expect(Array.from(j)).toEqual([1, 0, 0, 0, 1, 0, 0, 0, 1 + 0.25 * 9]);
   });
 
   it("inverts at its scale, by its own inverse only at 1 and by Newton otherwise", () => {
     const s = { value: 1 };
-    const warp = scaled(s, true);
+    const curvilinearMap = scaled(s, true);
     const p = [0.5, 1.5, -2];
-    const q = warpForward(warp, p, new Float64Array(3));
-    expect(Array.from(warpInverse(warp, q))).toEqual([0.5, 1.5, -0.2 * 10]);
+    const q = curvilinearForward(curvilinearMap, p, new Float64Array(3));
+    expect(Array.from(curvilinearInverse(curvilinearMap, q))).toEqual([
+      0.5,
+      1.5,
+      -0.2 * 10,
+    ]);
     s.value = 0.4;
-    const q2 = warpForward(warp, p, new Float64Array(3));
-    const back = warpInverse(warp, q2);
+    const q2 = curvilinearForward(curvilinearMap, p, new Float64Array(3));
+    const back = curvilinearInverse(curvilinearMap, q2);
     for (let i = 0; i < 3; i++) {
       expect(back[i]).toBeCloseTo(p[i]!, 12);
     }
     s.value = 0;
-    expect(Array.from(warpInverse(warp, p))).toEqual(p);
+    expect(Array.from(curvilinearInverse(curvilinearMap, p))).toEqual(p);
   });
 
   it("routeForward and routeInverse follow it, and a snapshot or the unit route ignore later changes", () => {

@@ -1,4 +1,4 @@
-// The body as an occluder under a warp (globe/bodyOccluder.ts): the drawn
+// The body as an occluder under a curvilinear map (globe/bodyOccluder.ts): the drawn
 // terrain's own bounds make the occluder, so it holds for any map that can
 // carry points.
 import { describe, expect, it } from "vitest";
@@ -7,7 +7,7 @@ import { flatTerrainHeights } from "../src/globe/quantizedMesh.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import type { SelectionView } from "../src/streaming/Stepwise.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
-import type { TileWarp } from "../src/streaming/tileWarp.ts";
+import type { TileCurvilinearMap } from "../src/streaming/tileCurvilinearMap.ts";
 import {
   regionFromJson,
   sphereFromObb,
@@ -17,7 +17,7 @@ import {
 const wgs84 = Ellipsoid.WGS84;
 
 /** A ×10 vertical exaggeration as a map of points, with nothing declared of it. */
-function warpOf(factor: number): TileWarp {
+function curvilinearMapOf(factor: number): TileCurvilinearMap {
   const map = (p: ArrayLike<number>, scale: number): number[] => {
     const c = wgs84.cartesianToCartographic(
       Float64Array.of(p[0]!, p[1]!, p[2]!),
@@ -121,7 +121,7 @@ function setup(basin = false, enabled = true) {
   const view = {
     id: 1,
     position: camera,
-    warp: warpOf(10),
+    curvilinearMap: curvilinearMapOf(10),
   } as unknown as SelectionView;
   occluder.prepare(view);
   return { occluder, view, camera };
@@ -159,7 +159,10 @@ describe("the body as an occluder", () => {
       off.occluder.hidden(regionVolume(0.2, 0.2005, 0, 10000), off.view),
     ).toBe(false);
     const { occluder, view } = setup();
-    const unmapped = { ...view, warp: { ...view.warp!, images: undefined } };
+    const unmapped = {
+      ...view,
+      curvilinearMap: { ...view.curvilinearMap!, images: undefined },
+    };
     occluder.prepare(unmapped as SelectionView);
     expect(
       occluder.hidden(
@@ -219,7 +222,7 @@ describe("the body as an occluder", () => {
     const view = {
       id: 1,
       position: camera,
-      warp: warpOf(10),
+      curvilinearMap: curvilinearMapOf(10),
     } as unknown as SelectionView;
     occluder.prepare(view);
     const s = occluder.scaleFor(view)!;
@@ -268,7 +271,7 @@ describe("the body as an occluder", () => {
         { longitude: 0, latitude: 0, height: 10 },
         new Float64Array(3),
       ),
-      warp: warpOf(10),
+      curvilinearMap: curvilinearMapOf(10),
     } as unknown as SelectionView;
     occluder.prepare(view);
     expect(occluder.scaleFor(view)).toBeGreaterThan(0);
@@ -300,7 +303,7 @@ describe("the body as an occluder", () => {
         { longitude: 0, latitude: 0, height: 10 },
         new Float64Array(3),
       ),
-      warp: warpOf(10),
+      curvilinearMap: curvilinearMapOf(10),
     } as unknown as SelectionView;
     occluder.prepare(view);
     const s = occluder.scaleFor(view)!;

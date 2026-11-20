@@ -47,7 +47,7 @@ const OWNS = [
   },
   {
     what: "Reference frame",
-    owns: "Where one frame is in another at a time, as a tree. Hierarchy lives here, and so does what's warped: an edge may be curvilinear.",
+    owns: "Where one frame is in another at a time, as a tree. Hierarchy lives here, and so does what's curvilinear: an edge may be curvilinear.",
     relation: "The core's resolver answers, or the optional frames module.",
   },
 ];
@@ -420,9 +420,9 @@ export function Scene() {
         <p>
           Where content sits in the{" "}
           <a href="#/transform-graph">transform graph</a> decides what is
-          warped. A deformer over the Earth's content exaggerates the terrain
-          and the tileset and leaves the Moon alone; the camera stays outside
-          it. Content gets there by its anchor:
+          curvilinear. A deformer over the Earth's content exaggerates the
+          terrain and the tileset and leaves the Moon alone; the camera stays
+          outside it. Content gets there by its anchor:
         </p>
         <ul>
           <li>

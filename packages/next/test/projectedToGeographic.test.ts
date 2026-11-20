@@ -232,7 +232,7 @@ describe("verticalExaggeration with a ceiling", () => {
   const ecef = ecefOf;
 
   it("is the built-in's function, Jacobian and inverse, below, across and above the ceiling", () => {
-    const warp = verticalExaggeration(options);
+    const curvilinearMap = verticalExaggeration(options);
     const r = rng(3);
     const mine = new Float64Array(3);
     const theirs = new Float64Array(3);
@@ -241,7 +241,7 @@ describe("verticalExaggeration with a ceiling", () => {
     const back = new Float64Array(3);
     for (const h of [-100, 200, 1500, 4200, 4800, 5000, 5600, 12000]) {
       const p = ecef(between(r, -180, 180), between(r, -85, 85), h);
-      warp.forward(p, mine, myJ);
+      curvilinearMap.forward(p, mine, myJ);
       edge.spec.forward(p, edge.spec.params, theirs, theirJ);
       for (let i = 0; i < 3; i++) {
         expect(Math.abs(mine[i]! - theirs[i]!)).toBeLessThan(1e-6);
@@ -249,7 +249,7 @@ describe("verticalExaggeration with a ceiling", () => {
       for (let i = 0; i < 9; i++) {
         expect(Math.abs(myJ[i]! - theirJ[i]!)).toBeLessThan(1e-9);
       }
-      warp.inverse!(mine, back);
+      curvilinearMap.inverse!(mine, back);
       for (let i = 0; i < 3; i++) {
         expect(Math.abs(back[i]! - p[i]!)).toBeLessThan(1e-6);
       }
@@ -257,12 +257,15 @@ describe("verticalExaggeration with a ceiling", () => {
   });
 
   it("lifts above the ceiling by a constant, and declares its profile as the height scale", () => {
-    const warp = verticalExaggeration(options);
-    expect(warp.heightScale?.profile).toEqual({ ceiling: 5000, band: 1000 });
+    const curvilinearMap = verticalExaggeration(options);
+    expect(curvilinearMap.heightScale?.profile).toEqual({
+      ceiling: 5000,
+      band: 1000,
+    });
     expect(verticalExaggeration({ factor: 4 }).heightScale).toBeDefined();
     const lift = (h: number) => {
       const p = ecef(10, 40, h);
-      const q = warp.forward(p, new Float64Array(3));
+      const q = curvilinearMap.forward(p, new Float64Array(3));
       return Math.hypot(q[0]! - p[0]!, q[1]! - p[1]!, q[2]! - p[2]!);
     };
     // (k - 1) (ceiling - base - band / 2) = 3 · 4300.
@@ -272,24 +275,27 @@ describe("verticalExaggeration with a ceiling", () => {
   });
 
   it("hands the compiler the built-in with its ceiling, and follows its setters", () => {
-    const warp = verticalExaggeration(options);
-    const first = warp.curvilinear!;
+    const curvilinearMap = verticalExaggeration(options);
+    const first = curvilinearMap.curvilinear!;
     expect(first.params).toMatchObject(options);
-    const revision = warp.revision;
-    warp.ceiling = 9000;
-    warp.factor = 2;
-    expect(warp.revision).toBe(revision + 2);
-    expect(warp.curvilinear!.params).toMatchObject({
+    const revision = curvilinearMap.revision;
+    curvilinearMap.ceiling = 9000;
+    curvilinearMap.factor = 2;
+    expect(curvilinearMap.revision).toBe(revision + 2);
+    expect(curvilinearMap.curvilinear!.params).toMatchObject({
       factor: 2,
       ceiling: 9000,
       baseHeight: 200,
       band: 1000,
     });
-    warp.band = undefined;
-    expect(warp.curvilinear!.params.band).toBeCloseTo(0.2 * (9000 - 200), 9);
-    warp.ceiling = undefined;
-    expect(warp.curvilinear!.params.ceiling).toBeGreaterThan(1e8);
-    expect(warp.heightScale).toBeDefined();
+    curvilinearMap.band = undefined;
+    expect(curvilinearMap.curvilinear!.params.band).toBeCloseTo(
+      0.2 * (9000 - 200),
+      9,
+    );
+    curvilinearMap.ceiling = undefined;
+    expect(curvilinearMap.curvilinear!.params.ceiling).toBeGreaterThan(1e8);
+    expect(curvilinearMap.heightScale).toBeDefined();
   });
 
   it("refuses a ceiling at or below the base, or a band that is not positive", () => {
@@ -299,20 +305,20 @@ describe("verticalExaggeration with a ceiling", () => {
     expect(() =>
       verticalExaggeration({ factor: 2, ceiling: 100, band: 0 }),
     ).toThrow(/band/);
-    const warp = verticalExaggeration({ factor: 2, ceiling: 100 });
+    const curvilinearMap = verticalExaggeration({ factor: 2, ceiling: 100 });
     expect(() => {
-      warp.baseHeight = 500;
+      curvilinearMap.baseHeight = 500;
     }).toThrow(/above the base/);
-    expect(warp.baseHeight).toBe(0);
+    expect(curvilinearMap.baseHeight).toBe(0);
   });
 
   it("scales with a slider: at scale s heights go to 1 + s (k - 1) times, ceiling and all", () => {
     const scale = { value: 0.5 };
-    const warp = verticalExaggeration({ ...options, scale });
-    expect(warp.scale).toBe(scale);
+    const curvilinearMap = verticalExaggeration({ ...options, scale });
+    expect(curvilinearMap.scale).toBe(scale);
     const half = verticalExaggerationEdge({ ...options, factor: 2.5 });
     const p = ecef(5, 20, 3000);
-    const full = warp.forward(p, new Float64Array(3));
+    const full = curvilinearMap.forward(p, new Float64Array(3));
     const expected = forwardOf(half, p);
     // The engine scales the displacement: p + s (full - p).
     for (let i = 0; i < 3; i++) {

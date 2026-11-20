@@ -2,7 +2,7 @@
 // pick carries where the content is (its domain point, or the drawn position
 // carried back through the route: `locatePick`) and the camera route that
 // drew it. `pickIn` represents that route as a transform graph (each rigid
-// step an affine node, each warp a curvilinear one, so the route's own steps are
+// step an affine node, each curvilinear map a curvilinear one, so the route's own steps are
 // its nodes: the content's node is "true", the view's render space is
 // "drawn") and carries the point to the node asked for, in float64, from the
 // point itself. A catalog frame is a node of the frames' graph
@@ -10,10 +10,10 @@
 import type { FrameKey } from "../camera/frameResolver.ts";
 import {
   curvilinearValuesOf,
-  warpForward,
-  warpInverse,
+  curvilinearForward,
+  curvilinearInverse,
   type Route as CameraRoute,
-  type Warp,
+  type CurvilinearMap,
 } from "../camera/route.ts";
 import type { CorePick } from "../scene/pick.ts";
 import type { SigmaIn } from "../transform/accuracy.ts";
@@ -34,7 +34,7 @@ import type { Frame } from "./Frame.ts";
 import type { FrameGraph } from "./graphOfFrames.ts";
 import { locatePick, type TruthHow } from "./pickTruth.ts";
 
-/** A camera route (rigid steps and warps) as a graph: the route's steps are its nodes. */
+/** A camera route (rigid steps and curvilinear maps) as a graph: the route's steps are its nodes. */
 export interface RouteGraph {
   readonly graph: TransformGraph;
   /** The content's node: the route's `frame`, where true coordinates are. */
@@ -45,34 +45,38 @@ export interface RouteGraph {
   readonly nodes: readonly TransformNode[];
 }
 
-/** One warp as a curvilinear edge: its IR spec where it has one, else its own function (float64 only). */
-function edgeOf(warp: Warp, inverse: boolean, index: number): CurvilinearSpec {
-  const sigma = warp.accuracy?.sigma;
-  const spec = warp.curvilinear;
-  if (spec && !inverse && (!warp.scale || spec.identity)) {
+/** One curvilinear map as a curvilinear edge: its IR spec where it has one, else its own function (float64 only). */
+function edgeOf(
+  curvilinearMap: CurvilinearMap,
+  inverse: boolean,
+  index: number,
+): CurvilinearSpec {
+  const sigma = curvilinearMap.accuracy?.sigma;
+  const spec = curvilinearMap.curvilinear;
+  if (spec && !inverse && (!curvilinearMap.scale || spec.identity)) {
     return {
       ...spec,
-      id: spec.id ?? `warp${index}`,
-      params: curvilinearValuesOf(warp),
+      id: spec.id ?? `curvilinear map${index}`,
+      params: curvilinearValuesOf(curvilinearMap),
       ...(sigma !== undefined && { accuracy: sigma }),
     };
   }
   return {
-    id: `warp${index}${inverse ? "-" : ""}`,
+    id: `curvilinear map${index}${inverse ? "-" : ""}`,
     params: {},
     forward: inverse
       ? (p, _params, out) => {
-          warpInverse(warp, p, out);
+          curvilinearInverse(curvilinearMap, p, out);
         }
       : (p, _params, out, jacobian) => {
-          warpForward(warp, p, out, jacobian);
+          curvilinearForward(curvilinearMap, p, out, jacobian);
         },
     inverse: inverse
       ? (q, _params, out) => {
-          warpForward(warp, q, out);
+          curvilinearForward(curvilinearMap, q, out);
         }
       : (q, _params, out) => {
-          warpInverse(warp, q, out);
+          curvilinearInverse(curvilinearMap, q, out);
         },
     ...(sigma !== undefined && { accuracy: sigma }),
   };
@@ -81,10 +85,10 @@ function edgeOf(warp: Warp, inverse: boolean, index: number): CurvilinearSpec {
 /**
  * `route` as a transform graph rooted at its base: step `i`'s input space is
  * node `i`, so the content is the deepest node and the view's render space
- * the root. A warp with a `curvilinear` spec keeps it (with the parameter values
+ * the root. A curvilinear map with a `curvilinear` spec keeps it (with the parameter values
  * it has, its scale applied), so its IR and closed-form Jacobian are there;
- * any other warp (no spec, or run through its inverse) is its function,
- * evaluated in float64 with the Jacobian by differences. The warps' scales
+ * any other curvilinear map (no spec, or run through its inverse) is its function,
+ * evaluated in float64 with the Jacobian by differences. The curvilinear maps' scales
  * are as they are now: a pick's own route has them frozen.
  */
 export function graphOfCameraRoute(route: CameraRoute): RouteGraph {
@@ -100,7 +104,7 @@ export function graphOfCameraRoute(route: CameraRoute): RouteGraph {
       parent,
       step.kind === "rigid"
         ? affine({ matrix: step.matrix })
-        : curvilinear(edgeOf(step.warp, step.inverse, i)),
+        : curvilinear(edgeOf(step.curvilinearMap, step.inverse, i)),
     );
     parent = nodes[i]!;
   }
@@ -213,7 +217,7 @@ export function pickIn(
   } else if (located.route !== undefined) {
     pg = graphOfCameraRoute(located.route);
   } else {
-    // No warp: drawn is true under the anchor's rigid placement, when the view gave it.
+    // No curvilinear map: drawn is true under the anchor's rigid placement, when the view gave it.
     const graph = new TransformGraph();
     const drawn = graph.root(pick.root.name);
     const placement = view.anchorPlacement?.(pick.anchor);

@@ -12,7 +12,7 @@ import type { GlobeTile } from "../globe/TerrainSource.ts";
 import type { ContentSummary } from "./pipeline.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
 import type { RequestPurpose } from "./Stepwise.ts";
-import type { DrawnCache } from "./tileWarp.ts";
+import type { DrawnCache } from "./tileCurvilinearMap.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { TilesetBodyError, tilesetBody } from "./tilesetBody.ts";
 import * as m4 from "../math/mat4.ts";
@@ -68,7 +68,7 @@ export interface ItemDraws {
   readonly twins: number[];
   /** Its mesh lacks the placement's attribute: this item skips it. */
   denied: boolean;
-  /** The tile's root transform, the origin its draws move about under `warpAt: "anchor"`. */
+  /** The tile's root transform, the origin its draws move about under `curvilinearAt: "anchor"`. */
   readonly origin?: TransformHandle;
 }
 
@@ -174,7 +174,7 @@ export class Tile {
   fillFromParent = false;
   /** Horizon-occlusion point of `volume` (`aboveHorizon`). */
   occludee?: Occludee & { volume: TileVolume };
-  /** Where its draws put `volume` under a warped anchor (`drawnCache`'s map: the one last asked for). */
+  /** Where its draws put `volume` under a curvilinear anchor (`drawnCache`'s map: the one last asked for). */
   drawnCache?: DrawnCache;
   /** The same for the other maps the tile was asked for (views that reach the anchor by routes of different shape), until it is asked for them again. */
   drawnOthers?: DrawnCache[];

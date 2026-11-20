@@ -5,7 +5,7 @@
 // forward is the exaggeration, with terrain, tilesets, models and pins placed
 // in it keeping their true coordinates, and a camera at ITRF seeing them drawn
 // through the edge. What is not under the frame (the Moon) is untouched. The
-// frames resolver composes routes through it as warp steps (`FrameResolver.
+// frames resolver composes routes through it as curvilinear steps (`FrameResolver.
 // route`), forward where the route goes up and inverse where it goes down;
 // anything that needs one matrix across it (`frameTransform`,
 // `FrameResolver.resolve`) throws `NonRigidRouteError`.
@@ -16,7 +16,7 @@
 import {
   NonRigidRouteError,
   type CurvilinearFrameSpec,
-  type Warp,
+  type CurvilinearMap,
 } from "../camera/route.ts";
 import { identity } from "../math/mat4.ts";
 import type { ViewId } from "../transform/graph.ts";
@@ -26,17 +26,17 @@ import type { FrameAccuracy } from "./frameAccuracy.ts";
 export type { CurvilinearFrameSpec };
 
 /**
- * A child of `parent` placed by a curvilinear edge: `p_parent = warp.forward(p)`,
- * `p` in this frame. `warp` is live: it reads `spec` on every call, so
+ * A child of `parent` placed by a curvilinear edge: `p_parent = curvilinearMap.forward(p)`,
+ * `p` in this frame. `curvilinearMap` is live: it reads `spec` on every call, so
  * changing the spec's `revision` (a counter the application owns) is seen by
  * routes at once. Say so with `invalidate()` too, which also wakes whoever
- * `watch`es the frames resolver. The frame's accuracy is the warp's
- * `accuracy.sigma` (1σ); a warp stating only a `bound` has no accuracy stated
- * here, as a bound is not a σ; a warp stating neither is exact by definition
+ * `watch`es the frames resolver. The frame's accuracy is the curvilinear map's
+ * `accuracy.sigma` (1σ); a curvilinear map stating only a `bound` has no accuracy stated
+ * here, as a bound is not a σ; a curvilinear map stating neither is exact by definition
  * (an `accuracy` with only a note says the accuracy is unknown).
  */
 export class CurvilinearFrame<N extends string = string> extends Frame<N> {
-  readonly warp: Warp;
+  readonly curvilinearMap: CurvilinearMap;
   private readonly listeners = new Set<() => void>();
   private readonly spec: CurvilinearFrameSpec;
 
@@ -50,7 +50,7 @@ export class CurvilinearFrame<N extends string = string> extends Frame<N> {
       { cache: false, accuracy: () => accuracyOf(spec) },
     );
     this.spec = spec;
-    this.warp = warpOf(spec, this, parent);
+    this.curvilinearMap = curvilinearMapOf(spec, this, parent);
     spec.attach?.(this);
   }
 
@@ -83,8 +83,8 @@ export class CurvilinearFrame<N extends string = string> extends Frame<N> {
  * A frame placed in `parent` by a curvilinear edge (`spec.forward`, this frame to
  * its parent), named `name`: `catalog.add(frame)` it, put content on it (an
  * anchor bound to it, a tileset, a globe) and routes through it carry the
- * warp as a step: forward from content up to the camera, inverse the other
- * way. Its `warp.from` is the frame and `warp.to` is `parent`.
+ * curvilinear map as a step: forward from content up to the camera, inverse the other
+ * way. Its `curvilinearMap.from` is the frame and `curvilinearMap.to` is `parent`.
  */
 export function curvilinearFrame<N extends string>(
   name: N,
@@ -117,7 +117,10 @@ export interface SwitchFrameOptions {
 export class SwitchFrame<N extends string = string> extends Frame<N> {
   private readonly byView: ReadonlyMap<ViewId, SwitchChoice>;
   private readonly fallback: SwitchChoice | undefined;
-  private readonly warps = new Map<CurvilinearFrameSpec, Warp>();
+  private readonly curvilinearMaps = new Map<
+    CurvilinearFrameSpec,
+    CurvilinearMap
+  >();
   private readonly listeners = new Set<() => void>();
 
   constructor(name: N, parent: Frame, options: SwitchFrameOptions) {
@@ -129,17 +132,20 @@ export class SwitchFrame<N extends string = string> extends Frame<N> {
     this.fallback = options.default;
     for (const choice of this.choices()) {
       if (choice !== "identity") {
-        this.warps.set(choice, warpOf(choice, this, parent));
+        this.curvilinearMaps.set(
+          choice,
+          curvilinearMapOf(choice, this, parent),
+        );
         choice.attach?.(this);
       }
     }
   }
 
   /**
-   * The edge `view` sees: its warp, or undefined for the identity. Throws,
+   * The edge `view` sees: its curvilinear map, or undefined for the identity. Throws,
    * naming the frame, for a view with no choice and no default.
    */
-  edgeFor(view: ViewId | undefined): Warp | undefined {
+  edgeFor(view: ViewId | undefined): CurvilinearMap | undefined {
     const choice =
       (view !== undefined ? this.byView.get(view) : undefined) ?? this.fallback;
     if (choice === undefined) {
@@ -147,7 +153,7 @@ export class SwitchFrame<N extends string = string> extends Frame<N> {
         `switch "${this.name}" has no choice for ${view === undefined ? "a route asked without a view" : "this view"} and no default`,
       );
     }
-    return choice === "identity" ? undefined : this.warps.get(choice);
+    return choice === "identity" ? undefined : this.curvilinearMaps.get(choice);
   }
 
   /** The distinct choices, the default included. */
@@ -160,16 +166,19 @@ export class SwitchFrame<N extends string = string> extends Frame<N> {
     ];
   }
 
-  /** What each named view sees (its warp, or undefined for the identity), and what the others do (null: no default). */
+  /** What each named view sees (its curvilinear map, or undefined for the identity), and what the others do (null: no default). */
   edges(): {
-    readonly byView: ReadonlyMap<ViewId, Warp | undefined>;
-    readonly default: Warp | undefined | null;
+    readonly byView: ReadonlyMap<ViewId, CurvilinearMap | undefined>;
+    readonly default: CurvilinearMap | undefined | null;
   } {
-    const warp = (c: SwitchChoice) =>
-      c === "identity" ? undefined : this.warps.get(c);
+    const curvilinearMap = (c: SwitchChoice) =>
+      c === "identity" ? undefined : this.curvilinearMaps.get(c);
     return {
-      byView: new Map([...this.byView].map(([view, c]) => [view, warp(c)])),
-      default: this.fallback === undefined ? null : warp(this.fallback),
+      byView: new Map(
+        [...this.byView].map(([view, c]) => [view, curvilinearMap(c)]),
+      ),
+      default:
+        this.fallback === undefined ? null : curvilinearMap(this.fallback),
     };
   }
 
@@ -212,15 +221,15 @@ export function isSwitchFrame(f: Frame): f is SwitchFrame {
 }
 
 /**
- * The warp `f`'s edge is for `view`: a curvilinear frame's, a switch's choice,
+ * The curvilinear map `f`'s edge is for `view`: a curvilinear frame's, a switch's choice,
  * undefined for any other frame and for a switch that chose the identity.
  */
 export function curvilinearEdgeOf(
   f: Frame,
   view: ViewId | undefined,
-): Warp | undefined {
+): CurvilinearMap | undefined {
   if (f instanceof CurvilinearFrame) {
-    return f.warp;
+    return f.curvilinearMap;
   }
   return f instanceof SwitchFrame ? f.edgeFor(view) : undefined;
 }
@@ -245,8 +254,12 @@ function firstSpec(options: SwitchFrameOptions): CurvilinearFrameSpec {
   };
 }
 
-/** `spec` as a `Warp` from `from` to its parent `to`: it reads `spec` live. */
-function warpOf(spec: CurvilinearFrameSpec, from: Frame, to: Frame): Warp {
+/** `spec` as a `CurvilinearMap` from `from` to its parent `to`: it reads `spec` live. */
+function curvilinearMapOf(
+  spec: CurvilinearFrameSpec,
+  from: Frame,
+  to: Frame,
+): CurvilinearMap {
   const inverse = spec.inverse;
   return {
     from,
@@ -284,7 +297,7 @@ function warpOf(spec: CurvilinearFrameSpec, from: Frame, to: Frame): Warp {
 
 function accuracyOf(spec: CurvilinearFrameSpec): FrameAccuracy {
   const a = spec.accuracy;
-  const what = spec.description ?? "a warp";
+  const what = spec.description ?? "a curvilinear map";
   if (a?.sigma !== undefined) {
     return {
       meters: a.sigma,

@@ -65,7 +65,7 @@ export interface DrawWorld extends Pick<
   | "removeTransform"
   | "slabs"
   | "version"
-  | "warps"
+  | "curvilinearMaps"
 > {
   readonly raster: Pick<
     WorldRaster,
@@ -143,7 +143,7 @@ export interface AddDrawWorld extends Pick<
   | "transformBuffer"
   | "transformsF32Scale"
   | "version"
-  | "warps"
+  | "curvilinearMaps"
 > {
   readonly raster: Pick<
     WorldRaster,
@@ -660,10 +660,14 @@ export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
     name: options.name,
   };
   world.scene.contentRevision_++;
-  if (options.warpAt !== undefined) {
-    world.warps.setWarpAt(handle, options.warpAt, options.warpOrigin);
+  if (options.curvilinearAt !== undefined) {
+    world.curvilinearMaps.setCurvilinearAt(
+      handle,
+      options.curvilinearAt,
+      options.curvilinearOrigin,
+    );
   }
-  world.warps.drawAdded(handle);
+  world.curvilinearMaps.drawAdded(handle);
   world.acceleration.drawAdded(handle);
   return handle;
 }
@@ -897,7 +901,7 @@ export function removeDraw(world: DrawWorld, handle: DrawHandle): void {
     return; // already removed
   }
   world.scene.contentRevision_++;
-  world.warps.drawRemoved(handle);
+  world.curvilinearMaps.drawRemoved(handle);
   world.acceleration.drawRemoved(handle);
   const batch = world.raster.drawBatches[handle.index]!;
   const o = handle.index * RECORD_WORDS;

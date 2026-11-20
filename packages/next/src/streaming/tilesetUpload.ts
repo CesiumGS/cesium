@@ -170,7 +170,7 @@ export function upload(tileset: TilesetUpload): void {
           ...(tileset.state.options.solid ? { solid: true } : {}),
           ...(shader ? { shader } : {}),
         });
-        // The warp fits of a tile's draws share its geometric error's budget.
+        // The curvilinear map fits of a tile's draws share its geometric error's budget.
         const heights = heightNormalInfo(asset);
         for (const draw of placement.draws) {
           tileset.world.setDrawGeometricError?.(draw, tile.geometricError);

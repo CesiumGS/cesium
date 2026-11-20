@@ -57,9 +57,9 @@ export function whenDrawn(host: SceneHost, waiting: Waiting): () => void {
     {
       one: "fit",
       many: "fits",
-      // Fits queued, and warped draws still waiting for their fit or compiled route.
+      // Fits queued, and curvilinear draws still waiting for their fit or compiled route.
       count: () => {
-        const stats = viewer.world.warpStats();
+        const stats = viewer.world.curvilinearStats();
         return stats.pending + stats.draws.pending;
       },
     },
@@ -69,16 +69,16 @@ export function whenDrawn(host: SceneHost, waiting: Waiting): () => void {
     cardTimeout: Math.ceil((waiting.timeout ?? 90_000) / 250),
   });
 
-  /** Whether anything is on screen: a warped draw that has its warp, or tiles selected where nothing is warped. */
+  /** Whether anything is on screen: a curvilinear draw that has its curvilinear map, or tiles selected where nothing is curvilinear. */
   const drawn = (): boolean => {
-    const draws = viewer.world.warpStats().draws;
+    const draws = viewer.world.curvilinearStats().draws;
     if (draws.fitted + draws.stale > 0) {
       return true;
     }
     if ([...resolved.values()].some(drawnTiles)) {
       return true;
     }
-    // Warped draws are held until their warp is ready: they are not on screen yet.
+    // Curvilinear draws are held until their curvilinear map is ready: they are not on screen yet.
     if (draws.total > 0) {
       return false;
     }
@@ -98,8 +98,8 @@ export function whenDrawn(host: SceneHost, waiting: Waiting): () => void {
       return extra;
     }
     const at = waiting.terrainAt;
-    const warped = viewer.world.warpStats().draws;
-    if (at && warped.total === 0) {
+    const curvilinear = viewer.world.curvilinearStats().draws;
+    if (at && curvilinear.total === 0) {
       return "Loading terrain…";
     }
     for (const entry of waiting.tilesets ?? []) {

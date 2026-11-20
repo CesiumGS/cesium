@@ -332,9 +332,9 @@ const CHECKS = [
   {
     where: "spikes/brepPatches.html",
     checks:
-      "An analytic cylinder, a sphere's span, a weighted rational patch and a weighted patch of degree 5 × 4 (the wide path), each at 20 m and 5.5 m, read back as bytes the fragment stage writes: every interior pixel's point against the true surface. The counts against the CPU twin. No uncovered pixel inside a face's silhouette. A warped patch against the twin. Shadows, ambient occlusion and picks raise no GPU error.",
+      "An analytic cylinder, a sphere's span, a weighted rational patch and a weighted patch of degree 5 × 4 (the wide path), each at 20 m and 5.5 m, read back as bytes the fragment stage writes: every interior pixel's point against the true surface. The counts against the CPU twin. No uncovered pixel inside a face's silhouette. A curvilinear patch against the twin. Shadows, ambient occlusion and picks raise no GPU error.",
     result:
-      "Within 0.32 px of the surface (target 0.5 px); the 5 × 4 patch within 0.055 px. Counts match, no cracks, the warp matches.",
+      "Within 0.32 px of the surface (target 0.5 px); the 5 × 4 patch within 0.055 px. Counts match, no cracks, the curvilinear map matches.",
   },
   {
     where: "spikes/brepTrims.html (runBrepTrims)",

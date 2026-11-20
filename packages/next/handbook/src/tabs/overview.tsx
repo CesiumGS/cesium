@@ -44,7 +44,7 @@ const MILESTONES = [
     state: "Built (tasks 1 to 8), with a gallery example; follow-ups open",
   },
   {
-    work: "Level of detail and culling under warps",
+    work: "Level of detail and culling under curvilinear maps",
     what: "An error exponent, exact drawn height ranges, geomorphing and imagery cross-fades, mixed LOD with exact holes, horizon culling from the drawn terrain, two-phase GPU occlusion culling of draws, and coarsening of long-hidden tiles. Debug views, and an inspector with a recorder, for seeing what they do",
     state:
       "Built; the exponent's default is 0.3, from a re-sweep. A runaway at exponent 1 is still to be tracked down",
@@ -59,7 +59,7 @@ const MILESTONES = [
     work: "Threads, jobs, renderers and engine profiles (the design note docs/design/investigations-2026-11-13.md)",
     what: "The engine on either thread behind one API, a job scheduler, loading as refinement, a renderer behind each view with support reports, and a profile system where the app owns the look and the engine owns fidelity",
     state:
-      "Planned and reviewed. Built: the job system's first slice and the refinement chip in the warp examples",
+      "Planned and reviewed. Built: the job system's first slice and the refinement chip in the curvilinear map examples",
   },
   {
     work: "Transitions, refinement, streaming robustness, the worker-mode façade, live MaterialX editing (projects CS-11, CS-13, CS-14, CS-15 and CS-16)",
@@ -73,7 +73,7 @@ const MILESTONES = [
   },
   {
     work: "Clipping and sections",
-    what: "World clips of planes, boxes and polygon prisms in any frame, GPU section caps, exact b-rep caps, clip effects (discard, ghost, shade), curved clips across a warp",
+    what: "World clips of planes, boxes and polygon prisms in any frame, GPU section caps, exact b-rep caps, clip effects (discard, ghost, shade), curved clips across a curvilinear map",
     state: "Built",
   },
   {

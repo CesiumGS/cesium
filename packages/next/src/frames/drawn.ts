@@ -5,16 +5,20 @@
 // is, in the content's own frame, which names itself; this module says what
 // the view drew it through, so an answer can state "drawn ×10 vertically;
 // values are true".
-import { routeIsRigid, warpScaleOf, type Route } from "../camera/route.ts";
+import {
+  routeIsRigid,
+  curvilinearScaleOf,
+  type Route,
+} from "../camera/route.ts";
 import { routeStretch } from "./routeStretch.ts";
 
-/** One warp a view drew content through. */
-export interface DrawnWarp {
-  /** The warp's words ("vertical exaggeration × 10 of height above WGS84"). */
+/** One curvilinear map a view drew content through. */
+export interface DrawnCurvilinearMap {
+  /** The curvilinear map's words ("vertical exaggeration × 10 of height above WGS84"). */
   readonly description: string;
   /** How much of it applies now (its live `scale`; 1 without one). */
   readonly scale: number;
-  /** Heights are multiplied by this where the warp declares a height scale (`Warp.heightScale`), at `scale`. */
+  /** Heights are multiplied by this where the curvilinear map declares a height scale (`CurvilinearMap.heightScale`), at `scale`. */
   readonly heightFactor?: number;
 }
 
@@ -24,10 +28,10 @@ export interface DrawnWarp {
  * is on the screen.
  */
 export interface DrawnThrough {
-  /** Whether the content was drawn through any warp. */
-  readonly warped: boolean;
-  /** The warps, in the order the route crosses them. */
-  readonly warps: readonly DrawnWarp[];
+  /** Whether the content was drawn through any curvilinear map. */
+  readonly curvilinear: boolean;
+  /** The curvilinear maps, in the order the route crosses them. */
+  readonly curvilinearMaps: readonly DrawnCurvilinearMap[];
   /**
    * [σ_min, σ_max] of the route's Jacobian where asked (`drawnThrough`'s
    * `at`): drawn distances over true ones, at least and at most. An
@@ -40,20 +44,20 @@ export interface DrawnThrough {
   readonly statement: string;
 }
 
-/** What is said of content drawn through no warp. */
+/** What is said of content drawn through no curvilinear map. */
 export const DRAWN_AS_IS = "drawn as it is; values are true";
 
-/** The drawn statement of a route crossing no warp (or of no route). */
-export const UNWARPED: DrawnThrough = Object.freeze({
-  warped: false,
-  warps: Object.freeze([]) as readonly DrawnWarp[],
+/** The drawn statement of a route crossing no curvilinear map (or of no route). */
+export const AFFINE_ONLY: DrawnThrough = Object.freeze({
+  curvilinear: false,
+  curvilinearMaps: Object.freeze([]) as readonly DrawnCurvilinearMap[],
   revision: 0,
   statement: DRAWN_AS_IS,
 });
 
 /**
  * What a route draws content through. Undefined, or a rigid route, is
- * `UNWARPED`. With `at` (a point of the route's own frame) the statement
+ * `AFFINE_ONLY`. With `at` (a point of the route's own frame) the statement
  * carries [σ_min, σ_max] there.
  */
 export function drawnThrough(
@@ -61,35 +65,36 @@ export function drawnThrough(
   at?: ArrayLike<number>,
 ): DrawnThrough {
   if (route === undefined || routeIsRigid(route)) {
-    return UNWARPED;
+    return AFFINE_ONLY;
   }
-  const warps: DrawnWarp[] = [];
+  const curvilinearMaps: DrawnCurvilinearMap[] = [];
   for (const step of route.steps) {
-    if (step.kind !== "warp") {
+    if (step.kind !== "curvilinear") {
       continue;
     }
-    const w = step.warp;
-    const scale = warpScaleOf(w);
+    const w = step.curvilinearMap;
+    const scale = curvilinearScaleOf(w);
     // With a profile (a ceiling) heights are not multiplied by one number: the description says it.
     const k = w.heightScale?.profile ? undefined : w.heightScale?.factor;
-    warps.push({
+    curvilinearMaps.push({
       description:
-        w.description ?? `a warp from ${w.from.name} to ${w.to.name}`,
+        w.description ??
+        `a curvilinear map from ${w.from.name} to ${w.to.name}`,
       scale,
       ...(k !== undefined && { heightFactor: 1 + scale * (k - 1) }),
     });
   }
   const stretch = at !== undefined ? routeStretch(route, at) : undefined;
   return {
-    warped: true,
-    warps,
+    curvilinear: true,
+    curvilinearMaps,
     ...(stretch !== undefined && { stretch }),
     revision: route.revision,
-    statement: `${warps.map(describe).join(", then ")}; values are true`,
+    statement: `${curvilinearMaps.map(describe).join(", then ")}; values are true`,
   };
 }
 
-function describe(w: DrawnWarp): string {
+function describe(w: DrawnCurvilinearMap): string {
   if (w.heightFactor !== undefined) {
     return `drawn ×${trim(w.heightFactor)} vertically`;
   }

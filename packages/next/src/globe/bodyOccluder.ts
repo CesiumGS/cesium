@@ -1,5 +1,5 @@
 // The body as an occluder (`streaming/occluders.ts`). Horizon culling's
-// ellipsoid is the body's shape as 1.x knows it; under a warp the drawn Earth
+// ellipsoid is the body's shape as 1.x knows it; under a curvilinear map the drawn Earth
 // is another shape, so this occluder takes its shape from the drawn terrain.
 //
 // Premise. The globe's drawn terrain (with the bare ellipsoid under it, which
@@ -33,15 +33,15 @@
 // of its four children's when it has them (a child with no data of its own is
 // drawn from its parent, whose bound then counts), else its own. A tile's own
 // bound is exact once its heights are resident (its vertices through the
-// warp's map, less the most a triangle's chord dips under the shell its
+// curvilinear map's map, less the most a triangle's chord dips under the shell its
 // vertices lie on). Without resident heights it is the nearest loaded
 // ancestor's, less the most a tile below it can dip under its mesh: the
-// ancestor's geometric error, stretched along the normal by the warp there.
+// ancestor's geometric error, stretched along the normal by the curvilinear map there.
 // Exact bounds are made where they bind, in chunks within a time budget a
 // tick (`BoundJob`).
 //
 // It is on only while the premise holds: the globe is shown with no regions
-// (cuts, translucent ground), the warp can map points, and the camera is
+// (cuts, translucent ground), the curvilinear map can map points, and the camera is
 // outside the surface (its scaled norm exceeds s). Otherwise `hidden` is false.
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import {
@@ -52,7 +52,10 @@ import type { Vec3 } from "../math/vec3.ts";
 import type { BodyShape, Occluder } from "../streaming/occluders.ts";
 import type { SelectionView } from "../streaming/Stepwise.ts";
 import type { Tile } from "../streaming/Tile.ts";
-import { drawnTile, type TileWarp } from "../streaming/tileWarp.ts";
+import {
+  drawnTile,
+  type TileCurvilinearMap,
+} from "../streaming/tileCurvilinearMap.ts";
 import type { TileVolume } from "../streaming/volumes.ts";
 import { flatTerrainHeights, type TerrainHeights } from "./quantizedMesh.ts";
 import { soundError } from "./terrainRefit.ts";
@@ -68,7 +71,7 @@ const BUDGET_MS = 1;
 const TOLERANCE = 1e-4;
 /** Vertices a bound reads between looks at the clock. */
 const CHUNK = 256;
-/** A triangle's chord dips by up to this times the standard sagitta under the drawn (stretched) surface: margin for the warp's stretch along the surface. */
+/** A triangle's chord dips by up to this times the standard sagitta under the drawn (stretched) surface: margin for the curvilinear map's stretch along the surface. */
 const CHORD_MARGIN = 1.1;
 /** The camera's cell for a kept cap, rad. */
 const CELL = 0.02;
@@ -110,7 +113,7 @@ interface ViewState {
  * ready, a sound lower bound the moment it is, never to be retracted while
  * the job isn't canceled) and whether the walk is `done`. The results
  * rise: each is the largest radius found sound so far. `cancel()` abandons it
- * (a warp, camera-cell or unload change): its results are void. `place`
+ * (a curvilinear map, camera-cell or unload change): its results are void. `place`
  * names what it was made for; `signature` the tiles it started from.
  */
 export class BoundJob {
@@ -121,7 +124,7 @@ export class BoundJob {
   private deadline = 0;
   constructor(
     owner: BodyOccluder,
-    warp: TileWarp,
+    curvilinearMap: TileCurvilinearMap,
     readonly place: string,
     readonly signature: number,
     center: Vec3,
@@ -129,7 +132,7 @@ export class BoundJob {
     start: number,
   ) {
     this.steps = owner.walk(
-      warp,
+      curvilinearMap,
       center,
       top,
       start,
@@ -232,17 +235,17 @@ export class BodyOccluder implements Occluder {
   /**
    * The scheduling adapter: drives a view's `BoundJob` for `BUDGET_MS` a
    * call, and answers with the best sound scale so far. A job belongs to
-   * one warp, one camera cell and the unloads so far; any change of those
+   * one curvilinear map, one camera cell and the unloads so far; any change of those
    * cancels it, and the scale is off until its first result. Loading only
    * raises a bound, so a scale already made stays sound as tiles load, and
    * a new job (for the tiles now loaded) replaces it only when it ends.
    */
   private compute(view: SelectionView): number | undefined {
-    const warp = view.warp;
-    if (!warp?.images || !this.options.enabled()) {
+    const curvilinearMap = view.curvilinearMap;
+    if (!curvilinearMap?.images || !this.options.enabled()) {
       return undefined;
     }
-    const key = `${warp.version}:${warp.scaleVersion ?? 0}`;
+    const key = `${curvilinearMap.version}:${curvilinearMap.scaleVersion ?? 0}`;
     this.keyNow = key;
     const signature = this.options.signature?.() ?? NaN;
     const unloads = this.options.unloads?.() ?? NaN;
@@ -276,7 +279,7 @@ export class BodyOccluder implements Occluder {
       ] as unknown as Vec3;
       state.job = new BoundJob(
         this,
-        warp,
+        curvilinearMap,
         place,
         signature,
         center,
@@ -309,23 +312,26 @@ export class BodyOccluder implements Occluder {
    * spent.
    */
   *walk(
-    warp: TileWarp,
+    curvilinearMap: TileCurvilinearMap,
     center: Vec3,
     top: number,
     start: number,
     publish: (s: number) => void,
     expired: () => boolean,
   ): Generator<void, void> {
-    this.keyNow = `${warp.version}:${warp.scaleVersion ?? 0}`;
+    this.keyNow = `${curvilinearMap.version}:${curvilinearMap.scaleVersion ?? 0}`;
     let low = 0;
     let high = top;
-    if (start > 0 && (yield* this.sound(start, warp, center, top, expired))) {
+    if (
+      start > 0 &&
+      (yield* this.sound(start, curvilinearMap, center, top, expired))
+    ) {
       low = start;
       publish(start);
     }
     while (high - low > TOLERANCE) {
       const mid = (low + high) / 2;
-      if (yield* this.sound(mid, warp, center, top, expired)) {
+      if (yield* this.sound(mid, curvilinearMap, center, top, expired)) {
         low = mid;
         publish(mid);
       } else {
@@ -343,7 +349,7 @@ export class BodyOccluder implements Occluder {
    */
   private *sound(
     radius: number,
-    warp: TileWarp,
+    curvilinearMap: TileCurvilinearMap,
     center: Vec3,
     top: number,
     expired: () => boolean,
@@ -361,18 +367,18 @@ export class BodyOccluder implements Occluder {
     for (;;) {
       const found = yield* this.peekBound(
         this.options.root,
-        warp,
+        curvilinearMap,
         cap,
         expired,
       );
       if (found.value >= radius) {
         return true;
       }
-      const target = this.unmade(found.tile, warp);
+      const target = this.unmade(found.tile, curvilinearMap);
       if (!target) {
         return false;
       }
-      yield* this.resident(target, warp, expired);
+      yield* this.resident(target, curvilinearMap, expired);
       if (expired()) {
         yield;
       }
@@ -384,7 +390,10 @@ export class BodyOccluder implements Occluder {
    * no bound made yet: refining from the top, a coarse bound serves every
    * tile under it before any finer one is made.
    */
-  private unmade(tile: Tile | undefined, _warp: TileWarp): Tile | undefined {
+  private unmade(
+    tile: Tile | undefined,
+    _CurvilinearMap: TileCurvilinearMap,
+  ): Tile | undefined {
     let found: Tile | undefined;
     for (let t = tile; t?.globe; t = t.parent) {
       const source = t.globe.upsampledFrom ?? t;
@@ -413,7 +422,7 @@ export class BodyOccluder implements Occluder {
   /** `bound` over what is made already: the smallest, and the tile whose own bound it is. */
   private *peekBound(
     tile: Tile,
-    warp: TileWarp,
+    curvilinearMap: TileCurvilinearMap,
     cap: { direction: Vec3; cos: number },
     expired: () => boolean,
   ): Generator<void, { value: number; tile: Tile | undefined }> {
@@ -431,7 +440,7 @@ export class BodyOccluder implements Occluder {
           !tile.globe.heights &&
           !tile.globe.upsampledFrom)
     ) {
-      return { value: this.peekOwn(tile, warp), tile };
+      return { value: this.peekOwn(tile, curvilinearMap), tile };
     }
     const kids = tile.children;
     if (kids.length > 0 && (kids.length === 4 || tile.globe === undefined)) {
@@ -444,25 +453,25 @@ export class BodyOccluder implements Occluder {
         if (kid.fillFromParent) {
           fills = true;
         } else {
-          const r = yield* this.peekBound(kid, warp, cap, expired);
+          const r = yield* this.peekBound(kid, curvilinearMap, cap, expired);
           if (r.value < best.value) {
             best = r;
           }
         }
       }
       if (fills) {
-        const own = this.peekOwn(tile, warp);
+        const own = this.peekOwn(tile, curvilinearMap);
         if (own < best.value) {
           best = { value: own, tile };
         }
       }
       return best;
     }
-    return { value: this.peekOwn(tile, warp), tile };
+    return { value: this.peekOwn(tile, curvilinearMap), tile };
   }
 
   /** `own` from the bounds made already: the tile's own, else the nearest ancestor's less its error (0 with none). */
-  private peekOwn(tile: Tile, warp: TileWarp): number {
+  private peekOwn(tile: Tile, curvilinearMap: TileCurvilinearMap): number {
     const mine = this.cached(tile);
     if (mine) {
       return mine.value;
@@ -470,15 +479,19 @@ export class BodyOccluder implements Occluder {
     for (let a = tile.parent; a?.globe; a = a.parent) {
       const base = this.cached(a);
       if (base) {
-        return this.derived(a, base.value, warp);
+        return this.derived(a, base.value, curvilinearMap);
       }
     }
     return 0;
   }
 
   /** The bound under ancestor `a` (its bound `tops`): its error, stretched along the normal. */
-  private derived(a: Tile, tops: number, warp: TileWarp): number {
-    const drawn = drawnTile(a, warp);
+  private derived(
+    a: Tile,
+    tops: number,
+    curvilinearMap: TileCurvilinearMap,
+  ): number {
+    const drawn = drawnTile(a, curvilinearMap);
     const stretch = Math.max(1, drawn.slopeMax ?? drawn.sigmaMax);
     const error = soundError(a.globe!.refit);
     return Math.max(0, tops - (error * stretch) / R_MIN);
@@ -487,7 +500,7 @@ export class BodyOccluder implements Occluder {
   /** The exact bound of a tile's own mesh, cached; undefined without resident heights . */
   private *resident(
     tile: Tile,
-    warp: TileWarp,
+    curvilinearMap: TileCurvilinearMap,
     expired: () => boolean,
   ): Generator<void, Exact | undefined> {
     const source = tile.globe?.upsampledFrom ?? tile;
@@ -501,7 +514,7 @@ export class BodyOccluder implements Occluder {
     if (kept && kept.key === this.keyNow && kept.heights === heights) {
       return kept;
     }
-    const value = yield* exactBound(source, heights, warp, expired);
+    const value = yield* exactBound(source, heights, curvilinearMap, expired);
     if (value === undefined) {
       return undefined;
     }
@@ -540,15 +553,15 @@ function meetsCap(tile: Tile, cap: { direction: Vec3; cos: number }): boolean {
 }
 
 /**
- * The bound from a tile's resident vertices: each, through the warp's map,
+ * The bound from a tile's resident vertices: each, through the curvilinear map's map,
  * the smallest scaled norm over the scale's span, less what the chord of a
  * triangle dips under the shell its vertices lie on (below). Undefined where
- * the warp can't map them.
+ * the curvilinear map can't map them.
  */
 function* exactBound(
   tile: Tile,
   heights: TerrainHeights,
-  warp: TileWarp,
+  curvilinearMap: TileCurvilinearMap,
   expired: () => boolean,
 ): Generator<void, number | undefined> {
   const g = tile.globe!;
@@ -570,7 +583,7 @@ function* exactBound(
       ellipsoid.cartographicToCartesian(carto, out);
       points.set(out, (i - from) * 3);
     }
-    const images = warp.images?.(points);
+    const images = curvilinearMap.images?.(points);
     if (!images) {
       return undefined;
     }

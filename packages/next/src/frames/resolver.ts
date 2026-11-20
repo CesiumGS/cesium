@@ -13,11 +13,11 @@ import {
 } from "../camera/frameResolver.ts";
 import {
   NonRigidRouteError,
-  warpForward,
-  warpInverse,
+  curvilinearForward,
+  curvilinearInverse,
   type Route,
   type RouteStep,
-  type Warp,
+  type CurvilinearMap,
 } from "../camera/route.ts";
 import { Emitter } from "../core/Emitter.ts";
 import * as m4 from "../math/mat4.ts";
@@ -240,7 +240,7 @@ class Resolver implements FramesResolver {
       return m4.identity(out);
     }
     if (a && b) {
-      if (this.crossesWarp(a, b, view)) {
+      if (this.crossesCurvilinearMap(a, b, view)) {
         throw new NonRigidRouteError(frame.name, base.name);
       }
       this.askPrecise(a, b);
@@ -264,7 +264,7 @@ class Resolver implements FramesResolver {
    * chooses by): one rigid step (`resolve`'s matrix) when it crosses no
    * curvilinear edge; else its rigid runs, each composed as `resolve` composes
    * them (an anchor's node-relative matrix folded into the first and last),
-   * and a warp step for each curvilinear edge, forward where the route goes up
+   * and a curvilinear step for each curvilinear edge, forward where the route goes up
    * from a frame to its parent and inverse where it goes down.
    */
   route(
@@ -277,7 +277,7 @@ class Resolver implements FramesResolver {
     const aLocal = this.hasLocal ? this.localA.slice() : undefined;
     const b = this.reference(base, this.localB);
     const bLocal = this.hasLocal ? this.localB.slice() : undefined;
-    if (!a || !b || !this.crossesWarp(a, b, view)) {
+    if (!a || !b || !this.crossesCurvilinearMap(a, b, view)) {
       return {
         frame,
         base,
@@ -304,10 +304,10 @@ class Resolver implements FramesResolver {
       steps.push({ kind: "rigid", matrix: aLocal });
     }
     for (const leg of this.legs(a, b, view)) {
-      if (leg.kind === "warp") {
+      if (leg.kind === "curvilinear") {
         steps.push({
-          kind: "warp",
-          warp: leg.warp,
+          kind: "curvilinear",
+          curvilinearMap: leg.curvilinearMap,
           inverse: leg.inverse,
         });
       } else {
@@ -344,7 +344,7 @@ class Resolver implements FramesResolver {
     let frames = 0;
     if (a && b) {
       this.askPrecise(a, b);
-      this.hookWarps(a, b);
+      this.hookCurvilinearMaps(a, b);
       frames = routeRevision(a, b);
     }
     let nodes = 0;
@@ -407,8 +407,8 @@ class Resolver implements FramesResolver {
         ]
       : [x, y, z];
     const instant = this.instant(seconds);
-    if (this.crossesWarp(a, b)) {
-      return this.warpAccuracy(p, a, b, instant);
+    if (this.crossesCurvilinearMap(a, b)) {
+      return this.curvilinearAccuracy(p, a, b, instant);
     }
     const result = pointAccuracy(framePoint(a, p, instant), b, instant);
     return {
@@ -553,7 +553,7 @@ class Resolver implements FramesResolver {
    * switch frame by what it chose; without one, any switch frame counts (a
    * matrix across it would depend on the view).
    */
-  private crossesWarp(a: Frame, b: Frame, view?: ViewId): boolean {
+  private crossesCurvilinearMap(a: Frame, b: Frame, view?: ViewId): boolean {
     const top = commonAncestor(a, b);
     for (const start of [a, b]) {
       for (let f = start; f !== top; f = f.parent!) {
@@ -579,12 +579,17 @@ class Resolver implements FramesResolver {
     const legs: Leg[] = [];
     let start = a;
     for (let f = a; f !== top; f = f.parent!) {
-      const warp = curvilinearEdgeOf(f, view);
-      if (warp) {
+      const curvilinearMap = curvilinearEdgeOf(f, view);
+      if (curvilinearMap) {
         if (start !== f) {
           legs.push({ kind: "tree", from: start, to: f });
         }
-        legs.push({ kind: "warp", frame: f, warp, inverse: false });
+        legs.push({
+          kind: "curvilinear",
+          frame: f,
+          curvilinearMap,
+          inverse: false,
+        });
         start = f.parent!;
       }
     }
@@ -594,12 +599,17 @@ class Resolver implements FramesResolver {
     }
     for (let i = down.length - 1; i >= 0; i--) {
       const f = down[i]!;
-      const warp = curvilinearEdgeOf(f, view);
-      if (warp) {
+      const curvilinearMap = curvilinearEdgeOf(f, view);
+      if (curvilinearMap) {
         if (start !== f.parent) {
           legs.push({ kind: "tree", from: start, to: f.parent! });
         }
-        legs.push({ kind: "warp", frame: f, warp, inverse: true });
+        legs.push({
+          kind: "curvilinear",
+          frame: f,
+          curvilinearMap,
+          inverse: true,
+        });
         start = f;
       }
     }
@@ -610,7 +620,7 @@ class Resolver implements FramesResolver {
   }
 
   /** Makes the curvilinear and switch frames on the route from `a` to `b` wake the watchers when they change. */
-  private hookWarps(a: Frame, b: Frame): void {
+  private hookCurvilinearMaps(a: Frame, b: Frame): void {
     const top = commonAncestor(a, b);
     for (const start of [a, b]) {
       for (let f = start; f !== top; f = f.parent!) {
@@ -631,10 +641,10 @@ class Resolver implements FramesResolver {
    * `accuracy` over a route that crosses curvilinear edges: each rigid run through
    * the frames' composition, each curvilinear edge by its `accuracy.sigma`, the
    * point carried through the route to place each term; the 1σ terms add in
-   * quadrature. A warp stating only a `bound` is not stated (a bound is
+   * quadrature. A curvilinear map stating only a `bound` is not stated (a bound is
    * not a σ).
    */
-  private warpAccuracy(
+  private curvilinearAccuracy(
     p: number[],
     a: Frame,
     b: Frame,
@@ -646,8 +656,8 @@ class Resolver implements FramesResolver {
     let unstated: string | undefined;
     const m = new Float64Array(16);
     for (const leg of this.legs(a, b)) {
-      if (leg.kind === "warp") {
-        const w = leg.warp;
+      if (leg.kind === "curvilinear") {
+        const w = leg.curvilinearMap;
         const label = w.description ?? `${w.from.name} to ${w.to.name}`;
         const { sigma, bound } = w.accuracy ?? {};
         if (sigma !== undefined) {
@@ -659,9 +669,9 @@ class Resolver implements FramesResolver {
           unstated ??= `${label} states only a worst-case bound of ${bound} m, not a 1σ`;
         }
         if (leg.inverse) {
-          warpInverse(w, at, at);
+          curvilinearInverse(w, at, at);
         } else {
-          warpForward(w, at.slice(), at);
+          curvilinearForward(w, at.slice(), at);
         }
         continue;
       }
@@ -695,7 +705,7 @@ class Resolver implements FramesResolver {
     }
     return {
       meters: Math.sqrt(squares),
-      note: `route ${a.name} to ${b.name} through a warp: ${terms.length > 0 ? terms.join(", ") : "every term exact"}; root-sum-square of independent 1σ terms`,
+      note: `route ${a.name} to ${b.name} through a curvilinear map: ${terms.length > 0 ? terms.join(", ") : "every term exact"}; root-sum-square of independent 1σ terms`,
     };
   }
 
@@ -834,7 +844,12 @@ function isNode(key: FrameKey): boolean {
 /** A run of a route: tree edges from one frame to another, or one curvilinear edge. */
 type Leg =
   | { kind: "tree"; from: Frame; to: Frame }
-  | { kind: "warp"; frame: Frame; warp: Warp; inverse: boolean };
+  | {
+      kind: "curvilinear";
+      frame: Frame;
+      curvilinearMap: CurvilinearMap;
+      inverse: boolean;
+    };
 
 /** Adds a rigid step, composed into the last when that is rigid too. */
 function pushRigid(steps: RouteStep[], m: Float64Array): void {
@@ -920,7 +935,7 @@ function commonAncestor(from: Frame, to: Frame): Frame {
  * - A curvilinear frame (`curvilinearFrame`) is a non-rigid edge whose coordinates map
  *   up to its parent's: content placed in it is drawn through the edge. A
  *   switch frame (`switchFrame`) chooses its edge per view. `route` carries
- *   each as a warp step, forward where the route goes up from the frame to
+ *   each as a curvilinear step, forward where the route goes up from the frame to
  *   its parent and inverse where it goes down (`route(frame, base, seconds,
  *   view)`: the view a switch chooses by); `resolve` and `motion` across
  *   one throw `NonRigidRouteError`; a route not crossing it is as it was. Its

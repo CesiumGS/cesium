@@ -1,4 +1,4 @@
-// Input 5: a plan-and-profile alignment as one warp, written with tables.
+// Input 5: a plan-and-profile alignment as one curvilinear map, written with tables.
 // (station, offset, height) -> plan point + offset · left normal, with the
 // profile's elevation added. The plan table holds one row per element
 // (start station, start point, start heading's cosine and sine, curvature),
@@ -77,7 +77,7 @@ export function profileTable(rows: readonly ProfileRow[]): {
   return { data: rows.flatMap((r) => [r.s, r.z, r.g, r.r]), rows: rows.length };
 }
 
-/** The alignment warp as a program over tables of `planRows` and `profileRows` rows. */
+/** The alignment curvilinear map as a program over tables of `planRows` and `profileRows` rows. */
 export function alignmentProgram(
   planRows: number,
   profileRows: number,
@@ -161,7 +161,7 @@ export function alignmentProgram(
 }
 
 /** The float64 reference: today's corridor descriptor for the plan, the profile by hand. */
-export function referenceWarp(
+export function referenceCurvilinearMap(
   options: CorridorOptions,
   profile: readonly ProfileRow[],
 ) {

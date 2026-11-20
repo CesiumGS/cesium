@@ -71,7 +71,7 @@ export interface FrameResolver {
    * `frame`'s place in `base` at scene `seconds` (UTC seconds since 1970):
    * `out` such that p_base = out · p_frame, column-major float64, meters.
    * Throws `FrameUnavailableError` when it can't answer yet, and
-   * `NonRigidRouteError` when the route crosses a warp (a non-rigid edge
+   * `NonRigidRouteError` when the route crosses a curvilinear map (a non-rigid edge
    * has no 4×4; ask `route`).
    */
   resolve(
@@ -81,8 +81,8 @@ export interface FrameResolver {
     out: Float64Array,
   ): Float64Array;
   /**
-   * The path from `frame` to `base` at scene `seconds`: rigid steps and warp
-   * steps in order (`Route`), a warp step forward where the route goes up
+   * The path from `frame` to `base` at scene `seconds`: rigid steps and curvilinear map
+   * steps in order (`Route`), a curvilinear step forward where the route goes up
    * from a frame to its parent. A route that crosses no curvilinear edge is one
    * rigid step with `resolve`'s matrix. `view` is the view the route is for,
    * which a switch frame chooses its edge by (any object, a name or a
@@ -106,7 +106,7 @@ export interface FrameResolver {
   binding?(anchor: AnchorHandle): FrameKey | undefined;
   /**
    * How fast `frame` moves in `base` at `seconds`, written into `out`. A
-   * resolver may throw `NonRigidRouteError` for a route that crosses a warp.
+   * resolver may throw `NonRigidRouteError` for a route that crosses a curvilinear map.
    */
   motion?(
     frame: FrameKey,
@@ -118,8 +118,8 @@ export interface FrameResolver {
    * How accurately a point in `frame` (meters, in its axes) is placed in
    * `base` at `seconds`, 1σ: `meters` is `undefined` when the route states
    * none, and `note` says why or from what. Without it a route is taken as
-   * exact: "the transform table states no error". Across a warp, the warp's
-   * `accuracy.sigma` joins the 1σ composition; a warp that states only a
+   * exact: "the transform table states no error". Across a curvilinear map, the curvilinear map's
+   * `accuracy.sigma` joins the 1σ composition; a curvilinear map that states only a
    * `bound` leaves `meters` undefined (a bound is not a σ) and the note
    * names it.
    */
@@ -133,13 +133,13 @@ export interface FrameResolver {
    * Goes up when the inputs of the route from `frame` to `base` change
    * (data arriving, a transform set), never with time alone: the camera
    * layer skips a tick's work while the time, the root and every route's
-   * revision stay as they were. It counts the `revision` of each warp on
-   * the route, so a warp's changing bumps it.
+   * revision stay as they were. It counts the `revision` of each curvilinear map on
+   * the route, so a curvilinear map's changing bumps it.
    */
   routeRevision(frame: FrameKey, base: FrameKey): number;
   /**
    * Calls `listener` when a route's revision may have gone up without the
-   * clock moving (data arriving, a binding changed, a warp frame defined or
+   * clock moving (data arriving, a binding changed, a curvilinear frame defined or
    * its revision changed). The camera layer
    * watches its resolvers so that on-demand rendering wakes for it.
    * Returns a remover.

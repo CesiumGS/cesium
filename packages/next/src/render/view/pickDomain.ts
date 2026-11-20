@@ -49,7 +49,7 @@ export interface PendingDomain {
   readonly disposables: readonly GPUBuffer[];
   /**
    * The terrain regions the pass stops at: set only for globes placed across
-   * a warp, where the CPU can't trace the drawn terrain (`terrainStops`):
+   * a curvilinear map, where the CPU can't trace the drawn terrain (`terrainStops`):
    * the pass's hit then stands in for the CPU's.
    */
   readonly stopsTerrain: boolean;

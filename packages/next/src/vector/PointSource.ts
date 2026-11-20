@@ -66,20 +66,20 @@ export interface PointSourceOptions {
   /** The clock (seconds; default the engine's, `Engine.time`). */
   clock?: () => number;
   /**
-   * Under a warped anchor (a rig on a warp frame) its points' positions go
+   * Under a curvilinear anchor (a rig on a curvilinear frame) its points' positions go
    * through the route: fitted over a sphere of this radius (m, default
-   * 50,000) around `origin`, to `warpTolerance` (m, default 0.05). A point
+   * 50,000) around `origin`, to `curvilinearTolerance` (m, default 0.05). A point
    * farther than the radius from `origin` is carried by the fit's
    * extrapolation, which grows less exact with distance.
    */
-  warpRadius?: number;
-  warpTolerance?: number;
+  curvilinearRadius?: number;
+  curvilinearTolerance?: number;
 }
 
 /** The fit's default region around a source's origin, m. */
-const WARP_RADIUS = 50_000;
+const CURVILINEAR_RADIUS = 50_000;
 /** The fit's default tolerance, m. */
-const WARP_TOLERANCE = 0.05;
+const CURVILINEAR_TOLERANCE = 0.05;
 
 /** Words per point in the state buffer (points.slang `State`). */
 const STATE_WORDS = 12;
@@ -123,9 +123,9 @@ export function dispatchSize(n: number): {
  * the anchors as streams the styles read; `heading` is written each frame.
  * No CPU work per point per frame, and no per-point instance rows.
  *
- * Under a warped anchor the same kernel carries each point through the
+ * Under a curvilinear anchor the same kernel carries each point through the
  * route (plan 13.26, increment 4): the source owns a hidden carrier draw,
- * which the world's warps fit like any draw over a sphere around `origin`,
+ * which the world's curvilinear maps fit like any draw over a sphere around `origin`,
  * and the kernel evaluates that fit's lattice at the point's position
  * before writing the anchor. Layers' draws and model pools, which read the
  * anchors, need nothing. Until the first fit lands the points are hidden.
@@ -162,7 +162,7 @@ export class PointSource {
   /** The world's placements buffer as the kernel's group 1 was made for it (`placementGroup`). */
   private placementsBound: GPUBuffer | undefined;
   private placementsGroup: GPUBindGroup | undefined;
-  /** @internal The hidden draw whose warp fit the frame kernel evaluates. */
+  /** @internal The hidden draw whose curvilinear map fit the frame kernel evaluates. */
   readonly carrier: DrawHandle;
   private readonly carrierMesh: MeshHandle;
   private readonly noHeights: GPUTexture | undefined;
@@ -330,7 +330,7 @@ export class PointSource {
     }
     this.kernels = kernels;
     // The carrier: a draw that is never drawn (no views), under the source's
-    // anchor in the source's frame, for the world's warps to fit.
+    // anchor in the source's frame, for the world's curvilinear maps to fit.
     const rotation = m4.copy(m4.mat4(), this.frame);
     rotation[12] = rotation[13] = rotation[14] = 0;
     this.carrierMesh = world.addMesh(CARRIER);
@@ -339,16 +339,16 @@ export class PointSource {
       parent: this.anchor,
       origin: options.origin,
       model: rotation,
-      radius: options.warpRadius ?? WARP_RADIUS,
+      radius: options.curvilinearRadius ?? CURVILINEAR_RADIUS,
       viewMask: 0,
       ground: false,
       name: "point source carrier",
     });
     world.setDrawGeometricError(
       this.carrier,
-      (options.warpTolerance ?? WARP_TOLERANCE) * 64,
+      (options.curvilinearTolerance ?? CURVILINEAR_TOLERANCE) * 64,
     );
-    world.warps.markSourced(this.mesh);
+    world.curvilinearMaps.markSourced(this.mesh);
     this.groupGeneration = world.tableGeneration;
     this.group = this.createGroup();
     this.removeHook = world.addFrameCompute((pass) => this.place(pass));

@@ -7,7 +7,11 @@
 // pixel's tolerance goes to true meters by σ_min; a bound and a 1σ stay
 // apart. CPU only: fake views and picks, no engine.
 import { describe, expect, it, vi } from "vitest";
-import { routeForward, type Route, type Warp } from "../src/camera/route.ts";
+import {
+  routeForward,
+  type Route,
+  type CurvilinearMap,
+} from "../src/camera/route.ts";
 import {
   ClientSnapService,
   refiningSnap,
@@ -18,7 +22,7 @@ import type { PickView } from "../src/engineering/pick.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { createFrames } from "../src/frames/frames.ts";
 import { framePoint } from "../src/frames/local.ts";
-import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
+import { verticalExaggeration } from "../src/georeference/heightCurvilinearMaps.ts";
 import { createFramesPickInterpreter } from "../src/frames/pickInterpreter.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
 import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
@@ -27,11 +31,11 @@ import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
 import { accuracyOf } from "../src/measure/accuracy.ts";
 import { DrawnCurve, sampleSegment } from "../src/measure/curve.ts";
 import { drawnDistance } from "../src/measure/drawn.ts";
-import { drawnThrough, UNWARPED } from "../src/frames/drawn.ts";
+import { drawnThrough, AFFINE_ONLY } from "../src/frames/drawn.ts";
 import { routeStretch } from "../src/frames/routeStretch.ts";
 import { measure } from "../src/measure/measure.ts";
 import { truePick } from "../src/frames/pickTruth.ts";
-import { routeSingularRange } from "../src/scene/warpBounds.ts";
+import { routeSingularRange } from "../src/scene/curvilinearBounds.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import { Camera, projectToPixel } from "../src/scene/Camera.ts";
 import type { CorePick } from "../src/scene/pick.ts";
@@ -101,7 +105,7 @@ describe("measurements are true whatever the exaggeration", () => {
       );
       expect(m.overBody!.heightDifference).toBeCloseTo(2000, 3);
       expect(m.frame).toBe(frames.itrf);
-      expect(m.drawn!.warped).toBe(true);
+      expect(m.drawn!.curvilinear).toBe(true);
       expect(m.drawn!.statement).toContain(`×${k} vertically`);
       expect(m.drawn!.statement).toMatch(/values are true$/);
     }
@@ -109,8 +113,8 @@ describe("measurements are true whatever the exaggeration", () => {
   });
 
   it("says nothing was drawn through a rigid route, or none", () => {
-    expect(drawnThrough(undefined)).toBe(UNWARPED);
-    expect(UNWARPED.statement).toMatch(/values are true/);
+    expect(drawnThrough(undefined)).toBe(AFFINE_ONLY);
+    expect(AFFINE_ONLY.statement).toMatch(/values are true/);
   });
 
   it("states [σ_min, σ_max] as the scene layer's estimate does, without the frames layer importing it", () => {
@@ -180,7 +184,7 @@ describe("the drawn distance, named as one", () => {
     expect(view.anchorRoute).toHaveBeenCalledWith(undefined);
     const plain = drawnDistance(a, b, undefined);
     expect(plain.distance).toBeCloseTo(plain.trueDistance, 9);
-    expect(plain.through).toBe(UNWARPED);
+    expect(plain.through).toBe(AFFINE_ONLY);
     expect(plain.label).not.toMatch(/×/);
   });
 });
@@ -354,7 +358,13 @@ describe("measurement graphics drawn through the route", () => {
       frame: { name: "content" },
       base: { name: "render" },
       seconds: 0,
-      steps: [{ kind: "warp", warp: asWarp(bend), inverse: false }],
+      steps: [
+        {
+          kind: "curvilinear",
+          curvilinearMap: asCurvilinearMap(bend),
+          inverse: false,
+        },
+      ],
       revision: 1,
     };
     const from = Float64Array.of(-3000, 0, 0);
@@ -491,8 +501,8 @@ describe("measurement graphics drawn through the route", () => {
   });
 });
 
-/** A `Warp` for a test route, from a frames-layer warp's fields. */
-function asWarp(w: ReturnType<typeof fromFunction>): Warp {
+/** A `CurvilinearMap` for a test route, from a frames-layer curvilinear map's fields. */
+function asCurvilinearMap(w: ReturnType<typeof fromFunction>): CurvilinearMap {
   return {
     from: { name: "content" },
     to: { name: "render" },
@@ -510,8 +520,8 @@ const R = 6_378_137;
 const DRAW = { index: 3, generation: 1, name: undefined } as DrawHandle;
 const GEOMETRIC_ERROR = 0.25;
 
-/** Heights times `k` above the plane z = 0: a warp with σ in [1, k]. */
-function stretchZ(k: number): Warp {
+/** Heights times `k` above the plane z = 0: a curvilinear map with σ in [1, k]. */
+function stretchZ(k: number): CurvilinearMap {
   return {
     from: { name: "anchor" },
     to: { name: "render" },
@@ -533,11 +543,11 @@ function stretchZ(k: number): Warp {
   };
 }
 
-const routeOf = (warp: Warp): Route => ({
+const routeOf = (curvilinearMap: CurvilinearMap): Route => ({
   frame: { name: "anchor" },
   base: { name: "render" },
   seconds: 0,
-  steps: [{ kind: "warp", warp, inverse: false }],
+  steps: [{ kind: "curvilinear", curvilinearMap, inverse: false }],
   revision: 1,
 });
 
@@ -586,13 +596,18 @@ function tileset(): Tileset3D {
 /**
  * A view whose pickPoint reads the drawn plane under the cursor, and the
  * true point behind it (`truePosition`, as the pick variant gives): the
- * content is drawn through `warp`.
+ * content is drawn through `curvilinearMap`.
  */
-function warpedView(warp: Warp | undefined, domain = true): PickView {
-  const route = warp ? routeOf(warp) : undefined;
+function curvilinearView(
+  curvilinearMap: CurvilinearMap | undefined,
+  domain = true,
+): PickView {
+  const route = curvilinearMap ? routeOf(curvilinearMap) : undefined;
   const identity = new Float64Array(16);
   identity[0] = identity[5] = identity[10] = identity[15] = 1;
-  const k = warp ? warp.forward([0, 0, 1], new Float64Array(3))[2]! : 1;
+  const k = curvilinearMap
+    ? curvilinearMap.forward([0, 0, 1], new Float64Array(3))[2]!
+    : 1;
   const camera = new Camera();
   camera.position.set([R + 1000, 0, 0]);
   camera.direction.set([-1, 0, 0]);
@@ -645,13 +660,13 @@ function warpedView(warp: Warp | undefined, domain = true): PickView {
 
 describe("snaps in true coordinates", () => {
   it("snaps to what the screen shows, and returns the true vertex", async () => {
-    const warp = stretchZ(3);
+    const curvilinearMap = stretchZ(3);
     const client = new ClientSnapService([tileset()]);
     // D is (R, 40, 40) and drawn at (R, 40, 120): pixel (520, 190). Its true
     // place on the screen, (520, 230), is 40 px away.
     const [x, y] = toScreen(40, 120);
     const result = await client.snap({
-      view: warpedView(warp),
+      view: curvilinearView(curvilinearMap),
       x: x + 2,
       y,
       aperture: 5,
@@ -668,11 +683,11 @@ describe("snaps in true coordinates", () => {
   });
 
   it("snaps to the edge's true point at the parameter the screen shows", async () => {
-    const warp = stretchZ(3);
+    const curvilinearMap = stretchZ(3);
     const client = new ClientSnapService([tileset()]);
     // A to C is drawn from (500, 250) to (500, 190): its middle, (500, 220), is the true (R, 0, 20).
     const result = await client.snap({
-      view: warpedView(warp),
+      view: curvilinearView(curvilinearMap),
       x: 504,
       y: 220,
       aperture: 6,
@@ -691,11 +706,11 @@ describe("snaps in true coordinates", () => {
     expect(result!.distance).toBeCloseTo(4, 6);
   });
 
-  it("without a warp, snaps as before and says nothing was drawn", async () => {
+  it("without a curvilinear map, snaps as before and says nothing was drawn", async () => {
     const client = new ClientSnapService([tileset()]);
     const [x, y] = toScreen(40, 40);
     const result = await client.snap({
-      view: warpedView(undefined),
+      view: curvilinearView(undefined),
       x,
       y,
       aperture: 4,
@@ -708,8 +723,8 @@ describe("snaps in true coordinates", () => {
   it("converts a pixel to true meters by σ_min: a compression of 0.5 doubles the tolerance", async () => {
     const client = new ClientSnapService([tileset()]);
     // Nothing within the aperture: a surface snap, tolerance = a pixel + the geometric error.
-    const request = (warp: Warp | undefined) => ({
-      view: warpedView(warp),
+    const request = (curvilinearMap: CurvilinearMap | undefined) => ({
+      view: curvilinearView(curvilinearMap),
       x: 516,
       y: 246,
       aperture: 1,
@@ -734,7 +749,7 @@ describe("snaps in true coordinates", () => {
   });
 
   it("checks a server's true point against the screen as drawn, and tells the server how to", async () => {
-    const warp = stretchZ(3);
+    const curvilinearMap = stretchZ(3);
     const client = new ClientSnapService([tileset()]);
     const [x, y] = toScreen(40, 120);
     const seen: ServiceSnapRequest[] = [];
@@ -749,7 +764,7 @@ describe("snaps in true coordinates", () => {
       provisional: false,
     };
     const result = await refiningSnap(
-      { view: warpedView(warp), x: x + 1, y, aperture: 4 },
+      { view: curvilinearView(curvilinearMap), x: x + 1, y, aperture: 4 },
       client,
       {
         snap: async (r) => {
@@ -772,7 +787,7 @@ describe("snaps in true coordinates", () => {
       snapPoint: Float64Array.of(R, 40, 100),
     };
     const refused = await refiningSnap(
-      { view: warpedView(warp), x: x + 1, y, aperture: 4 },
+      { view: curvilinearView(curvilinearMap), x: x + 1, y, aperture: 4 },
       client,
       { snap: async () => far },
       () => undefined,
@@ -783,8 +798,8 @@ describe("snaps in true coordinates", () => {
 
 describe("a pick as a true point", () => {
   it("is the content's own point where the pick variant found one, with a pixel's true size", async () => {
-    const warp = stretchZ(4);
-    const core = (await warpedView(warp).pickPoint!(520, 190))!;
+    const curvilinearMap = stretchZ(4);
+    const core = (await curvilinearView(curvilinearMap).pickPoint!(520, 190))!;
     const truth = truePick(core);
     expect(truth.how).toBe("domain");
     expect(truth.provisional).toBe(false);
@@ -793,13 +808,16 @@ describe("a pick as a true point", () => {
     expect(truth.bound).toBe(0.002);
     expect(truth.trueFootprint).toBeCloseTo(truth.footprint / 1, 9);
     const squashed = truePick(
-      (await warpedView(stretchZ(0.25)).pickPoint!(520, 190))!,
+      (await curvilinearView(stretchZ(0.25)).pickPoint!(520, 190))!,
     );
     expect(squashed.trueFootprint).toBeCloseTo(squashed.footprint * 4, 6);
   });
 
   it("goes back through the route's inverse without one: provisional, with the residual", async () => {
-    const core = (await warpedView(stretchZ(4), false).pickPoint!(520, 190))!;
+    const core = (await curvilinearView(stretchZ(4), false).pickPoint!(
+      520,
+      190,
+    ))!;
     const truth = truePick(core);
     expect(truth.how).toBe("inverse");
     expect(truth.provisional).toBe(true);
@@ -807,8 +825,11 @@ describe("a pick as a true point", () => {
     expect(truth.bound).toBeLessThan(1e-6);
   });
 
-  it("is the depth's position where nothing is drawn through a warp", async () => {
-    const core = (await warpedView(undefined, false).pickPoint!(520, 190))!;
+  it("is the depth's position where nothing is drawn through a curvilinear map", async () => {
+    const core = (await curvilinearView(undefined, false).pickPoint!(
+      520,
+      190,
+    ))!;
     const truth = truePick(core);
     expect(truth.how).toBe("depth");
     expect(truth.drawn).toBeUndefined();

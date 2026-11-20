@@ -23,7 +23,7 @@ export {
   type ReferenceSurface,
   type VerticalExaggeration,
   type VerticalExaggerationOptions,
-} from "./heightWarps.ts";
+} from "./heightCurvilinearMaps.ts";
 export { flatten, flattenDescriptor } from "./flatten.ts";
 export {
   transverseMercator,

@@ -276,7 +276,7 @@ export function createGraphPanel(): GraphPanel {
 /** The words an edge says of itself. */
 function describe(frame: Frame): string | undefined {
   if (isCurvilinearFrame(frame)) {
-    return frame.warp.description;
+    return frame.curvilinearMap.description;
   }
   if (isSwitchFrame(frame)) {
     const edges = frame.edges();

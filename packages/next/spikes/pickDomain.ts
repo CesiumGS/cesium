@@ -5,7 +5,7 @@
 // point comes from those, never from the drawn position.
 //
 // The Earth's anchor is placed in `exaggerated`, a curvilinear frame under ITRF
-// that multiplies height over a sphere by 10 (spikes/warpRoute.ts), with its scale (a
+// that multiplies height over a sphere by 10 (spikes/curvilinearRoute.ts), with its scale (a
 // placement parameter) at 0 for the first checks, which draw the content as it
 // is, and at 1 for the last, which draws a tile ten times as high. Eight checks
 // on a view of the north pole, each a `View.pickPoint`:
@@ -22,7 +22,7 @@
 //   4. an instance of an instanced draw: the point through its own matrix;
 //   5. an idle view's pick, from its last frame, the same point;
 //   6. a tile at scale 1 (height × 10): the true point is on the tile's own
-//      triangle, not where it is drawn; the drawn point is the warp's
+//      triangle, not where it is drawn; the drawn point is the curvilinear map's
 //      forward of it (`routeForward`) and the pick's pixel is where the true
 //      point's forward projects.
 import "../lab/harness.css";
@@ -45,8 +45,8 @@ import {
   type World,
 } from "../src/index.ts";
 import type { CorePick } from "../src/scene/pick.ts";
-import { weightOf } from "../src/scene/warpEvaluate.ts";
-import type { CubicLattice } from "../src/scene/warpTerms.ts";
+import { weightOf } from "../src/scene/curvilinearEvaluate.ts";
+import type { CubicLattice } from "../src/scene/curvilinearTerms.ts";
 import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
 
 const TEMPLATE = `
@@ -56,7 +56,7 @@ const TEMPLATE = `
   at height × 10, picked with <code>View.pickPoint</code>. The pick variant
   draws a few pixels around the cursor and writes which triangle (or face) it
   hit and where in it; the true point is then the content's own, against the
-  pixel's ray, and where the warp draws it against where the pick projects.
+  pixel's ray, and where the curvilinear map draws it against where the pick projects.
 </p>
 <div class="status">Run to check on this GPU.</div>
 <div data-id="adapter"></div>
@@ -64,7 +64,7 @@ const TEMPLATE = `
 
 const WIDTH = 512;
 const HEIGHT = 512;
-/** The warp's sphere, m: the ellipsoid's equatorial radius. */
+/** The curvilinear map's sphere, m: the ellipsoid's equatorial radius. */
 const SPHERE = 6_378_137;
 /** The exaggeration at scale 1. */
 const K = 10;
@@ -952,8 +952,9 @@ async function runPickDomain(): Promise<PickDomainResult> {
         );
         measured["true point's distance from the triangle's plane, m"] = off;
         measured["true point − drawn point, m"] = distance(truth, drawn);
-        measured["drawn point − the warp's forward of the true point, m"] =
-          distance(drawn, forwarded);
+        measured[
+          "drawn point − the curvilinear map's forward of the true point, m"
+        ] = distance(drawn, forwarded);
         measured["the forward point's pixel − the pick's, px"] = projection;
         measured["the fit's error, px"] = fit;
         pass =
@@ -966,9 +967,9 @@ async function runPickDomain(): Promise<PickDomainResult> {
           projection <= 0.75 + fit;
       }
       add(
-        `a warped tile (height × ${K}): the content's point, not the drawn one`,
+        `a curvilinear tile (height × ${K}): the content's point, not the drawn one`,
         measured,
-        `the true point within ${tolerance(6).toExponential(1)} m of the triangle it names, and on its plane; more than 1 m from the drawn point; the warp's forward of it projecting within 0.75 px plus the fit's error of the pick's pixel`,
+        `the true point within ${tolerance(6).toExponential(1)} m of the triangle it names, and on its plane; more than 1 m from the drawn point; the curvilinear map's forward of it projecting within 0.75 px plus the fit's error of the pick's pixel`,
         pass,
       );
     }

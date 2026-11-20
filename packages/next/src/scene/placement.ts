@@ -16,8 +16,8 @@
  * - **a blend** of two placements by `t`, each the identity or a fitted
  *   operation (plan 5a's call 43).
  *
- * Inside the engine a placement is a `WarpTerms` (scene/warpTerms.ts,
- * converted by scene/warpEvaluate.ts `termsOf`): `placePosition` and the
+ * Inside the engine a placement is a `CurvilinearTerms` (scene/curvilinearTerms.ts,
+ * converted by scene/curvilinearEvaluate.ts `termsOf`): `placePosition` and the
  * bounds here are its reference twins, and the world's placements buffer
  * and shaders/placement.slang hold only terms.
  *
@@ -36,7 +36,7 @@
  * A placement turns normals and tangents by its Jacobian J (docs/design/geometry-through-placement-review.md,
  * increment 2a): the normal by J's cofactor matrix, the tangent by J
  * (shaders/placement.slang `placeVertex`, its CPU twin
- * scene/warpEvaluate.ts `placeJacobianWithTerms`). A dual position or morph
+ * scene/curvilinearEvaluate.ts `placeJacobianWithTerms`). A dual position or morph
  * target has no spatial derivative, so under one a vertex keeps the normal
  * the mesh stores (0.197 degrees off at most on the design globe's 44 km
  * corridor).

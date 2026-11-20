@@ -110,7 +110,7 @@ export function writeClips(
     }
   }
   if (curved.length > 0) {
-    if (world.warps.curved.serves(curved.map((p) => p.set))) {
+    if (world.curvilinearMaps.curved.serves(curved.map((p) => p.set))) {
       plans.push(curved[0]!);
     } else {
       engine.ctx.errors.report(

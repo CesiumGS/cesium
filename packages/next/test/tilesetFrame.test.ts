@@ -164,7 +164,7 @@ function setup() {
   });
   const step = () => {
     engine.cameras.update();
-    world.warps.frame(
+    world.curvilinearMaps.frame(
       [{ id: engine.scene.viewIds.get(view)!, routes: view.anchorRoutes() }],
       Infinity,
       (message) => {
@@ -232,15 +232,15 @@ describe("a tileset in a reference frame", () => {
       expect(s.world.anchorOf(tileset.root.placement!.transform)).toBe(site);
       s.step();
       const route = s.view.anchorRoute(site)!;
-      expect(route.steps.filter((step) => step.kind === "warp")).toHaveLength(
-        1,
-      );
+      expect(
+        route.steps.filter((step) => step.kind === "curvilinear"),
+      ).toHaveLength(1);
       // 3 km up, ×5 below the ceiling (a lift of 4 × 3000 m).
       const drawn = routeForward(route, [6_381_137, 0, 0]);
       expect(drawn[0]).toBeCloseTo(6_378_137 + 5 * 3000, 3);
       const draw = tileset.root.placement!.draws[0]!;
       const info = placementOf(s.world, draw, s.view, s.resolver)!;
-      expect(info.route?.warps[0]?.description).toMatch(
+      expect(info.route?.curvilinearMaps[0]?.description).toMatch(
         /vertical exaggeration/,
       );
     } finally {
@@ -265,9 +265,9 @@ describe("a tileset in a reference frame", () => {
       expect([t[12], t[13], t[14]]).toEqual([...DESIGN]);
       s.step();
       const route = s.view.anchorRoute(site)!;
-      expect(route.steps.filter((step) => step.kind === "warp")).toHaveLength(
-        2,
-      );
+      expect(
+        route.steps.filter((step) => step.kind === "curvilinear"),
+      ).toHaveLength(2);
       // The route is the projection: the grid point's geographic, then body-fixed, position.
       const geo = utmToGeographic({ zone: 48, hemisphere: "south" });
       const lonLat = new Float64Array(3);
@@ -284,7 +284,7 @@ describe("a tileset in a reference frame", () => {
       expect(lonLat[1]).toBeCloseTo(-6.1034, 3);
       const draw = leaf(tileset).placement!.draws[0]!;
       const info = placementOf(s.world, draw, s.view, s.resolver)!;
-      expect(info.route?.warps).toHaveLength(2);
+      expect(info.route?.curvilinearMaps).toHaveLength(2);
     } finally {
       engine.removeTileset(tileset);
     }

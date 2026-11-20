@@ -524,7 +524,7 @@ export function Precision() {
             value, held on the GPU as float32 high and low parts. It comes from
             float64 on the CPU, or from a df64 compute pass for a parameter that
             doesn't separate. The same hi/lo split carries each draw's position
-            and its warp center to the cull.
+            and its curvilinear map center to the cull.
           </li>
           <li>
             <strong>The residual:</strong> the bracket is evaluated in float32

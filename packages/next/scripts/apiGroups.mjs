@@ -77,7 +77,7 @@ export const GROUPS = [
     entry: ".",
     title: "Transform graph & routes",
     blurb:
-      "Nodes, routes, queries in any node (points, measurements, accuracy along a route) and the warp types a curvilinear edge takes.",
+      "Nodes, routes, queries in any node (points, measurements, accuracy along a route) and the curvilinear map types a curvilinear edge takes.",
   },
   {
     id: "core.transforms",
@@ -187,7 +187,7 @@ export const GROUPS = [
     entry: "frames",
     title: "Curvilinear & switch frames",
     blurb:
-      "Frames whose edge is a curvilinear map or a per-view switch, routes through them, and what is drawn through a warp.",
+      "Frames whose edge is a curvilinear map or a per-view switch, routes through them, and what is drawn through a curvilinear map.",
   },
   {
     id: "frames.coordinates",
@@ -280,7 +280,7 @@ export const RULES = [
   { entry: ".", from: "src/scene/SceneItem.ts", group: "core.world" },
   // The transform graph and clipping live in files of their own, ahead of the
   // directories they sit in.
-  { entry: ".", from: "src/scene/world/warps.ts", group: "core.transform" },
+  { entry: ".", from: "src/scene/world/worldCurvilinearMaps.ts", group: "core.transform" },
   { entry: ".", from: "src/camera/route.ts", group: "core.transform" },
   { entry: ".", from: "src/transform/", group: "core.transform" },
   { entry: ".", from: "src/transforms/", group: "core.transforms" },
@@ -393,7 +393,7 @@ export const RULES = [
   { entry: "frames", from: "src/ephemeris/", group: "frames.ephemeris" },
   { entry: "frames", from: "src/trajectory/", group: "frames.ephemeris" },
   { entry: "frames", from: "src/frames/curvilinearFrame.ts", group: "frames.graph" },
-  { entry: "frames", from: "src/frames/warpMaps.ts", group: "frames.graph" },
+  { entry: "frames", from: "src/frames/curvilinearMaps.ts", group: "frames.graph" },
   {
     entry: "frames",
     from: "src/frames/graphOfFrames.ts",

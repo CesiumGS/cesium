@@ -8,7 +8,7 @@ import type { Placement, PlacementParameter } from "./placement.ts";
 import { PlacementTable } from "./placementTable.ts";
 import type { SceneItem, SceneItemOptions } from "./SceneItem.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
-import type { TileWarp } from "../streaming/tileWarp.ts";
+import type { TileCurvilinearMap } from "../streaming/tileCurvilinearMap.ts";
 import type { Occluder } from "../streaming/occluders.ts";
 
 const NO_OCCLUDERS: readonly Occluder[] = [];
@@ -132,11 +132,11 @@ import {
 } from "./world/terrainClips.ts";
 import { castRays } from "./world/rays.ts";
 import {
-  WorldWarps,
+  WorldCurvilinearMaps,
   type HeightNormalInfo,
-  type WarpStats,
-} from "./world/warps.ts";
-import type { WarpAt } from "./warpAnchor.ts";
+  type CurvilinearStats,
+} from "./world/worldCurvilinearMaps.ts";
+import type { CurvilinearAt } from "./curvilinearAnchor.ts";
 import type { Route } from "../camera/route.ts";
 import {
   releasePlacementParameter,
@@ -206,10 +206,12 @@ export class World {
   readonly scene: WorldScene = new WorldScene();
   /**
    * @internal Draws under an anchor whose route to the render root crosses a
-   * warp, drawn warped by fits of it (scene/world/warps.ts). The engine steps
+   * curvilinear map, drawn curvilinear by fits of it (scene/world/worldCurvilinearMaps.ts). The engine steps
    * it once a frame.
    */
-  readonly warps: WorldWarps = new WorldWarps(this);
+  readonly curvilinearMaps: WorldCurvilinearMaps = new WorldCurvilinearMaps(
+    this,
+  );
   /** @internal The world's clip sets (`addClip`, scene/world/clips.ts). */
   readonly clipSets: WorldClips = new WorldClips(this);
   /** @internal What one draw costs the tables (`DrawSink.drawOverheadBytes`). */
@@ -476,7 +478,7 @@ export class World {
     // The cull binds the placements too (its placed records' offsets).
     this.raster.placementTable = new PlacementTable(device, () => {
       tablesReplaced(this);
-      this.warps.routes.tableReplaced();
+      this.curvilinearMaps.routes.tableReplaced();
     });
     createCullBindGroup(this);
     this.imageryPlaceholder = device.createTexture({
@@ -940,7 +942,7 @@ export class World {
   twinDraw(source: DrawHandle): DrawHandle | undefined {
     const twin = twinDraw(this, source);
     if (twin) {
-      this.warps.inherit(source, twin);
+      this.curvilinearMaps.inherit(source, twin);
     }
     return twin;
   }
@@ -1051,21 +1053,21 @@ export class World {
   }
 
   /**
-   * @internal A tile's geometric error (m), the budget its draw's warp fit
-   * shares when its anchor's route crosses a warp: `max(1 mm, error / 64)`.
+   * @internal A tile's geometric error (m), the budget its draw's curvilinear map fit
+   * shares when its anchor's route crosses a curvilinear map: `max(1 mm, error / 64)`.
    */
   setDrawGeometricError(handle: DrawHandle, error: number): void {
-    this.warps.setGeometricError(handle, error);
+    this.curvilinearMaps.setGeometricError(handle, error);
   }
 
   /**
    * Where the route that places the draw's anchor is evaluated, when it
-   * crosses a warp (docs/design/geometry-through-placement-review.md, `warpAt`):
+   * crosses a curvilinear map (docs/design/geometry-through-placement-review.md, `curvilinearAt`):
    *
    * - `"vertex"`, the default: at every vertex, so content stretches with
-   *   the warp (a reprojection, an exaggeration). Fitted per draw to
+   *   the curvilinear map (a reprojection, an exaggeration). Fitted per draw to
    *   `max(1 mm, geometricError / 64)`, held hidden until the first fit;
-   *   a terrain tile under a height-scale warp is exact instead.
+   *   a terrain tile under a height-scale curvilinear map is exact instead.
    * - `"anchor"`: once, at the origin of `origin` (a transform the draw hangs
    *   under; by default the draw's own), in float64. The draw moves
    *   rigidly by the route there: its translation, and the rotation of the
@@ -1078,59 +1080,66 @@ export class World {
    * instances of a `ModelPool` it feeds, are carried through the route by
    * the source's frame kernel, where it writes each position (a hidden
    * carrier draw of the source is fitted); a point set no source owns is
-   * drawn at its anchor's place, unwarped. Costs nothing for a draw not
-   * under a warped anchor, which only remembers it. Changing it refits the
+   * drawn at its anchor's place, affine. Costs nothing for a draw not
+   * under a curvilinear anchor, which only remembers it. Changing it refits the
    * draw.
    */
-  setWarpAt(handle: DrawHandle, at: WarpAt, origin?: TransformHandle): void {
-    this.warps.setWarpAt(handle, at, origin);
+  setCurvilinearAt(
+    handle: DrawHandle,
+    at: CurvilinearAt,
+    origin?: TransformHandle,
+  ): void {
+    this.curvilinearMaps.setCurvilinearAt(handle, at, origin);
   }
 
-  /** What the draw asked of `setWarpAt`, and what it is drawn as (a billboard or an instanced draw is anchored). */
-  drawWarpAt(
+  /** What the draw asked of `setCurvilinearAt`, and what it is drawn as (a billboard or an instanced draw is anchored). */
+  drawCurvilinearAt(
     handle: DrawHandle,
-  ): { choice: WarpAt; effective: WarpAt } | undefined {
-    return this.warps.warpAt(handle);
+  ): { choice: CurvilinearAt; effective: CurvilinearAt } | undefined {
+    return this.curvilinearMaps.curvilinearAt(handle);
   }
 
   /**
-   * Provisional. What the world's warps have done, and how its warped draws
+   * Provisional. What the world's curvilinear maps have done, and how its curvilinear draws
    * stand: fits made and asked again, anchored draws placed, fits waiting,
-   * and the draws under a warped anchor by state (fitted, stale, pending,
+   * and the draws under a curvilinear anchor by state (fitted, stale, pending,
    * exact). Counts are since the world was made; a read changes nothing.
    */
-  warpStats(): WarpStats {
-    return this.warps.stats();
+  curvilinearStats(): CurvilinearStats {
+    return this.curvilinearMaps.stats();
   }
 
   /**
    * @internal A terrain tile's draw carries `h·n̂` per vertex made on the
    * ellipsoid `info.radii` (`HEIGHT_NORMAL_ATTRIBUTE`): under a height-scale
-   * warp on that ellipsoid its route term is exact, with no fit.
+   * curvilinear map on that ellipsoid its route term is exact, with no fit.
    */
   setDrawHeightNormal(handle: DrawHandle, info: HeightNormalInfo): void {
-    this.warps.setHeightNormal(handle, info);
+    this.curvilinearMaps.setHeightNormal(handle, info);
   }
 
   /**
    * @internal The draw's instances are written by the GPU (a `ModelPool`'s),
-   * so a warp can't move them on the CPU: their source's frame kernel
+   * so a curvilinear map can't move them on the CPU: their source's frame kernel
    * carries the points they stand at through the route instead, and the
    * draw itself is not placed.
    */
   markGpuInstances(handle: DrawHandle): void {
-    this.warps.markGpuInstances(handle);
+    this.curvilinearMaps.markGpuInstances(handle);
   }
 
   /**
    * @internal The map from an anchor's coordinates to where its content is
-   * drawn, when the anchor's route to the view's root crosses a warp:
-   * selection runs on drawn volumes (streaming/tileWarp.ts). Undefined for
+   * drawn, when the anchor's route to the view's root crosses a curvilinear map:
+   * selection runs on drawn volumes (streaming/tileCurvilinearMap.ts). Undefined for
    * an anchor placed rigidly. With a `viewId`, the map of that view's own
    * route (views of one anchor may reach it by routes of different shape).
    */
-  tileWarp(anchor: AnchorHandle, viewId?: number): TileWarp | undefined {
-    return this.warps.tileWarp(anchor.slot, viewId);
+  tileCurvilinearMap(
+    anchor: AnchorHandle,
+    viewId?: number,
+  ): TileCurvilinearMap | undefined {
+    return this.curvilinearMaps.tileCurvilinearMap(anchor.slot, viewId);
   }
 
   readonly #occluders = new Map<number, Set<Occluder>>();
@@ -1160,7 +1169,7 @@ export class World {
    * twin when views reach the anchor by routes of different shape.
    */
   drawForRoute(draw: DrawHandle, route: Route | undefined): DrawHandle {
-    return this.warps.variants.drawFor(draw, route);
+    return this.curvilinearMaps.variants.drawFor(draw, route);
   }
 
   /**
@@ -1178,7 +1187,7 @@ export class World {
   ): void {
     setInstance(this, handle, instance, change);
     if (change.matrix) {
-      this.warps.instanceChanged(handle, instance);
+      this.curvilinearMaps.instanceChanged(handle, instance);
     }
   }
 
@@ -1542,7 +1551,7 @@ export class World {
     }
     // Under an anchor whose views reach it by routes of different shape the
     // draw shows in its own group's views only (scene/world/variants.ts).
-    mask = this.warps.variants.viewMask(handle, mask);
+    mask = this.curvilinearMaps.variants.viewMask(handle, mask);
     const old =
       this.raster.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;
     if (old !== mask >>> 0) {
@@ -1572,7 +1581,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    mask = this.warps.variants.casterMask(handle, mask);
+    mask = this.curvilinearMaps.variants.casterMask(handle, mask);
     const old =
       this.raster.recordsU32[handle.index * RECORD_WORDS + CASTER_MASK_WORD]!;
     if (this.raster.drawConstants.setCasterMask(handle.index, mask)) {
@@ -1800,16 +1809,16 @@ export class World {
    * after the mesh's vertices.
    */
   setPlacement(handle: DrawHandle, placement: Placement | undefined): void {
-    if (this.warps.setUser(handle, placement)) {
-      return; // drawn warped by its route: kept, with the route's term
+    if (this.curvilinearMaps.setUser(handle, placement)) {
+      return; // drawn curvilinear by its route: kept, with the route's term
     }
     setPlacement(this, handle, placement);
   }
 
   /** The draw's per-vertex placement (`setPlacement`), if any. */
   drawPlacement(handle: DrawHandle): Placement | undefined {
-    return this.warps.has(handle)
-      ? this.warps.userPlacement(handle)
+    return this.curvilinearMaps.has(handle)
+      ? this.curvilinearMaps.userPlacement(handle)
       : drawPlacement(this, handle);
   }
 
@@ -1854,7 +1863,7 @@ export class World {
     if (!this.hasDraw(handle)) {
       return;
     }
-    if (this.warps.setVisible(handle, visible)) {
+    if (this.curvilinearMaps.setVisible(handle, visible)) {
       return; // held hidden until its route's fit lands: remembered
     }
     const flags =
@@ -2162,17 +2171,17 @@ export class World {
   /**
    * @internal A kernel's view of the draw's placement: its block's row in
    * the placements buffer (`NO_PLACEMENT`, 0xffffffff, for none), and
-   * whether the draw is under a warped anchor whose first fit hasn't
+   * whether the draw is under a curvilinear anchor whose first fit hasn't
    * landed (`held`: whatever the kernel writes should be hidden until it
-   * does). The draw's placement is the route's when its anchor is warped
-   * (scene/world/warps.ts).
+   * does). The draw's placement is the route's when its anchor is curvilinear
+   * (scene/world/worldCurvilinearMaps.ts).
    */
   placementOf(handle: DrawHandle): { row: number; held: boolean } {
     return {
       row: this.hasDraw(handle)
         ? this.raster.recordsU32[handle.index * RECORD_WORDS + PLACEMENT_WORD]!
         : NO_PLACEMENT,
-      held: this.warps.status(handle)?.state === "pending",
+      held: this.curvilinearMaps.status(handle)?.state === "pending",
     };
   }
 
@@ -2198,7 +2207,7 @@ export class World {
 
   destroy(): void {
     this.destroyed_ = true;
-    this.warps.clear();
+    this.curvilinearMaps.clear();
     this.stopTracking();
     // Its tables' string ids go back to the shared table.
     for (const uploaded of this.scene.tableColumns.values()) {

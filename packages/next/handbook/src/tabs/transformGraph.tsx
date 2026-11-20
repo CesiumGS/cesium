@@ -127,7 +127,7 @@ const BOXES: Box[] = [
   },
 ];
 
-/** A deformer over the Earth's content: what sits under it is warped, and the Moon is not. */
+/** A deformer over the Earth's content: what sits under it is curvilinear, and the Moon is not. */
 function GraphFigure() {
   const titleId = useId();
   const byId = new Map(BOXES.map((b) => [b.id, b]));
@@ -225,14 +225,14 @@ const PRIOR = [
     differs: "Their edges are affine, so nothing in them can deform",
   },
   {
-    art: "Deformers and FFD (Maya, 3ds Max space warps; Sederberg and Parry, 1986)",
+    art: "Deformers and FFD (Maya, 3ds Max space curvilinear maps; Sederberg and Parry, 1986)",
     has: "Bend, twist, taper and lattice deformers applied to an object's vertices",
-    takes: "The family, and “warp” as the friendly word",
+    takes: "The family, and “curvilinear map” as the friendly word",
     differs:
       "They deform one object's mesh. Here normals, picks, measurements, accuracy and tile selection follow from the one definition",
   },
   {
-    art: "Space warps in solid modeling (ACIS)",
+    art: "Space curvilinear maps in solid modeling (ACIS)",
     has: "A curvilinear map applied to a whole solid, not to a mesh of it",
     takes: "The idea that a map of space is an operation on exact geometry",
     differs:
@@ -302,7 +302,7 @@ const BUILTINS = [
     names:
       "`scaleAbout`, `scaleAlongAxes`, `bump`, `bend`, `twist`, `taper`, `lattice` (free-form deformation), `radialDistortion` (Brown–Conrady), `corridorUnroll`, `velocityModel`, `blend`",
     notes:
-      "Space warps in the 3ds Max sense, plus a lens, an alignment unrolled into a strip, and a 1D time-to-depth model.",
+      "Space curvilinear maps in the 3ds Max sense, plus a lens, an alignment unrolled into a strip, and a 1D time-to-depth model.",
   },
   {
     family: "Geo",
@@ -369,7 +369,7 @@ const PATHS = [
   {
     route: "A function outside the subset, or one with no source",
     path: "Fitted per tile; Jacobian by central differences",
-    why: "`FunctionWarp.fitReason` names the construct that was refused",
+    why: "`FunctionCurvilinearMap.fitReason` names the construct that was refused",
   },
   {
     route: "The globe's terrain under an exaggeration of its own ellipsoid",
@@ -446,7 +446,7 @@ const MEASURES = [
     check:
       "The vertical exaggeration example under the compiler: how many draws are compiled and how many fitted",
     result:
-      "81 draws compiled, 6 fitted. Compiling route pipelines one at a time cut the longest task from 1.23–1.62 s to 0.78–1.03 s; what is left is warped tile bounds in selection.",
+      "81 draws compiled, 6 fitted. Compiling route pipelines one at a time cut the longest task from 1.23–1.62 s to 0.78–1.03 s; what is left is curvilinear tile bounds in selection.",
     where: "the example, commits 23c7b191be and 811ed8814a",
   },
   {
@@ -459,7 +459,7 @@ const MEASURES = [
     check:
       "Three views of one world: ×10, the true place, and a 60 m lift, each box measured in its view against its own route",
     result: "Every box within 1.5 px; the twins released with their views.",
-    where: "spikes/warpViews.ts, commit e94e2ee653",
+    where: "spikes/curvilinearViews.ts, commit e94e2ee653",
   },
   {
     check:
@@ -505,7 +505,7 @@ const ALSO = [
   {
     what: "Fitting runs on the main thread",
     state:
-      "A fitted function is a JavaScript closure, which a worker can't be sent. Fits run within a 4 ms budget a tick (`Engine.warpBudgetMs`).",
+      "A fitted function is a JavaScript closure, which a worker can't be sent. Fits run within a 4 ms budget a tick (`Engine.curvilinearBudgetMs`).",
   },
   {
     what: "Exact sums rely on operation order",
@@ -532,7 +532,7 @@ export function TransformGraph() {
         <>
           One tree of nodes places everything: content, cameras and lights. Each
           node&apos;s edge to its parent is a matrix or a curvilinear map, and
-          where something sits decides what is warped. A reprojection, a
+          where something sits decides what is curvilinear. A reprojection, a
           vertical exaggeration, a plan-and-profile sheet and a camera lens are
           the same mechanism. See it on real data in the{" "}
           <a href="/examples/transform-graph/">Transform graph example</a> and
@@ -582,11 +582,11 @@ export function TransformGraph() {
           common ancestor of that node and the camera&apos;s, through each
           edge&apos;s forward function, then down to the camera&apos;s node
           through the inverses. That is its <strong>route</strong>. Where
-          content sits is the only thing that decides what is warped: a deformer
-          over the Earth&apos;s content warps the terrain and the buildings, and
-          the Moon in the same world is untouched. Put the camera under the
-          deformer instead and the rest of the world is warped, not the Earth
-          (scene 2 of the tour below).
+          content sits is the only thing that decides what is curvilinear: a
+          deformer over the Earth&apos;s content curvilinear maps the terrain
+          and the buildings, and the Moon in the same world is untouched. Put
+          the camera under the deformer instead and the rest of the world is
+          curvilinear, not the Earth (scene 2 of the tour below).
         </p>
         <Figure
           scroll
@@ -620,8 +620,8 @@ export function TransformGraph() {
           tall. Each is a curvilinear map of space that is locally invertible
           where content is, and each wanted its own machinery. Treating them as
           nodes of one tree gives one compiler, one set of queries and one
-          answer to &quot;what is warped&quot;: whatever is placed below the
-          node.
+          answer to &quot;what is curvilinear&quot;: whatever is placed below
+          the node.
         </p>
         <p>
           A tree rather than a general graph, because every view then sees a
@@ -878,8 +878,8 @@ export function TransformGraph() {
           Householder QR at Chebyshev–Lobatto samples, its error estimated on a
           denser grid). The tolerance is <C>max(1 mm, geometricError / 64)</C>,
           0.25 px at a 16 px threshold. A draw under a fitted route is held
-          hidden until its first fit, so unwarped content never flashes, and
-          fits run newest first within a budget, 4 ms a tick.
+          hidden until its first fit, so affine content never flashes, and fits
+          run newest first within a budget, 4 ms a tick.
         </p>
         <DataTable
           label="Measured fits of vertical exaggeration by 10, WGS84 heights"
@@ -901,8 +901,8 @@ export function TransformGraph() {
             <>
               <C>src/transform/compile.ts</C>, <C>residual.ts</C>,{" "}
               <C>df64Wgsl.ts</C>, <C>src/scene/world/routes.ts</C>,{" "}
-              <C>src/scene/warpFit.ts</C> and the commit messages of tasks 2 to
-              4
+              <C>src/scene/curvilinearFit.ts</C> and the commit messages of
+              tasks 2 to 4
             </>
           }
           on="2026-11-12"
@@ -1020,9 +1020,9 @@ export function TransformGraph() {
           <li>
             <strong>Content that keeps its shape.</strong> A car should not grow
             ten times as tall because the terrain under it does.{" "}
-            <C>warpAt: &quot;anchor&quot;</C> evaluates the route once at the
-            draw&apos;s origin, in float64, and moves the draw rigidly by the
-            translation and the rotation of J&apos;s polar factor, dropping
+            <C>curvilinearAt: &quot;anchor&quot;</C> evaluates the route once at
+            the draw&apos;s origin, in float64, and moves the draw rigidly by
+            the translation and the rotation of J&apos;s polar factor, dropping
             scale and shear. Billboards and instances always work this way.
           </li>
         </ul>
@@ -1031,7 +1031,7 @@ export function TransformGraph() {
             <>
               the overall plan, sections 13.26 and 13.37,{" "}
               <C>examples/vertical-exaggeration</C> and{" "}
-              <C>src/scene/warpAnchor.ts</C>
+              <C>src/scene/curvilinearAnchor.ts</C>
             </>
           }
           on="2026-11-12"
@@ -1101,8 +1101,8 @@ export function TransformGraph() {
           only in a draw&apos;s record data (a rigid step before the last
           curvilinear one) shows its group&apos;s first view. Follow-up 10
           removes the twins by choosing the program per (draw, view). Checked by{" "}
-          <C>test/warpViewVariants.test.ts</C> and a spike: three views of one
-          world, each box within 1.5 px of its own route.
+          <C>test/curvilinearViewVariants.test.ts</C> and a spike: three views
+          of one world, each box within 1.5 px of its own route.
         </p>
         <Written
           from={
@@ -1124,41 +1124,42 @@ export function TransformGraph() {
         </p>
         <ul>
           <li>
-            <strong>Selection samples.</strong> A warped tile&apos;s volume is
-            sampled on a 3 × 3 × 3 grid and the image&apos;s sphere padded for
-            bulge by <C>(1/8)·M₂·L²</C>, with M₂ from Jacobian differences. The
-            tile&apos;s geometric error is stretched by σ_max, the largest
+            <strong>Selection samples.</strong> A curvilinear tile&apos;s volume
+            is sampled on a 3 × 3 × 3 grid and the image&apos;s sphere padded
+            for bulge by <C>(1/8)·M₂·L²</C>, with M₂ from Jacobian differences.
+            The tile&apos;s geometric error is stretched by σ_max, the largest
             singular value of J. A ranged parameter is bounded per bucket (16
             over the range), so selection follows the value a slider is at. A
             plain height scale is the exception: its bound uses the scale&apos;s
             exact value and is made again when the value changes, since a
             bucket&apos;s range left about 1 km of slack at 1.8 km altitude.{" "}
-            <C>View.lodExponent</C> and <C>Warp.lodExponent</C> set how much of
-            the stretch selection counts, from none (0) to all of it (1, the
-            default). Tiles that refining can&apos;t add geometry to, the
-            upsampled ones, take no stretch.
+            <C>View.lodExponent</C> and <C>CurvilinearMap.lodExponent</C> set
+            how much of the stretch selection counts, from none (0) to all of it
+            (1, the default). Tiles that refining can&apos;t add geometry to,
+            the upsampled ones, take no stretch.
           </li>
           <li>
-            <strong>Horizon culling works under a warp</strong>, from an
-            occluder built out of the drawn terrain, not the true ellipsoid. Its
-            soundness doesn&apos;t depend on which warp it is: it needs a
-            closed, opaque drawn surface and a camera outside it. The Tile
-            selection tab has the details.
+            <strong>Horizon culling works under a curvilinear map</strong>, from
+            an occluder built out of the drawn terrain, not the true ellipsoid.
+            Its soundness doesn&apos;t depend on which curvilinear map it is: it
+            needs a closed, opaque drawn surface and a camera outside it. The
+            Tile selection tab has the details.
           </li>
           <li>
             <strong>Exact where compilable.</strong> A built-in curvilinear node
             compiles to exact GPU code, with its Jacobian by differentiation
-            (audit, 2026-11-13). Only <C>blendWarps</C> and a user&apos;s opaque
-            closure are fitted. The plan keeps fitting, narrowed, for opaque
-            code and deliberate approximation, with the error bound reported. A
-            warp written in the restricted subset compiles. The cost left is the
-            corridor unroll, which compiles per element until a table op exists.
+            (audit, 2026-11-13). Only <C>blendCurvilinearMaps</C> and a
+            user&apos;s opaque closure are fitted. The plan keeps fitting,
+            narrowed, for opaque code and deliberate approximation, with the
+            error bound reported. A curvilinear map written in the restricted
+            subset compiles. The cost left is the corridor unroll, which
+            compiles per element until a table op exists.
           </li>
           <li>
-            <strong>Refinement shows, and blocks nothing.</strong> In the warp
-            examples a card holds only until something first draws. After that,
-            a fixed-size chip counts what still refines, for example
-            &quot;Refining · 12 tiles, 3 fits&quot;. It is shared in{" "}
+            <strong>Refinement shows, and blocks nothing.</strong> In the
+            curvilinear map examples a card holds only until something first
+            draws. After that, a fixed-size chip counts what still refines, for
+            example &quot;Refining · 12 tiles, 3 fits&quot;. It is shared in{" "}
             <C>examples/refinement.ts</C>.
           </li>
         </ul>
@@ -1198,7 +1199,8 @@ export function TransformGraph() {
         <Written
           from={
             <>
-              <C>src/scene/warpBounds.ts</C>, <C>src/streaming/tileWarp.ts</C>,{" "}
+              <C>src/scene/curvilinearBounds.ts</C>,{" "}
+              <C>src/streaming/tileCurvilinearMap.ts</C>,{" "}
               <C>src/transform/taylorBounds.ts</C>, <C>curvature.ts</C> and the
               design note docs/design/transform-graph.md, &quot;Queries through
               routes&quot;; the 2026-11-13 notes in the transform graph plan and

@@ -47,7 +47,7 @@ import { createSites, trackGround } from "./sites.ts";
  * ellipsoid), the rest by the compiled route, whose slider is one uniform.
  * The camera stays at ITRF, where it sees them drawn, and the Moon, which is
  * not under the frame, is untouched. Pins are billboards, so they stay upright;
- * the truck can too (`warpAt: "anchor"`).
+ * the truck can too (`curvilinearAt: "anchor"`).
  *
  * Questions are asked in true coordinates. A pick's drawn position is in
  * ITRF, where the camera is, but the pick also gives the true point
@@ -194,7 +194,7 @@ export async function run({
     const pending = (t: typeof tileset) =>
       t ? t.stats.inFlight + t.stats.uploadQueue : 0;
     const view = loading.update({
-      stats: world.warpStats(),
+      stats: world.curvilinearStats(),
       buildings,
       tiles: pending(viewer.globe) + pending(tileset),
     });
@@ -218,7 +218,7 @@ export async function run({
 
   const keepShape = () => {
     for (const draw of truck?.draws ?? []) {
-      world.setWarpAt(draw, upright ? "anchor" : "vertex");
+      world.setCurvilinearAt(draw, upright ? "anchor" : "vertex");
     }
     engine.requestRender();
   };
@@ -403,7 +403,7 @@ export async function run({
 
   const fillStats = () => {
     const r = route();
-    const stats = world.warpStats();
+    const stats = world.curvilinearStats();
     const n = (x: number) => x.toLocaleString("en-US");
     routeOut.textContent = r ? String(r.revision) : "–";
     runOut.textContent = `${n(stats.fitsRun)}, ${n(stats.pending)} waiting`;
@@ -629,7 +629,7 @@ export async function run({
       runOut,
       el("dt", {}, "Refits"),
       refitOut,
-      el("dt", {}, "Warped draws"),
+      el("dt", {}, "Curvilinear draws"),
       drawsOut,
     ),
     el(

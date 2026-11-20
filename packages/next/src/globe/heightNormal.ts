@@ -2,7 +2,7 @@ import { Ellipsoid } from "../math/ellipsoid.ts";
 
 /**
  * The vertex attribute a terrain tile carries when its globe is drawn under
- * a height-scale warp (`HeightScale`, camera/route.ts): per vertex `h·n̂`, the
+ * a height-scale curvilinear map (`HeightScale`, camera/route.ts): per vertex `h·n̂`, the
  * geodetic height times the ellipsoid's normal there, in meters, so that
  * scaling heights by k is the displacement `(k − 1)·h·n̂`, exact and with no
  * fit (docs/design/geometry-through-placement-review.md, the owner's answer 3: terrain keeps (u, v, h)).
@@ -10,13 +10,13 @@ import { Ellipsoid } from "../math/ellipsoid.ts";
 export const HEIGHT_NORMAL_ATTRIBUTE = "_HEIGHT_NORMAL";
 
 /**
- * What a globe's terrain tiles carry under a height-scale warp that has a
+ * What a globe's terrain tiles carry under a height-scale curvilinear map that has a
  * ceiling (`HeightScale.profile`): per vertex `(n̂, h)`, 4 components, the
  * ellipsoid's unit normal and the signed geodetic height in meters (negative
  * below the ellipsoid). The displacement is then `D(h)·n̂` for the profile's
  * `D`, which is not `h` times anything, so `h·n̂` would not do (n̂ cannot be
  * recovered from it at h = 0, nor the sign of h from its length). A tile
- * carries this or `HEIGHT_NORMAL_ATTRIBUTE`, whichever the warp asked for.
+ * carries this or `HEIGHT_NORMAL_ATTRIBUTE`, whichever the curvilinear map asked for.
  */
 export const HEIGHT_PROFILE_ATTRIBUTE = "_HEIGHT_PROFILE";
 
@@ -25,7 +25,7 @@ export const HEIGHT_PROFILE_ATTRIBUTE = "_HEIGHT_PROFILE";
  * vertex `(n̂, δ)`, 4 components, the ellipsoid's unit normal and δ, the
  * height of its parent's surface at the vertex's (u, v) minus its own height,
  * in meters. The vertex stage moves the vertex by `(1 − t)·δ·n̂` while the
- * tile morphs in (t from 0 to 1), before any warp. A tile without it (its
+ * tile morphs in (t from 0 to 1), before any curvilinear map. A tile without it (its
  * parent was not resident at decode) doesn't morph. Shaders carry the
  * name's hash (`MORPH_HASH`, shaders/surface.slang).
  */

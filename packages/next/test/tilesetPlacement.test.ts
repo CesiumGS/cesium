@@ -209,7 +209,7 @@ describe("Tileset3D: the declaration, placement and tileOfDraw", () => {
       tilesetJson({
         [ENGINEERING_FRAME_EXTENSION]: {
           ...reprojected,
-          placement: { mode: "warped" },
+          placement: { mode: "curvilinear" },
         },
       }),
     );

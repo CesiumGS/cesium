@@ -34,7 +34,7 @@ import {
   geometryRefines,
   lodExponentOf,
   terrainDrawnError,
-} from "../streaming/tileWarp.ts";
+} from "../streaming/tileCurvilinearMap.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { CLIP_BOXES } from "../scene/contentLimits.ts";
 import type { Vec3 } from "../math/vec3.ts";
@@ -395,9 +395,11 @@ export class GlobeStepwiseSelection implements TileSelection {
     const view = P.view;
     const b = this.bounds(tile);
     const state = tile.viewState(view.id);
-    // Under a warped anchor the tile is where its draws put it (the camera
+    // Under a curvilinear anchor the tile is where its draws put it (the camera
     // is in drawn space): its drawn volume, and no horizon test.
-    const drawn = view.warp ? drawnTile(tile, view.warp) : undefined;
+    const drawn = view.curvilinearMap
+      ? drawnTile(tile, view.curvilinearMap)
+      : undefined;
     if (drawn) {
       state.distance = volumeDistance(
         drawn.surface ?? drawn.volume,
@@ -433,13 +435,13 @@ export class GlobeStepwiseSelection implements TileSelection {
       return (state.visible = false);
     }
     if (drawn) {
-      const warpedPlanes = view.planes;
-      for (let k = 0; k < warpedPlanes.length / 4; k++) {
+      const curvilinearPlanes = view.planes;
+      for (let k = 0; k < curvilinearPlanes.length / 4; k++) {
         if (
           volumeIntersectPlane(
             drawn.volume,
-            warpedPlanes.subarray(k * 4, k * 4 + 3),
-            warpedPlanes[k * 4 + 3]!,
+            curvilinearPlanes.subarray(k * 4, k * 4 + 3),
+            curvilinearPlanes[k * 4 + 3]!,
           ) === OUTSIDE
         ) {
           return (state.visible = false);
@@ -472,9 +474,11 @@ export class GlobeStepwiseSelection implements TileSelection {
   /** 1.x QuadtreePrimitive screenSpaceError (perspective) with fog. */
   private screenSpaceError(P: Pass, tile: Tile): number {
     const distance = tile.viewState(P.view.id).distance;
-    // A geometric error is a length in the tile's own meters: a warp
+    // A geometric error is a length in the tile's own meters: a curvilinear map
     // stretches it by at most σ_max over the tile, and its fit adds its own.
-    const drawn = P.view.warp ? drawnTile(tile, P.view.warp) : undefined;
+    const drawn = P.view.curvilinearMap
+      ? drawnTile(tile, P.view.curvilinearMap)
+      : undefined;
     const geometricError = drawn
       ? terrainDrawnError(
           tile,

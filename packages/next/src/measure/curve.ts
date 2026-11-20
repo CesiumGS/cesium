@@ -2,14 +2,14 @@
 // docs/design/geometry-through-placement-review.md, placement increment 6): a measurement's lines, polylines, area
 // outlines and labels are content in true coordinates, drawn through the same
 // route as everything else. A straight true segment draws as a curve under a
-// warp, so each is sampled adaptively until the drawn polyline is within a
+// curvilinear map, so each is sampled adaptively until the drawn polyline is within a
 // fraction of a pixel of the routed curve, and sampled again when the route,
-// a warp's scale or the camera's pixel size changes. Labels anchor at routed
+// a curvilinear map's scale or the camera's pixel size changes. Labels anchor at routed
 // points, never at a point carried by the route's affine part.
 import {
   routeForward,
   routeIsRigid,
-  warpScaleOf,
+  curvilinearScaleOf,
   type Route,
 } from "../camera/route.ts";
 import { distanceToSegment } from "./drawn.ts";
@@ -52,7 +52,7 @@ const DEFAULTS = {
 
 /** Interior points tested per piece. Three catch an S-curve whose midpoint sits on its chord. */
 const TESTS = [0.25, 0.5, 0.75] as const;
-/** A piece is halved at least this many times when the route bends (a warp's curve may leave its chord at its middle only). */
+/** A piece is halved at least this many times when the route bends (a curvilinear map's curve may leave its chord at its middle only). */
 const MIN_DEPTH = 2;
 
 /** Meters one pixel measures at `q` for `screen`. */
@@ -77,7 +77,7 @@ function pixelSize(screen: ScreenScale, q: ArrayLike<number>): number {
  * and the tested interior points are within the tolerance of their chords.
  * Between tested points a curve with a bend finer than a quarter of a piece
  * could leave a chord by more; the second derivative of a route over a
- * piece is curvilinear for the warps the engine fits (`secondDerivativeBound`).
+ * piece is curvilinear for the curvilinear maps the engine fits (`secondDerivativeBound`).
  */
 export function sampleSegment(
   route: Route,
@@ -162,7 +162,7 @@ export interface DrawnSamples {
   readonly generation: number;
 }
 
-/** What a sample depends on: the route's revision, each warp's scale, its rigid steps, and the camera's pixel size. */
+/** What a sample depends on: the route's revision, each curvilinear map's scale, its rigid steps, and the camera's pixel size. */
 function keyOf(route: Route, screen: ScreenScale | undefined): number[] {
   const key: number[] = [route.revision, route.steps.length];
   for (const step of route.steps) {
@@ -171,8 +171,8 @@ function keyOf(route: Route, screen: ScreenScale | undefined): number[] {
     } else {
       key.push(
         step.inverse ? -1 : 1,
-        step.warp.revision,
-        warpScaleOf(step.warp),
+        step.curvilinearMap.revision,
+        curvilinearScaleOf(step.curvilinearMap),
       );
     }
   }
@@ -194,7 +194,7 @@ const sameKey = (a: number[], b: number[]): boolean =>
 /**
  * A measurement's line, polyline or area outline, in true coordinates, drawn
  * through a route: `samples(route, screen)` gives the drawn polyline,
- * re-sampled only when the route's revision, a warp's scale (a slider writes
+ * re-sampled only when the route's revision, a curvilinear map's scale (a slider writes
  * one float and changes no revision), a rigid step or the camera's pixel
  * size changes. Re-sampling is cheap: each segment takes tens of routed
  * points. A closed curve (an area's outline) draws its closing segment too.

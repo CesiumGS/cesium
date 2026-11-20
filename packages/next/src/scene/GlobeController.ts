@@ -47,7 +47,7 @@ import {
  * It works in Earth-fixed coordinates: while the Earth's anchor isn't at
  * the identity in the view's render space (a rig off the Earth), it
  * ignores input and warns once (plan 5a's call 27). Where the Earth is
- * drawn across a warp (`View.anchorRoute`) it works on what is drawn: the
+ * drawn across a curvilinear map (`View.anchorRoute`) it works on what is drawn: the
  * picks it orbits and zooms about are drawn points (`View.pickPosition`),
  * the camera is in the render space, and the ground it keeps above is the
  * true ground carried through the route.
@@ -75,7 +75,7 @@ export class GlobeController {
    * Height of the ground (meters above the ellipsoid) at a longitude and
    * latitude in radians, e.g. `terrain.sampleHeight`; undefined where it
    * isn't known yet. Without it the ellipsoid is the ground. True heights:
-   * where the Earth is drawn across a warp (a vertical exaggeration) the
+   * where the Earth is drawn across a curvilinear map (a vertical exaggeration) the
    * controller carries the ground through the view's route, so the camera
    * keeps above the ground as drawn, and the zoom target is the drawn
    * ground (`View.anchorRoute`). Don't scale them yourself.
@@ -622,7 +622,7 @@ export class GlobeController {
   /**
    * The height of the ground under the camera as it is drawn, in render
    * space, where `surfaceHeight` says it is: the same number where the Earth
-   * is drawn unwarped. Where it is drawn across a warp (a vertical
+   * is drawn affine. Where it is drawn across a curvilinear map (a vertical
    * exaggeration: `View.anchorRoute`) the ground's true point under the
    * camera's true position goes through the route, and its drawn height is
    * the answer, so the camera keeps above the ground it sees. Undefined

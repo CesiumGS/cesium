@@ -450,10 +450,10 @@ export function Shading() {
           </li>
           <li>
             <strong>Still missing:</strong> texture reads, matrices, general
-            loops, noise, derivatives and structs. Real warps also need typed
-            constant tables, a search primitive and piecewise selection. A
-            corridor of a 39-line road compiles per element today, to 607 nodes
-            and 34 KB of WGSL. A table op is the fix.
+            loops, noise, derivatives and structs. Real curvilinear maps also
+            need typed constant tables, a search primitive and piecewise
+            selection. A corridor of a 39-line road compiles per element today,
+            to 607 nodes and 34 KB of WGSL. A table op is the fix.
           </li>
         </ul>
         <Written

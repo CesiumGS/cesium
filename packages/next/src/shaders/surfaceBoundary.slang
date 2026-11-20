@@ -55,7 +55,7 @@ public export __extern_cpp struct CesiumFragment {
   public __extern_cpp float3 positionMC;  // model coordinates of the design position (as the mesh stores it), interpolated
   public __extern_cpp float3 positionEC;  // relative to the camera, Earth-fixed axes (m)
   public __extern_cpp float3 positionWC;  // Earth-fixed (float32: about a meter at the Earth's scale)
-  public __extern_cpp float3 truePositionEC; // the true position (before a warp's map), as positionEC: relative to the camera, Earth-fixed axes (m)
+  public __extern_cpp float3 truePositionEC; // the true position (before a curvilinear map's map), as positionEC: relative to the camera, Earth-fixed axes (m)
   public __extern_cpp float3 normal;      // geometric normal, Earth-fixed axes, toward the viewer
   public __extern_cpp float2 texCoord0;
   public __extern_cpp float4 color0;      // the vertex color times the draw's and instance's tint
@@ -108,7 +108,7 @@ public void cesiumFragmentStage(CesiumFragment f, inout MaterialOutput material)
 // buffer (`routeRow`) and the view's render-space eye and axes, and puts the
 // vertex where the route does. The engine's own unit defines it as "not
 // routed". `position` is camera-relative in the shading axes, as the
-// transform puts a vertex; `displacement` the same minus the unwarped place,
+// transform puts a vertex; `displacement` the same minus the affine place,
 // in model space; `jx`, `jy`, `jz` the columns of d(model position drawn) /
 // d(model position), so the normal and tangent turn as under a placement.
 public export __extern_cpp struct RoutedVertex {

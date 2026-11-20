@@ -1,5 +1,5 @@
 // Curved clips (docs/design/geometry-through-placement-review.md, increment 8c): a clip set whose frame reaches a
-// draw's content only across a warp that bends it (a plane named in a design
+// draw's content only across a curvilinear map that bends it (a plane named in a design
 // CRS, the content in ITRF or drawn exaggerated) is a curved surface in the
 // content's own coordinates. Its signed distance is fitted per draw as a scalar
 // cubic lattice over the cells of the draw's position fit, and rides in the
@@ -11,7 +11,7 @@
 //   to its anchor's coordinates by its matrix, and from the anchor's frame to
 //   the set's by the route (`resolveRoute`, `routeForward`): the point where
 //   the content is, not where it is drawn, so a plane cuts the true surface
-//   of an exaggerated tile. The route's warps at the scales they had at the
+//   of an exaggerated tile. The route's curvilinear maps at the scales they had at the
 //   fit; a scale that moves later isn't followed (a refit follows a route's
 //   revision).
 // - **One field per draw.** The `w` channel holds one scalar, so a world's
@@ -34,7 +34,7 @@
 //   as the drawn surface does.
 // - **Not covered.** Billboards, point sets and instanced draws (they have no
 //   per-vertex placement) are cut by the true or drawn tests only, and a
-//   draw with `MAX_WARP_TERMS` terms and no lattice has no room for a
+//   draw with `MAX_CURVILINEAR_TERMS` terms and no lattice has no room for a
 //   carrier: both are said once.
 import type { FrameKey, FrameResolver } from "../../camera/frameResolver.ts";
 import { resolveRoute, routeForward, type Route } from "../../camera/route.ts";
@@ -46,14 +46,14 @@ import {
   RECORD_WORDS,
   RecordFlags,
 } from "../../render/layout.ts";
-import { fitClipField, type ScalarFunction } from "../warpFit.ts";
+import { fitClipField, type ScalarFunction } from "../curvilinearFit.ts";
 import {
-  MAX_WARP_TERMS,
+  MAX_CURVILINEAR_TERMS,
   constantWeight,
   type ClipField,
   type CubicLattice,
-  type WarpTerms,
-} from "../warpTerms.ts";
+  type CurvilinearTerms,
+} from "../curvilinearTerms.ts";
 import { PLACEMENT_TERMS } from "../placement.ts";
 import { clipSetDistance, type ClipSet } from "./clips.ts";
 import { setPlacement } from "./placements.ts";
@@ -94,7 +94,7 @@ export interface CurvedClipStatus {
 interface Entry {
   readonly generation: number;
   /** The terms the draw was given, before the field was put on them. */
-  base: WarpTerms | undefined;
+  base: CurvilinearTerms | undefined;
   /** The sets, the draw's anchor and matrix, the routes' revision and the tile the field is for. */
   sets: readonly ClipSet[] | undefined;
   anchor: FrameKey | undefined;
@@ -183,7 +183,7 @@ export class WorldCurvedClips {
     };
   }
 
-  /** The field's error (m) of the draw at `index`, 0 where it has none (joins the position fit's error: `WorldWarps.fitError`). */
+  /** The field's error (m) of the draw at `index`, 0 where it has none (joins the position fit's error: `WorldCurvilinearMaps.fitError`). */
   errorOf(index: number): number {
     return this.#entries.get(index)?.field?.errorBound ?? 0;
   }
@@ -255,7 +255,10 @@ export class WorldCurvedClips {
    * `terms` as they are where the draw has no field: none in this world, no
    * per-vertex placement, no room, or the fit couldn't be made.
    */
-  decorate(index: number, terms: WarpTerms | undefined): WarpTerms | undefined {
+  decorate(
+    index: number,
+    terms: CurvilinearTerms | undefined,
+  ): CurvilinearTerms | undefined {
     if (!this.#sets || !this.#tick || !this.#eligible(index)) {
       this.#entries.delete(index);
       return terms;
@@ -281,10 +284,10 @@ export class WorldCurvedClips {
     entry.base = terms;
     const at = terms?.findIndex(({ term }) => term.kind === "cubic") ?? -1;
     const carried = at >= 0 ? (terms![at]!.term as CubicLattice) : undefined;
-    if (!carried && (terms?.length ?? 0) >= MAX_WARP_TERMS) {
+    if (!carried && (terms?.length ?? 0) >= MAX_CURVILINEAR_TERMS) {
       this.#say(
         "room",
-        `clips: a draw with ${MAX_WARP_TERMS} terms and no lattice has no room for a curved clip's field; it is not cut by it.`,
+        `clips: a draw with ${MAX_CURVILINEAR_TERMS} terms and no lattice has no room for a curved clip's field; it is not cut by it.`,
       );
       entry.field = undefined;
       return terms;

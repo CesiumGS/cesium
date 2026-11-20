@@ -13,7 +13,7 @@ import {
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
 import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
-import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
+import { verticalExaggeration } from "../src/georeference/heightCurvilinearMaps.ts";
 import {
   verticalExaggerationDescriptor,
   verticalExaggerationEdge,
@@ -27,22 +27,25 @@ import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import * as m4 from "../src/math/mat4.ts";
 import {
   PlacementTable,
-  WARP_KIND,
+  CURVILINEAR_KIND,
   blockRows,
 } from "../src/scene/placementTable.ts";
 import { attributeHash } from "../src/render/layout.ts";
-import { constantWeight, type WarpTerms } from "../src/scene/warpTerms.ts";
+import {
+  constantWeight,
+  type CurvilinearTerms,
+} from "../src/scene/curvilinearTerms.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import type { MeshData } from "../src/scene/meshes.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { View } from "../src/scene/View.ts";
-import { placeWithTerms, weightOf } from "../src/scene/warpEvaluate.ts";
+import { placeWithTerms, weightOf } from "../src/scene/curvilinearEvaluate.ts";
 import type { World } from "../src/scene/World.ts";
 import { drawTerms } from "../src/scene/world/placements.ts";
 import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
 import { regionFromJson, sphereFromObb } from "../src/streaming/volumes.ts";
-import { drawnTile } from "../src/streaming/tileWarp.ts";
+import { drawnTile } from "../src/streaming/tileCurvilinearMap.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
@@ -96,13 +99,13 @@ describe("the profile in height", () => {
     ).toBeDefined();
   });
 
-  it("is declared by the warp with its ceiling and band, and is nondecreasing in height", () => {
-    const warp = verticalExaggeration({
+  it("is declared by the curvilinear map with its ceiling and band, and is nondecreasing in height", () => {
+    const curvilinearMap = verticalExaggeration({
       factor: K,
       baseHeight: BASE,
       ceiling: CEILING,
     });
-    expect(warp.heightScale).toMatchObject({
+    expect(curvilinearMap.heightScale).toMatchObject({
       kind: "heightScale",
       factor: K,
       baseHeight: BASE,
@@ -188,12 +191,14 @@ function setup(): Setup {
     orientation: { kind: "free" },
   });
   const fits = { count: 0 };
-  const run = world.warps.cache.run.bind(world.warps.cache);
-  vi.spyOn(world.warps.cache, "run").mockImplementation((budget, now) => {
-    const n = run(budget, now);
-    fits.count += n;
-    return n;
-  });
+  const run = world.curvilinearMaps.cache.run.bind(world.curvilinearMaps.cache);
+  vi.spyOn(world.curvilinearMaps.cache, "run").mockImplementation(
+    (budget, now) => {
+      const n = run(budget, now);
+      fits.count += n;
+      return n;
+    },
+  );
   const s: Setup = {
     world,
     view,
@@ -201,7 +206,7 @@ function setup(): Setup {
     fits,
     step() {
       engine.cameras.update();
-      world.warps.frame(
+      world.curvilinearMaps.frame(
         [{ id: engine.scene.viewIds.get(view)!, routes: view.anchorRoutes() }],
         Infinity,
         (message) => {
@@ -248,7 +253,7 @@ describe("a profile term's block", () => {
       queue: { writeBuffer() {} },
     } as unknown as GPUDevice;
     const table = new PlacementTable(device, () => {});
-    const terms: WarpTerms = [
+    const terms: CurvilinearTerms = [
       {
         term: {
           kind: "attribute",
@@ -264,7 +269,7 @@ describe("a profile term's block", () => {
     const at = table.add(terms, () => 0);
     const block = table.words(at, blockRows(terms));
     expect(block.u32[0]).toBe(1);
-    expect(block.u32[4]).toBe(WARP_KIND.profile);
+    expect(block.u32[4]).toBe(CURVILINEAR_KIND.profile);
     expect(block.f32[5]).toBe(K - 1);
     expect(block.u32[6]).toBe(attributeHash(HEIGHT_PROFILE_ATTRIBUTE));
     expect(block.u32[7]).toBe(4);
@@ -278,7 +283,9 @@ describe("a profile term's block", () => {
       "utf8",
     );
     expect(slang).toMatch(
-      new RegExp(String.raw`WARP_PROFILE\s*=\s*${WARP_KIND.profile}u`),
+      new RegExp(
+        String.raw`CURVILINEAR_PROFILE\s*=\s*${CURVILINEAR_KIND.profile}u`,
+      ),
     );
   });
 });
@@ -311,13 +318,13 @@ describe("terrain under a ceiling", () => {
       origin,
     });
     s.step();
-    expect(s.world.warps.status(tile)).toMatchObject({
+    expect(s.world.curvilinearMaps.status(tile)).toMatchObject({
       state: "fitted",
       exact: true,
     });
     expect(s.fits.count).toBe(0);
-    expect(s.world.warps.routes.has(tile.index)).toBe(false);
-    expect(s.world.warps.routes.has(plain.index)).toBe(true);
+    expect(s.world.curvilinearMaps.routes.has(tile.index)).toBe(false);
+    expect(s.world.curvilinearMaps.routes.has(plain.index)).toBe(true);
 
     const terms = drawTerms(s.world, tile as DrawHandle)!;
     expect(terms).toHaveLength(1);
@@ -366,9 +373,9 @@ describe("terrain under a ceiling", () => {
 
   it("is selected on a closed-form drawn volume that holds its region's drawn heights, with no sampled bounds", () => {
     const s = setup();
-    const warp = s.world.tileWarp(s.earth)!;
-    expect(warp.heightRange).toBeDefined();
-    const bounds = vi.spyOn(warp, "bounds");
+    const curvilinearMap = s.world.tileCurvilinearMap(s.earth)!;
+    expect(curvilinearMap.heightRange).toBeDefined();
+    const bounds = vi.spyOn(curvilinearMap, "bounds");
     const [hMin, hMax] = [-400, 10000];
     const region = regionFromJson([
       RECT.west,
@@ -381,7 +388,7 @@ describe("terrain under a ceiling", () => {
     const tile = {
       volume: { kind: "region", region, sphere: sphereFromObb(region.obb) },
     } as unknown as Tile;
-    const drawn = drawnTile(tile, warp);
+    const drawn = drawnTile(tile, curvilinearMap);
     expect(bounds).not.toHaveBeenCalled();
     const sphere = (
       drawn.volume as { sphere: { center: ArrayLike<number>; radius: number } }
@@ -416,7 +423,7 @@ describe("terrain under a ceiling", () => {
     }
     expect(worst).toBeLessThanOrEqual(sphere.radius);
     // And the tile's height range is the profile's, not a box of samples.
-    const range = warp.heightRange!(hMin, hMax);
+    const range = curvilinearMap.heightRange!(hMin, hMax);
     expect(range.min).toBeCloseTo(
       drawnHeight(hMin, K, BASE, CEILING, BAND)[0],
       9,

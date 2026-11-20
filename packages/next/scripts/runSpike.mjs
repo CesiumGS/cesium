@@ -1,6 +1,6 @@
 // Runs a spike's checks headless in Edge on this machine's GPU and prints
 // them: `node scripts/runSpike.mjs <spike page URL> <run function>`, e.g.
-// `node scripts/runSpike.mjs http://127.0.0.1:5190/spikes/warpGlobe.html?bench runWarpGlobe`
+// `node scripts/runSpike.mjs http://127.0.0.1:5190/spikes/curvilinearGlobe.html?bench runCurvilinearGlobe`
 // with the dev server running. A visible, focused page: a browser tab hidden
 // behind other windows throttles timers, and spikes then crawl or stall.
 import { chromium } from "playwright";

@@ -150,7 +150,7 @@ describe("the surface boundary", () => {
       fragment:
         "fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) { (*material).alpha = fsInput.metadata.t; }",
       attributes: { heat: { semantic: "_HEAT", type: "vec3f" } },
-      metadata: { t: "f32", warp: "mat2x2f" },
+      metadata: { t: "f32", curvilinearMap: "mat2x2f" },
       uniforms: { amount: { type: "f32", value: 1 } },
     });
     expect(

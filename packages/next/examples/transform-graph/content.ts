@@ -14,8 +14,8 @@ import {
 } from "@cesium/next";
 import {
   curvilinearFrame,
-  warpForward,
-  warpInverse,
+  curvilinearForward,
+  curvilinearInverse,
   type Frame,
   type CurvilinearFrame,
 } from "@cesium/next/frames";
@@ -124,9 +124,9 @@ export function createDeformer(
         factor === undefined ? undefined : scaleOf(factor),
       ),
     drawn: (point, out = new Float64Array(3)) =>
-      warpForward(frame.warp, point, out),
+      curvilinearForward(frame.curvilinearMap, point, out),
     truth: (point, out = new Float64Array(3)) =>
-      warpInverse(frame.warp, point, out),
+      curvilinearInverse(frame.curvilinearMap, point, out),
   };
 }
 

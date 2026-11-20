@@ -140,8 +140,8 @@ export {
 } from "../engineering/pipeline.ts";
 export { gridFactors } from "../engineering/factors.ts";
 export {
-  reprojectionWarp,
-  type ReprojectionWarpOptions,
-} from "./reprojectionWarp.ts";
+  reprojectionCurvilinearMap,
+  type ReprojectionCurvilinearMapOptions,
+} from "./reprojectionCurvilinearMap.ts";
 // AreaOfInterest, CrsRef, CrsUnits and GridFactors are the frames entry's
 // (with the coordinate service they belong to; the plan's call 36).

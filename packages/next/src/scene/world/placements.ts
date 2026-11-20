@@ -20,14 +20,18 @@ import {
   checkPlacement,
   finite32,
 } from "../placement.ts";
-import { checkTerms, termsOf, termsParameters } from "../warpEvaluate.ts";
+import {
+  checkTerms,
+  termsOf,
+  termsParameters,
+} from "../curvilinearEvaluate.ts";
 import {
   drawnSphere,
   roundUp32,
   termBoundsOver,
   type TermBounds,
-} from "../warpBounds.ts";
-import type { WarpTerms } from "../warpTerms.ts";
+} from "../curvilinearBounds.ts";
+import type { CurvilinearTerms } from "../curvilinearTerms.ts";
 import type { WorldCurvedClips } from "./curvedClips.ts";
 import type { ParameterSlot, DrawHandle, DrawPlacement } from "./types.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
@@ -39,7 +43,9 @@ export interface PlacementWorld extends Pick<
   "changedViews" | "ctx" | "hasDraw" | "markDirty" | "version"
 > {
   /** Where a curved clip's field is put on the terms (absent in a fake). */
-  readonly warps?: { readonly curved: Pick<WorldCurvedClips, "decorate"> };
+  readonly curvilinearMaps?: {
+    readonly curved: Pick<WorldCurvedClips, "decorate">;
+  };
   readonly raster: Pick<
     WorldRaster,
     | "drawBatches"
@@ -56,7 +62,9 @@ export interface PlacementWorld extends Pick<
   >;
 }
 
-function isTerms(placement: Placement | WarpTerms): placement is WarpTerms {
+function isTerms(
+  placement: Placement | CurvilinearTerms,
+): placement is CurvilinearTerms {
   return Array.isArray(placement);
 }
 
@@ -142,8 +150,8 @@ function writeSphere(
 }
 
 /**
- * Sets a draw's warp (`World.setPlacement` for a public `Placement`,
- * converted by `termsOf`; `WarpTerms` directly, for the engine's own
+ * Sets a draw's curvilinear map (`World.setPlacement` for a public `Placement`,
+ * converted by `termsOf`; `CurvilinearTerms` directly, for the engine's own
  * routes): the same refusals. Its culling sphere moves by the displacement
  * at its center and grows by the residual only (`drawnSphere`), for every
  * value in its parameters' ranges.
@@ -151,7 +159,7 @@ function writeSphere(
 export function setPlacement(
   world: PlacementWorld,
   handle: DrawHandle,
-  placement: Placement | WarpTerms | undefined,
+  placement: Placement | CurvilinearTerms | undefined,
   options: {
     /** The engine's own route term for a billboard: its placement moves its anchor (lattice terms only). */
     readonly anchored?: boolean;
@@ -162,7 +170,7 @@ export function setPlacement(
   }
   const index = handle.index;
   let source: Placement | undefined;
-  let next: WarpTerms | undefined;
+  let next: CurvilinearTerms | undefined;
   if (placement !== undefined && isTerms(placement)) {
     checkTerms("setPlacement", placement);
     next = placement;
@@ -214,7 +222,7 @@ export function setPlacement(
   const old = world.scene.drawPlacements[index];
   // A curved clip's field rides on the draw's first lattice, or on one made to
   // carry it (curvedClips.ts): whichever way the terms were set.
-  next = world.warps?.curved.decorate(index, next) ?? next;
+  next = world.curvilinearMaps?.curved.decorate(index, next) ?? next;
   const base = old ? old.base : world.raster.recordsF32[o + RADIUS_WORD]!;
   const center: readonly [number, number, number] = old
     ? old.center
@@ -287,7 +295,7 @@ export function drawPlacement(
 export function drawTerms(
   world: PlacementWorld,
   handle: DrawHandle,
-): WarpTerms | undefined {
+): CurvilinearTerms | undefined {
   return world.hasDraw(handle)
     ? world.scene.drawPlacements[handle.index]?.terms
     : undefined;

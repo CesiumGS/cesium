@@ -5,7 +5,7 @@
 // evaluate it at sample points the content never had (section 8.2). A
 // term's displacement is a cubic lattice's or a vertex attribute's; its
 // weight a constant times up to two factors of a parameter's float. The
-// float64 CPU twins are scene/warpEvaluate.ts `placeWithTerms` and
+// float64 CPU twins are scene/curvilinearEvaluate.ts `placeWithTerms` and
 // `placeJacobianWithTerms`; the buffer's layout is
 // scene/placementTable.ts's.
 //
@@ -15,7 +15,7 @@
 // It returns the placement's Jacobian J = I + sum of wi * dDi/dp beside
 // the position (plan 13.26, increment 2a): the stage turns the vertex's
 // tangent by J and its normal by J's cofactor matrix (`turnNormal`), so
-// shading follows the surface as drawn, however steep a warp makes it. A
+// shading follows the surface as drawn, however steep a curvilinear map makes it. A
 // lattice's Jacobian is the cubic's analytic derivative; an attribute
 // (or profile) term's is zero (data has no derivative in space), so under one the
 // normal stays as the mesh stores it. A record without a placement
@@ -34,21 +34,21 @@ public static const uint NO_PLACEMENT = 0xffffffffu;
 public static const uint PLACEMENT_TERMS = 20u;
 
 // Term kinds, and the rows of a term (scene/placementTable.ts).
-static const uint WARP_LATTICE = 1u;
-static const uint WARP_ATTRIBUTE = 2u;
+static const uint CURVILINEAR_LATTICE = 1u;
+static const uint CURVILINEAR_ATTRIBUTE = 2u;
 // A compiled route (transform graph, scene/world/routes.ts): the displacement
 // is the route's own function, evaluated by the route's pipeline variant
 // (`routeVertex`), not here. The block's term row is
-// [WARP_ROUTE, 0, body row, the route's uniform rows], and the vertex stage
+// [CURVILINEAR_ROUTE, 0, body row, the route's uniform rows], and the vertex stage
 // here leaves the position as it is.
-static const uint WARP_ROUTE = 3u;
+static const uint CURVILINEAR_ROUTE = 3u;
 // A terrain tile under a height profile (`HeightScale.profile`): the vertex's
 // `(n, h)` attribute (4 components: the ellipsoid's unit normal and the signed
 // height) gives the displacement G(h)·n, G `exaggerationLift`. The term row
-// is [WARP_PROFILE | factors << 8, weight scale, the attribute's name hash,
+// is [CURVILINEAR_PROFILE | factors << 8, weight scale, the attribute's name hash,
 // its body's row from the block's header]; the body's one row is
 // [base, ceiling, band, 0].
-static const uint WARP_PROFILE = 4u;
+static const uint CURVILINEAR_PROFILE = 4u;
 static const uint TERM_ROWS = 3u;
 // Rows before a lattice body's cells: the center and 1 / scale, then the
 // lattice's constant displacement (its value at the center) as hi and lo.
@@ -104,7 +104,7 @@ float3 jacobianColumn(float3x3 j, int c) {
   return float3(j[0][c], j[1][c], j[2][c]);
 }
 
-// A lattice's displacement at model-space `p` (scene/warpTerms.ts
+// A lattice's displacement at model-space `p` (scene/curvilinearTerms.ts
 // `CubicLattice`) less its constant part, which `placementOffset` carries
 // (the cell polynomials' constant coefficients hold the rest), and its
 // Jacobian `dD/dp` into `jacobian`: its body's first row holds the center
@@ -170,15 +170,15 @@ float3 latticeDisplacement(uint body, uint cells, float3 p, out float3x3 jacobia
 // also gives its clip field's value into `clip` (0 for an attribute).
 float3 termDisplacement(uint4 head, uint block, float3 p, uint vertexIndex, uint directory, uint feature, float4 morph,
                         out float3x3 jacobian, out float clip) {
-  if ((head.x & 255u) == WARP_LATTICE) {
+  if ((head.x & 255u) == CURVILINEAR_LATTICE) {
     return latticeDisplacement(block + head.z, head.w, p, jacobian, clip);
   }
   jacobian = ZERO_JACOBIAN;
   clip = 0.0;
-  if ((head.x & 255u) == WARP_ROUTE) {
+  if ((head.x & 255u) == CURVILINEAR_ROUTE) {
     return float3(0.0);
   }
-  if ((head.x & 255u) == WARP_PROFILE) {
+  if ((head.x & 255u) == CURVILINEAR_PROFILE) {
     float4 up = placementAttribute(directory, head.z, vertexIndex, feature);
     float4 profile = placementRow(block + head.w);
     // A tile morphing in (`morph`, below) lifts the height it is at now.
@@ -230,7 +230,7 @@ public Placed placeVertex(uint placement, float3 positionMC, uint vertexIndex, u
     float clip;
     d += w * termDisplacement(head, placement, positionMC, vertexIndex, directory, feature, morph, jd, clip);
     j += w * jd;
-    if (!clipTaken && (head.x & 255u) == WARP_LATTICE) {
+    if (!clipTaken && (head.x & 255u) == CURVILINEAR_LATTICE) {
       placed.clip = clip;
       clipTaken = true;
     }
@@ -278,7 +278,7 @@ public void placementOffset(uint placement, out float3 hi, out float3 lo) {
   for (uint i = 0u; i < count; i++) {
     uint row = placement + 1u + i * TERM_ROWS;
     uint4 head = asuint(placementRow(row));
-    if ((head.x & 255u) != WARP_LATTICE) {
+    if ((head.x & 255u) != CURVILINEAR_LATTICE) {
       continue;
     }
     float w = termWeight(row, head);
@@ -313,7 +313,7 @@ public float3 placeAnchor(uint placement, float3 p) {
   for (uint i = 0u; i < count; i++) {
     uint row = placement + 1u + i * TERM_ROWS;
     uint4 head = asuint(placementRow(row));
-    if ((head.x & 255u) != WARP_LATTICE) {
+    if ((head.x & 255u) != CURVILINEAR_LATTICE) {
       continue;
     }
     float w = termWeight(row, head);

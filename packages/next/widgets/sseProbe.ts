@@ -40,7 +40,7 @@ type Views = Array<{
 }>;
 type Terrain = Tileset3D & {
   world: {
-    tileWarp?(
+    tileCurvilinearMap?(
       anchor: unknown,
       id: number,
     ): { heightRange?: HeightRange } | undefined;
@@ -105,7 +105,7 @@ function report(engine: Engine, tileset: Terrain): string {
   const p = sv.position;
   const threshold = tileset.selection.memoryAdjustedScreenSpaceError;
   // Per drawn vertex x_i (at its drawn height): d_i, and the exact first-order
-  // error |P⊥ J n̂|·ε/d_i·K, with J n̂ = (dh'/dh)·n̂ for a height-scale warp
+  // error |P⊥ J n̂|·ε/d_i·K, with J n̂ = (dh'/dh)·n̂ for a height-scale curvilinear map
   // (dh'/dh by central difference of the drawn height). `box` is the distance
   // the selection used: the same vertices' stretch, over that distance.
   const K = sv.height / sv.sseDenominator;

@@ -116,7 +116,7 @@ try {
     `long tasks: ${longTasks.length}, total ${Math.round(longTasks.reduce((a, b) => a + b, 0))} ms, longest ${Math.round(Math.max(0, ...longTasks))} ms`,
   );
   console.log(`JS heap per second (MiB): ${heap.join(" ")}`);
-  // Self time of the functions whose names match PROFILE_MATCH (default "fit"), e.g. the warp fits.
+  // Self time of the functions whose names match PROFILE_MATCH (default "fit"), e.g. the curvilinear map fits.
   const match = new RegExp(process.env.PROFILE_MATCH ?? "fit", "i");
   const matched = [...byFn].filter(([name]) => match.test(name.split("  ")[0]));
   const matchedHits = matched.reduce((s, [, n]) => s + n, 0);

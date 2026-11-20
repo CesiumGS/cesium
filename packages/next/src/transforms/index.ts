@@ -17,13 +17,17 @@ export {
   type ScaleAbout,
   type ScaleAboutOptions,
 } from "./scaleAbout.ts";
-export { LiveWarp, liveWarp, type ChangeableWarp } from "./liveWarp.ts";
+export {
+  LiveCurvilinearMap,
+  liveCurvilinearMap,
+  type ChangeableCurvilinearMap,
+} from "./liveCurvilinearMap.ts";
 export { LiveEdge, liveEdge, type LiveEdgeOptions } from "./liveEdge.ts";
-export { blend, type BlendedWarp } from "./blend.ts";
+export { blend, type BlendedCurvilinearMap } from "./blend.ts";
 export {
   fromFunction,
   type FromFunctionOptions,
-  type FunctionWarp,
+  type FunctionCurvilinearMap,
   type PointFunction,
 } from "./fromFunction.ts";
 export { scaleAlongAxes, scaleAlongAxesDescriptor } from "./scaleAlongAxes.ts";

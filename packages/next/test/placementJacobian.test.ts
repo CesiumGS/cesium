@@ -18,13 +18,13 @@ import {
   placeJacobianWithTerms,
   placeWithTerms,
   turnNormalByJacobian,
-} from "../src/scene/warpEvaluate.ts";
-import { fitLattice } from "../src/scene/warpFit.ts";
+} from "../src/scene/curvilinearEvaluate.ts";
+import { fitLattice } from "../src/scene/curvilinearFit.ts";
 import type {
   AttributeTerm,
   CubicLattice,
-  WarpTerms,
-} from "../src/scene/warpTerms.ts";
+  CurvilinearTerms,
+} from "../src/scene/curvilinearTerms.ts";
 
 /** A deterministic generator in [−1, 1). */
 function random(seed: number): () => number {
@@ -100,7 +100,7 @@ const weighted = (
 
 /** The columns of `J` (`out[3 * column + row]`) by central differences of `placeWithTerms`. */
 function difference(
-  terms: WarpTerms,
+  terms: CurvilinearTerms,
   p: number[],
   h: number,
   out: Float64Array,
@@ -177,7 +177,7 @@ describe("the placement Jacobian", () => {
   });
 
   it("matches central differences of the placement: cells, factors, t outside [0, 1], outside the tile", () => {
-    const terms: WarpTerms = [
+    const terms: CurvilinearTerms = [
       weighted(lattice(4, 11), 1, [
         [1.7, -1, 1],
         [-0.4, 1, 0.5],
@@ -203,7 +203,7 @@ describe("the placement Jacobian", () => {
     }
   });
 
-  it("matches differences of a fitted warp (k = 10 over a height wave) at its vertices", () => {
+  it("matches differences of a fitted curvilinear map (k = 10 over a height wave) at its vertices", () => {
     const wave = (p: ArrayLike<number>, out: Float64Array) => {
       out[0] = 0;
       out[1] = 0;
@@ -215,7 +215,7 @@ describe("the placement Jacobian", () => {
       { tolerance: 1e-4 },
     );
     const k = parameter(10);
-    const terms: WarpTerms = [
+    const terms: CurvilinearTerms = [
       {
         term: fit,
         weight: { scale: 1, factors: [{ parameter: k, offset: -1, slope: 1 }] },
@@ -251,7 +251,7 @@ describe("normals turned by the cofactor matrix", () => {
     return a.map((x) => x / n);
   };
 
-  it("stay perpendicular to the placed triangle's plane, steep warps included", () => {
+  it("stay perpendicular to the placed triangle's plane, steep curvilinear maps included", () => {
     // A k = 10 exaggeration of a height wave: slopes ten times steeper.
     const wave = (p: ArrayLike<number>, out: Float64Array) => {
       out[0] = 0;
@@ -263,7 +263,7 @@ describe("normals turned by the cofactor matrix", () => {
       { center: [0, 0, 0], scale: 1.5 },
       { tolerance: 1e-4 },
     );
-    const terms: WarpTerms = [
+    const terms: CurvilinearTerms = [
       { term: fit, weight: { scale: 9, factors: [] } },
       weighted(lattice(2, 5, 1.5), 0.3),
     ];

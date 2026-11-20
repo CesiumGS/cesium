@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Curvilinear map Points Checks</title>
+  </head>
+  <body>
+    <!-- Plan docs/design/geometry-through-placement-review.md, increment 4: open with ?bench and call runCurvilinearPoints(). -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./curvilinearPoints.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runCurvilinearPoints");
+    </script>
+  </body>
+</html>

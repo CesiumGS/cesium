@@ -1,7 +1,7 @@
 import { attributeHash } from "../render/layout.ts";
 import { PLACEMENT_TERMS } from "./placement.ts";
-import { latticeDisplacement } from "./warpEvaluate.ts";
-import type { WarpTerms } from "./warpTerms.ts";
+import { latticeDisplacement } from "./curvilinearEvaluate.ts";
+import type { CurvilinearTerms } from "./curvilinearTerms.ts";
 
 /**
  * A world's placements buffer (plan 5a's call 42): one storage buffer of
@@ -12,18 +12,18 @@ import type { WarpTerms } from "./warpTerms.ts";
  *
  * - placement parameters, one float each, four to a row
  *   (`PlacementParameter`): a morph writes one float, 4 bytes, a tick;
- * - each placed draw's block (`WarpTerms`, plan 13.26), which its record's
+ * - each placed draw's block (`CurvilinearTerms`, plan 13.26), which its record's
  *   `placement` word points at (the row of its header).
  *
  * A block is, in rows (words are u32 unless marked f32; `at` is its first row):
  *
  * - `at`: the header, `[term count (1 to 3), 0, 0, 0]`;
  * - `at + 1 + 3i`: term `i`'s row, `[kind | factors << 8, weight scale
- *   (f32), a, b]`, with `kind` a `WARP_KIND`: a lattice has `a` the row of
+ *   (f32), a, b]`, with `kind` a `CURVILINEAR_KIND`: a lattice has `a` the row of
  *   its body from `at` and `b` its cells per axis; an attribute has `a` the
  *   name's hash (`attributeHash`) and `b` 1 if it is absolute (it holds a
  *   position: the displacement is it minus the point's), else 0. A profile
- *   term (`WARP_KIND.profile`, an attribute with a `profile`) has `b` the
+ *   term (`CURVILINEAR_KIND.profile`, an attribute with a `profile`) has `b` the
  *   row of its body from `at`, one row `[base, ceiling, band, 0]` (f32),
  *   after the lattices' bodies' places in term order;
  * - the two rows after it, the weight's factors, `[parameter's word,
@@ -113,7 +113,10 @@ export class PlacementTable {
   }
 
   /** Writes `terms`' block and returns its header row. `slotOf` gives a parameter's word. */
-  add(terms: WarpTerms, slotOf: (p: { value: number }) => number): number {
+  add(
+    terms: CurvilinearTerms,
+    slotOf: (p: { value: number }) => number,
+  ): number {
     const rows = blockRows(terms);
     const at = this.allocate(rows);
     this.pack(terms, at, slotOf);
@@ -128,7 +131,7 @@ export class PlacementTable {
   }
 
   /** Frees the block at `at` of `terms`' size, for reuse. */
-  remove(at: number, terms: WarpTerms): void {
+  remove(at: number, terms: CurvilinearTerms): void {
     this.releaseRows(at, blockRows(terms));
   }
 
@@ -239,7 +242,7 @@ export class PlacementTable {
   }
 
   private pack(
-    terms: WarpTerms,
+    terms: CurvilinearTerms,
     at: number,
     slotOf: (p: { value: number }) => number,
   ): void {
@@ -253,10 +256,10 @@ export class PlacementTable {
       const t = (at + 1 + TERM_ROWS * i) * 4;
       const kind =
         term.kind === "cubic"
-          ? WARP_KIND.lattice
+          ? CURVILINEAR_KIND.lattice
           : term.profile
-            ? WARP_KIND.profile
-            : WARP_KIND.attribute;
+            ? CURVILINEAR_KIND.profile
+            : CURVILINEAR_KIND.attribute;
       u32[t] = kind | (weight.factors.length << 8);
       f32[t + 1] = weight.scale;
       weight.factors.forEach((factor, j) => {
@@ -314,8 +317,8 @@ export class PlacementTable {
   }
 }
 
-/** Term kinds in a term's row (shaders/placement.slang `WARP_LATTICE`…; `route` is a compiled route's, scene/routeVariant.ts). */
-export const WARP_KIND = {
+/** Term kinds in a term's row (shaders/placement.slang `CURVILINEAR_LATTICE`…; `route` is a compiled route's, scene/routeVariant.ts). */
+export const CURVILINEAR_KIND = {
   lattice: 1,
   attribute: 2,
   route: 3,
@@ -337,7 +340,7 @@ export function latticeRows(cells: number): number {
 }
 
 /** Rows of `terms`' block. */
-export function blockRows(terms: WarpTerms): number {
+export function blockRows(terms: CurvilinearTerms): number {
   let rows = 1 + TERM_ROWS * terms.length;
   for (const { term } of terms) {
     if (term.kind === "cubic") {

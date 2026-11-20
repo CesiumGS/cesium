@@ -6,7 +6,7 @@
 // point: a mesh's triangle's stored positions, weighted by the barycentrics
 // and carried by the draw's matrix; a patch draw's face, evaluated by its
 // b-rep's `refinePick`. Nothing is inverted: a placement that bends the
-// draw (a warp) moved where the content is drawn, not where it is, and the
+// draw (a curvilinear map) moved where the content is drawn, not where it is, and the
 // point is the content's own whatever was drawn.
 import type { GeometryAccuracy } from "../geometry/query.ts";
 import { FLAGS_WORD, RECORD_WORDS, RecordFlags } from "../render/layout.ts";

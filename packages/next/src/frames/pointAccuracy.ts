@@ -71,7 +71,7 @@ export type PointAccuracyTerm =
       readonly frame: string;
       readonly kind: "pick";
       readonly part: "footprint" | "depth";
-      /** A worst-case bound, m (in true meters under a view warp). */
+      /** A worst-case bound, m (in true meters under a view curvilinear map). */
       readonly meters: number;
       readonly basis?: "bound";
       readonly note: string;

@@ -1,7 +1,7 @@
 // A placed draw's normals and positions on the GPU against the float64 CPU
 // twin (plan 13.26, increment 2a; the Node tests are test/placementJacobian
 // .test.ts and test/drawPlacement.test.ts). A grid 6,378 km from the
-// transform table's origin is drawn under a warp with a known analytic form:
+// transform table's origin is drawn under a curvilinear map with a known analytic form:
 // a lattice fitted (`fitLattice`) to a wave, weighted by `k − 1` for an
 // exaggeration k of 10 (then 4: one float written, no refit), plus a second
 // weighted term. Its vertices are placed by shaders/placement.slang, which
@@ -41,16 +41,19 @@ import {
   placeJacobianWithTerms,
   placeWithTerms,
   turnNormalByJacobian,
-} from "../src/scene/warpEvaluate.ts";
-import { fitLattice } from "../src/scene/warpFit.ts";
-import type { CubicLattice, WarpTerms } from "../src/scene/warpTerms.ts";
+} from "../src/scene/curvilinearEvaluate.ts";
+import { fitLattice } from "../src/scene/curvilinearFit.ts";
+import type {
+  CubicLattice,
+  CurvilinearTerms,
+} from "../src/scene/curvilinearTerms.ts";
 import { setPlacement } from "../src/scene/world/placements.ts";
 import type { DrawHandle } from "../src/scene/world/types.ts";
 
 const TEMPLATE = `
 <h1>A placed draw's normals and positions against their CPU twin</h1>
 <p>
-  A grid under a fitted warp (height wave, exaggeration 10 then 4), drawn
+  A grid under a fitted curvilinear map (height wave, exaggeration 10 then 4), drawn
   with a fragment stage that shows its difference from the float64 twin's
   value, amplified: the turned normal (0.1°), the design position the
   fragment stage gets, and the position where it is drawn.
@@ -130,7 +133,7 @@ function stop(engine: Engine | undefined): void {
   }
 }
 
-/** The analytic warp (model units): a height wave with a little lateral drift. */
+/** The analytic curvilinear map (model units): a height wave with a little lateral drift. */
 function wave(p: ArrayLike<number>, out: Float64Array): void {
   const [x, y] = [p[0]!, p[1]!];
   out[0] = 0.03 * Math.cos(1.3 * y);
@@ -200,7 +203,7 @@ interface Expected {
 
 function expectedFor(
   positions: Float32Array,
-  terms: WarpTerms | undefined,
+  terms: CurvilinearTerms | undefined,
 ): Expected {
   const n = positions.length / 3;
   const drawn = new Float32Array(n * 3);
@@ -379,7 +382,7 @@ async function runPlacementNormals(): Promise<PlacementNormalsResult> {
     const positions = gridPositions();
     const exaggeration: PlacementParameter = world.createPlacementParameter(10);
     const fits = lattices();
-    const warp: WarpTerms = [
+    const curvilinearMap: CurvilinearTerms = [
       {
         term: fits.wave,
         weight: {
@@ -399,7 +402,7 @@ async function runPlacementNormals(): Promise<PlacementNormalsResult> {
       tolerance: 1,
       maxCells: 1,
     });
-    const nothing: WarpTerms = [
+    const nothing: CurvilinearTerms = [
       {
         term: zeros,
         weight: { scale: 1, factors: [] },
@@ -415,7 +418,7 @@ async function runPlacementNormals(): Promise<PlacementNormalsResult> {
     };
     /** Draws the grid once, alone, and reads each image asked for. */
     const capture = async (
-      terms: WarpTerms | undefined,
+      terms: CurvilinearTerms | undefined,
       expected: Expected,
       images: ReadonlyArray<keyof typeof MODES | "lit">,
     ): Promise<Map<string, Uint8ClampedArray>> => {
@@ -458,7 +461,7 @@ async function runPlacementNormals(): Promise<PlacementNormalsResult> {
     const modes = ["normal", "design", "drawn", "mask"] as const;
     const measure = async (
       name: string,
-      terms: WarpTerms | undefined,
+      terms: CurvilinearTerms | undefined,
       moves: boolean,
     ): Promise<Map<string, Uint8ClampedArray>> => {
       const expected = expectedFor(positions, terms);
@@ -501,11 +504,15 @@ async function runPlacementNormals(): Promise<PlacementNormalsResult> {
     );
     unplacedLitHash = hash(unplaced.get("lit")!);
     exaggeration.value = 10;
-    await measure("lattice warp, exaggeration 10", warp, true);
+    await measure(
+      "lattice curvilinear map, exaggeration 10",
+      curvilinearMap,
+      true,
+    );
     exaggeration.value = 4;
     await measure(
       "the same, exaggeration 4 (one float written, no refit)",
-      warp,
+      curvilinearMap,
       true,
     );
     const identity = await measure(
@@ -529,7 +536,7 @@ async function runPlacementNormals(): Promise<PlacementNormalsResult> {
         "wave cells": fits.wave.cells,
         "ripple fit error bound, m": fits.ripple.errorBound,
         "analytic normal − twin normal, degrees": analyticAgainstTwin(
-          warp,
+          curvilinearMap,
           exaggeration,
         ),
       },
@@ -565,7 +572,7 @@ async function runPlacementNormals(): Promise<PlacementNormalsResult> {
  * central differences of the analytic functions, and a normal from them.
  */
 function analyticAgainstTwin(
-  terms: WarpTerms,
+  terms: CurvilinearTerms,
   parameter: PlacementParameter,
 ): number {
   parameter.value = 10;

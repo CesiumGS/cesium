@@ -2,7 +2,7 @@
 // writes (a mesh's triangle and barycentrics, a patch draw's face and (u, v))
 // becomes the content's own point: a mesh's stored corners weighted by the
 // barycentrics and carried by the draw's matrix, a b-rep face's exact point
-// through `refinePick`; a warp that bends the draw moves where it is drawn,
+// through `refinePick`; a curvilinear map that bends the draw moves where it is drawn,
 // never the point. The GPU side is spikes/pickDomain.html; the engine runs on
 // the fake device of test/fakeGpu.ts and the tests answer each pick's
 // readbacks as the passes would (as test/corePick.test.ts does).
@@ -124,7 +124,7 @@ const records = () => world.raster.recordsU32 as Uint32Array;
 const distance = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
 
-/** Height over a sphere about the origin times `k`, along the radial (a warp). */
+/** Height over a sphere about the origin times `k`, along the radial (a curvilinear map). */
 function exaggerate(k: number, p: ArrayLike<number>): number[] {
   const r = Math.hypot(p[0]!, p[1]!, p[2]!);
   const f = (R + k * (r - R)) / r;
@@ -255,7 +255,7 @@ describe("a mesh's point", () => {
     expect(Math.abs(off) / Math.hypot(...n)).toBeLessThan(1e-12);
   });
 
-  it("under a warp is the content's own point, not the drawn one: the warp's forward of it is where the surface is shown", () => {
+  it("under a curvilinear map is the content's own point, not the drawn one: the curvilinear map's forward of it is where the surface is shown", () => {
     // A mesh 3 m above the sphere, drawn through height × 10: its vertices
     // are drawn at F(true), so a pixel there sees F(point on the triangle).
     // Nothing is inverted: the point is the corners weighted, whatever F.
@@ -271,11 +271,11 @@ describe("a mesh's point", () => {
     const resolved = resolveDomain(sample, world, draw, 0)!;
     const c = sample.corners!;
     const sum = b[0] + b[1] + b[2];
-    const unwarped = [0, 1, 2].map(
+    const affine = [0, 1, 2].map(
       (i) =>
         origin[i]! + (b[0] * c[i]! + b[1] * c[3 + i]! + b[2] * c[6 + i]!) / sum,
     );
-    expect(distance(resolved.position, unwarped)).toBeLessThan(1e-9);
+    expect(distance(resolved.position, affine)).toBeLessThan(1e-9);
     const drawn = exaggerate(10, resolved.position);
     // Drawn ten times as high: the true point is not the drawn one.
     const height = Math.hypot(...resolved.position) - R;
@@ -584,7 +584,7 @@ describe("the pick's window", () => {
   });
 });
 
-describe("terrain placed across a warp", () => {
+describe("terrain placed across a curvilinear map", () => {
   const domain = (stopsTerrain: boolean) => ({
     readback: {} as GPUBuffer,
     disposables: [],
@@ -606,7 +606,7 @@ describe("terrain placed across a warp", () => {
     expect(standsInForTerrain(domain(true), sample, 1e-3)).toBe(true);
     // Reverse-Z: a greater depth is nearer. Farther than the image's: no.
     expect(standsInForTerrain(domain(true), sample, 3e-3)).toBe(false);
-    // Only where the pass was asked to stand in (a warped globe's stops).
+    // Only where the pass was asked to stand in (a curvilinear globe's stops).
     expect(standsInForTerrain(domain(false), sample, 1e-3)).toBe(false);
   });
 });

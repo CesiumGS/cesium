@@ -14,7 +14,7 @@ import {
 } from "../src/render/layout.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { placementBounds } from "../src/scene/world/patches.ts";
-import type { WarpTerms } from "../src/scene/warpTerms.ts";
+import type { CurvilinearTerms } from "../src/scene/curvilinearTerms.ts";
 import { prepareGpuPatches, tessellateBrep } from "../src/brep/index.ts";
 import { BrepBuilder } from "../src/brep/build.ts";
 import type { DrawHandle } from "../src/scene/world/types.ts";
@@ -498,7 +498,7 @@ describe("placementBounds", () => {
       estimate: false,
     };
   };
-  const at = (terms: WarpTerms) =>
+  const at = (terms: CurvilinearTerms) =>
     placementBounds({ terms, center: [0, 0, 0], base: 1 });
 
   it("is 1 and 0 without a placement", () => {

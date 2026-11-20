@@ -495,7 +495,7 @@ describe("Jobs: progressive jobs on this thread (slice)", () => {
     );
     const controller = new AbortController();
     const job = jobs.slice({ ...w.spec, signal: controller.signal });
-    controller.abort(); // a warp's signature changed
+    controller.abort(); // a curvilinear map's signature changed
     expect(await settled(job.promise)).toEqual({ error: "abort" });
     expect(w.canceled()).toBe(true);
     expect(jobs.waiting).toBe(0);

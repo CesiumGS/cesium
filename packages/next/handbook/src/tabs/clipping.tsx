@@ -23,7 +23,7 @@ function Ticks({ text }: { text: string }) {
 
 const SPACES = [
   {
-    scene: "No warp",
+    scene: "No curvilinear map",
     named: "Any reference frame reached by a rigid route",
     tested: "The true point, which is also the drawn one",
     why: "One point, so the choice makes no difference.",
@@ -512,14 +512,14 @@ const NOT_BUILT = [
       "A draw's `.w` channel holds one scalar. One view's curved sets combine by max, and views that use different curved sets share the first one's field: the others are reported.",
   },
   {
-    what: "A curved clip that moves, and a warp scaled after the fit",
+    what: "A curved clip that moves, and a curvilinear map scaled after the fit",
     state:
-      "Moving a curved clip refits every draw it cuts, within the per-frame budget, so a drag shows a stale field until the refit lands. A warp-scale change after the fit isn't followed until something else triggers a refit.",
+      "Moving a curved clip refits every draw it cuts, within the per-frame budget, so a drag shows a stale field until the refit lands. A curvilinear-scale change after the fit isn't followed until something else triggers a refit.",
   },
   {
     what: "Room for a carrier",
     state:
-      "A draw already at 3 warp terms with no lattice has nowhere to put the field and is left uncut, and the engine says so once.",
+      "A draw already at 3 curvilinear terms with no lattice has nowhere to put the field and is left uncut, and the engine says so once.",
   },
   {
     what: "Exemption by element data",
@@ -559,7 +559,7 @@ const NOT_BUILT = [
   {
     what: "Drawn-space sets in shadow cascades",
     state:
-      "A shadow cascade's or a height capture's view is orthographic with a window of its own, so it keeps the varying: a set named in a drawn reference frame is tested on the true point there. The two agree without a warp.",
+      "A shadow cascade's or a height capture's view is orthographic with a window of its own, so it keeps the varying: a set named in a drawn reference frame is tested on the true point there. The two agree without a curvilinear map.",
   },
   {
     what: "A GPU timing of the fragment test",
@@ -610,7 +610,7 @@ const TESTS = [
   {
     file: "test/clips.test.ts",
     covers:
-      "Shapes, validation, combining and keeping; the table against float64 far from the origin; which space a set is tested in, for no warp, a deformer over the content and a reprojection; the view's mask and a view without clips; and the queries, with ray, closest point and segment distance passing over what is removed, and points routed into each set's reference frame.",
+      "Shapes, validation, combining and keeping; the table against float64 far from the origin; which space a set is tested in, for no curvilinear map, a deformer over the content and a reprojection; the view's mask and a view without clips; and the queries, with ray, closest point and segment distance passing over what is removed, and points routed into each set's reference frame.",
   },
   {
     file: "test/queryClips.test.ts",
@@ -729,12 +729,13 @@ export function Clipping() {
 
       <Section title="Where a clip is tested">
         <p>
-          A warp can separate where content is from where it is drawn (see the
-          Warps and routes tab). A clip named in one reference frame has to cut
-          in the right place for both. Each set picks one of three, per view and
-          per tick, from the rigidity of its routes. The CPU places the set in
-          the view&apos;s shading axes, camera-relative, in float64, so the
-          fragment stage reads small float32 numbers near the camera.
+          A curvilinear map can separate where content is from where it is drawn
+          (see the Curvilinear maps and routes tab). A clip named in one
+          reference frame has to cut in the right place for both. Each set picks
+          one of three, per view and per tick, from the rigidity of its routes.
+          The CPU places the set in the view&apos;s shading axes,
+          camera-relative, in float64, so the fragment stage reads small float32
+          numbers near the camera.
         </p>
         <Flow label="Which point a set is tested on" steps={SPACE_STEPS} />
         <DataTable
@@ -748,10 +749,10 @@ export function Clipping() {
           rows={SPACES}
         />
         <p>
-          The spike&apos;s tower stands under a ×10 height warp, drawn in a 512
-          × 512 image. A plane at 1 m named in ITRF cuts the tower at 10 m as
-          drawn. Tested on the drawn point instead, it would cut at 1 m as
-          drawn, far lower in the image.
+          The spike&apos;s tower stands under a ×10 height curvilinear map,
+          drawn in a 512 × 512 image. A plane at 1 m named in ITRF cuts the
+          tower at 10 m as drawn. Tested on the drawn point instead, it would
+          cut at 1 m as drawn, far lower in the image.
         </p>
         <DataTable
           label="The ×10 tower, measured on the GPU"
@@ -781,7 +782,7 @@ export function Clipping() {
         <p>
           A clip set holds shapes in one reference frame. Any frame will do,
           presentation frames included: a plane drawn in a design view stays
-          where the user drew it when the scene is warped into another.
+          where the user drew it when the scene is curvilinear into another.
         </p>
         <DataTable
           label="The three shapes"
@@ -976,9 +977,9 @@ export function Clipping() {
           <C>ClipSet</C> or a list, or <C>&quot;none&quot;</C>. It tests points
           in float64, routing each into each set&apos;s own reference frame at
           the scene time: by the matrix for a rigid route, by the route&apos;s
-          forward map across a warp. A query without a filter applies no clips,
-          which is what a world question such as a distance, a clearance or a
-          line of sight wants.
+          forward map across a curvilinear map. A query without a filter applies
+          no clips, which is what a world question such as a distance, a
+          clearance or a line of sight wants.
         </p>
         <p>
           Every ray backend takes the same option. <C>RayQuery.clips</C> is a{" "}
@@ -1030,12 +1031,12 @@ export function Clipping() {
         <p>
           A set whose reference frame reaches neither the content&apos;s true
           side nor the render root rigidly is curved: in the content&apos;s own
-          coordinates its surface bends with the warp. A plane named in a design
-          frame cuts the true surface of an exaggerated tile, wherever that is
-          drawn. A set placed at a transform-graph node is curved the same way
-          when the graph&apos;s route from the node to the content crosses a
-          curvilinear edge. The clipping example hasn&apos;t moved to
-          node-placed clips yet.
+          coordinates its surface bends with the curvilinear map. A plane named
+          in a design frame cuts the true surface of an exaggerated tile,
+          wherever that is drawn. A set placed at a transform-graph node is
+          curved the same way when the graph&apos;s route from the node to the
+          content crosses a curvilinear edge. The clipping example hasn&apos;t
+          moved to node-placed clips yet.
         </p>
         <ul>
           <li>
@@ -1059,13 +1060,14 @@ export function Clipping() {
         <p>
           The limits: a world has one curved field, so one view&apos;s curved
           sets combine by max and differing views are reported. Moving a curved
-          clip refits every draw it cuts within the per-frame budget. A warp
-          scaled after the fit isn&apos;t followed. Billboards, points and
-          instances aren&apos;t cut. A draw already at 3 terms with no lattice
-          has no room for a carrier. A draw is uncut until its field lands.
+          clip refits every draw it cuts within the per-frame budget. A
+          curvilinear map scaled after the fit isn&apos;t followed. Billboards,
+          points and instances aren&apos;t cut. A draw already at 3 terms with
+          no lattice has no room for a carrier. A draw is uncut until its field
+          lands.
         </p>
         <Written
-          from="src/scene/world/curvedClips.ts, src/scene/warpFit.ts, src/shaders/placement.slang and test/curvedClips.test.ts"
+          from="src/scene/world/curvedClips.ts, src/scene/curvilinearFit.ts, src/shaders/placement.slang and test/curvedClips.test.ts"
           on="2026-11-11"
         />
       </Section>

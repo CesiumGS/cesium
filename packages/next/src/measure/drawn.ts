@@ -42,7 +42,7 @@ export interface DrawnDistanceOptions {
  */
 export interface DrawnDistance {
   readonly space: "drawn";
-  /** "drawn distance: …" — never a true distance; carries the warps' words. */
+  /** "drawn distance: …" — never a true distance; carries the curvilinear maps' words. */
   readonly label: string;
   /** The straight line between where the two points are drawn, m. */
   readonly distance: number;
@@ -67,7 +67,7 @@ export interface DrawnDistance {
  * density in what is on the screen), never for a measurement.
  *
  * `view` is the view that draws the content (`View.anchorRoute`), or the
- * route itself. Content drawn through no warp has the drawn distance equal to
+ * route itself. Content drawn through no curvilinear map has the drawn distance equal to
  * the true one, in the anchor's coordinates (rigid placement).
  */
 export function drawnDistance(
@@ -91,12 +91,12 @@ export function drawnDistance(
   );
   const through = drawnThrough(route, midpoint(a, b));
   let pathLength = distance;
-  if (route && through.warped) {
+  if (route && through.curvilinear) {
     pathLength = routedLength(route, a, b, options.pathTolerance ?? 1e-3);
   }
   return {
     space: "drawn",
-    label: `drawn distance${through.warped ? ` (${through.statement.replace("; values are true", "")})` : ""}: what is on the screen, not a true distance`,
+    label: `drawn distance${through.curvilinear ? ` (${through.statement.replace("; values are true", "")})` : ""}: what is on the screen, not a true distance`,
     distance,
     pathLength,
     trueDistance,

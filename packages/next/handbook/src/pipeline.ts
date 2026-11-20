@@ -153,7 +153,7 @@ export const PASSES: Record<string, PassNote> = {
     summary:
       "The tile boxes selection asked about, tested against the pyramid.",
     detail:
-      "The view's drawn depth, as a pyramid, answers the boxes tile selection queried. The verdicts come a tick or two late, so selection uses them only where nothing drawn is removed: holding back refinement, ordering requests, and coarsening a tile that has been hidden for 2 s. With the draw cull on, this reads the pyramid that pass built, instead of building its own. An analytic occluder, such as the horizon occluder of a warped globe, answers on the CPU with no delay and can be drawn into the pyramid first.",
+      "The view's drawn depth, as a pyramid, answers the boxes tile selection queried. The verdicts come a tick or two late, so selection uses them only where nothing drawn is removed: holding back refinement, ordering requests, and coarsening a tile that has been hidden for 2 s. With the draw cull on, this reads the pyramid that pass built, instead of building its own. An analytic occluder, such as the horizon occluder of a curvilinear globe, answers on the CPU with no delay and can be drawn into the pyramid first.",
     skipped: "When the view has no tile boxes to ask about.",
     reads: ["view block"],
   },

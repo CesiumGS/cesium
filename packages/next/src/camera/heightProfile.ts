@@ -37,7 +37,7 @@ export function drawnHeight(
 
 /**
  * The drawn heights [lo, hi] of heights in [hMin, hMax] when the multiplier
- * is anywhere in [kLow, kHigh] (a warp's scale bucket), all positive. h' is
+ * is anywhere in [kLow, kHigh] (a curvilinear map's scale bucket), all positive. h' is
  * nondecreasing in h for a positive multiplier and affine in the multiplier,
  * so the extremes are at the ends of both: closed form.
  */

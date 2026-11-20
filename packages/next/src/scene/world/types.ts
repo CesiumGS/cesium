@@ -12,9 +12,9 @@ import type { RouteVariant } from "../routeVariant.ts";
 import type { SceneItem } from "../SceneItem.ts";
 import type { World } from "../World.ts";
 import type { Placement } from "../placement.ts";
-import type { TermBounds } from "../warpBounds.ts";
-import type { WarpAt } from "../warpAnchor.ts";
-import type { WarpTerms } from "../warpTerms.ts";
+import type { TermBounds } from "../curvilinearBounds.ts";
+import type { CurvilinearAt } from "../curvilinearAnchor.ts";
+import type { CurvilinearTerms } from "../curvilinearTerms.ts";
 
 /**
  * A world's ceilings (docs/design/gpu-limits-and-capacities.md, "Growable tables"):
@@ -278,13 +278,13 @@ export interface DrawOptions {
   solid?: boolean;
   /**
    * Where the route that places the draw's anchor is evaluated, when it
-   * crosses a warp (`World.setWarpAt`): per `"vertex"` (the default), or
+   * crosses a curvilinear map (`World.setCurvilinearAt`): per `"vertex"` (the default), or
    * once at its `"anchor"`, keeping its shape. A billboard or an instanced
    * draw is anchored whatever this says.
    */
-  warpAt?: WarpAt;
-  /** With `warpAt: "anchor"`: the transform whose origin it moves about (its own by default). */
-  warpOrigin?: TransformHandle;
+  curvilinearAt?: CurvilinearAt;
+  /** With `curvilinearAt: "anchor"`: the transform whose origin it moves about (its own by default). */
+  curvilinearOrigin?: TransformHandle;
 }
 
 /** What a picked feature ID resolves to. */
@@ -459,7 +459,7 @@ export interface DrawPlacement {
   /** The public placement it was set from; undefined when set from terms. */
   placement: Placement | undefined;
   /** What the GPU evaluates: the placement as terms, or the terms it was set with. */
-  terms: WarpTerms;
+  terms: CurvilinearTerms;
   /** Its block's header row in the placements buffer. */
   at: number;
   /** The record's bounding radius without the placement (model units). */

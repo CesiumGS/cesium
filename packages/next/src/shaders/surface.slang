@@ -852,7 +852,7 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
     position = read3(r.positionOffset, vertexIndex);
   }
   // A terrain tile morphing in: its true position moves first, so every
-  // warp acts on the height it is at now.
+  // curvilinear map acts on the height it is at now.
   float4 morph = float4(0.0);
   if (!points && !patched && r.morph > 0.0) {
     morph = morphOf(r, vertexIndex);
@@ -906,7 +906,7 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   Placed placed = placeVertex(billboard ? NO_PLACEMENT : r.placement, position, vertexIndex, r.attributes, tableFeature, morph);
   position = placed.position;
   bool placedDraw = r.placement != NO_PLACEMENT && !billboard;
-  // A draw under a compiled route (placement.slang `WARP_ROUTE`) is put where
+  // A draw under a compiled route (placement.slang `CURVILINEAR_ROUTE`) is put where
   // its route's unit says (`routeVertex`): the model-space position the stage
   // sees is the design one moved by the displacement, and the Jacobian is the
   // route's, so the normal and tangent turn with it. The stage's own move
@@ -970,7 +970,7 @@ SurfaceVertex vertexOut(uint vertexIndex, uint item, bool withAir) {
   normal = stage.normalMC;
   // Fragment stage's design position (the mesh's own, whatever the
   // placement and the custom stage: a procedural pattern keeps to the
-  // surface under a warp), and the draw's transform on the position before
+  // surface under a curvilinear map), and the draw's transform on the position before
   // the placement; for an unplaced draw, where it is drawn.
   out.positionMC = designPosition;
   float4 world = mul(drawnModel, float4(stage.positionMC, 1.0));
@@ -3056,7 +3056,7 @@ void fsPatchListSamples(SurfaceVaryings in, bool frontFacing : SV_IsFrontFace, u
   }
 }
 
-// Distance from the camera warped to [-1, 1] (logarithmic, as the paper
+// Distance from the camera curvilinear to [-1, 1] (logarithmic, as the paper
 // recommends: layers far apart in depth stay apart in the moments).
 float momentDepth(float3 relPosition) {
   float t = (log(max(length(relPosition), 1e-6)) - translucency.logNear) * translucency.invLogRange;

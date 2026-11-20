@@ -1,11 +1,11 @@
 // A terrain tile's error under a height profile is vertical: seen at most by
-// sin θ, θ the angle between the view ray and the local up (`tileWarp.ts`).
+// sin θ, θ the angle between the view ray and the local up (`tileCurvilinearMap.ts`).
 import { describe, expect, it } from "vitest";
 import {
   sinThetaMax,
   terrainDrawnError,
   type DrawnTile,
-} from "../src/streaming/tileWarp.ts";
+} from "../src/streaming/tileCurvilinearMap.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
 import { at } from "./terrainRayFixtures.ts";
 
@@ -45,9 +45,9 @@ describe("direction-aware vertical error", () => {
     const edge = sinThetaMax(beside, sphere, rectangle, key);
     expect(top).toBeLessThan(0.05);
     expect(edge).toBeGreaterThan(0.99);
-    const warped = drawn({ slopeMax: 10 });
-    const a = terrainDrawnError(tile(100), warped, above);
-    const b = terrainDrawnError(tile(100), warped, beside);
+    const curvilinear = drawn({ slopeMax: 10 });
+    const a = terrainDrawnError(tile(100), curvilinear, above);
+    const b = terrainDrawnError(tile(100), curvilinear, beside);
     expect(a).toBeLessThan(b / 20);
     expect(b).toBeLessThanOrEqual(100 * 10 + 1e-9);
   });

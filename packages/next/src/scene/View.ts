@@ -34,7 +34,7 @@ import {
   pointToRender,
 } from "./viewAnchors.ts";
 import { ViewAnchorState } from "./viewAnchorState.ts";
-import { DEFAULT_LOD_EXPONENT } from "../streaming/tileWarp.ts";
+import { DEFAULT_LOD_EXPONENT } from "../streaming/tileCurvilinearMap.ts";
 import {
   DAYLIGHT_EXPOSURE,
   type GlareTier,
@@ -573,8 +573,8 @@ export class View {
    *   threshold (viridis). Over 1 is detail the view still wants.
    * - "state": a tile drawn normally, as a mixed-level placeholder, as a
    *   stand-in for finer tiles still loading, or held back by occlusion.
-   * - "stretch": how much the warp under the tile stretches its error
-   *   (cividis); 1 where there is no warp.
+   * - "stretch": how much the curvilinear map under the tile stretches its error
+   *   (cividis); 1 where there is no curvilinear map.
    * - "skirts": terrain skirts magenta, everything else shaded as normal.
    *
    * A tile's numbers (error, state, stretch) are from this view's own
@@ -601,14 +601,14 @@ export class View {
     return debugLegend(this.state.debug);
   }
   /**
-   * The error policy, α in [0, 1] (clamped; default 0.3, `DEFAULT_LOD_EXPONENT`). Under a warp that
+   * The error policy, α in [0, 1] (clamped; default 0.3, `DEFAULT_LOD_EXPONENT`). Under a curvilinear map that
    * stretches content, tile selection measures a tile's error as drawn: its
-   * geometric error times the warp's stretch s. With an exponent it uses
+   * geometric error times the curvilinear map's stretch s. With an exponent it uses
    * s^α instead. 1 is exact as drawn: a vertical exaggeration of 10 refines
    * terrain until the 10-times-taller error is small, with the most tiles.
-   * 0 measures the error as if unwarped, as for 1.x: far fewer tiles, and
+   * 0 measures the error as if affine, as for 1.x: far fewer tiles, and
    * the error on screen is s times the threshold. In between trades one for
-   * the other. A warp's own `lodExponent` (`Warp.lodExponent`), where it sets
+   * the other. A curvilinear map's own `lodExponent` (`CurvilinearMap.lodExponent`), where it sets
    * one, wins over this. Changing it reselects.
    */
   get lodExponent(): number {
@@ -623,7 +623,7 @@ export class View {
    * How terrain refines on screen: "morph" (the default) eases each new
    * tile's surface from the nearest ancestor that was drawn, over 0.3 seconds
    * (selection can skip levels, so that is not always the parent), so a tile
-   * replacing a coarser one doesn't jump (geomorphing; most visible when a warp such as
+   * replacing a coarser one doesn't jump (geomorphing; most visible when a curvilinear map such as
    * vertical exaggeration magnifies the difference). "pop" swaps at once,
    * as before, and costs nothing per vertex.
    *
@@ -783,7 +783,7 @@ export class View {
 
   /**
    * @internal Marks `anchor` (or, with `undefined`, the table's root) as
-   * placed across a warp by `route` (its placement is then the route's
+   * placed across a curvilinear map by `route` (its placement is then the route's
    * affine part), or as rigid again with no route. The camera layer sets it.
    */
   setAnchorRoute(
@@ -793,7 +793,7 @@ export class View {
     setAnchorRoute(this, anchor, route);
   }
 
-  /** @internal The routes of anchors placed across a warp, by slot (0: the table's root), as this view draws them: a slider this view sets for itself (`setParameter`) reads its value here. */
+  /** @internal The routes of anchors placed across a curvilinear map, by slot (0: the table's root), as this view draws them: a slider this view sets for itself (`setParameter`) reads its value here. */
   anchorRoutes(): ReadonlyArray<Route | undefined> {
     return anchorRoutes(this);
   }
@@ -812,7 +812,7 @@ export class View {
   }
 
   /**
-   * Whether `parameter` (a `PlacementParameter`, or the `WarpScale` that is
+   * Whether `parameter` (a `PlacementParameter`, or the `CurvilinearScale` that is
    * one) has a value of this view's own. @internal
    */
   hasParameterValue(parameter: object): boolean {
@@ -876,7 +876,7 @@ export class View {
     }
   }
 
-  /** The route that places `anchor` (or the table's root) when it crosses a curvilinear edge: its warps, as this view draws them, and its revision. Undefined for a rigid anchor. */
+  /** The route that places `anchor` (or the table's root) when it crosses a curvilinear edge: its curvilinear maps, as this view draws them, and its revision. Undefined for a rigid anchor. */
   anchorRoute(anchor: AnchorHandle | undefined): Route | undefined {
     if (anchor && this.world.anchorOf(anchor) !== anchor) {
       return undefined;
@@ -913,7 +913,7 @@ export class View {
    * @internal This view's placements now, for a pick to keep (render space
    * ← anchor, copied): the table root's (key `undefined`) and each anchor
    * of its world's, `undefined` at the identity; with the routes of those
-   * drawn across a warp, scales frozen (`routes`, by anchor slot).
+   * drawn across a curvilinear map, scales frozen (`routes`, by anchor slot).
    */
   pickPlacements(): ReturnType<typeof pickPlacements> {
     return pickPlacements(this);
@@ -966,18 +966,18 @@ export class View {
    * of it give pixels outside the view.
    *
    * The position is carried to render space as the view draws that anchor:
-   * through its rigid placement, or, where the anchor is drawn across a warp
+   * through its rigid placement, or, where the anchor is drawn across a curvilinear map
    * (a vertical exaggeration, a reprojection: `anchorRoute`), through its
-   * route, each warp at the scale it has now. So a point of the Earth in
+   * route, each curvilinear map at the scale it has now. So a point of the Earth in
    * true coordinates (the body anchor's, ITRF) lands on the pixel its
-   * content is drawn at. A position a warp doesn't map (outside its domain)
+   * content is drawn at. A position a curvilinear map doesn't map (outside its domain)
    * is not drawn.
    *
    * Without `anchor`, the view's body anchor (`bodyAnchor`: Earth-fixed
    * for the Earth), or the world's `root` while the world has none.
    * `world.root` is the transform table's root: render space while its
    * placement (`setAnchorPlacement(undefined, …)`) is the identity and it
-   * crosses no warp. An explicit `undefined` is refused, so it can't be
+   * crosses no curvilinear map. An explicit `undefined` is refused, so it can't be
    * read as either.
    */
   toPixel(

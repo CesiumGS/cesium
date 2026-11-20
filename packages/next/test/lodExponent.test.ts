@@ -1,12 +1,12 @@
-// The error exponent α (`View.lodExponent`, `Warp.lodExponent`): selection
-// uses the warp's stretch s as s^α. And the plain height scale, which has no
+// The error exponent α (`View.lodExponent`, `CurvilinearMap.lodExponent`): selection
+// uses the curvilinear map's stretch s as s^α. And the plain height scale, which has no
 // profile, gives the direction-aware slopeMax (= its multiplier).
 import { fakeEngine } from "./fakeGpu.ts";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
 import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
-import { verticalExaggeration } from "../src/georeference/heightWarps.ts";
+import { verticalExaggeration } from "../src/georeference/heightCurvilinearMaps.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
@@ -20,7 +20,7 @@ import {
   lodExponentOf,
   terrainDrawnError,
   type DrawnTile,
-} from "../src/streaming/tileWarp.ts";
+} from "../src/streaming/tileCurvilinearMap.ts";
 import { regionFromJson, sphereFromObb } from "../src/streaming/volumes.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
 import { parseAlpha } from "../widgets/urlAlpha.ts";
@@ -62,7 +62,7 @@ describe("the error exponent in terrain error", () => {
       100 * 10 + 2,
     );
   });
-  it("α = 0 is the unwarped error plus the fit", () => {
+  it("α = 0 is the affine error plus the fit", () => {
     expect(
       terrainDrawnError(tile(100), drawn({ slopeMax: 10 }), beside, 100, 0),
     ).toBe(102);
@@ -83,11 +83,14 @@ describe("which exponent a view uses", () => {
     expect(DEFAULT_LOD_EXPONENT).toBe(0.3);
     expect(lodExponentOf({ lodExponent: 0.25 })).toBe(0.25);
     expect(
-      lodExponentOf({ lodExponent: 0.25, warp: { lodExponent: 0.75 } }),
+      lodExponentOf({
+        lodExponent: 0.25,
+        curvilinearMap: { lodExponent: 0.75 },
+      }),
     ).toBe(0.75);
-    expect(lodExponentOf({ lodExponent: 0.25, warp: {} })).toBe(0.25);
+    expect(lodExponentOf({ lodExponent: 0.25, curvilinearMap: {} })).toBe(0.25);
     expect(lodExponentOf({ lodExponent: 3 })).toBe(1);
-    expect(lodExponentOf({ warp: { lodExponent: -1 } })).toBe(0);
+    expect(lodExponentOf({ curvilinearMap: { lodExponent: -1 } })).toBe(0);
   });
 });
 
@@ -147,7 +150,7 @@ function exaggerated(factor: number, scaleValue?: number) {
     orientation: { kind: "free" },
   });
   engine.cameras.update();
-  world.warps.frame(
+  world.curvilinearMaps.frame(
     [{ id: engine.scene.viewIds.get(view)!, routes: view.anchorRoutes() }],
     Infinity,
     (m) => {
@@ -156,7 +159,7 @@ function exaggerated(factor: number, scaleValue?: number) {
   );
   const step = () => {
     engine.cameras.update();
-    world.warps.frame(
+    world.curvilinearMaps.frame(
       [{ id: engine.scene.viewIds.get(view)!, routes: view.anchorRoutes() }],
       Infinity,
       (m) => {
@@ -170,8 +173,8 @@ function exaggerated(factor: number, scaleValue?: number) {
 describe("the plain height scale's slopeMax", () => {
   it.each([1, 4, 10])("is the multiplier (×%i) with no profile", (k) => {
     const { world, earth } = exaggerated(k);
-    const warp = world.tileWarp(earth)!;
-    expect(warp.heightRange).toBeDefined();
+    const curvilinearMap = world.tileCurvilinearMap(earth)!;
+    expect(curvilinearMap.heightRange).toBeDefined();
     const region = regionFromJson([
       LON - 0.001,
       LAT - 0.001,
@@ -183,9 +186,9 @@ describe("the plain height scale's slopeMax", () => {
     const t = {
       volume: { kind: "region", region, sphere: sphereFromObb(region.obb) },
     } as unknown as Tile;
-    const d = drawnTile(t, warp);
+    const d = drawnTile(t, curvilinearMap);
     expect(d.slopeMax).toBeCloseTo(k, 9);
-    const range = warp.heightRange!(-100, 3000);
+    const range = curvilinearMap.heightRange!(-100, 3000);
     expect(range.max).toBeCloseTo(3000 * k, 6);
     expect(range.min).toBeCloseTo(-100 * k, 6);
   });
@@ -221,7 +224,7 @@ describe("upsampled tiles carry no stretch", () => {
     ).toBe(false);
     expect(geometryRefines({ globe: undefined } as unknown as Tile)).toBe(true);
   });
-  it("an upsampled tile's error under ×10 is its unwarped error; a data tile keeps the stretch", () => {
+  it("an upsampled tile's error under ×10 is its affine error; a data tile keeps the stretch", () => {
     const d = drawn({ slopeMax: 10 });
     const up = mk({ fillFromParent: true });
     const alpha = geometryRefines(up) ? 1 : 0;
@@ -236,7 +239,7 @@ describe("upsampled tiles carry no stretch", () => {
 describe("the closed-form range takes the scale's exact value", () => {
   it("is exact at the current multiplier, and the drawn volume is made again for a move inside a bucket", () => {
     const { world, earth, parameter, step } = exaggerated(10, 0.9);
-    const warp = world.tileWarp(earth)!;
+    const curvilinearMap = world.tileCurvilinearMap(earth)!;
     const region = regionFromJson([
       LON - 0.001,
       LAT - 0.001,
@@ -249,12 +252,15 @@ describe("the closed-form range takes the scale's exact value", () => {
       volume: { kind: "region", region, sphere: sphereFromObb(region.obb) },
     } as unknown as Tile;
     const k1 = 1 + 0.9 * 9;
-    expect(warp.heightRange!(1796, 1819).min).toBeCloseTo(1796 * k1, 6);
-    expect(drawnTile(t, warp).slopeMax).toBeCloseTo(k1, 9);
-    const version = warp.scaleVersion;
+    expect(curvilinearMap.heightRange!(1796, 1819).min).toBeCloseTo(
+      1796 * k1,
+      6,
+    );
+    expect(drawnTile(t, curvilinearMap).slopeMax).toBeCloseTo(k1, 9);
+    const version = curvilinearMap.scaleVersion;
     parameter!.value = 0.9005;
     step();
-    const again = world.tileWarp(earth)!;
+    const again = world.tileCurvilinearMap(earth)!;
     const k2 = 1 + 0.9005 * 9;
     expect(again.scaleVersion).toBeGreaterThan(version!);
     expect(again.heightRange!(1796, 1819).min).toBeCloseTo(1796 * k2, 6);
@@ -265,7 +271,7 @@ describe("the closed-form range takes the scale's exact value", () => {
 describe("distance ignores skirts, culling keeps them", () => {
   it("a height-scaled terrain tile's surface volume is inside its cull volume and smaller by the skirt reach", () => {
     const { world, earth } = exaggerated(10);
-    const warp = world.tileWarp(earth)!;
+    const curvilinearMap = world.tileCurvilinearMap(earth)!;
     const region = regionFromJson([
       LON - 0.001,
       LAT - 0.001,
@@ -278,7 +284,7 @@ describe("distance ignores skirts, culling keeps them", () => {
       volume: { kind: "region", region, sphere: sphereFromObb(region.obb) },
       globe: { refit: { levelError: 20 }, rectangle },
     } as unknown as Tile;
-    const d = drawnTile(t, warp);
+    const d = drawnTile(t, curvilinearMap);
     const cull = (d.volume as { sphere: { radius: number } }).sphere;
     const surface = (d.surface as { sphere: { radius: number } }).sphere;
     // Skirts reach 5 × 20 m below, stretched by slopeMax (10).

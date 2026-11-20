@@ -149,7 +149,7 @@ function sameTiles(a?: Set<Tile>, b?: Set<Tile>): boolean {
  * below the finer content's box. Sideways it stays tight, so it doesn't
  * spill over finer neighbors. In the content's true frame (its own volume, as
  * written): the fragment stage tests it at the true point, so it holds under
- * any placement or warp.
+ * any placement or curvilinear map.
  */
 export function clipBox(tile: Tile, margin: number): ClipBox {
   const box = volumeObb(tile.ownVolume);
@@ -230,8 +230,8 @@ export function update(
   for (const item of tileset.state.itemList) {
     wanted |= item.views;
   }
-  // Under an anchor placed across a warp, selection runs on drawn volumes:
-  // a globe's too (its tiles are fitted like any tile's, scene/world/warps.ts).
+  // Under an anchor placed across a curvilinear map, selection runs on drawn volumes:
+  // a globe's too (its tiles are fitted like any tile's, scene/world/worldCurvilinearMaps.ts).
   // Each view on its own route's: views of one anchor may reach it by routes
   // of different shape (a switch frame).
   const views = tileset.show
@@ -241,14 +241,17 @@ export function update(
           // A tileset with no body is never horizon-culled.
           const view =
             tileset.bodyless && !own.noBody ? { ...own, noBody: true } : own;
-          const warp = tileset.world.tileWarp?.(tileset.anchor, view.id);
-          if (!warp) {
+          const curvilinearMap = tileset.world.tileCurvilinearMap?.(
+            tileset.anchor,
+            view.id,
+          );
+          if (!curvilinearMap) {
             return view;
           }
           const occluders = tileset.world.occluders?.(tileset.anchor);
           return occluders?.length
-            ? { ...view, warp, occluders }
-            : { ...view, warp };
+            ? { ...view, curvilinearMap, occluders }
+            : { ...view, curvilinearMap };
         })
     : [];
   if (allViews.length === 0) {

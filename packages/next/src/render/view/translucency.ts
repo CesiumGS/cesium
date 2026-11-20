@@ -91,7 +91,7 @@ export function writeTranslucency(
     );
   }
   // The moments' depths: the blended surfaces' own range (the moments
-  // can't tell apart layers whose warped depths nearly agree: a range
+  // can't tell apart layers whose curvilinear depths nearly agree: a range
   // reaching kilometers past a model's centimeters speckled it).
   const near = Math.max(range.near, engine.bodyCamera(view).near, 1e-3);
   const far = Math.max(range.far, near * 1.01);

@@ -1,7 +1,7 @@
 // Compiled routes in the renderer (plan 2026-11-12, task 4, part b). A draw
 // under an anchor whose route to the render root crosses only curvilinear steps the
-// compiler takes (`Warp.curvilinear`, src/transform/compile.ts) is drawn by that
-// compiled route instead of a fit (scene/warpFit.ts): its batch has the
+// compiler takes (`CurvilinearMap.curvilinear`, src/transform/compile.ts) is drawn by that
+// compiled route instead of a fit (scene/curvilinearFit.ts): its batch has the
 // route's pipeline variant (scene/routeVariant.ts), and its record's
 // placement block holds the draw's data for the route's `tgRoute`:
 //
@@ -19,17 +19,17 @@
 //    again;
 //  - per vertex: the residual, in the route's pipeline variant.
 //
-// Fits stay for what the compiler refuses (a warp with no curvilinear spec, JS
+// Fits stay for what the compiler refuses (a curvilinear map with no curvilinear spec, JS
 // outside the subset, an inverse step), draws with terms of their own, patch
 // draws, point sets, billboards and instances, a world with curved clips, and
 // a route whose pipelines failed to compile. The draw's culling sphere is the
 // route's image of its own, from interval evaluation of the IR
 // (transform/bounds.ts).
 import {
-  warpScaleOf,
+  curvilinearScaleOf,
   withScalesAt,
   type Route as CameraRoute,
-  type Warp,
+  type CurvilinearMap,
 } from "../../camera/route.ts";
 import {
   NO_PLACEMENT,
@@ -57,8 +57,8 @@ import {
   roundUp32,
   routeMap,
   type DrawnMap,
-} from "../warpBounds.ts";
-import { affinePart } from "../warpFit.ts";
+} from "../curvilinearBounds.ts";
+import { affinePart } from "../curvilinearFit.ts";
 import type { World } from "../World.ts";
 import { setDrawRoute } from "./draws.ts";
 import { setPlacement } from "./placements.ts";
@@ -86,7 +86,7 @@ export interface ViewCamera {
  * What a routed anchor holds of one view: its route to the view's root, as
  * the compiled program reads it. Views of one anchor share the program and
  * the draws' records (the route's value at each draw's center), and differ
- * in what is a uniform: the matrices after the last warp (a root) and the
+ * in what is a uniform: the matrices after the last curvilinear map (a root) and the
  * values of parameters that are uniforms (a slider set per view).
  */
 export interface RoutedView {
@@ -213,7 +213,7 @@ export class WorldRoutes {
 
   /**
    * Brings the slot's compiled route to the camera routes as they are now
-   * (their rigid matrices, their warps' parameters, a slider), making it when
+   * (their rigid matrices, their curvilinear maps' parameters, a slider), making it when
    * there is none or its shape changed. `views` are the views that draw the
    * anchor by routes of one shape (`WorldVariants` groups them; a route of
    * another shape has an anchor key and draws of its own), the first one the
@@ -250,7 +250,7 @@ export class WorldRoutes {
         if (made.say) {
           this.#say(
             `refused:${slot}:${made.reason}`,
-            `warp: ${camera.frame.name} to ${camera.base.name} is fitted, not compiled: ${made.reason}.`,
+            `curvilinear map: ${camera.frame.name} to ${camera.base.name} is fitted, not compiled: ${made.reason}.`,
             report,
           );
         }
@@ -263,7 +263,7 @@ export class WorldRoutes {
     return anchor;
   }
 
-  /** The slot is no longer warped: its routed draws go back as they were. */
+  /** The slot is no longer curvilinear: its routed draws go back as they were. */
   release(slot: number): void {
     this.#drop(slot);
     this.#refused.delete(slot);
@@ -309,7 +309,7 @@ export class WorldRoutes {
     this.#failed.add(anchor.variant.key);
     this.#say(
       `failed:${anchor.variant.key}`,
-      `warp: a compiled route's pipelines did not compile; its draws are fitted instead.`,
+      `curvilinear map: a compiled route's pipelines did not compile; its draws are fitted instead.`,
       report,
     );
     this.#drop(anchor.slot);
@@ -449,7 +449,7 @@ export class WorldRoutes {
 
   /**
    * The routed anchor made for the slot, or why it can't be: `say` when the
-   * route had curvilinear specs and the compiler still refused it (a warp with none
+   * route had curvilinear specs and the compiler still refused it (a curvilinear map with none
    * is the usual case, and fitted without a word).
    */
   #make(
@@ -457,7 +457,7 @@ export class WorldRoutes {
     first: ViewCamera,
   ): RoutedAnchor | { reason: string; say: boolean } {
     const camera = first.camera;
-    if (this.world.warps.curved.active) {
+    if (this.world.curvilinearMaps.curved.active) {
       return {
         reason:
           "the world's curved clips carry their field on the fitted lattices",
@@ -578,7 +578,7 @@ export class WorldRoutes {
       if (typeof made === "string") {
         this.#say(
           `view:${anchor.slot}:${id}:${made}`,
-          `warp: view ${id}'s route for ${camera.frame.name} to ${camera.base.name} ${made}; it shows view ${anchor.primaryView}'s route (views whose routes have the same shape share a draw: only a root and a parameter that is a uniform may differ between them).`,
+          `curvilinear map: view ${id}'s route for ${camera.frame.name} to ${camera.base.name} ${made}; it shows view ${anchor.primaryView}'s route (views whose routes have the same shape share a draw: only a root and a parameter that is a uniform may differ between them).`,
           report,
         );
         continue;
@@ -610,7 +610,7 @@ export class WorldRoutes {
       return "differs in structure";
     }
     if (centerSignature(bridged, compiled) !== primary) {
-      return "differs in what a draw's record is made from (a matrix before the last warp, or a parameter that isn't a uniform)";
+      return "differs in what a draw's record is made from (a matrix before the last curvilinear map, or a parameter that isn't a uniform)";
     }
     const table = this.world.raster.placementTable;
     return {
@@ -1118,22 +1118,22 @@ function handleOf(d: RoutedDraw): DrawHandle {
   return { index: d.index, generation: d.generation, name: undefined };
 }
 
-/** What a camera route's compiled form depends on in its shape: its steps' kinds (rigid steps at each end and between warps, as `normalize` has them) and its warps' functions. */
+/** What a camera route's compiled form depends on in its shape: its steps' kinds (rigid steps at each end and between curvilinear maps, as `normalize` has them) and its curvilinear maps' functions. */
 function shapeOf(camera: CameraRoute): string {
   return normalize(camera.steps)
     .map((s) =>
       s.kind === "rigid"
         ? "r"
-        : `${s.inverse ? "i" : "f"}${s.warp.curvilinear?.source ?? "?"}`,
+        : `${s.inverse ? "i" : "f"}${s.curvilinearMap.curvilinear?.source ?? "?"}`,
     )
     .join(",");
 }
 
 /**
  * What a draw's record (its center constants) is made from, which views of
- * one route must share: the rigid matrices before the last warp, and the
+ * one route must share: the rigid matrices before the last curvilinear map, and the
  * values of the parameters that aren't uniforms. What differs per view
- * without it is a uniform: the matrices after the last warp (a root) and
+ * without it is a uniform: the matrices after the last curvilinear map (a root) and
  * the values of the parameters that are.
  */
 function centerSignature(
@@ -1188,23 +1188,23 @@ function rangesOf(
   const ranges: Record<string, ParamRange> = {};
   let k = 0;
   for (const step of camera.steps) {
-    if (step.kind !== "warp") {
+    if (step.kind !== "curvilinear") {
       continue;
     }
     const info = compiled.steps[k++];
-    const warp: Warp = step.warp;
-    const range = warp.scale?.range;
+    const curvilinearMap: CurvilinearMap = step.curvilinearMap;
+    const range = curvilinearMap.scale?.range;
     if (!info || !range) {
       continue;
     }
     for (const [name, identity] of Object.entries(
-      warp.curvilinear?.identity ?? {},
+      curvilinearMap.curvilinear?.identity ?? {},
     )) {
       const key = info.keys.get(name);
       if (key === undefined) {
         continue;
       }
-      const value = warp.curvilinear!.params[name]!;
+      const value = curvilinearMap.curvilinear!.params[name]!;
       const a = identity + range[0] * (value - identity);
       const b = identity + range[1] * (value - identity);
       ranges[key] = [Math.min(a, b), Math.max(a, b)];
@@ -1215,12 +1215,13 @@ function rangesOf(
 
 /** The maps a draw's sphere is bounded through: the route with its scales at the ends of their ranges, or at their values. */
 function sphereMaps(camera: CameraRoute): DrawnMap[] {
-  const at = (end: 0 | 1) => (warp: Warp) => {
-    const range = warp.scale!.range;
-    return range ? range[end] : warpScaleOf(warp);
+  const at = (end: 0 | 1) => (curvilinearMap: CurvilinearMap) => {
+    const range = curvilinearMap.scale!.range;
+    return range ? range[end] : curvilinearScaleOf(curvilinearMap);
   };
   const ranged = camera.steps.some(
-    (s) => s.kind === "warp" && s.warp.scale?.range !== undefined,
+    (s) =>
+      s.kind === "curvilinear" && s.curvilinearMap.scale?.range !== undefined,
   );
   return ranged
     ? [

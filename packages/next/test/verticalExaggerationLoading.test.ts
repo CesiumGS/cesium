@@ -8,7 +8,7 @@ import {
   loadingStage,
   type LoadingState,
 } from "../examples/vertical-exaggeration/loading.ts";
-import type { WarpStats } from "../src/scene/world/warps.ts";
+import type { CurvilinearStats } from "../src/scene/world/worldCurvilinearMaps.ts";
 
 function state(
   over: {
@@ -20,7 +20,7 @@ function state(
   },
   buildings: LoadingState["buildings"],
 ): LoadingState {
-  const stats: WarpStats = {
+  const stats: CurvilinearStats = {
     fitsRun: 0,
     refits: 0,
     placed: 0,

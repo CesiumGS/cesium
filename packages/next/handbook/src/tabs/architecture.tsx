@@ -322,10 +322,10 @@ export function Architecture() {
         <p>
           These are folders of the core except <C>frames</C>, so one import
           reaches them. The boundary test fails when the transform core imports
-          a built-in, or a built-in reaches past the transform core. Warps are
-          gone as a separate idea: a deformer is a curvilinear node over the
-          content it deforms, and a Moon beside it is not under that node, so it
-          isn't warped.
+          a built-in, or a built-in reaches past the transform core. Curvilinear
+          maps are gone as a separate idea: a deformer is a curvilinear node
+          over the content it deforms, and a Moon beside it is not under that
+          node, so it isn't curvilinear.
         </p>
       </Section>
 
@@ -354,13 +354,13 @@ export function Architecture() {
             engine there or forwards to an engine thread, a worker with an{" "}
             <C>OffscreenCanvas</C>. Commands are ordered messages batched per
             tick. Reads come from a snapshot taken each tick. Queries return
-            promises. Code that must run inside the engine, such as a warp, a
-            style or a per-tick callback, loads as a module on the engine's
-            thread. The main-thread mode offers no synchronous read that the
-            worker mode can't, and the API tests run in both. A probe chooses
-            the mode, not browser sniffing, and the host can force it with{" "}
-            <C>thread: "auto" | "main" | "worker"</C>. Review decisions: a
-            closure the engine would run on its own thread is refused in both
+            promises. Code that must run inside the engine, such as a
+            curvilinear map, a style or a per-tick callback, loads as a module
+            on the engine's thread. The main-thread mode offers no synchronous
+            read that the worker mode can't, and the API tests run in both. A
+            probe chooses the mode, not browser sniffing, and the host can force
+            it with <C>thread: "auto" | "main" | "worker"</C>. Review decisions:
+            a closure the engine would run on its own thread is refused in both
             modes, but only once Cesium IR's self-contained function path
             exists, so examples migrate once. HTML overlays are the app's: the
             engine publishes tracked points (pixel, height, visibility) each
@@ -390,18 +390,19 @@ export function Architecture() {
           <li>
             <strong>Loading is refinement.</strong> A scene is interactive at
             once. A card blocks only until something first draws. After that, a
-            small chip of fixed size says what still refines. The warp examples
-            show it now, for example "Refining · 12 tiles, 3 fits". It blocks
-            nothing. The plan generalizes it: <C>view.refinement</C> lists the
-            active sources (streaming, transitions, shader compiles, occlusion
-            feedback, accumulation), and <C>view.converged()</C> resolves when
-            they are done, for screenshots, tests and exports. It is reviewed
-            (CS-15): <C>converged()</C> replaces <C>whenReady</C>, takes a level
-            (<C>"drawn"</C>, <C>"correct"</C> or <C>"converged"</C>) and
-            deadlines, and a <C>freeze</C> option holds the view's selection so
-            fades and fits finish on what has loaded. Transitions, pending
-            shader swaps and the resolution governor report as sources. Jobs
-            report through <C>JobSpec.refinement</C>. Only the chip is built.
+            small chip of fixed size says what still refines. The curvilinear
+            map examples show it now, for example "Refining · 12 tiles, 3 fits".
+            It blocks nothing. The plan generalizes it: <C>view.refinement</C>{" "}
+            lists the active sources (streaming, transitions, shader compiles,
+            occlusion feedback, accumulation), and <C>view.converged()</C>{" "}
+            resolves when they are done, for screenshots, tests and exports. It
+            is reviewed (CS-15): <C>converged()</C> replaces <C>whenReady</C>,
+            takes a level (<C>"drawn"</C>, <C>"correct"</C> or{" "}
+            <C>"converged"</C>) and deadlines, and a <C>freeze</C> option holds
+            the view's selection so fades and fits finish on what has loaded.
+            Transitions, pending shader swaps and the resolution governor report
+            as sources. Jobs report through <C>JobSpec.refinement</C>. Only the
+            chip is built.
           </li>
           <li>
             <strong>A renderer behind each view.</strong> The seam for a second
@@ -474,7 +475,7 @@ export function Architecture() {
             },
             {
               m: "CS-9 The WebGL 2 renderer",
-              what: "The shader route spike, the seam, first draws, the globe, lighting, styles and warps, picks and user code, the atmosphere and further steps (CS-32 to CS-47). The browser research (CS-43) is done and ordered the further steps.",
+              what: "The shader route spike, the seam, first draws, the globe, lighting, styles and curvilinear maps, picks and user code, the atmosphere and further steps (CS-32 to CS-47). The browser research (CS-43) is done and ordered the further steps.",
               state: "Reviewed; not built",
             },
             {

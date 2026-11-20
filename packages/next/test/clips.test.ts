@@ -458,7 +458,7 @@ describe("which space a clip is tested in", () => {
     shapes: [{ kind: "plane", point: [0, 0, R + 1], normal: [0, 0, 1] }],
   });
 
-  it("no warp: ITRF content and a clip in ITRF are tested on the true point", () => {
+  it("no curvilinear map: ITRF content and a clip in ITRF are tested on the true point", () => {
     const s = scene((itrf) => ({ frames: [], content: itrf }));
     const plan = planClip(planeIn(s.itrf), s.placement()) as PlannedClip;
     expect(plan.space).toBe("true");

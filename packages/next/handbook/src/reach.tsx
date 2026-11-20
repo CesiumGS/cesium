@@ -508,7 +508,7 @@ const VDI: { fact: ReactNode; evidence: Evidence; source: SourceId }[] = [
     source: "azure",
   },
   {
-    fact: "Chrome 124 on an EC2 g4dn under Windows Server 2022: requestAdapter failed while WebGL 2 worked. Posters said Chrome saw only Microsoft's basic render driver, and that WebGPU is blocklisted on WARP. No resolution shows.",
+    fact: "Chrome 124 on an EC2 g4dn under Windows Server 2022: requestAdapter failed while WebGL 2 worked. Posters said Chrome saw only Microsoft's basic render driver, and that WebGPU is blocklisted on CURVILINEAR. No resolution shows.",
     evidence: "Report",
     source: "ec2Thread",
   },

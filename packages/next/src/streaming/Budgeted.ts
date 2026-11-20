@@ -189,8 +189,8 @@ export class BudgetedSelection extends StepwiseSelection {
   }
 
   /**
-   * Whether the horizon hides `tile` from `view`. Unwarped, the true
-   * ellipsoid shrunk to the volume's lowest height. Under a warp that is not
+   * Whether the horizon hides `tile` from `view`. Affine, the true
+   * ellipsoid shrunk to the volume's lowest height. Under a curvilinear map that is not
    * sound (the drawn Earth is another shape: a drawn height need not be the
    * true one), so the view's occluders decide on the tile's drawn volume
    * (`bodyOccluder`: the drawn terrain's own bounds); with none, nothing is
@@ -203,7 +203,7 @@ export class BudgetedSelection extends StepwiseSelection {
     if (view.noBody) {
       return false;
     }
-    if (view.warp === undefined) {
+    if (view.curvilinearMap === undefined) {
       return !aboveHorizon(tile, view.position, view.ellipsoid);
     }
     return (
@@ -897,7 +897,7 @@ export class BudgetedSelection extends StepwiseSelection {
   }
 
   private mixes(tile: Tile): boolean {
-    // Under a placement or a warp too: a placeholder's clip boxes are in the
+    // Under a placement or a curvilinear map too: a placeholder's clip boxes are in the
     // content's true frame (`clipBox`, tile.ownVolume), and the fragment stage
     // tests them at the true point (`relPosition`, surface.slang), which
     // doesn't move with the draw.
@@ -1147,7 +1147,7 @@ class CasterRegion {
   /**
    * The region for `receivers`, or undefined with none. Undefined receivers
    * (`CasterRoom.receivers`): the boxes alone. `volumeOf` is the volume a
-   * tile is tested as: its own, or its drawn one under a warped anchor.
+   * tile is tested as: its own, or its drawn one under a curvilinear anchor.
    */
   static around(
     planes: Float64Array,

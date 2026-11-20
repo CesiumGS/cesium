@@ -150,10 +150,10 @@ export class GlobeBudgetedSelection extends BudgetedSelection {
     this.metadataWanted.clear();
     const result = super.select(root, rootGeometricError, view);
     // The base levels stay loaded whatever is in view: the body occluder's
-    // bounds under a warp rest on the meshes of the tiles above any that
+    // bounds under a curvilinear map rest on the meshes of the tiles above any that
     // aren't loaded (a few hundred small tiles).
-    // Only for a view that has a use for it: one under a warp with occluders.
-    const wanted = view.warp !== undefined && view.occluders?.length;
+    // Only for a view that has a use for it: one under a curvilinear map with occluders.
+    const wanted = view.curvilinearMap !== undefined && view.occluders?.length;
     const base = (tile: Tile): void => {
       if (tile.globe === undefined || tile.globe.level >= BASE_LEVELS) {
         return;

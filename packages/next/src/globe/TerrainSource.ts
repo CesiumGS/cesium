@@ -87,8 +87,8 @@ export type TerrainLoader = (
     skirtHeight: number | readonly number[];
     /**
      * The tile also carries `h·n̂` per vertex (`HEIGHT_NORMAL_ATTRIBUTE`),
-     * for a globe drawn under a height-scale warp; `"profile"`, `(n̂, h)`
-     * (`HEIGHT_PROFILE_ATTRIBUTE`) where that warp has a ceiling.
+     * for a globe drawn under a height-scale curvilinear map; `"profile"`, `(n̂, h)`
+     * (`HEIGHT_PROFILE_ATTRIBUTE`) where that curvilinear map has a ceiling.
      */
     heightNormal?: HeightNormalMode;
     /**
@@ -237,7 +237,7 @@ export class TerrainSource {
    * Whether tiles loaded now carry `h·n̂` (`HEIGHT_NORMAL_ATTRIBUTE`), or
    * `(n̂, h)` for `"profile"` (`HEIGHT_PROFILE_ATTRIBUTE`): set by the globe
    * drawn from this source, which asks its world whether its anchor's route
-   * is a height-scale warp (scene/world/warps.ts).
+   * is a height-scale curvilinear map (scene/world/worldCurvilinearMaps.ts).
    */
   wantsHeightNormal?: () => boolean | "profile";
   /**

@@ -19,7 +19,7 @@ import type {
 } from "../scene/world/types.ts";
 import type { RequestScheduler } from "./RequestScheduler.ts";
 import type { Tileset3D } from "./Tileset3D.ts";
-import type { TileWarp } from "./tileWarp.ts";
+import type { TileCurvilinearMap } from "./tileCurvilinearMap.ts";
 import type { Occluder } from "./occluders.ts";
 import type { AccelerationStructures } from "./acceleration.ts";
 
@@ -41,15 +41,15 @@ export interface DrawSink {
   addDraw(options: DrawOptions): DrawHandle;
   removeDraw(handle: DrawHandle): void;
   /**
-   * A tile's geometric error (m): the budget its draw's warp fit shares
-   * (`max(1 mm, error / 64)`). Optional: a sink with no warps ignores it.
+   * A tile's geometric error (m): the budget its draw's curvilinear map fit shares
+   * (`max(1 mm, error / 64)`). Optional: a sink with no curvilinear maps ignores it.
    */
   setDrawGeometricError?(handle: DrawHandle, error: number): void;
   /**
    * A terrain tile's draw carries `h·n̂` per vertex made on the ellipsoid
    * `info.radii` (`HEIGHT_NORMAL_ATTRIBUTE`), none longer than
-   * `info.maxDistance`: under a height-scale warp it is exaggerated exactly.
-   * Optional: a sink with no warps ignores it.
+   * `info.maxDistance`: under a height-scale curvilinear map it is exaggerated exactly.
+   * Optional: a sink with no curvilinear maps ignores it.
    */
   setDrawHeightNormal?(
     handle: DrawHandle,
@@ -61,22 +61,25 @@ export interface DrawSink {
     },
   ): void;
   /**
-   * Where a draw's route is evaluated under a warp (`World.setWarpAt`).
-   * Optional: a sink with no warps ignores it.
+   * Where a draw's route is evaluated under a curvilinear map (`World.setCurvilinearAt`).
+   * Optional: a sink with no curvilinear maps ignores it.
    */
-  setWarpAt?(
+  setCurvilinearAt?(
     handle: DrawHandle,
     at: "vertex" | "anchor",
     origin?: TransformHandle,
   ): void;
   /**
    * The map from an anchor's coordinates to where its content is drawn,
-   * when its route to the view's root crosses a warp: selection then runs on
-   * drawn volumes (`TileWarp`). `viewId` names the view whose selection
+   * when its route to the view's root crosses a curvilinear map: selection then runs on
+   * drawn volumes (`TileCurvilinearMap`). `viewId` names the view whose selection
    * asks: views of one anchor may reach it by different routes. Optional: a
-   * sink with no warps has none.
+   * sink with no curvilinear maps has none.
    */
-  tileWarp?(anchor: AnchorHandle, viewId?: number): TileWarp | undefined;
+  tileCurvilinearMap?(
+    anchor: AnchorHandle,
+    viewId?: number,
+  ): TileCurvilinearMap | undefined;
   /**
    * What can prove content hidden under `anchor`, in its coordinates
    * (`Occluder`): the body's own terrain's, for what hangs under the globe's

@@ -6,13 +6,21 @@
 // variable, a call to something but `Math`, a loop with no constant bound) is
 // refused by the parser with the construct named: it is kept all the same, its
 // Jacobian by central differences and its draws fitted per vertex, as ever
-// (`FunctionWarp.compiled` is false, `fitReason` says why).
-import { warpInverse, type Warp, type WarpScale } from "../camera/route.ts";
+// (`FunctionCurvilinearMap.compiled` is false, `fitReason` says why).
+import {
+  curvilinearInverse,
+  type CurvilinearMap,
+  type CurvilinearScale,
+} from "../camera/route.ts";
 import { jacobian as irJacobian } from "../transform/ad.ts";
 import type { IrProgram } from "../transform/ir.ts";
 import type { Params, CurvilinearSpec } from "../transform/graph.ts";
 import { parseTransform, TransformParseError } from "../transform/parse.ts";
-import { LiveWarp, NO_FRAME, type ChangeableWarp } from "./liveWarp.ts";
+import {
+  LiveCurvilinearMap,
+  NO_FRAME,
+  type ChangeableCurvilinearMap,
+} from "./liveCurvilinearMap.ts";
 
 /**
  * A point function, p to q in meters: it writes `q` into `out` (`out[0] = …`)
@@ -33,14 +41,14 @@ export interface FromFunctionOptions {
   readonly separable?: readonly string[];
   /** The values of the separable parameters at which the function is the identity, for a `scale` (a slider). */
   readonly identity?: Params;
-  /** Words for reports (a `Warp`'s `description`). */
+  /** Words for reports (a `CurvilinearMap`'s `description`). */
   readonly description?: string;
   /** Where the function is defined, in the frame's own meters; everywhere when absent. The derivative's step scales with its radius. */
-  readonly domain?: Warp["domain"];
+  readonly domain?: CurvilinearMap["domain"];
   /** What the function is accurate to against what it models; exact when absent. It says nothing of the derivative. */
-  readonly accuracy?: Warp["accuracy"];
-  /** A live number moving the warp's strength (a slider): see `Warp.scale`. */
-  readonly scale?: WarpScale;
+  readonly accuracy?: CurvilinearMap["accuracy"];
+  /** A live number moving the curvilinear map's strength (a slider): see `CurvilinearMap.scale`. */
+  readonly scale?: CurvilinearScale;
   /** The exact inverse, when the function has one; otherwise the engine's Newton inverts it. */
   readonly inverse?: (
     q: ArrayLike<number>,
@@ -56,7 +64,7 @@ export interface FromFunctionOptions {
 }
 
 /** A transform made from a function: `setParams` or `changed()` after it behaves differently. */
-export interface FunctionWarp extends ChangeableWarp {
+export interface FunctionCurvilinearMap extends ChangeableCurvilinearMap {
   /** The parameter values now. */
   readonly params: Params;
   /** Sets parameters by name (a name the function wasn't given throws), then `changed()`. */
@@ -65,17 +73,20 @@ export interface FunctionWarp extends ChangeableWarp {
   readonly compiled: boolean;
   /** The parser's words for the construct that kept the function out of the IR; undefined when it parsed. */
   readonly fitReason: string | undefined;
-  /** The inverse: the options' own, else the engine's Newton on this warp's `forward` and its Jacobian. */
+  /** The inverse: the options' own, else the engine's Newton on this curvilinear map's `forward` and its Jacobian. */
   inverse(q: ArrayLike<number>, out: Float64Array): Float64Array;
 }
 
 const EPS = Number.EPSILON;
 
-class FunctionWarpImpl extends LiveWarp implements FunctionWarp {
+class FunctionCurvilinearMapImpl
+  extends LiveCurvilinearMap
+  implements FunctionCurvilinearMap
+{
   readonly description: string | undefined;
-  readonly domain: Warp["domain"];
-  readonly accuracy: Warp["accuracy"];
-  readonly scale: WarpScale | undefined;
+  readonly domain: CurvilinearMap["domain"];
+  readonly accuracy: CurvilinearMap["accuracy"];
+  readonly scale: CurvilinearScale | undefined;
   readonly compiled: boolean;
   readonly fitReason: string | undefined;
   private readonly values: Record<string, number>;
@@ -84,7 +95,7 @@ class FunctionWarpImpl extends LiveWarp implements FunctionWarp {
   private readonly at = new Float64Array(3);
   private readonly plus = new Float64Array(3);
   private readonly minus = new Float64Array(3);
-  private readonly core: Warp;
+  private readonly core: CurvilinearMap;
   private curvilinearRevision = -1;
   private curvilinearSpec: CurvilinearSpec | undefined;
 
@@ -271,7 +282,7 @@ class FunctionWarpImpl extends LiveWarp implements FunctionWarp {
       return out;
     }
     const { tolerance, iterations } = this.options;
-    return warpInverse(this.core, q, out as Float64Array<ArrayBuffer>, {
+    return curvilinearInverse(this.core, q, out as Float64Array<ArrayBuffer>, {
       ...(tolerance !== undefined && { tolerance }),
       ...(iterations !== undefined && { iterations }),
     });
@@ -307,7 +318,7 @@ function checkValue(name: string, value: number): void {
  * the engine's stretch estimates and Newton's speed, never where Newton
  * converges to.
  *
- * The inverse is the options' own, or the engine's Newton (`warpInverse`)
+ * The inverse is the options' own, or the engine's Newton (`curvilinearInverse`)
  * using the Jacobian. The function must be injective on its domain and
  * finite (a `RangeError` where it isn't). Place it over the content it
  * transforms (`curvilinearFrame`).
@@ -315,6 +326,6 @@ function checkValue(name: string, value: number): void {
 export function fromFunction(
   map: PointFunction,
   options: FromFunctionOptions = {},
-): FunctionWarp {
-  return new FunctionWarpImpl(map, options);
+): FunctionCurvilinearMap {
+  return new FunctionCurvilinearMapImpl(map, options);
 }

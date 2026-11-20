@@ -8,7 +8,11 @@ import type { Route } from "../camera/route.ts";
 import type { Placement } from "../scene/placement.ts";
 import type { View } from "../scene/View.ts";
 import type { World } from "../scene/World.ts";
-import type { TermWeight, WarpTerm, WarpTerms } from "../scene/warpTerms.ts";
+import type {
+  TermWeight,
+  CurvilinearTerm,
+  CurvilinearTerms,
+} from "../scene/curvilinearTerms.ts";
 import type { DrawHandle } from "../scene/world/types.ts";
 import type { FramesResolver } from "./resolver.ts";
 
@@ -68,27 +72,27 @@ export interface DrawPlacementInfo {
   }[];
   /**
    * Where the draw's anchor reaches the render root across curvilinear edges
-   * (plan 13.37): the warps crossed in order and the state of the draw's
+   * (plan 13.37): the curvilinear maps crossed in order and the state of the draw's
    * fit. Its lattice, `terms`' last entry, has the cells, error and
    * estimate. Absent for a rigid route.
    */
   readonly route?: {
-    readonly warps: readonly {
+    readonly curvilinearMaps: readonly {
       readonly description: string;
-      /** The route goes down through the edge, from the warp's `to` (the parent) into its `from`. */
+      /** The route goes down through the edge, from the curvilinear map's `to` (the parent) into its `from`. */
       readonly inverse: boolean;
-      /** The warp's scale now, when it has one (1: the warp as stated). */
+      /** The curvilinear map's scale now, when it has one (1: the curvilinear map as stated). */
       readonly scale?: number;
     }[];
     /** The route's revision; a fit is redone when it changes. */
     readonly revision: number;
     /**
      * "fitted": drawn at the current fit; "stale": an older fit is drawn
-     * while a refit runs; "pending": hidden until its first fit; "unwarped":
+     * while a refit runs; "pending": hidden until its first fit; "affine":
      * a billboard, point or instanced draw, which has no per-vertex
      * placement and is drawn at its anchor's affine place.
      */
-    readonly fit: "fitted" | "stale" | "pending" | "unwarped";
+    readonly fit: "fitted" | "stale" | "pending" | "affine";
   };
 }
 
@@ -117,14 +121,14 @@ export function placementOf(
   // Views of one anchor may reach it by routes of different shape: the draw
   // that shows this view is the draw itself or its twin for the view's shape.
   const drawn = world.drawForRoute(draw, route);
-  const through = routeOf(route, world.warps.status(drawn));
+  const through = routeOf(route, world.curvilinearMaps.status(drawn));
   const placed = world.scene.drawPlacements[drawn.index];
   if (!placed) {
     return {
       kind: "affine",
       root,
       operation: through
-        ? `${transform}, across ${through.warps.map((w) => w.description).join(", then ")} (${through.fit})`
+        ? `${transform}, across ${through.curvilinearMaps.map((w) => w.description).join(", then ")} (${through.fit})`
         : transform,
       ...(through ? {} : { errorBound: 0 }),
       resamplable: true,
@@ -171,7 +175,7 @@ export function placementOf(
   return { ...info, errorBound: error, estimate };
 }
 
-/** The route a draw's anchor is placed by across warps, as the query reports it; undefined for a rigid one. */
+/** The route a draw's anchor is placed by across curvilinear maps, as the query reports it; undefined for a rigid one. */
 function routeOf(
   route: Route | undefined,
   status: { readonly state: "fitted" | "stale" | "pending" } | undefined,
@@ -180,26 +184,28 @@ function routeOf(
     return undefined;
   }
   return {
-    warps: route.steps.flatMap((step) =>
-      step.kind === "warp"
+    curvilinearMaps: route.steps.flatMap((step) =>
+      step.kind === "curvilinear"
         ? [
             {
               description:
-                step.warp.description ??
-                `${step.warp.from.name} to ${step.warp.to.name}`,
+                step.curvilinearMap.description ??
+                `${step.curvilinearMap.from.name} to ${step.curvilinearMap.to.name}`,
               inverse: step.inverse,
-              ...(step.warp.scale && { scale: step.warp.scale.value }),
+              ...(step.curvilinearMap.scale && {
+                scale: step.curvilinearMap.scale.value,
+              }),
             },
           ]
         : [],
     ),
     revision: route.revision,
-    fit: status?.state ?? "unwarped",
+    fit: status?.state ?? "affine",
   };
 }
 
 /** The public kind nearest to terms set directly. */
-function kindOf(terms: WarpTerms): Placement["kind"] {
+function kindOf(terms: CurvilinearTerms): Placement["kind"] {
   const only = terms.length === 1 ? terms[0]!.term : undefined;
   if (only?.kind === "attribute" && only.absolute) {
     return "dual";
@@ -207,7 +213,7 @@ function kindOf(terms: WarpTerms): Placement["kind"] {
   return only?.kind === "cubic" ? "fitted" : "blend";
 }
 
-function describe(term: WarpTerm, weight: number): string {
+function describe(term: CurvilinearTerm, weight: number): string {
   if (term.kind === "attribute") {
     return term.absolute
       ? `a dual position (${term.semantic}) at t = ${weight}`
@@ -217,7 +223,7 @@ function describe(term: WarpTerm, weight: number): string {
   return weight === 1 ? lattice : `${lattice} weighted ${weight}`;
 }
 
-/** A term's weight now (the frames layer's copy of scene/warpEvaluate.ts's: it imports no core values). */
+/** A term's weight now (the frames layer's copy of scene/curvilinearEvaluate.ts's: it imports no core values). */
 function weightOf(weight: TermWeight): number {
   let w = weight.scale;
   for (const f of weight.factors) {

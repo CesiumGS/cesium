@@ -359,25 +359,29 @@ describe("shape keys", () => {
   it("are the node kinds without values, and differ with structure", () => {
     const g = new TransformGraph();
     const root = g.root("root");
-    const warp = g.add("warp", root, curvilinear(exaggerate()));
+    const curvilinearMap = g.add(
+      "curvilinear",
+      root,
+      curvilinear(exaggerate()),
+    );
     const solved = g.add(
       "solved",
       root,
       curvilinear(twist({ inverse: undefined })),
     );
     const plain = g.add("plain", root, affine({ matrix: translate(1, 2, 3) }));
-    expect(routeBetween(warp, root).shapeKey).toBe("+exaggerate");
-    expect(routeBetween(root, warp).shapeKey).toBe("-exaggerate~");
+    expect(routeBetween(curvilinearMap, root).shapeKey).toBe("+exaggerate");
+    expect(routeBetween(root, curvilinearMap).shapeKey).toBe("-exaggerate~");
     expect(routeBetween(root, solved).shapeKey).toBe("-twist~");
     expect(routeBetween(plain, root).shapeKey).toBe("M");
-    expect(routeBetween(plain, warp).shapeKey).toBe("M>-exaggerate~");
-    g.setParams(warp, { k: 7 });
+    expect(routeBetween(plain, curvilinearMap).shapeKey).toBe("M>-exaggerate~");
+    g.setParams(curvilinearMap, { k: 7 });
     g.setMatrix(plain, translate(9, 9, 9));
-    expect(routeBetween(plain, warp).shapeKey).toBe("M>-exaggerate~");
+    expect(routeBetween(plain, curvilinearMap).shapeKey).toBe("M>-exaggerate~");
   });
 });
 
-describe("placement decides what is warped", () => {
+describe("placement decides what is curvilinear", () => {
   const graph = new TransformGraph();
   const display = graph.root("display");
   const earth = graph.add("earth", display, curvilinear(exaggerate()));
@@ -393,7 +397,7 @@ describe("placement decides what is warped", () => {
   );
   const terrain = [1000, 2000, 300];
 
-  it("warps Earth's content and not the Moon placed elsewhere", () => {
+  it("curvilinear maps Earth's content and not the Moon placed elsewhere", () => {
     near(routeBetween(earth, display).forward(terrain), [1000, 2000, 700]);
     near(routeBetween(moon, display).forward([5, 6, 7]), [3.8e8 + 5, 6, 7]);
     expect(routeBetween(moon, display).shapeKey).toBe("M");
@@ -406,7 +410,7 @@ describe("placement decides what is warped", () => {
     // In the display, then back through the exaggeration into Earth's true frame, then the camera's.
     near(seen.forward([5, 6, 107]), [3.8e8 + 5, 6, 100 + 7 / 3 - 500], 6);
     near(seen.inverse(seen.forward([5, 6, 107])), [5, 6, 107], 6);
-    // The camera's own content, in the same frame, is not warped relative to it.
+    // The camera's own content, in the same frame, is not curvilinear relative to it.
     near(routeBetween(earth, camera).forward(terrain), [1000, 2000, 300 - 500]);
   });
 

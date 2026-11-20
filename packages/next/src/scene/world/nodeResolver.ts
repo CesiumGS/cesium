@@ -9,7 +9,7 @@
 // when the route is affine (the set is tested in the true or drawn space as
 // ever), `NonRigidRouteError` when it crosses a curvilinear edge, which makes the
 // set curved (`planClip`), and `route()` as the camera layer's route, each
-// curvilinear edge a `Warp`, which is what `WorldCurvedClips` fits the signed
+// curvilinear edge a `CurvilinearMap`, which is what `WorldCurvedClips` fits the signed
 // distance through (`resolveRoute`, `routeForward`). Every other key goes to
 // the resolver it wraps.
 import type { FrameKey, FrameResolver } from "../../camera/frameResolver.ts";
@@ -17,7 +17,7 @@ import {
   NonRigidRouteError,
   type Route as CameraRoute,
   type RouteStep as CameraStep,
-  type Warp,
+  type CurvilinearMap,
 } from "../../camera/route.ts";
 import { accuracyAlong } from "../../transform/accuracy.ts";
 import { TransformNode, type ViewId } from "../../transform/graph.ts";
@@ -53,11 +53,11 @@ const IDENTITY = Float64Array.of(
   1,
 );
 
-/** A graph curvilinear edge as the camera layer's warp (up: its forward; a step down is `inverse: true` of the same warp). The parameters are as they are now: a route is a snapshot, and its revision says when to ask again. */
-function warpOf(
+/** A graph curvilinear edge as the camera layer's curvilinear map (up: its forward; a step down is `inverse: true` of the same curvilinear map). The parameters are as they are now: a route is a snapshot, and its revision says when to ask again. */
+function curvilinearMapOf(
   route: Route,
   step: Extract<Route["steps"][number], { kind: "curvilinear" }>,
-): Warp {
+): CurvilinearMap {
   const graph = route.from.graph;
   const node = step.node;
   const edge = graph.edgeFor(node, route.view).edge;
@@ -87,7 +87,7 @@ function warpOf(
   };
 }
 
-/** `route` as the camera layer's: its affine runs rigid steps, each curvilinear step a warp. */
+/** `route` as the camera layer's: its affine runs rigid steps, each curvilinear step a curvilinear map. */
 function cameraRoute(
   route: Route,
   frame: FrameKey,
@@ -100,8 +100,8 @@ function cameraRoute(
       steps.push({ kind: "rigid", matrix: Float64Array.from(step.matrix) });
     } else {
       steps.push({
-        kind: "warp",
-        warp: warpOf(route, step),
+        kind: "curvilinear",
+        curvilinearMap: curvilinearMapOf(route, step),
         inverse: step.inverse,
       });
     }

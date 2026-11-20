@@ -533,8 +533,8 @@ export function Selection() {
             children uses only children that drew nothing; the others add their
             own exact holes. Where no exact hole can be made, there is no
             placeholder, and the hold or stand-in branch runs. Placeholders clip
-            in the true frame, so mixed LOD works under any placement or warp,
-            including tilesets that move vertices.
+            in the true frame, so mixed LOD works under any placement or
+            curvilinear map, including tilesets that move vertices.
           </li>
         </ul>
       </Section>
@@ -891,15 +891,16 @@ export function Selection() {
         />
       </Section>
 
-      <Section title="Level of detail under a warp">
+      <Section title="Level of detail under a curvilinear map">
         <p>
-          A warp that stretches content changes what an error looks like on
-          screen. A vertical exaggeration of 10 shows a tile's geometric error
-          ten times taller. Selection measures a tile's error as drawn, so it
-          multiplies the error by the stretch s of the warp under the tile. Four
-          rules keep that honest and cheap. They came from watching the vertical
-          exaggeration example at ×10 in the Zermatt view, where terrain draws
-          fell from 8,487 during loading toward what the near field needs.
+          A curvilinear map that stretches content changes what an error looks
+          like on screen. A vertical exaggeration of 10 shows a tile's geometric
+          error ten times taller. Selection measures a tile's error as drawn, so
+          it multiplies the error by the stretch s of the curvilinear map under
+          the tile. Four rules keep that honest and cheap. They came from
+          watching the vertical exaggeration example at ×10 in the Zermatt view,
+          where terrain draws fell from 8,487 during loading toward what the
+          near field needs.
         </p>
         <ul>
           <li>
@@ -907,16 +908,16 @@ export function Selection() {
             [0, 1] with a default of 0.3 (<C>DEFAULT_LOD_EXPONENT</C>), makes
             the error s<sup>α</sup> times the geometric error instead of s times
             it. At 1 the error is as drawn, with the most tiles. At 0 it's
-            measured as if unwarped, as 1.x does: far fewer tiles, and the error
-            on screen is s times the threshold. A warp's own{" "}
-            <C>Warp.lodExponent</C> wins over the view's. The owner chose 0.3 on
-            2026-11-13 from a second sweep (0 to 1, at ×1, ×4 and ×10, in the
-            valley and Zermatt close views, after the culling fixes below). At
-            ×4 and ×10, α 0.25 and 0.5 differed from the exact image (α 1) by
-            less than the run-to-run noise, about 2% of pixels, with a quarter
-            to a fifth of α 1's terrain tiles: 471 and 760 tiles against 2,161
-            in the valley at ×4, and GPU time of 70 and 90 ms against 146 on
-            that Mac. α 0 was visibly coarser at ×4 (4.1% of pixels). Only
+            measured as if affine, as 1.x does: far fewer tiles, and the error
+            on screen is s times the threshold. A curvilinear map's own{" "}
+            <C>CurvilinearMap.lodExponent</C> wins over the view's. The owner
+            chose 0.3 on 2026-11-13 from a second sweep (0 to 1, at ×1, ×4 and
+            ×10, in the valley and Zermatt close views, after the culling fixes
+            below). At ×4 and ×10, α 0.25 and 0.5 differed from the exact image
+            (α 1) by less than the run-to-run noise, about 2% of pixels, with a
+            quarter to a fifth of α 1's terrain tiles: 471 and 760 tiles against
+            2,161 in the valley at ×4, and GPU time of 70 and 90 ms against 146
+            on that Mac. α 0 was visibly coarser at ×4 (4.1% of pixels). Only
             static frames were compared; popping in motion was not measured. The
             sweep is <C>scripts/alphaSweep.mjs</C>, and the example has a slider
             and a <C>&amp;alpha=</C> switch.
@@ -930,11 +931,11 @@ export function Selection() {
             skirts, and a plain height scale has an exact slope.
           </li>
           <li>
-            <strong>Upsampled tiles take no warp stretch.</strong> Past the
-            data's last level a tile is its parent's surface, cut smaller.
-            Refining it adds no geometry, so the stretched part of its error
-            counts only where refining can add some. Elsewhere the error is
-            unstretched, as imagery isn't stretched vertically.
+            <strong>Upsampled tiles take no curvilinear map stretch.</strong>{" "}
+            Past the data's last level a tile is its parent's surface, cut
+            smaller. Refining it adds no geometry, so the stretched part of its
+            error counts only where refining can add some. Elsewhere the error
+            is unstretched, as imagery isn't stretched vertically.
           </li>
           <li>
             <strong>Distance to the drawn surface.</strong> Cull volumes include
@@ -972,12 +973,12 @@ export function Selection() {
           <li>
             <strong>Analytic occluders</strong> run on the CPU with no delay and
             can cull what was never loaded. The first is the body occluder,
-            which does horizon culling under a warp. The ellipsoid test it
-            replaces was off under any warp. The body occluder instead fits a
-            shell inside the terrain that is drawn, so it holds under any warp,
-            with no flag for one. It is sound only for a closed, opaque drawn
-            surface with the camera outside it; with a translucent globe or clip
-            holes it is off.
+            which does horizon culling under a curvilinear map. The ellipsoid
+            test it replaces was off under any curvilinear map. The body
+            occluder instead fits a shell inside the terrain that is drawn, so
+            it holds under any curvilinear map, with no flag for one. It is
+            sound only for a closed, opaque drawn surface with the camera
+            outside it; with a translucent globe or clip holes it is off.
           </li>
           <li>
             <strong>The depth pyramid</strong> is the image occluder: the view's
@@ -991,16 +992,18 @@ export function Selection() {
           The shell is bounded by the drawn terrain: a min-hierarchy of tile
           bounds, exact once heights are resident. A tile without resident
           heights is bounded by the nearest loaded ancestor's exact minimum,
-          less its geometric error stretched by the warp, so there is no sampled
-          estimate. Skirts are left out of the occluder's bounds. The radius is
-          the largest sound one, found by bisection over the cap facing the
-          camera, so no global bound is needed. Only that cap has to enclose it.
+          less its geometric error stretched by the curvilinear map, so there is
+          no sampled estimate. Skirts are left out of the occluder's bounds. The
+          radius is the largest sound one, found by bisection over the cap
+          facing the camera, so no global bound is needed. Only that cap has to
+          enclose it.
         </p>
         <p>
-          The work is a resumable, budgeted job. Under a warp with occluders it
-          needs base levels 0 to 2 resident, and only then, for warped views. It
-          yields, taking about 1 ms of a tick. A first version loaded levels 0
-          to 4 for every globe (682 tiles) and walked cold for 236 ms.
+          The work is a resumable, budgeted job. Under a curvilinear map with
+          occluders it needs base levels 0 to 2 resident, and only then, for
+          curvilinear views. It yields, taking about 1 ms of a tick. A first
+          version loaded levels 0 to 4 for every globe (682 tiles) and walked
+          cold for 236 ms.
         </p>
         <h3>Two-phase culling of draws</h3>
         <p>
@@ -1214,13 +1217,13 @@ export function Selection() {
             tiles still loading, or held back by occlusion.
           </li>
           <li>
-            <C>"stretch"</C>: how much the warp under a tile stretches its
-            error, the factor selection used.
+            <C>"stretch"</C>: how much the curvilinear map under a tile
+            stretches its error, the factor selection used.
           </li>
           <li>
             <C>"skirts"</C> (<C>&amp;debug=skirts</C>): terrain skirt fragments
             in magenta, with everything else shaded as normal. It works under
-            any warp.
+            any curvilinear map.
           </li>
         </ul>
         <p>
@@ -1245,8 +1248,8 @@ export function Selection() {
           mesh's height interpolated on its triangles, the lookup the error
           refit already makes. A level-skipping selection still eases. From the
           tile's first drawn tick, the vertex stage moves each vertex from that
-          height to its own, with a smoothstep, before any warp: a height
-          profile lifts the height it is at now.
+          height to its own, with a smoothstep, before any curvilinear map: a
+          height profile lifts the height it is at now.
         </p>
         <ul>
           <li>
@@ -1308,12 +1311,14 @@ export function Selection() {
             absent. They form a regular grid seen at an angle, which real ridge
             shadows wouldn't: the shadow map's texel grid projected onto a wall
             the sun grazes, where the bias is too small. The suspects are the
-            receiver's normal offset, which may not use the drawn (warped)
+            receiver's normal offset, which may not use the drawn (curvilinear)
             normal, and a slope-scaled bias that doesn't see the wall's drawn
             slope. The check is a sweep of both at ×10 with a tint by cascade.
           </li>
           <li>
-            <strong>At α = 1, selection runs away under a steep warp.</strong>{" "}
+            <strong>
+              At α = 1, selection runs away under a steep curvilinear map.
+            </strong>{" "}
             Valley ×10 reached 9,546 terrain tiles and 23,512 imagery requests,
             still rising after 120 s. Valley ×4 made 14,559 imagery requests
             against 2,117 at α 0.75. An exact as-drawn error should converge, so

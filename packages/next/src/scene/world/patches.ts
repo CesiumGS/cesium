@@ -11,8 +11,11 @@ import {
   RecordFlags,
 } from "../../render/layout.ts";
 import { CapacityError } from "../CapacityError.ts";
-import { weightInterval } from "../warpBounds.ts";
-import { termCurvatureBound, termDerivativeBound } from "../warpEvaluate.ts";
+import { weightInterval } from "../curvilinearBounds.ts";
+import {
+  termCurvatureBound,
+  termDerivativeBound,
+} from "../curvilinearEvaluate.ts";
 import type { World } from "../World.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";

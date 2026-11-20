@@ -39,7 +39,7 @@ const content = curvilinearFrame(
 );
 catalog.add(content);
 
-// Placement decides what is warped: bind the Earth's anchor to the node and
+// Placement decides what is curvilinear: bind the Earth's anchor to the node and
 // its terrain, tilesets and models are drawn through the edge, with nothing
 // set on any item. The camera stays at ITRF, and the Moon, which isn't under
 // the node, is untouched.

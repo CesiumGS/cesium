@@ -3,20 +3,23 @@
 // edges, which are values: this puts one over content in the frames
 // (`curvilinearFrame(name, parent, liveEdge(edge, …))`), with its parameters
 // changeable and one float a slider moves.
-import type { CurvilinearFrameSpec, WarpScale } from "../camera/route.ts";
+import type {
+  CurvilinearFrameSpec,
+  CurvilinearScale,
+} from "../camera/route.ts";
 import type {
   Params,
   CurvilinearEdge,
   CurvilinearSpec,
 } from "../transform/graph.ts";
-import { LiveWarp } from "./liveWarp.ts";
+import { LiveCurvilinearMap } from "./liveCurvilinearMap.ts";
 
 /** What `liveEdge` takes besides the edge. */
 export interface LiveEdgeOptions {
   /** Words for the graph panel and reports. */
   readonly description: string;
   /** A live number for a slider (a world's placement parameter): the strength of the edge, 0 for none. Needs the edge's `identity`. */
-  readonly scale?: WarpScale;
+  readonly scale?: CurvilinearScale;
   /** Overrides the edge's own `identity` (the values of its separable parameters at which it does nothing). */
   readonly identity?: Params;
   /** 1σ of what the edge models, m. */
@@ -31,9 +34,12 @@ export interface LiveEdgeOptions {
 }
 
 /** A built-in edge as a changeable `CurvilinearFrameSpec`: its function and inverse with the parameters it has now, and the same edge as a graph step for the compiler. */
-export class LiveEdge extends LiveWarp implements CurvilinearFrameSpec {
+export class LiveEdge
+  extends LiveCurvilinearMap
+  implements CurvilinearFrameSpec
+{
   readonly description: string;
-  readonly scale: WarpScale | undefined;
+  readonly scale: CurvilinearScale | undefined;
   readonly accuracy: { readonly sigma: number } | undefined;
   readonly domain:
     { readonly center: ArrayLike<number>; readonly radius: number } | undefined;

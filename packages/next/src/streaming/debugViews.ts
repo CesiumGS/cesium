@@ -93,7 +93,7 @@ export const DEBUG_ERROR_RAMP: readonly Rgb[] = [
   [253, 231, 37],
 ];
 
-/** The stretch of a tile's error by the warp: cividis, low to high. */
+/** The stretch of a tile's error by the curvilinear map: cividis, low to high. */
 export const DEBUG_STRETCH_RAMP: readonly Rgb[] = [
   [0, 34, 78],
   [68, 89, 109],
@@ -145,7 +145,7 @@ export interface TileDebug {
   hash: number;
   /** Its screen-space error over the view's threshold; below 1/16 or above 4 clamps. */
   error: number;
-  /** The warp's stretch of its error (1 without a warp); from 1/4 to 16. */
+  /** The curvilinear map's stretch of its error (1 without a curvilinear map); from 1/4 to 16. */
   stretch: number;
 }
 
@@ -262,9 +262,9 @@ export function debugLegend(mode: DebugView): DebugLegend {
       const stops = [-2, 0, 1, 2, 4];
       return {
         mode,
-        title: "Warp stretch",
+        title: "Curvilinear map stretch",
         description:
-          "How much the warp stretches the tile's error: the largest singular value of the map there, or for terrain under a height profile, its vertical slope. 1 is no stretch.",
+          "How much the curvilinear map stretches the tile's error: the largest singular value of the map there, or for terrain under a height profile, its vertical slope. 1 is no stretch.",
         kind: "ramp",
         entries: stops.map((s) => ({
           label: s === 0 ? "1 (none)" : `${2 ** s}`,

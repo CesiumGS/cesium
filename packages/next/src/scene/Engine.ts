@@ -43,7 +43,7 @@ import {
   type ClipsOption,
 } from "./world/clips.ts";
 import { curvedClipSets } from "../render/view/clipTable.ts";
-import { WARP_BUDGET_MS } from "./world/warps.ts";
+import { CURVILINEAR_BUDGET_MS } from "./world/worldCurvilinearMaps.ts";
 import type { JobStats } from "../io/Jobs.ts";
 
 /** What the jobs' apply phase may cost a tick, ms, by default (docs/design/job-system.md). */
@@ -115,8 +115,8 @@ import {
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
-  /** What the warp fits may cost a frame, ms (default 4): `WorldWarps.frame`'s budget. */
-  warpBudgetMs?: number;
+  /** What the curvilinear map fits may cost a frame, ms (default 4): `WorldCurvilinearMaps.frame`'s budget. */
+  curvilinearBudgetMs?: number;
   /** What the jobs' apply phase may cost a tick, ms (default 4): `Engine.jobBudgetMs`. */
   jobBudgetMs?: number;
   /** Replace built-in shaders with complete WGSL modules (e.g. from Slang). */
@@ -700,11 +700,11 @@ export class Engine {
   private readonly farAnchors = new WeakMap<View, Set<AnchorHandle>>();
   private readonly freeViewIds: number[] = [];
   /**
-   * What fitting the draws' warps may cost a frame, ms (docs/design/geometry-through-placement-review.md): fits
+   * What fitting the draws' curvilinear maps may cost a frame, ms (docs/design/geometry-through-placement-review.md): fits
    * past it wait for the next frame, their draws held hidden or drawn at
    * their last fit, and the loop stays awake while any wait.
    */
-  warpBudgetMs = WARP_BUDGET_MS;
+  curvilinearBudgetMs = CURVILINEAR_BUDGET_MS;
   /**
    * What the jobs' apply phase may cost a tick, ms (docs/design/job-system.md): the
    * main-thread steps of finished worker jobs (a terrain tile's decode
@@ -883,7 +883,8 @@ export class Engine {
     // M0: device-loss recovery stops at the device. Rebuilding worlds from
     // their CPU-side sources arrives with the streaming cache (M2).
     const engine = new Engine(gpu, ctx, sky, options.maxViews ?? 16);
-    engine.warpBudgetMs = options.warpBudgetMs ?? WARP_BUDGET_MS;
+    engine.curvilinearBudgetMs =
+      options.curvilinearBudgetMs ?? CURVILINEAR_BUDGET_MS;
     engine.jobBudgetMs = options.jobBudgetMs ?? JOB_BUDGET_MS;
     engine.setHaze(
       options.visibility === undefined ? 60 : (options.visibility ?? undefined),
@@ -1740,12 +1741,12 @@ export class Engine {
       } catch (error) {
         this.reportLoopError("the camera layer", error);
       }
-      // The warp fits after the placements (they carry the routes), before
+      // The curvilinear map fits after the placements (they carry the routes), before
       // change detection: what they finish draws in this tick.
       try {
-        busy = this.warpTick(this.warpBudgetMs) || busy;
+        busy = this.curvilinearTick(this.curvilinearBudgetMs) || busy;
       } catch (error) {
-        this.reportLoopError("the warp fits", error);
+        this.reportLoopError("the curvilinear map fits", error);
       }
       // Each view's placements, checked against its world (a removed
       // anchor, another world: `View.anchorRevision`), so the wake that
@@ -1801,11 +1802,11 @@ export class Engine {
   };
 
   /**
-   * Steps each world's warp context (`WorldWarps.frame`): the routes of the
+   * Steps each world's curvilinear map context (`WorldCurvilinearMaps.frame`): the routes of the
    * anchors each of its views placed across a curvilinear edge, to that view's
    * render root. True while fits are pending.
    */
-  private warpTick(budgetMs: number): boolean {
+  private curvilinearTick(budgetMs: number): boolean {
     let busy = false;
     const report = (message: string) =>
       this.ctx.errors.report("frame", message);
@@ -1816,9 +1817,9 @@ export class Engine {
       const demands = worldViews
         .map((view) => curvedClipSets(this, view))
         .filter((sets) => sets.length > 0);
-      if (demands.length > 0 || world.warps.curved.active) {
+      if (demands.length > 0 || world.curvilinearMaps.curved.active) {
         busy =
-          world.warps.curved.frame(
+          world.curvilinearMaps.curved.frame(
             {
               resolver: this.cameras.resolver(world),
               seconds: this.cameras.clock(world)?.seconds ?? 0,
@@ -1830,13 +1831,13 @@ export class Engine {
       }
       if (
         worldViews.length === 0 &&
-        !world.warps.active &&
-        world.warps.size === 0
+        !world.curvilinearMaps.active &&
+        world.curvilinearMaps.size === 0
       ) {
         continue;
       }
       busy =
-        world.warps.frame(
+        world.curvilinearMaps.frame(
           worldViews.map((view) => ({
             id: this.scene.viewIds.get(view)!,
             routes: view.anchorRoutes(),
@@ -2067,7 +2068,7 @@ export class Engine {
       return all || moved || streaming;
     });
     // Tiles just placed are fitted before they draw (held hidden until then).
-    if (this.warpTick(this.warpBudgetMs)) {
+    if (this.curvilinearTick(this.curvilinearBudgetMs)) {
       this.wake();
     }
     for (let i = 0; i < views.length; i++) {
@@ -2211,8 +2212,8 @@ export class Engine {
     if (!this.ticking) {
       this.cameras.update();
       // Outside the loop nothing slices the fits: finish them, so a capture
-      // shows every draw warped.
-      this.warpTick(Infinity);
+      // shows every draw curvilinear.
+      this.curvilinearTick(Infinity);
       // Outside the loop nothing slices the upload: finish it, so a
       // capture shows the stars.
       while (this.raster.sky.uploading) {

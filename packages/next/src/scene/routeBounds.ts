@@ -10,10 +10,10 @@
 // box maps exactly (A ← L A). Sound where each bound is, and tight where
 // the stretch is along the box's own axes, which a tile's flat box is
 // (a sphere stretched by 10 along one axis is 10 times too big). A route
-// with a step that has no bound, or that inverts a warp, has no composed box
+// with a step that has no bound, or that inverts a curvilinear map, has no composed box
 // and is sampled instead.
-import { singularValues } from "./warpBounds.ts";
-import type { Route, Warp } from "../camera/route.ts";
+import { singularValues } from "./curvilinearBounds.ts";
+import type { Route, CurvilinearMap } from "../camera/route.ts";
 import { transformPoint, type Mat4 } from "../math/mat4.ts";
 
 /** What a composed box says of the volume it came from. */
@@ -25,7 +25,7 @@ export interface ComposedBox {
   readonly sigmaMax: number;
 }
 
-/** The values a warp's scale takes while a drawn volume holds: its bucket's ends. */
+/** The values a curvilinear map's scale takes while a drawn volume holds: its bucket's ends. */
 export interface ScaleSpan {
   readonly low: number;
   readonly high: number;
@@ -63,15 +63,15 @@ function normOf(m: ArrayLike<number>): number {
 
 /**
  * The box (`center`, `axes`) carried through `route`, then the affine
- * `after`, with each scaled warp's scale anywhere in its span (`spans`).
- * Undefined when any step has no declared bound, a warp is crossed
+ * `after`, with each scaled curvilinear map's scale anywhere in its span (`spans`).
+ * Undefined when any step has no declared bound, a curvilinear map is crossed
  * backwards, geographic coordinates don't line up between steps, or a value
  * is not finite.
  */
 export function composeBox(
   route: Route,
   after: ArrayLike<number> | undefined,
-  spans: ReadonlyMap<Warp, ScaleSpan>,
+  spans: ReadonlyMap<CurvilinearMap, ScaleSpan>,
   center: ArrayLike<number>,
   axes: ArrayLike<number>,
 ): ComposedBox | undefined {
@@ -99,15 +99,15 @@ export function composeBox(
       affine(step.matrix);
       continue;
     }
-    const spec = step.warp.curvilinear;
+    const spec = step.curvilinearMap.curvilinear;
     if (step.inverse || spec?.bound === undefined) {
       return undefined;
     }
     if (geographic !== (spec.geographic?.in === true)) {
       return undefined;
     }
-    const span = spans.get(step.warp);
-    const scaled = step.warp.scale !== undefined;
+    const span = spans.get(step.curvilinearMap);
+    const scaled = step.curvilinearMap.scale !== undefined;
     if (scaled && (span === undefined || geographic || spec.geographic?.out)) {
       return undefined;
     }
@@ -140,12 +140,12 @@ export function composeBox(
     if (!m.every(Number.isFinite)) {
       return undefined;
     }
-    // The warp at scale s is p + s (F(p) - p), F at scale 1: its Jacobian
+    // The curvilinear map at scale s is p + s (F(p) - p), F at scale 1: its Jacobian
     // (1 - s) I + s J, in the bound's bases (1 - s) Q + s J' with
     // Q = R_outᵀ R_in. An entry's magnitude is convex in s: the ends hold.
     // The center moves along its displacement with s.
     const next = new Float64Array(3);
-    step.warp.forward([c[0]!, c[1]!, c[2]!], next);
+    step.curvilinearMap.forward([c[0]!, c[1]!, c[2]!], next);
     let drift: number[] | undefined;
     let span2: ScaleSpan | undefined;
     if (scaled) {

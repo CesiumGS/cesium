@@ -1,4 +1,4 @@
-import type { WarpStats } from "@cesium/next";
+import type { CurvilinearStats } from "@cesium/next";
 import {
   createRefinement,
   type RefinementSource,
@@ -7,15 +7,15 @@ import {
 
 /** What the page knows of its content as it loads. */
 export interface LoadingState {
-  /** The world's warp counts (`World.warpStats`). */
-  readonly stats: WarpStats;
+  /** The world's curvilinear map counts (`World.curvilinearStats`). */
+  readonly stats: CurvilinearStats;
   /** The tileset of buildings: not asked for yet, asked for, drawing something, or failed. */
   readonly buildings: "waiting" | "loading" | "drawn" | "failed";
   /** Tiles still in flight or waiting for their upload, in the globe and the buildings. */
   readonly tiles?: number;
 }
 
-/** Whether anything is on screen: terrain by its exact term, a draw that has its warp, or the buildings. */
+/** Whether anything is on screen: terrain by its exact term, a draw that has its curvilinear map, or the buildings. */
 export function hasDrawn(state: LoadingState): boolean {
   const { draws } = state.stats;
   return (

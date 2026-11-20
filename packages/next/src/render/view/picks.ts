@@ -69,7 +69,7 @@ export interface PendingPick {
   translucent: { depth: number; featureId: number } | undefined;
   /**
    * The pick variant's pass, for a `View.pickPoint` (the content's own
-   * point at the hit), and for terrain placed across a warp, which it traces
+   * point at the hit), and for terrain placed across a curvilinear map, which it traces
    * in place of `translucent`.
    */
   domain: PendingDomain | undefined;
@@ -109,7 +109,7 @@ export function halfToFloat(h: number): number {
 
 /**
  * The terrain regions of the globes in the view's world that a pick's
- * drawn terrain is placed across a warp for: masks of the slots a pick
+ * drawn terrain is placed across a curvilinear map for: masks of the slots a pick
  * stops at (below full opacity, unless `pickThrough`) and goes through. The
  * CPU's ray (`translucentTerrainPick`) traces terrain as it is, not as it is
  * drawn, so there the pass stands in for it. Zero without such globes.
@@ -135,7 +135,7 @@ function terrainStops(
   return { stops: stops >>> 0, through: through >>> 0 };
 }
 
-/** The view's world's shown globes on its body anchor whose anchor is placed across a warp in the view. */
+/** The view's world's shown globes on its body anchor whose anchor is placed across a curvilinear map in the view. */
 function placedGlobes(engine: PickEngine, view: View): Globe[] {
   return engine.tilesets.filter(
     (t): t is Globe =>
@@ -233,7 +233,7 @@ export function encodePick(
  * tick the pick reads, and its depth and feature are kept to stand in for
  * the GPU's where they are nearer (`resolvePicks`). Undefined without
  * such terrain on the ray. The ray is in true coordinates, so a globe
- * placed across a warp (drawn exaggerated, as an example) isn't traced
+ * placed across a curvilinear map (drawn exaggerated, as an example) isn't traced
  * here: the pick variant's pass stands in for it (`terrainStops`).
  */
 function translucentTerrainPick(
@@ -365,7 +365,7 @@ export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
       let depth = new Float32Array(words.buffer, 4, 1)[0]!;
       readback.unmap();
       // What the pick variant's pass read, if it ran (the content's own
-      // point at the hit; terrain drawn across a warp).
+      // point at the hit; terrain drawn across a curvilinear map).
       const sample = pick.domain && readDomain(engine, pick.domain);
       // Translucent terrain nearer than what the opaque pass holds
       // (reverse-Z: nearer is greater) stands in for it.
@@ -374,7 +374,7 @@ export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
         featureId = translucent.featureId;
         depth = translucent.depth;
       }
-      // Where the terrain is drawn across a warp, the CPU can't trace it:
+      // Where the terrain is drawn across a curvilinear map, the CPU can't trace it:
       // the variant's pass, which draws it as drawn, stands in.
       if (
         pick.domain &&

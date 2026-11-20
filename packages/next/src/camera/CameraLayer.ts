@@ -23,8 +23,8 @@ import {
   type Route,
 } from "./route.ts";
 import { tableResolver } from "./tableResolver.ts";
-import { affinePart } from "../scene/warpFit.ts";
-import { routeMap } from "../scene/warpBounds.ts";
+import { affinePart } from "../scene/curvilinearFit.ts";
+import { routeMap } from "../scene/curvilinearBounds.ts";
 import type { Camera } from "../scene/Camera.ts";
 
 /** @internal What the camera layer needs of its engine. */
@@ -83,10 +83,10 @@ interface ViewState {
 /**
  * Each view's rig and render root (`Engine.cameras`, plan 5a's call 23).
  *
- * A re-root across a warp (a view on ITRF moved onto a vertical
+ * A re-root across a curvilinear map (a view on ITRF moved onto a vertical
  * exaggeration's frame, or back) has no 4×4: the camera is carried through
  * the route instead, its position mapped forward and its axes by the
- * route's Jacobian there, each warp at the scale it has then.
+ * route's Jacobian there, each curvilinear map at the scale it has then.
  *
  * Each tick (and at the start of a `renderFrame` outside the loop) it
  * evaluates each view's rig at the clock's seconds and places every anchor
@@ -100,9 +100,9 @@ interface ViewState {
  *
  * An anchor whose route to the root crosses a curvilinear edge (a curvilinear frame the
  * anchor is bound to, or one between it and the root; `FrameResolver.route`) is placed by the route's affine part (its
- * rigid steps composed, the warps as identity) and marked with the route
- * (`View.anchorRoute`): its content is drawn warped, per vertex, by fits
- * of the route (scene/world/warps.ts). The rig's own frames must reach the
+ * rigid steps composed, the curvilinear maps as identity) and marked with the route
+ * (`View.anchorRoute`): its content is drawn curvilinear, per vertex, by fits
+ * of the route (scene/world/worldCurvilinearMaps.ts). The rig's own frames must reach the
  * root rigidly, as the root follows the rig.
  *
  * A reference frame that can't be resolved (a `FrameUnavailableError`, any
@@ -124,7 +124,7 @@ export class CameraLayer {
   private readonly m = [0, 1, 2, 3].map(() => new Float64Array(16));
   private readonly current = new Float64Array(16);
   private readonly x = new Float64Array(16);
-  /** The route `resolveAnchor` last left, when it crossed a warp. */
+  /** The route `resolveAnchor` last left, when it crossed a curvilinear map. */
   private routed: Route | undefined;
 
   /** @internal Made by the engine. */
@@ -235,8 +235,8 @@ export class CameraLayer {
    * reference frame differs from the view's root, the view re-roots: the
    * camera is re-expressed from the old root into the new one at the
    * clock's seconds, so nothing placed rigidly moves on screen (across a
-   * warp the camera is carried through the route instead, and what is drawn
-   * through it moves with the warp). While that
+   * curvilinear map the camera is carried through the route instead, and what is drawn
+   * through it moves with the curvilinear map). While that
    * can't be resolved yet, the view stays on its old root (reported once)
    * and re-roots on the first tick that can. Throws, naming it, for an
    * offset, forward or up that isn't finite.
@@ -531,7 +531,7 @@ export class CameraLayer {
         m4.transformDirection(camera.up, x, camera.up);
         m4.transformDirection(camera.right, x, camera.right);
       } else {
-        // Across a warp there is no 4×4: the camera is carried through the
+        // Across a curvilinear map there is no 4×4: the camera is carried through the
         // route (its position mapped, its axes by the Jacobian there).
         carryCamera(camera, resolveRoute(resolver, from, to, seconds, view));
       }
@@ -596,10 +596,10 @@ export class CameraLayer {
   /**
    * An anchor's placement in `root`, or undefined after reporting why not.
    * Rigid: the resolver's matrix, as ever. Across a curvilinear edge: the route's
-   * affine part (its rigid steps composed, the warps as identity), the route
+   * affine part (its rigid steps composed, the curvilinear maps as identity), the route
    * (for `view`, which a switch frame chooses by) left in `routed` for the
-   * view to mark the anchor with; the warps are drawn per vertex
-   * (scene/world/warps.ts), not placed.
+   * view to mark the anchor with; the curvilinear maps are drawn per vertex
+   * (scene/world/worldCurvilinearMaps.ts), not placed.
    */
   private resolveAnchor(
     state: ViewState,

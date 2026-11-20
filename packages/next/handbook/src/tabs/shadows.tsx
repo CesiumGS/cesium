@@ -600,7 +600,7 @@ export function Shadows() {
           tested for shadow by where it is drawn, not by where its coordinates
           put it, so a mountain stretched tenfold casts from its stretched
           bounds. The request and dynamic-error volumes follow the same rule.
-          Which draws are warped is the placement's decision, and the{" "}
+          Which draws are curvilinear is the placement's decision, and the{" "}
           <a href="#/transform-graph">Transform graph tab</a> has the rest.
         </p>
         <h3>How much room they get</h3>
@@ -669,8 +669,9 @@ export function Shadows() {
           from={
             <>
               <C>src/streaming/Tileset3D.ts</C>,{" "}
-              <C>src/streaming/Budgeted.ts</C>, <C>src/streaming/tileWarp.ts</C>
-              , <C>src/scene/shadows.ts</C> and{" "}
+              <C>src/streaming/Budgeted.ts</C>,{" "}
+              <C>src/streaming/tileCurvilinearMap.ts</C>,{" "}
+              <C>src/scene/shadows.ts</C> and{" "}
               <C>src/shaders/cullTables.slang</C>
             </>
           }

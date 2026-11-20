@@ -3,7 +3,7 @@
 // reads a draw's block in the placements buffer and calls its
 // `tgRoute(pLocal, c, u, &j)`. The unit defines `routeVertex`, which the
 // surface shaders call (surfaceBoundary.slang) for a draw whose placement
-// block holds a `WARP_ROUTE` term; the pipelines made from it (ShaderCache,
+// block holds a `CURVILINEAR_ROUTE` term; the pipelines made from it (ShaderCache,
 // keyed by the route's `key`) draw such draws and no others: a batch's key
 // has the variant's `id` (scene/world/draws.ts).
 //
@@ -23,7 +23,7 @@
 import type { CompiledRoute } from "../transform/compile.ts";
 import { wgslUnit, type ShaderUnit } from "../shaders/link/unit.ts";
 
-/** The term kind of a compiled route (placement.slang `WARP_ROUTE`). */
+/** The term kind of a compiled route (placement.slang `CURVILINEAR_ROUTE`). */
 export const ROUTE_KIND = 3;
 /** Rows from a block's header to its body: the header and one term's three. */
 export const ROUTE_BODY = 4;

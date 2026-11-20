@@ -29,8 +29,8 @@ import {
   geometryRefines,
   lodExponentOf,
   terrainDrawnError,
-  type TileWarp,
-} from "./tileWarp.ts";
+  type TileCurvilinearMap,
+} from "./tileCurvilinearMap.ts";
 
 import type { ViewOcclusion } from "./occlusion.ts";
 import type { Occluder } from "./occluders.ts";
@@ -94,13 +94,13 @@ export interface SelectionView {
   /** The view morphs terrain in as it refines (`View.lodTransitions` "morph"); else it pops. */
   morph?: boolean;
   /**
-   * The error exponent α in [0, 1] (`View.lodExponent`): under a warp,
-   * selection uses its stretch s as s^α. Absent: 1. A warp's own
-   * (`TileWarp.lodExponent`) wins.
+   * The error exponent α in [0, 1] (`View.lodExponent`): under a curvilinear map,
+   * selection uses its stretch s as s^α. Absent: 1. A curvilinear map's own
+   * (`TileCurvilinearMap.lodExponent`) wins.
    */
   lodExponent?: number;
   /**
-   * Set when the tileset hangs under an anchor placed across a warp: its
+   * Set when the tileset hangs under an anchor placed across a curvilinear map: its
    * tiles are selected on their drawn volumes (`drawnTile`), with the
    * geometric error stretched by the map, and are not horizon-culled. The
    * viewer request volumes (`drawnRequestVolume`), the shadow casters'
@@ -108,10 +108,10 @@ export interface SelectionView {
    * are the drawn ones too. The camera, planes and distances are in the
    * anchor's coordinates as ever.
    */
-  warp?: TileWarp;
+  curvilinearMap?: TileCurvilinearMap;
   /**
    * What can prove a tile hidden for this view (`occluders.ts`): a tile any
-   * of them hides is neither drawn nor fetched. Under a warp the body's
+   * of them hides is neither drawn nor fetched. Under a curvilinear map the body's
    * (`globe/bodyOccluder.ts`) stands in for the ellipsoid's horizon, which
    * is not sound for a drawn Earth of another shape.
    */
@@ -500,8 +500,8 @@ export class StepwiseSelection implements TileSelection {
     }
     // 1.x selectTile: skip if the content bounding volume is out of view.
     const state = tile.viewState(view.id);
-    const contentVolume = view.warp
-      ? drawnContentVolume(tile, view.warp)
+    const contentVolume = view.curvilinearMap
+      ? drawnContentVolume(tile, view.curvilinearMap)
       : tile.contentVolume;
     if (contentVolume && state.planeMask !== MASK_INSIDE) {
       for (let p = 0; p < view.planes.length / 4; p++) {
@@ -592,7 +592,9 @@ export class StepwiseSelection implements TileSelection {
       : MASK_INDETERMINATE;
     const volume = this.volumeOf(tile, view);
     state.distance = volumeDistance(
-      view.warp ? (drawnTile(tile, view.warp).surface ?? volume) : volume,
+      view.curvilinearMap
+        ? (drawnTile(tile, view.curvilinearMap).surface ?? volume)
+        : volume,
       view.position,
       view.cartographic,
     );
@@ -604,12 +606,12 @@ export class StepwiseSelection implements TileSelection {
     state.sse = this.screenSpaceError(tile, view, false, 0);
     state.planeMask = planeMask(volume, view.planes, parentMask);
     state.visible = state.planeMask !== MASK_OUTSIDE;
-    // The request volume says where the viewer must be. Under a warped
+    // The request volume says where the viewer must be. Under a curvilinear
     // anchor the camera is where things are drawn, so it is tested against
     // the request volume as drawn (a sphere; the camera's height is then
     // of no use to it).
-    const request = view.warp
-      ? drawnRequestVolume(tile, view.warp)
+    const request = view.curvilinearMap
+      ? drawnRequestVolume(tile, view.curvilinearMap)
       : tile.requestVolume;
     state.inRequestVolume =
       !request ||
@@ -617,12 +619,14 @@ export class StepwiseSelection implements TileSelection {
   }
 
   /**
-   * The volume selection tests a tile as: its own, or, under a warped
+   * The volume selection tests a tile as: its own, or, under a curvilinear
    * anchor, where its draws put it (`drawnTile`), since the camera is where
    * things are drawn.
    */
   protected volumeOf(tile: Tile, view: SelectionView): TileVolume {
-    return view.warp ? drawnTile(tile, view.warp).volume : tile.volume;
+    return view.curvilinearMap
+      ? drawnTile(tile, view.curvilinearMap).volume
+      : tile.volume;
   }
 
   /** 1.x getScreenSpaceError (perspective). */
@@ -638,15 +642,15 @@ export class StepwiseSelection implements TileSelection {
         ? tile.parent.geometricError
         : rootError
       : tile.geometricError;
-    if (view.warp) {
+    if (view.curvilinearMap) {
       // A geometric error is a length in the tile's own meters: the map
       // stretches it by at most σ_max over the volume (an estimate), and its
       // fit adds its own error.
-      const drawn = drawnTile(source, view.warp);
+      const drawn = drawnTile(source, view.curvilinearMap);
       // The stretched part counts only where refining can reduce it: a tile
       // upsampled from its data ancestor, or one whose children are known to
-      // have no data, gains nothing but imagery (which the warp doesn't
-      // stretch), so its error is measured as if unwarped (s^0).
+      // have no data, gains nothing but imagery (which the curvilinear map doesn't
+      // stretch), so its error is measured as if affine (s^0).
       const alpha = geometryRefines(source) ? lodExponentOf(view) : 0;
       error =
         source.globe && drawn.slopeMax !== undefined
@@ -669,11 +673,11 @@ export class StepwiseSelection implements TileSelection {
 
   /** 1.x updateDynamicScreenSpaceError, from the root content volume. */
   protected computeDensity(root: Tile, view: SelectionView): number {
-    // Under a warped anchor, where the content is drawn: a sphere in the
+    // Under a curvilinear anchor, where the content is drawn: a sphere in the
     // anchor's coordinates, so the height falloff follows the drawn content.
-    const volume = view.warp
-      ? (drawnContentVolume(root, view.warp) ??
-        drawnTile(root, view.warp).volume)
+    const volume = view.curvilinearMap
+      ? (drawnContentVolume(root, view.curvilinearMap) ??
+        drawnTile(root, view.curvilinearMap).volume)
       : (root.contentVolume ?? root.volume);
     let up: Vec3;
     let direction: Vec3 = view.direction;

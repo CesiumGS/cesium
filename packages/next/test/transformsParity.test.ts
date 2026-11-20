@@ -2,14 +2,14 @@
 // float64 TS function against the IR parsed from its source (values, and the
 // analytic Jacobian against the IR's automatic one), inverse round trips,
 // the declared linear parameters, known projection values, the frames
-// catalog's height warps, and the Slang side (src/shaders/transforms.slang)
+// catalog's height curvilinear maps, and the Slang side (src/shaders/transforms.slang)
 // through the generated WGSL's structure.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   heightOffset as framesHeightOffset,
   verticalExaggeration as framesExaggeration,
-} from "../src/georeference/heightWarps.ts";
+} from "../src/georeference/heightCurvilinearMaps.ts";
 import {
   flatten,
   flattenDescriptor,
@@ -756,7 +756,8 @@ describe("projections against published values", () => {
   });
 
   it("UTM through geocentric nodes agrees with the spike's body-fixed transverse Mercator", async () => {
-    const { formForward, utmForm } = await import("../src/scene/warpForms.ts");
+    const { formForward, utmForm } =
+      await import("../src/scene/curvilinearForms.ts");
     const form = utmForm(33);
     const edge = utm({ zone: 33 });
     const tm = transverseMercatorDescriptor(WGS84);
@@ -775,14 +776,14 @@ describe("projections against published values", () => {
   });
 });
 
-describe("the height transforms against the frames catalog's warps", () => {
+describe("the height transforms against the frames catalog's curvilinear maps", () => {
   const r = rng(21);
   const points = Array.from({ length: 30 }, () =>
     ecef(between(r, -180, 180), between(r, -89, 89), between(r, -400, 8000)),
   );
 
   it("a lift profile below the ceiling is frames' verticalExaggeration, J and inverse included", () => {
-    const warp = framesExaggeration({ factor: 3.5, baseHeight: 200 });
+    const curvilinearMap = framesExaggeration({ factor: 3.5, baseHeight: 200 });
     const d = verticalExaggerationDescriptor(WGS84);
     const params = {
       ...defaultParams(d),
@@ -794,7 +795,7 @@ describe("the height transforms against the frames catalog's warps", () => {
     for (const p of points) {
       const theirs = new Float64Array(3);
       const theirJ = new Float64Array(9);
-      warp.forward(p, theirs, theirJ);
+      curvilinearMap.forward(p, theirs, theirJ);
       const mine = new Float64Array(3);
       const myJ = new Float64Array(9);
       d.forward(p, params, mine, myJ);
@@ -807,7 +808,7 @@ describe("the height transforms against the frames catalog's warps", () => {
       const back = new Float64Array(3);
       const theirBack = new Float64Array(3);
       d.inverse!(mine, params, back);
-      warp.inverse!(mine, theirBack);
+      curvilinearMap.inverse!(mine, theirBack);
       for (let i = 0; i < 3; i++) {
         expect(Math.abs(back[i]! - theirBack[i]!)).toBeLessThan(1e-6);
       }
@@ -815,12 +816,12 @@ describe("the height transforms against the frames catalog's warps", () => {
   });
 
   it("heightOffset is frames' heightOffset", () => {
-    const warp = framesHeightOffset(123.5);
+    const curvilinearMap = framesHeightOffset(123.5);
     const d = heightOffsetDescriptor(WGS84);
     for (const p of points) {
       const theirs = new Float64Array(3);
       const theirJ = new Float64Array(9);
-      warp.forward(p, theirs, theirJ);
+      curvilinearMap.forward(p, theirs, theirJ);
       const mine = new Float64Array(3);
       const myJ = new Float64Array(9);
       d.forward(p, { offset: 123.5 }, mine, myJ);

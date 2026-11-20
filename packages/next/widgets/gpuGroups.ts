@@ -38,7 +38,7 @@ const SKY = new Set([
   "environment",
   "atmosphere",
 ]);
-const PICKS = new Set(["pick", "warp-fit", "points", "mips"]);
+const PICKS = new Set(["pick", "curvilinear-fit", "points", "mips"]);
 
 /** The group a pass label belongs to; labels this doesn't know are "Other". */
 export function groupOf(label: string): GpuGroup {

@@ -49,7 +49,7 @@ export {
   type StyleExpression,
 } from "./scene/FeatureStyle.ts";
 export { World } from "./scene/World.ts";
-export type { WarpStats } from "./scene/world/warps.ts";
+export type { CurvilinearStats } from "./scene/world/worldCurvilinearMaps.ts";
 // Clips (docs/design/geometry-through-placement-review.md, increment 8a): shapes in a reference frame that cut
 // the content of the views that use them (`World.addClip`, `View.clipMask`).
 export {
@@ -317,13 +317,13 @@ export {
   velocityModel,
   liveEdge,
   LiveEdge,
-  type BlendedWarp,
-  type ChangeableWarp,
+  type BlendedCurvilinearMap,
+  type ChangeableCurvilinearMap,
   type CorridorElement,
   type CorridorOptions,
   type Degree,
   type FromFunctionOptions,
-  type FunctionWarp,
+  type FunctionCurvilinearMap,
   type LiveEdgeOptions,
   type PointFunction,
   type ScaleAbout,
@@ -349,7 +349,11 @@ export {
   type CurvilinearEdge,
   type TransformNode,
 } from "./transform/index.ts";
-export type { CurvilinearFrameSpec, Warp, WarpScale } from "./camera/route.ts";
+export type {
+  CurvilinearFrameSpec,
+  CurvilinearMap,
+  CurvilinearScale,
+} from "./camera/route.ts";
 export {
   StepwiseSelection,
   REQUEST_PURPOSES,

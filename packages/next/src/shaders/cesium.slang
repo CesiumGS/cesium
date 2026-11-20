@@ -54,13 +54,13 @@ public struct LabelAttribute { string text; };
 //    no placement.
 //  - normalMC is the normal after the placement: the mesh's own normal
 //    turned by the placement's Jacobian (its cofactor matrix, normalized),
-//    so it is the normal of the surface as drawn, however steeply the warp
+//    so it is the normal of the surface as drawn, however steeply the curvilinear map
 //    bends it. A term from a second position (an attribute) has no
 //    derivative in space and leaves the normal as stored. Without a
 //    placement it is the mesh's own, as stored.
 // The fragment stage's `FragmentInput.positionMC` is the DESIGN position,
 // not the placed one (a Pref, as RenderMan's reference position is): a
-// procedural texture built on it stays on the surface as a warp moves it.
+// procedural texture built on it stays on the surface as a curvilinear map moves it.
 // Where the placed position is wanted in a fragment, `positionEC` is where
 // the surface is drawn.
 public struct VertexInput {
@@ -89,7 +89,7 @@ public struct FragmentInput {
   public float3 positionMC;  // model coordinates of the design position (the mesh's own, before any placement or vertexMain), interpolated
   public float3 positionEC;  // relative to the camera, Earth-fixed axes (m)
   public float3 positionWC;  // Earth-fixed (float32: about a meter)
-  public float3 truePositionEC;  // where the content is, before any warp or placement draws it elsewhere, as positionEC (it is positionEC where the draw isn't warped)
+  public float3 truePositionEC;  // where the content is, before any curvilinear map or placement draws it elsewhere, as positionEC (it is positionEC where the draw isn't curvilinear)
   public float3 normal;      // geometric normal, toward the viewer
   public float2 texCoord0;
   public float4 color0;      // vertex color times the draw's tint

@@ -210,7 +210,7 @@ describe("readGeoreference", () => {
 
   describe("refuses, naming the path (Review Focus 3)", () => {
     it("an unknown placement mode", () => {
-      const e = failure({ ...rigid(), placement: { mode: "warped" } });
+      const e = failure({ ...rigid(), placement: { mode: "curvilinear" } });
       expect(e.path).toBe(`${ROOT}.placement.mode`);
       expect(e.message).toContain(`${ROOT}.placement.mode`);
       expect(e.message).toContain('"rigid" or "reprojected"');

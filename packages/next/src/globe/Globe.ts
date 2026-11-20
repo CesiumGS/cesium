@@ -386,7 +386,7 @@ export class Globe extends Tileset3D {
    * Custom shader stages for the surface's tiles, as a tileset item's
    * `shader` (`SceneItemOptions.shader`): the engine's own by default. A
    * `fragmentMain` shades the terrain or the ellipsoid, and where the globe
-   * is drawn across a warp it reads the true position
+   * is drawn across a curvilinear map it reads the true position
    * (`FragmentInput.truePositionEC`) beside the drawn one, so a lookup keyed
    * by height can take either. Set it before the tiles load or after: the
    * loaded ones change at once.
@@ -459,7 +459,7 @@ export class Globe extends Tileset3D {
 
   /**
    * The globe's drawn surface as an occluder for what hangs under its anchor
-   * (`BodyOccluder`): only a warped anchor uses it, and only while the globe
+   * (`BodyOccluder`): only a curvilinear anchor uses it, and only while the globe
    * is shown with no regions.
    */
   private registerOccluder(): void {

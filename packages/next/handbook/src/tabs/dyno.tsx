@@ -1016,12 +1016,12 @@ export function Dyno() {
           <li>
             <strong>GPU time.</strong> A stacked chart and a pass table show
             every pass timed or grouped. Passes outside the frame's encoder
-            (imagery, environment, atmosphere, points, warp fit, mip builds)
-            share one timestamped interval per group. A frame has a span and a
-            wall time, in milliseconds. The part with no timing is split in two:
-            untimed time inside the frame, between two markers, and untimed time
-            between frames. The in-frame part is real GPU work with no
-            timestamp; the gap is idle time or other work. The between-frames
+            (imagery, environment, atmosphere, points, curvilinear map fit, mip
+            builds) share one timestamped interval per group. A frame has a span
+            and a wall time, in milliseconds. The part with no timing is split
+            in two: untimed time inside the frame, between two markers, and
+            untimed time between frames. The in-frame part is real GPU work with
+            no timestamp; the gap is idle time or other work. The between-frames
             part is reported only when the GPU was busy back to back.
           </li>
           <li>

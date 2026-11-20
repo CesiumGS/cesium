@@ -10,7 +10,7 @@
 // Cases, each in a view that opts into its clips by mask:
 //   1. a cube cut by a plane, and a window cut by a box (two sets);
 //   2. the cube's roof cut by an extruded L-shaped polygon, from above;
-//   3. a tower under a ×10 height warp (placed in a frame under the camera's
+//   3. a tower under a ×10 height curvilinear map (placed in a frame under the camera's
 //      root, ITRF, which is where it is drawn), cut
 //      by a plane named in the tower's own frame (true: tested on the
 //      location-4 point);
@@ -50,7 +50,7 @@ const TEMPLATE = `
   Unlit white content on black, cut by clips the view opts into
   (<code>View.clipMask</code>). Every pixel is compared with float64's
   classification of the surface point it shows, tested in the clip's own
-  frame: a clip named in ITRF on a tower drawn under a ×10 height warp, and one
+  frame: a clip named in ITRF on a tower drawn under a ×10 height curvilinear map, and one
   named in the drawn frame. Pixels within 1 px of a boundary are left out.
 </p>
 <div class="status">Run to check on this GPU.</div>
@@ -60,9 +60,9 @@ const TEMPLATE = `
 
 const WIDTH = 512;
 const HEIGHT = 512;
-/** The warp's sphere, m: the ellipsoid's equatorial radius. */
+/** The curvilinear map's sphere, m: the ellipsoid's equatorial radius. */
 const R = 6_378_137;
-/** The exaggeration the warped cases draw at. */
+/** The exaggeration the curvilinear cases draw at. */
 const K = 10;
 const WHITE = [1, 1, 1, 1] as const;
 
@@ -167,9 +167,9 @@ interface Scene {
   view: View;
   target: OffscreenTarget;
   earth: AnchorHandle;
-  /** The frame the content is placed in: its coordinates are the true ones (ITRF when nothing is warped). */
+  /** The frame the content is placed in: its coordinates are the true ones (ITRF when nothing is curvilinear). */
   content: Frame;
-  /** The camera's root, where the content is drawn, when it is placed in a warped frame. */
+  /** The camera's root, where the content is drawn, when it is placed in a curvilinear frame. */
   root: Frame | undefined;
   /** Renders frames until the draws' fits have landed. */
   settle(draws: readonly DrawHandle[]): Promise<void>;
@@ -180,7 +180,7 @@ interface Scene {
 
 function scene(
   engine: Engine,
-  warped: boolean,
+  curvilinear: boolean,
   lost: () => void,
   extra: Partial<Parameters<Engine["addView"]>[0]> = {},
 ): Scene {
@@ -201,7 +201,7 @@ function scene(
   const catalog = createFrameCatalog();
   const itrf = catalog.get("ITRF");
   let content: Frame = itrf;
-  if (warped) {
+  if (curvilinear) {
     content = curvilinearFrame("Earth content (exaggerated)", itrf, {
       revision: 1,
       description: `height × ${K}`,
@@ -231,13 +231,13 @@ function scene(
     target,
     earth,
     content,
-    root: warped ? itrf : undefined,
+    root: curvilinear ? itrf : undefined,
     async settle(draws) {
       for (let i = 0; i < 200; i++) {
         await frames(1);
         if (
           draws.every((d) => {
-            const state = world.warps.status(d)?.state;
+            const state = world.curvilinearMaps.status(d)?.state;
             return state === undefined || state === "fitted";
           })
         ) {
@@ -636,7 +636,7 @@ async function runClips(): Promise<ClipsResult> {
       s.dispose();
     }
 
-    // --- 3 and 4. a tower under a ×10 warp, cut in the true and the drawn frame --
+    // --- 3 and 4. a tower under a ×10 curvilinear map, cut in the true and the drawn frame --
     for (const named of ["true", "drawn"] as const) {
       const s = scene(engine, true, lost);
       const { world, view } = s;

@@ -10,7 +10,7 @@ import {
 } from "../src/camera/route.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
 import { frameTransform } from "../src/frames/Frame.ts";
-import { verticalExaggeration as frameExaggeration } from "../src/georeference/heightWarps.ts";
+import { verticalExaggeration as frameExaggeration } from "../src/georeference/heightCurvilinearMaps.ts";
 import { graphOfFrames } from "../src/frames/graphOfFrames.ts";
 import { eastNorthUpFrame, framePoint } from "../src/frames/local.ts";
 import { pickIn, graphOfCameraRoute } from "../src/frames/pickIn.ts";
@@ -29,7 +29,7 @@ import {
   drawnBounds,
   volumeSamples,
   type DrawnMap,
-} from "../src/scene/warpBounds.ts";
+} from "../src/scene/curvilinearBounds.ts";
 import {
   clipSetDistance,
   planClip,
@@ -484,8 +484,12 @@ describe("points and measurements in any node", () => {
 describe("a core pick in any node", () => {
   const catalog = createFrameCatalog({ data: syntheticFrameData() });
   const itrf = catalog.get("ITRF", { user: "application" });
-  const warp = frameExaggeration({ factor: 10 });
-  const content = curvilinearFrame("Earth content (exaggerated)", itrf, warp);
+  const curvilinearMap = frameExaggeration({ factor: 10 });
+  const content = curvilinearFrame(
+    "Earth content (exaggerated)",
+    itrf,
+    curvilinearMap,
+  );
   catalog.add(content);
   const drawnFrame = itrf;
   const pad = eastNorthUpFrame(
@@ -531,7 +535,7 @@ describe("a core pick in any node", () => {
 
   it("represents the route as a graph whose nodes are its steps", () => {
     const pg = graphOfCameraRoute(route);
-    expect(route.steps.map((s) => s.kind)).toEqual(["rigid", "warp"]);
+    expect(route.steps.map((s) => s.kind)).toEqual(["rigid", "curvilinear"]);
     expect(pg.nodes).toHaveLength(3);
     expect(pg.true.name).toBe("Pad");
     expect(pg.drawn.name).toBe("ITRF");
@@ -577,7 +581,7 @@ describe("a core pick in any node", () => {
     const t = truePick(p);
     expect(t.how).toBe("domain");
     near(t.position, local, 0);
-    expect(t.drawn?.warped).toBe(true);
+    expect(t.drawn?.curvilinear).toBe(true);
     expect(t.footprint).toBeGreaterThan(0);
   });
 
@@ -1004,7 +1008,11 @@ describe("clip sets placed at nodes", () => {
 
   it("gives the camera layer's route, whose forward is the graph's", () => {
     const route = resolveRoute(resolver, content, design, 0);
-    expect(route.steps.map((s) => s.kind)).toEqual(["rigid", "warp", "rigid"]);
+    expect(route.steps.map((s) => s.kind)).toEqual([
+      "rigid",
+      "curvilinear",
+      "rigid",
+    ]);
     const a = [3, -4, 20];
     const graphRoute = routeBetween(content, design);
     near(routeForward(route, a), graphRoute.forward(a), 1e-9);

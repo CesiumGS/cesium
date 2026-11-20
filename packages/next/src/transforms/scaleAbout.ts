@@ -1,6 +1,6 @@
 // Scale about a point: q = c + S (p - c), S diagonal. Output is affine in
 // each factor and each center coordinate; the inverse is exact.
-import type { WarpScale } from "../camera/route.ts";
+import type { CurvilinearScale } from "../camera/route.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { CurvilinearEdge, CurvilinearSpec } from "../transform/graph.ts";
@@ -10,7 +10,10 @@ import {
   type Named,
   type TransformDescriptor,
 } from "./descriptor.ts";
-import { LiveWarp, type ChangeableWarp } from "./liveWarp.ts";
+import {
+  LiveCurvilinearMap,
+  type ChangeableCurvilinearMap,
+} from "./liveCurvilinearMap.ts";
 import { scaleAlongAxes } from "./scaleAlongAxes.ts";
 
 type K = "cx" | "cy" | "cz" | "sx" | "sy" | "sz";
@@ -99,12 +102,12 @@ export function scaleAboutEdge(options: {
 export interface ScaleAboutOptions {
   /** The ellipsoid whose east, north and up at the point define the axes: WGS84 by default. */
   readonly ellipsoid?: Ellipsoid;
-  /** A live number for a slider: see `Warp.scale`. */
-  readonly scale?: WarpScale;
+  /** A live number for a slider: see `CurvilinearMap.scale`. */
+  readonly scale?: CurvilinearScale;
 }
 
 /** An anisotropic scale about a point; set `factors` to change it. */
-export interface ScaleAbout extends ChangeableWarp {
+export interface ScaleAbout extends ChangeableCurvilinearMap {
   /** The scale along east, north and up: setting it calls `changed()`. */
   factors: readonly [number, number, number];
 }
@@ -126,8 +129,8 @@ function checkFactors(
   return f as [number, number, number];
 }
 
-class ScaleAboutImpl extends LiveWarp implements ScaleAbout {
-  readonly scale: WarpScale | undefined;
+class ScaleAboutImpl extends LiveCurvilinearMap implements ScaleAbout {
+  readonly scale: CurvilinearScale | undefined;
   private readonly center: Float64Array;
   /** Column-major east, north, up. */
   private readonly basis = new Float64Array(9);

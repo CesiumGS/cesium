@@ -76,7 +76,7 @@ export interface DesignPick {
    * Meters, in the hit anchor's coordinates (`CorePick.anchorPosition`'s
    * frame): body-fixed under a body anchor (Earth-fixed for content on the
    * Earth), else that anchor's own. Where the content is, as displayed by
-   * its placement: under a warp the view draws it elsewhere (`drawn`), and
+   * its placement: under a curvilinear map the view draws it elsewhere (`drawn`), and
    * this is its domain point's true position (`CorePick.truePosition`), or
    * a provisional inverse of the drawn one (`provisional`). Body-fixed
    * always for a `PickView` without `pickPoint` (`pickPosition`).
@@ -100,12 +100,12 @@ export interface DesignPick {
   /**
    * Meters, a worst case: one CSS pixel's footprint at the hit, in true
    * meters (the pixel's drawn size over σ_min of the route, where the view
-   * draws the content through a warp), plus the point's own bound where it
+   * draws the content through a curvilinear map), plus the point's own bound where it
    * is one (an inverted drawn position's residual).
    */
   readonly tolerance: number;
   /**
-   * What the view drew the hit content through, when through a warp
+   * What the view drew the hit content through, when through a curvilinear map
    * (`drawnThrough`): `position` is where the content is, and this says
    * where it is drawn differs. Absent when drawn as it is.
    */

@@ -215,7 +215,11 @@ function earth(v: Values, t: Flags, cameraInExag: boolean): Built {
         a: { node: "exag", p: polar(bTh.th, bBase) },
         b: { node: "exag", p: polar(bTh.th, bBase + bTh.h) },
         cols: [
-          { key: "true", label: "True (below the warp)", node: "exag" },
+          {
+            key: "true",
+            label: "True (below the curvilinear map)",
+            node: "exag",
+          },
           { key: "drawn", label: "Drawn (camera)", node: cam },
         ],
       },
@@ -228,7 +232,7 @@ function earth(v: Values, t: Flags, cameraInExag: boolean): Built {
         cols: [
           {
             key: "true",
-            label: "True (below the warp)",
+            label: "True (below the curvilinear map)",
             node: satNode,
           },
           { key: "drawn", label: "Drawn (camera)", node: cam },
@@ -250,7 +254,7 @@ export const EXAGGERATION: SceneDef = {
   title: "Exaggeration over Earth content",
   short: "1 · Exaggeration",
   caption:
-    "A cross-section of an Earth arc. Terrain, buildings and the pipe sit under the exaggeration node, so they stretch with k, while the satellite and the Moon sit above it and do not. Put the satellite under the node and it is lifted by (k − 1) × the ceiling. What is warped is decided by where things are placed, with no mode and no region.",
+    "A cross-section of an Earth arc. Terrain, buildings and the pipe sit under the exaggeration node, so they stretch with k, while the satellite and the Moon sit above it and do not. Put the satellite under the node and it is lifted by (k − 1) × the ceiling. What is curvilinear is decided by where things are placed, with no mode and no region.",
   controls: [
     {
       key: "k",
@@ -277,7 +281,7 @@ export const CAMERA_PLACE: SceneDef = {
   title: "Where the camera sits",
   short: "2 · Camera placement",
   caption:
-    "The same graph with the camera moved into the exaggeration node. Content under the node now looks true, and everything outside it, the satellite and the Moon, is carried down through the inverse and so looks squashed. That is legal and occasionally useful, a true view of a warped world, but it is usually not what you want.",
+    "The same graph with the camera moved into the exaggeration node. Content under the node now looks true, and everything outside it, the satellite and the Moon, is carried down through the inverse and so looks squashed. That is legal and occasionally useful, a true view of a curvilinear world, but it is usually not what you want.",
   controls: [
     {
       key: "k",

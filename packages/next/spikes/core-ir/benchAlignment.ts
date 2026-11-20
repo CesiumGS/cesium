@@ -31,7 +31,7 @@ import {
   perDrawEstimate,
   planTable,
   profileTable,
-  referenceWarp,
+  referenceCurvilinearMap,
   residualDelta,
   type ProfileRow,
 } from "./fromAlignment.ts";
@@ -101,7 +101,7 @@ export async function alignmentSection(
   const prof = profileTable(PROFILE);
   const tables = { plan: plan.data, profile: prof.data };
   const program = alignmentProgram(plan.rows, prof.rows);
-  const ref = referenceWarp(ALIGNMENT, PROFILE);
+  const ref = referenceCurvilinearMap(ALIGNMENT, PROFILE);
   const J = jacobianProgram(program, "q", "p");
 
   // Stations: every breakpoint and a hair either side, past both ends, and a sweep.

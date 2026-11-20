@@ -78,16 +78,16 @@ export interface CorePick {
    * `position` carried to `anchor`'s axes by the anchor's rigid placement
    * (Earth-fixed under the Earth's anchor), m: where the content is DRAWN,
    * written in the anchor's coordinates. Where the anchor is drawn across a
-   * warp (a vertical exaggeration, a reprojection) the warp is not undone
+   * curvilinear map (a vertical exaggeration, a reprojection) the curvilinear map is not undone
    * here, so this is not where the content is: take `truePosition` (the
    * content's own point, when `domain` is set) or `truePick(pick).position`
    * (which also inverts the route where there is no domain point) for the
-   * point in the anchor's true coordinates. With no warp the two agree.
+   * point in the anchor's true coordinates. With no curvilinear map the two agree.
    */
   readonly anchorPosition: Float64Array;
   /**
    * The route that drew the hit anchor's content at that tick, when it
-   * crosses a warp, with each warp's `scale` frozen at its value then: a pick
+   * crosses a curvilinear map, with each curvilinear map's `scale` frozen at its value then: a pick
    * resolves a few frames after the call, and a slider may have moved since,
    * so this (not `view.anchorRoute`) is what inverts the drawn `position`
    * as it was drawn. Its `revision` is the route's revision then. Absent for
@@ -120,7 +120,7 @@ export interface CorePick {
   /**
    * The content's own point there, in `anchorPosition`'s coordinates
    * (`frame` names them): the stored triangle's or the exact face's, carried
-   * by the draw's matrix. A placement that bends the draw (a warp), or a
+   * by the draw's matrix. A placement that bends the draw (a curvilinear map), or a
    * custom shader's vertex stage that moves it, changed where it is drawn,
    * not where it is: this is where the content is, never inverted from the
    * drawn position.
@@ -157,7 +157,7 @@ export interface PickTick {
     Float64Array | undefined
   > & {
     /**
-     * The routes of the anchors drawn across a warp at that tick, by anchor
+     * The routes of the anchors drawn across a curvilinear map at that tick, by anchor
      * slot (0: the table's root), scales frozen (`View.pickPlacements`).
      */
     readonly routes?: ReadonlyArray<Route | undefined>;

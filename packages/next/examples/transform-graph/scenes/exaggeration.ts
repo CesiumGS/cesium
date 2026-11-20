@@ -63,7 +63,7 @@ export const exaggeration: Scene = {
   caption:
     "Alps terrain and OSM Buildings sit under one curvilinear node that multiplies heights; a satellite at 150 km and a synthetic Moon sit at other nodes. The camera is at ITRF, so what it sees of each is decided by where that content is placed.",
   point:
-    "Placement decides what is warped. Above the ceiling the node lifts by a constant, so the satellite moves rigidly and the Moon (384,000 km out) hardly at all; put either outside the node and it is not touched.",
+    "Placement decides what is curvilinear. Above the ceiling the node lifts by a constant, so the satellite moves rigidly and the Moon (384,000 km out) hardly at all; put either outside the node and it is not touched.",
   sources: [
     {
       what: "Cesium World Terrain and Bing Maps Aerial",

@@ -141,7 +141,7 @@ export interface TilesetOptions extends BudgetedOptions {
    *
    * To place a tileset in a reference frame, give an anchor bound to that
    * frame (`FramesResolver.bindAnchor`): tiles are then in the frame's own
-   * coordinates, and drawn through its route to the camera, warps included.
+   * coordinates, and drawn through its route to the camera, curvilinear maps included.
    * A tileset whose root `transform` carries body-fixed (ECEF) meters, as
    * most do, belongs in a frame whose local coordinates are body-fixed (an
    * exaggeration over ITRF, say). A tileset authored in a projected CRS

@@ -745,7 +745,7 @@ export function Rendering() {
           shader through <C>routeVertex</C> and compiled one at a time, so a
           scene that adds many routes doesn't stall a frame. Each draw's center
           constants sit in its row of the placements buffer, as{" "}
-          <C>WARP_ROUTE</C>. A parameter the route is affine in becomes a
+          <C>CURVILINEAR_ROUTE</C>. A parameter the route is affine in becomes a
           per-route uniform, so a slider writes a few floats. Any other makes
           the center constants dynamic, and a df64 compute pass evaluates them
           each frame.
@@ -754,7 +754,7 @@ export function Rendering() {
           The depth, shadow, height, pick and line passes link a position-only
           module with no Jacobian, so they draw where the color pass does. A
           route the compiler refuses falls back to a fit per draw. Placement
-          decides what is warped, and the{" "}
+          decides what is curvilinear, and the{" "}
           <a href="#/transform-graph">Transform graph tab</a> has the compiler,
           the paths and what was measured.
         </p>

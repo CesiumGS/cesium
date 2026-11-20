@@ -1,7 +1,7 @@
 // What a view keeps of its anchors' placements between ticks (`viewAnchors.ts`).
 // Scene data.
 import { MAX_ANCHORS } from "../render/layout.ts";
-import type { Route, WarpScale } from "../camera/route.ts";
+import type { Route, CurvilinearScale } from "../camera/route.ts";
 import type { AnchorHandle } from "./world/types.ts";
 import type { World } from "./World.ts";
 
@@ -12,9 +12,9 @@ export class ViewAnchorState {
   /** Render space ← anchor, by slot (16 float64 each); slot 0: no anchor. */
   readonly placements = new Float64Array(MAX_ANCHORS * 16);
   /**
-   * By slot, the route of an anchor whose placement crosses a warp: its
+   * By slot, the route of an anchor whose placement crosses a curvilinear map: its
    * `placements` entry is then the route's affine part, and its content is
-   * drawn warped (scene/world/warps.ts). Undefined for a rigid anchor.
+   * drawn curvilinear (scene/world/worldCurvilinearMaps.ts). Undefined for a rigid anchor.
    */
   readonly routes: Array<Route | undefined> = [];
   /** The routes as the view draws them when it sets a parameter for itself (`View.setParameter`), by the route they were made from, for the `parameterRevision` they were made at; and the view's reading of each slider. */
@@ -22,7 +22,7 @@ export class ViewAnchorState {
     revision: 0,
     routes: new WeakMap(),
   };
-  readonly viewScales = new Map<object, WarpScale>();
+  readonly viewScales = new Map<object, CurvilinearScale>();
   /**
    * The anchor each slot's placement was set for; a slot whose anchor was
    * removed (and the slot reused) reads as the identity again.

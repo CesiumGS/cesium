@@ -8,12 +8,12 @@
 //   J = I + D M + (dh'/dh - 1) n nᵀ + n gᵀ,
 // where dh'/dh = 1 + ∂D/∂h at fixed position and g = ∇ of D through the
 // foot's position (zero when D depends on h alone). This is the closed form
-// of georeference/heightWarps.ts (there as A⁻¹(I + h'S - n nᵀ) + (dh'/dh) n nᵀ).
+// of georeference/heightCurvilinearMaps.ts (there as A⁻¹(I + h'S - n nᵀ) + (dh'/dh) n nᵀ).
 // The ellipsoid is a body's radii; the point must be away from its center.
-import { ellipsoidFoot, type Radii } from "../scene/warpForms.ts";
+import { ellipsoidFoot, type Radii } from "../scene/curvilinearForms.ts";
 
 export type { Radii };
-export { WGS84_RADII } from "../scene/warpForms.ts";
+export { WGS84_RADII } from "../scene/curvilinearForms.ts";
 
 /** Newton steps in the unrolled foot: from the start below, 5 reach float64 within a body's radius of the surface. */
 export const FOOT_STEPS = 5;

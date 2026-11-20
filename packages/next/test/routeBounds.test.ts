@@ -5,7 +5,11 @@
 // with a step that has no bound is not composed (it is sampled instead).
 import { describe, expect, it } from "vitest";
 import type { FrameKey } from "../src/camera/frameResolver.ts";
-import { routeForward, type Route, type Warp } from "../src/camera/route.ts";
+import {
+  routeForward,
+  type Route,
+  type CurvilinearMap,
+} from "../src/camera/route.ts";
 import {
   geocentricToGeographic,
   geographicToGeocentric,
@@ -15,7 +19,10 @@ import { utm } from "../src/georeference/transverseMercator.ts";
 import { verticalExaggerationEdge } from "../src/georeference/verticalExaggeration.ts";
 import { webMercator } from "../src/georeference/webMercator.ts";
 import { treeFromJson } from "../src/streaming/Tile.ts";
-import { drawnTile, type TileWarp } from "../src/streaming/tileWarp.ts";
+import {
+  drawnTile,
+  type TileCurvilinearMap,
+} from "../src/streaming/tileCurvilinearMap.ts";
 import { writeFileSync } from "node:fs";
 import { composeBox } from "../src/scene/routeBounds.ts";
 import { scaleAboutEdge } from "../src/transforms/scaleAbout.ts";
@@ -24,7 +31,7 @@ import { curvilinear, type CurvilinearEdge } from "../src/transform/graph.ts";
 
 const KEY = { name: "x" } as unknown as FrameKey;
 
-function warpOf(edge: CurvilinearEdge): Warp {
+function curvilinearMapOf(edge: CurvilinearEdge): CurvilinearMap {
   const spec = edge.spec;
   return {
     from: KEY,
@@ -45,8 +52,8 @@ function routeOf(...edges: CurvilinearEdge[]): Route {
     seconds: 0,
     revision: 0,
     steps: edges.map((e) => ({
-      kind: "warp" as const,
-      warp: warpOf(e),
+      kind: "curvilinear" as const,
+      curvilinearMap: curvilinearMapOf(e),
       inverse: false,
     })),
   };
@@ -290,7 +297,7 @@ describe("composed boxes", () => {
     ).toBeUndefined();
   });
 
-  it("drives drawnTile: composed where the warp has a sphere, sampled where it has none", () => {
+  it("drives drawnTile: composed where the curvilinear map has a sphere, sampled where it has none", () => {
     const tree = {
       warnings: new Set<string>(),
       tilesAdded: () => {},
@@ -315,7 +322,7 @@ describe("composed boxes", () => {
     const base = {
       version: 1,
       fitVersion: 0,
-      bounds(): ReturnType<TileWarp["bounds"]> {
+      bounds(): ReturnType<TileCurvilinearMap["bounds"]> {
         sampled++;
         return {
           center: Float64Array.of(1, 2, 3),
@@ -327,7 +334,7 @@ describe("composed boxes", () => {
       },
       fitError: () => 0,
     };
-    const composed: TileWarp = {
+    const composed: TileCurvilinearMap = {
       ...base,
       box: (c, axes) => ({
         center: Float64Array.of(c[0]!, c[1]!, c[2]!),
@@ -335,7 +342,7 @@ describe("composed boxes", () => {
         sigmaMax: 3,
       }),
     };
-    const none: TileWarp = { ...base, box: () => undefined };
+    const none: TileCurvilinearMap = { ...base, box: () => undefined };
     const a = drawnTile(make(), composed);
     expect(sampled).toBe(0);
     expect(a.sigmaMax).toBe(3);

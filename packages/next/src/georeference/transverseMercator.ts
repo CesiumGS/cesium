@@ -4,7 +4,7 @@
 // The node's points are geographic (longitude and latitude in degrees,
 // ellipsoidal height in meters); its parent's are (easting, northing, the
 // same height). Compose with `geocentricToGeographic` for body-fixed meters.
-// The α series and `utmForm` are scene/warpForms.ts's (the spike's forms, in
+// The α series and `utmForm` are scene/curvilinearForms.ts's (the spike's forms, in
 // ECEF); the inverse is the β series and Newton on τ. The Jacobian is left to
 // central differences (the graph's default): the IR's exact derivative is
 // the compiler's.
@@ -19,7 +19,7 @@ import {
   transverseMercatorSeries,
   utmForm,
   type TransverseMercatorForm,
-} from "../scene/warpForms.ts";
+} from "../scene/curvilinearForms.ts";
 import { revolution, WGS84_RADII, type Radii } from "./ellipsoid.ts";
 import {
   curvatureRadii,

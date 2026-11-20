@@ -9,7 +9,7 @@
 // A patch draw is its own batch and its own record (the item is the
 // record's), so a draw's dispatch reads its cull count from the batch's
 // arguments: 0 where the cull dropped it. Per span, a thread:
-//   1. skips a span outside the frustum (not under a placement: a warp moves
+//   1. skips a span outside the frustum (not under a placement: a curvilinear map moves
 //      what the span's sphere bounds, the record's sphere carries the pad);
 //   2. finds the pixels a model meter covers at the face's nearest distance
 //      (perspective and orthographic alike: the view's rows over the depth w,
