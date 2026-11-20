@@ -37,4 +37,16 @@ ComponentKeys.getName = function (componentType) {
   return NAMES[componentType];
 };
 
+/**
+ * Keys of a {@link Mesh}'s components, grouped by type. A type that's
+ * omitted has no keys.
+ *
+ * @typedef {object} MeshComponentKeys
+ * @property {BigUint64Array} [verts] The vertices' keys.
+ * @property {BigUint64Array} [edges] The edges' keys.
+ * @property {BigUint64Array} [faces] The faces' keys.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+
 export default Object.freeze(ComponentKeys);

@@ -1,6 +1,6 @@
 // @ts-check
 
-import { Matrix4, Ray, defined } from "@cesium/core";
+import { DeveloperError, Matrix4, Ray, defined } from "@cesium/core";
 import {
   KeyboardEventModifier,
   ScreenSpaceEventHandler,
@@ -10,8 +10,10 @@ import ComponentKeys from "./ComponentKeys.js";
 
 /** @import { Cartesian2 } from "@cesium/core"; */
 /** @import { Controller, ControllerHost, Scene, ScreenSpaceCameraController } from "@cesium/engine"; */
-/** @import { MeshEditor as WasmMeshEditor, PickHit, PointerModifiers, SceneInput } from "@cesium/mesh-editor"; */
+/** @import { MeshEditor as WasmMeshEditor, PickHit, SceneInput } from "@cesium/mesh-editor"; */
 /** @import Mesh from "./Mesh.js"; */
+/** @import MeshEditorTool from "./MeshEditorTool.js"; */
+/** @import { MeshComponentKeys } from "./ComponentKeys.js"; */
 /** @import { OverlayPickObject } from "./OverlayRenderer.js"; */
 
 const { SHIFT, CTRL, ALT } = KeyboardEventModifier;
@@ -67,6 +69,9 @@ class MeshEditorInputHandler {
   /** @type {ReadonlySet<Mesh>} */
   #meshes;
 
+  /** @type {function(): (MeshEditorTool | undefined)} */
+  #getActiveTool;
+
   /** @type {ScreenSpaceEventHandler} */
   #eventHandler;
 
@@ -91,6 +96,7 @@ class MeshEditorInputHandler {
    * @param {Scene} options.scene The scene whose canvas, camera and picking to use.
    * @param {WasmMeshEditor} options.wasmEditor The wasm editor that receives pointer input.
    * @param {ReadonlySet<Mesh>} options.meshes The editor's meshes. Read only.
+   * @param {function(): (MeshEditorTool | undefined)} options.getActiveTool Gets the editor's active tool.
    */
   constructor(options) {
     this.#scene = options.scene;
@@ -98,6 +104,7 @@ class MeshEditorInputHandler {
     this.#controllerHost = options.scene.controllerHost;
     this.#wasmEditor = options.wasmEditor;
     this.#meshes = options.meshes;
+    this.#getActiveTool = options.getActiveTool;
 
     const eventHandler = new ScreenSpaceEventHandler(options.scene.canvas);
 
@@ -131,18 +138,19 @@ class MeshEditorInputHandler {
   }
 
   /**
-   * Converts Cesium's modifier keys to the wasm editor's.
+   * Converts Cesium's modifier keys to the ones sent with pointer input.
+   * Frozen, since each is reused for every event with the same keys.
    *
    * @param {KeyboardEventModifier[] | undefined} modifiers The modifier keys held.
-   * @returns {PointerModifiers} The wasm editor's modifier keys.
+   * @returns {PointerModifiers} The modifier keys.
    * @ignore
    */
   static #createPointerModifiers(modifiers = []) {
-    return {
+    return Object.freeze({
       shift: modifiers.includes(SHIFT),
       control: modifiers.includes(CTRL),
       alt: modifiers.includes(ALT),
-    };
+    });
   }
 
   /**
@@ -207,20 +215,28 @@ class MeshEditorInputHandler {
   }
 
   /**
-   * Picks under the pointer and sends the click to the active tool.
+   * Picks under the pointer, lets the active tool's
+   * {@link MeshEditorTool#resolvePicks} inspect and potentially change the picks,
+   * and sends the click to the active tool.
    *
    * @param {PointerModifiers} modifiers The modifier keys held.
    * @param {ScreenSpaceEventHandler.PositionedEvent} event The click.
    * @ignore
    */
   #onClick(modifiers, event) {
-    if (!defined(this.#wasmEditor.activeTool)) {
+    const tool = this.#getActiveTool();
+    if (!defined(tool)) {
+      return;
+    }
+
+    const picks = tool.resolvePicks(this.#pick(event.position), modifiers);
+    if (!defined(picks)) {
       return;
     }
 
     this.#wasmEditor.pointerClick({
       modifiers,
-      pick: this.#pick(event.position),
+      pick: picks.map((pick) => this.#toWasmPick(pick)),
       ray: this.#getRay(event.position),
     });
   }
@@ -229,7 +245,7 @@ class MeshEditorInputHandler {
    * Picks a component of one of the editor's meshes.
    *
    * @param {Cartesian2} position The window position to pick at.
-   * @returns {PickHit[]} The picked component, or an empty array if no mesh in the editor is there.
+   * @returns {MeshPickHit[]} The picked component, or an empty array if no mesh in the editor is there.
    * @ignore
    */
   #pick(position) {
@@ -243,12 +259,32 @@ class MeshEditorInputHandler {
     const componentName = ComponentKeys.getName(picked.componentType);
     return [
       {
-        mesh: mesh._key,
+        mesh,
         componentKeys: {
           [componentName]: BigUint64Array.of(picked.componentKey),
         },
       },
     ];
+  }
+
+  /**
+   * @param {MeshPickHit} pick A pick.
+   * @returns {PickHit} The pick in wasm's format.
+   * @exception {DeveloperError} resolvePicks returned a mesh that isn't in this editor.
+   * @ignore
+   */
+  #toWasmPick(pick) {
+    const { mesh, componentKeys } = pick;
+
+    //>>includeStart('debug', pragmas.debug);
+    if (!this.#meshes.has(mesh)) {
+      throw new DeveloperError(
+        "resolvePicks returned a mesh that isn't in this editor.",
+      );
+    }
+    //>>includeEnd('debug');
+
+    return { mesh: mesh._key, componentKeys };
   }
 
   /**
@@ -336,5 +372,26 @@ class MeshEditorInputHandler {
     this.#eventHandler.destroy();
   }
 }
+
+/**
+ * The modifier keys held during pointer input.
+ *
+ * @typedef {object} PointerModifiers
+ * @property {boolean} shift Whether Shift is held.
+ * @property {boolean} control Whether Ctrl is held.
+ * @property {boolean} alt Whether Alt is held.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
+
+/**
+ * What a click picked on one mesh.
+ *
+ * @typedef {object} MeshPickHit
+ * @property {Mesh} mesh The mesh.
+ * @property {MeshComponentKeys} componentKeys The picked components.
+ *
+ * @experimental This feature is not final and is subject to change without Cesium's standard deprecation policy.
+ */
 
 export default MeshEditorInputHandler;

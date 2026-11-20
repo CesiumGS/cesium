@@ -361,6 +361,110 @@ describe(
       });
     });
 
+    describe("resolvePicks", function () {
+      let tool;
+
+      beforeEach(function () {
+        tool = SelectTool.addTo(editor);
+        editor.activeTool = tool;
+        spyOn(WasmMeshEditor.prototype, "pointerClick").and.callThrough();
+      });
+
+      it("receives what the click picked, and the modifiers", function () {
+        tool.resolvePicks = jasmine
+          .createSpy("resolvePicks")
+          .and.callFake((picks) => picks);
+
+        click(getWindowPosition(cornerPosition), { shiftKey: true });
+
+        expect(tool.resolvePicks).toHaveBeenCalledTimes(1);
+        const [picks, modifiers] = tool.resolvePicks.calls.mostRecent().args;
+        expect(modifiers).toEqual({ shift: true, control: false, alt: false });
+        expect(Object.isFrozen(modifiers)).toBe(true);
+        // The WebGL stub doesn't pick, so like the renderer matchers, skip the check.
+        if (!window.webglStub) {
+          expect(picks.length).toBe(1);
+          expect(picks[0].mesh).toBe(mesh);
+          expect(picks[0].componentKeys.verts.length).toBe(1);
+          expect(mostRecentInput("pointerClick").pick[0].componentKeys).toEqual(
+            picks[0].componentKeys,
+          );
+        }
+      });
+
+      it("receives an empty array for a miss", function () {
+        tool.resolvePicks = jasmine
+          .createSpy("resolvePicks")
+          .and.callFake((picks) => picks);
+
+        click(emptyWindowPosition);
+
+        expect(tool.resolvePicks.calls.mostRecent().args[0]).toEqual([]);
+        expect(mostRecentInput("pointerClick").pick).toEqual([]);
+      });
+
+      it("sends the returned picks", function () {
+        const other = editor.addMesh(createGeometrySource(square));
+        tool.resolvePicks = () => [
+          { mesh, componentKeys: { verts: BigUint64Array.of(1n, 2n) } },
+          { mesh: other, componentKeys: {} },
+        ];
+
+        click(emptyWindowPosition);
+
+        expect(mostRecentInput("pointerClick").pick).toEqual([
+          {
+            mesh: mesh._key,
+            componentKeys: { verts: BigUint64Array.of(1n, 2n) },
+          },
+          { mesh: other._key, componentKeys: {} },
+        ]);
+      });
+
+      it("sends the picks unchanged by default", function () {
+        click(emptyWindowPosition);
+
+        expect(mostRecentInput("pointerClick").pick).toEqual([]);
+        expect(tool.resolvePicks([], {})).toEqual([]);
+      });
+
+      it("drops the click if it returns undefined", function () {
+        tool.resolvePicks = () => undefined;
+
+        click(getWindowPosition(cornerPosition));
+
+        expect(WasmMeshEditor.prototype.pointerClick).not.toHaveBeenCalled();
+      });
+
+      it("isn't called while another tool is active", function () {
+        tool.resolvePicks = jasmine.createSpy("resolvePicks");
+        editor.activeTool = TranslateTool.addTo(editor);
+
+        click(getWindowPosition(cornerPosition));
+
+        expect(tool.resolvePicks).not.toHaveBeenCalled();
+      });
+
+      it("throws if it returns a mesh from another editor", async function () {
+        const otherEditor = await MeshEditor.addToScene(scene);
+        const otherMesh = otherEditor.addMesh(createGeometrySource(square));
+        tool.resolvePicks = () => [{ mesh: otherMesh, componentKeys: {} }];
+
+        // Errors thrown by event listeners are reported globally.
+        await jasmine.spyOnGlobalErrorsAsync(async function (globalErrorSpy) {
+          click(emptyWindowPosition);
+
+          expect(globalErrorSpy).toHaveBeenCalledWith(
+            jasmine.objectContaining({
+              message:
+                "resolvePicks returned a mesh that isn't in this editor.",
+            }),
+          );
+        });
+        expect(WasmMeshEditor.prototype.pointerClick).not.toHaveBeenCalled();
+      });
+    });
+
     describe("modifiers", function () {
       beforeEach(function () {
         editor.activeTool = TranslateTool.addTo(editor);
