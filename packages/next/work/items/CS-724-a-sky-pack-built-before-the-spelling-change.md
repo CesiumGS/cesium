@@ -1,10 +1,11 @@
 ---
 id: CS-724
-title: "Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again"
+title: Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-192
+claimed_by: orch-10-CS-724
 touches: [packages/next/src/atmosphere/skyPack.ts, packages/next/scripts/skyPack.mjs, packages/next/scripts/setup.mjs, packages/next/test/**]
 ---
 
