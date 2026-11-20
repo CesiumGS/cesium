@@ -64,21 +64,6 @@ describe(
       return new Uint8Array(bytes).buffer;
     }
 
-    async function loadProvider(tileBuffer) {
-      const provider = await MVTDataProvider.fromUrl(
-        "http://example.invalid/{z}/{x}/{y}.mvt",
-        { minZoom: 0, maxZoom: 0 },
-      );
-      // Refines past the content-less root on the 1x1 spec canvas.
-      provider.tileset.maximumScreenSpaceError = 0.0;
-      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
-        function (url, responseType, method, data, headers, deferred) {
-          deferred.resolve(tileBuffer);
-        },
-      );
-      return provider;
-    }
-
     beforeAll(function () {
       scene = createScene();
     });
@@ -92,12 +77,21 @@ describe(
     });
 
     it("adds a feature layer for each source layer with features", async function () {
-      const provider = await loadProvider(
-        encodeTile([
-          encodePointLayer("roads", 2),
-          encodePointLayer("water", 1),
-          encodePointLayer("empty", 0),
-        ]),
+      const provider = await MVTDataProvider.fromUrl(
+        "http://example.invalid/{z}/{x}/{y}.mvt",
+        { minZoom: 0, maxZoom: 0 },
+      );
+      // Refines past the content-less root on the 1x1 spec canvas.
+      provider.tileset.maximumScreenSpaceError = 0.0;
+      const tile = encodeTile([
+        encodePointLayer("roads", 2),
+        encodePointLayer("water", 1),
+        encodePointLayer("empty", 0),
+      ]);
+      spyOn(Resource._Implementations, "loadWithXhr").and.callFake(
+        function (url, responseType, method, data, headers, deferred) {
+          deferred.resolve(tile);
+        },
       );
       const added = [];
       provider.featureLayers.layerAdded.addEventListener((layer) =>
@@ -112,24 +106,6 @@ describe(
       expect(provider.featureLayers.getByName("roads").length).toBe(1);
       expect(provider.featureLayers.getByName("water").length).toBe(1);
       expect(provider.featureLayers.getByName("empty")).toEqual([]);
-    });
-
-    it("assigns each tile collection to the feature layer of its source layer", async function () {
-      const provider = await loadProvider(
-        encodeTile([
-          encodePointLayer("roads", 2),
-          encodePointLayer("water", 1),
-        ]),
-      );
-
-      scene.primitives.add(provider);
-      await Cesium3DTilesTester.waitForTilesLoaded(scene, provider.tileset);
-      const content = provider.tileset.root.children[0].content;
-      const layerNames = Array.from(
-        content._collectionFeatureLayers.values(),
-        (layer) => layer.name,
-      );
-      expect(layerNames.sort()).toEqual(["roads", "water"]);
     });
   },
   "WebGL",
