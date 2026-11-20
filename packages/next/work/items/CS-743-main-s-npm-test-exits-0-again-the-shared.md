@@ -2,7 +2,7 @@
 id: CS-743
 title: "Main's npm test exits 0 again: the shared manifest load leaves no unhandled rejection when the signal is already aborted"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 needs: [CS-706]

@@ -181,6 +181,11 @@ function unlessAborted<T>(
   if (!signal) {
     return promise;
   }
+  // The promise is its loader's to report. Handle it before the abort check
+  // can throw: a signal already aborted ends this wait, yet the load (the
+  // manifest read of `loadFrameRoles`) has started and rejects on its own,
+  // with nobody left to hear it (CS-743).
+  promise.catch(() => {});
   signal.throwIfAborted();
   return new Promise<T>((resolve, reject) => {
     const onAbort = () => reject(signal.reason);
