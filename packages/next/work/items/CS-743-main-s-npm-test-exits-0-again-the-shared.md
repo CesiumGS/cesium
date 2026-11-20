@@ -2,10 +2,11 @@
 id: CS-743
 title: "Main's npm test exits 0 again: the shared manifest load leaves no unhandled rejection when the signal is already aborted"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-389
 needs: [CS-706]
+claimed_by: orch-10-CS-743
 touches: [packages/next/src/ephemeris/frameRoles.ts, packages/next/src/frames/sharedLoads.ts, packages/next/test/**]
 ---
 
