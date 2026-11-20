@@ -2,7 +2,7 @@
 id: CS-706
 title: Dyno's viewer starts drawing within half a second on a cold browser again
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 claimed_by: orch-10-CS-706
