@@ -90,9 +90,7 @@ import getMetadataProperty from "./getMetadataProperty.js";
 /** @ignore */
 const requestRenderAfterFrame = function (scene) {
   return function () {
-    scene.frameState.afterRender.push(function () {
-      scene.requestRender();
-    });
+    scene.frameState.afterRender.push(() => true);
   };
 };
 
