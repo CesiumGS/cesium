@@ -1,44 +1,17 @@
+import type { CpuTable } from "./CpuTable.ts";
 import type { RenderContext } from "./RenderContext.ts";
 
-/** CPU rows a growable table starts with (fewer when its capacity is). */
-export const INITIAL_ROWS = 1024;
-
-/** Rows after growing from `rows` to hold `count`: doubling, capped. */
-export function grownSize(
-  rows: number,
-  count: number,
-  capacity: number,
-): number {
-  return Math.min(capacity, Math.max(count, rows * 2));
-}
-
-/** A copy of `array` with `length` elements, the new ones `fill`. */
-export function resized<
-  T extends Uint8Array | Uint32Array | Int32Array | Float64Array,
->(array: T, length: number, fill = 0): T {
-  const out = new (array.constructor as new (length: number) => T)(length);
-  out.set(array);
-  if (fill !== 0) {
-    out.fill(fill, array.length);
-  }
-  return out;
-}
-
 /**
- * A CPU table mirrored to a GPU storage buffer. Changed entries upload once
- * per frame: a contiguous run with one write, entries spread across the
- * table as packed (index, data) pairs that a compute pass scatters
- * (`scatter.slang`), instead of the whole span between them. The CPU rows
- * grow as entries are used (`reserve`); the GPU buffer holds `gpuRows`,
- * the full capacity unless given fewer, and grows by `growGpu`.
+ * A CPU table's copy in a GPU storage buffer (`CpuTable`). Changed entries
+ * upload once per frame, draining the table's change log: a contiguous run
+ * with one write, entries spread across the table as packed (index, data)
+ * pairs that a compute pass scatters (`scatter.slang`), instead of the whole
+ * span between them. The GPU buffer holds `gpuRows`, the full capacity
+ * unless given fewer, and grows by `growGpu`.
  */
 export class MirroredTable {
-  f32: Float32Array;
-  u32: Uint32Array;
   buffer: GPUBuffer;
   gpuRows: number;
-  private flags: Uint8Array;
-  private readonly dirty: number[] = [];
   private readonly params: GPUBuffer;
   private readonly paramsData = new Uint32Array(4);
   private staging?: GPUBuffer;
@@ -48,15 +21,10 @@ export class MirroredTable {
   constructor(
     private readonly ctx: RenderContext,
     private readonly label: string,
-    readonly words: number,
-    readonly capacity: number,
-    gpuRows = capacity,
+    /** The CPU rows it mirrors. */
+    readonly table: CpuTable,
+    gpuRows = table.capacity,
   ) {
-    const rows = Math.min(capacity, INITIAL_ROWS);
-    const data = new ArrayBuffer(rows * words * 4);
-    this.f32 = new Float32Array(data);
-    this.u32 = new Uint32Array(data);
-    this.flags = new Uint8Array(rows);
     this.gpuRows = gpuRows;
     this.buffer = this.createBuffer(gpuRows);
     this.params = ctx.device.createBuffer({
@@ -64,7 +32,25 @@ export class MirroredTable {
       size: 16,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     });
-    this.paramsData[1] = words;
+    this.paramsData[1] = table.words;
+  }
+
+  /** The table's words as floats (`CpuTable.f32`). */
+  get f32(): Float32Array {
+    return this.table.f32;
+  }
+
+  /** The table's words as unsigned integers (`CpuTable.u32`). */
+  get u32(): Uint32Array {
+    return this.table.u32;
+  }
+
+  get words(): number {
+    return this.table.words;
+  }
+
+  get capacity(): number {
+    return this.table.capacity;
   }
 
   private createBuffer(rows: number): GPUBuffer {
@@ -94,38 +80,25 @@ export class MirroredTable {
     this.bindGroup = undefined;
   }
 
-  /** Rows on the CPU. */
+  /** Rows on the CPU (`CpuTable.rows`). */
   get rows(): number {
-    return this.flags.length;
+    return this.table.rows;
   }
 
-  /**
-   * Room for rows below `count` on the CPU (doubling, up to the capacity);
-   * true when `f32` and `u32` were replaced.
-   */
+  /** `CpuTable.reserve`. */
   reserve(count: number): boolean {
-    if (count <= this.rows) {
-      return false;
-    }
-    const rows = grownSize(this.rows, count, this.capacity);
-    const data = new ArrayBuffer(rows * this.words * 4);
-    new Uint32Array(data).set(this.u32);
-    this.f32 = new Float32Array(data);
-    this.u32 = new Uint32Array(data);
-    this.flags = resized(this.flags, rows);
-    return true;
+    return this.table.reserve(count);
   }
 
+  /** `CpuTable.mark`. */
   mark(index: number): void {
-    if (this.flags[index] === 0) {
-      this.flags[index] = 1;
-      this.dirty.push(index);
-    }
+    this.table.mark(index);
   }
 
   /** Uploads the changes; a scatter is encoded into `pass`. */
   upload(pass: GPUComputePassEncoder): void {
-    const n = this.dirty.length;
+    const dirty = this.table.changed;
+    const n = dirty.length;
     if (n === 0) {
       return;
     }
@@ -133,10 +106,9 @@ export class MirroredTable {
     const bytes = this.words * 4;
     let min = Number.POSITIVE_INFINITY;
     let max = -1;
-    for (const i of this.dirty) {
+    for (const i of dirty) {
       min = Math.min(min, i);
       max = Math.max(max, i);
-      this.flags[i] = 0;
     }
     const span = max - min + 1;
     if (span <= 2 * n + 16) {
@@ -147,7 +119,7 @@ export class MirroredTable {
         min * bytes,
         span * bytes,
       );
-      this.dirty.length = 0;
+      this.table.drained();
       return;
     }
     const total = n * (1 + this.words);
@@ -175,14 +147,14 @@ export class MirroredTable {
     }
     const out = this.scratch;
     for (let k = 0; k < n; k++) {
-      const i = this.dirty[k]!;
+      const i = dirty[k]!;
       out[k] = i;
       out.set(
         this.u32.subarray(i * this.words, (i + 1) * this.words),
         n + k * this.words,
       );
     }
-    this.dirty.length = 0;
+    this.table.drained();
     queue.writeBuffer(this.staging!, 0, out.buffer, 0, total * 4);
     this.paramsData[0] = n;
     queue.writeBuffer(this.params, 0, this.paramsData);

@@ -1,7 +1,8 @@
 import { onTextureDestroyed } from "../gpu/textureTracking.ts";
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
 import { Slabs } from "./Slabs.ts";
-import { INITIAL_ROWS, MirroredTable } from "./MirroredTable.ts";
+import { CpuTable, INITIAL_ROWS } from "./CpuTable.ts";
+import { MirroredTable } from "./MirroredTable.ts";
 import { DrawConstants } from "../render/drawConstants.ts";
 import { DrawArguments } from "../render/drawArguments.ts";
 import type { Placement, PlacementParameter } from "./placement.ts";
@@ -387,8 +388,7 @@ export class World {
     this.raster.transforms = new MirroredTable(
       ctx,
       "transforms",
-      TRANSFORM_WORDS,
-      this.maxTransforms,
+      new CpuTable(TRANSFORM_WORDS, this.maxTransforms),
       Math.min(this.maxTransforms, INITIAL_ROWS),
     );
     const t = this.raster.transforms.rows;
@@ -405,8 +405,7 @@ export class World {
     this.raster.instances = new MirroredTable(
       ctx,
       "instances",
-      INSTANCE_WORDS,
-      Math.max(1, this.maxInstances),
+      new CpuTable(INSTANCE_WORDS, Math.max(1, this.maxInstances)),
       instanceRows,
     );
     this.raster.instanceAllocator = new RangeAllocator(this.maxInstances, 1);

@@ -1,3 +1,4 @@
+import { CpuTable } from "../scene/CpuTable.ts";
 import { MirroredTable } from "../scene/MirroredTable.ts";
 import type { RenderContext } from "../scene/RenderContext.ts";
 import {
@@ -49,8 +50,7 @@ export class DrawConstants {
     this.table = new MirroredTable(
       ctx,
       "records",
-      RECORD_WORDS,
-      capacity,
+      new CpuTable(RECORD_WORDS, capacity),
       gpuRows,
     );
   }

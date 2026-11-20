@@ -1,7 +1,7 @@
 // A world's GPU tables and the bind groups over them: growing them, and
 // rebuilding what referred to them.
 import { MATERIAL_SIZE, DRAW_ITEM_SIZE, ALL_VIEWS } from "../layout.ts";
-import { resized, grownSize } from "../../scene/MirroredTable.ts";
+import { resized, grownSize } from "../../scene/CpuTable.ts";
 import type { Slab } from "../../scene/Slabs.ts";
 import type { World } from "../../scene/World.ts";
 import { patchGroup } from "../../scene/world/patches.ts";
