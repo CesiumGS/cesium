@@ -33,7 +33,11 @@ Model: the most capable one (it sets the command surface others build on).
   - a fake mode with a simulated target and deterministic results, for hitld's tests;
   - a farm can drop in later behind the target class and the queue without changing the interface.
 
-  One part conflicts with the executor contract (rule 7: no keys that run code in data or config). hitld proposed a configurable command dyno runs when a measurement finishes. Instead, use polling, `measure status`, or a completion record that callers watch, and say so in the reply.
+  - **Settled with hitld on #363 (2026-11-20):** no command runs on completion, and no hook before or after a local measurement. Both conflict with rule 7 of the executor contract and with hitld's own schema. Instead:
+    - callers poll `measure status <handle>`, or watch a **completion record** (a file, or a line in an event log), whose shape this item proposes;
+    - dyno **gates itself** on the machine's measured state: it queues or refuses a local measurement until the machine is quiet, by whatever makes a measurement valid (load, thermal state, power source, other GPU use);
+    - `status --json` reports **three states** for the machine and each target dyno controls: `busy`, `waiting-for-quiet` (a local measurement is queued behind other work) and `quiet`, with who started the current measurement (command line, web interface or another caller) and for how long;
+    - hitld gates its own heavy steps (tests, builds) on that status. While the state is `waiting-for-quiet`, it starts none and lets running ones finish, so a queued measurement isn't starved. CS-390's run lock still orders dyno's own runs; it isn't what keeps other processes quiet.
 - A skill and notes in the repository for agents that use dyno: which suite a rendering change needs, which instrument answers which question, how to read a verdict, and what never goes in a public pull request (measured values, configurations, traces).
-- When it's built, the main session replies on #363 with example JSON for each command and what turned out unclear, wrong or costly.
+- When it's built, the main session replies on #363 with example JSON for each command, including the three-state `status` and the completion record, and with what turned out unclear, wrong or costly.
 - Tests cover the dispatch, `--help`, the JSON shape of each command, and `serve` refusing a port someone else's server holds.
