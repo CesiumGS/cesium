@@ -7,7 +7,7 @@ import usesExtension from "./usesExtension.js";
  * Contains traversal functions for processing elements of the glTF hierarchy.
  * @namespace ForEach
  *
- * @internal
+ * @private
  */
 const ForEach = {};
 
@@ -256,7 +256,7 @@ ForEach.animationSampler = function (animation, handler) {
  * @param {ForEachElementHandler} handler Called with each buffer.
  * @returns {*} The first defined value returned by the handler.
  *
- * @internal
+ * @private
  */
 ForEach.buffer = function (gltf, handler) {
   return ForEach.topLevel(gltf, "buffers", handler);
@@ -669,17 +669,6 @@ ForEach.texture = function (gltf, handler) {
 };
 
 /**
- * A function called with each glTF object. A defined return value stops the iteration.
- * @callback ForEachElementHandler
- *
- * @param {*} element The glTF object.
- * @param {number|string} index The element's index, or its id in glTF 1.0.
- * @returns {*}
- *
- * @internal
- */
-
-/**
  * A function called with each value of a keyed collection. A defined return value stops the iteration.
  * @callback ForEachNamedHandler
  *
@@ -687,7 +676,7 @@ ForEach.texture = function (gltf, handler) {
  * @param {string} name The key of the value.
  * @returns {*}
  *
- * @internal
+ * @private
  */
 
 /**
@@ -695,6 +684,17 @@ ForEach.texture = function (gltf, handler) {
  * @callback ForEachIdHandler
  *
  * @param {number} id The id.
+ * @returns {*}
+ *
+ * @private
+ */
+
+/**
+ * A function called with each glTF object. A defined return value stops the iteration.
+ * @callback ForEachElementHandler
+ *
+ * @param {*} element The glTF object.
+ * @param {number|string} index The element's index, or its id in glTF 1.0.
  * @returns {*}
  *
  * @internal

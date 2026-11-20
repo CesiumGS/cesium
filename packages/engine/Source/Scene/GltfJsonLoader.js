@@ -7,7 +7,7 @@ import {
   getMagic,
 } from "@cesium/core";
 import {
-  ForEach,
+  forEachBuffer,
   addDefaults,
   addPipelineExtras,
   parseGlb,
@@ -185,7 +185,7 @@ async function upgradeVersion(gltfJsonLoader, gltf) {
   // Load all buffers into memory. updateVersion will read and in some cases modify
   // the buffer data, which it accesses from buffer.extras._pipeline.source
   const promises = [];
-  ForEach.buffer(gltf, function (buffer) {
+  forEachBuffer(gltf, function (buffer) {
     if (
       !defined(buffer.extras._pipeline.source) && // Ignore uri if this buffer uses the glTF 1.0 KHR_binary_glTF extension
       defined(buffer.uri)
@@ -217,7 +217,7 @@ async function upgradeVersion(gltfJsonLoader, gltf) {
 
 function decodeDataUris(gltf) {
   const promises = [];
-  ForEach.buffer(gltf, function (buffer) {
+  forEachBuffer(gltf, function (buffer) {
     const bufferUri = buffer.uri;
     if (
       !defined(buffer.extras._pipeline.source) && // Ignore uri if this buffer uses the glTF 1.0 KHR_binary_glTF extension
@@ -237,7 +237,7 @@ function decodeDataUris(gltf) {
 
 function loadEmbeddedBuffers(gltfJsonLoader, gltf) {
   const promises = [];
-  ForEach.buffer(gltf, function (buffer, bufferId) {
+  forEachBuffer(gltf, function (buffer, bufferId) {
     const source = buffer.extras._pipeline.source;
     if (defined(source) && !defined(buffer.uri)) {
       const resourceCache = gltfJsonLoader._resourceCache;
