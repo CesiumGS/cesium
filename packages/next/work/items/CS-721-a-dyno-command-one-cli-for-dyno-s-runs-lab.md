@@ -26,4 +26,14 @@ Model: the most capable one (it sets the command surface others build on).
 - It runs as `npx dyno` anywhere in the repository. Where the bin lives is settled first: the library package `@cesium/next` will be published (CS-616), so a bin in it would ship to users. A private workspace package is the likely home. If the choice is a public name or ships with the library, it goes to the owner as a decision item.
 - The old entry points keep working, as thin wrappers that say the new command, until the repository's docs, items and skills are updated (`AGENTS.md`, `packages/next/AGENTS.md`, the README, the work-items skill).
 - Every command prints a short human summary by default and JSON with `--json`, like `hitld`. Exit codes are documented.
+- **The interface hitld will call** (its proposal on #363, 2026-11-20, to be checked against what we build):
+  - non-interactive: every command takes arguments, prints JSON with `api_version` (adding a field keeps it, removing, renaming or retyping one raises it), never prompts, and fails when anything is unclear;
+  - `capabilities`, `measure start` (asynchronous, returns a handle), `measure status` and `measure cancel`, `result show` (no raw values without `--values`), `result fetch`, `result pin` and `result unpin`, analysis commands (compare two commits, a trend, the commit a regression came in, each with noise estimates), `storage status`, and `status`;
+  - `status` says whether the machine is busy or quiet, who started the current measurement, and for how long, so other heavy work waits while a measurement runs. On 2026-11-19, CS-706's timing runs shared the machine with test suites at six times its cores. `status` turns the hand-written load rule into a check;
+  - a fake mode with a simulated target and deterministic results, for hitld's tests;
+  - a farm can drop in later behind the target class and the queue without changing the interface.
+
+  One part conflicts with the executor contract (rule 7: no keys that run code in data or config). hitld proposed a configurable command dyno runs when a measurement finishes. Instead, use polling, `measure status`, or a completion record that callers watch, and say so in the reply.
+- A skill and notes in the repository for agents that use dyno: which suite a rendering change needs, which instrument answers which question, how to read a verdict, and what never goes in a public pull request (measured values, configurations, traces).
+- When it's built, the main session replies on #363 with example JSON for each command and what turned out unclear, wrong or costly.
 - Tests cover the dispatch, `--help`, the JSON shape of each command, and `serve` refusing a port someone else's server holds.

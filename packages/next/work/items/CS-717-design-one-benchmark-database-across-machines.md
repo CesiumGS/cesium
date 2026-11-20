@@ -16,6 +16,8 @@ What exists today:
 - `machineKey` (`bench/suite/reuse.mjs`) hashes the hardware, the configuration (OS, browser, flags, viewport, driver) and the power state into one key. So a switch between battery and AC starts a new "machine", and a series splits. On 2026-11-19 the power source switched 137 times.
 - Planned: CS-390 adds a `machine` field to every run, CS-407 runs on a remote machine that lands in the Mac's store, CS-408 adds device aliases and hardware classes, and CS-323 adds dedicated runners. CS-404 records machine state with each run and treats the device as a stratum in a study.
 
+**hitld's answer (arobison/human-in-the-lead#363, 2026-11-20):** dyno owns benchmark storage. Results, screenshots, recordings and traces go in storage dyno manages, such as a private S3-compatible bucket, and hitld's private store is not changed for this. hitld keeps references (a result ID, which dyno instance holds it, a classification label, a headline where allowed) and reads through dyno's commands (CS-721). A data area in hitld's store is a later option only (HITLD-622, after v0.1.0; the decision is HITLD-623). So the sharing design below targets dyno's storage, and CS-718 no longer gates it.
+
 Model: the most capable one (design-heavy).
 
 ## Done when
@@ -34,6 +36,17 @@ Model: the most capable one (design-heavy).
   - *GitHub's limits:* files over 100 MiB are blocked, repositories should stay under about 1 GB and strongly under 5 GB, and Git LFS's free tier is 10 GiB of storage and of bandwidth.
   - *Git's own behavior:* history keeps every version, so deleting old runs doesn't shrink the repository. Encrypted files don't delta-compress, so a file that's rewritten is stored whole each time. Hence one immutable file per run.
   - *So:* the design splits records from blobs. Run records, summaries and study files go in the store's git. Images, traces and recordings go to a content-addressed, encrypted blob backend outside git history, such as Git LFS, an S3-compatible bucket, or the device that made them, fetched through the hub (CS-406). The design picks the backend, sets a size budget, and says what syncs by default and what is fetched when opened.
+- **Storage that dyno owns** (hitld's proposal on #363, to be checked, not taken as a contract):
+  - credentials and the bucket address in dyno's own configuration and the keychain, never in output, results, logs, briefs or the repository;
+  - separate read and write keys, one per device or role, so one can be revoked alone, with rotation and device removal written down;
+  - confidential results encrypted on the client before upload, one immutable object per record;
+  - what a content hash covers (plaintext dedupes but shows identical files, ciphertext doesn't dedupe);
+  - how a session on another machine, or a cloud session, gets read access through a harness secret, never a committed file;
+  - pinning (`result pin`, with a reason that names the study or decision), how long unpinned results last, and no silent deletion;
+  - a size budget per namespace (`storage status`);
+  - a classification label on every result, confidential by default, from an open set.
+
+  The owner decides the backend and any spend, a new trust boundary under the contract, as a decision item.
 - **Multi-device views:** a Trends series is per device and configuration. Charts filter and facet by device, hardware class (CS-408) and configuration. Baselines and alerts are per device. Normalization across hardware classes. What Overview shows when several devices disagree.
 - **Experiments:** device as a stratum in a study (CS-404). A study run on several devices pools them in the hierarchical model, and each verdict names the hardware it holds for.
 - **The causal piece:**
