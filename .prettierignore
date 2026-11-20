@@ -26,6 +26,7 @@
 
 packages/*/Build/**
 packages/*/index.js
+!packages/gltf/index.js
 packages/*/index.d.ts
 packages/*/Specs/SpecList.js
 

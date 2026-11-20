@@ -1,4 +1,4 @@
-import { addBuffer } from "../index.js";
+import addBuffer from "../Source/addBuffer.js";
 
 describe("addBuffer", function () {
   it("adds buffer to gltf and returns its bufferView id", function () {

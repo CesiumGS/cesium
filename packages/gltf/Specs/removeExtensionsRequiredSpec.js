@@ -1,4 +1,4 @@
-import { removeExtensionsRequired } from "../index.js";
+import removeExtensionsRequired from "../Source/removeExtensionsRequired.js";
 
 describe("removeExtensionsRequired", function () {
   it("removes extension from extensionsRequired", function () {

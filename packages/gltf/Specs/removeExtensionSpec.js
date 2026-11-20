@@ -1,5 +1,5 @@
 import { WebGLConstants } from "@cesium/core";
-import { removeExtension } from "../index.js";
+import removeExtension from "../Source/removeExtension.js";
 
 describe("removeExtension", function () {
   it("removes extension", function () {

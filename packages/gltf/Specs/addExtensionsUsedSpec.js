@@ -1,4 +1,4 @@
-import { addExtensionsUsed } from "../index.js";
+import addExtensionsUsed from "../Source/addExtensionsUsed.js";
 
 describe("addExtensionsUsed", function () {
   it("adds an extension to extensionsUsed", function () {

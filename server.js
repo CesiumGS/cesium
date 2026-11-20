@@ -73,7 +73,7 @@ function formatTimeSinceInSeconds(start) {
  * @property {BuildContext} specs
  * @property {BuildContext} testWorkers
  * @property {Record<string, CesiumBundles>} packages Bundles for each published workspace package, keyed by workspace name.
- * @property {Record<string, FileGlobs>} packageSourceGlobs Each published workspace's Source globs, keyed by workspace name.
+ * @property {Record<string, FileGlobs | undefined>} packageSourceGlobs Source globs of each published workspace whose index.js is generated, keyed by workspace name.
  */
 
 /**
@@ -348,10 +348,13 @@ const throttle = (callback) => {
         clearTopLevelCaches();
         packageBundleCaches[workspace].clear();
 
-        await createIndexJs(
-          /** @type {Workspace} */ (workspace),
-          contexts.packageSourceGlobs[workspace],
-        );
+        const sourceGlobs = contexts.packageSourceGlobs[workspace];
+        if (sourceGlobs) {
+          await createIndexJs(
+            /** @type {Workspace} */ (workspace),
+            sourceGlobs,
+          );
+        }
       });
     }
 

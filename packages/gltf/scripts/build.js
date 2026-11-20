@@ -4,7 +4,6 @@ import { globSync, mkdirSync } from "node:fs";
 import path from "node:path";
 
 import {
-  createIndexJs,
   bundleIndexJs,
   createSpecListForWorkspace,
   bundleSpecs,
@@ -12,7 +11,6 @@ import {
 
 /** @import {CesiumBundles} from "../../../scripts/build-utilities.js"; */
 
-export const sourceGlobs = { patterns: ["Source/*.js"] };
 export const specGlobs = { patterns: ["Specs/*Spec.js"] };
 
 /**
@@ -33,9 +31,6 @@ export const buildGltf = async (options) => {
 
   // Create Build folder to place build artifacts.
   mkdirSync("packages/gltf/Build", { recursive: true });
-
-  // Create index.js
-  await createIndexJs("gltf", sourceGlobs);
 
   const contexts = await bundleIndexJs({
     minify: minify,

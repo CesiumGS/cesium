@@ -1,5 +1,5 @@
 import { WebGLConstants } from "@cesium/core";
-import { ForEach } from "../index.js";
+import ForEach from "../Source/ForEach.js";
 
 describe("ForEach", function () {
   const gltfAccessors = {

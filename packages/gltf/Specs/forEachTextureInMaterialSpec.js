@@ -1,4 +1,4 @@
-import { forEachTextureInMaterial } from "../index.js";
+import forEachTextureInMaterial from "../Source/forEachTextureInMaterial.js";
 
 describe("forEachTextureInMaterial", function () {
   it("throws without material", function () {

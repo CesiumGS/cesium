@@ -1,4 +1,4 @@
-import { addExtensionsRequired } from "../index.js";
+import addExtensionsRequired from "../Source/addExtensionsRequired.js";
 
 describe("addExtensionsRequired", function () {
   it("adds an extension to extensionsRequired", function () {
