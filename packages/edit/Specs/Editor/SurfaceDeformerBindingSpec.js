@@ -44,8 +44,8 @@ describe(
       return texture;
     }
 
-    // Evaluates the binding's shader for a vertex bound to the triangle, and
-    // expects its position and jacobian. The vertex is at its position when
+    // Evaluates the binding's shader, and its deformer's CPU deformation, for
+    // a vertex bound to the triangle, and expects its position and jacobian. The vertex is at its position when
     // bound, unless positionMC is given.
     function expectDeformation(options) {
       const { current, bindMatrix, expectedPosition, expectedJacobian } =
@@ -63,7 +63,10 @@ describe(
         deformer: {
           _getShaderLines: SurfaceDeformer.prototype._getShaderLines,
         },
-        vertexBuffer: { destroy: () => {} },
+        vertexBuffer: {
+          getBufferData: (data) => data.set([0, 1, 2, ...coordinates]),
+          destroy: () => {},
+        },
         positionTexture,
         restPositionTexture,
         bindMatrix,
@@ -107,6 +110,15 @@ describe(
       expect({ context, fragmentShader, uniformMap }).contextToRender([
         0, 255, 0, 255,
       ]);
+
+      const positions = Cartesian3.pack(positionMC, new Float64Array(3));
+      const jacobians = new Float64Array(9);
+      SurfaceDeformer.prototype._deformPositions(binding, positions, jacobians);
+      expect(Cartesian3.unpack(positions)).toEqualEpsilon(
+        expectedPosition,
+        1e-5,
+      );
+      expect(Matrix3.unpack(jacobians)).toEqualEpsilon(expectedJacobian, 1e-5);
 
       binding.destroy();
       positionTexture.destroy();

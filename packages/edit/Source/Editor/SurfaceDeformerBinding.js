@@ -45,6 +45,9 @@ class SurfaceDeformerBinding {
   #vertexBuffer;
 
   /** @type {DataTexture} */
+  #positionTexture;
+
+  /** @type {DataTexture} */
   #restPositionTexture;
 
   /** @type {Object<string, {type: UniformType, value: function(): *}>} */
@@ -82,6 +85,7 @@ class SurfaceDeformerBinding {
 
     this.#deformer = deformer;
     this.#vertexBuffer = vertexBuffer;
+    this.#positionTexture = positionTexture;
     this.#restPositionTexture = restPositionTexture;
     this.#bindMatrix = bindMatrix;
     this.#boundsCoefficients = boundsCoefficients;
@@ -110,6 +114,16 @@ class SurfaceDeformerBinding {
 
   get vertexBuffer() {
     return this.#vertexBuffer;
+  }
+
+  /**
+   * The mesh's vertex positions.
+   *
+   * @type {DataTexture}
+   * @readonly
+   */
+  get positionTexture() {
+    return this.#positionTexture;
   }
 
   /**
