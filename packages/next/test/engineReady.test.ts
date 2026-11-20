@@ -157,7 +157,6 @@ function worldOf(options: {
   return {
     raster: {
       bundle: options.bundle === false ? undefined : ({} as GPURenderBundle),
-      drawBatches: options.drawBatches ?? [],
       patchDraws: new Map(
         (options.patchDraws ?? []).map((draw, i) => [i, draw] as const),
       ),
@@ -167,6 +166,7 @@ function worldOf(options: {
         ),
       ),
     },
+    draws: { drawBatches: options.drawBatches ?? [] },
   } as unknown as ReadyWorld;
 }
 

@@ -488,7 +488,7 @@ export interface RenderContext {
    */
   wake: () => void;
   /**
-   * Makes a world's mirror on the device this context belongs to
+   * @internal Makes a world's mirror on the device this context belongs to
    * (`RenderDevice.createWorld`). Set when the engine is made.
    */
   createMirror?: WebGpuDevice["createWorld"];
