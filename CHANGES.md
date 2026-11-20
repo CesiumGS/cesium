@@ -13,6 +13,7 @@
 #### Fixes :wrench:
 
 - Fixed `HermitePolynomialApproximation.interpolate` returning zero instead of the sample value for constant samples with zero derivatives. [#13934](https://github.com/CesiumGS/cesium/pull/13934)
+- Fixed `PerspectiveFrustum.clone` dropping `xOffset` and `yOffset`, which kept the stereo views of `executeWebVRCommands` from converging. [#14054](https://github.com/CesiumGS/cesium/issues/14054)
 
 ### @cesium/engine
 

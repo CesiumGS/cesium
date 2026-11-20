@@ -291,12 +291,16 @@ class PerspectiveFrustum {
     result.fov = this.fov;
     result.near = this.near;
     result.far = this.far;
+    result.xOffset = this.xOffset;
+    result.yOffset = this.yOffset;
 
     // force update of clone to compute matrices
     result._aspectRatio = undefined;
     result._fov = undefined;
     result._near = undefined;
     result._far = undefined;
+    result._xOffset = undefined;
+    result._yOffset = undefined;
 
     this._offCenterFrustum.clone(result._offCenterFrustum);
 
