@@ -36,7 +36,14 @@ import { IconButton } from "@stratakit/bricks";
 import { Icon } from "@stratakit/mui";
 import { unstable_Toolbar as Toolbar } from "@stratakit/structures";
 import { getRouteApi } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  startTransition,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import publicCatalog from "../catalog/public.json";
 import { ensureCesium } from "../cesium1x.ts";
 import { compareEngines, engineLabel, isRelease } from "../engines.mjs";
@@ -280,6 +287,26 @@ export function Viewer() {
     };
   }, [engine, index.branch]);
 
+  // The settings in the panel render once the view has first drawn
+  // (CS-706). Their controls are a few hundred milliseconds of React and
+  // StrataKit work in development, and on a cold start every millisecond
+  // of the main thread before the first frame is on its path. They act on
+  // the engine, which they would wait for anyway; once shown they stay.
+  const [settingsShown, setSettingsShown] = useState(false);
+  const settled = state.phase === "ready" || state.phase === "failed";
+  useEffect(() => {
+    if (!settled || settingsShown) {
+      return;
+    }
+    // Two animation frames: the one the engine draws in, then the next.
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() =>
+        startTransition(() => setSettingsShown(true)),
+      );
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [settled, settingsShown]);
+
   // The ion token, for both engines.
   useEffect(() => {
     ionDefaults.accessToken = token;
@@ -472,324 +499,337 @@ export function Viewer() {
                 }
               />
             </div>
-            <div className="viewer-subheader">
-              <Typography variant="body-sm" render={<h2 />}>
-                Settings
-              </Typography>
-              <GhostButton
-                label="Reset all settings to their defaults"
-                icon={svgRefresh}
-                onClick={() => {
-                  setView(VIEW_DEFAULTS);
-                  setLighting(LIGHTING_DEFAULTS);
-                  toast("All settings reset");
-                }}
-              />
-            </div>
-            <Group title="Tile selection" defaultOpen>
-              <Choice
-                label="Policy"
-                value={view.policy}
-                minWidth={0}
-                disabled={!!unsupported.policy}
-                options={[
-                  ["budgeted", "Budgeted (default)"],
-                  ["stepwise", "Stepwise (as CesiumJS 1.x)"],
-                ]}
-                onChange={(v) => set("policy", v as ViewSettings["policy"])}
-              />
-              <Range
-                label="Maximum screen-space error"
-                value={Math.log2(view.sse)}
-                min={0}
-                max={7}
-                step={0.25}
-                text={`${view.sse} px`}
-                onChange={(v) => set("sse", Math.round(2 ** v * 10) / 10)}
-              />
-              <NotHere reasons={[unsupported.policy]} />
-            </Group>
-            <Group title="Globe and rendering" defaultOpen>
-              <Setting
-                label="Cesium World Terrain"
-                checked={view.terrain}
-                onChange={(v) => set("terrain", v)}
-              />
-              <Setting
-                label="Unlit"
-                checked={view.unlit}
-                onChange={(v) => set("unlit", v)}
-              />
-              <Setting
-                label="Render continuously"
-                checked={view.continuous}
-                onChange={(v) => set("continuous", v)}
-              />
-              <Choice
-                label="Output encoding"
-                value={lighting.encoding}
-                minWidth={0}
-                disabled={!!unsupported.encoding}
-                options={[
-                  ["srgb", "sRGB (exact)"],
-                  ["gamma2.2", "Gamma 2.2 (as 1.x)"],
-                ]}
-                onChange={(v) => light("encoding", v as Lighting["encoding"])}
-              />
-              <Choice
-                label="Tone mapping"
-                value={lighting.toneMapping}
-                minWidth={0}
-                options={[
-                  ["pbrNeutral", "PBR Neutral"],
-                  ["agx", "AgX"],
-                  ["aces", "ACES (as 1.x)"],
-                ]}
-                onChange={(v) =>
-                  light("toneMapping", v as Lighting["toneMapping"])
-                }
-              />
-              <Choice
-                label="Translucency"
-                value={lighting.translucency}
-                minWidth={0}
-                disabled={!!unsupported.translucency}
-                options={[
-                  ["moments", "Moments (MBOIT)"],
-                  ["exact", "Exact (per-pixel lists)"],
-                ]}
-                onChange={(v) =>
-                  light("translucency", v as Lighting["translucency"])
-                }
-              />
-              <Setting
-                label="FXAA"
-                checked={lighting.fxaa}
-                onChange={(v) => light("fxaa", v)}
-              />
-              {engine === "2.0" && (
-                <Choice
-                  label="Device limits"
-                  value={limitsTier()}
-                  minWidth={0}
-                  options={[
-                    ["base", "Base: spec binding counts (default)"],
-                    ["minimum", "Minimum: smallest device's"],
-                    ["adapter", "Adapter: all raised (experiments)"],
-                  ]}
-                  // A device's limits are fixed at creation: the page
-                  // reloads with the engine on the chosen tier (docs/design/gpu-limits-and-capacities.md).
-                  onChange={(v) => reloadWithLimits(v)}
-                />
-              )}
-              <NotHere
-                reasons={[
-                  unsupported.encoding,
-                  unsupported.translucency,
-                  unsupported.split,
-                  unsupported.overview,
-                ]}
-              />
-            </Group>
-            <Group title="Lighting">
-              {engine === "2.0" && (
-                <Setting
-                  label="Sun from date and time"
-                  checked={lighting.sunFromTime}
-                  onChange={(v) => light("sunFromTime", v)}
-                />
-              )}
-              {(engine !== "2.0" || !lighting.sunFromTime) && (
-                <>
-                  <Range
-                    label="Sun azimuth"
-                    value={lighting.azimuth}
-                    min={0}
-                    max={360}
-                    text={`${lighting.azimuth}°`}
-                    onChange={(v) => light("azimuth", v)}
+            {/* The settings render once the view has drawn (CS-706). */}
+            {settingsShown && (
+              <>
+                <div className="viewer-subheader">
+                  <Typography variant="body-sm" render={<h2 />}>
+                    Settings
+                  </Typography>
+                  <GhostButton
+                    label="Reset all settings to their defaults"
+                    icon={svgRefresh}
+                    onClick={() => {
+                      setView(VIEW_DEFAULTS);
+                      setLighting(LIGHTING_DEFAULTS);
+                      toast("All settings reset");
+                    }}
                   />
-                  <Range
-                    label="Sun elevation"
-                    value={lighting.elevation}
-                    min={-10}
-                    max={90}
-                    text={`${lighting.elevation}°`}
-                    onChange={(v) => light("elevation", v)}
-                  />
-                </>
-              )}
-              {engine === "2.0" ? (
-                <>
-                  <Setting
-                    label="Sunlight from the atmosphere"
-                    checked={lighting.sunFromAtmosphere}
-                    onChange={(v) => light("sunFromAtmosphere", v)}
-                  />
-                  <Setting
-                    label="Aerial perspective"
-                    checked={lighting.aerialPerspective}
-                    onChange={(v) => light("aerialPerspective", v)}
-                  />
-                  <Setting
-                    label="Sun shadows"
-                    checked={lighting.shadows}
-                    onChange={(v) => light("shadows", v)}
-                  />
-                  <Setting
-                    label="Ambient occlusion"
-                    checked={lighting.ambientOcclusion}
-                    onChange={(v) => light("ambientOcclusion", v)}
-                  />
-                  <Setting
-                    label="City lights"
-                    checked={lighting.cityLights}
-                    onChange={(v) => light("cityLights", v)}
-                  />
+                </div>
+                <Group title="Tile selection" defaultOpen>
                   <Choice
-                    label="Aerosols"
-                    value={lighting.aerosol}
+                    label="Policy"
+                    value={view.policy}
                     minWidth={0}
-                    options={Object.entries(AEROSOLS).map(([key, a]) => [
-                      key,
-                      a.name,
-                    ])}
-                    onChange={(v) => light("aerosol", v as AerosolType)}
-                  />
-                  <Range
-                    label="Visibility"
-                    value={lighting.visibility}
-                    min={5}
-                    max={200}
-                    step={5}
-                    text={`${lighting.visibility} km`}
-                    onChange={(v) => light("visibility", v)}
-                  />
-                  {!lighting.sunFromAtmosphere && (
-                    <Range
-                      label="Sun illuminance"
-                      value={lighting.sunIlluminance}
-                      min={0}
-                      max={150_000}
-                      step={1000}
-                      text={`${Math.round(lighting.sunIlluminance / 1000)} klx`}
-                      onChange={(v) => light("sunIlluminance", v)}
-                    />
-                  )}
-                </>
-              ) : (
-                <Range
-                  label="Sun intensity"
-                  value={lighting.intensity}
-                  min={0}
-                  max={5}
-                  step={0.1}
-                  onChange={(v) => light("intensity", v)}
-                />
-              )}
-              {engine === "2.0" ? (
-                <>
-                  <Choice
-                    label="Rendering"
-                    value={lighting.rendering}
-                    minWidth={0}
+                    disabled={!!unsupported.policy}
                     options={[
-                      ["eye", "Eye"],
-                      ["camera", "Camera"],
+                      ["budgeted", "Budgeted (default)"],
+                      ["stepwise", "Stepwise (as CesiumJS 1.x)"],
+                    ]}
+                    onChange={(v) => set("policy", v as ViewSettings["policy"])}
+                  />
+                  <Range
+                    label="Maximum screen-space error"
+                    value={Math.log2(view.sse)}
+                    min={0}
+                    max={7}
+                    step={0.25}
+                    text={`${view.sse} px`}
+                    onChange={(v) => set("sse", Math.round(2 ** v * 10) / 10)}
+                  />
+                  <NotHere reasons={[unsupported.policy]} />
+                </Group>
+                <Group title="Globe and rendering" defaultOpen>
+                  <Setting
+                    label="Cesium World Terrain"
+                    checked={view.terrain}
+                    onChange={(v) => set("terrain", v)}
+                  />
+                  <Setting
+                    label="Unlit"
+                    checked={view.unlit}
+                    onChange={(v) => set("unlit", v)}
+                  />
+                  <Setting
+                    label="Render continuously"
+                    checked={view.continuous}
+                    onChange={(v) => set("continuous", v)}
+                  />
+                  <Choice
+                    label="Output encoding"
+                    value={lighting.encoding}
+                    minWidth={0}
+                    disabled={!!unsupported.encoding}
+                    options={[
+                      ["srgb", "sRGB (exact)"],
+                      ["gamma2.2", "Gamma 2.2 (as 1.x)"],
                     ]}
                     onChange={(v) =>
-                      light("rendering", v as Lighting["rendering"])
+                      light("encoding", v as Lighting["encoding"])
                     }
                   />
-                  {lighting.rendering === "eye" ? (
+                  <Choice
+                    label="Tone mapping"
+                    value={lighting.toneMapping}
+                    minWidth={0}
+                    options={[
+                      ["pbrNeutral", "PBR Neutral"],
+                      ["agx", "AgX"],
+                      ["aces", "ACES (as 1.x)"],
+                    ]}
+                    onChange={(v) =>
+                      light("toneMapping", v as Lighting["toneMapping"])
+                    }
+                  />
+                  <Choice
+                    label="Translucency"
+                    value={lighting.translucency}
+                    minWidth={0}
+                    disabled={!!unsupported.translucency}
+                    options={[
+                      ["moments", "Moments (MBOIT)"],
+                      ["exact", "Exact (per-pixel lists)"],
+                    ]}
+                    onChange={(v) =>
+                      light("translucency", v as Lighting["translucency"])
+                    }
+                  />
+                  <Setting
+                    label="FXAA"
+                    checked={lighting.fxaa}
+                    onChange={(v) => light("fxaa", v)}
+                  />
+                  {engine === "2.0" && (
+                    <Choice
+                      label="Device limits"
+                      value={limitsTier()}
+                      minWidth={0}
+                      options={[
+                        ["base", "Base: spec binding counts (default)"],
+                        ["minimum", "Minimum: smallest device's"],
+                        ["adapter", "Adapter: all raised (experiments)"],
+                      ]}
+                      // A device's limits are fixed at creation: the page
+                      // reloads with the engine on the chosen tier (docs/design/gpu-limits-and-capacities.md).
+                      onChange={(v) => reloadWithLimits(v)}
+                    />
+                  )}
+                  <NotHere
+                    reasons={[
+                      unsupported.encoding,
+                      unsupported.translucency,
+                      unsupported.split,
+                      unsupported.overview,
+                    ]}
+                  />
+                </Group>
+                <Group title="Lighting">
+                  {engine === "2.0" && (
+                    <Setting
+                      label="Sun from date and time"
+                      checked={lighting.sunFromTime}
+                      onChange={(v) => light("sunFromTime", v)}
+                    />
+                  )}
+                  {(engine !== "2.0" || !lighting.sunFromTime) && (
                     <>
-                      <Typography variant="caption-md" color="textSecondary">
-                        As a person there would see it: adapting to the light,
-                        losing color at night, the stars.
-                      </Typography>
                       <Range
-                        label="Brightness (stops)"
-                        value={lighting.compensation}
-                        min={-3}
-                        max={3}
-                        step={0.1}
-                        text={lighting.compensation.toFixed(1)}
-                        onChange={(v) => light("compensation", v)}
+                        label="Sun azimuth"
+                        value={lighting.azimuth}
+                        min={0}
+                        max={360}
+                        text={`${lighting.azimuth}°`}
+                        onChange={(v) => light("azimuth", v)}
                       />
                       <Range
-                        label="Adaptation speed"
-                        value={Math.log2(lighting.adaptationSpeed)}
-                        min={0}
-                        max={10}
-                        step={0.1}
-                        text={`×${Math.round(lighting.adaptationSpeed)}`}
-                        onChange={(v) => light("adaptationSpeed", 2 ** v)}
+                        label="Sun elevation"
+                        value={lighting.elevation}
+                        min={-10}
+                        max={90}
+                        text={`${lighting.elevation}°`}
+                        onChange={(v) => light("elevation", v)}
                       />
                     </>
-                  ) : (
+                  )}
+                  {engine === "2.0" ? (
                     <>
                       <Setting
-                        label="Automatic exposure"
-                        checked={lighting.autoExposure}
-                        onChange={(v) => light("autoExposure", v)}
+                        label="Sunlight from the atmosphere"
+                        checked={lighting.sunFromAtmosphere}
+                        onChange={(v) => light("sunFromAtmosphere", v)}
                       />
-                      {lighting.autoExposure ? (
-                        <Typography variant="caption-md" color="textSecondary">
-                          Exposure metered from the image.
-                        </Typography>
-                      ) : (
+                      <Setting
+                        label="Aerial perspective"
+                        checked={lighting.aerialPerspective}
+                        onChange={(v) => light("aerialPerspective", v)}
+                      />
+                      <Setting
+                        label="Sun shadows"
+                        checked={lighting.shadows}
+                        onChange={(v) => light("shadows", v)}
+                      />
+                      <Setting
+                        label="Ambient occlusion"
+                        checked={lighting.ambientOcclusion}
+                        onChange={(v) => light("ambientOcclusion", v)}
+                      />
+                      <Setting
+                        label="City lights"
+                        checked={lighting.cityLights}
+                        onChange={(v) => light("cityLights", v)}
+                      />
+                      <Choice
+                        label="Aerosols"
+                        value={lighting.aerosol}
+                        minWidth={0}
+                        options={Object.entries(AEROSOLS).map(([key, a]) => [
+                          key,
+                          a.name,
+                        ])}
+                        onChange={(v) => light("aerosol", v as AerosolType)}
+                      />
+                      <Range
+                        label="Visibility"
+                        value={lighting.visibility}
+                        min={5}
+                        max={200}
+                        step={5}
+                        text={`${lighting.visibility} km`}
+                        onChange={(v) => light("visibility", v)}
+                      />
+                      {!lighting.sunFromAtmosphere && (
+                        <Range
+                          label="Sun illuminance"
+                          value={lighting.sunIlluminance}
+                          min={0}
+                          max={150_000}
+                          step={1000}
+                          text={`${Math.round(lighting.sunIlluminance / 1000)} klx`}
+                          onChange={(v) => light("sunIlluminance", v)}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <Range
+                      label="Sun intensity"
+                      value={lighting.intensity}
+                      min={0}
+                      max={5}
+                      step={0.1}
+                      onChange={(v) => light("intensity", v)}
+                    />
+                  )}
+                  {engine === "2.0" ? (
+                    <>
+                      <Choice
+                        label="Rendering"
+                        value={lighting.rendering}
+                        minWidth={0}
+                        options={[
+                          ["eye", "Eye"],
+                          ["camera", "Camera"],
+                        ]}
+                        onChange={(v) =>
+                          light("rendering", v as Lighting["rendering"])
+                        }
+                      />
+                      {lighting.rendering === "eye" ? (
                         <>
-                          <Range
-                            label="Exposure (EV100)"
-                            value={lighting.ev100}
-                            min={-12}
-                            max={18}
-                            step={0.1}
-                            flip
-                            text={ev100Text(lighting.ev100)}
-                            onChange={(v) => light("ev100", v)}
-                          />
                           <Typography
                             variant="caption-md"
                             color="textSecondary"
                           >
-                            Right is brighter. A higher EV100 expects a brighter
-                            scene, so it lets in less light.
+                            As a person there would see it: adapting to the
+                            light, losing color at night, the stars.
                           </Typography>
+                          <Range
+                            label="Brightness (stops)"
+                            value={lighting.compensation}
+                            min={-3}
+                            max={3}
+                            step={0.1}
+                            text={lighting.compensation.toFixed(1)}
+                            onChange={(v) => light("compensation", v)}
+                          />
+                          <Range
+                            label="Adaptation speed"
+                            value={Math.log2(lighting.adaptationSpeed)}
+                            min={0}
+                            max={10}
+                            step={0.1}
+                            text={`×${Math.round(lighting.adaptationSpeed)}`}
+                            onChange={(v) => light("adaptationSpeed", 2 ** v)}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <Setting
+                            label="Automatic exposure"
+                            checked={lighting.autoExposure}
+                            onChange={(v) => light("autoExposure", v)}
+                          />
+                          {lighting.autoExposure ? (
+                            <Typography
+                              variant="caption-md"
+                              color="textSecondary"
+                            >
+                              Exposure metered from the image.
+                            </Typography>
+                          ) : (
+                            <>
+                              <Range
+                                label="Exposure (EV100)"
+                                value={lighting.ev100}
+                                min={-12}
+                                max={18}
+                                step={0.1}
+                                flip
+                                text={ev100Text(lighting.ev100)}
+                                onChange={(v) => light("ev100", v)}
+                              />
+                              <Typography
+                                variant="caption-md"
+                                color="textSecondary"
+                              >
+                                Right is brighter. A higher EV100 expects a
+                                brighter scene, so it lets in less light.
+                              </Typography>
+                            </>
+                          )}
                         </>
                       )}
                     </>
+                  ) : (
+                    <>
+                      <Range
+                        label="Diffuse IBL"
+                        value={lighting.diffuseIbl}
+                        min={0}
+                        max={2}
+                        step={0.05}
+                        onChange={(v) => light("diffuseIbl", v)}
+                      />
+                      <Range
+                        label="Specular IBL"
+                        value={lighting.specularIbl}
+                        min={0}
+                        max={2}
+                        step={0.05}
+                        onChange={(v) => light("specularIbl", v)}
+                      />
+                      <Range
+                        label="Exposure"
+                        value={lighting.exposure}
+                        min={0.1}
+                        max={4}
+                        step={0.05}
+                        onChange={(v) => light("exposure", v)}
+                      />
+                    </>
                   )}
-                </>
-              ) : (
-                <>
-                  <Range
-                    label="Diffuse IBL"
-                    value={lighting.diffuseIbl}
-                    min={0}
-                    max={2}
-                    step={0.05}
-                    onChange={(v) => light("diffuseIbl", v)}
-                  />
-                  <Range
-                    label="Specular IBL"
-                    value={lighting.specularIbl}
-                    min={0}
-                    max={2}
-                    step={0.05}
-                    onChange={(v) => light("specularIbl", v)}
-                  />
-                  <Range
-                    label="Exposure"
-                    value={lighting.exposure}
-                    min={0.1}
-                    max={4}
-                    step={0.05}
-                    onChange={(v) => light("exposure", v)}
-                  />
-                </>
-              )}
-            </Group>
+                </Group>
+              </>
+            )}
           </aside>
         ) : (
           // Folded: a rail at the same edge brings it back.
