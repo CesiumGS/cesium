@@ -2,10 +2,11 @@
 id: CS-712
 title: "One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-17
 needs: [CS-671]
+claimed_by: orch-10-CS-712
 touches: [packages/next/src/**, packages/next/test/**, packages/next/examples/**, packages/next/spikes/**, packages/next/handbook/**, packages/next/widgets/**, packages/next/scripts/**, packages/next/api/surface.txt, packages/next/README.md, docs/design/transform-graph.md]
 ---
 
