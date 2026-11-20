@@ -2,7 +2,7 @@
 id: CS-724
 title: Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-192
 claimed_by: orch-10-CS-724

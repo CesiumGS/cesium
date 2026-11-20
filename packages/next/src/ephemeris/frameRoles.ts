@@ -5,6 +5,7 @@
 import { readWithProgress, type LoadProgress } from "../io/readWithProgress.ts";
 import type { EarthOrientationParameters } from "../time/eop.ts";
 import { LeapSeconds } from "../time/leapSeconds.ts";
+import { framesDataFormatProblem } from "./framesDataFormat.ts";
 
 /** A notice about frame data, by kind, with a message for people. */
 export interface FrameDataWarning {
@@ -99,6 +100,12 @@ async function loadManifest(
       `frames data: ${url} is not valid JSON (the store may be stale or the server may serve another page); ${SETUP_HINT}`,
       { cause },
     );
+  }
+  // Built in another format than this code reads: one plain sentence, not
+  // whatever the first mismatched key turns into.
+  const problem = framesDataFormatProblem(parsed);
+  if (problem !== undefined) {
+    throw new Error(problem);
   }
   const entries = new Map<Role, ManifestEntry>();
   for (const entry of parsed.files ?? []) {

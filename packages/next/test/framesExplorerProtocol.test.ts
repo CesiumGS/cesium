@@ -1039,6 +1039,19 @@ describe("browserContext's loading states", () => {
     expect((await client.load("frames")).state).toBe("missing");
   });
 
+  it("gives missing, naming the dataset and the command, when the store was built in another format", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify({ format: 0, files: [] }))),
+    );
+    const { client } = connect(browserContext("/frames-data/"));
+    const frames = await client.load("frames");
+    expect(frames.state).toBe("missing");
+    expect(frames.detail).toBe(
+      "frames data: out of date, run `npm run setup` (built as format 0, this code reads format 1).",
+    );
+  });
+
   it("gives error, not missing and never fetching, when the fetch itself fails", async () => {
     vi.stubGlobal(
       "fetch",

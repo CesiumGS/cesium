@@ -22,7 +22,8 @@
 //  - the rest (SMLib's build, Open CASCADE, the Slang toolchain, the STEP
 //    samples): `format.json` in the dataset's folder, `{ "format": n }`.
 // A folder with no record is read as format 1: what stores held before
-// records began. `adoptFormat1` writes that record for a store that is whole.
+// records began. `adoptFormat1` writes that record for a store that is whole,
+// so setup leaves every store recording its format.
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { FRAMES_DATA_FORMAT } from "../src/ephemeris/framesDataFormat.ts";
@@ -137,9 +138,6 @@ export function datasetStatus(name, directory) {
     };
   }
   const recorded = recordedFormat(name, directory);
-  if (recorded.found === format) {
-    return { name, state: "current", found: format, expected: format };
-  }
   if (recorded.missing && DATASETS[name].record.file !== FORMAT_FILE) {
     // A manifest is the dataset itself: no manifest, no dataset.
     return {
@@ -149,16 +147,19 @@ export function datasetStatus(name, directory) {
       message: `${label}: not built. Run \`${command}\`.`,
     };
   }
-  const found = recorded.found ?? 1;
+  // A store with no record was built before records began: format 1.
+  const legacy = recorded.missing || recorded.unrecorded;
+  const found = recorded.found ?? (legacy ? 1 : undefined);
+  if (found === format) {
+    return { name, state: "current", found: format, expected: format };
+  }
   const why =
     recorded.problem ??
-    (recorded.missing || recorded.unrecorded
-      ? `it records no format, from before formats were recorded; this code reads format ${format}`
-      : `built as format ${found}, this code reads format ${format}`);
+    `built as format ${found}${legacy ? " (it records none, from before formats were)" : ""}, this code reads format ${format}`;
   return {
     name,
     state: "outOfDate",
-    found,
+    found: found ?? 1,
     expected: format,
     message: `${label}: out of date, run \`${command}\` (${why}).`,
   };

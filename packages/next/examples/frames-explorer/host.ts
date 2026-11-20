@@ -1037,6 +1037,31 @@ const SETUP = "run `npm run setup` and restart the dev server";
 /** The dev server's grid endpoint (vite.config.ts): catalog grids only, each verified. */
 const GRID_BASE = "/proj-grids/";
 
+/**
+ * The format of the store's manifest this reads: the library's
+ * `FRAMES_DATA_FORMAT` (src/ephemeris/framesDataFormat.ts), which an example
+ * can't import (it uses the public API only); test/dataFormats.test.ts checks
+ * the two agree, and say the same sentence.
+ */
+export const STORE_FORMAT = 1;
+
+/** Why a manifest isn't in the format this reads, as one sentence, or `undefined`. A manifest with no `format` is format 1 (written before formats were recorded). */
+export function storeFormatProblem(manifest: unknown): string | undefined {
+  const recorded =
+    typeof manifest === "object" && manifest !== null
+      ? (manifest as { format?: unknown }).format
+      : undefined;
+  const format = recorded === undefined ? 1 : recorded;
+  if (format === STORE_FORMAT) {
+    return undefined;
+  }
+  const why =
+    typeof format === "number"
+      ? `built as format ${format}${recorded === undefined ? " (it records none, from before formats were)" : ""}, this code reads format ${STORE_FORMAT}`
+      : `its format is not a number, this code reads format ${STORE_FORMAT}`;
+  return `frames data: out of date, run \`npm run setup\` (${why}).`;
+}
+
 /** The store's manifest, or `MissingDataError` when the store isn't served. */
 async function fetchManifest(root: string): Promise<StoreManifest> {
   const url = `${root}manifest.json`;
@@ -1065,6 +1090,11 @@ async function fetchManifest(root: string): Promise<StoreManifest> {
     throw new MissingDataError(
       `${url} is not the frames data store's manifest (the server answered with another page); ${SETUP}`,
     );
+  }
+  // Built in another format than this code reads: say so, as setup being needed.
+  const problem = storeFormatProblem(parsed);
+  if (problem !== undefined) {
+    throw new MissingDataError(problem);
   }
   return parsed as StoreManifest;
 }

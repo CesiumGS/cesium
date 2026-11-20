@@ -11,7 +11,12 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  STORE_FORMAT,
+  storeFormatProblem,
+} from "../examples/frames-explorer/host.ts";
+import { loadFrameData } from "../src/ephemeris/loadFrameData.ts";
 import {
   parseManifest,
   SKY_PACK_BUILD_COMMAND,
@@ -68,14 +73,16 @@ describe("what a store records", () => {
     );
   });
 
-  it("is out of date when it records no format, or can't be parsed", () => {
+  it("reads a store with no record as format 1, what stores held before records began", () => {
     writeJson("manifest.json", { span: [2000, 2050], files: [] });
-    expect(datasetStatus("frames", root)).toMatchObject({
-      state: "outOfDate",
-      message: expect.stringContaining(
-        "frames data: out of date, run `npm run setup`",
-      ),
-    });
+    expect(datasetStatus("frames", root).state).toBe(
+      DATASETS.frames.format === 1 ? "current" : "outOfDate",
+    );
+    // A pack from before format 2 has no escape: format 1 is not 2.
+    expect(datasetStatus("sky", root).state).toBe("outOfDate");
+  });
+
+  it("is out of date when its manifest can't be parsed", () => {
     writeFileSync(join(root, "manifest.json"), "{ not json");
     expect(datasetStatus("frames", root)).toMatchObject({
       state: "outOfDate",
@@ -91,9 +98,9 @@ describe("what a store records", () => {
     );
   });
 
-  it("reads a folder with no record as out of date until setup adopts it as format 1", () => {
+  it("reads a folder with no record as format 1, and setup writes that record", () => {
     mkdirSync(join(root, "build"));
-    expect(datasetStatus("occt", join(root, "build")).state).toBe("outOfDate");
+    expect(datasetStatus("occt", join(root, "build")).state).toBe("current");
     adoptFormat1("occt", join(root, "build"));
     expect(recordedFormat("occt", join(root, "build"))).toEqual({ found: 1 });
     // Format 1 is what it is: current while this code reads 1, and older the
@@ -131,8 +138,10 @@ describe("what a store records", () => {
     expect(framesDataFormatProblem({ format: FRAMES_DATA_FORMAT })).toBe(
       undefined,
     );
-    expect(framesDataFormatProblem({ files: [] })).toBe(
-      "frames data: out of date, run `npm run setup` (it records no format, from before formats were recorded; this code reads format 1).",
+    // No `format`: written before formats were recorded, so format 1.
+    expect(framesDataFormatProblem({ files: [] })).toBe(undefined);
+    expect(framesDataFormatProblem({ format: "1" })).toBe(
+      "frames data: out of date, run `npm run setup` (its format is not a number, this code reads format 1).",
     );
     expect(framesDataFormatProblem({ format: 0 })).toBe(
       "frames data: out of date, run `npm run setup` (built as format 0, this code reads format 1).",
@@ -140,6 +149,51 @@ describe("what a store records", () => {
     // Both readers agree with the registry.
     expect(DATASETS.frames.format).toBe(FRAMES_DATA_FORMAT);
     expect(DATASETS.sky.format).toBe(SKY_PACK_FORMAT);
+  });
+});
+
+describe("the frames data reader", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+  const serving = (manifest: unknown) =>
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(JSON.stringify(manifest))),
+    );
+
+  it("says a store built in another format is out of date, naming the dataset and the command", async () => {
+    serving({ format: 0, files: [] });
+    await expect(loadFrameData("/frames-data/")).rejects.toThrow(
+      "frames data: out of date, run `npm run setup` (built as format 0, this code reads format 1).",
+    );
+    serving({ format: 2, files: [] });
+    await expect(loadFrameData("/frames-data/")).rejects.toThrow(
+      "built as format 2, this code reads format 1",
+    );
+  });
+
+  it("is read the same way by the frames explorer, which can't import the library's check", () => {
+    expect(STORE_FORMAT).toBe(FRAMES_DATA_FORMAT);
+    for (const manifest of [
+      {},
+      { format: 1 },
+      { format: 0 },
+      { format: 2 },
+      { format: "1" },
+      null,
+    ]) {
+      expect(storeFormatProblem(manifest)).toBe(
+        framesDataFormatProblem(manifest),
+      );
+    }
+  });
+
+  it("reads a manifest with no format as format 1: it fails on what it lacks, not on its age", async () => {
+    serving({ files: [] });
+    await expect(loadFrameData("/frames-data/")).rejects.not.toThrow(
+      "out of date",
+    );
   });
 });
 
