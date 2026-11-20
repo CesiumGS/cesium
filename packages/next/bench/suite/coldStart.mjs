@@ -178,11 +178,15 @@ export function analyzeColdStart({ marks, resources, devices }) {
       MODULE.test(r.name) && (adapter === undefined || r.startTime < adapter),
   );
   const frameData = page.filter((r) => FRAME_DATA.test(r.name));
-  // Data asked for again (modules and WebAssembly are asked for once per
-  // worker, which is expected).
+  // Data asked for again before the first frame (modules and WebAssembly
+  // are asked for once per worker, which is expected).
   const seen = new Map();
+  const before = marks.firstFrame ?? Infinity;
   for (const r of page.filter(
-    (x) => !MODULE.test(x.name) && !/\.wasm(\?|$)/.test(x.name),
+    (x) =>
+      x.startTime < before &&
+      !MODULE.test(x.name) &&
+      !/\.wasm(\?|$)/.test(x.name),
   )) {
     seen.set(r.name, (seen.get(r.name) ?? 0) + 1);
   }
