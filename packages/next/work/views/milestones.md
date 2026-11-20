@@ -589,8 +589,8 @@ CS-695 Every package has its API reference [Planned], under CS-615 Packaging and
 
 CS-722 Benchmark results are shared across machines, and dyno is one command [Planned], under CS-389 Dyno as the development harness
   outcome: Every run records its device, configuration and machine state; results from every machine sit in storage dyno manages, and Trends, charts and studies compare devices; and dyno is one non-interactive command that people and hitld call.
-  constraints: 2 of 15 done
-  unmet: c1 a dev run from a worktree records purpose, item, study, worktree, base, machine, servedFrom and ID. `--purpose baseline` is refused from a dirty tree or a feature branch. Two runs started together run one after the other. (open: CS-390; check not passed)
+  constraints: 3 of 15 done
+  unmet: c1 a dev run from a worktree records purpose, item, study, worktree, base, machine, servedFrom and ID. `--purpose baseline` is refused from a dirty tree or a feature branch. Two runs started together run one after the other. (check not passed)
   unmet: c2 `npx dyno` covers what `cli.mjs` and `bench/run.mjs` do. Every command prints JSON with `api_version` under `--json`. `dyno status --json` reports busy, waiting-for-quiet or quiet. The old entry points still work, and `dyno data status` names any out-of-date dataset and its fix, and dyno won't measure on one. (open: CS-721; check not passed)
   unmet: c3 a run on any device records its device, configuration and state. A power-source switch changes neither the device nor its Trends series (tested). No identity field holds a host name, user name, serial number or network address (tested). (open: CS-733; check not passed)
   unmet: c4 runs made on two devices appear in each other's Dyno after one sync, with screenshots fetched when opened. No object is ever rewritten. Uploads never run during a measurement (tested; the owner checks once on two real devices). (open: CS-734; check not passed)
@@ -603,8 +603,8 @@ CS-722 Benchmark results are shared across machines, and dyno is one command [Pl
 
 CS-751 The owner's views answer what needs me, what's on track and what's wrong [Planned], under CS-389 Dyno as the development harness
   outcome: The Work page opens on a release's remaining milestones and the gates holding it, shows only the graph's exceptions, draws the path to any target, says what changed, shows projects as bets, orders work without a slot setting, makes each proposal a clear call, shows how well the system and the owner work together, and keeps Your move calm.
-  constraints: 0 of 9 done
-  unmet: not linked to a clause yet (open: CS-744, CS-745, CS-746, CS-747, CS-748, CS-749, CS-750, CS-752, CS-753; check not passed)
+  constraints: 1 of 9 done
+  unmet: not linked to a clause yet (open: CS-745, CS-746, CS-747, CS-748, CS-749, CS-750, CS-752, CS-753; check not passed)
   to shape: done_when; check; link CS-744, CS-745, CS-746, CS-747, CS-748, CS-749, CS-750, CS-752, CS-753 to a clause
 
 CS-1 Renderers and engine profiles [Dropped]

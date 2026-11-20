@@ -500,12 +500,6 @@ CS-197 Ray queries and path tracing
         CS-348 A GPU viewshed
 
 CS-389 Dyno as the development harness
-  CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
-      ← CS-390 Run identity and the machine-wide run lock
-  CS-392  Finding runs from the terminal (`runs`, `show`, `pin`)
-      ← CS-390 Run identity and the machine-wide run lock
-  CS-393  The settings registry and multi-axis sweeps
-      ← CS-390 Run identity and the machine-wide run lock
   CS-394  Example scenes and the development metrics
       ← CS-393 The settings registry and multi-axis sweeps
   CS-395  Reference images and the sweep view
@@ -517,40 +511,24 @@ CS-389 Dyno as the development harness
   CS-397  Image checks for development scenes and sweeps
       ← CS-394 Example scenes and the development metrics
         CS-395 Reference images and the sweep view
-  CS-398  Recordings as runs
-      ← CS-390 Run identity and the machine-wide run lock
-  CS-399  Test results in Dyno: the vitest reporter and the Tests view
-      ← CS-390 Run identity and the machine-wide run lock
-  CS-400  Archives: export and import (the manual fallback)
-      ← CS-390 Run identity and the machine-wide run lock
   CS-401  Lab pages and their results in the store
-      ← CS-390 Run identity and the machine-wide run lock
-        CS-394 Example scenes and the development metrics
+      ← CS-394 Example scenes and the development metrics
   CS-402  "Measuring with Dyno" in AGENTS.md, and its skill
-      ← CS-390 Run identity and the machine-wide run lock
-        CS-392 Finding runs from the terminal (`runs`, `show`, `pin`)
+      ← CS-392 Finding runs from the terminal (`runs`, `show`, `pin`)
         CS-404 Studies: the model, the files and the commands
-  CS-404  Studies: the model, the files and the commands
-      ← CS-390 Run identity and the machine-wide run lock
   CS-405  The Studies page
       ← CS-395 Reference images and the sweep view
         CS-404 Studies: the model, the files and the commands
-  CS-406  The local certificate authority, the hub and pairing
-      ← CS-390 Run identity and the machine-wide run lock
   CS-407  The runner and remote runs
-      ← CS-390 Run identity and the machine-wide run lock
-        CS-406 The local certificate authority, the hub and pairing
+      ← CS-406 The local certificate authority, the hub and pairing
   CS-408  The device lab
       ← CS-394 Example scenes and the development metrics
         CS-404 Studies: the model, the files and the commands
         CS-407 The runner and remote runs
   CS-518  A space switch in Dyno's rail: the engine and the work
       ← CS-517 The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
-  CS-721  A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
-      ← CS-390 Run identity and the machine-wide run lock
   CS-733  Each run records its device, configuration and state
-      ← CS-390 Run identity and the machine-wide run lock
-        CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
+      ← CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
   CS-734  A sealed, content-addressed layout for benchmark results, local first
       ← CS-733 Each run records its device, configuration and state
         CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
@@ -572,22 +550,6 @@ CS-389 Dyno as the development harness
   CS-740  A verdict says whether it carries to another hardware class
       ← CS-739 Studies across devices: noise floors per hardware class, pooling, and the health bar
         CS-394 Example scenes and the development metrics
-  CS-745  A Health view lists the work graph's exceptions, each with a proposed fix
-      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
-  CS-746  A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates
-      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
-  CS-747  A Since-you-last-looked view shows scope changes and answers since a chosen point
-      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
-  CS-748  The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions
-      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
-  CS-749  The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting
-      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
-  CS-750  The Proposals view says why each item is proposed, and offers commit, hold or drop
-      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
-  CS-752  Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them
-      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
-  CS-753  "Your move" gets a calmer layout: fewer, larger, ranked entries
-      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
 
 CS-18 The work tracker
   CS-530  Release 2.0.0-alpha.1
@@ -786,5 +748,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-261 blocked
+244 blocked
 ```

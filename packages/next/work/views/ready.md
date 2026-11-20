@@ -193,12 +193,27 @@ CS-199 Dyno hardening, packaging and CI
   CS-583  The casterLoop slow-orbit test holds under full-suite load
 
 CS-389 Dyno as the development harness
-  CS-390  Run identity and the machine-wide run lock
+  CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
+  CS-392  Finding runs from the terminal (`runs`, `show`, `pin`)
+  CS-393  The settings registry and multi-axis sweeps
+  CS-398  Recordings as runs
+  CS-399  Test results in Dyno: the vitest reporter and the Tests view
+  CS-400  Archives: export and import (the manual fallback)
+  CS-404  Studies: the model, the files and the commands
+  CS-406  The local certificate authority, the hub and pairing
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
   CS-714  decision: Reaching a 500 ms cold start: which engine-side work
   CS-715  decision: How the cold-start check runs from here on
   CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands
-  CS-744  The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
+  CS-721  A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
+  CS-745  A Health view lists the work graph's exceptions, each with a proposed fix
+  CS-746  A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates
+  CS-747  A Since-you-last-looked view shows scope changes and answers since a chosen point
+  CS-748  The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions
+  CS-749  The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting
+  CS-750  The Proposals view says why each item is proposed, and offers commit, hold or drop
+  CS-752  Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them
+  CS-753  "Your move" gets a calmer layout: fewer, larger, ranked entries
 
 CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
@@ -247,5 +262,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-176 ready
+191 ready
 ```

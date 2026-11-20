@@ -875,7 +875,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 20 of 62 done, 6 ready, 35 blocked, 1 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 24 of 64 done, 21 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -913,7 +913,7 @@ Milestone: Dyno switches between the engine and the work (CS-519, Planned)
 
 Milestone: Benchmark results are shared across machines, and dyno is one command (CS-722, Planned)
 
-- [ ] CS-390 Run identity and the machine-wide run lock. Needs nothing.
+- [x] CS-390 Run identity and the machine-wide run lock. Done.
 - [ ] CS-393 The settings registry and multi-axis sweeps. Needs CS-390.
 - [ ] CS-394 Example scenes and the development metrics. Needs CS-393.
 - [ ] CS-404 Studies: the model, the files and the commands. Needs CS-390 and CS-687.
@@ -930,7 +930,7 @@ Milestone: Benchmark results are shared across machines, and dyno is one command
 
 Milestone: The owner's views answer what needs me, what's on track and what's wrong (CS-751, Planned)
 
-- [ ] CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it. Needs nothing.
+- [x] CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it. Done.
 - [ ] CS-745 A Health view lists the work graph's exceptions, each with a proposed fix. Needs CS-744.
 - [ ] CS-746 A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates. Needs CS-744.
 - [ ] CS-747 A Since-you-last-looked view shows scope changes and answers since a chosen point. Needs CS-744.
@@ -962,6 +962,8 @@ No milestone
 - [x] CS-741 decision: Merge CS-706, Dyno's cold-start run and the viewer's fixes. Done.
 - [x] CS-743 Main's npm test exits 0 again: the shared manifest load leaves no unhandled rejection when the signal is already aborted. Done.
 - [x] CS-754 decision: Merge CS-743, main's npm test exits 0 again. Done.
+- [x] CS-756 decision: Merge CS-390, run identity and the machine-wide run lock. Done.
+- [x] CS-757 decision: Merge CS-744, the Release view and the Work page's tab shell. Done.
 
 ### The public API reviews
 

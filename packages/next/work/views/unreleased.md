@@ -50,11 +50,13 @@ CS-188 Earth to Moon (frames 5c to 5h)
   CS-201  Clamping, heights, models, point sources and picks per body
 
 CS-389 Dyno as the development harness
+  CS-390  Run identity and the machine-wide run lock
   CS-403  Dyno's navigation rail, regrouped by what people come to do
   CS-706  Dyno's viewer starts drawing within half a second on a cold browser again
   CS-707  Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected
   CS-717  Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability
   CS-743  Main's npm test exits 0 again: the shared manifest load leaves no unhandled rejection when the signal is already aborted
+  CS-744  The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
 
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
@@ -69,5 +71,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-42 merged item(s) not in a release
+44 merged item(s) not in a release
 ```

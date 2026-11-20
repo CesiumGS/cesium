@@ -540,7 +540,7 @@ graph LR
     CS_583["CS-583 The casterLoop slow-orbit test holds under full-suite load"]:::open
   end
   subgraph CS_389["Dyno as the development harness"]
-    CS_390["CS-390 Run identity and the machine-wide run lock"]:::open
+    CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
     CS_391["CS-391 Purpose, branch, item and study in Trends, Runs, Compare and Al"]:::open
     CS_392["CS-392 Finding runs from the terminal ('runs', 'show', 'pin')"]:::open
     CS_393["CS-393 The settings registry and multi-axis sweeps"]:::open
@@ -592,7 +592,7 @@ graph LR
     CS_740["CS-740 A verdict says whether it carries to another hardware class"]:::open
     CS_741["CS-741 Merge CS-706, Dyno's cold-start run and the viewer's fixes"]:::done
     CS_743["CS-743 Main's npm test exits 0 again: the shared manifest load leaves "]:::done
-    CS_744["CS-744 The Work page's roadmap opens on a Release view: what's left in"]:::open
+    CS_744["CS-744 The Work page's roadmap opens on a Release view: what's left in"]:::done
     CS_745["CS-745 A Health view lists the work graph's exceptions, each with a pr"]:::open
     CS_746["CS-746 A Path view shows only what lies upstream of a chosen target: i"]:::open
     CS_747["CS-747 A Since-you-last-looked view shows scope changes and answers si"]:::open
@@ -602,6 +602,8 @@ graph LR
     CS_752["CS-752 Flow answers how well the system and the owner work together: c"]:::open
     CS_753["CS-753 'Your move' gets a calmer layout: fewer, larger, ranked entries"]:::open
     CS_754["CS-754 Merge CS-743, main's npm test exits 0 again"]:::done
+    CS_756["CS-756 Merge CS-390, run identity and the machine-wide run lock"]:::done
+    CS_757["CS-757 Merge CS-744, the Release view and the Work page's tab shell"]:::done
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open

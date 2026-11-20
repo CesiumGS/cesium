@@ -100,7 +100,7 @@ CS-199 Dyno hardening, packaging and CI [Planned], led by owner
   waits on: nothing open
   waited on by: CS-18 The work tracker (2); CS-628 Sandcastle as 2.0's gallery (1)
 CS-389 Dyno as the development harness [Planned], led by owner
-  20 of 62 done, 6 ready, 35 blocked, 1 proposed
+  24 of 64 done, 21 ready, 18 blocked, 1 proposed
   waits on: nothing open
   waited on by: CS-195 Benchmarks, parity and image regression (2); CS-18 The work tracker (5)
 CS-437 The public API reviews [Planned], led by owner
