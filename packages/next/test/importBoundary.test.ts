@@ -138,8 +138,22 @@ function edgesOf(file: string): Edge[] {
  * and re-exports, dynamic `import("…")`, and `import("…").T` type nodes.
  */
 function edgesOfText(file: string, text: string): Edge[] {
+  return importsOfText(file, text).map((i) => i.edge);
+}
+
+/** `edgesOfText`'s edges, each with the line (from 1) it is written on. */
+function importsOfText(
+  file: string,
+  text: string,
+): { edge: Edge; line: number }[] {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest);
-  const edges: Edge[] = [];
+  const edges: { edge: Edge; line: number }[] = [];
+  let at: ts.Node = source;
+  const push = (edge: Edge) =>
+    edges.push({
+      edge,
+      line: source.getLineAndCharacterOfPosition(at.getStart(source)).line + 1,
+    });
   const add = (specifier: string, typeOnly: boolean, dynamic = false) => {
     if (specifier === SELF || specifier.startsWith(`${SELF}/`)) {
       // The package's own entry point, by name: the file its `exports` names.
@@ -148,7 +162,7 @@ function edgesOfText(file: string, text: string): Edge[] {
       if (target === undefined) {
         throw new Error(`${file}: ${specifier} is not an entry point`);
       }
-      edges.push({
+      push({
         to: target.replace(/^\.\//, ""),
         typeOnly,
         ...(dynamic ? { dynamic: true as const } : {}),
@@ -164,9 +178,10 @@ function edgesOfText(file: string, text: string): Edge[] {
       "\\",
       "/",
     );
-    edges.push(dynamic ? { to, typeOnly, dynamic } : { to, typeOnly });
+    push(dynamic ? { to, typeOnly, dynamic } : { to, typeOnly });
   };
   const visit = (node: ts.Node) => {
+    at = node;
     if (
       ts.isImportDeclaration(node) &&
       ts.isStringLiteral(node.moduleSpecifier)
@@ -447,10 +462,11 @@ it("resolves each published name to the file that declares it", () => {
 }, 30_000);
 
 // Layers inside the core (docs/design/layers-engine-renderer-backend.md): content, scene, renderer and
-// GPU. Assigned by file, like the rest. Content must not reach the renderer,
-// the GPU layer or the classes that hold them; the renderer may not reach
-// content's internals.
-type CoreTier = "gpu" | "renderer" | "scene" | "content";
+// GPU, and a second renderer's tier, `webgl2` (docs/superpowers/plans/2026-11-13-webgl2-renderer.md,
+// "Where it sits"). Assigned by file, like the rest. Content must not reach
+// the renderer, the GPU layer or the classes that hold them; the renderer may
+// not reach content's internals.
+type CoreTier = "gpu" | "renderer" | "scene" | "content" | "webgl2";
 
 /** Whole classes that give access to both sides. Content uses `DrawSink`. */
 const WHOLES = new Set([
@@ -460,6 +476,9 @@ const WHOLES = new Set([
 ]);
 
 function tierOf(file: string): CoreTier | undefined {
+  if (file.startsWith("src/webgl2/")) {
+    return "webgl2";
+  }
   if (file.startsWith("src/gpu/")) {
     return "gpu";
   }
@@ -668,6 +687,82 @@ it("the renderer reaches content only where named", () =>
   expect(
     tierViolations("renderer", (to) => tierOf(to) === "content").sort(),
   ).toEqual(RENDERER_READS_CONTENT));
+/**
+ * What a `webgl2` file may not import, as "<file>:<line> → <to>": anything
+ * but the scene, the utilities and its own tier. So no WebGPU renderer
+ * (`src/render/`, `src/shaders/`), no GPU layer (`src/gpu/`) and no
+ * content internals.
+ */
+function webgl2Refusals(file: string, text: string): string[] {
+  return importsOfText(file, text)
+    .filter(({ edge }) => {
+      const tier = tierOf(edge.to);
+      return !(
+        tier === "webgl2" ||
+        tier === "scene" ||
+        layerOf(edge.to) === "utilities"
+      );
+    })
+    .map(({ edge, line }) => `${file}:${line} → ${edge.to}`);
+}
+
+/** WebGPU's type names in `text` (`GPUDevice`, `GPUBuffer`, …), each with its line. */
+function webgpuTypeNames(file: string, text: string): string[] {
+  return [...text.matchAll(/\bGPU[A-Z]\w*/g)].map(
+    (m) => `${file}:${text.slice(0, m.index).split("\n").length} ${m[0]}`,
+  );
+}
+
+const webgl2Files = files.filter((f) => tierOf(f) === "webgl2");
+
+it("the webgl2 tier imports only the scene, the utilities and itself", () =>
+  expect(
+    webgl2Files.flatMap((f) =>
+      webgl2Refusals(f, readFileSync(join(root, f), "utf8")),
+    ),
+  ).toEqual([]));
+it("the webgl2 tier names no WebGPU type", () =>
+  expect(
+    webgl2Files.flatMap((f) =>
+      webgpuTypeNames(f, readFileSync(join(root, f), "utf8")),
+    ),
+  ).toEqual([]));
+it("no other tier imports the webgl2 tier, but the engine's device choice, dynamically", () => {
+  const found = files
+    .filter((f) => tierOf(f) !== "webgl2")
+    .flatMap((f) =>
+      edgesOf(f)
+        .filter((edge) => tierOf(edge.to) === "webgl2")
+        .filter(
+          (edge) => !(f === "src/scene/Engine.ts" && edge.dynamic === true),
+        )
+        .map((edge) => `${f} → ${edge.to}`),
+    );
+  expect(found).toEqual([]);
+});
+it("refuses a webgl2 file that imports the WebGPU renderer, the GPU layer or content, naming the line", () => {
+  const file = "src/webgl2/sample.ts";
+  expect(tierOf(file)).toBe("webgl2");
+  const text = [
+    'import type { World } from "../scene/World.ts";',
+    'import { RECORD_WORDS } from "../render/layout.ts";',
+    'import type { GpuDevice } from "../gpu/GpuDevice.ts";',
+    'import { dot } from "../math/vec3.ts";',
+    'import type { Tile } from "../streaming/Tile.ts";',
+    'import { WorldGl } from "./WorldGl.ts";',
+    'const surface = import("../shaders/generated/surface.wgsl");',
+    "let device: GPUDevice;",
+  ].join("\n");
+  expect(webgl2Refusals(file, text)).toEqual([
+    "src/webgl2/sample.ts:2 → src/render/layout.ts",
+    "src/webgl2/sample.ts:3 → src/gpu/GpuDevice.ts",
+    "src/webgl2/sample.ts:5 → src/streaming/Tile.ts",
+    "src/webgl2/sample.ts:7 → src/shaders/generated/surface.wgsl",
+  ]);
+  expect(webgpuTypeNames(file, text)).toEqual([
+    "src/webgl2/sample.ts:8 GPUDevice",
+  ]);
+});
 it("scene data doesn't import rasterizer data", () => {
   // Every file of the scene side's state: what its tick keeps of a world, an
   // engine and a view, apart from what the renderer keeps.
