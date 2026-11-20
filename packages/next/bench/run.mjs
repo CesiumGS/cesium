@@ -131,6 +131,9 @@ const suites = {
   irWgsl: ["/bench/irWgsl.html?bench", "runIrWgsl"],
   // Driven through CDP by `allocSuite` below.
   alloc: ["/bench/alloc.html", "allocSetup"],
+  // A Viewer under React's StrictMode: one device, each frames-store file
+  // fetched once, a clean console (CS-708; needs the frames store).
+  strictMode: ["/bench/strictMode.html?bench", "runStrictMode"],
 };
 
 /**

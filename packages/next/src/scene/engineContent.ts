@@ -115,6 +115,11 @@ export async function addTileset(
     new URL(url, globalThis.location?.href).href,
     options,
   );
+  if (world.destroyed) {
+    // Its world went while it loaded (a viewer disposed mid-startup).
+    tileset.destroy();
+    throw new Error("addTileset: the world was destroyed while it loaded");
+  }
   engine.tilesets.push(tileset);
   engine.wake();
   return tileset;
@@ -138,6 +143,10 @@ export async function addTerrain(
     engine.scene.terrainLoader,
     { warnings: new Set() },
   );
+  if (world.destroyed) {
+    // Its world went while the layer loaded (a viewer disposed mid-startup).
+    throw new Error("addTerrain: the world was destroyed while it loaded");
+  }
   source.jobs = engine.scene.workers;
   return addGlobeSource(engine, world, source, options);
 }

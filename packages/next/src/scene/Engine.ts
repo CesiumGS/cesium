@@ -283,6 +283,50 @@ export interface GlobeOptions extends TilesetOptions {
   lights?: ImageryProvider | Promise<ImageryProvider | undefined>;
 }
 
+/**
+ * The engine: a WebGPU device with its pipelines, workers and sky, and the
+ * worlds and views drawn with them (`Engine.create`). Several views, and
+ * several `Viewer`s, can share one.
+ *
+ * Lifetime: make an engine or a viewer in an effect, destroy it in the
+ * effect's cleanup, and nothing more is needed when React's StrictMode or
+ * a fast refresh runs the effect, its cleanup and the effect again at once:
+ *
+ * ```ts
+ * useEffect(() => {
+ *   let canceled = false;
+ *   let viewer: Viewer | undefined;
+ *   void Viewer.create(container.current!, options).then((made) => {
+ *     if (canceled) made.destroy(); // the cleanup ran first
+ *     else viewer = made;
+ *   });
+ *   return () => {
+ *     canceled = true;
+ *     viewer?.destroy();
+ *   };
+ * }, []);
+ * ```
+ *
+ * - `destroy()` may come at any time after `create` resolves, while the
+ *   engine or viewer is still starting included: loads in flight stop
+ *   quietly (no console errors, no "device lost"), and nothing is left
+ *   behind (device, buffers, workers, listeners, observers).
+ * - A `create` still in flight can't be canceled: destroy what it gives
+ *   when it resolves, as above.
+ * - `Viewer.create` on a container whose previous viewer is still being
+ *   made waits for that one and takes over the engine it leaves (its
+ *   device, pipelines, workers and sky), so the effect's second run costs
+ *   no second device. A viewer's own engine is destroyed a task after the
+ *   viewer, unless another viewer takes it over first.
+ * - Frame catalogs made with a `signal` (the viewer's are) share their
+ *   frames store's loads: the second run fetches nothing again
+ *   (`FrameCatalogOptions.signal`).
+ * - A canvas passes from a destroyed engine to a new one: a `CanvasTarget`
+ *   on it configures its WebGPU context for the new engine's device. An
+ *   `OffscreenTarget` makes its texture again on the new device.
+ * - `Engine.create` alone, destroyed and made again, makes a second device:
+ *   to keep one, share the engine (`ViewerOptions.engine`, several views).
+ */
 export class Engine {
   /** @internal Rasterizer data: staging buffers, view targets, picks, pass descriptors. */
   readonly raster: EngineRaster = new EngineRaster();

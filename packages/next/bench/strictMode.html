@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>StrictMode Viewer</title>
+  </head>
+  <body>
+    <!-- The runner's entry (bench/run.mjs strictMode: runStrictMode). -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./strictMode.tsx";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runStrictMode");
+    </script>
+  </body>
+</html>

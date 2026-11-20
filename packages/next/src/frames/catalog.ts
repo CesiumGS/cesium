@@ -31,6 +31,7 @@ import { BUILT_IN_ACCURACY } from "./frameAccuracy.ts";
 import type { Frames } from "./frames.ts";
 import type { EarthOrientation } from "./providers/earthOrientation.ts";
 import type { EphemerisFrames } from "./providers/ephemeris.ts";
+import { sharedProviderLoad } from "./sharedLoads.ts";
 
 /** The built-in reference frames the catalog knows by name. */
 export type CatalogFrameName =
@@ -61,7 +62,14 @@ export interface FrameCatalogOptions {
    * `"/frames-data/"`), or frame data already loaded.
    */
   data?: string | FrameData;
-  /** Aborting cancels every load; the reference frames keep their stand-ins. */
+  /**
+   * Aborting cancels every load; the reference frames keep their stand-ins.
+   * With a signal, a store's loads are shared with the other catalogs over
+   * the same store that have one: a catalog made while another's load is in
+   * flight (a viewer disposed and made again at once, as React's StrictMode
+   * does) joins it instead of fetching again, and a shared load stops only
+   * once every catalog sharing it has aborted.
+   */
   signal?: AbortSignal;
   /** Called as each data file arrives (`loadFrameRoles`). */
   onProgress?: LoadProgress;
@@ -623,11 +631,28 @@ class Catalog implements FrameCatalog {
       };
     }
     const source = this.source;
+    // A store's loads are shared with the other catalogs over it that carry
+    // a signal (sharedLoads.ts): a viewer made again at once refetches
+    // nothing.
+    const signal = this.signal;
+    const fromStore = <T>(
+      load: (base: string, o: FrameDataLoadOptions) => Promise<T>,
+    ): ((base: string) => Promise<T>) =>
+      signal
+        ? (base) =>
+            sharedProviderLoad(
+              provider,
+              base,
+              signal,
+              options.onProgress,
+              (o) => load(base, o),
+            )
+        : (base) => load(base, options);
     if (provider === "earthOrientation") {
       const module = await import("./providers/earthOrientation.ts");
       const eo =
         typeof source === "string"
-          ? await module.loadEarthOrientation(source, options)
+          ? await fromStore(module.loadEarthOrientation)(source)
           : module.earthOrientationFrom(source);
       this.earthOrientation = eo;
       if (eo.leapSeconds !== this.leap) {
@@ -647,7 +672,7 @@ class Catalog implements FrameCatalog {
     const module = await import("./providers/ephemeris.ts");
     const ephemeris =
       typeof source === "string"
-        ? await module.loadEphemeris(source, options)
+        ? await fromStore(module.loadEphemeris)(source)
         : module.ephemerisFrom(source.ephemeris);
     this.ephemeris = ephemeris;
     return ephemeris.edges;

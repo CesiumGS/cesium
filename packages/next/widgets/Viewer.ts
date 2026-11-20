@@ -344,6 +344,8 @@ export class Viewer {
   private readonly ambientOcclusion: boolean;
   /** Aborted on `destroy`: stops the Moon map's loads (and its worker). */
   private readonly moonMapLoad = new AbortController();
+  /** Stops redrawing on the clock's changes (an application's clock outlives the viewer). */
+  private readonly offClock: () => void;
 
   private constructor(
     readonly container: HTMLElement,
@@ -351,13 +353,22 @@ export class Viewer {
     options: ViewerOptions,
     early: EarlyEndpoints = {},
     private readonly ownsEngine = true,
+    /** Its own engine's options, as `engineKey` writes them (parking, `destroy`). */
+    private readonly engineKey: string | undefined = undefined,
+    adopted = false,
   ) {
     this.state.early = early;
     this.engine = engine;
-    if (!ownsEngine) {
+    if (!ownsEngine || adopted) {
       // A shared engine's own settings as a new viewer expects them, not
       // as the last viewer left them (the sun and render mode follow).
       engine.environment.setSky(DEFAULT_SKY);
+    }
+    if (adopted) {
+      // A disposed viewer's engine, taken over (`Viewer.create`): its stars
+      // and Moon map go; this viewer's options set them again.
+      engine.setStarMap(null);
+      engine.setMoonMap(null);
     }
     this.policy = options.policy ?? "budgeted";
     this.state.globeKind = options.globe ?? "ellipsoid";
@@ -426,7 +437,9 @@ export class Viewer {
           : Promise.resolve(lights)
       ).catch(() => undefined);
     }
-    this.clock.events.on("change", () => this.engine.requestRender());
+    this.offClock = this.clock.events.on("change", () =>
+      this.engine.requestRender(),
+    );
     if (options.warningNotice !== false) {
       this.state.warnings_ = attachWarnings(container);
     }
@@ -569,10 +582,36 @@ export class Viewer {
     engine.start();
   }
 
-  /** A viewer filling `container` (made positioned if it isn't). */
+  /**
+   * A viewer filling `container` (made positioned if it isn't).
+   *
+   * Safe to call from an effect that its cleanup undoes, as React's
+   * StrictMode and fast refresh run them (create, dispose, create again):
+   * see "Lifetime" on `Engine`. A `create` on a container whose previous
+   * `create` is still in flight waits for that one to settle (and one task,
+   * for its caller to `destroy` it), then takes over the engine it left;
+   * the frames data both asked for is fetched once.
+   */
   static async create(
     container: HTMLElement,
     options: ViewerOptions = {},
+  ): Promise<Viewer> {
+    const before = starting.get(container);
+    const made = Viewer.start(container, options, before);
+    starting.set(container, made);
+    const settled = () => {
+      if (starting.get(container) === made) {
+        starting.delete(container);
+      }
+    };
+    made.then(settled, settled);
+    return made;
+  }
+
+  private static async start(
+    container: HTMLElement,
+    options: ViewerOptions,
+    before: Promise<unknown> | undefined,
   ): Promise<Viewer> {
     // The default globe's endpoints resolve while the device is created
     // (2.0's first request came 150 to 550 ms after 1.x's, r37).
@@ -601,11 +640,31 @@ export class Viewer {
         : undefined;
     const shared =
       options.engine instanceof Engine ? options.engine : undefined;
+    const key = shared
+      ? undefined
+      : engineKey(options.engine as EngineOptions | undefined);
     try {
+      if (before) {
+        // Another viewer is being made on this container: an effect run
+        // again (StrictMode, fast refresh). Its caller disposes it as it
+        // resolves, leaving its engine parked for this one.
+        await before.then(nextTask, nextTask);
+      }
+      const adopted = takeParked(key);
       const engine =
-        shared ?? (await Engine.create(options.engine as EngineOptions));
+        shared ??
+        adopted ??
+        (await Engine.create(options.engine as EngineOptions));
       await given;
-      return new Viewer(container, engine, options, early, !shared);
+      return new Viewer(
+        container,
+        engine,
+        options,
+        early,
+        !shared,
+        key,
+        adopted !== undefined,
+      );
     } catch (error) {
       // No viewer: the frames data it started loading isn't wanted.
       early.frames?.abort.abort();
@@ -974,7 +1033,7 @@ export class Viewer {
   async setSkyPack(
     url: string | URL | null,
   ): Promise<SkyPackManifest | undefined> {
-    if (!this.starsOn) {
+    if (!this.starsOn || this.state.destroyed) {
       return undefined;
     }
     if (url === null) {
@@ -1175,8 +1234,19 @@ export class Viewer {
     return this.state.orbit_ ? "orbit" : "globe";
   }
 
+  /**
+   * Removes the viewer: its canvas, controls and listeners, and its loads
+   * (stopped). Its own engine is destroyed a task later unless a viewer made
+   * on the same engine options takes it over first (see "Lifetime" on
+   * `Engine`); a shared engine loses only this viewer's world and views.
+   * Once is enough; again does nothing.
+   */
   destroy(): void {
+    if (this.state.destroyed) {
+      return;
+    }
     this.state.destroyed = true;
+    this.offClock();
     this.moonMapLoad.abort();
     this.state.offFrames?.();
     this.state.framesAbort.abort();
@@ -1188,15 +1258,83 @@ export class Viewer {
     this.state.time_?.dispose();
     this.state.secondController?.dispose();
     this.controller.dispose();
-    if (this.ownsEngine) {
+    if (this.ownsEngine && this.engineKey === undefined) {
       this.engine.destroy();
     } else {
       // Its world with everything in it (tilesets, the views drawing it).
       this.engine.removeWorld(this.world);
       this.target.destroy();
+      if (this.ownsEngine) {
+        park(this.engine, this.engineKey!);
+      }
     }
     this.canvas.remove();
   }
+}
+
+/** `Viewer.create` calls in flight, by container. */
+const starting = new WeakMap<HTMLElement, Promise<Viewer>>();
+
+/** An engine a destroyed viewer left, until the next task. */
+interface Parked {
+  readonly engine: Engine;
+  readonly key: string;
+  readonly timer: ReturnType<typeof setTimeout>;
+}
+const parked: Parked[] = [];
+
+/** One task: what `setTimeout(0)` scheduled before it has run. */
+const nextTask = (): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, 0));
+
+/**
+ * Engine options as a key a parked engine is matched by; undefined for
+ * options that don't serialize (a function), whose engines aren't parked.
+ */
+function engineKey(options: EngineOptions | undefined): string | undefined {
+  try {
+    return JSON.stringify(options ?? {}, (_key, value: unknown) => {
+      if (typeof value === "function") {
+        throw new TypeError("not serializable");
+      }
+      return value;
+    });
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Stops a destroyed viewer's engine and keeps it for one task: a viewer
+ * made with the same engine options in that time takes it over (its
+ * device, pipelines, workers and sky), else it is destroyed.
+ */
+function park(engine: Engine, key: string): void {
+  engine.stop();
+  const entry: Parked = {
+    engine,
+    key,
+    timer: setTimeout(() => {
+      const index = parked.indexOf(entry);
+      if (index >= 0) {
+        parked.splice(index, 1);
+        engine.destroy();
+      }
+    }, 0),
+  };
+  parked.push(entry);
+}
+
+/** The engine parked under `key`, taken (its destruction canceled). */
+function takeParked(key: string | undefined): Engine | undefined {
+  const index =
+    key === undefined ? -1 : parked.findIndex((entry) => entry.key === key);
+  if (index < 0) {
+    return undefined;
+  }
+  const [entry] = parked.splice(index, 1);
+  clearTimeout(entry!.timer);
+  return entry!.engine;
 }
 
 /**

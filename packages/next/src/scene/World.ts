@@ -479,14 +479,15 @@ export class World {
       this.warps.routes.tableReplaced();
     });
     createCullBindGroup(this);
-    this.raster.imageryPlaceholder = device
-      .createTexture({
-        label: "world.imagery.placeholder",
-        size: [1, 1, 1],
-        format: "rgba8unorm",
-        usage: GPUTextureUsage.TEXTURE_BINDING,
-      })
-      .createView({ dimension: "2d-array" });
+    this.imageryPlaceholder = device.createTexture({
+      label: "world.imagery.placeholder",
+      size: [1, 1, 1],
+      format: "rgba8unorm",
+      usage: GPUTextureUsage.TEXTURE_BINDING,
+    });
+    this.raster.imageryPlaceholder = this.imageryPlaceholder.createView({
+      dimension: "2d-array",
+    });
     this.raster.imageryView = this.raster.imageryPlaceholder;
     this.raster.imagerySampler = device.createSampler({
       label: "world.imagery",
@@ -2186,6 +2187,9 @@ export class World {
       this.raster.recordsU32[index * RECORD_WORDS + CASTER_MASK_WORD]!;
   }
 
+  /** What `raster.imageryPlaceholder` views: destroyed with the world. */
+  private readonly imageryPlaceholder: GPUTexture;
+
   /** The world was destroyed (`destroy`): its GPU resources are gone. */
   get destroyed(): boolean {
     return this.destroyed_;
@@ -2228,5 +2232,7 @@ export class World {
     ]) {
       buffer.destroy();
     }
+    // Not left on a device that lives on (a shared engine, a parked one).
+    this.imageryPlaceholder.destroy();
   }
 }

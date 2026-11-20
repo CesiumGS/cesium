@@ -83,10 +83,20 @@ export async function setGlobe(
     const ion = await (viewer.state.early.terrain ??
       resolveIonAsset(1, tokenOptions(viewer)));
     viewer.state.early.terrain = undefined; // used once: later switches resolve anew
-    next = await viewer.engine.addTerrain(viewer.world, ion.url, {
-      headers: ion.headers,
-      ...options,
-    });
+    if (viewer.state.destroyed) {
+      return; // disposed mid-startup: nothing to add it to
+    }
+    try {
+      next = await viewer.engine.addTerrain(viewer.world, ion.url, {
+        headers: ion.headers,
+        ...options,
+      });
+    } catch (error) {
+      if (viewer.state.destroyed) {
+        return; // its world went while the layer loaded
+      }
+      throw error;
+    }
     attributions = ion.attributions;
   } else if (kind === "ellipsoid") {
     next = viewer.engine.addEllipsoid(viewer.world, options);
