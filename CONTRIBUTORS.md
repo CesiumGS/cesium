@@ -481,4 +481,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 - [Rayan Abdul Cader](https://github.com/minutechreview)
 - [Yu Cheng](https://github.com/KtzeAbyss)
 - [Peter Mayrhofer](https://github.com/mapeGeoinfo)
+- [CalamityXeroc](https://github.com/CalamityXeroc)
 - [Mike](https://github.com/dev1837457)
