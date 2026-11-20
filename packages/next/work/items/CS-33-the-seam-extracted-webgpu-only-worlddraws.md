@@ -2,9 +2,10 @@
 id: CS-33
 title: The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-9
+claimed_by: orch-11-CS-33
 touches: [packages/next/src/render/**, packages/next/src/scene/**, packages/next/test/fakeGpu.ts]
 tier_override: 3
 ---
