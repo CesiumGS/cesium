@@ -24,6 +24,7 @@ export interface ModelContextType {
   currentModel: ModelSelection | null;
   setCurrentModel: (selection: ModelSelection) => void;
   refreshModels: () => void;
+  resetModelSelection: () => void;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -125,6 +126,16 @@ function savePreferredModelSelection(selection: ModelSelection): void {
   }
 }
 
+function clearPreferredModelSelection(): void {
+  try {
+    persistentModelStorage?.removeItem(LAST_MODEL_SELECTION_STORAGE_KEY);
+    // Also drop any legacy copy so it is not migrated back on the next load.
+    legacySessionModelStorage?.removeItem(LAST_MODEL_SELECTION_STORAGE_KEY);
+  } catch (error) {
+    console.warn("Failed to clear last picked model from storage:", error);
+  }
+}
+
 function getInitialModelSelection(): ModelSelection | null {
   const storedSelection = getStoredPreferredModelSelection();
   if (
@@ -197,14 +208,20 @@ export function ModelProvider({ children }: { children: ReactNode }) {
     savePreferredModelSelection(selection);
   }, []);
 
+  const resetModelSelection = useCallback(() => {
+    clearPreferredModelSelection();
+    refreshModels();
+  }, [refreshModels]);
+
   const contextValue = useMemo(
     () => ({
       models,
       currentModel,
       setCurrentModel,
       refreshModels,
+      resetModelSelection,
     }),
-    [models, currentModel, setCurrentModel, refreshModels],
+    [models, currentModel, setCurrentModel, refreshModels, resetModelSelection],
   );
 
   return (
