@@ -24,6 +24,7 @@
 - `CircleVectorPrimitive` can style each point individually, e.g. `radius: (point) => ...`, and `filter` selects which points are drawn. [#13942](https://github.com/CesiumGS/cesium/pull/13942)
 - Added experimental feature layers for showing and hiding named sets of features: `Cesium3DTileset.featureLayers` for tilesets (using 3D Tiles 1.1 groups), and `GeoJsonFeatureLayerProvider` (a `FeatureLayerProvider`) for standalone GeoJSON layers. [#13921](https://github.com/CesiumGS/cesium/pull/13921)
 - Added experimental `MVTDataProvider.featureLayers`, with one feature layer per MVT source layer. [#14055](https://github.com/CesiumGS/cesium/pull/14055)
+- Added an `includeProperties` option to `IonAssetElementService.listElements` to return selected properties with each element.
 
 #### Fixes :wrench:
 

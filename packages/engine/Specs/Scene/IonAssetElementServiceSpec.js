@@ -189,6 +189,76 @@ describe("Scene/IonAssetElementService", function () {
     ).toBeRejectedWithDeveloperError();
   });
 
+  it("listElements sends includeProperties and adapts selected properties", async function () {
+    const getFetchedResource = mockFetchJson({
+      items: [
+        {
+          id: "8796093022212",
+          label: "Exterior Wall",
+          properties: {
+            "Dimensions.Height": {
+              displayValue: "3.5 m",
+              value: 3.5,
+              units: "Units:M",
+            },
+            "Category.Name": {
+              displayValue: null,
+              value: null,
+              units: null,
+            },
+          },
+        },
+        { id: "8796093022213", label: null, properties: {} },
+      ],
+      total: 2,
+    });
+
+    const result = await service.listElements({
+      includeProperties: ["Category.Name", "Dimensions.Height"],
+    });
+
+    const resource = getFetchedResource();
+    expect(resource.getUrlComponent(false)).toBe(
+      `https://example.com/v1/assets/${assetId}/elements`,
+    );
+    expect(resource.queryParameters).toEqual({
+      top: 100,
+      includeProperties: JSON.stringify(["Category.Name", "Dimensions.Height"]),
+    });
+    expect(result).toEqual({
+      items: [
+        {
+          id: "8796093022212",
+          label: "Exterior Wall",
+          properties: {
+            "Dimensions.Height": {
+              displayValue: "3.5 m",
+              value: 3.5,
+              units: "Units:M",
+            },
+            "Category.Name": {
+              displayValue: null,
+              value: null,
+              units: null,
+            },
+          },
+        },
+        { id: "8796093022213", label: null, properties: {} },
+      ],
+      total: 2,
+      continuationToken: undefined,
+    });
+  });
+
+  it("listElements validates includeProperties", async function () {
+    await expectAsync(
+      service.listElements({ includeProperties: "Dimensions.Height" }),
+    ).toBeRejectedWithDeveloperError();
+    await expectAsync(
+      service.listElements({ includeProperties: [1] }),
+    ).toBeRejectedWithDeveloperError();
+  });
+
   it("getElement requests and adapts one element", async function () {
     const getFetchedResource = mockFetchJson({ id: 42, label: "Door" });
 
