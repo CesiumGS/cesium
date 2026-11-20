@@ -2,10 +2,11 @@
 id: CS-567
 title: The protocol table classifies every member of api/surface.txt, not only the exported names
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-17
 project: CS-13
 needs: [CS-101]
+claimed_by: orch-11-CS-567
 touches: [packages/next/src/thread/protocol.ts, packages/next/scripts/surface.mjs, packages/next/test/threadProtocol.test.ts, packages/next/api/surface.txt]
 ---
 
