@@ -1,0 +1,128 @@
+name: sandcastle-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      commit_shas:
+        description: >-
+          Comma or newline-separated commit SHAs to cherry-pick onto cesium.com
+          in order (typically commits already merged to main)
+        required: true
+        type: string
+      dry_run:
+        description: Run validation only (do not push branch or open PR)
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: sandcastle-release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  prepare-release-pr:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: install node 22
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: npm install
+        run: npm install
+
+      - name: prepare branch from cesium.com
+        run: |
+          git fetch origin main cesium.com
+          BRANCH_NAME="sandcastle-website-only-release/${GITHUB_RUN_ID}"
+          echo "BRANCH_NAME=${BRANCH_NAME}" >> "$GITHUB_ENV"
+          git checkout -b "$BRANCH_NAME" origin/cesium.com
+
+      - name: cherry-pick selected commits
+        run: |
+          commits=$(echo "${{ inputs.commit_shas }}" | tr ',' ' ')
+          for sha in $commits; do
+            sha=$(echo "$sha" | xargs)
+            if [[ -z "$sha" ]]; then
+              continue
+            fi
+
+            if ! git merge-base --is-ancestor "$sha" origin/main; then
+              echo "Commit '$sha' is not reachable from origin/main."
+              exit 1
+            fi
+
+            git cherry-pick -x "$sha"
+          done
+
+      - name: enforce Sandcastle release scope
+        run: |
+          git diff --name-only origin/cesium.com...HEAD > changed_files.txt
+
+          if [[ ! -s changed_files.txt ]]; then
+            echo "No file changes detected after cherry-picks."
+            exit 1
+          fi
+
+          echo "Changed files:"
+          cat changed_files.txt
+
+          while IFS= read -r file; do
+            if [[ "$file" =~ ^packages/sandcastle/ ]] ||
+               [[ "$file" =~ ^Apps/Sandcastle2/ ]] ||
+               [[ "$file" == "scripts/buildSandcastle.js" ]]; then
+              continue
+            fi
+
+            echo "File '$file' is out of scope for sandcastle-only release."
+            echo "Allowed paths are limited to Sandcastle package/build inputs and this release guide."
+            exit 1
+          done < changed_files.txt
+
+      - name: run scoped safeguards
+        run: |
+          npm run build-ts
+          npm run build-sandcastle -- --outer-origin="https://sandcastle.cesium.com"
+
+      - name: create pull request into cesium.com
+        if: ${{ !inputs.dry_run }}
+        run: |
+          git push -u origin "$BRANCH_NAME"
+
+          cat > pr_body.md <<'EOF'
+          ## Summary
+
+          This PR prepares an out-of-band Sandcastle release by applying selected commits onto `cesium.com`.
+
+          ## Safeguards
+
+          - Started from `origin/cesium.com` (production baseline)
+          - Cherry-picked only selected commit SHAs from `main`
+          - Enforced file-scope guardrail for Sandcastle-only paths
+          - Ran `npm run build-ts`
+          - Ran `npm run build-sandcastle -- --outer-origin="https://sandcastle.cesium.com"`
+
+          ## Deployment
+
+          Merging this PR into `cesium.com` triggers `.github/workflows/prod.yml`, including deploy to `https://sandcastle.cesium.com`.
+          EOF
+
+          gh pr create \
+            --base cesium.com \
+            --head "$BRANCH_NAME" \
+            --title "Sandcastle release: selected changes (${GITHUB_RUN_ID})" \
+            --body-file pr_body.md
+
+      - name: dry run summary
+        if: ${{ inputs.dry_run }}
+        run: |
+          echo "Dry run complete. Branch not pushed and no PR created."
