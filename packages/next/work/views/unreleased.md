@@ -53,6 +53,7 @@ CS-389 Dyno as the development harness
   CS-706  Dyno's viewer starts drawing within half a second on a cold browser again
   CS-707  Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected
   CS-717  Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability
+  CS-743  Main's npm test exits 0 again: the shared manifest load leaves no unhandled rejection when the signal is already aborted
 
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
@@ -67,5 +68,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-40 merged item(s) not in a release
+41 merged item(s) not in a release
 ```

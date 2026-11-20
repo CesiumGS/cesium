@@ -4,7 +4,7 @@
 
 ### Engine profiles
 
-CS-8, Planned, led by owner: 3 of 19 done, 2 ready, 12 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](docs/superpowers/plans/2026-11-13-engine-profiles.md).
+CS-8, Planned, led by owner: 4 of 20 done, 2 ready, 12 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](docs/superpowers/plans/2026-11-13-engine-profiles.md).
 
 Milestone: Each view knows what the device supports and why (CS-466, Planned)
 
@@ -36,6 +36,7 @@ No milestone
 - [?] CS-367 Profiles later: measured step costs, a wider governor, a fidelity bias, host facts and storage. Proposed. Needs CS-26.
 - [?] CS-369 Importing an outside renderer's colour and depth. Proposed. Needs CS-23.
 - [x] CS-539 decision: How CS-20 reaches main while the merge queue cannot verify it. Done.
+- [x] CS-755 decision: Merge CS-22, paths in one place with the seam test. Done.
 
 ### The WebGL 2 renderer
 
@@ -164,7 +165,6 @@ Milestone: A headed run shows whether worker mode ticks smoother (CS-461, Planne
 Milestone: Loads and decodes run on Jobs (CS-462, Planned)
 
 - [ ] CS-87 Content decode with priorities and cancellation, onto `Jobs`. Needs CS-86.
-- [ ] CS-88 One-off engine loads onto `Jobs`. Needs CS-86.
 - [ ] CS-89 Dedicated worker groups onto `Jobs`. Needs CS-86.
 - [ ] CS-95 The inspector's Jobs section. Needs CS-87, CS-88 and CS-89.
 
@@ -197,6 +197,7 @@ Milestone: Apps run their own jobs (CS-509, Planned)
 No milestone
 
 - [x] CS-86 The first slice: `Jobs` behind `WorkerPool`. Done.
+- [ ] CS-88 One-off engine loads onto `Jobs`. Needs CS-86.
 
 ### The worker-mode façade
 
@@ -795,11 +796,14 @@ Milestone: Infrastructure and geoscience data shows in 2.0 (CS-534, Proposed)
 
 - [?] CS-337 Scalar fields on any geometry: values, colour ramps, legends and picks. Proposed. Needs CS-265 (Vector drawing and the styling language).
 - [?] CS-338 Per-element overrides at scale, through the styling language. Proposed. Needs CS-266 (Vector drawing and the styling language).
-- [ ] CS-339 Volumes: voxel grids, ray-marched or as isosurfaces. Needs nothing.
 - [?] CS-340 Printing to scale. Proposed. Needs CS-218 (Earth to Moon (frames 5c to 5h)).
-- [ ] CS-341 WebXR, including aligning a model with its site. Needs CS-275 (Content sources and formats) and CS-213 (Earth to Moon (frames 5c to 5h)).
 - [?] CS-342 The infrastructure and geoscience gallery examples. Proposed. Needs nothing.
 - [?] CS-343 Gallery: a vehicle's lidar over the design. Proposed. Needs CS-276 (Content sources and formats).
+
+No milestone
+
+- [ ] CS-339 Volumes: voxel grids, ray-marched or as isosurfaces. Needs nothing.
+- [ ] CS-341 WebXR, including aligning a model with its site. Needs CS-275 (Content sources and formats) and CS-213 (Earth to Moon (frames 5c to 5h)).
 
 ### Ray queries and path tracing
 
@@ -871,11 +875,10 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 18 of 52 done, 6 ready, 27 blocked, 1 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 20 of 62 done, 6 ready, 35 blocked, 1 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
-- [ ] CS-390 Run identity and the machine-wide run lock. Needs nothing.
 - [ ] CS-391 Purpose, branch, item and study in Trends, Runs, Compare and Alerts. Needs CS-390.
 - [ ] CS-392 Finding runs from the terminal (`runs`, `show`, `pin`). Needs CS-390.
 - [ ] CS-398 Recordings as runs. Needs CS-390.
@@ -884,8 +887,6 @@ Milestone: Every run says what it was for (CS-478, Planned)
 
 Milestone: Sweeps measure development cases (CS-479, Planned)
 
-- [ ] CS-393 The settings registry and multi-axis sweeps. Needs CS-390.
-- [ ] CS-394 Example scenes and the development metrics. Needs CS-393.
 - [ ] CS-395 Reference images and the sweep view. Needs CS-393 and CS-394.
 - [ ] CS-397 Image checks for development scenes and sweeps. Needs CS-394 and CS-395.
 - [ ] CS-401 Lab pages and their results in the store. Needs CS-390 and CS-394.
@@ -894,7 +895,6 @@ Milestone: Studies turn runs into verdicts (CS-480, Planned)
 
 - [ ] CS-396 The α study through Dyno (acceptance A). Needs CS-395 and CS-405.
 - [ ] CS-402 "Measuring with Dyno" in AGENTS.md, and its skill. Needs CS-390, CS-392 and CS-404.
-- [ ] CS-404 Studies: the model, the files and the commands. Needs CS-390 and CS-687.
 - [ ] CS-405 The Studies page. Needs CS-395, CS-403 and CS-404.
 - [x] CS-409 decision: Who records a study's verdict, and does a verdict close a decision?. Done.
 - [x] CS-410 decision: Does `--hypothesis` on a run without `--study` open a study?. Done.
@@ -913,6 +913,10 @@ Milestone: Dyno switches between the engine and the work (CS-519, Planned)
 
 Milestone: Benchmark results are shared across machines, and dyno is one command (CS-722, Planned)
 
+- [ ] CS-390 Run identity and the machine-wide run lock. Needs nothing.
+- [ ] CS-393 The settings registry and multi-axis sweeps. Needs CS-390.
+- [ ] CS-394 Example scenes and the development metrics. Needs CS-393.
+- [ ] CS-404 Studies: the model, the files and the commands. Needs CS-390 and CS-687.
 - [x] CS-717 Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability. Done.
 - [ ] CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices. Needs CS-390 and CS-724 (Sky, light and atmosphere).
 - [ ] CS-733 Each run records its device, configuration and state. Needs CS-390 and CS-721.
@@ -923,6 +927,18 @@ Milestone: Benchmark results are shared across machines, and dyno is one command
 - [ ] CS-738 Trends, charts, baselines and alerts keep devices apart. Needs CS-733 and CS-734.
 - [ ] CS-739 Studies across devices: noise floors per hardware class, pooling, and the health bar. Needs CS-404, CS-733, CS-738 and CS-732.
 - [ ] CS-740 A verdict says whether it carries to another hardware class. Needs CS-739, CS-394 and CS-732.
+
+Milestone: The owner's views answer what needs me, what's on track and what's wrong (CS-751, Planned)
+
+- [ ] CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it. Needs nothing.
+- [ ] CS-745 A Health view lists the work graph's exceptions, each with a proposed fix. Needs CS-744.
+- [ ] CS-746 A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates. Needs CS-744.
+- [ ] CS-747 A Since-you-last-looked view shows scope changes and answers since a chosen point. Needs CS-744.
+- [ ] CS-748 The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions. Needs CS-744.
+- [ ] CS-749 The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting. Needs CS-744.
+- [ ] CS-750 The Proposals view says why each item is proposed, and offers commit, hold or drop. Needs CS-744.
+- [ ] CS-752 Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them. Needs CS-744.
+- [ ] CS-753 "Your move" gets a calmer layout: fewer, larger, ranked entries. Needs CS-744.
 
 No milestone
 
@@ -944,7 +960,8 @@ No milestone
 - [x] CS-731 decision: Do inspector recordings upload to shared storage?. Done.
 - [x] CS-732 decision: Do the study-side device items join alpha.1?. Done.
 - [x] CS-741 decision: Merge CS-706, Dyno's cold-start run and the viewer's fixes. Done.
-- [ ] CS-743 Main's npm test exits 0 again: the shared manifest load leaves no unhandled rejection when the signal is already aborted. Needs CS-706.
+- [x] CS-743 Main's npm test exits 0 again: the shared manifest load leaves no unhandled rejection when the signal is already aborted. Done.
+- [x] CS-754 decision: Merge CS-743, main's npm test exits 0 again. Done.
 
 ### The public API reviews
 

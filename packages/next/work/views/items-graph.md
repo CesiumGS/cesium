@@ -24,6 +24,7 @@ graph LR
     CS_369["CS-369 Importing an outside renderer's colour and depth"]:::proposed
     CS_507["CS-507 Silent fallbacks become support notices"]:::open
     CS_539["CS-539 How CS-20 reaches main while the merge queue cannot verify it"]:::done
+    CS_755["CS-755 Merge CS-22, paths in one place with the seam test"]:::done
   end
   subgraph CS_9["WebGL 2 renderer"]
     CS_32["CS-32 The shader route spike: our own naga crate measured against the "]:::open
@@ -590,7 +591,17 @@ graph LR
     CS_739["CS-739 Studies across devices: noise floors per hardware class, poolin"]:::open
     CS_740["CS-740 A verdict says whether it carries to another hardware class"]:::open
     CS_741["CS-741 Merge CS-706, Dyno's cold-start run and the viewer's fixes"]:::done
-    CS_743["CS-743 Main's npm test exits 0 again: the shared manifest load leaves "]:::open
+    CS_743["CS-743 Main's npm test exits 0 again: the shared manifest load leaves "]:::done
+    CS_744["CS-744 The Work page's roadmap opens on a Release view: what's left in"]:::open
+    CS_745["CS-745 A Health view lists the work graph's exceptions, each with a pr"]:::open
+    CS_746["CS-746 A Path view shows only what lies upstream of a chosen target: i"]:::open
+    CS_747["CS-747 A Since-you-last-looked view shows scope changes and answers si"]:::open
+    CS_748["CS-748 The Projects view shows each project as a bet: its outcome, rel"]:::open
+    CS_749["CS-749 The Plan view becomes Order: the planner's sequence for a relea"]:::open
+    CS_750["CS-750 The Proposals view says why each item is proposed, and offers c"]:::open
+    CS_752["CS-752 Flow answers how well the system and the owner work together: c"]:::open
+    CS_753["CS-753 'Your move' gets a calmer layout: fewer, larger, ranked entries"]:::open
+    CS_754["CS-754 Merge CS-743, main's npm test exits 0 again"]:::done
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -1349,6 +1360,14 @@ graph LR
   CS_394 --> CS_740
   CS_732 --> CS_740
   CS_706 --> CS_743
+  CS_744 --> CS_745
+  CS_744 --> CS_746
+  CS_744 --> CS_747
+  CS_744 --> CS_748
+  CS_744 --> CS_749
+  CS_744 --> CS_750
+  CS_744 --> CS_752
+  CS_744 --> CS_753
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

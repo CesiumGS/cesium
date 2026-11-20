@@ -574,6 +574,22 @@ CS-389 Dyno as the development harness
   CS-740  A verdict says whether it carries to another hardware class
       ← CS-739 Studies across devices: noise floors per hardware class, pooling, and the health bar
         CS-394 Example scenes and the development metrics
+  CS-745  A Health view lists the work graph's exceptions, each with a proposed fix
+      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
+  CS-746  A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates
+      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
+  CS-747  A Since-you-last-looked view shows scope changes and answers since a chosen point
+      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
+  CS-748  The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions
+      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
+  CS-749  The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting
+      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
+  CS-750  The Proposals view says why each item is proposed, and offers commit, hold or drop
+      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
+  CS-752  Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them
+      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
+  CS-753  "Your move" gets a calmer layout: fewer, larger, ranked entries
+      ← CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
 
 CS-18 The work tracker
   CS-530  Release 2.0.0-alpha.1
@@ -772,5 +788,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-254 blocked
+262 blocked
 ```

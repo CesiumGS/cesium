@@ -153,9 +153,9 @@ CS-461 A headed run shows whether worker mode ticks smoother [Planned], under CS
 
 CS-462 Loads and decodes run on Jobs [Planned], under CS-12 The job system's ports
   outcome: Content decode, one-off engine loads and dedicated worker groups run on Jobs with priorities and cancellation and the inspector shows them.
-  constraints: 0 of 4 done
+  constraints: 0 of 3 done
   unmet: c1 glTF, 3D Tiles and terrain content decode at their tile's request priority; a tile that is deselected or evicted cancels its decode wherever it is, and upload preparation runs in the budgeted apply phase. (open: CS-87; check not passed)
-  unmet: c2 The glare kernel, the star field and the sky pack load below visible content, and are cancelled when the engine is disposed. (open: CS-88; check not passed)
+  unmet: c2 The glare kernel, the star field and the sky pack load below visible content, and are cancelled when the engine is disposed. (check not passed)
   unmet: c3 The Moon map, the Slang compiler and the B-rep kernels and sections keep their own workers but are scheduled through `Jobs` as dedicated groups, sharing its priorities and budget accounting. (open: CS-89; check not passed)
   unmet: c4 The inspector's Jobs section shows, per job kind, running, queued, submit-to-applied latency, worker time and cancelled counts, and each worker's busy time by group (engine, dedicated, app); every value has a recorder column. (open: CS-95; check not passed)
 
@@ -254,21 +254,21 @@ CS-477 A MaterialX graph is edited live on the stage [Planned], under CS-11 Live
 
 CS-478 Every run says what it was for [Planned], under CS-389 Dyno as the development harness
   outcome: Each run carries its identity, purpose, branch, item and study under a machine-wide lock; runs are found from the terminal; recordings and test results are runs; and archives export and import them.
-  constraints: 0 of 6 done
-  unmet: not linked to a clause yet (open: CS-390, CS-391, CS-392, CS-398, CS-399, CS-400; check not passed)
-  to shape: done_when; check; link CS-390, CS-391, CS-392, CS-398, CS-399, CS-400 to a clause
+  constraints: 0 of 5 done
+  unmet: not linked to a clause yet (open: CS-391, CS-392, CS-398, CS-399, CS-400; check not passed)
+  to shape: done_when; check; link CS-391, CS-392, CS-398, CS-399, CS-400 to a clause
 
 CS-479 Sweeps measure development cases [Planned], under CS-389 Dyno as the development harness
   outcome: Example scenes with parameters and a pose are development cases, the settings registry sweeps them on several axes with reference images and image checks, and Lab pages keep their results in the store.
-  constraints: 0 of 5 done
-  unmet: not linked to a clause yet (open: CS-393, CS-394, CS-395, CS-397, CS-401; check not passed)
-  to shape: done_when; check; link CS-393, CS-394, CS-395, CS-397, CS-401 to a clause
+  constraints: 0 of 3 done
+  unmet: not linked to a clause yet (open: CS-395, CS-397, CS-401; check not passed)
+  to shape: done_when; check; link CS-395, CS-397, CS-401 to a clause
 
 CS-480 Studies turn runs into verdicts [Planned], under CS-389 Dyno as the development harness
   outcome: Studies have a model, files, commands and a page, the α study runs through Dyno end to end, and AGENTS.md and its skill teach measuring with Dyno.
-  constraints: 2 of 6 done
-  unmet: not linked to a clause yet (open: CS-404, CS-405, CS-396, CS-402; check not passed)
-  to shape: done_when; check; link CS-404, CS-405, CS-396, CS-402, CS-409, CS-410 to a clause
+  constraints: 2 of 5 done
+  unmet: not linked to a clause yet (open: CS-405, CS-396, CS-402; check not passed)
+  to shape: done_when; check; link CS-405, CS-396, CS-402, CS-409, CS-410 to a clause
 
 CS-481 Other machines and devices run Dyno's scenes [Planned], under CS-389 Dyno as the development harness
   outcome: A local certificate authority pairs machines with the hub, runners take remote runs, and the device lab runs scenes on phones and other machines.
@@ -451,9 +451,9 @@ CS-524 The tracker runs on human-in-the-lead [Planned], under CS-18 The work tra
 
 CS-534 Infrastructure and geoscience data shows in 2.0 [Proposed], under CS-196 Infrastructure and geoscience capabilities
   outcome: Scalar fields, volumes and per-element overrides draw at scale, models print to scale and align with their site in WebXR, and gallery examples show each.
-  constraints: 0 of 7 done
-  unmet: not linked to a clause yet (open: CS-337, CS-338, CS-339, CS-340, CS-341, CS-342, CS-343; check not passed)
-  to shape: done_when; check; link CS-337, CS-338, CS-339, CS-340, CS-341, CS-342, CS-343 to a clause
+  constraints: 0 of 5 done
+  unmet: not linked to a clause yet (open: CS-337, CS-338, CS-340, CS-342, CS-343; check not passed)
+  to shape: done_when; check; link CS-337, CS-338, CS-340, CS-342, CS-343 to a clause
 
 CS-535 Rays query the scene on the GPU [Proposed], under CS-197 Ray queries and path tracing
   outcome: Rays query the scene on the GPU, from user code too, for a viewshed, a near-field terrain trace and a progressive path-traced view.
@@ -475,9 +475,9 @@ CS-561 Dyno's Work page shows the live system and the release plan [Proposed], u
 
 CS-595 Every 1.x widget's job has a StrataKit widget [Planned], under CS-584 The widgets library
   outcome: An app drops in StrataKit widgets for every job 1.x's widgets did, as React components or through DOM wrappers, and the Viewer is built from them.
-  constraints: 0 of 9 done
-  unmet: not linked to a clause yet (open: CS-585, CS-586, CS-587, CS-588, CS-589, CS-590, CS-591, CS-592, CS-593; check not passed)
-  to shape: done_when; check; link CS-585, CS-586, CS-587, CS-588, CS-589, CS-590, CS-591, CS-592, CS-593 to a clause
+  constraints: 0 of 10 done
+  unmet: not linked to a clause yet (open: CS-585, CS-586, CS-587, CS-588, CS-589, CS-590, CS-591, CS-592, CS-593, CS-341; check not passed)
+  to shape: done_when; check; link CS-585, CS-586, CS-587, CS-588, CS-589, CS-590, CS-591, CS-592, CS-593, CS-341 to a clause
 
 CS-606 The evals are designed and running in CI [Planned], under CS-596 Trust and evals
   outcome: The evals design is reviewed and mutation scores run in CI, so trust evidence accumulates from alpha.1 on.
@@ -565,9 +565,9 @@ CS-674 Panoramas, sensors and legacy glTF ship as experimental modules [Planned]
 
 CS-675 1.x's smaller tools have 2.0 homes [Planned], under CS-437 The public API reviews
   outcome: drillPick, intervals, bounding volumes, interpolation and edge types are public and reviewed.
-  constraints: 0 of 5 done
-  unmet: not linked to a clause yet (open: CS-669, CS-670, CS-649, CS-650, CS-643; check not passed)
-  to shape: done_when; check; link CS-669, CS-670, CS-649, CS-650, CS-643 to a clause
+  constraints: 0 of 2 done
+  unmet: not linked to a clause yet (open: CS-669, CS-670; check not passed)
+  to shape: done_when; check; link CS-669, CS-670 to a clause
 
 CS-676 Geometry has physics representations [Planned], under CS-193 B-reps and geometry queries
   outcome: Meshes, B-reps, SDFs, tiles and terrain offer physics representations to simulators through one seam.
@@ -601,6 +601,12 @@ CS-722 Benchmark results are shared across machines, and dyno is one command [Pl
   unmet: c9 a study made with a kind and its instruments reads back with its verdict (CS-404). A study run on several devices pools them by hardware class, and each verdict lists, per class, measured or can't tell, never "measured" for a class without runs (CS-739). (open: CS-404, CS-739; check not passed)
   unmet: c10 a sweep runs over several settings at once (CS-393), and `run --scenes` measures an example scene with the development metrics (CS-394). A verdict on one hardware class carries to another only when their work counters match within spread, the other class has a calibration study for that work, and both share a bottleneck; otherwise it says can't tell, naming the failed check and what to measure (CS-740). (open: CS-393, CS-394, CS-740; check not passed)
 
+CS-751 The owner's views answer what needs me, what's on track and what's wrong [Planned], under CS-389 Dyno as the development harness
+  outcome: The Work page opens on a release's remaining milestones and the gates holding it, shows only the graph's exceptions, draws the path to any target, says what changed, shows projects as bets, orders work without a slot setting, makes each proposal a clear call, shows how well the system and the owner work together, and keeps Your move calm.
+  constraints: 0 of 9 done
+  unmet: not linked to a clause yet (open: CS-744, CS-745, CS-746, CS-747, CS-748, CS-749, CS-750, CS-752, CS-753; check not passed)
+  to shape: done_when; check; link CS-744, CS-745, CS-746, CS-747, CS-748, CS-749, CS-750, CS-752, CS-753 to a clause
+
 CS-1 Renderers and engine profiles [Dropped]
 CS-2 Cesium IR and materials [Dropped]
 CS-3 Threading [Dropped]
@@ -611,5 +617,5 @@ CS-7 Upstream follow-ups [Dropped]
 CS-436 The public API [Dropped]
 CS-525 Bodies, frames and engineering coordinates [Dropped]
 
-95 open milestone(s)
+96 open milestone(s)
 ```

@@ -198,7 +198,7 @@ CS-389 Dyno as the development harness
   CS-714  decision: Reaching a 500 ms cold start: which engine-side work
   CS-715  decision: How the cold-start check runs from here on
   CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands
-  CS-743  Main's npm test exits 0 again: the shared manifest load leaves no unhandled rejection when the signal is already aborted
+  CS-744  The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
 
 CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
