@@ -117,7 +117,7 @@ function treeNodeFromResponse(response) {
  * @property {string} id The unique integer identifier of this element, as a decimal string, e.g. <code>"3298534886898"</code>.
  * @property {string} [label] The user-friendly label of this element, if any.
  * @property {IonAssetElementService.ElementLocation} [location] The geographic location of this element, or <code>undefined</code> when the element has no location (e.g. conceptual elements, or assets with no geographic coordinate system).
- * @property {Object<string, IonAssetElementService.ElementProperty>} [properties] The properties of this element, keyed by property name. List results may omit properties; use {@link IonAssetElementService#getElement} to retrieve the element's details. Property names are kept verbatim, including any dotted namespaces (e.g. <code>"Volume Aspect.Net Volume"</code>).
+ * @property {Object<string, IonAssetElementService.ElementProperty>} [properties] The properties of this element, keyed by property name. List results only include the properties selected with <code>options.includeProperties</code>, and omit <code>properties</code> when none are selected; use {@link IonAssetElementService#getElement} to retrieve all of an element's properties. Property names are kept verbatim, including any dotted namespaces (e.g. <code>"Volume Aspect.Net Volume"</code>).
  */
 
 /**
@@ -321,15 +321,19 @@ class IonAssetElementService extends ElementService {
    *
    * Results are paginated with an opaque cursor. Request subsequent pages by
    * passing the returned <code>continuationToken</code> as
-   * <code>options.continuationToken</code> until it is <code>undefined</code>.
+   * <code>options.continuationToken</code> until it is <code>undefined</code>,
+   * repeating the same <code>filter</code> and <code>includeProperties</code>
+   * each time.
    *
    * @param {object} [options] Object with the following properties:
    * @param {number} [options.top=100] The maximum number of elements to return per page.
    * @param {string} [options.continuationToken] A token returned from a previous call to retrieve the next page of results.
+   * @param {string[]} [options.includeProperties] The qualified property keys to return with each element. When omitted or empty, elements are returned without <code>properties</code>.
    * @param {object|string} [options.filter] An element filter. See the Query parameters section of the <a href="https://cesium.com/learn/ion/rest-api/#operation/getAssetElementsV1">List elements</a> ion REST API documentation for the supported structure.
    * @returns {Promise<IonAssetElementService.ElementPage>} A promise that resolves to a page of elements. The promise rejects with a {@link RequestErrorEvent} if the request fails.
    * @exception {DeveloperError} <code>options.top</code> must be a positive integer.
    * @exception {DeveloperError} <code>options.continuationToken</code> must be a string.
+   * @exception {DeveloperError} <code>options.includeProperties</code> must be an array of strings.
    *
    * @example
    * const page = await elements.listElements({
@@ -349,11 +353,33 @@ class IonAssetElementService extends ElementService {
         options.continuationToken,
       );
     }
+    if (defined(options.includeProperties)) {
+      if (!Array.isArray(options.includeProperties)) {
+        throw new DeveloperError(
+          "options.includeProperties must be an array of strings.",
+        );
+      }
+      for (let i = 0; i < options.includeProperties.length; i++) {
+        Check.typeOf.string(
+          `options.includeProperties[${i}]`,
+          options.includeProperties[i],
+        );
+      }
+    }
     //>>includeEnd('debug');
 
     const queryParameters = { top: options.top ?? 100 };
     if (defined(options.continuationToken)) {
       queryParameters.continuationToken = options.continuationToken;
+    }
+    if (
+      defined(options.includeProperties) &&
+      options.includeProperties.length > 0
+    ) {
+      // A JSON array, since property keys may contain commas.
+      queryParameters.includeProperties = JSON.stringify(
+        options.includeProperties,
+      );
     }
     if (defined(options.filter)) {
       queryParameters.filter =
