@@ -5,7 +5,7 @@ kind: external
 state: planned
 created: 2026-11-19
 project: CS-389
-waiting_on: "human-in-the-lead: a user-data area in the private store (issue not filed yet)"
+waiting_on: "human-in-the-lead: a user-data area in the private store (arobison/human-in-the-lead#363)"
 ---
 
 ## Waiting on
@@ -17,4 +17,4 @@ human-in-the-lead's private store holds the tracker's private records, encrypted
 - a size budget;
 - retention the project controls.
 
-To be filed as a feature request on human-in-the-lead once the owner approves the text. Until then, CS-717 designs a stop-gap.
+Filed as arobison/human-in-the-lead#363 (2026-11-19). Until it ships, CS-717 designs a stop-gap.
