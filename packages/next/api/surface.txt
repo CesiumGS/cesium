@@ -12,7 +12,7 @@ entry	name	kind	tier
 .	BREP_CAP_NAME	const	-
 .	BezierCurves	interface	-
 .	BingImagery	class	-
-.	BlendedWarp	interface	-
+.	BlendedCurvilinearMap	interface	-
 .	Body	interface	-
 .	BrepBuilder	class	-
 .	BrepCaps	class	-
@@ -55,7 +55,7 @@ entry	name	kind	tier
 .	CastOptions	interface	-
 .	CastRay	interface	-
 .	ChainIo	interface	-
-.	ChangeableWarp	interface	-
+.	ChangeableCurvilinearMap	interface	-
 .	Clamp	interface	-
 .	ClampOptions	interface	-
 .	ClipCaps	interface	-
@@ -74,6 +74,11 @@ entry	name	kind	tier
 .	CorePick	interface	-
 .	CorridorElement	type	-
 .	CorridorOptions	type	-
+.	CurvilinearEdge	interface	-
+.	CurvilinearFrameSpec	type	-
+.	CurvilinearMap	interface	-
+.	CurvilinearScale	interface	-
+.	CurvilinearStats	interface	-
 .	CustomShader	class	-
 .	CustomShaderOptions	interface	-
 .	DAYLIGHT_EXPOSURE	const	-
@@ -119,7 +124,7 @@ entry	name	kind	tier
 .	FrameStats	interface	-
 .	FrameUnavailableError	class	-
 .	FromFunctionOptions	interface	-
-.	FunctionWarp	interface	-
+.	FunctionCurvilinearMap	interface	-
 .	GeometryAccuracy	interface	-
 .	GeometryBounds	interface	-
 .	GeometryHit	interface	-
@@ -300,8 +305,6 @@ entry	name	kind	tier
 .	SlicePool	class	-
 .	SliceScheduler	interface	-
 .	SliceUser	interface	-
-.	SmoothEdge	interface	-
-.	SmoothFrameSpec	type	-
 .	SpatialQueries	interface	-
 .	Stage	type	-
 .	StageInfo	interface	-
@@ -373,9 +376,6 @@ entry	name	kind	tier
 .	ViewLinkMode	type	-
 .	ViewLinkOptions	interface	-
 .	Viewport	interface	-
-.	Warp	interface	-
-.	WarpScale	interface	-
-.	WarpStats	interface	-
 .	World	class	-
 .	WorldClip	interface	-
 .	WorldMemory	interface	-
@@ -529,9 +529,12 @@ frames	CoordinateRequest	interface	-
 frames	CoordinateService	interface	-
 frames	CrsRef	type	-
 frames	CrsUnits	interface	-
+frames	CurvilinearFrame	class	-
+frames	CurvilinearMap	type	-
+frames	CurvilinearScale	type	-
 frames	DrawPlacementInfo	interface	-
+frames	DrawnCurvilinearMap	interface	-
 frames	DrawnThrough	interface	-
-frames	DrawnWarp	interface	-
 frames	EarthOrientationParameters	class	-
 frames	EarthOrientationSigma	type	-
 frames	EopSample	interface	-
@@ -581,7 +584,6 @@ frames	RouteTerm	interface	-
 frames	SharedSource	interface	-
 frames	SkyInputs	type	-
 frames	SkyState	interface	-
-frames	SmoothFrame	class	-
 frames	StateSegment	interface	-
 frames	SwitchChoice	type	-
 frames	SwitchFrame	class	-
@@ -594,8 +596,6 @@ frames	TwoVectorDefinition	interface	-
 frames	TwoVectorDegenerateError	class	-
 frames	TwoVectorFrame	class	-
 frames	VectorDefinition	type	-
-frames	Warp	type	-
-frames	WarpScale	type	-
 frames	accuracySpan	function	-
 frames	angularVelocity	function	-
 frames	attachSky	function	-
@@ -607,6 +607,10 @@ frames	createFrames	function	-
 frames	createFramesPickInterpreter	function	-
 frames	createFramesResolver	function	-
 frames	createSkyState	function	-
+frames	curvilinearEdgeOf	function	-
+frames	curvilinearForward	function	-
+frames	curvilinearFrame	function	-
+frames	curvilinearInverse	function	-
 frames	dominantTerm	function	-
 frames	drawnThrough	function	-
 frames	earthOrientationSigma	function	-
@@ -616,7 +620,7 @@ frames	framePoint	function	-
 frames	frameTransform	function	-
 frames	frameVelocity	function	-
 frames	graphOfFrames	function	-
-frames	isSmoothFrame	function	-
+frames	isCurvilinearFrame	function	-
 frames	isSwitchFrame	function	-
 frames	loadFrameData	function	-
 frames	loadFrameRoles	function	-
@@ -635,14 +639,10 @@ frames	routeRevision	function	-
 frames	samplePath	function	-
 frames	separationAccuracy	function	-
 frames	skyState	function	-
-frames	smoothEdgeOf	function	-
-frames	smoothFrame	function	-
 frames	switchFrame	function	-
 frames	toParentMatrix	function	-
 frames	truePick	function	-
 frames	twoVectorFrame	function	-
-frames	warpForward	function	-
-frames	warpInverse	function	-
 frames	worldTransformFrame	function	-
 measure	AccuracyStatement	interface	-
 measure	AccuracyTerm	interface	-
@@ -743,7 +743,7 @@ proj	ProjCoordinateRequest	interface	-
 proj	ProjRequestOptions	interface	-
 proj	ProjResolvedCoordinates	interface	-
 proj	RecordedOperation	interface	-
-proj	ReprojectionWarpOptions	interface	-
+proj	ReprojectionCurvilinearMapOptions	interface	-
 proj	ResolveOptions	interface	-
 proj	RigidPlacement	class	-
 proj	SNAP_SERVER_ALWAYS_OUT_OF_SIGHT	const	-
@@ -787,7 +787,7 @@ proj	projCoordinateService	function	-
 proj	projTokenProblem	function	internal
 proj	readGeoreference	function	-
 proj	refiningSnap	function	-
-proj	reprojectionWarp	function	-
+proj	reprojectionCurvilinearMap	function	-
 proj	resolveOperation	function	-
 proj	strictWkt2	function	internal
 proj	tilesetGeoreference	function	-

@@ -1647,7 +1647,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "VerticalExaggeration",
       "VerticalExaggerationOptions",
       "CurvilinearFrameSpec",
-      "Curvilinear map",
+      "CurvilinearMap",
       "CurvilinearScale",
       "frames:angularVelocity",
       "frames:axesAt",
