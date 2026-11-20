@@ -188,6 +188,21 @@ Object.defineProperties(ModelPrimitive.prototype, {
       return this._geometryWriter;
     },
   },
+
+  /**
+   * Implements {@link Deformable#deformerBindings}.
+   *
+   * @memberof ModelPrimitive.prototype
+   *
+   * @type {Iterable<DeformerBinding>}
+   * @readonly
+   * @internal
+   */
+  deformerBindings: {
+    get: function () {
+      return this._runtimePrimitive.deformerBindings;
+    },
+  },
 });
 
 /**

@@ -46,6 +46,17 @@ class Deformable extends GeometrySource {
   removeDeformerBinding(binding) {
     DeveloperError.throwInstantiationError();
   }
+
+  /**
+   * The deformer bindings added to the deformable.
+   *
+   * @type {Iterable<DeformerBinding>}
+   * @readonly
+   * @internal
+   */
+  get deformerBindings() {
+    return DeveloperError.throwInstantiationError();
+  }
 }
 
 export default Deformable;
