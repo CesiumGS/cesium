@@ -2,10 +2,11 @@
 id: CS-22
 title: Paths in one place, with the seam test
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-8
 needs: [CS-21]
+claimed_by: orch-10-CS-22
 touches: [packages/next/src/profile/**, packages/next/src/render/**, packages/next/src/scene/**]
 ---
 
