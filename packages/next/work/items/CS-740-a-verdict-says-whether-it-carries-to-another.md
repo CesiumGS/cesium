@@ -9,7 +9,7 @@ needs: [CS-739, CS-394, CS-732]
 touches: [packages/next/bench/suite/studies.mjs, packages/next/bench/suite/report.mjs, packages/next/bench/suite/schema.ts, packages/next/test/bench*.test.ts]
 ---
 
-From CS-717's design, filed by the main session on 2026-11-19. It joins alpha.1 with CS-404 (the owner's answer to CS-732). The design is `docs/design/benchmark-devices-and-sharing.md` (CS-717), section 8. Rough size: medium.
+From CS-717's design, filed by the main session on 2026-11-19. It joins alpha.1 with CS-404, CS-393 and CS-394 (the owner's answer to CS-732, and "Yes, pull them in"). The design is `docs/design/benchmark-devices-and-sharing.md` (CS-717), section 8. Rough size: medium.
 
 Model: the most capable one for design-heavy parts, a fast one for the rest.
 
