@@ -2,10 +2,14 @@
 id: CS-727
 title: Who holds dyno's storage keys, and may remote and cloud sessions read results?
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-389
 decider: owner
+answer: B
+answered_at: 2026-11-20T04:31:14.661Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
@@ -27,4 +31,4 @@ Reversibility: the mechanism is two-way; a leaked key is one-way.
 
 ## Answer
 
-Open.
+B, per-device writer and reader keys with encryption on the client, and cloud and remote reading on by default with a read-only key (owner, 2026-11-19). The reader key goes in each enabled environment's secrets.

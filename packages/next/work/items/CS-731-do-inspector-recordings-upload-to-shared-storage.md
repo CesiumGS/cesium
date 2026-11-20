@@ -2,10 +2,14 @@
 id: CS-731
 title: Do inspector recordings upload to shared storage?
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-389
 decider: owner
+answer: B, retain everything for now with no pruning; if the owner is unhappy with the spend or finds no value in old recordings, pruning can start later
+answered_at: 2026-11-20T04:31:20.813Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
@@ -26,4 +30,4 @@ Reversibility: two-way.
 
 ## Answer
 
-Open.
+Every recording uploads, and nothing is pruned for now (owner, 2026-11-19): "let's retain everything for now, if i'm unhappy with the spend or find no value in the old stuff we can start pruning later." So the recordings budget warns rather than stops uploads, and pruning stays off until the owner turns it on.

@@ -2,10 +2,14 @@
 id: CS-726
 title: Where does dyno store shared benchmark results, and what may it spend?
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-389
 decider: owner
+answer: A
+answered_at: 2026-11-20T04:31:13.985Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
@@ -27,4 +31,4 @@ Reversibility: two-way: the layout is backend-neutral, and moving is a copy.
 
 ## Answer
 
-Open.
+A, a hosted S3-compatible bucket, with the design's budgets as the spend appetite (owner, 2026-11-19).

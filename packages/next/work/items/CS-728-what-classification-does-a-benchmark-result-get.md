@@ -2,10 +2,14 @@
 id: CS-728
 title: What classification does a benchmark result get by default?
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-389
 decider: owner
+answer: A
+answered_at: 2026-11-20T04:31:16.403Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
@@ -26,4 +30,4 @@ Reversibility: two-way for the default and the labels; one-way for anything publ
 
 ## Answer
 
-Open.
+A, confidential by default, from an open set: confidential, internal, public (owner, 2026-11-19).

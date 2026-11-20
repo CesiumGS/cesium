@@ -16,5 +16,5 @@ Model: the most capable one for design-heavy parts, a fast one for the rest.
 ## Done when
 
 - `dyno result pin <id> --reason <ref>` and `unpin` write events that every device sees after a sync (tested).
-- `dyno storage status` reports use against the budget per namespace, warns at 80%, and stops uploads past 100% while runs still record (tested).
-- `dyno storage prune` deletes only with `--apply`, never deletes a pinned or cited run, refuses on a stale store, and writes tombstones. Dyno shows a pruned blob as removed, with its reason (tested).
+- `dyno storage status` reports use against the budget per namespace, and warns at 80% and at 100%. It never stops uploads or prunes on its own: the owner retains everything for now (CS-731), and pruning starts only when the owner asks (tested).
+- `dyno storage prune` exists for when the owner turns pruning on. It deletes only with `--apply`, never deletes a pinned or cited run, refuses on a stale store, and writes tombstones. Dyno shows a pruned blob as removed, with its reason (tested).

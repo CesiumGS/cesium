@@ -2,10 +2,14 @@
 id: CS-732
 title: Do the study-side device items join alpha.1?
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-389
 decider: owner
+answer: B
+answered_at: 2026-11-20T04:31:23.118Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
@@ -25,4 +29,4 @@ Reversibility: two-way: milestone membership.
 
 ## Answer
 
-Open.
+B, CS-404 and the study-side items CS-739 and CS-740 join alpha.1 (owner, 2026-11-19).

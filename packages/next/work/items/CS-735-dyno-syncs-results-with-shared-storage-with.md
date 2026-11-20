@@ -19,3 +19,5 @@ Model: the most capable one for design-heavy parts, a fast one for the rest.
 - No object is ever overwritten, and uploads wait while `dyno status` isn't quiet (tested).
 - Canary secrets appear in no output, log, result or file, and no command takes a secret as an argument (tested).
 - Joining, setting credentials, rotating a key and removing a device behave as designed. A later object under a removed device's prefix is ignored and flagged. A remote reader can list, show and fetch, but can't write, pin or delete (tested).
+- Inspector recordings upload like every other blob (CS-731).
+- Remote and cloud reading is on by default (CS-727): each enabled environment gets a read-only key through its secrets, never a committed file, and that key can list, show and fetch but not write, pin or delete (tested).

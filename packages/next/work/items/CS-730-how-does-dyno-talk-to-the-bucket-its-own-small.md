@@ -2,10 +2,14 @@
 id: CS-730
 title: "How does dyno talk to the bucket: its own small client or a dependency?"
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-389
 decider: owner
+answer: A
+answered_at: 2026-11-20T04:31:18.657Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
@@ -26,4 +30,4 @@ Reversibility: two-way.
 
 ## Answer
 
-Open.
+A, dyno signs its own requests with a small hand-written SigV4 client, with no new dependency (owner, 2026-11-19). The owner asked whether the dyno command does this; it does in every option, and the choice was only what's inside it.
