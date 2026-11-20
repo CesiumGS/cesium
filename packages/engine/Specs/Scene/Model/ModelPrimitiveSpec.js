@@ -1,13 +1,22 @@
 import {
   AttributeType,
+  AxisAlignedBoundingBox,
+  BoundingSphere,
   Cartesian3,
   ComponentDatatype,
+  Event,
   Matrix4,
 } from "@cesium/core";
 import {
+  Buffer,
+  BufferUsage,
+  Deformable,
   GeometryAttributeDescriptor,
   GeometryAttributeDomain,
+  ModelDeformerPipelineStage,
+  ModelDeformerUpdateStage,
   ResourceCache,
+  UniformType,
   VertexAttributeSemantic,
 } from "../../../index.js";
 import createScene from "../../../../../Specs/createScene.js";
@@ -24,6 +33,7 @@ describe(
     const pointCloudWithRgbColorsUrl = `${modelsUrl}/PointCloudWithRGBColors/glTF-Binary/PointCloudWithRGBColors.glb`;
     const triangleWithoutIndicesUrl = `${modelsUrl}/TriangleWithoutIndices/glTF/TriangleWithoutIndices.gltf`;
     const simpleSkinUrl = `${modelsUrl}/SimpleSkin/glTF/SimpleSkin.gltf`;
+    const simpleMorphUrl = `${modelsUrl}/SimpleMorph/glTF/SimpleMorph.gltf`;
 
     const position = new GeometryAttributeDescriptor({
       semantic: VertexAttributeSemantic.POSITION,
@@ -899,6 +909,193 @@ describe(
       expect(function () {
         session.cornerAttributeWriter(position);
       }).toThrowDeveloperError();
+    });
+
+    describe("deformer bindings", function () {
+      const unitSquarePlainUrl = `${unitSquareUrl}/unitSquare11x11_plain.glb`;
+
+      function createBinding(offset) {
+        return {
+          vertexAttributes: [],
+          vertexBuffer: undefined,
+          uniforms: {
+            offset: { type: UniformType.VEC3, value: () => offset },
+          },
+          getShaderLines: (names) => [
+            "jacobian = mat3(1.0);",
+            `return positionMC + ${names.offset};`,
+          ],
+          deformedBoundingBoxChanged: new Event(),
+          computeDeformedBoundingBox: () => undefined,
+        };
+      }
+
+      it("is deformable", async function () {
+        const [primitive] = await loadPrimitives(unitSquarePlainUrl);
+        expect(Deformable.isDeformable(primitive)).toBe(true);
+      });
+
+      it("adds and removes bindings", async function () {
+        const [primitive] = await loadPrimitives(unitSquarePlainUrl);
+        const runtimePrimitive = primitive._runtimePrimitive;
+        const binding = createBinding(Cartesian3.ZERO);
+
+        primitive.addDeformerBinding(binding);
+        scene.renderForSpecs();
+        expect(runtimePrimitive.deformerBindings.has(binding)).toBe(true);
+        expect(runtimePrimitive.pipelineStages).toContain(
+          ModelDeformerPipelineStage,
+        );
+
+        primitive.removeDeformerBinding(binding);
+        scene.renderForSpecs();
+        expect(runtimePrimitive.deformerBindings.size).toBe(0);
+        expect(runtimePrimitive.pipelineStages).not.toContain(
+          ModelDeformerPipelineStage,
+        );
+        expect(binding.deformedBoundingBoxChanged.numberOfListeners).toBe(0);
+      });
+
+      it("bounds its draw command by its bindings' boxes", async function () {
+        const [primitive] = await loadPrimitives(unitSquarePlainUrl);
+        const runtimePrimitive = primitive._runtimePrimitive;
+        const box = new AxisAlignedBoundingBox(
+          new Cartesian3(-10.0, -10.0, -10.0),
+          new Cartesian3(10.0, 10.0, 10.0),
+        );
+        const binding = createBinding(Cartesian3.ZERO);
+        binding.computeDeformedBoundingBox = (result) =>
+          AxisAlignedBoundingBox.clone(box, result);
+
+        primitive.addDeformerBinding(binding);
+        scene.renderForSpecs();
+        expect(runtimePrimitive.updateStages).toContain(
+          ModelDeformerUpdateStage,
+        );
+        const expected = BoundingSphere.fromCornerPoints(
+          box.minimum,
+          box.maximum,
+        );
+        expect(runtimePrimitive.boundingSphere).toEqual(expected);
+        const { drawCommand } = runtimePrimitive;
+        expect(drawCommand.boundingVolume).toEqual(
+          BoundingSphere.transform(expected, drawCommand.modelMatrix),
+        );
+
+        Cartesian3.multiplyByScalar(box.maximum, 2.0, box.maximum);
+        binding.deformedBoundingBoxChanged.raiseEvent();
+        scene.renderForSpecs();
+        expect(runtimePrimitive.boundingSphere).toEqual(
+          BoundingSphere.fromCornerPoints(box.minimum, box.maximum),
+        );
+      });
+
+      it("grows the model's bounding sphere to contain the deformed primitives", async function () {
+        const [primitive] = await loadPrimitives(unitSquarePlainUrl);
+        const model = primitive._model;
+        const restRadius = model.boundingSphere.radius;
+        const binding = createBinding(Cartesian3.ZERO);
+        binding.computeDeformedBoundingBox = (result) =>
+          AxisAlignedBoundingBox.fromCorners(
+            new Cartesian3(-10.0, -10.0, -10.0),
+            new Cartesian3(10.0, 10.0, 10.0),
+            result,
+          );
+
+        primitive.addDeformerBinding(binding);
+        scene.renderForSpecs();
+        const deformed = BoundingSphere.transform(
+          primitive._runtimePrimitive.boundingSphere,
+          primitive._runtimePrimitive.drawCommand.modelMatrix,
+        );
+        expect(model.boundingSphere.radius).toBeGreaterThan(restRadius * 10.0);
+        expect(
+          BoundingSphere.union(model.boundingSphere, deformed),
+        ).toEqualEpsilon(model.boundingSphere, 1e-6);
+
+        primitive.removeDeformerBinding(binding);
+        scene.renderForSpecs();
+        expect(model.boundingSphere.radius).toEqualEpsilon(restRadius, 1e-6);
+      });
+
+      it("renders deformed positions", async function () {
+        if (webglStub) {
+          return;
+        }
+        const [primitive] = await loadPrimitives(
+          `${modelsUrl}/BoxTextured/glTF-Binary/BoxTextured.glb`,
+        );
+        const vertexCount = primitive.geometryReader.withReadSession(
+          {},
+          (session) => session.vertexCount(),
+        );
+        const vertexBuffer = Buffer.createVertexBuffer({
+          context: scene.context,
+          typedArray: new Float32Array(vertexCount * 3),
+          usage: BufferUsage.STATIC_DRAW,
+        });
+        vertexBuffer.vertexArrayDestroyable = false;
+
+        const binding = createBinding(new Cartesian3(1000.0, 1000.0, 1000.0));
+        binding.vertexAttributes = [
+          new GeometryAttributeDescriptor({
+            semantic: "direction",
+            type: AttributeType.VEC3,
+            componentDatatype: ComponentDatatype.FLOAT,
+          }),
+        ];
+        binding.vertexBuffer = vertexBuffer;
+        binding.getShaderLines = (names) => [
+          "jacobian = mat3(1.0);",
+          `return positionMC + ${names.direction} + ${names.offset};`,
+        ];
+
+        expect(scene).notToRender([0, 0, 0, 255]);
+        primitive.addDeformerBinding(binding);
+        expect(scene).toRender([0, 0, 0, 255]);
+        primitive.removeDeformerBinding(binding);
+        expect(scene).notToRender([0, 0, 0, 255]);
+
+        vertexBuffer.destroy();
+      });
+
+      it("transforms normals by the jacobian", async function () {
+        if (webglStub) {
+          return;
+        }
+        const [primitive] = await loadPrimitives(
+          `${modelsUrl}/BoxTextured/glTF-Binary/BoxTextured.glb`,
+        );
+        const binding = createBinding(Cartesian3.ZERO);
+        // Rotates by 90 degrees about x.
+        binding.getShaderLines = () => [
+          "jacobian = mat3(1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, -1.0, 0.0);",
+          "return positionMC;",
+        ];
+
+        let rest;
+        expect(scene).toRenderAndCall((rgba) => {
+          rest = rgba;
+        });
+        primitive.addDeformerBinding(binding);
+        expect(scene).toRenderAndCall((rgba) => {
+          expect(rgba).not.toEqual(rest);
+        });
+      });
+
+      it("throws when adding a binding to a skinned primitive", async function () {
+        const [primitive] = await loadPrimitives(simpleSkinUrl);
+        expect(function () {
+          primitive.addDeformerBinding(createBinding(Cartesian3.ZERO));
+        }).toThrowDeveloperError();
+      });
+
+      it("throws when adding a binding to a morphed primitive", async function () {
+        const [primitive] = await loadPrimitives(simpleMorphUrl);
+        expect(function () {
+          primitive.addDeformerBinding(createBinding(Cartesian3.ZERO));
+        }).toThrowDeveloperError();
+      });
     });
   },
   "WebGL",

@@ -394,6 +394,16 @@ class OverlayRenderer {
   }
 
   /**
+   * The mesh's local-space bounds, or undefined for a mesh without vertices.
+   *
+   * @type {AxisAlignedBoundingBox | undefined}
+   * @readonly
+   */
+  get localBounds() {
+    return this.#localBounds;
+  }
+
+  /**
    * The world-space bounding volume of the draw commands, or undefined without
    * local bounds.
    *
@@ -402,6 +412,17 @@ class OverlayRenderer {
    */
   get boundingVolume() {
     return defined(this.#localBounds) ? this.#boundingVolume : undefined;
+  }
+
+  /**
+   * The mesh's vertex positions, in overlay order, or undefined before the
+   * first upload.
+   *
+   * @type {DataTexture | undefined}
+   * @readonly
+   */
+  get positionTexture() {
+    return this.#positionTexture?.texture;
   }
 
   /**

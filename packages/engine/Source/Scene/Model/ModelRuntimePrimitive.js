@@ -22,6 +22,8 @@ import LightingPipelineStage from "./LightingPipelineStage.js";
 import MaterialPipelineStage from "./MaterialPipelineStage.js";
 import MetadataPickingPipelineStage from "./MetadataPickingPipelineStage.js";
 import MetadataPipelineStage from "./MetadataPipelineStage.js";
+import ModelDeformerPipelineStage from "./ModelDeformerPipelineStage.js";
+import ModelDeformerUpdateStage from "./ModelDeformerUpdateStage.js";
 import ModelUtility from "./ModelUtility.js";
 import MorphTargetsPipelineStage from "./MorphTargetsPipelineStage.js";
 import PickingPipelineStage from "./PickingPipelineStage.js";
@@ -191,6 +193,26 @@ function ModelRuntimePrimitive(options) {
    * @private
    */
   this.updateStages = [];
+
+  /**
+   * Whether {@link ModelRuntimePrimitive#boundingSphere} needs to be
+   * recomputed from the deformer bindings.
+   *
+   * @type {boolean}
+   *
+   * @private
+   */
+  this.deformedBoundsDirty = false;
+
+  /**
+   * The bindings that deform this primitive.
+   *
+   * @type {Set<DeformerBinding>}
+   * @readonly
+   *
+   * @private
+   */
+  this.deformerBindings = new Set();
 }
 
 /**
@@ -205,6 +227,8 @@ function ModelRuntimePrimitive(options) {
 ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
   const pipelineStages = this.pipelineStages;
   pipelineStages.length = 0;
+  const updateStages = this.updateStages;
+  updateStages.length = 0;
 
   const primitive = this.primitive;
   const node = this.node;
@@ -289,6 +313,14 @@ ModelRuntimePrimitive.prototype.configurePipeline = function (frameState) {
 
   if (hasSkinning) {
     pipelineStages.push(SkinningPipelineStage);
+  }
+
+  if (this.deformerBindings.size > 0) {
+    pipelineStages.push(ModelDeformerPipelineStage);
+    updateStages.push(ModelDeformerUpdateStage);
+    // Building draw commands resets the bounding sphere to the rest bounds, so
+    // the deformed bounds need recomputing afterwards.
+    this.deformedBoundsDirty = true;
   }
 
   if (hasPointCloudStyle) {

@@ -4,16 +4,18 @@ import {
   Check,
   DeveloperError,
   Math as CesiumMath,
+  PixelDatatype,
   PixelFormat,
   RuntimeError,
   defined,
   destroyObject,
 } from "@cesium/core";
 import ContextLimits from "./ContextLimits.js";
+import Framebuffer from "./Framebuffer.js";
 import Sampler from "./Sampler.js";
 import Texture from "./Texture.js";
 
-/** @import { PixelDatatype, TypedArray } from "@cesium/core"; */
+/** @import { TypedArray } from "@cesium/core"; */
 /** @import Context from "./Context.js"; */
 
 /**
@@ -123,6 +125,75 @@ class DataTexture {
   }
 
   /**
+   * Copies the texture on the GPU.
+   *
+   * @param {Context} context The context that owns the texture.
+   * @returns {DataTexture} A new data texture with the same elements.
+   *
+   * @exception {DeveloperError} The texture hasn't been uploaded.
+   * @exception {DeveloperError} The texture's pixel datatype is FLOAT and the WebGL implementation doesn't support {@link Context#colorBufferFloat}.
+   */
+  copy(context) {
+    /** @type {any} */
+    const source = this._texture;
+
+    //>>includeStart('debug', pragmas.debug);
+    Check.defined("context", context);
+    if (!defined(source)) {
+      throw new DeveloperError("The texture hasn't been uploaded.");
+    }
+    //>>includeEnd('debug');
+
+    const result = new DataTexture({
+      pixelFormat: this._pixelFormat,
+      pixelDatatype: this._pixelDatatype,
+    });
+
+    const { width, height } = source;
+    result.#setTexture(context, width, height);
+    result._elementCount = this._elementCount;
+
+    const read = new Framebuffer({
+      context,
+      colorTextures: [source],
+      destroyAttachments: false,
+    });
+
+    const draw = new Framebuffer({
+      context,
+      colorTextures: [result._texture],
+      destroyAttachments: false,
+    });
+
+    const gl = context._gl;
+
+    read.bindRead();
+    draw.bindDraw();
+
+    gl.blitFramebuffer(
+      0,
+      0,
+      width,
+      height,
+      0,
+      0,
+      width,
+      height,
+      gl.COLOR_BUFFER_BIT,
+      gl.NEAREST,
+    );
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    // Binding directly bypasses the context's framebuffer binding cache; update it to match.
+    context._currentFramebuffer = undefined;
+
+    read.destroy();
+    draw.destroy();
+
+    return result;
+  }
+
+  /**
    * @returns {boolean}
    */
   isDestroyed() {
@@ -137,6 +208,63 @@ class DataTexture {
   destroy() {
     this._texture?.destroy();
     return destroyObject(this);
+  }
+
+  /**
+   * Reads the texture's elements back to the CPU.
+   *
+   * @returns {TypedArray} Every element's values, componentsPerElement each.
+   *
+   * @exception {DeveloperError} The texture hasn't been uploaded.
+   * @exception {DeveloperError} The texture's pixel format can't be attached to a {@link Framebuffer}, e.g. it's RG or an integer format.
+   */
+  read() {
+    /** @type {any} */
+    const texture = this._texture;
+
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(texture)) {
+      throw new DeveloperError("The texture hasn't been uploaded.");
+    }
+    //>>includeEnd('debug');
+
+    const { width, height } = texture;
+    const context = texture._context;
+    const gl = context._gl;
+    const datatype = /** @type {any} */ (PixelDatatype);
+    const TypedArray = datatype.getTypedArrayConstructor(this._pixelDatatype);
+
+    const framebuffer = new Framebuffer({
+      context,
+      colorTextures: [texture],
+      destroyAttachments: false,
+    });
+
+    // Every readable color buffer can be read as four components per texel.
+    const texels = new TypedArray(width * height * 4);
+    framebuffer.bindRead();
+    gl.readPixels(
+      0,
+      0,
+      width,
+      height,
+      gl.RGBA,
+      datatype.toWebGLConstant(this._pixelDatatype, context.webgl2),
+      texels,
+    );
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    // Binding directly bypasses the context's framebuffer binding cache; update it to match.
+    context._currentFramebuffer = undefined;
+    framebuffer.destroy();
+
+    const components = this._componentsPerElement;
+    const result = new TypedArray(this._elementCount * components);
+    for (let i = 0; i < this._elementCount; ++i) {
+      for (let c = 0; c < components; ++c) {
+        result[i * components + c] = texels[i * 4 + c];
+      }
+    }
+    return result;
   }
 
   /**
@@ -159,6 +287,17 @@ class DataTexture {
       );
     }
 
+    this.#setTexture(context, width, height);
+  }
+
+  /**
+   * Replaces the texture with an empty one of the given size.
+   *
+   * @param {Context} context The context to create the texture in.
+   * @param {number} width The texture's width.
+   * @param {number} height The texture's height.
+   */
+  #setTexture(context, width, height) {
     this._texture?.destroy();
     this._texture = new Texture({
       context: context,

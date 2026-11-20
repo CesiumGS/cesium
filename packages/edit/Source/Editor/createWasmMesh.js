@@ -4,6 +4,7 @@ import { RuntimeError, defined, oneTimeWarning } from "@cesium/core";
 import { GeometryAttributeDomain } from "@cesium/engine";
 import { Mesh as WasmMesh } from "@cesium/mesh-editor";
 import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
+import readVertexValues from "./readVertexValues.js";
 
 /** @import { TypedArray } from "@cesium/core"; */
 /** @import { GeometryAttributeDescriptor, GeometryReadSession, GeometrySource } from "@cesium/engine"; */
@@ -140,25 +141,6 @@ function readBuffers(session, attributes) {
   }
 
   return { indices, faceVertexCounts, values };
-}
-
-/**
- * @template {TypedArray} T
- * @param {GeometryReadSession} session The read session.
- * @param {GeometryAttributeDescriptor} descriptor A per-vertex attribute.
- * @param {function(new:T, number)} ArrayType The array type to read into.
- * @returns {T} The values, in vertex order.
- * @ignore
- */
-function readVertexValues(session, descriptor, ArrayType) {
-  const vertexCount = session.vertexCount();
-  const { componentCount } = descriptor;
-  const values = new ArrayType(vertexCount * componentCount);
-  const read = session.vertexAttributeReader(descriptor);
-  for (let i = 0; i < vertexCount; ++i) {
-    read(i, values, i * componentCount);
-  }
-  return values;
 }
 
 /**
