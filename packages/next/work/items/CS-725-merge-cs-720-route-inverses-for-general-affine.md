@@ -2,10 +2,14 @@
 id: CS-725
 title: Merge CS-720, route inverses for general affine steps
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-17
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks and work check, fast-forwards main, regenerates the views and logs the merge."
+answered_at: 2026-11-20T04:08:52.596Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
