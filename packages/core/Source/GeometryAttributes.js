@@ -82,6 +82,12 @@ class GeometryAttributes {
      * @default undefined
      */
     this.color = options.color;
+
+    /**
+     * @type {GeometryAttribute|undefined}
+     * @ignore
+     */
+    this.applyOffset = undefined;
   }
 }
 export default GeometryAttributes;
