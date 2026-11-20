@@ -1,0 +1,57 @@
+{
+  "asset": { "version": "2.1" },
+  "extensionsUsed": [
+    "3DTILES_tileset",
+    "3DTILES_shape_ellipsoid_region",
+    "3DTILES_tileset_vectors",
+    "EXT_geospatial_crs",
+    "EXT_geospatial_crs_wkid"
+  ],
+  "extensionsRequired": [
+    "3DTILES_tileset",
+    "3DTILES_shape_ellipsoid_region"
+  ],
+  "scene": 0,
+  "scenes": [{ "nodes": [0] }],
+  "shapes": [
+    {
+      "type": "ellipsoid region",
+      "extensions": {
+        "3DTILES_shape_ellipsoid_region": {
+          "minimumHeight": -1000,
+          "maximumHeight": 1000,
+          "minimumLongitude": -3.1267109291897386,
+          "minimumLatitude": 0.31214887295348465,
+          "maximumLongitude": 3.13772622569785,
+          "maximumLatitude": 1.2453371191800977
+        }
+      }
+    }
+  ],
+  "files": [
+    { "mimeType": "model/gltf-binary", "uri": "sample-us-states-2.0.glb" }
+  ],
+  "externalAssets": [{ "file": 0 }],
+  "nodes": [
+    {
+      "boundingVolume": { "shape": 0 },
+      "externalAsset": 0,
+      "extensions": {
+        "3DTILES_tileset": {
+          "geometricError": 0.0,
+          "refine": "REPLACE"
+        }
+      }
+    }
+  ],
+  "extensions": {
+    "3DTILES_tileset": { "geometricError": 2000000.0 },
+    "3DTILES_tileset_vectors": {},
+    "EXT_geospatial_crs": {
+      "format": "wkid",
+      "extensions": {
+        "EXT_geospatial_crs_wkid": { "authority": "EPSG", "wkid": 4978 }
+      }
+    }
+  }
+}
