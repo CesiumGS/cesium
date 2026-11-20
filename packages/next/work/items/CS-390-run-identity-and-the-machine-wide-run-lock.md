@@ -11,7 +11,7 @@ project: CS-389
 
 ## Done when
 
-A dev run from a worktree records every field. `--purpose baseline` is refused from a dirty tree and from a feature branch (tested). Two runs started together run one after the other, the second saying whose run it waited for. An existing store still loads in Dyno unchanged.
+The default `machine` alias never uses the host name (CS-717's design, 2026-11-19; tested). A dev run from a worktree records every field. `--purpose baseline` is refused from a dirty tree and from a feature branch (tested). Two runs started together run one after the other, the second saying whose run it waited for. An existing store still loads in Dyno unchanged.
 
 ## Files
 
