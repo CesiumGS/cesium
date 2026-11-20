@@ -589,15 +589,17 @@ CS-695 Every package has its API reference [Planned], under CS-615 Packaging and
 
 CS-722 Benchmark results are shared across machines, and dyno is one command [Planned], under CS-389 Dyno as the development harness
   outcome: Every run records its device, configuration and machine state; results from every machine sit in storage dyno manages, and Trends, charts and studies compare devices; and dyno is one non-interactive command that people and hitld call.
-  constraints: 1 of 9 done
+  constraints: 2 of 15 done
   unmet: c1 a dev run from a worktree records purpose, item, study, worktree, base, machine, servedFrom and ID. `--purpose baseline` is refused from a dirty tree or a feature branch. Two runs started together run one after the other. (open: CS-390; check not passed)
-  unmet: c2 `npx dyno` covers what `cli.mjs` and `bench/run.mjs` do. Every command prints JSON with `api_version` under `--json`. `dyno status --json` reports busy, waiting-for-quiet or quiet. The old entry points still work. (open: CS-721; check not passed)
+  unmet: c2 `npx dyno` covers what `cli.mjs` and `bench/run.mjs` do. Every command prints JSON with `api_version` under `--json`. `dyno status --json` reports busy, waiting-for-quiet or quiet. The old entry points still work, and `dyno data status` names any out-of-date dataset and its fix, and dyno won't measure on one. (open: CS-721; check not passed)
   unmet: c3 a run on any device records its device, configuration and state. A power-source switch changes neither the device nor its Trends series (tested). No identity field holds a host name, user name, serial number or network address (tested). (open: CS-733; check not passed)
   unmet: c4 runs made on two devices appear in each other's Dyno after one sync, with screenshots fetched when opened. No object is ever rewritten. Uploads never run during a measurement (tested; the owner checks once on two real devices). (open: CS-734; check not passed)
   unmet: c5 no credential, endpoint or bucket name appears in any output, log, result or repository file (a canary test). A removed device's later objects are ignored, and its keys are revoked by the checklist. (open: CS-735; check not passed)
   unmet: c6 every result carries a label, confidential by default. `storage status` reports use against the budget per namespace. Nothing is deleted without `--apply`, nothing pinned is deleted, and every deletion leaves a tombstone. (open: CS-736, CS-737; check not passed)
   unmet: c7 Trends, Compare, Alerts and Overview keep devices apart and facet by device and hardware class. Overview names the devices when they disagree. Compare refuses a timing verdict across devices. (open: CS-738; check not passed)
   unmet: c8 the design `docs/design/benchmark-devices-and-sharing.md` is merged, and the filed items and clauses match it. (check not passed)
+  unmet: c9 a study made with a kind and its instruments reads back with its verdict (CS-404). A study run on several devices pools them by hardware class, and each verdict lists, per class, measured or can't tell, never "measured" for a class without runs (CS-739). (open: CS-404, CS-739; check not passed)
+  unmet: c10 a sweep runs over several settings at once (CS-393), and `run --scenes` measures an example scene with the development metrics (CS-394). A verdict on one hardware class carries to another only when their work counters match within spread, the other class has a calibration study for that work, and both share a bottleneck; otherwise it says can't tell, naming the failed check and what to measure (CS-740). (open: CS-393, CS-394, CS-740; check not passed)
 
 CS-1 Renderers and engine profiles [Dropped]
 CS-2 Cesium IR and materials [Dropped]

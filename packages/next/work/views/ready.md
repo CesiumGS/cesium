@@ -136,7 +136,6 @@ CS-192 Sky, light and atmosphere
   CS-284  Re-check East Antarctica drawn as ocean from far out
   CS-296  decision: Black hole visualization: how much physics, and an engine feature or a gallery example?
   CS-442  Exact lists and the meter: emission layers against the 32-node cap, and a Node port for the moments branch
-  CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
 CS-193 B-reps and geometry queries
   CS-302  Exact snapping and measurement on B-reps
@@ -199,12 +198,7 @@ CS-389 Dyno as the development harness
   CS-714  decision: Reaching a 500 ms cold start: which engine-side work
   CS-715  decision: How the cold-start check runs from here on
   CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands
-  CS-726  decision: Where does dyno store shared benchmark results, and what may it spend?
-  CS-727  decision: Who holds dyno's storage keys, and may remote and cloud sessions read results?
-  CS-728  decision: What classification does a benchmark result get by default?
-  CS-730  decision: How does dyno talk to the bucket: its own small client or a dependency?
-  CS-731  decision: Do inspector recordings upload to shared storage?
-  CS-732  decision: Do the study-side device items join alpha.1?
+  CS-743  Main's npm test exits 0 again: the shared manifest load leaves no unhandled rejection when the signal is already aborted
 
 CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
@@ -253,5 +247,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-182 ready
+176 ready
 ```

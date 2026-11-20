@@ -429,7 +429,8 @@ graph LR
     CS_298["CS-298 Gallery: orbits, with satellites from TLEs and near-Earth objec"]:::proposed
     CS_442["CS-442 Exact lists and the meter: emission layers against the 32-node "]:::open
     CS_446["CS-446 Planets as points, then disks"]:::open
-    CS_724["CS-724 Setup notices when the sky pack, or other data it built, is out"]:::open
+    CS_724["CS-724 Setup notices when the sky pack, or other data it built, is out"]:::done
+    CS_742["CS-742 Merge CS-724, out-of-date data says what to run"]:::done
   end
   subgraph CS_193["B-reps and geometry queries"]
     CS_299["CS-299 B-rep tiles: the extension's name and schema, NURBS or Bézier s"]:::done
@@ -573,22 +574,23 @@ graph LR
     CS_717["CS-717 Design: one benchmark database across machines, with device fin"]:::done
     CS_718["CS-718 hitld cites dyno's benchmark results by reference, reading them"]:::external
     CS_721["CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, st"]:::open
-    CS_726["CS-726 Where does dyno store shared benchmark results, and what may it"]:::decision
-    CS_727["CS-727 Who holds dyno's storage keys, and may remote and cloud session"]:::decision
-    CS_728["CS-728 What classification does a benchmark result get by default?"]:::decision
+    CS_726["CS-726 Where does dyno store shared benchmark results, and what may it"]:::done
+    CS_727["CS-727 Who holds dyno's storage keys, and may remote and cloud session"]:::done
+    CS_728["CS-728 What classification does a benchmark result get by default?"]:::done
     CS_729["CS-729 Merge CS-717, the benchmark devices and sharing design"]:::done
-    CS_730["CS-730 How does dyno talk to the bucket: its own small client or a dep"]:::decision
-    CS_731["CS-731 Do inspector recordings upload to shared storage?"]:::decision
-    CS_732["CS-732 Do the study-side device items join alpha.1?"]:::decision
+    CS_730["CS-730 How does dyno talk to the bucket: its own small client or a dep"]:::done
+    CS_731["CS-731 Do inspector recordings upload to shared storage?"]:::done
+    CS_732["CS-732 Do the study-side device items join alpha.1?"]:::done
     CS_733["CS-733 Each run records its device, configuration and state"]:::open
     CS_734["CS-734 A sealed, content-addressed layout for benchmark results, local"]:::open
     CS_735["CS-735 Dyno syncs results with shared storage, with keys per device an"]:::open
     CS_736["CS-736 Retention, pins and the size budget for benchmark storage"]:::open
     CS_737["CS-737 A classification label on every benchmark result"]:::open
     CS_738["CS-738 Trends, charts, baselines and alerts keep devices apart"]:::open
-    CS_739["CS-739 Studies across devices: noise floors per hardware class, poolin"]:::proposed
-    CS_740["CS-740 A verdict says whether it carries to another hardware class"]:::proposed
+    CS_739["CS-739 Studies across devices: noise floors per hardware class, poolin"]:::open
+    CS_740["CS-740 A verdict says whether it carries to another hardware class"]:::open
     CS_741["CS-741 Merge CS-706, Dyno's cold-start run and the viewer's fixes"]:::done
+    CS_743["CS-743 Main's npm test exits 0 again: the shared manifest load leaves "]:::open
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -1323,6 +1325,7 @@ graph LR
   CS_719 --> CS_720
   CS_712 --> CS_720
   CS_390 --> CS_721
+  CS_724 --> CS_721
   CS_390 --> CS_733
   CS_721 --> CS_733
   CS_733 --> CS_734
@@ -1345,6 +1348,7 @@ graph LR
   CS_739 --> CS_740
   CS_394 --> CS_740
   CS_732 --> CS_740
+  CS_706 --> CS_743
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

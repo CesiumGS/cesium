@@ -68,7 +68,7 @@ CS-191 Content sources and formats [Planned], led by owner
   waits on: CS-16 Streaming robustness (1); CS-188 Earth to Moon (frames 5c to 5h) (1); CS-647 Conditional content and motion (1); CS-190 Vector drawing and the styling language (1)
   waited on by: CS-196 Infrastructure and geoscience capabilities (1); CS-18 The work tracker (4); CS-584 The widgets library (1); CS-647 Conditional content and motion (2)
 CS-192 Sky, light and atmosphere [Planned], led by owner
-  0 of 21 done, 6 ready, 2 blocked, 13 proposed
+  2 of 22 done, 5 ready, 2 blocked, 13 proposed
   waits on: CS-189 Frames and engineering coordinates follow-ups (2); CS-11 Live MaterialX graph editing (1); CS-188 Earth to Moon (frames 5c to 5h) (4)
   waited on by: CS-18 The work tracker (2)
 CS-193 B-reps and geometry queries [Planned], led by owner
@@ -100,7 +100,7 @@ CS-199 Dyno hardening, packaging and CI [Planned], led by owner
   waits on: nothing open
   waited on by: CS-18 The work tracker (2); CS-628 Sandcastle as 2.0's gallery (1)
 CS-389 Dyno as the development harness [Planned], led by owner
-  12 of 51 done, 11 ready, 25 blocked, 3 proposed
+  18 of 52 done, 6 ready, 27 blocked, 1 proposed
   waits on: nothing open
   waited on by: CS-195 Benchmarks, parity and image regression (2); CS-18 The work tracker (5)
 CS-437 The public API reviews [Planned], led by owner

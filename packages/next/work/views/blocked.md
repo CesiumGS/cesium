@@ -558,19 +558,22 @@ CS-389 Dyno as the development harness
         CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
   CS-735  Dyno syncs results with shared storage, with keys per device and role
       ← CS-734 A sealed, content-addressed layout for benchmark results, local first
-        CS-726 Where does dyno store shared benchmark results, and what may it spend?
-        CS-727 Who holds dyno's storage keys, and may remote and cloud sessions read results?
-        CS-730 How does dyno talk to the bucket: its own small client or a dependency?
   CS-736  Retention, pins and the size budget for benchmark storage
       ← CS-734 A sealed, content-addressed layout for benchmark results, local first
         CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
   CS-737  A classification label on every benchmark result
       ← CS-734 A sealed, content-addressed layout for benchmark results, local first
-        CS-728 What classification does a benchmark result get by default?
         CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
   CS-738  Trends, charts, baselines and alerts keep devices apart
       ← CS-733 Each run records its device, configuration and state
         CS-734 A sealed, content-addressed layout for benchmark results, local first
+  CS-739  Studies across devices: noise floors per hardware class, pooling, and the health bar
+      ← CS-404 Studies: the model, the files and the commands
+        CS-733 Each run records its device, configuration and state
+        CS-738 Trends, charts, baselines and alerts keep devices apart
+  CS-740  A verdict says whether it carries to another hardware class
+      ← CS-739 Studies across devices: noise floors per hardware class, pooling, and the health bar
+        CS-394 Example scenes and the development metrics
 
 CS-18 The work tracker
   CS-530  Release 2.0.0-alpha.1
@@ -769,5 +772,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-252 blocked
+254 blocked
 ```

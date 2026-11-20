@@ -64,5 +64,8 @@ CS-17 The transform graph
   CS-712  One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps
   CS-720  Route inverses invert general affine steps, not only rigid ones
 
-39 merged item(s) not in a release
+CS-192 Sky, light and atmosphere
+  CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
+
+40 merged item(s) not in a release
 ```

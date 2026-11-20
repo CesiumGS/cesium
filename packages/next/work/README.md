@@ -707,7 +707,7 @@ No milestone
 
 ### Sky, light and atmosphere
 
-[CS-192](./projects/CS-192-sky-light-and-atmosphere.md), Planned, led by owner: 0 of 21 done, 6 ready, 2 blocked, 13 proposed. Plan: [lighting-and-shading.md](../../../docs/design/lighting-and-shading.md).
+[CS-192](./projects/CS-192-sky-light-and-atmosphere.md), Planned, led by owner: 2 of 22 done, 5 ready, 2 blocked, 13 proposed. Plan: [lighting-and-shading.md](../../../docs/design/lighting-and-shading.md).
 
 Milestone: Glare and the sky are checked on Intel integrated GPUs ([CS-491](./milestones/CS-491-glare-and-the-sky-are-checked-on-intel.md), Planned)
 
@@ -740,7 +740,8 @@ No milestone
 - [ ] [CS-296](./items/CS-296-black-hole-visualization-how-much-physics-and.md) decision: Black hole visualization: how much physics, and an engine feature or a gallery example?. Needs nothing. Decided by owner.
 - [?] [CS-297](./items/CS-297-gallery-a-black-hole-beside-the-moon.md) Gallery: a black hole beside the Moon. Proposed. Needs CS-296.
 - [?] [CS-298](./items/CS-298-gallery-orbits-with-satellites-from-tles-and.md) Gallery: orbits, with satellites from TLEs and near-Earth objects. Proposed. Needs CS-242 (Frames and engineering coordinates follow-ups).
-- [ ] [CS-724](./items/CS-724-a-sky-pack-built-before-the-spelling-change.md) Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again. Needs nothing.
+- [x] [CS-724](./items/CS-724-a-sky-pack-built-before-the-spelling-change.md) Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again. Done.
+- [x] [CS-742](./items/CS-742-merge-cs-724-out-of-date-data-says-what-to-run.md) decision: Merge CS-724, out-of-date data says what to run. Done.
 
 ### B-reps and geometry queries
 
@@ -927,7 +928,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 12 of 51 done, 11 ready, 25 blocked, 3 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 18 of 52 done, 6 ready, 27 blocked, 1 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -970,13 +971,15 @@ Milestone: Dyno switches between the engine and the work ([CS-519](./milestones/
 Milestone: Benchmark results are shared across machines, and dyno is one command ([CS-722](./milestones/CS-722-benchmark-results-are-shared-across-machines.md), Planned)
 
 - [x] [CS-717](./items/CS-717-design-one-benchmark-database-across-machines.md) Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability. Done.
-- [ ] [CS-721](./items/CS-721-a-dyno-command-one-cli-for-dyno-s-runs-lab.md) A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices. Needs CS-390.
+- [ ] [CS-721](./items/CS-721-a-dyno-command-one-cli-for-dyno-s-runs-lab.md) A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices. Needs CS-390 and CS-724 (Sky, light and atmosphere).
 - [ ] [CS-733](./items/CS-733-each-run-records-its-device-configuration-and.md) Each run records its device, configuration and state. Needs CS-390 and CS-721.
 - [ ] [CS-734](./items/CS-734-a-sealed-content-addressed-layout-for-benchmark.md) A sealed, content-addressed layout for benchmark results, local first. Needs CS-733 and CS-721.
 - [ ] [CS-735](./items/CS-735-dyno-syncs-results-with-shared-storage-with.md) Dyno syncs results with shared storage, with keys per device and role. Needs CS-734, CS-726, CS-727 and CS-730.
 - [ ] [CS-736](./items/CS-736-retention-pins-and-the-size-budget-for.md) Retention, pins and the size budget for benchmark storage. Needs CS-734 and CS-721.
 - [ ] [CS-737](./items/CS-737-a-classification-label-on-every-benchmark-result.md) A classification label on every benchmark result. Needs CS-734, CS-728 and CS-721.
 - [ ] [CS-738](./items/CS-738-trends-charts-baselines-and-alerts-keep-devices.md) Trends, charts, baselines and alerts keep devices apart. Needs CS-733 and CS-734.
+- [ ] [CS-739](./items/CS-739-studies-across-devices-noise-floors-per.md) Studies across devices: noise floors per hardware class, pooling, and the health bar. Needs CS-404, CS-733, CS-738 and CS-732.
+- [ ] [CS-740](./items/CS-740-a-verdict-says-whether-it-carries-to-another.md) A verdict says whether it carries to another hardware class. Needs CS-739, CS-394 and CS-732.
 
 No milestone
 
@@ -990,16 +993,15 @@ No milestone
 - [ ] [CS-715](./items/CS-715-how-the-cold-start-check-runs-from-here-on.md) decision: How the cold-start check runs from here on. Needs nothing. Decided by owner.
 - [?] [CS-716](./items/CS-716-dyno-s-shell-asks-for-triage-json-and-images.md) Dyno's shell asks for triage.json and images/index.json once per page load, not three times. Proposed. Needs nothing.
 - [ ] [CS-718](./items/CS-718-hitld-s-private-store-holds-project-data-such.md) external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands. Needs nothing. Waiting on human-in-the-lead: the measurement-tool design (HITLD-609), per arobison/human-in-the-lead#363.
-- [ ] [CS-726](./items/CS-726-where-does-dyno-store-shared-benchmark-results.md) decision: Where does dyno store shared benchmark results, and what may it spend?. Needs nothing. Decided by owner.
-- [ ] [CS-727](./items/CS-727-who-holds-dyno-s-storage-keys-and-may-remote.md) decision: Who holds dyno's storage keys, and may remote and cloud sessions read results?. Needs nothing. Decided by owner.
-- [ ] [CS-728](./items/CS-728-what-classification-does-a-benchmark-result-get.md) decision: What classification does a benchmark result get by default?. Needs nothing. Decided by owner.
+- [x] [CS-726](./items/CS-726-where-does-dyno-store-shared-benchmark-results.md) decision: Where does dyno store shared benchmark results, and what may it spend?. Done.
+- [x] [CS-727](./items/CS-727-who-holds-dyno-s-storage-keys-and-may-remote.md) decision: Who holds dyno's storage keys, and may remote and cloud sessions read results?. Done.
+- [x] [CS-728](./items/CS-728-what-classification-does-a-benchmark-result-get.md) decision: What classification does a benchmark result get by default?. Done.
 - [x] [CS-729](./items/CS-729-merge-cs-717-the-benchmark-devices-and-sharing.md) decision: Merge CS-717, the benchmark devices and sharing design. Done.
-- [ ] [CS-730](./items/CS-730-how-does-dyno-talk-to-the-bucket-its-own-small.md) decision: How does dyno talk to the bucket: its own small client or a dependency?. Needs nothing. Decided by owner.
-- [ ] [CS-731](./items/CS-731-do-inspector-recordings-upload-to-shared-storage.md) decision: Do inspector recordings upload to shared storage?. Needs nothing. Decided by owner.
-- [ ] [CS-732](./items/CS-732-do-the-study-side-device-items-join-alpha-1.md) decision: Do the study-side device items join alpha.1?. Needs nothing. Decided by owner.
-- [?] [CS-739](./items/CS-739-studies-across-devices-noise-floors-per.md) Studies across devices: noise floors per hardware class, pooling, and the health bar. Proposed. Needs CS-404, CS-733, CS-738 and CS-732.
-- [?] [CS-740](./items/CS-740-a-verdict-says-whether-it-carries-to-another.md) A verdict says whether it carries to another hardware class. Proposed. Needs CS-739, CS-394 and CS-732.
+- [x] [CS-730](./items/CS-730-how-does-dyno-talk-to-the-bucket-its-own-small.md) decision: How does dyno talk to the bucket: its own small client or a dependency?. Done.
+- [x] [CS-731](./items/CS-731-do-inspector-recordings-upload-to-shared-storage.md) decision: Do inspector recordings upload to shared storage?. Done.
+- [x] [CS-732](./items/CS-732-do-the-study-side-device-items-join-alpha-1.md) decision: Do the study-side device items join alpha.1?. Done.
 - [x] [CS-741](./items/CS-741-merge-cs-706-dyno-s-cold-start-run-and-the.md) decision: Merge CS-706, Dyno's cold-start run and the viewer's fixes. Done.
+- [ ] [CS-743](./items/CS-743-main-s-npm-test-exits-0-again-the-shared.md) Main's npm test exits 0 again: the shared manifest load leaves no unhandled rejection when the signal is already aborted. Needs CS-706.
 
 ### The public API reviews
 
