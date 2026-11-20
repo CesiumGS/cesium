@@ -2,10 +2,14 @@
 id: CS-713
 title: Merge CS-708, 2.0 strict-mode safe
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-437
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the tested commit (re-checked if main moves, as after CS-704), regenerates the views and logs the merge; CS-706 rebases onto it."
+answered_at: 2026-11-20T01:54:11.062Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

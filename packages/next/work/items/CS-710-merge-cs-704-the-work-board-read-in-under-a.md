@@ -2,10 +2,14 @@
 id: CS-710
 title: Merge CS-704, the Work board read in under a second
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-18
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the tested commit (re-checked if main moves), regenerates the views and logs the merge; CS-706 then measures against it."
+answered_at: 2026-11-20T01:54:10.314Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
