@@ -30,7 +30,7 @@
 - Added experimental `MVTDataProvider.featureLayers`, with one feature layer per MVT source layer. [#14055](https://github.com/CesiumGS/cesium/pull/14055)
 - Added `IonAssetElementService.listProperties` and `IonAssetElementService.listPropertyValues` for discovering the indexed properties of an asset's elements and their distinct values. [#14071](https://github.com/CesiumGS/cesium/pull/14071)
 - Added an `includeProperties` option to `IonAssetElementService.listElements` to return selected properties with each element. [#14072](https://github.com/CesiumGS/cesium/pull/14072)
-- Added `IonAssetElementService.listProperties` and `IonAssetElementService.listPropertyValues` for discovering the indexed properties of an asset's elements and their distinct values.
+- Added `IonAssetElementService.listProperties` and `IonAssetElementService.listPropertyValues` for discovering the indexed properties of an asset's elements and their distinct values. [#14071](https://github.com/CesiumGS/cesium/pull/14071)
 
 #### Fixes :wrench:
 
