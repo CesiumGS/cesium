@@ -2,7 +2,7 @@
 id: CS-33
 title: The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves
 kind: work
-state: in-progress
+state: done
 created: 2026-11-13
 project: CS-9
 claimed_by: orch-11-CS-33
