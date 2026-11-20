@@ -4,6 +4,7 @@ import {
   Check,
   DeveloperError,
   Math as CesiumMath,
+  PixelDatatype,
   PixelFormat,
   RuntimeError,
   defined,
@@ -14,7 +15,7 @@ import Framebuffer from "./Framebuffer.js";
 import Sampler from "./Sampler.js";
 import Texture from "./Texture.js";
 
-/** @import { PixelDatatype, TypedArray } from "@cesium/core"; */
+/** @import { TypedArray } from "@cesium/core"; */
 /** @import Context from "./Context.js"; */
 
 /**
@@ -207,6 +208,63 @@ class DataTexture {
   destroy() {
     this._texture?.destroy();
     return destroyObject(this);
+  }
+
+  /**
+   * Reads the texture's elements back to the CPU.
+   *
+   * @returns {TypedArray} Every element's values, componentsPerElement each.
+   *
+   * @exception {DeveloperError} The texture hasn't been uploaded.
+   * @exception {DeveloperError} The texture's pixel format can't be attached to a {@link Framebuffer}, e.g. it's RG or an integer format.
+   */
+  read() {
+    /** @type {any} */
+    const texture = this._texture;
+
+    //>>includeStart('debug', pragmas.debug);
+    if (!defined(texture)) {
+      throw new DeveloperError("The texture hasn't been uploaded.");
+    }
+    //>>includeEnd('debug');
+
+    const { width, height } = texture;
+    const context = texture._context;
+    const gl = context._gl;
+    const datatype = /** @type {any} */ (PixelDatatype);
+    const TypedArray = datatype.getTypedArrayConstructor(this._pixelDatatype);
+
+    const framebuffer = new Framebuffer({
+      context,
+      colorTextures: [texture],
+      destroyAttachments: false,
+    });
+
+    // Every readable color buffer can be read as four components per texel.
+    const texels = new TypedArray(width * height * 4);
+    framebuffer.bindRead();
+    gl.readPixels(
+      0,
+      0,
+      width,
+      height,
+      gl.RGBA,
+      datatype.toWebGLConstant(this._pixelDatatype, context.webgl2),
+      texels,
+    );
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    // Binding directly bypasses the context's framebuffer binding cache; update it to match.
+    context._currentFramebuffer = undefined;
+    framebuffer.destroy();
+
+    const components = this._componentsPerElement;
+    const result = new TypedArray(this._elementCount * components);
+    for (let i = 0; i < this._elementCount; ++i) {
+      for (let c = 0; c < components; ++c) {
+        result[i * components + c] = texels[i * 4 + c];
+      }
+    }
+    return result;
   }
 
   /**

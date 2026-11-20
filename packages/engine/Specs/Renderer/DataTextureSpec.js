@@ -289,6 +289,34 @@ describe(
       }).toThrowDeveloperError();
     });
 
+    it("reads every element", function () {
+      useMaximumTextureSize(4);
+      const data = createElements(6, 1);
+      dataTexture.upload(context, data);
+      expect(dataTexture.read()).toEqual(data);
+    });
+
+    it("reads float textures with fewer than four components", function () {
+      if (!context.colorBufferFloat) {
+        return;
+      }
+
+      const floatTexture = new DataTexture({
+        pixelFormat: PixelFormat.RED,
+        pixelDatatype: PixelDatatype.FLOAT,
+      });
+      const data = Float32Array.from([0.5, -1.0, 2.0, 3.25, -4.5]);
+      floatTexture.upload(context, data);
+      expect(floatTexture.read()).toEqual(data);
+      floatTexture.destroy();
+    });
+
+    it("throws when reading before the first upload", function () {
+      expect(function () {
+        dataTexture.read();
+      }).toThrowDeveloperError();
+    });
+
     it("destroys the texture", function () {
       dataTexture.upload(context, createElements(4, 1));
       const texture = dataTexture.texture;
