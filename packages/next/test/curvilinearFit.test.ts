@@ -92,7 +92,7 @@ function exaggerationRoute(enu: Float64Array, k: number): Route {
     base: { name: "ECEF" },
     seconds: 0,
     steps: [
-      { kind: "rigid", matrix: enu },
+      { kind: "affine", matrix: enu },
       { kind: "curvilinear", curvilinearMap: exaggeration(k), inverse: false },
     ],
     revision: 1,
@@ -384,9 +384,9 @@ describe("routeDisplacement", () => {
       base: { name: "world" },
       seconds: 0,
       steps: [
-        { kind: "rigid", matrix: toEcef },
+        { kind: "affine", matrix: toEcef },
         { kind: "curvilinear", curvilinearMap: shear, inverse: false },
-        { kind: "rigid", matrix: after },
+        { kind: "affine", matrix: after },
       ],
       revision: 3,
     };
@@ -430,13 +430,13 @@ describe("routeDisplacement", () => {
     expect(fit.errorBound).toBeLessThanOrEqual(1e-2);
   });
 
-  it("is zero for a rigid route, and affinePart ignores curvilinear maps", () => {
+  it("is zero for an affine route, and affinePart ignores curvilinear maps", () => {
     const m = rotation([1, 1, 0], 1.1, [6e6, 1, 2]);
     const route: Route = {
       frame: { name: "a" },
       base: { name: "b" },
       seconds: 0,
-      steps: [{ kind: "rigid", matrix: m }],
+      steps: [{ kind: "affine", matrix: m }],
       revision: 1,
     };
     expect(Array.from(affinePart(route))).toEqual(Array.from(m));

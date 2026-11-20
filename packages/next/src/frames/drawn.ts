@@ -6,7 +6,7 @@
 // the view drew it through, so an answer can state "drawn ×10 vertically;
 // values are true".
 import {
-  routeIsRigid,
+  routeIsAffine,
   curvilinearScaleOf,
   type Route,
 } from "../camera/route.ts";
@@ -56,7 +56,7 @@ export const AFFINE_ONLY: DrawnThrough = Object.freeze({
 });
 
 /**
- * What a route draws content through. Undefined, or a rigid route, is
+ * What a route draws content through. Undefined, or an affine route, is
  * `AFFINE_ONLY`. With `at` (a point of the route's own frame) the statement
  * carries [σ_min, σ_max] there.
  */
@@ -64,7 +64,7 @@ export function drawnThrough(
   route: Route | undefined,
   at?: ArrayLike<number>,
 ): DrawnThrough {
-  if (route === undefined || routeIsRigid(route)) {
+  if (route === undefined || routeIsAffine(route)) {
     return AFFINE_ONLY;
   }
   const curvilinearMaps: DrawnCurvilinearMap[] = [];

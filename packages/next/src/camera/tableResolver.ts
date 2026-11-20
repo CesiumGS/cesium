@@ -74,7 +74,7 @@ export function tableResolver(world: World): FrameResolver {
         seconds,
         steps: [
           {
-            kind: "rigid",
+            kind: "affine",
             matrix: table.resolve(frame, base, seconds, new Float64Array(16)),
           },
         ],

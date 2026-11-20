@@ -426,7 +426,7 @@ struct SurfaceVaryings {
   float3 relPosition : RELPOSITION;
   float4 tangent : TANGENT;
   float3 airInscatter : AIRINSCATTER;
-  float4 airTransmittance : AIRTRANSMITTANCE; // w: the fitted clip distance of a curved clip (`Placed.clip`)
+  float4 airTransmittance : AIRTRANSMITTANCE; // w: the fitted clip distance of a curvilinear clip (`Placed.clip`)
   float3 positionMC : POSITIONMC;
   float4 named0 : NAMEDA;
   float4 named1 : NAMEDB;
@@ -1394,12 +1394,12 @@ static const uint CLIP_POLYGON = 2u;
 static const uint CLIP_SET_INTERSECTION = 1u;
 static const uint CLIP_SET_KEEP_OUTSIDE = 2u;
 static const uint CLIP_SET_DRAWN = 4u;
-// A curved set (scene/world/clips.ts `CLIP_SET_CURVED`): neither point is
+// A curvilinear set (scene/world/clips.ts `CLIP_SET_CURVILINEAR`): neither point is
 // the one it is tested on; its signed distance was fitted over the draw's
 // lattice (the rows' `w`), evaluated per vertex at the design position and
 // interpolated (`airTransmittance.w`), kept where it is ≤ 0. The set's
 // shapes are not in the table.
-static const uint CLIP_SET_CURVED = 8u;
+static const uint CLIP_SET_CURVILINEAR = 8u;
 // Effects (scene/world/clips.ts `ClipEffect`, `CLIP_SET_GHOST` and the rest):
 // a ghost set's removed side is drawn blended by the translucent passes, or
 // dithered by the opaque pass (stipple); a shade set removes nothing; a
@@ -1549,7 +1549,7 @@ bool clipsKeep(SurfaceVaryings in, DrawRecord r) {
       break;
     }
     uint4 entry = asuint(clipRow(1u + s));
-    if ((entry.z & CLIP_SET_CURVED) != 0u) {
+    if ((entry.z & CLIP_SET_CURVILINEAR) != 0u) {
       if (in.airTransmittance.w > 0.0) {
         return false;
       }

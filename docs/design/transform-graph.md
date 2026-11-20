@@ -13,7 +13,7 @@ The handbook's "Transform graph (draft)" tab (`527e3bded1`) is the visual tour o
 **The design.** One graph of frames.
 
 - **Edges:** each node's edge to its parent is **affine** (a 4×4, cheap to recompute per frame from time or anything else) or **curvilinear** (a differentiable function with parameters: time, sliders, any input; an optional inverse; a declared accuracy).
-- **Placement:** content, cameras and lights sit at nodes. Where something sits decides what is curvilinear: a deformer over the Earth's content curvilinear maps the terrain and not the Moon, so there are no modes and no regions.
+- **Placement:** content, cameras and lights sit at nodes. Where something sits decides what is drawn through a curvilinear map: a curvilinear frame over the Earth's content bends the terrain and not the Moon, so there are no modes and no regions.
 - **Compilation:** a compiler collapses affine runs into matrices and differentiates curvilinear nodes automatically (J for normals, distortion and σ propagation; H for chord error, tessellation and bounds). It emits one fused GPU function per route shape, keyed by structure, with parameter values as uniforms.
 - **Truth on the CPU:** the CPU evaluates the same functions in float64 for picks, measurements (in a named frame) and accuracy (Σ_out = J Σ Jᵀ plus each node's σ).
 - **Data on top:** georeferencing, CRSs, views and charts sit above the graph. The graph itself encodes no meaning.
@@ -39,7 +39,7 @@ The handbook's "Transform graph (draft)" tab (`527e3bded1`) is the visual tour o
 
 **One view's content under different transforms: a tree, with per-view parameters and per-view switch nodes (decided by the owner, 2026-11-12: switch nodes to start, a DAG only if this gets inelegant).**
 
-1. **Same structure, different strengths** (view A at ×10, view B at ×1): the deformer's parameters take a value per view. This covers most uses with a plain tree, and the GPU cost is a per-view uniform.
+1. **Same structure, different strengths** (view A at ×10, view B at ×1): the curvilinear frame's parameters take a value per view. This covers most uses with a plain tree, and the GPU cost is a per-view uniform.
 2. **Different structures** (view A exaggerated, view B a plan-and-profile sheet or a UTM chart): a **switch node** whose transform is chosen per view, like a USD variant set or OpenSceneGraph's switch node with camera masks. Every view still sees a tree, so a pixel's route, and so its pick, is unambiguous. "True" frames are unaffected because they sit below the switch.
 3. **The same content twice in one view** (an inset, a before-and-after): instancing (a reference node), later.
 
@@ -48,7 +48,7 @@ A general DAG (a node with several parents) adds nothing the switch doesn't. It 
 **Naming and modules (decided by the owner, 2026-11-12).**
 
 - **The mathematical category:** curvilinear maps that are locally invertible where content is (local diffeomorphisms), and invertible where a route goes down through them (diffeomorphisms onto their image). Affine maps are the special case.
-- **Proposed API:** `affine(...)` and `curvilinear({ forward, inverse?, params })` nodes; "curvilinear transform" in the docs. "Curvilinear map" remains the friendly word for presentation-minded ones (3ds Max calls these "space curvilinear maps").
+- **Proposed API:** `affine(...)` and `curvilinear({ forward, inverse?, params })` nodes; "curvilinear map" in the docs (CS-671 settled on that one word; 3ds Max calls these "space warps").
 - **Modules:**
   - **`transform`** (core): the graph, the compiler and IR, autodiff, routes and accuracy.
   - **`frames`**: the reference-frame catalog (ICRF, ITRF, bodies, EOP, ephemerides), which is data feeding the graph. It isn't renamed to "georeference", which names placing _content_: `Georeference` replaces `DesignPlacement`, as [geometry-through-placement-review.md](geometry-through-placement-review.md) planned.
@@ -70,11 +70,11 @@ The example lands after the transform graph is built.
 
 **Migration from [geometry-through-placement-review.md](geometry-through-placement-review.md)'s code.**
 
-- **Keep:** float64 maps, fits as the fallback for functions the compiler can't take, picks by domain point, cofactor normals, drawn bounds and curved clips.
+- **Keep:** float64 maps, fits as the fallback for functions the compiler can't take, picks by domain point, cofactor normals, drawn bounds and curvilinear clips.
 - **Change:**
   - `curvilinearFrame` becomes a `curvilinear` node.
-  - The exaggeration example puts the deformer over the Earth's content (not between ITRF and the camera).
-  - `CurvilinearMap.presentation`, `CurvilinearMap.domain` and `NonRigidRouteError`'s uses are replaced by placement.
+  - The exaggeration example puts the curvilinear frame over the Earth's content (not between ITRF and the camera).
+  - `CurvilinearMap.presentation`, `CurvilinearMap.domain` and `NonAffineRouteError`'s uses are replaced by placement.
   - The GPU spike's direct evaluation (`277f2f3e57`) becomes the compiler's back end for the built-ins.
 - **5c and 5d** are rewritten against this before they start.
 
@@ -83,7 +83,7 @@ The example lands after the transform graph is built.
 - **Picks and measurements:** `pointIn` and `measureIn` carry points to any node in float64, from the point and its node, with J, [σ_min, σ_max] and accuracy. `pickIn(pick, "true" | "drawn" | node | Frame)` (`frames/pickIn.ts`) bridges a core pick: its camera route becomes a graph whose nodes are its steps, and a catalog frame is reached through `graphOfFrames`. `truePick` shares the located point (`locatePick`) and is unchanged.
 - **Accuracy:** `accuracyAlong(route, point, σ)` is Σ_out = J Σ Jᵀ plus each curvilinear node's `accuracy`, with J chained edge by edge (`Route.walk`; the IR's autodiff where a spec has IR). `FrameGraph.accuracy` supplies affine edges' figures from `pointAccuracy`'s composer; the two agree for a pad to ITRF and ITRF to GCRF. `pointAccuracy`'s covariance rotation now calls the same `congruence`; its terms (shared sources, levers, piecewise frames) stay frame-side.
 - **Bounds:** `taylorBounds` is a first-order Taylor model (F(c) + J(c)·δ + a remainder from the Hessian program's intervals, or J's for a function with a kink). It is conservative everywhere tested and within 1.1× of sampling for a twist up to 10 km boxes and a lens up to 10 m, but ×5 to ×28 sampling's radius for exaggeration and UTM at 100 m to 10 km (×3 to ×6 with 4³ cells), and refused at 100 km: the unrolled foot-point iteration's intervals swell even over a 100 m box (J over it: [−3, 9] for a true 5.1). So selection keeps sampling (`curvilinearBounds.ts`, `tileCurvilinearMap.ts`); interval Hessians over geodetic functions need affine arithmetic to be useful.
-- **Clips:** `nodeResolver` (`scene/world/nodeResolver.ts`) wraps a world's `FrameResolver` so a `ClipSet.frame` may be a node (a `TransformNode` is a `FrameKey`): rigid routes give a matrix, curvilinear ones `NonRigidRouteError` (so `planClip` says "curved") and `route()` gives the camera layer's route, which `WorldCurvedClips` already fits.
+- **Clips:** `nodeResolver` (`scene/world/nodeResolver.ts`) wraps a world's `FrameResolver` so a `ClipSet.frame` may be a node (a `TransformNode` is a `FrameKey`): affine routes give a matrix, curvilinear ones `NonAffineRouteError` (so `planClip` says "curvilinear") and `route()` gives the camera layer's route, which `WorldCurvilinearClips` already fits.
 - **Tessellation (spike, not wired):** `curvatureOver` (M₂ from the route's Jacobian by differences; the AD Hessian at Earth scale is rounding noise) and `subdivisionFor` give n = ⌈√(M₂L²/8 / tolerance)⌉ per triangle; `spikes/routeTessellation.ts` runs the compute pass and indirect draw (dice.slang's pattern). A 50 km tile under ×10 exaggeration at 10 km: 2 triangles take n = 36 (2,592 sub-triangles, 102 px unsubdivided to 0.08 px), 128 triangles take n = 5; a lens across ±50°: n = 64 (cap) and n = 15. Left unwired: a mesh draw needs its own batch kind, a vertex entry in every pass's pipeline (depth, shadow, pick) that decodes (triangle, n, sub-triangle), attribute interpolation, and per-edge levels from each edge's length (one level per triangle leaves T-junction cracks between neighbors of different n).
 
 **Per-view route structure (built 2026-11-12).** A draw has one program and one record, so a switch frame whose views take structurally different routes is drawn by one draw per shape of route (`scene/world/variants.ts`).
@@ -98,4 +98,4 @@ The example lands after the transform graph is built.
 - **Picks:** a twin's record has its source's first feature ID, so a pick in any view resolves to the source draw, and the route it is carried through is that view's own (`View.pickPlacements`). `placementOf` reports the view's variant.
 - **Selection:** each view's tile selection runs on its own route's drawn bounds (`World.tileCurvilinearMap(anchor, viewId)`: none for the identity group). A tile keeps drawn volumes for each map it was asked for (`Tile.drawnOthers`), so views asking in turn remake nothing.
 - **Checked:** `test/curvilinearViewVariants.test.ts` (twins, masks, picks, selection, release, terrain's exact term per view) and `spikes/curvilinearViews.ts` (three views on one GPU world: ×10, the true place and a 60 m lift; each box within 1.5 px of its own route, and the twins released with their views).
-- **Limits:** billboards, instanced draws and patch draws have no twin and are drawn by the primary group's route in every view (said once). A twin costs a draw record and its share of the world's draw table, for each tile a second group shows. A route that differs from its group's in what a draw's record is made from (a rigid step before the last curvilinear map) is still said once and shows the group's first view's. A tile keeps drawn volumes for the map last asked and three others.
+- **Limits:** billboards, instanced draws and patch draws have no twin and are drawn by the primary group's route in every view (said once). A twin costs a draw record and its share of the world's draw table, for each tile a second group shows. A route that differs from its group's in what a draw's record is made from (an affine step before the last curvilinear map) is still said once and shows the group's first view's. A tile keeps drawn volumes for the map last asked and three others.

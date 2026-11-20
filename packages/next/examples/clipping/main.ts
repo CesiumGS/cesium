@@ -90,12 +90,12 @@ import {
  * Section view looks square at the cut through a 2° lens from a few kilometers:
  * the engine has no orthographic camera yet (plan 5d, tasks 14 and 15).
  *
- * Curved clip: the plane is named in a design frame under ITRF whose curvilinear
- * edge waves heights (sections.ts), so no rigid test can draw it and the
+ * Curvilinear clip: the plane is named in a design frame under ITRF whose curvilinear
+ * edge waves heights (sections.ts), so no affine test can draw it and the
  * engine cuts it
  * along a signed distance fitted per draw. Its cut is not a plane the GPU
  * can intersect a pixel's ray with, so while it is on the view has no GPU cap
- * at all (the box's included, which would otherwise close a cut the curved
+ * at all (the box's included, which would otherwise close a cut the curvilinear
  * plane has already removed) and says so.
  */
 
@@ -267,7 +267,7 @@ export async function run({
 
   /** The state's clips into the world, the views' masks and the caps. */
   function applyClips(): void {
-    const planeFrame = state.curved && design ? (design as Frame) : itrf;
+    const planeFrame = state.curvilinear && design ? (design as Frame) : itrf;
     planeSet = planeClip(site, state, planeFrame);
     boxSet = boxClip(site, state, itrf);
     world.setClip(planeWorldClip, planeSet);
@@ -309,9 +309,9 @@ export async function run({
     if (second) {
       second.clipCaps = model.secondClipped ? instantCaps() : undefined;
     }
-    // Exact caps are for planes in a rigid frame: a curved plane has none.
+    // Exact caps are for planes in an affine frame: a curvilinear plane has none.
     capSets[0]?.follow(
-      state.plane.on && !state.curved ? planeSet : undefined,
+      state.plane.on && !state.curvilinear ? planeSet : undefined,
       model.caps.exact,
       model.caps.exact,
     );
@@ -326,8 +326,10 @@ export async function run({
   /** Says why caps are off, from what the view reports and the example's own switches. */
   function capNote(): void {
     panelControls.setCapNote(
-      state.curved && (state.plane.on || state.box.on) && model.caps.instant
-        ? "The plane is curved: the GPU draws a cap where a plane is rigid in the view's frame, and the cut of a curved clip is a surface fitted per draw that no pixel can ask for. While it is on, no GPU cap is drawn (the box's included), and the solids show hollow: turn it off and they come back."
+      state.curvilinear &&
+        (state.plane.on || state.box.on) &&
+        model.caps.instant
+        ? "The plane is curvilinear: the GPU draws a cap where a plane is affine in the view's frame, and the cut of a curvilinear clip is a surface fitted per draw that no pixel can ask for. While it is on, no GPU cap is drawn (the box's included), and the solids show hollow: turn it off and they come back."
         : view.capNote && model.caps.instant
           ? view.capNote
           : undefined,
@@ -498,8 +500,8 @@ export async function run({
       paintLabels();
       applyClips();
     },
-    curvedChanged: () => {
-      if (state.curved && !design) {
+    curvilinearChanged: () => {
+      if (state.curvilinear && !design) {
         design = createDesignFrame(viewer.frames, site);
       }
       applyClips();

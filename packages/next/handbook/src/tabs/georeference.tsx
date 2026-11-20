@@ -254,7 +254,7 @@ const CRS_ROUTES = [
     crs: "Local, with `EXT_georeference`",
     route:
       "The node's translation, rotation and scale (the site transform), then the anchor's east-north-up frame, then geocentric",
-    edge: "Rigid (affine)",
+    edge: "Affine",
     built:
       "An affine node: no curvilinear edge, so no curvilinear map and no pipeline. The site transform is what an engineering frame holds",
   },
@@ -497,7 +497,7 @@ export function Georeferencing() {
           CRS has <strong>grid</strong> distances, scaled by the projection:
           reprojecting is right. A design meant to keep its dimensions on the
           ground belongs in an <strong>engineering CRS</strong> with a site
-          transform, which is a rigid edge. IFC carries the difference in{" "}
+          transform, which is an affine edge. IFC carries the difference in{" "}
           <C>IfcMapConversionScaled</C>&apos;s scale factors.
         </p>
         <p>

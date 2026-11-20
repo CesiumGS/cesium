@@ -78,7 +78,7 @@ let idCount = 0;
 const shapes = new WeakMap<Route, string>();
 
 /**
- * What a route is made of apart from its rigid steps and its parameters'
+ * What a route is made of apart from its affine steps and its parameters'
  * values: the curvilinear edges it crosses, in order and direction, each by the
  * identity of its curvilinear map (a view that sets a slider for itself still reads the
  * same curvilinear map). "" for no route: the view crosses no curvilinear edge.

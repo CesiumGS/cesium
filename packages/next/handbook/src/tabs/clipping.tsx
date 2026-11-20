@@ -24,22 +24,23 @@ function Ticks({ text }: { text: string }) {
 const SPACES = [
   {
     scene: "No curvilinear map",
-    named: "Any reference frame reached by a rigid route",
+    named: "Any reference frame reached by an affine route",
     tested: "The true point, which is also the drawn one",
     why: "One point, so the choice makes no difference.",
   },
   {
     scene:
-      "A deformer over the content, such as ×10 exaggeration, with the camera outside it",
+      "A curvilinear frame over the content, such as ×10 exaggeration, with the camera outside it",
     named: "ITRF, or any frame on the content's side",
     tested: "The true point",
-    why: "The set's route to the content's true side is rigid, and location 4 carries the true camera-relative position.",
+    why: "The set's route to the content's true side is affine, and location 4 carries the true camera-relative position.",
   },
   {
     scene: "The same scene",
-    named: "A frame drawn with the deformer (its parent, where the camera is)",
+    named:
+      "A frame drawn with the curvilinear frame (its parent, where the camera is)",
     tested: "The drawn point, rebuilt per fragment",
-    why: "The route to the content's true side crosses the curvilinear node, but the route to the render root is rigid.",
+    why: "The route to the content's true side crosses the curvilinear node, but the route to the render root is affine.",
   },
   {
     scene:
@@ -52,7 +53,7 @@ const SPACES = [
     scene: "The same scene",
     named: "A frame on the content's side",
     tested: "A fitted signed distance, per draw",
-    why: "Rigid on neither side, so the clip is a curved surface in the content's own coordinates (increment 8c). Its distance is evaluated in float64 and fitted as a lattice.",
+    why: "Affine on neither side, so the clip is a curved surface in the content's own coordinates (increment 8c). Its distance is evaluated in float64 and fitted as a lattice.",
   },
 ];
 
@@ -466,7 +467,7 @@ const SPACE_STEPS = [
     body: (
       <p>
         The set&apos;s route to the content&apos;s own node (where its true
-        coordinates are) is rigid, and the content reaches the render root up
+        coordinates are) is affine, and the content reaches the render root up
         through curvilinear nodes. The set is tested on fragment location 4, the
         draw&apos;s true camera-relative position.
       </p>
@@ -478,7 +479,7 @@ const SPACE_STEPS = [
     title: "Drawn point",
     body: (
       <p>
-        Otherwise, the set&apos;s route to the render root is rigid. A placed
+        Otherwise, the set&apos;s route to the render root is affine. A placed
         draw rebuilds its drawn position per fragment from the window position
         and the depth, in about 17 multiply-adds. An unplaced draw reads it from
         location 4 as it is.
@@ -487,34 +488,35 @@ const SPACE_STEPS = [
     aside: "Rebuilt only when some set in the table is tested there.",
   },
   {
-    title: "Curved",
+    title: "Curvilinear",
     body: (
       <p>
-        Neither route is rigid, so the clip is a curved surface in the scene.
+        Neither route is affine, so the clip is a curved surface in the scene.
         Per draw, the CPU evaluates its signed distance in float64 and fits it
         as a scalar cubic lattice. The vertex stage evaluates the lattice and
         the fragment stage discards above zero.
       </p>
     ),
-    aside: "Increment 8c, built. The section on curved clips has the limits.",
+    aside:
+      "Increment 8c, built. The section on curvilinear clips has the limits.",
   },
 ];
 
 const NOT_BUILT = [
   {
-    what: "Curved clips on billboards, points and instances",
+    what: "Curvilinear clips on billboards, points and instances",
     state:
-      "Curved clips (increment 8c) cut meshes, b-rep patches and tiles. A draw with no per-vertex placement, which is a billboard, a point set or an instanced draw, is cut by the true or drawn tests only, and the engine says so once.",
+      "Curvilinear clips (increment 8c) cut meshes, b-rep patches and tiles. A draw with no per-vertex placement, which is a billboard, a point set or an instanced draw, is cut by the true or drawn tests only, and the engine says so once.",
   },
   {
-    what: "More than one curved field per world",
+    what: "More than one curvilinear field per world",
     state:
-      "A draw's `.w` channel holds one scalar. One view's curved sets combine by max, and views that use different curved sets share the first one's field: the others are reported.",
+      "A draw's `.w` channel holds one scalar. One view's curvilinear sets combine by max, and views that use different curvilinear sets share the first one's field: the others are reported.",
   },
   {
-    what: "A curved clip that moves, and a curvilinear map scaled after the fit",
+    what: "A curvilinear clip that moves, and a curvilinear map scaled after the fit",
     state:
-      "Moving a curved clip refits every draw it cuts, within the per-frame budget, so a drag shows a stale field until the refit lands. A curvilinear-scale change after the fit isn't followed until something else triggers a refit.",
+      "Moving a curvilinear clip refits every draw it cuts, within the per-frame budget, so a drag shows a stale field until the refit lands. A curvilinear-scale change after the fit isn't followed until something else triggers a refit.",
   },
   {
     what: "Room for a carrier",
@@ -539,7 +541,7 @@ const NOT_BUILT = [
   {
     what: "GPU caps for every clip",
     state:
-      "`View.clipCaps` makes caps for sets of planes or one box, tested in true space, with a discard effect, over draws marked `solid`. A polygon, several boxes, a drawn-space set, a ghost or shade set and a curved set make none, and the view says why (`View.capNote`). A GPU cap isn't pickable or measurable.",
+      "`View.clipCaps` makes caps for sets of planes or one box, tested in true space, with a discard effect, over draws marked `solid`. A polygon, several boxes, a drawn-space set, a ghost or shade set and a curvilinear set make none, and the view says why (`View.capNote`). A GPU cap isn't pickable or measurable.",
   },
   {
     what: "Exact caps tied to clips and tilesets",
@@ -582,7 +584,7 @@ const SPIKES = [
       "A capped cylinder, whose cap fills the section's ellipse and follows the clip when it moves; a block with a bore, whose hole stays open; a closed mesh, whose cap fills the section; an open L-shaped wall, which gets a section line and no cap; a closed mesh split across two tiles, whose cap closes; and no GPU validation error.",
   },
   {
-    check: "Curved clips against float64 (spikes/curvedClips.ts)",
+    check: "Curvilinear clips against float64 (spikes/curvilinearClips.ts)",
     result: "7 of 7",
     detail:
       "A wavy plane across a 24 m plate, fitted to 4.6 cm, about half a pixel; a box window whose kinks fit to 1.49 m; the ×10 plate cut on its true surface.",
@@ -603,14 +605,14 @@ const SPIKES = [
 
 const TESTS = [
   {
-    file: "test/curvedClips.test.ts",
+    file: "test/curvilinearClips.test.ts",
     covers:
-      "The set's signed distance in float64; the fit's stated error, which refines with cells; a plane in a design frame under a reprojection planned as curved and cutting a large tile along the bent surface; the field in the rows' `.w` channel as the vertex stage reads it, on a route's lattice or a carrier; the table's row; a moved or removed clip; differing views reported and one view's sets combined by max; and `clipFilter` routing in float64.",
+      "The set's signed distance in float64; the fit's stated error, which refines with cells; a plane in a design frame under a reprojection planned as curvilinear and cutting a large tile along the bent surface; the field in the rows' `.w` channel as the vertex stage reads it, on a route's lattice or a carrier; the table's row; a moved or removed clip; differing views reported and one view's sets combined by max; and `clipFilter` routing in float64.",
   },
   {
     file: "test/clips.test.ts",
     covers:
-      "Shapes, validation, combining and keeping; the table against float64 far from the origin; which space a set is tested in, for no curvilinear map, a deformer over the content and a reprojection; the view's mask and a view without clips; and the queries, with ray, closest point and segment distance passing over what is removed, and points routed into each set's reference frame.",
+      "Shapes, validation, combining and keeping; the table against float64 far from the origin; which space a set is tested in, for no curvilinear map, a curvilinear frame over the content and a reprojection; the view's mask and a view without clips; and the queries, with ray, closest point and segment distance passing over what is removed, and points routed into each set's reference frame.",
   },
   {
     file: "test/queryClips.test.ts",
@@ -620,12 +622,12 @@ const TESTS = [
   {
     file: "test/clipEffects.test.ts",
     covers:
-      "An effect's validation; a world keeping it frozen with its defaults; which sets want the translucent passes (a blended ghost only, not a stipple); the table's effect rows as the shader reads them; a curved set discarding; and the verdict of the opaque and translucent passes: a discard removes in every pass, a blended ghost is cut from the opaque passes and kept ghosted by the translucent ones, ghosts multiply their alphas, a discard beats a ghost.",
+      "An effect's validation; a world keeping it frozen with its defaults; which sets want the translucent passes (a blended ghost only, not a stipple); the table's effect rows as the shader reads them; a curvilinear set discarding; and the verdict of the opaque and translucent passes: a discard removes in every pass, a blended ghost is cut from the opaque passes and kept ghosted by the translucent ones, ghosts multiply their alphas, a discard beats a ghost.",
   },
   {
     file: "test/capFaces.test.ts",
     covers:
-      "The GPU caps' rows: a plane's face with the camera on its negative side and none when it is inside what is kept; the face of a box a ray enters; a face for each plane of a union, and the other cut when a set keeps the outside; none for a curved set, an effect or a polygon, saying why; at most the targets' eight; and a table with no room left alone.",
+      "The GPU caps' rows: a plane's face with the camera on its negative side and none when it is inside what is kept; the face of a box a ray enters; a face for each plane of a union, and the other cut when a set keeps the outside; none for a curvilinear set, an effect or a polygon, saying why; at most the targets' eight; and a table with no room left alone.",
   },
   {
     file: "test/capsOffThread.test.ts",
@@ -675,8 +677,8 @@ export function Clipping() {
     >
       <Note title="How much of this is built">
         <p>
-          Increments 8a (world clips), 8b (caps) and 8c (curved clips, cut along
-          a fitted signed distance) are built, and since then clip effects
+          Increments 8a (world clips), 8b (caps) and 8c (curvilinear clips, cut
+          along a fitted signed distance) are built, and since then clip effects
           (discard, ghost, shade, with the inputs a custom shader reads),
           per-draw exemption, GPU section caps (<C>View.clipCaps</C>), b-rep
           caps that build in steps or in a worker, and clips placed at
@@ -714,8 +716,8 @@ export function Clipping() {
           A set&apos;s <C>frame</C> may also be a node of a transform graph (a{" "}
           <C>TransformNode</C> is a frame key). A node resolver wraps the
           world&apos;s frame resolver: a route between the set&apos;s node and
-          the content&apos;s that is rigid gives a matrix, as any frame does,
-          and one that crosses a curvilinear edge makes the set curved, cut
+          the content&apos;s that is affine gives a matrix, as any frame does,
+          and one that crosses a curvilinear edge makes the set curvilinear, cut
           along a fitted signed distance as below. The route is the
           graph&apos;s, in float64.
         </p>
@@ -732,8 +734,8 @@ export function Clipping() {
           A curvilinear map can separate where content is from where it is drawn
           (see the Curvilinear maps and routes tab). A clip named in one
           reference frame has to cut in the right place for both. Each set picks
-          one of three, per view and per tick, from the rigidity of its routes.
-          The CPU places the set in the view&apos;s shading axes,
+          one of three, per view and per tick, from whether its routes are
+          affine. The CPU places the set in the view&apos;s shading axes,
           camera-relative, in float64, so the fragment stage reads small float32
           numbers near the camera.
         </p>
@@ -770,7 +772,7 @@ export function Clipping() {
           px). A set that can&apos;t be placed for a view, because its reference
           frame is unavailable, is left out of that view&apos;s table for the
           tick and reported once through the engine&apos;s error channel. A set
-          that is rigid on neither side is curved, and is cut as below.
+          that is affine on neither side is curvilinear, and is cut as below.
         </p>
         <Written
           from="src/scene/world/clips.ts (planClip), src/render/view/clipTable.ts, test/clips.test.ts and spikes/clips.ts"
@@ -848,7 +850,7 @@ export function Clipping() {
         <p>
           A ghost takes <C>alpha</C> (0 to 1, exclusive), and optionally a{" "}
           <C>tint</C> and <C>tintStrength</C>. Where ghosts overlap their alphas
-          multiply, and a discarding set beats a ghost. A curved set always
+          multiply, and a discarding set beats a ghost. A curvilinear set always
           discards: effects are for sets tested on the true or the drawn point.
         </p>
         <p>
@@ -976,7 +978,7 @@ export function Clipping() {
           view&apos;s sets (<C>&quot;view&quot;</C>, the default), a{" "}
           <C>ClipSet</C> or a list, or <C>&quot;none&quot;</C>. It tests points
           in float64, routing each into each set&apos;s own reference frame at
-          the scene time: by the matrix for a rigid route, by the route&apos;s
+          the scene time: by the matrix for an affine route, by the route&apos;s
           forward map across a curvilinear map. A query without a filter applies
           no clips, which is what a world question such as a distance, a
           clearance or a line of sight wants.
@@ -1027,16 +1029,16 @@ export function Clipping() {
         />
       </Section>
 
-      <Section title="Curved clips">
+      <Section title="Curvilinear clips">
         <p>
           A set whose reference frame reaches neither the content&apos;s true
-          side nor the render root rigidly is curved: in the content&apos;s own
-          coordinates its surface bends with the curvilinear map. A plane named
-          in a design frame cuts the true surface of an exaggerated tile,
-          wherever that is drawn. A set placed at a transform-graph node is
-          curved the same way when the graph&apos;s route from the node to the
-          content crosses a curvilinear edge. The clipping example hasn&apos;t
-          moved to node-placed clips yet.
+          side nor the render root by an affine route is curvilinear: in the
+          content&apos;s own coordinates its surface bends with the curvilinear
+          map. A plane named in a design frame cuts the true surface of an
+          exaggerated tile, wherever that is drawn. A set placed at a
+          transform-graph node is curvilinear the same way when the graph&apos;s
+          route from the node to the content crosses a curvilinear edge. The
+          clipping example hasn&apos;t moved to node-placed clips yet.
         </p>
         <ul>
           <li>
@@ -1058,16 +1060,16 @@ export function Clipping() {
           </li>
         </ul>
         <p>
-          The limits: a world has one curved field, so one view&apos;s curved
-          sets combine by max and differing views are reported. Moving a curved
-          clip refits every draw it cuts within the per-frame budget. A
-          curvilinear map scaled after the fit isn&apos;t followed. Billboards,
-          points and instances aren&apos;t cut. A draw already at 3 terms with
-          no lattice has no room for a carrier. A draw is uncut until its field
-          lands.
+          The limits: a world has one curvilinear field, so one view&apos;s
+          curvilinear sets combine by max and differing views are reported.
+          Moving a curvilinear clip refits every draw it cuts within the
+          per-frame budget. A curvilinear map scaled after the fit isn&apos;t
+          followed. Billboards, points and instances aren&apos;t cut. A draw
+          already at 3 terms with no lattice has no room for a carrier. A draw
+          is uncut until its field lands.
         </p>
         <Written
-          from="src/scene/world/curvedClips.ts, src/scene/curvilinearFit.ts, src/shaders/placement.slang and test/curvedClips.test.ts"
+          from="src/scene/world/curvilinearClips.ts, src/scene/curvilinearFit.ts, src/shaders/placement.slang and test/curvilinearClips.test.ts"
           on="2026-11-11"
         />
       </Section>
@@ -1114,11 +1116,11 @@ export function Clipping() {
           The count is right only if each solid is closed, so an open surface
           (terrain, a ground plane, a sheet) is left unmarked: its surfaces
           would flip the count behind it. A hollow solid, with a bore, gets a
-          ring, and the bore stays open. No cap is made for a curved set (its
-          field is fitted per draw, so no pixel knows it, and the other sets'
-          caps are left off with it), for a set tested on the drawn point, or
-          for a set with a ghost or shade effect. The cap is not pickable: ask
-          the geometry for that.
+          ring, and the bore stays open. No cap is made for a curvilinear set
+          (its field is fitted per draw, so no pixel knows it, and the other
+          sets' caps are left off with it), for a set tested on the drawn point,
+          or for a set with a ghost or shade effect. The cap is not pickable:
+          ask the geometry for that.
         </p>
         <h3>Exact caps, as geometry</h3>
         <p>

@@ -147,7 +147,7 @@ describe("CameraLayer.held", () => {
 
   /**
    * A target whose data runs from 0 to 100 s TDB. A real trajectory (on its own
-   * tree: the synthetic data's GCRF has no rigid edge to compose a route
+   * tree: the synthetic data's GCRF has no affine edge to compose a route
    * through) gives the error past its data, and the target throws it.
    */
   function straightLine(catalog: ReturnType<typeof createFrameCatalog>): Frame {

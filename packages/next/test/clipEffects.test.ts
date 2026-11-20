@@ -245,13 +245,13 @@ describe("the table's effect rows", () => {
     expect(u32[1]! & CLIP_ANY_REPORT).toBe(CLIP_ANY_REPORT);
   });
 
-  it("a curved set takes no effect: it discards", () => {
+  it("a curvilinear set takes no effect: it discards", () => {
     const table = new Float32Array(CLIP_TABLE_ROWS * 4);
     packClipTable(
       [
         {
           set: set([PLANE], { kind: "translucent" }),
-          space: "curved",
+          space: "curvilinear",
           matrix: IDENTITY,
         },
       ],

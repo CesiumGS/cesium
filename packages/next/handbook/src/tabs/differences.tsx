@@ -70,7 +70,7 @@ const CONCEPTS = [
   {
     topic: "Placing and reprojecting content",
     old: "A tileset's transform and modelMatrix, with 3D Tiles' ECEF coordinates. Content authored in a projected CRS isn't reprojected",
-    next: "A tree of frames whose edges are affine or curvilinear. A tileset's declared CRS picks its route to the body: the identity for a geocentric one, a fitted coordinate operation for a projected one, a rigid site transform for a local one. There are no placement modes. The tree is compiled to one GPU function per route.",
+    next: "A tree of frames whose edges are affine or curvilinear. A tileset's declared CRS picks its route to the body: the identity for a geocentric one, a fitted coordinate operation for a projected one, an affine site transform for a local one. There are no placement modes. The tree is compiled to one GPU function per route.",
   },
   {
     topic: "Clipping",

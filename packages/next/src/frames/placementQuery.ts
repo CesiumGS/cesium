@@ -74,7 +74,7 @@ export interface DrawPlacementInfo {
    * Where the draw's anchor reaches the render root across curvilinear edges
    * (plan 13.37): the curvilinear maps crossed in order and the state of the draw's
    * fit. Its lattice, `terms`' last entry, has the cells, error and
-   * estimate. Absent for a rigid route.
+   * estimate. Absent for an affine route.
    */
   readonly route?: {
     readonly curvilinearMaps: readonly {
@@ -175,7 +175,7 @@ export function placementOf(
   return { ...info, errorBound: error, estimate };
 }
 
-/** The route a draw's anchor is placed by across curvilinear maps, as the query reports it; undefined for a rigid one. */
+/** The route a draw's anchor is placed by across curvilinear maps, as the query reports it; undefined for an affine one. */
 function routeOf(
   route: Route | undefined,
   status: { readonly state: "fitted" | "stale" | "pending" } | undefined,

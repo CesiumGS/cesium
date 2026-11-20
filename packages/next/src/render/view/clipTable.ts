@@ -40,11 +40,11 @@ function placementOf(
 }
 
 /**
- * The view's clip sets that are curved surfaces in it (planClip's `curved`):
- * what the world fits a field for (`WorldCurvedClips.frame`). A set that
+ * The view's clip sets that are curved surfaces in it (planClip's `curvilinear`):
+ * what the world fits a field for (`WorldCurvilinearClips.frame`). A set that
  * can't be placed is left to `writeClips` to report.
  */
-export function curvedClipSets(
+export function curvilinearClipSets(
   engine: Pick<ClipTableEngine, "cameras">,
   view: View,
 ): ClipSet[] {
@@ -53,25 +53,25 @@ export function curvedClipSets(
     return [];
   }
   const placement = placementOf(engine, view);
-  const curved: ClipSet[] = [];
+  const curvilinear: ClipSet[] = [];
   for (const set of sets) {
     try {
-      if (planClip(set, placement).space === "curved") {
-        curved.push(set);
+      if (planClip(set, placement).space === "curvilinear") {
+        curvilinear.push(set);
       }
     } catch {
       // reported by writeClips
     }
   }
-  return curved;
+  return curvilinear;
 }
 
 /**
  * Places `view`'s clips for this tick and uploads its table; sets
  * `frame.clipBytes` (0 for none). A clip that can't be placed (its frame is
  * unavailable) is left out and reported, once, as the camera layer reports a
- * frame it can't resolve. The view's curved sets are one table row: their
- * field is the world's (`WorldCurvedClips`), a draw's fitted distance; when
+ * frame it can't resolve. The view's curvilinear sets are one table row: their
+ * field is the world's (`WorldCurvilinearClips`), a draw's fitted distance; when
  * the world's field is another view's, they are left out and reported.
  */
 export function writeClips(
@@ -91,11 +91,11 @@ export function writeClips(
   const world = view.world;
   const placement = placementOf(engine, view);
   const plans: PlannedClip[] = [];
-  const curved: PlannedClip[] = [];
+  const curvilinear: PlannedClip[] = [];
   for (const set of sets) {
     try {
       const plan = planClip(set, placement);
-      (plan.space === "curved" ? curved : plans).push(plan);
+      (plan.space === "curvilinear" ? curvilinear : plans).push(plan);
     } catch (error) {
       const reason =
         error instanceof FrameUnavailableError
@@ -109,13 +109,17 @@ export function writeClips(
       );
     }
   }
-  if (curved.length > 0) {
-    if (world.curvilinearMaps.curved.serves(curved.map((p) => p.set))) {
-      plans.push(curved[0]!);
+  if (curvilinear.length > 0) {
+    if (
+      world.curvilinearMaps.curvilinearClips.serves(
+        curvilinear.map((p) => p.set),
+      )
+    ) {
+      plans.push(curvilinear[0]!);
     } else {
       engine.ctx.errors.report(
         "camera",
-        `the curved clip${curved.length === 1 ? "" : "s"} in ${curved.map((p) => p.set.frame.name).join(", ")} ${curved.length === 1 ? "is" : "are"} left out of a view this tick: the world's draws carry one curved field, which is not this view's yet.`,
+        `the curvilinear clip${curvilinear.length === 1 ? "" : "s"} in ${curvilinear.map((p) => p.set.frame.name).join(", ")} ${curvilinear.length === 1 ? "is" : "are"} left out of a view this tick: the world's draws carry one curvilinear field, which is not this view's yet.`,
       );
     }
   }

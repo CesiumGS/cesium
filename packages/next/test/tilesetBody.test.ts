@@ -359,7 +359,7 @@ describe("selection views on the anchor's body", () => {
   });
 
   it("a ×10 lift over Earth content leaves the Moon's selection view as it was", () => {
-    // Review Focus 6: the Moon's route stays rigid.
+    // Review Focus 6: the Moon's route stays affine.
     const world = newWorld();
     const catalog = createFrameCatalog({ data: syntheticFrameData() });
     const itrf = catalog.get("ITRF");
@@ -390,7 +390,7 @@ describe("selection views on the anchor's body", () => {
       },
     );
     // The Earth's anchor is across the lift: selected on drawn volumes, and
-    // never horizon-culled. The Moon's is rigid: today's selection, horizon
+    // never horizon-culled. The Moon's is affine: today's selection, horizon
     // culling on its own ellipsoid.
     expect(world.tileCurvilinearMap(earth, id)).toBeDefined();
     expect(world.tileCurvilinearMap(moon, id)).toBeUndefined();

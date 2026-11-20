@@ -739,7 +739,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "triangulateRegion",
     ],
     status: "changed",
-    note: "Clips are world objects, not per tileset or model: `world.addClip(set)` with planes, boxes and extruded polygons in any frame, combined by union or intersection, keeping inside or outside, and views opt in by mask. 1.x's `edgeWidth` highlight has no direct equivalent: a set's `effect` can instead give a custom shader the distance to the cut to glow or fade, draw what was cut as a translucent ghost, or only report. Each set is tested per fragment on the true point or the drawn one, whichever its frame reaches rigidly, so a cut named in ITRF stays at its true height under exaggeration, and across a deformed route it is cut along a fitted distance. Picks and the view's queries respect them; world questions take a clip set explicitly. Caps close a cut: instantly on the GPU for the views that ask (`View.clipCaps`: the solid draws, `DrawOptions.solid`, are counted behind each cut face per pixel and the cap is drawn where the count is odd, so a moving clip never has a frame without it); exact for a b-rep (`BrepCaps`, `sectionBrep`, in steps within a frame's budget or in a worker through a `SectionRunner`), cut from the triangles for a mesh (`MeshCaps`, with its polygons exposed for exact picks). A `CapScheduler` given the engine rebuilds them and wakes it. Curved clips have no GPU cap. A draw can exempt itself from clips (`DrawOptions.clipExempt`); a per-feature exemption comes with the styling language's run-time data. Plan docs/design/geometry-through-placement-review.md, increment 8.",
+    note: "Clips are world objects, not per tileset or model: `world.addClip(set)` with planes, boxes and extruded polygons in any frame, combined by union or intersection, keeping inside or outside, and views opt in by mask. 1.x's `edgeWidth` highlight has no direct equivalent: a set's `effect` can instead give a custom shader the distance to the cut to glow or fade, draw what was cut as a translucent ghost, or only report. Each set is tested per fragment on the true point or the drawn one, whichever its frame reaches by an affine route, so a cut named in ITRF stays at its true height under exaggeration, and across a curvilinear route it is cut along a fitted distance. Picks and the view's queries respect them; world questions take a clip set explicitly. Caps close a cut: instantly on the GPU for the views that ask (`View.clipCaps`: the solid draws, `DrawOptions.solid`, are counted behind each cut face per pixel and the cap is drawn where the count is odd, so a moving clip never has a frame without it); exact for a b-rep (`BrepCaps`, `sectionBrep`, in steps within a frame's budget or in a worker through a `SectionRunner`), cut from the triangles for a mesh (`MeshCaps`, with its polygons exposed for exact picks). A `CapScheduler` given the engine rebuilds them and wakes it. Curvilinear clips have no GPU cap. A draw can exempt itself from clips (`DrawOptions.clipExempt`); a per-feature exemption comes with the styling language's run-time data. Plan docs/design/geometry-through-placement-review.md, increment 8.",
     snippet: "clipping",
   },
   {
@@ -1659,7 +1659,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "MAX_ANCHORS",
     ],
     status: "new",
-    note: "An optional tree of reference frames answers where one thing is in another at a given time, with its accuracy. `curvilinearFrame` and `switchFrame` put deformers, and per-view choices of one, in the same tree.",
+    note: "An optional tree of reference frames answers where one thing is in another at a given time, with its accuracy. `curvilinearFrame` and `switchFrame` put curvilinear frames, and per-view choices of one, in the same tree.",
   },
   {
     group: "frames",
@@ -1716,7 +1716,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "frames:PickTarget",
     ],
     status: "new",
-    note: "Built-in deformers and projections (each in both directions, between a CRS's grid and geographic) go over content as nodes of the frame graph, and a pick or a point is read in any node, with the accuracy along the route.",
+    note: "Built-in curvilinear frames and projections (each in both directions, between a CRS's grid and geographic) go over content as nodes of the frame graph, and a pick or a point is read in any node, with the accuracy along the route.",
   },
   {
     group: "frames",

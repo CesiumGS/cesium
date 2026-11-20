@@ -158,10 +158,10 @@ export function Api() {
       <Section title="Placing and deforming content">
         <p>
           Where content sits in a tree of frames decides how it is drawn. A
-          deformer is a node over the content it deforms: vertical exaggeration,
-          a projection, a bend, a lens. The built-ins come from the core (
-          <C>verticalExaggeration</C>, <C>utm</C>, <C>bend</C> and the rest),{" "}
-          <C>curvilinearFrame</C> and <C>switchFrame</C> in{" "}
+          curvilinear frame is a node over the content it deforms: vertical
+          exaggeration, a projection, a bend, a lens. The built-ins come from
+          the core (<C>verticalExaggeration</C>, <C>utm</C>, <C>bend</C> and the
+          rest), <C>curvilinearFrame</C> and <C>switchFrame</C> in{" "}
           <C>@cesium/next/frames</C> put them in the tree, and your own is a
           restricted-JavaScript function the engine parses, never evaluates. The{" "}
           <a href="#/transform-graph">Transform graph tab</a> explains it.

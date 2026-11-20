@@ -1,11 +1,11 @@
-// Curved clips (docs/design/geometry-through-placement-review.md, increment 8c): a clip set whose frame reaches a
+// Curvilinear clips (docs/design/geometry-through-placement-review.md, increment 8c): a clip set whose frame reaches a
 // draw's content only across a curvilinear map that bends it (a plane named in a design
 // CRS, the content in ITRF or drawn exaggerated) is a curved surface in the
 // content's own coordinates. Its signed distance is fitted per draw as a scalar
 // cubic lattice over the cells of the draw's position fit, and rides in the
 // free `w` channel of the lattice's rows (`ClipField`, placementTable.ts);
 // the vertex stage evaluates it at the design position and the fragment
-// stage discards by its sign (surface.slang `CLIP_SET_CURVED`).
+// stage discards by its sign (surface.slang `CLIP_SET_CURVILINEAR`).
 //
 // - **Evaluated in the set's frame, in float64.** A draw's model point goes
 //   to its anchor's coordinates by its matrix, and from the anchor's frame to
@@ -15,8 +15,8 @@
 //   fit; a scale that moves later isn't followed (a refit follows a route's
 //   revision).
 // - **One field per draw.** The `w` channel holds one scalar, so a world's
-//   curved sets are one field: the views' curved sets combine by max (kept
-//   where every one keeps). Views of a world that use different curved sets
+//   curvilinear sets are one field: the views' curvilinear sets combine by max (kept
+//   where every one keeps). Views of a world that use different curvilinear sets
 //   share the first one's field; the others' are left out and reported.
 // - **Carriers.** A draw with no lattice (ITRF content under an ITRF root,
 //   or only morph attributes) gets a lattice of weight 0 and no displacement
@@ -69,17 +69,17 @@ const TOLERANCE_FLOOR = 1e-3;
 /** What a fit hears of the tile's geometric error (as the position fits'). */
 const GEOMETRIC_ERROR_SHARE = 1 / 64;
 
-/** What the engine tells a world's curved clips each tick. */
-export interface CurvedClipTick {
+/** What the engine tells a world's curvilinear clips each tick. */
+export interface CurvilinearClipTick {
   readonly resolver: FrameResolver;
   /** The scene time, UTC seconds since 1970. */
   readonly seconds: number;
-  /** Each view's curved sets (`curvedClipSets`), in the view's order; views without any are left out. */
+  /** Each view's curvilinear sets (`curvilinearClipSets`), in the view's order; views without any are left out. */
   readonly demands: ReadonlyArray<readonly ClipSet[]>;
 }
 
-/** How a draw's field stands (`WorldCurvedClips.status`). */
-export interface CurvedClipStatus {
+/** How a draw's field stands (`WorldCurvilinearClips.status`). */
+export interface CurvilinearClipStatus {
   /** "fitted": drawn at the current field; "stale": an older one is drawn while a refit waits; "pending": none yet; "failed": it couldn't be fitted, the draw is uncut. */
   readonly state: "fitted" | "stale" | "pending" | "failed" | "unsupported";
   /** The field's worst residual against float64, m; 0 where there is none. */
@@ -125,10 +125,10 @@ function sameMatrix(a: Float64Array, b: Float64Array): boolean {
   return true;
 }
 
-export class WorldCurvedClips {
+export class WorldCurvilinearClips {
   /** The sets the world's draws carry the field of; undefined: none. */
   #sets: readonly ClipSet[] | undefined;
-  #tick: CurvedClipTick | undefined;
+  #tick: CurvilinearClipTick | undefined;
   #report: ((message: string) => void) | undefined;
   readonly #entries = new Map<number, Entry>();
   readonly #pending = new Set<number>();
@@ -151,13 +151,13 @@ export class WorldCurvedClips {
     return this.#pending.size;
   }
 
-  /** Whether the world's field is `sets` (a view's curved sets): the view's table may test it. */
+  /** Whether the world's field is `sets` (a view's curvilinear sets): the view's table may test it. */
   serves(sets: readonly ClipSet[]): boolean {
     return sameSets(sets, this.#sets);
   }
 
   /** How the draw's field stands, if the world has one. */
-  status(handle: DrawHandle): CurvedClipStatus | undefined {
+  status(handle: DrawHandle): CurvilinearClipStatus | undefined {
     if (!this.#sets || !this.world.hasDraw(handle)) {
       return undefined;
     }
@@ -209,11 +209,11 @@ export class WorldCurvedClips {
   }
 
   /**
-   * The frame's step: the world's field follows its views' curved sets; draws
+   * The frame's step: the world's field follows its views' curvilinear sets; draws
    * that need one are fitted for up to `budgetMs`. Returns whether any wait.
    */
   frame(
-    tick: CurvedClipTick,
+    tick: CurvilinearClipTick,
     budgetMs: number,
     report: (message: string) => void,
   ): boolean {
@@ -225,7 +225,7 @@ export class WorldCurvedClips {
     if (wanted.some((d) => !sameSets(d, chosen))) {
       this.#say(
         "views",
-        "clips: views of a world use different curved clips; a draw carries one field, so the first view's is cut and the others' curved clips are left out.",
+        "clips: views of a world use different curvilinear clips; a draw carries one field, so the first view's is cut and the others' curvilinear clips are left out.",
       );
     }
     if (!sameSets(chosen, this.#sets)) {
@@ -287,7 +287,7 @@ export class WorldCurvedClips {
     if (!carried && (terms?.length ?? 0) >= MAX_CURVILINEAR_TERMS) {
       this.#say(
         "room",
-        `clips: a draw with ${MAX_CURVILINEAR_TERMS} terms and no lattice has no room for a curved clip's field; it is not cut by it.`,
+        `clips: a draw with ${MAX_CURVILINEAR_TERMS} terms and no lattice has no room for a curvilinear clip's field; it is not cut by it.`,
       );
       entry.field = undefined;
       return terms;
@@ -326,7 +326,7 @@ export class WorldCurvedClips {
           ...(carried
             ? { cells: carried.cells }
             : { maxCells: CARRIER_MAX_CELLS }),
-          operation: `${this.#sets.length} curved clip${this.#sets.length === 1 ? "" : "s"} from ${anchor.name}`,
+          operation: `${this.#sets.length} curvilinear clip${this.#sets.length === 1 ? "" : "s"} from ${anchor.name}`,
         });
         entry.field = fit.field;
         entry.cells = fit.cells;
@@ -335,7 +335,7 @@ export class WorldCurvedClips {
         entry.failed = error instanceof Error ? error.message : String(error);
         this.#say(
           `fit:${entry.failed}`,
-          `clips: a curved clip's field could not be fitted (${entry.failed}); the draw is not cut by it.`,
+          `clips: a curvilinear clip's field could not be fitted (${entry.failed}); the draw is not cut by it.`,
         );
       }
     }
@@ -357,7 +357,7 @@ export class WorldCurvedClips {
       coefficients: new Float64Array(cells ** 3 * PLACEMENT_TERMS * 3),
       errorBound: 0,
       estimate: false,
-      operation: "curved clip carrier",
+      operation: "curvilinear clip carrier",
       clip: field,
     };
     return [...(terms ?? []), { term: lattice, weight: constantWeight(0) }];
@@ -387,7 +387,7 @@ export class WorldCurvedClips {
   }
 
   /** Draws whose transforms or routes changed are fitted again. */
-  #follow(tick: CurvedClipTick): void {
+  #follow(tick: CurvilinearClipTick): void {
     const revision = this.world.scene.transformRevision_;
     const moved = revision !== this.#transformRevision;
     this.#transformRevision = revision;
@@ -435,7 +435,7 @@ export class WorldCurvedClips {
     } catch (error) {
       this.#say(
         "apply",
-        `clips: a draw's curved-clip field could not be drawn: ${error instanceof Error ? error.message : String(error)}`,
+        `clips: a draw's curvilinear-clip field could not be drawn: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
   }
@@ -450,14 +450,14 @@ export class WorldCurvedClips {
     if (flags & (RecordFlags.billboard | RecordFlags.points)) {
       this.#say(
         "kind",
-        "clips: a billboard or point draw has no per-vertex placement to carry a curved clip's field; it is not cut by one.",
+        "clips: a billboard or point draw has no per-vertex placement to carry a curvilinear clip's field; it is not cut by one.",
       );
       return false;
     }
     if (raster.recordsU32[o + INSTANCE_COUNT_WORD]! > 0) {
       this.#say(
         "instances",
-        "clips: an instanced draw has no per-vertex placement to carry a curved clip's field; it is not cut by one.",
+        "clips: an instanced draw has no per-vertex placement to carry a curvilinear clip's field; it is not cut by one.",
       );
       return false;
     }
@@ -477,7 +477,7 @@ export class WorldCurvedClips {
   }
 
   /** A number that changes when a route from `anchor` to any set's frame does. */
-  #routesOf(anchor: FrameKey, tick: CurvedClipTick): number {
+  #routesOf(anchor: FrameKey, tick: CurvilinearClipTick): number {
     let sum = 0;
     for (const set of this.#sets ?? []) {
       if (set.frame !== anchor) {
@@ -495,7 +495,7 @@ export class WorldCurvedClips {
   #scalar(
     anchor: FrameKey,
     matrix: Float64Array,
-    tick: CurvedClipTick,
+    tick: CurvilinearClipTick,
   ): ScalarFunction {
     const sets = this.#sets!;
     const routes: Array<Route | undefined> = sets.map((set) =>

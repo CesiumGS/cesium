@@ -17,7 +17,7 @@ import {
 /** A curvilinear edge of the frame tree: a map from a frame's own coordinates to its parent's (see `CurvilinearFrameSpec`, `curvilinearFrame`). */
 export type CurvilinearMap = CoreCurvilinearMap;
 
-/** The path from a content frame to a base: rigid steps and curvilinear steps in order. */
+/** The path from a content frame to a base: affine steps and curvilinear steps in order. */
 export type Route = CoreRoute;
 
 /** A number read live that moves a curvilinear map's strength (a `PlacementParameter` is one). */

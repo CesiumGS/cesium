@@ -71,7 +71,7 @@ export interface FrameResolver {
    * `frame`'s place in `base` at scene `seconds` (UTC seconds since 1970):
    * `out` such that p_base = out · p_frame, column-major float64, meters.
    * Throws `FrameUnavailableError` when it can't answer yet, and
-   * `NonRigidRouteError` when the route crosses a curvilinear map (a non-rigid edge
+   * `NonAffineRouteError` when the route crosses a curvilinear map (a non-affine edge
    * has no 4×4; ask `route`).
    */
   resolve(
@@ -81,14 +81,14 @@ export interface FrameResolver {
     out: Float64Array,
   ): Float64Array;
   /**
-   * The path from `frame` to `base` at scene `seconds`: rigid steps and curvilinear map
+   * The path from `frame` to `base` at scene `seconds`: affine steps and curvilinear map
    * steps in order (`Route`), a curvilinear step forward where the route goes up
    * from a frame to its parent. A route that crosses no curvilinear edge is one
-   * rigid step with `resolve`'s matrix. `view` is the view the route is for,
+   * affine step with `resolve`'s matrix. `view` is the view the route is for,
    * which a switch frame chooses its edge by (any object, a name or a
    * number); without one a switch uses its default. Throws
    * `FrameUnavailableError` as `resolve` does. A resolver without it has only
-   * rigid routes (`resolveRoute`).
+   * affine routes (`resolveRoute`).
    */
   route?(
     frame: FrameKey,
@@ -106,7 +106,7 @@ export interface FrameResolver {
   binding?(anchor: AnchorHandle): FrameKey | undefined;
   /**
    * How fast `frame` moves in `base` at `seconds`, written into `out`. A
-   * resolver may throw `NonRigidRouteError` for a route that crosses a curvilinear map.
+   * resolver may throw `NonAffineRouteError` for a route that crosses a curvilinear map.
    */
   motion?(
     frame: FrameKey,

@@ -4,7 +4,7 @@
 //
 // What is kept of the route there: its translation, and its rotation, the
 // orthogonal factor R of the polar decomposition of the curvilinear map's Jacobian
-// (relative to the route's rigid part, which already places the anchor).
+// (relative to the route's affine part, which already places the anchor).
 // Its scale and shear are dropped: a vertical exaggeration leaves a car as
 // tall as it was (R = I), and a reprojection turns it with the grid's
 // convergence but doesn't scale it. With the curvilinear map at identity the result is
@@ -38,7 +38,7 @@ const IDENTITY: readonly number[] = [1, 0, 0, 0, 1, 0, 0, 0, 1];
 
 /** What a route does at one point, kept rigid (see the file's comment). */
 export interface AnchorCorrection {
-  /** `A⁻¹·route(f₀) − f₀`: where the origin goes, in the anchor's coordinates (`A` is the route's rigid part). */
+  /** `A⁻¹·route(f₀) − f₀`: where the origin goes, in the anchor's coordinates (`A` is the route's affine part). */
   readonly shift: Float64Array;
   /** The rotation about the origin, in the anchor's coordinates. */
   readonly rotation: Mat3;
@@ -137,7 +137,7 @@ export function polarRotation(k: ArrayLike<number>): Mat3 {
 /**
  * What `route` does at points of its frame, kept rigid: for `origin`, the
  * shift of the origin and the rotation about it, in the coordinates the
- * route's rigid part places (`affine`) the anchor in. The corrector is made
+ * route's affine part places (`affine`) the anchor in. The corrector is made
  * once and called per point (an instance's). Undefined where the route isn't
  * finite.
  */

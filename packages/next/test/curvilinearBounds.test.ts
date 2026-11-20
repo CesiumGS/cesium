@@ -436,7 +436,7 @@ describe("σ over a volume", () => {
     expect(high).toBeCloseTo(1, 3);
   });
 
-  it("carries a rigid step and an after matrix through the Jacobian", () => {
+  it("carries an affine step and an after matrix through the Jacobian", () => {
     // A rotation by 90° about z then the exaggeration: σ unchanged.
     // prettier-ignore
     const rotate = Float64Array.of(
@@ -445,7 +445,7 @@ describe("σ over a volume", () => {
       0, 0, 1, 0,
       0, 0, 0, 1,
     );
-    const r = route({ kind: "rigid", matrix: rotate });
+    const r = route({ kind: "affine", matrix: rotate });
     const out = new Float64Array(3);
     const jacobian = new Float64Array(9);
     routeMap(r)([1, 2, 3], out, jacobian);

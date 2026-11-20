@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   routeForward,
   routeInverse,
-  routeIsRigid,
+  routeIsAffine,
   curvilinearForward,
   curvilinearInverse,
   withFrozenScales,
@@ -65,23 +65,23 @@ function translation(x: number, y: number, z: number): Float64Array {
 }
 
 describe("routes", () => {
-  it("carries a point through rigid steps and a curvilinear map, and back", () => {
+  it("carries a point through affine steps and a curvilinear map, and back", () => {
     const route: Route = {
       frame: { name: "site" },
       base: drawn,
       seconds: 0,
       steps: [
-        { kind: "rigid", matrix: translation(10, 0, 100) },
+        { kind: "affine", matrix: translation(10, 0, 100) },
         {
           kind: "curvilinear",
           curvilinearMap: heightScale(10),
           inverse: false,
         },
-        { kind: "rigid", matrix: translation(0, -5, 0) },
+        { kind: "affine", matrix: translation(0, -5, 0) },
       ],
       revision: 1,
     };
-    expect(routeIsRigid(route)).toBe(false);
+    expect(routeIsAffine(route)).toBe(false);
     const q = routeForward(route, [1, 2, 3]);
     expect(Array.from(q)).toEqual([11, -3, 1030]);
     const p = routeInverse(route, q);

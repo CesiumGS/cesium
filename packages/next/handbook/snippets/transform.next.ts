@@ -19,7 +19,7 @@ import {
   switchFrame,
 } from "@cesium/next/frames";
 
-// A deformer is a node over the content it deforms. Its edge maps its own
+// A curvilinear frame is a node over the content it deforms. Its edge maps its own
 // coordinates up to its parent's. This one multiplies heights above WGS84 by
 // ten, and lifts by a constant above 12 km so that a satellite is moved, not
 // stretched. The slider is one float: at s the heights are multiplied by
@@ -39,7 +39,7 @@ const content = curvilinearFrame(
 );
 catalog.add(content);
 
-// Placement decides what is curvilinear: bind the Earth's anchor to the node and
+// Placement decides what is drawn through a curvilinear map: bind the Earth's anchor to the node and
 // its terrain, tilesets and models are drawn through the edge, with nothing
 // set on any item. The camera stays at ITRF, and the Moon, which isn't under
 // the node, is untouched.

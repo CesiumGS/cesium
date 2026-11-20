@@ -73,7 +73,7 @@ const MILESTONES = [
   },
   {
     work: "Clipping and sections",
-    what: "World clips of planes, boxes and polygon prisms in any frame, GPU section caps, exact b-rep caps, clip effects (discard, ghost, shade), curved clips across a curvilinear map",
+    what: "World clips of planes, boxes and polygon prisms in any frame, GPU section caps, exact b-rep caps, clip effects (discard, ghost, shade), curvilinear clips across a curvilinear map",
     state: "Built",
   },
   {

@@ -584,10 +584,10 @@ export function Selection() {
         </p>
         <h3>Under a transform graph</h3>
         <p>
-          When a deformer sits over a tileset's content (vertical exaggeration,
-          say), selection tests a tile where it draws, not where it was written.
-          The <a href="#/transform-graph">Transform graph</a> tab says how
-          routes are built. What selection does with one:
+          When a curvilinear frame sits over a tileset's content (vertical
+          exaggeration, say), selection tests a tile where it draws, not where
+          it was written. The <a href="#/transform-graph">Transform graph</a>{" "}
+          tab says how routes are built. What selection does with one:
         </p>
         <ul>
           <li>

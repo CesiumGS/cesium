@@ -420,9 +420,9 @@ export function Scene() {
         <p>
           Where content sits in the{" "}
           <a href="#/transform-graph">transform graph</a> decides what is
-          curvilinear. A deformer over the Earth's content exaggerates the
-          terrain and the tileset and leaves the Moon alone; the camera stays
-          outside it. Content gets there by its anchor:
+          curvilinear. A curvilinear frame over the Earth's content exaggerates
+          the terrain and the tileset and leaves the Moon alone; the camera
+          stays outside it. Content gets there by its anchor:
         </p>
         <ul>
           <li>

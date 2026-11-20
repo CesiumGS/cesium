@@ -111,7 +111,7 @@ import {
   type FitSteps,
   type CurvilinearFit,
 } from "../curvilinearFitCache.ts";
-import { WorldCurvedClips } from "./curvedClips.ts";
+import { WorldCurvilinearClips } from "./curvilinearClips.ts";
 import { checkTerms, termsOf } from "../curvilinearEvaluate.ts";
 import {
   MAX_CURVILINEAR_TERMS,
@@ -172,16 +172,16 @@ interface AnchorCurvilinearMap {
    * roots.
    */
   stamp: number;
-  /** Names what a fit's displacement is made of apart from the stamp's revisions and scales: its curvilinear maps and the rigid steps before the last of them. The cache's variant. */
+  /** Names what a fit's displacement is made of apart from the stamp's revisions and scales: its curvilinear maps and the affine steps before the last of them. The cache's variant. */
   shape: number;
-  /** What a fit depends on: its curvilinear maps and the rigid steps before the last of them, and the revisions the curvilinear maps had. */
+  /** What a fit depends on: its curvilinear maps and the affine steps before the last of them, and the revisions the curvilinear maps had. */
   signature: {
     curvilinearMaps: CurvilinearMap[];
     inverse: boolean[];
     prefix: number[];
     revisions: number[];
   };
-  /** The matrix the anchor is placed by: the route's rigid steps composed. */
+  /** The matrix the anchor is placed by: the route's affine steps composed. */
   affine: Float64Array;
   /** The single scaled curvilinear map's parameter, when one fit of its unit displacement serves every scale. */
   linear: CurvilinearScale | undefined;
@@ -197,7 +197,7 @@ interface AnchorCurvilinearMap {
   pointStamp: number;
   /** The route with its scales as they were at `pointStamp`: what anchored draws are evaluated on. */
   pointRoute: Route;
-  /** The route is one height-scale curvilinear map then rigid steps: terrain carrying `h·n̂` is exaggerated exactly. */
+  /** The route is one height-scale curvilinear map then affine steps: terrain carrying `h·n̂` is exaggerated exactly. */
   height: HeightScale | undefined;
   /** The route compiled (scene/world/routes.ts), when every curvilinear map has a curvilinear spec the compiler takes: draws it can serve are routed, not fitted. Reflects the last `frame`. */
   routed: RoutedAnchor | undefined;
@@ -377,7 +377,7 @@ class AnchorTileCurvilinearMap implements TileCurvilinearMap {
   #identity = "";
   #maps: DrawnMap[] = [];
   /**
-   * A route of one scaled curvilinear map among rigid steps is affine in the scale: its
+   * A route of one scaled curvilinear map among affine steps is affine in the scale: its
    * map at scale 0 and at scale 1, from which the bounds for any interval of
    * the scale follow (`scaledImage`), so a slider that crosses a bucket
    * remakes no tile's map evaluations.
@@ -553,7 +553,7 @@ class AnchorTileCurvilinearMap implements TileCurvilinearMap {
   /** Each scaled curvilinear map's bucket now: the span its scale holds over. */
   #spans = new Map<CurvilinearMap, { low: number; high: number }>();
 
-  /** Whether the route is one height-scale curvilinear map (with a profile or not) then rigid steps, and the multipliers its bucket holds. */
+  /** Whether the route is one height-scale curvilinear map (with a profile or not) then affine steps, and the multipliers its bucket holds. */
   #setProfile(
     route: Route,
     buckets: ReadonlyMap<CurvilinearMap, { low: number; high: number }>,
@@ -622,7 +622,7 @@ class AnchorTileCurvilinearMap implements TileCurvilinearMap {
       buckets.size === 1 &&
       only?.kind === "curvilinear" &&
       !only.inverse &&
-      route.steps.every((s) => s === only || s.kind === "rigid");
+      route.steps.every((s) => s === only || s.kind === "affine");
     const identity = affine ? `${stamp}:a` : parts.join(":");
     const key = affine ? `${identity}:${parts[1]}` : identity;
     if (key === this.#key) {
@@ -733,8 +733,8 @@ export class WorldCurvilinearMaps {
   #clock = 0;
   #transformRevision = -1;
   readonly #scratch = new Float64Array(16);
-  /** A curved clip's field on the draws' lattices (curvedClips.ts). */
-  readonly curved: WorldCurvedClips;
+  /** A curvilinear clip's field on the draws' lattices (curvilinearClips.ts). */
+  readonly curvilinearClips: WorldCurvilinearClips;
   /** Compiled routes: the draws they draw instead of fits (routes.ts). */
   readonly routes: WorldRoutes;
   /** Routed draws waiting for their block and pipelines. */
@@ -743,7 +743,7 @@ export class WorldCurvilinearMaps {
   readonly variants: WorldVariants;
 
   constructor(private readonly world: World) {
-    this.curved = new WorldCurvedClips(
+    this.curvilinearClips = new WorldCurvilinearClips(
       world,
       (index) => this.#errors.get(index) ?? 0,
     );
@@ -1032,7 +1032,7 @@ export class WorldCurvilinearMaps {
     return curvilinearMap;
   }
 
-  /** The worst error (m) of the fits now drawn for `draws` against their route, and of their curved clips' fields; 0 where none is drawn. */
+  /** The worst error (m) of the fits now drawn for `draws` against their route, and of their curvilinear clips' fields; 0 where none is drawn. */
   fitError(draws: readonly DrawHandle[], route?: Route): number {
     let worst = 0;
     for (const source of draws) {
@@ -1043,7 +1043,7 @@ export class WorldCurvilinearMaps {
         worst = Math.max(worst, applied.errorBound);
       }
       if (this.world.hasDraw(handle)) {
-        worst = Math.max(worst, this.curved.errorOf(handle.index));
+        worst = Math.max(worst, this.curvilinearClips.errorOf(handle.index));
       }
     }
     return worst;
@@ -1129,7 +1129,7 @@ export class WorldCurvilinearMaps {
 
   /** A draw was added: hidden at once when its anchor is curvilinear, before any frame can draw it. */
   drawAdded(handle: DrawHandle): void {
-    this.curved.drawAdded(handle);
+    this.curvilinearClips.drawAdded(handle);
     if (this.#anchors.size === 0) {
       return;
     }
@@ -1140,7 +1140,7 @@ export class WorldCurvilinearMaps {
   /** A draw is being removed: its fit is forgotten. */
   drawRemoved(handle: DrawHandle): void {
     this.variants.drawRemoved(handle);
-    this.curved.drawRemoved(handle);
+    this.curvilinearClips.drawRemoved(handle);
     this.#errors.delete(handle.index);
     this.#choices.delete(handle.index);
     this.#heightNormals.delete(handle.index);
@@ -1343,7 +1343,7 @@ export class WorldCurvilinearMaps {
   /** The world is gone: nothing is kept. */
   clear(): void {
     this.variants.clear();
-    this.curved.clear();
+    this.curvilinearClips.clear();
     this.routes.clear();
     this.cache.clear();
     this.#anchors.clear();
@@ -1481,7 +1481,7 @@ export class WorldCurvilinearMaps {
           if (held.route !== route) {
             const signature = signatureOf(route);
             if (same(signature, held.signature)) {
-              // The same curvilinear maps, with the same rigid steps before the last, at
+              // The same curvilinear maps, with the same affine steps before the last, at
               // the same revisions, placed again (as another root's route
               // is): what follows the last curvilinear map is not in a fit (it cancels),
               // so the fits stay and nothing is redone; `affine` stays the
@@ -1576,7 +1576,7 @@ export class WorldCurvilinearMaps {
 
   /**
    * The parameter of the route's only scaled curvilinear map, when the displacement is
-   * exactly linear in it: that curvilinear map goes forward and only rigid steps follow
+   * exactly linear in it: that curvilinear map goes forward and only affine steps follow
    * (the affine part treats curvilinear maps as identity, so `D = s · D₁`), and the
    * parameter is the world's, so the GPU reads it as a weight.
    */
@@ -1599,7 +1599,7 @@ export class WorldCurvilinearMaps {
       return undefined;
     }
     for (let i = at + 1; i < route.steps.length; i++) {
-      if (route.steps[i]!.kind !== "rigid") {
+      if (route.steps[i]!.kind !== "affine") {
         return undefined;
       }
     }
@@ -2326,7 +2326,7 @@ function ownTerms(
   return isTerms(user) ? user : (termsOf(user) ?? []);
 }
 
-/** What a fit depends on in a route: its curvilinear maps (at their revisions) and the rigid steps before the last of them. */
+/** What a fit depends on in a route: its curvilinear maps (at their revisions) and the affine steps before the last of them. */
 function signatureOf(route: Route): AnchorCurvilinearMap["signature"] {
   let last = -1;
   route.steps.forEach((s, i) => {
@@ -2399,7 +2399,7 @@ function effectiveAt(kind: DrawKind, choice: CurvilinearAt): CurvilinearAt {
   return kind === "mesh" ? choice : "anchor";
 }
 
-/** The route is one forward height-scale curvilinear map, and only rigid steps follow it. */
+/** The route is one forward height-scale curvilinear map, and only affine steps follow it. */
 function heightScaleOf(route: Route): HeightScale | undefined {
   const [first, ...rest] = route.steps;
   if (
@@ -2410,7 +2410,7 @@ function heightScaleOf(route: Route): HeightScale | undefined {
   ) {
     return undefined;
   }
-  return rest.every((s) => s.kind === "rigid")
+  return rest.every((s) => s.kind === "affine")
     ? first.curvilinearMap.heightScale
     : undefined;
 }

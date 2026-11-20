@@ -1,6 +1,6 @@
 // A frame whose edge to its parent is curvilinear, not a 4×4 (docs/design/transform-graph.md, the
 // transform graph's `curvilinear` node): its coordinates map UP to the parent's by
-// `spec.forward`, the scene-graph direction. A deformer is placed over the
+// `spec.forward`, the scene-graph direction. A curvilinear frame is placed over the
 // content it deforms: an "Earth content (exaggerated)" frame under ITRF whose
 // forward is the exaggeration, with terrain, tilesets, models and pins placed
 // in it keeping their true coordinates, and a camera at ITRF seeing them drawn
@@ -8,13 +8,13 @@
 // frames resolver composes routes through it as curvilinear steps (`FrameResolver.
 // route`), forward where the route goes up and inverse where it goes down;
 // anything that needs one matrix across it (`frameTransform`,
-// `FrameResolver.resolve`) throws `NonRigidRouteError`.
+// `FrameResolver.resolve`) throws `NonAffineRouteError`.
 //
 // `switchFrame` is the same with the edge chosen per view (a variant set): a
 // curvilinear spec for each view, or none (the identity), so every view still sees
 // a tree.
 import {
-  NonRigidRouteError,
+  NonAffineRouteError,
   type CurvilinearFrameSpec,
   type CurvilinearMap,
 } from "../camera/route.ts";
@@ -45,7 +45,7 @@ export class CurvilinearFrame<N extends string = string> extends Frame<N> {
       name,
       parent,
       () => {
-        throw new NonRigidRouteError(name, parent.name);
+        throw new NonAffineRouteError(name, parent.name);
       },
       { cache: false, accuracy: () => accuracyOf(spec) },
     );
@@ -54,9 +54,9 @@ export class CurvilinearFrame<N extends string = string> extends Frame<N> {
     spec.attach?.(this);
   }
 
-  /** It has no matrix: throws `NonRigidRouteError`. */
+  /** It has no matrix: throws `NonAffineRouteError`. */
   override toParent(): never {
-    throw new NonRigidRouteError(this.name, this.parent!.name);
+    throw new NonAffineRouteError(this.name, this.parent!.name);
   }
 
   override get revision(): number {
@@ -112,7 +112,7 @@ export interface SwitchFrameOptions {
  * A child of `parent` whose edge is chosen per view (`View` objects, or any
  * `ViewId`): each view sees the tree with its own choice, so a pixel's route,
  * and so its pick, is unambiguous. Routes asked without a view (`resolve`)
- * cannot cross it and throw `NonRigidRouteError`: ask `route(…, view)`.
+ * cannot cross it and throw `NonAffineRouteError`: ask `route(…, view)`.
  */
 export class SwitchFrame<N extends string = string> extends Frame<N> {
   private readonly byView: ReadonlyMap<ViewId, SwitchChoice>;
@@ -234,8 +234,8 @@ export function curvilinearEdgeOf(
   return f instanceof SwitchFrame ? f.edgeFor(view) : undefined;
 }
 
-/** Whether `f`'s edge can be non-rigid for some view: a curvilinear frame or a switch. */
-export function isNonRigidFrame(f: Frame): boolean {
+/** Whether `f`'s edge can be non-affine for some view: a curvilinear frame or a switch. */
+export function isNonAffineFrame(f: Frame): boolean {
   return f instanceof CurvilinearFrame || f instanceof SwitchFrame;
 }
 

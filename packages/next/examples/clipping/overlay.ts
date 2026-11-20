@@ -175,7 +175,7 @@ export class SectionOverlay {
   }
 
   private planePoint = (local: V3): V3 =>
-    this.state.curved ? designToTrue(local) : local;
+    this.state.curvilinear ? designToTrue(local) : local;
 
   /** Re-projects every layer: call it each tick. */
   update(): void {
@@ -245,7 +245,7 @@ export class SectionOverlay {
       }
       return parts.join("");
     };
-    const cells = state.curved ? 16 : 8;
+    const cells = state.curvilinear ? 16 : 8;
     layer.planes[0]!.setAttribute("d", plane.on ? grid(a, b, cells) : "");
     layer.planes[1]!.setAttribute(
       "d",

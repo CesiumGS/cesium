@@ -17,7 +17,7 @@ export const LATTICE_CELLS = [1, 2, 4, 8] as const;
 
 /**
  * A scalar fitted over a lattice's cells, in the free fourth channel of its
- * rows (`.w`): a curved clip's signed distance (docs/design/geometry-through-placement-review.md, increment 8c).
+ * rows (`.w`): a curvilinear clip's signed distance (docs/design/geometry-through-placement-review.md, increment 8c).
  * The same cells and local coordinates as the displacement, 20 monomials a
  * cell: coefficient `cell · 20 + term`, meters, the sign
  * being the clip's keep rule (kept where it is ≤ 0).
@@ -62,7 +62,7 @@ export interface CubicLattice {
   readonly estimate: boolean;
   /** What it was fitted to, in words (the route's curvilinear maps). */
   readonly operation?: string;
-  /** A curved clip's signed distance over the same cells, in the rows' `.w`; the draw's first lattice carries it. */
+  /** A curvilinear clip's signed distance over the same cells, in the rows' `.w`; the draw's first lattice carries it. */
   readonly clip?: ClipField;
 }
 

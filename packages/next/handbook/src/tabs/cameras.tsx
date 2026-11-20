@@ -149,15 +149,15 @@ export function Cameras() {
 
       <Section title="Under an exaggeration the camera stays still">
         <p>
-          A deformer, a curvilinear edge of the{" "}
-          <a href="#/transform-graph">transform graph</a>, curvilinear maps what
-          sits under it, not the camera's frame. Vertical exaggeration puts the
-          camera at ITRF and the deformer over the content's node, so the camera
+          A curvilinear frame, a curvilinear edge of the{" "}
+          <a href="#/transform-graph">transform graph</a>, bends what sits under
+          it, not the camera's frame. Vertical exaggeration puts the camera at
+          ITRF and the curvilinear frame over the content's node, so the camera
           doesn't move when a slider does, and terrain, tilesets and pins rise
-          toward it. Placing the deformer between ITRF and the camera instead
-          would curvilinear map the camera's own frame and move it. Where an
-          application wants the camera inside a deformed space, it sits at a
-          node under the deformer.
+          toward it. Placing the curvilinear frame between ITRF and the camera
+          instead would bend the camera's own frame and move it. Where an
+          application wants the camera inside a curvilinear space, it sits at a
+          node under the curvilinear frame.
         </p>
         <p>
           A lens on the camera branch (distortion applied after the view) is a

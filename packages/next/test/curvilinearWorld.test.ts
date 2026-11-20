@@ -161,14 +161,14 @@ interface Setup {
   view: View;
   earth: AnchorHandle;
   /**
-   * The frame the Earth's anchor is placed in: the deformer, whose
+   * The frame the Earth's anchor is placed in: the curvilinear frame, whose
    * coordinates are true and whose edge to `drawn` is the curvilinear map (itself when
    * the setup is rigid).
    */
   content: Frame;
   /** ITRF, the camera's root: where the content is drawn. */
   drawn: Frame;
-  /** A second deformer between `content` and `drawn` (`second`): the route is the exaggeration, then its lift. */
+  /** A second curvilinear frame between `content` and `drawn` (`second`): the route is the exaggeration, then its lift. */
   flat: Frame | undefined;
   spec: CurvilinearFrameSpec & { revision: number };
   /** The exaggeration `spec.forward` applies, changed with a revision bump. */
@@ -222,7 +222,7 @@ function setup(
     ...(scale && { scale }),
     forward: (p, out, jacobian) => exaggerate(state.k, p, out, jacobian),
   };
-  // A second deformer sits between the exaggeration and ITRF: the route is the exaggeration, then the lift.
+  // A second curvilinear frame sits between the exaggeration and ITRF: the route is the exaggeration, then the lift.
   let flat: Frame | undefined;
   if (options.second) {
     flat = curvilinearFrame("flat", itrf, {
@@ -384,9 +384,9 @@ describe("anchors across a curvilinear map", () => {
     expect(Array.from(s.view.anchorPlacement(s.earth))).toEqual(
       Array.from(m4.mat4()),
     );
-    // The table's root, bound to nothing, is rigid and unmarked.
+    // The table's root, bound to nothing, is affine and unmarked.
     expect(s.view.anchorRoute(undefined)).toBeUndefined();
-    // Where a rigid step precedes the curvilinear map, the placement is that step.
+    // Where an affine step precedes the curvilinear map, the placement is that step.
     const mast = Frame.constant("mast", s.content, translation(10, 20, 30), {
       accuracy: { meters: 0.3, note: "survey" },
     });
@@ -395,13 +395,13 @@ describe("anchors across a curvilinear map", () => {
     s.resolver.bindAnchor(site, mast);
     s.step();
     const through = s.view.anchorRoute(site)!;
-    expect(through.steps.map((x) => x.kind)).toEqual(["rigid", "curvilinear"]);
+    expect(through.steps.map((x) => x.kind)).toEqual(["affine", "curvilinear"]);
     expect(Array.from(s.view.anchorPlacement(site))).toEqual(
       Array.from(translation(10, 20, 30)),
     );
   });
 
-  it("leaves an anchor on a rigid route as it was, with no route", () => {
+  it("leaves an anchor on an affine route as it was, with no route", () => {
     const s = setup();
     const mast = Frame.constant("mast", s.drawn, translation(5, 6, 7), {
       accuracy: { meters: 0.3, note: "survey" },
@@ -564,7 +564,7 @@ describe("draws across a curvilinear map", () => {
     expect(s.world.curvilinearMaps.cache.pending).toBe(0);
   });
 
-  it("leaves a rigid route alone: no fit, no hiding, no terms", () => {
+  it("leaves an affine route alone: no fit, no hiding, no terms", () => {
     const s = setup({ rigid: true });
     expect(s.view.anchorRoute(s.earth)).toBeUndefined();
     const draw = addQuad(s);
@@ -588,7 +588,7 @@ describe("draws across a curvilinear map", () => {
     expect(lattice(s, draw)).toBeDefined();
   });
 
-  it("releases its draws when the route becomes rigid, as they were", () => {
+  it("releases its draws when the route becomes affine, as they were", () => {
     const s = setup();
     const draw = addQuad(s);
     s.world.setPlacement(draw, {
@@ -702,7 +702,7 @@ describe("draws across a curvilinear map", () => {
 });
 
 describe("a curvilinear map's scale", () => {
-  it("is a weight when one scaled curvilinear map is followed only by rigid steps: no refit", () => {
+  it("is a weight when one scaled curvilinear map is followed only by affine steps: no refit", () => {
     const s = setup({ scaled: "world" });
     const draws = [addQuad(s), addQuad(s)];
     s.step();
@@ -814,17 +814,20 @@ describe("the render root", () => {
     s.view.camera.version++;
   };
 
-  it("keeps its fit when the view re-roots by a rigid step after the curvilinear map: nothing refitted, nothing hidden", () => {
+  it("keeps its fit when the view re-roots by an affine step after the curvilinear map: nothing refitted, nothing hidden", () => {
     const s = setup();
     liftCamera(s);
     const draw = addQuad(s);
     s.step();
     expect(s.fits.count).toBe(1);
     const before = lattice(s, draw);
-    // A frame under ITRF, the camera's root, 1 km up: the route to it is the curvilinear map, then a rigid step.
+    // A frame under ITRF, the camera's root, 1 km up: the route to it is the curvilinear map, then an affine step.
     const mast = child(s, "mast", s.drawn, 0, 0, 1000);
     rigOn(s, mast);
-    expect(route(s).steps.map((x) => x.kind)).toEqual(["curvilinear", "rigid"]);
+    expect(route(s).steps.map((x) => x.kind)).toEqual([
+      "curvilinear",
+      "affine",
+    ]);
     expect(s.step(0)).toBe(false);
     expect(hidden(s, draw)).toBe(false);
     expect(s.fits.count).toBe(1);
@@ -851,7 +854,7 @@ describe("the render root", () => {
     s.step();
     const before = lattice(s, draw);
     expect(s.fits.count).toBe(1);
-    // On ITRF the route is rigid: the draw goes back to affine.
+    // On ITRF the route is affine: the draw goes back to affine.
     rigOn(s, s.content);
     s.step(0);
     expect(s.world.curvilinearMaps.has(draw)).toBe(false);
@@ -991,7 +994,7 @@ describe("the render root", () => {
     ).toHaveLength(0);
     expect(other.anchorRoute(s.earth)!.steps.map((x) => x.kind)).toEqual([
       "curvilinear",
-      "rigid",
+      "affine",
     ]);
     expect(s.view.anchorRoute(s.earth)!.steps.map((x) => x.kind)).toEqual([
       "curvilinear",
@@ -1001,7 +1004,7 @@ describe("the render root", () => {
   it("draws a view that crosses no curvilinear edge by a twin draw, affine, with no word", () => {
     const s = setup();
     const draw = addQuad(s);
-    // The second view's root is the deformer itself: no curvilinear edge for the anchor.
+    // The second view's root is the curvilinear frame itself: no curvilinear edge for the anchor.
     const other = engine.addView({
       target: new OffscreenTarget(32, 24),
       world: s.world,

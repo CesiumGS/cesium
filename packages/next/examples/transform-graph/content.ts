@@ -42,8 +42,8 @@ export const geodeticOf = (point: ArrayLike<number>): Geodetic => {
   return { longitude: c.longitude, latitude: c.latitude, height: c.height };
 };
 
-/** What `createDeformer` takes. */
-export interface DeformerOptions {
+/** What `createExaggerationFrame` takes. */
+export interface ExaggerationFrameOptions {
   /** The strongest multiplier the slider reaches. */
   readonly max: number;
   /** Heights above this, m, are lifted by a constant, not scaled. */
@@ -66,7 +66,7 @@ export interface DeformerOptions {
  * (`View.setParameter`), so the same node draws ×1 in one view and ×k in
  * another.
  */
-export interface Deformer {
+export interface ExaggerationFrame {
   readonly frame: CurvilinearFrame;
   readonly edge: VerticalExaggeration;
   readonly scale: PlacementParameter;
@@ -84,10 +84,10 @@ export interface Deformer {
   truth(point: ArrayLike<number>, out?: Float64Array): Float64Array;
 }
 
-export function createDeformer(
+export function createExaggerationFrame(
   host: SceneHost,
-  options: DeformerOptions,
-): Deformer {
+  options: ExaggerationFrameOptions,
+): ExaggerationFrame {
   const { world } = host.viewer;
   const scaleOf = (factor: number) => (factor - 1) / (options.max - 1);
   const scale = world.createPlacementParameter(scaleOf(options.start), {
@@ -132,13 +132,13 @@ export function createDeformer(
 
 /** The Earth's content from a node `view` doesn't know it by: where `point` (true, ITRF's axes) is drawn at multiplier `factor`. */
 export function drawnAt(
-  deformer: Deformer,
+  exaggerationFrame: ExaggerationFrame,
   point: ArrayLike<number>,
   factor: number,
   out = new Float64Array(3),
 ): Float64Array {
-  const full = deformer.edge.forward(point, out);
-  const s = (factor - 1) / (deformer.max - 1);
+  const full = exaggerationFrame.edge.forward(point, out);
+  const s = (factor - 1) / (exaggerationFrame.max - 1);
   for (let i = 0; i < 3; i++) {
     out[i] = point[i]! + s * (full[i]! - point[i]!);
   }

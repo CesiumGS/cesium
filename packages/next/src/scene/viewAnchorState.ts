@@ -14,7 +14,7 @@ export class ViewAnchorState {
   /**
    * By slot, the route of an anchor whose placement crosses a curvilinear map: its
    * `placements` entry is then the route's affine part, and its content is
-   * drawn curvilinear (scene/world/worldCurvilinearMaps.ts). Undefined for a rigid anchor.
+   * drawn curvilinear (scene/world/worldCurvilinearMaps.ts). Undefined for an affine anchor.
    */
   readonly routes: Array<Route | undefined> = [];
   /** The routes as the view draws them when it sets a parameter for itself (`View.setParameter`), by the route they were made from, for the `parameterRevision` they were made at; and the view's reading of each slider. */

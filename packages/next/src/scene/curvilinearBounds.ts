@@ -386,7 +386,7 @@ export function routeMap(route: Route, after?: ArrayLike<number>): DrawnMap {
     at[2] = p[2]!;
     jacobian.set(IDENTITY_3);
     for (const s of route.steps) {
-      if (s.kind === "rigid") {
+      if (s.kind === "affine") {
         transform(s.matrix, at);
         leftMultiply(s.matrix, jacobian);
       } else {
@@ -586,7 +586,7 @@ export function drawnBounds(
 /**
  * What a map that is affine in the scale it carries does to some points,
  * kept in a few numbers: the map at scale `s` is `M(0) + s·(M(1) − M(0))`,
- * Jacobian included (one scaled curvilinear map among rigid steps: `curvilinearForward`'s
+ * Jacobian included (one scaled curvilinear map among affine steps: `curvilinearForward`'s
  * `p + s·(forward(p) − p)`). `scaledBounds` gives the bounds for any
  * interval of the scale from it, with no map evaluated again.
  */
@@ -597,7 +597,7 @@ export interface ScaledImage {
   readonly shift: readonly [number, number, number, number];
   /** [σ_min, σ_max] of the Jacobians at scale 0, then at scale 1, over the samples. */
   readonly sigma: readonly [number, number, number, number];
-  /** The largest |J(p) − J(q)|_F / |p − q| at scale 1 (at scale s it is s times this: the Jacobian is affine in s and the rigid part's is constant). */
+  /** The largest |J(p) − J(q)|_F / |p − q| at scale 1 (at scale s it is s times this: the Jacobian is affine in s and the affine part's is constant). */
   readonly secondDerivative: number;
   /** The spacing of the samples (`drawnBounds`'s). */
   readonly spacing: number;

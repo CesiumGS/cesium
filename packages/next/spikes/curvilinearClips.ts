@@ -1,5 +1,5 @@
-// Curved clips on the GPU against the CPU's classification (docs/design/geometry-through-placement-review.md,
-// increment 8c; the Node test is test/curvedClips.test.ts). Unlit white
+// Curvilinear clips on the GPU against the CPU's classification (docs/design/geometry-through-placement-review.md,
+// increment 8c; the Node test is test/curvilinearClips.test.ts). Unlit white
 // content on black, drawn into an offscreen target with a clip on, and every
 // pixel read back and compared with what float64 says the clip keeps there:
 // the pixel's ray carried to the surface, to the true point (the route's
@@ -10,18 +10,18 @@
 //
 // The clip is a plane named in a design frame under the content's frame, whose
 // curvilinear edge takes it to true coordinates (the inverse of z' = z + A sin(x /
-// L) sin(y / L)): on a flat plate it is a wavy contour no rigid test can draw. Its signed distance is
+// L) sin(y / L)): on a flat plate it is a wavy contour no affine test can draw. Its signed distance is
 // fitted per draw into the lattice rows' w channel; the vertex stage reads
 // it, the fragment stage discards by its sign.
 //
 // Cases, each in a view that opts into its clips by mask:
 //   1. a plate (a 96 × 96 grid, so the interpolated distance follows the
-//      surface) under an ITRF root, cut by the curved plane: the draw has no
+//      surface) under an ITRF root, cut by the curvilinear plane: the draw has no
 //      lattice, so it carries the field on one of its own (a carrier);
 //   2. the same plate drawn under a ×10 height curvilinear map (its frame sits under the
 //      camera's root): the field rides on the route's lattice, and the cut is
 //      on the true surface;
-//   3. a curved plane and a rigid one in one view, together;
+//   3. a curvilinear plane and an affine one in one view, together;
 //   4. a box window in the design frame, keep outside: a distance with kinks;
 //   5. picks through the cut hit what is behind it;
 //   6. clearing the mask restores the image and the draw's placement.
@@ -48,7 +48,7 @@ import { clipSetDistance } from "../src/scene/world/clips.ts";
 import type { AnchorHandle, DrawHandle } from "../src/scene/world/types.ts";
 
 const TEMPLATE = `
-<h1>Curved clips on the GPU against the CPU's classification</h1>
+<h1>Curvilinear clips on the GPU against the CPU's classification</h1>
 <p>
   A plate cut by a plane named in a design frame that a reprojection bends
   away from ITRF, so its cut is a curve on the plate. Every pixel is compared
@@ -83,7 +83,7 @@ interface Check {
   pass: boolean;
 }
 
-export interface CurvedClipsResult {
+export interface CurvilinearClipsResult {
   adapter: string;
   checks: Check[];
   pass: boolean;
@@ -233,8 +233,8 @@ interface Scene {
   design: Frame;
   /** The content's frame to the design frame, in float64: the truth. */
   toDesign(p: ArrayLike<number>): Float64Array;
-  /** Renders frames until the draws' fits and curved fields have landed. */
-  settle(draws: readonly DrawHandle[], curved?: boolean): Promise<void>;
+  /** Renders frames until the draws' fits and curvilinear fields have landed. */
+  settle(draws: readonly DrawHandle[], curvilinear?: boolean): Promise<void>;
   capture(): Promise<Uint8ClampedArray>;
   frames(n: number): Promise<void>;
   dispose(): void;
@@ -304,7 +304,7 @@ function scene(
     design,
     toDesign: (p) => routeForward(route, p),
     frames,
-    async settle(draws, curved = false) {
+    async settle(draws, curvilinear = false) {
       for (let i = 0; i < 300; i++) {
         await frames(1);
         const fits = draws.every((d) => {
@@ -312,11 +312,13 @@ function scene(
           return state === undefined || state === "fitted";
         });
         const fields =
-          !curved ||
-          (world.curvilinearMaps.curved.active &&
-            world.curvilinearMaps.curved.pending === 0 &&
+          !curvilinear ||
+          (world.curvilinearMaps.curvilinearClips.active &&
+            world.curvilinearMaps.curvilinearClips.pending === 0 &&
             draws.every(
-              (d) => world.curvilinearMaps.curved.status(d)?.state === "fitted",
+              (d) =>
+                world.curvilinearMaps.curvilinearClips.status(d)?.state ===
+                "fitted",
             ));
         if (fits && fields) {
           break;
@@ -529,14 +531,14 @@ function describe(engine: Engine): string {
 }
 
 /** A plane in the design frame 1.5 m above the plate's height there: kept below it. */
-function curvedPlane(s: Scene): ClipSet {
+function curvilinearPlane(s: Scene): ClipSet {
   return {
     frame: s.design,
     shapes: [{ kind: "plane", point: [0, 0, PLATE + 1.5], normal: [0, 0, 1] }],
   };
 }
 
-async function runCurvedClips(): Promise<CurvedClipsResult> {
+async function runCurvilinearClips(): Promise<CurvilinearClipsResult> {
   const status = root.querySelector(".status")!;
   $("images").replaceChildren();
   $("results").replaceChildren();
@@ -607,7 +609,7 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
   };
   const onPlate = (p: V3) => Math.abs(p[0]) <= HALF && Math.abs(p[1]) <= HALF;
   const fieldOf = (s: Scene, d: DrawHandle) => {
-    const st = s.world.curvilinearMaps.curved.status(d);
+    const st = s.world.curvilinearMaps.curvilinearClips.status(d);
     return {
       "field error, m": st?.errorBound ?? -1,
       "field cells per axis": st?.cells ?? 0,
@@ -618,7 +620,7 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
     await engine.ctx.pipelines.warmClipped();
     lost();
 
-    // --- 1 and 2. a plate cut by a curved plane, under an ITRF root and a ×10 root --
+    // --- 1 and 2. a plate cut by a curvilinear plane, under an ITRF root and a ×10 root --
     for (const curvilinear of [false, true]) {
       const s = scene(engine, curvilinear, lost);
       const { world, view } = s;
@@ -629,7 +631,7 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
         [0, 0, -1],
         [0, 1, 0],
       );
-      const set = curvedPlane(s);
+      const set = curvilinearPlane(s);
       view.setClips([world.addClip(set)]);
       await s.settle([draw], true);
       const pixels = await s.capture();
@@ -661,34 +663,34 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
       s.dispose();
     }
 
-    // --- 3. a curved plane and a rigid one in one view -----------------------
+    // --- 3. a curvilinear plane and an affine one in one view -----------------------
     {
       const s = scene(engine, false, lost);
       const { world, view } = s;
       const draw = plate(s);
       look(view, [0, 0, PLATE + 40], [0, 0, -1], [0, 1, 0]);
-      const curved = curvedPlane(s);
+      const curvilinear = curvilinearPlane(s);
       const rigid: ClipSet = {
         frame: s.content,
         shapes: [{ kind: "plane", point: [5, 0, PLATE], normal: [1, 0, 0] }],
       };
-      view.setClips([world.addClip(curved), world.addClip(rigid)]);
+      view.setClips([world.addClip(curvilinear), world.addClip(rigid)]);
       await s.settle([draw], true);
       const pixels = await s.capture();
-      show("3. the curved plane and a rigid one (x ≤ 5 m)", pixels);
+      show("3. the curvilinear plane and an affine one (x ≤ 5 m)", pixels);
       const point = trueOf(s, false);
       const inside = (px: number, py: number): boolean => {
         const p = point(px, py);
         return (
           p !== undefined &&
           onPlate(p) &&
-          clipSetKeeps(curved, s.toDesign(p)) &&
+          clipSetKeeps(curvilinear, s.toDesign(p)) &&
           clipSetKeeps(rigid, p)
         );
       };
       const result = compare(pixels, inside);
       add(
-        "a curved plane (fitted) and a rigid one (tested at the true point), in one view",
+        "a curvilinear plane (fitted) and an affine one (tested at the true point), in one view",
         comparison(result),
         MEANINGFUL,
         agrees(result),
@@ -759,7 +761,7 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
         name: "back",
       });
       look(view, [0, 0, PLATE + 40], [0, 0, -1], [0, 1, 0]);
-      const set = curvedPlane(s);
+      const set = curvilinearPlane(s);
       const point = trueOf(s, false);
       const kept = (px: number, py: number) => {
         const p = point(px, py);
@@ -819,7 +821,7 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
       await s.settle([front]);
       const unclipped = await pickAt(cutAt[0], cutAt[1]);
       add(
-        "a pick through the curved cut hits what is behind it",
+        "a pick through the curvilinear cut hits what is behind it",
         {
           'where the clip keeps the plate (1: "front")':
             inKept === "front" ? 1 : 0,
@@ -842,23 +844,24 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
       await s.settle([draw]);
       const plain = await s.capture();
       const placedBefore = world.scene.drawPlacements[draw.index] !== undefined;
-      view.setClips([world.addClip(curvedPlane(s))]);
+      view.setClips([world.addClip(curvilinearPlane(s))]);
       await s.settle([draw], true);
       const cut = await s.capture();
-      const carrying = world.curvilinearMaps.curved.status(draw)?.carrier
+      const carrying = world.curvilinearMaps.curvilinearClips.status(draw)
+        ?.carrier
         ? 1
         : 0;
       view.clipMask = 0;
       await s.settle([draw]);
       await s.frames(3);
       const restored = await s.capture();
-      const stillActive = world.curvilinearMaps.curved.active ? 1 : 0;
+      const stillActive = world.curvilinearMaps.curvilinearClips.active ? 1 : 0;
       const placedAfter = world.scene.drawPlacements[draw.index] !== undefined;
       add(
         "clearing the mask restores the image and removes the carrier",
         {
           "white pixels, no mask": whitePixels(plain),
-          "white pixels, curved clip": whitePixels(cut),
+          "white pixels, curvilinear clip": whitePixels(cut),
           "white pixels, mask cleared": whitePixels(restored),
           "the draw carried a field (1: yes)": carrying,
           "the world's field still active (1: yes)": stillActive,
@@ -885,7 +888,7 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
     );
     if (gpuErrors.length > 0) {
       console.error(
-        `[curvedClips] GPU errors: ${gpuErrors.slice(0, 3).join(" | ")}`,
+        `[curvilinearClips] GPU errors: ${gpuErrors.slice(0, 3).join(" | ")}`,
       );
     }
     $("adapter").textContent = `Adapter: ${describe(engine)}`;
@@ -897,7 +900,7 @@ async function runCurvedClips(): Promise<CurvedClipsResult> {
       : `pass: all ${checks.length} checks`;
     if (failed.length) {
       console.error(
-        `[curvedClips] failed: ${failed.map((c) => `${c.id} ${c.name}`).join("; ")}`,
+        `[curvilinearClips] failed: ${failed.map((c) => `${c.id} ${c.name}`).join("; ")}`,
       );
     }
   }
@@ -912,6 +915,6 @@ export const harness: Harness = {
   mount(element) {
     root = element;
     root.innerHTML = TEMPLATE;
-    return { run: runCurvedClips, dispose: () => stop(active) };
+    return { run: runCurvilinearClips, dispose: () => stop(active) };
   },
 };

@@ -214,7 +214,7 @@ describe("a point source across a curvilinear map", () => {
     expect(moved).toBeGreaterThan(8_000);
   });
 
-  it("has no block, and holds nothing, under a rigid route", () => {
+  it("has no block, and holds nothing, under an affine route", () => {
     const s = setup({ rigid: true });
     const made = source(s);
     s.step();

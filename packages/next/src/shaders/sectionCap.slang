@@ -25,7 +25,7 @@ static const uint CLIP_PLANE = 0u;
 static const uint CLIP_BOX = 1u;
 static const uint CLIP_SET_INTERSECTION = 1u;
 static const uint CLIP_SET_KEEP_OUTSIDE = 2u;
-static const uint CLIP_SET_CURVED = 8u;
+static const uint CLIP_SET_CURVILINEAR = 8u;
 // Effects (scene/world/clips.ts): a ghost, stipple or shade set removes nothing from the opaque
 // pass, so it makes no cap and its region is kept here.
 static const uint CLIP_SET_EFFECT_MASK = 16u | 32u | 64u;
@@ -77,11 +77,11 @@ bool insideClipShape(uint at, float3 p) {
   return inside;
 }
 
-// Whether clip set `s` keeps `p` (camera-relative). A curved set keeps all: the
+// Whether clip set `s` keeps `p` (camera-relative). A curvilinear set keeps all: the
 // view has no caps while one is in it (`packCapFaces`).
 bool setKeeps(uint s, float3 p) {
   uint4 entry = asuint(clipRow(1u + s));
-  if ((entry.z & (CLIP_SET_CURVED | CLIP_SET_EFFECT_MASK)) != 0u) {
+  if ((entry.z & (CLIP_SET_CURVILINEAR | CLIP_SET_EFFECT_MASK)) != 0u) {
     return true;
   }
   bool every = (entry.z & CLIP_SET_INTERSECTION) != 0u;

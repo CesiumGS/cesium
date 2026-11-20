@@ -4,7 +4,7 @@ import { Ellipsoid } from "../math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type { Vec3 } from "../math/vec3.ts";
 import type { View } from "./View.ts";
-import { routeForward, routeInverse, routeIsRigid } from "../camera/route.ts";
+import { routeForward, routeInverse, routeIsAffine } from "../camera/route.ts";
 import { EarthFixedGuard, earthFixed } from "./earthAnchor.ts";
 import {
   TouchGestures,
@@ -636,7 +636,7 @@ export class GlobeController {
       this.surfaceHeight ? this.surfaceHeight(lon, lat) : 0;
     const anchor = this.view.bodyAnchor;
     const route = anchor && this.view.anchorRoute(anchor);
-    if (route && !routeIsRigid(route)) {
+    if (route && !routeIsAffine(route)) {
       try {
         const at = { longitude: 0, latitude: 0, height: 0 };
         const here = this.ellipsoid.cartesianToCartographic(

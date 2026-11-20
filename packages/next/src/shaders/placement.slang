@@ -112,7 +112,7 @@ float3 jacobianColumn(float3x3 j, int c) {
 // coefficients per monomial. One cell has v = u. The cell's cubic in v has
 // the derivative of each monomial per axis, and dv/dp = cells / scale on
 // every axis (past the cube the edge cell extrapolates at the same rate).
-// Each row's `w` is a scalar over the same cells (`ClipField`, a curved
+// Each row's `w` is a scalar over the same cells (`ClipField`, a curvilinear
 // clip's signed distance, 0 where the lattice has none), evaluated beside the
 // displacement from the same rows into `clip`.
 float3 latticeDisplacement(uint body, uint cells, float3 p, out float3x3 jacobian, out float clip) {
@@ -192,7 +192,7 @@ float3 termDisplacement(uint4 head, uint block, float3 p, uint vertexIndex, uint
 public struct Placed {
   public float3 position;     // model space
   public float3x3 jacobian;   // d(position) / d(design position): I + the sum of wi * dDi/dp
-  public float clip;          // the first lattice's clip field at the design position (a curved clip's signed distance); 0 if none
+  public float clip;          // the first lattice's clip field at the design position (a curvilinear clip's signed distance); 0 if none
 };
 
 // Where the draw's placement (`DrawRecord.placement`, its block's header

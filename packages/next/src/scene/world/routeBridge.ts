@@ -1,6 +1,6 @@
-// A camera route (src/camera/route.ts: rigid steps and `CurvilinearMap` steps) as a
+// A camera route (src/camera/route.ts: affine steps and `CurvilinearMap` steps) as a
 // transform-graph route (src/transform), for the compiler: the bridge between
-// the curvilinear maps the engine has today and the curvilinear steps it compiles. Each rigid
+// the curvilinear maps the engine has today and the curvilinear steps it compiles. Each affine
 // step is an affine node and each curvilinear map with a `curvilinear` spec a curvilinear node,
 // under a root that is the route's base; the content's node is the deepest.
 // Only forward steps bridge (a curvilinear map run through its inverse is fitted), and a
@@ -8,9 +8,9 @@
 // scales (`CurvilinearSpec.identity`): at scale `s` each is
 // `identity + s · (value − identity)`, the curvilinear map's `p + s · (f(p) − p)`.
 //
-// The bridged route always has a rigid step at each end and between two curvilinear maps
+// The bridged route always has an affine step at each end and between two curvilinear maps
 // (an identity where the camera route has none), so the routes of different
-// views to different roots, which differ in their rigid steps only, have one
+// views to different roots, which differ in their affine steps only, have one
 // shape and one compiled program (`normalize`).
 import {
   curvilinearValuesOf,
@@ -34,14 +34,14 @@ export interface BridgedRoute {
   /** What the route's curvilinear steps' functions are, for telling when a rebuild is due. */
   readonly sources: readonly (string | undefined)[];
   /**
-   * Brings the graph to the camera route's rigid matrices and the curvilinear maps'
+   * Brings the graph to the camera route's affine matrices and the curvilinear maps'
    * parameter values now (their specs are live, and so is a slider). What
    * changed: a matrix, or a parameter value.
    */
   refresh(camera: CameraRoute): { matrices: boolean; params: boolean };
   /** Whether `camera` is the route this was made from, in its steps and curvilinear maps' functions. */
   matches(camera: CameraRoute): boolean;
-  /** The rigid matrices before the last curvilinear map, in order, as the graph has them now. */
+  /** The affine matrices before the last curvilinear map, in order, as the graph has them now. */
   prefixMatrices(): readonly Float64Array[];
 }
 
@@ -69,14 +69,14 @@ const IDENTITY = Float64Array.of(
 );
 
 /**
- * The camera route's steps with a rigid step at each end and between curvilinear maps
+ * The camera route's steps with an affine step at each end and between curvilinear maps
  * (an identity where the route has none): the shape every view's route to
  * its own root takes.
  */
 export function normalize(steps: readonly CameraStep[]): CameraStep[] {
   const out: CameraStep[] = [];
   const pad = () =>
-    out.push({ kind: "rigid", matrix: Float64Array.from(IDENTITY) });
+    out.push({ kind: "affine", matrix: Float64Array.from(IDENTITY) });
   for (const step of steps) {
     if (
       step.kind === "curvilinear" &&
@@ -109,7 +109,7 @@ export function bridgeRoute(input: CameraRoute): BridgedRoute | BridgeRefusal {
   const camera = { ...input, steps: normalize(input.steps) };
   let curvilinearMaps = 0;
   for (const step of camera.steps) {
-    if (step.kind === "rigid") {
+    if (step.kind === "affine") {
       continue;
     }
     curvilinearMaps++;
@@ -142,9 +142,9 @@ export function bridgeRoute(input: CameraRoute): BridgedRoute | BridgeRefusal {
   let parent = root;
   for (let i = camera.steps.length - 1; i >= 0; i--) {
     const step = camera.steps[i]!;
-    if (step.kind === "rigid") {
+    if (step.kind === "affine") {
       nodes[i] = graph.add(
-        `rigid ${i}`,
+        `affine ${i}`,
         parent,
         affine({ matrix: step.matrix }),
       );
@@ -191,7 +191,7 @@ export function bridgeRoute(input: CameraRoute): BridgedRoute | BridgeRefusal {
       return (
         next.steps.length === nodes.length &&
         next.steps.every((s, i) =>
-          s.kind === "rigid"
+          s.kind === "affine"
             ? matrices[i] !== undefined
             : held[i] !== undefined &&
               !s.inverse &&
@@ -204,7 +204,7 @@ export function bridgeRoute(input: CameraRoute): BridgedRoute | BridgeRefusal {
       let changedMatrices = false;
       let changedParams = false;
       next.steps.forEach((s, i) => {
-        if (s.kind === "rigid") {
+        if (s.kind === "affine") {
           const before = matrices[i]!;
           for (let k = 0; k < 16; k++) {
             if (before[k] !== s.matrix[k]) {

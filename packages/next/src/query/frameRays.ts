@@ -9,7 +9,7 @@ import {
   type FrameKey,
   type FrameResolver,
 } from "../camera/frameResolver.ts";
-import { resolveRoute, routeForward, routeIsRigid } from "../camera/route.ts";
+import { resolveRoute, routeForward, routeIsAffine } from "../camera/route.ts";
 import { C } from "../math/constants.ts";
 import type { World } from "../scene/World.ts";
 import type { AnchorHandle } from "../scene/world/types.ts";
@@ -74,7 +74,7 @@ type Carrier = ((p: ArrayLike<number>) => Float64Array) & {
 };
 
 /**
- * A carrier of points of `from` into `to` at `seconds`, in float64: a rigid
+ * A carrier of points of `from` into `to` at `seconds`, in float64: an affine
  * route by its matrix, a route across curvilinear edges point by point
  * (`routeForward`; a ray is carried by its two ends, so it stays straight in
  * `to`, which is the frame the query is answered in).
@@ -87,7 +87,7 @@ function carrier(
 ): Carrier {
   const route = resolveRoute(resolver, from, to, seconds);
   const first = route.steps[0]!;
-  if (first.kind === "rigid" && routeIsRigid(route)) {
+  if (first.kind === "affine" && routeIsAffine(route)) {
     const m = first.matrix;
     return (p) => apply(m, p);
   }

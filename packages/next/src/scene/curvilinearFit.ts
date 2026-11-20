@@ -432,7 +432,7 @@ export function fitSolveOperator(): Float64Array {
   return fitBasis().solve;
 }
 
-/** A scalar of model point `p` (a curved clip's signed distance, `fitClipField`). */
+/** A scalar of model point `p` (a curvilinear clip's signed distance, `fitClipField`). */
 export type ScalarFunction = (p: Float64Array) => number;
 
 /** The `ClipField` of `cells` cells per axis over the cube [−1, 1]³ of u, and the worst residual at its check points. */
@@ -495,7 +495,7 @@ function fitScalarCells(
 }
 
 /**
- * Fits a scalar (a curved clip's signed distance) over the tile's sphere in
+ * Fits a scalar (a curvilinear clip's signed distance) over the tile's sphere in
  * model space, cells as `fitLattice`: `cells` fixed (the draw's position
  * lattice has them, and the scalar shares its rows), or doubling (1, 2, 4, 8)
  * from 1 until `errorBound ≤ tolerance` or `maxCells`. The field's cells are
@@ -576,11 +576,11 @@ export function evaluateClipField(
   return sum;
 }
 
-/** The draw's affine part of `route`: its rigid steps composed in order, curvilinear maps taken as identity. Column-major 4×4. */
+/** The draw's affine part of `route`: its affine steps composed in order, curvilinear maps taken as identity. Column-major 4×4. */
 export function affinePart(route: Route): Float64Array {
   const out = mat4();
   for (const step of route.steps) {
-    if (step.kind === "rigid") {
+    if (step.kind === "affine") {
       multiply(out, step.matrix, out);
     }
   }

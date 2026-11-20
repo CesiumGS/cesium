@@ -183,7 +183,7 @@ function sameRoute(a: Route, b: Route): boolean {
   for (let i = 0; i < a.steps.length; i++) {
     const x = a.steps[i]!;
     const y = b.steps[i]!;
-    if (x.kind === "rigid" && y.kind === "rigid") {
+    if (x.kind === "affine" && y.kind === "affine") {
       for (let k = 0; k < 16; k++) {
         if (x.matrix[k] !== y.matrix[k]) {
           return false;
@@ -203,7 +203,7 @@ function sameRoute(a: Route, b: Route): boolean {
 
 /**
  * Marks `anchor` (or the table's root) as placed across a curvilinear map by `route`,
- * or as rigid again (`undefined`). A route that is the same as the one held
+ * or as affine again (`undefined`). A route that is the same as the one held
  * keeps the held one and wakes nothing.
  */
 export function setAnchorRoute(

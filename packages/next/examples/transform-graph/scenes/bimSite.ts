@@ -16,7 +16,7 @@ import {
   addOsmBuildings,
   anchorIn,
   bindEarth,
-  createDeformer,
+  createExaggerationFrame,
   geodeticOf,
 } from "../content.ts";
 import { hex, MeshBuilder, polylines, type Rgba } from "../geometry.ts";
@@ -137,7 +137,7 @@ export const bimSite: Scene = {
   caption:
     "A port site authored in UTM 48S grid meters at Tanjung Priok, nested under the exaggeration: grid, then geographic, then geocentric, then the node that scales heights. Pick two points: the grid distance, the true ground distance and the drawn distance differ.",
   point:
-    "Nesting is just parenting: the CRS node sits under the deformer, so the site is exaggerated with the terrain it stands on, and a measurement in any node is the same route read at that node.",
+    "Nesting is just parenting: the CRS node sits under the exaggeration, so the site is exaggerated with the terrain it stands on, and a measurement in any node is the same route read at that node.",
   sources: [
     {
       what: "The port site",
@@ -156,12 +156,12 @@ export const bimSite: Scene = {
   async start(host: SceneHost) {
     const { viewer } = host;
     const { engine, view } = viewer;
-    const deformer = createDeformer(host, {
+    const exaggerationFrame = createExaggerationFrame(host, {
       max: MAX,
       ceiling: 12_000,
       start: 3,
     });
-    const earth = bindEarth(host, deformer.frame);
+    const earth = bindEarth(host, exaggerationFrame.frame);
     viewer.setSun(70, 35);
 
     // ----------------------------------------------- the nested nodes
@@ -174,7 +174,7 @@ export const bimSite: Scene = {
     );
     const geographic = curvilinearFrame(
       "Geographic to geocentric",
-      deformer.frame,
+      exaggerationFrame.frame,
       liveEdge(geographicToGeocentric(), {
         description: "longitude, latitude, height to body-fixed meters",
       }),
@@ -261,7 +261,7 @@ export const bimSite: Scene = {
       placements: [
         {
           label: "Terrain, Cesium OSM Buildings",
-          frame: deformer.frame,
+          frame: exaggerationFrame.frame,
           kind: "content",
         },
         {
@@ -279,8 +279,8 @@ export const bimSite: Scene = {
         },
       ],
       detail: (f) =>
-        f === deformer.frame
-          ? `heights × ${deformer.factor.toFixed(1)}`
+        f === exaggerationFrame.frame
+          ? `heights × ${exaggerationFrame.factor.toFixed(1)}`
           : f === site
             ? jakarta !== undefined
               ? `heights lifted ${GEOID_HEIGHT} m, EGM96 to the ellipsoid`
@@ -295,7 +295,7 @@ export const bimSite: Scene = {
     );
     const shot = () => {
       view.camera.lookAt(
-        deformer.drawn(center),
+        exaggerationFrame.drawn(center),
         200 * deg,
         -26 * deg,
         jakarta !== undefined ? 2_200 : 1_150,
@@ -342,7 +342,7 @@ export const bimSite: Scene = {
       {},
       el("dt", {}, "Grid distance (E, N)"),
       lengths.grid,
-      el("dt", {}, "Ground distance (true meters, below the deformer)"),
+      el("dt", {}, "Ground distance (true meters, below the exaggeration)"),
       lengths.ground,
       el("dt", {}, "Drawn distance (ITRF, as the view sees it)"),
       lengths.drawn,
@@ -368,8 +368,8 @@ export const bimSite: Scene = {
           .position;
       const ua = at(a, utmFrame);
       const ub = at(b, utmFrame);
-      const ta = at(a, deformer.frame);
-      const tb = at(b, deformer.frame);
+      const ta = at(a, exaggerationFrame.frame);
+      const tb = at(b, exaggerationFrame.frame);
       const da = at(a, host.itrf);
       const db = at(b, host.itrf);
       const chord = (p: Float64Array, q: Float64Array) =>
@@ -394,7 +394,7 @@ export const bimSite: Scene = {
       );
       const trueGeo = host.queries.pointIn(
         { frame: site, position: truth.position },
-        deformer.frame,
+        exaggerationFrame.frame,
         v,
       );
       const drawn = host.queries.pickIn(pick, "drawn");
@@ -418,11 +418,11 @@ export const bimSite: Scene = {
         min: 1,
         max: MAX,
         step: 0.1,
-        value: deformer.factor,
+        value: exaggerationFrame.factor,
         format: (v) => `×${v.toFixed(1)}`,
       },
       (v) => {
-        deformer.factor = v;
+        exaggerationFrame.factor = v;
         host.graph.refresh();
         fillMeasure();
         engine.requestRender();

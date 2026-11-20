@@ -1,6 +1,11 @@
 import type { Tileset3D, View } from "@cesium/next";
 import { CAMERA, positionOf } from "../../vertical-exaggeration/places.ts";
-import { bindEarth, createDeformer, drawnAt, geodeticOf } from "../content.ts";
+import {
+  bindEarth,
+  createExaggerationFrame,
+  drawnAt,
+  geodeticOf,
+} from "../content.ts";
 import { whenDrawn } from "../loading.ts";
 import { createMarker } from "../markers.ts";
 import type { Scene, SceneHost, ScenePick } from "../scene.ts";
@@ -36,12 +41,12 @@ export const splitView: Scene = {
   async start(host: SceneHost) {
     const { viewer } = host;
     const { engine, view } = viewer;
-    const deformer = createDeformer(host, {
+    const exaggerationFrame = createExaggerationFrame(host, {
       max: MAX,
       ceiling: 12_000,
       start: 1,
     });
-    const earth = bindEarth(host, deformer.frame);
+    const earth = bindEarth(host, exaggerationFrame.frame);
     const minimumHeight = viewer.controller.minimumHeight;
     viewer.controller.minimumHeight = 40;
     host.scope.defer(() => {
@@ -54,11 +59,11 @@ export const splitView: Scene = {
       viewer.split = false;
     });
     const right = viewer.views.find((v) => v !== view) as View;
-    deformer.setFactorIn(view, 1);
-    deformer.setFactorIn(right, 5);
+    exaggerationFrame.setFactorIn(view, 1);
+    exaggerationFrame.setFactorIn(right, 5);
     host.scope.defer(() => {
-      deformer.setFactorIn(view, undefined);
-      deformer.setFactorIn(right, undefined);
+      exaggerationFrame.setFactorIn(view, undefined);
+      exaggerationFrame.setFactorIn(right, undefined);
     });
 
     // One camera for both, from the north down the valley and high enough to clear ×10 summits.
@@ -88,23 +93,23 @@ export const splitView: Scene = {
     const rightTag = el("div", { className: "tgx-corner half-right" });
     host.overlay.append(left, rightTag);
     const tags = () => {
-      left.textContent = `Left view: ×${deformer.factorIn(view).toFixed(1)}`;
-      rightTag.textContent = `Right view: ×${deformer.factorIn(right).toFixed(1)}`;
+      left.textContent = `Left view: ×${exaggerationFrame.factorIn(view).toFixed(1)}`;
+      rightTag.textContent = `Right view: ×${exaggerationFrame.factorIn(right).toFixed(1)}`;
     };
 
     host.describe({
       placements: [
         {
           label: "Terrain, Cesium OSM Buildings",
-          frame: deformer.frame,
+          frame: exaggerationFrame.frame,
           kind: "content",
         },
         { label: "Camera, left view (×1)", frame: host.itrf, kind: "camera" },
         { label: "Camera, right view (×k)", frame: host.itrf, kind: "camera" },
       ],
       detail: (f) =>
-        f === deformer.frame
-          ? `heights × a value per view: ${deformer.factorIn(view).toFixed(1)} left, ${deformer.factorIn(right).toFixed(1)} right`
+        f === exaggerationFrame.frame
+          ? `heights × a value per view: ${exaggerationFrame.factorIn(view).toFixed(1)} left, ${exaggerationFrame.factorIn(right).toFixed(1)} right`
           : undefined,
     });
 
@@ -139,7 +144,11 @@ export const splitView: Scene = {
         ["left", view],
         ["right", right],
       ] as const) {
-        const drawn = drawnAt(deformer, truth.position, deformer.factorIn(v));
+        const drawn = drawnAt(
+          exaggerationFrame,
+          truth.position,
+          exaggerationFrame.factorIn(v),
+        );
         heights[key].textContent = length(geodeticOf(drawn).height);
       }
       frameNote.textContent = `On “${frame?.name ?? "no node"}”; ${truth.note}`;
@@ -160,7 +169,7 @@ export const splitView: Scene = {
         format: (v) => `×${v.toFixed(1)}`,
       },
       (v) => {
-        deformer.setFactorIn(view, v);
+        exaggerationFrame.setFactorIn(view, v);
         tags();
         host.graph.refresh();
         engine.requestRender();
@@ -176,7 +185,7 @@ export const splitView: Scene = {
         format: (v) => `×${v.toFixed(1)}`,
       },
       (v) => {
-        deformer.setFactorIn(right, v);
+        exaggerationFrame.setFactorIn(right, v);
         tags();
         host.graph.refresh();
         engine.requestRender();

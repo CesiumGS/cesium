@@ -1,9 +1,9 @@
-// Curved clips (docs/design/geometry-through-placement-review.md, increment 8c; docs/design/transform-graph.md): a plane named in a design
+// Curvilinear clips (docs/design/geometry-through-placement-review.md, increment 8c; docs/design/transform-graph.md): a plane named in a design
 // frame whose route to the content crosses a curvilinear edge that bends it. Its signed
 // distance is fitted per draw into the lattice rows' `w` channel; these check
 // the fit against float64 on the route, what the table and the packed rows
 // hold, and how the world follows its views' clips. The GPU side is
-// spikes/curvedClips.html.
+// spikes/curvilinearClips.html.
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import type { FrameKey } from "../src/camera/frameResolver.ts";
 import { routeForward } from "../src/camera/route.ts";
@@ -12,7 +12,7 @@ import type { Frame } from "../src/frames/Frame.ts";
 import { createFramesResolver } from "../src/frames/resolver.ts";
 import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import {
-  CLIP_SET_CURVED,
+  CLIP_SET_CURVILINEAR,
   CLIP_TABLE_ROWS,
   clipSetDistance,
   clipSetKeeps,
@@ -25,7 +25,7 @@ import {
   type ClipShape,
   type PlannedClip,
 } from "../src/scene/world/clips.ts";
-import { curvedClipSets } from "../src/render/view/clipTable.ts";
+import { curvilinearClipSets } from "../src/render/view/clipTable.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import { createBox } from "../src/scene/meshes.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
@@ -129,7 +129,7 @@ function random(seed: number): () => number {
   };
 }
 
-describe("a curved clip's distance", () => {
+describe("a curvilinear clip's distance", () => {
   it("is each shape's signed distance, negative inside, with the set's rule folded in", () => {
     const plane: ClipShape = {
       kind: "plane",
@@ -316,13 +316,13 @@ describe("a plane in a design frame under a bending edge", () => {
         Infinity,
         report,
       );
-      return world.curvilinearMaps.curved.frame(
+      return world.curvilinearMaps.curvilinearClips.frame(
         {
           resolver: engine.cameras.resolver(world),
           seconds: 0,
           demands: views
             .filter((w) => w.world === world)
-            .map((w) => curvedClipSets(engine, w))
+            .map((w) => curvilinearClipSets(engine, w))
             .filter((sets) => sets.length > 0),
         },
         Infinity,
@@ -380,13 +380,15 @@ describe("a plane in a design frame under a bending edge", () => {
     };
   }
 
-  it("is planned as curved", () => {
+  it("is planned as curvilinear", () => {
     const s = scene();
-    expect(planClip(planeIn(s.design), s.placement()).space).toBe("curved");
+    expect(planClip(planeIn(s.design), s.placement()).space).toBe(
+      "curvilinear",
+    );
     const exaggerated = scene(true);
     expect(
       planClip(planeIn(exaggerated.design), exaggerated.placement()).space,
-    ).toBe("curved");
+    ).toBe("curvilinear");
     // A plane in the content's own frame is not.
     expect(planClip(planeIn(s.content), s.placement()).space).toBe("true");
   });
@@ -395,9 +397,9 @@ describe("a plane in a design frame under a bending edge", () => {
     const s = scene();
     const set = planeIn(s.design);
     s.view.setClips([s.world.addClip(set)]);
-    expect(curvedClipSets(engine, s.view)).toEqual(s.view.clipSets());
+    expect(curvilinearClipSets(engine, s.view)).toEqual(s.view.clipSets());
     expect(s.step()).toBe(false);
-    const status = s.world.curvilinearMaps.curved.status(s.draw)!;
+    const status = s.world.curvilinearMaps.curvilinearClips.status(s.draw)!;
     expect(status).toMatchObject({ state: "fitted", carrier: true });
     const lattice = s.lattice()!;
     const field = lattice.clip!;
@@ -490,7 +492,9 @@ describe("a plane in a design frame under a bending edge", () => {
     const terms = drawTerms(s.world, s.draw)!;
     expect(terms).toHaveLength(1);
     const lattice = s.lattice()!;
-    expect(s.world.curvilinearMaps.curved.status(s.draw)).toMatchObject({
+    expect(
+      s.world.curvilinearMaps.curvilinearClips.status(s.draw),
+    ).toMatchObject({
       state: "fitted",
       carrier: false,
       cells: lattice.cells,
@@ -512,18 +516,18 @@ describe("a plane in a design frame under a bending edge", () => {
     }
   });
 
-  it("puts a curved set in the table as a row of its own, tested by the fitted distance", () => {
+  it("puts a curvilinear set in the table as a row of its own, tested by the fitted distance", () => {
     const s = scene();
     const rigid: ClipSet = {
       frame: s.content,
       shapes: [{ kind: "plane", point: [0, 0, R + 1], normal: [0, 0, 1] }],
     };
-    const curved = planeIn(s.design);
+    const curvilinear = planeIn(s.design);
     const plans: PlannedClip[] = [
       planClip(rigid, s.placement()),
-      planClip(curved, s.placement()),
+      planClip(curvilinear, s.placement()),
     ];
-    expect(plans.map((p) => p.space)).toEqual(["true", "curved"]);
+    expect(plans.map((p) => p.space)).toEqual(["true", "curvilinear"]);
     const table = new Float32Array(CLIP_TABLE_ROWS * 4);
     const camera = [0, 0, R];
     packClipTable(plans, camera, table);
@@ -531,16 +535,22 @@ describe("a plane in a design frame under a bending edge", () => {
     expect(u32[0]).toBe(2);
     expect(u32[1]! & 2).toBe(2);
     expect(u32[(1 + 1) * 4 + 1]).toBe(0);
-    expect(u32[(1 + 1) * 4 + 2]! & CLIP_SET_CURVED).toBe(CLIP_SET_CURVED);
+    expect(u32[(1 + 1) * 4 + 2]! & CLIP_SET_CURVILINEAR).toBe(
+      CLIP_SET_CURVILINEAR,
+    );
     const rel = [0, 0, -0.5];
-    expect(tableKeeps(table, { true: rel, drawn: rel, curved: -2 })).toBe(true);
-    expect(tableKeeps(table, { true: rel, drawn: rel, curved: 2 })).toBe(false);
+    expect(tableKeeps(table, { true: rel, drawn: rel, curvilinear: -2 })).toBe(
+      true,
+    );
+    expect(tableKeeps(table, { true: rel, drawn: rel, curvilinear: 2 })).toBe(
+      false,
+    );
     expect(tableKeeps(table, { true: rel, drawn: rel })).toBe(true);
     // The rigid set still cuts.
     const above = [0, 0, 5];
-    expect(tableKeeps(table, { true: above, drawn: above, curved: -2 })).toBe(
-      false,
-    );
+    expect(
+      tableKeeps(table, { true: above, drawn: above, curvilinear: -2 }),
+    ).toBe(false);
   });
 
   it("follows the view's clips: a moved clip refits, a removed one takes the field off", () => {
@@ -555,9 +565,9 @@ describe("a plane in a design frame under a bending edge", () => {
       shapes: [{ kind: "plane", point: [0, 0, R + 1150], normal: [0, 0, 1] }],
     };
     s.world.setClip(clip, moved);
-    expect(s.world.curvilinearMaps.curved.serves(s.view.clipSets())).toBe(
-      false,
-    );
+    expect(
+      s.world.curvilinearMaps.curvilinearClips.serves(s.view.clipSets()),
+    ).toBe(false);
     s.step();
     const after = s.lattice()!.clip!;
     expect(after).not.toBe(before);
@@ -565,7 +575,9 @@ describe("a plane in a design frame under a bending edge", () => {
       -100,
       0,
     );
-    expect(s.world.curvilinearMaps.curved.serves(s.view.clipSets())).toBe(true);
+    expect(
+      s.world.curvilinearMaps.curvilinearClips.serves(s.view.clipSets()),
+    ).toBe(true);
     // Moving the draw refits it.
     s.world.setTransform(
       s.transform,
@@ -593,15 +605,17 @@ describe("a plane in a design frame under a bending edge", () => {
       after.coefficients[0]! + 100,
       0,
     );
-    // No curved clip left: the carrier goes, and the draw is unplaced again.
+    // No curvilinear clip left: the carrier goes, and the draw is unplaced again.
     s.view.setClips([]);
     s.step();
-    expect(s.world.curvilinearMaps.curved.active).toBe(false);
+    expect(s.world.curvilinearMaps.curvilinearClips.active).toBe(false);
     expect(drawTerms(s.world, s.draw)).toBeUndefined();
-    expect(s.world.curvilinearMaps.curved.status(s.draw)).toBeUndefined();
+    expect(
+      s.world.curvilinearMaps.curvilinearClips.status(s.draw),
+    ).toBeUndefined();
   });
 
-  it("says so when views of a world want different curved clips", () => {
+  it("says so when views of a world want different curvilinear clips", () => {
     const s = scene();
     const a = planeIn(s.design);
     const b: ClipSet = {
@@ -620,12 +634,16 @@ describe("a plane in a design frame under a bending edge", () => {
     s.view.setClips([s.world.addClip(a)]);
     other.setClips([s.world.addClip(b)]);
     s.step();
-    expect(s.world.curvilinearMaps.curved.serves(s.view.clipSets())).toBe(true);
-    expect(s.world.curvilinearMaps.curved.serves(other.clipSets())).toBe(false);
-    expect(s.messages.join("\n")).toMatch(/different curved clips/);
+    expect(
+      s.world.curvilinearMaps.curvilinearClips.serves(s.view.clipSets()),
+    ).toBe(true);
+    expect(
+      s.world.curvilinearMaps.curvilinearClips.serves(other.clipSets()),
+    ).toBe(false);
+    expect(s.messages.join("\n")).toMatch(/different curvilinear clips/);
   });
 
-  it("combines a view's curved sets by max: kept where every one keeps", () => {
+  it("combines a view's curvilinear sets by max: kept where every one keeps", () => {
     const s = scene();
     const above: ClipSet = {
       frame: s.design,
@@ -662,7 +680,7 @@ describe("a plane in a design frame under a bending edge", () => {
     expect(kept).toBeLessThan(1000);
   });
 
-  it("routes queries through the curved route exactly, in float64", () => {
+  it("routes queries through the curvilinear route exactly, in float64", () => {
     const s = scene();
     const set = planeIn(s.design);
     s.view.setClips([s.world.addClip(set)]);

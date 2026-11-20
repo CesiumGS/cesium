@@ -3,7 +3,7 @@
 // the adapters that bridge today's frame-based picks and clip sets to nodes.
 import { describe, expect, it } from "vitest";
 import {
-  NonRigidRouteError,
+  NonAffineRouteError,
   resolveRoute,
   routeForward,
   type Route as CameraRoute,
@@ -535,7 +535,7 @@ describe("a core pick in any node", () => {
 
   it("represents the route as a graph whose nodes are its steps", () => {
     const pg = graphOfCameraRoute(route);
-    expect(route.steps.map((s) => s.kind)).toEqual(["rigid", "curvilinear"]);
+    expect(route.steps.map((s) => s.kind)).toEqual(["affine", "curvilinear"]);
     expect(pg.nodes).toHaveLength(3);
     expect(pg.true.name).toBe("Pad");
     expect(pg.drawn.name).toBe("ITRF");
@@ -960,16 +960,16 @@ describe("clip sets placed at nodes", () => {
     shapes: [{ kind: "plane", point: [0, 0, 50], normal: [0, 0, 1] }],
   };
 
-  it("answers a rigid route with the matrix, and a curvilinear one with NonRigidRouteError", () => {
+  it("answers an affine route with the matrix, and a curvilinear one with NonAffineRouteError", () => {
     const out = new Float64Array(16);
     resolver.resolve(design, world, 0, out);
     near(out, translate(100, 0, 0), 1e-12);
     expect(() => resolver.resolve(design, content, 0, out)).toThrow(
-      NonRigidRouteError,
+      NonAffineRouteError,
     );
   });
 
-  it("plans a set at a node as drawn where the view's root is rigid from it, and curved where it is not", () => {
+  it("plans a set at a node as drawn where the view's root is affine from it, and curvilinear where it is not", () => {
     const placement = Float64Array.of(
       1,
       0,
@@ -1003,15 +1003,15 @@ describe("clip sets placed at nodes", () => {
       body: content,
       bodyPlacement: placement,
     });
-    expect(curved.space).toBe("curved");
+    expect(curved.space).toBe("curvilinear");
   });
 
   it("gives the camera layer's route, whose forward is the graph's", () => {
     const route = resolveRoute(resolver, content, design, 0);
     expect(route.steps.map((s) => s.kind)).toEqual([
-      "rigid",
+      "affine",
       "curvilinear",
-      "rigid",
+      "affine",
     ]);
     const a = [3, -4, 20];
     const graphRoute = routeBetween(content, design);

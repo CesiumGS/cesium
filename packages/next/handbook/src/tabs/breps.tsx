@@ -331,12 +331,13 @@ const TWO_BY_TWO = [
   {
     row: "Changes where content is",
     space: "A coordinate operation (a reprojection)",
-    domain: "A deformer for a state: 4D construction, a survey epoch",
+    domain: "A curvilinear frame for a state: 4D construction, a survey epoch",
   },
   {
     row: "Changes only how it's drawn",
     space: "A drawn map (exaggeration, flattening, the 2D morph)",
-    domain: "A drawn deformer (an analysis shape at ×50), color fields",
+    domain:
+      "A drawn curvilinear frame (an analysis shape at ×50), color fields",
   },
 ];
 
@@ -1450,14 +1451,14 @@ export function Breps() {
           rows={SHARED}
         />
         <p>
-          Curved-surface tessellation isn't shared with vectors. It's shared
-          with reprojected meshes instead.
+          Curvilinear-surface tessellation isn't shared with vectors. It's
+          shared with reprojected meshes instead.
         </p>
         <p>
           <strong>Reprojection, one rule for both.</strong> Evaluate in source
           coordinates, then place each point. Test coverage in intrinsic
           coordinates, (u, v) or the source plane, which reprojection can't
-          change. A large planar face under a non-rigid reprojection isn't
+          change. A large planar face under a non-affine reprojection isn't
           planar once placed, so it subdivides, but its coverage test doesn't
           change. Quadratic segments are made after placement, with their error
           measured there, and snaps and measurements go back to the exact

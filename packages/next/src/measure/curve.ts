@@ -8,7 +8,7 @@
 // points, never at a point carried by the route's affine part.
 import {
   routeForward,
-  routeIsRigid,
+  routeIsAffine,
   curvilinearScaleOf,
   type Route,
 } from "../camera/route.ts";
@@ -71,13 +71,13 @@ function pixelSize(screen: ScreenScale, q: ArrayLike<number>): number {
  * until the drawn pieces are within the tolerance of the curve. For each
  * piece the images of three interior points are tested against its chord
  * (the distance to the chord, which parametrization doesn't enter), at the
- * pixel size where each is. A rigid route is its two ends.
+ * pixel size where each is. An affine route is its two ends.
  *
  * What is guaranteed: the sampled points are on the routed curve exactly,
  * and the tested interior points are within the tolerance of their chords.
  * Between tested points a curve with a bend finer than a quarter of a piece
  * could leave a chord by more; the second derivative of a route over a
- * piece is curvilinear for the curvilinear maps the engine fits (`secondDerivativeBound`).
+ * piece is smooth for the curvilinear maps the engine fits (`secondDerivativeBound`).
  */
 export function sampleSegment(
   route: Route,
@@ -87,7 +87,7 @@ export function sampleSegment(
 ): Float64Array {
   const first = routeForward(route, a);
   const last = routeForward(route, b);
-  if (routeIsRigid(route)) {
+  if (routeIsAffine(route)) {
     return Float64Array.of(...first, ...last);
   }
   const tolerance = (q: ArrayLike<number>): number =>
@@ -162,11 +162,11 @@ export interface DrawnSamples {
   readonly generation: number;
 }
 
-/** What a sample depends on: the route's revision, each curvilinear map's scale, its rigid steps, and the camera's pixel size. */
+/** What a sample depends on: the route's revision, each curvilinear map's scale, its affine steps, and the camera's pixel size. */
 function keyOf(route: Route, screen: ScreenScale | undefined): number[] {
   const key: number[] = [route.revision, route.steps.length];
   for (const step of route.steps) {
-    if (step.kind === "rigid") {
+    if (step.kind === "affine") {
       key.push(...step.matrix);
     } else {
       key.push(
@@ -195,7 +195,7 @@ const sameKey = (a: number[], b: number[]): boolean =>
  * A measurement's line, polyline or area outline, in true coordinates, drawn
  * through a route: `samples(route, screen)` gives the drawn polyline,
  * re-sampled only when the route's revision, a curvilinear map's scale (a slider writes
- * one float and changes no revision), a rigid step or the camera's pixel
+ * one float and changes no revision), an affine step or the camera's pixel
  * size changes. Re-sampling is cheap: each segment takes tens of routed
  * points. A closed curve (an area's outline) draws its closing segment too.
  */

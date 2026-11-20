@@ -78,7 +78,7 @@ describe("the public curvilinear map functions", () => {
       base: curvilinearMap.to,
       seconds: 0,
       steps: [
-        { kind: "rigid", matrix: shift },
+        { kind: "affine", matrix: shift },
         { kind: "curvilinear", curvilinearMap, inverse: false },
       ],
       revision: 1,

@@ -9,7 +9,7 @@ import { Frame, eastNorthUpFrame, curvilinearFrame } from "@cesium/next/frames";
 import {
   addMeshDraw,
   anchorIn,
-  createDeformer,
+  createExaggerationFrame,
   geodeticOf,
   stage,
 } from "../content.ts";
@@ -86,7 +86,7 @@ export const seismic: Scene = {
     const width = (traces - 1) * spacing;
 
     // --------------------------------------------------- the nested nodes
-    const deformer = createDeformer(host, {
+    const exaggerationFrame = createExaggerationFrame(host, {
       max: MAX,
       ceiling: 12_000,
       start: 8,
@@ -98,7 +98,7 @@ export const seismic: Scene = {
     );
     const survey = eastNorthUpFrame(
       "Survey site (ENU)",
-      deformer.frame,
+      exaggerationFrame.frame,
       Ellipsoid.WGS84,
       origin,
     );
@@ -142,8 +142,8 @@ export const seismic: Scene = {
       detail: (f) =>
         f === time
           ? `velocity v(z) = ${velocity.params.v0} + ${velocity.params.g} z`
-          : f === deformer.frame
-            ? `heights × ${deformer.factor.toFixed(1)}, depths too`
+          : f === exaggerationFrame.frame
+            ? `heights × ${exaggerationFrame.factor.toFixed(1)}, depths too`
             : undefined,
     });
 
@@ -241,7 +241,7 @@ export const seismic: Scene = {
       // zoom toward the Earth's surface over the background instead.
       const range = Math.max(4_500, width * 0.95);
       viewer.setControls("orbit", {
-        target: deformer.drawn(target),
+        target: exaggerationFrame.drawn(target),
         heading: (section.azimuth - 90) * deg,
         pitch: -6 * deg,
         range,
@@ -344,11 +344,11 @@ export const seismic: Scene = {
         min: 1,
         max: MAX,
         step: 0.5,
-        value: deformer.factor,
+        value: exaggerationFrame.factor,
         format: (v) => `×${v.toFixed(1)}`,
       },
       (v) => {
-        deformer.factor = v;
+        exaggerationFrame.factor = v;
         apply();
       },
     );

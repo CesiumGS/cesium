@@ -404,7 +404,7 @@ describe("placement decides what is curvilinear", () => {
     expect(routeBetween(earth, display).shapeKey).toBe("+exaggerate");
   });
 
-  it("puts a camera inside the deformer: it sees outside content through the inverse", () => {
+  it("puts a camera inside the curvilinear frame: it sees outside content through the inverse", () => {
     const seen = routeBetween(moon, camera);
     expect(seen.shapeKey).toBe("M>-exaggerate~>M");
     // In the display, then back through the exaggeration into Earth's true frame, then the camera's.

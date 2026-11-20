@@ -1,7 +1,7 @@
 // Clips (docs/design/geometry-through-placement-review.md, increment 8a): the shapes and their combination in
 // float64, the table the fragment stage reads (a CPU twin of its test, with
 // float32 rows), which space each clip is tested in by its frame's route
-// (true, drawn, curved), a view's table end to end, and queries filtered by
+// (true, drawn, curvilinear), a view's table end to end, and queries filtered by
 // clips. The GPU side is spikes/clips.html.
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { routeForward } from "../src/camera/route.ts";
@@ -467,7 +467,7 @@ describe("which space a clip is tested in", () => {
     ]);
   });
 
-  it("under a deformer over the content: a clip in the content's frame is true, one in the camera's root is drawn", () => {
+  it("under a curvilinear frame over the content: a clip in the content's frame is true, one in the camera's root is drawn", () => {
     const s = scene((itrf) => {
       const exaggerated = curvilinearFrame("exaggerated", itrf, {
         revision: 1,
@@ -486,7 +486,7 @@ describe("which space a clip is tested in", () => {
     expect(inDrawn.matrix[0]).toBeCloseTo(1, 12);
   });
 
-  it("under a datum shift of the content: a clip in the shifted frame is true, one in the root frame is drawn, one elsewhere is curved", () => {
+  it("under a datum shift of the content: a clip in the shifted frame is true, one in the root frame is drawn, one elsewhere is curvilinear", () => {
     const s = scene((itrf) => {
       // The content's frame runs 100 m past ITRF in x.
       const shifted = curvilinearFrame("shifted", itrf, {
@@ -502,7 +502,7 @@ describe("which space a clip is tested in", () => {
       });
       const elsewhere = curvilinearFrame("elsewhere", itrf, {
         revision: 1,
-        description: "another deformer",
+        description: "another curvilinear frame",
         forward(p, out, jacobian) {
           out[0] = p[0]!;
           out[1] = p[1]! + 50;
@@ -520,7 +520,9 @@ describe("which space a clip is tested in", () => {
     expect(
       (planClip(planeIn(s.itrf), s.placement()) as PlannedClip).space,
     ).toBe("drawn");
-    expect(planClip(planeIn(elsewhere), s.placement()).space).toBe("curved");
+    expect(planClip(planeIn(elsewhere), s.placement()).space).toBe(
+      "curvilinear",
+    );
   });
   it("a view's table end to end: each set in its space, against float64 on the route", () => {
     const s = scene((itrf) => {

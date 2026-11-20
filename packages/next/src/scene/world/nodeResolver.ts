@@ -7,14 +7,14 @@
 // are nodes of one graph (a node itself, or a key `options.nodeOf` places at
 // one) it answers from the graph's route between them, in float64: a matrix
 // when the route is affine (the set is tested in the true or drawn space as
-// ever), `NonRigidRouteError` when it crosses a curvilinear edge, which makes the
-// set curved (`planClip`), and `route()` as the camera layer's route, each
-// curvilinear edge a `CurvilinearMap`, which is what `WorldCurvedClips` fits the signed
+// ever), `NonAffineRouteError` when it crosses a curvilinear edge, which makes the
+// set curvilinear (`planClip`), and `route()` as the camera layer's route, each
+// curvilinear edge a `CurvilinearMap`, which is what `WorldCurvilinearClips` fits the signed
 // distance through (`resolveRoute`, `routeForward`). Every other key goes to
 // the resolver it wraps.
 import type { FrameKey, FrameResolver } from "../../camera/frameResolver.ts";
 import {
-  NonRigidRouteError,
+  NonAffineRouteError,
   type Route as CameraRoute,
   type RouteStep as CameraStep,
   type CurvilinearMap,
@@ -87,7 +87,7 @@ function curvilinearMapOf(
   };
 }
 
-/** `route` as the camera layer's: its affine runs rigid steps, each curvilinear step a curvilinear map. */
+/** `route` as the camera layer's: its affine runs affine steps, each curvilinear step a curvilinear map. */
 function cameraRoute(
   route: Route,
   frame: FrameKey,
@@ -97,7 +97,7 @@ function cameraRoute(
   const steps: CameraStep[] = [];
   for (const step of route.steps) {
     if (step.kind === "affine") {
-      steps.push({ kind: "rigid", matrix: Float64Array.from(step.matrix) });
+      steps.push({ kind: "affine", matrix: Float64Array.from(step.matrix) });
     } else {
       steps.push({
         kind: "curvilinear",
@@ -107,7 +107,7 @@ function cameraRoute(
     }
   }
   if (steps.length === 0) {
-    steps.push({ kind: "rigid", matrix: Float64Array.from(IDENTITY) });
+    steps.push({ kind: "affine", matrix: Float64Array.from(IDENTITY) });
   }
   return {
     frame,
@@ -120,7 +120,7 @@ function cameraRoute(
 
 /**
  * `inner` with transform-graph nodes understood as frames: the clip sets of
- * `WorldClips` and `WorldCurvedClips` then take a node as their `frame`.
+ * `WorldClips` and `WorldCurvilinearClips` then take a node as their `frame`.
  * Wrap the resolver a world's cameras use (`engine.cameras.setResolver`).
  */
 export function nodeResolver(
@@ -154,7 +154,7 @@ export function nodeResolver(
       }
       const steps = route.steps;
       if (steps.some((s) => s.kind === "curvilinear")) {
-        throw new NonRigidRouteError(frame.name, base.name);
+        throw new NonAffineRouteError(frame.name, base.name);
       }
       out.set(steps.length === 0 ? IDENTITY : (steps[0] as AffineStep).matrix);
       return out;
@@ -171,7 +171,7 @@ export function nodeResolver(
           seconds,
           steps: [
             {
-              kind: "rigid",
+              kind: "affine",
               matrix: inner.resolve(frame, base, seconds, new Float64Array(16)),
             },
           ],

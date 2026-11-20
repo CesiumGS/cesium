@@ -1,7 +1,7 @@
 // A pick in any node of the transform graph (plan 2026-11-12, task 5). A core
 // pick carries where the content is (its domain point, or the drawn position
 // carried back through the route: `locatePick`) and the camera route that
-// drew it. `pickIn` represents that route as a transform graph (each rigid
+// drew it. `pickIn` represents that route as a transform graph (each affine
 // step an affine node, each curvilinear map a curvilinear one, so the route's own steps are
 // its nodes: the content's node is "true", the view's render space is
 // "drawn") and carries the point to the node asked for, in float64, from the
@@ -34,7 +34,7 @@ import type { Frame } from "./Frame.ts";
 import type { FrameGraph } from "./graphOfFrames.ts";
 import { locatePick, type TruthHow } from "./pickTruth.ts";
 
-/** A camera route (rigid steps and curvilinear maps) as a graph: the route's steps are its nodes. */
+/** A camera route (affine steps and curvilinear maps) as a graph: the route's steps are its nodes. */
 export interface RouteGraph {
   readonly graph: TransformGraph;
   /** The content's node: the route's `frame`, where true coordinates are. */
@@ -102,7 +102,7 @@ export function graphOfCameraRoute(route: CameraRoute): RouteGraph {
     nodes[i] = graph.add(
       name,
       parent,
-      step.kind === "rigid"
+      step.kind === "affine"
         ? affine({ matrix: step.matrix })
         : curvilinear(edgeOf(step.curvilinearMap, step.inverse, i)),
     );

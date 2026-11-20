@@ -127,7 +127,7 @@ const BOXES: Box[] = [
   },
 ];
 
-/** A deformer over the Earth's content: what sits under it is curvilinear, and the Moon is not. */
+/** A curvilinear frame over the Earth's content: what sits under it is curvilinear, and the Moon is not. */
 function GraphFigure() {
   const titleId = useId();
   const byId = new Map(BOXES.map((b) => [b.id, b]));
@@ -225,14 +225,14 @@ const PRIOR = [
     differs: "Their edges are affine, so nothing in them can deform",
   },
   {
-    art: "Deformers and FFD (Maya, 3ds Max space curvilinear maps; Sederberg and Parry, 1986)",
+    art: "Deformers and FFD (Maya, 3ds Max space warps; Sederberg and Parry, 1986)",
     has: "Bend, twist, taper and lattice deformers applied to an object's vertices",
-    takes: "The family, and “curvilinear map” as the friendly word",
+    takes: "The family of operations, under the one name “curvilinear map”",
     differs:
       "They deform one object's mesh. Here normals, picks, measurements, accuracy and tile selection follow from the one definition",
   },
   {
-    art: "Space curvilinear maps in solid modeling (ACIS)",
+    art: "Space warps in solid modeling (ACIS)",
     has: "A curvilinear map applied to a whole solid, not to a mesh of it",
     takes: "The idea that a map of space is an operation on exact geometry",
     differs:
@@ -292,7 +292,7 @@ const NAMES = [
   },
   {
     name: "`FrameResolver.route(frame, base, seconds)`",
-    what: "The steps from content to the render root: one matrix for each rigid run, a step for each curvilinear edge, forward going up and inverse going down. `resolve` and `frameTransform` across a curvilinear edge throw `NonRigidRouteError`: there is no 4×4 to give.",
+    what: "The steps from content to the render root: one matrix for each affine run, a step for each curvilinear edge, forward going up and inverse going down. `resolve` and `frameTransform` across a curvilinear edge throw `NonAffineRouteError`: there is no 4×4 to give.",
   },
 ];
 
@@ -302,7 +302,7 @@ const BUILTINS = [
     names:
       "`scaleAbout`, `scaleAlongAxes`, `bump`, `bend`, `twist`, `taper`, `lattice` (free-form deformation), `radialDistortion` (Brown–Conrady), `corridorUnroll`, `velocityModel`, `blend`",
     notes:
-      "Space curvilinear maps in the 3ds Max sense, plus a lens, an alignment unrolled into a strip, and a 1D time-to-depth model.",
+      "Space warps in the 3ds Max sense, plus a lens, an alignment unrolled into a strip, and a 1D time-to-depth model.",
   },
   {
     family: "Geo",
@@ -582,16 +582,16 @@ export function TransformGraph() {
           common ancestor of that node and the camera&apos;s, through each
           edge&apos;s forward function, then down to the camera&apos;s node
           through the inverses. That is its <strong>route</strong>. Where
-          content sits is the only thing that decides what is curvilinear: a
-          deformer over the Earth&apos;s content curvilinear maps the terrain
-          and the buildings, and the Moon in the same world is untouched. Put
-          the camera under the deformer instead and the rest of the world is
-          curvilinear, not the Earth (scene 2 of the tour below).
+          content sits is the only thing that decides what is drawn through a
+          curvilinear map: a curvilinear frame over the Earth&apos;s content
+          bends the terrain and the buildings, and the Moon in the same world is
+          untouched. Put the camera under the curvilinear frame instead and the
+          rest of the world is bent, not the Earth (scene 2 of the tour below).
         </p>
         <Figure
           scroll
           label="A transform graph"
-          caption="A deformer over the Earth's content. The camera is at ITRF, so what it sees of each thing is decided by where that thing is placed: the terrain, buildings and models under the curvilinear node are drawn exaggerated, and the satellite and the Moon are not."
+          caption="A curvilinear frame over the Earth's content. The camera is at ITRF, so what it sees of each thing is decided by where that thing is placed: the terrain, buildings and models under the curvilinear node are drawn exaggerated, and the satellite and the Moon are not."
         >
           <GraphFigure />
         </Figure>
@@ -968,11 +968,11 @@ export function TransformGraph() {
         <h3>Clips</h3>
         <p>
           A clip set is placed at a node, so <C>ClipSet.frame</C> may be one.
-          Where its route to the content is rigid, the test is a matrix. Where
-          it crosses a curvilinear edge, <C>planClip</C> says &quot;curved&quot;
-          and the clip is cut along a signed distance fitted per draw, from the
-          route <C>nodeResolver</C> gives. The Clipping tab has how and what is
-          left.
+          Where its route to the content is affine, the test is a matrix. Where
+          it crosses a curvilinear edge, <C>planClip</C> says
+          &quot;curvilinear&quot; and the clip is cut along a signed distance
+          fitted per draw, from the route <C>nodeResolver</C> gives. The
+          Clipping tab has how and what is left.
         </p>
         <Written
           from={
@@ -1098,7 +1098,7 @@ export function TransformGraph() {
           view, and the engine says so once. A ray query with no view sees a
           draw and its twin. A twin costs a draw record and its share of the
           draw table for each tile a second group shows. A view that differs
-          only in a draw&apos;s record data (a rigid step before the last
+          only in a draw&apos;s record data (an affine step before the last
           curvilinear one) shows its group&apos;s first view. Follow-up 10
           removes the twins by choosing the program per (draw, view). Checked by{" "}
           <C>test/curvilinearViewVariants.test.ts</C> and a spike: three views

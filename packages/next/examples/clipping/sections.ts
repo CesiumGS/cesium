@@ -35,7 +35,7 @@ export interface SectionState {
   planeKeeps: "inside" | "outside";
   boxKeeps: "inside" | "outside";
   /** The plane is named in a design frame that a reprojection bends away from ITRF. */
-  curved: boolean;
+  curvilinear: boolean;
 }
 
 export const initialState = (): SectionState => ({
@@ -50,7 +50,7 @@ export const initialState = (): SectionState => ({
   combine: "intersection",
   planeKeeps: "inside",
   boxKeeps: "inside",
-  curved: false,
+  curvilinear: false,
 });
 
 const RAD = Math.PI / 180;
@@ -85,7 +85,7 @@ function planeShapes(site: Site, state: SectionState): ClipShape[] {
   return state.plane.second ? [plane(n), plane(a)] : [plane(n)];
 }
 
-/** The section planes as a clip set in `frame` (ITRF, or the design frame when curved). */
+/** The section planes as a clip set in `frame` (ITRF, or the design frame when curvilinear). */
 export function planeClip(
   site: Site,
   state: SectionState,
@@ -185,9 +185,9 @@ export const bendAt = (east: number, north: number): number =>
  * A design frame under ITRF whose heights wave along the site's up axis: a
  * node whose curvilinear edge takes its own coordinates (design) to ITRF's
  * (`curvilinearFrame`, with its Jacobian and its inverse written out). A plane
- * named in it is a rigid plane in no frame the content or the view is in
+ * named in it is affine in no frame the content or the view is in
  * (both are at ITRF), so the engine cuts it along a signed distance fitted
- * per draw (a curved clip), the route from the content down through the edge.
+ * per draw (a curvilinear clip), the route from the content down through the edge.
  */
 export function createDesignFrame(
   catalog: FrameCatalog,

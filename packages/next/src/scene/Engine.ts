@@ -42,7 +42,7 @@ import {
   type ClipSet,
   type ClipsOption,
 } from "./world/clips.ts";
-import { curvedClipSets } from "../render/view/clipTable.ts";
+import { curvilinearClipSets } from "../render/view/clipTable.ts";
 import { CURVILINEAR_BUDGET_MS } from "./world/worldCurvilinearMaps.ts";
 import type { JobStats } from "../io/Jobs.ts";
 
@@ -1813,13 +1813,13 @@ export class Engine {
     for (let w = 0; w < this.worlds.length; w++) {
       const world = this.worlds[w]!;
       const worldViews = this.views.filter((view) => view.world === world);
-      // A curved clip's field on the world's draws, for the views' curved sets.
+      // A curvilinear clip's field on the world's draws, for the views' curvilinear sets.
       const demands = worldViews
-        .map((view) => curvedClipSets(this, view))
+        .map((view) => curvilinearClipSets(this, view))
         .filter((sets) => sets.length > 0);
-      if (demands.length > 0 || world.curvilinearMaps.curved.active) {
+      if (demands.length > 0 || world.curvilinearMaps.curvilinearClips.active) {
         busy =
-          world.curvilinearMaps.curved.frame(
+          world.curvilinearMaps.curvilinearClips.frame(
             {
               resolver: this.cameras.resolver(world),
               seconds: this.cameras.clock(world)?.seconds ?? 0,

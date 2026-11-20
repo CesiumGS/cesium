@@ -21,7 +21,7 @@
 //
 // Fits stay for what the compiler refuses (a curvilinear map with no curvilinear spec, JS
 // outside the subset, an inverse step), draws with terms of their own, patch
-// draws, point sets, billboards and instances, a world with curved clips, and
+// draws, point sets, billboards and instances, a world with curvilinear clips, and
 // a route whose pipelines failed to compile. The draw's culling sphere is the
 // route's image of its own, from interval evaluation of the IR
 // (transform/bounds.ts).
@@ -97,7 +97,7 @@ export interface RoutedView {
   readonly uniforms: Float32Array;
   /** The parameter values the uniforms were made at. */
   values: ParamRecord;
-  /** The anchor's place in this view (the route's rigid steps composed), for spheres. */
+  /** The anchor's place in this view (the route's affine steps composed), for spheres. */
   affine: Float64Array;
   /** The scaled parameters' ranges in this view, by key. */
   ranges: Record<string, ParamRange>;
@@ -134,7 +134,7 @@ export interface RoutedAnchor {
   version: number;
   /** Goes up when a draw's culling sphere changes with the route: `version`, or a parameter without a range. */
   sphereVersion: number;
-  /** The anchor's place (the route's rigid steps composed), for spheres. */
+  /** The anchor's place (the route's affine steps composed), for spheres. */
   affine: Float64Array;
   /** The route's own scaled parameters' ranges (a slider's `range`), by key: spheres hold for all of them. */
   ranges: Record<string, ParamRange>;
@@ -213,7 +213,7 @@ export class WorldRoutes {
 
   /**
    * Brings the slot's compiled route to the camera routes as they are now
-   * (their rigid matrices, their curvilinear maps' parameters, a slider), making it when
+   * (their affine matrices, their curvilinear maps' parameters, a slider), making it when
    * there is none or its shape changed. `views` are the views that draw the
    * anchor by routes of one shape (`WorldVariants` groups them; a route of
    * another shape has an anchor key and draws of its own), the first one the
@@ -457,10 +457,10 @@ export class WorldRoutes {
     first: ViewCamera,
   ): RoutedAnchor | { reason: string; say: boolean } {
     const camera = first.camera;
-    if (this.world.curvilinearMaps.curved.active) {
+    if (this.world.curvilinearMaps.curvilinearClips.active) {
       return {
         reason:
-          "the world's curved clips carry their field on the fitted lattices",
+          "the world's curvilinear clips carry their field on the fitted lattices",
         say: false,
       };
     }
@@ -1118,11 +1118,11 @@ function handleOf(d: RoutedDraw): DrawHandle {
   return { index: d.index, generation: d.generation, name: undefined };
 }
 
-/** What a camera route's compiled form depends on in its shape: its steps' kinds (rigid steps at each end and between curvilinear maps, as `normalize` has them) and its curvilinear maps' functions. */
+/** What a camera route's compiled form depends on in its shape: its steps' kinds (affine steps at each end and between curvilinear maps, as `normalize` has them) and its curvilinear maps' functions. */
 function shapeOf(camera: CameraRoute): string {
   return normalize(camera.steps)
     .map((s) =>
-      s.kind === "rigid"
+      s.kind === "affine"
         ? "r"
         : `${s.inverse ? "i" : "f"}${s.curvilinearMap.curvilinear?.source ?? "?"}`,
     )
@@ -1131,7 +1131,7 @@ function shapeOf(camera: CameraRoute): string {
 
 /**
  * What a draw's record (its center constants) is made from, which views of
- * one route must share: the rigid matrices before the last curvilinear map, and the
+ * one route must share: the affine matrices before the last curvilinear map, and the
  * values of the parameters that aren't uniforms. What differs per view
  * without it is a uniform: the matrices after the last curvilinear map (a root) and
  * the values of the parameters that are.

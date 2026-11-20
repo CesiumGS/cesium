@@ -12,7 +12,7 @@ import {
   type FrameResolver,
 } from "../camera/frameResolver.ts";
 import {
-  NonRigidRouteError,
+  NonAffineRouteError,
   curvilinearForward,
   curvilinearInverse,
   type Route,
@@ -39,7 +39,7 @@ import { framePoint } from "./local.ts";
 import { rotationPart } from "./matrix.ts";
 import { pointAccuracy } from "./pointAccuracy.ts";
 import {
-  isNonRigidFrame,
+  isNonAffineFrame,
   curvilinearEdgeOf,
   type CurvilinearFrame,
   type SwitchFrame,
@@ -217,7 +217,7 @@ class Resolver implements FramesResolver {
     return this.resolveFor(frame, base, seconds, out, undefined);
   }
 
-  /** `resolve` for `view`: a switch frame that chose the identity is crossed, any other non-rigid edge refused. */
+  /** `resolve` for `view`: a switch frame that chose the identity is crossed, any other non-affine edge refused. */
   private resolveFor(
     frame: FrameKey,
     base: FrameKey,
@@ -241,7 +241,7 @@ class Resolver implements FramesResolver {
     }
     if (a && b) {
       if (this.crossesCurvilinearMap(a, b, view)) {
-        throw new NonRigidRouteError(frame.name, base.name);
+        throw new NonAffineRouteError(frame.name, base.name);
       }
       this.askPrecise(a, b);
       this.compose(a, b, this.instant(seconds), out);
@@ -261,8 +261,8 @@ class Resolver implements FramesResolver {
 
   /**
    * The route from `frame` to `base` (for `view`, which a switch frame
-   * chooses by): one rigid step (`resolve`'s matrix) when it crosses no
-   * curvilinear edge; else its rigid runs, each composed as `resolve` composes
+   * chooses by): one affine step (`resolve`'s matrix) when it crosses no
+   * curvilinear edge; else its affine runs, each composed as `resolve` composes
    * them (an anchor's node-relative matrix folded into the first and last),
    * and a curvilinear step for each curvilinear edge, forward where the route goes up
    * from a frame to its parent and inverse where it goes down.
@@ -284,7 +284,7 @@ class Resolver implements FramesResolver {
         seconds,
         steps: [
           {
-            kind: "rigid",
+            kind: "affine",
             matrix: this.resolveFor(
               frame,
               base,
@@ -301,7 +301,7 @@ class Resolver implements FramesResolver {
     const instant = this.instant(seconds);
     const steps: RouteStep[] = [];
     if (aLocal) {
-      steps.push({ kind: "rigid", matrix: aLocal });
+      steps.push({ kind: "affine", matrix: aLocal });
     }
     for (const leg of this.legs(a, b, view)) {
       if (leg.kind === "curvilinear") {
@@ -314,11 +314,11 @@ class Resolver implements FramesResolver {
         const m = new Float64Array(16);
         this.scaled = false;
         this.compose(leg.from, leg.to, instant, m);
-        pushRigid(steps, this.scaled ? this.rigid(m) : m);
+        pushAffine(steps, this.scaled ? this.rigid(m) : m);
       }
     }
     if (bLocal) {
-      pushRigid(steps, m4.invertAffine(bLocal, bLocal));
+      pushAffine(steps, m4.invertAffine(bLocal, bLocal));
     }
     return {
       frame,
@@ -559,7 +559,7 @@ class Resolver implements FramesResolver {
       for (let f = start; f !== top; f = f.parent!) {
         if (
           view === undefined
-            ? isNonRigidFrame(f)
+            ? isNonAffineFrame(f)
             : curvilinearEdgeOf(f, view) !== undefined
         ) {
           return true;
@@ -624,7 +624,7 @@ class Resolver implements FramesResolver {
     const top = commonAncestor(a, b);
     for (const start of [a, b]) {
       for (let f = start; f !== top; f = f.parent!) {
-        if (isNonRigidFrame(f) && !this.hooked.has(f as CurvilinearFrame)) {
+        if (isNonAffineFrame(f) && !this.hooked.has(f as CurvilinearFrame)) {
           const hooked = f as CurvilinearFrame | SwitchFrame;
           this.hooked.add(hooked);
           hooked.onChange(() => {
@@ -638,7 +638,7 @@ class Resolver implements FramesResolver {
   }
 
   /**
-   * `accuracy` over a route that crosses curvilinear edges: each rigid run through
+   * `accuracy` over a route that crosses curvilinear edges: each affine run through
    * the frames' composition, each curvilinear edge by its `accuracy.sigma`, the
    * point carried through the route to place each term; the 1σ terms add in
    * quadrature. A curvilinear map stating only a `bound` is not stated (a bound is
@@ -851,16 +851,16 @@ type Leg =
       inverse: boolean;
     };
 
-/** Adds a rigid step, composed into the last when that is rigid too. */
-function pushRigid(steps: RouteStep[], m: Float64Array): void {
+/** Adds an affine step, composed into the last when that is affine too. */
+function pushAffine(steps: RouteStep[], m: Float64Array): void {
   const last = steps[steps.length - 1];
-  if (last?.kind === "rigid") {
+  if (last?.kind === "affine") {
     steps[steps.length - 1] = {
-      kind: "rigid",
+      kind: "affine",
       matrix: m4.multiply(new Float64Array(16), m, last.matrix),
     };
   } else {
-    steps.push({ kind: "rigid", matrix: m });
+    steps.push({ kind: "affine", matrix: m });
   }
 }
 
@@ -932,13 +932,13 @@ function commonAncestor(from: Frame, to: Frame): Frame {
  *   that isn't rigid reaches the camera layer, which refuses it.
  * - The reference frames named directly (a rig's) are marked as used by
  *   `"rig"`; anchors' bindings as used by the application.
- * - A curvilinear frame (`curvilinearFrame`) is a non-rigid edge whose coordinates map
+ * - A curvilinear frame (`curvilinearFrame`) is a non-affine edge whose coordinates map
  *   up to its parent's: content placed in it is drawn through the edge. A
  *   switch frame (`switchFrame`) chooses its edge per view. `route` carries
  *   each as a curvilinear step, forward where the route goes up from the frame to
  *   its parent and inverse where it goes down (`route(frame, base, seconds,
  *   view)`: the view a switch chooses by); `resolve` and `motion` across
- *   one throw `NonRigidRouteError`; a route not crossing it is as it was. Its
+ *   one throw `NonAffineRouteError`; a route not crossing it is as it was. Its
  *   `revision` counts in `routeRevision`; `watch` hears `catalog.add` of
  *   it and its `invalidate()`. `accuracy` adds its `accuracy.sigma` in
  *   quadrature; one stating only a `bound` leaves `meters` undefined.

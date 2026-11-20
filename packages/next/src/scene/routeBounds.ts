@@ -92,7 +92,7 @@ export function composeBox(
     sigma *= stretchOf(m);
   };
   for (const step of route.steps) {
-    if (step.kind === "rigid") {
+    if (step.kind === "affine") {
       if (geographic) {
         return undefined;
       }

@@ -13,27 +13,27 @@
 // a shader:
 //
 // - **True.** The set's route to the view's body anchor (the content's own
-//   side) is rigid: the table is tested on the content's point, the
+//   side) is affine: the table is tested on the content's point, the
 //   fragment's location 4 (`relPosition`: the draw's transform on the design
 //   position, before any placement or route). Where content sits decides
-//   this, not the route: a deformer over the content (a curvilinear edge between
+//   this, not the route: a curvilinear frame over the content (a curvilinear edge between
 //   the content's frame and the root) changes where it is drawn, not the
 //   coordinates it has in its own frame.
-// - **Drawn.** The set's route to the render root is rigid: the table is
+// - **Drawn.** The set's route to the render root is affine: the table is
 //   tested on the drawn point, which a placed draw rebuilds per fragment
 //   (surface.slang `drawnPosition`), and an unplaced one reads from location 4.
-// - **Curved.** Neither is rigid: the set is a curved surface in the scene
+// - **Curvilinear.** Neither is affine: the set is a curved surface in the scene
 //   (the route from the content to the set's frame crosses a reprojection
 //   that bends it). Its signed distance is fitted per draw, over the draw's
-//   lattice, into the rows' free fourth channel (`WorldCurvedClips`,
-//   curvedClips.ts): the vertex stage evaluates it at the design position
+//   lattice, into the rows' free fourth channel (`WorldCurvilinearClips`,
+//   curvilinearClips.ts): the vertex stage evaluates it at the design position
 //   (surface.slang `Placed.clip`, in `airTransmittance.w`), the varying
 //   interpolates it, and the fragment stage discards by its sign. The cut is
 //   accurate to the fit's error, and to the mesh's own chords: the distance
 //   is interpolated between vertices as the surface is. A draw carries one
-//   field (`.w`), so a world's views may use one set of curved sets (their
-//   fields combine by max: kept where every curved set keeps); another
-//   view's different curved sets are left out and reported.
+//   field (`.w`), so a world's views may use one set of curvilinear sets (their
+//   fields combine by max: kept where every curvilinear set keeps); another
+//   view's different curvilinear sets are left out and reported.
 //
 // Queries test in float64 by routing points into the set's own frame
 // (`clipFilter`).
@@ -48,10 +48,10 @@
 import type { ClipFilter } from "../../geometry/query.ts";
 import type { FrameKey, FrameResolver } from "../../camera/frameResolver.ts";
 import {
-  NonRigidRouteError,
+  NonAffineRouteError,
   resolveRoute,
   routeForward,
-  routeIsRigid,
+  routeIsAffine,
 } from "../../camera/route.ts";
 
 /** A point or direction as three numbers. */
@@ -108,7 +108,7 @@ export type Vec4Like = readonly [number, number, number, number];
  *
  * Content a draw exempts from clips (`DrawOptions.clipExempt`) is left
  * alone by every effect. Effects are for sets tested on the true or the
- * drawn point; a curved set (increment 8c) always discards.
+ * drawn point; a curvilinear set (increment 8c) always discards.
  */
 export type ClipEffect =
   | "discard"
@@ -192,8 +192,8 @@ export const CLIP_POLYGON = 2;
 export const CLIP_SET_INTERSECTION = 1;
 export const CLIP_SET_KEEP_OUTSIDE = 2;
 export const CLIP_SET_DRAWN = 4;
-/** A curved set: its signed distance was fitted per draw (the row has no shapes). */
-export const CLIP_SET_CURVED = 8;
+/** A curvilinear set: its signed distance was fitted per draw (the row has no shapes). */
+export const CLIP_SET_CURVILINEAR = 8;
 /** Reserved: the styling language's exemptions by element data (a set row's w). */
 export const CLIP_SET_EXEMPT = 3;
 /**
@@ -212,10 +212,10 @@ export const CLIP_SET_EFFECT_SHIFT = 8;
 export const CLIP_EFFECT_ROWS = 3;
 /**
  * The header's flags: some set is tested on the drawn point; some set is
- * curved; some set reports (has effect rows); some set is a blended ghost.
+ * curvilinear; some set reports (has effect rows); some set is a blended ghost.
  */
 export const CLIP_ANY_DRAWN = 1;
-export const CLIP_ANY_CURVED = 2;
+export const CLIP_ANY_CURVILINEAR = 2;
 export const CLIP_ANY_REPORT = 4;
 export const CLIP_ANY_GHOST = 8;
 /** What `fsInput.clipFlags` carries: this set removes the fragment; it is a ghost. */
@@ -466,7 +466,7 @@ export function clipSetKeeps(set: ClipSet, p: ArrayLike<number>): boolean {
   return set.keep === "outside" ? !region : region;
 }
 
-// --- signed distances, in float64 (what a curved clip fits) --------------------
+// --- signed distances, in float64 (what a curvilinear clip fits) --------------------
 
 /** The distance from `(x, y)` to a polygon's ring, negative inside (even-odd, as `shapeContains`). */
 function ringDistance(
@@ -719,12 +719,12 @@ export interface ClipViewPlacement {
   readonly bodyPlacement: ArrayLike<number>;
 }
 
-export type ClipSpace = "true" | "drawn" | "curved";
+export type ClipSpace = "true" | "drawn" | "curvilinear";
 
 /**
  * A set placed for a view: which point it is tested on, and its frame in the
- * shading axes. A curved set has no matrix (the identity): its distance is
- * fitted per draw (`WorldCurvedClips`).
+ * shading axes. A curvilinear set has no matrix (the identity): its distance is
+ * fitted per draw (`WorldCurvilinearClips`).
  */
 export interface PlannedClip {
   readonly set: ClipSet;
@@ -733,15 +733,15 @@ export interface PlannedClip {
   readonly matrix: Float64Array;
 }
 
-function isNonRigid(error: unknown): boolean {
-  return error instanceof NonRigidRouteError;
+function isNonAffine(error: unknown): boolean {
+  return error instanceof NonAffineRouteError;
 }
 
 /**
  * Chooses the space `set` is tested in for a view, and the matrix that takes
  * the set's frame to the shading axes there. Throws what the resolver throws
- * when it can't answer (`FrameUnavailableError`). Neither route rigid: the
- * set is `curved` (fitted per draw, `WorldCurvedClips`).
+ * when it can't answer (`FrameUnavailableError`). Neither route affine: the
+ * set is `curvilinear` (fitted per draw, `WorldCurvilinearClips`).
  */
 export function planClip(set: ClipSet, view: ClipViewPlacement): PlannedClip {
   try {
@@ -753,7 +753,7 @@ export function planClip(set: ClipSet, view: ClipViewPlacement): PlannedClip {
     );
     return { set, space: "true", matrix };
   } catch (error) {
-    if (!isNonRigid(error)) {
+    if (!isNonAffine(error)) {
       throw error;
     }
   }
@@ -768,11 +768,11 @@ export function planClip(set: ClipSet, view: ClipViewPlacement): PlannedClip {
     const matrix = multiplyRigid(invertRigid(view.bodyPlacement), toRoot);
     return { set, space: "drawn", matrix };
   } catch (error) {
-    if (!isNonRigid(error)) {
+    if (!isNonAffine(error)) {
       throw error;
     }
   }
-  return { set, space: "curved", matrix: identity16() };
+  return { set, space: "curvilinear", matrix: identity16() };
 }
 
 const identity16 = (): Float64Array =>
@@ -824,8 +824,8 @@ function invertRigid(m: ArrayLike<number>): Float64Array {
  *   the drawn point;
  * - rows 1 to `MAX_CLIP_SETS` (uints): a set's first row, its shape count, its
  *   flags (`CLIP_SET_*`, with the row of its effect in bits 8 and up), and a
- *   reserved word (exemptions). A curved set
- *   (`CLIP_SET_CURVED`, header flag `CLIP_ANY_CURVED`) has no shapes: the
+ *   reserved word (exemptions). A curvilinear set
+ *   (`CLIP_SET_CURVILINEAR`, header flag `CLIP_ANY_CURVILINEAR`) has no shapes: the
  *   fragment tests the draw's fitted distance (a varying) instead;
  * - then each shape: a header row (uints: kind, rows with the header, vertex
  *   count), and its rows. A plane: (n, d) with inside n·p + d ≤ 0. A box: three
@@ -850,19 +850,19 @@ export function packClipTable(
   out.fill(0, 0, CLIP_HEADER_ROWS * 4);
   let row = CLIP_HEADER_ROWS;
   let anyDrawn = false;
-  let anyCurved = false;
+  let anyCurvilinear = false;
   let anyReport = false;
   let anyGhost = false;
   plans.forEach((plan, s) => {
     const first = row;
-    if (plan.space === "curved") {
+    if (plan.space === "curvilinear") {
       // No shapes: the draw's fitted distance is the test.
       const at = (1 + s) * 4;
       u32[at] = first;
       u32[at + 1] = 0;
-      u32[at + 2] = CLIP_SET_CURVED;
+      u32[at + 2] = CLIP_SET_CURVILINEAR;
       u32[at + 3] = 0;
-      anyCurved = true;
+      anyCurvilinear = true;
       return;
     }
     const m = plan.matrix;
@@ -987,7 +987,7 @@ export function packClipTable(
   u32[0] = plans.length;
   u32[1] =
     (anyDrawn ? CLIP_ANY_DRAWN : 0) |
-    (anyCurved ? CLIP_ANY_CURVED : 0) |
+    (anyCurvilinear ? CLIP_ANY_CURVILINEAR : 0) |
     (anyReport ? CLIP_ANY_REPORT : 0) |
     (anyGhost ? CLIP_ANY_GHOST : 0);
   if (row > CLIP_TABLE_ROWS) {
@@ -1014,7 +1014,7 @@ export function ghostRange(
   let near = Infinity;
   let far = 0;
   for (const { set, matrix: m, space } of plans) {
-    if (space === "curved" || !isBlendedGhost(set)) {
+    if (space === "curvilinear" || !isBlendedGhost(set)) {
       continue;
     }
     const removesInside = set.keep === "outside";
@@ -1098,8 +1098,8 @@ function tableShapeInside(
 
 /**
  * The table's float32 view of `plans`, as the GPU reads it (a twin of the
- * fragment test, for checks). `curved` is the draw's fitted distance at the
- * fragment, which a curved set's row tests. A ghost's removed side counts as
+ * fragment test, for checks). `curvilinear` is the draw's fitted distance at the
+ * fragment, which a curvilinear set's row tests. A ghost's removed side counts as
  * removed (the opaque passes' view of it) and a "shade" set removes nothing.
  */
 export function tableKeeps(
@@ -1107,7 +1107,7 @@ export function tableKeeps(
   space: {
     readonly true: ArrayLike<number>;
     readonly drawn: ArrayLike<number>;
-    readonly curved?: number;
+    readonly curvilinear?: number;
   },
 ): boolean {
   return tableVerdict(table, space).keeps;
@@ -1140,7 +1140,7 @@ export function tableVerdict(
   space: {
     readonly true: ArrayLike<number>;
     readonly drawn: ArrayLike<number>;
-    readonly curved?: number;
+    readonly curvilinear?: number;
   },
   options: { pass?: "opaque" | "translucent"; stipple?: number } = {},
 ): ClipVerdict {
@@ -1158,8 +1158,8 @@ export function tableVerdict(
     const at = (1 + s) * 4;
     const shapes = Math.min(u32[at + 1]!, MAX_CLIP_SHAPES);
     const flags = u32[at + 2]!;
-    if ((flags & CLIP_SET_CURVED) !== 0) {
-      if ((space.curved ?? 0) > 0) {
+    if ((flags & CLIP_SET_CURVILINEAR) !== 0) {
+      if ((space.curvilinear ?? 0) > 0) {
         keeps = false;
       }
       continue;
@@ -1309,7 +1309,7 @@ export interface CapPlane {
  * and 6): a set of planes, or of one box. Each plane's cap is the section by it,
  * limited to where it bounds what is kept: with the shapes combined by
  * intersection that is inside the other planes' half-spaces; by union, outside
- * them. A set of polygons or of several boxes has curved or concave
+ * them. A set of polygons or of several boxes has curvilinear or concave
  * boundaries that a plane-by-plane cap cannot say: `unsupported` names why.
  */
 export function capPlanes(
@@ -1404,7 +1404,7 @@ export function clipSetsOf(
 
 /**
  * A filter over `sets` for points in `frame` at `seconds`: each point is
- * routed, in float64, into each set's own frame (a rigid route by its
+ * routed, in float64, into each set's own frame (an affine route by its
  * matrix; across a curvilinear edge by the route's forward map) and tested there.
  * A route that crosses a curvilinear edge is followed: the point is tested where
  * it is drawn, in a set named in a drawn frame. Without a resolver the
@@ -1431,9 +1431,9 @@ export function clipFilter(
       set.frame,
       options.seconds,
     );
-    if (routeIsRigid(route)) {
+    if (routeIsAffine(route)) {
       const m =
-        route.steps[0]!.kind === "rigid" ? route.steps[0]!.matrix : undefined;
+        route.steps[0]!.kind === "affine" ? route.steps[0]!.matrix : undefined;
       const q = new Float64Array(3);
       return (p: ArrayLike<number>) => {
         const x = p[0]!;

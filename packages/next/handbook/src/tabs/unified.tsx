@@ -211,7 +211,7 @@ const MECHANISMS: (Block & { short: string })[] = [
   {
     short: "Clipping",
     name: "Sections and clipping",
-    what: "Planes, boxes and polygon prisms that cut every representation, in any frame, with capped faces: instant on the GPU, exact on a b-rep, joined loops on a mesh. A clip across a deformed route is cut along a fitted distance, and has no GPU cap. Effects: discard, a translucent ghost, or shade.",
+    what: "Planes, boxes and polygon prisms that cut every representation, in any frame, with capped faces: instant on the GPU, exact on a b-rep, joined loops on a mesh. A clip across a curvilinear route is cut along a fitted distance, and has no GPU cap. Effects: discard, a translucent ghost, or shade.",
     state: "partly",
   },
   {

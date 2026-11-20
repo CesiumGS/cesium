@@ -21,7 +21,7 @@ export interface PanelActions {
   resetView(): void;
   setSplit(on: boolean): void;
   secondClipChanged(): void;
-  curvedChanged(): void;
+  curvilinearChanged(): void;
 }
 
 /** A plane's offset along its normal is measured from here. */
@@ -347,15 +347,15 @@ export function createPanel(
       },
     ),
 
-    el("h3", {}, "Curved clip"),
+    el("h3", {}, "Curvilinear clip"),
     toggle(
       "Plane in a design frame, bent by a reprojection",
-      () => state.curved,
+      () => state.curvilinear,
       (on) => {
-        state.curved = on;
-        actions.curvedChanged();
+        state.curvilinear = on;
+        actions.curvilinearChanged();
       },
-      "The plane is named in a frame that a reprojection waves away from ITRF. Neither the content's frame nor the view's reaches it rigidly, so the engine cuts along a signed distance fitted per draw.",
+      "The plane is named in a frame that a reprojection waves away from ITRF. Neither the content's frame nor the view's reaches it by an affine route, so the engine cuts along a signed distance fitted per draw.",
     ),
 
     el("h3", {}, "F-reps"),

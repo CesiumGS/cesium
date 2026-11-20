@@ -16,7 +16,7 @@ import {
   addMeshDraw,
   anchorIn,
   bindEarth,
-  createDeformer,
+  createExaggerationFrame,
   geodeticOf,
 } from "../content.ts";
 import { hex, MeshBuilder } from "../geometry.ts";
@@ -88,12 +88,12 @@ export const exaggeration: Scene = {
   async start(host: SceneHost) {
     const { viewer } = host;
     const { engine, world, view } = viewer;
-    const deformer = createDeformer(host, {
+    const exaggerationFrame = createExaggerationFrame(host, {
       max: MAX,
       ceiling: CEILING,
       start: 5,
     });
-    const earth = bindEarth(host, deformer.frame);
+    const earth = bindEarth(host, exaggerationFrame.frame);
 
     const minimumHeight = viewer.controller.minimumHeight;
     viewer.controller.minimumHeight = 40;
@@ -127,10 +127,10 @@ export const exaggeration: Scene = {
       name: "Moon",
       doubleSided: true,
     });
-    // The Moon, placed as the engine's frames say, but under the deformer when asked.
+    // The Moon, placed as the engine's frames say, but under the exaggeration when asked.
     const moonUnder = new Frame(
-      "Moon (placed under the deformer)",
-      deformer.frame,
+      "Moon (placed under the exaggeration)",
+      exaggerationFrame.frame,
       (instant, out) => void frameTransform(moonMe, host.itrf, instant, out),
       {
         cache: false,
@@ -148,12 +148,12 @@ export const exaggeration: Scene = {
         placements: [
           {
             label: "Terrain, Cesium OSM Buildings",
-            frame: deformer.frame,
+            frame: exaggerationFrame.frame,
             kind: "content",
           },
           {
             label: "Satellite (150 km up)",
-            frame: state.satelliteUnder ? deformer.frame : host.itrf,
+            frame: state.satelliteUnder ? exaggerationFrame.frame : host.itrf,
             kind: "content",
           },
           {
@@ -168,10 +168,10 @@ export const exaggeration: Scene = {
           },
         ],
         detail: (f) =>
-          f === deformer.frame
-            ? `heights × ${deformer.factor.toFixed(1)} up to ${Math.round(CEILING / 1000)} km, then a constant lift`
+          f === exaggerationFrame.frame
+            ? `heights × ${exaggerationFrame.factor.toFixed(1)} up to ${Math.round(CEILING / 1000)} km, then a constant lift`
             : f === moonUnder
-              ? "the Moon's pose in ITRF, as an edge under the deformer"
+              ? "the Moon's pose in ITRF, as an edge under the exaggeration"
               : undefined,
       });
     };
@@ -181,7 +181,7 @@ export const exaggeration: Scene = {
     const valley = () => {
       const t = CAMERA.target;
       view.camera.lookAt(
-        deformer.drawn(positionOf(t, t.height)),
+        exaggerationFrame.drawn(positionOf(t, t.height)),
         CAMERA.heading * deg,
         CAMERA.pitch * deg,
         CAMERA.range,
@@ -281,7 +281,7 @@ export const exaggeration: Scene = {
     const refresh = () => {
       host.graph.refresh();
       const drawnIfUnder = (under: boolean, p: Float64Array) =>
-        under ? deformer.drawn(p) : p;
+        under ? exaggerationFrame.drawn(p) : p;
       const s = drawnIfUnder(state.satelliteUnder, satPosition);
       satShift.textContent = length(geodeticOf(s).height - SATELLITE_HEIGHT, 1);
       const matrix = moonAt(viewer.clock.time);
@@ -324,23 +324,27 @@ export const exaggeration: Scene = {
         min: 1,
         max: MAX,
         step: 0.1,
-        value: deformer.factor,
+        value: exaggerationFrame.factor,
         format: (v) => `×${v.toFixed(1)}`,
       },
       (v) => {
-        deformer.factor = v;
+        exaggerationFrame.factor = v;
         engine.requestRender();
         refresh();
       },
     );
-    const satellite = checkbox("Satellite under the deformer", false, (on) => {
-      state.satelliteUnder = on;
-      host.bind(satAnchor, on ? deformer.frame : host.itrf);
-      describe();
-      refresh();
-      engine.requestRender();
-    });
-    const moon = checkbox("Moon under the deformer", false, (on) => {
+    const satellite = checkbox(
+      "Satellite under the exaggeration",
+      false,
+      (on) => {
+        state.satelliteUnder = on;
+        host.bind(satAnchor, on ? exaggerationFrame.frame : host.itrf);
+        describe();
+        refresh();
+        engine.requestRender();
+      },
+    );
+    const moon = checkbox("Moon under the exaggeration", false, (on) => {
       state.moonUnder = on;
       host.bind(moonAnchor, on ? moonUnder : moonMe);
       describe();

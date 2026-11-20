@@ -189,9 +189,9 @@ export function Specs() {
           docs/design/geometry-through-placement-review.md, 2026-11-11). The
           type selects the route: a geocentric CRS is the identity, a
           geographic, projected or compound one is a coordinate operation, and a
-          local one with <C>EXT_georeference</C> or a site transform is a rigid
-          edge. The declaration composes with those, and only what is new is
-          worth proposing:
+          local one with <C>EXT_georeference</C> or a site transform is an
+          affine edge. The declaration composes with those, and only what is new
+          is worth proposing:
         </p>
         <DataTable
           label="Proposals for 3D Tiles and glTF"

@@ -290,8 +290,8 @@ export function Architecture() {
           host reprojected itself is drawn as delivered, with design coordinates
           from the host's coordinate service. A projected or geographic CRS is a
           coordinate operation, a curvilinear edge fitted per tile. A local CRS
-          with a site transform is a rigid edge. The mode field is still in the
-          code, and goes with the public API review (CS-102).
+          with a site transform is an affine edge. The mode field is still in
+          the code, and goes with the public API review (CS-102).
         </p>
         <Written
           from="the plan 5 spec, sections 7.2, 7.7, 7.9 and 7.10, and the design note docs/design/geometry-through-placement-review.md"
@@ -323,9 +323,9 @@ export function Architecture() {
           These are folders of the core except <C>frames</C>, so one import
           reaches them. The boundary test fails when the transform core imports
           a built-in, or a built-in reaches past the transform core. Curvilinear
-          maps are gone as a separate idea: a deformer is a curvilinear node
-          over the content it deforms, and a Moon beside it is not under that
-          node, so it isn't curvilinear.
+          maps are gone as a separate idea: a curvilinear frame is a curvilinear
+          node over the content it deforms, and a Moon beside it is not under
+          that node, so it isn't curvilinear.
         </p>
       </Section>
 

@@ -1,8 +1,8 @@
-// Routes through the frame tree, rigid edges and curvilinear edges (docs/design/transform-graph.md).
+// Routes through the frame tree, affine edges and curvilinear edges (docs/design/transform-graph.md).
 // A curvilinear map is a curvilinear edge: a map from a frame's own coordinates up to its
 // parent's, exact in float64, which the engine compiles or fits for the GPU.
 // A route is the path from a content frame to a base (ISO 19111's
-// concatenated coordinate operation, PROJ's pipeline): rigid steps and curvilinear map
+// concatenated coordinate operation, PROJ's pipeline): affine steps and curvilinear map
 // steps in order, a curvilinear step forward where the route goes up through the
 // edge and inverse where it goes down. What is placed in a frame has that
 // frame's coordinates, true or not as the application decides, and is drawn
@@ -55,7 +55,7 @@ export interface HeightScale {
 /**
  * A curvilinear edge of the frame tree: points in `from` (the node's own
  * coordinates, meters, its axes) map to `to` (its parent) by `forward`, the
- * direction of the transform graph (src/transform): a deformer over some
+ * direction of the transform graph (src/transform): a curvilinear frame over some
  * content is a node whose forward is the deformation, so what is placed in it
  * keeps its true coordinates and is drawn through the edge. A coordinate
  * operation is the same kind of edge.
@@ -141,28 +141,28 @@ export type CurvilinearFrameSpec = Omit<CurvilinearMap, "from" | "to"> & {
   readonly attach?: (frame: { invalidate(): void }) => void;
 };
 
-/** One step of a route: a rigid transform (column-major 4×4, p_next = m · p) or a curvilinear map, either way. */
+/** One step of a route: an affine transform (column-major 4×4, p_next = m · p) or a curvilinear map, either way. */
 export type RouteStep =
-  | { readonly kind: "rigid"; readonly matrix: Float64Array }
+  | { readonly kind: "affine"; readonly matrix: Float64Array }
   | {
       readonly kind: "curvilinear";
       readonly curvilinearMap: CurvilinearMap;
       readonly inverse: boolean;
     };
 
-/** The path from `frame` to `base` at `seconds`: its steps in order, with adjacent rigid steps composed. */
+/** The path from `frame` to `base` at `seconds`: its steps in order, with adjacent affine steps composed. */
 export interface Route {
   readonly frame: FrameKey;
   readonly base: FrameKey;
   readonly seconds: number;
-  /** At least one step; a route with no curvilinear map is one rigid step. */
+  /** At least one step; a route with no curvilinear map is one affine step. */
   readonly steps: readonly RouteStep[];
   /** The resolver's `routeRevision(frame, base)`, which counts its curvilinear maps' revisions too. */
   readonly revision: number;
 }
 
 /** Thrown by `FrameResolver.resolve` for a route that crosses a curvilinear edge: it has no 4×4. Use `route`. */
-export class NonRigidRouteError extends Error {
+export class NonAffineRouteError extends Error {
   readonly frame: string;
   readonly base: string;
 
@@ -170,20 +170,20 @@ export class NonRigidRouteError extends Error {
     super(
       `${frame} to ${base}: the route crosses a curvilinear edge, so it has no 4×4; use the resolver's route()`,
     );
-    this.name = "NonRigidRouteError";
+    this.name = "NonAffineRouteError";
     this.frame = frame;
     this.base = base;
   }
 }
 
-/** Whether the route is rigid: one rigid step. */
-export function routeIsRigid(route: Route): boolean {
-  return route.steps.every((s) => s.kind === "rigid");
+/** Whether the route is affine: one affine step. */
+export function routeIsAffine(route: Route): boolean {
+  return route.steps.every((s) => s.kind === "affine");
 }
 
 /**
  * `resolver`'s route from `frame` to `base`: its own `route`, or for a
- * resolver without one, a single rigid step from `resolve` (which then has
+ * resolver without one, a single affine step from `resolve` (which then has
  * no curvilinear maps to cross).
  */
 export function resolveRoute(
@@ -202,7 +202,7 @@ export function resolveRoute(
     seconds,
     steps: [
       {
-        kind: "rigid",
+        kind: "affine",
         matrix: resolver.resolve(frame, base, seconds, new Float64Array(16)),
       },
     ],
@@ -230,7 +230,7 @@ export function routeForward(
   forwarding = true;
   try {
     for (const step of route.steps) {
-      if (step.kind === "rigid") {
+      if (step.kind === "affine") {
         transformPoint(step.matrix, at, at);
       } else if (step.inverse) {
         curvilinearInverse(step.curvilinearMap, at, at);
@@ -256,7 +256,7 @@ export function routeInverse(
   const inv = new Float64Array(16);
   for (let i = route.steps.length - 1; i >= 0; i--) {
     const step = route.steps[i]!;
-    if (step.kind === "rigid") {
+    if (step.kind === "affine") {
       invertRigid(step.matrix, inv);
       transformPoint(inv, at, at);
     } else if (step.inverse) {
@@ -353,7 +353,7 @@ function mapScales(
   return {
     ...route,
     steps: route.steps.map((step) => {
-      if (step.kind === "rigid" || !step.curvilinearMap.scale) {
+      if (step.kind === "affine" || !step.curvilinearMap.scale) {
         return step;
       }
       const w = step.curvilinearMap;

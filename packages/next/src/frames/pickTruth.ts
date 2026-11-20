@@ -9,7 +9,7 @@
 import {
   routeForward,
   routeInverse,
-  routeIsRigid,
+  routeIsAffine,
   type Route,
 } from "../camera/route.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
@@ -77,7 +77,7 @@ function curvilinearRoute(pick: CorePick): Route | undefined {
   }
   const view = pick.view as unknown as RouteView;
   const route = view.anchorRoute?.(pick.anchor);
-  return route !== undefined && !routeIsRigid(route) ? route : undefined;
+  return route !== undefined && !routeIsAffine(route) ? route : undefined;
 }
 
 /** One CSS pixel's footprint at the hit, m, in what is drawn. */

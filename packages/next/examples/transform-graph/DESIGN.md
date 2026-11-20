@@ -2,7 +2,7 @@
 
 **Story.** One example, eight scenes, one idea: _where content and the camera sit in a graph of nodes decides what is curvilinear._ Each scene is a small tree of affine, curvilinear and switch nodes, built with the engine's own frames (`curvilinearFrame`, `switchFrame`, `bindAnchor`, `View.setParameter`) and the built-in transforms. The panel makes the tree visible.
 
-**Audience.** Engine users who need to place a deformer, a CRS, a lens or a sheet, and subject-matter experts who need to trust a number. Every readout names the node it is in.
+**Audience.** Engine users who need to place a curvilinear frame, a CRS, a lens or a sheet, and subject-matter experts who need to trust a number. Every readout names the node it is in.
 
 **Layout.** A side panel, top to bottom:
 

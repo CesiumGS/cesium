@@ -411,7 +411,7 @@ export class View {
    * from the clips as they are, so a clip that moves leaves no frame without
    * its caps. A view without clips, or without solids, has none. Caps are made
    * for the sets of planes or of one box that the view tests in true space;
-   * none while a curved clip is in the view. Not pickable: ask the geometry
+   * none while a curvilinear clip is in the view. Not pickable: ask the geometry
    * (`BrepCaps`, `MeshCaps`) for exact caps to measure or pick. Off (undefined)
    * by default.
    */
@@ -784,7 +784,7 @@ export class View {
   /**
    * @internal Marks `anchor` (or, with `undefined`, the table's root) as
    * placed across a curvilinear map by `route` (its placement is then the route's
-   * affine part), or as rigid again with no route. The camera layer sets it.
+   * affine part), or as affine again with no route. The camera layer sets it.
    */
   setAnchorRoute(
     anchor: AnchorHandle | undefined,
@@ -876,7 +876,7 @@ export class View {
     }
   }
 
-  /** The route that places `anchor` (or the table's root) when it crosses a curvilinear edge: its curvilinear maps, as this view draws them, and its revision. Undefined for a rigid anchor. */
+  /** The route that places `anchor` (or the table's root) when it crosses a curvilinear edge: its curvilinear maps, as this view draws them, and its revision. Undefined for an affine anchor. */
   anchorRoute(anchor: AnchorHandle | undefined): Route | undefined {
     if (anchor && this.world.anchorOf(anchor) !== anchor) {
       return undefined;

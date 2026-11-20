@@ -496,8 +496,8 @@ export function Precision() {
             <C>maxDisplacement</C>, and the draw's bounds grow by that much. A
             fitted operation's <C>secondDerivativeBound</C> bounds how far its
             curve departs from the flat triangles between vertices. For a draw
-            under a deformer, selection's bounds are carried through the route
-            to where the draw is drawn: see the{" "}
+            under a curvilinear frame, selection's bounds are carried through
+            the route to where the draw is drawn: see the{" "}
             <a href="#/transform-graph">Transform graph tab</a>.
           </li>
           <li>

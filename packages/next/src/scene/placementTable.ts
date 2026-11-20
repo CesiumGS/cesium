@@ -38,7 +38,7 @@ import type { CurvilinearTerms } from "./curvilinearTerms.ts";
  *   `cells³ × 20` rows, `[x, y, z, 0]` (f32), cell `(iz · cells + iy) ·
  *   cells + ix` term `k` at row `3 + cell · 20 + k` (`CubicLattice`). A
  *   row's `w` is the lattice's clip field when it has one (`ClipField`, a
- *   curved clip's signed distance), else 0.
+ *   curvilinear clip's signed distance), else 0.
  *
  * A lattice of one cell is a body of 23 rows; of eight, 10,243.
  *

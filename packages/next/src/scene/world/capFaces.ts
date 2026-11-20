@@ -62,7 +62,7 @@ const dot = (a: ArrayLike<number>, b: ArrayLike<number>) =>
  * number of faces). A set makes faces when it is tested in true space, removes
  * what it doesn't keep, and is of planes or one box (`capPlanes`). A face is
  * written only if the camera is on its outward side: a ray from inside the
- * kept region never enters it through the face. With a curved set in the view
+ * kept region never enters it through the face. With a curvilinear set in the view
  * there are none: its field is fitted per draw, so no pixel knows it.
  */
 export function packCapFaces(
@@ -76,10 +76,10 @@ export function packCapFaces(
   const u32 = new Uint32Array(out.buffer, out.byteOffset, out.length);
   u32[2] = 0;
   u32[3] = 0;
-  if (plans.some((p) => p.space === "curved")) {
+  if (plans.some((p) => p.space === "curvilinear")) {
     return {
       ...NONE,
-      note: "a curved clip is in the view: its cut has no cap, and the others' are left off with it",
+      note: "a curvilinear clip is in the view: its cut has no cap, and the others' are left off with it",
     };
   }
   const faces: Array<{

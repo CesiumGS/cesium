@@ -17,9 +17,9 @@ import {
 } from "./frameResolver.ts";
 import { defaultRig, isDefaultRig, rigError, type Rig } from "./rig.ts";
 import {
-  NonRigidRouteError,
+  NonAffineRouteError,
   resolveRoute,
-  routeIsRigid,
+  routeIsAffine,
   type Route,
 } from "./route.ts";
 import { tableResolver } from "./tableResolver.ts";
@@ -100,7 +100,7 @@ interface ViewState {
  *
  * An anchor whose route to the root crosses a curvilinear edge (a curvilinear frame the
  * anchor is bound to, or one between it and the root; `FrameResolver.route`) is placed by the route's affine part (its
- * rigid steps composed, the curvilinear maps as identity) and marked with the route
+ * affine steps composed, the curvilinear maps as identity) and marked with the route
  * (`View.anchorRoute`): its content is drawn curvilinear, per vertex, by fits
  * of the route (scene/world/worldCurvilinearMaps.ts). The rig's own frames must reach the
  * root rigidly, as the root follows the rig.
@@ -521,7 +521,7 @@ export class CameraLayer {
       try {
         x = this.checked(resolver, from, to, seconds, this.x);
       } catch (error) {
-        if (!(error instanceof NonRigidRouteError) || !resolver.route) {
+        if (!(error instanceof NonAffineRouteError) || !resolver.route) {
           throw error;
         }
       }
@@ -596,7 +596,7 @@ export class CameraLayer {
   /**
    * An anchor's placement in `root`, or undefined after reporting why not.
    * Rigid: the resolver's matrix, as ever. Across a curvilinear edge: the route's
-   * affine part (its rigid steps composed, the curvilinear maps as identity), the route
+   * affine part (its affine steps composed, the curvilinear maps as identity), the route
    * (for `view`, which a switch frame chooses by) left in `routed` for the
    * view to mark the anchor with; the curvilinear maps are drawn per vertex
    * (scene/world/worldCurvilinearMaps.ts), not placed.
@@ -615,7 +615,7 @@ export class CameraLayer {
     try {
       return this.checked(resolver, frame, root, seconds, out);
     } catch (error) {
-      if (!(error instanceof NonRigidRouteError) || !resolver.route) {
+      if (!(error instanceof NonAffineRouteError) || !resolver.route) {
         this.report(state, frame, what(frame), error);
         return undefined;
       }
@@ -628,7 +628,7 @@ export class CameraLayer {
         throw new NotRigidError(frame, root, bad);
       }
       m4.copy(out, affine);
-      this.routed = routeIsRigid(route) ? undefined : route;
+      this.routed = routeIsAffine(route) ? undefined : route;
       return out;
     } catch (error) {
       this.report(state, frame, what(frame), error);
@@ -809,7 +809,7 @@ export class CameraLayer {
     error: unknown,
   ): void {
     const reason =
-      error instanceof NonRigidRouteError
+      error instanceof NonAffineRouteError
         ? `${error.frame} to ${error.base} crosses a curvilinear edge, so it has no rigid placement: a rig's frames (position, anchor, orientation) must reach its render root rigidly (put the rig at a frame reached rigidly from them), and content across a curvilinear edge needs a resolver with route()`
         : error instanceof Error
           ? error.message

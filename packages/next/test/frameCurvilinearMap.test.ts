@@ -5,11 +5,11 @@
 // its edge per view.
 import { describe, expect, it, vi } from "vitest";
 import {
-  NonRigidRouteError,
+  NonAffineRouteError,
   resolveRoute,
   routeForward,
   routeInverse,
-  routeIsRigid,
+  routeIsAffine,
 } from "../src/camera/route.ts";
 import { tableResolver } from "../src/camera/tableResolver.ts";
 import { createFrameCatalog } from "../src/frames/catalog.ts";
@@ -137,21 +137,21 @@ describe("a curvilinear edge of the frame tree", () => {
     const { catalog, itrf, mast, resolver } = setup();
     const moon = Frame.constant("moon", itrf, translation(3.844e8, 0, 0));
     catalog.add(moon);
-    expect(routeIsRigid(resolver.route(moon, itrf, SECONDS))).toBe(true);
-    expect(routeIsRigid(resolver.route(mast, itrf, SECONDS))).toBe(false);
-    // Content in the deformed frame reaches its parent forward; the sibling reaches it as it is.
+    expect(routeIsAffine(resolver.route(moon, itrf, SECONDS))).toBe(true);
+    expect(routeIsAffine(resolver.route(mast, itrf, SECONDS))).toBe(false);
+    // Content in the curvilinear frame reaches its parent forward; the sibling reaches it as it is.
     const steps = resolver.route(mast, itrf, SECONDS).steps;
-    expect(steps.map((s) => s.kind)).toEqual(["rigid", "curvilinear"]);
+    expect(steps.map((s) => s.kind)).toEqual(["affine", "curvilinear"]);
     expect(steps[1]).toMatchObject({ kind: "curvilinear", inverse: false });
   });
 
-  it("composes rigid runs on both sides of the curvilinear map, in order", () => {
+  it("composes affine runs on both sides of the curvilinear map, in order", () => {
     const { mast, site, exaggerated, itrf, resolver } = setup();
     const route = resolver.route(mast, site, SECONDS);
     expect(route.steps.map((s) => s.kind)).toEqual([
-      "rigid",
+      "affine",
       "curvilinear",
-      "rigid",
+      "affine",
     ]);
     expect(route.steps[1]).toMatchObject({
       kind: "curvilinear",
@@ -212,7 +212,7 @@ describe("a curvilinear edge of the frame tree", () => {
     const { mast, site, itrf, exaggerated, resolver } = setup();
     const out = new Float64Array(16);
     expect(() => resolver.resolve(mast, site, SECONDS, out)).toThrow(
-      NonRigidRouteError,
+      NonAffineRouteError,
     );
     expect(() => resolver.resolve(itrf, exaggerated, SECONDS, out)).toThrow(
       /crosses a curvilinear edge/,
@@ -222,25 +222,25 @@ describe("a curvilinear edge of the frame tree", () => {
         velocity: new Float64Array(3),
         angularVelocity: new Float64Array(3),
       }),
-    ).toThrow(NonRigidRouteError);
+    ).toThrow(NonAffineRouteError);
     expect(() =>
       frameTransform(exaggerated, itrf, resolver.instant(SECONDS)),
-    ).toThrow(NonRigidRouteError);
+    ).toThrow(NonAffineRouteError);
   });
 
-  it("a route that doesn't cross the curvilinear map is unchanged: one rigid step, the same matrix", () => {
+  it("a route that doesn't cross the curvilinear map is unchanged: one affine step, the same matrix", () => {
     const { mast, site, itrf, exaggerated, resolver } = setup();
     const instant = resolver.instant(SECONDS);
     const matrix = resolver.resolve(site, itrf, SECONDS, new Float64Array(16));
     expect(matrix).toEqual(frameTransform(site, itrf, instant));
     const route = resolver.route(site, itrf, SECONDS);
-    expect(routeIsRigid(route)).toBe(true);
+    expect(routeIsAffine(route)).toBe(true);
     expect(route.steps).toHaveLength(1);
     const step = route.steps[0]!;
-    expect(step.kind === "rigid" && step.matrix).toEqual(matrix);
+    expect(step.kind === "affine" && step.matrix).toEqual(matrix);
     const inside = resolver.route(mast, exaggerated, SECONDS);
     expect(inside.steps).toHaveLength(1);
-    expect(inside.steps[0]!.kind).toBe("rigid");
+    expect(inside.steps[0]!.kind).toBe("affine");
   });
 
   it("the route's revision is the resolver's, and counts the curvilinear map's revision", () => {
@@ -284,7 +284,7 @@ describe("a curvilinear edge of the frame tree", () => {
     expect(told).toHaveBeenCalledTimes(heard + 1);
   });
 
-  it("accuracy adds the curvilinear map's sigma in quadrature with the rigid edges' and notes its bound", () => {
+  it("accuracy adds the curvilinear map's sigma in quadrature with the affine edges' and notes its bound", () => {
     const { mast, site, exaggerated, itrf, resolver } = setup(
       exaggeration(10, {
         accuracy: { sigma: 0.5, bound: 2, note: "fit of the model" },
@@ -337,7 +337,7 @@ describe("a switch frame chooses its edge per view", () => {
     return { catalog, itrf, chart, resolver, spec };
   }
 
-  it("is curvilinear for one view and rigid for the other, in the same tree", () => {
+  it("is curvilinear for one view and affine for the other, in the same tree", () => {
     const { itrf, chart, resolver } = withSwitch();
     expect(isSwitchFrame(chart)).toBe(true);
     const curvilinear = resolver.route(chart, itrf, SECONDS, exaggerating);
@@ -350,10 +350,10 @@ describe("a switch frame chooses its edge per view", () => {
       R + 10 * (Math.hypot(...POINT) - R),
       5,
     );
-    const rigid = resolver.route(chart, itrf, SECONDS, flat);
-    expect(routeIsRigid(rigid)).toBe(true);
-    const step = rigid.steps[0]!;
-    expect(step.kind === "rigid" && Array.from(step.matrix)).toEqual(
+    const plain = resolver.route(chart, itrf, SECONDS, flat);
+    expect(routeIsAffine(plain)).toBe(true);
+    const step = plain.steps[0]!;
+    expect(step.kind === "affine" && Array.from(step.matrix)).toEqual(
       Array.from(translation(0, 0, 0)),
     );
   });
@@ -362,7 +362,7 @@ describe("a switch frame chooses its edge per view", () => {
     const { itrf, chart, resolver } = withSwitch();
     expect(() =>
       resolver.resolve(chart, itrf, SECONDS, new Float64Array(16)),
-    ).toThrow(NonRigidRouteError);
+    ).toThrow(NonAffineRouteError);
     expect(() => resolver.route(chart, itrf, SECONDS)).toThrow(
       /no choice .* and no default/,
     );
@@ -391,29 +391,29 @@ describe("a switch frame chooses its edge per view", () => {
 });
 
 describe("routes without a resolver's own route()", () => {
-  it("resolveRoute makes one rigid step from resolve", () => {
+  it("resolveRoute makes one affine step from resolve", () => {
     const { site, itrf, resolver } = setup();
     const bare = {
       resolve: resolver.resolve.bind(resolver),
       routeRevision: resolver.routeRevision.bind(resolver),
     };
     const route = resolveRoute(bare, site, itrf, SECONDS);
-    expect(routeIsRigid(route)).toBe(true);
+    expect(routeIsAffine(route)).toBe(true);
     expect(route.steps).toHaveLength(1);
     expect(route.revision).toBe(resolver.routeRevision(site, itrf));
   });
 
-  it("the table resolver's route is one rigid step", async () => {
+  it("the table resolver's route is one affine step", async () => {
     const engine = await fakeEngine();
     const world = engine.createWorld();
     const anchor = world.addAnchor("site");
     const table = tableResolver(world);
     const route = table.route!(anchor, world.root, SECONDS);
     expect(route.steps).toHaveLength(1);
-    expect(route.steps[0]!.kind).toBe("rigid");
+    expect(route.steps[0]!.kind).toBe("affine");
     expect(route.revision).toBe(table.routeRevision(anchor, world.root));
     const step = route.steps[0]!;
-    expect(step.kind === "rigid" && step.matrix).toEqual(
+    expect(step.kind === "affine" && step.matrix).toEqual(
       table.resolve(anchor, world.root, SECONDS, new Float64Array(16)),
     );
   });

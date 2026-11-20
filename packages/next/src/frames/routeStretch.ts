@@ -5,7 +5,7 @@
 // meters: it is what divides a snap's or a pick's pixel tolerance. The same
 // estimate `scene/curvilinearBounds.ts` gives for a volume, kept here because the
 // frames layer imports no scene module: the Jacobian composes through the
-// route's steps (a rigid step's rotation, a curvilinear map's own Jacobian, an inverse
+// route's steps (an affine step's rotation, a curvilinear map's own Jacobian, an inverse
 // step's inverse) and σ are the roots of the eigenvalues of JᵀJ.
 import {
   curvilinearForward,
@@ -63,7 +63,7 @@ function jacobianAt(
   const out = new Float64Array(3);
   const step = new Float64Array(9);
   for (const s of route.steps) {
-    if (s.kind === "rigid") {
+    if (s.kind === "affine") {
       const m = s.matrix;
       j = multiply(
         [m[0]!, m[1]!, m[2]!, m[4]!, m[5]!, m[6]!, m[8]!, m[9]!, m[10]!],
@@ -97,7 +97,7 @@ function jacobianAt(
 /**
  * [σ_min, σ_max] of `route`'s Jacobian at `p` and at six points `radius` m
  * (default 1) along the axes about it: the least and the most any of them
- * stretches. An estimate. [1, 1] for a rigid route. Exaggeration by k at
+ * stretches. An estimate. [1, 1] for an affine route. Exaggeration by k at
  * the surface gives about [1, k].
  */
 export function routeStretch(

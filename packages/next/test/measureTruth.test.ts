@@ -112,7 +112,7 @@ describe("measurements are true whatever the exaggeration", () => {
     expect(first.drawn).toBeUndefined();
   });
 
-  it("says nothing was drawn through a rigid route, or none", () => {
+  it("says nothing was drawn through an affine route, or none", () => {
     expect(drawnThrough(undefined)).toBe(AFFINE_ONLY);
     expect(AFFINE_ONLY.statement).toMatch(/values are true/);
   });
@@ -438,7 +438,7 @@ describe("measurement graphics drawn through the route", () => {
     expect(factor.length).toBeGreaterThan(0);
   });
 
-  it("closes an area's outline, and takes a rigid route as its corners", () => {
+  it("closes an area's outline, and takes an affine route as its corners", () => {
     const rig = exaggerated(10);
     const route = rig.route();
     const view = modelView(route, a, b);
@@ -456,7 +456,7 @@ describe("measurement graphics drawn through the route", () => {
       seconds: SECONDS,
       steps: [
         {
-          kind: "rigid",
+          kind: "affine",
           matrix: Float64Array.of(
             1,
             0,

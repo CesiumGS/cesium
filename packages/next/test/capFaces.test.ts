@@ -174,10 +174,10 @@ describe("packCapFaces", () => {
     expect(face(outside, 0).n.map((c) => c + 0)).toEqual([0, 0, 1]);
   });
 
-  it("makes none of a curved set, an effect or a polygon, saying why", () => {
-    const curved = table([plan(level), plan(level, "curved")], [0, 0, 20]);
+  it("makes none of a curvilinear set, an effect or a polygon, saying why", () => {
+    const curved = table([plan(level), plan(level, "curvilinear")], [0, 0, 20]);
     expect(curved.caps.faces).toBe(0);
-    expect(curved.caps.note).toMatch(/curved/);
+    expect(curved.caps.note).toMatch(/curvilinear/);
     const ghost = table(
       [plan({ ...level, effect: { kind: "translucent" } })],
       [0, 0, 20],
