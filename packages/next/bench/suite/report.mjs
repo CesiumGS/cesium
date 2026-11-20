@@ -49,6 +49,7 @@ const METRICS = [
   ["moduleRequests", "module requests", "", 1],
   ["duplicateFetches", "requests for a URL already asked for", "", 1],
   ["devices", "WebGPU devices created", "", 1],
+  ["pipelines", "pipelines made before the first frame", "", 1],
   ["settleMs", "settled", "s", 1000],
   ["frameP50", "frame p50", "ms", 1],
   ["frameP95", "frame p95", "ms", 1],

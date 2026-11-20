@@ -25,12 +25,16 @@ export interface ColdStartMetrics {
   requests: number;
   duplicateFetches: number;
   devices: number;
+  shaderModules?: number;
+  pipelines?: number;
 }
 export function pageHooks(): void;
 export function analyzeColdStart(load: {
   marks: Record<string, number>;
   resources: ColdStartResource[];
   devices: number;
+  shaderModules?: number;
+  pipelines?: number;
 }): {
   metrics: ColdStartMetrics;
   phases: ColdStartPhase[];

@@ -83,6 +83,8 @@ export const COLD_START_METRICS = [
   ["requests", "requests", ""],
   ["duplicateFetches", "requests for a URL already asked for", ""],
   ["devices", "WebGPU devices created", ""],
+  ["shaderModules", "shader modules made before the first frame", ""],
+  ["pipelines", "pipelines made before the first frame", ""],
 ];
 
 /** Requests that are the page's modules (Vite's dev server serves each). */
@@ -102,7 +104,13 @@ const WORK = /\/work-api\//;
  * Runs in the page; plain JavaScript only.
  */
 export function pageHooks() {
-  const state = { marks: {}, devices: 0, canvas: false };
+  const state = {
+    marks: {},
+    devices: 0,
+    canvas: false,
+    shaderModules: 0,
+    pipelines: 0,
+  };
   Object.defineProperty(window, "__coldStart", { value: state });
   const mark = (key) => {
     if (!(key in state.marks)) {
@@ -138,6 +146,31 @@ export function pageHooks() {
       return device;
     };
   }
+  // Shader modules and pipelines made before the first frame: what a
+  // second engine compiles again.
+  const device = window.GPUDevice?.prototype;
+  if (device) {
+    const count = (name, key) => {
+      const original = device[name];
+      if (original) {
+        device[name] = function (...args) {
+          if (!("firstFrame" in state.marks)) {
+            state[key]++;
+          }
+          return original.apply(this, args);
+        };
+      }
+    };
+    count("createShaderModule", "shaderModules");
+    for (const name of [
+      "createRenderPipeline",
+      "createRenderPipelineAsync",
+      "createComputePipeline",
+      "createComputePipelineAsync",
+    ]) {
+      count(name, "pipelines");
+    }
+  }
   const context = window.GPUCanvasContext?.prototype;
   if (context) {
     const getCurrentTexture = context.getCurrentTexture;
@@ -170,7 +203,13 @@ const minOf = (list) => (list.length ? Math.min(...list) : undefined);
  * requests, its workers' too (`name`, `startTime`, `responseEnd`, all
  * milliseconds since navigation began). Pure, so tests can feed it.
  */
-export function analyzeColdStart({ marks, resources, devices }) {
+export function analyzeColdStart({
+  marks,
+  resources,
+  devices,
+  shaderModules,
+  pipelines,
+}) {
   const adapter = marks.adapter;
   const page = resources.filter((r) => !WORK.test(r.name));
   const modules = page.filter(
@@ -204,6 +243,8 @@ export function analyzeColdStart({ marks, resources, devices }) {
     requests: page.length,
     duplicateFetches: duplicates.reduce((sum, [, n]) => sum + n - 1, 0),
     devices,
+    shaderModules,
+    pipelines,
   };
   // The phases the first frame waits on, end to end: each starts where the
   // one before ended. The reference data is not one of them (the sky runs
@@ -446,6 +487,8 @@ async function coldLoad(
     const raw = await page.evaluate(() => ({
       marks: window.__coldStart.marks,
       devices: window.__coldStart.devices,
+      shaderModules: window.__coldStart.shaderModules,
+      pipelines: window.__coldStart.pipelines,
       timeOrigin: performance.timeOrigin,
     }));
     const resources = finished
@@ -465,6 +508,8 @@ async function coldLoad(
       failed,
       marks: raw.marks,
       devices: raw.devices,
+      shaderModules: raw.shaderModules,
+      pipelines: raw.pipelines,
       resources,
       ...(profiled && documentAt !== undefined && raw.marks.firstFrame
         ? {
@@ -747,7 +792,7 @@ export async function measureColdStart(opts, { root, log }) {
       });
       const m = analysis.metrics;
       log(
-        `${config} ${blockWork ? "no board" : "board   "} rep ${rep} (CPU ${background.cpuPercent}% before, ${background.duringPercent}% during): first frame ${m.firstFrameMs ?? "never"} ms | ${analysis.phases.map((p) => `${p.name} ${p.ms}`).join(" · ")} | ${m.moduleRequests} modules, ${m.devices} device${m.devices === 1 ? "" : "s"}, ${m.duplicateFetches} repeated requests${
+        `${config} ${blockWork ? "no board" : "board   "} rep ${rep} (CPU ${background.cpuPercent}% before, ${background.duringPercent}% during): first frame ${m.firstFrameMs ?? "never"} ms | ${analysis.phases.map((p) => `${p.name} ${p.ms}`).join(" · ")} | ${m.moduleRequests} modules, ${m.devices} device${m.devices === 1 ? "" : "s"}, ${m.pipelines} pipelines, ${m.duplicateFetches} repeated requests${
           load.cpu
             ? ` | main thread: ${Object.entries(load.cpu)
                 .filter(([, v]) => v >= 10)
