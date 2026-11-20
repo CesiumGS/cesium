@@ -319,8 +319,6 @@ CS-17 The transform graph
         CS-56 Tables and the bounded search, the first extensions, with the residual's row window
   CS-386  Under exaggeration, do shading and haze read the drawn or the true height?
       ← CS-385 Spike: height-keyed tint and haze under exaggeration, drawn against true height
-  CS-712  One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps
-      ← CS-671 What do smooth nodes get called instead?
 
 CS-188 Earth to Moon (frames 5c to 5h)
   CS-203  Depth across bodies
@@ -536,7 +534,6 @@ CS-389 Dyno as the development harness
         CS-404 Studies: the model, the files and the commands
   CS-404  Studies: the model, the files and the commands
       ← CS-390 Run identity and the machine-wide run lock
-        CS-687 The study model: what kinds a study has, and how it draws on a set of instruments
   CS-405  The Studies page
       ← CS-395 Reference images and the sweep view
         CS-404 Studies: the model, the files and the commands
@@ -551,6 +548,8 @@ CS-389 Dyno as the development harness
         CS-407 The runner and remote runs
   CS-518  A space switch in Dyno's rail: the engine and the work
       ← CS-517 The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
+  CS-721  A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
+      ← CS-390 Run identity and the machine-wide run lock
 
 CS-18 The work tracker
   CS-530  Release 2.0.0-alpha.1
@@ -566,6 +565,7 @@ CS-18 The work tracker
         CS-621 The core installs alone, and the whole engine installs from one umbrella package
         CS-635 Sandcastle hosts 2.0's examples
         CS-606 The evals are designed and running in CI
+        CS-722 Benchmark results are shared across machines, and dyno is one command
   CS-531  Release 2.0.0-beta.1
       ← CS-530 Release 2.0.0-alpha.1
         CS-415 WebGL 2 draws models, tiles and the globe

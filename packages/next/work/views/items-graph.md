@@ -213,8 +213,11 @@ graph LR
     CS_385["CS-385 Spike: height-keyed tint and haze under exaggeration, drawn aga"]:::open
     CS_386["CS-386 Under exaggeration, do shading and haze read the drawn or the t"]:::decision
     CS_450["CS-450 The inspector counts warped draws: exact, compiled and fitted"]:::open
-    CS_671["CS-671 What do smooth nodes get called instead?"]:::decision
-    CS_712["CS-712 One word per idea in the transform graph: CS-671's name for smo"]:::open
+    CS_671["CS-671 What do smooth nodes get called instead?"]:::done
+    CS_712["CS-712 One word per idea in the transform graph: CS-671's name for smo"]:::done
+    CS_719["CS-719 Affine route steps: invert them in general, or keep rigid-only"]:::done
+    CS_720["CS-720 Route inverses invert general affine steps, not only rigid ones"]:::open
+    CS_723["CS-723 Merge CS-712, the affine and curvilinear rename"]:::done
   end
   subgraph CS_18["work tracker"]
     CS_169["CS-169 The tracker: format, scripts, items and the plan's split"]:::done
@@ -425,6 +428,7 @@ graph LR
     CS_298["CS-298 Gallery: orbits, with satellites from TLEs and near-Earth objec"]:::proposed
     CS_442["CS-442 Exact lists and the meter: emission layers against the 32-node "]:::open
     CS_446["CS-446 Planets as points, then disks"]:::open
+    CS_724["CS-724 Setup notices when the sky pack, or other data it built, is out"]:::open
   end
   subgraph CS_193["B-reps and geometry queries"]
     CS_299["CS-299 B-rep tiles: the extension's name and schema, NURBS or Bézier s"]:::done
@@ -558,13 +562,16 @@ graph LR
     CS_516["CS-516 human-in-the-lead v0.1.0-rc.1 is released"]:::done
     CS_517["CS-517 The agent system's pages: the merge queue, quotas, the controll"]:::open
     CS_518["CS-518 A space switch in Dyno's rail: the engine and the work"]:::open
-    CS_687["CS-687 The study model: what kinds a study has, and how it draws on a "]:::decision
+    CS_687["CS-687 The study model: what kinds a study has, and how it draws on a "]:::done
     CS_706["CS-706 Dyno's viewer starts drawing within half a second on a cold bro"]:::open
     CS_707["CS-707 Dyno's scrollable tabs use StrataKit's supported API, and the S"]:::done
     CS_709["CS-709 Merge CS-707, Dyno's scrollable tabs on StrataKit's supported A"]:::done
     CS_714["CS-714 Reaching a 500 ms cold start: which engine-side work"]:::decision
     CS_715["CS-715 How the cold-start check runs from here on"]:::decision
     CS_716["CS-716 Dyno's shell asks for triage.json and images/index.json once pe"]:::proposed
+    CS_717["CS-717 Design: one benchmark database across machines, with device fin"]:::open
+    CS_718["CS-718 hitld cites dyno's benchmark results by reference, reading them"]:::external
+    CS_721["CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, st"]:::open
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -663,6 +670,7 @@ graph LR
   CS_621["CS-621 The core installs alone, and the whole engine installs from one"]:::open
   CS_635["CS-635 Sandcastle hosts 2.0's examples"]:::open
   CS_606["CS-606 The evals are designed and running in CI"]:::open
+  CS_722["CS-722 Benchmark results are shared across machines, and dyno is one c"]:::open
   CS_415["CS-415 WebGL 2 draws models, tiles and the globe"]:::open
   CS_417["CS-417 Transforms and styles compile through Cesium IR"]:::open
   CS_418["CS-418 Any shader language reaches both renderers"]:::open
@@ -1122,6 +1130,7 @@ graph LR
   CS_621 --> CS_530
   CS_635 --> CS_530
   CS_606 --> CS_530
+  CS_722 --> CS_530
   CS_527 --> CS_531
   CS_530 --> CS_531
   CS_415 --> CS_531
@@ -1294,6 +1303,9 @@ graph LR
   CS_693 --> CS_696
   CS_696 --> CS_698
   CS_671 --> CS_712
+  CS_719 --> CS_720
+  CS_712 --> CS_720
+  CS_390 --> CS_721
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

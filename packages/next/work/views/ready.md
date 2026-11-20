@@ -69,7 +69,7 @@ CS-17 The transform graph
   CS-166  The ×10 cliff bands: confirm shadow acne under the warp and fix it
   CS-385  Spike: height-keyed tint and haze under exaggeration, drawn against true height
   CS-450  The inspector counts warped draws: exact, compiled and fitted
-  CS-671  decision: What do smooth nodes get called instead?
+  CS-720  Route inverses invert general affine steps, not only rigid ones
 
 CS-19 Follow-ups for other teams
   CS-174  external: 1.x computes NaN for a root without the top-level `geometricError`
@@ -137,6 +137,7 @@ CS-192 Sky, light and atmosphere
   CS-284  Re-check East Antarctica drawn as ocean from far out
   CS-296  decision: Black hole visualization: how much physics, and an engine feature or a gallery example?
   CS-442  Exact lists and the meter: emission layers against the 32-node cap, and a Node port for the moments branch
+  CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
 CS-193 B-reps and geometry queries
   CS-302  Exact snapping and measurement on B-reps
@@ -196,10 +197,11 @@ CS-199 Dyno hardening, packaging and CI
 CS-389 Dyno as the development harness
   CS-390  Run identity and the machine-wide run lock
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
-  CS-687  decision: The study model: what kinds a study has, and how it draws on a set of instruments
   CS-706  Dyno's viewer starts drawing within half a second on a cold browser again
   CS-714  decision: Reaching a 500 ms cold start: which engine-side work
   CS-715  decision: How the cold-start check runs from here on
+  CS-717  Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability
+  CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands
 
 CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
@@ -248,5 +250,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-177 ready
+179 ready
 ```

@@ -53,8 +53,6 @@ CS-194 Budgeted selection and memory
 CS-17 The transform graph
   CS-386  Under exaggeration, do shading and haze read the drawn or the true height? (owner)
       first needs CS-385
-  CS-671  What do smooth nodes get called instead? (owner)
-      waited on by CS-712
 
 CS-437 The public API reviews
   CS-438  Which of the first public API review's proposed changes do you approve? (owner)
@@ -72,10 +70,8 @@ CS-615 Packaging and package names
       waited on by CS-617
 
 CS-389 Dyno as the development harness
-  CS-687  The study model: what kinds a study has, and how it draws on a set of instruments (owner)
-      waited on by CS-404
   CS-714  Reaching a 500 ms cold start: which engine-side work (owner)
   CS-715  How the cold-start check runs from here on (owner)
 
-26 open decision(s) for owner
+24 open decision(s) for owner
 ```

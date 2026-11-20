@@ -13,14 +13,14 @@ graph LR
   CS_14["Level-of-detail transitions<br/>0 of 14 done"]
   CS_15["Refinement and convergence<br/>0 of 13 done"]
   CS_16["Streaming robustness<br/>0 of 22 done"]
-  CS_17["transform graph<br/>0 of 15 done"]
+  CS_17["transform graph<br/>4 of 18 done"]
   CS_18["work tracker<br/>42 of 51 done"]
   CS_19["Follow-ups for other teams<br/>0 of 12 done"]
   CS_188["Earth to Moon (frames 5c to 5h)<br/>3 of 43 done"]
   CS_189["Frames and engineering coordinates follow-ups<br/>0 of 22 done"]
   CS_190["Vector drawing and the styling language<br/>0 of 14 done"]
   CS_191["Content sources and formats<br/>3 of 33 done"]
-  CS_192["Sky, light and atmosphere<br/>0 of 20 done"]
+  CS_192["Sky, light and atmosphere<br/>0 of 21 done"]
   CS_193["B-reps and geometry queries<br/>3 of 21 done"]
   CS_194["Budgeted selection and memory<br/>0 of 6 done"]
   CS_195["Benchmarks, parity and image regression<br/>0 of 25 done"]
@@ -28,7 +28,7 @@ graph LR
   CS_197["Ray queries and path tracing<br/>0 of 7 done"]
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
   CS_199["Dyno hardening, packaging and CI<br/>1 of 16 done"]
-  CS_389["Dyno as the development harness<br/>7 of 32 done"]
+  CS_389["Dyno as the development harness<br/>8 of 35 done"]
   CS_437["public API reviews<br/>3 of 15 done"]
   CS_579["Editing<br/>0 of 2 done"]
   CS_584["widgets library<br/>0 of 9 done"]
@@ -78,6 +78,7 @@ graph LR
   CS_615 -->|2| CS_18
   CS_628 -->|2| CS_18
   CS_596 -->|3| CS_18
+  CS_389 -->|5| CS_18
   CS_10 -->|3| CS_18
   CS_437 -->|3| CS_18
   CS_13 -->|4| CS_18
@@ -98,7 +99,6 @@ graph LR
   CS_195 -->|4| CS_18
   CS_198 -->|2| CS_18
   CS_194 -->|1| CS_18
-  CS_389 -->|4| CS_18
   CS_609 -->|1| CS_18
   CS_622 -->|1| CS_18
   CS_191 -->|1| CS_584

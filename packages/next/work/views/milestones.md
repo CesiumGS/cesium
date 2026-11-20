@@ -587,6 +587,12 @@ CS-695 Every package has its API reference [Planned], under CS-615 Packaging and
   unmet: not linked to a clause yet (open: CS-619; check not passed)
   to shape: done_when; check; link CS-619 to a clause
 
+CS-722 Benchmark results are shared across machines, and dyno is one command [Planned], under CS-389 Dyno as the development harness
+  outcome: Every run records its device, configuration and machine state; results from every machine sit in storage dyno manages, and Trends, charts and studies compare devices; and dyno is one non-interactive command that people and hitld call.
+  constraints: 0 of 3 done
+  unmet: not linked to a clause yet (open: CS-390, CS-717, CS-721; check not passed)
+  to shape: done_when; check; link CS-390, CS-717, CS-721 to a clause
+
 CS-1 Renderers and engine profiles [Dropped]
 CS-2 Cesium IR and materials [Dropped]
 CS-3 Threading [Dropped]
@@ -597,5 +603,5 @@ CS-7 Upstream follow-ups [Dropped]
 CS-436 The public API [Dropped]
 CS-525 Bodies, frames and engineering coordinates [Dropped]
 
-94 open milestone(s)
+95 open milestone(s)
 ```

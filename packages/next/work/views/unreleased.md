@@ -58,5 +58,8 @@ CS-199 Dyno hardening, packaging and CI
 CS-437 The public API reviews
   CS-708  2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything
 
-35 merged item(s) not in a release
+CS-17 The transform graph
+  CS-712  One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps
+
+36 merged item(s) not in a release
 ```

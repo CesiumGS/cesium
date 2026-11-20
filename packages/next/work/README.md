@@ -388,7 +388,7 @@ No milestone
 
 ### The transform graph
 
-[CS-17](./projects/CS-17-the-transform-graph.md), Planned, led by owner: 0 of 15 done, 10 ready, 3 blocked, 2 proposed. Plan: [2026-11-12-transform-graph.md](../../../docs/superpowers/plans/2026-11-12-transform-graph.md).
+[CS-17](./projects/CS-17-the-transform-graph.md), Planned, led by owner: 4 of 18 done, 10 ready, 2 blocked, 2 proposed. Plan: [2026-11-12-transform-graph.md](../../../docs/superpowers/plans/2026-11-12-transform-graph.md).
 
 Milestone: Warped views draw without twins or stalls ([CS-473](./milestones/CS-473-warped-views-draw-without-twins-or-stalls.md), Planned)
 
@@ -411,8 +411,11 @@ No milestone
 
 - [?] [CS-163](./items/CS-163-no-compile-before-first-draw-the-interpreter.md) No compile before first draw: the interpreter pipeline. Proposed. Needs nothing.
 - [?] [CS-167](./items/CS-167-imagery-levels-chosen-by-drawn-footprint.md) Imagery levels chosen by drawn footprint. Proposed. Needs nothing.
-- [ ] [CS-671](./items/CS-671-what-do-smooth-nodes-get-called-instead.md) decision: What do smooth nodes get called instead?. Needs nothing. Decided by owner.
-- [ ] [CS-712](./items/CS-712-one-word-per-idea-in-the-transform-graph-cs-671.md) One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps. Needs CS-671.
+- [x] [CS-671](./items/CS-671-what-do-smooth-nodes-get-called-instead.md) decision: What do smooth nodes get called instead?. Done.
+- [x] [CS-712](./items/CS-712-one-word-per-idea-in-the-transform-graph-cs-671.md) One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps. Done.
+- [x] [CS-719](./items/CS-719-affine-route-steps-invert-them-in-general-or.md) decision: Affine route steps: invert them in general, or keep rigid-only. Done.
+- [ ] [CS-720](./items/CS-720-route-inverses-invert-general-affine-steps-not.md) Route inverses invert general affine steps, not only rigid ones. Needs CS-719 and CS-712.
+- [x] [CS-723](./items/CS-723-merge-cs-712-the-affine-and-curvilinear-rename.md) decision: Merge CS-712, the affine and curvilinear rename. Done.
 
 ### The work tracker
 
@@ -464,7 +467,7 @@ No milestone
 - [x] [CS-527](./items/CS-527-which-milestones-does-2-0-0-beta-1-need.md) decision: Which milestones does 2.0.0-beta.1 need?. Done.
 - [x] [CS-528](./items/CS-528-which-milestones-does-2-0-0-rc-1-need.md) decision: Which milestones does 2.0.0-rc.1 need?. Done.
 - [x] [CS-529](./items/CS-529-which-milestones-does-2-0-0-need.md) decision: Which milestones does 2.0.0 need?. Done.
-- [ ] [CS-530](./items/CS-530-release-2-0-0-alpha-1.md) Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery) and CS-606 (Trust and evals).
+- [ ] [CS-530](./items/CS-530-release-2-0-0-alpha-1.md) Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals) and CS-722 (Dyno as the development harness).
 - [ ] [CS-531](./items/CS-531-release-2-0-0-beta-1.md) Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-657 (Vector drawing and the styling language), CS-668 (Content sources and formats), CS-675 (public API reviews), CS-463 (job system's ports) and CS-461 (job system's ports).
 - [ ] [CS-532](./items/CS-532-release-2-0-0-rc-1.md) Release 2.0.0-rc.1. Needs CS-528, CS-531, CS-416 (WebGL 2 renderer), CS-423 (worker-mode façade), CS-461 (job system's ports), CS-463 (job system's ports), CS-465 (job system's ports), CS-467 (Engine profiles), CS-471 (Level-of-detail transitions), CS-472 (Level-of-detail transitions), CS-474 (transform graph), CS-484 (Benchmarks, parity and image regression), CS-503 (GPU-driven rendering and capacities), CS-504 (Budgeted selection and memory), CS-511 (Benchmarks, parity and image regression), CS-491 (Sky, light and atmosphere), CS-502 (GPU-driven rendering and capacities), CS-481 (Dyno as the development harness), CS-482 (Benchmarks, parity and image regression), CS-478 (Dyno as the development harness), CS-479 (Dyno as the development harness), CS-480 (Dyno as the development harness), CS-483 (Benchmarks, parity and image regression), CS-470 (Refinement and convergence), CS-607 (Trust and evals), CS-614 (A clean 2.0 branch and a modern build), CS-627 (agent-first migration kit), CS-636 (Sandcastle as 2.0's gallery) and CS-695 (Packaging and package names).
 - [ ] [CS-533](./items/CS-533-release-2-0-0.md) Release 2.0.0. Needs CS-529, CS-532, CS-608 (Trust and evals) and CS-678.
@@ -703,7 +706,7 @@ No milestone
 
 ### Sky, light and atmosphere
 
-[CS-192](./projects/CS-192-sky-light-and-atmosphere.md), Planned, led by owner: 0 of 20 done, 5 ready, 2 blocked, 13 proposed. Plan: [lighting-and-shading.md](../../../docs/design/lighting-and-shading.md).
+[CS-192](./projects/CS-192-sky-light-and-atmosphere.md), Planned, led by owner: 0 of 21 done, 6 ready, 2 blocked, 13 proposed. Plan: [lighting-and-shading.md](../../../docs/design/lighting-and-shading.md).
 
 Milestone: Glare and the sky are checked on Intel integrated GPUs ([CS-491](./milestones/CS-491-glare-and-the-sky-are-checked-on-intel.md), Planned)
 
@@ -736,6 +739,7 @@ No milestone
 - [ ] [CS-296](./items/CS-296-black-hole-visualization-how-much-physics-and.md) decision: Black hole visualization: how much physics, and an engine feature or a gallery example?. Needs nothing. Decided by owner.
 - [?] [CS-297](./items/CS-297-gallery-a-black-hole-beside-the-moon.md) Gallery: a black hole beside the Moon. Proposed. Needs CS-296.
 - [?] [CS-298](./items/CS-298-gallery-orbits-with-satellites-from-tles-and.md) Gallery: orbits, with satellites from TLEs and near-Earth objects. Proposed. Needs CS-242 (Frames and engineering coordinates follow-ups).
+- [ ] [CS-724](./items/CS-724-a-sky-pack-built-before-the-spelling-change.md) Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again. Needs nothing.
 
 ### B-reps and geometry queries
 
@@ -922,7 +926,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 7 of 32 done, 6 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 8 of 35 done, 7 ready, 19 blocked, 1 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -962,17 +966,23 @@ Milestone: Dyno switches between the engine and the work ([CS-519](./milestones/
 - [ ] [CS-517](./items/CS-517-the-agent-system-s-pages-the-merge-queue-quotas.md) The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers. Needs CS-523 (work tracker).
 - [ ] [CS-518](./items/CS-518-a-space-switch-in-dyno-s-rail-the-engine-and.md) A space switch in Dyno's rail: the engine and the work. Needs CS-517.
 
+Milestone: Benchmark results are shared across machines, and dyno is one command ([CS-722](./milestones/CS-722-benchmark-results-are-shared-across-machines.md), Planned)
+
+- [ ] [CS-717](./items/CS-717-design-one-benchmark-database-across-machines.md) Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability. Needs nothing.
+- [ ] [CS-721](./items/CS-721-a-dyno-command-one-cli-for-dyno-s-runs-lab.md) A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices. Needs CS-390.
+
 No milestone
 
 - [x] [CS-403](./items/CS-403-dyno-s-navigation-rail-regrouped-by-what-people.md) Dyno's navigation rail, regrouped by what people come to do. Done.
 - [x] [CS-516](./items/CS-516-human-in-the-lead-v0-1-0-rc-1-is-released.md) external: human-in-the-lead v0.1.0-rc.1 is released. Done.
-- [ ] [CS-687](./items/CS-687-the-study-model-what-kinds-a-study-has-and-how.md) decision: The study model: what kinds a study has, and how it draws on a set of instruments. Needs nothing. Decided by owner.
+- [x] [CS-687](./items/CS-687-the-study-model-what-kinds-a-study-has-and-how.md) decision: The study model: what kinds a study has, and how it draws on a set of instruments. Done.
 - [ ] [CS-706](./items/CS-706-dyno-s-viewer-starts-drawing-within-half-a.md) Dyno's viewer starts drawing within half a second on a cold browser again. Needs nothing.
 - [x] [CS-707](./items/CS-707-dyno-s-scrollable-tabs-use-stratakit-s.md) Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected. Done.
 - [x] [CS-709](./items/CS-709-merge-cs-707-dyno-s-scrollable-tabs-on.md) decision: Merge CS-707, Dyno's scrollable tabs on StrataKit's supported API. Done.
 - [ ] [CS-714](./items/CS-714-reaching-a-500-ms-cold-start-which-engine-side.md) decision: Reaching a 500 ms cold start: which engine-side work. Needs nothing. Decided by owner.
 - [ ] [CS-715](./items/CS-715-how-the-cold-start-check-runs-from-here-on.md) decision: How the cold-start check runs from here on. Needs nothing. Decided by owner.
 - [?] [CS-716](./items/CS-716-dyno-s-shell-asks-for-triage-json-and-images.md) Dyno's shell asks for triage.json and images/index.json once per page load, not three times. Proposed. Needs nothing.
+- [ ] [CS-718](./items/CS-718-hitld-s-private-store-holds-project-data-such.md) external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands. Needs nothing. Waiting on human-in-the-lead: the measurement-tool design (HITLD-609), per arobison/human-in-the-lead#363.
 
 ### The public API reviews
 
