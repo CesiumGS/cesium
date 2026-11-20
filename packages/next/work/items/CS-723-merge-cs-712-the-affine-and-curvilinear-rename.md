@@ -2,10 +2,14 @@
 id: CS-723
 title: Merge CS-712, the affine and curvilinear rename
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-17
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the tested commit (re-checked if main moves), regenerates the views and logs the merge; CS-720 then rebases onto it."
+answered_at: 2026-11-20T03:53:03.124Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
