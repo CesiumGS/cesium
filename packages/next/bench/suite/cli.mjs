@@ -368,7 +368,9 @@ async function coldStart() {
     const over = overBudget(results, budgetMs);
     for (const o of over) {
       console.log(
-        `over budget: ${o.config} first frame ${o.firstFrameMs ?? "never"} ms (median, without the board) > ${budgetMs} ms`,
+        o.cantTell
+          ? `can't tell: ${o.config} had no load on a quiet machine; rerun when it is`
+          : `over budget: ${o.config} first frame ${o.firstFrameMs ?? "never"} ms (median of the loads on a quiet machine, without the board) > ${budgetMs} ms`,
       );
     }
     if (over.length) {

@@ -166,6 +166,25 @@ describe("the cold-start budget", () => {
     ]);
   });
 
+  it("leaves out loads on a busy machine, and can't tell with none left", () => {
+    const busy = { background: { quiet: false } };
+    const results = {
+      runs: [
+        run("dyno@a", "cold-browser-no-board", 1200),
+        { ...run("dyno@a", "cold-browser-no-board", 2300), ...busy },
+        run("dyno@a", "cold-browser-no-board", 1300),
+        { ...run("dyno@b", "cold-browser-no-board", 900), ...busy },
+      ],
+    };
+    expect(overBudget(results, 1250)).toEqual([
+      { config: "dyno@b", cantTell: true },
+    ]);
+    // Counted, the busy load would have put dyno@a over: [1200, 1300, 2300].
+    expect(overBudget(results, 1250).some((o) => o.config === "dyno@a")).toBe(
+      false,
+    );
+  });
+
   it("takes the lower middle of an even count", () => {
     expect(median([4, 1, 3, 2])).toBe(2);
     expect(median([])).toBeUndefined();

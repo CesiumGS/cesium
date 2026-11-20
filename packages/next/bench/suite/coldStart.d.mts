@@ -52,10 +52,11 @@ export function overBudget(
       config: string;
       scenario: string;
       metrics: { firstFrameMs?: number };
+      background?: { quiet?: boolean };
     }>;
   },
   budgetMs: number,
-): Array<{ config: string; firstFrameMs?: number }>;
+): Array<{ config: string; firstFrameMs?: number; cantTell?: boolean }>;
 export function measureColdStart(
   opts: Record<string, unknown>,
   context: { root: string; log: (line: string) => void },

@@ -654,7 +654,10 @@ export function median(values) {
 
 /**
  * The configurations whose median first frame without the board is over
- * `budgetMs` (or that never drew), from a cold-start run's results.
+ * `budgetMs` (or that never drew), from a cold-start run's results. Loads
+ * that started on a machine that never got quiet are left out; a
+ * configuration with none left can't be judged (`cantTell`), which fails
+ * the check too: rerun it on a quieter machine.
  */
 export function overBudget(results, budgetMs) {
   const out = [];
@@ -666,7 +669,12 @@ export function overBudget(results, budgetMs) {
     if (!runs.length) {
       continue;
     }
-    const value = median(runs.map((r) => r.metrics.firstFrameMs));
+    const quiet = runs.filter((r) => r.background?.quiet !== false);
+    if (!quiet.length) {
+      out.push({ config, cantTell: true });
+      continue;
+    }
+    const value = median(quiet.map((r) => r.metrics.firstFrameMs));
     if (value === undefined || value > budgetMs) {
       out.push({ config, firstFrameMs: value });
     }
