@@ -2,10 +2,14 @@
 id: CS-742
 title: Merge CS-724, out-of-date data says what to run
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-192
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks and work check, fast-forwards main, regenerates the views and logs the merge; you then run `npm run sky -- build`."
+answered_at: 2026-11-20T06:58:26.898Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
