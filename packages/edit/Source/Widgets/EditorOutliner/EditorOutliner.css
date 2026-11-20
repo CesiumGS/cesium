@@ -1,0 +1,115 @@
+/* Created by viewerEditorMixin in the viewer's top-right corner. Viewers that
+   show their own toolbar should move it below, e.g. to top: 50px, like the
+   inspector mixins' containers. */
+.cesium-viewer-editorOutlinerContainer {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  /* Leaves room for the viewer's fullscreen button below. The outliner
+     shrinks to fit and scrolls. */
+  max-height: calc(100% - 50px);
+  display: flex;
+  flex-direction: column;
+}
+
+.cesium-editor-outliner {
+  box-sizing: border-box;
+  min-width: 180px;
+  max-width: 320px;
+  /* Lets the outliner shrink below its rows' height in a flex container. */
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  padding: 2px;
+  background: rgba(48, 51, 54, 0.7);
+  border: 1px solid #444;
+  border-radius: 6px;
+  color: #edffff;
+  font-family: sans-serif;
+  font-size: 13px;
+  line-height: 20px;
+  /* Shift-clicking selects ranges of rows, not text. */
+  user-select: none;
+  resize: vertical;
+}
+
+/* The focused row shows where keyboard focus is instead. */
+.cesium-editor-outliner:focus {
+  outline: none;
+}
+
+.cesium-editor-outliner:focus-visible .cesium-editor-outliner-row-focused {
+  outline: 1px solid #aef;
+  outline-offset: -1px;
+}
+
+.cesium-editor-outliner-row {
+  display: flex;
+  align-items: center;
+  padding-right: 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.cesium-editor-outliner-row:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cesium-editor-outliner-row-active,
+.cesium-editor-outliner-row-active:hover {
+  background: rgba(72, 136, 187, 0.6);
+}
+
+/* Rows that can be neither selected nor expanded, like primitives that aren't in the editor. */
+.cesium-editor-outliner-row-disabled {
+  color: #888;
+  cursor: default;
+}
+
+.cesium-editor-outliner-row-disabled:hover {
+  background: none;
+}
+
+.cesium-editor-outliner-guides {
+  display: flex;
+  flex: none;
+  /* Full row height, so the lines join up between rows. */
+  align-self: stretch;
+}
+
+/* As wide as the expander, so each line runs down from an ancestor's arrow. */
+.cesium-editor-outliner-guide {
+  position: relative;
+  width: 16px;
+}
+
+.cesium-editor-outliner-guide::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 7px;
+  border-left: 1px dotted rgba(255, 255, 255, 0.3);
+}
+
+.cesium-editor-outliner-expander {
+  flex: none;
+  width: 16px;
+  text-align: center;
+  font-size: 10px;
+}
+
+.cesium-editor-outliner-expandable::before {
+  content: "\25B6";
+}
+
+.cesium-editor-outliner-expandable.cesium-editor-outliner-expanded::before {
+  content: "\25BC";
+}
+
+.cesium-editor-outliner-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

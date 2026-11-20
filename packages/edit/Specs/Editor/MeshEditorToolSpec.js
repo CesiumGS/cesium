@@ -59,6 +59,70 @@ describe(
       });
     });
 
+    describe("supportsMode", function () {
+      it("queries wasm with the tool's ID and the requested mode", function () {
+        const query = spyOn(
+          WasmMeshEditor.prototype,
+          "toolSupportsMode",
+        ).and.callThrough();
+        SelectTool.addTo(editor);
+        const tool = TranslateTool.addTo(editor);
+        const mode = EditMode.VERTEX | EditMode.EDGE;
+
+        expect(tool.supportsMode(mode)).toBe(true);
+
+        expect(query).toHaveBeenCalledOnceWith(tool._id, mode);
+      });
+
+      it("supports every mode for the select tool", function () {
+        const tool = SelectTool.addTo(editor);
+
+        for (let mode = EditMode.NONE; mode <= 7; mode++) {
+          expect(tool.supportsMode(mode)).toBe(true);
+        }
+      });
+
+      it("supports only component modes for the translate tool", function () {
+        const tool = TranslateTool.addTo(editor);
+
+        expect(tool.supportsMode(EditMode.NONE)).toBe(false);
+        for (let mode = EditMode.VERTEX; mode <= 7; mode++) {
+          expect(tool.supportsMode(mode)).toBe(true);
+        }
+      });
+
+      it("does not activate the tool or change the editor's mode", function () {
+        const tool = TranslateTool.addTo(editor);
+
+        expect(tool.supportsMode(EditMode.NONE)).toBe(false);
+        expect(tool.supportsMode(EditMode.EDGE)).toBe(true);
+        expect(editor.activeTool).toBeUndefined();
+        expect(editor.mode).toBe(EditMode.VERTEX);
+
+        const selectTool = SelectTool.addTo(editor);
+        editor.activeTool = selectTool;
+
+        tool.supportsMode(EditMode.FACE);
+        selectTool.supportsMode(EditMode.NONE);
+
+        expect(editor.activeTool).toBe(selectTool);
+        expect(editor.mode).toBe(EditMode.VERTEX);
+      });
+
+      it("throws for unknown components", function () {
+        const tool = SelectTool.addTo(editor);
+
+        expect(() => tool.supportsMode(8)).toThrowError();
+      });
+
+      it("throws if the mode is missing or is not a number", function () {
+        const tool = SelectTool.addTo(editor);
+
+        expect(() => tool.supportsMode()).toThrowDeveloperError();
+        expect(() => tool.supportsMode("vertex")).toThrowDeveloperError();
+      });
+    });
+
     describe("confirm", function () {
       it("confirms the interaction of the active tool", function () {
         spyOn(WasmMeshEditor.prototype, "confirm").and.callThrough();
