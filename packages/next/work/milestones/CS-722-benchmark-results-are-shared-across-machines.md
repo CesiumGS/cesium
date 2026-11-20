@@ -30,5 +30,5 @@ The owner, 2026-11-19: "let's do the 717 design and then take the output from th
 
 - **Its items so far:** CS-390, run identity and the run lock, which CS-721 needs and the design's `machine` field builds on. CS-390 also stays in CS-478. Then CS-717, the design, and CS-721, the dyno command.
 - **Joined 2026-11-19:** CS-733 to CS-738, CS-717's build items. Decisions they wait on: CS-726 (where results live, and spend), CS-727 (keys and remote reading), CS-728 (default classification), CS-730 (bucket client or dependency), CS-731 (whether recordings upload).
-- **Studies join alpha.1** (the owner's answer to CS-732, B): CS-404 and CS-739 are in c9. CS-404 also stays in CS-480. CS-740 needs CS-394 and so CS-393, both in CS-479, and waits on the owner before it joins. If CS-726 is answered C, CS-735 needs CS-406 (in CS-481).
+- **Studies join alpha.1** (the owner's answer to CS-732, B): CS-404 and CS-739 are in c9. CS-404 also stays in CS-480. CS-740 needs CS-394 and so CS-393, both in CS-479, and waits on the owner before it joins.
 - **Not in it:** CS-718, hitld's side, which is external and would hold alpha on another project.
