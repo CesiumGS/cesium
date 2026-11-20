@@ -2,7 +2,7 @@
 id: CS-717
 title: "Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 claimed_by: orch-10-CS-717
