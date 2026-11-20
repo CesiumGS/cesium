@@ -2,10 +2,14 @@
 id: CS-757
 title: Merge CS-744, the Release view and the Work page's tab shell
 kind: decision
-state: planned
+state: done
 created: 2026-11-20
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip (after CS-390 if both are yes), reruns the type checks, work check and the Dyno tests, fast-forwards main, regenerates the views and logs the merge; CS-745 (Health) starts next, then the other views as slots free."
+answered_at: 2026-11-20T21:24:28.563Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

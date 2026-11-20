@@ -2,10 +2,14 @@
 id: CS-756
 title: Merge CS-390, run identity and the machine-wide run lock
 kind: decision
-state: planned
+state: done
 created: 2026-11-20
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks and work check, fast-forwards main, regenerates the views and logs the merge; the chief of staff changes the 5190 start script to npm run dyno:serve."
+answered_at: 2026-11-20T21:24:27.750Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
