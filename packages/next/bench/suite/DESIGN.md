@@ -1130,6 +1130,96 @@ content is `flowDayOf` in `work.ts`, from `flowOf`'s days.
 - **Motion.** The shell's fade, dropped under reduced motion; the card
   follows the crosshair without animating.
 
+### The Since you last looked view (CS-747)
+
+The page's What changed tab (`view=changes`): what changed in the plan
+since a point the viewer picks, each change with the decision or reason
+behind it when the record has one. It is the digest as a view: a
+leadership team's weekly "what changed" without the owner writing it.
+
+- **Story.** The owner comes back after a day away and asks "what moved
+  while I wasn't looking?"; someone above the project asks it once a
+  week. Four figures answer at a glance: release scope, decisions
+  answered, plan changes (added, dropped and moved, with the split under
+  the number) and merged and done. Each number goes to its list. Then
+  the lists, what changes scope first: release scope, decisions
+  answered, added, dropped, moved between milestones, merged and done.
+  Proposals filed come last and closed, counted apart: they change
+  nothing until the owner commits them. A line names the sections where
+  nothing changed.
+- **The point.** Last visit, a date, or a commit. A visit is kept in
+  this browser (`localStorage`, read and written in try/catch) when the
+  viewer leaves the view or the page: the commit it showed and when, one
+  per commit, the last eight. The point stays put while the page is
+  open. With no visit kept yet it opens on a date a week back and says
+  when the first visit starts. A visit at a commit the branch doesn't
+  have falls back to its time, and says so. A date is the start of that
+  day in the viewer's clock; a commit is 7 to 40 hex digits on the
+  branch's history. If nothing changed since the last visit, the empty
+  state offers the visit before. If the tracker began after the point,
+  it says so and offers the tracker's first commit instead of listing
+  everything as new. The URL can't hold the point yet: the route's
+  search fields are the shell's.
+- **What counts as a change.** Read from the tracker's files at the
+  point and at HEAD, never the working tree: an entity added (committed,
+  or a proposal filed), dropped (or back to a proposal), reopened,
+  committed from a proposal, done (work merged, a milestone reached, an
+  outside wait ended, a release made); a decision answered, with its
+  answer (an answer of one letter reads as the decision's Answer section,
+  else that option's line); an item that left, joined or moved between
+  milestones, and the releases on each side when they differ; a
+  milestone or item that joined, left or moved between releases (the
+  first release in the ladder whose needs name it). A claim (planned to
+  in progress) isn't a change of scope.
+- **Its reason.** In order: a field of its record (a drop's `reason`, a
+  decision's `rationale`); the decision it follows (one answered in the
+  window that its needs name, or that its commit's message names in the
+  same sentence, or the only one that commit answered; a merge's own
+  "Merge CS-n" decision); the sentences of its commit's message that
+  name it, or the message's first paragraph when the commit changed
+  little else; for something new, its own text's lead; a subject that
+  credits the owner's word, "(owner, 2026-11-19)". Each says where it
+  came from. When none has one the row says plainly that neither its
+  record nor its commit says why, and a merge with no merge decision
+  says that.
+- **A row.** The entity with its kind's mark and short title
+  (`ItemRef`), Proposed when it still is, and at the end the commit
+  that made the change and its day, in a reserved width. Under it, what
+  happened in a sentence; a decision's answer; the reason. Every ID in
+  the free text (reasons, answers) is drawn as an `ItemRef` with its
+  title, except the row's own, whose title heads the row. A section
+  shows six rows, then Show all, whose words share one cell.
+- **Copy as text.** A short summary for a status update: a line for the
+  point, then each section with a line per change, titles in place of
+  IDs, answers cut at 140 characters, at most eight lines a section,
+  proposals counted. When the browser refuses the clipboard, the text
+  shows selected under the head for the keyboard's copy.
+- **Scope.** The shell's scope narrows to changes that involve an item
+  or milestone in it. The view reads the whole tracker and has no
+  Proposed switch: proposals are their own section.
+- **Layout.** The point (Since, the three ways, one reserved slot for
+  whichever control shows) with Copy as text at the end; a note under
+  it; the four figures (two columns narrow); a line on the span
+  compared; then the sections, one card each. Numbers are tabular,
+  nothing bolds on hover or selection, and the row of the item open in
+  the pane is tinted. Narrow (under 560 px of view), the commit goes
+  under the entity, the row's title may wrap to two lines, and the
+  indents go. While a new point reads, the last answer stays, dimmed.
+  The view's one motion, a figure scrolling to its list, is instant
+  under reduced motion, and so is the dimming.
+- **Data.** `GET /work-api/changes.json?commit=<hex>` or
+  `?date=<ISO 8601>` (`changesReader` and `readChanges` in
+  `scripts/workBoard.mjs`): git only, never hitld's store, with every
+  ref and date checked against a fixed form before it reaches git and
+  git run with argument arrays. Ten git processes on a first read (both
+  trees, one batch of blobs, the mainline log with its diffs, the
+  Work-Item trailers); kept per HEAD and point, so a warm read runs one
+  `git rev-parse`. A refused point answers 400 with fixed words.
+- **Model.** `changesOf` in `bench/suite/workChanges.ts`, tested in
+  `test/dynoWorkChanges.test.ts` on a throwaway repository with one
+  commit per kind of change, and against CS-704's read budget on this
+  repository.
+
 ## Page anatomy
 
 Every view renders through `Page` (views/common.tsx):

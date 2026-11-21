@@ -3,9 +3,11 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
 import { join } from "node:path";
 import {
+  ChangesRefused,
   HitldUnavailable,
   UNAVAILABLE_TEXT,
   boardReader,
+  changesReader,
   findItems,
   showItem,
 } from "./workBoard.mjs";
@@ -31,6 +33,11 @@ const CHANGED_MS = 250;
  *                             (countOf): `owner_decisions` and `items`
  *                             ({ id, title, kind }), from one hitld read.
  *                             Pages other than Work read only this.
+ *   /work-api/changes.json?commit=<hex> or ?date=<YYYY-MM-DD…>
+ *                             what changed in the tracker from that point
+ *                             to HEAD, from git (CS-747; changesReader):
+ *                             kept per HEAD and point. A refused point
+ *                             answers 400 with fixed words.
  *   /work-api/find.json?q=    full-text search over every item.
  *   /work-api/item/CS-<n>.json  one item's text.
  *
@@ -55,6 +62,7 @@ export function workApi(prefix = "/work-api"): Plugin {
         }, CHANGED_MS);
       };
       const board = boardReader(root, { onChange: tell });
+      const changes = changesReader(root);
       const workDir = join(root, "packages", "next", "work");
       server.watcher.add(workDir);
       const changed = (file: string) => {
@@ -88,6 +96,28 @@ export function workApi(prefix = "/work-api"): Plugin {
             }
             if (path === "/count.json") {
               send(res, 200, await board.count());
+              return;
+            }
+            if (path === "/changes.json") {
+              const q = new URLSearchParams(
+                (req.url ?? "").split("?")[1] ?? "",
+              );
+              const commit = q.get("commit")?.slice(0, 64);
+              const date = q.get("date")?.slice(0, 40);
+              try {
+                send(
+                  res,
+                  200,
+                  await changes.read(
+                    commit !== undefined ? { commit } : { date: date ?? "" },
+                  ),
+                );
+              } catch (e) {
+                if (!(e instanceof ChangesRefused)) {
+                  throw e;
+                }
+                send(res, 400, { error: e.message, reason: e.reason });
+              }
               return;
             }
             if (path === "/find.json") {

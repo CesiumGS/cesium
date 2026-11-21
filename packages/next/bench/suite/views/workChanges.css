@@ -1,0 +1,385 @@
+/*
+ * The Since-you-last-looked view (views/workChanges.tsx; DESIGN.md, "The
+ * Since you last looked view"). One surface level, as the board's other
+ * cards: rows are set apart by rules, numbers are tabular, and nothing
+ * changes width or weight on hover, selection or focus. Its one motion,
+ * a figure scrolling to its list, is instant under reduced motion.
+ */
+
+.work-changes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+}
+.work-changes[aria-busy="true"] .work-dash {
+  opacity: 0.6;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .work-changes .work-dash {
+    transition: opacity 120ms linear;
+  }
+}
+.work-changes-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+
+/* The point: Since, the three ways to pick it, its control, and Copy. */
+.work-changes-point {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}
+.work-changes-point-label {
+  font-size: var(--stratakit-font-size-body-md);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+/* One reserved slot for whichever control shows: switching moves nothing after it. */
+.work-changes-point-input {
+  display: flex;
+  align-items: center;
+  width: 20rem;
+  min-height: 32px;
+}
+.work-changes-visit,
+.work-changes-date {
+  width: 100%;
+}
+.work-changes-visit .MuiSelect-select {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--stratakit-space-300);
+}
+.work-changes-visit-when {
+  font-variant-numeric: tabular-nums;
+}
+.work-changes-visit-sha {
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-changes-date input {
+  font-variant-numeric: tabular-nums;
+}
+.work-changes-commit {
+  display: flex;
+  gap: var(--stratakit-space-200);
+  width: 100%;
+  margin: 0;
+}
+.work-changes-commit .MuiTextField-root {
+  flex: 1;
+}
+.work-changes-commit input {
+  font-family: var(--stratakit-font-family-code, ui-monospace, monospace);
+}
+.work-changes-novisit {
+  margin: 0;
+}
+.work-changes-copy {
+  margin-inline-start: auto;
+}
+.work-changes-point-note {
+  margin: calc(-1 * var(--stratakit-space-150, 6px)) 0 0;
+  min-height: 1.5em;
+}
+
+/* When the clipboard is refused: the summary, selected. */
+.work-changes-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--stratakit-space-200);
+}
+.work-changes-text textarea {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 88ch;
+  padding: var(--stratakit-space-300);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: var(--stratakit-radius-md);
+  font: inherit;
+  font-size: var(--stratakit-font-size-body-sm);
+  color: var(--stratakit-color-text-neutral-primary);
+  background: var(--stratakit-color-bg-page-depth);
+  resize: vertical;
+}
+
+/* The figures at a glance: four, each a number and a line under it. */
+.work-changes-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--stratakit-space-300);
+  margin: 0;
+}
+@container (max-width: 640px) {
+  .work-changes-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.work-changes-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  border-radius: var(--stratakit-radius-lg, 8px);
+  background: var(--stratakit-color-bg-elevation-level-1);
+}
+.work-changes-stat dt {
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-changes-stat dd {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+.work-changes-stat-value {
+  font-size: var(--stratakit-font-size-headline-sm, 1.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-changes-stat-value.zero {
+  color: var(
+    --stratakit-color-text-neutral-tertiary,
+    var(--stratakit-color-text-neutral-secondary)
+  );
+}
+.work-changes-stat-value.is-button {
+  all: unset;
+  align-self: flex-start;
+  font-size: var(--stratakit-font-size-headline-sm, 1.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-primary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 4px;
+  border-radius: 2px;
+}
+.work-changes-stat-value.is-button:hover {
+  text-decoration-thickness: 2px;
+}
+.work-changes-stat-value.is-button:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.work-changes-stat-line {
+  font-size: var(--stratakit-font-size-caption-md);
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* The span compared. */
+.work-changes-span {
+  margin: 0;
+  max-width: 96ch;
+}
+.work-changes-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+.work-changes-chip code,
+.work-changes-when code {
+  padding: 0 4px;
+  border-radius: var(--stratakit-radius-sm, 3px);
+  font-family: var(--stratakit-font-family-code, ui-monospace, monospace);
+  font-size: 0.95em;
+  color: var(--stratakit-color-text-neutral-primary);
+  background: var(--stratakit-color-bg-page-depth);
+}
+.work-changes-chip-when {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A section's head: its count and its name, then its rule. */
+.work-changes-section-line {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}
+.work-changes-section-line h2 {
+  margin: 0;
+}
+.work-changes-section-line h2:focus {
+  outline: none;
+}
+.work-changes-section-line h2:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.work-changes-count {
+  min-width: 3ch;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: var(--stratakit-font-size-body-sm);
+  font-weight: 600;
+  line-height: 20px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--stratakit-color-text-neutral-primary);
+  background: var(--stratakit-color-bg-page-depth);
+}
+
+/* The rows. */
+.work-changes-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.work-changes-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150, 6px);
+  padding: var(--stratakit-space-400) var(--stratakit-space-300);
+  margin-inline: calc(-1 * var(--stratakit-space-300));
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-changes-row:last-child {
+  border-bottom: 0;
+}
+.work-changes-row.selected {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-accent-pressed,
+    rgba(64, 120, 220, 0.08)
+  );
+}
+.work-changes-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-300);
+  min-width: 0;
+}
+.work-changes-entity {
+  min-width: 0;
+  font-size: var(--stratakit-font-size-body-md);
+  font-weight: 600;
+}
+.work-changes-proposed {
+  flex: none;
+  padding: 0 8px;
+  border: 1px dashed var(--stratakit-color-border-neutral-base);
+  border-radius: 999px;
+  font-size: var(--stratakit-font-size-caption-md);
+  line-height: 18px;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* The commit and its day, at the row's end, the same width on every row. */
+.work-changes-when {
+  display: inline-grid;
+  grid-template-columns: 8ch 11ch;
+  gap: 6px;
+  flex: none;
+  margin-inline-start: auto;
+  font-size: var(--stratakit-font-size-caption-md);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-changes-when code {
+  justify-self: start;
+}
+.work-changes-what,
+.work-changes-answer,
+.work-changes-why {
+  margin: 0;
+  max-width: calc(88ch + 4.25rem + var(--stratakit-space-200));
+  font-size: var(--stratakit-font-size-body-sm);
+  line-height: 1.55;
+}
+.work-changes-what {
+  padding-inline-start: calc(4.25rem + var(--stratakit-space-200));
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-changes-n {
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-changes-answer,
+.work-changes-why {
+  display: grid;
+  grid-template-columns: 4.25rem minmax(0, 1fr);
+  gap: var(--stratakit-space-200);
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-changes-why.none {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-changes-label {
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: 600;
+  line-height: 1.85;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-changes-src {
+  white-space: nowrap;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/* An ID in a sentence: its mark, its number and its title, cut to fit. */
+.work-changes-inline {
+  max-width: min(36ch, 100%);
+  vertical-align: bottom;
+}
+.work-changes-inline .work-ref-title {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+
+.work-changes-none h2,
+.work-changes-refused h2 {
+  margin: 0 0 var(--stratakit-space-200);
+}
+.work-changes-none p,
+.work-changes-refused p {
+  margin: 0;
+}
+.work-changes-quiet {
+  margin: 0;
+}
+
+/* Narrow: the commit goes under the entity, and the indents go. */
+@container (max-width: 560px) {
+  .work-changes-point-input {
+    width: 100%;
+    order: 3;
+  }
+  .work-changes-copy {
+    order: 4;
+  }
+  .work-changes-row-head {
+    flex-wrap: wrap;
+    row-gap: 2px;
+  }
+  .work-changes-entity {
+    flex: 1 1 100%;
+  }
+  /* The row's subject is what the row is about: whole, on two lines if need be. */
+  .work-changes-entity .work-ref-title {
+    white-space: normal;
+  }
+  .work-changes-when {
+    margin-inline-start: 0;
+  }
+  .work-changes-what {
+    padding-inline-start: 0;
+  }
+  .work-changes-answer,
+  .work-changes-why {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .work-changes-inline {
+    max-width: 100%;
+  }
+}

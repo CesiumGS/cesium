@@ -274,7 +274,13 @@ export async function queryWork(
   ]);
   return boardOf(
     root,
-    { all, proposals, ready: readyOf(all, claimedOf(claims)), problems, version },
+    {
+      all,
+      proposals,
+      ready: readyOf(all, claimedOf(claims)),
+      problems,
+      version,
+    },
     { elsewhere, history, live },
   );
 }
@@ -913,7 +919,10 @@ async function ledgerFold(root, store, prev) {
       return {
         total,
         lastId: events.at(-1)?.id,
-        queue: foldQueue(new Map(prev.queue), events.slice(events.length - fresh)),
+        queue: foldQueue(
+          new Map(prev.queue),
+          events.slice(events.length - fresh),
+        ),
         read: fresh,
       };
     }
@@ -981,9 +990,13 @@ export const liveClaims = (root) =>
 
 /** Items done on an hitld/* branch and not merged (git, unmergedOf). */
 export const liveUnmerged = (root, main, queue) =>
-  attempt(`git: hitld/* branches against ${main}`, LIVE_UNREAD.git, async () => ({
-    list: unmergedOf(root, main, queue),
-  }));
+  attempt(
+    `git: hitld/* branches against ${main}`,
+    LIVE_UNREAD.git,
+    async () => ({
+      list: unmergedOf(root, main, queue),
+    }),
+  );
 
 /**
  * The live run, as hitld and git show it now, each source with when it was
@@ -1132,9 +1145,11 @@ export function boardReader(root, { store: storeOption, onChange } = {}) {
   let workGeneration = 0;
   let treeGeneration = 0;
   let store = storeOption;
-  const storeReady = storeOption ? Promise.resolve() : storeOf(root).then((s) => {
-    store = s;
-  });
+  const storeReady = storeOption
+    ? Promise.resolve()
+    : storeOf(root).then((s) => {
+        store = s;
+      });
   // The keys' git reads, shared by every read of one request (and of any
   // other within KEY_MS), so a warm request runs each git command once.
   const keyReads = new Map();
@@ -1157,10 +1172,26 @@ export function boardReader(root, { store: storeOption, onChange } = {}) {
   const changed = () => onChange?.();
   let answered = false;
 
-  const entities = keptRead({ key: workKey, read: () => readEntities(root), wait: true });
-  const proposals = keptRead({ key: workKey, read: () => readProposals(root), wait: true });
-  const version = keptRead({ key: head, read: () => readVersion(root), wait: true });
-  const history = keptRead({ key: head, read: async () => stateHistory(root), wait: true });
+  const entities = keptRead({
+    key: workKey,
+    read: () => readEntities(root),
+    wait: true,
+  });
+  const proposals = keptRead({
+    key: workKey,
+    read: () => readProposals(root),
+    wait: true,
+  });
+  const version = keptRead({
+    key: head,
+    read: () => readVersion(root),
+    wait: true,
+  });
+  const history = keptRead({
+    key: head,
+    read: async () => stateHistory(root),
+    wait: true,
+  });
   const check = keptRead({
     key: () => `${head()} ${treeGeneration}`,
     read: () => readCheck(root),
@@ -1168,7 +1199,8 @@ export function boardReader(root, { store: storeOption, onChange } = {}) {
   });
   /** Live sources compare without when they were read. */
   const sameSource = (a, b) =>
-    JSON.stringify({ ...a, read_at: 0 }) === JSON.stringify({ ...b, read_at: 0 });
+    JSON.stringify({ ...a, read_at: 0 }) ===
+    JSON.stringify({ ...b, read_at: 0 });
   const run = keptRead({
     key: () =>
       `${ledgerKey()} ${store ? fileKey(join(store, "run-state.json")) : ""}`,
@@ -1286,16 +1318,16 @@ export function boardReader(root, { store: storeOption, onChange } = {}) {
         };
       };
       const NONE = Symbol("none");
-      const [problems, runSource, ledgerRead, claimsSource] = await Promise.all([
-        valueBy(slow.check, until, NONE),
-        valueBy(slow.run, until, NONE),
-        valueBy(slow.ledger, until, NONE),
-        valueBy(slow.claims, until, NONE),
-      ]);
+      const [problems, runSource, ledgerRead, claimsSource] = await Promise.all(
+        [
+          valueBy(slow.check, until, NONE),
+          valueBy(slow.run, until, NONE),
+          valueBy(slow.ledger, until, NONE),
+          valueBy(slow.claims, until, NONE),
+        ],
+      );
       const unmergedSource =
-        ledgerRead === NONE
-          ? NONE
-          : await valueBy(unmerged.get(), until, NONE);
+        ledgerRead === NONE ? NONE : await valueBy(unmerged.get(), until, NONE);
       if (problems === NONE) {
         pending.push("hitld work check");
       }
@@ -1307,7 +1339,8 @@ export function boardReader(root, { store: storeOption, onChange } = {}) {
           ledgerRead === NONE
             ? reading("hitld ledger in-flight and ledger tail")
             : ledgerRead.source,
-        claims: claimsSource === NONE ? reading("hitld work claims") : claimsSource,
+        claims:
+          claimsSource === NONE ? reading("hitld work claims") : claimsSource,
         unmerged:
           unmergedSource === NONE
             ? reading(`git: hitld/* branches against ${main}`)
@@ -1428,5 +1461,587 @@ export async function showItem(root, id) {
     id,
     path: answer.entity.path,
     body: String(answer.entity.body ?? "").trim(),
+  };
+}
+
+// ---------------------------------------------------------------------------
+// What changed since a point (CS-747): the Since-you-last-looked view's read.
+//
+// Self-contained: it shares no state with boardReader, so the Flow view's
+// reader (CS-752) and this one change apart. It reads git only, never
+// hitld's store: the tracker's files in two trees (the point's and HEAD's),
+// and the mainline commits between them. Every ref or date it is given is
+// checked against a fixed form before it reaches git, and git runs with
+// argument arrays, never through a shell.
+
+/** The tracker's folders, repository-relative. */
+const WORK_PATHS = [
+  "packages/next/work/items",
+  "packages/next/work/milestones",
+  "packages/next/work/projects",
+];
+
+/** A commit as given in a URL: hex, 7 to 40 digits. */
+export const COMMIT_FORM = /^[0-9a-f]{7,40}$/;
+
+/** A date as given in a URL: a day, or a time with an optional zone. */
+export const DATE_FORM =
+  /^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2}(\.\d{1,3})?)?(Z|[+-]\d{2}:\d{2})?)?$/;
+
+/** At most this many mainline commits are read between the point and HEAD. */
+export const CHANGES_MAX_COMMITS = 1500;
+
+/** How many points' reads are kept (per HEAD). */
+const CHANGES_KEPT = 8;
+
+/** The front-matter keys the view reads: the rest stay in the files. */
+const CHANGE_KEYS = new Set([
+  "id",
+  "title",
+  "kind",
+  "state",
+  "project",
+  "needs",
+  "constraints",
+  "decider",
+  "waiting_on",
+  "answer",
+  "answered_at",
+  "answered_by",
+  "rationale",
+  "reason",
+  "release",
+  // Before CS-521 the tracker wrote `status:` in its own names.
+  "status",
+]);
+
+/** Why a point can't be read: fixed words for the page. */
+export const CHANGES_REFUSED = {
+  form: "Give a commit (7 to 40 hex digits) or a date (YYYY-MM-DD)",
+  commit: "No such commit in this repository",
+  ancestor:
+    "That commit isn't in this branch's history: pick one on the branch Dyno is served from",
+  date: "No commit on this branch is that old",
+};
+
+/** Refused with fixed words (the reason's key in CHANGES_REFUSED). */
+export class ChangesRefused extends Error {
+  constructor(reason) {
+    super(CHANGES_REFUSED[reason]);
+    this.reason = reason;
+  }
+}
+
+/**
+ * Run git with an argument array (never a shell), optionally writing
+ * `input` to it: its exit code and output.
+ */
+export function gitRun(root, args, input) {
+  return new Promise((resolve) => {
+    const child = spawn("git", args, {
+      cwd: root,
+      stdio: [input === undefined ? "ignore" : "pipe", "pipe", "ignore"],
+    });
+    const out = [];
+    child.stdout.on("data", (d) => out.push(d));
+    child.on("error", () => resolve({ code: -1, stdout: "" }));
+    child.on("close", (code) =>
+      resolve({ code, stdout: Buffer.concat(out).toString("utf8") }),
+    );
+    if (input !== undefined) {
+      child.stdin.on("error", () => {});
+      child.stdin.end(input);
+    }
+  });
+}
+
+/** A YAML scalar as the tracker writes one: plain, "double" or 'single' quoted. */
+function scalarOf(raw) {
+  const v = raw.trim();
+  if (v.startsWith('"') && v.endsWith('"') && v.length >= 2) {
+    try {
+      return JSON.parse(v);
+    } catch {
+      return v.slice(1, -1);
+    }
+  }
+  if (v.startsWith("'") && v.endsWith("'") && v.length >= 2) {
+    return v.slice(1, -1).replaceAll("''", "'");
+  }
+  return v;
+}
+
+/** A flow list, `[a, b, "c, d"]`, split on the commas outside quotes. */
+function flowListOf(raw) {
+  const inner = raw.trim().slice(1, -1);
+  const out = [];
+  let cur = "";
+  let quote = "";
+  for (const ch of inner) {
+    if (quote) {
+      cur += ch;
+      if (ch === quote) {
+        quote = "";
+      }
+    } else if (ch === '"' || ch === "'") {
+      quote = ch;
+      cur += ch;
+    } else if (ch === ",") {
+      out.push(cur);
+      cur = "";
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur);
+  return out.map(scalarOf).filter((x) => x !== "");
+}
+
+/**
+ * The front matter keys the view reads from one tracker file, and the
+ * lead paragraph of its text (at most 400 characters). Top-level
+ * `key: value` lines only: block lists (a milestone's done_when) are
+ * skipped. Nothing read is executed or evaluated.
+ */
+export function frontMatterOf(text) {
+  const lines = String(text).split("\n");
+  if (lines[0]?.trim() !== "---") {
+    return undefined;
+  }
+  const fm = {};
+  let i = 1;
+  for (; i < lines.length && lines[i].trim() !== "---"; i++) {
+    const m = /^([a-z_]+):(.*)$/.exec(lines[i]);
+    if (!m || !CHANGE_KEYS.has(m[1])) {
+      continue;
+    }
+    const raw = m[2].trim();
+    fm[m[1]] =
+      raw.startsWith("[") && raw.endsWith("]")
+        ? flowListOf(raw)
+        : scalarOf(raw);
+  }
+  if (typeof fm.id !== "string" || !ID_PATTERN.test(fm.id)) {
+    return undefined;
+  }
+  if (fm.status !== undefined) {
+    fm.state ??= LEGACY_STATES[fm.status] ?? String(fm.status).toLowerCase();
+    delete fm.status;
+  }
+  // The lead: the first paragraph of the text that isn't a heading.
+  const body = lines.slice(i + 1).join("\n");
+  const lead = body
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .find((p) => p && !p.startsWith("#"));
+  const short = (p) => {
+    const flat = p.replace(/\s+/g, " ").trim();
+    return flat.length > 400 ? `${flat.slice(0, 399)}…` : flat;
+  };
+  if (lead) {
+    fm.lead = short(lead);
+  }
+  if (fm.kind === "decision" && typeof fm.answer === "string") {
+    // An answer of one letter names an option: its line, in words.
+    const letter = /^[A-Z]$/.exec(fm.answer.trim())?.[0];
+    const option =
+      letter &&
+      body
+        .split("\n")
+        .find((l) =>
+          new RegExp(`^\\s*[-*]\\s+(\\*\\*)?${letter}[.):]`).test(l),
+        );
+    if (option) {
+      fm.answer_option = short(
+        option.replace(/^\s*[-*]\s+/, "").replaceAll("**", ""),
+      );
+    }
+    // The text's Answer section, when it says more than its placeholder.
+    const section = /^## Answer\s*\n([\s\S]*?)(?=^## |(?![\s\S]))/m.exec(
+      body,
+    )?.[1];
+    const said = section
+      ?.split(/\n\s*\n/)
+      .map((x) => x.trim())
+      .find(Boolean);
+    if (said && !/^Recorded in the front matter/.test(said)) {
+      fm.answer_note = short(said);
+    }
+  }
+  return fm;
+}
+
+/** What the view compares of a file: its keys in a fixed order, without its text. */
+const fieldsKey = (fm) =>
+  fm
+    ? JSON.stringify(
+        Object.keys(fm)
+          // Read from the text, not the record: a text edit isn't a change.
+          .filter((k) => !["lead", "answer_option", "answer_note"].includes(k))
+          .sort()
+          .map((k) => [k, fm[k]]),
+      )
+    : "";
+
+/** `git ls-tree` of the tracker's folders at a commit: path → blob. */
+async function treeOf(run, root, commit) {
+  const { stdout } = await run(root, [
+    "ls-tree",
+    "-r",
+    "-z",
+    commit,
+    "--",
+    ...WORK_PATHS,
+  ]);
+  const out = new Map();
+  for (const rec of stdout.split("\0")) {
+    const m = /^\d+ blob ([0-9a-f]+)\t(.+\.md)$/.exec(rec);
+    if (m) {
+      out.set(m[2], m[1]);
+    }
+  }
+  return out;
+}
+
+/** Many blobs' text in one `git cat-file --batch`: blob → text. */
+async function blobsOf(run, root, blobs) {
+  const out = new Map();
+  if (!blobs.length) {
+    return out;
+  }
+  const { stdout } = await run(
+    root,
+    ["cat-file", "--batch"],
+    `${blobs.join("\n")}\n`,
+  );
+  const buf = Buffer.from(stdout, "utf8");
+  let at = 0;
+  while (at < buf.length) {
+    const nl = buf.indexOf(10, at);
+    if (nl < 0) {
+      break;
+    }
+    const head = buf.subarray(at, nl).toString("utf8").split(" ");
+    if (head[1] !== "blob") {
+      at = nl + 1;
+      continue;
+    }
+    const size = Number(head[2]);
+    out.set(head[0], buf.subarray(nl + 1, nl + 1 + size).toString("utf8"));
+    at = nl + 1 + size + 1;
+  }
+  return out;
+}
+
+const COMMIT_MARK = "\x1e@@commit ";
+const FIELD = "\x1f";
+
+/**
+ * The mainline commits from `base` to `head` that change the tracker,
+ * newest first: each with its message and, per tracker file, the
+ * front-matter keys its diff sets (`+key:` lines). Merges are read
+ * against their first parent, so a merged branch's change sits on its
+ * merge commit.
+ */
+async function logOf(run, root, base, head) {
+  const { stdout } = await run(root, [
+    "log",
+    "--first-parent",
+    "--diff-merges=first-parent",
+    `--max-count=${CHANGES_MAX_COMMITS + 1}`,
+    "-p",
+    "-U0",
+    "--no-color",
+    "--no-ext-diff",
+    `--format=${COMMIT_MARK}%H${FIELD}%h${FIELD}%cI${FIELD}%P${FIELD}%B${FIELD}`,
+    `${base}..${head}`,
+    "--",
+    ...WORK_PATHS,
+  ]);
+  const commits = [];
+  for (const chunk of stdout.split(COMMIT_MARK).slice(1)) {
+    const [sha, short, at, parents, message, rest] = chunk.split(FIELD);
+    const files = new Map();
+    let id;
+    for (const line of (rest ?? "").split("\n")) {
+      if (line.startsWith("diff --git ")) {
+        id = /\/(CS-[1-9]\d*)[-.][^/]*$/.exec(line)?.[1];
+        if (id && !files.has(id)) {
+          files.set(id, new Set());
+        }
+      } else if (id && /^\+[a-z_]+:/.test(line) && !line.startsWith("+++")) {
+        const key = line.slice(1, line.indexOf(":"));
+        if (CHANGE_KEYS.has(key)) {
+          files.get(id).add(key === "status" ? "state" : key);
+        }
+      }
+    }
+    const text = (message ?? "").trim();
+    const nl = text.indexOf("\n");
+    const subject = nl < 0 ? text : text.slice(0, nl);
+    const bodyLines = nl < 0 ? [] : text.slice(nl + 1).split("\n");
+    const trailers = {};
+    const kept = [];
+    for (const l of bodyLines) {
+      const t =
+        /^(Work-Item|Dispatch|Agent-Role|Agent-Model|Agent-Effort|Co-Authored-By):\s*(.*)$/.exec(
+          l,
+        );
+      if (t) {
+        trailers[t[1]] = t[2].trim();
+      } else {
+        kept.push(l);
+      }
+    }
+    commits.push({
+      sha,
+      short,
+      at,
+      parents: parents.trim() ? parents.trim().split(" ").length : 0,
+      subject,
+      body: kept.join("\n").trim(),
+      work_item: ID_PATTERN.test(trailers["Work-Item"] ?? "")
+        ? trailers["Work-Item"]
+        : undefined,
+      files: [...files].map(([fid, keys]) => ({ id: fid, keys: [...keys] })),
+    });
+  }
+  const truncated = commits.length > CHANGES_MAX_COMMITS;
+  return { commits: commits.slice(0, CHANGES_MAX_COMMITS), truncated };
+}
+
+/**
+ * How many commits from `base` to `head` carry each Work-Item trailer,
+ * merged branches' commits included: the work behind each merge.
+ */
+async function workItemsOf(run, root, base, head) {
+  // Read from the whole message: a trailer block followed by another
+  // paragraph (Co-Authored-By) is no trailer block to git.
+  const { stdout } = await run(root, [
+    "log",
+    `--max-count=${CHANGES_MAX_COMMITS * 4}`,
+    "--format=%x1e%B",
+    `${base}..${head}`,
+  ]);
+  const out = {};
+  for (const message of stdout.split("\x1e")) {
+    const ids = new Set(
+      [...message.matchAll(/^Work-Item:[ \t]*(CS-[1-9]\d*)[ \t]*$/gm)].map(
+        (m) => m[1],
+      ),
+    );
+    for (const id of ids) {
+      out[id] = (out[id] ?? 0) + 1;
+    }
+  }
+  return out;
+}
+
+/** A commit's sha, short sha, date and subject. */
+async function commitRefOf(run, root, commit) {
+  const { stdout } = await run(root, [
+    "show",
+    "-s",
+    `--format=%H${FIELD}%h${FIELD}%cI${FIELD}%s`,
+    commit,
+  ]);
+  const [sha, short, at, subject] = stdout.trim().split(FIELD);
+  return { sha, short, at, subject };
+}
+
+/**
+ * The point as a commit on HEAD's history: a commit given (checked to be
+ * an ancestor of HEAD), or the last mainline commit before a date.
+ * Throws ChangesRefused with fixed words.
+ */
+export async function pointOf(run, root, head, point) {
+  if (point.commit !== undefined) {
+    const c = String(point.commit).toLowerCase();
+    if (!COMMIT_FORM.test(c)) {
+      throw new ChangesRefused("form");
+    }
+    const got = await run(root, [
+      "rev-parse",
+      "--verify",
+      "--quiet",
+      "--end-of-options",
+      `${c}^{commit}`,
+    ]);
+    const sha = got.stdout.trim();
+    if (got.code !== 0 || !/^[0-9a-f]{40,64}$/.test(sha)) {
+      throw new ChangesRefused("commit");
+    }
+    const anc = await run(root, ["merge-base", "--is-ancestor", sha, head]);
+    if (anc.code !== 0) {
+      throw new ChangesRefused("ancestor");
+    }
+    return sha;
+  }
+  if (point.date !== undefined) {
+    const d = String(point.date);
+    if (!DATE_FORM.test(d) || Number.isNaN(Date.parse(d))) {
+      throw new ChangesRefused("form");
+    }
+    // In one form git reads exactly: "2026-11-13 08:00:00 +0000". A day
+    // alone is its midnight in UTC; the page sends its own midnight.
+    const utc = new Date(Date.parse(d))
+      .toISOString()
+      .replace("T", " ")
+      .replace(/\.\d+Z$/, " +0000");
+    const got = await run(root, [
+      "rev-list",
+      "-1",
+      "--first-parent",
+      `--before=${utc}`,
+      head,
+    ]);
+    const sha = got.stdout.trim();
+    if (got.code !== 0 || !/^[0-9a-f]{40,64}$/.test(sha)) {
+      throw new ChangesRefused("date");
+    }
+    return sha;
+  }
+  throw new ChangesRefused("form");
+}
+
+/**
+ * What changed in the tracker from a point to HEAD, read from git:
+ *
+ *   base, head   the two commits, each with its date and subject
+ *   base_files   how many tracker files the point had (0: it began after)
+ *   entities     every tracker file whose fields differ between them, its
+ *                front matter (the keys the view reads, and its text's
+ *                lead) before and after; and every release item, both
+ *                sides, so the view can tell each milestone's release
+ *   commits      the mainline commits between them that change the
+ *                tracker, newest first, with their messages and the keys
+ *                each sets per file; `truncated` past CHANGES_MAX_COMMITS
+ *   work_items   how many commits carry each Work-Item trailer, merged
+ *                branches' included
+ *
+ * The diff itself is the view's (bench/suite/workChanges.ts). Ten git
+ * processes, none of them hitld's.
+ */
+export async function readChanges(root, point, { run = gitRun } = {}) {
+  const headGot = await run(root, ["rev-parse", "--verify", "HEAD"]);
+  const head = headGot.stdout.trim();
+  return changesAt(run, root, head, point);
+}
+
+async function changesAt(run, root, head, point) {
+  const base = await pointOf(run, root, head, point);
+  const [baseRef, headRef, before, after, log, workItems] = await Promise.all([
+    commitRefOf(run, root, base),
+    commitRefOf(run, root, head),
+    treeOf(run, root, base),
+    treeOf(run, root, head),
+    logOf(run, root, base, head),
+    workItemsOf(run, root, base, head),
+  ]);
+  const idOf = (path) => /\/(CS-[1-9]\d*)[-.][^/]*$/.exec(path)?.[1];
+  // Every file by ID, both sides: a file renamed keeps its ID.
+  const sides = new Map();
+  for (const [side, tree] of [
+    ["before", before],
+    ["after", after],
+  ]) {
+    for (const [path, blob] of tree) {
+      const id = idOf(path);
+      if (id) {
+        const e = sides.get(id) ?? { id };
+        e[side] = { path, blob };
+        sides.set(id, e);
+      }
+    }
+  }
+  const changed = [...sides.values()].filter(
+    (e) => e.before?.blob !== e.after?.blob,
+  );
+  // Release items can't be told from a tree; every file at both sides is
+  // one cat-file batch either way, and only the changed and the releases
+  // go back to the page.
+  const blobs = new Set();
+  for (const e of sides.values()) {
+    if (e.before) {
+      blobs.add(e.before.blob);
+    }
+    if (e.after) {
+      blobs.add(e.after.blob);
+    }
+  }
+  const text = await blobsOf(run, root, [...blobs]);
+  const fmOf = (side) =>
+    side ? frontMatterOf(text.get(side.blob) ?? "") : undefined;
+  const changedIds = new Set(changed.map((e) => e.id));
+  const entities = [];
+  for (const e of [...sides.values()].sort(byNumber)) {
+    const b = fmOf(e.before);
+    const a = fmOf(e.after);
+    const isRelease = !!(b?.release || a?.release);
+    // A file rewritten without a change to what the view reads (the move
+    // onto human-in-the-lead's format) isn't a change.
+    const differs = changedIds.has(e.id) && fieldsKey(b) !== fieldsKey(a);
+    if (differs || isRelease) {
+      entities.push({
+        id: e.id,
+        path: (e.after ?? e.before).path,
+        ...(b ? { before: b } : {}),
+        ...(a ? { after: a } : {}),
+      });
+    }
+  }
+  return {
+    api_version: API_VERSION,
+    point:
+      point.commit !== undefined
+        ? { commit: String(point.commit) }
+        : { date: String(point.date) },
+    base: baseRef,
+    head: headRef,
+    base_files: before.size,
+    entities,
+    commits: log.commits,
+    work_items: workItems,
+    truncated: log.truncated,
+  };
+}
+
+/**
+ * The dev server's reader for `/work-api/changes.json` (CS-747), within
+ * CS-704's read budget: a point's read is kept while HEAD holds (the
+ * last CHANGES_KEPT points), so a warm request runs one `git rev-parse`
+ * and nothing else. Uncommitted changes aren't history yet.
+ */
+export function changesReader(root, { run = gitRun } = {}) {
+  const kept = new Map(); // `${head} ${point}` → Promise
+  let headAt = { value: "", at: 0 };
+  const headOf = async () => {
+    if (Date.now() - headAt.at < KEY_MS && headAt.value) {
+      return headAt.value;
+    }
+    const got = await run(root, ["rev-parse", "--verify", "HEAD"]);
+    headAt = { value: got.stdout.trim(), at: Date.now() };
+    return headAt.value;
+  };
+  return {
+    async read(point) {
+      const head = await headOf();
+      const k = `${head} ${point.commit !== undefined ? `c:${point.commit}` : `d:${point.date}`}`;
+      let p = kept.get(k);
+      if (!p) {
+        p = changesAt(run, root, head, point);
+        kept.set(k, p);
+        // A refusal or failure isn't kept: the next request tries again.
+        p.catch(() => kept.delete(k));
+        while (kept.size > CHANGES_KEPT) {
+          kept.delete(kept.keys().next().value);
+        }
+      } else {
+        // Most recently used last.
+        kept.delete(k);
+        kept.set(k, p);
+      }
+      return p;
+    },
   };
 }

@@ -2,7 +2,7 @@
 id: CS-747
 title: A Since-you-last-looked view shows scope changes and answers since a chosen point
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]

@@ -366,3 +366,99 @@ export function showItem(
   root: string,
   id: string,
 ): Promise<WorkItemText | undefined>;
+
+// What changed since a point (CS-747; `/work-api/changes.json`).
+
+/** The front matter keys the Since-you-last-looked view reads, and its text's lead. */
+export interface ChangeFields {
+  id: string;
+  title?: string;
+  kind?: string;
+  state?: string;
+  project?: string;
+  needs?: string[];
+  /** A milestone's constraints, as written: "CS-744 c?". */
+  constraints?: string[];
+  decider?: string;
+  waiting_on?: string;
+  answer?: string;
+  answered_at?: string;
+  answered_by?: string;
+  rationale?: string;
+  reason?: string;
+  release?: string;
+  /** The first paragraph of its text, at most 400 characters. */
+  lead?: string;
+  /** A decision answered with one letter: that option's line. */
+  answer_option?: string;
+  /** A decision's Answer section, when it says more than its placeholder. */
+  answer_note?: string;
+}
+export interface ChangeEntity {
+  id: string;
+  path: string;
+  /** Absent when the file didn't exist at the point. */
+  before?: ChangeFields;
+  /** Absent when the file is gone at HEAD. */
+  after?: ChangeFields;
+}
+export interface ChangeCommitRef {
+  sha: string;
+  short: string;
+  /** Its committer date, ISO 8601. */
+  at: string;
+  subject: string;
+}
+export interface ChangeCommit extends ChangeCommitRef {
+  /** 2 or more for a merge, read against its first parent. */
+  parents: number;
+  /** Its message after the subject, without the trailers. */
+  body: string;
+  /** Its Work-Item trailer. */
+  work_item?: string;
+  /** Per tracker file, the front-matter keys its diff sets. */
+  files: Array<{ id: string; keys: string[] }>;
+}
+export interface ChangesAnswer {
+  api_version: number;
+  point: { commit: string } | { date: string };
+  base: ChangeCommitRef;
+  head: ChangeCommitRef;
+  /** Tracker files at the point: 0 when the tracker began after it. */
+  base_files: number;
+  /** Files whose fields differ, and every release item, both sides. */
+  entities: ChangeEntity[];
+  /** Mainline commits that change the tracker, newest first. */
+  commits: ChangeCommit[];
+  /** Commits carrying each Work-Item trailer, merged branches' included. */
+  work_items: Record<string, number>;
+  /** More commits than CHANGES_MAX_COMMITS: the oldest weren't read. */
+  truncated: boolean;
+}
+export type ChangesPoint = { commit: string } | { date: string };
+export type GitRun = (
+  root: string,
+  args: string[],
+  input?: string,
+) => Promise<{ code: number | null; stdout: string }>;
+export const COMMIT_FORM: RegExp;
+export const DATE_FORM: RegExp;
+export const CHANGES_MAX_COMMITS: number;
+export const CHANGES_REFUSED: Record<
+  "form" | "commit" | "ancestor" | "date",
+  string
+>;
+export class ChangesRefused extends Error {
+  reason: "form" | "commit" | "ancestor" | "date";
+}
+export const gitRun: GitRun;
+export function frontMatterOf(text: string): ChangeFields | undefined;
+export function readChanges(
+  root: string,
+  point: ChangesPoint,
+  options?: { run?: GitRun },
+): Promise<ChangesAnswer>;
+export function changesReader(
+  root: string,
+  options?: { run?: GitRun },
+): { read(point: ChangesPoint): Promise<ChangesAnswer> };
