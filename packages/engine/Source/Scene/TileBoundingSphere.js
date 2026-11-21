@@ -105,13 +105,13 @@ TileBoundingSphere.prototype.distanceToCamera = function (frameState) {
 };
 
 /**
- * Determines which side of a plane this sphere is located.
+ * Determines which side of a plane this sphere is located:
+ * {@link Intersect.INSIDE} if the entire sphere is on the side the plane's normal points to,
+ * {@link Intersect.OUTSIDE} if the entire sphere is on the opposite side, or
+ * {@link Intersect.INTERSECTING} if the sphere intersects the plane.
  *
  * @param {Plane} plane The plane to test against.
- * @returns {Intersect} {@link Intersect.INSIDE} if the entire sphere is on the side of the plane
- *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire sphere is
- *                      on the opposite side, and {@link Intersect.INTERSECTING} if the sphere
- *                      intersects the plane.
+ * @returns {Intersect} The side of the plane the sphere is on.
  */
 TileBoundingSphere.prototype.intersectPlane = function (plane) {
   //>>includeStart('debug', pragmas.debug);
