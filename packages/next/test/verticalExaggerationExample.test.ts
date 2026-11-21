@@ -56,6 +56,7 @@ import { Instant } from "../src/time/Instant.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { gridTile } from "./terrainRayFixtures.ts";
+import { loadIr } from "../src/transform/lazyIr.ts";
 
 // The example imports the engine's entry point, which reads WebGPU's globals
 // as it loads: they come first.
@@ -87,6 +88,8 @@ const worlds: World[] = [];
 
 beforeAll(async () => {
   engine = await fakeEngine();
+  // The first compiled route loads Cesium IR (CS-794); these steps expect it.
+  await loadIr();
 });
 
 afterEach(() => {

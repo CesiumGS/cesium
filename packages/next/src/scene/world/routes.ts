@@ -36,11 +36,8 @@ import {
   RECORD_WORDS,
   VIEW_MASK_WORD,
 } from "../../render/layout.ts";
-import {
-  compileRoute,
-  type CompiledRoute,
-  type ParamRecord,
-} from "../../transform/compile.ts";
+import type { CompiledRoute, ParamRecord } from "../../transform/compile.ts";
+import { irPasses, loadIr } from "../../transform/lazyIr.ts";
 import type { ParamRange } from "../../transform/interval.ts";
 import {
   ROUTE_BODY,
@@ -171,6 +168,11 @@ export class WorldRoutes {
   readonly #anchors = new Map<number, RoutedAnchor>();
   /** Slots whose route was refused, and the shape it was refused for (asked again when it changes). */
   readonly #refused = new Map<number, { shape: string; reason: string }>();
+  /** Slots whose route waits for Cesium IR to load (CS-794): not refused, and not compiled yet. */
+  readonly #awaitingIr = new Set<number>();
+  /** Cesium IR was asked for; `#irFailure` says why it didn't come, if it didn't. */
+  #irAsked = false;
+  #irFailure: string | undefined;
   readonly #failed = new Set<string>();
   readonly #draws = new Map<number, RoutedDraw>();
   /** Draws whose block or record the CPU is to write. */
@@ -188,7 +190,16 @@ export class WorldRoutes {
 
   /** Whether draws still wait for their data. */
   get pending(): boolean {
-    return this.#queue.size > 0;
+    return this.#queue.size > 0 || this.#awaitingIr.size > 0;
+  }
+
+  /**
+   * Whether the slot's route waits for Cesium IR, which loads when the first
+   * route under a curvilinear map needs it (CS-794). Its draws stay held
+   * (hidden, as before a first fit) rather than being fitted and then routed.
+   */
+  awaitingIr(slot: number): boolean {
+    return this.#awaitingIr.has(slot);
   }
 
   /** The routed anchor of a slot, if its route is compiled. */
@@ -245,6 +256,11 @@ export class WorldRoutes {
         this.#drop(slot);
       }
       const made = this.#make(slot, first);
+      if ("waiting" in made) {
+        this.#awaitingIr.add(slot);
+        return undefined;
+      }
+      this.#awaitingIr.delete(slot);
       if ("reason" in made) {
         this.#refused.set(slot, { shape, reason: made.reason });
         if (made.say) {
@@ -267,12 +283,14 @@ export class WorldRoutes {
   release(slot: number): void {
     this.#drop(slot);
     this.#refused.delete(slot);
+    this.#awaitingIr.delete(slot);
   }
 
   /** The world is gone. */
   clear(): void {
     this.#anchors.clear();
     this.#refused.clear();
+    this.#awaitingIr.clear();
     this.#draws.clear();
     this.#queue.clear();
     this.#gpu = undefined;
@@ -455,7 +473,7 @@ export class WorldRoutes {
   #make(
     slot: number,
     first: ViewCamera,
-  ): RoutedAnchor | { reason: string; say: boolean } {
+  ): RoutedAnchor | { reason: string; say: boolean } | { waiting: true } {
     const camera = first.camera;
     if (this.world.curvilinearMaps.curvilinearClips.active) {
       return {
@@ -468,7 +486,19 @@ export class WorldRoutes {
     if ("reason" in bridged) {
       return { reason: bridged.reason, say: false };
     }
-    const compiled = compileRoute(bridged.route, {
+    // The first route to compile loads Cesium IR; its draws wait for it.
+    const passes = irPasses();
+    if (!passes) {
+      if (this.#irFailure !== undefined) {
+        return {
+          reason: `Cesium IR did not load (${this.#irFailure})`,
+          say: true,
+        };
+      }
+      this.#askForIr();
+      return { waiting: true };
+    }
+    const compiled = passes.compileRoute(bridged.route, {
       normals: "auto",
       centerRows: true,
     });
@@ -508,6 +538,18 @@ export class WorldRoutes {
     // Asks for the pipelines now, so they compile while the draws are made.
     void this.pipelines(anchor);
     return anchor;
+  }
+
+  /** Starts loading Cesium IR (once); a failure is kept, and the route is refused with it. */
+  #askForIr(): void {
+    if (this.#irAsked) {
+      return;
+    }
+    this.#irAsked = true;
+    loadIr().catch((error: unknown) => {
+      this.#irFailure = error instanceof Error ? error.message : String(error);
+      this.#irAsked = false;
+    });
   }
 
   /** Reads the live matrices and parameters; what changed is written or marked. */
@@ -602,7 +644,8 @@ export class WorldRoutes {
     if ("reason" in bridged) {
       return `can't be bridged (${bridged.reason})`;
     }
-    const compiled = compileRoute(bridged.route, {
+    // The anchor exists, so Cesium IR is loaded.
+    const compiled = irPasses()!.compileRoute(bridged.route, {
       normals: "auto",
       centerRows: true,
     });

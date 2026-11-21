@@ -1,3 +1,7 @@
+// What needs Cesium IR installs itself in lazyIr.ts when this loads: this
+// aggregate has the IR passes at once, as the startup code (which doesn't import
+// it) has them only after `loadIr()`.
+import "./irPasses.ts";
 export {
   affine,
   curvilinear,

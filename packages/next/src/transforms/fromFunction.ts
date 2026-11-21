@@ -12,10 +12,9 @@ import {
   type CurvilinearMap,
   type CurvilinearScale,
 } from "../camera/route.ts";
-import { jacobian as irJacobian } from "../transform/ad.ts";
 import type { Params, CurvilinearSpec } from "../transform/graph.ts";
+import { irPasses, loadIr, type IrPasses } from "../transform/lazyIr.ts";
 import type { Program } from "../transform/program.ts";
-import { parseTransform, TransformParseError } from "../transform/parse.ts";
 import {
   LiveCurvilinearMap,
   NO_FRAME,
@@ -69,15 +68,22 @@ export interface FunctionCurvilinearMap extends ChangeableCurvilinearMap {
   readonly params: Params;
   /** Sets parameters by name (a name the function wasn't given throws), then `changed()`. */
   setParams(patch: Params): void;
-  /** Whether the function parsed to the IR: its draws are compiled. False: they are fitted, and `fitReason` says why. */
+  /**
+   * Whether the function parsed to the IR: its draws are compiled. False: they are fitted, and `fitReason` says why.
+   * Cesium IR loads when the first function map is made (CS-794), so this is false
+   * until it has (a moment, usually): the map says `changed()` when it settles.
+   */
   readonly compiled: boolean;
-  /** The parser's words for the construct that kept the function out of the IR; undefined when it parsed. */
+  /** The parser's words for the construct that kept the function out of the IR; undefined when it parsed. While Cesium IR loads: "Cesium IR is loading". */
   readonly fitReason: string | undefined;
   /** The inverse: the options' own, else the engine's Newton on this curvilinear map's `forward` and its Jacobian. */
   inverse(q: ArrayLike<number>, out: Float64Array): Float64Array;
 }
 
 const EPS = Number.EPSILON;
+
+/** `fitReason` while Cesium IR loads (the function isn't parsed yet). */
+const IR_LOADING = "Cesium IR is loading";
 
 class FunctionCurvilinearMapImpl
   extends LiveCurvilinearMap
@@ -87,10 +93,11 @@ class FunctionCurvilinearMapImpl
   readonly domain: CurvilinearMap["domain"];
   readonly accuracy: CurvilinearMap["accuracy"];
   readonly scale: CurvilinearScale | undefined;
-  readonly compiled: boolean;
-  readonly fitReason: string | undefined;
   private readonly values: Record<string, number>;
-  private readonly program: Program | undefined;
+  /** The function's IR program: parsed once Cesium IR has loaded, and none when it is outside the subset. */
+  private program: Program | undefined;
+  private irPasses: IrPasses | undefined;
+  private reason: string | undefined = IR_LOADING;
   private readonly source: string;
   private readonly at = new Float64Array(3);
   private readonly plus = new Float64Array(3);
@@ -121,17 +128,22 @@ class FunctionCurvilinearMapImpl
     this.accuracy = options.accuracy;
     this.scale = options.scale;
     this.source = Function.prototype.toString.call(map);
-    try {
-      this.program = parseTransform(this.source);
-      this.fitReason = undefined;
-    } catch (error) {
-      if (!(error instanceof TransformParseError)) {
-        throw error;
-      }
-      this.program = undefined;
-      this.fitReason = error.message;
+    // Cesium IR loads with the first function map; this parses as soon as it has.
+    const passes = irPasses();
+    if (passes) {
+      this.adopt(passes);
+    } else {
+      loadIr().then(
+        (loaded) => {
+          this.adopt(loaded);
+          this.changed();
+        },
+        (error: unknown) => {
+          this.reason = `Cesium IR did not load (${error instanceof Error ? error.message : String(error)})`;
+          this.changed();
+        },
+      );
     }
-    this.compiled = this.program !== undefined;
     this.core = {
       from: NO_FRAME,
       to: NO_FRAME,
@@ -141,6 +153,29 @@ class FunctionCurvilinearMapImpl
       }),
       forward: (p, out, jacobian) => this.forward(p, out, jacobian),
     };
+  }
+
+  get compiled(): boolean {
+    return this.program !== undefined;
+  }
+
+  get fitReason(): string | undefined {
+    return this.reason;
+  }
+
+  /** Parses the function now that Cesium IR is here. */
+  private adopt(passes: IrPasses): void {
+    try {
+      this.program = passes.parseTransform(this.source);
+      this.irPasses = passes;
+      this.reason = undefined;
+    } catch (error) {
+      if (!(error instanceof passes.TransformParseError)) {
+        throw error;
+      }
+      this.program = undefined;
+      this.reason = error.message;
+    }
   }
 
   get params(): Params {
@@ -225,8 +260,8 @@ class FunctionCurvilinearMapImpl
     params: Params,
     out: Float64Array,
   ): void {
-    if (this.program) {
-      const rows = irJacobian(this.program, p, params);
+    if (this.program && this.irPasses) {
+      const rows = this.irPasses.jacobian(this.program, p, params);
       for (let c = 0; c < 3; c++) {
         for (let r = 0; r < 3; r++) {
           out[c * 3 + r] = rows[3 * r + c]!;

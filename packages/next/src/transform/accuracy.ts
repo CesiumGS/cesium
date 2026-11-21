@@ -12,7 +12,7 @@
 // route's Jacobians are).
 import type { Params, CurvilinearSpec, TransformNode } from "./graph.ts";
 import type { Route } from "./route.ts";
-import { adJacobian } from "./stepIr.ts";
+import { adJacobian } from "./lazyIr.ts";
 
 /** `A C Aᵀ` for row-major 3×3s, written to `out` (which may be `c`). */
 export function congruence(

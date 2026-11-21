@@ -3,7 +3,7 @@
 // definition, and the helpers through `curvilinearFrame`, the frames resolver's
 // `route()` and `routeForward`: forward going up from the frame to its
 // parent.
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import {
   routeForward,
   routeInverse,
@@ -29,7 +29,13 @@ import { reprojectionCurvilinearMap } from "../src/proj/reprojectionCurvilinearM
 import type { CoordinateOperation } from "../src/frames/coordinates.ts";
 import { Ellipsoid, fromDegrees } from "../src/math/ellipsoid.ts";
 import { EARTH } from "../src/scene/Body.ts";
+import { loadIr } from "../src/transform/lazyIr.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
+
+// `fromFunction` loads Cesium IR with the first map (CS-794); these tests read what it parsed to.
+beforeAll(async () => {
+  await loadIr();
+});
 
 const SECONDS = Date.UTC(2000, 0, 1, 12) / 1000;
 const WGS84 = Ellipsoid.WGS84;

@@ -341,23 +341,29 @@ export {
 // Queries on the transform graph's routes: a point in another node, the
 // metric between two, and the accuracy along a route (`pickIn` and
 // `graphOfFrames` are in `@cesium/next/frames`, over its frames).
+// These come from the queries' own modules, not the aggregate `transform/index.ts`,
+// which loads Cesium IR: a view with no curvilinear map starts without it (CS-794).
 export {
   accuracyAlong,
-  measureIn,
-  pointIn,
   type AccuracyOptions,
   type AccuracyPart,
+  type RouteAccuracy,
+  type SigmaIn,
+} from "./transform/accuracy.ts";
+export {
+  measureIn,
+  pointIn,
   type MeasureIn,
   type MeasureInOptions,
   type NodePoint,
-  type Params,
   type PointIn,
   type PointInOptions,
-  type RouteAccuracy,
-  type SigmaIn,
-  type CurvilinearEdge,
-  type TransformNode,
-} from "./transform/index.ts";
+} from "./transform/queries.ts";
+export type {
+  CurvilinearEdge,
+  Params,
+  TransformNode,
+} from "./transform/graph.ts";
 export type {
   CurvilinearFrameSpec,
   CurvilinearMap,

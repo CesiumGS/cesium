@@ -1267,7 +1267,11 @@ export class WorldCurvilinearMaps {
     this.#track();
     for (const [index, d] of this.#draws) {
       const anchor = this.#anchors.get(d.slot);
-      if (anchor && d.requested !== this.#stampOf(d, anchor)) {
+      if (
+        anchor &&
+        d.requested !== this.#stampOf(d, anchor) &&
+        !this.routes.awaitingIr(d.slot)
+      ) {
         this.#request(index, d, anchor, report);
       }
     }
