@@ -61,6 +61,59 @@ describe("Editor/WasmMeshAttributeTranslator", function () {
     expect(getArrayType(ComponentDatatype.UNSIGNED_BYTE)).toBe(Uint32Array);
   });
 
+  it("toWasmDomain translates every domain", function () {
+    const { toWasmDomain } = WasmMeshAttributeTranslator;
+    expect(toWasmDomain(GeometryAttributeDomain.VERTEX)).toBe(
+      AttributeDomain.Vertex,
+    );
+    expect(toWasmDomain(GeometryAttributeDomain.CORNER)).toBe(
+      AttributeDomain.Corner,
+    );
+    expect(toWasmDomain(GeometryAttributeDomain.EDGE)).toBe(
+      AttributeDomain.Edge,
+    );
+    expect(toWasmDomain(GeometryAttributeDomain.FACE)).toBe(
+      AttributeDomain.Face,
+    );
+  });
+
+  describe("createDefaultValue", function () {
+    const { createDefaultValue } = WasmMeshAttributeTranslator;
+
+    it("creates an array of the attribute's storage type", function () {
+      const scalar = createDefaultValue(
+        createDescriptor(AttributeType.SCALAR, ComponentDatatype.FLOAT),
+        0.5,
+      );
+      expect(scalar).toEqual(new Float32Array([0.5]));
+
+      const vector = createDescriptor(
+        AttributeType.VEC2,
+        ComponentDatatype.SHORT,
+      );
+      expect(createDefaultValue(vector, [1, -1])).toEqual(
+        new Int32Array([1, -1]),
+      );
+    });
+
+    it("throws if the value doesn't fit the attribute's type", function () {
+      const vector = createDescriptor(
+        AttributeType.VEC2,
+        ComponentDatatype.FLOAT,
+      );
+      expect(() => createDefaultValue(vector, 0)).toThrowDeveloperError();
+      expect(() =>
+        createDefaultValue(vector, [0, 0, 0]),
+      ).toThrowDeveloperError();
+
+      const integer = createDescriptor(
+        AttributeType.SCALAR,
+        ComponentDatatype.UNSIGNED_INT,
+      );
+      expect(() => createDefaultValue(integer, 0.5)).toThrowDeveloperError();
+    });
+  });
+
   describe("toDescriptor", function () {
     function toDescriptor(name, options = {}) {
       return WasmMeshAttributeTranslator.toDescriptor({

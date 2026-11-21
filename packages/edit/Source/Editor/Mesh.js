@@ -148,6 +148,59 @@ class Mesh {
   }
 
   /**
+   * Adds a custom attribute, giving every component in its domain a default
+   * value.
+   *
+   * @param {GeometryAttributeDescriptor} descriptor The attribute.
+   * @param {number|number[]} defaultValue A number for scalar attributes, or an array for vector attributes.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   * @exception {DeveloperError} The mesh already has an attribute with that name.
+   * @exception {DeveloperError} The name is reserved for a built-in attribute.
+   * @exception {DeveloperError} The default value doesn't fit the attribute's type.
+   */
+  addAttribute(descriptor, defaultValue) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("descriptor", descriptor);
+    Check.defined("defaultValue", defaultValue);
+    const reason = WasmMeshAttributeTranslator.getUnsupportedReason(descriptor);
+    if (defined(reason)) {
+      throw new DeveloperError(`The attribute can't be added: ${reason}.`);
+    }
+    //>>includeEnd('debug');
+
+    const status = this.#wasmEditor.addAttribute(
+      this._key,
+      descriptor.name,
+      WasmMeshAttributeTranslator.toWasmDomain(descriptor.domain),
+      WasmMeshAttributeTranslator.createDefaultValue(descriptor, defaultValue),
+    );
+
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(
+      status,
+      descriptor.name,
+    );
+  }
+
+  /**
+   * Removes a custom attribute.
+   *
+   * @param {string} name The attribute's name.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is built-in.
+   */
+  removeAttribute(name) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("name", name);
+    //>>includeEnd('debug');
+
+    const status = this.#wasmEditor.removeAttribute(this._key, name);
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
+  }
+
+  /**
    * Gets an attribute's values at vertex, edge, or face keys, according to
    * the given attribute's domain.
    *
@@ -191,6 +244,34 @@ class Mesh {
     WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
 
     return result;
+  }
+
+  /**
+   * Sets an attribute's values at vertex, edge or face keys, matching the
+   * attribute's domain.
+   *
+   * @param {string} name The attribute's name, such as <code>POSITION</code>.
+   * @param {BigUint64Array} keys The components' keys.
+   * @param {Float32Array|Int32Array|Uint32Array} values <code>componentCount</code> values per key, in an array matching the attribute's datatype.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is per-corner.
+   */
+  setAttributeValues(name, keys, values) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("name", name);
+    Check.typeOf.object("keys", keys);
+    Check.typeOf.object("values", values);
+    //>>includeEnd('debug');
+
+    const status = this.#wasmEditor.setAttributeValues(
+      this._key,
+      name,
+      keys,
+      values,
+    );
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
   }
 
   /**

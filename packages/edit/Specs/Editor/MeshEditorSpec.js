@@ -737,6 +737,159 @@ describe(
         ).toThrowDeveloperError();
       });
 
+      function createDescriptor(semantic, domain, type, componentDatatype) {
+        return new GeometryAttributeDescriptor({
+          semantic,
+          domain,
+          type,
+          componentDatatype,
+        });
+      }
+
+      async function addActiveSquare() {
+        const result = await addSquareWithAttributes();
+        result.editor.setMeshActive(result.mesh);
+        return result;
+      }
+
+      it("adds attributes with a default value", async function () {
+        const { mesh } = await addActiveSquare();
+        const weight = createDescriptor(
+          "_WEIGHT",
+          GeometryAttributeDomain.EDGE,
+          AttributeType.SCALAR,
+          ComponentDatatype.FLOAT,
+        );
+        const region = createDescriptor(
+          "_REGION",
+          GeometryAttributeDomain.FACE,
+          AttributeType.VEC2,
+          ComponentDatatype.INT,
+        );
+
+        mesh.addAttribute(weight, 0.5);
+        mesh.addAttribute(region, [1, -1]);
+
+        const attributes = mesh.getAttributes();
+        const added = attributes.find(
+          (attribute) => attribute.name === "_WEIGHT",
+        );
+        expect(added.domain).toBe(GeometryAttributeDomain.EDGE);
+        expect(added.componentDatatype).toBe(ComponentDatatype.FLOAT);
+        expect(
+          attributes.find((attribute) => attribute.name === "_REGION").domain,
+        ).toBe(GeometryAttributeDomain.FACE);
+
+        const { edges, faces } = mesh.getComponentKeys(
+          EditMode.EDGE | EditMode.FACE,
+        );
+        expect(getValues(mesh, "_WEIGHT", edges)).toEqual([
+          0.5, 0.5, 0.5, 0.5, 0.5,
+        ]);
+        expect(getValues(mesh, "_REGION", faces)).toEqual([1, -1, 1, -1]);
+      });
+
+      it("removes attributes", async function () {
+        const { mesh } = await addActiveSquare();
+
+        mesh.removeAttribute("_ID");
+
+        expect(
+          mesh.getAttributes().some((attribute) => attribute.name === "_ID"),
+        ).toBe(false);
+      });
+
+      it("sets values", async function () {
+        const { mesh } = await addActiveSquare();
+        const keys = mesh.queryByAttribute("_ID", EQUAL, 7).verts;
+
+        mesh.setAttributeValues("_ID", keys, new Uint32Array([1, 2]));
+        mesh.setAttributeValues(
+          "POSITION",
+          keys.subarray(0, 1),
+          new Float32Array([0.0, 0.0, 1.0]),
+        );
+
+        expect(getValues(mesh, "_ID", keys)).toEqual([1, 2]);
+        expect(getValues(mesh, "POSITION", keys.subarray(0, 1))).toEqual([
+          0.0, 0.0, 1.0,
+        ]);
+      });
+
+      it("throws when adding an attribute that doesn't fit", async function () {
+        const { mesh } = await addActiveSquare();
+        const { SCALAR, VEC2 } = AttributeType;
+        const { FLOAT, INT, DOUBLE } = ComponentDatatype;
+        const { VERTEX } = GeometryAttributeDomain;
+
+        expect(() =>
+          mesh.addAttribute(createDescriptor("_ID", VERTEX, SCALAR, INT), 0),
+        )
+          .withContext("name in use")
+          .toThrowDeveloperError();
+        expect(() =>
+          mesh.addAttribute(
+            createDescriptor(
+              VertexAttributeSemantic.NORMAL,
+              VERTEX,
+              VEC2,
+              FLOAT,
+            ),
+            [0, 0],
+          ),
+        )
+          .withContext("reserved name")
+          .toThrowDeveloperError();
+        expect(() =>
+          mesh.addAttribute(createDescriptor("_A", VERTEX, VEC2, FLOAT), 0),
+        )
+          .withContext("wrong component count")
+          .toThrowDeveloperError();
+        expect(() =>
+          mesh.addAttribute(createDescriptor("_A", VERTEX, SCALAR, INT), 0.5),
+        )
+          .withContext("non-integer for integer attribute")
+          .toThrowDeveloperError();
+        expect(() =>
+          mesh.addAttribute(createDescriptor("_A", VERTEX, SCALAR, DOUBLE), 0),
+        )
+          .withContext("unsupported datatype")
+          .toThrowDeveloperError();
+      });
+
+      it("throws when removing an unknown or built-in attribute", async function () {
+        const { mesh } = await addActiveSquare();
+
+        expect(() => mesh.removeAttribute("_UNKNOWN")).toThrowDeveloperError();
+        expect(() => mesh.removeAttribute("POSITION")).toThrowDeveloperError();
+      });
+
+      it("throws when setting values of an unknown attribute", async function () {
+        const { mesh } = await addActiveSquare();
+        const keys = mesh.getComponentKeys(EditMode.VERTEX).verts;
+
+        expect(() =>
+          mesh.setAttributeValues("_UNKNOWN", keys, new Uint32Array(4)),
+        ).toThrowDeveloperError();
+      });
+
+      it("throws when changing attributes of an inactive mesh", async function () {
+        const { mesh } = await addSquareWithAttributes();
+        const keys = mesh.queryByAttribute("_ID", EQUAL, 8).verts;
+        const descriptor = createDescriptor(
+          "_A",
+          GeometryAttributeDomain.VERTEX,
+          AttributeType.SCALAR,
+          ComponentDatatype.FLOAT,
+        );
+
+        expect(() => mesh.addAttribute(descriptor, 0)).toThrowDeveloperError();
+        expect(() => mesh.removeAttribute("_ID")).toThrowDeveloperError();
+        expect(() =>
+          mesh.setAttributeValues("_ID", keys, new Uint32Array([1])),
+        ).toThrowDeveloperError();
+      });
+
       it("queries vertices by a scalar attribute, on an inactive mesh", async function () {
         const { editor, mesh } = await addSquareWithAttributes();
         expect(editor.isMeshActive(mesh)).toBe(false);

@@ -137,10 +137,52 @@ WasmMeshAttributeTranslator.createCustomAttribute = function (
 ) {
   return STORAGE[descriptor.componentDatatype].create(
     descriptor.name,
-    WASM_DOMAINS[descriptor.domain],
+    WasmMeshAttributeTranslator.toWasmDomain(descriptor.domain),
     descriptor.componentCount,
     values,
   );
+};
+
+/**
+ * Gets the wasm domain for a {@link GeometryAttributeDomain}.
+ *
+ * @param {GeometryAttributeDomain} domain The domain.
+ * @returns {AttributeDomain} The wasm domain.
+ */
+WasmMeshAttributeTranslator.toWasmDomain = function (domain) {
+  return WASM_DOMAINS[domain];
+};
+
+/**
+ * Creates the typed array wasm takes as an attribute's default value.
+ *
+ * @param {GeometryAttributeDescriptor} descriptor A supported attribute.
+ * @param {number|number[]} value A number for scalar attributes, or an array for vector attributes.
+ * @returns {Float32Array|Int32Array|Uint32Array} The default value.
+ *
+ * @exception {DeveloperError} The value doesn't fit the attribute's type.
+ */
+WasmMeshAttributeTranslator.createDefaultValue = function (descriptor, value) {
+  const ArrayType = STORAGE[descriptor.componentDatatype].ArrayType;
+  const components = [value].flat();
+
+  //>>includeStart('debug', pragmas.debug);
+  // Wasm takes the component count from the value's length, and would
+  // truncate non-integers for integer attributes.
+  const fits =
+    components.length === descriptor.componentCount &&
+    (ArrayType === Float32Array ||
+      components.every((component) => Number.isInteger(component)));
+  if (!fits) {
+    throw new DeveloperError(
+      `The default value doesn't fit the type of attribute ${descriptor.name}.`,
+    );
+  }
+  //>>includeEnd('debug');
+
+  const result = new ArrayType(components.length);
+  result.set(components);
+  return result;
 };
 
 /**
