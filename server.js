@@ -292,6 +292,18 @@ const throttle = (callback) => {
       "/Build/CesiumUnminified/Workers/*file.js",
       contexts.workers,
     );
+    const testWorkersCache = createRoute(
+      app,
+      "TestWorkers/*",
+      "/Build/Specs/TestWorkers/*file",
+      contexts.testWorkers,
+    );
+    const specsCache = createRoute(
+      app,
+      "Specs/*",
+      "/Build/Specs/*file",
+      contexts.specs,
+    );
     function clearTopLevelCaches() {
       esmCache.clear();
       iifeCache.clear();
@@ -331,6 +343,7 @@ const throttle = (callback) => {
           );
           clearTopLevelCaches();
           packageBundleCaches[workspace].clear();
+          specsCache.clear();
         });
       }
 
@@ -354,6 +367,7 @@ const throttle = (callback) => {
       sourceWatcher.on("all", async () => {
         clearTopLevelCaches();
         packageBundleCaches[workspace].clear();
+        specsCache.clear();
 
         if (sourceGlobs) {
           await createIndexJs(
@@ -364,22 +378,10 @@ const throttle = (callback) => {
       });
     }
 
-    const testWorkersCache = createRoute(
-      app,
-      "TestWorkers/*",
-      "/Build/Specs/TestWorkers/*file",
-      contexts.testWorkers,
-    );
     chokidar
       .watch(["Specs/TestWorkers/*.js"], { ignoreInitial: true })
       .on("all", testWorkersCache.clear);
 
-    const specsCache = createRoute(
-      app,
-      "Specs/*",
-      "/Build/Specs/*file",
-      contexts.specs,
-    );
     const specWatcher = chokidar.watch(
       [
         ...workspaces.map((workspace) => `packages/${workspace}/Specs`),

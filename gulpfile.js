@@ -224,6 +224,8 @@ export async function buildWatch() {
   gulp.watch(
     [
       ...sourceFiles,
+      // gltf's index.js is hand-maintained, so it isn't regenerated from Source
+      "packages/gltf/index.js",
       // Shader results are generated in the previous watch task; no need to rebuild twice
       "!Source/Shaders/**",
     ],
