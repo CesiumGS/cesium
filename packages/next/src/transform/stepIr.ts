@@ -3,23 +3,22 @@
 // the parameters may take. Parsed from `spec.source` once per spec; a spec
 // with none, or a source outside the subset, has no IR and its queries fall
 // back on the function's own Jacobian or on sampling.
-import { cirOf } from "../ir/fromTodayIr.ts";
 import { kinks } from "../ir/kinks.ts";
+import type { Program } from "../ir/types.ts";
 import { hessianProgram, jacobianProgram, parameterProgram } from "./ad.ts";
 import { evaluate } from "./evaluate.ts";
 import type { Params, CurvilinearSpec } from "./graph.ts";
-import type { IrProgram } from "./ir.ts";
 import { parseTransform } from "./parse.ts";
 
 export interface StepIr {
   /** 3 outputs. */
-  readonly value: IrProgram;
+  readonly value: Program;
   /** J, row-major (`3 * i + j`): 9 outputs. */
-  readonly jacobian: IrProgram;
+  readonly jacobian: Program;
   /** H (`9 * i + 3 * j + k`): 27 outputs, built on first use. */
-  hessian(): IrProgram;
+  hessian(): Program;
   /** The derivatives along parameters (`3 * n + i`), for the names given. */
-  parameters(names: readonly string[]): IrProgram;
+  parameters(names: readonly string[]): Program;
   /** The function has an op whose derivative may jump: H doesn't bound how J changes. */
   readonly kinked: boolean;
   /** The function has an op whose value may jump (floor, fract): no derivative bound holds. */
@@ -40,9 +39,9 @@ export function stepIr(spec: CurvilinearSpec): StepIr | undefined {
       const value = parseTransform(spec.source);
       if (value.outputs.length === 3) {
         // Cesium IR's kinks pass: the ops whose derivative or value jumps.
-        const outputs = Object.values(kinks(cirOf(value)));
-        let hessian: IrProgram | undefined;
-        const parameters = new Map<string, IrProgram>();
+        const outputs = Object.values(kinks(value));
+        let hessian: Program | undefined;
+        const parameters = new Map<string, Program>();
         made = {
           value,
           jacobian: jacobianProgram(value),

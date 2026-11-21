@@ -15,6 +15,7 @@ import {
   TransformGraph,
 } from "../../src/transform/index.ts";
 import { parseTransform } from "../../src/transform/parse.ts";
+import { paramsOf } from "../../src/transform/program.ts";
 import {
   corridorUnroll,
   corridorUnrollDescriptor,
@@ -85,8 +86,8 @@ function today(options: CorridorOptions) {
     throw new Error(compiled.reason);
   }
   return {
-    irNodes: parsed.nodes.length,
-    params: parsed.params.length,
+    irNodes: parsed.eqns.length,
+    params: paramsOf(parsed).length,
     parseMs: Math.round(parseMs * 10) / 10,
     compileRouteMs: Math.round(compileMs * 10) / 10,
     wgslChars: compiled.wgsl.length,

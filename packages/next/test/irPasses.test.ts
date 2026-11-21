@@ -1,8 +1,8 @@
 // Cesium IR's passes (CS-50) on vector programs, which today's scalar IR
 // can't express: forward-mode AD, intervals and breakpoint splitting, the
-// Taylor model, rates and hoisting, literals to uniforms, and kinks. Also the
-// adapter from today's IR, round trip. The transform modules run on these
-// passes (CS-53), so their own tests check them on today's cases.
+// Taylor model, rates and hoisting, literals to uniforms, and kinks. The
+// transform modules run on these passes (CS-53), so their own tests check
+// them on today's cases.
 import { describe, expect, it } from "vitest";
 import {
   differentiate,
@@ -12,8 +12,7 @@ import {
   parameterProgram,
 } from "../src/ir/ad.ts";
 import { Builder, shapeKey } from "../src/ir/builder.ts";
-import { evaluate, print } from "../src/ir/evaluate.ts";
-import { fromTodayIr, toTodayIr } from "../src/ir/fromTodayIr.ts";
+import { evaluate } from "../src/ir/evaluate.ts";
 import {
   evaluateInterval,
   evaluateIntervalSplit,
@@ -28,10 +27,6 @@ import {
 } from "../src/ir/rates.ts";
 import { mapIr, taylorChain } from "../src/ir/taylor.ts";
 import type { Id, Program, Value } from "../src/ir/types.ts";
-import { evaluate as todayEvaluate } from "../src/transform/evaluate.ts";
-import { Ir, type IrProgram } from "../src/transform/ir.ts";
-import { parseTransform } from "../src/transform/parse.ts";
-import * as samples from "./transformIrSamples.ts";
 
 function rng(seed: number): () => number {
   let s = seed >>> 0;
@@ -647,62 +642,5 @@ describe("kinks per output", () => {
     expect(k["kinked"]!.steps).toEqual([]);
     expect(k["stepped"]!.steps).toHaveLength(1);
     expect(k["smooth"]).toEqual({ kinks: [], steps: [] });
-  });
-});
-
-describe("the adapter from today's IR", () => {
-  const CASES = {
-    twist: { rate: 0.01 },
-    bend: { curvature: 0.002 },
-    flatten: { h: 10, falloff: 100 },
-    kitchenSink: { a: 0.7 },
-  } as const;
-
-  for (const [name, params] of Object.entries(CASES)) {
-    it(`${name}: round-trips, and evaluates as today's`, () => {
-      const today = parseTransform(samples[name as keyof typeof CASES]);
-      const cir = fromTodayIr(today);
-      const back = toTodayIr(cir);
-      expect(back.outputs).toHaveLength(today.outputs.length);
-      expect(new Set(back.params)).toEqual(new Set(today.params));
-      const random = rng(31);
-      for (let k = 0; k < 30; k++) {
-        const p = [0, 1, 2].map(() => 4 * random() - 2);
-        const want = todayEvaluate(today, p, params);
-        const got = evaluate(cir, { p, ...params });
-        want.forEach((v, i) => expect(got[`o${i}`]).toBe(v));
-        expect(todayEvaluate(back as IrProgram, p, params)).toEqual(want);
-      }
-    });
-  }
-
-  it("booleans become bool, ne becomes not-eq, and smoothstep becomes smoothStep", () => {
-    const ir = new Ir();
-    const x = ir.pos(0);
-    const y = ir.pos(1);
-    const ne = ir.op("ne", x, y);
-    const both = ir.op("and", ne, x);
-    const out = [
-      ir.op("select", both, x, y),
-      ir.op("smoothstep", ir.constant(0), ir.constant(1), x),
-      ir.op("mul", ne, y),
-    ];
-    const today = ir.program(out);
-    const cir = fromTodayIr(today);
-    const listing = print(cir);
-    expect(listing).toContain("math/smoothStep");
-    expect(listing).toMatch(/:bool = math\/not/);
-    expect(listing).toContain("type/boolToFloat");
-    for (const p of [
-      [0.5, 0.5, 0],
-      [0.5, 0.25, 0],
-      [0, 3, 0],
-      [-1, 2, 0],
-    ]) {
-      const want = todayEvaluate(today, p);
-      const got = evaluate(cir, { p });
-      want.forEach((v, i) => expect(got[`o${i}`]).toBe(v));
-      expect(todayEvaluate(toTodayIr(cir) as IrProgram, p)).toEqual(want);
-    }
   });
 });

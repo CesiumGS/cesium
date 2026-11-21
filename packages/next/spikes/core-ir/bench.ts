@@ -181,7 +181,7 @@ export async function run(deps: Deps): Promise<Record<string, unknown>> {
   }).q!;
   const todayIv = todayInterval(today, box, TWIST_PARAMS);
   R.twist = {
-    todayNodes: today.nodes.length,
+    todayNodes: today.eqns.length,
     eqns: twist.eqns.length,
     jacobianEqns: J.eqns.length,
     maxRelErrForwardVsToday: fErr,

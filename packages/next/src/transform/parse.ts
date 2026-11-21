@@ -2,9 +2,10 @@
 // application writes as a transform function (plan 2026-11-12, task 2; owner,
 // 2026-11-11: plain JS, parsed from `fn.toString()`, never evaluated, so it is
 // CSP-safe and the CPU path is the function itself). The source becomes an AST
-// and the AST is interpreted symbolically into the IR: `const`/`let` locals,
-// unrolled `for` loops with constant bounds, `if`/`else` and ternaries (both
-// sides built and merged with `select`, unless the condition is constant).
+// and the AST is interpreted symbolically into Cesium IR: `const`/`let`
+// locals, unrolled `for` loops with constant bounds, `if`/`else` and
+// ternaries (both sides built and merged with `select`, unless the condition
+// is constant).
 //
 // Accepted: an arrow function, `function` expression or method with
 // `(p, params)` or `(p, params, out)` (a 4th parameter is bound to undefined,
@@ -25,7 +26,11 @@
 // `break`/`continue`, `try`, optional chaining, spread, templates, and
 // assignment to the parameters `p`, `params` and `out` themselves.
 
-import { Ir, type IrProgram, type NodeId, type Op } from "./ir.ts";
+import { Builder } from "../ir/builder.ts";
+import type { Id, Program } from "../ir/types.ts";
+import { opOf, POSITION } from "./program.ts";
+
+type NodeId = Id;
 
 export class TransformParseError extends Error {
   constructor(
@@ -926,7 +931,9 @@ class Parser {
   }
 }
 
-// Interpretation into the IR.
+// Interpretation into Cesium IR: a number is a `float` equation, a boolean a
+// `bool` one, the position `p` a float3 input read lane by lane, and a
+// parameter a float uniform input. The program's outputs are `o0` to `o2`.
 
 type Val =
   | { t: "num"; n: NodeId }
@@ -951,23 +958,23 @@ interface State {
 const UNDEF: Val = { t: "undef" };
 const MAX_ITERATIONS = 1024;
 
-const MATH_UNARY: Readonly<Record<string, Op>> = {
-  abs: "abs",
-  sqrt: "sqrt",
-  exp: "exp",
-  log: "log",
-  sin: "sin",
-  cos: "cos",
-  tan: "tan",
-  atan: "atan",
-  asin: "asin",
-  acos: "acos",
-  sinh: "sinh",
-  cosh: "cosh",
-  tanh: "tanh",
-  floor: "floor",
-  ceil: "ceil",
-  sign: "sign",
+const MATH_UNARY: Readonly<Record<string, string>> = {
+  abs: "math/abs",
+  sqrt: "math/sqrt",
+  exp: "math/exp",
+  log: "math/log",
+  sin: "math/sin",
+  cos: "math/cos",
+  tan: "math/tan",
+  atan: "math/atan",
+  asin: "math/asin",
+  acos: "math/acos",
+  sinh: "math/sinh",
+  cosh: "math/cosh",
+  tanh: "math/tanh",
+  floor: "math/floor",
+  ceil: "math/ceil",
+  sign: "math/sign",
 };
 
 const MATH_CONSTANTS: Readonly<Record<string, number>> = {
@@ -981,21 +988,22 @@ const MATH_CONSTANTS: Readonly<Record<string, number>> = {
   SQRT1_2: Math.SQRT1_2,
 };
 
-const ARITHMETIC: Readonly<Record<string, Op>> = {
-  "+": "add",
-  "-": "sub",
-  "*": "mul",
-  "/": "div",
-  "**": "pow",
+const ARITHMETIC: Readonly<Record<string, string>> = {
+  "+": "math/add",
+  "-": "math/sub",
+  "*": "math/mul",
+  "/": "math/div",
+  "**": "math/pow",
 };
 
-const COMPARISON: Readonly<Record<string, Op>> = {
-  "<": "lt",
-  "<=": "le",
-  ">": "gt",
-  ">=": "ge",
-  "==": "eq",
-  "===": "eq",
+/** `!=` and `!==` are not-eq: KHR_interactivity has no ne. */
+const COMPARISON: Readonly<Record<string, string>> = {
+  "<": "math/lt",
+  "<=": "math/le",
+  ">": "math/gt",
+  ">=": "math/ge",
+  "==": "math/eq",
+  "===": "math/eq",
   "!=": "ne",
   "!==": "ne",
 };
@@ -1027,12 +1035,57 @@ function sameVal(a: Val, b: Val): boolean {
 }
 
 class Interpreter {
-  private readonly ir = new Ir();
+  private readonly ir = new Builder();
   private scopes: Scope[] = [new Map()];
   private ret: Val | undefined;
-  private done: NodeId = this.ir.constant(0);
+  // Made first, as today's front end made its flag (the number 0) first, so
+  // the equations keep today's order (see `op`).
+  private done: NodeId = this.constant(false);
 
-  run(fn: FunctionAst): IrProgram {
+  /**
+   * A constant. A boolean has its float (0 or 1) made beside it: today's
+   * booleans were those numbers, so the equations keep today's order.
+   */
+  private constant(value: number | boolean): NodeId {
+    const id = this.ir.const(value);
+    if (typeof value === "boolean") {
+      this.ir.op("type/boolToFloat", [id]);
+    }
+    return id;
+  }
+
+  /**
+   * `op` on `args`, with today's rewrites (`opOf`). A bool result has its
+   * float made beside it, as `constant`'s, so a commutative op that later
+   * reads it as a number sorts its operands as today's did.
+   */
+  private op(op: string, ...args: NodeId[]): NodeId {
+    const id = opOf(this.ir, op, args);
+    if (this.ir.typeOf(id) === "bool") {
+      this.ir.op("type/boolToFloat", [id]);
+    }
+    return id;
+  }
+
+  /** A number for `id`: a boolean as its float, 0 or 1. */
+  private float(id: NodeId): NodeId {
+    return this.ir.typeOf(id) === "bool"
+      ? this.ir.op("type/boolToFloat", [id])
+      : id;
+  }
+
+  /** The position's lane `axis`. */
+  private pos(axis: number): NodeId {
+    const p = this.ir.input(POSITION, "float3", "vertex");
+    return this.ir.op("math/extract3", [p], axis);
+  }
+
+  /** A parameter by name. */
+  private param(name: string): NodeId {
+    return this.ir.input(name, "float", "uniform");
+  }
+
+  run(fn: FunctionAst): Program {
     this.bindParameters(fn);
     for (const stmt of fn.body) {
       this.exec(stmt);
@@ -1040,19 +1093,21 @@ class Interpreter {
     if (this.ret === undefined) {
       fail("function without a return", fn, "return [x, y, z]");
     }
-    if (this.ir.constOf(this.done) !== 1) {
+    if (this.ir.constOf(this.done) !== true) {
       fail("path without a return", fn, "every path must return [x, y, z]");
     }
-    return this.ir.program((this.ret as Val & { t: "vec" }).c as NodeId[]);
+    const out = (this.ret as Val & { t: "vec" }).c as NodeId[];
+    return this.ir.program(
+      Object.fromEntries(out.map((id, i) => [`o${i}`, id])),
+    );
   }
 
   private bindParameters(fn: FunctionAst): void {
-    const ir = this.ir;
     const [first, second, third] = fn.params;
     if (first) {
       const p: Val = {
         t: "vec",
-        c: [ir.pos(0), ir.pos(1), ir.pos(2)],
+        c: [this.pos(0), this.pos(1), this.pos(2)],
         ro: true,
       };
       if (first.k === "id") {
@@ -1168,12 +1223,11 @@ class Interpreter {
       tRet === undefined || base.ret === undefined
         ? (tRet ?? base.ret)
         : this.merge(c, tRet, base.ret, at);
-    this.done = this.ir.op("select", c, afterTrue.done, base.done);
+    this.done = this.op("math/select", c, afterTrue.done, base.done);
     return [whenTrue, whenFalse];
   }
 
   private merge(c: NodeId, a: Val, b: Val, at: Pos): Val {
-    const ir = this.ir;
     if (sameVal(a, b)) {
       return a;
     }
@@ -1191,19 +1245,22 @@ class Interpreter {
                   "assign every element on every path",
                 );
           }
-          return ir.op("select", c, x, y);
+          return this.op("math/select", c, x, y);
         }),
         ro: a.ro && b.ro,
       };
     }
     if (a.t === "bool" && b.t === "bool") {
-      return { t: "bool", n: ir.op("select", c, a.n, b.n) };
+      return { t: "bool", n: this.op("math/select", c, a.n, b.n) };
     }
     if (
       (a.t === "num" || a.t === "bool") &&
       (b.t === "num" || b.t === "bool")
     ) {
-      return { t: "num", n: ir.op("select", c, a.n, b.n) };
+      return {
+        t: "num",
+        n: this.op("math/select", c, this.float(a.n), this.float(b.n)),
+      };
     }
     return fail(
       `branches giving ${describe(a)} and ${describe(b)}`,
@@ -1245,14 +1302,14 @@ class Interpreter {
           this.ret === undefined
             ? val
             : this.merge(this.done, this.ret, val, stmt);
-        this.done = this.ir.constant(1);
+        this.done = this.constant(true);
         return;
       }
       case "if": {
         const c = this.condition(this.eval(stmt.test), stmt.test);
         const known = this.ir.constOf(c);
         if (known !== undefined) {
-          const taken = known !== 0 ? stmt.then : stmt.else;
+          const taken = known === true ? stmt.then : stmt.else;
           if (taken) {
             this.exec(taken);
           }
@@ -1295,7 +1352,7 @@ class Interpreter {
                 "loops are unrolled: bounds must be constants",
               );
             }
-            if (test === 0) {
+            if (test === false) {
               break;
             }
             if (count >= MAX_ITERATIONS) {
@@ -1371,7 +1428,7 @@ class Interpreter {
           );
         }
         for (const { key, name } of pattern.props) {
-          this.declare(name, kind, { t: "num", n: this.ir.param(key) });
+          this.declare(name, kind, { t: "num", n: this.param(key) });
         }
     }
   }
@@ -1380,20 +1437,20 @@ class Interpreter {
 
   private num(val: Val, at: Pos): NodeId {
     if (val.t === "num" || val.t === "bool") {
-      return val.n;
+      return this.float(val.n);
     }
     return fail(`${describe(val)} used as a number`, at, "expected a number");
   }
 
-  /** A 0/1 node for a value used as a condition. */
+  /** A bool equation for a value used as a condition. */
   private condition(val: Val, at: Pos): NodeId {
     switch (val.t) {
       case "bool":
         return val.n;
       case "num":
-        return this.ir.op("ne", val.n, this.ir.constant(0));
+        return this.op("math/not", this.op("math/eq", val.n, this.constant(0)));
       case "undef":
-        return this.ir.constant(0);
+        return this.constant(false);
       default:
         return fail(
           `${describe(val)} used as a condition`,
@@ -1404,12 +1461,11 @@ class Interpreter {
   }
 
   private eval(e: Expr): Val {
-    const ir = this.ir;
     switch (e.k) {
       case "num":
-        return { t: "num", n: ir.constant(e.v) };
+        return { t: "num", n: this.constant(e.v) };
       case "bool":
-        return { t: "bool", n: ir.constant(e.v ? 1 : 0) };
+        return { t: "bool", n: this.constant(e.v) };
       case "str":
         return fail(
           "string literal",
@@ -1459,9 +1515,14 @@ class Interpreter {
         const r = this.eval(e.r);
         const compare = COMPARISON[op];
         if (compare) {
+          const a = this.num(l, e.l);
+          const b = this.num(r, e.r);
           return {
             t: "bool",
-            n: ir.op(compare, this.num(l, e.l), this.num(r, e.r)),
+            n:
+              compare === "ne"
+                ? this.op("math/not", this.op("math/eq", a, b))
+                : this.op(compare, a, b),
           };
         }
         return this.arithmetic(op, l, r, e);
@@ -1478,8 +1539,8 @@ class Interpreter {
             "the result would be a value, not a boolean; compare explicitly (x !== 0)",
           );
         }
-        const known = ir.constOf(l.n);
-        if (known !== undefined && (known !== 0) === (e.op === "||")) {
+        const known = this.ir.constOf(l.n);
+        if (known !== undefined && (known === true) === (e.op === "||")) {
           return l;
         }
         const r = this.eval(e.r);
@@ -1490,13 +1551,16 @@ class Interpreter {
             "the result would be a value, not a boolean; compare explicitly (x !== 0)",
           );
         }
-        return { t: "bool", n: ir.op(e.op === "&&" ? "and" : "or", l.n, r.n) };
+        return {
+          t: "bool",
+          n: this.op(e.op === "&&" ? "math/and" : "math/or", l.n, r.n),
+        };
       }
       case "cond": {
         const c = this.condition(this.eval(e.test), e.test);
-        const known = ir.constOf(c);
+        const known = this.ir.constOf(c);
         if (known !== undefined) {
-          return this.eval(known !== 0 ? e.a : e.b);
+          return this.eval(known === true ? e.a : e.b);
         }
         const [a, b] = this.fork(
           c,
@@ -1543,7 +1607,7 @@ class Interpreter {
       return e.prop.v;
     }
     const index = this.ir.constOf(this.num(this.eval(e.prop), e.prop));
-    if (index === undefined || !Number.isInteger(index)) {
+    if (typeof index !== "number" || !Number.isInteger(index)) {
       fail(
         "non-constant index",
         e.prop,
@@ -1564,7 +1628,7 @@ class Interpreter {
           "only Math.PI, E, LN2, LN10, LOG2E, LOG10E, SQRT2 and SQRT1_2 are constants",
         );
       }
-      return { t: "num", n: this.ir.constant(value) };
+      return { t: "num", n: this.constant(value) };
     }
     const obj = this.eval(e.obj);
     const key = this.key(e);
@@ -1572,12 +1636,12 @@ class Interpreter {
       if (typeof key !== "string") {
         fail("indexed params", e, "read parameters by name: params.name");
       }
-      return { t: "num", n: this.ir.param(key) };
+      return { t: "num", n: this.param(key) };
     }
     if (obj.t === "vec") {
       const index = typeof key === "number" ? key : "xyz".indexOf(key);
       if (key === "length") {
-        return { t: "num", n: this.ir.constant(3) };
+        return { t: "num", n: this.constant(3) };
       }
       if (typeof key === "string" && (key.length !== 1 || index < 0)) {
         fail(
@@ -1631,7 +1695,6 @@ class Interpreter {
   }
 
   private mathCall(name: string, args: NodeId[], at: Pos): NodeId {
-    const ir = this.ir;
     const need = (count: number) => {
       if (args.length !== count) {
         fail(
@@ -1644,7 +1707,7 @@ class Interpreter {
     const unary = MATH_UNARY[name];
     if (unary) {
       need(1);
-      return ir.op(unary, args[0]!);
+      return this.op(unary, args[0]!);
     }
     switch (name) {
       case "min":
@@ -1652,38 +1715,38 @@ class Interpreter {
         if (args.length === 0) {
           need(2);
         }
-        return args.reduce((acc, arg) => ir.op(name, acc, arg));
+        return args.reduce((acc, arg) => this.op(`math/${name}`, acc, arg));
       case "pow":
         need(2);
-        return ir.op("pow", args[0]!, args[1]!);
+        return this.op("math/pow", args[0]!, args[1]!);
       case "atan2":
         need(2);
-        return ir.op("atan2", args[0]!, args[1]!);
+        return this.op("math/atan2", args[0]!, args[1]!);
       case "hypot": {
         if (args.length === 0) {
           need(1);
         }
-        const squares = args.map((a) => ir.op("mul", a, a));
-        return ir.op(
-          "sqrt",
-          squares.reduce((acc, s) => ir.op("add", acc, s)),
+        const squares = args.map((a) => this.op("math/mul", a, a));
+        return this.op(
+          "math/sqrt",
+          squares.reduce((acc, s) => this.op("math/add", acc, s)),
         );
       }
       case "log2":
       case "log10":
         need(1);
-        return ir.op(
-          "div",
-          ir.op("log", args[0]!),
-          ir.constant(name === "log2" ? Math.LN2 : Math.LN10),
+        return this.op(
+          "math/div",
+          this.op("math/log", args[0]!),
+          this.constant(name === "log2" ? Math.LN2 : Math.LN10),
         );
       case "trunc":
         need(1);
-        return ir.op(
-          "select",
-          ir.op("lt", args[0]!, ir.constant(0)),
-          ir.op("ceil", args[0]!),
-          ir.op("floor", args[0]!),
+        return this.op(
+          "math/select",
+          this.op("math/lt", args[0]!, this.constant(0)),
+          this.op("math/ceil", args[0]!),
+          this.op("math/floor", args[0]!),
         );
       default:
         return fail(
@@ -1695,15 +1758,17 @@ class Interpreter {
   }
 
   private unary(e: Expr & { k: "unary" }): Val {
-    const ir = this.ir;
     const arg = this.eval(e.arg);
     switch (e.op) {
       case "-":
-        return { t: "num", n: ir.op("neg", this.num(arg, e.arg)) };
+        return { t: "num", n: this.op("math/neg", this.num(arg, e.arg)) };
       case "+":
         return { t: "num", n: this.num(arg, e.arg) };
       case "!":
-        return { t: "bool", n: ir.op("not", this.condition(arg, e.arg)) };
+        return {
+          t: "bool",
+          n: this.op("math/not", this.condition(arg, e.arg)),
+        };
       default:
         return UNDEF;
     }
@@ -1714,7 +1779,7 @@ class Interpreter {
     if (!code) {
       fail(`operator '${op}'`, at, "not supported");
     }
-    return { t: "num", n: this.ir.op(code, this.num(l, at), this.num(r, at)) };
+    return { t: "num", n: this.op(code, this.num(l, at), this.num(r, at)) };
   }
 
   private assign(e: Expr & { k: "assign" }): Val {
@@ -1813,11 +1878,12 @@ class Interpreter {
 export type TransformSource = string | ((...args: never[]) => unknown);
 
 /**
- * The IR program (3 outputs) of a restricted-JS transform function. The
- * function is read from its source and never evaluated. Errors are
- * `TransformParseError`s naming the refused construct and its `line:column`.
+ * The Cesium IR program (3 outputs, `o0` to `o2`) of a restricted-JS
+ * transform function. The function is read from its source and never
+ * evaluated. Errors are `TransformParseError`s naming the refused construct
+ * and its `line:column`.
  */
-export function parseTransform(source: TransformSource): IrProgram {
+export function parseTransform(source: TransformSource): Program {
   const text =
     typeof source === "string"
       ? source

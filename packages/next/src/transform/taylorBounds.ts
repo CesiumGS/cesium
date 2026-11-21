@@ -28,15 +28,14 @@
 // for the chord error of a straight edge of the box under the route
 // (`chordErrorBound`): M₂L²/8 for a function whose J is continuous,
 // W·L/4 (W, the oscillation of J) for one that is only Lipschitz.
-import { cirOf } from "../ir/fromTodayIr.ts";
 import {
   mapIr,
   taylorChain,
   type MapIr,
   type TaylorLink,
 } from "../ir/taylor.ts";
+import type { Program } from "../ir/types.ts";
 import type { TransformNode } from "./graph.ts";
-import type { IrProgram } from "./ir.ts";
 import type { ParamRange } from "./interval.ts";
 import type { Route } from "./route.ts";
 import { stepIr } from "./stepIr.ts";
@@ -92,12 +91,12 @@ export interface TaylorRefusal {
 }
 
 /** Each step's map on Cesium IR (`mapIr`), made once per program. */
-const maps = new WeakMap<IrProgram, MapIr>();
+const maps = new WeakMap<Program, MapIr>();
 
-function mapOf(value: IrProgram): MapIr {
+function mapOf(value: Program): MapIr {
   let found = maps.get(value);
   if (!found) {
-    found = mapIr(cirOf(value));
+    found = mapIr(value);
     maps.set(value, found);
   }
   return found;

@@ -18,6 +18,7 @@ import {
 } from "../src/transform/interval.ts";
 import { Ir } from "../src/transform/ir.ts";
 import { parseTransform, TransformParseError } from "../src/transform/parse.ts";
+import { paramsOf } from "../src/transform/program.ts";
 import { toWgsl } from "../src/transform/wgsl.ts";
 import * as samples from "./transformIrSamples.ts";
 
@@ -178,7 +179,7 @@ describe("parse and evaluate", () => {
       const fn = samples[name];
       const program = parseTransform(fn);
       expect(program.outputs).toHaveLength(3);
-      expect(program.params.length).toBeGreaterThan(0);
+      expect(paramsOf(program).length).toBeGreaterThan(0);
       const random = rng(7);
       for (let k = 0; k < 200; k++) {
         const p = randomPoint(domain, random);
@@ -201,7 +202,7 @@ describe("parse and evaluate", () => {
     for (const source of sources) {
       const program = parseTransform(source);
       expect(evaluate(program, [1, 2, 3], params)).toEqual([1, 2, 9]);
-      expect(program.params).toEqual(expect.arrayContaining(["k", "h0"]));
+      expect(paramsOf(program)).toEqual(expect.arrayContaining(["k", "h0"]));
     }
   });
 
@@ -268,10 +269,10 @@ describe("parse and evaluate", () => {
     const program = parseTransform(
       "(p, q) => { const s = Math.sin(p[0] * q.k); return [s * s + 2 * 3, s * s, s] }",
     );
-    const ops = program.nodes.map((n) => n.op);
-    expect(ops.filter((op) => op === "sin")).toHaveLength(1);
-    expect(ops.filter((op) => op === "mul")).toHaveLength(2);
-    expect(program.nodes.some((n) => n.op === "const" && n.value === 6)).toBe(
+    const ops = program.eqns.map((e) => e.op);
+    expect(ops.filter((op) => op === "math/sin")).toHaveLength(1);
+    expect(ops.filter((op) => op === "math/mul")).toHaveLength(2);
+    expect(program.eqns.some((e) => e.op === "const" && e.value === 6)).toBe(
       true,
     );
   });
@@ -542,7 +543,7 @@ describe("autodiff", () => {
 
     it(`${name}: derivatives along the parameters match central differences`, () => {
       const random = rng(5);
-      const names = [...program.params];
+      const names = paramsOf(program);
       for (let k = 0; k < 10; k++) {
         const p = randomPoint(domain, random);
         const D = parameterDerivatives(program, names, p, params);
@@ -775,7 +776,7 @@ describe("wgsl", () => {
       expect(text).toContain(
         `struct ${name[0]!.toUpperCase()}${name.slice(1)}Params {`,
       );
-      for (const param of program.params) {
+      for (const param of paramsOf(program)) {
         expect(text).toContain(`  ${param}: f32,`);
         expect(text).toContain(`params.${param}`);
       }

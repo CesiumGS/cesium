@@ -69,13 +69,12 @@ import {
   velocityModelDescriptor,
   type TransformDescriptor,
 } from "../src/transforms/index.ts";
-import { cirOf } from "../src/ir/fromTodayIr.ts";
 import { parseTransform } from "../src/transform/parse.ts";
 
 // --- What a fixture records, and how --------------------------------------
 
 /** The parsed program, as Cesium IR. */
-const programOf = (source: string): Program => cirOf(parseTransform(source));
+const programOf = (source: string): Program => parseTransform(source);
 
 /** The float parameters the program reads, in input order. */
 const paramsOf = (p: Program): string[] => [

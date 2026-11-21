@@ -41,7 +41,6 @@
 // derivatives in float64) would cost less per vertex for a curvilinear step
 // with no kinks and stays an option for the normals, whose exact Jacobian
 // is the expensive part of a nested route.
-import { cirOf } from "../ir/fromTodayIr.ts";
 import { scalarize } from "../ir/scalarize.ts";
 import type { Program } from "../ir/types.ts";
 import { hessianProgram, jacobianProgram } from "./ad.ts";
@@ -318,7 +317,7 @@ const parsed = new Map<string, Program>();
 function programOf(source: string): Program {
   let program = parsed.get(source);
   if (!program) {
-    program = scalarize(lowerComposites(cirOf(parseTransform(source))));
+    program = scalarize(lowerComposites(parseTransform(source)));
     parsed.set(source, program);
   }
   return program;
