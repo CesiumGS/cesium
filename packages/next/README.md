@@ -775,9 +775,17 @@ npm run build                               # at the repo root: 1.x build used b
 npm run dev --workspace @cesium/next        # dev server at http://127.0.0.1:5190
 npm run test --workspace @cesium/next       # unit + 1.x parity (L0) tests
 npm run typecheck --workspace @cesium/next
-npm run bench --workspace @cesium/next      # needs the dev server; writes bench/results/*.json
+npm run bench --workspace @cesium/next      # the Lab's harnesses (dyno lab); writes bench/results/*.json
 npm run build:lib --workspace @cesium/next  # the library for pages without a build step
 ```
+
+**dyno**, Dyno's command line (`bench/dyno.mjs`; `npm run dyno:cli --
+<command>` in this package), runs the benchmark suite (`dyno suite`), the
+Lab's harnesses (`dyno lab`), Dyno's and the handbook's servers (`dyno
+serve`), measurements a program starts and watches (`dyno measure`), and
+reports the machine (`dyno status`) and setup's data (`dyno data status`).
+`dyno --help` lists the commands; every one takes `--json`. The old
+`bench/suite/cli.mjs` and `bench/run.mjs` still work and say the new command.
 
 **The library build** (`build:lib`, `vite.lib.config.ts`) writes
 `dist-lib/`: `cesium-next.mjs` (the core's ES module, the shaders

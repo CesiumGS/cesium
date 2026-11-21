@@ -29,6 +29,7 @@ It sets `state: in-progress` and `claimed_by`, and commits `claim: CS-<n>`. Clai
 - If the work split, list the remainder in your report (kind, project, title, needs) for the main session to create, rather than leaving the item half done.
 - If an item turns out not to be worth doing, set `state: dropped` and give a `reason:`. The file stays.
 - Run `npx hitld work check` before committing.
+- Measured work cites its dyno run ids (`dyno result list`) under `bench_runs`. Start the full suite or a build only when `dyno status` says the machine isn't measuring (the `dyno` skill).
 
 ## Creating items
 

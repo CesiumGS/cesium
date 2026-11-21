@@ -21,7 +21,8 @@ Rules for anyone working in this package, people and coding agents alike. The RE
 - While iterating, run focused tests: `npx vitest run <files>`.
 - Before committing, run the full `npm test` once.
 - Run `npm run test:data` (it needs the setup store) when you change code under `src/frames`, `src/time`, `src/ephemeris` or `src/engineering`.
-- Run the browser parity suites (`node bench/run.mjs <suite>`) when you change rendering. Compare against the previous commit as well as a base commit. Metal's compiler can reorder a float sum when a kernel's code changes, so explain any pixel difference before accepting it.
+- Before the full suite, a build or a measurement, run `dyno status`: while it says `busy` or `waiting-for-quiet`, a measurement runs or waits, so start no heavy work. `dyno` is Dyno's command line (`node bench/dyno.mjs`, `npm run dyno:cli --`); the `dyno` skill says which suite a change needs and how to read a verdict.
+- Run the browser parity suites (`dyno lab <suite>`) when you change rendering. Compare against the previous commit as well as a base commit. Metal's compiler can reorder a float sum when a kernel's code changes, so explain any pixel difference before accepting it.
 - Also run `npx tsc --noEmit -p .` and `-p tsconfig.lib.json`, eslint and prettier on what you changed.
 - If you change an entry point's exports, run `npm run surface` and commit `api/surface.txt` with your change.
 
@@ -57,7 +58,7 @@ Example pages are documentation and demos at once. They have to work as a visual
 - Don't gate building on a mockup. Make the design call and build it in the real page, because the design is judged by clicking around in context. Describe structure in words, or a simple wireframe, if it helps beforehand.
 - Do a design pass while implementing: write the page's `DESIGN.md` (its story, audience and layout), then run a UX review on the real page and fix what it finds.
 - Check every page in both themes, at desktop and at 380 px wide, with the keyboard only, with reduced motion, and with a clean console.
-- Ports 5190 (Dyno, `npm run dyno:serve`) and 5199 (the handbook, `npm run handbook:serve`) are the owner's, for interactive use. To look at them, open a browser tab of your own. For your own work, start your own server in your worktree, on another port: the `dyno-own` and `handbook-own` entries in the local `.claude/launch.json` do that.
+- Ports 5190 (Dyno, `npm run dyno:serve`) and 5199 (the handbook, `npm run handbook:serve`) are the owner's, for interactive use. To look at them, open a browser tab of your own. For your own work, start your own server in your worktree, on another port: the `dyno-own` and `handbook-own` entries in the local `.claude/launch.json` do that, and so does `dyno serve start dyno` (or `handbook`), detached, on a free port. Never pass `--owner` unless the owner asks.
 
 ## The handbook
 

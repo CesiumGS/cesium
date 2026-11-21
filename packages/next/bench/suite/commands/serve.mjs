@@ -549,8 +549,14 @@ export function serverLogs({
   here = checkout(root),
 }) {
   const record = pick(readRecords(directory), { name, owner, port, here });
+  // A server that failed to start leaves its log without a record.
   const log =
-    record?.log ?? (owner ? join(directory, `${name}.log`) : undefined);
+    record?.log ??
+    (owner
+      ? join(directory, `${name}.log`)
+      : port !== undefined
+        ? join(directory, `${name}-${port}.log`)
+        : undefined);
   if (!log || !existsSync(log)) {
     throw new DynoError(
       "problem",

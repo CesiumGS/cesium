@@ -104,7 +104,10 @@ const SUITE_OPTIONS = {
     ...RUN_IDENTITY,
     route: o("the page", "/viewer"),
     reps: o("repetitions", "n"),
-    port: o("the dev server's port", "port"),
+    port: o(
+      "the dev server's port (4101 by default, not a free one: always pass yours)",
+      "port",
+    ),
     board: o("with the board, without, or both", "with,without"),
     profile: o("record a CPU profile"),
     quiet: o("the CPU utility a quiet machine stays under", "percent"),
@@ -175,12 +178,22 @@ const SUITE_SUMMARIES = {
   ],
 };
 
+/** More for a suite command's --help. */
+const SUITE_DETAILS = {
+  coldstart: [
+    "Its dev server listens on --port, 4101 by default. dyno doesn't pick a free",
+    "port for it, as `serve` does: 4101 can be another executor's leased port, so",
+    "a scripted run always passes --port <your leased port>.",
+  ],
+};
+
 /** The lines a suite command prints are its own; its result is the JSON. */
 const suiteCommand = (name) => ({
   summary: SUITE_SUMMARIES[name][0],
   usage: SUITE_SUMMARIES[name][1],
   options: SUITE_OPTIONS[name],
   passthrough: true,
+  ...(SUITE_DETAILS[name] ? { details: SUITE_DETAILS[name] } : {}),
   async run({ argv }) {
     const { main, SuiteRefusal, SuiteUsage } = await import("./suite.mjs");
     try {
@@ -479,6 +492,10 @@ export const TABLE = {
         summary: "start one detached (again: says where the running one is)",
         usage:
           "dyno serve start <dyno|handbook> [--port n] [--owner] [--wait s]",
+        details: [
+          "In a fresh worktree the handbook needs one full `npm run handbook:data` first:",
+          "its dev server keeps the bundle figures from an earlier full run.",
+        ],
         args: [
           { name: "server", required: true, choices: ["dyno", "handbook"] },
         ],

@@ -32,6 +32,7 @@ import {
 } from "../bench/suite/commands/measure.mjs";
 import {
   answers,
+  serverLogs,
   serverStatus,
   startServer,
   stopServer,
@@ -695,6 +696,10 @@ describe("serve", () => {
     expect((await serverStatus({ directory: servers, here })).servers).toEqual(
       [],
     );
+    // Its log stays, found by its port.
+    expect(
+      serverLogs({ name: "dyno", port, directory: servers, here }).log,
+    ).toBe(join(servers, `dyno-${port}.log`));
   });
 });
 

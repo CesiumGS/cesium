@@ -488,10 +488,14 @@ export const SUITE_COMMANDS = Object.keys(COMMANDS);
 /**
  * Runs one suite command: `argv` is the command and its arguments, as after
  * `dyno suite`. `as` is how it was typed, recorded in the run's results
- * (`["npx", "dyno", "suite"]`). Returns the command's result; throws
- * SuiteRefusal or SuiteUsage when it can't go ahead.
+ * (`node packages/next/bench/dyno.mjs suite` until `npx dyno` is wired).
+ * Returns the command's result; throws SuiteRefusal or SuiteUsage when it
+ * can't go ahead.
  */
-export async function main(argv, { as = ["npx", "dyno", "suite"] } = {}) {
+export async function main(
+  argv,
+  { as = ["node", "packages/next/bench/dyno.mjs", "suite"] } = {},
+) {
   [command = "list", ...rest] = argv;
   if (!Object.hasOwn(COMMANDS, command)) {
     throw new SuiteUsage(

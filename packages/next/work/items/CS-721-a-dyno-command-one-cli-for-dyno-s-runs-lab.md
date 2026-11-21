@@ -2,7 +2,7 @@
 id: CS-721
 title: "A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 needs: [CS-390, CS-724]

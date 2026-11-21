@@ -41,3 +41,5 @@ Otherwise a question is not yours when any one of these holds, and you ask: (1) 
 ## Project rules
 
 Cesium 2.0 lives in `packages/next`. Its rules (repository practice, tests, GPU safety, wording, work items) are in `packages/next/AGENTS.md`; follow them as well as the contract above.
+
+The project's benchmark tool (rule 4) is `dyno`, Dyno's command line: `node packages/next/bench/dyno.mjs <command>`, `dyno --help` for its commands. Before heavy work (a full test suite, a build, a measurement), check `dyno status`: while it says `busy` or `waiting-for-quiet`, start none. The `dyno` skill in `packages/next` covers which suite a change needs and what never goes in a public pull request.
