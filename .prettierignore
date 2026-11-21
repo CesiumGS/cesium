@@ -28,6 +28,7 @@ packages/*/Build/**
 packages/*/index.js
 !packages/gltf/index.js
 packages/*/index.d.ts
+!packages/gltf/index.d.ts
 packages/*/Specs/SpecList.js
 
 packages/engine/Source/Shaders/**/*.js

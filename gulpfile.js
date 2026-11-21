@@ -21,6 +21,7 @@ import yargs from "yargs";
 import { build as esbuild } from "esbuild";
 import { createInstrumenter } from "istanbul-lib-instrument";
 import { Extractor, ExtractorConfig } from "@microsoft/api-extractor";
+import { format as formatWithPrettier, resolveConfig } from "prettier";
 
 import { buildCore } from "./packages/core/scripts/build.js";
 import { buildGltf } from "./packages/gltf/scripts/build.js";
@@ -1243,7 +1244,7 @@ function processEngineSource(source) {
   return newSource;
 }
 
-function generateCesiumTypeScriptDefinitions() {
+async function generateCesiumTypeScriptDefinitions() {
   // Engine's Viewer type stand-in collides with widgets' Viewer under export *,
   // which drops names exported by two modules, so name widgets' Viewer explicitly.
   mkdirSync("Build/Types", { recursive: true });
@@ -1284,6 +1285,13 @@ function generateCesiumTypeScriptDefinitions() {
     }
     source = source.replace(new RegExp(`\\b${name}_2\\b`, "g"), name);
   }
+
+  // API Extractor strips the leading spaces from every line it copies.
+  const prettierOptions = await resolveConfig("Source/Cesium.d.ts");
+  source = await formatWithPrettier(source, {
+    ...prettierOptions,
+    filepath: "Source/Cesium.d.ts",
+  });
   writeFileSync("Source/Cesium.d.ts", source);
 
   // Use tsc to compile it and make sure it is valid

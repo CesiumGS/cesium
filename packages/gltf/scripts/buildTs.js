@@ -4,6 +4,7 @@ import { execSync } from "node:child_process";
 import { globSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { Extractor, ExtractorConfig } from "@microsoft/api-extractor";
+import { format, resolveConfig } from "prettier";
 
 const packageDirectory = join(import.meta.dirname, "..");
 const rootDirectory = join(packageDirectory, "../..");
@@ -36,6 +37,17 @@ if (!extractorResult.succeeded) {
     `API Extractor failed with ${extractorResult.errorCount} errors and ${extractorResult.warningCount} warnings`,
   );
 }
+
+// API Extractor strips the leading spaces from every line it copies.
+const rollupPath = join(packageDirectory, "index.d.ts");
+const prettierOptions = await resolveConfig(rollupPath);
+writeFileSync(
+  rollupPath,
+  await format(readFileSync(rollupPath, "utf8"), {
+    ...prettierOptions,
+    filepath: rollupPath,
+  }),
+);
 
 execSync("npx tsc -p packages/gltf/tsconfig.types.json", {
   cwd: rootDirectory,
