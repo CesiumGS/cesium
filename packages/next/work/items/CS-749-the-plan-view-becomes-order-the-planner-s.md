@@ -2,10 +2,11 @@
 id: CS-749
 title: "The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]
+claimed_by: orch-11-CS-749
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/views/workOrder.tsx, packages/next/bench/suite/views/workOrder.css, packages/next/test/dynoWorkPlan*.test.ts]
 ---
 
