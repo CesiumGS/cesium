@@ -2,33 +2,16 @@
 // (`getCompilationInfo` must report no errors), run on the GPU over its
 // edge-case rows and read back, and compared with the float64 evaluator to
 // the case's stated tolerance (src/ir/wgslCases.ts).
+import { emitWgslKernel, packUniforms } from "../src/ir/index.ts";
 import {
-  evaluate,
-  emitWgslKernel,
-  packUniforms,
-  width,
-  type Value,
-} from "../src/ir/index.ts";
+  compareReadback,
+  newReadbackRow,
+  packRows,
+  type ReadbackRow,
+} from "../src/ir/readback.ts";
 import { wgslCases } from "../src/ir/wgslCases.ts";
 
-const lanesOf = (v: Value): number[] =>
-  typeof v === "number" ? [v] : typeof v === "boolean" ? [v ? 1 : 0] : [...v];
-
-export interface IrWgslRow {
-  name: string;
-  rows: number;
-  compared: number;
-  skipped: number;
-  tolerance: { abs: number; rel: number };
-  /** Largest |gpu - float64| and the largest |gpu - float64| / |float64|. */
-  maxAbs: number;
-  maxRel: number;
-  /** Largest error as a fraction of what the tolerance allows (pass when <= 1). */
-  worstRatio: number;
-  worst: { row: number; lane: number; gpu: number; cpu: number } | null;
-  compileMessages: string[];
-  pass: boolean;
-}
+export type IrWgslRow = ReadbackRow;
 
 async function runIrWgsl(): Promise<IrWgslRow[]> {
   const adapter = await navigator.gpu?.requestAdapter({
@@ -53,33 +36,14 @@ async function runIrWgsl(): Promise<IrWgslRow[]> {
     const compileMessages = info.messages
       .filter((m) => m.type === "error")
       .map((m) => `${m.lineNum}:${m.linePos} ${m.message}`);
-    const row: IrWgslRow = {
-      name: c.name,
-      rows: c.rows.length,
-      compared: 0,
-      skipped: 0,
-      tolerance: c.tolerance,
-      maxAbs: 0,
-      maxRel: 0,
-      worstRatio: 0,
-      worst: null,
-      compileMessages,
-      pass: false,
-    };
+    const row: IrWgslRow = newReadbackRow(c);
+    row.compileMessages = compileMessages;
     out.push(row);
     if (compileMessages.length > 0) {
       continue;
     }
     // Inputs, row by row, in parameter order.
-    const input = new Float32Array(Math.max(k.inStride * c.rows.length, 1));
-    c.rows.forEach((r, i) => {
-      let off = i * k.inStride;
-      for (const q of k.params) {
-        const lanes = lanesOf(r[q.name]!);
-        input.set(lanes, off);
-        off += width(q.type);
-      }
-    });
+    const input = packRows(c, k.params, k.inStride);
     const bytes = Math.max(k.outStride * c.rows.length, 1) * 4;
     const mk = (usage: number, size: number) =>
       device.createBuffer({ size, usage });
@@ -130,41 +94,7 @@ async function runIrWgsl(): Promise<IrWgslRow[]> {
       b?.destroy();
     }
 
-    c.rows.forEach((r, i) => {
-      const expected = evaluate(c.program, { ...r, ...c.uniforms });
-      let off = i * k.outStride;
-      for (const o of k.outputs) {
-        const base = off;
-        lanesOf(expected[o.name]!).forEach((cpu, lane) => {
-          const g = gpu[base + lane]!;
-          if (!Number.isFinite(cpu) || Math.abs(cpu) > 3e38) {
-            row.skipped++;
-            return;
-          }
-          row.compared++;
-          const err = Math.abs(g - cpu);
-          const allowed = c.tolerance.abs + c.tolerance.rel * Math.abs(cpu);
-          // NaN on the GPU against a finite answer is an error.
-          const ratio = Number.isNaN(err)
-            ? Infinity
-            : allowed === 0
-              ? err === 0
-                ? 0
-                : Infinity
-              : err / allowed;
-          row.maxAbs = Math.max(row.maxAbs, err);
-          if (cpu !== 0) {
-            row.maxRel = Math.max(row.maxRel, err / Math.abs(cpu));
-          }
-          if (ratio > row.worstRatio || row.worst === null) {
-            row.worstRatio = Math.max(ratio, row.worstRatio);
-            row.worst = { row: i, lane, gpu: g, cpu };
-          }
-        });
-        off += width(o.type);
-      }
-    });
-    row.pass = row.worstRatio <= 1;
+    compareReadback(row, c, k.outputs, k.outStride, gpu);
   }
   if (lost) {
     throw new Error(`The WebGPU device was lost: ${lost}`);

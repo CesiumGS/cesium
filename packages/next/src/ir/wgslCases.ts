@@ -536,6 +536,64 @@ export function wgslCases(): WgslCase[] {
     });
   }
 
+  // The ops whose emitted form isn't one built-in call, on float3: a select
+  // or a comparison inside them has to work on a vector as well as a scalar
+  // (GLSL has no `&&` on a bvec, and its ternary takes a scalar condition).
+  // Each takes its rows from the scalar case of the same name, three
+  // consecutive rows to a vector, so the tolerance and the claim are the same.
+  for (const name of [
+    "math/pow",
+    "math/sinh",
+    "math/tanh",
+    "math/cbrt",
+    "math/round",
+    "math/saturate",
+    "math/rem",
+    "math/smoothStep",
+    "math/atan2",
+    "math/log10",
+  ]) {
+    const scalar = cases.find((c) => c.name === name)!;
+    const arity = Object.keys(scalar.rows[0]!).length;
+    const names = ["a", "b", "c"].slice(0, arity);
+    const n = Math.floor(scalar.rows.length / 3) * 3;
+    add({
+      name: `${name}:float3`,
+      program: opProgram(name, arity, "float3"),
+      rows: Array.from({ length: n / 3 }, (_, i) =>
+        Object.fromEntries(
+          names.map((x) => [
+            x,
+            [0, 1, 2].map((j) => scalar.rows[3 * i + j]![x] as number),
+          ]),
+        ),
+      ),
+      uniforms: {},
+      tolerance: scalar.tolerance,
+      note: `componentwise: the scalar case's rows, three to a vector. ${scalar.note}`,
+    });
+  }
+  {
+    const b = new Builder();
+    const c = b.input("c", "float", "vertex");
+    const x = b.input("a", "float3", "vertex");
+    const y = b.input("b", "float3", "vertex");
+    add({
+      name: "math/select:float3",
+      program: b.program({
+        r: b.op("math/select", [b.op("math/gt", [c, b.const(0)]), x, y]),
+      }),
+      rows: TRIPLES.map((t) => ({
+        c: t.c!,
+        a: [t.a, t.b, t.c] as number[],
+        b: [t.c, t.a, t.b] as number[],
+      })),
+      uniforms: {},
+      tolerance: EXACT,
+      note: "one scalar condition chooses a whole vector",
+    });
+  }
+
   // The composite: a uniform, a literal slot, an int and a bool, over
   // feature-rate floats.
   {

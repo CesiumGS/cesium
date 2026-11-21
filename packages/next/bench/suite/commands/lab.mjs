@@ -102,6 +102,9 @@ export function labSuites(env = process.env) {
     // Cesium IR's WGSL emitter: Chrome compiles every test module, and the GPU's
     // answers are read back against the float64 evaluator (CS-51).
     irWgsl: ["/bench/irWgsl.html?bench", "runIrWgsl"],
+    // The same programs in WebGL 2: Chrome compiles and links each GLSL ES 3.00
+    // kernel, and transform feedback reads the answers back (CS-52).
+    irGlsl: ["/bench/irGlsl.html?bench", "runIrGlsl"],
     // Driven through CDP by `allocSuite` below.
     alloc: ["/bench/alloc.html", "allocSetup"],
     // A Viewer under React's StrictMode: one device, each frames-store file

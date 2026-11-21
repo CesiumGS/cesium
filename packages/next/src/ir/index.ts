@@ -60,3 +60,10 @@ export {
   type EmittedWgsl,
   type UniformSlot,
 } from "./wgsl.ts";
+export {
+  GLSL_KERNEL_FRAGMENT,
+  emitGlsl,
+  emitGlslKernel,
+  type EmittedGlsl,
+  type GlslEmitOptions,
+} from "./glsl.ts";

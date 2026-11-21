@@ -2,7 +2,7 @@
 id: CS-52
 title: The GLSL ES 3.00 emitter
 kind: work
-state: in-progress
+state: done
 created: 2026-11-13
 project: CS-10
 needs: [CS-51]
