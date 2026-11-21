@@ -12,6 +12,7 @@ import { textureDestroyed } from "../../scene/world/materials.ts";
 import { createSplats } from "../../scene/world/points.ts";
 import { flushUploads } from "../../scene/world/uploads.ts";
 import { DrawArguments } from "../drawArguments.ts";
+import { WebGpuContentTextures, WebGpuImagery } from "./contentResources.ts";
 import { DRAW_ITEM_SIZE, MATERIAL_SIZE } from "../layout.ts";
 import {
   clippedBundle,
@@ -48,6 +49,8 @@ export class WebGpuWorldMirror implements WorldMirror {
   /** What `raster.imageryPlaceholder` views: destroyed with the world. */
   private readonly imageryPlaceholder: GPUTexture;
   private readonly stopTracking: () => void;
+  readonly textures: WebGpuContentTextures;
+  readonly imagery: WebGpuImagery;
 
   /**
    * The GPU tables, groups and lists, sized from the world's rows
@@ -147,6 +150,8 @@ export class WebGpuWorldMirror implements WorldMirror {
     });
     createDrawBindGroup(world);
     this.stopTracking = onTextureDestroyed((t) => textureDestroyed(world, t));
+    this.textures = new WebGpuContentTextures(ctx);
+    this.imagery = new WebGpuImagery(ctx, world);
   }
 
   /** Copies the queued geometry into place (scene/world/uploads.ts). */

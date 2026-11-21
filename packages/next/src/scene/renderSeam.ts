@@ -8,6 +8,7 @@
 // They name no GPU type, so a second device (src/webgl2/, CS-35) can
 // implement them.
 import type { DeviceFacts } from "../gpu/GpuDevice.ts";
+import type { ContentTextures, ImageryDevice } from "./contentResources.ts";
 import type { SupportReport } from "../profile/types.ts";
 import type { RenderTarget } from "./renderTarget.ts";
 import type { View } from "./View.ts";
@@ -58,6 +59,10 @@ export interface RenderTick {
 export interface WorldMirror {
   /** Copies geometry written since the last tick to the device now. */
   sync(): void;
+  /** Content's textures on the device (glTF's, `gltfModel.ts`). */
+  readonly textures: ContentTextures;
+  /** The world's globe imagery on the device: its slices and compositors. */
+  readonly imagery: ImageryDevice;
   destroy(): void;
 }
 
