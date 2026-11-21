@@ -51,7 +51,7 @@ export function machineKey(environment) {
 const METHOD_FILES = [
   "bench/suite/suite.html",
   "bench/suite/suite.ts",
-  "bench/suite/cli.mjs",
+  "bench/suite/commands/suite.mjs",
   "bench/suite/telemetry.mjs",
   "bench/suite/frozen.mjs",
   "vite.config.ts",
