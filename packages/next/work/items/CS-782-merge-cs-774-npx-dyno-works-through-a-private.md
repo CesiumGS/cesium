@@ -2,10 +2,14 @@
 id: CS-782
 title: Merge CS-774, npx dyno works through a private workspace package, run as npx --no-install dyno
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the dyno tests, fast-forwards main, regenerates the views and logs the merge. The main checkout needs one root npm install before npx --no-install dyno works there. CS-393 and CS-580 can then start."
+answered_at: 2026-11-21T08:28:27.894Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

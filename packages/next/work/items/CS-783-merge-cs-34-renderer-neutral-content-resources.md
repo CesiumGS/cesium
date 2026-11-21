@@ -2,10 +2,14 @@
 id: CS-783
 title: Merge CS-34, renderer-neutral content resources (texture images, queued uploads, ImageryCompositor)
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-9
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the boundary tests, fast-forwards main, regenerates the views, runs the cold-start check on main and logs the merge; CS-35 and CS-36's content side can build on it."
+answered_at: 2026-11-21T08:28:37.566Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
