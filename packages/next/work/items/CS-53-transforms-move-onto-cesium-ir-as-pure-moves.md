@@ -2,10 +2,11 @@
 id: CS-53
 title: Transforms move onto Cesium IR, as pure moves
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-10
 needs: [CS-48, CS-50, CS-51]
+claimed_by: orch-11-CS-53
 touches: [packages/next/src/ir/**, packages/next/src/transform/**, packages/next/src/transforms/**]
 ---
 
