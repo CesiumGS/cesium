@@ -2,10 +2,11 @@
 id: CS-784
 title: The dyno tool is @cesium/dyno, so npx can never reach an outside package by its name
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-21
 project: CS-389
 needs: [CS-774]
+claimed_by: orch-11-CS-784
 touches: [package.json, packages/next/tools/dyno/**, packages/next/bench/dyno.mjs, packages/next/bench/suite/**, packages/next/.claude/skills/dyno/**, packages/next/test/dyno*.test.ts, AGENTS.md]
 ---
 
