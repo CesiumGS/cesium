@@ -28,17 +28,19 @@
 // for the chord error of a straight edge of the box under the route
 // (`chordErrorBound`): M₂L²/8 for a function whose J is continuous,
 // W·L/4 (W, the oscillation of J) for one that is only Lipschitz.
+import { cirOf } from "../ir/fromTodayIr.ts";
 import {
-  evaluateInterval,
-  type Interval,
-  type ParamRange,
-} from "./interval.ts";
+  mapIr,
+  taylorChain,
+  type MapIr,
+  type TaylorLink,
+} from "../ir/taylor.ts";
 import type { TransformNode } from "./graph.ts";
 import type { IrProgram } from "./ir.ts";
+import type { ParamRange } from "./interval.ts";
 import type { Route } from "./route.ts";
-import { adJacobian, stepIr } from "./stepIr.ts";
+import { stepIr } from "./stepIr.ts";
 
-/** A box of the route's input: its center and either half axes (column-major 3×3, an oriented box) or a half-extent (axis-aligned). */
 export interface BoundsBox {
   readonly center: ArrayLike<number>;
   readonly halfAxes?: ArrayLike<number>;
@@ -89,298 +91,74 @@ export interface TaylorRefusal {
   readonly reason: string;
 }
 
-const norm = (m: ArrayLike<number>): number => {
-  let s = 0;
-  for (let i = 0; i < m.length; i++) {
-    s += m[i]! * m[i]!;
-  }
-  return Math.sqrt(s);
-};
+/** Each step's map on Cesium IR (`mapIr`), made once per program. */
+const maps = new WeakMap<IrProgram, MapIr>();
 
-const reach = (i: Interval): number => Math.max(Math.abs(i.lo), Math.abs(i.hi));
+function mapOf(value: IrProgram): MapIr {
+  let found = maps.get(value);
+  if (!found) {
+    found = mapIr(cirOf(value));
+    maps.set(value, found);
+  }
+  return found;
+}
 
 /**
- * The reach (largest |value|) and deviation (largest |value − center|) of
- * each output of `program` over `hull`, taken over `cells` per axis (a cell's
- * interval is tighter than the hull's: the swell of an interval grows
- * faster than the cell's size). A non-finite interval makes Infinity.
+ * The bound of F over `box` as a first-order Taylor model, or why it can't
+ * be made: the route's edges as a chain of links, each curvilinear step's
+ * map on Cesium IR, bounded by Cesium IR's Taylor chain (`taylorChain`).
  */
-function intervalReaches(
-  program: IrProgram,
-  hull: { min: number[]; max: number[] },
-  ranges: Readonly<Record<string, ParamRange>>,
-  cells: number,
-  center?: readonly number[],
-): { reach: number[]; deviation: number[] } {
-  const n = program.outputs.length;
-  const reachOut = new Array<number>(n).fill(0);
-  const deviationOut = new Array<number>(n).fill(0);
-  const size = [0, 1, 2].map((a) => (hull.max[a]! - hull.min[a]!) / cells);
-  const cell = { min: [0, 0, 0], max: [0, 0, 0] };
-  for (let i = 0; i < cells; i++) {
-    for (let j = 0; j < cells; j++) {
-      for (let k = 0; k < cells; k++) {
-        const at = [i, j, k];
-        for (let a = 0; a < 3; a++) {
-          cell.min[a] = hull.min[a]! + at[a]! * size[a]!;
-          cell.max[a] = cell.min[a]! + size[a]!;
-        }
-        evaluateInterval(program, cell, ranges).forEach((value, o) => {
-          const r = Number.isFinite(value.lo + value.hi)
-            ? reach(value)
-            : Infinity;
-          reachOut[o] = Math.max(reachOut[o]!, r);
-          const d =
-            center && Number.isFinite(value.lo + value.hi)
-              ? Math.max(
-                  Math.abs(value.lo - center[o]!),
-                  Math.abs(value.hi - center[o]!),
-                )
-              : r;
-          deviationOut[o] = Math.max(deviationOut[o]!, d);
-        });
-      }
-    }
-  }
-  return { reach: reachOut, deviation: deviationOut };
-}
-
-/** `A·B` for column-major 3×3s. */
-function multiply(a: Float64Array, b: Float64Array): Float64Array {
-  const out = new Float64Array(9);
-  for (let c = 0; c < 3; c++) {
-    for (let r = 0; r < 3; r++) {
-      out[c * 3 + r] =
-        a[r]! * b[c * 3]! +
-        a[3 + r]! * b[c * 3 + 1]! +
-        a[6 + r]! * b[c * 3 + 2]!;
-    }
-  }
-  return out;
-}
-
-/** The bound of F over `box` as a first-order Taylor model, or why it can't be made. */
 export function taylorBounds(
   route: Route,
   box: BoundsBox,
   options: TaylorOptions = {},
 ): TaylorBounds | TaylorRefusal {
-  const c = box.center;
-  let linear: Float64Array;
-  if (box.halfAxes) {
-    linear = Float64Array.from(box.halfAxes);
-  } else if (box.halfExtent) {
-    linear = Float64Array.of(
-      box.halfExtent[0]!,
-      0,
-      0,
-      0,
-      box.halfExtent[1]!,
-      0,
-      0,
-      0,
-      box.halfExtent[2]!,
-    );
-  } else {
+  if (!box.halfAxes && !box.halfExtent) {
     throw new RangeError("taylorBounds: a box has halfAxes or halfExtent");
   }
-  const rho = new Float64Array(3);
-  let jacobianNorm = 1;
-  let oscillation = 0;
-  let hessianNorm = 0;
-  let continuous = true;
-  let refusal: string | undefined;
-
-  const center = route.walk(c, (edge) => {
-    if (refusal !== undefined) {
+  const links: TaylorLink[] = [];
+  let refused = false;
+  const center = route.walk(box.center, (edge) => {
+    if (refused) {
       return;
     }
     if (edge.kind === "affine") {
-      const a = Float64Array.from(edge.jacobian);
-      linear = multiply(a, linear);
-      const absRho = Float64Array.of(
-        Math.abs(a[0]!) * rho[0]! +
-          Math.abs(a[3]!) * rho[1]! +
-          Math.abs(a[6]!) * rho[2]!,
-        Math.abs(a[1]!) * rho[0]! +
-          Math.abs(a[4]!) * rho[1]! +
-          Math.abs(a[7]!) * rho[2]!,
-        Math.abs(a[2]!) * rho[0]! +
-          Math.abs(a[5]!) * rho[1]! +
-          Math.abs(a[8]!) * rho[2]!,
-      );
-      rho.set(absRho);
-      const f = norm(a);
-      jacobianNorm *= f;
-      oscillation *= f;
-      hessianNorm *= f;
+      links.push({
+        kind: "affine",
+        jacobian: Float64Array.from(edge.jacobian),
+      });
       return;
     }
     const name = edge.node.name;
-    if (edge.down) {
-      refusal = `"${name}" is undone by the route: a Taylor model needs the function's own derivatives`;
-      return;
-    }
-    const spec = edge.spec!;
-    const ir = stepIr(spec);
-    if (!ir) {
-      refusal = `"${name}" has no restricted-JS source for the IR`;
-      return;
-    }
-    if (ir.discontinuous) {
-      refusal = `"${name}" has a step (floor, ceil or fract): no derivative bound holds`;
-      return;
-    }
-    const held = edge.params!;
-    const ranges: Record<string, ParamRange> = { ...held };
-    const given = options.params?.(edge.node);
-    const widths: Array<[string, number]> = [];
-    for (const [p, range] of Object.entries(given ?? {})) {
-      if (!(p in held)) {
-        throw new Error(`taylorBounds: "${name}" has no parameter "${p}"`);
-      }
-      const [lo, hi] =
-        typeof range === "number"
-          ? [range, range]
-          : Array.isArray(range)
-            ? [range[0]!, range[1]!]
-            : [(range as Interval).lo, (range as Interval).hi];
-      ranges[p] = [lo, hi];
-      const half = Math.max(Math.abs(hi - held[p]!), Math.abs(held[p]! - lo));
-      if (half > 0) {
-        widths.push([p, half]);
-      }
-    }
-    const input = edge.input;
-    const s = [0, 1, 2].map(
-      (j) =>
-        Math.abs(linear[j]!) +
-        Math.abs(linear[3 + j]!) +
-        Math.abs(linear[6 + j]!) +
-        rho[j]!,
-    );
-    const hull = {
-      min: [0, 1, 2].map((j) => input[j]! - s[j]!),
-      max: [0, 1, 2].map((j) => input[j]! + s[j]!),
+    const refuse = (reason: string) => {
+      links.push({ kind: "refuse", reason });
+      refused = true;
     };
-    const j = adJacobian(spec, input, held, new Float64Array(9))!;
-    const centerJ = Array.from(
-      { length: 9 },
-      (_, k) => j[3 * (k % 3) + Math.floor(k / 3)]!,
-    );
-    const cells = options.cells ?? 1;
-    const jOver = intervalReaches(ir.jacobian, hull, ranges, cells, centerJ);
-    const hOver = intervalReaches(ir.hessian(), hull, ranges, cells);
-    if (
-      jOver.reach.some((x) => !Number.isFinite(x)) ||
-      hOver.reach.some((x) => !Number.isFinite(x))
-    ) {
-      refusal = `"${name}": its derivatives are not bounded over the box (a division or root through zero)`;
+    if (edge.down) {
+      refuse(
+        `"${name}" is undone by the route: a Taylor model needs the function's own derivatives`,
+      );
       return;
     }
-    // J's reach, and its distance from J(c), per entry (row-major in the program).
-    const jReach = jOver.reach;
-    const jWidth = jOver.deviation;
-    const hMax = hOver.reach;
-    const step = new Float64Array(3);
-    for (let i = 0; i < 3; i++) {
-      let second = 0;
-      if (ir.kinked) {
-        for (let k = 0; k < 3; k++) {
-          second += jWidth[3 * i + k]! * s[k]!;
-        }
-      } else {
-        for (let a = 0; a < 3; a++) {
-          for (let b = 0; b < 3; b++) {
-            second += 0.5 * hMax[9 * i + 3 * a + b]! * s[a]! * s[b]!;
-          }
-        }
-      }
-      step[i] = second;
+    const ir = stepIr(edge.spec!);
+    if (!ir) {
+      refuse(`"${name}" has no restricted-JS source for the IR`);
+      return;
     }
-    if (widths.length > 0) {
-      const names = widths.map(([p]) => p);
-      const dp = intervalReaches(
-        ir.parameters(names),
-        hull,
-        ranges,
-        cells,
-      ).reach;
-      widths.forEach(([, half], n) => {
-        for (let i = 0; i < 3; i++) {
-          step[i] = step[i]! + half * dp[3 * n + i]!;
-        }
-      });
-    }
-    const nextRho = Float64Array.of(
-      Math.abs(j[0]!) * rho[0]! +
-        Math.abs(j[3]!) * rho[1]! +
-        Math.abs(j[6]!) * rho[2]! +
-        step[0]!,
-      Math.abs(j[1]!) * rho[0]! +
-        Math.abs(j[4]!) * rho[1]! +
-        Math.abs(j[7]!) * rho[2]! +
-        step[1]!,
-      Math.abs(j[2]!) * rho[0]! +
-        Math.abs(j[5]!) * rho[1]! +
-        Math.abs(j[8]!) * rho[2]! +
-        step[2]!,
-    );
-    rho.set(nextRho);
-    linear = multiply(j, linear);
-    const jf = norm(jReach);
-    const wf = norm(jWidth);
-    const mf = norm(hMax);
-    // D²(f∘g) = f''(g')² + f'g''; osc(J_f∘g · J_g) ≤ W_f·‖J_g‖ + ‖J_f‖·W_g.
-    hessianNorm = mf * jacobianNorm * jacobianNorm + jf * hessianNorm;
-    oscillation = wf * jacobianNorm + jf * oscillation;
-    jacobianNorm *= jf;
-    continuous &&= !ir.kinked;
+    const given = options.params?.(edge.node);
+    links.push({
+      kind: "map",
+      name,
+      map: mapOf(ir.value),
+      input: Float64Array.from(edge.input),
+      params: { ...edge.params! },
+      ...(given && { ranges: given }),
+    });
   });
-  if (refusal !== undefined) {
-    return { ok: false, reason: refusal };
-  }
-  let reachCorner = 0;
-  for (const sx of [-1, 1]) {
-    for (const sy of [-1, 1]) {
-      for (const sz of [-1, 1]) {
-        reachCorner = Math.max(
-          reachCorner,
-          Math.hypot(
-            sx * linear[0]! + sy * linear[3]! + sz * linear[6]!,
-            sx * linear[1]! + sy * linear[4]! + sz * linear[7]!,
-            sx * linear[2]! + sy * linear[5]! + sz * linear[8]!,
-          ),
-        );
-      }
-    }
-  }
-  const halfExtent = Float64Array.of(
-    Math.abs(linear[0]!) +
-      Math.abs(linear[3]!) +
-      Math.abs(linear[6]!) +
-      rho[0]!,
-    Math.abs(linear[1]!) +
-      Math.abs(linear[4]!) +
-      Math.abs(linear[7]!) +
-      rho[1]!,
-    Math.abs(linear[2]!) +
-      Math.abs(linear[5]!) +
-      Math.abs(linear[8]!) +
-      rho[2]!,
-  );
-  return {
-    ok: true,
-    center,
-    linear,
-    remainder: rho,
-    halfExtent,
-    radius: reachCorner + Math.hypot(rho[0]!, rho[1]!, rho[2]!),
-    jacobianNorm,
-    oscillation,
-    hessianNorm,
-    continuous,
-  };
+  const chain = taylorChain(box, links, {
+    ...(options.cells !== undefined && { cells: options.cells }),
+  });
+  return chain.ok ? { ...chain, center } : chain;
 }
 
 /**
