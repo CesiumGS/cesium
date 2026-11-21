@@ -18,7 +18,6 @@ CS-9 The WebGL 2 renderer
   CS-34  Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`)
   CS-35  The probe, the `renderer` option and an empty WebGL 2 device
   CS-46  decision: Which test devices are available for the WebGL 2 probe runs?
-  CS-783  decision: Merge CS-34, renderer-neutral content resources (texture images, queued uploads, ImageryCompositor)
 
 CS-10 Cesium IR
   CS-49  The versioned JSON format
@@ -219,8 +218,7 @@ CS-389 Dyno as the development harness
   CS-753  "Your move" gets a calmer layout: fewer, larger, ranked entries
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
   CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
-  CS-774  npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno
-  CS-782  decision: Merge CS-774, npx dyno works through a private workspace package, run as npx --no-install dyno
+  CS-784  The dyno tool is @cesium/dyno, so npx can never reach an outside package by its name
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
@@ -266,5 +264,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-197 ready
+195 ready
 ```

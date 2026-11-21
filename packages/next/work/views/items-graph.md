@@ -46,7 +46,7 @@ graph LR
     CS_47["CS-47 Probe runs on the test devices"]:::open
     CS_370["CS-370 Scene rebuild after a WebGL 2 context loss"]:::proposed
     CS_761["CS-761 Merge CS-33, the renderer seam extracted (WebGPU only, pure mov"]:::done
-    CS_783["CS-783 Merge CS-34, renderer-neutral content resources (texture images"]:::decision
+    CS_783["CS-783 Merge CS-34, renderer-neutral content resources (texture images"]:::done
   end
   subgraph CS_10["Cesium IR"]
     CS_48["CS-48 The core (types, rates, equations, literal slots, the builder)"]:::done
@@ -621,11 +621,12 @@ graph LR
     CS_770["CS-770 Merge CS-721, one dyno command for Dyno's runs, Lab pages, serv"]:::done
     CS_772["CS-772 Dyno's views and docs name the dyno commands, the old wrappers "]:::proposed
     CS_773["CS-773 dyno analysis compare and trend give verdicts with noise estima"]:::proposed
-    CS_774["CS-774 npx dyno works: the dyno bin lives in a private workspace packa"]:::open
+    CS_774["CS-774 npx dyno works: the dyno bin lives in a private workspace packa"]:::done
     CS_775["CS-775 The Dependencies view's waves grid retires now that the Path vi"]:::proposed
     CS_778["CS-778 Merge CS-747, the What changed view (since you last looked)"]:::done
     CS_781["CS-781 What changed takes a since= URL field, so a chosen point can be"]:::proposed
-    CS_782["CS-782 Merge CS-774, npx dyno works through a private workspace packag"]:::decision
+    CS_782["CS-782 Merge CS-774, npx dyno works through a private workspace packag"]:::done
+    CS_784["CS-784 The dyno tool is @cesium/dyno, so npx can never reach an outsid"]:::open
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -1406,6 +1407,7 @@ graph LR
   CS_580 --> CS_777
   CS_23 --> CS_780
   CS_747 --> CS_781
+  CS_774 --> CS_784
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

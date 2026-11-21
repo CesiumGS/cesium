@@ -8,7 +8,7 @@ CS-8 Engine profiles [Planned], led by owner
   waits on: CS-9 The WebGL 2 renderer (1); CS-12 The job system's ports (1); CS-15 Refinement and convergence (1)
   waited on by: CS-13 The worker-mode façade (1); CS-18 The work tracker (3)
 CS-9 The WebGL 2 renderer [Planned], led by owner
-  3 of 19 done, 5 ready, 10 blocked, 1 proposed
+  4 of 19 done, 4 ready, 10 blocked, 1 proposed
   waits on: CS-10 Cesium IR (4); CS-13 The worker-mode façade (1)
   waited on by: CS-8 Engine profiles (1); CS-11 Live MaterialX graph editing (1); CS-18 The work tracker (3)
 CS-10 Cesium IR [Planned], led by owner
@@ -100,7 +100,7 @@ CS-199 Dyno hardening, packaging and CI [Planned], led by owner
   waits on: nothing open
   waited on by: CS-18 The work tracker (2); CS-628 Sandcastle as 2.0's gallery (1); CS-10 Cesium IR (1)
 CS-389 Dyno as the development harness [Planned], led by owner
-  38 of 78 done, 18 ready, 17 blocked, 5 proposed
+  40 of 79 done, 17 ready, 17 blocked, 5 proposed
   waits on: nothing open
   waited on by: CS-195 Benchmarks, parity and image regression (2); CS-18 The work tracker (5)
 CS-437 The public API reviews [Planned], led by owner

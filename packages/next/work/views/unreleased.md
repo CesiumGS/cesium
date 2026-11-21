@@ -68,6 +68,7 @@ CS-389 Dyno as the development harness
   CS-747  A Since-you-last-looked view shows scope changes and answers since a chosen point
   CS-748  The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions
   CS-750  The Proposals view says why each item is proposed, and offers commit, hold or drop
+  CS-774  npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno
 
 CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
@@ -83,5 +84,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-56 merged item(s) not in a release
+57 merged item(s) not in a release
 ```

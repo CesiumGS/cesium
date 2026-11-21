@@ -41,7 +41,7 @@ No milestone
 
 ### The WebGL 2 renderer
 
-CS-9, Planned, led by owner: 3 of 19 done, 5 ready, 10 blocked, 1 proposed. Plan: [2026-11-13-webgl2-renderer.md](docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
+CS-9, Planned, led by owner: 4 of 19 done, 4 ready, 10 blocked, 1 proposed. Plan: [2026-11-13-webgl2-renderer.md](docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
 
 Milestone: Renderers plug in behind one seam (CS-414, Planned)
 
@@ -72,7 +72,7 @@ No milestone
 - [ ] CS-39 Styles and warps through Cesium IR. Needs CS-38, CS-52 (Cesium IR), CS-54 (Cesium IR) and CS-55 (Cesium IR).
 - [?] CS-370 Scene rebuild after a WebGL 2 context loss. Proposed. Needs CS-113 (worker-mode façade) and CS-36.
 - [x] CS-761 decision: Merge CS-33, the renderer seam extracted (WebGPU only, pure moves). Done.
-- [ ] CS-783 decision: Merge CS-34, renderer-neutral content resources (texture images, queued uploads, ImageryCompositor). Needs nothing. Decided by owner.
+- [x] CS-783 decision: Merge CS-34, renderer-neutral content resources (texture images, queued uploads, ImageryCompositor). Done.
 
 ### Cesium IR
 
@@ -883,7 +883,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 38 of 78 done, 18 ready, 17 blocked, 5 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 40 of 79 done, 17 ready, 17 blocked, 5 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -981,11 +981,12 @@ No milestone
 - [x] CS-770 decision: Merge CS-721, one dyno command for Dyno's runs, Lab pages, servers and measurements. Done.
 - [?] CS-772 Dyno's views and docs name the dyno commands, the old wrappers retire, and coldstart takes a free port. Proposed. Needs CS-721.
 - [?] CS-773 dyno analysis compare and trend give verdicts with noise estimates, and bisect hands off to CS-325. Proposed. Needs CS-721.
-- [ ] CS-774 npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno. Needs CS-721.
+- [x] CS-774 npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno. Done.
 - [?] CS-775 The Dependencies view's waves grid retires now that the Path view answers what it did. Proposed. Needs CS-746.
 - [x] CS-778 decision: Merge CS-747, the What changed view (since you last looked). Done.
 - [?] CS-781 What changed takes a since= URL field, so a chosen point can be shared as a link. Proposed. Needs CS-747.
-- [ ] CS-782 decision: Merge CS-774, npx dyno works through a private workspace package, run as npx --no-install dyno. Needs nothing. Decided by owner.
+- [x] CS-782 decision: Merge CS-774, npx dyno works through a private workspace package, run as npx --no-install dyno. Done.
+- [ ] CS-784 The dyno tool is @cesium/dyno, so npx can never reach an outside package by its name. Needs CS-774.
 
 ### The public API reviews
 
