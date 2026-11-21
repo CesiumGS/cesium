@@ -10,13 +10,13 @@ import { PROFILE_DATA, resolve, type ProfileData } from "./resolve.ts";
 import type {
   Context,
   EffectiveSettings,
+  Facts,
   Fidelity,
   Look,
   Predicate,
   Step,
   Subject,
 } from "./types.ts";
-import type { DeviceFacts } from "../gpu/GpuDevice.ts";
 
 /** A notice's identity across resolves, for reporting only new ones. */
 const noticeKey = (n: { kind: string; feature: string; given: string }) =>
@@ -24,7 +24,7 @@ const noticeKey = (n: { kind: string; feature: string; given: string }) =>
 
 export class ViewProfile {
   private last: EffectiveSettings | undefined;
-  private lastFacts: DeviceFacts | undefined;
+  private lastFacts: Facts | undefined;
   private readonly lastLook: (boolean | Step)[] = [];
   private readonly look: (boolean | Step)[] = [];
   /** The rules whose `when` reads the context. */
@@ -37,7 +37,7 @@ export class ViewProfile {
 
   constructor(
     /** The engine's device's facts now. */
-    private readonly facts: () => DeviceFacts,
+    private readonly facts: () => Facts,
     /** Names the view in warn-once keys. */
     readonly scope: string,
     readonly fidelity: Fidelity = "auto",

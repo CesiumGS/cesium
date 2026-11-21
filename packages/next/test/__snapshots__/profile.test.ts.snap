@@ -1660,3 +1660,640 @@ exports[`profile invariants > 9. snapshots > swiftshader: support 1`] = `
   "updates": "each-tick",
 }
 `;
+
+exports[`profile invariants > 9. snapshots > webgl2-basic: effective, auto, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+      "*cityLights.webgl2.on",
+    ],
+    "given": "off",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+      "*glare.webgl2.full",
+    ],
+    "given": "off",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+      "*translucency.webgl2.exact",
+    ],
+    "given": "moments16",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > webgl2-basic: effective, auto, glare on 2`] = `
+[
+  {
+    "asked": "full",
+    "feature": "glare",
+    "given": "off",
+    "kind": "unsupported",
+    "reason": "WebGL 2: glare is a compute pass, and WebGL 2 has no compute shaders; it has no step in the PoC",
+    "rule": "glare.webgl2.full",
+  },
+  {
+    "asked": "exact",
+    "feature": "translucency",
+    "given": "moments16",
+    "kind": "unsupported",
+    "reason": "WebGL 2: exact per-pixel lists need storage buffers, and WebGL 2 has none",
+    "rule": "translucency.webgl2.exact",
+  },
+  {
+    "asked": "on",
+    "feature": "cityLights",
+    "given": "off",
+    "kind": "unsupported",
+    "reason": "WebGL 2: the PoC's WebGL 2 renderer has no step for city lights",
+    "rule": "cityLights.webgl2.on",
+  },
+]
+`;
+
+exports[`profile invariants > 9. snapshots > webgl2-basic: effective, fixed, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+      "*cityLights.webgl2.on",
+    ],
+    "given": "off",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+      "*glare.webgl2.full",
+    ],
+    "given": "off",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+      "*translucency.webgl2.exact",
+    ],
+    "given": "moments16",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > webgl2-basic: effective, fixed, glare on 2`] = `
+[
+  {
+    "asked": "full",
+    "feature": "glare",
+    "given": "off",
+    "kind": "unsupported",
+    "reason": "WebGL 2: glare is a compute pass, and WebGL 2 has no compute shaders; it has no step in the PoC",
+    "rule": "glare.webgl2.full",
+  },
+  {
+    "asked": "exact",
+    "feature": "translucency",
+    "given": "moments16",
+    "kind": "unsupported",
+    "reason": "WebGL 2: exact per-pixel lists need storage buffers, and WebGL 2 has none",
+    "rule": "translucency.webgl2.exact",
+  },
+  {
+    "asked": "on",
+    "feature": "cityLights",
+    "given": "off",
+    "kind": "unsupported",
+    "reason": "WebGL 2: the PoC's WebGL 2 renderer has no step for city lights",
+    "rule": "cityLights.webgl2.on",
+  },
+]
+`;
+
+exports[`profile invariants > 9. snapshots > webgl2-basic: support 1`] = `
+{
+  "content": {
+    "optional": {
+      "advancedTranslucency": false,
+      "brep": false,
+      "labels": false,
+      "points": false,
+      "splats": false,
+      "vectors": false,
+    },
+    "required": [
+      "globe",
+      "terrain",
+      "imagery",
+      "meshes",
+    ],
+  },
+  "features": {
+    "aerialPerspective": [
+      "march",
+      "screen",
+      "volume",
+    ],
+    "ambientOcclusion": [
+      "full",
+    ],
+    "cityLights": [],
+    "fxaa": [
+      "on",
+    ],
+    "glare": [],
+    "lodTransitions": [
+      "morph",
+      "pop",
+    ],
+    "msaa": [
+      "4x",
+      "1x+fxaa",
+    ],
+    "normals": [
+      "exact",
+      "linear",
+    ],
+    "resolution": [
+      1,
+      0.75,
+      0.5,
+    ],
+    "shadows": [
+      "full",
+    ],
+    "sunDisk": [
+      "on",
+    ],
+    "translucency": [
+      "moments16",
+    ],
+  },
+  "outputs": [
+    "color",
+  ],
+  "paths": [
+    "depth: log (no EXT_clip_control, so depth is written per fragment)",
+    "draws: one call per record (no WEBGL_multi_draw)",
+    "textureTranscode: rgba8 (no block format samples on this device, so textures are uncompressed)",
+    "drawing: nothing yet (the empty device clears to the background color)",
+  ],
+  "queries": [],
+  "renderer": "webgl2",
+  "updates": "each-tick",
+}
+`;
+
+exports[`profile invariants > 9. snapshots > webgl2-chrome: effective, auto, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+      "*cityLights.webgl2.on",
+    ],
+    "given": "off",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+      "*glare.webgl2.full",
+    ],
+    "given": "off",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+      "*translucency.webgl2.exact",
+    ],
+    "given": "moments32",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > webgl2-chrome: effective, auto, glare on 2`] = `
+[
+  {
+    "asked": "full",
+    "feature": "glare",
+    "given": "off",
+    "kind": "unsupported",
+    "reason": "WebGL 2: glare is a compute pass, and WebGL 2 has no compute shaders; it has no step in the PoC",
+    "rule": "glare.webgl2.full",
+  },
+  {
+    "asked": "exact",
+    "feature": "translucency",
+    "given": "moments32",
+    "kind": "unsupported",
+    "reason": "WebGL 2: exact per-pixel lists need storage buffers, and WebGL 2 has none",
+    "rule": "translucency.webgl2.exact",
+  },
+  {
+    "asked": "on",
+    "feature": "cityLights",
+    "given": "off",
+    "kind": "unsupported",
+    "reason": "WebGL 2: the PoC's WebGL 2 renderer has no step for city lights",
+    "rule": "cityLights.webgl2.on",
+  },
+]
+`;
+
+exports[`profile invariants > 9. snapshots > webgl2-chrome: effective, fixed, glare on 1`] = `
+{
+  "aerialPerspective": {
+    "asked": true,
+    "because": [
+      "*aerialPerspective.catalog",
+      "*aerialPerspective.rank.march",
+    ],
+    "given": "march",
+  },
+  "ambientOcclusion": {
+    "asked": true,
+    "because": [
+      "*ambientOcclusion.catalog",
+    ],
+    "given": "full",
+  },
+  "cityLights": {
+    "asked": true,
+    "because": [
+      "*cityLights.catalog",
+      "*cityLights.webgl2.on",
+    ],
+    "given": "off",
+  },
+  "fxaa": {
+    "asked": false,
+    "because": [
+      "*fxaa.catalog",
+    ],
+    "given": "off",
+  },
+  "glare": {
+    "asked": true,
+    "because": [
+      "*glare.catalog",
+      "*glare.webgl2.full",
+    ],
+    "given": "off",
+  },
+  "lodTransitions": {
+    "asked": true,
+    "because": [
+      "*lodTransitions.catalog",
+    ],
+    "given": "morph",
+  },
+  "msaa": {
+    "asked": true,
+    "because": [
+      "*msaa.catalog",
+    ],
+    "given": "4x",
+  },
+  "normals": {
+    "asked": true,
+    "because": [
+      "*normals.catalog",
+    ],
+    "given": "exact",
+  },
+  "resolution": {
+    "asked": true,
+    "because": [
+      "*resolution.catalog",
+    ],
+    "given": 1,
+  },
+  "shadows": {
+    "asked": true,
+    "because": [
+      "*shadows.catalog",
+    ],
+    "given": "full",
+  },
+  "sunDisk": {
+    "asked": true,
+    "because": [
+      "*sunDisk.catalog",
+    ],
+    "given": "on",
+  },
+  "translucency": {
+    "asked": true,
+    "because": [
+      "*translucency.catalog",
+      "*translucency.webgl2.exact",
+    ],
+    "given": "moments32",
+  },
+}
+`;
+
+exports[`profile invariants > 9. snapshots > webgl2-chrome: effective, fixed, glare on 2`] = `
+[
+  {
+    "asked": "full",
+    "feature": "glare",
+    "given": "off",
+    "kind": "unsupported",
+    "reason": "WebGL 2: glare is a compute pass, and WebGL 2 has no compute shaders; it has no step in the PoC",
+    "rule": "glare.webgl2.full",
+  },
+  {
+    "asked": "exact",
+    "feature": "translucency",
+    "given": "moments32",
+    "kind": "unsupported",
+    "reason": "WebGL 2: exact per-pixel lists need storage buffers, and WebGL 2 has none",
+    "rule": "translucency.webgl2.exact",
+  },
+  {
+    "asked": "on",
+    "feature": "cityLights",
+    "given": "off",
+    "kind": "unsupported",
+    "reason": "WebGL 2: the PoC's WebGL 2 renderer has no step for city lights",
+    "rule": "cityLights.webgl2.on",
+  },
+]
+`;
+
+exports[`profile invariants > 9. snapshots > webgl2-chrome: support 1`] = `
+{
+  "content": {
+    "optional": {
+      "advancedTranslucency": false,
+      "brep": false,
+      "labels": false,
+      "points": false,
+      "splats": false,
+      "vectors": false,
+    },
+    "required": [
+      "globe",
+      "terrain",
+      "imagery",
+      "meshes",
+    ],
+  },
+  "features": {
+    "aerialPerspective": [
+      "march",
+      "screen",
+      "volume",
+    ],
+    "ambientOcclusion": [
+      "full",
+    ],
+    "cityLights": [],
+    "fxaa": [
+      "on",
+    ],
+    "glare": [],
+    "lodTransitions": [
+      "morph",
+      "pop",
+    ],
+    "msaa": [
+      "4x",
+      "1x+fxaa",
+    ],
+    "normals": [
+      "exact",
+      "linear",
+    ],
+    "resolution": [
+      1,
+      0.75,
+      0.5,
+    ],
+    "shadows": [
+      "full",
+    ],
+    "sunDisk": [
+      "on",
+    ],
+    "translucency": [
+      "moments32",
+      "moments16",
+    ],
+  },
+  "outputs": [
+    "color",
+  ],
+  "paths": [
+    "depth: reversed-z (EXT_clip_control sets clip depth to 0 to 1)",
+    "draws: multi-draw (WEBGL_multi_draw, one call a batch)",
+    "textureTranscode: astc-4x4 (ASTC 4 × 4 blocks sample on this device, and BC7 doesn't)",
+    "drawing: nothing yet (the empty device clears to the background color)",
+  ],
+  "queries": [],
+  "renderer": "webgl2",
+  "updates": "each-tick",
+}
+`;

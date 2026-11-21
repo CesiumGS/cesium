@@ -7,6 +7,7 @@ const KEYS: readonly string[] = [
   "above",
   "below",
   "has",
+  "hasExtension",
   "all",
   "any",
   "not",
@@ -19,17 +20,26 @@ function read(subject: Subject, path: FactPath): Scalar {
     case "renderer":
       return facts.renderer;
     case "limitsTier":
-      return facts.limitsTier;
+      return facts.renderer === "webgpu" ? facts.limitsTier : "none";
     case "canvasFormat":
-      return facts.canvasFormat;
+      return facts.renderer === "webgpu" ? facts.canvasFormat : "none";
+    // Who the GPU is: WebGPU's adapter info, or WebGL 2's unmasked strings.
     case "adapter.vendor":
-      return facts.adapter.vendor;
+      return facts.renderer === "webgpu"
+        ? facts.adapter.vendor
+        : (facts.unmasked?.vendor ?? facts.vendor);
     case "adapter.architecture":
-      return facts.adapter.architecture;
+      return facts.renderer === "webgpu"
+        ? facts.adapter.architecture
+        : (facts.angleBackend ?? "");
     case "adapter.isFallbackAdapter":
-      return facts.adapter.isFallbackAdapter;
+      return facts.renderer === "webgpu"
+        ? facts.adapter.isFallbackAdapter
+        : facts.software;
     case "probes.storageWritesRunPerSample":
-      return facts.probes.storageWritesRunPerSample;
+      return facts.renderer === "webgpu"
+        ? facts.probes.storageWritesRunPerSample
+        : "unknown";
     case "context.pixels":
     case "context.altitudeKm": {
       if (!context) {
@@ -66,7 +76,16 @@ export function evaluate(predicate: Predicate, subject: Subject): boolean {
     return (read(subject, predicate.below[0]) as number) < predicate.below[1];
   }
   if ("has" in predicate) {
-    return subject.facts.features.includes(predicate.has);
+    return (
+      subject.facts.renderer === "webgpu" &&
+      subject.facts.features.includes(predicate.has)
+    );
+  }
+  if ("hasExtension" in predicate) {
+    return (
+      subject.facts.renderer === "webgl2" &&
+      subject.facts.extensions.includes(predicate.hasExtension)
+    );
   }
   if ("all" in predicate) {
     return predicate.all.every((p) => evaluate(p, subject));
@@ -94,7 +113,7 @@ export function pathsRead(predicate: Predicate): FactPath[] {
   if ("below" in predicate) {
     return [predicate.below[0]];
   }
-  if ("has" in predicate) {
+  if ("has" in predicate || "hasExtension" in predicate) {
     return [];
   }
   if ("all" in predicate) {

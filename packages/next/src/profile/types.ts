@@ -2,6 +2,10 @@
 // Everything a resolver returns survives `structuredClone` (worker mode).
 import type { Notice } from "../gpu/EngineErrors.ts";
 import type { DeviceFacts } from "../gpu/GpuDevice.ts";
+import type { Webgl2Facts } from "./webgl2Facts.ts";
+
+/** What a device was observed to be, under its renderer's own names: WebGPU's facts or WebGL 2's. */
+export type Facts = DeviceFacts | Webgl2Facts;
 
 /** How much a feature matters to the look. */
 export type Importance = "essential" | "preferred" | "extra";
@@ -43,13 +47,14 @@ export type Predicate =
   | { readonly above: readonly [FactPath, number] }
   | { readonly below: readonly [FactPath, number] }
   | { readonly has: GPUFeatureName }
+  | { readonly hasExtension: string }
   | { readonly all: readonly Predicate[] }
   | { readonly any: readonly Predicate[] }
   | { readonly not: Predicate };
 
 /** What a predicate is evaluated over. Support rules have no context. */
 export interface Subject {
-  facts: DeviceFacts;
+  facts: Facts;
   context?: Context;
 }
 
@@ -155,7 +160,7 @@ export interface EffectiveSettings {
 
 /** What this view can do, in scene terms. */
 export interface SupportReport {
-  renderer: DeviceFacts["renderer"];
+  renderer: Facts["renderer"];
   content: {
     /** Every renderer draws these. */
     required: readonly string[];

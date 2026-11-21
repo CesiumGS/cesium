@@ -7,10 +7,10 @@
 //
 // Path names and their strings in `SupportReport.paths` are diagnostic and
 // unstable.
-import type { DeviceFacts } from "../gpu/GpuDevice.ts";
 import { evaluate } from "./predicate.ts";
 import { PROFILE_DATA, unmetSupport, type ProfileData } from "./resolve.ts";
-import type { Predicate } from "./types.ts";
+import type { Facts, Predicate } from "./types.ts";
+import type { Webgl2Facts } from "./webgl2Facts.ts";
 
 /** How stars are submitted where the world allows indirect draws. */
 export type StarSubmissionPath = "indirect" | "direct";
@@ -109,7 +109,7 @@ export const PATHS = {
 
 function choose<Choice extends string>(
   choices: readonly PathChoice<Choice>[],
-  facts: DeviceFacts,
+  facts: Facts,
 ): PathChoice<Choice> {
   const taken = choices.find(
     (c) => c.needs === undefined || evaluate(c.needs, { facts }),
@@ -121,7 +121,7 @@ function choose<Choice extends string>(
 }
 
 /** The engine's paths on a device with `facts`. */
-export function paths(facts: DeviceFacts, table: PathTable = PATHS): Paths {
+export function paths(facts: Facts, table: PathTable = PATHS): Paths {
   return {
     starSubmission: choose(table.starSubmission, facts).choice,
     textureTranscode: choose(table.textureTranscode, facts).choice,
@@ -132,7 +132,7 @@ export function paths(facts: DeviceFacts, table: PathTable = PATHS): Paths {
 
 /** Why each path was chosen on a device with `facts`, as `name: choice (reason)` strings. */
 export function describePaths(
-  facts: DeviceFacts,
+  facts: Facts,
   table: PathTable = PATHS,
 ): string[] {
   return (Object.keys(table) as (keyof Paths)[]).map((name) => {
@@ -150,7 +150,7 @@ export type MomentsStep = "moments32" | "moments16";
  * this is engine-wide, whichever step a view is given.
  */
 export function momentsStep(
-  facts: DeviceFacts,
+  facts: Facts,
   data: ProfileData = PROFILE_DATA,
 ): MomentsStep {
   return unmetSupport("translucency", "moments32", facts, data).length === 0
@@ -164,6 +164,38 @@ export interface DeviceChoices {
   readonly moments: MomentsStep;
 }
 
-export function deviceChoices(facts: DeviceFacts): DeviceChoices {
+export function deviceChoices(facts: Facts): DeviceChoices {
   return { paths: paths(facts), moments: momentsStep(facts) };
+}
+
+/**
+ * Why each WebGL 2 path is what it is, as `name: choice (reason)` strings
+ * like `describePaths`' (the plan's section 6). Depth and draw submission
+ * follow the extensions; the KTX2 target follows the compressed formats.
+ */
+export function describeWebgl2Paths(facts: Webgl2Facts): string[] {
+  const has = (name: string) => facts.extensions.includes(name);
+  const transcode = has("EXT_texture_compression_bptc")
+    ? ["bc7", "BC7 blocks sample on this device"]
+    : has("WEBGL_compressed_texture_astc")
+      ? ["astc-4x4", "ASTC 4 × 4 blocks sample on this device, and BC7 doesn't"]
+      : has("WEBGL_compressed_texture_etc")
+        ? [
+            "etc2-rgba8",
+            "ETC2 blocks sample on this device, and BC7 and ASTC don't",
+          ]
+        : [
+            "rgba8",
+            "no block format samples on this device, so textures are uncompressed",
+          ];
+  return [
+    has("EXT_clip_control")
+      ? "depth: reversed-z (EXT_clip_control sets clip depth to 0 to 1)"
+      : "depth: log (no EXT_clip_control, so depth is written per fragment)",
+    has("WEBGL_multi_draw")
+      ? "draws: multi-draw (WEBGL_multi_draw, one call a batch)"
+      : "draws: one call per record (no WEBGL_multi_draw)",
+    `textureTranscode: ${transcode[0]!} (${transcode[1]!})`,
+    "drawing: nothing yet (the empty device clears to the background color)",
+  ];
 }

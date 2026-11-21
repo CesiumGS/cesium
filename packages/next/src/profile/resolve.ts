@@ -7,6 +7,7 @@ import { evaluate } from "./predicate.ts";
 import { RULES } from "./rules.ts";
 import type {
   Catalog,
+  Facts,
   Context,
   CostRule,
   EffectiveFeature,
@@ -23,7 +24,6 @@ import type {
   Subject,
   SupportRule,
 } from "./types.ts";
-import type { DeviceFacts } from "../gpu/GpuDevice.ts";
 
 /** The data a resolve reads. The defaults are the engine's own. */
 export interface ProfileData {
@@ -34,7 +34,7 @@ export interface ProfileData {
 export const PROFILE_DATA: ProfileData = { catalog: CATALOG, rules: RULES };
 
 export interface ResolveInput {
-  facts: DeviceFacts;
+  facts: Facts;
   look: Look;
   fidelity: Fidelity;
   context: Context;
@@ -114,7 +114,7 @@ export function rankRuleAt(
 export function unmetSupport(
   feature: string,
   step: Step,
-  facts: DeviceFacts,
+  facts: Facts,
   data: ProfileData = PROFILE_DATA,
 ): SupportRule[] {
   return rulesOf(data.rules, feature, "requires").filter(

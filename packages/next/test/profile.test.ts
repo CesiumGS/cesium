@@ -10,7 +10,11 @@ import {
   variantCount,
 } from "../src/profile/catalog.ts";
 import { evaluate, pathsRead } from "../src/profile/predicate.ts";
-import { personas, type PersonaName } from "../src/profile/personas.ts";
+import {
+  personas,
+  webgl2Personas,
+  type PersonaName,
+} from "../src/profile/personas.ts";
 import {
   orderAt,
   PROFILE_DATA,
@@ -30,7 +34,12 @@ import type {
 } from "../src/profile/types.ts";
 import { installPersona, personas as fakePersonas } from "./fakeGpu.ts";
 
-const NAMES = Object.keys(personas) as PersonaName[];
+// Every renderer's personas: WebGPU's and WebGL 2's. The invariants cover both.
+const ALL = { ...personas, ...webgl2Personas };
+type AnyPersonaName = keyof typeof ALL;
+const NAMES = Object.keys(ALL) as AnyPersonaName[];
+/** The WebGPU personas: the ones with GPU features and a fake GPU. */
+const GPU_NAMES = Object.keys(personas) as PersonaName[];
 const FEATURES = Object.keys(CATALOG);
 const FIDELITIES: Fidelity[] = ["auto", "fixed"];
 
@@ -68,7 +77,7 @@ for (const [feature, entry] of Object.entries(CATALOG)) {
 }
 
 interface Row {
-  persona: PersonaName;
+  persona: AnyPersonaName;
   look: string;
   fidelity: Fidelity;
   context: Context;
@@ -86,7 +95,7 @@ function* matrix(): Generator<Row> {
             fidelity,
             context,
             effective: resolve({
-              facts: personas[persona],
+              facts: ALL[persona],
               look: l,
               fidelity,
               context,
@@ -126,12 +135,12 @@ describe("profile invariants", () => {
 
   it("2. every renderer persona supports the required content kinds", () => {
     for (const name of NAMES) {
-      const report = support(personas[name]);
+      const report = support(ALL[name]);
       for (const kind of REQUIRED_CONTENT) {
         expect(report.content.required, `${name}`).toContain(kind);
       }
       // Required content never depends on an optional feature.
-      expect(report.renderer).toBe(personas[name].renderer);
+      expect(report.renderer).toBe(ALL[name].renderer);
     }
   });
 
@@ -149,7 +158,7 @@ describe("profile invariants", () => {
           continue;
         }
         const order = orderAt(name, {
-          facts: personas[row.persona],
+          facts: ALL[row.persona],
           context: row.context,
         });
         const wanted = a === true ? 0 : Math.max(order.indexOf(a as Step), 0);
@@ -270,7 +279,7 @@ describe("profile invariants", () => {
 
   it("7. support, effective settings and notices survive structuredClone", () => {
     for (const name of NAMES) {
-      const report = support(personas[name]);
+      const report = support(ALL[name]);
       expect(structuredClone(report)).toEqual(report);
     }
     for (const row of rows) {
@@ -293,12 +302,12 @@ describe("profile invariants", () => {
     const context = { pixels: 4e6, altitudeKm: 100 };
     for (const name of NAMES) {
       it(`${name}: support`, () => {
-        expect(support(personas[name])).toMatchSnapshot();
+        expect(support(ALL[name])).toMatchSnapshot();
       });
       for (const fidelity of FIDELITIES) {
         it(`${name}: effective, ${fidelity}, glare on`, () => {
           const effective = resolve({
-            facts: personas[name],
+            facts: ALL[name],
             look: { glare: true },
             fidelity,
             context,
@@ -345,7 +354,7 @@ function glareTier(
 
 describe("the first rules describe today's behavior", () => {
   it("glare's auto tier is glareTier() on every persona and size", () => {
-    for (const name of NAMES) {
+    for (const name of GPU_NAMES) {
       for (const pixels of [
         1e5,
         1e6,
@@ -388,7 +397,7 @@ describe("the first rules describe today's behavior", () => {
 
   it("translucency's moments drop to 16 bits without float32-blendable", () => {
     const context = { pixels: 1e6, altitudeKm: 1 };
-    for (const name of NAMES) {
+    for (const name of GPU_NAMES) {
       const facts = personas[name];
       const blendable = (facts.features as readonly string[]).includes(
         "float32-blendable",
@@ -640,7 +649,7 @@ describe("the resolver's contract", () => {
 });
 
 describe("personas", () => {
-  for (const name of NAMES) {
+  for (const name of GPU_NAMES) {
     it(`${name} agrees with the fake GPU's`, async () => {
       const fake = fakePersonas[name];
       installPersona(name);

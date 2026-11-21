@@ -1,10 +1,11 @@
 // Rules are data: typed literals with no functions. The first ones describe
 // today's behavior and name where it lives, so each can be checked against it.
 import type { Rule } from "./types.ts";
+import { WEBGL2_RULES } from "./webgl2Rules.ts";
 
 const GLARE_PROVENANCE = "measured on M2; Intel and the rest estimated";
 
-export const RULES = [
+const WEBGPU_RULES = [
   // Glare (`glareTier()` in src/render/post/glare.ts).
   {
     id: "glare.fallbackAdapter",
@@ -54,9 +55,11 @@ export const RULES = [
     kind: "requires",
     feature: "translucency",
     step: "moments32",
-    needs: { has: "float32-blendable" },
+    needs: {
+      any: [{ has: "float32-blendable" }, { hasExtension: "EXT_float_blend" }],
+    },
     reason:
-      "32-bit moments need float32-blendable; without it the moments are 16-bit (bias 6 × 10⁻⁴ instead of 5 × 10⁻⁶)",
+      "32-bit moments need float32-blendable (WebGPU) or EXT_float_blend (WebGL 2); without it the moments are 16-bit (bias 6 × 10⁻⁴ instead of 5 × 10⁻⁶)",
   },
 
   // Ambient occlusion (`AO_MAX_PIXELS` in src/scene/RenderContext.ts).
@@ -120,3 +123,6 @@ export const RULES = [
       "above 1000 km the screen grid is exact; the march is not offered, because it streaks at the day/night line, and the volume bands",
   },
 ] as const satisfies readonly Rule[];
+
+/** Every renderer's rules: WebGPU's (the rules above) and WebGL 2's (`webgl2Rules.ts`). */
+export const RULES: readonly Rule[] = [...WEBGPU_RULES, ...WEBGL2_RULES];
