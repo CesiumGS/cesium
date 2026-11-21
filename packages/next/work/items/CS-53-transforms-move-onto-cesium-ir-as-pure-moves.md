@@ -2,7 +2,7 @@
 id: CS-53
 title: Transforms move onto Cesium IR, as pure moves
 kind: work
-state: in-progress
+state: done
 created: 2026-11-13
 project: CS-10
 needs: [CS-48, CS-50, CS-51]
