@@ -30,6 +30,7 @@ import Cesium3DTileOptimizationHint from "./Cesium3DTileOptimizationHint.js";
 import Cesium3DTilePass from "./Cesium3DTilePass.js";
 import Cesium3DTileRefine from "./Cesium3DTileRefine.js";
 import Empty3DTileContent from "./Empty3DTileContent.js";
+import findGroupMetadata from "./findGroupMetadata.js";
 import findTileMetadata from "./findTileMetadata.js";
 import hasExtension from "./hasExtension.js";
 import Multiple3DTileContent from "./Multiple3DTileContent.js";
@@ -467,22 +468,13 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
   this._colorDirty = false;
 
   this._request = undefined;
-
-  // A parent's layer wins over this tile's own group, as in 3DTILES_layers. Tiles with
-  // multiple contents only inherit (needs per-content hiding).
-  const featureLayers = tileset.featureLayers;
-  const ownFeatureLayer =
-    defined(featureLayers) && defined(contentHeader) && !hasMultipleContents
-      ? featureLayers._getByGroup(findGroupMetadata(tileset, contentHeader))
-      : undefined;
-  this._featureLayer = parent?._featureLayer ?? ownFeatureLayer;
 }
 
 /**
  * Initialize the content-related properties of the given tile.
  *
- * This assumes that the <code>_tileset</code> and the
- * <code>computedTransform</code> of the given tile have
+ * This assumes that the <code>_tileset</code>, <code>parent</code>
+ * and <code>computedTransform</code> of the given tile have
  * already been set.
  *
  * It will initialize the following properties of the tile, based
@@ -499,6 +491,7 @@ function Cesium3DTile(tileset, baseResource, header, parent) {
  * - hasEmptyContent
  * - hasRenderableContent
  * - hasMultipleContents
+ * - _featureLayer
  *
  * The exact meaning of these properties has to be derived from
  * the code. This function was just introduced as first cleanup.
@@ -590,6 +583,17 @@ function initializeContent(tile, baseResource, header) {
   tile.hasEmptyContent = hasEmptyContent;
   tile.hasRenderableContent = !hasEmptyContent;
   tile.hasMultipleContents = hasMultipleContents;
+
+  // A parent's layer wins over this tile's own group, as in 3DTILES_layers. Tiles with
+  // multiple contents only inherit (needs per-content hiding).
+  const parent = tile.parent;
+  const tileset = tile._tileset;
+  const featureLayers = tileset.featureLayers;
+  const ownFeatureLayer =
+    defined(featureLayers) && defined(contentHeader) && !hasMultipleContents
+      ? featureLayers._getByGroup(findGroupMetadata(tileset, contentHeader))
+      : undefined;
+  tile._featureLayer = parent?._featureLayer ?? ownFeatureLayer;
 }
 
 /**
