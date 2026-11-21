@@ -2,10 +2,11 @@
 id: CS-752
 title: "Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]
+claimed_by: orch-11-CS-752
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/bench/suite/views/workFlow.tsx, packages/next/bench/suite/views/workFlow.css, packages/next/bench/suite/workFlow.ts, packages/next/scripts/workBoard.mjs, packages/next/test/dynoWorkFlow*.test.ts]
 ---
 
