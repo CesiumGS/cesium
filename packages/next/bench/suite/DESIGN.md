@@ -790,6 +790,110 @@ job was spotting loops.
   tonight's two loops and the CS-341 crossing rebuilt from the tracker
   before the owner fixed them.
 
+### The Proposals view (CS-750)
+
+The page's Proposals tab, mounted from `views/workProposals.tsx` with
+`id: "proposals"`, so it takes the place of CS-688's tab (whose code
+stays in `Work.tsx` until a clean-up removes it). Promoting a proposal
+is the owner's call (hitld 04 §4.6); the view makes each call easy.
+
+- **Story.** The owner opens Proposals and asks "what do I do with
+  these?". The answer is a call per proposal, in words: commit it, hold
+  it, or drop it, with the rule that recommends one. Proposals are
+  candidate commitments (CS-686), and the owner's attention is what the
+  view saves: the ones holding committed work up come first.
+- **Audience.** The owner first; then the chief of staff, who acts on
+  the calls. Nothing is applied from the page.
+- **Groups, by why each is proposed.** Five, in this order, each a card
+  with its count and its rule under its name ("None now" when empty).
+  The first two come from the graph and hold with or without a header;
+  the rest from the header alone, never from a guess at the text.
+  1. **Needed by committed work** (the exception that leads): a planned
+     or in-progress item needs it, or a committed milestone names it.
+     The card has the attention rule at its edge.
+  2. **Waiting on a decision or study**: an open decision, or an open
+     learning milestone, comes before the commit.
+  3. **New**: its header makes the case for now; the oldest filed first,
+     as the chief of staff brings them about five at a time.
+  4. **Deferred**: its header's source or why now says it was deferred
+     or is for later. None does on 2026-11-20: the owner's deferrals and
+     the "later" copies have no header yet.
+  5. **No header yet**: no header and nothing in the graph says why. An
+     exception of its own (CS-680 writes the headers), with one button
+     that copies a single question asking for all of them.
+- **A row.** On the left, the proposal (`ItemRef`), its flags, and its
+  header: source, why now (up to three lines; the whole of it on hover),
+  rough size, age, and the decider when it isn't the owner. Without a
+  header, one line says so plainly, with its age from the tracker. Then
+  what the graph says, an item per line: Needed by, Waits on, Dropped
+  need, Holds (a proposed milestone's constraints, each with its state),
+  and, quieter, Starts after (its other needs: committing isn't
+  starting). On the right, the call: "Recommended" and the call's name,
+  the milestone a commit would put it in when the graph names one (a
+  milestone that names it, else the committed milestone of the work
+  that needs it), the reason, and three buttons of one width, Commit,
+  Hold and Drop, the recommended one filled. Narrow (under 640 px of
+  view), the call drops under the proposal.
+- **Age.** The header's filed date, else when it became proposed (the
+  board's state history), else its creation, said as "filed", "proposed"
+  or "created" so the reader knows which.
+- **Flags**, outlined (never filled, so they don't read as a stage): No
+  header; Committed work inside (a proposed milestone with planned or
+  in-progress constraints); A need was dropped; Two weeks old (a header
+  filed 14 days ago or more: CS-686 brings it back once); Not shaped
+  (only on a new one whose call it changes).
+- **The recommendation** follows these rules, the first that matches
+  (`recommendOf` in `workProposals.ts`); there is no score:
+  1. Needed by committed work: commit it, after any decision before it,
+     or take the need away.
+  2. A proposed milestone with committed work inside: commit it.
+  3. Waiting on a decision or study: hold it until that is answered.
+  4. No header: hold it and ask for its header. **Drop is never
+     recommended without a header**: the "later" copies are kept for the
+     owner's review (CS-686's answer).
+  5. A need was dropped: drop it, its premise may be gone.
+  6. Deferred: hold it for review with its batch.
+  7. New and shaped (an item says what done is; a milestone owes
+     shaping nothing): commit it.
+  8. New, not shaped, two weeks old or more: drop it with that reason.
+  9. New, not shaped: hold it and send it to shaping.
+- **Nothing is applied.** hitld 0.1.0-rc.1 has no command to commit or
+  drop a proposal (`hitld --help`, checked 2026-11-20), so each button
+  copies a question for the chief of staff: the call, why it's proposed,
+  the view's recommendation and its reason, the decider when it isn't
+  the owner, and `npx hitld work show <ID>` to read it, the one command
+  shown, which exists in rc.1. The line under the tabs says so. A toast
+  confirms the copy, or says the browser refused.
+- **IDs.** Every ID shown carries its short title: the rows and lists
+  through `ItemRef`, and an ID inside prose (a header's field, a group's
+  rule, a reason) through the same reference, its title cut to 26
+  characters so it flows with the sentence; the hover card carries the
+  rest. The reasons name none of the row's own relations: those sit
+  beside them with their titles.
+- **The tiles** at the top, one per group (five across, three at tablet
+  width, two narrow), each a number, the group's name and a line: what
+  it holds up, how many answers it waits on, how many are ready to
+  commit. A tile moves to its group and focuses it; the scroll is smooth
+  unless reduced motion is asked for, when it jumps. Needed and No
+  header take the attention rule when not empty; the rule's width is
+  reserved on every tile.
+- **Arriving with one chosen.** Your move links here with `?item=`. Its
+  group shows all its rows, and the row is tinted and brought into view
+  once on arrival. A group shows eight rows, then "Show all".
+- **No movement.** Numbers are tabular, nothing bolds on hover or
+  selection (the chosen row is tinted), the buttons keep one width, and
+  the flags and fields reserve their columns. Reduced motion turns off
+  the smooth scroll and the buttons' transitions.
+- **Scope.** The scope narrows the view to its items and milestones, as
+  every view.
+- **Data.** Only the board's snapshot (`/work-api/query.json`): the
+  proposals' text for the header, their needs and the state history.
+  The board carries no field for a deferral or for a header's age apart
+  from its "Filed" date.
+- **Model.** `proposalsViewOf` in `bench/suite/workProposals.ts`, built
+  on `proposalsOf` (CS-688), tested in `test/dynoWorkProposals.test.ts`
+  with a fixture for each group and exception.
+
 ### The roadmap's Dependencies view (CS-694)
 
 The second of the roadmap's three views (the owner, 2026-11-18: Plan,

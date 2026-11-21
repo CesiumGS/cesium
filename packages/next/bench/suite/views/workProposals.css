@@ -1,0 +1,381 @@
+/*
+ * The Proposals view (views/workProposals.tsx; DESIGN.md, "The Proposals
+ * view"). One surface level, as the board's other cards: rows are set
+ * apart by rules, numbers are tabular, and nothing changes width or
+ * weight on hover, selection or a copy. The chosen row is tinted.
+ */
+
+.work-props {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+}
+.work-props-lede {
+  margin: 0;
+  max-width: 72ch;
+}
+.work-props-lede strong {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+
+/* The groups at a glance: five tiles, each a number, a name and a line. */
+.work-props-tiles {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--stratakit-space-300);
+}
+@container (max-width: 760px) {
+  .work-props-tiles {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@container (max-width: 440px) {
+  .work-props-tiles {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.work-props-tile {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  border-radius: var(--stratakit-radius-lg, 8px);
+  /* The exception's rule is reserved on every tile, so none moves. */
+  border-inline-start: 3px solid transparent;
+  background: var(--stratakit-color-bg-elevation-level-1);
+  cursor: pointer;
+}
+.work-props-tile:hover {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-neutral-hover,
+    rgba(128, 128, 128, 0.08)
+  );
+}
+.work-props-tile:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.work-props-tile.is-exception {
+  border-inline-start-color: var(
+    --stratakit-color-border-attention-base,
+    #c27a00
+  );
+}
+.work-props-tile-value {
+  font-size: var(--stratakit-font-size-headline-sm, 1.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-props-tile.is-exception .work-props-tile-value {
+  color: var(--stratakit-color-text-attention-strong, #a15c00);
+}
+.work-props-tile-name {
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-props-tile-detail {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* A group: a card with its rule under its name. */
+.work-props-group {
+  scroll-margin-top: var(--stratakit-space-500);
+}
+.work-props-group:focus {
+  outline: none;
+}
+.work-props-group:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.work-props-group.g-needed {
+  box-shadow: inset 3px 0 0
+    var(--stratakit-color-border-attention-base, #c27a00);
+}
+.work-props-group-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--stratakit-space-400);
+}
+.work-props-group-head .work-card-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 76ch;
+}
+.work-props-count {
+  margin-inline-start: var(--stratakit-space-100);
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: normal;
+}
+.work-props-bulk {
+  flex: none;
+}
+
+/* The rows: the proposal on the left, its call on the right. */
+.work-props-rows {
+  display: flex;
+  flex-direction: column;
+  margin: var(--stratakit-space-400) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.work-props-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem);
+  gap: var(--stratakit-space-500);
+  padding: var(--stratakit-space-400) var(--stratakit-space-300);
+  margin: 0 calc(-1 * var(--stratakit-space-300));
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+  border-radius: 4px;
+}
+.work-props-row:first-child {
+  border-top-color: transparent;
+}
+.work-props-row.selected {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-accent-pressed,
+    rgba(64, 120, 220, 0.08)
+  );
+}
+@container (max-width: 640px) {
+  .work-props-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--stratakit-space-300);
+  }
+}
+.work-props-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+}
+.work-props-title {
+  display: flex;
+  min-width: 0;
+  font-size: var(--stratakit-font-size-body-md);
+}
+
+/* Flags: outlined, never filled, so they don't read as a stage. */
+.work-props-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.work-props-flag {
+  padding: 0 var(--stratakit-space-200);
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+  border-radius: 999px;
+  font-size: var(--stratakit-font-size-caption-md);
+  line-height: 1.5;
+  color: var(--stratakit-color-text-neutral-secondary);
+  cursor: help;
+}
+.work-props-flag.f-no-header,
+.work-props-flag.f-committed-inside,
+.work-props-flag.f-need-dropped {
+  border-color: var(--stratakit-color-border-attention-base, #c27a00);
+  color: var(--stratakit-color-text-attention-strong, #a15c00);
+}
+
+/* The header's fields: a label over each value, in a row that wraps. */
+.work-props-fields,
+.work-props-graph {
+  display: grid;
+  gap: var(--stratakit-space-200) var(--stratakit-space-500);
+  margin: 0;
+}
+.work-props-fields {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) 7rem 9rem;
+}
+.work-props-fields:has(.f-decider) {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr) 7rem 9rem 8rem;
+}
+@container (max-width: 900px) {
+  .work-props-fields,
+  .work-props-fields:has(.f-decider) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .work-props-fields .f-why {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}
+.work-props-fields > div,
+.work-props-graph > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.work-props-fields dt,
+.work-props-graph dt {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-tertiary);
+}
+.work-props-fields dd,
+.work-props-graph dd {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-sm);
+  color: var(--stratakit-color-text-neutral-primary);
+  min-width: 0;
+}
+.work-props-fields .f-why dd {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+}
+.work-props-fields .f-age dd,
+.work-props-fields .f-size dd {
+  font-variant-numeric: tabular-nums;
+}
+.work-props-missing {
+  color: var(--stratakit-color-text-neutral-tertiary);
+}
+.work-props-noheader {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+/*
+ * An ID inside prose: its reference, its title cut short so it flows with
+ * the sentence; the hover card and the link's name carry the title whole.
+ */
+.work-props-inref {
+  display: inline-flex;
+  max-width: min(100%, 26ch);
+  vertical-align: bottom;
+}
+.work-props-inref .work-ref-title {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* What the graph says: one line per relation, its items listed. */
+.work-props-graph {
+  grid-template-columns: minmax(0, 1fr);
+}
+.work-props-graph > div {
+  flex-direction: row;
+  align-items: baseline;
+  gap: var(--stratakit-space-300);
+}
+.work-props-graph dt {
+  flex: none;
+  width: 7rem;
+}
+.work-props-graph .is-minor dd {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-props-graph dd {
+  flex: 1 1 auto;
+}
+@container (max-width: 440px) {
+  .work-props-graph > div {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+  .work-props-graph dt {
+    width: auto;
+  }
+}
+.work-props-refs {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  min-width: 0;
+}
+.work-props-refs li {
+  display: flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-300);
+  min-width: 0;
+}
+.work-props-state {
+  flex: none;
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-props-state.s-planned,
+.work-props-state.s-in-progress {
+  color: var(--stratakit-color-text-attention-strong, #a15c00);
+}
+
+/* The call: the recommendation, its rule, and three buttons of one width. */
+.work-props-call {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+  padding-inline-start: var(--stratakit-space-500);
+  border-inline-start: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+@container (max-width: 640px) {
+  .work-props-call {
+    padding: var(--stratakit-space-300) 0 0;
+    border-inline-start: none;
+    border-top: 1px dashed transparent;
+  }
+}
+.work-props-rec {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-body-sm);
+  min-width: 0;
+}
+.work-props-rec-name {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-tertiary);
+}
+.work-props-rec-call {
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-props-rec-target {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+  max-width: 100%;
+}
+.work-props-reason {
+  margin: 0;
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-props-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--stratakit-space-200);
+  margin-top: var(--stratakit-space-100);
+}
+.work-props-buttons .work-props-btn {
+  min-width: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-props-tile,
+  .work-props-btn {
+    transition: none;
+  }
+}

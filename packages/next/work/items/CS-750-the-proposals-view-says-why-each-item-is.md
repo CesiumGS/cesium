@@ -2,7 +2,7 @@
 id: CS-750
 title: The Proposals view says why each item is proposed, and offers commit, hold or drop
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]
