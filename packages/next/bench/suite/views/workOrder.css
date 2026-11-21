@@ -1,0 +1,364 @@
+/*
+ * The Order view (CS-749; DESIGN.md, "The Order view"). Its own prefix,
+ * work-order-. Nothing bolds or moves on hover, focus or selection: the
+ * active bar takes an outline drawn outside its box, the chosen row a
+ * tint, and every number is tabular in a reserved width.
+ */
+.work-order {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+}
+.work-order-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}
+.work-order-info {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* The figures: five tiles, three at tablet width, two narrow. */
+.work-order-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--stratakit-space-300);
+  margin: 0;
+}
+@container (max-width: 760px) {
+  .work-order-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@container (max-width: 440px) {
+  .work-order-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.work-order-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  border-radius: var(--stratakit-radius-lg, 8px);
+  background: var(--stratakit-color-bg-elevation-level-1);
+}
+.work-order-stat dt {
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-order-stat dd {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+.work-order-stat-value {
+  font-size: var(--stratakit-font-size-headline-sm, 1.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-order-stat-value.attention {
+  color: var(--stratakit-color-text-attention-strong, #a15c00);
+}
+/* Ready's blue is a fill; as text it takes the accent ink, readable in both modes. */
+.work-order-stat-value.ready {
+  color: var(--stratakit-color-text-accent-strong);
+}
+.work-order-stat-detail {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+.work-order-notes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  margin: calc(-1 * var(--stratakit-space-200)) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* The key: every color and mark, each with its words. */
+.work-order-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200) var(--stratakit-space-500);
+  margin: 0 0 var(--stratakit-space-400);
+  padding: 0;
+  list-style: none;
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-order-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+.work-order-swatch {
+  position: relative;
+  display: inline-block;
+  flex: none;
+  box-sizing: border-box;
+  width: 10px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--stage, transparent);
+}
+/* A gate's cap: a short bar of the kind's ink over the stage's fill. */
+/* The gate and next swatches are about the marks, not a stage: an empty box. */
+.work-order-swatch.gate,
+.work-order-swatch.next {
+  background: transparent;
+  border: 1px solid var(--stratakit-color-border-neutral-base);
+}
+.work-order-swatch.gate::before,
+.work-order-bar.gate::before {
+  content: "";
+  position: absolute;
+  inset: -4px 0 auto;
+  height: 3px;
+  border-radius: 1px;
+  background: var(--kind);
+}
+.work-order-swatch.decision,
+.work-order-bar.decision {
+  --kind: var(--kind-decision);
+}
+.work-order-swatch.external,
+.work-order-bar.external {
+  --kind: var(--kind-external);
+}
+.work-order-swatch.gate {
+  margin-top: 4px;
+  height: 10px;
+}
+/* Starts next: an accent line under the bar. */
+.work-order-swatch.next {
+  height: 10px;
+  margin-bottom: 4px;
+}
+.work-order-swatch.next::after,
+.work-order-bar.next::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 -5px;
+  height: 3px;
+  border-radius: 1px;
+  background: var(--stratakit-color-border-accent-strong);
+}
+.work-order-swatch.proposed,
+.work-order-bar.proposed {
+  outline: 1px dashed var(--proposed-outline);
+  outline-offset: -1px;
+}
+
+/* The lanes: a sticky name column beside one track per project. */
+.work-order-lanes {
+  position: relative;
+}
+.work-order-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+.work-order-grid {
+  display: grid;
+  grid-template-columns:
+    var(--work-order-name, 240px)
+    minmax(var(--work-order-track-min, 0px), 1fr);
+  min-width: 0;
+}
+.work-order-lane {
+  display: contents;
+}
+.work-order-lane-name {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+  height: 32px;
+  padding-inline-end: var(--stratakit-space-300);
+  background: var(--stratakit-color-bg-elevation-level-1);
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.work-order-lane-name .work-ref {
+  flex: 1 1 auto;
+}
+.work-order-lane-none {
+  flex: 1 1 auto;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-order-lane-count {
+  flex: none;
+  min-width: 3ch;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-order-track {
+  position: relative;
+  height: 32px;
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+/* Narrow: a lane's name on its own line, its track under it at full width. */
+@container (max-width: 560px) {
+  .work-order-grid {
+    grid-template-columns: minmax(var(--work-order-track-narrow, 0px), 1fr);
+  }
+  .work-order-lane-name {
+    height: 28px;
+    width: min(100%, calc(100cqw - 2 * var(--stratakit-space-500)));
+    box-sizing: border-box;
+  }
+  .work-order-track {
+    height: 24px;
+    border-top: 0;
+  }
+  .work-order-track .work-order-bar {
+    top: 4px;
+  }
+}
+/* A bar: its stage's fill, 1 px apart from its neighbors, never resized on hover. */
+.work-order-bar {
+  all: unset;
+  position: absolute;
+  top: 9px;
+  box-sizing: border-box;
+  height: 14px;
+  border-inline: 0.5px solid var(--stratakit-color-bg-elevation-level-1);
+  border-radius: 2px;
+  background: var(--stage, var(--stratakit-color-bg-neutral-base));
+  cursor: pointer;
+}
+.work-order-bar.selected {
+  box-shadow: 0 0 0 2px var(--stratakit-color-text-neutral-primary);
+  z-index: 1;
+}
+.work-order-bar.active,
+.work-order-bar:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+  z-index: 2;
+}
+/* Focused while the pointer shows another bar's card: still visible, quieter. */
+.work-order-bar:focus-visible:not(.active) {
+  outline-width: 1px;
+}
+
+/* The sequence: one line per item, the columns set by the list, not the row. */
+.work-order-seq {
+  --work-order-cols: var(--work-order-rank, 4ch) 10px minmax(0, 1fr)
+    minmax(0, 14rem) minmax(0, max-content);
+  display: grid;
+  grid-template-columns: var(--work-order-cols);
+  column-gap: var(--stratakit-space-300);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.work-order-seq.has-size {
+  --work-order-cols: var(--work-order-rank, 4ch) 10px minmax(0, 1fr)
+    minmax(0, 14rem) 7ch minmax(0, max-content);
+}
+.work-order-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 var(--stratakit-space-200);
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.work-order-row .visually-hidden {
+  position: absolute;
+}
+.work-order-row.selected {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-accent-pressed,
+    rgba(64, 120, 220, 0.08)
+  );
+}
+.work-order-rank,
+.work-order-size {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-order-item {
+  min-width: 0;
+  display: flex;
+}
+.work-order-project {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-order-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+}
+.work-order-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+  padding: 0 var(--stratakit-space-200);
+  border-radius: 999px;
+  white-space: nowrap;
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-order-tag.next {
+  color: var(--stratakit-color-text-accent-strong);
+  border-color: var(--stratakit-color-border-accent-strong);
+}
+.work-order-tag .work-kind-mark {
+  width: 12px;
+  height: 12px;
+}
+
+/* Narrow: each row stacks its item over its project and tags. */
+@container (max-width: 560px) {
+  .work-order-seq,
+  .work-order-seq.has-size {
+    --work-order-cols: var(--work-order-rank, 4ch) 10px minmax(0, 1fr);
+  }
+  .work-order-row {
+    row-gap: 2px;
+    padding-block: var(--stratakit-space-200);
+  }
+  .work-order-project,
+  .work-order-size,
+  .work-order-tags {
+    grid-column: 3;
+    justify-content: start;
+    text-align: start;
+  }
+  .work-order-tag {
+    max-width: 100%;
+    white-space: normal;
+  }
+}
+
+.work-order-pop {
+  max-width: min(520px, calc(100vw - 32px));
+  padding: var(--stratakit-space-400);
+}
+.work-order-pop h3,
+.work-order-pop p {
+  margin: 0 0 var(--stratakit-space-200);
+}

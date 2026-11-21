@@ -268,7 +268,8 @@ milestones named by their outcome, each with an `outcome` sentence,
     what the dependencies are and what milestones are going into what
     releases" from first principles. The roadmap answers three questions,
     one view each: **Plan**, when things get built (CS-692, the default
-    until CS-744 made the Release view the roadmap's first, below);
+    until CS-744 made the Release view the roadmap's first, below; the
+    Order view since CS-749);
     **Dependencies**, why something waits and what it unblocks, for one
     chosen milestone or item (CS-694); and **Projects**, how ready each
     project is for each release (CS-693). They rest on five principles,
@@ -294,50 +295,16 @@ milestones named by their outcome, each with an `outcome` sentence,
     release's finish is set by the chain that ends last, or by the
     amount of work, and the page says which.
 
-  - **Plan (CS-692)**: what gets built when, grouped by release, with no
-    dates and no durations. `planOf` in `work.ts` sequences the open work
-    items as the run would: each executor slot (the run's
-    `max_executors`; one in run 2026-11-18-2) takes the next item in the
-    planner's order whose needs are all finished. The order is work in
-    progress first, then the release bands in ladder order, then
-    hitld's queue rule (`orderQueue` in its `dispatch/queue.mjs`): most
-    open items unblocked, then the smaller estimate, then the ID. An item
-    a band's work needs is worked in that band, wherever its milestone
-    sits. Decisions and outside waits take no slot; the items behind
-    them carry their glyph after the bar, and the plan assumes they are
-    answered in time and says so. Across is cumulative tokens per slot;
-    the read API carries no estimates today, so it is item count, and
-    the view says so, naming how many items it counted as one (with
-    some estimates, the rest count at their median, and it says how
-    many). The slot count is a control above the plan (`&slots=`, 1 to
-    8, one when absent), so the owner can see the plan with more
-    executors. Rows are the releases in ladder order, then "No release
-    needs these"; a release folds to one summary bar and opens to one
-    bar per milestone, from its first item's start to its last item's
-    finish, each item's stretch filled by its stage; a milestone opens
-    to its items; items a band works that none of its milestones holds
-    sit in "Not in a … milestone" (or "In no milestone"), and milestones
-    with nothing left to sequence are named under the band. The first
-    release with work starts open; Expand all and Collapse all are
-    beside the slots. Each release is a marker on the axis, a labeled
-    flag along the top and a line down the plot, where the last item it
-    needs finishes (its milestones, their items and what those need,
-    and the releases before it). The markers are part of the plot: they
-    move with the zoom, their labels keep their size and stack where
-    they would overlap, and on a narrow plot a prerelease is named by
-    its tag ("alpha.1"). Choosing a marker (`&release=`) answers "what
-    sets its finish?": the chain of needs that ends at its last item is
-    outlined, what it doesn't need is dimmed, and a sentence above the
-    plot gives the finish, the last item, the chain and its length, the
-    other work the slots do before and during it, and how many open
-    decisions and outside waits it assumes answered. The key is one
-    line (fill: stage, glyph: kind, dashed: proposed, line: a release
-    is done) with a "?" popover that has the full key and how the plan
-    is sequenced. The plot sits in the roadmap's canvas (`ZoomCanvas`,
-    zooming across only: rows keep their height), starting fitted to
-    the width and fitted again when the slot count changes; the names
-    stay at the left and the markers at the top while it pans. Nothing
-    animates. "Releases and the milestones they need" follows the plot.
+  - **Plan (CS-692)** became the **Order view (CS-749)**, below. It
+    sequenced the work for an executor-slot count the owner set
+    (`&slots=`); the owner found that a setting the run's own history
+    should answer, since concurrency varies through a project, and the
+    legend unlabeled, the intro text unhelpful and the bars' hover and
+    tooltip in conflict. Its slot control, zoomable plot, release
+    markers and "Releases and the milestones they need" panel went with
+    it. `planOf` in `work.ts` stays: the Order view and the hover card
+    sequence with it. The route still reads `&slots=` and nothing uses
+    it.
   - **Earliest possible start** (the depth layering): each open
     milestone in the first wave it could start, in project lanes. It
     lives only in the Dependencies view's whole structure (CS-694,
@@ -366,23 +333,15 @@ milestones named by their outcome, each with an `outcome` sentence,
     each open release in ladder order (each after the releases it needs).
     A break is fixed in the tracker, by moving the item or splitting its
     milestone, never explained away on screen, so the roadmap shows each
-    as a problem to fix: "Releases and the milestones they need", after
-    the Plan's plot, gives each release with its milestones (folded
-    behind it) and, always open, its problems. Each problem names the
-    release, what it pulls in, the milestone that holds it and that
-    milestone's band, the path of needs from the release to it (IDs with
-    their kind's mark, named on hover), and the two fixes. A release
-    that needs an item itself, not through a milestone, is a problem
-    too. With none, the panel says so. Each open milestone sits in the
-    band of the earliest release that needs it ("a release is just a
-    special milestone"), and the Plan groups its rows by band.
-  - **The roadmap's canvas (CS-683)**, `ZoomCanvas`, holds the Plan's
-    plot: pinch, or Ctrl or ⌘ with the wheel, zooms about the pointer;
-    the wheel and a drag pan; the keys + and − step through the levels,
-    Shift+1 fits and Shift+0 goes back to 100%. The bar over it shows the
-    level and has zoom out, zoom in and Fit, all reachable by keyboard.
-    The zoom is semantic: text is drawn at full size or not at all.
-    Nothing animates, so reduced motion needs nothing more.
+    as a problem to fix: the Health view's release crossings (CS-745)
+    name each one with its fix. (The Plan view's "Releases and the
+    milestones they need" panel did, until it went with the Plan view,
+    CS-749.) Each open milestone sits in the band of the earliest
+    release that needs it ("a release is just a special milestone"),
+    and the Order view takes a release's work by band.
+  - **The roadmap's canvas (CS-683)**, `ZoomCanvas`, held the Plan's
+    plot and went with it (CS-749); `fitZoom` and the zoom levels in
+    `work.ts` stay for a later view.
   - **Proposals (CS-688)**: candidate commitments (CS-686), laid out as
     the flow they go through: new to discuss, being shaped, ready for
     your yes, and the "later" copies awaiting review. A proposal is a
@@ -476,11 +435,12 @@ is cheap and clashes with nothing, and that the tabs never move.
   else changes: no table to edit, so views built in parallel never
   conflict. A mounted view with a built-in view's ID takes its place
   (CS-750's Proposals view takes `id: "proposals"`); `replaces` retires
-  others (CS-749's Order view retires `"plan"` from Older views, and
-  CS-748's Projects view `"projects"` when it moves to its own file). A
-  doubled ID or one that isn't a slug is left out and logged. Built-in
-  orders: page Your move 10, Roadmap 20, Proposals 60, Flow 70; roadmap
-  Release 10; older Plan 10, Dependencies 20, Projects 30. The route
+  others. CS-749's Order view and CS-748's Projects view keep the IDs
+  of the views they replace (`"plan"`, `"projects"`), so old links open
+  them. A doubled ID or one that isn't a slug is left out and logged.
+  Built-in orders: page Your move 10, Roadmap 20, Proposals 60, Flow 70;
+  roadmap Release 10; older Dependencies 20, Projects 30. Mounted:
+  roadmap Path 20, Projects 30, Order 40. The route
   takes any slug for `view=` and `roadmap=`, and the shell shows the
   first view when the slug names none it has.
 
@@ -894,6 +854,96 @@ is the owner's call (hitld 04 §4.6); the view makes each call easy.
   on `proposalsOf` (CS-688), tested in `test/dynoWorkProposals.test.ts`
   with a fixture for each group and exception.
 
+### The Order view (CS-749)
+
+The roadmap's fourth view, after Release, Path and Projects: pick a
+release, and it shows the order the planner takes its work in, each
+project a lane so the interleaving shows, with each item's size. It
+answers "what comes next, and in what order?" for the owner, and "how
+much is left, and how fast does it go?" for anyone above the project,
+without a date or a duration. It replaces the Plan view (CS-692): the
+owner liked its interleaving across projects but not its executor-slot
+setting, which varies through a project, and found its legend
+unlabeled, its intro text unhelpful and its bars' hover and tooltip in
+conflict (2026-11-20).
+
+- **Where it is.** `?view=roadmap&roadmap=plan`, mounted by
+  `views/workOrder.tsx` (place `roadmap`, order 40). It keeps the Plan
+  view's ID, so old links open it. It follows the release picker
+  (`release=`) and the shared Proposed switch.
+- **Figures first.** Five tiles: the items in order (and in how many
+  projects), the size, how many items run at once in history, how many
+  start next, and how many wait on a gate (decisions and outside waits,
+  in the attention ink). A line under them says what comes first
+  ("Comes after alpha.1 (61 items)", each release a link), and names
+  only the exceptions there are: items pulled in from a later
+  release's milestone, items in no milestone, loops of needs, what the
+  history couldn't time, and how much of the release the scope shows.
+- **The order** is `orderPlanOf`: `planOf` (work in progress first, then
+  the release bands, then hitld's queue rule; an item starts once its
+  needs are done) with as many slots as runs typically had at once. A
+  release's rows are the items its band works, by start, then rank.
+  Decisions and outside waits are not in the order: the items behind
+  them carry a cap in the gate's ink, and the order assumes them
+  answered in time.
+- **Sizes.** Items now, and the figure says "no token estimates yet".
+  Once estimates exist, tokens as a range (the Release view's rule,
+  `sizeOf`): the sum of the estimates there are, to that plus each
+  unestimated item at their median, labeled with how many are
+  estimated, and the list gains a column with each item's estimate.
+  Across, a bar is as wide as its size.
+- **Concurrency is history, not a setting** (`concurrencyOf`). A span
+  runs from an item's In progress to its next state in the board's
+  history, and work in progress now runs to now (from its claim, when
+  it is on another branch). Each day with work in progress gives its
+  most at once; the tile shows the fewest and the most of those as a
+  range, labeled "At once, in history", over how many days. The order
+  plans with the typical day's most (the median, rounded up), and
+  "Starts next" marks the first ready items, as many as the most runs
+  have had at once. A span claimed and closed at one commit time
+  (landed as one merge) can't be timed: it is left out, and a line
+  says how many.
+- **By project.** A lane per project, in the order each project's
+  first item comes, named by its `ItemRef` and its count, the names
+  sticky at the left. Across is how much of the release's work comes
+  before an item; each item is a bar filled by its stage, a cap in a
+  gate's ink when it waits on one, an accent line under it when it
+  starts next, dashed when proposed. The key above it names every
+  color and mark in words. A bar is at least 6 px (3 px narrow): a long
+  release scrolls sideways in its box, never the page.
+- **One card per bar.** A bar's card is the shared hover card
+  (`WorkCardBody`) with its place in the order in the footer ("#4 in
+  alpha.1's order · Click or Enter for details"). The pointer and the
+  keyboard share one active bar (`barReducer`): the bar under the
+  pointer, else the bar focused from the keyboard, so exactly one card
+  is open. A bar shows no other hover state than the card's outline;
+  the keyboard-focused bar keeps a thinner outline while the pointer
+  shows another's card. A click opens the item in the pane and leaves
+  no card behind; Escape closes the card. The lanes are one tab stop:
+  the left and right arrows walk the order, up and down move to the
+  nearest bar in the next lane, Home and End jump to its ends, and
+  Enter opens the item.
+- **The sequence.** The same order as a list: the rank, the stage's
+  swatch, the item's `ItemRef` (every ID with its title and the hover
+  card), its project, and tags for starts next, the gates it waits on
+  (with the kind's mark) and pulled in. One grid sets the columns for
+  every row (CSS subgrid), so no row's content moves another's; the
+  chosen item's row is tinted, never bolded. Numbers are tabular, and
+  the rank column is as wide as the longest rank.
+- **Help.** The info button beside the release picker opens "Reading
+  the order": what across means, how the planner orders the work, the
+  sizes, and how the history is read, with its days. No intro text sits
+  above the view.
+- **Nothing is applied from the page**, and it shows no command.
+- **Widths.** Five tiles, three at tablet width, two narrow. Under 560
+  px of view a lane's name takes its own line above its track, and a
+  row of the sequence stacks its project and tags under its item.
+- **Motion.** Nothing in the view animates; the hover card and the help
+  popover appear at once under reduced motion.
+- **Model.** `concurrencyOf`, `orderPlanOf`, `orderViewOf` and
+  `barReducer` in `views/workOrder.tsx`, tested in
+  `test/dynoWorkPlanOrder.test.ts`.
+
 ### The roadmap's Dependencies view (CS-694)
 
 The second of the roadmap's three views (the owner, 2026-11-18: Plan,
@@ -903,14 +953,11 @@ between 90-odd milestones drawn at once answers neither "what is this
 waiting on?" nor "what does this unblock?", so the view asks about one
 thing at a time and shows the rest on demand.
 
-- **Where it is.** `?view=roadmap&roadmap=deps`, the Dependencies toggle
-  between Plan and Projects. `&focus=CS-<n>` is the center;
+- **Where it is.** `?view=roadmap&roadmap=deps`, under Older views. `&focus=CS-<n>` is the center;
   `&depth=` the levels shown, 1 to 6 (3 when absent); `&deps=all` the
   whole structure. It follows the roadmap's Proposed toggle: proposed
   milestones join only when asked for, outlined dashed (CS-563).
-- **Choosing the center.** From the Plan view directly (each milestone
-  and item row has a dependencies button beside its name, quiet until
-  pointed at or focused), from the pane (Its dependencies, on any
+- **Choosing the center.** From the pane (Its dependencies, on any
   milestone or item, so from a list, Find or the map), from its own
   search field (ID or words in the title, milestones
   first; the arrow keys walk the matches, Enter takes the first), or,
@@ -951,10 +998,10 @@ thing at a time and shows the rest on demand.
   each cell listing its milestones as small chips (the mark, the ID, the
   title cut to fit). A milestone's wave is one more than the latest wave
   of the milestones it waits on; it is the earliest it could start with
-  unlimited hands, never when it will (the Plan view answers when).
+  unlimited hands, never when it will (the Order view gives the order).
   Release items take no wave. One key line (the lead sentence, dashed
   for proposed, ↻ for a loop) carries a "?" whose popover explains the
-  rest, as the Plan's does. No wait is drawn; a chip's tip is short
+  rest. No wait is drawn; a chip's tip is short
   (its title, its loop, how many it waits on), and choosing it centers
   the view on it. The grid scrolls sideways in its own box, the lanes'
   names held. Then the project matrix, CS-693's, the roadmap's only
@@ -1046,8 +1093,9 @@ lines of equal weight (the owner, 2026-11-18: hard to read, and the
 progress bars' colors unexplained). `HoverCard.tsx` beside `Work.tsx`;
 its content comes from `workCardOf` in `work.ts`.
 
-- **Where.** The same card on every mark that stands for work: a Plan
-  row's name and bar and each release marker, a Dependencies node and
+- **Where.** The same card on every mark that stands for work: an
+  Order bar (opened by the Order view itself, so the pointer and the
+  keyboard share one), a Dependencies node and
   waves chip, a Projects cell, project and release head, and every row
   of the lists (Your move, the pane's trees, the chains, the tables). It
   opens on hover after a short pause and on keyboard focus, beside its
@@ -1057,7 +1105,7 @@ its content comes from `workCardOf` in `work.ts`.
   (CS-698) mounts it with its own.
 - **What and how far.** The kind's glyph and the title; the ID, one
   state chip (Ready, Blocked, In progress, Proposed or Done) and the
-  release it belongs to (its band in the Plan view, else the first
+  release it belongs to (its band in the Order view's plan, else the first
   release it gates). A set of items (a milestone, a release, a project,
   a cell) adds a small bar like its mark and the words under it, each
   beside its color: "2 done · 1 ready · 2 blocked". A lone item has its
@@ -1067,9 +1115,10 @@ its content comes from `workCardOf` in `work.ts`.
   owner's come first, set apart in amber under "Needs your answer";
   then what lies outside the set before its own items; decisions, then
   outside waits, then work. Two by name, then "+N more".
-- **Slip.** One plain line against its release, read off the Plan
-  view's own sequence and units, with the page's slots
-  (`planSlackOf`): a backward pass over what follows each item, the
+- **Slip.** One plain line against its release, read off the Order
+  view's own plan (`orderPlanOf`: `planOf` with as many slots as runs
+  typically had at once, from history; CS-749), so the card and the
+  view agree (`planSlackOf`): a backward pass over what follows each item, the
   items that need it and the next item in its slot. "Sets beta.1's
   finish: any delay moves beta.1", or "Room to slip: about 12 items
   before beta.1 moves" (tokens once items carry estimates). A set is as
@@ -1087,7 +1136,6 @@ its content comes from `workCardOf` in `work.ts`.
   hover, "2 blocked: waiting on CS-22 and CS-23", in CS-573's stage
   colors. In the pane each segment is also a stop for the keyboard; in
   a Projects cell, a button, the cell's card labels the colors instead.
-  A Plan bar's segments, one per item, name the item and its state.
 - **Size and motion.** About 320 px wide, never wider than the screen
   less 16 px; short section labels; body text at full contrast, muted
   only for the note and the footer. Below 480 px the slack's bar and the

@@ -2,7 +2,7 @@
 id: CS-749
 title: "The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]
