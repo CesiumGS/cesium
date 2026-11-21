@@ -108,6 +108,7 @@ export const API_ROWS: readonly ApiRow[] = [
     next: ["Engine", "World", "View"],
     supporting: [
       "EngineOptions",
+      "RendererOption",
       "Capabilities",
       "FrameStats",
       "WorldMemory",

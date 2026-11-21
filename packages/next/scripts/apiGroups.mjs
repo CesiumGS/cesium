@@ -272,6 +272,7 @@ export const RULES = [
   { entry: ".", from: "src/scene/View.ts", group: "core.engine" },
   { entry: ".", from: "src/profile/", group: "core.engine" },
   { entry: ".", from: "src/scene/renderTarget.ts", group: "core.engine" },
+  { entry: ".", from: "src/scene/deviceChoice.ts", group: "core.engine" },
   { entry: ".", from: "src/scene/Body.ts", group: "core.engine" },
   { entry: ".", from: "src/gpu/GpuDevice.ts", group: "core.engine" },
   { entry: ".", from: "src/gpu/limits.ts", group: "core.engine" },

@@ -86,14 +86,14 @@ function statusName(gl: WebGL2RenderingContext, status: number): string {
   );
 }
 
-/** The samples of the multisampled targets (plan section 3, "MSAA"). */
+/** The samples of the multisampled targets (the WebGL 2 plan's "MSAA"). */
 const MSAA_SAMPLES = 4;
 /** The probe's framebuffers are a few pixels: only completeness is asked. */
 const SIZE = 4;
 
 /**
- * Builds the framebuffer `name` for real (the formats the renderer will use,
- * plan sections 3 and 5) and checks its status, then deletes what it made.
+ * Builds the framebuffer `name` for real (the formats the renderer will use, in the
+ * WebGL 2 plan) and checks its status, then deletes what it made.
  */
 function checkFramebuffer(
   gl: WebGL2RenderingContext,

@@ -2,7 +2,7 @@
 id: CS-35
 title: The probe, the `renderer` option and an empty WebGL 2 device
 kind: work
-state: in-progress
+state: done
 created: 2026-11-13
 project: CS-9
 needs: [CS-33, CS-21]

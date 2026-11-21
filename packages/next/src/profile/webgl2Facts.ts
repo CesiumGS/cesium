@@ -35,8 +35,8 @@ export interface FramebufferCheck {
 }
 
 /**
- * The framebuffers the renderer builds (plan section 3 "MSAA" and section
- * 5): the probe makes each at a few pixels and checks it is complete, so a
+ * The framebuffers the renderer builds (the WebGL 2 plan's "MSAA" and "Outputs
+ * and post stages"): the probe makes each at a few pixels and checks it is complete, so a
  * context that lists `EXT_color_buffer_float` but can't render to the
  * formats is found out here, not at the first frame.
  */

@@ -151,12 +151,12 @@ export class Environment {
   }
 
   private constructor(private readonly device: GPUDevice) {
-    this.specularCube = specularCube(device, "env.specular", COPY_DST());
+    this.specularCube = specularCube(device, "env.specular", copyDst());
     this.specularView = this.specularCube.createView({ dimension: "cube" });
     this.irradianceCube = irradianceCube(
       device,
       "env.irradiance",
-      COPY_DST() | COPY_SRC(),
+      copyDst() | copySrc(),
     );
     this.irradianceView = this.irradianceCube.createView({
       dimension: "cube",
@@ -217,8 +217,8 @@ export class Environment {
           GPUTextureUsage.TEXTURE_BINDING |
           GPUTextureUsage.RENDER_ATTACHMENT,
       }),
-      specularCube: specularCube(device, `${label}.specular`, COPY_SRC()),
-      irradianceCube: irradianceCube(device, `${label}.irradiance`, COPY_SRC()),
+      specularCube: specularCube(device, `${label}.specular`, copySrc()),
+      irradianceCube: irradianceCube(device, `${label}.irradiance`, copySrc()),
       sh: device.createBuffer({
         label: `${label}.sh`,
         size: 9 * 16,
@@ -468,8 +468,8 @@ const KERNELS = [
 
 // Read when used, not when the module loads: a browser without WebGPU (the
 // WebGL 2 fallback's) has no `GPUTextureUsage`, and still loads the engine.
-const COPY_SRC = () => GPUTextureUsage.COPY_SRC;
-const COPY_DST = () => GPUTextureUsage.COPY_DST;
+const copySrc = () => GPUTextureUsage.COPY_SRC;
+const copyDst = () => GPUTextureUsage.COPY_DST;
 
 function specularCube(
   device: GPUDevice,
