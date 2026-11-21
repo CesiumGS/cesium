@@ -779,8 +779,9 @@ npm run bench --workspace @cesium/next      # the Lab's harnesses (dyno lab); wr
 npm run build:lib --workspace @cesium/next  # the library for pages without a build step
 ```
 
-**dyno**, Dyno's command line (`npx dyno`: the private workspace package `tools/dyno`, which runs
-`bench/dyno.mjs`), runs the benchmark suite (`dyno suite`), the
+**dyno**, Dyno's command line (`npx --no-install dyno`: the private workspace package `tools/dyno`, which
+runs `bench/dyno.mjs`; `--no-install` so a missing link fails instead of
+downloading the unrelated public `dyno` package), runs the benchmark suite (`dyno suite`), the
 Lab's harnesses (`dyno lab`), Dyno's and the handbook's servers (`dyno
 serve`), measurements a program starts and watches (`dyno measure`), and
 reports the machine (`dyno status`) and setup's data (`dyno data status`).

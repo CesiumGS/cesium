@@ -201,7 +201,8 @@ export function helpLines(node, path) {
     lines.push(`       ${name} <command> --help`);
     // The bin is the private workspace package tools/dyno (CS-774).
     if (path.length === 0) {
-      lines.push("", "Run it as `npx dyno`, from the repository root or packages/next.");
+      lines.push("", "Run it as `npx --no-install dyno`, from the repository root or packages/next.",
+        "(--no-install: a missing link then fails instead of downloading the public `dyno` package.)");
     }
     lines.push("");
     lines.push("Commands:");

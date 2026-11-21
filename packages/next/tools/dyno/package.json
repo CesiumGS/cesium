@@ -2,7 +2,7 @@
   "name": "dyno",
   "version": "0.0.0",
   "private": true,
-  "description": "The dyno command: `npx dyno`. A private workspace package that only carries the bin; the command is bench/dyno.mjs (CS-774).",
+  "description": "The dyno command: `npx --no-install dyno`. A private workspace package that only carries the bin; the command is bench/dyno.mjs (CS-774).",
   "license": "Apache-2.0",
   "type": "module",
   "bin": {
