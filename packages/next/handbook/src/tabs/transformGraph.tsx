@@ -693,9 +693,9 @@ export function TransformGraph() {
           parameters to a point in meters. The function <em>is</em> the CPU
           path, called as it is. For the GPU and the derivatives the engine
           reads its source (<C>Function.prototype.toString</C>) and parses it,
-          without evaluating it, into the IR. A function outside the subset
-          isn&apos;t rejected: it still works, fitted, and the error names the
-          construct, with its line and column.
+          without evaluating it, into Cesium IR, the engine&apos;s core IR. A
+          function outside the subset isn&apos;t rejected: it still works,
+          fitted, and the error names the construct, with its line and column.
         </p>
         <DataTable
           label="What the restricted JavaScript accepts and refuses"
@@ -770,11 +770,11 @@ export function TransformGraph() {
               body: (
                 <>
                   A built-in carries its source; <C>fromFunction</C>&apos;s is
-                  parsed. The IR is a hash-consed scalar program of about 25 ops
-                  on scalars and vec3: arithmetic, <C>select</C>,{" "}
-                  <C>sqrt exp log pow</C>, the trig and hyperbolic functions,{" "}
-                  <C>floor fract clamp mix smoothstep</C>, and dot, cross,
-                  length and normalize.
+                  parsed. Either becomes Cesium IR: typed, hash-consed equations
+                  in KHR_interactivity&apos;s math ops. A transform&apos;s are
+                  scalar: arithmetic, comparisons, <C>select</C>,{" "}
+                  <C>sqrt exp log pow</C>, the trig and hyperbolic functions,
+                  and <C>floor ceil sign min max</C>.
                 </>
               ),
             },
