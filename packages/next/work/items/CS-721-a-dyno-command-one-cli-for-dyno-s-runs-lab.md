@@ -2,10 +2,11 @@
 id: CS-721
 title: "A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-389
 needs: [CS-390, CS-724]
+claimed_by: orch-11-CS-721
 ---
 
 The owner, 2026-11-19: "right now we run dyno cli stuff through `node <scriptname>`, i think we need to turn that into a real 'dyno' cli tool to help manage some of this stuff."
