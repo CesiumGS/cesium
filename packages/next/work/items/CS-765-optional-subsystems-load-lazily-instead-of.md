@@ -15,6 +15,7 @@ Source: the owner's answer to CS-714 (A, file both items), 2026-11-20. Why now: 
 ## Done when
 
 - A page that uses none of the optional subsystems loads none of their modules. A test lists the modules the core entry pulls in and fails when an optional subsystem joins them.
+- Cesium IR loads lazily too. Since CS-53, `src/transform` imports Cesium IR's AD, builder and scalarize modules, which raised the viewer's startup modules from 492 to 501 (run 2026-11-21T16-10-32-739Z-mac-apple). Only content under a curvilinear map compiles routes, so a default view loads none of Cesium IR. (Added 2026-11-21, from orch-11's cold-start check after CS-53.)
 - The public API keeps its names: `npm run surface` shows no removal, and `api/surface.txt` is committed with any change.
 - The coldstart Dyno run measures module load before and after, with run IDs cited, and the regression budget in `bench/suite/coldStart.mjs` tightens to what is measured, with headroom stated.
 - `scripts/checkBundle.mjs` and the library build still pass.
