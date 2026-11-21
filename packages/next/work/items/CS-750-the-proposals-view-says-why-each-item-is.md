@@ -2,10 +2,11 @@
 id: CS-750
 title: The Proposals view says why each item is proposed, and offers commit, hold or drop
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]
+claimed_by: orch-11-CS-750
 touches: [packages/next/bench/suite/views/workProposals.tsx, packages/next/bench/suite/views/workProposals.css, packages/next/bench/suite/workProposals.ts, packages/next/test/dynoWorkProposals.test.ts]
 ---
 
