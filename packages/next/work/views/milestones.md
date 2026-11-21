@@ -603,8 +603,8 @@ CS-722 Benchmark results are shared across machines, and dyno is one command [Pl
 
 CS-751 The owner's views answer what needs me, what's on track and what's wrong [Planned], under CS-389 Dyno as the development harness
   outcome: The Work page opens on a release's remaining milestones and the gates holding it, shows only the graph's exceptions, draws the path to any target, says what changed, shows projects as bets, orders work without a slot setting, makes each proposal a clear call, shows how well the system and the owner work together, and keeps Your move calm.
-  constraints: 7 of 9 done
-  unmet: not linked to a clause yet (open: CS-752, CS-753; check not passed)
+  constraints: 8 of 9 done
+  unmet: not linked to a clause yet (open: CS-753; check not passed)
   to shape: done_when; check; link CS-744, CS-745, CS-746, CS-747, CS-748, CS-749, CS-750, CS-752, CS-753 to a clause
 
 CS-1 Renderers and engine profiles [Dropped]

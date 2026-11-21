@@ -212,7 +212,6 @@ CS-389 Dyno as the development harness
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
   CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands
   CS-733  Each run records its device, configuration and state
-  CS-752  Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them
   CS-753  "Your move" gets a calmer layout: fewer, larger, ranked entries
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
   CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
@@ -261,5 +260,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-192 ready
+191 ready
 ```

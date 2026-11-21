@@ -613,7 +613,7 @@ graph LR
     CS_748["CS-748 The Projects view shows each project as a bet: its outcome, rel"]:::done
     CS_749["CS-749 The Plan view becomes Order: the planner's sequence for a relea"]:::done
     CS_750["CS-750 The Proposals view says why each item is proposed, and offers c"]:::done
-    CS_752["CS-752 Flow answers how well the system and the owner work together: c"]:::open
+    CS_752["CS-752 Flow answers how well the system and the owner work together: c"]:::done
     CS_753["CS-753 'Your move' gets a calmer layout: fewer, larger, ranked entries"]:::open
     CS_754["CS-754 Merge CS-743, main's npm test exits 0 again"]:::done
     CS_756["CS-756 Merge CS-390, run identity and the machine-wide run lock"]:::done
@@ -637,6 +637,7 @@ graph LR
     CS_786["CS-786 Order's concurrency history reads when work really started, not"]:::proposed
     CS_787["CS-787 Dyno's Work page says Order where it still says Plan view, and "]:::proposed
     CS_793["CS-793 Merge CS-784, the dyno tool is @cesium/dyno"]:::done
+    CS_795["CS-795 Merge CS-752, Flow answers how well the system and the owner wo"]:::done
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open

@@ -889,7 +889,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 44 of 83 done, 15 ready, 17 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 46 of 84 done, 14 ready, 17 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -951,7 +951,7 @@ Milestone: The owner's views answer what needs me, what's on track and what's wr
 - [x] CS-748 The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions. Done.
 - [x] CS-749 The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting. Done.
 - [x] CS-750 The Proposals view says why each item is proposed, and offers commit, hold or drop. Done.
-- [ ] CS-752 Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them. Needs CS-744.
+- [x] CS-752 Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them. Done.
 - [ ] CS-753 "Your move" gets a calmer layout: fewer, larger, ranked entries. Needs CS-744 and CS-750.
 
 No milestone
@@ -997,6 +997,7 @@ No milestone
 - [?] CS-786 Order's concurrency history reads when work really started, not commit dates. Proposed. Needs CS-749.
 - [?] CS-787 Dyno's Work page says Order where it still says Plan view, and DESIGN.md drops the old Projects section. Proposed. Needs CS-749.
 - [x] CS-793 decision: Merge CS-784, the dyno tool is @cesium/dyno. Done.
+- [x] CS-795 decision: Merge CS-752, Flow answers how well the system and the owner work together. Done.
 
 ### The public API reviews
 
