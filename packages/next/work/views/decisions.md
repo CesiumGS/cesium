@@ -6,6 +6,7 @@
 CS-9 The WebGL 2 renderer
   CS-46  Which test devices are available for the WebGL 2 probe runs? (owner)
       waited on by CS-47
+  CS-789  Merge CS-35, the probe, the renderer option and an empty WebGL 2 device (owner)
 
 CS-13 The worker-mode façade
   CS-118  Do the façade's measurements ask for a shared snapshot? (owner)
@@ -68,5 +69,8 @@ CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617
 
-21 open decision(s) for owner
+CS-10 Cesium IR
+  CS-788  Merge CS-53, transforms move onto Cesium IR, with its browser parity bullet not showable today (owner)
+
+23 open decision(s) for owner
 ```

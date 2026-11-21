@@ -17,6 +17,7 @@ CS-9 The WebGL 2 renderer
   CS-32  The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points
   CS-35  The probe, the `renderer` option and an empty WebGL 2 device
   CS-46  decision: Which test devices are available for the WebGL 2 probe runs?
+  CS-789  decision: Merge CS-35, the probe, the renderer option and an empty WebGL 2 device
 
 CS-10 Cesium IR
   CS-49  The versioned JSON format
@@ -29,6 +30,7 @@ CS-10 Cesium IR
   CS-549  The IR models math/normalize's isValid output
   CS-550  The core IR spike's evaluator gets dot and intToFloat's signed zero right
   CS-571  The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires
+  CS-788  decision: Merge CS-53, transforms move onto Cesium IR, with its browser parity bullet not showable today
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -212,7 +214,6 @@ CS-389 Dyno as the development harness
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
   CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands
   CS-733  Each run records its device, configuration and state
-  CS-749  The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting
   CS-752  Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them
   CS-753  "Your move" gets a calmer layout: fewer, larger, ranked entries
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
@@ -263,5 +264,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-194 ready
+195 ready
 ```

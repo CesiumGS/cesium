@@ -47,6 +47,7 @@ graph LR
     CS_370["CS-370 Scene rebuild after a WebGL 2 context loss"]:::proposed
     CS_761["CS-761 Merge CS-33, the renderer seam extracted (WebGPU only, pure mov"]:::done
     CS_783["CS-783 Merge CS-34, renderer-neutral content resources (texture images"]:::done
+    CS_789["CS-789 Merge CS-35, the probe, the renderer option and an empty WebGL "]:::decision
   end
   subgraph CS_10["Cesium IR"]
     CS_48["CS-48 The core (types, rates, equations, literal slots, the builder)"]:::done
@@ -86,6 +87,9 @@ graph LR
     CS_759["CS-759 Merge CS-50, Cesium IR's passes (AD, intervals with splitting, "]:::done
     CS_776["CS-776 Merge CS-52, the GLSL ES 3.00 emitter, with its naga cross-chec"]:::done
     CS_777["CS-777 The GLSL ES emitter's output is cross-checked against naga's, a"]:::proposed
+    CS_788["CS-788 Merge CS-53, transforms move onto Cesium IR, with its browser p"]:::decision
+    CS_790["CS-790 A Lab parity page draws through a compiled curvilinear route, s"]:::proposed
+    CS_791["CS-791 Per-draw center constants on Cesium IR's generic evaluator are "]:::proposed
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -605,7 +609,7 @@ graph LR
     CS_746["CS-746 A Path view shows only what lies upstream of a chosen target: i"]:::done
     CS_747["CS-747 A Since-you-last-looked view shows scope changes and answers si"]:::done
     CS_748["CS-748 The Projects view shows each project as a bet: its outcome, rel"]:::done
-    CS_749["CS-749 The Plan view becomes Order: the planner's sequence for a relea"]:::open
+    CS_749["CS-749 The Plan view becomes Order: the planner's sequence for a relea"]:::done
     CS_750["CS-750 The Proposals view says why each item is proposed, and offers c"]:::done
     CS_752["CS-752 Flow answers how well the system and the owner work together: c"]:::open
     CS_753["CS-753 'Your move' gets a calmer layout: fewer, larger, ranked entries"]:::open
@@ -627,6 +631,9 @@ graph LR
     CS_781["CS-781 What changed takes a since= URL field, so a chosen point can be"]:::proposed
     CS_782["CS-782 Merge CS-774, npx dyno works through a private workspace packag"]:::done
     CS_784["CS-784 The dyno tool is @cesium/dyno, so npx can never reach an outsid"]:::open
+    CS_785["CS-785 Merge CS-749, the Plan view becomes Order"]:::done
+    CS_786["CS-786 Order's concurrency history reads when work really started, not"]:::proposed
+    CS_787["CS-787 Dyno's Work page says Order where it still says Plan view, and "]:::proposed
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -1408,6 +1415,10 @@ graph LR
   CS_23 --> CS_780
   CS_747 --> CS_781
   CS_774 --> CS_784
+  CS_749 --> CS_786
+  CS_749 --> CS_787
+  CS_53 --> CS_790
+  CS_53 --> CS_791
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3
