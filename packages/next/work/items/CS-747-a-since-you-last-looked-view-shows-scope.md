@@ -2,10 +2,11 @@
 id: CS-747
 title: A Since-you-last-looked view shows scope changes and answers since a chosen point
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]
+claimed_by: orch-11-CS-747
 touches: [packages/next/bench/suite/views/workChanges.tsx, packages/next/bench/suite/views/workChanges.css, packages/next/bench/suite/workChanges.ts, packages/next/scripts/workBoard.mjs, packages/next/test/dynoWorkChanges.test.ts]
 ---
 
