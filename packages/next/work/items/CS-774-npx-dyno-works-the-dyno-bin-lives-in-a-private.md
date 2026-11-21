@@ -2,10 +2,11 @@
 id: CS-774
 title: "npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-20
 project: CS-389
 needs: [CS-721]
+claimed_by: orch-11-CS-774
 touches: [package.json, package-lock.json, packages/next/tools/dyno/**, packages/next/bench/dyno.mjs, packages/next/package.json, packages/next/.claude/skills/dyno/**, packages/next/test/dyno*.test.ts]
 ---
 
