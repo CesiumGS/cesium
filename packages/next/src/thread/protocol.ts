@@ -503,7 +503,8 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         setMoonMap
       `,
       "cannot-cross": `
-        adoptTileset bodyCamera ctx gpu raster reportFarAnchors scene
+        adoptTileset bodyCamera ctx device gpu raster renderers
+        reportFarAnchors scene
       `,
     },
     FrameResolver: {
@@ -1047,10 +1048,10 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         addBrep addPatchMesh addTerrainClipRegion anchorRemovals
         clipBuffer clipSets clippedBundle copyOcclusionCounters ctx
         curvilinearMaps depthBundle drawForRoute drawHasPosition
-        drawMaterial drawOverheadBytes drawSplats encodeCull encodeRetest
+        drawMaterial drawOverheadBytes draws drawSplats encodeCull encodeRetest
         encodeTranslucent featureIdOf findBodyAnchor forEachLight
         heightBundle instanceBuffer itemBuffer itemOfDraw itemRemoved
-        markDirty markGpuInstances materialBuffer materialWithFlags
+        markDirty markGpuInstances materialBuffer materialWithFlags mirror
         occluders occlusionLayout pickBundle pickSource placementBuffer
         placementOf positionRefusal prepareFrame prepassBundle raster
         readPatchStats ready recordBuffer releasePlacementParameter
