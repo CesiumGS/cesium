@@ -2,10 +2,11 @@
 id: CS-34
 title: Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`)
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-9
 needs: [CS-33]
+claimed_by: orch-11-CS-34
 touches: [packages/next/src/scene/gltfModel.ts, packages/next/src/globe/**]
 ---
 
