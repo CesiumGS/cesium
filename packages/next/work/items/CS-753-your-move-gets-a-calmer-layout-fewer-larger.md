@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-19
 project: CS-389
-needs: [CS-744]
+needs: [CS-744, CS-750]
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/test/dynoWork*.test.ts]
 ---
 
@@ -23,4 +23,5 @@ Model: the most capable one (design-heavy UI).
 - Body text is at least the page's base size. Secondary detail moves into the entry's drawer, not smaller type.
 - One column on narrow screens and a clear two-level hierarchy on wide ones. No section scrolls sideways.
 - Empty sections collapse to one line, and a fully clear "Your move" says so.
+- The "Proposals for you" card counts proposals in CS-750's groups (needed by committed work, waiting on a decision or study, new, deferred) and links to the Proposals view. The old card's code for CS-688's stages is removed from `Work.tsx`. (Added 2026-11-20, from CS-750's report.)
 - Design pass as AGENTS.md asks: update `bench/suite/DESIGN.md`, run a UX review on the real page and fix what it finds; check both themes, 380 px wide, keyboard only, reduced motion and a clean console. Every item ID shown carries its short title. No layout shift on hover, selection or bolding. The owner reviews it by clicking around.
