@@ -88,6 +88,7 @@
     "@vitejs/plugin-basic-ssl": "2.3.0",
     "@webgpu/types": "^0.1.74",
     "human-in-the-lead": "git+https://github.com/arobison/human-in-the-lead.git#v0.1.0-rc.1",
+    "naga-wasm": "30.2.0",
     "typescript": "^6.0.2",
     "vite": "8.0.16",
     "vitest": "^5.0.5"

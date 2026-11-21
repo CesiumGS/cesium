@@ -2,7 +2,7 @@
 id: CS-580
 title: naga-wasm is a dev dependency of @cesium/next, so CI validates the WGSL emitter's output
 kind: work
-state: in-progress
+state: done
 created: 2026-11-17
 project: CS-199
 needs: [CS-574]

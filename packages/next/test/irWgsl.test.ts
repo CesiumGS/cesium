@@ -1,9 +1,7 @@
 // CS-51: the WGSL emitter. Every test program's WGSL is validated by naga
-// (naga-wasm, from the core IR spike's dependencies, until CS-57 replaces
-// it), and the emitter's layout, source map and refusals are checked. The
+// (naga-wasm, a dev dependency of this package, until CS-57 replaces it),
+// and the emitter's layout, source map and refusals are checked. The
 // GPU readback half runs in the browser suite (`node bench/run.mjs irWgsl`).
-import { existsSync } from "node:fs";
-import { fileURLToPath, pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 import {
   Builder,
@@ -19,20 +17,27 @@ interface Naga {
   validate(module: unknown): unknown;
 }
 
-const nagaPath = fileURLToPath(
-  new URL(
-    "../spikes/core-ir/node_modules/naga-wasm/dist/node.js",
-    import.meta.url,
-  ),
+// naga-wasm is a devDependency, so `npm install` provides it. A missing
+// package skips these cases with a message (and fails the run under CI).
+const naga: Naga | undefined = await import("naga-wasm").then(
+  (m) => m as unknown as Naga,
+  (error: unknown) => {
+    // Only a package that isn't installed skips; a broken install throws.
+    if ((error as { code?: string }).code === "ERR_MODULE_NOT_FOUND") {
+      return undefined;
+    }
+    throw error;
+  },
 );
-const naga: Naga | undefined = existsSync(nagaPath)
-  ? ((await import(pathToFileURL(nagaPath).href)) as Naga)
-  : undefined;
 
 describe("naga accepts the emitted WGSL", () => {
-  it("is installed (CI runs `npm install` in spikes/core-ir)", () => {
+  it("is installed (run `npm install` if this fails or the cases below skip)", () => {
     if (process.env.CI) {
       expect(naga).toBeDefined();
+    } else if (!naga) {
+      console.warn(
+        "naga-wasm is not installed, so the WGSL validation cases are skipped. Run `npm install` at the repository root.",
+      );
     }
   });
   const cases = wgslCases();

@@ -69,6 +69,8 @@ function hasRun(numbers, values) {
   return false;
 }
 
+/** naga-wasm's modules, a dev dependency that no build may include. */
+const NAGA_MODULES = /[\\/]naga-wasm[\\/]/;
 /** The Slang compiler's modules (a module id may carry a `?worker&url` query). */
 const SLANG_MODULES = /[\\/]src[\\/]scene[\\/]slang(?:Worker)?\.ts(?:\?|$)/;
 
@@ -267,6 +269,27 @@ try {
   } else {
     console.log(
       `checkBundle: Cesium IR's core is in the main chunk (${irHere.length} modules, ${kb(ir.main.code)} KB), with no dependency`,
+    );
+  }
+  // naga-wasm is a devDependency (the WGSL emitter's test validates with
+  // it, CS-580): no chunk of any of these builds, eager or lazy, may hold a
+  // module from it.
+  const nagaIn = [
+    { label: "the globe-only Viewer", chunks: [...eager, ...lazy] },
+    { label: "the styled Viewer", chunks: [...styled.eager, ...styled.lazy] },
+    { label: "the IR core page", chunks: [...ir.eager, ...ir.lazy] },
+  ].filter(({ chunks }) =>
+    chunks.some((c) =>
+      Object.keys(c.modules).some((id) => NAGA_MODULES.test(id)),
+    ),
+  );
+  if (nagaIn.length > 0) {
+    found.push(
+      `naga-wasm (a dev dependency) in ${nagaIn.map(({ label }) => label).join(", ")}`,
+    );
+  } else {
+    console.log(
+      "checkBundle: no naga-wasm module in any chunk of these builds",
     );
   }
   if (found.length > 0) {
