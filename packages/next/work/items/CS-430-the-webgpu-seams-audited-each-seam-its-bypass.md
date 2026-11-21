@@ -2,7 +2,7 @@
 id: CS-430
 title: "The WebGPU seams audited: each seam, its bypass test, and the seams still missing"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-14
 project: CS-437
 claimed_by: orch-11-CS-430
