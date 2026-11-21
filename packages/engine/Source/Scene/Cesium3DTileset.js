@@ -2353,9 +2353,38 @@ Object.defineProperties(Cesium3DTileset.prototype, {
    * extension object, and returns whether the corresponding URI should
    * be currently active.
    *
-   * This function may be called many times from the "update" function of
+   * The function may be called many times from the "update" function of
    * the conditional content, meaning that it should not perform any complex
    * computations or queries.
+   *
+   * @example
+   * // A structure that holds information about the conditional
+   * // contents that should currently be "active". If contains
+   * // the properties that correspond to the 'dimensions' that
+   * // are found in the top-level 3DTILES_content_conditional
+   * // extension object, with the value that they must have for
+   * // one content to be "active"
+   * const requiredKeys = {
+   *   exampleTimeStamp: "2026-11-21",
+   *   exampleRevision = "2"
+   * }
+   * // A simple function that serves as the URI condition for
+   * // the conditional content: It checks if all properties
+   * // from the given keys match the required keys, exactly.
+   * // More complex conditions (e.g. combining properties
+   * // with boolean operators, or checking the ranges of
+   * // values in the given keys) may be implemented similarly.
+   * const conditionalContentUriCondition = (keys) => {
+   *   for (const key of Object.keys(keys)) {
+   *     const requiredValue = requiredKeys[key];
+   *     const value = keys[key];
+   *     if (value !== requiredValue) {
+   *       return false;
+   *     }
+   *   }
+   *   return true;
+   * };
+   * tileset.conditionalContentUriCondition = conditionalContentUriCondition;
    *
    * @memberof Cesium3DTileset.prototype
    * @type {Function|undefined}
@@ -2755,29 +2784,6 @@ Cesium3DTileset.prototype.loadTileset = function (
   }
 
   return rootTile;
-};
-
-/**
- * XXX_CONDITIONAL A draft for a convenience function for the conditional content
- * URI condition. It simply sets URIs as "active" when their keys match
- * the given required keys.
- *
- * @param {object} requiredKeys The keys
- */
-Cesium3DTileset.prototype.setSimpleConditionalContentUriCondition = function (
-  requiredKeys,
-) {
-  const conditionalContentUriCondition = (keys) => {
-    for (const key of Object.keys(keys)) {
-      const requiredValue = requiredKeys[key];
-      const value = keys[key];
-      if (value !== requiredValue) {
-        return false;
-      }
-    }
-    return true;
-  };
-  this.conditionalContentUriCondition = conditionalContentUriCondition;
 };
 
 /**
