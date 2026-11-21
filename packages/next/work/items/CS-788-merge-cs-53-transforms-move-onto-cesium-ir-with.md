@@ -2,10 +2,14 @@
 id: CS-788
 title: Merge CS-53, transforms move onto Cesium IR, with its browser parity bullet not showable today
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-10
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the transform and IR tests, fast-forwards main, regenerates the views, runs the cold-start check on main and logs the merge. CS-53 closes; the chief of staff files the parity page and the center-constants measure; CS-49 and CS-54 can start."
+answered_at: 2026-11-21T16:04:46.372Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

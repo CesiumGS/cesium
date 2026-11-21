@@ -2,10 +2,14 @@
 id: CS-789
 title: Merge CS-35, the probe, the renderer option and an empty WebGL 2 device
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-9
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the WebGL 2, boundary and protocol tests, fast-forwards main, regenerates the views, runs the cold-start check on main and logs the merge; CS-780, CS-763, CS-764 and CS-507 can then start, CS-780 from a base with this in it."
+answered_at: 2026-11-21T16:04:46.958Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
