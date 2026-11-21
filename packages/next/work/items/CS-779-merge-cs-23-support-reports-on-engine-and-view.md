@@ -2,10 +2,14 @@
 id: CS-779
 title: Merge CS-23, support reports on Engine and View (view.support, view.effective, view.explain, strict)
 kind: decision
-state: planned
+state: done
 created: 2026-11-20
 project: CS-8
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the protocol and support tests, fast-forwards main, regenerates the views, runs the cold-start check on main and logs the merge; CS-35, CS-763, CS-764, CS-507 and CS-202 can then start."
+answered_at: 2026-11-21T07:50:27.358Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

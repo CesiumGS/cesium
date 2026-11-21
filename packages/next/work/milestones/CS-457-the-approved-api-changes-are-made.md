@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-15
 project: CS-437
 outcome: "The stability tiers the review approved are TSDoc tags, with internal members stripped from the published types, and measurement has its own module seam and entry point."
-constraints: [CS-434 c?, CS-435 c?, CS-708 c?, CS-763 c?]
+constraints: [CS-434 c?, CS-435 c?, CS-708 c?, CS-763 c?, CS-780 c?]
 ---
 
 ## Done when
@@ -20,3 +20,5 @@ Split on 2026-11-15 from "The public API shape is approved" (CS-420), on the own
 CS-708 joined on 2026-11-19 (owner): strict-mode safety is part of the API contract beta.1 freezes.
 
 CS-763 joined on 2026-11-20: the owner approved a signal on Engine.create (CS-711, A), an API change to the lifetime contract beta.1 freezes.
+
+CS-780 joined on 2026-11-20: the owner chose `engine.errors.on("support", …)` over `onError` for support notices (CS-23's question), a change to `Engine.errors`, which beta.1 freezes.

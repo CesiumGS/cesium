@@ -16,6 +16,8 @@ Each fallback that is silent today raises a support notice, as the engine-profil
 - Each warns once in the console where the notice table says to, and throws under `strict`.
 - Accuracy-class notices state their effect on accuracy.
 - Glare is migrated to the notice, and glare and translucency parity are unchanged.
+- The moments fallback is settled. Either the catalog's ladder changes, or the notice maps moments32 to "unsupported" rather than "unmet". Until then, CS-23's warn-and-throw stays, as the owner chose on 2026-11-20.
+- The remaining limit notices that CS-23's row in the plan names are raised through `engine.notices.report`, the caster scale among them. (Added 2026-11-20, from CS-23's report.)
 
 ## Plan
 
