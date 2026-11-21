@@ -242,7 +242,7 @@ The boundary: the owner's enrolled devices hold the keys and see everything; the
 - **Joining a device**: `dyno storage join` reads the keyring from a file the owner carries through their password manager (`--key-file`, then offers to delete it) and the device's own provider keys from standard input, then enrolls the device in the registry.
 - **Rotating**: provider keys are replaced at the provider, set with `dyno storage credentials set --role <role>` (standard input), checked with `storage status`, and the old ones revoked at the provider. `dyno storage rotate-key` makes a new content and naming key version for all new writes; old objects keep theirs and stay readable.
 - **Removing a device**: `dyno device remove <alias>` prints the checklist and does its part: (1) the owner revokes the device's writer and reader keys at the provider (dyno holds no admin key, by design); (2) dyno writes a removal event to the registry and rotates the content key; (3) readers ignore and flag anything under the removed device's prefix stamped after its removal. Its past runs stay valid.
-- **Reading from another machine or a cloud session**: it needs a checkout with `npm ci` (for `npx dyno`) and the harness's secrets: the endpoint, bucket and namespace, a remote reader's key, and the keyring. It can list, show and fetch; it can't write, pin or delete, and it never measures. `result show` without `--values` is what such sessions use. The CS-721 skill says so.
+- **Reading from another machine or a cloud session**: it needs a checkout with `npm ci` (for `npx @cesium/dyno`) and the harness's secrets: the endpoint, bucket and namespace, a remote reader's key, and the keyring. It can list, show and fetch; it can't write, pin or delete, and it never measures. `result show` without `--values` is what such sessions use. The CS-721 skill says so.
 
 ## 3. Multi-device views
 
@@ -510,7 +510,7 @@ For milestone CS-722 unless marked. Touches are from the repository root. Every 
 Each clause is checkable; the item that meets it is in brackets.
 
 - **c1** [CS-390]: a dev run from a worktree records purpose, item, study, worktree, base, machine, servedFrom and id; `--purpose baseline` is refused from a dirty tree or a feature branch; two runs started together run one after the other.
-- **c2** [CS-721]: `npx dyno` covers what `cli.mjs` and `bench/run.mjs` do, every command prints JSON with `api_version` under `--json`, `dyno status --json` reports `busy`, `waiting-for-quiet` or `quiet`, and the old entry points still work.
+- **c2** [CS-721]: `npx @cesium/dyno` covers what `cli.mjs` and `bench/run.mjs` do, every command prints JSON with `api_version` under `--json`, `dyno status --json` reports `busy`, `waiting-for-quiet` or `quiet`, and the old entry points still work.
 - **c3** [B1]: a run on any device records its device, configuration and state; a power-source switch changes neither the device nor its Trends series (tested); no identity field holds a host name, user name, serial or network address (tested).
 - **c4** [B2, B3]: runs made on two devices appear in each other's Dyno after one sync, with screenshots fetched when opened; no object is ever rewritten; uploads never run during a measurement (tested; the owner checks once on two real devices).
 - **c5** [B3]: no credential, endpoint or bucket name appears in any output, log, result or repository file (canary test); a removed device's later objects are ignored, and its keys are revoked by the checklist.

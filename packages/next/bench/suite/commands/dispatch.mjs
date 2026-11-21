@@ -199,10 +199,10 @@ export function helpLines(node, path) {
     lines.push(`${name}: ${node.summary ?? "Dyno's command line"}`, "");
     lines.push(`Usage: ${name} <command> [options]`);
     lines.push(`       ${name} <command> --help`);
-    // The bin is the private workspace package tools/dyno (CS-774).
+    // The bin is the private workspace package tools/dyno, @cesium/dyno (CS-774, CS-784).
     if (path.length === 0) {
-      lines.push("", "Run it as `npx --no-install dyno`, from the repository root or packages/next.",
-        "(--no-install: a missing link then fails instead of downloading the public `dyno` package.)");
+      lines.push("", "Run it as `npx @cesium/dyno`, from the repository root or packages/next.",
+        "(The scoped name: a missing link then fails instead of downloading the public `dyno` package.)");
     }
     lines.push("");
     lines.push("Commands:");

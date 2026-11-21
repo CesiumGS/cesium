@@ -1,5 +1,5 @@
 // Benchmark suite commands (docs/design/benchmark-suite.md), run as
-// `npx --no-install dyno suite <command>` (dispatch.mjs; the bin is tools/dyno, which runs
+// `npx @cesium/dyno suite <command>` (dispatch.mjs; the bin is tools/dyno, which runs
 // bench/dyno.mjs). The old entry point,
 // bench/suite/cli.mjs, still runs them and says the new command.
 //
@@ -488,13 +488,13 @@ export const SUITE_COMMANDS = Object.keys(COMMANDS);
 /**
  * Runs one suite command: `argv` is the command and its arguments, as after
  * `dyno suite`. `as` is how it was typed, recorded in the run's results
- * (`npx --no-install dyno suite`).
+ * (`npx @cesium/dyno suite`).
  * Returns the command's result; throws SuiteRefusal or SuiteUsage when it
  * can't go ahead.
  */
 export async function main(
   argv,
-  { as = ["npx", "--no-install", "dyno", "suite"] } = {},
+  { as = ["npx", "@cesium/dyno", "suite"] } = {},
 ) {
   [command = "list", ...rest] = argv;
   if (!Object.hasOwn(COMMANDS, command)) {

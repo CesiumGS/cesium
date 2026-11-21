@@ -21,7 +21,7 @@ Rules for anyone working in this package, people and coding agents alike. The RE
 - While iterating, run focused tests: `npx vitest run <files>`.
 - Before committing, run the full `npm test` once.
 - Run `npm run test:data` (it needs the setup store) when you change code under `src/frames`, `src/time`, `src/ephemeris` or `src/engineering`.
-- Before the full suite, a build or a measurement, run `dyno status`: while it says `busy` or `waiting-for-quiet`, a measurement runs or waits, so start no heavy work. `dyno` is Dyno's command line (`npx --no-install dyno`: without `--no-install`, a missing workspace link makes `npx` download an unrelated public package); the `dyno` skill says which suite a change needs and how to read a verdict.
+- Before the full suite, a build or a measurement, run `dyno status`: while it says `busy` or `waiting-for-quiet`, a measurement runs or waits, so start no heavy work. `dyno` is Dyno's command line (`npx @cesium/dyno`: the scoped name can only be this workspace package, so a missing link fails instead of downloading an unrelated public package); the `dyno` skill says which suite a change needs and how to read a verdict.
 - Run the browser parity suites (`dyno lab <suite>`) when you change rendering. Compare against the previous commit as well as a base commit. Metal's compiler can reorder a float sum when a kernel's code changes, so explain any pixel difference before accepting it.
 - Also run `npx tsc --noEmit -p .` and `-p tsconfig.lib.json`, eslint and prettier on what you changed.
 - If you change an entry point's exports, run `npm run surface` and commit `api/surface.txt` with your change.

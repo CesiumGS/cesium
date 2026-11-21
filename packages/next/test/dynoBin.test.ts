@@ -1,18 +1,28 @@
-// The dyno bin (CS-774): `npx --no-install dyno` works because the bin lives in a private
-// workspace package, tools/dyno. This checks the package stays private, has no
-// dependencies, never ships with @cesium/next, and that its bin runs
-// bench/dyno.mjs. Every `npx dyno` the docs, help and recorded runs show says
-// --no-install: a missing link must fail, not download the unrelated public
-// `dyno` package (npx installs without asking when there is no terminal).
+// The dyno bin (CS-774, CS-784): `npx @cesium/dyno` works because the bin lives in a private
+// workspace package, tools/dyno. This checks the package is named @cesium/dyno, stays
+// private, has no dependencies, never ships with @cesium/next, and that its bin runs
+// bench/dyno.mjs. The command is always written with the scope: a bare name that
+// npx can't find locally is downloaded from the registry (without asking when there
+// is no terminal), and an unrelated public package is named `dyno`. Only Cesium can
+// publish under @cesium, so the scoped name can't reach an outside package.
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const next = fileURLToPath(new URL("..", import.meta.url));
 const root = resolve(next, "../..");
+// An address nothing listens on: npx that has to fetch anything fails at once.
+const unreachableRegistry = "http://127.0.0.1:9";
 const pkgDir = resolve(next, "tools/dyno");
 
 const readJson = (path: string) =>
@@ -22,7 +32,7 @@ describe("the dyno bin package", () => {
   const pkg = readJson(resolve(pkgDir, "package.json"));
 
   it("is private and has no dependencies of its own", () => {
-    expect(pkg.name).toBe("dyno");
+    expect(pkg.name).toBe("@cesium/dyno");
     expect(pkg.private).toBe(true);
     for (const field of [
       "dependencies",
@@ -64,30 +74,34 @@ describe("the dyno bin package", () => {
   });
 });
 
-describe("npx dyno always says --no-install", () => {
-  /** Where `npx dyno` is written without --no-install, as `file:line`. */
-  function bare(file: string, text: string): string[] {
+describe("npx @cesium/dyno is the only form", () => {
+  /** Where npx is given the bare name `dyno` (with or without flags), as `file:line`. */
+  function unscoped(file: string, text: string): string[] {
     return text
       .split("\n")
       .flatMap((line, i) =>
-        [...line.matchAll(/\bnpx((?:\s+-{1,2}[\w-]+)*)\s+dyno\b/g)]
-          .filter((m) => !(m[1] ?? "").includes("--no-install"))
-          .map(() => `${file}:${i + 1}: ${line.trim().slice(0, 100)}`),
+        [...line.matchAll(/\bnpx(?:\s+-{1,2}[\w=-]+)*\s+dyno\b/g)].map(
+          () => `${file}:${i + 1}: ${line.trim().slice(0, 100)}`,
+        ),
       );
   }
 
   const files = [
+    "../../AGENTS.md",
+    "../../docs/design/benchmark-devices-and-sharing.md",
     ".claude/skills/dyno/SKILL.md",
     "AGENTS.md",
     "README.md",
+    "bench/dyno.mjs",
     "bench/suite/commands/dispatch.mjs",
     "bench/suite/commands/suite.mjs",
+    "tools/dyno/bin.mjs",
     "tools/dyno/package.json",
   ];
 
   it("in the docs, the skill, the help source and the package", () => {
     const found = files.flatMap((f) =>
-      bare(f, readFileSync(resolve(next, f), "utf8")),
+      unscoped(f, readFileSync(resolve(next, f), "utf8")),
     );
     expect(found).toEqual([]);
   });
@@ -99,8 +113,8 @@ describe("npx dyno always says --no-install", () => {
       { encoding: "utf8", timeout: 60000 },
     );
     expect(out.status).toBe(0);
-    expect(bare("--help", out.stdout)).toEqual([]);
-    expect(out.stdout).toContain("npx --no-install dyno");
+    expect(unscoped("--help", out.stdout)).toEqual([]);
+    expect(out.stdout).toContain("npx @cesium/dyno");
   });
 
   it("in the command a suite run records", () => {
@@ -108,13 +122,71 @@ describe("npx dyno always says --no-install", () => {
       resolve(next, "bench/suite/commands/suite.mjs"),
       "utf8",
     );
-    expect(source).toContain('as = ["npx", "--no-install", "dyno", "suite"]');
+    expect(source).toContain('as = ["npx", "@cesium/dyno", "suite"]');
   });
 
   it("and the checker names a line that doesn't", () => {
     expect(
-      bare("x.md", "ok `npx --no-install dyno`\nbad `npx dyno status`"),
+      unscoped("x.md", "ok `npx @cesium/dyno`\nbad `npx dyno status`"),
     ).toEqual(["x.md:2: bad `npx dyno status`"]);
-    expect(bare("x.md", "bad `npx -y dyno`")).toHaveLength(1);
+    expect(unscoped("x.md", "bad `npx -y dyno`")).toHaveLength(1);
+    expect(unscoped("x.md", "bad `npx --no-install dyno`")).toHaveLength(1);
+    expect(unscoped("x.md", "bad `npx --yes --quiet dyno suite`")).toHaveLength(
+      1,
+    );
+    expect(unscoped("x.md", "ok `npx @cesium/dyno suite`")).toEqual([]);
+  });
+});
+
+describe("npx @cesium/dyno resolves the workspace link and never downloads", () => {
+  /** npx with an unreachable registry and empty config, so nothing can be fetched. */
+  function npx(cwd: string, args: string[], scratch: string) {
+    const userconfig = join(scratch, "empty.npmrc");
+    writeFileSync(userconfig, "");
+    return spawnSync("npx", args, {
+      cwd,
+      encoding: "utf8",
+      timeout: 60000,
+      env: {
+        ...process.env,
+        npm_config_registry: unreachableRegistry,
+        npm_config_userconfig: userconfig,
+        npm_config_cache: join(scratch, "cache"),
+        npm_config_fetch_retries: "0",
+      },
+    });
+  }
+
+  for (const [label, cwd] of [
+    ["the repository root", root],
+    ["packages/next", next],
+  ] as const) {
+    it(`runs from ${label} after npm install`, () => {
+      const scratch = mkdtempSync(join(tmpdir(), "dyno-npx-"));
+      try {
+        const out = npx(cwd, ["@cesium/dyno", "--help"], scratch);
+        // A failure here means the workspace link is missing: run `npm install` at the root.
+        expect(out.stderr).not.toContain("ECONNREFUSED");
+        expect(out.status).toBe(0);
+        expect(out.stdout).toContain("Dyno's command line");
+      } finally {
+        rmSync(scratch, { recursive: true, force: true });
+      }
+    });
+  }
+
+  it("fails without the link, asking the registry and nothing else", () => {
+    // A directory outside the repository has no workspace link. npx has to ask
+    // the registry for @cesium/dyno, which here is an address nothing listens on.
+    const scratch = mkdtempSync(join(tmpdir(), "dyno-npx-"));
+    try {
+      const out = npx(scratch, ["@cesium/dyno", "--help"], scratch);
+      expect(out.status).not.toBe(0);
+      expect(out.stderr).toContain("127.0.0.1:9");
+      expect(out.stderr).toContain("@cesium%2fdyno");
+      expect(out.stdout).not.toContain("Dyno's command line");
+    } finally {
+      rmSync(scratch, { recursive: true, force: true });
+    }
   });
 });

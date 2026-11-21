@@ -2,7 +2,7 @@
 id: CS-784
 title: The dyno tool is @cesium/dyno, so npx can never reach an outside package by its name
 kind: work
-state: in-progress
+state: done
 created: 2026-11-21
 project: CS-389
 needs: [CS-774]
