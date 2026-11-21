@@ -12,6 +12,9 @@ import {
 import type { Engine } from "../src/scene/Engine.ts";
 import { engineSnapshot } from "../widgets/engine.ts";
 import { gpuHtml } from "../widgets/inspector.ts";
+import type { GltfAsset } from "../src/io/gltfTypes.ts";
+import { GlobeImagery } from "../src/globe/GlobeImagery.ts";
+import { isCapacityError } from "../src/scene/CapacityError.ts";
 import { createBox } from "../src/scene/meshes.ts";
 import { CanvasTarget, OffscreenTarget } from "../src/scene/renderTarget.ts";
 import {
@@ -32,6 +35,33 @@ async function create(
   engine.stop();
   engines.push(engine);
   return engine;
+}
+
+/** One triangle, one draw, the default material: nothing to decode. */
+function triangle(): GltfAsset {
+  return {
+    meshes: [
+      {
+        positions: new Float32Array([0, 0, 0, 1, 0, 0, 0, 1, 0]),
+        normals: new Float32Array([0, 0, 1, 0, 0, 1, 0, 0, 1]),
+        indices: new Uint32Array([0, 1, 2]),
+      },
+    ],
+    materials: [],
+    textures: [],
+    images: [],
+    draws: [
+      {
+        mesh: 0,
+        material: -1,
+        matrix: Float64Array.from([
+          1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1,
+        ]),
+      },
+    ],
+    featureTables: [],
+    warnings: [],
+  };
 }
 
 /** A canvas target over a fake canvas, and the context the engine takes of it. */
@@ -240,12 +270,86 @@ describe("the view's support on the WebGL 2 device", () => {
   });
 });
 
-describe("a world on the WebGL 2 device", () => {
-  it("holds no geometry yet, and says so", async () => {
+describe("content on the empty WebGL 2 device", () => {
+  // The call: the device draws no content yet (CS-36), so it refuses content,
+  // wherever it reaches the device, with one message naming CS-36.
+  const REFUSAL = /draws no content yet \(CS-36\), so it can't take /;
+
+  it("refuses a mesh, with the message, and not as a capacity error streaming would retry", async () => {
     const engine = await create({ emulate: "webgl2-basic" });
     const world = engine.createWorld();
-    expect(() => world.addMesh(createBox())).toThrow(/vertex arena is full/);
-    // It is a world: it takes a view and comes down with the engine.
+    let error: unknown;
+    try {
+      world.addMesh(createBox());
+    } catch (e) {
+      error = e;
+    }
+    expect((error as Error).message).toMatch(REFUSAL);
+    expect((error as Error).message).toContain("geometry");
+    expect(isCapacityError(error)).toBe(false);
+    // Nothing was left behind.
+    expect(world.recordCount).toBe(0);
+  });
+
+  it("refuses a model", async () => {
+    const engine = await create({ emulate: "webgl2-basic" });
+    const world = engine.createWorld();
+    expect(() =>
+      engine.uploadModel(world, triangle(), { name: "tri" }),
+    ).toThrow(REFUSAL);
+  });
+
+  it("refuses textures and queued geometry on the world's mirror", async () => {
+    const engine = await create({ emulate: "webgl2-basic" });
+    const { mirror } = engine.createWorld();
+    expect(() =>
+      mirror.textures.createTexture({
+        label: "t",
+        image: {} as ImageBitmap,
+        srgb: true,
+        mipmaps: false,
+      }),
+    ).toThrow(/a texture/);
+    expect(() => mirror.textures.createSampler({} as never)).toThrow(
+      /a sampler/,
+    );
+    expect(() =>
+      mirror.queueUpload(0, "vertex", 0, new Float32Array(3)),
+    ).toThrow(REFUSAL);
+  });
+
+  it("refuses globe imagery, and offers the layers the device has", async () => {
+    const engine = await create({ emulate: "webgl2-basic" });
+    const world = engine.createWorld();
+    expect(world.mirror.imagery.maxLayers).toBe(256);
+    expect(
+      () =>
+        new GlobeImagery(
+          world.mirror.imagery,
+          world,
+          {
+            name: "test",
+            tilingScheme: "webMercator",
+            minimumLevel: 0,
+            maximumLevel: 4,
+            tileSize: 256,
+            tileUrl: () => "https://imagery.test/tile.png",
+            attributions: [],
+          },
+          engine.requests,
+          engine.scene.workers,
+        ),
+    ).toThrow(/imagery/);
+  });
+
+  it("takes no content and still clears: a world and its view work, and it comes down with the engine", async () => {
+    const engine = await create({ emulate: "webgl2-basic" });
+    const world = engine.createWorld();
+    const { canvas, target } = canvasTarget();
+    engine.addView({ target, world });
+    expect(() => world.addMesh(createBox())).toThrow(REFUSAL);
+    engine.renderFrame();
+    expect(contextOf(canvas).called("clear")).toHaveLength(1);
     expect(world.recordCount).toBe(0);
     void v3;
   });

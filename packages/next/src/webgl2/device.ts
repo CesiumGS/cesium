@@ -10,6 +10,11 @@
 // renderer: this tier imports the scene and the profile layer only.
 import { support } from "../profile/support.ts";
 import type { SupportReport } from "../profile/types.ts";
+import type {
+  ContentTextures,
+  ImageryDevice,
+} from "../scene/contentResources.ts";
+import { noContent } from "../scene/headlessContext.ts";
 import type { Webgl2Facts } from "../profile/webgl2Facts.ts";
 import type {
   DeviceHost,
@@ -48,8 +53,53 @@ function encoded(linear: number, encoding: View["outputEncoding"]): number {
     : Math.pow(Math.min(1, Math.max(0, linear)), 1 / 2.2);
 }
 
-/** One per world: the device draws no content yet, so it copies nothing. */
+/**
+ * One per world. The device draws no content yet (CS-36), so it takes none:
+ * geometry, textures and imagery are refused with the same message
+ * (`noContent`), which the headless world's slabs give too.
+ */
 class Webgl2WorldMirror implements WorldMirror {
+  readonly textures: ContentTextures = {
+    createTexture: () => {
+      throw noContent("a texture");
+    },
+    createSampler: () => {
+      throw noContent("a sampler");
+    },
+    binding: () => {
+      throw noContent("a texture binding");
+    },
+  };
+
+  readonly imagery: ImageryDevice;
+
+  constructor(maxLayers: number) {
+    this.imagery = {
+      maxLayers,
+      createSource: () => {
+        throw noContent("imagery");
+      },
+      createCompositor: () => {
+        throw noContent("imagery");
+      },
+      createSlices: () => {
+        throw noContent("imagery");
+      },
+      tryCreateSlices: () => {
+        throw noContent("imagery");
+      },
+      copySlices: () => {
+        throw noContent("imagery");
+      },
+      // Nothing is bound: a world with no imagery unbinds nothing.
+      bindSlices: () => {},
+    };
+  }
+
+  queueUpload(): void {
+    throw noContent("geometry");
+  }
+
   sync(): void {}
   destroy(): void {}
 }
@@ -98,7 +148,7 @@ export class Webgl2Device implements RenderDevice {
   }
 
   createWorld(_world: World): WorldMirror {
-    return new Webgl2WorldMirror();
+    return new Webgl2WorldMirror(this.facts.limits.maxArrayTextureLayers);
   }
 
   createRenderer(view: View): Webgl2ViewRenderer {

@@ -1,7 +1,7 @@
 import { PlacementRows } from "./placementTable.ts";
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
 import { NO_GPU, Slabs } from "./Slabs.ts";
-import { isHeadless } from "./headlessContext.ts";
+import { isHeadless, noContent } from "./headlessContext.ts";
 import { CpuTable, INITIAL_ROWS } from "./CpuTable.ts";
 import { DrawConstants } from "../render/drawConstants.ts";
 import type { Placement, PlacementParameter } from "./placement.ts";
@@ -346,6 +346,7 @@ export class World {
         slabCap: headless
           ? 0
           : Math.min(binding, options.slabBytes ?? 256 << 20),
+        ...(headless && { unavailable: () => noContent("geometry") }),
         bindingBytes: binding,
       },
       () => this.flushUploads(),

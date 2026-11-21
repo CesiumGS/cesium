@@ -50,6 +50,12 @@ export interface SlabOptions {
   /** A new slab's first sizes (it doubles from there). */
   initialVertexBytes?: number;
   initialIndexBytes?: number;
+  /**
+   * Set where no geometry can be held (a world on the empty WebGL 2
+   * device): `pick` throws it, a plain error, not a `CapacityError`, which
+   * streaming would retry.
+   */
+  unavailable?: () => Error;
 }
 
 /**
@@ -131,6 +137,9 @@ export class Slabs {
    * when none can make room within the budget.
    */
   pick(vertexBytes: number, indexBytes: number): Slab | undefined {
+    if (this.options.unavailable) {
+      throw this.options.unavailable();
+    }
     for (const slab of this.slabs) {
       if (slab && this.reserve(slab, vertexBytes, indexBytes)) {
         return slab;

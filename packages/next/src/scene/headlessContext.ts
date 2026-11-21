@@ -11,6 +11,18 @@ import type { World } from "./World.ts";
 /** The binding size a headless world sizes its CPU tables by: the WebGPU default's. */
 const BINDING_BYTES = 128 << 20;
 
+/**
+ * What the empty WebGL 2 device does with content: it refuses it, with this
+ * error, wherever content reaches the device (geometry, textures, imagery),
+ * so an app finds out at once that nothing would draw, not by a blank
+ * canvas. The first draws arrive with CS-36.
+ */
+export function noContent(what: string): Error {
+  return new Error(
+    `The WebGL 2 renderer draws no content yet (CS-36), so it can't take ${what}.`,
+  );
+}
+
 export interface HeadlessHost {
   wake(): void;
   readonly errors: RenderContext["errors"];
