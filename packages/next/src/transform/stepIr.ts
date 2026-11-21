@@ -3,22 +3,13 @@
 // the parameters may take. Parsed from `spec.source` once per spec; a spec
 // with none, or a source outside the subset, has no IR and its queries fall
 // back on the function's own Jacobian or on sampling.
+import { cirOf } from "../ir/fromTodayIr.ts";
+import { kinks } from "../ir/kinks.ts";
 import { hessianProgram, jacobianProgram, parameterProgram } from "./ad.ts";
 import { evaluate } from "./evaluate.ts";
 import type { Params, CurvilinearSpec } from "./graph.ts";
 import type { IrProgram } from "./ir.ts";
 import { parseTransform } from "./parse.ts";
-
-/** Ops whose derivative jumps (a kink) or whose value does (a step). */
-const KINKS: ReadonlySet<string> = new Set([
-  "abs",
-  "min",
-  "max",
-  "select",
-  "clamp",
-  "sign",
-]);
-const STEPS: ReadonlySet<string> = new Set(["floor", "ceil", "fract"]);
 
 export interface StepIr {
   /** 3 outputs. */
@@ -48,6 +39,8 @@ export function stepIr(spec: CurvilinearSpec): StepIr | undefined {
     try {
       const value = parseTransform(spec.source);
       if (value.outputs.length === 3) {
+        // Cesium IR's kinks pass: the ops whose derivative or value jumps.
+        const outputs = Object.values(kinks(cirOf(value)));
         let hessian: IrProgram | undefined;
         const parameters = new Map<string, IrProgram>();
         made = {
@@ -63,8 +56,8 @@ export function stepIr(spec: CurvilinearSpec): StepIr | undefined {
             }
             return program;
           },
-          kinked: value.nodes.some((n) => KINKS.has(n.op)),
-          discontinuous: value.nodes.some((n) => STEPS.has(n.op)),
+          kinked: outputs.some((o) => o.kinks.length > 0),
+          discontinuous: outputs.some((o) => o.steps.length > 0),
         };
       }
     } catch {
