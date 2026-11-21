@@ -1,0 +1,280 @@
+{
+ "exact": {
+  "wgsl": {
+   "canonical": "a6f3496595bb570b45cfb220b56c8b68",
+   "canonicalLength": 65935
+  },
+  "positionWgsl": {
+   "canonical": "2c242d6ee52afc74e9a3527b23aef569",
+   "canonicalLength": 15497
+  },
+  "centerConstantsWgsl": {
+   "canonical": "ba33ffdff48135d5b5e972325b6caf18",
+   "canonicalLength": 83906
+  },
+  "uniformsLayout": {
+   "floats": 40,
+   "fields": {
+    "eyeHi": 0,
+    "eyeLo": 4,
+    "affine0": 8,
+    "s0.v20": 20,
+    "s0.v21": 21,
+    "param:verticalExaggeration.factor": 22,
+    "s0.j24": 24,
+    "s0.j25": 25,
+    "affine2": 28
+   }
+  },
+  "perDrawLayout": {
+   "floats": 464,
+   "fields": {
+    "n": 431,
+    "sha": "95d43b6dc43449d78b01e0bc86b4bb66"
+   }
+  },
+  "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
+  "separableParams": ["verticalExaggeration.factor"],
+  "uniformParams": [],
+  "approximations": [],
+  "normalModes": ["exact"],
+  "steps": [
+   {
+    "id": "verticalExaggeration",
+    "locals": ["factor", "ceiling", "baseHeight", "band"],
+    "value": 3,
+    "jacobian": 9
+   }
+  ],
+  "paramValues": {
+   "verticalExaggeration.factor": 10,
+   "verticalExaggeration.ceiling": 9000,
+   "verticalExaggeration.baseHeight": 0,
+   "verticalExaggeration.band": 1800
+  },
+  "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, -0.14780941605567932, 0.9890158772468567, 0, 0, -0.7174067497253418, -0.10721715539693832, 0.6883545517921448, 0, 0.6807935833930969, 0.10174528509378433, 0.7253744006156921, 0, 3600, 9, 10, 0, 3600, 9, 0, 0, 0.8775825500488281, 0.4794255495071411, 0, 0, -0.4794255495071411, 0.8775825500488281, 0, 0, 0, 0, 1, 0],
+  "records": [
+   {
+    "n": 464,
+    "sha": "a967e59f9d1bf0d4b646ea9a3dfbe28e"
+   },
+   {
+    "n": 464,
+    "sha": "d254458a00642ffda398c719d2336052"
+   }
+  ],
+  "centerUniforms": {
+   "n": 76,
+   "sha": "1e11f18dadc4cc6822e971280b440222"
+  },
+  "packCenters": [0, 0, 0, 0, 0, 0, 0, 0, 1200, -800, 350, 0, 0, 0, 0, 0]
+ },
+ "linear": {
+  "wgsl": {
+   "canonical": "a6f3496595bb570b45cfb220b56c8b68",
+   "canonicalLength": 65935
+  },
+  "positionWgsl": {
+   "canonical": "2c242d6ee52afc74e9a3527b23aef569",
+   "canonicalLength": 15497
+  },
+  "centerConstantsWgsl": {
+   "canonical": "ba33ffdff48135d5b5e972325b6caf18",
+   "canonicalLength": 83906
+  },
+  "uniformsLayout": {
+   "floats": 40,
+   "fields": {
+    "eyeHi": 0,
+    "eyeLo": 4,
+    "affine0": 8,
+    "s0.v20": 20,
+    "s0.v21": 21,
+    "param:verticalExaggeration.factor": 22,
+    "s0.j24": 24,
+    "s0.j25": 25,
+    "affine2": 28
+   }
+  },
+  "perDrawLayout": {
+   "floats": 464,
+   "fields": {
+    "n": 431,
+    "sha": "95d43b6dc43449d78b01e0bc86b4bb66"
+   }
+  },
+  "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
+  "separableParams": ["verticalExaggeration.factor"],
+  "uniformParams": [],
+  "approximations": [],
+  "normalModes": ["exact"],
+  "steps": [
+   {
+    "id": "verticalExaggeration",
+    "locals": ["factor", "ceiling", "baseHeight", "band"],
+    "value": 3,
+    "jacobian": 9
+   }
+  ],
+  "paramValues": {
+   "verticalExaggeration.factor": 10,
+   "verticalExaggeration.ceiling": 9000,
+   "verticalExaggeration.baseHeight": 0,
+   "verticalExaggeration.band": 1800
+  },
+  "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, -0.14780941605567932, 0.9890158772468567, 0, 0, -0.7174067497253418, -0.10721715539693832, 0.6883545517921448, 0, 0.6807935833930969, 0.10174528509378433, 0.7253744006156921, 0, 3600, 9, 10, 0, 3600, 9, 0, 0, 0.8775825500488281, 0.4794255495071411, 0, 0, -0.4794255495071411, 0.8775825500488281, 0, 0, 0, 0, 1, 0],
+  "records": [
+   {
+    "n": 464,
+    "sha": "a967e59f9d1bf0d4b646ea9a3dfbe28e"
+   },
+   {
+    "n": 464,
+    "sha": "d254458a00642ffda398c719d2336052"
+   }
+  ],
+  "centerUniforms": {
+   "n": 76,
+   "sha": "1e11f18dadc4cc6822e971280b440222"
+  },
+  "packCenters": [0, 0, 0, 0, 0, 0, 0, 0, 1200, -800, 350, 0, 0, 0, 0, 0]
+ },
+ "auto": {
+  "wgsl": {
+   "canonical": "a6f3496595bb570b45cfb220b56c8b68",
+   "canonicalLength": 65935
+  },
+  "positionWgsl": {
+   "canonical": "2c242d6ee52afc74e9a3527b23aef569",
+   "canonicalLength": 15497
+  },
+  "centerConstantsWgsl": {
+   "canonical": "ba33ffdff48135d5b5e972325b6caf18",
+   "canonicalLength": 83906
+  },
+  "uniformsLayout": {
+   "floats": 40,
+   "fields": {
+    "eyeHi": 0,
+    "eyeLo": 4,
+    "affine0": 8,
+    "s0.v20": 20,
+    "s0.v21": 21,
+    "param:verticalExaggeration.factor": 22,
+    "s0.j24": 24,
+    "s0.j25": 25,
+    "affine2": 28
+   }
+  },
+  "perDrawLayout": {
+   "floats": 464,
+   "fields": {
+    "n": 431,
+    "sha": "95d43b6dc43449d78b01e0bc86b4bb66"
+   }
+  },
+  "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
+  "separableParams": ["verticalExaggeration.factor"],
+  "uniformParams": [],
+  "approximations": [],
+  "normalModes": ["exact"],
+  "steps": [
+   {
+    "id": "verticalExaggeration",
+    "locals": ["factor", "ceiling", "baseHeight", "band"],
+    "value": 3,
+    "jacobian": 9
+   }
+  ],
+  "paramValues": {
+   "verticalExaggeration.factor": 10,
+   "verticalExaggeration.ceiling": 9000,
+   "verticalExaggeration.baseHeight": 0,
+   "verticalExaggeration.band": 1800
+  },
+  "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, -0.14780941605567932, 0.9890158772468567, 0, 0, -0.7174067497253418, -0.10721715539693832, 0.6883545517921448, 0, 0.6807935833930969, 0.10174528509378433, 0.7253744006156921, 0, 3600, 9, 10, 0, 3600, 9, 0, 0, 0.8775825500488281, 0.4794255495071411, 0, 0, -0.4794255495071411, 0.8775825500488281, 0, 0, 0, 0, 1, 0],
+  "records": [
+   {
+    "n": 464,
+    "sha": "a967e59f9d1bf0d4b646ea9a3dfbe28e"
+   },
+   {
+    "n": 464,
+    "sha": "d254458a00642ffda398c719d2336052"
+   }
+  ],
+  "centerUniforms": {
+   "n": 76,
+   "sha": "1e11f18dadc4cc6822e971280b440222"
+  },
+  "packCenters": [0, 0, 0, 0, 0, 0, 0, 0, 1200, -800, 350, 0, 0, 0, 0, 0]
+ },
+ "none": {
+  "wgsl": {
+   "canonical": "968e8c6817546d67e316e3e9a1070555",
+   "canonicalLength": 13893
+  },
+  "positionWgsl": {
+   "canonical": "c8d4c2bb9a72a0cf9d51155ce41308ad",
+   "canonicalLength": 14236
+  },
+  "centerConstantsWgsl": {
+   "canonical": "87ee5bc4ad8426b2cef0318eafa66a3c",
+   "canonicalLength": 23384
+  },
+  "uniformsLayout": {
+   "floats": 36,
+   "fields": {
+    "eyeHi": 0,
+    "eyeLo": 4,
+    "affine0": 8,
+    "s0.v20": 20,
+    "s0.v21": 21,
+    "param:verticalExaggeration.factor": 22,
+    "affine2": 24
+   }
+  },
+  "perDrawLayout": {
+   "floats": 112,
+   "fields": {
+    "n": 92,
+    "sha": "90262d4306c2a3b8b6e2843c25ee101e"
+   }
+  },
+  "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
+  "separableParams": ["verticalExaggeration.factor"],
+  "uniformParams": [],
+  "approximations": [],
+  "normalModes": ["none"],
+  "steps": [
+   {
+    "id": "verticalExaggeration",
+    "locals": ["factor", "ceiling", "baseHeight", "band"],
+    "value": 3,
+    "jacobian": null
+   }
+  ],
+  "paramValues": {
+   "verticalExaggeration.factor": 10,
+   "verticalExaggeration.ceiling": 9000,
+   "verticalExaggeration.baseHeight": 0,
+   "verticalExaggeration.band": 1800
+  },
+  "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, -0.14780941605567932, 0.9890158772468567, 0, 0, -0.7174067497253418, -0.10721715539693832, 0.6883545517921448, 0, 0.6807935833930969, 0.10174528509378433, 0.7253744006156921, 0, 3600, 9, 10, 0, 0.8775825500488281, 0.4794255495071411, 0, 0, -0.4794255495071411, 0.8775825500488281, 0, 0, 0, 0, 1, 0],
+  "records": [
+   {
+    "n": 112,
+    "sha": "2371e2b5fc79f82f35d1f4ff98604cdf"
+   },
+   {
+    "n": 112,
+    "sha": "f616ce50eed2e92a3833628a48ca07c0"
+   }
+  ],
+  "centerUniforms": {
+   "n": 76,
+   "sha": "1e11f18dadc4cc6822e971280b440222"
+  },
+  "packCenters": [0, 0, 0, 0, 0, 0, 0, 0, 1200, -800, 350, 0, 0, 0, 0, 0]
+ }
+}

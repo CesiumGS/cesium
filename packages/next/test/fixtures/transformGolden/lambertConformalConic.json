@@ -1,0 +1,487 @@
+{
+ "program": {
+  "equations": 104,
+  "listing": "8dbe0fc24ae4f7fc7930e0c94fc6cf9b",
+  "params": ["lat1", "lat2", "lat0", "lon0", "falseEasting", "falseNorthing"],
+  "outputs": 3
+ },
+ "points": [
+  {
+   "p": [-96, 40, 10],
+   "value": [1000000, -102881.2009429615, 10],
+   "jacobian": [84938.36985294164, "-0", 0, 0, 110442.37869311651, 0, 0, 0, 1],
+   "hessian": ["-0", -1215.3339452264777, 0, -1215.3339452264777, "-0", 0, 0, 0, 0, 934.681825545606, "-0", 0, "-0", 49.921446203079796, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": [0, 3738.296604991425, 0, 0, 386.4126630011888, 0, 0, -114300.1908580485, 0, -84938.36985294164, "-0", 0, 1, 0, 0, 0, 1, 0],
+   "interval": [
+    [999150.4938086214, 1000849.5061913786],
+    [-103994.35926349182, -101767.99341272656],
+    [0, 20]
+   ]
+  },
+  {
+   "p": [-110, 30, 500],
+   "value": [-354376.6975619714, -1105790.365032699, 500],
+   "jacobian": [95974.61848793177, 17122.96828771634, 0, -14903.880146809888, 110264.59771593685, 0, 0, 0, 1],
+   "hessian": [164.00580712170017, -1213.377601484712, 0, -1213.377601484712, -42.20254067085451, 0, 0, 0, 0, 1056.1273046522492, 188.4251756377209, 0, 188.4251756377209, -271.76632529305806, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": [-2842.347007579927, 3399.3107887163496, 0, -459.7670057522955, 1917.251661666538, 0, 0, -114300.1908580485, 0, -95974.61848793177, 14903.880146809888, 0, 1, 0, 0, 0, 1, 0],
+   "interval": [
+    [-355509.52112622093, -353244.1073860852],
+    [-1107053.177959552, -1104527.5145685412],
+    [490, 510]
+   ]
+  }
+ ],
+ "stepIr": {
+  "kinked": true,
+  "discontinuous": false
+ },
+ "taylor": [
+  {
+   "center": [1000000, -102881.2009429615, 10],
+   "linear": [849.3836985294165, 0, 0, 0, 1104.423786931165, 0, 0, 0, 10],
+   "remainder": [0.24405388769494163, 0.27991074274539723, 0],
+   "halfExtent": [849.6277524171114, 1104.7036976739105, 10],
+   "continuous": false,
+   "hessianNorm": 5872.2855164358225,
+   "oscillation": 46.88588940995234
+  },
+  {
+   "center": [-354376.6975619714, -1105790.365032699, 500],
+   "linear": [959.7461848793178, -149.03880146809888, 0, 171.2296828771634, 1102.6459771593686, 0, 0, 0, 10],
+   "remainder": [0.2909643276749193, 0.3407989100447776, 0],
+   "halfExtent": [1131.266832084156, 1252.0255775375122, 10],
+   "continuous": false,
+   "hessianNorm": 6174.196537363376,
+   "oscillation": 56.03697497884645
+  }
+ ],
+ "curvature": [1957.1054437288915, 2057.561877080028],
+ "route": {
+  "exact": {
+   "wgsl": {
+    "canonical": "ef062fb9e39f07ead4a303ffd6b4e997",
+    "canonicalLength": 10827
+   },
+   "positionWgsl": {
+    "canonical": "17f7388dfe2603f6fca0d4409bde37c8",
+    "canonicalLength": 7125
+   },
+   "centerConstantsWgsl": {
+    "canonical": "4bb40815c47386c8152a42f4a24c8572",
+    "canonicalLength": 21460
+   },
+   "uniformsLayout": {
+    "floats": 32,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "param:lambertConformalConic.falseEasting": 22,
+     "param:lambertConformalConic.falseNorthing": 24,
+     "s0.j26": 26,
+     "s0.j27": 27,
+     "s0.j28": 28,
+     "s0.j29": 29
+    }
+   },
+   "perDrawLayout": {
+    "floats": 72,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "outG:lambertConformalConic.falseEasting": 8,
+     "outG:lambertConformalConic.falseNorthing": 16,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v28": 28,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31,
+     "s0.v32": 32,
+     "s0.v33": 33,
+     "s0.v34": 34,
+     "s0.v35": 35,
+     "s0.v36": 36,
+     "s0.v38": 38,
+     "s0.v40": 40,
+     "s0.j41": 41,
+     "s0.j42": 42,
+     "s0.j43": 43,
+     "s0.j44": 44,
+     "s0.j45": 45,
+     "s0.j46": 46,
+     "s0.j47": 47,
+     "s0.j48": 48,
+     "s0.j49": 49,
+     "s0.j50": 50,
+     "s0.j51": 51,
+     "s0.j52": 52,
+     "s0.j53": 53,
+     "s0.j54": 54,
+     "s0.j55": 55,
+     "s0.j56": 56,
+     "s0.j57": 57,
+     "s0.j58": 58,
+     "s0.j59": 59,
+     "s0.j60": 60,
+     "s0.j61": 61,
+     "s0.j62": 62,
+     "s0.j63": 63,
+     "s0.j64": 64,
+     "s0.j65": 65,
+     "s0.j66": 66,
+     "s0.j67": 67,
+     "s0.j68": 68
+    }
+   },
+   "dynamicParams": ["lambertConformalConic.lon0", "lambertConformalConic.lat0", "lambertConformalConic.lat1", "lambertConformalConic.lat2"],
+   "separableParams": ["lambertConformalConic.falseEasting", "lambertConformalConic.falseNorthing"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "lambertConformalConic",
+     "locals": ["lon0", "lat0", "lat1", "lat2", "falseEasting", "falseNorthing"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "lambertConformalConic.lon0": -96,
+    "lambertConformalConic.lat0": 23,
+    "lambertConformalConic.lat1": 33,
+    "lambertConformalConic.lat2": 45,
+    "lambertConformalConic.falseEasting": 1000000,
+    "lambertConformalConic.falseNorthing": -2000000
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.6304962635040283, 12452754, 1000000, 0, -2000000, 0, 0.6304962635040283, 12452754, 0.011004235595464706, -0.3695037364959717, 0, 0],
+   "records": [
+    {
+     "n": 72,
+     "sha": "5788adf5923619af92411d7fcc57bd34"
+    },
+    {
+     "n": 72,
+     "sha": "e06dc3bb079693bcdf2ea4ed938a9980"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, -96, 0, 23, 0, 33, 0, 45, 0, 1000000, 0, -2000000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [-96, 40, 10, 0, 0, 0, 0, 0, -110, 30, 500, 0, 0, 0, 0, 0]
+  },
+  "linear": {
+   "wgsl": {
+    "canonical": "ef062fb9e39f07ead4a303ffd6b4e997",
+    "canonicalLength": 10827
+   },
+   "positionWgsl": {
+    "canonical": "17f7388dfe2603f6fca0d4409bde37c8",
+    "canonicalLength": 7125
+   },
+   "centerConstantsWgsl": {
+    "canonical": "4bb40815c47386c8152a42f4a24c8572",
+    "canonicalLength": 21460
+   },
+   "uniformsLayout": {
+    "floats": 32,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "param:lambertConformalConic.falseEasting": 22,
+     "param:lambertConformalConic.falseNorthing": 24,
+     "s0.j26": 26,
+     "s0.j27": 27,
+     "s0.j28": 28,
+     "s0.j29": 29
+    }
+   },
+   "perDrawLayout": {
+    "floats": 72,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "outG:lambertConformalConic.falseEasting": 8,
+     "outG:lambertConformalConic.falseNorthing": 16,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v28": 28,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31,
+     "s0.v32": 32,
+     "s0.v33": 33,
+     "s0.v34": 34,
+     "s0.v35": 35,
+     "s0.v36": 36,
+     "s0.v38": 38,
+     "s0.v40": 40,
+     "s0.j41": 41,
+     "s0.j42": 42,
+     "s0.j43": 43,
+     "s0.j44": 44,
+     "s0.j45": 45,
+     "s0.j46": 46,
+     "s0.j47": 47,
+     "s0.j48": 48,
+     "s0.j49": 49,
+     "s0.j50": 50,
+     "s0.j51": 51,
+     "s0.j52": 52,
+     "s0.j53": 53,
+     "s0.j54": 54,
+     "s0.j55": 55,
+     "s0.j56": 56,
+     "s0.j57": 57,
+     "s0.j58": 58,
+     "s0.j59": 59,
+     "s0.j60": 60,
+     "s0.j61": 61,
+     "s0.j62": 62,
+     "s0.j63": 63,
+     "s0.j64": 64,
+     "s0.j65": 65,
+     "s0.j66": 66,
+     "s0.j67": 67,
+     "s0.j68": 68
+    }
+   },
+   "dynamicParams": ["lambertConformalConic.lon0", "lambertConformalConic.lat0", "lambertConformalConic.lat1", "lambertConformalConic.lat2"],
+   "separableParams": ["lambertConformalConic.falseEasting", "lambertConformalConic.falseNorthing"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "lambertConformalConic",
+     "locals": ["lon0", "lat0", "lat1", "lat2", "falseEasting", "falseNorthing"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "lambertConformalConic.lon0": -96,
+    "lambertConformalConic.lat0": 23,
+    "lambertConformalConic.lat1": 33,
+    "lambertConformalConic.lat2": 45,
+    "lambertConformalConic.falseEasting": 1000000,
+    "lambertConformalConic.falseNorthing": -2000000
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.6304962635040283, 12452754, 1000000, 0, -2000000, 0, 0.6304962635040283, 12452754, 0.011004235595464706, -0.3695037364959717, 0, 0],
+   "records": [
+    {
+     "n": 72,
+     "sha": "5788adf5923619af92411d7fcc57bd34"
+    },
+    {
+     "n": 72,
+     "sha": "e06dc3bb079693bcdf2ea4ed938a9980"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, -96, 0, 23, 0, 33, 0, 45, 0, 1000000, 0, -2000000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [-96, 40, 10, 0, 0, 0, 0, 0, -110, 30, 500, 0, 0, 0, 0, 0]
+  },
+  "auto": {
+   "wgsl": {
+    "canonical": "ef062fb9e39f07ead4a303ffd6b4e997",
+    "canonicalLength": 10827
+   },
+   "positionWgsl": {
+    "canonical": "17f7388dfe2603f6fca0d4409bde37c8",
+    "canonicalLength": 7125
+   },
+   "centerConstantsWgsl": {
+    "canonical": "4bb40815c47386c8152a42f4a24c8572",
+    "canonicalLength": 21460
+   },
+   "uniformsLayout": {
+    "floats": 32,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "param:lambertConformalConic.falseEasting": 22,
+     "param:lambertConformalConic.falseNorthing": 24,
+     "s0.j26": 26,
+     "s0.j27": 27,
+     "s0.j28": 28,
+     "s0.j29": 29
+    }
+   },
+   "perDrawLayout": {
+    "floats": 72,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "outG:lambertConformalConic.falseEasting": 8,
+     "outG:lambertConformalConic.falseNorthing": 16,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v28": 28,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31,
+     "s0.v32": 32,
+     "s0.v33": 33,
+     "s0.v34": 34,
+     "s0.v35": 35,
+     "s0.v36": 36,
+     "s0.v38": 38,
+     "s0.v40": 40,
+     "s0.j41": 41,
+     "s0.j42": 42,
+     "s0.j43": 43,
+     "s0.j44": 44,
+     "s0.j45": 45,
+     "s0.j46": 46,
+     "s0.j47": 47,
+     "s0.j48": 48,
+     "s0.j49": 49,
+     "s0.j50": 50,
+     "s0.j51": 51,
+     "s0.j52": 52,
+     "s0.j53": 53,
+     "s0.j54": 54,
+     "s0.j55": 55,
+     "s0.j56": 56,
+     "s0.j57": 57,
+     "s0.j58": 58,
+     "s0.j59": 59,
+     "s0.j60": 60,
+     "s0.j61": 61,
+     "s0.j62": 62,
+     "s0.j63": 63,
+     "s0.j64": 64,
+     "s0.j65": 65,
+     "s0.j66": 66,
+     "s0.j67": 67,
+     "s0.j68": 68
+    }
+   },
+   "dynamicParams": ["lambertConformalConic.lon0", "lambertConformalConic.lat0", "lambertConformalConic.lat1", "lambertConformalConic.lat2"],
+   "separableParams": ["lambertConformalConic.falseEasting", "lambertConformalConic.falseNorthing"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "lambertConformalConic",
+     "locals": ["lon0", "lat0", "lat1", "lat2", "falseEasting", "falseNorthing"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "lambertConformalConic.lon0": -96,
+    "lambertConformalConic.lat0": 23,
+    "lambertConformalConic.lat1": 33,
+    "lambertConformalConic.lat2": 45,
+    "lambertConformalConic.falseEasting": 1000000,
+    "lambertConformalConic.falseNorthing": -2000000
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.6304962635040283, 12452754, 1000000, 0, -2000000, 0, 0.6304962635040283, 12452754, 0.011004235595464706, -0.3695037364959717, 0, 0],
+   "records": [
+    {
+     "n": 72,
+     "sha": "5788adf5923619af92411d7fcc57bd34"
+    },
+    {
+     "n": 72,
+     "sha": "e06dc3bb079693bcdf2ea4ed938a9980"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, -96, 0, 23, 0, 33, 0, 45, 0, 1000000, 0, -2000000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [-96, 40, 10, 0, 0, 0, 0, 0, -110, 30, 500, 0, 0, 0, 0, 0]
+  },
+  "none": {
+   "wgsl": {
+    "canonical": "27d3c8772220edee3e63d8af3bd0fdbc",
+    "canonicalLength": 6720
+   },
+   "positionWgsl": {
+    "canonical": "015cc275841e5499c4a7f21f67cbdd45",
+    "canonicalLength": 7014
+   },
+   "centerConstantsWgsl": {
+    "canonical": "a5bff65704f7a50a061058309a931d62",
+    "canonicalLength": 15207
+   },
+   "uniformsLayout": {
+    "floats": 28,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "param:lambertConformalConic.falseEasting": 22,
+     "param:lambertConformalConic.falseNorthing": 24
+    }
+   },
+   "perDrawLayout": {
+    "floats": 44,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "outG:lambertConformalConic.falseEasting": 8,
+     "outG:lambertConformalConic.falseNorthing": 16,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v28": 28,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31,
+     "s0.v32": 32,
+     "s0.v33": 33,
+     "s0.v34": 34,
+     "s0.v35": 35,
+     "s0.v36": 36,
+     "s0.v38": 38,
+     "s0.v40": 40
+    }
+   },
+   "dynamicParams": ["lambertConformalConic.lon0", "lambertConformalConic.lat0", "lambertConformalConic.lat1", "lambertConformalConic.lat2"],
+   "separableParams": ["lambertConformalConic.falseEasting", "lambertConformalConic.falseNorthing"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["none"],
+   "steps": [
+    {
+     "id": "lambertConformalConic",
+     "locals": ["lon0", "lat0", "lat1", "lat2", "falseEasting", "falseNorthing"],
+     "value": 3,
+     "jacobian": null
+    }
+   ],
+   "paramValues": {
+    "lambertConformalConic.lon0": -96,
+    "lambertConformalConic.lat0": 23,
+    "lambertConformalConic.lat1": 33,
+    "lambertConformalConic.lat2": 45,
+    "lambertConformalConic.falseEasting": 1000000,
+    "lambertConformalConic.falseNorthing": -2000000
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.6304962635040283, 12452754, 1000000, 0, -2000000, 0, 0, 0],
+   "records": [
+    [0, 1897118.75, 10, 0, 0, 0.04905703663825989, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0.7660444378852844, 0.6427876353263855, 0.4226182699203491, 0.9063078165054321, 0.9000707864761353, 1.052592396736145, 0.9957022070884705, 0.46832039952278137, 0.6198386549949646, 1, 0, 7718698, 0, 1, 1897118.75, 1, 10, 0, 0, 0],
+    [-1354376.75, 894209.625, 500, 0, 0.052438028156757355, 0.009967301040887833, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0.8660253882408142, 0.5, 0.5, 0.8660253882408142, 0.9213964343070984, 1.0409096479415894, 0.9966565370559692, 0.5792871117591858, 0.708770215511322, 0.9881563186645508, -0.153450608253479, 8826141, -1354376.75, 1, 894209.625, 1, 500, 0, 0, 0]
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, -96, 0, 23, 0, 33, 0, 45, 0, 1000000, 0, -2000000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [-96, 40, 10, 0, 0, 0, 0, 0, -110, 30, 500, 0, 0, 0, 0, 0]
+  }
+ }
+}

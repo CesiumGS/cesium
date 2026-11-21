@@ -1,0 +1,323 @@
+{
+ "program": {
+  "equations": 196,
+  "listing": "9d595b9ed40082110864080db5cafb48",
+  "params": ["ceiling", "band", "baseHeight", "factor"],
+  "outputs": 3
+ },
+ "points": [
+  {
+   "p": [4000000, 300000, 4900000],
+   "value": [3958666.48360236, 296899.986270177, 4849023.4226668235],
+   "jacobian": [1.7853013320644904, 0.05967260333729253, 0.9812895262214621, 0.05967260333729254, 0.9941420661508868, 0.07359671446660966, 0.9812895262214621, 0.07359671446660966, 2.1998619820699847],
+   "hessian": [3.61521426885767e-7, -2.722194652213745e-9, -4.608079306418116e-8, -2.722194652213745e-9, 1.9758565187948488e-7, -2.1855238096466004e-8, -4.608079306418116e-8, -2.1855238096466004e-8, -1.607590106907357e-7, -2.7221946522137482e-9, 1.9758565187948486e-7, -2.1855238096466004e-8, 1.9758565187948486e-7, 4.465522555960764e-8, 2.436832386981306e-7, -2.1855238096466004e-8, 2.436832386981306e-7, -1.2056925801805177e-8, -4.608079306418107e-8, -2.185523809646599e-8, -1.6075901069073586e-7, -2.185523809646599e-8, 2.4368323869813066e-7, -1.2056925801805192e-8, -1.6075901069073586e-7, -1.2056925801805192e-8, 2.937139987113055e-7],
+   "parameters": [0, 0, 0, 0, 0, 0, -1.258222266967404, -0.09436667002255529, -1.5517640473010903, -20666.758198820142, -1550.0068649115105, -25488.288666588152],
+   "interval": [
+    [3946793.046167564, 3970449.880484047],
+    [295915.7503949616, 297876.92671245924],
+    [4834402.915859104, 4863532.731643659]
+   ]
+  },
+  {
+   "p": [4200000, 700000, 4750000],
+   "value": [4210626.447941654, 701771.0746569424, 4762098.838733649],
+   "jacobian": [1.0014455488814384, -0.00018075962855607577, -0.0012431698173443208, -0.00018075962855607582, 1.0024999800480157, -0.0002071949695573868, -0.0012431698173443208, -0.0002071949695573868, 1.0011222099413983],
+   "hessian": [-4.4386628665180703e-10, 1.2098299156163503e-11, 8.492866241584293e-11, 1.2098299156163503e-11, -2.490386564685225e-10, 6.348691267820876e-11, 8.492866241584293e-11, 6.348691267820876e-11, 1.7685810647884579e-10, 1.2098299156163503e-11, -2.490386564685225e-10, 6.348691267820876e-11, -2.490386564685225e-10, -1.275824563428851e-10, -2.8541166154037496e-10, 6.348691267820876e-11, -2.8541166154037496e-10, 2.947635107980763e-11, 8.492866241584295e-11, 6.348691267820876e-11, 1.7685810647884579e-10, 6.348691267820876e-11, -2.8541166154037486e-10, 2.947635107980763e-11, 1.7685810647884579e-10, 2.947635107980763e-11, -3.950242240505569e-10],
+   "parameters": [1.3119071532906879, 0.21865119221511464, 1.4936837942776349, -0.6559535766453439, -0.10932559610755732, -0.7468418971388174, -1.3119071532906879, -0.21865119221511464, -1.4936837942776349, 5313.2239708272855, 885.5373284712143, 6049.419366824422],
+   "interval": [
+    [4202986.562942865, 4211943.083356568],
+    [700414.365914358, 702074.0822023125],
+    [4753414.208698519, 4763584.148311111]
+   ]
+  }
+ ],
+ "stepIr": {
+  "kinked": true,
+  "discontinuous": false
+ },
+ "taylor": [
+  {
+   "center": [3958666.4836023604, 296899.986270177, 4849023.422666824],
+   "linear": [178.53013320644905, 5.967260333729254, 98.12895262214622, 5.967260333729254, 99.41420661508869, 7.3596714466609665, 98.12895262214622, 7.3596714466609665, 219.98619820699847],
+   "remainder": [5.13467828634545, 0.6785498201326935, 6.196577084809528],
+   "halfExtent": [287.76102444866996, 113.4196882156116, 331.67139936061517],
+   "continuous": false,
+   "hessianNorm": 0.0000027236882526785374,
+   "oscillation": 0.09379162390606334
+  },
+  {
+   "center": [4210626.447941654, 701771.0746569424, 4762098.838733649],
+   "linear": [100.14455488814384, -0.018075962855607582, -0.12431698173443208, -0.018075962855607575, 100.24999800480157, -0.02071949695573868, -0.12431698173443208, -0.02071949695573868, 100.11222099413983],
+   "remainder": [407.48642626937067, 67.95839480594859, 463.9332703960947],
+   "halfExtent": [507.7733741021045, 168.24718827056148, 564.1905278689247],
+   "continuous": false,
+   "hessianNorm": 0.003504532546451364,
+   "oscillation": 7.111492965875896
+  }
+ ],
+ "curvature": [7.755317667982328e-7, 9.708156591931414e-10],
+ "route": {
+  "exact": {
+   "wgsl": {
+    "canonical": "d9916156c06692e73f0e637230dbd946",
+    "canonicalLength": 65747
+   },
+   "positionWgsl": {
+    "canonical": "08a6f1b03e1ad2b8336d7b168d6cf0af",
+    "canonicalLength": 15360
+   },
+   "centerConstantsWgsl": {
+    "canonical": "653f27bb005888db478b24b578e1e5b6",
+    "canonicalLength": 82723
+   },
+   "uniformsLayout": {
+    "floats": 28,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "param:verticalExaggeration.factor": 22,
+     "s0.j24": 24,
+     "s0.j25": 25
+    }
+   },
+   "perDrawLayout": {
+    "floats": 464,
+    "fields": {
+     "n": 431,
+     "sha": "95d43b6dc43449d78b01e0bc86b4bb66"
+    }
+   },
+   "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
+   "separableParams": ["verticalExaggeration.factor"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "verticalExaggeration",
+     "locals": ["factor", "ceiling", "baseHeight", "band"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "verticalExaggeration.factor": 3,
+    "verticalExaggeration.ceiling": 9000,
+    "verticalExaggeration.baseHeight": 0,
+    "verticalExaggeration.band": 1800
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3600, 2, 3, 0, 3600, 2, 0, 0],
+   "records": [
+    {
+     "n": 464,
+     "sha": "363de2f90f675941e8ddad7bfa63442b"
+    },
+    {
+     "n": 464,
+     "sha": "e9819b7e82fe9b35e9b51622bc1312ba"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, 9000, 0, 0, 0, 1800, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [4000000, 300000, 4900000, 0, 0, 0, 0, 0, 4200000, 700000, 4750000, 0, 0, 0, 0, 0]
+  },
+  "linear": {
+   "wgsl": {
+    "canonical": "d9916156c06692e73f0e637230dbd946",
+    "canonicalLength": 65747
+   },
+   "positionWgsl": {
+    "canonical": "08a6f1b03e1ad2b8336d7b168d6cf0af",
+    "canonicalLength": 15360
+   },
+   "centerConstantsWgsl": {
+    "canonical": "653f27bb005888db478b24b578e1e5b6",
+    "canonicalLength": 82723
+   },
+   "uniformsLayout": {
+    "floats": 28,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "param:verticalExaggeration.factor": 22,
+     "s0.j24": 24,
+     "s0.j25": 25
+    }
+   },
+   "perDrawLayout": {
+    "floats": 464,
+    "fields": {
+     "n": 431,
+     "sha": "95d43b6dc43449d78b01e0bc86b4bb66"
+    }
+   },
+   "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
+   "separableParams": ["verticalExaggeration.factor"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "verticalExaggeration",
+     "locals": ["factor", "ceiling", "baseHeight", "band"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "verticalExaggeration.factor": 3,
+    "verticalExaggeration.ceiling": 9000,
+    "verticalExaggeration.baseHeight": 0,
+    "verticalExaggeration.band": 1800
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3600, 2, 3, 0, 3600, 2, 0, 0],
+   "records": [
+    {
+     "n": 464,
+     "sha": "363de2f90f675941e8ddad7bfa63442b"
+    },
+    {
+     "n": 464,
+     "sha": "e9819b7e82fe9b35e9b51622bc1312ba"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, 9000, 0, 0, 0, 1800, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [4000000, 300000, 4900000, 0, 0, 0, 0, 0, 4200000, 700000, 4750000, 0, 0, 0, 0, 0]
+  },
+  "auto": {
+   "wgsl": {
+    "canonical": "d9916156c06692e73f0e637230dbd946",
+    "canonicalLength": 65747
+   },
+   "positionWgsl": {
+    "canonical": "08a6f1b03e1ad2b8336d7b168d6cf0af",
+    "canonicalLength": 15360
+   },
+   "centerConstantsWgsl": {
+    "canonical": "653f27bb005888db478b24b578e1e5b6",
+    "canonicalLength": 82723
+   },
+   "uniformsLayout": {
+    "floats": 28,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "param:verticalExaggeration.factor": 22,
+     "s0.j24": 24,
+     "s0.j25": 25
+    }
+   },
+   "perDrawLayout": {
+    "floats": 464,
+    "fields": {
+     "n": 431,
+     "sha": "95d43b6dc43449d78b01e0bc86b4bb66"
+    }
+   },
+   "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
+   "separableParams": ["verticalExaggeration.factor"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "verticalExaggeration",
+     "locals": ["factor", "ceiling", "baseHeight", "band"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "verticalExaggeration.factor": 3,
+    "verticalExaggeration.ceiling": 9000,
+    "verticalExaggeration.baseHeight": 0,
+    "verticalExaggeration.band": 1800
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3600, 2, 3, 0, 3600, 2, 0, 0],
+   "records": [
+    {
+     "n": 464,
+     "sha": "363de2f90f675941e8ddad7bfa63442b"
+    },
+    {
+     "n": 464,
+     "sha": "e9819b7e82fe9b35e9b51622bc1312ba"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, 9000, 0, 0, 0, 1800, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [4000000, 300000, 4900000, 0, 0, 0, 0, 0, 4200000, 700000, 4750000, 0, 0, 0, 0, 0]
+  },
+  "none": {
+   "wgsl": {
+    "canonical": "532659d2d0315641c60b0752be4f2dc7",
+    "canonicalLength": 13805
+   },
+   "positionWgsl": {
+    "canonical": "3f3d3ff5ef8da691a6642bee22addb07",
+    "canonicalLength": 14099
+   },
+   "centerConstantsWgsl": {
+    "canonical": "b6f8cfe6eb1916d664b487d703fbe049",
+    "canonicalLength": 22201
+   },
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "param:verticalExaggeration.factor": 22
+    }
+   },
+   "perDrawLayout": {
+    "floats": 112,
+    "fields": {
+     "n": 92,
+     "sha": "90262d4306c2a3b8b6e2843c25ee101e"
+    }
+   },
+   "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
+   "separableParams": ["verticalExaggeration.factor"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["none"],
+   "steps": [
+    {
+     "id": "verticalExaggeration",
+     "locals": ["factor", "ceiling", "baseHeight", "band"],
+     "value": 3,
+     "jacobian": null
+    }
+   ],
+   "paramValues": {
+    "verticalExaggeration.factor": 3,
+    "verticalExaggeration.ceiling": 9000,
+    "verticalExaggeration.baseHeight": 0,
+    "verticalExaggeration.band": 1800
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3600, 2, 3, 0],
+   "records": [
+    {
+     "n": 112,
+     "sha": "49fafd8016ded2c4f5debdbca7d9c55b"
+    },
+    {
+     "n": 112,
+     "sha": "20eaf7a89ec033a960ab92b6afa36f23"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, 9000, 0, 0, 0, 1800, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [4000000, 300000, 4900000, 0, 0, 0, 0, 0, 4200000, 700000, 4750000, 0, 0, 0, 0, 0]
+  }
+ }
+}

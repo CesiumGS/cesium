@@ -1,0 +1,430 @@
+{
+ "program": {
+  "equations": 29,
+  "listing": "ec00820b90fe419661bf6e46984d031d",
+  "params": ["v0", "g"],
+  "outputs": 3
+ },
+ "points": [
+  {
+   "p": [1, 2, 0.5],
+   "value": [1, 2, 450],
+   "jacobian": [1, 0, 0, 0, 1, 0, 0, 0, 900],
+   "hessian": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": [0, 0, 0.25, 0, 0, 56.25],
+   "interval": [
+    [-4, 6],
+    [-3, 7],
+    [270, 630]
+   ]
+  },
+  {
+   "p": [-30, 40, 2],
+   "value": [-30, 40, 1800],
+   "jacobian": [1, 0, 0, 0, 1, 0, 0, 0, 900],
+   "hessian": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": [0, 0, 1, 0, 0, 900],
+   "interval": [
+    [-35, -25],
+    [35, 45],
+    [1620, 1980.0000000000002]
+   ]
+  }
+ ],
+ "stepIr": {
+  "kinked": true,
+  "discontinuous": false
+ },
+ "taylor": [
+  {
+   "center": [1, 2, 450],
+   "linear": [5, 0, 0, 0, 5, 0, 0, 0, 180],
+   "remainder": [0, 0, 0],
+   "halfExtent": [5, 5, 180],
+   "continuous": false,
+   "hessianNorm": 0,
+   "oscillation": 0
+  },
+  {
+   "center": [-30, 40, 1800],
+   "linear": [5, 0, 0, 0, 5, 0, 0, 0, 180],
+   "remainder": [0, 0, 0],
+   "halfExtent": [5, 5, 180],
+   "continuous": false,
+   "hessianNorm": 0,
+   "oscillation": 0
+  }
+ ],
+ "curvature": [0, 0],
+ "route": {
+  "exact": {
+   "wgsl": {
+    "canonical": "c1e4f9052026fac2c27db8c781184873",
+    "canonicalLength": 9149
+   },
+   "positionWgsl": {
+    "canonical": "13fa8138db0c7d62b6298e3daf9194a4",
+    "canonicalLength": 6476
+   },
+   "centerConstantsWgsl": {
+    "canonical": "0687db0e3b391f6ae11102a429c68366",
+    "canonicalLength": 13788
+   },
+   "uniformsLayout": {
+    "floats": 28,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "param:velocityModel.v0": 22,
+     "s0.j24": 24,
+     "s0.j25": 25,
+     "s0.j26": 26,
+     "s0.j27": 27
+    }
+   },
+   "perDrawLayout": {
+    "floats": 52,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "outG:velocityModel.v0": 8,
+     "s0.v16": 16,
+     "s0.v17": 17,
+     "s0.v18": 18,
+     "s0.v19": 19,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31,
+     "s0.j33": 33,
+     "s0.j34": 34,
+     "s0.j35": 35,
+     "s0.j36": 36,
+     "s0.j37": 37,
+     "s0.j38": 38,
+     "s0.j39": 39,
+     "s0.j40": 40,
+     "s0.j41": 41,
+     "s0.j42": 42,
+     "s0.j43": 43,
+     "s0.j44": 44,
+     "s0.j45": 45,
+     "s0.j46": 46,
+     "s0.j47": 47,
+     "s0.j49": 49,
+     "s0.j50": 50
+    }
+   },
+   "dynamicParams": ["velocityModel.g"],
+   "separableParams": ["velocityModel.v0"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "velocityModel",
+     "locals": ["v0", "g"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "velocityModel.v0": 1800,
+    "velocityModel.g": 0
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 900, 1800, 0, 0, 900, 0, "-0"],
+   "records": [
+    {
+     "n": 52,
+     "sha": "902cf85817a2ddb01fd2266def62f2ff"
+    },
+    {
+     "n": 52,
+     "sha": "a549ef87cd25de05951595be44744859"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 1800, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [1, 2, 0.5, 0, 0, 0, 0, 0, -30, 40, 2, 0, 0, 0, 0, 0]
+  },
+  "linear": {
+   "wgsl": {
+    "canonical": "c1e4f9052026fac2c27db8c781184873",
+    "canonicalLength": 9149
+   },
+   "positionWgsl": {
+    "canonical": "13fa8138db0c7d62b6298e3daf9194a4",
+    "canonicalLength": 6476
+   },
+   "centerConstantsWgsl": {
+    "canonical": "0687db0e3b391f6ae11102a429c68366",
+    "canonicalLength": 13788
+   },
+   "uniformsLayout": {
+    "floats": 28,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "param:velocityModel.v0": 22,
+     "s0.j24": 24,
+     "s0.j25": 25,
+     "s0.j26": 26,
+     "s0.j27": 27
+    }
+   },
+   "perDrawLayout": {
+    "floats": 52,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "outG:velocityModel.v0": 8,
+     "s0.v16": 16,
+     "s0.v17": 17,
+     "s0.v18": 18,
+     "s0.v19": 19,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31,
+     "s0.j33": 33,
+     "s0.j34": 34,
+     "s0.j35": 35,
+     "s0.j36": 36,
+     "s0.j37": 37,
+     "s0.j38": 38,
+     "s0.j39": 39,
+     "s0.j40": 40,
+     "s0.j41": 41,
+     "s0.j42": 42,
+     "s0.j43": 43,
+     "s0.j44": 44,
+     "s0.j45": 45,
+     "s0.j46": 46,
+     "s0.j47": 47,
+     "s0.j49": 49,
+     "s0.j50": 50
+    }
+   },
+   "dynamicParams": ["velocityModel.g"],
+   "separableParams": ["velocityModel.v0"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "velocityModel",
+     "locals": ["v0", "g"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "velocityModel.v0": 1800,
+    "velocityModel.g": 0
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 900, 1800, 0, 0, 900, 0, "-0"],
+   "records": [
+    {
+     "n": 52,
+     "sha": "902cf85817a2ddb01fd2266def62f2ff"
+    },
+    {
+     "n": 52,
+     "sha": "a549ef87cd25de05951595be44744859"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 1800, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [1, 2, 0.5, 0, 0, 0, 0, 0, -30, 40, 2, 0, 0, 0, 0, 0]
+  },
+  "auto": {
+   "wgsl": {
+    "canonical": "c1e4f9052026fac2c27db8c781184873",
+    "canonicalLength": 9149
+   },
+   "positionWgsl": {
+    "canonical": "13fa8138db0c7d62b6298e3daf9194a4",
+    "canonicalLength": 6476
+   },
+   "centerConstantsWgsl": {
+    "canonical": "0687db0e3b391f6ae11102a429c68366",
+    "canonicalLength": 13788
+   },
+   "uniformsLayout": {
+    "floats": 28,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "param:velocityModel.v0": 22,
+     "s0.j24": 24,
+     "s0.j25": 25,
+     "s0.j26": 26,
+     "s0.j27": 27
+    }
+   },
+   "perDrawLayout": {
+    "floats": 52,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "outG:velocityModel.v0": 8,
+     "s0.v16": 16,
+     "s0.v17": 17,
+     "s0.v18": 18,
+     "s0.v19": 19,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31,
+     "s0.j33": 33,
+     "s0.j34": 34,
+     "s0.j35": 35,
+     "s0.j36": 36,
+     "s0.j37": 37,
+     "s0.j38": 38,
+     "s0.j39": 39,
+     "s0.j40": 40,
+     "s0.j41": 41,
+     "s0.j42": 42,
+     "s0.j43": 43,
+     "s0.j44": 44,
+     "s0.j45": 45,
+     "s0.j46": 46,
+     "s0.j47": 47,
+     "s0.j49": 49,
+     "s0.j50": 50
+    }
+   },
+   "dynamicParams": ["velocityModel.g"],
+   "separableParams": ["velocityModel.v0"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "velocityModel",
+     "locals": ["v0", "g"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "velocityModel.v0": 1800,
+    "velocityModel.g": 0
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 900, 1800, 0, 0, 900, 0, "-0"],
+   "records": [
+    {
+     "n": 52,
+     "sha": "902cf85817a2ddb01fd2266def62f2ff"
+    },
+    {
+     "n": 52,
+     "sha": "a549ef87cd25de05951595be44744859"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 1800, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [1, 2, 0.5, 0, 0, 0, 0, 0, -30, 40, 2, 0, 0, 0, 0, 0]
+  },
+  "none": {
+   "wgsl": {
+    "canonical": "20409aed0a93b939471ef07089f17c7b",
+    "canonicalLength": 6114
+   },
+   "positionWgsl": {
+    "canonical": "c54901ed1c0c5b55d322c901dc618c34",
+    "canonicalLength": 6408
+   },
+   "centerConstantsWgsl": {
+    "canonical": "1964c13cae5f27de458ec695d0c7aab8",
+    "canonicalLength": 11025
+   },
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "param:velocityModel.v0": 22
+    }
+   },
+   "perDrawLayout": {
+    "floats": 36,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "outG:velocityModel.v0": 8,
+     "s0.v16": 16,
+     "s0.v17": 17,
+     "s0.v18": 18,
+     "s0.v19": 19,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31
+    }
+   },
+   "dynamicParams": ["velocityModel.g"],
+   "separableParams": ["velocityModel.v0"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["none"],
+   "steps": [
+    {
+     "id": "velocityModel",
+     "locals": ["v0", "g"],
+     "value": 3,
+     "jacobian": null
+    }
+   ],
+   "paramValues": {
+    "velocityModel.v0": 1800,
+    "velocityModel.g": 0
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 900, 1800, 0],
+   "records": [
+    [1, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0.25, 0, 0, 0, 0, 0, 0, -0.0010000000474974513, 1, 1, 0.1666666716337204, 0.5, 1, 0, 1, 1, 1, 0, 0.25, 1, 2, 0, 0.25, 0, 0, 0],
+    [-30, 40, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, -0.0010000000474974513, 1, 1, 0.1666666716337204, 0.5, 1, 0, 1, 1, 1, 0, 1, -30, 40, 0, 1, 0, 0, 0]
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 1800, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [1, 2, 0.5, 0, 0, 0, 0, 0, -30, 40, 2, 0, 0, 0, 0, 0]
+  }
+ }
+}

@@ -1,0 +1,310 @@
+{
+ "program": {
+  "equations": 262,
+  "listing": "c597867678ca8208c81a3e15d688c4be",
+  "params": ["scaleFactor", "falseNorthing", "falseEasting", "centralMeridian"],
+  "outputs": 3
+ },
+ "points": [
+  {
+   "p": [500100, 5100000, 100],
+   "value": [9.001292698690431, 46.05357436246726, 100],
+   "jacobian": [0.000012926986900972019, 2.099896365597861e-10, 0, -1.462027688383016e-10, 0.000009000259768155147, 0, 0, 0, 1],
+   "hessian": [-1.0001732482153313e-16, 2.099896363631066e-12, 0, 2.099896363631066e-12, 1.0001732482153313e-16, 0, 0, 0, 0, -1.4620276874032092e-12, -4.565500966888924e-17, 0, -4.565500966888924e-17, -1.4236560284124896e-14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": [-0.0023645916732213997, -45.919692680042985, 0, -2.099896365597861e-10, -0.000009000259768155147, 0, -0.000012926986900972019, 1.462027688383016e-10, 0, 1, 0, 0],
+   "interval": [
+    [9.000646344095472, 9.001939063784873],
+    [46.023964192152306, 46.08315297305714],
+    [90, 110]
+   ]
+  },
+  {
+   "p": [420000, 5600000, 20],
+   "value": [7.870863324719566, 50.54645819475161, 20],
+   "jacobian": [0.000014111289942884376, -2.1475491572746713e-7, 0, 1.3683789473487714e-7, 0.000008991455218786283, 0, 0, 0, 1],
+   "hessian": [1.0941512820055738e-13, 2.6824914342112836e-12, 0, 2.6824914342112836e-12, -1.0941512820055735e-13, 0, 0, 0, 0, -1.709633616529735e-12, 4.348250795068497e-14, 0, 4.348250795068497e-14, -1.4623496857940546e-14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": [2.332463708988161, -50.36134673231733, 0, 2.1475491572746713e-7, -0.000008991455218786283, 0, -0.000014111289942884376, -1.3683789473487714e-7, 0, 1, 0, 0],
+   "interval": [
+    [7.870147014876914, 7.871579621148606],
+    [50.51635335651837, 50.57652484187385],
+    [10, 30]
+   ]
+  }
+ ],
+ "stepIr": {
+  "kinked": false,
+  "discontinuous": false
+ },
+ "taylor": [
+  {
+   "center": [9.001292698690431, 46.053574362467266, 100],
+   "linear": [0.000646349345048601, -7.3101384419150805e-9, 0, 1.0499481827989305e-8, 0.00045001298840775735, 0, 0, 0, 10],
+   "remainder": [5.250700753584191e-9, 2.2249413220727343e-9, 0],
+   "halfExtent": [0.0006463650952311826, 0.0004500225234875213, 10],
+   "continuous": true,
+   "hessianNorm": 9.98345937556472e-12,
+   "oscillation": 1.366756579459212e-7
+  },
+  {
+   "center": [7.870863324719566, 50.54645819475161, 20],
+   "linear": [0.0007055644971442188, 0.000006841894736743857, 0, -0.000010737745786373357, 0.00044957276093931413, 0, 0, 0, 10],
+   "remainder": [6.980775329412424e-9, 2.8012338545298915e-9, 0],
+   "halfExtent": [0.0007163092237059216, 0.0004564174569099125, 10],
+   "continuous": true,
+   "hessianNorm": 1.2570487384072335e-11,
+   "oscillation": 1.6289924289123614e-7
+  }
+ ],
+ "curvature": [3.7016822451552695e-12, 7.870693564504099e-12],
+ "route": {
+  "exact": {
+   "wgsl": {
+    "canonical": "5cc470daac651cf64df39c783f5fa9b0",
+    "canonicalLength": 62332
+   },
+   "positionWgsl": {
+    "canonical": "46ef573a99cb66f380c3b82c5d31b936",
+    "canonicalLength": 19657
+   },
+   "centerConstantsWgsl": {
+    "canonical": "b93367c6a4b88a30fb7d6170569efda2",
+    "canonicalLength": 79018
+   },
+   "uniformsLayout": {
+    "floats": 28,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.j21": 21,
+     "s0.j22": 22,
+     "s0.j23": 23,
+     "s0.j24": 24,
+     "s0.j25": 25,
+     "s0.j26": 26,
+     "s0.j27": 27
+    }
+   },
+   "perDrawLayout": {
+    "floats": 524,
+    "fields": {
+     "n": 515,
+     "sha": "9be96542aa33c6d64d9c3a01564f4768"
+    }
+   },
+   "dynamicParams": ["transverseMercatorToGeographic.centralMeridian", "transverseMercatorToGeographic.scaleFactor", "transverseMercatorToGeographic.falseEasting", "transverseMercatorToGeographic.falseNorthing"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "transverseMercatorToGeographic",
+     "locals": ["centralMeridian", "scaleFactor", "falseEasting", "falseNorthing"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "transverseMercatorToGeographic.centralMeridian": 9,
+    "transverseMercatorToGeographic.scaleFactor": 0.9996,
+    "transverseMercatorToGeographic.falseEasting": 500000,
+    "transverseMercatorToGeographic.falseNorthing": 0
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 6364902, 3.142232003483514e-7, 6.284464006967028e-7, 9.42669657888473e-7, 0.0000012568928013934055, 0.0000015711160585851758, 0.000001885339315776946],
+   "records": [
+    {
+     "n": 524,
+     "sha": "d42b1f2422a639545b4878ed1a567923"
+    },
+    {
+     "n": 524,
+     "sha": "18bcbd9af920ae2e15b4bc331fbfcbed"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 9, 0, 0.9995999932289124, 6.771087690538025e-9, 500000, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [500100, 5100000, 100, 0, 0, 0, 0, 0, 420000, 5600000, 20, 0, 0, 0, 0, 0]
+  },
+  "linear": {
+   "wgsl": {
+    "canonical": "20afbd253321f94a3ab0d7392182e9b3",
+    "canonicalLength": 20446
+   },
+   "positionWgsl": {
+    "canonical": "af4d3d8e65425be173c379dea3ae6e40",
+    "canonicalLength": 18451
+   },
+   "centerConstantsWgsl": null,
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20
+    }
+   },
+   "perDrawLayout": {
+    "floats": 192,
+    "fields": {
+     "n": 147,
+     "sha": "e5a9c8735454a5a7e8f5b1404b6d389c"
+    }
+   },
+   "dynamicParams": ["transverseMercatorToGeographic.centralMeridian", "transverseMercatorToGeographic.scaleFactor", "transverseMercatorToGeographic.falseEasting", "transverseMercatorToGeographic.falseNorthing"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["linear"],
+   "steps": [
+    {
+     "id": "transverseMercatorToGeographic",
+     "locals": ["centralMeridian", "scaleFactor", "falseEasting", "falseNorthing"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "transverseMercatorToGeographic.centralMeridian": 9,
+    "transverseMercatorToGeographic.scaleFactor": 0.9996,
+    "transverseMercatorToGeographic.falseEasting": 500000,
+    "transverseMercatorToGeographic.falseNorthing": 0
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 0, 0, 0],
+   "records": [
+    {
+     "n": 192,
+     "sha": "5f53cfdebb54462ebbbceface343f7ca"
+    },
+    {
+     "n": 192,
+     "sha": "a42728c23f6c0b33de90ef58be5176f1"
+    }
+   ],
+   "centerUniforms": null,
+   "packCenters": [500100, 5100000, 100, 0, 0, 0, 0, 0, 420000, 5600000, 20, 0, 0, 0, 0, 0]
+  },
+  "auto": {
+   "wgsl": {
+    "canonical": "20afbd253321f94a3ab0d7392182e9b3",
+    "canonicalLength": 20446
+   },
+   "positionWgsl": {
+    "canonical": "af4d3d8e65425be173c379dea3ae6e40",
+    "canonicalLength": 18451
+   },
+   "centerConstantsWgsl": null,
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20
+    }
+   },
+   "perDrawLayout": {
+    "floats": 192,
+    "fields": {
+     "n": 147,
+     "sha": "e5a9c8735454a5a7e8f5b1404b6d389c"
+    }
+   },
+   "dynamicParams": ["transverseMercatorToGeographic.centralMeridian", "transverseMercatorToGeographic.scaleFactor", "transverseMercatorToGeographic.falseEasting", "transverseMercatorToGeographic.falseNorthing"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["linear"],
+   "steps": [
+    {
+     "id": "transverseMercatorToGeographic",
+     "locals": ["centralMeridian", "scaleFactor", "falseEasting", "falseNorthing"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "transverseMercatorToGeographic.centralMeridian": 9,
+    "transverseMercatorToGeographic.scaleFactor": 0.9996,
+    "transverseMercatorToGeographic.falseEasting": 500000,
+    "transverseMercatorToGeographic.falseNorthing": 0
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 0, 0, 0],
+   "records": [
+    {
+     "n": 192,
+     "sha": "5f53cfdebb54462ebbbceface343f7ca"
+    },
+    {
+     "n": 192,
+     "sha": "a42728c23f6c0b33de90ef58be5176f1"
+    }
+   ],
+   "centerUniforms": null,
+   "packCenters": [500100, 5100000, 100, 0, 0, 0, 0, 0, 420000, 5600000, 20, 0, 0, 0, 0, 0]
+  },
+  "none": {
+   "wgsl": {
+    "canonical": "6790548820b44d9ecacfeddf791daccd",
+    "canonicalLength": 18017
+   },
+   "positionWgsl": {
+    "canonical": "89f4b314431bcfb911e225ef28debbae",
+    "canonicalLength": 18311
+   },
+   "centerConstantsWgsl": {
+    "canonical": "7b6cc53b4c53405e09b36f610661c6d4",
+    "canonicalLength": 26450
+   },
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20
+    }
+   },
+   "perDrawLayout": {
+    "floats": 152,
+    "fields": {
+     "n": 145,
+     "sha": "f23adcfe5deda61088a58781f3f6157d"
+    }
+   },
+   "dynamicParams": ["transverseMercatorToGeographic.centralMeridian", "transverseMercatorToGeographic.scaleFactor", "transverseMercatorToGeographic.falseEasting", "transverseMercatorToGeographic.falseNorthing"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["none"],
+   "steps": [
+    {
+     "id": "transverseMercatorToGeographic",
+     "locals": ["centralMeridian", "scaleFactor", "falseEasting", "falseNorthing"],
+     "value": 3,
+     "jacobian": null
+    }
+   ],
+   "paramValues": {
+    "transverseMercatorToGeographic.centralMeridian": 9,
+    "transverseMercatorToGeographic.scaleFactor": 0.9996,
+    "transverseMercatorToGeographic.falseEasting": 500000,
+    "transverseMercatorToGeographic.falseNorthing": 0
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 0, 0, 0],
+   "records": [
+    {
+     "n": 152,
+     "sha": "310ccf94969e63b6fa6d5c6f6b6adf35"
+    },
+    {
+     "n": 152,
+     "sha": "47d15618c901cf7490b7470df4840baa"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 9, 0, 0.9995999932289124, 6.771087690538025e-9, 500000, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [500100, 5100000, 100, 0, 0, 0, 0, 0, 420000, 5600000, 20, 0, 0, 0, 0, 0]
+  }
+ }
+}

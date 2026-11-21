@@ -1,0 +1,347 @@
+{
+ "program": {
+  "equations": 185,
+  "listing": "e20797ca56002864d57ca48bb33a81a8",
+  "params": ["lat1", "lat2", "lat0", "falseEasting", "falseNorthing", "lon0"],
+  "outputs": 3
+ },
+ "points": [
+  {
+   "p": [1000000, -1000000, 10],
+   "value": [-96, 31.88893657577915, 10],
+   "jacobian": [0.00001054735761285274, 0, 0, "-0", 0.000008998995882358401, 0, 0, 0, 1],
+   "hessian": ["-0", 1.2241854652819718e-12, 0, 1.2241854652819718e-12, 0, 0, 0, 0, 0, -1.044473920926993e-12, "-0", 0, "-0", 1.5658373859552455e-13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": [0, -0.022625272510451568, 0, 0, -0.007018012652333513, 0, 0, 1.0285869468843578, 0, -0.00001054735761285274, 0, 0, "-0", -0.000008998995882358401, 0, 1, 0, 0],
+   "interval": [
+    [-96.00052737094111, -95.99947262905889],
+    [31.888486624875213, 31.88938652707463],
+    [0, 20]
+   ]
+  },
+  {
+   "p": [250000, -1800000, 500],
+   "value": [-103.22316317413271, 24.49360202103518, 500],
+   "jacobian": [0.000009590370642682307, -7.639037789267536e-7, 0, 6.99037950095525e-7, 0.000008776017634231073, 0, 0, 0, 1],
+   "hessian": [1.6123670794163196e-13, 1.0056953510132233e-12, 0, 1.0056953510132233e-12, -1.6123670794163196e-13, 0, 0, 0, 0, -9.242268240158964e-13, 9.8222989340077e-14, 0, 9.8222989340077e-14, 3.010822883196929e-13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": [0.02133030465714998, -0.0064462050720715605, 0, 0.00876171908811892, -0.00451167863371909, 0, -0.08731434772851243, 1.003100490566211, 0, -0.000009590370642682307, -6.99037950095525e-7, 0, 7.639037789267536e-7, -0.000008776017634231073, 0, 1, 0, 0],
+   "interval": [
+    [-103.22368089036803, -103.22264546292585],
+    [24.493128267722625, 24.49407577328103],
+    [490, 510]
+   ]
+  }
+ ],
+ "stepIr": {
+  "kinked": true,
+  "discontinuous": false
+ },
+ "taylor": [
+  {
+   "center": [-96, 31.88893657577915, 10],
+   "linear": [0.000527367880642637, 0, 0, 0, 0.0004499497941179201, 0, 0, 0, 10],
+   "remainder": [1.224199674043843e-8, 1.1392147007039406e-8, 0],
+   "halfExtent": [0.0005273801226393774, 0.0004499611862649271, 10],
+   "continuous": false,
+   "hessianNorm": 6.0842382112693525e-12,
+   "oscillation": 4.616358228614983e-10
+  },
+  {
+   "center": [-103.22316317413271, 24.49360202103518, 500],
+   "linear": [0.0004795185321341153, 0.00003495189750477625, 0, -0.000038195188946337684, 0.00043880088171155364, 0, 0, 0, 10],
+   "remainder": [1.099166348517022e-8, 1.1539145557681653e-8, 0],
+   "halfExtent": [0.0005177247127439382, 0.0004737643183618876, 10],
+   "continuous": false,
+   "hessianNorm": 5.230075015078651e-12,
+   "oscillation": 4.3380108683759814e-10
+  }
+ ],
+ "curvature": [2.519442087452942e-12, 4.7466347965156e-12],
+ "route": {
+  "exact": {
+   "wgsl": {
+    "canonical": "f6672eeddfaf6c3bb0ba00b313fa1b61",
+    "canonicalLength": 30073
+   },
+   "positionWgsl": {
+    "canonical": "4731ecc05590c4f9c269baee920164ad",
+    "canonicalLength": 10649
+   },
+   "centerConstantsWgsl": {
+    "canonical": "647ae688bd3e138d3696715f7dc29f13",
+    "canonicalLength": 48861
+   },
+   "uniformsLayout": {
+    "floats": 32,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.j24": 24,
+     "s0.j25": 25,
+     "s0.j26": 26,
+     "s0.j27": 27,
+     "s0.j28": 28,
+     "s0.j29": 29
+    }
+   },
+   "perDrawLayout": {
+    "floats": 248,
+    "fields": {
+     "n": 241,
+     "sha": "9c1808c9a5366a50ff150865678f53c0"
+    }
+   },
+   "dynamicParams": ["lambertConformalConicToGeographic.lon0", "lambertConformalConicToGeographic.lat0", "lambertConformalConicToGeographic.lat1", "lambertConformalConicToGeographic.lat2", "lambertConformalConicToGeographic.falseEasting", "lambertConformalConicToGeographic.falseNorthing"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "lambertConformalConicToGeographic",
+     "locals": ["lon0", "lat0", "lat1", "lat2", "falseEasting", "falseNorthing"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "lambertConformalConicToGeographic.lon0": -96,
+    "lambertConformalConicToGeographic.lat0": 23,
+    "lambertConformalConicToGeographic.lat1": 33,
+    "lambertConformalConicToGeographic.lat2": 45,
+    "lambertConformalConicToGeographic.falseEasting": 1000000,
+    "lambertConformalConicToGeographic.falseNorthing": -2000000
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 0.5860522389411926, -1, 0, 0],
+   "records": [
+    {
+     "n": 248,
+     "sha": "48cd5a37d403b9f56477d37e48d2648a"
+    },
+    {
+     "n": 248,
+     "sha": "1f66588ce74c65726ca6530c15e087da"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, -96, 0, 23, 0, 33, 0, 45, 0, 1000000, 0, -2000000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [1000000, -1000000, 10, 0, 0, 0, 0, 0, 250000, -1800000, 500, 0, 0, 0, 0, 0]
+  },
+  "linear": {
+   "wgsl": {
+    "canonical": "f6672eeddfaf6c3bb0ba00b313fa1b61",
+    "canonicalLength": 30073
+   },
+   "positionWgsl": {
+    "canonical": "4731ecc05590c4f9c269baee920164ad",
+    "canonicalLength": 10649
+   },
+   "centerConstantsWgsl": {
+    "canonical": "647ae688bd3e138d3696715f7dc29f13",
+    "canonicalLength": 48861
+   },
+   "uniformsLayout": {
+    "floats": 32,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.j24": 24,
+     "s0.j25": 25,
+     "s0.j26": 26,
+     "s0.j27": 27,
+     "s0.j28": 28,
+     "s0.j29": 29
+    }
+   },
+   "perDrawLayout": {
+    "floats": 248,
+    "fields": {
+     "n": 241,
+     "sha": "9c1808c9a5366a50ff150865678f53c0"
+    }
+   },
+   "dynamicParams": ["lambertConformalConicToGeographic.lon0", "lambertConformalConicToGeographic.lat0", "lambertConformalConicToGeographic.lat1", "lambertConformalConicToGeographic.lat2", "lambertConformalConicToGeographic.falseEasting", "lambertConformalConicToGeographic.falseNorthing"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "lambertConformalConicToGeographic",
+     "locals": ["lon0", "lat0", "lat1", "lat2", "falseEasting", "falseNorthing"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "lambertConformalConicToGeographic.lon0": -96,
+    "lambertConformalConicToGeographic.lat0": 23,
+    "lambertConformalConicToGeographic.lat1": 33,
+    "lambertConformalConicToGeographic.lat2": 45,
+    "lambertConformalConicToGeographic.falseEasting": 1000000,
+    "lambertConformalConicToGeographic.falseNorthing": -2000000
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 0.5860522389411926, -1, 0, 0],
+   "records": [
+    {
+     "n": 248,
+     "sha": "48cd5a37d403b9f56477d37e48d2648a"
+    },
+    {
+     "n": 248,
+     "sha": "1f66588ce74c65726ca6530c15e087da"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, -96, 0, 23, 0, 33, 0, 45, 0, 1000000, 0, -2000000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [1000000, -1000000, 10, 0, 0, 0, 0, 0, 250000, -1800000, 500, 0, 0, 0, 0, 0]
+  },
+  "auto": {
+   "wgsl": {
+    "canonical": "f6672eeddfaf6c3bb0ba00b313fa1b61",
+    "canonicalLength": 30073
+   },
+   "positionWgsl": {
+    "canonical": "4731ecc05590c4f9c269baee920164ad",
+    "canonicalLength": 10649
+   },
+   "centerConstantsWgsl": {
+    "canonical": "647ae688bd3e138d3696715f7dc29f13",
+    "canonicalLength": 48861
+   },
+   "uniformsLayout": {
+    "floats": 32,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.j24": 24,
+     "s0.j25": 25,
+     "s0.j26": 26,
+     "s0.j27": 27,
+     "s0.j28": 28,
+     "s0.j29": 29
+    }
+   },
+   "perDrawLayout": {
+    "floats": 248,
+    "fields": {
+     "n": 241,
+     "sha": "9c1808c9a5366a50ff150865678f53c0"
+    }
+   },
+   "dynamicParams": ["lambertConformalConicToGeographic.lon0", "lambertConformalConicToGeographic.lat0", "lambertConformalConicToGeographic.lat1", "lambertConformalConicToGeographic.lat2", "lambertConformalConicToGeographic.falseEasting", "lambertConformalConicToGeographic.falseNorthing"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "lambertConformalConicToGeographic",
+     "locals": ["lon0", "lat0", "lat1", "lat2", "falseEasting", "falseNorthing"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "lambertConformalConicToGeographic.lon0": -96,
+    "lambertConformalConicToGeographic.lat0": 23,
+    "lambertConformalConicToGeographic.lat1": 33,
+    "lambertConformalConicToGeographic.lat2": 45,
+    "lambertConformalConicToGeographic.falseEasting": 1000000,
+    "lambertConformalConicToGeographic.falseNorthing": -2000000
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 0.5860522389411926, -1, 0, 0],
+   "records": [
+    {
+     "n": 248,
+     "sha": "48cd5a37d403b9f56477d37e48d2648a"
+    },
+    {
+     "n": 248,
+     "sha": "1f66588ce74c65726ca6530c15e087da"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, -96, 0, 23, 0, 33, 0, 45, 0, 1000000, 0, -2000000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [1000000, -1000000, 10, 0, 0, 0, 0, 0, 250000, -1800000, 500, 0, 0, 0, 0, 0]
+  },
+  "none": {
+   "wgsl": {
+    "canonical": "ee8f835d6a47d6c70ef7d8f5a245a03a",
+    "canonicalLength": 9699
+   },
+   "positionWgsl": {
+    "canonical": "8d9779b0481d6024c6f92f5a62ed82c3",
+    "canonicalLength": 9993
+   },
+   "centerConstantsWgsl": {
+    "canonical": "43e1a2ccb7e679a26f132938b67d72c4",
+    "canonicalLength": 20405
+   },
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23
+    }
+   },
+   "perDrawLayout": {
+    "floats": 68,
+    "fields": {
+     "n": 62,
+     "sha": "1cffa2ec0d589a3b3d2f1c8e8e7b4181"
+    }
+   },
+   "dynamicParams": ["lambertConformalConicToGeographic.lon0", "lambertConformalConicToGeographic.lat0", "lambertConformalConicToGeographic.lat1", "lambertConformalConicToGeographic.lat2", "lambertConformalConicToGeographic.falseEasting", "lambertConformalConicToGeographic.falseNorthing"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["none"],
+   "steps": [
+    {
+     "id": "lambertConformalConicToGeographic",
+     "locals": ["lon0", "lat0", "lat1", "lat2", "falseEasting", "falseNorthing"],
+     "value": 3,
+     "jacobian": null
+    }
+   ],
+   "paramValues": {
+    "lambertConformalConicToGeographic.lon0": -96,
+    "lambertConformalConicToGeographic.lat0": 23,
+    "lambertConformalConicToGeographic.lat1": 33,
+    "lambertConformalConicToGeographic.lat2": 45,
+    "lambertConformalConicToGeographic.falseEasting": 1000000,
+    "lambertConformalConicToGeographic.falseNorthing": -2000000
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 12452754, 1.5860522985458374, 0.6304962635040283],
+   "records": [
+    {
+     "n": 68,
+     "sha": "cf2c5b619a6705fee7ffc58cc3d26661"
+    },
+    {
+     "n": 68,
+     "sha": "760bdc133c8c1f7ba04aa81d34784654"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, -96, 0, 23, 0, 33, 0, 45, 0, 1000000, 0, -2000000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [1000000, -1000000, 10, 0, 0, 0, 0, 0, 250000, -1800000, 500, 0, 0, 0, 0, 0]
+  }
+ }
+}

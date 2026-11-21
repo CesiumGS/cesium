@@ -1,0 +1,318 @@
+{
+ "program": {
+  "equations": 19,
+  "listing": "1687970ff7256dff97d38773b78ffbad",
+  "params": ["cx", "cy", "cz", "sx", "sy", "sz"],
+  "outputs": 3
+ },
+ "points": [
+  {
+   "p": [1, 2, 3],
+   "value": [-1, 0, -2],
+   "jacobian": [2, 0, 0, 0, 0.5, 0, 0, 0, -1.5],
+   "hessian": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": [-1, 0, 0, 0, 0.5, 0, 0, 0, 2.5, -2, 0, 0, 0, 4, 0, 0, 0, 2],
+   "interval": [
+    [-11, 9],
+    [-2.5, 2.5],
+    [-9.5, 5.5]
+   ]
+  },
+  {
+   "p": [-40, 25, 11],
+   "value": [-83, 11.5, -14],
+   "jacobian": [2, 0, 0, 0, 0.5, 0, 0, 0, -1.5],
+   "hessian": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": [-1, 0, 0, 0, 0.5, 0, 0, 0, 2.5, -43, 0, 0, 0, 27, 0, 0, 0, 10],
+   "interval": [
+    [-93, -73],
+    [9, 14],
+    [-21.5, -6.5]
+   ]
+  }
+ ],
+ "stepIr": {
+  "kinked": false,
+  "discontinuous": false
+ },
+ "taylor": [
+  {
+   "center": [-1, 0, -2],
+   "linear": [10, 0, 0, 0, 2.5, 0, 0, 0, -7.5],
+   "remainder": [0, 0, 0],
+   "halfExtent": [10, 2.5, 7.5],
+   "continuous": true,
+   "hessianNorm": 0,
+   "oscillation": 0
+  },
+  {
+   "center": [-83, 11.5, -14],
+   "linear": [10, 0, 0, 0, 2.5, 0, 0, 0, -7.5],
+   "remainder": [0, 0, 0],
+   "halfExtent": [10, 2.5, 7.5],
+   "continuous": true,
+   "hessianNorm": 0,
+   "oscillation": 0
+  }
+ ],
+ "curvature": [0, 0],
+ "route": {
+  "exact": {
+   "wgsl": {
+    "canonical": "d497d88eb50bfa6d71660bba1cf0206f",
+    "canonicalLength": 7059
+   },
+   "positionWgsl": {
+    "canonical": "bbd6240c220aec177a1bb66bec8fdb68",
+    "canonicalLength": 5651
+   },
+   "centerConstantsWgsl": {
+    "canonical": "84514d5ceefe8a86518cba9db7e18c8b",
+    "canonicalLength": 9706
+   },
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:scaleAbout.sx": 20,
+     "param:scaleAbout.sy": 21,
+     "param:scaleAbout.sz": 22
+    }
+   },
+   "perDrawLayout": {
+    "floats": 12,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "s0.v8": 8,
+     "s0.v9": 9,
+     "s0.v10": 10
+    }
+   },
+   "dynamicParams": ["scaleAbout.cx", "scaleAbout.cy", "scaleAbout.cz", "scaleAbout.sx", "scaleAbout.sy", "scaleAbout.sz"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "scaleAbout",
+     "locals": ["cx", "cy", "cz", "sx", "sy", "sz"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "scaleAbout.cx": 3,
+    "scaleAbout.cy": -2,
+    "scaleAbout.cz": 1,
+    "scaleAbout.sx": 2,
+    "scaleAbout.sy": 0.5,
+    "scaleAbout.sz": -1.5
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0.5, -1.5, 0],
+   "records": [
+    [-1, 0, -2, 0, 0, 0, 0, 0, -1, 0, -2, 0],
+    [-83, 11.5, -14, 0, 0, 0, 0, 0, -83, 11.5, -14, 0]
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, -2, 0, 1, 0, 2, 0, 0.5, 0, -1.5, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [1, 2, 3, 0, 0, 0, 0, 0, -40, 25, 11, 0, 0, 0, 0, 0]
+  },
+  "linear": {
+   "wgsl": {
+    "canonical": "a825ef4f0b483cbbca94c7c5aa9c6a02",
+    "canonicalLength": 7754
+   },
+   "positionWgsl": {
+    "canonical": "cb37fcef31864f0a96fd92ff7e6d9d74",
+    "canonicalLength": 5784
+   },
+   "centerConstantsWgsl": null,
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:scaleAbout.sx": 20,
+     "param:scaleAbout.sy": 21,
+     "param:scaleAbout.sz": 22
+    }
+   },
+   "perDrawLayout": {
+    "floats": 52,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "s0.v8": 8,
+     "s0.v9": 9,
+     "s0.v10": 10,
+     "s0.lj0": 12,
+     "s0.lh0": 24
+    }
+   },
+   "dynamicParams": ["scaleAbout.cx", "scaleAbout.cy", "scaleAbout.cz", "scaleAbout.sx", "scaleAbout.sy", "scaleAbout.sz"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["linear"],
+   "steps": [
+    {
+     "id": "scaleAbout",
+     "locals": ["cx", "cy", "cz", "sx", "sy", "sz"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "scaleAbout.cx": 3,
+    "scaleAbout.cy": -2,
+    "scaleAbout.cz": 1,
+    "scaleAbout.sx": 2,
+    "scaleAbout.sy": 0.5,
+    "scaleAbout.sz": -1.5
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0.5, -1.5, 0],
+   "records": [
+    {
+     "n": 52,
+     "sha": "3705e2e5f388f9f7cb2e408597714fe8"
+    },
+    {
+     "n": 52,
+     "sha": "04672286dbb90f23e54cd5176d817011"
+    }
+   ],
+   "centerUniforms": null,
+   "packCenters": [1, 2, 3, 0, 0, 0, 0, 0, -40, 25, 11, 0, 0, 0, 0, 0]
+  },
+  "auto": {
+   "wgsl": {
+    "canonical": "d497d88eb50bfa6d71660bba1cf0206f",
+    "canonicalLength": 7059
+   },
+   "positionWgsl": {
+    "canonical": "bbd6240c220aec177a1bb66bec8fdb68",
+    "canonicalLength": 5651
+   },
+   "centerConstantsWgsl": {
+    "canonical": "84514d5ceefe8a86518cba9db7e18c8b",
+    "canonicalLength": 9706
+   },
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:scaleAbout.sx": 20,
+     "param:scaleAbout.sy": 21,
+     "param:scaleAbout.sz": 22
+    }
+   },
+   "perDrawLayout": {
+    "floats": 12,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "s0.v8": 8,
+     "s0.v9": 9,
+     "s0.v10": 10
+    }
+   },
+   "dynamicParams": ["scaleAbout.cx", "scaleAbout.cy", "scaleAbout.cz", "scaleAbout.sx", "scaleAbout.sy", "scaleAbout.sz"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "scaleAbout",
+     "locals": ["cx", "cy", "cz", "sx", "sy", "sz"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "scaleAbout.cx": 3,
+    "scaleAbout.cy": -2,
+    "scaleAbout.cz": 1,
+    "scaleAbout.sx": 2,
+    "scaleAbout.sy": 0.5,
+    "scaleAbout.sz": -1.5
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0.5, -1.5, 0],
+   "records": [
+    [-1, 0, -2, 0, 0, 0, 0, 0, -1, 0, -2, 0],
+    [-83, 11.5, -14, 0, 0, 0, 0, 0, -83, 11.5, -14, 0]
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, -2, 0, 1, 0, 2, 0, 0.5, 0, -1.5, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [1, 2, 3, 0, 0, 0, 0, 0, -40, 25, 11, 0, 0, 0, 0, 0]
+  },
+  "none": {
+   "wgsl": {
+    "canonical": "e80fefe0e65583e8c6fe4eb824c539e5",
+    "canonicalLength": 5357
+   },
+   "positionWgsl": {
+    "canonical": "bbd6240c220aec177a1bb66bec8fdb68",
+    "canonicalLength": 5651
+   },
+   "centerConstantsWgsl": {
+    "canonical": "86af452ac9ae38f6e0dbc65f5132dfdd",
+    "canonicalLength": 9433
+   },
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:scaleAbout.sx": 20,
+     "param:scaleAbout.sy": 21,
+     "param:scaleAbout.sz": 22
+    }
+   },
+   "perDrawLayout": {
+    "floats": 12,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "s0.v8": 8,
+     "s0.v9": 9,
+     "s0.v10": 10
+    }
+   },
+   "dynamicParams": ["scaleAbout.cx", "scaleAbout.cy", "scaleAbout.cz", "scaleAbout.sx", "scaleAbout.sy", "scaleAbout.sz"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["none"],
+   "steps": [
+    {
+     "id": "scaleAbout",
+     "locals": ["cx", "cy", "cz", "sx", "sy", "sz"],
+     "value": 3,
+     "jacobian": null
+    }
+   ],
+   "paramValues": {
+    "scaleAbout.cx": 3,
+    "scaleAbout.cy": -2,
+    "scaleAbout.cz": 1,
+    "scaleAbout.sx": 2,
+    "scaleAbout.sy": 0.5,
+    "scaleAbout.sz": -1.5
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0.5, -1.5, 0],
+   "records": [
+    [-1, 0, -2, 0, 0, 0, 0, 0, -1, 0, -2, 0],
+    [-83, 11.5, -14, 0, 0, 0, 0, 0, -83, 11.5, -14, 0]
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, -2, 0, 1, 0, 2, 0, 0.5, 0, -1.5, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [1, 2, 3, 0, 0, 0, 0, 0, -40, 25, 11, 0, 0, 0, 0, 0]
+  }
+ }
+}

@@ -1,0 +1,293 @@
+{
+ "program": {
+  "equations": 370,
+  "listing": "18186b40d21314305594b2d7f78ee0f4",
+  "params": ["falloff", "height"],
+  "outputs": 3
+ },
+ "points": [
+  {
+   "p": [4454500, 786000, 4488500],
+   "value": [4454006.448391595, 785912.9124336723, 4487999.332132586],
+   "jacobian": [1.5794599070589355, -0.10887476356600563, -0.7004995663818272, 0.10226570311250442, 0.980678164604044, -0.1236036949547909, 0.5879275956612453, -0.11044450623853828, 0.2892891298211667],
+   "hessian": [-0.0001301097291962883, 0.000050335163724817705, 0.00031528802046078784, 0.000050335163724817705, -0.000011870020851938106, -0.00007636194961101617, 0.00031528802046078784, -0.00007636194961101617, -0.0004855135755764022, -0.00002300387889875578, 0.000009016100669022697, 0.00005566056522104255, 0.000009016100669022697, -0.0000021433574849602343, -0.000013631382188941643, 0.00005566056522104255, -0.000013631382188941643, -0.00008566924916445214, -0.00013225054533844776, 0.00005108571859851645, 0.0003201245842976097, 0.00005108571859851645, -0.00001204113970995244, -0.00007748740398399354, 0.0003201245842976097, -0.00007748740398399354, -0.0004928295116406277],
+   "parameters": [-0.6873892183775488, -0.12129036382192242, -0.6973003191296282, 0.10474981675985859, 0.018483186883656716, 0.10626014883943244],
+   "interval": [
+    [4433775.955287308, 4488540.197750148],
+    [782177.7574352665, 792172.3805129789],
+    [4467479.612385, 4523028.810134128]
+   ]
+  },
+  {
+   "p": [4448000, 804000, 4499000],
+   "value": [4441151.61880662, 802762.1181475995, 4492026.486068737],
+   "jacobian": [0.51600499071381, -0.08720640863617274, -0.49126561977198974, -0.08720640863617275, 0.9826973170555614, -0.08879891148756293, -0.4912656197719898, -0.08879891148756293, 0.498213214555718],
+   "hessian": [-1.6869548629770535e-7, 8.718895298783808e-9, 4.9834938577157136e-8, 8.718895298783808e-9, -1.0334584858847333e-7, 2.897171809883032e-8, 4.9834938577157136e-8, 2.897171809883032e-8, 5.474521473998662e-8, 8.71889529878381e-9, -1.0334584858847336e-7, 2.897171809883032e-8, -1.0334584858847336e-7, -5.789183442838987e-8, -1.0520961295425592e-7, 2.897171809883032e-8, -1.0520961295425592e-7, 9.895492952101895e-9, 4.983493857715714e-8, 2.897171809883032e-8, 5.474521473998662e-8, 2.897171809883032e-8, -1.0520961295425592e-7, 9.895492952101897e-9, 5.474521473998662e-8, 9.895492952101897e-9, -1.6588725684699519e-7],
+   "parameters": [0, 0, 0, 0.6951235883316673, 0.12564733925779242, 0.7078247968829178],
+   "interval": [
+    [4427292.041488972, 4489215.917022057],
+    [800092.3204364532, 811615.3591270937],
+    [4477916.907487012, 4540966.185025976]
+   ]
+  }
+ ],
+ "stepIr": {
+  "kinked": true,
+  "discontinuous": true
+ },
+ "taylor": [
+  {
+   "refused": "\"step\" has a step (floor, ceil or fract): no derivative bound holds"
+  },
+  {
+   "refused": "\"step\" has a step (floor, ceil or fract): no derivative bound holds"
+  }
+ ],
+ "curvature": [0.0009826711475177043, 3.828526560125841e-7],
+ "route": {
+  "exact": {
+   "wgsl": {
+    "canonical": "3de8010be00b49d1223c0645e65e84c5",
+    "canonicalLength": 96715
+   },
+   "positionWgsl": {
+    "canonical": "a55774be3958b29e875f1f1f8f475116",
+    "canonicalLength": 22660
+   },
+   "centerConstantsWgsl": {
+    "canonical": "f6ed5b372bf3ca3f205cd56078d7870a",
+    "canonicalLength": 132298
+   },
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:flatten5.falloff": 20,
+     "param:flatten5.height": 21
+    }
+   },
+   "perDrawLayout": {
+    "floats": 700,
+    "fields": {
+     "n": 667,
+     "sha": "d3311fe80b214c792f5e5a434ccaff6d"
+    }
+   },
+   "dynamicParams": ["flatten5.falloff"],
+   "separableParams": ["flatten5.height"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "flatten5",
+     "locals": ["height", "falloff"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "flatten5.height": 150,
+    "flatten5.falloff": 4000
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4000, 150, 0, 0],
+   "records": [
+    {
+     "n": 700,
+     "sha": "6bfc3ddbbc82c41938b44f788dc6466f"
+    },
+    {
+     "n": 700,
+     "sha": "0a1a9caf990318177fa99e79b7fc8f19"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 150, 0, 4000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [4454500, 786000, 4488500, 0, 0, 0, 0, 0, 4448000, 804000, 4499000, 0, 0, 0, 0, 0]
+  },
+  "linear": {
+   "wgsl": {
+    "canonical": "3de8010be00b49d1223c0645e65e84c5",
+    "canonicalLength": 96715
+   },
+   "positionWgsl": {
+    "canonical": "a55774be3958b29e875f1f1f8f475116",
+    "canonicalLength": 22660
+   },
+   "centerConstantsWgsl": {
+    "canonical": "f6ed5b372bf3ca3f205cd56078d7870a",
+    "canonicalLength": 132298
+   },
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:flatten5.falloff": 20,
+     "param:flatten5.height": 21
+    }
+   },
+   "perDrawLayout": {
+    "floats": 700,
+    "fields": {
+     "n": 667,
+     "sha": "d3311fe80b214c792f5e5a434ccaff6d"
+    }
+   },
+   "dynamicParams": ["flatten5.falloff"],
+   "separableParams": ["flatten5.height"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "flatten5",
+     "locals": ["height", "falloff"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "flatten5.height": 150,
+    "flatten5.falloff": 4000
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4000, 150, 0, 0],
+   "records": [
+    {
+     "n": 700,
+     "sha": "6bfc3ddbbc82c41938b44f788dc6466f"
+    },
+    {
+     "n": 700,
+     "sha": "0a1a9caf990318177fa99e79b7fc8f19"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 150, 0, 4000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [4454500, 786000, 4488500, 0, 0, 0, 0, 0, 4448000, 804000, 4499000, 0, 0, 0, 0, 0]
+  },
+  "auto": {
+   "wgsl": {
+    "canonical": "3de8010be00b49d1223c0645e65e84c5",
+    "canonicalLength": 96715
+   },
+   "positionWgsl": {
+    "canonical": "a55774be3958b29e875f1f1f8f475116",
+    "canonicalLength": 22660
+   },
+   "centerConstantsWgsl": {
+    "canonical": "f6ed5b372bf3ca3f205cd56078d7870a",
+    "canonicalLength": 132298
+   },
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:flatten5.falloff": 20,
+     "param:flatten5.height": 21
+    }
+   },
+   "perDrawLayout": {
+    "floats": 700,
+    "fields": {
+     "n": 667,
+     "sha": "d3311fe80b214c792f5e5a434ccaff6d"
+    }
+   },
+   "dynamicParams": ["flatten5.falloff"],
+   "separableParams": ["flatten5.height"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "flatten5",
+     "locals": ["height", "falloff"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "flatten5.height": 150,
+    "flatten5.falloff": 4000
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4000, 150, 0, 0],
+   "records": [
+    {
+     "n": 700,
+     "sha": "6bfc3ddbbc82c41938b44f788dc6466f"
+    },
+    {
+     "n": 700,
+     "sha": "0a1a9caf990318177fa99e79b7fc8f19"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 150, 0, 4000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [4454500, 786000, 4488500, 0, 0, 0, 0, 0, 4448000, 804000, 4499000, 0, 0, 0, 0, 0]
+  },
+  "none": {
+   "wgsl": {
+    "canonical": "bc6355fadac18f57e9456c61316dbd30",
+    "canonicalLength": 20415
+   },
+   "positionWgsl": {
+    "canonical": "903c31815430bdc45850b87f1d1d4ef0",
+    "canonicalLength": 20709
+   },
+   "centerConstantsWgsl": {
+    "canonical": "a32ca8fe6bb0093585aade055ca93a76",
+    "canonicalLength": 34022
+   },
+   "uniformsLayout": {
+    "floats": 24,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:flatten5.falloff": 20,
+     "param:flatten5.height": 21
+    }
+   },
+   "perDrawLayout": {
+    "floats": 164,
+    "fields": {
+     "n": 146,
+     "sha": "2ce01ae345211ce4beee9aa20bd144f2"
+    }
+   },
+   "dynamicParams": ["flatten5.falloff"],
+   "separableParams": ["flatten5.height"],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["none"],
+   "steps": [
+    {
+     "id": "flatten5",
+     "locals": ["height", "falloff"],
+     "value": 3,
+     "jacobian": null
+    }
+   ],
+   "paramValues": {
+    "flatten5.height": 150,
+    "flatten5.falloff": 4000
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4000, 150, 0, 0],
+   "records": [
+    {
+     "n": 164,
+     "sha": "149301326df00e97d286d9fa876ad7fc"
+    },
+    {
+     "n": 164,
+     "sha": "26861b2a159c55d33cb2ffa4e32a584c"
+    }
+   ],
+   "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 150, 0, 4000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "packCenters": [4454500, 786000, 4488500, 0, 0, 0, 0, 0, 4448000, 804000, 4499000, 0, 0, 0, 0, 0]
+  }
+ }
+}

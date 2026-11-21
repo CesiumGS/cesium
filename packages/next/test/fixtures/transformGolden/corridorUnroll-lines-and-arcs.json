@@ -1,0 +1,629 @@
+{
+ "program": {
+  "equations": 129,
+  "listing": "4fe8bc434ef3de85313d8b9b0987515e",
+  "params": ["s0", "x0", "y0", "c0", "n0", "s1", "x1", "y1", "c1", "n1", "k1", "s2", "x2", "y2", "c2", "n2", "s3", "x3", "y3", "c3", "n3", "k3", "s4", "x4", "y4", "c4", "n4", "se", "xe", "ye", "ce", "ne"],
+  "outputs": 3
+ },
+ "points": [
+  {
+   "p": [1010, 3, 1],
+   "value": [108.66680427127203, -44.178788466009784, 1],
+   "jacobian": [0.955336489125606, -0.29552020666133955, 0, 0.29552020666133955, 0.955336489125606, 0, 0, 0, 1],
+   "hessian": [0, "-0", 0, "-0", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": {
+    "n": 96,
+    "sha": "5235662d91f595335880849c328d299d"
+   },
+   "interval": [
+    [106.16509087969816, 111.16851766284594],
+    [-46.68050185758368, -41.67707507443589],
+    [0, 2]
+   ]
+  },
+  {
+   "p": [1120, -8, 2],
+   "value": [217.54955985256095, -20.54374499509136, 2],
+   "jacobian": [0.955974926867108, -0.41989836670380576, 0, 0.4422929462613422, 0.9075711331016849, 0, 0, 0, 1],
+   "hessian": [-0.0029486196417422813, -0.0060504742206779, 0, -0.0060504742206779, 0, 0, 0, 0, 0, 0.006373166179114055, -0.002799322444692039, 0, -0.002799322444692039, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": {
+    "n": 96,
+    "sha": "fb1186cd84d791617bdca91e8022ad52"
+   },
+   "interval": [
+    [214.6528234681795, 220.48709468045485],
+    [-23.241736414994463, -17.842655204158987],
+    [1, 3]
+   ]
+  },
+  {
+   "p": [1250, 15, -3],
+   "value": [301.8094293462651, 84.45508448493297, -3],
+   "jacobian": [0.9269680881092045, -0.5918349049587528, 0, 0.6806101407025658, 0.806059207051482, 0, 0, 0, 1],
+   "hessian": [0.006806101407025656, 0.008060592070514822, 0, 0.008060592070514822, 0, 0, 0, 0, 0, -0.009269680881092042, 0.005918349049587528, 0, 0.005918349049587528, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": {
+    "n": 96,
+    "sha": "7b038258d8233d9fabca751a86a1b6fc"
+   },
+   "interval": [
+    [298.7535552097196, 304.8280465433031],
+    [80.88351591510725, 88.05829180876347],
+    [-4, -2]
+   ]
+  },
+  {
+   "p": [1360, 2, 0],
+   "value": [414.3888935875248, 107.17971040072138, 0],
+   "jacobian": [0.9729010620814507, -0.2312218056342985, 0, 0.2312218056342985, 0.9729010620814507, 0, 0, 0, 1],
+   "hessian": [0, "-0", 0, "-0", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": {
+    "n": 96,
+    "sha": "b88d1fe35df8a36a82e4c6b7e7d90fd1"
+   },
+   "interval": [
+    [411.9806478520933, 416.79713932295635],
+    [104.77146466528988, 109.58795613615288],
+    [-1, 1]
+   ]
+  }
+ ],
+ "stepIr": {
+  "kinked": true,
+  "discontinuous": false
+ },
+ "taylor": [
+  {
+   "center": [108.66680427127203, -44.178788466009784, 1],
+   "linear": [1.910672978251212, 0.5910404133226791, 0, -0.5910404133226791, 1.910672978251212, 0, 0, 0, 1],
+   "remainder": [0, 0, 0],
+   "halfExtent": [2.501713391573891, 2.501713391573891, 1],
+   "continuous": false,
+   "hessianNorm": 0,
+   "oscillation": 0
+  },
+  {
+   "center": [217.54955985256095, -20.54374499509136, 2],
+   "linear": [1.911949853734216, 0.8845858925226844, 0, -0.8397967334076115, 1.8151422662033698, 0, 0, 0, 1],
+   "remainder": [0.062385551712096254, 0.05052543263767495, 0],
+   "halfExtent": [2.8141321388539238, 2.750253591363729, 1],
+   "continuous": false,
+   "hessianNorm": 0.03580160777622438,
+   "oscillation": 0.05236090385581003
+  },
+  {
+   "center": [301.8094293462651, 84.45508448493297, -3],
+   "linear": [1.853936176218409, 1.3612202814051315, 0, -1.1836698099175056, 1.612118414102964, 0, 0, 0, 1],
+   "remainder": [0.10454109138139644, 0.09579801646051833, 0],
+   "halfExtent": [3.142147077517311, 3.069136711968614, 1],
+   "continuous": false,
+   "hessianNorm": 0.056340710663470205,
+   "oscillation": 0.09159453834516229
+  },
+  {
+   "center": [414.3888935875248, 107.17971040072138, 0],
+   "linear": [1.9458021241629013, 0.462443611268597, 0, -0.462443611268597, 1.9458021241629013, 0, 0, 0, 1],
+   "remainder": [0, 0, 0],
+   "halfExtent": [2.4082457354314983, 2.4082457354314983, 1],
+   "continuous": false,
+   "hessianNorm": 0,
+   "oscillation": 0
+  }
+ ],
+ "curvature": [0, 0.011755811535444145, 0.018227513775514025, 0],
+ "route": {
+  "exact": {
+   "wgsl": {
+    "canonical": "698a19b2e284840f58254e31079d80d3",
+    "canonicalLength": 15010
+   },
+   "positionWgsl": {
+    "canonical": "38f48c6030c7abe914752bec36c287fe",
+    "canonicalLength": 9547
+   },
+   "centerConstantsWgsl": {
+    "canonical": "476dfca443b9892c19aafe7e4909f03e",
+    "canonicalLength": 24242
+   },
+   "uniformsLayout": {
+    "floats": 40,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:corridorUnroll:LALAL.c0": 20,
+     "param:corridorUnroll:LALAL.n0": 21,
+     "param:corridorUnroll:LALAL.k1": 22,
+     "param:corridorUnroll:LALAL.n1": 23,
+     "param:corridorUnroll:LALAL.c1": 24,
+     "param:corridorUnroll:LALAL.c2": 25,
+     "param:corridorUnroll:LALAL.n2": 26,
+     "param:corridorUnroll:LALAL.k3": 27,
+     "param:corridorUnroll:LALAL.n3": 28,
+     "param:corridorUnroll:LALAL.c3": 29,
+     "param:corridorUnroll:LALAL.c4": 30,
+     "param:corridorUnroll:LALAL.n4": 31,
+     "param:corridorUnroll:LALAL.ce": 32,
+     "param:corridorUnroll:LALAL.ne": 33,
+     "s0.v34": 34,
+     "s0.v35": 35,
+     "s0.j36": 36,
+     "s0.j37": 37
+    }
+   },
+   "perDrawLayout": {
+    "floats": 108,
+    "fields": {
+     "n": 99,
+     "sha": "b630499346d5878f0513b87a68eb8bc7"
+    }
+   },
+   "dynamicParams": ["corridorUnroll:LALAL.s0", "corridorUnroll:LALAL.x0", "corridorUnroll:LALAL.y0", "corridorUnroll:LALAL.c0", "corridorUnroll:LALAL.n0", "corridorUnroll:LALAL.s1", "corridorUnroll:LALAL.x1", "corridorUnroll:LALAL.y1", "corridorUnroll:LALAL.c1", "corridorUnroll:LALAL.n1", "corridorUnroll:LALAL.k1", "corridorUnroll:LALAL.s2", "corridorUnroll:LALAL.x2", "corridorUnroll:LALAL.y2", "corridorUnroll:LALAL.c2", "corridorUnroll:LALAL.n2", "corridorUnroll:LALAL.s3", "corridorUnroll:LALAL.x3", "corridorUnroll:LALAL.y3", "corridorUnroll:LALAL.c3", "corridorUnroll:LALAL.n3", "corridorUnroll:LALAL.k3", "corridorUnroll:LALAL.s4", "corridorUnroll:LALAL.x4", "corridorUnroll:LALAL.y4", "corridorUnroll:LALAL.c4", "corridorUnroll:LALAL.n4", "corridorUnroll:LALAL.se", "corridorUnroll:LALAL.xe", "corridorUnroll:LALAL.ye", "corridorUnroll:LALAL.ce", "corridorUnroll:LALAL.ne"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "corridorUnroll:LALAL",
+     "locals": ["s0", "x0", "y0", "c0", "n0", "s1", "x1", "y1", "c1", "n1", "k1", "s2", "x2", "y2", "c2", "n2", "s3", "x3", "y3", "c3", "n3", "k3", "s4", "x4", "y4", "c4", "n4", "se", "xe", "ye", "ce", "ne"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "corridorUnroll:LALAL.s0": 1000,
+    "corridorUnroll:LALAL.x0": 100,
+    "corridorUnroll:LALAL.y0": -50,
+    "corridorUnroll:LALAL.c0": 0.955336489125606,
+    "corridorUnroll:LALAL.n0": 0.29552020666133955,
+    "corridorUnroll:LALAL.s1": 1100,
+    "corridorUnroll:LALAL.x1": 195.53364891256058,
+    "corridorUnroll:LALAL.y1": -20.447979333866044,
+    "corridorUnroll:LALAL.c1": 0.955336489125606,
+    "corridorUnroll:LALAL.n1": 0.29552020666133955,
+    "corridorUnroll:LALAL.k1": 0.006666666666666667,
+    "corridorUnroll:LALAL.s2": 1180,
+    "corridorUnroll:LALAL.x2": 262.2321458927652,
+    "corridorUnroll:LALAL.y2": 21.99065742251635,
+    "corridorUnroll:LALAL.c2": 0.6724122440830568,
+    "corridorUnroll:LALAL.n2": 0.740176853196037,
+    "corridorUnroll:LALAL.s3": 1230,
+    "corridorUnroll:LALAL.x3": 295.852758096918,
+    "corridorUnroll:LALAL.y3": 58.9995000823182,
+    "corridorUnroll:LALAL.c3": 0.6724122440830568,
+    "corridorUnroll:LALAL.n3": 0.740176853196037,
+    "corridorUnroll:LALAL.k3": -0.01,
+    "corridorUnroll:LALAL.s4": 1290,
+    "corridorUnroll:LALAL.x4": 346.7482628530919,
+    "corridorUnroll:LALAL.y4": 89.04838188215759,
+    "corridorUnroll:LALAL.c4": 0.9729010620814507,
+    "corridorUnroll:LALAL.n4": 0.2312218056342985,
+    "corridorUnroll:LALAL.se": 1330,
+    "corridorUnroll:LALAL.xe": 385.6643053363499,
+    "corridorUnroll:LALAL.ye": 98.29725410752953,
+    "corridorUnroll:LALAL.ce": 0.9729010620814507,
+    "corridorUnroll:LALAL.ne": 0.2312218056342985
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.9553365111351013, 0.29552021622657776, 0.006666666828095913, 0.29552021622657776, 0.9553365111351013, 0.6724122166633606, 0.7401768565177917, -0.009999999776482582, 0.7401768565177917, 0.6724122166633606, 0.9729010462760925, 0.23122180998325348, 0.9729010462760925, 0.23122180998325348, 0, 0, 0, 0, 0, 0],
+   "records": [
+    {
+     "n": 108,
+     "sha": "381d0808dc4ae67f3dc7d56a0c0775d8"
+    },
+    {
+     "n": 108,
+     "sha": "fc679b3e15855102c81f0f27ca7536c8"
+    },
+    {
+     "n": 108,
+     "sha": "216b38d09cda3033d462e887461bc86a"
+    },
+    {
+     "n": 108,
+     "sha": "a3529195c0dc68b2e5ea8773055754a3"
+    }
+   ],
+   "centerUniforms": {
+    "n": 100,
+    "sha": "ae3b506f6f6fe1685ecafcb090350583"
+   },
+   "packCenters": [1010, 3, 1, 0, 0, 0, 0, 0, 1120, -8, 2, 0, 0, 0, 0, 0, 1250, 15, -3, 0, 0, 0, 0, 0, 1360, 2, 0, 0, 0, 0, 0, 0]
+  },
+  "linear": {
+   "wgsl": {
+    "canonical": "698a19b2e284840f58254e31079d80d3",
+    "canonicalLength": 15010
+   },
+   "positionWgsl": {
+    "canonical": "38f48c6030c7abe914752bec36c287fe",
+    "canonicalLength": 9547
+   },
+   "centerConstantsWgsl": {
+    "canonical": "476dfca443b9892c19aafe7e4909f03e",
+    "canonicalLength": 24242
+   },
+   "uniformsLayout": {
+    "floats": 40,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:corridorUnroll:LALAL.c0": 20,
+     "param:corridorUnroll:LALAL.n0": 21,
+     "param:corridorUnroll:LALAL.k1": 22,
+     "param:corridorUnroll:LALAL.n1": 23,
+     "param:corridorUnroll:LALAL.c1": 24,
+     "param:corridorUnroll:LALAL.c2": 25,
+     "param:corridorUnroll:LALAL.n2": 26,
+     "param:corridorUnroll:LALAL.k3": 27,
+     "param:corridorUnroll:LALAL.n3": 28,
+     "param:corridorUnroll:LALAL.c3": 29,
+     "param:corridorUnroll:LALAL.c4": 30,
+     "param:corridorUnroll:LALAL.n4": 31,
+     "param:corridorUnroll:LALAL.ce": 32,
+     "param:corridorUnroll:LALAL.ne": 33,
+     "s0.v34": 34,
+     "s0.v35": 35,
+     "s0.j36": 36,
+     "s0.j37": 37
+    }
+   },
+   "perDrawLayout": {
+    "floats": 108,
+    "fields": {
+     "n": 99,
+     "sha": "b630499346d5878f0513b87a68eb8bc7"
+    }
+   },
+   "dynamicParams": ["corridorUnroll:LALAL.s0", "corridorUnroll:LALAL.x0", "corridorUnroll:LALAL.y0", "corridorUnroll:LALAL.c0", "corridorUnroll:LALAL.n0", "corridorUnroll:LALAL.s1", "corridorUnroll:LALAL.x1", "corridorUnroll:LALAL.y1", "corridorUnroll:LALAL.c1", "corridorUnroll:LALAL.n1", "corridorUnroll:LALAL.k1", "corridorUnroll:LALAL.s2", "corridorUnroll:LALAL.x2", "corridorUnroll:LALAL.y2", "corridorUnroll:LALAL.c2", "corridorUnroll:LALAL.n2", "corridorUnroll:LALAL.s3", "corridorUnroll:LALAL.x3", "corridorUnroll:LALAL.y3", "corridorUnroll:LALAL.c3", "corridorUnroll:LALAL.n3", "corridorUnroll:LALAL.k3", "corridorUnroll:LALAL.s4", "corridorUnroll:LALAL.x4", "corridorUnroll:LALAL.y4", "corridorUnroll:LALAL.c4", "corridorUnroll:LALAL.n4", "corridorUnroll:LALAL.se", "corridorUnroll:LALAL.xe", "corridorUnroll:LALAL.ye", "corridorUnroll:LALAL.ce", "corridorUnroll:LALAL.ne"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "corridorUnroll:LALAL",
+     "locals": ["s0", "x0", "y0", "c0", "n0", "s1", "x1", "y1", "c1", "n1", "k1", "s2", "x2", "y2", "c2", "n2", "s3", "x3", "y3", "c3", "n3", "k3", "s4", "x4", "y4", "c4", "n4", "se", "xe", "ye", "ce", "ne"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "corridorUnroll:LALAL.s0": 1000,
+    "corridorUnroll:LALAL.x0": 100,
+    "corridorUnroll:LALAL.y0": -50,
+    "corridorUnroll:LALAL.c0": 0.955336489125606,
+    "corridorUnroll:LALAL.n0": 0.29552020666133955,
+    "corridorUnroll:LALAL.s1": 1100,
+    "corridorUnroll:LALAL.x1": 195.53364891256058,
+    "corridorUnroll:LALAL.y1": -20.447979333866044,
+    "corridorUnroll:LALAL.c1": 0.955336489125606,
+    "corridorUnroll:LALAL.n1": 0.29552020666133955,
+    "corridorUnroll:LALAL.k1": 0.006666666666666667,
+    "corridorUnroll:LALAL.s2": 1180,
+    "corridorUnroll:LALAL.x2": 262.2321458927652,
+    "corridorUnroll:LALAL.y2": 21.99065742251635,
+    "corridorUnroll:LALAL.c2": 0.6724122440830568,
+    "corridorUnroll:LALAL.n2": 0.740176853196037,
+    "corridorUnroll:LALAL.s3": 1230,
+    "corridorUnroll:LALAL.x3": 295.852758096918,
+    "corridorUnroll:LALAL.y3": 58.9995000823182,
+    "corridorUnroll:LALAL.c3": 0.6724122440830568,
+    "corridorUnroll:LALAL.n3": 0.740176853196037,
+    "corridorUnroll:LALAL.k3": -0.01,
+    "corridorUnroll:LALAL.s4": 1290,
+    "corridorUnroll:LALAL.x4": 346.7482628530919,
+    "corridorUnroll:LALAL.y4": 89.04838188215759,
+    "corridorUnroll:LALAL.c4": 0.9729010620814507,
+    "corridorUnroll:LALAL.n4": 0.2312218056342985,
+    "corridorUnroll:LALAL.se": 1330,
+    "corridorUnroll:LALAL.xe": 385.6643053363499,
+    "corridorUnroll:LALAL.ye": 98.29725410752953,
+    "corridorUnroll:LALAL.ce": 0.9729010620814507,
+    "corridorUnroll:LALAL.ne": 0.2312218056342985
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.9553365111351013, 0.29552021622657776, 0.006666666828095913, 0.29552021622657776, 0.9553365111351013, 0.6724122166633606, 0.7401768565177917, -0.009999999776482582, 0.7401768565177917, 0.6724122166633606, 0.9729010462760925, 0.23122180998325348, 0.9729010462760925, 0.23122180998325348, 0, 0, 0, 0, 0, 0],
+   "records": [
+    {
+     "n": 108,
+     "sha": "381d0808dc4ae67f3dc7d56a0c0775d8"
+    },
+    {
+     "n": 108,
+     "sha": "fc679b3e15855102c81f0f27ca7536c8"
+    },
+    {
+     "n": 108,
+     "sha": "216b38d09cda3033d462e887461bc86a"
+    },
+    {
+     "n": 108,
+     "sha": "a3529195c0dc68b2e5ea8773055754a3"
+    }
+   ],
+   "centerUniforms": {
+    "n": 100,
+    "sha": "ae3b506f6f6fe1685ecafcb090350583"
+   },
+   "packCenters": [1010, 3, 1, 0, 0, 0, 0, 0, 1120, -8, 2, 0, 0, 0, 0, 0, 1250, 15, -3, 0, 0, 0, 0, 0, 1360, 2, 0, 0, 0, 0, 0, 0]
+  },
+  "auto": {
+   "wgsl": {
+    "canonical": "698a19b2e284840f58254e31079d80d3",
+    "canonicalLength": 15010
+   },
+   "positionWgsl": {
+    "canonical": "38f48c6030c7abe914752bec36c287fe",
+    "canonicalLength": 9547
+   },
+   "centerConstantsWgsl": {
+    "canonical": "476dfca443b9892c19aafe7e4909f03e",
+    "canonicalLength": 24242
+   },
+   "uniformsLayout": {
+    "floats": 40,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:corridorUnroll:LALAL.c0": 20,
+     "param:corridorUnroll:LALAL.n0": 21,
+     "param:corridorUnroll:LALAL.k1": 22,
+     "param:corridorUnroll:LALAL.n1": 23,
+     "param:corridorUnroll:LALAL.c1": 24,
+     "param:corridorUnroll:LALAL.c2": 25,
+     "param:corridorUnroll:LALAL.n2": 26,
+     "param:corridorUnroll:LALAL.k3": 27,
+     "param:corridorUnroll:LALAL.n3": 28,
+     "param:corridorUnroll:LALAL.c3": 29,
+     "param:corridorUnroll:LALAL.c4": 30,
+     "param:corridorUnroll:LALAL.n4": 31,
+     "param:corridorUnroll:LALAL.ce": 32,
+     "param:corridorUnroll:LALAL.ne": 33,
+     "s0.v34": 34,
+     "s0.v35": 35,
+     "s0.j36": 36,
+     "s0.j37": 37
+    }
+   },
+   "perDrawLayout": {
+    "floats": 108,
+    "fields": {
+     "n": 99,
+     "sha": "b630499346d5878f0513b87a68eb8bc7"
+    }
+   },
+   "dynamicParams": ["corridorUnroll:LALAL.s0", "corridorUnroll:LALAL.x0", "corridorUnroll:LALAL.y0", "corridorUnroll:LALAL.c0", "corridorUnroll:LALAL.n0", "corridorUnroll:LALAL.s1", "corridorUnroll:LALAL.x1", "corridorUnroll:LALAL.y1", "corridorUnroll:LALAL.c1", "corridorUnroll:LALAL.n1", "corridorUnroll:LALAL.k1", "corridorUnroll:LALAL.s2", "corridorUnroll:LALAL.x2", "corridorUnroll:LALAL.y2", "corridorUnroll:LALAL.c2", "corridorUnroll:LALAL.n2", "corridorUnroll:LALAL.s3", "corridorUnroll:LALAL.x3", "corridorUnroll:LALAL.y3", "corridorUnroll:LALAL.c3", "corridorUnroll:LALAL.n3", "corridorUnroll:LALAL.k3", "corridorUnroll:LALAL.s4", "corridorUnroll:LALAL.x4", "corridorUnroll:LALAL.y4", "corridorUnroll:LALAL.c4", "corridorUnroll:LALAL.n4", "corridorUnroll:LALAL.se", "corridorUnroll:LALAL.xe", "corridorUnroll:LALAL.ye", "corridorUnroll:LALAL.ce", "corridorUnroll:LALAL.ne"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "corridorUnroll:LALAL",
+     "locals": ["s0", "x0", "y0", "c0", "n0", "s1", "x1", "y1", "c1", "n1", "k1", "s2", "x2", "y2", "c2", "n2", "s3", "x3", "y3", "c3", "n3", "k3", "s4", "x4", "y4", "c4", "n4", "se", "xe", "ye", "ce", "ne"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "corridorUnroll:LALAL.s0": 1000,
+    "corridorUnroll:LALAL.x0": 100,
+    "corridorUnroll:LALAL.y0": -50,
+    "corridorUnroll:LALAL.c0": 0.955336489125606,
+    "corridorUnroll:LALAL.n0": 0.29552020666133955,
+    "corridorUnroll:LALAL.s1": 1100,
+    "corridorUnroll:LALAL.x1": 195.53364891256058,
+    "corridorUnroll:LALAL.y1": -20.447979333866044,
+    "corridorUnroll:LALAL.c1": 0.955336489125606,
+    "corridorUnroll:LALAL.n1": 0.29552020666133955,
+    "corridorUnroll:LALAL.k1": 0.006666666666666667,
+    "corridorUnroll:LALAL.s2": 1180,
+    "corridorUnroll:LALAL.x2": 262.2321458927652,
+    "corridorUnroll:LALAL.y2": 21.99065742251635,
+    "corridorUnroll:LALAL.c2": 0.6724122440830568,
+    "corridorUnroll:LALAL.n2": 0.740176853196037,
+    "corridorUnroll:LALAL.s3": 1230,
+    "corridorUnroll:LALAL.x3": 295.852758096918,
+    "corridorUnroll:LALAL.y3": 58.9995000823182,
+    "corridorUnroll:LALAL.c3": 0.6724122440830568,
+    "corridorUnroll:LALAL.n3": 0.740176853196037,
+    "corridorUnroll:LALAL.k3": -0.01,
+    "corridorUnroll:LALAL.s4": 1290,
+    "corridorUnroll:LALAL.x4": 346.7482628530919,
+    "corridorUnroll:LALAL.y4": 89.04838188215759,
+    "corridorUnroll:LALAL.c4": 0.9729010620814507,
+    "corridorUnroll:LALAL.n4": 0.2312218056342985,
+    "corridorUnroll:LALAL.se": 1330,
+    "corridorUnroll:LALAL.xe": 385.6643053363499,
+    "corridorUnroll:LALAL.ye": 98.29725410752953,
+    "corridorUnroll:LALAL.ce": 0.9729010620814507,
+    "corridorUnroll:LALAL.ne": 0.2312218056342985
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.9553365111351013, 0.29552021622657776, 0.006666666828095913, 0.29552021622657776, 0.9553365111351013, 0.6724122166633606, 0.7401768565177917, -0.009999999776482582, 0.7401768565177917, 0.6724122166633606, 0.9729010462760925, 0.23122180998325348, 0.9729010462760925, 0.23122180998325348, 0, 0, 0, 0, 0, 0],
+   "records": [
+    {
+     "n": 108,
+     "sha": "381d0808dc4ae67f3dc7d56a0c0775d8"
+    },
+    {
+     "n": 108,
+     "sha": "fc679b3e15855102c81f0f27ca7536c8"
+    },
+    {
+     "n": 108,
+     "sha": "216b38d09cda3033d462e887461bc86a"
+    },
+    {
+     "n": 108,
+     "sha": "a3529195c0dc68b2e5ea8773055754a3"
+    }
+   ],
+   "centerUniforms": {
+    "n": 100,
+    "sha": "ae3b506f6f6fe1685ecafcb090350583"
+   },
+   "packCenters": [1010, 3, 1, 0, 0, 0, 0, 0, 1120, -8, 2, 0, 0, 0, 0, 0, 1250, 15, -3, 0, 0, 0, 0, 0, 1360, 2, 0, 0, 0, 0, 0, 0]
+  },
+  "none": {
+   "wgsl": {
+    "canonical": "3a57cbcf25d1c9a3df5a1305c1ab701b",
+    "canonicalLength": 9044
+   },
+   "positionWgsl": {
+    "canonical": "40f279af51de616b2e74b6215c668c5f",
+    "canonicalLength": 9338
+   },
+   "centerConstantsWgsl": {
+    "canonical": "cc5428235fe375311765d9ad86873efe",
+    "canonicalLength": 16808
+   },
+   "uniformsLayout": {
+    "floats": 36,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:corridorUnroll:LALAL.c0": 20,
+     "param:corridorUnroll:LALAL.n0": 21,
+     "param:corridorUnroll:LALAL.k1": 22,
+     "param:corridorUnroll:LALAL.n1": 23,
+     "param:corridorUnroll:LALAL.c1": 24,
+     "param:corridorUnroll:LALAL.c2": 25,
+     "param:corridorUnroll:LALAL.n2": 26,
+     "param:corridorUnroll:LALAL.k3": 27,
+     "param:corridorUnroll:LALAL.n3": 28,
+     "param:corridorUnroll:LALAL.c3": 29,
+     "param:corridorUnroll:LALAL.c4": 30,
+     "param:corridorUnroll:LALAL.n4": 31,
+     "param:corridorUnroll:LALAL.ce": 32,
+     "param:corridorUnroll:LALAL.ne": 33,
+     "s0.v34": 34,
+     "s0.v35": 35
+    }
+   },
+   "perDrawLayout": {
+    "floats": 52,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "s0.v8": 8,
+     "s0.v9": 9,
+     "s0.v10": 10,
+     "s0.v11": 11,
+     "s0.v12": 12,
+     "s0.v13": 13,
+     "s0.v14": 14,
+     "s0.v15": 15,
+     "s0.v16": 16,
+     "s0.v17": 17,
+     "s0.v18": 18,
+     "s0.v19": 19,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v28": 28,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31,
+     "s0.v32": 32,
+     "s0.v33": 33,
+     "s0.v34": 34,
+     "s0.v35": 35,
+     "s0.v36": 36,
+     "s0.v37": 37,
+     "s0.v38": 38,
+     "s0.v39": 39,
+     "s0.v40": 40,
+     "s0.v41": 41,
+     "s0.v42": 42,
+     "s0.v43": 43,
+     "s0.v44": 44,
+     "s0.v45": 45,
+     "s0.v46": 46,
+     "s0.v47": 47,
+     "s0.v48": 48,
+     "s0.v49": 49,
+     "s0.v50": 50,
+     "s0.v51": 51
+    }
+   },
+   "dynamicParams": ["corridorUnroll:LALAL.s0", "corridorUnroll:LALAL.x0", "corridorUnroll:LALAL.y0", "corridorUnroll:LALAL.c0", "corridorUnroll:LALAL.n0", "corridorUnroll:LALAL.s1", "corridorUnroll:LALAL.x1", "corridorUnroll:LALAL.y1", "corridorUnroll:LALAL.c1", "corridorUnroll:LALAL.n1", "corridorUnroll:LALAL.k1", "corridorUnroll:LALAL.s2", "corridorUnroll:LALAL.x2", "corridorUnroll:LALAL.y2", "corridorUnroll:LALAL.c2", "corridorUnroll:LALAL.n2", "corridorUnroll:LALAL.s3", "corridorUnroll:LALAL.x3", "corridorUnroll:LALAL.y3", "corridorUnroll:LALAL.c3", "corridorUnroll:LALAL.n3", "corridorUnroll:LALAL.k3", "corridorUnroll:LALAL.s4", "corridorUnroll:LALAL.x4", "corridorUnroll:LALAL.y4", "corridorUnroll:LALAL.c4", "corridorUnroll:LALAL.n4", "corridorUnroll:LALAL.se", "corridorUnroll:LALAL.xe", "corridorUnroll:LALAL.ye", "corridorUnroll:LALAL.ce", "corridorUnroll:LALAL.ne"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["none"],
+   "steps": [
+    {
+     "id": "corridorUnroll:LALAL",
+     "locals": ["s0", "x0", "y0", "c0", "n0", "s1", "x1", "y1", "c1", "n1", "k1", "s2", "x2", "y2", "c2", "n2", "s3", "x3", "y3", "c3", "n3", "k3", "s4", "x4", "y4", "c4", "n4", "se", "xe", "ye", "ce", "ne"],
+     "value": 3,
+     "jacobian": null
+    }
+   ],
+   "paramValues": {
+    "corridorUnroll:LALAL.s0": 1000,
+    "corridorUnroll:LALAL.x0": 100,
+    "corridorUnroll:LALAL.y0": -50,
+    "corridorUnroll:LALAL.c0": 0.955336489125606,
+    "corridorUnroll:LALAL.n0": 0.29552020666133955,
+    "corridorUnroll:LALAL.s1": 1100,
+    "corridorUnroll:LALAL.x1": 195.53364891256058,
+    "corridorUnroll:LALAL.y1": -20.447979333866044,
+    "corridorUnroll:LALAL.c1": 0.955336489125606,
+    "corridorUnroll:LALAL.n1": 0.29552020666133955,
+    "corridorUnroll:LALAL.k1": 0.006666666666666667,
+    "corridorUnroll:LALAL.s2": 1180,
+    "corridorUnroll:LALAL.x2": 262.2321458927652,
+    "corridorUnroll:LALAL.y2": 21.99065742251635,
+    "corridorUnroll:LALAL.c2": 0.6724122440830568,
+    "corridorUnroll:LALAL.n2": 0.740176853196037,
+    "corridorUnroll:LALAL.s3": 1230,
+    "corridorUnroll:LALAL.x3": 295.852758096918,
+    "corridorUnroll:LALAL.y3": 58.9995000823182,
+    "corridorUnroll:LALAL.c3": 0.6724122440830568,
+    "corridorUnroll:LALAL.n3": 0.740176853196037,
+    "corridorUnroll:LALAL.k3": -0.01,
+    "corridorUnroll:LALAL.s4": 1290,
+    "corridorUnroll:LALAL.x4": 346.7482628530919,
+    "corridorUnroll:LALAL.y4": 89.04838188215759,
+    "corridorUnroll:LALAL.c4": 0.9729010620814507,
+    "corridorUnroll:LALAL.n4": 0.2312218056342985,
+    "corridorUnroll:LALAL.se": 1330,
+    "corridorUnroll:LALAL.xe": 385.6643053363499,
+    "corridorUnroll:LALAL.ye": 98.29725410752953,
+    "corridorUnroll:LALAL.ce": 0.9729010620814507,
+    "corridorUnroll:LALAL.ne": 0.2312218056342985
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.9553365111351013, 0.29552021622657776, 0.006666666828095913, 0.29552021622657776, 0.9553365111351013, 0.6724122166633606, 0.7401768565177917, -0.009999999776482582, 0.7401768565177917, 0.6724122166633606, 0.9729010462760925, 0.23122180998325348, 0.9729010462760925, 0.23122180998325348, 0, 0],
+   "records": [
+    {
+     "n": 52,
+     "sha": "490e26057c721b3bd08521f4c9516226"
+    },
+    {
+     "n": 52,
+     "sha": "20cb16f52276f70dc7ed101a2fca0f4a"
+    },
+    {
+     "n": 52,
+     "sha": "9ed75d0cafc9c2bfb7ca3dc59653a57a"
+    },
+    {
+     "n": 52,
+     "sha": "f3c9161cd1b8caf07be0ab911ab3fc7e"
+    }
+   ],
+   "centerUniforms": {
+    "n": 100,
+    "sha": "ae3b506f6f6fe1685ecafcb090350583"
+   },
+   "packCenters": [1010, 3, 1, 0, 0, 0, 0, 0, 1120, -8, 2, 0, 0, 0, 0, 0, 1250, 15, -3, 0, 0, 0, 0, 0, 1360, 2, 0, 0, 0, 0, 0, 0]
+  }
+ }
+}

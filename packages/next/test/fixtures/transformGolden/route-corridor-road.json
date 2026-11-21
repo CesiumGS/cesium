@@ -1,0 +1,294 @@
+{
+ "wgsl": {
+  "canonical": "46d293f7608e03457d7573d725a507d8",
+  "canonicalLength": 33760
+ },
+ "wgslLength": 34260,
+ "perDrawFloats": 416,
+ "uniformFloats": 104,
+ "dynamicParams": 200,
+ "equations": 608,
+ "listing": "15e31e06ffba9766f99c81680bfb6f8e",
+ "route": {
+  "exact": {
+   "wgsl": {
+    "canonical": "46d293f7608e03457d7573d725a507d8",
+    "canonicalLength": 33760
+   },
+   "positionWgsl": {
+    "canonical": "5518374790aacc97a7efdad406cbe2ea",
+    "canonicalLength": 25155
+   },
+   "centerConstantsWgsl": {
+    "canonical": "fb93be37b8f8464fa7e0527bb2460ff3",
+    "canonicalLength": 72492
+   },
+   "uniformsLayout": {
+    "floats": 104,
+    "fields": {
+     "n": 87,
+     "sha": "911999b12340435d12a10439a5355f5b"
+    }
+   },
+   "perDrawLayout": {
+    "floats": 416,
+    "fields": {
+     "n": 407,
+     "sha": "833a2ca4042eea317ded7c3b46568b7b"
+    }
+   },
+   "dynamicParams": {
+    "n": 200,
+    "sha": "483800b7912c4a92be02c83bac217ca8"
+   },
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "corridorUnroll:LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+     "locals": {
+      "n": 200,
+      "sha": "cd604c5ef90189e2d56368e6300bb1e8"
+     },
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "n": 200,
+    "sha": "4b5142d95f5463c89ac068273fa907e7"
+   },
+   "uniforms": {
+    "n": 104,
+    "sha": "fc93cddf4bb54250c3327669c92a7207"
+   },
+   "records": [
+    {
+     "n": 416,
+     "sha": "793d7cc23389d5e98ed9a792172c579a"
+    },
+    {
+     "n": 416,
+     "sha": "369f4a78ca622efd6bce562fefd4736b"
+    }
+   ],
+   "centerUniforms": {
+    "n": 436,
+    "sha": "1091decf7539c17f5caaa14307df7432"
+   },
+   "packCenters": [500, 3, 0, 0, 0, 0, 0, 0, 4100, -12, 2, 0, 0, 0, 0, 0]
+  },
+  "linear": {
+   "wgsl": {
+    "canonical": "46d293f7608e03457d7573d725a507d8",
+    "canonicalLength": 33760
+   },
+   "positionWgsl": {
+    "canonical": "5518374790aacc97a7efdad406cbe2ea",
+    "canonicalLength": 25155
+   },
+   "centerConstantsWgsl": {
+    "canonical": "fb93be37b8f8464fa7e0527bb2460ff3",
+    "canonicalLength": 72492
+   },
+   "uniformsLayout": {
+    "floats": 104,
+    "fields": {
+     "n": 87,
+     "sha": "911999b12340435d12a10439a5355f5b"
+    }
+   },
+   "perDrawLayout": {
+    "floats": 416,
+    "fields": {
+     "n": 407,
+     "sha": "833a2ca4042eea317ded7c3b46568b7b"
+    }
+   },
+   "dynamicParams": {
+    "n": 200,
+    "sha": "483800b7912c4a92be02c83bac217ca8"
+   },
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "corridorUnroll:LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+     "locals": {
+      "n": 200,
+      "sha": "cd604c5ef90189e2d56368e6300bb1e8"
+     },
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "n": 200,
+    "sha": "4b5142d95f5463c89ac068273fa907e7"
+   },
+   "uniforms": {
+    "n": 104,
+    "sha": "fc93cddf4bb54250c3327669c92a7207"
+   },
+   "records": [
+    {
+     "n": 416,
+     "sha": "793d7cc23389d5e98ed9a792172c579a"
+    },
+    {
+     "n": 416,
+     "sha": "369f4a78ca622efd6bce562fefd4736b"
+    }
+   ],
+   "centerUniforms": {
+    "n": 436,
+    "sha": "1091decf7539c17f5caaa14307df7432"
+   },
+   "packCenters": [500, 3, 0, 0, 0, 0, 0, 0, 4100, -12, 2, 0, 0, 0, 0, 0]
+  },
+  "auto": {
+   "wgsl": {
+    "canonical": "46d293f7608e03457d7573d725a507d8",
+    "canonicalLength": 33760
+   },
+   "positionWgsl": {
+    "canonical": "5518374790aacc97a7efdad406cbe2ea",
+    "canonicalLength": 25155
+   },
+   "centerConstantsWgsl": {
+    "canonical": "fb93be37b8f8464fa7e0527bb2460ff3",
+    "canonicalLength": 72492
+   },
+   "uniformsLayout": {
+    "floats": 104,
+    "fields": {
+     "n": 87,
+     "sha": "911999b12340435d12a10439a5355f5b"
+    }
+   },
+   "perDrawLayout": {
+    "floats": 416,
+    "fields": {
+     "n": 407,
+     "sha": "833a2ca4042eea317ded7c3b46568b7b"
+    }
+   },
+   "dynamicParams": {
+    "n": 200,
+    "sha": "483800b7912c4a92be02c83bac217ca8"
+   },
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "corridorUnroll:LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+     "locals": {
+      "n": 200,
+      "sha": "cd604c5ef90189e2d56368e6300bb1e8"
+     },
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "n": 200,
+    "sha": "4b5142d95f5463c89ac068273fa907e7"
+   },
+   "uniforms": {
+    "n": 104,
+    "sha": "fc93cddf4bb54250c3327669c92a7207"
+   },
+   "records": [
+    {
+     "n": 416,
+     "sha": "793d7cc23389d5e98ed9a792172c579a"
+    },
+    {
+     "n": 416,
+     "sha": "369f4a78ca622efd6bce562fefd4736b"
+    }
+   ],
+   "centerUniforms": {
+    "n": 436,
+    "sha": "1091decf7539c17f5caaa14307df7432"
+   },
+   "packCenters": [500, 3, 0, 0, 0, 0, 0, 0, 4100, -12, 2, 0, 0, 0, 0, 0]
+  },
+  "none": {
+   "wgsl": {
+    "canonical": "ca3b6046c23cfdad54bbd3156cf0c099",
+    "canonicalLength": 24283
+   },
+   "positionWgsl": {
+    "canonical": "ec3101f783e031957d29e47e76ec5c66",
+    "canonicalLength": 24577
+   },
+   "centerConstantsWgsl": {
+    "canonical": "a7b98a39f6a7d5a931de640d34b11a49",
+    "canonicalLength": 54366
+   },
+   "uniformsLayout": {
+    "floats": 104,
+    "fields": {
+     "n": 85,
+     "sha": "17897849cb5f86979fd1597d4f72884f"
+    }
+   },
+   "perDrawLayout": {
+    "floats": 252,
+    "fields": {
+     "n": 246,
+     "sha": "a7459918bca3f15041b7e163f5443605"
+    }
+   },
+   "dynamicParams": {
+    "n": 200,
+    "sha": "483800b7912c4a92be02c83bac217ca8"
+   },
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["none"],
+   "steps": [
+    {
+     "id": "corridorUnroll:LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL",
+     "locals": {
+      "n": 200,
+      "sha": "cd604c5ef90189e2d56368e6300bb1e8"
+     },
+     "value": 3,
+     "jacobian": null
+    }
+   ],
+   "paramValues": {
+    "n": 200,
+    "sha": "4b5142d95f5463c89ac068273fa907e7"
+   },
+   "uniforms": {
+    "n": 104,
+    "sha": "fc93cddf4bb54250c3327669c92a7207"
+   },
+   "records": [
+    {
+     "n": 252,
+     "sha": "52f0162ecd876fb7e1660f71dc8d9ac5"
+    },
+    {
+     "n": 252,
+     "sha": "23ad09fbd42e0d961bac9a542c8038a8"
+    }
+   ],
+   "centerUniforms": {
+    "n": 436,
+    "sha": "1091decf7539c17f5caaa14307df7432"
+   },
+   "packCenters": [500, 3, 0, 0, 0, 0, 0, 0, 4100, -12, 2, 0, 0, 0, 0, 0]
+  }
+ }
+}

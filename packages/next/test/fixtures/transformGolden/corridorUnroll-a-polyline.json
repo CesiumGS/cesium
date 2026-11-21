@@ -1,0 +1,627 @@
+{
+ "program": {
+  "equations": 68,
+  "listing": "2ee63aa341bfbcf4336895c0e97ba415",
+  "params": ["s0", "x0", "y0", "c0", "n0", "s1", "x1", "y1", "c1", "n1", "s2", "x2", "y2", "c2", "n2", "se", "xe", "ye", "ce", "ne"],
+  "outputs": 3
+ },
+ "points": [
+  {
+   "p": [50, 1, 2],
+   "value": [49.652355791478456, 5.970223141259935, 2],
+   "jacobian": [0.9950371902099892, -0.09950371902099893, 0, 0.09950371902099893, 0.9950371902099892, 0, 0, 0, 1],
+   "hessian": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": {
+    "n": 60,
+    "sha": "eb9d1accb26865b3bb6198c30c48de74"
+   },
+   "interval": [
+    [47.562777692037486, 51.741933890919434],
+    [4.776178513007949, 7.164267769511922],
+    [1, 3]
+   ]
+  },
+  {
+   "p": [150, -2, 1],
+   "value": [147.05170576858032, 25.50838872688824, 1],
+   "jacobian": [0.9363291775690445, -0.35112344158839165, 0, 0.35112344158839165, 0.9363291775690445, 0, 0, 0, 1],
+   "hessian": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": {
+    "n": 60,
+    "sha": "6eb7cf1ab9b69be597c456097c11ca7d"
+   },
+   "interval": [
+    [144.82792397185383, 149.27548756530683],
+    [23.86981266614241, 27.14696478763407],
+    [0, 2]
+   ]
+  },
+  {
+   "p": [215, 1.5, -2],
+   "value": [209.04475413421324, 41.790522539467226, -2],
+   "jacobian": [0.9999500037496876, -0.009999500037496875, 0, 0.009999500037496875, 0.9999500037496876, 0, 0, 0, 1],
+   "hessian": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+   "parameters": {
+    "n": 60,
+    "sha": "6dff9a43dfbb3ab4f18121b43043a269"
+   },
+   "interval": [
+    [207.03485462667635, 211.0546536417501],
+    [40.77057353564255, 42.81047154329191],
+    [-3, -1]
+   ]
+  }
+ ],
+ "stepIr": {
+  "kinked": true,
+  "discontinuous": false
+ },
+ "taylor": [
+  {
+   "center": [49.652355791478456, 5.970223141259935, 2],
+   "linear": [1.9900743804199783, 0.19900743804199786, 0, -0.09950371902099893, 0.9950371902099892, 0, 0, 0, 1],
+   "remainder": [0, 0, 0],
+   "halfExtent": [2.089578099440977, 1.194044628251987, 1],
+   "continuous": false,
+   "hessianNorm": 0,
+   "oscillation": 0
+  },
+  {
+   "center": [147.05170576858032, 25.50838872688824, 1],
+   "linear": [1.872658355138089, 0.7022468831767833, 0, -0.35112344158839165, 0.9363291775690445, 0, 0, 0, 1],
+   "remainder": [0, 0, 0],
+   "halfExtent": [2.2237817967264806, 1.638576060745828, 1],
+   "continuous": false,
+   "hessianNorm": 0,
+   "oscillation": 0
+  },
+  {
+   "center": [209.04475413421324, 41.790522539467226, -2],
+   "linear": [1.9999000074993751, 0.01999900007499375, 0, -0.009999500037496875, 0.9999500037496876, 0, 0, 0, 1],
+   "remainder": [0, 0, 0],
+   "halfExtent": [2.009899507536872, 1.0199490038246812, 1],
+   "continuous": false,
+   "hessianNorm": 0,
+   "oscillation": 0
+  }
+ ],
+ "curvature": [0, 0, 0],
+ "route": {
+  "exact": {
+   "wgsl": {
+    "canonical": "cd9390c3823cbe6fe75f92ca97bfd625",
+    "canonicalLength": 9617
+   },
+   "positionWgsl": {
+    "canonical": "dc99dc2348d7592d398c560f5d2e961a",
+    "canonicalLength": 7445
+   },
+   "centerConstantsWgsl": {
+    "canonical": "b3df30f10beb104450379ccddb73ac1d",
+    "canonicalLength": 15166
+   },
+   "uniformsLayout": {
+    "floats": 32,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:corridorUnroll:LLL.c0": 20,
+     "param:corridorUnroll:LLL.n0": 21,
+     "param:corridorUnroll:LLL.c1": 22,
+     "param:corridorUnroll:LLL.n1": 23,
+     "param:corridorUnroll:LLL.c2": 24,
+     "param:corridorUnroll:LLL.n2": 25,
+     "param:corridorUnroll:LLL.ce": 26,
+     "param:corridorUnroll:LLL.ne": 27,
+     "s0.v28": 28,
+     "s0.v29": 29,
+     "s0.j30": 30,
+     "s0.j31": 31
+    }
+   },
+   "perDrawLayout": {
+    "floats": 56,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "s0.v8": 8,
+     "s0.v9": 9,
+     "s0.v10": 10,
+     "s0.v11": 11,
+     "s0.v12": 12,
+     "s0.v13": 13,
+     "s0.v14": 14,
+     "s0.v15": 15,
+     "s0.v16": 16,
+     "s0.v17": 17,
+     "s0.v18": 18,
+     "s0.v19": 19,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v28": 28,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31,
+     "s0.v32": 32,
+     "s0.v33": 33,
+     "s0.v34": 34,
+     "s0.v35": 35,
+     "s0.j36": 36,
+     "s0.j37": 37,
+     "s0.j38": 38,
+     "s0.j39": 39,
+     "s0.j40": 40,
+     "s0.j41": 41,
+     "s0.j42": 42,
+     "s0.j43": 43,
+     "s0.j44": 44,
+     "s0.j45": 45,
+     "s0.j46": 46,
+     "s0.j47": 47,
+     "s0.j48": 48,
+     "s0.j49": 49,
+     "s0.j50": 50,
+     "s0.j51": 51,
+     "s0.j52": 52
+    }
+   },
+   "dynamicParams": ["corridorUnroll:LLL.s0", "corridorUnroll:LLL.x0", "corridorUnroll:LLL.y0", "corridorUnroll:LLL.c0", "corridorUnroll:LLL.n0", "corridorUnroll:LLL.s1", "corridorUnroll:LLL.x1", "corridorUnroll:LLL.y1", "corridorUnroll:LLL.c1", "corridorUnroll:LLL.n1", "corridorUnroll:LLL.s2", "corridorUnroll:LLL.x2", "corridorUnroll:LLL.y2", "corridorUnroll:LLL.c2", "corridorUnroll:LLL.n2", "corridorUnroll:LLL.se", "corridorUnroll:LLL.xe", "corridorUnroll:LLL.ye", "corridorUnroll:LLL.ce", "corridorUnroll:LLL.ne"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "corridorUnroll:LLL",
+     "locals": ["s0", "x0", "y0", "c0", "n0", "s1", "x1", "y1", "c1", "n1", "s2", "x2", "y2", "c2", "n2", "se", "xe", "ye", "ce", "ne"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "corridorUnroll:LLL.s0": 0,
+    "corridorUnroll:LLL.x0": 0,
+    "corridorUnroll:LLL.y0": 0,
+    "corridorUnroll:LLL.c0": 0.9950371902099892,
+    "corridorUnroll:LLL.n0": 0.09950371902099893,
+    "corridorUnroll:LLL.s1": 100.4987562112089,
+    "corridorUnroll:LLL.x1": 100,
+    "corridorUnroll:LLL.y1": 10,
+    "corridorUnroll:LLL.c1": 0.9363291775690445,
+    "corridorUnroll:LLL.n1": 0.35112344158839165,
+    "corridorUnroll:LLL.s2": 185.9387936643842,
+    "corridorUnroll:LLL.x2": 180,
+    "corridorUnroll:LLL.y2": 40,
+    "corridorUnroll:LLL.c2": 0.9999500037496876,
+    "corridorUnroll:LLL.n2": 0.009999500037496875,
+    "corridorUnroll:LLL.se": 235.9412936018873,
+    "corridorUnroll:LLL.xe": 230,
+    "corridorUnroll:LLL.ye": 40.5,
+    "corridorUnroll:LLL.ce": 0.9999500037496876,
+    "corridorUnroll:LLL.ne": 0.009999500037496875
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.9950371980667114, 0.09950371831655502, 0.936329185962677, 0.3511234521865845, 0.9999499917030334, 0.009999499656260014, 0.9999499917030334, 0.009999499656260014, 0, 0, 0, 0],
+   "records": [
+    {
+     "n": 56,
+     "sha": "c5daf89a3e12b52140dc464f8bcc7279"
+    },
+    {
+     "n": 56,
+     "sha": "81baaa23e549a2f21f8212e868cc2d65"
+    },
+    {
+     "n": 56,
+     "sha": "77471b1a7540af22db3e778a36948047"
+    }
+   ],
+   "centerUniforms": {
+    "n": 76,
+    "sha": "6c5a3af9e18f827e32f030d60aa4a08e"
+   },
+   "packCenters": [50, 1, 2, 0, 0, 0, 0, 0, 150, -2, 1, 0, 0, 0, 0, 0, 215, 1.5, -2, 0, 0, 0, 0, 0]
+  },
+  "linear": {
+   "wgsl": {
+    "canonical": "cd9390c3823cbe6fe75f92ca97bfd625",
+    "canonicalLength": 9617
+   },
+   "positionWgsl": {
+    "canonical": "dc99dc2348d7592d398c560f5d2e961a",
+    "canonicalLength": 7445
+   },
+   "centerConstantsWgsl": {
+    "canonical": "b3df30f10beb104450379ccddb73ac1d",
+    "canonicalLength": 15166
+   },
+   "uniformsLayout": {
+    "floats": 32,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:corridorUnroll:LLL.c0": 20,
+     "param:corridorUnroll:LLL.n0": 21,
+     "param:corridorUnroll:LLL.c1": 22,
+     "param:corridorUnroll:LLL.n1": 23,
+     "param:corridorUnroll:LLL.c2": 24,
+     "param:corridorUnroll:LLL.n2": 25,
+     "param:corridorUnroll:LLL.ce": 26,
+     "param:corridorUnroll:LLL.ne": 27,
+     "s0.v28": 28,
+     "s0.v29": 29,
+     "s0.j30": 30,
+     "s0.j31": 31
+    }
+   },
+   "perDrawLayout": {
+    "floats": 56,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "s0.v8": 8,
+     "s0.v9": 9,
+     "s0.v10": 10,
+     "s0.v11": 11,
+     "s0.v12": 12,
+     "s0.v13": 13,
+     "s0.v14": 14,
+     "s0.v15": 15,
+     "s0.v16": 16,
+     "s0.v17": 17,
+     "s0.v18": 18,
+     "s0.v19": 19,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v28": 28,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31,
+     "s0.v32": 32,
+     "s0.v33": 33,
+     "s0.v34": 34,
+     "s0.v35": 35,
+     "s0.j36": 36,
+     "s0.j37": 37,
+     "s0.j38": 38,
+     "s0.j39": 39,
+     "s0.j40": 40,
+     "s0.j41": 41,
+     "s0.j42": 42,
+     "s0.j43": 43,
+     "s0.j44": 44,
+     "s0.j45": 45,
+     "s0.j46": 46,
+     "s0.j47": 47,
+     "s0.j48": 48,
+     "s0.j49": 49,
+     "s0.j50": 50,
+     "s0.j51": 51,
+     "s0.j52": 52
+    }
+   },
+   "dynamicParams": ["corridorUnroll:LLL.s0", "corridorUnroll:LLL.x0", "corridorUnroll:LLL.y0", "corridorUnroll:LLL.c0", "corridorUnroll:LLL.n0", "corridorUnroll:LLL.s1", "corridorUnroll:LLL.x1", "corridorUnroll:LLL.y1", "corridorUnroll:LLL.c1", "corridorUnroll:LLL.n1", "corridorUnroll:LLL.s2", "corridorUnroll:LLL.x2", "corridorUnroll:LLL.y2", "corridorUnroll:LLL.c2", "corridorUnroll:LLL.n2", "corridorUnroll:LLL.se", "corridorUnroll:LLL.xe", "corridorUnroll:LLL.ye", "corridorUnroll:LLL.ce", "corridorUnroll:LLL.ne"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "corridorUnroll:LLL",
+     "locals": ["s0", "x0", "y0", "c0", "n0", "s1", "x1", "y1", "c1", "n1", "s2", "x2", "y2", "c2", "n2", "se", "xe", "ye", "ce", "ne"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "corridorUnroll:LLL.s0": 0,
+    "corridorUnroll:LLL.x0": 0,
+    "corridorUnroll:LLL.y0": 0,
+    "corridorUnroll:LLL.c0": 0.9950371902099892,
+    "corridorUnroll:LLL.n0": 0.09950371902099893,
+    "corridorUnroll:LLL.s1": 100.4987562112089,
+    "corridorUnroll:LLL.x1": 100,
+    "corridorUnroll:LLL.y1": 10,
+    "corridorUnroll:LLL.c1": 0.9363291775690445,
+    "corridorUnroll:LLL.n1": 0.35112344158839165,
+    "corridorUnroll:LLL.s2": 185.9387936643842,
+    "corridorUnroll:LLL.x2": 180,
+    "corridorUnroll:LLL.y2": 40,
+    "corridorUnroll:LLL.c2": 0.9999500037496876,
+    "corridorUnroll:LLL.n2": 0.009999500037496875,
+    "corridorUnroll:LLL.se": 235.9412936018873,
+    "corridorUnroll:LLL.xe": 230,
+    "corridorUnroll:LLL.ye": 40.5,
+    "corridorUnroll:LLL.ce": 0.9999500037496876,
+    "corridorUnroll:LLL.ne": 0.009999500037496875
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.9950371980667114, 0.09950371831655502, 0.936329185962677, 0.3511234521865845, 0.9999499917030334, 0.009999499656260014, 0.9999499917030334, 0.009999499656260014, 0, 0, 0, 0],
+   "records": [
+    {
+     "n": 56,
+     "sha": "c5daf89a3e12b52140dc464f8bcc7279"
+    },
+    {
+     "n": 56,
+     "sha": "81baaa23e549a2f21f8212e868cc2d65"
+    },
+    {
+     "n": 56,
+     "sha": "77471b1a7540af22db3e778a36948047"
+    }
+   ],
+   "centerUniforms": {
+    "n": 76,
+    "sha": "6c5a3af9e18f827e32f030d60aa4a08e"
+   },
+   "packCenters": [50, 1, 2, 0, 0, 0, 0, 0, 150, -2, 1, 0, 0, 0, 0, 0, 215, 1.5, -2, 0, 0, 0, 0, 0]
+  },
+  "auto": {
+   "wgsl": {
+    "canonical": "cd9390c3823cbe6fe75f92ca97bfd625",
+    "canonicalLength": 9617
+   },
+   "positionWgsl": {
+    "canonical": "dc99dc2348d7592d398c560f5d2e961a",
+    "canonicalLength": 7445
+   },
+   "centerConstantsWgsl": {
+    "canonical": "b3df30f10beb104450379ccddb73ac1d",
+    "canonicalLength": 15166
+   },
+   "uniformsLayout": {
+    "floats": 32,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:corridorUnroll:LLL.c0": 20,
+     "param:corridorUnroll:LLL.n0": 21,
+     "param:corridorUnroll:LLL.c1": 22,
+     "param:corridorUnroll:LLL.n1": 23,
+     "param:corridorUnroll:LLL.c2": 24,
+     "param:corridorUnroll:LLL.n2": 25,
+     "param:corridorUnroll:LLL.ce": 26,
+     "param:corridorUnroll:LLL.ne": 27,
+     "s0.v28": 28,
+     "s0.v29": 29,
+     "s0.j30": 30,
+     "s0.j31": 31
+    }
+   },
+   "perDrawLayout": {
+    "floats": 56,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "s0.v8": 8,
+     "s0.v9": 9,
+     "s0.v10": 10,
+     "s0.v11": 11,
+     "s0.v12": 12,
+     "s0.v13": 13,
+     "s0.v14": 14,
+     "s0.v15": 15,
+     "s0.v16": 16,
+     "s0.v17": 17,
+     "s0.v18": 18,
+     "s0.v19": 19,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v28": 28,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31,
+     "s0.v32": 32,
+     "s0.v33": 33,
+     "s0.v34": 34,
+     "s0.v35": 35,
+     "s0.j36": 36,
+     "s0.j37": 37,
+     "s0.j38": 38,
+     "s0.j39": 39,
+     "s0.j40": 40,
+     "s0.j41": 41,
+     "s0.j42": 42,
+     "s0.j43": 43,
+     "s0.j44": 44,
+     "s0.j45": 45,
+     "s0.j46": 46,
+     "s0.j47": 47,
+     "s0.j48": 48,
+     "s0.j49": 49,
+     "s0.j50": 50,
+     "s0.j51": 51,
+     "s0.j52": 52
+    }
+   },
+   "dynamicParams": ["corridorUnroll:LLL.s0", "corridorUnroll:LLL.x0", "corridorUnroll:LLL.y0", "corridorUnroll:LLL.c0", "corridorUnroll:LLL.n0", "corridorUnroll:LLL.s1", "corridorUnroll:LLL.x1", "corridorUnroll:LLL.y1", "corridorUnroll:LLL.c1", "corridorUnroll:LLL.n1", "corridorUnroll:LLL.s2", "corridorUnroll:LLL.x2", "corridorUnroll:LLL.y2", "corridorUnroll:LLL.c2", "corridorUnroll:LLL.n2", "corridorUnroll:LLL.se", "corridorUnroll:LLL.xe", "corridorUnroll:LLL.ye", "corridorUnroll:LLL.ce", "corridorUnroll:LLL.ne"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["exact"],
+   "steps": [
+    {
+     "id": "corridorUnroll:LLL",
+     "locals": ["s0", "x0", "y0", "c0", "n0", "s1", "x1", "y1", "c1", "n1", "s2", "x2", "y2", "c2", "n2", "se", "xe", "ye", "ce", "ne"],
+     "value": 3,
+     "jacobian": 9
+    }
+   ],
+   "paramValues": {
+    "corridorUnroll:LLL.s0": 0,
+    "corridorUnroll:LLL.x0": 0,
+    "corridorUnroll:LLL.y0": 0,
+    "corridorUnroll:LLL.c0": 0.9950371902099892,
+    "corridorUnroll:LLL.n0": 0.09950371902099893,
+    "corridorUnroll:LLL.s1": 100.4987562112089,
+    "corridorUnroll:LLL.x1": 100,
+    "corridorUnroll:LLL.y1": 10,
+    "corridorUnroll:LLL.c1": 0.9363291775690445,
+    "corridorUnroll:LLL.n1": 0.35112344158839165,
+    "corridorUnroll:LLL.s2": 185.9387936643842,
+    "corridorUnroll:LLL.x2": 180,
+    "corridorUnroll:LLL.y2": 40,
+    "corridorUnroll:LLL.c2": 0.9999500037496876,
+    "corridorUnroll:LLL.n2": 0.009999500037496875,
+    "corridorUnroll:LLL.se": 235.9412936018873,
+    "corridorUnroll:LLL.xe": 230,
+    "corridorUnroll:LLL.ye": 40.5,
+    "corridorUnroll:LLL.ce": 0.9999500037496876,
+    "corridorUnroll:LLL.ne": 0.009999500037496875
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.9950371980667114, 0.09950371831655502, 0.936329185962677, 0.3511234521865845, 0.9999499917030334, 0.009999499656260014, 0.9999499917030334, 0.009999499656260014, 0, 0, 0, 0],
+   "records": [
+    {
+     "n": 56,
+     "sha": "c5daf89a3e12b52140dc464f8bcc7279"
+    },
+    {
+     "n": 56,
+     "sha": "81baaa23e549a2f21f8212e868cc2d65"
+    },
+    {
+     "n": 56,
+     "sha": "77471b1a7540af22db3e778a36948047"
+    }
+   ],
+   "centerUniforms": {
+    "n": 76,
+    "sha": "6c5a3af9e18f827e32f030d60aa4a08e"
+   },
+   "packCenters": [50, 1, 2, 0, 0, 0, 0, 0, 150, -2, 1, 0, 0, 0, 0, 0, 215, 1.5, -2, 0, 0, 0, 0, 0]
+  },
+  "none": {
+   "wgsl": {
+    "canonical": "8fbc58edcf74c1c90598130a408dea03",
+    "canonicalLength": 7082
+   },
+   "positionWgsl": {
+    "canonical": "101a32697f887d2b2654d128cd6d226e",
+    "canonicalLength": 7376
+   },
+   "centerConstantsWgsl": {
+    "canonical": "fe4cacf99c974a3d95f1a610dab6b828",
+    "canonicalLength": 13237
+   },
+   "uniformsLayout": {
+    "floats": 32,
+    "fields": {
+     "eyeHi": 0,
+     "eyeLo": 4,
+     "affine0": 8,
+     "param:corridorUnroll:LLL.c0": 20,
+     "param:corridorUnroll:LLL.n0": 21,
+     "param:corridorUnroll:LLL.c1": 22,
+     "param:corridorUnroll:LLL.n1": 23,
+     "param:corridorUnroll:LLL.c2": 24,
+     "param:corridorUnroll:LLL.n2": 25,
+     "param:corridorUnroll:LLL.ce": 26,
+     "param:corridorUnroll:LLL.ne": 27,
+     "s0.v28": 28,
+     "s0.v29": 29
+    }
+   },
+   "perDrawLayout": {
+    "floats": 36,
+    "fields": {
+     "outHi": 0,
+     "outLo": 4,
+     "s0.v8": 8,
+     "s0.v9": 9,
+     "s0.v10": 10,
+     "s0.v11": 11,
+     "s0.v12": 12,
+     "s0.v13": 13,
+     "s0.v14": 14,
+     "s0.v15": 15,
+     "s0.v16": 16,
+     "s0.v17": 17,
+     "s0.v18": 18,
+     "s0.v19": 19,
+     "s0.v20": 20,
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
+     "s0.v28": 28,
+     "s0.v29": 29,
+     "s0.v30": 30,
+     "s0.v31": 31,
+     "s0.v32": 32,
+     "s0.v33": 33,
+     "s0.v34": 34,
+     "s0.v35": 35
+    }
+   },
+   "dynamicParams": ["corridorUnroll:LLL.s0", "corridorUnroll:LLL.x0", "corridorUnroll:LLL.y0", "corridorUnroll:LLL.c0", "corridorUnroll:LLL.n0", "corridorUnroll:LLL.s1", "corridorUnroll:LLL.x1", "corridorUnroll:LLL.y1", "corridorUnroll:LLL.c1", "corridorUnroll:LLL.n1", "corridorUnroll:LLL.s2", "corridorUnroll:LLL.x2", "corridorUnroll:LLL.y2", "corridorUnroll:LLL.c2", "corridorUnroll:LLL.n2", "corridorUnroll:LLL.se", "corridorUnroll:LLL.xe", "corridorUnroll:LLL.ye", "corridorUnroll:LLL.ce", "corridorUnroll:LLL.ne"],
+   "separableParams": [],
+   "uniformParams": [],
+   "approximations": [],
+   "normalModes": ["none"],
+   "steps": [
+    {
+     "id": "corridorUnroll:LLL",
+     "locals": ["s0", "x0", "y0", "c0", "n0", "s1", "x1", "y1", "c1", "n1", "s2", "x2", "y2", "c2", "n2", "se", "xe", "ye", "ce", "ne"],
+     "value": 3,
+     "jacobian": null
+    }
+   ],
+   "paramValues": {
+    "corridorUnroll:LLL.s0": 0,
+    "corridorUnroll:LLL.x0": 0,
+    "corridorUnroll:LLL.y0": 0,
+    "corridorUnroll:LLL.c0": 0.9950371902099892,
+    "corridorUnroll:LLL.n0": 0.09950371902099893,
+    "corridorUnroll:LLL.s1": 100.4987562112089,
+    "corridorUnroll:LLL.x1": 100,
+    "corridorUnroll:LLL.y1": 10,
+    "corridorUnroll:LLL.c1": 0.9363291775690445,
+    "corridorUnroll:LLL.n1": 0.35112344158839165,
+    "corridorUnroll:LLL.s2": 185.9387936643842,
+    "corridorUnroll:LLL.x2": 180,
+    "corridorUnroll:LLL.y2": 40,
+    "corridorUnroll:LLL.c2": 0.9999500037496876,
+    "corridorUnroll:LLL.n2": 0.009999500037496875,
+    "corridorUnroll:LLL.se": 235.9412936018873,
+    "corridorUnroll:LLL.xe": 230,
+    "corridorUnroll:LLL.ye": 40.5,
+    "corridorUnroll:LLL.ce": 0.9999500037496876,
+    "corridorUnroll:LLL.ne": 0.009999500037496875
+   },
+   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0.9950371980667114, 0.09950371831655502, 0.936329185962677, 0.3511234521865845, 0.9999499917030334, 0.009999499656260014, 0.9999499917030334, 0.009999499656260014, 0, 0, 0, 0],
+   "records": [
+    [49.6523551940918, 5.9702229499816895, 2, 0, 5.973866450403875e-7, 1.9127824657516612e-7, 0, 0, 50, -50.498756408691406, -135.9387969970703, -185.94129943847656, -2.842170943040401e-14, 1, 8.648538589477539, 1, -2.964681625366211, 1, 0, 0, 0, -46.371978759765625, 12.706482887268066, 0, -0.06362082809209824, 0.058708012104034424, 0, 0.34112393856048584, -0.25161972641944885, 0, 1, 0.09950371831655502, 0.9950371980667114, 49.6523551940918, 5.9702229499816895, 2],
+    [147.0517120361328, 25.50838851928711, 1, 0, -0.000006267552635108586, 2.0760113272899616e-7, 0, 0, 150, 49.501243591308594, -35.93879318237305, -85.94129180908203, -2.842170943040401e-14, 1, 2.2864556312561035, 1, 2.9061195850372314, 0, 2.9061195850372314, 0, 0, -12.25958251953125, -12.455489158630371, -12.455489158630371, -0.06362082809209824, 0.058708012104034424, 0.058708012104034424, 0.34112393856048584, -0.25161972641944885, -0.25161972641944885, -2, 0.3511234521865845, 0.936329185962677, 147.0517120361328, 25.50838851928711, 1],
+    [209.0447540283203, 41.790523529052734, -2, 0, 1.0589292287477292e-7, -9.895854873320786e-7, 0, 0, 215, 114.5012435913086, 29.061206817626953, -20.941293716430664, 0, 1, -1.848897933959961, 0, 4.873242378234863, 0, 4.873242378234863, 0, 0, 9.913473129272461, -18.89729881286621, -18.89729881286621, -0.06362082809209824, -0.004912813659757376, -0.004912813659757376, 0.34112393856048584, 0.08950421959161758, 0.08950421959161758, 1.5, 0.009999499656260014, 0.9999499917030334, 209.0447540283203, 41.790523529052734, -2]
+   ],
+   "centerUniforms": {
+    "n": 76,
+    "sha": "6c5a3af9e18f827e32f030d60aa4a08e"
+   },
+   "packCenters": [50, 1, 2, 0, 0, 0, 0, 0, 150, -2, 1, 0, 0, 0, 0, 0, 215, 1.5, -2, 0, 0, 0, 0, 0]
+  }
+ }
+}
