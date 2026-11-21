@@ -2,10 +2,14 @@
 id: CS-785
 title: Merge CS-749, the Plan view becomes Order
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the Dyno Work tests, fast-forwards main, regenerates the views and logs the merge; CS-752 (Flow) and CS-753 (a calmer Your move) can then start, one after the other."
+answered_at: 2026-11-21T15:44:29.293Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
