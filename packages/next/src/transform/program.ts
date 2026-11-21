@@ -8,6 +8,9 @@
 import type { Builder } from "../ir/builder.ts";
 import type { Id, Program } from "../ir/types.ts";
 
+/** A transform's program is a Cesium IR program (the built-ins name it from here). */
+export type { Program } from "../ir/types.ts";
+
 /** The position's input. */
 export const POSITION = "p";
 

@@ -1,9 +1,9 @@
 // Kinks and steps, per output: the ops whose derivative jumps (a kink: a
 // Hessian doesn't bound how the Jacobian changes) or whose value does (a
-// step: no derivative bound holds). Today's list (`src/transform/stepIr.ts`),
-// with KHR_interactivity's ops that today's IR lacks: `saturate` is a kink,
-// and `trunc`, `round` and `rem` are steps. `sign` stays among the kinks, as
-// today.
+// step: no derivative bound holds). The transforms' list, as their own IR
+// had it before CS-53, with KHR_interactivity's ops that IR lacked:
+// `saturate` is a kink, and `trunc`, `round` and `rem` are steps. `sign`
+// stays among the kinks, as it was.
 
 import type { Id, Program } from "./types.ts";
 

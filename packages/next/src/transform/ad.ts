@@ -13,19 +13,8 @@ import {
   parameterProgram as cirParameters,
 } from "../ir/ad.ts";
 import { Builder } from "../ir/builder.ts";
-import {
-  hessianProgram as todayHessianProgram,
-  jacobianProgram as todayJacobianProgram,
-  parameterProgram as todayParameterProgram,
-} from "../ir/fromTodayIr.ts";
 import type { Id, Program } from "../ir/types.ts";
-import {
-  asCir,
-  evaluate,
-  type AnyProgram,
-  type ParamValues,
-} from "./evaluate.ts";
-import type { IrProgram } from "./ir.ts";
+import { evaluate, type ParamValues } from "./evaluate.ts";
 import { POSITION } from "./program.ts";
 
 const outputNames = (p: Program) => p.outputs.map((o) => o.name);
@@ -39,12 +28,7 @@ function idOf(p: Program, name: string): Id {
 }
 
 /** J as a program of 9 outputs, row-major: `3 * i + j` is d out_i / d p_j. */
-export function jacobianProgram(program: Program): Program;
-export function jacobianProgram(program: IrProgram): IrProgram;
-export function jacobianProgram(program: AnyProgram): AnyProgram {
-  if (!("eqns" in program)) {
-    return todayJacobianProgram(program) as IrProgram;
-  }
+export function jacobianProgram(program: Program): Program {
   const names = outputNames(program);
   const j = cirJacobian(program, POSITION, names);
   const b = Builder.from(j);
@@ -64,12 +48,7 @@ export function jacobianProgram(program: AnyProgram): AnyProgram {
  * H as a program of 27 outputs: `9 * i + 3 * j + k` is d² out_i / d p_j d p_k.
  * Forward over forward: each of J's columns, differentiated again.
  */
-export function hessianProgram(program: Program): Program;
-export function hessianProgram(program: IrProgram): IrProgram;
-export function hessianProgram(program: AnyProgram): AnyProgram {
-  if (!("eqns" in program)) {
-    return todayHessianProgram(program) as IrProgram;
-  }
+export function hessianProgram(program: Program): Program {
   const names = outputNames(program);
   const h = cirHessian(program, POSITION, names);
   const b = Builder.from(h);
@@ -99,18 +78,7 @@ export function hessianProgram(program: AnyProgram): AnyProgram {
 export function parameterProgram(
   program: Program,
   names: readonly string[],
-): Program;
-export function parameterProgram(
-  program: IrProgram,
-  names: readonly string[],
-): IrProgram;
-export function parameterProgram(
-  program: AnyProgram,
-  names: readonly string[],
-): AnyProgram {
-  if (!("eqns" in program)) {
-    return todayParameterProgram(program, names) as IrProgram;
-  }
+): Program {
   const outs = outputNames(program);
   const known = names.filter((n) => program.inputs.some((i) => i.name === n));
   const d = cirParameters(program, known, outs);
@@ -145,13 +113,12 @@ function derived(program: Program, key: string, build: () => Program): Program {
 
 /** J at `p`, row-major (`3 * i + j`), in float64. */
 export function jacobian(
-  program: AnyProgram,
+  program: Program,
   p: ArrayLike<number>,
   params: ParamValues = {},
 ): number[] {
-  const cir = asCir(program);
   return evaluate(
-    derived(cir, "J", () => jacobianProgram(cir)),
+    derived(program, "J", () => jacobianProgram(program)),
     p,
     params,
   );
@@ -159,13 +126,12 @@ export function jacobian(
 
 /** H at `p` (`9 * i + 3 * j + k`), in float64. */
 export function hessian(
-  program: AnyProgram,
+  program: Program,
   p: ArrayLike<number>,
   params: ParamValues = {},
 ): number[] {
-  const cir = asCir(program);
   return evaluate(
-    derived(cir, "H", () => hessianProgram(cir)),
+    derived(program, "H", () => hessianProgram(program)),
     p,
     params,
   );
@@ -173,14 +139,15 @@ export function hessian(
 
 /** The derivatives along `names` at `p` (`3 * n + i`), in float64. */
 export function parameterDerivatives(
-  program: AnyProgram,
+  program: Program,
   names: readonly string[],
   p: ArrayLike<number>,
   params: ParamValues = {},
 ): number[] {
-  const cir = asCir(program);
   return evaluate(
-    derived(cir, `P:${names.join(",")}`, () => parameterProgram(cir, names)),
+    derived(program, `P:${names.join(",")}`, () =>
+      parameterProgram(program, names),
+    ),
     p,
     params,
   );

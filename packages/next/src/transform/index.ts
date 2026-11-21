@@ -62,8 +62,9 @@ export {
   type PointIn,
   type PointInOptions,
 } from "./queries.ts";
-// The IR a curvilinear edge's function is parsed into (never evaluated as
-// source): float64 evaluation, derivatives as programs, intervals, WGSL.
+// Cesium IR, which a curvilinear edge's function is parsed into (never
+// evaluated as source): float64 evaluation, derivatives as programs,
+// intervals, WGSL.
 export {
   parseTransform,
   TransformParseError,
@@ -85,7 +86,6 @@ export {
   type ParamRange,
 } from "./interval.ts";
 export { toWgsl, type WgslOptions } from "./wgsl.ts";
-export type { IrProgram } from "./ir.ts";
 // The compiler: a route's shape to fused WGSL with float64 center constants.
 export {
   clearCompileCache,

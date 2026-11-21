@@ -7,7 +7,6 @@
 // refused by the parser with the construct named: it is kept all the same, its
 // Jacobian by central differences and its draws fitted per vertex, as ever
 // (`FunctionCurvilinearMap.compiled` is false, `fitReason` says why).
-import type { Program } from "../ir/types.ts";
 import {
   curvilinearInverse,
   type CurvilinearMap,
@@ -15,6 +14,7 @@ import {
 } from "../camera/route.ts";
 import { jacobian as irJacobian } from "../transform/ad.ts";
 import type { Params, CurvilinearSpec } from "../transform/graph.ts";
+import type { Program } from "../transform/program.ts";
 import { parseTransform, TransformParseError } from "../transform/parse.ts";
 import {
   LiveCurvilinearMap,

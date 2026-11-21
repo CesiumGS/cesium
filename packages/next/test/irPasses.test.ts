@@ -1,8 +1,8 @@
-// Cesium IR's passes (CS-50) on vector programs, which today's scalar IR
-// can't express: forward-mode AD, intervals and breakpoint splitting, the
-// Taylor model, rates and hoisting, literals to uniforms, and kinks. The
-// transform modules run on these passes (CS-53), so their own tests check
-// them on today's cases.
+// Cesium IR's passes (CS-50) on vector programs, which the transform front
+// end's scalar programs don't exercise: forward-mode AD, intervals and
+// breakpoint splitting, the Taylor model, rates and hoisting, literals to
+// uniforms, and kinks. The transform modules run on these passes (CS-53), so
+// their own tests check them on the transforms' cases.
 import { describe, expect, it } from "vitest";
 import {
   differentiate,

@@ -15,8 +15,7 @@
 // `emitDf64`; the float32 residual form the compiler uses is residual.ts's.
 
 import { scalarize } from "../ir/scalarize.ts";
-import type { Id } from "../ir/types.ts";
-import { asCir, type AnyProgram } from "./evaluate.ts";
+import type { Id, Program } from "../ir/types.ts";
 import { leafOf, numbering, paramsOf, through } from "./program.ts";
 
 export interface WgslOptions {
@@ -142,12 +141,12 @@ function emitPow(base: string, exponent: number | undefined, e: string) {
 }
 
 /** The WGSL function text for `program`. */
-export function toWgsl(program: AnyProgram, options: WgslOptions = {}): string {
+export function toWgsl(program: Program, options: WgslOptions = {}): string {
   const name = options.name ?? "transformPoint";
   if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(name)) {
     throw new Error(`'${name}' is not a usable WGSL function name`);
   }
-  const s = scalarize(asCir(program));
+  const s = scalarize(program);
   const fields = new Map<string, string>();
   for (const param of paramsOf(s)) {
     const field = wgslParamField(param);

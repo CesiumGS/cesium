@@ -16,11 +16,44 @@ import {
   type Interval,
   type ParamRange,
 } from "../src/transform/interval.ts";
-import { Ir } from "../src/transform/ir.ts";
+import { Builder } from "../src/ir/builder.ts";
+import type { Id } from "../src/ir/types.ts";
 import { parseTransform, TransformParseError } from "../src/transform/parse.ts";
 import { paramsOf } from "../src/transform/program.ts";
+import { lowerComposites } from "../src/transform/residual.ts";
 import { toWgsl } from "../src/transform/wgsl.ts";
 import * as samples from "./transformIrSamples.ts";
+
+/**
+ * Cesium IR built by hand, as the front end lays out a transform: `pos(i)`
+ * reads lane i of the float3 input `p`, `param` is a float uniform input,
+ * `op` takes KHR_interactivity's `math/` names without the prefix, and the
+ * outputs are `o0`, `o1`, ….
+ */
+class HandBuilt {
+  readonly b = new Builder();
+  constant(value: number): Id {
+    return this.b.const(value);
+  }
+  pos(axis: number): Id {
+    return this.b.op(
+      "math/extract3",
+      [this.b.input("p", "float3", "vertex")],
+      axis,
+    );
+  }
+  param(name: string): Id {
+    return this.b.input(name, "float", "uniform");
+  }
+  op(name: string, ...args: Id[]): Id {
+    return this.b.op(`math/${name}`, args);
+  }
+  program(outputs: readonly Id[]) {
+    return this.b.program(
+      Object.fromEntries(outputs.map((id, i) => [`o${i}`, id])),
+    );
+  }
+}
 
 type V3 = [number, number, number];
 type SampleFn = (p: V3, params: never, out: number[]) => readonly number[];
@@ -277,14 +310,26 @@ describe("parse and evaluate", () => {
     );
   });
 
-  it("builds vector helpers on the IR", () => {
-    const ir = new Ir();
-    const a = [ir.constant(1), ir.constant(2), ir.constant(3)] as const;
-    const p = [ir.pos(0), ir.pos(1), ir.pos(2)] as const;
-    const [cx, cy, cz] = ir.cross3(a, p);
-    const dot = ir.dot3(a, p);
-    const [nx, ny, nz] = ir.normalize3(p);
-    const program = ir.program([cx, cy, cz, dot, ir.length3(p), nx, ny, nz]);
+  it("builds vector ops on the IR", () => {
+    const ir = new HandBuilt();
+    const b = ir.b;
+    const a = b.const([1, 2, 3]);
+    const p = b.input("p", "float3", "vertex");
+    const lanes = (v: Id) =>
+      [0, 1, 2].map((i) => b.op("math/extract3", [v], i));
+    const [cx, cy, cz] = lanes(ir.op("cross", a, p));
+    const dot = ir.op("dot", a, p);
+    const [nx, ny, nz] = lanes(ir.op("normalize", p));
+    const program = ir.program([
+      cx!,
+      cy!,
+      cz!,
+      dot,
+      ir.op("length", p),
+      nx!,
+      ny!,
+      nz!,
+    ]);
     const q = [0.5, -1.5, 2];
     const [x, y, z, d, len, ux, uy, uz] = evaluate(program, q);
     expect([x, y, z]).toEqual([
@@ -565,14 +610,44 @@ describe("autodiff", () => {
     });
   }
 
+  it("follows KHR_interactivity for clamp with reversed bounds and smoothStep with reversed edges", () => {
+    // The semantic change CS-53 states: today's IR took clamp(x, lo, hi) as
+    // min(max(x, lo), hi) and smoothstep's ramp from edge0 to edge1. No
+    // built-in uses either case.
+    const ir = new HandBuilt();
+    const x = ir.pos(0);
+    const program = ir.program([
+      ir.op("clamp", x, ir.constant(1), ir.constant(-1)),
+      ir.op("smoothStep", ir.constant(2), ir.constant(0), x),
+      ir.op("clamp", x, ir.param("hi"), ir.param("lo")),
+    ]);
+    const lowered = lowerComposites(program);
+    expect(lowered.eqns.some((e) => /clamp|smoothStep/.test(e.op))).toBe(false);
+    const ramp = (t: number) => t * t * (3 - 2 * t);
+    for (const px of [-3, -0.5, 0.25, 1.5, 4]) {
+      const params = { lo: -1, hi: 1 };
+      const want = [
+        Math.min(Math.max(px, -1), 1),
+        ramp(Math.min(Math.max(px / 2, 0), 1)),
+        Math.min(Math.max(px, -1), 1),
+      ];
+      expect(evaluate(program, [px, 0, 0], params)).toEqual(want);
+      // The residual pass's lowering and the WGSL keep the same meaning.
+      expect(evaluate(lowered, [px, 0, 0], params)).toEqual(want);
+    }
+    const text = toWgsl(program);
+    expect(text).not.toMatch(/\b(clamp|smoothstep)\(v|\bclamp\(p/);
+    expect(text).toContain("min(max(p.x, min(");
+  });
+
   it("differentiates composite ops by their definitions", () => {
-    const ir = new Ir();
+    const ir = new HandBuilt();
     const x = ir.pos(0);
     const t = ir.param("t");
     const out = [
       ir.op("clamp", ir.op("mul", x, t), ir.constant(-0.5), ir.constant(0.5)),
       ir.op("mix", x, ir.op("mul", x, x), t),
-      ir.op("smoothstep", ir.constant(0), ir.constant(2), x),
+      ir.op("smoothStep", ir.constant(0), ir.constant(2), x),
     ];
     const program = ir.program(out);
     const params = { t: 0.3 };
@@ -630,11 +705,11 @@ describe("intervals", () => {
   }
 
   const one = (
-    build: (ir: Ir, x: number) => number,
+    build: (ir: HandBuilt, x: Id) => Id,
     lo: number,
     hi: number,
   ): Interval => {
-    const ir = new Ir();
+    const ir = new HandBuilt();
     const program = ir.program([build(ir, ir.pos(0))]);
     return evaluateInterval(program, { min: [lo, 0, 0], max: [hi, 0, 0] })[0]!;
   };
@@ -728,7 +803,7 @@ describe("intervals", () => {
   });
 
   it("bounds atan2 across quadrants and the branch cut", () => {
-    const ir = new Ir();
+    const ir = new HandBuilt();
     const program = ir.program([ir.op("atan2", ir.pos(1), ir.pos(0))]);
     const at = (x: [number, number], y: [number, number]) =>
       evaluateInterval(program, {

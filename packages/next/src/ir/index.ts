@@ -6,9 +6,7 @@ export * from "./types.ts";
 export { OPS, applyValue, typeOf, typeOfValue } from "./ops.ts";
 export { Builder, shapeKey } from "./builder.ts";
 export { evaluate, print } from "./evaluate.ts";
-// The passes, each an interpretation of the one program structure. (The
-// adapter from today's transform IR, `fromTodayIr.ts`, is CS-53's to remove
-// and isn't exported here.)
+// The passes, each an interpretation of the one program structure.
 export {
   derivativeName,
   differentiate,
