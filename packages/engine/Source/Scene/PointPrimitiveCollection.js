@@ -947,6 +947,8 @@ PointPrimitiveCollection.prototype.update = function (frameState) {
       }
       this._vaf.commit();
     } else {
+      let offset = pointPrimitivesToUpdate[0]._index;
+      let count = 0;
       for (let h = 0; h < pointPrimitivesToUpdateLength; ++h) {
         const bb = pointPrimitivesToUpdate[h];
         bb._dirty = false;
@@ -954,8 +956,16 @@ PointPrimitiveCollection.prototype.update = function (frameState) {
         for (let o = 0; o < numWriters; ++o) {
           writers[o](this, context, vafWriters, bb);
         }
-        this._vaf.subCommit(bb._index, 1);
+        // Combine consecutive dirty points without uploading unchanged points
+        // or sorting the update list.
+        if (bb._index !== offset + count) {
+          this._vaf.subCommit(offset, count);
+          offset = bb._index;
+          count = 0;
+        }
+        ++count;
       }
+      this._vaf.subCommit(offset, count);
       this._vaf.endSubCommits();
     }
 
