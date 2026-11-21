@@ -151,8 +151,7 @@ CS-12 The job system's ports
 
 CS-437 The public API reviews
   CS-102  The public API review, with the protocol table and the façade's constraints
-      ← CS-430 The WebGPU seams audited: each seam, its bypass test, and the seams still missing
-        CS-431 The camera chain's layers checked against what each may know
+      ← CS-431 The camera chain's layers checked against what each may know
         CS-432 The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors
         CS-433 Promotions and demotions proposed: what every app needs, and what is exported only for examples
         CS-572 The full version of scene items, designed before the first public API review
@@ -517,19 +516,14 @@ CS-389 Dyno as the development harness
         CS-407 The runner and remote runs
   CS-518  A space switch in Dyno's rail: the engine and the work
       ← CS-517 The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
-  CS-733  Each run records its device, configuration and state
-      ← CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
   CS-734  A sealed, content-addressed layout for benchmark results, local first
       ← CS-733 Each run records its device, configuration and state
-        CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
   CS-735  Dyno syncs results with shared storage, with keys per device and role
       ← CS-734 A sealed, content-addressed layout for benchmark results, local first
   CS-736  Retention, pins and the size budget for benchmark storage
       ← CS-734 A sealed, content-addressed layout for benchmark results, local first
-        CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
   CS-737  A classification label on every benchmark result
       ← CS-734 A sealed, content-addressed layout for benchmark results, local first
-        CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
   CS-738  Trends, charts, baselines and alerts keep devices apart
       ← CS-733 Each run records its device, configuration and state
         CS-734 A sealed, content-addressed layout for benchmark results, local first
@@ -738,5 +732,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-241 blocked
+240 blocked
 ```

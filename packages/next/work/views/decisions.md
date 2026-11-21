@@ -60,7 +60,6 @@ CS-437 The public API reviews
       waited on by CS-103, CS-104, CS-105, CS-107, CS-243, CS-303, CS-378, CS-434, CS-435
   CS-681  Should 2.0 keep marking APIs experimental, and how? (owner)
       waited on by CS-434
-  CS-711  Add a signal option to cancel an engine create in flight (owner)
 
 CS-579 Editing
   CS-453  What editing should the engine support, with vector data and GIS sources among it? (owner)
@@ -69,9 +68,5 @@ CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617
 
-CS-389 Dyno as the development harness
-  CS-714  Reaching a 500 ms cold start: which engine-side work (owner)
-  CS-715  How the cold-start check runs from here on (owner)
-
-24 open decision(s) for owner
+21 open decision(s) for owner
 ```

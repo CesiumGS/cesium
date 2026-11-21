@@ -573,12 +573,12 @@ graph LR
     CS_706["CS-706 Dyno's viewer starts drawing within half a second on a cold bro"]:::done
     CS_707["CS-707 Dyno's scrollable tabs use StrataKit's supported API, and the S"]:::done
     CS_709["CS-709 Merge CS-707, Dyno's scrollable tabs on StrataKit's supported A"]:::done
-    CS_714["CS-714 Reaching a 500 ms cold start: which engine-side work"]:::decision
-    CS_715["CS-715 How the cold-start check runs from here on"]:::decision
+    CS_714["CS-714 Reaching a 500 ms cold start: which engine-side work"]:::done
+    CS_715["CS-715 How the cold-start check runs from here on"]:::done
     CS_716["CS-716 Dyno's shell asks for triage.json and images/index.json once pe"]:::proposed
     CS_717["CS-717 Design: one benchmark database across machines, with device fin"]:::done
     CS_718["CS-718 hitld cites dyno's benchmark results by reference, reading them"]:::external
-    CS_721["CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, st"]:::open
+    CS_721["CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, st"]:::done
     CS_726["CS-726 Where does dyno store shared benchmark results, and what may it"]:::done
     CS_727["CS-727 Who holds dyno's storage keys, and may remote and cloud session"]:::done
     CS_728["CS-728 What classification does a benchmark result get by default?"]:::done
@@ -598,21 +598,31 @@ graph LR
     CS_743["CS-743 Main's npm test exits 0 again: the shared manifest load leaves "]:::done
     CS_744["CS-744 The Work page's roadmap opens on a Release view: what's left in"]:::done
     CS_745["CS-745 A Health view lists the work graph's exceptions, each with a pr"]:::done
-    CS_746["CS-746 A Path view shows only what lies upstream of a chosen target: i"]:::open
+    CS_746["CS-746 A Path view shows only what lies upstream of a chosen target: i"]:::done
     CS_747["CS-747 A Since-you-last-looked view shows scope changes and answers si"]:::open
-    CS_748["CS-748 The Projects view shows each project as a bet: its outcome, rel"]:::open
+    CS_748["CS-748 The Projects view shows each project as a bet: its outcome, rel"]:::done
     CS_749["CS-749 The Plan view becomes Order: the planner's sequence for a relea"]:::open
-    CS_750["CS-750 The Proposals view says why each item is proposed, and offers c"]:::open
+    CS_750["CS-750 The Proposals view says why each item is proposed, and offers c"]:::done
     CS_752["CS-752 Flow answers how well the system and the owner work together: c"]:::open
     CS_753["CS-753 'Your move' gets a calmer layout: fewer, larger, ranked entries"]:::open
     CS_754["CS-754 Merge CS-743, main's npm test exits 0 again"]:::done
     CS_756["CS-756 Merge CS-390, run identity and the machine-wide run lock"]:::done
     CS_757["CS-757 Merge CS-744, the Release view and the Work page's tab shell"]:::done
     CS_760["CS-760 Merge CS-745, the Health view of the work graph's exceptions"]:::done
+    CS_764["CS-764 Engine.create compiles its pipelines in one concurrent round in"]:::open
+    CS_765["CS-765 Optional subsystems load lazily instead of through the @cesium/"]:::open
+    CS_766["CS-766 Merge CS-746, the Path view of what lies upstream of a target"]:::done
+    CS_767["CS-767 Merge CS-748, the Projects view shows each project as a bet"]:::done
+    CS_768["CS-768 Merge CS-750, the Proposals view says why each item is proposed"]:::done
+    CS_770["CS-770 Merge CS-721, one dyno command for Dyno's runs, Lab pages, serv"]:::done
+    CS_772["CS-772 Dyno's views and docs name the dyno commands, the old wrappers "]:::proposed
+    CS_773["CS-773 dyno analysis compare and trend give verdicts with noise estima"]:::proposed
+    CS_774["CS-774 npx dyno works: the dyno bin lives in a private workspace packa"]:::open
+    CS_775["CS-775 The Dependencies view's waves grid retires now that the Path vi"]:::proposed
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
-    CS_430["CS-430 The WebGPU seams audited: each seam, its bypass test, and the s"]:::open
+    CS_430["CS-430 The WebGPU seams audited: each seam, its bypass test, and the s"]:::done
     CS_431["CS-431 The camera chain's layers checked against what each may know"]:::open
     CS_432["CS-432 The API's shape checked: sync and async, cancelling, lifetimes,"]:::open
     CS_433["CS-433 Promotions and demotions proposed: what every app needs, and wh"]:::open
@@ -624,8 +634,11 @@ graph LR
     CS_670["CS-670 Bounding volumes and their tests on the public API"]:::open
     CS_681["CS-681 Should 2.0 keep marking APIs experimental, and how?"]:::decision
     CS_708["CS-708 2.0 is strict-mode safe: a canvas the engine draws survives cre"]:::done
-    CS_711["CS-711 Add a signal option to cancel an engine create in flight"]:::decision
+    CS_711["CS-711 Add a signal option to cancel an engine create in flight"]:::done
     CS_713["CS-713 Merge CS-708, 2.0 strict-mode safe"]:::done
+    CS_763["CS-763 Engine.create takes a signal: an aborted create releases its de"]:::open
+    CS_769["CS-769 Merge CS-430, the WebGPU seams audited"]:::done
+    CS_771["CS-771 The seam bypass tests catch the five plants CS-430's audit foun"]:::proposed
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::decision
@@ -1375,6 +1388,12 @@ graph LR
   CS_744 --> CS_750
   CS_744 --> CS_752
   CS_744 --> CS_753
+  CS_750 --> CS_753
+  CS_430 --> CS_771
+  CS_721 --> CS_772
+  CS_721 --> CS_773
+  CS_721 --> CS_774
+  CS_746 --> CS_775
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

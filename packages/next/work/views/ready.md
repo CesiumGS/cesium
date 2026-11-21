@@ -204,27 +204,24 @@ CS-389 Dyno as the development harness
   CS-404  Studies: the model, the files and the commands
   CS-406  The local certificate authority, the hub and pairing
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
-  CS-714  decision: Reaching a 500 ms cold start: which engine-side work
-  CS-715  decision: How the cold-start check runs from here on
   CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands
-  CS-721  A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
-  CS-746  A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates
+  CS-733  Each run records its device, configuration and state
   CS-747  A Since-you-last-looked view shows scope changes and answers since a chosen point
-  CS-748  The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions
   CS-749  The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting
-  CS-750  The Proposals view says why each item is proposed, and offers commit, hold or drop
   CS-752  Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them
   CS-753  "Your move" gets a calmer layout: fewer, larger, ranked entries
+  CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
+  CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
+  CS-774  npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno
 
 CS-437 The public API reviews
-  CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
   CS-431  The camera chain's layers checked against what each may know
   CS-432  The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors
   CS-433  Promotions and demotions proposed: what every app needs, and what is exported only for examples
   CS-572  The full version of scene items, designed before the first public API review
   CS-670  Bounding volumes and their tests on the public API
   CS-681  decision: Should 2.0 keep marking APIs experimental, and how?
-  CS-711  decision: Add a signal option to cancel an engine create in flight
+  CS-763  Engine.create takes a signal: an aborted create releases its device and pipelines
 
 CS-579 Editing
   CS-453  decision: What editing should the engine support, with vector data and GIS sources among it?
@@ -260,5 +257,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-191 ready
+188 ready
 ```

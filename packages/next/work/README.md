@@ -936,7 +936,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 26 of 65 done, 20 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 36 of 75 done, 18 ready, 17 blocked, 4 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -979,7 +979,7 @@ Milestone: Benchmark results are shared across machines, and dyno is one command
 - [ ] [CS-394](./items/CS-394-example-scenes-and-the-development-metrics.md) Example scenes and the development metrics. Needs CS-393.
 - [ ] [CS-404](./items/CS-404-studies-the-model-the-files-and-the-commands.md) Studies: the model, the files and the commands. Needs CS-390 and CS-687.
 - [x] [CS-717](./items/CS-717-design-one-benchmark-database-across-machines.md) Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability. Done.
-- [ ] [CS-721](./items/CS-721-a-dyno-command-one-cli-for-dyno-s-runs-lab.md) A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices. Needs CS-390 and CS-724 (Sky, light and atmosphere).
+- [x] [CS-721](./items/CS-721-a-dyno-command-one-cli-for-dyno-s-runs-lab.md) A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices. Done.
 - [ ] [CS-733](./items/CS-733-each-run-records-its-device-configuration-and.md) Each run records its device, configuration and state. Needs CS-390 and CS-721.
 - [ ] [CS-734](./items/CS-734-a-sealed-content-addressed-layout-for-benchmark.md) A sealed, content-addressed layout for benchmark results, local first. Needs CS-733 and CS-721.
 - [ ] [CS-735](./items/CS-735-dyno-syncs-results-with-shared-storage-with.md) Dyno syncs results with shared storage, with keys per device and role. Needs CS-734, CS-726, CS-727 and CS-730.
@@ -993,13 +993,13 @@ Milestone: The owner's views answer what needs me, what's on track and what's wr
 
 - [x] [CS-744](./items/CS-744-the-work-page-s-roadmap-opens-on-a-release-view.md) The Work page's roadmap opens on a Release view: what's left in a release and what's holding it. Done.
 - [x] [CS-745](./items/CS-745-a-health-view-lists-the-work-graph-s-exceptions.md) A Health view lists the work graph's exceptions, each with a proposed fix. Done.
-- [ ] [CS-746](./items/CS-746-a-path-view-shows-only-what-lies-upstream-of-a.md) A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates. Needs CS-744.
+- [x] [CS-746](./items/CS-746-a-path-view-shows-only-what-lies-upstream-of-a.md) A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates. Done.
 - [ ] [CS-747](./items/CS-747-a-since-you-last-looked-view-shows-scope.md) A Since-you-last-looked view shows scope changes and answers since a chosen point. Needs CS-744.
-- [ ] [CS-748](./items/CS-748-the-projects-view-shows-each-project-as-a-bet.md) The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions. Needs CS-744.
+- [x] [CS-748](./items/CS-748-the-projects-view-shows-each-project-as-a-bet.md) The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions. Done.
 - [ ] [CS-749](./items/CS-749-the-plan-view-becomes-order-the-planner-s.md) The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting. Needs CS-744.
-- [ ] [CS-750](./items/CS-750-the-proposals-view-says-why-each-item-is.md) The Proposals view says why each item is proposed, and offers commit, hold or drop. Needs CS-744.
+- [x] [CS-750](./items/CS-750-the-proposals-view-says-why-each-item-is.md) The Proposals view says why each item is proposed, and offers commit, hold or drop. Done.
 - [ ] [CS-752](./items/CS-752-flow-answers-how-well-the-system-and-the-owner.md) Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them. Needs CS-744.
-- [ ] [CS-753](./items/CS-753-your-move-gets-a-calmer-layout-fewer-larger.md) "Your move" gets a calmer layout: fewer, larger, ranked entries. Needs CS-744.
+- [ ] [CS-753](./items/CS-753-your-move-gets-a-calmer-layout-fewer-larger.md) "Your move" gets a calmer layout: fewer, larger, ranked entries. Needs CS-744 and CS-750.
 
 No milestone
 
@@ -1009,8 +1009,8 @@ No milestone
 - [x] [CS-706](./items/CS-706-dyno-s-viewer-starts-drawing-within-half-a.md) Dyno's viewer starts drawing within half a second on a cold browser again. Done.
 - [x] [CS-707](./items/CS-707-dyno-s-scrollable-tabs-use-stratakit-s.md) Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected. Done.
 - [x] [CS-709](./items/CS-709-merge-cs-707-dyno-s-scrollable-tabs-on.md) decision: Merge CS-707, Dyno's scrollable tabs on StrataKit's supported API. Done.
-- [ ] [CS-714](./items/CS-714-reaching-a-500-ms-cold-start-which-engine-side.md) decision: Reaching a 500 ms cold start: which engine-side work. Needs nothing. Decided by owner.
-- [ ] [CS-715](./items/CS-715-how-the-cold-start-check-runs-from-here-on.md) decision: How the cold-start check runs from here on. Needs nothing. Decided by owner.
+- [x] [CS-714](./items/CS-714-reaching-a-500-ms-cold-start-which-engine-side.md) decision: Reaching a 500 ms cold start: which engine-side work. Done.
+- [x] [CS-715](./items/CS-715-how-the-cold-start-check-runs-from-here-on.md) decision: How the cold-start check runs from here on. Done.
 - [?] [CS-716](./items/CS-716-dyno-s-shell-asks-for-triage-json-and-images.md) Dyno's shell asks for triage.json and images/index.json once per page load, not three times. Proposed. Needs nothing.
 - [ ] [CS-718](./items/CS-718-hitld-s-private-store-holds-project-data-such.md) external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands. Needs nothing. Waiting on human-in-the-lead: the measurement-tool design (HITLD-609), per arobison/human-in-the-lead#363.
 - [x] [CS-726](./items/CS-726-where-does-dyno-store-shared-benchmark-results.md) decision: Where does dyno store shared benchmark results, and what may it spend?. Done.
@@ -1026,15 +1026,25 @@ No milestone
 - [x] [CS-756](./items/CS-756-merge-cs-390-run-identity-and-the-machine-wide.md) decision: Merge CS-390, run identity and the machine-wide run lock. Done.
 - [x] [CS-757](./items/CS-757-merge-cs-744-the-release-view-and-the-work-page.md) decision: Merge CS-744, the Release view and the Work page's tab shell. Done.
 - [x] [CS-760](./items/CS-760-merge-cs-745-the-health-view-of-the-work-graph.md) decision: Merge CS-745, the Health view of the work graph's exceptions. Done.
+- [ ] [CS-764](./items/CS-764-engine-create-compiles-its-pipelines-in-one.md) Engine.create compiles its pipelines in one concurrent round instead of three. Needs nothing.
+- [ ] [CS-765](./items/CS-765-optional-subsystems-load-lazily-instead-of.md) Optional subsystems load lazily instead of through the @cesium/next barrel. Needs nothing.
+- [x] [CS-766](./items/CS-766-merge-cs-746-the-path-view-of-what-lies.md) decision: Merge CS-746, the Path view of what lies upstream of a target. Done.
+- [x] [CS-767](./items/CS-767-merge-cs-748-the-projects-view-shows-each.md) decision: Merge CS-748, the Projects view shows each project as a bet. Done.
+- [x] [CS-768](./items/CS-768-merge-cs-750-the-proposals-view-says-why-each.md) decision: Merge CS-750, the Proposals view says why each item is proposed. Done.
+- [x] [CS-770](./items/CS-770-merge-cs-721-one-dyno-command-for-dyno-s-runs.md) decision: Merge CS-721, one dyno command for Dyno's runs, Lab pages, servers and measurements. Done.
+- [?] [CS-772](./items/CS-772-dyno-s-views-and-docs-name-the-dyno-commands.md) Dyno's views and docs name the dyno commands, the old wrappers retire, and coldstart takes a free port. Proposed. Needs CS-721.
+- [?] [CS-773](./items/CS-773-dyno-analysis-compare-and-trend-give-verdicts.md) dyno analysis compare and trend give verdicts with noise estimates, and bisect hands off to CS-325. Proposed. Needs CS-721.
+- [ ] [CS-774](./items/CS-774-npx-dyno-works-the-dyno-bin-lives-in-a-private.md) npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno. Needs CS-721.
+- [?] [CS-775](./items/CS-775-the-dependencies-view-s-waves-grid-retires-now.md) The Dependencies view's waves grid retires now that the Path view answers what it did. Proposed. Needs CS-746.
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 3 of 15 done, 8 ready, 4 blocked. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 6 of 18 done, 7 ready, 4 blocked, 1 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
 - [ ] [CS-102](./items/CS-102-the-public-api-review-with-the-protocol-table.md) The public API review, with the protocol table and the façade's constraints. Needs CS-101 (worker-mode façade), CS-430, CS-431, CS-432, CS-433, CS-454, CS-567 (worker-mode façade) and CS-572.
-- [ ] [CS-430](./items/CS-430-the-webgpu-seams-audited-each-seam-its-bypass.md) The WebGPU seams audited: each seam, its bypass test, and the seams still missing. Needs nothing.
+- [x] [CS-430](./items/CS-430-the-webgpu-seams-audited-each-seam-its-bypass.md) The WebGPU seams audited: each seam, its bypass test, and the seams still missing. Done.
 - [ ] [CS-431](./items/CS-431-the-camera-chain-s-layers-checked-against-what.md) The camera chain's layers checked against what each may know. Needs CS-101 (worker-mode façade).
 - [ ] [CS-432](./items/CS-432-the-api-s-shape-checked-sync-and-async.md) The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors. Needs CS-101 (worker-mode façade).
 - [ ] [CS-433](./items/CS-433-promotions-and-demotions-proposed-what-every.md) Promotions and demotions proposed: what every app needs, and what is exported only for examples. Needs CS-101 (worker-mode façade).
@@ -1047,6 +1057,7 @@ Milestone: The approved API changes are made ([CS-457](./milestones/CS-457-the-a
 - [ ] [CS-434](./items/CS-434-stability-tiers-as-tsdoc-tags-with-internal.md) Stability tiers as TSDoc tags, with internal members stripped from the published types. Needs CS-438 and CS-681.
 - [ ] [CS-435](./items/CS-435-the-measurement-module-s-seam-and-entry-point.md) The measurement module's seam and entry point. Needs CS-438.
 - [x] [CS-708](./items/CS-708-2-0-is-strict-mode-safe-a-canvas-the-engine.md) 2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything. Done.
+- [ ] [CS-763](./items/CS-763-engine-create-takes-a-signal-an-aborted-create.md) Engine.create takes a signal: an aborted create releases its device and pipelines. Needs nothing.
 
 Milestone: 1.x's smaller tools have 2.0 homes ([CS-675](./milestones/CS-675-1-x-s-smaller-tools-have-2-0-homes.md), Planned)
 
@@ -1055,8 +1066,10 @@ Milestone: 1.x's smaller tools have 2.0 homes ([CS-675](./milestones/CS-675-1-x-
 No milestone
 
 - [ ] [CS-681](./items/CS-681-should-2-0-keep-marking-apis-experimental-and.md) decision: Should 2.0 keep marking APIs experimental, and how?. Needs nothing. Decided by owner.
-- [ ] [CS-711](./items/CS-711-add-a-signal-option-to-cancel-an-engine-create.md) decision: Add a signal option to cancel an engine create in flight. Needs nothing. Decided by owner.
+- [x] [CS-711](./items/CS-711-add-a-signal-option-to-cancel-an-engine-create.md) decision: Add a signal option to cancel an engine create in flight. Done.
 - [x] [CS-713](./items/CS-713-merge-cs-708-2-0-strict-mode-safe.md) decision: Merge CS-708, 2.0 strict-mode safe. Done.
+- [x] [CS-769](./items/CS-769-merge-cs-430-the-webgpu-seams-audited.md) decision: Merge CS-430, the WebGPU seams audited. Done.
+- [?] [CS-771](./items/CS-771-the-seam-bypass-tests-catch-the-five-plants-cs.md) The seam bypass tests catch the five plants CS-430's audit found passing. Proposed. Needs CS-430.
 
 ### Editing
 

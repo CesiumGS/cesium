@@ -58,15 +58,20 @@ CS-389 Dyno as the development harness
   CS-706  Dyno's viewer starts drawing within half a second on a cold browser again
   CS-707  Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected
   CS-717  Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability
+  CS-721  A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
   CS-743  Main's npm test exits 0 again: the shared manifest load leaves no unhandled rejection when the signal is already aborted
   CS-744  The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
   CS-745  A Health view lists the work graph's exceptions, each with a proposed fix
+  CS-746  A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates
+  CS-748  The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions
+  CS-750  The Proposals view says why each item is proposed, and offers commit, hold or drop
+
+CS-437 The public API reviews
+  CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
+  CS-708  2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything
 
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
-
-CS-437 The public API reviews
-  CS-708  2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything
 
 CS-17 The transform graph
   CS-712  One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps
@@ -75,5 +80,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-48 merged item(s) not in a release
+53 merged item(s) not in a release
 ```
