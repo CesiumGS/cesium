@@ -66,13 +66,10 @@ CesiumJS has a number of GLSL shaders and auto-generated files that must be
 built before CesiumJS can be used. The simplest way in VSCode is to type
 `CTRL-P` `task build` to trigger a single build.
 
-You can also start the build watcher with `CTRL-P` `task build-watch`. This
-leaves a watcher running until you exit VSCode, that will automatically
+You can also start the development server with `CTRL-P` `task start`. This
+leaves a server running until you exit VSCode, that will automatically
 update any shaders or auto-generated files to reflect changes to CesiumJS as
 you save them.
-
-Keep in mind that `build-watch` will quietly terminate when
-you quit VSCode, so should be restarted manually on next launch.
 
 ## Debugging CesiumJS
 

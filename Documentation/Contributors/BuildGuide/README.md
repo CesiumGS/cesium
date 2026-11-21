@@ -111,8 +111,8 @@ For a production app, we recommend using the `Source` modules directly which wil
 Read the complete list of build scripts and options below for more details.
 
 While you can use the editor of your choice to develop Cesium, certain files, such as `glsl` and new tests, require that
-the `build` task be executed in order for the changes to take effect. You can use the `build-watch` script to have this
-happen automatically.
+the `build` task be executed in order for the changes to take effect. The development server started by `npm start` does
+this automatically.
 
 ## Build Scripts
 
@@ -131,7 +131,6 @@ Here's the full set of scripts and what they do.
     - `--minify` - [Minifies](<http://en.wikipedia.org/wiki/Minification_(programming)>) the output for optimized loading. Specifying this option will output to `Build/Cesium`.
     - `--removePragmas` - Optimizes the output by removing debugging code that validates function input and throws `DeveloperError`s. The removed sections are marked with `//>>includeStart('debug', pragmas.debug);` blocks in the code.
     - `--node` - Bundles an `index.cjs` module targeted for use in NodeJS
-  - `build-watch` - A never-ending task that watches your file system for changes to Cesium and builds the source code as needed. All `build` options are also available for this task.
   - `build-apps` - Builds the example applications (such as Cesium Viewer) to produce self-contained, minified, deployable versions in the `Build` directory.
   - `build-sandcastle` - Builds the Sandcastle app for use with the local CesiumJS library.
     - Accepts options `--outer-origin` and `--inner-origin` to specify the origins expected by the app. See the [Sandcastle docs](../../../packages/sandcastle/README.md#applicationviewer-structure) for more info.
