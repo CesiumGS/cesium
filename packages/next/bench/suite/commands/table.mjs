@@ -8,6 +8,7 @@
 // A planned command has `planned: "<item>"`: it is listed, and running it
 // exits 3 and names the item that builds it.
 import process from "node:process";
+import { settingsList } from "../settings.mjs";
 import {
   API_VERSION,
   DynoError,
@@ -54,7 +55,24 @@ const SUITE_OPTIONS = {
     releases: o("a historical sweep: a range or a list", "1.120.0..1.146.0"),
     dpr: o("device pixel ratio", "n"),
     "pixel-ratio": o("render scale", "device|1"),
-    sweep: o("a settings sweep", "param=v1,v2"),
+    sweep: o(
+      "a sweep axis: a setting and its values; repeat it for a grid",
+      "setting=v1,v2",
+      { repeatable: true },
+    ),
+    "sweep-file": o(
+      'axes and, for grids that aren\'t products, points: {"axes":[{"id","values"}],"points"?:[…]}',
+      "file.json",
+    ),
+    reference: o(
+      "the sweep's reference: a swept value, or a setting outside the grid",
+      "setting=value",
+    ),
+    "reference-reps": o(
+      "how often each reference point runs per repetition (the noise floor)",
+      "n",
+    ),
+    yes: o("run a sweep of more than 60 browser runs"),
     "sweep-engines": o("the engines the sweep applies to", "list"),
     "motion-samples": o("frames in motion", "n"),
     "no-motion-quality": o("skip quality in motion"),
@@ -180,6 +198,14 @@ const SUITE_SUMMARIES = {
 
 /** More for a suite command's --help. */
 const SUITE_DETAILS = {
+  run: [
+    "A sweep (--sweep, repeated, or --sweep-file) runs each 2.0 engine once per",
+    "point of the grid of its axes; it prints the points × scenes × repetitions",
+    "first and needs --yes above 60 browser runs. --reference <setting>=<value>",
+    "marks the reference points; --reference-reps runs them more often. Engine",
+    "settings go without their namespace in engine ids too (2.0+sse=32). Settings:",
+    ...settingsList({ kind: "bench" }).split("\n"),
+  ],
   coldstart: [
     "Its dev server listens on --port, 4101 by default. dyno doesn't pick a free",
     "port for it, as `serve` does: 4101 can be another executor's leased port, so",

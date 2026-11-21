@@ -12,7 +12,9 @@
 //
 // A run resolves the working tree to its current branch, so results name
 // "2.0@cesium-2.0-webgpu-poc" and, after a merge, "2.0@main". "1.x" always
-// means "a CesiumJS 1 build", never a release.
+// means "a CesiumJS 1 build", never a release. Swept values name settings
+// of the registry (settings.mjs), which also gives their words.
+import { variantWords } from "./settings.mjs";
 
 /** Released CesiumJS versions look like 1.146.0 (prereleases allowed). */
 const VERSION = /^\d+\.\d+\.\d+(-[\w.]+)?$/;
@@ -99,15 +101,11 @@ const VARIANT_WORDS = {
   stepwise: "stepwise selection",
   budgeted: "budgeted selection",
 };
-const PARAM_WORDS = {
-  maximumScreenSpaceError: "SSE",
-  sse: "SSE",
-  "render.pixelRatio": "pixel ratio",
-};
 
 /**
  * A person's name for an id: "1.146.0", "2.0 · main",
- * "2.0 · cesium-2.0-webgpu-poc · stepwise selection", "2.0 · main · SSE 32".
+ * "2.0 · cesium-2.0-webgpu-poc · stepwise selection", "2.0 · main · SSE 32",
+ * "2.0 · main · error exponent 0.5 · shadows off".
  * `short` drops the source for compact places (legends) when the caller
  * shows it elsewhere.
  */
@@ -129,11 +127,11 @@ export function engineLabel(id, { short = false } = {}) {
     }
   }
   for (const v of variants) {
-    const [key, value] = v.split("=");
+    const at = v.indexOf("=");
     parts.push(
-      value === undefined
+      at < 0
         ? (VARIANT_WORDS[v] ?? v)
-        : `${PARAM_WORDS[key] ?? key} ${value}`,
+        : variantWords(v.slice(0, at), v.slice(at + 1)),
     );
   }
   return parts.join(" · ");

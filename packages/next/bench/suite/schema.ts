@@ -186,6 +186,27 @@ export interface EngineConfig {
   skipLevels?: number;
   /** Render settings over the catalog's (e.g. 1.x out of the box). */
   render?: Partial<RenderSettings>;
+  /**
+   * The View's settings from `view.` variants (settings.mjs), typed:
+   * 2.0+view.lodExponent=0.5 → { lodExponent: 0.5 }. 2.0 only.
+   */
+  view?: ViewSettings;
+}
+
+/** A configuration's `view.` settings (settings.mjs's registry). */
+export interface ViewSettings {
+  /** `View.lodExponent`, 0 to 1. */
+  lodExponent?: number;
+  /** `View.shadows`. */
+  shadows?: boolean;
+  /** `View.debug`. */
+  debug?: "off" | "level" | "tiles" | "error" | "state" | "stretch" | "skirts";
+  /** `View.occlusionCulling`. */
+  occlusionCull?: "on" | "off";
+  /** `OcclusionFeedback.coarsen`. */
+  coarsen?: boolean;
+  /** `View.lodTransitions`. */
+  lod?: "morph" | "pop";
 }
 
 /**
@@ -282,6 +303,11 @@ export interface RunMetrics {
   frameStdDev?: number;
   /** What the engine rendered with (drawing buffer, MSAA, HDR...). */
   render?: EffectiveRender;
+  /**
+   * What the view held for every `view.` setting after settling (2.0),
+   * read back from the page: the CLI checks the asked ones against it.
+   */
+  view?: Record<string, unknown>;
   /** Every motion frame interval, ms (percentile curves). */
   intervals?: number[];
   /**

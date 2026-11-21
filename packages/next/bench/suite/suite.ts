@@ -39,6 +39,7 @@ import type {
   Scene,
 } from "./schema.ts";
 import { limitsTier } from "./limitsTier.ts";
+import { applyViewSettings, readViewSettings } from "./settings.mjs";
 import { DEFAULT_ION_TOKEN, NEEDS_TOKEN, userToken } from "./ionToken.ts";
 
 // CesiumJS 1.x, a global on 1.x runs' pages only (see suite.html).
@@ -471,6 +472,12 @@ export interface Adapter {
   credits?(): CreditSource;
   /** The render settings in effect (read after frames were drawn). */
   effectiveRender(): EffectiveRender;
+  /**
+   * What the view holds for every `view.` setting (settings.mjs), read
+   * back after the scene settles; the CLI fails a run whose asked settings
+   * aren't there. 2.0 only.
+   */
+  viewSettings?(): Record<string, unknown>;
   /** Each content request so far: its URL and what it was for (2.0). */
   requestPurposes?(): Array<[string, string]>;
   /** Lights the scene from this direction (unit vector toward the sun). */
@@ -628,6 +635,9 @@ export class NextAdapter implements Adapter {
       },
     });
     this.view.camera.near = 1;
+    // The configuration's `view.` settings (settings.mjs), before content
+    // is added: shadows change what a tileset loads.
+    applyViewSettings({ engine, view: this.view }, config.view);
     // Budgeted's numeric options, from engine variants (2.0+motionBenefit=0).
     const tuning = Object.fromEntries(
       BUDGETED_OPTIONS.filter((k) => config[k] !== undefined).map((k) => [
@@ -961,6 +971,10 @@ export class NextAdapter implements Adapter {
       sun.set(direction);
       this.engine.requestRender(); // set in place: the view's key can't see it
     }
+  }
+
+  viewSettings(): Record<string, unknown> {
+    return readViewSettings({ engine: this.engine, view: this.view });
   }
 
   effectiveRender(): EffectiveRender {
@@ -1730,6 +1744,10 @@ export async function runScene(spec: RunSpec): Promise<RunMetrics> {
       },
     );
     metrics.render = adapter.effectiveRender();
+    const view = adapter.viewSettings?.();
+    if (view) {
+      metrics.view = view;
+    }
     // Settled: the start view, for the filmstrip (outside any timing).
     if (metrics.settleMs !== undefined) {
       await captureMoment(spec, "start");

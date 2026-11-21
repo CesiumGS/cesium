@@ -12,7 +12,13 @@
 //        [--baseline 1.146.0] [--candidate 2.0]
 //        [--releases 1.120.0..1.146.0 | 1.130.0,1.140.0]  (historical sweep)
 //        [--dpr 2] [--pixel-ratio device|1]  (high-DPI display; render scale)
-//        [--sweep maximumScreenSpaceError=8,16,32 [--sweep-engines 2.0]]
+//        [--sweep view.lodExponent=0,0.5,1 [--sweep engine.policy=…] …
+//         | --sweep-file grid.json] [--sweep-engines 2.0]
+//        [--reference view.lodExponent=1 [--reference-reps 3]] [--yes]
+//        (a settings sweep: the grid of every --sweep axis, each point
+//        one configuration; settings.mjs lists the settings, and an
+//        unknown one stops the run before it starts. Above 60 browser
+//        runs a sweep needs --yes)
 //        [--motion-samples 8 | --no-motion-quality]  (frames in motion)
 //        [--tier quick|standard|full]  (scenarios, repetitions and motion
 //        quality for the occasion; explicit options override them)
@@ -96,6 +102,13 @@ import { fetchDatasets, verify } from "../store.mjs";
 import { releaseList } from "../release.mjs";
 import { describeBuild, resolveEngine, treeRef } from "../engineBuilds.mjs";
 import { parseEngine } from "../engines.mjs";
+import {
+  planSweep,
+  pointSuffix,
+  SettingError,
+  checkVariants,
+  unappliedViewSettings,
+} from "../settings.mjs";
 import { renderReport, summarizeRun } from "../report.mjs";
 import {
   closingLines,
@@ -148,20 +161,28 @@ const root = join(here, "..", "..", "..");
 const resultsDirectory = () =>
   process.env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
 
+/** Options that may repeat: each occurrence's value, in order. */
+const REPEATABLE = new Set(["sweep"]);
+
 /**
  * `--key value` options, `--flag` booleans (followed by another option or
- * nothing) and positional arguments.
+ * nothing) and positional arguments. A repeatable option (--sweep) gives
+ * the list of its values.
  */
 export function options(args) {
   const out = {};
   for (let i = 0; i < args.length; i++) {
     if (args[i].startsWith("--")) {
+      const name = args[i].slice(2);
       const next = args[i + 1];
-      if (next === undefined || next.startsWith("--")) {
-        out[args[i].slice(2)] = true;
-      } else {
-        out[args[i].slice(2)] = next;
+      const value = next === undefined || next.startsWith("--") ? true : next;
+      if (value !== true) {
         i++;
+      }
+      if (REPEATABLE.has(name)) {
+        (out[name] ??= []).push(value);
+      } else {
+        out[name] = value;
       }
     } else {
       (out._ ??= []).push(args[i]);
@@ -600,6 +621,128 @@ async function coldStart() {
   };
 }
 
+/** A setting the run can't take: the dispatcher's usage error, with the list. */
+function settingUsage(error) {
+  return error instanceof SettingError ? new SuiteUsage(error.message) : error;
+}
+
+/** Checks an engine spec's settings (settings.mjs) for a bench run. */
+function checkSpec(spec) {
+  try {
+    checkVariants(parseEngine(spec), "bench");
+  } catch (error) {
+    throw settingUsage(
+      error instanceof SettingError
+        ? new SettingError(`engine "${spec}": ${error.message}`)
+        : error,
+    );
+  }
+}
+
+/**
+ * The run's sweep from --sweep (repeated), --sweep-file, --reference and
+ * --reference-reps, with `specs` (the run's engines) replaced in place by
+ * the swept engines once per point. Returns { axes, reference?, points:
+ * [{ coords, reference?, specs }], engines } or undefined.
+ */
+function sweepOf(specs) {
+  const typed = [].concat(opts.sweep ?? []);
+  if (typed.includes(true)) {
+    throw new SuiteUsage(
+      "--sweep needs <setting>=<value>,<value>, e.g. --sweep view.lodExponent=0,0.5,1",
+    );
+  }
+  let file;
+  if (opts["sweep-file"] !== undefined) {
+    if (opts["sweep-file"] === true) {
+      throw new SuiteUsage("--sweep-file needs a file (grid.json)");
+    }
+    try {
+      file = JSON.parse(readFileSync(String(opts["sweep-file"]), "utf8"));
+    } catch (error) {
+      throw new SuiteUsage(
+        `--sweep-file ${opts["sweep-file"]}: ${error.code === "ENOENT" ? "no such file" : `not JSON (${error.message})`}`,
+      );
+    }
+  }
+  const swept = opts["sweep-engines"]
+    ? String(opts["sweep-engines"]).split(",")
+    : specs.filter((x) => parseEngine(x).engine === "2.0");
+  if ((typed.length || file) && !swept.length) {
+    throw new SuiteUsage(
+      "a sweep needs a 2.0 engine to sweep (--engines 2.0, or --sweep-engines)",
+    );
+  }
+  const engines = [...new Set(swept.map((x) => parseEngine(x).engine))];
+  let plan;
+  try {
+    plan = planSweep({
+      sweeps: typed,
+      file,
+      ...(opts.reference !== undefined
+        ? { reference: String(opts.reference) }
+        : {}),
+      ...(opts["reference-reps"] !== undefined
+        ? { referenceReps: opts["reference-reps"] }
+        : {}),
+      kind: "bench",
+      ...(engines.length === 1 ? { engine: engines[0] } : {}),
+    });
+  } catch (error) {
+    throw settingUsage(error);
+  }
+  if (!plan) {
+    return undefined;
+  }
+  const order = plan.axes.map((a) => a.id);
+  if (plan.reference?.outside) {
+    order.push(plan.reference.id);
+  }
+  const points = plan.points.map((p) => ({
+    ...p,
+    specs: swept.map((x) => `${x}${pointSuffix(p.coords, order)}`),
+  }));
+  specs.splice(
+    0,
+    specs.length,
+    ...specs.flatMap((x) =>
+      swept.includes(x) ? points.map((p) => p.specs[swept.indexOf(x)]) : [x],
+    ),
+  );
+  return { ...plan, points, engines: swept };
+}
+
+/** Above this many browser runs a sweep needs --yes. */
+const SWEEP_CONFIRM_RUNS = 60;
+
+/**
+ * Prints a sweep's size (points × scenes × repetitions, and the browser
+ * runs that makes) and refuses one above SWEEP_CONFIRM_RUNS without --yes.
+ * No time estimate: the count is what a person weighs.
+ */
+function checkSweepCost(sweep, { specs, scenes, scenarios, reps }) {
+  const extra = (sweep.reference?.reps ?? 1) - 1;
+  const referenceSpecs = sweep.points
+    .filter((p) => p.reference)
+    .reduce((n, p) => n + p.specs.length, 0);
+  const cells = scenes.length * scenarios.length * reps;
+  const runs = cells * (specs.length + extra * referenceSpecs);
+  const axes = sweep.axes
+    .map((a) => `${a.id} (${a.values.length})`)
+    .join(" × ");
+  const reference = sweep.reference
+    ? `; reference ${sweep.reference.id}=${sweep.reference.value}${sweep.reference.reps > 1 ? `, ${sweep.reference.reps} times a repetition` : ""}`
+    : "";
+  console.log(
+    `sweep: ${axes}${reference}: ${sweep.points.length} point${sweep.points.length === 1 ? "" : "s"} × ${scenes.length} scene${scenes.length === 1 ? "" : "s"} × ${scenarios.length} scenario${scenarios.length === 1 ? "" : "s"} × ${reps} repetition${reps === 1 ? "" : "s"}: ${runs} browser runs`,
+  );
+  if (runs > SWEEP_CONFIRM_RUNS && !opts.yes) {
+    fail(
+      `this sweep is ${runs} browser runs, more than ${SWEEP_CONFIRM_RUNS}: pass --yes to run it, or narrow the scenes, axes or repetitions`,
+    );
+  }
+}
+
 async function run() {
   const identity = beginRun("bench");
   const pick = (list, key) =>
@@ -668,32 +811,14 @@ async function run() {
       }
     }
   }
-  // A parameter sweep (docs/design/benchmark-analysis-and-experience.md, Explore): each 2.0 engine (or
-  // --sweep-engines) once per value, e.g. --sweep maximumScreenSpaceError=8,16,32
-  // or --sweep render.pixelRatio=1,2: "2.0+maximumScreenSpaceError=8".
-  let sweep;
-  if (opts.sweep) {
-    const [param, list] = String(opts.sweep).split("=");
-    if (!param || !list) {
-      throw new Error("--sweep param=value,value");
-    }
-    const values = list.split(",");
-    const swept = opts["sweep-engines"]
-      ? String(opts["sweep-engines"]).split(",")
-      : specs.filter((x) => parseEngine(x).engine === "2.0");
-    specs.splice(
-      0,
-      specs.length,
-      ...specs.flatMap((x) =>
-        swept.includes(x) ? values.map((v) => `${x}+${param}=${v}`) : [x],
-      ),
-    );
-    sweep = {
-      param,
-      values: values.map((v) => (Number.isFinite(Number(v)) ? Number(v) : v)),
-      engines: swept,
-    };
-  }
+  // A settings sweep (docs/superpowers/plans/2026-11-13-dyno-dev-harness.md,
+  // section 4): each 2.0 engine (or --sweep-engines) once per point of the
+  // grid of every --sweep axis (or --sweep-file's points), a point's
+  // configuration spelling its coordinates:
+  // "2.0+maximumScreenSpaceError=8+view.lodExponent=0.5". Every setting and
+  // value is checked against the registry (settings.mjs) before anything
+  // runs.
+  const sweep = sweepOf(specs);
   // --against-base: this tree against its base commit, in one run, where
   // the configurations alternate. The base is 2.0 built at the commit this
   // branch left the integration branch (an engine at a ref, built once into
@@ -720,6 +845,21 @@ async function run() {
     console.log(
       `against base: ${againstBase} (${identity.base.ref}) is the baseline, this tree the candidate`,
     );
+  }
+  const scenarios =
+    pick(catalog.scenarios, "scenarios") ??
+    (tier
+      ? catalog.scenarios.filter((s) => tier.scenarios.includes(s.id))
+      : catalog.scenarios.filter(
+          (s) => s.id === "cold-orbit" || s.id === "uncapped-orbit",
+        ));
+  const reps = Number(opts.reps ?? tier?.reps ?? 3);
+  // Every engine's settings, checked before anything runs.
+  for (const spec of specs) {
+    checkSpec(spec);
+  }
+  if (sweep) {
+    checkSweepCost(sweep, { specs, scenes, scenarios, reps });
   }
   // From here the run builds and measures: one at a time per machine.
   const lock = await takeLock(identity);
@@ -808,21 +948,27 @@ async function run() {
     byspec.set(spec, config.id);
   }
   if (sweep) {
-    // The swept engines (resolved ids) and, per value, the engines run.
-    const suffix = (v) => `+${sweep.param}=${v}`;
-    sweep.engines = [
-      ...new Set(
-        configs
-          .filter((c) => c.id.includes(`+${sweep.param}=`))
-          .map((c) => c.id.replace(/\+[^+]*=[^+]*$/, "")),
-      ),
-    ];
-    sweep.points = sweep.values.map((value) => ({
-      value,
-      configs: configs
-        .filter((c) => c.id.endsWith(suffix(value)))
-        .map((c) => c.id),
-    }));
+    // The record (settings.mjs, readSweep): the axes, the reference, the
+    // swept engines (resolved ids) and, per point, its coordinates and the
+    // configurations that ran it.
+    const resolved = (spec) => byspec.get(spec);
+    // A swept engine's id: its first point's, without the coordinates.
+    const engineIdOf = (spec, i) => {
+      const point = sweep.points[0].specs[i];
+      const suffix = point.slice(spec.length);
+      const id = resolved(point);
+      return id.endsWith(suffix) ? id.slice(0, id.length - suffix.length) : id;
+    };
+    sweep.record = {
+      axes: sweep.axes,
+      ...(sweep.reference ? { reference: sweep.reference } : {}),
+      engines: sweep.engines.map(engineIdOf),
+      points: sweep.points.map((p) => ({
+        coords: p.coords,
+        ...(p.reference ? { reference: true } : {}),
+        configs: p.specs.map(resolved),
+      })),
+    };
   }
   // Baseline and candidate: specs as typed, or the catalog's defaults.
   const idOf = (spec) => {
@@ -850,14 +996,6 @@ async function run() {
       byspec.get(catalog.engines.candidate) ??
       configs.find((c) => c.engine === "2.0" && c.id !== baseline)?.id ??
       configs.at(-1).id);
-  const scenarios =
-    pick(catalog.scenarios, "scenarios") ??
-    (tier
-      ? catalog.scenarios.filter((s) => tier.scenarios.includes(s.id))
-      : catalog.scenarios.filter(
-          (s) => s.id === "cold-orbit" || s.id === "uncapped-orbit",
-        ));
-  const reps = Number(opts.reps ?? tier?.reps ?? 3);
   const replayMotion =
     !opts["no-motion-quality"] && tier?.motionQuality !== false;
   const motion = opts.motion ? Number(opts.motion) : undefined;
@@ -1027,11 +1165,21 @@ async function run() {
   results.environment.render = render;
   results.budgets = catalog.budgets;
   if (sweep) {
-    results.sweep = sweep;
+    results.sweep = sweep.record;
   }
   const filmstrip = [];
   const motionFrames = [];
-  let total = scenes.length * scenarios.length * reps * configs.length;
+  // A sweep's reference points run --reference-reps times in each
+  // repetition (the noise floor), and never come from stored runs.
+  const referenceIds = new Set(
+    sweep?.record.points.filter((p) => p.reference).flatMap((p) => p.configs),
+  );
+  const referenceReps = sweep?.reference?.reps ?? 1;
+  let total =
+    scenes.length *
+    scenarios.length *
+    reps *
+    (configs.length + (referenceReps - 1) * referenceIds.size);
   let done = 0;
   let failed = 0;
   const resultsDir = resultsDirectory();
@@ -1110,8 +1258,17 @@ async function run() {
       for (let rep = 0; rep < reps; rep++) {
         // Rotate the configuration order every repetition.
         const shift = rep % configs.length;
-        const order = [...configs.slice(shift), ...configs.slice(0, shift)];
-        for (const config of order) {
+        const rotated = [...configs.slice(shift), ...configs.slice(0, shift)];
+        // The reference points' extra runs follow, in the same order.
+        const order = [
+          ...rotated.map((config) => ({ config, repeat: 0 })),
+          ...[...Array(referenceReps - 1).keys()].flatMap((k) =>
+            rotated
+              .filter((c) => referenceIds.has(c.id))
+              .map((config) => ({ config, repeat: k + 1 })),
+          ),
+        ];
+        for (const { config, repeat } of order) {
           if (fromStore.has(config.id)) {
             continue;
           }
@@ -1124,10 +1281,10 @@ async function run() {
               : scenario,
             config,
             unsupported: unsupportedReason(catalog, scene, config.engine),
-            capture: rep === 0 && !opts["no-capture"],
+            capture: rep === 0 && repeat === 0 && !opts["no-capture"],
             render,
           };
-          const label = `[${done}/${total}] ${scene.id} ${scenario.id} ${config.id} #${rep + 1}`;
+          const label = `[${done}/${total}] ${scene.id} ${scenario.id} ${config.id} #${rep + 1}${repeat ? `.${repeat + 1}` : ""}`;
           process.stdout.write(`${label}… `);
           const cooldownMs = spec.unsupported
             ? 0
@@ -1143,6 +1300,17 @@ async function run() {
             results,
           );
           result.span = [(runStart - t0) / 1000, (Date.now() - t0) / 1000];
+          // The view's settings as the page holds them (metrics.view): one
+          // that didn't reach the view fails the run instead of measuring
+          // the default under the setting's name.
+          const unapplied =
+            config.view && result.metrics.status === "ok"
+              ? unappliedViewSettings(config.view, result.metrics.view)
+              : [];
+          if (unapplied.length) {
+            result.metrics.status = "error";
+            result.metrics.message = `settings didn't reach the view: ${unapplied.join("; ")}`;
+          }
           result.telemetry = {
             ...sampler.window(runStart, Date.now()),
             cooldownMs,
@@ -1172,6 +1340,7 @@ async function run() {
             config: config.id,
             engine: config.engine,
             rep,
+            ...(repeat ? { repeat } : {}),
             sceneKey: sceneKey(spec),
             ...result,
           };
@@ -1191,8 +1360,10 @@ async function run() {
           // The first repetition calibrates against stored ones.
           if (
             rep === 0 &&
+            repeat === 0 &&
             reusing &&
             config.id !== candidate &&
+            !referenceIds.has(config.id) &&
             immutable(config) &&
             result.metrics.status === "ok" &&
             result.validity.verdict === "valid"

@@ -19,6 +19,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import process from "node:process";
 import { engineId, parseEngine, setupOf } from "./engines.mjs";
+import { checkVariants, configPath } from "./settings.mjs";
 import { ensureRelease, resolveVersion } from "./release.mjs";
 import { snapshot } from "../snapshot.mjs";
 
@@ -33,29 +34,35 @@ export function treeRef(cwd) {
     : branch;
 }
 
-/** Sets a dotted path ("render.pixelRatio") on a configuration. */
+/**
+ * Sets a dotted path ("render.pixelRatio", "view.lodExponent") on a
+ * configuration, to a value the settings registry has typed.
+ */
 function setPath(target, path, value) {
   const keys = path.split(".");
   let at = target;
   for (const key of keys.slice(0, -1)) {
     at = at[key] ??= {};
   }
-  at[keys.at(-1)] = Number.isFinite(Number(value)) ? Number(value) : value;
+  at[keys.at(-1)] = value;
 }
 
 /**
  * Resolves one spec into a configuration: the setup's settings with any
- * key=value variants applied, the canonical id (releases exact, the
- * working tree named by its branch), the source and how the page loads
- * the engine (`page`: { cesium?, server? }). `serve(root)` returns the
+ * key=value variants applied (each checked against the settings registry,
+ * settings.mjs, for the run's `kind`: an unknown one stops here, with the
+ * list), the canonical id (releases exact, the working tree named by its
+ * branch), the source and how the page loads the engine (`page`:
+ * { cesium?, server? }). `serve(root)` returns the
  * origin of a dev server for a snapshot's packages/next (2.0 at a ref).
  */
 export async function resolveEngine(
   spec,
   catalog,
-  { cwd, serve, frozen, log },
+  { cwd, serve, frozen, log, kind = "bench" },
 ) {
   const parsed = parseEngine(spec);
+  const variants = checkVariants(parsed, kind);
   const setupId = setupOf(spec);
   const setup = catalog.setups.find((s) => s.id === setupId);
   if (!setup) {
@@ -65,9 +72,8 @@ export async function resolveEngine(
   }
   const config = structuredClone(setup);
   delete config.$comment;
-  for (const v of parsed.variants.filter((x) => x.includes("="))) {
-    const [key, value] = v.split("=");
-    setPath(config, key === "sse" ? "maximumScreenSpaceError" : key, value);
+  for (const { setting, value } of variants) {
+    setPath(config, configPath(setting), value);
   }
   const page = {};
   let source;

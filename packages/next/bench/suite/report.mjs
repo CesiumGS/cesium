@@ -9,6 +9,7 @@
 import { ratio, summarize } from "./stats.mjs";
 import { currentGpuTimer, GPU_TIMER } from "./gpuTimer.mjs";
 import { engineLabel, isRelease } from "./engines.mjs";
+import { readSweep } from "./settings.mjs";
 import {
   CHART_CSS,
   CHART_SCRIPT,
@@ -1047,7 +1048,8 @@ export function summarizeRun(results) {
     subject: results.subject,
     baseline: results.baseline,
     candidate: results.candidate,
-    ...(results.sweep ? { sweep: results.sweep } : {}),
+    // Either form of the record, as axes and points (settings.mjs).
+    ...(readSweep(results.sweep) ? { sweep: readSweep(results.sweep) } : {}),
     render: env.render ?? null,
     validity: {
       valid: verdicts.filter((v) => v === "valid").length,

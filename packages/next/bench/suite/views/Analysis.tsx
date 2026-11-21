@@ -7,7 +7,8 @@ import {
 } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { lineChart } from "../charts.mjs";
-import { compareEngines, engineLabel, isRelease } from "../engines.mjs";
+import { engineLabel } from "../engines.mjs";
+import { axisOf, type SweepAxis } from "./sweepAxis.ts";
 import {
   cellKey,
   cellTitle,
@@ -89,50 +90,6 @@ export function Analysis() {
 
 // ------------------------------------------------------------ sweeps
 
-interface SweepAxis {
-  param: string;
-  /** Per value (in order): the configuration ids that ran it. */
-  points: Array<{ label: string; configs: string[] }>;
-  lines: string[];
-  baseline?: string;
-}
-
-interface SweepInfo {
-  param: string;
-  values: Array<string | number>;
-  /** The swept engines (resolved ids, without the swept value). */
-  engines: string[];
-  /** Per value: the engines run with it. */
-  points: Array<{ value: string | number; configs: string[] }>;
-}
-
-/** The axis a run swept, if any: a parameter, or CesiumJS releases. */
-function axisOf(s: Summary): SweepAxis | undefined {
-  const sweep = s.sweep as SweepInfo | undefined;
-  if (sweep) {
-    return {
-      param: sweep.param,
-      points: sweep.points.map((p) => ({
-        label: String(p.value),
-        configs: p.configs,
-      })),
-      lines: sweep.engines,
-      baseline: s.baseline,
-    };
-  }
-  // Several CesiumJS releases in one run: a release sweep.
-  const releases = s.configs.filter(isRelease).sort(compareEngines);
-  if (releases.length >= 2) {
-    return {
-      param: "CesiumJS release",
-      points: releases.map((c) => ({ label: engineLabel(c), configs: [c] })),
-      lines: ["CesiumJS"],
-      baseline: s.candidate,
-    };
-  }
-  return undefined;
-}
-
 function Sweeps() {
   const { summaries } = useRuns();
   const search = route.useSearch();
@@ -169,17 +126,15 @@ function Sweeps() {
         .filter((v): v is number => Number.isFinite(v) && v! > 0);
       return scene === ALL ? geomean(medians) : medians[0];
     };
-    const xNames = axis.points.map((p) => p.label);
+    const { xNames } = axis;
     for (const [, metrics] of SWEEP_GROUPS) {
       for (const metric of metrics) {
         const [, , unit, scale] = metricInfo(metric);
         const series = axis.lines.map((line, i) => ({
-          label: engineLabel(line),
+          label: line.label,
           color: `var(--series-${Math.min(4, i + 2)})`,
-          points: axis.points.map((p, x) => {
-            const config =
-              p.configs.find((c) => c.startsWith(line)) ?? p.configs[0]!;
-            const v = value(config, metric);
+          points: line.configs.map((config, x) => {
+            const v = config === undefined ? undefined : value(config, metric);
             return [x, v === undefined ? null : v / scale] as [
               number,
               number | null,
@@ -292,8 +247,8 @@ function Sweeps() {
         render={<p />}
         className="analysis-note"
       >
-        {axis.param} at {listOf(axis.points.map((p) => p.label))} on{" "}
-        {listOf(axis.lines)}
+        {axis.param} at {listOf(axis.xNames)} on{" "}
+        {listOf(axis.lines.map((l) => l.label))}
         {axis.baseline
           ? `, against ${engineLabel(axis.baseline)} (dashed)`
           : ""}
