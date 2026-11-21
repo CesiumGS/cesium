@@ -2,10 +2,11 @@
 id: CS-748
 title: "The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]
+claimed_by: orch-11-CS-748
 touches: [packages/next/bench/suite/views/Projects.tsx, packages/next/bench/suite/views/projects.css, packages/next/test/dynoWorkProjects*.test.ts]
 ---
 
