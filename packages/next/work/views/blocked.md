@@ -16,7 +16,6 @@ CS-8 Engine profiles
 CS-9 The WebGL 2 renderer
   CS-36  First draws, unlit (glTF and 3D Tiles meshes)
       ← CS-32 The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points
-        CS-34 Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`)
         CS-35 The probe, the `renderer` option and an empty WebGL 2 device
   CS-37  The globe, terrain and imagery
       ← CS-36 First draws, unlit (glTF and 3D Tiles meshes)

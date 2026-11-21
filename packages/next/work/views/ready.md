@@ -15,7 +15,6 @@ CS-8 Engine profiles
 
 CS-9 The WebGL 2 renderer
   CS-32  The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points
-  CS-34  Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`)
   CS-35  The probe, the `renderer` option and an empty WebGL 2 device
   CS-46  decision: Which test devices are available for the WebGL 2 probe runs?
 
@@ -264,5 +263,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-195 ready
+194 ready
 ```

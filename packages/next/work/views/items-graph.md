@@ -30,7 +30,7 @@ graph LR
   subgraph CS_9["WebGL 2 renderer"]
     CS_32["CS-32 The shader route spike: our own naga crate measured against the "]:::open
     CS_33["CS-33 The seam extracted, WebGPU only ('WorldDraws', 'RenderDevice', '"]:::done
-    CS_34["CS-34 Renderer-neutral content resources (texture sources, 'MeshData',"]:::open
+    CS_34["CS-34 Renderer-neutral content resources (texture sources, 'MeshData',"]:::done
     CS_35["CS-35 The probe, the 'renderer' option and an empty WebGL 2 device"]:::open
     CS_36["CS-36 First draws, unlit (glTF and 3D Tiles meshes)"]:::open
     CS_37["CS-37 The globe, terrain and imagery"]:::open

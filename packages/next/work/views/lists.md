@@ -41,12 +41,12 @@ No milestone
 
 ### The WebGL 2 renderer
 
-CS-9, Planned, led by owner: 4 of 19 done, 4 ready, 10 blocked, 1 proposed. Plan: [2026-11-13-webgl2-renderer.md](docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
+CS-9, Planned, led by owner: 5 of 19 done, 3 ready, 10 blocked, 1 proposed. Plan: [2026-11-13-webgl2-renderer.md](docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
 
 Milestone: Renderers plug in behind one seam (CS-414, Planned)
 
 - [x] CS-33 The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves. Done.
-- [ ] CS-34 Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`). Needs CS-33.
+- [x] CS-34 Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`). Done.
 - [ ] CS-35 The probe, the `renderer` option and an empty WebGL 2 device. Needs CS-33 and CS-21 (Engine profiles).
 - [x] CS-43 Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have. Done.
 

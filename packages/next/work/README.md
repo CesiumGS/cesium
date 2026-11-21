@@ -98,12 +98,12 @@ No milestone
 
 ### The WebGL 2 renderer
 
-[CS-9](./projects/CS-9-the-webgl-2-renderer.md), Planned, led by owner: 4 of 19 done, 4 ready, 10 blocked, 1 proposed. Plan: [2026-11-13-webgl2-renderer.md](../../../docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
+[CS-9](./projects/CS-9-the-webgl-2-renderer.md), Planned, led by owner: 5 of 19 done, 3 ready, 10 blocked, 1 proposed. Plan: [2026-11-13-webgl2-renderer.md](../../../docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
 
 Milestone: Renderers plug in behind one seam ([CS-414](./milestones/CS-414-renderers-plug-in-behind-one-seam.md), Planned)
 
 - [x] [CS-33](./items/CS-33-the-seam-extracted-webgpu-only-worlddraws.md) The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves. Done.
-- [ ] [CS-34](./items/CS-34-renderer-neutral-content-resources-texture.md) Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`). Needs CS-33.
+- [x] [CS-34](./items/CS-34-renderer-neutral-content-resources-texture.md) Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`). Done.
 - [ ] [CS-35](./items/CS-35-the-probe-the-renderer-option-and-an-empty.md) The probe, the `renderer` option and an empty WebGL 2 device. Needs CS-33 and CS-21 (Engine profiles).
 - [x] [CS-43](./items/CS-43-research-which-browsers-lack-webgpu-by-share.md) Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have. Done.
 

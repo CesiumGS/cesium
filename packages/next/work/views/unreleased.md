@@ -11,6 +11,7 @@ CS-8 Engine profiles
 
 CS-9 The WebGL 2 renderer
   CS-33  The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves
+  CS-34  Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`)
   CS-43  Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have
 
 CS-10 Cesium IR
@@ -84,5 +85,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-57 merged item(s) not in a release
+58 merged item(s) not in a release
 ```
