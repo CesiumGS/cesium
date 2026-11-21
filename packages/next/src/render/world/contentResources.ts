@@ -468,7 +468,10 @@ class WebGpuImageryCompositor implements ImageryCompositor {
         params[0] = mapping.s0;
         params[1] = mapping.ds;
         params[2] = this.size;
-        params.set(mapping.t, 8);
+        // Rows past the block's room are dropped, as before the move.
+        for (let j = 0; j < mapping.t.length; j++) {
+          params[8 + j] = mapping.t[j]!;
+        }
         const offset = block(params);
         const group = this.bindGroup(
           (source as WebGpuSource).texture.createView(),

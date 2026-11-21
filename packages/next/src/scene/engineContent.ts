@@ -198,7 +198,7 @@ function addGlobeSource(
     engine.views.some((view) => view.lodTransitions === "morph");
   const drape = (provider: ImageryProvider) => {
     const imagery = new GlobeImagery(
-      engine.ctx,
+      world.mirror.imagery,
       world,
       provider,
       engine.requests,
@@ -218,7 +218,7 @@ function addGlobeSource(
       (provider) => {
         if (provider && engine.tilesets.includes(tileset)) {
           tileset.lights = new GlobeImagery(
-            engine.ctx,
+            world.mirror.imagery,
             world,
             provider,
             engine.requests,

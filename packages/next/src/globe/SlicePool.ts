@@ -1,4 +1,5 @@
 import { MAX_IMAGERY_SLICES } from "../scene/contentLimits.ts";
+import type { ImageryDevice, SliceArray } from "../scene/contentResources.ts";
 
 /**
  * Growth on need: a layer's slices grow by a step (its first request) when
@@ -41,10 +42,11 @@ export interface SliceUser {
   readonly needed: number;
 }
 
-/** What the pool asks of a world: to bind its array of slices. */
-export interface SliceWorld {
-  setImageryArray(view: GPUTextureView | undefined): void;
-}
+/**
+ * The world a pool belongs to, which keys it: one pool per world. Its
+ * device side (`ImageryDevice`, the world's mirror's) binds the array.
+ */
+export type SliceWorld = object;
 
 /**
  * A world's globe imagery slices: one `texture_2d_array` that every
@@ -90,10 +92,11 @@ export class SlicePool {
   /**
    * The world's pool, created on first use at `size` texels a side, with
    * room for `slices` more for `user`. `layers` is the most a texture array
-   * may have on the device (`RenderContext.capacities`).
+   * may have on the device (`ImageryDevice.maxLayers`). `imagery` is the
+   * world's device side, which makes, copies and binds the array.
    */
   static acquire(
-    device: GPUDevice,
+    imagery: ImageryDevice,
     world: SliceWorld,
     size: number,
     slices: number,
@@ -102,7 +105,7 @@ export class SlicePool {
   ): SlicePool {
     let pool = SlicePool.pools.get(world);
     if (!pool || pool.destroyed) {
-      pool = new SlicePool(device, world, size, layers);
+      pool = new SlicePool(imagery, size, layers);
       SlicePool.pools.set(world, pool);
     }
     if (!Number.isInteger(slices) || slices <= 0) {
@@ -152,7 +155,7 @@ export class SlicePool {
     };
   }
 
-  texture: GPUTexture;
+  texture: SliceArray;
   /** Layers in the array. */
   capacity = 0;
   private free: number[] = [];
@@ -169,7 +172,7 @@ export class SlicePool {
   /** The most it may grow to: the ceiling, or less after out of memory. */
   private limit: number;
   /** The larger array being allocated (`grow`), and the tick it began. */
-  private pending?: { texture: GPUTexture; target: number; since: number };
+  private pending?: { texture: SliceArray; target: number; since: number };
   /** Bumped by every resize, so a growth that resolves late is dropped. */
   private version = 0;
   /**
@@ -185,8 +188,7 @@ export class SlicePool {
   readonly mipLevelCount: number;
 
   private constructor(
-    private readonly device: GPUDevice,
-    private readonly world: SliceWorld,
+    private readonly imagery: ImageryDevice,
     readonly size: number,
     private readonly layers: number,
   ) {
@@ -352,10 +354,6 @@ export class SlicePool {
       return;
     }
     const version = this.version;
-    this.device.pushErrorScope("out-of-memory");
-    const texture = this.create(target);
-    const pending = { texture, target, since: this.tick };
-    this.pending = pending;
     const settle = (error: unknown) => {
       if (this.pending !== pending) {
         // Timed out: already freed.
@@ -383,7 +381,15 @@ export class SlicePool {
       }
       this.switchTo(texture, target);
     };
-    void this.device.popErrorScope().then(settle, settle);
+    // Settled once the device says whether it ran out of memory.
+    const texture = this.imagery.tryCreateSlices(
+      this.size,
+      this.mipLevelCount,
+      target,
+      settle,
+    );
+    const pending = { texture, target, since: this.tick };
+    this.pending = pending;
   }
 
   /**
@@ -433,7 +439,7 @@ export class SlicePool {
     this.destroyed = true;
     // Unbind before destroying: the world's draw bind group names the array,
     // and a destroyed texture in a submit fails the whole frame.
-    this.world.setImageryArray(undefined);
+    this.imagery.bindSlices(undefined);
     this.texture.destroy();
   }
 
@@ -447,24 +453,19 @@ export class SlicePool {
   }
 
   /** Switches to a larger array of `target` layers, copying what's there. */
-  private switchTo(texture: GPUTexture, target: number): void {
+  private switchTo(texture: SliceArray, target: number): void {
     this.version++;
     const old = this.texture;
     const oldCapacity = this.capacity;
     this.texture = texture;
     if (oldCapacity > 0) {
-      const encoder = this.device.createCommandEncoder({
-        label: "globe.slices.grow",
-      });
-      for (let level = 0; level < this.mipLevelCount; level++) {
-        const extent = Math.max(1, this.size >> level);
-        encoder.copyTextureToTexture(
-          { texture: old, mipLevel: level },
-          { texture: this.texture, mipLevel: level },
-          [extent, extent, oldCapacity],
-        );
-      }
-      this.device.queue.submit([encoder.finish()]);
+      this.imagery.copySlices(
+        old,
+        this.texture,
+        oldCapacity,
+        [],
+        "globe.slices.grow",
+      );
     }
     for (let i = target - 1; i >= oldCapacity; i--) {
       this.free.push(i);
@@ -472,9 +473,7 @@ export class SlicePool {
     this.capacity = target;
     // The new array bound before the old is destroyed: never a bind group
     // naming a destroyed texture, even between two calls.
-    this.world.setImageryArray(
-      this.texture.createView({ dimension: "2d-array" }),
-    );
+    this.imagery.bindSlices(this.texture);
     old.destroy();
   }
 
@@ -526,47 +525,23 @@ export class SlicePool {
     });
     const old = this.texture;
     this.texture = this.create(target);
-    const encoder = this.device.createCommandEncoder({
-      label: "globe.slices.shrink",
-    });
-    for (let level = 0; level < this.mipLevelCount; level++) {
-      const extent = Math.max(1, this.size >> level);
-      encoder.copyTextureToTexture(
-        { texture: old, mipLevel: level },
-        { texture: this.texture, mipLevel: level },
-        [extent, extent, target],
-      );
-      for (const [from, to] of moves) {
-        encoder.copyTextureToTexture(
-          { texture: old, mipLevel: level, origin: [0, 0, from] },
-          { texture: this.texture, mipLevel: level, origin: [0, 0, to] },
-          [extent, extent, 1],
-        );
-      }
-    }
-    this.device.queue.submit([encoder.finish()]);
+    this.imagery.copySlices(
+      old,
+      this.texture,
+      target,
+      moves,
+      "globe.slices.shrink",
+    );
     this.free = free;
     this.capacity = target;
-    this.world.setImageryArray(
-      this.texture.createView({ dimension: "2d-array" }),
-    );
+    this.imagery.bindSlices(this.texture);
     old.destroy();
     for (const [user, moved] of renumbered) {
       user.relocate(moved);
     }
   }
 
-  private create(layers: number): GPUTexture {
-    return this.device.createTexture({
-      label: "globe.slices",
-      size: [this.size, this.size, layers],
-      format: "rgba8unorm",
-      mipLevelCount: this.mipLevelCount,
-      usage:
-        GPUTextureUsage.TEXTURE_BINDING |
-        GPUTextureUsage.STORAGE_BINDING |
-        GPUTextureUsage.COPY_DST |
-        GPUTextureUsage.COPY_SRC,
-    });
+  private create(layers: number): SliceArray {
+    return this.imagery.createSlices(this.size, this.mipLevelCount, layers);
   }
 }

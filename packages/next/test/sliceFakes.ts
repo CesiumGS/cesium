@@ -9,7 +9,7 @@ import {
 import type { ImageryProvider } from "../src/globe/ImageryProvider.ts";
 import { SlicePool, type SliceUser } from "../src/globe/SlicePool.ts";
 import type { WorkerPool } from "../src/io/WorkerPool.ts";
-import type { RenderContext } from "../src/scene/RenderContext.ts";
+import { WebGpuImagery } from "../src/render/world/contentResources.ts";
 import type { World } from "../src/scene/World.ts";
 import type { RequestScheduler } from "../src/streaming/RequestScheduler.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
@@ -24,6 +24,14 @@ export function fakeWorld(log: string[] = []): World {
     setImagery: () => {},
     setLights: () => {},
   } as unknown as World;
+}
+
+/** The world's imagery on a (fake) WebGPU device, as its mirror makes it. */
+export function imageryOn(device: GPUDevice, world: World): WebGpuImagery {
+  return new WebGpuImagery(
+    { device, capacities: deviceCapacities(device) },
+    world,
+  );
 }
 
 /** A texture copy, as `recordingDevice` records it. */
@@ -98,7 +106,7 @@ export function holder(
 ): Holder & { pool: SlicePool } {
   const h = new Holder();
   h.pool = SlicePool.acquire(
-    device,
+    imageryOn(device, world),
     world,
     256,
     slices,
@@ -133,10 +141,7 @@ export function layer(
   source: ImageryProvider = provider,
 ): GlobeImagery {
   return new GlobeImagery(
-    {
-      device,
-      capacities: deviceCapacities(device),
-    } as unknown as RenderContext,
+    imageryOn(device, world),
     world,
     source,
     requests,
@@ -176,10 +181,7 @@ export function compositingLayer(
   options: GlobeImageryOptions = {},
 ): GlobeImagery {
   const imagery = new GlobeImagery(
-    {
-      device,
-      capacities: deviceCapacities(device),
-    } as unknown as RenderContext,
+    imageryOn(device, world),
     world,
     { ...provider, maximumLevel: 0 },
     requests,
@@ -188,17 +190,25 @@ export function compositingLayer(
   );
   const internals = imagery as unknown as {
     sources: Map<string, unknown>;
-    pipelines?: object;
+    compositor: { pipelines?: object };
   };
-  internals.pipelines = { fill: {}, composite: {}, downsample: {} };
+  internals.compositor.pipelines = {
+    fill: {},
+    composite: {},
+    downsample: {},
+  };
+  // A source tile on the device, as `ImageryDevice.createSource` makes one.
   internals.sources.set("0/0/0", {
     state: "ready",
     used: 0,
-    texture: device.createTexture({
-      size: [256, 256],
-      format: "rgba8unorm",
-      usage: 0,
-    }),
+    texture: {
+      texture: device.createTexture({
+        size: [256, 256],
+        format: "rgba8unorm",
+        usage: 0,
+      }),
+      destroy: () => {},
+    },
   });
   return imagery;
 }

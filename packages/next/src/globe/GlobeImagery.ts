@@ -15,7 +15,6 @@
  *   through the origin's request window and decoded in workers.
  */
 import type { Tile } from "../streaming/Tile.ts";
-import type { RenderContext } from "../scene/RenderContext.ts";
 import type { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import type { WorkerPool } from "../io/WorkerPool.ts";
 import type { ModelPlacement } from "../scene/gltfModel.ts";
@@ -24,15 +23,22 @@ import {
   MAX_IMAGERY_SLICES,
   packImagery,
 } from "../scene/contentLimits.ts";
+import {
+  IMAGERY_STEPS_PER_TICK,
+  type DeviceTexture,
+  type ImageryCompositor,
+  type ImageryDevice,
+  type SliceArray,
+  type SliceComposite,
+  type SourceMapping,
+} from "../scene/contentResources.ts";
 import type { DrawHandle } from "../scene/world/types.ts";
 import type { ImageryProvider } from "./ImageryProvider.ts";
-import imageryWgsl from "../shaders/generated/imagery.wgsl?raw";
-import { SlicePool, type SliceUser, type SliceWorld } from "./SlicePool.ts";
-import { GpuTimer } from "../gpu/GpuTimer.ts";
+import { SlicePool, type SliceUser } from "./SlicePool.ts";
 import { MORPH_SECONDS } from "../streaming/tileMorph.ts";
 
 /** What a layer asks of the world it composites for. */
-export interface GlobeImageryWorld extends SliceWorld {
+export interface GlobeImageryWorld {
   setImagery(handle: DrawHandle, packed: number, unlit?: boolean): void;
   setLights(handle: DrawHandle, packed: number): void;
   /** Cross-fades a draw's imagery from `from` since `seconds` (0: ends it); a world that doesn't fade omits it. */
@@ -42,11 +48,8 @@ export interface GlobeImageryWorld extends SliceWorld {
 const WGS84_RADIUS = 6378137;
 /** Web Mercator's latitude limit. */
 const MAX_LATITUDE = 1.4844222297453324; // 85.05112878°
-/** Bytes of one `Params` block, padded to the uniform offset alignment. */
-const PARAMS_BYTES = 1056;
-const PARAMS_STRIDE = 1280;
 /** Compositing passes per frame (each a source tile or a mip). */
-const PASSES_PER_FRAME = 256;
+const PASSES_PER_FRAME = IMAGERY_STEPS_PER_TICK;
 /**
  * Drawn tiles a layer over its share gives up a slice for, per update, at
  * the ceiling (`trim`): a step of 256 handed over in 16 updates, about a
@@ -92,7 +95,7 @@ export interface GlobeImageryOptions {
 interface Source {
   /** "empty": the provider has no imagery there (an ancestor's stands in). */
   state: "loading" | "ready" | "empty" | "failed";
-  texture?: GPUTexture;
+  texture?: DeviceTexture;
   used: number;
   /** While loading: cancels the request when no tile wants it any more. */
   controller?: AbortController;
@@ -189,16 +192,8 @@ export class GlobeImagery implements SliceUser {
    * pool, it recycles slices it needs again.
    */
   needed = 0;
-  /** Compiled asynchronously: a synchronous compile stalls frames. */
-  private pipelines?: {
-    fill: GPUComputePipeline;
-    composite: GPUComputePipeline;
-    downsample: GPUComputePipeline;
-  };
-  private readonly layout: GPUBindGroupLayout;
-  private readonly params: GPUBuffer;
-  private readonly sampler: GPUSampler;
-  private readonly placeholder: GPUTextureView;
+  /** Composites this layer's slices on the world's device. */
+  private readonly compositor: ImageryCompositor;
   private readonly baseColor: readonly [number, number, number];
   /** Lit by the sun and sky (`GlobeImageryOptions.lit`). */
   private readonly lit: boolean;
@@ -207,15 +202,18 @@ export class GlobeImagery implements SliceUser {
   private frame = 0;
   private loading = 0;
 
+  /**
+   * `imagery` is the world's device side (`WorldMirror.imagery`): its slice
+   * array, and what this layer composites and uploads sources with.
+   */
   constructor(
-    private readonly ctx: RenderContext,
+    private readonly imagery: ImageryDevice,
     private readonly world: GlobeImageryWorld,
     readonly provider: ImageryProvider,
     private readonly requests: RequestScheduler,
     private readonly workers: WorkerPool,
     options: GlobeImageryOptions = {},
   ) {
-    const device = ctx.device;
     // Every layer of a world composites into one array (SlicePool), so
     // they share its size: the first layer's.
     const slices = options.slices ?? DEFAULT_IMAGERY_SLICES;
@@ -226,12 +224,12 @@ export class GlobeImagery implements SliceUser {
     }
     this.requested = Math.min(slices, MAX_IMAGERY_SLICES);
     this.pool = SlicePool.acquire(
-      device,
+      imagery,
       world,
       options.size ?? 256,
       this.requested,
       this,
-      ctx.capacities.textureArrayLayers,
+      imagery.maxLayers,
     );
     this.size = this.pool.size;
     this.role = options.role ?? "surface";
@@ -239,69 +237,7 @@ export class GlobeImagery implements SliceUser {
     this.baseColor =
       options.baseColor ?? (this.role === "lights" ? [0, 0, 0] : [0, 0, 0.5]);
     this.lit = options.lit ?? true;
-    this.layout = device.createBindGroupLayout({
-      label: "globe.imagery.composite",
-      entries: [
-        {
-          binding: 0,
-          visibility: GPUShaderStage.COMPUTE,
-          texture: { sampleType: "float" },
-        },
-        {
-          binding: 1,
-          visibility: GPUShaderStage.COMPUTE,
-          sampler: { type: "filtering" },
-        },
-        {
-          binding: 2,
-          visibility: GPUShaderStage.COMPUTE,
-          storageTexture: { access: "write-only", format: "rgba8unorm" },
-        },
-        {
-          binding: 3,
-          visibility: GPUShaderStage.COMPUTE,
-          buffer: { type: "uniform", hasDynamicOffset: true },
-        },
-      ],
-    });
-    const module = device.createShaderModule({
-      label: "globe.imagery",
-      code: imageryWgsl,
-    });
-    const pipelineLayout = device.createPipelineLayout({
-      bindGroupLayouts: [this.layout],
-    });
-    const pipeline = (entryPoint: string) =>
-      device.createComputePipelineAsync({
-        label: `globe.imagery.${entryPoint}`,
-        layout: pipelineLayout,
-        compute: { module, entryPoint },
-      });
-    void Promise.all([
-      pipeline("fill"),
-      pipeline("composite"),
-      pipeline("downsample"),
-    ]).then(([fill, composite, downsample]) => {
-      this.pipelines = { fill, composite, downsample };
-    });
-    this.params = device.createBuffer({
-      label: "globe.imagery.params",
-      size: PARAMS_STRIDE * PASSES_PER_FRAME,
-      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
-    });
-    this.sampler = device.createSampler({
-      magFilter: "linear",
-      minFilter: "linear",
-      addressModeU: "clamp-to-edge",
-      addressModeV: "clamp-to-edge",
-    });
-    this.placeholder = device
-      .createTexture({
-        size: [1, 1],
-        format: "rgba8unorm",
-        usage: GPUTextureUsage.TEXTURE_BINDING,
-      })
-      .createView();
+    this.compositor = imagery.createCompositor(this.size);
     this.origin = new URL(
       provider.tileUrl(0, 0, Math.max(provider.minimumLevel, 1)),
     ).origin;
@@ -309,7 +245,7 @@ export class GlobeImagery implements SliceUser {
   }
 
   /** The world's slice array (replaced when the pool grows). */
-  get texture(): GPUTexture {
+  get texture(): SliceArray {
     return this.pool.texture;
   }
 
@@ -343,7 +279,7 @@ export class GlobeImagery implements SliceUser {
 
   /** Loading or compositing: the terrain tileset stays active. */
   get busy(): boolean {
-    return this.loading > 0 || this.jobs.size > 0 || !this.pipelines;
+    return this.loading > 0 || this.jobs.size > 0 || !this.compositor.ready;
   }
 
   /**
@@ -484,7 +420,7 @@ export class GlobeImagery implements SliceUser {
     this.drawn = [];
     this.needed = 0;
     this.pool.release(this);
-    this.params.destroy();
+    this.compositor.destroy();
   }
 
   /** Its slices, most recently used first (`SliceUser`). */
@@ -652,20 +588,7 @@ export class GlobeImagery implements SliceUser {
           source.state = "empty";
           return;
         }
-        const texture = this.ctx.device.createTexture({
-          label: `globe.imagery.source ${key}`,
-          size: [bitmap.width, bitmap.height],
-          format: "rgba8unorm",
-          usage:
-            GPUTextureUsage.TEXTURE_BINDING |
-            GPUTextureUsage.COPY_DST |
-            GPUTextureUsage.RENDER_ATTACHMENT,
-        });
-        this.ctx.device.queue.copyExternalImageToTexture(
-          { source: bitmap },
-          { texture },
-          [bitmap.width, bitmap.height],
-        );
+        const texture = this.imagery.createSource(bitmap, key);
         bitmap.close();
         source.texture = texture;
         source.state = "ready";
@@ -692,19 +615,12 @@ export class GlobeImagery implements SliceUser {
 
   /** Composites ready jobs, nearest first, within the per-frame pass budget. */
   private composite(order: [Tile, number][], frame: number): void {
-    const pipelines = this.pipelines;
-    if (!pipelines) {
+    if (!this.compositor.ready) {
       return; // still compiling: tiles draw ancestors' slices or none
     }
-    const device = this.ctx.device;
-    const mips = this.texture.mipLevelCount;
+    const mips = this.pool.mipLevelCount;
     let passes = 0;
-    const blocks: ArrayBuffer[] = [];
-    const dispatches: Array<{
-      pipeline: GPUComputePipeline;
-      group: GPUBindGroup;
-      offset: number;
-    }> = [];
+    const composites: SliceComposite[] = [];
     for (const [tile] of order) {
       const job = this.jobs.get(tile);
       if (!job) {
@@ -735,66 +651,25 @@ export class GlobeImagery implements SliceUser {
         break;
       }
       const r = tile.globe!.rectangle;
-      const destination = this.sliceView(slice, 0);
-      const block = (params: Float32Array) => {
-        blocks.push(params.buffer as ArrayBuffer);
-        return (blocks.length - 1) * PARAMS_STRIDE;
-      };
-      // Base color, then each source tile over it.
-      const fill = new Float32Array(PARAMS_BYTES / 4);
-      fill[2] = this.size;
-      fill.set([...this.baseColor, 1], 4);
-      const fillOffset = block(fill);
-      const fillGroup = this.bindGroup(this.placeholder, destination);
-      dispatches.push({
-        pipeline: pipelines.fill,
-        group: fillGroup,
-        offset: fillOffset,
-      });
-      for (const key of keys) {
+      // Base color, then each source tile over it, then the mips.
+      const sources = keys.map((key) => {
         const [x, y, level] = supply.get(key)!;
         const source = this.sources.get(key)!;
         if (!source.composited) {
           source.composited = true;
           this.stats.drawn++;
         }
-        const offset = block(this.mapping(r, x, y, level));
-        const group = this.bindGroup(source.texture!.createView(), destination);
-        dispatches.push({
-          pipeline: pipelines.composite,
-          group: group,
-          offset: offset,
-        });
-      }
-      for (let level = 1; level < mips; level++) {
-        const params = new Float32Array(PARAMS_BYTES / 4);
-        params[2] = this.size >> level;
-        const offset = block(params);
-        const group = this.bindGroup(
-          this.sliceView(slice, level - 1),
-          this.sliceView(slice, level),
-        );
-        dispatches.push({
-          pipeline: pipelines.downsample,
-          group: group,
-          offset: offset,
-        });
-      }
+        return {
+          texture: source.texture!,
+          mapping: this.mapping(r, x, y, level),
+        };
+      });
+      composites.push({ slice, baseColor: this.baseColor, sources });
       passes += keys.length + mips + 1;
       this.slices.set(tile, { slice, used: frame });
       this.jobs.delete(tile);
     }
-    if (dispatches.length === 0) {
-      return;
-    }
-    const encoder = device.createCommandEncoder({ label: "globe.imagery" });
-    const data = new Uint8Array(blocks.length * PARAMS_STRIDE);
-    blocks.forEach((b, i) => data.set(new Uint8Array(b), i * PARAMS_STRIDE));
-    device.queue.writeBuffer(this.params, 0, data);
-    for (const d of dispatches) {
-      this.dispatch(encoder, d.pipeline, d.group, d.offset);
-    }
-    device.queue.submit([encoder.finish()]);
+    this.compositor.composite(this.texture, composites);
   }
 
   /**
@@ -806,69 +681,26 @@ export class GlobeImagery implements SliceUser {
     x: number,
     y: number,
     level: number,
-  ): Float32Array {
-    const params = new Float32Array(PARAMS_BYTES / 4);
+  ): SourceMapping {
     const n = 2 ** level;
     const size = this.size;
     // Longitude → source s: lon = west + (i + 0.5) / size * width.
     const width = r.east - r.west;
     const sourceWest = (x / n) * 2 * Math.PI - Math.PI;
     const sourceWidth = (2 * Math.PI) / n;
-    params[0] = (r.west - sourceWest) / sourceWidth;
-    params[1] = width / size / sourceWidth;
-    params[2] = size;
+    const t = new Float64Array(size);
     for (let j = 0; j < size; j++) {
       const latitude = r.north - ((j + 0.5) / size) * (r.north - r.south);
-      params[8 + j] =
+      t[j] =
         this.provider.tilingScheme === "webMercator"
           ? mercatorY(latitude) * n - y
           : ((Math.PI / 2 - latitude) / Math.PI) * n - y;
     }
-    return params;
-  }
-
-  private dispatch(
-    encoder: GPUCommandEncoder,
-    pipeline: GPUComputePipeline,
-    group: GPUBindGroup,
-    offset: number,
-  ): void {
-    const pass = encoder.beginComputePass({
-      timestampWrites: GpuTimer.groupWrites(this.ctx.device, "imagery"),
-    });
-    pass.setPipeline(pipeline);
-    pass.setBindGroup(0, group, [offset]);
-    const groups = Math.ceil(this.size / 8);
-    pass.dispatchWorkgroups(groups, groups);
-    pass.end();
-  }
-
-  private bindGroup(
-    source: GPUTextureView,
-    destination: GPUTextureView,
-  ): GPUBindGroup {
-    return this.ctx.device.createBindGroup({
-      layout: this.layout,
-      entries: [
-        { binding: 0, resource: source },
-        { binding: 1, resource: this.sampler },
-        { binding: 2, resource: destination },
-        {
-          binding: 3,
-          resource: { buffer: this.params, size: PARAMS_BYTES },
-        },
-      ],
-    });
-  }
-
-  private sliceView(slice: number, level: number): GPUTextureView {
-    return this.texture.createView({
-      dimension: "2d",
-      baseArrayLayer: slice,
-      arrayLayerCount: 1,
-      baseMipLevel: level,
-      mipLevelCount: 1,
-    });
+    return {
+      s0: (r.west - sourceWest) / sourceWidth,
+      ds: width / size / sourceWidth,
+      t,
+    };
   }
 
   /**

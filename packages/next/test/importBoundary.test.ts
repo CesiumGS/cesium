@@ -511,13 +511,6 @@ const TIER_EXCEPTIONS: Readonly<Record<string, string>> = {
   "src/streaming/Tileset3D.ts → src/scene/Engine.ts": "public signature",
   "src/globe/Globe.ts → src/scene/World.ts": "public signature",
   "src/globe/Globe.ts → src/scene/Engine.ts": "public signature",
-  // Imagery composites on the GPU: rasterizer code that lives with content.
-  "src/globe/GlobeImagery.ts → src/scene/RenderContext.ts":
-    "composites on the GPU",
-  "src/globe/GlobeImagery.ts → src/gpu/GpuTimer.ts":
-    "times its composite passes as one group",
-  "src/globe/GlobeImagery.ts → src/shaders/generated/imagery.wgsl":
-    "composites on the GPU",
 };
 
 /** The renderer's imports from content (docs/design/layers-engine-renderer-backend.md wants none). */
@@ -633,15 +626,11 @@ const ENGINE_ONLY = ["raster", "ctx"];
 it("content never reads a world's rasterizer data or an engine's GPU context", () => {
   const reads = files
     .filter((f) => tierOf(f) === "content")
-    .flatMap((f) => {
-      // `GlobeImagery` holds a `RenderContext` of its own (a named
-      // exception above) and reads its `ctx`; its `raster` stays refused.
-      const own = edgesOf(f).some((e) => e.to === "src/scene/RenderContext.ts");
-      return readsMembers(
-        readFileSync(join(root, f), "utf8"),
-        own ? ["raster"] : ENGINE_ONLY,
-      ).map((name) => `${f}: ${name}`);
-    });
+    .flatMap((f) =>
+      readsMembers(readFileSync(join(root, f), "utf8"), ENGINE_ONLY).map(
+        (name) => `${f}: ${name}`,
+      ),
+    );
   expect(reads).toEqual([]);
 });
 it("refuses a read of a member through a destructure, an index or a path", () => {
@@ -724,6 +713,33 @@ it("the webgl2 tier names no WebGPU type", () =>
       webgpuTypeNames(f, readFileSync(join(root, f), "utf8")),
     ),
   ).toEqual([]));
+/**
+ * Content files that name WebGPU types: glTF's sampler modes, which are
+ * WebGPU's string names (`GPUFilterMode`, `GPUAddressMode`), not objects.
+ */
+const CONTENT_GPU_NAMES: Readonly<Record<string, string>> = {
+  "src/io/gltfTypes.ts": "glTF's sampler modes, as WebGPU's string names",
+  "src/io/gltfParse.ts": "glTF's sampler modes, as WebGPU's string names",
+};
+/** Scene files content resources go through: they hold no GPU object either. */
+const NEUTRAL_RESOURCES = [
+  "src/scene/contentResources.ts",
+  "src/scene/gltfModel.ts",
+];
+
+it("content holds no WebGPU object: it names no WebGPU type, nor do gltfModel and the content resources", () => {
+  const named = [
+    ...files.filter((f) => tierOf(f) === "content"),
+    ...NEUTRAL_RESOURCES,
+  ].filter(
+    (f) => webgpuTypeNames(f, readFileSync(join(root, f), "utf8")).length > 0,
+  );
+  expect(named.filter((f) => !(f in CONTENT_GPU_NAMES))).toEqual([]);
+  // An allowance that no longer names one is one to delete.
+  expect(
+    Object.keys(CONTENT_GPU_NAMES).filter((f) => !named.includes(f)),
+  ).toEqual([]);
+});
 it("no other tier imports the webgl2 tier, but the engine's device choice, dynamically", () => {
   const found = files
     .filter((f) => tierOf(f) !== "webgl2")
