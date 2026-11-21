@@ -15,7 +15,7 @@ import {
   AttributeComponentType,
   AttributeDomain,
   CustomAttribute,
-  VertsByAttributeResult,
+  AttributeResult,
 } from "@cesium/mesh-editor";
 
 /** @import { MeshAttribute } from "@cesium/mesh-editor"; */
@@ -67,11 +67,15 @@ const TYPES = [
 const WASM_DOMAINS = {
   [GeometryAttributeDomain.VERTEX]: AttributeDomain.Vertex,
   [GeometryAttributeDomain.CORNER]: AttributeDomain.Corner,
+  [GeometryAttributeDomain.EDGE]: AttributeDomain.Edge,
+  [GeometryAttributeDomain.FACE]: AttributeDomain.Face,
 };
 
 const DOMAINS = {
   [AttributeDomain.Vertex]: GeometryAttributeDomain.VERTEX,
   [AttributeDomain.Corner]: GeometryAttributeDomain.CORNER,
+  [AttributeDomain.Edge]: GeometryAttributeDomain.EDGE,
+  [AttributeDomain.Face]: GeometryAttributeDomain.FACE,
 };
 
 const DATATYPES = {
@@ -173,34 +177,46 @@ WasmMeshAttributeTranslator.toDescriptor = function (attribute) {
 };
 
 /**
- * Throws if a by-attribute operation on a mesh's vertices failed.
+ * Throws if an attribute operation on a mesh failed.
  *
- * @param {VertsByAttributeResult} result The operation's result.
+ * @param {AttributeResult} result The operation's result.
  * @param {string} name The attribute's name.
  *
  * @exception {DeveloperError} The operation failed.
  */
-WasmMeshAttributeTranslator.debugCheckVertsByAttributeResult = function (
+WasmMeshAttributeTranslator.debugCheckAttributeResult = function (
   result,
   name,
 ) {
   //>>includeStart('debug', pragmas.debug);
   switch (result) {
-    case VertsByAttributeResult.Ok:
+    case AttributeResult.Ok:
       return;
-    case VertsByAttributeResult.MeshInactive:
-      throw new DeveloperError("The mesh isn't active.");
-    case VertsByAttributeResult.AttributeNotFound:
-      throw new DeveloperError(
-        `The mesh has no per-vertex attribute named ${name}.`,
-      );
-    case VertsByAttributeResult.WrongType:
+    case AttributeResult.AttributeNotFound:
+      throw new DeveloperError(`The mesh has no attribute named ${name}.`);
+    case AttributeResult.WrongType:
       throw new DeveloperError(
         `The value doesn't fit the type of attribute ${name}.`,
       );
-    case VertsByAttributeResult.UnsupportedComparison:
+    case AttributeResult.MeshInactive:
+      throw new DeveloperError("The mesh isn't active.");
+    case AttributeResult.UnsupportedComparison:
       throw new DeveloperError(
         `The comparison doesn't apply to the type of attribute ${name}.`,
+      );
+    case AttributeResult.UnsupportedDomain:
+      throw new DeveloperError(`Attribute ${name} is per-corner.`);
+    case AttributeResult.NameInUse:
+      throw new DeveloperError(
+        `The mesh already has an attribute named ${name}.`,
+      );
+    case AttributeResult.Reserved:
+      throw new DeveloperError(
+        `The name ${name} is reserved for a built-in attribute.`,
+      );
+    case AttributeResult.KeyNotFound:
+      throw new DeveloperError(
+        `A key isn't in the mesh, and no value was given for missing keys.`,
       );
   }
   //>>includeEnd('debug');

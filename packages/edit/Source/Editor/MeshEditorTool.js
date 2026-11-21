@@ -75,22 +75,24 @@ class MeshEditorTool {
      * // Pick every vertex with the same _GROUP_ID as the clicked vertex.
      * selectTool.resolvePicks = function (picks) {
      *   return picks.map(({ mesh, componentKeys }) => {
-     *     const vertexKey = componentKeys.verts?.[0];
-     *     const groupId = Cesium.defined(vertexKey)
-     *       ? mesh.getVertexAttributeValue(vertexKey, "_GROUP_ID")
-     *       : undefined;
-     *
-     *     if (!Cesium.defined(groupId)) {
+     *     const verts = componentKeys.verts;
+     *     if (!Cesium.defined(verts) || verts.length === 0) {
      *       return { mesh, componentKeys };
      *     }
      *
-     *     const verts = mesh.queryVerticesByAttribute(
+     *     const [groupId] = mesh.getAttributeValues(
      *       "_GROUP_ID",
-     *       Cesium.ComparisonOperator.EQUAL,
-     *       groupId,
+     *       verts.subarray(0, 1),
      *     );
      *
-     *     return { mesh, componentKeys: { verts } };
+     *     return {
+     *       mesh,
+     *       componentKeys: mesh.queryByAttribute(
+     *         "_GROUP_ID",
+     *         Cesium.ComparisonOperator.EQUAL,
+     *         groupId,
+     *       ),
+     *     };
      *   });
      * };
      */

@@ -657,72 +657,112 @@ describe(
       return { editor, mesh };
     }
 
-    describe("attribute queries", function () {
+    describe("attributes", function () {
       const [corner0, corner1, corner2] = square.positions;
+      const { EQUAL, GREATER, LESS } = ComparisonOperator;
 
-      function getValues(mesh, keys, name) {
-        return Array.from(keys, (key) =>
-          mesh.getVertexAttributeValue(key, name),
-        );
+      function getValues(mesh, name, keys) {
+        return Array.from(mesh.getAttributeValues(name, keys));
       }
+
+      it("gets the keys of every component of the given types", async function () {
+        const { mesh } = await addSquareWithAttributes();
+
+        const verts = mesh.getComponentKeys(EditMode.VERTEX);
+        expect(verts.verts.length).toBe(4);
+        expect(verts.edges?.length ?? 0).toBe(0);
+        expect(verts.faces?.length ?? 0).toBe(0);
+
+        const all = mesh.getComponentKeys(
+          EditMode.VERTEX | EditMode.EDGE | EditMode.FACE,
+        );
+        expect(all.verts.length).toBe(4);
+        expect(all.edges.length).toBe(5);
+        expect(all.faces.length).toBe(2);
+      });
+
+      it("gets values in an array of the attribute's type", async function () {
+        const { mesh } = await addSquareWithAttributes();
+        const { verts } = mesh.queryByAttribute("_ID", EQUAL, 8);
+
+        const ids = mesh.getAttributeValues("_ID", verts);
+        expect(ids).toBeInstanceOf(Uint32Array);
+        expect(Array.from(ids)).toEqual([8]);
+
+        const offsets = mesh.getAttributeValues("_OFFSET", verts);
+        expect(offsets).toBeInstanceOf(Int32Array);
+        expect(Array.from(offsets)).toEqual([3, -3]);
+
+        const positions = mesh.getAttributeValues("POSITION", verts);
+        expect(positions).toBeInstanceOf(Float32Array);
+        expect(Array.from(positions)).toEqual(corner2);
+      });
+
+      it("gets values into a result", async function () {
+        const { mesh } = await addSquareWithAttributes();
+        const { verts } = mesh.queryByAttribute("_ID", EQUAL, 7);
+        const result = new Uint32Array(2);
+
+        expect(mesh.getAttributeValues("_ID", verts, result)).toBe(result);
+        expect(Array.from(result)).toEqual([7, 7]);
+      });
+
+      it("gets noData for keys that aren't in the mesh", async function () {
+        const { mesh } = await addSquareWithAttributes();
+        const [key] = mesh.queryByAttribute("_ID", EQUAL, 8).verts;
+        const keys = new BigUint64Array([key, 123456n]);
+
+        expect(
+          Array.from(mesh.getAttributeValues("_ID", keys, undefined, 0)),
+        ).toEqual([8, 0]);
+        expect(
+          Array.from(
+            mesh.getAttributeValues("_OFFSET", keys, undefined, [0, 0]),
+          ),
+        ).toEqual([3, -3, 0, 0]);
+      });
+
+      it("throws when getting values of an unknown attribute or key", async function () {
+        const { mesh } = await addSquareWithAttributes();
+        const keys = new BigUint64Array([123456n]);
+
+        expect(() =>
+          mesh.getAttributeValues("_UNKNOWN", keys),
+        ).toThrowDeveloperError();
+        expect(() =>
+          mesh.getAttributeValues("_UNKNOWN", keys, new Uint32Array(1)),
+        ).toThrowDeveloperError();
+        expect(() =>
+          mesh.getAttributeValues("_ID", keys),
+        ).toThrowDeveloperError();
+      });
 
       it("queries vertices by a scalar attribute, on an inactive mesh", async function () {
         const { editor, mesh } = await addSquareWithAttributes();
         expect(editor.isMeshActive(mesh)).toBe(false);
 
-        const equal = mesh.queryVerticesByAttribute(
-          "_ID",
-          ComparisonOperator.EQUAL,
-          7,
-        );
+        const equal = mesh.queryByAttribute("_ID", EQUAL, 7).verts;
         expect(equal).toBeInstanceOf(BigUint64Array);
-        expect(getValues(mesh, equal, "_ID")).toEqual([7, 7]);
+        expect(getValues(mesh, "_ID", equal)).toEqual([7, 7]);
 
-        const greater = mesh.queryVerticesByAttribute(
-          "_ID",
-          ComparisonOperator.GREATER,
-          7,
-        );
-        expect(getValues(mesh, greater, "_ID").sort()).toEqual([8, 9]);
+        const greater = mesh.queryByAttribute("_ID", GREATER, 7).verts;
+        expect(getValues(mesh, "_ID", greater).sort()).toEqual([8, 9]);
 
-        expect(
-          mesh.queryVerticesByAttribute("_ID", ComparisonOperator.EQUAL, 1)
-            .length,
-        ).toBe(0);
+        expect(mesh.queryByAttribute("_ID", EQUAL, 1).verts.length).toBe(0);
       });
 
       it("queries vertices by a vector attribute", async function () {
         const { mesh } = await addSquareWithAttributes();
 
-        const keys = mesh.queryVerticesByAttribute(
-          "_OFFSET",
-          ComparisonOperator.EQUAL,
-          [2, -2],
-        );
+        const { verts } = mesh.queryByAttribute("_OFFSET", EQUAL, [2, -2]);
 
-        expect(getValues(mesh, keys, "_OFFSET")).toEqual([[2, -2]]);
-      });
-
-      it("gets undefined for an unknown vertex or attribute", async function () {
-        const { mesh } = await addSquareWithAttributes();
-        const [key] = mesh.queryVerticesByAttribute(
-          "_ID",
-          ComparisonOperator.EQUAL,
-          8,
-        );
-
-        expect(mesh.getVertexAttributeValue(key, "_UNKNOWN")).toBeUndefined();
-        expect(mesh.getVertexAttributeValue(123456n, "_ID")).toBeUndefined();
+        expect(getValues(mesh, "_OFFSET", verts)).toEqual([2, -2]);
       });
 
       it("throws for an unknown attribute, a value of the wrong type, or an unsupported comparison", async function () {
         const { mesh } = await addSquareWithAttributes();
-        const { EQUAL, LESS } = ComparisonOperator;
 
-        for (const method of [
-          "queryVerticesByAttribute",
-          "selectVerticesByAttribute",
-        ]) {
+        for (const method of ["queryByAttribute", "selectByAttribute"]) {
           expect(() => mesh[method]("_UNKNOWN", EQUAL, 7))
             .withContext(method)
             .toThrowDeveloperError();
@@ -743,8 +783,8 @@ describe(
         editor.setMeshActive(mesh);
         editor.mode = EditMode.VERTEX;
 
-        mesh.selectVerticesByAttribute("_ID", ComparisonOperator.EQUAL, 8);
-        mesh.selectVerticesByAttribute("_ID", ComparisonOperator.EQUAL, 7);
+        mesh.selectByAttribute("_ID", EQUAL, 8);
+        mesh.selectByAttribute("_ID", EQUAL, 7);
 
         expectPixel(corner0, selectedPointColor);
         expectPixel(corner1, selectedPointColor);
@@ -757,7 +797,7 @@ describe(
         editor.setMeshActive(mesh);
         editor.mode = EditMode.FACE;
 
-        mesh.selectVerticesByAttribute("_ID", ComparisonOperator.EQUAL, 7);
+        mesh.selectByAttribute("_ID", EQUAL, 7);
         editor.mode = EditMode.VERTEX;
 
         expectPixel(corner0, pointColor);
@@ -768,7 +808,7 @@ describe(
         editor.mode = EditMode.VERTEX;
 
         expect(() =>
-          mesh.selectVerticesByAttribute("_ID", ComparisonOperator.EQUAL, 7),
+          mesh.selectByAttribute("_ID", EQUAL, 7),
         ).toThrowDeveloperError();
       });
     });
@@ -796,7 +836,7 @@ describe(
       }
 
       function queryId(mesh, id) {
-        return mesh.queryVerticesByAttribute("_ID", EQUAL, id);
+        return mesh.queryByAttribute("_ID", EQUAL, id).verts;
       }
 
       it("hides and shows components", async function () {
@@ -815,7 +855,7 @@ describe(
 
       it("deselects the components it hides", async function () {
         const { mesh } = await addActiveSquare(EditMode.VERTEX);
-        mesh.selectVerticesByAttribute("_ID", EQUAL, 7);
+        mesh.selectByAttribute("_ID", EQUAL, 7);
         expectVertex(corner0, selectedPointColor);
 
         mesh.hideComponents({ verts: queryId(mesh, 7) });
@@ -826,7 +866,7 @@ describe(
 
       it("hides and deselects the selection", async function () {
         const { mesh } = await addActiveSquare(EditMode.VERTEX);
-        mesh.selectVerticesByAttribute("_ID", EQUAL, 7);
+        mesh.selectByAttribute("_ID", EQUAL, 7);
 
         mesh.hideSelected();
         expectVertex(corner0, backgroundColor);
@@ -838,15 +878,15 @@ describe(
         expectVertex(corner1, pointColor);
       });
 
-      it("hides, deselects and shows vertices by attribute", async function () {
+      it("hides, deselects and shows components by attribute", async function () {
         const { mesh } = await addActiveSquare(EditMode.VERTEX);
-        mesh.selectVerticesByAttribute("_ID", EQUAL, 7);
+        mesh.selectByAttribute("_ID", EQUAL, 7);
 
-        mesh.hideVerticesByAttribute("_ID", EQUAL, 7);
+        mesh.hideByAttribute("_ID", EQUAL, 7);
         expectVertex(corner0, backgroundColor);
         expectVertex(corner2, pointColor);
 
-        mesh.showVerticesByAttribute("_ID", EQUAL, 7);
+        mesh.showByAttribute("_ID", EQUAL, 7);
         expectVertex(corner0, pointColor);
       });
 
@@ -863,7 +903,7 @@ describe(
         const { mesh } = await addActiveSquare(EditMode.VERTEX);
         const options = { extendToConnectedFaces: true };
 
-        mesh.hideVerticesByAttribute("_ID", EQUAL, 9, options);
+        mesh.hideByAttribute("_ID", EQUAL, 9, options);
         scene.renderForSpecs();
         expect(scene).toPickAndCall((result) => {
           expect(result).toBeUndefined();
@@ -872,7 +912,7 @@ describe(
           expect(result.primitive).toBe(mesh);
         }, getWindowPosition(facePosition));
 
-        mesh.showVerticesByAttribute("_ID", EQUAL, 9, options);
+        mesh.showByAttribute("_ID", EQUAL, 9, options);
         scene.renderForSpecs();
         expect(scene).toPickAndCall((result) => {
           expect(result.primitive).toBe(mesh);
@@ -888,10 +928,10 @@ describe(
         expect(() => mesh.hideSelected()).toThrowDeveloperError();
         expect(() => mesh.showAllComponents()).toThrowDeveloperError();
         expect(() =>
-          mesh.hideVerticesByAttribute("_ID", EQUAL, 7),
+          mesh.hideByAttribute("_ID", EQUAL, 7),
         ).toThrowDeveloperError();
         expect(() =>
-          mesh.showVerticesByAttribute("_ID", EQUAL, 7),
+          mesh.showByAttribute("_ID", EQUAL, 7),
         ).toThrowDeveloperError();
       });
     });
@@ -904,19 +944,19 @@ describe(
         const tool = SelectTool.addTo(editor);
         tool.resolvePicks = function (picks) {
           return picks.map(({ mesh, componentKeys }) => {
-            const vertexKey = componentKeys.verts?.[0];
-            const id = defined(vertexKey)
-              ? mesh.getVertexAttributeValue(vertexKey, "_ID")
-              : undefined;
-            if (!defined(id)) {
+            const verts = componentKeys.verts;
+            if (!defined(verts) || verts.length === 0) {
               return { mesh, componentKeys };
             }
-            const verts = mesh.queryVerticesByAttribute(
-              "_ID",
-              ComparisonOperator.EQUAL,
-              id,
-            );
-            return { mesh, componentKeys: { verts } };
+            const [id] = mesh.getAttributeValues("_ID", verts.subarray(0, 1));
+            return {
+              mesh,
+              componentKeys: mesh.queryByAttribute(
+                "_ID",
+                ComparisonOperator.EQUAL,
+                id,
+              ),
+            };
           });
         };
         editor.activeTool = tool;

@@ -4,7 +4,11 @@ import {
   GeometryAttributeDomain,
   VertexAttributeSemantic,
 } from "@cesium/engine";
-import { AttributeComponentType, AttributeDomain } from "@cesium/mesh-editor";
+import {
+  AttributeComponentType,
+  AttributeDomain,
+  AttributeResult,
+} from "@cesium/mesh-editor";
 import { WasmMeshAttributeTranslator } from "../../index.js";
 
 describe("Editor/WasmMeshAttributeTranslator", function () {
@@ -97,6 +101,46 @@ describe("Editor/WasmMeshAttributeTranslator", function () {
         toDescriptor("_VALUE", { componentType: AttributeComponentType.Int32 })
           .componentDatatype,
       ).toBe(ComponentDatatype.INT);
+    });
+
+    it("translates every domain", function () {
+      const domains = [
+        [AttributeDomain.Vertex, GeometryAttributeDomain.VERTEX],
+        [AttributeDomain.Corner, GeometryAttributeDomain.CORNER],
+        [AttributeDomain.Edge, GeometryAttributeDomain.EDGE],
+        [AttributeDomain.Face, GeometryAttributeDomain.FACE],
+      ];
+      for (const [domain, expected] of domains) {
+        expect(toDescriptor("_VALUE", { domain }).domain).toBe(expected);
+      }
+    });
+  });
+
+  describe("debugCheckAttributeResult", function () {
+    it("passes for Ok", function () {
+      expect(() =>
+        WasmMeshAttributeTranslator.debugCheckAttributeResult(
+          AttributeResult.Ok,
+          "_VALUE",
+        ),
+      ).not.toThrow();
+    });
+
+    it("throws for every other result", function () {
+      const results = Object.values(AttributeResult).filter(
+        (result) => typeof result === "number" && result !== AttributeResult.Ok,
+      );
+      expect(results.length).toBeGreaterThan(0);
+      for (const result of results) {
+        expect(() =>
+          WasmMeshAttributeTranslator.debugCheckAttributeResult(
+            result,
+            "_VALUE",
+          ),
+        )
+          .withContext(AttributeResult[result])
+          .toThrowDeveloperError();
+      }
     });
   });
 });

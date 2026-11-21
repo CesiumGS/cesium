@@ -1,6 +1,6 @@
 // @ts-check
 
-import { Check, DeveloperError, destroyObject } from "@cesium/core";
+import { Check, DeveloperError, defined, destroyObject } from "@cesium/core";
 import OverlayRenderer from "./OverlayRenderer.js";
 import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
 
@@ -8,6 +8,7 @@ import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
 /** @import { FrameState, GeometryAttributeDescriptor, GeometrySource } from "@cesium/engine"; */
 /** @import { MeshEditor as WasmMeshEditor, OverlayViews } from "@cesium/mesh-editor"; */
 /** @import ComparisonOperator from "./ComparisonOperator.js"; */
+/** @import EditMode from "./EditMode.js"; */
 /** @import { MeshComponentKeys } from "./ComponentKeys.js"; */
 /** @import MeshEditorGroup from "./MeshEditorGroup.js"; */
 /** @import MeshEditorStyle from "./MeshEditorStyle.js"; */
@@ -133,74 +134,119 @@ class Mesh {
   }
 
   /**
-   * Gets a vertex's value of a per-vertex attribute.
+   * Gets the keys of every component of the given types.
    *
-   * @param {bigint} vertexKey The vertex's key.
-   * @param {string} name The attribute's name.
-   * @returns {number|number[]|undefined} The value: a number for scalar attributes and an array for vector attributes. <code>undefined</code> if the mesh has no such vertex or per-vertex attribute.
+   * @param {EditMode} components The component types, combined with <code>|</code>.
+   * @returns {MeshComponentKeys} The components' keys.
    */
-  getVertexAttributeValue(vertexKey, name) {
+  getComponentKeys(components) {
     //>>includeStart('debug', pragmas.debug);
-    Check.typeOf.bigint("vertexKey", vertexKey);
-    Check.typeOf.string("name", name);
+    Check.typeOf.number("components", components);
     //>>includeEnd('debug');
 
-    return this.#wasmEditor.vertexAttributeValue(this._key, vertexKey, name);
+    return this.#wasmEditor.componentKeys(this._key, components);
   }
 
   /**
-   * Finds the vertices whose value of a per-vertex attribute compares to a
-   * value. Includes hidden vertices, and works whether or not the mesh is
-   * active.
+   * Gets an attribute's values at vertex, edge, or face keys, according to
+   * the given attribute's domain.
+   *
+   * @param {string} name The attribute's name, such as <code>POSITION</code>.
+   * @param {BigUint64Array} keys The components' keys.
+   * @param {Float32Array|Int32Array|Uint32Array} [result] Receives <code>componentCount</code> values per key. Its type must match the attribute's datatype. Allocated if omitted.
+   * @param {number|number[]} [noData] The value for keys that aren't in the mesh.
+   * @returns {Float32Array|Int32Array|Uint32Array} The values.
+   *
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is per-corner.
+   * @exception {DeveloperError} A key isn't in the mesh, and noData is undefined.
+   */
+  getAttributeValues(name, keys, result, noData) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.string("name", name);
+    Check.typeOf.object("keys", keys);
+    //>>includeEnd('debug');
+
+    if (!defined(result)) {
+      const descriptor = this.getAttributes().find(
+        (attribute) => attribute.name === name,
+      );
+      //>>includeStart('debug', pragmas.debug);
+      if (!defined(descriptor)) {
+        throw new DeveloperError(`The mesh has no attribute named ${name}.`);
+      }
+      //>>includeEnd('debug');
+
+      const ArrayType = WasmMeshAttributeTranslator.getArrayType(descriptor);
+      result = new ArrayType(keys.length * descriptor.componentCount);
+    }
+
+    const status = this.#wasmEditor.attributeValues(
+      this._key,
+      name,
+      keys,
+      result,
+      noData,
+    );
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
+
+    return result;
+  }
+
+  /**
+   * Finds the vertices, edges or faces, matching the attribute's domain, whose
+   * value of an attribute compares to a value. Includes hidden components, and
+   * works whether or not the mesh is active.
    *
    * @param {string} name The attribute's name.
-   * @param {ComparisonOperator} comparison How to compare each vertex's value to <code>value</code>.
+   * @param {ComparisonOperator} comparison How to compare each component's value to <code>value</code>.
    * @param {number|number[]} value A number for scalar attributes, or an array for vector attributes.
-   * @returns {BigUint64Array} The matching vertices' keys.
+   * @returns {MeshComponentKeys} The matching components' keys.
    *
-   * @exception {DeveloperError} The mesh has no per-vertex attribute with that name.
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is per-corner.
    * @exception {DeveloperError} The value doesn't fit the attribute's type.
    * @exception {DeveloperError} The comparison doesn't apply to the attribute's type.
    */
-  queryVerticesByAttribute(name, comparison, value) {
+  queryByAttribute(name, comparison, value) {
     Mesh.#debugCheckAttributeQuery(name, comparison, value);
 
-    const { status, verts } = this.#wasmEditor.queryVertsByAttribute(
+    const { status, keys } = this.#wasmEditor.queryByAttribute(
       this._key,
       name,
       comparison,
       value,
     );
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
 
-    WasmMeshAttributeTranslator.debugCheckVertsByAttributeResult(status, name);
-    return verts;
+    return keys;
   }
 
   /**
-   * Adds the vertices whose value of a per-vertex attribute compares to a
-   * value to the selection. Skips hidden vertices. Does nothing unless the
-   * editor's mode includes {@link EditMode.VERTEX}.
+   * Adds the components whose value of an attribute compares to a value to
+   * the selection. Skips hidden components, and those of types that the
+   * current edit mode excludes.
    *
    * @param {string} name The attribute's name.
-   * @param {ComparisonOperator} comparison How to compare each vertex's value to <code>value</code>.
+   * @param {ComparisonOperator} comparison How to compare each component's value to <code>value</code>.
    * @param {number|number[]} value A number for scalar attributes, or an array for vector attributes.
    *
    * @exception {DeveloperError} The mesh isn't active.
-   * @exception {DeveloperError} The mesh has no per-vertex attribute with that name.
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is per-corner.
    * @exception {DeveloperError} The value doesn't fit the attribute's type.
    * @exception {DeveloperError} The comparison doesn't apply to the attribute's type.
    */
-  selectVerticesByAttribute(name, comparison, value) {
+  selectByAttribute(name, comparison, value) {
     Mesh.#debugCheckAttributeQuery(name, comparison, value);
 
-    const status = this.#wasmEditor.selectVertsByAttribute(
+    const status = this.#wasmEditor.selectByAttribute(
       this._key,
       name,
       comparison,
       value,
     );
-
-    WasmMeshAttributeTranslator.debugCheckVertsByAttributeResult(status, name);
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
   }
 
   /**
@@ -274,43 +320,52 @@ class Mesh {
   }
 
   /**
-   * Hides and deselects the vertices whose value of a per-vertex attribute
-   * compares to a value. Does nothing if the current edit mode does not include
-   * {@link EditMode.VERTEX}.
+   * Hides and deselects the components whose value of an attribute compares
+   * to a value, like {@link Mesh#hideComponents}.
    *
    * @param {string} name The attribute's name.
-   * @param {ComparisonOperator} comparison How to compare each vertex's value to <code>value</code>.
+   * @param {ComparisonOperator} comparison How to compare each component's value to <code>value</code>.
    * @param {number|number[]} value A number for scalar attributes, or an array for vector attributes.
    * @param {MeshVisibilityOptions} [options] The options.
    *
    * @exception {DeveloperError} The mesh isn't active.
-   * @exception {DeveloperError} The mesh has no per-vertex attribute with that name.
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is per-corner.
    * @exception {DeveloperError} The value doesn't fit the attribute's type.
    * @exception {DeveloperError} The comparison doesn't apply to the attribute's type.
    */
-  hideVerticesByAttribute(name, comparison, value, options) {
-    const verts = this.queryVerticesByAttribute(name, comparison, value);
-    this.hideComponents({ verts }, options);
+  hideByAttribute(name, comparison, value, options) {
+    // Hides through hideComponents, which also deselects.
+    const componentKeys = this.queryByAttribute(name, comparison, value);
+    this.hideComponents(componentKeys, options);
   }
 
   /**
-   * Shows the hidden vertices whose value of a per-vertex attribute compares
-   * to a value. Does nothing if the current edit mode does not include
-   * {@link EditMode.VERTEX}.
+   * Shows the hidden components whose value of an attribute compares to a
+   * value, like {@link Mesh#showComponents}.
    *
    * @param {string} name The attribute's name.
-   * @param {ComparisonOperator} comparison How to compare each vertex's value to <code>value</code>.
+   * @param {ComparisonOperator} comparison How to compare each component's value to <code>value</code>.
    * @param {number|number[]} value A number for scalar attributes, or an array for vector attributes.
    * @param {MeshVisibilityOptions} [options] The options.
    *
    * @exception {DeveloperError} The mesh isn't active.
-   * @exception {DeveloperError} The mesh has no per-vertex attribute with that name.
+   * @exception {DeveloperError} The mesh has no attribute with that name.
+   * @exception {DeveloperError} The attribute is per-corner.
    * @exception {DeveloperError} The value doesn't fit the attribute's type.
    * @exception {DeveloperError} The comparison doesn't apply to the attribute's type.
    */
-  showVerticesByAttribute(name, comparison, value, options) {
-    const verts = this.queryVerticesByAttribute(name, comparison, value);
-    this.showComponents({ verts }, options);
+  showByAttribute(name, comparison, value, options) {
+    Mesh.#debugCheckAttributeQuery(name, comparison, value);
+
+    const status = this.#wasmEditor.showByAttribute(
+      this._key,
+      name,
+      comparison,
+      value,
+      options,
+    );
+    WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
   }
 
   /**
