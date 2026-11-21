@@ -7,6 +7,7 @@ CS-8 Engine profiles
   CS-20  Facts and personas
   CS-21  The catalog, rules and resolver
   CS-22  Paths in one place, with the seam test
+  CS-23  Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
 
 CS-9 The WebGL 2 renderer
   CS-33  The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves
@@ -81,5 +82,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-54 merged item(s) not in a release
+55 merged item(s) not in a release
 ```

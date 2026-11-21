@@ -61,14 +61,14 @@ Generated from the item files by `npx hitld work views` (its marker keeps the ol
 
 ### Engine profiles
 
-[CS-8](./projects/CS-8-engine-profiles.md), Planned, led by owner: 5 of 20 done, 2 ready, 11 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](../../../docs/superpowers/plans/2026-11-13-engine-profiles.md).
+[CS-8](./projects/CS-8-engine-profiles.md), Planned, led by owner: 7 of 21 done, 8 ready, 4 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](../../../docs/superpowers/plans/2026-11-13-engine-profiles.md).
 
 Milestone: Each view knows what the device supports and why ([CS-466](./milestones/CS-466-each-view-knows-what-the-device-supports-and-why.md), Planned)
 
 - [x] [CS-20](./items/CS-20-facts-and-personas.md) Facts and personas. Done.
 - [x] [CS-21](./items/CS-21-the-catalog-rules-and-resolver.md) The catalog, rules and resolver. Done.
 - [x] [CS-22](./items/CS-22-paths-in-one-place-with-the-seam-test.md) Paths in one place, with the seam test. Done.
-- [ ] [CS-23](./items/CS-23-wired-into-engine-and-view-view-support-view.md) Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`). Needs CS-22.
+- [x] [CS-23](./items/CS-23-wired-into-engine-and-view-view-support-view.md) Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`). Done.
 - [ ] [CS-507](./items/CS-507-silent-fallbacks-become-support-notices.md) Silent fallbacks become support notices. Needs CS-23.
 
 Milestone: Fidelity adapts without silent fallbacks ([CS-467](./milestones/CS-467-fidelity-adapts-without-silent-fallbacks.md), Planned)
@@ -94,6 +94,7 @@ No milestone
 - [?] [CS-369](./items/CS-369-importing-an-outside-renderer-s-colour-and-depth.md) Importing an outside renderer's colour and depth. Proposed. Needs CS-23.
 - [x] [CS-539](./items/CS-539-how-cs-20-reaches-main-while-the-merge-queue.md) decision: How CS-20 reaches main while the merge queue cannot verify it. Done.
 - [x] [CS-755](./items/CS-755-merge-cs-22-paths-in-one-place-with-the-seam.md) decision: Merge CS-22, paths in one place with the seam test. Done.
+- [x] [CS-779](./items/CS-779-merge-cs-23-support-reports-on-engine-and-view.md) decision: Merge CS-23, support reports on Engine and View (view.support, view.effective, view.explain, strict). Done.
 
 ### The WebGL 2 renderer
 
@@ -938,7 +939,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 36 of 76 done, 19 ready, 17 blocked, 4 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 37 of 77 done, 18 ready, 17 blocked, 5 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -1038,11 +1039,12 @@ No milestone
 - [?] [CS-773](./items/CS-773-dyno-analysis-compare-and-trend-give-verdicts.md) dyno analysis compare and trend give verdicts with noise estimates, and bisect hands off to CS-325. Proposed. Needs CS-721.
 - [ ] [CS-774](./items/CS-774-npx-dyno-works-the-dyno-bin-lives-in-a-private.md) npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno. Needs CS-721.
 - [?] [CS-775](./items/CS-775-the-dependencies-view-s-waves-grid-retires-now.md) The Dependencies view's waves grid retires now that the Path view answers what it did. Proposed. Needs CS-746.
-- [ ] [CS-778](./items/CS-778-merge-cs-747-the-what-changed-view-since-you.md) decision: Merge CS-747, the What changed view (since you last looked). Needs nothing. Decided by owner.
+- [x] [CS-778](./items/CS-778-merge-cs-747-the-what-changed-view-since-you.md) decision: Merge CS-747, the What changed view (since you last looked). Done.
+- [?] [CS-781](./items/CS-781-what-changed-takes-a-since-url-field-so-a.md) What changed takes a since= URL field, so a chosen point can be shared as a link. Proposed. Needs CS-747.
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 6 of 18 done, 7 ready, 4 blocked, 1 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 6 of 19 done, 8 ready, 4 blocked, 1 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
@@ -1061,6 +1063,7 @@ Milestone: The approved API changes are made ([CS-457](./milestones/CS-457-the-a
 - [ ] [CS-435](./items/CS-435-the-measurement-module-s-seam-and-entry-point.md) The measurement module's seam and entry point. Needs CS-438.
 - [x] [CS-708](./items/CS-708-2-0-is-strict-mode-safe-a-canvas-the-engine.md) 2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything. Done.
 - [ ] [CS-763](./items/CS-763-engine-create-takes-a-signal-an-aborted-create.md) Engine.create takes a signal: an aborted create releases its device and pipelines. Needs nothing.
+- [ ] [CS-780](./items/CS-780-engine-errors-becomes-an-emitter-errors-on.md) Engine.errors becomes an emitter: errors.on("support", …) reaches notice listeners, as the engine-profiles plan names it. Needs CS-23 (Engine profiles).
 
 Milestone: 1.x's smaller tools have 2.0 homes ([CS-675](./milestones/CS-675-1-x-s-smaller-tools-have-2-0-homes.md), Planned)
 

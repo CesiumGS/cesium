@@ -4,30 +4,14 @@
 
 ```text
 CS-8 Engine profiles
-  CS-24  `resolution` and `msaa` as features
-      ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
-  CS-25  Aerial perspective steps
-      ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
   CS-26  The opt-in resolution governor
       ← CS-24 `resolution` and `msaa` as features
-  CS-27  The inspector's Profile section and emulation
-      ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
-  CS-28  The `@cesium/next/gpu` entry point
-      ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
-  CS-29  The Viewer's defaults migrated
-      ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
   CS-30  The WebGL 2 renderer's facts and support rules
       ← CS-35 The probe, the `renderer` option and an empty WebGL 2 device
   CS-31  The worker mode's snapshots
-      ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
-        CS-99 The worker-mode spike: a headed run on an otherwise idle GPU
-  CS-365  Limit-forced accuracy changes carried into query results
-      ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
+      ← CS-99 The worker-mode spike: a headed run on an otherwise idle GPU
   CS-366  The remaining silent fallbacks: translucency layers, the slice pool's capacity, the normals choice
-      ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
-        CS-134 The source registry and snapshot, with adapters and a check against today's `needsTicks`; no behaviour change
-  CS-507  Silent fallbacks become support notices
-      ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
+      ← CS-134 The source registry and snapshot, with adapters and a check against today's `needsTicks`; no behaviour change
 
 CS-9 The WebGL 2 renderer
   CS-36  First draws, unlit (glTF and 3D Tiles meshes)
@@ -726,5 +710,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-238 blocked
+231 blocked
 ```

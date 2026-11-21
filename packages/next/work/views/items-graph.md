@@ -8,7 +8,7 @@ graph LR
     CS_20["CS-20 Facts and personas"]:::done
     CS_21["CS-21 The catalog, rules and resolver"]:::done
     CS_22["CS-22 Paths in one place, with the seam test"]:::done
-    CS_23["CS-23 Support reports on 'Engine' and 'View' ('view.support', 'view.ef"]:::open
+    CS_23["CS-23 Support reports on 'Engine' and 'View' ('view.support', 'view.ef"]:::done
     CS_24["CS-24 'resolution' and 'msaa' as features"]:::open
     CS_25["CS-25 Aerial perspective steps"]:::open
     CS_26["CS-26 The opt-in resolution governor"]:::open
@@ -25,6 +25,7 @@ graph LR
     CS_507["CS-507 Silent fallbacks become support notices"]:::open
     CS_539["CS-539 How CS-20 reaches main while the merge queue cannot verify it"]:::done
     CS_755["CS-755 Merge CS-22, paths in one place with the seam test"]:::done
+    CS_779["CS-779 Merge CS-23, support reports on Engine and View (view.support, "]:::done
   end
   subgraph CS_9["WebGL 2 renderer"]
     CS_32["CS-32 The shader route spike: our own naga crate measured against the "]:::open
@@ -621,7 +622,8 @@ graph LR
     CS_773["CS-773 dyno analysis compare and trend give verdicts with noise estima"]:::proposed
     CS_774["CS-774 npx dyno works: the dyno bin lives in a private workspace packa"]:::open
     CS_775["CS-775 The Dependencies view's waves grid retires now that the Path vi"]:::proposed
-    CS_778["CS-778 Merge CS-747, the What changed view (since you last looked)"]:::decision
+    CS_778["CS-778 Merge CS-747, the What changed view (since you last looked)"]:::done
+    CS_781["CS-781 What changed takes a since= URL field, so a chosen point can be"]:::proposed
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -642,6 +644,7 @@ graph LR
     CS_763["CS-763 Engine.create takes a signal: an aborted create releases its de"]:::open
     CS_769["CS-769 Merge CS-430, the WebGPU seams audited"]:::done
     CS_771["CS-771 The seam bypass tests catch the five plants CS-430's audit foun"]:::proposed
+    CS_780["CS-780 Engine.errors becomes an emitter: errors.on('support', …) reach"]:::open
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::decision
@@ -1399,6 +1402,8 @@ graph LR
   CS_746 --> CS_775
   CS_52 --> CS_777
   CS_580 --> CS_777
+  CS_23 --> CS_780
+  CS_747 --> CS_781
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

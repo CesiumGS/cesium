@@ -114,9 +114,9 @@ CS-456 Refinement, profiles and streaming work in worker mode [Planned], under C
 
 CS-457 The approved API changes are made [Planned], under CS-437 The public API reviews
   outcome: The stability tiers the review approved are TSDoc tags, with internal members stripped from the published types, and measurement has its own module seam and entry point.
-  constraints: 1 of 4 done
-  unmet: not linked to a clause yet (open: CS-434, CS-435, CS-763; check not passed)
-  to shape: done_when; check; link CS-434, CS-435, CS-708, CS-763 to a clause
+  constraints: 1 of 5 done
+  unmet: not linked to a clause yet (open: CS-434, CS-435, CS-763, CS-780; check not passed)
+  to shape: done_when; check; link CS-434, CS-435, CS-708, CS-763, CS-780 to a clause
 
 CS-458 Every fetch has a deadline and retries within its origin's budget [Planned], under CS-16 Streaming robustness
   outcome: Every request the engine makes has a deadline set from what its origin has delivered and fails with a kind an app can read; transient failures retry with backoff inside per-origin budgets, and apps can route requests with 1.x's proxies, query parameters, headers and credentials.
@@ -179,10 +179,10 @@ CS-465 Jobs share one tick budget and decode can't hang [Planned], under CS-12 T
 
 CS-466 Each view knows what the device supports and why [Planned], under CS-8 Engine profiles
   outcome: An app can ask any view what the device supports, what each feature was given and why, and no fallback happens without being reported.
-  constraints: 3 of 5 done
+  constraints: 4 of 5 done
   unmet: c1 On every named persona, from `m2-chrome` down to `swiftshader`, `minimum-limits` and `no-optional-features`, every feature in the catalog resolves to a step the device can run or to its documented fallback; the step given is never better than the step asked, and unknown hardware gets the best supported step with the reason that no rule matched. (check not passed)
   unmet: c2 The path `view.support.paths` names is the path that runs (star submission, the moments format, the KTX2 transcode target, the sample-rate path and GPU timing), and no code outside the profile and device layers reads device features, adapter info or limits to choose behaviour; a test names any line that does. (check not passed)
-  unmet: c3 On a live view, an app reads `view.support`, `view.effective` and `view.explain(feature)` and gets, for each feature, what it asked for, what it was given, and the rule and reason behind it; the values stay right after a resize and after device loss. (open: CS-23; check not passed)
+  unmet: c3 On a live view, an app reads `view.support`, `view.effective` and `view.explain(feature)` and gets, for each feature, what it asked for, what it was given, and the rule and reason behind it; the values stay right after a resize and after device loss. (check not passed)
   unmet: c4 Each fallback that is silent today raises a support notice on `Engine.errors` (glare's auto, moments without `float32-blendable`, the ambient occlusion pixel cap, World capacity clamps, the imagery slice ceiling, and screen-space error raised over budget), warns once in the console where the notice table says to, and throws under `strict`. (open: CS-507; check not passed)
 
 CS-467 Fidelity adapts without silent fallbacks [Planned], under CS-8 Engine profiles

@@ -4,8 +4,14 @@
 
 ```text
 CS-8 Engine profiles
-  CS-23  Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
+  CS-24  `resolution` and `msaa` as features
+  CS-25  Aerial perspective steps
+  CS-27  The inspector's Profile section and emulation
+  CS-28  The `@cesium/next/gpu` entry point
+  CS-29  The Viewer's defaults migrated
+  CS-365  Limit-forced accuracy changes carried into query results
   CS-368  `Engine.queries` takes the application's backends
+  CS-507  Silent fallbacks become support notices
 
 CS-9 The WebGL 2 renderer
   CS-32  The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points
@@ -214,7 +220,6 @@ CS-389 Dyno as the development harness
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
   CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
   CS-774  npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno
-  CS-778  decision: Merge CS-747, the What changed view (since you last looked)
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
@@ -224,6 +229,7 @@ CS-437 The public API reviews
   CS-670  Bounding volumes and their tests on the public API
   CS-681  decision: Should 2.0 keep marking APIs experimental, and how?
   CS-763  Engine.create takes a signal: an aborted create releases its device and pipelines
+  CS-780  Engine.errors becomes an emitter: errors.on("support", …) reaches notice listeners, as the engine-profiles plan names it
 
 CS-579 Editing
   CS-453  decision: What editing should the engine support, with vector data and GIS sources among it?
@@ -259,5 +265,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-190 ready
+196 ready
 ```
