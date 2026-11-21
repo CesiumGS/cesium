@@ -13,20 +13,17 @@ import type { Slab } from "../Slabs.ts";
 import type { World } from "../World.ts";
 import { stringIds } from "../stringIds.ts";
 import type { TablePlan, TableColumn, MeshHandle } from "./types.ts";
-import { queueUpload } from "./uploads.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
+import type { WorldMirror } from "../renderSeam.ts";
 
 /** Scene side, uploading through the rasterizer's per-tick computes. */
 export interface FeatureTableWorld extends Pick<World, "ctx" | "slabs"> {
+  /** The world's device copy: geometry bytes go to it (`queueUpload`). */
+  readonly mirror: Pick<WorldMirror, "queueUpload">;
   readonly raster: Pick<
     WorldRaster,
-    | "frameComputes"
-    | "instances"
-    | "pendingUploads"
-    | "records"
-    | "transforms"
-    | "uploadChunks"
+    "frameComputes" | "instances" | "records" | "transforms"
   >;
   readonly draws: Pick<
     WorldDraws,
@@ -296,7 +293,7 @@ export function uploadTable(
         strings.push(value); // not push(...held): a long column overflows the stack
       }
       ranges.push([offset, data.byteLength]);
-      queueUpload(world, slab.vertexBuffer, offset, data);
+      world.mirror.queueUpload(slab.id, "vertex", offset, data);
       entries.push([
         attributeHash(metadataKey(column.name)),
         offset / 4,
@@ -350,7 +347,7 @@ export function warnUnavailable(
 
 /** Uploads changed table entries (a scatter is encoded into `pass`). */
 export function uploadTables(
-  world: FeatureTableWorld,
+  world: Omit<FeatureTableWorld, "mirror">,
   pass: GPUComputePassEncoder,
 ): void {
   if (!world.draws.uploadsPending) {

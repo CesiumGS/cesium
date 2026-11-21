@@ -21,23 +21,20 @@ import {
   releaseTable,
 } from "./featureTables.ts";
 import type { MeshHandle, PointMesh } from "./types.ts";
-import { queueUpload } from "./uploads.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
+import type { WorldMirror } from "../renderSeam.ts";
 
 /** Scene side: geometry into the world's slabs. */
 export interface MeshWorld extends Pick<
   World,
   "changedViews" | "ctx" | "flushUploads" | "slabs" | "version"
 > {
+  /** The world's device copy: geometry bytes go to it (`queueUpload`). */
+  readonly mirror: Pick<WorldMirror, "queueUpload">;
   readonly raster: Pick<
     WorldRaster,
-    | "records"
-    | "frameComputes"
-    | "instances"
-    | "pendingUploads"
-    | "transforms"
-    | "uploadChunks"
+    "records" | "frameComputes" | "instances" | "transforms"
   >;
   readonly draws: Pick<
     WorldDraws,
@@ -134,7 +131,7 @@ export function addMesh(world: MeshWorld, mesh: MeshData): MeshHandle {
       throw new CapacityError("vertex arena");
     }
     vertexRanges.push([offset, data.byteLength]);
-    queueUpload(world, slab.vertexBuffer, offset, data);
+    world.mirror.queueUpload(slab.id, "vertex", offset, data);
     return offset / 4;
   };
   const streams: MeshStreams = {
@@ -218,7 +215,7 @@ export function addMesh(world: MeshWorld, mesh: MeshData): MeshHandle {
     }
     throw new CapacityError("index arena");
   }
-  queueUpload(world, slab.indexBuffer, indexOffset, mesh.indices);
+  world.mirror.queueUpload(slab.id, "index", indexOffset, mesh.indices);
   const { center, radius } = boundingSphere(mesh.positions);
   const id = world.scene.nextMeshId++;
   world.scene.meshRanges.set(id, {
@@ -303,9 +300,9 @@ export function addPointMesh(
     );
   }
   if (directory.byteLength) {
-    queueUpload(
-      world,
-      slab.vertexBuffer,
+    world.mirror.queueUpload(
+      slab.id,
+      "vertex",
       offset + anchorBytes + streamBytes,
       directory,
     );
@@ -365,9 +362,9 @@ export function setPointProperties(
       `setPointProperties: ${data.length / Math.max(1, stride)} points from ${first} don't fit`,
     );
   }
-  queueUpload(
-    world,
-    world.slabs.get(mesh.slab).vertexBuffer,
+  world.mirror.queueUpload(
+    mesh.slab,
+    "vertex",
     (streams + first * stride) * 4,
     data,
   );

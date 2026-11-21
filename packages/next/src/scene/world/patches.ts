@@ -21,7 +21,7 @@ import type { World } from "../World.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
 import type { DrawPlacement, PatchDraw, PatchMesh } from "./types.ts";
-import { queueUpload } from "./uploads.ts";
+import type { WorldMirror } from "../renderSeam.ts";
 
 /** `PatchDice` (shaders/dice.slang): 8 words. */
 export const PATCH_DICE_BYTES = 32;
@@ -35,8 +35,9 @@ export const DEFAULT_ERROR_PIXELS = 0.5;
 export const DEFAULT_MAX_CHUNKS = 65536;
 
 /** Scene side: a patch mesh's geometry into the world's slabs. */
-export interface PatchMeshWorld extends Pick<World, "ctx" | "slabs"> {
-  readonly raster: Pick<WorldRaster, "pendingUploads" | "uploadChunks">;
+export interface PatchMeshWorld extends Pick<World, "slabs"> {
+  /** The world's device copy: geometry bytes go to it (`queueUpload`). */
+  readonly mirror: Pick<WorldMirror, "queueUpload">;
   readonly draws: Pick<WorldDraws, "uploadsPending">;
   readonly scene: Pick<WorldScene, "meshRanges" | "nextMeshId">;
 }
@@ -87,7 +88,7 @@ export function addPatchMesh(
       `patches of ${bytes.toLocaleString("en-US")} bytes: ${world.slabs.refusal(bytes, 0) ?? "no slab has a range that size free"}`,
     );
   }
-  queueUpload(world, slab.vertexBuffer, offset, data.words);
+  world.mirror.queueUpload(slab.id, "vertex", offset, data.words);
   const id = world.scene.nextMeshId++;
   world.scene.meshRanges.set(id, {
     slab: slab.id,

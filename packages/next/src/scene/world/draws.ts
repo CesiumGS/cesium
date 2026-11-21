@@ -43,7 +43,6 @@ import type {
   PointMesh,
   PointDraw,
 } from "./types.ts";
-import { queueUpload } from "./uploads.ts";
 import {
   growPointSets,
   growDraws,
@@ -52,6 +51,7 @@ import {
 } from "../../render/world/tables.ts";
 import type { WorldRaster } from "../../render/world/worldRaster.ts";
 import type { WorldScene } from "./worldScene.ts";
+import type { WorldMirror } from "../renderSeam.ts";
 
 /** Crosses the sides: changing draw records and batches (rasterizer) with what they name (scene). */
 export interface DrawWorld extends Pick<
@@ -68,6 +68,8 @@ export interface DrawWorld extends Pick<
   | "version"
   | "curvilinearMaps"
 > {
+  /** The world's device copy: geometry bytes go to it (`queueUpload`). */
+  readonly mirror: Pick<WorldMirror, "queueUpload">;
   readonly raster: Pick<
     WorldRaster,
     | "batchChunks"
@@ -78,14 +80,12 @@ export interface DrawWorld extends Pick<
     | "instanceStreamRanges"
     | "instances"
     | "patchDraws"
-    | "pendingUploads"
     | "placementTable"
     | "pointCounts"
     | "pointDraws"
     | "splats"
     | "transforms"
     | "translucentDraws"
-    | "uploadChunks"
   >;
   readonly draws: Pick<
     WorldDraws,
@@ -153,6 +153,8 @@ export interface AddDrawWorld extends Pick<
   | "version"
   | "curvilinearMaps"
 > {
+  /** The world's device copy: geometry bytes go to it (`queueUpload`). */
+  readonly mirror: Pick<WorldMirror, "queueUpload">;
   readonly raster: Pick<
     WorldRaster,
     | "batchChunks"
@@ -174,7 +176,6 @@ export interface AddDrawWorld extends Pick<
     | "instances"
     | "materialRows"
     | "patchDraws"
-    | "pendingUploads"
     | "placementTable"
     | "pointCounts"
     | "patchDraws"
@@ -185,7 +186,6 @@ export interface AddDrawWorld extends Pick<
     | "splats"
     | "transforms"
     | "translucentDraws"
-    | "uploadChunks"
   >;
   readonly draws: Pick<
     WorldDraws,
@@ -527,11 +527,11 @@ export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
       releasePoints();
       throw new CapacityError("vertex arena");
     }
-    queueUpload(world, slab.vertexBuffer, offset, data);
+    world.mirror.queueUpload(slab.id, "vertex", offset, data);
     if (fields.length) {
-      queueUpload(
-        world,
-        slab.vertexBuffer,
+      world.mirror.queueUpload(
+        slab.id,
+        "vertex",
         offset + data.byteLength,
         directory,
       );
@@ -1076,12 +1076,7 @@ export function setInstanceStreams(
       `setInstanceStreams: ${data.length / stride} instances from ${firstInstance} don't fit`,
     );
   }
-  queueUpload(
-    world,
-    world.slabs.get(range[3]).vertexBuffer,
-    range[0] + at,
-    data,
-  );
+  world.mirror.queueUpload(range[3], "vertex", range[0] + at, data);
   world.version++;
   world.changedViews |=
     world.draws.recordsU32[handle.index * RECORD_WORDS + VIEW_MASK_WORD]!;

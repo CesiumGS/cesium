@@ -1,6 +1,9 @@
-// A world's upload queue: writes into its slabs, gathered and flushed in chunks.
-import type { World } from "../World.ts";
-import type { WorldRaster } from "../../render/world/worldRaster.ts";
+// A world's upload queue on the WebGPU device: writes into its slabs,
+// gathered in mapped staging chunks and flushed in one batch at `sync`.
+// The scene side queues through `WorldMirror.queueUpload`, naming a slab
+// and arena (src/render/world/worldMirror.ts).
+import type { World } from "../../scene/World.ts";
+import type { WorldRaster } from "./worldRaster.ts";
 
 /** Rasterizer side: the upload queue. */
 export interface UploadWorld extends Pick<World, "ctx"> {
@@ -10,7 +13,7 @@ export interface UploadWorld extends Pick<World, "ctx"> {
 /** Smallest staging buffer for queued uploads. */
 const UPLOAD_CHUNK_BYTES = 1 << 20;
 
-/** @internal Queues a write of `data` at `offset` in `target` (`flushUploads`). */
+/** Queues a write of `data` at `offset` in `target` (`flushUploads`). */
 export function queueUpload(
   world: UploadWorld,
   target: GPUBuffer,

@@ -10,9 +10,9 @@ import type { WorldMirror } from "../../scene/renderSeam.ts";
 import type { World } from "../../scene/World.ts";
 import { textureDestroyed } from "../../scene/world/materials.ts";
 import { createSplats } from "../../scene/world/points.ts";
-import { flushUploads } from "../../scene/world/uploads.ts";
 import { DrawArguments } from "../drawArguments.ts";
 import { WebGpuContentTextures, WebGpuImagery } from "./contentResources.ts";
+import { flushUploads, queueUpload } from "./uploads.ts";
 import { DRAW_ITEM_SIZE, MATERIAL_SIZE } from "../layout.ts";
 import {
   clippedBundle,
@@ -154,9 +154,24 @@ export class WebGpuWorldMirror implements WorldMirror {
     this.imagery = new WebGpuImagery(ctx, world);
   }
 
-  /** Copies the queued geometry into place (scene/world/uploads.ts). */
+  /** Copies the queued geometry into place (src/render/world/uploads.ts). */
   sync(): void {
     flushUploads(this.world);
+  }
+
+  queueUpload(
+    slab: number,
+    arena: "vertex" | "index",
+    offset: number,
+    data: Float32Array | Uint32Array,
+  ): void {
+    const { vertexBuffer, indexBuffer } = this.world.slabs.get(slab);
+    queueUpload(
+      this.world,
+      arena === "vertex" ? vertexBuffer : indexBuffer,
+      offset,
+      data,
+    );
   }
 
   /** A geometry slab was replaced by a larger one: its groups bind it again. */

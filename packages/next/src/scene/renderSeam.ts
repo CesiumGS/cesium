@@ -59,6 +59,17 @@ export interface RenderTick {
 export interface WorldMirror {
   /** Copies geometry written since the last tick to the device now. */
   sync(): void;
+  /**
+   * Queues `data` for the world's geometry slab `slab` (`Slabs`), at byte
+   * `offset` in its vertex or index arena, copied to the device at `sync`.
+   * The device keeps the bytes from now: the caller may reuse `data`.
+   */
+  queueUpload(
+    slab: number,
+    arena: "vertex" | "index",
+    offset: number,
+    data: Float32Array | Uint32Array,
+  ): void;
   /** Content's textures on the device (glTF's, `gltfModel.ts`). */
   readonly textures: ContentTextures;
   /** The world's globe imagery on the device: its slices and compositors. */
