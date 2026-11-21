@@ -3,7 +3,7 @@
 import { destroyObject } from "@cesium/core";
 import OverlayRenderer from "./OverlayRenderer.js";
 
-/** @import { OrientedBoundingBox } from "@cesium/core"; */
+/** @import { Matrix4, OrientedBoundingBox } from "@cesium/core"; */
 /** @import { FrameState, GeometrySource } from "@cesium/engine"; */
 /** @import { OverlayViews } from "@cesium/mesh-editor"; */
 /** @import MeshEditorGroup from "./MeshEditorGroup.js"; */
@@ -121,6 +121,21 @@ class Mesh {
    */
   get orientedBoundingBox() {
     return this._renderer.boundingVolume;
+  }
+
+  /**
+   * The transform from the mesh's local coordinates to world coordinates.
+   * Starts as the source's {@link GeometrySource#worldMatrix}. Setting it
+   * doesn't change the source. Don't modify it; assign a new matrix instead.
+   *
+   * @type {Matrix4}
+   */
+  get modelMatrix() {
+    return this._renderer.modelMatrix;
+  }
+
+  set modelMatrix(value) {
+    this._renderer.setModelMatrix(value);
   }
 
   /**

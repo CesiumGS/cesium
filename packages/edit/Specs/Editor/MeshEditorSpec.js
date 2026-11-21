@@ -942,6 +942,46 @@ describe(
         );
       });
 
+      it("starts with a copy of the source's world matrix", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const source = createSource(square);
+        Matrix4.fromTranslation(
+          new Cartesian3(1.0, 2.0, 3.0),
+          source.worldMatrix,
+        );
+        const mesh = editor.addMesh(source);
+        const expected = Matrix4.clone(source.worldMatrix);
+
+        Matrix4.fromTranslation(
+          new Cartesian3(4.0, 5.0, 6.0),
+          source.worldMatrix,
+        );
+
+        expect(mesh.modelMatrix).toEqual(expected);
+      });
+
+      it("draws the overlay and fits its bounding box at a new model matrix", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createSource(square));
+        scene.renderForSpecs();
+
+        const modelMatrix = Matrix4.fromTranslation(
+          new Cartesian3(1.0, 2.0, 3.0),
+        );
+        mesh.modelMatrix = modelMatrix;
+
+        expect(mesh.modelMatrix).toEqual(modelMatrix);
+        expect(mesh.orientedBoundingBox).toEqual(
+          new OrientedBoundingBox(
+            new Cartesian3(1.0, 2.0, 3.0),
+            Matrix3.fromScale(new Cartesian3(1.0, 1.0, 0.0)),
+          ),
+        );
+        for (const command of renderCommands(mesh)) {
+          expect(command.modelMatrix).toEqual(modelMatrix);
+        }
+      });
+
       it("culls the overlay with its bounding volume", async function () {
         const editor = await MeshEditor.addToScene(scene);
         const mesh = editor.addMesh(createSource(square));
