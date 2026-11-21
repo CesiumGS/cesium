@@ -287,49 +287,55 @@ export async function buildWatch() {
 }
 
 export async function buildTs() {
+  /** @type {string[]} */
+  let workspaces;
   if (!argv.workspace) {
-    for (const workspace of getWorkspaces(true)) {
-      execSync(`npm run build-ts --workspace @${scope}/${workspace}`, {
-        stdio: "inherit",
-      });
-    }
-    await generateCesiumTypeScriptDefinitions();
-    return;
+    workspaces = getWorkspaces(true);
+  } else if (Array.isArray(argv.workspace)) {
+    workspaces = argv.workspace.map(normalizeWorkspaceArg);
+  } else {
+    workspaces = [normalizeWorkspaceArg(argv.workspace)];
   }
 
-  /** @type {string[]} */
-  const workspaces = Array.isArray(argv.workspace)
-    ? argv.workspace
-    : [argv.workspace];
+  for (const workspace of workspaces) {
+    execSync(`npm run build-ts --workspace @${scope}/${workspace}`, {
+      stdio: "inherit",
+    });
+  }
 
-  // Earlier workspaces that aren't regenerated in this run are imported using their existing declarations.
+  if (!argv.workspace) {
+    await generateCesiumTypeScriptDefinitions();
+  }
+}
+
+/**
+ * Runs tsd-jsdoc to generate the type declarations for the workspace given by
+ * `--workspace`. Earlier workspaces are imported using their existing declarations.
+ */
+export async function runTsdJsdoc() {
+  if (!argv.workspace || Array.isArray(argv.workspace)) {
+    throw new Error("runTsdJsdoc requires exactly one --workspace.");
+  }
+  const workspace = normalizeWorkspaceArg(argv.workspace);
+
   /** @type {Object<string, Set<string>>} */
   const dependencyExports = {};
-  const requested = workspaces.map(normalizeWorkspaceArg);
   const allWorkspaces = getWorkspaces(true);
-  const lastIndex = Math.max(
+  for (const dependency of allWorkspaces.slice(
     0,
-    ...requested.map((workspace) => allWorkspaces.indexOf(workspace)),
-  );
-  for (const dependency of allWorkspaces.slice(0, lastIndex)) {
-    if (!requested.includes(dependency)) {
-      dependencyExports[dependency] = readWorkspaceExports(dependency);
-    }
+    allWorkspaces.indexOf(workspace),
+  )) {
+    dependencyExports[dependency] = readWorkspaceExports(dependency);
   }
 
-  // Generate types for passed packages in order.
-  for (const workspace of workspaces) {
-    const directory = normalizeWorkspaceArg(workspace);
-    const workspaceExports = await generateWorkspaceTypeScriptDefinitions(
-      directory,
-      `packages/${directory}/index.d.ts`,
-      `packages/${directory}/tsd-conf.json`,
-      // The engine package needs its own Viewer circular-dependency workaround.
-      directory === "engine" ? processEngineSource : undefined,
-      dependencyExports,
-    );
-    dependencyExports[directory] = workspaceExports;
-  }
+  await generateWorkspaceTypeScriptDefinitions(
+    workspace,
+    `packages/${workspace}/index.d.ts`,
+    `packages/${workspace}/tsd-conf.json`,
+    // The engine package needs its own Viewer circular-dependency workaround.
+    workspace === "engine" ? processEngineSource : undefined,
+    dependencyExports,
+  );
 }
 
 export async function tsc() {
