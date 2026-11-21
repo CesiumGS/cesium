@@ -20,8 +20,9 @@
 // - floor, comparisons, min, max: exact on (hi, lo).
 // Beyond the ranges (exp of more than 80, an angle of 1e5 radians) results
 // degrade or overflow to inf as float32 does.
+import type { Id, Program } from "../ir/types.ts";
 import { splitDf64 } from "../math/transforms.ts";
-import type { IrNode } from "./ir.ts";
+import { leafOf, numbering, through } from "./program.ts";
 
 /** x as (hi, lo), float32 each: hi + lo is x to 48 bits (`splitDf64`). */
 export function splitDouble(x: number): [number, number] {
@@ -275,33 +276,34 @@ export interface Df64Inputs {
 }
 
 /**
- * df64 WGSL statements for `nodes` (a program's nodes, in order): each
- * computed node becomes `var <prefix><id>: vec2f`. `ref(id)` is the
- * expression for a node's value (constants and inputs inline). Booleans are
- * 0 and 1 in the hi part.
+ * df64 WGSL statements for `program` (Cesium IR, scalarized), its equations
+ * in order: each computed equation becomes `var <prefix><n>: vec2f`, `n`
+ * from `numbering`. `ref(id)` is the expression for an equation's value
+ * (constants and inputs inline). Booleans are 0 and 1 in the hi part.
  */
 export function emitDf64(
-  nodes: readonly IrNode[],
+  program: Program,
   inputs: Df64Inputs,
   prefix: string,
-): { lines: string[]; ref: (id: number) => string } {
-  const ref = (id: number): string => {
-    const node = nodes[id]!;
-    switch (node.op) {
+): { lines: string[]; ref: (id: Id) => string } {
+  const number = numbering(program);
+  const ref = (id: Id): string => {
+    const leaf = leafOf(program, id);
+    switch (leaf?.kind) {
       case "const":
-        return df64Literal(node.value);
+        return df64Literal(leaf.value);
       case "pos":
-        return inputs.pos(node.value);
+        return inputs.pos(leaf.lane);
       case "param":
-        return inputs.param(node.name);
+        return inputs.param(leaf.name);
       default:
-        return `${prefix}${id}`;
+        return `${prefix}${number(id)}`;
     }
   };
   const lines: string[] = [];
   const cached = new Map<string, string>();
-  const shared = (kind: string, arg: number, call: string): string => {
-    const name = `${prefix}${kind}${arg}`;
+  const shared = (kind: string, arg: Id, call: string): string => {
+    const name = `${prefix}${kind}${number(arg)}`;
     if (!cached.has(name)) {
       lines.push(`  var ${name}: vec4f = ${call}(${ref(arg)});`);
       cached.set(name, name);
@@ -309,8 +311,12 @@ export function emitDf64(
     return name;
   };
   const zero = "vec2f(0.0)";
-  nodes.forEach((node, id) => {
-    if (node.op === "const" || node.op === "pos" || node.op === "param") {
+  program.eqns.forEach((node, id) => {
+    if (
+      node.op === "input" ||
+      through(program, id) !== id ||
+      leafOf(program, id) !== undefined
+    ) {
       return;
     }
     const [a, b, c] = node.args;
@@ -319,118 +325,115 @@ export function emitDf64(
     const C = c === undefined ? "" : ref(c);
     let e: string;
     switch (node.op) {
-      case "add":
+      case "math/add":
         e = `df_add(${A}, ${B})`;
         break;
-      case "sub":
+      case "math/sub":
         e = `df_sub(${A}, ${B})`;
         break;
-      case "mul":
+      case "math/mul":
         e = `df_mul(${A}, ${B})`;
         break;
-      case "div":
+      case "math/div":
         e = `df_div(${A}, ${B})`;
         break;
-      case "neg":
+      case "math/neg":
         e = `-${A}`;
         break;
-      case "sqrt":
+      case "math/sqrt":
         e = `df_sqrt(${A})`;
         break;
-      case "abs":
+      case "math/abs":
         e = `select(${A}, -${A}, df_lt(${A}, ${zero}))`;
         break;
-      case "min":
+      case "math/min":
         e = `select(${B}, ${A}, df_lt(${A}, ${B}))`;
         break;
-      case "max":
+      case "math/max":
         e = `select(${B}, ${A}, df_lt(${B}, ${A}))`;
         break;
-      case "floor":
+      case "math/floor":
         e = `df_floor(${A})`;
         break;
-      case "ceil":
+      case "math/ceil":
         e = `-df_floor(-${A})`;
         break;
-      case "fract":
+      case "math/fract":
         e = `df_sub(${A}, df_floor(${A}))`;
         break;
-      case "sign":
+      case "math/sign":
         e = `vec2f(df_sign(${A}), 0.0)`;
         break;
-      case "lt":
+      case "math/lt":
         e = `df_flag(df_lt(${A}, ${B}))`;
         break;
-      case "le":
+      case "math/le":
         e = `df_flag(!df_lt(${B}, ${A}))`;
         break;
-      case "gt":
+      case "math/gt":
         e = `df_flag(df_lt(${B}, ${A}))`;
         break;
-      case "ge":
+      case "math/ge":
         e = `df_flag(!df_lt(${A}, ${B}))`;
         break;
-      case "eq":
+      case "math/eq":
         e = `df_flag(df_eq(${A}, ${B}))`;
         break;
-      case "ne":
-        e = `df_flag(!df_eq(${A}, ${B}))`;
-        break;
-      case "and":
+      case "math/and":
         e = `df_flag(${A}.x != 0.0 && ${B}.x != 0.0)`;
         break;
-      case "or":
+      case "math/or":
         e = `df_flag(${A}.x != 0.0 || ${B}.x != 0.0)`;
         break;
-      case "not":
+      case "math/not":
         e = `df_flag(${A}.x == 0.0)`;
         break;
-      case "select":
+      case "math/select":
         e = `select(${C}, ${B}, ${A}.x != 0.0)`;
         break;
-      case "sin":
+      case "math/sin":
         e = `${shared("sc", a!, "df_sincos")}.xy`;
         break;
-      case "cos":
+      case "math/cos":
         e = `${shared("sc", a!, "df_sincos")}.zw`;
         break;
-      case "tan": {
+      case "math/tan": {
         const sc = shared("sc", a!, "df_sincos");
         e = `df_div(${sc}.xy, ${sc}.zw)`;
         break;
       }
-      case "sinh":
+      case "math/sinh":
         e = `${shared("sh", a!, "df_sinhcosh")}.xy`;
         break;
-      case "cosh":
+      case "math/cosh":
         e = `${shared("sh", a!, "df_sinhcosh")}.zw`;
         break;
-      case "tanh": {
+      case "math/tanh": {
         const sh = shared("sh", a!, "df_sinhcosh");
         e = `df_div(${sh}.xy, ${sh}.zw)`;
         break;
       }
-      case "exp":
+      case "math/exp":
         e = `df_exp(${A})`;
         break;
-      case "log":
+      case "math/log":
         e = `df_log(${A})`;
         break;
-      case "atan":
+      case "math/atan":
         e = `df_atan2(${A}, vec2f(1.0, 0.0))`;
         break;
-      case "atan2":
+      case "math/atan2":
         e = `df_atan2(${A}, ${B})`;
         break;
-      case "asin":
+      case "math/asin":
         e = `df_atan2(${A}, df_sqrt(df_sub(vec2f(1.0, 0.0), df_sqr(${A}))))`;
         break;
-      case "acos":
+      case "math/acos":
         e = `df_atan2(df_sqrt(df_sub(vec2f(1.0, 0.0), df_sqr(${A}))), ${A})`;
         break;
-      case "pow": {
-        const exponent = nodes[b!]!;
-        const n = exponent.op === "const" ? exponent.value : undefined;
+      case "math/pow": {
+        const exponent = leafOf(program, b!);
+        const n = exponent?.kind === "const" ? exponent.value : undefined;
         if (n !== undefined && Number.isInteger(n) && Math.abs(n) <= 4) {
           if (n === 0) {
             e = "vec2f(1.0, 0.0)";
@@ -450,7 +453,7 @@ export function emitDf64(
       default:
         throw new Error(`df64: no emitter for op '${node.op}'`);
     }
-    lines.push(`  var ${prefix}${id}: vec2f = ${e};`);
+    lines.push(`  var ${prefix}${number(id)}: vec2f = ${e};`);
   });
   return { lines, ref };
 }

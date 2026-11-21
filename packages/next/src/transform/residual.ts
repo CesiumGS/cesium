@@ -22,8 +22,16 @@
 // shader forms v(s) from the uniform s and no per-frame work follows a
 // slider move. Branches (select, min, max, abs, floor, comparisons) follow
 // the vertex's own side with the crossing term from the center values.
+//
+// The program is Cesium IR, scalarized: `d<n>` takes its number from
+// `numbering`, a lane of the position is `math/extract3` of `p`, and a bool
+// is the float 0 or 1 (`type/boolToFloat` is its operand).
+import { Builder } from "../ir/builder.ts";
+import type { Id, Program } from "../ir/types.ts";
 import { f32Literal } from "./df64Wgsl.ts";
-import { expandComposite, Ir, type IrProgram, type NodeId } from "./ir.ts";
+import { leafOf, numbering, opOf, through } from "./program.ts";
+
+type NodeId = Id;
 
 /** The float32 helpers the generated residual code calls (names `tg_`); include once per module. */
 export const RESIDUAL_WGSL = `
@@ -150,43 +158,112 @@ fn tg_pow4d(ac: f32, da: f32) -> f32 {
 }
 `;
 
-const COMPOSITES = new Set(["clamp", "mix", "smoothstep"]);
-const FLAGS = new Set(["lt", "le", "gt", "ge", "eq", "ne", "and", "or", "not"]);
+const COMPOSITES = new Set([
+  "math/clamp",
+  "math/saturate",
+  "math/mix",
+  "math/smoothStep",
+]);
+const FLAGS = new Set([
+  "math/lt",
+  "math/le",
+  "math/gt",
+  "math/ge",
+  "math/eq",
+  "math/and",
+  "math/or",
+  "math/not",
+]);
 const COMPARE_TEST: Record<string, string> = {
-  lt: "< 0.0",
-  le: "<= 0.0",
-  gt: "> 0.0",
-  ge: ">= 0.0",
-  eq: "== 0.0",
-  ne: "!= 0.0",
+  "math/lt": "< 0.0",
+  "math/le": "<= 0.0",
+  "math/gt": "> 0.0",
+  "math/ge": ">= 0.0",
+  "math/eq": "== 0.0",
 };
 
-/** `program` with clamp, mix and smoothstep written out in the other ops. */
-export function lowerComposites(program: IrProgram): IrProgram {
-  let current = program;
-  for (let pass = 0; pass < 4; pass++) {
-    if (!current.nodes.some((node) => COMPOSITES.has(node.op))) {
-      return current;
+/**
+ * KHR_interactivity's formula for a composite op, in the other ops: `clamp`
+ * with reversed bounds allowed, `mix` as (1 - t) a + t b, and `smoothStep`'s
+ * rising ramp. With constant bounds or edges, their min and max fold.
+ */
+function expandComposite(b: Builder, op: string, args: readonly Id[]): Id {
+  const [x, y, z] = args as [Id, Id, Id];
+  const k = (v: number) => b.const(v);
+  const f = (name: string, ...a: Id[]) => opOf(b, name, a);
+  const clamp = (v: Id, lo: Id, hi: Id) =>
+    f(
+      "math/min",
+      f("math/max", v, f("math/min", lo, hi)),
+      f("math/max", lo, hi),
+    );
+  switch (op) {
+    case "math/clamp":
+      return clamp(x, y, z);
+    case "math/saturate":
+      return f("math/min", f("math/max", x, k(0)), k(1));
+    case "math/mix":
+      return f(
+        "math/add",
+        f("math/mul", f("math/sub", k(1), z), x),
+        f("math/mul", z, y),
+      );
+    case "math/smoothStep": {
+      const t = f(
+        "math/min",
+        f(
+          "math/max",
+          f(
+            "math/div",
+            f("math/sub", z, f("math/min", x, y)),
+            f("math/abs", f("math/sub", y, x)),
+          ),
+          k(0),
+        ),
+        k(1),
+      );
+      return f(
+        "math/mul",
+        f("math/mul", t, t),
+        f("math/sub", k(3), f("math/mul", k(2), t)),
+      );
     }
-    const ir = new Ir();
-    const map: NodeId[] = [];
-    current.nodes.forEach((node, id) => {
-      if (node.op === "const") {
-        map[id] = ir.constant(node.value);
-      } else if (node.op === "pos") {
-        map[id] = ir.pos(node.value);
-      } else if (node.op === "param") {
-        map[id] = ir.param(node.name);
-      } else {
-        const args = node.args.map((arg) => map[arg]!);
-        map[id] = COMPOSITES.has(node.op)
-          ? expandComposite(ir, node.op, args)!
-          : ir.op(node.op, ...args);
-      }
-    });
-    current = ir.program(current.outputs.map((out) => map[out]!));
+    default:
+      throw new Error(`no composite '${op}'`);
   }
-  return current;
+}
+
+/** `program` with clamp, saturate, mix and smoothStep written out in the other ops. */
+export function lowerComposites(program: Program): Program {
+  if (!program.eqns.some((e) => COMPOSITES.has(e.op))) {
+    return program;
+  }
+  const b = new Builder();
+  const map: Id[] = [];
+  program.eqns.forEach((e, id) => {
+    switch (e.op) {
+      case "const":
+        map[id] = b.const(e.value!);
+        return;
+      case "literal":
+        map[id] = b.literal(e.slot!, e.value!);
+        return;
+      case "input": {
+        const input = program.inputs[e.index!]!;
+        map[id] = b.input(input.name, input.type, input.rate);
+        return;
+      }
+      default: {
+        const args = e.args.map((a) => map[a]!);
+        map[id] = COMPOSITES.has(e.op)
+          ? expandComposite(b, e.op, args)
+          : opOf(b, e.op, args, e.index);
+      }
+    }
+  });
+  return b.program(
+    Object.fromEntries(program.outputs.map((o) => [o.name, map[o.id]!])),
+  );
 }
 
 /** What a pass asks of its host: where per-draw and uniform floats live. */
@@ -229,7 +306,8 @@ export interface PassOutput {
  * the center, reading `c: DrawCenter` and `u: RouteUniforms`.
  */
 export class ResidualPass {
-  readonly ir: Ir;
+  /** The program's builder, holding the equations the rules add (`cos a` for `sin a`'s rule). */
+  readonly ir: Builder;
   readonly lines: string[] = [];
   readonly stored: StoredValue[] = [];
   readonly derived: DerivedValue[] = [];
@@ -238,9 +316,10 @@ export class ResidualPass {
   /** Set when a rule falls back to float32 on whole values (`asin`, `acos`, a variable power). */
   readonly approximate = new Set<string>();
   readonly outputs: NodeId[];
+  private readonly number: (id: NodeId) => number;
   private readonly varyingMemo = new Map<NodeId, boolean>();
-  private centerMemo: IrProgram | undefined;
-  private uniformMemo: IrProgram | undefined;
+  private centerMemo: Program | undefined;
+  private uniformMemo: Program | undefined;
   private readonly storedExpr = new Map<NodeId, string>();
   private readonly derivedExpr = new Map<NodeId, string>();
   private readonly depsMemo = new Map<
@@ -249,39 +328,60 @@ export class ResidualPass {
   >();
 
   constructor(
-    readonly program: IrProgram,
+    readonly program: Program,
     private readonly host: PassHost,
     private readonly separable: ReadonlySet<string>,
   ) {
-    this.ir = Ir.fromProgram(program);
-    this.outputs = [...program.outputs];
+    this.ir = Builder.from(program);
+    this.outputs = program.outputs.map((o) => o.id);
+    this.number = numbering(program);
+  }
+
+  /** The program the rules read: the given one and the equations they add. */
+  private get view(): Program {
+    return {
+      version: this.program.version,
+      inputs: this.ir.inputs,
+      eqns: this.ir.eqns,
+      outputs: [],
+    };
+  }
+
+  /** The change of equation `id` at the vertex, by name. */
+  private d(id: NodeId): string {
+    return `d${this.number(id)}`;
   }
 
   /** Emits the statements and returns each program output's change and center value. */
   emit(): PassOutput[] {
-    this.program.nodes.forEach((_, id) => {
-      if (this.varying(id)) {
-        this.lines.push(`  let d${id}: f32 = ${this.rule(id)};`);
+    this.program.eqns.forEach((e, id) => {
+      if (
+        e.op !== "input" &&
+        through(this.program, id) === id &&
+        this.varying(id)
+      ) {
+        this.lines.push(`  let ${this.d(id)}: f32 = ${this.rule(id)};`);
       }
     });
     return this.outputs.map((id) => ({
-      delta: this.varying(id) ? `d${id}` : "0.0",
+      delta: this.varying(id) ? this.d(id) : "0.0",
       center: this.cv(id),
     }));
   }
 
-  /** The program whose outputs are `this.outputs` followed by each stored value's node (after `emit`). */
-  centerProgram(): IrProgram {
-    this.centerMemo ??= this.ir.program([
-      ...this.outputs,
-      ...this.stored.map((s) => s.node),
-    ]);
+  /** The program whose outputs are `this.outputs` followed by each stored value's equation (after `emit`). */
+  centerProgram(): Program {
+    this.centerMemo ??= this.ir.program(
+      named([...this.outputs, ...this.stored.map((s) => s.node)]),
+    );
     return this.centerMemo;
   }
 
-  /** The program of the derived uniforms' nodes, in `derived` order (after `emit`). */
-  uniformProgram(): IrProgram {
-    this.uniformMemo ??= this.ir.program(this.derived.map((d) => d.node));
+  /** The program of the derived uniforms' equations, in `derived` order (after `emit`). */
+  uniformProgram(): Program {
+    this.uniformMemo ??= this.ir.program(
+      named(this.derived.map((d) => d.node)),
+    );
     return this.uniformMemo;
   }
 
@@ -290,50 +390,53 @@ export class ResidualPass {
     if (known !== undefined) {
       return known;
     }
-    const node = this.ir.nodes[id]!;
+    const e = this.ir.eqns[id]!;
+    const leaf = leafOf(this.view, id);
     const result =
-      node.op === "pos" ||
-      (node.op !== "const" &&
-        node.op !== "param" &&
-        node.args.some((arg) => this.varying(arg)));
+      leaf?.kind === "pos" ||
+      (e.op === "input" && e.type === "float3") ||
+      (leaf === undefined &&
+        e.op !== "input" &&
+        e.args.some((arg) => this.varying(arg)));
     this.varyingMemo.set(id, result);
     return result;
   }
 
-  /** Which separable parameters a node depends on, and whether it is affine in them. */
+  /** Which separable parameters an equation depends on, and whether it is affine in them. */
   private deps(id: NodeId): { deps: ReadonlySet<string>; ok: boolean } {
     const known = this.depsMemo.get(id);
     if (known) {
       return known;
     }
-    const node = this.ir.nodes[id]!;
+    const e = this.ir.eqns[through(this.view, id)]!;
+    const leaf = leafOf(this.view, id);
     const none = new Set<string>();
     let result: { deps: ReadonlySet<string>; ok: boolean };
-    if (node.op === "param") {
+    if (leaf?.kind === "param") {
       result = {
-        deps: this.separable.has(node.name) ? new Set([node.name]) : none,
+        deps: this.separable.has(leaf.name) ? new Set([leaf.name]) : none,
         ok: true,
       };
-    } else if (node.args.length === 0) {
+    } else if (leaf !== undefined || e.args.length === 0) {
       result = { deps: none, ok: true };
     } else {
-      const parts = node.args.map((arg) => this.deps(arg));
+      const parts = e.args.map((arg) => this.deps(arg));
       const union = new Set<string>(parts.flatMap((p) => [...p.deps]));
       const allOk = parts.every((p) => p.ok);
       let ok: boolean;
-      switch (node.op) {
-        case "add":
-        case "sub":
-        case "neg":
+      switch (e.op) {
+        case "math/add":
+        case "math/sub":
+        case "math/neg":
           ok = allOk;
           break;
-        case "mul":
+        case "math/mul":
           ok = allOk && !(parts[0]!.deps.size > 0 && parts[1]!.deps.size > 0);
           break;
-        case "div":
+        case "math/div":
           ok = allOk && parts[1]!.deps.size === 0;
           break;
-        case "select":
+        case "math/select":
           ok = allOk && parts[0]!.deps.size === 0;
           break;
         default:
@@ -345,14 +448,15 @@ export class ResidualPass {
     return result;
   }
 
-  /** The WGSL expression of node `id`'s center value. */
-  cv(id: NodeId): string {
-    const node = this.ir.nodes[id]!;
-    if (node.op === "const") {
-      return literal(node.value);
+  /** The WGSL expression of equation `id`'s center value. */
+  cv(given: NodeId): string {
+    const id = through(this.view, given);
+    const leaf = leafOf(this.view, id);
+    if (leaf?.kind === "const") {
+      return literal(leaf.value);
     }
-    if (node.op === "param") {
-      return this.host.param(node.name);
+    if (leaf?.kind === "param") {
+      return this.host.param(leaf.name);
     }
     if (!this.varying(id)) {
       let expr = this.derivedExpr.get(id);
@@ -388,23 +492,23 @@ export class ResidualPass {
   }
 
   /** The vertex's value of a condition: the flag itself, or the center value plus its change. */
-  private flag(id: NodeId): string {
+  private flag(given: NodeId): string {
+    const id = through(this.view, given);
     if (!this.varying(id)) {
       return this.cv(id);
     }
-    return FLAGS.has(this.ir.nodes[id]!.op)
-      ? `d${id}`
-      : `(${this.cv(id)} + d${id})`;
+    return FLAGS.has(this.ir.eqns[id]!.op)
+      ? this.d(id)
+      : `(${this.cv(id)} + ${this.d(id)})`;
   }
 
   private rule(id: NodeId): string {
-    const ir = this.ir;
-    const node = ir.nodes[id]!;
-    const [a, b, c] = node.args;
+    const e = this.ir.eqns[id]!;
+    const [a, b, c] = e.args;
     const isVarying = (n: NodeId | undefined) =>
       n !== undefined && this.varying(n);
     const dOf = (n: NodeId | undefined): string | null =>
-      isVarying(n) ? `d${n}` : null;
+      isVarying(n) ? this.d(n!) : null;
     const zero = (x: string | null) => x ?? "0.0";
     const plus = (x: string | null, y: string | null): string | null =>
       x === null ? y : y === null ? x : `(${x} + ${y})`;
@@ -412,20 +516,21 @@ export class ResidualPass {
       y === null ? x : x === null ? `(-${y})` : `(${x} - ${y})`;
     const da = dOf(a);
     const db = dOf(b);
-    const aux = (op: Parameters<Ir["op"]>[0], ...args: NodeId[]) =>
-      ir.op(op, ...args);
+    const aux = (op: string, ...args: NodeId[]) => opOf(this.ir, op, args);
     const cvOf = (n: NodeId) => this.cv(n);
+    const leaf = leafOf(this.view, id);
+    if (leaf?.kind === "pos") {
+      return `dIn.${"xyz"[leaf.lane]}`;
+    }
 
-    switch (node.op) {
-      case "pos":
-        return `dIn.${"xyz"[node.value]}`;
-      case "add":
+    switch (e.op) {
+      case "math/add":
         return plus(da, db)!;
-      case "sub":
+      case "math/sub":
         return minus(da, db)!;
-      case "neg":
+      case "math/neg":
         return `-${da}`;
-      case "mul": {
+      case "math/mul": {
         const terms = [
           db === null ? null : `${cvOf(a!)} * ${db}`,
           da === null ? null : `${cvOf(b!)} * ${da}`,
@@ -433,102 +538,112 @@ export class ResidualPass {
         ].filter((t): t is string => t !== null);
         return terms.join(" + ");
       }
-      case "div":
+      case "math/div":
         if (db === null) {
           return `${da} / ${cvOf(b!)}`;
         }
         return `${minus(da, `${cvOf(id)} * ${db}`)} / (${cvOf(b!)} + ${db})`;
-      case "sqrt":
+      case "math/sqrt":
         return `${da} / (${cvOf(id)} + sqrt(max(${cvOf(a!)} + ${da}, 0.0)))`;
-      case "exp":
+      case "math/exp":
         return `${cvOf(id)} * tg_expm1(${da})`;
-      case "log":
+      case "math/log":
         return `tg_log1p(${da} / ${cvOf(a!)})`;
-      case "sin": {
-        const cosA = cvOf(aux("cos", a!));
+      case "math/sin": {
+        const cosA = cvOf(aux("math/cos", a!));
         return `${cosA} * tg_sin(${da}) - 2.0 * ${cvOf(id)} * tg_sq(tg_sin(0.5 * ${da}))`;
       }
-      case "cos": {
-        const sinA = cvOf(aux("sin", a!));
+      case "math/cos": {
+        const sinA = cvOf(aux("math/sin", a!));
         return `-${sinA} * tg_sin(${da}) - 2.0 * ${cvOf(id)} * tg_sq(tg_sin(0.5 * ${da}))`;
       }
-      case "tan": {
-        const s = cvOf(aux("sin", a!));
-        const cc = cvOf(aux("cos", a!));
-        return `tg_sin(${da}) / (${cc} * (${cc} * tg_cos(${da}) - ${s} * tg_sin(${da})))`;
+      case "math/tan": {
+        const sn = cvOf(aux("math/sin", a!));
+        const cc = cvOf(aux("math/cos", a!));
+        return `tg_sin(${da}) / (${cc} * (${cc} * tg_cos(${da}) - ${sn} * tg_sin(${da})))`;
       }
-      case "atan":
+      case "math/atan":
         return `tg_atan1(${cvOf(a!)}, ${da})`;
-      case "atan2":
+      case "math/atan2":
         return `tg_atan2(${cvOf(a!)}, ${cvOf(b!)}, ${zero(da)}, ${zero(db)}, ${cvOf(id)})`;
-      case "sinh": {
-        const ch = cvOf(aux("cosh", a!));
+      case "math/sinh": {
+        const ch = cvOf(aux("math/cosh", a!));
         const h = `(0.5 * ${da})`;
         return `2.0 * (${ch} * tg_cosh(${h}) + ${cvOf(id)} * tg_sinh(${h})) * tg_sinh(${h})`;
       }
-      case "cosh": {
-        const sh = cvOf(aux("sinh", a!));
+      case "math/cosh": {
+        const sh = cvOf(aux("math/sinh", a!));
         const h = `(0.5 * ${da})`;
         return `2.0 * (${sh} * tg_cosh(${h}) + ${cvOf(id)} * tg_sinh(${h})) * tg_sinh(${h})`;
       }
-      case "tanh": {
-        const ch = cvOf(aux("cosh", a!));
-        const sh = cvOf(aux("sinh", a!));
+      case "math/tanh": {
+        const ch = cvOf(aux("math/cosh", a!));
+        const sh = cvOf(aux("math/sinh", a!));
         return `tg_sinh(${da}) / (${ch} * (${ch} * tg_cosh(${da}) + ${sh} * tg_sinh(${da})))`;
       }
-      case "asin":
-      case "acos":
-        this.approximate.add(node.op);
-        return `${node.op}(clamp(${cvOf(a!)} + ${da}, -1.0, 1.0)) - ${cvOf(id)}`;
-      case "pow":
+      case "math/asin":
+      case "math/acos": {
+        const name = e.op.slice("math/".length);
+        this.approximate.add(name);
+        return `${name}(clamp(${cvOf(a!)} + ${da}, -1.0, 1.0)) - ${cvOf(id)}`;
+      }
+      case "math/pow":
         return this.powRule(id, da, db);
-      case "abs":
+      case "math/abs":
         return `tg_abs(${cvOf(a!)}, ${da})`;
-      case "min":
-      case "max": {
+      case "math/min":
+      case "math/max": {
         // min(a, b) = a + min(0, b - a), and likewise for max
-        const d = cvOf(aux("sub", b!, a!));
-        const step = `tg_${node.op}0(${d}, ${zero(minus(db, da))})`;
+        const d = cvOf(aux("math/sub", b!, a!));
+        const step = `tg_${e.op.slice("math/".length)}0(${d}, ${zero(minus(db, da))})`;
         return plus(da, step)!;
       }
-      case "floor":
-      case "ceil":
-      case "sign":
-        return `${node.op}(${cvOf(a!)} + ${da}) - ${cvOf(id)}`;
-      case "fract": {
-        const fl = cvOf(aux("floor", a!));
+      case "math/floor":
+      case "math/ceil":
+      case "math/sign":
+        return `${e.op.slice("math/".length)}(${cvOf(a!)} + ${da}) - ${cvOf(id)}`;
+      case "math/fract": {
+        const fl = cvOf(aux("math/floor", a!));
         return `${da} - (floor(${cvOf(a!)} + ${da}) - ${fl})`;
       }
-      case "lt":
-      case "le":
-      case "gt":
-      case "ge":
-      case "eq":
-      case "ne": {
-        const d = cvOf(aux("sub", a!, b!));
-        return `select(0.0, 1.0, ${d} + ${zero(minus(da, db))} ${COMPARE_TEST[node.op]!})`;
+      case "math/lt":
+      case "math/le":
+      case "math/gt":
+      case "math/ge":
+      case "math/eq": {
+        const d = cvOf(aux("math/sub", a!, b!));
+        return `select(0.0, 1.0, ${d} + ${zero(minus(da, db))} ${COMPARE_TEST[e.op]!})`;
       }
-      case "and":
+      case "math/and":
         return `select(0.0, 1.0, ${this.flag(a!)} != 0.0 && ${this.flag(b!)} != 0.0)`;
-      case "or":
+      case "math/or":
         return `select(0.0, 1.0, ${this.flag(a!)} != 0.0 || ${this.flag(b!)} != 0.0)`;
-      case "not":
+      case "math/not":
         return `select(0.0, 1.0, ${this.flag(a!)} == 0.0)`;
-      case "select": {
-        const e = cvOf(aux("sub", b!, c!));
-        return `tg_select(${this.flag(a!)}, ${cvOf(a!)}, ${zero(dOf(b))}, ${zero(dOf(c))}, ${e})`;
+      case "math/select": {
+        const t = through(this.view, b!);
+        const f = through(this.view, c!);
+        const diff = cvOf(aux("math/sub", this.asFloat(t), this.asFloat(f)));
+        return `tg_select(${this.flag(a!)}, ${cvOf(a!)}, ${zero(dOf(b))}, ${zero(dOf(c))}, ${diff})`;
       }
       default:
-        throw new Error(`residual: no rule for op '${node.op}'`);
+        throw new Error(`residual: no rule for op '${e.op}'`);
     }
   }
 
+  /** A float equation for `id`: a bool's float. */
+  private asFloat(id: NodeId): NodeId {
+    return this.ir.typeOf(id) === "bool"
+      ? this.ir.op("type/boolToFloat", [id])
+      : id;
+  }
+
   private powRule(id: NodeId, da: string | null, db: string | null): string {
-    const node = this.ir.nodes[id]!;
-    const [a, b] = node.args as [NodeId, NodeId];
+    const e = this.ir.eqns[id]!;
+    const [a, b] = e.args as [NodeId, NodeId];
     const cvOf = (n: NodeId) => this.cv(n);
-    const exponent = this.ir.nodes[b]!;
-    const n = exponent.op === "const" ? exponent.value : undefined;
+    const exponent = leafOf(this.view, b);
+    const n = exponent?.kind === "const" ? exponent.value : undefined;
     if (da !== null && db === null && n !== undefined) {
       const m = Math.abs(n);
       if (Number.isInteger(n) && m >= 2 && m <= 4) {
@@ -556,6 +671,10 @@ export class ResidualPass {
     return `pow(${cvOf(a)} + ${da ?? "0.0"}, ${cvOf(b)} + ${db ?? "0.0"}) - ${cvOf(id)}`;
   }
 }
+
+/** Equations as outputs `e0`, `e1`, …, in order. */
+const named = (ids: readonly NodeId[]): Record<string, NodeId> =>
+  Object.fromEntries(ids.map((id, i) => [`e${i}`, id]));
 
 function literal(value: number): string {
   const text = f32Literal(value);

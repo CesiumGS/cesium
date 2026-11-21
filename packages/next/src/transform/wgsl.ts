@@ -6,10 +6,18 @@
 // Known limits: `pow` with a negative base (or a non-constant exponent
 // reaching one) is undefined in WGSL, where JS gives a number or NaN;
 // constant integer exponents up to 4 become products and are exact.
+// `clamp`, `mix` and `smoothStep` are written as KHR_interactivity's
+// formulas (reversed bounds and edges allowed, as CS-51's emitter writes
+// them), not WGSL's built-ins. The program is read scalarized (Cesium IR's
+// `scalarize`); a bool is the float 0 or 1, and `let v<n>` takes its number
+// from `numbering`.
 // The df64 variant (center constants in hi/lo pairs) is df64Wgsl.ts's
 // `emitDf64`; the float32 residual form the compiler uses is residual.ts's.
 
-import type { IrNode, IrProgram, Op } from "./ir.ts";
+import { scalarize } from "../ir/scalarize.ts";
+import type { Id } from "../ir/types.ts";
+import { asCir, type AnyProgram } from "./evaluate.ts";
+import { leafOf, numbering, paramsOf, through } from "./program.ts";
 
 export interface WgslOptions {
   /** The function's name; default `transformPoint`. */
@@ -83,44 +91,43 @@ function literal(value: number): string {
   return f32 < 0 || Object.is(f32, -0) ? `(${text})` : text;
 }
 
-const UNARY: Partial<Record<Op, string>> = {
-  abs: "abs",
-  sqrt: "sqrt",
-  exp: "exp",
-  log: "log",
-  sin: "sin",
-  cos: "cos",
-  tan: "tan",
-  atan: "atan",
-  asin: "asin",
-  acos: "acos",
-  sinh: "sinh",
-  cosh: "cosh",
-  tanh: "tanh",
-  floor: "floor",
-  ceil: "ceil",
-  fract: "fract",
-  sign: "sign",
+const UNARY: Readonly<Record<string, string>> = {
+  "math/abs": "abs",
+  "math/sqrt": "sqrt",
+  "math/exp": "exp",
+  "math/log": "log",
+  "math/sin": "sin",
+  "math/cos": "cos",
+  "math/tan": "tan",
+  "math/atan": "atan",
+  "math/asin": "asin",
+  "math/acos": "acos",
+  "math/sinh": "sinh",
+  "math/cosh": "cosh",
+  "math/tanh": "tanh",
+  "math/floor": "floor",
+  "math/ceil": "ceil",
+  "math/fract": "fract",
+  "math/sign": "sign",
 };
 
-const INFIX: Partial<Record<Op, string>> = {
-  add: "+",
-  sub: "-",
-  mul: "*",
-  div: "/",
+const INFIX: Readonly<Record<string, string>> = {
+  "math/add": "+",
+  "math/sub": "-",
+  "math/mul": "*",
+  "math/div": "/",
 };
 
-const COMPARE: Partial<Record<Op, string>> = {
-  lt: "<",
-  le: "<=",
-  gt: ">",
-  ge: ">=",
-  eq: "==",
-  ne: "!=",
+const COMPARE: Readonly<Record<string, string>> = {
+  "math/lt": "<",
+  "math/le": "<=",
+  "math/gt": ">",
+  "math/ge": ">=",
+  "math/eq": "==",
 };
 
-function emitPow(base: string, exponent: IrNode | undefined, e: string) {
-  const n = exponent?.op === "const" ? exponent.value : undefined;
+function emitPow(base: string, exponent: number | undefined, e: string) {
+  const n = exponent;
   if (n !== undefined && Number.isInteger(n) && Math.abs(n) <= 4) {
     if (n === 0) {
       return "1.0";
@@ -135,13 +142,14 @@ function emitPow(base: string, exponent: IrNode | undefined, e: string) {
 }
 
 /** The WGSL function text for `program`. */
-export function toWgsl(program: IrProgram, options: WgslOptions = {}): string {
+export function toWgsl(program: AnyProgram, options: WgslOptions = {}): string {
   const name = options.name ?? "transformPoint";
   if (!/^[A-Za-z][A-Za-z0-9_]*$/.test(name)) {
     throw new Error(`'${name}' is not a usable WGSL function name`);
   }
+  const s = scalarize(asCir(program));
   const fields = new Map<string, string>();
-  for (const param of program.params) {
+  for (const param of paramsOf(s)) {
     const field = wgslParamField(param);
     const clash = [...fields.entries()].find(([, f]) => f === field);
     if (clash) {
@@ -152,37 +160,37 @@ export function toWgsl(program: IrProgram, options: WgslOptions = {}): string {
     fields.set(param, field);
   }
   const structName = `${name[0]!.toUpperCase()}${name.slice(1)}Params`;
-  const nodes = program.nodes;
-  const inline = (id: number): string | undefined => {
-    const node = nodes[id]!;
-    switch (node.op) {
+  const number = numbering(s);
+  const inline = (id: Id): string | undefined => {
+    const leaf = leafOf(s, id);
+    switch (leaf?.kind) {
       case "const":
-        return literal(node.value);
+        return literal(leaf.value);
       case "pos":
-        return `p.${"xyz"[node.value]}`;
+        return `p.${"xyz"[leaf.lane]}`;
       case "param":
-        return `params.${fields.get(node.name)}`;
+        return `params.${fields.get(leaf.name)}`;
       default:
         return undefined;
     }
   };
-  const ref = (id: number) => inline(id) ?? `v${id}`;
-  const bool = (id: number) => `(${ref(id)} != 0.0)`;
+  const ref = (id: Id) => inline(id) ?? `v${number(id)}`;
+  const bool = (id: Id) => `(${ref(id)} != 0.0)`;
   const flag = (condition: string) => `select(0.0, 1.0, ${condition})`;
 
   const lines: string[] = [];
-  nodes.forEach((node, id) => {
-    if (inline(id) !== undefined) {
+  s.eqns.forEach((e, id) => {
+    if (e.op === "input" || through(s, id) !== id || inline(id) !== undefined) {
       return;
     }
-    const [a, b, c] = node.args;
+    const [a, b, c] = e.args;
     const A = ref(a!);
     const B = b === undefined ? "" : ref(b);
     const C = c === undefined ? "" : ref(c);
     let expression: string;
-    const unary = UNARY[node.op];
-    const infix = INFIX[node.op];
-    const compare = COMPARE[node.op];
+    const unary = UNARY[e.op];
+    const infix = INFIX[e.op];
+    const compare = COMPARE[e.op];
     if (unary) {
       expression = `${unary}(${A})`;
     } else if (infix) {
@@ -190,49 +198,63 @@ export function toWgsl(program: IrProgram, options: WgslOptions = {}): string {
     } else if (compare) {
       expression = flag(`${A} ${compare} ${B}`);
     } else {
-      switch (node.op) {
-        case "neg":
+      switch (e.op) {
+        case "math/neg":
           expression = `-${A}`;
           break;
-        case "min":
-        case "max":
-          expression = `${node.op}(${A}, ${B})`;
+        case "math/min":
+          expression = `min(${A}, ${B})`;
           break;
-        case "pow":
-          expression = emitPow(A, nodes[b!], B);
+        case "math/max":
+          expression = `max(${A}, ${B})`;
           break;
-        case "atan2":
+        case "math/pow": {
+          const exponent = leafOf(s, b!);
+          expression = emitPow(
+            A,
+            exponent?.kind === "const" ? exponent.value : undefined,
+            B,
+          );
+          break;
+        }
+        case "math/atan2":
           expression = `atan2(${A}, ${B})`;
           break;
-        case "not":
+        case "math/not":
           expression = flag(`${A} == 0.0`);
           break;
-        case "and":
+        case "math/and":
           expression = flag(`${bool(a!)} && ${bool(b!)}`);
           break;
-        case "or":
+        case "math/or":
           expression = flag(`${bool(a!)} || ${bool(b!)}`);
           break;
-        case "select":
+        case "math/select":
           expression = `select(${C}, ${B}, ${bool(a!)})`;
           break;
-        case "clamp":
-          expression = `clamp(${A}, ${B}, ${C})`;
+        // KHR_interactivity's formulas, as CS-51's emitter writes them.
+        case "math/clamp":
+          expression = `min(max(${A}, min(${B}, ${C})), max(${B}, ${C}))`;
           break;
-        case "mix":
-          expression = `mix(${A}, ${B}, ${C})`;
+        case "math/saturate":
+          expression = `min(max(${A}, 0.0), 1.0)`;
           break;
-        case "smoothstep":
-          expression = `smoothstep(${A}, ${B}, ${C})`;
+        case "math/mix":
+          expression = `((1.0 - ${C}) * ${A} + ${C} * ${B})`;
           break;
+        case "math/smoothStep": {
+          const t = `clamp((${C} - min(${A}, ${B})) / abs(${B} - ${A}), 0.0, 1.0)`;
+          expression = `(${t} * ${t} * (3.0 - 2.0 * ${t}))`;
+          break;
+        }
         default:
-          throw new Error(`wgsl: no emitter for op '${node.op}'`);
+          throw new Error(`wgsl: no emitter for op '${e.op}'`);
       }
     }
-    lines.push(`  let v${id} = ${expression};`);
+    lines.push(`  let v${number(id)} = ${expression};`);
   });
 
-  const out = program.outputs.map(ref);
+  const out = s.outputs.map((o) => ref(o.id));
   let returnType: string;
   let result: string;
   if (out.length === 3) {

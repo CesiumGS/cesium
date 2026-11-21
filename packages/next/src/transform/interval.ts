@@ -6,9 +6,13 @@
 // operands is ignored (the usual overestimate of the natural extension).
 // There is no outward rounding: the bounds are exact up to the final ulp.
 
-import { evaluateInterval as cirEvaluateInterval } from "../ir/fromTodayIr.ts";
-import type { Interval } from "../ir/interval.ts";
-import type { IrProgram } from "./ir.ts";
+import {
+  evaluateInterval as cirEvaluateInterval,
+  type Interval,
+  type Range,
+} from "../ir/interval.ts";
+import { asCir, type AnyProgram } from "./evaluate.ts";
+import { POSITION } from "./program.ts";
 
 export type { Interval } from "../ir/interval.ts";
 
@@ -22,9 +26,33 @@ export type ParamRange = number | readonly [number, number] | Interval;
 
 /** Bounds of each output of `program` over `box` and the parameter ranges. */
 export function evaluateInterval(
-  program: IrProgram,
+  program: AnyProgram,
   box: Box,
   params: Readonly<Record<string, ParamRange>> = {},
 ): Interval[] {
-  return cirEvaluateInterval(program, box, params);
+  const cir = asCir(program);
+  const ranges: Record<string, Range> = {
+    [POSITION]: [0, 1, 2].map((i) => ({ lo: box.min[i]!, hi: box.max[i]! })),
+  };
+  for (const e of cir.eqns) {
+    if (e.op !== "input") {
+      continue;
+    }
+    const name = cir.inputs[e.index!]!.name;
+    if (name === POSITION) {
+      continue;
+    }
+    const r = params[name];
+    if (r === undefined) {
+      throw new Error(`parameter '${name}' has no range`);
+    }
+    ranges[name] =
+      typeof r === "number"
+        ? r
+        : Array.isArray(r)
+          ? { lo: r[0]!, hi: r[1]! }
+          : (r as Interval);
+  }
+  const bounds = cirEvaluateInterval(cir, ranges);
+  return cir.outputs.map((o) => bounds[o.name]![0]!);
 }

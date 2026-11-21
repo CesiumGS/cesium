@@ -41,6 +41,9 @@
 // derivatives in float64) would cost less per vertex for a curvilinear step
 // with no kinks and stays an option for the normals, whose exact Jacobian
 // is the expensive part of a nested route.
+import { cirOf } from "../ir/fromTodayIr.ts";
+import { scalarize } from "../ir/scalarize.ts";
+import type { Program } from "../ir/types.ts";
 import { hessianProgram, jacobianProgram } from "./ad.ts";
 import {
   DF64_CORE_WGSL,
@@ -50,8 +53,8 @@ import {
 } from "./df64Wgsl.ts";
 import { evaluate } from "./evaluate.ts";
 import type { CurvilinearSpec } from "./graph.ts";
-import type { IrProgram } from "./ir.ts";
 import { parseTransform } from "./parse.ts";
+import { paramsOf, valueCount } from "./program.ts";
 import {
   lowerComposites,
   RESIDUAL_WGSL,
@@ -92,13 +95,14 @@ export const AUTO_LINEAR_NODES = 400;
 
 /** Ops that make a function's Jacobian jump: a step with one never takes linear normals. */
 const KINK_OPS: ReadonlySet<string> = new Set([
-  "abs",
-  "min",
-  "max",
-  "select",
-  "clamp",
-  "floor",
-  "fract",
+  "math/abs",
+  "math/min",
+  "math/max",
+  "math/select",
+  "math/clamp",
+  "math/saturate",
+  "math/floor",
+  "math/fract",
 ]);
 
 /** A packed record: float offsets of named fields, and its length in floats (a multiple of 4). */
@@ -118,10 +122,10 @@ export interface CompiledStep {
   readonly locals: readonly string[];
   /** Each local's key in `paramValues`. */
   readonly keys: ReadonlyMap<string, string>;
-  /** The value program, composites lowered: 3 outputs. */
-  readonly value: IrProgram;
+  /** The value program (Cesium IR, scalarized), composites lowered: 3 outputs. */
+  readonly value: Program;
   /** J, row-major (`3 * i + j`): 9 outputs; undefined when compiled without normals. */
-  readonly jacobian: IrProgram | undefined;
+  readonly jacobian: Program | undefined;
 }
 
 export interface CompiledRoute {
@@ -264,8 +268,8 @@ interface CurvilinearInfo {
   readonly locals: readonly string[];
   readonly keys: ReadonlyMap<string, string>;
   readonly spec: CurvilinearSpec;
-  readonly value: IrProgram;
-  readonly jacobian: IrProgram | undefined;
+  readonly value: Program;
+  readonly jacobian: Program | undefined;
   /** How the step's Jacobian is made in the shader; set once the route's modes are chosen. */
   normal: "exact" | "linear" | "none";
 }
@@ -308,35 +312,36 @@ interface Plan {
   readonly outG: ReadonlyMap<string, number>;
 }
 
-const parsed = new Map<string, IrProgram>();
+const parsed = new Map<string, Program>();
 
-function programOf(source: string): IrProgram {
+/** A source's program, composites lowered and scalarized, made once. */
+function programOf(source: string): Program {
   let program = parsed.get(source);
   if (!program) {
-    program = lowerComposites(parseTransform(source));
+    program = scalarize(lowerComposites(cirOf(parseTransform(source))));
     parsed.set(source, program);
   }
   return program;
 }
 
-const jacobians = new WeakMap<IrProgram, IrProgram>();
-const hessians = new WeakMap<IrProgram, IrProgram>();
+const jacobians = new WeakMap<Program, Program>();
+const hessians = new WeakMap<Program, Program>();
 
-/** J of a (lowered) value program, lowered, made once. */
-function jacobianOf(value: IrProgram): IrProgram {
+/** J of a (lowered) value program, lowered and scalarized, made once. */
+function jacobianOf(value: Program): Program {
   let program = jacobians.get(value);
   if (!program) {
-    program = lowerComposites(jacobianProgram(value));
+    program = scalarize(lowerComposites(jacobianProgram(value)));
     jacobians.set(value, program);
   }
   return program;
 }
 
 /** H of a (lowered) value program (`9 i + 3 j + k`), made once. */
-function hessianOf(value: IrProgram): IrProgram {
+function hessianOf(value: Program): Program {
   let program = hessians.get(value);
   if (!program) {
-    program = lowerComposites(hessianProgram(value));
+    program = scalarize(lowerComposites(hessianProgram(value)));
     hessians.set(value, program);
   }
   return program;
@@ -354,12 +359,13 @@ function chooseNormals(
     return;
   }
   const curvilinearSteps = infos.map(
-    (info) => !info.value.nodes.some((node) => KINK_OPS.has(node.op)),
+    (info) => !info.value.eqns.some((e) => KINK_OPS.has(e.op)),
   );
   // What linear normals would save: the Jacobian programs of the steps that may take them.
   const saved = infos.reduce(
     (sum, info, k) =>
-      sum + (curvilinearSteps[k] ? (info.jacobian?.nodes.length ?? 0) : 0),
+      sum +
+      (curvilinearSteps[k] && info.jacobian ? valueCount(info.jacobian) : 0),
     0,
   );
   const linear =
@@ -426,8 +432,8 @@ export function compileRoute(
         reason: `curvilinear step "${step.id}" has no restricted-JS source for the IR (its function is not in the subset); the fitted lattice path takes it`,
       };
     }
-    let value: IrProgram;
-    let jacobian: IrProgram | undefined;
+    let value: Program;
+    let jacobian: Program | undefined;
     try {
       value = programOf(spec.source);
       if (value.outputs.length !== 3) {
@@ -441,7 +447,8 @@ export function compileRoute(
       };
     }
     const declared = new Set(Object.keys(spec.params));
-    const undeclared = value.params.find((p) => !declared.has(p));
+    const read = paramsOf(value);
+    const undeclared = read.find((p) => !declared.has(p));
     if (undeclared !== undefined) {
       return {
         ok: false,
@@ -451,9 +458,7 @@ export function compileRoute(
     const count = (seen.get(step.id) ?? 0) + 1;
     seen.set(step.id, count);
     const prefix = count === 1 ? step.id : `${step.id}#${count}`;
-    const locals = Object.keys(spec.params).filter((p) =>
-      value.params.includes(p),
-    );
+    const locals = Object.keys(spec.params).filter((p) => read.includes(p));
     infos.push({
       j: infos.length,
       stepIndex: i,
@@ -680,10 +685,10 @@ function assemble(
       continue;
     }
     const centered = new Set([
-      ...link.value.centerProgram().params,
-      ...(link.jac?.centerProgram().params ?? []),
+      ...paramsOf(link.value.centerProgram()),
+      ...(link.jac ? paramsOf(link.jac.centerProgram()) : []),
       // A linear step's J and H at the center read what its function does.
-      ...(link.linear ? jacobianOf(link.info.value).params : []),
+      ...(link.linear ? paramsOf(jacobianOf(link.info.value)) : []),
     ]);
     for (const name of link.info.locals) {
       if (link.info === last && plan.separable.includes(name)) {
@@ -1151,14 +1156,14 @@ function centerShader(
     const program = pass.centerProgram();
     const local = new Map(info.locals.map((n, i) => [n, i]));
     const { lines, ref } = emitDf64(
-      program.nodes,
+      program,
       {
         pos: (axis) => `x${axis}`,
         param: (n) => `P[${local.get(n)}]`,
       },
       "e",
     );
-    const outputs = program.outputs.map(ref);
+    const outputs = program.outputs.map((o) => ref(o.id));
     out.push(
       `fn ${name}(x0: vec2f, x1: vec2f, x2: vec2f, P: array<vec2f, ${Math.max(1, info.locals.length)}>) -> array<vec2f, ${outputs.length}> {`,
       ...lines,
