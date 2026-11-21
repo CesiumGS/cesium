@@ -9,13 +9,14 @@ CS-8 Engine profiles
 
 CS-9 The WebGL 2 renderer
   CS-32  The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points
-  CS-33  The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves
+  CS-34  Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`)
+  CS-35  The probe, the `renderer` option and an empty WebGL 2 device
   CS-46  decision: Which test devices are available for the WebGL 2 probe runs?
 
 CS-10 Cesium IR
   CS-49  The versioned JSON format
-  CS-50  The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
   CS-52  The GLSL ES 3.00 emitter
+  CS-53  Transforms move onto Cesium IR, as pure moves
   CS-57  Our naga crate (Rust in development and CI only)
   CS-371  Math ops the transform graph needs: `atanh`, `asinh`, `acosh`, `expm1`, `log1p`, `%`, `hypot`
   CS-548  The IR's math/eq covers floatN and bool, as KHR_interactivity defines it
@@ -167,6 +168,7 @@ CS-195 Benchmarks, parity and image regression
   CS-568  The lod parity page reads the tileset's selection policy where it lives now
   CS-581  The irWgsl browser suite joins the browser-suite gate for changes under src/ir
   CS-582  The tracks parity suite's billboards draw on the first run after a cold server start
+  CS-762  The instances parity suite runs to the end: releasing a model no longer throws "World: no slab 0"
 
 CS-196 Infrastructure and geoscience capabilities
   CS-339  Volumes: voxel grids, ray-marched or as isosurfaces
@@ -206,7 +208,6 @@ CS-389 Dyno as the development harness
   CS-715  decision: How the cold-start check runs from here on
   CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands
   CS-721  A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices
-  CS-745  A Health view lists the work graph's exceptions, each with a proposed fix
   CS-746  A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates
   CS-747  A Since-you-last-looked view shows scope changes and answers since a chosen point
   CS-748  The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions
@@ -228,9 +229,6 @@ CS-437 The public API reviews
 CS-579 Editing
   CS-453  decision: What editing should the engine support, with vector data and GIS sources among it?
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
-
-CS-13 The worker-mode façade
-  CS-567  The protocol table classifies every member of api/surface.txt, not only the exported names
 
 CS-584 The widgets library
   CS-585  The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them

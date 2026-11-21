@@ -30,10 +30,6 @@ CS-8 Engine profiles
       ← CS-23 Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
 
 CS-9 The WebGL 2 renderer
-  CS-34  Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`)
-      ← CS-33 The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves
-  CS-35  The probe, the `renderer` option and an empty WebGL 2 device
-      ← CS-33 The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves
   CS-36  First draws, unlit (glTF and 3D Tiles meshes)
       ← CS-32 The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points
         CS-34 Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`)
@@ -64,14 +60,11 @@ CS-9 The WebGL 2 renderer
         CS-46 Which test devices are available for the WebGL 2 probe runs?
 
 CS-10 Cesium IR
-  CS-53  Transforms move onto Cesium IR, as pure moves
-      ← CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
   CS-54  Routes on both emitters, with the residual and df64 forms
       ← CS-52 The GLSL ES 3.00 emitter
         CS-53 Transforms move onto Cesium IR, as pure moves
   CS-55  Styles move onto Cesium IR, literals as uniforms
-      ← CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
-        CS-52 The GLSL ES 3.00 emitter
+      ← CS-52 The GLSL ES 3.00 emitter
   CS-56  Tables and the bounded search, the first extensions, with the residual's row window
       ← CS-53 Transforms move onto Cesium IR, as pure moves
         CS-54 Routes on both emitters, with the residual and df64 forms
@@ -90,11 +83,9 @@ CS-10 Cesium IR
   CS-62  The inspector and debugging
       ← CS-55 Styles move onto Cesium IR, literals as uniforms
   CS-63  The MaterialX front end, including the lowering the MaterialX plan's task 9 had (no pre-IR emitter)
-      ← CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
-        CS-55 Styles move onto Cesium IR, literals as uniforms
+      ← CS-55 Styles move onto Cesium IR, literals as uniforms
   CS-64  Noise, first among the gaps
-      ← CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
-        CS-52 The GLSL ES 3.00 emitter
+      ← CS-52 The GLSL ES 3.00 emitter
   CS-65  Textures and samplers
       ← CS-56 Tables and the bounded search, the first extensions, with the residual's row window
         CS-64 Noise, first among the gaps
@@ -164,7 +155,6 @@ CS-437 The public API reviews
         CS-431 The camera chain's layers checked against what each may know
         CS-432 The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors
         CS-433 Promotions and demotions proposed: what every app needs, and what is exported only for examples
-        CS-567 The protocol table classifies every member of api/surface.txt, not only the exported names
         CS-572 The full version of scene items, designed before the first public API review
   CS-434  Stability tiers as TSDoc tags, with internal members stripped from the published types
       ← CS-438 Which of the first public API review's proposed changes do you approve?
@@ -748,5 +738,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-244 blocked
+241 blocked
 ```

@@ -9,10 +9,12 @@ CS-8 Engine profiles
   CS-22  Paths in one place, with the seam test
 
 CS-9 The WebGL 2 renderer
+  CS-33  The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves
   CS-43  Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have
 
 CS-10 Cesium IR
   CS-48  The core (types, rates, equations, literal slots, the builder)
+  CS-50  The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
   CS-51  The WGSL emitter
   CS-543  CS-48's formula cases checked against the whole KHR_interactivity spec
 
@@ -21,6 +23,7 @@ CS-12 The job system's ports
 
 CS-13 The worker-mode façade
   CS-101  The protocol table: every public member classified, checked against `api/surface.txt`
+  CS-567  The protocol table classifies every member of api/surface.txt, not only the exported names
 
 CS-18 The work tracker
   CS-169  The tracker: format, scripts, items and the plan's split
@@ -57,6 +60,7 @@ CS-389 Dyno as the development harness
   CS-717  Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability
   CS-743  Main's npm test exits 0 again: the shared manifest load leaves no unhandled rejection when the signal is already aborted
   CS-744  The Work page's roadmap opens on a Release view: what's left in a release and what's holding it
+  CS-745  A Health view lists the work graph's exceptions, each with a proposed fix
 
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
@@ -71,5 +75,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-44 merged item(s) not in a release
+48 merged item(s) not in a release
 ```

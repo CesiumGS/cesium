@@ -97,11 +97,11 @@ No milestone
 
 ### The WebGL 2 renderer
 
-[CS-9](./projects/CS-9-the-webgl-2-renderer.md), Planned, led by owner: 1 of 17 done, 3 ready, 12 blocked, 1 proposed. Plan: [2026-11-13-webgl2-renderer.md](../../../docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
+[CS-9](./projects/CS-9-the-webgl-2-renderer.md), Planned, led by owner: 3 of 18 done, 4 ready, 10 blocked, 1 proposed. Plan: [2026-11-13-webgl2-renderer.md](../../../docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
 
 Milestone: Renderers plug in behind one seam ([CS-414](./milestones/CS-414-renderers-plug-in-behind-one-seam.md), Planned)
 
-- [ ] [CS-33](./items/CS-33-the-seam-extracted-webgpu-only-worlddraws.md) The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves. Needs nothing.
+- [x] [CS-33](./items/CS-33-the-seam-extracted-webgpu-only-worlddraws.md) The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves. Done.
 - [ ] [CS-34](./items/CS-34-renderer-neutral-content-resources-texture.md) Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`). Needs CS-33.
 - [ ] [CS-35](./items/CS-35-the-probe-the-renderer-option-and-an-empty.md) The probe, the `renderer` option and an empty WebGL 2 device. Needs CS-33 and CS-21 (Engine profiles).
 - [x] [CS-43](./items/CS-43-research-which-browsers-lack-webgpu-by-share.md) Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have. Done.
@@ -127,16 +127,17 @@ No milestone
 
 - [ ] [CS-39](./items/CS-39-styles-and-warps-through-cesium-ir.md) Styles and warps through Cesium IR. Needs CS-38, CS-52 (Cesium IR), CS-54 (Cesium IR) and CS-55 (Cesium IR).
 - [?] [CS-370](./items/CS-370-scene-rebuild-after-a-webgl-2-context-loss.md) Scene rebuild after a WebGL 2 context loss. Proposed. Needs CS-113 (worker-mode façade) and CS-36.
+- [x] [CS-761](./items/CS-761-merge-cs-33-the-renderer-seam-extracted-webgpu.md) decision: Merge CS-33, the renderer seam extracted (WebGPU only, pure moves). Done.
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 7 of 34 done, 9 ready, 16 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 9 of 35 done, 9 ready, 15 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
 - [x] [CS-48](./items/CS-48-the-core-types-rates-equations-literal-slots.md) The core (types, rates, equations, literal slots, the builder). Done.
 - [ ] [CS-49](./items/CS-49-the-versioned-json-format.md) The versioned JSON format. Needs CS-48.
-- [ ] [CS-50](./items/CS-50-the-passes-float64-evaluator-autodiff-intervals.md) The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms). Needs CS-48.
+- [x] [CS-50](./items/CS-50-the-passes-float64-evaluator-autodiff-intervals.md) The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms). Done.
 - [x] [CS-51](./items/CS-51-the-wgsl-emitter.md) The WGSL emitter. Done.
 - [ ] [CS-52](./items/CS-52-the-glsl-es-3-00-emitter.md) The GLSL ES 3.00 emitter. Needs CS-51.
 - [ ] [CS-53](./items/CS-53-transforms-move-onto-cesium-ir-as-pure-moves.md) Transforms move onto Cesium IR, as pure moves. Needs CS-48, CS-50 and CS-51.
@@ -177,6 +178,7 @@ No milestone
 - [x] [CS-570](./items/CS-570-executors-blocked-by-the-bash-guard-s-match-on.md) decision: Executors blocked by the Bash guard's match on the word hitld. Done.
 - [x] [CS-574](./items/CS-574-how-ci-gets-naga-wasm-for-cs-51-s-wgsl.md) decision: How CI gets naga-wasm for CS-51's WGSL validation. Done.
 - [x] [CS-575](./items/CS-575-adding-cs-51-s-irwgsl-browser-suite-to-the.md) decision: Adding CS-51's irWgsl browser suite to the browser-suite gate. Done.
+- [x] [CS-759](./items/CS-759-merge-cs-50-cesium-ir-s-passes-ad-intervals.md) decision: Merge CS-50, Cesium IR's passes (AD, intervals with splitting, Taylor bounds, rates, uniforms, kinks). Done.
 
 ### Live MaterialX graph editing
 
@@ -258,7 +260,7 @@ No milestone
 
 ### The worker-mode façade
 
-[CS-13](./projects/CS-13-the-worker-mode-facade.md), Planned, led by owner: 1 of 21 done, 1 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-worker-facade.md](../../../docs/superpowers/plans/2026-11-13-worker-facade.md).
+[CS-13](./projects/CS-13-the-worker-mode-facade.md), Planned, led by owner: 3 of 22 done, 0 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-worker-facade.md](../../../docs/superpowers/plans/2026-11-13-worker-facade.md).
 
 Milestone: Every public call can cross a thread ([CS-421](./milestones/CS-421-every-public-call-can-cross-a-thread.md), Planned)
 
@@ -294,7 +296,8 @@ Milestone: Refinement, profiles and streaming work in worker mode ([CS-456](./mi
 No milestone
 
 - [x] [CS-101](./items/CS-101-the-protocol-table-every-public-member.md) The protocol table: every public member classified, checked against `api/surface.txt`. Done.
-- [ ] [CS-567](./items/CS-567-the-protocol-table-classifies-every-member-of.md) The protocol table classifies every member of api/surface.txt, not only the exported names. Needs CS-101.
+- [x] [CS-567](./items/CS-567-the-protocol-table-classifies-every-member-of.md) The protocol table classifies every member of api/surface.txt, not only the exported names. Done.
+- [x] [CS-758](./items/CS-758-merge-cs-567-the-protocol-table-covers-every.md) decision: Merge CS-567, the protocol table covers every member of the engine types. Done.
 
 ### Level-of-detail transitions
 
@@ -803,7 +806,7 @@ No milestone
 
 ### Benchmarks, parity and image regression
 
-[CS-195](./projects/CS-195-benchmarks-parity-and-image-regression.md), Planned, led by owner: 0 of 25 done, 13 ready, 6 blocked, 6 proposed. Plan: [benchmark-suite.md](../../../docs/design/benchmark-suite.md).
+[CS-195](./projects/CS-195-benchmarks-parity-and-image-regression.md), Planned, led by owner: 0 of 26 done, 14 ready, 6 blocked, 6 proposed. Plan: [benchmark-suite.md](../../../docs/design/benchmark-suite.md).
 
 Milestone: Benchmarks run per merge on dedicated machines ([CS-482](./milestones/CS-482-benchmarks-run-per-merge-on-dedicated-machines.md), Planned)
 
@@ -825,6 +828,7 @@ Milestone: Image regression and parity are checked in CI ([CS-483](./milestones/
 - [ ] [CS-568](./items/CS-568-the-lod-parity-page-reads-the-tileset-s.md) The lod parity page reads the tileset's selection policy where it lives now. Needs nothing.
 - [ ] [CS-581](./items/CS-581-the-irwgsl-browser-suite-joins-the-browser.md) The irWgsl browser suite joins the browser-suite gate for changes under src/ir. Needs CS-575 (Cesium IR).
 - [ ] [CS-582](./items/CS-582-the-tracks-parity-suite-s-billboards-draw-on.md) The tracks parity suite's billboards draw on the first run after a cold server start. Needs nothing.
+- [ ] [CS-762](./items/CS-762-the-instances-parity-suite-runs-to-the-end.md) The instances parity suite runs to the end: releasing a model no longer throws "World: no slab 0". Needs nothing.
 
 Milestone: The performance targets are met or the gaps explained ([CS-484](./milestones/CS-484-the-performance-targets-are-met-or-the-gaps.md), Planned)
 
@@ -932,7 +936,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 24 of 64 done, 21 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 26 of 65 done, 20 ready, 18 blocked, 1 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -988,7 +992,7 @@ Milestone: Benchmark results are shared across machines, and dyno is one command
 Milestone: The owner's views answer what needs me, what's on track and what's wrong ([CS-751](./milestones/CS-751-the-owner-s-views-answer-what-needs-me-what-s.md), Planned)
 
 - [x] [CS-744](./items/CS-744-the-work-page-s-roadmap-opens-on-a-release-view.md) The Work page's roadmap opens on a Release view: what's left in a release and what's holding it. Done.
-- [ ] [CS-745](./items/CS-745-a-health-view-lists-the-work-graph-s-exceptions.md) A Health view lists the work graph's exceptions, each with a proposed fix. Needs CS-744.
+- [x] [CS-745](./items/CS-745-a-health-view-lists-the-work-graph-s-exceptions.md) A Health view lists the work graph's exceptions, each with a proposed fix. Done.
 - [ ] [CS-746](./items/CS-746-a-path-view-shows-only-what-lies-upstream-of-a.md) A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates. Needs CS-744.
 - [ ] [CS-747](./items/CS-747-a-since-you-last-looked-view-shows-scope.md) A Since-you-last-looked view shows scope changes and answers since a chosen point. Needs CS-744.
 - [ ] [CS-748](./items/CS-748-the-projects-view-shows-each-project-as-a-bet.md) The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions. Needs CS-744.
@@ -1021,6 +1025,7 @@ No milestone
 - [x] [CS-754](./items/CS-754-merge-cs-743-main-s-npm-test-exits-0-again.md) decision: Merge CS-743, main's npm test exits 0 again. Done.
 - [x] [CS-756](./items/CS-756-merge-cs-390-run-identity-and-the-machine-wide.md) decision: Merge CS-390, run identity and the machine-wide run lock. Done.
 - [x] [CS-757](./items/CS-757-merge-cs-744-the-release-view-and-the-work-page.md) decision: Merge CS-744, the Release view and the Work page's tab shell. Done.
+- [x] [CS-760](./items/CS-760-merge-cs-745-the-health-view-of-the-work-graph.md) decision: Merge CS-745, the Health view of the work graph's exceptions. Done.
 
 ### The public API reviews
 

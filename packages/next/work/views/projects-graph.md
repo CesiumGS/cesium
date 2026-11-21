@@ -5,11 +5,11 @@
 ```mermaid
 graph LR
   CS_8["Engine profiles<br/>5 of 20 done"]
-  CS_9["WebGL 2 renderer<br/>1 of 17 done"]
-  CS_10["Cesium IR<br/>7 of 34 done"]
+  CS_9["WebGL 2 renderer<br/>3 of 18 done"]
+  CS_10["Cesium IR<br/>9 of 35 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
-  CS_13["worker-mode façade<br/>1 of 21 done"]
+  CS_13["worker-mode façade<br/>3 of 22 done"]
   CS_14["Level-of-detail transitions<br/>0 of 14 done"]
   CS_15["Refinement and convergence<br/>0 of 13 done"]
   CS_16["Streaming robustness<br/>0 of 22 done"]
@@ -23,12 +23,12 @@ graph LR
   CS_192["Sky, light and atmosphere<br/>2 of 22 done"]
   CS_193["B-reps and geometry queries<br/>3 of 21 done"]
   CS_194["Budgeted selection and memory<br/>0 of 6 done"]
-  CS_195["Benchmarks, parity and image regression<br/>0 of 25 done"]
+  CS_195["Benchmarks, parity and image regression<br/>0 of 26 done"]
   CS_196["Infrastructure and geoscience capabilities<br/>0 of 7 done"]
   CS_197["Ray queries and path tracing<br/>0 of 7 done"]
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
   CS_199["Dyno hardening, packaging and CI<br/>1 of 16 done"]
-  CS_389["Dyno as the development harness<br/>24 of 64 done"]
+  CS_389["Dyno as the development harness<br/>26 of 65 done"]
   CS_437["public API reviews<br/>3 of 15 done"]
   CS_579["Editing<br/>0 of 2 done"]
   CS_584["widgets library<br/>0 of 9 done"]
@@ -46,7 +46,6 @@ graph LR
   CS_10 -->|2| CS_11
   CS_9 -->|1| CS_11
   CS_13 -->|2| CS_12
-  CS_13 -->|1| CS_437
   CS_437 -->|5| CS_13
   CS_10 -->|4| CS_13
   CS_8 -->|1| CS_13
@@ -54,7 +53,7 @@ graph LR
   CS_15 -->|1| CS_16
   CS_10 -->|2| CS_17
   CS_437 -->|1| CS_189
-  CS_10 -->|3| CS_190
+  CS_10 -->|2| CS_190
   CS_16 -->|1| CS_191
   CS_188 -->|1| CS_191
   CS_189 -->|2| CS_192

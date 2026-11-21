@@ -28,7 +28,7 @@ graph LR
   end
   subgraph CS_9["WebGL 2 renderer"]
     CS_32["CS-32 The shader route spike: our own naga crate measured against the "]:::open
-    CS_33["CS-33 The seam extracted, WebGPU only ('WorldDraws', 'RenderDevice', '"]:::open
+    CS_33["CS-33 The seam extracted, WebGPU only ('WorldDraws', 'RenderDevice', '"]:::done
     CS_34["CS-34 Renderer-neutral content resources (texture sources, 'MeshData',"]:::open
     CS_35["CS-35 The probe, the 'renderer' option and an empty WebGL 2 device"]:::open
     CS_36["CS-36 First draws, unlit (glTF and 3D Tiles meshes)"]:::open
@@ -44,11 +44,12 @@ graph LR
     CS_46["CS-46 Which test devices are available for the WebGL 2 probe runs?"]:::decision
     CS_47["CS-47 Probe runs on the test devices"]:::open
     CS_370["CS-370 Scene rebuild after a WebGL 2 context loss"]:::proposed
+    CS_761["CS-761 Merge CS-33, the renderer seam extracted (WebGPU only, pure mov"]:::done
   end
   subgraph CS_10["Cesium IR"]
     CS_48["CS-48 The core (types, rates, equations, literal slots, the builder)"]:::done
     CS_49["CS-49 The versioned JSON format"]:::open
-    CS_50["CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoi"]:::open
+    CS_50["CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoi"]:::done
     CS_51["CS-51 The WGSL emitter"]:::done
     CS_52["CS-52 The GLSL ES 3.00 emitter"]:::open
     CS_53["CS-53 Transforms move onto Cesium IR, as pure moves"]:::open
@@ -80,6 +81,7 @@ graph LR
     CS_571["CS-571 The IR builder rewrites x + c to x only when c is -0, as the sp"]:::open
     CS_574["CS-574 How CI gets naga-wasm for CS-51's WGSL validation"]:::done
     CS_575["CS-575 Adding CS-51's irWgsl browser suite to the browser-suite gate"]:::done
+    CS_759["CS-759 Merge CS-50, Cesium IR's passes (AD, intervals with splitting, "]:::done
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -143,7 +145,8 @@ graph LR
     CS_119["CS-119 A shared snapshot"]:::proposed
     CS_120["CS-120 The other plans plug in"]:::open
     CS_378["CS-378 No placement modes: route by the declared CRS, and read the 3D "]:::open
-    CS_567["CS-567 The protocol table classifies every member of api/surface.txt, "]:::open
+    CS_567["CS-567 The protocol table classifies every member of api/surface.txt, "]:::done
+    CS_758["CS-758 Merge CS-567, the protocol table covers every member of the eng"]:::done
   end
   subgraph CS_14["Level-of-detail transitions"]
     CS_121["CS-121 The signed 'transition' word, the dither flag, 'View.lodTransit"]:::open
@@ -491,6 +494,7 @@ graph LR
     CS_568["CS-568 The lod parity page reads the tileset's selection policy where "]:::open
     CS_581["CS-581 The irWgsl browser suite joins the browser-suite gate for chang"]:::open
     CS_582["CS-582 The tracks parity suite's billboards draw on the first run afte"]:::open
+    CS_762["CS-762 The instances parity suite runs to the end: releasing a model n"]:::open
   end
   subgraph CS_196["Infrastructure and geoscience capabilities"]
     CS_337["CS-337 Scalar fields on any geometry: values, colour ramps, legends an"]:::proposed
@@ -593,7 +597,7 @@ graph LR
     CS_741["CS-741 Merge CS-706, Dyno's cold-start run and the viewer's fixes"]:::done
     CS_743["CS-743 Main's npm test exits 0 again: the shared manifest load leaves "]:::done
     CS_744["CS-744 The Work page's roadmap opens on a Release view: what's left in"]:::done
-    CS_745["CS-745 A Health view lists the work graph's exceptions, each with a pr"]:::open
+    CS_745["CS-745 A Health view lists the work graph's exceptions, each with a pr"]:::done
     CS_746["CS-746 A Path view shows only what lies upstream of a chosen target: i"]:::open
     CS_747["CS-747 A Since-you-last-looked view shows scope changes and answers si"]:::open
     CS_748["CS-748 The Projects view shows each project as a bet: its outcome, rel"]:::open
@@ -604,6 +608,7 @@ graph LR
     CS_754["CS-754 Merge CS-743, main's npm test exits 0 again"]:::done
     CS_756["CS-756 Merge CS-390, run identity and the machine-wide run lock"]:::done
     CS_757["CS-757 Merge CS-744, the Release view and the Work page's tab shell"]:::done
+    CS_760["CS-760 Merge CS-745, the Health view of the work graph's exceptions"]:::done
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open

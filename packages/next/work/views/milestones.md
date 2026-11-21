@@ -5,8 +5,8 @@
 ```text
 CS-414 Renderers plug in behind one seam [Planned], under CS-9 The WebGL 2 renderer
   outcome: An app can ask for the WebGL 2 renderer and get an engine that runs on it, or a named reason it can't, while WebGPU apps draw exactly as before through the same seam.
-  constraints: 1 of 4 done
-  unmet: c1 WebGPU apps see no change: every WebGPU parity suite gives the same results before and after the seam is extracted. (open: CS-33; check not passed)
+  constraints: 2 of 4 done
+  unmet: c1 WebGPU apps see no change: every WebGPU parity suite gives the same results before and after the seam is extracted. (check not passed)
   unmet: c2 A second renderer reaches everything the WebGPU renderer draws (draw records, meshes, textures, imagery) without holding a WebGPU object: the import-boundary test has no content-tier exceptions for imagery, and a `webgl2` tier that may not import WebGPU code. (open: CS-34; check not passed)
   unmet: c3 An app gets an engine that clears to its background on WebGL 2, with the inspector naming the device and why, when it sets `renderer: "webgl2"`, when it leaves auto on a browser without WebGPU (with one warning), or when it emulates `webgl2-basic`; below the floor, `Engine.create` rejects naming what is missing, and WebGPU apps never download the WebGL 2 code. (open: CS-35; check not passed)
 
@@ -24,8 +24,8 @@ CS-416 WebGL 2 reaches parity with WebGPU [Planned], under CS-9 The WebGL 2 rend
 
 CS-417 Transforms and styles compile through Cesium IR [Planned], under CS-10 Cesium IR
   outcome: Styles, transforms and routes are Cesium IR programs that evaluate in float64 on the CPU and emit both WGSL and GLSL ES, with the same results as today.
-  constraints: 2 of 11 done
-  unmet: not linked to a clause yet (open: CS-49, CS-50, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371, CS-39; check not passed)
+  constraints: 3 of 11 done
+  unmet: not linked to a clause yet (open: CS-49, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371, CS-39; check not passed)
   to shape: done_when; check; link CS-48, CS-49, CS-50, CS-51, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371, CS-39 to a clause
 
 CS-418 Any shader language reaches both renderers [Planned], under CS-10 Cesium IR
@@ -42,8 +42,8 @@ CS-419 Cesium IR covers what materials need [Planned], under CS-10 Cesium IR
 
 CS-420 The public API shape is approved [Planned], under CS-437 The public API reviews
   outcome: Every public member is mapped and reviewed against the façade's constraints and other engines' idioms, and the owner has approved which changes to make.
-  constraints: 2 of 10 done
-  unmet: not linked to a clause yet (open: CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-572, CS-567; check not passed)
+  constraints: 3 of 10 done
+  unmet: not linked to a clause yet (open: CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-572; check not passed)
   to shape: done_when; check; link CS-101, CS-102, CS-430, CS-431, CS-432, CS-433, CS-438, CS-454, CS-572, CS-567 to a clause
 
 CS-421 Every public call can cross a thread [Planned], under CS-13 The worker-mode façade
@@ -284,9 +284,9 @@ CS-482 Benchmarks run per merge on dedicated machines [Planned], under CS-195 Be
 
 CS-483 Image regression and parity are checked in CI [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: SwiftShader runs image checks and the parity pages in CI, custom shaders and feature styles match 1.x, and coloured metals match a multiple-scattering reference.
-  constraints: 0 of 9 done
-  unmet: not linked to a clause yet (open: CS-327, CS-330, CS-448, CS-541, CS-542, CS-568, CS-581, CS-582, CS-335; check not passed)
-  to shape: done_when; check; link CS-327, CS-330, CS-448, CS-541, CS-542, CS-568, CS-581, CS-582, CS-335 to a clause
+  constraints: 0 of 10 done
+  unmet: not linked to a clause yet (open: CS-327, CS-330, CS-448, CS-541, CS-542, CS-568, CS-762, CS-581, CS-582, CS-335; check not passed)
+  to shape: done_when; check; link CS-327, CS-330, CS-448, CS-541, CS-542, CS-568, CS-762, CS-581, CS-582, CS-335 to a clause
 
 CS-484 The performance targets are met or the gaps explained [Planned], under CS-195 Benchmarks, parity and image regression
   outcome: Throttled network scenarios run against a link-shaping server, Dyno's guardrails are revisited per scene, and every performance target, multi-view included, is met or its gap explained.
@@ -603,8 +603,8 @@ CS-722 Benchmark results are shared across machines, and dyno is one command [Pl
 
 CS-751 The owner's views answer what needs me, what's on track and what's wrong [Planned], under CS-389 Dyno as the development harness
   outcome: The Work page opens on a release's remaining milestones and the gates holding it, shows only the graph's exceptions, draws the path to any target, says what changed, shows projects as bets, orders work without a slot setting, makes each proposal a clear call, shows how well the system and the owner work together, and keeps Your move calm.
-  constraints: 1 of 9 done
-  unmet: not linked to a clause yet (open: CS-745, CS-746, CS-747, CS-748, CS-749, CS-750, CS-752, CS-753; check not passed)
+  constraints: 2 of 9 done
+  unmet: not linked to a clause yet (open: CS-746, CS-747, CS-748, CS-749, CS-750, CS-752, CS-753; check not passed)
   to shape: done_when; check; link CS-744, CS-745, CS-746, CS-747, CS-748, CS-749, CS-750, CS-752, CS-753 to a clause
 
 CS-1 Renderers and engine profiles [Dropped]

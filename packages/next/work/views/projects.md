@@ -8,13 +8,13 @@ CS-8 Engine profiles [Planned], led by owner
   waits on: CS-9 The WebGL 2 renderer (1); CS-12 The job system's ports (1); CS-15 Refinement and convergence (1)
   waited on by: CS-13 The worker-mode façade (1); CS-18 The work tracker (3)
 CS-9 The WebGL 2 renderer [Planned], led by owner
-  1 of 17 done, 3 ready, 12 blocked, 1 proposed
+  3 of 18 done, 4 ready, 10 blocked, 1 proposed
   waits on: CS-10 Cesium IR (5); CS-13 The worker-mode façade (1)
   waited on by: CS-8 Engine profiles (1); CS-11 Live MaterialX graph editing (1); CS-18 The work tracker (3)
 CS-10 Cesium IR [Planned], led by owner
-  7 of 34 done, 9 ready, 16 blocked, 2 proposed
+  9 of 35 done, 9 ready, 15 blocked, 2 proposed
   waits on: nothing open
-  waited on by: CS-9 The WebGL 2 renderer (5); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (4); CS-17 The transform graph (2); CS-190 Vector drawing and the styling language (3); CS-18 The work tracker (3)
+  waited on by: CS-9 The WebGL 2 renderer (5); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (4); CS-17 The transform graph (2); CS-190 Vector drawing and the styling language (2); CS-18 The work tracker (3)
 CS-11 Live MaterialX graph editing [Planned], led by owner
   0 of 17 done, 6 ready, 10 blocked, 1 proposed
   waits on: CS-10 Cesium IR (2); CS-9 The WebGL 2 renderer (1)
@@ -24,9 +24,9 @@ CS-12 The job system's ports [Planned], led by owner
   waits on: CS-13 The worker-mode façade (2)
   waited on by: CS-8 Engine profiles (1); CS-13 The worker-mode façade (1); CS-16 Streaming robustness (1); CS-18 The work tracker (8)
 CS-13 The worker-mode façade [Planned], led by owner
-  1 of 21 done, 1 ready, 18 blocked, 1 proposed
+  3 of 22 done, 0 ready, 18 blocked, 1 proposed
   waits on: CS-437 The public API reviews (5); CS-10 Cesium IR (4); CS-8 Engine profiles (1); CS-12 The job system's ports (1)
-  waited on by: CS-12 The job system's ports (2); CS-437 The public API reviews (1); CS-9 The WebGL 2 renderer (1); CS-18 The work tracker (4)
+  waited on by: CS-12 The job system's ports (2); CS-9 The WebGL 2 renderer (1); CS-18 The work tracker (4)
 CS-14 Level-of-detail transitions [Planned], led by owner
   0 of 14 done, 2 ready, 9 blocked, 3 proposed
   waits on: nothing open
@@ -61,7 +61,7 @@ CS-189 Frames and engineering coordinates follow-ups [Planned], led by owner
   waited on by: CS-192 Sky, light and atmosphere (2); CS-18 The work tracker (4); CS-584 The widgets library (1); CS-642 Geometry generators (1)
 CS-190 Vector drawing and the styling language [Planned], led by owner
   0 of 14 done, 4 ready, 6 blocked, 4 proposed
-  waits on: CS-10 Cesium IR (3)
+  waits on: CS-10 Cesium IR (2)
   waited on by: CS-193 B-reps and geometry queries (1); CS-196 Infrastructure and geoscience capabilities (2); CS-18 The work tracker (4); CS-642 Geometry generators (1); CS-191 Content sources and formats (1); CS-197 Ray queries and path tracing (1)
 CS-191 Content sources and formats [Planned], led by owner
   3 of 33 done, 9 ready, 20 blocked, 1 proposed
@@ -80,7 +80,7 @@ CS-194 Budgeted selection and memory [Planned], led by owner
   waits on: nothing open
   waited on by: CS-18 The work tracker (1)
 CS-195 Benchmarks, parity and image regression [Planned], led by owner
-  0 of 25 done, 13 ready, 6 blocked, 6 proposed
+  0 of 26 done, 14 ready, 6 blocked, 6 proposed
   waits on: CS-389 Dyno as the development harness (2)
   waited on by: CS-18 The work tracker (4); CS-596 Trust and evals (1)
 CS-196 Infrastructure and geoscience capabilities [Planned], led by owner
@@ -100,12 +100,12 @@ CS-199 Dyno hardening, packaging and CI [Planned], led by owner
   waits on: nothing open
   waited on by: CS-18 The work tracker (2); CS-628 Sandcastle as 2.0's gallery (1)
 CS-389 Dyno as the development harness [Planned], led by owner
-  24 of 64 done, 21 ready, 18 blocked, 1 proposed
+  26 of 65 done, 20 ready, 18 blocked, 1 proposed
   waits on: nothing open
   waited on by: CS-195 Benchmarks, parity and image regression (2); CS-18 The work tracker (5)
 CS-437 The public API reviews [Planned], led by owner
   3 of 15 done, 8 ready, 4 blocked
-  waits on: CS-13 The worker-mode façade (1)
+  waits on: nothing open
   waited on by: CS-13 The worker-mode façade (5); CS-189 Frames and engineering coordinates follow-ups (1); CS-193 B-reps and geometry queries (1); CS-18 The work tracker (3)
 CS-579 Editing [Planned], led by owner
   0 of 2 done, 2 ready, 0 blocked
