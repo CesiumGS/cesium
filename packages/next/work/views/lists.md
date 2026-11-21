@@ -78,7 +78,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 13 of 40 done, 10 ready, 12 blocked, 5 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 13 of 41 done, 11 ready, 12 blocked, 5 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -131,6 +131,7 @@ No milestone
 - [x] CS-788 decision: Merge CS-53, transforms move onto Cesium IR, with its browser parity bullet not showable today. Done.
 - [?] CS-790 A Lab parity page draws through a compiled curvilinear route, so IR changes are checked in pixels. Proposed. Needs CS-53.
 - [?] CS-791 Per-draw center constants on Cesium IR's generic evaluator are measured against the old Float64Array loop. Proposed. Needs CS-53.
+- [ ] CS-794 The transform passes load Cesium IR lazily, so a default view starts without it. Needs CS-53.
 
 ### Live MaterialX graph editing
 
@@ -888,7 +889,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 42 of 82 done, 16 ready, 17 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 44 of 83 done, 15 ready, 17 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -991,10 +992,11 @@ No milestone
 - [x] CS-778 decision: Merge CS-747, the What changed view (since you last looked). Done.
 - [?] CS-781 What changed takes a since= URL field, so a chosen point can be shared as a link. Proposed. Needs CS-747.
 - [x] CS-782 decision: Merge CS-774, npx dyno works through a private workspace package, run as npx --no-install dyno. Done.
-- [ ] CS-784 The dyno tool is @cesium/dyno, so npx can never reach an outside package by its name. Needs CS-774.
+- [x] CS-784 The dyno tool is @cesium/dyno, so npx can never reach an outside package by its name. Done.
 - [x] CS-785 decision: Merge CS-749, the Plan view becomes Order. Done.
 - [?] CS-786 Order's concurrency history reads when work really started, not commit dates. Proposed. Needs CS-749.
 - [?] CS-787 Dyno's Work page says Order where it still says Plan view, and DESIGN.md drops the old Projects section. Proposed. Needs CS-749.
+- [x] CS-793 decision: Merge CS-784, the dyno tool is @cesium/dyno. Done.
 
 ### The public API reviews
 

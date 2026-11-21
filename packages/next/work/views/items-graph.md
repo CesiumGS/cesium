@@ -91,6 +91,7 @@ graph LR
     CS_788["CS-788 Merge CS-53, transforms move onto Cesium IR, with its browser p"]:::done
     CS_790["CS-790 A Lab parity page draws through a compiled curvilinear route, s"]:::proposed
     CS_791["CS-791 Per-draw center constants on Cesium IR's generic evaluator are "]:::proposed
+    CS_794["CS-794 The transform passes load Cesium IR lazily, so a default view s"]:::open
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -631,10 +632,11 @@ graph LR
     CS_778["CS-778 Merge CS-747, the What changed view (since you last looked)"]:::done
     CS_781["CS-781 What changed takes a since= URL field, so a chosen point can be"]:::proposed
     CS_782["CS-782 Merge CS-774, npx dyno works through a private workspace packag"]:::done
-    CS_784["CS-784 The dyno tool is @cesium/dyno, so npx can never reach an outsid"]:::open
+    CS_784["CS-784 The dyno tool is @cesium/dyno, so npx can never reach an outsid"]:::done
     CS_785["CS-785 Merge CS-749, the Plan view becomes Order"]:::done
     CS_786["CS-786 Order's concurrency history reads when work really started, not"]:::proposed
     CS_787["CS-787 Dyno's Work page says Order where it still says Plan view, and "]:::proposed
+    CS_793["CS-793 Merge CS-784, the dyno tool is @cesium/dyno"]:::done
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -1421,6 +1423,7 @@ graph LR
   CS_53 --> CS_790
   CS_53 --> CS_791
   CS_35 --> CS_792
+  CS_53 --> CS_794
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

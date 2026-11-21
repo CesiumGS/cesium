@@ -28,6 +28,7 @@ CS-10 Cesium IR
   CS-549  The IR models math/normalize's isValid output
   CS-550  The core IR spike's evaluator gets dot and intToFloat's signed zero right
   CS-571  The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires
+  CS-794  The transform passes load Cesium IR lazily, so a default view starts without it
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -215,7 +216,6 @@ CS-389 Dyno as the development harness
   CS-753  "Your move" gets a calmer layout: fewer, larger, ranked entries
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
   CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
-  CS-784  The dyno tool is @cesium/dyno, so npx can never reach an outside package by its name
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
