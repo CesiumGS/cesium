@@ -2,10 +2,11 @@
 id: CS-753
 title: '"Your move" gets a calmer layout: fewer, larger, ranked entries'
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-389
 needs: [CS-744, CS-750]
+claimed_by: orch-11-CS-753
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/work.css, packages/next/test/dynoWork*.test.ts]
 ---
 
