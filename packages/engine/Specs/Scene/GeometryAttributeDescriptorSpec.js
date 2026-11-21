@@ -231,7 +231,7 @@ describe("Scene/GeometryAttributeDescriptor", function () {
     expect(function () {
       return new GeometryAttributeDescriptor({
         semantic: VertexAttributeSemantic.POSITION,
-        domain: "FACE",
+        domain: "INVALID",
       });
     }).toThrowDeveloperError();
   });

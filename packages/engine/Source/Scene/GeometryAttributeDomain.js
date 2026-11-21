@@ -1,7 +1,7 @@
 // @ts-check
 
 /**
- * How a geometry attribute should be interpreted: a value for a given vertex, or a value for a given vertex for a given primitive.
+ * What each of a geometry attribute's values belongs to.
  *
  * @enum {string}
  *
@@ -23,6 +23,22 @@ const GeometryAttributeDomain = {
    * @constant
    */
   CORNER: "CORNER",
+
+  /**
+   * One value per edge between two vertices.
+   *
+   * @type {string}
+   * @constant
+   */
+  EDGE: "EDGE",
+
+  /**
+   * One value per primitive.
+   *
+   * @type {string}
+   * @constant
+   */
+  FACE: "FACE",
 };
 
 Object.freeze(GeometryAttributeDomain);
