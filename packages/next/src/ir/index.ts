@@ -37,6 +37,7 @@ export {
   type Uniforms,
 } from "./rates.ts";
 export { KINK_OPS, STEP_OPS, kinks, type OutputKinks } from "./kinks.ts";
+export { scalarize } from "./scalarize.ts";
 export {
   evaluateScalars,
   intervalReaches,
