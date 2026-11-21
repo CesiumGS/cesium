@@ -2,10 +2,14 @@
 id: CS-795
 title: Merge CS-752, Flow answers how well the system and the owner work together
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the Dyno Work tests, fast-forwards main, regenerates the views and logs the merge; CS-753 (a calmer Your move) can then start."
+answered_at: 2026-11-21T16:54:24.677Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
