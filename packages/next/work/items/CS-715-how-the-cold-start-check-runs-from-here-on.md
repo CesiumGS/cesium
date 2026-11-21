@@ -33,3 +33,7 @@ If unanswered by 2026-11-23T12:00:00Z: Only on request.
 ## Answer
 
 Recorded in the front matter once answered.
+
+## Notes
+
+2026-11-20, the owner on how the check is judged while executors load the machine: keep the plain 1,400 ms budget, and hold a merge that touches the viewer, the engine or frames until the machine is quiet enough for the check to pass. An interleaved run against main (A/B) can be evidence, but it doesn't pass or hold a batch on its own.

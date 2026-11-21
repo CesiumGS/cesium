@@ -2,10 +2,14 @@
 id: CS-776
 title: Merge CS-52, the GLSL ES 3.00 emitter, with its naga cross-check left open
 kind: decision
-state: planned
+state: done
 created: 2026-11-20
 project: CS-10
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the IR and dyno tests, fast-forwards main, regenerates the views and logs the merge. CS-52 closes, and the chief of staff files the naga cross-check as its own item, which waits on your choice of naga."
+answered_at: 2026-11-21T07:31:45.498Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
