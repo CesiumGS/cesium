@@ -369,10 +369,6 @@
     grid-column: 1 / -1;
   }
 }
-.work-dash > .work-later {
-  grid-column: 1 / -1;
-  margin: 0;
-}
 
 /*
  * One surface level: a section is a raised panel with no border, and
@@ -708,9 +704,6 @@
 }
 .work-row-sub {
   margin-top: 2px;
-}
-.work-later {
-  margin: var(--stratakit-space-600) 0 0;
 }
 
 /*
@@ -1863,156 +1856,6 @@ a.work-related-item:focus-visible {
 }
 .work-bar {
   grid-template-columns: minmax(0, 1fr) 64px 28px;
-}
-
-/* Measures: one row each, name and info tip, value, chart, pair. */
-.work-mrows {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-.work-mrow {
-  display: grid;
-  grid-template-columns:
-    minmax(150px, 1fr) minmax(170px, 1.3fr) minmax(200px, 2fr)
-    minmax(140px, 1.3fr);
-  align-items: center;
-  gap: var(--stratakit-space-200) var(--stratakit-space-500);
-  padding: var(--stratakit-space-300) 0;
-}
-.work-mrow + .work-mrow {
-  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-.work-mrow-name {
-  display: flex;
-  align-items: center;
-  gap: var(--stratakit-space-150);
-}
-.work-mrow-name h3 {
-  margin: 0;
-  font-weight: 600;
-}
-.work-mrow-value {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.work-mrow-big {
-  all: unset;
-  align-self: flex-start;
-  font-size: var(--stratakit-font-size-body-lg);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-button.work-mrow-big {
-  cursor: pointer;
-  border-radius: var(--stratakit-radius-sm);
-}
-button.work-mrow-big:hover {
-  text-decoration: underline;
-}
-button.work-mrow-big:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 2px;
-}
-.work-mrow-big.muted,
-.work-mrow.later h3 {
-  color: var(--stratakit-color-text-neutral-secondary);
-  font-weight: 400;
-}
-.work-mrow-chart {
-  min-width: 0;
-}
-@container (max-width: 760px) {
-  .work-mrow {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
-  .work-mrow-chart {
-    grid-column: 1 / -1;
-  }
-}
-
-/* The info tip. */
-.work-info {
-  all: unset;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  color: var(--stratakit-color-text-neutral-secondary);
-  cursor: help;
-}
-.work-info:hover {
-  color: var(--stratakit-color-text-neutral-primary);
-}
-.work-info:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-}
-.work-info svg {
-  width: 14px;
-  height: 14px;
-}
-
-/* The small charts over time. */
-.work-mini {
-  width: 100%;
-  max-width: 280px;
-}
-.work-mini-svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  overflow: visible;
-}
-.work-mini.done {
-  --mini: var(--stage-done);
-}
-.work-mini.attention {
-  --mini: var(--stratakit-color-border-attention-base);
-}
-.work-mini-base {
-  stroke: var(--stratakit-color-border-neutral-muted);
-  stroke-width: 1;
-}
-.work-mini-median {
-  stroke: var(--stratakit-color-text-neutral-secondary);
-  stroke-width: 1;
-  stroke-dasharray: 4 3;
-}
-.work-mini-mark {
-  fill: var(--mini);
-  stroke: var(--stratakit-color-bg-elevation-level-1);
-  stroke-width: 1;
-}
-.work-mini-mark.open {
-  fill: var(--stratakit-color-bg-elevation-level-1);
-  stroke: var(--mini);
-  stroke-width: 1.5;
-}
-.work-mini-line {
-  fill: none;
-  stroke: var(--mini);
-  stroke-width: 2;
-  stroke-linejoin: round;
-}
-.work-mini-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 44px;
-  max-width: 280px;
-  border: 1px dashed var(--stratakit-color-border-neutral-muted);
-  border-radius: var(--stratakit-radius-md);
-  font-size: var(--stratakit-font-size-caption-md);
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-
-.work-mini-hatch {
-  stroke: var(--stratakit-color-border-neutral-muted);
-  stroke-width: 1;
 }
 
 /*

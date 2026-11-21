@@ -16,7 +16,6 @@ import {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
-  Tooltip,
   Typography,
   useMediaQuery,
 } from "@mui/material";
@@ -91,11 +90,6 @@ import {
   loadItemText,
   criticalPathOf,
   longestChains,
-  type MeasurePoint,
-  type Measures,
-  measuresOf,
-  median,
-  percentile,
   mapEntityItems,
   mapEntityTitle,
   milestoneRoadmapOf,
@@ -216,8 +210,6 @@ function WorkHelp() {
   );
 }
 
-const DAY_MS = 86_400_000;
-
 /** What each stage's color means, for the tooltip on anything colored by stage. */
 const STAGE_MEANING: Record<Stage, string> = {
   Proposed: "gray: proposed, not committed to yet",
@@ -303,13 +295,6 @@ const BUILT_IN_VIEWS: WorkViewDef[] = [
     question: "What is proposed, and what each proposal waits on",
     place: "page",
     order: 60,
-  },
-  {
-    id: "flow",
-    label: "Flow",
-    question: "How the work flows, day by day",
-    place: "page",
-    order: 70,
   },
   {
     id: "deps",
@@ -468,10 +453,6 @@ function Board({
   );
   const now = Date.now();
   const ageOf = (it: WorkItem) => now - (flow.since.get(it.id) ?? now);
-  const doneDaily = useMemo(
-    () => doneByDay(s, items, flow.days),
-    [s, items, flow.days],
-  );
   const open = (list: string) => set({ list, item: undefined });
   /** Scopes to one line (or all work), replacing the scope. */
   const scopeTo = (patch: Partial<WorkSearch>) =>
@@ -980,41 +961,6 @@ function Board({
                   />
                 </div>
               )}
-
-              {!pageView.Component && view === "flow" && (
-                <div className="work-dash">
-                  <Card
-                    id="work-flow-h"
-                    title="Items in each stage, day by day"
-                    caption={`A band that widens is a queue growing; choose a day to list what moved, or a stage to list it. ${flow.created} ${flow.created === 1 ? "item" : "items"} new in the last ${flow.window} days.`}
-                    className="span-12"
-                  >
-                    <FlowChart
-                      flow={flow}
-                      itemOf={itemOf}
-                      onStage={(st) => open(`stage:${st}`)}
-                      onDay={(key) => open(`day:${key}`)}
-                    />
-                  </Card>
-                  <MeasuresCard
-                    s={s}
-                    items={items}
-                    flow={flow}
-                    doneDaily={doneDaily}
-                    itemOf={itemOf}
-                    onOpen={open}
-                  />
-                  <Typography
-                    variant="caption-md"
-                    color="textTertiary"
-                    render={<p />}
-                    className="work-later"
-                  >
-                    The merge queue, quotas and what the controllers do join
-                    this view when HITLd records them.
-                  </Typography>
-                </div>
-              )}
             </div>
           </div>
 
@@ -1069,476 +1015,6 @@ function Board({
         </div>
       </Page>
     </WorkCardProvider>
-  );
-}
-
-/** Below this many samples, a measure shows its points but no typical value. */
-const MIN_SAMPLES = 10;
-
-/**
- * The measures that replace velocity (human-in-the-lead's design, part
- * 11): flow from the tracker's history now, tokens and quality once its
- * ledger records them. Each row has its value, a chart over time, how it
- * is read (the info tip) and its pair, the measure that must not get
- * worse if this one is pushed (part 11.3).
- */
-function MeasuresCard({
-  s,
-  items,
-  flow,
-  doneDaily,
-  itemOf,
-  onOpen,
-}: {
-  s: WorkSnapshot;
-  items: WorkItem[];
-  flow: Flow;
-  doneDaily: number[];
-  itemOf: Map<string, WorkItem>;
-  onOpen: (list: string) => void;
-}) {
-  const m: Measures = useMemo(
-    () => measuresOf(s, items, flow),
-    [s, items, flow],
-  );
-  const end = Date.now();
-  const began = flow.days[0] ?? end;
-  // At least two weeks across, so a short history reads as short.
-  const start = Math.min(began, end - 14 * DAY_MS);
-  const typical = (xs: number[], what: string) =>
-    xs.length >= MIN_SAMPLES
-      ? {
-          value: ageText(median(xs)!),
-          sub: `Median of ${xs.length}; 90th percentile ${ageText(percentile(xs, 90)!)}`,
-        }
-      : {
-          value: `${xs.length} ${what}`,
-          sub: `Too few for a typical time (it needs ${MIN_SAMPLES}); each dot is one`,
-        };
-  const lead = typical(m.lead, m.lead.length === 1 ? "finished" : "finished");
-  const answered = typical(m.decisionLatency, "answered");
-  const titleOf = (id: string) => itemOf.get(id)?.title ?? id;
-  // As Your decisions counts them: open, with nothing they need still open.
-  const answerable = items.filter(
-    (it) => isOwnerDecision(it) && !it.open_needs.length,
-  ).length;
-  return (
-    <Card
-      id="work-measures-h"
-      title="Measures"
-      caption="Each is paired with the measure that must not get worse when it is pushed"
-      className="span-12"
-    >
-      <ul className="work-mrows">
-        <MeasureRow
-          name="Throughput"
-          info={`Items moved to Done, by day; the headline counts the last ${flow.window} days. The tracker's import, which arrived with items already Done, isn't counted.`}
-          value={`${flow.arrived.Done} done`}
-          sub={`In the last ${flow.window} days`}
-          pair="Change failure rate, escaped defects"
-          onOpen={() => onOpen("done")}
-          chart={
-            <MiniChart
-              kind="bars"
-              start={start}
-              began={began}
-              end={end}
-              days={flow.days}
-              series={doneDaily}
-              tone="done"
-              format={(v) => `${v} done`}
-              label="Items done per day"
-            />
-          }
-        />
-        <MeasureRow
-          name="Lead time"
-          info="From an item's Planned to its Done, for items finished since the history began. Each dot is one item, at the day it finished; higher took longer. Work that lands as one merge shows the merge's timing, so the numbers firm up once HITLd records claims."
-          value={lead.value}
-          sub={lead.sub}
-          chart={
-            <MiniChart
-              kind="dots"
-              start={start}
-              began={began}
-              end={end}
-              points={m.leadPoints}
-              tone="done"
-              median={m.lead.length >= MIN_SAMPLES ? median(m.lead) : undefined}
-              format={(v) => ageText(v)}
-              pointLabel={(p) => `${p.id} ${titleOf(p.id)}: ${ageText(p.v)}`}
-              label="Lead time of each finished item"
-              empty="No item has finished since the history began"
-            />
-          }
-        />
-        <MeasureRow
-          name="Decision latency"
-          info="From a decision being asked (its creation) to its answer (Done). Filled dots are answered decisions, at the day they were answered; the open column at the right is every decision still waiting, by how long it has waited."
-          value={answered.value}
-          sub={
-            m.decisionsOpen.length
-              ? `${m.decisionsOpen.length} open, ${answerable} you can answer now; oldest asked ${ageText(Math.max(...m.decisionsOpen))} ago`
-              : "None open"
-          }
-          pair="How often answered decisions are overruled or reversed"
-          onOpen={() => onOpen("owner")}
-          chart={
-            <MiniChart
-              kind="dots"
-              start={start}
-              began={began}
-              end={end}
-              points={m.decisionPoints}
-              tone="attention"
-              median={
-                m.decisionLatency.length >= MIN_SAMPLES
-                  ? median(m.decisionLatency)
-                  : undefined
-              }
-              format={(v) => ageText(v)}
-              pointLabel={(p) =>
-                `${p.id} ${titleOf(p.id)}: ${p.open ? `waiting ${ageText(p.v)}` : `answered after ${ageText(p.v)}`}`
-              }
-              label="How long each decision waited"
-            />
-          }
-        />
-        <MeasureRow
-          name="Blocked on your decisions"
-          info="Open items that need an open decision of yours, at the end of each day. The item-days are how long those waiting now have waited so far, together."
-          value={`${m.blocked.items} ${m.blocked.items === 1 ? "item" : "items"}`}
-          sub={
-            m.blocked.items
-              ? `Behind ${m.blocked.decisions} ${m.blocked.decisions === 1 ? "decision" : "decisions"}; ${Math.round(m.blocked.itemDays)} item-days so far`
-              : "No open item waits on you"
-          }
-          onOpen={() => onOpen("owner")}
-          chart={
-            <MiniChart
-              kind="line"
-              start={start}
-              began={began}
-              end={end}
-              days={flow.days}
-              series={m.blockedDaily}
-              tone="attention"
-              format={(v) => `${v} blocked`}
-              label="Items blocked on your decisions, by day"
-            />
-          }
-        />
-        <MeasureRow
-          name="Token estimate error"
-          info={`How far each item type's token estimates are from the tokens spent: accuracy is the bias (the mean of log actual over estimate), precision the spread. It needs estimates on items (estimate_tokens; ${m.estimated} have one) and actual tokens from HITLd's ledger.`}
-          pair="Appetite use: estimates mustn't be padded"
-        />
-        <MeasureRow
-          name="Tokens per accepted item"
-          info="All tokens spent on an item (the work, retries, checks and reviews) for items merged and not reverted, by tier and item type. It needs HITLd's ledger."
-          pair="First-pass yield, escaped defects"
-        />
-        <MeasureRow
-          name="First-pass yield"
-          info="The share of items whose first report passed verification and merged without a second round. It needs HITLd's ledger."
-        />
-      </ul>
-    </Card>
-  );
-}
-
-/** An info mark that shows how something is read, on hover or focus. */
-function InfoTip({ text }: { text: string }) {
-  return (
-    <Tooltip title={text} placement="top" arrow>
-      <button type="button" className="work-info" aria-label={text}>
-        <Icon href={svgInfo} />
-      </button>
-    </Tooltip>
-  );
-}
-
-/**
- * One measure: its name and how it is read (the info tip), its value now,
- * a chart over time, and its pair. With no value it isn't measured yet,
- * and the chart's place says what it waits for.
- */
-function MeasureRow({
-  name,
-  info,
-  value,
-  sub,
-  chart,
-  pair,
-  onOpen,
-}: {
-  name: string;
-  info: string;
-  value?: string;
-  sub?: string;
-  chart?: ReactNode;
-  pair?: string;
-  onOpen?: () => void;
-}) {
-  const later = value === undefined;
-  return (
-    <li className={`work-mrow${later ? " later" : ""}`}>
-      <span className="work-mrow-name">
-        <Typography variant="body-sm" render={<h3 />}>
-          {name}
-        </Typography>
-        <InfoTip text={info} />
-      </span>
-      <span className="work-mrow-value">
-        {later ? (
-          <span className="work-mrow-big muted">Not measured yet</span>
-        ) : onOpen ? (
-          <button type="button" className="work-mrow-big" onClick={onOpen}>
-            {value}
-          </button>
-        ) : (
-          <span className="work-mrow-big">{value}</span>
-        )}
-        {sub && (
-          <Typography variant="caption-md" color="textSecondary">
-            {sub}
-          </Typography>
-        )}
-      </span>
-      <span className="work-mrow-chart">
-        {chart ?? (
-          <Typography variant="caption-md" color="textSecondary">
-            Arrives with HITLd's ledger
-          </Typography>
-        )}
-      </span>
-      <Typography
-        variant="caption-md"
-        color="textSecondary"
-        className="work-mrow-pair"
-      >
-        {pair ? (
-          <>Paired with {pair.charAt(0).toLowerCase() + pair.slice(1)}</>
-        ) : (
-          "No pair"
-        )}
-      </Typography>
-    </li>
-  );
-}
-
-/**
- * A small chart over the history's days: bars or a line for a count per
- * day, or dots for things that finished (how long each took, at the day
- * it finished; open ones stand at the right edge, hollow). Hovering
- * follows the pointer with a crosshair and reads the nearest day or dot.
- */
-function MiniChart({
-  kind,
-  start,
-  began,
-  end,
-  days = [],
-  series = [],
-  points = [],
-  tone,
-  median: mid,
-  format,
-  pointLabel,
-  label,
-  empty = "Nothing yet",
-}: {
-  kind: "bars" | "line" | "dots";
-  start: number;
-  /** When the history began: before it, the chart is shaded. */
-  began: number;
-  end: number;
-  days?: number[];
-  series?: number[];
-  points?: MeasurePoint[];
-  tone: "done" | "attention";
-  median?: number;
-  format: (v: number) => string;
-  pointLabel?: (p: MeasurePoint) => string;
-  label: string;
-  empty?: string;
-}) {
-  const [at, setAt] = useState<number>();
-  const ref = useRef<SVGSVGElement>(null);
-  const hatch = useId();
-  const w = 240;
-  const h = 44;
-  const pad = 5;
-  const span = Math.max(1, end - start);
-  const xt = (t: number) => pad + ((t - start) / span) * (w - 2 * pad);
-  const values = kind === "dots" ? points.map((p) => p.v) : series;
-  const max = Math.max(1, ...values, mid ?? 0);
-  const y = (v: number) => h - pad - ((h - 2 * pad) * v) / max;
-  // Day bars and line points sit at each day's middle, the last at now.
-  const dayX = (i: number) =>
-    i === days.length - 1
-      ? xt(end) - (kind === "bars" ? 4 : 0)
-      : xt(days[i]! + DAY_MS / 2);
-  // Open ones all stand at now: spread them leftwards in a narrow band,
-  // longest-waiting nearest the edge, so each one shows.
-  const openOrder = new Map(
-    points
-      .filter((p) => p.open)
-      .sort((a, b) => b.v - a.v)
-      .map((p, i) => [p.id, i]),
-  );
-  const px = (p: MeasurePoint) =>
-    p.open ? xt(p.t) - ((openOrder.get(p.id) ?? 0) % 6) * 4 : xt(p.t);
-  const xs = kind === "dots" ? points.map(px) : days.map((_, i) => dayX(i));
-  const day = (t: number) =>
-    new Date(t).toLocaleDateString([], { month: "short", day: "numeric" });
-  if (!values.length) {
-    return <span className="work-mini-empty">{empty}</span>;
-  }
-  const follow = (clientX: number) => {
-    const r = ref.current?.getBoundingClientRect();
-    if (!r?.width) {
-      return;
-    }
-    const px = ((clientX - r.left) / r.width) * w;
-    let best = 0;
-    for (let i = 1; i < xs.length; i++) {
-      if (Math.abs(xs[i]! - px) < Math.abs(xs[best]! - px)) {
-        best = i;
-      }
-    }
-    setAt(best);
-  };
-  const read =
-    at === undefined
-      ? undefined
-      : kind === "dots"
-        ? (pointLabel?.(points[at]!) ?? format(points[at]!.v))
-        : `${day(days[at]!)}: ${format(series[at]!)}`;
-  const barW = Math.max(
-    3,
-    Math.min(14, ((w - 2 * pad) / Math.max(1, (end - start) / DAY_MS)) * 0.6),
-  );
-  return (
-    <span
-      className={`work-spark-wrap work-mini ${tone}`}
-      onPointerMove={(e) => follow(e.clientX)}
-      onPointerLeave={() => setAt(undefined)}
-    >
-      <svg
-        ref={ref}
-        width={w}
-        height={h}
-        viewBox={`0 0 ${w} ${h}`}
-        role="img"
-        aria-label={`${label}, ${day(start)} to ${day(end)}${kind === "dots" ? `: ${points.length} shown` : `: ${series.map((v, i) => `${day(days[i]!)} ${format(v)}`).join(", ")}`}`}
-        className="work-mini-svg"
-      >
-        <defs>
-          <pattern
-            id={hatch}
-            width="4"
-            height="4"
-            patternUnits="userSpaceOnUse"
-            patternTransform="rotate(45)"
-          >
-            <line x1="0" y1="0" x2="0" y2="4" className="work-mini-hatch" />
-          </pattern>
-        </defs>
-        {began > start && (
-          <rect
-            x={pad}
-            y={0}
-            width={Math.max(0, xt(began) - pad)}
-            height={h - pad}
-            fill={`url(#${hatch})`}
-          >
-            <title>Before the history began</title>
-          </rect>
-        )}
-        <line
-          x1={pad}
-          x2={w - pad}
-          y1={h - pad}
-          y2={h - pad}
-          className="work-mini-base"
-        />
-        {mid !== undefined && (
-          <line
-            x1={pad}
-            x2={w - pad}
-            y1={y(mid)}
-            y2={y(mid)}
-            className="work-mini-median"
-          />
-        )}
-        {at !== undefined && (
-          <line
-            x1={xs[at]}
-            x2={xs[at]}
-            y1={0}
-            y2={h}
-            className="work-spark-cross"
-          />
-        )}
-        {kind === "bars" &&
-          series.map((v, i) =>
-            v > 0 ? (
-              <rect
-                key={i}
-                x={dayX(i) - barW / 2}
-                y={y(v)}
-                width={barW}
-                height={h - pad - y(v)}
-                rx={2}
-                className={`work-mini-mark${at === i ? " on" : ""}`}
-              />
-            ) : null,
-          )}
-        {kind === "line" && (
-          <>
-            <path
-              d={series
-                .map((v, i) => `${i ? "L" : "M"}${dayX(i)},${y(v)}`)
-                .join(" ")}
-              className="work-mini-line"
-            />
-            {series.map((v, i) => (
-              <circle
-                key={i}
-                cx={dayX(i)}
-                cy={y(v)}
-                r={at === i ? 3.5 : 2.5}
-                className="work-mini-mark"
-              />
-            ))}
-          </>
-        )}
-        {kind === "dots" &&
-          points.map((p, i) => (
-            <circle
-              key={p.id}
-              cx={px(p)}
-              cy={y(p.v)}
-              r={at === i ? 4 : 3}
-              className={`work-mini-mark${p.open ? " open" : ""}${at === i ? " on" : ""}`}
-            />
-          ))}
-        <rect x={0} y={0} width={w} height={h} className="work-spark-hit" />
-      </svg>
-      {read && (
-        <span
-          className="work-spark-read"
-          aria-hidden="true"
-          style={{
-            left: `${(xs[at!]! / w) * 100}%`,
-            transform: `translateX(-${(xs[at!]! / w) * 100}%)`,
-          }}
-        >
-          {read}
-        </span>
-      )}
-    </span>
   );
 }
 
@@ -2273,35 +1749,6 @@ function LiveUnmergedRow({ u, now }: { u: LiveUnmerged; now: number }) {
   );
 }
 
-/** Items finished on each day of the flow's days (the throughput run). */
-function doneByDay(
-  s: WorkSnapshot,
-  items: readonly WorkItem[],
-  days: number[],
-): number[] {
-  const ids = new Set(items.map((i) => i.id));
-  const out = days.map(() => 0);
-  // Moves into Done only: an item whose first record is Done arrived
-  // finished (the tracker's import), and finished no work that day.
-  const last = new Map<string, string>();
-  const ordered = [...(s.history ?? [])].sort(
-    (a, b) => Date.parse(a.at) - Date.parse(b.at),
-  );
-  for (const e of ordered) {
-    const before = last.get(e.id);
-    last.set(e.id, e.state);
-    if (e.state !== "done" || !ids.has(e.id) || !before || before === "done") {
-      continue;
-    }
-    const t = Date.parse(e.at);
-    const i = days.findLastIndex((d) => d <= t);
-    if (i >= 0) {
-      out[i]!++;
-    }
-  }
-  return out;
-}
-
 /** Items as rows with a bar for how much waits behind each. */
 function LeverageBars({
   items,
@@ -2383,7 +1830,7 @@ function LeverageBars({
  * count and its change from the day before, and what moved. Arrow keys
  * step through the days; a click or Enter lists what moved in the pane.
  */
-function FlowChart({
+export function FlowChart({
   flow,
   itemOf,
   onStage,

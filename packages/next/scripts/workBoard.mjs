@@ -2045,3 +2045,438 @@ export function changesReader(root, { run = gitRun } = {}) {
     },
   };
 }
+
+// ------------- How well the system and the owner work together (CS-752)
+//
+// The Flow view's read (`/work-api/flow.json`): hitld's ledger, as
+// `hitld ledger tail` gives it, cut to the fields the view's measures
+// need; the items' fields and the few lines of their text the measures
+// read (a decision's recommendation and reversibility, a proposal's
+// source); and the tracker's history with both of each commit's dates.
+// The author date is when the work was written, the committer date when
+// it landed on this branch: a branch replayed onto main keeps the first
+// and takes a new second, so the two tell claimed and done from merged.
+// It takes nothing from the URL. git and hitld run with argument arrays;
+// nothing read is executed or evaluated.
+
+/** At most this many commits of the tracker's history are read. */
+export const FLOW_MAX_COMMITS = 4000;
+
+/** How many reverts are read at most. */
+const FLOW_MAX_REVERTS = 200;
+
+/**
+ * The hitld policy settings that set a band, with rc.1's defaults (its
+ * schemas/policy/*.schema.json) for those the project's policy leaves
+ * out. Each band says which it came from.
+ */
+export const FLOW_POLICY = {
+  decisions_per_digest_max: ["attention", 10],
+  interrupts_per_day_max: ["attention", 6],
+  silence_max_hours: ["digests", 48],
+  lease_expiry_seconds: ["run", 1800],
+  rubber_stamp_seconds: ["trust", 60],
+};
+
+/** The ledger's fields the measures read; the rest (notes, text, hosts, sessions, briefs) stay in the ledger. */
+const FLOW_EVENT_KEYS = [
+  "event",
+  "at",
+  "run",
+  "item",
+  "decision",
+  "dispatch",
+  "tier",
+  "model",
+  "estimate_tokens",
+  "tokens",
+  "duration_ms",
+  "result",
+  "commit",
+  "delivery",
+  "via",
+  "reason",
+  "step",
+];
+
+/** The front-matter keys the Flow view reads from an item. */
+const FLOW_KEYS = new Set([
+  "id",
+  "title",
+  "kind",
+  "state",
+  "project",
+  "created",
+  "decider",
+  "answer",
+  "answered_at",
+  "answered_by",
+  "answered_via",
+  "claimed_by",
+  "estimate_tokens",
+  "release",
+  "status",
+]);
+
+/** Why a source couldn't be read: fixed words for the page. */
+export const FLOW_UNREAD = {
+  ledger: "hitld's ledger couldn't be read",
+  empty: "hitld's ledger is empty or wasn't found",
+  git: "the tracker's history couldn't be read",
+};
+
+/** One ledger event cut to FLOW_EVENT_KEYS, its values checked for type. */
+export function flowEventOf(e) {
+  if (!e || typeof e !== "object" || typeof e.event !== "string") {
+    return undefined;
+  }
+  const out = {};
+  for (const k of FLOW_EVENT_KEYS) {
+    const v = e[k];
+    if (typeof v === "string") {
+      out[k] = v.slice(0, 80);
+    } else if (typeof v === "number" && Number.isFinite(v)) {
+      out[k] = v;
+    }
+  }
+  if (e.event === "run-started" && Number.isFinite(e.scope?.max_executors)) {
+    out.max_executors = e.scope.max_executors;
+  }
+  return typeof out.at === "string" ? out : undefined;
+}
+
+/**
+ * An item's fields for the Flow view, from its file's text: the
+ * FLOW_KEYS of its front matter, and from its text a decision's options
+ * (letter and label), the option it recommends, its reversibility (the
+ * door: "one-way", "two-way" or "mixed") and the item a proposal was
+ * filed from (its "Source:" line naming another item). Nothing read is
+ * executed or evaluated.
+ */
+export function flowFieldsOf(text) {
+  const lines = String(text).split("\n");
+  if (lines[0]?.trim() !== "---") {
+    return undefined;
+  }
+  const fm = {};
+  let i = 1;
+  for (; i < lines.length && lines[i].trim() !== "---"; i++) {
+    const m = /^([a-z_]+):(.*)$/.exec(lines[i]);
+    if (!m || !FLOW_KEYS.has(m[1])) {
+      continue;
+    }
+    const raw = m[2].trim();
+    fm[m[1]] =
+      raw.startsWith("[") && raw.endsWith("]")
+        ? flowListOf(raw)
+        : scalarOf(raw);
+  }
+  if (typeof fm.id !== "string" || !ID_PATTERN.test(fm.id)) {
+    return undefined;
+  }
+  if (fm.status !== undefined) {
+    fm.state ??= LEGACY_STATES[fm.status] ?? String(fm.status).toLowerCase();
+    delete fm.status;
+  }
+  if (fm.estimate_tokens !== undefined) {
+    const n = Number(fm.estimate_tokens);
+    if (Number.isFinite(n) && n > 0) {
+      fm.estimate_tokens = n;
+    } else {
+      delete fm.estimate_tokens;
+    }
+  }
+  const body = lines.slice(i + 1);
+  const cut = (s, n = 160) => {
+    const flat = s.replace(/\s+/g, " ").replaceAll("**", "").trim();
+    return flat.length > n ? `${flat.slice(0, n - 1)}…` : flat;
+  };
+  if (typeof fm.answer === "string") {
+    fm.answer = cut(fm.answer);
+  }
+  if (fm.kind === "decision") {
+    const options = [];
+    for (const l of body) {
+      const m = /^\s*[-*]\s+(?:\*\*)?([A-Z])[.):](?:\*\*)?\s*(.*)$/.exec(l);
+      if (m && !options.some((o) => o.letter === m[1])) {
+        // Its label: the words before its first colon or full stop.
+        const label = /^([^:.]{1,120})[:.]/.exec(m[2])?.[1] ?? m[2];
+        options.push({ letter: m[1], label: cut(label, 120) });
+      }
+    }
+    if (options.length) {
+      fm.options = options;
+    }
+    const rec = body
+      .map(
+        (l) =>
+          /^\s*(?:[-*]\s+)?(?:\*\*)?Recommended:?(?:\*\*)?:?\s*(.+)$/.exec(
+            l,
+          )?.[1],
+      )
+      .find(Boolean);
+    if (rec) {
+      fm.recommended = cut(rec);
+    }
+    const door = body
+      .map((l) => /Reversibility:\s*([^\n]+)$/.exec(l)?.[1])
+      .find(Boolean);
+    if (door) {
+      const one = /one-way/i.test(door);
+      const two = /two-way/i.test(door);
+      fm.door =
+        one && two ? "mixed" : one ? "one-way" : two ? "two-way" : undefined;
+      if (!fm.door) {
+        delete fm.door;
+      }
+    }
+  } else {
+    const source = body.find((l) => /^Source:/.test(l.trim()));
+    const from = source
+      ? [...source.matchAll(/\b(CS-[1-9]\d*)(?:'s| report| review)/g)].map(
+          (m) => m[1],
+        )
+      : [];
+    if (from.length) {
+      fm.follows = [...new Set(from)].filter((x) => x !== fm.id);
+    }
+  }
+  return fm;
+}
+
+const FLOW_MARK = "\x1e@@flow ";
+
+/**
+ * The tracker's history on HEAD, oldest first: each commit that changes an
+ * item file, with its author and committer dates, its subject, its
+ * Work-Item trailer (read from the whole message), and per item what its
+ * diff sets: `state` (legacy `status:` lines in hitld's names) and
+ * whether it adds the file. Merges are left out: a branch's commits carry
+ * their own changes.
+ */
+async function flowLogOf(run, root, head) {
+  const { code, stdout } = await run(root, [
+    "log",
+    "--no-merges",
+    `--max-count=${FLOW_MAX_COMMITS + 1}`,
+    "-p",
+    "-U0",
+    "--no-color",
+    "--no-ext-diff",
+    `--format=${FLOW_MARK}%h${FIELD}%aI${FIELD}%cI${FIELD}%B${FIELD}`,
+    head,
+    "--",
+    "packages/next/work/items",
+  ]);
+  if (code !== 0) {
+    throw new Error("log");
+  }
+  const commits = [];
+  for (const chunk of stdout.split(FLOW_MARK).slice(1)) {
+    const [short, authored, committed, message, rest] = chunk.split(FIELD);
+    const text = (message ?? "").trim();
+    const work = /^Work-Item:[ \t]*(CS-[1-9]\d*)[ \t]*$/m.exec(text)?.[1];
+    const files = new Map();
+    let id;
+    let added = false;
+    for (const line of (rest ?? "").split("\n")) {
+      if (line.startsWith("diff --git ")) {
+        id = /\/(CS-[1-9]\d*)[-.][^/]*$/.exec(line)?.[1];
+        added = false;
+      } else if (id && line.startsWith("new file mode")) {
+        added = true;
+        files.set(id, { ...files.get(id), id, added: true });
+      } else if (id && line.startsWith("+state: ")) {
+        files.set(id, {
+          ...files.get(id),
+          id,
+          added,
+          state: line.slice(8).trim(),
+        });
+      } else if (id && line.startsWith("+status: ")) {
+        const state = LEGACY_STATES[line.slice(9).trim()];
+        if (state) {
+          files.set(id, { ...files.get(id), id, added, state });
+        }
+      }
+    }
+    if (!files.size) {
+      continue;
+    }
+    commits.push({
+      short,
+      authored,
+      committed,
+      subject: (text.split("\n")[0] ?? "").slice(0, 200),
+      ...(work ? { work_item: work } : {}),
+      files: [...files.values()],
+    });
+  }
+  const truncated = commits.length > FLOW_MAX_COMMITS;
+  return { commits: commits.slice(0, FLOW_MAX_COMMITS).reverse(), truncated };
+}
+
+/** The reverts on HEAD's history (subjects starting "Revert"), newest first. */
+async function flowRevertsOf(run, root, head) {
+  const { code, stdout } = await run(root, [
+    "log",
+    "--no-merges",
+    `--max-count=${FLOW_MAX_REVERTS}`,
+    "--grep=^Revert",
+    `--format=${FLOW_MARK}%h${FIELD}%cI${FIELD}%B`,
+    head,
+  ]);
+  if (code !== 0) {
+    return [];
+  }
+  return stdout
+    .split(FLOW_MARK)
+    .slice(1)
+    .map((chunk) => {
+      const [short, at, message] = chunk.split(FIELD);
+      const text = (message ?? "").trim();
+      const work = /^Work-Item:[ \t]*(CS-[1-9]\d*)[ \t]*$/m.exec(text)?.[1];
+      return {
+        short,
+        at,
+        subject: (text.split("\n")[0] ?? "").slice(0, 200),
+        ...(work ? { work_item: work } : {}),
+      };
+    });
+}
+
+/** The bands' settings: the project's policy where it sets them, else hitld rc.1's defaults. */
+export function flowPolicyOf(policy) {
+  const out = {};
+  for (const [key, [section, fallback]] of Object.entries(FLOW_POLICY)) {
+    const v = policy?.[section]?.[key];
+    out[key] =
+      typeof v === "number" && Number.isFinite(v)
+        ? { value: v, source: "policy" }
+        : { value: fallback, source: "hitld default" };
+  }
+  return out;
+}
+
+/** The ledger's events (`hitld ledger tail`), cut to FLOW_EVENT_KEYS. */
+export async function flowLedger(root, store) {
+  try {
+    const tail = await hitld(
+      root,
+      withStore(store, ["ledger", "tail", "--limit", LEDGER_ALL]),
+    );
+    if (!tail.ok) {
+      return { ok: false, why: FLOW_UNREAD.ledger };
+    }
+    const events = (tail.events ?? []).map(flowEventOf).filter(Boolean);
+    return events.length
+      ? { ok: true, events }
+      : { ok: false, why: FLOW_UNREAD.empty };
+  } catch (e) {
+    if (e instanceof HitldUnavailable && e.reason !== "failed") {
+      throw e;
+    }
+    return { ok: false, why: FLOW_UNREAD.ledger };
+  }
+}
+
+/**
+ * The Flow view's read, everything at once: HEAD, the items at HEAD (one
+ * ls-tree, one cat-file batch), the tracker's history, the reverts, the
+ * ledger and the policy's bands. `ledger(root)` is injectable for tests.
+ */
+export async function readFlow(
+  root,
+  { run = gitRun, ledger = (r) => flowLedger(r) } = {},
+) {
+  const headGot = await run(root, ["rev-parse", "--verify", "HEAD"]);
+  const head = headGot.stdout.trim();
+  return flowAt(run, root, head, ledger);
+}
+
+async function flowAt(run, root, head, ledger) {
+  const items = async () => {
+    const tree = await treeOf(run, root, head);
+    const paths = [...tree].filter(([p]) => p.startsWith(WORK_PATHS[0]));
+    const text = await blobsOf(
+      run,
+      root,
+      paths.map(([, b]) => b),
+    );
+    return paths
+      .map(([, b]) => flowFieldsOf(text.get(b) ?? ""))
+      .filter(Boolean)
+      .sort(byNumber);
+  };
+  const history = flowLogOf(run, root, head).then(
+    (h) => ({ ok: true, ...h }),
+    () => ({ ok: false, why: FLOW_UNREAD.git, commits: [], truncated: false }),
+  );
+  const [headRef, entities, log, reverts, led] = await Promise.all([
+    commitRefOf(run, root, head),
+    items(),
+    history,
+    flowRevertsOf(run, root, head),
+    ledger(root),
+  ]);
+  return {
+    api_version: API_VERSION,
+    read_at: new Date().toISOString(),
+    head: headRef,
+    entities,
+    history: log,
+    reverts,
+    ledger: led,
+    policy: flowPolicyOf(policyOf(root)),
+  };
+}
+
+/**
+ * The dev server's reader for `/work-api/flow.json` (CS-752), within
+ * CS-704's read budget: the read is kept while HEAD and the ledger file
+ * hold, so a warm request runs one `git rev-parse` and one stat.
+ * `ledgerKey()` says when the ledger changed (the store's ledger.jsonl's
+ * size and time by default).
+ */
+export function flowReader(root, { run = gitRun, ledger, ledgerKey } = {}) {
+  let store;
+  const storeReady = storeOf(root).then(
+    (s) => {
+      store = s;
+    },
+    () => {},
+  );
+  const read = ledger ?? ((r) => flowLedger(r, store));
+  const keyOfLedger =
+    ledgerKey ?? (() => (store ? fileKey(join(store, "ledger.jsonl")) : ""));
+  let kept;
+  let headAt = { value: "", at: 0 };
+  const headOf = async () => {
+    if (Date.now() - headAt.at < KEY_MS && headAt.value) {
+      return headAt.value;
+    }
+    const got = await run(root, ["rev-parse", "--verify", "HEAD"]);
+    headAt = { value: got.stdout.trim(), at: Date.now() };
+    return headAt.value;
+  };
+  return {
+    async read() {
+      if (!ledger) {
+        await storeReady;
+      }
+      const head = await headOf();
+      const k = `${head} ${keyOfLedger()}`;
+      if (kept?.key !== k) {
+        const p = flowAt(run, root, head, read);
+        kept = { key: k, p };
+        // A failure isn't kept: the next request tries again.
+        p.catch(() => {
+          if (kept?.p === p) {
+            kept = undefined;
+          }
+        });
+      }
+      return kept.p;
+    },
+  };
+}

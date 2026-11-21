@@ -438,9 +438,10 @@ is cheap and clashes with nothing, and that the tabs never move.
   others. CS-749's Order view and CS-748's Projects view keep the IDs
   of the views they replace (`"plan"`, `"projects"`), so old links open
   them. A doubled ID or one that isn't a slug is left out and logged.
-  Built-in orders: page Your move 10, Roadmap 20, Proposals 60, Flow 70;
+  Built-in orders: page Your move 10, Roadmap 20, Proposals 60;
   roadmap Release 10; older Dependencies 20, Projects 30. Mounted:
-  roadmap Path 20, Projects 30, Order 40. The route
+  page Flow 70 (CS-752 keeps the ID `"flow"`); roadmap Path 20,
+  Projects 30, Order 40. The route
   takes any slug for `view=` and `roadmap=`, and the shell shows the
   first view when the slug names none it has.
 
@@ -1144,7 +1145,9 @@ its content comes from `workCardOf` in `work.ts`.
 
 ### The Flow chart's card (CS-698)
 
-The cumulative flow chart reads a day in the shared hover card, in
+The cumulative flow chart is the Flow view's last card (CS-752 moved
+it there from the old Flow tab; `FlowChart` is exported from
+`Work.tsx`). It reads a day in the shared hover card, in
 place of the line of text that used to sit under the chart (the owner,
 2026-11-18: a hover card, and help with the day-to-day change). Its
 content is `flowDayOf` in `work.ts`, from `flowOf`'s days.
@@ -1177,6 +1180,105 @@ content is `flowDayOf` in `work.ts`, from `flowOf`'s days.
   "Click for what moved · ← → for other days".
 - **Motion.** The shell's fade, dropped under reduced motion; the card
   follows the crosshair without animating.
+
+### The Flow view (CS-752)
+
+The page's Flow tab (`view=flow`): how well the system and the owner
+work together, so the product builder and anyone above the project get
+answers without asking a person. It replaces the old Flow tab's
+Measures card; the cumulative flow chart stays, as its last card.
+
+- **Story.** Someone asks "how is it going?" or "is the system getting
+  better?". Exceptions lead: a "Needs a look" card lists every measure
+  outside its band now, each with its band, where the band came from
+  and one line on what to do. Four figures answer at a glance: merged
+  in the last 7 days, your decision time, the first-pass merge rate and
+  how many measures are out of band; each goes to its measure. Then six
+  groups, one card each: Cost, Throughput, Latencies, Quality, You and
+  the system, and The machine. No vanity counts: every measure says
+  what to do when it moves the wrong way.
+- **A measure.** Its name and an info mark that says how it is read
+  (its sources and their limits); its line on what to do; its value
+  with its basis under it ("Median of 49; 90th percentile 12 h", or
+  how many items have tokens); a split where one tells more (decision
+  time by door and by now or digest, check failures by cause); up to
+  three items behind it, each an `ItemRef` with words ("waiting 7.4
+  days"); and its trend over runs, with the band's edge dashed and
+  points outside it in the attention color. Durations are drawn on a
+  log scale, and the axis says so. "No band set" is said, not hidden.
+- **Can't be told yet.** A measure no record can answer sits in its
+  group's last lines with the reason and what would tell it, never as
+  an empty chart: money (no price is recorded), spend against appetite
+  (no milestone has `appetite_tokens`), check run time (the ledger's
+  `verified` has no duration), worth asking and reversals (only hitld's
+  trust record has them, and `hitld rights trust` is the owner's, from
+  the primary checkout), corrections (no record holds them),
+  contention and harness refusals (not recorded where the board reads).
+  A stated value never claims more than its inputs: under five values
+  it says "too few to call", and ledger pairs written in the same
+  second (recorded after the fact) are left out and counted.
+- **Runs.** The trends are over the ledger's runs (`run-started`), each
+  from its start to the next one's, labeled by its ID ("Nov 19 #1").
+  Without a ledger, over the last eight weeks, and a note says why.
+- **Dates.** From git: a claim is its claim commit's author date, done
+  is the close commit's author date, merged is the close commit's
+  committer date (a branch replayed onto main takes a new one). A
+  decision is asked at the ledger's `asked`, else the commit that filed
+  it. So the spans need no fix to the board's state history (CS-786).
+  Executors started by hand aren't in the ledger, so set-up to started
+  counts the ledger's dispatches only, and says how many claims it
+  can't see.
+- **Bands.** From the project's hitld policy, else hitld rc.1's
+  defaults, and each says which: questions per digest
+  (`attention.decisions_per_digest_max`), interrupts per day
+  (`attention.interrupts_per_day_max`), time since the last digest
+  (`digests.silence_max_hours`); from the run's scope, work in progress
+  (`max_executors`); from shaping, spend against appetite.
+- **Read from the text.** A decision's door from its "Reversibility:"
+  line; whether the answer took the recommendation, from its
+  "Recommended:" line against the option its answer names; a
+  follow-up from a proposal's "Source:" line naming another item's
+  report or review; a merge's readiness from a "Merge CS-n" decision.
+- **Cost by milestone.** Under Cost, the release picked (the shell's
+  `ReleasePicker`): each milestone with tokens known on its items, with
+  how many of its items have them and its clauses; the rest counted in
+  a line. When none has tokens, it says so in a sentence.
+- **Copy as text.** A short summary for a stakeholder: merged, lately
+  merged by title, decisions, first pass, ready to merged, what is out
+  of band and what can't be told yet. Titles, never bare IDs. Token
+  counts only when "With token counts" is checked: the owner allows it
+  per copy. The view never reads hosts, sessions, dispatch IDs, notes
+  or the text of logged calls, so neither the page nor the summary can
+  carry them. When the browser refuses the clipboard, the text shows
+  selected for the keyboard's copy.
+- **Scope.** The shell's scope narrows every measure that is an
+  item's; a run's measures (digests, interrupts, calls, leases) stay
+  whole and say "Run-wide" while a scope is set. No Proposed switch.
+- **Layout.** The as-of line with Copy as text and its checkbox; the
+  figures (two columns under 760 px); Needs a look; the six groups; the
+  stages chart. A row is three columns (name, value, trend); under 760
+  px the trend goes under, and under 560 px everything stacks and an
+  item's words go under its title. Numbers are tabular; the trend's
+  caption keeps one reserved line whether it shows the axis or a run's
+  value; nothing bolds on hover or focus, and a measure jumped to is
+  tinted. While a new read comes in, the last answer stays, dimmed.
+- **Keys and motion.** Each trend is one stop for the keyboard, a
+  slider over the runs: ← and → step through them, Home and End jump,
+  and the caption reads the run; a screen reader gets every run in its
+  description. A figure's jump scrolls smoothly, instantly under
+  reduced motion, and the dimming's fade goes too.
+- **Data.** `GET /work-api/flow.json` (`flowReader` and `readFlow` in
+  `scripts/workBoard.mjs`): takes no parameters. One `hitld ledger
+tail` (cut to the fields the measures read, `flowEventOf`), and git
+  with argument arrays only: HEAD, one `ls-tree` and one `cat-file
+--batch` of the items, the items' history with both dates (`log -p
+-U0`, at most 4,000 commits), and the reverts. Kept while HEAD and
+  the ledger file hold, so a warm read runs one `git rev-parse` and a
+  stat. About 0.4 s cold on this repository.
+- **Model.** `flowViewOf` and `flowText` in `bench/suite/workFlow.ts`,
+  tested in `test/dynoWorkFlow.test.ts`: the endpoint on a throwaway
+  repository, every measure group on a hand-made answer, the summary,
+  and CS-704's read budget on this repository.
 
 ### The Since you last looked view (CS-747)
 

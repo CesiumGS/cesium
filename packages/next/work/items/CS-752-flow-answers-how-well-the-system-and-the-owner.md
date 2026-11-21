@@ -2,7 +2,7 @@
 id: CS-752
 title: "Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]

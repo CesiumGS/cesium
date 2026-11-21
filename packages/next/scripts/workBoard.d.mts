@@ -462,3 +462,122 @@ export function changesReader(
   root: string,
   options?: { run?: GitRun },
 ): { read(point: ChangesPoint): Promise<ChangesAnswer> };
+
+// ------------- How well the system and the owner work together (CS-752)
+
+/** One ledger event, cut to the fields the Flow view reads. */
+export interface FlowEvent {
+  event: string;
+  at: string;
+  run?: string;
+  item?: string;
+  decision?: string;
+  dispatch?: string;
+  tier?: number;
+  model?: string;
+  estimate_tokens?: number;
+  tokens?: number;
+  duration_ms?: number;
+  result?: string;
+  commit?: string;
+  /** sent: "now" or "digest". */
+  delivery?: string;
+  /** answered: "default" when no one answered. */
+  via?: string;
+  /** lease-released: "handover", "expired" and the like. */
+  reason?: string;
+  step?: string;
+  /** run-started: its scope's executor cap. */
+  max_executors?: number;
+}
+
+/** An item's fields for the Flow view (flowFieldsOf). */
+export interface FlowEntity {
+  id: string;
+  title: string;
+  kind: ItemKind;
+  state: State;
+  project?: string;
+  created?: string;
+  decider?: string;
+  answer?: string;
+  answered_at?: string;
+  answered_by?: string;
+  answered_via?: string;
+  claimed_by?: string;
+  estimate_tokens?: number;
+  release?: string;
+  /** Decisions: each option's letter and label. */
+  options?: Array<{ letter: string; label: string }>;
+  /** Decisions: the text after "Recommended:". */
+  recommended?: string;
+  /** Decisions: the door, from the text's "Reversibility:" line. */
+  door?: "one-way" | "two-way" | "mixed";
+  /** Proposals: the items its "Source:" line names (a report, a review). */
+  follows?: string[];
+}
+
+/** A commit that changes an item file, with both of its dates. */
+export interface FlowCommit {
+  short: string;
+  /** When it was written (the author date). */
+  authored: string;
+  /** When it landed on this branch (the committer date). */
+  committed: string;
+  subject: string;
+  work_item?: string;
+  files: Array<{ id: string; added: boolean; state?: State }>;
+}
+
+export interface FlowBandSetting {
+  value: number;
+  source: "policy" | "hitld default";
+}
+
+export interface FlowAnswer {
+  api_version: 3;
+  read_at: string;
+  head: ChangeCommitRef;
+  entities: FlowEntity[];
+  /** The tracker's history on HEAD, oldest first. */
+  history: {
+    ok: boolean;
+    why?: string;
+    commits: FlowCommit[];
+    truncated: boolean;
+  };
+  reverts: Array<{
+    short: string;
+    at: string;
+    subject: string;
+    work_item?: string;
+  }>;
+  ledger: { ok: true; events: FlowEvent[] } | { ok: false; why: string };
+  policy: Record<
+    | "decisions_per_digest_max"
+    | "interrupts_per_day_max"
+    | "silence_max_hours"
+    | "lease_expiry_seconds"
+    | "rubber_stamp_seconds",
+    FlowBandSetting
+  >;
+}
+export type FlowLedgerRead = (root: string) => Promise<FlowAnswer["ledger"]>;
+export const FLOW_MAX_COMMITS: number;
+export const FLOW_UNREAD: Record<"ledger" | "empty" | "git", string>;
+export const FLOW_POLICY: Record<string, [string, number]>;
+export function flowEventOf(e: unknown): FlowEvent | undefined;
+export function flowFieldsOf(text: string): FlowEntity | undefined;
+export function flowPolicyOf(policy: unknown): FlowAnswer["policy"];
+export function flowLedger(
+  root: string,
+  store?: string,
+): Promise<FlowAnswer["ledger"]>;
+export function readFlow(
+  root: string,
+  options?: { run?: GitRun; ledger?: FlowLedgerRead },
+): Promise<FlowAnswer>;
+export function flowReader(
+  root: string,
+  options?: { run?: GitRun; ledger?: FlowLedgerRead; ledgerKey?: () => string },
+): { read(): Promise<FlowAnswer> };

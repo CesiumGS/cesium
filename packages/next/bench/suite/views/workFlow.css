@@ -1,0 +1,497 @@
+/*
+ * The Flow view (views/workFlow.tsx; DESIGN.md, "The Flow view"). One
+ * surface level, as the board's other cards: rows are set apart by
+ * rules, numbers are tabular, and nothing changes width on hover, focus
+ * or a jump to a measure (the row is tinted, never bolded).
+ */
+
+.work-flow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-500);
+}
+.work-flow.reading {
+  opacity: 0.7;
+  transition: opacity 120ms ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .work-flow.reading {
+    transition: none;
+  }
+}
+
+/* The head: when it was read on the left, the summary to share on the right. */
+.work-flow-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-300) var(--stratakit-space-500);
+}
+.work-flow-asof {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 18rem;
+}
+.work-flow-share {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+  flex-wrap: wrap;
+}
+.work-flow-tokens {
+  margin: 0;
+}
+.work-flow-tokens .MuiFormControlLabel-label {
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.work-flow-note {
+  margin: 0;
+}
+.work-flow-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+}
+.work-flow-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--stratakit-space-200);
+}
+.work-flow-text textarea {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  font-size: var(--stratakit-font-size-body-sm);
+  padding: var(--stratakit-space-300);
+  border-radius: var(--stratakit-radius-md);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+  background: var(--stratakit-color-bg-page-base, transparent);
+  color: inherit;
+}
+
+/* The four figures: a number and a line under each. */
+.work-flow-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--stratakit-space-300);
+  margin: 0;
+}
+@container (max-width: 760px) {
+  .work-flow-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.work-flow-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  border-radius: var(--stratakit-radius-lg, 8px);
+  background: var(--stratakit-color-bg-elevation-level-1);
+}
+.work-flow-stat dt {
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-flow-stat dd {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0;
+  min-width: 0;
+}
+.work-flow-stat-value {
+  all: unset;
+  font-size: var(--stratakit-font-size-headline-sm, 1.5rem);
+  font-weight: 600;
+  line-height: 1.2;
+  font-variant-numeric: tabular-nums;
+  border-radius: var(--stratakit-radius-sm);
+}
+button.work-flow-stat-value {
+  cursor: pointer;
+}
+button.work-flow-stat-value:hover {
+  text-decoration: underline;
+}
+button.work-flow-stat-value:focus-visible,
+.work-flow-link:focus-visible,
+.work-flow-how:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.work-flow-stat.attention .work-flow-stat-value {
+  color: var(--stratakit-color-text-attention-base);
+}
+.work-flow-stat-detail {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+  overflow-wrap: anywhere;
+}
+
+/* Needs a look: the measures out of their band. */
+.work-flow-out-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-300);
+}
+.work-flow-out {
+  display: flex;
+  gap: var(--stratakit-space-300);
+}
+.work-flow-out-mark {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 0.45em;
+  border-radius: 50%;
+  background: var(--stratakit-color-border-attention-base);
+}
+.work-flow-out-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.work-flow-out-text h3 {
+  margin: 0;
+}
+.work-flow-out-what {
+  font-variant-numeric: tabular-nums;
+}
+.work-flow-link {
+  all: unset;
+  cursor: pointer;
+  font-weight: 600;
+  border-radius: var(--stratakit-radius-sm);
+}
+.work-flow-link:hover {
+  text-decoration: underline;
+}
+
+/* A group: its measures, one row each. */
+.work-flow-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.work-flow-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) 232px;
+  gap: var(--stratakit-space-200) var(--stratakit-space-500);
+  padding: var(--stratakit-space-400) var(--stratakit-space-200);
+  margin-inline: calc(-1 * var(--stratakit-space-200));
+  scroll-margin: 96px;
+}
+.work-flow-row + .work-flow-row {
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-flow-row:focus,
+.work-flow-notyet li:focus {
+  outline: none;
+  background: var(--stratakit-color-bg-accent-muted, rgb(0 120 212 / 0.08));
+}
+.work-flow-row.out .work-flow-value {
+  color: var(--stratakit-color-text-attention-base);
+}
+.work-flow-row-name,
+.work-flow-row-value,
+.work-flow-row-trend {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.work-flow-row-title {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.work-flow-row-title h3 {
+  margin: 0;
+}
+.work-flow-act {
+  margin: 0;
+}
+.work-flow-value {
+  font-size: var(--stratakit-font-size-body-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.work-flow-sub,
+.work-flow-band {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.work-flow-split {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: start;
+  gap: 0 var(--stratakit-space-400);
+  margin: var(--stratakit-space-200) 0 0;
+  font-size: var(--stratakit-font-size-caption-md);
+}
+.work-flow-split > div {
+  display: contents;
+}
+.work-flow-split dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-flow-split dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.work-flow-n {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-flow-refs {
+  list-style: none;
+  margin: var(--stratakit-space-200) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.work-flow-refs li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--stratakit-space-300);
+  align-items: baseline;
+}
+.work-flow-ref-words {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* The info mark. */
+.work-flow-how {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: var(--stratakit-color-text-neutral-secondary);
+  cursor: help;
+}
+.work-flow-how:hover {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-flow-how svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* The trend over runs. */
+.work-flow-spark {
+  margin: 0;
+  width: 100%;
+}
+.work-flow-spark svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+.work-flow-spark-base {
+  stroke: var(--stratakit-color-border-neutral-muted);
+  stroke-width: 1;
+}
+.work-flow-spark-band {
+  stroke: var(--stratakit-color-border-attention-base);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+.work-flow-spark-line {
+  fill: none;
+  stroke: var(--stratakit-color-border-accent-strong);
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.work-flow-spark-dot {
+  fill: var(--stratakit-color-border-accent-strong);
+  stroke: var(--stratakit-color-bg-elevation-level-1);
+  stroke-width: 1;
+}
+.work-flow-spark-dot.out {
+  fill: var(--stratakit-color-border-attention-base);
+}
+.work-flow-spark svg {
+  cursor: crosshair;
+  border-radius: var(--stratakit-radius-sm);
+}
+.work-flow-spark svg:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.work-flow-spark-cursor {
+  stroke: var(--stratakit-color-text-neutral-secondary);
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+.work-flow-spark-read {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-flow-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.work-flow-spark-axis {
+  display: flex;
+  min-height: 1.5em;
+  line-height: 1.5;
+  justify-content: space-between;
+  font-size: var(--stratakit-font-size-caption-sm, 0.6875rem);
+  color: var(
+    --stratakit-color-text-neutral-tertiary,
+    var(--stratakit-color-text-neutral-secondary)
+  );
+  font-variant-numeric: tabular-nums;
+}
+.work-flow-spark-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  border: 1px dashed var(--stratakit-color-border-neutral-muted);
+  border-radius: var(--stratakit-radius-md);
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* What can't be told yet, at a group's end. */
+.work-flow-notyet {
+  margin-top: var(--stratakit-space-300);
+  padding-top: var(--stratakit-space-300);
+  box-shadow: inset 0 1px 0 var(--stratakit-color-border-neutral-muted);
+}
+.work-flow-notyet h3 {
+  margin: 0 0 var(--stratakit-space-200);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-weight: 600;
+}
+.work-flow-notyet ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+}
+.work-flow-notyet li {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.5fr) minmax(0, 1.5fr);
+  gap: var(--stratakit-space-400);
+  padding: 2px var(--stratakit-space-200);
+  margin-inline: calc(-1 * var(--stratakit-space-200));
+  border-radius: var(--stratakit-radius-sm);
+  font-size: var(--stratakit-font-size-body-sm);
+  scroll-margin: 96px;
+}
+.work-flow-notyet-name {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-flow-notyet-why {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* Tokens by milestone in the release picked, under Cost. */
+.work-flow-bymilestone {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-200);
+  margin-top: var(--stratakit-space-300);
+  padding-top: var(--stratakit-space-400);
+  box-shadow: inset 0 1px 0 var(--stratakit-color-border-neutral-muted);
+}
+.work-flow-bymilestone p {
+  margin: 0;
+}
+.work-flow-bymilestone-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-300);
+}
+.work-flow-bymilestone-head h3 {
+  margin: 0;
+}
+.work-flow-ms {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.work-flow-ms li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 7rem 11rem;
+  gap: var(--stratakit-space-100) var(--stratakit-space-400);
+  align-items: baseline;
+  padding: var(--stratakit-space-200) 0;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.work-flow-ms li + li {
+  box-shadow: inset 0 1px 0 var(--stratakit-color-border-neutral-muted);
+}
+.work-flow-ms-tokens {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.work-flow-ms-known,
+.work-flow-ms-clauses {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-variant-numeric: tabular-nums;
+}
+.work-flow-ms-clauses {
+  grid-column: 1 / -1;
+}
+
+/* Narrow: each row stacks, the trend under the value. */
+@container (max-width: 760px) {
+  .work-flow-row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .work-flow-row-trend {
+    grid-column: 1 / -1;
+    max-width: 360px;
+  }
+}
+@container (max-width: 560px) {
+  .work-flow-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .work-flow-notyet li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  .work-flow-ms li {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .work-flow-ms-known {
+    grid-column: 1 / -1;
+  }
+  .work-flow-refs li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}

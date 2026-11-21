@@ -9,6 +9,7 @@ import {
   boardReader,
   changesReader,
   findItems,
+  flowReader,
   showItem,
 } from "./workBoard.mjs";
 
@@ -38,6 +39,11 @@ const CHANGED_MS = 250;
  *                             to HEAD, from git (CS-747; changesReader):
  *                             kept per HEAD and point. A refused point
  *                             answers 400 with fixed words.
+ *   /work-api/flow.json       the Flow view's read (CS-752; flowReader): the
+ *                             ledger's events cut to what its measures read,
+ *                             the items' fields and the tracker's history
+ *                             with both dates. Takes no parameters; kept
+ *                             while HEAD and the ledger file hold.
  *   /work-api/find.json?q=    full-text search over every item.
  *   /work-api/item/CS-<n>.json  one item's text.
  *
@@ -63,6 +69,7 @@ export function workApi(prefix = "/work-api"): Plugin {
       };
       const board = boardReader(root, { onChange: tell });
       const changes = changesReader(root);
+      const flow = flowReader(root);
       const workDir = join(root, "packages", "next", "work");
       server.watcher.add(workDir);
       const changed = (file: string) => {
@@ -118,6 +125,10 @@ export function workApi(prefix = "/work-api"): Plugin {
                 }
                 send(res, 400, { error: e.message, reason: e.reason });
               }
+              return;
+            }
+            if (path === "/flow.json") {
+              send(res, 200, await flow.read());
               return;
             }
             if (path === "/find.json") {
