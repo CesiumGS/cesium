@@ -41,7 +41,7 @@ No milestone
 
 ### The WebGL 2 renderer
 
-CS-9, Planned, led by owner: 3 of 18 done, 4 ready, 10 blocked, 1 proposed. Plan: [2026-11-13-webgl2-renderer.md](docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
+CS-9, Planned, led by owner: 3 of 19 done, 5 ready, 10 blocked, 1 proposed. Plan: [2026-11-13-webgl2-renderer.md](docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
 
 Milestone: Renderers plug in behind one seam (CS-414, Planned)
 
@@ -72,6 +72,7 @@ No milestone
 - [ ] CS-39 Styles and warps through Cesium IR. Needs CS-38, CS-52 (Cesium IR), CS-54 (Cesium IR) and CS-55 (Cesium IR).
 - [?] CS-370 Scene rebuild after a WebGL 2 context loss. Proposed. Needs CS-113 (worker-mode façade) and CS-36.
 - [x] CS-761 decision: Merge CS-33, the renderer seam extracted (WebGPU only, pure moves). Done.
+- [ ] CS-783 decision: Merge CS-34, renderer-neutral content resources (texture images, queued uploads, ImageryCompositor). Needs nothing. Decided by owner.
 
 ### Cesium IR
 
@@ -882,7 +883,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 37 of 77 done, 18 ready, 17 blocked, 5 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 38 of 78 done, 18 ready, 17 blocked, 5 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -940,7 +941,7 @@ Milestone: The owner's views answer what needs me, what's on track and what's wr
 - [x] CS-744 The Work page's roadmap opens on a Release view: what's left in a release and what's holding it. Done.
 - [x] CS-745 A Health view lists the work graph's exceptions, each with a proposed fix. Done.
 - [x] CS-746 A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates. Done.
-- [ ] CS-747 A Since-you-last-looked view shows scope changes and answers since a chosen point. Needs CS-744.
+- [x] CS-747 A Since-you-last-looked view shows scope changes and answers since a chosen point. Done.
 - [x] CS-748 The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions. Done.
 - [ ] CS-749 The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting. Needs CS-744.
 - [x] CS-750 The Proposals view says why each item is proposed, and offers commit, hold or drop. Done.
@@ -984,6 +985,7 @@ No milestone
 - [?] CS-775 The Dependencies view's waves grid retires now that the Path view answers what it did. Proposed. Needs CS-746.
 - [x] CS-778 decision: Merge CS-747, the What changed view (since you last looked). Done.
 - [?] CS-781 What changed takes a since= URL field, so a chosen point can be shared as a link. Proposed. Needs CS-747.
+- [ ] CS-782 decision: Merge CS-774, npx dyno works through a private workspace package, run as npx --no-install dyno. Needs nothing. Decided by owner.
 
 ### The public API reviews
 

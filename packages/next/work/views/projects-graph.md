@@ -5,7 +5,7 @@
 ```mermaid
 graph LR
   CS_8["Engine profiles<br/>7 of 21 done"]
-  CS_9["WebGL 2 renderer<br/>3 of 18 done"]
+  CS_9["WebGL 2 renderer<br/>3 of 19 done"]
   CS_10["Cesium IR<br/>11 of 37 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
@@ -28,7 +28,7 @@ graph LR
   CS_197["Ray queries and path tracing<br/>0 of 7 done"]
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
   CS_199["Dyno hardening, packaging and CI<br/>1 of 16 done"]
-  CS_389["Dyno as the development harness<br/>37 of 77 done"]
+  CS_389["Dyno as the development harness<br/>38 of 78 done"]
   CS_437["public API reviews<br/>6 of 19 done"]
   CS_579["Editing<br/>0 of 2 done"]
   CS_584["widgets library<br/>0 of 9 done"]

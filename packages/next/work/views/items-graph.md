@@ -46,6 +46,7 @@ graph LR
     CS_47["CS-47 Probe runs on the test devices"]:::open
     CS_370["CS-370 Scene rebuild after a WebGL 2 context loss"]:::proposed
     CS_761["CS-761 Merge CS-33, the renderer seam extracted (WebGPU only, pure mov"]:::done
+    CS_783["CS-783 Merge CS-34, renderer-neutral content resources (texture images"]:::decision
   end
   subgraph CS_10["Cesium IR"]
     CS_48["CS-48 The core (types, rates, equations, literal slots, the builder)"]:::done
@@ -602,7 +603,7 @@ graph LR
     CS_744["CS-744 The Work page's roadmap opens on a Release view: what's left in"]:::done
     CS_745["CS-745 A Health view lists the work graph's exceptions, each with a pr"]:::done
     CS_746["CS-746 A Path view shows only what lies upstream of a chosen target: i"]:::done
-    CS_747["CS-747 A Since-you-last-looked view shows scope changes and answers si"]:::open
+    CS_747["CS-747 A Since-you-last-looked view shows scope changes and answers si"]:::done
     CS_748["CS-748 The Projects view shows each project as a bet: its outcome, rel"]:::done
     CS_749["CS-749 The Plan view becomes Order: the planner's sequence for a relea"]:::open
     CS_750["CS-750 The Proposals view says why each item is proposed, and offers c"]:::done
@@ -624,6 +625,7 @@ graph LR
     CS_775["CS-775 The Dependencies view's waves grid retires now that the Path vi"]:::proposed
     CS_778["CS-778 Merge CS-747, the What changed view (since you last looked)"]:::done
     CS_781["CS-781 What changed takes a since= URL field, so a chosen point can be"]:::proposed
+    CS_782["CS-782 Merge CS-774, npx dyno works through a private workspace packag"]:::decision
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
