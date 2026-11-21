@@ -42,12 +42,13 @@ graph LR
     CS_43["CS-43 Research: which browsers lack WebGPU, by share and platform, and"]:::done
     CS_44["CS-44 Further steps, in the browser research's order (FXAA, clips, the"]:::open
     CS_45["CS-45 The runner suite, the gallery's renderer switch, the handbook"]:::open
-    CS_46["CS-46 Which test devices are available for the WebGL 2 probe runs?"]:::decision
+    CS_46["CS-46 Which test devices are available for the WebGL 2 probe runs?"]:::done
     CS_47["CS-47 Probe runs on the test devices"]:::open
     CS_370["CS-370 Scene rebuild after a WebGL 2 context loss"]:::proposed
     CS_761["CS-761 Merge CS-33, the renderer seam extracted (WebGPU only, pure mov"]:::done
     CS_783["CS-783 Merge CS-34, renderer-neutral content resources (texture images"]:::done
-    CS_789["CS-789 Merge CS-35, the probe, the renderer option and an empty WebGL "]:::decision
+    CS_789["CS-789 Merge CS-35, the probe, the renderer option and an empty WebGL "]:::done
+    CS_792["CS-792 The WebGL 2 probe runs on a cloud device service, so the phone "]:::proposed
   end
   subgraph CS_10["Cesium IR"]
     CS_48["CS-48 The core (types, rates, equations, literal slots, the builder)"]:::done
@@ -55,7 +56,7 @@ graph LR
     CS_50["CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoi"]:::done
     CS_51["CS-51 The WGSL emitter"]:::done
     CS_52["CS-52 The GLSL ES 3.00 emitter"]:::done
-    CS_53["CS-53 Transforms move onto Cesium IR, as pure moves"]:::open
+    CS_53["CS-53 Transforms move onto Cesium IR, as pure moves"]:::done
     CS_54["CS-54 Routes on both emitters, with the residual and df64 forms"]:::open
     CS_55["CS-55 Styles move onto Cesium IR, literals as uniforms"]:::open
     CS_56["CS-56 Tables and the bounded search, the first extensions, with the re"]:::open
@@ -87,7 +88,7 @@ graph LR
     CS_759["CS-759 Merge CS-50, Cesium IR's passes (AD, intervals with splitting, "]:::done
     CS_776["CS-776 Merge CS-52, the GLSL ES 3.00 emitter, with its naga cross-chec"]:::done
     CS_777["CS-777 The GLSL ES emitter's output is cross-checked against naga's, a"]:::proposed
-    CS_788["CS-788 Merge CS-53, transforms move onto Cesium IR, with its browser p"]:::decision
+    CS_788["CS-788 Merge CS-53, transforms move onto Cesium IR, with its browser p"]:::done
     CS_790["CS-790 A Lab parity page draws through a compiled curvilinear route, s"]:::proposed
     CS_791["CS-791 Per-draw center constants on Cesium IR's generic evaluator are "]:::proposed
   end
@@ -1419,6 +1420,7 @@ graph LR
   CS_749 --> CS_787
   CS_53 --> CS_790
   CS_53 --> CS_791
+  CS_35 --> CS_792
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

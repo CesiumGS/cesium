@@ -8,13 +8,13 @@ CS-8 Engine profiles [Planned], led by owner
   waits on: CS-9 The WebGL 2 renderer (1); CS-12 The job system's ports (1); CS-15 Refinement and convergence (1)
   waited on by: CS-13 The worker-mode façade (1); CS-18 The work tracker (3)
 CS-9 The WebGL 2 renderer [Planned], led by owner
-  5 of 20 done, 4 ready, 10 blocked, 1 proposed
+  7 of 21 done, 2 ready, 10 blocked, 2 proposed
   waits on: CS-10 Cesium IR (4); CS-13 The worker-mode façade (1)
   waited on by: CS-8 Engine profiles (1); CS-11 Live MaterialX graph editing (1); CS-18 The work tracker (3)
 CS-10 Cesium IR [Planned], led by owner
-  11 of 40 done, 11 ready, 13 blocked, 5 proposed
+  13 of 40 done, 10 ready, 12 blocked, 5 proposed
   waits on: CS-199 Dyno hardening, packaging and CI (1)
-  waited on by: CS-9 The WebGL 2 renderer (4); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (4); CS-17 The transform graph (2); CS-190 Vector drawing and the styling language (2); CS-18 The work tracker (3)
+  waited on by: CS-9 The WebGL 2 renderer (4); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (3); CS-17 The transform graph (1); CS-190 Vector drawing and the styling language (2); CS-18 The work tracker (3)
 CS-11 Live MaterialX graph editing [Planned], led by owner
   0 of 17 done, 6 ready, 10 blocked, 1 proposed
   waits on: CS-10 Cesium IR (2); CS-9 The WebGL 2 renderer (1)
@@ -25,7 +25,7 @@ CS-12 The job system's ports [Planned], led by owner
   waited on by: CS-8 Engine profiles (1); CS-13 The worker-mode façade (1); CS-16 Streaming robustness (1); CS-18 The work tracker (8)
 CS-13 The worker-mode façade [Planned], led by owner
   3 of 22 done, 0 ready, 18 blocked, 1 proposed
-  waits on: CS-437 The public API reviews (5); CS-10 Cesium IR (4); CS-8 Engine profiles (1); CS-12 The job system's ports (1)
+  waits on: CS-437 The public API reviews (5); CS-10 Cesium IR (3); CS-8 Engine profiles (1); CS-12 The job system's ports (1)
   waited on by: CS-12 The job system's ports (2); CS-9 The WebGL 2 renderer (1); CS-18 The work tracker (4)
 CS-14 Level-of-detail transitions [Planned], led by owner
   0 of 14 done, 2 ready, 9 blocked, 3 proposed
@@ -41,7 +41,7 @@ CS-16 Streaming robustness [Planned], led by owner
   waited on by: CS-191 Content sources and formats (1); CS-18 The work tracker (3)
 CS-17 The transform graph [Planned], led by owner
   6 of 19 done, 9 ready, 2 blocked, 2 proposed
-  waits on: CS-10 Cesium IR (2)
+  waits on: CS-10 Cesium IR (1)
   waited on by: CS-18 The work tracker (2)
 CS-18 The work tracker [Planned], led by owner
   42 of 51 done, 3 ready, 4 blocked, 2 proposed, 1 dropped

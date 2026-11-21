@@ -98,7 +98,7 @@ No milestone
 
 ### The WebGL 2 renderer
 
-[CS-9](./projects/CS-9-the-webgl-2-renderer.md), Planned, led by owner: 5 of 20 done, 4 ready, 10 blocked, 1 proposed. Plan: [2026-11-13-webgl2-renderer.md](../../../docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
+[CS-9](./projects/CS-9-the-webgl-2-renderer.md), Planned, led by owner: 7 of 21 done, 2 ready, 10 blocked, 2 proposed. Plan: [2026-11-13-webgl2-renderer.md](../../../docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
 
 Milestone: Renderers plug in behind one seam ([CS-414](./milestones/CS-414-renderers-plug-in-behind-one-seam.md), Planned)
 
@@ -121,7 +121,7 @@ Milestone: WebGL 2 reaches parity with WebGPU ([CS-416](./milestones/CS-416-webg
 - [ ] [CS-42](./items/CS-42-the-atmosphere.md) The atmosphere. Needs CS-38.
 - [ ] [CS-44](./items/CS-44-further-steps-in-the-browser-research-s-order.md) Further steps, in the browser research's order (FXAA, clips, the depth-range readback, shadows, ambient occlusion, `moments16`, `moments32`). Needs CS-42 and CS-43.
 - [ ] [CS-45](./items/CS-45-the-runner-suite-the-gallery-s-renderer-switch.md) The runner suite, the gallery's renderer switch, the handbook. Needs CS-36.
-- [ ] [CS-46](./items/CS-46-which-test-devices-are-available-for-the-webgl.md) decision: Which test devices are available for the WebGL 2 probe runs?. Needs nothing. Decided by owner.
+- [x] [CS-46](./items/CS-46-which-test-devices-are-available-for-the-webgl.md) decision: Which test devices are available for the WebGL 2 probe runs?. Done.
 - [ ] [CS-47](./items/CS-47-probe-runs-on-the-test-devices.md) Probe runs on the test devices. Needs CS-35 and CS-46.
 
 No milestone
@@ -130,11 +130,12 @@ No milestone
 - [?] [CS-370](./items/CS-370-scene-rebuild-after-a-webgl-2-context-loss.md) Scene rebuild after a WebGL 2 context loss. Proposed. Needs CS-113 (worker-mode façade) and CS-36.
 - [x] [CS-761](./items/CS-761-merge-cs-33-the-renderer-seam-extracted-webgpu.md) decision: Merge CS-33, the renderer seam extracted (WebGPU only, pure moves). Done.
 - [x] [CS-783](./items/CS-783-merge-cs-34-renderer-neutral-content-resources.md) decision: Merge CS-34, renderer-neutral content resources (texture images, queued uploads, ImageryCompositor). Done.
-- [ ] [CS-789](./items/CS-789-merge-cs-35-the-probe-the-renderer-option-and.md) decision: Merge CS-35, the probe, the renderer option and an empty WebGL 2 device. Needs nothing. Decided by owner.
+- [x] [CS-789](./items/CS-789-merge-cs-35-the-probe-the-renderer-option-and.md) decision: Merge CS-35, the probe, the renderer option and an empty WebGL 2 device. Done.
+- [?] [CS-792](./items/CS-792-the-webgl-2-probe-runs-on-a-cloud-device.md) The WebGL 2 probe runs on a cloud device service, so the phone personas come from real reports. Proposed. Needs CS-35.
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 11 of 40 done, 11 ready, 13 blocked, 5 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 13 of 40 done, 10 ready, 12 blocked, 5 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -143,7 +144,7 @@ Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestone
 - [x] [CS-50](./items/CS-50-the-passes-float64-evaluator-autodiff-intervals.md) The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms). Done.
 - [x] [CS-51](./items/CS-51-the-wgsl-emitter.md) The WGSL emitter. Done.
 - [x] [CS-52](./items/CS-52-the-glsl-es-3-00-emitter.md) The GLSL ES 3.00 emitter. Done.
-- [ ] [CS-53](./items/CS-53-transforms-move-onto-cesium-ir-as-pure-moves.md) Transforms move onto Cesium IR, as pure moves. Needs CS-48, CS-50 and CS-51.
+- [x] [CS-53](./items/CS-53-transforms-move-onto-cesium-ir-as-pure-moves.md) Transforms move onto Cesium IR, as pure moves. Done.
 - [ ] [CS-54](./items/CS-54-routes-on-both-emitters-with-the-residual-and.md) Routes on both emitters, with the residual and df64 forms. Needs CS-52 and CS-53.
 - [ ] [CS-55](./items/CS-55-styles-move-onto-cesium-ir-literals-as-uniforms.md) Styles move onto Cesium IR, literals as uniforms. Needs CS-50, CS-51 and CS-52.
 - [ ] [CS-56](./items/CS-56-tables-and-the-bounded-search-the-first.md) Tables and the bounded search, the first extensions, with the residual's row window. Needs CS-53 and CS-54.
@@ -184,7 +185,7 @@ No milestone
 - [x] [CS-759](./items/CS-759-merge-cs-50-cesium-ir-s-passes-ad-intervals.md) decision: Merge CS-50, Cesium IR's passes (AD, intervals with splitting, Taylor bounds, rates, uniforms, kinks). Done.
 - [x] [CS-776](./items/CS-776-merge-cs-52-the-glsl-es-3-00-emitter-with-its.md) decision: Merge CS-52, the GLSL ES 3.00 emitter, with its naga cross-check left open. Done.
 - [?] [CS-777](./items/CS-777-the-glsl-es-emitter-s-output-is-cross-checked.md) The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned. Proposed. Needs CS-52 and CS-580 (Dyno hardening, packaging and CI).
-- [ ] [CS-788](./items/CS-788-merge-cs-53-transforms-move-onto-cesium-ir-with.md) decision: Merge CS-53, transforms move onto Cesium IR, with its browser parity bullet not showable today. Needs nothing. Decided by owner.
+- [x] [CS-788](./items/CS-788-merge-cs-53-transforms-move-onto-cesium-ir-with.md) decision: Merge CS-53, transforms move onto Cesium IR, with its browser parity bullet not showable today. Done.
 - [?] [CS-790](./items/CS-790-a-lab-parity-page-draws-through-a-compiled.md) A Lab parity page draws through a compiled curvilinear route, so IR changes are checked in pixels. Proposed. Needs CS-53.
 - [?] [CS-791](./items/CS-791-per-draw-center-constants-on-cesium-ir-s.md) Per-draw center constants on Cesium IR's generic evaluator are measured against the old Float64Array loop. Proposed. Needs CS-53.
 

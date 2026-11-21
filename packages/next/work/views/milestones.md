@@ -18,14 +18,14 @@ CS-415 WebGL 2 draws models, tiles and the globe [Planned], under CS-9 The WebGL
 
 CS-416 WebGL 2 reaches parity with WebGPU [Planned], under CS-9 The WebGL 2 renderer
   outcome: On WebGL 2, styles, warps, picks, outputs, user code, the atmosphere and the further effects match WebGPU within the agreed tolerances, shown on the test devices.
-  constraints: 0 of 7 done
-  unmet: not linked to a clause yet (open: CS-40, CS-41, CS-42, CS-44, CS-45, CS-47, CS-46; check not passed)
+  constraints: 1 of 7 done
+  unmet: not linked to a clause yet (open: CS-40, CS-41, CS-42, CS-44, CS-45, CS-47; check not passed)
   to shape: done_when; check; link CS-40, CS-41, CS-42, CS-44, CS-45, CS-47, CS-46 to a clause
 
 CS-417 Transforms and styles compile through Cesium IR [Planned], under CS-10 Cesium IR
   outcome: Styles, transforms and routes are Cesium IR programs that evaluate in float64 on the CPU and emit both WGSL and GLSL ES, with the same results as today.
-  constraints: 4 of 11 done
-  unmet: not linked to a clause yet (open: CS-49, CS-53, CS-54, CS-55, CS-56, CS-371, CS-39; check not passed)
+  constraints: 5 of 11 done
+  unmet: not linked to a clause yet (open: CS-49, CS-54, CS-55, CS-56, CS-371, CS-39; check not passed)
   to shape: done_when; check; link CS-48, CS-49, CS-50, CS-51, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371, CS-39 to a clause
 
 CS-418 Any shader language reaches both renderers [Planned], under CS-10 Cesium IR

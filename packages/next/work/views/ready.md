@@ -16,12 +16,10 @@ CS-8 Engine profiles
 CS-9 The WebGL 2 renderer
   CS-32  The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points
   CS-35  The probe, the `renderer` option and an empty WebGL 2 device
-  CS-46  decision: Which test devices are available for the WebGL 2 probe runs?
-  CS-789  decision: Merge CS-35, the probe, the renderer option and an empty WebGL 2 device
 
 CS-10 Cesium IR
   CS-49  The versioned JSON format
-  CS-53  Transforms move onto Cesium IR, as pure moves
+  CS-54  Routes on both emitters, with the residual and df64 forms
   CS-55  Styles move onto Cesium IR, literals as uniforms
   CS-57  Our naga crate (Rust in development and CI only)
   CS-64  Noise, first among the gaps
@@ -30,7 +28,6 @@ CS-10 Cesium IR
   CS-549  The IR models math/normalize's isValid output
   CS-550  The core IR spike's evaluator gets dot and intToFloat's signed zero right
   CS-571  The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires
-  CS-788  decision: Merge CS-53, transforms move onto Cesium IR, with its browser parity bullet not showable today
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -264,5 +261,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-195 ready
+192 ready
 ```

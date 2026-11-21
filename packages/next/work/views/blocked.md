@@ -39,14 +39,10 @@ CS-9 The WebGL 2 renderer
       ← CS-36 First draws, unlit (glTF and 3D Tiles meshes)
   CS-47  Probe runs on the test devices
       ← CS-35 The probe, the `renderer` option and an empty WebGL 2 device
-        CS-46 Which test devices are available for the WebGL 2 probe runs?
 
 CS-10 Cesium IR
-  CS-54  Routes on both emitters, with the residual and df64 forms
-      ← CS-53 Transforms move onto Cesium IR, as pure moves
   CS-56  Tables and the bounded search, the first extensions, with the residual's row window
-      ← CS-53 Transforms move onto Cesium IR, as pure moves
-        CS-54 Routes on both emitters, with the residual and df64 forms
+      ← CS-54 Routes on both emitters, with the residual and df64 forms
   CS-58  The WGSL front end, through naga and SPIR-V, with diagnostics
       ← CS-57 Our naga crate (Rust in development and CI only)
   CS-59  The writer and reader for `KHR_interactivity`'s graph JSON (vendor extension `BENTLEY_interactivity_ir`)
@@ -149,7 +145,6 @@ CS-13 The worker-mode façade
       ← CS-438 Which of the first public API review's proposed changes do you approve?
   CS-106  Functions as Cesium IR programs; closures refused
       ← CS-105 Functions reshaped, on the main thread
-        CS-53 Transforms move onto Cesium IR, as pure moves
         CS-55 Styles move onto Cesium IR, literals as uniforms
         CS-56 Tables and the bounded search, the first extensions, with the residual's row window
         CS-61 The API surface (a program is the normative input; languages as entry points loaded on demand; `CustomShader` hooks take programs or WGSL functions)
@@ -279,8 +274,7 @@ CS-16 Streaming robustness
 
 CS-17 The transform graph
   CS-168  The per-family warp fixes: flatten, corridor, bend, the TM Jacobian
-      ← CS-53 Transforms move onto Cesium IR, as pure moves
-        CS-56 Tables and the bounded search, the first extensions, with the residual's row window
+      ← CS-56 Tables and the bounded search, the first extensions, with the residual's row window
   CS-386  Under exaggeration, do shading and haze read the drawn or the true height?
       ← CS-385 Spike: height-keyed tint and haze under exaggeration, drawn against true height
 
@@ -709,5 +703,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-231 blocked
+230 blocked
 ```

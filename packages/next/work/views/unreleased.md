@@ -19,6 +19,7 @@ CS-10 Cesium IR
   CS-50  The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms)
   CS-51  The WGSL emitter
   CS-52  The GLSL ES 3.00 emitter
+  CS-53  Transforms move onto Cesium IR, as pure moves
   CS-543  CS-48's formula cases checked against the whole KHR_interactivity spec
 
 CS-12 The job system's ports
@@ -86,5 +87,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-59 merged item(s) not in a release
+60 merged item(s) not in a release
 ```

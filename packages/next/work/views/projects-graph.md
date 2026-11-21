@@ -5,8 +5,8 @@
 ```mermaid
 graph LR
   CS_8["Engine profiles<br/>7 of 21 done"]
-  CS_9["WebGL 2 renderer<br/>5 of 20 done"]
-  CS_10["Cesium IR<br/>11 of 40 done"]
+  CS_9["WebGL 2 renderer<br/>7 of 21 done"]
+  CS_10["Cesium IR<br/>13 of 40 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
   CS_13["worker-mode façade<br/>3 of 22 done"]
@@ -47,11 +47,11 @@ graph LR
   CS_9 -->|1| CS_11
   CS_13 -->|2| CS_12
   CS_437 -->|5| CS_13
-  CS_10 -->|4| CS_13
+  CS_10 -->|3| CS_13
   CS_8 -->|1| CS_13
   CS_12 -->|1| CS_13
   CS_15 -->|1| CS_16
-  CS_10 -->|2| CS_17
+  CS_10 -->|1| CS_17
   CS_437 -->|1| CS_189
   CS_10 -->|2| CS_190
   CS_16 -->|1| CS_191
