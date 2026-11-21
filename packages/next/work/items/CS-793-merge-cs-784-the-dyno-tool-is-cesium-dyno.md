@@ -2,10 +2,14 @@
 id: CS-793
 title: Merge CS-784, the dyno tool is @cesium/dyno
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the dyno tests, fast-forwards main, regenerates the views and logs the merge; the chief of staff runs the root npm install in the main checkout; CS-393 and CS-580 can then start."
+answered_at: 2026-11-21T16:33:03.359Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
