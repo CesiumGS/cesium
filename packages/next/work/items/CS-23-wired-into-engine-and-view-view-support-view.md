@@ -2,10 +2,11 @@
 id: CS-23
 title: Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-8
 needs: [CS-22]
+claimed_by: orch-11-CS-23
 touches: [packages/next/src/profile/**, packages/next/src/scene/Engine.ts, packages/next/src/scene/View.ts]
 ---
 
