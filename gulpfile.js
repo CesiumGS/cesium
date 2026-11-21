@@ -1161,7 +1161,7 @@ function generateWorkspaceTypeScriptDefinitions(
  */
 function parseWorkspaceExports(source) {
   const regex =
-    /^(?:declare|export) (?:const )?(function|class|namespace|enum|interface|type) (.+)/gm;
+    /^export (?:declare )?(?:const )?(function|class|namespace|enum|interface|type) (.+)/gm;
   const exportNames = new Set();
   let match;
   while ((match = regex.exec(source))) {

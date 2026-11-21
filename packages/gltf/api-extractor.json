@@ -1,0 +1,30 @@
+{
+  "projectFolder": ".",
+  "mainEntryPointFilePath": "<projectFolder>/Build/Types/index.d.ts",
+  "bundledPackages": [],
+  "compiler": {
+    "overrideTsconfig": {
+      "extends": "../../tsconfig.types.base.json",
+      "files": ["./Build/Types/index.d.ts"]
+    }
+  },
+  "apiReport": { "enabled": false },
+  "docModel": { "enabled": false },
+  "dtsRollup": {
+    "enabled": true,
+    "untrimmedFilePath": "<projectFolder>/index.d.ts",
+    "publicTrimmedFilePath": ""
+  },
+  "tsdocMetadata": { "enabled": false },
+  "newlineKind": "lf",
+  "messages": {
+    "extractorMessageReporting": {
+      "ae-internal-missing-underscore": { "logLevel": "none" },
+      "ae-missing-release-tag": { "logLevel": "none" },
+      "ae-unresolved-link": { "logLevel": "none" }
+    },
+    "tsdocMessageReporting": {
+      "default": { "logLevel": "none" }
+    }
+  }
+}
