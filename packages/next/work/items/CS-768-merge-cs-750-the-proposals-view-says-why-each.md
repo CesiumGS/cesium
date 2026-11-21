@@ -2,10 +2,14 @@
 id: CS-768
 title: Merge CS-750, the Proposals view says why each item is proposed
 kind: decision
-state: planned
+state: done
 created: 2026-11-20
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator merges it after CS-746 and CS-748, replays it onto main's tip, reruns the type checks, work check and the Dyno Work tests, fast-forwards main, regenerates the views and logs the merge."
+answered_at: 2026-11-21T06:31:38.033Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

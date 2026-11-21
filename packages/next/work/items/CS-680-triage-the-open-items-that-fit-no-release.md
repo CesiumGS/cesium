@@ -14,6 +14,7 @@ The owner, 2026-11-17: "i suspect a bunch of items in the work tree already are 
 
 - Each of those items gets the proposal header CS-686 settles (source, why, size, decider, date; for a "later" copy, the design section it came from), and the owner reviews them in batches: commit into a milestone, keep proposed, or drop. Nothing is dropped without the owner's word (CS-686's answer: "don't drop the later things, keep them as proposals so i can review").
 - The 7 proposed items that committed work needs are committed or their needs removed, starting with CS-344 (CS-348 needs it) and the constraints of CS-423, CS-465 and CS-511.
+- A deferral needs no new label (the owner, 2026-11-20, answering CS-750's question). The header's Source says "deferred by the owner" for the owner's deferrals, among them CS-163, and "later" for copies of a design document's list. The Proposals view sorts them by that.
 - The owner sees them in small batches, grouped by project, in the chief of staff's digests, and the Work page's items-in-no-milestone list is short.
 
 From the owner's release planning on 2026-11-17: `docs/decisions/2026-11-17-release-plan-and-parity.md`.

@@ -2,10 +2,14 @@
 id: CS-769
 title: Merge CS-430, the WebGPU seams audited
 kind: decision
-state: planned
+state: done
 created: 2026-11-20
 project: CS-437
 decider: owner
+answer: "A. Merge it: The orchestrator merges it after CS-721, replays it onto main's tip, reruns the work check, fast-forwards main, regenerates the views and logs the merge; CS-102 takes its list."
+answered_at: 2026-11-21T06:31:40.601Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

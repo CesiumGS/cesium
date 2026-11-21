@@ -2,10 +2,14 @@
 id: CS-770
 title: Merge CS-721, one dyno command for Dyno's runs, Lab pages, servers and measurements
 kind: decision
-state: planned
+state: done
 created: 2026-11-20
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator merges it after CS-746, CS-748 and CS-750, replays it onto main's tip, reruns the type checks, work check and the dyno tests, fast-forwards main, regenerates the views and logs the merge; CS-393 (the settings registry and sweeps) can start on it."
+answered_at: 2026-11-21T06:31:39.205Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
