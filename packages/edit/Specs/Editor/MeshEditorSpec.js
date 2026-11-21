@@ -1150,9 +1150,8 @@ describe(
         const other = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(other);
         // Draws the other square behind the first, so clicks hit the first.
-        Matrix4.fromTranslation(
+        other.modelMatrix = Matrix4.fromTranslation(
           new Cartesian3(0.0, 0.0, -1.0),
-          other.source.worldMatrix,
         );
         scene.renderForSpecs();
 
@@ -1170,9 +1169,8 @@ describe(
         editor.setMeshInactive(mesh);
         const other = editor.addMesh(createGeometrySource(square));
         editor.setMeshActive(other);
-        Matrix4.fromTranslation(
+        other.modelMatrix = Matrix4.fromTranslation(
           new Cartesian3(0.0, 0.0, -1.0),
-          other.source.worldMatrix,
         );
         scene.renderForSpecs();
 
@@ -1471,7 +1469,7 @@ describe(
 
       it("starts with a copy of the source's world matrix", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const source = createSource(square);
+        const source = createGeometrySource(square);
         Matrix4.fromTranslation(
           new Cartesian3(1.0, 2.0, 3.0),
           source.worldMatrix,
@@ -1489,7 +1487,7 @@ describe(
 
       it("draws the overlay and fits its bounding box at a new model matrix", async function () {
         const editor = await MeshEditor.addToScene(scene);
-        const mesh = editor.addMesh(createSource(square));
+        const mesh = editor.addMesh(createGeometrySource(square));
         scene.renderForSpecs();
 
         const modelMatrix = Matrix4.fromTranslation(

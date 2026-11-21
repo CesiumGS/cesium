@@ -120,9 +120,8 @@ describe(
     describe("press", function () {
       it("sends the ray and the active meshes' world matrices", function () {
         const inactiveMesh = editor.addMesh(createGeometrySource(square));
-        Matrix4.fromTranslation(
+        mesh.modelMatrix = Matrix4.fromTranslation(
           new Cartesian3(1.0, 2.0, 3.0),
-          mesh.source.worldMatrix,
         );
         editor.activeTool = TranslateTool.addTo(editor);
         spyOn(WasmMeshEditor.prototype, "pointerDown").and.callThrough();
@@ -135,7 +134,7 @@ describe(
         expect(input.scene.viewDirection).toEqual(scene.camera.directionWC);
         expect(Array.from(input.scene.meshKeys)).toEqual([mesh._key]);
         expect(Array.from(input.scene.matrices)).toEqual(
-          Matrix4.toArray(mesh.source.worldMatrix),
+          Matrix4.toArray(mesh.modelMatrix),
         );
         expect(Array.from(input.scene.meshKeys)).not.toContain(
           inactiveMesh._key,

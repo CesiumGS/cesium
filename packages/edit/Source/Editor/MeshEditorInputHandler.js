@@ -280,7 +280,7 @@ class MeshEditorInputHandler {
     const matrices = new Float64Array(activeMeshes.length * 16);
     activeMeshes.forEach((mesh, i) => {
       meshKeys[i] = mesh._key;
-      matrices.set(Matrix4.toArray(mesh.source.worldMatrix), i * 16);
+      matrices.set(Matrix4.toArray(mesh.modelMatrix), i * 16);
     });
 
     return {
