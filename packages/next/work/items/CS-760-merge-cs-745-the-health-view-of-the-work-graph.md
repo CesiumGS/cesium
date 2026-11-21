@@ -2,10 +2,14 @@
 id: CS-760
 title: Merge CS-745, the Health view of the work graph's exceptions
 kind: decision
-state: planned
+state: done
 created: 2026-11-20
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the Dyno Work tests, fast-forwards main, regenerates the views and logs the merge."
+answered_at: 2026-11-21T04:41:56.830Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

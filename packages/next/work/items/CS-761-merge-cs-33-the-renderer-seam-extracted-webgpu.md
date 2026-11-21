@@ -2,10 +2,14 @@
 id: CS-761
 title: Merge CS-33, the renderer seam extracted (WebGPU only, pure moves)
 kind: decision
-state: planned
+state: done
 created: 2026-11-20
 project: CS-9
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks and work check, fast-forwards main, regenerates the views and logs the merge; CS-23 (Engine and View) and CS-430 are set up from it as slots free, with CS-34 and CS-35 beside CS-23."
+answered_at: 2026-11-21T04:41:57.552Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

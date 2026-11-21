@@ -2,10 +2,14 @@
 id: CS-758
 title: Merge CS-567, the protocol table covers every member of the engine types
 kind: decision
-state: planned
+state: done
 created: 2026-11-20
 project: CS-13
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks and work check, fast-forwards main, regenerates the views and logs the merge; CS-23 (Engine and View) starts on it once CS-33 merges."
+answered_at: 2026-11-21T04:41:55.184Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

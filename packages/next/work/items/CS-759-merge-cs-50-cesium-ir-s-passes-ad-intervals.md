@@ -2,10 +2,14 @@
 id: CS-759
 title: Merge CS-50, Cesium IR's passes (AD, intervals with splitting, Taylor bounds, rates, uniforms, kinks)
 kind: decision
-state: planned
+state: done
 created: 2026-11-20
 project: CS-10
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip (after CS-567 if both are yes), reruns the type checks and work check, fast-forwards main, regenerates the views and logs the merge; CS-52 (the GLSL ES 3.00 emitter) is set up from it."
+answered_at: 2026-11-21T04:41:56.075Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
