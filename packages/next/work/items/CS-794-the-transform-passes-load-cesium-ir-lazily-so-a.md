@@ -2,10 +2,11 @@
 id: CS-794
 title: The transform passes load Cesium IR lazily, so a default view starts without it
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-21
 project: CS-10
 needs: [CS-53]
+claimed_by: orch-11-CS-794
 touches: [packages/next/src/transform/**, packages/next/src/ir/**, packages/next/src/scene/Camera.ts, packages/next/test, packages/next/bench/suite/coldStart.mjs]
 ---
 
