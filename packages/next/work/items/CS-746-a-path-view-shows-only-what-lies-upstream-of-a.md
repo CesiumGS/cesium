@@ -2,10 +2,11 @@
 id: CS-746
 title: "A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]
+claimed_by: orch-11-cs-746
 touches: [packages/next/bench/suite/views/workPath.tsx, packages/next/bench/suite/views/workPath.css, packages/next/bench/suite/workPath.ts, packages/next/test/dynoWorkPath.test.ts]
 ---
 
