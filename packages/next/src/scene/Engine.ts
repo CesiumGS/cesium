@@ -8,6 +8,8 @@ import type { Vec3 } from "../math/vec3.ts";
 import type { RenderContext, ShaderOverrides } from "./RenderContext.ts";
 import { createBox } from "./meshes.ts";
 import { View, type ViewOptions } from "./View.ts";
+import { SupportNotices } from "../profile/notices.ts";
+import { ViewProfile } from "../profile/viewProfile.ts";
 import { PostStage, PostStageError } from "./postStage.ts";
 import {
   CanvasTarget,
@@ -109,6 +111,18 @@ export interface EngineOptions extends GpuDeviceOptions {
   visibility?: number | null;
   /** What the haze is made of (default "continental"). */
   aerosol?: AerosolType;
+  /**
+   * Every support notice that warns throws instead (default false): a
+   * pinned step that can't run on this device, an unsupported feature that
+   * matters, a hard limit. From `addView`, and from `renderFrame` or the
+   * tick when a view's look changes (the loop reports it in `errors`).
+   */
+  strict?: boolean;
+  /**
+   * Support notices that warn do so once in the console (default true).
+   * False keeps the console quiet; the notices are still in `errors`.
+   */
+  warnings?: boolean;
 }
 
 export interface FrameStats {
@@ -313,6 +327,11 @@ export class Engine {
   readonly raster: EngineRaster;
   /** @internal The engine's device (`RenderDevice`): the WebGPU renderer is reached through it. */
   readonly device: WebGpuDevice;
+  /**
+   * @internal The support notices (src/profile/notices.ts): recorded in
+   * `errors`, warned once, thrown under `strict`.
+   */
+  readonly notices: SupportNotices;
   /** @internal What draws each view (`ViewRenderer`), made when the view is added. */
   readonly renderers = new Map<View, WebGpuViewRenderer>();
   /** @internal Scene data: view ids and motion, tick timing, selection scratch. */
@@ -724,11 +743,24 @@ export class Engine {
   private readonly scratchKey = new Float64Array(VIEW_KEY_LENGTH);
   private readonly dirtyTargets = new Set<RenderTarget>();
   private readonly dirtyViews = new Set<View>();
+  /** Views added so far, which name each view's notices (`ViewProfile.scope`). */
+  private profiledViews = 0;
+  /** The warm-up's own view is drawing (`warmUp`): no notices. */
+  private warming = false;
 
-  private constructor(opened: OpenedWebGpu, maxViews: number) {
+  private constructor(
+    opened: OpenedWebGpu,
+    maxViews: number,
+    options: Pick<EngineOptions, "strict" | "warnings"> = {},
+  ) {
     const { gpu, ctx } = opened;
     this.gpu = gpu;
     this.ctx = ctx;
+    this.notices = new SupportNotices(
+      ctx.errors,
+      options.strict ?? false,
+      options.warnings ?? true,
+    );
     this.device = new WebGpuDevice(this, opened, maxViews);
     this.raster = this.device.raster;
     ctx.wake = () => this.wake();
@@ -768,7 +800,7 @@ export class Engine {
 
   static async create(options: EngineOptions = {}): Promise<Engine> {
     const opened = await WebGpuDevice.open(options);
-    const engine = new Engine(opened, options.maxViews ?? 16);
+    const engine = new Engine(opened, options.maxViews ?? 16, options);
     engine.curvilinearBudgetMs =
       options.curvilinearBudgetMs ?? CURVILINEAR_BUDGET_MS;
     engine.jobBudgetMs = options.jobBudgetMs ?? JOB_BUDGET_MS;
@@ -800,9 +832,15 @@ export class Engine {
       model: m4.mat4(),
     });
     const target = new OffscreenTarget(1, 1);
-    const view = this.addView({ target, world });
-    this.renderFrame();
-    this.removeView(view);
+    // The warm-up view is the engine's own: its look raises no notices.
+    this.warming = true;
+    try {
+      const view = this.addView({ target, world });
+      this.renderFrame();
+      this.removeView(view);
+    } finally {
+      this.warming = false;
+    }
     this.worlds.splice(this.worlds.indexOf(world), 1);
     world.destroy();
     target.destroy();
@@ -1295,8 +1333,7 @@ export class Engine {
     if (this.views.length >= this.maxViews) {
       throw new Error(`At most ${this.maxViews} views are supported.`);
     }
-    const id = this.freeViewIds.pop();
-    if (id === undefined) {
+    if (this.freeViewIds.length === 0) {
       throw new Error("At most 32 views can have view masks.");
     }
     const view = new View(options);
@@ -1307,6 +1344,20 @@ export class Engine {
         `Only the Earth's atmosphere is built so far (view body ${view.body.name}).`,
       );
     }
+    // Its look on this device: under `strict` a notice that warns throws
+    // here, before the view is added.
+    const resolver = new ViewProfile(
+      () => this.device.facts,
+      `view ${++this.profiledViews}`,
+    );
+    if (!this.warming) {
+      resolver.check(view, view.profileContext(), this.notices);
+    }
+    view.profile = {
+      resolver,
+      support: () => this.renderers.get(view)?.support,
+    };
+    const id = this.freeViewIds.pop()!;
     this.views.push(view);
     this.renderers.set(view, this.device.createRenderer(view));
     this.scene.viewIds.set(view, id);
@@ -1332,6 +1383,7 @@ export class Engine {
     view.wake = undefined;
     view.renderRoot = undefined;
     view.releaseStages();
+    view.profile = undefined;
     this.renderers.get(view)?.destroy();
     this.renderers.delete(view);
     const index = this.views.indexOf(view);
@@ -1876,6 +1928,7 @@ export class Engine {
   }
 
   private tick(): void {
+    this.checkLooks();
     this.advanceSkyUpload();
     if (this.renderMode === "continuous") {
       this.renderFrame();
@@ -1970,6 +2023,22 @@ export class Engine {
       targets: dirty,
       views: dirtyViews,
     });
+  }
+
+  /**
+   * Resolves each view's look again where its options, size, camera height
+   * band or device changed, and reports the notices that are new
+   * (`ViewProfile.check`). Under `strict` one that warns throws.
+   */
+  private checkLooks(): void {
+    if (this.warming) {
+      return;
+    }
+    const views = this.views;
+    for (let i = 0; i < views.length; i++) {
+      const view = views[i]!;
+      view.profile?.resolver.check(view, view.profileContext(), this.notices);
+    }
   }
 
   /** The sun and the set of enabled views changed (affects every view). */
@@ -2089,6 +2158,7 @@ export class Engine {
    */
   renderFrame(): void {
     if (!this.ticking) {
+      this.checkLooks();
       this.cameras.update();
       // Outside the loop nothing slices the fits: finish them, so a capture
       // shows every draw curvilinear.

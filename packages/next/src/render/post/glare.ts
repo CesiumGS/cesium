@@ -4,11 +4,8 @@
 import type { Sky } from "../../atmosphere/Sky.ts";
 import { GLARE_BRIGHT_STARS } from "../../atmosphere/starCells.ts";
 import type { GpuTimer } from "../../gpu/GpuTimer.ts";
-import {
-  glareTier,
-  glareTierReason,
-  type GlareFacts,
-} from "../../profile/glare.ts";
+import { decidingReason } from "../../profile/resolve.ts";
+import type { EffectiveFeature } from "../../profile/types.ts";
 import type { Camera } from "../../scene/Camera.ts";
 import { lightListFor, type LightList } from "../../scene/lightList.ts";
 import type {
@@ -187,27 +184,30 @@ export interface GlareEngine {
     readonly timer: Pick<GpuTimer, "passWrites">;
     readonly glareKernels: GlareKernels;
   };
-  /** The device's facts, handed to the profile layer (src/profile/glare.ts), never read here. */
-  readonly gpu: { readonly facts: GlareFacts };
   requestRender(): void;
 }
 
-/** Why the tier is what it is, in a sentence, for a readout. */
+/**
+ * Why the tier is what it is, in a sentence, for a readout: from the view's
+ * effective `glare` (`View.effective`), the rule that lowered it if one did.
+ */
 export function glareReason(
   settings: GlareSettings | null,
-  facts: GlareFacts,
-  pixels: number,
+  glare: EffectiveFeature,
 ): string {
   if (!settings || (!settings.veil && !settings.spikes)) {
     return "no veil or spikes are on";
   }
-  if (settings.tier !== "auto") {
-    return "chosen in the settings";
+  const deciding = decidingReason(glare);
+  if (deciding) {
+    return deciding.text;
   }
-  return glareTierReason(facts, pixels);
+  return glare.asked === true
+    ? "no rule lowers it on this GPU at this size"
+    : "chosen in the settings";
 }
 
-/** What a view's glare settings mean on its adapter. */
+/** What a view's glare settings mean at the tier its look was given. */
 export interface ResolvedGlare {
   tier: GlareTier;
   /** The pyramid's levels; 0 for no pyramid. */
@@ -255,17 +255,17 @@ const TIERS: Readonly<
   sources: { levels: 0, basePixels: 2, sprites: 16, spritePixels: 1_000_000 },
 };
 
-/** What `settings` mean on this device at `pixels` of view. */
+/**
+ * What `settings` mean at `tier`: the step the view's look was given
+ * (`View.effective`'s `glare`), which chose "auto" by this device and size.
+ */
 export function resolveGlare(
   settings: GlareSettings | null,
-  facts: GlareFacts,
-  pixels: number,
+  tier: GlareTier,
 ): ResolvedGlare {
   if (!settings || (!settings.veil && !settings.spikes)) {
     return OFF;
   }
-  const tier =
-    settings.tier === "auto" ? glareTier(facts, pixels) : settings.tier;
   if (tier === "off") {
     return OFF;
   }
@@ -651,11 +651,13 @@ export function glareFor(
   if (width < 2 || height < 2) {
     return undefined;
   }
-  const { facts } = engine.gpu;
-  const resolved = resolveGlare(view.observer.glare, facts, width * height);
+  // The look is resolved at the view's pixels (`View.profileContext`),
+  // the width × height of this frame.
+  const glare = view.effective.features["glare"]!;
+  const resolved = resolveGlare(view.observer.glare, glare.given as GlareTier);
   view.glareResolved = {
     tier: resolved.tier,
-    reason: glareReason(view.observer.glare, facts, width * height),
+    reason: glareReason(view.observer.glare, glare),
   };
   if (resolved.tier === "off") {
     return undefined;

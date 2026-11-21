@@ -46,6 +46,16 @@ import {
   observerReadout,
 } from "./observer.ts";
 import { PostStage, checkStageList } from "./postStage.ts";
+import { cartographic } from "../math/ellipsoid.ts";
+import { explain } from "../profile/resolve.ts";
+import type {
+  Context,
+  EffectiveSettings,
+  Reason,
+  Step,
+  SupportReport,
+} from "../profile/types.ts";
+import type { ViewProfile } from "../profile/viewProfile.ts";
 import {
   OcclusionFeedback,
   type OcclusionSwitch,
@@ -686,6 +696,14 @@ export class View {
   occlusionCulling: OcclusionSwitch | undefined;
   /** @internal The glare tier at the last render, and why (`readout`). */
   glareResolved?: { tier: GlareTier; reason: string };
+  /**
+   * @internal Its look resolved on the engine's device, and the device's
+   * support report: set by `Engine.addView`, cleared by `removeView`.
+   */
+  profile?: {
+    readonly resolver: ViewProfile;
+    support(): SupportReport | undefined;
+  };
   /** @internal Waiting for the view's next render (`readHdr`). */
   pendingHdrReads: Array<(image: HdrImage) => void> = [];
   /** @internal The same, after glare. */
@@ -733,6 +751,74 @@ export class View {
   }
 
   private readonly rect: PixelRect = { x: 0, y: 0, width: 1, height: 1 };
+  private readonly context: Context = { pixels: 1, altitudeKm: 0 };
+  private readonly cartographic = cartographic();
+
+  private profileOf(): NonNullable<View["profile"]> {
+    if (!this.profile) {
+      throw new Error("The view isn't in an engine (Engine.addView).");
+    }
+    return this.profile;
+  }
+
+  /**
+   * What this view can do on its engine's device, in the scene's terms: the
+   * content it draws, the steps each feature of the look offers here (best
+   * first), its outputs, queries and update model, and the implementation
+   * paths chosen for the device. The paths' strings are diagnostic, and their
+   * wording may change. Made again after device loss.
+   */
+  get support(): SupportReport {
+    const report = this.profileOf().support();
+    if (!report) {
+      throw new Error("This view's renderer has no support report yet.");
+    }
+    return report;
+  }
+
+  /**
+   * The look made effective on this device, at this view's size and camera
+   * height: per feature what was asked (`false`, `true` or a pinned step),
+   * the step given, its importance and scope, and the rules behind it
+   * (`because`), and the notices raised. The look is read from the view's
+   * options (`shadows`, `ambientOcclusion`, `translucencyMethod`, `fxaa`,
+   * `cityLights`, `sunDisk`, `aerialPerspective`, `lodTransitions`, and
+   * `observer.glare`, whose `tier: "auto"` is the engine's pick). Resolved
+   * again when an option, the size, the camera's height band or the device
+   * changes; otherwise the same object.
+   */
+  get effective(): EffectiveSettings {
+    return this.profileOf().resolver.effective(this, this.profileContext());
+  }
+
+  /**
+   * One feature of `effective`: what was asked, what was given, and the
+   * trail of rules that decided it, each with its layer, its reason and
+   * whether it applied. Throws for a feature the catalog doesn't know.
+   */
+  explain(feature: string): {
+    asked: Step | boolean;
+    given: Step | "off";
+    trail: readonly Reason[];
+  } {
+    return explain(this.effective, feature);
+  }
+
+  /**
+   * @internal What the look is resolved for: the view's pixels and the
+   * camera's height above the body's ellipsoid, km. The object is reused.
+   */
+  profileContext(): Readonly<Context> {
+    const rect = this.pixelRect();
+    const context = this.context;
+    context.pixels = rect.width * rect.height;
+    const c = this.body.ellipsoid.cartesianToCartographic(
+      this.camera.position,
+      this.cartographic,
+    );
+    context.altitudeKm = (c?.height ?? 0) / 1000;
+    return context;
+  }
   /** `bodyKey(body)`, for `bodyAnchor`. */
   private bodyKey_: string | undefined;
 

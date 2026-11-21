@@ -438,13 +438,23 @@ export function Architecture() {
             allows. Each feature has a short ladder of cheaper steps, including
             render resolution, multisampling and aerial perspective's three
             methods. Rules are data. Fidelity is automatic unless the app pins
-            it. An opt-in governor may change only the render scale. Not
-            started.
+            it. An opt-in governor may change only the render scale. Built so
+            far: the device's facts, the catalog, its rules and the resolver,
+            the hardware paths chosen in one place, and the reports on each
+            view. <C>view.support</C> lists what the view can do on its device,{" "}
+            <C>view.effective</C> gives each feature what was asked, what was
+            given and the rules behind it, and <C>view.explain(feature)</C>{" "}
+            gives one feature's trail. They are resolved again after a resize
+            and after device loss. Glare's automatic tier comes from the
+            resolver. Notices go to the engine's errors as kind <C>"support"</C>
+            ; those that matter warn once, and <C>strict</C> makes them throw.
+            The view's options are its look for now; resolution, multisampling,
+            the inspector's section and the advanced entry point are next.
           </li>
         </ul>
         <Written
           from="the overall plan, sections 13.41 and 13.43, and the plans for engine profiles, the worker-mode façade, refinement and streaming robustness"
-          on="2026-11-13"
+          on="2026-11-20"
         />
       </Section>
 

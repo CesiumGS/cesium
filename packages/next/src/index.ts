@@ -453,7 +453,16 @@ export {
   EngineErrors,
   type EngineError,
   type EngineErrorKind,
+  type Notice,
 } from "./gpu/EngineErrors.ts";
+export type {
+  EffectiveFeature,
+  EffectiveSettings,
+  Importance,
+  Reason,
+  Step,
+  SupportReport,
+} from "./profile/types.ts";
 export { MaterialFlags } from "./render/layout.ts";
 export {
   DAYLIGHT_SUN_ILLUMINANCE,

@@ -65,8 +65,9 @@ export interface WorldMirror {
 export interface ViewRenderer {
   readonly view: View;
   /**
-   * What the view supports on this device, in scene terms. Not filled yet:
-   * CS-23 sets it from the device's facts and paths (`describePaths`).
+   * What the view supports on this device, in scene terms (`View.support`):
+   * from the device's facts (src/profile/support.ts), made again after
+   * device loss. Undefined for a device with no support rules yet.
    */
   readonly support: SupportReport | undefined;
   /** The view's exposure scale for this tick (its observer's exposure). */

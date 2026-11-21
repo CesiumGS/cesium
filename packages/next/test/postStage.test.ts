@@ -295,6 +295,11 @@ describe("the chain's order", () => {
 
 describe("a view's chain", () => {
   let engine: Engine;
+  /**
+   * The engine's errors but its support notices: a fake device has no
+   * float32-blendable, so each view's moments step down to 16-bit (CS-23).
+   */
+  const engineErrors = () => engine.errors.filter((e) => e.kind !== "support");
 
   /** The passes before the chain and its neighbors, as they've always been. */
   const NO_STAGE = [
@@ -533,7 +538,7 @@ describe("a view's chain", () => {
       acquire.mock.calls.some(([d]) => (d as TextureDesc).label === "post.bad"),
     ).toBe(false);
     expect(passes(view)).toContain("post.bad");
-    expect(engine.errors).toMatchObject([
+    expect(engineErrors()).toMatchObject([
       { kind: "shader", message: bad.error!.message },
     ]);
   });
@@ -553,7 +558,7 @@ describe("a view's chain", () => {
     await tick();
     expect(bad.error).toBeInstanceOf(PostStageError);
     expect(bad.error!.message).toContain("no group 1");
-    expect(engine.errors).toMatchObject([
+    expect(engineErrors()).toMatchObject([
       { kind: "pipeline", message: bad.error!.message },
     ]);
     // One made later of the same code is told too, by its own name.
@@ -582,7 +587,7 @@ describe("a view's chain", () => {
       message: "the GPU hung",
       reason: "unknown",
     } as GPUDeviceLostInfo);
-    const [report] = engine.errors;
+    const [report] = engineErrors();
     expect(report).toMatchObject({ kind: "device" });
     expect(report!.message).toContain("the GPU hung");
     expect(report!.message).toContain('"on"');
@@ -816,8 +821,8 @@ describe("a view's chain", () => {
       await tick();
       expect(made.enabled).toBe(false);
       expect(made.error?.field).toBe("perView");
-      expect(engine.errors).toMatchObject([{ kind: "frame", count: 1 }]);
-      expect(engine.errors[0]!.message).toContain("no such thing");
+      expect(engineErrors()).toMatchObject([{ kind: "frame", count: 1 }]);
+      expect(engineErrors()[0]!.message).toContain("no such thing");
       expect(passes(view)).toContain("post.shared");
     });
 

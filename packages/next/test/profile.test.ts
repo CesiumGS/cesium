@@ -4,7 +4,6 @@
 // resolver reads no GPU.
 import { describe, expect, it } from "vitest";
 import { GpuDevice } from "../src/gpu/GpuDevice.ts";
-import { glareTier } from "../src/profile/glare.ts";
 import {
   CATALOG,
   VARIANT_BUDGET,
@@ -325,6 +324,24 @@ describe("profile invariants", () => {
     }
   });
 });
+
+/**
+ * Glare's tier as the engine chose it before its look was resolved (CS-22's
+ * `glareTier`, src/profile/glare.ts, removed by CS-23), kept here so the
+ * rules are checked against it.
+ */
+function glareTier(
+  facts: { adapter: { vendor: string; isFallbackAdapter: boolean } },
+  pixels: number,
+): string {
+  if (facts.adapter.isFallbackAdapter) {
+    return "off";
+  }
+  if (facts.adapter.vendor.toLowerCase().includes("intel")) {
+    return pixels > 3_700_000 ? "sources" : "reduced";
+  }
+  return pixels > 8_300_000 ? "reduced" : "full";
+}
 
 describe("the first rules describe today's behavior", () => {
   it("glare's auto tier is glareTier() on every persona and size", () => {

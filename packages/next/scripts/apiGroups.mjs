@@ -270,6 +270,7 @@ export const RULES = [
   // Core: the scene directory is mixed, so its files are named one by one.
   { entry: ".", from: "src/scene/Engine.ts", group: "core.engine" },
   { entry: ".", from: "src/scene/View.ts", group: "core.engine" },
+  { entry: ".", from: "src/profile/", group: "core.engine" },
   { entry: ".", from: "src/scene/renderTarget.ts", group: "core.engine" },
   { entry: ".", from: "src/scene/Body.ts", group: "core.engine" },
   { entry: ".", from: "src/gpu/GpuDevice.ts", group: "core.engine" },
@@ -280,7 +281,11 @@ export const RULES = [
   { entry: ".", from: "src/scene/SceneItem.ts", group: "core.world" },
   // The transform graph and clipping live in files of their own, ahead of the
   // directories they sit in.
-  { entry: ".", from: "src/scene/world/worldCurvilinearMaps.ts", group: "core.transform" },
+  {
+    entry: ".",
+    from: "src/scene/world/worldCurvilinearMaps.ts",
+    group: "core.transform",
+  },
   { entry: ".", from: "src/camera/route.ts", group: "core.transform" },
   { entry: ".", from: "src/transform/", group: "core.transform" },
   { entry: ".", from: "src/transforms/", group: "core.transforms" },
@@ -392,8 +397,16 @@ export const RULES = [
   { entry: "frames", from: "src/time/", group: "frames.sky" },
   { entry: "frames", from: "src/ephemeris/", group: "frames.ephemeris" },
   { entry: "frames", from: "src/trajectory/", group: "frames.ephemeris" },
-  { entry: "frames", from: "src/frames/curvilinearFrame.ts", group: "frames.graph" },
-  { entry: "frames", from: "src/frames/curvilinearMaps.ts", group: "frames.graph" },
+  {
+    entry: "frames",
+    from: "src/frames/curvilinearFrame.ts",
+    group: "frames.graph",
+  },
+  {
+    entry: "frames",
+    from: "src/frames/curvilinearMaps.ts",
+    group: "frames.graph",
+  },
   {
     entry: "frames",
     from: "src/frames/graphOfFrames.ts",

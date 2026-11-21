@@ -99,6 +99,8 @@ entry	name	kind	tier
 .	DualPosition	interface	-
 .	EARTH	const	-
 .	EYE	const	-
+.	EffectiveFeature	interface	-
+.	EffectiveSettings	interface	-
 .	ElementCap	interface	-
 .	Ellipsoid	class	-
 .	Emitter	class	-
@@ -154,6 +156,7 @@ entry	name	kind	tier
 .	HeightReference	type	-
 .	ITwinOptions	interface	-
 .	ImageryProvider	interface	-
+.	Importance	type	-
 .	InspectController	class	-
 .	InspectControllerOptions	interface	-
 .	InstanceOptions	interface	-
@@ -210,6 +213,7 @@ entry	name	kind	tier
 .	NO_ACCELERATION	const	-
 .	NamedType	type	-
 .	NodePoint	interface	-
+.	Notice	interface	-
 .	NurbsCurve	interface	-
 .	NurbsSurface	interface	-
 .	ObserverReadout	interface	-
@@ -267,6 +271,7 @@ entry	name	kind	tier
 .	RayTarget	type	-
 .	RayTargetName	type	-
 .	RayVerdict	type	-
+.	Reason	interface	-
 .	ReferenceSurface	type	-
 .	RefinedPick	interface	-
 .	RenderTarget	interface	-
@@ -310,6 +315,7 @@ entry	name	kind	tier
 .	StageInfo	interface	-
 .	StageStats	interface	-
 .	StandingQuery	interface	-
+.	Step	type	-
 .	StepwiseSelection	class	-
 .	StyleExpression	type	-
 .	StyleField	type	-
@@ -317,6 +323,7 @@ entry	name	kind	tier
 .	StyleParameter	interface	-
 .	StyleScale	interface	-
 .	SubmissionMode	type	-
+.	SupportReport	interface	-
 .	SurfaceIdentity	interface	-
 .	SurfaceKind	enum	-
 .	SurfacePatch	interface	-

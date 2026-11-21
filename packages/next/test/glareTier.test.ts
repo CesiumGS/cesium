@@ -5,7 +5,8 @@ import {
   glareReason,
   resolveGlare,
 } from "../src/render/post/glare.ts";
-import { glareTier } from "../src/profile/glare.ts";
+import { personas } from "../src/profile/personas.ts";
+import { resolve } from "../src/profile/resolve.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import {
   cameraGlare,
@@ -13,17 +14,32 @@ import {
   eyeGlare,
   eyeObserver,
   type GlareSettings,
+  type GlareTier,
 } from "../src/scene/observer.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { View } from "../src/scene/View.ts";
 import { STAR_FLOATS } from "../src/atmosphere/stars.ts";
-import { fakeEngine } from "./fakeGpu.ts";
+import { fakeEngine, installPersona } from "./fakeGpu.ts";
 
-const apple = { adapter: { vendor: "apple", isFallbackAdapter: false } };
-const intel = { adapter: { vendor: "Intel", isFallbackAdapter: false } };
-const fallback = { adapter: { vendor: "google", isFallbackAdapter: true } };
+const apple = personas["m2-chrome"];
+const intel = personas["intel-uhd-4k"];
+const fallback = personas["swiftshader"];
 
-describe("glareTier", () => {
+/** Glare left at `true` (the settings' "auto"), as a view on `facts` at `pixels` is given it. */
+const autoGlare = (
+  facts: typeof apple | typeof intel | typeof fallback,
+  pixels: number,
+) =>
+  resolve({
+    facts,
+    look: { glare: true },
+    fidelity: "auto",
+    context: { pixels, altitudeKm: 1 },
+  }).features["glare"]!;
+const glareTier = (facts: Parameters<typeof autoGlare>[0], pixels: number) =>
+  autoGlare(facts, pixels).given as GlareTier;
+
+describe("glare's tier left to the engine", () => {
   it("has none on a fallback adapter", () => {
     expect(glareTier(fallback, 1e6)).toBe("off");
   });
@@ -39,24 +55,22 @@ describe("glareTier", () => {
 
 describe("resolveGlare", () => {
   it("has no glare with no settings", () => {
-    expect(resolveGlare(null, apple, 1e6).tier).toBe("off");
+    expect(resolveGlare(null, "full").tier).toBe("off");
     expect(
-      resolveGlare({ tier: "full", veil: null, spikes: null }, apple, 1e6).tier,
+      resolveGlare({ tier: "full", veil: null, spikes: null }, "full").tier,
     ).toBe("off");
   });
 
-  it("lets an explicit tier beat auto", () => {
+  it("draws the tier it is given", () => {
     const settings: GlareSettings = { ...cameraGlare(), tier: "sources" };
-    expect(resolveGlare(settings, apple, 1e6).tier).toBe("sources");
-    expect(resolveGlare({ ...settings, tier: "off" }, apple, 1e6).tier).toBe(
-      "off",
-    );
-    expect(resolveGlare(cameraGlare(), intel, 2e6).tier).toBe("reduced");
+    expect(resolveGlare(settings, "sources").tier).toBe("sources");
+    expect(resolveGlare(settings, "off").tier).toBe("off");
+    expect(resolveGlare(cameraGlare(), "reduced").tier).toBe("reduced");
   });
 
   it("gives reduced a base of 4 and 7 levels, up to 64 sprites", () => {
     expect(
-      resolveGlare({ ...cameraGlare(), tier: "reduced" }, apple, 1e6),
+      resolveGlare({ ...cameraGlare(), tier: "reduced" }, "reduced"),
     ).toMatchObject({
       levels: 7,
       basePixels: 4,
@@ -68,7 +82,7 @@ describe("resolveGlare", () => {
 
   it("gives sources no pyramid, the sun's veil, and 16 sprites", () => {
     expect(
-      resolveGlare({ ...cameraGlare(), tier: "sources" }, apple, 1e6),
+      resolveGlare({ ...cameraGlare(), tier: "sources" }, "sources"),
     ).toMatchObject({ levels: 0, sunVeil: true, sprites: 16 });
   });
 });
@@ -269,31 +283,40 @@ describe("in an engine", () => {
     expect(passes(view).some((p) => p.includes("glare"))).toBe(false);
   });
 
-  it("has no glare at all on a fallback adapter", () => {
-    const made = glareFor(
-      {
-        ...(engine as unknown as Parameters<typeof glareFor>[0]),
-        gpu: { facts: fallback },
-      },
-      addView(null),
-      512,
-      256,
-    );
-    expect(made).toBeUndefined();
+  it("has no glare at all on a fallback adapter", async () => {
+    installPersona("swiftshader");
+    const { Engine } = await import("../src/scene/Engine.ts");
+    const soft = await Engine.create();
+    soft.stop();
+    const view = soft.addView({
+      target: new OffscreenTarget(512, 256),
+      world: soft.createWorld(),
+      observer: { ...cameraObserver({ ev100: 15 }), glare: cameraGlare() },
+    });
+    expect(glareFor(soft, view, 512, 256)).toBeUndefined();
+    expect(view.glareResolved?.tier).toBe("off");
+    expect(view.glareResolved?.reason).toMatch(/fallback/);
+    soft.destroy();
   });
 });
 
 describe("glareReason", () => {
   it("says why a tier was chosen, for the readout", () => {
     const auto = cameraGlare();
-    expect(glareReason(auto, intel, 2e6)).toMatch(/Intel.*reduced/);
-    expect(glareReason(auto, intel, 4e6)).toMatch(/Intel.*4\.0 million/);
-    expect(glareReason(auto, fallback, 1e6)).toMatch(/fallback/);
-    expect(glareReason(auto, apple, 9e6)).toMatch(/9\.0 million/);
-    expect(glareReason(auto, apple, 1e6)).toMatch(/room/);
-    expect(glareReason({ ...auto, tier: "full" }, intel, 1e6)).toMatch(
-      /settings/,
+    expect(glareReason(auto, autoGlare(intel, 2e6))).toMatch(/Intel.*reduced/);
+    expect(glareReason(auto, autoGlare(intel, 4e6))).toMatch(
+      /Intel.*3\.7 million/,
     );
-    expect(glareReason(null, apple, 1e6)).toMatch(/no veil/);
+    expect(glareReason(auto, autoGlare(fallback, 1e6))).toMatch(/fallback/);
+    expect(glareReason(auto, autoGlare(apple, 9e6))).toMatch(/8\.3 million/);
+    expect(glareReason(auto, autoGlare(apple, 1e6))).toMatch(/no rule/);
+    const pinned = resolve({
+      facts: intel,
+      look: { glare: "full" },
+      fidelity: "auto",
+      context: { pixels: 1e6, altitudeKm: 1 },
+    }).features["glare"]!;
+    expect(glareReason({ ...auto, tier: "full" }, pinned)).toMatch(/settings/);
+    expect(glareReason(null, autoGlare(apple, 1e6))).toMatch(/no veil/);
   });
 });

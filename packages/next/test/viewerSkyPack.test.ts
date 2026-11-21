@@ -73,6 +73,14 @@ const field = (): StarField => ({
 let engine: Engine;
 let request: ReturnType<typeof vi.fn>;
 let warn: ReturnType<typeof vi.spyOn>;
+/**
+ * The console's warnings but support notices: a fake device has no
+ * float32-blendable, so a view's moments step down to 16-bit (CS-23).
+ */
+const warnings = () =>
+  warn.mock.calls.filter(
+    (call: unknown[]) => !String(call[0]).includes("support:"),
+  );
 
 async function makeViewer(options: Record<string, unknown> = {}) {
   const { Viewer } = await import("../widgets/Viewer.ts");
@@ -154,19 +162,19 @@ describe("a Viewer with a sky pack", () => {
         : new Promise(() => {}),
     );
     viewer = await makeViewer({ skyPack: "https://p.test/pack/" });
-    await vi.waitFor(() => expect(warn).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(warnings()).toHaveLength(1));
     await viewer.setSkyPack("https://p.test/pack/");
     expect(viewer.credits().credits).toEqual([]);
-    expect(warn).toHaveBeenCalledOnce();
-    expect(String(warn.mock.calls[0]![0])).toContain("points.bin, count");
+    expect(warnings()).toHaveLength(1);
+    expect(String(warnings()[0]![0])).toContain("points.bin, count");
   });
 
   it("warns once, naming the pack, that it isn't distributable, across two loads", async () => {
     viewer = await makeViewer({ skyPack: "https://p.test/pack/" });
-    await vi.waitFor(() => expect(warn).toHaveBeenCalledOnce());
+    await vi.waitFor(() => expect(warnings()).toHaveLength(1));
     await viewer.setSkyPack("https://p.test/pack/");
-    expect(warn).toHaveBeenCalledOnce();
-    expect(String(warn.mock.calls[0]![0])).toContain("synthetic");
+    expect(warnings()).toHaveLength(1);
+    expect(String(warnings()[0]![0])).toContain("synthetic");
   });
 
   it("makes no pack request without a skyPack", async () => {

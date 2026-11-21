@@ -2,7 +2,7 @@
 id: CS-23
 title: Support reports on `Engine` and `View` (`view.support`, `view.effective`, `view.explain`, `strict`)
 kind: work
-state: in-progress
+state: done
 created: 2026-11-13
 project: CS-8
 needs: [CS-22]

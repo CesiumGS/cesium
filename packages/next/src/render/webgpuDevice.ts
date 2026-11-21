@@ -9,6 +9,7 @@ import { runStartupProbes } from "../gpu/sampleRateProbe.ts";
 import { RealtimeAtmosphere } from "../atmosphere/RealtimeAtmosphere.ts";
 import { Sky } from "../atmosphere/Sky.ts";
 import { deviceChoices } from "../profile/paths.ts";
+import { support } from "../profile/support.ts";
 import type { SupportReport } from "../profile/types.ts";
 import { EARTH } from "../scene/Body.ts";
 import type { Engine } from "../scene/Engine.ts";
@@ -57,6 +58,9 @@ export class WebGpuDevice implements RenderDevice {
   readonly raster: EngineRaster = new EngineRaster();
   readonly gpu: GpuDevice;
   readonly ctx: RenderContext;
+  /** The device's facts and support report, made once a device (again after device loss). */
+  private facts_: GpuDevice["facts"] | undefined;
+  private support_: SupportReport | undefined;
 
   /**
    * Opens the device: requests it, runs the startup probes while the
@@ -111,6 +115,14 @@ export class WebGpuDevice implements RenderDevice {
     const { gpu, ctx, sky } = opened;
     this.gpu = gpu;
     this.ctx = ctx;
+    // A replacement device has facts of its own, and so a support report:
+    // views resolve their looks again from them. The render context keeps
+    // the paths it was made with (nothing rebuilds it after a loss yet).
+    gpu.events.on("restored", () => {
+      this.facts_ = undefined;
+      this.support_ = undefined;
+      engine.wake();
+    });
     ctx.createMirror = (world) => this.createWorld(world);
     const raster = this.raster;
     raster.sky = sky;
@@ -189,8 +201,14 @@ export class WebGpuDevice implements RenderDevice {
     });
   }
 
+  /** What was observed about the device: one object a device, so a change of it is a new device. */
   get facts(): GpuDevice["facts"] {
-    return this.gpu.facts;
+    return (this.facts_ ??= this.gpu.facts);
+  }
+
+  /** What views can do on this device, in scene terms (`View.support`). */
+  get support(): SupportReport {
+    return (this.support_ ??= support(this.facts));
   }
 
   createWorld(world: World): WebGpuWorldMirror {
@@ -198,7 +216,7 @@ export class WebGpuDevice implements RenderDevice {
   }
 
   createRenderer(view: View): WebGpuViewRenderer {
-    return new WebGpuViewRenderer(this.engine, view);
+    return new WebGpuViewRenderer(this.engine, view, this);
   }
 
   render(tick: RenderTick): void {
@@ -224,12 +242,16 @@ export class WebGpuDevice implements RenderDevice {
 
 /** What draws one view on the WebGPU device: its frame, image and probe. */
 export class WebGpuViewRenderer implements ViewRenderer {
-  readonly support: SupportReport | undefined = undefined;
-
   constructor(
     private readonly engine: Engine,
     readonly view: View,
+    private readonly device: WebGpuDevice,
   ) {}
+
+  /** The device's support report: every view on a WebGPU device can do the same. */
+  get support(): SupportReport {
+    return this.device.support;
+  }
 
   exposure(): number {
     return updateExposure(this.engine, this.view);

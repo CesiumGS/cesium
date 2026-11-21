@@ -1,5 +1,6 @@
 // The profile layer's shared types: plain data, nothing here runs on a GPU.
 // Everything a resolver returns survives `structuredClone` (worker mode).
+import type { Notice } from "../gpu/EngineErrors.ts";
 import type { DeviceFacts } from "../gpu/GpuDevice.ts";
 
 /** How much a feature matters to the look. */
@@ -143,15 +144,8 @@ export interface EffectiveFeature {
   because: readonly Reason[];
 }
 
-export interface Notice {
-  kind: "stepped" | "dropped" | "unmet" | "unsupported" | "limited";
-  feature: string;
-  asked: string;
-  given: string;
-  rule: string;
-  reason: string;
-  accuracy?: string;
-}
+/** A support notice: defined beside the errors it is recorded in. */
+export type { Notice } from "../gpu/EngineErrors.ts";
 
 export interface EffectiveSettings {
   fidelity: Fidelity;

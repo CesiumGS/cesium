@@ -98,7 +98,8 @@ const TABLE: Record<string, EntryTable> = {
       ClosestPoint ClosestPointOptions CompiledSlangEntry CompiledStyle
       ContentSummary ContentTotals CorePick CorridorElement CorridorOptions
       CustomShaderOptions DebugLegend DebugLegendEntry DebugView Degree
-      DisplayMesh DistanceField DrawHandle DrawOptions DualPosition ElementCap
+      DisplayMesh DistanceField DrawHandle DrawOptions DualPosition
+      EffectiveFeature EffectiveSettings ElementCap
       EngineError EngineErrorKind EngineOptions EntityInfo EntityKind
       EntityRef Exposure EyeExposure FaceTrim FeatureStyleOptions FeatureTable
       FeatureValue FittedOperation FrameKey FrameMotion FrameStats
@@ -106,14 +107,15 @@ const TABLE: Record<string, EntryTable> = {
       GeometryHit GeometryKind GeometryQueries GeometryRayAnswer Georeference
       GlareKernelHandle GlarePupil GlareSettings GlareTier GlobeImageryOptions
       GlobeOptions GltfAsset HdrImage HeightOffset HeightOffsetOptions
-      HeightReference ITwinOptions InspectControllerOptions InstanceOptions
+      HeightReference ITwinOptions Importance InspectControllerOptions
+      InstanceOptions
       IonAsset IonOptions LightHandle LightOptions LimitsTier LiveEdgeOptions
       LoadProgress LodTransitions MaterialOptions MeasureIn MeasureInOptions
       MeshCapGeometry MeshCapHit MeshCapPlane MeshCapRegion MeshCapReport
       MeshCapSurface MeshCapSurfaceHit MeshCapTile MeshCapsOptions
       MeshCapsReport MeshData MeshGeometryOptions MeshHandle MeshSource
       ModelGeometry ModelInstances ModelResourceOptions ModelUsage MoonMap
-      NamedType NodePoint NurbsCurve NurbsSurface ObserverReadout
+      NamedType NodePoint Notice NurbsCurve NurbsSurface ObserverReadout
       ObserverSettings ObserverStage OrbitBasis OrbitFrame OutputEncoding
       Params PickCamera PickDomain PickHint PickInterpreter PickPoint
       PickResult Placement PlacementBlend PlacementMode PlacementOptions
@@ -122,7 +124,7 @@ const TABLE: Record<string, EntryTable> = {
       PostStageImage PostStageKind PostStageLevel PostStageOptions
       PostStagePass PostStageRead PostStageSlot PostStageTarget
       PostStageViewInfo PostStageViewValues PurposeStats QueryAnswer QueryRay
-      RayAnswer RayHitOptions RayQuery RayTargetName RayVerdict
+      RayAnswer RayHitOptions RayQuery RayTargetName RayVerdict Reason
       ReferenceSurface RefinedPick RequestPurpose ResolveView Rig
       RigOrientation RigPosition RouteAccuracy ScaleAbout ScaleAboutOptions
       SceneItemOptions SdfGeometryOptions SectionOptions SectionOutcome
@@ -130,6 +132,7 @@ const TABLE: Record<string, EntryTable> = {
       SegmentDistance SelectionView ShaderControl ShaderOverrides ShaderUnit
       SigmaIn SkyOptions SkyPackManifest SlangCache SlangPostLayout
       SlangPostShader CurvilinearEdge CurvilinearFrameSpec Stage StageInfo StageStats
+      Step SupportReport
       StandingQuery StyleExpression StyleField StyleLayer StyleParameter
       StyleScale SubmissionMode SurfaceIdentity SurfacePatch SurfaceSample
       TerrainQueryOptions TerrainRayOptions TerrainRayPatch TerrainRayResult
@@ -503,7 +506,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         setMoonMap
       `,
       "cannot-cross": `
-        adoptTileset bodyCamera ctx device gpu raster renderers
+        adoptTileset bodyCamera ctx device gpu notices raster renderers
         reportFarAnchors scene
       `,
     },
@@ -965,7 +968,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
     View: {
       snapshot: `
         anchorRevision aspect body bodyAnchor capFaces capNote clipSets
-        debugLegend observerRevision pixelRect readout
+        debugLegend effective observerRevision pixelRect readout support
       `,
       mutation: `
         aerialPerspective ambientOcclusion ambientOcclusionRadius
@@ -981,8 +984,8 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         pick pickPoint pickPosition readHdr
       `,
       "sync-read": `
-        anchorCamera anchorPlacement anchorRoute contains parameterValue
-        toPixel
+        anchorCamera anchorPlacement anchorRoute contains explain
+        parameterValue toPixel
       `,
       callback: `
         renderRoot
@@ -993,8 +996,9 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
       "cannot-cross": `
         anchorRoutes anchorState autoExposure clipMaskRevision debugMode
         exposureScale glareResolved hasParameterValue parameterRevision
-        pendingGlareReads pendingHdrReads pendingPicks pickPlacements
-        releaseParameters releaseStages setAnchorRoute stagesRevision wake
+        pendingGlareReads pendingHdrReads pendingPicks pickPlacements profile
+        profileContext releaseParameters releaseStages setAnchorRoute
+        stagesRevision wake
       `,
     },
     ViewLink: {

@@ -346,3 +346,23 @@ export function explain(
   }
   return { asked: f.asked, given: f.given, trail: f.because };
 }
+
+/**
+ * The rule that decided a feature's step, when one did: the support, cost or
+ * limit rule that lowered it. Undefined when the step is what was asked.
+ */
+export function decidingReason(feature: EffectiveFeature): Reason | undefined {
+  let deciding: Reason | undefined;
+  for (const reason of feature.because) {
+    if (
+      reason.applied &&
+      (reason.layer === "support" ||
+        reason.layer === "cost" ||
+        reason.layer === "limit") &&
+      !reason.rule.includes(".rank.")
+    ) {
+      deciding = reason;
+    }
+  }
+  return deciding;
+}
