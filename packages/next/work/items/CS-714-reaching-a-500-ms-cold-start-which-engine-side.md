@@ -2,10 +2,14 @@
 id: CS-714
 title: "Reaching a 500 ms cold start: which engine-side work"
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-389
 decider: owner
+answer: "A. File both items: Two engine items: compile the pipelines while the sky builds instead of in three rounds, and load optional subsystems (b-rep, the transform graph, georeference, measure, engineering) lazily instead of through the barrel; each measures with the coldstart run, and the budget tightens as they land."
+answered_at: 2026-11-21T04:58:02.516Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

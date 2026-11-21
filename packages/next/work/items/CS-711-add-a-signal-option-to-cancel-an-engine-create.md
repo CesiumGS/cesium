@@ -2,10 +2,14 @@
 id: CS-711
 title: Add a signal option to cancel an engine create in flight
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-437
 decider: owner
+answer: "A. Add it to Engine.create: A follow-up item adds `signal?: AbortSignal` to EngineOptions, documented in Engine's lifetime contract, with a test that an aborted create releases its device and pipelines."
+answered_at: 2026-11-21T04:58:01.916Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

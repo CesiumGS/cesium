@@ -2,10 +2,14 @@
 id: CS-715
 title: How the cold-start check runs from here on
 kind: decision
-state: planned
+state: done
 created: 2026-11-19
 project: CS-389
 decider: owner
+answer: "B. After each merge: The orchestrator runs coldstart after each merge that touches the viewer, engine or frames, and holds the next batch on a failure."
+answered_at: 2026-11-21T04:58:03.086Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
