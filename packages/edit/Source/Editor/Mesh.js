@@ -4,11 +4,12 @@ import { Check, DeveloperError, defined, destroyObject } from "@cesium/core";
 import OverlayRenderer from "./OverlayRenderer.js";
 import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
 
-/** @import { Matrix4, OrientedBoundingBox } from "@cesium/core"; */
+/** @import { Cartesian3, Matrix4, OrientedBoundingBox } from "@cesium/core"; */
 /** @import { FrameState, GeometryAttributeDescriptor, GeometrySource } from "@cesium/engine"; */
 /** @import { MeshEditor as WasmMeshEditor, OverlayViews } from "@cesium/mesh-editor"; */
 /** @import ComparisonOperator from "./ComparisonOperator.js"; */
 /** @import EditMode from "./EditMode.js"; */
+/** @import SelectionStep from "./SelectionStep.js"; */
 /** @import { MeshComponentKeys } from "./ComponentKeys.js"; */
 /** @import MeshEditorGroup from "./MeshEditorGroup.js"; */
 /** @import MeshEditorStyle from "./MeshEditorStyle.js"; */
@@ -305,8 +306,7 @@ class Mesh {
 
   /**
    * Adds the components whose value of an attribute compares to a value to
-   * the selection. Skips hidden components, and those of types that the
-   * current edit mode excludes.
+   * the selection, like {@link Mesh#selectComponents}.
    *
    * @param {string} name The attribute's name.
    * @param {ComparisonOperator} comparison How to compare each component's value to <code>value</code>.
@@ -328,6 +328,153 @@ class Mesh {
       value,
     );
     WasmMeshAttributeTranslator.debugCheckAttributeResult(status, name);
+  }
+
+  /**
+   * Gets the selected components.
+   *
+   * @returns {MeshComponentKeys} The selected components' keys.
+   */
+  getSelectedComponents() {
+    return this.#wasmEditor.selectedComponents(this._key);
+  }
+
+  /**
+   * Replaces the selection. Ignores components of types that the current edit
+   * mode excludes, and unknown keys.
+   *
+   * @param {MeshComponentKeys} componentKeys The components to select.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  setSelection(componentKeys) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("componentKeys", componentKeys);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.setSelection(this._key, componentKeys);
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Adds components to the selection, like {@link Mesh#setSelection}.
+   *
+   * @param {MeshComponentKeys} componentKeys The components to select.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  selectComponents(componentKeys) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("componentKeys", componentKeys);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.selectComponents(
+      this._key,
+      componentKeys,
+    );
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Removes components from the selection.
+   *
+   * @param {MeshComponentKeys} componentKeys The components to deselect.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  deselectComponents(componentKeys) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("componentKeys", componentKeys);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.deselectComponents(
+      this._key,
+      componentKeys,
+    );
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Deselects every component.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  clearSelection() {
+    const isActive = this.#wasmEditor.clearSelection(this._key);
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Selects the given components that aren't selected, and deselects those
+   * that are, like {@link Mesh#setSelection}.
+   *
+   * @param {MeshComponentKeys} componentKeys The components to toggle.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  toggleComponents(componentKeys) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("componentKeys", componentKeys);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.toggleComponents(
+      this._key,
+      componentKeys,
+    );
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Grows the selection by one layer of neighboring components.
+   *
+   * @param {SelectionStep} step What makes components neighbors.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  growSelection(step) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("step", step);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.growSelection(this._key, step);
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Shrinks the selection by one layer from its boundary.
+   *
+   * @param {SelectionStep} step What makes components neighbors.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  shrinkSelection(step) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.number("step", step);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.shrinkSelection(this._key, step);
+    Mesh.#debugCheckActive(isActive);
+  }
+
+  /**
+   * Moves the selected vertices, including those of selected edges and faces.
+   *
+   * @param {Cartesian3} offset The offset, in the mesh's local space.
+   *
+   * @exception {DeveloperError} The mesh isn't active.
+   */
+  translateSelected(offset) {
+    //>>includeStart('debug', pragmas.debug);
+    Check.typeOf.object("offset", offset);
+    //>>includeEnd('debug');
+
+    const isActive = this.#wasmEditor.translateSelected(
+      this._key,
+      offset.x,
+      offset.y,
+      offset.z,
+    );
+    Mesh.#debugCheckActive(isActive);
   }
 
   /**

@@ -33,6 +33,7 @@ import {
   MeshEditorGroup,
   MeshEditorStyle,
   SelectTool,
+  SelectionStep,
   TranslateTool,
 } from "../../index.js";
 import createCanvas from "../../../../Specs/createCanvas.js";
@@ -962,6 +963,153 @@ describe(
 
         expect(() =>
           mesh.selectByAttribute("_ID", EQUAL, 7),
+        ).toThrowDeveloperError();
+      });
+    });
+
+    describe("selection", function () {
+      const { EQUAL } = ComparisonOperator;
+
+      async function addActiveSquare() {
+        const result = await addSquareWithAttributes();
+        result.editor.setMeshActive(result.mesh);
+        result.editor.mode = EditMode.VERTEX;
+        return result;
+      }
+
+      function queryId(mesh, id) {
+        return mesh.queryByAttribute("_ID", EQUAL, id).verts;
+      }
+
+      function getSelectedVerts(mesh) {
+        return Array.from(mesh.getSelectedComponents().verts ?? []).sort();
+      }
+
+      function sorted(keys) {
+        return Array.from(keys).sort();
+      }
+
+      it("is empty for a new mesh", async function () {
+        const { mesh } = await addSquareWithAttributes();
+
+        expect(getSelectedVerts(mesh)).toEqual([]);
+      });
+
+      it("sets, adds to, removes from and clears the selection", async function () {
+        const { mesh } = await addActiveSquare();
+        const sevens = queryId(mesh, 7);
+        const eight = queryId(mesh, 8);
+
+        mesh.setSelection({ verts: sevens });
+        expect(getSelectedVerts(mesh)).toEqual(sorted(sevens));
+
+        mesh.setSelection({ verts: eight });
+        expect(getSelectedVerts(mesh)).toEqual(sorted(eight));
+
+        mesh.selectComponents({ verts: sevens });
+        expect(getSelectedVerts(mesh)).toEqual(sorted([...sevens, ...eight]));
+
+        mesh.deselectComponents({ verts: eight });
+        expect(getSelectedVerts(mesh)).toEqual(sorted(sevens));
+
+        mesh.clearSelection();
+        expect(getSelectedVerts(mesh)).toEqual([]);
+      });
+
+      it("toggles components", async function () {
+        const { mesh } = await addActiveSquare();
+        const sevens = queryId(mesh, 7);
+        const eight = queryId(mesh, 8);
+        mesh.setSelection({ verts: sevens });
+
+        mesh.toggleComponents({
+          verts: new BigUint64Array([sevens[0], ...eight]),
+        });
+
+        expect(getSelectedVerts(mesh)).toEqual(sorted([sevens[1], ...eight]));
+      });
+
+      it("grows and shrinks the selection", async function () {
+        const { mesh } = await addActiveSquare();
+        // The corner at (1, -1) shares an edge with every corner but (-1, 1).
+        const corner = mesh.queryByAttribute("_OFFSET", EQUAL, [2, -2]).verts;
+        mesh.setSelection({ verts: corner });
+
+        mesh.growSelection(SelectionStep.EDGE);
+        expect(getSelectedVerts(mesh)).toEqual(
+          sorted([...queryId(mesh, 7), ...queryId(mesh, 8)]),
+        );
+
+        mesh.shrinkSelection(SelectionStep.EDGE);
+        expect(getSelectedVerts(mesh)).toEqual(sorted(corner));
+      });
+
+      it("ignores components of types the edit mode excludes", async function () {
+        const { editor, mesh } = await addActiveSquare();
+        editor.mode = EditMode.FACE;
+
+        mesh.setSelection({ verts: queryId(mesh, 7) });
+
+        expect(getSelectedVerts(mesh)).toEqual([]);
+      });
+
+      it("translates the selection in local space", async function () {
+        const { mesh } = await addActiveSquare();
+        const eight = queryId(mesh, 8);
+        mesh.setSelection({ verts: eight });
+
+        mesh.translateSelected(new Cartesian3(0.0, 0.0, 1.0));
+
+        expect(Array.from(mesh.getAttributeValues("POSITION", eight))).toEqual([
+          1.0, 1.0, 1.0,
+        ]);
+        const [seven] = queryId(mesh, 7);
+        expect(
+          Array.from(
+            mesh.getAttributeValues("POSITION", new BigUint64Array([seven])),
+          )[2],
+        ).toBe(0.0);
+      });
+
+      it("translates the vertices of selected faces", async function () {
+        const { editor, mesh } = await addActiveSquare();
+        editor.mode = EditMode.FACE;
+        const { faces, verts } = mesh.getComponentKeys(
+          EditMode.VERTEX | EditMode.FACE,
+        );
+        mesh.setSelection({ faces });
+
+        mesh.translateSelected(new Cartesian3(0.0, 0.0, 1.0));
+
+        const positions = mesh.getAttributeValues("POSITION", verts);
+        expect(positions.filter((_, i) => i % 3 === 2)).toEqual(
+          new Float32Array([1.0, 1.0, 1.0, 1.0]),
+        );
+      });
+
+      it("throws when editing the selection of an inactive mesh", async function () {
+        const { mesh } = await addSquareWithAttributes();
+        const componentKeys = { verts: queryId(mesh, 7) };
+
+        expect(() => mesh.setSelection(componentKeys)).toThrowDeveloperError();
+        expect(() =>
+          mesh.selectComponents(componentKeys),
+        ).toThrowDeveloperError();
+        expect(() =>
+          mesh.deselectComponents(componentKeys),
+        ).toThrowDeveloperError();
+        expect(() =>
+          mesh.toggleComponents(componentKeys),
+        ).toThrowDeveloperError();
+        expect(() => mesh.clearSelection()).toThrowDeveloperError();
+        expect(() =>
+          mesh.growSelection(SelectionStep.EDGE),
+        ).toThrowDeveloperError();
+        expect(() =>
+          mesh.shrinkSelection(SelectionStep.EDGE),
+        ).toThrowDeveloperError();
+        expect(() =>
+          mesh.translateSelected(new Cartesian3(0.0, 0.0, 1.0)),
         ).toThrowDeveloperError();
       });
     });
