@@ -2,7 +2,7 @@
 id: CS-746
 title: "A Path view shows only what lies upstream of a chosen target: its milestones, its longest chain and its gates"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]

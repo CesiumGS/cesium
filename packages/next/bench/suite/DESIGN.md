@@ -574,6 +574,89 @@ owner's attention is what it saves.
 - **Model.** `releaseViewOf` in `bench/suite/workModel.ts`, tested in
   `test/dynoWorkRelease.test.ts`.
 
+### The Path view (CS-746)
+
+The roadmap's second view: pick a target, and it draws only what lies
+upstream of it, small enough to draw with arrows. It answers "why isn't
+this done?" for the owner, and for anyone above the project who asks
+about one release, milestone or item. The 600 open items as one
+flowchart answer nothing; the upstream of one target, collapsed to
+milestones, does.
+
+- **Where it is.** `?view=roadmap&roadmap=path`, after Release. The
+  target is in the URL, so a link opens the same path: `focus=CS-<n>`
+  names a milestone or an item (the Dependencies view's center, the
+  same field), and otherwise the release picked (`release=`, alpha.1 by
+  default) is the target. The release picker, or a search for any
+  milestone or item by ID or title (Enter takes the first match, the
+  arrow keys walk them), chooses it; every node but a group has a
+  re-center button that makes it the target, and "Back to the path to
+  alpha.1" returns. Retargeting adds a history entry, so Back works. It
+  follows the shared Proposed switch.
+- **The sentence above the drawing** answers "why isn't this done?" in
+  three parts, counted in items and milestones, never in time: how long
+  the longest chain left is (its milestones, items, gates and earlier
+  releases, and how many chains are as long), the gates open on the
+  path and how many can be answered now, and what can start now, with
+  up to three of the items on the longest chain named under it.
+- **What is upstream** (`pathViewOf` in `bench/suite/workPath.ts`). A
+  release reaches what it needs; a milestone what it names; an item its
+  open needs; and so on, through needs. Done and dropped work ends a
+  chain. For a release, an earlier release's milestones are that
+  release's (as in the Release view): it is one node, its own path one
+  click away. Each open item is drawn inside the milestone that holds
+  it. A milestone named on the path holds all its open items; one
+  reached only through an item's need holds only the items on the path,
+  and says "2 of its 9 open on this path". An item in no milestone is a
+  node of its own.
+- **Gates** are the decisions and outside waits on the path, each a node
+  of its own, hatched in its kind's ink, with who answers it and whether
+  it can be answered now. A gate is never grouped, nor is a node a gate
+  holds, so every gate shows what it holds.
+- **The spine** is the longest remaining chain, in nodes, drawn along
+  the top with accent arrows. Between chains of one length it takes the
+  one with more open work items on it, then the one whose nodes have
+  the lower numbers, first node first, so the same board always draws
+  the same spine; the sentence says how many are as long.
+- **Layout.** Layered left to right, the target last: a node's column
+  is how far it is from the target along its longest chain, so short
+  chains sit near the target and the spine takes the first lane of
+  every column. Other nodes in a column follow where their arrows go,
+  then milestones, releases, gates, items and groups. Positions come
+  from the model alone, so hovering (which brightens a node's arrows
+  and dims the rest), choosing or opening a node moves nothing. Nodes
+  are a fixed size: the stage as a strip down the left edge, the ID
+  with its kind's mark, the title on its own line, then a line of
+  counts. The drawing scrolls sideways in its own box, with an edge
+  fade while more lies to the right.
+- **Groups: overview by aggregation.** Three or more nodes off the spine
+  whose one arrow goes to the same node, and that have nothing open
+  before them or lead straight to the target, are drawn as one group
+  ("16 milestones, each leads straight to beta.1"). It opens in place
+  to its members, each with its counts and a re-center button.
+- **Opening a node.** A milestone opens in place, over the drawing, to
+  its open items on the path, the ready ones marked in the Ready stage's
+  blue. Nothing else changes position. Escape closes it and returns
+  focus to its toggle.
+- **Ready work** is marked by the Ready stage's blue swatch on any node
+  that has some, and counted in its line.
+- **Loops.** Milestones can wait on each other through their items. The
+  arrow that closes such a loop is left out of the drawing and named
+  under it.
+- **Scope.** The scope doesn't narrow a path, and a note says so.
+- **Nothing is applied from the page.** IDs open the item in the pane;
+  no command is shown.
+- **Checked** in both themes, at 380 px (the drawing scrolls in its box,
+  and the page doesn't), with the keyboard only, and with a clean
+  console. Nothing in the view animates; under reduced motion the opened
+  panel appears without its grow.
+- **The waves grid** in the Dependencies view's whole structure is the
+  wave chart this view is meant to replace. It is part of the built-in
+  Dependencies view, not a view of its own, so it stays until the owner
+  says whether to remove it.
+- **Model.** `pathViewOf`, `whyNotDone` and `pathTargetOf` in
+  `bench/suite/workPath.ts`, tested in `test/dynoWorkPath.test.ts`.
+
 ### The Health view (CS-745)
 
 The page's third tab (`view=health`): what is wrong in the work graph,
