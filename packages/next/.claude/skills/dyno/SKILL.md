@@ -5,7 +5,7 @@ description: Use before measuring, checking images, running the Lab's parity sui
 
 # dyno
 
-`dyno` is Dyno's command line: the benchmark suite, the Lab's harnesses, Dyno's and the handbook's servers, setup's data, and measurements a program starts and watches. `dyno --help` lists the commands and `dyno <command> --help` says what each takes. Until the bin is wired (`npx dyno`), run it as `node packages/next/bench/dyno.mjs <command>`, or `npm run dyno:cli -- <command>` in `packages/next`. The old `node bench/suite/cli.mjs` and `node bench/run.mjs` still work and say the new command.
+`dyno` is Dyno's command line: the benchmark suite, the Lab's harnesses, Dyno's and the handbook's servers, setup's data, and measurements a program starts and watches. `dyno --help` lists the commands and `dyno <command> --help` says what each takes. Run it as `npx dyno <command>`, from the repository root or from `packages/next` (the bin is the private workspace package `tools/dyno`, which runs `bench/dyno.mjs`; `npm install` links it). `node bench/dyno.mjs <command>` and `npm run dyno:cli -- <command>` in `packages/next` do the same. The old `node bench/suite/cli.mjs` and `node bench/run.mjs` still work and say the new command.
 
 For a program: every command takes `--json` and prints one object with `api_version`, `command` and `ok`. Exit codes: 0 ok, 1 a problem found or the run failed, 2 usage, 3 not built yet (the item is named), 4 refused (out-of-date data, a busy machine, a held port). Nothing prompts; anything unclear fails with exit 2.
 

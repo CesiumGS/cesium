@@ -2,7 +2,7 @@
 id: CS-774
 title: "npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-20
 project: CS-389
 needs: [CS-721]

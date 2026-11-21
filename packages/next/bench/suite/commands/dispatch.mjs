@@ -198,7 +198,12 @@ export function helpLines(node, path) {
   if (node.children) {
     lines.push(`${name}: ${node.summary ?? "Dyno's command line"}`, "");
     lines.push(`Usage: ${name} <command> [options]`);
-    lines.push(`       ${name} <command> --help`, "");
+    lines.push(`       ${name} <command> --help`);
+    // The bin is the private workspace package tools/dyno (CS-774).
+    if (path.length === 0) {
+      lines.push("", "Run it as `npx dyno`, from the repository root or packages/next.");
+    }
+    lines.push("");
     lines.push("Commands:");
     const entries = Object.entries(node.children).filter(([, n]) => !n.hidden);
     const width = Math.max(...entries.map(([n]) => n.length)) + 2;

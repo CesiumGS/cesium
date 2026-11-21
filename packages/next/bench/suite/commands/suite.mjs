@@ -1,6 +1,6 @@
 // Benchmark suite commands (docs/design/benchmark-suite.md), run as
-// `dyno suite <command>` (dispatch.mjs; until the bin is wired, `dyno` is
-// `node packages/next/bench/dyno.mjs`). The old entry point,
+// `npx dyno suite <command>` (dispatch.mjs; the bin is tools/dyno, which runs
+// bench/dyno.mjs). The old entry point,
 // bench/suite/cli.mjs, still runs them and says the new command.
 //
 //   dyno suite list
@@ -488,13 +488,13 @@ export const SUITE_COMMANDS = Object.keys(COMMANDS);
 /**
  * Runs one suite command: `argv` is the command and its arguments, as after
  * `dyno suite`. `as` is how it was typed, recorded in the run's results
- * (`node packages/next/bench/dyno.mjs suite` until `npx dyno` is wired).
+ * (`npx dyno suite`).
  * Returns the command's result; throws SuiteRefusal or SuiteUsage when it
  * can't go ahead.
  */
 export async function main(
   argv,
-  { as = ["node", "packages/next/bench/dyno.mjs", "suite"] } = {},
+  { as = ["npx", "dyno", "suite"] } = {},
 ) {
   [command = "list", ...rest] = argv;
   if (!Object.hasOwn(COMMANDS, command)) {

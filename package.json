@@ -160,7 +160,8 @@
     "packages/engine",
     "packages/widgets",
     "packages/sandcastle",
-    "packages/next"
+    "packages/next",
+    "packages/next/tools/dyno"
   ],
   "overrides": {
     "protobufjs": "^8.8.0",
