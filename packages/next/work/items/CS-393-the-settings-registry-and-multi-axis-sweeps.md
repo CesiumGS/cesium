@@ -2,10 +2,11 @@
 id: CS-393
 title: The settings registry and multi-axis sweeps
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-389
 needs: [CS-390]
+claimed_by: orch-11-CS-393
 ---
 
 `settings.mjs`, and validation before a run. `engine.` and `view.` settings applied by the catalog adapter (`lodExponent`, `shadows`, `debug`, `occlusionCull`, `coarsen`, `lod`). Repeated `--sweep`, `--sweep-file`, `--reference`, `--reference-reps`, the point count and `--yes`. The sweep record with `axes`, `reference` and `points`, reading old one-axis records.
