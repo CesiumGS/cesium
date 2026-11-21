@@ -3712,6 +3712,13 @@ function updateVectorProvider(scene, frameState) {
 
   const frameNumber = frameState.frameNumber;
   markVectorCollections(scene._primitives, vectorProvider, frameNumber);
+
+  if (frameState.passes.render) {
+    // Surfaces bake draped collections as a frame begins, so changes made during it show next frame.
+    frameState.afterRender.push(() =>
+      vectorProvider.changedDuringFrame(frameNumber),
+    );
+  }
 }
 
 /**
