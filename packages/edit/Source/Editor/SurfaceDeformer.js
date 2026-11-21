@@ -252,7 +252,7 @@ class SurfaceDeformer extends Deformer {
     );
 
     const deformableToDeformer = Matrix4.multiply(
-      Matrix4.inverse(mesh.source.worldMatrix, scratchDeformableToDeformer),
+      Matrix4.inverse(mesh.modelMatrix, scratchDeformableToDeformer),
       deformable.worldMatrix,
       scratchDeformableToDeformer,
     );

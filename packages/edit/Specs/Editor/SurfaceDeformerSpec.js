@@ -38,10 +38,10 @@ describe(
       scene.primitives.removeAll();
     });
 
-    function addCage(worldMatrix = Matrix4.IDENTITY) {
-      const source = createGeometrySource(square);
-      Matrix4.clone(worldMatrix, source.worldMatrix);
-      return editor.addMesh(source);
+    function addCage(modelMatrix = Matrix4.IDENTITY) {
+      const mesh = editor.addMesh(createGeometrySource(square));
+      mesh.modelMatrix = modelMatrix;
+      return mesh;
     }
 
     // A deformable that records the bindings added to it.
