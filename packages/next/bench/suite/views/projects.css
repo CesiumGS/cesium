@@ -524,3 +524,550 @@
     min-width: 16px;
   }
 }
+
+/*
+ * The Projects view (CS-748; Projects.tsx, ProjectBetsView; DESIGN.md,
+ * "The Projects view"): a row per project on one grid. The columns are
+ * set on the grid, never by what a row holds, so every row aligns and
+ * nothing moves on hover, selection or a row opening. Numbers are
+ * tabular. Nothing animates.
+ */
+.work-projects {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-400);
+}
+.work-projects-head {
+  align-items: flex-start;
+}
+.work-projects-all {
+  flex: none;
+}
+.work-projects-lead {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-150) var(--stratakit-space-500);
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-sm);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-projects-lead b {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-projects-lead .is-decision b {
+  color: var(--kind-decision);
+}
+.work-projects-note {
+  margin: calc(-1 * var(--stratakit-space-200)) 0 0;
+}
+
+.work-projects-grid {
+  --work-projects-slot: 3.25rem;
+  --work-projects-clauses: 10.5rem;
+  --work-projects-spend: 9.5rem;
+  --work-projects-template: 28px minmax(0, 1fr)
+    calc(var(--work-projects-slots, 5) * var(--work-projects-slot))
+    var(--work-projects-clauses);
+}
+.work-projects-grid.has-spend {
+  --work-projects-template: 28px minmax(0, 1fr)
+    calc(var(--work-projects-slots, 5) * var(--work-projects-slot))
+    var(--work-projects-clauses) var(--work-projects-spend);
+}
+.work-projects-cols,
+.work-projects-line {
+  display: grid;
+  grid-template-columns: var(--work-projects-template);
+  column-gap: var(--stratakit-space-400);
+  align-items: start;
+}
+.work-projects-cols {
+  align-items: end;
+  padding-bottom: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+
+/* A run of rows with one next release. */
+.work-projects-group {
+  display: flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-300);
+  padding: var(--stratakit-space-400) 0 var(--stratakit-space-150)
+    calc(28px + var(--stratakit-space-400));
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-projects-group-name {
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-projects-group-count {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.work-projects-row {
+  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-projects-line {
+  padding: var(--stratakit-space-300) 0;
+}
+.work-projects-row.selected > .work-projects-line,
+.work-projects-ms.selected > .work-projects-line {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-accent-pressed,
+    rgba(64, 120, 220, 0.08)
+  );
+}
+/* Proposed: the roadmap's dashed outline, and the name says so. */
+.work-projects-row.proposed > .work-projects-line,
+.work-projects-ms.proposed > .work-projects-line {
+  outline: 2px dashed var(--proposed-outline);
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+.work-projects-toggle {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-projects-toggle:hover {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-neutral-hover,
+    rgba(127, 127, 127, 0.12)
+  );
+}
+.work-projects-toggle:focus-visible,
+.work-projects-more:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 1px;
+}
+/* Nothing to open: the place stays, the chevron goes. */
+.work-projects-toggle:disabled {
+  visibility: hidden;
+}
+
+.work-projects-name {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-150);
+  min-width: 0;
+}
+.work-projects-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-200);
+  min-width: 0;
+  font-weight: 600;
+}
+.work-projects-ms .work-projects-title {
+  font-weight: normal;
+}
+.work-projects-tag {
+  flex: none;
+  font-size: var(--stratakit-font-size-caption-md);
+  font-weight: normal;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-projects-outcome {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-projects-outcome-lead {
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-projects-quiet {
+  font-style: italic;
+}
+
+/* A project's own open decisions: badges in the decision kind's ink. */
+.work-projects-decisions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-150) var(--stratakit-space-200);
+  min-width: 0;
+}
+.work-projects-badge {
+  display: inline-flex;
+  align-items: baseline;
+  max-width: min(100%, 20rem);
+  min-width: 0;
+  padding: 1px var(--stratakit-space-300);
+  border: 1px solid color-mix(in srgb, var(--kind-decision) 35%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--kind-decision) 7%, transparent);
+  font-size: var(--stratakit-font-size-caption-lg);
+}
+.work-projects-badge.answerable {
+  border-color: var(--kind-decision);
+}
+.work-projects-badge.proposed {
+  border-style: dashed;
+  border-color: var(--proposed-outline);
+  background: transparent;
+}
+.work-projects-more {
+  all: unset;
+  cursor: pointer;
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  border-radius: 2px;
+}
+.work-projects-waits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* Where its open milestones land: a slot per release, in ladder order. */
+.work-projects-slots {
+  display: grid;
+  grid-template-columns: repeat(
+    var(--work-projects-slots, 5),
+    var(--work-projects-slot)
+  );
+  justify-items: center;
+}
+.work-projects-slot-head {
+  font-variant-numeric: tabular-nums;
+}
+.work-projects-slot-head.proposed {
+  outline: 1px dashed var(--proposed-outline);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.work-projects-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.work-projects-slot-name {
+  display: none;
+  font-size: var(--stratakit-font-size-caption-sm, 0.6875rem);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-projects-slot-n {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 1.75rem;
+  height: 1.5rem;
+  padding: 0 6px;
+  border-radius: 999px;
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-tertiary, #8a9099);
+}
+.work-projects-slot.has .work-projects-slot-n {
+  border: 1px solid var(--stratakit-color-border-neutral-base, #9aa0a8);
+  background: var(--stratakit-color-bg-elevation-level-1);
+  color: var(--stratakit-color-text-neutral-primary);
+}
+/* Its next release: the release's ink on the outline, the same weight. */
+.work-projects-slot.next .work-projects-slot-n {
+  border-color: var(--kind-release);
+  box-shadow: inset 0 0 0 1px var(--kind-release);
+}
+.work-projects-done-word {
+  grid-column: 1 / -1;
+  justify-self: start;
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* Progress by clauses: a segment per milestone, filled as far as checked. */
+.work-projects-clauses,
+.work-projects-spend {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  padding-top: 6px;
+}
+.work-projects-bar,
+.work-projects-spend-bar {
+  display: flex;
+  gap: 2px;
+  height: 8px;
+}
+.work-projects-seg {
+  position: relative;
+  flex-basis: 0;
+  min-width: 3px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(
+    --stratakit-color-bg-neutral-muted,
+    rgba(127, 127, 127, 0.18)
+  );
+}
+.work-projects-seg.unshaped {
+  box-sizing: border-box;
+  background: transparent;
+  border: 1px dashed var(--stratakit-color-text-neutral-tertiary, #8a9099);
+}
+.work-projects-seg-fill,
+.work-projects-seg-check {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+}
+.work-projects-seg-fill {
+  left: 0;
+  background: var(--stage-done);
+}
+.work-projects-seg-check {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--stage-done) 0 2px,
+    transparent 2px 4px
+  );
+}
+.work-projects-num {
+  font-size: var(--stratakit-font-size-body-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--stratakit-color-text-neutral-primary);
+}
+.work-projects-num.quiet {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-projects-sub {
+  font-size: var(--stratakit-font-size-caption-md);
+  font-variant-numeric: tabular-nums;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* Spend against appetite, once the records carry tokens. */
+.work-projects-spend-bar {
+  position: relative;
+  border-radius: 2px;
+  background: var(
+    --stratakit-color-bg-neutral-muted,
+    rgba(127, 127, 127, 0.18)
+  );
+  overflow: hidden;
+}
+.work-projects-spend-est,
+.work-projects-spend-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+}
+.work-projects-spend-est {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--stratakit-color-text-neutral-tertiary, #8a9099) 0 2px,
+    transparent 2px 4px
+  );
+}
+.work-projects-spend-fill {
+  background: var(--stage-in-flight);
+}
+.work-projects-spend-fill.over {
+  background: var(--stage-waiting);
+}
+
+/* A project open: its milestones on the same grid, then a milestone's items. */
+.work-projects-panel {
+  padding-bottom: var(--stratakit-space-300);
+}
+.work-projects-panel-note {
+  margin: var(--stratakit-space-200) 0 0
+    calc(28px + var(--stratakit-space-400) + 32px);
+}
+.work-projects-ms > .work-projects-line {
+  padding: var(--stratakit-space-200) 0;
+  border-top: 1px dotted var(--stratakit-color-border-neutral-muted);
+}
+/* A milestone's chevron and name sit in the name column, one step in. */
+.work-projects-ms > .work-projects-line > .work-projects-toggle {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: start;
+  /* Above the name, which shares its cell. */
+  position: relative;
+  z-index: 1;
+}
+.work-projects-ms > .work-projects-line > .work-projects-name {
+  grid-column: 2;
+  grid-row: 1;
+  padding-inline-start: 32px;
+}
+.work-projects-ms > .work-projects-line > :nth-child(3) {
+  grid-column: 3;
+  grid-row: 1;
+}
+.work-projects-ms > .work-projects-line > :nth-child(4) {
+  grid-column: 4;
+  grid-row: 1;
+}
+.work-projects-ms > .work-projects-line > :nth-child(5) {
+  grid-column: 5;
+  grid-row: 1;
+}
+.work-projects-ms.done .work-projects-title {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-projects-items {
+  display: flex;
+  flex-direction: column;
+  margin: 0 0 var(--stratakit-space-200);
+  padding: 0 0 0 calc(28px + var(--stratakit-space-400) + 32px);
+  list-style: none;
+}
+.work-projects-items li {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) 7ch 11ch;
+  align-items: center;
+  column-gap: var(--stratakit-space-300);
+  min-height: 28px;
+  font-size: var(--stratakit-font-size-body-sm);
+}
+.work-projects-items li.selected {
+  background: var(
+    --stratakit-color-bg-glow-on-surface-accent-pressed,
+    rgba(64, 120, 220, 0.08)
+  );
+}
+.work-projects-item-clause,
+.work-projects-item-stage {
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+  white-space: nowrap;
+}
+
+/* Tablet: the same grid, its slots and numbers narrower. */
+@container (max-width: 820px) {
+  .work-projects-grid {
+    --work-projects-slot: 2.85rem;
+    --work-projects-clauses: 8.5rem;
+    --work-projects-spend: 8rem;
+  }
+}
+/*
+ * Narrow: each row stacks, the same for every row. Its slots name their
+ * release, since the grid's head is hidden.
+ */
+@container (max-width: 560px) {
+  .work-projects-grid,
+  .work-projects-grid.has-spend {
+    --work-projects-slot: 2.75rem;
+    --work-projects-template: 28px minmax(0, 1fr);
+  }
+  .work-projects-cols {
+    display: none;
+  }
+  .work-projects-line {
+    row-gap: var(--stratakit-space-300);
+  }
+  .work-projects-line > :nth-child(n + 3) {
+    grid-column: 2;
+  }
+  .work-projects-ms > .work-projects-line > :nth-child(n + 3) {
+    grid-column: 2;
+    grid-row: auto;
+  }
+  /* A project's name wraps rather than cut: the row has the room. */
+  .work-projects-row
+    > .work-projects-line
+    .work-projects-title
+    .work-ref-title {
+    white-space: normal;
+  }
+  .work-projects-slot-name {
+    display: block;
+  }
+  .work-projects-slots {
+    justify-items: start;
+  }
+  .work-projects-slot {
+    align-items: flex-start;
+  }
+  .work-projects-clauses,
+  .work-projects-spend {
+    padding-top: 0;
+    max-width: 16rem;
+  }
+  .work-projects-group {
+    padding-inline-start: 0;
+  }
+  .work-projects-items,
+  .work-projects-panel-note {
+    padding-inline-start: 0;
+    margin-inline-start: 0;
+  }
+  .work-projects-items li {
+    grid-template-columns: 10px minmax(0, 1fr) auto;
+  }
+  .work-projects-item-clause {
+    display: none;
+  }
+}
+
+/* The key: one line, each mark as the rows draw it. */
+.work-projects-key {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-150) var(--stratakit-space-500);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--stratakit-font-size-caption-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-projects-key li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+}
+.work-projects-key .work-projects-slot-n {
+  min-width: 1.5rem;
+  height: 1.25rem;
+}
+.work-projects-key-seg {
+  position: relative;
+  display: inline-block;
+  width: 24px;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(
+    --stratakit-color-bg-neutral-muted,
+    rgba(127, 127, 127, 0.18)
+  );
+}
+.work-projects-key-seg > * {
+  left: 0;
+  width: 100%;
+}
+.work-projects-key-seg.unshaped {
+  box-sizing: border-box;
+  background: transparent;
+  border: 1px dashed var(--stratakit-color-text-neutral-tertiary, #8a9099);
+}

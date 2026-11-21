@@ -2,7 +2,7 @@
 id: CS-748
 title: "The Projects view shows each project as a bet: its outcome, releases, clauses, spend and its own decisions"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 needs: [CS-744]

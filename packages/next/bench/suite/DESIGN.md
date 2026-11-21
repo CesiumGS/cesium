@@ -657,6 +657,72 @@ milestones, does.
 - **Model.** `pathViewOf`, `whyNotDone` and `pathTargetOf` in
   `bench/suite/workPath.ts`, tested in `test/dynoWorkPath.test.ts`.
 
+### The Projects view (CS-748)
+
+The roadmap's second view, after Release: each project as a bet. The
+owner found CS-693's Projects tab hard to parse: its decisions didn't
+read as part of their project, and it was crowded and hard to scan down.
+This view answers what a leadership team above the project asks of each
+bet: what it promises next, where it lands, how much of it is checked,
+what it has cost against its appetite, and what it waits on the owner
+for. No dates and no priorities.
+
+- **Where it is.** `?view=roadmap&roadmap=projects`, mounted by
+  `views/workProjects.tsx` (place `roadmap`, order 30). It keeps the
+  older view's ID, so it takes that view's place and old links keep
+  working; CS-693's view (see "The roadmap's Projects view") is retired
+  from Older views. The project matrix stays in the Dependencies view.
+  The view is `ProjectBetsView` in `views/Projects.tsx`, the model
+  `projectBetsOf` in `bench/suite/projectBets.ts`, tested in
+  `test/dynoWorkProjects.test.ts`.
+- **Exceptions lead.** One line of figures above the grid: the projects
+  shown, the owner's open decisions (in how many projects, how many can
+  be answered now, in the decision kind's ink), the open milestones with
+  no clauses yet, and the projects with no open milestone. Then a one-line
+  key.
+- **One row per project, on one grid.** Rows sort by the project's next
+  release: the earliest release that is the first to need one of its
+  open milestones (CS-685's bands), then where the planner reaches its
+  first milestone, then by number. A quiet group head names each run
+  ("Next in alpha.1, 9 projects"); projects whose milestones no release
+  needs come next ("No release yet"), and projects with no open
+  milestone last. No item lanes.
+- **A row** is the project's ID and title, bold; its next milestone's
+  outcome on one line ("Next: …"; the tracker gives a project no outcome
+  of its own); and its own open decisions as badges under the name, in
+  the decision kind's ink, the owner's answerable ones first, solid when
+  answerable now, dashed when proposed, three shown and "n more" to open
+  the row. Then three columns: **where it lands**, a slot per release in
+  ladder order and one for None, each with how many open milestones that
+  release is the first to need, the next release ringed in the release
+  kind's ink; **clauses checked**, a bar with a segment per milestone as
+  wide as its clauses, filled green as far as they are checked, hatched
+  where the items are done and the check hasn't passed, dashed where the
+  milestone has no clauses yet, with "n of m" and how many milestones
+  aren't shaped; and **spend against appetite**, only once a record
+  carries an appetite, an estimate or tokens spent. Until then there is
+  no column, and a sentence says so; never an empty bar. A project with
+  an appetite and no estimates reads "Appetite 400k, no estimates yet".
+- **Opening.** A row opens to its milestones on the same grid, a step in:
+  each with its outcome, its release slot, its clauses as segments, its
+  items done, and the decisions on its way (its items' open needs, any
+  project's). A milestone opens to its items: stage swatch, ID and title,
+  the clause it is linked to, and its stage, open first. Open all opens
+  every project.
+- **Every ID** is an `ItemRef`: its kind's mark, its short title, the
+  hover card, and a link that opens the pane. The selected project,
+  milestone or item is tinted, never bolded.
+- **No movement.** The columns are set on the grid (`--work-projects-*`
+  custom properties), never by a row's content, so every row and
+  milestone row align at every width (checked: one column layout across
+  43 rows, with and without the pane). Numbers are tabular; Open all's
+  words share one cell (`ReservedText`); a chevron with nothing to open
+  keeps its place, hidden. Nothing animates, so reduced motion changes
+  nothing.
+- **Widths.** Under 820 px of view the slots and numbers narrow; under
+  560 px each row stacks (name, decisions, slots that name their
+  release, the bar), the same for every row.
+
 ### The Health view (CS-745)
 
 The page's third tab (`view=health`): what is wrong in the work graph,
