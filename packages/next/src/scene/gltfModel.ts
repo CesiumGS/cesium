@@ -1,6 +1,5 @@
 // Symbol.dispose and DisposableStack where the browser lacks them (Safari).
 import "../core/disposeShim.ts";
-import { MipGenerator } from "../gpu/MipGenerator.ts";
 import { MaterialFlags } from "../render/layout.ts";
 import * as m4 from "../math/mat4.ts";
 import * as v3 from "../math/vec3.ts";
@@ -9,8 +8,6 @@ import type { Vec3 } from "../math/vec3.ts";
 import { Ellipsoid, fromDegrees } from "../math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 import type {
-  CompressedFormat,
-  CompressedImage,
   FeatureTable,
   GltfAsset,
   GltfAssetPart,
@@ -20,7 +17,11 @@ import type {
   GltfMaterial,
   GltfSampler,
 } from "../io/gltfTypes.ts";
-import type { RenderContext } from "./RenderContext.ts";
+import type {
+  ContentTexture,
+  ContentTextures,
+  DeviceSampler,
+} from "./contentResources.ts";
 import type {
   Clamp,
   HeightClamping,
@@ -264,7 +265,7 @@ interface UploadedAsset {
   meshes: MeshHandle[];
   materials: number[];
   textureSets: number[];
-  textures: GPUTexture[];
+  textures: ContentTexture[];
   /** Texture sets with property textures, by `${material}|${mesh}`. */
   propertySets: Map<string, number>;
   /** Per glTF material, and the default material last. */
@@ -292,9 +293,8 @@ interface PlacementTemplate {
   firstTable?: FeatureTable;
 }
 
-/** What a placement's engine provides: its context and ground clamping. */
+/** What a placement's engine provides: its ground clamping. */
 export interface ModelHost {
-  readonly ctx: RenderContext;
   readonly clamping: HeightClamping;
 }
 
@@ -374,7 +374,7 @@ export class ModelResource implements Disposable {
   readonly upload: UploadedAsset;
   /** @internal What placing needs. */
   readonly template: PlacementTemplate;
-  /** @internal The engine's context and clamping. */
+  /** @internal The engine's clamping. */
   readonly host: ModelHost;
   /** @internal The triangles kept per draw (`retainGeometry`), or undefined. */
   readonly retained: readonly (RetainedMesh | undefined)[] | undefined;
@@ -555,7 +555,7 @@ export function uploadModel(
     );
   }
   const gamma22 = options.colorTransfer === "gamma2.2";
-  const textures = new TextureUploader(host.ctx, asset);
+  const textures = new TextureUploader(world.mirror.textures, asset);
   const taken = {
     materials: [] as number[],
     textureSets: [] as number[],
@@ -563,7 +563,7 @@ export function uploadModel(
   };
   let upload: UploadedAsset;
   try {
-    upload = uploadAssetInto(host.ctx, world, asset, gamma22, textures, taken);
+    upload = uploadAssetInto(world, asset, gamma22, textures, taken);
   } catch (error) {
     for (const mesh of taken.meshes) {
       world.removeMesh(mesh);
@@ -588,7 +588,6 @@ export function uploadModel(
 }
 
 function uploadAssetInto(
-  ctx: RenderContext,
   world: World,
   asset: GltfAsset,
   gamma22: boolean,
@@ -1409,17 +1408,21 @@ function materialData(m: GltfMaterial, gamma22: boolean) {
   };
 }
 
-/** Creates GPU textures and samplers on demand, one per (image, color space). */
+/**
+ * Makes the asset's textures and samplers on the world's device on demand,
+ * one texture per (image, color space, mips): content describes them
+ * (`TextureImage`, glTF's samplers) and the device uploads them.
+ */
 class TextureUploader {
   /** Every texture created, freed with the model. */
-  readonly textures: GPUTexture[] = [];
-  /** Approximate GPU bytes of those textures (mips included). */
+  readonly textures: ContentTexture[] = [];
+  /** Approximate device bytes of those textures (mips included). */
   bytes = 0;
-  private readonly views = new Map<string, GPUTextureView>();
-  private readonly samplers = new Map<string, GPUSampler>();
+  private readonly images = new Map<string, ContentTexture>();
+  private readonly samplers = new Map<string, DeviceSampler>();
 
   constructor(
-    private readonly ctx: RenderContext,
+    private readonly device: ContentTextures,
     private readonly asset: GltfAsset,
   ) {}
 
@@ -1434,187 +1437,42 @@ class TextureUploader {
     if (!texture || this.asset.images[texture.image] === undefined) {
       return undefined;
     }
-    return {
-      view: this.view(texture.image, srgb, texture.sampler.mipmaps),
-      sampler: this.sampler(texture.sampler),
-    };
+    return this.device.binding(
+      this.texture(texture.image, srgb, texture.sampler.mipmaps),
+      this.sampler(texture.sampler),
+    );
   }
 
-  private view(
+  private texture(
     imageIndex: number,
     srgb: boolean,
     mipmaps: boolean,
-  ): GPUTextureView {
+  ): ContentTexture {
     const key = `${imageIndex}|${srgb}|${mipmaps}`;
-    let view = this.views.get(key);
-    if (!view) {
-      const image = this.asset.images[imageIndex]!;
-      const { device, mips } = this.ctx;
-      if (!(image instanceof ImageBitmap)) {
-        const texture = uploadCompressed(
-          this.ctx,
-          image,
-          srgb,
-          mipmaps,
-          imageIndex,
-        );
-        this.textures.push(texture);
-        this.bytes += image.levels.reduce((n, l) => n + l.byteLength, 0);
-        view = texture.createView();
-        this.views.set(key, view);
-        return view;
-      }
-      const texture = device.createTexture({
-        label: `gltf.image${imageIndex}`,
-        size: [image.width, image.height],
-        format: srgb ? "rgba8unorm-srgb" : "rgba8unorm",
-        mipLevelCount: mipmaps
-          ? MipGenerator.levelCount(image.width, image.height)
-          : 1,
-        usage:
-          GPUTextureUsage.TEXTURE_BINDING |
-          GPUTextureUsage.COPY_DST |
-          GPUTextureUsage.RENDER_ATTACHMENT,
+    let texture = this.images.get(key);
+    if (!texture) {
+      texture = this.device.createTexture({
+        label: `image${imageIndex}`,
+        image: this.asset.images[imageIndex]!,
+        srgb,
+        mipmaps,
       });
-      device.queue.copyExternalImageToTexture({ source: image }, { texture }, [
-        image.width,
-        image.height,
-      ]);
-      mips.generate(texture);
       this.textures.push(texture);
-      // RGBA8 plus a full mip chain ≈ 4/3 of the base level.
-      this.bytes += Math.round(
-        image.width *
-          image.height *
-          4 *
-          (texture.mipLevelCount > 1 ? 4 / 3 : 1),
-      );
-      view = texture.createView();
-      this.views.set(key, view);
+      this.bytes += texture.bytes;
+      this.images.set(key, texture);
     }
-    return view;
+    return texture;
   }
 
-  private sampler(s: GltfSampler): GPUSampler {
+  private sampler(s: GltfSampler): DeviceSampler {
     const key = JSON.stringify(s);
     let sampler = this.samplers.get(key);
     if (!sampler) {
-      sampler = this.ctx.device.createSampler({
-        magFilter: s.magFilter,
-        minFilter: s.minFilter,
-        mipmapFilter: s.mipmapFilter,
-        addressModeU: s.addressModeU,
-        addressModeV: s.addressModeV,
-        maxAnisotropy:
-          s.mipmaps &&
-          s.minFilter === "linear" &&
-          s.magFilter === "linear" &&
-          s.mipmapFilter === "linear"
-            ? 16
-            : 1,
-      });
+      sampler = this.device.createSampler(s);
       this.samplers.set(key, sampler);
     }
     return sampler;
   }
-}
-
-const BLOCK_FORMATS: Record<
-  Exclude<CompressedFormat, "rgba8">,
-  [GPUTextureFormat, GPUTextureFormat]
-> = {
-  bc7: ["bc7-rgba-unorm", "bc7-rgba-unorm-srgb"],
-  "astc-4x4": ["astc-4x4-unorm", "astc-4x4-unorm-srgb"],
-  "etc2-rgba8": ["etc2-rgba8unorm", "etc2-rgba8unorm-srgb"],
-};
-
-/**
- * Uploads a worker-transcoded KTX2 image. Block formats get exactly the mip
- * levels the file provides (compressed formats cannot be render targets);
- * the uncompressed fallback gets a generated mip chain like other images.
- */
-function uploadCompressed(
-  ctx: RenderContext,
-  image: CompressedImage,
-  srgb: boolean,
-  mipmaps: boolean,
-  index: number,
-): GPUTexture {
-  const { device, mips } = ctx;
-  const block = image.format !== "rgba8";
-  const format: GPUTextureFormat =
-    image.format === "rgba8"
-      ? srgb
-        ? "rgba8unorm-srgb"
-        : "rgba8unorm"
-      : BLOCK_FORMATS[image.format][srgb ? 1 : 0];
-  const generate = !block && mipmaps && image.levels.length === 1;
-  const texture = device.createTexture({
-    label: `gltf.ktx2.image${index}`,
-    size: [image.width, image.height],
-    format,
-    mipLevelCount: generate
-      ? MipGenerator.levelCount(image.width, image.height)
-      : image.levels.length,
-    usage:
-      GPUTextureUsage.TEXTURE_BINDING |
-      GPUTextureUsage.COPY_DST |
-      (generate ? GPUTextureUsage.RENDER_ATTACHMENT : 0),
-  });
-  // Through one mapped staging buffer, as World's geometry: writeTexture
-  // goes through the browser's transfer ring, and under a GPU backlog it
-  // blocked the main thread for up to 0.5 s (AEC with vsync off, r38).
-  // Buffer copies need rows padded to 256 bytes.
-  const levels = image.levels.map((data, level) => {
-    const width = Math.max(1, image.width >> level);
-    const height = Math.max(1, image.height >> level);
-    // Block formats: 4×4 blocks of 16 bytes; copies cover whole blocks.
-    const columns = block ? Math.ceil(width / 4) : width;
-    const rows = block ? Math.ceil(height / 4) : height;
-    const rowBytes = columns * (block ? 16 : 4);
-    const paddedRow = Math.ceil(rowBytes / 256) * 256;
-    return { data, width, height, columns, rows, rowBytes, paddedRow };
-  });
-  const size = levels.reduce((n, l) => n + l.paddedRow * l.rows, 0);
-  const staging = device.createBuffer({
-    label: `gltf.ktx2.image${index}.staging`,
-    size,
-    usage: GPUBufferUsage.COPY_SRC,
-    mappedAtCreation: true,
-  });
-  const bytes = new Uint8Array(staging.getMappedRange());
-  const encoder = device.createCommandEncoder({ label: "gltf.ktx2.upload" });
-  let at = 0;
-  levels.forEach((l, level) => {
-    if (l.paddedRow === l.rowBytes) {
-      bytes.set(l.data.subarray(0, l.rowBytes * l.rows), at);
-    } else {
-      for (let r = 0; r < l.rows; r++) {
-        bytes.set(
-          l.data.subarray(r * l.rowBytes, (r + 1) * l.rowBytes),
-          at + r * l.paddedRow,
-        );
-      }
-    }
-    encoder.copyBufferToTexture(
-      {
-        buffer: staging,
-        offset: at,
-        bytesPerRow: l.paddedRow,
-        rowsPerImage: l.rows,
-      },
-      { texture, mipLevel: level },
-      block ? [l.columns * 4, l.rows * 4] : [l.width, l.height],
-    );
-    at += l.paddedRow * l.rows;
-  });
-  staging.unmap();
-  device.queue.submit([encoder.finish()]);
-  staging.destroy(); // released once the copies have run
-  if (generate) {
-    mips.generate(texture);
-  }
-  return texture;
 }
 
 function determinant3(m: Mat4): number {

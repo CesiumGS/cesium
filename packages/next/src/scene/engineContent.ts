@@ -78,12 +78,7 @@ export function uploadModelTo(
   asset: GltfAsset,
   options: ModelResourceOptions = {},
 ): ModelResource {
-  return uploadModel(
-    { ctx: engine.ctx, clamping: engine.clamping },
-    world,
-    asset,
-    options,
-  );
+  return uploadModel({ clamping: engine.clamping }, world, asset, options);
 }
 
 export async function loadTileset(
