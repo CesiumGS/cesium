@@ -101,10 +101,10 @@ export const outputName = (i: number): string => `o${i}`;
 /** Today's program as Cesium IR (see the file's comment for the mapping). */
 export function fromTodayIr(src: TodayProgram): Program {
   const b = new Builder();
-  const p = b.input("p", "float3", "vertex");
-  for (const name of src.params) {
-    b.input(name, "float", "uniform");
-  }
+  // Each input is declared where today's program first reads it, so the
+  // equations keep today's order, and with it a commutative op's operand
+  // order (both builders sort those by id).
+  const p = () => b.input("p", "float3", "vertex");
   const ids: Id[] = [];
   const asBool = (id: Id) =>
     b.typeOf(id) === "bool"
@@ -119,7 +119,7 @@ export function fromTodayIr(src: TodayProgram): Program {
         ids[i] = b.const(n.value);
         return;
       case "pos":
-        ids[i] = b.op("math/extract3", [p], n.value);
+        ids[i] = b.op("math/extract3", [p()], n.value);
         return;
       case "param":
         ids[i] = b.input(n.name, "float", "uniform");
