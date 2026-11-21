@@ -446,7 +446,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         kind
       `,
       dom: `
-        canvas destroy fixedPixelRatio height pixelRatio watch width
+        canvas destroy fixedPixelRatio height pixelRatio watch webgl2 width
       `,
       "cannot-cross": `
         acquire texture
@@ -531,7 +531,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         setMoonMap
       `,
       "cannot-cross": `
-        adoptTileset bodyCamera ctx device gpu notices raster renderers
+        adoptTileset bodyCamera choice ctx device gpu notices raster renderers
         reportFarAnchors scene
       `,
     },

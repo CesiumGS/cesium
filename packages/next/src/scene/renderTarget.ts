@@ -41,6 +41,7 @@ export class CanvasTarget implements RenderTarget {
   texture?: GPUTexture;
   private context?: GPUCanvasContext;
   private configuredFor?: GPUDevice;
+  private gl?: WebGL2RenderingContext;
 
   constructor(
     readonly canvas: HTMLCanvasElement | OffscreenCanvas,
@@ -100,6 +101,44 @@ export class CanvasTarget implements RenderTarget {
     this.context = undefined;
     this.configuredFor = undefined;
     this.texture = undefined;
+    // The canvas keeps its WebGL 2 context; the page may draw with it again.
+    this.gl = undefined;
+  }
+
+  /**
+   * The canvas's WebGL 2 context (what the WebGL 2 device draws into), made
+   * once, with the canvas sized as `acquire` sizes it. A canvas holds one
+   * context type, so this throws on a canvas that already has another.
+   */
+  webgl2(attributes: WebGLContextAttributes): WebGL2RenderingContext {
+    this.resize();
+    if (!this.gl) {
+      const gl = this.canvas.getContext(
+        "webgl2",
+        attributes,
+      ) as WebGL2RenderingContext | null;
+      if (!gl) {
+        throw new Error(
+          "Could not create a WebGL 2 canvas context (a canvas holds one context type, and this one has another).",
+        );
+      }
+      this.gl = gl;
+    }
+    return this.gl;
+  }
+
+  /** An `HTMLCanvasElement`'s drawing buffer follows its CSS box × the pixel ratio. */
+  private resize(): void {
+    const canvas = this.canvas;
+    if ("clientWidth" in canvas) {
+      const dpr = this.pixelRatio;
+      const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
+      const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
+      if (canvas.width !== width || canvas.height !== height) {
+        canvas.width = width;
+        canvas.height = height;
+      }
+    }
   }
 
   /** Drawing-buffer pixels per CSS pixel (1 for an `OffscreenCanvas`). */
@@ -119,15 +158,7 @@ export class CanvasTarget implements RenderTarget {
 
   acquire(device: GPUDevice, format: GPUTextureFormat): GPUTextureView {
     const canvas = this.canvas;
-    if ("clientWidth" in canvas) {
-      const dpr = this.pixelRatio;
-      const width = Math.max(1, Math.round(canvas.clientWidth * dpr));
-      const height = Math.max(1, Math.round(canvas.clientHeight * dpr));
-      if (canvas.width !== width || canvas.height !== height) {
-        canvas.width = width;
-        canvas.height = height;
-      }
-    }
+    this.resize();
     if (this.configuredFor !== device) {
       this.context =
         (canvas.getContext("webgpu") as GPUCanvasContext | null) ?? undefined;

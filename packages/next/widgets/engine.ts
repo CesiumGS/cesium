@@ -470,8 +470,10 @@ export function engineSnapshot(
   }
 
   const world = options.world ?? tilesets[0]?.world;
-  const targets = engine.renderTargetMemory;
-  if (world) {
+  // The WebGPU renderer's pools; the WebGL 2 device has none yet (CS-36).
+  const targets =
+    engine.device.kind === "webgpu" ? engine.renderTargetMemory : undefined;
+  if (world && targets) {
     const m = world.memory;
     const mb = (bytes: number) => `${(bytes / 1048576).toFixed(1)} MB`;
     const pressure = world.pressure();
@@ -558,9 +560,36 @@ export function engineSnapshot(
     ];
     out.memory = rows;
   }
+  const choice = engine.choice;
+  const device = `${choice.renderer === "webgpu" ? "WebGPU" : "WebGL 2"} · ${choice.reason}`;
+  const facts = engine.device.facts;
+  if (facts.renderer === "webgl2") {
+    // The facts the probe read, under WebGL's own names.
+    out.gpu = {
+      device,
+      adapter: (facts.unmasked?.renderer ?? facts.glRenderer).trim(),
+      webgl2: {
+        version: facts.version,
+        ...(facts.angleBackend && { backend: facts.angleBackend }),
+        software: facts.software,
+        maxTextureSize: facts.limits.maxTextureSize,
+        maxArrayTextureLayers: facts.limits.maxArrayTextureLayers,
+        maxSamples: facts.limits.maxSamples,
+        maxUniformBlockSize: facts.limits.maxUniformBlockSize,
+        extensions: facts.extensions.length,
+        ...(facts.emulating && { emulating: facts.emulating }),
+      },
+      views: s.views,
+      ...(options.canvas
+        ? { canvas: [options.canvas.width, options.canvas.height] }
+        : {}),
+    };
+    return out;
+  }
   const info = engine.gpu.adapter.info;
   const limits = engine.gpu.device.limits;
   out.gpu = {
+    device,
     adapter: `${info.vendor} ${info.architecture}`.trim(),
     limits: {
       tier: engine.gpu.limitsTier,
@@ -573,7 +602,7 @@ export function engineSnapshot(
     },
     views: s.views,
     batches: s.batches,
-    renderTargetBytes: targets.residentBytes,
+    renderTargetBytes: targets!.residentBytes,
     ...(options.canvas
       ? { canvas: [options.canvas.width, options.canvas.height] }
       : {}),

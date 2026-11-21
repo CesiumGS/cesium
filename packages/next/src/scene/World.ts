@@ -1,6 +1,7 @@
 import { PlacementRows } from "./placementTable.ts";
 import { RangeAllocator } from "../gpu/RangeAllocator.ts";
-import { Slabs } from "./Slabs.ts";
+import { NO_GPU, Slabs } from "./Slabs.ts";
+import { isHeadless } from "./headlessContext.ts";
 import { CpuTable, INITIAL_ROWS } from "./CpuTable.ts";
 import { DrawConstants } from "../render/drawConstants.ts";
 import type { Placement, PlacementParameter } from "./placement.ts";
@@ -307,7 +308,8 @@ export class World {
     /** @internal */ readonly ctx: RenderContext,
     options: WorldOptions = {},
   ) {
-    const device = ctx.device;
+    const headless = isHeadless(ctx);
+    const device = headless ? NO_GPU : ctx.device;
     // Ceilings: the option, and what one storage binding holds (the
     // device's capacity limits; the tables start small and grow to them).
     const binding = ctx.capacities.storageBindingBytes;
@@ -338,9 +340,12 @@ export class World {
     this.slabs = new Slabs(
       device,
       {
-        vertexBudget: options.vertexBytes ?? 1 << 30,
-        indexBudget: options.indexBytes ?? 1 << 29,
-        slabCap: Math.min(binding, options.slabBytes ?? 256 << 20),
+        // A headless world holds no geometry (`headlessContext`).
+        vertexBudget: headless ? 0 : (options.vertexBytes ?? 1 << 30),
+        indexBudget: headless ? 0 : (options.indexBytes ?? 1 << 29),
+        slabCap: headless
+          ? 0
+          : Math.min(binding, options.slabBytes ?? 256 << 20),
         bindingBytes: binding,
       },
       () => this.flushUploads(),
@@ -393,7 +398,9 @@ export class World {
     this.mirror = ctx.createMirror!(this);
 
     this.addMaterial({}); // material 0: white, lit, untextured
-    this.createTextureSet({}); // texture set 0: defaults
+    if (!headless) {
+      this.createTextureSet({}); // texture set 0: defaults
+    }
   }
 
   /**

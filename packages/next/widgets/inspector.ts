@@ -2208,11 +2208,29 @@ function memoryHtml(v: InspectorView): string {
   }${rows.join("")}`;
 }
 
-function gpuHtml(g: NonNullable<InspectorSnapshot["gpu"]>): string {
+/** The GPU section: the device and why it was chosen, then its adapter, facts and limits. */
+export function gpuHtml(g: NonNullable<InspectorSnapshot["gpu"]>): string {
   const l = g.limits;
+  const w = g.webgl2;
   return kv(
     [
+      // The device, and why it was chosen: whichever device runs.
+      ["Device", g.device ? escape(g.device) : ""],
       ["Adapter", g.adapter ? escape(g.adapter) : ""],
+      // A WebGL 2 device's facts, under WebGL's names.
+      ["WebGL", w ? escape(w.version) : ""],
+      [
+        "Backend",
+        w
+          ? `${w.backend ? escape(w.backend) : "unknown"}${w.software ? " · software renderer" : ""}`
+          : "",
+      ],
+      ["Emulating", w?.emulating ? escape(w.emulating) : ""],
+      ["MAX_TEXTURE_SIZE", w ? `${w.maxTextureSize}` : ""],
+      ["MAX_ARRAY_TEXTURE_LAYERS", w ? `${w.maxArrayTextureLayers}` : ""],
+      ["MAX_SAMPLES", w ? `${w.maxSamples}` : ""],
+      ["MAX_UNIFORM_BLOCK_SIZE", w ? `${w.maxUniformBlockSize / 1024} KB` : ""],
+      ["Extensions", w ? `${w.extensions}` : ""],
       // Binding counts the engine fits (the tier), then capacities it grows
       // into (docs/design/gpu-limits-and-capacities.md), a short row each.
       ["Limits tier", l ? escape(l.tier) : ""],

@@ -52,7 +52,21 @@ export interface SlabOptions {
   initialIndexBytes?: number;
 }
 
-const STORAGE_COPY =
+/**
+ * What a world with no GPU behind it (`headlessContext`) holds in place of a
+ * device: buffers that are only a size. Its budgets are 0, so nothing is
+ * ever placed in them.
+ */
+export const NO_GPU = {
+  createBuffer: (descriptor: { size: number }) => ({
+    size: descriptor.size,
+    destroy() {},
+  }),
+} as unknown as GPUDevice;
+
+// Read when used, not when the module loads: a browser without WebGPU (the
+// WebGL 2 fallback's) has no `GPUBufferUsage`, and still loads the engine.
+const storageCopy = () =>
   GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST | GPUBufferUsage.COPY_SRC;
 
 export class Slabs {
@@ -340,7 +354,7 @@ export class Slabs {
       size,
       // COPY_SRC: harnesses read back what kernels write (point anchors),
       // and the slab copies itself when it grows.
-      usage: STORAGE_COPY,
+      usage: this.device === NO_GPU ? 0 : storageCopy(),
     });
   }
 
@@ -349,7 +363,7 @@ export class Slabs {
       label: `world.slab${id}.indices`,
       size,
       // STORAGE: ray casts read triangles (`castRays`).
-      usage: GPUBufferUsage.INDEX | STORAGE_COPY,
+      usage: this.device === NO_GPU ? 0 : GPUBufferUsage.INDEX | storageCopy(),
     });
   }
 }

@@ -253,6 +253,11 @@ export class WebGpuViewRenderer implements ViewRenderer {
     return this.device.support;
   }
 
+  /** Its last frame's image exists (`serveIdlePick` reads it). */
+  get rendered(): boolean {
+    return this.engine.raster.viewFrames.get(this.view)?.rendered ?? false;
+  }
+
   exposure(): number {
     return updateExposure(this.engine, this.view);
   }

@@ -1,5 +1,9 @@
 import type { OcclusionSwitch } from "./occlusionFeedback.ts";
-import type { EngineError, EngineErrorKind } from "../gpu/EngineErrors.ts";
+import {
+  EngineErrors,
+  type EngineError,
+  type EngineErrorKind,
+} from "../gpu/EngineErrors.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import type { GpuDevice, GpuDeviceOptions } from "../gpu/GpuDevice.ts";
 import * as m4 from "../math/mat4.ts";
@@ -86,15 +90,44 @@ import {
 import type { GpuWork } from "../gpu/GpuWork.ts";
 import { EngineScene } from "./engineScene.ts";
 import type { EngineRaster } from "../render/view/engineRaster.ts";
+import { WebGpuDevice, type OpenedWebGpu } from "../render/webgpuDevice.ts";
 import {
-  WebGpuDevice,
-  type OpenedWebGpu,
-  type WebGpuViewRenderer,
-} from "../render/webgpuDevice.ts";
+  chooseDevice,
+  probeWebgpu,
+  warnFallback,
+  type DeviceChoice,
+  type Probes,
+  type RendererOption,
+} from "./deviceChoice.ts";
+import { headlessContext } from "./headlessContext.ts";
+import type { DeviceHost, RenderDevice, ViewRenderer } from "./renderSeam.ts";
+import type { Webgl2PersonaName } from "../profile/personas.ts";
 import {
   emptyGeometry,
   type GeometryStats,
 } from "../render/view/geometryStats.ts";
+
+/** What `Engine.gpuSample` is where no GPU time is measured: no samples, every time unavailable. */
+const NO_GPU_SAMPLE = Object.freeze({
+  samples: 0,
+  tick: 0,
+  ms: Number.NaN,
+  spanMs: Number.NaN,
+  wallMs: Number.NaN,
+  intervalMs: Number.NaN,
+  inFrameUntimedMs: Number.NaN,
+  betweenFramesMs: Number.NaN,
+  markerSpanMs: Number.NaN,
+  passes: Object.freeze({}),
+});
+
+/**
+ * The WebGL 2 tier, loaded when the device choice needs it: a chunk of its
+ * own, so WebGPU users never load it (`scripts/checkBundle.mjs`). The only
+ * edge into `src/webgl2/` (test/importBoundary.test.ts).
+ */
+const loadWebgl2 = () => import("../webgl2/index.ts");
+type Webgl2Tier = Awaited<ReturnType<typeof loadWebgl2>>;
 
 export interface EngineOptions extends GpuDeviceOptions {
   maxViews?: number;
@@ -123,6 +156,21 @@ export interface EngineOptions extends GpuDeviceOptions {
    * False keeps the console quiet; the notices are still in `errors`.
    */
   warnings?: boolean;
+  /**
+   * The device the engine draws with (default "auto"): WebGPU, then WebGL 2
+   * with a warning once, with the reason, if WebGPU is missing. "webgpu" and
+   * "webgl2" force one (and `create` rejects, naming what is missing, if it
+   * can't run); under `strict` "auto" throws instead of falling back. The
+   * probe runs where the engine will.
+   */
+  renderer?: RendererOption;
+  /**
+   * Runs the WebGL 2 device with what a persona lacks hidden
+   * (`webgl2-basic`: the floor, no clip control, no multi-draw), so a
+   * developer sees the engine on weak hardware, and the fallback paths run
+   * outside CI. It can only remove capabilities. Names the WebGL 2 device.
+   */
+  emulate?: Webgl2PersonaName;
 }
 
 export interface FrameStats {
@@ -323,21 +371,43 @@ export interface GlobeOptions extends TilesetOptions {
  *   to keep one, share the engine (`ViewerOptions.engine`, several views).
  */
 export class Engine {
-  /** @internal Rasterizer data: staging buffers, view targets, picks, pass descriptors. */
-  readonly raster: EngineRaster;
-  /** @internal The engine's device (`RenderDevice`): the WebGPU renderer is reached through it. */
-  readonly device: WebGpuDevice;
+  /**
+   * @internal Rasterizer data: staging buffers, view targets, picks, pass
+   * descriptors. The WebGPU renderer's: throws on a WebGL 2 engine.
+   */
+  get raster(): EngineRaster {
+    return this.webgpu("raster").raster;
+  }
+  /** @internal The engine's device (`RenderDevice`): the renderer is reached through it. */
+  readonly device: RenderDevice;
+  /** @internal Which device was chosen and why (the inspector shows it). */
+  readonly choice: DeviceChoice;
+  private readonly webgpu_: WebGpuDevice | undefined;
+  private readonly errors_: EngineErrors;
+
+  /** The WebGPU device, or a throw naming `what` where the engine draws with WebGL 2. */
+  private webgpu(what: string): WebGpuDevice {
+    if (!this.webgpu_) {
+      throw new Error(
+        `Engine.${what} belongs to the WebGPU renderer, and this engine draws with WebGL 2 (${this.choice.reason}).`,
+      );
+    }
+    return this.webgpu_;
+  }
   /**
    * @internal The support notices (src/profile/notices.ts): recorded in
    * `errors`, warned once, thrown under `strict`.
    */
   readonly notices: SupportNotices;
   /** @internal What draws each view (`ViewRenderer`), made when the view is added. */
-  readonly renderers = new Map<View, WebGpuViewRenderer>();
+  readonly renderers = new Map<View, ViewRenderer>();
   /** @internal Scene data: view ids and motion, tick timing, selection scratch. */
   readonly scene: EngineScene = new EngineScene();
 
-  readonly gpu: GpuDevice;
+  /** The WebGPU device (`Capabilities`, limits). Throws on a WebGL 2 engine: read `choice` and `device.facts`. */
+  get gpu(): GpuDevice {
+    return this.webgpu("gpu").gpu;
+  }
   readonly worlds: World[] = [];
   readonly views: View[] = [];
   readonly links: ViewLink[] = [];
@@ -532,7 +602,7 @@ export class Engine {
    * up): where `stats.gpuMs` goes. Empty without `timestamp-query`.
    */
   get gpuPasses(): Record<string, number> {
-    return this.raster.timer.passes;
+    return this.webgpu_?.raster.timer.passes ?? {};
   }
   /**
    * What occlusion culling left undrawn in the views' latest readouts
@@ -549,7 +619,7 @@ export class Engine {
     let draws = 0;
     let triangles = 0;
     for (const view of this.views) {
-      const cull = this.raster.viewFrames.get(view)?.cull;
+      const cull = this.webgpu_?.raster.viewFrames.get(view)?.cull;
       if (cull?.active) {
         views++;
         draws += cull.hidden.draws;
@@ -599,7 +669,11 @@ export class Engine {
     markerSpanMs: number;
     passes: Readonly<Record<string, number>>;
   } {
-    const t = this.raster.timer;
+    const t = this.webgpu_?.raster.timer;
+    if (!t) {
+      // WebGL 2's GPU time comes from a timer query where there is one (CS-36 onwards).
+      return NO_GPU_SAMPLE;
+    }
     return {
       samples: t.samples,
       tick: t.lastSample.tag,
@@ -682,8 +756,10 @@ export class Engine {
    */
   moonAxes: Float64Array | undefined = undefined;
 
-  /** @internal */
-  readonly ctx: RenderContext;
+  /** @internal The WebGPU render context. Throws on a WebGL 2 engine. */
+  get ctx(): RenderContext {
+    return this.webgpu("ctx").ctx;
+  }
   /** Content request windows per origin, shared by all tilesets. */
   readonly requests = new RequestScheduler();
   /**
@@ -749,27 +825,54 @@ export class Engine {
   private warming = false;
 
   private constructor(
-    opened: OpenedWebGpu,
+    choice: DeviceChoice,
+    opened: OpenedWebGpu | undefined,
+    webgl2: Webgl2Tier | undefined,
     maxViews: number,
     options: Pick<EngineOptions, "strict" | "warnings"> = {},
   ) {
-    const { gpu, ctx } = opened;
-    this.gpu = gpu;
-    this.ctx = ctx;
+    this.choice = choice;
+    // A WebGL 2 engine has no render context to own its errors: it makes its own.
+    this.errors_ = opened ? opened.ctx.errors : new EngineErrors();
     this.notices = new SupportNotices(
-      ctx.errors,
+      this.errors_,
       options.strict ?? false,
       options.warnings ?? true,
     );
-    this.device = new WebGpuDevice(this, opened, maxViews);
-    this.raster = this.device.raster;
-    ctx.wake = () => this.wake();
-    ctx.shaderBindings.wake = ctx.wake;
+    if (opened) {
+      this.webgpu_ = new WebGpuDevice(this, opened, maxViews);
+      this.device = this.webgpu_;
+      opened.ctx.wake = () => this.wake();
+      opened.ctx.shaderBindings.wake = opened.ctx.wake;
+    } else {
+      const host: DeviceHost = {
+        views: this.views,
+        report: (kind, message) => void this.errors_.report(kind, message),
+        wake: () => this.wake(),
+        drewFrame: (views) => {
+          this.stats.framesRendered++;
+          this.stats.views = views;
+          this.stats.idle = false;
+        },
+      };
+      this.device = new webgl2!.Webgl2Device(choice.webgl2!, host);
+    }
     this.cameras = new CameraLayer({
       views: this.views,
       wake: () => this.wake(),
-      errors: ctx.errors,
+      errors: this.errors_,
     });
+    if (opened) {
+      this.watchGpu(opened);
+    }
+    this.maxViews = maxViews;
+    for (let id = Math.min(maxViews, 32) - 1; id >= 0; id--) {
+      this.freeViewIds.push(id);
+    }
+  }
+
+  /** The WebGPU device's errors and its loss, which stop what is on (the post stages). */
+  private watchGpu({ gpu, ctx }: OpenedWebGpu): void {
     // Uncaptured device errors join the engine's (logged once each there).
     gpu.events.on("error", (error) =>
       ctx.errors.report("device", error.message),
@@ -792,23 +895,51 @@ export class Engine {
         names ? `${detail} Post stages on, now off: ${names}.` : detail,
       );
     });
-    this.maxViews = maxViews;
-    for (let id = Math.min(maxViews, 32) - 1; id >= 0; id--) {
-      this.freeViewIds.push(id);
-    }
   }
 
   static async create(options: EngineOptions = {}): Promise<Engine> {
-    const opened = await WebGpuDevice.open(options);
-    const engine = new Engine(opened, options.maxViews ?? 16, options);
+    // The probe runs where the engine will; the real device is made once, after it.
+    const probes: Probes = {
+      webgpu: probeWebgpu,
+      webgl2: async () => (await loadWebgl2()).probeWebgl2(),
+    };
+    const choice = await chooseDevice(
+      {
+        ...(options.renderer && { renderer: options.renderer }),
+        ...(options.strict && { strict: options.strict }),
+        ...(options.emulate && { emulate: options.emulate }),
+      },
+      probes,
+    );
+    if (options.warnings !== false) {
+      warnFallback(choice);
+    }
+    const opened =
+      choice.renderer === "webgpu"
+        ? await WebGpuDevice.open(options)
+        : undefined;
+    const webgl2 = opened ? undefined : await loadWebgl2();
+    const engine = new Engine(
+      choice,
+      opened,
+      webgl2,
+      options.maxViews ?? 16,
+      options,
+    );
     engine.curvilinearBudgetMs =
       options.curvilinearBudgetMs ?? CURVILINEAR_BUDGET_MS;
     engine.jobBudgetMs = options.jobBudgetMs ?? JOB_BUDGET_MS;
-    engine.setHaze(
-      options.visibility === undefined ? 60 : (options.visibility ?? undefined),
-      options.aerosol ?? "continental",
-    );
-    engine.warmUp();
+    // The sky's haze and the warm-up are the WebGPU renderer's: the WebGL 2
+    // renderer has no sky yet (CS-42), and no pipelines to warm.
+    if (opened) {
+      engine.setHaze(
+        options.visibility === undefined
+          ? 60
+          : (options.visibility ?? undefined),
+        options.aerosol ?? "continental",
+      );
+      engine.warmUp();
+    }
     return engine;
   }
 
@@ -856,6 +987,9 @@ export class Engine {
    * exposure opens at night, dimmed by the air; null: none.
    */
   setStarMap(faces: readonly (string | URL)[] | null): void {
+    if (!this.webgpu_) {
+      return this.noSky("setStarMap");
+    }
     const token = ++this.starToken;
     this.packToken++;
     this.packLoad?.abort();
@@ -897,6 +1031,10 @@ export class Engine {
   async setSkyPack(
     url: string | URL | null,
   ): Promise<SkyPackManifest | undefined> {
+    if (!this.webgpu_) {
+      this.noSky("setSkyPack");
+      return undefined;
+    }
     this.packLoad?.abort();
     this.packLoad = null;
     if (url === null) {
@@ -937,6 +1075,14 @@ export class Engine {
     }
   }
 
+  /** The WebGL 2 renderer draws no sky until CS-42: said once, in `errors`. */
+  private noSky(what: string): void {
+    this.errors_.report(
+      "support",
+      `${what}: the WebGL 2 renderer draws no sky yet, so it does nothing.`,
+    );
+  }
+
   private warnSkyPack(message: string): void {
     if (!this.skyPackWarnings.has(message)) {
       this.skyPackWarnings.add(message);
@@ -950,8 +1096,8 @@ export class Engine {
    * runs again; when it is complete the stars show in a frame of their own.
    */
   private advanceSkyUpload(): void {
-    const sky = this.raster.sky;
-    if (!sky.uploading) {
+    const sky = this.webgpu_?.raster.sky;
+    if (!sky?.uploading) {
       return;
     }
     if (sky.advanceUpload()) {
@@ -970,6 +1116,9 @@ export class Engine {
    * closed once this returns.
    */
   setMoonMap(image: ImageBitmap | null, mean?: number): void {
+    if (!this.webgpu_) {
+      return this.noSky("setMoonMap");
+    }
     this.raster.sky.setMoonMap(image, mean);
     this.requestRender();
   }
@@ -981,7 +1130,7 @@ export class Engine {
    * value) is about 220 km, very clean air.
    */
   get visibility(): number | undefined {
-    return this.raster.sky.atmosphere.visibility;
+    return this.webgpu_?.raster.sky.atmosphere.visibility;
   }
 
   set visibility(kilometers: number | undefined) {
@@ -993,7 +1142,7 @@ export class Engine {
    * particles by default (a bluish haze), urban, maritime or desert dust.
    */
   get aerosol(): AerosolType | undefined {
-    return this.raster.sky.atmosphere.aerosol;
+    return this.webgpu_?.raster.sky.atmosphere.aerosol;
   }
 
   set aerosol(aerosol: AerosolType | undefined) {
@@ -1004,6 +1153,9 @@ export class Engine {
     kilometers: number | undefined,
     aerosol: AerosolType | undefined,
   ): void {
+    if (!this.webgpu_) {
+      return this.noSky("setHaze");
+    }
     if (kilometers === this.visibility && aerosol === this.aerosol) {
       return;
     }
@@ -1031,7 +1183,7 @@ export class Engine {
    * (the worlds bound again), uncaptured device errors.
    */
   get errors(): readonly EngineError[] {
-    return this.ctx.errors.all;
+    return this.errors_.all;
   }
 
   /**
@@ -1039,12 +1191,12 @@ export class Engine {
    * are), for what an application caught, a point set that didn't fit, say.
    */
   reportError(kind: EngineErrorKind, message: string): void {
-    this.ctx.errors.report(kind, message);
+    this.errors_.report(kind, message);
   }
 
   /** Hears every error the engine reports; returns the unsubscribe. */
   onError(listener: (error: EngineError) => void): () => void {
-    return this.ctx.errors.on(listener);
+    return this.errors_.on(listener);
   }
 
   /**
@@ -1262,7 +1414,7 @@ export class Engine {
             this.farAnchors.set(view, far);
           }
           far.add(anchor);
-          this.ctx.errors.report(
+          this.errors_.report(
             "frame",
             `The eye of view ${this.scene.viewIds.get(view) ?? "?"} is more than ${ANCHOR_EYE_REACH.toLocaleString("en-US")} m (2^31 m) from the anchor ${anchor.name}: its draws are hidden in that view.`,
           );
@@ -1303,7 +1455,17 @@ export class Engine {
   }
 
   createWorld(options?: WorldOptions): World {
-    const world = new World(this.ctx, options);
+    // A WebGL 2 engine's worlds hold no content yet (`headlessContext`).
+    const world = new World(
+      this.webgpu_
+        ? this.ctx
+        : headlessContext({
+            wake: () => this.wake(),
+            errors: this.errors_,
+            createMirror: (w) => this.device.createWorld(w),
+          }),
+      options,
+    );
     this.worlds.push(world);
     this.wake();
     return world;
@@ -1338,7 +1500,9 @@ export class Engine {
     }
     const view = new View(options);
     const atmosphere = view.body.atmosphere;
-    if (atmosphere && atmosphere !== this.raster.sky.atmosphere.parameters) {
+    // The WebGL 2 renderer builds its own atmosphere with the sky (CS-42).
+    const sky = this.webgpu_?.raster.sky;
+    if (atmosphere && sky && atmosphere !== sky.atmosphere.parameters) {
       // Per-body atmospheres follow with per-body frames (docs/design/bodies-frames-and-engineering-coordinates.md).
       throw new Error(
         `Only the Earth's atmosphere is built so far (view body ${view.body.name}).`,
@@ -1735,8 +1899,7 @@ export class Engine {
    */
   private curvilinearTick(budgetMs: number): boolean {
     let busy = false;
-    const report = (message: string) =>
-      this.ctx.errors.report("frame", message);
+    const report = (message: string) => this.errors_.report("frame", message);
     for (let w = 0; w < this.worlds.length; w++) {
       const world = this.worlds[w]!;
       const worldViews = this.views.filter((view) => view.world === world);
@@ -1873,7 +2036,7 @@ export class Engine {
   }
 
   private reportLoopError(where: string, error: unknown): void {
-    this.ctx.errors.report(
+    this.errors_.report(
       "frame",
       `${where} threw: ${error instanceof Error ? error.message : String(error)}`,
     );
@@ -1946,7 +2109,7 @@ export class Engine {
     // so a target redraws all its views when any of them changed; targets
     // with none changed are skipped and keep their last image.
     // A custom shader's uniform or texture changed: everything may show it.
-    const uniforms = this.ctx.shaderBindings.flush();
+    const uniforms = this.webgpu_?.ctx.shaderBindings.flush() ?? false;
     const globalMoved = this.globalChanged();
     // Terrain morphing in changes the image with the clock alone.
     const morphing = this.tilesets.some((tileset) => tileset.morphing);
@@ -1972,8 +2135,7 @@ export class Engine {
       moved ||= changed;
       why.tickReasons |= changed ? REASON_CAMERA : 0;
       why.tickReasons |=
-        view.pendingPicks.length > 0 &&
-        !this.raster.viewFrames.get(view)?.rendered
+        view.pendingPicks.length > 0 && !this.renderers.get(view)?.rendered
           ? REASON_PICK
           : 0;
       // A pick renders a frame only when the view has no last frame to
@@ -1981,8 +2143,7 @@ export class Engine {
       if (
         all ||
         changed ||
-        (view.pendingPicks.length > 0 &&
-          !this.raster.viewFrames.get(view)?.rendered)
+        (view.pendingPicks.length > 0 && !this.renderers.get(view)?.rendered)
       ) {
         dirty.add(view.target);
         dirtyViews.add(view);
@@ -2169,8 +2330,9 @@ export class Engine {
       this.curvilinearTick(Infinity);
       // Outside the loop nothing slices the upload: finish it, so a
       // capture shows the stars.
-      while (this.raster.sky.uploading) {
-        this.raster.sky.advanceUpload();
+      const sky = this.webgpu_?.raster.sky;
+      while (sky?.uploading) {
+        sky.advanceUpload();
       }
     }
     this.device.render({ tilesetsUpdated: false });

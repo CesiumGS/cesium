@@ -7,15 +7,27 @@
 // These are internal types: nothing here is exported from an entry point.
 // They name no GPU type, so a second device (src/webgl2/, CS-35) can
 // implement them.
-import type { DeviceFacts } from "../gpu/GpuDevice.ts";
 import type { ContentTextures, ImageryDevice } from "./contentResources.ts";
-import type { SupportReport } from "../profile/types.ts";
+import type { Facts, SupportReport } from "../profile/types.ts";
 import type { RenderTarget } from "./renderTarget.ts";
 import type { View } from "./View.ts";
 import type { World } from "./World.ts";
 
-/** Which device an engine draws with (`DeviceFacts.renderer`). */
-export type RenderDeviceKind = DeviceFacts["renderer"];
+/** Which device an engine draws with (`Facts.renderer`). */
+export type RenderDeviceKind = Facts["renderer"];
+
+/**
+ * What a device may ask of its engine: the views it draws, a way to report
+ * what went wrong (`Engine.errors`) and to wake the loop. Names no GPU type,
+ * so the WebGL 2 tier (src/webgl2/) can hold it.
+ */
+export interface DeviceHost {
+  readonly views: readonly View[];
+  report(kind: "device" | "frame", message: string): void;
+  wake(): void;
+  /** A tick drew `views` views: the engine counts the frame (`FrameStats`). */
+  drewFrame(views: number): void;
+}
 
 /**
  * One per engine: where GPU resources live (a WebGPU device today). Views
@@ -23,8 +35,8 @@ export type RenderDeviceKind = DeviceFacts["renderer"];
  */
 export interface RenderDevice {
   readonly kind: RenderDeviceKind;
-  /** What was observed about the device (the profiles plan's facts). */
-  readonly facts: DeviceFacts;
+  /** What was observed about the device (the profiles plan's facts, under its renderer's own names). */
+  readonly facts: Facts;
   /** The device's copy of a world, made once with it. */
   createWorld(world: World): WorldMirror;
   /** What draws one view, made when the view is added. */
@@ -86,6 +98,11 @@ export interface ViewRenderer {
    * device loss. Undefined for a device with no support rules yet.
    */
   readonly support: SupportReport | undefined;
+  /**
+   * A frame of this view was drawn: its last image is current, so a pick
+   * can be answered from it without drawing again.
+   */
+  readonly rendered: boolean;
   /** The view's exposure scale for this tick (its observer's exposure). */
   exposure(): number;
   /** Releases what the device holds for the view. */

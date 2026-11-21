@@ -184,7 +184,26 @@ export interface InspectorSnapshot {
   };
   memory?: MemoryRow[];
   gpu?: {
+    /**
+     * The device and why it was chosen ("WebGL 2 · WebGPU unavailable: no
+     * adapter"), whichever device runs.
+     */
+    device?: string;
     adapter?: string;
+    /** A WebGL 2 device's facts, under WebGL's names (`Webgl2Facts`). */
+    webgl2?: {
+      version: string;
+      /** The ANGLE backend, where the unmasked renderer names one. */
+      backend?: string;
+      software: boolean;
+      maxTextureSize: number;
+      maxArrayTextureLayers: number;
+      maxSamples: number;
+      maxUniformBlockSize: number;
+      extensions: number;
+      /** The persona the device is clamped toward. */
+      emulating?: string;
+    };
     /**
      * The device's limits tier ("base", "minimum", "adapter") and the
      * limits it was created with that shape the engine (docs/design/gpu-limits-and-capacities.md).

@@ -787,14 +787,15 @@ it("refuses a webgl2 file that imports the WebGPU renderer, the GPU layer or con
  */
 const SEAM_EDGES: Readonly<Record<string, string>> = {
   "src/scene/Engine.ts → src/render/webgpuDevice.ts":
-    "the device (RenderDevice), until CS-35 makes it the device choice",
+    "the WebGPU device (RenderDevice), made by the device choice; the WebGL 2 device is its dynamic import",
   "src/scene/Engine.ts → src/render/view/engineRaster.ts":
     "type: the device's engine-wide state, read off the engine by the renderer's passes",
   "src/scene/Engine.ts → src/render/view/geometryStats.ts":
     "draw counts for FrameStats, renderer-neutral (they read World.draws)",
   "src/scene/Engine.ts → src/gpu/GpuDevice.ts":
     "type: Engine.gpu, public, and the device options",
-  "src/scene/Engine.ts → src/gpu/EngineErrors.ts": "type: the engine's errors",
+  "src/scene/Engine.ts → src/gpu/EngineErrors.ts":
+    "the engine's errors: a plain class, which a WebGL 2 engine makes itself",
   "src/scene/Engine.ts → src/gpu/GpuWork.ts": "type: FrameStats.work",
   "src/scene/World.ts → src/render/layout.ts":
     "the record, transform, instance and material layouts' constants",
