@@ -6,7 +6,7 @@
 graph LR
   CS_8["Engine profiles<br/>5 of 20 done"]
   CS_9["WebGL 2 renderer<br/>3 of 18 done"]
-  CS_10["Cesium IR<br/>9 of 35 done"]
+  CS_10["Cesium IR<br/>11 of 37 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
   CS_13["worker-mode façade<br/>3 of 22 done"]
@@ -28,7 +28,7 @@ graph LR
   CS_197["Ray queries and path tracing<br/>0 of 7 done"]
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
   CS_199["Dyno hardening, packaging and CI<br/>1 of 16 done"]
-  CS_389["Dyno as the development harness<br/>36 of 75 done"]
+  CS_389["Dyno as the development harness<br/>36 of 76 done"]
   CS_437["public API reviews<br/>6 of 18 done"]
   CS_579["Editing<br/>0 of 2 done"]
   CS_584["widgets library<br/>0 of 9 done"]
@@ -42,7 +42,7 @@ graph LR
   CS_647["Conditional content and motion<br/>0 of 5 done"]
   CS_9 -->|1| CS_8
   CS_12 -->|1| CS_8
-  CS_10 -->|5| CS_9
+  CS_10 -->|4| CS_9
   CS_10 -->|2| CS_11
   CS_9 -->|1| CS_11
   CS_13 -->|2| CS_12
@@ -115,4 +115,5 @@ graph LR
   CS_647 -->|1| CS_191
   CS_190 -->|1| CS_191
   CS_190 -->|1| CS_197
+  CS_199 -->|1| CS_10
 ```

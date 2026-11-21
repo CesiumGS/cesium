@@ -40,7 +40,6 @@ CS-9 The WebGL 2 renderer
       ← CS-36 First draws, unlit (glTF and 3D Tiles meshes)
   CS-39  Styles and warps through Cesium IR
       ← CS-38 Lighting and instancing
-        CS-52 The GLSL ES 3.00 emitter
         CS-54 Routes on both emitters, with the residual and df64 forms
         CS-55 Styles move onto Cesium IR, literals as uniforms
   CS-40  Picks and outputs
@@ -61,10 +60,7 @@ CS-9 The WebGL 2 renderer
 
 CS-10 Cesium IR
   CS-54  Routes on both emitters, with the residual and df64 forms
-      ← CS-52 The GLSL ES 3.00 emitter
-        CS-53 Transforms move onto Cesium IR, as pure moves
-  CS-55  Styles move onto Cesium IR, literals as uniforms
-      ← CS-52 The GLSL ES 3.00 emitter
+      ← CS-53 Transforms move onto Cesium IR, as pure moves
   CS-56  Tables and the bounded search, the first extensions, with the residual's row window
       ← CS-53 Transforms move onto Cesium IR, as pure moves
         CS-54 Routes on both emitters, with the residual and df64 forms
@@ -84,8 +80,6 @@ CS-10 Cesium IR
       ← CS-55 Styles move onto Cesium IR, literals as uniforms
   CS-63  The MaterialX front end, including the lowering the MaterialX plan's task 9 had (no pre-IR emitter)
       ← CS-55 Styles move onto Cesium IR, literals as uniforms
-  CS-64  Noise, first among the gaps
-      ← CS-52 The GLSL ES 3.00 emitter
   CS-65  Textures and samplers
       ← CS-56 Tables and the bounded search, the first extensions, with the residual's row window
         CS-64 Noise, first among the gaps
@@ -732,5 +726,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-240 blocked
+238 blocked
 ```

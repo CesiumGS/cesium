@@ -9,12 +9,12 @@ CS-8 Engine profiles [Planned], led by owner
   waited on by: CS-13 The worker-mode façade (1); CS-18 The work tracker (3)
 CS-9 The WebGL 2 renderer [Planned], led by owner
   3 of 18 done, 4 ready, 10 blocked, 1 proposed
-  waits on: CS-10 Cesium IR (5); CS-13 The worker-mode façade (1)
+  waits on: CS-10 Cesium IR (4); CS-13 The worker-mode façade (1)
   waited on by: CS-8 Engine profiles (1); CS-11 Live MaterialX graph editing (1); CS-18 The work tracker (3)
 CS-10 Cesium IR [Planned], led by owner
-  9 of 35 done, 9 ready, 15 blocked, 2 proposed
-  waits on: nothing open
-  waited on by: CS-9 The WebGL 2 renderer (5); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (4); CS-17 The transform graph (2); CS-190 Vector drawing and the styling language (2); CS-18 The work tracker (3)
+  11 of 37 done, 10 ready, 13 blocked, 3 proposed
+  waits on: CS-199 Dyno hardening, packaging and CI (1)
+  waited on by: CS-9 The WebGL 2 renderer (4); CS-11 Live MaterialX graph editing (2); CS-13 The worker-mode façade (4); CS-17 The transform graph (2); CS-190 Vector drawing and the styling language (2); CS-18 The work tracker (3)
 CS-11 Live MaterialX graph editing [Planned], led by owner
   0 of 17 done, 6 ready, 10 blocked, 1 proposed
   waits on: CS-10 Cesium IR (2); CS-9 The WebGL 2 renderer (1)
@@ -98,9 +98,9 @@ CS-198 GPU-driven rendering and capacities [Planned], led by owner
 CS-199 Dyno hardening, packaging and CI [Planned], led by owner
   1 of 16 done, 14 ready, 0 blocked, 1 proposed
   waits on: nothing open
-  waited on by: CS-18 The work tracker (2); CS-628 Sandcastle as 2.0's gallery (1)
+  waited on by: CS-18 The work tracker (2); CS-628 Sandcastle as 2.0's gallery (1); CS-10 Cesium IR (1)
 CS-389 Dyno as the development harness [Planned], led by owner
-  36 of 75 done, 18 ready, 17 blocked, 4 proposed
+  36 of 76 done, 19 ready, 17 blocked, 4 proposed
   waits on: nothing open
   waited on by: CS-195 Benchmarks, parity and image regression (2); CS-18 The work tracker (5)
 CS-437 The public API reviews [Planned], led by owner

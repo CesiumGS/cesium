@@ -51,7 +51,7 @@ graph LR
     CS_49["CS-49 The versioned JSON format"]:::open
     CS_50["CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoi"]:::done
     CS_51["CS-51 The WGSL emitter"]:::done
-    CS_52["CS-52 The GLSL ES 3.00 emitter"]:::open
+    CS_52["CS-52 The GLSL ES 3.00 emitter"]:::done
     CS_53["CS-53 Transforms move onto Cesium IR, as pure moves"]:::open
     CS_54["CS-54 Routes on both emitters, with the residual and df64 forms"]:::open
     CS_55["CS-55 Styles move onto Cesium IR, literals as uniforms"]:::open
@@ -82,6 +82,8 @@ graph LR
     CS_574["CS-574 How CI gets naga-wasm for CS-51's WGSL validation"]:::done
     CS_575["CS-575 Adding CS-51's irWgsl browser suite to the browser-suite gate"]:::done
     CS_759["CS-759 Merge CS-50, Cesium IR's passes (AD, intervals with splitting, "]:::done
+    CS_776["CS-776 Merge CS-52, the GLSL ES 3.00 emitter, with its naga cross-chec"]:::done
+    CS_777["CS-777 The GLSL ES emitter's output is cross-checked against naga's, a"]:::proposed
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -619,6 +621,7 @@ graph LR
     CS_773["CS-773 dyno analysis compare and trend give verdicts with noise estima"]:::proposed
     CS_774["CS-774 npx dyno works: the dyno bin lives in a private workspace packa"]:::open
     CS_775["CS-775 The Dependencies view's waves grid retires now that the Path vi"]:::proposed
+    CS_778["CS-778 Merge CS-747, the What changed view (since you last looked)"]:::decision
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -1394,6 +1397,8 @@ graph LR
   CS_721 --> CS_773
   CS_721 --> CS_774
   CS_746 --> CS_775
+  CS_52 --> CS_777
+  CS_580 --> CS_777
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

@@ -68,5 +68,8 @@ CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617
 
-21 open decision(s) for owner
+CS-389 Dyno as the development harness
+  CS-778  Merge CS-747, the What changed view (since you last looked) (owner)
+
+22 open decision(s) for owner
 ```

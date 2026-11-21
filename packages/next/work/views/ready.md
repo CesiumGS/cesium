@@ -15,9 +15,10 @@ CS-9 The WebGL 2 renderer
 
 CS-10 Cesium IR
   CS-49  The versioned JSON format
-  CS-52  The GLSL ES 3.00 emitter
   CS-53  Transforms move onto Cesium IR, as pure moves
+  CS-55  Styles move onto Cesium IR, literals as uniforms
   CS-57  Our naga crate (Rust in development and CI only)
+  CS-64  Noise, first among the gaps
   CS-371  Math ops the transform graph needs: `atanh`, `asinh`, `acosh`, `expm1`, `log1p`, `%`, `hypot`
   CS-548  The IR's math/eq covers floatN and bool, as KHR_interactivity defines it
   CS-549  The IR models math/normalize's isValid output
@@ -213,6 +214,7 @@ CS-389 Dyno as the development harness
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
   CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
   CS-774  npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno
+  CS-778  decision: Merge CS-747, the What changed view (since you last looked)
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
@@ -257,5 +259,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-188 ready
+190 ready
 ```

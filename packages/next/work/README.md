@@ -131,7 +131,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 9 of 35 done, 9 ready, 15 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 11 of 37 done, 10 ready, 13 blocked, 3 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -139,7 +139,7 @@ Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestone
 - [ ] [CS-49](./items/CS-49-the-versioned-json-format.md) The versioned JSON format. Needs CS-48.
 - [x] [CS-50](./items/CS-50-the-passes-float64-evaluator-autodiff-intervals.md) The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms). Done.
 - [x] [CS-51](./items/CS-51-the-wgsl-emitter.md) The WGSL emitter. Done.
-- [ ] [CS-52](./items/CS-52-the-glsl-es-3-00-emitter.md) The GLSL ES 3.00 emitter. Needs CS-51.
+- [x] [CS-52](./items/CS-52-the-glsl-es-3-00-emitter.md) The GLSL ES 3.00 emitter. Done.
 - [ ] [CS-53](./items/CS-53-transforms-move-onto-cesium-ir-as-pure-moves.md) Transforms move onto Cesium IR, as pure moves. Needs CS-48, CS-50 and CS-51.
 - [ ] [CS-54](./items/CS-54-routes-on-both-emitters-with-the-residual-and.md) Routes on both emitters, with the residual and df64 forms. Needs CS-52 and CS-53.
 - [ ] [CS-55](./items/CS-55-styles-move-onto-cesium-ir-literals-as-uniforms.md) Styles move onto Cesium IR, literals as uniforms. Needs CS-50, CS-51 and CS-52.
@@ -179,6 +179,8 @@ No milestone
 - [x] [CS-574](./items/CS-574-how-ci-gets-naga-wasm-for-cs-51-s-wgsl.md) decision: How CI gets naga-wasm for CS-51's WGSL validation. Done.
 - [x] [CS-575](./items/CS-575-adding-cs-51-s-irwgsl-browser-suite-to-the.md) decision: Adding CS-51's irWgsl browser suite to the browser-suite gate. Done.
 - [x] [CS-759](./items/CS-759-merge-cs-50-cesium-ir-s-passes-ad-intervals.md) decision: Merge CS-50, Cesium IR's passes (AD, intervals with splitting, Taylor bounds, rates, uniforms, kinks). Done.
+- [x] [CS-776](./items/CS-776-merge-cs-52-the-glsl-es-3-00-emitter-with-its.md) decision: Merge CS-52, the GLSL ES 3.00 emitter, with its naga cross-check left open. Done.
+- [?] [CS-777](./items/CS-777-the-glsl-es-emitter-s-output-is-cross-checked.md) The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned. Proposed. Needs CS-52 and CS-580 (Dyno hardening, packaging and CI).
 
 ### Live MaterialX graph editing
 
@@ -936,7 +938,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 36 of 75 done, 18 ready, 17 blocked, 4 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 36 of 76 done, 19 ready, 17 blocked, 4 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -1036,6 +1038,7 @@ No milestone
 - [?] [CS-773](./items/CS-773-dyno-analysis-compare-and-trend-give-verdicts.md) dyno analysis compare and trend give verdicts with noise estimates, and bisect hands off to CS-325. Proposed. Needs CS-721.
 - [ ] [CS-774](./items/CS-774-npx-dyno-works-the-dyno-bin-lives-in-a-private.md) npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno. Needs CS-721.
 - [?] [CS-775](./items/CS-775-the-dependencies-view-s-waves-grid-retires-now.md) The Dependencies view's waves grid retires now that the Path view answers what it did. Proposed. Needs CS-746.
+- [ ] [CS-778](./items/CS-778-merge-cs-747-the-what-changed-view-since-you.md) decision: Merge CS-747, the What changed view (since you last looked). Needs nothing. Decided by owner.
 
 ### The public API reviews
 

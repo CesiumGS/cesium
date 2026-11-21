@@ -74,7 +74,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 9 of 35 done, 9 ready, 15 blocked, 2 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 11 of 37 done, 10 ready, 13 blocked, 3 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -82,7 +82,7 @@ Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 - [ ] CS-49 The versioned JSON format. Needs CS-48.
 - [x] CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoint splitting, rates, literals to uniforms). Done.
 - [x] CS-51 The WGSL emitter. Done.
-- [ ] CS-52 The GLSL ES 3.00 emitter. Needs CS-51.
+- [x] CS-52 The GLSL ES 3.00 emitter. Done.
 - [ ] CS-53 Transforms move onto Cesium IR, as pure moves. Needs CS-48, CS-50 and CS-51.
 - [ ] CS-54 Routes on both emitters, with the residual and df64 forms. Needs CS-52 and CS-53.
 - [ ] CS-55 Styles move onto Cesium IR, literals as uniforms. Needs CS-50, CS-51 and CS-52.
@@ -122,6 +122,8 @@ No milestone
 - [x] CS-574 decision: How CI gets naga-wasm for CS-51's WGSL validation. Done.
 - [x] CS-575 decision: Adding CS-51's irWgsl browser suite to the browser-suite gate. Done.
 - [x] CS-759 decision: Merge CS-50, Cesium IR's passes (AD, intervals with splitting, Taylor bounds, rates, uniforms, kinks). Done.
+- [x] CS-776 decision: Merge CS-52, the GLSL ES 3.00 emitter, with its naga cross-check left open. Done.
+- [?] CS-777 The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned. Proposed. Needs CS-52 and CS-580 (Dyno hardening, packaging and CI).
 
 ### Live MaterialX graph editing
 
@@ -879,7 +881,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 36 of 75 done, 18 ready, 17 blocked, 4 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 36 of 76 done, 19 ready, 17 blocked, 4 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -979,6 +981,7 @@ No milestone
 - [?] CS-773 dyno analysis compare and trend give verdicts with noise estimates, and bisect hands off to CS-325. Proposed. Needs CS-721.
 - [ ] CS-774 npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno. Needs CS-721.
 - [?] CS-775 The Dependencies view's waves grid retires now that the Path view answers what it did. Proposed. Needs CS-746.
+- [ ] CS-778 decision: Merge CS-747, the What changed view (since you last looked). Needs nothing. Decided by owner.
 
 ### The public API reviews
 
