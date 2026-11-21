@@ -334,7 +334,14 @@ const throttle = (callback) => {
         });
       }
 
-      const sourceWatcher = chokidar.watch([`packages/${workspace}/Source`], {
+      const sourceGlobs = contexts.packageSourceGlobs[workspace];
+      /** @type {string[]} */
+      const watchedPaths = [`packages/${workspace}/Source`];
+      // A hand-maintained index.js isn't regenerated from Source, so watch it directly.
+      if (!sourceGlobs) {
+        watchedPaths.push(`packages/${workspace}/index.js`);
+      }
+      const sourceWatcher = chokidar.watch(watchedPaths, {
         ignored: [
           `packages/${workspace}/Source/Shaders`,
           `packages/${workspace}/Source/ThirdParty`,
@@ -348,7 +355,6 @@ const throttle = (callback) => {
         clearTopLevelCaches();
         packageBundleCaches[workspace].clear();
 
-        const sourceGlobs = contexts.packageSourceGlobs[workspace];
         if (sourceGlobs) {
           await createIndexJs(
             /** @type {Workspace} */ (workspace),
