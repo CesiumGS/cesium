@@ -12,6 +12,7 @@ export {
   TICK_REASONS,
 } from "./scene/Engine.ts";
 export { type ShaderOverrides } from "./scene/RenderContext.ts";
+export type { RendererOption } from "./scene/deviceChoice.ts";
 export {
   CustomShader,
   type CustomShaderOptions,

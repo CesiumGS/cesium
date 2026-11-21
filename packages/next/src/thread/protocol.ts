@@ -131,7 +131,7 @@ const TABLE: Record<string, EntryTable> = {
       PostStagePass PostStageRead PostStageSlot PostStageTarget
       PostStageViewInfo PostStageViewValues PurposeStats QueryAnswer QueryRay
       RayAnswer RayHitOptions RayQuery RayTargetName RayVerdict Reason
-      ReferenceSurface RefinedPick RequestPurpose ResolveView Rig
+      ReferenceSurface RefinedPick RendererOption RequestPurpose ResolveView Rig
       RigOrientation RigPosition RouteAccuracy ScaleAbout ScaleAboutOptions
       SceneItemOptions SdfGeometryOptions SectionOptions SectionOutcome
       SectionPlaneInput SectionReport SectionRequest SectionResult

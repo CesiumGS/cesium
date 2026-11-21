@@ -293,6 +293,7 @@ entry	name	kind	tier
 .	ReferenceSurface	type	-
 .	RefinedPick	interface	-
 .	RenderTarget	interface	-
+.	RendererOption	type	-
 .	RequestKind	type	-
 .	RequestProxy	interface	-
 .	RequestPurpose	type	-

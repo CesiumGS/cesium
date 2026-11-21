@@ -8,6 +8,9 @@
 // providers load by dynamic `import()`, so they belong in chunks of their
 // own, reached only through it.
 //
+// The same first build checks the WebGL 2 tier: it must be a chunk loaded
+// on demand, with nothing of it in what the WebGPU path loads with the page.
+//
 // A second build, of an app that styles 3D Tiles (a Viewer and a
 // `FeatureStyle`), checks the same of the Slang compiler's modules
 // (src/scene/slang.ts and its worker): styling compiles to WGSL in
@@ -71,6 +74,10 @@ function hasRun(numbers, values) {
 
 /** naga-wasm's modules, a dev dependency that no build may include. */
 const NAGA_MODULES = /[\\/]naga-wasm[\\/]/;
+
+/** The WebGL 2 tier's modules (src/webgl2/): loaded only by the engine's device choice. */
+const WEBGL2_MODULES = /[\\/]src[\\/]webgl2[\\/]/;
+
 /** The Slang compiler's modules (a module id may carry a `?worker&url` query). */
 const SLANG_MODULES = /[\\/]src[\\/]scene[\\/]slang(?:Worker)?\.ts(?:\?|$)/;
 
@@ -312,6 +319,29 @@ try {
   } else {
     console.log(
       "checkBundle: no naga-wasm module in any chunk of these builds",
+    );
+  }
+  // The WebGL 2 tier (src/webgl2/): the engine's device choice loads it by
+  // dynamic import(), only where WebGPU is missing or WebGL 2 is asked for,
+  // so it is a chunk of its own and nothing of it is in what the WebGPU
+  // path loads with the page.
+  const webgl2In = (chunks) =>
+    chunks.filter((c) =>
+      Object.keys(c.modules).some((id) => WEBGL2_MODULES.test(id)),
+    );
+  const webgl2Eager = webgl2In(eager);
+  const webgl2Lazy = webgl2In(lazy);
+  if (webgl2Eager.length > 0) {
+    found.push(
+      `the WebGL 2 tier (src/webgl2/) in ${webgl2Eager.map((c) => c.fileName).join(", ")}, in what the WebGPU path loads with the page`,
+    );
+  } else if (webgl2Lazy.length === 0) {
+    found.push(
+      "no WebGL 2 tier in any chunk of the globe build: this check can no longer tell where it is",
+    );
+  } else {
+    console.log(
+      `checkBundle: the WebGL 2 tier is in ${webgl2Lazy.map((c) => `${c.fileName} (${kb(c.code)} KB)`).join(", ")}, loaded on demand; not in the main chunk or its static imports`,
     );
   }
   if (found.length > 0) {

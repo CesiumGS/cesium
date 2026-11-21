@@ -79,7 +79,8 @@ export class Webgl2ViewRenderer implements ViewRenderer {
 export class Webgl2Device implements RenderDevice {
   readonly kind = "webgl2" as const;
   private support_: SupportReport | undefined;
-  private readonly contexts = new Map<CanvasTarget, WebGL2RenderingContext>();
+  /** The canvases whose context loss is listened for. */
+  private readonly watched = new Set<CanvasTarget>();
   private readonly unlisten: Array<() => void> = [];
   private readonly complained = new Set<RenderTarget>();
   /** The context was lost: the engine stops drawing, as it does after a WebGPU device loss. */
@@ -159,7 +160,7 @@ export class Webgl2Device implements RenderDevice {
       remove();
     }
     this.unlisten.length = 0;
-    this.contexts.clear();
+    this.watched.clear();
   }
 
   /**
@@ -179,21 +180,23 @@ export class Webgl2Device implements RenderDevice {
       }
       return undefined;
     }
-    let gl = this.contexts.get(target);
-    if (!gl) {
-      try {
-        gl = target.webgl2(CANVAS_ATTRIBUTES);
-      } catch (error) {
-        if (!this.complained.has(target)) {
-          this.complained.add(target);
-          this.host.report(
-            "frame",
-            error instanceof Error ? error.message : String(error),
-          );
-        }
-        return undefined;
+    let gl: WebGL2RenderingContext;
+    try {
+      // Each tick: the target sizes its canvas first (an element's CSS box ×
+      // the pixel ratio), as it does for WebGPU, then hands back its context.
+      gl = target.webgl2(CANVAS_ATTRIBUTES);
+    } catch (error) {
+      if (!this.complained.has(target)) {
+        this.complained.add(target);
+        this.host.report(
+          "frame",
+          error instanceof Error ? error.message : String(error),
+        );
       }
-      this.contexts.set(target, gl);
+      return undefined;
+    }
+    if (!this.watched.has(target)) {
+      this.watched.add(target);
       this.watchLoss(target.canvas);
     }
     if (gl.isContextLost()) {

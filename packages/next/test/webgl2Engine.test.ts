@@ -124,6 +124,23 @@ describe('emulate: "webgl2-basic"', () => {
     expect(gl.called("clear")).toHaveLength(2);
   });
 
+  it("sizes an element canvas to its CSS box on every tick, as the WebGPU path does", async () => {
+    const engine = await create({ emulate: "webgl2-basic" });
+    // An element: it has a CSS box (`clientWidth`), and its drawing buffer follows it.
+    const gl = new FakeOffscreenCanvas(1, 1);
+    const element = Object.assign(gl, { clientWidth: 200, clientHeight: 100 });
+    const target = new CanvasTarget(element as never, { pixelRatio: 2 });
+    engine.addView({ target, world: engine.createWorld() });
+    engine.renderFrame();
+    expect([element.width, element.height]).toEqual([400, 200]);
+    element.clientWidth = 300;
+    engine.renderFrame();
+    expect([element.width, element.height]).toEqual([600, 200]);
+    expect(contextOf(element).called("viewport").at(-1)!.args).toEqual([
+      0, 0, 600, 200,
+    ]);
+  });
+
   it("draws only the targets asked for, and not a disabled view", async () => {
     const engine = await create({ emulate: "webgl2-basic" });
     const a = canvasTarget();

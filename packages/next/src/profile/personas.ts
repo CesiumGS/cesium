@@ -150,7 +150,7 @@ export const webgl2Personas = {
       maxTextureSize: 16384,
       maxArrayTextureLayers: 2048,
       max3dTextureSize: 2048,
-      maxUniformBlockSize: 65536,
+      maxUniformBlockSize: 16384,
       maxVertexTextureImageUnits: 16,
       maxSamples: 4,
       maxDrawBuffers: 8,

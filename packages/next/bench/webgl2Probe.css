@@ -1,0 +1,252 @@
+/* The device probe page: a report to read on any device, phone included. */
+:root {
+  color-scheme: light dark;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --text: #16191f;
+  --muted: #5a6270;
+  --line: #d9dde4;
+  --accent: #1f5fd1;
+  --ok: #17703a;
+  --bad: #b3261e;
+  --warn: #8a5a00;
+  --code: #eef0f4;
+  --gap: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #12151a;
+    --surface: #1a1e25;
+    --text: #e6e9ef;
+    --muted: #9aa3b2;
+    --line: #2b313b;
+    --accent: #7fb0ff;
+    --ok: #5fd48a;
+    --bad: #ff8a80;
+    --warn: #e6b04a;
+    --code: #232831;
+  }
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    15px/1.5 system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px var(--gap) 48px;
+}
+h1 {
+  margin: 0 0 4px;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+h2 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.lede {
+  margin: 0 0 20px;
+  color: var(--muted);
+  max-width: 62ch;
+}
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: end;
+  margin-bottom: 20px;
+}
+.controls label {
+  display: grid;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--muted);
+}
+select,
+button {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-height: 40px;
+}
+button {
+  cursor: pointer;
+}
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  button.primary {
+    color: #0b1220;
+  }
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.grid {
+  display: grid;
+  gap: var(--gap);
+  grid-template-columns: minmax(0, 1fr);
+}
+@media (min-width: 900px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 0;
+}
+.card + .card {
+  margin-top: var(--gap);
+}
+.stack > .card + .card {
+  margin-top: var(--gap);
+}
+.verdict {
+  margin: 0 0 4px;
+  font-size: 17px;
+  font-weight: 600;
+}
+.reason {
+  margin: 0;
+  color: var(--muted);
+}
+dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 16px;
+  margin: 8px 0 0;
+}
+@media (max-width: 520px) {
+  dl {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  dd {
+    margin-bottom: 8px;
+  }
+}
+dt {
+  color: var(--muted);
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 14px;
+}
+th,
+td {
+  text-align: left;
+  padding: 4px 8px 4px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+th {
+  font-weight: 500;
+  color: var(--muted);
+}
+td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.ok {
+  color: var(--ok);
+}
+.bad {
+  color: var(--bad);
+}
+.warn {
+  color: var(--warn);
+}
+.mark {
+  font-weight: 700;
+  margin-right: 4px;
+}
+code,
+textarea {
+  font:
+    13px/1.45 ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    monospace;
+}
+code {
+  background: var(--code);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+textarea {
+  width: 100%;
+  min-height: 180px;
+  margin-top: 8px;
+  padding: 10px;
+  color: var(--text);
+  background: var(--code);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  resize: vertical;
+}
+.stage {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+  margin-top: 8px;
+}
+.stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.note {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    transition: none !important;
+  }
+}
