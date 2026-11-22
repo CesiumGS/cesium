@@ -57,7 +57,7 @@ export function whenMapped(buffer: GPUBuffer, then: () => void): void {
 /** @internal A pick the pass encoded, awaiting its readback. */
 export interface PendingPick {
   view: View;
-  /** The camera record the pick used (`PickResult.cameraRecord`). */
+  /** The camera record the pick used (`PickResult.camera`). */
   cameraRecord: CameraRecord;
   readback: GPUBuffer;
   request: View["pendingPicks"][number];
@@ -438,9 +438,13 @@ export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
         request.resolvePosition({ position: p, cameraRecord: c.cameraRecord });
         return;
       }
-      const result = pickResult(featureId, view.world.feature(featureId));
       request.resolve!(
-        result && { ...result, cameraRecord: pick.cameraRecord },
+        pickResult(
+          view.world,
+          featureId,
+          view.world.feature(featureId),
+          pick.cameraRecord,
+        ),
       );
     };
     if (pick.domain) {

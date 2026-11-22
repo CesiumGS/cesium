@@ -10,6 +10,7 @@
  * supported yet (warnings).
  */
 import type { FeatureTable, FeatureValue } from "./gltfTypes.ts";
+import type { FeatureIdSetInfo } from "../scene/identity.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
 
@@ -27,11 +28,63 @@ export interface FeatureIdSource {
   /** Index into the asset's feature tables. */
   table?: number;
   nullFeatureId?: number;
+  /** Its index among the primitive's feature-ID sets (0 for `_BATCHID`). */
+  set: number;
+}
+
+/**
+ * Every `EXT_mesh_features` feature-ID set of a primitive, as read (CS-815):
+ * "A mesh primitive may specify multiple sets of feature IDs" (the
+ * extension's README, read 2026-11-22 at
+ * https://github.com/CesiumGS/glTF/tree/3d-tiles-next/extensions/2.0/Vendor/EXT_mesh_features).
+ * A set with neither `attribute` nor `texture` is implicit: "the feature ID
+ * value for each vertex is given implicitly, via the index of the vertex".
+ * Only attribute sets are drawn yet; texture and implicit sets are reported
+ * (CS-272 draws them). A b3dm's `_BATCHID` is one set, of kind "batch".
+ */
+export function featureIdSets(
+  primitive: Json,
+  batchLength: number | undefined,
+): FeatureIdSetInfo[] {
+  const sets: Json[] =
+    primitive.extensions?.EXT_mesh_features?.featureIds ?? [];
+  const out: FeatureIdSetInfo[] = sets.map((set, index) => ({
+    index,
+    featureCount: set.featureCount,
+    kind:
+      set.attribute !== undefined
+        ? "attribute"
+        : set.texture !== undefined
+          ? "texture"
+          : "implicit",
+    ...(typeof set.label === "string" && { label: set.label }),
+    ...(typeof set.propertyTable === "number" && {
+      propertyTable: set.propertyTable,
+    }),
+  }));
+  if (out.length === 0 && batchLength !== undefined) {
+    for (const name of ["_BATCHID", "BATCHID"]) {
+      if (primitive.attributes?.[name] !== undefined) {
+        return [
+          {
+            index: 0,
+            featureCount: batchLength,
+            kind: "batch",
+            label: name,
+            propertyTable: 0,
+          },
+        ];
+      }
+    }
+  }
+  return out;
 }
 
 /**
  * Picks the primitive's feature-ID set: the first `EXT_mesh_features` entry
  * backed by a vertex attribute, else a legacy `_BATCHID` attribute (b3dm).
+ * It is the identity set (`FeatureIdSource.set`): the extension says nothing
+ * of which set identifies, so the first one drawn does (CS-832's design).
  */
 export function featureIdSource(
   primitive: Json,
@@ -40,13 +93,15 @@ export function featureIdSource(
 ): FeatureIdSource | undefined {
   const sets: Json[] =
     primitive.extensions?.EXT_mesh_features?.featureIds ?? [];
-  for (const set of sets) {
+  for (let index = 0; index < sets.length; index++) {
+    const set = sets[index];
     if (set.attribute !== undefined) {
       return {
         attribute: `_FEATURE_ID_${set.attribute}`,
         featureCount: set.featureCount,
         table: set.propertyTable,
         nullFeatureId: set.nullFeatureId,
+        set: index,
       };
     }
   }
@@ -60,7 +115,7 @@ export function featureIdSource(
       primitive.attributes?.[name] !== undefined &&
       batchLength !== undefined
     ) {
-      return { attribute: name, featureCount: batchLength, table: 0 };
+      return { attribute: name, featureCount: batchLength, table: 0, set: 0 };
     }
   }
   return undefined;
@@ -225,7 +280,25 @@ export function readPropertyTables(
         );
       }
     }
-    return { name: table.name, className: table.class, count, columns };
+    // A class property's `semantic` "describes how this property should be
+    // interpreted" (EXT_structural_metadata, schema/class.property.schema.json,
+    // read 2026-11-22); `ID` is "The unique identifier for the entity" (the 3D
+    // Metadata Semantic Reference, read 2026-11-22).
+    const semantics: Record<string, string> = {};
+    for (const [name, definition] of Object.entries<Json>(
+      cls.properties ?? {},
+    )) {
+      if (typeof definition.semantic === "string" && columns[name]) {
+        semantics[name] = definition.semantic;
+      }
+    }
+    return {
+      name: table.name,
+      className: table.class,
+      count,
+      columns,
+      ...(Object.keys(semantics).length > 0 && { semantics }),
+    };
   });
 }
 

@@ -627,11 +627,15 @@ export function Architecture() {
           <C>renderer</C>, <C>scene</C>, <C>content</C>) that the boundary test
           enforces, and draw records, compiled styles and queries are plain
           data. The bundle check measures what an app with no tilesets pays
-          today, as the baseline the modules are checked against.
+          today, as the baseline the modules are checked against. Stable IDs are
+          built as well: a pick, a ray hit and an ID image all name a feature by
+          a 64-bit hash of what it is (its item, its source, its content and
+          feature), never by the order it loaded in, with labels by taxonomy
+          beside it.
         </p>
         <Written
-          from="the design note docs/design/content-source-seam.md"
-          on="2026-11-21"
+          from="the design note docs/design/content-source-seam.md, and the stable IDs in packages/core/src/scene/identity.ts"
+          on="2026-11-22"
         />
       </Section>
     </Page>

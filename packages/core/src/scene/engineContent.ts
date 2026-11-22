@@ -1,4 +1,5 @@
 // Loading content into an engine: models, tilesets and globes.
+import { canonicalSource } from "./identity.ts";
 import { Globe } from "../globe/Globe.ts";
 import { GlobeImagery } from "../globe/GlobeImagery.ts";
 import type { ImageryProvider } from "../globe/ImageryProvider.ts";
@@ -68,6 +69,7 @@ export async function loadModel(
   signal?.throwIfAborted();
   return engine.uploadModel(world, asset, {
     name: String(url).split("/").pop(),
+    source: canonicalSource(String(url)),
     ...upload,
   });
 }

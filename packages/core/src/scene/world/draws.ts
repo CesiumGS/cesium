@@ -67,6 +67,7 @@ export interface DrawWorld extends Pick<
   | "slabs"
   | "version"
   | "curvilinearMaps"
+  | "identities"
 > {
   /** The world's device copy: geometry bytes go to it (`queueUpload`). */
   readonly mirror: Pick<WorldMirror, "queueUpload">;
@@ -152,6 +153,7 @@ export interface AddDrawWorld extends Pick<
   | "transformsF32Scale"
   | "version"
   | "curvilinearMaps"
+  | "identities"
 > {
   /** The world's device copy: geometry bytes go to it (`queueUpload`). */
   readonly mirror: Pick<WorldMirror, "queueUpload">;
@@ -585,7 +587,8 @@ export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
   world.scene.names[index] = options.name;
   world.scene.featureTables[index] = options.features;
   const firstFeature = world.scene.nextFeatureId;
-  world.scene.nextFeatureId += Math.max(1, mesh.featureCount, instanceFeatures);
+  const slotCount = Math.max(1, mesh.featureCount, instanceFeatures);
+  world.scene.nextFeatureId += slotCount;
   world.scene.featureRangeFirst.push(firstFeature);
   world.scene.featureRangeDraw.push(index);
   world.scene.drawFeatureFirst[index] = firstFeature;
@@ -673,6 +676,18 @@ export function addDraw(world: AddDrawWorld, options: DrawOptions): DrawHandle {
     generation: world.draws.drawGeneration[index]!,
     name: options.name,
   };
+  // Its stable IDs, computed when first asked for (scene/identity.ts).
+  world.identities.register(
+    handle,
+    firstFeature,
+    slotCount,
+    mesh.streams.featureId !== NO_STREAM ||
+      instanceFeatures > 0 ||
+      patchSet !== undefined ||
+      options.features !== undefined,
+    options.identity,
+    options.id,
+  );
   world.scene.contentRevision_++;
   if (options.curvilinearAt !== undefined) {
     world.curvilinearMaps.setCurvilinearAt(
@@ -891,6 +906,8 @@ export function twinDraw(
   const flags = world.draws.recordsU32[o + FLAGS_WORD]!;
   const features = world.scene.featureTables[index];
   const name = world.scene.names[index];
+  // The same content: its IDs differ by the item that draws the twin.
+  const identity = world.identities.identityOfDraw(index);
   return world.addDraw({
     mesh: batch.mesh,
     transform: {
@@ -907,6 +924,7 @@ export function twinDraw(
     viewMask: 0,
     ...(name !== undefined && { name }),
     ...(features !== undefined && { features }),
+    ...(identity !== undefined && { identity }),
   });
 }
 
@@ -972,6 +990,7 @@ export function removeDraw(world: DrawWorld, handle: DrawHandle): void {
     world.raster.instanceStreamRanges[handle.index] = undefined;
   }
   releaseOwnedTransform(world, handle.index);
+  world.identities.unregister(handle.index);
   world.scene.names[handle.index] = undefined;
   world.scene.featureTables[handle.index] = undefined;
   world.scene.pickSources.delete(handle.index);

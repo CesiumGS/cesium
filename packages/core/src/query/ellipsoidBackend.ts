@@ -69,7 +69,12 @@ function blockedAt(
   for (let i = 0; i < 3; i++) {
     position[i] = ray.from[i]! + t * (ray.to[i]! - ray.from[i]!);
   }
-  return { verdict: "blocked", hit: { t, position }, unknown, accuracy };
+  return {
+    verdict: "blocked",
+    hit: { t, position, basis: "surface" },
+    unknown,
+    accuracy,
+  };
 }
 
 /**

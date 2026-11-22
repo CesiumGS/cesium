@@ -35,6 +35,7 @@ export interface TilesetUpdate extends Pick<
   | "events"
   | "evict"
   | "firstContentAt"
+  | "url"
   | "geometricError"
   | "idle"
   | "imagery"

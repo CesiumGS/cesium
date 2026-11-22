@@ -67,9 +67,6 @@ export interface PickView {
     readonly pixelRatio?: number;
   };
   pixelRect(): { readonly width: number; readonly height: number };
-  readonly world: {
-    feature(featureId: number): { readonly draw: DrawHandle } | undefined;
-  };
 }
 
 /** What a pick found: a true position, and design coordinates when placed. */
@@ -391,10 +388,7 @@ export async function pickInFrame(
       );
       return { pick };
     }
-    const draw =
-      feature === undefined
-        ? undefined
-        : view.world.feature(feature.featureId)?.draw;
+    const draw = feature?.draw;
     return framed(view.body, position, feature, draw, camera, tilesets);
   }
   throw new Error("unreachable");

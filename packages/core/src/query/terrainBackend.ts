@@ -185,7 +185,7 @@ export function terrainRayAnswer(
   return {
     verdict,
     ...(ray.hit && {
-      hit: { t: ray.hit.t, position: ray.hit.point },
+      hit: { t: ray.hit.t, position: ray.hit.point, basis: "surface" },
     }),
     unknown: spans,
     accuracy: meters === undefined ? { note } : { meters, note },

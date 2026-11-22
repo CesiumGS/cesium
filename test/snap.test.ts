@@ -37,6 +37,7 @@ import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
 import type { TileGeometry } from "../packages/core/src/streaming/Tile.ts";
 import { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import { fakeEngine } from "./fakeGpu.ts";
+import { standInPick } from "./pickStandIn.ts";
 
 const R = 6_378_137;
 // An EngineeringFrame to `instanceof` (engineeringPlacement), with only what is read.
@@ -135,9 +136,7 @@ function view(
   return {
     pick: async () => {
       o.onPick?.(camera);
-      return o.feature === false
-        ? undefined
-        : { featureId: 7, name: undefined };
+      return o.feature === false ? undefined : standInPick(7n, DRAW);
     },
     pickPosition: async (x, y) =>
       positionHit(o.sky ? undefined : under(x, y), camera, 1000, 500),
@@ -145,7 +144,6 @@ function view(
     camera,
     target: { kind: "canvas", width: 1000, pixelRatio: 1 },
     pixelRect: () => ({ width: 1000, height: 500 }),
-    world: { feature: () => ({ draw: DRAW }) },
   };
 }
 
@@ -168,7 +166,7 @@ describe("ClientSnapService", () => {
     expect(r!.curve).toBeUndefined();
     expect(r!.source).toBe("client");
     expect(r!.provisional).toBe(false);
-    expect(r!.feature).toEqual({ featureId: 7, name: undefined });
+    expect(r!.feature).toEqual(standInPick(7n, DRAW));
     expect(r!.camera!.position[0]).toBe(R + 1000);
     // The face normal, toward the camera.
     expect(Array.from(r!.normal!)).toEqual([1, 0, 0]);
@@ -347,10 +345,20 @@ describe("ClientSnapService: no design answer (Review Focus 4)", () => {
     // under the cursor.
     const v = view();
     const camera = v.camera as Camera;
-    v.world.feature = () => {
-      camera.direction.set([-1, 0.5, 0]);
-      camera.orient(Float64Array.from([0, 0, 1]));
-      return { draw: DRAW };
+    const pick = v.pick;
+    v.pick = async (x, y) => {
+      const feature = await pick(x, y);
+      // The draw is read once the frame is checked: the camera turns then.
+      return (
+        feature &&
+        Object.defineProperty({ ...feature }, "draw", {
+          get: () => {
+            camera.direction.set([-1, 0.5, 0]);
+            camera.orient(Float64Array.from([0, 0, 1]));
+            return DRAW;
+          },
+        })
+      );
     };
     const r = await new ClientSnapService([tileset()]).snap({
       view: v,
@@ -418,7 +426,7 @@ describe("refiningSnap: the client's snap, then the server's", () => {
     const [req, signal] = fn.mock.calls[0]!;
     expect(signal).toBeUndefined();
     expect(req.tileset).toBe(ts);
-    expect(req.feature).toEqual({ featureId: 7, name: undefined });
+    expect(req.feature).toEqual(standInPick(7n, DRAW));
     expect(req.testPoint).toBe(first.hitPoint);
     expect(req.closePoint).toBe(first.snapPoint);
     expect(req.camera).toBe(first.camera);
@@ -534,7 +542,7 @@ describe("refiningSnap: the client's snap, then the server's", () => {
   it("keeps the client's feature, not the server's", async () => {
     const { service } = server(async () => ({
       ...answer(),
-      feature: { featureId: 99, name: undefined },
+      feature: standInPick(99n),
     }));
     const r = await refiningSnap(
       request(),
@@ -543,7 +551,7 @@ describe("refiningSnap: the client's snap, then the server's", () => {
       () => {},
     );
     expect(r?.source).toBe("server");
-    expect(r?.feature?.featureId).toBe(7);
+    expect(r?.feature?.id).toBe(7n);
   });
 
   it("accepts an exact design point a little inside the drawn mesh", async () => {

@@ -12,6 +12,7 @@
 import type { World } from "../scene/World.ts";
 import type { CastOptions, CastRay } from "../scene/world/types.ts";
 import type { Tile } from "../streaming/Tile.ts";
+import type { StableId } from "../scene/identity.ts";
 import type {
   RayAnswer,
   RayBackend,
@@ -21,7 +22,11 @@ import type {
 
 /** Where a query's rays are cast: the world, and the cast's anchor and views. */
 export interface DrawRoute {
-  readonly world: Pick<World, "castRays">;
+  /**
+   * The world cast in: with `identities`, hits carry the stable ID of what
+   * they hit (a pick's there), from the slots its cast fills (`hitSlots`).
+   */
+  readonly world: Pick<World, "castRays"> & Partial<Pick<World, "identities">>;
   readonly options: CastOptions;
   /** Groups queries into one cast: equal keys, one dispatch. */
   readonly key: string;
@@ -96,11 +101,26 @@ export function drawBackend(
       });
       await Promise.all(
         [...groups.values()].map(async ({ route, rays, slots }) => {
-          const hits = await route.world.castRays(rays, route.options);
-          hits.forEach((distance, i) => {
+          const { world } = route;
+          const hitSlots: number[] = [];
+          const distances = await world.castRays(rays, {
+            ...route.options,
+            ...(world.identities && { hitSlots }),
+          });
+          // A world that left the slots empty (a stand-in's) gives no IDs.
+          const hits = distances.map((distance, i) => {
+            if (distance === undefined) {
+              return undefined;
+            }
+            const slot = hitSlots[i] ?? 0;
+            return slot > 0 && world.identities
+              ? { distance, id: world.identities.idOfSlot(slot) }
+              : { distance };
+          });
+          hits.forEach((hit, i) => {
             const [q, r, length, untested] = slots[i]!;
             const ray = queries[q]!.rays[r]!;
-            out[q]![r] = drawAnswer(ray, rays[i]!, distance, length, untested);
+            out[q]![r] = drawAnswer(ray, rays[i]!, hit, length, untested);
           });
         }),
       );
@@ -112,10 +132,11 @@ export function drawBackend(
 function drawAnswer(
   ray: RayQuery["rays"][number],
   cast: CastRay,
-  distance: number | undefined,
+  hit: { distance: number; id?: StableId } | undefined,
   length: number,
   untested: readonly UnknownSpan[],
 ): RayAnswer {
+  const distance = hit?.distance;
   const bounds =
     "tiles not drawn are bounded by their bounding spheres, so their spans may run wider than the tiles";
   if (distance === undefined) {
@@ -149,7 +170,12 @@ function drawAnswer(
     .map((s) => (s.to > t ? { ...s, to: t } : s));
   return {
     verdict: "blocked",
-    hit: { t, position },
+    hit: {
+      t,
+      position,
+      ...(hit!.id !== undefined && hit!.id !== 0n && { id: hit!.id }),
+      basis: "surface",
+    },
     unknown: before,
     accuracy: {
       note: `the nearest draw's triangle, ray cast on the GPU in 32-bit floats${before.length > 0 ? `; tiles not drawn yet before it are untested, so it may be blocked sooner; ${bounds}` : ""}`,

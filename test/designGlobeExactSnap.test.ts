@@ -40,6 +40,7 @@ import {
   type SnapResult,
 } from "../packages/crs/src/engineering/snap.ts";
 import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
+import { standInPick } from "./pickStandIn.ts";
 
 const R = 6_378_137;
 const MPU = 1200 / 3937;
@@ -488,7 +489,7 @@ describe("ExactSnapService through refiningSnap, the barrier drawn", () => {
     camera.near = 0.1;
     const fovy = camera.fovy(W / H);
     const view: PickView = {
-      pick: async () => ({ featureId: 7, name: undefined }),
+      pick: async () => standInPick(7n, DRAW),
       pickPosition: async (px, py) => {
         const t = Math.tan(fovy / 2);
         const nx = ((2 * px) / W - 1) * t * (W / H);
@@ -509,7 +510,6 @@ describe("ExactSnapService through refiningSnap, the barrier drawn", () => {
       camera,
       target: { kind: "canvas", width: W, pixelRatio: 1 },
       pixelRect: () => ({ width: W, height: H }),
-      world: { feature: () => ({ draw: DRAW }) },
     };
     const pixel = (p: ArrayLike<number>) => {
       const out = new Float64Array(2);

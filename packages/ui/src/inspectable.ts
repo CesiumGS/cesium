@@ -42,7 +42,8 @@ export interface ContentMix {
 /** A picked feature. */
 export interface PickInfo {
   name?: string;
-  featureId?: number;
+  /** Its stable ID (`PickResult.id`), as decimal text. */
+  id?: string;
   properties?: Record<string, unknown>;
 }
 

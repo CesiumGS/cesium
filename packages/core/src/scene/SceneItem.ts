@@ -24,6 +24,15 @@ import type { CurvilinearAt } from "./curvilinearAnchor.ts";
 import type { Georeference } from "../georeference/georeference.ts";
 import type { ItemDraws, Tile } from "../streaming/Tile.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
+import {
+  canonicalSource,
+  checkLabels,
+  checkSchemaIdentity,
+  type IdentityDeclaration,
+  type ItemIdentity,
+  type Labels,
+  type TaxonomyDeclaration,
+} from "./identity.ts";
 
 /** At or above this opacity an item draws opaque (surface.slang's `OPAQUE_ALPHA`). */
 const OPAQUE_OPACITY = 0.999;
@@ -96,6 +105,32 @@ export interface SceneItemOptions {
    * nothing under an anchor placed rigidly.
    */
   curvilinearAt?: CurvilinearAt;
+  /**
+   * The item's key, part of every stable ID it draws (`StableKey.item`), so
+   * the same content drawn twice has two sets of IDs. Unique in its world.
+   * Default the tileset's canonical URL (`canonicalSource`); a second item of
+   * a tileset without one takes an ordinal (`#2`), which then depends on the
+   * order items were added, and `Engine.errors` says so.
+   */
+  id?: string;
+  /**
+   * Labels by taxonomy for everything it draws (`{ class: ["truck"] }`), in
+   * each taxonomy its content doesn't set itself: the lowest level of the
+   * precedence (`Identity`).
+   */
+  labels?: Labels;
+  /**
+   * Where its content's labels come from: a property per taxonomy
+   * (`{ taxonomy: "class", from: "property", property: "classification" }`),
+   * as no 3D Tiles semantic names a class label.
+   */
+  taxonomies?: readonly TaxonomyDeclaration[];
+  /**
+   * How its content's IDs are made: a property that names each feature (an
+   * element ID) makes them hold at every level of detail. Default: a
+   * property with the `ID` semantic, if the content has one.
+   */
+  identity?: IdentityDeclaration;
 }
 
 /** @internal What an item needs of its tileset. */
@@ -152,6 +187,7 @@ export function checkItemOptions(
   if (options.curvilinearAt !== undefined) {
     checkCurvilinearAt(options.curvilinearAt);
   }
+  checkItemIdentity(options, "World.add");
   if (options.placement !== undefined) {
     checkParameterValue("SceneItem.placement", options.placement);
     if (!hasSecond && options.placement !== 0) {
@@ -160,6 +196,47 @@ export function checkItemOptions(
       );
     }
   }
+}
+
+/**
+ * @internal Throws for identity options an item or a placement refuses: an
+ * id that isn't a non-empty string, labels that aren't sets of strings, and
+ * reserved taxonomies.
+ */
+export function checkItemIdentity(
+  options: Pick<SceneItemOptions, "id" | "labels" | "taxonomies" | "identity">,
+  where: string,
+): void {
+  if (
+    options.id !== undefined &&
+    (typeof options.id !== "string" || options.id.length === 0)
+  ) {
+    throw new TypeError(`${where}: an id is a non-empty string.`);
+  }
+  if (options.labels !== undefined) {
+    checkLabels(options.labels, where);
+  }
+  checkSchemaIdentity(
+    {
+      ...(options.taxonomies && { taxonomies: options.taxonomies }),
+      ...(options.identity && { identity: options.identity }),
+    },
+    where,
+  );
+}
+
+/** @internal An item's or a placement's identity, its key claimed in `world`. */
+export function itemIdentity(
+  world: Pick<World, "identities">,
+  options: Pick<SceneItemOptions, "id" | "labels" | "taxonomies" | "identity">,
+  derived: string,
+): ItemIdentity {
+  return {
+    key: world.identities.claimItemKey(options.id, derived),
+    ...(options.labels && { labels: checkLabels(options.labels, "item") }),
+    ...(options.taxonomies && { taxonomies: [...options.taxonomies] }),
+    ...(options.identity && { identity: { ...options.identity } }),
+  };
 }
 
 /** Throws unless `at` is "vertex" or "anchor". */
@@ -210,6 +287,8 @@ export class SceneItem {
   private dual: DualPosition | undefined;
   /** The words its tint and opacity are written as. */
   private readonly color = new Float32Array(4);
+  /** @internal Its key and labels, for the stable IDs of what it draws. */
+  readonly identity: ItemIdentity;
 
   /** @internal Use `World.add`. */
   constructor(
@@ -224,6 +303,14 @@ export class SceneItem {
     if (options.tint !== undefined) {
       checkTint(options.tint);
     }
+    checkItemIdentity(options, "World.add");
+    this.identity = itemIdentity(
+      host.world,
+      options,
+      canonicalSource(host.tileset.url),
+    );
+    // Draws already loaded may now take another item's key: their IDs again.
+    host.world.identities.recompute();
     this.placementValue = 0;
     this.tint_ = options.tint ?? WHITE;
     this.opacity_ = options.opacity ?? 1;
@@ -425,6 +512,8 @@ export class SceneItem {
       this.host.tileBytes(tile, -bytes);
     }
     this.releaseDual();
+    this.host.world.identities.releaseItemKey(this.identity.key);
+    this.host.world.identities.recompute();
     this.host.removed(this);
     this.host.surfaceChanged();
     this.host.changed();
@@ -432,6 +521,10 @@ export class SceneItem {
 
   /** @internal Its tileset was destroyed: its tiles have unloaded. */
   destroyed(): void {
+    if (!this.removed_) {
+      this.host.world.identities.releaseItemKey(this.identity.key);
+      this.host.world.identities.recompute();
+    }
     this.removed_ = true;
     this.dual = undefined;
   }

@@ -279,7 +279,11 @@ export function castTilesetRays(
     if (blockAt !== undefined) {
       return {
         verdict: "blocked" as const,
-        hit: { t: blockAt, position: positionAt(ray, blockAt) },
+        hit: {
+          t: blockAt,
+          position: positionAt(ray, blockAt),
+          basis: "surface",
+        },
         unknown: unknown.filter((u) => u.from < blockAt),
         accuracy:
           hit === blockAt

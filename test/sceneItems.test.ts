@@ -35,6 +35,7 @@ import { ClientSnapService } from "../packages/crs/src/engineering/snap.ts";
 import { FeatureStyle } from "../packages/core/src/scene/FeatureStyle.ts";
 import { untestedSpans } from "../packages/core/src/query/drawBackend.ts";
 import { fakeEngine } from "./fakeGpu.ts";
+import { standInPick } from "./pickStandIn.ts";
 const world = (w: World): World => w;
 
 const R = 6_378_137;
@@ -773,7 +774,7 @@ describe("scene items", () => {
         anchor: undefined,
         anchorPosition: here,
         draw: twin,
-        feature: { featureId: 7, name: undefined },
+        feature: standInPick(7n),
         item: placed,
         seconds: 0,
         camera: pose,

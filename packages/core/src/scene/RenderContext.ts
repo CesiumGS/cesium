@@ -392,6 +392,8 @@ export interface Pipelines extends SurfacePipelines {
   scatterLayout: GPUBindGroupLayout;
   /** Rays against draw geometry (`World.castRays`, `raycast.slang`). */
   raycast: GPUComputePipeline;
+  /** The feature slots of rays' nearest hits, after `raycast` (`rayFeature`). */
+  raycastFeature: GPUComputePipeline;
   /** Average log luminance for automatic exposure (`meter.slang`). */
   meter: GPUComputePipeline;
   /** The eye's local adaptation map (`adapt.slang`): reduce, then blur. */
@@ -2049,6 +2051,7 @@ async function createPipelines(
     pickTriangle,
     scatter,
     raycast,
+    raycastFeature,
     meter,
     adaptReduce,
     adaptBlur,
@@ -2241,6 +2244,14 @@ async function createPipelines(
       compute: {
         module: module("raycast", raycastWgsl),
         entryPoint: "main",
+      },
+    }),
+    device.createComputePipelineAsync({
+      label: "raycast.feature",
+      layout: "auto",
+      compute: {
+        module: module("raycast", raycastWgsl),
+        entryPoint: "rayFeature",
       },
     }),
     device.createComputePipelineAsync({
@@ -2617,6 +2628,7 @@ async function createPipelines(
     scatter,
     scatterLayout,
     raycast,
+    raycastFeature,
     meter,
     adaptReduce,
     adaptBlur,

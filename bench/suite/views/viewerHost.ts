@@ -629,7 +629,7 @@ export class NextViewerHost implements ViewerHost {
     return r
       ? {
           ...(r.name !== undefined ? { name: r.name } : {}),
-          featureId: r.featureId,
+          id: r.id.toString(),
           ...(r.properties ? { properties: r.properties } : {}),
         }
       : undefined;

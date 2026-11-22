@@ -2272,8 +2272,8 @@ function pickHtml(pick: PickInfo | undefined): string {
     )
     .join("");
   return `<div class="ci-pick-name">${escape(pick.name ?? "(unnamed)")}</div>${
-    pick.featureId !== undefined
-      ? `<div class="ci-note">feature ${pick.featureId}</div>`
+    pick.id !== undefined
+      ? `<div class="ci-note">ID ${escape(pick.id)}</div>`
       : ""
   }${rows ? `<table class="ci-props">${rows}</table>` : ""}`;
 }

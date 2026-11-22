@@ -48,6 +48,7 @@ import type { TileGeometry } from "../packages/core/src/streaming/Tile.ts";
 import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
+import { standInPick } from "./pickStandIn.ts";
 
 const SECONDS = Date.UTC(2000, 0, 1, 12) / 1000;
 const WGS84 = Ellipsoid.WGS84;
@@ -622,7 +623,7 @@ function curvilinearView(
     anchorPlacement: () => identity,
   };
   return {
-    pick: async () => ({ featureId: 7, name: undefined }),
+    pick: async () => standInPick(7n),
     pickPosition: async () => undefined,
     pickPoint: async (x: number, y: number) => {
       // The drawn plane x = R under the pixel; its true point has z / k.
@@ -635,7 +636,7 @@ function curvilinearView(
         anchor: undefined,
         anchorPosition: drawn,
         draw: DRAW,
-        feature: { featureId: 7, name: undefined },
+        feature: standInPick(7n),
         seconds: 0,
         camera: {
           position: Float64Array.of(R + 1000, 0, 0),

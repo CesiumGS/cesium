@@ -6,6 +6,7 @@
 
 import type { BrepForm } from "../brep/form.ts";
 import type { PropertyTextureData } from "../scene/meshes.ts";
+import type { FeatureIdSetInfo } from "../scene/identity.ts";
 
 export interface GltfMesh {
   positions: Float32Array;
@@ -27,6 +28,12 @@ export interface GltfMesh {
   brep?: number;
   /** Index into `GltfAsset.featureTables` describing the features. */
   featureTable?: number;
+  /**
+   * Every `EXT_mesh_features` feature-ID set of its primitive, as read
+   * (`featureIdSets`), and the one `featureIds` holds: the identity set.
+   */
+  featureSets?: FeatureIdSetInfo[];
+  identitySet?: number;
   /** "line-list" for glTF LINES/LINE_STRIP/LINE_LOOP; default triangle-list. */
   topology?: "triangle-list" | "line-list";
   /** A globe tile's first skirt vertex (`MeshData.skirtStart`). */
@@ -75,6 +82,11 @@ export interface FeatureTable {
   className?: string;
   count: number;
   columns: Record<string, FeatureValue[]>;
+  /**
+   * Each property's `semantic` from its class (`EXT_structural_metadata`), by
+   * property name: `ID` names the feature (`StableKey` kind `named`).
+   */
+  semantics?: Record<string, string>;
 }
 
 /** Block-compressed (or fallback RGBA8) texture data transcoded in a worker. */
@@ -141,6 +153,8 @@ export interface GltfDraw {
   instanceFeatureIds?: Uint32Array;
   /** Which of `GltfAsset.parts` it belongs to (a composite's). */
   part?: number;
+  /** Its glTF node and primitive (`n3/p0`), for its stable IDs. */
+  path?: string;
 }
 
 /** How a content load spent its time in the worker, and its image types. */

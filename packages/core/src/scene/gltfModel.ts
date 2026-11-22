@@ -41,6 +41,15 @@ import type {
   TransformHandle,
 } from "./world/types.ts";
 import type { CustomShader } from "./CustomShader.ts";
+import type {
+  DrawIdentity,
+  FeatureIdSetInfo,
+  IdentityDeclaration,
+  ItemIdentity,
+  Labels,
+  TaxonomyDeclaration,
+} from "./identity.ts";
+import { checkItemIdentity, itemIdentity } from "./SceneItem.ts";
 
 /**
  * How a model is uploaded (`engine.loadModel`, `engine.uploadModel`): what
@@ -79,6 +88,12 @@ export interface ModelResourceOptions {
   retainGeometry?: boolean;
   /** A name, for the inspector and warnings. */
   name?: string;
+  /**
+   * @internal Its canonical reference (`canonicalSource`), for its stable IDs:
+   * `loadModel`'s URL. A model uploaded from memory has none, and its
+   * placements' IDs take its name.
+   */
+  source?: string;
 }
 
 /**
@@ -208,6 +223,19 @@ interface PlacementCommon {
   /** A closed solid: section caps cut through it (default false; `DrawOptions.solid`). */
   solid?: boolean;
   name?: string;
+  /**
+   * The placement's key, part of every stable ID it draws (as
+   * `SceneItemOptions.id`). Unique in its world. Default the model's URL; a
+   * second placement of one model without one takes an ordinal (`#2`), which
+   * depends on the order placements were made.
+   */
+  id?: string;
+  /** Labels by taxonomy for everything it draws (`SceneItemOptions.labels`). */
+  labels?: Labels;
+  /** Where its features' labels come from (`SceneItemOptions.taxonomies`). */
+  taxonomies?: readonly TaxonomyDeclaration[];
+  /** How its features' IDs are made (`SceneItemOptions.identity`). */
+  identity?: IdentityDeclaration;
   /** Initial view mask of every draw (default: all views). */
   viewMask?: number;
   /**
@@ -234,6 +262,11 @@ export type InternalPlacementOptions = PlacementOptions & {
   collision?: boolean;
   /** Drawn behind all other content (the bare ellipsoid's tiles). */
   underlay?: boolean;
+  /**
+   * A tile's content, for its stable IDs: its tileset's canonical URL and
+   * the content relative to it. Its item is the scene item that draws it.
+   */
+  contentIdentity?: { source: string; content: string };
 };
 
 /** GPU instances of a whole model (`PlacementOptions.instances`). */
@@ -291,6 +324,8 @@ interface PlacementTemplate {
   drawTables: Array<FeatureTable | undefined>;
   /** The first table (i3dm's batch table, for its instances). */
   firstTable?: FeatureTable;
+  /** Per draw, its mesh's feature-ID sets and identity set (`GltfMesh.featureSets`). */
+  drawSets: Array<{ set: number; sets?: FeatureIdSetInfo[] }>;
 }
 
 /** What a placement's engine provides: its ground clamping. */
@@ -368,6 +403,8 @@ const sourceReleased = new WeakSet<GltfAsset>();
 export class ModelResource implements Disposable {
   readonly world: World;
   readonly name: string | undefined;
+  /** @internal Its canonical reference, for stable IDs (`ModelResourceOptions.source`). */
+  readonly source: string | undefined;
   readonly colorTransfer: "srgb" | "gamma2.2";
   readonly axes: NonNullable<ModelResourceOptions["axes"]>;
   /** @internal The GPU resources. */
@@ -395,6 +432,7 @@ export class ModelResource implements Disposable {
     this.asset = asset;
     this.upload = upload;
     this.name = options.name;
+    this.source = options.source;
     this.colorTransfer = options.colorTransfer ?? "srgb";
     this.axes = options.axes ?? "gltf";
     this.retained = options.retainGeometry ? retainMeshes(asset) : undefined;
@@ -412,6 +450,13 @@ export class ModelResource implements Disposable {
         return table !== undefined ? asset.featureTables[table] : undefined;
       }),
       ...(asset.featureTables[0] ? { firstTable: asset.featureTables[0] } : {}),
+      drawSets: asset.draws.map((d) => {
+        const mesh = asset.meshes[d.mesh];
+        return {
+          set: mesh?.featureIds ? (mesh.identitySet ?? 0) : -1,
+          ...(mesh?.featureSets && { sets: mesh.featureSets }),
+        };
+      }),
     };
     this.state = {
       name: options.name ?? "model",
@@ -734,13 +779,22 @@ export function placeModel(
     lights: [],
   };
   let root: TransformHandle | undefined;
+  // A model's own placement is its item; a tile's item is its scene item.
+  checkItemIdentity(options, "place");
+  const item =
+    options.contentIdentity === undefined
+      ? itemIdentity(world, options, modelSource(model))
+      : undefined;
   try {
-    const placement = placeGltf(model, options, placed, (handle) => {
+    const placement = placeGltf(model, options, placed, item, (handle) => {
       root = handle;
     });
     model.placed();
     return placement;
   } catch (error) {
+    if (item) {
+      world.identities.releaseItemKey(item.key);
+    }
     for (const light of placed.lights) {
       world.removeLight(light);
     }
@@ -777,10 +831,16 @@ function placementMatrix(world: World, options: PlacementOptions): Mat4 {
   );
 }
 
+/** A model's source for its IDs: its URL, else its name. */
+function modelSource(model: ModelResource): string {
+  return model.source ?? `model:${model.name ?? ""}`;
+}
+
 function placeGltf(
   model: ModelResource,
   options: InternalPlacementOptions,
   placed: { draws: DrawHandle[]; lights: LightHandle[] },
+  item: ItemIdentity | undefined,
   onRoot: (root: TransformHandle) => void,
 ): ModelPlacement {
   const { world, upload, template: asset } = model;
@@ -889,6 +949,7 @@ function placeGltf(
       features:
         asset.drawTables[d] ??
         (!composite && only ? asset.firstTable : undefined),
+      identity: drawIdentity(model, options, item, d, draw),
       ...(user
         ? {
             instances: modelInstances(
@@ -964,6 +1025,7 @@ function placeGltf(
     model,
     draws,
     lights,
+    item?.key,
     root,
     // The bounds in the root's frame: they follow it (moves, clamping).
     m4.transformPoint(
@@ -980,6 +1042,31 @@ function placeGltf(
     placement.anchor(reference, options.heightOffset);
   }
   return placement;
+}
+
+/**
+ * What draw `d` of a placement is, for its stable IDs: the source, the
+ * content (a tile's, then a composite's part, then the glTF node and
+ * primitive) and its feature-ID sets.
+ */
+function drawIdentity(
+  model: ModelResource,
+  options: InternalPlacementOptions,
+  item: ItemIdentity | undefined,
+  d: number,
+  draw: GltfDraw,
+): DrawIdentity {
+  const tile = options.contentIdentity;
+  const path = `${draw.part !== undefined ? `c${draw.part}/` : ""}${draw.path ?? `d${d}`}`;
+  const sets = model.template.drawSets[d];
+  return {
+    source: tile?.source ?? modelSource(model),
+    content: tile ? `${tile.content}#${path}` : path,
+    set: sets?.set ?? -1,
+    ...(sets?.sets && { sets: sets.sets }),
+    scope: tile ? "tile" : "global",
+    ...(item && { item }),
+  };
 }
 
 /**
@@ -1068,6 +1155,8 @@ export class ModelPlacement implements Disposable {
     model: ModelResource,
     draws: DrawHandle[],
     lights: LightHandle[],
+    /** The item key it claimed (a model's own placement), released when removed. */
+    private readonly itemKey: string | undefined,
     transform: TransformHandle,
     private readonly localCenter: Vec3,
     private readonly radius: number,
@@ -1231,6 +1320,9 @@ export class ModelPlacement implements Disposable {
       world.removeDraw(draw);
     }
     world.removeTransform(this.transform);
+    if (this.itemKey !== undefined) {
+      world.identities.releaseItemKey(this.itemKey);
+    }
     this.model.unplaced();
   }
 

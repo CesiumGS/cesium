@@ -241,21 +241,189 @@ fn main(@builtin(workgroup_id) wg_0 : vec3<u32>, @builtin(local_invocation_index
 }
 
 @compute
+@workgroup_size(64, 1, 1)
+fn rayFeature(@builtin(workgroup_id) wg_1 : vec3<u32>, @builtin(local_invocation_index) lane_1 : u32)
+{
+    var jobIndex_1 : u32 = wg_1.y * WorkgroupCount_0().x + wg_1.x;
+    var _S12 : vec2<u32> = vec2<u32>(arrayLength(&jobs_0), 16);
+    if((jobIndex_1 >= (_S12.x)))
+    {
+        return;
+    }
+    var job_1 : Job_std430_0 = jobs_0[jobIndex_1];
+    var _S13 : u32 = job_1.record_0;
+    var firstIndex_2 : u32 = records_0[_S13].firstIndex_0;
+    var positionOffset_2 : u32 = records_0[_S13].positionOffset_0;
+    var _S14 : u32 = (job_1.firstTriangle_0 + lane_1) * u32(3);
+    if(((_S14 + u32(2)) >= (records_0[_S13].indexCount_0)))
+    {
+        return;
+    }
+    var _S15 : vec2<u32> = vec2<u32>(arrayLength(&rays_0), 48);
+    var rayCount_0 : u32 = _S15.x;
+    var _S16 : vec2<u32> = vec2<u32>(arrayLength(&hits_0), 4);
+    var hitCount_0 : u32 = _S16.x;
+    var _S17 : bool;
+    if(((job_1.ray_0) >= rayCount_0))
+    {
+        _S17 = true;
+    }
+    else
+    {
+        _S17 = ((rayCount_0 + job_1.ray_0) >= hitCount_0);
+    }
+    if(_S17)
+    {
+        return;
+    }
+    var nearest_0 : u32 = atomicLoad(&(hits_0[job_1.ray_0]));
+    if(nearest_0 == u32(2139095039))
+    {
+        return;
+    }
+    var t_1 : Transform_std430_0 = transforms_0[records_0[_S13].transform_0];
+    var ray_2 : Ray_std430_0 = rays_0[job_1.ray_0];
+    var origin_1 : vec3<f32> = SplitPosition_difference_0(SplitPosition_x24init_0(ray_2.originHi_1, ray_2.originLo_1), SplitPosition_x24init_0(t_1.originHi_0, t_1.originLo_0));
+    var _S18 : mat3x3<f32> = mat3x3<f32>(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+    var _S19 : vec3<f32> = vec3<f32>(0.0f);
+    var _S20 : bool = (job_1.instance_0) != u32(4294967295);
+    var local_1 : mat3x3<f32>;
+    var offset_2 : vec3<f32>;
+    var instanceFeature_0 : u32;
+    if(_S20)
+    {
+        var inst_1 : Instance_std430_0 = instanceTable_0[job_1.instance_0];
+        var _S21 : vec3<f32> = vec3<f32>(inst_1.row0_0.w, inst_1.row1_0.w, inst_1.row2_0.w);
+        local_1 = mat3x3<f32>(inst_1.row0_0.xyz, inst_1.row1_0.xyz, inst_1.row2_0.xyz);
+        offset_2 = _S21;
+        instanceFeature_0 = inst_1.feature_0;
+    }
+    else
+    {
+        local_1 = _S18;
+        offset_2 = _S19;
+        instanceFeature_0 = u32(4294967295);
+    }
+    var first_1 : u32 = firstIndex_2 + _S14;
+    var _S22 : mat3x3<f32> = mat3x3<f32>(t_1.linear_0.data_0[i32(0)][i32(0)], t_1.linear_0.data_0[i32(1)][i32(0)], t_1.linear_0.data_0[i32(2)][i32(0)], t_1.linear_0.data_0[i32(0)][i32(1)], t_1.linear_0.data_0[i32(1)][i32(1)], t_1.linear_0.data_0[i32(2)][i32(1)], t_1.linear_0.data_0[i32(0)][i32(2)], t_1.linear_0.data_0[i32(1)][i32(2)], t_1.linear_0.data_0[i32(2)][i32(2)]);
+    var a_1 : vec3<f32> = ((((((position_0(positionOffset_2, indices_0[first_1])) * (local_1))) + offset_2) * (_S22)));
+    var e1_1 : vec3<f32> = ((((((position_0(positionOffset_2, indices_0[first_1 + u32(1)])) * (local_1))) + offset_2) * (_S22))) - a_1;
+    var e2_1 : vec3<f32> = ((((((position_0(positionOffset_2, indices_0[first_1 + u32(2)])) * (local_1))) + offset_2) * (_S22))) - a_1;
+    var p_1 : vec3<f32> = cross(ray_2.direction_0, e2_1);
+    var det_1 : f32 = dot(e1_1, p_1);
+    if(((abs(det_1)) < 9.999999960041972e-13f))
+    {
+        return;
+    }
+    var inv_1 : f32 = 1.0f / det_1;
+    var s_1 : vec3<f32> = origin_1 - a_1;
+    var u_1 : f32 = dot(s_1, p_1) * inv_1;
+    if((u_1 < 0.0f))
+    {
+        _S17 = true;
+    }
+    else
+    {
+        _S17 = (u_1 > 1.0f);
+    }
+    if(_S17)
+    {
+        return;
+    }
+    var q_1 : vec3<f32> = cross(s_1, e1_1);
+    var v_1 : f32 = dot(ray_2.direction_0, q_1) * inv_1;
+    if((v_1 < 0.0f))
+    {
+        _S17 = true;
+    }
+    else
+    {
+        _S17 = ((u_1 + v_1) > 1.0f);
+    }
+    if(_S17)
+    {
+        return;
+    }
+    var d_1 : f32 = dot(e2_1, q_1) * inv_1;
+    if((d_1 >= 0.0f))
+    {
+        _S17 = (d_1 <= (ray_2.maxDistance_0));
+    }
+    else
+    {
+        _S17 = false;
+    }
+    if(!_S17)
+    {
+        return;
+    }
+    if(((abs(i32((bitcast<u32>((d_1)))) - i32(nearest_0))) > i32(4)))
+    {
+        return;
+    }
+    var _S23 : u32 = records_0[_S13].featureId_0;
+    var slot_0 : u32;
+    if(_S20)
+    {
+        if(instanceFeature_0 != u32(4294967295))
+        {
+            _S17 = _S23 != u32(0);
+        }
+        else
+        {
+            _S17 = false;
+        }
+        if(_S17)
+        {
+            slot_0 = _S23 + instanceFeature_0;
+        }
+        else
+        {
+            slot_0 = _S23;
+        }
+    }
+    else
+    {
+        var _S24 : u32 = records_0[_S13].featureIdOffset_0;
+        if((records_0[_S13].featureIdOffset_0) != u32(4294967295))
+        {
+            var _S25 : vec2<u32> = vec2<u32>(arrayLength(&vertices_0), 4);
+            var localFeature_0 : u32 = (bitcast<u32>((vertices_0[min(_S24 + indices_0[first_1], max(_S25.x, u32(1)) - u32(1))])));
+            if(localFeature_0 == u32(4294967295))
+            {
+                instanceFeature_0 = u32(0);
+            }
+            else
+            {
+                instanceFeature_0 = _S23 + localFeature_0;
+            }
+            slot_0 = instanceFeature_0;
+        }
+        else
+        {
+            slot_0 = _S23;
+        }
+    }
+    var _S26 : u32 = atomicMin(&(hits_0[rayCount_0 + job_1.ray_0]), slot_0);
+    return;
+}
+
+@compute
 @workgroup_size(1, 1, 1)
 fn pickTriangle()
 {
     var draw_0 : u32 = pickResult_0[i32(0)];
     var number_0 : u32 = pickResult_0[i32(2)];
-    var _S12 : bool;
+    var _S27 : bool;
     if(pickResult_0[i32(0)] == u32(4294967295))
     {
-        _S12 = true;
+        _S27 = true;
     }
     else
     {
-        _S12 = number_0 == u32(4294967295);
+        _S27 = number_0 == u32(4294967295);
     }
-    if(_S12)
+    if(_S27)
     {
         return;
     }
@@ -263,7 +431,7 @@ fn pickTriangle()
     {
         return;
     }
-    var _S13 : u32 = records_0[draw_0].firstIndex_0 + number_0 * u32(3);
+    var _S28 : u32 = records_0[draw_0].firstIndex_0 + number_0 * u32(3);
     var k_0 : u32 = u32(0);
     loop
     {
@@ -274,11 +442,11 @@ fn pickTriangle()
         {
             break;
         }
-        var p_1 : vec3<f32> = position_0(records_0[draw_0].positionOffset_0, indices_0[_S13 + k_0]);
-        var _S14 : u32 = k_0 * u32(3);
-        pickResult_0[u32(10) + _S14] = (bitcast<u32>((p_1.x)));
-        pickResult_0[u32(11) + _S14] = (bitcast<u32>((p_1.y)));
-        pickResult_0[u32(12) + _S14] = (bitcast<u32>((p_1.z)));
+        var p_2 : vec3<f32> = position_0(records_0[draw_0].positionOffset_0, indices_0[_S28 + k_0]);
+        var _S29 : u32 = k_0 * u32(3);
+        pickResult_0[u32(10) + _S29] = (bitcast<u32>((p_2.x)));
+        pickResult_0[u32(11) + _S29] = (bitcast<u32>((p_2.y)));
+        pickResult_0[u32(12) + _S29] = (bitcast<u32>((p_2.z)));
         k_0 = k_0 + u32(1);
     }
     pickResult_0[i32(9)] = u32(1);

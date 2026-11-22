@@ -205,7 +205,7 @@ async function main(): Promise<void> {
     }
     const result = await main.pick(x, y);
     document.querySelector("#pick")!.textContent = result
-      ? `${result.name} (feature ${result.featureId})`
+      ? `${result.name} (ID ${result.id})`
       : "nothing";
   });
 

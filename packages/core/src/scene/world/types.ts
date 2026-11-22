@@ -10,6 +10,7 @@ import type { CustomShader } from "../CustomShader.ts";
 import type { PointCuller } from "../PointCuller.ts";
 import type { RouteVariant } from "../routeVariant.ts";
 import type { SceneItem } from "../SceneItem.ts";
+import type { DrawIdentity } from "../identity.ts";
 import type { World } from "../World.ts";
 import type { Placement } from "../placement.ts";
 import type { TermBounds } from "../curvilinearBounds.ts";
@@ -246,6 +247,15 @@ export interface DrawOptions {
   name?: string;
   /** Properties of the mesh's features, indexed by local feature ID. */
   features?: FeatureTable;
+  /**
+   * The host's own key for the draw: its stable IDs are made from it
+   * (`StableKey` kind `host`, or `content` per feature), so they hold across
+   * runs whatever order draws are added in. Without one, a draw the engine
+   * didn't load has IDs in the order draws were added.
+   */
+  id?: string;
+  /** @internal What the content is, for its stable IDs (scene/identity.ts). */
+  identity?: DrawIdentity;
   /** Views that draw it, one bit per view (`Engine.viewBit`); default all. */
   viewMask?: number;
   /**
@@ -375,6 +385,12 @@ export interface CastOptions {
    * none without one): a draw under another throws, naming both.
    */
   draws?: readonly DrawHandle[];
+  /**
+   * @internal Filled with each ray's hit feature slot (0: no hit, or nothing
+   * pickable), as the pick pass writes it there: `World.identities.idOfSlot`
+   * gives the hit's stable ID. One more dispatch over the cast's jobs.
+   */
+  hitSlots?: number[];
   /**
    * @internal Not the draws in the slots it is true for (height clamping
    * leaves the globes' out).

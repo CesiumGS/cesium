@@ -113,6 +113,8 @@ export interface CastWorld extends Pick<
 
 /** Hit distance bits meaning "no hit" (the largest finite float). */
 const NO_HIT = 0x7f7fffff;
+/** A hit's slot before `rayFeature` writes one (the atomic min's start). */
+const NO_SLOT = 0xffffffff;
 
 /** Casts a ray goes through at most, each past a hit the clips removed. */
 const MAX_CLIP_CASTS = 256;
@@ -132,9 +134,47 @@ export async function castRays(
   rays: readonly CastRay[],
   options: CastOptions = {},
 ): Promise<Array<number | undefined>> {
-  const { clips, ...cast } = options;
-  const once = (these: readonly CastRay[]) => castOnce(world, these, cast);
+  const { hitSlots, ...rest } = options;
+  if (hitSlots) {
+    const hits = await castRayHits(world, rays, rest);
+    hitSlots.length = 0;
+    hitSlots.push(...hits.map((h) => h?.slot ?? 0));
+    return hits.map((h) => h?.distance);
+  }
+  const { clips, ...cast } = rest;
+  const once = async (these: readonly CastRay[]) =>
+    (await castOnce(world, these, cast, false)).map((h) => h?.distance);
   return clips ? castPastClips(rays, clips, once) : once(rays);
+}
+
+/** A ray's nearest hit: its distance, m, and the feature slot it hit (0: none). */
+export interface RayHit {
+  readonly distance: number;
+  readonly slot: number;
+}
+
+/**
+ * `castRays`, with the feature slot of each hit (`CastOptions.hitSlots`): one
+ * more dispatch over the same jobs (`rayFeature`). The slot is the one the
+ * pick pass writes for that triangle, so a hit's stable ID is a pick's.
+ */
+export async function castRayHits(
+  world: CastWorld,
+  rays: readonly CastRay[],
+  options: Omit<CastOptions, "hitSlots"> = {},
+): Promise<Array<RayHit | undefined>> {
+  const { clips, ...cast } = options;
+  const once = (these: readonly CastRay[]) =>
+    castOnce(world, these, cast, true);
+  return clips
+    ? searchPastClips(
+        rays,
+        clips,
+        once,
+        (h) => h.distance,
+        (h, start) => ({ distance: h.distance + start, slot: h.slot }),
+      )
+    : once(rays);
 }
 
 /** `castRays`'s search past removed hits, over a `cast` that finds each ray's nearest hit. */
@@ -143,6 +183,26 @@ export async function castPastClips(
   clips: ClipFilter,
   cast: (rays: readonly CastRay[]) => Promise<Array<number | undefined>>,
 ): Promise<Array<number | undefined>> {
+  return searchPastClips(
+    rays,
+    clips,
+    cast,
+    (d) => d,
+    (d, start) => d + start,
+  );
+}
+
+/**
+ * The search past removed hits over any hit `H` with a distance: `shift`
+ * makes a hit cast from `start` m along the ray one from its origin.
+ */
+async function searchPastClips<H>(
+  rays: readonly CastRay[],
+  clips: ClipFilter,
+  cast: (rays: readonly CastRay[]) => Promise<Array<H | undefined>>,
+  distanceOf: (hit: H) => number,
+  shift: (hit: H, start: number) => H,
+): Promise<Array<H | undefined>> {
   const out = await cast(rays);
   /** Where each searching ray starts, m along its own. */
   const start = rays.map(() => 0);
@@ -152,12 +212,13 @@ export async function castPastClips(
     const again: number[] = [];
     for (const i of searching) {
       const ray = rays[i]!;
-      const distance = start[i]! + out[i]!;
+      const hit = shift(out[i]!, start[i]!);
+      const distance = distanceOf(hit);
       for (let k = 0; k < 3; k++) {
         at[k] = ray.origin[k]! + distance * ray.direction[k]!;
       }
       if (clips.keeps(at)) {
-        out[i] = distance;
+        out[i] = hit;
         continue;
       }
       const next = distance + Math.max(1e-3, distance * 1e-6);
@@ -200,9 +261,10 @@ export async function castPastClips(
 async function castOnce(
   world: CastWorld,
   rays: readonly CastRay[],
-  options: Omit<CastOptions, "clips">,
-): Promise<Array<number | undefined>> {
-  const out: Array<number | undefined> = rays.map(() => undefined);
+  options: Omit<CastOptions, "clips" | "hitSlots">,
+  withSlots: boolean,
+): Promise<Array<RayHit | undefined>> {
+  const out: Array<RayHit | undefined> = rays.map(() => undefined);
   if (rays.length === 0) {
     return out;
   }
@@ -243,18 +305,19 @@ async function castOnce(
   };
   const STORAGE = GPUBufferUsage.STORAGE;
   const rayBuffer = buffer("rays", rayData, STORAGE);
-  const hitBuffer = buffer(
-    "hits",
-    new Uint32Array(rays.length).fill(NO_HIT),
-    STORAGE | GPUBufferUsage.COPY_SRC,
-  );
+  // Distances, then (with slots) each hit's feature slot (`rayFeature`).
+  const words = withSlots ? rays.length * 2 : rays.length;
+  const initial = new Uint32Array(words).fill(NO_HIT);
+  initial.fill(NO_SLOT, rays.length);
+  const hitBuffer = buffer("hits", initial, STORAGE | GPUBufferUsage.COPY_SRC);
   const readback = device.createBuffer({
     label: "world.raycast.readback",
-    size: Math.max(16, rays.length * 4),
+    size: Math.max(16, words * 4),
     usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
   });
   const pipeline = world.ctx.pipelines.raycast;
   const jobBuffers: GPUBuffer[] = [];
+  const slotGroups: Array<[GPUBindGroup, number]> = [];
   const encoder = device.createCommandEncoder({ label: "world.raycast" });
   const pass = encoder.beginComputePass({ label: "raycast" });
   // The tables as the CPU has them (draws added since the last frame).
@@ -283,16 +346,49 @@ async function castOnce(
     const count = jobs.length / 4;
     const x = Math.min(count, 65535);
     pass.dispatchWorkgroups(x, Math.ceil(count / x));
+    if (withSlots) {
+      const feature = world.ctx.pipelines.raycastFeature;
+      slotGroups.push([
+        device.createBindGroup({
+          label: `world.raycast.feature.slab${id}`,
+          layout: feature.getBindGroupLayout(0),
+          entries: [
+            rayBuffer,
+            jobBuffer,
+            world.recordBuffer,
+            world.transformBuffer,
+            world.instanceBuffer,
+            slab.vertexBuffer,
+            slab.indexBuffer,
+            hitBuffer,
+          ].map((b, binding) => ({ binding, resource: { buffer: b } })),
+        }),
+        count,
+      ]);
+    }
+  }
+  // After every slab's distances: the triangles at them write their slots.
+  if (slotGroups.length > 0) {
+    pass.setPipeline(world.ctx.pipelines.raycastFeature);
+    for (const [group, count] of slotGroups) {
+      pass.setBindGroup(0, group);
+      const x = Math.min(count, 65535);
+      pass.dispatchWorkgroups(x, Math.ceil(count / x));
+    }
   }
   pass.end();
-  encoder.copyBufferToBuffer(hitBuffer, 0, readback, 0, rays.length * 4);
+  encoder.copyBufferToBuffer(hitBuffer, 0, readback, 0, words * 4);
   device.queue.submit([encoder.finish()]);
   try {
     await readback.mapAsync(GPUMapMode.READ);
-    const hits = new Uint32Array(readback.getMappedRange(0, rays.length * 4));
+    const hits = new Uint32Array(readback.getMappedRange(0, words * 4));
     const f32 = new Float32Array(hits.buffer, hits.byteOffset, hits.length);
     for (let i = 0; i < rays.length; i++) {
-      out[i] = hits[i] === NO_HIT ? undefined : f32[i];
+      const slot = withSlots ? hits[rays.length + i]! : NO_SLOT;
+      out[i] =
+        hits[i] === NO_HIT
+          ? undefined
+          : { distance: f32[i]!, slot: slot === NO_SLOT ? 0 : slot };
     }
     readback.unmap();
   } finally {

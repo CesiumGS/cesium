@@ -5,7 +5,8 @@ import {
   type CameraRecord,
 } from "./Camera.ts";
 import type { World } from "./World.ts";
-import type { AnchorHandle } from "./world/types.ts";
+import type { AnchorHandle, DrawHandle } from "./world/types.ts";
+import type { Labels, PickBasis, StableId, StableKey } from "./identity.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { Route } from "../camera/route.ts";
 import type { FeatureValue } from "../io/gltfTypes.ts";
@@ -98,21 +99,42 @@ export interface HdrImage {
 }
 
 export interface PickResult {
-  /** Global feature ID (unique within the world). */
-  featureId: number;
+  /**
+   * Its stable ID (`World.identity`): made from what the content is, never
+   * from the order it loaded in, so the same across runs, and the same ID
+   * ray hits and ID images give.
+   */
+  readonly id: StableId;
+  /** How the ID was made (`StableKey`), with the feature-ID set it came from (`set`). */
+  readonly key: StableKey;
+  /** How far the ID holds: at every level of detail, or in its tile only. */
+  readonly scope: "global" | "tile";
+  /** Its labels, every taxonomy, each resolved by precedence (`Identity`). */
+  readonly labels: Labels;
   name: string | undefined;
   /** Feature properties from the content's property or batch table. */
   properties?: Record<string, FeatureValue>;
   /** The item that drew it, if an item did (`World.add`). */
   item?: SceneItem;
+  /** The draw that drew it, if it is still in the world when the readback maps. */
+  readonly draw?: DrawHandle;
+  /** How the answer was made: "surface" for meshes, "point" for points. */
+  readonly basis: PickBasis;
+  /**
+   * For splats and fields: how much of the pixel this answer explains, 0 to
+   * 1. Unset for surfaces and points, which explain the whole pixel.
+   */
+  readonly coverage?: number;
+  /** The point or splat, when the answer is one sample of many and its content says which. */
+  readonly sample?: { readonly index: number };
   /**
    * The camera record the pick used (`View.pick`): the camera at the tick
    * whose image was read, in the view's render root, for an image the
-   * view's size in CSS pixels (as the pick's x and y). Unset where a
-   * feature is looked up outside a pick (`CorePick.feature`: the core pick
-   * has its own).
+   * view's size in CSS pixels (as the pick's x and y).
    */
-  cameraRecord?: CameraRecord;
+  readonly camera: CameraRecord;
+  /** The scene time the pick's image was made at: the scene clock's seconds (0 without a clock). */
+  readonly time: { readonly seconds: number };
 }
 
 /**

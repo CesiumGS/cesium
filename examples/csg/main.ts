@@ -8,6 +8,7 @@ import {
   tessellateBrep,
   vec3,
   type DrawHandle,
+  type PickResult,
   type MeshHandle,
 } from "../../packages/core/src/index.ts";
 import { KernelCanceled } from "../../packages/core/src/brep/kernelClient.ts";
@@ -926,7 +927,7 @@ export async function run({
       [-3, -3],
     ] as const) {
       const hit = await viewer.pick(x + dx, y + dy);
-      const info = hit ? world.feature(hit.featureId) : undefined;
+      const info = pickedFeature(hit);
       if (!info) {
         return undefined;
       }
@@ -2336,4 +2337,16 @@ export async function run({
     }
     panel.replaceChildren();
   };
+}
+
+/** The draw and local feature a pick names: its key's feature, for content keys. */
+function pickedFeature(
+  hit: PickResult | undefined,
+): { draw: DrawHandle; localId: number } | undefined {
+  return hit?.draw
+    ? {
+        draw: hit.draw,
+        localId: hit.key.kind === "content" ? hit.key.feature : 0,
+      }
+    : undefined;
 }

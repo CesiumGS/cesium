@@ -52,6 +52,7 @@ import type { CurvilinearTerms } from "../packages/core/src/scene/curvilinearTer
 import { setPlacement } from "../packages/core/src/scene/world/placements.ts";
 import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
 import type { BrepHandle } from "../packages/core/src/scene/world/brep.ts";
+import type { PickResult } from "../packages/core/src/scene/View.ts";
 
 const TEMPLATE = `
 <h1>B-rep patches diced on the GPU</h1>
@@ -1072,6 +1073,12 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
         doubleSided: true,
       });
       const first = world.scene.drawFeatureFirst[brep.patches!.index]!;
+      // The slot the pick pass wrote: the pick's draw's first, plus its feature.
+      const slotOf = (h: PickResult | undefined) =>
+        h?.draw
+          ? world.scene.drawFeatureFirst[h.draw.index]! +
+            (h.key.kind === "content" ? h.key.feature : 0)
+          : undefined;
       placeCamera(view, scene.target, DISTANCES[1]);
       for (let k = 0; k < 4; k++) {
         engine.renderFrame();
@@ -1092,11 +1099,11 @@ async function runBrepPatches(): Promise<BrepPatchesResult> {
         measured: {
           "GPU errors": gpuErrors.length - before,
           "picked feature − the draw's first": hit
-            ? hit.featureId - first
+            ? slotOf(hit)! - first
             : Number.NaN,
         },
         limit: "no GPU errors; the pick is the face (feature 0)",
-        pass: gpuErrors.length === before && hit?.featureId === first,
+        pass: gpuErrors.length === before && slotOf(hit) === first,
       });
       engine.removeView(view);
       world.removeBrep(brep);

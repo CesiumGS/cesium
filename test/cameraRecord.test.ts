@@ -561,8 +561,9 @@ describe("views and picks", () => {
       expect(pixel[1]).toBeCloseTo(y + 0.5, 6);
     }
     const result = (await feature)!;
-    expect(result.featureId).toBe(featureId);
-    expect(result.cameraRecord).toEqual(record);
+    expect(result.id).toBe(world.identities.idOfSlot(featureId));
+    expect(result.camera).toEqual(record);
+    expect(result.time.seconds).toBe(record.pose.seconds);
   });
 
   it("a centered pick reports a centered record", async () => {
@@ -573,7 +574,7 @@ describe("views and picks", () => {
       engine.renderFrame();
       await settle();
     }
-    const record = (await result)!.cameraRecord!;
+    const record = (await result)!.camera;
     expect(record.cx).toBe(WIDTH / 2);
     expect(record.cy).toBe(HEIGHT / 2);
     expect(record.width).toBe(WIDTH);

@@ -409,6 +409,23 @@ export {
 } from "./streaming/Budgeted.ts";
 export { Tile, tileHeaderKey, type TileGeometry } from "./streaming/Tile.ts";
 export { SceneItem, type SceneItemOptions } from "./scene/SceneItem.ts";
+// Stable identity and semantic labels (CS-815): IDs that don't depend on load order.
+export {
+  DEFAULT_TAXONOMY,
+  canonicalSource,
+  stableIdOf,
+  type EmbeddingSpace,
+  type EmbeddingTable,
+  type Embeddings,
+  type Identified,
+  type Identity,
+  type IdentityDeclaration,
+  type Labels,
+  type PickBasis,
+  type StableId,
+  type StableKey,
+  type TaxonomyDeclaration,
+} from "./scene/identity.ts";
 export {
   createBillboard,
   createBox,

@@ -714,7 +714,10 @@ describe("View.pickPoint with the pick variant", () => {
     expect(pick.accuracy!.exact).toBe(false);
     // What it was: the same fields, and the same values.
     expect(pick.anchor).toBe(earth);
-    expect(pick.feature).toEqual({ featureId: feature, name: "box" });
+    expect(pick.feature).toMatchObject({
+      id: world.identities.idOfSlot(feature),
+      name: "box",
+    });
     expect(Array.from(pick.anchorPosition)).toEqual(Array.from(pick.position));
   });
 

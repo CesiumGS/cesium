@@ -6,6 +6,7 @@ import { CpuTable, INITIAL_ROWS } from "./CpuTable.ts";
 import { DrawConstants } from "../render/drawConstants.ts";
 import type { Placement, PlacementParameter } from "./placement.ts";
 import type { SceneItem, SceneItemOptions } from "./SceneItem.ts";
+import { IdentityTable, type Identity, type ItemIdentity } from "./identity.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { TileCurvilinearMap } from "../streaming/tileCurvilinearMap.ts";
 import type { Occluder } from "../streaming/occluders.ts";
@@ -192,6 +193,34 @@ export class World {
   );
   /** @internal The world's clip sets (`addClip`, scene/world/clips.ts). */
   readonly clipSets: WorldClips = new WorldClips(this);
+  /** @internal The stable IDs of its draws' features (scene/identity.ts). */
+  readonly identities: IdentityTable = new IdentityTable({
+    scene: this.scene,
+    itemIdentity: (draw) =>
+      this.itemIdentity({ ...draw, name: this.scene.names[draw.index] }),
+    featureProperties: (index, local) => {
+      const table = this.scene.featureTables[index];
+      const name = this.scene.names[index];
+      if (!table || local >= table.count) {
+        return name !== undefined ? { name } : {};
+      }
+      const own = featureName(table, local) ?? name;
+      return {
+        ...(own !== undefined && { name: own }),
+        properties: featureProperties(table, local),
+      };
+    },
+    report: (message) => this.ctx.errors.report("resource", message),
+  });
+
+  /**
+   * Stable identity and labels (CS-815): what a `StableId` from a pick, a
+   * ray hit or an ID image names, and the host's labels by ID. IDs never
+   * depend on the order content loaded in.
+   */
+  get identity(): Identity {
+    return this.identities;
+  }
   /** @internal What one draw costs the tables (`DrawSink.drawOverheadBytes`). */
   readonly drawOverheadBytes = DRAW_OVERHEAD_BYTES;
   /** @internal A custom shader's pipeline is ready: draw with it from now on. */
@@ -924,6 +953,11 @@ export class World {
     if (at >= 0) {
       this.sceneItems.splice(at, 1);
     }
+  }
+
+  /** @internal What gives `draw`'s IDs their item: its scene item's, if an item drew it. */
+  itemIdentity(draw: DrawHandle): ItemIdentity | undefined {
+    return this.itemOfDraw(draw)?.identity;
   }
 
   /** @internal The item that drew `draw`, if an item did. */

@@ -94,6 +94,9 @@ const TABLE: Record<string, EntryTable> = {
       CameraDistortionModel CameraExposure CameraIntrinsics CameraPose
       CameraRecord CameraRecordPose
       CapBias CapColor CapDrawOptions CapDraws CapFace CapHatch CapPlacement
+      EmbeddingSpace EmbeddingTable Embeddings Identified Identity
+      IdentityDeclaration Labels PickBasis StableId StableKey
+      TaxonomyDeclaration
       CapPlane CapRgba CapSchedulerOptions CapStyle CapStyleInput CapTick
       Cartographic CastOptions CastRay ChangeableCurvilinearMap Clamp ClampOptions
       ClipCaps ClipEffect ClipFilter ClipSet ClipShape ClipsOption ClockChange
@@ -166,7 +169,7 @@ const TABLE: Record<string, EntryTable> = {
       MaterialFlags NO_ACCELERATION PLACEMENT_MONOMIALS PLACEMENT_TERMS
       PostStageError REQUEST_PURPOSES STAGES SectionJob SurfaceKind
       TICK_REASONS TerrainRegionError TilesetBodyError UNITLESS_EXPOSURE
-      UNITLESS_SKY
+      UNITLESS_SKY DEFAULT_TAXONOMY canonicalSource stableIdOf
       UNITLESS_SUN_ILLUMINANCE UrlTemplateImagery accuracyAlong
       assembleMeshCaps bend brepGeometry bump cameraGlare cameraObserver
       capPlanes cartographic castTerrainRay clipFilter clipSetDistance
@@ -757,7 +760,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         place
       `,
       "cannot-cross": `
-        host placed retained template unplaced upload
+        host placed retained source template unplaced upload
       `,
     },
     OffscreenTarget: {
@@ -860,7 +863,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
       `,
       "cannot-cross": `
         applyCasterMask applyPlaceholder applyViewMask bytes castViews
-        destroyed discard drawColor drawsOf holdsBase moves place reach
+        destroyed discard drawColor drawsOf holdsBase identity moves place reach
         setSurface shownIn surfaceRank unplace views
       `,
     },
@@ -1092,7 +1095,8 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         curvilinearMaps depthBundle drawForRoute drawHasPosition
         drawMaterial drawOverheadBytes draws drawSplats encodeCull encodeRetest
         encodeTranslucent featureIdOf findBodyAnchor forEachLight
-        heightBundle instanceBuffer itemBuffer itemOfDraw itemRemoved
+        heightBundle identities identity instanceBuffer itemBuffer
+        itemIdentity itemOfDraw itemRemoved
         markDirty markGpuInstances materialBuffer materialWithFlags mirror
         occluders occlusionLayout pickBundle pickSource placementBuffer
         placementOf positionRefusal prepareFrame prepassBundle raster

@@ -13,6 +13,7 @@ import {
   type BrepForm,
   type BrepMesh,
   type DrawHandle,
+  type PickResult,
   type MeshData,
 } from "../../packages/core/src/index.ts";
 import { SurfaceKind } from "../../packages/core/src/brep/index.ts";
@@ -2636,7 +2637,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
       view.pickPosition(x * scale - area.x, y * scale - area.y),
     ]);
     const ecef = ecefHit?.position;
-    const info = result ? world.feature(result.featureId) : undefined;
+    const info = pickedFeature(result);
     const part = info ? parts.get(info.draw.index) : undefined;
     if (!info || !part) {
       clearSelection();
@@ -2713,4 +2714,16 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     }
     panel.replaceChildren();
   };
+}
+
+/** The draw and local feature a pick names: its key's feature, for content keys. */
+function pickedFeature(
+  hit: PickResult | undefined,
+): { draw: DrawHandle; localId: number } | undefined {
+  return hit?.draw
+    ? {
+        draw: hit.draw,
+        localId: hit.key.kind === "content" ? hit.key.feature : 0,
+      }
+    : undefined;
 }

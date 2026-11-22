@@ -1,4 +1,5 @@
 // Puts a tileset's decoded tiles into its world, within the tick's upload budget.
+import { canonicalSource } from "../scene/identity.ts";
 import type { DrawSink, TilesetHost } from "./DrawSink.ts";
 import type { GltfAsset } from "../io/gltfTypes.ts";
 import { heightNormalInfo } from "../globe/heightNormal.ts";
@@ -27,6 +28,7 @@ export interface TilesetUpload extends Pick<
   | "retainGeometry"
   | "stats"
   | "undrawnTile"
+  | "url"
   | "warnings"
 > {
   readonly world: DrawSink;
@@ -161,6 +163,7 @@ export function upload(tileset: TilesetUpload): void {
           tileset.state.options.customShader ??
           tileset.state.options.style?.shader;
         placement = placeModel(model, {
+          contentIdentity: tileContentIdentity(tileset, tile),
           modelMatrix: placing?.modelMatrix ?? tile.transform,
           ...(placing?.underlay ? { underlay: true } : {}),
           parent: tileset.state.transform,
@@ -451,4 +454,34 @@ export function applyTerrainClip(tileset: TilesetUpload, tile: Tile): void {
       tileset.world.setDrawMaterial(draw, wanted);
     }
   }
+}
+
+/**
+ * A tile's content for its stable IDs: its tileset's canonical URL, and the
+ * content's URI relative to the tileset (query tokens dropped), or a terrain
+ * tile's quadtree address.
+ */
+export function tileContentIdentity(
+  tileset: { readonly url: string },
+  tile: Pick<Tile, "contentUrl" | "globe">,
+): { source: string; content: string } {
+  const source = canonicalSource(tileset.url);
+  if (tile.globe) {
+    const { level, x, y } = tile.globe;
+    return { source, content: `${level}/${x}/${y}` };
+  }
+  const url = tile.contentUrl;
+  if (url === undefined) {
+    return { source, content: "" };
+  }
+  const content = canonicalSource(url);
+  const base = source.replace(/\?.*$/s, "");
+  const directory = base.slice(0, base.lastIndexOf("/") + 1);
+  return {
+    source,
+    content:
+      directory && content.startsWith(directory)
+        ? content.slice(directory.length)
+        : content,
+  };
 }

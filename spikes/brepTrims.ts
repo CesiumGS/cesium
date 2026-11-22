@@ -52,6 +52,7 @@ import {
   type World,
 } from "../packages/core/src/index.ts";
 import type { BrepHandle } from "../packages/core/src/scene/world/brep.ts";
+import type { PickResult } from "../packages/core/src/scene/View.ts";
 
 const TEMPLATE = `
 <h1>B-rep faces trimmed per pixel on the GPU</h1>
@@ -1095,6 +1096,12 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
         env.world.scene.drawFeatureFirst[brep.trimmed!.index]!;
       const firstBehind =
         env.world.scene.drawFeatureFirst[brep.patches!.index]!;
+      // The slot the pick pass wrote: the pick's draw's first, plus its feature.
+      const slotOf = (h: PickResult | undefined) =>
+        h?.draw
+          ? env.world.scene.drawFeatureFirst[h.draw.index]! +
+            (h.key.kind === "content" ? h.key.feature : 0)
+          : undefined;
       const ppm = pixelsPerMeter(env.view, 6);
       const atPixel = (u: number, v: number): Pair => [
         WIDTH / 2 + u * ppm,
@@ -1115,16 +1122,16 @@ async function runBrepTrims(): Promise<BrepTrimsResult> {
         measured: {
           "GPU errors": gpuErrors.length - before,
           "pick through the hole: the face behind (1) or not (0)":
-            throughHole?.featureId === firstBehind + 1 ? 1 : 0,
+            slotOf(throughHole) === firstBehind + 1 ? 1 : 0,
           "pick on the material: the plate (1) or not (0)":
-            onMaterial?.featureId === firstTrimmed ? 1 : 0,
+            slotOf(onMaterial) === firstTrimmed ? 1 : 0,
         },
         limit:
           "no GPU errors; a pick through a hole finds the face behind; on the material, the plate",
         pass:
           gpuErrors.length === before &&
-          throughHole?.featureId === firstBehind + 1 &&
-          onMaterial?.featureId === firstTrimmed,
+          slotOf(throughHole) === firstBehind + 1 &&
+          slotOf(onMaterial) === firstTrimmed,
       });
       engine.removeView(env.view);
       env.world.removeBrep(brep);

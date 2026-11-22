@@ -165,7 +165,11 @@ describe("a pick that translucent terrain may stop", () => {
     const feature = firstFeature(world, tileDraw);
     addGlobe(() => ({ distance: 400, draw: tileDraw }));
     const pick = (await pickAt())!;
-    expect(pick.feature).toEqual({ featureId: feature, name: "tile" });
+    expect(pick.feature).toMatchObject({
+      id: world.identities.idOfSlot(feature),
+      name: "tile",
+      basis: "surface",
+    });
     expect(pick.draw?.index).toBe(tileDraw.index);
     // Reverse-Z: the depth is near / distance along the view axis, so the
     // position is 400 m from the camera along the view axis.
@@ -183,7 +187,7 @@ describe("a pick that translucent terrain may stop", () => {
     const feature = firstFeature(world, boxDraw);
     addGlobe(() => ({ distance: 2500, draw: tileDraw }));
     const pick = (await pickAt())!;
-    expect(pick.feature?.featureId).toBe(feature);
+    expect(pick.feature?.id).toBe(world.identities.idOfSlot(feature));
     expect(pick.draw?.index).toBe(boxDraw.index);
     const alongAxis = [0, 1, 2].reduce(
       (sum, k) =>
@@ -206,7 +210,7 @@ describe("a pick that translucent terrain may stop", () => {
     const feature = firstFeature(world, boxDraw);
     addGlobe(() => ({ distance: view.camera.near / 2, draw: tileDraw }));
     const pick = (await pickAt())!;
-    expect(pick.feature?.featureId).toBe(feature);
+    expect(pick.feature?.id).toBe(world.identities.idOfSlot(feature));
   });
 
   it("takes the nearest of several globes, and a hit with no draw keeps feature 0", async () => {
@@ -238,7 +242,7 @@ describe("a pick that translucent terrain may stop", () => {
     (foreign as unknown as { world: World }).world = other;
     const feature = firstFeature(world, boxDraw);
     const pick = (await pickAt())!;
-    expect(pick.feature?.featureId).toBe(feature);
+    expect(pick.feature?.id).toBe(world.identities.idOfSlot(feature));
     for (const g of [hidden, elsewhere, foreign]) {
       expect(g.stoppingTerrainHit).not.toHaveBeenCalled();
     }

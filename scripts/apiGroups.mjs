@@ -338,6 +338,7 @@ export const RULES = [
   { entry: ".", from: "core/src/query/", group: "core.geometry" },
   { entry: ".", from: "core/src/scene/pick.ts", group: "core.geometry" },
   { entry: ".", from: "core/src/scene/pickDomain.ts", group: "core.geometry" },
+  { entry: ".", from: "core/src/scene/identity.ts", group: "core.geometry" },
 
   { entry: ".", from: "core/src/brep/", group: "core.brep" },
 

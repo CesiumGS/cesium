@@ -116,6 +116,103 @@ void main(uint3 wg : SV_GroupID, uint lane : SV_GroupIndex) {
   }
 }
 
+// Ray hits' feature slots (World.castRays with slots; CS-815's stable IDs):
+// run after `main` over the same jobs, with `hits` twice as long. Each
+// triangle at its ray's nearest distance (the first half, as `main` left it)
+// writes the slot the pick pass would (surface.slang's `ids.y`: the record's
+// first slot, plus its instance's or its vertex's local feature) into the
+// second half, keeping the lowest. "At the distance" is within 4 ulps: this
+// entry point's float math is `main`'s, copied so `main` compiles as before,
+// and a compiler may order the two apart. No loops.
+[shader("compute")]
+[numthreads(64, 1, 1)]
+void rayFeature(uint3 wg : SV_GroupID, uint lane : SV_GroupIndex) {
+  uint jobIndex = wg.y * WorkgroupCount().x + wg.x;
+  uint jobCount, stride;
+  jobs.GetDimensions(jobCount, stride);
+  if (jobIndex >= jobCount) {
+    return;
+  }
+  Job job = jobs[jobIndex];
+  DrawRecord r = drawRecord(job.record);
+  uint indexCount = r.indexCount;
+  uint firstIndex = r.firstIndex;
+  uint positionOffset = r.positionOffset;
+  uint triangle = job.firstTriangle + lane;
+  if (triangle * 3u + 2u >= indexCount) {
+    return;
+  }
+  uint rayCount, rayStride;
+  rays.GetDimensions(rayCount, rayStride);
+  uint hitCount, hitStride;
+  hits.GetDimensions(hitCount, hitStride);
+  if (job.ray >= rayCount || rayCount + job.ray >= hitCount) {
+    return;
+  }
+  uint nearest = hits[job.ray].load();
+  if (nearest == 0x7f7fffffu) {
+    return;
+  }
+  Transform t = transforms[r.transform];
+  Ray ray = rays[job.ray];
+  float3 origin = SplitPosition(ray.originHi, ray.originLo)
+                      .difference(SplitPosition(t.originHi, t.originLo));
+  float3x3 local = float3x3(1, 0, 0, 0, 1, 0, 0, 0, 1);
+  float3 offset = float3(0.0);
+  uint instanceFeature = NONE;
+  if (job.instance != NONE) {
+    Instance inst = instanceTable[job.instance];
+    local = float3x3(inst.row0.xyz, inst.row1.xyz, inst.row2.xyz);
+    offset = float3(inst.row0.w, inst.row1.w, inst.row2.w);
+    instanceFeature = inst.feature;
+  }
+  uint first = firstIndex + triangle * 3u;
+  float3 a = mul(t.linear, mul(local, position(positionOffset, indices[first])) + offset);
+  float3 b = mul(t.linear, mul(local, position(positionOffset, indices[first + 1u])) + offset);
+  float3 c = mul(t.linear, mul(local, position(positionOffset, indices[first + 2u])) + offset);
+
+  float3 e1 = b - a;
+  float3 e2 = c - a;
+  float3 p = cross(ray.direction, e2);
+  float det = dot(e1, p);
+  if (abs(det) < 1e-12) {
+    return;
+  }
+  float inv = 1.0 / det;
+  float3 s = origin - a;
+  float u = dot(s, p) * inv;
+  if (u < 0.0 || u > 1.0) {
+    return;
+  }
+  float3 q = cross(s, e1);
+  float v = dot(ray.direction, q) * inv;
+  if (v < 0.0 || u + v > 1.0) {
+    return;
+  }
+  float d = dot(e2, q) * inv;
+  if (!(d >= 0.0 && d <= ray.maxDistance)) {
+    return;
+  }
+  int apart = int(asuint(d)) - int(nearest);
+  if (abs(apart) > 4) {
+    return;
+  }
+  uint slot = r.featureId;
+  if (job.instance != NONE) {
+    if (instanceFeature != NONE && r.featureId != 0u) {
+      slot = r.featureId + instanceFeature;
+    }
+  } else if (r.featureIdOffset != NO_STREAM) {
+    // Clamped: a vertex past the arena reads its last word.
+    uint vertexCount, vertexStride;
+    vertices.GetDimensions(vertexCount, vertexStride);
+    uint at = min(r.featureIdOffset + indices[first], max(vertexCount, 1u) - 1u);
+    uint localFeature = asuint(vertices[at]);
+    slot = localFeature == NONE ? 0u : r.featureId + localFeature;
+  }
+  hits[rayCount + job.ray].min(slot);
+}
+
 // A pick's hit triangle (render/view/pickDomain.ts, shaders/pickDomain.slang):
 // the triangle's three stored positions, as the vertex arena holds them
 // (before any placement or transform), into the pick's result for the CPU to

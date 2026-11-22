@@ -14,6 +14,7 @@ import type { View } from "../packages/core/src/scene/View.ts";
 import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import type { TilesetPlacement } from "../packages/crs/src/engineering/placement.ts";
 import { EngineeringFrame } from "../packages/crs/src/engineering/EngineeringFrame.ts";
+import { standInPick } from "./pickStandIn.ts";
 
 // An EngineeringFrame to `instanceof` (engineeringPlacement), with only what is read.
 const frame = Object.assign(Object.create(EngineeringFrame.prototype), {
@@ -82,7 +83,7 @@ function view(
   let calls = 0;
   const pick = vi.fn(async () => {
     o.onPick?.(camera, calls++);
-    return o.feature === false ? undefined : { featureId: 7, name: undefined };
+    return o.feature === false ? undefined : standInPick(7n, DRAW);
   });
   const pickPosition = vi.fn(async () => {
     const rect = o.rect ?? { width: 1000, height: 500 };
@@ -101,7 +102,6 @@ function view(
     camera,
     target: { kind: "canvas", width: 1000, pixelRatio: o.ratio ?? 1 },
     pixelRect: () => o.rect ?? { width: 1000, height: 500 },
-    world: { feature: () => ({ draw: DRAW }) },
   };
   return { v, pick, pickPosition, camera };
 }
@@ -121,7 +121,7 @@ describe("pickDesign", () => {
       const { v } = view();
       const r = await pickDesign(v, 5, 5, [ts]);
       expect(r?.tileset).toBe(ts);
-      expect(r?.feature?.featureId).toBe(7);
+      expect(r?.feature?.id).toBe(7n);
       expect(r?.body).toBe(EARTH);
       expect(Array.from(r!.position)).toEqual(Array.from(HIT));
       // 1000 m away (camera at x+1000, hit at x), aspect 2, fov 90 deg at
@@ -164,7 +164,7 @@ describe("pickDesign", () => {
     const ts = tileset({ placement: pl });
     const r = await pickDesign(view().v, 5, 5, [ts]);
     expect(r?.tileset).toBe(ts);
-    expect(r?.feature?.featureId).toBe(7);
+    expect(r?.feature?.id).toBe(7n);
     expect(Array.from(r!.position)).toEqual(Array.from(HIT));
     expect(r!.tolerance).toBeGreaterThan(0);
     expect(r?.design).toBeUndefined();
@@ -186,7 +186,7 @@ describe("pickDesign", () => {
     const r = await pickDesign(view().v, 1, 1, [other]);
     expect(r?.tileset).toBeUndefined();
     expect(r?.design).toBeUndefined();
-    expect(r?.feature?.featureId).toBe(7);
+    expect(r?.feature?.id).toBe(7n);
     expect(r?.position).toBeDefined();
   });
 
@@ -297,8 +297,7 @@ describe("pickDesign on View.pickPoint", () => {
         anchor: undefined,
         anchorPosition: hit,
         draw: o.feature === false ? undefined : DRAW,
-        feature:
-          o.feature === false ? undefined : { featureId: 7, name: undefined },
+        feature: o.feature === false ? undefined : standInPick(7n, DRAW),
         seconds: 0,
         cameraRecord: at.record(
           rect.width,
@@ -357,7 +356,7 @@ describe("pickDesign on View.pickPoint", () => {
     // 1000 m from the hit, as read: no retry, the design kept.
     expect(r!.tolerance).toBeCloseTo(2, 9);
     expect(r!.design).toBeDefined();
-    expect(r!.feature?.featureId).toBe(7);
+    expect(r!.feature?.id).toBe(7n);
   });
 
   it("returns undefined over the sky, and no tileset without a draw", async () => {

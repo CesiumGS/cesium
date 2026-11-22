@@ -6,6 +6,7 @@ import {
 } from "./decoders.ts";
 import type { TextureTranscodePath } from "../profile/paths.ts";
 import {
+  featureIdSets,
   featureIdSource,
   isB3dm,
   isI3dm,
@@ -401,6 +402,7 @@ async function parseTile(
     key: string;
     meshIndex: number;
     primitive: number;
+    node: number;
     matrix: Float64Array;
     gpuInstances?: { matrices: Float32Array; featureIds?: Uint32Array };
   }> = [];
@@ -423,6 +425,7 @@ async function parseTile(
           key: `${node.mesh}/${p}`,
           meshIndex: node.mesh,
           primitive: p,
+          node: nodeIndex,
           matrix: world,
           ...(gpuInstances ? { gpuInstances } : {}),
         });
@@ -457,6 +460,10 @@ async function parseTile(
     );
     const mesh = buildMesh(primitive, source, warnings, key);
     const features = featureIdSource(primitive, b3dm?.batchLength, warnings);
+    const sets = featureIdSets(primitive, b3dm?.batchLength);
+    if (mesh && sets.length > 0) {
+      mesh.featureSets = sets;
+    }
     const ids = features && source.attribute(features.attribute);
     if (mesh && features && ids) {
       const local = toFeatureIds(ids.data, features.nullFeatureId);
@@ -465,6 +472,7 @@ async function parseTile(
         ? Uint32Array.from(mesh.unwelded, (v) => local[v]!)
         : local;
       mesh.featureCount = features.featureCount;
+      mesh.identitySet = features.set;
       if (features.table !== undefined) {
         mesh.featureTable = features.table;
       }
@@ -503,13 +511,14 @@ async function parseTile(
     );
   }
   const draws: GltfDraw[] = [];
-  for (const { key, matrix, gpuInstances } of instances) {
+  for (const { key, matrix, gpuInstances, node, primitive } of instances) {
     const entry = built.get(key);
     if (entry) {
       draws.push({
         mesh: entry.mesh,
         material: entry.material,
         matrix,
+        path: `n${node}/p${primitive}`,
         ...(gpuInstances
           ? {
               instances: gpuInstances.matrices,

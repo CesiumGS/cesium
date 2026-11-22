@@ -9,6 +9,7 @@ import {
   type ClipCaps,
   type ClipSet,
   type DrawHandle,
+  type PickResult,
   type MeshCapTile,
   type View,
   type WorldClip,
@@ -871,7 +872,7 @@ export async function run({
     // The draw that drew the pixel says what it is: a cap of one of the
     // sets, the part (its feature is a face), or something else (the
     // ground, a tile).
-    const info = hit && world.feature(hit.featureId);
+    const info = pickedFeature(hit);
     const draw = info?.draw;
     const capSet = draw ? capSets.findIndex((caps) => caps.owns(draw)) : -1;
     const label = !draw
@@ -880,7 +881,7 @@ export async function run({
         ? `section cap of the ${capSet === 0 ? "plane" : "box"}`
         : draw.name === PART_NAME
           ? `B-rep part, face ${info?.localId}`
-          : (draw.name ?? `tileset, feature ${hit?.name ?? hit?.featureId}`);
+          : (draw.name ?? `tileset, feature ${hit?.name ?? hit?.id}`);
     pickReadout.set(
       "Drawn",
       label && point
@@ -964,4 +965,16 @@ export async function run({
   // `SectionCaps` as a third kind of cap, and its pick joins `targets`.
 
   return () => undefined;
+}
+
+/** The draw and local feature a pick names: its key's feature, for content keys. */
+function pickedFeature(
+  hit: PickResult | undefined,
+): { draw: DrawHandle; localId: number } | undefined {
+  return hit?.draw
+    ? {
+        draw: hit.draw,
+        localId: hit.key.kind === "content" ? hit.key.feature : 0,
+      }
+    : undefined;
 }

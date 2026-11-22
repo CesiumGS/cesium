@@ -198,19 +198,43 @@ export interface PickTick {
   readonly ndcY: number;
 }
 
-/** A feature's pick result (`View.pick`). */
+/**
+ * @internal A feature's pick result (`View.pick`): what the slot the pick pass read
+ * names (its stable ID, key and labels) and its properties, with the camera
+ * record and the scene time the pick's image was made with.
+ */
 export function pickResult(
-  featureId: number,
+  world: Pick<World, "identities" | "draws" | "hasDraw">,
+  slot: number,
   info: FeatureInfo | undefined,
+  camera: CameraRecord,
 ): PickResult | undefined {
-  return info
-    ? {
-        featureId,
-        name: info.name,
-        ...(info.properties ? { properties: info.properties } : {}),
-        ...(info.item ? { item: info.item } : {}),
-      }
-    : undefined;
+  const identified = info && world.identities.slot(slot);
+  if (!info || !identified) {
+    return undefined;
+  }
+  const points = world.hasDraw(info.draw)
+    ? world.draws.drawBatches[info.draw.index]?.points === true
+    : false;
+  return {
+    id: identified.id,
+    key: identified.key,
+    scope: identified.scope,
+    labels: world.identities.labelsOfSlot(slot),
+    name: info.name,
+    ...(info.properties ? { properties: info.properties } : {}),
+    ...(info.item ? { item: info.item } : {}),
+    draw: info.draw,
+    basis: points ? "point" : "surface",
+    // A point without a feature of its own: the content names it, and the
+    // point is a sample of it.
+    ...(points &&
+      identified.key.kind === "draw" && {
+        sample: { index: identified.local },
+      }),
+    camera,
+    time: { seconds: camera.pose.seconds },
+  };
 }
 
 /**
@@ -316,7 +340,7 @@ export function corePick(
     anchorPosition: alongRay(camera, tanX, tanY, tick.ndcX, tick.ndcY, z),
     ...(route && { route }),
     draw,
-    feature: pickResult(featureId, info),
+    feature: pickResult(tick.world, featureId, info, tick.cameraRecord),
     ...(info?.item && { item: info.item }),
     seconds: tick.seconds,
     camera,

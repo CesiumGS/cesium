@@ -955,7 +955,7 @@ export class NextAdapter implements Adapter {
     return r
       ? {
           ...(r.name !== undefined ? { name: r.name } : {}),
-          featureId: r.featureId,
+          id: r.id.toString(),
           ...(r.properties ? { properties: r.properties } : {}),
         }
       : undefined;
@@ -1130,7 +1130,7 @@ export function legacyPick(
     const name = properties.name ?? properties.Name;
     return {
       ...(name !== undefined ? { name: String(name) } : {}),
-      featureId: picked.featureId,
+      id: String(picked.featureId),
       properties,
     };
   }

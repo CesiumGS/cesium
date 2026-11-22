@@ -23,6 +23,7 @@
  * The 5a backends take rays in one anchor's coordinates (Earth-fixed under
  * the Earth's anchor); carrying rays through the frame tree is 5b's.
  */
+import type { PickBasis, StableId } from "../scene/identity.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
 import type { Body } from "../scene/Body.ts";
 import type { View } from "../scene/View.ts";
@@ -172,6 +173,14 @@ export interface RayAnswer {
     readonly target?: RayTarget;
     /** When the target was placed, UTC seconds since 1970 (frame rays). */
     readonly seconds?: number;
+    /**
+     * The stable ID of what was hit (`World.identity`), the one a pick there
+     * gives: draws only. Labels come from `identify`, so a large batch of
+     * rays carries IDs only.
+     */
+    readonly id?: StableId;
+    /** How the hit was found: "surface" for triangles (draws, terrain, the ellipsoid). */
+    readonly basis?: PickBasis;
   };
   /**
    * The spans it couldn't decide, nearest first. A ray that is blocked may

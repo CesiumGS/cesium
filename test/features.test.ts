@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
+  featureIdSets,
   featureIdSource,
   featureName,
   isB3dm,
@@ -80,7 +81,56 @@ describe("EXT_mesh_features / EXT_structural_metadata", () => {
       featureCount: 10,
       table: 0,
       nullFeatureId: undefined,
+      set: 0,
     });
+  });
+
+  it("reads every feature-ID set, and names the first drawn one the identity set", () => {
+    const primitive = {
+      attributes: { _FEATURE_ID_1: 4 },
+      extensions: {
+        EXT_mesh_features: {
+          featureIds: [
+            { featureCount: 3, texture: { index: 0 }, label: "parts" },
+            { featureCount: 5, attribute: 1, propertyTable: 2, label: "rooms" },
+            { featureCount: 9 },
+          ],
+        },
+      },
+    };
+    expect(featureIdSets(primitive, undefined)).toEqual([
+      { index: 0, featureCount: 3, kind: "texture", label: "parts" },
+      {
+        index: 1,
+        featureCount: 5,
+        kind: "attribute",
+        label: "rooms",
+        propertyTable: 2,
+      },
+      { index: 2, featureCount: 9, kind: "implicit" },
+    ]);
+    expect(featureIdSource(primitive, undefined, [])?.set).toBe(1);
+    expect(featureIdSets({ attributes: { _BATCHID: 0 } }, 10)).toEqual([
+      {
+        index: 0,
+        featureCount: 10,
+        kind: "batch",
+        label: "_BATCHID",
+        propertyTable: 0,
+      },
+    ]);
+  });
+
+  it("keeps each property's semantic: ID names the feature", () => {
+    const semantic = structuredClone(json);
+    const cls = Object.values<{
+      properties: Record<string, { semantic?: string }>;
+    }>(semantic.extensions.EXT_structural_metadata.schema.classes)[0]!;
+    cls.properties.id!.semantic = "ID";
+    const [table] = readPropertyTables(semantic, bufferView, []);
+    expect(table!.semantics).toEqual({ id: "ID" });
+    const [plain] = readPropertyTables(json, bufferView, []);
+    expect(plain!.semantics).toBeUndefined();
   });
 
   it("reads property tables with defaults, noData and normalized scale/offset", () => {
