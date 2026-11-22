@@ -2,10 +2,15 @@
 id: CS-836
 title: Merge CS-49, Cesium IR's versioned JSON format, cesium-ir/1.0
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-10
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the IR tests, fast-forwards main, regenerates the views and logs the merge; cesium-ir/1.0 becomes the format, and CS-54 can start once CS-794 merges."
+rationale: "but as 0.x: the format is marked experimental at cesium-ir/0.x by CS-837, not 1.0"
+answered_at: 2026-11-22T04:13:43.731Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
