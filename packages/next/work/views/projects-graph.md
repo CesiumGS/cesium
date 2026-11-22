@@ -27,13 +27,13 @@ graph LR
   CS_196["Infrastructure and geoscience capabilities<br/>0 of 7 done"]
   CS_197["Ray queries and path tracing<br/>0 of 8 done"]
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
-  CS_199["Dyno hardening, packaging and CI<br/>5 of 20 done"]
+  CS_199["Dyno hardening, packaging and CI<br/>5 of 21 done"]
   CS_389["Dyno as the development harness<br/>58 of 94 done"]
   CS_437["public API reviews<br/>11 of 27 done"]
   CS_579["Editing<br/>8 of 22 done"]
   CS_584["widgets library<br/>0 of 9 done"]
   CS_596["Trust and evals<br/>0 of 9 done"]
-  CS_609["A clean 2.0 branch and a modern build<br/>10 of 16 done"]
+  CS_609["A clean 2.0 branch and a modern build<br/>12 of 18 done"]
   CS_615["Packaging and package names<br/>5 of 11 done"]
   CS_622["agent-first migration kit<br/>0 of 4 done"]
   CS_628["Sandcastle as 2.0's gallery<br/>0 of 16 done"]
@@ -112,7 +112,6 @@ graph LR
   CS_193 -->|1| CS_615
   CS_199 -->|1| CS_628
   CS_622 -->|1| CS_628
-  CS_609 -->|1| CS_628
   CS_190 -->|1| CS_642
   CS_189 -->|1| CS_642
   CS_191 -->|1| CS_647
@@ -121,7 +120,6 @@ graph LR
   CS_191 -->|7| CS_628
   CS_584 -->|1| CS_628
   CS_437 -->|4| CS_628
-  CS_609 -->|1| CS_615
   CS_437 -->|1| CS_191
   CS_191 -->|5| CS_579
   CS_437 -->|1| CS_579

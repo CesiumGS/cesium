@@ -246,11 +246,12 @@ CS-596 Trust and evals
   CS-605  external: Extension users validate 2.0 with their own data
 
 CS-609 A clean 2.0 branch and a modern build
-  CS-611  The 1.x code is replaced in the branch
   CS-612  The new build system
+  CS-911  The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite
 
 CS-615 Packaging and package names
   CS-616  decision: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
+  CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
 CS-622 The agent-first migration kit
   CS-623  The 1.x-to-2.0 map in a form agents read, with worked patterns
@@ -271,5 +272,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-202 ready
+203 ready
 ```

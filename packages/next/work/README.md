@@ -958,7 +958,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 5 of 20 done, 14 ready, 0 blocked, 1 proposed.
+[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 5 of 21 done, 14 ready, 0 blocked, 2 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host ([CS-485](./milestones/CS-485-dyno-and-the-gallery-are-safe-to-build-and-host.md), Planned)
 
@@ -988,6 +988,7 @@ No milestone
 - [?] [CS-364](./items/CS-364-the-gallery-shell-filters-editable-source.md) The gallery shell: filters, editable source, checked-in thumbnails, the playground's later list. Proposed. Needs nothing.
 - [x] [CS-796](./items/CS-796-merge-cs-580-naga-wasm-30-2-0-is-a-dev.md) decision: Merge CS-580, naga-wasm 30.2.0 is a dev dependency of @cesium/next. Done.
 - [x] [CS-852](./items/CS-852-merge-cs-850-eslint-passes-on-main-again-the.md) decision: Merge CS-850, eslint passes on main again (the unused PostStageKind import goes). Done.
+- [?] [CS-912](./items/CS-912-dyno-s-rough-edges-found-by-cs-611-a-hang-after.md) Dyno's rough edges found by CS-611: a hang after a throwing suite, baseline IDs in studies, a port for suite run. Proposed. Needs nothing.
 
 ### Dyno as the development harness
 
@@ -1232,12 +1233,12 @@ Milestone: Extension users have validated 2.0 with their own data ([CS-608](./mi
 
 ### A clean 2.0 branch and a modern build
 
-[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 10 of 16 done, 2 ready, 1 blocked, 3 proposed.
+[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 12 of 18 done, 2 ready, 1 blocked, 3 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614-the-branch-is-a-clean-modern-2-0-build.md), Planned)
 
 - [x] [CS-610](./items/CS-610-the-2-0-repository-s-design-build-system-ci-cd.md) The 2.0 repository's design: build system, CI/CD and release pipeline. Done.
-- [ ] [CS-611](./items/CS-611-the-1-x-code-is-replaced-in-the-branch.md) The 1.x code is replaced in the branch. Needs CS-610 and CS-887.
+- [x] [CS-611](./items/CS-611-the-1-x-code-is-replaced-in-the-branch.md) The 1.x code is replaced in the branch. Done.
 - [ ] [CS-612](./items/CS-612-the-new-build-system.md) The new build system. Needs CS-610.
 - [ ] [CS-613](./items/CS-613-ci-cd-on-the-new-build-with-the-release-pipeline.md) CI/CD on the new build, with the release pipeline. Needs CS-612.
 
@@ -1255,10 +1256,12 @@ No milestone
 - [?] [CS-895](./items/CS-895-isolateddeclarations-across-2-0-s-packages.md) isolatedDeclarations across 2.0's packages. Proposed. Needs CS-612.
 - [?] [CS-896](./items/CS-896-docs-and-site-deploys-for-2-0.md) Docs and site deploys for 2.0. Proposed. Needs CS-613.
 - [?] [CS-897](./items/CS-897-a-software-webgpu-smoke-job-in-ci.md) A software-WebGPU smoke job in CI. Proposed. Needs CS-613 and CS-893.
+- [x] [CS-910](./items/CS-910-merge-cs-611-1-x-leaves-the-2-0-branch.md) decision: Merge CS-611, 1.x leaves the 2.0 branch. Done.
+- [ ] [CS-911](./items/CS-911-the-move-s-fix-ups-after-cs-611-an-https.md) The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite. Needs nothing.
 
 ### Packaging and package names
 
-[CS-615](./projects/CS-615-packaging-and-package-names.md), Planned, led by owner: 5 of 11 done, 1 ready, 5 blocked.
+[CS-615](./projects/CS-615-packaging-and-package-names.md), Planned, led by owner: 5 of 11 done, 2 ready, 4 blocked.
 
 Milestone: The core installs alone, and the whole engine installs from one umbrella package ([CS-621](./milestones/CS-621-the-core-installs-alone-and-the-whole-engine.md), Planned)
 

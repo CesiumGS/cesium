@@ -594,6 +594,7 @@ graph LR
     CS_850["CS-850 eslint passes on main again: the unused PostStageKind import in"]:::done
     CS_851["CS-851 npm run handbook type-checks again: handbook/viewer/workerPool."]:::open
     CS_852["CS-852 Merge CS-850, eslint passes on main again (the unused PostStage"]:::done
+    CS_912["CS-912 Dyno's rough edges found by CS-611: a hang after a throwing sui"]:::proposed
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
@@ -768,7 +769,7 @@ graph LR
   end
   subgraph CS_609["A clean 2.0 branch and a modern build"]
     CS_610["CS-610 The 2.0 repository's design: build system, CI/CD and release pi"]:::done
-    CS_611["CS-611 The 1.x code is replaced in the branch"]:::open
+    CS_611["CS-611 The 1.x code is replaced in the branch"]:::done
     CS_612["CS-612 The new build system"]:::open
     CS_613["CS-613 CI/CD on the new build, with the release pipeline"]:::open
     CS_886["CS-886 Merge CS-610, the 2.0 repository's design: layout, build, tests"]:::done
@@ -783,6 +784,8 @@ graph LR
     CS_895["CS-895 isolatedDeclarations across 2.0's packages"]:::proposed
     CS_896["CS-896 Docs and site deploys for 2.0"]:::proposed
     CS_897["CS-897 A software-WebGPU smoke job in CI"]:::proposed
+    CS_910["CS-910 Merge CS-611, 1.x leaves the 2.0 branch"]:::done
+    CS_911["CS-911 The move's fix-ups after CS-611: an https lockfile entry, stale"]:::open
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision

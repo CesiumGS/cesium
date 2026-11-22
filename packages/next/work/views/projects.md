@@ -96,7 +96,7 @@ CS-198 GPU-driven rendering and capacities [Planned], led by owner
   waits on: nothing open
   waited on by: CS-18 The work tracker (2)
 CS-199 Dyno hardening, packaging and CI [Planned], led by owner
-  5 of 20 done, 14 ready, 0 blocked, 1 proposed
+  5 of 21 done, 14 ready, 0 blocked, 2 proposed
   waits on: nothing open
   waited on by: CS-18 The work tracker (2); CS-628 Sandcastle as 2.0's gallery (1)
 CS-389 Dyno as the development harness [Planned], led by owner
@@ -120,12 +120,12 @@ CS-596 Trust and evals [Planned], led by owner
   waits on: CS-195 Benchmarks, parity and image regression (1)
   waited on by: CS-18 The work tracker (3)
 CS-609 A clean 2.0 branch and a modern build [Planned], led by owner
-  10 of 16 done, 2 ready, 1 blocked, 3 proposed
+  12 of 18 done, 2 ready, 1 blocked, 3 proposed
   waits on: nothing open
-  waited on by: CS-18 The work tracker (1); CS-628 Sandcastle as 2.0's gallery (1); CS-615 Packaging and package names (1)
+  waited on by: CS-18 The work tracker (1)
 CS-615 Packaging and package names [Planned], led by owner
-  5 of 11 done, 1 ready, 5 blocked
-  waits on: CS-193 B-reps and geometry queries (1); CS-609 A clean 2.0 branch and a modern build (1); CS-191 Content sources and formats (1)
+  5 of 11 done, 2 ready, 4 blocked
+  waits on: CS-193 B-reps and geometry queries (1); CS-191 Content sources and formats (1)
   waited on by: CS-18 The work tracker (2); CS-191 Content sources and formats (3)
 CS-622 The agent-first migration kit [Planned], led by owner
   0 of 4 done, 1 ready, 3 blocked
@@ -133,7 +133,7 @@ CS-622 The agent-first migration kit [Planned], led by owner
   waited on by: CS-18 The work tracker (1); CS-628 Sandcastle as 2.0's gallery (1)
 CS-628 Sandcastle as 2.0's gallery [Planned], led by owner
   0 of 16 done, 2 ready, 14 blocked
-  waits on: CS-199 Dyno hardening, packaging and CI (1); CS-622 The agent-first migration kit (1); CS-609 A clean 2.0 branch and a modern build (1); CS-191 Content sources and formats (7); CS-584 The widgets library (1); CS-437 The public API reviews (4)
+  waits on: CS-199 Dyno hardening, packaging and CI (1); CS-622 The agent-first migration kit (1); CS-191 Content sources and formats (7); CS-584 The widgets library (1); CS-437 The public API reviews (4)
   waited on by: CS-18 The work tracker (3); CS-579 Editing (1)
 CS-637 The particle system [Planned], led by owner
   0 of 3 done, 1 ready, 2 blocked

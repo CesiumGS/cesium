@@ -901,7 +901,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-CS-199, Planned, led by owner: 5 of 20 done, 14 ready, 0 blocked, 1 proposed.
+CS-199, Planned, led by owner: 5 of 21 done, 14 ready, 0 blocked, 2 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host (CS-485, Planned)
 
@@ -931,6 +931,7 @@ No milestone
 - [?] CS-364 The gallery shell: filters, editable source, checked-in thumbnails, the playground's later list. Proposed. Needs nothing.
 - [x] CS-796 decision: Merge CS-580, naga-wasm 30.2.0 is a dev dependency of @cesium/next. Done.
 - [x] CS-852 decision: Merge CS-850, eslint passes on main again (the unused PostStageKind import goes). Done.
+- [?] CS-912 Dyno's rough edges found by CS-611: a hang after a throwing suite, baseline IDs in studies, a port for suite run. Proposed. Needs nothing.
 
 ### Dyno as the development harness
 
@@ -1175,12 +1176,12 @@ Milestone: Extension users have validated 2.0 with their own data (CS-608, Plann
 
 ### A clean 2.0 branch and a modern build
 
-CS-609, Planned, led by owner: 10 of 16 done, 2 ready, 1 blocked, 3 proposed.
+CS-609, Planned, led by owner: 12 of 18 done, 2 ready, 1 blocked, 3 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
 
 - [x] CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline. Done.
-- [ ] CS-611 The 1.x code is replaced in the branch. Needs CS-610 and CS-887.
+- [x] CS-611 The 1.x code is replaced in the branch. Done.
 - [ ] CS-612 The new build system. Needs CS-610.
 - [ ] CS-613 CI/CD on the new build, with the release pipeline. Needs CS-612.
 
@@ -1198,10 +1199,12 @@ No milestone
 - [?] CS-895 isolatedDeclarations across 2.0's packages. Proposed. Needs CS-612.
 - [?] CS-896 Docs and site deploys for 2.0. Proposed. Needs CS-613.
 - [?] CS-897 A software-WebGPU smoke job in CI. Proposed. Needs CS-613 and CS-893.
+- [x] CS-910 decision: Merge CS-611, 1.x leaves the 2.0 branch. Done.
+- [ ] CS-911 The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite. Needs nothing.
 
 ### Packaging and package names
 
-CS-615, Planned, led by owner: 5 of 11 done, 1 ready, 5 blocked.
+CS-615, Planned, led by owner: 5 of 11 done, 2 ready, 4 blocked.
 
 Milestone: The core installs alone, and the whole engine installs from one umbrella package (CS-621, Planned)
 
