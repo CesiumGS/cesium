@@ -1,7 +1,24 @@
+# Dependabot reads this file from the default branch only, so each branch's
+# updates are an entry here with its `target-branch`.
 version: 2
 updates:
+  # 1.x's workflows, on main.
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
       interval: "daily"
     target-branch: "main"
+  # 2.0's workflows (CS-613; docs/design/repository-build-and-release.md,
+  # "CI"): every action is pinned to a full commit SHA with its version in a
+  # comment, and these updates move the pin and the comment together, as
+  # one grouped change a week, through the merge queue like any change.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    target-branch: "cesium-2.0-webgpu-poc"
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "ci"

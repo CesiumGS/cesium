@@ -1,0 +1,254 @@
+# CI for the 2.0 branch (CS-613): docs/design/repository-build-and-release.md,
+# "CI". The merge queue on the owner's machine stays the gate for merges; this
+# is the second gate, on the public side, and the record a release reads.
+#
+# Hardening: read-only `contents` for every job, no secrets, no
+# `pull_request_target`, `npm ci --ignore-scripts` so no dependency's install
+# script runs, and every action pinned to a full commit SHA (its version in a
+# comment; Dependabot keeps the pins current, .github/dependabot.yml).
+name: ci
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches: [cesium-2.0-webgpu-poc]
+  # The data tier, nightly. GitHub runs `schedule` from the default branch's
+  # copy of this file, so this fires only once the 2.0 branch is the default
+  # (the design's "CI", the nightly row).
+  schedule:
+    - cron: "23 7 * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  # The Node the lockfile was written with; `test` adds the current release.
+  NODE_VERSION: "24"
+  # Tells eslint-seatbelt and the tools that read it that this is CI.
+  CI: "true"
+
+jobs:
+  # What the change compares against, and whether it touches the packages the
+  # data tier covers. No checkout of the change's code runs here beyond git.
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      base: ${{ steps.base.outputs.base }}
+      data: ${{ steps.data.outputs.data }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - id: base
+        name: The base commit
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          GROUP_BASE: ${{ github.event.merge_group.base_sha }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          case "$EVENT" in
+            pull_request) base="$PR_BASE" ;;
+            merge_group) base="$GROUP_BASE" ;;
+            push) base="$BEFORE" ;;
+            *) base="" ;;
+          esac
+          # A new branch's push has no before commit.
+          if [ "$base" = "0000000000000000000000000000000000000000" ]; then base=""; fi
+          if [ -n "$base" ] && ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            echo "::warning::base $base isn't in the clone; the changeset check is skipped"
+            base=""
+          fi
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          echo "base: ${base:-none}"
+      - id: data
+        name: Whether the data tier runs
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ steps.base.outputs.base }}
+        run: |
+          if [ "$EVENT" = "schedule" ]; then
+            data=true
+          elif [ -z "$BASE" ]; then
+            data=false
+          elif git diff --quiet "$BASE...HEAD" -- packages/time packages/frames packages/crs; then
+            data=false
+          else
+            data=true
+          fi
+          echo "data=$data" >> "$GITHUB_OUTPUT"
+          echo "data tier: $data"
+
+  # The fast tier: type checks, lint and format, the tracker's checks, the
+  # version lines, and the changeset rule.
+  checks:
+    needs: changes
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Declarations (tsc --build)
+        run: npm run typecheck
+      - name: The harness (tsc --noEmit)
+        run: npx tsc --noEmit -p .
+      - name: eslint
+        run: npm run eslint
+      - name: prettier
+        run: npm run prettier-check
+      - name: markdownlint
+        run: npm run markdownlint
+      - name: The tracker
+        run: npx hitld work check
+      - name: Stale names
+        run: node scripts/staleNames.mjs
+      - name: The version lines
+        run: npm run release:check
+      - name: A changeset for a change to a published package
+        if: needs.changes.outputs.base != ''
+        env:
+          BASE: ${{ needs.changes.outputs.base }}
+        run: npm run changeset:check -- --base "$BASE"
+
+  # The full suite, on Node 24 and the current release.
+  test:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ["24", "current"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+
+  # Every package built, packed and checked as it publishes; the bundle check
+  # against that output; the surface; Sandcastle's and the handbook's builds.
+  build:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Build, pack, and the packed checks (publint, attw, declarations)
+        run: npm run build
+      - name: The bundle check
+        run: npm run check:bundle
+      - name: The surface is current
+        run: npm run surface -- --check
+      - name: Sandcastle
+        run: npm run build-sandcastle
+      - name: The handbook
+        run: npm run handbook
+
+  # The generated shaders match their Slang sources, compiled with the pinned
+  # slangc, checked against the SHA-256 the release publishes for the asset
+  # (GitHub's `digest` for it, read 2026-11-22 from
+  # api.github.com/repos/shader-slang/slang/releases/tags/v2026.22).
+  shaders:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      SLANG_VERSION: "2026.22"
+      SLANG_ASSET_SHA256: 77680e3fbcf8413abb17a675828c1c25ad221cadbbab7f948b56265fe743a05e
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: The pin here matches the engine's
+        run: |
+          if ! grep -q "SLANG_VERSION = \"$SLANG_VERSION\"" packages/core/src/scene/slangVersion.ts; then
+            echo "::error::slangVersion.ts pins another Slang release than this job's $SLANG_VERSION; update SLANG_VERSION and SLANG_ASSET_SHA256 together"
+            exit 1
+          fi
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Cache the slangc release
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/slang/${{ env.SLANG_VERSION }}
+          key: slang-${{ env.SLANG_VERSION }}-linux-x86_64-${{ env.SLANG_ASSET_SHA256 }}
+      - name: Fetch slangc and check its hash
+        run: |
+          dir="$HOME/.cache/slang/$SLANG_VERSION"
+          zip="$dir/slang-$SLANG_VERSION-linux-x86_64.zip"
+          mkdir -p "$dir"
+          if [ ! -f "$zip" ]; then
+            curl --fail --location --silent --show-error --output "$zip" \
+              "https://github.com/shader-slang/slang/releases/download/v$SLANG_VERSION/slang-$SLANG_VERSION-linux-x86_64.zip"
+          fi
+          # Checked on every run, cached or not.
+          echo "$SLANG_ASSET_SHA256  $zip" | sha256sum --check --strict
+          rm -rf "$dir/unpacked"
+          unzip -q "$zip" -d "$dir/unpacked"
+          slangc="$(find "$dir/unpacked" -type f -name slangc -path '*/bin/*' | head -n 1)"
+          if [ -z "$slangc" ]; then
+            echo "::error::no bin/slangc in the release asset"
+            exit 1
+          fi
+          chmod +x "$slangc"
+          "$slangc" -version
+          echo "SLANGC=$slangc" >> "$GITHUB_ENV"
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm run shaders:check
+
+  # The data tier: nightly, and on a change under packages/{time,frames,crs}.
+  # `npm run setup` fills the store outside the repository (~/.cesium-bench,
+  # the frames data included), cached by the scripts that define what it
+  # fetches and builds.
+  data:
+    needs: changes
+    if: needs.changes.outputs.data == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Cache the setup store
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cesium-bench
+          key: setup-store-${{ hashFiles('scripts/setup.mjs', 'scripts/frameData.mjs', 'scripts/projGrids.mjs', 'scripts/gridSets.mjs', 'scripts/designTiles.mjs', 'scripts/dataFormats.mjs', 'scripts/slangTools.mjs', 'scripts/smlibTools.mjs', 'scripts/occtTools.mjs', 'scripts/stepSamples.mjs', 'packages/core/src/scene/slangVersion.ts', 'bench/suite/catalog/public.json') }}
+          restore-keys: setup-store-
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: The setup store
+        run: npm run setup
+      - run: npm run test:data

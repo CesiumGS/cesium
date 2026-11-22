@@ -172,9 +172,9 @@ _The model: every representation is a domain, an embedding, and fields._
 
 _Two kinds of data, two meanings:_
 
-|                               | Defined on space                                     | Defined on the domain                                      |
-| ----------------------------- | ---------------------------------------------------- | ---------------------------------------------------------- |
-| Changes where content _is_    | A coordinate operation (a reprojection)              | A deformer for a state: 4D construction, a survey epoch    |
+|                               | Defined on space                                     | Defined on the domain                                     |
+| ----------------------------- | ---------------------------------------------------- | --------------------------------------------------------- |
+| Changes where content _is_    | A coordinate operation (a reprojection)              | A deformer for a state: 4D construction, a survey epoch   |
 | Changes only how it's _drawn_ | A drawn map (exaggeration, flattening, the 2D morph) | A drawn deformer (an analysis shape at ×50); color fields |
 
 - Queries, clipping and measurement apply the first row only.
