@@ -11,7 +11,9 @@ import {
   FetchProvider,
   ForwardingProxy,
   engineFetch,
+  type FetchProviderOptions,
   type FetchTransport,
+  type OriginRule,
 } from "../src/io/fetchProvider.ts";
 import { ionDefaults, resolveIonAsset } from "../src/io/ion.ts";
 import {
@@ -259,6 +261,7 @@ describe("proxies", () => {
       proxy: new ForwardingProxy("https://gateway.test/forward", {
         header: "X-Target",
       }),
+      origins: [{ origin: "https://gateway.test", allowCredentials: true }],
     });
     const credential = new Credential({ query: { key: FAKE } });
     await provider.fetch("https://a.test/t.json", {
@@ -299,7 +302,11 @@ describe("enterprise environments", () => {
       transport,
       origins: [
         { origin: "https://sso.corp.test", credentials: "include" },
-        { origin: "https://proxy.corp.test", credentials: "include" },
+        {
+          origin: "https://proxy.corp.test",
+          credentials: "include",
+          allowCredentials: true,
+        },
         {
           origin: "https://behind.test",
           proxy: new DefaultProxy("https://proxy.corp.test/"),
@@ -447,6 +454,242 @@ describe("the worker bridge", () => {
   });
 });
 
+describe("credentials through a proxy (owner, CS-838)", () => {
+  const TENANT = "tenant-secret-5";
+  const URL_TOKEN = "url-token-9";
+  const SECRETS = [FAKE, ROTATED, TENANT, URL_TOKEN];
+
+  /**
+   * One request carrying every kind of credential: a renewable Credential
+   * (header and query), a tenant header from the target's rule, a header
+   * the hook adds, tokens already in the URL, and `credentials: "include"`
+   * from the target's rule.
+   */
+  async function sendThrough(
+    proxyOptions: Pick<FetchProviderOptions, "proxy"> & {
+      targetProxy?: OriginRule["proxy"];
+      rules?: OriginRule[];
+    },
+    status = 200,
+  ) {
+    const refresh = vi.fn(async () => ({
+      headers: { Authorization: `Bearer ${ROTATED}` },
+    }));
+    const credential = new Credential(
+      {
+        headers: { Authorization: `Bearer ${FAKE}`, "X-Api-Key": FAKE },
+        query: { sig: FAKE },
+      },
+      { refresh },
+    );
+    const { sent, transport } = recorder(() => new Response("{}", { status }));
+    const provider = new FetchProvider({
+      transport,
+      ...(proxyOptions.proxy ? { proxy: proxyOptions.proxy } : {}),
+      origins: [
+        ...(proxyOptions.rules ?? []),
+        {
+          origin: "https://a.test",
+          headers: { "X-Tenant": TENANT },
+          credentials: "include",
+          ...(proxyOptions.targetProxy !== undefined
+            ? { proxy: proxyOptions.targetProxy }
+            : {}),
+        },
+      ],
+      onRequest: (request) => {
+        request.headers["X-Signature"] = `signed-${FAKE}`;
+      },
+    });
+    const response = await provider.fetch(
+      `https://a.test/t.json?v=2&access_token=${URL_TOKEN}&key=${URL_TOKEN}`,
+      {
+        kind: "tileset",
+        headers: credential.headers,
+        accept: "application/json",
+      },
+    );
+    return { sent, response, refresh };
+  }
+
+  const leaks = (sent: Sent[]) =>
+    SECRETS.filter((secret) => JSON.stringify(sent).includes(secret));
+
+  it("the provider-wide DefaultProxy, with no rule for its origin, gets no credential or token", async () => {
+    const { sent } = await sendThrough({
+      proxy: new DefaultProxy("https://proxy.test/p/"),
+    });
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.url).toBe(
+      `https://proxy.test/p/?${encodeURIComponent("https://a.test/t.json?v=2")}`,
+    );
+    expect(sent[0]!.init?.headers).toEqual({ Accept: "application/json" });
+    expect(sent[0]!.init?.credentials).toBeUndefined();
+    expect(leaks(sent)).toEqual([]);
+  });
+
+  it("a target rule's DefaultProxy, with no rule for its origin, gets no credential or token", async () => {
+    const { sent } = await sendThrough({
+      targetProxy: new DefaultProxy("https://proxy.test/q/"),
+    });
+    expect(sent[0]!.url).toBe(
+      `https://proxy.test/q/?${encodeURIComponent("https://a.test/t.json?v=2")}`,
+    );
+    expect(sent[0]!.init?.headers).toEqual({ Accept: "application/json" });
+    expect(sent[0]!.init?.credentials).toBeUndefined();
+    expect(leaks(sent)).toEqual([]);
+  });
+
+  it("ForwardingProxy, with no rule for its origin, gets no credential, and X-Target-URL carries no token", async () => {
+    const { sent } = await sendThrough({
+      proxy: new ForwardingProxy("https://gateway.test/forward"),
+    });
+    expect(sent[0]!.url).toBe("https://gateway.test/forward");
+    expect(sent[0]!.init?.headers).toEqual({
+      Accept: "application/json",
+      "X-Target-URL": "https://a.test/t.json?v=2",
+    });
+    expect(sent[0]!.init?.credentials).toBeUndefined();
+    expect(leaks(sent)).toEqual([]);
+  });
+
+  it("a proxy that refuses the bare request gets its 401 back: no renewal, no fallback with credentials", async () => {
+    const { sent, response, refresh } = await sendThrough(
+      { proxy: new DefaultProxy("https://proxy.test/p/") },
+      401,
+    );
+    expect(response.status).toBe(401);
+    expect(sent).toHaveLength(1);
+    expect(refresh).not.toHaveBeenCalled();
+    expect(leaks(sent)).toEqual([]);
+  });
+
+  it("a proxy whose origin rule allows credentials gets them, as 1.x's do", async () => {
+    const { sent } = await sendThrough({
+      proxy: new DefaultProxy("https://proxy.test/p/"),
+      rules: [
+        {
+          origin: "https://proxy.test",
+          allowCredentials: true,
+          credentials: "include",
+        },
+      ],
+    });
+    const target = decodeURIComponent(
+      sent[0]!.url.split("?").slice(1).join("?"),
+    );
+    expect(target).toBe(
+      `https://a.test/t.json?v=2&access_token=${URL_TOKEN}&key=${URL_TOKEN}&sig=${FAKE}`,
+    );
+    expect(sent[0]!.init?.headers).toMatchObject({
+      Authorization: `Bearer ${FAKE}`,
+      "X-Api-Key": FAKE,
+      "X-Tenant": TENANT,
+      "X-Signature": `signed-${FAKE}`,
+    });
+    expect(sent[0]!.init?.credentials).toBe("include");
+  });
+
+  it("an allowed proxy's 401 renews the credential once, through the proxy", async () => {
+    const { sent, response, refresh } = await sendThrough(
+      {
+        proxy: new ForwardingProxy("https://gateway.test/forward"),
+        rules: [{ origin: "https://gateway.test", allowCredentials: true }],
+      },
+      401,
+    );
+    expect(response.status).toBe(401);
+    expect(refresh).toHaveBeenCalledTimes(1);
+    expect(sent.map((s) => header(s, "Authorization"))).toEqual([
+      `Bearer ${FAKE}`,
+      `Bearer ${ROTATED}`,
+    ]);
+  });
+
+  it("rules match the proxy's origin, exact or *.subdomain, never the target's", async () => {
+    // A wildcard rule for the proxy's origin allows.
+    const wildcard = await sendThrough({
+      proxy: new DefaultProxy("https://east.gw.test/p/"),
+      rules: [{ origin: "https://*.gw.test", allowCredentials: true }],
+    });
+    expect(header(wildcard.sent[0]!, "Authorization")).toBe(`Bearer ${FAKE}`);
+    // Rules for other origins don't: the target's own, a wildcard that
+    // matches the target, an exact rule for a near miss, a bare domain.
+    for (const rules of [
+      [{ origin: "https://a.test", allowCredentials: true }],
+      [{ origin: "https://*.a.test", allowCredentials: true }],
+      [{ origin: "https://proxy.test:8443", allowCredentials: true }],
+      [{ origin: "http://proxy.test", allowCredentials: true }],
+      [{ origin: "https://*.proxy.test", allowCredentials: true }],
+    ]) {
+      const { sent } = await sendThrough({
+        proxy: new DefaultProxy("https://proxy.test/p/"),
+        rules,
+      });
+      expect(sent[0]!.init?.headers, JSON.stringify(rules)).toEqual({
+        Accept: "application/json",
+      });
+      expect(leaks(sent), JSON.stringify(rules)).toEqual([]);
+    }
+  });
+
+  it("an ion asset through a proxy with no rule: neither the access token nor an asset token reaches it", async () => {
+    ionDefaults.accessToken = FAKE;
+    const answer = (s: Sent) => {
+      const target = decodeURIComponent(s.url.split("?").slice(1).join("?"));
+      if (target.includes("/endpoint")) {
+        return header(s, "Authorization") === `Bearer ${FAKE}`
+          ? Response.json({
+              type: "3DTILES",
+              url: "https://assets.ion.test/1/tileset.json?v=1",
+              accessToken: `asset-${ROTATED}`,
+            })
+          : new Response("", { status: 401 });
+      }
+      return new Response("{}", {
+        status:
+          header(s, "Authorization") === `Bearer asset-${ROTATED}` ? 200 : 401,
+      });
+    };
+    try {
+      const bare = recorder(answer);
+      FetchProvider.default = new FetchProvider({
+        transport: bare.transport,
+        proxy: new DefaultProxy("https://proxy.test/"),
+      });
+      await expect(
+        resolveIonAsset(55_501, { server: "https://api.ion.test/" }),
+      ).rejects.toThrow("endpoint request failed (401)");
+      expect(bare.sent).toHaveLength(1);
+      expect(leaks(bare.sent)).toEqual([]);
+      // With a rule for the proxy, the endpoint and the asset token go through.
+      const allowed = recorder(answer);
+      FetchProvider.default = new FetchProvider({
+        transport: allowed.transport,
+        proxy: new DefaultProxy("https://proxy.test/"),
+        origins: [{ origin: "https://proxy.test", allowCredentials: true }],
+      });
+      const asset = await resolveIonAsset(55_502, {
+        server: "https://api.ion.test/",
+      });
+      const response = await engineFetch(asset.url, { headers: asset.headers });
+      expect(response.status).toBe(200);
+      // The same asset through a proxy that isn't allowed: refused, no token.
+      const refused = recorder(answer);
+      FetchProvider.default = new FetchProvider({
+        transport: refused.transport,
+        proxy: new DefaultProxy("https://proxy.test/"),
+      });
+      expect(
+        (await engineFetch(asset.url, { headers: asset.headers })).status,
+      ).toBe(401);
+      expect(leaks(refused.sent)).toEqual([]);
+    } finally {
+      delete ionDefaults.accessToken;
+    }
+  });
+});
+
 describe("no token or header value in any output", () => {
   it("a fake value through a 401 retry, a proxy and a hook appears in nothing printed or thrown", async () => {
     const printed: string[] = [];
@@ -465,6 +708,7 @@ describe("no token or header value in any output", () => {
         }),
       },
     );
+    const sends: number[] = [];
     const provider = new FetchProvider({
       proxy: new DefaultProxy("https://proxy.test/"),
       origins: [
@@ -472,6 +716,8 @@ describe("no token or header value in any output", () => {
           origin: "https://a.test",
           headers: { "X-Tenant": "tenant-secret-5" },
         },
+        // Allowed, so the credential and its 401 retry go through the proxy.
+        { origin: "https://proxy.test", allowCredentials: true },
       ],
       onRequest: (request) => {
         hookViews.push(JSON.stringify(request));
@@ -481,7 +727,10 @@ describe("no token or header value in any output", () => {
           JSON.stringify({ ...response, headers: [...response.headers] }),
         );
       },
-      transport: async () => new Response("denied", { status: 401 }),
+      transport: async () => {
+        sends.push(1);
+        return new Response("denied", { status: 401 });
+      },
     });
     FetchProvider.default = provider;
     const thrown: string[] = [];
@@ -505,6 +754,8 @@ describe("no token or header value in any output", () => {
       parseGltf("https://a.test/c.glb", "rgba8unorm" as never),
     );
     expect(thrown).toHaveLength(2);
+    // The tileset JSON was refused, renewed and refused again; the glTF once.
+    expect(sends).toHaveLength(3);
     const output = [...printed, ...thrown].join("\n");
     for (const secret of [FAKE, ROTATED, "tenant-secret-5"]) {
       expect(output).not.toContain(secret);

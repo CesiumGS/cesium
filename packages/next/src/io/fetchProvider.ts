@@ -19,10 +19,15 @@
  * 4. **The proxy**: the rule's, else the provider's (`DefaultProxy`, 1.x's
  *    prefix form; `ForwardingProxy`, a host's endpoint; or any
  *    `RequestProxy`). The engine's own files (kind `"engine"`) skip the
- *    provider's proxy. A proxied request carries the source's headers to
- *    the proxy, as 1.x's do: the host chose it, and it forwards them.
+ *    provider's proxy. A proxy gets credentials only where an origin rule
+ *    for the proxy's own origin allows them (`allowCredentials`); without
+ *    one it gets a bare request, with no headers but `Accept` and its own,
+ *    no credential, no token in the URL it forwards, and no
+ *    `credentials: "include"`. That is stricter than 1.x, whose proxies get
+ *    everything; a host that wants 1.x's behavior adds the rule.
  * 5. **The credentials mode**, from the rule of the origin the request is
- *    actually sent to (the proxy's, when there is one). Without a rule the
+ *    actually sent to (the proxy's, when there is one, and `"include"` only
+ *    with `allowCredentials`). Without a rule the
  *    mode is the browser's default (`"same-origin"`), as before CS-809: only
  *    a host chooses another, per origin.
  * 6. **The transport** (`fetch`, or a host's), then the response hook
@@ -52,8 +57,8 @@
  * an origin the browser trusts (`DefaultProxy` or `ForwardingProxy`) that
  * holds the client certificate or the private trust store, sets what the
  * page can't, and forwards to the real server; the page's own cookies or
- * single sign-on reach that proxy with an origin rule's
- * `credentials: "include"`.
+ * single sign-on reach that proxy with an origin rule for it that has
+ * `allowCredentials` and `credentials: "include"`.
  */
 
 /** What a request is for: hooks and diagnostics can tell requests apart. */
@@ -255,6 +260,14 @@ export interface OriginRule {
   credentials?: RequestCredentials;
   /** Its own proxy, or `null` for none (the provider's is skipped). */
   proxy?: RequestProxy | null;
+  /**
+   * For a proxy's origin: the proxy may receive the credentials of the
+   * requests it forwards (their headers, rule headers, credential query
+   * parameters, tokens in the target URL, `credentials: "include"`).
+   * Without it a proxy gets none of them. 1.x's proxies get everything; a
+   * host that wants that adds this rule for its proxy.
+   */
+  allowCredentials?: boolean;
 }
 
 /** A request as the request hook sees it: change it in place. */
@@ -333,12 +346,18 @@ export class FetchProvider {
     let retried = false;
     for (;;) {
       const generation = credential?.generation ?? 0;
-      const response = await this.send(String(input), init, credential);
+      const { response, sentCredential } = await this.send(
+        String(input),
+        init,
+        credential,
+      );
+      // Only a credential that was sent can be what the server refused: a
+      // proxy that wasn't allowed it gets no renewal and no fallback.
       if (
         response.status !== 401 ||
         retried ||
-        !credential?.renewable ||
-        !credential.appliesTo(originOf(String(input)))
+        !sentCredential ||
+        !credential?.renewable
       ) {
         return response;
       }
@@ -356,7 +375,7 @@ export class FetchProvider {
     input: string,
     init: ProviderRequestInit,
     credential: Credential | undefined,
-  ): Promise<Response> {
+  ): Promise<{ response: Response; sentCredential: boolean }> {
     const kind = init.kind ?? "other";
     const rule = this.ruleFor(originOf(input));
     const outgoing: OutgoingRequest = {
@@ -370,16 +389,6 @@ export class FetchProvider {
     await this.options.onRequest?.(outgoing);
     const target = outgoing.url;
     const origin = originOf(target);
-    const headers: Record<string, string> = { ...outgoing.headers };
-    let url = target;
-    if (init.headers && (!credential || credential.appliesTo(origin))) {
-      for (const [name, value] of Object.entries(init.headers)) {
-        setHeader(headers, name, value);
-      }
-      if (credential && Object.keys(credential.query).length > 0) {
-        url = withQuery(url, credential.query);
-      }
-    }
     const targetRule = this.ruleFor(origin);
     const proxy =
       targetRule?.proxy !== undefined
@@ -387,13 +396,64 @@ export class FetchProvider {
         : kind === "engine"
           ? undefined
           : this.options.proxy;
-    if (proxy) {
-      for (const [name, value] of Object.entries(proxy.headers?.(url) ?? {})) {
+
+    // The request with everything it carries.
+    let headers: Record<string, string> = { ...outgoing.headers };
+    let url = target;
+    let sentCredential = false;
+    if (init.headers && (!credential || credential.appliesTo(origin))) {
+      for (const [name, value] of Object.entries(init.headers)) {
         setHeader(headers, name, value);
       }
-      url = proxy.getURL(url);
+      if (credential) {
+        sentCredential = true;
+        if (Object.keys(credential.query).length > 0) {
+          url = withQuery(url, credential.query);
+        }
+      }
     }
-    const mode = this.ruleFor(originOf(url))?.credentials;
+    let mode: RequestCredentials | undefined;
+    if (!proxy) {
+      mode = this.ruleFor(originOf(url))?.credentials;
+    } else {
+      // Through a proxy, credentials go only where an origin rule for the
+      // proxy's own origin allows them (`OriginRule.allowCredentials`);
+      // stricter than 1.x, whose proxies get everything. Otherwise the
+      // proxy gets a bare request: no source or rule headers, no hook's
+      // headers, no credential, no token in the target URL it forwards,
+      // and no `credentials: "include"`.
+      const bare = withoutTokens(target, credential);
+      const bareUrl = proxy.getURL(bare);
+      const proxyRule = this.ruleFor(originOf(bareUrl));
+      if (proxyRule?.allowCredentials === true) {
+        for (const [name, value] of Object.entries({
+          ...proxyRule.headers,
+          ...proxy.headers?.(url),
+        })) {
+          setHeader(headers, name, value);
+        }
+        url = proxy.getURL(url);
+        mode = proxyRule.credentials;
+      } else {
+        const accept = Object.entries(outgoing.headers).find(
+          ([name]) => name.toLowerCase() === "accept",
+        );
+        headers = {};
+        for (const [name, value] of Object.entries({
+          ...(accept ? { [accept[0]]: accept[1] } : {}),
+          ...proxyRule?.headers,
+          ...proxy.headers?.(bare),
+        })) {
+          setHeader(headers, name, value);
+        }
+        url = bareUrl;
+        sentCredential = false;
+        mode =
+          proxyRule?.credentials === "include"
+            ? undefined
+            : proxyRule?.credentials;
+      }
+    }
     const request: RequestInit = {
       ...(Object.keys(headers).length > 0 ? { headers } : {}),
       ...(init.signal ? { signal: init.signal } : {}),
@@ -410,7 +470,7 @@ export class FetchProvider {
       ok: response.ok,
       headers: response.headers,
     });
-    return response;
+    return { response, sentCredential };
   }
 
   private ruleFor(origin: string | undefined): OriginRule | undefined {
@@ -466,6 +526,52 @@ function setHeader(
     }
   }
   headers[name] = value;
+}
+
+/**
+ * Query parameters that carry a token by convention (OAuth's
+ * `access_token`, service keys, signed URLs' signatures), stripped, with a
+ * credential's own, from a URL a proxy wasn't allowed credentials for.
+ */
+const TOKEN_PARAMETERS = new Set([
+  "access_token",
+  "accesstoken",
+  "token",
+  "key",
+  "api_key",
+  "apikey",
+  "sig",
+  "signature",
+  "x-amz-credential",
+  "x-amz-security-token",
+  "x-amz-signature",
+  "x-goog-credential",
+  "x-goog-signature",
+]);
+
+/** `url` without a credential's query parameters or token parameters. */
+function withoutTokens(
+  url: string,
+  credential: Credential | undefined,
+): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(url, globalThis.location?.href);
+  } catch {
+    return url;
+  }
+  const own = new Set(
+    Object.keys(credential?.query ?? {}).map((name) => name.toLowerCase()),
+  );
+  let changed = false;
+  for (const name of [...parsed.searchParams.keys()]) {
+    const lower = name.toLowerCase();
+    if (TOKEN_PARAMETERS.has(lower) || own.has(lower)) {
+      parsed.searchParams.delete(name);
+      changed = true;
+    }
+  }
+  return changed ? parsed.href : url;
 }
 
 function withQuery(

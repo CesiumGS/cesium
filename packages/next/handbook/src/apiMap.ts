@@ -2236,7 +2236,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "RequestKind",
     ],
     status: "changed",
-    note: "Every request the engine makes goes through one `FetchProvider`, which the host sets as `FetchProvider.default`. Its origin rules replace `TrustedServers` (headers and the `credentials` mode per origin), and `DefaultProxy` works as in 1.x. A `Credential` holds a token that can change: a 401 renews it and the request is made once more, as `IonResource` does.",
+    note: "Every request the engine makes goes through one `FetchProvider`, which the host sets as `FetchProvider.default`. Its origin rules replace `TrustedServers` (headers and the `credentials` mode per origin), and `DefaultProxy` rewrites URLs as in 1.x. Unlike 1.x, a proxy gets no credentials (tokens, auth headers, cookies) unless an origin rule for the proxy allows them with `allowCredentials`. A `Credential` holds a token that can change: a 401 renews it and the request is made once more, as `IonResource` does.",
   },
   {
     group: "network",
