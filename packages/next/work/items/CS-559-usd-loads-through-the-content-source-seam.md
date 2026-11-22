@@ -5,16 +5,17 @@ kind: work
 state: planned
 created: 2026-11-16
 project: CS-191
-needs: [CS-552]
+needs: [CS-552, CS-556, CS-843]
 touches: [packages/next/src/**]
 ---
 
-Proposed under the owner's call to load every kind of source through one module seam (CS-551, `docs/decisions/2026-11-16-content-sources-as-modules.md`). It stays proposed until the seam's design and plan (CS-552) set its scope; that plan turns it into a planned item with its "Done when".
 
 USD loads as a source through the seam. Related: CS-304 (`BrepSource.fromUsd`) and CS-305 (the B-rep tiler, USD to 3D Tiles 2.0), which cover USD's B-reps.
 
 ## Done when
 
-- Set by CS-552's plan.
-
-Committed by the owner's release plan on 2026-11-17 (`docs/decisions/2026-11-17-release-plan-and-parity.md`).
+- D3's spike (CS-843, A) is done, shared with CS-833's SimReady study, and its numbers recorded: size, start time in a worker, threads, and what a strict CSP needs. "Can't tell" is an acceptable answer where no build exists.
+- A `usd` kind, a `whole` source on the runtime D3 chose. A fixture stage with a reference, a payload and a variant loads, and the payload loads only when it's in view.
+- `UsdPreviewSurface` materials draw through the material system, point instancers through instancing, and `SemanticsLabelsAPI` labels reach picks (CS-815).
+- Time samples play through the views' clock.
+- A new dependency comes in only with the owner's yes.

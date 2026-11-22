@@ -2,10 +2,14 @@
 id: CS-839
 title: Merge CS-814, camera records with intrinsics, an off-center principal point and a named distortion
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-10
 decider: owner
+answer: "A. Merge once a quiet check passes, with the three recommendations: The orchestrator runs the plain 1,400 ms cold-start check on the candidate when the machine is quiet; on a pass it replays onto main's tip, reruns the type checks, work check and camera tests, fast-forwards main, runs the plain check on main and logs the merge. The main session files the follow-up for the other field-of-view readers; pickPosition and the corner convention stay."
+answered_at: 2026-11-22T04:53:07.759Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

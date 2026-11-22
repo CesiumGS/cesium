@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-13
 project: CS-191
-needs: [CS-552]
+needs: [CS-552, CS-847, CS-846]
 ---
 
 ## Done when

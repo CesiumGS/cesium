@@ -2,10 +2,15 @@
 id: CS-838
 title: Merge CS-809, one fetch and credential provider for every request
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-10
 decider: owner
+answer: "A. Merge once a quiet check passes; proxies keep the headers: The orchestrator runs the plain 1,400 ms cold-start check on the candidate when the machine is quiet; on a pass it replays onto main's tip, reruns the type checks, work check and the seam tests, fast-forwards main, runs the plain check on main and logs the merge. A proxied request keeps carrying the source's headers, as 1.x does."
+rationale: "after one change: credentials go to a host-set proxy only where its origin rule allows"
+answered_at: 2026-11-22T04:53:14.595Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

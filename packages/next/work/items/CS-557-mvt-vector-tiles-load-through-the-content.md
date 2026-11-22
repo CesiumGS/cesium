@@ -5,16 +5,18 @@ kind: work
 state: planned
 created: 2026-11-16
 project: CS-191
-needs: [CS-552]
+needs: [CS-552, CS-554, CS-261]
 touches: [packages/next/src/**]
 ---
 
-Proposed under the owner's call to load every kind of source through one module seam (CS-551, `docs/decisions/2026-11-16-content-sources-as-modules.md`). It stays proposed until the seam's design and plan (CS-552) set its scope; that plan turns it into a planned item with its "Done when".
 
 Mapbox Vector Tiles (MVT) load as a source through the seam. Related: CS-261 (wide lines, polygons and decals, with vector sources and vector tiles), which draws what this loads.
 
 ## Done when
 
-- Set by CS-552's plan.
-
-Committed by the owner's release plan on 2026-11-17 (`docs/decisions/2026-11-17-release-plan-and-parity.md`).
+- An `mvt` kind, a `tree` source on the kit over web Mercator or a declared tile matrix set. Its protobuf decodes on Jobs into `FeatureSink` rows, and it overzooms past the server's last level.
+- The vector pipeline (CS-261) draws it, draped on terrain.
+- A style in the styling language binds to its tags through its schema. Whether to accept MapLibre style JSON as a front end comes back as a question.
+- A label that straddles a tile edge appears once, tested on a fixture.
+- A pick returns the feature's properties and stable ID.
+- Tests use recorded tiles, with no outside service.

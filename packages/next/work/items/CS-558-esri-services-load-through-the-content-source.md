@@ -5,16 +5,20 @@ kind: work
 state: planned
 created: 2026-11-16
 project: CS-191
-needs: [CS-552]
+needs: [CS-552, CS-555, CS-557]
 touches: [packages/next/src/**]
 ---
 
-Proposed under the owner's call to load every kind of source through one module seam (CS-551, `docs/decisions/2026-11-16-content-sources-as-modules.md`). It stays proposed until the seam's design and plan (CS-552) set its scope; that plan turns it into a planned item with its "Done when".
 
 Esri services load as sources through the seam, for example feature, tile and I3S scene services; which ones, and in what order, is for CS-552's plan.
 
 ## Done when
 
-- Set by CS-552's plan.
+In the design's order: map and tile services, feature services, I3S scene layers, elevation.
 
-Committed by the owner's release plan on 2026-11-17 (`docs/decisions/2026-11-17-release-plan-and-parity.md`).
+- Map and tile services load as imagery through CS-810's contract, tiled and by box (`export`).
+- Feature services load as features by extent, paged and quantized, into `FeatureSink`, with the service's fields as the schema. The write capability is declared from the service's own, and stays read-only until CS-831's writers.
+- I3S scene layers load as a `tree` source on the kit: node pages, geometry buffers, Draco and attribute buffers.
+- Elevation services load as a terrain kind, with a LERC decoder from CS-811.
+- Each is tested on recorded responses, with no outside service.
+- This is large. The main session may split I3S and elevation into items of their own (a question below).

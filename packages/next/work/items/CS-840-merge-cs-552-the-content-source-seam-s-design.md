@@ -2,10 +2,14 @@
 id: CS-840
 title: Merge CS-552, the content-source seam's design (ContentSource) and its plan for CS-554 to CS-559
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-191
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns markdownlint, the work check and the handbook build, fast-forwards main, regenerates the views and logs the merge. The main session files D1 to D6, items A, B and C, and the changes to CS-554 to CS-559. CS-834 and CS-831, which read this design, then build on main's copy."
+answered_at: 2026-11-22T04:53:08.431Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

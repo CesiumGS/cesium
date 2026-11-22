@@ -5,16 +5,18 @@ kind: work
 state: planned
 created: 2026-11-16
 project: CS-191
-needs: [CS-552]
+needs: [CS-552, CS-847]
 touches: [packages/next/src/io/**]
 ---
 
-Proposed under the owner's call to load every kind of source through one module seam (CS-551, `docs/decisions/2026-11-16-content-sources-as-modules.md`). It stays proposed until the seam's design and plan (CS-552) set its scope; that plan turns it into a planned item with its "Done when".
 
 Single glTF and GLB files load as a source through the seam, beside glTF as 3D Tiles content. Related: CS-273 (glTF extension gaps).
 
 ## Done when
 
-- Set by CS-552's plan.
-
-Committed by the owner's release plan on 2026-11-17 (`docs/decisions/2026-11-17-release-plan-and-parity.md`).
+- A `gltf` kind, a `whole` source: `engine.open({ url: "model.glb" })` gives content, and `world.add` places it. `Engine.loadModel` stays as shorthand.
+- It decodes on Jobs with the same parser 3D Tiles content uses.
+- Its features carry stable IDs from `EXT_mesh_features`, and a pick returns them (CS-815).
+- Animations play through the item. Node transforms as items follow CS-454's answer; until then they stay as today.
+- glTF 2.1's external references are not required. When Khronos publishes its schema, a follow-up is proposed.
+- `npm run surface` is run, and `api/surface.txt` is committed.

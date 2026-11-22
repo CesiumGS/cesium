@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-21
 project: CS-615
-touches: [packages/next/docs/design, packages/next/test/importBoundary.test.ts]
+touches: [docs/design, packages/next/test/importBoundary.test.ts]
 ---
 
 The owner, 2026-11-21, after the review of 2.0's seams: "how do we think about these packages outside of the seam and how we might name them? … a better directory structure … modules and seams holistically?"

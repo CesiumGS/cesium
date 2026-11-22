@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-21
 project: CS-579
-touches: [packages/next/docs/design/editing.md, packages/next/docs/design]
+touches: [docs/design/editing.md, docs/design]
 ---
 
 The owner, 2026-11-21: "we also need to think about how editing works back through all of the seams we just called out. for example, for the PostGIS thing, how might we push data edited in a 2.0-based application back to the database? or for 3d tiles? or any other content source. so we could enable collaborative editing of these content sources when they support that." The owner chose to design this first and review it before CS-453 is answered.
