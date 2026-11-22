@@ -12,6 +12,6 @@ project: CS-199
 ## Done when
 
 - `dyno lab --commit <rev>` serves the commit's own packages. `@cesium/*` resolves inside the snapshot, never through the worktree's `node_modules`.
-- It writes no generated shaders or other output into the worktree.
+- It writes no generated shaders or other output into the worktree. `scripts/slangBuild.mjs` compiles `.slang` files inside `.bench/` snapshots and rewrites generated headers there too. It has the same cause, so fix it here.
 - A test plants a difference between the worktree and the commit, and the comparison shows it.
 - Parity comparisons made with `--commit` since the move (CS-835, 2026-11-22) are listed, each with whether its evidence needs a rerun.

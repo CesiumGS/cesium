@@ -19,3 +19,7 @@ The worker mode's snapshots. Needs CS-23 and the worker spike (`docs/design/job-
 ## Plan
 
 `docs/superpowers/plans/2026-11-13-engine-profiles.md`, its milestone table.
+
+## Note (2026-11-22)
+
+From CS-815: `World.identity` has to work in worker mode too, so stable IDs and labels agree between the worker and the main thread.
