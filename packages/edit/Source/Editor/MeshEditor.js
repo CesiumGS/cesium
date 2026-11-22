@@ -646,6 +646,32 @@ class MeshEditor {
   }
 
   /**
+   * Raises {@link Mesh#selectionChanged} for each mesh whose selection wasm
+   * reports changed since the previous update.
+   *
+   * @param {BigUint64Array} selectionChangedMeshes The keys of the meshes whose selection changed.
+   * @ignore
+   */
+  #raiseSelectionChanged(selectionChangedMeshes) {
+    if (selectionChangedMeshes.length === 0) {
+      return;
+    }
+
+    const changedKeys = new Set(selectionChangedMeshes);
+    // Collected first, since listeners may add or remove meshes.
+    const changedMeshes = Array.from(this.#meshes).filter((mesh) =>
+      changedKeys.has(mesh._key),
+    );
+
+    for (const mesh of changedMeshes) {
+      // A listener may have removed the mesh.
+      if (this.#meshes.has(mesh)) {
+        mesh.selectionChanged.raiseEvent(mesh);
+      }
+    }
+  }
+
+  /**
    * Sets which of a mesh's components to draw and pick. Components that are
    * drawn but aren't interactable, like edges in Face mode, aren't pickable, so
    * they don't interfere with picking the interactable components (like vertices) around them.
@@ -720,10 +746,15 @@ class MeshEditor {
     if (frameState.passes.render) {
       // TODO: pass in real timestep. Currently unused by wasm update, but may be needed in the future.
       this.#wasmEditor.update(0.0, this.#updateResult);
-      const { changedOverlays, activatedMeshes, deactivatedMeshes } =
-        this.#updateResult;
+      const {
+        changedOverlays,
+        selectionChangedMeshes,
+        activatedMeshes,
+        deactivatedMeshes,
+      } = this.#updateResult;
       changedKeys = new Set(changedOverlays);
       this.#syncActiveMeshes(activatedMeshes, deactivatedMeshes);
+      this.#raiseSelectionChanged(selectionChangedMeshes);
     }
 
     for (const mesh of this.#meshes) {

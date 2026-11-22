@@ -1,6 +1,12 @@
 // @ts-check
 
-import { Check, DeveloperError, defined, destroyObject } from "@cesium/core";
+import {
+  Check,
+  DeveloperError,
+  Event,
+  defined,
+  destroyObject,
+} from "@cesium/core";
 import OverlayRenderer from "./OverlayRenderer.js";
 import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
 
@@ -82,6 +88,18 @@ class Mesh {
      * @default false
      */
     this.wireframe = false;
+
+    /**
+     * Raised when the mesh's selection changes, whether by a method like
+     * {@link Mesh#setSelection} or by a tool. The mesh is passed to listeners.
+     * <p>
+     * Raised on the frame after it occurs, once for all the changes since
+     * the previous one. Not raised once the mesh is removed from its editor.
+     * </p>
+     *
+     * @type {Event<function(Mesh): void>}
+     */
+    this.selectionChanged = new Event();
 
     /**
      * The mesh's key in its editor's wasm.

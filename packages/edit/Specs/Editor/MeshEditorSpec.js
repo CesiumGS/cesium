@@ -1204,6 +1204,107 @@ describe(
           mesh.translateSelected(new Cartesian3(0.0, 0.0, 1.0)),
         ).toThrowDeveloperError();
       });
+
+      describe("selectionChanged", function () {
+        async function addActiveSquareWithListener() {
+          const result = await addActiveSquare();
+          scene.renderForSpecs();
+          const listener = jasmine.createSpy("selectionChanged");
+          result.mesh.selectionChanged.addEventListener(listener);
+          return { ...result, listener };
+        }
+
+        it("is raised on the next frame when the selection changes", async function () {
+          const { mesh, listener } = await addActiveSquareWithListener();
+
+          mesh.setSelection({ verts: queryId(mesh, 7) });
+          expect(listener).not.toHaveBeenCalled();
+          scene.renderForSpecs();
+
+          expect(listener).toHaveBeenCalledOnceWith(mesh);
+        });
+
+        it("is raised once for all the changes since the previous frame", async function () {
+          const { mesh, listener } = await addActiveSquareWithListener();
+
+          mesh.setSelection({ verts: queryId(mesh, 7) });
+          mesh.selectComponents({ verts: queryId(mesh, 8) });
+          scene.renderForSpecs();
+          scene.renderForSpecs();
+
+          expect(listener).toHaveBeenCalledOnceWith(mesh);
+        });
+
+        it("is not raised when the selection doesn't change", async function () {
+          const { mesh, listener } = await addActiveSquareWithListener();
+          const sevens = queryId(mesh, 7);
+          mesh.setSelection({ verts: sevens });
+          scene.renderForSpecs();
+          listener.calls.reset();
+
+          mesh.selectComponents({ verts: sevens });
+          scene.renderForSpecs();
+
+          expect(listener).not.toHaveBeenCalled();
+        });
+
+        it("is not raised for edits that keep the selection", async function () {
+          const { mesh, listener } = await addActiveSquareWithListener();
+          mesh.setSelection({ verts: queryId(mesh, 8) });
+          scene.renderForSpecs();
+          listener.calls.reset();
+
+          mesh.translateSelected(new Cartesian3(0.0, 0.0, 1.0));
+          scene.renderForSpecs();
+
+          expect(listener).not.toHaveBeenCalled();
+        });
+
+        it("is only raised for the mesh whose selection changed", async function () {
+          const { editor, mesh, listener } =
+            await addActiveSquareWithListener();
+          const other = editor.addMesh(createGeometrySource(square));
+          editor.setMeshActive(other);
+          scene.renderForSpecs();
+          const otherListener = jasmine.createSpy("otherSelectionChanged");
+          other.selectionChanged.addEventListener(otherListener);
+
+          mesh.setSelection({ verts: queryId(mesh, 7) });
+          scene.renderForSpecs();
+
+          expect(listener).toHaveBeenCalledOnceWith(mesh);
+          expect(otherListener).not.toHaveBeenCalled();
+        });
+
+        it("is not raised for a removed mesh", async function () {
+          const { editor, mesh, listener } =
+            await addActiveSquareWithListener();
+
+          mesh.setSelection({ verts: queryId(mesh, 7) });
+          editor.removeMesh(mesh);
+          scene.renderForSpecs();
+
+          expect(listener).not.toHaveBeenCalled();
+        });
+
+        it("is not raised for a mesh a listener removed", async function () {
+          const { editor, mesh, listener } =
+            await addActiveSquareWithListener();
+          const other = editor.addMesh(createGeometrySource(square));
+          editor.setMeshActive(other);
+          scene.renderForSpecs();
+          const otherListener = jasmine.createSpy("otherSelectionChanged");
+          other.selectionChanged.addEventListener(otherListener);
+          listener.and.callFake(() => editor.removeMesh(other));
+
+          mesh.setSelection({ verts: queryId(mesh, 7) });
+          other.setSelection(other.getComponentKeys(EditMode.VERTEX));
+          scene.renderForSpecs();
+
+          expect(listener).toHaveBeenCalledOnceWith(mesh);
+          expect(otherListener).not.toHaveBeenCalled();
+        });
+      });
     });
 
     describe("hiding", function () {
@@ -2109,6 +2210,21 @@ describe(
 
         expectPixel(getWindowPosition(corner0), selectedPointColor);
         expectPixel(getWindowPosition(corner1), pointColor);
+      });
+
+      it("raises selectionChanged for a mesh the select tool selects in", async function () {
+        const { editor, mesh } = await createEditorWithSquare(EditMode.VERTEX);
+        editor.activeTool = SelectTool.addTo(editor);
+        const listener = jasmine.createSpy("selectionChanged");
+        mesh.selectionChanged.addEventListener(listener);
+
+        click(getWindowPosition(corner0));
+        expect(listener).not.toHaveBeenCalled();
+        scene.renderForSpecs();
+
+        if (!window.webglStub) {
+          expect(listener).toHaveBeenCalledOnceWith(mesh);
+        }
       });
 
       it("toggles a shift-clicked vertex with the select tool", async function () {
