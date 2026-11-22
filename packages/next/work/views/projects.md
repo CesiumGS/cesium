@@ -120,13 +120,13 @@ CS-596 Trust and evals [Planned], led by owner
   waits on: CS-195 Benchmarks, parity and image regression (1)
   waited on by: CS-18 The work tracker (3)
 CS-609 A clean 2.0 branch and a modern build [Planned], led by owner
-  0 of 5 done, 2 ready, 3 blocked
-  waits on: CS-615 Packaging and package names (1)
+  9 of 16 done, 3 ready, 1 blocked, 3 proposed
+  waits on: nothing open
   waited on by: CS-18 The work tracker (1); CS-628 Sandcastle as 2.0's gallery (1); CS-615 Packaging and package names (1)
 CS-615 Packaging and package names [Planned], led by owner
   5 of 11 done, 1 ready, 5 blocked
   waits on: CS-193 B-reps and geometry queries (1); CS-609 A clean 2.0 branch and a modern build (1); CS-191 Content sources and formats (1)
-  waited on by: CS-18 The work tracker (2); CS-609 A clean 2.0 branch and a modern build (1)
+  waited on by: CS-18 The work tracker (2)
 CS-622 The agent-first migration kit [Planned], led by owner
   0 of 4 done, 1 ready, 3 blocked
   waits on: nothing open

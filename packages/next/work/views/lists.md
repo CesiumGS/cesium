@@ -1163,18 +1163,29 @@ Milestone: Extension users have validated 2.0 with their own data (CS-608, Plann
 
 ### A clean 2.0 branch and a modern build
 
-CS-609, Planned, led by owner: 0 of 5 done, 2 ready, 3 blocked.
+CS-609, Planned, led by owner: 9 of 16 done, 3 ready, 1 blocked, 3 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
 
-- [ ] CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline. Needs nothing.
-- [ ] CS-611 The 1.x code is replaced in the branch. Needs CS-610 and CS-835 (Packaging and package names).
+- [x] CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline. Done.
+- [ ] CS-611 The 1.x code is replaced in the branch. Needs CS-610 and CS-887.
 - [ ] CS-612 The new build system. Needs CS-610.
 - [ ] CS-613 CI/CD on the new build, with the release pipeline. Needs CS-612.
 
 No milestone
 
-- [ ] CS-886 decision: Merge CS-610, the 2.0 repository's design: layout, build, tests and releases. Needs nothing. Decided by owner.
+- [x] CS-886 decision: Merge CS-610, the 2.0 repository's design: layout, build, tests and releases. Done.
+- [x] CS-887 decision: CS-610 D1: does 1.x leave (CS-611) before the package move (CS-835)?. Done.
+- [ ] CS-888 decision: CS-610 D2: which release tool does 2.0 use?. Needs nothing. Decided by owner.
+- [x] CS-889 decision: CS-610 D3: do packages publish through npm trusted publishing from release.yml?. Done.
+- [x] CS-890 decision: CS-610 D4: when do 1.x's releases move to the 1x dist-tag?. Done.
+- [x] CS-891 decision: CS-610 D5: how is the paired experimental 0.x version numbered?. Done.
+- [x] CS-892 decision: CS-610 D6: do publint and @arethetypeswrong/cli join as pinned dev dependencies?. Done.
+- [x] CS-893 decision: CS-610 D7: does CI run anything on a GPU for alpha.1?. Done.
+- [x] CS-894 decision: CS-610 D8: does the 2.0 branch commit a lockfile?. Done.
+- [?] CS-895 isolatedDeclarations across 2.0's packages. Proposed. Needs CS-612.
+- [?] CS-896 Docs and site deploys for 2.0. Proposed. Needs CS-613.
+- [?] CS-897 A software-WebGPU smoke job in CI. Proposed. Needs CS-613 and CS-893.
 
 ### Packaging and package names
 
@@ -1194,7 +1205,7 @@ Milestone: Every package has its API reference (CS-695, Planned)
 
 No milestone
 
-- [ ] CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json. Needs CS-834, CS-809 (Content sources and formats), CS-814 (public API reviews), CS-552 (Content sources and formats) and CS-610 (A clean 2.0 branch and a modern build).
+- [ ] CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json. Needs CS-834, CS-809 (Content sources and formats), CS-814 (public API reviews), CS-552 (Content sources and formats), CS-610 (A clean 2.0 branch and a modern build), CS-611 (A clean 2.0 branch and a modern build) and CS-887 (A clean 2.0 branch and a modern build).
 - [x] CS-867 decision: Merge CS-834, the map of 2.0's packages and seams. Done.
 - [x] CS-880 decision: CS-834 D2: how does 1.x's @cesium/core 0.1.1 give way to 2.0's core?. Done.
 - [x] CS-881 decision: CS-834 D3: what prefix do catalog adapters use?. Done.

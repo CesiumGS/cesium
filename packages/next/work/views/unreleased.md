@@ -101,6 +101,9 @@ CS-191 Content sources and formats
   CS-552  The content-source seam: one interface every source module implements, designed and planned
   CS-809  Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
 
+CS-609 A clean 2.0 branch and a modern build
+  CS-610  The 2.0 repository's design: build system, CI/CD and release pipeline
+
 CS-17 The transform graph
   CS-712  One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps
   CS-720  Route inverses invert general affine steps, not only rigid ones
@@ -114,5 +117,5 @@ CS-579 Editing
 CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
 
-81 merged item(s) not in a release
+82 merged item(s) not in a release
 ```

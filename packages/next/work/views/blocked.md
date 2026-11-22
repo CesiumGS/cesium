@@ -643,11 +643,6 @@ CS-596 Trust and evals
       ← CS-603 A trust report per module and per release, from each merge's provenance
 
 CS-609 A clean 2.0 branch and a modern build
-  CS-611  The 1.x code is replaced in the branch
-      ← CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline
-        CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
-  CS-612  The new build system
-      ← CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline
   CS-613  CI/CD on the new build, with the release pipeline
       ← CS-612 The new build system
 
@@ -661,7 +656,7 @@ CS-615 Packaging and package names
   CS-619  The API reference for every package
       ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
-      ← CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline
+      ← CS-611 The 1.x code is replaced in the branch
   CS-882  PROJ sits behind a coordinate-operations seam: @cesium/crs-proj splits from @cesium/crs
       ← CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
         CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
@@ -732,5 +727,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-232 blocked
+230 blocked
 ```

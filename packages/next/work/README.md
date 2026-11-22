@@ -1220,18 +1220,29 @@ Milestone: Extension users have validated 2.0 with their own data ([CS-608](./mi
 
 ### A clean 2.0 branch and a modern build
 
-[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 0 of 5 done, 2 ready, 3 blocked.
+[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 9 of 16 done, 3 ready, 1 blocked, 3 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614-the-branch-is-a-clean-modern-2-0-build.md), Planned)
 
-- [ ] [CS-610](./items/CS-610-the-2-0-repository-s-design-build-system-ci-cd.md) The 2.0 repository's design: build system, CI/CD and release pipeline. Needs nothing.
-- [ ] [CS-611](./items/CS-611-the-1-x-code-is-replaced-in-the-branch.md) The 1.x code is replaced in the branch. Needs CS-610 and CS-835 (Packaging and package names).
+- [x] [CS-610](./items/CS-610-the-2-0-repository-s-design-build-system-ci-cd.md) The 2.0 repository's design: build system, CI/CD and release pipeline. Done.
+- [ ] [CS-611](./items/CS-611-the-1-x-code-is-replaced-in-the-branch.md) The 1.x code is replaced in the branch. Needs CS-610 and CS-887.
 - [ ] [CS-612](./items/CS-612-the-new-build-system.md) The new build system. Needs CS-610.
 - [ ] [CS-613](./items/CS-613-ci-cd-on-the-new-build-with-the-release-pipeline.md) CI/CD on the new build, with the release pipeline. Needs CS-612.
 
 No milestone
 
-- [ ] [CS-886](./items/CS-886-merge-cs-610-the-2-0-repository-s-design-layout.md) decision: Merge CS-610, the 2.0 repository's design: layout, build, tests and releases. Needs nothing. Decided by owner.
+- [x] [CS-886](./items/CS-886-merge-cs-610-the-2-0-repository-s-design-layout.md) decision: Merge CS-610, the 2.0 repository's design: layout, build, tests and releases. Done.
+- [x] [CS-887](./items/CS-887-cs-610-d1-does-1-x-leave-cs-611-before-the.md) decision: CS-610 D1: does 1.x leave (CS-611) before the package move (CS-835)?. Done.
+- [ ] [CS-888](./items/CS-888-cs-610-d2-which-release-tool-does-2-0-use.md) decision: CS-610 D2: which release tool does 2.0 use?. Needs nothing. Decided by owner.
+- [x] [CS-889](./items/CS-889-cs-610-d3-do-packages-publish-through-npm.md) decision: CS-610 D3: do packages publish through npm trusted publishing from release.yml?. Done.
+- [x] [CS-890](./items/CS-890-cs-610-d4-when-do-1-x-s-releases-move-to-the-1x.md) decision: CS-610 D4: when do 1.x's releases move to the 1x dist-tag?. Done.
+- [x] [CS-891](./items/CS-891-cs-610-d5-how-is-the-paired-experimental-0-x.md) decision: CS-610 D5: how is the paired experimental 0.x version numbered?. Done.
+- [x] [CS-892](./items/CS-892-cs-610-d6-do-publint-and-arethetypeswrong-cli.md) decision: CS-610 D6: do publint and @arethetypeswrong/cli join as pinned dev dependencies?. Done.
+- [x] [CS-893](./items/CS-893-cs-610-d7-does-ci-run-anything-on-a-gpu-for.md) decision: CS-610 D7: does CI run anything on a GPU for alpha.1?. Done.
+- [x] [CS-894](./items/CS-894-cs-610-d8-does-the-2-0-branch-commit-a-lockfile.md) decision: CS-610 D8: does the 2.0 branch commit a lockfile?. Done.
+- [?] [CS-895](./items/CS-895-isolateddeclarations-across-2-0-s-packages.md) isolatedDeclarations across 2.0's packages. Proposed. Needs CS-612.
+- [?] [CS-896](./items/CS-896-docs-and-site-deploys-for-2-0.md) Docs and site deploys for 2.0. Proposed. Needs CS-613.
+- [?] [CS-897](./items/CS-897-a-software-webgpu-smoke-job-in-ci.md) A software-WebGPU smoke job in CI. Proposed. Needs CS-613 and CS-893.
 
 ### Packaging and package names
 
@@ -1251,7 +1262,7 @@ Milestone: Every package has its API reference ([CS-695](./milestones/CS-695-eve
 
 No milestone
 
-- [ ] [CS-835](./items/CS-835-2-0-s-folders-become-its-packages-the-move-to.md) 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json. Needs CS-834, CS-809 (Content sources and formats), CS-814 (public API reviews), CS-552 (Content sources and formats) and CS-610 (A clean 2.0 branch and a modern build).
+- [ ] [CS-835](./items/CS-835-2-0-s-folders-become-its-packages-the-move-to.md) 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json. Needs CS-834, CS-809 (Content sources and formats), CS-814 (public API reviews), CS-552 (Content sources and formats), CS-610 (A clean 2.0 branch and a modern build), CS-611 (A clean 2.0 branch and a modern build) and CS-887 (A clean 2.0 branch and a modern build).
 - [x] [CS-867](./items/CS-867-merge-cs-834-the-map-of-2-0-s-packages-and-seams.md) decision: Merge CS-834, the map of 2.0's packages and seams. Done.
 - [x] [CS-880](./items/CS-880-cs-834-d2-how-does-1-x-s-cesium-core-0-1-1-give.md) decision: CS-834 D2: how does 1.x's @cesium/core 0.1.1 give way to 2.0's core?. Done.
 - [x] [CS-881](./items/CS-881-cs-834-d3-what-prefix-do-catalog-adapters-use.md) decision: CS-834 D3: what prefix do catalog adapters use?. Done.

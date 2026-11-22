@@ -59,7 +59,7 @@ CS-615 Packaging and package names
       waited on by CS-617
 
 CS-609 A clean 2.0 branch and a modern build
-  CS-886  Merge CS-610, the 2.0 repository's design: layout, build, tests and releases (owner)
+  CS-888  CS-610 D2: which release tool does 2.0 use? (owner)
 
 18 open decision(s) for owner
 ```

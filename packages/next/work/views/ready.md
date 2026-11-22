@@ -246,8 +246,9 @@ CS-596 Trust and evals
   CS-605  external: Extension users validate 2.0 with their own data
 
 CS-609 A clean 2.0 branch and a modern build
-  CS-610  The 2.0 repository's design: build system, CI/CD and release pipeline
-  CS-886  decision: Merge CS-610, the 2.0 repository's design: layout, build, tests and releases
+  CS-611  The 1.x code is replaced in the branch
+  CS-612  The new build system
+  CS-888  decision: CS-610 D2: which release tool does 2.0 use?
 
 CS-615 Packaging and package names
   CS-616  decision: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
@@ -271,5 +272,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-202 ready
+203 ready
 ```

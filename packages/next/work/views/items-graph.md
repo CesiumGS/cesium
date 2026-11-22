@@ -755,11 +755,22 @@ graph LR
     CS_605["CS-605 Extension users validate 2.0 with their own data"]:::external
   end
   subgraph CS_609["A clean 2.0 branch and a modern build"]
-    CS_610["CS-610 The 2.0 repository's design: build system, CI/CD and release pi"]:::open
+    CS_610["CS-610 The 2.0 repository's design: build system, CI/CD and release pi"]:::done
     CS_611["CS-611 The 1.x code is replaced in the branch"]:::open
     CS_612["CS-612 The new build system"]:::open
     CS_613["CS-613 CI/CD on the new build, with the release pipeline"]:::open
-    CS_886["CS-886 Merge CS-610, the 2.0 repository's design: layout, build, tests"]:::decision
+    CS_886["CS-886 Merge CS-610, the 2.0 repository's design: layout, build, tests"]:::done
+    CS_887["CS-887 CS-610 D1: does 1.x leave (CS-611) before the package move (CS-"]:::done
+    CS_888["CS-888 CS-610 D2: which release tool does 2.0 use?"]:::decision
+    CS_889["CS-889 CS-610 D3: do packages publish through npm trusted publishing f"]:::done
+    CS_890["CS-890 CS-610 D4: when do 1.x's releases move to the 1x dist-tag?"]:::done
+    CS_891["CS-891 CS-610 D5: how is the paired experimental 0.x version numbered?"]:::done
+    CS_892["CS-892 CS-610 D6: do publint and @arethetypeswrong/cli join as pinned "]:::done
+    CS_893["CS-893 CS-610 D7: does CI run anything on a GPU for alpha.1?"]:::done
+    CS_894["CS-894 CS-610 D8: does the 2.0 branch commit a lockfile?"]:::done
+    CS_895["CS-895 isolatedDeclarations across 2.0's packages"]:::proposed
+    CS_896["CS-896 Docs and site deploys for 2.0"]:::proposed
+    CS_897["CS-897 A software-WebGPU smoke job in CI"]:::proposed
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision
@@ -1470,7 +1481,7 @@ graph LR
   CS_597 --> CS_603
   CS_603 --> CS_604
   CS_610 --> CS_611
-  CS_835 --> CS_611
+  CS_887 --> CS_611
   CS_610 --> CS_612
   CS_612 --> CS_613
   CS_616 --> CS_617
@@ -1614,6 +1625,8 @@ graph LR
   CS_814 --> CS_835
   CS_552 --> CS_835
   CS_610 --> CS_835
+  CS_611 --> CS_835
+  CS_887 --> CS_835
   CS_49 --> CS_837
   CS_552 --> CS_847
   CS_809 --> CS_847
@@ -1647,6 +1660,10 @@ graph LR
   CS_559 --> CS_879
   CS_835 --> CS_882
   CS_808 --> CS_882
+  CS_612 --> CS_895
+  CS_613 --> CS_896
+  CS_613 --> CS_897
+  CS_893 --> CS_897
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3
