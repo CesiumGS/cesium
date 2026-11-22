@@ -1920,6 +1920,41 @@ describe(
         expect(pickIds[0].object.id).toBeUndefined();
       });
 
+      it("updates all pick IDs in a model with instanced and non-instanced primitives", async function () {
+        const resource = Resource.createIfNeeded(boxInstanced);
+        const gltf = await resource.fetchJson();
+        delete gltf.extensions;
+        delete gltf.nodes[0].extensions.EXT_instance_features;
+        gltf.extensionsUsed = ["EXT_mesh_gpu_instancing"];
+        gltf.nodes.unshift({ mesh: 0 });
+        gltf.scenes[0].nodes = [0, 1];
+        // Both meshes use two primitives to exercise repeated instanced picking.
+        gltf.meshes[0].primitives.push(gltf.meshes[0].primitives[0]);
+
+        const model = await loadAndZoomToModelAsync(
+          { gltf: gltf, basePath: boxInstanced, id: "original" },
+          scene,
+        );
+        scene.renderForSpecs();
+        // Two ordinary primitives and two primitives with four instances each.
+        expect(model.pickIds.length).toEqual(10);
+        for (const id of ["updated", undefined]) {
+          model.id = id;
+          scene.renderForSpecs();
+          const pickObjects = Array.from(
+            scene.context._pickObjects.values(),
+          ).filter((object) => object.primitive === model);
+          expect(pickObjects.length).toEqual(10);
+          for (const pickObject of pickObjects) {
+            expect(pickObject.id).toBe(id);
+          }
+        }
+
+        model.resetDrawCommands();
+        scene.renderForSpecs();
+        expect(model.pickIds.length).toEqual(10);
+      });
+
       it("picks box textured", async function () {
         // This model gets clipped if log depth is disabled, so zoom out
         // the camera just a little

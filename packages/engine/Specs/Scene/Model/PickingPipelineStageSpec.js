@@ -334,6 +334,35 @@ describe(
       });
     });
 
+    it("preserves pick IDs from earlier primitives when processing instances", function () {
+      const frameState = scene.frameState;
+      const resources = mockRenderResources();
+      const model = resources.model;
+
+      try {
+        PickingPipelineStage.process(resources, {}, frameState);
+        const firstPickId = model._pickIds[0];
+
+        for (let i = 0; i < 2; i++) {
+          const instancedResources = mockRenderResources();
+          instancedResources.model = model;
+          instancedResources.instanceCount = 2;
+          instancedResources.runtimeNode.node.instances = {};
+          PickingPipelineStage.process(instancedResources, {}, frameState);
+        }
+
+        expect(model._pickIds.length).toEqual(5);
+        expect(model._pickIds[0]).toBe(firstPickId);
+        expect(
+          model._pickIds.map((pickId) => pickId.object.instanceId),
+        ).toEqual([undefined, 0, 1, 0, 1]);
+      } finally {
+        for (const resource of model._pipelineResources) {
+          resource.destroy();
+        }
+      }
+    });
+
     it("sets the picking variables in render resources with feature ID textures", function () {
       const mockModelFeatureTable = {
         batchTexture: {
