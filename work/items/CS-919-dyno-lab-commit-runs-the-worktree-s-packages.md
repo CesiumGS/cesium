@@ -2,9 +2,10 @@
 id: CS-919
 title: dyno lab --commit runs the worktree's packages, not the commit's, and writes generated shaders into it
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-22
 project: CS-199
+claimed_by: orch-11-CS-919
 ---
 
 > **Committed by the owner (2026-11-22, to start next).** Source: CS-612's executor, confirmed by the orchestrator (2026-11-22). Why now: the "previous commit" side of a parity comparison silently runs the worktree's own package sources, so it shows no difference whatever changed. Merge evidence relies on that comparison. Until this is fixed, comparisons are made with a separate checkout and server for each side. Size: small to medium. Filed 2026-11-22.
