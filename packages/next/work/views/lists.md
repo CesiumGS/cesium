@@ -78,7 +78,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 21 of 48 done, 12 ready, 11 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 22 of 48 done, 11 ready, 11 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -93,7 +93,7 @@ Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 - [ ] CS-56 Tables and the bounded search, the first extensions, with the residual's row window. Needs CS-53 and CS-54.
 - [ ] CS-371 Math ops the transform graph needs: `atanh`, `asinh`, `acosh`, `expm1`, `log1p`, `%`, `hypot`. Needs CS-48.
 - [ ] CS-794 The transform passes load Cesium IR lazily, so a default view starts without it. Needs CS-53.
-- [ ] CS-837 Cesium IR's JSON format is experimental at cesium-ir/0.x until it graduates. Needs CS-49.
+- [x] CS-837 Cesium IR's JSON format is experimental at cesium-ir/0.x until it graduates. Done.
 
 Milestone: Any shader language reaches both renderers (CS-418, Planned)
 

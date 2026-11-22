@@ -95,7 +95,7 @@ graph LR
     CS_800["CS-800 Merge CS-777, the GLSL ES emitter's output is cross-checked aga"]:::done
     CS_807["CS-807 Merge CS-794, the transform passes load Cesium IR lazily, once "]:::done
     CS_836["CS-836 Merge CS-49, Cesium IR's versioned JSON format, cesium-ir/1.0"]:::done
-    CS_837["CS-837 Cesium IR's JSON format is experimental at cesium-ir/0.x until "]:::open
+    CS_837["CS-837 Cesium IR's JSON format is experimental at cesium-ir/0.x until "]:::done
     CS_838["CS-838 Merge CS-809, one fetch and credential provider for every reque"]:::done
     CS_839["CS-839 Merge CS-814, camera records with intrinsics, an off-center pri"]:::done
     CS_860["CS-860 Merge CS-837, Cesium IR's JSON format is experimental at cesium"]:::done

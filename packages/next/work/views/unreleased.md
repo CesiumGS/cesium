@@ -23,6 +23,7 @@ CS-10 Cesium IR
   CS-53  Transforms move onto Cesium IR, as pure moves
   CS-543  CS-48's formula cases checked against the whole KHR_interactivity spec
   CS-777  The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned
+  CS-837  Cesium IR's JSON format is experimental at cesium-ir/0.x until it graduates
 
 CS-12 The job system's ports
   CS-86  The first slice: `Jobs` behind `WorkerPool`
@@ -104,5 +105,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-75 merged item(s) not in a release
+76 merged item(s) not in a release
 ```

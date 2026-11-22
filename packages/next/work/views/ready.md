@@ -29,7 +29,6 @@ CS-10 Cesium IR
   CS-550  The core IR spike's evaluator gets dot and intToFloat's signed zero right
   CS-571  The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires
   CS-794  The transform passes load Cesium IR lazily, so a default view starts without it
-  CS-837  Cesium IR's JSON format is experimental at cesium-ir/0.x until it graduates
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -274,5 +273,5 @@ CS-18 The work tracker
 CS-579 Editing
   CS-831  A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
 
-205 ready
+204 ready
 ```
