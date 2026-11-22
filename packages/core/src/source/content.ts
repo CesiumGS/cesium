@@ -34,6 +34,7 @@ import type {
 /**
  * What a world gives content: a draw sink, and what the item and the edit
  * layer set on draws. `World` is one.
+ * @experimental
  */
 export interface ContentWorld extends DrawSink {
   setVisible(handle: DrawHandle, visible: boolean): void;
@@ -120,13 +121,15 @@ export class SourceContent {
 
   /** @internal Its kind opened it. */
   attach(source: ContentSource): void {
-    const writable = !isReadOnly(source.capabilities.write);
+    // Destructured: `capabilities.` alone reads as the device's to
+    // test/deviceFactsSeam.test.ts, and these are the source's.
+    const { write, polls, pushes } = source.capabilities;
+    const writable = !isReadOnly(write);
     if (writable && !source.writer) {
       throw new Error(
         `open: the "${this.kind}" source declares write capabilities but has no writer.`,
       );
     }
-    const polls = source.capabilities.polls;
     if (
       polls !== undefined &&
       !(
@@ -138,7 +141,7 @@ export class SourceContent {
         `open: the "${this.kind}" source polls every ${polls.intervalSeconds} s; a declared interval is at least ${MIN_POLL_SECONDS} s (CS-863).`,
       );
     }
-    if (polls !== undefined && !source.capabilities.pushes) {
+    if (polls !== undefined && !pushes) {
       throw new Error(
         `open: the "${this.kind}" source polls but doesn't push: what it learns reaches the engine only as pushes (CS-863).`,
       );

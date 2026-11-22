@@ -93,10 +93,10 @@ export class WorkerDecoders {
     try {
       const decode = await this.loading.get(type)!;
       signal.throwIfAborted();
-      const fetch = this.fetchFor?.(id, signal);
+      const request = this.fetchFor?.(id, signal);
       const out = await decode(payload, {
         signal,
-        ...(fetch ? { fetch } : {}),
+        ...(request ? { fetch: request } : {}),
       });
       post({ id, ok: true, result: out.result }, [...(out.transfer ?? [])]);
     } catch (error) {

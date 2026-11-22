@@ -119,6 +119,14 @@ const TABLE: Record<string, EntryTable> = {
       CredentialOptions CredentialValue FetchProviderOptions FetchTransport
       IncomingResponse OriginRule OutgoingRequest ProviderRequestInit
       RequestKind
+      AssetRef BudgetOptions ChangeOp ChangeSet ChangeSetLimits CommitResult
+      Conflict ContentItemOptions ContentKey Credit CreditList CustomRows
+      DecoderContext DecoderRef DecoderResult FeatureBatch FeatureData
+      FeaturePatch FeatureSchema FeatureVersion GeometryData InvalidateChange
+      KindRef ModuleRef OpenOptions Override PlainData PlainValue PointBatch
+      PropertyColumn RasterImage ResolvedAsset RowIdentity SampleBatch
+      SourceCapabilities SourceChange SourceClock SourceExtent SourceGrant
+      SourceJobSpec SourceTick SourceView Want WantClass WriteCapabilities
       LoadProgress LodTransitions MaterialOptions MeasureIn MeasureInOptions
       MeshCapHit MeshCapRegion MeshCapReport
       MeshCapSurface MeshCapSurfaceHit MeshCapTile MeshCapsOptions
@@ -202,9 +210,15 @@ const TABLE: Record<string, EntryTable> = {
       vec3.scale vec3.scaleAndAdd vec3.set vec3.sub vec3.vec3 velocityModel
       vertexCount webMercator webMercatorToGeographic wgslUnit
       writeBrepExtension DefaultProxy ForwardingProxy
+      BudgetArbiter CHANGE_SET_FORMAT CHANGE_SET_VERSION READ_ONLY UrlResolver
+      changeSetFromJson changeSetToJson checkChangeSet isReadOnly
     `,
     engine: `
       Credential FetchProvider RequestProxy
+      AssetResolver BudgetClient ContentItem ContentSinks ContentSource
+      ContentWorld CustomSink Decoder EditLayer FeatureSink PointSink
+      RasterSink RowSink SourceContent SourceHost SourceJobs SourceKind
+      SourceKinds SourceQueries SourceRuntime SourceWriter
       AccelerationStructures BrepCaps BudgetedSelection Camera CameraLayer
       CanvasTarget CapEngine CapScheduler Capabilities ChainIo Engine
       FrameResolver GlareIo Globe GlobeController GlobeImagery
@@ -487,6 +501,168 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         device passWrites
       `,
     },
+    AssetResolver: {
+      snapshot: `
+        id
+      `,
+      callback: `
+        accepts resolve
+      `,
+    },
+    BudgetClient: {
+      snapshot: `
+        resident
+      `,
+      callback: `
+        release settle want
+      `,
+    },
+    ContentItem: {
+      snapshot: `
+        content removed world
+      `,
+      mutation: `
+        show viewMask
+      `,
+      command: `
+        remove
+      `,
+      "cannot-cross": `
+        identity
+      `,
+    },
+    ContentSinks: {
+      callback: `
+        custom draws features images points
+      `,
+    },
+    ContentSource: {
+      snapshot: `
+        capabilities credits extent kind schema
+      `,
+      query: `
+        ready
+      `,
+      callback: `
+        destroy queries update writer
+      `,
+    },
+    ContentWorld: {
+      snapshot: `
+        contentRevision pressure version
+      `,
+      command: `
+        freeClip removeDraw removeMesh removeTransform setCollision setColor
+        setCurvilinearAt setDrawDebug setDrawMorph setViewMask setVisible
+      `,
+      handle: `
+        addDraw addMesh addTransform allocateClip
+      `,
+      "sync-read": `
+        drawMatrix
+      `,
+      callback: `
+        acceleration
+      `,
+      "cannot-cross": `
+        drawMaterial drawOverheadBytes materialWithFlags occluders
+        setDrawGeometricError setDrawHeightNormal setDrawMaterial setGround
+        setTerrainClip tileCurvilinearMap
+      `,
+    },
+    EditLayer: {
+      snapshot: `
+        revision size
+      `,
+      command: `
+        clear clearAll hide insert replace
+      `,
+      "sync-read": `
+        entries get showsBase
+      `,
+      event: `
+        onChange
+      `,
+    },
+    RowSink: {
+      callback: `
+        put remove
+      `,
+    },
+    SourceContent: {
+      snapshot: `
+        asset capabilities destroyed id item kind source world
+      `,
+      command: `
+        destroy
+      `,
+      query: `
+        ready
+      `,
+      "sync-read": `
+        credits feature features
+      `,
+      mutation: `
+        edits
+      `,
+      "cannot-cross": `
+        addItem attach baseFeature contentSource drawCount drawSink feed
+        noteInvalidated onDestroy refreshDraws rows shows takeInvalidated
+      `,
+    },
+    SourceHost: {
+      callback: `
+        budget changed clock fetch jobs sinks
+      `,
+    },
+    SourceJobs: {
+      callback: `
+        submit
+      `,
+    },
+    SourceKind: {
+      snapshot: `
+        decoders id renderFeatures
+      `,
+      callback: `
+        accepts open
+      `,
+    },
+    SourceKinds: {
+      snapshot: `
+        ids
+      `,
+      command: `
+        register
+      `,
+      query: `
+        kind pick
+      `,
+    },
+    SourceQueries: {
+      callback: `
+        feature height
+      `,
+    },
+    SourceRuntime: {
+      snapshot: `
+        bufferedSamples budget contents kinds
+      `,
+      command: `
+        addResolver destroy registerKind
+      `,
+      query: `
+        open
+      `,
+      "cannot-cross": `
+        tick
+      `,
+    },
+    SourceWriter: {
+      callback: `
+        commit read
+      `,
+    },
     Credential: {
       snapshot: `
         generation headers query renewable
@@ -505,7 +681,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
       snapshot: `
         bulk cameras capabilities clamping environment errors gpuPasses
         gpuSample links occlusionCullStats occlusionStats queries
-        renderTargetMemory requests stats tilesets time views worlds
+        renderTargetMemory requests sources stats tilesets time views worlds
       `,
       mutation: `
         aerosol curvilinearBudgetMs icrfToFixed jobBudgetMs
@@ -523,7 +699,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
       `,
       query: `
         addTerrain addTileset compileShader loadGltf loadModel loadTileset
-        setSkyPack static.create whenReady
+        open setSkyPack static.create whenReady
       `,
       event: `
         onAfterTick onError

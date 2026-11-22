@@ -250,7 +250,8 @@ export class SourceRuntime {
   }
 
   private host(opened: Opened, types: ReadonlySet<string>): SourceHost {
-    const { pool, fetch, clock } = this.options;
+    const { pool, clock } = this.options;
+    const provider = this.options.fetch;
     const jobs: SourceJobs = {
       submit<R, A = R>(spec: SourceJobSpec<R, A>): Job<A> {
         if (!types.has(spec.type)) {
@@ -283,7 +284,7 @@ export class SourceRuntime {
     };
     return {
       get fetch() {
-        return fetch();
+        return provider();
       },
       jobs,
       budget,
@@ -300,7 +301,8 @@ export class SourceRuntime {
     if (this.destroyed || opened.content.destroyed) {
       return;
     }
-    if (!opened.content.capabilities.pushes) {
+    const { pushes } = opened.content.capabilities;
+    if (!pushes) {
       this.report(
         `the "${opened.content.kind}" source's push`,
         new Error("it declares pushes: false; dropped."),
