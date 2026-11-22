@@ -3,7 +3,7 @@ import {
   frameRotation,
   multiply3 as multiply,
 } from "../frames/lunarConstants.ts";
-import { Instant } from "../../../time/src/Instant.ts";
+import { Instant } from "@cesium/time";
 import { chebyshev } from "./chebyshev.ts";
 import { readPack, type PackSegment } from "./pack.ts";
 

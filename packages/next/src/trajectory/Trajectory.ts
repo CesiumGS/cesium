@@ -4,8 +4,7 @@ import { eigenSymmetric } from "../frames/covariance.ts";
 import type { FrameAccuracy } from "../frames/frameAccuracy.ts";
 import type { Frames } from "../frames/frames.ts";
 import { toParentMatrix } from "../frames/matrix.ts";
-import { Instant } from "../../../time/src/Instant.ts";
-import type { LeapSeconds } from "../../../time/src/leapSeconds.ts";
+import { Instant, type LeapSeconds } from "@cesium/time";
 import {
   interpolateState,
   windowStart,

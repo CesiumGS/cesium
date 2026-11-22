@@ -2,9 +2,12 @@
 // into Earth-fixed axes. Apart from `sky.ts` so that what imports it
 // (`attachSky`, the Viewer) doesn't reach the IAU 2006/2000A series that
 // `skyState`'s data branch pulls (plan 5a's call 32 and ruling 6).
-import { icrfToFixed } from "../../../time/src/celestial.ts";
-import { moonAxes, moonPosition } from "../../../time/src/moon.ts";
-import { sunDirection } from "../../../time/src/sun.ts";
+import {
+  icrfToFixed,
+  moonAxes,
+  moonPosition,
+  sunDirection,
+} from "@cesium/time";
 
 /**
  * The sky at a time, in Earth-fixed axes: what the engine draws the stars,

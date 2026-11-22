@@ -5,12 +5,15 @@
 // EME2000 and MOON_PA are constant and built in; their matrices live here so
 // the catalog and `createFrames` share them.
 import { identity, type Mat4 } from "@cesium/core/internal";
-import { icrfToFixed } from "../../../time/src/celestial.ts";
+import {
+  icrfToFixed,
+  type Instant,
+  type LeapSeconds,
+  moonAxes,
+  moonPosition,
+  sunPosition,
+} from "@cesium/time";
 import { frameBias } from "../time/erfa/bias.ts";
-import type { Instant } from "../../../time/src/Instant.ts";
-import type { LeapSeconds } from "../../../time/src/leapSeconds.ts";
-import { moonAxes, moonPosition } from "../../../time/src/moon.ts";
-import { sunPosition } from "../../../time/src/sun.ts";
 import type { FrameEdge } from "./edges.ts";
 import { deepFreeze, type FrameAccuracy } from "./frameAccuracy.ts";
 import { MOON_PA_TO_ME } from "./lunarConstants.ts";

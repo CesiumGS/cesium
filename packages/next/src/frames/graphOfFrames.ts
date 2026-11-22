@@ -11,7 +11,7 @@ import {
   type PlainEdge,
   type TransformNode,
 } from "@cesium/core/internal";
-import type { Instant } from "../../../time/src/Instant.ts";
+import type { Instant } from "@cesium/time";
 import type { FrameCatalog } from "./catalog.ts";
 import type { Frame } from "./Frame.ts";
 import { framePoint } from "./local.ts";

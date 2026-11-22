@@ -21,7 +21,7 @@ import type {
   FrameDataWarning,
 } from "../ephemeris/loadFrameData.ts";
 import type { FrameManifest } from "../ephemeris/frameRoles.ts";
-import { LeapSeconds } from "../../../time/src/leapSeconds.ts";
+import { LeapSeconds, type Instant } from "@cesium/time";
 import {
   ANALYTIC_ACCURACY,
   EME2000_TO_PARENT,
@@ -29,7 +29,6 @@ import {
   analyticEdges,
   type StandInName,
 } from "./analytic.ts";
-import type { Instant } from "../../../time/src/Instant.ts";
 import type { FrameEdge, PreciseEdge } from "./edges.ts";
 import { Frame } from "./Frame.ts";
 import { BUILT_IN_ACCURACY } from "./frameAccuracy.ts";

@@ -2,7 +2,7 @@ import { c2ixys, c2tcio, era00, pom00, sp00 } from "./erfa/rotation.ts";
 import { s06 } from "./erfa/s06.ts";
 import { xy06 } from "./erfa/xy06.ts";
 import type { EopSample } from "./eop.ts";
-import type { Instant } from "../../../time/src/Instant.ts";
+import type { Instant } from "@cesium/time";
 
 /** Seconds past J2000 as a two-part JD: J2000 plus whole days, then the rest. */
 function splitJd(seconds: number): [number, number] {

@@ -4,7 +4,7 @@ import {
   isOnPolarAxis,
 } from "@cesium/core/internal";
 import type { Ellipsoid, World, TransformHandle } from "@cesium/core";
-import type { Instant } from "../../../time/src/Instant.ts";
+import type { Instant } from "@cesium/time";
 import { Frame, frameTransform, type FrameOptions } from "./Frame.ts";
 
 /**

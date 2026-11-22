@@ -14,7 +14,7 @@ import {
   type FrameDataWarning,
 } from "../../ephemeris/frameRoles.ts";
 import { EarthOrientationParameters } from "../../time/eop.ts";
-import type { LeapSeconds } from "../../../../time/src/leapSeconds.ts";
+import type { LeapSeconds } from "@cesium/time";
 import type { PreciseEdge } from "../edges.ts";
 import { itrfAccuracy, itrfEdge } from "../itrfEdge.ts";
 

@@ -12,7 +12,7 @@ import type {
   DrawHandle,
   Georeference,
 } from "@cesium/core";
-import type { Instant } from "../../../time/src/Instant.ts";
+import type { Instant } from "@cesium/time";
 import type { DrawnThrough } from "./drawn.ts";
 import { truePick, type TruePick } from "./pickTruth.ts";
 import type { CatalogFrameName, FrameCatalog } from "./catalog.ts";

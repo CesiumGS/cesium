@@ -1,7 +1,7 @@
 import { Frame } from "../frames/Frame.ts";
 import { DE440_EARTH_MOON_METERS, type Frames } from "../frames/frames.ts";
 import { convertPoint, type FramePoint } from "../frames/local.ts";
-import type { Instant } from "../../../time/src/Instant.ts";
+import type { Instant } from "@cesium/time";
 import { Trajectory } from "../trajectory/Trajectory.ts";
 import type {
   DesignPointObtained,

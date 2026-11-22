@@ -4,7 +4,7 @@
 // without the other provider's parsers.
 import { readWithProgress, type LoadProgress } from "@cesium/core";
 import type { EarthOrientationParameters } from "../time/eop.ts";
-import { LeapSeconds } from "../../../time/src/leapSeconds.ts";
+import { LeapSeconds } from "@cesium/time";
 import { framesDataFormatProblem } from "./framesDataFormat.ts";
 
 /** A notice about frame data, by kind, with a message for people. */

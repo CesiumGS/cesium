@@ -1,5 +1,4 @@
-import { Instant } from "../../../time/src/Instant.ts";
-import type { LeapSeconds } from "../../../time/src/leapSeconds.ts";
+import { Instant, type LeapSeconds } from "@cesium/time";
 
 /** One OEM ephemeris segment (a META block and its states). */
 export interface OemSegment {

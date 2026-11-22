@@ -1,6 +1,6 @@
 import { frameTransform, type Frame } from "./Frame.ts";
 import type { FramePoint } from "./local.ts";
-import { Instant } from "../../../time/src/Instant.ts";
+import { Instant } from "@cesium/time";
 
 /** The central difference's half-step, TDB seconds (frames 3, R3). */
 const H = 0.5;

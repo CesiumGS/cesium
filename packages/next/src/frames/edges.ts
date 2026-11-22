@@ -6,7 +6,7 @@
 // re-export would put the series in the ephemeris provider's chunk too.
 import type { FrameData } from "../ephemeris/loadFrameData.ts";
 import { C, GM_MOON, GM_SUN, L_C, type Mat4 } from "@cesium/core/internal";
-import type { Instant } from "../../../time/src/Instant.ts";
+import type { Instant } from "@cesium/time";
 import type { FrameAccuracy } from "./frameAccuracy.ts";
 import { toParentMatrix } from "./matrix.ts";
 
