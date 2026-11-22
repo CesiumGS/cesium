@@ -19,7 +19,7 @@ graph LR
   CS_188["Earth to Moon (frames 5c to 5h)<br/>3 of 43 done"]
   CS_189["Frames and engineering coordinates follow-ups<br/>1 of 22 done"]
   CS_190["Vector drawing and the styling language<br/>0 of 14 done"]
-  CS_191["Content sources and formats<br/>15 of 59 done"]
+  CS_191["Content sources and formats<br/>17 of 60 done"]
   CS_192["Sky, light and atmosphere<br/>2 of 22 done"]
   CS_193["B-reps and geometry queries<br/>3 of 22 done"]
   CS_194["Budgeted selection and memory<br/>0 of 6 done"]
@@ -69,7 +69,7 @@ graph LR
   CS_13 -->|1| CS_9
   CS_12 -->|1| CS_16
   CS_9 -->|3| CS_18
-  CS_191 -->|9| CS_18
+  CS_191 -->|8| CS_18
   CS_16 -->|3| CS_18
   CS_8 -->|4| CS_18
   CS_199 -->|2| CS_18
@@ -128,5 +128,6 @@ graph LR
   CS_628 -->|1| CS_579
   CS_193 -->|1| CS_579
   CS_191 -->|1| CS_615
+  CS_615 -->|3| CS_191
   CS_191 -->|1| CS_193
 ```

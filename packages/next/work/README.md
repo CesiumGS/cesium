@@ -675,7 +675,7 @@ No milestone
 
 ### Content sources and formats
 
-[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 15 of 59 done, 21 ready, 19 blocked, 4 proposed.
+[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 17 of 60 done, 17 ready, 22 blocked, 4 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token ([CS-497](./milestones/CS-497-cesium-ion-is-a-swappable-module-with-a-default.md), Planned)
 
@@ -745,14 +745,15 @@ No milestone
 - [x] [CS-845](./items/CS-845-d5-how-are-the-content-sources-entry-points.md) decision: D5: how are the content sources' entry points grouped and named?. Done.
 - [x] [CS-846](./items/CS-846-d6-what-is-ion-s-interface-an-asset-resolver-or.md) decision: D6: what is ion's interface, an asset resolver or a source of its own?. Done.
 - [x] [CS-853](./items/CS-853-merge-cs-832-the-design-for-semantic-metadata.md) decision: Merge CS-832, the design for semantic metadata and picking. Done.
-- [ ] [CS-898](./items/CS-898-64-bit-integer-properties-keep-their-exact-value.md) 64-bit integer properties keep their exact value. Needs nothing.
+- [x] [CS-898](./items/CS-898-64-bit-integer-properties-keep-their-exact-value.md) 64-bit integer properties keep their exact value. Done.
 - [ ] [CS-900](./items/CS-900-three-usd-readers-compared-in-dyno-the-subset.md) Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD. Needs nothing.
 - [ ] [CS-901](./items/CS-901-which-usd-reader-does-cs-559-use-from-cs-900-s.md) decision: Which USD reader does CS-559 use, from CS-900's comparison?. Needs CS-900. Decided by owner.
 - [ ] [CS-902](./items/CS-902-cs-559-s-scope-from-the-chosen-reader-and-cs.md) CS-559's scope, from the chosen reader and CS-833's study. Needs CS-901.
-- [ ] [CS-903](./items/CS-903-label-precedence-the-bound-material-taxonomy.md) Label precedence: the bound material, taxonomy aliases and GeomSubset IDs. Needs nothing.
-- [ ] [CS-904](./items/CS-904-source-declared-axis-and-scale-corrected.md) Source-declared axis and scale, corrected through placement. Needs nothing.
-- [ ] [CS-906](./items/CS-906-variant-selections-and-payload-policy-as-open.md) Variant selections and payload policy as open options, and their change as invalidation. Needs nothing.
+- [ ] [CS-903](./items/CS-903-label-precedence-the-bound-material-taxonomy.md) Label precedence: the bound material, taxonomy aliases and GeomSubset IDs. Needs CS-835 (Packaging and package names) and CS-847.
+- [ ] [CS-904](./items/CS-904-source-declared-axis-and-scale-corrected.md) Source-declared axis and scale, corrected through placement. Needs CS-835 (Packaging and package names) and CS-847.
+- [ ] [CS-906](./items/CS-906-variant-selections-and-payload-policy-as-open.md) Variant selections and payload policy as open options, and their change as invalidation. Needs CS-835 (Packaging and package names) and CS-847.
 - [?] [CS-908](./items/CS-908-gaussian-splats-from-usd-s-particlefield-into.md) Gaussian splats from USD's ParticleField into the splat render feature. Proposed. Needs CS-277 and CS-901.
+- [x] [CS-909](./items/CS-909-merge-cs-898-64-bit-integer-properties-keep.md) decision: Merge CS-898, 64-bit integer properties keep their exact value. Done.
 
 ### Sky, light and atmosphere
 

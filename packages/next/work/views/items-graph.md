@@ -448,7 +448,7 @@ graph LR
     CS_848["CS-848 Render features: content modules register passes in named slots"]:::open
     CS_849["CS-849 Streams for push sources: connect on the fetch and credential p"]:::open
     CS_853["CS-853 Merge CS-832, the design for semantic metadata and picking"]:::done
-    CS_898["CS-898 64-bit integer properties keep their exact value"]:::open
+    CS_898["CS-898 64-bit integer properties keep their exact value"]:::done
     CS_900["CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD"]:::open
     CS_901["CS-901 Which USD reader does CS-559 use, from CS-900's comparison?"]:::decision
     CS_902["CS-902 CS-559's scope, from the chosen reader and CS-833's study"]:::open
@@ -456,6 +456,7 @@ graph LR
     CS_904["CS-904 Source-declared axis and scale, corrected through placement"]:::open
     CS_906["CS-906 Variant selections and payload policy as open options, and thei"]:::open
     CS_908["CS-908 Gaussian splats from USD's ParticleField into the splat render "]:::proposed
+    CS_909["CS-909 Merge CS-898, 64-bit integer properties keep their exact value"]:::done
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -1681,7 +1682,13 @@ graph LR
   CS_893 --> CS_897
   CS_900 --> CS_901
   CS_901 --> CS_902
+  CS_835 --> CS_903
+  CS_847 --> CS_903
+  CS_835 --> CS_904
+  CS_847 --> CS_904
   CS_475 --> CS_905
+  CS_835 --> CS_906
+  CS_847 --> CS_906
   CS_672 --> CS_907
   CS_901 --> CS_907
   CS_277 --> CS_908

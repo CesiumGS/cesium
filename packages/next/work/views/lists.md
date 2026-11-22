@@ -618,7 +618,7 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 15 of 59 done, 21 ready, 19 blocked, 4 proposed.
+CS-191, Planned, led by owner: 17 of 60 done, 17 ready, 22 blocked, 4 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -688,14 +688,15 @@ No milestone
 - [x] CS-845 decision: D5: how are the content sources' entry points grouped and named?. Done.
 - [x] CS-846 decision: D6: what is ion's interface, an asset resolver or a source of its own?. Done.
 - [x] CS-853 decision: Merge CS-832, the design for semantic metadata and picking. Done.
-- [ ] CS-898 64-bit integer properties keep their exact value. Needs nothing.
+- [x] CS-898 64-bit integer properties keep their exact value. Done.
 - [ ] CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD. Needs nothing.
 - [ ] CS-901 decision: Which USD reader does CS-559 use, from CS-900's comparison?. Needs CS-900. Decided by owner.
 - [ ] CS-902 CS-559's scope, from the chosen reader and CS-833's study. Needs CS-901.
-- [ ] CS-903 Label precedence: the bound material, taxonomy aliases and GeomSubset IDs. Needs nothing.
-- [ ] CS-904 Source-declared axis and scale, corrected through placement. Needs nothing.
-- [ ] CS-906 Variant selections and payload policy as open options, and their change as invalidation. Needs nothing.
+- [ ] CS-903 Label precedence: the bound material, taxonomy aliases and GeomSubset IDs. Needs CS-835 (Packaging and package names) and CS-847.
+- [ ] CS-904 Source-declared axis and scale, corrected through placement. Needs CS-835 (Packaging and package names) and CS-847.
+- [ ] CS-906 Variant selections and payload policy as open options, and their change as invalidation. Needs CS-835 (Packaging and package names) and CS-847.
 - [?] CS-908 Gaussian splats from USD's ParticleField into the splat render feature. Proposed. Needs CS-277 and CS-901.
+- [x] CS-909 decision: Merge CS-898, 64-bit integer properties keep their exact value. Done.
 
 ### Sky, light and atmosphere
 

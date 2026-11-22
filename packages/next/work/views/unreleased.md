@@ -101,6 +101,7 @@ CS-199 Dyno hardening, packaging and CI
 CS-191 Content sources and formats
   CS-552  The content-source seam: one interface every source module implements, designed and planned
   CS-809  Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
+  CS-898  64-bit integer properties keep their exact value
 
 CS-609 A clean 2.0 branch and a modern build
   CS-610  The 2.0 repository's design: build system, CI/CD and release pipeline
@@ -118,5 +119,5 @@ CS-579 Editing
 CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
 
-83 merged item(s) not in a release
+84 merged item(s) not in a release
 ```

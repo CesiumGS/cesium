@@ -405,6 +405,15 @@ CS-191 Content sources and formats
       ← CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD
   CS-902  CS-559's scope, from the chosen reader and CS-833's study
       ← CS-901 Which USD reader does CS-559 use, from CS-900's comparison?
+  CS-903  Label precedence: the bound material, taxonomy aliases and GeomSubset IDs
+      ← CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
+        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+  CS-904  Source-declared axis and scale, corrected through placement
+      ← CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
+        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+  CS-906  Variant selections and payload policy as open options, and their change as invalidation
+      ← CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
+        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
 
 CS-192 Sky, light and atmosphere
   CS-282  Intel figures into `glareTier` and the Intel tables
@@ -515,7 +524,6 @@ CS-18 The work tracker
         CS-858 Meshes can be edited: a sample drags a mesh's vertices, edges and faces through the edit layer
         CS-859 The engine starts fast: pipelines compile in one round and optional subsystems load lazily
         CS-614 The branch is a clean, modern 2.0 build
-        CS-898 64-bit integer properties keep their exact value
         CS-903 Label precedence: the bound material, taxonomy aliases and GeomSubset IDs
         CS-904 Source-declared axis and scale, corrected through placement
         CS-906 Variant selections and payload policy as open options, and their change as invalidation
@@ -738,5 +746,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-233 blocked
+236 blocked
 ```
