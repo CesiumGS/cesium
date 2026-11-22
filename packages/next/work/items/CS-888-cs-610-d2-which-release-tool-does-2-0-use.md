@@ -2,10 +2,14 @@
 id: CS-888
 title: "CS-610 D2: which release tool does 2.0 use?"
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-609
 decider: owner
+answer: B, Changesets, with one small script that derives the experimental line's 0.x number and checks it before publishing
+answered_at: 2026-11-22T07:35:50.853Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
