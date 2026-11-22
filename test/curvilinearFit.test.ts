@@ -4,19 +4,19 @@ import {
   routeForward,
   type Route,
   type CurvilinearMap,
-} from "../packages/next/src/camera/route.ts";
-import { Ellipsoid, fromDegrees } from "../packages/next/src/math/ellipsoid.ts";
-import { fromBasis, mat4, multiply } from "../packages/next/src/math/mat4.ts";
-import { PLACEMENT_MONOMIALS } from "../packages/next/src/scene/placement.ts";
+} from "../packages/core/src/camera/route.ts";
+import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
+import { fromBasis, mat4, multiply } from "../packages/core/src/math/mat4.ts";
+import { PLACEMENT_MONOMIALS } from "../packages/core/src/scene/placement.ts";
 import {
   affinePart,
   evaluateLattice,
   fitLattice,
   fitLatticeSteps,
   routeDisplacement,
-} from "../packages/next/src/scene/curvilinearFit.ts";
-import { CurvilinearFitCache } from "../packages/next/src/scene/curvilinearFitCache.ts";
-import type { CubicLattice } from "../packages/next/src/scene/curvilinearTerms.ts";
+} from "../packages/core/src/scene/curvilinearFit.ts";
+import { CurvilinearFitCache } from "../packages/core/src/scene/curvilinearFitCache.ts";
+import type { CubicLattice } from "../packages/core/src/scene/curvilinearTerms.ts";
 
 // A deterministic generator, so the runs are repeatable.
 function rng(seed: number): () => number {

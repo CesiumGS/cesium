@@ -2,17 +2,17 @@
 // terrain's own bounds make the occluder, so it holds for any map that can
 // carry points.
 import { describe, expect, it } from "vitest";
-import { BodyOccluder } from "../packages/next/src/globe/bodyOccluder.ts";
-import { flatTerrainHeights } from "../packages/next/src/globe/quantizedMesh.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
-import type { TileCurvilinearMap } from "../packages/next/src/streaming/tileCurvilinearMap.ts";
+import { BodyOccluder } from "../packages/core/src/globe/bodyOccluder.ts";
+import { flatTerrainHeights } from "../packages/core/src/globe/quantizedMesh.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
+import type { TileCurvilinearMap } from "../packages/core/src/streaming/tileCurvilinearMap.ts";
 import {
   regionFromJson,
   sphereFromObb,
   type TileVolume,
-} from "../packages/next/src/streaming/volumes.ts";
+} from "../packages/core/src/streaming/volumes.ts";
 
 const wgs84 = Ellipsoid.WGS84;
 

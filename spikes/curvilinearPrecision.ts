@@ -16,7 +16,7 @@
 // projection put it, plus the fit's own error.
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
-import { routeForward } from "../packages/next/src/camera/route.ts";
+import { routeForward } from "../packages/core/src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
@@ -30,11 +30,11 @@ import {
   type MeshData,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/world/types.ts";
 
 const TEMPLATE = `
 <h1>A placed draw's large displacement against the float64 route</h1>

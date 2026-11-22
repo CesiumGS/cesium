@@ -1,12 +1,12 @@
 // Fixtures for the section tests: solids with known cross sections. Lengths
 // are meters.
-import { BrepBuilder } from "../packages/next/src/brep/build.ts";
-import { SurfaceKind, type BrepForm } from "../packages/next/src/brep/form.ts";
-import type { NurbsCurve } from "../packages/next/src/brep/nurbs.ts";
+import { BrepBuilder } from "../packages/core/src/brep/build.ts";
+import { SurfaceKind, type BrepForm } from "../packages/core/src/brep/form.ts";
+import type { NurbsCurve } from "../packages/core/src/brep/nurbs.ts";
 import {
   fromPlane,
   planeFrame,
-} from "../packages/next/src/brep/sectionCurves.ts";
+} from "../packages/core/src/brep/sectionCurves.ts";
 import {
   arcChain,
   lineProfile,

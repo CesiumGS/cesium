@@ -8,22 +8,22 @@
 // tileset.json and `engine.loadGltf` answers with one triangle, as in
 // test/tilesetPlacement.test.ts.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { HeightClamping } from "../packages/next/src/scene/HeightClamping.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import { ViewLink } from "../packages/next/src/scene/ViewLink.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { AnchorHandle } from "../packages/next/src/scene/world/types.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
-import { PointSource } from "../packages/next/src/vector/PointSource.ts";
-import { VectorLayer } from "../packages/next/src/vector/VectorLayer.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { HeightClamping } from "../packages/core/src/scene/HeightClamping.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import { ViewLink } from "../packages/core/src/scene/ViewLink.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { AnchorHandle } from "../packages/core/src/scene/world/types.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
+import { PointSource } from "../packages/core/src/vector/PointSource.ts";
+import { VectorLayer } from "../packages/core/src/vector/VectorLayer.ts";
 import { fakeDevice, fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

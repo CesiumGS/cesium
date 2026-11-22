@@ -15,12 +15,12 @@
 // load, is unknown, never clear; inside the terrain's error it "may block"
 // (Review Focus 2). Without the terrain globe nothing is traced and the line
 // says why.
-import { Ellipsoid } from "../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import {
   terrainLineOfSight,
   type TerrainLineOfSight,
 } from "../../packages/next/src/measure/terrainLineOfSight.ts";
-import type { SpatialQueries } from "../../packages/next/src/query/queries.ts";
+import type { SpatialQueries } from "../../packages/core/src/query/queries.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import { length, share } from "./panel/format.ts";
 import type { ScenarioEvaluation, SightLine } from "./scenarios/evaluate.ts";

@@ -8,7 +8,7 @@ import {
   loadingStage,
   type LoadingState,
 } from "../examples/vertical-exaggeration/loading.ts";
-import type { CurvilinearStats } from "../packages/next/src/scene/world/worldCurvilinearMaps.ts";
+import type { CurvilinearStats } from "../packages/core/src/scene/world/worldCurvilinearMaps.ts";
 
 function state(
   over: {

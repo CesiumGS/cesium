@@ -9,21 +9,21 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   TerrainSource,
   type TerrainLoader,
-} from "../packages/next/src/globe/TerrainSource.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
+} from "../packages/core/src/globe/TerrainSource.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
 import type {
   QueryAnswer,
   RayQuery,
-} from "../packages/next/src/query/queries.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { ClipSet } from "../packages/next/src/scene/world/clips.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
-import { Globe } from "../packages/next/src/globe/Globe.ts";
+} from "../packages/core/src/query/queries.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { ClipSet } from "../packages/core/src/scene/world/clips.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
+import { Globe } from "../packages/core/src/globe/Globe.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { at, contains, gridTile } from "./terrainRayFixtures.ts";
 

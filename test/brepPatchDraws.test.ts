@@ -4,23 +4,23 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   PLACEMENT_MONOMIALS,
   PLACEMENT_TERMS,
-} from "../packages/next/src/scene/placement.ts";
-import { DrawRecordLayout } from "../packages/next/src/render/generated/layouts.ts";
+} from "../packages/core/src/scene/placement.ts";
+import { DrawRecordLayout } from "../packages/core/src/render/generated/layouts.ts";
 import {
   FLAGS_WORD,
   PATCH_ISO_SHIFT,
   RECORD_WORDS,
   RecordFlags,
-} from "../packages/next/src/render/layout.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { placementBounds } from "../packages/next/src/scene/world/patches.ts";
-import type { CurvilinearTerms } from "../packages/next/src/scene/curvilinearTerms.ts";
+} from "../packages/core/src/render/layout.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { placementBounds } from "../packages/core/src/scene/world/patches.ts";
+import type { CurvilinearTerms } from "../packages/core/src/scene/curvilinearTerms.ts";
 import {
   prepareGpuPatches,
   tessellateBrep,
-} from "../packages/next/src/brep/index.ts";
-import { BrepBuilder } from "../packages/next/src/brep/build.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/brep/index.ts";
+import { BrepBuilder } from "../packages/core/src/brep/build.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
 import {
   boxBrep,
   boxFace,

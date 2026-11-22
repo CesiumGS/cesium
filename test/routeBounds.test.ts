@@ -4,33 +4,33 @@
 // vertical exaggeration (with and without a ceiling) and a UTM route; a route
 // with a step that has no bound is not composed (it is sampled instead).
 import { describe, expect, it } from "vitest";
-import type { FrameKey } from "../packages/next/src/camera/frameResolver.ts";
+import type { FrameKey } from "../packages/core/src/camera/frameResolver.ts";
 import {
   routeForward,
   type Route,
   type CurvilinearMap,
-} from "../packages/next/src/camera/route.ts";
+} from "../packages/core/src/camera/route.ts";
 import {
   geocentricToGeographic,
   geographicToGeocentric,
-} from "../packages/next/src/georeference/geocentric.ts";
-import { heightOffsetEdge } from "../packages/next/src/georeference/heightOffset.ts";
-import { utm } from "../packages/next/src/georeference/transverseMercator.ts";
-import { verticalExaggerationEdge } from "../packages/next/src/georeference/verticalExaggeration.ts";
-import { webMercator } from "../packages/next/src/georeference/webMercator.ts";
-import { treeFromJson } from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/georeference/geocentric.ts";
+import { heightOffsetEdge } from "../packages/core/src/georeference/heightOffset.ts";
+import { utm } from "../packages/core/src/georeference/transverseMercator.ts";
+import { verticalExaggerationEdge } from "../packages/core/src/georeference/verticalExaggeration.ts";
+import { webMercator } from "../packages/core/src/georeference/webMercator.ts";
+import { treeFromJson } from "../packages/core/src/streaming/Tile.ts";
 import {
   drawnTile,
   type TileCurvilinearMap,
-} from "../packages/next/src/streaming/tileCurvilinearMap.ts";
+} from "../packages/core/src/streaming/tileCurvilinearMap.ts";
 import { writeFileSync } from "node:fs";
-import { composeBox } from "../packages/next/src/scene/routeBounds.ts";
-import { scaleAboutEdge } from "../packages/next/src/transforms/scaleAbout.ts";
-import { bend } from "../packages/next/src/transforms/bend.ts";
+import { composeBox } from "../packages/core/src/scene/routeBounds.ts";
+import { scaleAboutEdge } from "../packages/core/src/transforms/scaleAbout.ts";
+import { bend } from "../packages/core/src/transforms/bend.ts";
 import {
   curvilinear,
   type CurvilinearEdge,
-} from "../packages/next/src/transform/graph.ts";
+} from "../packages/core/src/transform/graph.ts";
 
 const KEY = { name: "x" } as unknown as FrameKey;
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { splitGlb } from "../packages/next/src/io/glb.ts";
+import { splitGlb } from "../packages/core/src/io/glb.ts";
 
 /**
  * A GLB of a JSON chunk and a BIN chunk of `binLength` bytes whose header

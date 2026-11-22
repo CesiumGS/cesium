@@ -40,8 +40,8 @@ import {
   type GpuPatches,
   type NurbsCurve,
   type NurbsSurface,
-} from "../packages/next/src/brep/index.ts";
-import { OcctKernel } from "../packages/next/src/brep/occt.ts";
+} from "../packages/core/src/brep/index.ts";
+import { OcctKernel } from "../packages/core/src/brep/occt.ts";
 import {
   CustomShader,
   Engine,
@@ -50,8 +50,8 @@ import {
   UNITLESS_EXPOSURE,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
-import type { BrepHandle } from "../packages/next/src/scene/world/brep.ts";
+} from "../packages/core/src/index.ts";
+import type { BrepHandle } from "../packages/core/src/scene/world/brep.ts";
 
 const TEMPLATE = `
 <h1>B-rep faces trimmed per pixel on the GPU</h1>

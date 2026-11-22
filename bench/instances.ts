@@ -5,7 +5,7 @@ import {
   eastNorthUpToFixedFrame,
   fromDegrees,
   type ModelPlacement,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import "./instances.css";
 

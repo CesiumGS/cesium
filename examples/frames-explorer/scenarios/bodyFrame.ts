@@ -15,7 +15,7 @@ import {
   Frame,
   type FrameOptions,
 } from "../../../packages/next/src/frames/Frame.ts";
-import { Ellipsoid } from "../../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 
 /** Where a body is, in its parent's coordinates (m, m/s), at a TDB time (s past J2000). */
 export interface BodyTrack {

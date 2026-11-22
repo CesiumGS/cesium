@@ -164,9 +164,12 @@
 // (`parseGeoreference`), and `readGeoreference`, which passes EARTH and MOON,
 // is in georeferenceTileset.ts with `georeferenceTileset` and
 // `checkRigidTransform`, which need the engineering modules.
-import type { Cartographic } from "../math/ellipsoid.ts";
-import type { Body } from "../scene/Body.ts";
-import { TilesetBodyError, tilesetBody } from "../streaming/tilesetBody.ts";
+import type { Cartographic } from "../../../core/src/math/ellipsoid.ts";
+import type { Body } from "../../../core/src/scene/Body.ts";
+import {
+  TilesetBodyError,
+  tilesetBody,
+} from "../../../core/src/streaming/tilesetBody.ts";
 import type {
   AlignmentDefinition,
   HorizontalElement,

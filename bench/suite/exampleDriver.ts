@@ -1,12 +1,12 @@
 // Symbol.dispose and DisposableStack where the browser lacks them (Safari).
-import "../../packages/next/src/core/disposeShim.ts";
+import "../../packages/core/src/core/disposeShim.ts";
 import {
   Ellipsoid,
   Engine,
   fromDegrees,
   type Tileset3D,
   vec3,
-} from "../../packages/next/src/index.ts";
+} from "../../packages/core/src/index.ts";
 import { Viewer } from "../../packages/next/widgets/index.ts";
 import { startSseProbe } from "../../packages/next/widgets/sseProbe.ts";
 import { EXAMPLES, type ExampleInfo } from "../../examples/index.ts";

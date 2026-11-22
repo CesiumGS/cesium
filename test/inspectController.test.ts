@@ -2,19 +2,19 @@
 // (an up and a heading reference), the east-north-up path unchanged, the
 // pitch clamp, the wheel's range limits, re-focusing and dispose.
 import { describe, expect, it } from "vitest";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
 import {
   InspectController,
   type InspectControllerOptions,
-} from "../packages/next/src/scene/InspectController.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
+} from "../packages/core/src/scene/InspectController.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
 import {
   Ellipsoid,
   cartographic,
-} from "../packages/next/src/math/ellipsoid.ts";
-import { eastNorthUpToFixedFrame } from "../packages/next/src/math/transforms.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
+} from "../packages/core/src/math/ellipsoid.ts";
+import { eastNorthUpToFixedFrame } from "../packages/core/src/math/transforms.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
 import { installGpuGlobals } from "./fakeGpu.ts";
 
 // The widgets import the core by its entry point, which reads WebGPU's

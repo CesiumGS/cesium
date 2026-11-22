@@ -1,13 +1,13 @@
 import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import { View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import { CapacityError } from "../packages/next/src/scene/CapacityError.ts";
-import { MAX_ANCHORS } from "../packages/next/src/render/layout.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import { View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import { CapacityError } from "../packages/core/src/scene/CapacityError.ts";
+import { MAX_ANCHORS } from "../packages/core/src/render/layout.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 /** Column-major translation by (x, y, z). */

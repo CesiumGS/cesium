@@ -7,12 +7,12 @@
 // controls, so the ground is a zoom away. Plain functions; cameraRig.ts applies them, follows
 // the clock and draws the pivot marker (pivot.ts). The larger design, camera
 // rigs attached to frames, is plan 5's (docs/design/bodies-frames-and-engineering-coordinates.md).
-import { Camera } from "../../packages/next/src/scene/Camera.ts";
+import { Camera } from "../../packages/core/src/scene/Camera.ts";
 import {
   orbitBasis,
   orbitPose,
   type OrbitFrame,
-} from "../../packages/next/src/scene/InspectController.ts";
+} from "../../packages/core/src/scene/InspectController.ts";
 import { LUNAR_SITE } from "./scenarios/scenes.ts";
 import type { Framing } from "./globe.ts";
 import { projectInto } from "./inset.ts";

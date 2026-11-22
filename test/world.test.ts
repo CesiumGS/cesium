@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { CapacityError } from "../packages/next/src/scene/CapacityError.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
+import { CapacityError } from "../packages/core/src/scene/CapacityError.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 /** World pools (docs/design/gpu-limits-and-capacities.md) on the fake device. */

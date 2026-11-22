@@ -9,22 +9,22 @@ import {
   sphereHidden,
   type PyramidCamera,
   type PyramidLevel,
-} from "../packages/next/src/render/view/occlusionMath.ts";
+} from "../packages/core/src/render/view/occlusionMath.ts";
 import {
   cullsByOcclusion,
   hiddenByOcclusion,
   occlusionCullParams,
   occlusionCullingOn,
   OCCLUSION_CULL_BYTES,
-} from "../packages/next/src/render/view/occlusionCull.ts";
-import { occludable } from "../packages/next/src/render/world/bundles.ts";
+} from "../packages/core/src/render/view/occlusionCull.ts";
+import { occludable } from "../packages/core/src/render/world/bundles.ts";
 import {
   MATERIAL_WORDS,
   MaterialFlags,
-} from "../packages/next/src/render/layout.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { MeshData } from "../packages/next/src/scene/meshes.ts";
+} from "../packages/core/src/render/layout.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { MeshData } from "../packages/core/src/scene/meshes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 describe("the switch", () => {

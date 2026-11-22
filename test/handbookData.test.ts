@@ -26,7 +26,7 @@ import {
   readSurface,
 } from "../scripts/handbookData.mjs";
 import ts from "typescript";
-import { UrlTemplateImagery } from "../packages/next/src/globe/ImageryProvider.ts";
+import { UrlTemplateImagery } from "../packages/core/src/globe/ImageryProvider.ts";
 import { API_ROWS } from "../handbook/src/apiMap.ts";
 import { highlight } from "../handbook/src/highlight.ts";
 

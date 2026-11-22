@@ -1,5 +1,5 @@
 import type { Harness } from "../lab/harness.ts";
-import { splitHigh } from "../packages/next/src/math/transforms.ts";
+import { splitHigh } from "../packages/core/src/math/transforms.ts";
 import probesJson from "./slang/generated/probes.json";
 
 /**
@@ -302,7 +302,7 @@ async function runProbes(): Promise<{ rows: Row[]; slang: string }> {
     .catch(() => 0);
   if (bytes > 0) {
     const { CustomShader } =
-      await import("../packages/next/src/scene/CustomShader.ts");
+      await import("../packages/core/src/scene/CustomShader.ts");
     const source = `import cesium;
 public void fragmentMain(FragmentInput fsInput, inout MaterialOutput material) {
   material.baseColor *= 0.5;

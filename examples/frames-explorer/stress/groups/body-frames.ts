@@ -7,9 +7,9 @@ import {
   frameTransform,
   type Frame,
 } from "../../../../packages/next/src/frames/Frame.ts";
-import { Ellipsoid } from "../../../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../../../packages/core/src/math/ellipsoid.ts";
 import { terrainLineOfSight } from "../../../../packages/next/src/measure/terrainLineOfSight.ts";
-import { terrainQueries } from "../../../../packages/next/src/query/terrainBackend.ts";
+import { terrainQueries } from "../../../../packages/core/src/query/terrainBackend.ts";
 import { Instant } from "../../../../packages/next/src/time/Instant.ts";
 import { trackFrame, type BodyTrack } from "../../scenarios/bodyFrame.ts";
 import { heightOverMeridian, testHill } from "../../scenarios/testHill.ts";

@@ -15,7 +15,7 @@ import { Frame } from "../../../packages/next/src/frames/Frame.ts";
 import {
   Ellipsoid,
   fromDegrees,
-} from "../../../packages/next/src/math/ellipsoid.ts";
+} from "../../../packages/core/src/math/ellipsoid.ts";
 import {
   headingOf,
   tiltDown,

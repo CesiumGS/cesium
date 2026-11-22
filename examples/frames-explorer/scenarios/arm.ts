@@ -15,7 +15,7 @@ import { RAD_PER_DEG } from "../units.ts";
 import { Frame } from "../../../packages/next/src/frames/Frame.ts";
 import type { FrameAccuracy } from "../../../packages/next/src/frames/frameAccuracy.ts";
 import { eastNorthUpFrame } from "../../../packages/next/src/frames/local.ts";
-import { Ellipsoid } from "../../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 import type { KnobState } from "./spec.ts";
 import { jointChain, type Joint } from "./jointChain.ts";
 

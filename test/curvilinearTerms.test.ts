@@ -2,9 +2,9 @@
 // placements, the float64 twin, its bounds, its validation, and the
 // placements buffer's layout read back as shaders/placement.slang reads it.
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { attributeHash } from "../packages/next/src/render/layout.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { MeshData } from "../packages/next/src/scene/meshes.ts";
+import { attributeHash } from "../packages/core/src/render/layout.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { MeshData } from "../packages/core/src/scene/meshes.ts";
 import {
   PLACEMENT_MONOMIALS,
   PLACEMENT_TERMS,
@@ -14,14 +14,14 @@ import {
   type FittedOperation,
   type Placement,
   type PlacementParameter,
-} from "../packages/next/src/scene/placement.ts";
+} from "../packages/core/src/scene/placement.ts";
 import {
   TERM_ROWS,
   CURVILINEAR_KIND,
   blockRows,
   latticeRows,
   LATTICE_HEAD_ROWS,
-} from "../packages/next/src/scene/placementTable.ts";
+} from "../packages/core/src/scene/placementTable.ts";
 import {
   checkTerms,
   latticeDisplacement,
@@ -31,21 +31,21 @@ import {
   termsResamplable,
   termsSecondDerivativeBound,
   weightOf,
-} from "../packages/next/src/scene/curvilinearEvaluate.ts";
+} from "../packages/core/src/scene/curvilinearEvaluate.ts";
 import {
   LATTICE_CELLS,
   MAX_CURVILINEAR_TERMS,
   constantWeight,
   type CubicLattice,
   type CurvilinearTerms,
-} from "../packages/next/src/scene/curvilinearTerms.ts";
-import { drawnSphere } from "../packages/next/src/scene/curvilinearBounds.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+} from "../packages/core/src/scene/curvilinearTerms.ts";
+import { drawnSphere } from "../packages/core/src/scene/curvilinearBounds.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import {
   drawTerms,
   setPlacement,
-} from "../packages/next/src/scene/world/placements.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/world/placements.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const PARTNER = "_PARTNER";

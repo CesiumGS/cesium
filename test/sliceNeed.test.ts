@@ -2,9 +2,9 @@
 // it, not on how many hold imagery (the slices are an LRU cache, so "used"
 // fills to capacity within about 10 seconds of flying, by design).
 import { beforeAll, describe, expect, it } from "vitest";
-import { DEFAULT_IMAGERY_SLICES } from "../packages/next/src/globe/GlobeImagery.ts";
-import { SlicePool } from "../packages/next/src/globe/SlicePool.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
+import { DEFAULT_IMAGERY_SLICES } from "../packages/core/src/globe/GlobeImagery.ts";
+import { SlicePool } from "../packages/core/src/globe/SlicePool.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 import { fakeDevice, installGpuGlobals } from "./fakeGpu.ts";
 import { fakeWorld, holder, layer, tile } from "./sliceFakes.ts";
 

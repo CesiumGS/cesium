@@ -4,11 +4,11 @@
 // regions come and go; and the queries that treat clipped terrain as a
 // hole (height clamping, sampleHeightMostDetailed). CPU only (fakeGpu).
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
 import {
   TerrainRegionError,
   type TerrainRegionShape,
-} from "../packages/next/src/globe/terrainClip.ts";
+} from "../packages/core/src/globe/terrainClip.ts";
 import {
   CLIP_BLOCK_BITS,
   CLIP_BLOCK_ROWS,
@@ -20,17 +20,17 @@ import {
   RECORD_WORDS,
   TERRAIN_CLIP_WORD,
   packClip,
-} from "../packages/next/src/render/layout.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { HeightClamping } from "../packages/next/src/scene/HeightClamping.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+} from "../packages/core/src/render/layout.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { HeightClamping } from "../packages/core/src/scene/HeightClamping.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import type {
   CastRay,
   ClipBox,
-} from "../packages/next/src/scene/world/types.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
+} from "../packages/core/src/scene/world/types.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = Math.PI / 180;

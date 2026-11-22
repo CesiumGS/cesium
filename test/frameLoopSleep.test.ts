@@ -8,16 +8,16 @@
 // The engine runs on the fake device of test/fakeGpu.ts; requestAnimationFrame
 // is a queue these tests flush by hand, one 60 Hz frame at a time.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
 import {
   CanvasTarget,
   OffscreenTarget,
-} from "../packages/next/src/scene/renderTarget.ts";
+} from "../packages/core/src/scene/renderTarget.ts";
 import { Clock } from "../packages/next/src/time/Clock.ts";
 import { fakeDevice, fakeEngine } from "./fakeGpu.ts";
 
@@ -646,7 +646,7 @@ describe("the frame loop sleeps when settled", () => {
   describe("custom shaders", () => {
     async function shaded(uniforms: Record<string, unknown>) {
       const { CustomShader } =
-        await import("../packages/next/src/scene/CustomShader.ts");
+        await import("../packages/core/src/scene/CustomShader.ts");
       const shader = new CustomShader({
         uniforms: uniforms as never,
         fragment:

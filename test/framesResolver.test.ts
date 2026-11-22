@@ -5,17 +5,17 @@
 // Focus 1, and the ruling that a precise reference frame outside its data
 // draws on its stand-in while measurement still throws).
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { FrameUnavailableError } from "../packages/next/src/camera/frameResolver.ts";
+import { FrameUnavailableError } from "../packages/core/src/camera/frameResolver.ts";
 import { ANALYTIC_ACCURACY } from "../packages/next/src/frames/analytic.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import type { FrameData } from "../packages/next/src/ephemeris/loadFrameData.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import { icrfToFixed } from "../packages/next/src/time/celestial.ts";
 import { Clock } from "../packages/next/src/time/Clock.ts";
 import type { EarthOrientationParameters } from "../packages/next/src/time/eop.ts";

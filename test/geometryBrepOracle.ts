@@ -2,15 +2,15 @@
 // docs/design/breps-and-geometry-queries.md): the tessellator's mesh as a mesh geometry in the form's own
 // coordinates, and the checks the adapter's tests share.
 import { expect } from "vitest";
-import { evaluateSurface } from "../packages/next/src/brep/evaluate.ts";
-import type { BrepForm } from "../packages/next/src/brep/form.ts";
-import { formBounds } from "../packages/next/src/brep/formBounds.ts";
+import { evaluateSurface } from "../packages/core/src/brep/evaluate.ts";
+import type { BrepForm } from "../packages/core/src/brep/form.ts";
+import { formBounds } from "../packages/core/src/brep/formBounds.ts";
 import {
   faceTrim,
   tessellateBrep,
-} from "../packages/next/src/brep/tessellate.ts";
-import { meshGeometry } from "../packages/next/src/geometry/mesh.ts";
-import type { GeometryQueries } from "../packages/next/src/geometry/query.ts";
+} from "../packages/core/src/brep/tessellate.ts";
+import { meshGeometry } from "../packages/core/src/geometry/mesh.ts";
+import type { GeometryQueries } from "../packages/core/src/geometry/query.ts";
 
 /** A seeded generator in [0, 1). */
 export function random(seed: number): () => number {

@@ -10,7 +10,7 @@ import {
   mat4,
   vec3,
   type MeshData,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 
 // CesiumJS 1.x, loaded from the repo build as a global (see tracksBench.html).

@@ -5,14 +5,14 @@ import {
   castTilesetRays,
   type RayTile,
   type RayTileset,
-} from "../packages/next/src/query/geometryBackend.ts";
-import type { QueryRay } from "../packages/next/src/query/queries.ts";
-import { MOON } from "../packages/next/src/scene/Body.ts";
+} from "../packages/core/src/query/geometryBackend.ts";
+import type { QueryRay } from "../packages/core/src/query/queries.ts";
+import { MOON } from "../packages/core/src/scene/Body.ts";
 import {
   obb,
   sphereFromObb,
   type TileVolume,
-} from "../packages/next/src/streaming/volumes.ts";
+} from "../packages/core/src/streaming/volumes.ts";
 
 const R = 1_737_400;
 const BAND = MOON.terrainBand!;

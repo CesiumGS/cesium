@@ -2,9 +2,9 @@ import {
   curvilinearForward,
   curvilinearInverse,
   type CurvilinearMap,
-} from "../camera/route.ts";
+} from "../../../core/src/camera/route.ts";
 import type { Instant } from "../time/Instant.ts";
-import type { EdgeAccuracy } from "../transform/accuracy.ts";
+import type { EdgeAccuracy } from "../../../core/src/transform/accuracy.ts";
 import {
   affine,
   curvilinear,
@@ -13,7 +13,7 @@ import {
   type Edge,
   type PlainEdge,
   type TransformNode,
-} from "../transform/graph.ts";
+} from "../../../core/src/transform/graph.ts";
 import type { FrameCatalog } from "./catalog.ts";
 import type { Frame } from "./Frame.ts";
 import { framePoint } from "./local.ts";

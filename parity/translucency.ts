@@ -12,7 +12,7 @@ import {
   type MeshData,
   type TranslucencyMethod,
   type World,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
 

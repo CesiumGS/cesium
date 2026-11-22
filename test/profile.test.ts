@@ -3,30 +3,30 @@
 // 9), and the first rules against the behavior they describe. Node only: the
 // resolver reads no GPU.
 import { describe, expect, it } from "vitest";
-import { GpuDevice } from "../packages/next/src/gpu/GpuDevice.ts";
+import { GpuDevice } from "../packages/core/src/gpu/GpuDevice.ts";
 import {
   CATALOG,
   VARIANT_BUDGET,
   variantCount,
-} from "../packages/next/src/profile/catalog.ts";
-import { evaluate, pathsRead } from "../packages/next/src/profile/predicate.ts";
+} from "../packages/core/src/profile/catalog.ts";
+import { evaluate, pathsRead } from "../packages/core/src/profile/predicate.ts";
 import {
   personas,
   webgl2Personas,
   type PersonaName,
-} from "../packages/next/src/profile/personas.ts";
+} from "../packages/core/src/profile/personas.ts";
 import {
   orderAt,
   PROFILE_DATA,
   resolve,
   explain,
   type ProfileData,
-} from "../packages/next/src/profile/resolve.ts";
-import { RULES } from "../packages/next/src/profile/rules.ts";
+} from "../packages/core/src/profile/resolve.ts";
+import { RULES } from "../packages/core/src/profile/rules.ts";
 import {
   REQUIRED_CONTENT,
   support,
-} from "../packages/next/src/profile/support.ts";
+} from "../packages/core/src/profile/support.ts";
 import type {
   Context,
   Fidelity,
@@ -34,7 +34,7 @@ import type {
   Reason,
   Rule,
   Step,
-} from "../packages/next/src/profile/types.ts";
+} from "../packages/core/src/profile/types.ts";
 import { installPersona, personas as fakePersonas } from "./fakeGpu.ts";
 
 // Every renderer's personas: WebGPU's and WebGL 2's. The invariants cover both.

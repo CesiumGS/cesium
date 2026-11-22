@@ -8,7 +8,7 @@ import {
   createPostStage,
   slangPostShader,
   type SlangPostLayout,
-} from "../packages/next/src/scene/postStage.ts";
+} from "../packages/core/src/scene/postStage.ts";
 
 const CODE = `@group(1) @binding(0) var<uniform> uniforms_0 : array<vec4<f32>, 1>;
 fn postStageBridge(uv: vec2<f32>, pixel: vec2<i32>, size: vec2<f32>, preExposure: f32, pixelAngle: f32, mip: u32) -> vec4<f32> { return vec4<f32>(0.0); }
@@ -162,7 +162,7 @@ describe("a stage's Slang shader", () => {
 
 describe("the stages the engine builds in Slang", () => {
   const dir = new URL(
-    "../packages/next/src/shaders/generated/",
+    "../packages/core/src/shaders/generated/",
     import.meta.url,
   );
   const stages = [

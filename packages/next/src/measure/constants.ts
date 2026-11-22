@@ -7,4 +7,4 @@ export {
   GM_MOON,
   GM_SUN,
   L_C,
-} from "../math/constants.ts";
+} from "../../../core/src/math/constants.ts";

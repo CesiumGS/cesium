@@ -23,14 +23,14 @@ import {
 } from "../../packages/next/src/frames/Frame.ts";
 import type { Frames } from "../../packages/next/src/frames/frames.ts";
 import { rotationPart } from "../../packages/next/src/frames/matrix.ts";
-import type { Ellipsoid } from "../../packages/next/src/math/ellipsoid.ts";
-import type { MeshData } from "../../packages/next/src/scene/meshes.ts";
-import type { World } from "../../packages/next/src/scene/World.ts";
+import type { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
+import type { MeshData } from "../../packages/core/src/scene/meshes.ts";
+import type { World } from "../../packages/core/src/scene/World.ts";
 import type {
   DrawHandle,
   MeshHandle,
   TransformHandle,
-} from "../../packages/next/src/scene/world/types.ts";
+} from "../../packages/core/src/scene/world/types.ts";
 import { Instant } from "../../packages/next/src/time/Instant.ts";
 import type { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
 

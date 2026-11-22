@@ -36,7 +36,7 @@ import {
   checkRecipe,
   countBooleans,
   recipeLeaves,
-} from "../packages/next/src/brep/kernelProtocol.ts";
+} from "../packages/core/src/brep/kernelProtocol.ts";
 
 const ids = (tree: CsgTree) => {
   const out: number[] = [];

@@ -10,8 +10,8 @@ import {
   routeForward,
   routeInverse,
   routeIsAffine,
-} from "../packages/next/src/camera/route.ts";
-import { tableResolver } from "../packages/next/src/camera/tableResolver.ts";
+} from "../packages/core/src/camera/route.ts";
+import { tableResolver } from "../packages/core/src/camera/tableResolver.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";

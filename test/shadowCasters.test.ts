@@ -9,9 +9,9 @@
 // alone (`SelectionResult.casters`, `DrawRecord.casterMask`): what they cost
 // is bounded, and nothing but the cascades sees them.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
 import {
   CASTER_MASK_WORD,
   FLAGS_WORD,
@@ -23,21 +23,21 @@ import {
   TRANSFORM_WORDS,
   VIEW_MASK_WORD,
   VIEW_TIME_WORD,
-} from "../packages/next/src/render/layout.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
-import type { TilesetOptions } from "../packages/next/src/streaming/tilesetTypes.ts";
+} from "../packages/core/src/render/layout.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
+import type { TilesetOptions } from "../packages/core/src/streaming/tilesetTypes.ts";
 import {
   casterPlanes,
   createShadowCascades,
   fitShadowCascades,
-} from "../packages/next/src/scene/shadows.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
+} from "../packages/core/src/scene/shadows.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
 import { readFileSync } from "node:fs";
-import { PLACEMENT_TERMS } from "../packages/next/src/scene/placement.ts";
+import { PLACEMENT_TERMS } from "../packages/core/src/scene/placement.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

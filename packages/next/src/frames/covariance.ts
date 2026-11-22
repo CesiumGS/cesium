@@ -1,6 +1,6 @@
 // 3×3 symmetric helpers for the accuracy composer (frames 5b, Task 4).
 // Matrices are row-major `Float64Array(9)`, in m².
-import { congruence } from "../transform/accuracy.ts";
+import { congruence } from "../../../core/src/transform/accuracy.ts";
 
 /** `R C Rᵀ`, with `r` a row-major rotation, written to `out`: the covariance's congruence, as a route's J Σ Jᵀ. */
 export function rotateCovariance(

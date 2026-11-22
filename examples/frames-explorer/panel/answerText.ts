@@ -4,7 +4,7 @@
 // it from the checked setup's. Pure, unit-tested.
 import type { ScenarioAnswer } from "../scenarios/evaluate.ts";
 import type { TerrainSightView } from "./model.ts";
-import { Ellipsoid } from "../../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 import { onGrid } from "../scenarios/placement.ts";
 import { length, quantity, radians, share } from "./format.ts";
 

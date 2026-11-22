@@ -2,12 +2,12 @@
 // heights in a SharedArrayBuffer under cross-origin isolation, transferred
 // otherwise; the job system reports which.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { upsampleTerrainTile } from "../packages/next/src/globe/quantizedMesh.ts";
-import { Jobs } from "../packages/next/src/io/Jobs.ts";
+import { upsampleTerrainTile } from "../packages/core/src/globe/quantizedMesh.ts";
+import { Jobs } from "../packages/core/src/io/Jobs.ts";
 import {
   jobMemory,
   shareArrays,
-} from "../packages/next/src/io/sharedMemory.ts";
+} from "../packages/core/src/io/sharedMemory.ts";
 import { gridTile } from "./terrainRayFixtures.ts";
 
 afterEach(() => vi.unstubAllGlobals());

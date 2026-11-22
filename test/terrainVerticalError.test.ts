@@ -5,8 +5,8 @@ import {
   sinThetaMax,
   terrainDrawnError,
   type DrawnTile,
-} from "../packages/next/src/streaming/tileCurvilinearMap.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/streaming/tileCurvilinearMap.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 import { at } from "./terrainRayFixtures.ts";
 
 const LON = 0.3;

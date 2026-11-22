@@ -26,23 +26,23 @@ import {
   engineeringPlacement,
   placeHosted,
 } from "../packages/next/src/engineering/placement.ts";
-import { cartographic } from "../packages/next/src/math/ellipsoid.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import type { CorePick } from "../packages/next/src/scene/pick.ts";
+import { cartographic } from "../packages/core/src/math/ellipsoid.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import type { CorePick } from "../packages/core/src/scene/pick.ts";
 import {
   Camera,
   centeredIntrinsics,
-} from "../packages/next/src/scene/Camera.ts";
-import { View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+} from "../packages/core/src/scene/Camera.ts";
+import { View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
-import type { PlacementMode } from "../packages/next/src/georeference/georeference.ts";
+} from "../packages/core/src/scene/world/types.ts";
+import type { PlacementMode } from "../packages/core/src/georeference/georeference.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const RADIANS = Math.PI / 180;

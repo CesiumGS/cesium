@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { BrepBuilder } from "../packages/next/src/brep/build.ts";
+import { BrepBuilder } from "../packages/core/src/brep/build.ts";
 import {
   evaluateCurve2,
   evaluateSurface,
   faceNormal,
-} from "../packages/next/src/brep/evaluate.ts";
+} from "../packages/core/src/brep/evaluate.ts";
 import {
   edgeCount,
   faceCount,
   SurfaceKind,
   vertexCount,
   type BrepForm,
-} from "../packages/next/src/brep/form.ts";
-import { validateBrep } from "../packages/next/src/brep/validate.ts";
+} from "../packages/core/src/brep/form.ts";
+import { validateBrep } from "../packages/core/src/brep/validate.ts";
 import { sphereBrep } from "../examples/brep-first-look/fixtures.ts";
 import {
   boxBrep,

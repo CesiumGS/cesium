@@ -1,14 +1,14 @@
-import { parseGltf } from "../../packages/next/src/io/gltfParse.ts";
-import type { TextureFormatSupport } from "../../packages/next/src/io/decoders.ts";
+import { parseGltf } from "../../packages/core/src/io/gltfParse.ts";
+import type { TextureFormatSupport } from "../../packages/core/src/io/decoders.ts";
 import {
   decodeQuantizedMesh,
   flatTerrainTile,
   type Rectangle,
-} from "../../packages/next/src/globe/quantizedMesh.ts";
+} from "../../packages/core/src/globe/quantizedMesh.ts";
 import {
   extractStars,
   type StarMapFace,
-} from "../../packages/next/src/atmosphere/stars.ts";
+} from "../../packages/core/src/atmosphere/stars.ts";
 import { demTile, overlaps, type Dem } from "./terrain.ts";
 
 /**

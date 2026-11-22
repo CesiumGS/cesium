@@ -19,8 +19,8 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { cesiumModule, slangStages } from "../packages/next/src/scene/slangStages.ts";
-import { SLANG_STUB_ENTRY, slangBridge } from "../packages/next/src/scene/contract.ts";
+import { cesiumModule, slangStages } from "../packages/core/src/scene/slangStages.ts";
+import { SLANG_STUB_ENTRY, slangBridge } from "../packages/core/src/scene/contract.ts";
 import { slangcPath } from "./slangTools.mjs";
 
 // SLANGC, else the pinned one `npm run setup` fetched (scripts/slangTools.mjs).

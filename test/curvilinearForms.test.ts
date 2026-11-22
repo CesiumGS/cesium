@@ -5,11 +5,11 @@ import { describe, expect, it } from "vitest";
 import {
   verticalExaggeration,
   heightOffset,
-} from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
+} from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import {
   Ellipsoid,
   cartographic,
-} from "../packages/next/src/math/ellipsoid.ts";
+} from "../packages/core/src/math/ellipsoid.ts";
 import {
   WGS84_RADII,
   ellipsoidFoot,
@@ -19,13 +19,13 @@ import {
   formWords,
   utmForm,
   type GpuCurvilinearForm,
-} from "../packages/next/src/scene/curvilinearForms.ts";
+} from "../packages/core/src/scene/curvilinearForms.ts";
 import {
   evaluateLattice,
   fitLatticeAt,
   fitSolveOperator,
-} from "../packages/next/src/scene/curvilinearFit.ts";
-import { PLACEMENT_MONOMIALS } from "../packages/next/src/scene/placement.ts";
+} from "../packages/core/src/scene/curvilinearFit.ts";
+import { PLACEMENT_MONOMIALS } from "../packages/core/src/scene/placement.ts";
 
 const WGS84 = Ellipsoid.WGS84;
 

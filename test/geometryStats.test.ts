@@ -5,8 +5,8 @@ import {
   geometryTotals,
   kindOf,
   worldGeometry,
-} from "../packages/next/src/render/view/geometryStats.ts";
-import type { Batch } from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/render/view/geometryStats.ts";
+import type { Batch } from "../packages/core/src/scene/world/types.ts";
 
 const batch = (over: Record<string, unknown>, mesh: Record<string, unknown>) =>
   ({

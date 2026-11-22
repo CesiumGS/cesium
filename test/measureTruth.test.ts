@@ -11,7 +11,7 @@ import {
   routeForward,
   type Route,
   type CurvilinearMap,
-} from "../packages/next/src/camera/route.ts";
+} from "../packages/core/src/camera/route.ts";
 import {
   ClientSnapService,
   refiningSnap,
@@ -22,12 +22,12 @@ import type { PickView } from "../packages/next/src/engineering/pick.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { createFrames } from "../packages/next/src/frames/frames.ts";
 import { framePoint } from "../packages/next/src/frames/local.ts";
-import { verticalExaggeration } from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
+import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import { createFramesPickInterpreter } from "../packages/next/src/frames/pickInterpreter.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
-import { fromFunction } from "../packages/next/src/transforms/fromFunction.ts";
-import { Ellipsoid, fromDegrees } from "../packages/next/src/math/ellipsoid.ts";
+import { fromFunction } from "../packages/core/src/transforms/fromFunction.ts";
+import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
 import { accuracyOf } from "../packages/next/src/measure/accuracy.ts";
 import {
   DrawnCurve,
@@ -41,17 +41,17 @@ import {
 import { routeStretch } from "../packages/next/src/frames/routeStretch.ts";
 import { measure } from "../packages/next/src/measure/measure.ts";
 import { truePick } from "../packages/next/src/frames/pickTruth.ts";
-import { routeSingularRange } from "../packages/next/src/scene/curvilinearBounds.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
+import { routeSingularRange } from "../packages/core/src/scene/curvilinearBounds.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
 import {
   Camera,
   centeredIntrinsics,
   projectToPixel,
-} from "../packages/next/src/scene/Camera.ts";
-import type { CorePick } from "../packages/next/src/scene/pick.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
-import type { TileGeometry } from "../packages/next/src/streaming/Tile.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
+} from "../packages/core/src/scene/Camera.ts";
+import type { CorePick } from "../packages/core/src/scene/pick.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
+import type { TileGeometry } from "../packages/core/src/streaming/Tile.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

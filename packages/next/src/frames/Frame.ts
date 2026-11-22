@@ -4,7 +4,7 @@ import {
   multiply,
   copy,
   type Mat4,
-} from "../math/mat4.ts";
+} from "../../../core/src/math/mat4.ts";
 import type { Instant } from "../time/Instant.ts";
 import {
   NOT_STATED,

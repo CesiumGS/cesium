@@ -14,7 +14,7 @@ import {
   vec3,
   type MeshData,
   type World,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import { flip } from "./flip.ts";
 import twistHeightSlang from "./slang/twistHeight.slang?raw";

@@ -9,14 +9,14 @@ import type {
   CoordinateOperation,
   ResolvedCoordinates,
 } from "../frames/coordinates.ts";
-import type { CurvilinearScale } from "../camera/route.ts";
-import { cartographic } from "../math/ellipsoid.ts";
-import { EARTH, type Body } from "../scene/Body.ts";
+import type { CurvilinearScale } from "../../../core/src/camera/route.ts";
+import { cartographic } from "../../../core/src/math/ellipsoid.ts";
+import { EARTH, type Body } from "../../../core/src/scene/Body.ts";
 import { EngineeringFrame } from "../engineering/EngineeringFrame.ts";
 import {
   fromFunction,
   type FunctionCurvilinearMap,
-} from "../transforms/fromFunction.ts";
+} from "../../../core/src/transforms/fromFunction.ts";
 
 /** What `reprojectionCurvilinearMap` takes besides the operation. */
 export interface ReprojectionCurvilinearMapOptions {

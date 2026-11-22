@@ -1,4 +1,4 @@
-import { Ellipsoid } from "../math/ellipsoid.ts";
+import { Ellipsoid } from "../../../core/src/math/ellipsoid.ts";
 import { julianDate } from "./sun.ts";
 
 const deg = Math.PI / 180;

@@ -17,10 +17,10 @@ import {
   rectanglesOverlap,
   type ClipEntry,
   type TerrainRegionShape,
-} from "../packages/next/src/globe/terrainClip.ts";
-import { castTerrainRay } from "../packages/next/src/globe/terrainRay.ts";
-import { TerrainSource } from "../packages/next/src/globe/TerrainSource.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+} from "../packages/core/src/globe/terrainClip.ts";
+import { castTerrainRay } from "../packages/core/src/globe/terrainRay.ts";
+import { TerrainSource } from "../packages/core/src/globe/TerrainSource.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import {
   CLIP_BLOCK_BITS,
   CLIP_BLOCK_ROWS,
@@ -28,9 +28,9 @@ import {
   MAX_TERRAIN_CLIPS,
   TERRAIN_CLIP_WORD,
   RECORD_WORDS,
-} from "../packages/next/src/render/layout.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
+} from "../packages/core/src/render/layout.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
 import { A, at, gridTile, stripTarget } from "./terrainRayFixtures.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { shaderInside } from "./terrainClipShader.ts";
@@ -580,12 +580,12 @@ describe("a corridor's strip", () => {
 
 describe("the shader's constants and loops", () => {
   const slang = readFileSync(
-    new URL("../packages/next/src/shaders/surface.slang", import.meta.url),
+    new URL("../packages/core/src/shaders/surface.slang", import.meta.url),
     "utf8",
   );
   const wgsl = readFileSync(
     new URL(
-      "../packages/next/src/shaders/generated/surface.wgsl",
+      "../packages/core/src/shaders/generated/surface.wgsl",
       import.meta.url,
     ),
     "utf8",

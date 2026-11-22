@@ -4,22 +4,22 @@
 // facts and support report are the view's. Node only: a fake WebGL 2 stands
 // in for the browser's (test/fakeGl.ts), and there is no `navigator.gpu`.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as v3 from "../packages/next/src/math/vec3.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
 import {
   forgetFallbackWarnings,
   forgetProbes,
-} from "../packages/next/src/scene/deviceChoice.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+} from "../packages/core/src/scene/deviceChoice.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import { engineSnapshot } from "../packages/next/widgets/engine.ts";
 import { gpuHtml } from "../packages/next/widgets/inspector.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import { GlobeImagery } from "../packages/next/src/globe/GlobeImagery.ts";
-import { isCapacityError } from "../packages/next/src/scene/CapacityError.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import { GlobeImagery } from "../packages/core/src/globe/GlobeImagery.ts";
+import { isCapacityError } from "../packages/core/src/scene/CapacityError.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
 import {
   CanvasTarget,
   OffscreenTarget,
-} from "../packages/next/src/scene/renderTarget.ts";
+} from "../packages/core/src/scene/renderTarget.ts";
 import {
   FakeOffscreenCanvas,
   fakeGlFor,
@@ -29,7 +29,7 @@ import {
 } from "./fakeGl.ts";
 
 const { Engine: EngineClass } =
-  await import("../packages/next/src/scene/Engine.ts");
+  await import("../packages/core/src/scene/Engine.ts");
 
 const engines: Engine[] = [];
 async function create(

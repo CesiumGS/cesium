@@ -2,7 +2,7 @@
 // clamped to what the sliders allow, the defaults leave the link empty, and
 // the settings land on the viewer's view and sun.
 import { describe, expect, it, vi } from "vitest";
-import { DAYLIGHT_SUN_ILLUMINANCE } from "../packages/next/src/render/layout.ts";
+import { DAYLIGHT_SUN_ILLUMINANCE } from "../packages/core/src/render/layout.ts";
 import {
   DEFAULT_LIGHTING,
   LIGHTING_RANGES,

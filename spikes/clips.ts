@@ -22,7 +22,7 @@
 //   7. a view without clips draws everything, and clearing the mask restores it.
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
-import { routeInverse } from "../packages/next/src/camera/route.ts";
+import { routeInverse } from "../packages/core/src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
@@ -40,11 +40,11 @@ import {
   type MeshData,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/world/types.ts";
 import { cappedCylinderBrep } from "../test/brepFixtures.ts";
 
 const TEMPLATE = `

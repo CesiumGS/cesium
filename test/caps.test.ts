@@ -2,20 +2,20 @@
 // planes of a clip set, b-rep caps drawn through `addBrep` under a bias, mesh
 // caps cut per tile and cached, and the scheduler's throttle and budget.
 import { beforeAll, describe, expect, it } from "vitest";
-import { validateBrep } from "../packages/next/src/brep/validate.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+import { validateBrep } from "../packages/core/src/brep/validate.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import {
   BrepCaps,
   CapScheduler,
   MeshCaps,
   biasedCapPlanes,
   invertSimilarity,
-} from "../packages/next/src/scene/world/caps.ts";
+} from "../packages/core/src/scene/world/caps.ts";
 import {
   capPlanes,
   type ClipSet,
-} from "../packages/next/src/scene/world/clips.ts";
-import type { MeshCapTile } from "../packages/next/src/scene/world/meshCaps.ts";
+} from "../packages/core/src/scene/world/clips.ts";
+import type { MeshCapTile } from "../packages/core/src/scene/world/meshCaps.ts";
 import { boxBrep } from "./brepFixtures.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 

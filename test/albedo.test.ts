@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { meanAlbedo } from "../packages/next/src/atmosphere/albedo.ts";
+import { meanAlbedo } from "../packages/core/src/atmosphere/albedo.ts";
 
 /** sRGB to linear, as the sky reads its maps. */
 function linear(c: number): number {

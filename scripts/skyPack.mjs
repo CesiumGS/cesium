@@ -27,8 +27,8 @@ import {
   SKY_PACK_FORMAT,
   parseManifest,
   skyPackFormatProblem,
-} from "../packages/next/src/atmosphere/skyPack.ts";
-import { STAR_FLOATS } from "../packages/next/src/atmosphere/stars.ts";
+} from "../packages/core/src/atmosphere/skyPack.ts";
+import { STAR_FLOATS } from "../packages/core/src/atmosphere/stars.ts";
 import {
   buildBackground,
   backgroundScale,

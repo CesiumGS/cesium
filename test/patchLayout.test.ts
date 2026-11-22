@@ -10,23 +10,23 @@ import {
   SPAN_REVERSED,
   SPAN_WORDS,
   TRIM_PENDING,
-} from "../packages/next/src/brep/gpuPatches.ts";
+} from "../packages/core/src/brep/gpuPatches.ts";
 import {
   TRIM_BAND_WORDS,
   TRIM_HEADER_WORDS,
   TRIM_SEGMENT_WORDS,
-} from "../packages/next/src/brep/gpuTrims.ts";
+} from "../packages/core/src/brep/gpuTrims.ts";
 import {
   PATCH_CHUNK_CELLS,
   PATCH_ISO_SHIFT,
   RecordFlags,
-} from "../packages/next/src/render/layout.ts";
-import { patchChunkIndices } from "../packages/next/src/render/drawArguments.ts";
+} from "../packages/core/src/render/layout.ts";
+import { patchChunkIndices } from "../packages/core/src/render/drawArguments.ts";
 import {
   CHUNK_BYTES,
   PATCH_DICE_BYTES,
-} from "../packages/next/src/scene/world/patches.ts";
-import { SURFACE_VERTEX_BOUNDARY } from "../packages/next/src/shaders/link/index.ts";
+} from "../packages/core/src/scene/world/patches.ts";
+import { SURFACE_VERTEX_BOUNDARY } from "../packages/core/src/shaders/link/index.ts";
 
 const source = (path: string) =>
   readFileSync(new URL(`../packages/next/${path}`, import.meta.url), "utf8");

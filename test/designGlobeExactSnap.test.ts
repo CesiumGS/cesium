@@ -8,17 +8,17 @@
 // x = R (E along +y, N along +z, height along +x), with the camera 100 m
 // above looking down −x. The alignment is the corridor's own.
 import { describe, expect, it } from "vitest";
-import * as m4 from "../packages/next/src/math/mat4.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
 import type { PickView } from "../packages/next/src/engineering/pick.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
 import {
   Camera,
   centeredIntrinsics,
   projectToPixel,
-} from "../packages/next/src/scene/Camera.ts";
+} from "../packages/core/src/scene/Camera.ts";
 import { positionHit } from "./positionHit.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
-import type { TileGeometry } from "../packages/next/src/streaming/Tile.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
+import type { TileGeometry } from "../packages/core/src/streaming/Tile.ts";
 import {
   CORRIDOR_ALIGNMENT,
   CROSS_SECTION,
@@ -39,7 +39,7 @@ import {
   type SnapCamera,
   type SnapResult,
 } from "../packages/next/src/engineering/snap.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 
 const R = 6_378_137;
 const MPU = 1200 / 3937;

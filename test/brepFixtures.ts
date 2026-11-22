@@ -1,12 +1,12 @@
 // Fixtures for the b-rep tests: a box, a capped cylinder and a trimmed NURBS
 // face (Spike B's surface). Lengths are meters.
-import { BrepBuilder } from "../packages/next/src/brep/build.ts";
-import { SurfaceKind, type BrepForm } from "../packages/next/src/brep/form.ts";
+import { BrepBuilder } from "../packages/core/src/brep/build.ts";
+import { SurfaceKind, type BrepForm } from "../packages/core/src/brep/form.ts";
 import {
   evaluateNurbsSurface,
   type NurbsCurve,
   type NurbsSurface,
-} from "../packages/next/src/brep/nurbs.ts";
+} from "../packages/core/src/brep/nurbs.ts";
 
 /**
  * Spike B's surface: a 6 × 6 net over x, y in [0, 100] m, a saddle of

@@ -4,7 +4,7 @@ import Cartesian3 from "cesium-oracle/Cartesian3.js";
 import Ellipsoid from "cesium-oracle/Ellipsoid.js";
 import OrientedBoundingBox from "cesium-oracle/OrientedBoundingBox.js";
 import Rectangle from "cesium-oracle/Rectangle.js";
-import { Ellipsoid as NextEllipsoid } from "../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid as NextEllipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import {
   aboveHorizon,
   obbFromRectangle,
@@ -13,7 +13,7 @@ import {
   volumeFromJson,
   volumeOccludee,
   type TileVolume,
-} from "../packages/next/src/streaming/volumes.ts";
+} from "../packages/core/src/streaming/volumes.ts";
 
 const MOON_RADIUS = 1_737_400;
 const tileOf = (volume: TileVolume) => ({ volume });

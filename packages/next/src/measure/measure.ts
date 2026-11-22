@@ -6,13 +6,13 @@ import {
   type DesignPoint,
   type EngineeringFrame,
 } from "../engineering/EngineeringFrame.ts";
-import { runBulk, type BulkOptions } from "../core/bulk.ts";
+import { runBulk, type BulkOptions } from "../../../core/src/core/bulk.ts";
 import { gridFactors } from "../engineering/factors.ts";
 import type { CoordinateOperation } from "../frames/coordinates.ts";
-import { cartographic } from "../math/ellipsoid.ts";
-import { mat4 } from "../math/mat4.ts";
-import { vec3 } from "../math/vec3.ts";
-import type { Body } from "../scene/Body.ts";
+import { cartographic } from "../../../core/src/math/ellipsoid.ts";
+import { mat4 } from "../../../core/src/math/mat4.ts";
+import { vec3 } from "../../../core/src/math/vec3.ts";
+import type { Body } from "../../../core/src/scene/Body.ts";
 import { Instant } from "../time/Instant.ts";
 import type { StationOffset } from "../engineering/alignment.ts";
 import {

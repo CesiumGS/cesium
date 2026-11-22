@@ -12,11 +12,11 @@
 // A second view on that canvas (the explorer's gap inset) rounded to x = 1,
 // width 0: a texture of no size, every frame rejected by the GPU.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import { EYE } from "../packages/next/src/scene/observer.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import { EYE } from "../packages/core/src/scene/observer.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

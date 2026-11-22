@@ -7,8 +7,8 @@ import {
   resolveITwinIModel,
   type TilesetOptions,
   type View,
-} from "../packages/next/src/index.ts";
-import type { TileSelection } from "../packages/next/src/streaming/Stepwise.ts";
+} from "../packages/core/src/index.ts";
+import type { TileSelection } from "../packages/core/src/streaming/Stepwise.ts";
 import type { Harness } from "../lab/harness.ts";
 import { createGpuFlip, type GpuFlip } from "./flipGpu.ts";
 import { DEFAULT_ION_TOKEN, requireToken } from "../bench/suite/ionToken.ts";

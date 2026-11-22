@@ -11,7 +11,7 @@ import {
   type DrawHandle,
   type MeshData,
   type TranslucencyMethod,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 
 /**

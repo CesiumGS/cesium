@@ -4,19 +4,19 @@ import { describe, expect, it } from "vitest";
 import {
   Ellipsoid,
   cartographic,
-} from "../packages/next/src/math/ellipsoid.ts";
+} from "../packages/core/src/math/ellipsoid.ts";
 import {
   WGS84_RADII,
   formForward,
   type GpuCurvilinearForm,
-} from "../packages/next/src/scene/curvilinearForms.ts";
+} from "../packages/core/src/scene/curvilinearForms.ts";
 import {
   DIRECT_DRAW_ROWS,
   bakeHeightField,
   directDisplacement,
   liftBoundOver,
   scaleAboutBoundOver,
-} from "../packages/next/src/scene/curvilinearDirect.ts";
+} from "../packages/core/src/scene/curvilinearDirect.ts";
 
 function ecef(lonDeg: number, latDeg: number, h: number): Float64Array {
   return Ellipsoid.WGS84.cartographicToCartesian(

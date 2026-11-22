@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { GpuTimer } from "../packages/next/src/gpu/GpuTimer.ts";
+import { GpuTimer } from "../packages/core/src/gpu/GpuTimer.ts";
 import annotations from "../bench/suite/annotations.json";
 import { detectAlerts } from "../bench/suite/changepoints.mjs";
 import {

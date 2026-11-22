@@ -2,7 +2,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { splitHigh, splitVec3 } from "../packages/next/src/math/transforms.ts";
+import { splitHigh, splitVec3 } from "../packages/core/src/math/transforms.ts";
 
 /**
  * Float64 positions reach the GPU as float32 pairs (hi, lo). Two rules keep

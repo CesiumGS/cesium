@@ -7,7 +7,7 @@ import {
   fromDegrees,
   vec3,
   type VectorStyleDocument,
-} from "../../packages/next/src/index.ts";
+} from "../../packages/core/src/index.ts";
 import type { ExampleContext } from "../types.ts";
 
 /**

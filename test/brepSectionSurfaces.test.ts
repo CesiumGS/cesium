@@ -2,8 +2,8 @@
 // is marched and fitted (src/brep/section.ts), against the area of a numeric
 // count over the plane.
 import { describe, expect, it } from "vitest";
-import { sectionBrep } from "../packages/next/src/brep/section.ts";
-import { validateBrep } from "../packages/next/src/brep/validate.ts";
+import { sectionBrep } from "../packages/core/src/brep/section.ts";
+import { validateBrep } from "../packages/core/src/brep/validate.ts";
 import {
   coneFrustumBrep,
   nurbsCappedCylinderBrep,

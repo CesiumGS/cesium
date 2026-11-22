@@ -3,7 +3,7 @@
 // malformed or truncated extension drops the b-rep and keeps the mesh.
 import { describe, expect, it, vi } from "vitest";
 
-vi.mock("../packages/next/src/io/decoders.ts", () => ({
+vi.mock("../packages/core/src/io/decoders.ts", () => ({
   decodeDraco: async () => {
     throw new Error("no Draco");
   },
@@ -12,15 +12,15 @@ vi.mock("../packages/next/src/io/decoders.ts", () => ({
   },
 }));
 
-import type { BrepForm } from "../packages/next/src/brep/form.ts";
+import type { BrepForm } from "../packages/core/src/brep/form.ts";
 import {
   readBrepExtension,
   writeBrepExtension,
-} from "../packages/next/src/brep/gltf.ts";
-import { validateBrep } from "../packages/next/src/brep/validate.ts";
-import { parseGltf } from "../packages/next/src/io/gltfParse.ts";
-import { mergeAssets } from "../packages/next/src/io/composite.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
+} from "../packages/core/src/brep/gltf.ts";
+import { validateBrep } from "../packages/core/src/brep/validate.ts";
+import { parseGltf } from "../packages/core/src/io/gltfParse.ts";
+import { mergeAssets } from "../packages/core/src/io/composite.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
 import {
   boxBrep,
   cappedCylinderBrep,

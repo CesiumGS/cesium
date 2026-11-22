@@ -5,7 +5,7 @@ import {
   InstanceLayout,
   TransformLayout,
   ViewLayout,
-} from "../packages/next/src/render/generated/layouts.ts";
+} from "../packages/core/src/render/generated/layouts.ts";
 import commonReference from "./slang/reference/common.wgsl?raw";
 import cullReference from "./slang/reference/cull.wgsl?raw";
 import depthRangeReference from "./slang/reference/depthRange.wgsl?raw";
@@ -25,30 +25,30 @@ import iblReference from "./slang/reference/ibl.wgsl?raw";
 import iblMonteCarloReference from "./slang/reference/iblReference.wgsl?raw";
 import pointsReference from "./slang/reference/points.wgsl?raw";
 import modelPoolReference from "./slang/reference/modelPool.wgsl?raw";
-import cullSlang from "../packages/next/src/shaders/generated/cull.wgsl?raw";
-import depthRangeSlang from "../packages/next/src/shaders/generated/depthRange.wgsl?raw";
-import lightsSlang from "../packages/next/src/shaders/generated/lights.wgsl?raw";
-import raycastSlang from "../packages/next/src/shaders/generated/raycast.wgsl?raw";
-import overlaySlang from "../packages/next/src/shaders/generated/overlay.wgsl?raw";
-import splatSlang from "../packages/next/src/shaders/generated/splat.wgsl?raw";
-import imagerySlang from "../packages/next/src/shaders/generated/imagery.wgsl?raw";
-import adaptSlang from "../packages/next/src/shaders/generated/adapt.wgsl?raw";
-import meterSlang from "../packages/next/src/shaders/generated/meter.wgsl?raw";
-import aoSlang from "../packages/next/src/shaders/generated/ao.wgsl?raw";
-import presentSlang from "../packages/next/src/shaders/generated/present.wgsl?raw";
-import fxaaSlang from "../packages/next/src/shaders/generated/fxaa.wgsl?raw";
-import compositeSlang from "../packages/next/src/shaders/generated/composite.wgsl?raw";
-import scatterSlang from "../packages/next/src/shaders/generated/scatter.wgsl?raw";
-import iblSlang from "../packages/next/src/shaders/generated/ibl.wgsl?raw";
-import iblMonteCarloSlang from "../packages/next/src/shaders/generated/iblReference.wgsl?raw";
-import pointsSlang from "../packages/next/src/shaders/generated/points.wgsl?raw";
-import modelPoolSlang from "../packages/next/src/shaders/generated/modelPool.wgsl?raw";
+import cullSlang from "../packages/core/src/shaders/generated/cull.wgsl?raw";
+import depthRangeSlang from "../packages/core/src/shaders/generated/depthRange.wgsl?raw";
+import lightsSlang from "../packages/core/src/shaders/generated/lights.wgsl?raw";
+import raycastSlang from "../packages/core/src/shaders/generated/raycast.wgsl?raw";
+import overlaySlang from "../packages/core/src/shaders/generated/overlay.wgsl?raw";
+import splatSlang from "../packages/core/src/shaders/generated/splat.wgsl?raw";
+import imagerySlang from "../packages/core/src/shaders/generated/imagery.wgsl?raw";
+import adaptSlang from "../packages/core/src/shaders/generated/adapt.wgsl?raw";
+import meterSlang from "../packages/core/src/shaders/generated/meter.wgsl?raw";
+import aoSlang from "../packages/core/src/shaders/generated/ao.wgsl?raw";
+import presentSlang from "../packages/core/src/shaders/generated/present.wgsl?raw";
+import fxaaSlang from "../packages/core/src/shaders/generated/fxaa.wgsl?raw";
+import compositeSlang from "../packages/core/src/shaders/generated/composite.wgsl?raw";
+import scatterSlang from "../packages/core/src/shaders/generated/scatter.wgsl?raw";
+import iblSlang from "../packages/core/src/shaders/generated/ibl.wgsl?raw";
+import iblMonteCarloSlang from "../packages/core/src/shaders/generated/iblReference.wgsl?raw";
+import pointsSlang from "../packages/core/src/shaders/generated/points.wgsl?raw";
+import modelPoolSlang from "../packages/core/src/shaders/generated/modelPool.wgsl?raw";
 import atmosphereReference from "./slang/reference/atmosphere.wgsl?raw";
 import skyReference from "./slang/reference/sky.wgsl?raw";
 import pathReference from "./slang/reference/atmosphereReference.wgsl?raw";
-import atmosphereSlang from "../packages/next/src/shaders/generated/atmosphere.wgsl?raw";
-import skySlang from "../packages/next/src/shaders/generated/sky.wgsl?raw";
-import pathSlang from "../packages/next/src/shaders/generated/reference.wgsl?raw";
+import atmosphereSlang from "../packages/core/src/shaders/generated/atmosphere.wgsl?raw";
+import skySlang from "../packages/core/src/shaders/generated/sky.wgsl?raw";
+import pathSlang from "../packages/core/src/shaders/generated/reference.wgsl?raw";
 /**
  * The Slang-first migration's performance gate (
  * docs/design/shaders.md, step 4): each ported kernel against the hand-written WGSL it

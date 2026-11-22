@@ -1,4 +1,4 @@
-import { Ellipsoid } from "../../../packages/next/src/index.ts";
+import { Ellipsoid } from "../../../packages/core/src/index.ts";
 import type {
   CreditSource,
   Inspectable,

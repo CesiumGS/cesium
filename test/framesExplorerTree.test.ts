@@ -12,7 +12,7 @@ import {
 } from "../examples/frames-explorer/tree.ts";
 import { Frame } from "../packages/next/src/frames/Frame.ts";
 import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
 import type {

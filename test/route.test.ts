@@ -9,7 +9,7 @@ import {
   withoutScales,
   type Route,
   type CurvilinearMap,
-} from "../packages/next/src/camera/route.ts";
+} from "../packages/core/src/camera/route.ts";
 
 const content = { name: "content" };
 const drawn = { name: "ITRF" };

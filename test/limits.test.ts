@@ -6,7 +6,7 @@ import {
   layoutViolations,
   requiredLimitsFor,
   wgslBindings,
-} from "../packages/next/src/gpu/limits.ts";
+} from "../packages/core/src/gpu/limits.ts";
 import {
   fakeDevice,
   installFakeNavigator,
@@ -98,11 +98,11 @@ describe("layout budget", () => {
     // Large limits so setup runs through; the budget is checked below.
     installFakeNavigator(fakeDevice({}));
     layoutObservers.add((label, groups) => layouts.push({ label, groups }));
-    const { Engine } = await import("../packages/next/src/scene/Engine.ts");
+    const { Engine } = await import("../packages/core/src/scene/Engine.ts");
     const { POINT_STYLE_DEFAULTS } =
-      await import("../packages/next/src/scene/RenderContext.ts");
+      await import("../packages/core/src/scene/RenderContext.ts");
     const { PointSource } =
-      await import("../packages/next/src/vector/PointSource.ts");
+      await import("../packages/core/src/vector/PointSource.ts");
     const engine = await Engine.create({ limits: "adapter" });
     const world = engine.createWorld();
     // Created on demand: a vector style's point cull, a point source.
@@ -116,7 +116,7 @@ describe("layout budget", () => {
     // reading metadata per fragment (the property textures) and one with
     // texture uniforms, each with its translucent layout.
     const { CustomShader } =
-      await import("../packages/next/src/scene/CustomShader.ts");
+      await import("../packages/core/src/scene/CustomShader.ts");
     const fs =
       "fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {";
     const shaders = [

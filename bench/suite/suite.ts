@@ -14,11 +14,11 @@ import {
   UNITLESS_EXPOSURE,
   UNITLESS_SKY,
   UNITLESS_SUN_ILLUMINANCE,
-} from "../../packages/next/src/index.ts";
-import { volumeFromJson } from "../../packages/next/src/streaming/volumes.ts";
-import { GpuTimer } from "../../packages/next/src/gpu/GpuTimer.ts";
-import { UPLOAD_PACING_VERSION } from "../../packages/next/src/scene/uploadPacing.ts";
-import { OCCLUSION_FEEDBACK_VERSION } from "../../packages/next/src/streaming/occlusion.ts";
+} from "../../packages/core/src/index.ts";
+import { volumeFromJson } from "../../packages/core/src/streaming/volumes.ts";
+import { GpuTimer } from "../../packages/core/src/gpu/GpuTimer.ts";
+import { UPLOAD_PACING_VERSION } from "../../packages/core/src/scene/uploadPacing.ts";
+import { OCCLUSION_FEEDBACK_VERSION } from "../../packages/core/src/streaming/occlusion.ts";
 import {
   type CreditSource,
   engineSnapshot,

@@ -11,17 +11,17 @@ import { installGpuGlobals } from "./fakeGpu.ts";
 import {
   LATTICE_HEAD_ROWS,
   PlacementTable,
-} from "../packages/next/src/scene/placementTable.ts";
+} from "../packages/core/src/scene/placementTable.ts";
 import {
   PLACEMENT_MONOMIALS,
   PLACEMENT_TERMS,
-} from "../packages/next/src/scene/placement.ts";
-import { latticeDisplacement } from "../packages/next/src/scene/curvilinearEvaluate.ts";
+} from "../packages/core/src/scene/placement.ts";
+import { latticeDisplacement } from "../packages/core/src/scene/curvilinearEvaluate.ts";
 import {
   constantWeight,
   type CubicLattice,
   type CurvilinearTerms,
-} from "../packages/next/src/scene/curvilinearTerms.ts";
+} from "../packages/core/src/scene/curvilinearTerms.ts";
 
 installGpuGlobals();
 

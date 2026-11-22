@@ -16,8 +16,8 @@ import {
   obbIntersectPlane,
   regionDistance,
   regionFromJson,
-} from "../packages/next/src/streaming/volumes.ts";
-import { Ellipsoid as NextEllipsoid } from "../packages/next/src/math/ellipsoid.ts";
+} from "../packages/core/src/streaming/volumes.ts";
+import { Ellipsoid as NextEllipsoid } from "../packages/core/src/math/ellipsoid.ts";
 
 let seed = 12345;
 const random = () => (seed = (seed * 16807) % 2147483647) / 2147483647;

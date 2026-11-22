@@ -8,7 +8,7 @@ import {
   resolveIonAsset,
   type Tileset3D,
   type View,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import { requireToken } from "../bench/suite/ionToken.ts";
 

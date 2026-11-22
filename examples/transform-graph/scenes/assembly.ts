@@ -6,8 +6,8 @@ import {
   type BrepForm,
 } from "@cesium/next";
 import { Frame, eastNorthUpFrame } from "@cesium/next/frames";
-import { KernelClient } from "../../../packages/next/src/brep/kernelClient.ts";
-import type { FormBounds } from "../../../packages/next/src/brep/formBounds.ts";
+import { KernelClient } from "../../../packages/core/src/brep/kernelClient.ts";
+import type { FormBounds } from "../../../packages/core/src/brep/formBounds.ts";
 import { anchorIn, geodeticOf, stage } from "../content.ts";
 import { hex, type Rgba } from "../geometry.ts";
 import { createMarker } from "../markers.ts";

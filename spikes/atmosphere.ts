@@ -8,13 +8,13 @@
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
 import { meanLuminance, picture, type HdrPixels } from "../lab/hdr.ts";
-import { GpuDevice } from "../packages/next/src/gpu/GpuDevice.ts";
-import { AtmosphereReference } from "../packages/next/src/atmosphere/AtmosphereReference.ts";
+import { GpuDevice } from "../packages/core/src/gpu/GpuDevice.ts";
+import { AtmosphereReference } from "../packages/core/src/atmosphere/AtmosphereReference.ts";
 import {
   EARTH,
   directSunIlluminance,
   singleScattering,
-} from "../packages/next/src/atmosphere/model.ts";
+} from "../packages/core/src/atmosphere/model.ts";
 
 type V3 = [number, number, number];
 

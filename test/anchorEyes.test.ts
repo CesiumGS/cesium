@@ -1,15 +1,15 @@
-import type { CastOptions } from "../packages/next/src/scene/world/types.ts";
-import { rayJobs } from "../packages/next/src/scene/world/rays.ts";
+import type { CastOptions } from "../packages/core/src/scene/world/types.ts";
+import { rayJobs } from "../packages/core/src/scene/world/rays.ts";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import { splitVec3 } from "../packages/next/src/math/transforms.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import { splitVec3 } from "../packages/core/src/math/transforms.ts";
 import {
   ANCHOR_EYE_WORDS,
   MAX_ANCHORS,
@@ -19,13 +19,13 @@ import {
   TRANSFORM_WORD,
   TRANSFORM_WORDS,
   VIEW_ANCHORS_WORD,
-} from "../packages/next/src/render/layout.ts";
+} from "../packages/core/src/render/layout.ts";
 import {
   ViewLayout,
   TransformLayout,
-} from "../packages/next/src/render/generated/layouts.ts";
-import { ANCHOR_EYE_REACH } from "../packages/next/src/scene/anchorEyes.ts";
-import { LIGHT_HEADER_FLOATS } from "../packages/next/src/scene/lights.ts";
+} from "../packages/core/src/render/generated/layouts.ts";
+import { ANCHOR_EYE_REACH } from "../packages/core/src/scene/anchorEyes.ts";
+import { LIGHT_HEADER_FLOATS } from "../packages/core/src/scene/lights.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 /** Word offsets of the view block's fields. */

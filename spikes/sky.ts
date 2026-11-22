@@ -11,20 +11,20 @@ import {
   picture,
   type HdrPixels,
 } from "../lab/hdr.ts";
-import { GpuDevice } from "../packages/next/src/gpu/GpuDevice.ts";
-import { AtmosphereReference } from "../packages/next/src/atmosphere/AtmosphereReference.ts";
-import { RealtimeAtmosphere } from "../packages/next/src/atmosphere/RealtimeAtmosphere.ts";
+import { GpuDevice } from "../packages/core/src/gpu/GpuDevice.ts";
+import { AtmosphereReference } from "../packages/core/src/atmosphere/AtmosphereReference.ts";
+import { RealtimeAtmosphere } from "../packages/core/src/atmosphere/RealtimeAtmosphere.ts";
 import {
   EARTH,
   directSunIlluminance,
-} from "../packages/next/src/atmosphere/model.ts";
-import { Engine } from "../packages/next/src/scene/Engine.ts";
-import { type HdrImage, type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import { Ellipsoid, fromDegrees } from "../packages/next/src/math/ellipsoid.ts";
-import { eastNorthUpToFixedFrame } from "../packages/next/src/math/transforms.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
+} from "../packages/core/src/atmosphere/model.ts";
+import { Engine } from "../packages/core/src/scene/Engine.ts";
+import { type HdrImage, type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
+import { eastNorthUpToFixedFrame } from "../packages/core/src/math/transforms.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
 
 type V3 = [number, number, number];
 

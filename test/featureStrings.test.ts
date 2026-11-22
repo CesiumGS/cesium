@@ -1,17 +1,17 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { CustomShader } from "../packages/next/src/scene/CustomShader.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { CustomShader } from "../packages/core/src/scene/CustomShader.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import type {
   FeatureTable,
   GltfAsset,
-} from "../packages/next/src/io/gltfTypes.ts";
-import { CapacityError } from "../packages/next/src/scene/CapacityError.ts";
+} from "../packages/core/src/io/gltfTypes.ts";
+import { CapacityError } from "../packages/core/src/scene/CapacityError.ts";
 import {
   STRING_ID_BASE,
   StringIds,
   stringIds,
-} from "../packages/next/src/scene/stringIds.ts";
+} from "../packages/core/src/scene/stringIds.ts";
 import {
   fakeDevice,
   installFakeNavigator,
@@ -144,7 +144,7 @@ describe("string columns on the GPU", () => {
       });
     };
     installFakeNavigator(device);
-    const { Engine } = await import("../packages/next/src/scene/Engine.ts");
+    const { Engine } = await import("../packages/core/src/scene/Engine.ts");
     engine = await Engine.create({ limits: "adapter" });
     world = engine.createWorld();
   });

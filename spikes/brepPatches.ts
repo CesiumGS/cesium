@@ -36,7 +36,7 @@ import {
   type GpuPatches,
   type GpuSpan,
   type NurbsSurface,
-} from "../packages/next/src/brep/index.ts";
+} from "../packages/core/src/brep/index.ts";
 import {
   CustomShader,
   Engine,
@@ -44,14 +44,14 @@ import {
   UNITLESS_EXPOSURE,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
-import { placeWithTerms } from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import { PATCH_CHUNK_CELLS } from "../packages/next/src/render/layout.ts";
-import { fitLattice } from "../packages/next/src/scene/curvilinearFit.ts";
-import type { CurvilinearTerms } from "../packages/next/src/scene/curvilinearTerms.ts";
-import { setPlacement } from "../packages/next/src/scene/world/placements.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
-import type { BrepHandle } from "../packages/next/src/scene/world/brep.ts";
+} from "../packages/core/src/index.ts";
+import { placeWithTerms } from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import { PATCH_CHUNK_CELLS } from "../packages/core/src/render/layout.ts";
+import { fitLattice } from "../packages/core/src/scene/curvilinearFit.ts";
+import type { CurvilinearTerms } from "../packages/core/src/scene/curvilinearTerms.ts";
+import { setPlacement } from "../packages/core/src/scene/world/placements.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
+import type { BrepHandle } from "../packages/core/src/scene/world/brep.ts";
 
 const TEMPLATE = `
 <h1>B-rep patches diced on the GPU</h1>

@@ -19,7 +19,7 @@ import {
   type Tileset3D,
   type VectorStyleDocument,
   type View,
-} from "../../packages/next/src/index.ts";
+} from "../../packages/core/src/index.ts";
 import {
   EarthOrientationParameters,
   Ephemeris,

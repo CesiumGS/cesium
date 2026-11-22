@@ -9,7 +9,7 @@ import {
   routeIsAffine,
   curvilinearScaleOf,
   type Route,
-} from "../camera/route.ts";
+} from "../../../core/src/camera/route.ts";
 import { routeStretch } from "./routeStretch.ts";
 
 /** One curvilinear map a view drew content through. */

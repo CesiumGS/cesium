@@ -17,13 +17,13 @@ import {
   readBackground,
   readPoints,
   type SkyPackManifest,
-} from "../packages/next/src/atmosphere/skyPack.ts";
+} from "../packages/core/src/atmosphere/skyPack.ts";
 import {
   STAR_FLOATS,
   type StarField,
-} from "../packages/next/src/atmosphere/stars.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
+} from "../packages/core/src/atmosphere/stars.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 function manifestJson(over: Record<string, unknown> = {}) {

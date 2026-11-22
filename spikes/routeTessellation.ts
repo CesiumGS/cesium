@@ -31,15 +31,15 @@ import {
   geocentricToGeographic,
   utm,
   verticalExaggerationEdge,
-} from "../packages/next/src/georeference/index.ts";
+} from "../packages/core/src/georeference/index.ts";
 import {
   Ellipsoid,
   cartographic,
-} from "../packages/next/src/math/ellipsoid.ts";
+} from "../packages/core/src/math/ellipsoid.ts";
 import {
   compileRoute,
   type CompiledRoute,
-} from "../packages/next/src/transform/compile.ts";
+} from "../packages/core/src/transform/compile.ts";
 import {
   affine,
   chordError,
@@ -48,8 +48,8 @@ import {
   subdivisionFor,
   TransformGraph,
   type Route,
-} from "../packages/next/src/transform/index.ts";
-import { radialDistortion } from "../packages/next/src/transforms/index.ts";
+} from "../packages/core/src/transform/index.ts";
+import { radialDistortion } from "../packages/core/src/transforms/index.ts";
 
 const TEMPLATE = `
 <h1>Route tessellation</h1>

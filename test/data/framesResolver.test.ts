@@ -11,7 +11,7 @@ import type { FrameData } from "../../packages/next/src/ephemeris/loadFrameData.
 import { createFrameCatalog } from "../../packages/next/src/frames/catalog.ts";
 import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
 import { createFramesResolver } from "../../packages/next/src/frames/resolver.ts";
-import { rigidMatrixError } from "../../packages/next/src/math/transforms.ts";
+import { rigidMatrixError } from "../../packages/core/src/math/transforms.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
 import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
 

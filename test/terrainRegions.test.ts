@@ -6,24 +6,24 @@
 // regions and "everywhere". CPU only (fakeGpu); the shader's opacity rules
 // are in test/terrainTranslucency.test.ts.
 import { describe, expect, it, vi } from "vitest";
-import type { Globe } from "../packages/next/src/globe/Globe.ts";
-import { TerrainRegionError } from "../packages/next/src/globe/terrainClip.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+import type { Globe } from "../packages/core/src/globe/Globe.ts";
+import { TerrainRegionError } from "../packages/core/src/globe/terrainClip.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import {
   RECORD_WORDS,
   TERRAIN_CLIP_WORD,
-} from "../packages/next/src/render/layout.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
+} from "../packages/core/src/render/layout.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 // Counts every polygon compile the globe makes.
 const compiles = vi.hoisted(() => ({ count: 0 }));
-vi.mock("../packages/next/src/globe/terrainClip.ts", async (importOriginal) => {
+vi.mock("../packages/core/src/globe/terrainClip.ts", async (importOriginal) => {
   const actual =
     await importOriginal<
-      typeof import("../packages/next/src/globe/terrainClip.ts")
+      typeof import("../packages/core/src/globe/terrainClip.ts")
     >();
   return {
     ...actual,

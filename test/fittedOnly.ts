@@ -1,4 +1,4 @@
-import type { CurvilinearFrameSpec } from "../packages/next/src/camera/route.ts";
+import type { CurvilinearFrameSpec } from "../packages/core/src/camera/route.ts";
 
 /**
  * A helper's spec without its curvilinear spec: the engine fits it, as it does a

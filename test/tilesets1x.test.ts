@@ -3,12 +3,12 @@ import { describe, expect, it } from "vitest";
 import {
   treeFromJson,
   type TileJson,
-} from "../packages/next/src/streaming/Tile.ts";
-import { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
+} from "../packages/core/src/streaming/Tile.ts";
+import { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import {
   MAX_UNDRAWN_REASONS,
   undrawnKind,
-} from "../packages/next/src/streaming/tilesetLoad.ts";
+} from "../packages/core/src/streaming/tilesetLoad.ts";
 
 const BOX = { box: [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1] };
 

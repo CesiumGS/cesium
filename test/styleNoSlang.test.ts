@@ -9,15 +9,15 @@ import { readFileSync } from "node:fs";
 import { dirname, join, normalize, relative } from "node:path";
 import ts from "typescript";
 import { describe, expect, it, vi } from "vitest";
-import { FeatureStyle } from "../packages/next/src/scene/FeatureStyle.ts";
+import { FeatureStyle } from "../packages/core/src/scene/FeatureStyle.ts";
 import { styleScene } from "./styleScene.ts";
 
 const loaded = vi.hoisted(() => [] as string[]);
-vi.mock("../packages/next/src/scene/slang.ts", () => {
+vi.mock("../packages/core/src/scene/slang.ts", () => {
   loaded.push("src/scene/slang.ts");
   return {};
 });
-vi.mock("../packages/next/src/scene/slangWorker.ts", () => {
+vi.mock("../packages/core/src/scene/slangWorker.ts", () => {
   loaded.push("src/scene/slangWorker.ts");
   return {};
 });
@@ -52,7 +52,7 @@ describe("styling without Slang", () => {
     // Without this, the check above would pass for a mock that never
     // records: `fromSlang` imports the module dynamically, so it does.
     const { CustomShader } =
-      await import("../packages/next/src/scene/CustomShader.ts");
+      await import("../packages/core/src/scene/CustomShader.ts");
     await expect(
       CustomShader.fromSlang("void fragmentMain() {}"),
     ).rejects.toThrow();

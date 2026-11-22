@@ -8,7 +8,7 @@ import {
   extractStars,
   magnitudeOfRank,
   type StarMapFace,
-} from "../packages/next/src/atmosphere/stars.ts";
+} from "../packages/core/src/atmosphere/stars.ts";
 
 const SIZE = 64;
 

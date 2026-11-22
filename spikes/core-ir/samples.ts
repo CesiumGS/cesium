@@ -1,6 +1,6 @@
 // The four inputs every candidate takes.
 
-import { twistDescriptor } from "../../packages/next/src/transforms/twist.ts";
+import { twistDescriptor } from "../../packages/core/src/transforms/twist.ts";
 
 /** 1. A 1.x / 3D Tiles style (show and color). */
 export const STYLE = {

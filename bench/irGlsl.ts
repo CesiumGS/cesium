@@ -19,15 +19,15 @@ import {
   packUniforms,
   width,
   type Type,
-} from "../packages/next/src/ir/index.ts";
-import { nagaGlsl, type NagaApi } from "../packages/next/src/ir/nagaVertex.ts";
+} from "../packages/core/src/ir/index.ts";
+import { nagaGlsl, type NagaApi } from "../packages/core/src/ir/nagaVertex.ts";
 import {
   compareReadback,
   newReadbackRow,
   packRows,
   type ReadbackRow,
-} from "../packages/next/src/ir/readback.ts";
-import { wgslCases, type WgslCase } from "../packages/next/src/ir/wgslCases.ts";
+} from "../packages/core/src/ir/readback.ts";
+import { wgslCases, type WgslCase } from "../packages/core/src/ir/wgslCases.ts";
 
 /** One case: our kernel's result, and naga's beside it. */
 export interface IrGlslRow extends ReadbackRow {

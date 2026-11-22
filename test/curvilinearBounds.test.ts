@@ -2,15 +2,15 @@
 // displacement at its center and pads by the residual, for every value in
 // its parameters' ranges; a map's drawn bounding sphere and [σ_min, σ_max].
 import { describe, expect, it } from "vitest";
-import type { FrameKey } from "../packages/next/src/camera/frameResolver.ts";
+import type { FrameKey } from "../packages/core/src/camera/frameResolver.ts";
 import type {
   Route,
   CurvilinearMap,
-} from "../packages/next/src/camera/route.ts";
+} from "../packages/core/src/camera/route.ts";
 import {
   PLACEMENT_TERMS,
   type PlacementParameter,
-} from "../packages/next/src/scene/placement.ts";
+} from "../packages/core/src/scene/placement.ts";
 import {
   drawnBounds,
   drawnSphere,
@@ -24,13 +24,13 @@ import {
   termBoundsOver,
   weightFollowsValue,
   weightInterval,
-} from "../packages/next/src/scene/curvilinearBounds.ts";
-import { placeWithTerms } from "../packages/next/src/scene/curvilinearEvaluate.ts";
+} from "../packages/core/src/scene/curvilinearBounds.ts";
+import { placeWithTerms } from "../packages/core/src/scene/curvilinearEvaluate.ts";
 import type {
   CubicLattice,
   TermWeight,
   CurvilinearTerms,
-} from "../packages/next/src/scene/curvilinearTerms.ts";
+} from "../packages/core/src/scene/curvilinearTerms.ts";
 
 /** A repeatable stream in [-1, 1) (a linear congruential generator). */
 function random(seed: number): () => number {

@@ -1,21 +1,21 @@
 // Fakes for the imagery slice tests (test/sliceNeed.test.ts and
 // test/slicePoolShrink.test.ts): a world, a recording device, a layer that
 // holds slices, and GlobeImagery over a provider that never loads.
-import { deviceCapacities } from "../packages/next/src/gpu/limits.ts";
+import { deviceCapacities } from "../packages/core/src/gpu/limits.ts";
 import {
   GlobeImagery,
   type GlobeImageryOptions,
-} from "../packages/next/src/globe/GlobeImagery.ts";
-import type { ImageryProvider } from "../packages/next/src/globe/ImageryProvider.ts";
+} from "../packages/core/src/globe/GlobeImagery.ts";
+import type { ImageryProvider } from "../packages/core/src/globe/ImageryProvider.ts";
 import {
   SlicePool,
   type SliceUser,
-} from "../packages/next/src/globe/SlicePool.ts";
-import type { WorkerPool } from "../packages/next/src/io/WorkerPool.ts";
-import { WebGpuImagery } from "../packages/next/src/render/world/contentResources.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { RequestScheduler } from "../packages/next/src/streaming/RequestScheduler.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/globe/SlicePool.ts";
+import type { WorkerPool } from "../packages/core/src/io/WorkerPool.ts";
+import { WebGpuImagery } from "../packages/core/src/render/world/contentResources.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { RequestScheduler } from "../packages/core/src/streaming/RequestScheduler.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 import { checkTextureCopy, fakeDevice } from "./fakeGpu.ts";
 
 /** A world that records binds; nothing else is needed of it here. */

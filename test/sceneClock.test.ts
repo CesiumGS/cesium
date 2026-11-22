@@ -1,7 +1,7 @@
 // The scene clock interface (plan 5a Task 7): what the camera layer and the
 // animation core read of the time library's Clock.
 import { expect, it } from "vitest";
-import type { SceneClock } from "../packages/next/src/core/sceneClock.ts";
+import type { SceneClock } from "../packages/core/src/core/sceneClock.ts";
 import {
   Clock,
   Instant,

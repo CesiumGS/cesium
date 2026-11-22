@@ -7,22 +7,22 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import { SCENES, bracket } from "../../spikes/csgRecipes.ts";
-import { KernelClient } from "../../packages/next/src/brep/kernelClient.ts";
-import type { KernelName } from "../../packages/next/src/brep/kernelProtocol.ts";
+import { KernelClient } from "../../packages/core/src/brep/kernelClient.ts";
+import type { KernelName } from "../../packages/core/src/brep/kernelProtocol.ts";
 import {
   ExtractCache,
   OcctKernel,
   type OcctModule,
-} from "../../packages/next/src/brep/occt.ts";
+} from "../../packages/core/src/brep/occt.ts";
 import {
   createPrepareCache,
   prepareGpuPatches,
-} from "../../packages/next/src/brep/gpuPatches.ts";
+} from "../../packages/core/src/brep/gpuPatches.ts";
 import {
   SmlibKernel,
   type SmlibModule,
-} from "../../packages/next/src/brep/smlib.ts";
-import { validateBrep } from "../../packages/next/src/brep/validate.ts";
+} from "../../packages/core/src/brep/smlib.ts";
+import { validateBrep } from "../../packages/core/src/brep/validate.ts";
 import { occtDirectory } from "../../scripts/occtTools.mjs";
 import { smlibDirectory } from "../../scripts/smlibTools.mjs";
 import { stepSamplesDirectory } from "../../scripts/stepSamples.mjs";

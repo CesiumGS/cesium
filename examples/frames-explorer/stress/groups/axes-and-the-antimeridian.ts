@@ -5,9 +5,9 @@ import { framePoint } from "../../../../packages/next/src/frames/local.ts";
 import {
   fromDegrees,
   type Cartographic,
-} from "../../../../packages/next/src/math/ellipsoid.ts";
+} from "../../../../packages/core/src/math/ellipsoid.ts";
 import { measure } from "../../../../packages/next/src/measure/measure.ts";
-import { EARTH } from "../../../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import {
   DEGREE,
   type NgsMark,

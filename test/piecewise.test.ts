@@ -1,7 +1,7 @@
 // Piecewise reference frames (frames 5b, Task 6) on synthetic frames: a stack
 // moving at 1 m/s along X, a stage offset 10 m in it, and the stage's own path.
 import { describe, expect, it } from "vitest";
-import { FrameUnavailableError } from "../packages/next/src/camera/frameResolver.ts";
+import { FrameUnavailableError } from "../packages/core/src/camera/frameResolver.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
 import { frameVelocity } from "../packages/next/src/frames/motion.ts";
@@ -11,7 +11,7 @@ import {
   piecewiseFrame,
 } from "../packages/next/src/frames/piecewise.ts";
 import { pointAccuracy } from "../packages/next/src/frames/pointAccuracy.ts";
-import { identity } from "../packages/next/src/math/mat4.ts";
+import { identity } from "../packages/core/src/math/mat4.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 
 const CHANGE = 100;

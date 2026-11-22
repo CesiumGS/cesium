@@ -20,19 +20,19 @@ import { outlineOf } from "../../examples/csg/preview.ts";
 import {
   KernelCanceled,
   KernelClient,
-} from "../../packages/next/src/brep/kernelClient.ts";
+} from "../../packages/core/src/brep/kernelClient.ts";
 import type {
   KernelName,
   SolidRecipe,
-} from "../../packages/next/src/brep/kernelProtocol.ts";
+} from "../../packages/core/src/brep/kernelProtocol.ts";
 import {
   OcctKernel,
   type OcctModule,
-} from "../../packages/next/src/brep/occt.ts";
+} from "../../packages/core/src/brep/occt.ts";
 import {
   SmlibKernel,
   type SmlibModule,
-} from "../../packages/next/src/brep/smlib.ts";
+} from "../../packages/core/src/brep/smlib.ts";
 import { occtDirectory } from "../../scripts/occtTools.mjs";
 import { smlibDirectory } from "../../scripts/smlibTools.mjs";
 import { stepSamplesDirectory } from "../../scripts/stepSamples.mjs";

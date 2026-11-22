@@ -5,13 +5,13 @@
 // the old sort would have: before each eviction the old candidates are
 // computed from the loaded set, and the tiles unloaded are compared.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
-import { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
-import { type TilesetOptions } from "../packages/next/src/streaming/tilesetTypes.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
+import { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
+import { type TilesetOptions } from "../packages/core/src/streaming/tilesetTypes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

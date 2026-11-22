@@ -14,7 +14,7 @@ import {
   attachInspector,
   inspectEngine,
 } from "../packages/next/widgets/index.ts";
-import { Engine } from "../packages/next/src/scene/Engine.ts";
+import { Engine } from "../packages/core/src/scene/Engine.ts";
 import {
   chooseDevice,
   forgetProbes,
@@ -23,17 +23,17 @@ import {
   type RendererOption,
   type Webgl2Probe,
   type WebgpuProbe,
-} from "../packages/next/src/scene/deviceChoice.ts";
+} from "../packages/core/src/scene/deviceChoice.ts";
 import {
   PROBED_FRAMEBUFFERS,
   LIMIT_NAMES,
   WEBGL2_FLOOR,
   type Webgl2Facts,
   type Webgl2Limits,
-} from "../packages/next/src/profile/webgl2Facts.ts";
-import { webgl2Personas } from "../packages/next/src/profile/personas.ts";
-import { CanvasTarget } from "../packages/next/src/scene/renderTarget.ts";
-import { probeWebgl2 } from "../packages/next/src/webgl2/probe.ts";
+} from "../packages/core/src/profile/webgl2Facts.ts";
+import { webgl2Personas } from "../packages/core/src/profile/personas.ts";
+import { CanvasTarget } from "../packages/core/src/scene/renderTarget.ts";
+import { probeWebgl2 } from "../packages/core/src/webgl2/probe.ts";
 
 /** The extensions the plan's steps depend on (CS-43), with what each is for. */
 const EXTENSIONS: readonly [string, string][] = [

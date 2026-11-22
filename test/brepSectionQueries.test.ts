@@ -1,9 +1,9 @@
 // The cap form joins the b-rep family (docs/design/geometry-through-placement-review.md, item 5): its faces
 // tessellate, are queried by `brepGeometry` and are picked like any form's.
 import { describe, expect, it } from "vitest";
-import { sectionBrep } from "../packages/next/src/brep/section.ts";
-import { tessellateBrep } from "../packages/next/src/brep/tessellate.ts";
-import { brepGeometry } from "../packages/next/src/geometry/brep.ts";
+import { sectionBrep } from "../packages/core/src/brep/section.ts";
+import { tessellateBrep } from "../packages/core/src/brep/tessellate.ts";
+import { brepGeometry } from "../packages/core/src/geometry/brep.ts";
 import { boxMinusCylinderBrep } from "./brepSectionFixtures.ts";
 
 describe("the cap form of a block with a bore", () => {

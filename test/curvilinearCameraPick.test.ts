@@ -10,35 +10,35 @@ import {
   routeInverse,
   curvilinearScaleOf,
   type Route,
-} from "../packages/next/src/camera/route.ts";
+} from "../packages/core/src/camera/route.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { truePick } from "../packages/next/src/frames/pickTruth.ts";
 import {
   verticalExaggeration,
   type VerticalExaggeration,
-} from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
+} from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import {
   curvilinearFrame,
   type CurvilinearFrame,
 } from "../packages/next/src/frames/curvilinearFrame.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import { Camera, projectToPixel } from "../packages/next/src/scene/Camera.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { GlobeController } from "../packages/next/src/scene/GlobeController.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import { Camera, projectToPixel } from "../packages/core/src/scene/Camera.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { GlobeController } from "../packages/core/src/scene/GlobeController.ts";
 import {
   createBox,
   createBillboard,
-} from "../packages/next/src/scene/meshes.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+} from "../packages/core/src/scene/meshes.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { fittedOnly } from "./fittedOnly.ts";

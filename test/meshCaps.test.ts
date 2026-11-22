@@ -8,7 +8,7 @@ import {
   sectionTile,
   triangulateRegion,
   type MeshCapTile,
-} from "../packages/next/src/scene/world/meshCaps.ts";
+} from "../packages/core/src/scene/world/meshCaps.ts";
 
 type V3 = [number, number, number];
 

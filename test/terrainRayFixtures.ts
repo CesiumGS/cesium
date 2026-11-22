@@ -7,17 +7,17 @@
 import {
   Ellipsoid,
   type Cartographic,
-} from "../packages/next/src/math/ellipsoid.ts";
+} from "../packages/core/src/math/ellipsoid.ts";
 import type {
   Rectangle,
   TerrainHeights,
-} from "../packages/next/src/globe/quantizedMesh.ts";
+} from "../packages/core/src/globe/quantizedMesh.ts";
 import type {
   TerrainRayPatch,
   TerrainRayTarget,
   TerrainRayTile,
-} from "../packages/next/src/globe/terrainRay.ts";
-import { LEVEL_ZERO_ERROR } from "../packages/next/src/globe/TerrainSource.ts";
+} from "../packages/core/src/globe/terrainRay.ts";
+import { LEVEL_ZERO_ERROR } from "../packages/core/src/globe/TerrainSource.ts";
 
 export const WGS84 = Ellipsoid.WGS84;
 export const A = WGS84.radii[0]!;

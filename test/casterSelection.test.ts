@@ -1,24 +1,24 @@
 // What the caster walk selects (`BudgetedSelection.selectCasters`), on
 // synthetic trees with the real cascade fit: no GPU, no tileset.
 import { describe, expect, it } from "vitest";
-import { GlobeBudgetedSelection } from "../packages/next/src/globe/GlobeBudgeted.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
+import { GlobeBudgetedSelection } from "../packages/core/src/globe/GlobeBudgeted.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
 import {
   casterPlanes,
   createShadowCascades,
   fitShadowCascades,
-} from "../packages/next/src/scene/shadows.ts";
-import { BudgetedSelection } from "../packages/next/src/streaming/Budgeted.ts";
+} from "../packages/core/src/scene/shadows.ts";
+import { BudgetedSelection } from "../packages/core/src/streaming/Budgeted.ts";
 import type {
   CasterRoom,
   SelectionView,
-} from "../packages/next/src/streaming/Stepwise.ts";
+} from "../packages/core/src/streaming/Stepwise.ts";
 import {
   treeFromJson,
   type Tile,
-} from "../packages/next/src/streaming/Tile.ts";
-import type { TerrainSource } from "../packages/next/src/globe/TerrainSource.ts";
+} from "../packages/core/src/streaming/Tile.ts";
+import type { TerrainSource } from "../packages/core/src/globe/TerrainSource.ts";
 
 const R = 6_378_137;
 const HEIGHT = 1080;

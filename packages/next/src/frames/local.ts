@@ -1,9 +1,12 @@
-import { mat4 } from "../math/mat4.ts";
-import { eastNorthUpToFixedFrame, isOnPolarAxis } from "../math/transforms.ts";
-import type { Ellipsoid } from "../math/ellipsoid.ts";
+import { mat4 } from "../../../core/src/math/mat4.ts";
+import {
+  eastNorthUpToFixedFrame,
+  isOnPolarAxis,
+} from "../../../core/src/math/transforms.ts";
+import type { Ellipsoid } from "../../../core/src/math/ellipsoid.ts";
 import type { Instant } from "../time/Instant.ts";
-import type { World } from "../scene/World.ts";
-import type { TransformHandle } from "../scene/world/types.ts";
+import type { World } from "../../../core/src/scene/World.ts";
+import type { TransformHandle } from "../../../core/src/scene/world/types.ts";
 import { Frame, frameTransform, type FrameOptions } from "./Frame.ts";
 
 /**

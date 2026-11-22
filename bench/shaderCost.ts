@@ -11,7 +11,7 @@ import {
   mat4,
   vec3,
   type World,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 
 /**

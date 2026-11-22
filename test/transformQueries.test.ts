@@ -7,10 +7,10 @@ import {
   resolveRoute,
   routeForward,
   type Route as CameraRoute,
-} from "../packages/next/src/camera/route.ts";
+} from "../packages/core/src/camera/route.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { verticalExaggeration as frameExaggeration } from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
+import { verticalExaggeration as frameExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import { graphOfFrames } from "../packages/next/src/frames/graphOfFrames.ts";
 import {
   eastNorthUpFrame,
@@ -28,20 +28,20 @@ import {
   geocentricToGeographic,
   utm,
   verticalExaggerationEdge,
-} from "../packages/next/src/georeference/index.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import type { CorePick } from "../packages/next/src/scene/pick.ts";
+} from "../packages/core/src/georeference/index.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import type { CorePick } from "../packages/core/src/scene/pick.ts";
 import {
   drawnBounds,
   volumeSamples,
   type DrawnMap,
-} from "../packages/next/src/scene/curvilinearBounds.ts";
+} from "../packages/core/src/scene/curvilinearBounds.ts";
 import {
   clipSetDistance,
   planClip,
   type ClipSet,
-} from "../packages/next/src/scene/world/clips.ts";
-import { nodeResolver } from "../packages/next/src/scene/world/nodeResolver.ts";
+} from "../packages/core/src/scene/world/clips.ts";
+import { nodeResolver } from "../packages/core/src/scene/world/nodeResolver.ts";
 import {
   accuracyAlong,
   affine,
@@ -56,11 +56,11 @@ import {
   taylorBounds,
   TransformGraph,
   type Route,
-} from "../packages/next/src/transform/index.ts";
+} from "../packages/core/src/transform/index.ts";
 import {
   radialDistortion,
   twist,
-} from "../packages/next/src/transforms/index.ts";
+} from "../packages/core/src/transforms/index.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
 const RAD = Math.PI / 180;

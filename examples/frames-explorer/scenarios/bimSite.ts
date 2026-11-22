@@ -29,9 +29,9 @@ import { gridFactors } from "../../../packages/next/src/engineering/factors.ts";
 import {
   Ellipsoid,
   fromDegrees,
-} from "../../../packages/next/src/math/ellipsoid.ts";
+} from "../../../packages/core/src/math/ellipsoid.ts";
 import { measure } from "../../../packages/next/src/measure/measure.ts";
-import { EARTH } from "../../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../../packages/core/src/scene/Body.ts";
 import { Instant } from "../../../packages/next/src/time/Instant.ts";
 import type { FrameCache } from "../frameCache.ts";
 import {

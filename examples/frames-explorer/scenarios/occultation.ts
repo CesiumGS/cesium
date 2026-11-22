@@ -30,7 +30,7 @@ import {
   C,
   EARTH_ROTATION_RATE,
 } from "../../../packages/next/src/measure/constants.ts";
-import { Ellipsoid } from "../../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 import { Instant } from "../../../packages/next/src/time/Instant.ts";
 import type { Trajectory } from "../../../packages/next/src/trajectory/Trajectory.ts";
 import { type HorizonMask, belowMask, maskAt } from "./horizonMask.ts";

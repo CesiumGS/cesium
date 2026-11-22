@@ -11,14 +11,14 @@ import {
   routeForward,
   type Route,
   type CurvilinearFrameSpec,
-} from "../packages/next/src/camera/route.ts";
+} from "../packages/core/src/camera/route.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { Frame } from "../packages/next/src/frames/Frame.ts";
 import { placementOf } from "../packages/next/src/frames/placementQuery.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
 import {
   CENTER_WORD,
   FLAGS_WORD,
@@ -26,27 +26,27 @@ import {
   RECORD_WORDS,
   RecordFlags,
   VIEW_MASK_WORD,
-} from "../packages/next/src/render/layout.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { MeshData } from "../packages/next/src/scene/meshes.ts";
-import type { PlacementParameter } from "../packages/next/src/scene/placement.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
+} from "../packages/core/src/render/layout.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { MeshData } from "../packages/core/src/scene/meshes.ts";
+import type { PlacementParameter } from "../packages/core/src/scene/placement.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import {
   placeWithTerms,
   weightOf,
-} from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import type { CubicLattice } from "../packages/next/src/scene/curvilinearTerms.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import { drawTerms } from "../packages/next/src/scene/world/placements.ts";
+} from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import type { CubicLattice } from "../packages/core/src/scene/curvilinearTerms.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import { drawTerms } from "../packages/core/src/scene/world/placements.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
-import { drawnTile } from "../packages/next/src/streaming/tileCurvilinearMap.ts";
+} from "../packages/core/src/scene/world/types.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
+import { drawnTile } from "../packages/core/src/streaming/tileCurvilinearMap.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

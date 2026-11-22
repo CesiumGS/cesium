@@ -12,17 +12,17 @@
 // ghosts are the same dashed mesh drawn twice, pinned at either end, shown as
 // a site's ghost is (siteDrawings.ts): the other placement's while
 // settled, both while moving.
-import { Ellipsoid } from "../../packages/next/src/math/ellipsoid.ts";
-import { EARTH } from "../../packages/next/src/scene/Body.ts";
+import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
+import { EARTH } from "../../packages/core/src/scene/Body.ts";
 import type {
   DualPosition,
   PlacementParameter,
-} from "../../packages/next/src/scene/placement.ts";
-import type { World } from "../../packages/next/src/scene/World.ts";
+} from "../../packages/core/src/scene/placement.ts";
+import type { World } from "../../packages/core/src/scene/World.ts";
 import type {
   DrawHandle,
   MeshHandle,
-} from "../../packages/next/src/scene/world/types.ts";
+} from "../../packages/core/src/scene/world/types.ts";
 import { hexLinear } from "./colors.ts";
 import { REPROJECTED_SEMANTIC } from "./dualPosition.ts";
 import {

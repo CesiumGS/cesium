@@ -6,14 +6,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   ObserverSettings,
   SkyPackManifest,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import { installGpuGlobals } from "./fakeGpu.ts";
 
 // The engine reads WebGPU's constants as it loads.
 installGpuGlobals();
 const { cameraObserver, eyeObserver } =
-  await import("../packages/next/src/index.ts");
-const { View } = await import("../packages/next/src/scene/View.ts");
+  await import("../packages/core/src/index.ts");
+const { View } = await import("../packages/core/src/scene/View.ts");
 const {
   attachObserverPanel,
   ev100FromSlider,

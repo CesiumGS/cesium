@@ -1,13 +1,13 @@
 // Scene items: a tileset drawn more than once in its world. The same loaded
 // tiles, one selection, one cache, one set of bounds. Through the real tileset
 // on the fake engine (test/fakeGpu.ts).
-import { recordBundle } from "../packages/next/src/render/world/bundles.ts";
-import { rayJobs } from "../packages/next/src/scene/world/rays.ts";
+import { recordBundle } from "../packages/core/src/render/world/bundles.ts";
+import { rayJobs } from "../packages/core/src/scene/world/rays.ts";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { centeredIntrinsics } from "../packages/next/src/scene/Camera.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
+import { centeredIntrinsics } from "../packages/core/src/scene/Camera.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
 import {
   CASTER_MASK_WORD,
   COLOR_WORD,
@@ -20,20 +20,20 @@ import {
   FLAGS_WORD,
   RecordFlags,
   VIEW_MASK_WORD,
-} from "../packages/next/src/render/layout.ts";
-import { CapacityError } from "../packages/next/src/scene/CapacityError.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
-import type { TilesetOptions } from "../packages/next/src/streaming/tilesetTypes.ts";
+} from "../packages/core/src/render/layout.ts";
+import { CapacityError } from "../packages/core/src/scene/CapacityError.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
+import type { TilesetOptions } from "../packages/core/src/streaming/tilesetTypes.ts";
 import { pickInFrame } from "../packages/next/src/engineering/pick.ts";
 import { ClientSnapService } from "../packages/next/src/engineering/snap.ts";
-import { FeatureStyle } from "../packages/next/src/scene/FeatureStyle.ts";
-import { untestedSpans } from "../packages/next/src/query/drawBackend.ts";
+import { FeatureStyle } from "../packages/core/src/scene/FeatureStyle.ts";
+import { untestedSpans } from "../packages/core/src/query/drawBackend.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 const world = (w: World): World => w;
 

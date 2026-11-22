@@ -10,7 +10,7 @@ import {
   BACKGROUND_MAGIC,
   POINTS_MAGIC,
   isPackBinary,
-} from "../packages/next/src/atmosphere/skyPack.ts";
+} from "../packages/core/src/atmosphere/skyPack.ts";
 import {
   skyPackDevRoute,
   skyPackGuard,

@@ -6,43 +6,43 @@
 // Picks run on the fake device of test/fakeGpu.ts, answered as in
 // test/corePick.test.ts.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
 import {
   Camera,
   type CameraIntrinsics,
   type CameraRecord,
   projectToPixel,
-} from "../packages/next/src/scene/Camera.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { AnchorHandle } from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/Camera.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { AnchorHandle } from "../packages/core/src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
-import { cullCamera } from "../packages/next/src/render/view/occlusionPass.ts";
+import { cullCamera } from "../packages/core/src/render/view/occlusionPass.ts";
 import {
   OCCLUSION_CULL_BYTES,
   occlusionCullParams,
-} from "../packages/next/src/render/view/occlusionCull.ts";
+} from "../packages/core/src/render/view/occlusionCull.ts";
 import {
   buildPyramid,
   sphereHidden,
-} from "../packages/next/src/render/view/occlusionMath.ts";
+} from "../packages/core/src/render/view/occlusionMath.ts";
 import {
   SHADOW_CASCADES,
   SHADOW_SIZE,
   createShadowCascades,
   fitShadowCascades,
-} from "../packages/next/src/scene/shadows.ts";
+} from "../packages/core/src/scene/shadows.ts";
 import {
   LIGHTS_SIZE,
   type LightOptions,
   packViewLights,
-} from "../packages/next/src/scene/lights.ts";
-import { starCullInputs } from "../packages/next/src/atmosphere/starCells.ts";
+} from "../packages/core/src/scene/lights.ts";
+import { starCullInputs } from "../packages/core/src/atmosphere/starCells.ts";
 
 const R = 6_378_137;
 const WIDTH = 64;

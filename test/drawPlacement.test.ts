@@ -16,13 +16,13 @@ import {
   RADIUS_WORD,
   RECORD_WORDS,
   attributeHash,
-} from "../packages/next/src/render/layout.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+} from "../packages/core/src/render/layout.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import {
   createBillboard,
   type MeshData,
-} from "../packages/next/src/scene/meshes.ts";
+} from "../packages/core/src/scene/meshes.ts";
 import {
   PLACEMENT_MONOMIALS,
   PLACEMENT_TERMS,
@@ -34,19 +34,19 @@ import {
   type Placement,
   type PlacementBlend,
   type PlacementParameter,
-} from "../packages/next/src/scene/placement.ts";
+} from "../packages/core/src/scene/placement.ts";
 import {
   TERM_ROWS,
   CURVILINEAR_KIND,
   blockRows,
   latticeRows,
   LATTICE_HEAD_ROWS,
-} from "../packages/next/src/scene/placementTable.ts";
-import { termsOf } from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/placementTable.ts";
+import { termsOf } from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const PARTNER = "_PARTNER";
@@ -777,7 +777,7 @@ describe("World placements", () => {
 
 describe("placement.slang and the TypeScript agree", () => {
   const slang = readFileSync(
-    new URL("../packages/next/src/shaders/placement.slang", import.meta.url),
+    new URL("../packages/core/src/shaders/placement.slang", import.meta.url),
     "utf8",
   );
   const constant = (name: string, source = slang): number => {
@@ -808,7 +808,7 @@ describe("placement.slang and the TypeScript agree", () => {
     expect(latticeRows(1)).toBe(LATTICE_HEAD_ROWS + PLACEMENT_TERMS);
     expect(constant("LATTICE_HEAD_ROWS")).toBe(LATTICE_HEAD_ROWS);
     const surface = readFileSync(
-      new URL("../packages/next/src/shaders/surface.slang", import.meta.url),
+      new URL("../packages/core/src/shaders/surface.slang", import.meta.url),
       "utf8",
     );
     expect(constant("MAX_DIRECTORY_ENTRIES", surface)).toBe(

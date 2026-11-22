@@ -51,7 +51,7 @@ import {
   AEROSOLS,
   ionDefaults,
   type AerosolType,
-} from "../../../packages/next/src/index.ts";
+} from "../../../packages/core/src/index.ts";
 import { attachInspector } from "../../../packages/next/widgets/index.ts";
 import { ev100Text } from "../../../packages/next/widgets/observerPanel.ts";
 import { Choice, Page, toast, useRuns, useStored } from "./common.tsx";

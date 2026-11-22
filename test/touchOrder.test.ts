@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 import {
   TouchOrder,
   type TouchNode,
-} from "../packages/next/src/streaming/TouchOrder.ts";
+} from "../packages/core/src/streaming/TouchOrder.ts";
 
 class Node implements TouchNode<Node> {
   touchedFrame = -1;

@@ -2,15 +2,15 @@
 // framebuffers it builds and checks, the reason a context is below the floor,
 // and that it needs nothing but an OffscreenCanvas (so it runs in a worker).
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { forgetProbes } from "../packages/next/src/scene/deviceChoice.ts";
+import { forgetProbes } from "../packages/core/src/scene/deviceChoice.ts";
 import {
   belowFloor,
   PROBED_FRAMEBUFFERS,
-} from "../packages/next/src/profile/webgl2Facts.ts";
+} from "../packages/core/src/profile/webgl2Facts.ts";
 import {
   angleBackend,
   probeWebgl2,
-} from "../packages/next/src/webgl2/probe.ts";
+} from "../packages/core/src/webgl2/probe.ts";
 import {
   FakeOffscreenCanvas,
   GL,

@@ -15,13 +15,13 @@ import {
   toParentMatrix,
 } from "../packages/next/src/frames/matrix.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
-import { Ellipsoid, fromDegrees } from "../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
 import {
   identity,
   invertAffine,
   multiply,
-} from "../packages/next/src/math/mat4.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+} from "../packages/core/src/math/mat4.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const OMEGA = 1e-3;

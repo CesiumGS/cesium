@@ -2,15 +2,15 @@
 // read lane by lane, the same values lane by lane, and an already-scalar
 // program back unchanged.
 import { describe, expect, it } from "vitest";
-import { Builder } from "../packages/next/src/ir/builder.ts";
-import { evaluate } from "../packages/next/src/ir/evaluate.ts";
-import { scalarize } from "../packages/next/src/ir/scalarize.ts";
+import { Builder } from "../packages/core/src/ir/builder.ts";
+import { evaluate } from "../packages/core/src/ir/evaluate.ts";
+import { scalarize } from "../packages/core/src/ir/scalarize.ts";
 import {
   width,
   type Id,
   type Program,
   type Value,
-} from "../packages/next/src/ir/types.ts";
+} from "../packages/core/src/ir/types.ts";
 
 /** q = cross(p, a) · |p| + mix(p, a ⊙ p, t) + select(p.x > 0, (p · a) a, -a), s = |p - a|. */
 function vectorProgram(): Program {

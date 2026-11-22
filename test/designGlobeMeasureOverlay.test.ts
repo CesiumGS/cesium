@@ -6,7 +6,7 @@ import {
   LINE_LIFT,
   MeasureOverlay,
 } from "../examples/design-globe/measureOverlay.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 describe("a measure line", () => {

@@ -2,16 +2,16 @@
 // pinch, twist, pan and tilt, 1:1 (plan 5d's ruling 26). Node, no GPU.
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { positionHit } from "./positionHit.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
-import { GlobeController } from "../packages/next/src/scene/GlobeController.ts";
-import { InspectController } from "../packages/next/src/scene/InspectController.ts";
-import { OrbitController } from "../packages/next/src/scene/OrbitController.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
+import { GlobeController } from "../packages/core/src/scene/GlobeController.ts";
+import { InspectController } from "../packages/core/src/scene/InspectController.ts";
+import { OrbitController } from "../packages/core/src/scene/OrbitController.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const SIZE = 100;

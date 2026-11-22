@@ -3,7 +3,7 @@ import { installGpuGlobals } from "./fakeGpu.ts";
 import type {
   Slabs as SlabsType,
   SlabOptions,
-} from "../packages/next/src/scene/Slabs.ts";
+} from "../packages/core/src/scene/Slabs.ts";
 
 let Slabs: typeof SlabsType;
 
@@ -68,7 +68,7 @@ function make(options: Partial<SlabOptions> = {}) {
 describe("slabs", () => {
   beforeAll(async () => {
     installGpuGlobals();
-    ({ Slabs } = await import("../packages/next/src/scene/Slabs.ts"));
+    ({ Slabs } = await import("../packages/core/src/scene/Slabs.ts"));
   });
 
   it("gives a range past the cap a slab of its exact aligned size", () => {

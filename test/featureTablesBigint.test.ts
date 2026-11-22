@@ -1,8 +1,8 @@
 // A 64-bit integer property is a bigint; the feature table upload turns it
 // into a float32 as it always did, and doesn't throw on it.
 import { describe, expect, it } from "vitest";
-import { plannedColumns } from "../packages/next/src/scene/world/featureTables.ts";
-import type { FeatureTable } from "../packages/next/src/io/gltfTypes.ts";
+import { plannedColumns } from "../packages/core/src/scene/world/featureTables.ts";
+import type { FeatureTable } from "../packages/core/src/io/gltfTypes.ts";
 
 describe("featureTables with bigint columns", () => {
   it("uploads a scalar bigint column as Number(v)", () => {

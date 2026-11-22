@@ -2,13 +2,13 @@
 // pyramid and the box test as the kernels are written, the queries and what
 // their results do to a tile, and what `Budgeted` does with it. No GPU.
 import { describe, expect, it, vi } from "vitest";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
 import {
   OcclusionFeedback,
   OcclusionQueries,
   LISTS_PER_VIEW,
-} from "../packages/next/src/scene/occlusionFeedback.ts";
+} from "../packages/core/src/scene/occlusionFeedback.ts";
 import {
   OCCLUSION_BIAS,
   blockOf,
@@ -17,8 +17,8 @@ import {
   levelSize,
   pyramidShape,
   type PyramidCamera,
-} from "../packages/next/src/render/view/occlusionMath.ts";
-import { BudgetedSelection } from "../packages/next/src/streaming/Budgeted.ts";
+} from "../packages/core/src/render/view/occlusionMath.ts";
+import { BudgetedSelection } from "../packages/core/src/streaming/Budgeted.ts";
 import {
   COARSEN_AFTER_MS,
   COARSEN_BACKOFF_MS,
@@ -28,16 +28,16 @@ import {
   QUERY_FLOATS,
   RESULT_MAX_AGE,
   type ViewOcclusion,
-} from "../packages/next/src/streaming/occlusion.ts";
+} from "../packages/core/src/streaming/occlusion.ts";
 import {
   StepwiseSelection,
   type SelectionView,
-} from "../packages/next/src/streaming/Stepwise.ts";
+} from "../packages/core/src/streaming/Stepwise.ts";
 import {
   treeFromJson,
   type Tile,
-} from "../packages/next/src/streaming/Tile.ts";
-import type { TileVolume } from "../packages/next/src/streaming/volumes.ts";
+} from "../packages/core/src/streaming/Tile.ts";
+import type { TileVolume } from "../packages/core/src/streaming/volumes.ts";
 
 describe("the depth pyramid", () => {
   it("is half the frame at level 0, rounded down, with levels to one texel", () => {
@@ -822,7 +822,7 @@ describe("what may block", () => {
     splatted?: boolean;
   }) {
     const { occlusionPass } =
-      await import("../packages/next/src/render/view/occlusionPass.ts");
+      await import("../packages/core/src/render/view/occlusionPass.ts");
     const feedback = new OcclusionFeedback();
     feedback.begin(Float64Array.of(R, 0, 0), Float64Array.of(0, 1, 0), 1000);
     const tile = build({

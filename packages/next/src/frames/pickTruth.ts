@@ -11,9 +11,9 @@ import {
   routeInverse,
   routeIsAffine,
   type Route,
-} from "../camera/route.ts";
-import type { FrameKey } from "../camera/frameResolver.ts";
-import type { CorePick } from "../scene/pick.ts";
+} from "../../../core/src/camera/route.ts";
+import type { FrameKey } from "../../../core/src/camera/frameResolver.ts";
+import type { CorePick } from "../../../core/src/scene/pick.ts";
 import { drawnThrough, type DrawnThrough } from "./drawn.ts";
 
 /** How a pick's true point was found. */

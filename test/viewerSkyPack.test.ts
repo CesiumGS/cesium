@@ -5,12 +5,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   SkyPackError,
   type SkyPackManifest,
-} from "../packages/next/src/atmosphere/skyPack.ts";
+} from "../packages/core/src/atmosphere/skyPack.ts";
 import {
   STAR_FLOATS,
   type StarField,
-} from "../packages/next/src/atmosphere/stars.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+} from "../packages/core/src/atmosphere/stars.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import { attachCredits } from "../packages/next/widgets/credits.ts";
 import type { Viewer } from "../packages/next/widgets/Viewer.ts";
 import { fakeDevice, fakeEngine } from "./fakeGpu.ts";

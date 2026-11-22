@@ -7,41 +7,41 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
   routeForward,
   type CurvilinearFrameSpec,
-} from "../packages/next/src/camera/route.ts";
+} from "../packages/core/src/camera/route.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import {
   heightOffset,
   verticalExaggeration,
-} from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
+} from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
-import { scaleAbout } from "../packages/next/src/transforms/scaleAbout.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
+import { scaleAbout } from "../packages/core/src/transforms/scaleAbout.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
 import {
   ROUTE_BODY,
   ROUTE_KIND,
   ROUTE_POINTER_ROWS,
   routeBlockRows,
-} from "../packages/next/src/scene/routeVariant.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
+} from "../packages/core/src/scene/routeVariant.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import {
   curvilinear,
   TransformGraph,
-} from "../packages/next/src/transform/graph.ts";
-import { routeBetween } from "../packages/next/src/transform/route.ts";
+} from "../packages/core/src/transform/graph.ts";
+import { routeBetween } from "../packages/core/src/transform/route.ts";
 import {
   CENTER_WORD,
   PLACEMENT_WORD,
   RADIUS_WORD,
   RECORD_WORDS,
-} from "../packages/next/src/render/layout.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/render/layout.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { fittedOnly } from "./fittedOnly.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";

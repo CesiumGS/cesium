@@ -15,8 +15,8 @@ import { eastNorthUpFrame } from "../../../packages/next/src/frames/local.ts";
 import {
   Ellipsoid,
   fromDegrees,
-} from "../../../packages/next/src/math/ellipsoid.ts";
-import { MOON } from "../../../packages/next/src/scene/Body.ts";
+} from "../../../packages/core/src/math/ellipsoid.ts";
+import { MOON } from "../../../packages/core/src/scene/Body.ts";
 import type { EngineeringSetup } from "../overlayConfig.ts";
 import type { RigKind } from "../orbit.ts";
 import type { OverlayId } from "../panel/model.ts";

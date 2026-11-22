@@ -4,12 +4,12 @@ import {
   type CrsRef,
   crsDefinition,
 } from "../../../../packages/next/src/engineering/crs.ts";
-import { fromDegrees } from "../../../../packages/next/src/math/ellipsoid.ts";
+import { fromDegrees } from "../../../../packages/core/src/math/ellipsoid.ts";
 import {
   type Body,
   EARTH,
   MOON,
-} from "../../../../packages/next/src/scene/Body.ts";
+} from "../../../../packages/core/src/scene/Body.ts";
 import { CALIFORNIA, type Need, type StressCase } from "../runner.ts";
 import {
   DESIGN_ROUND_TRIP,

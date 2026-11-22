@@ -1,5 +1,5 @@
-import type { Rig } from "../camera/rig.ts";
-import { EARTH, MOON, type Body } from "../scene/Body.ts";
+import type { Rig } from "../../../core/src/camera/rig.ts";
+import { EARTH, MOON, type Body } from "../../../core/src/scene/Body.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { FrameCatalog, Precision } from "./catalog.ts";
 import type { Frame } from "./Frame.ts";

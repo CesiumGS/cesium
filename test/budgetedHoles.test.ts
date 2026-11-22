@@ -3,17 +3,17 @@
 // coarse surface is drawn through finer content (at x4 vertical exaggeration
 // the two surfaces are meters apart and show as interpenetrating sheets).
 import { describe, expect, it } from "vitest";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
-import { BudgetedSelection } from "../packages/next/src/streaming/Budgeted.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
+import { BudgetedSelection } from "../packages/core/src/streaming/Budgeted.ts";
 import type {
   SelectionResult,
   SelectionView,
-} from "../packages/next/src/streaming/Stepwise.ts";
+} from "../packages/core/src/streaming/Stepwise.ts";
 import { expectExactPlaceholders } from "./placeholderInvariant.ts";
 import {
   treeFromJson,
   type Tile,
-} from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/streaming/Tile.ts";
 
 const R = 6371e3;
 const ASPECT = 16 / 9;

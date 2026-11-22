@@ -63,8 +63,8 @@ import {
 } from "../../examples/frames-explorer/scenarios/testHill.ts";
 import { terrainSightText } from "../../examples/frames-explorer/sightLines.ts";
 import { terrainLineOfSight } from "../../packages/next/src/measure/terrainLineOfSight.ts";
-import { terrainQueries } from "../../packages/next/src/query/terrainBackend.ts";
-import { LEVEL_ZERO_ERROR } from "../../packages/next/src/globe/TerrainSource.ts";
+import { terrainQueries } from "../../packages/core/src/query/terrainBackend.ts";
+import { LEVEL_ZERO_ERROR } from "../../packages/core/src/globe/TerrainSource.ts";
 import references from "../../examples/frames-explorer/references.json";
 import { enuAxes } from "../../examples/frames-explorer/scenarios/bodyFrame.ts";
 import {
@@ -83,7 +83,7 @@ import {
   type StressResult,
 } from "../../examples/frames-explorer/tests.ts";
 import { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import { Ellipsoid } from "../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import { catalogGridsFrom } from "../../examples/frames-explorer/stress/groups/global-geoids.ts";
 import {
   gridSource,
@@ -98,7 +98,7 @@ import {
 } from "../../packages/next/src/frames/local.ts";
 import { pointAccuracy } from "../../packages/next/src/frames/pointAccuracy.ts";
 import { createFrames } from "../../packages/next/src/frames/frames.ts";
-import { EARTH } from "../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../packages/core/src/scene/Body.ts";
 import { Instant } from "../../packages/next/src/time/Instant.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
 import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";

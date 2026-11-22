@@ -13,7 +13,7 @@ import {
   type SiteTransform,
 } from "../../packages/next/src/engineering/EngineeringFrame.ts";
 import { loadProj } from "../../packages/next/src/engineering/proj.ts";
-import { EARTH, MOON } from "../../packages/next/src/scene/Body.ts";
+import { EARTH, MOON } from "../../packages/core/src/scene/Body.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
 /** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */

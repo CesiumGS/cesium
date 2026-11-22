@@ -8,22 +8,22 @@ import {
   decodeQuantizedMesh,
   type Rectangle,
   type TerrainHeights,
-} from "../packages/next/src/globe/quantizedMesh.ts";
-import { HEIGHT_MORPH_ATTRIBUTE } from "../packages/next/src/globe/heightNormal.ts";
-import { TerrainSource } from "../packages/next/src/globe/TerrainSource.ts";
-import { parentSurfaceHeights } from "../packages/next/src/globe/terrainRefit.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
+} from "../packages/core/src/globe/quantizedMesh.ts";
+import { HEIGHT_MORPH_ATTRIBUTE } from "../packages/core/src/globe/heightNormal.ts";
+import { TerrainSource } from "../packages/core/src/globe/TerrainSource.ts";
+import { parentSurfaceHeights } from "../packages/core/src/globe/terrainRefit.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
 import {
   attributeHash,
   MORPH_WORD,
   RECORD_WORDS,
-} from "../packages/next/src/render/layout.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/render/layout.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 import {
   endMorphs,
   MORPH_SECONDS,
@@ -33,7 +33,7 @@ import {
   morphFactor,
   startMorphs,
   type MorphHost,
-} from "../packages/next/src/streaming/tileMorph.ts";
+} from "../packages/core/src/streaming/tileMorph.ts";
 import { gridTile } from "./terrainRayFixtures.ts";
 
 const PARENT: Rectangle = { west: 0.3, south: 0.2, east: 0.302, north: 0.202 };
@@ -445,7 +445,7 @@ describe("the morph's clock", () => {
 
 describe("the shader's twins", () => {
   const slang = readFileSync(
-    new URL("../packages/next/src/shaders/surface.slang", import.meta.url),
+    new URL("../packages/core/src/shaders/surface.slang", import.meta.url),
     "utf8",
   );
   it("MORPH_HASH is the TypeScript constant, and the duration comes from the view block", () => {
@@ -546,7 +546,7 @@ describe("the engine side", () => {
 
   it("names a morph wake reason", async () => {
     const { TICK_REASONS } =
-      await import("../packages/next/src/scene/Engine.ts");
+      await import("../packages/core/src/scene/Engine.ts");
     expect(TICK_REASONS).toContain("morph");
   });
 
@@ -597,7 +597,7 @@ describe("the engine side", () => {
     });
     view.camera.lookAt(v3.vec3(R, 0, 0), 0, -Math.PI / 2, 100);
     const { TICK_REASONS } =
-      await import("../packages/next/src/scene/Engine.ts");
+      await import("../packages/core/src/scene/Engine.ts");
     engine.start();
     await frames(30);
     const tileset = await engine.addTileset(view.world, `${BASE}tileset.json`);

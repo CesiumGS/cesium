@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   bindDeclaredUniforms,
   declaredUniforms,
-} from "../packages/next/src/scene/slangControls.ts";
+} from "../packages/core/src/scene/slangControls.ts";
 
 /** Reflection's parameters, as Slang's `toJsonObject` gives them. */
 const scalar = (scalarType: string) => ({ kind: "scalar", scalarType });
@@ -132,7 +132,7 @@ public void fragmentMain(FragmentInput f, inout MaterialOutput m) {
 describe("words", () => {
   it("labels a name in words", async () => {
     const { words } =
-      await import("../packages/next/src/scene/slangControls.ts");
+      await import("../packages/core/src/scene/slangControls.ts");
     expect(words("glowColor")).toBe("Glow color");
     expect(words("linesPerUnit")).toBe("Lines per unit");
     expect(words("colorA")).toBe("Color A");

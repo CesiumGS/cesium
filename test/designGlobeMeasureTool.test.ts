@@ -15,7 +15,7 @@ import {
 import { shownValues } from "../examples/design-globe/measureShown.ts";
 import { datasheetUrl } from "../examples/design-globe/measureView.ts";
 import { accuracyRows } from "../examples/design-globe/measureModel.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import {
   formatMeasureLink,
   nextMeasure,

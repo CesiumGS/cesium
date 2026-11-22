@@ -1,7 +1,7 @@
 import { expect } from "vitest";
-import { CLIP_BOXES } from "../packages/next/src/scene/contentLimits.ts";
-import type { SelectionResult } from "../packages/next/src/streaming/Stepwise.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
+import { CLIP_BOXES } from "../packages/core/src/scene/contentLimits.ts";
+import type { SelectionResult } from "../packages/core/src/streaming/Stepwise.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 
 const isAncestorOrSelf = (a: Tile, d: Tile): boolean => {
   for (let t: Tile | undefined = d; t; t = t.parent) {

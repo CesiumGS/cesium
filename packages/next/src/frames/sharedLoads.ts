@@ -23,7 +23,7 @@ import type {
   FrameDataLoadOptions,
   FrameManifest,
 } from "../ephemeris/frameRoles.ts";
-import type { LoadProgress } from "../io/readWithProgress.ts";
+import type { LoadProgress } from "../../../core/src/io/readWithProgress.ts";
 
 interface SharedLoad {
   readonly promise: Promise<unknown>;

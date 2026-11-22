@@ -10,14 +10,14 @@ import {
   type PostStage,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import { spritesStage } from "../examples/night-sky/sprites.ts";
 import {
   MAGNITUDE_ZERO_ILLUMINANCE,
   STAR_FLOATS,
   magnitudeOfRank,
   type StarField,
-} from "../packages/next/src/atmosphere/stars.ts";
+} from "../packages/core/src/atmosphere/stars.ts";
 import type { Harness } from "../lab/harness.ts";
 
 /**

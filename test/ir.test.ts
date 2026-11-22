@@ -16,7 +16,7 @@ import {
   shapeKey,
   typeOf,
   type Value,
-} from "../packages/next/src/ir/index.ts";
+} from "../packages/core/src/ir/index.ts";
 
 const INF = Infinity;
 type Case = [op: string, args: Value[], expected: Value];

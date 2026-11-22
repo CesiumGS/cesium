@@ -3,7 +3,7 @@
 // lines are lifted off the faces. Positions are relative to the mesh's own
 // origin, as the tessellator's are, and lengths are meters in the b-rep's own
 // units.
-import type { BrepForm, BrepMesh } from "../../packages/next/src/brep/index.ts";
+import type { BrepForm, BrepMesh } from "../../packages/core/src/brep/index.ts";
 
 /** How the faces are drawn. */
 export type DisplayMode = "shaded" | "shadedWire" | "flatWire" | "wire";

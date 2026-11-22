@@ -11,22 +11,22 @@ import {
   type Rectangle,
   type TerrainHeights,
   type TileRange,
-} from "../packages/next/src/globe/quantizedMesh.ts";
+} from "../packages/core/src/globe/quantizedMesh.ts";
 import {
   LEVEL_ZERO_ERROR,
   TerrainSource,
   skirtDepths,
   rectangle as tileRectangle,
   type TerrainLoader,
-} from "../packages/next/src/globe/TerrainSource.ts";
-import { GlobeBudgetedSelection } from "../packages/next/src/globe/GlobeBudgeted.ts";
-import { GlobeStepwiseSelection } from "../packages/next/src/globe/GlobeStepwise.ts";
-import { imageryLevel } from "../packages/next/src/globe/GlobeImagery.ts";
-import type { ImageryProvider } from "../packages/next/src/globe/ImageryProvider.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/globe/TerrainSource.ts";
+import { GlobeBudgetedSelection } from "../packages/core/src/globe/GlobeBudgeted.ts";
+import { GlobeStepwiseSelection } from "../packages/core/src/globe/GlobeStepwise.ts";
+import { imageryLevel } from "../packages/core/src/globe/GlobeImagery.ts";
+import type { ImageryProvider } from "../packages/core/src/globe/ImageryProvider.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 import { expectExactPlaceholders } from "./placeholderInvariant.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
 import { at, contains, gridTile } from "./terrainRayFixtures.ts";
 
 const PARENT: Rectangle = { west: 0.3, south: 0.2, east: 0.302, north: 0.202 };

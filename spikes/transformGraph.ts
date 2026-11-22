@@ -25,11 +25,11 @@ import {
   geocentricToGeographic,
   utm,
   verticalExaggerationEdge,
-} from "../packages/next/src/georeference/index.ts";
+} from "../packages/core/src/georeference/index.ts";
 import {
   Ellipsoid,
   cartographic,
-} from "../packages/next/src/math/ellipsoid.ts";
+} from "../packages/core/src/math/ellipsoid.ts";
 import {
   ROUTE_BODY,
   ROUTE_POINTER_ROWS,
@@ -37,22 +37,22 @@ import {
   ROUTE_OWN_ROWS,
   routeBlockRows,
   routeUnitWgsl,
-} from "../packages/next/src/scene/routeVariant.ts";
+} from "../packages/core/src/scene/routeVariant.ts";
 import {
   compileRoute,
   type CompiledRoute,
   type ParamRecord,
-} from "../packages/next/src/transform/compile.ts";
+} from "../packages/core/src/transform/compile.ts";
 import {
   affine,
   routeBetween,
   TransformGraph,
   type Route,
-} from "../packages/next/src/transform/index.ts";
+} from "../packages/core/src/transform/index.ts";
 import {
   radialDistortion,
   twist,
-} from "../packages/next/src/transforms/index.ts";
+} from "../packages/core/src/transforms/index.ts";
 
 const TEMPLATE = `
 <h1>Transform graph compiler</h1>

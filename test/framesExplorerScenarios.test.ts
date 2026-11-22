@@ -65,7 +65,7 @@ import {
   MOON_RADIUS,
   windowsOf,
 } from "../examples/frames-explorer/scenarios/occultation.ts";
-import { Ellipsoid, fromDegrees } from "../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
 
 const spec = (id: string) => SCENARIOS.find((s) => s.id === id)!;
 

@@ -9,9 +9,9 @@
 // worker answers there exactly. The sliders stay the keyboard's way in; the
 // target is a pointer convenience, hidden from assistive technology.
 import { Alignment } from "../../packages/next/src/engineering/alignment.ts";
-import { Ellipsoid } from "../../packages/next/src/math/ellipsoid.ts";
-import { vec3 } from "../../packages/next/src/math/vec3.ts";
-import { holdBrowserGestures } from "../../packages/next/src/scene/touchGestures.ts";
+import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
+import { vec3 } from "../../packages/core/src/math/vec3.ts";
+import { holdBrowserGestures } from "../../packages/core/src/scene/touchGestures.ts";
 import { createFramesPickInterpreter } from "../../packages/next/src/frames/pickInterpreter.ts";
 import { createFramesResolver } from "../../packages/next/src/frames/resolver.ts";
 import type { Viewer } from "@cesium/next/widgets";

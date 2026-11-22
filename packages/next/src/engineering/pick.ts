@@ -1,16 +1,22 @@
-import type { Body } from "../scene/Body.ts";
-import type { PickPositionResult, PickResult } from "../scene/View.ts";
-import type { DrawHandle } from "../scene/world/types.ts";
-import type { Tile } from "../streaming/Tile.ts";
-import type { SceneItem } from "../scene/SceneItem.ts";
-import type { Tileset3D } from "../streaming/Tileset3D.ts";
+import type { Body } from "../../../core/src/scene/Body.ts";
+import type {
+  PickPositionResult,
+  PickResult,
+} from "../../../core/src/scene/View.ts";
+import type { DrawHandle } from "../../../core/src/scene/world/types.ts";
+import type { Tile } from "../../../core/src/streaming/Tile.ts";
+import type { SceneItem } from "../../../core/src/scene/SceneItem.ts";
+import type { Tileset3D } from "../../../core/src/streaming/Tileset3D.ts";
 import {
   sphereDistance,
   obbDistanceSquaredTo,
   volumeObb,
   type TileVolume,
-} from "../streaming/volumes.ts";
-import type { CorePick, PickInterpreter } from "../scene/pick.ts";
+} from "../../../core/src/streaming/volumes.ts";
+import type {
+  CorePick,
+  PickInterpreter,
+} from "../../../core/src/scene/pick.ts";
 import type { CoordinateOperation } from "../frames/coordinates.ts";
 import { designPoint, type DesignPoint } from "./EngineeringFrame.ts";
 import { DESIGN_NOT_INVERTED, engineeringPlacement } from "./placement.ts";

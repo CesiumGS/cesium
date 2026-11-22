@@ -16,7 +16,7 @@ import {
   parseManifest,
   readBackground,
   readPoints,
-} from "../packages/next/src/atmosphere/skyPack.ts";
+} from "../packages/core/src/atmosphere/skyPack.ts";
 import { buildPack } from "../scripts/skyPack.mjs";
 import { floatToHalf } from "../scripts/skyPack/background.mjs";
 import {

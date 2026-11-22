@@ -1,5 +1,5 @@
 import type { FrameData } from "../ephemeris/loadFrameData.ts";
-import { EARTH, MOON, type Body } from "../scene/Body.ts";
+import { EARTH, MOON, type Body } from "../../../core/src/scene/Body.ts";
 import { EME2000_TO_PARENT, MOON_PA_TO_PARENT } from "./analytic.ts";
 import { bodyEdge, gcrfEdge, moonMeEdge } from "./edges.ts";
 import { itrfAccuracy, itrfEdge } from "./itrfEdge.ts";

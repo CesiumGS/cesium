@@ -16,8 +16,8 @@ import {
   nearestOnFace,
   nearestVertexUv,
 } from "../examples/brep-first-look/exact.ts";
-import { tessellateBrep } from "../packages/next/src/brep/tessellate.ts";
-import { validateBrep } from "../packages/next/src/brep/validate.ts";
+import { tessellateBrep } from "../packages/core/src/brep/tessellate.ts";
+import { validateBrep } from "../packages/core/src/brep/validate.ts";
 
 const shapes = {
   box: boxBrep,

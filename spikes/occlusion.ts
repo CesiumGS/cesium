@@ -15,20 +15,20 @@
 // Run: node scripts/runSpike.mjs "http://127.0.0.1:5190/spikes/occlusion.html?bench" runOcclusion
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
-import hzbWgsl from "../packages/next/src/shaders/generated/hzb.wgsl?raw";
-import occlusionQueryWgsl from "../packages/next/src/shaders/generated/occlusionQuery.wgsl?raw";
-import { FrameOcclusion } from "../packages/next/src/render/view/occlusionPass.ts";
+import hzbWgsl from "../packages/core/src/shaders/generated/hzb.wgsl?raw";
+import occlusionQueryWgsl from "../packages/core/src/shaders/generated/occlusionQuery.wgsl?raw";
+import { FrameOcclusion } from "../packages/core/src/render/view/occlusionPass.ts";
 import {
   boxHidden,
   buildPyramid,
   pyramidShape,
   type PyramidCamera,
-} from "../packages/next/src/render/view/occlusionMath.ts";
-import { OcclusionQueries } from "../packages/next/src/scene/occlusionFeedback.ts";
+} from "../packages/core/src/render/view/occlusionMath.ts";
+import { OcclusionQueries } from "../packages/core/src/scene/occlusionFeedback.ts";
 import {
   MAX_QUERIES,
   QUERY_FLOATS,
-} from "../packages/next/src/streaming/occlusion.ts";
+} from "../packages/core/src/streaming/occlusion.ts";
 
 const TEMPLATE = `
 <h1>Occlusion feedback: depth pyramid and tile queries</h1>

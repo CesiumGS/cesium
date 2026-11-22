@@ -8,19 +8,19 @@ import { ROAD } from "../../examples/transform-graph/data/road.ts";
 import {
   clearCompileCache,
   compileRoute,
-} from "../../packages/next/src/transform/compile.ts";
+} from "../../packages/core/src/transform/compile.ts";
 import {
   affine,
   routeBetween,
   TransformGraph,
-} from "../../packages/next/src/transform/index.ts";
-import { parseTransform } from "../../packages/next/src/transform/parse.ts";
-import { paramsOf } from "../../packages/next/src/transform/program.ts";
+} from "../../packages/core/src/transform/index.ts";
+import { parseTransform } from "../../packages/core/src/transform/parse.ts";
+import { paramsOf } from "../../packages/core/src/transform/program.ts";
 import {
   corridorUnroll,
   corridorUnrollDescriptor,
   type CorridorOptions,
-} from "../../packages/next/src/transforms/corridorUnroll.ts";
+} from "../../packages/core/src/transforms/corridorUnroll.ts";
 import { evaluate, type Program, type Value } from "./cir.ts";
 import { jacobianProgram } from "./ad.ts";
 import { evaluateInterval, evaluateIntervalSplit } from "./interval.ts";

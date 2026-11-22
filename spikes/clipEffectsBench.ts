@@ -30,13 +30,13 @@ import {
   type Globe,
   type Tileset3D,
   type WorldClip,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
   eastNorthUpFrame,
 } from "../packages/next/src/frames/index.ts";
-import type { TerrainRegion } from "../packages/next/src/globe/Globe.ts";
+import type { TerrainRegion } from "../packages/core/src/globe/Globe.ts";
 import { NEEDS_TOKEN, userToken } from "../bench/suite/ionToken.ts";
 
 const WIDTHS = { hd: [1920, 1080], uhd: [3840, 2160] } as const;

@@ -20,6 +20,7 @@
     ]
   },
   "include": [
-    "src"
+    "src",
+    "src/**/*.json"
   ]
 }

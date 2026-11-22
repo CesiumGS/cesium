@@ -13,12 +13,12 @@ import {
   type Route,
   type CurvilinearMap,
 } from "../packages/next/src/frames/index.ts";
-import { curvilinearScaleOf } from "../packages/next/src/camera/route.ts";
-import { verticalExaggeration } from "../packages/next/src/georeference/index.ts";
-import { fromFunction } from "../packages/next/src/transforms/fromFunction.ts";
-import { liveCurvilinearMap } from "../packages/next/src/transforms/liveCurvilinearMap.ts";
-import { scaleAbout } from "../packages/next/src/transforms/scaleAbout.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+import { curvilinearScaleOf } from "../packages/core/src/camera/route.ts";
+import { verticalExaggeration } from "../packages/core/src/georeference/index.ts";
+import { fromFunction } from "../packages/core/src/transforms/fromFunction.ts";
+import { liveCurvilinearMap } from "../packages/core/src/transforms/liveCurvilinearMap.ts";
+import { scaleAbout } from "../packages/core/src/transforms/scaleAbout.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 
 const WGS84 = Ellipsoid.WGS84;
 const at = (longitude: number, latitude: number, height: number) =>

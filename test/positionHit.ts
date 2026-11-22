@@ -1,7 +1,7 @@
 // A `View.pickPosition` answer for fakes (CS-814): the position with the
 // camera record the pick would have used.
-import { Camera } from "../packages/next/src/scene/Camera.ts";
-import type { PickPositionResult } from "../packages/next/src/scene/View.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
+import type { PickPositionResult } from "../packages/core/src/scene/View.ts";
 
 /**
  * `position` (undefined: over the sky) with `camera`'s record for a

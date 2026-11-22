@@ -16,7 +16,7 @@ import {
   type Params,
   type PlainEdge,
   type CurvilinearSpec,
-} from "../packages/next/src/transform/index.ts";
+} from "../packages/core/src/transform/index.ts";
 
 const translate = (x: number, y: number, z: number): number[] => [
   1,

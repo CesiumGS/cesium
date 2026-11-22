@@ -14,9 +14,9 @@ import {
   type BrepMesh,
   type DrawHandle,
   type MeshData,
-} from "../../packages/next/src/index.ts";
-import { SurfaceKind } from "../../packages/next/src/brep/index.ts";
-import type { BrepProblem } from "../../packages/next/src/brep/validate.ts";
+} from "../../packages/core/src/index.ts";
+import { SurfaceKind } from "../../packages/core/src/brep/index.ts";
+import type { BrepProblem } from "../../packages/core/src/brep/validate.ts";
 import type { ExampleContext } from "../types.ts";
 import {
   boxBrep,
@@ -67,7 +67,7 @@ import {
 import {
   formBounds,
   type FormBounds,
-} from "../../packages/next/src/brep/formBounds.ts";
+} from "../../packages/core/src/brep/formBounds.ts";
 
 /**
  * B-reps, a first look, in three scenes.

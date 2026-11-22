@@ -3,12 +3,12 @@ import {
   compileStyleExpression,
   cssColor,
   type PropertyReader,
-} from "../packages/next/src/scene/styleExpression.ts";
-import { FeatureStyle } from "../packages/next/src/scene/FeatureStyle.ts";
+} from "../packages/core/src/scene/styleExpression.ts";
+import { FeatureStyle } from "../packages/core/src/scene/FeatureStyle.ts";
 import {
   STRING_ID_BASE,
   stringIds,
-} from "../packages/next/src/scene/stringIds.ts";
+} from "../packages/core/src/scene/stringIds.ts";
 
 /** Properties as `p.<name>` numbers (vectors where named so). */
 const read: PropertyReader = (name) =>

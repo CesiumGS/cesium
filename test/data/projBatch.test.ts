@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
 import { loadProj } from "../../packages/next/src/engineering/proj.ts";
-import { EARTH } from "../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../packages/core/src/scene/Body.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;

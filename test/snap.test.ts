@@ -21,21 +21,21 @@ import {
   designPoint,
   EngineeringFrame,
 } from "../packages/next/src/engineering/EngineeringFrame.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import { Camera, projectToPixel } from "../packages/next/src/scene/Camera.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { View } from "../packages/next/src/scene/View.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import { Camera, projectToPixel } from "../packages/core/src/scene/Camera.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { View } from "../packages/core/src/scene/View.ts";
 import {
   CanvasTarget,
   OffscreenTarget,
-} from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { TileGeometry } from "../packages/next/src/streaming/Tile.ts";
-import { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
+} from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { TileGeometry } from "../packages/core/src/streaming/Tile.ts";
+import { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

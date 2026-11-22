@@ -55,7 +55,7 @@ import {
   eastNorthUpFrame,
   framePoint,
 } from "../../packages/next/src/frames/local.ts";
-import { Ellipsoid } from "../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import { measure } from "../../packages/next/src/measure/measure.ts";
 import { createFrames } from "../../packages/next/src/frames/frames.ts";
 import { Instant } from "../../packages/next/src/time/Instant.ts";

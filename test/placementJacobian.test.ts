@@ -7,24 +7,24 @@
 // the varyings' count.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
 import {
   PLACEMENT_TERMS,
   type PlacementParameter,
-} from "../packages/next/src/scene/placement.ts";
+} from "../packages/core/src/scene/placement.ts";
 import {
   latticeJacobian,
   placeJacobianWithTerms,
   placeWithTerms,
   turnNormalByJacobian,
-} from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import { fitLattice } from "../packages/next/src/scene/curvilinearFit.ts";
+} from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import { fitLattice } from "../packages/core/src/scene/curvilinearFit.ts";
 import type {
   AttributeTerm,
   CubicLattice,
   CurvilinearTerms,
-} from "../packages/next/src/scene/curvilinearTerms.ts";
+} from "../packages/core/src/scene/curvilinearTerms.ts";
 
 /** A deterministic generator in [−1, 1). */
 function random(seed: number): () => number {

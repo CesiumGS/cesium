@@ -4,9 +4,9 @@
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { parentPort, workerData } from "node:worker_threads";
-import { KernelHost } from "../packages/next/src/brep/kernelHost.ts";
-import { OcctKernel } from "../packages/next/src/brep/occt.ts";
-import { SmlibKernel } from "../packages/next/src/brep/smlib.ts";
+import { KernelHost } from "../packages/core/src/brep/kernelHost.ts";
+import { OcctKernel } from "../packages/core/src/brep/occt.ts";
+import { SmlibKernel } from "../packages/core/src/brep/smlib.ts";
 
 const load = async (directory, file) =>
   (await import(pathToFileURL(join(directory, file)).href)).default();

@@ -3,10 +3,10 @@
 // name that can't be mistaken for a true distance. What a vector style needs
 // (dash lengths, label spacing, symbol density in what is on the screen).
 // Everything else a measurement reports is true (`measure`, `drawnThrough`).
-import { routeForward, type Route } from "../camera/route.ts";
-import type { FrameKey } from "../camera/frameResolver.ts";
+import { routeForward, type Route } from "../../../core/src/camera/route.ts";
+import type { FrameKey } from "../../../core/src/camera/frameResolver.ts";
 import { drawnThrough, type DrawnThrough } from "../frames/drawn.ts";
-import type { AnchorHandle } from "../scene/world/types.ts";
+import type { AnchorHandle } from "../../../core/src/scene/world/types.ts";
 
 /** What yields the route that draws an anchor's content: a `View`. */
 export interface DrawnView {

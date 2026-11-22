@@ -24,7 +24,7 @@ import {
 } from "../examples/frames-explorer/scenarios/vehicles.ts";
 import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
 import { terrainLineOfSight } from "../packages/next/src/measure/terrainLineOfSight.ts";
-import { terrainQueries } from "../packages/next/src/query/terrainBackend.ts";
+import { terrainQueries } from "../packages/core/src/query/terrainBackend.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 
 const deg = Math.PI / 180;

@@ -15,15 +15,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
-import { SurfaceKind } from "../../packages/next/src/brep/form.ts";
+import { SurfaceKind } from "../../packages/core/src/brep/form.ts";
 import {
   OcctKernel,
   type OcctModule,
   type OcctSolid,
-} from "../../packages/next/src/brep/occt.ts";
-import { tessellateBrep } from "../../packages/next/src/brep/tessellate.ts";
-import { formBounds } from "../../packages/next/src/brep/formBounds.ts";
-import { validateBrep } from "../../packages/next/src/brep/validate.ts";
+} from "../../packages/core/src/brep/occt.ts";
+import { tessellateBrep } from "../../packages/core/src/brep/tessellate.ts";
+import { formBounds } from "../../packages/core/src/brep/formBounds.ts";
+import { validateBrep } from "../../packages/core/src/brep/validate.ts";
 import { occtDirectory } from "../../scripts/occtTools.mjs";
 import {
   STEP_SAMPLES,

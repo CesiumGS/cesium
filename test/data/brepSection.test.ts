@@ -8,25 +8,25 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { BrepForm } from "../../packages/next/src/brep/form.ts";
+import type { BrepForm } from "../../packages/core/src/brep/form.ts";
 import {
   OcctKernel,
   type OcctModule,
   type OcctSolid,
-} from "../../packages/next/src/brep/occt.ts";
-import { sectionBrep } from "../../packages/next/src/brep/section.ts";
+} from "../../packages/core/src/brep/occt.ts";
+import { sectionBrep } from "../../packages/core/src/brep/section.ts";
 import {
   fromPlane,
   planeFrame,
   toPlane,
-} from "../../packages/next/src/brep/sectionCurves.ts";
+} from "../../packages/core/src/brep/sectionCurves.ts";
 import {
   SmlibKernel,
   type SmlibModule,
   type SmlibSolid,
-} from "../../packages/next/src/brep/smlib.ts";
-import { validateBrep } from "../../packages/next/src/brep/validate.ts";
-import { brepGeometry } from "../../packages/next/src/geometry/brep.ts";
+} from "../../packages/core/src/brep/smlib.ts";
+import { validateBrep } from "../../packages/core/src/brep/validate.ts";
+import { brepGeometry } from "../../packages/core/src/geometry/brep.ts";
 import { occtDirectory } from "../../scripts/occtTools.mjs";
 import { smlibDirectory } from "../../scripts/smlibTools.mjs";
 import {

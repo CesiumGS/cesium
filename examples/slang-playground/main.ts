@@ -12,7 +12,7 @@ import {
   type ShaderControl,
   type SkyOptions,
   type ToneMapping,
-} from "../../packages/next/src/index.ts";
+} from "../../packages/core/src/index.ts";
 import { ev100Text } from "../../packages/next/widgets/observerPanel.ts";
 import type { ExampleContext } from "../types.ts";
 import { createContractView, createSlangEditor } from "./editor.ts";

@@ -16,10 +16,10 @@ import {
 import { MORPH_MS } from "../examples/design-globe/page.ts";
 import { CameraMoves, type Framing } from "../examples/design-globe/shots.ts";
 import { createStore } from "../examples/design-globe/stores.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

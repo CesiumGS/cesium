@@ -1,4 +1,4 @@
-import { runBulk, type BulkOptions } from "../core/bulk.ts";
+import { runBulk, type BulkOptions } from "../../../core/src/core/bulk.ts";
 import { Instant } from "../time/Instant.ts";
 import { frameTransform, type Frame } from "./Frame.ts";
 import type { FramePoint } from "./local.ts";

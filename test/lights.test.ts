@@ -7,8 +7,8 @@ import {
   lightReach,
   packViewLights,
   type LightOptions,
-} from "../packages/next/src/scene/lights.ts";
-import { readLight } from "../packages/next/src/io/gltfLights.ts";
+} from "../packages/core/src/scene/lights.ts";
+import { readLight } from "../packages/core/src/io/gltfLights.ts";
 
 const transform = { index: 0, generation: 0 };
 

@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest";
 import {
   CONTRACT_STRUCTS,
   ENGINE_STRUCTS,
-} from "../packages/next/src/shaders/generated/boundary.ts";
+} from "../packages/core/src/shaders/generated/boundary.ts";
 import {
   CONTRACT_WGSL,
   SLANG_BRIDGE,
   slangAdapter,
   slangBridge,
-} from "../packages/next/src/scene/contract.ts";
-import { CustomShader } from "../packages/next/src/scene/CustomShader.ts";
+} from "../packages/core/src/scene/contract.ts";
+import { CustomShader } from "../packages/core/src/scene/CustomShader.ts";
 import {
   SURFACE_BOUNDARY,
   SURFACE_VERTEX_BOUNDARY,
@@ -19,7 +19,7 @@ import {
   declarations,
   linkFailure,
   wgslUnit,
-} from "../packages/next/src/shaders/link/index.ts";
+} from "../packages/core/src/shaders/link/index.ts";
 
 /**
  * The surface boundary's description (shaders/generated/boundary.ts, from

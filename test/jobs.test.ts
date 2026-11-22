@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Jobs, type JobMessage } from "../packages/next/src/io/Jobs.ts";
+import { Jobs, type JobMessage } from "../packages/core/src/io/Jobs.ts";
 
 /** A port that records what each worker was sent, and a clock the test moves. */
 function setup(size = 1, cpuPerWorker = 1) {

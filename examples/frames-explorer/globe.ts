@@ -9,14 +9,14 @@ import {
   frameTransform,
   type Frame,
 } from "../../packages/next/src/frames/Frame.ts";
-import { EARTH } from "../../packages/next/src/scene/Body.ts";
-import type { MeshData } from "../../packages/next/src/scene/meshes.ts";
+import { EARTH } from "../../packages/core/src/scene/Body.ts";
+import type { MeshData } from "../../packages/core/src/scene/meshes.ts";
 import type {
   DrawHandle,
   AnchorHandle,
   MeshHandle,
   TransformHandle,
-} from "../../packages/next/src/scene/world/types.ts";
+} from "../../packages/core/src/scene/world/types.ts";
 import type { Instant } from "../../packages/next/src/time/Instant.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import { clearOfPanels, overlaps, panelBoxes } from "./labelPanels.ts";

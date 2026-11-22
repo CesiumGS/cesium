@@ -7,7 +7,7 @@
 // the fake device of test/fakeGpu.ts and the tests answer each pick's
 // readbacks as the passes would (as test/corePick.test.ts does).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { brepGeometry } from "../packages/next/src/geometry/brep.ts";
+import { brepGeometry } from "../packages/core/src/geometry/brep.ts";
 import {
   FLAGS_WORD,
   PICK_RESULT_WORDS,
@@ -16,16 +16,16 @@ import {
   RecordFlags,
   TERRAIN_CLIP_WORD,
   writePickBlock,
-} from "../packages/next/src/render/layout.ts";
-import { ViewLayout } from "../packages/next/src/render/generated/layouts.ts";
+} from "../packages/core/src/render/layout.ts";
+import { ViewLayout } from "../packages/core/src/render/generated/layouts.ts";
 import {
   standsInForTerrain,
   windowPlanes,
-} from "../packages/next/src/render/view/pickDomain.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
+} from "../packages/core/src/render/view/pickDomain.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
 import {
   NO_DRAW,
   NO_TRIANGLE,
@@ -33,14 +33,14 @@ import {
   resolveDomain,
   sampleHit,
   type DomainSample,
-} from "../packages/next/src/scene/pickDomain.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+} from "../packages/core/src/scene/pickDomain.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/world/types.ts";
 import { cappedCylinderBrep } from "./brepFixtures.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 

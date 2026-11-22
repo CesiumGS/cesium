@@ -2,12 +2,12 @@
 // the chain's order in a view's graph, and what a stage costs when it's off. The
 // pixels are checked in spikes/observer.ts.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as v3 from "../packages/next/src/math/vec3.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
 import {
   FrameGraph,
   TexturePool,
   type TextureDesc,
-} from "../packages/next/src/render/FrameGraph.ts";
+} from "../packages/core/src/render/FrameGraph.ts";
 import {
   ChainSlot,
   ViewChain,
@@ -17,22 +17,22 @@ import {
   registerSlot,
   type ChainEngine,
   type GraphStage,
-} from "../packages/next/src/render/post/chain.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
+} from "../packages/core/src/render/post/chain.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
 import {
   cameraObserver,
   eyeObserver,
-} from "../packages/next/src/scene/observer.ts";
+} from "../packages/core/src/scene/observer.ts";
 import {
   PostStageError,
   createPostStage,
   type PostStageOptions,
   type PostStagePass,
   type PostStageViewInfo,
-} from "../packages/next/src/scene/postStage.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import { wgslUnit } from "../packages/next/src/shaders/link/unit.ts";
+} from "../packages/core/src/scene/postStage.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import { wgslUnit } from "../packages/core/src/shaders/link/unit.ts";
 import { fakeDevice, fakeEngine, installGpuGlobals } from "./fakeGpu.ts";
 
 const PASS_THROUGH = `fn postStage(input: PostInput) -> vec4<f32> {

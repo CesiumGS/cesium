@@ -1,5 +1,5 @@
-import cesiumSlang from "../../packages/next/src/shaders/cesium.slang?raw";
-import { cesiumModule } from "../../packages/next/src/scene/slangStages.ts";
+import cesiumSlang from "../../packages/core/src/shaders/cesium.slang?raw";
+import { cesiumModule } from "../../packages/core/src/scene/slangStages.ts";
 
 /** An LSP position: line from 0, UTF-16 column. */
 export interface Position {

@@ -4,7 +4,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join, normalize, relative } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FrameUnavailableError } from "../packages/next/src/camera/frameResolver.ts";
+import { FrameUnavailableError } from "../packages/core/src/camera/frameResolver.ts";
 import {
   ANALYTIC_ACCURACY,
   analyticUtcMs,
@@ -17,7 +17,7 @@ import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
 import { createFrames } from "../packages/next/src/frames/frames.ts";
 import { createSkyState, skyState } from "../packages/next/src/frames/sky.ts";
 import type { FrameDataWarning } from "../packages/next/src/ephemeris/loadFrameData.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
 import { icrfToFixed } from "../packages/next/src/time/celestial.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";

@@ -3,17 +3,17 @@
 // per-vertex placement, it is the seam a later tessellation engine
 // consumes (section 8.4): a query, not only what the frames module pushes
 // into the core.
-import type { FrameKey } from "../camera/frameResolver.ts";
-import type { Route } from "../camera/route.ts";
-import type { Placement } from "../scene/placement.ts";
-import type { View } from "../scene/View.ts";
-import type { World } from "../scene/World.ts";
+import type { FrameKey } from "../../../core/src/camera/frameResolver.ts";
+import type { Route } from "../../../core/src/camera/route.ts";
+import type { Placement } from "../../../core/src/scene/placement.ts";
+import type { View } from "../../../core/src/scene/View.ts";
+import type { World } from "../../../core/src/scene/World.ts";
 import type {
   TermWeight,
   CurvilinearTerm,
   CurvilinearTerms,
-} from "../scene/curvilinearTerms.ts";
-import type { DrawHandle } from "../scene/world/types.ts";
+} from "../../../core/src/scene/curvilinearTerms.ts";
+import type { DrawHandle } from "../../../core/src/scene/world/types.ts";
 import type { FramesResolver } from "./resolver.ts";
 
 /** What `placementOf` answers. */

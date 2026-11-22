@@ -4,16 +4,16 @@
 // request scheduler on the fake GPU. Requests take a few simulated ticks at
 // 60 Hz, and tile sizes are set by hand: the trees and bytes are synthetic.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
-import type { TilesetOptions } from "../packages/next/src/streaming/tilesetTypes.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
+import type { TilesetOptions } from "../packages/core/src/streaming/tilesetTypes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 // Long runs of simulated ticks, some on and off.

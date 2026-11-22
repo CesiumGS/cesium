@@ -9,56 +9,56 @@ import {
   drawnHeight,
   drawnHeightRange,
   liftedPart,
-} from "../packages/next/src/camera/heightProfile.ts";
+} from "../packages/core/src/camera/heightProfile.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
-import { verticalExaggeration } from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
+import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import {
   verticalExaggerationDescriptor,
   verticalExaggerationEdge,
-} from "../packages/next/src/georeference/verticalExaggeration.ts";
+} from "../packages/core/src/georeference/verticalExaggeration.ts";
 import {
   HEIGHT_PROFILE_ATTRIBUTE,
   heightNormalInfo,
-} from "../packages/next/src/globe/heightNormal.ts";
-import { upsampleTerrainTile } from "../packages/next/src/globe/quantizedMesh.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
+} from "../packages/core/src/globe/heightNormal.ts";
+import { upsampleTerrainTile } from "../packages/core/src/globe/quantizedMesh.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
 import {
   PlacementTable,
   CURVILINEAR_KIND,
   blockRows,
-} from "../packages/next/src/scene/placementTable.ts";
-import { attributeHash } from "../packages/next/src/render/layout.ts";
+} from "../packages/core/src/scene/placementTable.ts";
+import { attributeHash } from "../packages/core/src/render/layout.ts";
 import {
   constantWeight,
   type CurvilinearTerms,
-} from "../packages/next/src/scene/curvilinearTerms.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { MeshData } from "../packages/next/src/scene/meshes.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
+} from "../packages/core/src/scene/curvilinearTerms.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { MeshData } from "../packages/core/src/scene/meshes.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
 import {
   placeWithTerms,
   weightOf,
-} from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import { drawTerms } from "../packages/next/src/scene/world/placements.ts";
+} from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import { drawTerms } from "../packages/core/src/scene/world/placements.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/world/types.ts";
 import {
   regionFromJson,
   sphereFromObb,
-} from "../packages/next/src/streaming/volumes.ts";
-import { drawnTile } from "../packages/next/src/streaming/tileCurvilinearMap.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
+} from "../packages/core/src/streaming/volumes.ts";
+import { drawnTile } from "../packages/core/src/streaming/tileCurvilinearMap.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
-import { loadIr } from "../packages/next/src/transform/lazyIr.ts";
+import { loadIr } from "../packages/core/src/transform/lazyIr.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { gridTile } from "./terrainRayFixtures.ts";
 
@@ -291,7 +291,7 @@ describe("a profile term's block", () => {
       BAND,
     ]);
     const slang = readFileSync(
-      new URL("../packages/next/src/shaders/placement.slang", import.meta.url),
+      new URL("../packages/core/src/shaders/placement.slang", import.meta.url),
       "utf8",
     );
     expect(slang).toMatch(

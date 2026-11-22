@@ -4,7 +4,7 @@ import {
   type Placement,
   type Primitive,
   type SolidRecipe,
-} from "../../packages/next/src/brep/kernelProtocol.ts";
+} from "../../packages/core/src/brep/kernelProtocol.ts";
 
 /**
  * The CSG sample's model (docs/design/breps-and-geometry-queries.md): a tree whose leaves are primitives

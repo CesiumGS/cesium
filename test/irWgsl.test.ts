@@ -9,8 +9,8 @@ import {
   emitWgslKernel,
   f32Literal,
   packUniforms,
-} from "../packages/next/src/ir/index.ts";
-import { wgslCases } from "../packages/next/src/ir/wgslCases.ts";
+} from "../packages/core/src/ir/index.ts";
+import { wgslCases } from "../packages/core/src/ir/wgslCases.ts";
 
 interface Naga {
   parseWgsl(source: string): unknown;
@@ -42,7 +42,7 @@ describe("naga accepts the emitted WGSL", () => {
   });
   const cases = wgslCases();
   it("has a case for every op in the vocabulary", async () => {
-    const { OPS } = await import("../packages/next/src/ir/index.ts");
+    const { OPS } = await import("../packages/core/src/ir/index.ts");
     const used = new Set(cases.flatMap((c) => c.program.eqns.map((e) => e.op)));
     for (const op of Object.keys(OPS)) {
       expect(used.has(op), op).toBe(true);

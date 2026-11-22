@@ -7,7 +7,7 @@ import {
   ionDefaults,
   resolveIonAsset,
   type Tileset3D,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import type { Harness } from "../lab/harness.ts";
 import "./hitch.css";
 import { NEEDS_TOKEN, userToken } from "./suite/ionToken.ts";

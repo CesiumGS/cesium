@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { compileSlang } from "../packages/next/src/scene/slang.ts";
+import { compileSlang } from "../packages/core/src/scene/slang.ts";
 import {
   memorySlangCache,
   slangCacheKey,
   type CompiledSlangEntry,
   type SlangCache,
-} from "../packages/next/src/scene/slangCache.ts";
+} from "../packages/core/src/scene/slangCache.ts";
 
 /**
  * Browser-compiled Slang's cache (slangCache.ts): a hit doesn't start the

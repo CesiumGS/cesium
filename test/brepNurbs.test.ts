@@ -2,17 +2,17 @@ import { describe, expect, it } from "vitest";
 import {
   evaluatePatch,
   evaluateSegment,
-} from "../packages/next/src/brep/bezier.ts";
+} from "../packages/core/src/brep/bezier.ts";
 import {
   evaluateCurve2,
   evaluateCurve3,
   evaluateSurface,
-} from "../packages/next/src/brep/evaluate.ts";
+} from "../packages/core/src/brep/evaluate.ts";
 import {
   SurfaceKind,
   type BezierCurves,
   type BrepForm,
-} from "../packages/next/src/brep/form.ts";
+} from "../packages/core/src/brep/form.ts";
 import {
   approximateCubic,
   evaluateNurbsCurve,
@@ -22,7 +22,7 @@ import {
   reverseNurbsCurve,
   trimNurbsCurve,
   type NurbsSurface,
-} from "../packages/next/src/brep/nurbs.ts";
+} from "../packages/core/src/brep/nurbs.ts";
 import { spikeBSurface as spikeB } from "./brepFixtures.ts";
 
 /** A seeded linear congruential generator in [0, 1), so failures repeat. */

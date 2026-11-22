@@ -3,7 +3,7 @@
 // GPU cast. Asynchronous, batched, standing, three-way answers with their
 // reasons and accuracy, and answers that improve.
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import { LEVEL_ZERO_ERROR } from "../packages/next/src/globe/TerrainSource.ts";
+import { LEVEL_ZERO_ERROR } from "../packages/core/src/globe/TerrainSource.ts";
 import {
   combineRayAnswers,
   createSpatialQueries,
@@ -12,17 +12,17 @@ import {
   type RayAnswer,
   type RayBackend,
   type RayQuery,
-} from "../packages/next/src/query/queries.ts";
-import { drawBackend } from "../packages/next/src/query/drawBackend.ts";
+} from "../packages/core/src/query/queries.ts";
+import { drawBackend } from "../packages/core/src/query/drawBackend.ts";
 import {
   terrainBackend,
   terrainQueries,
-} from "../packages/next/src/query/terrainBackend.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { CastRay } from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/query/terrainBackend.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { CastRay } from "../packages/core/src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { A, at, gridTile, strip, stripTarget } from "./terrainRayFixtures.ts";
 

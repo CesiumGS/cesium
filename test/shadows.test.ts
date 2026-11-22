@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { shadowRange } from "../packages/next/src/scene/shadows.ts";
+import { shadowRange } from "../packages/core/src/scene/shadows.ts";
 
 describe("shadowRange", () => {
   it("covers what is shown with room, in quarter-octave steps", () => {

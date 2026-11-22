@@ -8,11 +8,11 @@ import {
   deviceChoices,
   momentsStep,
   paths,
-} from "../packages/next/src/profile/paths.ts";
+} from "../packages/core/src/profile/paths.ts";
 import {
   personas,
   type PersonaName,
-} from "../packages/next/src/profile/personas.ts";
+} from "../packages/core/src/profile/personas.ts";
 import { installPersona } from "./fakeGpu.ts";
 
 const NAMES = Object.keys(personas) as PersonaName[];
@@ -91,7 +91,7 @@ describe("the engine builds with its paths", () => {
   for (const name of ["m2-chrome", "no-optional-features"] as const) {
     it(`on ${name}`, async () => {
       installPersona(name);
-      const { Engine } = await import("../packages/next/src/scene/Engine.ts");
+      const { Engine } = await import("../packages/core/src/scene/Engine.ts");
       const engine = await Engine.create();
       const chosen = deviceChoices(engine.gpu.facts);
       expect(engine.ctx.paths).toEqual(chosen.paths);

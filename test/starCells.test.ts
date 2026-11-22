@@ -10,17 +10,17 @@ import {
   cullCell,
   starCullInputs,
   starSubmission,
-} from "../packages/next/src/atmosphere/starCells.ts";
+} from "../packages/core/src/atmosphere/starCells.ts";
 import {
   STAR_FLOATS,
   starPeakShare,
   starRadius,
-} from "../packages/next/src/atmosphere/stars.ts";
+} from "../packages/core/src/atmosphere/stars.ts";
 import {
   ev100ToScale,
   type PointSpread,
-} from "../packages/next/src/scene/observer.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
+} from "../packages/core/src/scene/observer.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const SOURCE = readFileSync(

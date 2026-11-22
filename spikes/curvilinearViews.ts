@@ -21,7 +21,7 @@
 // go away: their twins must be released, and A's image must not change.
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
-import { routeForward } from "../packages/next/src/camera/route.ts";
+import { routeForward } from "../packages/core/src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
@@ -31,13 +31,13 @@ import {
 import {
   heightOffset,
   verticalExaggeration,
-} from "../packages/next/src/georeference/index.ts";
-import { HEIGHT_NORMAL_ATTRIBUTE } from "../packages/next/src/globe/heightNormal.ts";
+} from "../packages/core/src/georeference/index.ts";
+import { HEIGHT_NORMAL_ATTRIBUTE } from "../packages/core/src/globe/heightNormal.ts";
 import {
   RECORD_WORDS,
   VIEW_MASK_WORD,
-} from "../packages/next/src/render/layout.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/render/layout.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
 import {
   EARTH,
   Ellipsoid,
@@ -47,7 +47,7 @@ import {
   type MeshData,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 
 const TEMPLATE = `
 <h1>One world, three views, three routes</h1>

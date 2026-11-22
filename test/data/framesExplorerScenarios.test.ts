@@ -35,8 +35,8 @@ import {
 } from "../../examples/frames-explorer/scenarios/sites.ts";
 import { siteGap } from "../../examples/frames-explorer/stress/groups/rigid-placement-budget.ts";
 import { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import { Ellipsoid } from "../../packages/next/src/math/ellipsoid.ts";
-import { EARTH } from "../../packages/next/src/scene/Body.ts";
+import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
+import { EARTH } from "../../packages/core/src/scene/Body.ts";
 import { routeSteps } from "../../examples/frames-explorer/panel/routeSteps.ts";
 import references from "../../examples/frames-explorer/references.json";
 import {

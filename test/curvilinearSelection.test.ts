@@ -4,30 +4,30 @@
 // the horizon test is off for them. Synthetic trees and a `TileCurvilinearMap` made of
 // the same maps the engine uses; the engine's wiring is in curvilinearWorld.test.ts.
 import { describe, expect, it, vi } from "vitest";
-import type { FrameKey } from "../packages/next/src/camera/frameResolver.ts";
+import type { FrameKey } from "../packages/core/src/camera/frameResolver.ts";
 import {
   routeForward,
   type Route,
   type CurvilinearMap,
-} from "../packages/next/src/camera/route.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
+} from "../packages/core/src/camera/route.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
 import {
   drawnBounds,
   routeMap,
-} from "../packages/next/src/scene/curvilinearBounds.ts";
-import { BudgetedSelection } from "../packages/next/src/streaming/Budgeted.ts";
+} from "../packages/core/src/scene/curvilinearBounds.ts";
+import { BudgetedSelection } from "../packages/core/src/streaming/Budgeted.ts";
 import {
   StepwiseSelection,
   type SelectionView,
-} from "../packages/next/src/streaming/Stepwise.ts";
+} from "../packages/core/src/streaming/Stepwise.ts";
 import {
   treeFromJson,
   type Tile,
-} from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/streaming/Tile.ts";
 import {
   drawnTile,
   type TileCurvilinearMap,
-} from "../packages/next/src/streaming/tileCurvilinearMap.ts";
+} from "../packages/core/src/streaming/tileCurvilinearMap.ts";
 
 const R = 6371e3;
 const HEIGHT = 1080;

@@ -4,8 +4,8 @@
 import {
   forgetProbes,
   probeWebgpu,
-} from "../packages/next/src/scene/deviceChoice.ts";
-import { probeWebgl2 } from "../packages/next/src/webgl2/probe.ts";
+} from "../packages/core/src/scene/deviceChoice.ts";
+import { probeWebgl2 } from "../packages/core/src/webgl2/probe.ts";
 
 self.onmessage = async () => {
   forgetProbes();

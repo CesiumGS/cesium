@@ -8,7 +8,7 @@ import {
   toFeatureIds,
   unwrapB3dm,
   NULL_FEATURE,
-} from "../packages/next/src/io/features.ts";
+} from "../packages/core/src/io/features.ts";
 
 const data = new URL("fixtures/1x/", import.meta.url);
 const bytes = (path: string) =>

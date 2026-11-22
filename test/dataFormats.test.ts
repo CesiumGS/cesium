@@ -21,7 +21,7 @@ import {
   parseManifest,
   SKY_PACK_BUILD_COMMAND,
   SKY_PACK_FORMAT,
-} from "../packages/next/src/atmosphere/skyPack.ts";
+} from "../packages/core/src/atmosphere/skyPack.ts";
 import {
   FRAMES_DATA_FORMAT,
   framesDataFormatProblem,

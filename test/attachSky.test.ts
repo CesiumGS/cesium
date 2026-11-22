@@ -24,7 +24,7 @@ import {
   skyState,
   type SkyState,
 } from "../packages/next/src/frames/sky.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import { Clock } from "../packages/next/src/time/Clock.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";

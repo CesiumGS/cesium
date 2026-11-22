@@ -2,7 +2,7 @@
 // datasheet point (aviation and drones).
 import { EngineeringFrame } from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
 import { resolveOperation } from "../../../../packages/next/src/engineering/crs.ts";
-import { EARTH } from "../../../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import { epsgTimeDependentHelmert, type EpsgParameter } from "../datum.ts";
 import { geodeticToGeocentric, helmert, reversedHelmert } from "../geodesy.ts";
 import {

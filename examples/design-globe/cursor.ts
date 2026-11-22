@@ -14,7 +14,7 @@ import {
   pickDesign,
   type DesignPick,
 } from "../../packages/next/src/engineering/pick.ts";
-import type { Tileset3D } from "../../packages/next/src/streaming/Tileset3D.ts";
+import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import {
   compassNeedles,
@@ -29,7 +29,7 @@ import {
   errorText,
   type Placement,
 } from "./page.ts";
-import { Ellipsoid } from "../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import type {
   CompassView,
   CoordinateBlock,

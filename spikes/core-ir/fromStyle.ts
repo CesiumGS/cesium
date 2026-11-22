@@ -10,7 +10,7 @@ import {
   cssColor,
   parseStyleExpression,
   type StyleNode,
-} from "../../packages/next/src/scene/styleExpression.ts";
+} from "../../packages/core/src/scene/styleExpression.ts";
 import { Builder, width, type Id, type Program } from "./cir.ts";
 
 const UNARY_1X: Record<string, string> = {

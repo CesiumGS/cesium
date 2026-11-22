@@ -85,7 +85,7 @@ describe("the meter's highlight guard", () => {
 
   it("is in the shader, bounded by constants", () => {
     const slang = readFileSync(
-      new URL("../packages/next/src/shaders/meter.slang", import.meta.url),
+      new URL("../packages/core/src/shaders/meter.slang", import.meta.url),
       "utf8",
     );
     expect(slang).toContain("static const float HIGHLIGHT_GUARD_STOPS = 4.0;");

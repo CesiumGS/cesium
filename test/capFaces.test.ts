@@ -2,20 +2,20 @@
 // table that the parity and cap passes read, and a CPU twin of the cap pass's
 // choice of face (sectionCap.slang `fs`) for a ray.
 import { describe, expect, it } from "vitest";
-import { RecordFlags } from "../packages/next/src/render/layout.ts";
+import { RecordFlags } from "../packages/core/src/render/layout.ts";
 import {
   CAP_FACE_ROWS,
   CAP_LOOK_ROWS,
   CAP_MAX_FACES,
   packCapFaces,
-} from "../packages/next/src/scene/world/capFaces.ts";
+} from "../packages/core/src/scene/world/capFaces.ts";
 import {
   CLIP_TABLE_ROWS,
   packClipTable,
   tableKeeps,
   type ClipSet,
   type PlannedClip,
-} from "../packages/next/src/scene/world/clips.ts";
+} from "../packages/core/src/scene/world/clips.ts";
 
 const IDENTITY = Float64Array.of(
   1,

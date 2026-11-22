@@ -12,13 +12,13 @@ import {
   wgslUnit,
   type Boundary,
   type ShaderUnit,
-} from "../packages/next/src/shaders/link/index.ts";
+} from "../packages/core/src/shaders/link/index.ts";
 import {
   CustomShader,
   DEFAULT_STAGES,
-} from "../packages/next/src/scene/CustomShader.ts";
-import { POINT_STYLE_DEFAULTS } from "../packages/next/src/scene/pointStyle.ts";
-import { compileVectorStyle } from "../packages/next/src/vector/VectorStyle.ts";
+} from "../packages/core/src/scene/CustomShader.ts";
+import { POINT_STYLE_DEFAULTS } from "../packages/core/src/scene/pointStyle.ts";
+import { compileVectorStyle } from "../packages/core/src/vector/VectorStyle.ts";
 
 const source = (path: string) =>
   readFileSync(

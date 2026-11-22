@@ -7,18 +7,18 @@
 // answer each pick's readback as the GPU's pick pass would, as
 // test/corePick.test.ts does.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { Globe } from "../packages/next/src/globe/Globe.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+import { Globe } from "../packages/core/src/globe/Globe.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

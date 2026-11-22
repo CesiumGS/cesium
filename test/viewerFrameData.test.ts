@@ -18,8 +18,8 @@ import {
   skyState,
   type SkyState,
 } from "../packages/next/src/frames/sky.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import { Clock } from "../packages/next/src/time/Clock.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
@@ -506,7 +506,7 @@ describe("the Viewer's warnings and loads, guarded", () => {
       }),
     );
     const { Viewer } = await import("../packages/next/widgets/Viewer.ts");
-    const { Engine } = await import("../packages/next/src/scene/Engine.ts");
+    const { Engine } = await import("../packages/core/src/scene/Engine.ts");
     vi.spyOn(Engine, "create").mockRejectedValue(new Error("no device"));
     await expect(
       Viewer.create(element() as unknown as HTMLElement, {

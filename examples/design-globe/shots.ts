@@ -4,7 +4,7 @@
 // along" down the corridor to the anchor, a site's framing, and the daylight
 // each site is seen in.
 import type { Alignment } from "../../packages/next/src/engineering/alignment.ts";
-import type { Tileset3D } from "../../packages/next/src/streaming/Tileset3D.ts";
+import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import type { AnswerSite, Answers } from "./answers.ts";
 import type { OpenerId } from "./measureOpeners.ts";

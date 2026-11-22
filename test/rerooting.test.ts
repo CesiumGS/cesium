@@ -11,25 +11,25 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { attachSky } from "../packages/next/src/frames/attachSky.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import { ViewLayout } from "../packages/next/src/render/generated/layouts.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import { ViewLayout } from "../packages/core/src/render/generated/layouts.ts";
 import {
   ANCHOR_EYE_WORDS,
   VIEW_ANCHORS_WORD,
   VIEW_TRANSITION_WORD,
   VIEW_BIT_WORD,
   VIEW_STRIDE,
-} from "../packages/next/src/render/layout.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { AnchorHandle } from "../packages/next/src/scene/world/types.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
+} from "../packages/core/src/render/layout.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { AnchorHandle } from "../packages/core/src/scene/world/types.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import { Clock } from "../packages/next/src/time/Clock.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 

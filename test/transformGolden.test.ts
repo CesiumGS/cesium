@@ -30,30 +30,30 @@ import {
   verticalExaggerationEdge,
   webMercatorDescriptor,
   webMercatorToGeographicDescriptor,
-} from "../packages/next/src/georeference/index.ts";
-import { COMMUTATIVE } from "../packages/next/src/ir/ops.ts";
-import type { Id, Program } from "../packages/next/src/ir/types.ts";
+} from "../packages/core/src/georeference/index.ts";
+import { COMMUTATIVE } from "../packages/core/src/ir/ops.ts";
+import type { Id, Program } from "../packages/core/src/ir/types.ts";
 import {
   hessian,
   jacobian,
   parameterDerivatives,
-} from "../packages/next/src/transform/ad.ts";
+} from "../packages/core/src/transform/ad.ts";
 import {
   clearCompileCache,
   compileRoute,
-} from "../packages/next/src/transform/compile.ts";
-import { curvatureAt } from "../packages/next/src/transform/curvature.ts";
-import { evaluate } from "../packages/next/src/transform/evaluate.ts";
+} from "../packages/core/src/transform/compile.ts";
+import { curvatureAt } from "../packages/core/src/transform/curvature.ts";
+import { evaluate } from "../packages/core/src/transform/evaluate.ts";
 import {
   affine,
   routeBetween,
   TransformGraph,
   type Params,
   type Route,
-} from "../packages/next/src/transform/index.ts";
-import { evaluateInterval } from "../packages/next/src/transform/interval.ts";
-import { stepIr } from "../packages/next/src/transform/stepIr.ts";
-import { taylorBounds } from "../packages/next/src/transform/taylorBounds.ts";
+} from "../packages/core/src/transform/index.ts";
+import { evaluateInterval } from "../packages/core/src/transform/interval.ts";
+import { stepIr } from "../packages/core/src/transform/stepIr.ts";
+import { taylorBounds } from "../packages/core/src/transform/taylorBounds.ts";
 import {
   bendDescriptor,
   bumpDescriptor,
@@ -71,8 +71,8 @@ import {
   twistDescriptor,
   velocityModelDescriptor,
   type TransformDescriptor,
-} from "../packages/next/src/transforms/index.ts";
-import { parseTransform } from "../packages/next/src/transform/parse.ts";
+} from "../packages/core/src/transforms/index.ts";
+import { parseTransform } from "../packages/core/src/transform/parse.ts";
 
 // --- What a fixture records, and how --------------------------------------
 

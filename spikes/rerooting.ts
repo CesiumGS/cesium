@@ -30,7 +30,7 @@ import {
   type Tileset3D,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 
 const TEMPLATE = `
 <h1>A rig on GCRF, and re-rooting without a pixel's change</h1>

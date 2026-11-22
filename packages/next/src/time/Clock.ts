@@ -1,5 +1,8 @@
-import { Emitter } from "../core/Emitter.ts";
-import type { ClockChange, SceneClock } from "../core/sceneClock.ts";
+import { Emitter } from "../../../core/src/core/Emitter.ts";
+import type {
+  ClockChange,
+  SceneClock,
+} from "../../../core/src/core/sceneClock.ts";
 import { Instant } from "./Instant.ts";
 import { LeapSeconds } from "./leapSeconds.ts";
 

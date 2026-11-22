@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { GpuDevice } from "../packages/next/src/gpu/GpuDevice.ts";
-import { storageWritesRunPerSample } from "../packages/next/src/gpu/sampleRateProbe.ts";
+import { GpuDevice } from "../packages/core/src/gpu/GpuDevice.ts";
+import { storageWritesRunPerSample } from "../packages/core/src/gpu/sampleRateProbe.ts";
 import { installPersona, personas, type PersonaName } from "./fakeGpu.ts";
 
 const REQUESTED = 12;

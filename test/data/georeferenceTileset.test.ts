@@ -18,9 +18,9 @@ import {
 } from "../../packages/next/src/engineering/georeferenceTileset.ts";
 import { placeRigid } from "../../packages/next/src/engineering/placement.ts";
 import { loadProj } from "../../packages/next/src/engineering/proj.ts";
-import * as m4 from "../../packages/next/src/math/mat4.ts";
-import { EARTH } from "../../packages/next/src/scene/Body.ts";
-import type { Tileset3D } from "../../packages/next/src/streaming/Tileset3D.ts";
+import * as m4 from "../../packages/core/src/math/mat4.ts";
+import { EARTH } from "../../packages/core/src/scene/Body.ts";
+import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
 /** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */

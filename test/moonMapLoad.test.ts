@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { composeInWorker } from "../packages/next/src/io/moonMapLoad.ts";
+import { composeInWorker } from "../packages/core/src/io/moonMapLoad.ts";
 
 /** A stand-in for the Moon map's worker: replies when told to. */
 class FakeWorker {

@@ -29,7 +29,7 @@ import { beforeAll, describe, expect, it, vi } from "vitest";
 
 // Tile.ts reaches the content decoders, which need a browser worker; the
 // tilesets here are only parsed.
-vi.mock("../../packages/next/src/io/decoders.ts", () => ({
+vi.mock("../../packages/core/src/io/decoders.ts", () => ({
   decodeDraco: async () => {
     throw new Error("no Draco");
   },
@@ -108,12 +108,12 @@ import {
 import type { ProjApi } from "../../packages/next/src/engineering/projApi.ts";
 import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
 import { createFrames } from "../../packages/next/src/frames/frames.ts";
-import { splitGlb } from "../../packages/next/src/io/glb.ts";
+import { splitGlb } from "../../packages/core/src/io/glb.ts";
 import { measure } from "../../packages/next/src/measure/measure.ts";
 import {
   treeFromJson,
   type Tile,
-} from "../../packages/next/src/streaming/Tile.ts";
+} from "../../packages/core/src/streaming/Tile.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
 import { Instant } from "../../packages/next/src/time/Instant.ts";
 import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";

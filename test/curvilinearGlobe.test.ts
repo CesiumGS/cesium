@@ -6,38 +6,38 @@
 // the CPU against the route's own float64 map, as curvilinearWorld.test.ts does;
 // the GPU side is spikes/curvilinearGlobe.html.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { routeForward, type Route } from "../packages/next/src/camera/route.ts";
+import { routeForward, type Route } from "../packages/core/src/camera/route.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
-import { verticalExaggeration } from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
+import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
-import { GlobeBudgetedSelection } from "../packages/next/src/globe/GlobeBudgeted.ts";
-import { GlobeStepwiseSelection } from "../packages/next/src/globe/GlobeStepwise.ts";
+import { GlobeBudgetedSelection } from "../packages/core/src/globe/GlobeBudgeted.ts";
+import { GlobeStepwiseSelection } from "../packages/core/src/globe/GlobeStepwise.ts";
 import {
   HEIGHT_NORMAL_ATTRIBUTE,
   heightNormalInfo,
-} from "../packages/next/src/globe/heightNormal.ts";
+} from "../packages/core/src/globe/heightNormal.ts";
 import {
   flatTerrainTile,
   upsampleTerrainTile,
-} from "../packages/next/src/globe/quantizedMesh.ts";
+} from "../packages/core/src/globe/quantizedMesh.ts";
 import {
   TerrainSource,
   type TerrainLoader,
-} from "../packages/next/src/globe/TerrainSource.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import { readInstanceMatrix } from "../packages/next/src/render/layout.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+} from "../packages/core/src/globe/TerrainSource.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import { readInstanceMatrix } from "../packages/core/src/render/layout.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import {
   createBillboard,
   type MeshData,
-} from "../packages/next/src/scene/meshes.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { PlacementParameter } from "../packages/next/src/scene/placement.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
+} from "../packages/core/src/scene/meshes.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { PlacementParameter } from "../packages/core/src/scene/placement.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
 import {
   affineLattice,
   anchorCorrector,
@@ -46,20 +46,20 @@ import {
   invert3,
   linearPart,
   polarRotation,
-} from "../packages/next/src/scene/curvilinearAnchor.ts";
+} from "../packages/core/src/scene/curvilinearAnchor.ts";
 import {
   placeWithTerms,
   weightOf,
-} from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import { drawTerms } from "../packages/next/src/scene/world/placements.ts";
+} from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import { drawTerms } from "../packages/core/src/scene/world/placements.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
-import { drawnTile } from "../packages/next/src/streaming/tileCurvilinearMap.ts";
+} from "../packages/core/src/scene/world/types.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
+import { drawnTile } from "../packages/core/src/streaming/tileCurvilinearMap.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { fittedOnly } from "./fittedOnly.ts";

@@ -14,11 +14,11 @@ import {
   SLICE_GROWTH_TIMEOUT,
   SLICE_SHRINK_AFTER,
   SlicePool,
-} from "../packages/next/src/globe/SlicePool.ts";
-import { packImagery } from "../packages/next/src/render/layout.ts";
-import type { ModelPlacement } from "../packages/next/src/scene/gltfModel.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/globe/SlicePool.ts";
+import { packImagery } from "../packages/core/src/render/layout.ts";
+import type { ModelPlacement } from "../packages/core/src/scene/gltfModel.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 import { fakeDevice, installGpuGlobals } from "./fakeGpu.ts";
 import {
   compositingLayer,

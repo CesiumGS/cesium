@@ -2,15 +2,21 @@
 // closes plan 3's R8): a core pick (`View.pickPoint`) tagged with its
 // reference frame, its body, its body-fixed position, design coordinates
 // where the content has a placement, and its composed accuracy.
-import type { FrameKey } from "../camera/frameResolver.ts";
-import type { Body } from "../scene/Body.ts";
-import type { CorePick, PickInterpreter } from "../scene/pick.ts";
-import type { Placement } from "../scene/placement.ts";
-import type { AnchorHandle, DrawHandle } from "../scene/world/types.ts";
+import type { FrameKey } from "../../../core/src/camera/frameResolver.ts";
+import type { Body } from "../../../core/src/scene/Body.ts";
+import type {
+  CorePick,
+  PickInterpreter,
+} from "../../../core/src/scene/pick.ts";
+import type { Placement } from "../../../core/src/scene/placement.ts";
+import type {
+  AnchorHandle,
+  DrawHandle,
+} from "../../../core/src/scene/world/types.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { DrawnThrough } from "./drawn.ts";
 import { truePick, type TruePick } from "./pickTruth.ts";
-import type { Georeference } from "../georeference/georeference.ts";
+import type { Georeference } from "../../../core/src/georeference/georeference.ts";
 import type { CatalogFrameName, FrameCatalog } from "./catalog.ts";
 import { Frame } from "./Frame.ts";
 import { isUnstated } from "./frameAccuracy.ts";

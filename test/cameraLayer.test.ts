@@ -8,21 +8,21 @@ import {
   FrameUnavailableError,
   type FrameKey,
   type FrameResolver,
-} from "../packages/next/src/camera/frameResolver.ts";
-import { defaultRig, type Rig } from "../packages/next/src/camera/rig.ts";
+} from "../packages/core/src/camera/frameResolver.ts";
+import { defaultRig, type Rig } from "../packages/core/src/camera/rig.ts";
 import type {
   ClockChange,
   SceneClock,
-} from "../packages/next/src/core/sceneClock.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { GlobeController } from "../packages/next/src/scene/GlobeController.ts";
-import { InspectController } from "../packages/next/src/scene/InspectController.ts";
-import { OrbitController } from "../packages/next/src/scene/OrbitController.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { AnchorHandle } from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/core/sceneClock.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { GlobeController } from "../packages/core/src/scene/GlobeController.ts";
+import { InspectController } from "../packages/core/src/scene/InspectController.ts";
+import { OrbitController } from "../packages/core/src/scene/OrbitController.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { AnchorHandle } from "../packages/core/src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 /** Column-major translation by (x, y, z). */

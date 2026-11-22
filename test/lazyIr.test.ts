@@ -14,7 +14,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join, normalize, relative } from "node:path";
 import ts from "typescript";
 import { describe, expect, it, vi } from "vitest";
-import { curvilinear } from "../packages/next/src/transform/graph.ts";
+import { curvilinear } from "../packages/core/src/transform/graph.ts";
 
 const root = normalize(join(import.meta.dirname, "..", "packages", "next"));
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
@@ -211,7 +211,7 @@ describe("Cesium IR on demand", () => {
 
   it("asks for it and answers without it, then answers with it", async () => {
     vi.resetModules();
-    const lazy = await import("../packages/next/src/transform/lazyIr.ts");
+    const lazy = await import("../packages/core/src/transform/lazyIr.ts");
     expect(lazy.irPasses()).toBeUndefined();
     const out = new Float64Array(9);
     const spec = stretch("(p, params) => [p[0], p[1], p[2] * params.k]");
@@ -226,7 +226,7 @@ describe("Cesium IR on demand", () => {
 
   it("does not load it for a spec that has no IR source", async () => {
     vi.resetModules();
-    const lazy = await import("../packages/next/src/transform/lazyIr.ts");
+    const lazy = await import("../packages/core/src/transform/lazyIr.ts");
     expect(
       lazy.adJacobian(stretch(), [1, 2, 3], { k: 4 }, new Float64Array(9)),
     ).toBeUndefined();
@@ -236,7 +236,7 @@ describe("Cesium IR on demand", () => {
 
   it("shares one load, and a later call gets the installed passes at once", async () => {
     vi.resetModules();
-    const lazy = await import("../packages/next/src/transform/lazyIr.ts");
+    const lazy = await import("../packages/core/src/transform/lazyIr.ts");
     const [a, b] = await Promise.all([lazy.loadIr(), lazy.loadIr()]);
     expect(a).toBe(b);
     expect(await lazy.loadIr()).toBe(a);
@@ -246,8 +246,8 @@ describe("Cesium IR on demand", () => {
   it("parses a function map when Cesium IR arrives, and says changed()", async () => {
     vi.resetModules();
     const { fromFunction } =
-      await import("../packages/next/src/transforms/fromFunction.ts");
-    const lazy = await import("../packages/next/src/transform/lazyIr.ts");
+      await import("../packages/core/src/transforms/fromFunction.ts");
+    const lazy = await import("../packages/core/src/transform/lazyIr.ts");
     const stretchZ = (p: ArrayLike<number>) => [p[0]!, p[1]!, p[2]! * 2];
     const map = fromFunction(stretchZ as never);
     // Until Cesium IR is here the function is not parsed: it is fitted, and says why.
@@ -268,10 +268,10 @@ describe("Cesium IR on demand", () => {
 
   it("a function map made after Cesium IR is here parses at once", async () => {
     vi.resetModules();
-    const lazy = await import("../packages/next/src/transform/lazyIr.ts");
+    const lazy = await import("../packages/core/src/transform/lazyIr.ts");
     await lazy.loadIr();
     const { fromFunction } =
-      await import("../packages/next/src/transforms/fromFunction.ts");
+      await import("../packages/core/src/transforms/fromFunction.ts");
     const map = fromFunction(((p: ArrayLike<number>) => [
       p[0]!,
       p[1]!,

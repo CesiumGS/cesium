@@ -7,12 +7,12 @@ import {
   type FramePoint,
 } from "../packages/next/src/frames/local.ts";
 import { Frame } from "../packages/next/src/frames/Frame.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { C } from "../packages/next/src/measure/constants.ts";
 import { downlink, uplink } from "../packages/next/src/measure/doppler.ts";
 import { measure, measureSpan } from "../packages/next/src/measure/measure.ts";
 import { surfaceDistance } from "../packages/next/src/measure/surface.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 import type { EarthOrientationParameters } from "../packages/next/src/time/eop.ts";
 import { Trajectory } from "../packages/next/src/trajectory/Trajectory.ts";

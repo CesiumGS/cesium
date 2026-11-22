@@ -7,7 +7,7 @@ import {
 import { Alignment } from "../../../../packages/next/src/engineering/alignment.ts";
 import { framePoint } from "../../../../packages/next/src/frames/local.ts";
 import { measure } from "../../../../packages/next/src/measure/measure.ts";
-import { EARTH } from "../../../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import { CALIFORNIA, type StressCase, plainAccuracy } from "../runner.ts";
 import { CLOTHOID_ROAD } from "../../scenarios/sites.ts";
 import {

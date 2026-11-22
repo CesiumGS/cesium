@@ -15,9 +15,9 @@ import {
   emitWgsl,
   packUniforms,
   type Program,
-} from "../packages/next/src/ir/index.ts";
-import { nagaGlsl, type NagaApi } from "../packages/next/src/ir/nagaVertex.ts";
-import { wgslCases } from "../packages/next/src/ir/wgslCases.ts";
+} from "../packages/core/src/ir/index.ts";
+import { nagaGlsl, type NagaApi } from "../packages/core/src/ir/nagaVertex.ts";
+import { wgslCases } from "../packages/core/src/ir/wgslCases.ts";
 
 const cases = wgslCases();
 

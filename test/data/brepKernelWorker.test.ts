@@ -8,21 +8,21 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
 import { RECIPES } from "../../examples/brep-first-look/kernels.ts";
-import { formBounds } from "../../packages/next/src/brep/formBounds.ts";
-import { prepareGpuPatches } from "../../packages/next/src/brep/gpuPatches.ts";
+import { formBounds } from "../../packages/core/src/brep/formBounds.ts";
+import { prepareGpuPatches } from "../../packages/core/src/brep/gpuPatches.ts";
 import {
   KernelCanceled,
   KernelClient,
-} from "../../packages/next/src/brep/kernelClient.ts";
+} from "../../packages/core/src/brep/kernelClient.ts";
 import {
   OcctKernel,
   type OcctModule,
-} from "../../packages/next/src/brep/occt.ts";
+} from "../../packages/core/src/brep/occt.ts";
 import {
   SmlibKernel,
   type SmlibModule,
-} from "../../packages/next/src/brep/smlib.ts";
-import { validateBrep } from "../../packages/next/src/brep/validate.ts";
+} from "../../packages/core/src/brep/smlib.ts";
+import { validateBrep } from "../../packages/core/src/brep/validate.ts";
 import { occtDirectory } from "../../scripts/occtTools.mjs";
 import { smlibDirectory } from "../../scripts/smlibTools.mjs";
 import { stepSamplesDirectory } from "../../scripts/stepSamples.mjs";

@@ -4,22 +4,22 @@ import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import {
   FrameUnavailableError,
   type FrameResolver,
-} from "../packages/next/src/camera/frameResolver.ts";
+} from "../packages/core/src/camera/frameResolver.ts";
 import type {
   ClockChange,
   SceneClock,
-} from "../packages/next/src/core/sceneClock.ts";
+} from "../packages/core/src/core/sceneClock.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { createFrames } from "../packages/next/src/frames/frames.ts";
 import { Frame } from "../packages/next/src/frames/Frame.ts";
 import { rigPreset } from "../packages/next/src/frames/presets.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { identity } from "../packages/next/src/math/mat4.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+import { identity } from "../packages/core/src/math/mat4.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
 import { Trajectory } from "../packages/next/src/trajectory/Trajectory.ts";

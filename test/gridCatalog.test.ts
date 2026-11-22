@@ -5,7 +5,7 @@ import {
   isPlainGridName,
 } from "../packages/next/src/engineering/gridCatalog.ts";
 import { PROJ_DATA_CATALOG } from "../packages/next/src/engineering/projPins.ts";
-import { sha256Hex } from "../packages/next/src/io/sha256.ts";
+import { sha256Hex } from "../packages/core/src/io/sha256.ts";
 import {
   PLAIN_GRID_NAMES,
   RESERVED_GRID_NAMES,

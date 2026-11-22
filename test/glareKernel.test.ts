@@ -11,13 +11,13 @@ import {
   kernelImage,
   kernelRadii,
   type GlareKernel,
-} from "../packages/next/src/render/post/glareKernel.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+} from "../packages/core/src/render/post/glareKernel.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import {
   cameraObserver,
   type GlarePupil,
-} from "../packages/next/src/scene/observer.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
+} from "../packages/core/src/scene/observer.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import { spritesStage } from "../examples/night-sky/sprites.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
@@ -208,7 +208,7 @@ describe("kernelImage", () => {
 });
 
 describe("the live path", () => {
-  const src = fileURLToPath(new URL("../packages/next/src", import.meta.url));
+  const src = fileURLToPath(new URL("../packages/core/src", import.meta.url));
   const files = (dir: string): string[] =>
     readdirSync(dir).flatMap((name) => {
       const path = join(dir, name);

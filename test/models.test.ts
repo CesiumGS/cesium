@@ -1,8 +1,8 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import type { PlacementOptions } from "../packages/next/src/scene/gltfModel.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import type { PlacementOptions } from "../packages/core/src/scene/gltfModel.ts";
 import {
   fakeDevice,
   installFakeNavigator,
@@ -45,14 +45,14 @@ const at = {
 describe("ModelResource and ModelPlacement", () => {
   let engine: Engine;
   let world: World;
-  let usage: typeof import("../packages/next/src/scene/gltfModel.ts").modelUsage;
+  let usage: typeof import("../packages/core/src/scene/gltfModel.ts").modelUsage;
 
   beforeAll(async () => {
     installGpuGlobals();
     installFakeNavigator(fakeDevice({}));
-    const { Engine } = await import("../packages/next/src/scene/Engine.ts");
+    const { Engine } = await import("../packages/core/src/scene/Engine.ts");
     ({ modelUsage: usage } =
-      await import("../packages/next/src/scene/gltfModel.ts"));
+      await import("../packages/core/src/scene/gltfModel.ts"));
     engine = await Engine.create({ limits: "adapter" });
     world = engine.createWorld();
   });
@@ -140,7 +140,7 @@ describe("ModelResource and ModelPlacement", () => {
 
   it("swaps a shader in place, keeping its draws", async () => {
     const { CustomShader } =
-      await import("../packages/next/src/scene/CustomShader.ts");
+      await import("../packages/core/src/scene/CustomShader.ts");
     const shader = new CustomShader({
       fragment:
         "fn fragmentMain(fsInput: FragmentInput, material: ptr<function, MaterialOutput>) {}",

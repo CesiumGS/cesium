@@ -11,7 +11,7 @@ import {
   routeIsAffine,
   curvilinearScaleOf,
   type Route,
-} from "../camera/route.ts";
+} from "../../../core/src/camera/route.ts";
 import { distanceToSegment } from "./drawn.ts";
 
 /**

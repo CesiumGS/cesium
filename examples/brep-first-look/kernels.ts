@@ -1,17 +1,17 @@
-import type { BrepForm } from "../../packages/next/src/index.ts";
-import type { BrepProblem } from "../../packages/next/src/brep/validate.ts";
+import type { BrepForm } from "../../packages/core/src/index.ts";
+import type { BrepProblem } from "../../packages/core/src/brep/validate.ts";
 import {
   KernelClient,
   type KernelClientOptions,
-} from "../../packages/next/src/brep/kernelClient.ts";
+} from "../../packages/core/src/brep/kernelClient.ts";
 import type {
   BooleanOperation,
   KernelForm,
   KernelName as WorkerKernel,
   Primitive,
-} from "../../packages/next/src/brep/kernelProtocol.ts";
-import type { FormBounds } from "../../packages/next/src/brep/formBounds.ts";
-import type { GpuPatches } from "../../packages/next/src/brep/gpuPatches.ts";
+} from "../../packages/core/src/brep/kernelProtocol.ts";
+import type { FormBounds } from "../../packages/core/src/brep/formBounds.ts";
+import type { GpuPatches } from "../../packages/core/src/brep/gpuPatches.ts";
 
 /**
  * The kernels behind the example's second and third scenes. The CSG spike's

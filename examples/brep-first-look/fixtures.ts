@@ -7,7 +7,7 @@ import {
   type BrepForm,
   type NurbsCurve,
   type NurbsSurface,
-} from "../../packages/next/src/brep/index.ts";
+} from "../../packages/core/src/brep/index.ts";
 
 /** The tolerance, m, of edges whose curves a 64-sample polyline only approximates. */
 const POLYLINE_TOLERANCE = 1e-3;

@@ -21,34 +21,34 @@
 // Run: node scripts/runSpike.mjs "http://127.0.0.1:5190/spikes/curvilinearFitGpu.html?bench" runCurvilinearFitGpu
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
-import curvilinearFitDirectWgsl from "../packages/next/src/shaders/generated/curvilinearFitDirect.wgsl?raw";
+import curvilinearFitDirectWgsl from "../packages/core/src/shaders/generated/curvilinearFitDirect.wgsl?raw";
 import {
   Ellipsoid,
   cartographic,
-} from "../packages/next/src/math/ellipsoid.ts";
+} from "../packages/core/src/math/ellipsoid.ts";
 import {
   WGS84_RADII,
   formDisplacement,
   splitDf64,
   utmForm,
   type GpuCurvilinearForm,
-} from "../packages/next/src/scene/curvilinearForms.ts";
+} from "../packages/core/src/scene/curvilinearForms.ts";
 import {
   DIRECT_DRAW_ROWS,
   bakeHeightField,
   liftBoundOver,
   scaleAboutBoundOver,
-} from "../packages/next/src/scene/curvilinearDirect.ts";
+} from "../packages/core/src/scene/curvilinearDirect.ts";
 import {
   evaluateLattice,
   fitLatticeAt,
-} from "../packages/next/src/scene/curvilinearFit.ts";
+} from "../packages/core/src/scene/curvilinearFit.ts";
 import {
   GpuCurvilinearFitter,
   gpuLatticeRows,
   type GpuFitTile,
-} from "../packages/next/src/scene/curvilinearFitGpu.ts";
-import type { CubicLattice } from "../packages/next/src/scene/curvilinearTerms.ts";
+} from "../packages/core/src/scene/curvilinearFitGpu.ts";
+import type { CubicLattice } from "../packages/core/src/scene/curvilinearTerms.ts";
 
 const TEMPLATE = `
 <h1>Curvilinear map fitting on the GPU</h1>

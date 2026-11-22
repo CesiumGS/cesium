@@ -10,32 +10,32 @@ import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import {
   FrameUnavailableError,
   type FrameKey,
-} from "../packages/next/src/camera/frameResolver.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
+} from "../packages/core/src/camera/frameResolver.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
 import {
   corePick as readCorePick,
   type CorePick,
   type PickTick,
-} from "../packages/next/src/scene/pick.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import { routeForward } from "../packages/next/src/camera/route.ts";
+} from "../packages/core/src/scene/pick.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import { routeForward } from "../packages/core/src/camera/route.ts";
 import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
-import { verticalExaggeration } from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
+import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import { pickIn } from "../packages/next/src/frames/pickIn.ts";
 import {
   Camera,
   centeredIntrinsics,
-} from "../packages/next/src/scene/Camera.ts";
-import { View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+} from "../packages/core/src/scene/Camera.ts";
+import { View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
-import type { Georeference } from "../packages/next/src/georeference/georeference.ts";
+} from "../packages/core/src/scene/world/types.ts";
+import type { Georeference } from "../packages/core/src/georeference/georeference.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

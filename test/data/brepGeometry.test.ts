@@ -7,19 +7,19 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import type { BrepForm } from "../../packages/next/src/brep/form.ts";
-import { formBounds } from "../../packages/next/src/brep/formBounds.ts";
+import type { BrepForm } from "../../packages/core/src/brep/form.ts";
+import { formBounds } from "../../packages/core/src/brep/formBounds.ts";
 import {
   OcctKernel,
   type OcctModule,
   type OcctSolid,
-} from "../../packages/next/src/brep/occt.ts";
+} from "../../packages/core/src/brep/occt.ts";
 import {
   SmlibKernel,
   type SmlibModule,
   type SmlibSolid,
-} from "../../packages/next/src/brep/smlib.ts";
-import { brepGeometry } from "../../packages/next/src/geometry/brep.ts";
+} from "../../packages/core/src/brep/smlib.ts";
+import { brepGeometry } from "../../packages/core/src/geometry/brep.ts";
 import { occtDirectory } from "../../scripts/occtTools.mjs";
 import { smlibDirectory } from "../../scripts/smlibTools.mjs";
 import {

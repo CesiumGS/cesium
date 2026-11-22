@@ -19,9 +19,9 @@ import {
   dominantTerm,
   pointAccuracy,
 } from "../packages/next/src/frames/pointAccuracy.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { itrfAccuracy } from "../packages/next/src/frames/itrfEdge.ts";
-import { EARTH_ROTATION_RATE } from "../packages/next/src/math/constants.ts";
+import { EARTH_ROTATION_RATE } from "../packages/core/src/math/constants.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

@@ -1,16 +1,16 @@
 import {
   KernelClient,
   type KernelClientOptions,
-} from "../../packages/next/src/brep/kernelClient.ts";
-import type { BrepForm } from "../../packages/next/src/brep/form.ts";
-import type { FormBounds } from "../../packages/next/src/brep/formBounds.ts";
-import type { GpuPatches } from "../../packages/next/src/brep/gpuPatches.ts";
+} from "../../packages/core/src/brep/kernelClient.ts";
+import type { BrepForm } from "../../packages/core/src/brep/form.ts";
+import type { FormBounds } from "../../packages/core/src/brep/formBounds.ts";
+import type { GpuPatches } from "../../packages/core/src/brep/gpuPatches.ts";
 import {
   recipeLeaves,
   type KernelName,
   type SolidRecipe,
-} from "../../packages/next/src/brep/kernelProtocol.ts";
-import type { BrepProblem } from "../../packages/next/src/brep/validate.ts";
+} from "../../packages/core/src/brep/kernelProtocol.ts";
+import type { BrepProblem } from "../../packages/core/src/brep/validate.ts";
 
 /** Why SMLib can't build a tree with a STEP part. */
 export const STEP_NEEDS_OCCT =

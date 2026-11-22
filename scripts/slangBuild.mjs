@@ -414,7 +414,7 @@ function reflectedStructs(reflection) {
  * declares none) with its structs in buffers, compiled in a scratch folder.
  */
 async function contractReflection(slangc) {
-  const { cesiumModule } = await import("../packages/next/src/scene/slangStages.ts");
+  const { cesiumModule } = await import("../packages/core/src/scene/slangStages.ts");
   const temp = mkdtempSync(join(tmpdir(), "slang-contract-"));
   try {
     writeFileSync(

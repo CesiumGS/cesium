@@ -7,11 +7,11 @@ import {
   SurfaceKind,
   type BezierCurves,
   type BrepForm,
-} from "../packages/next/src/brep/form.ts";
+} from "../packages/core/src/brep/form.ts";
 import {
   evaluateSurface,
   faceNormal,
-} from "../packages/next/src/brep/evaluate.ts";
+} from "../packages/core/src/brep/evaluate.ts";
 
 const O = [10, 20, 30];
 const X = [0, 1, 0];

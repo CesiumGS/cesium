@@ -4,7 +4,7 @@ import { EngineeringFrame } from "../../../../packages/next/src/engineering/Engi
 import { gridFactors } from "../../../../packages/next/src/engineering/factors.ts";
 import { framePoint } from "../../../../packages/next/src/frames/local.ts";
 import { measure } from "../../../../packages/next/src/measure/measure.ts";
-import { EARTH } from "../../../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import { DEGREE, ellipsoidOf, onEarth } from "../references.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";
 import { EFFECT, MEASURED_AT, epsg, proj, stressCase, utc } from "../shared.ts";

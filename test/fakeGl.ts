@@ -8,8 +8,8 @@
 import {
   webgl2Personas,
   type Webgl2PersonaName,
-} from "../packages/next/src/profile/personas.ts";
-import type { Webgl2Facts } from "../packages/next/src/profile/webgl2Facts.ts";
+} from "../packages/core/src/profile/personas.ts";
+import type { Webgl2Facts } from "../packages/core/src/profile/webgl2Facts.ts";
 
 export const GL = {
   VENDOR: 0x1f00,

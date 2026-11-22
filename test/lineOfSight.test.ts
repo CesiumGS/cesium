@@ -7,9 +7,9 @@ import {
   lineOfSight,
   segmentBlocked,
 } from "../packages/next/src/measure/lineOfSight.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import { transformPoint } from "../packages/next/src/math/mat4.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import { transformPoint } from "../packages/core/src/math/mat4.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

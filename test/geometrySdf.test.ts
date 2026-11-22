@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   sdfGeometry,
   type DistanceField,
-} from "../packages/next/src/geometry/sdf.ts";
+} from "../packages/core/src/geometry/sdf.ts";
 
 const sphere: DistanceField = {
   distance: (x, y, z) => Math.hypot(x, y, z) - 1,

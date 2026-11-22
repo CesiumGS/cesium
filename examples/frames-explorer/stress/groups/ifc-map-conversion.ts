@@ -4,7 +4,7 @@ import {
   EngineeringFrame,
   type SiteTransform,
 } from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
-import { EARTH } from "../../../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import {
   DEGREE,
   citation,

@@ -18,11 +18,11 @@
 // GPU does it.
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { TranslucencyMethod } from "../packages/next/src/scene/View.ts";
-import { EYE } from "../packages/next/src/scene/observer.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { TranslucencyMethod } from "../packages/core/src/scene/View.ts";
+import { EYE } from "../packages/core/src/scene/observer.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const LUMINANCE = [0.2126, 0.7152, 0.0722] as const;

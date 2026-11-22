@@ -3,18 +3,18 @@
 // place and unload, and every draw added and removed, through the real
 // tileset on the fake engine (as test/tilesetEviction.test.ts).
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
-import { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
+import { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import {
   NO_ACCELERATION,
   type AccelerationStructures,
-} from "../packages/next/src/streaming/acceleration.ts";
+} from "../packages/core/src/streaming/acceleration.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

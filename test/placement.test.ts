@@ -7,7 +7,7 @@ import {
   placeRigid,
 } from "../packages/next/src/engineering/placement.ts";
 import type { ProjApi } from "../packages/next/src/engineering/projApi.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
 
 const stub = (): ProjApi =>
   ({

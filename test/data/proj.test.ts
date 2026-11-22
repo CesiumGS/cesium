@@ -14,7 +14,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import { loadProj } from "../../packages/next/src/engineering/proj.ts";
 import { PROJ_FILE_SHA256 } from "../../packages/next/src/engineering/projPins.ts";
-import { sha256Hex } from "../../packages/next/src/io/sha256.ts";
+import { sha256Hex } from "../../packages/core/src/io/sha256.ts";
 import fixture from "../fixtures/frames/proj.json";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;

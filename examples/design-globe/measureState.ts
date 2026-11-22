@@ -9,7 +9,7 @@ import {
   type SnapResult,
   type SnapService,
 } from "../../packages/next/src/engineering/snap.ts";
-import type { Tileset3D } from "../../packages/next/src/streaming/Tileset3D.ts";
+import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
 import type { SnapMode } from "./page.ts";
 
 // ------------------------------------------------------------ the points

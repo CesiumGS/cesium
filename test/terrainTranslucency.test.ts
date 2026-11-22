@@ -4,15 +4,15 @@
 // terrain as ground, the shader's opacity and skirt rules, and the CPU
 // ray that lets picks stop at it. CPU only (fakeGpu).
 import { readFileSync } from "node:fs";
-import type { World } from "../packages/next/src/scene/World.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import { describe, expect, it, vi } from "vitest";
-import { flatTerrainTile } from "../packages/next/src/globe/quantizedMesh.ts";
+import { flatTerrainTile } from "../packages/core/src/globe/quantizedMesh.ts";
 import {
   compileTerrainClip,
   packClipShape,
-} from "../packages/next/src/globe/terrainClip.ts";
-import { castTerrainRay } from "../packages/next/src/globe/terrainRay.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+} from "../packages/core/src/globe/terrainClip.ts";
+import { castTerrainRay } from "../packages/core/src/globe/terrainRay.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import {
   ALL_VIEWS,
   BATCH_WORD,
@@ -21,10 +21,10 @@ import {
   MaterialFlags,
   RECORD_WORDS,
   TERRAIN_CLIP_WORD,
-} from "../packages/next/src/render/layout.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
-import type { Globe } from "../packages/next/src/globe/Globe.ts";
+} from "../packages/core/src/render/layout.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
+import type { Globe } from "../packages/core/src/globe/Globe.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import {
   shaderClippedOut,
@@ -107,7 +107,7 @@ describe("a terrain tile's skirts", () => {
     const u = world.draws.recordsU32;
     const o = draw.index * RECORD_WORDS;
     const layout =
-      await import("../packages/next/src/render/generated/layouts.ts");
+      await import("../packages/core/src/render/generated/layouts.ts");
     expect(u[o + layout.DrawRecordLayout.skirtStart / 4]).toBe(start);
     const box = world.addDraw({ mesh: world.addMesh(createBox()) });
     expect(
@@ -1021,12 +1021,12 @@ describe("the shader's opacity rules (surface.slang terrainOpacity and terrainAl
 
 describe("the shader's translucency", () => {
   const slang = readFileSync(
-    new URL("../packages/next/src/shaders/surface.slang", import.meta.url),
+    new URL("../packages/core/src/shaders/surface.slang", import.meta.url),
     "utf8",
   );
   const wgsl = readFileSync(
     new URL(
-      "../packages/next/src/shaders/generated/surface.wgsl",
+      "../packages/core/src/shaders/generated/surface.wgsl",
       import.meta.url,
     ),
     "utf8",
@@ -1089,7 +1089,7 @@ describe("the shader's translucency", () => {
     );
     expect(wgsl).toMatch(/fn heightFs\(/);
     const pipelines = readFileSync(
-      new URL("../packages/next/src/scene/RenderContext.ts", import.meta.url),
+      new URL("../packages/core/src/scene/RenderContext.ts", import.meta.url),
       "utf8",
     );
     expect(pipelines).toMatch(/\? bias\s+\? "shadowFs"\s+: "heightFs"/);

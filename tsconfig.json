@@ -9,8 +9,8 @@
     "test",
     "vite.config.ts",
     "basisTranscoderEsm.ts",
-    "packages/next/src/io/vendor.d.ts",
-    "packages/next/src/io/basisTranscoder.d.ts"
+    "packages/core/src/io/vendor.d.ts",
+    "packages/core/src/io/basisTranscoder.d.ts"
   ],
   "references": [
     {

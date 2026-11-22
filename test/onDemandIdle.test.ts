@@ -13,13 +13,13 @@
 // its readings alternating between two values 0.01% apart. A reading within
 // a settled band of the exposure now moves nothing (Engine `adaptExposure`).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import { EYE, type Exposure } from "../packages/next/src/scene/observer.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import { EYE, type Exposure } from "../packages/core/src/scene/observer.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

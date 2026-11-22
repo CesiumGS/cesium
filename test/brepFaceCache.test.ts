@@ -12,16 +12,16 @@ import {
 import {
   faceDigest,
   faceDigests,
-} from "../packages/next/src/brep/faceDigest.ts";
-import type { BrepForm } from "../packages/next/src/brep/form.ts";
+} from "../packages/core/src/brep/faceDigest.ts";
+import type { BrepForm } from "../packages/core/src/brep/form.ts";
 import {
   createBoundsCache,
   formBounds,
-} from "../packages/next/src/brep/formBounds.ts";
+} from "../packages/core/src/brep/formBounds.ts";
 import {
   createPrepareCache,
   prepareGpuPatches,
-} from "../packages/next/src/brep/gpuPatches.ts";
+} from "../packages/core/src/brep/gpuPatches.ts";
 
 /** The form with every pcurve point nudged, as a face edited in (u, v) would be. */
 function nudged(form: BrepForm): BrepForm {

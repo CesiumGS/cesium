@@ -4,12 +4,12 @@
 import {
   KernelHost,
   type KernelHostOptions,
-} from "../packages/next/src/brep/kernelHost.ts";
-import type { KernelWorkerLike } from "../packages/next/src/brep/kernelClient.ts";
+} from "../packages/core/src/brep/kernelHost.ts";
+import type { KernelWorkerLike } from "../packages/core/src/brep/kernelClient.ts";
 import type {
   KernelReply,
   KernelRequest,
-} from "../packages/next/src/brep/kernelProtocol.ts";
+} from "../packages/core/src/brep/kernelProtocol.ts";
 
 export interface Loopback extends KernelWorkerLike {
   readonly host: KernelHost;

@@ -1,4 +1,4 @@
-import type { LimitsTier } from "../../packages/next/src/gpu/limits.ts";
+import type { LimitsTier } from "../../packages/core/src/gpu/limits.ts";
 
 /**
  * The page's `?limits=` (before the `#`), read when this module first loads:

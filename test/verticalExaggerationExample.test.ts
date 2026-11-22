@@ -26,7 +26,7 @@ import {
   routeInverse,
   withFrozenScales,
   type Route,
-} from "../packages/next/src/camera/route.ts";
+} from "../packages/core/src/camera/route.ts";
 import {
   createFrameCatalog,
   type FrameCatalog,
@@ -35,34 +35,34 @@ import { Frame } from "../packages/next/src/frames/Frame.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import { truePick } from "../packages/next/src/frames/pickTruth.ts";
 import { isCurvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
-import { heightNormalInfo } from "../packages/next/src/globe/heightNormal.ts";
-import { upsampleTerrainTile } from "../packages/next/src/globe/quantizedMesh.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import { GlobeController } from "../packages/next/src/scene/GlobeController.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { CorePick } from "../packages/next/src/scene/pick.ts";
+import { heightNormalInfo } from "../packages/core/src/globe/heightNormal.ts";
+import { upsampleTerrainTile } from "../packages/core/src/globe/quantizedMesh.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import { GlobeController } from "../packages/core/src/scene/GlobeController.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { CorePick } from "../packages/core/src/scene/pick.ts";
 import {
   createBillboard,
   type MeshData,
-} from "../packages/next/src/scene/meshes.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import { placeWithTerms } from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { CurvilinearStats } from "../packages/next/src/scene/world/worldCurvilinearMaps.ts";
-import { drawTerms } from "../packages/next/src/scene/world/placements.ts";
+} from "../packages/core/src/scene/meshes.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import { placeWithTerms } from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { CurvilinearStats } from "../packages/core/src/scene/world/worldCurvilinearMaps.ts";
+import { drawTerms } from "../packages/core/src/scene/world/placements.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/world/types.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { gridTile } from "./terrainRayFixtures.ts";
-import { loadIr } from "../packages/next/src/transform/lazyIr.ts";
+import { loadIr } from "../packages/core/src/transform/lazyIr.ts";
 
 // The example imports the engine's entry point, which reads WebGPU's globals
 // as it loads: they come first.

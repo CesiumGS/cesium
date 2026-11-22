@@ -1,6 +1,6 @@
 // Turning peaks into stars with magnitudes and colors, and merging them
 // with a catalog's bright end.
-import { MAGNITUDE_ZERO_ILLUMINANCE } from "../../packages/next/src/atmosphere/stars.ts";
+import { MAGNITUDE_ZERO_ILLUMINANCE } from "../../packages/core/src/atmosphere/stars.ts";
 
 const LUM = [0.2126, 0.7152, 0.0722];
 

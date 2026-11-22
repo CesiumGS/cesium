@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { RangeAllocator } from "../packages/next/src/gpu/RangeAllocator.ts";
+import { RangeAllocator } from "../packages/core/src/gpu/RangeAllocator.ts";
 import {
   FrameGraph,
   type TextureAllocator,
   type TextureDesc,
-} from "../packages/next/src/render/FrameGraph.ts";
+} from "../packages/core/src/render/FrameGraph.ts";
 
 describe("RangeAllocator", () => {
   it("allocates aligned ranges and coalesces freed neighbors", () => {

@@ -10,8 +10,8 @@ import {
   type SiteTransform,
 } from "../packages/next/src/engineering/EngineeringFrame.ts";
 import type { ProjApi } from "../packages/next/src/engineering/projApi.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 
 const stub = (
   metersPerUnit = 1,

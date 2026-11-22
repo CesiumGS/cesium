@@ -2,7 +2,7 @@
 // compared with the generator's exact answer (answers.json), and the survey
 // mark's zone 3 coordinates, as PROJ gives them, compared with NGS's
 // datasheet. The check panel (Task 20) draws these rows.
-import type { PlacementMode } from "../../packages/next/src/georeference/georeference.ts";
+import type { PlacementMode } from "../../packages/core/src/georeference/georeference.ts";
 import type { Answers } from "./answers.ts";
 import { offsetText, stationText, unitSymbol } from "./measureModel.ts";
 

@@ -5,7 +5,7 @@ import {
   MAGNITUDE_ZERO_ILLUMINANCE,
   boxLevels,
   cubeDirection,
-} from "../../packages/next/src/atmosphere/stars.ts";
+} from "../../packages/core/src/atmosphere/stars.ts";
 
 const LUM = [0.2126, 0.7152, 0.0722];
 

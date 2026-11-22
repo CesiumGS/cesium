@@ -15,10 +15,10 @@ import {
   createFramesResolver,
   curvilinearFrame,
 } from "../packages/next/src/frames/index.ts";
-import { EARTH, Engine, OffscreenTarget } from "../packages/next/src/index.ts";
-import { placeWithTerms } from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import { drawTerms } from "../packages/next/src/scene/world/placements.ts";
-import { PointSource } from "../packages/next/src/vector/PointSource.ts";
+import { EARTH, Engine, OffscreenTarget } from "../packages/core/src/index.ts";
+import { placeWithTerms } from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import { drawTerms } from "../packages/core/src/scene/world/placements.ts";
+import { PointSource } from "../packages/core/src/vector/PointSource.ts";
 
 const TEMPLATE = `
 <h1>A point source's points through a curvilinear map</h1>

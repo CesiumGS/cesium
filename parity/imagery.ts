@@ -10,8 +10,8 @@ import {
   UNITLESS_EXPOSURE,
   UNITLESS_SKY,
   UNITLESS_SUN_ILLUMINANCE,
-} from "../packages/next/src/index.ts";
-import { imageryLevel } from "../packages/next/src/globe/GlobeImagery.ts";
+} from "../packages/core/src/index.ts";
+import { imageryLevel } from "../packages/core/src/globe/GlobeImagery.ts";
 import { flip } from "./flip.ts";
 import type { Harness } from "../lab/harness.ts";
 import { compareImages } from "./metrics.ts";

@@ -1,9 +1,9 @@
 // The distance over a body: Karney's geodesic (geographiclib-geodesic) against Python's
 // geographiclib, in test/fixtures/frames/geodesic.json (scripts/frameFixtures.py geodesic).
 import { describe, expect, it } from "vitest";
-import { Ellipsoid, fromDegrees } from "../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
 import { surfaceDistance } from "../packages/next/src/measure/surface.ts";
-import { vec3 } from "../packages/next/src/math/vec3.ts";
+import { vec3 } from "../packages/core/src/math/vec3.ts";
 import fixture from "./fixtures/frames/geodesic.json";
 
 const deg = Math.PI / 180;

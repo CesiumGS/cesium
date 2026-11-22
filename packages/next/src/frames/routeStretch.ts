@@ -11,7 +11,7 @@ import {
   curvilinearForward,
   curvilinearInverse,
   type Route,
-} from "../camera/route.ts";
+} from "../../../core/src/camera/route.ts";
 import { eigenSymmetric } from "./covariance.ts";
 
 /** `a · b` for column-major 3 × 3. */

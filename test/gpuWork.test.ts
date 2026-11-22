@@ -4,7 +4,7 @@ import {
   gpuWorkEnabled,
   takeGpuWork,
   texelBytes,
-} from "../packages/next/src/gpu/GpuWork.ts";
+} from "../packages/core/src/gpu/GpuWork.ts";
 import {
   gpuRow,
   RECORD_COLUMNS,

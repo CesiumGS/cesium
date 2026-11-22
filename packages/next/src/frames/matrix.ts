@@ -1,4 +1,4 @@
-import type { Mat4 } from "../math/mat4.ts";
+import type { Mat4 } from "../../../core/src/math/mat4.ts";
 
 /**
  * The one bridge between plan 1's rotations and frame transforms (R7).

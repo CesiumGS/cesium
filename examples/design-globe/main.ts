@@ -22,7 +22,7 @@
 import { createElement } from "react";
 import { Alignment } from "../../packages/next/src/engineering/alignment.ts";
 import type { ProjApi } from "../../packages/next/src/engineering/proj.ts";
-import { Ellipsoid } from "../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
 import type { Answers } from "./answers.ts";
 import { checksView } from "./checksView.ts";

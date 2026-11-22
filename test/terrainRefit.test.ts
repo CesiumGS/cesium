@@ -5,18 +5,18 @@ import {
   LEVEL_ZERO_ERROR,
   TerrainSource,
   type TerrainLoader,
-} from "../packages/next/src/globe/TerrainSource.ts";
+} from "../packages/core/src/globe/TerrainSource.ts";
 import type {
   Rectangle,
   TerrainHeights,
-} from "../packages/next/src/globe/quantizedMesh.ts";
+} from "../packages/core/src/globe/quantizedMesh.ts";
 import {
   deviationFromParent,
   parentBound,
-} from "../packages/next/src/globe/terrainRefit.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
-import { Jobs, type JobMessage } from "../packages/next/src/io/Jobs.ts";
+} from "../packages/core/src/globe/terrainRefit.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
+import { Jobs, type JobMessage } from "../packages/core/src/io/Jobs.ts";
 import { gridTile } from "./terrainRayFixtures.ts";
 
 const EMPTY_ASSET = {

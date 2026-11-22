@@ -29,11 +29,11 @@ import {
   orbitBasis,
   orbitPose,
   type OrbitFrame,
-} from "../packages/next/src/scene/InspectController.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
+} from "../packages/core/src/scene/InspectController.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
 import { installGpuGlobals } from "./fakeGpu.ts";
 import { SCENES } from "../examples/frames-explorer/scenarios/scenes.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
 
 // The widgets import the core by its entry point, which reads WebGPU's
 // globals as it loads: install them first, then import.

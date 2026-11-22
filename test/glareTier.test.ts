@@ -4,10 +4,10 @@ import {
   glareFor,
   glareReason,
   resolveGlare,
-} from "../packages/next/src/render/post/glare.ts";
-import { personas } from "../packages/next/src/profile/personas.ts";
-import { resolve } from "../packages/next/src/profile/resolve.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+} from "../packages/core/src/render/post/glare.ts";
+import { personas } from "../packages/core/src/profile/personas.ts";
+import { resolve } from "../packages/core/src/profile/resolve.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import {
   cameraGlare,
   cameraObserver,
@@ -15,10 +15,10 @@ import {
   eyeObserver,
   type GlareSettings,
   type GlareTier,
-} from "../packages/next/src/scene/observer.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import { STAR_FLOATS } from "../packages/next/src/atmosphere/stars.ts";
+} from "../packages/core/src/scene/observer.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import { STAR_FLOATS } from "../packages/core/src/atmosphere/stars.ts";
 import { fakeEngine, installPersona } from "./fakeGpu.ts";
 
 const apple = personas["m2-chrome"];
@@ -285,7 +285,7 @@ describe("in an engine", () => {
 
   it("has no glare at all on a fallback adapter", async () => {
     installPersona("swiftshader");
-    const { Engine } = await import("../packages/next/src/scene/Engine.ts");
+    const { Engine } = await import("../packages/core/src/scene/Engine.ts");
     const soft = await Engine.create();
     soft.stop();
     const view = soft.addView({

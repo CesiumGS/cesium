@@ -7,14 +7,14 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   SurfaceKind,
   type BrepForm,
-} from "../../packages/next/src/brep/form.ts";
+} from "../../packages/core/src/brep/form.ts";
 import {
   SmlibKernel,
   type SmlibBrep,
   type SmlibModule,
   type SmlibSolid,
-} from "../../packages/next/src/brep/smlib.ts";
-import { tessellateBrep } from "../../packages/next/src/brep/tessellate.ts";
+} from "../../packages/core/src/brep/smlib.ts";
+import { tessellateBrep } from "../../packages/core/src/brep/tessellate.ts";
 import { smlibDirectory } from "../../scripts/smlibTools.mjs";
 import {
   distanceToIdentity,

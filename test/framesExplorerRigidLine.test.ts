@@ -18,7 +18,7 @@ import {
   RIGID_LINE,
   rigidCopy,
 } from "../examples/frames-explorer/rigidLine.ts";
-import { Ellipsoid, fromDegrees } from "../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
 
 // The figures the worker gives for the page's line (test/data checks them):
 // the gap at the mark is mostly the drop, and 1.48 m of it along the line,

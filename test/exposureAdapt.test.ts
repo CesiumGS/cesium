@@ -12,16 +12,16 @@
 // exposure set after the view was made never applied, and automatic
 // exposure never moved.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
 import {
   EYE,
   ev100ToScale,
   type Exposure,
-} from "../packages/next/src/scene/observer.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import { eyeResponse, SCOTOPIC_WHITE } from "../packages/next/src/scene/eye.ts";
+} from "../packages/core/src/scene/observer.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import { eyeResponse, SCOTOPIC_WHITE } from "../packages/core/src/scene/eye.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

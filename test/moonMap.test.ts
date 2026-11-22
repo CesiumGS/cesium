@@ -7,7 +7,7 @@ import {
   type MoonMapSource,
   type Raster,
   readMoonMap,
-} from "../packages/next/src/io/moonMap.ts";
+} from "../packages/core/src/io/moonMap.ts";
 
 const DEG = Math.PI / 180;
 

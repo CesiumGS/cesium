@@ -1,5 +1,5 @@
 // Symbol.dispose and DisposableStack where the browser lacks them (Safari).
-import "../../../packages/next/src/core/disposeShim.ts";
+import "../../../packages/core/src/core/disposeShim.ts";
 import "./examples.css";
 import {
   Alert,
@@ -37,7 +37,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { EXAMPLES, type ExampleInfo } from "../../../examples/index.ts";
-import { Engine } from "../../../packages/next/src/index.ts";
+import { Engine } from "../../../packages/core/src/index.ts";
 import { Viewer } from "../../../packages/next/widgets/index.ts";
 import { needsToken, tokenSource } from "../ionToken.ts";
 import { TokenPrompt } from "../IonTokenSettings.tsx";

@@ -8,23 +8,23 @@ import {
   geocentricToGeographic,
   utm,
   verticalExaggerationEdge,
-} from "../packages/next/src/georeference/index.ts";
+} from "../packages/core/src/georeference/index.ts";
 import {
   clearCompileCache,
   compileRoute,
   type CompiledRoute,
-} from "../packages/next/src/transform/compile.ts";
+} from "../packages/core/src/transform/compile.ts";
 import {
   affine,
   routeBetween,
   curvilinear,
   TransformGraph,
   type Route,
-} from "../packages/next/src/transform/index.ts";
+} from "../packages/core/src/transform/index.ts";
 import {
   radialDistortion,
   twist,
-} from "../packages/next/src/transforms/index.ts";
+} from "../packages/core/src/transforms/index.ts";
 
 const RAD = Math.PI / 180;
 

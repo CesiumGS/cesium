@@ -1,5 +1,5 @@
 import { isStepLeaf, primitiveOf, type LeafNode, type Vec3 } from "./tree.ts";
-import type { Primitive } from "../../packages/next/src/brep/kernelProtocol.ts";
+import type { Primitive } from "../../packages/core/src/brep/kernelProtocol.ts";
 
 /**
  * The transient preview of a primitive while a parameter is dragged (

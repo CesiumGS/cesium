@@ -5,7 +5,7 @@ import {
   frameTimes,
   mergeOrder,
   passTimes,
-} from "../packages/next/src/gpu/GpuTimer.ts";
+} from "../packages/core/src/gpu/GpuTimer.ts";
 import { installGpuGlobals } from "./fakeGpu.ts";
 
 describe("GPU pass order", () => {

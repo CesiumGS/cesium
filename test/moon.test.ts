@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   lommelSeeliger,
   moonPhaseBrightness,
-} from "../packages/next/src/atmosphere/moonLight.ts";
+} from "../packages/core/src/atmosphere/moonLight.ts";
 import { icrfToFixed } from "../packages/next/src/time/celestial.ts";
 import {
   moonAxes,

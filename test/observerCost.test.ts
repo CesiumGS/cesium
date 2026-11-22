@@ -5,7 +5,7 @@ import {
   MAGNITUDE_ZERO_ILLUMINANCE,
   STAR_FLOATS,
   magnitudeOfRank,
-} from "../packages/next/src/atmosphere/stars.ts";
+} from "../packages/core/src/atmosphere/stars.ts";
 import { installGpuGlobals } from "./fakeGpu.ts";
 
 // The page imports the engine, which reads WebGPU's constants as it loads.

@@ -7,7 +7,7 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import {
   SectionClient,
   type SectionWorkerLike,
-} from "../packages/next/src/brep/sectionClient.ts";
+} from "../packages/core/src/brep/sectionClient.ts";
 import {
   SectionHost,
   runSection,
@@ -15,10 +15,10 @@ import {
   type SectionReply,
   type SectionRequest,
   type SectionRunner,
-} from "../packages/next/src/brep/sectionHost.ts";
-import { sectionBrep, SectionJob } from "../packages/next/src/brep/section.ts";
-import { validateBrep } from "../packages/next/src/brep/validate.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+} from "../packages/core/src/brep/sectionHost.ts";
+import { sectionBrep, SectionJob } from "../packages/core/src/brep/section.ts";
+import { validateBrep } from "../packages/core/src/brep/validate.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import {
   BREP_CAP_NAME,
   BrepCaps,
@@ -27,15 +27,15 @@ import {
   MESH_CAP_NAME,
   MeshCaps,
   type CapEngine,
-} from "../packages/next/src/scene/world/caps.ts";
-import type { ClipSet } from "../packages/next/src/scene/world/clips.ts";
+} from "../packages/core/src/scene/world/caps.ts";
+import type { ClipSet } from "../packages/core/src/scene/world/clips.ts";
 import {
   rayHitRegions,
   tileBounds,
   type MeshCapRegion,
   type MeshCapTile,
-} from "../packages/next/src/scene/world/meshCaps.ts";
-import { planeFrame } from "../packages/next/src/brep/sectionCurves.ts";
+} from "../packages/core/src/scene/world/meshCaps.ts";
+import { planeFrame } from "../packages/core/src/brep/sectionCurves.ts";
 import { boxBrep } from "./brepFixtures.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 

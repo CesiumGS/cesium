@@ -1,4 +1,4 @@
-import { DAYLIGHT_SUN_ILLUMINANCE } from "../../packages/next/src/render/layout.ts";
+import { DAYLIGHT_SUN_ILLUMINANCE } from "../../packages/core/src/render/layout.ts";
 
 /**
  * The CSG sample's lighting controls (docs/design/breps-and-geometry-queries.md): what the engine's view

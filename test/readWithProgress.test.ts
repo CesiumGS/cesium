@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   READ_PREALLOCATE_LIMIT,
   readWithProgress,
-} from "../packages/next/src/io/readWithProgress.ts";
+} from "../packages/core/src/io/readWithProgress.ts";
 
 const bytes = (n: number) => Uint8Array.from({ length: n }, (_, i) => i % 251);
 

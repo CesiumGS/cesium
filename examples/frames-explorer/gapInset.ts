@@ -7,7 +7,7 @@
 // The engine is shared with the next example (Dyno keeps one while the page
 // is open), so the view is removed on `hide`, which `dispose` calls: main.ts
 // defers it on the example's scope, before the viewer goes.
-import type { View } from "../../packages/next/src/scene/View.ts";
+import type { View } from "../../packages/core/src/scene/View.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import {
   insetBox,

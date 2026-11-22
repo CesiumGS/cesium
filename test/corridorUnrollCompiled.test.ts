@@ -9,21 +9,21 @@ import { ROAD } from "../examples/transform-graph/data/road.ts";
 import {
   clearCompileCache,
   compileRoute,
-} from "../packages/next/src/transform/compile.ts";
-import { parseTransform } from "../packages/next/src/transform/parse.ts";
+} from "../packages/core/src/transform/compile.ts";
+import { parseTransform } from "../packages/core/src/transform/parse.ts";
 import {
   affine,
   evaluate,
   jacobian,
   routeBetween,
   TransformGraph,
-} from "../packages/next/src/transform/index.ts";
+} from "../packages/core/src/transform/index.ts";
 import {
   corridorUnroll,
   corridorUnrollDescriptor,
   type CorridorOptions,
-} from "../packages/next/src/transforms/index.ts";
-import { defaultParams } from "../packages/next/src/transforms/descriptor.ts";
+} from "../packages/core/src/transforms/index.ts";
+import { defaultParams } from "../packages/core/src/transforms/descriptor.ts";
 
 /** The road in plan meters about its middle (an equirectangular scale is enough for a shape). */
 const road = ROAD.map(

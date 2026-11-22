@@ -4,8 +4,8 @@
 // parameters are uniforms. Constants written in the function stay
 // constants (folded); a transform's knobs are its parameters.
 
-import type { Program as EngineProgram } from "../../packages/next/src/ir/types.ts";
-import { parseTransform } from "../../packages/next/src/transform/parse.ts";
+import type { Program as EngineProgram } from "../../packages/core/src/ir/types.ts";
+import { parseTransform } from "../../packages/core/src/transform/parse.ts";
 import { Builder, type Id, type Program } from "./cir.ts";
 
 /** The engine's Cesium IR program in this IR: its three outputs as one float3, `q`. */

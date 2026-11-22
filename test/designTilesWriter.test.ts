@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 // The Draco and Basis decoders need a browser worker; this content uses neither.
-vi.mock("../packages/next/src/io/decoders.ts", () => ({
+vi.mock("../packages/core/src/io/decoders.ts", () => ({
   decodeDraco: async () => {
     throw new Error("no Draco");
   },
@@ -13,16 +13,16 @@ vi.mock("../packages/next/src/io/decoders.ts", () => ({
 import { frameExtensions } from "../scripts/designTiles.mjs";
 import { writeGlb } from "../scripts/designTiles/gltf.mjs";
 import { tilesetJson } from "../scripts/designTiles/tileset.mjs";
-import { featureName } from "../packages/next/src/io/features.ts";
-import { splitGlb } from "../packages/next/src/io/glb.ts";
-import { parseGltf } from "../packages/next/src/io/gltfParse.ts";
-import { treeFromJson } from "../packages/next/src/streaming/Tile.ts";
+import { featureName } from "../packages/core/src/io/features.ts";
+import { splitGlb } from "../packages/core/src/io/glb.ts";
+import { parseGltf } from "../packages/core/src/io/gltfParse.ts";
+import { treeFromJson } from "../packages/core/src/streaming/Tile.ts";
 import {
   ALIGNMENTS_EXTENSION,
   ENGINEERING_FRAME_EXTENSION,
 } from "../packages/next/src/engineering/georeference.ts";
 import { readGeoreference } from "../packages/next/src/engineering/georeferenceTileset.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
 
 // A quad of two triangles, one per feature (glTF Y-up).
 const mesh = () => ({

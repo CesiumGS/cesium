@@ -29,7 +29,7 @@ import {
   measure,
   measureSpan,
 } from "../../packages/next/src/measure/measure.ts";
-import { EARTH, MOON } from "../../packages/next/src/scene/Body.ts";
+import { EARTH, MOON } from "../../packages/core/src/scene/Body.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
 import { Instant } from "../../packages/next/src/time/Instant.ts";
 import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";

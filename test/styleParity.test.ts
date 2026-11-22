@@ -11,8 +11,8 @@ import { describe, expect, it } from "vitest";
 import {
   FeatureStyle,
   type FeatureStyleOptions,
-} from "../packages/next/src/scene/FeatureStyle.ts";
-import { stringIds } from "../packages/next/src/scene/stringIds.ts";
+} from "../packages/core/src/scene/FeatureStyle.ts";
+import { stringIds } from "../packages/core/src/scene/stringIds.ts";
 
 type Row = Record<string, string | number | null | undefined>;
 

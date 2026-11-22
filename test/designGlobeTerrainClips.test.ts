@@ -2,7 +2,7 @@
 // padded, and the corridor's strip, as polygons in geodetic degrees.
 import { describe, expect, it } from "vitest";
 import { Alignment } from "../packages/next/src/engineering/alignment.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { CORRIDOR_ALIGNMENT } from "../examples/design-globe/corridor.ts";
 import {
   PORTFOLIO,
@@ -35,13 +35,13 @@ import {
   UNDERGROUND_OPACITY,
   type DaylightStretch,
 } from "../examples/design-globe/terrainClips.ts";
-import type { Globe } from "../packages/next/src/globe/Globe.ts";
+import type { Globe } from "../packages/core/src/globe/Globe.ts";
 import {
   MAX_CLIP_CELL_EDGES,
   MAX_CLIP_FRAGMENT_EDGES,
   MAX_TERRAIN_CLIP_VERTICES,
   compileTerrainClip,
-} from "../packages/next/src/globe/terrainClip.ts";
+} from "../packages/core/src/globe/terrainClip.ts";
 
 const R = Math.PI / 180;
 /** A toy placement: a design unit is 1e-5° east or north of (10°, 50°). */

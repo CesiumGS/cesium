@@ -8,17 +8,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   TerrainSource,
   type TerrainLoader,
-} from "../packages/next/src/globe/TerrainSource.ts";
+} from "../packages/core/src/globe/TerrainSource.ts";
 import {
   imageryLevel,
   type GlobeImagery,
-} from "../packages/next/src/globe/GlobeImagery.ts";
-import type { ImageryProvider } from "../packages/next/src/globe/ImageryProvider.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
-import { Globe } from "../packages/next/src/globe/Globe.ts";
+} from "../packages/core/src/globe/GlobeImagery.ts";
+import type { ImageryProvider } from "../packages/core/src/globe/ImageryProvider.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
+import { Globe } from "../packages/core/src/globe/Globe.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { layer, provider } from "./sliceFakes.ts";
 import { at, gridTile } from "./terrainRayFixtures.ts";

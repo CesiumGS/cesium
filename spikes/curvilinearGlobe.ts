@@ -18,14 +18,14 @@
 // come to be drawn under the curvilinear map, carrying h·n̂ and exact.
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
-import { routeForward } from "../packages/next/src/camera/route.ts";
+import { routeForward } from "../packages/core/src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
   curvilinearFrame,
 } from "../packages/next/src/frames/index.ts";
-import { verticalExaggeration } from "../packages/next/src/georeference/index.ts";
-import { HEIGHT_NORMAL_ATTRIBUTE } from "../packages/next/src/globe/heightNormal.ts";
+import { verticalExaggeration } from "../packages/core/src/georeference/index.ts";
+import { HEIGHT_NORMAL_ATTRIBUTE } from "../packages/core/src/globe/heightNormal.ts";
 import {
   EARTH,
   Ellipsoid,
@@ -35,8 +35,8 @@ import {
   createBillboard,
   type MeshData,
   type World,
-} from "../packages/next/src/index.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/index.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
 
 const TEMPLATE = `
 <h1>The globe, a billboard and anchored content across a curvilinear map</h1>

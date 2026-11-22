@@ -8,14 +8,14 @@ import PerspectiveFrustum from "cesium-oracle/PerspectiveFrustum.js";
 import {
   Ellipsoid,
   cartographic,
-} from "../packages/next/src/math/ellipsoid.ts";
+} from "../packages/core/src/math/ellipsoid.ts";
 import {
   eastNorthUpToFixedFrame,
   splitVec3,
-} from "../packages/next/src/math/transforms.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
+} from "../packages/core/src/math/transforms.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
 
 // L0 parity: 2.0 geodesy must match 1.x to near machine precision.
 const REL = 1e-12;

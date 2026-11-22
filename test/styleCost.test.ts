@@ -4,8 +4,8 @@
 // costs nothing. Counted on the fake GPU, so these are numbers of
 // compiles, not times.
 import { beforeAll, describe, expect, it } from "vitest";
-import { CustomShader } from "../packages/next/src/scene/CustomShader.ts";
-import { FeatureStyle } from "../packages/next/src/scene/FeatureStyle.ts";
+import { CustomShader } from "../packages/core/src/scene/CustomShader.ts";
+import { FeatureStyle } from "../packages/core/src/scene/FeatureStyle.ts";
 import { styleScene, type StyleScene } from "./styleScene.ts";
 
 describe("what a style change costs", () => {

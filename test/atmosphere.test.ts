@@ -8,8 +8,8 @@ import {
   directSunIlluminance,
   singleScattering,
   solarIlluminanceOutside,
-} from "../packages/next/src/atmosphere/model.ts";
-import { toZUp } from "../packages/next/src/atmosphere/AtmosphereReference.ts";
+} from "../packages/core/src/atmosphere/model.ts";
+import { toZUp } from "../packages/core/src/atmosphere/AtmosphereReference.ts";
 
 const ground: [number, number, number] = [0, 0, EARTH.bottomRadius + 1];
 const sunAt = (zenithDegrees: number): [number, number, number] => {

@@ -21,7 +21,7 @@ import {
 import { homedir } from "node:os";
 import { join } from "node:path";
 import process from "node:process";
-import { SLANG_VERSION } from "../packages/next/src/scene/slangVersion.ts";
+import { SLANG_VERSION } from "../packages/core/src/scene/slangVersion.ts";
 import {
   adoptFormat1,
   datasetStatus,

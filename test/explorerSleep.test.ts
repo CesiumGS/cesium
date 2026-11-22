@@ -8,9 +8,9 @@
 // test/frameLoopSleep.test.ts.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Pose } from "../bench/suite/schema.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import type { Adapter, RunSpec } from "../bench/suite/suite.ts";
 import type { ExplorerSession } from "../bench/suite/views/explorerSession.ts";
 import {

@@ -30,9 +30,9 @@ import {
   type MeshData,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
-import type { AnchorHandle } from "../packages/next/src/scene/world/types.ts";
-import type { CapParityKind } from "../packages/next/src/scene/RenderContext.ts";
+} from "../packages/core/src/index.ts";
+import type { AnchorHandle } from "../packages/core/src/scene/world/types.ts";
+import type { CapParityKind } from "../packages/core/src/scene/RenderContext.ts";
 
 const TEMPLATE = `
 <h1>Section caps on the GPU</h1>

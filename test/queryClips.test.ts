@@ -4,27 +4,27 @@
 // geometry, a distance field); "none" ignores clips; a query with a view
 // takes the view's by default.
 import { beforeAll, describe, expect, it, vi } from "vitest";
-import type { ClipFilter } from "../packages/next/src/geometry/query.ts";
+import type { ClipFilter } from "../packages/core/src/geometry/query.ts";
 import {
   sdfGeometry,
   type DistanceField,
-} from "../packages/next/src/geometry/sdf.ts";
+} from "../packages/core/src/geometry/sdf.ts";
 import {
   castTilesetRays,
   type RayTile,
-} from "../packages/next/src/query/geometryBackend.ts";
-import type { RayQuery } from "../packages/next/src/query/queries.ts";
-import { terrainQueries } from "../packages/next/src/query/terrainBackend.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { ClipSet } from "../packages/next/src/scene/world/clips.ts";
-import { castPastClips } from "../packages/next/src/scene/world/rays.ts";
+} from "../packages/core/src/query/geometryBackend.ts";
+import type { RayQuery } from "../packages/core/src/query/queries.ts";
+import { terrainQueries } from "../packages/core/src/query/terrainBackend.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { ClipSet } from "../packages/core/src/scene/world/clips.ts";
+import { castPastClips } from "../packages/core/src/scene/world/rays.ts";
 import type {
   CastOptions,
   CastRay,
-} from "../packages/next/src/scene/world/types.ts";
-import { MOON } from "../packages/next/src/scene/Body.ts";
-import { obb, sphereFromObb } from "../packages/next/src/streaming/volumes.ts";
+} from "../packages/core/src/scene/world/types.ts";
+import { MOON } from "../packages/core/src/scene/Body.ts";
+import { obb, sphereFromObb } from "../packages/core/src/streaming/volumes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { A, at, gridTile, strip, stripTarget } from "./terrainRayFixtures.ts";
 

@@ -9,21 +9,21 @@ import { boxBrep } from "../examples/brep-first-look/fixtures.ts";
 import {
   KernelCanceled,
   KernelClient,
-} from "../packages/next/src/brep/kernelClient.ts";
+} from "../packages/core/src/brep/kernelClient.ts";
 import {
   transferable,
   type KernelForm,
-} from "../packages/next/src/brep/kernelProtocol.ts";
-import type { OcctKernel, OcctSolid } from "../packages/next/src/brep/occt.ts";
+} from "../packages/core/src/brep/kernelProtocol.ts";
+import type { OcctKernel, OcctSolid } from "../packages/core/src/brep/occt.ts";
 import type {
   SmlibKernel,
   SmlibSolid,
-} from "../packages/next/src/brep/smlib.ts";
-import { formBounds } from "../packages/next/src/brep/formBounds.ts";
+} from "../packages/core/src/brep/smlib.ts";
+import { formBounds } from "../packages/core/src/brep/formBounds.ts";
 import {
   packGpuPatches,
   prepareGpuPatches,
-} from "../packages/next/src/brep/gpuPatches.ts";
+} from "../packages/core/src/brep/gpuPatches.ts";
 import { loopback, type Loopback } from "./kernelLoopback.ts";
 
 /** Counts the solids a fake kernel makes and the ones deleted. */

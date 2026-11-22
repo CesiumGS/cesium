@@ -11,11 +11,11 @@ import {
   parseManifest,
   readBackground,
   readPoints,
-} from "../../packages/next/src/atmosphere/skyPack.ts";
+} from "../../packages/core/src/atmosphere/skyPack.ts";
 import {
   MAGNITUDE_ZERO_ILLUMINANCE,
   STAR_FLOATS,
-} from "../../packages/next/src/atmosphere/stars.ts";
+} from "../../packages/core/src/atmosphere/stars.ts";
 import { chosenPackDirectory } from "../../scripts/skyStore.mjs";
 
 const dir = chosenPackDirectory();

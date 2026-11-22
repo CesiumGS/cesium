@@ -13,7 +13,7 @@ import {
   vi,
 } from "vitest";
 
-vi.mock("../packages/next/src/io/decoders.ts", () => ({
+vi.mock("../packages/core/src/io/decoders.ts", () => ({
   decodeDraco: async () => {
     throw new Error("no Draco");
   },
@@ -29,13 +29,13 @@ import {
   MAX_COMPOSITE_TILES,
   mergeAssets,
   splitComposite,
-} from "../packages/next/src/io/composite.ts";
-import { parseGltf } from "../packages/next/src/io/gltfParse.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import { summarizeContent } from "../packages/next/src/streaming/pipeline.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
+} from "../packages/core/src/io/composite.ts";
+import { parseGltf } from "../packages/core/src/io/gltfParse.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import { summarizeContent } from "../packages/core/src/streaming/pipeline.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import {
   fakeDevice,
   installFakeNavigator,
@@ -609,7 +609,7 @@ describe("a composite placed as one tile's content", () => {
   beforeAll(async () => {
     installGpuGlobals();
     installFakeNavigator(fakeDevice({}));
-    const { Engine } = await import("../packages/next/src/scene/Engine.ts");
+    const { Engine } = await import("../packages/core/src/scene/Engine.ts");
     engine = await Engine.create({ limits: "adapter" });
     world = engine.createWorld();
   });

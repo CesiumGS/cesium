@@ -4,13 +4,13 @@
 // and passes in what the TypeScript project can't import (naga-wasm and the
 // 1.x oracle).
 
-import { evaluate as todayEvaluate } from "../../packages/next/src/transform/evaluate.ts";
-import { jacobian as todayJacobian } from "../../packages/next/src/transform/ad.ts";
-import { evaluateInterval as todayInterval } from "../../packages/next/src/transform/interval.ts";
-import { parseTransform } from "../../packages/next/src/transform/parse.ts";
-import { toWgsl as todayToWgsl } from "../../packages/next/src/transform/wgsl.ts";
-import { compileStyleExpression } from "../../packages/next/src/scene/styleExpression.ts";
-import { twistDescriptor } from "../../packages/next/src/transforms/twist.ts";
+import { evaluate as todayEvaluate } from "../../packages/core/src/transform/evaluate.ts";
+import { jacobian as todayJacobian } from "../../packages/core/src/transform/ad.ts";
+import { evaluateInterval as todayInterval } from "../../packages/core/src/transform/interval.ts";
+import { parseTransform } from "../../packages/core/src/transform/parse.ts";
+import { toWgsl as todayToWgsl } from "../../packages/core/src/transform/wgsl.ts";
+import { compileStyleExpression } from "../../packages/core/src/scene/styleExpression.ts";
+import { twistDescriptor } from "../../packages/core/src/transforms/twist.ts";
 import { evaluate, print, type Program, type Value } from "./cir.ts";
 import { jacobianProgram } from "./ad.ts";
 import { evaluateInterval } from "./interval.ts";

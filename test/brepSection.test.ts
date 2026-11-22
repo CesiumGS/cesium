@@ -1,9 +1,9 @@
 // The b-rep section (src/brep/section.ts): the cap faces of a solid cut by
 // planes, against analytic cross sections.
 import { describe, expect, it } from "vitest";
-import { validateBrep } from "../packages/next/src/brep/validate.ts";
-import { sectionBrep } from "../packages/next/src/brep/section.ts";
-import { faceTrim } from "../packages/next/src/brep/tessellate.ts";
+import { validateBrep } from "../packages/core/src/brep/validate.ts";
+import { sectionBrep } from "../packages/core/src/brep/section.ts";
+import { faceTrim } from "../packages/core/src/brep/tessellate.ts";
 import {
   boxBrep,
   cappedCylinderBrep,

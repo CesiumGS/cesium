@@ -36,7 +36,7 @@ import {
 } from "../../packages/next/src/engineering/proj.ts";
 import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
 import { createFrames } from "../../packages/next/src/frames/frames.ts";
-import { EARTH } from "../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../packages/core/src/scene/Body.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
 import { Instant } from "../../packages/next/src/time/Instant.ts";
 import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";

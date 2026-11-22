@@ -3,28 +3,28 @@
 // draws had none of those and were diced, and the wait follows the frames.
 import { describe, expect, it } from "vitest";
 import { installGpuGlobals } from "./fakeGpu.ts";
-import { whenReady } from "../packages/next/src/scene/engineReady.ts";
+import { whenReady } from "../packages/core/src/scene/engineReady.ts";
 import {
   drawsReady,
   type ReadyWorld,
-} from "../packages/next/src/scene/world/ready.ts";
-import { withPatchDisplay } from "../packages/next/src/scene/world/patches.ts";
+} from "../packages/core/src/scene/world/ready.ts";
+import { withPatchDisplay } from "../packages/core/src/scene/world/patches.ts";
 import {
   PATCH_ISO_SHIFT,
   RecordFlags,
-} from "../packages/next/src/render/layout.ts";
-import type { CustomShader } from "../packages/next/src/scene/CustomShader.ts";
-import type { RouteVariant } from "../packages/next/src/scene/routeVariant.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
+} from "../packages/core/src/render/layout.ts";
+import type { CustomShader } from "../packages/core/src/scene/CustomShader.ts";
+import type { RouteVariant } from "../packages/core/src/scene/routeVariant.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
 import type {
   Batch,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/world/types.ts";
 
 // The cache reaches the engine's pipeline keys, which read WebGPU's flags.
 installGpuGlobals();
 const { ShaderCache } =
-  await import("../packages/next/src/scene/ShaderCache.ts");
+  await import("../packages/core/src/scene/ShaderCache.ts");
 
 const shader = (code: string) => ({ code }) as unknown as CustomShader;
 const pipeline = {} as GPURenderPipeline;

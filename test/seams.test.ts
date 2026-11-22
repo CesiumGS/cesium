@@ -2,8 +2,8 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { beforeAll, describe, expect, it } from "vitest";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { MeshData } from "../packages/next/src/scene/meshes.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { MeshData } from "../packages/core/src/scene/meshes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { RAY_MODULES, rayBypasses, rayProgram } from "./raySeam.ts";
 

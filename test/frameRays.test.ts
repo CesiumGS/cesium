@@ -6,14 +6,14 @@ import {
   FrameUnavailableError,
   type FrameKey,
   type FrameResolver,
-} from "../packages/next/src/camera/frameResolver.ts";
-import { C } from "../packages/next/src/math/constants.ts";
-import type { QueryRay } from "../packages/next/src/query/queries.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import { obb, sphereFromObb } from "../packages/next/src/streaming/volumes.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
+} from "../packages/core/src/camera/frameResolver.ts";
+import { C } from "../packages/core/src/math/constants.ts";
+import type { QueryRay } from "../packages/core/src/query/queries.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import { obb, sphereFromObb } from "../packages/core/src/streaming/volumes.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R_EARTH = 6_378_137;

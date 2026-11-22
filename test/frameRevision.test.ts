@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { Frame, routeRevision } from "../packages/next/src/frames/Frame.ts";
 import type { FrameAccuracy } from "../packages/next/src/frames/frameAccuracy.ts";
-import { identity } from "../packages/next/src/math/mat4.ts";
+import { identity } from "../packages/core/src/math/mat4.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 
 const root = Frame.root("Root");

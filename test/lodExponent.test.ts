@@ -6,13 +6,13 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
-import { verticalExaggeration } from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import { selectionViews } from "../packages/next/src/scene/tileSelection.ts";
+import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import { selectionViews } from "../packages/core/src/scene/tileSelection.ts";
 import {
   DEFAULT_LOD_EXPONENT,
   drawnTile,
@@ -20,12 +20,12 @@ import {
   lodExponentOf,
   terrainDrawnError,
   type DrawnTile,
-} from "../packages/next/src/streaming/tileCurvilinearMap.ts";
+} from "../packages/core/src/streaming/tileCurvilinearMap.ts";
 import {
   regionFromJson,
   sphereFromObb,
-} from "../packages/next/src/streaming/volumes.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/streaming/volumes.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 import { parseAlpha } from "../packages/next/widgets/urlAlpha.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { at } from "./terrainRayFixtures.ts";

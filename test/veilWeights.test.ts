@@ -6,22 +6,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   GLARE_IMAGE_CLAMP,
   GLARE_SOURCES,
-} from "../packages/next/src/render/post/glare.ts";
+} from "../packages/core/src/render/post/glare.ts";
 import {
   VEIL_LEVELS,
   sunVeil,
   veilSpread,
   veilWeights,
-} from "../packages/next/src/render/post/veilWeights.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { eyeLimitStage } from "../packages/next/src/scene/eyeLimit.ts";
+} from "../packages/core/src/render/post/veilWeights.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { eyeLimitStage } from "../packages/core/src/scene/eyeLimit.ts";
 import {
   cameraObserver,
   type GlareSettings,
-} from "../packages/next/src/scene/observer.ts";
-import { createPostStage } from "../packages/next/src/scene/postStage.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
+} from "../packages/core/src/scene/observer.ts";
+import { createPostStage } from "../packages/core/src/scene/postStage.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const DEG = Math.PI / 180;

@@ -35,8 +35,8 @@ import {
   type MeshData,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
-import type { AnchorHandle } from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/index.ts";
+import type { AnchorHandle } from "../packages/core/src/scene/world/types.ts";
 import { cappedCylinderBrep } from "../test/brepFixtures.ts";
 import { boxMinusCylinderBrep } from "../test/brepSectionFixtures.ts";
 

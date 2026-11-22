@@ -36,19 +36,19 @@ import {
   type MeshData,
   type PlacementParameter,
   type World,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import {
   placeJacobianWithTerms,
   placeWithTerms,
   turnNormalByJacobian,
-} from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import { fitLattice } from "../packages/next/src/scene/curvilinearFit.ts";
+} from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import { fitLattice } from "../packages/core/src/scene/curvilinearFit.ts";
 import type {
   CubicLattice,
   CurvilinearTerms,
-} from "../packages/next/src/scene/curvilinearTerms.ts";
-import { setPlacement } from "../packages/next/src/scene/world/placements.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/curvilinearTerms.ts";
+import { setPlacement } from "../packages/core/src/scene/world/placements.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
 
 const TEMPLATE = `
 <h1>A placed draw's normals and positions against their CPU twin</h1>

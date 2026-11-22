@@ -17,8 +17,8 @@
 import {
   corridorUnrollDescriptor,
   type CorridorOptions,
-} from "../../packages/next/src/transforms/corridorUnroll.ts";
-import { defaultParams } from "../../packages/next/src/transforms/descriptor.ts";
+} from "../../packages/core/src/transforms/corridorUnroll.ts";
+import { defaultParams } from "../../packages/core/src/transforms/descriptor.ts";
 import {
   Builder,
   evaluate,

@@ -6,7 +6,7 @@
 // placement at an anchor) left out (`rootTransform: "none"`). Small fixture
 // tilesets, and the fake engine of test/fakeGpu.ts.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { routeForward } from "../packages/next/src/camera/route.ts";
+import { routeForward } from "../packages/core/src/camera/route.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { placementOf } from "../packages/next/src/frames/placementQuery.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
@@ -15,17 +15,17 @@ import {
   geographicToGeocentric,
   utmToGeographic,
   verticalExaggeration,
-} from "../packages/next/src/georeference/index.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
-import type { TilesetOptions } from "../packages/next/src/streaming/tilesetTypes.ts";
-import { liveEdge } from "../packages/next/src/transforms/index.ts";
+} from "../packages/core/src/georeference/index.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
+import type { TilesetOptions } from "../packages/core/src/streaming/tilesetTypes.ts";
+import { liveEdge } from "../packages/core/src/transforms/index.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

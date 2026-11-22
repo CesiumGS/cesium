@@ -8,18 +8,18 @@ import { describe, expect, it } from "vitest";
 import {
   BrepBuilder,
   type SurfaceIdentity,
-} from "../packages/next/src/brep/build.ts";
+} from "../packages/core/src/brep/build.ts";
 import {
   axisRates,
   frameOf,
   speedBounds,
-} from "../packages/next/src/brep/bounds.ts";
-import { evaluateSurface } from "../packages/next/src/brep/evaluate.ts";
-import { SurfaceKind, type BrepForm } from "../packages/next/src/brep/form.ts";
+} from "../packages/core/src/brep/bounds.ts";
+import { evaluateSurface } from "../packages/core/src/brep/evaluate.ts";
+import { SurfaceKind, type BrepForm } from "../packages/core/src/brep/form.ts";
 import {
   tessellateBrep,
   type BrepMesh,
-} from "../packages/next/src/brep/tessellate.ts";
+} from "../packages/core/src/brep/tessellate.ts";
 import {
   boxFace,
   lineProfile,

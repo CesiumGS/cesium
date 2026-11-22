@@ -17,7 +17,7 @@ import { gridFactors } from "../../../../packages/next/src/engineering/factors.t
 import { projTokenProblem } from "../../../../packages/next/src/engineering/wkt2.ts";
 import type { ProjApi } from "../../../../packages/next/src/engineering/proj.ts";
 import { measure } from "../../../../packages/next/src/measure/measure.ts";
-import { EARTH } from "../../../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import {
   type EllipsoidShape,
   ellipsoidShape,

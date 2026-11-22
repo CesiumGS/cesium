@@ -30,7 +30,7 @@ import { FRAMES_DATA_FORMAT } from "../packages/next/src/ephemeris/framesDataFor
 import {
   SKY_PACK_BUILD_COMMAND,
   SKY_PACK_FORMAT,
-} from "../packages/next/src/atmosphere/skyPack.ts";
+} from "../packages/core/src/atmosphere/skyPack.ts";
 
 /** The command that sets everything up (the sky pack has its own). */
 export const SETUP_COMMAND = "npm run setup";

@@ -29,7 +29,7 @@ import {
   type PlacementParameter,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 
 const TEMPLATE = `
 <h1>A draw's placement against its CPU twin</h1>

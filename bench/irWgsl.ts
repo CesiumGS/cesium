@@ -2,14 +2,14 @@
 // (`getCompilationInfo` must report no errors), run on the GPU over its
 // edge-case rows and read back, and compared with the float64 evaluator to
 // the case's stated tolerance (src/ir/wgslCases.ts).
-import { emitWgslKernel, packUniforms } from "../packages/next/src/ir/index.ts";
+import { emitWgslKernel, packUniforms } from "../packages/core/src/ir/index.ts";
 import {
   compareReadback,
   newReadbackRow,
   packRows,
   type ReadbackRow,
-} from "../packages/next/src/ir/readback.ts";
-import { wgslCases } from "../packages/next/src/ir/wgslCases.ts";
+} from "../packages/core/src/ir/readback.ts";
+import { wgslCases } from "../packages/core/src/ir/wgslCases.ts";
 
 export type IrWgslRow = ReadbackRow;
 

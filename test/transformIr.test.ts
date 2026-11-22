@@ -8,25 +8,25 @@ import {
   jacobianProgram,
   hessianProgram,
   parameterDerivatives,
-} from "../packages/next/src/transform/ad.ts";
+} from "../packages/core/src/transform/ad.ts";
 import {
   evaluate,
   type ParamValues,
-} from "../packages/next/src/transform/evaluate.ts";
+} from "../packages/core/src/transform/evaluate.ts";
 import {
   evaluateInterval,
   type Interval,
   type ParamRange,
-} from "../packages/next/src/transform/interval.ts";
-import { Builder } from "../packages/next/src/ir/builder.ts";
-import type { Id } from "../packages/next/src/ir/types.ts";
+} from "../packages/core/src/transform/interval.ts";
+import { Builder } from "../packages/core/src/ir/builder.ts";
+import type { Id } from "../packages/core/src/ir/types.ts";
 import {
   parseTransform,
   TransformParseError,
-} from "../packages/next/src/transform/parse.ts";
-import { paramsOf } from "../packages/next/src/transform/program.ts";
-import { lowerComposites } from "../packages/next/src/transform/residual.ts";
-import { toWgsl } from "../packages/next/src/transform/wgsl.ts";
+} from "../packages/core/src/transform/parse.ts";
+import { paramsOf } from "../packages/core/src/transform/program.ts";
+import { lowerComposites } from "../packages/core/src/transform/residual.ts";
+import { toWgsl } from "../packages/core/src/transform/wgsl.ts";
 import * as samples from "./transformIrSamples.ts";
 
 /**

@@ -7,30 +7,30 @@
 // map: the carrier's twin lands each point on `routeForward` within the
 // fit's error. The kernel on the GPU is spikes/curvilinearPoints.html.
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { routeForward, type Route } from "../packages/next/src/camera/route.ts";
+import { routeForward, type Route } from "../packages/core/src/camera/route.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
 import {
   FLAGS_WORD,
   NO_PLACEMENT,
   RECORD_WORDS,
   RecordFlags,
   VIEW_MASK_WORD,
-} from "../packages/next/src/render/layout.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
+} from "../packages/core/src/render/layout.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
 import {
   placeWithTerms,
   weightOf,
-} from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import { drawTerms } from "../packages/next/src/scene/world/placements.ts";
-import type { AnchorHandle } from "../packages/next/src/scene/world/types.ts";
-import { PointSource } from "../packages/next/src/vector/PointSource.ts";
+} from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import { drawTerms } from "../packages/core/src/scene/world/placements.ts";
+import type { AnchorHandle } from "../packages/core/src/scene/world/types.ts";
+import { PointSource } from "../packages/core/src/vector/PointSource.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

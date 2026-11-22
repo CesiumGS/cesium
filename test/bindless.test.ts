@@ -6,7 +6,7 @@ import {
   MATERIAL_WORDS,
   NO_TEXTURE,
   writeMaterial,
-} from "../packages/next/src/render/layout.ts";
+} from "../packages/core/src/render/layout.ts";
 
 /**
  * The bindless seam (docs/design/risks.md, "Bindless textures: not in the PoC, designed for in 2.0", docs/design/gpu-limits-and-capacities.md): material

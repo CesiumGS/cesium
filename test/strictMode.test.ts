@@ -414,9 +414,9 @@ describe("a Viewer under StrictMode (create, dispose, create again at once)", ()
   });
 
   it("a canvas passes from a disposed engine to a new one, its context configured for the new device", async () => {
-    const { Engine } = await import("../packages/next/src/scene/Engine.ts");
+    const { Engine } = await import("../packages/core/src/scene/Engine.ts");
     const { CanvasTarget } =
-      await import("../packages/next/src/scene/renderTarget.ts");
+      await import("../packages/core/src/scene/renderTarget.ts");
     const canvas = element(platform);
     const context = canvas.getContext();
     const draw = (engine: Awaited<ReturnType<typeof Engine.create>>) => {
@@ -443,9 +443,9 @@ describe("a Viewer under StrictMode (create, dispose, create again at once)", ()
   });
 
   it("an OffscreenTarget passes from a disposed engine to a new one", async () => {
-    const { Engine } = await import("../packages/next/src/scene/Engine.ts");
+    const { Engine } = await import("../packages/core/src/scene/Engine.ts");
     const { OffscreenTarget } =
-      await import("../packages/next/src/scene/renderTarget.ts");
+      await import("../packages/core/src/scene/renderTarget.ts");
     const target = new OffscreenTarget(4, 4);
     for (let i = 0; i < 2; i++) {
       const engine = await Engine.create({ limits: "adapter" });

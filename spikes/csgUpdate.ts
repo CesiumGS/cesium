@@ -8,14 +8,14 @@
 // NIST files at /step-samples/).
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
-import { tessellateBrep } from "../packages/next/src/brep/index.ts";
-import { KernelClient } from "../packages/next/src/brep/kernelClient.ts";
-import type { KernelName } from "../packages/next/src/brep/kernelProtocol.ts";
+import { tessellateBrep } from "../packages/core/src/brep/index.ts";
+import { KernelClient } from "../packages/core/src/brep/kernelClient.ts";
+import type { KernelName } from "../packages/core/src/brep/kernelProtocol.ts";
 import {
   Engine,
   OffscreenTarget,
   UNITLESS_EXPOSURE,
-} from "../packages/next/src/index.ts";
+} from "../packages/core/src/index.ts";
 import { SCENES } from "./csgRecipes.ts";
 
 const TEMPLATE = `

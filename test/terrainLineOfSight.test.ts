@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { terrainLineOfSight as traced } from "../packages/next/src/measure/terrainLineOfSight.ts";
-import { terrainQueries } from "../packages/next/src/query/terrainBackend.ts";
-import type { TerrainRayTarget } from "../packages/next/src/globe/terrainRay.ts";
-import { LEVEL_ZERO_ERROR } from "../packages/next/src/globe/TerrainSource.ts";
+import { terrainQueries } from "../packages/core/src/query/terrainBackend.ts";
+import type { TerrainRayTarget } from "../packages/core/src/globe/terrainRay.ts";
+import { LEVEL_ZERO_ERROR } from "../packages/core/src/globe/TerrainSource.ts";
 import {
   A,
   WGS84,

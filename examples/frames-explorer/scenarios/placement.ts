@@ -2,7 +2,7 @@
 // drone's footprint, traced on the page, has no PROJ there (R13), so the
 // worker hands over a linear map exact at one point (drone.ts
 // `localPlacement`). Light imports only: the page reads it.
-import { Ellipsoid } from "../../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 
 /** Easting and northing of Earth-fixed `p` from a local placement: moved to its height along its normal first. */
 export function onGrid(

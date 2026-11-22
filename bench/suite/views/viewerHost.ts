@@ -25,7 +25,7 @@ import {
   type AerosolType,
   type ToneMapping,
   type TranslucencyMethod,
-} from "../../../packages/next/src/index.ts";
+} from "../../../packages/core/src/index.ts";
 import { DEFAULT_ION_TOKEN } from "../ionToken.ts";
 import { limitsTier } from "../limitsTier.ts";
 import {

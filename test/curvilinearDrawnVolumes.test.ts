@@ -5,22 +5,22 @@
 // what is drawn is far from where the volume says; with no curvilinear map, selection is
 // as it was.
 import { describe, expect, it } from "vitest";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
-import { BudgetedSelection } from "../packages/next/src/streaming/Budgeted.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
+import { BudgetedSelection } from "../packages/core/src/streaming/Budgeted.ts";
 import {
   StepwiseSelection,
   type CasterRoom,
   type SelectionView,
-} from "../packages/next/src/streaming/Stepwise.ts";
+} from "../packages/core/src/streaming/Stepwise.ts";
 import {
   treeFromJson,
   type Tile,
-} from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/streaming/Tile.ts";
 import {
   drawnRequestVolume,
   drawnTile,
   type TileCurvilinearMap,
-} from "../packages/next/src/streaming/tileCurvilinearMap.ts";
+} from "../packages/core/src/streaming/tileCurvilinearMap.ts";
 
 const R = 6_378_137;
 const ASPECT = 16 / 9;

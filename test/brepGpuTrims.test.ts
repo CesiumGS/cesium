@@ -5,9 +5,9 @@
 // free-form face, and loops that touch the seam; the dilation keeps what is
 // within the reach of the boundary and nothing farther than it allows.
 import { describe, expect, it } from "vitest";
-import { BrepBuilder } from "../packages/next/src/brep/build.ts";
-import { evaluateCurve2 } from "../packages/next/src/brep/evaluate.ts";
-import type { BrepForm } from "../packages/next/src/brep/form.ts";
+import { BrepBuilder } from "../packages/core/src/brep/build.ts";
+import { evaluateCurve2 } from "../packages/core/src/brep/evaluate.ts";
+import type { BrepForm } from "../packages/core/src/brep/form.ts";
 import {
   NO_TRIM,
   SPAN,
@@ -15,7 +15,7 @@ import {
   packGpuPatches,
   prepareGpuPatches,
   type GpuFace,
-} from "../packages/next/src/brep/gpuPatches.ts";
+} from "../packages/core/src/brep/gpuPatches.ts";
 import {
   DISPLAY_TRIM_TOLERANCE,
   MAX_TRIM_BANDS,
@@ -24,9 +24,9 @@ import {
   trimCovers,
   trimCrossings,
   trimTolerance,
-} from "../packages/next/src/brep/gpuTrims.ts";
-import type { NurbsCurve } from "../packages/next/src/brep/nurbs.ts";
-import { faceTrim } from "../packages/next/src/brep/tessellate.ts";
+} from "../packages/core/src/brep/gpuTrims.ts";
+import type { NurbsCurve } from "../packages/core/src/brep/nurbs.ts";
+import { faceTrim } from "../packages/core/src/brep/tessellate.ts";
 import {
   boxBrep,
   cappedCylinderBrep,

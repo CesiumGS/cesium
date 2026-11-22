@@ -59,10 +59,10 @@ import {
 } from "../examples/frames-explorer/overlays.ts";
 import type { EngineeringFrame } from "../packages/next/src/engineering/EngineeringFrame.ts";
 import type { ProjApi } from "../packages/next/src/engineering/proj.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import { createFrames } from "../packages/next/src/frames/frames.ts";
 import type { AccuracyStatement } from "../packages/next/src/measure/accuracy.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
 const frames = createFrames(syntheticFrameData());

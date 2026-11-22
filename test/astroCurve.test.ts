@@ -7,8 +7,8 @@ import { describe, expect, it } from "vitest";
 import {
   astroCurve,
   astrophotoCurveStage,
-} from "../packages/next/src/render/post/astroCurve.ts";
-import { PostStageError } from "../packages/next/src/scene/postStage.ts";
+} from "../packages/core/src/render/post/astroCurve.ts";
+import { PostStageError } from "../packages/core/src/scene/postStage.ts";
 
 describe("astroCurve", () => {
   it("about holds white, and leaves black", () => {
@@ -94,7 +94,7 @@ describe("astrophotoCurveStage", () => {
   describe("its Slang source (shaders/stages/astroCurve.slang)", () => {
     const source = readFileSync(
       new URL(
-        "../packages/next/src/shaders/stages/astroCurve.slang",
+        "../packages/core/src/shaders/stages/astroCurve.slang",
         import.meta.url,
       ),
       "utf8",

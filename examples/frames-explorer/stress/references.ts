@@ -1,8 +1,8 @@
 // Published values (R10): references.json read as printed, with half a unit
 // in each value's last printed digit, and the path tolerances beside them.
 import { ARCSECOND } from "../units.ts";
-import { fromDegrees } from "../../../packages/next/src/math/ellipsoid.ts";
-import { EARTH } from "../../../packages/next/src/scene/Body.ts";
+import { fromDegrees } from "../../../packages/core/src/math/ellipsoid.ts";
+import { EARTH } from "../../../packages/core/src/scene/Body.ts";
 import references from "../references.json";
 import type { Citation } from "./groupInfo.ts";
 

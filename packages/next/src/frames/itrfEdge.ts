@@ -2,7 +2,7 @@
 // EOP. Apart from `edges.ts` because it pulls the X, Y and s series: only
 // the Earth orientation provider and `createFrames` load it.
 import type { FrameData } from "../ephemeris/loadFrameData.ts";
-import { EARTH_ROTATION_RATE } from "../math/constants.ts";
+import { EARTH_ROTATION_RATE } from "../../../core/src/math/constants.ts";
 import { celestialToTerrestrial } from "../time/earthOrientation.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { FrameEdge } from "./edges.ts";

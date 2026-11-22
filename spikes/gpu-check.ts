@@ -11,7 +11,7 @@ import {
   BASE_BINDING_LIMITS,
   BASE_CAPACITY_LIMITS,
   requiredLimitsFor,
-} from "../packages/next/src/gpu/limits.ts";
+} from "../packages/core/src/gpu/limits.ts";
 import wgsl from "./gpu-check.wgsl?raw";
 
 /** A step's wait for the GPU before it counts as a hang, ms. */
@@ -592,7 +592,7 @@ const rawSteps: Step[] = [
 
 // -------------------------------------------------------------- engine steps
 
-type Lib = typeof import("../packages/next/src/index.ts");
+type Lib = typeof import("../packages/core/src/index.ts");
 
 interface Scene {
   side: number;
@@ -609,7 +609,7 @@ async function engineStep(
   modes: Array<"indirect" | "direct">,
 ): Promise<Outcome> {
   const out = outcome();
-  const lib: Lib = await import("../packages/next/src/index.ts");
+  const lib: Lib = await import("../packages/core/src/index.ts");
   const {
     Engine,
     CanvasTarget,

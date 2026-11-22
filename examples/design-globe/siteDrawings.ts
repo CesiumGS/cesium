@@ -7,10 +7,10 @@
 // Both read the same vertices, each with its rigid position and its
 // reprojected one (the generator's), so there is one tile selection and one
 // tile cache, and neither can show a tile the other doesn't.
-import { CustomShader } from "../../packages/next/src/scene/CustomShader.ts";
-import type { World } from "../../packages/next/src/scene/World.ts";
-import type { SceneItem } from "../../packages/next/src/scene/SceneItem.ts";
-import type { Tileset3D } from "../../packages/next/src/streaming/Tileset3D.ts";
+import { CustomShader } from "../../packages/core/src/scene/CustomShader.ts";
+import type { World } from "../../packages/core/src/scene/World.ts";
+import type { SceneItem } from "../../packages/core/src/scene/SceneItem.ts";
+import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
 import type { Rgba } from "./colors.ts";
 import { DUAL_POSITION_EXTENSION, STANDOFF_SEMANTIC } from "./dualPosition.ts";
 import {

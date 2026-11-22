@@ -18,16 +18,16 @@ import {
   verticalExaggerationDescriptor,
   webMercatorDescriptor,
   webMercatorToGeographicDescriptor,
-} from "../packages/next/src/georeference/index.ts";
+} from "../packages/core/src/georeference/index.ts";
 import {
   IR_VERSION,
   jacobianProgram,
   literalsToUniforms,
   scalarize,
   type Program,
-} from "../packages/next/src/ir/index.ts";
-import { wgslCases } from "../packages/next/src/ir/wgslCases.ts";
-import { parseTransform } from "../packages/next/src/transform/parse.ts";
+} from "../packages/core/src/ir/index.ts";
+import { wgslCases } from "../packages/core/src/ir/wgslCases.ts";
+import { parseTransform } from "../packages/core/src/transform/parse.ts";
 import {
   bendDescriptor,
   bumpDescriptor,
@@ -40,7 +40,7 @@ import {
   twistDescriptor,
   velocityModelDescriptor,
   type TransformDescriptor,
-} from "../packages/next/src/transforms/index.ts";
+} from "../packages/core/src/transforms/index.ts";
 import { materialXProgram } from "../spikes/core-ir/fromMaterialX.ts";
 import { styleProgram } from "../spikes/core-ir/fromStyle.ts";
 import { transformProgram } from "../spikes/core-ir/fromTransform.ts";

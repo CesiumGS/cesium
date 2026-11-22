@@ -6,15 +6,15 @@ import { describe, expect, it } from "vitest";
 import {
   STARLIGHT,
   type SkyView,
-} from "../packages/next/src/atmosphere/Sky.ts";
+} from "../packages/core/src/atmosphere/Sky.ts";
 import {
   STAR_FLOATS,
   type StarField,
-} from "../packages/next/src/atmosphere/stars.ts";
-import { VIEW_TIME_WORD } from "../packages/next/src/render/layout.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import { createPostStage } from "../packages/next/src/scene/postStage.ts";
-import { cameraGlare } from "../packages/next/src/scene/observer.ts";
+} from "../packages/core/src/atmosphere/stars.ts";
+import { VIEW_TIME_WORD } from "../packages/core/src/render/layout.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import { createPostStage } from "../packages/core/src/scene/postStage.ts";
+import { cameraGlare } from "../packages/core/src/scene/observer.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const root = join(import.meta.dirname, "..", "packages", "next");

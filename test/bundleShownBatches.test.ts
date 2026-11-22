@@ -1,9 +1,9 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { DrawHandle } from "../packages/next/src/scene/world/types.ts";
-import type { MeshData } from "../packages/next/src/scene/meshes.ts";
-import { CustomShader } from "../packages/next/src/scene/CustomShader.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
+import type { MeshData } from "../packages/core/src/scene/meshes.ts";
+import { CustomShader } from "../packages/core/src/scene/CustomShader.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 /**

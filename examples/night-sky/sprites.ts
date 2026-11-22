@@ -2,7 +2,7 @@ import type {
   ChainIo,
   GraphStage,
   GraphStageBuilder,
-} from "../../packages/next/src/index.ts";
+} from "../../packages/core/src/index.ts";
 import spritesWgsl from "./generated/sprites.wgsl?raw";
 
 /**

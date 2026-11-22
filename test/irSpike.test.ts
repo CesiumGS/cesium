@@ -22,7 +22,7 @@ import {
   print,
   type Program,
   type Value,
-} from "../packages/next/src/ir/index.ts";
+} from "../packages/core/src/ir/index.ts";
 
 /** Values as bit patterns, so -0 and NaN compare exactly. */
 const bits = (v: unknown): string =>

@@ -1,4 +1,4 @@
-import type { SkyPackManifest } from "../packages/next/src/atmosphere/skyPack.ts";
+import type { SkyPackManifest } from "../packages/core/src/atmosphere/skyPack.ts";
 export function insideWorktree(path: string): boolean;
 export function readCatalog(
   text: string,

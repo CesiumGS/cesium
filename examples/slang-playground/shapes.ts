@@ -1,4 +1,4 @@
-import type { MeshData } from "../../packages/next/src/index.ts";
+import type { MeshData } from "../../packages/core/src/index.ts";
 
 /**
  * Shader-ball shapes for the playground, z up, in meters: a UV sphere and a

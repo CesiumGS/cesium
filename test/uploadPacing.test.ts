@@ -3,9 +3,9 @@ import {
   MAXIMUM_UPLOAD_CPU_MS,
   uploadCpuMs,
   uploadScale,
-} from "../packages/next/src/scene/uploadPacing.ts";
-import { updateTilesets } from "../packages/next/src/scene/tileSelection.ts";
-import { EngineScene } from "../packages/next/src/scene/engineScene.ts";
+} from "../packages/core/src/scene/uploadPacing.ts";
+import { updateTilesets } from "../packages/core/src/scene/tileSelection.ts";
+import { EngineScene } from "../packages/core/src/scene/engineScene.ts";
 
 /** Ticks to drain a queue at one allowance: 8 uploads per 60 Hz tick. */
 function ticksToDrain(queue: number, intervalMs: number): number {

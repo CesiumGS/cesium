@@ -12,9 +12,9 @@ import { EARTH_MEAN_RADIUS } from "../units.ts";
 import type {
   TerrainRayTarget,
   TerrainRayTile,
-} from "../../../packages/next/src/index.ts";
-import { LEVEL_ZERO_ERROR } from "../../../packages/next/src/globe/TerrainSource.ts";
-import { Ellipsoid } from "../../../packages/next/src/math/ellipsoid.ts";
+} from "../../../packages/core/src/index.ts";
+import { LEVEL_ZERO_ERROR } from "../../../packages/core/src/globe/TerrainSource.ts";
+import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 
 type Rectangle = TerrainRayTile["rectangle"];
 type TerrainHeights = TerrainRayTile["heights"];

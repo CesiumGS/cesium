@@ -2,7 +2,7 @@
 // in a Node worker, `csgUpdate.ts` in the browser). Not the sample's own
 // (examples/csg/tree.ts `defaultBracket`), which is being reshaped: the same
 // shape, as data, with a parameter to move.
-import type { SolidRecipe } from "../packages/next/src/brep/kernelProtocol.ts";
+import type { SolidRecipe } from "../packages/core/src/brep/kernelProtocol.ts";
 
 type Vec3 = [number, number, number];
 

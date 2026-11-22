@@ -13,7 +13,7 @@ import {
   eyeResponse,
   rodThreshold,
   rodWeight,
-} from "../packages/next/src/scene/eye.ts";
+} from "../packages/core/src/scene/eye.ts";
 
 describe("thresholds (Ferwerda et al. 1996)", () => {
   it("follow Weber's law in bright light", () => {
@@ -58,7 +58,7 @@ describe("the rods' share and brightness", () => {
 describe("the eye's target", () => {
   it("is the same in the shader", () => {
     const slang = readFileSync(
-      new URL("../packages/next/src/shaders/present.slang", import.meta.url),
+      new URL("../packages/core/src/shaders/present.slang", import.meta.url),
       "utf8",
     );
     expect(slang).toContain("float calibration = 0.18 /");

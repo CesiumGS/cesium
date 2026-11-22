@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import * as layouts from "../packages/next/src/render/generated/layouts.ts";
+import * as layouts from "../packages/core/src/render/generated/layouts.ts";
 
 /**
  * The shared structs are defined once, in shaders/common.slang, and the

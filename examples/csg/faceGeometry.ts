@@ -1,4 +1,4 @@
-import type { BrepForm } from "../../packages/next/src/brep/form.ts";
+import type { BrepForm } from "../../packages/core/src/brep/form.ts";
 import {
   cross,
   dot,

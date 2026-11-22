@@ -19,7 +19,7 @@ import type {
   CrsRef,
 } from "../../packages/next/src/engineering/crs.ts";
 import type { EngineeringFrameDefinition } from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import { EARTH } from "../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../packages/core/src/scene/Body.ts";
 
 /** NAD83(2011) / California zone 3 (ftUS) + NAVD88 height (ftUS). */
 export const CORRIDOR_CRS: CrsRef = {

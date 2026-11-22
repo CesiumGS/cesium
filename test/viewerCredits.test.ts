@@ -3,8 +3,8 @@
 // `viewer.addTileset`. They go away with the last item. A real Viewer over
 // a fake DOM and the fake device of test/fakeGpu.ts.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Attribution } from "../packages/next/src/io/ion.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+import type { Attribution } from "../packages/core/src/io/ion.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import type { Viewer } from "../packages/next/widgets/Viewer.ts";
 import { fakeDevice, fakeEngine } from "./fakeGpu.ts";
 

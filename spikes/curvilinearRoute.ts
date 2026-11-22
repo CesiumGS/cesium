@@ -16,7 +16,7 @@
 // (`routeForward`) and the view's projection (`View.toPixel`) put it.
 import "../lab/harness.css";
 import type { Harness } from "../lab/harness.ts";
-import { routeForward } from "../packages/next/src/camera/route.ts";
+import { routeForward } from "../packages/core/src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
@@ -30,13 +30,13 @@ import {
   type MeshData,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
-import { weightOf } from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import type { CubicLattice } from "../packages/next/src/scene/curvilinearTerms.ts";
+} from "../packages/core/src/index.ts";
+import { weightOf } from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import type { CubicLattice } from "../packages/core/src/scene/curvilinearTerms.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/world/types.ts";
 
 const TEMPLATE = `
 <h1>A route across a curvilinear map against the float64 route</h1>

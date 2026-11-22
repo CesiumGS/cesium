@@ -3,12 +3,12 @@
  * asks of the device: one triangle with a feature table, a view of it,
  * and counts of the shader modules and render pipelines created.
  */
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import type {
   FeatureTable,
   GltfAsset,
-} from "../packages/next/src/io/gltfTypes.ts";
-import type { CustomShader } from "../packages/next/src/scene/CustomShader.ts";
+} from "../packages/core/src/io/gltfTypes.ts";
+import type { CustomShader } from "../packages/core/src/scene/CustomShader.ts";
 import {
   fakeDevice,
   installFakeNavigator,
@@ -83,8 +83,8 @@ export async function styleScene(table: FeatureTable): Promise<StyleScene> {
     };
   }
   installFakeNavigator(device);
-  const { Engine } = await import("../packages/next/src/scene/Engine.ts");
-  const { OffscreenTarget } = await import("../packages/next/src/index.ts");
+  const { Engine } = await import("../packages/core/src/scene/Engine.ts");
+  const { OffscreenTarget } = await import("../packages/core/src/index.ts");
   const engine = await Engine.create({ limits: "adapter" });
   const world = engine.createWorld();
   const view = engine.addView({

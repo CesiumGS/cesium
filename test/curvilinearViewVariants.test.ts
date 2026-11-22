@@ -5,7 +5,7 @@
 // against the routes' own float64 maps and the draws' records; the GPU's side
 // is spikes/curvilinearViews.ts.
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { routeForward, type Route } from "../packages/next/src/camera/route.ts";
+import { routeForward, type Route } from "../packages/core/src/camera/route.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import {
@@ -15,11 +15,11 @@ import {
 import {
   heightOffset,
   verticalExaggeration,
-} from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
-import { heightNormalInfo } from "../packages/next/src/globe/heightNormal.ts";
-import { upsampleTerrainTile } from "../packages/next/src/globe/quantizedMesh.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+} from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
+import { heightNormalInfo } from "../packages/core/src/globe/heightNormal.ts";
+import { upsampleTerrainTile } from "../packages/core/src/globe/quantizedMesh.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import {
   COLOR_WORD,
   FEATURE_ID_WORD,
@@ -27,21 +27,21 @@ import {
   RECORD_WORDS,
   RecordFlags,
   VIEW_MASK_WORD,
-} from "../packages/next/src/render/layout.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox, type MeshData } from "../packages/next/src/scene/meshes.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import { weightOf } from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import { drawTerms } from "../packages/next/src/scene/world/placements.ts";
+} from "../packages/core/src/render/layout.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox, type MeshData } from "../packages/core/src/scene/meshes.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import { weightOf } from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import { drawTerms } from "../packages/core/src/scene/world/placements.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import { drawnTile } from "../packages/next/src/streaming/tileCurvilinearMap.ts";
+} from "../packages/core/src/scene/world/types.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import { drawnTile } from "../packages/core/src/streaming/tileCurvilinearMap.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { gridTile } from "./terrainRayFixtures.ts";

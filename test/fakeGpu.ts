@@ -400,9 +400,9 @@ export function installPersona(name: PersonaName): Persona {
 /** An engine on the fake device (Node), for tests of CPU-side world logic. */
 export async function fakeEngine(
   limits: Record<string, number> = {},
-): Promise<import("../packages/next/src/scene/Engine.ts").Engine> {
+): Promise<import("../packages/core/src/scene/Engine.ts").Engine> {
   installGpuGlobals();
   installFakeNavigator(fakeDevice(limits));
-  const { Engine } = await import("../packages/next/src/scene/Engine.ts");
+  const { Engine } = await import("../packages/core/src/scene/Engine.ts");
   return Engine.create({ limits: "adapter" });
 }

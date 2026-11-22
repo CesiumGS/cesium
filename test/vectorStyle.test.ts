@@ -2,14 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   compileStyleExpression,
   type PropertyReader,
-} from "../packages/next/src/scene/styleExpression.ts";
+} from "../packages/core/src/scene/styleExpression.ts";
 import {
   compileVectorStyle,
   type CompiledModelLayer,
   type CompiledShapeLayer,
   type VectorStyleDocument,
-} from "../packages/next/src/vector/VectorStyle.ts";
-import type { PointProperty } from "../packages/next/src/vector/PointSource.ts";
+} from "../packages/core/src/vector/VectorStyle.ts";
+import type { PointProperty } from "../packages/core/src/vector/PointSource.ts";
 
 const read: PropertyReader = (name) =>
   name === "kind"

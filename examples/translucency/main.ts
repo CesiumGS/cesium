@@ -10,7 +10,7 @@ import {
   type MeshData,
   type TranslucencyMethod,
   type View,
-} from "../../packages/next/src/index.ts";
+} from "../../packages/core/src/index.ts";
 import type { ExampleContext } from "../types.ts";
 
 /**

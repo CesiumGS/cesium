@@ -2,7 +2,7 @@
 // display (brep 3, Task 1). A unit square at z = 0 of two triangles, plain or
 // placed by a translation of an Earth radius.
 import { describe, expect, it } from "vitest";
-import { meshGeometry } from "../packages/next/src/geometry/mesh.ts";
+import { meshGeometry } from "../packages/core/src/geometry/mesh.ts";
 
 const T = [6_378_137, 0, 0] as const;
 const positions = Float32Array.from([0, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0]);

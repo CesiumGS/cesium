@@ -33,8 +33,8 @@ import {
 import {
   readWithProgress,
   type LoadProgress,
-} from "../../packages/next/src/io/readWithProgress.ts";
-import { EARTH, MOON } from "../../packages/next/src/scene/Body.ts";
+} from "../../packages/core/src/io/readWithProgress.ts";
+import { EARTH, MOON } from "../../packages/core/src/scene/Body.ts";
 import { Instant } from "../../packages/next/src/time/Instant.ts";
 import type { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
 import {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { slangStages } from "../packages/next/src/scene/slangStages.ts";
+import { slangStages } from "../packages/core/src/scene/slangStages.ts";
 
 describe("slangStages", () => {
   it("finds stages by their definitions, not by mentions in comments", () => {

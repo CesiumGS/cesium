@@ -13,15 +13,15 @@ import {
   torusBrep,
   trimmedNurbsBrep,
 } from "../examples/brep-first-look/fixtures.ts";
-import { BrepBuilder } from "../packages/next/src/brep/build.ts";
-import { evaluateSurface } from "../packages/next/src/brep/evaluate.ts";
-import type { BrepForm } from "../packages/next/src/brep/form.ts";
+import { BrepBuilder } from "../packages/core/src/brep/build.ts";
+import { evaluateSurface } from "../packages/core/src/brep/evaluate.ts";
+import type { BrepForm } from "../packages/core/src/brep/form.ts";
 import {
   formBounds,
   type FormBounds,
-} from "../packages/next/src/brep/formBounds.ts";
-import type { NurbsCurve } from "../packages/next/src/brep/nurbs.ts";
-import { tessellateBrep } from "../packages/next/src/brep/tessellate.ts";
+} from "../packages/core/src/brep/formBounds.ts";
+import type { NurbsCurve } from "../packages/core/src/brep/nurbs.ts";
+import { tessellateBrep } from "../packages/core/src/brep/tessellate.ts";
 import {
   lineProfile,
   meridianProfile,

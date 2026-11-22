@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { BrepBuilder } from "../packages/next/src/brep/build.ts";
-import { evaluateSurface } from "../packages/next/src/brep/evaluate.ts";
+import { BrepBuilder } from "../packages/core/src/brep/build.ts";
+import { evaluateSurface } from "../packages/core/src/brep/evaluate.ts";
 import {
   faceTrim,
   tessellateBrep,
   type BrepMesh,
-} from "../packages/next/src/brep/tessellate.ts";
+} from "../packages/core/src/brep/tessellate.ts";
 import {
   boxBrep,
   cappedCylinderBrep,

@@ -32,7 +32,7 @@ import {
   type Frame,
 } from "../../packages/next/src/frames/Frame.ts";
 import type { Frames } from "../../packages/next/src/frames/frames.ts";
-import { Ellipsoid } from "../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import { hexRgba, type Globe, type LabelSpec } from "./globe.ts";
 import { overlayMesh, polyline } from "./overlays.ts";
 import { footprintLabel, spotOf } from "./panel/answerText.ts";

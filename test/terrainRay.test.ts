@@ -1,18 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { castTerrainRay } from "../packages/next/src/globe/terrainRay.ts";
+import { castTerrainRay } from "../packages/core/src/globe/terrainRay.ts";
 import { terrainLineOfSight } from "../packages/next/src/measure/terrainLineOfSight.ts";
-import { terrainQueries } from "../packages/next/src/query/terrainBackend.ts";
+import { terrainQueries } from "../packages/core/src/query/terrainBackend.ts";
 import {
   LEVEL_ZERO_ERROR,
   TerrainSource,
   type TerrainLoader,
-} from "../packages/next/src/globe/TerrainSource.ts";
-import { GlobeBudgetedSelection } from "../packages/next/src/globe/GlobeBudgeted.ts";
-import { GlobeStepwiseSelection } from "../packages/next/src/globe/GlobeStepwise.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/globe/TerrainSource.ts";
+import { GlobeBudgetedSelection } from "../packages/core/src/globe/GlobeBudgeted.ts";
+import { GlobeStepwiseSelection } from "../packages/core/src/globe/GlobeStepwise.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 import { expectExactPlaceholders } from "./placeholderInvariant.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
 import {
   A,
   WGS84,

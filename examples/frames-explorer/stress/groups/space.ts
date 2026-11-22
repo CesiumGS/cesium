@@ -11,7 +11,7 @@ import {
 import {
   Ellipsoid,
   fromDegrees,
-} from "../../../../packages/next/src/math/ellipsoid.ts";
+} from "../../../../packages/core/src/math/ellipsoid.ts";
 import { measure } from "../../../../packages/next/src/measure/measure.ts";
 import { Instant } from "../../../../packages/next/src/time/Instant.ts";
 import signalFixture from "../../../../test/fixtures/frames/signal.json";

@@ -1,7 +1,7 @@
 // Two-vector reference frames (frames 5b, Task 2) on synthetic frames.
 import { describe, expect, it } from "vitest";
 import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
-import { FrameUnavailableError } from "../packages/next/src/camera/frameResolver.ts";
+import { FrameUnavailableError } from "../packages/core/src/camera/frameResolver.ts";
 import {
   angularVelocity,
   frameVelocity,
@@ -13,7 +13,7 @@ import {
   type Axis,
   type VectorDefinition,
 } from "../packages/next/src/frames/twoVector.ts";
-import { identity } from "../packages/next/src/math/mat4.ts";
+import { identity } from "../packages/core/src/math/mat4.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 
 const root = Frame.root("Root");

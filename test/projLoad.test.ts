@@ -12,7 +12,7 @@ import { pathToFileURL } from "node:url";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadProj } from "../packages/next/src/engineering/proj.ts";
 import { PROJ_FILE_SHA256 } from "../packages/next/src/engineering/projPins.ts";
-import { sha256Hex } from "../packages/next/src/io/sha256.ts";
+import { sha256Hex } from "../packages/core/src/io/sha256.ts";
 
 // A module whose emnapiInit returns a marker object (which finds every grid
 // where it was written).

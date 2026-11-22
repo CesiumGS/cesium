@@ -32,7 +32,7 @@ import {
   loadGrids,
   loadProj,
 } from "../../packages/next/src/engineering/proj.ts";
-import { sha256Hex } from "../../packages/next/src/io/sha256.ts";
+import { sha256Hex } from "../../packages/core/src/io/sha256.ts";
 import {
   HOSTILE_GRID_NAMES,
   RESERVED_GRID_NAMES,

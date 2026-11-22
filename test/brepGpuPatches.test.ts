@@ -7,9 +7,9 @@ import { describe, expect, it } from "vitest";
 import {
   BrepBuilder,
   type SurfaceIdentity,
-} from "../packages/next/src/brep/build.ts";
-import { SurfaceKind, type BrepForm } from "../packages/next/src/brep/form.ts";
-import { evaluateNurbsSurface } from "../packages/next/src/brep/nurbs.ts";
+} from "../packages/core/src/brep/build.ts";
+import { SurfaceKind, type BrepForm } from "../packages/core/src/brep/form.ts";
+import { evaluateNurbsSurface } from "../packages/core/src/brep/nurbs.ts";
 import {
   MAX_CELLS,
   NO_TRIM,
@@ -23,7 +23,7 @@ import {
   prepareGpuPatches,
   spanError,
   type GpuSpan,
-} from "../packages/next/src/brep/gpuPatches.ts";
+} from "../packages/core/src/brep/gpuPatches.ts";
 import {
   boxBrep,
   highDegreeSurface,

@@ -10,7 +10,7 @@ import {
   type FrameKey,
   type FrameMotion,
   type FrameResolver,
-} from "../camera/frameResolver.ts";
+} from "../../../core/src/camera/frameResolver.ts";
 import {
   NonAffineRouteError,
   curvilinearForward,
@@ -18,14 +18,17 @@ import {
   type Route,
   type RouteStep,
   type CurvilinearMap,
-} from "../camera/route.ts";
-import { Emitter } from "../core/Emitter.ts";
-import * as m4 from "../math/mat4.ts";
-import { rigidMatrixError } from "../math/transforms.ts";
-import type { AnchorHandle, TransformFrameKey } from "../scene/world/types.ts";
+} from "../../../core/src/camera/route.ts";
+import { Emitter } from "../../../core/src/core/Emitter.ts";
+import * as m4 from "../../../core/src/math/mat4.ts";
+import { rigidMatrixError } from "../../../core/src/math/transforms.ts";
+import type {
+  AnchorHandle,
+  TransformFrameKey,
+} from "../../../core/src/scene/world/types.ts";
 import { Instant } from "../time/Instant.ts";
 import type { LeapSeconds } from "../time/leapSeconds.ts";
-import type { ViewId } from "../transform/graph.ts";
+import type { ViewId } from "../../../core/src/transform/graph.ts";
 import {
   ANALYTIC_ACCURACY,
   analyticEdges,

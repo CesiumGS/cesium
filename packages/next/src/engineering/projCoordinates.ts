@@ -9,7 +9,7 @@
 // verified, staged, plain-named grids (crs.ts `checkUsedGrids`), after
 // strict WKT2 and declared-pipeline screening upstream. A host's own
 // coordinate service is outside that chain by design.
-import { EARTH, MOON, type Body } from "../scene/Body.ts";
+import { EARTH, MOON, type Body } from "../../../core/src/scene/Body.ts";
 import type {
   AreaOfInterest,
   CoordinateRequest,

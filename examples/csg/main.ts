@@ -9,9 +9,9 @@ import {
   vec3,
   type DrawHandle,
   type MeshHandle,
-} from "../../packages/next/src/index.ts";
-import { KernelCanceled } from "../../packages/next/src/brep/kernelClient.ts";
-import type { KernelName } from "../../packages/next/src/brep/kernelProtocol.ts";
+} from "../../packages/core/src/index.ts";
+import { KernelCanceled } from "../../packages/core/src/brep/kernelClient.ts";
+import type { KernelName } from "../../packages/core/src/brep/kernelProtocol.ts";
 import type { ExampleContext } from "../types.ts";
 import { KIND_NAMES, linearOf } from "../brep-first-look/analysis.ts";
 import { edgeLines } from "../brep-first-look/meshes.ts";

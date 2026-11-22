@@ -4,20 +4,20 @@
 // (true, drawn, curvilinear), a view's table end to end, and queries filtered by
 // clips. The GPU side is spikes/clips.html.
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { routeForward } from "../packages/next/src/camera/route.ts";
+import { routeForward } from "../packages/core/src/camera/route.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import type { Frame } from "../packages/next/src/frames/Frame.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
 import { boxBrep } from "./brepFixtures.ts";
-import { brepGeometry } from "../packages/next/src/geometry/brep.ts";
-import { meshGeometry } from "../packages/next/src/geometry/mesh.ts";
-import { writeClips } from "../packages/next/src/render/view/clipTable.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+import { brepGeometry } from "../packages/core/src/geometry/brep.ts";
+import { meshGeometry } from "../packages/core/src/geometry/mesh.ts";
+import { writeClips } from "../packages/core/src/render/view/clipTable.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import {
   CLIP_TABLE_ROWS,
   MAX_CLIP_SETS,
@@ -34,8 +34,8 @@ import {
   type ClipSet,
   type ClipShape,
   type PlannedClip,
-} from "../packages/next/src/scene/world/clips.ts";
-import type { ViewFrame } from "../packages/next/src/render/view/viewFrameData.ts";
+} from "../packages/core/src/scene/world/clips.ts";
+import type { ViewFrame } from "../packages/core/src/render/view/viewFrameData.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

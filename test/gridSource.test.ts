@@ -21,7 +21,7 @@ import {
   type ProjApi,
 } from "../packages/next/src/engineering/proj.ts";
 import { PROJ_DATA_CATALOG } from "../packages/next/src/engineering/projPins.ts";
-import { sha256Hex } from "../packages/next/src/io/sha256.ts";
+import { sha256Hex } from "../packages/core/src/io/sha256.ts";
 import { HOSTILE_GRID_NAMES, RESERVED_GRID_NAMES } from "./hostileGridNames.ts";
 
 const encode = (text: string) => new TextEncoder().encode(text);

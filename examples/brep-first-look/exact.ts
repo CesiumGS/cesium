@@ -8,7 +8,7 @@ import {
   faceTrim,
   type BrepForm,
   type BrepMesh,
-} from "../../packages/next/src/brep/index.ts";
+} from "../../packages/core/src/brep/index.ts";
 
 /** The most Gauss–Newton iterations. */
 export const MAX_ITERATIONS = 10;

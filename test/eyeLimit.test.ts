@@ -1,17 +1,17 @@
 // The eye's point limit: its numbers, and when a view has it (plan's Task 11).
 import { describe, expect, it } from "vitest";
-import { MAGNITUDE_ZERO_ILLUMINANCE } from "../packages/next/src/atmosphere/stars.ts";
-import { eyeLimitStage } from "../packages/next/src/scene/eyeLimit.ts";
+import { MAGNITUDE_ZERO_ILLUMINANCE } from "../packages/core/src/atmosphere/stars.ts";
+import { eyeLimitStage } from "../packages/core/src/scene/eyeLimit.ts";
 import {
   SCOTOPIC_WHITE,
   eyePointLimit,
-} from "../packages/next/src/scene/eye.ts";
+} from "../packages/core/src/scene/eye.ts";
 import {
   cameraObserver,
   eyeObserver,
-} from "../packages/next/src/scene/observer.ts";
-import type { PostStageViewInfo } from "../packages/next/src/scene/postStage.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
+} from "../packages/core/src/scene/observer.ts";
+import type { PostStageViewInfo } from "../packages/core/src/scene/postStage.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
 
 const magnitude = (photopic: number) =>
   -2.5 *

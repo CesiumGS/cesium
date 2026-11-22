@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { EngineErrors } from "../packages/next/src/gpu/EngineErrors.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { EngineErrors } from "../packages/core/src/gpu/EngineErrors.ts";
 import {
   fakeDevice,
   installFakeNavigator,
@@ -35,7 +35,7 @@ describe("fault isolation", () => {
   beforeAll(async () => {
     installGpuGlobals();
     installFakeNavigator(fakeDevice({}));
-    const { Engine } = await import("../packages/next/src/scene/Engine.ts");
+    const { Engine } = await import("../packages/core/src/scene/Engine.ts");
     engine = await Engine.create({ limits: "adapter" });
   });
 

@@ -3,9 +3,9 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { MOON } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+import { MOON } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
 import { fakeEngine } from "./fakeGpu.ts";

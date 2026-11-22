@@ -1,12 +1,12 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { positionHit } from "./positionHit.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { GlobeController } from "../packages/next/src/scene/GlobeController.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { GlobeController } from "../packages/core/src/scene/GlobeController.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const WIDTH = 640;

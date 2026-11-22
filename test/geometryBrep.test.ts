@@ -18,12 +18,12 @@ import {
   nearestOnFace,
   nearestVertexUv,
 } from "../examples/brep-first-look/exact.ts";
-import { BrepBuilder } from "../packages/next/src/brep/build.ts";
-import { evaluateSurface } from "../packages/next/src/brep/evaluate.ts";
-import { SurfaceKind, type BrepForm } from "../packages/next/src/brep/form.ts";
-import { formBounds } from "../packages/next/src/brep/formBounds.ts";
-import { tessellateBrep } from "../packages/next/src/brep/tessellate.ts";
-import { brepGeometry } from "../packages/next/src/geometry/brep.ts";
+import { BrepBuilder } from "../packages/core/src/brep/build.ts";
+import { evaluateSurface } from "../packages/core/src/brep/evaluate.ts";
+import { SurfaceKind, type BrepForm } from "../packages/core/src/brep/form.ts";
+import { formBounds } from "../packages/core/src/brep/formBounds.ts";
+import { tessellateBrep } from "../packages/core/src/brep/tessellate.ts";
+import { brepGeometry } from "../packages/core/src/geometry/brep.ts";
 import {
   meridianProfile,
   nurbsCylinderBrep,

@@ -1,7 +1,10 @@
 /** The distance over a body: Karney's geodesic between two points' geodetic footprints. */
 import { Geodesic } from "geographiclib-geodesic";
-import { cartographic, type Ellipsoid } from "../math/ellipsoid.ts";
-import { vec3, type Vec3 } from "../math/vec3.ts";
+import {
+  cartographic,
+  type Ellipsoid,
+} from "../../../core/src/math/ellipsoid.ts";
+import { vec3, type Vec3 } from "../../../core/src/math/vec3.ts";
 
 const RADIANS = Math.PI / 180;
 

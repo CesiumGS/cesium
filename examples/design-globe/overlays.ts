@@ -12,15 +12,15 @@
 // (The camera's moves are in shots.ts.)
 import type { Alignment } from "../../packages/next/src/engineering/alignment.ts";
 import type { TilesetPlacement } from "../../packages/next/src/engineering/placement.ts";
-import { Ellipsoid } from "../../packages/next/src/math/ellipsoid.ts";
-import { MaterialFlags } from "../../packages/next/src/render/layout.ts";
-import { EARTH } from "../../packages/next/src/scene/Body.ts";
-import type { PlacementParameter } from "../../packages/next/src/scene/placement.ts";
-import type { World } from "../../packages/next/src/scene/World.ts";
+import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
+import { MaterialFlags } from "../../packages/core/src/render/layout.ts";
+import { EARTH } from "../../packages/core/src/scene/Body.ts";
+import type { PlacementParameter } from "../../packages/core/src/scene/placement.ts";
+import type { World } from "../../packages/core/src/scene/World.ts";
 import type {
   DrawHandle,
   MeshHandle,
-} from "../../packages/next/src/scene/world/types.ts";
+} from "../../packages/core/src/scene/world/types.ts";
 import { visibleRise } from "./exactSnap.ts";
 import { rampAt } from "./colors.ts";
 import { sectionSurface } from "./corridor.ts";

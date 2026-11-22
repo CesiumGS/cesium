@@ -22,7 +22,7 @@ import {
   unappliedViewSettings,
 } from "../bench/suite/settings.mjs";
 import { summarizeRun } from "../bench/suite/report.mjs";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const dynoBin = fileURLToPath(new URL("../bench/dyno.mjs", import.meta.url));

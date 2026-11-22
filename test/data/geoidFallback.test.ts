@@ -27,7 +27,7 @@ import {
   type GridSource,
 } from "../../packages/next/src/engineering/proj.ts";
 import type { ProjApi } from "../../packages/next/src/engineering/projApi.ts";
-import { EARTH } from "../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../packages/core/src/scene/Body.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
 const grids = `${join(framesDataDirectory(), "grids")}/`;

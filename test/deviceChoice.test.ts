@@ -3,7 +3,7 @@
 // the floor, with fake probes (the rules are pure), plus the WebGPU probe on
 // a fake `navigator`.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { webgl2Personas } from "../packages/next/src/profile/personas.ts";
+import { webgl2Personas } from "../packages/core/src/profile/personas.ts";
 import {
   chooseDevice,
   forgetFallbackWarnings,
@@ -14,7 +14,7 @@ import {
   type Probes,
   type Webgl2Probe,
   type WebgpuProbe,
-} from "../packages/next/src/scene/deviceChoice.ts";
+} from "../packages/core/src/scene/deviceChoice.ts";
 import { fakeGlFor, installFakeGl, uninstallFakeGl } from "./fakeGl.ts";
 
 /** Probes that answer as told, and count how often they were asked. */

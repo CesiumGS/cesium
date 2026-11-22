@@ -30,8 +30,8 @@ import type { Harness } from "../lab/harness.ts";
 import {
   BrepBuilder,
   type NurbsCurve,
-} from "../packages/next/src/brep/index.ts";
-import { routeForward } from "../packages/next/src/camera/route.ts";
+} from "../packages/core/src/brep/index.ts";
+import { routeForward } from "../packages/core/src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
@@ -46,14 +46,14 @@ import {
   type MeshData,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
-import type { CorePick } from "../packages/next/src/scene/pick.ts";
-import { weightOf } from "../packages/next/src/scene/curvilinearEvaluate.ts";
-import type { CubicLattice } from "../packages/next/src/scene/curvilinearTerms.ts";
+} from "../packages/core/src/index.ts";
+import type { CorePick } from "../packages/core/src/scene/pick.ts";
+import { weightOf } from "../packages/core/src/scene/curvilinearEvaluate.ts";
+import type { CubicLattice } from "../packages/core/src/scene/curvilinearTerms.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/world/types.ts";
 
 const TEMPLATE = `
 <h1>Picks by domain point</h1>

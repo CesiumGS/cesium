@@ -6,22 +6,22 @@ import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
 import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
-import { verticalExaggeration } from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
-import { EARTH, MOON, type Body } from "../packages/next/src/scene/Body.ts";
-import { Camera } from "../packages/next/src/scene/Camera.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import { selectionViews } from "../packages/next/src/scene/tileSelection.ts";
-import { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
+import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
+import { EARTH, MOON, type Body } from "../packages/core/src/scene/Body.ts";
+import { Camera } from "../packages/core/src/scene/Camera.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import { selectionViews } from "../packages/core/src/scene/tileSelection.ts";
+import { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import {
   TilesetBodyError,
   resolveTilesetBody,
   tilesetBody,
-} from "../packages/next/src/streaming/tilesetBody.ts";
-import type { TilesetOptions } from "../packages/next/src/streaming/tilesetTypes.ts";
+} from "../packages/core/src/streaming/tilesetBody.ts";
+import type { TilesetOptions } from "../packages/core/src/streaming/tilesetTypes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

@@ -2,9 +2,9 @@
 // mixes (its placeholders' boxes are in the true frame), `mixedLod: "never"`
 // is still honored, and a box is made from the tile's own, unmoved volume.
 import { describe, expect, it } from "vitest";
-import { BudgetedSelection } from "../packages/next/src/streaming/Budgeted.ts";
-import { clipBox } from "../packages/next/src/streaming/tilesetUpdate.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
+import { BudgetedSelection } from "../packages/core/src/streaming/Budgeted.ts";
+import { clipBox } from "../packages/core/src/streaming/tilesetUpdate.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 
 type Mixes = { mixes(tile: Tile): boolean };
 const mixes = (s: BudgetedSelection, t: Tile) =>

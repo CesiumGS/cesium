@@ -2,14 +2,14 @@
 // solid it should be (docs/design/breps-and-geometry-queries.md, the CSG spike): the form validates, and
 // every face's outside really is outside. Shared by the SMLib and OCCT tests.
 import { expect } from "vitest";
-import { evaluateSurface } from "../../packages/next/src/brep/evaluate.ts";
+import { evaluateSurface } from "../../packages/core/src/brep/evaluate.ts";
 import {
   SurfaceKind,
   type BrepForm,
-} from "../../packages/next/src/brep/form.ts";
-import { formBounds } from "../../packages/next/src/brep/formBounds.ts";
-import { tessellateBrep } from "../../packages/next/src/brep/tessellate.ts";
-import { validateBrep } from "../../packages/next/src/brep/validate.ts";
+} from "../../packages/core/src/brep/form.ts";
+import { formBounds } from "../../packages/core/src/brep/formBounds.ts";
+import { tessellateBrep } from "../../packages/core/src/brep/tessellate.ts";
+import { validateBrep } from "../../packages/core/src/brep/validate.ts";
 
 /** Whether a point is inside the exact solid. */
 export type Inside = (x: number, y: number, z: number) => boolean;

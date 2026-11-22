@@ -20,8 +20,8 @@ import {
   type ExtensionTable,
   type Program,
   type Value,
-} from "../packages/next/src/ir/index.ts";
-import { wgslCases } from "../packages/next/src/ir/wgslCases.ts";
+} from "../packages/core/src/ir/index.ts";
+import { wgslCases } from "../packages/core/src/ir/wgslCases.ts";
 import { corpus } from "./irCorpus.ts";
 import { validateSchema } from "./irJsonSchema.ts";
 

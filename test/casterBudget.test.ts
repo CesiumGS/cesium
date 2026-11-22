@@ -1,17 +1,17 @@
 // How off-screen shadow casters share the cache and the world's pools with
 // what views draw: through the real tileset on the fake engine, in
 // continuous mode. `casterLoop.test.ts` runs them on the on-demand loop.
-import { upload } from "../packages/next/src/streaming/tilesetUpload.ts";
-import { unload } from "../packages/next/src/streaming/tilesetEviction.ts";
+import { upload } from "../packages/core/src/streaming/tilesetUpload.ts";
+import { unload } from "../packages/core/src/streaming/tilesetEviction.ts";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
-import type { TilesetOptions } from "../packages/next/src/streaming/tilesetTypes.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
+import type { TilesetOptions } from "../packages/core/src/streaming/tilesetTypes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

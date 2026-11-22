@@ -9,7 +9,7 @@ import {
   isTilt,
   type TouchGestureListener,
   type TwoFingerMove,
-} from "../packages/next/src/scene/touchGestures.ts";
+} from "../packages/core/src/scene/touchGestures.ts";
 
 const pt = (x: number, y: number) => ({ x, y });
 

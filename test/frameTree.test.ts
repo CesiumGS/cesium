@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import type { Ephemeris } from "../packages/next/src/ephemeris/Ephemeris.ts";
 import {
   C,
@@ -7,7 +7,7 @@ import {
   GM_SUN,
   L_C,
 } from "../packages/next/src/measure/constants.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
 import { frameTransform } from "../packages/next/src/frames/Frame.ts";
 import { createFrames } from "../packages/next/src/frames/frames.ts";
 import { frameBias } from "../packages/next/src/time/erfa/bias.ts";

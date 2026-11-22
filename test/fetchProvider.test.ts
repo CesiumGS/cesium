@@ -4,7 +4,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // The decoders' wasm modules don't load in Node, and no test here decodes.
-vi.mock("../packages/next/src/io/decoders.ts", () => ({}));
+vi.mock("../packages/core/src/io/decoders.ts", () => ({}));
 import {
   Credential,
   DefaultProxy,
@@ -14,15 +14,15 @@ import {
   type FetchProviderOptions,
   type FetchTransport,
   type OriginRule,
-} from "../packages/next/src/io/fetchProvider.ts";
-import { ionDefaults, resolveIonAsset } from "../packages/next/src/io/ion.ts";
+} from "../packages/core/src/io/fetchProvider.ts";
+import { ionDefaults, resolveIonAsset } from "../packages/core/src/io/ion.ts";
 import {
   settleWorkerFetch,
   workerFetch,
   WorkerFetchServer,
   type WorkerFetchReply,
-} from "../packages/next/src/io/workerFetch.ts";
-import { fetchTilesetJson } from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/io/workerFetch.ts";
+import { fetchTilesetJson } from "../packages/core/src/streaming/Tile.ts";
 
 const FAKE = "fake-token-3f9c";
 const ROTATED = "fake-token-rotated-77";
@@ -749,7 +749,7 @@ describe("no token or header value in any output", () => {
     await capture(() =>
       fetchTilesetJson("https://a.test/t.json?key=abc", credential.headers),
     );
-    const { parseGltf } = await import("../packages/next/src/io/gltfParse.ts");
+    const { parseGltf } = await import("../packages/core/src/io/gltfParse.ts");
     await capture(() =>
       parseGltf("https://a.test/c.glb", "rgba8unorm" as never),
     );

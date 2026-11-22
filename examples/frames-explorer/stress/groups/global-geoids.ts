@@ -34,7 +34,7 @@ import {
   type ProjApi,
   loadGrids,
 } from "../../../../packages/next/src/engineering/proj.ts";
-import { EARTH } from "../../../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import fixture from "../../../../test/fixtures/frames/geoids.json";
 import { cited } from "../references.ts";
 import {

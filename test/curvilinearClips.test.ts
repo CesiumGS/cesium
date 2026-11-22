@@ -5,8 +5,8 @@
 // hold, and how the world follows its views' clips. The GPU side is
 // spikes/curvilinearClips.html.
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import type { FrameKey } from "../packages/next/src/camera/frameResolver.ts";
-import { routeForward } from "../packages/next/src/camera/route.ts";
+import type { FrameKey } from "../packages/core/src/camera/frameResolver.ts";
+import { routeForward } from "../packages/core/src/camera/route.ts";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import type { Frame } from "../packages/next/src/frames/Frame.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
@@ -24,25 +24,25 @@ import {
   type ClipSet,
   type ClipShape,
   type PlannedClip,
-} from "../packages/next/src/scene/world/clips.ts";
-import { curvilinearClipSets } from "../packages/next/src/scene/world/clipPlacement.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import { PLACEMENT_MONOMIALS } from "../packages/next/src/scene/placement.ts";
+} from "../packages/core/src/scene/world/clips.ts";
+import { curvilinearClipSets } from "../packages/core/src/scene/world/clipPlacement.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import { PLACEMENT_MONOMIALS } from "../packages/core/src/scene/placement.ts";
 import {
   LATTICE_HEAD_ROWS,
   blockRows,
-} from "../packages/next/src/scene/placementTable.ts";
+} from "../packages/core/src/scene/placementTable.ts";
 import {
   evaluateClipField,
   fitClipField,
-} from "../packages/next/src/scene/curvilinearFit.ts";
-import type { CubicLattice } from "../packages/next/src/scene/curvilinearTerms.ts";
-import { drawTerms } from "../packages/next/src/scene/world/placements.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+} from "../packages/core/src/scene/curvilinearFit.ts";
+import type { CubicLattice } from "../packages/core/src/scene/curvilinearTerms.ts";
+import { drawTerms } from "../packages/core/src/scene/world/placements.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

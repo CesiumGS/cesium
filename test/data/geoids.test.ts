@@ -37,7 +37,7 @@ import {
   type GridSource,
 } from "../../packages/next/src/engineering/proj.ts";
 import type { ProjApi } from "../../packages/next/src/engineering/projApi.ts";
-import { EARTH } from "../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../packages/core/src/scene/Body.ts";
 
 interface Source {
   readonly url: string;

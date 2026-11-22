@@ -15,8 +15,8 @@ import {
   sceneExposure,
 } from "../examples/frames-explorer/scenarios/scenes.ts";
 import { SCENARIOS } from "../examples/frames-explorer/scenarios/specs.ts";
-import { MOON } from "../packages/next/src/scene/Body.ts";
-import { eastNorthUpToFixedFrame } from "../packages/next/src/math/transforms.ts";
+import { MOON } from "../packages/core/src/scene/Body.ts";
+import { eastNorthUpToFixedFrame } from "../packages/core/src/math/transforms.ts";
 
 const scene = (id: keyof typeof SCENES) => SCENES[id]!;
 

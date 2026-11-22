@@ -10,14 +10,14 @@ import {
   Section,
   Written,
 } from "../parts.tsx";
-import type { Camera } from "../../../packages/next/src/scene/Camera.ts";
+import type { Camera } from "../../../packages/core/src/scene/Camera.ts";
 import {
   createShadowCascades,
   fitShadowCascades,
   shadowRange,
   SHADOW_CASCADES,
   SHADOW_SIZE,
-} from "../../../packages/next/src/scene/shadows.ts";
+} from "../../../packages/core/src/scene/shadows.ts";
 
 const TICK: BoardStep[] = [
   {

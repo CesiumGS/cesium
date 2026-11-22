@@ -14,8 +14,8 @@ import {
   verticalExaggerationEdge,
   webMercator,
   webMercatorToGeographic,
-} from "../packages/next/src/georeference/index.ts";
-import { compileRoute } from "../packages/next/src/transform/compile.ts";
+} from "../packages/core/src/georeference/index.ts";
+import { compileRoute } from "../packages/core/src/transform/compile.ts";
 import {
   affine,
   evaluate,
@@ -23,8 +23,8 @@ import {
   routeBetween,
   TransformGraph,
   type CurvilinearEdge,
-} from "../packages/next/src/transform/index.ts";
-import { liveEdge, twist } from "../packages/next/src/transforms/index.ts";
+} from "../packages/core/src/transform/index.ts";
+import { liveEdge, twist } from "../packages/core/src/transforms/index.ts";
 
 /** A repeatable stream in [0, 1). */
 function rng(seed: number): () => number {

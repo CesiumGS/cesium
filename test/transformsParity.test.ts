@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import {
   heightOffset as framesHeightOffset,
   verticalExaggeration as framesExaggeration,
-} from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
+} from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
 import {
   flatten,
   flattenDescriptor,
@@ -27,7 +27,7 @@ import {
   verticalExaggerationDescriptor,
   webMercatorDescriptor,
   webMercatorToGeographicDescriptor,
-} from "../packages/next/src/georeference/index.ts";
+} from "../packages/core/src/georeference/index.ts";
 import {
   jacobian as irJacobian,
   evaluate,
@@ -36,7 +36,7 @@ import {
   routeBetween,
   TransformGraph,
   type Params,
-} from "../packages/next/src/transform/index.ts";
+} from "../packages/core/src/transform/index.ts";
 import {
   bendDescriptor,
   bumpDescriptor,
@@ -56,7 +56,7 @@ import {
   velocityModelDescriptor,
   type CorridorOptions,
   type TransformDescriptor,
-} from "../packages/next/src/transforms/index.ts";
+} from "../packages/core/src/transforms/index.ts";
 
 const WGS84 = [6378137, 6378137, 6356752.314245179] as const;
 const RAD = Math.PI / 180;
@@ -757,7 +757,7 @@ describe("projections against published values", () => {
 
   it("UTM through geocentric nodes agrees with the spike's body-fixed transverse Mercator", async () => {
     const { formForward, utmForm } =
-      await import("../packages/next/src/scene/curvilinearForms.ts");
+      await import("../packages/core/src/scene/curvilinearForms.ts");
     const form = utmForm(33);
     const edge = utm({ zone: 33 });
     const tm = transverseMercatorDescriptor(WGS84);
@@ -990,7 +990,7 @@ describe("the constructors give edges the graph takes", () => {
 describe("transforms.slang's generated WGSL", () => {
   const wgsl = readFileSync(
     new URL(
-      "../packages/next/src/shaders/generated/transforms.wgsl",
+      "../packages/core/src/shaders/generated/transforms.wgsl",
       import.meta.url,
     ),
     "utf8",
@@ -998,7 +998,7 @@ describe("transforms.slang's generated WGSL", () => {
   const reflection = JSON.parse(
     readFileSync(
       new URL(
-        "../packages/next/src/shaders/generated/transforms.json",
+        "../packages/core/src/shaders/generated/transforms.json",
         import.meta.url,
       ),
       "utf8",

@@ -3,19 +3,19 @@
 // loss, and `strict` (docs/superpowers/plans/2026-11-13-engine-profiles.md,
 // sections 4 and 6). Node only.
 import { afterEach, describe, expect, it, vi } from "vitest";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import { CATALOG } from "../packages/next/src/profile/catalog.ts";
-import { describePaths, paths } from "../packages/next/src/profile/paths.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import { CATALOG } from "../packages/core/src/profile/catalog.ts";
+import { describePaths, paths } from "../packages/core/src/profile/paths.ts";
 import type {
   Engine,
   EngineOptions,
-} from "../packages/next/src/scene/Engine.ts";
+} from "../packages/core/src/scene/Engine.ts";
 import {
   cameraGlare,
   cameraObserver,
-} from "../packages/next/src/scene/observer.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View, ViewOptions } from "../packages/next/src/scene/View.ts";
+} from "../packages/core/src/scene/observer.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View, ViewOptions } from "../packages/core/src/scene/View.ts";
 import {
   fakeDevice,
   installFakeNavigator,
@@ -41,7 +41,7 @@ async function engineOn(
         resolve({ reason: "unknown", message: "a test" } as GPUDeviceLostInfo);
     });
   installFakeNavigator(device, personas[name]);
-  const { Engine } = await import("../packages/next/src/scene/Engine.ts");
+  const { Engine } = await import("../packages/core/src/scene/Engine.ts");
   const engine = await Engine.create(options);
   engine.stop();
   return { engine, lose };

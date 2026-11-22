@@ -10,16 +10,16 @@ import { KernelSession, STEP_NEEDS_OCCT } from "../examples/csg/evaluator.ts";
 import {
   KernelCanceled,
   KernelClient,
-} from "../packages/next/src/brep/kernelClient.ts";
+} from "../packages/core/src/brep/kernelClient.ts";
 import type {
   Placement,
   SolidRecipe,
-} from "../packages/next/src/brep/kernelProtocol.ts";
-import type { OcctKernel, OcctSolid } from "../packages/next/src/brep/occt.ts";
+} from "../packages/core/src/brep/kernelProtocol.ts";
+import type { OcctKernel, OcctSolid } from "../packages/core/src/brep/occt.ts";
 import type {
   SmlibKernel,
   SmlibSolid,
-} from "../packages/next/src/brep/smlib.ts";
+} from "../packages/core/src/brep/smlib.ts";
 import { loopback } from "./kernelLoopback.ts";
 
 /** A fake solid: named, recorded in the log when made and freed, idempotent to delete. */

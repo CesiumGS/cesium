@@ -5,9 +5,9 @@ import {
   fromDegrees,
   mat4,
   vec3,
-} from "../packages/next/src/index.ts";
-import { DRAW_ITEM_SIZE } from "../packages/next/src/render/layout.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
+} from "../packages/core/src/index.ts";
+import { DRAW_ITEM_SIZE } from "../packages/core/src/render/layout.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
 import type { Harness } from "../lab/harness.ts";
 
 const TEMPLATE = `

@@ -12,25 +12,25 @@ import {
   debugModeId,
   packTileDebug,
   unpackTileDebug,
-} from "../packages/next/src/streaming/debugViews.ts";
-import { ViewLayout } from "../packages/next/src/render/generated/layouts.ts";
+} from "../packages/core/src/streaming/debugViews.ts";
+import { ViewLayout } from "../packages/core/src/render/generated/layouts.ts";
 import {
   DEBUG_WORD,
   MORPH_WORD,
   RECORD_SIZE,
   RECORD_WORDS,
   VIEW_STRIDE,
-} from "../packages/next/src/render/layout.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { View } from "../packages/next/src/scene/View.ts";
-import type { SelectionView } from "../packages/next/src/streaming/Stepwise.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/render/layout.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { View } from "../packages/core/src/scene/View.ts";
+import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 import {
   tileDebugWord,
   writeTileDebug,
-} from "../packages/next/src/streaming/tilesetDebug.ts";
+} from "../packages/core/src/streaming/tilesetDebug.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 describe("debug view words", () => {
@@ -105,7 +105,7 @@ describe("legends", () => {
 describe("the shader's colors", () => {
   const source = readFileSync(
     fileURLToPath(
-      new URL("../packages/next/src/shaders/surface.slang", import.meta.url),
+      new URL("../packages/core/src/shaders/surface.slang", import.meta.url),
     ),
     "utf8",
   );

@@ -10,23 +10,23 @@ import {
   jacobianProgram,
   jvp,
   parameterProgram,
-} from "../packages/next/src/ir/ad.ts";
-import { Builder, shapeKey } from "../packages/next/src/ir/builder.ts";
-import { evaluate } from "../packages/next/src/ir/evaluate.ts";
+} from "../packages/core/src/ir/ad.ts";
+import { Builder, shapeKey } from "../packages/core/src/ir/builder.ts";
+import { evaluate } from "../packages/core/src/ir/evaluate.ts";
 import {
   evaluateInterval,
   evaluateIntervalSplit,
   type Interval,
-} from "../packages/next/src/ir/interval.ts";
-import { kinks } from "../packages/next/src/ir/kinks.ts";
+} from "../packages/core/src/ir/interval.ts";
+import { kinks } from "../packages/core/src/ir/kinks.ts";
 import {
   hoistUniforms,
   hoistedValues,
   literalsToUniforms,
   rates,
-} from "../packages/next/src/ir/rates.ts";
-import { mapIr, taylorChain } from "../packages/next/src/ir/taylor.ts";
-import type { Id, Program, Value } from "../packages/next/src/ir/types.ts";
+} from "../packages/core/src/ir/rates.ts";
+import { mapIr, taylorChain } from "../packages/core/src/ir/taylor.ts";
+import type { Id, Program, Value } from "../packages/core/src/ir/types.ts";
 
 function rng(seed: number): () => number {
   let s = seed >>> 0;

@@ -1,6 +1,6 @@
 // surface.slang's terrain region test, in float32 as the GPU runs it, for
 // tests that check what the shader does with a region's rows.
-import { splitVec3 } from "../packages/next/src/math/transforms.ts";
+import { splitVec3 } from "../packages/core/src/math/transforms.ts";
 
 /**
  * surface.slang `terrainOpacity` for one region, in float32 as the GPU

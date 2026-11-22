@@ -25,7 +25,7 @@ import {
   parsePipeline,
 } from "../packages/next/src/engineering/pipeline.ts";
 import { readGeoreference } from "../packages/next/src/engineering/georeferenceTileset.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
 
 const ROOT = "extensions.BENTLEY_engineering_frame";
 

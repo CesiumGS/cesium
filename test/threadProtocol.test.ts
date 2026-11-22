@@ -15,7 +15,7 @@ import {
   threadKindOf,
   type MemberSurfaceRow,
   type SurfaceRow,
-} from "../packages/next/src/thread/protocol.ts";
+} from "../packages/core/src/thread/protocol.ts";
 
 const surface: SurfaceRow[] = readFileSync("api/surface.txt", "utf8")
   .split("\n")

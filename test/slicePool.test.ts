@@ -2,9 +2,9 @@ import { beforeAll, describe, expect, it } from "vitest";
 import {
   SlicePool,
   type SliceUser,
-} from "../packages/next/src/globe/SlicePool.ts";
-import { deviceCapacities } from "../packages/next/src/gpu/limits.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
+} from "../packages/core/src/globe/SlicePool.ts";
+import { deviceCapacities } from "../packages/core/src/gpu/limits.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
 import { fakeDevice, installGpuGlobals } from "./fakeGpu.ts";
 import { imageryOn } from "./sliceFakes.ts";
 

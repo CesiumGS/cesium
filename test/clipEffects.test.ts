@@ -4,7 +4,7 @@
 // float32 twin (`tableVerdict`), and the CPU's agreement with it.
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { RecordFlags } from "../packages/next/src/render/layout.ts";
+import { RecordFlags } from "../packages/core/src/render/layout.ts";
 import {
   CLIP_ANY_GHOST,
   CLIP_ANY_REPORT,
@@ -34,7 +34,7 @@ import {
   type ClipSet,
   type ClipShape,
   type PlannedClip,
-} from "../packages/next/src/scene/world/clips.ts";
+} from "../packages/core/src/scene/world/clips.ts";
 
 const FRAME = { name: "test frame" };
 const IDENTITY = Float64Array.of(
@@ -509,7 +509,7 @@ describe("the translucent passes' depth range", () => {
 
 describe("what the shader and the layout share", () => {
   const shader = readFileSync(
-    new URL("../packages/next/src/shaders/surface.slang", import.meta.url),
+    new URL("../packages/core/src/shaders/surface.slang", import.meta.url),
     "utf8",
   );
   const constant = (name: string) => {

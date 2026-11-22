@@ -5,8 +5,8 @@
 // 2006/2000A series, lives in `itrfEdge.ts`. It is not re-exported here: a
 // re-export would put the series in the ephemeris provider's chunk too.
 import type { FrameData } from "../ephemeris/loadFrameData.ts";
-import { C, GM_MOON, GM_SUN, L_C } from "../math/constants.ts";
-import type { Mat4 } from "../math/mat4.ts";
+import { C, GM_MOON, GM_SUN, L_C } from "../../../core/src/math/constants.ts";
+import type { Mat4 } from "../../../core/src/math/mat4.ts";
 import type { Instant } from "../time/Instant.ts";
 import type { FrameAccuracy } from "./frameAccuracy.ts";
 import { toParentMatrix } from "./matrix.ts";

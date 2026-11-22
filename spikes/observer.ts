@@ -20,30 +20,30 @@ import {
   type PostStageOptions,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
-import { astroCurve } from "../packages/next/src/render/post/astroCurve.ts";
-import { computeKernel } from "../packages/next/src/render/post/glareKernel.ts";
+} from "../packages/core/src/index.ts";
+import { astroCurve } from "../packages/core/src/render/post/astroCurve.ts";
+import { computeKernel } from "../packages/core/src/render/post/glareKernel.ts";
 import {
   VEIL_LEVELS,
   veilSpread,
   veilWeights,
-} from "../packages/next/src/render/post/veilWeights.ts";
+} from "../packages/core/src/render/post/veilWeights.ts";
 import {
   cullCell,
   type StarCell,
-} from "../packages/next/src/atmosphere/starCells.ts";
+} from "../packages/core/src/atmosphere/starCells.ts";
 import {
   MAGNITUDE_ZERO_ILLUMINANCE,
   type StarField,
-} from "../packages/next/src/atmosphere/stars.ts";
+} from "../packages/core/src/atmosphere/stars.ts";
 import { moonPosition } from "../packages/next/src/time/moon.ts";
 import { sunDirection, sunPosition } from "../packages/next/src/time/sun.ts";
 import { Viewer } from "../packages/next/widgets/Viewer.ts";
-import { eyePointLimit } from "../packages/next/src/scene/eye.ts";
+import { eyePointLimit } from "../packages/core/src/scene/eye.ts";
 import {
   ev100ToScale,
   type PointSpread,
-} from "../packages/next/src/scene/observer.ts";
+} from "../packages/core/src/scene/observer.ts";
 
 const TEMPLATE = `
 <h1>The observer's chain</h1>

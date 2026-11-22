@@ -7,12 +7,12 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { createFrameCatalog } from "../packages/next/src/frames/catalog.ts";
 import { curvilinearFrame } from "../packages/next/src/frames/curvilinearFrame.ts";
 import { createFramesResolver } from "../packages/next/src/frames/resolver.ts";
-import { verticalExaggeration } from "../packages/next/src/georeference/heightCurvilinearMaps.ts";
-import { EARTH } from "../packages/next/src/scene/Body.ts";
-import { createBox } from "../packages/next/src/scene/meshes.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { irPasses } from "../packages/next/src/transform/lazyIr.ts";
+import { verticalExaggeration } from "../packages/core/src/georeference/heightCurvilinearMaps.ts";
+import { EARTH } from "../packages/core/src/scene/Body.ts";
+import { createBox } from "../packages/core/src/scene/meshes.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { irPasses } from "../packages/core/src/transform/lazyIr.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

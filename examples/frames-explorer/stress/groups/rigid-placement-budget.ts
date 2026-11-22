@@ -6,7 +6,7 @@ import {
   type SiteTransform,
 } from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../../../../packages/next/src/engineering/factors.ts";
-import { EARTH } from "../../../../packages/next/src/scene/Body.ts";
+import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import { ellipsoidOf, onEarth, radii } from "../references.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";
 import { epsg, fingerprintOf, proj, stressCase } from "../shared.ts";
@@ -20,7 +20,7 @@ import {
   rigidGapByHand,
   siteAxisAzimuth,
 } from "../../scenarios/sites.ts";
-import { Ellipsoid } from "../../../../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../../../../packages/core/src/math/ellipsoid.ts";
 
 const DEGREE = Math.PI / 180;
 const WGS84 = Ellipsoid.WGS84;

@@ -3,14 +3,14 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
-import type { Sky } from "../packages/next/src/atmosphere/Sky.ts";
+import type { Sky } from "../packages/core/src/atmosphere/Sky.ts";
 import {
   STAR_FLOATS,
   backgroundLevel,
   starRadius,
-} from "../packages/next/src/atmosphere/stars.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { PointSpread } from "../packages/next/src/scene/observer.ts";
+} from "../packages/core/src/atmosphere/stars.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { PointSpread } from "../packages/core/src/scene/observer.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const SOURCE = readFileSync(

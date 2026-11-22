@@ -25,8 +25,8 @@ import type {
   CrsRef,
 } from "../../packages/next/src/engineering/crs.ts";
 import type { EngineeringFrameDefinition } from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import type { PlacementMode } from "../../packages/next/src/georeference/georeference.ts";
-import { EARTH } from "../../packages/next/src/scene/Body.ts";
+import type { PlacementMode } from "../../packages/core/src/georeference/georeference.ts";
+import { EARTH } from "../../packages/core/src/scene/Body.ts";
 import {
   CORRIDOR_ALIGNMENT,
   CORRIDOR_CRS,

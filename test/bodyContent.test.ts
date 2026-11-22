@@ -5,17 +5,17 @@
 // The fake engine of test/fakeGpu.ts; tilesets are stubs as height clamping
 // sees them (test/earthAnchor.test.ts).
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import type { GltfAsset } from "../packages/next/src/io/gltfTypes.ts";
-import { Ellipsoid, fromDegrees } from "../packages/next/src/math/ellipsoid.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import { EARTH, MOON } from "../packages/next/src/scene/Body.ts";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { AnchorHandle } from "../packages/next/src/scene/world/types.ts";
-import type { Tileset3D } from "../packages/next/src/streaming/Tileset3D.ts";
-import { PointSource } from "../packages/next/src/vector/PointSource.ts";
-import { VectorLayer } from "../packages/next/src/vector/VectorLayer.ts";
+import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
+import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { AnchorHandle } from "../packages/core/src/scene/world/types.ts";
+import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
+import { PointSource } from "../packages/core/src/vector/PointSource.ts";
+import { VectorLayer } from "../packages/core/src/vector/VectorLayer.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const RAD = Math.PI / 180;

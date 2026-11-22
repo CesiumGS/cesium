@@ -8,7 +8,7 @@ import {
   faceTrim,
   type BrepForm,
   type BrepMesh,
-} from "../../packages/next/src/brep/index.ts";
+} from "../../packages/core/src/brep/index.ts";
 import type { LineMesh } from "./meshes.ts";
 
 /** The names of the surface kinds, by `SurfaceKind` value. */

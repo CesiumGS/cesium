@@ -1,4 +1,4 @@
-import type { Ellipsoid } from "../math/ellipsoid.ts";
+import type { Ellipsoid } from "../../../core/src/math/ellipsoid.ts";
 import type { Instant } from "../time/Instant.ts";
 import {
   Frame,

@@ -5,7 +5,7 @@
 // fake DOM and the fake device of test/fakeGpu.ts; requestAnimationFrame
 // is a queue flushed by hand.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import type { Viewer } from "../packages/next/widgets/Viewer.ts";
 import { fakeDevice, fakeEngine } from "./fakeGpu.ts";
 

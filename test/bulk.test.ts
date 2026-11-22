@@ -4,7 +4,7 @@ import {
   runBulk,
   tickSlices,
   timeSlices,
-} from "../packages/next/src/core/bulk.ts";
+} from "../packages/core/src/core/bulk.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 /** Burns about `ms` of wall time. */

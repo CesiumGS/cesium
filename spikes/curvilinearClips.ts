@@ -30,7 +30,7 @@ import type { Harness } from "../lab/harness.ts";
 import {
   routeForward,
   routeInverse,
-} from "../packages/next/src/camera/route.ts";
+} from "../packages/core/src/camera/route.ts";
 import {
   createFrameCatalog,
   createFramesResolver,
@@ -46,12 +46,12 @@ import {
   type MeshData,
   type View,
   type World,
-} from "../packages/next/src/index.ts";
-import { clipSetDistance } from "../packages/next/src/scene/world/clips.ts";
+} from "../packages/core/src/index.ts";
+import { clipSetDistance } from "../packages/core/src/scene/world/clips.ts";
 import type {
   AnchorHandle,
   DrawHandle,
-} from "../packages/next/src/scene/world/types.ts";
+} from "../packages/core/src/scene/world/types.ts";
 
 const TEMPLATE = `
 <h1>Curvilinear clips on the GPU against the CPU's classification</h1>

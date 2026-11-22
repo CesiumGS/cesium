@@ -7,13 +7,13 @@
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import { SurfaceKind } from "../../packages/next/src/brep/form.ts";
+import { SurfaceKind } from "../../packages/core/src/brep/form.ts";
 import {
   OcctKernel,
   type OcctBrep,
   type OcctModule,
   type OcctSolid,
-} from "../../packages/next/src/brep/occt.ts";
+} from "../../packages/core/src/brep/occt.ts";
 import { occtDirectory } from "../../scripts/occtTools.mjs";
 import { expectSolidForm, inBox, type Inside } from "./brepSolids.ts";
 import { trackHandles } from "./occtHandles.ts";

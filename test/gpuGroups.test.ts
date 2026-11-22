@@ -10,7 +10,7 @@ import {
   gpuRow,
   RECORD_COLUMNS,
 } from "../packages/next/widgets/recorderRows.ts";
-import { GpuTimer } from "../packages/next/src/gpu/GpuTimer.ts";
+import { GpuTimer } from "../packages/core/src/gpu/GpuTimer.ts";
 
 describe("GPU groups", () => {
   it("files labels under their group, unknown ones under Other", () => {

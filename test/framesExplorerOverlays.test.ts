@@ -27,7 +27,7 @@ import {
   toParentMatrix,
 } from "../packages/next/src/frames/matrix.ts";
 import { frameBias } from "../packages/next/src/time/erfa/bias.ts";
-import { Ellipsoid } from "../packages/next/src/math/ellipsoid.ts";
+import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { Instant } from "../packages/next/src/time/Instant.ts";
 import type { Trajectory } from "../packages/next/src/trajectory/Trajectory.ts";
 import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";

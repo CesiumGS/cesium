@@ -14,20 +14,20 @@ import {
   picture,
   type HdrPixels,
 } from "../lab/hdr.ts";
-import { Engine } from "../packages/next/src/scene/Engine.ts";
-import { environmentFrame } from "../packages/next/src/render/view/environment.ts";
-import { type HdrImage } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
+import { Engine } from "../packages/core/src/scene/Engine.ts";
+import { environmentFrame } from "../packages/core/src/render/view/environment.ts";
+import { type HdrImage } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import {
   IblReference,
   type ReferenceSphere,
-} from "../packages/next/src/lighting/IblReference.ts";
-import { Ellipsoid, fromDegrees } from "../packages/next/src/math/ellipsoid.ts";
-import { eastNorthUpToFixedFrame } from "../packages/next/src/math/transforms.ts";
-import * as v3 from "../packages/next/src/math/vec3.ts";
-import * as m4 from "../packages/next/src/math/mat4.ts";
-import type { MeshData } from "../packages/next/src/scene/meshes.ts";
-import type { SkyOptions } from "../packages/next/src/gpu/Environment.ts";
+} from "../packages/core/src/lighting/IblReference.ts";
+import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
+import { eastNorthUpToFixedFrame } from "../packages/core/src/math/transforms.ts";
+import * as v3 from "../packages/core/src/math/vec3.ts";
+import * as m4 from "../packages/core/src/math/mat4.ts";
+import type { MeshData } from "../packages/core/src/scene/meshes.ts";
+import type { SkyOptions } from "../packages/core/src/gpu/Environment.ts";
 
 const TEMPLATE = `
   <h1>Image-based lighting vs reference</h1>

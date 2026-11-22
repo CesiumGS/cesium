@@ -1,10 +1,10 @@
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
-import type { Engine } from "../packages/next/src/scene/Engine.ts";
-import { MaterialFlags } from "../packages/next/src/render/layout.ts";
-import { type View } from "../packages/next/src/scene/View.ts";
-import { OffscreenTarget } from "../packages/next/src/scene/renderTarget.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import type { MeshData } from "../packages/next/src/scene/meshes.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { MaterialFlags } from "../packages/core/src/render/layout.ts";
+import { type View } from "../packages/core/src/scene/View.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import type { MeshData } from "../packages/core/src/scene/meshes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 /**

@@ -4,21 +4,21 @@
 // the record and the shader agree with it.
 import { readFileSync } from "node:fs";
 import { beforeAll, describe, expect, it } from "vitest";
-import type { GlobeImagery } from "../packages/next/src/globe/GlobeImagery.ts";
+import type { GlobeImagery } from "../packages/core/src/globe/GlobeImagery.ts";
 import {
   IMAGERY_FADE_WORD,
   IMAGERY_FROM_WORD,
   RECORD_SIZE,
   RECORD_WORDS,
-} from "../packages/next/src/render/layout.ts";
+} from "../packages/core/src/render/layout.ts";
 import {
   DrawRecordLayout,
   ViewLayout,
-} from "../packages/next/src/render/generated/layouts.ts";
-import { packImagery } from "../packages/next/src/scene/contentLimits.ts";
-import type { World } from "../packages/next/src/scene/World.ts";
-import { MORPH_SECONDS } from "../packages/next/src/streaming/tileMorph.ts";
-import type { Tile } from "../packages/next/src/streaming/Tile.ts";
+} from "../packages/core/src/render/generated/layouts.ts";
+import { packImagery } from "../packages/core/src/scene/contentLimits.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import { MORPH_SECONDS } from "../packages/core/src/streaming/tileMorph.ts";
+import type { Tile } from "../packages/core/src/streaming/Tile.ts";
 import { installGpuGlobals } from "./fakeGpu.ts";
 import { layer, tile } from "./sliceFakes.ts";
 
@@ -191,7 +191,7 @@ describe("imagery cross-fade record and shader", () => {
 
   it("the shader reads the view block's duration and the writer fills it", () => {
     const slang = readFileSync(
-      new URL("../packages/next/src/shaders/surface.slang", import.meta.url),
+      new URL("../packages/core/src/shaders/surface.slang", import.meta.url),
       "utf8",
     );
     expect(slang).toContain("/ max(view.transition.x");
