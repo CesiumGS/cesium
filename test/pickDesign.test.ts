@@ -299,13 +299,8 @@ describe("pickDesign on View.pickPoint", () => {
         draw: o.feature === false ? undefined : DRAW,
         feature: o.feature === false ? undefined : standInPick(7n, DRAW),
         seconds: 0,
-        cameraRecord: at.record(
-          rect.width,
-          rect.height,
-          { name: "render root" },
-          0,
-        ),
-        camera: {
+        camera: at.record(rect.width, rect.height, { name: "render root" }, 0),
+        pose: {
           position: eye,
           direction: Float64Array.from(at.direction),
           up: Float64Array.from(at.up),

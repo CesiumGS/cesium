@@ -197,8 +197,8 @@ export class Camera {
    * A record of the camera now, for an image of `width` × `height` pixels
    * (`CameraRecord`): its intrinsics at that size, its pose (copied) in
    * `referenceFrame` at `seconds` on the scene clock, and its distortion.
-   * Picks report the one they used (`PickResult.cameraRecord`,
-   * `CorePick.cameraRecord`), in CSS pixels and the view's render root.
+   * Picks report the one they used (`PickResult.camera`,
+   * `CorePick.camera`), in CSS pixels and the view's render root.
    */
   record(
     width: number,

@@ -81,7 +81,7 @@ function curvilinearRoute(pick: CorePick): Route | undefined {
 
 /** One CSS pixel's footprint at the hit, m, in what is drawn. */
 export function pixelFootprint(pick: CorePick): number {
-  const c = pick.camera;
+  const c = pick.pose;
   const p = pick.anchorPosition;
   const distance = Math.hypot(
     p[0]! - c.position[0]!,

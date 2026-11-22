@@ -201,7 +201,7 @@ describe("View.pickPoint", () => {
       basis: "surface",
       time: { seconds: 0 },
     });
-    expect(pick.feature!.camera).toBe(pick.cameraRecord);
+    expect(pick.feature!.camera).toBe(pick.camera);
     // View.pick's result is the core pick's feature: the same ID, key,
     // labels and record.
     expect(await feature).toEqual(pick.feature);
@@ -218,16 +218,16 @@ describe("View.pickPoint", () => {
     );
     // The camera it was read with, in the anchor's coordinates, and the
     // view's size in CSS pixels (an offscreen target is at 1).
-    expect(Array.from(pick.camera.position)).toEqual(
+    expect(Array.from(pick.pose.position)).toEqual(
       Array.from(view.camera.position),
     );
-    expect(Array.from(pick.camera.direction)).toEqual(
+    expect(Array.from(pick.pose.direction)).toEqual(
       Array.from(view.camera.direction),
     );
-    expect(pick.camera.fovy).toBe(fovy);
-    expect(pick.camera.near).toBe(view.camera.near);
-    expect(pick.camera.width).toBe(WIDTH);
-    expect(pick.camera.height).toBe(HEIGHT);
+    expect(pick.pose.fovy).toBe(fovy);
+    expect(pick.pose.near).toBe(view.camera.near);
+    expect(pick.pose.width).toBe(WIDTH);
+    expect(pick.pose.height).toBe(HEIGHT);
   });
 
   it("resolves undefined over the sky; with depth but no draw, gives the body anchor", async () => {
@@ -318,13 +318,11 @@ describe("View.pickPoint", () => {
     expect(pick.anchor).toBe(earth);
     expect(pick.seconds).toBe(seconds);
     // The camera of tick n, in the Earth's anchor.
-    expect(Array.from(pick.camera.position)).toEqual(
-      Array.from(camera.position),
-    );
-    expect(Array.from(pick.camera.direction)).toEqual(
+    expect(Array.from(pick.pose.position)).toEqual(Array.from(camera.position));
+    expect(Array.from(pick.pose.direction)).toEqual(
       Array.from(camera.direction),
     );
-    expect(Array.from(pick.camera.up)).toEqual(Array.from(camera.up));
+    expect(Array.from(pick.pose.up)).toEqual(Array.from(camera.up));
     // The render-space position from tick n's camera (the free rig keeps
     // it in GCRF), and the anchor position through tick n's placement.
     const fovy = view.camera.fovy(WIDTH / HEIGHT);

@@ -572,8 +572,8 @@ describe("the hosted placement mode", () => {
       draw: site,
       feature: undefined,
       seconds: SECONDS,
-      cameraRecord: new Camera().record(64, 48, itrf, SECONDS),
-      camera: {
+      camera: new Camera().record(64, 48, itrf, SECONDS),
+      pose: {
         position: Float64Array.of(point[0]! + 1000, point[1]!, point[2]!),
         direction: Float64Array.of(-1, 0, 0),
         up: Float64Array.of(0, 0, 1),

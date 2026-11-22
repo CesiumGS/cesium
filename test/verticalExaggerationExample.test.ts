@@ -234,7 +234,7 @@ function pickAt(s: Setup, drawn: Float64Array, route?: Route): CorePick {
     anchor: s.earth,
     anchorPosition: Float64Array.from(drawn),
     ...(route && { route }),
-    camera: {
+    pose: {
       position: Float64Array.of(drawn[0]! + 1000, drawn[1]!, drawn[2]!),
       fovy: 1,
       height: 480,

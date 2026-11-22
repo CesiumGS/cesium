@@ -537,7 +537,7 @@ describe("views and picks", () => {
       await settle();
     }
     const pick = (await point)!;
-    const record = pick.cameraRecord;
+    const record = pick.camera;
     expect(record.cx).toBeCloseTo(OFF_CENTER.cx, 10);
     expect(record.cy).toBeCloseTo(OFF_CENTER.cy, 10);
     expect(record.pose.referenceFrame).toBe(pick.root);
@@ -578,7 +578,7 @@ describe("views and picks", () => {
     expect(record.cx).toBe(WIDTH / 2);
     expect(record.cy).toBe(HEIGHT / 2);
     expect(record.width).toBe(WIDTH);
-    expect(record).toEqual((await point)!.cameraRecord);
+    expect(record).toEqual((await point)!.camera);
   });
 });
 

@@ -638,7 +638,7 @@ function curvilinearView(
         draw: DRAW,
         feature: standInPick(7n),
         seconds: 0,
-        camera: {
+        pose: {
           position: Float64Array.of(R + 1000, 0, 0),
           direction: Float64Array.of(-1, 0, 0),
           up: Float64Array.of(0, 0, 1),
@@ -864,7 +864,7 @@ describe("accuracy keeps a bound and a σ apart", () => {
       draw: undefined,
       feature: undefined,
       seconds: SECONDS,
-      camera: {
+      pose: {
         position: eye,
         direction,
         up: Float64Array.of(0, 0, 1),

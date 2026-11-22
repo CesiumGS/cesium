@@ -134,8 +134,8 @@ function corePick(
     draw,
     feature: undefined,
     seconds: SECONDS,
-    cameraRecord: new Camera().record(64, 48, root, SECONDS),
-    camera: {
+    camera: new Camera().record(64, 48, root, SECONDS),
+    pose: {
       position: Float64Array.of(R + 1000, 0, 0),
       direction: Float64Array.of(-1, 0, 0),
       up: Float64Array.of(0, 0, 1),

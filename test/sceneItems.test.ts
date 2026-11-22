@@ -777,7 +777,7 @@ describe("scene items", () => {
         feature: standInPick(7n),
         item: placed,
         seconds: 0,
-        camera: pose,
+        pose,
       }),
     };
     const framed = await pickInFrame(fake as never, 50, 50, [s.tileset]);

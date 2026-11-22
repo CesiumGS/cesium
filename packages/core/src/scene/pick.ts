@@ -63,7 +63,7 @@ export interface PickPoint {
  * What is drawn under a pixel (`View.pickPoint`), all from the tick whose
  * image the pick read: its position, the anchors' placements, the camera and
  * the scene time, never mixed with a later tick's (plan 5a, Review Focus 3).
- * `position` is in render space; `anchorPosition` and `camera` are in the
+ * `position` is in render space; `anchorPosition` and `pose` are in the
  * hit anchor's coordinates. `draw` and `feature` are looked up in the world
  * when the readback maps, from the feature ID the pick pass read.
  */
@@ -115,14 +115,14 @@ export interface CorePick {
   readonly item?: SceneItem;
   /** The scene clock's seconds at that tick (0 without a clock). */
   readonly seconds: number;
-  /** That tick's camera, in `anchor`'s coordinates. */
-  readonly camera: PickCamera;
+  /** The pick camera's pose at that tick, in `anchor`'s coordinates. */
+  readonly pose: PickCamera;
   /**
    * The camera record the pick used: that tick's camera in the render root
    * (`root`) at `seconds`, for an image the view's size in CSS pixels (as
    * the pick's x and y).
    */
-  readonly cameraRecord: CameraRecord;
+  readonly camera: CameraRecord;
   /**
    * Where the hit is in the content's own domain, when the pick variant
    * resolved it (a mesh's triangle and the barycentrics, or a b-rep face and
@@ -180,7 +180,7 @@ export interface PickTick {
   };
   /** The view's camera, in render space. */
   readonly camera: CameraPose;
-  /** The camera record the pick used (`CorePick.cameraRecord`). */
+  /** The camera record the pick used (`CorePick.camera`). */
   readonly cameraRecord: CameraRecord;
   readonly near: number;
   readonly fovy: number;
@@ -300,7 +300,7 @@ export function corePick(
   }
   const m = tick.placements.get(anchor);
   const c = tick.camera;
-  const camera: PickCamera = {
+  const pose: PickCamera = {
     position: new Float64Array(3),
     direction: new Float64Array(3),
     up: new Float64Array(3),
@@ -314,10 +314,10 @@ export function corePick(
     cx: tick.cameraRecord.cx,
     cy: tick.cameraRecord.cy,
   };
-  inverseRotate(m, c.position, camera.position, true);
-  inverseRotate(m, c.direction, camera.direction, false);
-  inverseRotate(m, c.up, camera.up, false);
-  inverseRotate(m, c.right, camera.right, false);
+  inverseRotate(m, c.position, pose.position, true);
+  inverseRotate(m, c.direction, pose.direction, false);
+  inverseRotate(m, c.up, pose.up, false);
+  inverseRotate(m, c.right, pose.right, false);
   // The variant's hit counts where it is the image's: the same draw and feature.
   const resolved =
     sample && info && sampleHit(sample) && sample.feature === featureId
@@ -337,14 +337,14 @@ export function corePick(
     root: tick.root,
     anchor,
     ...(anchor?.body !== undefined && { body: anchor.body }),
-    anchorPosition: alongRay(camera, tanX, tanY, tick.ndcX, tick.ndcY, z),
+    anchorPosition: alongRay(pose, tanX, tanY, tick.ndcX, tick.ndcY, z),
     ...(route && { route }),
     draw,
     feature: pickResult(tick.world, featureId, info, tick.cameraRecord),
     ...(info?.item && { item: info.item }),
     seconds: tick.seconds,
-    camera,
-    cameraRecord: tick.cameraRecord,
+    pose,
+    camera: tick.cameraRecord,
     ...(resolved && {
       domain: resolved.domain,
       truePosition: { position: resolved.position, frame: anchor ?? tick.root },

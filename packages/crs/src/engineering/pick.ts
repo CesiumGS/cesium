@@ -26,10 +26,10 @@ import { DESIGN_NOT_INVERTED, engineeringPlacement } from "./placement.ts";
 
 /**
  * The camera a pick's position and feature were read with, for projecting
- * into that same tick (`projectToPixel`): the core's (`CorePick.camera`),
+ * into that same tick (`projectToPixel`): the core's (`CorePick.pose`),
  * named in this entry too; public as `SnapCamera`.
  */
-export type PickCamera = CorePick["camera"];
+export type PickCamera = CorePick["pose"];
 
 /**
  * The part of a `View` that `pickDesign` uses, so tests can pass fakes.
@@ -219,7 +219,7 @@ export function designPickInterpreter(
         truth.position,
         core.feature,
         core.draw,
-        core.camera,
+        core.pose,
         tilesets,
         truth,
       );

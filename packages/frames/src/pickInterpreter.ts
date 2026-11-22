@@ -383,7 +383,7 @@ function pickTerms(
   trueFootprint?: number,
   footprint?: number,
 ): PointAccuracyTerm[] {
-  const c = pick.camera;
+  const c = pick.pose;
   const p = pick.anchorPosition;
   const dx = p[0]! - c.position[0]!;
   const dy = p[1]! - c.position[1]!;

@@ -2,7 +2,7 @@
 id: CS-939
 title: PickPositionResult and CorePick say camera, not cameraRecord (CS-935)
 kind: work
-state: in-progress
+state: done
 created: 2026-11-22
 project: CS-437
 needs: [CS-815]

@@ -519,7 +519,7 @@ describe("a core pick in any node", () => {
       anchor,
       anchorPosition: Float64Array.from(local),
       seconds: 0,
-      camera: {
+      pose: {
         position: Float64Array.of(local[0]!, local[1]!, local[2]! + 500),
         fovy: 1,
         height: 600,
