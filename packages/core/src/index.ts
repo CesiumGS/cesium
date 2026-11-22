@@ -415,7 +415,9 @@ export { SceneItem, type SceneItemOptions } from "./scene/SceneItem.ts";
 export {
   DEFAULT_TAXONOMY,
   canonicalSource,
+  parseStableId,
   stableIdOf,
+  stableIdToHex,
   type EmbeddingSpace,
   type EmbeddingTable,
   type Embeddings,

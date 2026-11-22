@@ -1086,6 +1086,8 @@ export const API_ROWS: readonly ApiRow[] = [
       "StableId",
       "StableKey",
       "stableIdOf",
+      "stableIdToHex",
+      "parseStableId",
       "canonicalSource",
       "Identity",
       "Identified",

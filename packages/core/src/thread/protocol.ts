@@ -171,7 +171,7 @@ const TABLE: Record<string, EntryTable> = {
       MaterialFlags NO_ACCELERATION PLACEMENT_MONOMIALS PLACEMENT_TERMS
       PostStageError REQUEST_PURPOSES STAGES SectionJob SurfaceKind
       TICK_REASONS TerrainRegionError TilesetBodyError UNITLESS_EXPOSURE
-      UNITLESS_SKY DEFAULT_TAXONOMY canonicalSource stableIdOf
+      UNITLESS_SKY DEFAULT_TAXONOMY canonicalSource parseStableId stableIdOf stableIdToHex
       UNITLESS_SUN_ILLUMINANCE UrlTemplateImagery accuracyAlong
       assembleMeshCaps bend brepGeometry bump cameraGlare cameraObserver
       capPlanes cartographic castTerrainRay clipFilter clipSetDistance

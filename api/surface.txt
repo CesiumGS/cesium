@@ -503,6 +503,7 @@ entry	name	kind	tier
 .	observerPointSpread	function	-
 .	orbitBasis	function	-
 .	orbitPose	function	-
+.	parseStableId	function	-
 .	placePosition	function	-
 .	pointIn	function	-
 .	radialDistortion	function	-
@@ -525,6 +526,7 @@ entry	name	kind	tier
 .	sectionTile	function	-
 .	slangPostShader	function	-
 .	stableIdOf	function	-
+.	stableIdToHex	function	-
 .	summarizeContent	function	-
 .	surfaceCount	function	-
 .	tableResolver	function	-
@@ -1407,6 +1409,7 @@ ui	zoneOf	function	-
 @cesium/core	observerPointSpread	function	-
 @cesium/core	orbitBasis	function	-
 @cesium/core	orbitPose	function	-
+@cesium/core	parseStableId	function	-
 @cesium/core	placePosition	function	-
 @cesium/core	pointIn	function	-
 @cesium/core	radialDistortion	function	-
@@ -1429,6 +1432,7 @@ ui	zoneOf	function	-
 @cesium/core	sectionTile	function	-
 @cesium/core	slangPostShader	function	-
 @cesium/core	stableIdOf	function	-
+@cesium/core	stableIdToHex	function	-
 @cesium/core	summarizeContent	function	-
 @cesium/core	surfaceCount	function	-
 @cesium/core	tableResolver	function	-

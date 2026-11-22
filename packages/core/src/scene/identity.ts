@@ -517,6 +517,60 @@ export function stableIdOf(key: StableKey): StableId {
   return hashKey(canonicalKey(key));
 }
 
+const HEX16 = /^[0-9a-fA-F]{16}$/;
+const U64_MAX = (1n << 64n) - 1n;
+
+/**
+ * A `StableId` as exactly 16 lowercase hex digits, zero-padded. Use it to
+ * put an ID in JSON, a URL or a log: `JSON.stringify` throws a `TypeError` on
+ * a bigint, so a replacer does the conversion and `parseStableId` undoes it:
+ *
+ * ```ts
+ * const text = JSON.stringify(data, (_k, v) =>
+ *   typeof v === "bigint" ? stableIdToHex(v) : v);
+ * const back = JSON.parse(text, (k, v) =>
+ *   k === "id" ? parseStableId(v) : v);
+ * ```
+ *
+ * Refuses a value that isn't a bigint (`TypeError`) or is outside 0 to
+ * 2^64 - 1 (`RangeError`). It accepts 0, the "none" value of `idOfSlot`.
+ */
+export function stableIdToHex(id: StableId): string {
+  if (typeof id !== "bigint") {
+    throw new TypeError(
+      `stableIdToHex: a StableId is a bigint, got ${typeof id}`,
+    );
+  }
+  if (id < 0n || id > U64_MAX) {
+    throw new RangeError("stableIdToHex: a StableId is outside 0 to 2^64 - 1");
+  }
+  return id.toString(16).padStart(16, "0");
+}
+
+/**
+ * Reads the text `stableIdToHex` writes: exactly 16 hex digits (uppercase is
+ * accepted; no sign, `0x` prefix, whitespace or separators). Anything else
+ * throws a `SyntaxError` that names the problem and the input's length, not
+ * the input.
+ *
+ * `"0000000000000000"` reads as 0n, not as an error. `hashKey` never makes 0,
+ * but 0 is the "none" value (`idOfSlot`), and a list of IDs that holds a "none"
+ * has to round-trip. Check for 0n if you need a real `StableId`.
+ *
+ * See `stableIdToHex` for the `JSON.parse` reviver.
+ */
+export function parseStableId(text: string): StableId {
+  if (typeof text !== "string") {
+    throw new TypeError(`parseStableId: expected a string, got ${typeof text}`);
+  }
+  if (!HEX16.test(text)) {
+    throw new SyntaxError(
+      `parseStableId: expected exactly 16 hex digits, got ${text.length} characters or a non-hex one`,
+    );
+  }
+  return BigInt(`0x${text}`);
+}
+
 /** Hosts whose `v` query parameter is the asset's version, not a token. */
 const VERSIONED_HOSTS = /(^|\.)ion\.cesium\.com$|^assets\.cesium\.com$/i;
 
