@@ -23,6 +23,8 @@
 - Added support for Custom Shaders in Gaussian Splat tilesets. [#13418](https://github.com/CesiumGS/cesium/pull/13418)
 - Added experimental `VectorPrimitive` and `CircleVectorPrimitive`. A vector primitive draws a `BufferPrimitiveCollection` with styling held by the vector primitive instead of per-primitive materials, and several vector primitives may draw the same collection. `CircleVectorPrimitive` draws points with a radius, fill color, and outline. [#13932](https://github.com/CesiumGS/cesium/pull/13932)
 - `CircleVectorPrimitive` can style each point individually, e.g. `radius: (point) => ...`, and `filter` selects which points are drawn. [#13942](https://github.com/CesiumGS/cesium/pull/13942)
+- Added experimental feature layers for showing and hiding named sets of features: `Cesium3DTileset.featureLayers` for tilesets (using 3D Tiles 1.1 groups), and `GeoJsonFeatureLayerProvider` (a `FeatureLayerProvider`) for standalone GeoJSON layers. [#13921](https://github.com/CesiumGS/cesium/pull/13921)
+- Added experimental `MVTDataProvider.featureLayers`, with one feature layer per MVT source layer. [#14055](https://github.com/CesiumGS/cesium/pull/14055)
 
 #### Fixes :wrench:
 
@@ -42,6 +44,9 @@
 - Fixed tiles failing to load when their tile or content metadata uses a class missing from the root tileset's schema. The metadata is now ignored with a warning. [#14050](https://github.com/CesiumGS/cesium/pull/14050)
 - Fixed `MVTDataProvider` freezing or running out of memory on load when `maxZoom` is high. Tiles are now created as they come into view. [#13867](https://github.com/CesiumGS/cesium/pull/13867)
 - Fixed `BufferPrimitiveCollection` rendering nothing after `destroy()`. [#13895](https://github.com/CesiumGS/cesium/pull/13895)
+- Improved performance of entity paths with long `leadTime` and `trailTime`, especially with `materialMode` set to `PathMode.PORTIONS`, and of `PolylineCollection` in 3D when its `modelMatrix` changes every frame, such as paths in the inertial frame or using `relativeTo`. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
+- Fixed paths with `materialMode` set to `PathMode.PORTIONS` and a material defined over intervals incorrectly drawing only one color per interval of a sampled material property, instead of following the sampled values. [#14067](https://github.com/CesiumGS/cesium/pull/14067)
+- Fixed ETC2 compressed texture support never being detected because `Context` checked for a misspelled `WEBGL_compressed_texture_etc` extension name. [#14075](https://github.com/CesiumGS/cesium/pull/14075)
 
 ## 1.147 - 2026-11-02
 

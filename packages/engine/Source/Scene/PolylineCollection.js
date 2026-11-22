@@ -169,6 +169,7 @@ function PolylineCollection(options) {
   };
 
   this._mode = undefined;
+  this._modelMatrixChanged = false;
 
   this._polylinesToUpdate = [];
   this._vertexArrays = [];
@@ -438,6 +439,14 @@ PolylineCollection.prototype.update = function (frameState) {
     }
     createBatchTable(this, context);
     this._createBatchTable = false;
+  }
+
+  if (this._modelMatrixChanged) {
+    this._modelMatrixChanged = false;
+    // A full rebuild recomputes the bounding volumes itself.
+    if (!this._createVertexArray) {
+      updateWorldBoundingVolumes(this);
+    }
   }
 
   if (this._createVertexArray || computeNewBuffersUsage(this)) {
@@ -1175,13 +1184,56 @@ function sortPolylinesIntoBuckets(collection) {
 function updateMode(collection, frameState) {
   const mode = frameState.mode;
 
-  if (
-    collection._mode !== mode ||
-    !Matrix4.equals(collection._modelMatrix, collection.modelMatrix)
-  ) {
+  if (collection._mode !== mode) {
     collection._mode = mode;
     collection._modelMatrix = Matrix4.clone(collection.modelMatrix);
     collection._createVertexArray = true;
+    return;
+  }
+
+  if (!Matrix4.equals(collection._modelMatrix, collection.modelMatrix)) {
+    collection._modelMatrix = Matrix4.clone(collection.modelMatrix);
+    if (mode === SceneMode.SCENE3D) {
+      // In 3D, vertex positions are stored in model space and the model matrix
+      // is applied by the draw command, so only world-space bounding volumes
+      // need to be updated rather than rebuilding every vertex array.
+      collection._modelMatrixChanged = true;
+    } else {
+      collection._createVertexArray = true;
+    }
+  }
+}
+
+function updateWorldBoundingVolumes(collection) {
+  const modelMatrix = collection.modelMatrix;
+  const batchTable = collection._batchTable;
+  const updateCenters = defined(batchTable) && batchTable.attributes.length > 2;
+  const polylines = collection._polylines;
+  const length = polylines.length;
+  for (let i = 0; i < length; ++i) {
+    const polyline = polylines[i];
+    const boundingSphere = (polyline._boundingVolumeWC =
+      BoundingSphere.transform(
+        polyline._boundingVolume,
+        modelMatrix,
+        polyline._boundingVolumeWC,
+      ));
+
+    if (updateCenters) {
+      const encodedCenter = EncodedCartesian3.fromCartesian(
+        boundingSphere.center,
+        scratchUpdatePolylineEncodedCartesian,
+      );
+      const low = Cartesian4.fromElements(
+        encodedCenter.low.x,
+        encodedCenter.low.y,
+        encodedCenter.low.z,
+        boundingSphere.radius,
+        scratchUpdatePolylineCartesian4,
+      );
+      batchTable.setBatchedAttribute(polyline._index, 2, encodedCenter.high);
+      batchTable.setBatchedAttribute(polyline._index, 3, low);
+    }
   }
 }
 
