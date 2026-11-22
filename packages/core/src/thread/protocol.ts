@@ -136,7 +136,8 @@ const TABLE: Record<string, EntryTable> = {
       PostStageViewInfo PostStageViewValues PurposeStats QueryAnswer QueryRay
       RayAnswer RayHitOptions RayQuery RayTargetName RayVerdict Reason
       ReferenceSurface RefinedPick RendererOption RequestPurpose ResolveView Rig
-      RigOrientation RigPosition RouteAccuracy ScaleAbout ScaleAboutOptions
+      RigOrientation RigPosition Route RouteAccuracy RouteStep ScaleAbout
+      ScaleAboutOptions
       SceneItemOptions SdfGeometryOptions SectionOptions SectionOutcome
       SectionPlaneInput SectionReport SectionRequest SectionResult
       SegmentDistance SelectionView ShaderControl ShaderOverrides ShaderUnit
@@ -327,7 +328,7 @@ const TABLE: Record<string, EntryTable> = {
       InspectorOptions InspectorSnapshot MemoryRow ModelLoad
       ObserverControlKind ObserverPanelHandle ObserverPanelOptions
       ObserverPanelSection OrbitContext OrbitOptions OrbitPlan PickInfo
-      StagePercentiles TickEvent TilesetSource TimeControlsHandle
+      Recordable StagePercentiles TickEvent TilesetSource TimeControlsHandle
       TimeControlsOptions TimeMark TimeZoneChoice ViewerOptions ViewerWarning
       ZoomTarget
     `,

@@ -142,7 +142,9 @@ export type CurvilinearFrameSpec = Omit<CurvilinearMap, "from" | "to"> & {
   readonly attach?: (frame: { invalidate(): void }) => void;
 };
 
-/** One step of a route: an affine transform (column-major 4×4, p_next = m · p) or a curvilinear map, either way. */
+/**
+ * One step of a `Route`: an affine transform (column-major 4×4, p_next = m · p) or a curvilinear map, either way.
+ */
 export type RouteStep =
   | { readonly kind: "affine"; readonly matrix: Float64Array }
   | {

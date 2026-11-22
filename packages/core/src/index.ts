@@ -369,6 +369,8 @@ export type {
   CurvilinearFrameSpec,
   CurvilinearMap,
   CurvilinearScale,
+  Route,
+  RouteStep,
 } from "./camera/route.ts";
 export {
   StepwiseSelection,

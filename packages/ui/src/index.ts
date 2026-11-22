@@ -58,6 +58,7 @@ export type {
   InspectorSnapshot,
   MemoryRow,
   PickInfo,
+  Recordable,
   StagePercentiles,
   TickEvent,
 } from "./inspectable.ts";

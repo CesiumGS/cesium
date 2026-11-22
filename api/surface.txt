@@ -312,7 +312,9 @@ entry	name	kind	tier
 .	Rig	interface	-
 .	RigOrientation	type	-
 .	RigPosition	interface	-
+.	Route	interface	-
 .	RouteAccuracy	interface	-
+.	RouteStep	type	-
 .	STAGES	const	-
 .	ScaleAbout	interface	-
 .	ScaleAboutOptions	interface	-
@@ -879,6 +881,7 @@ ui	OrbitContext	interface	-
 ui	OrbitOptions	interface	-
 ui	OrbitPlan	interface	-
 ui	PickInfo	interface	-
+ui	Recordable	interface	-
 ui	StagePercentiles	interface	-
 ui	TickEvent	type	-
 ui	TilesetSource	type	-
@@ -1213,7 +1216,9 @@ ui	zoneOf	function	-
 @cesium/core	Rig	interface	-
 @cesium/core	RigOrientation	type	-
 @cesium/core	RigPosition	interface	-
+@cesium/core	Route	interface	-
 @cesium/core	RouteAccuracy	interface	-
+@cesium/core	RouteStep	type	-
 @cesium/core	STAGES	const	-
 @cesium/core	ScaleAbout	interface	-
 @cesium/core	ScaleAboutOptions	interface	-
@@ -1844,6 +1849,7 @@ ui	zoneOf	function	-
 @cesium/ui	OrbitOptions	interface	-
 @cesium/ui	OrbitPlan	interface	-
 @cesium/ui	PickInfo	interface	-
+@cesium/ui	Recordable	interface	-
 @cesium/ui	StagePercentiles	interface	-
 @cesium/ui	TickEvent	type	-
 @cesium/ui	TilesetSource	type	-

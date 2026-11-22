@@ -2,7 +2,7 @@
 id: CS-943
 title: Route, RouteStep and Recordable are exported, so the library build's declaration check passes
 kind: work
-state: in-progress
+state: done
 created: 2026-11-22
 project: CS-437
 claimed_by: orch-11-CS-943

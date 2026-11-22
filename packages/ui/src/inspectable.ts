@@ -231,7 +231,11 @@ export interface InspectorSnapshot {
   camera?: readonly number[];
 }
 
-/** Records an engine's ticks to a file (development only, `recorder.ts`). */
+/**
+ * Records an engine's ticks to a file (development only, `recorder.ts`): what
+ * `Inspectable.record` offers to start and stop a recording, to save an image
+ * of the view, and to read the recording's status.
+ */
 export interface Recordable {
   readonly active: boolean;
   start(): void;

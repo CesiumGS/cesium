@@ -46,23 +46,7 @@ import ts from "typescript";
  * are reported here, not failed on: each by its name and the file that
  * declares it, so another type of the same name still fails.
  */
-export const PENDING = [
-  {
-    name: "Route",
-    file: "core/camera/route.d.ts",
-    why: "exported only from @cesium/core/internal",
-  },
-  {
-    name: "RouteStep",
-    file: "core/camera/route.d.ts",
-    why: "exported only from @cesium/core/internal",
-  },
-  {
-    name: "Recordable",
-    file: "ui/inspectable.d.ts",
-    why: "exported from no entry",
-  },
-];
+export const PENDING = [];
 
 /** TypeScript names files with forward slashes, whatever the platform. */
 const slash = (path) => path.split(sep).join("/");
