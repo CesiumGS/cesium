@@ -60,4 +60,4 @@ Open.
 
 From the owner's release planning on 2026-11-17: `docs/decisions/2026-11-17-release-plan-and-parity.md`.
 
-The owner's two calls, 2026-11-21: experimental packages carry a paired 0.x version line, as OpenTelemetry's do, not the lockstep 2.x numbers. The package names follow CS-616.
+The owner answered B on 2026-11-21: experimental packages outside the umbrella, plus member tags where a capability can't split out. Their two calls: experimental packages carry a paired 0.x version line, as OpenTelemetry's do, not the lockstep 2.x numbers. The package names follow CS-616.
