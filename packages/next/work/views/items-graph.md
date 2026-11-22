@@ -763,12 +763,13 @@ graph LR
     CS_617["CS-617 2.0 splits into scoped packages, released in lockstep, with ces"]:::open
     CS_618["CS-618 An embedding app installs the core alone, checked by an install"]:::open
     CS_619["CS-619 The API reference for every package"]:::open
-    CS_834["CS-834 A map of 2.0's packages and seams: capability packages, seam-pr"]:::open
+    CS_834["CS-834 A map of 2.0's packages and seams: capability packages, seam-pr"]:::done
     CS_835["CS-835 2.0's folders become its packages: the move to the package map,"]:::open
-    CS_867["CS-867 Merge CS-834, the map of 2.0's packages and seams"]:::decision
+    CS_867["CS-867 Merge CS-834, the map of 2.0's packages and seams"]:::done
     CS_880["CS-880 CS-834 D2: how does 1.x's @cesium/core 0.1.1 give way to 2.0's "]:::done
     CS_881["CS-881 CS-834 D3: what prefix do catalog adapters use?"]:::done
     CS_882["CS-882 PROJ sits behind a coordinate-operations seam: @cesium/crs-proj"]:::open
+    CS_883["CS-883 CS-834 D1: where do the shared utilities live?"]:::done
   end
   subgraph CS_622["agent-first migration kit"]
     CS_623["CS-623 The 1.x-to-2.0 map in a form agents read, with worked patterns"]:::open

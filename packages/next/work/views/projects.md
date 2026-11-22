@@ -105,7 +105,7 @@ CS-389 Dyno as the development harness [Planned], led by owner
   waited on by: CS-195 Benchmarks, parity and image regression (2); CS-18 The work tracker (8)
 CS-437 The public API reviews [Planned], led by owner
   9 of 26 done, 11 ready, 4 blocked, 2 proposed
-  waits on: CS-615 Packaging and package names (1)
+  waits on: nothing open
   waited on by: CS-13 The worker-mode façade (5); CS-189 Frames and engineering coordinates follow-ups (1); CS-193 B-reps and geometry queries (1); CS-18 The work tracker (4); CS-191 Content sources and formats (2); CS-628 Sandcastle as 2.0's gallery (4); CS-579 Editing (1)
 CS-579 Editing [Planned], led by owner
   8 of 22 done, 1 ready, 0 blocked, 13 proposed
@@ -124,9 +124,9 @@ CS-609 A clean 2.0 branch and a modern build [Planned], led by owner
   waits on: nothing open
   waited on by: CS-18 The work tracker (1); CS-628 Sandcastle as 2.0's gallery (1)
 CS-615 Packaging and package names [Planned], led by owner
-  2 of 10 done, 3 ready, 5 blocked
+  5 of 11 done, 2 ready, 4 blocked
   waits on: CS-193 B-reps and geometry queries (1); CS-191 Content sources and formats (1)
-  waited on by: CS-437 The public API reviews (1); CS-18 The work tracker (2)
+  waited on by: CS-18 The work tracker (2)
 CS-622 The agent-first migration kit [Planned], led by owner
   0 of 4 done, 1 ready, 3 blocked
   waits on: nothing open

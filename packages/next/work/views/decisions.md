@@ -57,7 +57,6 @@ CS-437 The public API reviews
 CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617
-  CS-867  Merge CS-834, the map of 2.0's packages and seams (owner)
 
-18 open decision(s) for owner
+17 open decision(s) for owner
 ```

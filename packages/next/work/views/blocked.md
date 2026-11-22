@@ -125,7 +125,6 @@ CS-437 The public API reviews
         CS-432 The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors
         CS-433 Promotions and demotions proposed: what every app needs, and what is exported only for examples
         CS-572 The full version of scene items, designed before the first public API review
-        CS-834 A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-434  Stability tiers as TSDoc tags, with internal members stripped from the published types
       ← CS-438 Which of the first public API review's proposed changes do you approve?
   CS-435  The measurement module's seam and entry point
@@ -664,14 +663,11 @@ CS-615 Packaging and package names
   CS-617  2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
       ← CS-616 Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
         CS-310 Licence check for Open Cascade (LGPL 2.1) before distribution
-        CS-834 A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
         CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
   CS-618  An embedding app installs the core alone, checked by an install and bundle test
       ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
   CS-619  The API reference for every package
       ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
-  CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
-      ← CS-834 A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-882  PROJ sits behind a coordinate-operations seam: @cesium/crs-proj splits from @cesium/crs
       ← CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
         CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
@@ -742,5 +738,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-234 blocked
+233 blocked
 ```

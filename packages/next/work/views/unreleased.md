@@ -109,5 +109,8 @@ CS-192 Sky, light and atmosphere
 CS-579 Editing
   CS-831  A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
 
-78 merged item(s) not in a release
+CS-615 Packaging and package names
+  CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
+
+79 merged item(s) not in a release
 ```

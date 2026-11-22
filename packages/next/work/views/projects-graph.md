@@ -34,7 +34,7 @@ graph LR
   CS_584["widgets library<br/>0 of 9 done"]
   CS_596["Trust and evals<br/>0 of 9 done"]
   CS_609["A clean 2.0 branch and a modern build<br/>0 of 4 done"]
-  CS_615["Packaging and package names<br/>2 of 10 done"]
+  CS_615["Packaging and package names<br/>5 of 11 done"]
   CS_622["agent-first migration kit<br/>0 of 4 done"]
   CS_628["Sandcastle as 2.0's gallery<br/>0 of 16 done"]
   CS_637["particle system<br/>0 of 3 done"]
@@ -46,7 +46,6 @@ graph LR
   CS_10 -->|2| CS_11
   CS_9 -->|1| CS_11
   CS_13 -->|2| CS_12
-  CS_615 -->|1| CS_437
   CS_437 -->|5| CS_13
   CS_10 -->|3| CS_13
   CS_8 -->|1| CS_13

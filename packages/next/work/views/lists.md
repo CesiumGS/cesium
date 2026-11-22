@@ -1172,14 +1172,14 @@ Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
 
 ### Packaging and package names
 
-CS-615, Planned, led by owner: 2 of 10 done, 3 ready, 5 blocked.
+CS-615, Planned, led by owner: 5 of 11 done, 2 ready, 4 blocked.
 
 Milestone: The core installs alone, and the whole engine installs from one umbrella package (CS-621, Planned)
 
 - [ ] CS-616 decision: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?. Needs nothing. Decided by owner.
 - [ ] CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella. Needs CS-616, CS-310 (B-reps and geometry queries), CS-834 and CS-835.
 - [ ] CS-618 An embedding app installs the core alone, checked by an install and bundle test. Needs CS-617.
-- [ ] CS-834 A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout. Needs nothing.
+- [x] CS-834 A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout. Done.
 - [ ] CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json. Needs CS-834, CS-809 (Content sources and formats), CS-814 (public API reviews) and CS-552 (Content sources and formats).
 - [ ] CS-882 PROJ sits behind a coordinate-operations seam: @cesium/crs-proj splits from @cesium/crs. Needs CS-835 and CS-808 (Content sources and formats).
 
@@ -1189,9 +1189,10 @@ Milestone: Every package has its API reference (CS-695, Planned)
 
 No milestone
 
-- [ ] CS-867 decision: Merge CS-834, the map of 2.0's packages and seams. Needs nothing. Decided by owner.
+- [x] CS-867 decision: Merge CS-834, the map of 2.0's packages and seams. Done.
 - [x] CS-880 decision: CS-834 D2: how does 1.x's @cesium/core 0.1.1 give way to 2.0's core?. Done.
 - [x] CS-881 decision: CS-834 D3: what prefix do catalog adapters use?. Done.
+- [x] CS-883 decision: CS-834 D1: where do the shared utilities live?. Done.
 
 ### The agent-first migration kit
 

@@ -499,8 +499,8 @@ CS-614 The branch is a clean, modern 2.0 build [Planned], under CS-609 A clean 2
 
 CS-621 The core installs alone, and the whole engine installs from one umbrella package [Planned], under CS-615 Packaging and package names
   outcome: A host installs only the core, or the whole engine through `cesium@2`, with every package at one version.
-  constraints: 0 of 8 done
-  unmet: not linked to a clause yet (open: CS-616, CS-617, CS-618, CS-363, CS-310, CS-834, CS-835, CS-882; check not passed)
+  constraints: 1 of 8 done
+  unmet: not linked to a clause yet (open: CS-616, CS-617, CS-618, CS-363, CS-310, CS-835, CS-882; check not passed)
   to shape: done_when; check; link CS-616, CS-617, CS-618, CS-363, CS-310, CS-834, CS-835, CS-882 to a clause
 
 CS-627 A 1.x app moves to 2.0 with the kit and is shown to match [Planned], under CS-622 The agent-first migration kit
