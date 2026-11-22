@@ -13,6 +13,7 @@ import {
   Rectangle,
   defined,
 } from "@cesium/core";
+/** @import Cesium3DTile from "./Cesium3DTile.js"; */
 
 /**
  * Creates six inward-facing planes, one per face of an oriented bounding box.
@@ -79,10 +80,22 @@ function createCullingVolume(area, minimumHeight, maximumHeight) {
 }
 
 /**
+ * A function that returns how coarse a tile is. Larger values mean coarser.
+ *
+ * @callback Cesium3DTilesetAreaSelectionMeasureCallback
+ * @param {Cesium3DTile} tile The tile.
+ * @param {number} depth The tile's depth in the tree, with the root at 0.
+ * @returns {number} The tile's measure.
+ */
+
+/**
  * @typedef {object} Cesium3DTilesetAreaSelectionOptions
  * @property {Rectangle|OrientedBoundingBox|BoundingSphere} area The volume the area covers.
  * @property {number} [minimumHeight=-1000.0] The minimum height, in meters, when area is a Rectangle.
  * @property {number} [maximumHeight=10000.0] The maximum height, in meters, when area is a Rectangle.
+ * @property {Cesium3DTilesetAreaSelectionMeasureCallback} measure The function that returns how coarse a tile is.
+ * @property {number} minimumMeasure The fine bound. Tiles at or below this measure are not refined.
+ * @property {number} maximumMeasure The coarse bound. Tiles above this measure are always refined.
  * @property {boolean} [show=true] Whether the area is active.
  */
 
@@ -98,11 +111,19 @@ class Cesium3DTilesetAreaSelection {
    * @exception {DeveloperError} options.area is required.
    * @exception {DeveloperError} options.area must be a Rectangle, OrientedBoundingBox, or BoundingSphere.
    * @exception {DeveloperError} options.minimumHeight must be less than or equal to options.maximumHeight.
+   * @exception {DeveloperError} options.measure must be a function.
+   * @exception {DeveloperError} options.minimumMeasure must be a number.
+   * @exception {DeveloperError} options.maximumMeasure must be a number.
+   * @exception {DeveloperError} options.minimumMeasure must be finite and greater than or equal to 0.0.
+   * @exception {DeveloperError} options.maximumMeasure must be greater than or equal to options.minimumMeasure.
    */
   constructor(options = Frozen.EMPTY_OBJECT) {
     const area = options.area;
     const minimumHeight = options.minimumHeight ?? -1000.0;
     const maximumHeight = options.maximumHeight ?? 10000.0;
+    const measure = options.measure;
+    const minimumMeasure = options.minimumMeasure;
+    const maximumMeasure = options.maximumMeasure;
 
     if (!defined(area)) {
       throw new DeveloperError("options.area is required.");
@@ -121,10 +142,32 @@ class Cesium3DTilesetAreaSelection {
         "options.minimumHeight must be less than or equal to options.maximumHeight.",
       );
     }
+    if (typeof measure !== "function") {
+      throw new DeveloperError("options.measure must be a function.");
+    }
+    if (typeof minimumMeasure !== "number" || Number.isNaN(minimumMeasure)) {
+      throw new DeveloperError("options.minimumMeasure must be a number.");
+    }
+    if (typeof maximumMeasure !== "number" || Number.isNaN(maximumMeasure)) {
+      throw new DeveloperError("options.maximumMeasure must be a number.");
+    }
+    if (!Number.isFinite(minimumMeasure) || minimumMeasure < 0.0) {
+      throw new DeveloperError(
+        "options.minimumMeasure must be finite and greater than or equal to 0.0.",
+      );
+    }
+    if (maximumMeasure < minimumMeasure) {
+      throw new DeveloperError(
+        "options.maximumMeasure must be greater than or equal to options.minimumMeasure.",
+      );
+    }
 
     this._area = area.clone();
     this._minimumHeight = minimumHeight;
     this._maximumHeight = maximumHeight;
+    this._measure = measure;
+    this._minimumMeasure = minimumMeasure;
+    this._maximumMeasure = maximumMeasure;
     this._show = options.show ?? true;
 
     this._cullingVolume = createCullingVolume(
@@ -164,6 +207,36 @@ class Cesium3DTilesetAreaSelection {
    */
   get maximumHeight() {
     return this._maximumHeight;
+  }
+
+  /**
+   * The function that returns how coarse a tile is. Larger values mean coarser.
+   *
+   * @type {Cesium3DTilesetAreaSelectionMeasureCallback}
+   * @readonly
+   */
+  get measure() {
+    return this._measure;
+  }
+
+  /**
+   * The fine bound of the level-of-detail range. Tiles at or below this measure are not refined.
+   *
+   * @type {number}
+   * @readonly
+   */
+  get minimumMeasure() {
+    return this._minimumMeasure;
+  }
+
+  /**
+   * The coarse bound of the level-of-detail range. Tiles above this measure are always refined.
+   *
+   * @type {number}
+   * @readonly
+   */
+  get maximumMeasure() {
+    return this._maximumMeasure;
   }
 
   /**
