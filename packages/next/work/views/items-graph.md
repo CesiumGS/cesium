@@ -598,7 +598,7 @@ graph LR
     CS_401["CS-401 Lab pages and their results in the store"]:::open
     CS_402["CS-402 'Measuring with Dyno' in AGENTS.md, and its skill"]:::open
     CS_403["CS-403 Dyno's navigation rail, regrouped by what people come to do"]:::done
-    CS_404["CS-404 Studies: the model, the files and the commands"]:::open
+    CS_404["CS-404 Studies: the model, the files and the commands"]:::done
     CS_405["CS-405 The Studies page"]:::open
     CS_406["CS-406 The local certificate authority, the hub and pairing"]:::open
     CS_407["CS-407 The runner and remote runs"]:::open

@@ -922,7 +922,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 57 of 94 done, 15 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 58 of 94 done, 14 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -963,7 +963,7 @@ Milestone: Benchmark results are shared across machines, and dyno is one command
 - [x] CS-390 Run identity and the machine-wide run lock. Done.
 - [x] CS-393 The settings registry and multi-axis sweeps. Done.
 - [x] CS-394 Example scenes and the development metrics. Done.
-- [ ] CS-404 Studies: the model, the files and the commands. Needs CS-390 and CS-687.
+- [x] CS-404 Studies: the model, the files and the commands. Done.
 - [x] CS-717 Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability. Done.
 - [x] CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices. Done.
 - [ ] CS-733 Each run records its device, configuration and state. Needs CS-390 and CS-721.

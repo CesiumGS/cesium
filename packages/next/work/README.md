@@ -979,7 +979,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 57 of 94 done, 15 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 58 of 94 done, 14 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -1020,7 +1020,7 @@ Milestone: Benchmark results are shared across machines, and dyno is one command
 - [x] [CS-390](./items/CS-390-run-identity-and-the-machine-wide-run-lock.md) Run identity and the machine-wide run lock. Done.
 - [x] [CS-393](./items/CS-393-the-settings-registry-and-multi-axis-sweeps.md) The settings registry and multi-axis sweeps. Done.
 - [x] [CS-394](./items/CS-394-example-scenes-and-the-development-metrics.md) Example scenes and the development metrics. Done.
-- [ ] [CS-404](./items/CS-404-studies-the-model-the-files-and-the-commands.md) Studies: the model, the files and the commands. Needs CS-390 and CS-687.
+- [x] [CS-404](./items/CS-404-studies-the-model-the-files-and-the-commands.md) Studies: the model, the files and the commands. Done.
 - [x] [CS-717](./items/CS-717-design-one-benchmark-database-across-machines.md) Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability. Done.
 - [x] [CS-721](./items/CS-721-a-dyno-command-one-cli-for-dyno-s-runs-lab.md) A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices. Done.
 - [ ] [CS-733](./items/CS-733-each-run-records-its-device-configuration-and.md) Each run records its device, configuration and state. Needs CS-390 and CS-721.

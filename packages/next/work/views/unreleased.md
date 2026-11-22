@@ -66,6 +66,7 @@ CS-389 Dyno as the development harness
   CS-393  The settings registry and multi-axis sweeps
   CS-394  Example scenes and the development metrics
   CS-403  Dyno's navigation rail, regrouped by what people come to do
+  CS-404  Studies: the model, the files and the commands
   CS-706  Dyno's viewer starts drawing within half a second on a cold browser again
   CS-707  Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected
   CS-717  Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability
@@ -113,5 +114,5 @@ CS-579 Editing
 CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
 
-80 merged item(s) not in a release
+81 merged item(s) not in a release
 ```

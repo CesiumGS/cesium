@@ -458,15 +458,12 @@ CS-389 Dyno as the development harness
       ← CS-395 Reference images and the sweep view
   CS-402  "Measuring with Dyno" in AGENTS.md, and its skill
       ← CS-392 Finding runs from the terminal (`runs`, `show`, `pin`)
-        CS-404 Studies: the model, the files and the commands
   CS-405  The Studies page
       ← CS-395 Reference images and the sweep view
-        CS-404 Studies: the model, the files and the commands
   CS-407  The runner and remote runs
       ← CS-406 The local certificate authority, the hub and pairing
   CS-408  The device lab
-      ← CS-404 Studies: the model, the files and the commands
-        CS-407 The runner and remote runs
+      ← CS-407 The runner and remote runs
   CS-518  A space switch in Dyno's rail: the engine and the work
       ← CS-517 The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
   CS-734  A sealed, content-addressed layout for benchmark results, local first
@@ -481,8 +478,7 @@ CS-389 Dyno as the development harness
       ← CS-733 Each run records its device, configuration and state
         CS-734 A sealed, content-addressed layout for benchmark results, local first
   CS-739  Studies across devices: noise floors per hardware class, pooling, and the health bar
-      ← CS-404 Studies: the model, the files and the commands
-        CS-733 Each run records its device, configuration and state
+      ← CS-733 Each run records its device, configuration and state
         CS-738 Trends, charts, baselines and alerts keep devices apart
   CS-740  A verdict says whether it carries to another hardware class
       ← CS-739 Studies across devices: noise floors per hardware class, pooling, and the health bar

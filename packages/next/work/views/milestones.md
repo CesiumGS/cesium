@@ -584,7 +584,7 @@ CS-695 Every package has its API reference [Planned], under CS-615 Packaging and
 
 CS-722 Benchmark results are shared across machines, and dyno is one command [Planned], under CS-389 Dyno as the development harness
   outcome: Every run records its device, configuration and machine state; results from every machine sit in storage dyno manages, and Trends, charts and studies compare devices; and dyno is one non-interactive command that people and hitld call.
-  constraints: 6 of 15 done
+  constraints: 7 of 15 done
   unmet: c1 a dev run from a worktree records purpose, item, study, worktree, base, machine, servedFrom and ID. `--purpose baseline` is refused from a dirty tree or a feature branch. Two runs started together run one after the other. (check not passed)
   unmet: c2 `npx dyno` covers what `cli.mjs` and `bench/run.mjs` do. Every command prints JSON with `api_version` under `--json`. `dyno status --json` reports busy, waiting-for-quiet or quiet. The old entry points still work, and `dyno data status` names any out-of-date dataset and its fix, and dyno won't measure on one. (check not passed)
   unmet: c3 a run on any device records its device, configuration and state. A power-source switch changes neither the device nor its Trends series (tested). No identity field holds a host name, user name, serial number or network address (tested). (open: CS-733; check not passed)
@@ -593,7 +593,7 @@ CS-722 Benchmark results are shared across machines, and dyno is one command [Pl
   unmet: c6 every result carries a label, confidential by default. `storage status` reports use against the budget per namespace. Nothing is deleted without `--apply`, nothing pinned is deleted, and every deletion leaves a tombstone. (open: CS-736, CS-737; check not passed)
   unmet: c7 Trends, Compare, Alerts and Overview keep devices apart and facet by device and hardware class. Overview names the devices when they disagree. Compare refuses a timing verdict across devices. (open: CS-738; check not passed)
   unmet: c8 the design `docs/design/benchmark-devices-and-sharing.md` is merged, and the filed items and clauses match it. (check not passed)
-  unmet: c9 a study made with a kind and its instruments reads back with its verdict (CS-404). A study run on several devices pools them by hardware class, and each verdict lists, per class, measured or can't tell, never "measured" for a class without runs (CS-739). (open: CS-404, CS-739; check not passed)
+  unmet: c9 a study made with a kind and its instruments reads back with its verdict (CS-404). A study run on several devices pools them by hardware class, and each verdict lists, per class, measured or can't tell, never "measured" for a class without runs (CS-739). (open: CS-739; check not passed)
   unmet: c10 a sweep runs over several settings at once (CS-393), and `run --scenes` measures an example scene with the development metrics (CS-394). A verdict on one hardware class carries to another only when their work counters match within spread, the other class has a calibration study for that work, and both share a bottleneck; otherwise it says can't tell, naming the failed check and what to measure (CS-740). (open: CS-740; check not passed)
 
 CS-751 The owner's views answer what needs me, what's on track and what's wrong [Planned], under CS-389 Dyno as the development harness

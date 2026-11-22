@@ -214,7 +214,6 @@ CS-389 Dyno as the development harness
   CS-399  Test results in Dyno: the vitest reporter and the Tests view
   CS-400  Archives: export and import (the manual fallback)
   CS-401  Lab pages and their results in the store
-  CS-404  Studies: the model, the files and the commands
   CS-406  The local certificate authority, the hub and pairing
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
   CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands
@@ -272,5 +271,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-203 ready
+202 ready
 ```
