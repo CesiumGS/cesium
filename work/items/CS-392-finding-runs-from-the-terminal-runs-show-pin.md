@@ -2,10 +2,11 @@
 id: CS-392
 title: Finding runs from the terminal (`runs`, `show`, `pin`)
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-389
 needs: [CS-390]
+claimed_by: orch-11-CS-392
 ---
 
 `cli.mjs runs` (filters, table and JSON), `show <id>`, `pin <id>`.
