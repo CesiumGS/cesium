@@ -20,7 +20,7 @@
 // and the high-performance GPU on dual-GPU machines. Results record the
 // adapter so numbers from different GPUs are never mixed up.
 import { mkdirSync, writeFileSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { keepAwake } from "../telemetry.mjs";
@@ -108,6 +108,10 @@ export function labSuites(env = process.env) {
     // A Viewer under React's StrictMode: one device, each frames-store file
     // fetched once, a clean console (CS-708; needs the frames store).
     strictMode: ["/bench/strictMode.html?bench", "runStrictMode"],
+    // Three USD readers over six SimReady samples: size, start time, coverage
+    // of CS-802 B's features (CS-900). Needs spikes/usd-readers/serve.mjs as
+    // the server (--url): its routes, builds and cross-origin isolation.
+    usdReaders: ["/bench/usdReaders.html?bench", "runUsdReaders"],
   };
 }
 
@@ -378,6 +382,9 @@ export async function main(names = [], { env = process.env } = {}) {
   }
   return {
     file,
+    // The results file's name is the run's id until CS-401 records Lab
+    // runs in the store; `measure` keeps it in its completion record.
+    run_id: basename(file, ".json"),
     suites: names,
     errors: errors.length,
     ...(commit ? { commit } : {}),

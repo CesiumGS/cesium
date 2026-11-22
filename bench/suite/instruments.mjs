@@ -12,7 +12,7 @@
 import { CONDITION_METRICS, DEV_FAMILIES, METRICS } from "./report.mjs";
 
 /** Metrics where a higher value is better; every other one is lower-better. */
-export const HIGHER_IS_BETTER = new Set(["settled"]);
+export const HIGHER_IS_BETTER = new Set(["settled", "usdCoverage"]);
 
 const fromRows = (rows) =>
   rows.map(([key, label, unit]) => ({
@@ -63,6 +63,35 @@ export const INSTRUMENTS = [
     title: "the Lab's harnesses (dyno lab); recorded as runs by CS-401",
     runKind: "lab",
     metrics: [],
+    noiseFloor: UNMEASURED,
+  },
+  {
+    // CS-900: one Lab harness (bench/usdReaders.html, served by
+    // spikes/usd-readers/serve.mjs) over three USD readers and six SimReady
+    // samples. Its runs are Lab runs until CS-401 records them in the store.
+    id: "usdReaders",
+    title:
+      "USD readers over SimReady samples (dyno lab usdReaders, with spikes/usd-readers/serve.mjs)",
+    runKind: "lab",
+    metrics: [
+      { key: "usdBytesRaw", label: "a reader's shipped files, raw", unit: "B" },
+      { key: "usdBytesGzip", label: "the same, gzip level 9", unit: "B" },
+      {
+        key: "usdBytesBrotli",
+        label: "the same, Brotli quality 11",
+        unit: "B",
+      },
+      {
+        key: "usdStartMs",
+        label: "a new worker to a composed stage, median per sample",
+        unit: "ms",
+      },
+      {
+        key: "usdCoverage",
+        label: "checks of CS-802 B's features agreeing with OpenUSD",
+        unit: "",
+      },
+    ],
     noiseFloor: UNMEASURED,
   },
 ];

@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>USD readers</title>
+  </head>
+  <body>
+    <!-- CS-900's instrument (dyno lab usdReaders). Needs spikes/usd-readers/serve.mjs: its routes and cross-origin isolation. -->
+    <div id="root"></div>
+    <script type="module">
+      import { harness } from "./usdReaders.ts";
+      import { standalone } from "../lab/harness.ts";
+      standalone(harness, "runUsdReaders");
+    </script>
+  </body>
+</html>
