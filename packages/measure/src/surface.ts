@@ -1,7 +1,16 @@
 /** The distance over a body: Karney's geodesic between two points' geodetic footprints. */
-import { Geodesic } from "geographiclib-geodesic";
+import * as geographiclib from "geographiclib-geodesic";
 import { cartographic, type Ellipsoid } from "@cesium/core";
 import { vec3, type Vec3 } from "@cesium/core/internal";
+
+// geographiclib-geodesic is a CommonJS package. A bundler gives its named
+// exports, but Node's own ES module loader can't see them, only `default`
+// (the whole of `module.exports`). Take it from whichever is there, so the
+// package imports in Node as well as in a bundled application (CS-938's
+// install test).
+const { Geodesic } =
+  (geographiclib as unknown as { default?: typeof geographiclib }).default ??
+  geographiclib;
 
 const RADIANS = Math.PI / 180;
 

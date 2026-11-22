@@ -2,7 +2,7 @@
 id: CS-938
 title: Packed pre-release builds a host application can install, at a named commit
 kind: work
-state: in-progress
+state: done
 created: 2026-11-22
 project: CS-609
 needs: [CS-612]
