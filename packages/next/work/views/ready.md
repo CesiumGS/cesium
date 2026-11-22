@@ -28,6 +28,7 @@ CS-10 Cesium IR
   CS-549  The IR models math/normalize's isValid output
   CS-550  The core IR spike's evaluator gets dot and intToFloat's signed zero right
   CS-571  The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires
+  CS-777  The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned
   CS-794  The transform passes load Cesium IR lazily, so a default view starts without it
 
 CS-11 Live MaterialX graph editing
@@ -197,7 +198,6 @@ CS-199 Dyno hardening, packaging and CI
   CS-538  The no-scene-gains glare test holds under full-suite load
   CS-540  The hitld work check test finishes under full-suite load
   CS-544  The handbook's reel runs in the served handbook as well as the static file
-  CS-580  naga-wasm is a dev dependency of @cesium/next, so CI validates the WGSL emitter's output
   CS-583  The casterLoop slow-orbit test holds under full-suite load
 
 CS-389 Dyno as the development harness

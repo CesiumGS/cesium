@@ -78,7 +78,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 13 of 41 done, 11 ready, 12 blocked, 5 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 13 of 41 done, 12 ready, 12 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -127,7 +127,7 @@ No milestone
 - [x] CS-575 decision: Adding CS-51's irWgsl browser suite to the browser-suite gate. Done.
 - [x] CS-759 decision: Merge CS-50, Cesium IR's passes (AD, intervals with splitting, Taylor bounds, rates, uniforms, kinks). Done.
 - [x] CS-776 decision: Merge CS-52, the GLSL ES 3.00 emitter, with its naga cross-check left open. Done.
-- [?] CS-777 The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned. Proposed. Needs CS-52 and CS-580 (Dyno hardening, packaging and CI).
+- [ ] CS-777 The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned. Needs CS-52 and CS-580 (Dyno hardening, packaging and CI).
 - [x] CS-788 decision: Merge CS-53, transforms move onto Cesium IR, with its browser parity bullet not showable today. Done.
 - [?] CS-790 A Lab parity page draws through a compiled curvilinear route, so IR changes are checked in pixels. Proposed. Needs CS-53.
 - [?] CS-791 Per-draw center constants on Cesium IR's generic evaluator are measured against the old Float64Array loop. Proposed. Needs CS-53.
@@ -860,7 +860,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-CS-199, Planned, led by owner: 1 of 16 done, 14 ready, 0 blocked, 1 proposed.
+CS-199, Planned, led by owner: 3 of 17 done, 13 ready, 0 blocked, 1 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host (CS-485, Planned)
 
@@ -879,13 +879,14 @@ Milestone: CI keeps packages/next clean (CS-486, Planned)
 - [x] CS-537 The tickSlices budget test holds under full-suite load. Done.
 - [ ] CS-538 The no-scene-gains glare test holds under full-suite load. Needs nothing.
 - [ ] CS-540 The hitld work check test finishes under full-suite load. Needs nothing.
-- [ ] CS-580 naga-wasm is a dev dependency of @cesium/next, so CI validates the WGSL emitter's output. Needs CS-574 (Cesium IR).
+- [x] CS-580 naga-wasm is a dev dependency of @cesium/next, so CI validates the WGSL emitter's output. Done.
 - [ ] CS-583 The casterLoop slow-orbit test holds under full-suite load. Needs nothing.
 
 No milestone
 
 - [ ] CS-363 Packaging for pages without a build step. Needs nothing.
 - [?] CS-364 The gallery shell: filters, editable source, checked-in thumbnails, the playground's later list. Proposed. Needs nothing.
+- [x] CS-796 decision: Merge CS-580, naga-wasm 30.2.0 is a dev dependency of @cesium/next. Done.
 
 ### Dyno as the development harness
 

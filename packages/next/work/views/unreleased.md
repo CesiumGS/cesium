@@ -81,6 +81,7 @@ CS-437 The public API reviews
 
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
+  CS-580  naga-wasm is a dev dependency of @cesium/next, so CI validates the WGSL emitter's output
 
 CS-17 The transform graph
   CS-712  One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps
@@ -89,5 +90,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-62 merged item(s) not in a release
+63 merged item(s) not in a release
 ```

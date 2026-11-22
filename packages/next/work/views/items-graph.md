@@ -87,7 +87,7 @@ graph LR
     CS_575["CS-575 Adding CS-51's irWgsl browser suite to the browser-suite gate"]:::done
     CS_759["CS-759 Merge CS-50, Cesium IR's passes (AD, intervals with splitting, "]:::done
     CS_776["CS-776 Merge CS-52, the GLSL ES 3.00 emitter, with its naga cross-chec"]:::done
-    CS_777["CS-777 The GLSL ES emitter's output is cross-checked against naga's, a"]:::proposed
+    CS_777["CS-777 The GLSL ES emitter's output is cross-checked against naga's, a"]:::open
     CS_788["CS-788 Merge CS-53, transforms move onto Cesium IR, with its browser p"]:::done
     CS_790["CS-790 A Lab parity page draws through a compiled curvilinear route, s"]:::proposed
     CS_791["CS-791 Per-draw center constants on Cesium IR's generic evaluator are "]:::proposed
@@ -550,8 +550,9 @@ graph LR
     CS_538["CS-538 The no-scene-gains glare test holds under full-suite load"]:::open
     CS_540["CS-540 The hitld work check test finishes under full-suite load"]:::open
     CS_544["CS-544 The handbook's reel runs in the served handbook as well as the "]:::open
-    CS_580["CS-580 naga-wasm is a dev dependency of @cesium/next, so CI validates "]:::open
+    CS_580["CS-580 naga-wasm is a dev dependency of @cesium/next, so CI validates "]:::done
     CS_583["CS-583 The casterLoop slow-orbit test holds under full-suite load"]:::open
+    CS_796["CS-796 Merge CS-580, naga-wasm 30.2.0 is a dev dependency of @cesium/n"]:::done
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
