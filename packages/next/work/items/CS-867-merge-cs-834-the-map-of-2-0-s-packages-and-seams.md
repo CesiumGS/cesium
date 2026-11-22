@@ -2,10 +2,14 @@
 id: CS-867
 title: Merge CS-834, the map of 2.0's packages and seams
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-615
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), regenerates the views and logs the merge. The main session files D1 to D3, the new item and the notes. CS-835 waits on D1."
+answered_at: 2026-11-22T06:33:23.527Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
