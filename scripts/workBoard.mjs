@@ -550,6 +550,8 @@ export function stateHistory(root) {
     "--format=@@commit %cI",
     "--",
     "work/items",
+    // Before CS-835 the tracker was here; its history still is.
+    "packages/next/work/items",
   ]);
   const events = [];
   const last = new Map();
@@ -724,6 +726,8 @@ function closesIn(root, range) {
     "--format=@@commit %H %cI",
     "--",
     "work/items",
+    // Before CS-835 the tracker was here; its history still is.
+    "packages/next/work/items",
   ]);
   const out = [];
   let commit;
@@ -751,6 +755,8 @@ function statesOn(root, ref) {
     ref,
     "--",
     "work/items",
+    // Before CS-835 the tracker was here; its history still is.
+    "packages/next/work/items",
   ]);
   for (const line of (lines ?? "").split("\n")) {
     const m = /\/(CS-[1-9]\d*)[-.][^/:]*:state: (\S+)/.exec(line);
@@ -1479,6 +1485,10 @@ const WORK_PATHS = [
   "work/items",
   "work/milestones",
   "work/projects",
+  // Before CS-835 the tracker was here; its history still is.
+  "packages/next/work/items",
+  "packages/next/work/milestones",
+  "packages/next/work/projects",
 ];
 
 /** A commit as given in a URL: hex, 7 to 40 digits. */
@@ -2267,6 +2277,8 @@ async function flowLogOf(run, root, head) {
     head,
     "--",
     "work/items",
+    // Before CS-835 the tracker was here; its history still is.
+    "packages/next/work/items",
   ]);
   if (code !== 0) {
     throw new Error("log");

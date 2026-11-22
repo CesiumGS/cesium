@@ -7,31 +7,29 @@
   "merge": {
     "main_branch": "cesium-2.0-webgpu-poc",
     "fast_checks": [
-      "cd packages/next && npm run typecheck",
-      "cd packages/next && npx hitld work check"
+      "npm run typecheck",
+      "npx hitld work check"
     ],
     "full_suite": [
-      "cd packages/next && npm test"
+      "npm test"
     ],
     "mode": "owner",
     "owner_paths": [
-      "packages/next/api/surface.txt",
+      "api/surface.txt",
       "packages/next/src/index.ts",
       "packages/next/src/ir/FORMAT.md",
       "packages/next/package.json",
       "package.json",
       ".human-in-the-lead/",
       "AGENTS.md",
-      "packages/next/AGENTS.md",
       ".husky/",
       ".github/",
-      ".claude/",
-      "packages/next/.claude/"
+      ".claude/"
     ]
   },
   "dispatch": {
     "inline_globs": [
-      "packages/next/work/**"
+      "work/**"
     ]
   },
   "env": {

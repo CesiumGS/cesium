@@ -28,7 +28,7 @@
 // reports whether the local one is current.
 // Nothing here is committed: all of it lives outside version control.
 // A machine also gets its name in benchmark runs (BENCH_MACHINE).
-// Usage: npm run setup --workspace @cesium/next [-- --frames-span[ =]2000-2050] [--grids[ =]portfolio,tests]
+// Usage: npm run setup [-- --frames-span[ =]2000-2050] [--grids[ =]portfolio,tests]
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import process from "node:process";

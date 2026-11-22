@@ -36,9 +36,7 @@ beforeAll(async () => {
   const occt = occtDirectory();
   const smlib = smlibDirectory();
   if (!occt || !smlib) {
-    throw new Error(
-      "No OCCT or SMLib build: run npm run setup --workspace @cesium/next",
-    );
+    throw new Error("No OCCT or SMLib build: run npm run setup");
   }
   oc = await (
     (await import(pathToFileURL(join(occt, "replicad_single.js")).href)) as {

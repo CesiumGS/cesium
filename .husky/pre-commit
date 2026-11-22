@@ -2,7 +2,7 @@
 # top level. Tools come from this worktree's node_modules, or the main
 # checkout's when the worktree has none.
 main="$(cd "$(git rev-parse --git-common-dir)/.." && pwd)"
-PATH="$PWD/node_modules/.bin:$PWD/packages/next/node_modules/.bin:$main/node_modules/.bin:$PATH"
+PATH="$PWD/node_modules/.bin:$main/node_modules/.bin:$PATH"
 
 # --no-stash: lint-staged's backup is a stash, and every worktree shares one
 # stash list, so a backup could sweep another session's work into a commit.

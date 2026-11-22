@@ -6,16 +6,7 @@
   "license": "Apache-2.0",
   "type": "module",
   "sideEffects": [
-    "*.css",
-    "./bench/**",
-    "./demo/**",
-    "./examples/**",
-    "./handbook/**",
-    "./lab/**",
-    "./parity/**",
-    "./spikes/**",
-    "./standalone/**",
-    "./test/**"
+    "*.css"
   ],
   "engines": {
     "node": ">=24"
@@ -29,29 +20,7 @@
     "./widgets": "./widgets/index.ts"
   },
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "dyno": "node bench/suite/commands/serve.mjs",
-    "dyno:serve": "vite --host 127.0.0.1 --port 5190 --strictPort",
-    "dyno:cli": "node bench/dyno.mjs",
-    "build": "vite build",
-    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && tsc -p tsconfig.lib.widgets.json && node scripts/checkDeclarations.mjs --only engineering,measure,widgets dist-lib/types/proj/index.d.ts dist-lib/types/measure/index.d.ts dist-lib/types/widgets/index.d.ts",
-    "typecheck": "tsc -p . --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:data": "FRAMES_DATA=1 vitest run test/data",
-    "bench": "node bench/run.mjs",
-    "slang": "node scripts/slangShader.mjs",
-    "shaders": "node scripts/slangBuild.mjs",
-    "shaders:check": "node scripts/slangBuild.mjs --check",
-    "surface": "node scripts/surfaceMap.mjs --write",
-    "check:bundle": "node scripts/checkBundle.mjs",
-    "handbook:data": "node scripts/handbookData.mjs",
-    "handbook": "node scripts/handbookData.mjs && tsc -p handbook && vite build --config handbook/vite.config.ts",
-    "handbook:dev": "node scripts/handbookData.mjs --no-bundles && vite --config handbook/vite.config.ts",
-    "handbook:serve": "npm run handbook:dev -- --port 5199 --strictPort",
-    "setup": "node scripts/setup.mjs",
-    "sky": "node scripts/skyPack.mjs",
-    "hitld:setup": "cd \"$(git rev-parse --show-toplevel)\" && claude plugin marketplace add arobison/human-in-the-lead#v0.1.0-rc.1 --scope project && claude plugin install human-in-the-lead@human-in-the-lead --scope project && hitld install --ref v0.1.0-rc.1 --repo arobison/human-in-the-lead"
+    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && tsc -p tsconfig.lib.widgets.json && node ../../scripts/checkDeclarations.mjs --only engineering,measure,widgets dist-lib/types/proj/index.d.ts dist-lib/types/measure/index.d.ts dist-lib/types/widgets/index.d.ts"
   },
   "dependencies": {
     "@emnapi/runtime": "1.8.1",

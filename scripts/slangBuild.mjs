@@ -496,7 +496,7 @@ async function main() {
   const slangc = slangcPath();
   if (!slangc) {
     console.error(
-      "No slangc: run `npm run setup --workspace @cesium/next` (or set SLANGC).",
+      "No slangc: run `npm run setup` (or set SLANGC).",
     );
     process.exit(2);
   }
@@ -596,7 +596,7 @@ async function main() {
   }
   if (stale.length) {
     console.error(
-      `Generated shaders out of date (run \`npm run shaders --workspace @cesium/next\`):\n  ${stale.join("\n  ")}`,
+      `Generated shaders out of date (run \`npm run shaders\`):\n  ${stale.join("\n  ")}`,
     );
     process.exit(1);
   }

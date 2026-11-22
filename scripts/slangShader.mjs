@@ -27,7 +27,7 @@ import { slangcPath } from "./slangTools.mjs";
 const slangc = slangcPath();
 if (!slangc) {
   throw new Error(
-    "No slangc: run `npm run setup --workspace @cesium/next` (or set SLANGC).",
+    "No slangc: run `npm run setup` (or set SLANGC).",
   );
 }
 const args = process.argv.slice(2);

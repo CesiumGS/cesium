@@ -39,13 +39,11 @@ let kernel: OcctKernel;
 
 beforeAll(async () => {
   if (!directory) {
-    throw new Error(
-      "No OCCT build: run npm run setup --workspace @cesium/next",
-    );
+    throw new Error("No OCCT build: run npm run setup");
   }
   if (!samples) {
     throw new Error(
-      "No NIST STEP samples: run npm run setup --workspace @cesium/next (or node scripts/stepSamples.mjs)",
+      "No NIST STEP samples: run npm run setup (or node scripts/stepSamples.mjs)",
     );
   }
   const imported = (await import(

@@ -38,7 +38,7 @@ const owned: Array<OcctSolid | SmlibSolid> = [];
 beforeAll(async () => {
   if (!occt || !samples || !smlib) {
     throw new Error(
-      "No OCCT build, SMLib build or STEP samples: run npm run setup --workspace @cesium/next",
+      "No OCCT build, SMLib build or STEP samples: run npm run setup",
     );
   }
   const o = (await import(

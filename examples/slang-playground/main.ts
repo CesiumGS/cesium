@@ -1186,7 +1186,7 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
   applyLooks();
   if (!served) {
     status.compile.textContent =
-      "The Slang WebAssembly build isn't served here: run `npm run setup --workspace @cesium/next` (it fetches it) and restart the dev server.";
+      "The Slang WebAssembly build isn't served here: run `npm run setup` (it fetches it) and restart the dev server.";
     await place();
   } else {
     await compile();

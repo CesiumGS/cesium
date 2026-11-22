@@ -1,11 +1,11 @@
 ---
 name: work-items
-description: Use when starting, claiming, finishing or creating work in packages/next, or when the main session merges branches. Covers the CS-n work items in packages/next/work, kept in human-in-the-lead's format with its hitld commands (ready work, claims, closing, new items, decisions for the owner), and the main session's steps after merges and bundles.
+description: Use when starting, claiming, finishing or creating work in Cesium 2.0, or when the main session merges branches. Covers the CS-n work items in work, kept in human-in-the-lead's format with its hitld commands (ready work, claims, closing, new items, decisions for the owner), and the main session's steps after merges and bundles.
 ---
 
 # Work items
 
-Cesium 2.0's work lives in `packages/next/work/`, one markdown file per entity, with `CS-<n>` IDs, in human-in-the-lead's format (its design, part 3.4). Projects (usually one plan each) group items. Milestones are checkable outcomes; a milestone with no parent is a long outcome over other milestones. The rules are in `packages/next/AGENTS.md`, "Work items", and the executor contract in the root `AGENTS.md`. Run `npx hitld …` anywhere in the repository; every command prints JSON.
+Cesium 2.0's work lives in `work/`, one markdown file per entity, with `CS-<n>` IDs, in human-in-the-lead's format (its design, part 3.4). Projects (usually one plan each) group items. Milestones are checkable outcomes; a milestone with no parent is a long outcome over other milestones. The rules are in `AGENTS.md`, "Work items", and the executor contract in the root `AGENTS.md`. Run `npx hitld …` anywhere in the repository; every command prints JSON.
 
 ## Starting a session
 

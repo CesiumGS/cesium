@@ -44,7 +44,7 @@ export const STALE_PATTERNS = [
       "docs/decisions",
       "docs/superpowers/plans/2026-11-12-transform-graph.md",
       "docs/superpowers/plans/2026-11-13-*",
-      "packages/next/AGENTS.md",
+      "AGENTS.md",
       "work",
       "handbook/src",
       ".claude",

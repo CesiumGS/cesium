@@ -90,7 +90,6 @@ describe("npx @cesium/dyno is the only form", () => {
     "AGENTS.md",
     "docs/design/benchmark-devices-and-sharing.md",
     ".claude/skills/dyno/SKILL.md",
-    "packages/next/AGENTS.md",
     "packages/next/README.md",
     "bench/dyno.mjs",
     "bench/suite/commands/dispatch.mjs",

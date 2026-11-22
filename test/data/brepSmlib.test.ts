@@ -28,9 +28,7 @@ let kernel: SmlibKernel;
 
 beforeAll(async () => {
   if (!directory) {
-    throw new Error(
-      "No SMLib build: run npm run setup --workspace @cesium/next",
-    );
+    throw new Error("No SMLib build: run npm run setup");
   }
   const imported = (await import(
     pathToFileURL(join(directory, "smlib.mjs")).href

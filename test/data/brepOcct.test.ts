@@ -24,9 +24,7 @@ let kernel: OcctKernel;
 
 beforeAll(async () => {
   if (!directory) {
-    throw new Error(
-      "No OCCT build: run npm run setup --workspace @cesium/next",
-    );
+    throw new Error("No OCCT build: run npm run setup");
   }
   const imported = (await import(
     pathToFileURL(join(directory, "replicad_single.js")).href

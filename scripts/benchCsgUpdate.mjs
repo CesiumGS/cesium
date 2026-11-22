@@ -56,7 +56,7 @@ const occt = occtDirectory();
 const smlib = smlibDirectory();
 if (!occt || !smlib) {
   throw new Error(
-    "No kernel builds: run npm run setup --workspace @cesium/next",
+    "No kernel builds: run npm run setup",
   );
 }
 
