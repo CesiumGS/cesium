@@ -8,6 +8,8 @@
 
 **What to read first.** "The recommendation for CS-802", then "What alpha.1 must reserve". The rest is the evidence.
 
+**Since then (2026-11-22):** CS-900 built LightUSD and OpenUSD for WebAssembly and measured all three readers in Dyno, which replaces this note's published numbers and its "can't tell" for OpenUSD's start time: see [usd-readers.md](usd-readers.md).
+
 ## The recommendation for CS-802
 
 **Target the visual half of SimReady's Robotics-Prop profile, read-only, through a TypeScript subset reader behind the content-source seam.** That is CS-802's option A, refined by what the study found:

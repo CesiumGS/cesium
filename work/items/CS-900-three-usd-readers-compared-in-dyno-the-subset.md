@@ -2,7 +2,7 @@
 id: CS-900
 title: "Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-22
 project: CS-191
 claimed_by: orch-11-CS-900
