@@ -40,6 +40,17 @@ export function installFragment(
   packages: readonly { name: string; tarball: string }[],
   folder?: string,
 ): InstallFragment;
+/** The problems with a set's `@cesium/*` dependencies: absent from the set, or not at its exact version. */
+export function siblingProblems(
+  entries: readonly {
+    name: string;
+    version: string;
+    manifest: Record<string, any>;
+  }[],
+  members?: readonly { name: string; version: string }[],
+): string[];
+/** `path` absolute, with symbolic links in its nearest existing ancestor resolved. */
+export function realResolve(path: string): string;
 /** Packs every package into the output folder; returns the manifest. */
 export function packSet(options?: {
   out?: string;
@@ -48,6 +59,8 @@ export function packSet(options?: {
   requireClean?: boolean;
   repoDir?: string;
   log?: (line: string) => void;
+  /** Called once the new set is staged, before it replaces the old one; for tests. */
+  beforeReplace?: () => void;
 }): SetManifest;
 /** Checks a set's folder against its manifest; returns the problems. */
 export function verifySet(folder: string): string[];

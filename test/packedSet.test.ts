@@ -10,6 +10,11 @@
 // cache, and one that isn't cached fails with a message saying so, never by
 // reaching out.
 //
+// A host lists only what it imports, so two more installs list one package
+// each (the umbrella, then `@cesium/measure`). Their siblings resolve only
+// through the manifest's `overrides`: a control installs the same single
+// package without them and must fail against the unreachable registry.
+//
 // It packs whatever each package's dist/ holds (a build when one is
 // missing), from any tree, clean or not; the command itself refuses a dirty
 // one, which the git tests here cover.
@@ -22,6 +27,7 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   truncateSync,
   writeFileSync,
 } from "node:fs";
@@ -37,7 +43,9 @@ import {
   installFragment,
   integrityOf,
   packSet,
+  realResolve,
   requireCleanTree,
+  siblingProblems,
   verifySet,
   type SetManifest,
 } from "../scripts/packSet.mjs";
@@ -85,10 +93,99 @@ const packages = packageDirs().map((dir) => ({
   ) as Manifest,
 }));
 
+interface Lock {
+  packages: Record<string, { resolved?: string; integrity?: string }>;
+}
+
+interface InstallResult {
+  project: string;
+  /** The error output of a failed install, or undefined when it succeeded. */
+  failure?: string;
+}
+
+/**
+ * A host in its own folder: the set copied into it, `dependencies` and
+ * `overrides` as given, the @cesium scope pointed at an address nothing
+ * listens on, and `npm install` run offline. A failure is returned, except
+ * one that is the test's own setup (a third-party package that isn't cached).
+ */
+function installHost(
+  setDir: string,
+  manifest: SetManifest,
+  dependencies: Record<string, string>,
+  overrides: Record<string, string> | undefined,
+): InstallResult {
+  const project = temp("cesium-packed-host-");
+  mkdirSync(join(project, HOST_FOLDER), { recursive: true });
+  for (const { tarball } of manifest.packages) {
+    copyFileSync(join(setDir, tarball), join(project, HOST_FOLDER, tarball));
+  }
+  writeFileSync(
+    join(project, "package.json"),
+    JSON.stringify(
+      {
+        name: "host",
+        private: true,
+        version: "1.0.0",
+        type: "module",
+        dependencies,
+        ...(overrides ? { overrides } : {}),
+      },
+      null,
+      2,
+    ),
+  );
+  writeFileSync(
+    join(project, ".npmrc"),
+    "@cesium:registry=http://127.0.0.1:9/\n",
+  );
+  try {
+    execFileSync(
+      "npm",
+      ["install", "--offline", "--no-audit", "--no-fund", "--ignore-scripts"],
+      { cwd: project, encoding: "utf8", stdio: "pipe", env: childEnv() },
+    );
+  } catch (error) {
+    const output = `${(error as { stderr?: string }).stderr ?? ""}`;
+    if (
+      output.includes("ENOTCACHED") &&
+      !output.includes("127.0.0.1:9") &&
+      !output.includes("@cesium")
+    ) {
+      throw new Error(
+        `a third-party dependency isn't in the npm cache, and this test doesn't reach out for it. Run npm ci in the checkout to fill the cache:\n${output}`,
+        { cause: error },
+      );
+    }
+    return { project, failure: output };
+  }
+  return { project };
+}
+
+/** Every @cesium entry in the host's lockfile must be a file: tarball of the set, with its integrity. */
+function expectLockedToSet(project: string, manifest: SetManifest): void {
+  const lock = JSON.parse(
+    readFileSync(join(project, "package-lock.json"), "utf8"),
+  ) as Lock;
+  const cesium = Object.entries(lock.packages).filter(([path]) =>
+    /node_modules\/@cesium\//.test(path),
+  );
+  // One entry per package, at the top: no sibling nested under another, and
+  // none from anywhere but the set.
+  expect(cesium.map(([path]) => path).sort()).toEqual(
+    manifest.packages.map((p) => `node_modules/${p.name}`).sort(),
+  );
+  for (const p of manifest.packages) {
+    const entry = lock.packages[`node_modules/${p.name}`]!;
+    expect(entry.resolved).toBe(`file:${HOST_FOLDER}/${p.tarball}`);
+    expect(entry.integrity).toBe(p.integrity);
+  }
+}
+
 describe("a packed set, installed by file: path", () => {
   const root = temp("cesium-packed-set-");
   const setDir = join(root, "set");
-  const project = join(root, "host");
+  let project: string;
   let manifest: SetManifest;
 
   beforeAll(() => {
@@ -102,51 +199,17 @@ describe("a packed set, installed by file: path", () => {
       log: () => {},
     });
 
-    // The host: its own folder, the set copied into it, the fragment merged in.
-    mkdirSync(join(project, HOST_FOLDER), { recursive: true });
-    for (const { tarball } of manifest.packages) {
-      copyFileSync(join(setDir, tarball), join(project, HOST_FOLDER, tarball));
-    }
-    writeFileSync(
-      join(project, "package.json"),
-      JSON.stringify(
-        {
-          name: "host",
-          private: true,
-          version: "1.0.0",
-          type: "module",
-          ...manifest.install,
-        },
-        null,
-        2,
-      ),
+    // The host lists every package, as the fragment gives them.
+    const { project: dir, failure } = installHost(
+      setDir,
+      manifest,
+      manifest.install.dependencies,
+      manifest.install.overrides,
     );
-    writeFileSync(
-      join(project, ".npmrc"),
-      "@cesium:registry=http://127.0.0.1:9/\n",
-    );
-    try {
-      execFileSync(
-        "npm",
-        ["install", "--offline", "--no-audit", "--no-fund", "--ignore-scripts"],
-        { cwd: project, encoding: "utf8", stdio: "pipe", env: childEnv() },
-      );
-    } catch (error) {
-      const output = `${(error as { stderr?: string }).stderr ?? ""}`;
-      if (output.includes("127.0.0.1:9")) {
-        throw new Error(
-          `npm asked a registry for an @cesium package, so the overrides didn't cover it:\n${output}`,
-          { cause: error },
-        );
-      }
-      if (output.includes("ENOTCACHED")) {
-        throw new Error(
-          `a third-party dependency isn't in the npm cache, and this test doesn't reach out for it. Run npm ci in the checkout to fill the cache:\n${output}`,
-          { cause: error },
-        );
-      }
-      throw error;
+    if (failure !== undefined) {
+      throw new Error(`the full install failed:\n${failure}`);
     }
+    project = dir;
   }, 300_000);
 
   it("records the commit, the tools and every package, with its integrity", () => {
@@ -199,25 +262,52 @@ describe("a packed set, installed by file: path", () => {
   });
 
   it("locks every @cesium package to its tarball in the set, with the manifest's integrity", () => {
-    const lock = JSON.parse(
-      readFileSync(join(project, "package-lock.json"), "utf8"),
-    ) as {
-      packages: Record<string, { resolved?: string; integrity?: string }>;
-    };
-    const cesium = Object.entries(lock.packages).filter(([path]) =>
-      /node_modules\/@cesium\//.test(path),
-    );
-    // One entry per package, at the top: no sibling nested under another, and
-    // none from anywhere but the set.
-    expect(cesium.map(([path]) => path).sort()).toEqual(
-      manifest.packages.map((p) => `node_modules/${p.name}`).sort(),
-    );
-    for (const p of manifest.packages) {
-      const entry = lock.packages[`node_modules/${p.name}`]!;
-      expect(entry.resolved).toBe(`file:${HOST_FOLDER}/${p.tarball}`);
-      expect(entry.integrity).toBe(p.integrity);
-    }
+    expectLockedToSet(project, manifest);
   });
+
+  it("installs from the overrides alone, for a host that lists only the umbrella", () => {
+    const name = "@cesium/next";
+    const { project: host, failure } = installHost(
+      setDir,
+      manifest,
+      { [name]: manifest.install.dependencies[name]! },
+      manifest.install.overrides,
+    );
+    expect(failure).toBeUndefined();
+    expectLockedToSet(host, manifest);
+  }, 300_000);
+
+  it("installs from the overrides alone, for a host that lists only @cesium/measure", () => {
+    const name = "@cesium/measure";
+    const { project: host, failure } = installHost(
+      setDir,
+      manifest,
+      { [name]: manifest.install.dependencies[name]! },
+      manifest.install.overrides,
+    );
+    expect(failure).toBeUndefined();
+    // Its siblings (core, time, frames, crs) come in as its dependencies.
+    expectLockedToSet(host, {
+      ...manifest,
+      packages: manifest.packages.filter((p) =>
+        ["core", "crs", "frames", "measure", "time"].includes(
+          p.name.replace("@cesium/", ""),
+        ),
+      ),
+    });
+  }, 300_000);
+
+  it("fails without the overrides: the siblings go to the unreachable registry", () => {
+    const name = "@cesium/measure";
+    const { failure } = installHost(
+      setDir,
+      manifest,
+      { [name]: manifest.install.dependencies[name]! },
+      undefined,
+    );
+    expect(failure).toBeDefined();
+    expect(failure).toMatch(/@cesium|127\.0\.0\.1:9/);
+  }, 300_000);
 
   it("imports every entry point of every package in Node", () => {
     const specifiers: string[] = [];
@@ -297,6 +387,173 @@ describe("a packed set, installed by file: path", () => {
       packSet({ out: other, build: false, requireClean: false }),
     ).toThrow(/no manifest\.json/);
     expect(existsSync(join(other, "notes.txt"))).toBe(true);
+  });
+
+  it("refuses an output folder that a symbolic link leads into the checkout", () => {
+    const outside = temp("cesium-packed-link-");
+    const link = join(outside, "link");
+    symlinkSync(repo, link);
+    expect(realResolve(join(link, "not", "made", "yet"))).toBe(
+      join(realResolve(repo), "not", "made", "yet"),
+    );
+    expect(() =>
+      packSet({
+        out: join(link, "packs-here"),
+        build: false,
+        requireClean: false,
+      }),
+    ).toThrow(/inside the checkout/);
+    expect(existsSync(join(repo, "packs-here"))).toBe(false);
+  });
+
+  describe("replacing a set", () => {
+    /** A copy of the set, to replace without touching the shared one. */
+    function copyOfSet(): string {
+      const copy = temp("cesium-packed-replace-");
+      for (const name of readdirSync(setDir)) {
+        copyFileSync(join(setDir, name), join(copy, name));
+      }
+      return copy;
+    }
+
+    it("leaves the old set whole when the replacement fails partway", () => {
+      const copy = copyOfSet();
+      const before = readdirSync(copy).sort();
+      const manifestBefore = readFileSync(join(copy, "manifest.json"), "utf8");
+      expect(() =>
+        packSet({
+          out: copy,
+          force: true,
+          build: false,
+          requireClean: false,
+          log: () => {},
+          beforeReplace: () => {
+            throw new Error("fails after packing, before replacing");
+          },
+        }),
+      ).toThrow(/fails after packing/);
+      expect(readdirSync(copy).sort()).toEqual(before);
+      expect(readFileSync(join(copy, "manifest.json"), "utf8")).toBe(
+        manifestBefore,
+      );
+      expect(verifySet(copy)).toEqual([]);
+    }, 120_000);
+
+    it("removes only the old tarballs the new manifest doesn't list", () => {
+      const copy = copyOfSet();
+      const stale = "cesium-core-2.0.0-poc.0-aaaaaaaaaa.tgz";
+      copyFileSync(
+        join(copy, manifest.packages[0]!.tarball),
+        join(copy, stale),
+      );
+      const old = JSON.parse(
+        readFileSync(join(copy, "manifest.json"), "utf8"),
+      ) as SetManifest;
+      old.packages.push({ ...old.packages[0]!, tarball: stale });
+      writeFileSync(join(copy, "manifest.json"), JSON.stringify(old));
+      packSet({
+        out: copy,
+        force: true,
+        build: false,
+        requireClean: false,
+        log: () => {},
+      });
+      expect(readdirSync(copy).sort()).toEqual(
+        [...manifest.packages.map((p) => p.tarball), "manifest.json"].sort(),
+      );
+      expect(verifySet(copy)).toEqual([]);
+    }, 120_000);
+  });
+
+  describe("the siblings of a set", () => {
+    it("are found missing, or at another version, by name", () => {
+      const entry = (
+        name: string,
+        deps: Record<string, string>,
+        field = "dependencies",
+      ) => ({
+        name,
+        version: "2.0.0-poc.0",
+        manifest: { [field]: deps },
+      });
+      expect(
+        siblingProblems([
+          entry("@cesium/a", { "@cesium/b": "2.0.0-poc.0", left: "^1.0.0" }),
+          entry("@cesium/b", {}),
+        ]),
+      ).toEqual([]);
+      expect(
+        siblingProblems([
+          entry("@cesium/a", { "@cesium/gone": "2.0.0-poc.0" }),
+          entry("@cesium/b", { "@cesium/a": "2.0.0-poc.0" }),
+        ]),
+      ).toEqual([
+        "@cesium/a depends on @cesium/gone (dependencies), which isn't in the set",
+      ]);
+      expect(
+        siblingProblems([
+          entry("@cesium/a", { "@cesium/b": "^2.0.0-poc.0" }),
+          entry("@cesium/b", {}),
+        ]),
+      ).toEqual([expect.stringContaining("asks for @cesium/b ^2.0.0-poc.0")]);
+      for (const field of ["optionalDependencies", "peerDependencies"]) {
+        expect(
+          siblingProblems([entry("@cesium/a", { "@cesium/gone": "1" }, field)]),
+        ).toEqual([expect.stringContaining(`(${field})`)]);
+      }
+    });
+
+    it("are checked in a real set: a planted missing sibling fails verify", () => {
+      const planted = temp("cesium-packed-planted-");
+      for (const name of readdirSync(setDir)) {
+        copyFileSync(join(setDir, name), join(planted, name));
+      }
+      // Rewrite one tarball so its package.json names a sibling the set lacks,
+      // and make the manifest agree, so only the sibling check can object.
+      const target = manifest.packages.find((p) => p.name === "@cesium/time")!;
+      const file = join(planted, target.tarball);
+      const unpacked = temp("cesium-packed-unpacked-");
+      execFileSync("tar", ["-xzf", file, "-C", unpacked]);
+      const jsonFile = join(unpacked, "package", "package.json");
+      const json = JSON.parse(readFileSync(jsonFile, "utf8")) as {
+        dependencies: Record<string, string>;
+      };
+      json.dependencies["@cesium/missing"] = "2.0.0-poc.0";
+      writeFileSync(jsonFile, JSON.stringify(json, null, 2));
+      execFileSync("tar", ["-czf", file, "-C", unpacked, "package"]);
+      const edited = JSON.parse(
+        readFileSync(join(planted, "manifest.json"), "utf8"),
+      ) as SetManifest;
+      const record = edited.packages.find((p) => p.name === target.name)!;
+      record.integrity = integrityOf(file);
+      record.size = readFileSync(file).length;
+      writeFileSync(join(planted, "manifest.json"), JSON.stringify(edited));
+      expect(verifySet(planted)).toEqual([
+        "@cesium/time depends on @cesium/missing (dependencies), which isn't in the set",
+      ]);
+    });
+  });
+
+  it("finds a tarball that isn't the package the manifest says, and an install fragment that isn't the set's", () => {
+    const wrong = temp("cesium-packed-wrong-");
+    for (const name of readdirSync(setDir)) {
+      copyFileSync(join(setDir, name), join(wrong, name));
+    }
+    const edited = JSON.parse(
+      readFileSync(join(wrong, "manifest.json"), "utf8"),
+    ) as SetManifest;
+    edited.packages[0]!.version = "9.9.9";
+    edited.install.overrides[edited.packages[1]!.name] = "file:./elsewhere.tgz";
+    writeFileSync(join(wrong, "manifest.json"), JSON.stringify(edited));
+    const problems = verifySet(wrong);
+    expect(problems).toContainEqual(
+      expect.stringContaining(
+        `holds ${edited.packages[0]!.name}@2.0.0-poc.0, the manifest says ${edited.packages[0]!.name}@9.9.9`,
+      ),
+    );
+    expect(problems).toContainEqual(
+      expect.stringContaining("install fragment"),
+    );
   });
 
   it("refuses a manifest that names a tarball outside its folder", () => {

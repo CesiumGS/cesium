@@ -8,7 +8,11 @@
 // 1. Refuses a dirty tree: any change git sees, staged, unstaged, or an
 //    untracked file that isn't ignored. An untracked file counts because the
 //    build reads it (a new module under src/ would land in dist/), so a set
-//    from such a tree wouldn't be what its commit says.
+//    from such a tree wouldn't be what its commit says. Git's view is the
+//    limit: an ignored file the build reads, and a file marked
+//    `assume-unchanged` or `skip-worktree`, aren't covered. The tree is checked
+//    again after the build and after the packs, to catch an edit made while
+//    they ran.
 // 2. Runs `npm run build`, with the packed checks (scripts/build.mjs).
 // 3. Packs each package as a release would publish it: the `@cesium/source`
 //    condition out of `exports` (scripts/build/pack.mjs's publishedManifest),
@@ -16,18 +20,25 @@
 // 4. Writes the tarballs (each file name ends in the short commit) and
 //    `manifest.json` to the output folder, by default
 //    ~/.cesium-bench/packs/<full commit SHA>/. It refuses to replace a set
-//    that exists unless `--force`.
+//    that exists unless `--force`; a replacement writes the new tarballs and
+//    manifest beside the old ones first, then renames them into place, so a
+//    failure leaves the old set whole.
+//    Before anything is written, every `@cesium/*` dependency of every packed
+//    package must be in the set, at exactly that package's version.
 //
 // The command writes nowhere but the output folder (its scratch space is a
 // `.work` folder inside it, removed at the end) and the build's own outputs.
 // `--verify` checks a folder against its manifest: every tarball present and
-// matching its integrity, none extra, every `gitHead` the manifest's commit.
-// That catches a mixed set, tarballs from two commits.
+// matching its integrity, none extra, every tarball's name and version the
+// manifest's, every `gitHead` the manifest's commit, the `install` fragment
+// the set's, and every sibling dependency in the set. That catches a mixed
+// set, tarballs from two commits.
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   existsSync,
   mkdirSync,
+  realpathSync,
   readdirSync,
   readFileSync,
   renameSync,
@@ -115,6 +126,60 @@ function manifestInTarball(tarball) {
   return JSON.parse(run("tar", ["-xOzf", tarball, "package/package.json"], undefined));
 }
 
+/** The dependency fields npm resolves, so a sibling in any of them must be in the set. */
+const DEPENDENCY_FIELDS = ["dependencies", "optionalDependencies", "peerDependencies"];
+
+/**
+ * The problems with a set's `@cesium/*` dependencies: each one named in a
+ * package's `dependencies`, `optionalDependencies` or `peerDependencies` must
+ * be a package in the set, and its range must be that package's exact version,
+ * since the host's overrides map the name to one tarball. Without this, a
+ * package that gained a sibling would resolve it from the public registry.
+ * @param {readonly { name: string, version: string, manifest: Record<string, any> }[]} entries
+ *   each package's name and version as the set records them, and its packed `package.json`.
+ * @param {readonly { name: string, version: string }[]} [members] the set's packages, when
+ *   some tarball couldn't be read (it's reported elsewhere, and still counts as in the set).
+ */
+export function siblingProblems(entries, members = entries) {
+  const versions = new Map(members.map((e) => [e.name, e.version]));
+  const problems = [];
+  for (const { name, manifest } of entries) {
+    for (const field of DEPENDENCY_FIELDS) {
+      for (const [dep, range] of Object.entries(manifest[field] ?? {})) {
+        if (!dep.startsWith("@cesium/")) {
+          continue;
+        }
+        if (!versions.has(dep)) {
+          problems.push(`${name} depends on ${dep} (${field}), which isn't in the set`);
+        } else if (range !== versions.get(dep)) {
+          problems.push(
+            `${name} asks for ${dep} ${range} (${field}), and the set holds ${versions.get(dep)}`,
+          );
+        }
+      }
+    }
+  }
+  return problems;
+}
+
+/**
+ * `path` as an absolute path with every symbolic link resolved in its nearest
+ * existing ancestor (the rest doesn't exist yet, so it can't be one).
+ */
+export function realResolve(path) {
+  let existing = resolve(path);
+  const rest = [];
+  while (!existsSync(existing)) {
+    const parent = dirname(existing);
+    if (parent === existing) {
+      break;
+    }
+    rest.unshift(basename(existing));
+    existing = parent;
+  }
+  return join(realpathSync(existing), ...rest);
+}
+
 /**
  * The package.json fragment a host merges in: each package by `file:` path to
  * its tarball in the host's copy of the set, and the same for every
@@ -176,7 +241,7 @@ function readSet(folder) {
  * manifest.
  * @param {{
  *   out?: string, force?: boolean, build?: boolean, requireClean?: boolean,
- *   repoDir?: string, log?: (line: string) => void
+ *   repoDir?: string, log?: (line: string) => void, beforeReplace?: () => void
  * }} [options] `build: false` and `requireClean: false` are for the test,
  *   which packs whatever `dist/` holds; the command always builds from a
  *   clean tree.
@@ -191,7 +256,10 @@ export function packSet(options = {}) {
   }
   const commit = headCommit(repoDir);
   const out = resolve(options.out ?? defaultOut(commit));
-  if (out === repoDir || out.startsWith(`${repoDir}${sep}`)) {
+  // Compare real paths: a link in --out, or in a parent of it, can lead into the checkout.
+  const realOut = realResolve(out);
+  const realRepo = realResolve(repoDir);
+  if (realOut === realRepo || realOut.startsWith(`${realRepo}${sep}`)) {
     throw new Error(`--out ${out} is inside the checkout; choose a folder outside it`);
   }
   checkOutFolder(out, options.force ?? false, commit);
@@ -225,17 +293,17 @@ export function packSet(options = {}) {
     mkdirSync(work);
     const packed = dirs.map((dir) => packOne(dir, work, commit));
     packed.sort((a, b) => a.name.localeCompare(b.name));
+    if (requireClean) {
+      // Packing reads the tree too: an edit made since the build shows here.
+      requireCleanTree(repoDir);
+    }
+    const siblings = siblingProblems(
+      packed.map((p) => ({ name: p.name, version: p.version, manifest: manifestInTarball(join(work, p.tarball)) })),
+    );
+    if (siblings.length > 0) {
+      throw new Error(`the packages don't resolve inside the set:\n  ${siblings.join("\n  ")}`);
+    }
 
-    // Everything packed: replace an old set, then write tarballs, manifest last.
-    if (existsSync(join(out, "manifest.json"))) {
-      for (const old of readSet(out).packages) {
-        rmSync(join(out, old.tarball), { force: true });
-      }
-      rmSync(join(out, "manifest.json"));
-    }
-    for (const p of packed) {
-      renameSync(join(work, p.tarball), join(out, p.tarball));
-    }
     const manifest = {
       format: MANIFEST_FORMAT,
       commit,
@@ -252,7 +320,23 @@ export function packSet(options = {}) {
       install: installFragment(packed),
       installFolder: HOST_FOLDER,
     };
-    writeFileSync(join(out, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+    // Everything is staged in the work folder, inside `out`, before the old
+    // set is touched: the manifest is written, then each file is renamed into
+    // place (a same-folder rename), the manifest last, and only then are the
+    // old tarballs the new manifest doesn't list removed.
+    writeFileSync(join(work, "manifest.json"), `${JSON.stringify(manifest, null, 2)}\n`);
+    const old = existsSync(join(out, "manifest.json")) ? readSet(out).packages : [];
+    options.beforeReplace?.(); // for the test: a failure here must leave the old set whole
+    for (const p of packed) {
+      renameSync(join(work, p.tarball), join(out, p.tarball));
+    }
+    renameSync(join(work, "manifest.json"), join(out, "manifest.json"));
+    const kept = new Set(packed.map((p) => p.tarball));
+    for (const o of old) {
+      if (!kept.has(o.tarball)) {
+        rmSync(join(out, o.tarball), { force: true });
+      }
+    }
     log(`packSet: ${packed.length} packages for ${commit} in ${out}`);
     return manifest;
   } catch (error) {
@@ -307,13 +391,16 @@ function packOne(dir, work, commit) {
 /**
  * Checks a set's folder against its manifest. Returns the problems, none when
  * the set is whole: each tarball present, its size and integrity as recorded,
- * its `gitHead` the manifest's commit, and no tarball the manifest doesn't list.
+ * its name and version and `gitHead` the manifest's, no tarball the manifest
+ * doesn't list, the `install` fragment the packages' own, and every `@cesium/*`
+ * dependency in the set.
  */
 export function verifySet(folder) {
   const dir = resolve(folder);
   const manifest = readSet(dir);
   const problems = [];
   const listed = new Set();
+  const entries = [];
   for (const p of manifest.packages) {
     listed.add(p.tarball);
     const file = join(dir, p.tarball);
@@ -327,18 +414,30 @@ export function verifySet(folder) {
       );
       continue;
     }
-    const head = manifestInTarball(file).gitHead;
-    if (head !== manifest.commit) {
+    const inside = manifestInTarball(file);
+    if (inside.name !== p.name || inside.version !== p.version) {
       problems.push(
-        `${p.name}: ${p.tarball} was packed at ${head ?? "no commit"}, the manifest says ${manifest.commit}`,
+        `${p.name}: ${p.tarball} holds ${inside.name}@${inside.version}, the manifest says ${p.name}@${p.version}`,
       );
     }
+    if (inside.gitHead !== manifest.commit) {
+      problems.push(
+        `${p.name}: ${p.tarball} was packed at ${inside.gitHead ?? "no commit"}, the manifest says ${manifest.commit}`,
+      );
+    }
+    entries.push({ name: p.name, version: p.version, manifest: inside });
   }
   for (const name of readdirSync(dir)) {
     if (name.endsWith(".tgz") && !listed.has(name)) {
       problems.push(`${name} isn't in the manifest; it may belong to another set`);
     }
   }
+  // The fragment a host copies must be the one these tarballs make.
+  const fragment = installFragment(manifest.packages, manifest.installFolder);
+  if (JSON.stringify(manifest.install) !== JSON.stringify(fragment)) {
+    problems.push("the manifest's install fragment isn't the one its packages make");
+  }
+  problems.push(...siblingProblems(entries, manifest.packages));
   return problems;
 }
 
