@@ -202,7 +202,7 @@ export function readPropertyTables(
       const property = table.properties?.[name];
       if (!property) {
         if (definition.default !== undefined) {
-          columns[name] = new Array(count).fill(definition.default);
+          columns[name] = new Array(count).fill(defaultValue(definition));
         }
         continue;
       }
@@ -236,12 +236,37 @@ export function readPropertyTables(
  */
 function noDataBigInt(noData: unknown): bigint | undefined {
   if (typeof noData === "number") {
-    return Number.isInteger(noData) ? BigInt(noData) : undefined;
+    // JSON.parse has already rounded a number above 2^53, so it can match no
+    // real value: larger values must come as decimal strings.
+    return Number.isSafeInteger(noData) ? BigInt(noData) : undefined;
   }
   if (typeof noData === "string" && /^-?\d{1,20}$/.test(noData)) {
     return BigInt(noData);
   }
   return undefined;
+}
+
+/**
+ * A class `default`, converted like a read value when the property is 64-bit:
+ * a bigint for a non-normalized INT64 or UINT64 (a decimal string is parsed as
+ * `noData` is), a double for a normalized one. Any other default passes
+ * through as written.
+ */
+function defaultValue(definition: Json): FeatureValue {
+  const componentType = definition.componentType;
+  if (componentType !== "INT64" && componentType !== "UINT64") {
+    return definition.default;
+  }
+  const one = (v: unknown): unknown => {
+    if (definition.normalized) {
+      return typeof v === "number" || typeof v === "string"
+        ? normalizedValue(Number(v), componentType)
+        : v;
+    }
+    return noDataBigInt(v) ?? v;
+  };
+  const value = definition.default;
+  return (Array.isArray(value) ? value.map(one) : one(value)) as FeatureValue;
 }
 
 function readColumn(
@@ -299,19 +324,16 @@ function readColumn(
   if (definition.type === "ENUM") {
     const e = enums?.[definition.enumType];
     const valueType = e?.valueType ?? "UINT16";
-    const names = new Map<number, string>(
-      (e?.values ?? []).map((v: Json) => [v.value, v.name]),
+    // Keyed by the decimal text of the value, so a 64-bit enum is read exactly.
+    const names = new Map<string, string>(
+      (e?.values ?? []).map((v: Json) => [String(v.value), v.name]),
     );
     const size = COMPONENT_BYTES[valueType]!;
     for (let i = 0; i < count; i++) {
       const items: string[] = [];
       for (let k = 0; k < perFeature; k++) {
-        const value = readComponent(
-          data,
-          (i * perFeature + k) * size,
-          valueType,
-        );
-        items.push(names.get(value) ?? String(value));
+        const value = readExact(data, (i * perFeature + k) * size, valueType);
+        items.push(names.get(String(value)) ?? String(value));
       }
       out[i] = definition.array ? items : items[0]!;
     }

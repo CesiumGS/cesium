@@ -2354,14 +2354,19 @@ const duration = (v: number) =>
 const mb = (bytes: number) => `${(bytes / MB).toFixed(1)} MB`;
 const count = (n: number) => Math.round(n).toLocaleString("en-US");
 
-function formatValue(value: unknown): string {
+export function formatValue(value: unknown): string {
   if (typeof value === "number") {
     return Number.isInteger(value) ? String(value) : value.toPrecision(6);
   }
   if (typeof value === "bigint" || typeof value === "string") {
     return String(value);
   }
-  return JSON.stringify(value) ?? String(value);
+  // A 64-bit integer property is a bigint, which JSON.stringify can't write.
+  return (
+    JSON.stringify(value, (_k, v: unknown) =>
+      typeof v === "bigint" ? String(v) : v,
+    ) ?? String(value)
+  );
 }
 
 function escape(text: string): string {

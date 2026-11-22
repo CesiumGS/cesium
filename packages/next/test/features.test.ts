@@ -208,6 +208,158 @@ describe("64-bit integer properties", () => {
   });
 });
 
+describe("64-bit integer properties: edge cases", () => {
+  const table = (
+    properties: Record<string, unknown>,
+    bytes: Uint8Array = new Uint8Array(0),
+    count = 2,
+    tableProperties: Record<string, unknown> = {},
+    enums?: unknown,
+  ) => {
+    const json = {
+      extensions: {
+        EXT_structural_metadata: {
+          schema: { classes: { c: { properties } }, enums },
+          propertyTables: [{ class: "c", count, properties: tableProperties }],
+        },
+      },
+    };
+    const warnings: string[] = [];
+    const [t] = readPropertyTables(json, () => bytes, warnings);
+    expect(warnings).toEqual([]);
+    return t!.columns;
+  };
+  const bytes64 = (type: "INT64" | "UINT64", values: bigint[]) => {
+    const out = new Uint8Array(values.length * 8);
+    const view = new DataView(out.buffer);
+    values.forEach((v, i) =>
+      type === "INT64"
+        ? view.setBigInt64(i * 8, v, true)
+        : view.setBigUint64(i * 8, v, true),
+    );
+    return out;
+  };
+  const scalar = (componentType: string, extra = {}) => ({
+    id: { type: "SCALAR", componentType, ...extra },
+  });
+
+  it("normalizes INT64 at both ends", () => {
+    const col = table(
+      scalar("INT64", { normalized: true }),
+      bytes64("INT64", [-(2n ** 63n), 2n ** 63n - 1n]),
+      2,
+      { id: { values: 0 } },
+    ).id!;
+    expect(col[0]).toBe(-1);
+    expect(col[1] as number).toBeCloseTo(1, 12);
+  });
+
+  it("normalizes UINT64 at 0 and at the maximum", () => {
+    const col = table(
+      scalar("UINT64", { normalized: true }),
+      bytes64("UINT64", [0n, 2n ** 64n - 1n]),
+      2,
+      { id: { values: 0 } },
+    ).id!;
+    expect(col[0]).toBe(0);
+    expect(col[1] as number).toBeCloseTo(1, 12);
+  });
+
+  it("converts a class default of a 64-bit property to a bigint", () => {
+    expect(
+      table(scalar("UINT64", { default: "18446744073709551615" }), undefined, 2)
+        .id,
+    ).toEqual([2n ** 64n - 1n, 2n ** 64n - 1n]);
+    expect(table(scalar("INT64", { default: -5 }), undefined, 1).id).toEqual([
+      -5n,
+    ]);
+    expect(
+      table(
+        {
+          id: {
+            type: "SCALAR",
+            componentType: "INT64",
+            array: true,
+            count: 2,
+            default: [1, "-9223372036854775808"],
+          },
+        },
+        undefined,
+        1,
+      ).id,
+    ).toEqual([[1n, -(2n ** 63n)]]);
+  });
+
+  it("denormalizes a class default of a normalized 64-bit property", () => {
+    const [v] = table(
+      scalar("INT64", { normalized: true, default: -(2 ** 63) }),
+      undefined,
+      1,
+    ).id!;
+    expect(v).toBe(-1);
+  });
+
+  it("leaves a default of another type as written", () => {
+    expect(table(scalar("INT32", { default: 7 }), undefined, 1).id).toEqual([
+      7,
+    ]);
+  });
+
+  it("takes a large noData given as a string, and a negative one for INT64", () => {
+    const big = 2n ** 63n + 5n;
+    expect(
+      table(
+        scalar("UINT64", { noData: big.toString() }),
+        bytes64("UINT64", [big, big + 1n]),
+        2,
+        { id: { values: 0 } },
+      ).id,
+    ).toEqual([null, big + 1n]);
+    expect(
+      table(
+        scalar("INT64", { noData: -(2 ** 53 - 1) }),
+        bytes64("INT64", [-(2n ** 53n - 1n), 3n]),
+        2,
+        { id: { values: 0 } },
+      ).id,
+    ).toEqual([null, 3n]);
+  });
+
+  it("matches no value with a noData number above 2^53", () => {
+    // JSON.parse has already rounded it, so it can't be the real sentinel.
+    const rounded = 2 ** 60;
+    expect(
+      table(
+        scalar("UINT64", { noData: rounded }),
+        bytes64("UINT64", [BigInt(rounded), 1n]),
+        2,
+        { id: { values: 0 } },
+      ).id,
+    ).toEqual([BigInt(rounded), 1n]);
+  });
+
+  it("reads a 64-bit enum exactly", () => {
+    const big = 2n ** 60n + 1n;
+    const col = table(
+      { id: { type: "ENUM", enumType: "e" } },
+      bytes64("UINT64", [big, 3n]),
+      2,
+      { id: { values: 0 } },
+      {
+        e: {
+          valueType: "UINT64",
+          values: [
+            { name: "A", value: 3 },
+            { name: "B", value: Number(2n ** 60n) },
+          ],
+        },
+      },
+    ).id;
+    // 2^60 + 1 is not the enum's 2^60, which it would be if read as a double.
+    expect(col).toEqual([String(big), "A"]);
+  });
+});
+
 describe("3DTILES_batch_table_hierarchy", () => {
   for (const name of [
     "BatchTableHierarchy",
