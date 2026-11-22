@@ -956,7 +956,7 @@ describe(
         );
         const vertexCount = primitive.geometryReader.withReadSession(
           {},
-          (session) => session.vertexCount(),
+          (session) => session.elementCount(GeometryAttributeDomain.VERTEX),
         );
         const vertexBuffer = Buffer.createVertexBuffer({
           context: scene.context,

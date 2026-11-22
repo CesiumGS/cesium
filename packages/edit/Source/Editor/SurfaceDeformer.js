@@ -9,7 +9,7 @@ import {
   VertexAttributeSemantic,
 } from "@cesium/engine";
 import SurfaceDeformerBinding from "./SurfaceDeformerBinding.js";
-import readVertexValues from "./readVertexValues.js";
+import readAttributeValues from "./readAttributeValues.js";
 
 /** @import { TypedArray } from "@cesium/core"; */
 /** @import { Deformable, FrameState, GeometryReadSession } from "@cesium/engine"; */
@@ -248,7 +248,7 @@ class SurfaceDeformer extends Deformer {
     const positions = deformable.geometryReader.withReadSession(
       { attributes: [POSITION] },
       /** @param {GeometryReadSession} session */
-      (session) => readVertexValues(session, POSITION, Float32Array),
+      (session) => readAttributeValues(session, POSITION, Float32Array),
     );
 
     const deformableToDeformer = Matrix4.multiply(

@@ -8,6 +8,7 @@ import {
 import {
   Deformable,
   GeometryAttributeDescriptor,
+  GeometryAttributeDomain,
   Model,
   VertexAttributeSemantic,
 } from "@cesium/engine";
@@ -83,9 +84,12 @@ describe(
       return primitive.geometryReader.withReadSession(
         { attributes: [position] },
         (session) => {
-          const read = session.vertexAttributeReader(position);
+          const read = session.attributeReader(position);
+          const vertexCount = session.elementCount(
+            GeometryAttributeDomain.VERTEX,
+          );
           const positions = [];
-          for (let i = 0; i < session.vertexCount(); ++i) {
+          for (let i = 0; i < vertexCount; ++i) {
             positions.push(Cartesian3.fromArray(read(i, [])));
           }
           return positions;

@@ -12,6 +12,7 @@ import {
 } from "@cesium/core";
 import Deformable from "./Deformable.js";
 import GeometryAttributeDescriptor from "./GeometryAttributeDescriptor.js";
+import GeometryAttributeDomain from "./GeometryAttributeDomain.js";
 import VertexAttributeSemantic from "./VertexAttributeSemantic.js";
 
 /** @import DeformerBinding from "./DeformerBinding.js"; */
@@ -365,10 +366,11 @@ class Deformer {
  * @ignore
  */
 function readValues(session, descriptor) {
-  const read = session.vertexAttributeReader(descriptor);
+  const read = session.attributeReader(descriptor);
   const componentCount = descriptor.componentCount;
-  const values = new Float64Array(session.vertexCount() * componentCount);
-  for (let i = 0; i < session.vertexCount(); ++i) {
+  const vertexCount = session.elementCount(GeometryAttributeDomain.VERTEX);
+  const values = new Float64Array(vertexCount * componentCount);
+  for (let i = 0; i < vertexCount; ++i) {
     read(i, values, i * componentCount);
   }
   return values;
@@ -381,9 +383,10 @@ function readValues(session, descriptor) {
  * @ignore
  */
 function writeValues(session, descriptor, values) {
-  const write = session.vertexAttributeWriter(descriptor);
+  const write = session.attributeWriter(descriptor);
   const componentCount = descriptor.componentCount;
-  for (let i = 0; i < session.vertexCount(); ++i) {
+  const vertexCount = session.elementCount(GeometryAttributeDomain.VERTEX);
+  for (let i = 0; i < vertexCount; ++i) {
     write(i, values, i * componentCount);
   }
 }
@@ -401,7 +404,8 @@ function writeValues(session, descriptor, values) {
 function bakeDirections(session, descriptor, jacobians, getTransform) {
   const values = readValues(session, descriptor);
   const componentCount = descriptor.componentCount;
-  for (let i = 0; i < session.vertexCount(); ++i) {
+  const vertexCount = session.elementCount(GeometryAttributeDomain.VERTEX);
+  for (let i = 0; i < vertexCount; ++i) {
     const jacobian = Matrix3.unpack(
       /** @type {any} */ (jacobians),
       i * 9,

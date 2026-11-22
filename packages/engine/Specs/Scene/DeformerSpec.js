@@ -70,14 +70,14 @@ describe("Scene/Deformer", function () {
   // that sessions read and write directly.
   function createBakeableDeformable(values, writable = Object.keys(values)) {
     const createSession = () => ({
-      vertexCount: () => values.POSITION.length / 3,
-      vertexAttributeReader:
+      elementCount: () => values.POSITION.length / 3,
+      attributeReader:
         ({ semantic, componentCount: n }) =>
         (i, result, offset = 0) => {
           result.set(values[semantic].slice(i * n, (i + 1) * n), offset);
           return result;
         },
-      vertexAttributeWriter:
+      attributeWriter:
         ({ semantic, componentCount: n }) =>
         (i, source, offset = 0) => {
           values[semantic].splice(

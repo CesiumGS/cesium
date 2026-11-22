@@ -4,6 +4,7 @@ import { RuntimeError, defined, oneTimeWarning } from "@cesium/core";
 import { GeometryAttributeDomain } from "@cesium/engine";
 import { Mesh as WasmMesh } from "@cesium/mesh-editor";
 import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
+import readAttributeValues from "./readAttributeValues.js";
 
 /** @import { GeometryAttributeDescriptor, GeometryReadSession, GeometrySource } from "@cesium/engine"; */
 
@@ -132,7 +133,13 @@ function readBuffers(session, attributes) {
 
   const values = new Map();
   for (const descriptor of attributes) {
-    values.set(descriptor.name, readAttributeValues(session, descriptor));
+    const ArrayType = WASM_BUILT_IN_ATTRIBUTES.includes(descriptor.name)
+      ? Float32Array
+      : WasmMeshAttributeTranslator.getArrayType(descriptor);
+    values.set(
+      descriptor.name,
+      readAttributeValues(session, descriptor, ArrayType),
+    );
   }
 
   return { indices, faceVertexCounts, edgeIndices, values };
@@ -201,28 +208,6 @@ function readEdgeIndices(session, indices, faceVertexCounts, primitiveEdges) {
   }
 
   return edgeIndices;
-}
-
-/**
- * @param {GeometryReadSession} session The read session.
- * @param {GeometryAttributeDescriptor} descriptor An attribute.
- * @returns {Float32Array|Int32Array|Uint32Array} The values, in the order of the attribute's domain and the array type wasm takes.
- * @ignore
- */
-function readAttributeValues(session, descriptor) {
-  const ArrayType = WASM_BUILT_IN_ATTRIBUTES.includes(descriptor.name)
-    ? Float32Array
-    : WasmMeshAttributeTranslator.getArrayType(descriptor);
-  const count = session.elementCount(descriptor.domain);
-  const { componentCount } = descriptor;
-  const values = new ArrayType(count * componentCount);
-  const read = session.attributeReader(descriptor);
-
-  for (let i = 0; i < count; ++i) {
-    read(i, values, i * componentCount);
-  }
-
-  return values;
 }
 
 export default createWasmMesh;
