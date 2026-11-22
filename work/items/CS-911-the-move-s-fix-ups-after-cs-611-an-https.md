@@ -2,7 +2,7 @@
 id: CS-911
 title: "The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-22
 project: CS-609
 claimed_by: orch-11-CS-911
