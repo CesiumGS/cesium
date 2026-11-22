@@ -20,7 +20,7 @@ Every first-party package releases in lockstep at `cesium`'s version, starting a
 
 Recommendation: fresh names, unless the 1.x team is glad to hand over `@cesium/core` and `@cesium/gltf`. Due before alpha.1.
 
-The owner, 2026-11-21: the StrataKit widgets package is `@cesium/ui`. The rest of the names are still open.
+The owner, 2026-11-21: the StrataKit widgets package is `@cesium/ui`. Adapters take seam prefixes (`source-*`, `loader-*`, `imagery-*`, `data-*`, `geocoder-*`), and today's `/proj` becomes `@cesium/crs`, with PROJ as `@cesium/crs-proj`. The full list comes from CS-834's package map, reviewed with the API review (CS-102).
 
 ## Answer
 
