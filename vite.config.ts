@@ -417,8 +417,14 @@ export default defineConfig({
     port: 5190,
     strictPort: true,
     // The handbook has its own server. Without this, every handbook build
-    // reloads the pages open on this one, mid-example.
-    watch: { ignored: ["**/handbook/**"] },
+    // reloads the pages open on this one, mid-example. Dyno's checkouts of
+    // other commits (its .bench/) aren't this tree's sources (CS-919).
+    watch: {
+      ignored: [
+        "**/handbook/**",
+        `${fileURLToPath(new URL("./.bench/", import.meta.url))}**`,
+      ],
+    },
   },
   // Every bare import, bundled at startup: a dependency discovered later
   // (say Dyno's React) re-bundles them all under a new hash, and a content

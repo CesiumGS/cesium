@@ -8,9 +8,13 @@
 // The runner serves the pages from its own Vite server with file watching
 // and HMR off, so editing code mid-run can't reload the page being measured
 // (BENCH_URL=<origin> or --url uses an existing server instead).
+// BENCH_PORT=<n> or --port <n> picks its port (5191, or the next free one,
+// by default).
 // BENCH_COMMIT=<rev> or --commit <rev> (e.g. HEAD) serves that commit from a
 // snapshot worktree under .bench/ instead of the working tree, so
-// development continues while benchmarks run (see snapshot.mjs). Every
+// development continues while benchmarks run (see snapshot.mjs). The
+// snapshot's workspace packages (`@cesium/*`) are its own, never the
+// worktree's (CS-919). Every
 // commit's 1.x is the pinned one (cesium-1x, in the repository's
 // node_modules): a commit from before CS-611 reads it from
 // CESIUM_BUILD_DIR, which this sets.
@@ -256,10 +260,11 @@ export async function main(names = [], { env = process.env } = {}) {
       const snap = snapshot(env.BENCH_COMMIT, here);
       root = snap.root;
       commit = snap.sha;
-      // The repository's node_modules (resolved by walking up from
-      // .bench/<sha>), served without links, with the pinned 1.x in it.
-      // Commits from before CS-611 read their 1.x build from
-      // CESIUM_BUILD_DIR.
+      // Its own workspace packages, linked in .bench/<sha>/node_modules;
+      // third-party ones from the repository's node_modules (resolved by
+      // walking up), with the pinned 1.x in it, unless the snapshot
+      // installed its own (snapshot.mjs). Commits from before CS-611 read
+      // their 1.x build from CESIUM_BUILD_DIR.
       const { pinned1x } = await import("../pinned1x.mjs");
       env.CESIUM_BUILD_DIR ??= pinned1x().build;
       allow = [snap.repo];
@@ -272,8 +277,8 @@ export async function main(names = [], { env = process.env } = {}) {
       // Its own dependency cache inside the served tree.
       cacheDir: join(root, ".vite-bench"),
       server: {
-        port: 5191,
-        strictPort: false,
+        port: env.BENCH_PORT ? Number(env.BENCH_PORT) : 5191,
+        strictPort: Boolean(env.BENCH_PORT),
         hmr: false,
         watch: null,
         ...(allow ? { fs: { allow } } : {}),

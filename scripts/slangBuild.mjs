@@ -124,8 +124,23 @@ function imports(path) {
   ].map((m) => m[1]);
 }
 
-/** Entry sources that use `changed` (itself, or through imports). */
+/**
+ * Whether `path` is one of this checkout's own shader sources (under the
+ * engine's src/ or examples/). A snapshot or the frozen tree under .bench/
+ * holds copies at other commits; the dev server's watcher sees edits to
+ * them, and compiling one would write its WGSL, and a header naming it,
+ * into this checkout's generated/ (CS-919).
+ */
+export function isOwnSource(path) {
+  const full = resolve(path);
+  return full.startsWith(SOURCES + sep) || full.startsWith(EXAMPLES + sep);
+}
+
+/** Entry sources that use `changed` (itself, or through imports); none for a file that isn't this checkout's (`isOwnSource`). */
 export function dependents(changed, sources = slangSources()) {
+  if (!isOwnSource(changed)) {
+    return [];
+  }
   const name = basename(changed, ".slang");
   const uses = new Map(sources.map((s) => [s, imports(s)]));
   const affected = new Set([resolve(changed)]);

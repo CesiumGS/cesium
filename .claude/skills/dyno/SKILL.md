@@ -26,7 +26,7 @@ The machine is shared. A measurement taken while tests or builds run measures th
 - **The sky and the atmosphere**: `dyno lab sky`, `atmosphere`, `ibl`, `observer`.
 - **History**: `dyno suite alerts` (change points across runs, with their triage) and `dyno suite compare <old.json> [new.json]`.
 
-`dyno lab --commit <rev>` serves a commit from a snapshot worktree, so you can keep working while it runs. The snapshot finds the repository's own `node_modules`, where the pinned 1.x (`cesium-1x`) is, so a linked worktree (an executor's) needs only `npm ci` at its root; no 1.x build step and no `CESIUM_BUILD_DIR`.
+`dyno lab --commit <rev>` serves a commit from a snapshot worktree under `.bench/`, so you can keep working while it runs, and the comparison against it is real: the snapshot runs the commit's own workspace packages (`@cesium/*`, linked in `.bench/<sha>/node_modules`), never your worktree's. Before CS-919 it ran the worktree's, so a `--commit` comparison made before that fix showed no difference whatever changed. Third-party packages, the pinned 1.x (`cesium-1x`) among them, come from the repository's own `node_modules` when the commit's lockfile agrees with yours, so a linked worktree (an executor's) needs only `npm ci` at its root; no 1.x build step and no `CESIUM_BUILD_DIR`. When the lockfiles differ, the snapshot installs its own (`npm ci --ignore-scripts`, inside the snapshot, once), and a failed install stops the run. Nothing a snapshot run does writes outside `.bench/` and the results store. Pass your leased port: `--port <n>`.
 
 ## Measuring
 

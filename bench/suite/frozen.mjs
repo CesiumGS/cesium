@@ -22,7 +22,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
-import { harnessRoot } from "../snapshot.mjs";
+import { harnessRoot, linkSnapshotPackages } from "../snapshot.mjs";
 
 const git = (args, cwd, env) =>
   execFileSync("git", args, {
@@ -79,6 +79,9 @@ export function checkoutFrozen(repo, sha) {
     // Files the previous commit had and this one doesn't stay behind as
     // untracked files; harmless to a build of the pages' imports.
   }
+  // Its own workspace packages, not the live tree's (CS-919): otherwise
+  // edits made mid-run would reach the build through the worktree's links.
+  linkSnapshotPackages(dir, repo);
   const root = harnessRoot(dir);
   const env = join(repo, ".env.local");
   if (existsSync(env)) {

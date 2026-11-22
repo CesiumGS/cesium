@@ -259,6 +259,10 @@ const LAB_OPTIONS = {
   list: o("the harnesses, without running any"),
   commit: o("serve this commit from a snapshot worktree (BENCH_COMMIT)", "rev"),
   url: o("use an existing server (BENCH_URL)", "origin"),
+  port: o(
+    "its own server's port (BENCH_PORT; 5191 or the next free one by default)",
+    "n",
+  ),
   headed: o("show the browser (BENCH_HEADED)"),
   channel: o(
     "the browser channel (BENCH_CHANNEL; msedge by default)",
@@ -658,14 +662,16 @@ export const TABLE = {
     summary:
       "the Lab's harnesses: spikes, benchmarks and parity suites (bench/results)",
     usage:
-      "dyno lab [suite ...] [--commit rev] [--url origin] [--headed] [--channel c] | --list",
+      "dyno lab [suite ...] [--commit rev] [--url origin] [--port n] [--headed] [--channel c] | --list",
     args: [{ name: "suite", variadic: true }],
     options: LAB_OPTIONS,
     details: [
       "With no suite, runs every one. Pages read some settings from the environment",
       "(GROUP, MODELS_ONLY, ION_ASSET, AT, SCENARIOS, POLICIES, THROTTLE, ALLOC_GLARE, …;",
       "see suite/commands/lab.mjs).",
-      "--commit serves a snapshot worktree under .bench/. Suites that load 1.x",
+      "--commit serves a snapshot worktree under .bench/, with that commit's own",
+      "workspace packages (@cesium/*); third-party packages are the worktree's when",
+      "the lockfiles agree, else the snapshot installs its own. Suites that load 1.x",
       "(baseline, parity) load the pinned one, cesium-1x, at every commit.",
     ],
     async run({ args, opts, env }) {
@@ -687,6 +693,7 @@ export const TABLE = {
       const settings = {
         commit: "BENCH_COMMIT",
         url: "BENCH_URL",
+        port: "BENCH_PORT",
         headed: "BENCH_HEADED",
         channel: "BENCH_CHANNEL",
       };
