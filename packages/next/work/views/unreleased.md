@@ -79,6 +79,7 @@ CS-389 Dyno as the development harness
   CS-774  npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno
   CS-775  The Work page's older views retire: the Older views menu, the Dependencies view and the old Projects matrix go
   CS-784  The dyno tool is @cesium/dyno, so npx can never reach an outside package by its name
+  CS-787  The Work page's code says Order where it still says Plan view, and its dead Plan-view and proposal-stage code goes
 
 CS-437 The public API reviews
   CS-430  The WebGPU seams audited: each seam, its bypass test, and the seams still missing
@@ -95,5 +96,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-68 merged item(s) not in a release
+69 merged item(s) not in a release
 ```

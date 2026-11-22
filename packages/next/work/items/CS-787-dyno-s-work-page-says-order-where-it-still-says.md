@@ -25,3 +25,7 @@ Trimmed 2026-11-22 by orch-11, after CS-775 merged (e5938516a8): CS-775 removed 
 - `measuresOf` in `work.ts` has no caller since CS-752 (Flow), so it goes.
 - `proposalsForOwner` and its stage types (`ProposalStage`, `PROPOSAL_STAGES`), which have only test callers since CS-753, go with their tests. So do the `work.css` rules that nothing uses, each checked by grep across `bench/suite` before it's removed.
 - A test fails if "Plan view" appears in a view's UI strings again.
+
+## Follow-up
+
+`fitZoom` and `cardDetail` in `bench/suite/work.ts` look test-only: a small follow-up for a later clean-up. (Noted 2026-11-22 by orch-11, from CS-787's executor, at the chief of staff's word.)

@@ -409,6 +409,12 @@ CS-191 Content sources and formats
       ← CS-556 glTF files load through the content-source seam
   CS-667  Panoramas as a module
       ← CS-654 The surface-projection design: classification, draping and decals
+  CS-808  Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
+      ← CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
+  CS-810  The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
+      ← CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
+  CS-811  2.0 owns its texture and mesh decoders: Basis and Draco built for 2.0, with nothing loaded from 1.x's tree
+      ← CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
 
 CS-192 Sky, light and atmosphere
   CS-282  Intel figures into `glareTier` and the Intel tables
@@ -514,6 +520,7 @@ CS-18 The work tracker
         CS-519 Dyno switches between the engine and the work
         CS-561 Dyno's Work page shows the live system and the release plan
         CS-751 The owner's views answer what needs me, what's on track and what's wrong
+        CS-819 Machines can read the engine: render products, camera records, stable identity and explicit stepping
   CS-531  Release 2.0.0-beta.1
       ← CS-530 Release 2.0.0-alpha.1
         CS-415 WebGL 2 draws models, tiles and the globe
@@ -713,5 +720,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-227 blocked
+230 blocked
 ```

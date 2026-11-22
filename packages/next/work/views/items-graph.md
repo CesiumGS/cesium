@@ -93,6 +93,7 @@ graph LR
     CS_791["CS-791 Per-draw center constants on Cesium IR's generic evaluator are "]:::proposed
     CS_794["CS-794 The transform passes load Cesium IR lazily, so a default view s"]:::open
     CS_800["CS-800 Merge CS-777, the GLSL ES emitter's output is cross-checked aga"]:::done
+    CS_807["CS-807 Merge CS-794, the transform passes load Cesium IR lazily, once "]:::done
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -354,7 +355,7 @@ graph LR
     CS_241["CS-241 Frames 4b's carried-forward fixes: deformation models, stale st"]:::open
     CS_242["CS-242 TEME and SGP4 as the first frames add-on provider"]:::open
     CS_243["CS-243 Measurement tools and their UI as a module"]:::open
-    CS_244["CS-244 Should Cesium ion host PROJ grids, with CORS and cropped tiles?"]:::decision
+    CS_244["CS-244 Should Cesium ion host PROJ grids, with CORS and cropped tiles?"]:::done
     CS_245["CS-245 Engineering references: rail alignments, MGRS and US National G"]:::proposed
     CS_246["CS-246 Cropped regional grid tiles for large grids"]:::proposed
     CS_247["CS-247 iModel and IFC inputs: real alignments, an iModel's frame from "]:::proposed
@@ -423,6 +424,12 @@ graph LR
     CS_667["CS-667 Panoramas as a module"]:::open
     CS_682["CS-682 Audit every extension 1.x 1.147 reads against 2.0, and refresh "]:::open
     CS_802["CS-802 Is NVIDIA SimReady a target for 2.0, at which profile and relea"]:::decision
+    CS_806["CS-806 A design and size spike: Cesium Native in WebAssembly as an opt"]:::proposed
+    CS_808["CS-808 Outside data comes through a data-resource provider: PROJ grids"]:::open
+    CS_809["CS-809 Every request goes through one fetch and credential provider: r"]:::open
+    CS_810["CS-810 The imagery and terrain provider seam carries any tiling scheme"]:::open
+    CS_811["CS-811 2.0 owns its texture and mesh decoders: Basis and Draco built f"]:::open
+    CS_818["CS-818 A catalog and search seam: STAC, CSW and OGC API Records return"]:::proposed
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -638,7 +645,7 @@ graph LR
     CS_784["CS-784 The dyno tool is @cesium/dyno, so npx can never reach an outsid"]:::done
     CS_785["CS-785 Merge CS-749, the Plan view becomes Order"]:::done
     CS_786["CS-786 Order's concurrency history reads when work really started, not"]:::proposed
-    CS_787["CS-787 The Work page's code says Order where it still says Plan view, "]:::open
+    CS_787["CS-787 The Work page's code says Order where it still says Plan view, "]:::done
     CS_793["CS-793 Merge CS-784, the dyno tool is @cesium/dyno"]:::done
     CS_795["CS-795 Merge CS-752, Flow answers how well the system and the owner wo"]:::done
     CS_797["CS-797 Merge CS-753, Your move gets a calmer layout: fewer, larger, ra"]:::done
@@ -648,6 +655,7 @@ graph LR
     CS_803["CS-803 Merge CS-394, example scenes and the development metrics"]:::done
     CS_804["CS-804 The Scenes view lists group D's example scenes beside the catal"]:::proposed
     CS_805["CS-805 Catalog scenes record the development metrics that example scen"]:::proposed
+    CS_812["CS-812 Merge CS-787, the Work page's code says Order where it still sa"]:::done
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -669,6 +677,11 @@ graph LR
     CS_769["CS-769 Merge CS-430, the WebGPU seams audited"]:::done
     CS_771["CS-771 The seam bypass tests catch the five plants CS-430's audit foun"]:::proposed
     CS_780["CS-780 Engine.errors becomes an emitter: errors.on('support', …) reach"]:::open
+    CS_813["CS-813 A view hands out render products: depth, normals, motion vector"]:::open
+    CS_814["CS-814 A camera record carries intrinsics, an off-center principal poi"]:::open
+    CS_815["CS-815 Scene content has stable identity and semantic labels that don'"]:::open
+    CS_816["CS-816 The host steps the engine: advance to a time, wait until settle"]:::open
+    CS_817["CS-817 Physical-AI modules on the four seams: ROS 2 and MCAP, randomiz"]:::proposed
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::decision
@@ -755,6 +768,7 @@ graph LR
   CS_519["CS-519 Dyno switches between the engine and the work"]:::open
   CS_561["CS-561 Dyno's Work page shows the live system and the release plan"]:::open
   CS_751["CS-751 The owner's views answer what needs me, what's on track and wha"]:::open
+  CS_819["CS-819 Machines can read the engine: render products, camera records, "]:::open
   CS_415["CS-415 WebGL 2 draws models, tiles and the globe"]:::open
   CS_417["CS-417 Transforms and styles compile through Cesium IR"]:::open
   CS_418["CS-418 Any shader language reaches both renderers"]:::open
@@ -1230,6 +1244,7 @@ graph LR
   CS_519 --> CS_530
   CS_561 --> CS_530
   CS_751 --> CS_530
+  CS_819 --> CS_530
   CS_527 --> CS_531
   CS_530 --> CS_531
   CS_415 --> CS_531
@@ -1476,6 +1491,15 @@ graph LR
   CS_53 --> CS_794
   CS_394 --> CS_804
   CS_394 --> CS_805
+  CS_552 --> CS_806
+  CS_809 --> CS_808
+  CS_809 --> CS_810
+  CS_808 --> CS_811
+  CS_813 --> CS_817
+  CS_814 --> CS_817
+  CS_815 --> CS_817
+  CS_816 --> CS_817
+  CS_552 --> CS_818
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

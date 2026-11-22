@@ -326,8 +326,8 @@ CS-489 Satellite frames plug in as an add-on [Planned], under CS-189 Frames and 
 
 CS-490 Reference data's hosting and shipping are settled [Planned], under CS-189 Frames and engineering coordinates follow-ups
   outcome: Legal has reviewed how reference and sky data may ship, and the owner has decided whether ion hosts PROJ grids and whether setup hosts NOAA's VDatum surfaces.
-  constraints: 0 of 3 done
-  unmet: not linked to a clause yet (open: CS-244, CS-250, CS-255; check not passed)
+  constraints: 1 of 3 done
+  unmet: not linked to a clause yet (open: CS-250, CS-255; check not passed)
   to shape: done_when; check; link CS-244, CS-250, CS-255 to a clause
 
 CS-491 Glare and the sky are checked on Intel integrated GPUs [Planned], under CS-192 Sky, light and atmosphere
@@ -457,9 +457,9 @@ CS-535 Rays query the scene on the GPU [Planned], under CS-197 Ray queries and p
 
 CS-560 Content from any source loads through one module seam [Planned], under CS-191 Content sources and formats
   outcome: An application loads 3D Tiles, the globe's terrain and imagery, glTF files, MVT, Esri services and USD through one content-source interface, importing only the source modules it uses.
-  constraints: 0 of 8 done
-  unmet: not linked to a clause yet (open: CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553; check not passed)
-  to shape: done_when; check; link CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553 to a clause
+  constraints: 0 of 12 done
+  unmet: not linked to a clause yet (open: CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553, CS-808, CS-809, CS-810, CS-811; check not passed)
+  to shape: done_when; check; link CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553, CS-808, CS-809, CS-810, CS-811 to a clause
 
 CS-561 Dyno's Work page shows the live system and the release plan [Planned], under CS-18 The work tracker
   outcome: A reader of Dyno's Work page sees what's moving now (dispatches, branches waiting to merge, the active run) and where each release falls among the milestones that feed it.
@@ -601,6 +601,12 @@ CS-751 The owner's views answer what needs me, what's on track and what's wrong 
   check due: every constraint is done; the check has not passed
   to shape: done_when; check; link CS-744, CS-745, CS-746, CS-747, CS-748, CS-749, CS-750, CS-752, CS-753 to a clause
 
+CS-819 Machines can read the engine: render products, camera records, stable identity and explicit stepping [Planned], under CS-437 The public API reviews
+  outcome: A simulator, a synthetic-data pipeline or a world model drives the engine step by step and reads back depth, normals, motion and IDs, with each frame's camera record and stable, labeled identity.
+  constraints: 0 of 4 done
+  unmet: not linked to a clause yet (open: CS-813, CS-814, CS-815, CS-816; check not passed)
+  to shape: done_when; check; link CS-813, CS-814, CS-815, CS-816 to a clause
+
 CS-1 Renderers and engine profiles [Dropped]
 CS-2 Cesium IR and materials [Dropped]
 CS-3 Threading [Dropped]
@@ -612,5 +618,5 @@ CS-436 The public API [Dropped]
 CS-524 The tracker runs on human-in-the-lead [Done]
 CS-525 Bodies, frames and engineering coordinates [Dropped]
 
-95 open milestone(s)
+96 open milestone(s)
 ```

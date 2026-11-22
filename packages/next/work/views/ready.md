@@ -109,7 +109,6 @@ CS-189 Frames and engineering coordinates follow-ups
   CS-240  Frames 5b's carried-forward fixes: angular velocity, the ORION_NADIR fixture, ray targets and standing queries
   CS-241  Frames 4b's carried-forward fixes: deformation models, stale store files, Mercator (Spherical), vertical datums by code
   CS-242  TEME and SGP4 as the first frames add-on provider
-  CS-244  decision: Should Cesium ion host PROJ grids, with CORS and cropped tiles?
   CS-250  external: Legal review of how reference data and sky data may ship
   CS-253  2D, Columbus view and the 2D/3D morph through a world-spanning CRS root
   CS-254  decision: Which long models fill the design globe's ion slots?
@@ -137,6 +136,7 @@ CS-191 Content sources and formats
   CS-666  GPM metadata feeds measurement accuracy
   CS-682  Audit every extension 1.x 1.147 reads against 2.0, and refresh the parity table
   CS-802  decision: Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in?
+  CS-809  Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
 
 CS-192 Sky, light and atmosphere
   CS-281  external: Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws
@@ -215,7 +215,6 @@ CS-389 Dyno as the development harness
   CS-733  Each run records its device, configuration and state
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
   CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
-  CS-787  The Work page's code says Order where it still says Plan view, and its dead Plan-view and proposal-stage code goes
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
@@ -225,6 +224,10 @@ CS-437 The public API reviews
   CS-670  Bounding volumes and their tests on the public API
   CS-763  Engine.create takes a signal: an aborted create releases its device and pipelines
   CS-780  Engine.errors becomes an emitter: errors.on("support", …) reaches notice listeners, as the engine-profiles plan names it
+  CS-813  A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color
+  CS-814  A camera record carries intrinsics, an off-center principal point and a named distortion model
+  CS-815  Scene content has stable identity and semantic labels that don't depend on load order
+  CS-816  The host steps the engine: advance to a time, wait until settled, render, read back
 
 CS-579 Editing
   CS-453  decision: What editing should the engine support, with vector data and GIS sources among it?
@@ -260,5 +263,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-191 ready
+194 ready
 ```

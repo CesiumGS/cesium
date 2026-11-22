@@ -20,8 +20,6 @@ CS-188 Earth to Moon (frames 5c to 5h)
   CS-210  Should a world clip cut the Moon's impostor? (owner)
 
 CS-189 Frames and engineering coordinates follow-ups
-  CS-244  Should Cesium ion host PROJ grids, with CORS and cropped tiles? (owner)
-      waited on by CS-246
   CS-254  Which long models fill the design globe's ion slots? (owner)
   CS-255  Should the engine's setup host NOAA's VDatum surfaces (MLLW, MHW)? (owner)
   CS-256  When do the upstream proposals go to the 3D Tiles and glTF groups, and who takes them? (owner)
@@ -63,5 +61,5 @@ CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617
 
-20 open decision(s) for owner
+19 open decision(s) for owner
 ```

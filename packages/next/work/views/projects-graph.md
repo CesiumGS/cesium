@@ -6,7 +6,7 @@
 graph LR
   CS_8["Engine profiles<br/>7 of 21 done"]
   CS_9["WebGL 2 renderer<br/>7 of 21 done"]
-  CS_10["Cesium IR<br/>15 of 42 done"]
+  CS_10["Cesium IR<br/>16 of 43 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
   CS_13["worker-mode façade<br/>3 of 22 done"]
@@ -17,9 +17,9 @@ graph LR
   CS_18["work tracker<br/>42 of 51 done"]
   CS_19["Follow-ups for other teams<br/>0 of 12 done"]
   CS_188["Earth to Moon (frames 5c to 5h)<br/>3 of 43 done"]
-  CS_189["Frames and engineering coordinates follow-ups<br/>0 of 22 done"]
+  CS_189["Frames and engineering coordinates follow-ups<br/>1 of 22 done"]
   CS_190["Vector drawing and the styling language<br/>0 of 14 done"]
-  CS_191["Content sources and formats<br/>3 of 34 done"]
+  CS_191["Content sources and formats<br/>3 of 40 done"]
   CS_192["Sky, light and atmosphere<br/>2 of 22 done"]
   CS_193["B-reps and geometry queries<br/>3 of 21 done"]
   CS_194["Budgeted selection and memory<br/>0 of 6 done"]
@@ -28,8 +28,8 @@ graph LR
   CS_197["Ray queries and path tracing<br/>0 of 7 done"]
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
   CS_199["Dyno hardening, packaging and CI<br/>3 of 17 done"]
-  CS_389["Dyno as the development harness<br/>54 of 91 done"]
-  CS_437["public API reviews<br/>7 of 19 done"]
+  CS_389["Dyno as the development harness<br/>56 of 92 done"]
+  CS_437["public API reviews<br/>7 of 24 done"]
   CS_579["Editing<br/>0 of 2 done"]
   CS_584["widgets library<br/>0 of 9 done"]
   CS_596["Trust and evals<br/>0 of 9 done"]
@@ -78,8 +78,8 @@ graph LR
   CS_628 -->|2| CS_18
   CS_596 -->|3| CS_18
   CS_389 -->|7| CS_18
+  CS_437 -->|4| CS_18
   CS_10 -->|3| CS_18
-  CS_437 -->|3| CS_18
   CS_13 -->|5| CS_18
   CS_12 -->|9| CS_18
   CS_188 -->|6| CS_18
