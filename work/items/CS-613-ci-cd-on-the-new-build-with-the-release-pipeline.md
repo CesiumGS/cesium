@@ -2,7 +2,7 @@
 id: CS-613
 title: CI/CD on the new build, with the release pipeline
 kind: work
-state: in-progress
+state: done
 created: 2026-11-17
 project: CS-609
 needs: [CS-612]

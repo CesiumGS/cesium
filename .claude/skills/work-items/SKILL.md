@@ -26,6 +26,14 @@ It sets `state: in-progress` and `claimed_by`, and commits `claim: CS-<n>`. Clai
 ## Finishing
 
 - Run `npx hitld work close CS-<n> --no-commit` and commit the `state: done` with the change that finishes the work, so merging closes the item.
+- Add a changeset in that same commit (CS-613). It names the packages, the bump (major, minor or patch), and one or two sentences written for users:
+
+  ```sh
+  npx changeset --minor @cesium/core -m "Views gain …"   # --major, --minor, --patch: comma-separated packages
+  npx changeset --empty                                   # nothing for users: tests, docs, bench
+  ```
+
+  CI fails a pull request that changes a published package (anything under `packages/`) without one. Run `npx hitld publish check --file .changeset/<name>.md` on it before the merge; the merge review checks its wording. `.changeset/README.md` has the rest.
 - If the work split, list the remainder in your report (kind, project, title, needs) for the main session to create, rather than leaving the item half done.
 - If an item turns out not to be worth doing, set `state: dropped` and give a `reason:`. The file stays.
 - Run `npx hitld work check` before committing.
