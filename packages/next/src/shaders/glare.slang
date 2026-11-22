@@ -86,6 +86,7 @@ struct GlareFrame {
   float uvPerPixel;
   float kernelLevel;
   float topRadius;      // the air's, km
+  float2 shift;         // the principal point, NDC (`Camera.lens`): 0 while centered
 };
 
 [[vk::binding(0, 0)]] ConstantBuffer<GlareFrame> frame;
@@ -98,7 +99,7 @@ struct GlareFrame {
 
 // Where a direction falls on the view, pixels, and whether in front of it.
 float2 toPixel(float3 d, float z) {
-  float2 ndc = float2(dot(d, frame.right) / (z * frame.tanX), dot(d, frame.up) / (z * frame.tanY));
+  float2 ndc = float2(dot(d, frame.right) / (z * frame.tanX), dot(d, frame.up) / (z * frame.tanY)) + frame.shift;
   return float2((ndc.x * 0.5 + 0.5) * frame.size.x, (0.5 - ndc.y * 0.5) * frame.size.y);
 }
 

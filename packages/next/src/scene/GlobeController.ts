@@ -709,8 +709,15 @@ export class GlobeController {
     // In view: in front, within the cone through the view's corners.
     const r = this.view.pixelRect();
     const aspect = r.width / r.height;
-    const halfHeight = Math.tan(camera.fovy(aspect) / 2);
-    const halfDiagonal = Math.atan(Math.hypot(halfHeight, halfHeight * aspect));
+    // The farthest corner, past the centered ones by the principal point's
+    // offset (`Camera.lens`; centered, exactly them).
+    const lens = camera.lens(aspect);
+    const halfDiagonal = Math.atan(
+      Math.hypot(
+        (1 + Math.abs(lens.shiftY)) * lens.tanY,
+        (1 + Math.abs(lens.shiftX)) * lens.tanX,
+      ),
+    );
     const cos = v3.dot(offset, camera.direction) / distance;
     if (cos < Math.cos(halfDiagonal)) {
       return;
@@ -1007,7 +1014,8 @@ export class GlobeController {
     this.offGlobe = false;
     const anchoring = ++this.anchoring;
     const r = this.view.pixelRect();
-    void this.view.pickPosition(x - r.x, y - r.y).then((p) => {
+    void this.view.pickPosition(x - r.x, y - r.y).then((hit) => {
+      const p = hit?.position;
       if (p) {
         this.sawContent(p);
       }
@@ -1037,7 +1045,8 @@ export class GlobeController {
     }
     this.zoomPickPending = true;
     const r = this.view.pixelRect();
-    void this.view.pickPosition(pixel[0] - r.x, pixel[1] - r.y).then((p) => {
+    void this.view.pickPosition(pixel[0] - r.x, pixel[1] - r.y).then((hit) => {
+      const p = hit?.position;
       this.zoomPickPending = false;
       if (p) {
         this.sawContent(p);
@@ -1064,7 +1073,8 @@ export class GlobeController {
     }
     this.hoverPending = true;
     const r = this.view.pixelRect();
-    void this.view.pickPosition(x - r.x, y - r.y).then((p) => {
+    void this.view.pickPosition(x - r.x, y - r.y).then((hit) => {
+      const p = hit?.position;
       this.hoverPending = false;
       if (p) {
         this.sawContent(p);

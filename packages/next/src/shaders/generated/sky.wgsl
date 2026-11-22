@@ -45,6 +45,7 @@ struct Sky_std140_0
     @align(8) starWingShare_0 : f32,
     @align(4) starBackgroundLevel_0 : f32,
     @align(16) faintStars_0 : vec3<f32>,
+    @align(16) shift_0 : vec2<f32>,
 };
 
 @binding(0) @group(2) var<uniform> sky_0 : Sky_std140_0;
@@ -220,7 +221,8 @@ fn toRgb_0( spectral_0 : vec4<f32>,  group_0 : u32) -> vec3<f32>
 fn aerialColumn_0( column_0 : vec3<u32>,  j_0 : u32)
 {
     var scattered_0 : vec4<f32>;
-    var direction_0 : vec3<f32> = normalize(sky_0.forward_0 + sky_0.right_0 * vec3<f32>((((f32(column_0.x) + 0.5f) / 32.0f * 2.0f - 1.0f) * sky_0.tanX_0)) + sky_0.up_0 * vec3<f32>(((1.0f - (f32(column_0.y) + 0.5f) / 32.0f * 2.0f) * sky_0.tanY_0)));
+    var ndc_0 : vec2<f32> = vec2<f32>((f32(column_0.x) + 0.5f) / 32.0f * 2.0f - 1.0f, 1.0f - (f32(column_0.y) + 0.5f) / 32.0f * 2.0f) - sky_0.shift_0;
+    var direction_0 : vec3<f32> = normalize(sky_0.forward_0 + sky_0.right_0 * vec3<f32>((ndc_0.x * sky_0.tanX_0)) + sky_0.up_0 * vec3<f32>((ndc_0.y * sky_0.tanY_0)));
     var _S10 : f32 = sky_0.aerialStart_0;
     var _S11 : f32 = sky_0.aerialEnd_0;
     var nu_0 : f32 = dot(direction_0, sky_0.sun_0);
@@ -343,7 +345,8 @@ fn aerialColumn_0( column_0 : vec3<u32>,  j_0 : u32)
 fn aerialColumn_1( column_1 : vec3<u32>,  j_1 : u32)
 {
     var scattered_2 : vec4<f32>;
-    var direction_1 : vec3<f32> = normalize(sky_0.forward_0 + sky_0.right_0 * vec3<f32>((((f32(column_1.x) + 0.5f) / 32.0f * 2.0f - 1.0f) * sky_0.tanX_0)) + sky_0.up_0 * vec3<f32>(((1.0f - (f32(column_1.y) + 0.5f) / 32.0f * 2.0f) * sky_0.tanY_0)));
+    var ndc_1 : vec2<f32> = vec2<f32>((f32(column_1.x) + 0.5f) / 32.0f * 2.0f - 1.0f, 1.0f - (f32(column_1.y) + 0.5f) / 32.0f * 2.0f) - sky_0.shift_0;
+    var direction_1 : vec3<f32> = normalize(sky_0.forward_0 + sky_0.right_0 * vec3<f32>((ndc_1.x * sky_0.tanX_0)) + sky_0.up_0 * vec3<f32>((ndc_1.y * sky_0.tanY_0)));
     var _S26 : f32 = sky_0.aerialStart_0;
     var _S27 : f32 = sky_0.aerialEnd_0;
     var nu_1 : f32 = dot(direction_1, sky_0.sun_0);
@@ -514,7 +517,8 @@ fn starVertex(@builtin(vertex_index) corner_0 : u32, @builtin(instance_index) in
     {
         return out_1;
     }
-    var pixel_0 : vec2<f32> = vec2<f32>((dot(d_0, sky_0.right_0) / (z_0 * sky_0.tanX_0) * 0.5f + 0.5f) * sky_0.size_0.x, (0.5f - dot(d_0, sky_0.up_0) / (z_0 * sky_0.tanY_0) * 0.5f) * sky_0.size_0.y);
+    var ndc_2 : vec2<f32> = vec2<f32>(dot(d_0, sky_0.right_0) / (z_0 * sky_0.tanX_0), dot(d_0, sky_0.up_0) / (z_0 * sky_0.tanY_0)) + sky_0.shift_0;
+    var pixel_0 : vec2<f32> = vec2<f32>((ndc_2.x * 0.5f + 0.5f) * sky_0.size_0.x, (0.5f - ndc_2.y * 0.5f) * sky_0.size_0.y);
     var pixelAngle_0 : f32 = 2.0f * sky_0.tanY_0 / sky_0.size_0.y;
     var omega_0 : f32 = pixelAngle_0 * pixelAngle_0 * z_0 * z_0 * z_0;
     var _S41 : f32 = a_3.w;
@@ -917,7 +921,8 @@ fn starCull(@builtin(global_invocation_id) id_0 : vec3<u32>)
 
 fn viewDirection_0( pixel_1 : vec2<f32>) -> vec3<f32>
 {
-    return normalize(sky_0.forward_0 + sky_0.right_0 * vec3<f32>(((pixel_1.x / sky_0.size_0.x * 2.0f - 1.0f) * sky_0.tanX_0)) + sky_0.up_0 * vec3<f32>(((1.0f - pixel_1.y / sky_0.size_0.y * 2.0f) * sky_0.tanY_0)));
+    var ndc_3 : vec2<f32> = vec2<f32>(pixel_1.x / sky_0.size_0.x * 2.0f - 1.0f, 1.0f - pixel_1.y / sky_0.size_0.y * 2.0f) - sky_0.shift_0;
+    return normalize(sky_0.forward_0 + sky_0.right_0 * vec3<f32>((ndc_3.x * sky_0.tanX_0)) + sky_0.up_0 * vec3<f32>((ndc_3.y * sky_0.tanY_0)));
 }
 
 struct Scattered_0
@@ -1757,7 +1762,8 @@ struct pixelInput_7
 @fragment
 fn aerialScreenFragment( _S104 : pixelInput_7, @builtin(position) position_11 : vec4<f32>) -> AerialScreen_0
 {
-    var direction_14 : vec3<f32> = normalize(sky_0.shape_0 * normalize(sky_0.forward_0 + sky_0.right_0 * vec3<f32>(((position_11.x / 640.0f * 2.0f - 1.0f) * sky_0.tanX_0)) + sky_0.up_0 * vec3<f32>(((1.0f - position_11.y / 400.0f * 2.0f) * sky_0.tanY_0))));
+    var ndc_4 : vec2<f32> = vec2<f32>(position_11.x / 640.0f * 2.0f - 1.0f, 1.0f - position_11.y / 400.0f * 2.0f) - sky_0.shift_0;
+    var direction_14 : vec3<f32> = normalize(sky_0.shape_0 * normalize(sky_0.forward_0 + sky_0.right_0 * vec3<f32>((ndc_4.x * sky_0.tanX_0)) + sky_0.up_0 * vec3<f32>((ndc_4.y * sky_0.tanY_0))));
     var sun_4 : vec3<f32> = normalize(sky_0.shape_0 * sky_0.sun_0);
     var r_17 : f32 = length(sky_0.position_0);
     var mu_14 : f32 = dot(sky_0.position_0, direction_14) / r_17;

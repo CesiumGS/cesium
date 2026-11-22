@@ -1,5 +1,5 @@
 import { CASTER_PLANES } from "../streaming/Stepwise.ts";
-import type { Camera } from "./Camera.ts";
+import { type Camera, newLens } from "./Camera.ts";
 
 /** Cascades of the sun's shadow map (each a layer of a 2D array). */
 export const SHADOW_CASCADES = 4;
@@ -107,8 +107,11 @@ export function fitShadowCascades(
   out.far = far;
   out.fadeStart = far * 0.85;
   const lambda = 0.9;
-  const tanY = Math.tan(camera.fovy(aspect) / 2);
-  const tanX = tanY * aspect;
+  // The farthest corner's tangents: past the centered ones by the
+  // principal point's offset (`Camera.lens`; centered, exactly them).
+  const lens = camera.lens(aspect, scratchLens);
+  const tanX = (1 + Math.abs(lens.shiftX)) * lens.tanX;
+  const tanY = (1 + Math.abs(lens.shiftY)) * lens.tanY;
   // The light's axes: z toward the sun, x and y across it.
   const lz = [sun[0]!, sun[1]!, sun[2]!];
   const reference = Math.abs(lz[2]!) < 0.9 ? [0, 0, 1] : [1, 0, 0];
@@ -196,6 +199,7 @@ export function fitShadowCascades(
  * shadow the view, and bounds it by each tile's own height.
  */
 const CASTER_CEILING = 50_000;
+const scratchLens = newLens();
 /**
  * Where selection looks for shadow casters (`SelectionView.casterPlanes`):
  * each fitted cascade's box in `position`'s coordinates, (nx, ny, nz, d)

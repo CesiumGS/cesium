@@ -11,6 +11,7 @@ import {
   viewBlockBytes,
   VIEW_STRIDE,
 } from "../layout.ts";
+import { newLens } from "../../scene/Camera.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import { AO_MAX_PIXELS } from "../../scene/RenderContext.ts";
 import type { View } from "../../scene/View.ts";
@@ -56,7 +57,8 @@ export interface ShadowBlockEngine extends Pick<
 const scratchCaptureAnchor = new Float64Array(16);
 const scratchCaptureOrigin = v3.vec3();
 const scratchCaptureAxes = [v3.vec3(), v3.vec3(), v3.vec3()] as const;
-const scratchAo = new Float32Array(16);
+const scratchAo = new Float32Array(20);
+const scratchLens = newLens();
 
 const scratchCapture = m4.mat4();
 const scratchCapturePlanes = new Float32Array(20);
@@ -226,10 +228,10 @@ export function writeViewShadows(
   frame.ambient =
     view.ambientOcclusion && frame.width * frame.height <= AO_MAX_PIXELS;
   if (frame.ambient) {
-    const tanY = Math.tan(camera.fovy(aspect) / 2);
+    const { tanX, tanY, shiftX, shiftY } = camera.lens(aspect, scratchLens);
     const a = scratchAo;
     a.set(camera.right, 0);
-    a[3] = tanY * aspect;
+    a[3] = tanX;
     a.set(camera.up, 4);
     a[7] = tanY;
     a.set(camera.direction, 8);
@@ -238,6 +240,9 @@ export function writeViewShadows(
     a[13] = frame.height;
     a[14] = view.ambientOcclusionRadius;
     a[15] = Math.max(32, 0.15 * frame.height);
+    // The principal point (ao.slang `shift`).
+    a[16] = shiftX;
+    a[17] = shiftY;
     engine.ctx.device.queue.writeBuffer(frame.aoParams, 0, a);
   }
   writeShadows(

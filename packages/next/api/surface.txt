@@ -248,6 +248,7 @@ entry	name	kind	tier
 .	PickHint	interface	-
 .	PickInterpreter	interface	-
 .	PickPoint	interface	-
+.	PickPositionResult	interface	-
 .	PickResult	interface	-
 .	Placement	type	-
 .	PlacementBlend	interface	-

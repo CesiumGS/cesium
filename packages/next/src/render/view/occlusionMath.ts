@@ -133,6 +133,9 @@ export interface PyramidCamera {
   readonly tanX: number;
   readonly tanY: number;
   readonly near: number;
+  /** The principal point, NDC (`Camera.lens`): 0 (the default) while centered. */
+  readonly shiftX?: number;
+  readonly shiftY?: number;
 }
 
 /** A box in camera space (x right, y up, z forward), relative to the eye. */
@@ -163,6 +166,8 @@ export function boxHidden(
   window = 2,
 ): boolean {
   const { frameWidth, frameHeight } = camera;
+  const shiftX = camera.shiftX ?? 0;
+  const shiftY = camera.shiftY ?? 0;
   const c = box.center;
   const a = box.axes;
   let nearestZ = Infinity;
@@ -180,8 +185,8 @@ export function boxHidden(
     if (!(z > camera.near)) {
       return false;
     }
-    const sx = ((x / z / camera.tanX) * 0.5 + 0.5) * frameWidth;
-    const sy = (0.5 - (y / z / camera.tanY) * 0.5) * frameHeight;
+    const sx = ((x / z / camera.tanX + shiftX) * 0.5 + 0.5) * frameWidth;
+    const sy = (0.5 - (y / z / camera.tanY + shiftY) * 0.5) * frameHeight;
     lowX = Math.min(lowX, sx);
     highX = Math.max(highX, sx);
     lowY = Math.min(lowY, sy);

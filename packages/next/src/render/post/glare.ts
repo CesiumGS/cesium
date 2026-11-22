@@ -71,7 +71,7 @@ const RECORD_BYTES = 32;
 /** The list's buffer: the header, then the records. */
 export const GLARE_SOURCES_BYTES = (GLARE_SOURCES + 1) * RECORD_BYTES;
 /** glare.slang's `GlareFrame`, floats. */
-const FRAME_FLOATS = 88;
+const FRAME_FLOATS = 92;
 
 /**
  * `n` points evenly spread in the unit disk: a Vogel spiral. glare.slang holds

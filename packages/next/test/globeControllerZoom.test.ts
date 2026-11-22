@@ -1,4 +1,5 @@
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { positionHit } from "./positionHit.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import * as v3 from "../src/math/vec3.ts";
 import type { Engine } from "../src/scene/Engine.ts";
@@ -75,7 +76,10 @@ describe("GlobeController wheel zoom", () => {
         v3.vec3(),
       );
       return new Promise((resolve) =>
-        pending.push({ due: tick + lag, resolve: () => resolve(hit) }),
+        pending.push({
+          due: tick + lag,
+          resolve: () => resolve(positionHit(hit ?? undefined)),
+        }),
       );
     });
 
@@ -192,9 +196,11 @@ describe("GlobeController wheel zoom", () => {
       const disc = b * b - (v3.dot(o, o) - radius * radius);
       const t = -b - Math.sqrt(Math.max(disc, 0));
       return Promise.resolve(
-        disc >= 0 && t > 0
-          ? v3.scaleAndAdd(v3.vec3(), camera.position, d, t)
-          : undefined,
+        positionHit(
+          disc >= 0 && t > 0
+            ? v3.scaleAndAdd(v3.vec3(), camera.position, d, t)
+            : undefined,
+        ),
       );
     });
     const pointer = (px: number, py: number) =>

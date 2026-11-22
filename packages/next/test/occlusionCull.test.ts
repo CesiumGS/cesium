@@ -160,7 +160,9 @@ describe("the uniforms and the counters", () => {
     // This tick's: no offset.
     expect([...f.subarray(16, 20)]).toEqual([1, 0, 0, 0]);
     expect(f[28]).toBeCloseTo(0.5, 6);
-    expect([...u.subarray(32, 40)]).toEqual([64, 48, 6, 1, 64, 300, 640, 0]);
+    // Both principal points centered (CS-814), then the image size, levels and layout.
+    expect([...f.subarray(32, 36)]).toEqual([0, 0, 0, 0]);
+    expect([...u.subarray(36, 44)]).toEqual([64, 48, 6, 1, 64, 300, 640, 0]);
   });
 
   it("tests nothing in the first phase without a last pyramid", () => {
@@ -172,7 +174,7 @@ describe("the uniforms and the counters", () => {
       { width: 64, height: 48, levels: 6 },
       layout,
     );
-    expect(new Uint32Array(out)[35]).toBe(0);
+    expect(new Uint32Array(out)[39]).toBe(0);
   });
 
   it("counts what was listed less what the second phase showed again", () => {

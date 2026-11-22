@@ -11,7 +11,12 @@ import { describe, expect, it } from "vitest";
 import * as m4 from "../src/math/mat4.ts";
 import type { PickView } from "../src/engineering/pick.ts";
 import { EARTH } from "../src/scene/Body.ts";
-import { Camera, projectToPixel } from "../src/scene/Camera.ts";
+import {
+  Camera,
+  centeredIntrinsics,
+  projectToPixel,
+} from "../src/scene/Camera.ts";
+import { positionHit } from "./positionHit.ts";
 import type { DrawHandle } from "../src/scene/world/types.ts";
 import type { TileGeometry } from "../src/streaming/Tile.ts";
 import {
@@ -93,8 +98,7 @@ function cameraOver(over: Float64Array): SnapCamera {
     right: Float64Array.from([0, 1, 0]),
     fovy: 2 * Math.atan(0.5),
     near: 0.1,
-    width: 1000,
-    height: 500,
+    ...centeredIntrinsics(2 * Math.atan(0.5), 1000, 500),
   };
 }
 
@@ -494,7 +498,12 @@ describe("ExactSnapService through refiningSnap, the barrier drawn", () => {
             camera.direction[k]! + nx * camera.right[k]! + ny * camera.up[k]!,
         );
         const rl = Math.hypot(...ray);
-        return cast(ts, eye, Float64Array.from(ray.map((v) => v / rl)));
+        return positionHit(
+          cast(ts, eye, Float64Array.from(ray.map((v) => v / rl))),
+          camera,
+          W,
+          H,
+        );
       },
       body: EARTH,
       camera,
@@ -596,7 +605,9 @@ describe("ExactSnapService through refiningSnap, the barrier drawn", () => {
     const { view, pixel } = viewOf(ts, eye, target);
     const cursor = pixel(onTop(31_000, 0.2));
     const hit = await view.pickPosition(cursor[0]!, cursor[1]!);
-    const station = alignment.stationOffset(placement.designOf(hit!)).station;
+    const station = alignment.stationOffset(
+      placement.designOf(hit!.position),
+    ).station;
     // Where the centerline is shown (the barrier's top) and where it is (the
     // profile grade line, 0.81 m below), in pixels from the cursor.
     const shownAt = pixel(onTop(station, 0));

@@ -30,6 +30,8 @@ public struct PyramidCamera {
   public float tanY;
   public float near;
   public float bias;
+  public float shiftX;  // the principal point, NDC (`Camera.lens`): 0 while centered
+  public float shiftY;
 };
 
 static const uint MAX_LEVELS = 16u;
@@ -54,8 +56,8 @@ public bool boxHidden(Texture2D<float> pyramid, PyramidCamera camera, float3 cen
     }
     float inverse = 1.0 / p.z;
     float2 screen = float2(
-      (p.x * inverse / camera.tanX * 0.5 + 0.5) * frameWidth,
-      (0.5 - p.y * inverse / camera.tanY * 0.5) * frameHeight);
+      ((p.x * inverse / camera.tanX + camera.shiftX) * 0.5 + 0.5) * frameWidth,
+      (0.5 - (p.y * inverse / camera.tanY + camera.shiftY) * 0.5) * frameHeight);
     low = min(low, screen);
     high = max(high, screen);
     nearestZ = min(nearestZ, p.z);

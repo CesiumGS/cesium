@@ -31,7 +31,7 @@ import { EARTH, MOON } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { createBox } from "../src/scene/meshes.ts";
 import type { CorePick } from "../src/scene/pick.ts";
-import { Camera } from "../src/scene/Camera.ts";
+import { Camera, centeredIntrinsics } from "../src/scene/Camera.ts";
 import { View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { World } from "../src/scene/World.ts";
@@ -574,8 +574,7 @@ describe("the hosted placement mode", () => {
         right: Float64Array.of(0, 1, 0),
         fovy: 1,
         near: 0.1,
-        width: 64,
-        height: 48,
+        ...centeredIntrinsics(1, 64, 48),
       },
     };
   }

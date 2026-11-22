@@ -10,7 +10,7 @@ import type { Route } from "../camera/route.ts";
 import type { GeometryAccuracy } from "../geometry/query.ts";
 import type { Body } from "./Body.ts";
 import { UNDERLAY_DEPTH } from "../render/layout.ts";
-import type { CameraPose, CameraRecord } from "./Camera.ts";
+import type { CameraIntrinsics, CameraPose, CameraRecord } from "./Camera.ts";
 import { type PickResult, type View } from "./View.ts";
 import { inverseRotate } from "./viewAnchors.ts";
 import {
@@ -28,17 +28,27 @@ import type { AnchorHandle, DrawHandle, FeatureInfo } from "./world/types.ts";
  * into that same tick (`projectToPixel`); public as `SnapCamera`. In a core
  * pick, in the hit anchor's coordinates (as `CorePick.anchorPosition`).
  */
-export interface PickCamera extends CameraPose {
+export interface PickCamera extends CameraPose, CameraIntrinsics {
   readonly position: Float64Array;
   readonly direction: Float64Array;
   readonly up: Float64Array;
   readonly right: Float64Array;
+  /** The vertical field of view (radians): for a pixel's size, 2 tan(fovy / 2) / height. */
   readonly fovy: number;
   /** Meters: nothing nearer is drawn. */
   readonly near: number;
   /** The view's size in CSS pixels. */
   readonly width: number;
   readonly height: number;
+  /**
+   * The pinhole's intrinsics in CSS pixels (`CameraIntrinsics`): an
+   * off-center principal point and pixels that aren't square included.
+   * Project with these, not with `fovy` alone.
+   */
+  readonly fx: number;
+  readonly fy: number;
+  readonly cx: number;
+  readonly cy: number;
 }
 
 /** A point a pick reports, with the reference frame it is in (`CorePick.truePosition`). */
@@ -275,6 +285,10 @@ export function corePick(
     near: tick.near,
     width: tick.width,
     height: tick.height,
+    fx: tick.cameraRecord.fx,
+    fy: tick.cameraRecord.fy,
+    cx: tick.cameraRecord.cx,
+    cy: tick.cameraRecord.cy,
   };
   inverseRotate(m, c.position, camera.position, true);
   inverseRotate(m, c.direction, camera.direction, false);

@@ -1075,6 +1075,7 @@ export const API_ROWS: readonly ApiRow[] = [
     old: ["Scene.pick", "Scene.pickPosition", "PickId"],
     next: [
       "PickResult",
+      "PickPositionResult",
       "CorePick",
       "PickInterpreter",
       "PickDomain",
@@ -1088,7 +1089,7 @@ export const API_ROWS: readonly ApiRow[] = [
       "proj:PickCamera",
     ],
     status: "changed",
-    note: "`view.pick` and `view.pickPosition` return promises, so every call site must `await`. They read a feature-ID target back, with no extra render.",
+    note: "`view.pick` and `view.pickPosition` return promises, so every call site must `await`. They read a feature-ID target back, with no extra render. `view.pickPosition` resolves to the position with the camera record it used (`hit.position`, `hit.cameraRecord`), not to the bare position.",
     source: "Overall plan, sections 2 and 3.5",
     snippet: "pick",
   },

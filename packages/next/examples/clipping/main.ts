@@ -853,10 +853,11 @@ export async function run({
       new Float64Array(3),
     );
     const from = Float64Array.from(camera.position);
-    const [hit, point] = await Promise.all([
+    const [hit, pointHit] = await Promise.all([
       at.pick(x, y),
       at.pickPosition(x, y),
     ]);
+    const point = pointHit?.position;
     if (signal.aborted) {
       return;
     }

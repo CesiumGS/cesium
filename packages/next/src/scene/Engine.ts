@@ -251,7 +251,7 @@ const REASON_MORPH = bit("morph");
 const REASON_JOBS = bit("jobs");
 
 /** Values in one view's on-demand fingerprint (see `viewChanged`). */
-const VIEW_KEY_LENGTH = 33;
+const VIEW_KEY_LENGTH = 36;
 
 /** Options for a globe surface: terrain or the ellipsoid. */
 export interface GlobeOptions extends TilesetOptions {
@@ -2116,6 +2116,10 @@ export class Engine {
       s[n++] = c.up[k]!;
     }
     s[n++] = c.fov;
+    // The rest of the lens (`Camera.setIntrinsics`).
+    s[n++] = c.shiftX;
+    s[n++] = c.shiftY;
+    s[n++] = c.pixelAspect;
     s[n++] = c.near;
     s[n++] = this.renderers.get(view)!.exposure();
     s[n++] = view.clearColor[0];

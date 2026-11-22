@@ -2628,10 +2628,11 @@ export async function run({ viewer, panel, signal }: ExampleContext) {
     // The depth is read at the same pixel, in the view's device pixels.
     const scale = viewer.canvas.width / Math.max(1, viewer.canvas.clientWidth);
     const area = view.pixelRect();
-    const [result, ecef] = await Promise.all([
+    const [result, ecefHit] = await Promise.all([
       viewer.pick(x, y),
       view.pickPosition(x * scale - area.x, y * scale - area.y),
     ]);
+    const ecef = ecefHit?.position;
     const info = result ? world.feature(result.featureId) : undefined;
     const part = info ? parts.get(info.draw.index) : undefined;
     if (!info || !part) {

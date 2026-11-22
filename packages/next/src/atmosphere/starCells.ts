@@ -316,6 +316,8 @@ export function starCullInputs(
   up: ArrayLike<number>,
   tanX: number,
   tanY: number,
+  shiftX: number,
+  shiftY: number,
   width: number,
   height: number,
   exposure: number,
@@ -341,13 +343,21 @@ export function starCullInputs(
     out.peak = starPeakShare(spread.core * pixelRatio);
   }
   const margin = out.margin;
-  const wideX = tanX * (1 + (2 * margin) / width);
-  const wideY = tanY * (1 + (2 * margin) / height);
+  // Each side's tangent, out past the edge by the margin, the principal
+  // point's offset moving the edges (centered, (1 ± 0) is 1 exactly).
+  const marginX = (2 * margin) / width;
+  const marginY = (2 * margin) / height;
+  const left = tanX * (1 + shiftX + marginX);
+  const right_ = tanX * (1 - shiftX + marginX);
+  const bottom = tanY * (1 + shiftY + marginY);
+  const top = tanY * (1 - shiftY + marginY);
   const { planes } = out;
-  writePlane(planes, 0, forward, wideX, right, 1, rows);
-  writePlane(planes, 4, forward, wideX, right, -1, rows);
-  writePlane(planes, 8, forward, wideY, up, 1, rows);
-  writePlane(planes, 12, forward, wideY, up, -1, rows);
+  writePlane(planes, 0, forward, left, right, 1, rows);
+  writePlane(planes, 4, forward, right_, right, -1, rows);
+  writePlane(planes, 8, forward, bottom, up, 1, rows);
+  writePlane(planes, 12, forward, top, up, -1, rows);
+  const wideX = Math.max(left, right_);
+  const wideY = Math.max(bottom, top);
   const pixelAngle = (2 * tanY) / height;
   const gain = Math.max(shadowGain, 1);
   out.minRadiance = STAR_VISIBLE / (exposure * out.peak * gain);

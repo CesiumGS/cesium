@@ -115,6 +115,22 @@ export interface PickResult {
   cameraRecord?: CameraRecord;
 }
 
+/**
+ * What is drawn under a pixel, where (`View.pickPosition`): the position and
+ * the camera record the pick used, both in the body anchor's coordinates.
+ */
+export interface PickPositionResult {
+  /** The body anchor's coordinates (Earth-fixed for the Earth), m, float64. */
+  position: Float64Array;
+  /**
+   * The camera record the pick used: the camera at the tick whose image was
+   * read, in the body anchor's coordinates (its `referenceFrame` is the body
+   * anchor, or the render root while the view has none), for an image the
+   * view's size in CSS pixels (as the pick's x and y).
+   */
+  cameraRecord: CameraRecord;
+}
+
 /** α clamped to [0, 1]; NaN is 1. */
 function clampExponent(value: number): number {
   return Number.isNaN(value)
@@ -687,7 +703,7 @@ export class View {
     x: number;
     y: number;
     resolve?: (r: PickResult | undefined) => void;
-    resolvePosition?: (p: Float64Array | undefined) => void;
+    resolvePosition?: (p: PickPositionResult | undefined) => void;
     resolvePoint?: (p: CorePick | undefined) => void;
   }> = [];
   /**
@@ -1170,12 +1186,15 @@ export class View {
   /**
    * Earth-fixed position of what is drawn under a pixel of this view
    * (float64, from the depth buffer): the body anchor's coordinates
-   * (`bodyAnchor`), whatever the render root. Undefined over the sky.
-   * Resolves a few frames later, with the camera of the frame it was read
-   * in. Translucent terrain stops it unless made with `pickThrough`
-   * (`pick`).
+   * (`bodyAnchor`), whatever the render root, with the camera record the
+   * pick used (`PickPositionResult`). Undefined over the sky. Resolves a few
+   * ticks later, with the camera of the tick it was read in. Translucent
+   * terrain stops it unless made with `pickThrough` (`pick`).
+   *
+   * It resolved to the bare position before CS-814: a caller now reads
+   * `.position` (`const hit = await view.pickPosition(x, y); hit?.position`).
    */
-  pickPosition(x: number, y: number): Promise<Float64Array | undefined> {
+  pickPosition(x: number, y: number): Promise<PickPositionResult | undefined> {
     return new Promise((resolvePosition) => {
       this.pendingPicks.push({ x, y, resolvePosition });
       this.wake?.();

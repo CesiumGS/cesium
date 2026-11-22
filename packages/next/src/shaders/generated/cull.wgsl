@@ -144,6 +144,7 @@ struct OcclusionCull_std140_0
     @align(16) up_0 : vec4<f32>,
     @align(16) forward_0 : vec4<f32>,
     @align(16) lens_0 : vec4<f32>,
+    @align(16) shifts_0 : vec4<f32>,
     @align(16) width_0 : u32,
     @align(4) height_0 : u32,
     @align(8) levels_0 : u32,
@@ -456,6 +457,8 @@ struct PyramidCamera_0
      tanY_0 : f32,
      near_1 : f32,
      bias_0 : f32,
+     shiftX_0 : f32,
+     shiftY_0 : f32,
 };
 
 fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  center_2 : vec3<f32>,  a_4 : vec3<f32>,  b_4 : vec3<f32>,  c_1 : vec3<f32>,  window_0 : u32) -> bool
@@ -512,7 +515,7 @@ fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  cente
             return false;
         }
         var inverse_0 : f32 = 1.0f / _S25;
-        var screen_0 : vec2<f32> = vec2<f32>((p_4.x * inverse_0 / camera_0.tanX_0 * 0.5f + 0.5f) * frameWidth_0, (0.5f - p_4.y * inverse_0 / camera_0.tanY_0 * 0.5f) * frameHeight_0);
+        var screen_0 : vec2<f32> = vec2<f32>(((p_4.x * inverse_0 / camera_0.tanX_0 + camera_0.shiftX_0) * 0.5f + 0.5f) * frameWidth_0, (0.5f - (p_4.y * inverse_0 / camera_0.tanY_0 + camera_0.shiftY_0) * 0.5f) * frameHeight_0);
         var _S26 : vec2<f32> = min(low_0, screen_0);
         var _S27 : vec2<f32> = max(high_0, screen_0);
         var _S28 : f32 = min(nearestZ_0, _S25);
@@ -650,7 +653,7 @@ fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  cente
     return (farthest_0 > (camera_0.near_1 / nearestZ_0 * (1.0f + camera_0.bias_0)));
 }
 
-fn sphereHidden_0( center_3 : vec3<f32>,  radius_2 : f32,  right_1 : vec4<f32>,  up_1 : vec4<f32>,  forward_1 : vec4<f32>,  lens_1 : vec4<f32>) -> bool
+fn sphereHidden_0( center_3 : vec3<f32>,  radius_2 : f32,  right_1 : vec4<f32>,  up_1 : vec4<f32>,  forward_1 : vec4<f32>,  lens_1 : vec4<f32>,  shift_0 : vec2<f32>) -> bool
 {
     if(!(radius_2 < 1.00000001504746622e+30f))
     {
@@ -664,6 +667,8 @@ fn sphereHidden_0( center_3 : vec3<f32>,  radius_2 : f32,  right_1 : vec4<f32>, 
     camera_1.tanY_0 = lens_1.y;
     camera_1.near_1 = lens_1.z;
     camera_1.bias_0 = lens_1.w;
+    camera_1.shiftX_0 = shift_0.x;
+    camera_1.shiftY_0 = shift_0.y;
     return boxHidden_0(pyramid_0, camera_1, vec3<f32>(dot(right_1.xyz, center_3) + right_1.w, dot(up_1.xyz, center_3) + up_1.w, dot(forward_1.xyz, center_3) + forward_1.w), vec3<f32>(radius_2, 0.0f, 0.0f), vec3<f32>(0.0f, radius_2, 0.0f), vec3<f32>(0.0f, 0.0f, radius_2), u32(8));
 }
 
@@ -692,7 +697,7 @@ fn place_0( batch_4 : u32,  item_2 : u32,  center_4 : vec3<f32>,  radius_3 : f32
     }
     if(_S51)
     {
-        _S51 = sphereHidden_0(center_4, radius_3, occlusion_0.lastRight_0, occlusion_0.lastUp_0, occlusion_0.lastForward_0, occlusion_0.lastLens_0);
+        _S51 = sphereHidden_0(center_4, radius_3, occlusion_0.lastRight_0, occlusion_0.lastUp_0, occlusion_0.lastForward_0, occlusion_0.lastLens_0, occlusion_0.shifts_0.xy);
     }
     else
     {
@@ -1313,7 +1318,7 @@ fn retestOccluded(@builtin(global_invocation_id) gid_6 : vec3<u32>)
         m_2 = _S119;
     }
     var _S120 : DrawRecord_0 = r_0;
-    if(sphereHidden_0((((vec4<f32>(r_0.center_0, 1.0f)) * (m_2))).xyz, radius_8, occlusion_0.right_0, occlusion_0.up_0, occlusion_0.forward_0, occlusion_0.lens_0))
+    if(sphereHidden_0((((vec4<f32>(r_0.center_0, 1.0f)) * (m_2))).xyz, radius_8, occlusion_0.right_0, occlusion_0.up_0, occlusion_0.forward_0, occlusion_0.lens_0, occlusion_0.shifts_0.zw))
     {
         return;
     }

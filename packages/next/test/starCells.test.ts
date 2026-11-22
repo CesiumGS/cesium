@@ -99,6 +99,8 @@ function viewOf(
     up,
     tanX,
     tanY,
+    0,
+    0,
     width,
     height,
     exposure,

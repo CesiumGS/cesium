@@ -77,11 +77,14 @@ export interface CullCamera {
   /** Tangents of half the field of view, across and up. */
   readonly tanX: number;
   readonly tanY: number;
+  /** The principal point, NDC (`Camera.lens`): 0 (the default) while centered. */
+  readonly shiftX?: number;
+  readonly shiftY?: number;
   readonly near: number;
 }
 
 /** Bytes of cull.slang's `OcclusionCull`. */
-export const OCCLUSION_CULL_BYTES = 160;
+export const OCCLUSION_CULL_BYTES = 176;
 
 /**
  * cull.slang's `OcclusionCull` for a tick: `last`, the camera the pyramid
@@ -98,8 +101,8 @@ export function occlusionCullParams(
   frame: { width: number; height: number; levels: number },
   layout: { argumentRows: number; itemRows: number; counterWord: number },
 ): void {
-  const f = new Float32Array(out, 0, 32);
-  const u = new Uint32Array(out, 128, 8);
+  const f = new Float32Array(out, 0, 36);
+  const u = new Uint32Array(out, 144, 8);
   const axes = (camera: CullCamera, offset: ArrayLike<number>, at: number) => {
     const rows = [camera.right, camera.up, camera.direction];
     for (let r = 0; r < 3; r++) {
@@ -129,6 +132,10 @@ export function occlusionCullParams(
     f.fill(0, 0, 16);
   }
   axes(current, [0, 0, 0], 16);
+  f[32] = last?.shiftX ?? 0;
+  f[33] = last?.shiftY ?? 0;
+  f[34] = current.shiftX ?? 0;
+  f[35] = current.shiftY ?? 0;
   u[0] = frame.width;
   u[1] = frame.height;
   u[2] = frame.levels;

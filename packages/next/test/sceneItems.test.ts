@@ -4,6 +4,7 @@
 import { recordBundle } from "../src/render/world/bundles.ts";
 import { rayJobs } from "../src/scene/world/rays.ts";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { centeredIntrinsics } from "../src/scene/Camera.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import * as m4 from "../src/math/mat4.ts";
 import * as v3 from "../src/math/vec3.ts";
@@ -755,8 +756,7 @@ describe("scene items", () => {
       right: Float64Array.from([0, 1, 0]),
       fovy: 1,
       near: 0.1,
-      width: 100,
-      height: 100,
+      ...centeredIntrinsics(1, 100, 100),
     };
     const fake = {
       body: s.view.body,

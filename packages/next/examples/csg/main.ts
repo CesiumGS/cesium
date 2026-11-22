@@ -941,7 +941,7 @@ export async function run({
   /** Where the solid is at a pixel, in the sample's meters. */
   const pointAt = async (x: number, y: number): Promise<V3 | undefined> => {
     const scale = viewer.canvas.width / Math.max(1, viewer.canvas.clientWidth);
-    const hit = await view.pickPosition(x * scale, y * scale);
+    const hit = (await view.pickPosition(x * scale, y * scale))?.position;
     if (!hit) {
       return undefined;
     }

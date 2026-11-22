@@ -97,10 +97,47 @@
                                 ]
                             },
                             "binding": {"kind": "uniform", "offset": 28, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "shiftX",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 32, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "shiftY",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "float32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 36, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "pad",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 2,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 8, "alignment": 8}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 40, "size": 8, "elementStride": 4}
                         }
                     ],
                     "sizes": [
-                        {"kind": "uniform", "value": 32, "alignment": 16}
+                        {"kind": "uniform", "value": 48, "alignment": 16}
                     ]
                 },
                 "containerVarLayout": {
@@ -198,13 +235,50 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 28, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "shiftX",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 32, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "shiftY",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 36, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "pad",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 2,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 8, "alignment": 8}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 40, "size": 8, "elementStride": 4}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 32, "alignment": 16}
+                            {"kind": "uniform", "value": 48, "alignment": 16}
                         ]
                     },
-                    "binding": {"kind": "uniform", "offset": 0, "size": 32, "elementStride": 0}
+                    "binding": {"kind": "uniform", "offset": 0, "size": 48, "elementStride": 0}
                 },
                 "sizes": [
                     {"kind": "descriptorTableSlot", "value": 1}
@@ -363,10 +437,47 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 28, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "shiftX",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 32, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "shiftY",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 36, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "pad",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 2,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 8, "alignment": 8}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 40, "size": 8, "elementStride": 4}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 32, "alignment": 16}
+                            {"kind": "uniform", "value": 48, "alignment": 16}
                         ]
                     },
                     "containerVarLayout": {
@@ -464,13 +575,50 @@
                                         ]
                                     },
                                     "binding": {"kind": "uniform", "offset": 28, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "shiftX",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 32, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "shiftY",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 36, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "pad",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 2,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 8, "alignment": 8}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 40, "size": 8, "elementStride": 4}
                                 }
                             ],
                             "sizes": [
-                                {"kind": "uniform", "value": 32, "alignment": 16}
+                                {"kind": "uniform", "value": 48, "alignment": 16}
                             ]
                         },
-                        "binding": {"kind": "uniform", "offset": 0, "size": 32, "elementStride": 0}
+                        "binding": {"kind": "uniform", "offset": 0, "size": 48, "elementStride": 0}
                     },
                     "sizes": [
                         {"kind": "descriptorTableSlot", "value": 1}

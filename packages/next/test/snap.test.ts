@@ -1,6 +1,7 @@
 // Plan 4b task 16: ClientSnapService over retained tile geometry, View.toPixel,
 // and Tileset3D's retainGeometry (with World.drawMatrix).
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
+import { positionHit } from "./positionHit.ts";
 import {
   ClientSnapService,
   OUT_OF_SIGHT_WARNING,
@@ -135,7 +136,8 @@ function view(
         ? undefined
         : { featureId: 7, name: undefined };
     },
-    pickPosition: async (x, y) => (o.sky ? undefined : under(x, y)),
+    pickPosition: async (x, y) =>
+      positionHit(o.sky ? undefined : under(x, y), camera, 1000, 500),
     body: EARTH,
     camera,
     target: { kind: "canvas", width: 1000, pixelRatio: 1 },
@@ -167,6 +169,32 @@ describe("ClientSnapService", () => {
     expect(r!.camera!.position[0]).toBe(R + 1000);
     // The face normal, toward the camera.
     expect(Array.from(r!.normal!)).toEqual([1, 0, 0]);
+  });
+
+  it("snaps where an off-center camera shows the vertex", async () => {
+    // The principal point 120 px right of center (CS-814): the vertex at
+    // (R, 40, 0) shows at 620 + 500 · 40 / 1000 = 640, not at 520.
+    const ts = tileset({ placement: placement() });
+    const r = await new ClientSnapService([ts]).snap({
+      view: view({
+        aim: (c) =>
+          c.setIntrinsics({
+            width: 1000,
+            height: 500,
+            fx: 500,
+            fy: 500,
+            cx: 620,
+            cy: 250,
+          }),
+      }),
+      x: 643,
+      y: 250,
+      aperture: 6,
+    });
+    expect(r?.kind).toBe("point");
+    expect(Array.from(r!.snapPoint)).toEqual([R, 40, 0]);
+    expect(r!.distance).toBeCloseTo(3, 9);
+    expect(r!.camera!.cx).toBeCloseTo(620, 9);
   });
 
   it("snaps to the nearest point of an edge", async () => {

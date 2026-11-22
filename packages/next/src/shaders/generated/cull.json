@@ -131,51 +131,22 @@
                             "binding": {"kind": "uniform", "offset": 112, "size": 16, "elementStride": 4}
                         },
                         {
+                            "name": "shifts",
+                            "type": {
+                                "kind": "vector",
+                                "elementCount": 4,
+                                "elementType": {
+                                    "kind": "scalar",
+                                    "scalarType": "float32"
+                                },
+                                "sizes": [
+                                    {"kind": "uniform", "value": 16, "alignment": 16}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 128, "size": 16, "elementStride": 4}
+                        },
+                        {
                             "name": "width",
-                            "type": {
-                                "kind": "scalar",
-                                "scalarType": "uint32",
-                                "sizes": [
-                                    {"kind": "uniform", "value": 4, "alignment": 4}
-                                ]
-                            },
-                            "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
-                        },
-                        {
-                            "name": "height",
-                            "type": {
-                                "kind": "scalar",
-                                "scalarType": "uint32",
-                                "sizes": [
-                                    {"kind": "uniform", "value": 4, "alignment": 4}
-                                ]
-                            },
-                            "binding": {"kind": "uniform", "offset": 132, "size": 4, "elementStride": 0}
-                        },
-                        {
-                            "name": "levels",
-                            "type": {
-                                "kind": "scalar",
-                                "scalarType": "uint32",
-                                "sizes": [
-                                    {"kind": "uniform", "value": 4, "alignment": 4}
-                                ]
-                            },
-                            "binding": {"kind": "uniform", "offset": 136, "size": 4, "elementStride": 0}
-                        },
-                        {
-                            "name": "test",
-                            "type": {
-                                "kind": "scalar",
-                                "scalarType": "uint32",
-                                "sizes": [
-                                    {"kind": "uniform", "value": 4, "alignment": 4}
-                                ]
-                            },
-                            "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
-                        },
-                        {
-                            "name": "argumentRows",
                             "type": {
                                 "kind": "scalar",
                                 "scalarType": "uint32",
@@ -186,7 +157,7 @@
                             "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
                         },
                         {
-                            "name": "itemRows",
+                            "name": "height",
                             "type": {
                                 "kind": "scalar",
                                 "scalarType": "uint32",
@@ -197,7 +168,7 @@
                             "binding": {"kind": "uniform", "offset": 148, "size": 4, "elementStride": 0}
                         },
                         {
-                            "name": "counters",
+                            "name": "levels",
                             "type": {
                                 "kind": "scalar",
                                 "scalarType": "uint32",
@@ -208,7 +179,7 @@
                             "binding": {"kind": "uniform", "offset": 152, "size": 4, "elementStride": 0}
                         },
                         {
-                            "name": "pad",
+                            "name": "test",
                             "type": {
                                 "kind": "scalar",
                                 "scalarType": "uint32",
@@ -217,10 +188,54 @@
                                 ]
                             },
                             "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "argumentRows",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 160, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "itemRows",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 164, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "counters",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 168, "size": 4, "elementStride": 0}
+                        },
+                        {
+                            "name": "pad",
+                            "type": {
+                                "kind": "scalar",
+                                "scalarType": "uint32",
+                                "sizes": [
+                                    {"kind": "uniform", "value": 4, "alignment": 4}
+                                ]
+                            },
+                            "binding": {"kind": "uniform", "offset": 172, "size": 4, "elementStride": 0}
                         }
                     ],
                     "sizes": [
-                        {"kind": "uniform", "value": 160, "alignment": 16}
+                        {"kind": "uniform", "value": 176, "alignment": 16}
                     ]
                 },
                 "containerVarLayout": {
@@ -352,51 +367,22 @@
                                 "binding": {"kind": "uniform", "offset": 112, "size": 16, "elementStride": 4}
                             },
                             {
+                                "name": "shifts",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 128, "size": 16, "elementStride": 4}
+                            },
+                            {
                                 "name": "width",
-                                "type": {
-                                    "kind": "scalar",
-                                    "scalarType": "uint32",
-                                    "sizes": [
-                                        {"kind": "uniform", "value": 4, "alignment": 4}
-                                    ]
-                                },
-                                "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
-                            },
-                            {
-                                "name": "height",
-                                "type": {
-                                    "kind": "scalar",
-                                    "scalarType": "uint32",
-                                    "sizes": [
-                                        {"kind": "uniform", "value": 4, "alignment": 4}
-                                    ]
-                                },
-                                "binding": {"kind": "uniform", "offset": 132, "size": 4, "elementStride": 0}
-                            },
-                            {
-                                "name": "levels",
-                                "type": {
-                                    "kind": "scalar",
-                                    "scalarType": "uint32",
-                                    "sizes": [
-                                        {"kind": "uniform", "value": 4, "alignment": 4}
-                                    ]
-                                },
-                                "binding": {"kind": "uniform", "offset": 136, "size": 4, "elementStride": 0}
-                            },
-                            {
-                                "name": "test",
-                                "type": {
-                                    "kind": "scalar",
-                                    "scalarType": "uint32",
-                                    "sizes": [
-                                        {"kind": "uniform", "value": 4, "alignment": 4}
-                                    ]
-                                },
-                                "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
-                            },
-                            {
-                                "name": "argumentRows",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -407,7 +393,7 @@
                                 "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "itemRows",
+                                "name": "height",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -418,7 +404,7 @@
                                 "binding": {"kind": "uniform", "offset": 148, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "counters",
+                                "name": "levels",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -429,7 +415,7 @@
                                 "binding": {"kind": "uniform", "offset": 152, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "pad",
+                                "name": "test",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -438,13 +424,57 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "argumentRows",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 160, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "itemRows",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 164, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "counters",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 168, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "pad",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 172, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 160, "alignment": 16}
+                            {"kind": "uniform", "value": 176, "alignment": 16}
                         ]
                     },
-                    "binding": {"kind": "uniform", "offset": 0, "size": 160, "elementStride": 0}
+                    "binding": {"kind": "uniform", "offset": 0, "size": 176, "elementStride": 0}
                 },
                 "sizes": [
                     {"kind": "descriptorTableSlot", "value": 1}
@@ -2413,51 +2443,22 @@
                                 "binding": {"kind": "uniform", "offset": 112, "size": 16, "elementStride": 4}
                             },
                             {
+                                "name": "shifts",
+                                "type": {
+                                    "kind": "vector",
+                                    "elementCount": 4,
+                                    "elementType": {
+                                        "kind": "scalar",
+                                        "scalarType": "float32"
+                                    },
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 16, "alignment": 16}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 128, "size": 16, "elementStride": 4}
+                            },
+                            {
                                 "name": "width",
-                                "type": {
-                                    "kind": "scalar",
-                                    "scalarType": "uint32",
-                                    "sizes": [
-                                        {"kind": "uniform", "value": 4, "alignment": 4}
-                                    ]
-                                },
-                                "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
-                            },
-                            {
-                                "name": "height",
-                                "type": {
-                                    "kind": "scalar",
-                                    "scalarType": "uint32",
-                                    "sizes": [
-                                        {"kind": "uniform", "value": 4, "alignment": 4}
-                                    ]
-                                },
-                                "binding": {"kind": "uniform", "offset": 132, "size": 4, "elementStride": 0}
-                            },
-                            {
-                                "name": "levels",
-                                "type": {
-                                    "kind": "scalar",
-                                    "scalarType": "uint32",
-                                    "sizes": [
-                                        {"kind": "uniform", "value": 4, "alignment": 4}
-                                    ]
-                                },
-                                "binding": {"kind": "uniform", "offset": 136, "size": 4, "elementStride": 0}
-                            },
-                            {
-                                "name": "test",
-                                "type": {
-                                    "kind": "scalar",
-                                    "scalarType": "uint32",
-                                    "sizes": [
-                                        {"kind": "uniform", "value": 4, "alignment": 4}
-                                    ]
-                                },
-                                "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
-                            },
-                            {
-                                "name": "argumentRows",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -2468,7 +2469,7 @@
                                 "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "itemRows",
+                                "name": "height",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -2479,7 +2480,7 @@
                                 "binding": {"kind": "uniform", "offset": 148, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "counters",
+                                "name": "levels",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -2490,7 +2491,7 @@
                                 "binding": {"kind": "uniform", "offset": 152, "size": 4, "elementStride": 0}
                             },
                             {
-                                "name": "pad",
+                                "name": "test",
                                 "type": {
                                     "kind": "scalar",
                                     "scalarType": "uint32",
@@ -2499,10 +2500,54 @@
                                     ]
                                 },
                                 "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "argumentRows",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 160, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "itemRows",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 164, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "counters",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 168, "size": 4, "elementStride": 0}
+                            },
+                            {
+                                "name": "pad",
+                                "type": {
+                                    "kind": "scalar",
+                                    "scalarType": "uint32",
+                                    "sizes": [
+                                        {"kind": "uniform", "value": 4, "alignment": 4}
+                                    ]
+                                },
+                                "binding": {"kind": "uniform", "offset": 172, "size": 4, "elementStride": 0}
                             }
                         ],
                         "sizes": [
-                            {"kind": "uniform", "value": 160, "alignment": 16}
+                            {"kind": "uniform", "value": 176, "alignment": 16}
                         ]
                     },
                     "containerVarLayout": {
@@ -2634,51 +2679,22 @@
                                     "binding": {"kind": "uniform", "offset": 112, "size": 16, "elementStride": 4}
                                 },
                                 {
+                                    "name": "shifts",
+                                    "type": {
+                                        "kind": "vector",
+                                        "elementCount": 4,
+                                        "elementType": {
+                                            "kind": "scalar",
+                                            "scalarType": "float32"
+                                        },
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 16, "alignment": 16}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 128, "size": 16, "elementStride": 4}
+                                },
+                                {
                                     "name": "width",
-                                    "type": {
-                                        "kind": "scalar",
-                                        "scalarType": "uint32",
-                                        "sizes": [
-                                            {"kind": "uniform", "value": 4, "alignment": 4}
-                                        ]
-                                    },
-                                    "binding": {"kind": "uniform", "offset": 128, "size": 4, "elementStride": 0}
-                                },
-                                {
-                                    "name": "height",
-                                    "type": {
-                                        "kind": "scalar",
-                                        "scalarType": "uint32",
-                                        "sizes": [
-                                            {"kind": "uniform", "value": 4, "alignment": 4}
-                                        ]
-                                    },
-                                    "binding": {"kind": "uniform", "offset": 132, "size": 4, "elementStride": 0}
-                                },
-                                {
-                                    "name": "levels",
-                                    "type": {
-                                        "kind": "scalar",
-                                        "scalarType": "uint32",
-                                        "sizes": [
-                                            {"kind": "uniform", "value": 4, "alignment": 4}
-                                        ]
-                                    },
-                                    "binding": {"kind": "uniform", "offset": 136, "size": 4, "elementStride": 0}
-                                },
-                                {
-                                    "name": "test",
-                                    "type": {
-                                        "kind": "scalar",
-                                        "scalarType": "uint32",
-                                        "sizes": [
-                                            {"kind": "uniform", "value": 4, "alignment": 4}
-                                        ]
-                                    },
-                                    "binding": {"kind": "uniform", "offset": 140, "size": 4, "elementStride": 0}
-                                },
-                                {
-                                    "name": "argumentRows",
                                     "type": {
                                         "kind": "scalar",
                                         "scalarType": "uint32",
@@ -2689,7 +2705,7 @@
                                     "binding": {"kind": "uniform", "offset": 144, "size": 4, "elementStride": 0}
                                 },
                                 {
-                                    "name": "itemRows",
+                                    "name": "height",
                                     "type": {
                                         "kind": "scalar",
                                         "scalarType": "uint32",
@@ -2700,7 +2716,7 @@
                                     "binding": {"kind": "uniform", "offset": 148, "size": 4, "elementStride": 0}
                                 },
                                 {
-                                    "name": "counters",
+                                    "name": "levels",
                                     "type": {
                                         "kind": "scalar",
                                         "scalarType": "uint32",
@@ -2711,7 +2727,7 @@
                                     "binding": {"kind": "uniform", "offset": 152, "size": 4, "elementStride": 0}
                                 },
                                 {
-                                    "name": "pad",
+                                    "name": "test",
                                     "type": {
                                         "kind": "scalar",
                                         "scalarType": "uint32",
@@ -2720,13 +2736,57 @@
                                         ]
                                     },
                                     "binding": {"kind": "uniform", "offset": 156, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "argumentRows",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 160, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "itemRows",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 164, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "counters",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 168, "size": 4, "elementStride": 0}
+                                },
+                                {
+                                    "name": "pad",
+                                    "type": {
+                                        "kind": "scalar",
+                                        "scalarType": "uint32",
+                                        "sizes": [
+                                            {"kind": "uniform", "value": 4, "alignment": 4}
+                                        ]
+                                    },
+                                    "binding": {"kind": "uniform", "offset": 172, "size": 4, "elementStride": 0}
                                 }
                             ],
                             "sizes": [
-                                {"kind": "uniform", "value": 160, "alignment": 16}
+                                {"kind": "uniform", "value": 176, "alignment": 16}
                             ]
                         },
-                        "binding": {"kind": "uniform", "offset": 0, "size": 160, "elementStride": 0}
+                        "binding": {"kind": "uniform", "offset": 0, "size": 176, "elementStride": 0}
                     },
                     "sizes": [
                         {"kind": "descriptorTableSlot", "value": 1}

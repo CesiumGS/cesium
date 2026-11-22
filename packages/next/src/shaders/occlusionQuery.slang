@@ -20,6 +20,9 @@ struct QueryParams {
   float tanY;
   float near;
   float bias;
+  float shiftX;  // the principal point, NDC (`Camera.lens`): 0 while centered
+  float shiftY;
+  float2 pad;
 };
 
 [[vk::binding(0, 0)]] ConstantBuffer<QueryParams> params;
@@ -47,6 +50,8 @@ bool isHidden(uint q) {
   camera.tanY = params.tanY;
   camera.near = params.near;
   camera.bias = params.bias;
+  camera.shiftX = params.shiftX;
+  camera.shiftY = params.shiftY;
   return boxHidden(pyramid, camera, vec(at), vec(at + 3u), vec(at + 6u), vec(at + 9u), 2u);
 }
 

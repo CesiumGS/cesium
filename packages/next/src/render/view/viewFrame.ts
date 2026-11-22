@@ -311,7 +311,7 @@ function buildViewFrame(
     cascadeRange: undefined,
     aoParams: device.createBuffer({
       label: "aoParams",
-      size: 64,
+      size: 80,
       usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
     }),
     translucent: false,

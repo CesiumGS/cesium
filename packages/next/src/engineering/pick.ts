@@ -1,5 +1,5 @@
 import type { Body } from "../scene/Body.ts";
-import type { PickResult } from "../scene/View.ts";
+import type { PickPositionResult, PickResult } from "../scene/View.ts";
 import type { DrawHandle } from "../scene/world/types.ts";
 import type { Tile } from "../streaming/Tile.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
@@ -40,7 +40,7 @@ export interface PickView {
    */
   pickPoint?(x: number, y: number): Promise<CorePick | undefined>;
   pick(x: number, y: number): Promise<PickResult | undefined>;
-  pickPosition(x: number, y: number): Promise<Float64Array | undefined>;
+  pickPosition(x: number, y: number): Promise<PickPositionResult | undefined>;
   readonly body: Body;
   readonly camera: {
     readonly position: ArrayLike<number>;
@@ -337,13 +337,16 @@ export async function pickInFrame(
     const width = rect.width;
     const height = rect.height;
     const fovy = cam.fovy(width / height);
-    const [position, feature] = await Promise.all([
+    const [hit, feature] = await Promise.all([
       view.pickPosition(px, py),
       view.pick(px, py),
     ]);
-    if (position === undefined) {
+    if (hit === undefined) {
       return undefined;
     }
+    const position = hit.position;
+    // The lens the pick used (its record's intrinsics, CSS pixels).
+    const { fx, fy, cx, cy } = hit.cameraRecord;
     const camera: PickCamera = {
       position: eye,
       direction,
@@ -353,6 +356,10 @@ export async function pickInFrame(
       near,
       width: width / ratio,
       height: height / ratio,
+      fx,
+      fy,
+      cx,
+      cy,
     };
     const moved =
       cam.version !== version ||

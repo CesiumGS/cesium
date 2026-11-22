@@ -41,6 +41,9 @@ struct OcclusionCull {
   float4 up;
   float4 forward;
   float4 lens;
+  // The principal points, NDC (`Camera.lens`; 0 while centered): the last
+  // camera's (xy) and this tick's (zw).
+  float4 shifts;
   uint width;        // the frame's, pixels
   uint height;
   uint levels;       // the pyramid's
@@ -102,7 +105,7 @@ float4x4 instanceMatrix(Instance inst, DrawRecord r, Transform t, out float4x4 l
 // hidden by the pyramid seen from a camera's axes (w: the offset of this
 // tick's eye along each) and lens. A sphere with no bound (a radius past
 // float32's reach, `routes.ts`) never is.
-bool sphereHidden(float3 center, float radius, float4 right, float4 up, float4 forward, float4 lens) {
+bool sphereHidden(float3 center, float radius, float4 right, float4 up, float4 forward, float4 lens, float2 shift) {
   if (!(radius < 1.0e30)) {
     return false;
   }
@@ -114,6 +117,8 @@ bool sphereHidden(float3 center, float radius, float4 right, float4 up, float4 f
   camera.tanY = lens.y;
   camera.near = lens.z;
   camera.bias = lens.w;
+  camera.shiftX = shift.x;
+  camera.shiftY = shift.y;
   float3 c = float3(dot(right.xyz, center) + right.w,
                     dot(up.xyz, center) + up.w,
                     dot(forward.xyz, center) + forward.w);
@@ -138,7 +143,7 @@ uint trianglesOf(uint batch) {
 void place(uint batch, uint item, float3 center, float radius) {
   if (occlusion.test != 0u && occludable(batch) &&
       sphereHidden(center, radius, occlusion.lastRight, occlusion.lastUp,
-                   occlusion.lastForward, occlusion.lastLens)) {
+                   occlusion.lastForward, occlusion.lastLens, occlusion.shifts.xy)) {
     uint k = addToCounter(occlusion.counters + LISTED, 1u);
     addToCounter(occlusion.counters + LISTED_TRIANGLES, trianglesOf(batch));
     itemList[2u * occlusion.itemRows + min(k, occlusion.itemRows - 1u)] = item;
@@ -293,7 +298,7 @@ void retestOccluded(uint3 gid : SV_DispatchThreadID) {
   }
   uint batch = r.batch;
   if (sphereHidden(mul(m, float4(r.center, 1.0)).xyz, radius, occlusion.right,
-                   occlusion.up, occlusion.forward, occlusion.lens)) {
+                   occlusion.up, occlusion.forward, occlusion.lens, occlusion.shifts.zw)) {
     return;
   }
   addToCounter(occlusion.counters + SHOWN_AGAIN, 1u);

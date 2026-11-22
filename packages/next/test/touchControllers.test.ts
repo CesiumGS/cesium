@@ -1,6 +1,7 @@
 // The touch gestures through each controller with synthetic pointer events:
 // pinch, twist, pan and tilt, 1:1 (plan 5d's ruling 26). Node, no GPU.
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { positionHit } from "./positionHit.ts";
 import { Ellipsoid } from "../src/math/ellipsoid.ts";
 import * as m4 from "../src/math/mat4.ts";
 import * as v3 from "../src/math/vec3.ts";
@@ -125,11 +126,13 @@ describe("GlobeController touch", () => {
     // The engine's pick: the ground under the pixel, one tick later.
     vi.spyOn(view, "pickPosition").mockImplementation((x, y) =>
       Promise.resolve(
-        WGS84.rayIntersection(
-          camera.position,
-          rayAt(camera, Math.floor(x) + 0.5, Math.floor(y) + 0.5),
-          v3.vec3(),
-        ) ?? undefined,
+        positionHit(
+          WGS84.rayIntersection(
+            camera.position,
+            rayAt(camera, Math.floor(x) + 0.5, Math.floor(y) + 0.5),
+            v3.vec3(),
+          ) ?? undefined,
+        ),
       ),
     );
     const b = box();

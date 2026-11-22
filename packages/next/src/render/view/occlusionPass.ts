@@ -14,6 +14,7 @@
 // height captures are other passes: they build none and read none.
 import type { TextureHandle } from "../FrameGraph.ts";
 import type { ViewFrame } from "./viewFrameData.ts";
+import { newLens } from "../../scene/Camera.ts";
 import type { Engine } from "../../scene/Engine.ts";
 import type { View } from "../../scene/View.ts";
 import {
@@ -44,7 +45,8 @@ export interface OcclusionPassEngine extends Pick<
 
 /** Words of results: one bit a query. */
 const RESULT_WORDS = MAX_QUERIES / 32;
-const PARAMS_BYTES = 32;
+const PARAMS_BYTES = 48;
+const scratchLens = newLens();
 
 /** A view's pyramid: its texture, bind groups and the camera it was built for. */
 export class DepthPyramid {
@@ -85,6 +87,9 @@ export class DepthPyramid {
     | {
         tanX: number;
         tanY: number;
+        /** The principal point, NDC (`Camera.lens`): 0 (the default) while centered. */
+        shiftX?: number;
+        shiftY?: number;
         near: number;
         position: Float64Array;
         direction: Float64Array;
@@ -297,11 +302,13 @@ export class FrameOcclusion {
       pyramid.height,
       pyramid.shape.levels,
     ]);
-    new Float32Array(params, 16, 4).set([
+    new Float32Array(params, 16, 6).set([
       camera.tanX,
       camera.tanY,
       camera.near,
       OCCLUSION_BIAS,
+      camera.shiftX ?? 0,
+      camera.shiftY ?? 0,
     ]);
     this.device.queue.writeBuffer(slot.params, 0, params);
     this.device.queue.writeBuffer(
@@ -342,11 +349,15 @@ export function cullCamera(
   frame: { width: number; height: number },
 ): NonNullable<DepthPyramid["built"]> {
   const camera = engine.bodyCamera(view);
-  const aspect = frame.width / frame.height;
-  const tanY = Math.tan(camera.fovy(aspect) / 2);
+  const { tanX, tanY, shiftX, shiftY } = camera.lens(
+    frame.width / frame.height,
+    scratchLens,
+  );
   return {
-    tanX: tanY * aspect,
+    tanX,
     tanY,
+    shiftX,
+    shiftY,
     near: camera.near,
     position: Float64Array.from(camera.position),
     direction: Float64Array.from(camera.direction),

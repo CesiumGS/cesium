@@ -45,9 +45,9 @@ fn assign(@builtin(workgroup_id) tile_0 : vec3<u32>, @builtin(local_invocation_i
     var _S18 : u32 = _S17.x;
     var _S19 : vec2<f32> = vec2<f32>(2.0f);
     var _S20 : vec2<f32> = vec2<f32>(1.0f);
-    var sx_0 : vec2<f32> = (vec2<f32>(f32(i_0), f32(i_0 + u32(1))) / vec2<f32>(f32(_S18)) * _S19 - _S20) * vec2<f32>(bitcast<f32>(lightTable_0[(u32(24))/4]));
+    var sx_0 : vec2<f32> = (vec2<f32>(f32(i_0), f32(i_0 + u32(1))) / vec2<f32>(f32(_S18)) * _S19 - _S20 - vec2<f32>(bitcast<f32>(lightTable_0[(u32(60))/4]))) * vec2<f32>(bitcast<f32>(lightTable_0[(u32(24))/4]));
     var _S21 : u32 = _S17.y;
-    var sy_0 : vec2<f32> = (_S20 - vec2<f32>(f32(j_0 + u32(1)), f32(j_0)) / vec2<f32>(f32(_S21)) * _S19) * vec2<f32>(bitcast<f32>(lightTable_0[(u32(28))/4]));
+    var sy_0 : vec2<f32> = (_S20 - vec2<f32>(f32(j_0 + u32(1)), f32(j_0)) / vec2<f32>(f32(_S21)) * _S19 - vec2<f32>(bitcast<f32>(lightTable_0[(u32(76))/4]))) * vec2<f32>(bitcast<f32>(lightTable_0[(u32(28))/4]));
     var _S22 : f32 = sx_0.x;
     var _S23 : vec3<f32> = vec3<f32>(-1.0f, 0.0f, _S22) * vec3<f32>(inverseSqrt(1.0f + _S22 * _S22));
     var _S24 : f32 = sx_0.y;

@@ -84,6 +84,9 @@ struct Sky {
   // already holds them; an environment face's also takes the background's mean,
   // which isn't otherwise in it.
   float3 faintStars;
+  // The principal point, in normalized device coordinates (`Camera.lens`):
+  // rays leave from it; 0 while centered (an environment face's always is).
+  float2 shift;
 };
 
 [[vk::binding(0, 2)]] ConstantBuffer<Sky> sky;
@@ -115,7 +118,7 @@ float3 toRgb(float4 spectral, uint group) {
 }
 
 float3 viewDirection(float2 pixel) {
-  float2 ndc = float2(pixel.x / sky.size.x * 2.0 - 1.0, 1.0 - pixel.y / sky.size.y * 2.0);
+  float2 ndc = float2(pixel.x / sky.size.x * 2.0 - 1.0, 1.0 - pixel.y / sky.size.y * 2.0) - sky.shift;
   return normalize(sky.forward + sky.right * (ndc.x * sky.tanX) + sky.up * (ndc.y * sky.tanY));
 }
 
@@ -237,7 +240,7 @@ StarSplat starVertex(uint corner : SV_VertexID, uint index : SV_InstanceID) {
   if (z < 0.01) {
     return out;
   }
-  float2 ndc = float2(dot(d, sky.right) / (z * sky.tanX), dot(d, sky.up) / (z * sky.tanY));
+  float2 ndc = float2(dot(d, sky.right) / (z * sky.tanX), dot(d, sky.up) / (z * sky.tanY)) + sky.shift;
   float2 pixel = float2((ndc.x * 0.5 + 0.5) * sky.size.x, (0.5 - ndc.y * 0.5) * sky.size.y);
   // Its illuminance over the pixel's solid angle there: radiance.
   float pixelAngle = 2.0 * sky.tanY / sky.size.y;
@@ -856,7 +859,7 @@ groupshared float4 scanTransmittance[AERIAL_SLICES];
 void aerialColumn<let group : uint>(uint3 column, uint j) {
   float2 ndc = float2(
       (float(column.x) + 0.5) / float(AERIAL_SIZE) * 2.0 - 1.0,
-      1.0 - (float(column.y) + 0.5) / float(AERIAL_SIZE) * 2.0);
+      1.0 - (float(column.y) + 0.5) / float(AERIAL_SIZE) * 2.0) - sky.shift;
   float3 direction = normalize(sky.forward + sky.right * (ndc.x * sky.tanX) + sky.up * (ndc.y * sky.tanY));
   float2 span = float2(sky.aerialStart, sky.aerialEnd);
   float nu = dot(direction, sky.sun);
@@ -965,7 +968,7 @@ struct AerialScreen {
 
 [shader("fragment")]
 AerialScreen aerialScreenFragment(SkyVarying in) {
-  float2 ndc = float2(in.position.x / AERIAL_SCREEN.x * 2.0 - 1.0, 1.0 - in.position.y / AERIAL_SCREEN.y * 2.0);
+  float2 ndc = float2(in.position.x / AERIAL_SCREEN.x * 2.0 - 1.0, 1.0 - in.position.y / AERIAL_SCREEN.y * 2.0) - sky.shift;
   float3 seen = normalize(sky.forward + sky.right * (ndc.x * sky.tanX) + sky.up * (ndc.y * sky.tanY));
   float3 direction = normalize(sky.shape * seen);
   float3 sun = normalize(sky.shape * sky.sun);

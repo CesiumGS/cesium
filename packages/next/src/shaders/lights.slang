@@ -37,9 +37,10 @@ void assign(uint3 tile : SV_GroupID, uint k : SV_GroupIndex) {
   uint i = tile.x;
   uint j = tile.y; // from the top
   // The tile's side planes, by their slopes: x/z in [sx.x, sx.y], y/z in
-  // [sy.x, sy.y]; their outward normals, unit.
-  float2 sx = (float2(float(i), float(i + 1u)) / float(dims.x) * 2.0 - 1.0) * h.depth.z;
-  float2 sy = (1.0 - float2(float(j + 1u), float(j)) / float(dims.y) * 2.0) * h.depth.w;
+  // [sy.x, sy.y], from the principal point (right.w, up.w); their outward
+  // normals, unit.
+  float2 sx = (float2(float(i), float(i + 1u)) / float(dims.x) * 2.0 - 1.0 - h.right.w) * h.depth.z;
+  float2 sy = (1.0 - float2(float(j + 1u), float(j)) / float(dims.y) * 2.0 - h.up.w) * h.depth.w;
   float3 left = float3(-1.0, 0.0, sx.x) * rsqrt(1.0 + sx.x * sx.x);
   float3 right = float3(1.0, 0.0, -sx.y) * rsqrt(1.0 + sx.y * sx.y);
   float3 bottom = float3(0.0, -1.0, sy.x) * rsqrt(1.0 + sy.x * sy.x);

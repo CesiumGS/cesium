@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { positionHit } from "./positionHit.ts";
 import { Camera } from "../src/scene/Camera.ts";
 import { EARTH } from "../src/scene/Body.ts";
 import {
@@ -83,9 +84,16 @@ function view(
     o.onPick?.(camera, calls++);
     return o.feature === false ? undefined : { featureId: 7, name: undefined };
   });
-  const pickPosition = vi.fn(async () =>
-    "hit" in o ? o.hit : new Float64Array(HIT),
-  );
+  const pickPosition = vi.fn(async () => {
+    const rect = o.rect ?? { width: 1000, height: 500 };
+    const ratio = o.ratio ?? 1;
+    return positionHit(
+      "hit" in o ? o.hit : new Float64Array(HIT),
+      camera,
+      rect.width / ratio,
+      rect.height / ratio,
+    );
+  });
   const v: PickView = {
     pick,
     pickPosition,
@@ -305,8 +313,7 @@ describe("pickDesign on View.pickPoint", () => {
           right: Float64Array.from(at.right),
           fovy: at.fovy(rect.width / rect.height),
           near: at.near,
-          width: rect.width / ratio,
-          height: rect.height / ratio,
+          ...at.intrinsics(rect.width / ratio, rect.height / ratio),
         },
       };
     });

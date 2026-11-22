@@ -6,6 +6,7 @@ struct AoParams_std140_0
     @align(16) up_0 : vec4<f32>,
     @align(16) forward_0 : vec4<f32>,
     @align(16) size_0 : vec4<f32>,
+    @align(16) shift_0 : vec4<f32>,
 };
 
 @binding(0) @group(0) var<uniform> params_0 : AoParams_std140_0;
@@ -32,7 +33,8 @@ fn distanceAt_0( depth_0 : f32,  near_0 : f32) -> f32
 
 fn positionAt_0( pixel_0 : vec2<f32>,  depth_1 : f32) -> vec3<f32>
 {
-    return (params_0.forward_0.xyz + params_0.right_0.xyz * vec3<f32>(((pixel_0.x / params_0.size_0.x * 2.0f - 1.0f) * params_0.right_0.w)) + params_0.up_0.xyz * vec3<f32>(((1.0f - pixel_0.y / params_0.size_0.y * 2.0f) * params_0.up_0.w))) * vec3<f32>(distanceAt_0(depth_1, params_0.forward_0.w));
+    var ndc_0 : vec2<f32> = vec2<f32>(pixel_0.x / params_0.size_0.x * 2.0f - 1.0f, 1.0f - pixel_0.y / params_0.size_0.y * 2.0f) - params_0.shift_0.xy;
+    return (params_0.forward_0.xyz + params_0.right_0.xyz * vec3<f32>((ndc_0.x * params_0.right_0.w)) + params_0.up_0.xyz * vec3<f32>((ndc_0.y * params_0.up_0.w))) * vec3<f32>(distanceAt_0(depth_1, params_0.forward_0.w));
 }
 
 fn noise_0( pixel_1 : vec2<f32>) -> f32

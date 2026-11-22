@@ -24,7 +24,7 @@ import { routeForward } from "../src/camera/route.ts";
 import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { verticalExaggeration } from "../src/georeference/heightCurvilinearMaps.ts";
 import { pickIn } from "../src/frames/pickIn.ts";
-import { Camera } from "../src/scene/Camera.ts";
+import { Camera, centeredIntrinsics } from "../src/scene/Camera.ts";
 import { View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { World } from "../src/scene/World.ts";
@@ -136,8 +136,7 @@ function corePick(
       right: Float64Array.of(0, 1, 0),
       fovy: 1,
       near: 0.1,
-      width: 64,
-      height: 48,
+      ...centeredIntrinsics(1, 64, 48),
     },
   };
 }

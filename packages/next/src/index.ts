@@ -158,6 +158,7 @@ export {
   type OutputEncoding,
   type TranslucencyMethod,
   type ViewBackground,
+  type PickPositionResult,
   type PickResult,
 } from "./scene/View.ts";
 export {

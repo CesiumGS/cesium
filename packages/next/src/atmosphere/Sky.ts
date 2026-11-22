@@ -6,7 +6,7 @@ import type { Ellipsoid, Cartographic } from "../math/ellipsoid.ts";
 import * as v3 from "../math/vec3.ts";
 import { MipGenerator } from "../gpu/MipGenerator.ts";
 import type { Vec3 } from "../math/vec3.ts";
-import type { Camera } from "../scene/Camera.ts";
+import { type Camera, newLens } from "../scene/Camera.ts";
 import type { PointSpread } from "../scene/observer.ts";
 import { STAR_FLOATS, backgroundLevel, type StarField } from "./stars.ts";
 import {
@@ -32,7 +32,7 @@ import {
 export const SUN_ANGULAR_DIAMETER = 0.00935;
 
 /** Bytes of the `Sky` uniform (sky.slang). */
-const SKY_SIZE = 352;
+const SKY_SIZE = 368;
 /** The Earth's geometric albedo (earthshine on the Moon). */
 const EARTH_ALBEDO = 0.367;
 /** Bytes between the environment faces' `Sky` uniforms. */
@@ -266,6 +266,7 @@ export class Sky {
   private readonly groups: Array<[GPUBindGroup, GPUBindGroup]>;
   private readonly empty: GPUBindGroup;
   private readonly data = new ArrayBuffer(SKY_SIZE);
+  private readonly lens = newLens();
   private readonly f32 = new Float32Array(this.data);
   /** The uniform's camera axes, and its point spread as `writeStars` reads it. */
   private readonly forward = this.f32.subarray(8, 11);
@@ -778,6 +779,8 @@ export class Sky {
       this.up,
       words[11]!,
       words[15]!,
+      words[88]!,
+      words[89]!,
       words[20]!,
       words[21]!,
       words[3]!,
@@ -892,6 +895,9 @@ export class Sky {
     const p = this.atmosphere.parameters;
     out[35] = (distance - distance / scaled) / (p.topRadius - p.bottomRadius);
     out[87] = p.topRadius / 1000;
+    // The principal point (glare.slang `shift`).
+    out[88] = f[88]!;
+    out[89] = f[89]!;
     for (let i = 0; i < 12; i++) {
       out[36 + i] = this.starData[i]!;
     }
@@ -1063,6 +1069,8 @@ export class Sky {
     f[11] = 1;
     f[15] = 1;
     f[19] = 1;
+    f[88] = 0; // a face's principal point is centered
+    f[89] = 0;
     f[20] = ENVIRONMENT_SIZE;
     f[21] = ENVIRONMENT_SIZE;
     f[22] = SKY_STEPS;
@@ -1728,11 +1736,13 @@ export class Sky {
     f[6] = sun[2]!;
     const radius = SUN_ANGULAR_DIAMETER / 2;
     f[7] = sunDisk ? Math.cos(radius) : 2;
-    const tanY = Math.tan(camera.fovy(aspect) / 2);
+    const { tanX, tanY, shiftX, shiftY } = camera.lens(aspect, this.lens);
     f.set(camera.direction, 8);
-    f[11] = tanY * aspect;
+    f[11] = tanX;
     f.set(camera.right, 12);
     f[15] = tanY;
+    f[88] = shiftX;
+    f[89] = shiftY;
     f[83] = backgroundLevel(tanY, this.starLevels);
     for (let i = 0; i < 3; i++) {
       f[84 + i] = STARLIGHT[i]! * this.faintShare;
@@ -1743,7 +1753,7 @@ export class Sky {
     f[21] = height;
     f[22] = SKY_STEPS;
     this.device.queue.writeBuffer(view.buffer, 0, this.data, 0, 96);
-    this.device.queue.writeBuffer(view.buffer, 224, this.data, 224, 128);
+    this.device.queue.writeBuffer(view.buffer, 224, this.data, 224, 144);
   }
 
   /** The weights (bytes 96 on) are constant: written once per view. */

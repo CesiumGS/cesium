@@ -205,7 +205,7 @@ describe("View.pickPoint", () => {
     expect(distance(pick.position, expected)).toBeLessThan(1e-6);
     expect(Array.from(pick.anchorPosition)).toEqual(Array.from(pick.position));
     // pickPosition: the body anchor's (Earth-fixed) coordinates, as before.
-    expect(Array.from((await position)!)).toEqual(
+    expect(Array.from((await position)!.position)).toEqual(
       Array.from(pick.anchorPosition),
     );
     // The camera it was read with, in the anchor's coordinates, and the
@@ -343,7 +343,7 @@ describe("View.pickPoint", () => {
     // pickPosition, read at tick n + 1 with that tick's camera in the
     // Earth's anchor: Earth-fixed coordinates of the ground, a minute of
     // the Earth's turn (about 28 km here) from tick n's.
-    const own = (await position)!;
+    const own = (await position)!.position;
     expect(radius(own)).toBeCloseTo(R, 3);
     expect(distance(own, pick.anchorPosition)).toBeGreaterThan(20_000);
   });

@@ -196,7 +196,7 @@ public struct LightHeader {
   public float4 grid;            // tiles across, down, slices; the lights' count
   public float4 depth;           // near (m), slices per unit of ln(z / near), tan(half fov) x, y
   public float4 forward;         // the camera's axes; .w of forward: the grid's far end (m)
-  public float4 right;
+  public float4 right;           // .w of right and up: the principal point, NDC (0: centered)
   public float4 up;
 };
 

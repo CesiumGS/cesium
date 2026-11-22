@@ -79,6 +79,8 @@ export interface PendingPick {
 }
 
 interface PendingCamera {
+  /** The record the pick used, in the body anchor's coordinates. */
+  cameraRecord: CameraRecord;
   position: Float64Array;
   direction: Float64Array;
   up: Float64Array;
@@ -225,7 +227,7 @@ export function encodePick(
       pickTick(engine, view, frame, cameraRecord, tanX, tanY, ndcX, ndcY),
     camera:
       request.resolvePosition &&
-      positionCamera(engine, view, tanX, tanY, ndcX, ndcY),
+      positionCamera(engine, view, frame, ratio, tanX, tanY, ndcX, ndcY),
     translucent: translucentTerrainPick(engine, view, tanX, tanY, ndcX, ndcY),
     domain:
       request.resolvePoint || placedGlobes(engine, view).length > 0
@@ -309,6 +311,8 @@ function translucentTerrainPick(
 function positionCamera(
   engine: PickEngine,
   view: View,
+  frame: ViewFrame,
+  ratio: number,
   tanX: number,
   tanY: number,
   ndcX: number,
@@ -316,6 +320,12 @@ function positionCamera(
 ): PendingCamera {
   const camera = engine.bodyCamera(view);
   return {
+    cameraRecord: camera.record(
+      frame.width / ratio,
+      frame.height / ratio,
+      view.bodyAnchor ?? engine.cameras.root(view),
+      frame.seconds,
+    ),
     position: Float64Array.from(camera.position),
     direction: Float64Array.from(camera.direction),
     up: Float64Array.from(camera.up),
@@ -425,7 +435,7 @@ export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
                 c.ndcX * c.tanX * c.right[i]! +
                 c.ndcY * c.tanY * c.up[i]!);
         }
-        request.resolvePosition(p);
+        request.resolvePosition({ position: p, cameraRecord: c.cameraRecord });
         return;
       }
       const result = pickResult(featureId, view.world.feature(featureId));

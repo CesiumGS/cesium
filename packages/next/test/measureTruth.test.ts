@@ -37,7 +37,11 @@ import { measure } from "../src/measure/measure.ts";
 import { truePick } from "../src/frames/pickTruth.ts";
 import { routeSingularRange } from "../src/scene/curvilinearBounds.ts";
 import { EARTH } from "../src/scene/Body.ts";
-import { Camera, projectToPixel } from "../src/scene/Camera.ts";
+import {
+  Camera,
+  centeredIntrinsics,
+  projectToPixel,
+} from "../src/scene/Camera.ts";
 import type { CorePick } from "../src/scene/pick.ts";
 import type { DrawHandle } from "../src/scene/world/types.ts";
 import type { TileGeometry } from "../src/streaming/Tile.ts";
@@ -640,8 +644,7 @@ function curvilinearView(
           right: Float64Array.of(0, 1, 0),
           fovy: 2 * Math.atan(0.5),
           near: 0.1,
-          width: 1000,
-          height: 500,
+          ...centeredIntrinsics(2 * Math.atan(0.5), 1000, 500),
         },
         ...(domain && {
           domain: { draw: DRAW, kind: "triangle" as const },
@@ -867,8 +870,7 @@ describe("accuracy keeps a bound and a σ apart", () => {
         right: Float64Array.of(0, 1, 0),
         fovy: 0.8,
         near: 1,
-        width: 800,
-        height: 800,
+        ...centeredIntrinsics(0.8, 800, 800),
       },
       truePosition: { position: truePoint, frame: rig.itrf },
       accuracy: { meters: 0.01, exact: false, note: "on the triangle" },

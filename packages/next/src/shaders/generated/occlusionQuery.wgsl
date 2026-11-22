@@ -10,6 +10,9 @@ struct QueryParams_std140_0
     @align(4) tanY_0 : f32,
     @align(8) near_0 : f32,
     @align(4) bias_0 : f32,
+    @align(16) shiftX_0 : f32,
+    @align(4) shiftY_0 : f32,
+    @align(8) pad_0 : vec2<f32>,
 };
 
 @binding(0) @group(0) var<uniform> params_0 : QueryParams_std140_0;
@@ -35,6 +38,8 @@ struct PyramidCamera_0
      tanY_1 : f32,
      near_1 : f32,
      bias_1 : f32,
+     shiftX_1 : f32,
+     shiftY_1 : f32,
 };
 
 fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  center_0 : vec3<f32>,  a_0 : vec3<f32>,  b_0 : vec3<f32>,  c_0 : vec3<f32>,  window_0 : u32) -> bool
@@ -91,7 +96,7 @@ fn boxHidden_0( pyramid_1 : texture_2d<f32>,  camera_0 : PyramidCamera_0,  cente
             return false;
         }
         var inverse_0 : f32 = 1.0f / _S7;
-        var screen_0 : vec2<f32> = vec2<f32>((p_0.x * inverse_0 / camera_0.tanX_1 * 0.5f + 0.5f) * frameWidth_0, (0.5f - p_0.y * inverse_0 / camera_0.tanY_1 * 0.5f) * frameHeight_0);
+        var screen_0 : vec2<f32> = vec2<f32>(((p_0.x * inverse_0 / camera_0.tanX_1 + camera_0.shiftX_1) * 0.5f + 0.5f) * frameWidth_0, (0.5f - (p_0.y * inverse_0 / camera_0.tanY_1 + camera_0.shiftY_1) * 0.5f) * frameHeight_0);
         var _S8 : vec2<f32> = min(low_0, screen_0);
         var _S9 : vec2<f32> = max(high_0, screen_0);
         var _S10 : f32 = min(nearestZ_0, _S7);
@@ -240,6 +245,8 @@ fn isHidden_0( q_0 : u32) -> bool
     camera_1.tanY_1 = params_0.tanY_0;
     camera_1.near_1 = params_0.near_0;
     camera_1.bias_1 = params_0.bias_0;
+    camera_1.shiftX_1 = params_0.shiftX_0;
+    camera_1.shiftY_1 = params_0.shiftY_0;
     return boxHidden_0(pyramid_0, camera_1, vec_0(at_1), vec_0(at_1 + u32(3)), vec_0(at_1 + u32(6)), vec_0(at_1 + u32(9)), u32(2));
 }
 

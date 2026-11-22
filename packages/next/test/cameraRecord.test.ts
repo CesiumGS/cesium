@@ -22,6 +22,27 @@ import type { View } from "../src/scene/View.ts";
 import type { World } from "../src/scene/World.ts";
 import type { AnchorHandle } from "../src/scene/world/types.ts";
 import { fakeEngine } from "./fakeGpu.ts";
+import { cullCamera } from "../src/render/view/occlusionPass.ts";
+import {
+  OCCLUSION_CULL_BYTES,
+  occlusionCullParams,
+} from "../src/render/view/occlusionCull.ts";
+import {
+  buildPyramid,
+  sphereHidden,
+} from "../src/render/view/occlusionMath.ts";
+import {
+  SHADOW_CASCADES,
+  SHADOW_SIZE,
+  createShadowCascades,
+  fitShadowCascades,
+} from "../src/scene/shadows.ts";
+import {
+  LIGHTS_SIZE,
+  type LightOptions,
+  packViewLights,
+} from "../src/scene/lights.ts";
+import { starCullInputs } from "../src/atmosphere/starCells.ts";
 
 const R = 6_378_137;
 const WIDTH = 64;
@@ -524,9 +545,17 @@ describe("views and picks", () => {
     expect(record.distortion.model).toBe("none");
     const pixel = new Float64Array(2);
     const z = view.camera.near / depth;
-    // The picked point is on the pixel's center, at the depth read.
-    for (const p of [pick.position, (await position)!]) {
-      const along = projectToPixel(record, p, pixel);
+    // The picked point is on the pixel's center, at the depth read, each
+    // through the record it came with (on the default rig, render space and
+    // the body anchor's coordinates are the same).
+    const own = (await position)!;
+    expect(own.cameraRecord.cx).toBeCloseTo(OFF_CENTER.cx, 10);
+    expect(own.cameraRecord.pose.referenceFrame).toBe(earth);
+    for (const [p, r] of [
+      [pick.position, record],
+      [own.position, own.cameraRecord],
+    ] as const) {
+      const along = projectToPixel(r, p, pixel);
       expect(along).toBeCloseTo(z, 6);
       expect(pixel[0]).toBeCloseTo(x + 0.5, 6);
       expect(pixel[1]).toBeCloseTo(y + 0.5, 6);
@@ -549,5 +578,261 @@ describe("views and picks", () => {
     expect(record.cy).toBe(HEIGHT / 2);
     expect(record.width).toBe(WIDTH);
     expect(record).toEqual((await point)!.cameraRecord);
+  });
+});
+
+describe("every reader of the field of view follows the lens", () => {
+  /** A view 128 × 96 whose principal point is 32 px right of center. */
+  const W = 128;
+  const H = 96;
+  const SHIFTED: CameraIntrinsics = {
+    width: W,
+    height: H,
+    fx: 80,
+    fy: 80,
+    cx: 96,
+    cy: 48,
+  };
+
+  it("occlusion culling keeps an item in view near the image's edge", async () => {
+    const engine = await fakeEngine();
+    try {
+      const world = engine.createWorld({ maxDraws: 4 });
+      const view = engine.addView({
+        target: new OffscreenTarget(W, H),
+        world,
+      });
+      view.camera.setIntrinsics(SHIFTED);
+      // The lens the engine culls with (occlusionPass `cullCamera`).
+      const built = cullCamera(engine, view, { width: W, height: H });
+      expect(built.shiftX).toBeCloseTo(0.5, 12);
+      const near = view.camera.near;
+      // The off-center image: a wall 10 m away over x in [70, 110), the sky
+      // (reverse-Z 0) elsewhere.
+      const levels = buildPyramid(W, H, (x) =>
+        x >= 70 && x < 110 ? near / 10 : 0,
+      );
+      const camera = { frameWidth: W, frameHeight: H, ...built };
+      // Items 50 m away, drawn beside the wall at the right edge (columns
+      // 112 to 127), in the middle and at the corners: none hidden.
+      for (const [u, v] of [
+        [120, 48],
+        [124, 6],
+        [124, 90],
+      ] as const) {
+        const z = 50;
+        const center = [
+          ((u - SHIFTED.cx) / SHIFTED.fx) * z,
+          ((SHIFTED.cy - v) / SHIFTED.fy) * z,
+          z,
+        ];
+        expect(sphereHidden(levels, camera, center, 0.5), `${u}, ${v}`).toBe(
+          false,
+        );
+        // The centered lens puts it 32 px left, on the wall: it was hidden.
+        expect(
+          sphereHidden(
+            levels,
+            { ...camera, shiftX: 0, shiftY: 0 },
+            center,
+            0.5,
+          ),
+        ).toBe(true);
+      }
+      // And behind the wall, it is hidden.
+      expect(sphereHidden(levels, camera, [0.125 * 50, 0, 50], 0.5)).toBe(true);
+      // The GPU cull's uniform carries both cameras' principal points.
+      const out = new ArrayBuffer(OCCLUSION_CULL_BYTES);
+      occlusionCullParams(
+        out,
+        built,
+        built,
+        { width: W, height: H, levels: 7 },
+        { argumentRows: 1, itemRows: 1, counterWord: 0 },
+      );
+      expect(Array.from(new Float32Array(out, 128, 4))).toEqual([
+        0.5, 0, 0.5, 0,
+      ]);
+    } finally {
+      engine.destroy();
+    }
+  });
+
+  it("the sky's rays leave from the principal point", async () => {
+    const engine = await fakeEngine();
+    try {
+      const world = engine.createWorld({ maxDraws: 4 });
+      world.bodyAnchor(EARTH);
+      const view = engine.addView({
+        target: new OffscreenTarget(W, H),
+        world,
+      });
+      view.setCameraFromAnchor(world.bodyAnchor(EARTH), above());
+      view.camera.setIntrinsics(SHIFTED);
+      // The view's uniform as the sky writes it (the environment's faces
+      // write theirs, centered, from the same array afterward).
+      const sky = engine.raster.sky as unknown as {
+        f32: Float32Array;
+        write: (...args: unknown[]) => void;
+      };
+      let f = new Float32Array(0);
+      const write = sky.write.bind(sky);
+      sky.write = (...args: unknown[]) => {
+        write(...args);
+        f = Float32Array.from(sky.f32);
+      };
+      engine.renderFrame();
+      expect(f.length).toBeGreaterThan(89);
+      const camera = engine.bodyCamera(view);
+      const lens = camera.lens(W / H);
+      expect(f[88]).toBe(Math.fround(lens.shiftX));
+      expect(f[89]).toBe(Math.fround(lens.shiftY));
+      expect(f[11]).toBe(Math.fround(lens.tanX));
+      // sky.slang `viewDirection` for a pixel, from the uniform: the ray
+      // through that pixel of the record.
+      const record = camera.record(W, H, ROOT, 0);
+      const out = new Float64Array(2);
+      const u = f;
+      const ray = (nx: number, ny: number) =>
+        [0, 1, 2].map(
+          (i) =>
+            u[8 + i]! + u[12 + i]! * nx * u[11]! + u[16 + i]! * ny * u[15]!,
+        );
+      for (const [px, py] of [
+        [2, 3],
+        [96, 48],
+        [125, 90],
+      ] as const) {
+        const nx = (px / u[20]!) * 2 - 1 - u[88]!;
+        const ny = 1 - (py / u[21]!) * 2 - u[89]!;
+        const d = ray(nx, ny);
+        const point = d.map((v, i) => camera.position[i]! + 1000 * v);
+        projectToPixel(record, point, out);
+        expect(Math.abs(out[0]! - px)).toBeLessThan(1e-3);
+        expect(Math.abs(out[1]! - py)).toBeLessThan(1e-3);
+      }
+    } finally {
+      engine.destroy();
+    }
+  });
+
+  it("shadow cascades cover every corner of an off-center view", () => {
+    const camera = above().setIntrinsics({
+      ...SHIFTED,
+      cx: 110,
+      cy: 20,
+    });
+    const cascades = createShadowCascades();
+    const sun = [0.3, 0.2, 0.93];
+    const length = Math.hypot(...sun);
+    fitShadowCascades(
+      cascades,
+      camera,
+      W / H,
+      sun.map((v) => v / length),
+      50,
+    );
+    let previous = Math.max(camera.near, 1);
+    for (let c = 0; c < SHADOW_CASCADES; c++) {
+      const m = cascades.matrices.subarray(c * 16, c * 16 + 16);
+      for (const d of [previous, cascades.splits[c]!]) {
+        for (const [nx, ny] of [
+          [-1, -1],
+          [-1, 1],
+          [1, -1],
+          [1, 1],
+        ] as const) {
+          const ray = camera.rayDirection(nx, ny, W / H, new Float64Array(3));
+          const along = d / v3.dot(ray, camera.direction);
+          const p = [0, 1, 2].map((i) => ray[i]! * along);
+          for (const row of [0, 1]) {
+            const clip =
+              m[row]! * p[0]! +
+              m[4 + row]! * p[1]! +
+              m[8 + row]! * p[2]! +
+              m[12 + row]!;
+            expect(Math.abs(clip), `cascade ${c}`).toBeLessThanOrEqual(
+              1 + 2 / SHADOW_SIZE,
+            );
+          }
+        }
+      }
+      previous = cascades.splits[c]!;
+    }
+  });
+
+  it("light culling uses each edge's own tangent", () => {
+    // Looking down +y, x right, z up; the principal point half a view right.
+    const camera = {
+      position: [0, 0, 0],
+      direction: [0, 1, 0],
+      up: [0, 0, 1],
+      right: [1, 0, 0],
+      near: 0.1,
+      tanX: 1,
+      tanY: 1,
+      shiftX: 0.5,
+      shiftY: 0,
+    };
+    const at = (x: number, y: number, z: number) => {
+      const m = new Float64Array(16);
+      m[0] = m[5] = m[10] = m[15] = 1;
+      m[12] = x;
+      m[13] = y;
+      m[14] = z;
+      return m;
+    };
+    const kept = (x: number) => {
+      const out = new Float32Array(LIGHTS_SIZE / 4);
+      const count = packViewLights(
+        out,
+        0,
+        (visit) =>
+          visit(
+            {
+              type: "point",
+              intensity: 1,
+              range: 0.5,
+            } as LightOptions,
+            at(x, 10, 0),
+          ),
+        camera,
+        1,
+      );
+      return { count, shift: [out[15], out[19]] };
+    };
+    // The left edge's tangent is 1.5 and the right's 0.5.
+    expect(kept(-13).count).toBe(1); // beyond the centered edge, in view
+    expect(kept(8).count).toBe(0); // within the centered edge, out of view
+    expect(kept(4).count).toBe(1);
+    // lights.slang's tiles read the principal point from the header.
+    expect(kept(4).shift).toEqual([0.5, 0]);
+  });
+
+  it("the star cells' planes are the off-center edges", () => {
+    const inputs = starCullInputs(
+      [0, 0, -1],
+      [1, 0, 0],
+      [0, 1, 0],
+      1,
+      1,
+      0.5,
+      0,
+      1000,
+      1000,
+      1,
+      [1, 0, 0, 0, 1, 0, 0, 0, 1],
+      1,
+      { core: 0.5 },
+      1,
+    );
+    const p = inputs.planes;
+    const side = (k: number, d: readonly number[]) =>
+      p[k]! * d[0]! + p[k + 1]! * d[1]! + p[k + 2]! * d[2]!;
+    // A star at slope −1.4 (in view: the left edge is at −1.5) and one at
+    // 0.6 (out: the right edge is at 0.5).
+    const unit = (v: number[]) => v.map((x) => x / Math.hypot(...v));
+    expect(side(0, unit([-1.4, 0, -1]))).toBeGreaterThan(0);
+    expect(side(4, unit([0.6, 0, -1]))).toBeLessThan(0);
   });
 });

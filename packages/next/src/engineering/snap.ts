@@ -6,7 +6,7 @@
  * `SnapService`, as `IonSnapService` implements it). `refiningSnap` shows the
  * client's answer and then updates it with the server's.
  */
-import { projectToPixel } from "../scene/Camera.ts";
+import { isCentered, projectThrough, projectToPixel } from "../scene/Camera.ts";
 import type { PickResult } from "../scene/View.ts";
 import type { CoordinateOperation } from "../frames/coordinates.ts";
 import type { SceneItem } from "../scene/SceneItem.ts";
@@ -731,14 +731,17 @@ function cursorDistance(
   cursor: { readonly x: number; readonly y: number },
 ): number {
   const at = new Float64Array(2);
-  const depth = projectToPixel(
-    camera,
-    camera.fovy,
-    camera.width,
-    camera.height,
-    point,
-    at,
-  );
+  // Through the pick's lens: centered, the field of view's math as always.
+  const depth = isCentered(camera)
+    ? projectToPixel(
+        camera,
+        camera.fovy,
+        camera.width,
+        camera.height,
+        point,
+        at,
+      )
+    : projectThrough(camera, camera, point, at);
   return depth > 0 && depth >= camera.near
     ? Math.hypot(at[0]! - cursor.x, at[1]! - cursor.y)
     : NaN;
@@ -1017,12 +1020,23 @@ function nearest(
   const { width, height, near: nearPlane } = camera;
   const tan = Math.tan(camera.fovy / 2);
   const aspect = width / height;
+  // Off center, or pixels not square: through the intrinsics (a pixel is
+  // c + f · slope). Centered, the field of view's math as always.
+  const centered = isCentered(camera);
   // The aperture's box as bounds on right/depth and up/depth: a cheap
   // reject (no division) before any vertex is projected to a pixel.
-  const left = ((2 * (cx - aperture)) / width - 1) * tan * aspect,
-    right = ((2 * (cx + aperture)) / width - 1) * tan * aspect,
-    above = (1 - (2 * (cy - aperture)) / height) * tan,
-    below = (1 - (2 * (cy + aperture)) / height) * tan;
+  const left = centered
+      ? ((2 * (cx - aperture)) / width - 1) * tan * aspect
+      : (cx - aperture - camera.cx) / camera.fx,
+    right = centered
+      ? ((2 * (cx + aperture)) / width - 1) * tan * aspect
+      : (cx + aperture - camera.cx) / camera.fx,
+    above = centered
+      ? (1 - (2 * (cy - aperture)) / height) * tan
+      : (camera.cy - (cy - aperture)) / camera.fy,
+    below = centered
+      ? (1 - (2 * (cy + aperture)) / height) * tan
+      : (camera.cy - (cy + aperture)) / camera.fy;
   for (let v = 0; v < count; v++) {
     const x = positions[3 * v]!,
       y = positions[3 * v + 1]!,
@@ -1087,9 +1101,15 @@ function nearest(
         continue;
       }
       projected[v] = s.stamp;
-      const f = tan * depth[v]!;
-      pixel[2 * v] = ((pixel[2 * v]! / (f * aspect) + 1) / 2) * width;
-      pixel[2 * v + 1] = ((1 - pixel[2 * v + 1]! / f) / 2) * height;
+      if (centered) {
+        const f = tan * depth[v]!;
+        pixel[2 * v] = ((pixel[2 * v]! / (f * aspect) + 1) / 2) * width;
+        pixel[2 * v + 1] = ((1 - pixel[2 * v + 1]! / f) / 2) * height;
+      } else {
+        pixel[2 * v] = camera.cx + (camera.fx * pixel[2 * v]!) / depth[v]!;
+        pixel[2 * v + 1] =
+          camera.cy - (camera.fy * pixel[2 * v + 1]!) / depth[v]!;
+      }
     }
   }
 

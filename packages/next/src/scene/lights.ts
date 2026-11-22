@@ -90,6 +90,12 @@ export interface LightCamera {
   /** Tangents of the half fields of view. */
   tanX: number;
   tanY: number;
+  /**
+   * The principal point in normalized device coordinates (`Camera.lens`):
+   * 0 (the default) while it is centered.
+   */
+  shiftX?: number;
+  shiftY?: number;
 }
 
 const candidates: Array<{ distance: number; at: number }> = [];
@@ -124,8 +130,18 @@ export function packViewLights(
   const r = camera.right;
   const u = camera.up;
   const { tanX, tanY, near } = camera;
-  const sideX = Math.sqrt(1 + tanX * tanX);
-  const sideY = Math.sqrt(1 + tanY * tanY);
+  const shiftX = camera.shiftX ?? 0;
+  const shiftY = camera.shiftY ?? 0;
+  // Each side plane's tangent: the principal point's offset moves the edges
+  // (centered, each is tanX or tanY exactly).
+  const left = (1 + shiftX) * tanX,
+    right = (1 - shiftX) * tanX,
+    bottom = (1 + shiftY) * tanY,
+    top = (1 - shiftY) * tanY;
+  const sideL = Math.sqrt(1 + left * left),
+    sideR = Math.sqrt(1 + right * right),
+    sideB = Math.sqrt(1 + bottom * bottom),
+    sideT = Math.sqrt(1 + top * top);
   candidates.length = 0;
   scratchCount = 0;
   lights((light, m, anchor = 0) => {
@@ -173,8 +189,10 @@ export function packViewLights(
     // Outside the frustum's near or side planes by more than its reach.
     if (
       z + reach < near ||
-      (Math.abs(x) - z * tanX) / sideX > reach ||
-      (Math.abs(y) - z * tanY) / sideY > reach
+      (x - z * right) / sideR > reach ||
+      (-x - z * left) / sideL > reach ||
+      (y - z * top) / sideT > reach ||
+      (-y - z * bottom) / sideB > reach
     ) {
       return;
     }
@@ -226,8 +244,22 @@ export function packViewLights(
   out[h + 5] = CLUSTERS[2] / Math.log(far / near);
   out[h + 6] = tanX;
   out[h + 7] = tanY;
+  // The axes' w: the principal point's offset (lights.slang's tiles).
   out.set(
-    [f[0]!, f[1]!, f[2]!, far, r[0]!, r[1]!, r[2]!, 0, u[0]!, u[1]!, u[2]!, 0],
+    [
+      f[0]!,
+      f[1]!,
+      f[2]!,
+      far,
+      r[0]!,
+      r[1]!,
+      r[2]!,
+      shiftX,
+      u[0]!,
+      u[1]!,
+      u[2]!,
+      shiftY,
+    ],
     h + 8,
   );
   out.set(

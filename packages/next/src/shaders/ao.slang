@@ -19,6 +19,7 @@ struct AoParams {
   float4 up;       // camera up (xyz); w: the same, y
   float4 forward;  // camera forward (xyz); w: near plane, m
   float4 size;     // width, height (pixels); radius, m; largest radius, pixels
+  float4 shift;    // the principal point, NDC (xy; 0 while centered); zw unused
 };
 
 [[vk::binding(0, 0)]] ConstantBuffer<AoParams> params;
@@ -39,7 +40,8 @@ float distanceAt(float depth, float near) {
 }
 
 float3 positionAt(float2 pixel, float depth) {
-  float2 ndc = float2(pixel.x / params.size.x * 2.0 - 1.0, 1.0 - pixel.y / params.size.y * 2.0);
+  float2 ndc = float2(pixel.x / params.size.x * 2.0 - 1.0, 1.0 - pixel.y / params.size.y * 2.0) -
+               params.shift.xy;
   float3 ray = params.forward.xyz + params.right.xyz * (ndc.x * params.right.w) +
                params.up.xyz * (ndc.y * params.up.w);
   return ray * distanceAt(depth, params.forward.w);

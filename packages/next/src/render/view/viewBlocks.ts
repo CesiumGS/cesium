@@ -7,6 +7,7 @@ import { CityLight } from "../../globe/cityLight.ts";
 import type { Cartographic } from "../../math/ellipsoid.ts";
 import * as m4 from "../../math/mat4.ts";
 import * as v3 from "../../math/vec3.ts";
+import { newLens } from "../../scene/Camera.ts";
 import {
   writeViewBlock,
   VIEW_STRIDE,
@@ -78,6 +79,7 @@ export interface ViewBlockEngine extends Pick<
 
 export const scratchView = m4.mat4();
 const scratchProj = m4.mat4();
+const scratchLens = newLens();
 export const scratchViewProj = m4.mat4();
 export const scratchPlanes = new Float32Array(20);
 const scratchMoonAxis = v3.vec3();
@@ -159,7 +161,7 @@ function writeLights(
 ): void {
   const frame = engine.raster.viewFrames.get(view)!;
   const camera = engine.bodyCamera(view);
-  const tanY = Math.tan(camera.fovy(aspect) / 2);
+  const { tanX, tanY, shiftX, shiftY } = camera.lens(aspect, scratchLens);
   frame.tanY = tanY;
   const count = packViewLights(
     engine.raster.lightData,
@@ -171,8 +173,10 @@ function writeLights(
       up: camera.up,
       right: camera.right,
       near: camera.near,
-      tanX: tanY * aspect,
+      tanX,
       tanY,
+      shiftX,
+      shiftY,
     },
     view.exposureScale,
     engine.scene.anchorEyes,

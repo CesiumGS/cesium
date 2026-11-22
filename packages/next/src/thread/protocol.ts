@@ -123,7 +123,8 @@ const TABLE: Record<string, EntryTable> = {
       NamedType NodePoint Notice NurbsCurve NurbsSurface ObserverReadout
       ObserverSettings ObserverStage OrbitBasis OrbitFrame OutputEncoding
       Params PickCamera PickDomain PickHint PickInterpreter PickPoint
-      PickResult Placement PlacementBlend PlacementMode PlacementOptions
+      PickPositionResult PickResult Placement PlacementBlend PlacementMode
+      PlacementOptions
       PlacementParameter PointFunction PointIn PointInOptions PointProperty
       PointPropertyType PointSourceOptions PointSpread PostStageFormat
       PostStageImage PostStageKind PostStageLevel PostStageOptions
@@ -426,7 +427,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         viewRotation
       `,
       "cannot-cross": `
-        centered copyLens lens
+        centered copyLens lens pixelAspect shiftX shiftY
       `,
     },
     CameraLayer: {

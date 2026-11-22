@@ -31,6 +31,7 @@ struct GlareFrame_std140_0
     @align(4) uvPerPixel_0 : f32,
     @align(8) kernelLevel_0 : f32,
     @align(4) topRadius_0 : f32,
+    @align(16) shift_0 : vec2<f32>,
 };
 
 @binding(0) @group(0) var<uniform> frame_0 : GlareFrame_std140_0;
@@ -55,7 +56,8 @@ struct GlareSource_std430_0
 
 fn toPixel_0( d_0 : vec3<f32>,  z_0 : f32) -> vec2<f32>
 {
-    return vec2<f32>((dot(d_0, frame_0.right_0) / (z_0 * frame_0.tanX_0) * 0.5f + 0.5f) * frame_0.size_0.x, (0.5f - dot(d_0, frame_0.up_0) / (z_0 * frame_0.tanY_0) * 0.5f) * frame_0.size_0.y);
+    var ndc_0 : vec2<f32> = vec2<f32>(dot(d_0, frame_0.right_0) / (z_0 * frame_0.tanX_0), dot(d_0, frame_0.up_0) / (z_0 * frame_0.tanY_0)) + frame_0.shift_0;
+    return vec2<f32>((ndc_0.x * 0.5f + 0.5f) * frame_0.size_0.x, (0.5f - ndc_0.y * 0.5f) * frame_0.size_0.y);
 }
 
 fn missesBody_0( direction_0 : vec3<f32>) -> bool

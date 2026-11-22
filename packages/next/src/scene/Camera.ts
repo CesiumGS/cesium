@@ -118,10 +118,11 @@ export class Camera {
    * centered principal point and square pixels, keeping `fov`. Setting
    * `fov` later keeps the principal point and the pixel aspect.
    *
-   * The projection, the culling planes, `rayDirection`, `View.toPixel` and
-   * picks follow an off-center principal point. Until the renderer's other
-   * readers of the field of view follow it too (the sky, occlusion culling,
-   * light culling and the shadow cascades), they see the centered lens.
+   * Everything that reads the lens follows an off-center principal point:
+   * the projection, the culling planes, `rayDirection`, `View.toPixel`,
+   * picks and snaps, and the renderer's own readers (the sky and the
+   * aerial perspective, occlusion culling, light culling, the shadow
+   * cascades, ambient occlusion, the star cells and glare).
    *
    * `distortion` is a model's name and coefficients (`CameraDistortion`).
    * Only `"none"` is built: the others are refused by name, so they can come
@@ -179,14 +180,14 @@ export class Camera {
    * (width / 2, height / 2).
    */
   intrinsics(width: number, height: number): CameraIntrinsics {
-    const aspect = width / height;
-    const tanY = Math.tan(this.fovy(aspect) / 2);
-    const tanX = tanY * aspect * this.pixelAspect_;
+    const tanY = Math.tan(this.fovy(width / height) / 2);
+    // fy / fx is the pixel aspect: with square pixels fx is fy exactly.
+    const fy = height / (2 * tanY);
     return {
       width,
       height,
-      fx: width / (2 * tanX),
-      fy: height / (2 * tanY),
+      fx: fy / this.pixelAspect_,
+      fy,
       cx: ((this.shiftX_ + 1) / 2) * width,
       cy: ((1 - this.shiftY_) / 2) * height,
     };
@@ -228,19 +229,34 @@ export class Camera {
   }
 
   /**
+   * @internal The principal point's offset from the view's center, in
+   * normalized device coordinates (y up): 0 while centered.
+   */
+  get shiftX(): number {
+    return this.shiftX_;
+  }
+  /** @internal As `shiftX`, up. */
+  get shiftY(): number {
+    return this.shiftY_;
+  }
+  /** @internal fy / fx: 1 for square pixels. */
+  get pixelAspect(): number {
+    return this.pixelAspect_;
+  }
+
+  /**
    * @internal What a view at `aspect` sees through: the tangents of the half
    * fields of view across and up, and the principal point in normalized
    * device coordinates. A ray through `(ndcX, ndcY)` is `direction +
    * right · (ndcX − shiftX) · tanX + up · (ndcY − shiftY) · tanY`.
    */
-  lens(aspect: number): CameraLens {
+  lens(aspect: number, out: CameraLens = newLens()): CameraLens {
     const tanY = Math.tan(this.fovy(aspect) / 2);
-    return {
-      tanX: tanY * aspect * this.pixelAspect_,
-      tanY,
-      shiftX: this.shiftX_,
-      shiftY: this.shiftY_,
-    };
+    out.tanX = tanY * aspect * this.pixelAspect_;
+    out.tanY = tanY;
+    out.shiftX = this.shiftX_;
+    out.shiftY = this.shiftY_;
+    return out;
   }
 
   /** Vertical field of view for an aspect ratio, as computed by 1.x. */
@@ -481,12 +497,17 @@ export interface CameraRecord extends CameraIntrinsics {
   readonly distortion: CameraDistortion;
 }
 
-/** @internal What a view sees through (`Camera.lens`). */
+/** @internal What a view sees through (`Camera.lens`), written in place. */
 export interface CameraLens {
-  readonly tanX: number;
-  readonly tanY: number;
-  readonly shiftX: number;
-  readonly shiftY: number;
+  tanX: number;
+  tanY: number;
+  shiftX: number;
+  shiftY: number;
+}
+
+/** @internal A lens to write into (`Camera.lens`'s `out`), centered. */
+export function newLens(): CameraLens {
+  return { tanX: 1, tanY: 1, shiftX: 0, shiftY: 0 };
 }
 
 const NO_DISTORTION: CameraDistortion = Object.freeze({
@@ -545,19 +566,7 @@ export function projectToPixel(
   if (args.length === 3) {
     const [record, point, out] = args;
     checkDistortion(record.distortion);
-    const { position: e, direction: d, up: u, right: r } = record.pose;
-    const x = point[0]! - e[0]!,
-      y = point[1]! - e[1]!,
-      z = point[2]! - e[2]!;
-    const depth = x * d[0]! + y * d[1]! + z * d[2]!;
-    if (!(depth > 0)) {
-      return depth;
-    }
-    out[0] =
-      record.cx + (record.fx * (x * r[0]! + y * r[1]! + z * r[2]!)) / depth;
-    out[1] =
-      record.cy - (record.fy * (x * u[0]! + y * u[1]! + z * u[2]!)) / depth;
-    return depth;
+    return projectThrough(record.pose, record, point, out);
   }
   const [pose, fovy, width, height, point, out] = args;
   const e = pose.position,
@@ -577,6 +586,60 @@ export function projectToPixel(
   out[0] = ((ndcX + 1) / 2) * width;
   out[1] = ((1 - ndcY) / 2) * height;
   return depth;
+}
+
+/**
+ * @internal `projectToPixel` through a pose and a pinhole's intrinsics
+ * (no distortion): pixels from the top-left, y down, into `out`; returns
+ * the depth along the view direction (not positive: behind, `out` as it was).
+ */
+export function projectThrough(
+  pose: CameraPose,
+  intrinsics: CameraIntrinsics,
+  point: ArrayLike<number>,
+  out: Float64Array,
+): number {
+  const { position: e, direction: d, up: u, right: r } = pose;
+  const x = point[0]! - e[0]!,
+    y = point[1]! - e[1]!,
+    z = point[2]! - e[2]!;
+  const depth = x * d[0]! + y * d[1]! + z * d[2]!;
+  if (!(depth > 0)) {
+    return depth;
+  }
+  out[0] =
+    intrinsics.cx +
+    (intrinsics.fx * (x * r[0]! + y * r[1]! + z * r[2]!)) / depth;
+  out[1] =
+    intrinsics.cy -
+    (intrinsics.fy * (x * u[0]! + y * u[1]! + z * u[2]!)) / depth;
+  return depth;
+}
+
+/**
+ * @internal The centered intrinsics, with square pixels, of a vertical field
+ * of view `fovy` (radians) for a `width` × `height` image.
+ */
+export function centeredIntrinsics(
+  fovy: number,
+  width: number,
+  height: number,
+): CameraIntrinsics {
+  const fy = height / (2 * Math.tan(fovy / 2));
+  return { width, height, fx: fy, fy, cx: width / 2, cy: height / 2 };
+}
+
+/**
+ * @internal The intrinsics are centered with square pixels, exactly (as
+ * `Camera.intrinsics` gives them for a centered camera): the symmetric
+ * field of view's math applies, bit for bit.
+ */
+export function isCentered(intrinsics: CameraIntrinsics): boolean {
+  return (
+    intrinsics.cx === intrinsics.width / 2 &&
+    intrinsics.cy === intrinsics.height / 2 &&
+    intrinsics.fx === intrinsics.fy
+  );
 }
 
 const scratchMat = m4.mat4();
