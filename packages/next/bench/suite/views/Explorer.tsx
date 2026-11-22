@@ -99,9 +99,8 @@ const route = getRouteApi("/_runs/scenes/$scene");
 /**
  * An engine spec (engines.mjs) as a configuration the explorer can load:
  * the catalog setup's settings with any key=value variants, and the 1.x
- * build it needs ("repo" for the working tree's, or a release version).
- * Builds at other refs need their own dev server, which only the CLI
- * starts.
+ * release it needs. 2.0 built at other refs needs its own dev server, which
+ * only the CLI starts.
  */
 function configOf(spec: string): {
   config?: EngineConfig;
@@ -131,12 +130,9 @@ function configOf(spec: string): {
       config.maximumScreenSpaceError = Number(value);
     }
   }
+  // 1.x is always a release (engines.mjs refuses its source).
   const build =
-    parsed.engine === "1.x"
-      ? parsed.source.kind === "release"
-        ? parsed.source.version
-        : "repo"
-      : undefined;
+    parsed.source.kind === "release" ? parsed.source.version : undefined;
   return { config, ...(build ? { build } : {}) };
 }
 

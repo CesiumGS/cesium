@@ -81,23 +81,19 @@
     <div id="output"></div>
     <div id="credits" hidden></div>
     <script>
-      // The 1.x build, only on a 1.x run's page: the working tree's
-      // (?cesium=repo), a released version from the suite's store
-      // (?cesium=<version>) or one built at a git ref in its snapshot
-      // worktree (?cesium=ref:<sha>), prepared by the CLI
-      // (engineBuilds.mjs). A 2.0 page loads none: the unminified build's
-      // source alone held 39 MB on 2.0's main thread (r39).
+      // The 1.x build, only on a 1.x run's page: a released version from
+      // the suite's store (?cesium=<version>), prepared by the CLI
+      // (engineBuilds.mjs), or the pinned one (?cesium=pinned, /cesium1x/).
+      // A 2.0 page loads none: the unminified build's source alone held
+      // 39 MB on 2.0's main thread (r39).
       (() => {
         const build = new URLSearchParams(location.search).get("cesium");
         if (!build) {
           return;
         }
-        const ref = /^ref:([0-9a-f]{7,40})$/.exec(build);
-        const base = ref
-          ? `/cesium-ref/${ref[1]}/Build/CesiumUnminified/`
-          : /^\d+\.\d+\.\d+(-[\w.]+)?$/.test(build)
-            ? `/cesium-release/${build}/package/Build/Cesium/`
-            : "/cesium1x/";
+        const base = /^\d+\.\d+\.\d+(-[\w.]+)?$/.test(build)
+          ? `/cesium-release/${build}/package/Build/Cesium/`
+          : "/cesium1x/";
         window.CESIUM_BASE_URL = base;
         document.write(
           `<link rel="stylesheet" href="${base}Widgets/widgets.css"><script src="${base}Cesium.js"><\/script>`,

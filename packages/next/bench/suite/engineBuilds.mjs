@@ -2,22 +2,18 @@
 // catalog setup's settings, the build each needs and where the suite page
 // loads it from.
 //
-//   release  CesiumJS from npm, fetched once into the store (release.mjs);
-//            the page loads /cesium-release/<version>/.
-//   tree     the working tree: 2.0 from the suite's own server (the tree
-//            frozen and built, frozen.mjs, or live with --dev), 1.x from
-//            its build (/cesium1x/, `npm run build` at the repository
-//            root; the page loads it for `cesium: "repo"`). Named by the
+//   release  CesiumJS 1.x from npm, fetched once into the store (release.mjs);
+//            the page loads /cesium-release/<version>/. 1.x is always a
+//            release: its source left this repository (CS-611).
+//   tree     2.0 from the working tree: the suite's own server (the tree
+//            frozen and built, frozen.mjs, or live with --dev). Named by the
 //            current branch.
-//   ref      a git ref, checked out once into a snapshot worktree
-//            (snapshot.mjs, <repo>/.bench/<sha>). 1.x is built there on
-//            first use (`npm run build`, minutes) and loaded from
-//            /cesium-ref/<sha>/; 2.0 is built there and served by a server
-//            of its own.
+//   ref      2.0 at a git ref, checked out once into a snapshot worktree
+//            (snapshot.mjs, <repo>/.bench/<sha>), built there and served by
+//            a server of its own.
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
-import process from "node:process";
 import { engineId, parseEngine, setupOf } from "./engines.mjs";
 import { checkVariants, configPath } from "./settings.mjs";
 import { ensureRelease, resolveVersion } from "./release.mjs";
@@ -59,7 +55,7 @@ function setPath(target, path, value) {
 export async function resolveEngine(
   spec,
   catalog,
-  { cwd, serve, frozen, log, kind = "bench" },
+  { cwd, serve, frozen, kind = "bench" },
 ) {
   const parsed = parseEngine(spec);
   const variants = checkVariants(parsed, kind);
@@ -88,37 +84,15 @@ export async function resolveEngine(
       ref: treeRef(cwd),
       ...(frozen ? { sha: frozen.sha } : {}),
     };
-    if (parsed.engine === "1.x") {
-      page.cesium = "repo";
-    }
   } else {
     const snap = snapshot(parsed.source.ref, cwd);
-    const short = snap.sha.slice(0, 12);
     source = { kind: "ref", ref: parsed.source.ref, sha: snap.sha };
-    const tree = join(snap.repo, ".bench", short);
-    if (parsed.engine === "1.x") {
-      const build = join(tree, "Build", "CesiumUnminified", "Cesium.js");
-      if (!existsSync(build)) {
-        log?.(`building CesiumJS at ${parsed.source.ref} (${short}), once…`);
-        execFileSync(
-          process.platform === "win32" ? "npm.cmd" : "npm",
-          ["run", "build"],
-          {
-            cwd: tree,
-            stdio: "inherit",
-            shell: process.platform === "win32",
-          },
-        );
-      }
-      page.cesium = `ref:${short}`;
-    } else {
-      if (!existsSync(join(snap.root, "bench", "suite", "suite.html"))) {
-        throw new Error(
-          `engine "${spec}": ${parsed.source.ref} has no 2.0 benchmark suite (packages/next/bench/suite)`,
-        );
-      }
-      page.server = await serve(snap.root, snap.repo);
+    if (!existsSync(join(snap.root, "bench", "suite", "suite.html"))) {
+      throw new Error(
+        `engine "${spec}": ${parsed.source.ref} has no 2.0 benchmark suite (packages/next/bench/suite)`,
+      );
     }
+    page.server = await serve(snap.root, snap.repo);
   }
   const id = engineId({
     engine: parsed.engine,
@@ -143,7 +117,5 @@ export function describeBuild(config) {
     s.kind === "tree"
       ? `working tree of ${s.ref}${s.sha ? ` (frozen at ${s.sha.slice(0, 12)})` : ""}`
       : `${s.ref} at ${s.sha.slice(0, 12)}`;
-  return config.engine === "1.x"
-    ? `CesiumJS 1.x built from the ${where}`
-    : `2.0 from the ${where}, ${config.policy ?? "budgeted"} selection`;
+  return `2.0 from the ${where}, ${config.policy ?? "budgeted"} selection`;
 }

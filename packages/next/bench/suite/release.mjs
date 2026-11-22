@@ -1,6 +1,6 @@
 // Released CesiumJS builds for the benchmark suite (docs/design/benchmark-suite.md, "Engines and versions"): a 1.x
-// configuration can run this repository's build or any version published
-// on npm. Versions are resolved ("latest" → an exact version), downloaded
+// configuration runs a version published on npm (1.x's source left this
+// repository in CS-611; the default is the pinned cesium-1x's version). Versions are resolved ("latest" → an exact version), downloaded
 // once with `npm pack` into the store outside the repo
 // (BENCH_CESIUM_DIR, default ~/.cesium-bench/cesium/<version>), verified
 // against npm's integrity hash, and served by the dev server at

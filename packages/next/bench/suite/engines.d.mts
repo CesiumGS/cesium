@@ -18,3 +18,6 @@ export function engineOf(id: string): "1.x" | "2.0";
 export function setupOf(id: string): string;
 export function engineLabel(id: string, options?: { short?: boolean }): string;
 export function compareEngines(a: string, b: string): number;
+/** The CesiumJS release the workspace root pins as cesium-1x. */
+export const PINNED_1X: string;
+export function parseId(spec: string): ParsedEngine;
