@@ -2,7 +2,7 @@
 id: CS-787
 title: The Work page's code says Order where it still says Plan view, and its dead Plan-view and proposal-stage code goes
 kind: work
-state: proposed
+state: planned
 created: 2026-11-21
 project: CS-389
 needs: [CS-749, CS-775]
@@ -12,6 +12,8 @@ touches: [packages/next/bench/suite/work.ts, packages/next/bench/suite/views/wor
 After CS-749 turned the Plan view into Order, some text still names the Plan view: the Dependencies help (`Dependencies.tsx`) and three strings and comments in `Projects.tsx`. `bench/suite/DESIGN.md` also keeps a section on CS-693's Projects tab, which CS-748 replaced.
 
 Source: CS-749's report, relayed by orch-11, 2026-11-21. Why now: help text that names a view that's gone confuses the owner. Rough size: small. Decider: the executor. Filed: 2026-11-21.
+
+Committed 2026-11-22 by the owner.
 
 ## Done when
 

@@ -2,10 +2,14 @@
 id: CS-803
 title: Merge CS-394, example scenes and the development metrics
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the dyno and example tests, fast-forwards main, regenerates the views and logs the merge."
+answered_at: 2026-11-22T02:30:11.919Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
