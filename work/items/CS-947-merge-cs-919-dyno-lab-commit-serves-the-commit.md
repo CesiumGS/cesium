@@ -2,10 +2,14 @@
 id: CS-947
 title: Merge CS-919, dyno lab --commit serves the commit's own packages
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-199
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), runs the work check, regenerates the views and logs the merge; --commit comparisons become valid evidence again."
+answered_at: 2026-11-22T18:49:29.913Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
