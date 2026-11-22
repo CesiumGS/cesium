@@ -995,6 +995,7 @@ ui	zoneOf	function	-
 @cesium/core	DEFAULT_IMAGERY_SLICES	const	-
 @cesium/core	DEFAULT_SECTION_LINE_COLOR	const	-
 @cesium/core	DEFAULT_SKY	const	-
+@cesium/core	DEFAULT_TAXONOMY	const	-
 @cesium/core	DebugLegend	interface	-
 @cesium/core	DebugLegendEntry	interface	-
 @cesium/core	DebugView	type	-
@@ -1011,6 +1012,9 @@ ui	zoneOf	function	-
 @cesium/core	EffectiveSettings	interface	-
 @cesium/core	ElementCap	interface	-
 @cesium/core	Ellipsoid	class	-
+@cesium/core	EmbeddingSpace	interface	-
+@cesium/core	EmbeddingTable	interface	-
+@cesium/core	Embeddings	interface	-
 @cesium/core	Emitter	class	-
 @cesium/core	Engine	class	-
 @cesium/core	EngineError	interface	-
@@ -1067,6 +1071,9 @@ ui	zoneOf	function	-
 @cesium/core	HeightOffsetOptions	interface	-
 @cesium/core	HeightReference	type	-
 @cesium/core	ITwinOptions	interface	-
+@cesium/core	Identified	interface	-
+@cesium/core	Identity	interface	-
+@cesium/core	IdentityDeclaration	interface	-
 @cesium/core	ImageryProvider	interface	-
 @cesium/core	Importance	type	-
 @cesium/core	IncomingResponse	interface	-
@@ -1077,6 +1084,7 @@ ui	zoneOf	function	-
 @cesium/core	IonOptions	interface	-
 @cesium/core	IonTmsImagery	class	-
 @cesium/core	LEVEL_ZERO_ERROR	const	-
+@cesium/core	Labels	type	-
 @cesium/core	LightHandle	interface	-
 @cesium/core	LightOptions	interface	-
 @cesium/core	LimitsTier	type	-
@@ -1142,6 +1150,7 @@ ui	zoneOf	function	-
 @cesium/core	PLACEMENT_MONOMIALS	const	-
 @cesium/core	PLACEMENT_TERMS	const	-
 @cesium/core	Params	type	-
+@cesium/core	PickBasis	type	-
 @cesium/core	PickCamera	interface	-
 @cesium/core	PickDomain	interface	-
 @cesium/core	PickHint	interface	-
@@ -1231,6 +1240,8 @@ ui	zoneOf	function	-
 @cesium/core	SliceScheduler	interface	-
 @cesium/core	SliceUser	interface	-
 @cesium/core	SpatialQueries	interface	-
+@cesium/core	StableId	type	-
+@cesium/core	StableKey	type	-
 @cesium/core	Stage	type	-
 @cesium/core	StageInfo	interface	-
 @cesium/core	StageStats	interface	-
@@ -1249,6 +1260,7 @@ ui	zoneOf	function	-
 @cesium/core	SurfacePatch	interface	-
 @cesium/core	SurfaceSample	interface	-
 @cesium/core	TICK_REASONS	const	-
+@cesium/core	TaxonomyDeclaration	interface	-
 @cesium/core	TerrainQueryOptions	interface	-
 @cesium/core	TerrainRayOptions	interface	-
 @cesium/core	TerrainRayPatch	interface	-
@@ -1315,6 +1327,7 @@ ui	zoneOf	function	-
 @cesium/core	bump	function	-
 @cesium/core	cameraGlare	function	-
 @cesium/core	cameraObserver	function	-
+@cesium/core	canonicalSource	function	-
 @cesium/core	capPlanes	function	-
 @cesium/core	cartographic	function	-
 @cesium/core	castTerrainRay	function	-
@@ -1406,6 +1419,7 @@ ui	zoneOf	function	-
 @cesium/core	sectionBrep	function	-
 @cesium/core	sectionTile	function	-
 @cesium/core	slangPostShader	function	-
+@cesium/core	stableIdOf	function	-
 @cesium/core	summarizeContent	function	-
 @cesium/core	surfaceCount	function	-
 @cesium/core	tableResolver	function	-
