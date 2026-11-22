@@ -2,7 +2,7 @@
 id: CS-921
 title: A compiled route's center term subtracts its highs as integers on both emitters
 kind: work
-state: in-progress
+state: done
 created: 2026-11-22
 project: CS-10
 needs: [CS-54]

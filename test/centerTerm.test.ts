@@ -136,7 +136,7 @@ describe("a split position as the center term's parts (tg_splitParts)", () => {
       2 ** 24 + 0.7,
       -(2 ** 29) - 0.3,
     ]) {
-      splitVec3([v, 0, 0], hi, 0, lo, 0);
+      splitVec3(Float64Array.of(v, 0, 0), hi, 0, lo, 0);
       // The WGSL, statement for statement.
       const w = i32(hi[0]!);
       const k = Math.round(lo[0]! * 2 ** 24);

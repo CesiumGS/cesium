@@ -59,12 +59,12 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "c4dc407138dacd5e7d7bfb8a37b04a62",
-    "canonicalLength": 11485
+    "canonical": "bebe5c5113726cbed531becbf35c8eae",
+    "canonicalLength": 11808
    },
    "positionWgsl": {
-    "canonical": "26be2d0cff89ce387c415ef51c9b56f7",
-    "canonicalLength": 7783
+    "canonical": "2f9c2c5300d06649e41e2c7ac417bfd1",
+    "canonicalLength": 8106
    },
    "centerConstantsWgsl": {
     "canonical": "967c5e2a1628d22c45a791c393c8305e",
@@ -175,12 +175,12 @@
   },
   "linear": {
    "wgsl": {
-    "canonical": "c4dc407138dacd5e7d7bfb8a37b04a62",
-    "canonicalLength": 11485
+    "canonical": "bebe5c5113726cbed531becbf35c8eae",
+    "canonicalLength": 11808
    },
    "positionWgsl": {
-    "canonical": "26be2d0cff89ce387c415ef51c9b56f7",
-    "canonicalLength": 7783
+    "canonical": "2f9c2c5300d06649e41e2c7ac417bfd1",
+    "canonicalLength": 8106
    },
    "centerConstantsWgsl": {
     "canonical": "967c5e2a1628d22c45a791c393c8305e",
@@ -291,12 +291,12 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "c4dc407138dacd5e7d7bfb8a37b04a62",
-    "canonicalLength": 11485
+    "canonical": "bebe5c5113726cbed531becbf35c8eae",
+    "canonicalLength": 11808
    },
    "positionWgsl": {
-    "canonical": "26be2d0cff89ce387c415ef51c9b56f7",
-    "canonicalLength": 7783
+    "canonical": "2f9c2c5300d06649e41e2c7ac417bfd1",
+    "canonicalLength": 8106
    },
    "centerConstantsWgsl": {
     "canonical": "967c5e2a1628d22c45a791c393c8305e",
@@ -407,12 +407,12 @@
   },
   "none": {
    "wgsl": {
-    "canonical": "a115e7dc2988e731d0764afb964f30e9",
-    "canonicalLength": 7378
+    "canonical": "0f127e1a57b8f37f99bab60fdfbbdd59",
+    "canonicalLength": 7701
    },
    "positionWgsl": {
-    "canonical": "f3e1a07b7c46850192908651530f0176",
-    "canonicalLength": 7672
+    "canonical": "fe8707e42efe5b28660bdc801a2d3acd",
+    "canonicalLength": 7995
    },
    "centerConstantsWgsl": {
     "canonical": "6c33df42e45c41ae24b93065f043aaad",

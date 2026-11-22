@@ -1,12 +1,12 @@
 {
  "exact": {
   "wgsl": {
-   "canonical": "e339737abf777645a99103275dc87b81",
-   "canonicalLength": 150525
+   "canonical": "ea3fc98457408b81f7773bca85a5182e",
+   "canonicalLength": 150848
   },
   "positionWgsl": {
-   "canonical": "b6d9c99c333344980f0e02aeb8e33ff7",
-   "canonicalLength": 33452
+   "canonical": "66083239e7f70b8c061ef4a63fb9f720",
+   "canonicalLength": 33775
   },
   "centerConstantsWgsl": {
    "canonical": "b8c95e9eee655bcc11e4a1f521138a33",
@@ -92,12 +92,12 @@
  },
  "linear": {
   "wgsl": {
-   "canonical": "b57989c7cddb3a2ddce94b294133fa0c",
-   "canonicalLength": 82859
+   "canonical": "b280fe90e67b9de3b05b1c683aebc63c",
+   "canonicalLength": 83182
   },
   "positionWgsl": {
-   "canonical": "d70ac7faae478b5bd5b395dd170ec3da",
-   "canonicalLength": 31439
+   "canonical": "80f8b7d218cf04e017aa7c0d38c2ad67",
+   "canonicalLength": 31762
   },
   "centerConstantsWgsl": null,
   "uniformsLayout": {
@@ -170,12 +170,12 @@
  },
  "auto": {
   "wgsl": {
-   "canonical": "b57989c7cddb3a2ddce94b294133fa0c",
-   "canonicalLength": 82859
+   "canonical": "b280fe90e67b9de3b05b1c683aebc63c",
+   "canonicalLength": 83182
   },
   "positionWgsl": {
-   "canonical": "d70ac7faae478b5bd5b395dd170ec3da",
-   "canonicalLength": 31439
+   "canonical": "80f8b7d218cf04e017aa7c0d38c2ad67",
+   "canonicalLength": 31762
   },
   "centerConstantsWgsl": null,
   "uniformsLayout": {
@@ -248,12 +248,12 @@
  },
  "none": {
   "wgsl": {
-   "canonical": "a3e41f2000410d0206101f222fa2f029",
-   "canonicalLength": 29750
+   "canonical": "52bda0969a2b1631ddf7ab222312445f",
+   "canonicalLength": 30073
   },
   "positionWgsl": {
-   "canonical": "310e2584838e880ad2a3b8433b4a6191",
-   "canonicalLength": 30092
+   "canonical": "b0b7082744f5f12aff8892ecabae5ffa",
+   "canonicalLength": 30415
   },
   "centerConstantsWgsl": {
    "canonical": "c61b62d985f1996c0c65a8295512285f",
