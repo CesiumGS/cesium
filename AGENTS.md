@@ -44,7 +44,7 @@ Cesium 2.0's rules (repository practice, tests, GPU safety, wording, work items)
 
 The project's benchmark tool (rule 4) is `dyno`, Dyno's command line: `npx @cesium/dyno <command>` (the same as `node bench/dyno.mjs <command>`), `npx @cesium/dyno --help` for its commands. Before heavy work (a full test suite, a build, a measurement), check `dyno status`: while it says `busy` or `waiting-for-quiet`, start none. The `dyno` skill in `.claude/skills` covers which suite a change needs and what never goes in a public pull request.
 
-Rules for anyone working on Cesium 2.0, people and coding agents alike (until CS-835, `packages/next/AGENTS.md`). The README covers what the package is; this file covers how we work on it.
+Rules for anyone working on Cesium 2.0, people and coding agents alike (until CS-835, `AGENTS.md`). The README covers what the package is; this file covers how we work on it.
 
 ## Repository practice
 
@@ -64,7 +64,7 @@ Rules for anyone working on Cesium 2.0, people and coding agents alike (until CS
 
 - While iterating, run focused tests: `npx vitest run <files>`.
 - Before committing, run the full `npm test` once.
-- Run `npm run test:data` (it needs the setup store) when you change code under `src/frames`, `src/time`, `src/ephemeris` or `src/engineering`.
+- Run `npm run test:data` (it needs the setup store) when you change code under `packages/frames`, `packages/time` or `packages/crs`.
 - Before the full suite, a build or a measurement, run `dyno status`: while it says `busy` or `waiting-for-quiet`, a measurement runs or waits, so start no heavy work. `dyno` is Dyno's command line (`npx @cesium/dyno`: the scoped name can only be this workspace package, so a missing link fails instead of downloading an unrelated public package); the `dyno` skill says which suite a change needs and how to read a verdict.
 - Run the browser parity suites (`dyno lab <suite>`) when you change rendering. Compare against the previous commit as well as a base commit. Metal's compiler can reorder a float sum when a kernel's code changes, so explain any pixel difference before accepting it.
 - Also run `npx tsc --noEmit -p .` and `-p tsconfig.lib.json`, eslint and prettier on what you changed.
@@ -74,14 +74,14 @@ Rules for anyone working on Cesium 2.0, people and coding agents alike (until CS
 
 The GPU is shared with every other app on the machine. A hung shader resets it for all of them.
 
-- Engine shaders are Slang (`src/**/*.slang`), compiled by `npm run shaders`. The compiler is found through `SLANGC`. Never edit generated output; `npm run shaders:check` must pass.
+- Engine shaders are Slang (`packages/core/src/**/*.slang`), compiled by `npm run shaders`. The compiler is found through `SLANGC`. Never edit generated output; `npm run shaders:check` must pass.
 - Bound every shader loop by a constant, never by a count read from a buffer: `for (uint i = 0u; i < CONSTANT; i++)` with an early `break`. Clamp every buffer index.
 - Read the Metal output with `node scripts/dumpMsl.mjs <module.wgsl> <entry>` before the first browser run of a changed kernel.
 - Prefer Node tests with `test/fakeGpu.ts`. In the browser, use one small page at a time, on your own dev server and port. Never stop or reuse a dev server someone else started. If the WebGPU device is lost, stop and find out why; don't retry.
 
 ## Seams and boundaries
 
-- The dependency rule between entry points (core, `/time`, `/frames`, `/proj`, `/measure`, `/widgets`) is enforced by `test/importBoundary.test.ts`. The widgets import the other entry points by the package's name and nothing under `src/`.
+- The dependency rule between the packages (`@cesium/core`, `time`, `frames`, `crs`, `measure`, `ui`, and the umbrella) is each package's `package.json` dependencies, enforced by `test/importBoundary.test.ts`. A package imports another only by its name, never by a path into its `src/`.
 - Per-draw constants, draw arguments, geometry submission, bindless resources and ray queries each go through one seam, and a bypass test fails naming the line (`test/seams.test.ts` and its neighbors). Add to the seam; don't go around it.
 - Examples use the public API only. Where an example has to reach past it, record that for the API review.
 

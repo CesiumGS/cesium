@@ -1,7 +1,7 @@
 // The subset reader's size as a library would ship it: one minified ES
 // module of the readers and the composer (not the coverage report or the
 // fixture), with its gzip and Brotli sizes. Writes out/size.json.
-//   node packages/next/spikes/usd-subset/size.mjs
+//   node spikes/usd-subset/size.mjs
 
 // esbuild comes from the repository root; spike tools only.
 import { build } from "esbuild";

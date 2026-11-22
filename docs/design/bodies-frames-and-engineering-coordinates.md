@@ -614,7 +614,7 @@ because none of them changes a result.
 
 _Frames example results (r65): the frames-and-projections gallery example._
 The example from the entry above landed in
-`packages/next/examples/frames-explorer/` (plan
+`examples/frames-explorer/` (plan
 `docs/superpowers/plans/2026-11-06-frames-explorer-example.md`), built before
 4b. It uses only the public API, except for the library fixes below. It has
 the frame tree live at the clock's time, stress tests that run in a worker,

@@ -4,7 +4,7 @@ Branch: `cesium-2.0-webgpu-poc` (off `main` @ `587f52f1eb`, CesiumJS 1.146.0)
 
 History is in git. Tags like "r23" in this document are old revision numbers, kept so references to them still make sense.
 
-**What this holds:** the goal, the principles, how the project's documents are organized, and where to look. Until 2026-11-13 this file held everything in one place; that content now lives in the files indexed below, unchanged, and the work is tracked as items in [`packages/next/work/`](packages/next/work/README.md).
+**What this holds:** the goal, the principles, how the project's documents are organized, and where to look. Until 2026-11-13 this file held everything in one place; that content now lives in the files indexed below, unchanged, and the work is tracked as items in [`work/`](work/README.md).
 
 ## Goal
 
@@ -46,20 +46,20 @@ The public API is open to breaking changes. 1.x serves two roles only: it is the
 | `docs/design/`            | Design notes, one topic per file: architecture, shading, selection, frames, the IR, the job system and more | The design changes; each note keeps its own dated entries |
 | `docs/history/`           | Milestones as they were planned, progress logs, measurements and spike results                              | Rarely: history is appended, not rewritten                |
 | `docs/superpowers/plans/` | Implementation plans, one per project, with milestone tables                                                | A plan is written, reviewed or amended                    |
-| `packages/next/work/`     | The work items: one file per item, with projects and initiatives, and the generated lists                   | Work is claimed, finished, added or dropped               |
-| `packages/next/handbook/` | The engine's document for stakeholders and the 1.x team                                                     | A plan lands or a deep dive changes                       |
+| `work/`                   | The work items: one file per item, with projects and initiatives, and the generated lists                   | Work is claimed, finished, added or dropped               |
+| `handbook/`               | The engine's document for stakeholders and the 1.x team                                                     | A plan lands or a deep dive changes                       |
 
 ## Where to look
 
-| Question                                               | Look in                                                                                               |
-| ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| What can I work on now?                                | `npx hitld work query --ready`, and [the work lists](packages/next/work/README.md)                    |
-| What is waiting on the owner?                          | `npx hitld work query --kind decision --state planned`, or `packages/next/work/views/decisions.md`    |
-| Why was something decided?                             | [`docs/decisions/`](#decisions), then the design note on the topic                                    |
-| How does a part of the engine work, or how should it?  | [`docs/design/`](#design)                                                                             |
-| What was measured, and when?                           | [`docs/history/`](#history) for milestones and logs; `packages/next/bench/results` for benchmark runs |
-| How is a project built, step by step?                  | Its plan in `docs/superpowers/plans/`, named by its project file                                      |
-| What did an old section number or milestone name mean? | [the renumbering table](docs/history/2026-11-13-work-items-renumbered.md)                             |
+| Question                                               | Look in                                                                                 |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| What can I work on now?                                | `npx hitld work query --ready`, and [the work lists](work/README.md)                    |
+| What is waiting on the owner?                          | `npx hitld work query --kind decision --state planned`, or `work/views/decisions.md`    |
+| Why was something decided?                             | [`docs/decisions/`](#decisions), then the design note on the topic                      |
+| How does a part of the engine work, or how should it?  | [`docs/design/`](#design)                                                               |
+| What was measured, and when?                           | [`docs/history/`](#history) for milestones and logs; `bench/results` for benchmark runs |
+| How is a project built, step by step?                  | Its plan in `docs/superpowers/plans/`, named by its project file                        |
+| What did an old section number or milestone name mean? | [the renumbering table](docs/history/2026-11-13-work-items-renumbered.md)               |
 
 ## Index
 
@@ -117,7 +117,7 @@ The public API is open to breaking changes. 1.x serves two roles only: it is the
 - [Brainstorm: a styling language of our own, on the IR](docs/design/styling-language.md): A styling language of our own on the IR, with its open questions (owner, 2026-11-12).
 - [Investigations and design-review questions](docs/design/investigations-2026-11-13.md): The 2026-11-13 investigations: hybrid rendering and ray tracing, culling and rasterization, wgpu, modularization, the shader toolchain and IR, and swappable and hybrid renderers. The owner's architecture decisions from the same discussion are in `docs/decisions/2026-11-13-architecture-decisions.md`.
 - [The core IR: what the middle end should be](docs/design/core-ir.md): Research and spikes behind Cesium IR, the owner's decisions and naming (2026-11-13). The plan is `docs/superpowers/plans/2026-11-13-cesium-ir.md`.
-- [A job system for background work](docs/design/job-system.md): The job system's design and first slice (2026-11-13). Its ports are the job system's project in `packages/next/work/`.
+- [A job system for background work](docs/design/job-system.md): The job system's design and first slice (2026-11-13). Its ports are the job system's project in `work/`.
 - [The benchmark suite](docs/design/benchmark-suite.md): The benchmark suite's design (concepts, manifests and storage, measurement and statistics, the catalog, interfaces, engines and versions, scope, later), with what v1 built and the findings it raised.
 - [Benchmark analysis and experience design](docs/design/benchmark-analysis-and-experience.md): Learning from analogous systems: how the benchmark suite's analysis and experience should work.
 - [Image regression in Dyno](docs/design/image-regression-in-dyno.md): Image regression checks in Dyno.

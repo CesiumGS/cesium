@@ -76,7 +76,7 @@ export interface HandbookData {
   layers: {
     layers: { id: string; files: number; lines: number }[];
     allowed: Record<string, string[]>;
-    framesCoreValues: string[];
+    internalEntries: string[];
     edges: LayerEdge[];
     dynamicImports: { from: string; to: string }[];
     core: {

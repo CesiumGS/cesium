@@ -165,8 +165,12 @@ export function buildReference({ root = defaultRoot, entries } = {}) {
     return byEntry && (byEntry.get(entry) ?? byEntry.values().next().value);
   };
 
+  // Declaring files by path from packages/ (`core/src/scene/World.ts`): the
+  // umbrella's entries re-export the packages (CS-835).
   const fileOf = (declaration) =>
-    relative(root, declaration.getSourceFile().fileName).split(sep).join("/");
+    relative(resolve(root, ".."), declaration.getSourceFile().fileName)
+      .split(sep)
+      .join("/");
   const lineOf = (declaration) => {
     const source = declaration.getSourceFile();
     return (

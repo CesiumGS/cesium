@@ -49,11 +49,17 @@ import ts from "typescript";
 import { verifiedDownload } from "./verifiedDownload.mjs";
 import { describeReference, writeReference } from "./apiReference.mjs";
 import { pinned1x } from "../bench/suite/pinned1x.mjs";
+import {
+  listTs as listPackageTs,
+  packageOf as packageOfFile,
+  packages as graphPackages,
+  resolveSpecifier,
+} from "../test/packageGraph.ts";
 
 // The repository root (the harness, the surface, Dyno's results) and the
 // package whose sources the figures read (CS-835).
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
-const packageOf = (root) => join(root, "packages", "next");
+const packageOf = (root) => join(root, "packages", "cesium");
 // The engine's package: the sources the pipeline figures read.
 const coreOf = (root) => join(root, "packages", "core");
 
@@ -224,12 +230,7 @@ export function readCatalog(root = repoRoot) {
 
 /** The declarations the layer table is made of, by name, in the test. */
 const TEST_DECLARATIONS = [
-  "pkg",
-  "SELF",
-  "TIME_FILES",
   "layerOf",
-  "FRAMES_CORE_VALUES",
-  "ALLOWED",
   "listTs",
   "edgesOfText",
   "WHOLES",
@@ -275,7 +276,7 @@ export function readBoundaryRules(root = repoRoot) {
   );
   const scope = {
     ts,
-    root: packageOf(root),
+    root: coreOf(root),
     readdirSync,
     readFileSync,
     join,
@@ -283,30 +284,48 @@ export function readBoundaryRules(root = repoRoot) {
     relative,
   };
   return runInNewContext(
-    `${outputText}\n({ layerOf, ALLOWED, FRAMES_CORE_VALUES: [...FRAMES_CORE_VALUES], listTs, edgesOfText, tierOf, WHOLES: [...WHOLES], TIER_EXCEPTIONS })`,
+    `${outputText}\n({ layerOf, listTs, edgesOfText, tierOf, WHOLES: [...WHOLES], TIER_EXCEPTIONS })`,
     scope,
   );
 }
 
-/** Layers, their sizes, the rules, and the imports that exist today. */
+/**
+ * The packages (and core's shared utilities, as a layer of their own), their
+ * sizes, the rule each package.json states, and the imports between them
+ * today, by path and by package name (test/packageGraph.ts; CS-835).
+ */
 export function readLayers(root = repoRoot) {
   const rules = readBoundaryRules(root);
-  const files = [...rules.listTs("src"), ...rules.listTs("widgets")];
-  const pkg = packageOf(root);
+  const libraries = graphPackages.filter((p) => p.name !== "@cesium/next");
+  const idOf = (pkg) => pkg.dir.slice("packages/".length);
+  const layerOfFile = (file) => {
+    const pkg = packageOfFile(file);
+    if (!pkg || pkg.name === "@cesium/next") {
+      return undefined;
+    }
+    const id = idOf(pkg);
+    return id === "core" &&
+      rules.layerOf(file.slice("packages/core/".length)) === "utilities"
+      ? "utilities"
+      : id;
+  };
   const layers = new Map();
   const edges = new Map();
   const dynamicImports = [];
-  for (const file of files) {
-    const text = readFileSync(join(pkg, file), "utf8");
-    const from = rules.layerOf(file);
+  for (const file of libraries.flatMap((p) => listPackageTs(`${p.dir}/src`))) {
+    const text = readFileSync(join(root, file), "utf8");
+    const from = layerOfFile(file);
     if (!layers.has(from)) {
       layers.set(from, { id: from, files: 0, lines: 0 });
     }
     const layer = layers.get(from);
     layer.files++;
     layer.lines += text.split("\n").length;
-    for (const edge of rules.edgesOfText(file, text)) {
-      const to = rules.layerOf(edge.to);
+    for (const edge of packageImportsOf(file, text)) {
+      const to = layerOfFile(edge.to);
+      if (to === undefined) {
+        continue;
+      }
       if (edge.dynamic) {
         dynamicImports.push({
           from: file,
@@ -332,14 +351,68 @@ export function readLayers(root = repoRoot) {
       }
     }
   }
+  // What each may import: itself and the siblings its package.json names;
+  // core's utilities with core (the utilities import only each other).
+  const allowed = { utilities: ["utilities"] };
+  for (const pkg of libraries) {
+    const siblings = pkg.dependencies
+      .map((name) => libraries.find((p) => p.name === name))
+      .filter(Boolean)
+      .map(idOf);
+    allowed[idOf(pkg)] = [
+      idOf(pkg),
+      ...siblings,
+      ...(idOf(pkg) === "core" || siblings.includes("core")
+        ? ["utilities"]
+        : []),
+    ];
+  }
   return {
     layers: [...layers.values()],
-    allowed: JSON.parse(JSON.stringify(rules.ALLOWED)),
-    framesCoreValues: rules.FRAMES_CORE_VALUES,
+    allowed,
+    internalEntries: graphPackages
+      .filter((p) => "./internal" in p.entries)
+      .map((p) => `${p.name}/internal`),
     edges: [...edges.values()],
     dynamicImports,
-    core: readCoreTiers(rules, files, pkg),
+    core: readCoreTiers(rules, rules.listTs("src"), coreOf(root)),
   };
+}
+
+/** Each import of a file, by path or by package name: the file it loads. */
+function packageImportsOf(file, text) {
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest);
+  const out = [];
+  const add = (specifier, typeOnly, dynamic) => {
+    const to = resolveSpecifier(file, specifier);
+    if (to !== undefined) {
+      out.push({ to, typeOnly, dynamic });
+    }
+  };
+  const visit = (node) => {
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      add(node.moduleSpecifier.text, node.importClause?.isTypeOnly === true, false);
+    } else if (
+      ts.isExportDeclaration(node) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      add(node.moduleSpecifier.text, node.isTypeOnly, false);
+    } else if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments[0] &&
+      ts.isStringLiteralLike(node.arguments[0])
+    ) {
+      add(node.arguments[0].text, false, true);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return out;
 }
 
 /**

@@ -17,18 +17,18 @@ const ENTRY_LABEL: Record<string, string> = {
   ".": "core",
   time: "time",
   frames: "frames",
-  proj: "proj",
+  crs: "crs",
   measure: "measure",
-  widgets: "widgets",
+  ui: "ui",
 };
 
 const ENTRY_PATH: Record<string, string> = {
   ".": "@cesium/next",
   time: "@cesium/next/time",
   frames: "@cesium/next/frames",
-  proj: "@cesium/next/crs",
+  crs: "@cesium/next/crs",
   measure: "@cesium/next/measure",
-  widgets: "widgets/index.ts",
+  ui: "@cesium/next/ui",
 };
 
 const KINDS = ["class", "function", "const", "interface", "type"];

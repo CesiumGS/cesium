@@ -98,8 +98,8 @@ const CLONE =
 
 const QUICK_START = `cd cesium
 npm install
-npm run setup --workspace @cesium/next
-npm run dev --workspace @cesium/next`;
+npm run setup
+npm run dev`;
 
 export function Overview() {
   const core = libraryEntry("core");

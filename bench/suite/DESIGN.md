@@ -103,7 +103,7 @@ timings don't compare, and it says so.
 
 ## The Work board
 
-The tracker (`packages/next/work`) as a running system, for the owner
+The tracker (`work`) as a running system, for the owner
 first and then anyone choosing what moves next. Its shape comes from the
 first principles in human-in-the-lead's systems-thinking notes, not from
 a team's lifecycle columns: work is stocks and flows; the owner's

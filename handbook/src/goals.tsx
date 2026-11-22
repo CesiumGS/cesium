@@ -386,7 +386,7 @@ const goals = (): readonly Goal[] => [
     sentence:
       "Parity against 1.x, benchmarks and image regression, so claims have numbers.",
     state: "measured",
-    oneX: "1.x's own test suite and years of production use are what make it a useful oracle. The parity tests compare against it, and building 2.0 this way turned up follow-ups for 1.x, tracked as work items for other teams (project CS-19 in packages/next/work).",
+    oneX: "1.x's own test suite and years of production use are what make it a useful oracle. The parity tests compare against it, and building 2.0 this way turned up follow-ups for 1.x, tracked as work items for other teams (project CS-19 in work).",
     today: [
       [
         "built",

@@ -15,17 +15,17 @@ const PATHS: Record<string, string> = {
   core: "@cesium/next",
   time: "@cesium/next/time",
   frames: "@cesium/next/frames",
-  proj: "@cesium/next/crs",
+  crs: "@cesium/next/crs",
   measure: "@cesium/next/measure",
 };
 
 /** Dynamic imports, and what makes each one load. */
 const TRIGGERS: Record<string, string> = {
-  "src/frames/providers/earthOrientation.ts":
+  "packages/frames/src/providers/earthOrientation.ts":
     'A reference frame asks for the "precise" level of Earth orientation (the IAU 2006/2000A series)',
-  "src/frames/providers/ephemeris.ts":
+  "packages/frames/src/providers/ephemeris.ts":
     "A reference frame needs the ephemeris (DE440 packs)",
-  "src/scene/slang.ts":
+  "packages/core/src/scene/slang.ts":
     "A custom shader compiles Slang at run time (CustomShader.fromSlang)",
 };
 
@@ -149,33 +149,34 @@ export function Architecture() {
         <Generated
           from={
             <>
-              <C>test/importBoundary.test.ts</C>'s layers, a library build, the
-              bundle check and the setup store
+              the packages&apos; package.json files and their imports, a library
+              build, the bundle check and the setup store
             </>
           }
         />
         <ModuleRules />
         <p>
-          Two details the stack leaves out. <C>frames</C> may import core types,
-          and values from only{" "}
-          {data.layers.framesCoreValues.map((f, i) => (
+          One detail the stack leaves out. A package reaches names another
+          doesn&apos;t publish only through that package&apos;s internal entry (
+          {data.layers.internalEntries.map((f, i) => (
             <span key={f}>
-              {i > 0 ? " and " : ""}
+              {i > 0 ? ", " : ""}
               <C>{f}</C>
             </span>
           ))}
-          . And <C>time</C> uses only utilities, not the core. The boundary test
-          fails on any import that breaks these rules.
+          ), and only the names the boundary test lists. It fails on any import
+          that breaks these rules.
         </p>
       </Section>
 
       <Section title="From entry points to packages">
         <p>
-          The entry points above are planned to become packages of their own,
-          released together at one version. This is a proposal under review with
-          the public API review, not built (the design note
-          docs/design/package-map.md). There are three kinds of package, and one
-          rule between them: a capability package never depends on an adapter.
+          The entry points above re-export packages of their own, which 2.0's
+          code moved into (CS-835), planned to be released together at one
+          version. Their names are under review with the public API review (the
+          design note docs/design/package-map.md). There are three kinds of
+          package, and one rule between them: a capability package never depends
+          on an adapter.
         </p>
         <DataTable
           label="Kinds of package"
@@ -261,7 +262,7 @@ export function Architecture() {
               cell: (r) => (r.lazyKb > 0 ? size(r.lazyKb) : "none"),
             },
           ]}
-          rows={["core", "time", "frames", "proj", "measure"].flatMap((id) =>
+          rows={["core", "time", "frames", "crs", "measure"].flatMap((id) =>
             library.entries.filter((e) => e.entry === id),
           )}
         />
@@ -510,10 +511,9 @@ export function Architecture() {
 
       <Section title="The planned work, by project">
         <p>
-          The work items in <C>packages/next/work/</C>, one file per item,
-          grouped by project; each project is a plan reviewed by the owner on
-          2026-11-13. Items list order and dependencies only. "Not built" means
-          no code is merged.
+          The work items in <C>work/</C>, one file per item, grouped by project;
+          each project is a plan reviewed by the owner on 2026-11-13. Items list
+          order and dependencies only. "Not built" means no code is merged.
         </p>
         <DataTable
           label="Planned work by project"
@@ -582,7 +582,7 @@ export function Architecture() {
           each item's inputs.
         </p>
         <Written
-          from="the work items in packages/next/work (views.mjs lists)"
+          from="the work items in work (views.mjs lists)"
           on="2026-11-13"
         />
       </Section>

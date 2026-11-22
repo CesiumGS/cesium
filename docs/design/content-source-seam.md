@@ -10,7 +10,7 @@
 
 ## Where today's code stands
 
-Read on `f112dc0903`. Counts are rough. Paths are under `packages/next/src/`.
+Read on `f112dc0903`. Counts are rough. Paths are under `packages/core/src/`.
 
 - **Content and its place are already apart, for tilesets only.** `engine.loadTileset(url)` gives the content (tree, selection, cache), and `world.add(tileset, { placement, opacity, tint, viewMask })` gives a `SceneItem` ([scene-items.md](scene-items.md)). A tileset can have several items, with one selection and one cache. `World.add` takes only a `Tileset3D` (`scene/World.ts:898`), and refuses a globe (`streaming/Tileset3D.ts:729`).
 - **Streaming writes through two narrow interfaces.** `DrawSink` (meshes, transforms, draws, materials, clips, pool pressure) and `TilesetHost` (the request scheduler, the other tilesets, the upload budget, `loadGltf`, `uploadModel`, `wake`), both in `streaming/DrawSink.ts`. The import-boundary test (`test/importBoundary.test.ts`) keeps the content tier off the renderer and the GPU.

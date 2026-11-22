@@ -431,7 +431,7 @@ For milestone CS-722 unless marked. Touches are from the repository root. Every 
   - A denylist test over every identity field finds no host name, user name, serial, GPU UUID, MAC or IP address.
   - An existing store loads in Dyno unchanged; after `enroll`, its legacy runs read under the device, and no file changes (tested on a fixture store).
 - **Needs**: CS-390, CS-721.
-- **Touches**: `packages/next/bench/suite/identity.mjs`, `packages/next/bench/suite/telemetry.mjs`, `packages/next/bench/suite/reuse.mjs`, `packages/next/bench/suite/commands/device.mjs`, `packages/next/bench/suite/cli.mjs`, `packages/next/bench/suite/report.mjs`, `packages/next/bench/suite/data.ts`, `packages/next/bench/suite/schema.ts`, `packages/next/bench/run.mjs`, `packages/next/scripts/setup.mjs`, `packages/next/test/bench*.test.ts`.
+- **Touches**: `bench/suite/identity.mjs`, `bench/suite/telemetry.mjs`, `bench/suite/reuse.mjs`, `bench/suite/commands/device.mjs`, `bench/suite/cli.mjs`, `bench/suite/report.mjs`, `bench/suite/data.ts`, `bench/suite/schema.ts`, `bench/run.mjs`, `scripts/setup.mjs`, `test/bench*.test.ts`.
 
 ### B2. A sealed, content-addressed store layout, local first
 
@@ -442,7 +442,7 @@ For milestone CS-722 unless marked. Touches are from the repository root. Every 
   - Judgments (pins, labels, triage, annotations, approvals) are events; two devices' events on one alert fold to the newer with the other in its history (tested).
   - With no remote configured, everything works as today.
 - **Needs**: B1, CS-721.
-- **Touches**: `packages/next/bench/suite/storage/**`, `packages/next/bench/suite/commands/storage.mjs`, `packages/next/bench/suite/cli.mjs`, `packages/next/bench/suite/data.ts`, `packages/next/bench/suite/images.mjs`, `packages/next/bench/suite/report.mjs`, `packages/next/test/bench*.test.ts`.
+- **Touches**: `bench/suite/storage/**`, `bench/suite/commands/storage.mjs`, `bench/suite/cli.mjs`, `bench/suite/data.ts`, `bench/suite/images.mjs`, `bench/suite/report.mjs`, `test/bench*.test.ts`.
 
 ### B3. Sync with the bucket, with keys per device and role
 
@@ -453,7 +453,7 @@ For milestone CS-722 unless marked. Touches are from the repository root. Every 
   - Canary secrets planted in the keychain and environment appear in no output, log, result or written file (tested); no command takes a secret as an argument.
   - `storage join`, `credentials set`, `rotate-key` and `device remove` behave as section 2 says; after removal, an object stamped later under the removed prefix is ignored and flagged (tested); a remote reader can list, show and fetch, and can't write, pin or delete.
 - **Needs**: B2, D1, D2, D4.
-- **Touches**: `packages/next/bench/suite/storage/**`, `packages/next/bench/suite/commands/storage.mjs`, `packages/next/bench/suite/commands/device.mjs`, `packages/next/bench/suite/commands/result.mjs`, `packages/next/test/bench*.test.ts`, the CS-721 skill (`packages/next/.claude/skills/measuring-with-dyno/SKILL.md`).
+- **Touches**: `bench/suite/storage/**`, `bench/suite/commands/storage.mjs`, `bench/suite/commands/device.mjs`, `bench/suite/commands/result.mjs`, `test/bench*.test.ts`, the CS-721 skill (`packages/next/.claude/skills/measuring-with-dyno/SKILL.md`).
 
 ### B4. Retention, pins and the size budget
 
@@ -463,7 +463,7 @@ For milestone CS-722 unless marked. Touches are from the repository root. Every 
   - `dyno storage status` reports use against budget per namespace, warns at 80% and stops uploads past 100% while runs still record locally (tested).
   - `dyno storage prune` lists and deletes only with `--apply`, never touches a pinned or cited run, refuses on a stale store, and writes a tombstone per object; Dyno shows a pruned blob as removed with its reason (tested).
 - **Needs**: B2, CS-721. (Studies' citations come from CS-404's clean-up when it lands; pins cover them until then.)
-- **Touches**: `packages/next/bench/suite/storage/**`, `packages/next/bench/suite/commands/storage.mjs`, `packages/next/bench/suite/commands/result.mjs`, `packages/next/bench/suite/views/Report.tsx`, `packages/next/bench/suite/views/Images.tsx`, `packages/next/test/bench*.test.ts`.
+- **Touches**: `bench/suite/storage/**`, `bench/suite/commands/storage.mjs`, `bench/suite/commands/result.mjs`, `bench/suite/views/Report.tsx`, `bench/suite/views/Images.tsx`, `test/bench*.test.ts`.
 
 ### B5. A classification label on every result
 
@@ -473,7 +473,7 @@ For milestone CS-722 unless marked. Touches are from the repository root. Every 
   - `dyno result show` prints no raw values without `--values`; `result fetch` refuses a `confidential` blob into a git working tree (tested).
   - A relabel is an event, and the run's file doesn't change.
 - **Needs**: B2, D3, CS-721.
-- **Touches**: `packages/next/bench/suite/storage/**`, `packages/next/bench/suite/commands/result.mjs`, `packages/next/bench/suite/cli.mjs`, `packages/next/bench/suite/schema.ts`, `packages/next/test/bench*.test.ts`.
+- **Touches**: `bench/suite/storage/**`, `bench/suite/commands/result.mjs`, `bench/suite/cli.mjs`, `bench/suite/schema.ts`, `test/bench*.test.ts`.
 
 ### B6. Trends, charts, baselines and alerts take devices
 
@@ -484,7 +484,7 @@ For milestone CS-722 unless marked. Touches are from the repository root. Every 
   - Control bands, change points and alerts run per series; one commit range moving two devices groups into one alert naming both (tested).
   - Overview says "on all N devices" or "Mixed: …" and never averages; Machines becomes Devices. The handbook build refuses a device ID, hardware object or configuration in what it embeds (tested). Owner review by clicking around.
 - **Needs**: B1, B2.
-- **Touches**: `packages/next/bench/suite/data.ts`, `packages/next/bench/suite/views/trendsModel.ts`, `packages/next/bench/suite/views/Trends.tsx`, `packages/next/bench/suite/views/Compare.tsx`, `packages/next/bench/suite/views/Scenes.tsx`, `packages/next/bench/suite/views/Runs.tsx`, `packages/next/bench/suite/views/Alerts.tsx`, `packages/next/bench/suite/views/Overview.tsx`, `packages/next/bench/suite/views/Machines.tsx`, `packages/next/bench/suite/changepoints.mjs`, `packages/next/bench/suite/annotations.json`, `packages/next/bench/suite/DESIGN.md`, `packages/next/handbook/vite.config.ts`, `packages/next/test/bench*.test.ts`.
+- **Touches**: `bench/suite/data.ts`, `bench/suite/views/trendsModel.ts`, `bench/suite/views/Trends.tsx`, `bench/suite/views/Compare.tsx`, `bench/suite/views/Scenes.tsx`, `bench/suite/views/Runs.tsx`, `bench/suite/views/Alerts.tsx`, `bench/suite/views/Overview.tsx`, `bench/suite/views/Machines.tsx`, `bench/suite/changepoints.mjs`, `bench/suite/annotations.json`, `bench/suite/DESIGN.md`, `handbook/vite.config.ts`, `test/bench*.test.ts`.
 
 ### B7. Studies across devices (CS-480, not alpha.1, per D6)
 
@@ -494,7 +494,7 @@ For milestone CS-722 unless marked. Touches are from the repository root. Every 
   - The health bar reads the state before the run; a study whose arms lose runs to it at clearly different rates warns (tested on a fixture).
   - The hierarchical model pools devices within classes and recovers a planted one-device difference on a fixture; each verdict lists per class `measured`, `carried` or `can't tell`, and a class without runs is never `measured`.
 - **Needs**: CS-404, B1, B6.
-- **Touches**: `packages/next/bench/suite/studies.mjs`, `packages/next/bench/suite/commands/studies.mjs`, `packages/next/bench/suite/schema.ts`, `packages/next/work/studies/README.md`, `packages/next/test/bench*.test.ts`.
+- **Touches**: `bench/suite/studies.mjs`, `bench/suite/commands/studies.mjs`, `bench/suite/schema.ts`, `work/studies/README.md`, `test/bench*.test.ts`.
 
 ### B8. A verdict says where it carries (CS-480, not alpha.1, per D6)
 
@@ -503,7 +503,7 @@ For milestone CS-722 unless marked. Touches are from the repository root. Every 
   - Each run records its work counters and its bottleneck per scene.
   - A verdict on class A is `carried` to class B only when B's counters match within their spread, B has a calibration study for that work, and both have one bottleneck; otherwise `can't tell`, naming the failed check and what to measure (tested on three fixtures, one per failed check, and one that carries).
 - **Needs**: B7, CS-394.
-- **Touches**: `packages/next/bench/suite/studies.mjs`, `packages/next/bench/suite/report.mjs`, `packages/next/bench/suite/schema.ts`, `packages/next/test/bench*.test.ts`.
+- **Touches**: `bench/suite/studies.mjs`, `bench/suite/report.mjs`, `bench/suite/schema.ts`, `test/bench*.test.ts`.
 
 ## 10. Proposed "Done when" for CS-722
 

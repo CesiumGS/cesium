@@ -14,8 +14,8 @@ Whether USD comes into the engine through a TypeScript subset reader behind the 
 ## Run it
 
 ```sh
-node packages/next/spikes/usd-subset/run.ts [data folder]   # Node: every sample, 7 runs each; writes out/report.json
-node packages/next/spikes/usd-subset/size.mjs                # the reader's bundle size; writes out/size.json
+node spikes/usd-subset/run.ts [data folder]   # Node: every sample, 7 runs each; writes out/report.json
+node spikes/usd-subset/size.mjs                # the reader's bundle size; writes out/size.json
 ```
 
 In a browser, start a dev server of your own (not 5190) and open `/spikes/usdSubset.html`. Run times the reader in a module worker on the fixture, ten runs. The folder picker composes a local `simready_usd` folder in the tab and lists what it read; nothing is uploaded.

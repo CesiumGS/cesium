@@ -358,7 +358,7 @@ copy rules and component choices; every view follows it.
 
 ## Inspector (designed r34, built r37)
 
-Built as designed, in `packages/next/widgets/`: `Inspectable` (a
+Built as designed, in `packages/ui/src/`: `Inspectable` (a
 snapshot an engine fills in as far as it can measure), `inspectEngine`
 for 2.0, Dyno's 1.x adapter for 1.x, and `attachInspector` with every
 readout the viewer panel had. Beside it, `Viewer` (2.0's counterpart to

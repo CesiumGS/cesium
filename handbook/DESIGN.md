@@ -263,7 +263,7 @@ By hand, when the work changes it:
 ## Decided while sketching (cheap to change)
 
 - The side list rather than top tabs, as above.
-- `packages/next/handbook/` as the location.
+- `handbook/` as the location.
 - One built file rather than a zip or a folder of assets, as it stays small.
 - Generated data isn't committed, so a checkout builds its own figures. A shared
   copy of the page shows the commit it was built from.

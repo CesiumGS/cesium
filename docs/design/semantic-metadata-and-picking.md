@@ -10,7 +10,7 @@
 
 ## Where today's code stands
 
-Paths are under `packages/next/src/`.
+Paths are under `packages/core/src/`.
 
 - **Feature IDs are a running counter.** Each draw takes a range of global feature IDs from `worldScene.nextFeatureId` (`scene/world/draws.ts:587`). So an ID depends on the order draws were added, and changes between runs. `World.feature(id)` binary-searches the ranges back to a draw and a local ID (`scene/World.ts:1768`).
 - **glTF feature IDs are read, partly.** `io/features.ts` reads `EXT_mesh_features` feature IDs from vertex attributes and the legacy `_BATCHID`. Feature-ID textures and implicit IDs warn and are skipped. It reads `EXT_structural_metadata` property tables, including fixed-length arrays and enums. Variable-length arrays, property textures and property attributes are skipped, and so are external schemas.

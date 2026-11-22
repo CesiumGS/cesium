@@ -355,7 +355,7 @@ so Dyno's Viewer listed 1.146.0 and 1.147.0 and failed to start either
 ("not found"), while the first-run check said "Ready" (the dev server
 answers a missing file with the app's page, 200). Now:
 
-- `npm run setup --workspace @cesium/next` (scripts/setup.mjs) builds
+- `npm run setup` (scripts/setup.mjs) builds
   this repository's 1.x if `Build/CesiumUnminified` is missing and
   fetches the catalog's default releases into the store. Neither is
   committed.

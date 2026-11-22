@@ -4,7 +4,7 @@
 
 **What it read.** Main at `7691e1092f`. The designs for the content-source seam ([content-source-seam.md](content-source-seam.md), CS-552), semantic metadata and picking ([semantic-metadata-and-picking.md](semantic-metadata-and-picking.md), CS-832), editing ([editing.md](editing.md), CS-831) and the package map ([package-map.md](package-map.md), CS-834). The items CS-802, CS-843, CS-559, CS-672, CS-841 and CS-842. Outside pages are cited where they are used, each with the date it was read.
 
-**What it measured.** A TypeScript subset reader, in `packages/next/spikes/usd-subset/`, run over six SimReady sample assets from NVIDIA's SimReady Foundation (Apache 2.0), and a browser page, `spikes/usdSubset.html`, that times it in a module worker. OpenUSD in WebAssembly wasn't built: that is a new dependency, and the owner's call. Its numbers here are published ones, and where nothing is published the answer is "can't tell".
+**What it measured.** A TypeScript subset reader, in `spikes/usd-subset/`, run over six SimReady sample assets from NVIDIA's SimReady Foundation (Apache 2.0), and a browser page, `spikes/usdSubset.html`, that times it in a module worker. OpenUSD in WebAssembly wasn't built: that is a new dependency, and the owner's call. Its numbers here are published ones, and where nothing is published the answer is "can't tell".
 
 **What to read first.** "The recommendation for CS-802", then "What alpha.1 must reserve". The rest is the evidence.
 
@@ -121,7 +121,7 @@ Builds others publish:
 
 ## What the spike measured
 
-**The spike.** `packages/next/spikes/usd-subset/`: an LZ4 and integer decoder, a USDC reader, a USDA reader, a USDZ reader, a composer, a coverage report and a fixture. `run.ts` runs it in Node over a data folder; `size.mjs` bundles it; `spikes/usdSubset.html` times it in a worker. Its README says how to run each and states the data, settings and costs.
+**The spike.** `spikes/usd-subset/`: an LZ4 and integer decoder, a USDC reader, a USDA reader, a USDZ reader, a composer, a coverage report and a fixture. `run.ts` runs it in Node over a data folder; `size.mjs` bundles it; `spikes/usdSubset.html` times it in a worker. Its README says how to run each and states the data, settings and costs.
 
 **The data.** Six asset folders from NVIDIA's SimReady Foundation repository at commit `1abf3ae2e9a0ae2ccad8c8632065621c9e08f2ef`, `sample_content/common_assets/`, each asset's `simready_usd/` folder without thumbnails, 77 MB in all. NVIDIA's content in that repository is Apache 2.0, which allows this use (https://github.com/NVIDIA/simready-foundation/blob/main/LICENSE.txt, read 2026-11-21). Its listed exceptions (Robotiq, UR10, Spot, and the OmniPBR MDL files under BSD 3-Clause) aren't among the six, except OmniPBR's MDL files, which the spike only checks exist. They are kept in the setup store at `~/.cesium-bench/simready/foundation-1abf3ae2/`, outside the repository. Nothing from them is committed.
 

@@ -27,7 +27,7 @@ import {
 } from "../handbook/src/reference.ts";
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
-const root = join(repo, "packages", "next");
+const root = join(repo, "packages", "cesium");
 const built = buildReference({ root });
 const reference: Reference = built.reference;
 const { report } = built;
@@ -113,9 +113,9 @@ describe("the API reference's coverage", () => {
   });
 
   it("leaves a symbol that no rule places unmapped, never in a catch-all", () => {
-    expect(groupOf(".", "Nothing", "src/nowhere/file.ts")).toBeUndefined();
-    expect(groupOf(".", "World", "src/scene/World.ts")).toBe("core.world");
-    expect(groupOf("frames", "Precision", "src/frames/catalog.ts")).toBe(
+    expect(groupOf(".", "Nothing", "core/src/nowhere/file.ts")).toBeUndefined();
+    expect(groupOf(".", "World", "core/src/scene/World.ts")).toBe("core.world");
+    expect(groupOf("frames", "Precision", "frames/src/catalog.ts")).toBe(
       "frames.accuracy",
     );
   });
@@ -181,7 +181,7 @@ describe("the API reference's page logic", () => {
     expect(linker.resolve("NotAThing", ".")).toBeUndefined();
     const pick = symbols.filter((s) => s.name === "PickCamera");
     if (pick.length > 1) {
-      expect(linker.resolve("PickCamera", "proj")).toBe("proj:PickCamera");
+      expect(linker.resolve("PickCamera", "crs")).toBe("crs:PickCamera");
     }
   });
 

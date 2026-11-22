@@ -34,14 +34,7 @@ it("reads the API map per entry point", () => {
   const surface = readSurface();
   const entries = surface.entries.map((e) => e.entry);
   expect(entries).toEqual(
-    expect.arrayContaining([
-      ".",
-      "time",
-      "frames",
-      "proj",
-      "measure",
-      "widgets",
-    ]),
+    expect.arrayContaining([".", "time", "frames", "crs", "measure", "ui"]),
   );
   expect(surface.total).toBe(surface.entries.reduce((n, e) => n + e.total, 0));
   expect(surface.entries[0]!.names[0]).toEqual(
@@ -52,16 +45,16 @@ it("reads the API map per entry point", () => {
   );
 });
 
-it("runs the boundary test's table over the import graph", () => {
+it("reads the packages' rule and imports", () => {
   const { layers, allowed, edges, dynamicImports } = readLayers();
   expect(layers.map((l) => l.id).sort()).toEqual([
     "core",
+    "crs",
     "frames",
     "measure",
-    "proj",
     "time",
+    "ui",
     "utilities",
-    "widgets",
   ]);
   expect(allowed.core).toEqual(["core", "utilities"]);
   // The rule the layer diagram draws: nothing leaves the core but to utilities.

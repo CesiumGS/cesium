@@ -7,7 +7,7 @@ import { drawScaling, ms, num } from "./tabs/benchmarks.tsx";
 /**
  * Why the API breaks: what a shape of 1.x's made hard, what 2.0 does, and
  * where 2.0 still leaks. Each was read in `packages/engine/Source` and
- * `packages/next/src`. 1.x's shapes follow from WebGL and from when they were
+ * the packages' `src/`. 1.x's shapes follow from WebGL and from when they were
  * made, so these state consequences, not faults.
  */
 

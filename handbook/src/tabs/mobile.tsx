@@ -167,7 +167,7 @@ export function Mobile() {
           phone. WebGPU on an iPhone needs iOS 26 or later.
         </p>
         <CodeBlock
-          code="DEV_HTTPS=1 npm run dev --workspace @cesium/next -- --host 0.0.0.0 --port 5198"
+          code="DEV_HTTPS=1 npm run dev -- --host 0.0.0.0 --port 5198"
           language="shell"
         />
         <Written from="this session's fixes, on 2026-11-10" on="2026-11-10" />

@@ -485,7 +485,7 @@ https://github.com/BinomialLLC/basis_universal
 https://github.com/ebruneton/precomputed_atmospheric_scattering
 
 Used for the solar spectrum, ozone cross-sections and CIE color matching
-function tables in `packages/next/src/atmosphere/spectra.ts`.
+function tables in `packages/core/src/atmosphere/spectra.ts`.
 
 > Copyright (c) 2017 Eric Bruneton
 > All rights reserved.

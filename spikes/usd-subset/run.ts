@@ -1,7 +1,7 @@
 // Runs the subset reader in Node over SimReady sample assets and the
 // spike's fixture, and writes out/report.json. Node 24 runs it as is:
 //
-//   node packages/next/spikes/usd-subset/run.ts [data directory]
+//   node spikes/usd-subset/run.ts [data directory]
 //
 // The data directory defaults to ~/.cesium-bench/simready, outside the
 // repository. Nothing read from it is written back into the repository:

@@ -278,8 +278,7 @@ export function Differences() {
         </ul>
         <p>
           Details are in the follow-up items for other teams (project CS-19 in{" "}
-          <C>packages/next/work/</C>) and{" "}
-          <C>packages/next/docs/clamping-1x-spec.md</C>.
+          <C>work/</C>) and <C>docs/design/clamping-1x-spec.md</C>.
         </p>
         <h3>Worth backporting to 1.x</h3>
         <ul>

@@ -6,7 +6,7 @@ Clean-slate, WebGPU-only engine prototype. See `CESIUM2_WEBGPU_PLAN.md` at the r
 
 ```sh
 npm install                                 # at the repo root
-npm run setup --workspace @cesium/next      # the 1.x build, the CesiumJS releases Dyno and the benchmarks run, the Slang WASM build, SMLib, Open CASCADE, NIST's STEP samples
+npm run setup      # the 1.x build, the CesiumJS releases Dyno and the benchmarks run, the Slang WASM build, SMLib, Open CASCADE, NIST's STEP samples
 ```
 
 `setup` builds this repository's 1.x (`npm run build` at the root) if
@@ -118,10 +118,10 @@ every dish. It agrees with our per-dish light-time ranges within 5.7% and
 with no geometry better, so it is only a 30% sanity check here.
 
 `--frames-span y0-y1` sets the excerpted years, both included (default `2000-2050`):
-`npm run setup --workspace @cesium/next -- --frames-span 2000-2050`.
+`npm run setup -- --frames-span 2000-2050`.
 
 The dev server serves the store at `/frames-data/`, so restart it after a
-first setup. `npm run test:data --workspace @cesium/next` runs the tests that
+first setup. `npm run test:data` runs the tests that
 compare against the real store (they need setup to have run). Without a store,
 `loadFrameData` rejects with a message saying to run `npm run setup`.
 
@@ -772,11 +772,11 @@ among others. `GridCatalog.credit` reads each from the CSV.
 
 ```sh
 npm run build                               # at the repo root: 1.x build used by the parity harness
-npm run dev --workspace @cesium/next        # dev server at http://127.0.0.1:5190
-npm run test --workspace @cesium/next       # unit + 1.x parity (L0) tests
-npm run typecheck --workspace @cesium/next
-npm run bench --workspace @cesium/next      # the Lab's harnesses (dyno lab); writes bench/results/*.json
-npm run build:lib --workspace @cesium/next  # the library for pages without a build step
+npm run dev        # dev server at http://127.0.0.1:5190
+npm run test       # unit + 1.x parity (L0) tests
+npm run typecheck
+npm run bench      # the Lab's harnesses (dyno lab); writes bench/results/*.json
+npm run build:lib  # the library for pages without a build step
 ```
 
 **dyno**, Dyno's command line (`npx @cesium/dyno`: the private workspace package `tools/dyno`, which
@@ -816,7 +816,7 @@ mips, IBL environment), `src/io` (worker pool, glTF parsing),
 The Cesium ion token: paste one in Dyno (ion token, at the foot of the rail;
 kept for the session or remembered on the device), and every view, example,
 Lab page and benchmark uses it. On the dev server `VITE_ION_TOKEN=<token>` in
-`packages/next/.env.local` (gitignored) also works; production builds never
+`.env.local` at the repository root (gitignored) also works; production builds never
 contain it (`bench/suite/ionToken.ts`, and `scripts/vitePluginEnvSecrets.ts`
 fails a build that would). With neither, public assets load with CesiumJS's
 evaluation token.

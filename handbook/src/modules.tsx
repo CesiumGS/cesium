@@ -38,10 +38,10 @@ interface ModuleWords {
 }
 
 const MODULES: Record<string, () => ModuleWords> = {
-  widgets: () => ({
+  ui: () => ({
     title: "Widgets",
     optional: true,
-    path: "widgets/index.ts",
+    path: "@cesium/next/ui",
     forWhat:
       "Viewer, for a working globe in one call, and the inspector. Kept apart from the engine, as 1.x keeps its widgets.",
     loads: (
@@ -62,13 +62,13 @@ const MODULES: Record<string, () => ModuleWords> = {
     loads: <>With the page, if you import it. {entrySize("measure")}.</>,
     downloads: "Nothing of its own: it uses what frames and proj load.",
   }),
-  proj: () => ({
-    title: "Proj",
+  crs: () => ({
+    title: "CRS",
     optional: true,
     path: "@cesium/next/crs",
     forWhat:
       "PROJ for any coordinate operation the core's built-in reprojections don't cover (datum grids, the EPSG catalog), plus snapping and alignments with stations.",
-    loads: <>With the page, if you import it. {entrySize("proj")}.</>,
+    loads: <>With the page, if you import it. {entrySize("crs")}.</>,
     downloads: (
       <>
         The first time coordinates are converted: PROJ's WebAssembly (
@@ -196,7 +196,7 @@ function ModuleBlock({
 
 /** Layers the test has, placed in the stack: most dependencies at the top. */
 function stackOrder() {
-  const known = new Set(["widgets", "core", "utilities"]);
+  const known = new Set(["ui", "core", "utilities"]);
   return data.layers.layers
     .map((l) => l.id)
     .filter((id) => !known.has(id))
@@ -318,7 +318,7 @@ export function CoreTiers({ deeper = true }: { deeper?: boolean } = {}) {
 export function ModuleStack() {
   return (
     <div className="stack-map">
-      <ModuleBlock id="widgets" wide />
+      <ModuleBlock id="ui" wide />
       <div className="stack-optional">
         {stackOrder().map((id) => (
           <ModuleBlock id={id} key={id} />
@@ -458,11 +458,9 @@ export function ModuleRules() {
               <tr key={l.id}>
                 <th scope="row">{l.id}</th>
                 <td>
-                  {l.id === "widgets"
-                    ? "anything"
-                    : (data.layers.allowed[l.id] ?? [])
-                        .filter((x) => x !== l.id)
-                        .join(", ") || "only itself"}
+                  {(data.layers.allowed[l.id] ?? [])
+                    .filter((x) => x !== l.id)
+                    .join(", ") || "only itself"}
                 </td>
                 <td>
                   {counts(l.id)
