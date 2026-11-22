@@ -2,10 +2,11 @@
 id: CS-394
 title: Example scenes and the development metrics
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-389
 needs: [CS-393]
+claimed_by: orch-11-CS-394
 ---
 
 `catalog/dev.json` and group D; `example.html` in the frozen build. The host pose contract (`camera=`) and declared example parameters. The settle rule, with "not settled". The metrics of section 4: tiles and requests per tileset, requests and bytes by host class, triangles and draws, GPU per pass, `probe=sse`, page errors. Tileset labels in the vertical-exaggeration example. Group D kept out of headline means, Overview and budgets. "Measure this" in the Examples view.
