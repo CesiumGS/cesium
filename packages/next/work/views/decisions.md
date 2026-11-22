@@ -34,8 +34,8 @@ CS-190 Vector drawing and the styling language
 CS-191 Content sources and formats
   CS-270  Where does 2.0's default evaluation token come from? (owner)
       waited on by CS-271
-  CS-452  How should semantic metadata reach the engine, and what does picking mean in splats and point clouds? (owner)
   CS-802  Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in? (owner)
+      first needs CS-833
 
 CS-192 Sky, light and atmosphere
   CS-296  Black hole visualization: how much physics, and an engine feature or a gallery example? (owner)
@@ -56,10 +56,11 @@ CS-437 The public API reviews
 
 CS-579 Editing
   CS-453  What editing should the engine support, with vector data and GIS sources among it? (owner)
+      first needs CS-831
 
 CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617
 
-19 open decision(s) for owner
+18 open decision(s) for owner
 ```

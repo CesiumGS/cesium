@@ -18,10 +18,10 @@ CS-9 The WebGL 2 renderer
   CS-35  The probe, the `renderer` option and an empty WebGL 2 device
 
 CS-10 Cesium IR
-  CS-49  The versioned JSON format
   CS-54  Routes on both emitters, with the residual and df64 forms
   CS-55  Styles move onto Cesium IR, literals as uniforms
   CS-57  Our naga crate (Rust in development and CI only)
+  CS-59  The writer and reader for `KHR_interactivity`'s graph JSON (vendor extension `BENTLEY_interactivity_ir`)
   CS-64  Noise, first among the gaps
   CS-371  Math ops the transform graph needs: `atanh`, `asinh`, `acosh`, `expm1`, `log1p`, `%`, `hypot`
   CS-548  The IR's math/eq covers floatN and bool, as KHR_interactivity defines it
@@ -29,6 +29,7 @@ CS-10 Cesium IR
   CS-550  The core IR spike's evaluator gets dot and intToFloat's signed zero right
   CS-571  The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires
   CS-794  The transform passes load Cesium IR lazily, so a default view starts without it
+  CS-837  Cesium IR's JSON format is experimental at cesium-ir/0.x until it graduates
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -130,12 +131,10 @@ CS-191 Content sources and formats
   CS-272  3D Tiles format gaps: implicit tiling, multiple contents, metadata, S2 and cylinder volumes
   CS-273  glTF extension gaps: texture transforms, primitive outlines, WebP, node visibility, specular-glossiness
   CS-279  More terrain and imagery providers, and several imagery layers on one globe
-  CS-452  decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?
   CS-552  The content-source seam: one interface every source module implements, designed and planned
   CS-553  What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline
   CS-666  GPM metadata feeds measurement accuracy
   CS-682  Audit every extension 1.x 1.147 reads against 2.0, and refresh the parity table
-  CS-802  decision: Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in?
   CS-809  Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
 
 CS-192 Sky, light and atmosphere
@@ -226,12 +225,13 @@ CS-437 The public API reviews
   CS-780  Engine.errors becomes an emitter: errors.on("support", …) reaches notice listeners, as the engine-profiles plan names it
   CS-813  A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color
   CS-814  A camera record carries intrinsics, an off-center principal point and a named distortion model
-  CS-815  Scene content has stable identity and semantic labels that don't depend on load order
   CS-816  The host steps the engine: advance to a time, wait until settled, render, read back
+  CS-832  A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds
+  CS-833  A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802
 
 CS-579 Editing
-  CS-453  decision: What editing should the engine support, with vector data and GIS sources among it?
   CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
+  CS-831  A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
 
 CS-584 The widgets library
   CS-585  The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them
@@ -245,6 +245,7 @@ CS-609 A clean 2.0 branch and a modern build
 
 CS-615 Packaging and package names
   CS-616  decision: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
+  CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
 
 CS-622 The agent-first migration kit
   CS-623  The 1.x-to-2.0 map in a form agents read, with worked patterns
@@ -263,5 +264,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-194 ready
+195 ready
 ```

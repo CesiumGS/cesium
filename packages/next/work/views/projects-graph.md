@@ -6,7 +6,7 @@
 graph LR
   CS_8["Engine profiles<br/>7 of 21 done"]
   CS_9["WebGL 2 renderer<br/>7 of 21 done"]
-  CS_10["Cesium IR<br/>16 of 43 done"]
+  CS_10["Cesium IR<br/>18 of 45 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
   CS_13["worker-mode façade<br/>3 of 22 done"]
@@ -19,7 +19,7 @@ graph LR
   CS_188["Earth to Moon (frames 5c to 5h)<br/>3 of 43 done"]
   CS_189["Frames and engineering coordinates follow-ups<br/>1 of 22 done"]
   CS_190["Vector drawing and the styling language<br/>0 of 14 done"]
-  CS_191["Content sources and formats<br/>3 of 40 done"]
+  CS_191["Content sources and formats<br/>4 of 40 done"]
   CS_192["Sky, light and atmosphere<br/>2 of 22 done"]
   CS_193["B-reps and geometry queries<br/>3 of 21 done"]
   CS_194["Budgeted selection and memory<br/>0 of 6 done"]
@@ -29,14 +29,14 @@ graph LR
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
   CS_199["Dyno hardening, packaging and CI<br/>3 of 17 done"]
   CS_389["Dyno as the development harness<br/>56 of 92 done"]
-  CS_437["public API reviews<br/>7 of 24 done"]
-  CS_579["Editing<br/>0 of 2 done"]
+  CS_437["public API reviews<br/>7 of 26 done"]
+  CS_579["Editing<br/>0 of 3 done"]
   CS_584["widgets library<br/>0 of 9 done"]
   CS_596["Trust and evals<br/>0 of 9 done"]
   CS_609["A clean 2.0 branch and a modern build<br/>0 of 4 done"]
-  CS_615["Packaging and package names<br/>0 of 4 done"]
+  CS_615["Packaging and package names<br/>0 of 6 done"]
   CS_622["agent-first migration kit<br/>0 of 4 done"]
-  CS_628["Sandcastle as 2.0's gallery<br/>0 of 6 done"]
+  CS_628["Sandcastle as 2.0's gallery<br/>0 of 16 done"]
   CS_637["particle system<br/>0 of 3 done"]
   CS_642["Geometry generators<br/>0 of 2 done"]
   CS_647["Conditional content and motion<br/>0 of 5 done"]
@@ -46,6 +46,7 @@ graph LR
   CS_10 -->|2| CS_11
   CS_9 -->|1| CS_11
   CS_13 -->|2| CS_12
+  CS_615 -->|1| CS_437
   CS_437 -->|5| CS_13
   CS_10 -->|3| CS_13
   CS_8 -->|1| CS_13
@@ -75,7 +76,7 @@ graph LR
   CS_8 -->|4| CS_18
   CS_199 -->|2| CS_18
   CS_615 -->|2| CS_18
-  CS_628 -->|2| CS_18
+  CS_628 -->|3| CS_18
   CS_596 -->|3| CS_18
   CS_389 -->|7| CS_18
   CS_437 -->|4| CS_18
@@ -118,4 +119,10 @@ graph LR
   CS_647 -->|1| CS_191
   CS_190 -->|1| CS_191
   CS_190 -->|1| CS_197
+  CS_437 -->|1| CS_191
+  CS_191 -->|8| CS_628
+  CS_584 -->|1| CS_628
+  CS_437 -->|6| CS_628
+  CS_191 -->|2| CS_615
+  CS_437 -->|1| CS_615
 ```

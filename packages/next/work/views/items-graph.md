@@ -52,7 +52,7 @@ graph LR
   end
   subgraph CS_10["Cesium IR"]
     CS_48["CS-48 The core (types, rates, equations, literal slots, the builder)"]:::done
-    CS_49["CS-49 The versioned JSON format"]:::open
+    CS_49["CS-49 The versioned JSON format"]:::done
     CS_50["CS-50 The passes (float64 evaluator, autodiff, intervals with breakpoi"]:::done
     CS_51["CS-51 The WGSL emitter"]:::done
     CS_52["CS-52 The GLSL ES 3.00 emitter"]:::done
@@ -94,6 +94,8 @@ graph LR
     CS_794["CS-794 The transform passes load Cesium IR lazily, so a default view s"]:::open
     CS_800["CS-800 Merge CS-777, the GLSL ES emitter's output is cross-checked aga"]:::done
     CS_807["CS-807 Merge CS-794, the transform passes load Cesium IR lazily, once "]:::done
+    CS_836["CS-836 Merge CS-49, Cesium IR's versioned JSON format, cesium-ir/1.0"]:::done
+    CS_837["CS-837 Cesium IR's JSON format is experimental at cesium-ir/0.x until "]:::open
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -402,7 +404,7 @@ graph LR
     CS_278["CS-278 glTF animation playback: skins, morph targets and animated node"]:::open
     CS_279["CS-279 More terrain and imagery providers, and several imagery layers "]:::open
     CS_280["CS-280 Thin wrappers for ion's REST API, including element metadata"]:::proposed
-    CS_452["CS-452 How should semantic metadata reach the engine, and what does pi"]:::decision
+    CS_452["CS-452 How should semantic metadata reach the engine, and what does pi"]:::done
     CS_551["CS-551 Does content from every kind of source, the globe included, loa"]:::done
     CS_552["CS-552 The content-source seam: one interface every source module impl"]:::open
     CS_553["CS-553 What 3D Tiles costs an application that doesn't use them, measu"]:::open
@@ -682,10 +684,13 @@ graph LR
     CS_815["CS-815 Scene content has stable identity and semantic labels that don'"]:::open
     CS_816["CS-816 The host steps the engine: advance to a time, wait until settle"]:::open
     CS_817["CS-817 Physical-AI modules on the four seams: ROS 2 and MCAP, randomiz"]:::proposed
+    CS_832["CS-832 A design for semantic metadata and picking: how metadata reache"]:::open
+    CS_833["CS-833 A SimReady scoping study: which profile, how USD comes in, and "]:::open
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::decision
     CS_578["CS-578 A mesh editing sample: drag a mesh's vertices, edges and faces,"]:::open
+    CS_831["CS-831 A design for editing back through the seams: write capabilities"]:::open
   end
   subgraph CS_584["widgets library"]
     CS_585["CS-585 The widgets library's design: React components on StrataKit, DO"]:::open
@@ -720,6 +725,8 @@ graph LR
     CS_617["CS-617 2.0 splits into scoped packages, released in lockstep, with ces"]:::open
     CS_618["CS-618 An embedding app installs the core alone, checked by an install"]:::open
     CS_619["CS-619 The API reference for every package"]:::open
+    CS_834["CS-834 A map of 2.0's packages and seams: capability packages, seam-pr"]:::open
+    CS_835["CS-835 2.0's folders become its packages: the move to the package map,"]:::open
   end
   subgraph CS_622["agent-first migration kit"]
     CS_623["CS-623 The 1.x-to-2.0 map in a form agents read, with worked patterns"]:::open
@@ -734,6 +741,16 @@ graph LR
     CS_632["CS-632 1.x's Sandcastle examples are migrated with the kit and checked"]:::open
     CS_633["CS-633 Examples that use dropped features are recorded in the API map"]:::open
     CS_634["CS-634 The 2.0 Sandcastle replaces 1.x's"]:::open
+    CS_820["CS-820 Example: bring your own format, a custom loader registered and "]:::open
+    CS_821["CS-821 Example: a live feed pushes moving objects through a custom str"]:::open
+    CS_822["CS-822 Example: your imagery, your servers: WMTS, OGC API Tiles and ST"]:::open
+    CS_823["CS-823 Example: offline coordinates, with PROJ grids from a local bund"]:::open
+    CS_824["CS-824 Example: search anything, with swappable geocoders and a catalo"]:::open
+    CS_825["CS-825 Example: vector features stream from PostGIS by view, styled an"]:::open
+    CS_826["CS-826 Example: synthetic data capture, stepping a scene and exporting"]:::open
+    CS_827["CS-827 Example: a calibrated camera from an OpenCV calibration, overla"]:::open
+    CS_828["CS-828 Example: what is this? Stable IDs and semantic labels on a city"]:::open
+    CS_829["CS-829 Example: simulator in the loop, a small rigid-body sim writing "]:::open
   end
   subgraph CS_637["particle system"]
     CS_638["CS-638 The particle system's design"]:::open
@@ -819,6 +836,7 @@ graph LR
   CS_467["CS-467 Fidelity adapts without silent fallbacks"]:::open
   CS_534["CS-534 Infrastructure and geoscience data shows in 2.0"]:::open
   CS_504["CS-504 Tiles are chosen by benefit per byte across views"]:::open
+  CS_830["CS-830 2.0's examples show its seams in use"]:::open
   CS_416["CS-416 WebGL 2 reaches parity with WebGPU"]:::open
   CS_472["CS-472 Transition costs are measured and the options decided"]:::open
   CS_484["CS-484 The performance targets are met or the gaps explained"]:::open
@@ -964,6 +982,7 @@ graph LR
   CS_454 --> CS_102
   CS_567 --> CS_102
   CS_572 --> CS_102
+  CS_834 --> CS_102
   CS_438 --> CS_103
   CS_438 --> CS_104
   CS_438 --> CS_105
@@ -1209,6 +1228,7 @@ graph LR
   CS_206 --> CS_446
   CS_222 --> CS_446
   CS_96 --> CS_449
+  CS_831 --> CS_453
   CS_23 --> CS_507
   CS_383 --> CS_508
   CS_88 --> CS_508
@@ -1297,6 +1317,7 @@ graph LR
   CS_467 --> CS_531
   CS_534 --> CS_531
   CS_504 --> CS_531
+  CS_830 --> CS_531
   CS_528 --> CS_532
   CS_531 --> CS_532
   CS_416 --> CS_532
@@ -1385,6 +1406,8 @@ graph LR
   CS_612 --> CS_613
   CS_616 --> CS_617
   CS_310 --> CS_617
+  CS_834 --> CS_617
+  CS_835 --> CS_617
   CS_617 --> CS_618
   CS_617 --> CS_619
   CS_623 --> CS_624
@@ -1489,17 +1512,39 @@ graph LR
   CS_53 --> CS_791
   CS_35 --> CS_792
   CS_53 --> CS_794
+  CS_833 --> CS_802
   CS_394 --> CS_804
   CS_394 --> CS_805
   CS_552 --> CS_806
   CS_809 --> CS_808
   CS_809 --> CS_810
   CS_808 --> CS_811
+  CS_832 --> CS_815
   CS_813 --> CS_817
   CS_814 --> CS_817
   CS_815 --> CS_817
   CS_816 --> CS_817
   CS_552 --> CS_818
+  CS_560 --> CS_820
+  CS_560 --> CS_821
+  CS_810 --> CS_822
+  CS_809 --> CS_822
+  CS_279 --> CS_822
+  CS_808 --> CS_823
+  CS_587 --> CS_824
+  CS_560 --> CS_825
+  CS_663 --> CS_825
+  CS_813 --> CS_826
+  CS_814 --> CS_826
+  CS_816 --> CS_826
+  CS_814 --> CS_827
+  CS_815 --> CS_828
+  CS_816 --> CS_829
+  CS_834 --> CS_835
+  CS_809 --> CS_835
+  CS_814 --> CS_835
+  CS_552 --> CS_835
+  CS_49 --> CS_837
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

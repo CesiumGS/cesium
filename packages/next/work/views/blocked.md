@@ -45,14 +45,11 @@ CS-10 Cesium IR
       ← CS-54 Routes on both emitters, with the residual and df64 forms
   CS-58  The WGSL front end, through naga and SPIR-V, with diagnostics
       ← CS-57 Our naga crate (Rust in development and CI only)
-  CS-59  The writer and reader for `KHR_interactivity`'s graph JSON (vendor extension `BENTLEY_interactivity_ir`)
-      ← CS-49 The versioned JSON format
   CS-60  Tables in the `KHR_interactivity` graph JSON
       ← CS-59 The writer and reader for `KHR_interactivity`'s graph JSON (vendor extension `BENTLEY_interactivity_ir`)
         CS-56 Tables and the bounded search, the first extensions, with the residual's row window
   CS-61  The API surface (a program is the normative input; languages as entry points loaded on demand; `CustomShader` hooks take programs or WGSL functions)
-      ← CS-49 The versioned JSON format
-        CS-55 Styles move onto Cesium IR, literals as uniforms
+      ← CS-55 Styles move onto Cesium IR, literals as uniforms
         CS-56 Tables and the bounded search, the first extensions, with the residual's row window
         CS-58 The WGSL front end, through naga and SPIR-V, with diagnostics
   CS-62  The inspector and debugging
@@ -128,12 +125,15 @@ CS-437 The public API reviews
         CS-432 The API's shape checked: sync and async, cancelling, lifetimes, events, units and errors
         CS-433 Promotions and demotions proposed: what every app needs, and what is exported only for examples
         CS-572 The full version of scene items, designed before the first public API review
+        CS-834 A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-434  Stability tiers as TSDoc tags, with internal members stripped from the published types
       ← CS-438 Which of the first public API review's proposed changes do you approve?
   CS-435  The measurement module's seam and entry point
       ← CS-438 Which of the first public API review's proposed changes do you approve?
   CS-438  Which of the first public API review's proposed changes do you approve?
       ← CS-102 The public API review, with the protocol table and the façade's constraints
+  CS-815  Scene content has stable identity and semantic labels that don't depend on load order
+      ← CS-832 A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds
 
 CS-13 The worker-mode façade
   CS-103  Reads reshaped, on the main thread
@@ -409,6 +409,8 @@ CS-191 Content sources and formats
       ← CS-556 glTF files load through the content-source seam
   CS-667  Panoramas as a module
       ← CS-654 The surface-projection design: classification, draping and decals
+  CS-802  Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in?
+      ← CS-833 A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802
   CS-808  Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
       ← CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
   CS-810  The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
@@ -501,6 +503,10 @@ CS-389 Dyno as the development harness
   CS-740  A verdict says whether it carries to another hardware class
       ← CS-739 Studies across devices: noise floors per hardware class, pooling, and the health bar
 
+CS-579 Editing
+  CS-453  What editing should the engine support, with vector data and GIS sources among it?
+      ← CS-831 A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
+
 CS-18 The work tracker
   CS-530  Release 2.0.0-alpha.1
       ← CS-414 Renderers plug in behind one seam
@@ -573,6 +579,7 @@ CS-18 The work tracker
         CS-467 Fidelity adapts without silent fallbacks
         CS-534 Infrastructure and geoscience data shows in 2.0
         CS-504 Tiles are chosen by benefit per byte across views
+        CS-830 2.0's examples show its seams in use
   CS-532  Release 2.0.0-rc.1
       ← CS-531 Release 2.0.0-beta.1
         CS-416 WebGL 2 reaches parity with WebGPU
@@ -668,10 +675,17 @@ CS-615 Packaging and package names
   CS-617  2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
       ← CS-616 Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
         CS-310 Licence check for Open Cascade (LGPL 2.1) before distribution
+        CS-834 A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
+        CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
   CS-618  An embedding app installs the core alone, checked by an install and bundle test
       ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
   CS-619  The API reference for every package
       ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
+  CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
+      ← CS-834 A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
+        CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
+        CS-814 A camera record carries intrinsics, an off-center principal point and a named distortion model
+        CS-552 The content-source seam: one interface every source module implements, designed and planned
 
 CS-622 The agent-first migration kit
   CS-624  The migration skill
@@ -695,6 +709,31 @@ CS-628 Sandcastle as 2.0's gallery
   CS-634  The 2.0 Sandcastle replaces 1.x's
       ← CS-632 1.x's Sandcastle examples are migrated with the kit and checked for parity
         CS-611 The 1.x code is replaced in the branch
+  CS-820  Example: bring your own format, a custom loader registered and used from the public API
+      ← CS-560 Content from any source loads through one module seam
+  CS-821  Example: a live feed pushes moving objects through a custom streaming source
+      ← CS-560 Content from any source loads through one module seam
+  CS-822  Example: your imagery, your servers: WMTS, OGC API Tiles and STAC layered, with token renewal and a proxy
+      ← CS-810 The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
+        CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
+        CS-279 More terrain and imagery providers, and several imagery layers on one globe
+  CS-823  Example: offline coordinates, with PROJ grids from a local bundle, HTTP or ion giving the same answer
+      ← CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
+  CS-824  Example: search anything, with swappable geocoders and a catalog search for the view
+      ← CS-587 The geocoder widget, with a pluggable geocoding service
+  CS-825  Example: vector features stream from PostGIS by view, styled and picked
+      ← CS-560 Content from any source loads through one module seam
+        CS-663 PostGIS loads through the content-source seam
+  CS-826  Example: synthetic data capture, stepping a scene and exporting color, depth and IDs with each camera record
+      ← CS-813 A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color
+        CS-814 A camera record carries intrinsics, an off-center principal point and a named distortion model
+        CS-816 The host steps the engine: advance to a time, wait until settled, render, read back
+  CS-827  Example: a calibrated camera from an OpenCV calibration, overlaid on its reference photo
+      ← CS-814 A camera record carries intrinsics, an off-center principal point and a named distortion model
+  CS-828  Example: what is this? Stable IDs and semantic labels on a city, with a segmentation view
+      ← CS-815 Scene content has stable identity and semantic labels that don't depend on load order
+  CS-829  Example: simulator in the loop, a small rigid-body sim writing timed poses and replaying identically
+      ← CS-816 The host steps the engine: advance to a time, wait until settled, render, read back
 
 CS-637 The particle system
   CS-639  Particles simulate on the GPU and draw through the point-source seam
@@ -720,5 +759,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-230 blocked
+243 blocked
 ```

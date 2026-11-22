@@ -24,9 +24,9 @@ CS-416 WebGL 2 reaches parity with WebGPU [Planned], under CS-9 The WebGL 2 rend
 
 CS-417 Transforms and styles compile through Cesium IR [Planned], under CS-10 Cesium IR
   outcome: Styles, transforms and routes are Cesium IR programs that evaluate in float64 on the CPU and emit both WGSL and GLSL ES, with the same results as today.
-  constraints: 5 of 11 done
-  unmet: not linked to a clause yet (open: CS-49, CS-54, CS-55, CS-56, CS-371, CS-39; check not passed)
-  to shape: done_when; check; link CS-48, CS-49, CS-50, CS-51, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371, CS-39 to a clause
+  constraints: 6 of 12 done
+  unmet: not linked to a clause yet (open: CS-54, CS-55, CS-56, CS-371, CS-39, CS-837; check not passed)
+  to shape: done_when; check; link CS-48, CS-49, CS-50, CS-51, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371, CS-39, CS-837 to a clause
 
 CS-418 Any shader language reaches both renderers [Planned], under CS-10 Cesium IR
   outcome: WGSL, MaterialX and `KHR_interactivity` graphs come into Cesium IR through one public API, with diagnostics and an inspector, so one program runs on both renderers and the CPU.
@@ -457,9 +457,9 @@ CS-535 Rays query the scene on the GPU [Planned], under CS-197 Ray queries and p
 
 CS-560 Content from any source loads through one module seam [Planned], under CS-191 Content sources and formats
   outcome: An application loads 3D Tiles, the globe's terrain and imagery, glTF files, MVT, Esri services and USD through one content-source interface, importing only the source modules it uses.
-  constraints: 0 of 12 done
-  unmet: not linked to a clause yet (open: CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553, CS-808, CS-809, CS-810, CS-811; check not passed)
-  to shape: done_when; check; link CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553, CS-808, CS-809, CS-810, CS-811 to a clause
+  constraints: 0 of 13 done
+  unmet: not linked to a clause yet (open: CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553, CS-808, CS-809, CS-810, CS-811, CS-831; check not passed)
+  to shape: done_when; check; link CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553, CS-808, CS-809, CS-810, CS-811, CS-831 to a clause
 
 CS-561 Dyno's Work page shows the live system and the release plan [Planned], under CS-18 The work tracker
   outcome: A reader of Dyno's Work page sees what's moving now (dispatches, branches waiting to merge, the active run) and where each release falls among the milestones that feed it.
@@ -499,9 +499,9 @@ CS-614 The branch is a clean, modern 2.0 build [Planned], under CS-609 A clean 2
 
 CS-621 The core installs alone, and the whole engine installs from one umbrella package [Planned], under CS-615 Packaging and package names
   outcome: A host installs only the core, or the whole engine through `cesium@2`, with every package at one version.
-  constraints: 0 of 5 done
-  unmet: not linked to a clause yet (open: CS-616, CS-617, CS-618, CS-363, CS-310; check not passed)
-  to shape: done_when; check; link CS-616, CS-617, CS-618, CS-363, CS-310 to a clause
+  constraints: 0 of 7 done
+  unmet: not linked to a clause yet (open: CS-616, CS-617, CS-618, CS-363, CS-310, CS-834, CS-835; check not passed)
+  to shape: done_when; check; link CS-616, CS-617, CS-618, CS-363, CS-310, CS-834, CS-835 to a clause
 
 CS-627 A 1.x app moves to 2.0 with the kit and is shown to match [Planned], under CS-622 The agent-first migration kit
   outcome: An agent moves a 1.x app with the kit, and the parity harness shows the result matches.
@@ -603,9 +603,15 @@ CS-751 The owner's views answer what needs me, what's on track and what's wrong 
 
 CS-819 Machines can read the engine: render products, camera records, stable identity and explicit stepping [Planned], under CS-437 The public API reviews
   outcome: A simulator, a synthetic-data pipeline or a world model drives the engine step by step and reads back depth, normals, motion and IDs, with each frame's camera record and stable, labeled identity.
-  constraints: 0 of 4 done
-  unmet: not linked to a clause yet (open: CS-813, CS-814, CS-815, CS-816; check not passed)
-  to shape: done_when; check; link CS-813, CS-814, CS-815, CS-816 to a clause
+  constraints: 0 of 6 done
+  unmet: not linked to a clause yet (open: CS-813, CS-814, CS-815, CS-816, CS-832, CS-833; check not passed)
+  to shape: done_when; check; link CS-813, CS-814, CS-815, CS-816, CS-832, CS-833 to a clause
+
+CS-830 2.0's examples show its seams in use [Planned], under CS-628 Sandcastle as 2.0's gallery
+  outcome: Ten gallery examples show any data loading through its seams and machines reading the engine, each built on the public API alone.
+  constraints: 0 of 10 done
+  unmet: not linked to a clause yet (open: CS-820, CS-821, CS-822, CS-823, CS-824, CS-825, CS-826, CS-827, CS-828, CS-829; check not passed)
+  to shape: done_when; check; link CS-820, CS-821, CS-822, CS-823, CS-824, CS-825, CS-826, CS-827, CS-828, CS-829 to a clause
 
 CS-1 Renderers and engine profiles [Dropped]
 CS-2 Cesium IR and materials [Dropped]
@@ -618,5 +624,5 @@ CS-436 The public API [Dropped]
 CS-524 The tracker runs on human-in-the-lead [Done]
 CS-525 Bodies, frames and engineering coordinates [Dropped]
 
-96 open milestone(s)
+97 open milestone(s)
 ```
