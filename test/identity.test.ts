@@ -18,6 +18,8 @@ import {
 } from "../packages/core/src/scene/identity.ts";
 import type { FeatureTable } from "../packages/core/src/io/gltfTypes.ts";
 
+const ENCODER = new TextEncoder();
+
 describe("the hash", () => {
   it("is MurmurHash3_x86_128: SMHasher's verification value", () => {
     // SMHasher's VerificationTest: hash keys {0}, {0,1}, ... of 0 to 255
@@ -132,7 +134,68 @@ describe("canonical sources", () => {
         "https://assets.ion.cesium.com/us-east-1/96188/tileset.json?v=3&session=xyz",
       ),
     ).toBe("https://assets.ion.cesium.com/us-east-1/96188/tileset.json?v=3");
+    // Protocol-relative, the same.
+    expect(
+      canonicalSource("//assets.ion.cesium.com/96188/tileset.json?v=3&t=x"),
+    ).toBe("//assets.ion.cesium.com/96188/tileset.json?v=3");
   });
+
+  it("reads a reference as the URL parser does: leading spaces and controls, tabs and newlines go first", () => {
+    expect(canonicalSource(" //u:p@h/x")).toBe("//h/x");
+    expect(canonicalSource(" https://u:p@h/")).toBe("https://h/");
+    expect(canonicalSource("\t//u:p@h")).toBe("//h/");
+    expect(canonicalSource("https://u:p@h/\n")).toBe("https://h/");
+    expect(canonicalSource("\u0000 htt\tps://u:p@h/a\r\nb ")).toBe(
+      "https://h/ab",
+    );
+    // A data URI with a leading space is still a digest, never its payload.
+    expect(canonicalSource(' data:application/json,{"a":1}')).toBe(
+      canonicalSource('data:application/json,{"a":1}'),
+    );
+  });
+
+  it("keeps nothing before the last @ of an authority the URL parser can't read", () => {
+    // A raw "?", "#" or "/" in the password: the parser fails or would cut it.
+    expect(canonicalSource("https://user:pa?ss@h/")).toBe("https://h/");
+    expect(canonicalSource("https://user:pa#ss@h/x")).toBe("https://h/x");
+    expect(canonicalSource("https://user:pa/ss@h/x")).toBe("https://h/x");
+    expect(canonicalSource("//user:pa?ss@h/x?t=1")).toBe("//h/x");
+    expect(canonicalSource("s3://key:p?w@bucket/x")).toBe("s3://bucket/x");
+    expect(canonicalSource("blob:https://u:p?s@h/x")).toBe("blob:https://h/x");
+    // An opaque reference's password may hold "?" or "#" too.
+    expect(canonicalSource("custom:user:p?w#x@site/x")).toBe("custom:site/x");
+  });
+
+  it("reads base64 only after a semicolon, as RFC 2397 and fetch's data URL processor do", () => {
+    expect(canonicalSource("data:base64,QUJD")).toBe(
+      canonicalSource("data:,QUJD"),
+    );
+    expect(canonicalSource("data:;base64,QUJD")).toBe(
+      canonicalSource("data:,ABC"),
+    );
+  });
+
+  it("digests a 20 MB data URI in one pass: under 2 s and 32 MB of heap", () => {
+    const base64 = `data:application/octet-stream;base64,${"QUJD".repeat(5_000_000)}`;
+    const percent = `data:text/plain,${"%41".repeat(7_000_000)}`;
+    const expected = [
+      murmur3x86x128(ENCODER.encode("ABC".repeat(5_000_000))),
+      murmur3x86x128(ENCODER.encode("A".repeat(7_000_000))),
+    ].map((w) => w.map((x) => x.toString(16).padStart(8, "0")).join(""));
+    [base64, percent].forEach((uri, i) => {
+      expect(uri.length).toBeGreaterThanOrEqual(20_000_000);
+      const heap = process.memoryUsage().heapUsed;
+      const start = performance.now();
+      const digest = canonicalSource(uri);
+      const elapsed = performance.now() - start;
+      const grown = process.memoryUsage().heapUsed - heap;
+      // The same digest as hashing the decoded bytes whole.
+      expect(digest).toMatch(new RegExp(`;murmur3-128=${expected[i]}$`));
+      expect(elapsed).toBeLessThan(2000);
+      // A concatenated string is flattened once (one copy); nothing more.
+      expect(grown).toBeLessThan(32 * 1024 * 1024);
+    });
+  }, 30_000);
 });
 
 describe("labels", () => {
@@ -375,7 +438,7 @@ describe("the identity table", () => {
   });
 
   it("keeps no credential, token or data URI payload in keys or messages", () => {
-    const secret = /secret|token|pw|eyJ|%7B|\{/;
+    const secret = /secret|token|pw|user|eyJ|%7B|\{/;
     const sources = [
       "https://user:secret@tiles.test/site/tileset.json?token=pw",
       "//user:secret@tiles.test/site/tileset.json?access_token=pw",
@@ -386,6 +449,16 @@ describe("the identity table", () => {
       "site/tileset.json?token=pw#secret",
       "data:application/json;base64,eyJzZWNyZXQiOiJwdyJ9",
       'data:application/json;charset=utf-8,{"secret":"pw"}',
+      " //user:secret@tiles.test/site/tileset.json",
+      " https://user:secret@tiles.test/site/tileset.json",
+      ' data:application/json,{"secret":"pw"}',
+      "\t//user:secret@tiles.test/site/tileset.json",
+      "https://user:secret@tiles.test/site/tileset.json\n",
+      "https://user:pw?secret@tiles.test/site/tileset.json",
+      "https://user:pw#secret@tiles.test/site/tileset.json",
+      "https://user:pw/secret@tiles.test/site/tileset.json",
+      "//user:pw?secret@tiles.test/site/tileset.json",
+      "custom:user:pw?secret@site/tileset.json",
     ];
     const { ids, reports } = table({ hash: () => 42n });
     sources.forEach((source, index) => {

@@ -292,6 +292,187 @@ function fmix(h: number): number {
   return h;
 }
 
+const C1 = 0x239b961b;
+const C2 = 0xab0e9789;
+const C3 = 0x38b34ae5;
+const C4 = 0xa1e38b93;
+
+/** The little-endian 32-bit word at `i`. */
+function word(bytes: Uint8Array, i: number): number {
+  return (
+    bytes[i]! |
+    (bytes[i + 1]! << 8) |
+    (bytes[i + 2]! << 16) |
+    (bytes[i + 3]! << 24)
+  );
+}
+
+/**
+ * MurmurHash3_x86_128's running state (SMHasher's reference, public
+ * domain). Bytes go in one at a time or as an array, so a long input is
+ * hashed in one pass without a copy of it.
+ */
+class Murmur3x86x128 {
+  private h1: number;
+  private h2: number;
+  private h3: number;
+  private h4: number;
+  private length = 0;
+  private readonly pending = new Uint8Array(16);
+  private filled = 0;
+
+  constructor(seed = 0) {
+    this.h1 = seed | 0;
+    this.h2 = seed | 0;
+    this.h3 = seed | 0;
+    this.h4 = seed | 0;
+  }
+
+  /** Mixes one 16-byte block, given as its four words. */
+  private block(k1: number, k2: number, k3: number, k4: number): void {
+    let { h1, h2, h3, h4 } = this;
+    k1 = Math.imul(k1, C1);
+    k1 = rotl(k1, 15);
+    k1 = Math.imul(k1, C2);
+    h1 ^= k1;
+    h1 = rotl(h1, 19);
+    h1 = (h1 + h2) | 0;
+    h1 = (Math.imul(h1, 5) + 0x561ccd1b) | 0;
+    k2 = Math.imul(k2, C2);
+    k2 = rotl(k2, 16);
+    k2 = Math.imul(k2, C3);
+    h2 ^= k2;
+    h2 = rotl(h2, 17);
+    h2 = (h2 + h3) | 0;
+    h2 = (Math.imul(h2, 5) + 0x0bcaa747) | 0;
+    k3 = Math.imul(k3, C3);
+    k3 = rotl(k3, 17);
+    k3 = Math.imul(k3, C4);
+    h3 ^= k3;
+    h3 = rotl(h3, 15);
+    h3 = (h3 + h4) | 0;
+    h3 = (Math.imul(h3, 5) + 0x96cd1c35) | 0;
+    k4 = Math.imul(k4, C4);
+    k4 = rotl(k4, 18);
+    k4 = Math.imul(k4, C1);
+    h4 ^= k4;
+    h4 = rotl(h4, 13);
+    h4 = (h4 + h1) | 0;
+    h4 = (Math.imul(h4, 5) + 0x32ac3b17) | 0;
+    this.h1 = h1;
+    this.h2 = h2;
+    this.h3 = h3;
+    this.h4 = h4;
+  }
+
+  /** Adds one byte. */
+  push(byte: number): void {
+    const pending = this.pending;
+    pending[this.filled++] = byte;
+    this.length++;
+    if (this.filled === 16) {
+      this.block(
+        word(pending, 0),
+        word(pending, 4),
+        word(pending, 8),
+        word(pending, 12),
+      );
+      this.filled = 0;
+    }
+  }
+
+  /** Adds bytes: whole blocks straight from the array when none are pending. */
+  update(bytes: Uint8Array): this {
+    let i = 0;
+    if (this.filled === 0) {
+      const end = bytes.length - (bytes.length & 15);
+      for (; i < end; i += 16) {
+        this.block(
+          word(bytes, i),
+          word(bytes, i + 4),
+          word(bytes, i + 8),
+          word(bytes, i + 12),
+        );
+      }
+      this.length += end;
+    }
+    for (; i < bytes.length; i++) {
+      this.push(bytes[i]!);
+    }
+    return this;
+  }
+
+  /** The hash of the bytes so far: its four 32-bit words, unsigned. */
+  digest(): [number, number, number, number] {
+    let { h1, h2, h3, h4 } = this;
+    const tail = this.pending;
+    const rest = this.filled;
+    let k1 = 0;
+    let k2 = 0;
+    let k3 = 0;
+    let k4 = 0;
+    // The reference's switch falls through from the longest tail down.
+    if (rest >= 13) {
+      for (let j = rest - 1; j >= 12; j--) {
+        k4 ^= tail[j]! << ((j - 12) * 8);
+      }
+      k4 = Math.imul(k4, C4);
+      k4 = rotl(k4, 18);
+      k4 = Math.imul(k4, C1);
+      h4 ^= k4;
+    }
+    if (rest >= 9) {
+      for (let j = Math.min(rest, 12) - 1; j >= 8; j--) {
+        k3 ^= tail[j]! << ((j - 8) * 8);
+      }
+      k3 = Math.imul(k3, C3);
+      k3 = rotl(k3, 17);
+      k3 = Math.imul(k3, C4);
+      h3 ^= k3;
+    }
+    if (rest >= 5) {
+      for (let j = Math.min(rest, 8) - 1; j >= 4; j--) {
+        k2 ^= tail[j]! << ((j - 4) * 8);
+      }
+      k2 = Math.imul(k2, C2);
+      k2 = rotl(k2, 16);
+      k2 = Math.imul(k2, C3);
+      h2 ^= k2;
+    }
+    if (rest >= 1) {
+      for (let j = Math.min(rest, 4) - 1; j >= 0; j--) {
+        k1 ^= tail[j]! << (j * 8);
+      }
+      k1 = Math.imul(k1, C1);
+      k1 = rotl(k1, 15);
+      k1 = Math.imul(k1, C2);
+      h1 ^= k1;
+    }
+    const len = this.length;
+    h1 ^= len;
+    h2 ^= len;
+    h3 ^= len;
+    h4 ^= len;
+    h1 = (h1 + h2) | 0;
+    h1 = (h1 + h3) | 0;
+    h1 = (h1 + h4) | 0;
+    h2 = (h2 + h1) | 0;
+    h3 = (h3 + h1) | 0;
+    h4 = (h4 + h1) | 0;
+    h1 = fmix(h1);
+    h2 = fmix(h2);
+    h3 = fmix(h3);
+    h4 = fmix(h4);
+    h1 = (h1 + h2) | 0;
+    h1 = (h1 + h3) | 0;
+    h1 = (h1 + h4) | 0;
+    h2 = (h2 + h1) | 0;
+    h3 = (h3 + h1) | 0;
+    h4 = (h4 + h1) | 0;
+    return [h1 >>> 0, h2 >>> 0, h3 >>> 0, h4 >>> 0];
+  }
+}
+
 /**
  * @internal MurmurHash3_x86_128 (SMHasher's reference, public domain) of
  * `bytes` with `seed`: its four 32-bit words, unsigned.
@@ -300,120 +481,7 @@ export function murmur3x86x128(
   bytes: Uint8Array,
   seed = 0,
 ): [number, number, number, number] {
-  const c1 = 0x239b961b;
-  const c2 = 0xab0e9789;
-  const c3 = 0x38b34ae5;
-  const c4 = 0xa1e38b93;
-  let h1 = seed | 0;
-  let h2 = seed | 0;
-  let h3 = seed | 0;
-  let h4 = seed | 0;
-  const len = bytes.length;
-  const blocks = len >>> 4;
-  const word = (i: number) =>
-    bytes[i]! |
-    (bytes[i + 1]! << 8) |
-    (bytes[i + 2]! << 16) |
-    (bytes[i + 3]! << 24);
-  for (let b = 0; b < blocks; b++) {
-    const i = b * 16;
-    let k1 = word(i);
-    let k2 = word(i + 4);
-    let k3 = word(i + 8);
-    let k4 = word(i + 12);
-    k1 = Math.imul(k1, c1);
-    k1 = rotl(k1, 15);
-    k1 = Math.imul(k1, c2);
-    h1 ^= k1;
-    h1 = rotl(h1, 19);
-    h1 = (h1 + h2) | 0;
-    h1 = (Math.imul(h1, 5) + 0x561ccd1b) | 0;
-    k2 = Math.imul(k2, c2);
-    k2 = rotl(k2, 16);
-    k2 = Math.imul(k2, c3);
-    h2 ^= k2;
-    h2 = rotl(h2, 17);
-    h2 = (h2 + h3) | 0;
-    h2 = (Math.imul(h2, 5) + 0x0bcaa747) | 0;
-    k3 = Math.imul(k3, c3);
-    k3 = rotl(k3, 17);
-    k3 = Math.imul(k3, c4);
-    h3 ^= k3;
-    h3 = rotl(h3, 15);
-    h3 = (h3 + h4) | 0;
-    h3 = (Math.imul(h3, 5) + 0x96cd1c35) | 0;
-    k4 = Math.imul(k4, c4);
-    k4 = rotl(k4, 18);
-    k4 = Math.imul(k4, c1);
-    h4 ^= k4;
-    h4 = rotl(h4, 13);
-    h4 = (h4 + h1) | 0;
-    h4 = (Math.imul(h4, 5) + 0x32ac3b17) | 0;
-  }
-  const tail = blocks * 16;
-  const rest = len & 15;
-  let k1 = 0;
-  let k2 = 0;
-  let k3 = 0;
-  let k4 = 0;
-  // The reference's switch falls through from the longest tail down.
-  if (rest >= 13) {
-    for (let j = rest - 1; j >= 12; j--) {
-      k4 ^= bytes[tail + j]! << ((j - 12) * 8);
-    }
-    k4 = Math.imul(k4, c4);
-    k4 = rotl(k4, 18);
-    k4 = Math.imul(k4, c1);
-    h4 ^= k4;
-  }
-  if (rest >= 9) {
-    for (let j = Math.min(rest, 12) - 1; j >= 8; j--) {
-      k3 ^= bytes[tail + j]! << ((j - 8) * 8);
-    }
-    k3 = Math.imul(k3, c3);
-    k3 = rotl(k3, 17);
-    k3 = Math.imul(k3, c4);
-    h3 ^= k3;
-  }
-  if (rest >= 5) {
-    for (let j = Math.min(rest, 8) - 1; j >= 4; j--) {
-      k2 ^= bytes[tail + j]! << ((j - 4) * 8);
-    }
-    k2 = Math.imul(k2, c2);
-    k2 = rotl(k2, 16);
-    k2 = Math.imul(k2, c3);
-    h2 ^= k2;
-  }
-  if (rest >= 1) {
-    for (let j = Math.min(rest, 4) - 1; j >= 0; j--) {
-      k1 ^= bytes[tail + j]! << (j * 8);
-    }
-    k1 = Math.imul(k1, c1);
-    k1 = rotl(k1, 15);
-    k1 = Math.imul(k1, c2);
-    h1 ^= k1;
-  }
-  h1 ^= len;
-  h2 ^= len;
-  h3 ^= len;
-  h4 ^= len;
-  h1 = (h1 + h2) | 0;
-  h1 = (h1 + h3) | 0;
-  h1 = (h1 + h4) | 0;
-  h2 = (h2 + h1) | 0;
-  h3 = (h3 + h1) | 0;
-  h4 = (h4 + h1) | 0;
-  h1 = fmix(h1);
-  h2 = fmix(h2);
-  h3 = fmix(h3);
-  h4 = fmix(h4);
-  h1 = (h1 + h2) | 0;
-  h1 = (h1 + h3) | 0;
-  h1 = (h1 + h4) | 0;
-  h2 = (h2 + h1) | 0;
-  h3 = (h3 + h1) | 0;
-  h4 = (h4 + h1) | 0;
-  return [h1 >>> 0, h2 >>> 0, h3 >>> 0, h4 >>> 0];
+  return new Murmur3x86x128(seed).update(bytes).digest();
 }
 
 /** @internal A key's canonical text: what its ID is a hash of. */
@@ -452,120 +520,258 @@ export function stableIdOf(key: StableKey): StableId {
 /** Hosts whose `v` query parameter is the asset's version, not a token. */
 const VERSIONED_HOSTS = /(^|\.)ion\.cesium\.com$|^assets\.cesium\.com$/i;
 
-/** A reference's scheme, if it has one (RFC 3986's `scheme ":"`). */
-const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
-/** An authority's user information (`user:password@`) after `//`, up to the host. */
-const USER_INFO = /^([a-z][a-z0-9+.-]*:)?([\\/]{2})[^/\\?#]*@/i;
-/** The same in an opaque reference (`scheme:user:password@rest`), which has no `//`. */
-const OPAQUE_USER_INFO = /^([a-z][a-z0-9+.-]*:)[^/\\?#]*@/i;
+/**
+ * A reference's scheme, if any, and `//` (or `\\`, as http reads it): it
+ * has an authority, `user:password@host:port`.
+ */
+const AUTHORITY = /^([a-z][a-z0-9+.-]*:)?[\\/]{2}/i;
+/**
+ * An opaque reference's user information (`scheme:user:password@rest`, no
+ * `//`): up to its last `@` before any slash, so a password with `?` or `#`
+ * goes whole.
+ */
+const OPAQUE_USER_INFO = /^([a-z][a-z0-9+.-]*:)[^/\\]*@/i;
+/** A reference's query and fragment. */
+const QUERY_AND_FRAGMENT = /[?#].*$/s;
 /** A data URI's media type, kept only when it is a plain `type/subtype`. */
 const MEDIA_TYPE = /^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/i;
+/** The longest media type kept: RFC 6838 allows 127 characters each side. */
+const MEDIA_TYPE_LENGTH = 255;
 
-/** Percent-encoded text's bytes: each `%XX` its byte, the rest as UTF-8. */
-function percentBytes(text: string): Uint8Array {
-  if (!text.includes("%")) {
-    return ENCODER.encode(text);
+/**
+ * A reference as the URL standard's parser reads it, before any test on
+ * it: no leading or trailing C0 control or space, and no tab, line feed or
+ * carriage return anywhere (WHATWG URL, "basic URL parser", steps 1 and 2).
+ */
+function normalizeReference(reference: string): string {
+  let start = 0;
+  let end = reference.length;
+  while (start < end && reference.charCodeAt(start) <= 0x20) {
+    start++;
   }
-  const parts: Uint8Array[] = [];
-  let length = 0;
-  for (const [run, hex] of text.matchAll(/%([0-9a-f]{2})|[^%]+|%/gi)) {
-    const part =
-      hex !== undefined
-        ? Uint8Array.of(parseInt(hex, 16))
-        : ENCODER.encode(run);
-    parts.push(part);
-    length += part.length;
+  while (end > start && reference.charCodeAt(end - 1) <= 0x20) {
+    end--;
   }
-  const bytes = new Uint8Array(length);
-  let at = 0;
-  for (const part of parts) {
-    bytes.set(part, at);
-    at += part.length;
+  return reference.slice(start, end).replace(/[\t\n\r]/g, "");
+}
+
+/** A hexadecimal digit's value, or -1 (`NaN` past the text's end too). */
+function hexDigit(code: number): number {
+  if (code >= 0x30 && code <= 0x39) {
+    return code - 0x30;
   }
-  return bytes;
+  const lower = code | 0x20;
+  return lower >= 0x61 && lower <= 0x66 ? lower - 0x57 : -1;
 }
 
 /**
- * A data URI's media type and bytes: its payload after the first comma,
- * percent-decoded, then decoded from base64 when it says so (RFC 2397).
- * Base64 that doesn't decode counts as its percent-decoded bytes.
+ * Percent-encoded text's bytes from `from`, in order, to `emit`: each `%XX`
+ * its byte, the rest as UTF-8, as `TextEncoder` gives it (a lone surrogate
+ * is U+FFFD). One pass, nothing allocated.
  */
-function dataBytes(uri: string): { type: string; bytes: Uint8Array } {
+function percentDecode(
+  text: string,
+  from: number,
+  emit: (byte: number) => void,
+): void {
+  for (let i = from; i < text.length; i++) {
+    let c = text.charCodeAt(i);
+    if (c === 0x25) {
+      const high = hexDigit(text.charCodeAt(i + 1));
+      const low = hexDigit(text.charCodeAt(i + 2));
+      if (high >= 0 && low >= 0) {
+        emit(high * 16 + low);
+        i += 2;
+      } else {
+        emit(c);
+      }
+    } else if (c < 0x80) {
+      emit(c);
+    } else if (c < 0x800) {
+      emit(0xc0 | (c >> 6));
+      emit(0x80 | (c & 0x3f));
+    } else {
+      if (c >= 0xd800 && c <= 0xdbff) {
+        const next = text.charCodeAt(i + 1);
+        if (next >= 0xdc00 && next <= 0xdfff) {
+          const point = 0x10000 + ((c - 0xd800) << 10) + (next - 0xdc00);
+          emit(0xf0 | (point >> 18));
+          emit(0x80 | ((point >> 12) & 0x3f));
+          emit(0x80 | ((point >> 6) & 0x3f));
+          emit(0x80 | (point & 0x3f));
+          i++;
+          continue;
+        }
+        c = 0xfffd;
+      } else if (c >= 0xdc00 && c <= 0xdfff) {
+        c = 0xfffd;
+      }
+      emit(0xe0 | (c >> 12));
+      emit(0x80 | ((c >> 6) & 0x3f));
+      emit(0x80 | (c & 0x3f));
+    }
+  }
+}
+
+/** A base64 digit's value, or -1. */
+function base64Digit(code: number): number {
+  if (code >= 0x41 && code <= 0x5a) {
+    return code - 0x41;
+  }
+  if (code >= 0x61 && code <= 0x7a) {
+    return code - 0x47;
+  }
+  if (code >= 0x30 && code <= 0x39) {
+    return code + 4;
+  }
+  return code === 0x2b ? 62 : code === 0x2f ? 63 : -1;
+}
+
+/**
+ * Base64 decoded as it arrives, one byte (one Latin-1 character) at a time,
+ * into a hash of the decoded bytes. It accepts what `atob` accepts after
+ * every JavaScript white space character goes (HTML's forgiving-base64
+ * decode): at most two `=` at the end, and only when they make the length a
+ * multiple of 4.
+ */
+class Base64Hash {
+  private readonly hash = new Murmur3x86x128();
+  private bits = 0;
+  private count = 0;
+  private digits = 0;
+  private padding = 0;
+  private valid = true;
+
+  push(byte: number): void {
+    if (!this.valid) {
+      return;
+    }
+    // JavaScript's white space among Latin-1 characters.
+    if ((byte >= 0x09 && byte <= 0x0d) || byte === 0x20 || byte === 0xa0) {
+      return;
+    }
+    if (byte === 0x3d) {
+      this.padding++;
+      return;
+    }
+    const digit = base64Digit(byte);
+    if (digit < 0 || this.padding > 0) {
+      this.valid = false;
+      return;
+    }
+    this.digits++;
+    this.bits = ((this.bits << 6) | digit) & 0xffff;
+    this.count += 6;
+    if (this.count >= 8) {
+      this.count -= 8;
+      this.hash.push((this.bits >> this.count) & 0xff);
+    }
+  }
+
+  /** The decoded bytes' hash, or `undefined` when the text isn't base64. */
+  digest(): [number, number, number, number] | undefined {
+    const padded =
+      this.padding === 0 ||
+      (this.padding <= 2 && (this.digits + this.padding) % 4 === 0);
+    return this.valid && padded && this.digits % 4 !== 1
+      ? this.hash.digest()
+      : undefined;
+  }
+}
+
+/**
+ * A data URI's canonical form: its media type and the MurmurHash3_x86_128
+ * of its payload's bytes (RFC 2397): after the first comma, percent-decoded,
+ * then decoded from base64 when its header ends in `;base64`. Base64 that
+ * doesn't decode counts as its percent-decoded bytes. One pass over the
+ * text, with nothing allocated per byte, whatever its size.
+ */
+function dataDigest(uri: string): string {
   const comma = uri.indexOf(",");
   const header = comma < 0 ? uri.slice(5) : uri.slice(5, comma);
-  const params = header.split(";");
-  const type = MEDIA_TYPE.test(params[0]!) ? params[0]!.toLowerCase() : "";
-  const bytes = percentBytes(comma < 0 ? "" : uri.slice(comma + 1));
-  if (params.at(-1)?.toLowerCase() !== "base64") {
-    return { type, bytes };
+  const semicolon = header.indexOf(";");
+  const candidate = semicolon < 0 ? header : header.slice(0, semicolon);
+  const type =
+    candidate.length <= MEDIA_TYPE_LENGTH && MEDIA_TYPE.test(candidate)
+      ? candidate.toLowerCase()
+      : "";
+  const last = header.lastIndexOf(";");
+  const base64 =
+    last >= 0 &&
+    header.length - last === 7 &&
+    header.slice(last + 1).toLowerCase() === "base64";
+  const plain = new Murmur3x86x128();
+  const decoded = base64 ? new Base64Hash() : undefined;
+  if (comma >= 0) {
+    percentDecode(
+      uri,
+      comma + 1,
+      decoded
+        ? (byte) => {
+            plain.push(byte);
+            decoded.push(byte);
+          }
+        : (byte) => plain.push(byte),
+    );
   }
-  let text = "";
-  for (let i = 0; i < bytes.length; i += 8192) {
-    text += String.fromCharCode(...bytes.subarray(i, i + 8192));
-  }
-  try {
-    const binary = atob(text.replace(/\s/g, ""));
-    return { type, bytes: Uint8Array.from(binary, (c) => c.charCodeAt(0)) };
-  } catch {
-    return { type, bytes };
-  }
+  const digest = (decoded?.digest() ?? plain.digest())
+    .map((w) => w.toString(16).padStart(8, "0"))
+    .join("");
+  return `data:${type};murmur3-128=${digest}`;
 }
 
 /**
  * An asset's canonical reference, for its IDs and every message that names
  * a key: no credentials, query or fragment (session tokens never enter an
- * ID).
+ * ID). It reads the reference as the URL parser does: leading and trailing
+ * spaces and controls, and every tab and newline, go first.
  *
- * - An absolute URL keeps its scheme, host, port and path. Cesium ion's
+ * - A reference with an authority (`scheme://` or `//`) keeps its scheme,
+ *   if any, and the host, port and path the URL parser finds. Cesium ion's
  *   assets keep their `v` (the asset's version), so a new version of the
  *   data gets new IDs.
- * - A protocol-relative reference (`//host/x`) keeps `//`, its host and path.
+ * - When the parser can't read it, or finds no host, nothing before the
+ *   reference's last `@` survives: a password with a raw `?`, `#` or `/`
+ *   goes whole, with its user name. Then the query and fragment go.
  * - A blob URL keeps `blob:` and its origin's URL, canonical as above.
- * - A relative or opaque reference loses its query and fragment, and any
- *   user information (after `//`, or after an opaque reference's scheme).
+ * - A relative or opaque reference loses its query and fragment, and an
+ *   opaque one's user information (`scheme:user:password@`).
  * - A data URI becomes `data:<type>;murmur3-128=<32 hex digits>`: the
  *   MurmurHash3_x86_128 of its decoded bytes, so the same bytes give the same
  *   IDs and no payload is kept. Its media type stays only when it is a plain
  *   `type/subtype`; its parameters go.
  */
 export function canonicalSource(reference: string): string {
-  if (/^data:/i.test(reference)) {
-    const { type, bytes } = dataBytes(reference);
-    const digest = murmur3x86x128(bytes)
-      .map((w) => w.toString(16).padStart(8, "0"))
-      .join("");
-    return `data:${type};murmur3-128=${digest}`;
+  const text = normalizeReference(reference);
+  if (/^data:/i.test(text)) {
+    return dataDigest(text);
   }
-  const bare = reference.replace(/[?#].*$/s, "");
-  if (/^[\\/]{2}/.test(bare)) {
-    // Protocol-relative: the host and path as an absolute URL would give them.
-    try {
-      const url = new URL(bare, "https://base.invalid/");
-      return `//${url.host}${url.pathname}`;
-    } catch {
-      return bare.replace(USER_INFO, "$1$2");
-    }
+  if (/^blob:/i.test(text)) {
+    // blob:<origin>/<uuid>: the origin's own URL, canonical.
+    return `blob:${canonicalSource(text.slice(5))}`;
+  }
+  const authority = AUTHORITY.exec(text);
+  if (!authority) {
+    // Relative or opaque: no query or fragment, no user information.
+    return text.replace(OPAQUE_USER_INFO, "$1").replace(QUERY_AND_FRAGMENT, "");
   }
   let url: URL | undefined;
-  if (SCHEME.test(bare)) {
-    try {
-      url = new URL(reference);
-    } catch {
-      url = undefined;
-    }
-  }
-  if (url?.protocol === "blob:") {
-    // blob:<origin>/<uuid>: the origin's own URL, canonical.
-    return `blob:${canonicalSource(bare.slice(5))}`;
+  try {
+    // The base only resolves a protocol-relative reference, as http.
+    url = new URL(text, "https://base.invalid/");
+  } catch {
+    url = undefined;
   }
   if (!url || url.host === "") {
-    // Relative or opaque: no query or fragment, no user information.
-    return bare.replace(USER_INFO, "$1$2").replace(OPAQUE_USER_INFO, "$1");
+    const at = text.lastIndexOf("@");
+    const rest = text.slice(Math.max(at + 1, authority[0].length));
+    return `${authority[0]}${rest}`.replace(QUERY_AND_FRAGMENT, "");
   }
   const version = VERSIONED_HOSTS.test(url.hostname)
     ? url.searchParams.get("v")
     : null;
-  const base = `${url.protocol}//${url.host}${url.pathname}`;
+  const scheme = authority[1] === undefined ? "" : url.protocol;
+  const base = `${scheme}//${url.host}${url.pathname}`;
   return version !== null ? `${base}?v=${version}` : base;
 }
 
