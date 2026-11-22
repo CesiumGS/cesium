@@ -20,7 +20,9 @@
 // `<dir>/release.json`: the version, the dist-tag, and each package's
 // tarball and SHA-256, siblings before their dependents and the umbrella
 // last. `--dry-run` reports check 2 instead of refusing, skips the release
-// gate, and passes `--dry-run` to npm, so it sends nothing.
+// gate, and passes `--dry-run` to npm, so it publishes nothing: npm 11's
+// dry run skips only the upload (lib/commands/publish.js), and still reads
+// each name's versions from the registry.
 import { execFileSync } from "node:child_process";
 import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

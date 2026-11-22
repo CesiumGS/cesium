@@ -12,10 +12,15 @@
 # build: `verify` builds, tests, packs and checks the tarballs, and
 # `publish` stages exactly those, their SHA-256 sums checked on arrival.
 #
+# A push can hold several commits (a bundle pushed from another machine),
+# so `record` judges each commit and names the record's; every later job
+# works on that commit, not on the push's head (GITHUB_SHA).
+#
 # It runs only after the owner has set up the `npm` environment (its
-# required reviewer and the CESIUM_RELEASE_GATE variable) and npm's
-# trusted publisher for each package (the design's checklist, under
-# "Releases"). Until then `publish` refuses at the gate, and nothing is sent.
+# required reviewer, its branch policy and the CESIUM_RELEASE_GATE
+# variable) and npm's trusted publisher for each package (the design's
+# checklist, under "Releases"). Until then `publish` refuses at the gate,
+# and nothing is sent.
 name: release
 
 on:
@@ -27,26 +32,30 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: release
-  cancel-in-progress: false
+# No workflow-wide concurrency group: GitHub cancels a pending run in a
+# group when a newer one queues, so a later push could cancel a record's
+# run while it waits. Each job after `record` takes a group keyed by the
+# record's commit instead, which only a rerun of that record shares.
 
 env:
   NODE_VERSION: "24"
   CI: "true"
 
 jobs:
-  # Whether this push is a release record (scripts/release/record.mjs):
-  # exactly what `npm run release:version` writes, from a before commit
-  # that is an ancestor of this one, at a version with no `v<version>` tag
-  # and not on npm yet. A before it can't resolve (a new branch, a force
-  # push) is never one. No `npm ci`: the script needs only Node.
+  # Whether this push holds a release record (scripts/release/record.mjs):
+  # a commit, judged against its first parent, that is exactly what `npm
+  # run release:version` writes, at a version with no `v<version>` tag and
+  # not on npm yet. A before it can't resolve (a new branch, a force push)
+  # never holds one. It fails the run for two records in one push, or a
+  # commit that moves the version up without being one, since that version
+  # would otherwise never release. No `npm ci`: the script needs only Node.
   record:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       release: ${{ steps.record.outputs.release }}
       version: ${{ steps.record.outputs.version }}
+      sha: ${{ steps.record.outputs.sha }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -72,12 +81,20 @@ jobs:
     if: needs.record.outputs.release == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    concurrency:
+      group: release-verify-${{ needs.record.outputs.sha || github.run_id }}
+      cancel-in-progress: false
     outputs:
       tarballs-sha256: ${{ steps.pack.outputs.sha256 }}
       files-sha256: ${{ steps.files.outputs.sha256 }}
     steps:
+      - name: The record's commit
+        env:
+          RECORD_SHA: ${{ needs.record.outputs.sha }}
+        run: echo "checking out the release record's commit $RECORD_SHA, not the push's head $GITHUB_SHA"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ needs.record.outputs.sha }}
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -114,33 +131,43 @@ jobs:
           name: npm-tarballs
           path: ${{ runner.temp }}/npm
           if-no-files-found: error
-          retention-days: 7
+          # 30 days, so they outlast a long wait for the owner's approval.
+          retention-days: 30
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: github-release
           path: ${{ runner.temp }}/github
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 30
 
   # Stages the checked tarballs, and nothing else runs here: no `npm ci`, no
   # build, no dependency's code. The `npm` environment's required reviewer
   # (the owner) approves the run before this job starts; npm's trusted
   # publisher for each package names this file and that environment, and
   # allows `npm stage publish` only. scripts/release/stageTarballs.mjs
-  # refuses unless the environment's CESIUM_RELEASE_GATE is set, checks
-  # release.json against the sum `verify` reported and each tarball against
-  # release.json, then stages each in order.
+  # refuses unless the `npm` environment, as the REST API returns it, has a
+  # required reviewer and a branch policy, and its CESIUM_RELEASE_GATE is
+  # set; checks release.json against the sum `verify` reported and each
+  # tarball against release.json, then stages each in order.
   publish:
     needs: [record, verify]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     environment: npm
+    concurrency:
+      group: release-publish-${{ needs.record.outputs.sha || github.run_id }}
+      cancel-in-progress: false
     permissions:
       contents: read
       id-token: write
     steps:
+      - name: The record's commit
+        env:
+          RECORD_SHA: ${{ needs.record.outputs.sha }}
+        run: echo "checking out the release record's commit $RECORD_SHA, not the push's head $GITHUB_SHA"
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: ${{ needs.record.outputs.sha }}
           persist-credentials: false
           sparse-checkout: scripts/release
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
@@ -156,11 +183,20 @@ jobs:
         with:
           name: npm-tarballs
           path: ${{ runner.temp }}/npm
+      # The real gate: the environment's own protection, read with the job's
+      # token (read access to the repository is all the endpoint asks). A
+      # failed read leaves no file, and the next step refuses.
+      - name: The npm environment's protection
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api "repos/$GITHUB_REPOSITORY/environments/npm" > "$RUNNER_TEMP/environment.json" || rm -f "$RUNNER_TEMP/environment.json"
       - name: Stage every package
         env:
+          # A second guard only: `vars.` falls back to a repository's or an
+          # organization's variable of this name (the checklist forbids one).
           CESIUM_RELEASE_GATE: ${{ vars.CESIUM_RELEASE_GATE }}
           MANIFEST_SHA256: ${{ needs.verify.outputs.tarballs-sha256 }}
-        run: node scripts/release/stageTarballs.mjs --from "$RUNNER_TEMP/npm" --manifest-sha256 "$MANIFEST_SHA256"
+        run: node scripts/release/stageTarballs.mjs --from "$RUNNER_TEMP/npm" --manifest-sha256 "$MANIFEST_SHA256" --environment "$RUNNER_TEMP/environment.json"
 
   # The GitHub release, as a draft: the tag, the combined release notes and
   # the browser build `verify` made, their sums checked on arrival. The only
@@ -169,6 +205,9 @@ jobs:
     needs: [record, verify, publish]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
+    concurrency:
+      group: release-github-${{ needs.record.outputs.sha || github.run_id }}
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
@@ -188,13 +227,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
           VERSION: ${{ needs.record.outputs.version }}
+          RECORD_SHA: ${{ needs.record.outputs.sha }}
         working-directory: ${{ runner.temp }}/github
         run: |
+          echo "tagging the release record's commit $RECORD_SHA, not the push's head $GITHUB_SHA"
           prerelease=""
           case "$VERSION" in *-*) prerelease="--prerelease" ;; esac
           gh release create "v$VERSION" \
             --draft $prerelease \
-            --target "$GITHUB_SHA" \
+            --target "$RECORD_SHA" \
             --title "v$VERSION" \
             --notes-file notes.md \
             "cesium-browser-$VERSION.tgz"

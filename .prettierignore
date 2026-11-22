@@ -44,6 +44,8 @@ packages/core/src/io/ThirdParty/**
 test/fixtures/1x/**
 
 apps/sandcastle/node_modules/**
+# Sandcastle's build output (npm run build-sandcastle).
+apps/sandcastle/dist/
 apps/sandcastle/templates/Sandcastle.d.ts
 apps/sandcastle/templates/Sandcastle.js
 

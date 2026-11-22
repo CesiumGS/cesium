@@ -4,7 +4,13 @@ export const GATE: { name: string; value: string };
 /** Why the release gate is shut, or undefined when the owner has opened it. */
 export function gateProblem(env: Record<string, string | undefined>): string | undefined;
 
-/** `folder`, resolved, when inside a scratch folder; throws otherwise. */
+/** Why the GitHub environment `npm` (the REST API's JSON) doesn't guard the release. */
+export function environmentProblems(environment: unknown): string[];
+
+/** Why this process can't stage: undefined only in GitHub Actions with an OIDC token. */
+export function runnerProblem(env: Record<string, string | undefined>): string | undefined;
+
+/** `folder`, at its real location, when strictly inside a scratch folder; throws otherwise. */
 export function scratchFolder(folder: string, env?: Record<string, string | undefined>): string;
 
 /** Bytes' SHA-256, in hex. */
@@ -35,6 +41,7 @@ export function stageTarballs(
   options?: {
     dryRun?: boolean;
     env?: Record<string, string | undefined>;
+    environment?: unknown;
     log?: (line: string) => void;
     npm?: (args: string[], cwd: string) => void;
   },

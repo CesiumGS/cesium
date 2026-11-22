@@ -8,6 +8,7 @@ import {
   mkdtempSync,
   readdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -36,7 +37,9 @@ import {
   sectionFor,
 } from "../scripts/release/notes.mjs";
 import {
+  changeParts,
   checkChangesets,
+  checkParts,
   isChangeset,
   namedPackages,
   parseNameStatus,
@@ -51,7 +54,9 @@ import {
 } from "../scripts/release/record.mjs";
 import { publishOrder } from "../scripts/release/stage.mjs";
 import {
+  environmentProblems,
   gateProblem,
+  runnerProblem,
   scratchFolder,
   sha256,
   stageArgs,
@@ -783,7 +788,7 @@ describe("a release record as release:version writes it", () => {
     const log: string[] = [];
     expect(
       pushIsRelease(base, head, { cwd: root, log: (l) => log.push(l) }),
-    ).toEqual({ release: true, version: "2.1.0" });
+    ).toEqual({ release: true, version: "2.1.0", sha: head });
 
     // Not a release: a missing, all-zeros, unknown or non-ancestor before,
     // a version already tagged, and a version npm already has.
@@ -878,6 +883,123 @@ describe("a release record as release:version writes it", () => {
   });
 });
 
+/** Writes `text` at `path` in `root`. */
+function put(root: string, path: string, text: string): void {
+  mkdirSync(dirname(join(root, path)), { recursive: true });
+  writeFileSync(join(root, path), text);
+}
+
+/** Commits everything in `root`; returns the commit. */
+function commitAll(root: string, message: string): string {
+  git(root, "add", "-A");
+  git(root, "commit", "-q", "-m", message);
+  return git(root, "rev-parse", "HEAD").trim();
+}
+
+describe("a push of several commits (a bundle from another machine)", () => {
+  const roots: string[] = [];
+  afterEach(() => {
+    for (const root of roots.splice(0)) {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  const pending = {
+    "brave-owls.md": '---\n"@x/core": minor\n---\n\nViews gain a thing.\n',
+  };
+  const coreChangeset = '---\n"@x/core": patch\n---\n\nViews draw faster.\n';
+  const quiet = { log: () => {} };
+
+  it("finds the record in the middle of three commits and names its commit", () => {
+    const { root, base } = workspace("2.0.0", pending);
+    roots.push(root);
+    put(root, "notes.md", "outside the packages\n");
+    commitAll(root, "a note");
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const record = commitAll(root, "the record");
+    put(root, "packages/core/src/view.ts", "export {};\n");
+    put(root, ".changeset/quick-cats.md", coreChangeset);
+    const head = commitAll(root, "a change, with its changeset");
+    const log: string[] = [];
+    expect(
+      pushIsRelease(base, head, { cwd: root, log: (l) => log.push(l) }),
+    ).toEqual({ release: true, version: "2.1.0", sha: record });
+    expect(log.at(-1)).toMatch(/at [0-9a-f]{40} \(commit 2 of the push's 3\)/);
+    // The changeset rule judges the record alone and the rest as changes.
+    const parts = checkParts(base, head, root);
+    expect(parts.map((p) => [p.record, p.result.ok])).toEqual([
+      [false, true],
+      [true, true],
+      [false, true],
+    ]);
+    expect(parts[1]).toMatchObject({ to: record, commits: 1 });
+  });
+  it("refuses two records in one push, naming both", () => {
+    const { root, base } = workspace("2.0.0", pending);
+    roots.push(root);
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const first = commitAll(root, "the first record");
+    put(root, "packages/core/src/view.ts", "export {};\n");
+    put(root, ".changeset/quick-cats.md", coreChangeset);
+    commitAll(root, "a change, with its changeset");
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const second = commitAll(root, "the second record");
+    expect(() => pushIsRelease(base, second, { cwd: root, ...quiet })).toThrow(
+      new RegExp(
+        `holds 2 release records, ${first} \\(2\\.1\\.0\\) and ${second} \\(2\\.1\\.1\\)`,
+      ),
+    );
+  });
+  it("is not a release when no commit is a record", () => {
+    const { root, base } = workspace("2.0.0", pending);
+    roots.push(root);
+    put(root, "notes.md", "outside the packages\n");
+    commitAll(root, "a note");
+    put(root, "packages/core/src/view.ts", "export {};\n");
+    put(root, ".changeset/quick-cats.md", coreChangeset);
+    const head = commitAll(root, "a change, with its changeset");
+    const log: string[] = [];
+    expect(
+      pushIsRelease(base, head, { cwd: root, log: (l) => log.push(l) }),
+    ).toEqual({ release: false, version: "2.0.0", sha: "" });
+    expect(log.at(-1)).toMatch(/none of the push's 2 commit\(s\) is one/);
+  });
+  it("fails, rather than ends green, for a commit that moves the version up without being a record", () => {
+    const { root, base } = workspace("2.0.0", pending);
+    roots.push(root);
+    // A record that landed after a new changeset: it leaves that one.
+    put(root, ".changeset/quick-cats.md", coreChangeset);
+    commitAll(root, "a changeset");
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    git(root, "checkout", "HEAD", "--", ".changeset/quick-cats.md");
+    const head = commitAll(root, "a stale record");
+    expect(() => pushIsRelease(base, head, { cwd: root, ...quiet })).toThrow(
+      /moves the umbrella's version up to 2\.1\.0 but isn't a release record: it leaves \.changeset\/quick-cats\.md unconsumed/,
+    );
+  });
+  it("judges a batch's runs of commits together, and fails a run without its changeset", () => {
+    const { root, base } = workspace("2.0.0", pending);
+    roots.push(root);
+    // A branch's commits land one by one, the changeset in the last.
+    put(root, "packages/core/src/view.ts", "export {};\n");
+    commitAll(root, "a change");
+    put(root, ".changeset/quick-cats.md", coreChangeset);
+    commitAll(root, "its changeset; done");
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const record = commitAll(root, "the record");
+    put(root, "packages/core/src/draw.ts", "export {};\n");
+    const head = commitAll(root, "a change without a changeset");
+    expect(changeParts(base, head, root).map((p) => p.commits)).toEqual([
+      2, 1, 1,
+    ]);
+    const parts = checkParts(base, head, root);
+    expect(parts.map((p) => p.result.ok)).toEqual([true, true, false]);
+    expect(parts[1]).toMatchObject({ record: true, to: record });
+    expect(parts[2]!.result.problem).toMatch(
+      /touches @x\/core and adds no changeset/,
+    );
+  });
+});
+
 describe("staging the checked tarballs", () => {
   let dir: string | undefined;
   afterEach(() => {
@@ -908,19 +1030,118 @@ describe("staging the checked tarballs", () => {
     writeFileSync(join(dir, "release.json"), text);
     return sha256(Buffer.from(text));
   };
-  const open = { CESIUM_RELEASE_GATE: "reviewed" };
+  const runner = {
+    GITHUB_ACTIONS: "true",
+    ACTIONS_ID_TOKEN_REQUEST_URL: "https://token.invalid/",
+  };
+  const open = { ...runner, CESIUM_RELEASE_GATE: "reviewed" };
+  /** The npm environment as the REST API returns it, guarded. */
+  const guarded = {
+    name: "npm",
+    protection_rules: [
+      { id: 1, type: "branch_policy" },
+      {
+        id: 2,
+        type: "required_reviewers",
+        prevent_self_review: false,
+        reviewers: [{ type: "User", reviewer: { login: "owner" } }],
+      },
+    ],
+    deployment_branch_policy: {
+      protected_branches: false,
+      custom_branch_policies: true,
+    },
+  };
+  const ok = { env: open, environment: guarded, log: () => {} };
 
-  it("reads and writes tarballs only inside a scratch folder", () => {
-    expect(scratchFolder(join(tmpdir(), "x"), {})).toBe(join(tmpdir(), "x"));
-    expect(scratchFolder("/ci/tmp/npm", { RUNNER_TEMP: "/ci/tmp" })).toBe(
-      "/ci/tmp/npm",
+  it("reads and writes tarballs only strictly inside a scratch folder", () => {
+    const temp = realpathSync(tmpdir());
+    expect(scratchFolder(join(tmpdir(), "x"), {})).toBe(join(temp, "x"));
+    // RUNNER_TEMP counts in GitHub Actions only.
+    expect(
+      scratchFolder("/ci/tmp/npm", {
+        GITHUB_ACTIONS: "true",
+        RUNNER_TEMP: "/ci/tmp",
+      }),
+    ).toBe("/ci/tmp/npm");
+    expect(() =>
+      scratchFolder("/ci/tmp/npm", { RUNNER_TEMP: "/ci/tmp" }),
+    ).toThrow(/isn't a folder inside a scratch folder/);
+    // Never the temporary folder itself.
+    expect(() => scratchFolder(tmpdir(), {})).toThrow(
+      /isn't a folder inside a scratch folder/,
     );
     expect(() => scratchFolder(repo, {})).toThrow(
-      /isn't inside a scratch folder/,
+      /isn't a folder inside a scratch folder/,
     );
     expect(() => scratchFolder(join(tmpdir(), "..", "etc"), {})).toThrow(
-      /isn't inside a scratch folder/,
+      /isn't a folder inside a scratch folder/,
     );
+  });
+  it("follows a symbolic link planted in the temporary folder before comparing", () => {
+    const temp = mkdtempSync(join(tmpdir(), "cesium-stage-"));
+    dir = temp;
+    const outside = mkdtempSync(join(repo, ".scratch-link-"));
+    try {
+      symlinkSync(outside, join(temp, "npm"), "dir");
+      expect(() => scratchFolder(join(temp, "npm", "out"), {})).toThrow(
+        /isn't a folder inside a scratch folder/,
+      );
+      expect(scratchFolder(join(temp, "real", "out"), {})).toBe(
+        join(realpathSync(temp), "real", "out"),
+      );
+    } finally {
+      rmSync(outside, { recursive: true, force: true });
+    }
+  });
+  it("stages only in GitHub Actions with an OIDC token, never from a machine", () => {
+    expect(runnerProblem(runner)).toBeUndefined();
+    expect(runnerProblem({})).toMatch(/never from a machine/);
+    expect(runnerProblem({ GITHUB_ACTIONS: "true" })).toMatch(
+      /never from a machine/,
+    );
+    const sum = release();
+    const npm = vi.fn();
+    expect(() =>
+      stageTarballs(dir!, sum, {
+        ...ok,
+        env: { CESIUM_RELEASE_GATE: "reviewed" },
+        npm,
+      }),
+    ).toThrow(/nothing staged: it stages only in release\.yml's publish job/);
+    expect(npm).not.toHaveBeenCalled();
+    // A dry run is the local path.
+    expect(
+      stageTarballs(dir!, sum, { env: {}, npm, log: () => {}, dryRun: true }),
+    ).toHaveLength(2);
+    expect(npm.mock.calls[0]![0]).toContain("--dry-run");
+  });
+  it("keeps the gate shut until the npm environment has a reviewer and a branch policy", () => {
+    expect(environmentProblems(guarded)).toEqual([]);
+    expect(environmentProblems(undefined)).toEqual([
+      expect.stringMatching(/couldn't be read \(no JSON\)/),
+    ]);
+    expect(environmentProblems({ message: "Not Found" })).toEqual([
+      expect.stringMatching(/couldn't be read \(got "Not Found"\)/),
+    ]);
+    // GitHub's environment, created on first use: no rules at all.
+    expect(
+      environmentProblems({
+        name: "npm",
+        protection_rules: [],
+        deployment_branch_policy: null,
+      }),
+    ).toEqual([
+      "the environment `npm` has no required reviewer",
+      "the environment `npm` lets any branch deploy; limit it to the 2.0 branch",
+    ]);
+    const sum = release();
+    const npm = vi.fn();
+    // The variable alone, as a repository variable would supply it.
+    expect(() =>
+      stageTarballs(dir!, sum, { ...ok, environment: undefined, npm }),
+    ).toThrow(/the release gate is shut: the GitHub environment `npm`/);
+    expect(npm).not.toHaveBeenCalled();
   });
   it("keeps the gate shut until the owner sets the npm environment's variable", () => {
     expect(gateProblem({})).toMatch(
@@ -932,17 +1153,18 @@ describe("staging the checked tarballs", () => {
     expect(gateProblem(open)).toBeUndefined();
     const sum = release();
     const npm = vi.fn();
-    expect(() =>
-      stageTarballs(dir!, sum, { env: {}, npm, log: () => {} }),
-    ).toThrow(/the release gate is shut/);
+    expect(() => stageTarballs(dir!, sum, { ...ok, env: runner, npm })).toThrow(
+      /the release gate is shut: CESIUM_RELEASE_GATE is not set/,
+    );
     expect(npm).not.toHaveBeenCalled();
   });
   it("stages the tarballs in release.json's order once every sum matches", () => {
     const sum = release();
     const npm = vi.fn();
-    expect(stageTarballs(dir!, sum, { env: open, npm, log: () => {} })).toEqual(
-      ["@x/core@2.0.0-alpha.1", "@x/next@2.0.0-alpha.1"],
-    );
+    expect(stageTarballs(dir!, sum, { ...ok, npm })).toEqual([
+      "@x/core@2.0.0-alpha.1",
+      "@x/next@2.0.0-alpha.1",
+    ]);
     expect(npm.mock.calls.map(([args]) => args[2])).toEqual([
       "./x-core-2.0.0-alpha.1.tgz",
       "./x-next-2.0.0-alpha.1.tgz",
@@ -952,13 +1174,13 @@ describe("staging the checked tarballs", () => {
   it("refuses a release.json or a tarball whose sum isn't the one reported", () => {
     const sum = release();
     const npm = vi.fn();
-    expect(() =>
-      stageTarballs(dir!, "0".repeat(64), { env: open, npm, log: () => {} }),
-    ).toThrow(/release\.json's SHA-256 is/);
+    expect(() => stageTarballs(dir!, "0".repeat(64), { ...ok, npm })).toThrow(
+      /release\.json's SHA-256 is/,
+    );
     writeFileSync(join(dir!, "x-next-2.0.0-alpha.1.tgz"), "swapped");
-    expect(() =>
-      stageTarballs(dir!, sum, { env: open, npm, log: () => {} }),
-    ).toThrow(/x-next-2\.0\.0-alpha\.1\.tgz's SHA-256 is/);
+    expect(() => stageTarballs(dir!, sum, { ...ok, npm })).toThrow(
+      /x-next-2\.0\.0-alpha\.1\.tgz's SHA-256 is/,
+    );
     expect(npm).not.toHaveBeenCalled();
   });
   it("refuses a private package, a wrong tag and a tarball that holds another package", () => {
@@ -988,9 +1210,7 @@ describe("staging the checked tarballs", () => {
         throw new Error("E403");
       }
     };
-    expect(() =>
-      stageTarballs(dir!, sum, { env: open, npm, log: () => {} }),
-    ).toThrow(
+    expect(() => stageTarballs(dir!, sum, { ...ok, npm })).toThrow(
       /staging @x\/next@2\.0\.0-alpha\.1 failed \(E403\)\. Already staged: @x\/core@2\.0\.0-alpha\.1; reject each on npm/,
     );
   });

@@ -13,9 +13,14 @@
 //
 //   node scripts/release/changesetCheck.mjs --base <ref> [--head <ref>]
 //
-// It compares the head with its merge base with `<base>` (head defaults
-// to HEAD), so the base must be fetched. Exits 1 with the reason when the
-// change fails the rule.
+// It walks the head's first-parent line from its merge base with `<base>`
+// (head defaults to HEAD), so the base must be fetched, and judges it in
+// parts (changeParts): each release record by itself, against its first
+// parent, and each run of commits between records as one change. So a
+// push that batches a record with other work passes when each part does,
+// and a branch's commits, which land one by one with the changeset in the
+// closing commit, are judged together as they were reviewed. Exits 1 with
+// the reason when a part fails the rule.
 import { execFileSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -23,6 +28,7 @@ import {
   changedPaths,
   gitTree,
   isChangeset,
+  judgeCommits,
   parseNameStatus,
   releaseRecordProblems,
 } from "./record.mjs";
@@ -128,6 +134,55 @@ export function checkChangesets(changed, base, head) {
   return result({ ok: true, named: sortedNamed, unnamed });
 }
 
+/**
+ * The parts the rule judges a push or a branch by: each commit along the
+ * head's first-parent line from `base` that is a release record, by
+ * itself, and each run of commits between them as one change. One part,
+ * base to head, when that line doesn't reach `base`.
+ * @returns {{ from: string, to: string, commits: number, record: boolean }[]}
+ */
+export function changeParts(base, head, cwd = repo) {
+  const judged = judgeCommits(base, head, cwd);
+  if (!judged) {
+    return [{ from: base, to: head, commits: 0, record: false }];
+  }
+  const parts = [];
+  let run;
+  for (const c of judged) {
+    if (c.problems.length === 0) {
+      if (run) {
+        parts.push(run);
+        run = undefined;
+      }
+      parts.push({ from: c.parent, to: c.commit, commits: 1, record: true });
+    } else if (run) {
+      run.to = c.commit;
+      run.commits += 1;
+    } else {
+      run = { from: c.parent, to: c.commit, commits: 1, record: false };
+    }
+  }
+  if (run) {
+    parts.push(run);
+  }
+  return parts;
+}
+
+/**
+ * The rule on each part of the change from `base` to `head`
+ * (changeParts), each part's result with its range.
+ */
+export function checkParts(base, head, cwd = repo) {
+  return changeParts(base, head, cwd).map((part) => ({
+    ...part,
+    result: checkChangesets(
+      changedPaths(part.from, part.to, cwd),
+      gitTree(part.from, cwd),
+      gitTree(part.to, cwd),
+    ),
+  }));
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
   const option = (flag) => {
@@ -144,27 +199,32 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     cwd: repo,
     encoding: "utf8",
   }).trim();
-  const result = checkChangesets(
-    changedPaths(mergeBase, head),
-    gitTree(mergeBase),
-    gitTree(head),
-  );
-  if (!result.ok) {
-    console.error(`changesetCheck: ${result.problem}`);
+  const parts = checkParts(mergeBase, head);
+  let failed = false;
+  for (const { from, to, commits, record, result } of parts) {
+    const range = `${from.slice(0, 10)}..${to.slice(0, 10)}${record ? " (a release record)" : commits > 1 ? ` (${commits} commits)` : ""}`;
+    if (!result.ok) {
+      console.error(`changesetCheck: ${range}: ${result.problem}`);
+      failed = true;
+    } else if (result.touched.length === 0) {
+      console.log(`changesetCheck: ${range}: no published package changed`);
+    } else if (result.release) {
+      console.log(`changesetCheck: ${range}: a release record for ${result.touched.join(", ")}`);
+    } else {
+      console.log(
+        `changesetCheck: ${range}: ${result.added.length} changeset(s) for a change to ${result.touched.join(", ")}; they name ${result.named.join(", ")}`,
+      );
+    }
+    if (result.ok && !result.release && result.deleted.length > 0) {
+      console.log(
+        `changesetCheck: ${range}: note: it deletes ${result.deleted.join(", ")} outside a release record; the merge review checks that's right (a revert, say)`,
+      );
+    }
+  }
+  if (parts.length === 0) {
+    console.log("changesetCheck: no commits to check");
+  }
+  if (failed) {
     process.exit(1);
-  }
-  if (result.touched.length === 0) {
-    console.log("changesetCheck: no published package changed");
-  } else if (result.release) {
-    console.log(`changesetCheck: a release record for ${result.touched.join(", ")}`);
-  } else {
-    console.log(
-      `changesetCheck: ${result.added.length} changeset(s) for a change to ${result.touched.join(", ")}; they name ${result.named.join(", ")}`,
-    );
-  }
-  if (!result.release && result.deleted.length > 0) {
-    console.log(
-      `changesetCheck: note: it deletes ${result.deleted.join(", ")} outside a release record; the merge review checks that's right (a revert, say)`,
-    );
   }
 }

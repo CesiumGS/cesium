@@ -21,3 +21,19 @@ export function checkChangesets(
   recordProblems: string[];
   problem?: string;
 };
+
+/** The parts the rule judges a change by: each release record alone, each run between them as one. */
+export function changeParts(
+  base: string,
+  head: string,
+  cwd?: string,
+): { from: string; to: string; commits: number; record: boolean }[];
+
+/** The rule on each part of the change from `base` to `head`. */
+export function checkParts(
+  base: string,
+  head: string,
+  cwd?: string,
+): ({ from: string; to: string; commits: number; record: boolean } & {
+  result: ReturnType<typeof checkChangesets>;
+})[];

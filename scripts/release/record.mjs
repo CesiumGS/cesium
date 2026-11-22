@@ -17,11 +17,16 @@
 //
 //   node scripts/release/record.mjs --before <sha> [--head <ref>]
 //
-// prints `release=true|false` and `version=<the umbrella's version>`, and
-// appends them to $GITHUB_OUTPUT when it is set (release.yml's `record`
-// job). A `before` it can't resolve (none, all zeros, missing from the
-// clone, or not an ancestor of the head, as after a force push) is never a
-// release record. It imports nothing outside Node.
+// judges each commit of the push (the head's first-parent line from
+// `before`) against its first parent, so a record pushed in a batch with
+// other commits is still found. It prints `release=true|false`,
+// `version=<the umbrella's version>` and `sha=<the record's commit>` (empty
+// when there is none), and appends them to $GITHUB_OUTPUT when it is set
+// (release.yml's `record` job). A `before` it can't resolve (none, all
+// zeros, missing from the clone, or not an ancestor of the head, as after
+// a force push) is never a release record. It refuses, exiting 1, a push
+// with two records or with a commit that moves the umbrella's version up
+// without being one. It imports nothing outside Node.
 import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
@@ -274,24 +279,89 @@ export function onNpm(name, version) {
 }
 
 /**
- * Whether the push from `before` to `head` is a release record to stage.
- * Logs each reason it isn't. `published(name, version)` says whether npm
- * already has the umbrella at that version, as after a record that was
- * reverted and landed again.
- * @returns {{ release: boolean, version: string }}
+ * The commits from `before` to `head` along the head's first-parent line,
+ * oldest first, each with its first parent. Undefined when that line
+ * doesn't reach `before` (the before commit sits only on a merged side
+ * branch). `before` must be an ancestor of `head`.
+ * @returns {{ commit: string, parent: string }[] | undefined}
+ */
+export function firstParentCommits(before, head, cwd = repo) {
+  const git = (...args) =>
+    execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  const base = git("rev-parse", "--verify", "--quiet", `${before}^{commit}`).trim();
+  const pairs = git("rev-list", "--first-parent", "--reverse", "--parents", `${base}..${head}`)
+    .split("\n")
+    .filter((line) => line !== "")
+    .map((line) => {
+      const [commit, parent] = line.split(" ");
+      return { commit, parent };
+    });
+  if (pairs.length > 0 && pairs[0].parent !== base) {
+    return undefined;
+  }
+  return pairs;
+}
+
+/**
+ * Each commit of the push from `before` to `head` (its first-parent
+ * line), judged against its first parent: whether it is a release record,
+ * and if not, why, and whether it moves the umbrella's version up.
+ * @returns {{ commit: string, parent: string, problems: string[], version: string | undefined, raises: boolean }[] | undefined}
+ */
+export function judgeCommits(before, head, cwd = repo) {
+  const pairs = firstParentCommits(before, head, cwd);
+  if (!pairs) {
+    return undefined;
+  }
+  const trees = new Map();
+  const tree = (rev) => {
+    if (!trees.has(rev)) {
+      trees.set(rev, gitTree(rev, cwd));
+    }
+    return trees.get(rev);
+  };
+  const umbrella = (t) => t.packages.find((p) => p.folder === "cesium")?.manifest.version;
+  return pairs.map(({ commit, parent }) => {
+    const a = tree(parent);
+    const b = tree(commit);
+    const problems = releaseRecordProblems(changedPaths(parent, commit, cwd), a, b);
+    const from = umbrella(a);
+    const to = umbrella(b);
+    const raises =
+      parseVersion(`${from}`) !== undefined &&
+      parseVersion(`${to}`) !== undefined &&
+      compareVersions(to, from) > 0;
+    return { commit, parent, problems, version: to, raises };
+  });
+}
+
+/**
+ * Whether the push from `before` to `head` holds a release record to
+ * stage, and which commit it is. Each commit of the push (its first-parent
+ * line, so a batch pushed from a bundle is judged commit by commit) is
+ * tested against its first parent. Logs each reason it isn't one.
+ * `published(name, version)` says whether npm already has the umbrella at
+ * that version, as after a record that was reverted and landed again.
+ *
+ * Throws, so the run fails rather than ends green with nothing staged,
+ * when the push holds two release records, or a commit that moves the
+ * umbrella's version up without being one (a record that landed after new
+ * changesets, say); either version would otherwise never release, since
+ * the next push's before commit is past it.
+ * @returns {{ release: boolean, version: string, sha: string }}
  */
 export function pushIsRelease(before, head, options = {}) {
   const { log = console.log, cwd = repo, published = () => false } = options;
   const git = (...args) =>
     execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-  const umbrella = gitTree(head, cwd).packages.find((p) => p.folder === "cesium");
-  const version = umbrella?.manifest.version;
-  if (!version || !parseVersion(version)) {
-    throw new Error(`the umbrella's version at ${head} isn't one: ${version}`);
+  const headVersion = gitTree(head, cwd).packages.find((p) => p.folder === "cesium")?.manifest
+    .version;
+  if (!headVersion || !parseVersion(headVersion)) {
+    throw new Error(`the umbrella's version at ${head} isn't one: ${headVersion}`);
   }
   const no = (why) => {
     log(`record: not a release record: ${why}`);
-    return { release: false, version };
+    return { release: false, version: headVersion, sha: "" };
   };
   if (!before || /^0+$/.test(before)) {
     return no("the push has no before commit (a new branch), so there is nothing to compare");
@@ -309,25 +379,52 @@ export function pushIsRelease(before, head, options = {}) {
   } catch {
     return no(`the before commit ${before} isn't an ancestor of ${head} (a force push?)`);
   }
+  const judged = judgeCommits(before, head, cwd);
+  if (!judged) {
+    return no(`${head}'s first-parent line doesn't reach the before commit ${before}`);
+  }
+  if (judged.length === 0) {
+    return no("the push holds no commits");
+  }
+  const records = judged.filter((c) => c.problems.length === 0);
+  const strays = judged.filter((c) => c.problems.length > 0 && c.raises);
+  if (records.length > 1) {
+    throw new Error(
+      `the push holds ${records.length} release records, ${records.map((c) => `${c.commit} (${c.version})`).join(" and ")}; a push holds at most one, so none is staged. Push each record by itself (up to the first, then the rest). Once they have landed together, neither can release: revert both, then write one record from the tip with \`npm run release:version\``,
+    );
+  }
+  if (strays.length > 0) {
+    const lines = strays.map(
+      (c) =>
+        `${c.commit} moves the umbrella's version up to ${c.version} but isn't a release record: ${c.problems.join("; ")}`,
+    );
+    throw new Error(
+      `${lines.join("\n")}\nThat version would never release. Revert the commit, then write the record again from the tip with \`npm run release:version\``,
+    );
+  }
+  if (records.length === 0) {
+    for (const c of judged) {
+      log(`record: ${c.commit}: ${c.problems.join("; ")}`);
+    }
+    return no(`none of the push's ${judged.length} commit(s) is one`);
+  }
+  const [record] = records;
+  const version = record.version;
+  const name = gitTree(record.commit, cwd).packages.find((p) => p.folder === "cesium").manifest
+    .name;
   try {
     git("rev-parse", "--verify", "--quiet", `refs/tags/v${version}`);
     return no(`v${version} is already tagged`);
   } catch {
     // No tag: go on.
   }
-  const problems = releaseRecordProblems(
-    changedPaths(before, head, cwd),
-    gitTree(before, cwd),
-    gitTree(head, cwd),
+  if (published(name, version)) {
+    return no(`npm already has ${name}@${version}`);
+  }
+  log(
+    `record: a release record for ${version} at ${record.commit} (commit ${judged.indexOf(record) + 1} of the push's ${judged.length})`,
   );
-  if (problems.length > 0) {
-    return no(problems.join("; "));
-  }
-  if (published(umbrella.manifest.name, version)) {
-    return no(`npm already has ${umbrella.manifest.name}@${version}`);
-  }
-  log(`record: a release record for ${version}`);
-  return { release: true, version };
+  return { release: true, version, sha: record.commit };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
@@ -337,10 +434,12 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     return i >= 0 ? args[i + 1] : undefined;
   };
   try {
-    const { release, version } = pushIsRelease(option("--before") ?? "", option("--head") ?? "HEAD", {
-      published: onNpm,
-    });
-    const lines = `release=${release}\nversion=${version}\n`;
+    const { release, version, sha } = pushIsRelease(
+      option("--before") ?? "",
+      option("--head") ?? "HEAD",
+      { published: onNpm },
+    );
+    const lines = `release=${release}\nversion=${version}\nsha=${sha}\n`;
     process.stdout.write(lines);
     if (process.env.GITHUB_OUTPUT) {
       appendFileSync(process.env.GITHUB_OUTPUT, lines);

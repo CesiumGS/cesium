@@ -4,21 +4,27 @@
 // identity; no token), so nothing is live until a maintainer approves each
 // staged version with 2FA on npm, the umbrella last.
 //
-//   node scripts/release/stageTarballs.mjs --from <dir> --manifest-sha256 <hex> [--dry-run]
+//   node scripts/release/stageTarballs.mjs --from <dir> --manifest-sha256 <hex>
+//     --environment <the npm environment's JSON> [--dry-run]
 //
 // It runs in release.yml's `publish` job, the only one with `id-token:
 // write`, which runs no `npm ci` and no build, so it imports nothing
 // outside Node and this folder's lines.mjs. Before it stages anything, it
 // checks, and stops on the first failure:
-// 1. the owner's release gate: the variable CESIUM_RELEASE_GATE, set to
-//    `reviewed` on the GitHub environment `npm` (the design's checklist,
-//    "Releases", step 1). GitHub creates a missing environment with no
-//    reviewer and no variables, so a missing gate fails closed;
-// 2. `<dir>/release.json`'s SHA-256 is the one the packing job reported;
-// 3. each tarball's SHA-256 is the one release.json lists, its
+// 1. it runs in GitHub Actions with an OIDC token to ask for, so no local
+//    login ever stages;
+// 2. the owner's release gate: the GitHub environment `npm`, read through
+//    the REST API by the job (`--environment`), has a required reviewer
+//    and a deployment-branch policy; and its variable CESIUM_RELEASE_GATE
+//    is `reviewed` (the design's checklist, "Releases", step 1). GitHub
+//    creates a missing environment with no reviewer and no variables, so a
+//    missing gate fails closed. The variable alone isn't enough: `vars.`
+//    falls back to a repository's or an organization's variable;
+// 3. `<dir>/release.json`'s SHA-256 is the one the packing job reported;
+// 4. each tarball's SHA-256 is the one release.json lists, its
 //    package.json names that package and version, and it isn't private;
-// 4. the versions and the dist-tag agree with scripts/release/lines.mjs.
-// `--dry-run` skips the gate, passes `--dry-run` to npm and reports a
+// 5. the versions and the dist-tag agree with scripts/release/lines.mjs.
+// `--dry-run` skips checks 1 and 2, passes `--dry-run` to npm and reports a
 // private package instead of refusing it, so the path can be tried on a
 // machine. A failure partway leaves the packages before it staged; the
 // message names them, for the owner to reject before rerunning.
@@ -26,14 +32,19 @@ import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { readFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { basename, join, resolve, sep } from "node:path";
+import { basename, dirname, join, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { distTag, pairedVersion, parseVersion } from "./lines.mjs";
 
 /** The variable the owner sets on the `npm` environment, and its value. */
 export const GATE = { name: "CESIUM_RELEASE_GATE", value: "reviewed" };
 
-/** Why the gate is shut, or undefined when the owner has opened it. */
+/**
+ * Why the gate is shut, or undefined when the owner has opened it. The
+ * variable is a second, weaker guard: `vars.` falls back to a repository's
+ * or an organization's variable of the same name, so environmentProblems
+ * is the real check.
+ */
 export function gateProblem(env) {
   const value = env[GATE.name];
   if (value === GATE.value) {
@@ -43,25 +54,90 @@ export function gateProblem(env) {
 }
 
 /**
- * `folder`, resolved, when it lies inside a scratch folder (the system's
- * temporary folder or the runner's `RUNNER_TEMP`), where the release's
- * tarballs are written and read; throws otherwise.
+ * Why the GitHub environment `npm`, as the REST API returns it (`GET
+ * /repos/{owner}/{repo}/environments/npm`), doesn't guard the release: it
+ * must have a required-reviewers rule with at least one reviewer, and a
+ * deployment-branch policy. An empty list when it does.
+ * @param {any} environment the API's JSON, or undefined when it couldn't be read
+ */
+export function environmentProblems(environment) {
+  if (!isObject(environment) || environment.name !== "npm") {
+    return [
+      `the GitHub environment \`npm\` couldn't be read (${isObject(environment) ? `got ${JSON.stringify(environment.name ?? environment.message)}` : "no JSON"}); the publish job reads it with its own token, which needs read access to the repository`,
+    ];
+  }
+  const problems = [];
+  const rules = Array.isArray(environment.protection_rules) ? environment.protection_rules : [];
+  const reviewers = rules
+    .filter((rule) => isObject(rule) && rule.type === "required_reviewers")
+    .flatMap((rule) => (Array.isArray(rule.reviewers) ? rule.reviewers : []));
+  if (reviewers.length === 0) {
+    problems.push("the environment `npm` has no required reviewer");
+  }
+  const policy = environment.deployment_branch_policy;
+  if (
+    !isObject(policy) ||
+    !(policy.protected_branches === true || policy.custom_branch_policies === true) ||
+    !rules.some((rule) => isObject(rule) && rule.type === "branch_policy")
+  ) {
+    problems.push("the environment `npm` lets any branch deploy; limit it to the 2.0 branch");
+  }
+  return problems;
+}
+
+function isObject(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/**
+ * Why this process can't stage, or undefined when it runs in GitHub
+ * Actions with an OIDC token to ask for: no local login ever stages.
+ */
+export function runnerProblem(env) {
+  if (env.GITHUB_ACTIONS === "true" && `${env.ACTIONS_ID_TOKEN_REQUEST_URL ?? ""}` !== "") {
+    return undefined;
+  }
+  return "it stages only in release.yml's publish job (GITHUB_ACTIONS and ACTIONS_ID_TOKEN_REQUEST_URL set), never from a machine; use --dry-run to try the path here";
+}
+
+/**
+ * A path's real location: its nearest existing ancestor through
+ * `realpath`, with the rest of the path joined on, so a symbolic link
+ * anywhere along it is followed.
+ */
+function realLocation(path) {
+  let head = resolve(path);
+  const rest = [];
+  for (;;) {
+    try {
+      return join(realpathSync(head), ...rest);
+    } catch {
+      const parent = dirname(head);
+      if (parent === head) {
+        return join(head, ...rest);
+      }
+      rest.unshift(basename(head));
+      head = parent;
+    }
+  }
+}
+
+/**
+ * `folder`, at its real location, when it lies strictly inside a scratch
+ * folder: the system's temporary folder, or the runner's `RUNNER_TEMP` in
+ * GitHub Actions only. The release's tarballs are written and read there.
+ * A symbolic link along the path is followed before the comparison, so one
+ * planted in a shared temporary folder can't send the writes elsewhere.
+ * Throws otherwise, and for a scratch folder itself.
  */
 export function scratchFolder(folder, env = process.env) {
-  const roots = [tmpdir(), env.RUNNER_TEMP]
+  const roots = [tmpdir(), env.GITHUB_ACTIONS === "true" ? env.RUNNER_TEMP : undefined]
     .filter((root) => typeof root === "string" && root !== "")
-    .flatMap((root) => {
-      const resolved = resolve(root);
-      try {
-        return [resolved, realpathSync(resolved)];
-      } catch {
-        return [resolved];
-      }
-    });
-  const target = resolve(`${folder}`);
-  if (!roots.some((root) => target === root || target.startsWith(`${root}${sep}`))) {
+    .map((root) => realLocation(root));
+  const target = realLocation(`${folder}`);
+  if (!roots.some((root) => target.startsWith(`${root}${sep}`))) {
     throw new Error(
-      `${target} isn't inside a scratch folder (${[...new Set(roots)].join(" or ")}); the release's tarballs live only there`,
+      `${target} isn't a folder inside a scratch folder (${[...new Set(roots)].join(" or ")}); the release's tarballs live only there`,
     );
   }
   return target;
@@ -137,8 +213,24 @@ export function stageArgs(file, tag, dryRun) {
  * Throws on the first failure, naming what it had already staged.
  */
 export function stageTarballs(from, expectedSha256, options = {}) {
-  const { dryRun = false, env = process.env, log = console.log, npm = runNpm } = options;
+  const {
+    dryRun = false,
+    env = process.env,
+    environment,
+    log = console.log,
+    npm = runNpm,
+  } = options;
   if (!dryRun) {
+    const runner = runnerProblem(env);
+    if (runner) {
+      throw new Error(`nothing staged: ${runner}`);
+    }
+    const guard = environmentProblems(environment);
+    if (guard.length > 0) {
+      throw new Error(
+        `the release gate is shut: ${guard.join("; ")}. Step 1 of "What the owner sets up outside the repository" in docs/design/repository-build-and-release.md`,
+      );
+    }
     const gate = gateProblem(env);
     if (gate) {
       throw new Error(`the release gate is shut: ${gate}`);
@@ -180,9 +272,17 @@ export function stageTarballs(from, expectedSha256, options = {}) {
     staged.push(`${p.name}@${p.version}`);
   }
   log(
-    `stage: ${staged.length} packages staged at ${manifest.version} under ${manifest.tag}${dryRun ? " (dry run: nothing sent)" : "; approve each on npm with 2FA, the umbrella last"}`,
+    `stage: ${staged.length} packages staged at ${manifest.version} under ${manifest.tag}${dryRun ? " (dry run: nothing published)" : "; approve each on npm with 2FA, the umbrella last"}`,
   );
   return staged;
+}
+
+function readJson(path) {
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    return undefined;
+  }
 }
 
 function runNpm(args, cwd) {
@@ -201,8 +301,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     process.exit(2);
   }
   try {
+    const environmentFile = option("--environment");
     stageTarballs(scratchFolder(from), option("--manifest-sha256"), {
       dryRun: args.includes("--dry-run"),
+      environment: environmentFile ? readJson(scratchFolder(environmentFile)) : undefined,
     });
   } catch (error) {
     console.error(`stageTarballs: ${error instanceof Error ? error.message : error}`);

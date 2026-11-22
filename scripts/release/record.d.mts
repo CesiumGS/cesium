@@ -39,7 +39,29 @@ export function changedPaths(base: string, head: string, cwd?: string): Changed[
 /** Whether npm already has `name@version`, published. */
 export function onNpm(name: string, version: string): boolean;
 
-/** Whether the push from `before` to `head` is a release record to stage. */
+/** The push's commits along the head's first-parent line, oldest first; undefined when it doesn't reach `before`. */
+export function firstParentCommits(
+  before: string,
+  head: string,
+  cwd?: string,
+): { commit: string; parent: string }[] | undefined;
+
+/** Each commit of the push judged against its first parent. */
+export function judgeCommits(
+  before: string,
+  head: string,
+  cwd?: string,
+):
+  | {
+      commit: string;
+      parent: string;
+      problems: string[];
+      version: string | undefined;
+      raises: boolean;
+    }[]
+  | undefined;
+
+/** Whether the push from `before` to `head` holds a release record to stage, and its commit. */
 export function pushIsRelease(
   before: string,
   head: string,
@@ -48,4 +70,4 @@ export function pushIsRelease(
     cwd?: string;
     published?: (name: string, version: string) => boolean;
   },
-): { release: boolean; version: string };
+): { release: boolean; version: string; sha: string };

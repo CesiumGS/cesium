@@ -119,8 +119,12 @@ jobs:
         run: node scripts/staleNames.mjs
       - name: The version lines
         run: npm run release:check
-      # Fails, never skips, when there is no base to compare with (a new
-      # branch's push, or a before commit missing after a force push).
+      # Judged in parts (scripts/release/changesetCheck.mjs): each release
+      # record by itself, against its first parent, and each run of commits
+      # between records as one change, so a push that batches a record with
+      # other work passes when each part does. Fails, never skips, when
+      # there is no base to compare with (a new branch's push, or a before
+      # commit missing after a force push).
       - name: A changeset for a change to a published package
         env:
           BASE: ${{ needs.changes.outputs.base }}
