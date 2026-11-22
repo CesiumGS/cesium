@@ -74,6 +74,16 @@ class Mesh {
     this.show = true;
 
     /**
+     * Whether to draw the mesh in wireframe: translucent faces, with edges.
+     * The mesh is also drawn in wireframe while {@link MeshEditor#wireframe}
+     * is true.
+     *
+     * @type {boolean}
+     * @default false
+     */
+    this.wireframe = false;
+
+    /**
      * The mesh's key in its editor's wasm.
      *
      * @type {bigint}

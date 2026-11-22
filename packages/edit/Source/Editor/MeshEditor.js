@@ -188,6 +188,15 @@ class MeshEditor {
      */
     this.activeToolChanged = new Event();
 
+    /**
+     * Whether to draw every mesh in wireframe: translucent faces, with edges.
+     * Faces are still picked as usual. See also {@link Mesh#wireframe}.
+     *
+     * @type {boolean}
+     * @default false
+     */
+    this.wireframe = false;
+
     this.#inputHandler = new MeshEditorInputHandler({
       scene: options.scene,
       wasmEditor: this.#wasmEditor,
@@ -725,6 +734,7 @@ class MeshEditor {
         overlayViews = this.#wasmEditor.overlayViews(mesh._key);
       }
 
+      mesh._renderer.wireframe = this.wireframe || mesh.wireframe;
       mesh._update(frameState, overlayViews);
     }
 

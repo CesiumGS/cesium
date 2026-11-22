@@ -789,6 +789,112 @@ describe(
       });
     });
 
+    describe("wireframe", function () {
+      const faceOnly = 1 << ComponentType.Face;
+      const facePosition = [0.5, -0.5, 0.0];
+
+      function pickCommands(overlay) {
+        scene.pick(getWindowPosition(overlay, facePosition));
+        return scene.frameState.commandList.filter(
+          (command) => command.owner === overlay.renderer,
+        );
+      }
+
+      it("is false by default", function () {
+        expect(addSquare().renderer.wireframe).toBe(false);
+      });
+
+      it("draws edges that aren't shown, without picking them", function () {
+        const overlay = addSquare();
+        overlay.renderer.setShownComponents(faceOnly);
+        overlay.renderer.setPickableComponents(faceOnly);
+
+        overlay.renderer.wireframe = true;
+
+        expect(getInstanceCounts(renderCommands(overlay))).toEqual([2, 5]);
+        expect(getInstanceCounts(pickCommands(overlay))).toEqual([2]);
+
+        overlay.renderer.wireframe = false;
+
+        expect(getInstanceCounts(renderCommands(overlay))).toEqual([2]);
+      });
+
+      it("picks edges that are pickable but not shown", function () {
+        const overlay = addSquare();
+        overlay.renderer.setShownComponents(faceOnly);
+        overlay.renderer.wireframe = true;
+        renderCommands(overlay);
+
+        expect(getInstanceCounts(pickCommands(overlay))).toEqual([2, 5]);
+      });
+
+      it("writes depth for faces only in the pick pass", function () {
+        const overlay = addSquare();
+        overlay.renderer.wireframe = true;
+
+        const [faceCommand] = renderCommands(overlay);
+        expect(faceCommand.renderState.depthMask).toBe(false);
+
+        pickCommands(overlay);
+        expect(faceCommand.renderState.depthMask).toBe(true);
+      });
+
+      it("marks the stencil with faces while outlined", function () {
+        const overlay = addSquare();
+        overlay.renderer.outlined = true;
+        overlay.renderer.wireframe = true;
+
+        const [faceCommand] = renderCommands(overlay);
+
+        expect(faceCommand.renderState.stencilTest.enabled).toBe(true);
+        expect(faceCommand.renderState.depthMask).toBe(false);
+      });
+
+      it("scales face colors' alpha by the style's wireframe face opacity", function () {
+        const overlay = addSquare();
+        overlay.style.faceColor = new Color(0.1, 0.2, 0.3, 0.8);
+        overlay.style.selectedFaceColor = new Color(0.4, 0.5, 0.6, 1.0);
+        overlay.style.wireframeFaceOpacity = 0.5;
+        overlay.renderer.wireframe = true;
+
+        const { uniformMap } = renderCommands(overlay)[0];
+        const { face } = shaders.uniforms;
+
+        expect(uniformMap[face.color]()).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
+        expect(uniformMap[face.selectedColor]()).toEqual(
+          new Color(0.4, 0.5, 0.6, 0.5),
+        );
+        expect(overlay.style.faceColor.alpha).toBe(0.8);
+        expect(overlay.style.selectedFaceColor.alpha).toBe(1.0);
+      });
+
+      it("doesn't scale face colors' alpha in the pick pass", function () {
+        const overlay = addSquare();
+        overlay.style.wireframeFaceOpacity = 0.5;
+        overlay.renderer.wireframe = true;
+        const [faceCommand] = renderCommands(overlay);
+
+        pickCommands(overlay);
+
+        expect(faceCommand.uniformMap[shaders.uniforms.face.color]()).toBe(
+          overlay.style.faceColor,
+        );
+      });
+
+      it("draws faces with the scaled alpha, and still picks them", function () {
+        const overlay = addSquare();
+        overlay.style.wireframeFaceOpacity = 0.0;
+        overlay.renderer.wireframe = true;
+
+        expectPixel(overlay, facePosition, background);
+        expectPick(overlay, facePosition, {
+          primitive: overlay.mesh,
+          componentType: ComponentType.Face,
+          componentKey: defaultKey("faces", 0),
+        });
+      });
+    });
+
     describe("bounding volume", function () {
       const squareBounds = new AxisAlignedBoundingBox(
         new Cartesian3(-1.0, -1.0, 0.0),

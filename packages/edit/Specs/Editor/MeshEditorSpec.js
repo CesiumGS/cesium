@@ -2551,6 +2551,43 @@ describe(
       });
     });
 
+    describe("wireframe", function () {
+      it("is false by default for the editor and its meshes", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createGeometrySource(square));
+
+        expect(editor.wireframe).toBe(false);
+        expect(mesh.wireframe).toBe(false);
+      });
+
+      it("draws a mesh in wireframe while the editor or the mesh is", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createGeometrySource(square));
+
+        for (const [editorWireframe, meshWireframe, expected] of [
+          [false, false, false],
+          [true, false, true],
+          [false, true, true],
+          [true, true, true],
+        ]) {
+          editor.wireframe = editorWireframe;
+          mesh.wireframe = meshWireframe;
+          scene.renderForSpecs();
+
+          expect(mesh._renderer.wireframe).toBe(expected);
+        }
+      });
+
+      it("draws an inactive mesh's edges without picking them", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        const mesh = editor.addMesh(createGeometrySource(square));
+        editor.wireframe = true;
+
+        expect(renderInstanceCounts(mesh)).toEqual([2, 5]);
+        expect(pickInstanceCounts(mesh)).toEqual([2]);
+      });
+    });
+
     describe("outline", function () {
       it("outlines only active meshes in EditMode.NONE", async function () {
         const editor = await MeshEditor.addToScene(scene);
