@@ -2,10 +2,14 @@
 id: CS-885
 title: Merge CS-680's proposal headers now, before the owner's batch review
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-18
 decider: owner
+answer: "A. Merge the headers now: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), regenerates the views and logs the merge; CS-680 stays in progress until the owner's batch review, and its batches come through the chief of staff."
+answered_at: 2026-11-22T06:58:18.042Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
