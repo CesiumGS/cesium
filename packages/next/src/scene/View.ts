@@ -1,4 +1,9 @@
-import { Camera, projectToPixel, type CameraPose } from "./Camera.ts";
+import {
+  Camera,
+  projectToPixel,
+  type CameraPose,
+  type CameraRecord,
+} from "./Camera.ts";
 import type { World } from "./World.ts";
 import type { AnchorHandle } from "./world/types.ts";
 import type { FrameKey } from "../camera/frameResolver.ts";
@@ -100,6 +105,14 @@ export interface PickResult {
   properties?: Record<string, FeatureValue>;
   /** The item that drew it, if an item did (`World.add`). */
   item?: SceneItem;
+  /**
+   * The camera record the pick used (`View.pick`): the camera at the tick
+   * whose image was read, in the view's render root, for an image the
+   * view's size in CSS pixels (as the pick's x and y). Unset where a
+   * feature is looked up outside a pick (`CorePick.feature`: the core pick
+   * has its own).
+   */
+  cameraRecord?: CameraRecord;
 }
 
 /** α clamped to [0, 1]; NaN is 1. */
@@ -973,8 +986,8 @@ export class View {
   /**
    * This view's camera re-expressed in `anchor`'s coordinates (`undefined`:
    * the table's root), through its placement: written into `out` (a new
-   * camera by default), field of view and near plane copied. With
-   * `setCameraFromAnchor` the round trip is exact, to the float64 step of
+   * camera by default), its lens copied (field of view, near plane,
+   * principal point and pixel aspect). With `setCameraFromAnchor` the round trip is exact, to the float64 step of
    * the camera's coordinates, near the anchor; far from it, about one
    * float64 step of the placement's translation (about 60 nm at 400,000 km).
    */
@@ -1090,14 +1103,24 @@ export class View {
     const ratio =
       this.target instanceof CanvasTarget ? this.target.pixelRatio : 1;
     const out = new Float64Array(2);
-    const depth = projectToPixel(
-      this.camera,
-      this.camera.fovy(rect.width / rect.height),
-      rect.width / ratio,
-      rect.height / ratio,
-      position,
-      out,
-    );
+    const width = rect.width / ratio,
+      height = rect.height / ratio;
+    // An off-center or non-square lens projects through its record; the
+    // centered one as it always has, bit for bit.
+    const depth = this.camera.centered
+      ? projectToPixel(
+          this.camera,
+          this.camera.fovy(rect.width / rect.height),
+          width,
+          height,
+          position,
+          out,
+        )
+      : projectToPixel(
+          this.camera.record(width, height, this.world.root, 0),
+          position,
+          out,
+        );
     return depth >= this.camera.near && depth > 0 ? out : undefined;
   }
 

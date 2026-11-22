@@ -193,7 +193,10 @@ describe("View.pickPoint", () => {
     expect(pick.draw?.index).toBe(draw.index);
     expect(pick.draw?.generation).toBe(draw.generation);
     expect(pick.feature).toEqual({ featureId, name: "box" });
-    expect(pick.feature).toEqual(await feature);
+    // View.pick's result is the core pick's feature, with the record it used.
+    expect({ ...pick.feature, cameraRecord: pick.cameraRecord }).toEqual(
+      await feature,
+    );
     expect(pick.seconds).toBe(0); // no scene clock
     // On the default rig every placement is the identity: render space is
     // Earth-fixed, and the two positions agree bit for bit.

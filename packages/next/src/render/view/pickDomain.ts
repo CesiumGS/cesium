@@ -183,14 +183,15 @@ export function encodeDomainPick(
   const hx = PICK_SIZE / width;
   const hy = PICK_SIZE / height;
   const camera = engine.bodyCamera(view);
-  const tanY = Math.tan(camera.fovy(width / height) / 2);
-  const tanX = tanY * (width / height);
+  // The planes' rays leave from the principal point (`Camera.lens`); the
+  // window itself stays in the view's NDC, as the pass's clip space is.
+  const { tanX, tanY, shiftX, shiftY } = camera.lens(width / height);
   const planes = new Float32Array(20);
   windowPlanes(planes, camera, tanX, tanY, [
-    cx - hx,
-    cx + hx,
-    cy - hy,
-    cy + hy,
+    cx - hx - shiftX,
+    cx + hx - shiftX,
+    cy - hy - shiftY,
+    cy + hy - shiftY,
   ]);
   const { stops, through } = terrain;
   const block = frame.block.slice();

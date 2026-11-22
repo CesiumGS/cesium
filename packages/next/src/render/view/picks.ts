@@ -11,6 +11,7 @@ import {
   pickResult,
 } from "../../scene/pick.ts";
 import { CanvasTarget } from "../../scene/renderTarget.ts";
+import type { CameraRecord } from "../../scene/Camera.ts";
 import {
   type PendingDomain,
   encodeDomainPick,
@@ -56,6 +57,8 @@ export function whenMapped(buffer: GPUBuffer, then: () => void): void {
 /** @internal A pick the pass encoded, awaiting its readback. */
 export interface PendingPick {
   view: View;
+  /** The camera record the pick used (`PickResult.cameraRecord`). */
+  cameraRecord: CameraRecord;
   readback: GPUBuffer;
   request: View["pendingPicks"][number];
   /** What a `View.pickPoint` keeps of its tick. */
@@ -195,17 +198,31 @@ export function encodePick(
       usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
     });
   enc.copyBufferToBuffer(engine.raster.pickResult, 0, readback, 0, 16);
-  const tanY = Math.tan(view.camera.fovy(width / height) / 2);
-  const tanX = tanY * (width / height);
-  const ndcX = ((engine.raster.pickParamsData[0]! + 0.5) / width) * 2 - 1;
-  const ndcY = 1 - ((engine.raster.pickParamsData[1]! + 0.5) / height) * 2;
+  // The pixel's center, from the principal point (`Camera.lens`): with it
+  // centered, the plain NDC.
+  const { tanX, tanY, shiftX, shiftY } = view.camera.lens(width / height);
+  const ndcX =
+    ((engine.raster.pickParamsData[0]! + 0.5) / width) * 2 - 1 - shiftX;
+  const ndcY =
+    1 - ((engine.raster.pickParamsData[1]! + 0.5) / height) * 2 - shiftY;
+  const ratio =
+    view.target instanceof CanvasTarget ? view.target.pixelRatio : 1;
+  // The record the pick used: CSS pixels, the view's render root, the
+  // tick's seconds.
+  const cameraRecord = view.camera.record(
+    width / ratio,
+    height / ratio,
+    engine.cameras.root(view),
+    frame.seconds,
+  );
   engine.raster.picks.push({
     view,
+    cameraRecord,
     readback,
     request,
     tick:
       request.resolvePoint &&
-      pickTick(engine, view, frame, tanX, tanY, ndcX, ndcY),
+      pickTick(engine, view, frame, cameraRecord, tanX, tanY, ndcX, ndcY),
     camera:
       request.resolvePosition &&
       positionCamera(engine, view, tanX, tanY, ndcX, ndcY),
@@ -323,6 +340,7 @@ function pickTick(
   engine: PickEngine,
   view: View,
   frame: ViewFrame,
+  cameraRecord: CameraRecord,
   tanX: number,
   tanY: number,
   ndcX: number,
@@ -336,6 +354,7 @@ function pickTick(
     world: view.world,
     root: engine.cameras.root(view),
     seconds: frame.seconds,
+    cameraRecord,
     bodyAnchor: view.bodyAnchor,
     placements: view.pickPlacements(),
     camera: {
@@ -409,7 +428,10 @@ export function resolvePicks(engine: PickEngine, picks: PendingPick[]): void {
         request.resolvePosition(p);
         return;
       }
-      request.resolve!(pickResult(featureId, view.world.feature(featureId)));
+      const result = pickResult(featureId, view.world.feature(featureId));
+      request.resolve!(
+        result && { ...result, cameraRecord: pick.cameraRecord },
+      );
     };
     if (pick.domain) {
       // Both mapped before either is read, as the pass wrote them together.

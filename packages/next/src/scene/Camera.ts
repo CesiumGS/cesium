@@ -4,6 +4,7 @@ import type { Vec3 } from "../math/vec3.ts";
 import type { Mat4 } from "../math/mat4.ts";
 import { Ellipsoid } from "../math/ellipsoid.ts";
 import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
+import type { FrameKey } from "../camera/frameResolver.ts";
 
 /**
  * A perspective camera in the Earth-fixed frame (float64). Rendering is
@@ -11,7 +12,9 @@ import { eastNorthUpToFixedFrame } from "../math/transforms.ts";
  * by (origin - position) on the GPU.
  *
  * `fov` follows 1.x `PerspectiveFrustum` semantics: it is the field of view of
- * the larger viewport dimension.
+ * the larger viewport dimension. `setIntrinsics` sets it from a pinhole's
+ * intrinsics instead, with an off-center principal point and pixels that
+ * need not be square; `record` reports the camera as a `CameraRecord`.
  */
 export class Camera {
   /**
@@ -26,6 +29,13 @@ export class Camera {
   private fov_ = Math.PI / 3;
   private near_ = 0.1;
   private version_ = 0;
+  // The lens beyond `fov` (`setIntrinsics`): the principal point in
+  // normalized device coordinates (0, 0 at the view's center, y up), and
+  // fy / fx (1 for square pixels). At their defaults the projection is
+  // exactly the symmetric one of `fov`.
+  private shiftX_ = 0;
+  private shiftY_ = 0;
+  private pixelAspect_ = 1;
 
   /**
    * The field of view of the larger viewport dimension (radians). Setting
@@ -82,10 +92,155 @@ export class Camera {
     v3.copy(this.direction, other.direction);
     v3.copy(this.up, other.up);
     v3.copy(this.right, other.right);
+    return this.copyLens(other);
+  }
+
+  /**
+   * @internal Copies `other`'s lens (field of view, near plane, principal
+   * point and pixel aspect), not its pose.
+   */
+  copyLens(other: Camera): this {
     this.fov_ = other.fov_;
     this.near_ = other.near_;
+    this.shiftX_ = other.shiftX_;
+    this.shiftY_ = other.shiftY_;
+    this.pixelAspect_ = other.pixelAspect_;
     this.version++;
     return this;
+  }
+
+  /**
+   * Sets the lens from a pinhole's intrinsics (`CameraIntrinsics`): `fov`
+   * from `fy`, and the principal point and pixel aspect, which `fov` alone
+   * can't give. The view needn't be `width` × `height`: at another size the
+   * intrinsics scale with it (as an image resized), and at another aspect
+   * the field of view follows `fov`'s rule. Undefined goes back to a
+   * centered principal point and square pixels, keeping `fov`. Setting
+   * `fov` later keeps the principal point and the pixel aspect.
+   *
+   * The projection, the culling planes, `rayDirection`, `View.toPixel` and
+   * picks follow an off-center principal point. Until the renderer's other
+   * readers of the field of view follow it too (the sky, occlusion culling,
+   * light culling and the shadow cascades), they see the centered lens.
+   *
+   * `distortion` is a model's name and coefficients (`CameraDistortion`).
+   * Only `"none"` is built: the others are refused by name, so they can come
+   * later, as a post stage, without a change here. Rolling shutter is out of
+   * scope: a record is one pose for the whole image.
+   */
+  setIntrinsics(
+    intrinsics: CameraIntrinsics | undefined,
+    distortion?: CameraDistortion,
+  ): this {
+    if (distortion !== undefined) {
+      checkDistortion(distortion);
+    }
+    if (intrinsics === undefined) {
+      this.shiftX_ = 0;
+      this.shiftY_ = 0;
+      this.pixelAspect_ = 1;
+      this.version++;
+      return this;
+    }
+    const { width, height, fx, fy, cx, cy } = intrinsics;
+    for (const [name, value] of [
+      ["width", width],
+      ["height", height],
+      ["fx", fx],
+      ["fy", fy],
+    ] as const) {
+      if (!(value > 0) || !Number.isFinite(value)) {
+        throw new RangeError(
+          `setIntrinsics: ${name} must be a positive, finite number of pixels, not ${value}.`,
+        );
+      }
+    }
+    if (!Number.isFinite(cx) || !Number.isFinite(cy)) {
+      throw new RangeError(
+        `setIntrinsics: the principal point (${cx}, ${cy}) must be finite.`,
+      );
+    }
+    const aspect = width / height;
+    // The tangent of the half field of view, up, and the larger dimension's.
+    const tanY = height / (2 * fy);
+    this.fov_ = 2 * Math.atan(aspect <= 1 ? tanY : tanY * aspect);
+    this.shiftX_ = (2 * cx) / width - 1;
+    this.shiftY_ = 1 - (2 * cy) / height;
+    this.pixelAspect_ = fy / fx;
+    this.version++;
+    return this;
+  }
+
+  /**
+   * The camera's intrinsics for a view of `width` × `height` pixels: from
+   * `fov`, with the principal point and pixel aspect `setIntrinsics` set
+   * (by default centered, and square). Pixels are counted from the view's
+   * top-left corner, y down, so a centered principal point is at
+   * (width / 2, height / 2).
+   */
+  intrinsics(width: number, height: number): CameraIntrinsics {
+    const aspect = width / height;
+    const tanY = Math.tan(this.fovy(aspect) / 2);
+    const tanX = tanY * aspect * this.pixelAspect_;
+    return {
+      width,
+      height,
+      fx: width / (2 * tanX),
+      fy: height / (2 * tanY),
+      cx: ((this.shiftX_ + 1) / 2) * width,
+      cy: ((1 - this.shiftY_) / 2) * height,
+    };
+  }
+
+  /**
+   * A record of the camera now, for an image of `width` × `height` pixels
+   * (`CameraRecord`): its intrinsics at that size, its pose (copied) in
+   * `referenceFrame` at `seconds` on the scene clock, and its distortion.
+   * Picks report the one they used (`PickResult.cameraRecord`,
+   * `CorePick.cameraRecord`), in CSS pixels and the view's render root.
+   */
+  record(
+    width: number,
+    height: number,
+    referenceFrame: FrameKey,
+    seconds: number,
+  ): CameraRecord {
+    return {
+      ...this.intrinsics(width, height),
+      pose: {
+        position: Float64Array.from(this.position),
+        direction: Float64Array.from(this.direction),
+        up: Float64Array.from(this.up),
+        right: Float64Array.from(this.right),
+        referenceFrame,
+        seconds,
+      },
+      distortion: NO_DISTORTION,
+    };
+  }
+
+  /**
+   * @internal The lens is the symmetric one of `fov`: the principal point
+   * centered, the pixels square (`setIntrinsics`).
+   */
+  get centered(): boolean {
+    return this.shiftX_ === 0 && this.shiftY_ === 0 && this.pixelAspect_ === 1;
+  }
+
+  /**
+   * @internal What a view at `aspect` sees through: the tangents of the half
+   * fields of view across and up, and the principal point in normalized
+   * device coordinates. A ray through `(ndcX, ndcY)` is `direction +
+   * right · (ndcX − shiftX) · tanX + up · (ndcY − shiftY) · tanY`.
+   */
+  lens(aspect: number): CameraLens {
+    const tanY = Math.tan(this.fovy(aspect) / 2);
+    return {
+      tanX: tanY * aspect * this.pixelAspect_,
+      tanY,
+      shiftX: this.shiftX_,
+      shiftY: this.shiftY_,
+    };
   }
 
   /** Vertical field of view for an aspect ratio, as computed by 1.x. */
@@ -183,14 +338,24 @@ export class Camera {
     return m4.viewRotation(out, this.direction, this.up, this.right);
   }
 
-  /** Reverse-Z, infinite far plane, WebGPU clip space. */
+  /**
+   * Reverse-Z, infinite far plane, WebGPU clip space. With a centered
+   * principal point and square pixels (the default) it is exactly
+   * `mat4.perspectiveReverseZInfinite` of `fovy(aspect)`.
+   */
   projection(out: Mat4, aspect: number): Mat4 {
-    return m4.perspectiveReverseZInfinite(
-      out,
-      this.fovy(aspect),
-      aspect,
-      this.near,
-    );
+    m4.perspectiveReverseZInfinite(out, this.fovy(aspect), aspect, this.near);
+    if (this.pixelAspect_ !== 1) {
+      out[0] = out[0]! / this.pixelAspect_;
+    }
+    // The principal point's offset: x_ndc gains shiftX (w is the depth).
+    if (this.shiftX_ !== 0) {
+      out[8] = -this.shiftX_;
+    }
+    if (this.shiftY_ !== 0) {
+      out[9] = -this.shiftY_;
+    }
+    return out;
   }
 
   /**
@@ -205,17 +370,23 @@ export class Camera {
   ): T {
     const fovy = this.fovy(aspect);
     const t = Math.tan(fovy / 2) * widen;
-    const r = t * aspect;
+    const r = t * aspect * this.pixelAspect_;
+    // Each side's tangent: the principal point's offset moves the edges
+    // (with it centered, each is r or t exactly).
+    const left = (1 + this.shiftX_) * r,
+      right = (1 - this.shiftX_) * r,
+      bottom = (1 + this.shiftY_) * t,
+      top = (1 - this.shiftY_) * t;
     const d = this.direction,
       u = this.up,
       x = this.right;
     // Unnormalized normals first; side planes pass through the camera
     // (origin), so d = 0.
     for (let k = 0; k < 3; k++) {
-      out[k] = d[k]! * r + x[k]!;
-      out[4 + k] = d[k]! * r - x[k]!;
-      out[8 + k] = d[k]! * t + u[k]!;
-      out[12 + k] = d[k]! * t - u[k]!;
+      out[k] = d[k]! * left + x[k]!;
+      out[4 + k] = d[k]! * right - x[k]!;
+      out[8 + k] = d[k]! * bottom + u[k]!;
+      out[12 + k] = d[k]! * top - u[k]!;
       out[16 + k] = d[k]!;
     }
     out[3] = out[7] = out[11] = out[15] = 0;
@@ -236,11 +407,13 @@ export class Camera {
   /** World-space ray through a normalized viewport point (x, y in [-1, 1], y up). */
   rayDirection(ndcX: number, ndcY: number, aspect: number, out: Vec3): Vec3 {
     const t = Math.tan(this.fovy(aspect) / 2);
+    const x = ndcX - this.shiftX_,
+      y = ndcY - this.shiftY_;
     for (let i = 0; i < 3; i++) {
       out[i] =
         this.direction[i]! +
-        this.right[i]! * ndcX * t * aspect +
-        this.up[i]! * ndcY * t;
+        this.right[i]! * x * t * aspect * this.pixelAspect_ +
+        this.up[i]! * y * t;
     }
     return v3.normalize(out, out);
   }
@@ -255,11 +428,101 @@ export interface CameraPose {
 }
 
 /**
+ * A pinhole's intrinsics for an image of `width` × `height` pixels: the focal
+ * lengths `fx` and `fy` and the principal point (`cx`, `cy`), in pixels.
+ * Pixels are counted from the image's top-left corner, y down, so a centered
+ * principal point is at (width / 2, height / 2). OpenCV counts from the
+ * first pixel's center: add 0.5 to its `cx` and `cy`.
+ */
+export interface CameraIntrinsics {
+  readonly width: number;
+  readonly height: number;
+  readonly fx: number;
+  readonly fy: number;
+  readonly cx: number;
+  readonly cy: number;
+}
+
+/**
+ * A lens distortion model's name (`CameraDistortion`): `"none"`; OpenCV's
+ * pinhole model (`"opencvPinhole"`: k1, k2, p1, p2, k3, then k4 to k6 if
+ * rational), or OpenCV's fisheye model (`"opencvFisheye"`: k1 to k4). Only
+ * `"none"` is built: the others are refused by name.
+ */
+export type CameraDistortionModel = "none" | "opencvPinhole" | "opencvFisheye";
+
+/** A lens distortion: its model's name and coefficients, in the model's order. */
+export interface CameraDistortion {
+  readonly model: CameraDistortionModel;
+  readonly coefficients: readonly number[];
+}
+
+/** A camera record's pose (`CameraRecord.pose`): where, which way, in which reference frame, and when. */
+export interface CameraRecordPose extends CameraPose {
+  /** Meters, float64, in `referenceFrame`. */
+  readonly position: Float64Array;
+  readonly direction: Float64Array;
+  readonly up: Float64Array;
+  readonly right: Float64Array;
+  /** The reference frame the pose's numbers are in (for a pick, the view's render root). */
+  readonly referenceFrame: FrameKey;
+  /** The scene clock's seconds the pose is at (0 without a clock). */
+  readonly seconds: number;
+}
+
+/**
+ * Everything needed to project a point into an image, and back: the
+ * intrinsics, the pose (with its reference frame and time) and the lens
+ * distortion. Camera.record makes one; picks report the one they used.
+ * One pose covers the whole image: rolling shutter is out of scope.
+ */
+export interface CameraRecord extends CameraIntrinsics {
+  readonly pose: CameraRecordPose;
+  readonly distortion: CameraDistortion;
+}
+
+/** @internal What a view sees through (`Camera.lens`). */
+export interface CameraLens {
+  readonly tanX: number;
+  readonly tanY: number;
+  readonly shiftX: number;
+  readonly shiftY: number;
+}
+
+const NO_DISTORTION: CameraDistortion = Object.freeze({
+  model: "none",
+  coefficients: Object.freeze([]) as readonly number[],
+});
+
+/**
+ * @internal Refuses a distortion that isn't built, by its model's name (only
+ * `"none"` is), and a name that isn't a model.
+ */
+export function checkDistortion(distortion: CameraDistortion): void {
+  const model: string = distortion.model;
+  if (model === "none") {
+    return;
+  }
+  if (model === "opencvPinhole" || model === "opencvFisheye") {
+    throw new Error(
+      `The "${model}" distortion model is not built yet: only "none" is.`,
+    );
+  }
+  throw new Error(
+    `"${model}" is not a distortion model: "none", "opencvPinhole" or "opencvFisheye".`,
+  );
+}
+
+/**
  * Projects an Earth-fixed point for a camera pose with vertical field of view
  * `fovy` onto a view of `width` × `height` pixels: writes x and y (from the
  * top-left, y down) into `out` and returns the point's depth along the view
  * direction, in meters. A depth that is not positive means the point is not in
  * front of the camera, and `out` is then left as it was.
+ *
+ * With a `CameraRecord` instead, it projects through the record's pose and
+ * intrinsics (an off-center principal point included) onto its image; a
+ * distortion that isn't built is refused by name.
  */
 export function projectToPixel(
   pose: CameraPose,
@@ -268,7 +531,35 @@ export function projectToPixel(
   height: number,
   point: ArrayLike<number>,
   out: Float64Array,
+): number;
+export function projectToPixel(
+  record: CameraRecord,
+  point: ArrayLike<number>,
+  out: Float64Array,
+): number;
+export function projectToPixel(
+  ...args:
+    | [CameraPose, number, number, number, ArrayLike<number>, Float64Array]
+    | [CameraRecord, ArrayLike<number>, Float64Array]
 ): number {
+  if (args.length === 3) {
+    const [record, point, out] = args;
+    checkDistortion(record.distortion);
+    const { position: e, direction: d, up: u, right: r } = record.pose;
+    const x = point[0]! - e[0]!,
+      y = point[1]! - e[1]!,
+      z = point[2]! - e[2]!;
+    const depth = x * d[0]! + y * d[1]! + z * d[2]!;
+    if (!(depth > 0)) {
+      return depth;
+    }
+    out[0] =
+      record.cx + (record.fx * (x * r[0]! + y * r[1]! + z * r[2]!)) / depth;
+    out[1] =
+      record.cy - (record.fy * (x * u[0]! + y * u[1]! + z * u[2]!)) / depth;
+    return depth;
+  }
+  const [pose, fovy, width, height, point, out] = args;
   const e = pose.position,
     d = pose.direction,
     u = pose.up,

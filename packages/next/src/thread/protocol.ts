@@ -90,7 +90,9 @@ const TABLE: Record<string, EntryTable> = {
       AccuracyOptions AccuracyPart AerosolType AffinePlacement AnchorHandle
       Attribution BezierCurves BlendedCurvilinearMap Body BrepCapsOptions BrepCapsReport
       BrepForm BrepGeometry BrepGeometryOptions BrepMesh BrepProblem BrepUse
-      BudgetedOptions BulkOptions BulkProgress CameraExposure CameraPose
+      BudgetedOptions BulkOptions BulkProgress CameraDistortion
+      CameraDistortionModel CameraExposure CameraIntrinsics CameraPose
+      CameraRecord CameraRecordPose
       CapBias CapColor CapDrawOptions CapDraws CapFace CapHatch CapPlacement
       CapPlane CapRgba CapSchedulerOptions CapStyle CapStyleInput CapTick
       Cartographic CastOptions CastRay ChangeableCurvilinearMap Clamp ClampOptions
@@ -414,13 +416,17 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
       `,
       mutation: `
         copyFrom direction fov lookAt lookAtInFrame near orient position
-        right rotateAroundCenter up
+        right rotateAroundCenter setIntrinsics up
       `,
       event: `
         watch
       `,
       "sync-read": `
-        fovy frustumPlanes projection rayDirection viewRotation
+        fovy frustumPlanes intrinsics projection rayDirection record
+        viewRotation
+      `,
+      "cannot-cross": `
+        centered copyLens lens
       `,
     },
     CameraLayer: {

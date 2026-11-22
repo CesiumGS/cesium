@@ -31,6 +31,7 @@ import { EARTH, MOON } from "../src/scene/Body.ts";
 import type { Engine } from "../src/scene/Engine.ts";
 import { createBox } from "../src/scene/meshes.ts";
 import type { CorePick } from "../src/scene/pick.ts";
+import { Camera } from "../src/scene/Camera.ts";
 import { View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { World } from "../src/scene/World.ts";
@@ -565,6 +566,7 @@ describe("the hosted placement mode", () => {
       draw: site,
       feature: undefined,
       seconds: SECONDS,
+      cameraRecord: new Camera().record(64, 48, itrf, SECONDS),
       camera: {
         position: Float64Array.of(point[0]! + 1000, point[1]!, point[2]!),
         direction: Float64Array.of(-1, 0, 0),

@@ -247,7 +247,15 @@ export {
   type ViewLinkMode,
   type ViewLinkOptions,
 } from "./scene/ViewLink.ts";
-export { Camera, type CameraPose } from "./scene/Camera.ts";
+export {
+  Camera,
+  type CameraDistortion,
+  type CameraDistortionModel,
+  type CameraIntrinsics,
+  type CameraPose,
+  type CameraRecord,
+  type CameraRecordPose,
+} from "./scene/Camera.ts";
 export { OrbitController } from "./scene/OrbitController.ts";
 export {
   InspectController,

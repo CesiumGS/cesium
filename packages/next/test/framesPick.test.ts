@@ -24,6 +24,7 @@ import { routeForward } from "../src/camera/route.ts";
 import { curvilinearFrame } from "../src/frames/curvilinearFrame.ts";
 import { verticalExaggeration } from "../src/georeference/heightCurvilinearMaps.ts";
 import { pickIn } from "../src/frames/pickIn.ts";
+import { Camera } from "../src/scene/Camera.ts";
 import { View } from "../src/scene/View.ts";
 import { OffscreenTarget } from "../src/scene/renderTarget.ts";
 import type { World } from "../src/scene/World.ts";
@@ -127,6 +128,7 @@ function corePick(
     draw,
     feature: undefined,
     seconds: SECONDS,
+    cameraRecord: new Camera().record(64, 48, root, SECONDS),
     camera: {
       position: Float64Array.of(R + 1000, 0, 0),
       direction: Float64Array.of(-1, 0, 0),
@@ -473,6 +475,7 @@ describe("a pick on another body (plan 5c, Task 2)", () => {
       world,
       root: world.root,
       seconds: SECONDS,
+      cameraRecord: new Camera().record(64, 48, world.root, SECONDS),
       bodyAnchor: earth,
       placements: new Map([
         [earth, undefined],

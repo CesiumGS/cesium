@@ -10,7 +10,7 @@ import type { Route } from "../camera/route.ts";
 import type { GeometryAccuracy } from "../geometry/query.ts";
 import type { Body } from "./Body.ts";
 import { UNDERLAY_DEPTH } from "../render/layout.ts";
-import type { CameraPose } from "./Camera.ts";
+import type { CameraPose, CameraRecord } from "./Camera.ts";
 import { type PickResult, type View } from "./View.ts";
 import { inverseRotate } from "./viewAnchors.ts";
 import {
@@ -108,6 +108,12 @@ export interface CorePick {
   /** That tick's camera, in `anchor`'s coordinates. */
   readonly camera: PickCamera;
   /**
+   * The camera record the pick used: that tick's camera in the render root
+   * (`root`) at `seconds`, for an image the view's size in CSS pixels (as
+   * the pick's x and y).
+   */
+  readonly cameraRecord: CameraRecord;
+  /**
    * Where the hit is in the content's own domain, when the pick variant
    * resolved it (a mesh's triangle and the barycentrics, or a b-rep face and
    * its (u, v)); then `truePosition`, `drawnPosition` and `accuracy` are
@@ -164,6 +170,8 @@ export interface PickTick {
   };
   /** The view's camera, in render space. */
   readonly camera: CameraPose;
+  /** The camera record the pick used (`CorePick.cameraRecord`). */
+  readonly cameraRecord: CameraRecord;
   readonly near: number;
   readonly fovy: number;
   /** The view's size in CSS pixels. */
@@ -172,7 +180,10 @@ export interface PickTick {
   /** Tangents of the half fields of view, across and up. */
   readonly tanX: number;
   readonly tanY: number;
-  /** The pixel's center in normalized device coordinates. */
+  /**
+   * The pixel's center in normalized device coordinates, from the principal
+   * point (`Camera.lens`): the plain NDC while it is centered.
+   */
   readonly ndcX: number;
   readonly ndcY: number;
 }
@@ -295,6 +306,7 @@ export function corePick(
     ...(info?.item && { item: info.item }),
     seconds: tick.seconds,
     camera,
+    cameraRecord: tick.cameraRecord,
     ...(resolved && {
       domain: resolved.domain,
       truePosition: { position: resolved.position, frame: anchor ?? tick.root },

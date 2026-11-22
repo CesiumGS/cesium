@@ -202,6 +202,11 @@ export const API_ROWS: readonly ApiRow[] = [
     next: ["Camera"],
     supporting: [
       "CameraPose",
+      "CameraIntrinsics",
+      "CameraDistortion",
+      "CameraDistortionModel",
+      "CameraRecord",
+      "CameraRecordPose",
       "PickCamera",
       "CameraLayer",
       "Rig",

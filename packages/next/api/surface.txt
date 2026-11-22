@@ -30,9 +30,14 @@ entry	name	kind	tier
 .	BulkProgress	interface	-
 .	CESIUM_MOON_TERRAIN	const	-
 .	Camera	class	-
+.	CameraDistortion	interface	-
+.	CameraDistortionModel	type	-
 .	CameraExposure	type	-
+.	CameraIntrinsics	interface	-
 .	CameraLayer	class	-
 .	CameraPose	interface	-
+.	CameraRecord	interface	-
+.	CameraRecordPose	interface	-
 .	CanvasTarget	class	-
 .	CapBias	interface	-
 .	CapColor	type	-

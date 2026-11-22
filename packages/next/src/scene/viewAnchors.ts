@@ -313,8 +313,7 @@ export function anchorCamera(
   inverseRotate(m, camera.up, out.up, false);
   inverseRotate(m, camera.right, out.right, false);
   if (out !== camera) {
-    out.fov = camera.fov;
-    out.near = camera.near;
+    out.copyLens(camera);
   }
   out.version++;
   return out;

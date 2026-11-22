@@ -292,6 +292,12 @@ describe("pickDesign on View.pickPoint", () => {
         feature:
           o.feature === false ? undefined : { featureId: 7, name: undefined },
         seconds: 0,
+        cameraRecord: at.record(
+          rect.width,
+          rect.height,
+          { name: "render root" },
+          0,
+        ),
         camera: {
           position: eye,
           direction: Float64Array.from(at.direction),
