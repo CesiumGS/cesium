@@ -1,4 +1,4 @@
-import type { Viewer } from "@cesium/next/widgets";
+import type { Viewer } from "@cesium/next/ui";
 import { positionOf, type Place } from "./places.ts";
 
 /** A place with the true height of the ground there, as far as the terrain has loaded. */

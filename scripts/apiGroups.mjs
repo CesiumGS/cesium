@@ -26,7 +26,7 @@ export const ENTRIES = [
   {
     id: "widgets",
     title: "Widgets",
-    import: "@cesium/next/widgets",
+    import: "@cesium/next/ui",
     blurb: "The Viewer and the panels that attach to an engine.",
   },
   {
@@ -45,7 +45,7 @@ export const ENTRIES = [
   {
     id: "proj",
     title: "Projections",
-    import: "@cesium/next/proj",
+    import: "@cesium/next/crs",
     blurb:
       "PROJ, coordinate reference systems, and engineering frames with alignments.",
   },

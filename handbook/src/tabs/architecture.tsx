@@ -15,7 +15,7 @@ const PATHS: Record<string, string> = {
   core: "@cesium/next",
   time: "@cesium/next/time",
   frames: "@cesium/next/frames",
-  proj: "@cesium/next/proj",
+  proj: "@cesium/next/crs",
   measure: "@cesium/next/measure",
 };
 

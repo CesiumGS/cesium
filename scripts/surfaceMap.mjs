@@ -19,7 +19,7 @@ import ts from "typescript";
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 /** The package whose entry points the map lists. */
-const defaultRoot = resolve(repo, "packages", "next");
+const defaultRoot = resolve(repo, "packages", "cesium");
 const TIERS = ["stable", "experimental", "internal"];
 const HEADER = "entry\tname\tkind\ttier";
 
@@ -33,8 +33,11 @@ export const packageEntries = (root) => {
     const file =
       typeof target === "string"
         ? target
-        : (target.types ?? target.import ?? target.default);
-    if (typeof file === "string") {
+        : (target["@cesium/source"] ??
+          target.types ??
+          target.import ??
+          target.default);
+    if (typeof file === "string" && file.endsWith(".ts")) {
       entries[key === "." ? "." : key.slice(2)] = file;
     }
   }

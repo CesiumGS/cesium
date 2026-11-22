@@ -1,7 +1,45 @@
 {
   "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "rewriteRelativeImportExtensions": true,
+    "rootDir": "src",
+    "outDir": "dist/types",
+    "types": [
+      "@webgpu/types",
+      "vite/client"
+    ],
+    "lib": [
+      "ES2023",
+      "ESNext.Disposable",
+      "DOM",
+      "DOM.Iterable"
+    ]
+  },
   "include": [
-    "src",
-    "vite.lib.config.ts"
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../core"
+    },
+    {
+      "path": "../time"
+    },
+    {
+      "path": "../frames"
+    },
+    {
+      "path": "../crs"
+    },
+    {
+      "path": "../measure"
+    },
+    {
+      "path": "../ui"
+    }
   ]
 }

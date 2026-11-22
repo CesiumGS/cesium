@@ -1,15 +1,37 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": false,
     "declaration": true,
     "emitDeclarationOnly": true,
     "stripInternal": true,
     "rewriteRelativeImportExtensions": true,
-    "rootDir": "src",
+    "rootDir": "..",
     "outDir": "dist-lib/types",
-    "types": ["@webgpu/types", "vite/client"],
-    "lib": ["ES2023", "ESNext.Disposable", "DOM", "DOM.Iterable"]
+    "types": [
+      "@webgpu/types",
+      "vite/client"
+    ],
+    "lib": [
+      "ES2023",
+      "ESNext.Disposable",
+      "DOM",
+      "DOM.Iterable"
+    ]
   },
-  "include": ["src"]
+  "include": [
+    "src",
+    "../core/src",
+    "../core/src/**/*.json",
+    "../time/src",
+    "../time/src/**/*.json",
+    "../frames/src",
+    "../frames/src/**/*.json",
+    "../crs/src",
+    "../crs/src/**/*.json",
+    "../measure/src",
+    "../measure/src/**/*.json",
+    "../ui/src",
+    "../ui/src/**/*.json"
+  ]
 }

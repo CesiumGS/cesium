@@ -37,7 +37,7 @@ import {
   type SnapService,
 } from "../../packages/crs/src/engineering/snap.ts";
 import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
-import type { Viewer } from "@cesium/next/widgets";
+import type { Viewer } from "@cesium/next/ui";
 import type { Answers } from "./answers.ts";
 import type { ShownValues } from "./checks.ts";
 import { hitRefusal, type PagePick, type PickState } from "./cursor.ts";

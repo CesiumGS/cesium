@@ -15,7 +15,7 @@ import {
   type DesignPick,
 } from "../../packages/crs/src/engineering/pick.ts";
 import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
-import type { Viewer } from "@cesium/next/widgets";
+import type { Viewer } from "@cesium/next/ui";
 import {
   compassNeedles,
   convergenceShort,

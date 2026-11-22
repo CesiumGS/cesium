@@ -14,7 +14,7 @@ import { vec3 } from "../../packages/core/src/math/vec3.ts";
 import { holdBrowserGestures } from "../../packages/core/src/scene/touchGestures.ts";
 import { createFramesPickInterpreter } from "../../packages/frames/src/pickInterpreter.ts";
 import { createFramesResolver } from "../../packages/frames/src/resolver.ts";
-import type { Viewer } from "@cesium/next/widgets";
+import type { Viewer } from "@cesium/next/ui";
 import { snapToStep } from "./panel/knobText.ts";
 import type { ScenarioEvaluation } from "./scenarios/evaluate.ts";
 import { CLOTHOID_ROAD } from "./scenarios/sites.ts";

@@ -33,7 +33,7 @@ const ENTRIES: Readonly<Record<string, string>> = {
   "@cesium/next": "src/index",
   "@cesium/next/time": "src/time/index",
   "@cesium/next/frames": "src/frames/index",
-  "@cesium/next/proj": "src/proj/index",
+  "@cesium/next/crs": "src/proj/index",
   "@cesium/next/measure": "src/measure/index",
 };
 

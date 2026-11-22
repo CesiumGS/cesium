@@ -63,12 +63,19 @@ function libraryPackage(): Plugin {
       ) as {
         version: string;
         license: string;
-        exports: Record<string, string>;
+        exports: Record<string, string | Record<string, string>>;
       };
       const exports: Record<string, { types: string; import: string }> = {};
-      for (const [key, path] of Object.entries(source.exports)) {
+      for (const [key, target] of Object.entries(source.exports)) {
+        // Each entry's source file (its @cesium/source condition); its
+        // declarations are the umbrella's, under types/cesium (CS-835).
+        const path =
+          typeof target === "string" ? target : target["@cesium/source"];
+        if (!path?.endsWith(".ts")) {
+          continue;
+        }
         exports[key] = {
-          types: `./types/${path.replace(/^\.\/(src\/)?/, "").replace(/\.ts$/, ".d.ts")}`,
+          types: `./types/cesium/${path.replace(/^\.\//, "").replace(/\.ts$/, ".d.ts")}`,
           import: `./cesium-next${key === "." ? "" : `-${key.slice(2)}`}.mjs`,
         };
       }
@@ -110,12 +117,12 @@ export default defineConfig({
       // assets/, so a page loads only what its imports reach.
       input: {
         "cesium-next": "src/index.ts",
-        "cesium-next-time": "src/time/index.ts",
-        // Not `src/frames/index.ts` itself: see the file.
-        "cesium-next-frames": "scripts/libEntries/frames.ts",
-        "cesium-next-proj": "src/proj/index.ts",
-        "cesium-next-measure": "src/measure/index.ts",
-        "cesium-next-widgets": "widgets/index.ts",
+        "cesium-next-time": "src/time.ts",
+        // Not frames' index itself: see the file.
+        "cesium-next-frames": "../../scripts/libEntries/frames.ts",
+        "cesium-next-crs": "src/crs.ts",
+        "cesium-next-measure": "src/measure.ts",
+        "cesium-next-ui": "src/ui.ts",
       },
       // Keep the entries' exports (a library, not an app).
       preserveEntrySignatures: "strict",

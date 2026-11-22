@@ -5,7 +5,7 @@
 // each site is seen in.
 import type { Alignment } from "../../packages/crs/src/engineering/alignment.ts";
 import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
-import type { Viewer } from "@cesium/next/widgets";
+import type { Viewer } from "@cesium/next/ui";
 import type { AnswerSite, Answers } from "./answers.ts";
 import type { OpenerId } from "./measureOpeners.ts";
 import { enuAt, type SagSample } from "./overlays.ts";

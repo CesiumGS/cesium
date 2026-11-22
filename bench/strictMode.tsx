@@ -5,7 +5,7 @@
 // console. The runner's entry is `runStrictMode` (bench/run.mjs strictMode).
 import { StrictMode, useEffect, useRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { Viewer, type ViewerOptions } from "@cesium/next/widgets";
+import { Viewer, type ViewerOptions } from "@cesium/next/ui";
 import type { Harness } from "../lab/harness.ts";
 
 const STORE = "/frames-data/";

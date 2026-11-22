@@ -32,7 +32,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
 // The package whose library build (dist-lib) it checks.
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "packages", "next");
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "packages", "cesium");
 const args = process.argv.slice(2);
 const onlyAt = args.indexOf("--only");
 const only =
@@ -42,15 +42,17 @@ const entries = JSON.parse(
   readFileSync(resolve(root, "package.json"), "utf8"),
 ).exports;
 /**
- * An entry point's declarations: `./src/x/index.ts` -> `types/x/index.d.ts`,
- * and the widgets' `./widgets/index.ts` -> `types/widgets/index.d.ts`.
+ * An entry point's declarations: its source file (the @cesium/source
+ * condition), `./src/crs.ts` -> `types/cesium/src/crs.d.ts` (CS-835).
  */
 const declarationsOf = (path) =>
-  resolve(
-    typesDir,
-    path.replace(/^\.\/(src\/)?/, "").replace(/\.ts$/, ".d.ts"),
-  );
-const entryPoints = Object.values(entries).map(declarationsOf);
+  resolve(typesDir, "cesium", path.replace(/^\.\//, "").replace(/\.ts$/, ".d.ts"));
+const entryPoints = Object.values(entries)
+  .map((target) =>
+    typeof target === "string" ? target : target["@cesium/source"],
+  )
+  .filter((path) => path?.endsWith(".ts"))
+  .map(declarationsOf);
 const walked =
   args.length > 0 ? args.map((path) => resolve(root, path)) : entryPoints;
 const reported = (file) =>
@@ -212,7 +214,7 @@ if (dangling.size > 0) {
  */
 const CONSUMER = `import { Emitter } from "@cesium/next";
 import { Clock } from "@cesium/next/time";
-import { Viewer, type ViewerOptions } from "@cesium/next/widgets";
+import { Viewer, type ViewerOptions } from "@cesium/next/ui";
 
 const options: ViewerOptions = { clock: new Clock({ mode: "paused" }) };
 // @ts-expect-error a number is not a Clock

@@ -8,7 +8,7 @@
 // is open), so the view is removed on `hide`, which `dispose` calls: main.ts
 // defers it on the example's scope, before the viewer goes.
 import type { View } from "../../packages/core/src/scene/View.ts";
-import type { Viewer } from "@cesium/next/widgets";
+import type { Viewer } from "@cesium/next/ui";
 import {
   insetBox,
   insetCamera,

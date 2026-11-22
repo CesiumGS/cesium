@@ -10,7 +10,8 @@
     "vite.config.ts",
     "basisTranscoderEsm.ts",
     "packages/core/src/io/vendor.d.ts",
-    "packages/core/src/io/basisTranscoder.d.ts"
+    "packages/core/src/io/basisTranscoder.d.ts",
+    "packages/cesium/vite.lib.config.ts"
   ],
   "references": [
     {
@@ -30,6 +31,9 @@
     },
     {
       "path": "packages/ui"
+    },
+    {
+      "path": "packages/cesium"
     }
   ]
 }

@@ -12,15 +12,40 @@
     "node": ">=24"
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./time": "./src/time.ts",
-    "./frames": "./src/frames.ts",
-    "./proj": "./src/crs.ts",
-    "./measure": "./src/measure.ts",
-    "./widgets": "./src/ui.ts"
+    ".": {
+      "@cesium/source": "./src/index.ts",
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./time": {
+      "@cesium/source": "./src/time.ts",
+      "types": "./dist/types/time.d.ts",
+      "default": "./dist/time.js"
+    },
+    "./frames": {
+      "@cesium/source": "./src/frames.ts",
+      "types": "./dist/types/frames.d.ts",
+      "default": "./dist/frames.js"
+    },
+    "./crs": {
+      "@cesium/source": "./src/crs.ts",
+      "types": "./dist/types/crs.d.ts",
+      "default": "./dist/crs.js"
+    },
+    "./measure": {
+      "@cesium/source": "./src/measure.ts",
+      "types": "./dist/types/measure.d.ts",
+      "default": "./dist/measure.js"
+    },
+    "./ui": {
+      "@cesium/source": "./src/ui.ts",
+      "types": "./dist/types/ui.d.ts",
+      "default": "./dist/ui.js"
+    },
+    "./package.json": "./package.json"
   },
   "scripts": {
-    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && tsc -p tsconfig.lib.widgets.json && node ../../scripts/checkDeclarations.mjs --only engineering,measure,widgets dist-lib/types/proj/index.d.ts dist-lib/types/measure/index.d.ts dist-lib/types/widgets/index.d.ts"
+    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && node ../../scripts/libraryTypes.mjs dist-lib/types && node ../../scripts/checkDeclarations.mjs --only crs/src/engineering,measure/src,ui/src dist-lib/types/cesium/src/crs.d.ts dist-lib/types/cesium/src/measure.d.ts dist-lib/types/cesium/src/ui.d.ts"
   },
   "dependencies": {
     "@cesium/core": "2.0.0-poc.0",
@@ -28,11 +53,6 @@
     "@cesium/frames": "2.0.0-poc.0",
     "@cesium/measure": "2.0.0-poc.0",
     "@cesium/time": "2.0.0-poc.0",
-    "@cesium/ui": "2.0.0-poc.0",
-    "@emnapi/runtime": "1.8.1",
-    "draco3d": "1.5.7",
-    "geographiclib-geodesic": "2.2.0",
-    "ktx-parse": "^2.0.0",
-    "meshoptimizer": "^1.2.0"
+    "@cesium/ui": "2.0.0-poc.0"
   }
 }

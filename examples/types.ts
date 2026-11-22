@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Tileset3D } from "@cesium/next";
-import type { GlobeKind, Viewer } from "@cesium/next/widgets";
+import type { GlobeKind, Viewer } from "@cesium/next/ui";
 
 /**
  * Examples (docs/design/examples-and-the-gallery.md): what users and stakeholders see, one per

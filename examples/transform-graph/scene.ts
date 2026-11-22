@@ -1,6 +1,6 @@
 import type { AnchorHandle, CorePick, View } from "@cesium/next";
 import type { Frame, FrameCatalog } from "@cesium/next/frames";
-import type { Viewer } from "@cesium/next/widgets";
+import type { Viewer } from "@cesium/next/ui";
 import type { GraphPanel, GraphSpec } from "./graphPanel.ts";
 import type { Queries } from "./queries.ts";
 

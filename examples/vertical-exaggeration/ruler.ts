@@ -1,5 +1,5 @@
 import { EARTH, type DrawHandle, type MeshHandle } from "@cesium/next";
-import type { Viewer } from "@cesium/next/widgets";
+import type { Viewer } from "@cesium/next/ui";
 
 /** Segments along the ruler: the map bends a straight line, so it is drawn in pieces. */
 const SEGMENTS = 64;

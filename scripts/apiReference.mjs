@@ -42,7 +42,7 @@ import {
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 /** The package whose entry points the reference reads. */
-const defaultRoot = resolve(repo, "packages", "next");
+const defaultRoot = resolve(repo, "packages", "cesium");
 const FORMAT = ts.TypeFormatFlags.NoTruncation;
 const NOT_PUBLIC = ts.ModifierFlags.Private | ts.ModifierFlags.Protected;
 // Tags that become fields of their own, or that the tier already says.

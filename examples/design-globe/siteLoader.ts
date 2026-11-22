@@ -18,7 +18,7 @@ import {
   type ProjApi,
 } from "../../packages/crs/src/engineering/proj.ts";
 import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
-import type { Viewer } from "@cesium/next/widgets";
+import type { Viewer } from "@cesium/next/ui";
 import { loadAnswers, type Answers } from "./answers.ts";
 import {
   GRID_MODELS,

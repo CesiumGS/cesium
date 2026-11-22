@@ -13,7 +13,7 @@ import {
   type Measurement,
 } from "../../packages/measure/src/measure.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
-import type { Viewer } from "@cesium/next/widgets";
+import type { Viewer } from "@cesium/next/ui";
 import type { LoadEvent } from "./page.ts";
 
 /** A `measure` that ran: its result, or why it failed. */

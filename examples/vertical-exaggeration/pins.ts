@@ -6,7 +6,7 @@ import {
   type MeshHandle,
   type TransformHandle,
 } from "@cesium/next";
-import type { Viewer } from "@cesium/next/widgets";
+import type { Viewer } from "@cesium/next/ui";
 import type { Site } from "./sites.ts";
 
 /** Pixels a pin stands tall. */

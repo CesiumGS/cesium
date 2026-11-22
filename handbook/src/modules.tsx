@@ -65,7 +65,7 @@ const MODULES: Record<string, () => ModuleWords> = {
   proj: () => ({
     title: "Proj",
     optional: true,
-    path: "@cesium/next/proj",
+    path: "@cesium/next/crs",
     forWhat:
       "PROJ for any coordinate operation the core's built-in reprojections don't cover (datum grids, the EPSG catalog), plus snapping and alignments with stations.",
     loads: <>With the page, if you import it. {entrySize("proj")}.</>,
