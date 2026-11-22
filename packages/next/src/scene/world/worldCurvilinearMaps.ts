@@ -1267,11 +1267,7 @@ export class WorldCurvilinearMaps {
     this.#track();
     for (const [index, d] of this.#draws) {
       const anchor = this.#anchors.get(d.slot);
-      if (
-        anchor &&
-        d.requested !== this.#stampOf(d, anchor) &&
-        !this.routes.awaitingIr(d.slot)
-      ) {
+      if (anchor && d.requested !== this.#stampOf(d, anchor)) {
         this.#request(index, d, anchor, report);
       }
     }
@@ -1379,11 +1375,17 @@ export class WorldCurvilinearMaps {
    * Whether the anchor's compiled route draws the draw: a mesh placed per
    * vertex, with no terms of its own, that no exact term serves (terrain's
    * `h·n̂`), and not a patch draw (its dice kernel reads the lattices), a point
-   * set or a billboard.
+   * set or a billboard. With `assume`, as if the route were compiled: a draw
+   * that would be routed once Cesium IR has loaded waits for it (held, not fitted
+   * and then routed); one that is never routed (an exact term, a fit) goes on.
    */
-  #routable(d: DrawCurvilinearMap, anchor: AnchorCurvilinearMap): boolean {
+  #routable(
+    d: DrawCurvilinearMap,
+    anchor: AnchorCurvilinearMap,
+    assume = false,
+  ): boolean {
     if (
-      !anchor.routed ||
+      !(anchor.routed || assume) ||
       d.kind !== "mesh" ||
       effectiveAt(d.kind, d.choice) !== "vertex" ||
       ownTerms(d.user).length > 0
@@ -1896,6 +1898,7 @@ export class WorldCurvilinearMaps {
     const stamp = this.#stampOf(d, anchor);
     const matrix = drawMatrix(this.world, handle, new Float64Array(16))!;
     d.matrix.set(matrix);
+    const asked = d.requested;
     d.requested = stamp;
     if (d.instances) {
       this.#countAsk(d, stamp, true);
@@ -1924,6 +1927,15 @@ export class WorldCurvilinearMaps {
       this.cache.forget(d.key);
       this.#waiting.delete(index);
       this.#adoptTerm(index, d, exact, undefined, stamp, report);
+      return;
+    }
+    if (
+      !anchor.routed &&
+      this.routes.awaitingIr(d.slot) &&
+      this.#routable(d, anchor, true)
+    ) {
+      // The route that will draw it waits for Cesium IR: no fit meanwhile, the draw stays held, and it is asked for again next tick.
+      d.requested = asked;
       return;
     }
     if (anchor.routed && this.#routable(d, anchor)) {

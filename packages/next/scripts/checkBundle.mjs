@@ -194,6 +194,28 @@ try {
       `checkBundle: the Slang compiler is in ${slangLazy.map((c) => `${c.fileName} (${kb(c.code)} KB)`).join(", ")}, loaded on demand; not in the main chunk or its static imports of an app that styles 3D Tiles`,
     );
   }
+  // Cesium IR (src/ir) and the transform passes built on it load when the first
+  // curvilinear route or function map needs them (CS-794): a Viewer page has them
+  // in a chunk of their own, not in what loads with the page.
+  const irIn = (chunks) =>
+    chunks.filter((c) =>
+      Object.keys(c.modules).some((id) => /[\\/]src[\\/]ir[\\/]/.test(id)),
+    );
+  const irEager = irIn(eager);
+  const irLazy = irIn(lazy);
+  if (irEager.length > 0) {
+    found.push(
+      `Cesium IR (src/ir) in ${irEager.map((c) => c.fileName).join(", ")}, in what a Viewer page loads with the page`,
+    );
+  } else if (irLazy.length === 0) {
+    found.push(
+      "no Cesium IR in any chunk of the Viewer build: this check can no longer tell where it is",
+    );
+  } else {
+    console.log(
+      `checkBundle: Cesium IR is in ${irLazy.map((c) => `${c.fileName} (${kb(c.code)} KB)`).join(", ")}, loaded on demand; not in the main chunk or its static imports of a Viewer page`,
+    );
+  }
   // A third build: a page that imports a synthetic sky pack that isn't
   // cleared must fail with the guard's message (scripts/vitePluginSkyPack.ts),
   // and the same page without it must build.

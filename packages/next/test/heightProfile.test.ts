@@ -49,6 +49,7 @@ import { drawnTile } from "../src/streaming/tileCurvilinearMap.ts";
 import type { Tile } from "../src/streaming/Tile.ts";
 import type { GltfAsset } from "../src/io/gltfTypes.ts";
 import { fakeEngine } from "./fakeGpu.ts";
+import { loadIr } from "../src/transform/lazyIr.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { gridTile } from "./terrainRayFixtures.ts";
 
@@ -143,6 +144,8 @@ const worlds: World[] = [];
 
 beforeAll(async () => {
   engine = await fakeEngine();
+  // The first compiled route loads Cesium IR (CS-794); a plain tile here expects its route in one step.
+  await loadIr();
 });
 
 afterEach(() => {
