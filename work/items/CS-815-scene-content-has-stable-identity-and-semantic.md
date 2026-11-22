@@ -2,7 +2,7 @@
 id: CS-815
 title: Scene content has stable identity and semantic labels that don't depend on load order
 kind: work
-state: in-progress
+state: done
 created: 2026-11-21
 project: CS-437
 needs: [CS-832]

@@ -1,6 +1,6 @@
 # Semantic metadata and picking (design, 2026-11-21)
 
-**What this holds:** The design for CS-832. It covers how semantic metadata reaches the engine, how labels are keyed by taxonomy, and how they bind to CS-815's stable IDs. It says how picks, ID images and ray hits return them, and what "what did I pick?" means in Gaussian splats, point clouds and labeled or learned fields. It leaves room for per-feature embeddings and semantic search (CS-817). The owner answered CS-452 on 2026-11-21: design it now, with CS-815. Nothing here is built.
+**What this holds:** The design for CS-832. It covers how semantic metadata reaches the engine, how labels are keyed by taxonomy, and how they bind to CS-815's stable IDs. It says how picks, ID images and ray hits return them, and what "what did I pick?" means in Gaussian splats, point clouds and labeled or learned fields. It leaves room for per-feature embeddings and semantic search (CS-817). The owner answered CS-452 on 2026-11-21: design it now, with CS-815. CS-815 built the identity and label parts on 2026-11-22 (`packages/core/src/scene/identity.ts`): stable IDs, labels by taxonomy, `identify` and `setLabels`, and the IDs on picks and ray hits. The ID images (CS-813), fields and splats are not built.
 
 **What it replaces.** The stub of 2026-11-08 ("For a later brainstorm: semantic metadata and picking"). Its question is answered below. The owner's 2026-11-08 framing stands: splats and point clouds have no surfaces, so a pick there may come from a learned or labeled field, not from a feature ID on a mesh.
 
