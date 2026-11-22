@@ -2,11 +2,10 @@
 id: CS-680
 title: Triage the open items that fit no release
 kind: work
-state: in-progress
+state: planned
 created: 2026-11-17
 project: CS-18
 needs: [CS-686]
-claimed_by: orch-11-CS-680
 ---
 
 The owner, 2026-11-17: "i suspect a bunch of items in the work tree already are actually proposals that need to be moved to this shape, so take a look at that, too." A count that day: of 496 open items, 361 are needed by a release (7 of them still proposed, which blocks committed work) and 135 by none: 65 proposed, mostly "later" copies of design-document lists, and 70 planned, of which 48 were created by the plan migration on 2026-11-13, committed by migration rather than by the owner. hitld has no "later" state; the owner chose to keep these as proposals for review (CS-686).
