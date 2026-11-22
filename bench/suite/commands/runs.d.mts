@@ -20,4 +20,5 @@ export function pinnedRuns(results: string): Set<string>;
 export function listRuns(
   results: string,
   opts?: Record<string, string | boolean | undefined>,
+  warn?: (line: string) => void,
 ): RunRow[];

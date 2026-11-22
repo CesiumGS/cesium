@@ -4,6 +4,7 @@ import {
   chmodSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -264,22 +265,39 @@ describe("dyno show", () => {
     expect(out).toContain("CS-396");
     expect(out).toContain("pinned    no");
     const { body } = await json("show", B);
-    expect(body.run).toMatchObject({
-      id: B,
-      kind: "bench",
-      scenes: ["tiles"],
-      pinned: false,
-    });
-    expect(body.scenes).toEqual([
-      {
-        scene: "tiles",
-        scenario: "cold-orbit",
-        config: "2.0",
-        warnings: 0,
-        metrics: ["cpuMs"],
+    expect(body).toEqual({
+      api_version: 1,
+      command: "show",
+      ok: true,
+      run: {
+        id: B,
+        date: "2026-11-15T12:30:00.000Z",
+        purpose: "dev",
+        commit: "2222222abc",
+        branch: "hitld/x",
+        baseline: "1.146.0",
+        candidate: "2.0",
+        item: "CS-396",
+        validity: { valid: 2, warning: 0, invalid: 0 },
+        tags: ["alpha", "sweep"],
+        kind: "bench",
+        scenes: ["tiles"],
+        note: null,
+        pinned: false,
       },
-    ]);
-    expect(body.values_included).toBe(false);
+      verdict: null,
+      scenes: [
+        {
+          scene: "tiles",
+          scenario: "cold-orbit",
+          config: "2.0",
+          warnings: 0,
+          metrics: ["cpuMs"],
+        },
+      ],
+      values_included: false,
+      report: join(results, `${B}.html`),
+    });
     expect(JSON.stringify(body)).not.toContain("4.2");
     expect(JSON.stringify((await json("show", B, "--values")).body)).toContain(
       "4.2",
@@ -299,7 +317,14 @@ describe("dyno show", () => {
 describe("dyno pin", () => {
   it("pins, lists the run as pinned, and unpins", async () => {
     const pinned = await json("pin", A);
-    expect(pinned.body).toMatchObject({ id: A, pinned: true, changed: true });
+    expect(pinned.body).toEqual({
+      api_version: 1,
+      command: "pin",
+      ok: true,
+      id: A,
+      pinned: true,
+      changed: true,
+    });
     expect((await json("show", A)).body.run.pinned).toBe(true);
     expect(
       (await json("runs")).body.runs.find((r: Json) => r.id === A).pinned,
@@ -324,6 +349,17 @@ describe("dyno pin", () => {
     expect(code).toBe(2);
     expect(err).toContain("2026-01-01T00-00-00-000Z-nope");
     expect((await dyno("pin", "../etc/passwd")).code).toBe(2);
+    expect(await json("pin", "2026-01-01T00-00-00-000Z-nope")).toEqual({
+      code: 2,
+      body: {
+        api_version: 1,
+        command: "pin",
+        ok: false,
+        error: "usage",
+        message: expect.stringContaining("2026-01-01T00-00-00-000Z-nope"),
+        run: "2026-01-01T00-00-00-000Z-nope",
+      },
+    });
   });
 
   it("a pinned run survives retention", async () => {
@@ -342,6 +378,87 @@ describe("dyno pin", () => {
     expect(
       readFileSync(join(results, `${A}.summary.json`), "utf8"),
     ).not.toContain("pinned");
+  });
+});
+
+describe("a corrupt pins.json", () => {
+  const pinsFile = () => join(results, "pins.json");
+  const corrupt = '{"version": 1, "pins": {'; // cut off mid-write
+
+  it("makes pin refuse and leaves the file as it was, byte for byte", async () => {
+    writeFileSync(pinsFile(), corrupt);
+    for (const argv of [
+      ["pin", B],
+      ["pin", A, "--unpin"],
+    ]) {
+      const { code, err } = await dyno(...argv);
+      expect(code).toBe(1);
+      expect(err).toContain("pins.json");
+      expect(err).toContain("fix it or remove it");
+    }
+    const { code, body } = await json("pin", B);
+    expect(code).toBe(1);
+    expect(body).toMatchObject({ ok: false, error: "problem" });
+    expect(readFileSync(pinsFile(), "utf8")).toBe(corrupt);
+    // No temporary file was left beside it either.
+    expect(readdirSync(results).filter((f) => f.endsWith(".tmp"))).toEqual([]);
+  });
+
+  it("refuses a file that parses but isn't a pins file", async () => {
+    writeFileSync(pinsFile(), "[]");
+    expect((await dyno("pin", B)).code).toBe(1);
+    expect(readFileSync(pinsFile(), "utf8")).toBe("[]");
+  });
+
+  it("makes pinnedRuns throw, so retention can't prune pinned runs", () => {
+    writeFileSync(pinsFile(), corrupt);
+    expect(() => pinnedRuns(results)).toThrow(/pins\.json/);
+  });
+
+  it("still lists runs, with a warning on stderr", async () => {
+    writeFileSync(pinsFile(), corrupt);
+    const { code, out, err } = await dyno("runs");
+    expect(code).toBe(0);
+    expect(out).toContain(C);
+    expect(err).toContain("pins.json");
+    expect(err).toContain("warning");
+    const shown = await dyno("show", B);
+    expect(shown.code).toBe(0);
+    expect(shown.err).toContain("warning");
+    expect(readFileSync(pinsFile(), "utf8")).toBe(corrupt);
+  });
+
+  it("a missing file is still no pins, and no warning", async () => {
+    expect([...pinnedRuns(results)]).toEqual([]);
+    const { code, err } = await dyno("runs");
+    expect(code).toBe(0);
+    expect(err).toBe("");
+  });
+});
+
+describe("--since and --until", () => {
+  it("read an ISO time without a zone as UTC", async () => {
+    // B ran at 12:30 UTC. In any machine zone, these cut at exactly 12:30 UTC.
+    expect(
+      ids((await json("runs", "--since", "2026-11-15T12:30:00")).body),
+    ).toEqual([C, B]);
+    expect(
+      ids((await json("runs", "--since", "2026-11-15T12:30:01")).body),
+    ).toEqual([C]);
+    expect(
+      ids((await json("runs", "--until", "2026-11-15T12:30:00")).body),
+    ).toEqual([B, A, OLD]);
+    expect(
+      ids((await json("runs", "--until", "2026-11-15T12:29:59")).body),
+    ).toEqual([A, OLD]);
+  });
+
+  it("refuse an empty value with exit 2, naming the flag", async () => {
+    for (const flag of ["--since", "--until"]) {
+      const { code, err } = await dyno("runs", flag, "");
+      expect(code).toBe(2);
+      expect(err).toContain(flag);
+    }
   });
 });
 

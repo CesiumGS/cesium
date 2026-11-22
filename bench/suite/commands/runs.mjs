@@ -11,7 +11,7 @@
 // summary is derived (`dyno suite resummarize` rewrites it), a pin is the
 // person's choice. `pinnedRuns` returns the set the store's clean-up reads
 // (studies.mjs, planPrune), so retention keeps a pinned run.
-import { readFileSync, renameSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, renameSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseRunId } from "../identity.mjs";
 import { kindOf, resultsDirectory } from "../studyVerdict.mjs";
@@ -20,24 +20,58 @@ import { identity, showResult, summariesIn } from "./result.mjs";
 
 const PINS_FILE = "pins.json";
 
-const readJson = (file) => {
-  try {
-    return JSON.parse(readFileSync(file, "utf8"));
-  } catch {
-    return undefined;
-  }
-};
 
 // ----------------------------------------------------------------- the pins
 
-/** The pins: Map run id → when it was pinned (ISO). A missing file is no pins. */
+/**
+ * The pins: Map run id → when it was pinned (ISO). A missing file is no pins.
+ * A file that exists but can't be read or parsed throws: reading it as "no
+ * pins" would let the next `pin` overwrite every pin, and let the clean-up
+ * prune pinned runs.
+ */
 export function readPins(results) {
-  const file = readJson(join(results, PINS_FILE));
+  const path = join(results, PINS_FILE);
   const out = new Map();
-  for (const [id, pin] of Object.entries(file?.pins ?? {})) {
+  if (!existsSync(path)) {
+    return out;
+  }
+  let file;
+  try {
+    file = JSON.parse(readFileSync(path, "utf8"));
+  } catch (error) {
+    throw new DynoError(
+      "problem",
+      `${path} can't be read (${error.message}): fix it or remove it`,
+      { file: path },
+    );
+  }
+  if (file === null || typeof file !== "object" || Array.isArray(file)) {
+    throw new DynoError(
+      "problem",
+      `${path} isn't a pins file: fix it or remove it`,
+      { file: path },
+    );
+  }
+  for (const [id, pin] of Object.entries(file.pins ?? {})) {
     out.set(id, pin?.pinned ?? null);
   }
   return out;
+}
+
+/**
+ * The pins for a listing. A corrupt file doesn't hide the run list: it warns
+ * (through `warn`) and lists the runs as unpinned.
+ */
+function readPinsForListing(results, warn) {
+  try {
+    return readPins(results);
+  } catch (error) {
+    if (!(error instanceof DynoError)) {
+      throw error;
+    }
+    warn?.(`warning: ${error.message}; runs list as not pinned`);
+    return new Map();
+  }
 }
 
 /** The ids of the pinned runs, for the clean-up (planPrune's `pinned`). */
@@ -81,12 +115,22 @@ export function runRow({ id, summary }, pins) {
   };
 }
 
+// A date is the whole UTC day; an ISO time without a zone is UTC too (a bare
+// Date.parse would read it in the machine's own zone).
+const ZONELESS = /^\d{4}-\d\d-\d\dT[\d:.]+$/;
 const startOf = (text) =>
-  /^\d{4}-\d\d-\d\d$/.test(text) ? `${text}T00:00:00.000Z` : text;
+  /^\d{4}-\d\d-\d\d$/.test(text)
+    ? `${text}T00:00:00.000Z`
+    : ZONELESS.test(text)
+      ? `${text}Z`
+      : text;
 const endOf = (text) =>
-  /^\d{4}-\d\d-\d\d$/.test(text) ? `${text}T23:59:59.999Z` : text;
+  /^\d{4}-\d\d-\d\d$/.test(text) ? `${text}T23:59:59.999Z` : startOf(text);
 
 function checkDate(name, text) {
+  if (typeof text !== "string" || text.trim() === "") {
+    throw new DynoError("usage", `--${name}: needs a date such as 2026-11-21`);
+  }
   if (Number.isNaN(Date.parse(startOf(text)))) {
     throw new DynoError(
       "usage",
@@ -96,7 +140,7 @@ function checkDate(name, text) {
 }
 
 /** The rows matching the filters, newest first. */
-export function listRuns(results, opts = {}) {
+export function listRuns(results, opts = {}, warn) {
   for (const name of ["since", "until"]) {
     if (opts[name] !== undefined) {
       checkDate(name, opts[name]);
@@ -109,9 +153,9 @@ export function listRuns(results, opts = {}) {
       `--kind ${opts.kind}: one of ${kinds.join(", ")}`,
     );
   }
-  const since = opts.since ? Date.parse(startOf(opts.since)) : undefined;
-  const until = opts.until ? Date.parse(endOf(opts.until)) : undefined;
-  const pins = readPins(results);
+  const since = opts.since !== undefined ? Date.parse(startOf(opts.since)) : undefined;
+  const until = opts.until !== undefined ? Date.parse(endOf(opts.until)) : undefined;
+  const pins = readPinsForListing(results, warn);
   return summariesIn(results)
     .filter((entry) => entry.summary)
     .map((entry) => runRow(entry, pins))
@@ -196,8 +240,8 @@ export function showLines(row, summary) {
 // ----------------------------------------------------------------- commands
 
 /** `runs`: the store's runs, from their summaries. */
-export function runs({ opts, env }) {
-  const rows = listRuns(resultsDirectory(env), opts);
+export function runs({ opts, env, warn }) {
+  const rows = listRuns(resultsDirectory(env), opts, warn);
   const limit = opts.limit === undefined ? undefined : Number(opts.limit);
   if (limit !== undefined && !(Number.isInteger(limit) && limit > 0)) {
     throw new DynoError("usage", `--limit ${opts.limit}: a whole number above 0`);
@@ -211,13 +255,15 @@ export function runs({ opts, env }) {
 }
 
 /** `show <id>`: one run's identity, verdict and cells. */
-export function show({ args, opts, env }) {
+export function show({ args, opts, env, warn }) {
   const results = resultsDirectory(env);
   const id = args[0];
-  // showResult refuses an unknown id, naming it.
+  // An unknown id is a usage error (exit 2), as for `pin`: the argument is
+  // wrong. (`result show` keeps its own code for the same case.)
+  requireRun(results, id);
   const shown = showResult({ id, values: Boolean(opts.values), env });
   const entry = summariesIn(results).find((e) => e.id === id);
-  const row = runRow(entry, readPins(results));
+  const row = runRow(entry, readPinsForListing(results, warn));
   return {
     ...shown,
     run: { ...shown.run, kind: row.kind, scenes: row.scenes, note: row.note, pinned: row.pinned },
@@ -225,13 +271,18 @@ export function show({ args, opts, env }) {
   };
 }
 
+function requireRun(results, id) {
+  if (!/^[\w.@+-]+$/.test(id) || !summariesIn(results).some((e) => e.id === id)) {
+    throw new DynoError("usage", `no run ${id} in the results store (dyno runs lists them)`, { run: id });
+  }
+}
+
 /** `pin <id>` and `pin <id> --unpin`. */
 export function pin({ args, opts, env }) {
   const results = resultsDirectory(env);
   const id = args[0];
-  if (!/^[\w.@+-]+$/.test(id) || !summariesIn(results).some((e) => e.id === id)) {
-    throw new DynoError("usage", `no run ${id} in the results store (dyno runs lists them)`, { run: id });
-  }
+  requireRun(results, id);
+  // A corrupt pins file throws here, before anything is written.
   const pins = readPins(results);
   const was = pins.has(id);
   if (opts.unpin) {
@@ -240,7 +291,16 @@ export function pin({ args, opts, env }) {
     pins.set(id, new Date().toISOString());
   }
   if (opts.unpin ? was : !was) {
-    writePins(results, pins);
+    // Read again just before the write, so a pin made since the first read
+    // isn't lost. Two `pin` calls at the same moment can still race (a lock
+    // isn't worth it for a one-person tool).
+    const latest = readPins(results);
+    if (opts.unpin) {
+      latest.delete(id);
+    } else {
+      latest.set(id, pins.get(id));
+    }
+    writePins(results, latest);
   }
   const pinned = pins.has(id);
   return {

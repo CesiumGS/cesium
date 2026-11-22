@@ -381,6 +381,7 @@ export async function dispatch(argv, io) {
     );
     ctx.env = env;
     ctx.say = (line) => (json ? stderr(line) : stdout(line));
+    ctx.warn = (line) => stderr(line);
     result = (await node.run(ctx)) ?? {};
   } catch (error) {
     return failure(error);
