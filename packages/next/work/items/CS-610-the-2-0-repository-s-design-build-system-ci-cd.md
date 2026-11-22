@@ -2,9 +2,10 @@
 id: CS-610
 title: "The 2.0 repository's design: build system, CI/CD and release pipeline"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-17
 project: CS-609
+claimed_by: orch-11-CS-610
 ---
 
 ## Done when
