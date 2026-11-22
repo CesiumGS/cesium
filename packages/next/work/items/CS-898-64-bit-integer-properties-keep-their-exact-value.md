@@ -2,9 +2,10 @@
 id: CS-898
 title: 64-bit integer properties keep their exact value
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-21
 project: CS-191
+claimed_by: orch-11-CS-898
 ---
 
 > **Committed by the owner for alpha.1 (2026-11-21).** Source: research on CAD and BIM content (chief of staff, 2026-11-21), checked against the code. Why now: it's a live correctness bug, and CAD and BIM content often names its elements with 64-bit IDs. It also blocks CS-338's per-element overrides for that content. Size: small. Filed 2026-11-21.
