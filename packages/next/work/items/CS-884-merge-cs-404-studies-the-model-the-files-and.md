@@ -2,10 +2,14 @@
 id: CS-884
 title: "Merge CS-404, studies: the model, the files and the commands"
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-389
 decider: owner
+answer: "A. Merge after the fix round: The executor limits ?branch= to local branches with tests; the orchestrator replays the branch onto main's tip, reruns the type checks, the Dyno tests and the work check, fast-forwards main, regenerates the views and logs the merge. CS-405, CS-402 and CS-736 can then build on it."
+answered_at: 2026-11-22T06:40:39.901Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
