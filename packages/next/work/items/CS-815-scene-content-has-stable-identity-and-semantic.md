@@ -15,6 +15,7 @@ Source: the owner's review of 2.0's seams, 2026-11-21, after a survey of physica
 
 ## Done when
 
+- Stable IDs are 64-bit, and the default taxonomy is `class`. Alpha.1 reserves the type names for learned fields and embeddings, and refuses them by name until they're built. (The owner, 2026-11-21, answering CS-832's design questions.)
 - It uses CS-832's design for how labels and metadata bind to IDs. (Added 2026-11-21.)
 - Every pickable thing has a stable ID: derived from content (source, content key, feature-ID set, feature ID), or supplied by the host on a scene item. It never depends on load order. A test loads the same content in two orders and gets the same IDs.
 - Labels are keyed by taxonomy, mirroring USD's `SemanticsLabelsAPI` instance names. They're read from glTF `EXT_mesh_features` and `EXT_structural_metadata` and from 3D Tiles metadata, and set by the host on scene items.

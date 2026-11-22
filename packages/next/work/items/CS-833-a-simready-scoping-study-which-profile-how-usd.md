@@ -14,6 +14,7 @@ Source: the owner's answer, through the chief of staff, after a read of the plan
 
 ## Done when
 
+- It checks whether SimReady's sample assets still use Isaac's older SemanticsAPI rather than `SemanticsLabelsAPI`, and says how the engine reads each one. (Added 2026-11-21, from CS-832's report.)
 - **Profile.** It recommends a SimReady profile (for example "Minimal Placeable Visual") and lists that profile's rules from NVIDIA's SimReady Foundation, each with its source and the date it was read.
 - **How USD comes in.** It compares the three paths on size, start time, coverage and upkeep:
   - OpenUSD built for WebAssembly;

@@ -2,10 +2,14 @@
 id: CS-853
 title: Merge CS-832, the design for semantic metadata and picking
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-191
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), regenerates the views and logs the merge. The main session files Q1 to Q4 and the new items it suggests."
+answered_at: 2026-11-22T05:42:58.212Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

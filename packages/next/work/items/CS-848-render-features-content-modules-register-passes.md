@@ -15,6 +15,7 @@ From CS-552's design and plan (`docs/design/content-source-seam.md`; `docs/super
 
 ## Done when
 
+- A render feature that draws Gaussian splats answers picks the way CS-832 settles it: the pick names the splat where accumulated opacity first reaches 0.5, and it reports coverage and the top k splats. This is part of the public `RenderFeature` contract. (The owner, 2026-11-21, answering CS-832's design questions.)
 - A `RenderFeature` registers its passes in named slots (`opaque`, `translucent`, `ground`, `overlay`, and the post slots), each declaring what it reads and writes. Pass order still comes from one function, `buildViewFrame`.
 - Each feature declares whether it writes IDs, gives a ray adapter and casts shadows. A test fails on a feature that declares none of the three, so no default is silent.
 - A sample feature on the fake device draws custom rows in the `translucent` slot, depth-tested against a mesh.

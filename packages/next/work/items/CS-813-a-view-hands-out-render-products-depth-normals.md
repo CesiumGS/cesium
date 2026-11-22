@@ -19,6 +19,7 @@ Source: the owner's review of 2.0's seams, 2026-11-21, after a survey of physica
 
 ## Done when
 
+- ID images carry 64-bit stable IDs as two u32 words per pixel, with no lookup table. (The owner, 2026-11-21, answering CS-832's design questions.)
 - A view or offscreen target asks for named outputs. Each readback is a typed array, paired with the frame's camera record (CS-814) and its scene time (CS-816).
   - `color`
   - `depth`: linear, in meters, along the optical axis
