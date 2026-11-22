@@ -1,10 +1,11 @@
 ---
 id: CS-911
-title: The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite
+title: "The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-22
 project: CS-609
+claimed_by: orch-11-CS-911
 ---
 
 > **Committed by the owner**, through their approval of the move's fix-ups on 2026-11-22: "the rest of the work to get 2.0 onto a clean tree that's part of that move". Source: CS-611's review and its executor's follow-ups (CS-910). Merges under the same bar as CS-611.
