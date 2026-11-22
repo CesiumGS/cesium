@@ -2,11 +2,15 @@
 id: CS-802
 title: Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in?
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-191
-decider: owner
 needs: [CS-833]
+decider: owner
+answer: "B: the visual features of Robotics-Prop 5.0.0 (FET001, FET006, FET009, FET011), read-only, as CS-833 refines option A, plus UsdPhysics read into CS-672's physics seam. Seams reserved in alpha.1; the loader on the 0.x line. The reader isn't chosen yet: a three-way evaluation (the subset reader, LightUSD, full OpenUSD in WebAssembly) comes first"
+answered_at: 2026-11-22T08:03:50.589Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

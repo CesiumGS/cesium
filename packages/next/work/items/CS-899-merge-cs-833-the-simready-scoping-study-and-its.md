@@ -2,10 +2,14 @@
 id: CS-899
 title: Merge CS-833, the SimReady scoping study and its USD subset reader spike
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-437
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), regenerates the views and logs the merge. The main session puts CS-802, CS-843 and the two questions to the owner and files the follow-ups."
+answered_at: 2026-11-22T08:03:52.757Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
