@@ -84,7 +84,6 @@ describe("the spike's programs in the core", () => {
     const again = b.program(
       Object.fromEntries(p.outputs.map((o) => [o.name, o.id])),
     );
-    // The spike's programs carry the spike's version; the builder's carry ours.
-    expect(print(again)).toBe(print({ ...p, version: again.version }));
+    expect(print(again)).toBe(print(p));
   });
 });

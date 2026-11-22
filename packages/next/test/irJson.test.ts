@@ -31,7 +31,7 @@ const FIXTURES = join(import.meta.dirname, "fixtures/irJson");
 const load = (path: string): unknown =>
   JSON.parse(readFileSync(join(FIXTURES, path), "utf8"));
 const schema = JSON.parse(
-  readFileSync(join(SRC, "cesium-ir-1.0.schema.json"), "utf8"),
+  readFileSync(join(SRC, "cesium-ir-0.1.schema.json"), "utf8"),
 ) as Record<string, unknown>;
 
 /** Values as bit patterns, so -0 and NaN compare exactly. */
@@ -51,7 +51,11 @@ const refusal = (text: string, options?: Parameters<typeof readProgram>[1]) => {
   }
   throw new Error("the file was accepted");
 };
-const refusalOf = (doc: unknown) => refusal(JSON.stringify(doc));
+const refusalOf = (doc: unknown, options?: Parameters<typeof readProgram>[1]) =>
+  refusal(JSON.stringify(doc), options);
+// The rules that apply from 1.0 (a minor stays readable) have no build that
+// reads as 1.0 yet, so those tests read as it through an option.
+const AS_1_0 = { readsVersion: "cesium-ir/1.0" };
 
 const programs = corpus();
 
@@ -102,7 +106,7 @@ describe("every program in the test suite round-trips through JSON", () => {
   it("pins the written form of the spike's style program", () => {
     const style = programs.find((p) => p.name === "spike style")!.program;
     const doc = programToDocument(style);
-    expect(doc.format).toBe("cesium-ir/1.0");
+    expect(doc.format).toBe("cesium-ir/0.1");
     expect(doc.vocabulary).toBe("KHR_interactivity");
     expect(doc.extensions).toEqual([]);
     // Leaves carry no operands; everything else names earlier equations.
@@ -116,8 +120,8 @@ describe("every program in the test suite round-trips through JSON", () => {
 
   it("writes only programs of its own version", () => {
     const p = programs[0]!.program;
-    expect(() => programToDocument({ ...p, version: "cesium-ir/0.1" })).toThrow(
-      "can't write a program of version 'cesium-ir/0.1'; this writer writes 'cesium-ir/1.0'",
+    expect(() => programToDocument({ ...p, version: "cesium-ir/1.0" })).toThrow(
+      "can't write a program of version 'cesium-ir/1.0'; this writer writes 'cesium-ir/0.1'",
     );
   });
 });
@@ -126,7 +130,7 @@ describe("malformed files are refused with the right message", () => {
   const fixtures: [string, string][] = [
     [
       "unknown-major",
-      "cesium-ir: unknown major version 2 (format 'cesium-ir/2.0'); this reader reads major version 1",
+      "cesium-ir: unknown version 'cesium-ir/2.0'; this reader reads 'cesium-ir/0.1' only (0.x is experimental: any 0.x release may change the format)",
     ],
     [
       "unlisted-extension",
@@ -356,7 +360,7 @@ describe("the schema validates every fixture", () => {
     // a type mismatch and an unlisted extension are the reader's to refuse.
     expect(
       validateSchema(schema, load("malformed/unknown-major.json")),
-    ).toEqual(['$/format: expected "cesium-ir/1.0"']);
+    ).toEqual(['$/format: expected "cesium-ir/0.1"']);
     for (const name of [
       "unlisted-extension",
       "forward-reference",
@@ -439,10 +443,11 @@ describe("the schema validates every fixture", () => {
   });
 });
 
-describe("versioning: a minor stays readable, a major is refused", () => {
+describe("versioning from 1.0: a minor stays readable, a major is refused", () => {
   it("reads a file of a newer minor by what it knows, ignoring added optional fields", () => {
     const p = readProgram(
       readFileSync(join(FIXTURES, "newer-minor.json"), "utf8"),
+      AS_1_0,
     );
     expect(p.version).toBe(IR_VERSION);
     expect(evaluate(p, { x: 4 })).toEqual({ y: 8 });
@@ -454,7 +459,9 @@ describe("versioning: a minor stays readable, a major is refused", () => {
     same.format = "cesium-ir/1.0";
     delete same.title;
     delete (same.equations as Record<string, unknown>[])[2]!.hint;
-    expect(shapeKey(readProgram(JSON.stringify(same)))).toBe(shapeKey(p));
+    expect(shapeKey(readProgram(JSON.stringify(same), AS_1_0))).toBe(
+      shapeKey(p),
+    );
   });
 
   it("refuses, in a newer minor, an op it doesn't know, naming it", () => {
@@ -462,15 +469,15 @@ describe("versioning: a minor stays readable, a major is refused", () => {
       equations: Record<string, unknown>[];
     };
     doc.equations[2] = { op: "math/newOpOf17", args: [0, 1], type: "float" };
-    expect(refusalOf(doc).message).toBe(
+    expect(refusalOf(doc, AS_1_0).message).toBe(
       "cesium-ir: equation 2 (math/newOpOf17): unknown op: it isn't in KHR_interactivity and doesn't start with 'cesium/'",
     );
     doc.equations[2] = { op: "cesium/newOpOf17", args: [0, 1], type: "float" };
-    expect(refusalOf(doc).message).toBe(
+    expect(refusalOf(doc, AS_1_0).message).toBe(
       "cesium-ir: equation 2 (cesium/newOpOf17): extension op isn't listed in 'extensions'",
     );
     const listed = { ...doc, extensions: ["cesium/newOpOf17"] };
-    expect(refusalOf(listed).message).toBe(
+    expect(refusalOf(listed, AS_1_0).message).toBe(
       "cesium-ir: extension 'cesium/newOpOf17' isn't known to this reader (it reads cesium-ir/1.0)",
     );
   });
@@ -481,14 +488,14 @@ describe("versioning: a minor stays readable, a major is refused", () => {
       vocabulary: string;
     };
     doc.equations[2]!.type = "float3";
-    expect(refusalOf(doc).message).toBe(
+    expect(refusalOf(doc, AS_1_0).message).toBe(
       "cesium-ir: equation 2 (math/mul): declared float3, but its operands give float",
     );
     const other = structuredClone(load("newer-minor.json")) as {
       vocabulary: string;
     };
     other.vocabulary = "Other";
-    expect(refusalOf(other).message).toBe(
+    expect(refusalOf(other, AS_1_0).message).toBe(
       "cesium-ir: vocabulary 'Other' isn't 'KHR_interactivity'",
     );
   });
@@ -500,10 +507,49 @@ describe("versioning: a minor stays readable, a major is refused", () => {
       };
       doc.format = format;
       const major = format.split("/")[1]!.split(".")[0];
-      expect(refusalOf(doc).message).toBe(
+      expect(refusalOf(doc, AS_1_0).message).toBe(
         `cesium-ir: unknown major version ${major} (format '${format}'); this reader reads major version 1`,
       );
     }
+  });
+});
+
+describe("experimental: a 0.x reader reads its own version only", () => {
+  const own = () =>
+    structuredClone(load("specials.json")) as { format: string };
+
+  it("is at cesium-ir/0.1, and the writer writes it", () => {
+    expect(IR_VERSION).toBe("cesium-ir/0.1");
+    for (const { name, program } of programs.slice(0, 20)) {
+      expect(programToDocument(program).format, name).toBe("cesium-ir/0.1");
+    }
+  });
+
+  it("reads a file of its own version", () => {
+    expect(() => readProgram(JSON.stringify(own()))).not.toThrow();
+  });
+
+  it("refuses every other version, older or newer, naming both", () => {
+    for (const format of [
+      "cesium-ir/0.0",
+      "cesium-ir/0.2",
+      "cesium-ir/0.10",
+      "cesium-ir/1.0",
+      "cesium-ir/1.7",
+      "cesium-ir/2.0",
+    ]) {
+      const doc = own();
+      doc.format = format;
+      expect(refusalOf(doc).message).toBe(
+        `cesium-ir: unknown version '${format}'; this reader reads 'cesium-ir/0.1' only (0.x is experimental: any 0.x release may change the format)`,
+      );
+    }
+  });
+
+  it("refuses a newer 0.x file even when it adds nothing the reader lacks", () => {
+    const doc = own();
+    doc.format = "cesium-ir/0.2";
+    expect(refusalOf(doc).reason).toMatch(/^unknown version 'cesium-ir\/0\.2'/);
   });
 });
 
@@ -560,7 +606,7 @@ describe("extensions: listed, known and typed", () => {
       programToDocument(program(), { extensions: table }),
     );
     expect(refusal(text).message).toBe(
-      "cesium-ir: extension 'cesium/clampTo' isn't known to this reader (it reads cesium-ir/1.0)",
+      "cesium-ir: extension 'cesium/clampTo' isn't known to this reader (it reads cesium-ir/0.1)",
     );
   });
 

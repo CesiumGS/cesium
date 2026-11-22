@@ -3,7 +3,8 @@
 // outputs. Types are glTF KHR_interactivity's (matrices come later).
 
 // The program structure's version, and the JSON form's (`json.ts`): `cesium-ir/<major>.<minor>`.
-export const IR_VERSION = "cesium-ir/1.0";
+// Experimental at 0.x: any 0.x release may change the format (`FORMAT.md`).
+export const IR_VERSION = "cesium-ir/0.1";
 export const VOCABULARY = "KHR_interactivity";
 
 export type Type = "bool" | "int" | "float" | "float2" | "float3" | "float4";

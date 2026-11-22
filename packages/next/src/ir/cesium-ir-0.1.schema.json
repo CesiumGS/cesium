@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "cesium-ir-1.0.schema.json",
-  "title": "Cesium IR, cesium-ir/1.0",
-  "description": "The shape of a cesium-ir/1.0 file. The checking reader also refuses what a schema can't say: an operand that doesn't refer to an earlier equation, a declared type that differs from the one the operands give, an extension op that isn't listed, an input index out of range, and a repeated name or slot. See FORMAT.md.",
+  "$id": "cesium-ir-0.1.schema.json",
+  "title": "Cesium IR, cesium-ir/0.1",
+  "description": "The shape of a cesium-ir/0.1 file. The checking reader also refuses what a schema can't say: an operand that doesn't refer to an earlier equation, a declared type that differs from the one the operands give, an extension op that isn't listed, an input index out of range, and a repeated name or slot. See FORMAT.md.",
   "type": "object",
   "required": [
     "format",
@@ -15,7 +15,7 @@
   "additionalProperties": false,
   "properties": {
     "format": {
-      "const": "cesium-ir/1.0"
+      "const": "cesium-ir/0.1"
     },
     "vocabulary": {
       "const": "KHR_interactivity"

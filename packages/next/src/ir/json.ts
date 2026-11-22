@@ -2,7 +2,7 @@
 // interchange. The writer turns a program into a plain document; the checking
 // reader turns a document (or its text) back into a program, or refuses it
 // with an error that names the equation and the reason. The rules are in
-// `FORMAT.md`; the schema (`cesium-ir-1.0.schema.json`) checks the shape.
+// `FORMAT.md`; the schema (`cesium-ir-0.1.schema.json`) checks the shape.
 //
 // The reader never trusts the file. It checks that the version's major is
 // its own, that every extension op is listed (and known), that every operand
@@ -26,9 +26,11 @@ import {
 } from "./types.ts";
 
 const FORMAT_NAME = "cesium-ir";
-const [FORMAT_MAJOR, FORMAT_MINOR] = IR_VERSION.slice(FORMAT_NAME.length + 1)
-  .split(".")
-  .map(Number) as [number, number];
+const splitVersion = (v: string): [number, number] =>
+  v
+    .slice(FORMAT_NAME.length + 1)
+    .split(".")
+    .map(Number) as [number, number];
 
 const TYPES: readonly Type[] = [
   "bool",
@@ -88,6 +90,11 @@ export class IrFormatError extends Error {
 export interface FormatOptions {
   /** The extension ops to write and read. Default: what this build knows. */
   readonly extensions?: ExtensionTable;
+  /**
+   * The version the reader reads as. Default: `IR_VERSION`. It exists to test
+   * the rules that apply from 1.0, which no build reads as yet.
+   */
+  readonly readsVersion?: string;
 }
 
 const encodeNumber = (x: number): JsonNumber =>
@@ -227,6 +234,15 @@ export function programFromDocument(
     );
   }
   const [major, minor] = [Number(m[1]), Number(m[2])];
+  const readsVersion = options.readsVersion ?? IR_VERSION;
+  const [FORMAT_MAJOR, FORMAT_MINOR] = splitVersion(readsVersion);
+  // Experimental: any 0.x release may change the format, so a reader reads
+  // exactly its own 0.x version, and refuses every other, older or newer.
+  if (FORMAT_MAJOR === 0 && format !== readsVersion) {
+    throw new IrFormatError(
+      `unknown version '${format}'; this reader reads '${readsVersion}' only (0.x is experimental: any 0.x release may change the format)`,
+    );
+  }
   if (major !== FORMAT_MAJOR) {
     throw new IrFormatError(
       `unknown major version ${major} (format '${format}'); this reader reads major version ${FORMAT_MAJOR}`,
@@ -274,7 +290,7 @@ export function programFromDocument(
     }
     if (!table[name]) {
       throw new IrFormatError(
-        `extension '${name}' isn't known to this reader (it reads ${IR_VERSION})`,
+        `extension '${name}' isn't known to this reader (it reads ${readsVersion})`,
       );
     }
     listed.add(name);

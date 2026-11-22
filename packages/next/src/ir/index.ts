@@ -6,7 +6,7 @@ export * from "./types.ts";
 export { OPS, applyValue, typeOf, typeOfValue } from "./ops.ts";
 export { Builder, shapeKey } from "./builder.ts";
 export { evaluate, print } from "./evaluate.ts";
-// The versioned JSON form (cesium-ir/1.0): writer, checking reader, extensions.
+// The versioned JSON form (cesium-ir/0.1, experimental): writer, checking reader, extensions.
 export {
   EXTENSIONS,
   type ExtensionOp,

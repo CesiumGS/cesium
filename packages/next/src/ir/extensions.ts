@@ -3,8 +3,8 @@
 // rule the checking reader re-derives from. An op's meaning never changes
 // after release: a change is a new op under a new name.
 //
-// 1.0 has no extension ops. CS-56 adds the first ones (`cesium/search`,
-// `cesium/tableGet`) here and in the registry file, in a minor version.
+// 0.1 has no extension ops. CS-56 adds the first ones (`cesium/search`,
+// `cesium/tableGet`) here and in the registry file, in a later version.
 
 import type { Type } from "./types.ts";
 
@@ -18,5 +18,5 @@ export interface ExtensionOp {
 /** The extension ops by name, each starting `cesium/`. */
 export type ExtensionTable = Readonly<Record<string, ExtensionOp>>;
 
-/** What this build knows. Empty in 1.0. */
+/** What this build knows. Empty in 0.1. */
 export const EXTENSIONS: ExtensionTable = {};

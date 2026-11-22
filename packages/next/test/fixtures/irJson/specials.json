@@ -1,5 +1,5 @@
 {
-  "format": "cesium-ir/1.0",
+  "format": "cesium-ir/0.1",
   "vocabulary": "KHR_interactivity",
   "extensions": [],
   "inputs": [
