@@ -10,7 +10,9 @@ import {
   lstatSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
+  readlinkSync,
   realpathSync,
   rmSync,
   symlinkSync,
@@ -25,6 +27,7 @@ import {
   linkSnapshotPackages,
   snapshot,
   thirdPartyDifferences,
+  workspacePackages,
 } from "../bench/snapshot.mjs";
 import { checkoutFrozen } from "../bench/suite/frozen.mjs";
 // @ts-expect-error -- a plain .mjs module, no declarations
@@ -77,7 +80,77 @@ const lock = (version: string, extra: Record<string, unknown> = {}) =>
 const core = (planted: string) =>
   `export const planted = ${JSON.stringify(planted)};\n`;
 
+/**
+ * Everything under `root`, without following links: each path with its
+ * kind and a file's text or a link's target. `git status` can't see an
+ * ignored folder such as node_modules; this can.
+ */
+const listing = (root: string): string[] => {
+  if (!existsSync(root)) {
+    return [];
+  }
+  const out: string[] = [];
+  const walk = (folder: string, prefix: string) => {
+    for (const entry of readdirSync(folder, { withFileTypes: true }).sort(
+      (a, b) => a.name.localeCompare(b.name),
+    )) {
+      const path = join(folder, entry.name);
+      const name = `${prefix}${entry.name}`;
+      if (entry.isSymbolicLink()) {
+        out.push(`${name} -> ${readlinkSync(path)}`);
+      } else if (entry.isDirectory()) {
+        out.push(`${name}/`);
+        walk(path, `${name}/`);
+      } else {
+        out.push(`${name}: ${readFileSync(path, "utf8")}`);
+      }
+    }
+  };
+  walk(root, "");
+  return out;
+};
+
+/**
+ * A worktree-like folder (a lockfile at `version`, a third-party package
+ * nested under packages/core) and a snapshot at <it>/.bench/x whose
+ * lockfile agrees, both made fresh.
+ */
+const pair = (version = "1.0.0") => {
+  const repo = realpathSync(mkdtempSync(join(tmpdir(), "bench-pair-")));
+  const put = (path: string, text: string) => {
+    mkdirSync(dirname(join(repo, path)), { recursive: true });
+    writeFileSync(join(repo, path), text);
+  };
+  const manifest = `${JSON.stringify({ name: "fixture", workspaces: ["packages/*"] })}\n`;
+  put("package.json", manifest);
+  put("package-lock.json", lock(version));
+  put(
+    "packages/core/node_modules/right-pad/package.json",
+    `${JSON.stringify({ name: "right-pad", version: "2.0.0" })}\n`,
+  );
+  put(".bench/x/package.json", manifest);
+  put(".bench/x/package-lock.json", lock(version));
+  put(
+    ".bench/x/packages/core/package.json",
+    `${JSON.stringify({ name: "@cesium/core" })}\n`,
+  );
+  return { repo, at: join(repo, ".bench", "x") };
+};
+
+/** A stand-in for `npm ci` in `at`: clears the root node_modules only, then reifies packages/core's own. */
+const fakeCi = (at: string, calls: string[]) => () => {
+  calls.push(at);
+  rmSync(join(at, "node_modules"), { recursive: true, force: true });
+  const nested = join(at, "packages", "core", "node_modules");
+  mkdirSync(join(nested, "right-pad"), { recursive: true });
+  writeFileSync(
+    join(nested, "right-pad", "package.json"),
+    `${JSON.stringify({ name: "right-pad", version: "3.0.0" })}\n`,
+  );
+};
+
 let base: string;
+let worktreeModules: string[];
 
 beforeAll(() => {
   dir = realpathSync(mkdtempSync(join(tmpdir(), "bench-snapshot-")));
@@ -125,6 +198,7 @@ beforeAll(() => {
     "node_modules/left-pad/package.json",
     `${JSON.stringify({ name: "left-pad", version: "1.0.0" })}\n`,
   );
+  worktreeModules = listing(join(dir, "node_modules"));
 });
 
 afterAll(() => {
@@ -178,6 +252,9 @@ describe("a --commit snapshot", () => {
   it("writes nothing outside the snapshot", () => {
     snapshot(base, dir);
     expect(git("status", "--porcelain", "--ignored=no")).toBe("");
+    // Nor in the worktree's node_modules, which git status can't see.
+    expect(worktreeModules.length).toBeGreaterThan(0);
+    expect(listing(join(dir, "node_modules"))).toEqual(worktreeModules);
     // The worktree's own link is untouched.
     expect(realpathSync(join(dir, "node_modules", "@cesium", "core"))).toBe(
       join(dir, "packages", "core"),
@@ -316,6 +393,107 @@ describe("third-party dependencies", () => {
     expect(existsSync(join(at, "node_modules", ".bench-deps.json"))).toBe(
       false,
     );
+  });
+
+  it("switching from links to an install removes the links first, and writes nothing into the worktree's nested folder", () => {
+    const { repo, at } = pair();
+    const nested = join(repo, "packages", "core", "node_modules");
+    const noInstall = () => {
+      throw new Error("no install expected");
+    };
+    expect(linkSnapshotPackages(at, repo, { install: noInstall }).mode).toBe(
+      "links",
+    );
+    const own = join(at, "packages", "core", "node_modules");
+    expect(lstatSync(own).isSymbolicLink()).toBe(true);
+    expect(
+      JSON.parse(
+        readFileSync(join(at, "node_modules", ".bench-deps.json"), "utf8"),
+      ).links,
+    ).toContain(join("packages", "core", "node_modules"));
+    const before = listing(nested);
+    // The snapshot's lockfile moves on (the frozen tree's does).
+    writeFileSync(join(at, "package-lock.json"), lock("1.1.0"));
+    const calls: string[] = [];
+    const result = linkSnapshotPackages(at, repo, {
+      install: fakeCi(at, calls),
+    });
+    expect(result.mode).toBe("installed");
+    expect(calls).toEqual([at]);
+    expect(listing(nested)).toEqual(before);
+    // The install's folder is the snapshot's own.
+    expect(lstatSync(own).isDirectory()).toBe(true);
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it("refuses to install while a node_modules under the snapshot links out of it", () => {
+    const { repo, at } = pair();
+    // A link this module didn't make (someone's, by hand).
+    mkdirSync(join(at, "tools", "x"), { recursive: true });
+    symlinkSync(
+      join(repo, "packages", "core", "node_modules"),
+      join(at, "tools", "x", "node_modules"),
+      "junction",
+    );
+    writeFileSync(join(at, "package-lock.json"), lock("1.1.0"));
+    const calls: string[] = [];
+    expect(() =>
+      linkSnapshotPackages(at, repo, { install: fakeCi(at, calls) }),
+    ).toThrow(
+      /tools.x.node_modules is a link out of the snapshot.*not installing/,
+    );
+    expect(calls).toEqual([]);
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it("stays installed, without a throw, once the worktree's lockfile agrees", () => {
+    const { repo, at } = pair();
+    writeFileSync(join(at, "package-lock.json"), lock("1.1.0"));
+    const calls: string[] = [];
+    expect(
+      linkSnapshotPackages(at, repo, { install: fakeCi(at, calls) }).mode,
+    ).toBe("installed");
+    // npm's real nested folder is in place, and now the lockfiles agree.
+    writeFileSync(join(repo, "package-lock.json"), lock("1.1.0"));
+    const result = linkSnapshotPackages(at, repo, {
+      install: fakeCi(at, calls),
+    });
+    expect(result).toEqual({ mode: "installed", differences: [] });
+    expect(calls).toHaveLength(1);
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it("refuses a snapshot whose own node_modules is a link", () => {
+    const { repo, at } = pair();
+    const elsewhere = join(repo, "elsewhere");
+    mkdirSync(elsewhere);
+    symlinkSync(elsewhere, join(at, "node_modules"), "junction");
+    expect(() => linkSnapshotPackages(at, repo)).toThrow(
+      /its node_modules is a link/,
+    );
+    expect(readdirSync(elsewhere)).toEqual([]);
+    rmSync(repo, { recursive: true, force: true });
+  });
+});
+
+describe("workspace patterns", () => {
+  it("reads paths and a trailing /*, and throws on any other pattern, naming it", () => {
+    const { repo, at } = pair();
+    expect([...workspacePackages(at).keys()]).toEqual(["@cesium/core"]);
+    for (const pattern of [
+      "packages/**",
+      "packages/{a,b}",
+      "pack?ges/*",
+      "!packages/x",
+      "../elsewhere/*",
+    ]) {
+      writeFileSync(
+        join(at, "package.json"),
+        `${JSON.stringify({ name: "fixture", workspaces: [pattern] })}\n`,
+      );
+      expect(() => workspacePackages(at)).toThrow(JSON.stringify(pattern));
+    }
+    rmSync(repo, { recursive: true, force: true });
   });
 });
 

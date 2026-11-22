@@ -13,11 +13,13 @@
 // own workspace packages; third-party packages still come from the
 // worktree's node_modules (where the pinned 1.x, cesium-1x, is) when the
 // two lockfiles agree on them. When they don't, the snapshot installs its
-// own (`npm ci --ignore-scripts`, inside the snapshot), or the run stops.
-// The local secrets file is copied as a plain file.
+// own (`npm ci --ignore-scripts`, inside the snapshot), or the run stops;
+// it first removes its own links, so the install can't write through one
+// into the worktree. The local secrets file is copied as a plain file.
 // Commits from before CS-611 read their 1.x build from CESIUM_BUILD_DIR,
-// which the Lab sets to the pinned one (suite/commands/lab.mjs). This module never deletes anything; remove old
-// worktrees by hand with `git worktree remove .bench/<sha>` (no --force).
+// which the Lab sets to the pinned one (suite/commands/lab.mjs). This
+// module deletes nothing but the links it made; remove old worktrees by
+// hand with `git worktree remove .bench/<sha>` (no --force).
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
@@ -27,12 +29,13 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
+  readlinkSync,
   realpathSync,
   symlinkSync,
   unlinkSync,
   writeFileSync,
 } from "node:fs";
-import { dirname, join, relative, resolve } from "node:path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import process from "node:process";
 
 const git = (args, cwd) =>
@@ -54,7 +57,8 @@ const readJson = (path) =>
 /**
  * A checkout's workspace packages: name → directory, from its root
  * package.json's `workspaces` (paths, or one trailing `*` per pattern, as
- * this repository writes them).
+ * this repository writes them). Any other pattern throws, naming it: a
+ * package it missed would resolve to the worktree's copy.
  */
 export function workspacePackages(dir) {
   const manifest = readJson(join(dir, "package.json"));
@@ -63,15 +67,27 @@ export function workspacePackages(dir) {
     : (manifest?.workspaces?.packages ?? []);
   const found = new Map();
   for (const pattern of patterns) {
+    const literal =
+      typeof pattern === "string" && pattern.endsWith("/*")
+        ? pattern.slice(0, -2)
+        : pattern;
+    if (
+      typeof literal !== "string" ||
+      /[*?[\]{}!]|[+@]\(/.test(literal) ||
+      literal.startsWith("/") ||
+      literal.split(/[\\/]/).includes("..")
+    ) {
+      throw new Error(
+        `${dir}: the workspace pattern ${JSON.stringify(pattern)} isn't one Dyno's snapshots can read (a path, or a path ending in "/*"): its packages would resolve to the worktree's copies`,
+      );
+    }
     const folders = pattern.endsWith("/*")
-      ? (existsSync(join(dir, pattern.slice(0, -2)))
-          ? readdirSync(join(dir, pattern.slice(0, -2)), {
-              withFileTypes: true,
-            })
+      ? (existsSync(join(dir, literal))
+          ? readdirSync(join(dir, literal), { withFileTypes: true })
           : []
         )
           .filter((entry) => entry.isDirectory())
-          .map((entry) => join(dir, pattern.slice(0, -2), entry.name))
+          .map((entry) => join(dir, literal, entry.name))
       : [join(dir, pattern)];
     for (const folder of folders) {
       const name = readJson(join(folder, "package.json"))?.name;
@@ -120,14 +136,23 @@ export function thirdPartyDifferences(snapshotLock, worktreeLock) {
     .sort();
 }
 
+const lstat = (path) => {
+  try {
+    return lstatSync(path);
+  } catch {
+    return undefined;
+  }
+};
+
+/** Whether `path` is `root` or lies under it (both already real paths). */
+const inside = (path, root) => {
+  const rel = relative(root, path);
+  return rel === "" || (rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel));
+};
+
 /** Links `path` to the directory `target`, replacing a link that points elsewhere. */
 function link(target, path) {
-  let stat;
-  try {
-    stat = lstatSync(path);
-  } catch {
-    stat = undefined;
-  }
+  const stat = lstat(path);
   if (stat?.isSymbolicLink()) {
     if (existsSync(path) && realpathSync(path) === realpathSync(target)) {
       return;
@@ -145,6 +170,66 @@ function link(target, path) {
 const STATE = ".bench-deps.json";
 
 /**
+ * Removes the links this module made in `dir`: those its state file
+ * records, and any link where it puts one (an older state file recorded
+ * none). Only a link inside `dir`, under no other link, is removed, and
+ * only the link itself.
+ */
+function removeOwnLinks(dir, state) {
+  const real = realpathSync(dir);
+  const places = new Set(
+    (Array.isArray(state?.links) ? state.links : []).map((path) =>
+      join(dir, String(path)),
+    ),
+  );
+  for (const [name, folder] of workspacePackages(dir)) {
+    places.add(join(dir, "node_modules", ...name.split("/")));
+    places.add(join(folder, "node_modules"));
+  }
+  for (const path of places) {
+    if (
+      lstat(path)?.isSymbolicLink() &&
+      inside(resolve(path), resolve(dir)) &&
+      existsSync(dirname(path)) &&
+      inside(realpathSync(dirname(path)), real)
+    ) {
+      unlinkSync(path);
+    }
+  }
+}
+
+/**
+ * Every `node_modules` under `dir` that is a link to a place outside it:
+ * an install would write through it. Doesn't look inside a real
+ * `node_modules` (npm's own) or `.git`.
+ */
+function outsideLinks(dir) {
+  const real = realpathSync(dir);
+  const found = [];
+  const walk = (folder) => {
+    for (const entry of readdirSync(folder, { withFileTypes: true })) {
+      const path = join(folder, entry.name);
+      if (entry.name === "node_modules" && entry.isSymbolicLink()) {
+        const target = existsSync(path)
+          ? realpathSync(path)
+          : resolve(folder, readlinkSync(path));
+        if (!inside(target, real)) {
+          found.push(relative(dir, path));
+        }
+      } else if (
+        entry.isDirectory() &&
+        entry.name !== "node_modules" &&
+        entry.name !== ".git"
+      ) {
+        walk(path);
+      }
+    }
+  };
+  walk(dir);
+  return found.sort();
+}
+
+/**
  * Gives the checkout at `dir` (a snapshot or the frozen tree, under
  * <repo>/.bench/) its own workspace packages: links in <dir>/node_modules
  * to its packages/*, so `@cesium/*` resolves inside it. Third-party
@@ -152,8 +237,12 @@ const STATE = ".bench-deps.json";
  * on them (those nested under a workspace package through a link to the
  * worktree's folder); otherwise the snapshot installs its own with `install`
  * (`npm ci --ignore-scripts` by default, run in `dir`), once per lockfile,
- * and a failed install stops the run. Writes nothing outside `dir`.
- * Returns the mode and the differing lockfile entries.
+ * and a failed install stops the run. Before an install it removes the
+ * links it made (recorded in node_modules/.bench-deps.json), and it
+ * refuses to install while any node_modules under `dir` is still a link
+ * out of it, or to work at all when `dir`'s own node_modules is a link:
+ * either would let it write into the worktree. Writes nothing outside
+ * `dir`. Returns the mode and the differing lockfile entries.
  */
 export function linkSnapshotPackages(
   dir,
@@ -164,6 +253,11 @@ export function linkSnapshotPackages(
   } = {},
 ) {
   const modules = join(dir, "node_modules");
+  if (lstat(modules)?.isSymbolicLink()) {
+    throw new Error(
+      `${dir}: its node_modules is a link (to ${readlinkSync(modules)}): leaving it as it is, since links and ${STATE} would be written through it. Remove the link and run again.`,
+    );
+  }
   const stateFile = join(modules, STATE);
   const ownLock = join(dir, "package-lock.json");
   const lockText = existsSync(ownLock) ? readFileSync(ownLock, "utf8") : "";
@@ -174,50 +268,63 @@ export function linkSnapshotPackages(
     lockText && existsSync(worktreeLock)
       ? thirdPartyDifferences(lockText, readFileSync(worktreeLock, "utf8"))
       : [];
-  if (
-    differences.length > 0 ||
-    (state?.mode === "installed" && state.lock !== lockHash)
-  ) {
-    if (state?.mode !== "installed" || state.lock !== lockHash) {
-      const shown = differences.slice(0, 5).join(", ");
-      const more =
-        differences.length > 5 ? ` and ${differences.length - 5} more` : "";
-      console.log(
-        `${dir}: its lockfile differs from the worktree's (${shown || "an earlier install"}${more}): installing its own dependencies there`,
-      );
-      try {
-        install(
-          process.platform === "win32" ? "npm.cmd" : "npm",
-          ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
-          dir,
-        );
-      } catch (error) {
-        throw new Error(
-          `${dir}: its lockfile differs from the worktree's (${shown}${more}), and installing its own dependencies failed: ${error instanceof Error ? error.message : String(error)}. Compare with a separate checkout and its own server (--url) instead.`,
-          { cause: error },
-        );
-      }
-      mkdirSync(modules, { recursive: true });
-      writeFileSync(
-        stateFile,
-        `${JSON.stringify({ mode: "installed", lock: lockHash })}\n`,
+  // Installed for this very lockfile: npm's folders are the snapshot's
+  // own, whatever the worktree's lockfile says now.
+  if (state?.mode === "installed" && state.lock === lockHash) {
+    return { mode: "installed", differences };
+  }
+  if (differences.length > 0 || state?.mode === "installed") {
+    const shown = differences.slice(0, 5).join(", ");
+    const more =
+      differences.length > 5 ? ` and ${differences.length - 5} more` : "";
+    // npm clears only the root node_modules: a nested link left in place
+    // would have it write into the worktree's folder.
+    removeOwnLinks(dir, state);
+    const outside = outsideLinks(dir);
+    if (outside.length > 0) {
+      throw new Error(
+        `${dir}: its lockfile differs from the worktree's, but ${outside.join(", ")} ${outside.length === 1 ? "is a link" : "are links"} out of the snapshot, so an install there would write through ${outside.length === 1 ? "it" : "them"}: not installing. Remove ${outside.length === 1 ? "it" : "them"} and run again.`,
       );
     }
+    console.log(
+      `${dir}: its lockfile differs from the worktree's (${shown || "an earlier install"}${more}): installing its own dependencies there`,
+    );
+    try {
+      install(
+        process.platform === "win32" ? "npm.cmd" : "npm",
+        ["ci", "--ignore-scripts", "--no-audit", "--no-fund"],
+        dir,
+      );
+    } catch (error) {
+      throw new Error(
+        `${dir}: its lockfile differs from the worktree's (${shown}${more}), and installing its own dependencies failed: ${error instanceof Error ? error.message : String(error)}. Compare with a separate checkout and its own server (--url) instead.`,
+        { cause: error },
+      );
+    }
+    mkdirSync(modules, { recursive: true });
+    writeFileSync(
+      stateFile,
+      `${JSON.stringify({ mode: "installed", lock: lockHash, links: [] })}\n`,
+    );
     // npm ci links the workspace packages itself.
     return { mode: "installed", differences };
   }
+  const links = [];
   for (const [name, folder] of workspacePackages(dir)) {
-    link(folder, join(modules, ...name.split("/")));
+    const at = join(modules, ...name.split("/"));
+    link(folder, at);
+    links.push(relative(dir, at));
     // Third-party packages npm placed under a workspace package (Sandcastle
     // has its own Vite): the worktree's, which the lockfiles agree on.
     const nested = join(repo, relative(dir, folder), "node_modules");
     if (existsSync(nested)) {
       link(nested, join(folder, "node_modules"));
+      links.push(relative(dir, join(folder, "node_modules")));
     }
   }
   writeFileSync(
     stateFile,
-    `${JSON.stringify({ mode: "links", lock: lockHash })}\n`,
+    `${JSON.stringify({ mode: "links", lock: lockHash, links })}\n`,
   );
   return { mode: "links", differences };
 }

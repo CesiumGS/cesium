@@ -21,7 +21,7 @@ The machine is shared. A measurement taken while tests or builds run measures th
 - **Rendering** (shaders, passes, materials, lighting, tiles): the Lab's parity suites, `dyno lab parity` and the ones for what you touched (`models`, `globe`, `imagery`, `translucency`, `customShader`, `tracks`, `heights`, `tileset`, `lod`, `selection`), and the image checks, `dyno suite images`. Compare against the previous commit as well as a base commit. Explain any pixel difference before accepting it: Metal's compiler can reorder a float sum when a kernel changes.
 - **Performance**: `dyno measure start suite --changed --tier quick` while developing (the scenes of the areas your files fall in), `--tier standard` before a commit that changes performance. Say what the run is meant to move: `--primary cpuP50 --guardrails settleMs,bytes --hypothesis "…"`.
 - **Startup**: `dyno suite coldstart --port <your leased port>` (a page's first frame against its budget). Its dev server listens on 4101 unless `--port` says otherwise, and dyno doesn't pick a free port for it the way `serve` does: 4101 can be another executor's leased port, so a scripted run always passes `--port`.
-- **Allocation per frame**: `dyno lab alloc`.
+- **Allocation per tick**: `dyno lab alloc`.
 - **A shader's or a pass's cost**: `dyno lab shaderCost`, `translucencyCost`, `observerCost`.
 - **The sky and the atmosphere**: `dyno lab sky`, `atmosphere`, `ibl`, `observer`.
 - **History**: `dyno suite alerts` (change points across runs, with their triage) and `dyno suite compare <old.json> [new.json]`.
