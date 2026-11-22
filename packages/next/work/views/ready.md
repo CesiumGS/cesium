@@ -203,10 +203,11 @@ CS-199 Dyno hardening, packaging and CI
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
   CS-392  Finding runs from the terminal (`runs`, `show`, `pin`)
-  CS-394  Example scenes and the development metrics
+  CS-395  Reference images and the sweep view
   CS-398  Recordings as runs
   CS-399  Test results in Dyno: the vitest reporter and the Tests view
   CS-400  Archives: export and import (the manual fallback)
+  CS-401  Lab pages and their results in the store
   CS-404  Studies: the model, the files and the commands
   CS-406  The local certificate authority, the hub and pairing
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
@@ -214,6 +215,7 @@ CS-389 Dyno as the development harness
   CS-733  Each run records its device, configuration and state
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
   CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
+  CS-787  The Work page's code says Order where it still says Plan view, and its dead Plan-view and proposal-stage code goes
 
 CS-437 The public API reviews
   CS-431  The camera chain's layers checked against what each may know
@@ -221,7 +223,6 @@ CS-437 The public API reviews
   CS-433  Promotions and demotions proposed: what every app needs, and what is exported only for examples
   CS-572  The full version of scene items, designed before the first public API review
   CS-670  Bounding volumes and their tests on the public API
-  CS-681  decision: Should 2.0 keep marking APIs experimental, and how?
   CS-763  Engine.create takes a signal: an aborted create releases its device and pipelines
   CS-780  Engine.errors becomes an emitter: errors.on("support", …) reaches notice listeners, as the engine-profiles plan names it
 
@@ -259,5 +260,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-190 ready
+191 ready
 ```

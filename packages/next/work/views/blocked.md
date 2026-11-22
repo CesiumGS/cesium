@@ -130,7 +130,6 @@ CS-437 The public API reviews
         CS-572 The full version of scene items, designed before the first public API review
   CS-434  Stability tiers as TSDoc tags, with internal members stripped from the published types
       ← CS-438 Which of the first public API review's proposed changes do you approve?
-        CS-681 Should 2.0 keep marking APIs experimental, and how?
   CS-435  The measurement module's seam and entry point
       ← CS-438 Which of the first public API review's proposed changes do you approve?
   CS-438  Which of the first public API review's proposed changes do you approve?
@@ -460,16 +459,11 @@ CS-197 Ray queries and path tracing
         CS-348 A GPU viewshed
 
 CS-389 Dyno as the development harness
-  CS-395  Reference images and the sweep view
-      ← CS-394 Example scenes and the development metrics
   CS-396  The α study through Dyno (acceptance A)
       ← CS-395 Reference images and the sweep view
         CS-405 The Studies page
   CS-397  Image checks for development scenes and sweeps
-      ← CS-394 Example scenes and the development metrics
-        CS-395 Reference images and the sweep view
-  CS-401  Lab pages and their results in the store
-      ← CS-394 Example scenes and the development metrics
+      ← CS-395 Reference images and the sweep view
   CS-402  "Measuring with Dyno" in AGENTS.md, and its skill
       ← CS-392 Finding runs from the terminal (`runs`, `show`, `pin`)
         CS-404 Studies: the model, the files and the commands
@@ -479,8 +473,7 @@ CS-389 Dyno as the development harness
   CS-407  The runner and remote runs
       ← CS-406 The local certificate authority, the hub and pairing
   CS-408  The device lab
-      ← CS-394 Example scenes and the development metrics
-        CS-404 Studies: the model, the files and the commands
+      ← CS-404 Studies: the model, the files and the commands
         CS-407 The runner and remote runs
   CS-518  A space switch in Dyno's rail: the engine and the work
       ← CS-517 The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
@@ -501,7 +494,6 @@ CS-389 Dyno as the development harness
         CS-738 Trends, charts, baselines and alerts keep devices apart
   CS-740  A verdict says whether it carries to another hardware class
       ← CS-739 Studies across devices: noise floors per hardware class, pooling, and the health bar
-        CS-394 Example scenes and the development metrics
 
 CS-18 The work tracker
   CS-530  Release 2.0.0-alpha.1
@@ -721,5 +713,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-229 blocked
+227 blocked
 ```

@@ -949,7 +949,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 52 of 88 done, 13 ready, 16 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 54 of 91 done, 15 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -989,7 +989,7 @@ Milestone: Benchmark results are shared across machines, and dyno is one command
 
 - [x] [CS-390](./items/CS-390-run-identity-and-the-machine-wide-run-lock.md) Run identity and the machine-wide run lock. Done.
 - [x] [CS-393](./items/CS-393-the-settings-registry-and-multi-axis-sweeps.md) The settings registry and multi-axis sweeps. Done.
-- [ ] [CS-394](./items/CS-394-example-scenes-and-the-development-metrics.md) Example scenes and the development metrics. Needs CS-393.
+- [x] [CS-394](./items/CS-394-example-scenes-and-the-development-metrics.md) Example scenes and the development metrics. Done.
 - [ ] [CS-404](./items/CS-404-studies-the-model-the-files-and-the-commands.md) Studies: the model, the files and the commands. Needs CS-390 and CS-687.
 - [x] [CS-717](./items/CS-717-design-one-benchmark-database-across-machines.md) Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability. Done.
 - [x] [CS-721](./items/CS-721-a-dyno-command-one-cli-for-dyno-s-runs-lab.md) A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices. Done.
@@ -1055,17 +1055,20 @@ No milestone
 - [x] [CS-784](./items/CS-784-the-dyno-tool-is-cesium-dyno-so-npx-can-never.md) The dyno tool is @cesium/dyno, so npx can never reach an outside package by its name. Done.
 - [x] [CS-785](./items/CS-785-merge-cs-749-the-plan-view-becomes-order.md) decision: Merge CS-749, the Plan view becomes Order. Done.
 - [?] [CS-786](./items/CS-786-order-s-concurrency-history-reads-when-work.md) Order's concurrency history reads when work really started, not commit dates. Proposed. Needs CS-749.
-- [?] [CS-787](./items/CS-787-dyno-s-work-page-says-order-where-it-still-says.md) Dyno's Work page says Order where it still says Plan view, and DESIGN.md drops the old Projects section. Proposed. Needs CS-749.
+- [ ] [CS-787](./items/CS-787-dyno-s-work-page-says-order-where-it-still-says.md) The Work page's code says Order where it still says Plan view, and its dead Plan-view and proposal-stage code goes. Needs CS-749 and CS-775.
 - [x] [CS-793](./items/CS-793-merge-cs-784-the-dyno-tool-is-cesium-dyno.md) decision: Merge CS-784, the dyno tool is @cesium/dyno. Done.
 - [x] [CS-795](./items/CS-795-merge-cs-752-flow-answers-how-well-the-system.md) decision: Merge CS-752, Flow answers how well the system and the owner work together. Done.
 - [x] [CS-797](./items/CS-797-merge-cs-753-your-move-gets-a-calmer-layout.md) decision: Merge CS-753, Your move gets a calmer layout: fewer, larger, ranked entries. Done.
 - [x] [CS-798](./items/CS-798-merge-cs-393-the-settings-registry-and-multi.md) decision: Merge CS-393, the settings registry and multi-axis sweeps. Done.
 - [?] [CS-799](./items/CS-799-the-health-view-brings-a-chosen-row-into-view.md) The Health view brings a chosen row into view, so a link from Your move lands on it. Proposed. Needs nothing.
 - [x] [CS-801](./items/CS-801-merge-cs-775-the-work-page-s-older-views-retire.md) decision: Merge CS-775, the Work page's older views retire. Done.
+- [x] [CS-803](./items/CS-803-merge-cs-394-example-scenes-and-the-development.md) decision: Merge CS-394, example scenes and the development metrics. Done.
+- [?] [CS-804](./items/CS-804-the-scenes-view-lists-group-d-s-example-scenes.md) The Scenes view lists group D's example scenes beside the catalog. Proposed. Needs CS-394.
+- [?] [CS-805](./items/CS-805-catalog-scenes-record-the-development-metrics.md) Catalog scenes record the development metrics that example scenes now do. Proposed. Needs CS-394.
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 6 of 19 done, 8 ready, 4 blocked, 1 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 7 of 19 done, 7 ready, 4 blocked, 1 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
@@ -1092,7 +1095,7 @@ Milestone: 1.x's smaller tools have 2.0 homes ([CS-675](./milestones/CS-675-1-x-
 
 No milestone
 
-- [ ] [CS-681](./items/CS-681-should-2-0-keep-marking-apis-experimental-and.md) decision: Should 2.0 keep marking APIs experimental, and how?. Needs nothing. Decided by owner.
+- [x] [CS-681](./items/CS-681-should-2-0-keep-marking-apis-experimental-and.md) decision: Should 2.0 keep marking APIs experimental, and how?. Done.
 - [x] [CS-711](./items/CS-711-add-a-signal-option-to-cancel-an-engine-create.md) decision: Add a signal option to cancel an engine create in flight. Done.
 - [x] [CS-713](./items/CS-713-merge-cs-708-2-0-strict-mode-safe.md) decision: Merge CS-708, 2.0 strict-mode safe. Done.
 - [x] [CS-769](./items/CS-769-merge-cs-430-the-webgpu-seams-audited.md) decision: Merge CS-430, the WebGPU seams audited. Done.

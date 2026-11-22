@@ -561,7 +561,7 @@ graph LR
     CS_391["CS-391 Purpose, branch, item and study in Trends, Runs, Compare and Al"]:::open
     CS_392["CS-392 Finding runs from the terminal ('runs', 'show', 'pin')"]:::open
     CS_393["CS-393 The settings registry and multi-axis sweeps"]:::done
-    CS_394["CS-394 Example scenes and the development metrics"]:::open
+    CS_394["CS-394 Example scenes and the development metrics"]:::done
     CS_395["CS-395 Reference images and the sweep view"]:::open
     CS_396["CS-396 The α study through Dyno (acceptance A)"]:::open
     CS_397["CS-397 Image checks for development scenes and sweeps"]:::open
@@ -638,13 +638,16 @@ graph LR
     CS_784["CS-784 The dyno tool is @cesium/dyno, so npx can never reach an outsid"]:::done
     CS_785["CS-785 Merge CS-749, the Plan view becomes Order"]:::done
     CS_786["CS-786 Order's concurrency history reads when work really started, not"]:::proposed
-    CS_787["CS-787 Dyno's Work page says Order where it still says Plan view, and "]:::proposed
+    CS_787["CS-787 The Work page's code says Order where it still says Plan view, "]:::open
     CS_793["CS-793 Merge CS-784, the dyno tool is @cesium/dyno"]:::done
     CS_795["CS-795 Merge CS-752, Flow answers how well the system and the owner wo"]:::done
     CS_797["CS-797 Merge CS-753, Your move gets a calmer layout: fewer, larger, ra"]:::done
     CS_798["CS-798 Merge CS-393, the settings registry and multi-axis sweeps"]:::done
     CS_799["CS-799 The Health view brings a chosen row into view, so a link from Y"]:::proposed
     CS_801["CS-801 Merge CS-775, the Work page's older views retire"]:::done
+    CS_803["CS-803 Merge CS-394, example scenes and the development metrics"]:::done
+    CS_804["CS-804 The Scenes view lists group D's example scenes beside the catal"]:::proposed
+    CS_805["CS-805 Catalog scenes record the development metrics that example scen"]:::proposed
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open
@@ -658,7 +661,7 @@ graph LR
     CS_454["CS-454 What is the full version of scene items: references, groups, th"]:::done
     CS_572["CS-572 The full version of scene items, designed before the first publ"]:::open
     CS_670["CS-670 Bounding volumes and their tests on the public API"]:::open
-    CS_681["CS-681 Should 2.0 keep marking APIs experimental, and how?"]:::decision
+    CS_681["CS-681 Should 2.0 keep marking APIs experimental, and how?"]:::done
     CS_708["CS-708 2.0 is strict-mode safe: a canvas the engine draws survives cre"]:::done
     CS_711["CS-711 Add a signal option to cancel an engine create in flight"]:::done
     CS_713["CS-713 Merge CS-708, 2.0 strict-mode safe"]:::done
@@ -1466,10 +1469,13 @@ graph LR
   CS_774 --> CS_784
   CS_749 --> CS_786
   CS_749 --> CS_787
+  CS_775 --> CS_787
   CS_53 --> CS_790
   CS_53 --> CS_791
   CS_35 --> CS_792
   CS_53 --> CS_794
+  CS_394 --> CS_804
+  CS_394 --> CS_805
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

@@ -892,7 +892,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 52 of 88 done, 13 ready, 16 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 54 of 91 done, 15 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -932,7 +932,7 @@ Milestone: Benchmark results are shared across machines, and dyno is one command
 
 - [x] CS-390 Run identity and the machine-wide run lock. Done.
 - [x] CS-393 The settings registry and multi-axis sweeps. Done.
-- [ ] CS-394 Example scenes and the development metrics. Needs CS-393.
+- [x] CS-394 Example scenes and the development metrics. Done.
 - [ ] CS-404 Studies: the model, the files and the commands. Needs CS-390 and CS-687.
 - [x] CS-717 Design: one benchmark database across machines, with device fingerprints, multi-device views and transportability. Done.
 - [x] CS-721 A dyno command: one CLI for Dyno's runs, Lab pages, servers, studies and devices. Done.
@@ -998,17 +998,20 @@ No milestone
 - [x] CS-784 The dyno tool is @cesium/dyno, so npx can never reach an outside package by its name. Done.
 - [x] CS-785 decision: Merge CS-749, the Plan view becomes Order. Done.
 - [?] CS-786 Order's concurrency history reads when work really started, not commit dates. Proposed. Needs CS-749.
-- [?] CS-787 Dyno's Work page says Order where it still says Plan view, and DESIGN.md drops the old Projects section. Proposed. Needs CS-749.
+- [ ] CS-787 The Work page's code says Order where it still says Plan view, and its dead Plan-view and proposal-stage code goes. Needs CS-749 and CS-775.
 - [x] CS-793 decision: Merge CS-784, the dyno tool is @cesium/dyno. Done.
 - [x] CS-795 decision: Merge CS-752, Flow answers how well the system and the owner work together. Done.
 - [x] CS-797 decision: Merge CS-753, Your move gets a calmer layout: fewer, larger, ranked entries. Done.
 - [x] CS-798 decision: Merge CS-393, the settings registry and multi-axis sweeps. Done.
 - [?] CS-799 The Health view brings a chosen row into view, so a link from Your move lands on it. Proposed. Needs nothing.
 - [x] CS-801 decision: Merge CS-775, the Work page's older views retire. Done.
+- [x] CS-803 decision: Merge CS-394, example scenes and the development metrics. Done.
+- [?] CS-804 The Scenes view lists group D's example scenes beside the catalog. Proposed. Needs CS-394.
+- [?] CS-805 Catalog scenes record the development metrics that example scenes now do. Proposed. Needs CS-394.
 
 ### The public API reviews
 
-CS-437, Planned, led by owner: 6 of 19 done, 8 ready, 4 blocked, 1 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-437, Planned, led by owner: 7 of 19 done, 7 ready, 4 blocked, 1 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
@@ -1035,7 +1038,7 @@ Milestone: 1.x's smaller tools have 2.0 homes (CS-675, Planned)
 
 No milestone
 
-- [ ] CS-681 decision: Should 2.0 keep marking APIs experimental, and how?. Needs nothing. Decided by owner.
+- [x] CS-681 decision: Should 2.0 keep marking APIs experimental, and how?. Done.
 - [x] CS-711 decision: Add a signal option to cancel an engine create in flight. Done.
 - [x] CS-713 decision: Merge CS-708, 2.0 strict-mode safe. Done.
 - [x] CS-769 decision: Merge CS-430, the WebGPU seams audited. Done.

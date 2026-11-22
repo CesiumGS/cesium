@@ -60,6 +60,7 @@ CS-188 Earth to Moon (frames 5c to 5h)
 CS-389 Dyno as the development harness
   CS-390  Run identity and the machine-wide run lock
   CS-393  The settings registry and multi-axis sweeps
+  CS-394  Example scenes and the development metrics
   CS-403  Dyno's navigation rail, regrouped by what people come to do
   CS-706  Dyno's viewer starts drawing within half a second on a cold browser again
   CS-707  Dyno's scrollable tabs use StrataKit's supported API, and the StrataKit feedback is corrected
@@ -94,5 +95,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-67 merged item(s) not in a release
+68 merged item(s) not in a release
 ```
