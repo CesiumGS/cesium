@@ -203,6 +203,30 @@ describe('emulate: "webgl2-basic"', () => {
     expect(frames[0]!.message).toContain("OffscreenTarget");
   });
 
+  it("hears a support notice through errors.on, once, and not from a stopped listener", async () => {
+    const engine = await create({ emulate: "webgl2-basic" });
+    const heard: string[] = [];
+    const stopped = vi.fn();
+    engine.errors.on("support", stopped)();
+    engine.errors.on("support", (e) => heard.push(e.notice!.feature));
+    engine.notices.report(
+      {
+        kind: "stepped",
+        feature: "glare",
+        asked: "full",
+        given: "reduced",
+        rule: "test.rule",
+        reason: "a test",
+      },
+      { importance: "preferred", because: [] },
+      "test",
+    );
+    expect(heard).toEqual(["glare"]);
+    expect(stopped).not.toHaveBeenCalled();
+    // The error is in the list as well.
+    expect(engine.errors.filter((e) => e.kind === "support")).toHaveLength(1);
+  });
+
   it("stops, and reports once, when the context is lost", async () => {
     const engine = await create({ emulate: "webgl2-basic" });
     const { canvas, target } = canvasTarget();

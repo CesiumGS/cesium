@@ -105,7 +105,8 @@ const TABLE: Record<string, EntryTable> = {
       CustomShaderOptions DebugLegend DebugLegendEntry DebugView Degree
       DisplayMesh DistanceField DrawHandle DrawOptions DualPosition
       EffectiveFeature EffectiveSettings ElementCap
-      EngineError EngineErrorKind EngineOptions EntityInfo EntityKind
+      EngineError EngineErrorKind EngineErrorListener EngineErrorLog
+      EngineOptions EntityInfo EntityKind
       EntityRef Exposure EyeExposure FaceTrim FeatureStyleOptions FeatureTable
       FeatureValue FittedOperation FrameKey FrameMotion FrameStats
       FromFunctionOptions FunctionCurvilinearMap GeometryAccuracy GeometryBounds

@@ -2160,9 +2160,14 @@ export const API_ROWS: readonly ApiRow[] = [
       "Scene.renderError",
     ],
     next: ["TilesetEvents", "EngineError", "EngineErrors"],
-    supporting: ["EngineErrorKind", "Notice"],
+    supporting: [
+      "EngineErrorKind",
+      "EngineErrorListener",
+      "EngineErrorLog",
+      "Notice",
+    ],
     status: "changed",
-    note: "`events.on` replaces `addEventListener`, and errors come through `engine.onError`. Tilesets report a request starting, and have no event for a tile loading or failing yet.",
+    note: "`events.on` replaces `addEventListener`, and errors come through `engine.errors.on(kind, …)` (`engine.onError` hears every kind). Tilesets report a request starting, and have no event for a tile loading or failing yet.",
     snippet: "events",
   },
   {

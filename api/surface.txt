@@ -120,6 +120,8 @@ entry	name	kind	tier
 .	Engine	class	-
 .	EngineError	interface	-
 .	EngineErrorKind	type	-
+.	EngineErrorListener	type	-
+.	EngineErrorLog	interface	-
 .	EngineErrors	class	-
 .	EngineOptions	interface	-
 .	EntityInfo	interface	-

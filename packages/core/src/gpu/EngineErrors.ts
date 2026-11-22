@@ -48,17 +48,54 @@ export interface EngineError {
   last: number;
 }
 
+/** What `EngineErrors.on` calls: the error, as reported (its `count` so far). */
+export type EngineErrorListener = (error: EngineError) => void;
+
+/**
+ * `Engine.errors`: the errors already raised, and a way to hear the next.
+ *
+ * It is the list itself, oldest first, one entry per distinct message with
+ * its `count` (a `ReadonlyArray`: `length`, index, `filter`, `at`, spread,
+ * `for…of`), so what code read before `on` existed reads the same. It is
+ * live: it grows as errors are reported, and a snapshot is `[...errors]`.
+ * Each entry is updated in place when its message repeats.
+ *
+ * `on` hears the errors reported after it is called, never the ones
+ * already in the list. Read the list first to catch up.
+ */
+export interface EngineErrorLog extends ReadonlyArray<EngineError> {
+  /**
+   * Hears each report of `kind` (`"support"`: a view's look stepped,
+   * dropped or limited here, with `error.notice`), repeats included, as
+   * `listener(error)`. Without a kind it hears every kind. Returns a
+   * function that stops listening; calling it twice is harmless.
+   */
+  on(kind: EngineErrorKind, listener: EngineErrorListener): () => void;
+  on(listener: EngineErrorListener): () => void;
+}
+
 /** Distinct errors kept, oldest dropped first. */
 const MAX_ERRORS = 100;
 
 export class EngineErrors {
   private readonly list: EngineError[] = [];
   private readonly byKey = new Map<string, EngineError>();
-  private readonly listeners = new Set<(error: EngineError) => void>();
+  private readonly listeners = new Set<{
+    readonly kind: EngineErrorKind | undefined;
+    readonly listener: EngineErrorListener;
+  }>();
+  private readonly log: EngineErrorLog;
 
-  /** Distinct errors, oldest first. */
-  get all(): readonly EngineError[] {
-    return this.list;
+  constructor() {
+    // `on` rides on the list, out of its keys, so it stays an array to
+    // everything that reads it (`toEqual`, spread, JSON).
+    Object.defineProperty(this.list, "on", { value: this.on.bind(this) });
+    this.log = this.list as unknown as EngineErrorLog;
+  }
+
+  /** Distinct errors, oldest first, with `on` (`Engine.errors`). */
+  get all(): EngineErrorLog {
+    return this.log;
   }
 
   /**
@@ -95,8 +132,10 @@ export class EngineErrors {
         console.error(`[cesium/next] ${kind}: ${message}`);
       }
     }
-    for (const listener of this.listeners) {
-      listener(error);
+    for (const entry of this.listeners) {
+      if (entry.kind === undefined || entry.kind === kind) {
+        entry.listener(error);
+      }
     }
     return error;
   }
@@ -107,9 +146,21 @@ export class EngineErrors {
     this.byKey.clear();
   }
 
-  /** Hears every report; returns the unsubscribe. */
-  on(listener: (error: EngineError) => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+  /**
+   * Hears each report of `kind`, or of every kind without one; returns the
+   * unsubscribe (`Engine.errors.on`).
+   */
+  on(kind: EngineErrorKind, listener: EngineErrorListener): () => void;
+  on(listener: EngineErrorListener): () => void;
+  on(
+    kindOrListener: EngineErrorKind | EngineErrorListener,
+    listener?: EngineErrorListener,
+  ): () => void {
+    const entry =
+      typeof kindOrListener === "function"
+        ? { kind: undefined, listener: kindOrListener }
+        : { kind: kindOrListener, listener: listener! };
+    this.listeners.add(entry);
+    return () => void this.listeners.delete(entry);
   }
 }

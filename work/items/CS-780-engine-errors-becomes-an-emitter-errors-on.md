@@ -2,7 +2,7 @@
 id: CS-780
 title: 'Engine.errors becomes an emitter: errors.on("support", …) reaches notice listeners, as the engine-profiles plan names it'
 kind: work
-state: in-progress
+state: done
 created: 2026-11-20
 project: CS-437
 needs: [CS-23]

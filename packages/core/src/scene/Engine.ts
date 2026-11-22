@@ -3,6 +3,7 @@ import {
   EngineErrors,
   type EngineError,
   type EngineErrorKind,
+  type EngineErrorLog,
 } from "../gpu/EngineErrors.ts";
 import { RequestScheduler } from "../streaming/RequestScheduler.ts";
 import type { GpuDevice, GpuDeviceOptions } from "../gpu/GpuDevice.ts";
@@ -1180,9 +1181,16 @@ export class Engine {
    * What went wrong, each distinct error once with a count: shaders and
    * pipelines that failed (their draws use the engine's), textures
    * destroyed while bound (their draws skipped), frames the GPU rejected
-   * (the worlds bound again), uncaptured device errors.
+   * (the worlds bound again), uncaptured device errors, and support
+   * notices (`"support"`, with `error.notice`).
+   *
+   * To hear them as they happen: `engine.errors.on("support", (error) =>
+   * …)`, for any kind, returning a function that stops listening. The
+   * errors already raised stay readable: `errors` is also the list of
+   * them, oldest first (`errors.length`, `errors.filter(…)`, `[...errors]`).
+   * `on` hears only what is reported after it is called.
    */
-  get errors(): readonly EngineError[] {
+  get errors(): EngineErrorLog {
     return this.errors_.all;
   }
 
@@ -1194,7 +1202,11 @@ export class Engine {
     this.errors_.report(kind, message);
   }
 
-  /** Hears every error the engine reports; returns the unsubscribe. */
+  /**
+   * Hears every error the engine reports, of every kind; returns the
+   * unsubscribe. Shorthand for `engine.errors.on(listener)`; to hear one
+   * kind, `engine.errors.on(kind, listener)`.
+   */
   onError(listener: (error: EngineError) => void): () => void {
     return this.errors_.on(listener);
   }

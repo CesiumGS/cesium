@@ -501,6 +501,8 @@ export {
 export {
   EngineErrors,
   type EngineError,
+  type EngineErrorListener,
+  type EngineErrorLog,
   type EngineErrorKind,
   type Notice,
 } from "./gpu/EngineErrors.ts";
