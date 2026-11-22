@@ -2,7 +2,7 @@
 id: CS-832
 title: "A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-21
 project: CS-437
 claimed_by: orch-11-CS-832

@@ -93,7 +93,7 @@ The public API is open to breaking changes. 1.x serves two roles only: it is the
 - [Ray queries: where they run, and when acceleration structures are built](docs/design/ray-queries-where-they-run.md): Placement of ray queries on CPU and GPU, and when acceleration structures are built (owner, 2026-11-06).
 - [Layers: engine, renderer and GPU backend](docs/design/layers-engine-renderer-backend.md): Notes on the layers between the engine, a renderer and the GPU backend (2026-11-08).
 - [Color in the styling language](docs/design/color-in-the-styling-language.md): How color works in the styling language (owner, 2026-11-08).
-- [Semantic metadata and picking](docs/design/semantic-metadata-and-picking.md): For a later brainstorm: semantic metadata and picking (owner, 2026-11-08).
+- [Semantic metadata and picking](docs/design/semantic-metadata-and-picking.md): How metadata reaches the engine, labels by taxonomy, stable IDs, and what a pick means in splats, point clouds and fields (design, CS-832, 2026-11-21).
 - [Editing](docs/design/editing.md): For a later brainstorm: editing (owner, 2026-11-08).
 - [Ion as a swappable module](docs/design/ion-as-a-module.md): Cesium ion behind an interface the host can replace (owner, 2026-11-08).
 - [Custom post-processing](docs/design/custom-post-processing.md): For later: custom post-processing stages (owner, 2026-11-08).
