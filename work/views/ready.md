@@ -251,7 +251,6 @@ CS-609 A clean 2.0 branch and a modern build
 
 CS-615 Packaging and package names
   CS-616  decision: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
-  CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
 CS-622 The agent-first migration kit
   CS-623  The 1.x-to-2.0 map in a form agents read, with worked patterns
@@ -272,5 +271,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-203 ready
+202 ready
 ```

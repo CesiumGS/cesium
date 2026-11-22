@@ -675,7 +675,7 @@ No milestone
 
 ### Content sources and formats
 
-[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 17 of 60 done, 17 ready, 22 blocked, 4 proposed.
+[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 17 of 62 done, 17 ready, 22 blocked, 6 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token ([CS-497](./milestones/CS-497-cesium-ion-is-a-swappable-module-with-a-default.md), Planned)
 
@@ -754,6 +754,8 @@ No milestone
 - [ ] [CS-906](./items/CS-906-variant-selections-and-payload-policy-as-open.md) Variant selections and payload policy as open options, and their change as invalidation. Needs CS-835 (Packaging and package names) and CS-847.
 - [?] [CS-908](./items/CS-908-gaussian-splats-from-usd-s-particlefield-into.md) Gaussian splats from USD's ParticleField into the splat render feature. Proposed. Needs CS-277 and CS-901.
 - [x] [CS-909](./items/CS-909-merge-cs-898-64-bit-integer-properties-keep.md) decision: Merge CS-898, 64-bit integer properties keep their exact value. Done.
+- [?] [CS-913](./items/CS-913-the-subset-reader-s-composition-faults-on.md) The subset reader's composition faults on broken assets, tested against OpenUSD. Proposed. Needs CS-901.
+- [?] [CS-914](./items/CS-914-openusd-in-webassembly-as-a-test-oracle-for-the.md) OpenUSD in WebAssembly as a test oracle for the USD source. Proposed. Needs CS-901.
 
 ### Sky, light and atmosphere
 
@@ -1261,7 +1263,7 @@ No milestone
 
 ### Packaging and package names
 
-[CS-615](./projects/CS-615-packaging-and-package-names.md), Planned, led by owner: 5 of 11 done, 2 ready, 4 blocked.
+[CS-615](./projects/CS-615-packaging-and-package-names.md), Planned, led by owner: 7 of 12 done, 1 ready, 4 blocked.
 
 Milestone: The core installs alone, and the whole engine installs from one umbrella package ([CS-621](./milestones/CS-621-the-core-installs-alone-and-the-whole-engine.md), Planned)
 
@@ -1277,11 +1279,12 @@ Milestone: Every package has its API reference ([CS-695](./milestones/CS-695-eve
 
 No milestone
 
-- [ ] [CS-835](./items/CS-835-2-0-s-folders-become-its-packages-the-move-to.md) 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json. Needs CS-834, CS-809 (Content sources and formats), CS-814 (public API reviews), CS-552 (Content sources and formats), CS-610 (A clean 2.0 branch and a modern build), CS-611 (A clean 2.0 branch and a modern build) and CS-887 (A clean 2.0 branch and a modern build).
+- [x] [CS-835](./items/CS-835-2-0-s-folders-become-its-packages-the-move-to.md) 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json. Done.
 - [x] [CS-867](./items/CS-867-merge-cs-834-the-map-of-2-0-s-packages-and-seams.md) decision: Merge CS-834, the map of 2.0's packages and seams. Done.
 - [x] [CS-880](./items/CS-880-cs-834-d2-how-does-1-x-s-cesium-core-0-1-1-give.md) decision: CS-834 D2: how does 1.x's @cesium/core 0.1.1 give way to 2.0's core?. Done.
 - [x] [CS-881](./items/CS-881-cs-834-d3-what-prefix-do-catalog-adapters-use.md) decision: CS-834 D3: what prefix do catalog adapters use?. Done.
 - [x] [CS-883](./items/CS-883-cs-834-d1-where-do-the-shared-utilities-live.md) decision: CS-834 D1: where do the shared utilities live?. Done.
+- [x] [CS-916](./items/CS-916-merge-cs-835-2-0-s-folders-become-its-packages.md) decision: Merge CS-835, 2.0's folders become its packages in the final layout. Done.
 
 ### The agent-first migration kit
 

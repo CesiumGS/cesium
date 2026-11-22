@@ -406,14 +406,11 @@ CS-191 Content sources and formats
   CS-902  CS-559's scope, from the chosen reader and CS-833's study
       ← CS-901 Which USD reader does CS-559 use, from CS-900's comparison?
   CS-903  Label precedence: the bound material, taxonomy aliases and GeomSubset IDs
-      ← CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
-        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-904  Source-declared axis and scale, corrected through placement
-      ← CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
-        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-906  Variant selections and payload policy as open options, and their change as invalidation
-      ← CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
-        CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
 
 CS-192 Sky, light and atmosphere
   CS-282  Intel figures into `glareTier` and the Intel tables
@@ -669,14 +666,12 @@ CS-615 Packaging and package names
   CS-617  2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
       ← CS-616 Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
         CS-310 Licence check for Open Cascade (LGPL 2.1) before distribution
-        CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
   CS-618  An embedding app installs the core alone, checked by an install and bundle test
       ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
   CS-619  The API reference for every package
       ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
   CS-882  PROJ sits behind a coordinate-operations seam: @cesium/crs-proj splits from @cesium/crs
-      ← CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
-        CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
+      ← CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
 
 CS-622 The agent-first migration kit
   CS-624  The migration skill

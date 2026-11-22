@@ -119,6 +119,7 @@ CS-579 Editing
 
 CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
+  CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-85 merged item(s) not in a release
+86 merged item(s) not in a release
 ```

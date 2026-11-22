@@ -457,6 +457,8 @@ graph LR
     CS_906["CS-906 Variant selections and payload policy as open options, and thei"]:::open
     CS_908["CS-908 Gaussian splats from USD's ParticleField into the splat render "]:::proposed
     CS_909["CS-909 Merge CS-898, 64-bit integer properties keep their exact value"]:::done
+    CS_913["CS-913 The subset reader's composition faults on broken assets, tested"]:::proposed
+    CS_914["CS-914 OpenUSD in WebAssembly as a test oracle for the USD source"]:::proposed
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -793,12 +795,13 @@ graph LR
     CS_618["CS-618 An embedding app installs the core alone, checked by an install"]:::open
     CS_619["CS-619 The API reference for every package"]:::open
     CS_834["CS-834 A map of 2.0's packages and seams: capability packages, seam-pr"]:::done
-    CS_835["CS-835 2.0's folders become its packages: the move to the package map,"]:::open
+    CS_835["CS-835 2.0's folders become its packages: the move to the package map,"]:::done
     CS_867["CS-867 Merge CS-834, the map of 2.0's packages and seams"]:::done
     CS_880["CS-880 CS-834 D2: how does 1.x's @cesium/core 0.1.1 give way to 2.0's "]:::done
     CS_881["CS-881 CS-834 D3: what prefix do catalog adapters use?"]:::done
     CS_882["CS-882 PROJ sits behind a coordinate-operations seam: @cesium/crs-proj"]:::open
     CS_883["CS-883 CS-834 D1: where do the shared utilities live?"]:::done
+    CS_916["CS-916 Merge CS-835, 2.0's folders become its packages in the final la"]:::done
   end
   subgraph CS_622["agent-first migration kit"]
     CS_623["CS-623 The 1.x-to-2.0 map in a form agents read, with worked patterns"]:::open
@@ -1696,6 +1699,8 @@ graph LR
   CS_901 --> CS_907
   CS_277 --> CS_908
   CS_901 --> CS_908
+  CS_901 --> CS_913
+  CS_901 --> CS_914
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

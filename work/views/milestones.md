@@ -494,8 +494,8 @@ CS-608 Extension users have validated 2.0 with their own data [Planned], under C
 
 CS-614 The branch is a clean, modern 2.0 build [Planned], under CS-609 A clean 2.0 branch and a modern build
   outcome: The branch holds 2.0 alone, built, tested and released by a modern pipeline.
-  constraints: 2 of 5 done
-  unmet: not linked to a clause yet (open: CS-612, CS-613, CS-835; check not passed)
+  constraints: 3 of 5 done
+  unmet: not linked to a clause yet (open: CS-612, CS-613; check not passed)
   to shape: done_when; check; link CS-611, CS-612, CS-613, CS-610, CS-835 to a clause
 
 CS-621 The core installs alone, and the whole engine installs from one umbrella package [Planned], under CS-615 Packaging and package names

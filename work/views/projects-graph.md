@@ -19,7 +19,7 @@ graph LR
   CS_188["Earth to Moon (frames 5c to 5h)<br/>3 of 43 done"]
   CS_189["Frames and engineering coordinates follow-ups<br/>1 of 22 done"]
   CS_190["Vector drawing and the styling language<br/>0 of 14 done"]
-  CS_191["Content sources and formats<br/>17 of 60 done"]
+  CS_191["Content sources and formats<br/>17 of 62 done"]
   CS_192["Sky, light and atmosphere<br/>2 of 22 done"]
   CS_193["B-reps and geometry queries<br/>3 of 22 done"]
   CS_194["Budgeted selection and memory<br/>0 of 6 done"]
@@ -34,7 +34,7 @@ graph LR
   CS_584["widgets library<br/>0 of 9 done"]
   CS_596["Trust and evals<br/>0 of 9 done"]
   CS_609["A clean 2.0 branch and a modern build<br/>12 of 18 done"]
-  CS_615["Packaging and package names<br/>5 of 11 done"]
+  CS_615["Packaging and package names<br/>7 of 12 done"]
   CS_622["agent-first migration kit<br/>0 of 4 done"]
   CS_628["Sandcastle as 2.0's gallery<br/>0 of 16 done"]
   CS_637["particle system<br/>0 of 3 done"]
@@ -126,6 +126,5 @@ graph LR
   CS_628 -->|1| CS_579
   CS_193 -->|1| CS_579
   CS_191 -->|1| CS_615
-  CS_615 -->|3| CS_191
   CS_191 -->|1| CS_193
 ```

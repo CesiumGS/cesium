@@ -36,7 +36,7 @@ CS-191 Content sources and formats
       waited on by CS-271
   CS-901  Which USD reader does CS-559 use, from CS-900's comparison? (owner)
       first needs CS-900
-      waited on by CS-902, CS-907, CS-908
+      waited on by CS-902, CS-907, CS-908, CS-913, CS-914
 
 CS-192 Sky, light and atmosphere
   CS-296  Black hole visualization: how much physics, and an engine feature or a gallery example? (owner)
