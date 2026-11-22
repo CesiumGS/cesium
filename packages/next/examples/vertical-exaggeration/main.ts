@@ -86,6 +86,7 @@ export async function run({
   params,
   setParams,
   accessToken,
+  label,
 }: ExampleContext): Promise<Dispose> {
   const { engine, world, view } = viewer;
   const scrub = (text: string) =>
@@ -757,6 +758,8 @@ export async function run({
         return;
       }
       tileset = added;
+      // Its name where a host measures it (Dyno: tiles.osm, requests.osm).
+      label(added, "osm");
       scope.defer(() => viewer.remove(added));
     })
     .catch((error: unknown) => {

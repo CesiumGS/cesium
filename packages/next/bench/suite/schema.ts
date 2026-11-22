@@ -139,6 +139,49 @@ export interface Scene {
   height?: number;
 }
 
+/**
+ * A group D scene (catalog/dev.json; docs/superpowers/plans/2026-11-13-dyno-dev-harness.md,
+ * section 3): a gallery example with its parameters, run by the example
+ * host page (example.html) from the frozen build like any scene. Only
+ * 2.0 runs it; it has no camera script (the example frames itself, or the
+ * host applies a `camera` parameter) and no motion.
+ */
+export interface ExampleScene {
+  id: string;
+  title: string;
+  group: "D";
+  description?: string;
+  /** The example's id in examples/index.ts. */
+  example: string;
+  /**
+   * The example's own URL parameters, as it reads them (`x`, `view`), and
+   * the host's `camera` (`lon,lat,height,heading,pitch,range`: degrees and
+   * meters, the height above the ellipsoid as drawn). A configuration's
+   * `param.` settings override them.
+   */
+  params?: Record<string, string | number>;
+  /** `view.` settings the scene always runs with (`{ shadows: true }`). */
+  view?: ViewSettings;
+  /** The catalog datasets the example streams, for the licensing rule. */
+  datasets: string[];
+  /** The settle rule (exampleDriver.ts): how long the view must hold, and the cap. */
+  settle?: { holdMs?: number; capSeconds?: number };
+  /** Image checks (CS-397): what must hold for a capture ("settled"). */
+  checks?: string[];
+  /** Named crops of the image, [x0, y0, x1, y1] as shares of its size (CS-395). */
+  crop?: Record<string, [number, number, number, number]>;
+  areas?: string[];
+  /** Engines that run it ("2.0"): examples have no 1.x adapter. */
+  engines?: string[];
+  /** Measures `trianglesTerrainOnly`: the other tilesets hidden for a moment. */
+  terrainOnly?: boolean;
+  /** Measures the stretched error in a second page load (`probe=sse`). */
+  probe?: "sse";
+  /** Canvas size in CSS pixels (pixel ratio 1); default 1280×720. */
+  width?: number;
+  height?: number;
+}
+
 export interface Scenario {
   id: string;
   title: string;
@@ -191,6 +234,11 @@ export interface EngineConfig {
    * 2.0+view.lodExponent=0.5 → { lodExponent: 0.5 }. 2.0 only.
    */
   view?: ViewSettings;
+  /**
+   * An example's parameters from `param.` variants (2.0+param.x=10 →
+   * { x: 10 }), over the example scene's own. Example scenes only.
+   */
+  param?: Record<string, string | number | boolean>;
 }
 
 /** A configuration's `view.` settings (settings.mjs's registry). */
@@ -290,6 +338,28 @@ export interface RunMetrics {
   firstContentMs?: number;
   /** Load start until the initial view settled (nothing loading), ms. */
   settleMs?: number;
+  /**
+   * Example scenes: whether the settle rule held before its cap. A run
+   * that hit the cap is not settled, not failed: its metrics are kept,
+   * with why (`settleReason`) and the content request rate over its last
+   * 30 s (`requestRateEnd`, requests per second: still rising or not).
+   */
+  settled?: boolean;
+  settleReason?: string;
+  requestRateEnd?: number;
+  /** When the settle rule decided, ms since 1970 (the page's; the CLI drops it). */
+  decidedAt?: number;
+  /**
+   * The development metrics (docs/superpowers/plans/2026-11-13-dyno-dev-harness.md,
+   * section 4), by key: `tiles.<label>`, `tilesKnown.<label>`,
+   * `requests.<label>` (a tileset's own requests), `requests.<class>` and
+   * `bytes.<class>` (the browser's requests by host class: imagery,
+   * ionContent, ionEndpoint, google, other), `triangles`, `draws`,
+   * `trianglesTerrainOnly`, `gpuPass.<name>` and `gpuPassP90.<name>` (ms),
+   * `stretchedErrorMax`, `stretchedErrorP99`, `stretchedErrorOver`
+   * (`probe=sse`) and `pageErrors`. Summaries hold them as cells' metrics.
+   */
+  dev?: Record<string, number>;
   /** During motion: frame intervals (requestAnimationFrame), ms. */
   frameP50?: number;
   frameP95?: number;

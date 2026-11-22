@@ -29,10 +29,21 @@
 // but not judged. 2.0 against 2.0 (a change against main) judges them all.
 //
 // No scene measured by both engines (all errored, say) has no scorecard.
+// Group D's example scenes are never judged here, nor by budgets: they are
+// development measurements, kept out of headline means (CS-394).
 import { currentGpuTimer } from "./gpuTimer.mjs";
 import { ratio, summarize } from "./stats.mjs";
 import { escape } from "./charts.mjs";
 import { engineLabel, engineOf, setupOf } from "./engines.mjs";
+
+/**
+ * The run without its group D runs (example scenes): measured and shown,
+ * never judged by a scorecard or a budget.
+ */
+const headlineRuns = (results) =>
+  results.runs.some((r) => r.group === "D")
+    ? { ...results, runs: results.runs.filter((r) => r.group !== "D") }
+    : results;
 
 /** Guardrails for a change against the same engine (2.0 vs 2.0). */
 export const DEFAULT_PLAN = {
@@ -227,7 +238,7 @@ function selectionCheck(results, candidate) {
 
 /** The scorecard for baseline vs candidate under a declared plan. */
 export function scorecard(results, options = {}) {
-  results = currentGpuTimer(results);
+  results = headlineRuns(currentGpuTimer(results));
   const configs = [...new Set(results.runs.map((r) => r.config))];
   const baseline = options.baseline ?? results.baseline ?? configs[0];
   const candidate =
@@ -374,7 +385,7 @@ ${card.plan.hypothesis ? `<div class="sub">Hypothesis: ${escape(card.plan.hypoth
  */
 export function checkBudgets(results, budgets = results.budgets ?? []) {
   // A ratio to a baseline measured by another GPU timer isn't taken.
-  results = currentGpuTimer(results);
+  results = headlineRuns(currentGpuTimer(results));
   const configs = [...new Set(results.runs.map((r) => r.config))];
   const baseline = results.baseline ?? configs[0];
   return budgets

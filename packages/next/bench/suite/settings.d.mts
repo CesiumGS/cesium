@@ -12,7 +12,30 @@ export interface Setting {
   engines: Array<"1.x" | "2.0">;
   kinds: string[];
   aliases?: string[];
+  /** `param.` settings: the examples that declare it. */
+  examples?: string[];
 }
+
+/** A parameter an example declares (examples/index.ts `params`). */
+export interface DeclaredParam {
+  name: string;
+  label: string;
+  type: "number" | "integer" | "boolean" | "enum";
+  min?: number;
+  max?: number;
+  values?: readonly string[];
+}
+export function registerExampleParams(
+  examples: ReadonlyArray<{
+    id: string;
+    title: string;
+    params?: readonly DeclaredParam[];
+  }>,
+): Setting[];
+export function paramsNotTaken(
+  settingIds: string[],
+  scenes: ReadonlyArray<{ id: string; example: string }>,
+): string[];
 
 export const NAMESPACES: string[];
 export const SETTINGS: Setting[];

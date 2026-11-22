@@ -97,7 +97,13 @@ import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { loadCatalog, sceneDatasets, unsupportedReason } from "../manifest.mjs";
+import {
+  allScenes,
+  isExampleScene,
+  loadCatalog,
+  sceneDatasets,
+  unsupportedReason,
+} from "../manifest.mjs";
 import { fetchDatasets, verify } from "../store.mjs";
 import { releaseList } from "../release.mjs";
 import { describeBuild, resolveEngine, treeRef } from "../engineBuilds.mjs";
@@ -107,6 +113,8 @@ import {
   pointSuffix,
   SettingError,
   checkVariants,
+  paramsNotTaken,
+  registerExampleParams,
   unappliedViewSettings,
 } from "../settings.mjs";
 import { renderReport, summarizeRun } from "../report.mjs";
@@ -163,6 +171,38 @@ const resultsDirectory = () =>
 
 /** Options that may repeat: each occurrence's value, in order. */
 const REPEATABLE = new Set(["sweep"]);
+
+/** The host classes example scenes count requests and bytes by. */
+const HOST_CLASSES = [
+  "imagery",
+  "ionContent",
+  "ionEndpoint",
+  "google",
+  "other",
+];
+
+/**
+ * A content request's host class, as the α study counted them: Bing's
+ * imagery, ion's content and its endpoint (asset resolution), Google's
+ * tiles, and anything else. By host only: never the URL, which can carry
+ * a key.
+ */
+function hostClass(url) {
+  const host = url.hostname;
+  if (host.endsWith("virtualearth.net")) {
+    return "imagery";
+  }
+  if (host === "assets.ion.cesium.com" || host === "assets.cesium.com") {
+    return "ionContent";
+  }
+  if (host === "api.cesium.com") {
+    return "ionEndpoint";
+  }
+  if (host === "googleapis.com" || host.endsWith(".googleapis.com")) {
+    return "google";
+  }
+  return "other";
+}
 
 /**
  * `--key value` options, `--flag` booleans (followed by another option or
@@ -309,6 +349,18 @@ const COMMANDS = {
         `${scene.group}  ${scene.id.padEnd(24)} ${scene.title}${scene.unsupported.length ? `  [${scene.unsupported.join("; ")}]` : ""}`,
       );
     }
+    // Group D: run only when --scenes names them.
+    const exampleScenes = catalog.exampleScenes.map((scene) => ({
+      id: scene.id,
+      group: scene.group,
+      title: scene.title,
+      example: scene.example,
+    }));
+    for (const scene of exampleScenes) {
+      console.log(
+        `${scene.group}  ${scene.id.padEnd(24)} ${scene.title}  [example ${scene.example}; --scenes ${scene.id}]`,
+      );
+    }
     const source = catalog.sources > 1 ? "public+private" : "public";
     console.log(
       `${catalog.scenes.length} scenes, ${catalog.datasets.length} datasets, ${catalog.sources > 1 ? "public + private" : "public"} catalog`,
@@ -327,6 +379,7 @@ const COMMANDS = {
     return {
       catalog: source,
       scenes,
+      exampleScenes,
       datasets: catalog.datasets.length,
       areas,
       tiers,
@@ -626,10 +679,13 @@ function settingUsage(error) {
   return error instanceof SettingError ? new SuiteUsage(error.message) : error;
 }
 
-/** Checks an engine spec's settings (settings.mjs) for a bench run. */
-function checkSpec(spec) {
+/**
+ * Checks an engine spec's settings (settings.mjs) for the run's kind:
+ * "bench", or "example" when every scene is an example scene.
+ */
+function checkSpec(spec, kind = "bench") {
   try {
-    checkVariants(parseEngine(spec), "bench");
+    checkVariants(parseEngine(spec), kind);
   } catch (error) {
     throw settingUsage(
       error instanceof SettingError
@@ -645,7 +701,7 @@ function checkSpec(spec) {
  * the swept engines once per point. Returns { axes, reference?, points:
  * [{ coords, reference?, specs }], engines } or undefined.
  */
-function sweepOf(specs) {
+function sweepOf(specs, kind = "bench") {
   const typed = [].concat(opts.sweep ?? []);
   if (typed.includes(true)) {
     throw new SuiteUsage(
@@ -685,7 +741,7 @@ function sweepOf(specs) {
       ...(opts["reference-reps"] !== undefined
         ? { referenceReps: opts["reference-reps"] }
         : {}),
-      kind: "bench",
+      kind,
       ...(engines.length === 1 ? { engine: engines[0] } : {}),
     });
   } catch (error) {
@@ -720,12 +776,14 @@ const SWEEP_CONFIRM_RUNS = 60;
  * runs that makes) and refuses one above SWEEP_CONFIRM_RUNS without --yes.
  * No time estimate: the count is what a person weighs.
  */
-function checkSweepCost(sweep, { specs, scenes, scenarios, reps }) {
+function checkSweepCost(sweep, { specs, scenes, scenariosOf, reps }) {
   const extra = (sweep.reference?.reps ?? 1) - 1;
   const referenceSpecs = sweep.points
     .filter((p) => p.reference)
     .reduce((n, p) => n + p.specs.length, 0);
-  const cells = scenes.length * scenarios.length * reps;
+  const scenarioRuns = scenes.reduce((n, s) => n + scenariosOf(s).length, 0);
+  const cells = scenarioRuns * reps;
+  const scenarios = [...new Set(scenes.flatMap(scenariosOf))];
   const runs = cells * (specs.length + extra * referenceSpecs);
   const axes = sweep.axes
     .map((a) => `${a.id} (${a.values.length})`)
@@ -790,20 +848,53 @@ async function run() {
       return { run_id: null, scenes: [] };
     }
   }
+  // Example scenes (group D) run only when --scenes names them.
   const scenes =
-    pick(catalog.scenes, "scenes") ??
+    pick(allScenes(catalog), "scenes") ??
     (areaIds && !tier?.allScenes
       ? scenesFor(catalog, areaIds)
       : catalog.scenes);
+  // An example run (every scene an example's) takes the examples' own
+  // param. settings (examples/index.ts), registered here before any
+  // engine or sweep is checked.
+  const exampleScenes = scenes.filter(isExampleScene);
+  const kind =
+    exampleScenes.length && exampleScenes.length === scenes.length
+      ? "example"
+      : "bench";
+  if (exampleScenes.length) {
+    const { EXAMPLES } = await import("../../../examples/index.ts");
+    registerExampleParams(EXAMPLES);
+    const missing = exampleScenes.filter(
+      (s) => !EXAMPLES.some((e) => e.id === s.example),
+    );
+    if (missing.length) {
+      throw new Error(
+        `no such example (examples/index.ts): ${missing.map((s) => `${s.id} names "${s.example}"`).join(", ")}`,
+      );
+    }
+  }
   if (opts.configs || opts.cesium) {
     throw new Error(
       "--configs and --cesium became --engines (e.g. --engines 1.146.0,2.0)",
     );
   }
-  // Engines (engines.mjs); a historical sweep adds one release each.
+  // param. settings are examples' own: a run with catalog scenes takes none.
+  const asked = [opts.engines, opts.reference, ...[].concat(opts.sweep ?? [])]
+    .filter((x) => typeof x === "string")
+    .join(" ");
+  if (kind !== "example" && /(^|[\s+,])param\./.test(asked)) {
+    throw new SuiteUsage(
+      "param. settings are an example's own: run them on example scenes only (group D, catalog/dev.json, e.g. --scenes vex-valley)",
+    );
+  }
+  // Engines (engines.mjs); a historical sweep adds one release each. An
+  // example run defaults to the engines its scenes name (2.0).
   const specs = opts.engines
     ? String(opts.engines).split(",")
-    : [...catalog.engines.default];
+    : kind === "example"
+      ? [...new Set(exampleScenes.flatMap((s) => s.engines ?? ["2.0"]))]
+      : [...catalog.engines.default];
   if (opts.releases) {
     for (const version of releaseList(opts.releases)) {
       if (!specs.includes(version)) {
@@ -818,7 +909,7 @@ async function run() {
   // "2.0+maximumScreenSpaceError=8+view.lodExponent=0.5". Every setting and
   // value is checked against the registry (settings.mjs) before anything
   // runs.
-  const sweep = sweepOf(specs);
+  const sweep = sweepOf(specs, kind);
   // --against-base: this tree against its base commit, in one run, where
   // the configurations alternate. The base is 2.0 built at the commit this
   // branch left the integration branch (an engine at a ref, built once into
@@ -854,12 +945,38 @@ async function run() {
           (s) => s.id === "cold-orbit" || s.id === "uncapped-orbit",
         ));
   const reps = Number(opts.reps ?? tier?.reps ?? 3);
+  // Example scenes load and settle, with no motion: the startup scenario,
+  // whatever the run's scenarios are.
+  const exampleScenario = catalog.scenarios.find((s) => s.id === "cold-start");
+  const scenariosOf = (scene) =>
+    isExampleScene(scene) ? [exampleScenario] : scenarios;
   // Every engine's settings, checked before anything runs.
   for (const spec of specs) {
-    checkSpec(spec);
+    checkSpec(spec, kind);
+  }
+  if (kind === "example") {
+    // A param. setting must be one each scene's example declares.
+    const params = [
+      ...new Set(
+        specs.flatMap((spec) =>
+          parseEngine(spec)
+            .variants.filter((v) => v.startsWith("param.") && v.includes("="))
+            .map((v) => v.slice(0, v.indexOf("="))),
+        ),
+      ),
+    ];
+    const refused = paramsNotTaken(params, exampleScenes);
+    if (refused.length) {
+      throw new SuiteUsage(
+        `a scene's example doesn't take ${refused.join(", ")}: each example declares its parameters in examples/index.ts`,
+      );
+    }
+  }
+  if (opts.probe !== undefined && opts.probe !== "sse") {
+    throw new SuiteUsage("--probe takes sse (the stretched error)");
   }
   if (sweep) {
-    checkSweepCost(sweep, { specs, scenes, scenarios, reps });
+    checkSweepCost(sweep, { specs, scenes, scenariosOf, reps });
   }
   // From here the run builds and measures: one at a time per machine.
   const lock = await takeLock(identity);
@@ -943,6 +1060,7 @@ async function run() {
       serve,
       frozen,
       log,
+      kind,
     });
     configs.push(config);
     byspec.set(spec, config.id);
@@ -996,6 +1114,17 @@ async function run() {
       byspec.get(catalog.engines.candidate) ??
       configs.find((c) => c.engine === "2.0" && c.id !== baseline)?.id ??
       configs.at(-1).id);
+  // The settle rule's cap for example scenes, over each scene's own.
+  const settleCap =
+    opts["settle-cap"] === undefined ? undefined : Number(opts["settle-cap"]);
+  if (settleCap !== undefined && !(settleCap > 0 && settleCap <= 3600)) {
+    throw new SuiteUsage("--settle-cap: seconds, above 0 and at most 3600");
+  }
+  // GPU time per pass after an example scene settles, in ticks.
+  const gpuTicks = Number(opts["gpu-ticks"] ?? 120);
+  if (!Number.isInteger(gpuTicks) || gpuTicks < 0 || gpuTicks > 2000) {
+    throw new SuiteUsage("--gpu-ticks: an integer from 0 to 2000");
+  }
   const replayMotion =
     !opts["no-motion-quality"] && tier?.motionQuality !== false;
   const motion = opts.motion ? Number(opts.motion) : undefined;
@@ -1176,8 +1305,7 @@ async function run() {
   );
   const referenceReps = sweep?.reference?.reps ?? 1;
   let total =
-    scenes.length *
-    scenarios.length *
+    scenes.reduce((n, s) => n + scenariosOf(s).length, 0) *
     reps *
     (configs.length + (referenceReps - 1) * referenceIds.size);
   let done = 0;
@@ -1250,9 +1378,13 @@ async function run() {
       plan.guardrails.every((k) => settledBy(k, plan.tolerance))
     );
   };
-  for (const scene of scenes) {
+  for (let scene of scenes) {
+    const example = isExampleScene(scene);
+    if (example && settleCap !== undefined) {
+      scene = { ...scene, settle: { ...scene.settle, capSeconds: settleCap } };
+    }
     const datasets = sceneDatasets(catalog, scene);
-    for (const scenario of scenarios) {
+    for (const scenario of scenariosOf(scene)) {
       // Engines whose remaining repetitions came from stored runs.
       const fromStore = new Set();
       for (let rep = 0; rep < reps; rep++) {
@@ -1283,6 +1415,7 @@ async function run() {
             unsupported: unsupportedReason(catalog, scene, config.engine),
             capture: rep === 0 && repeat === 0 && !opts["no-capture"],
             render,
+            ...(example ? { gpuTicks } : {}),
           };
           const label = `[${done}/${total}] ${scene.id} ${scenario.id} ${config.id} #${rep + 1}${repeat ? `.${repeat + 1}` : ""}`;
           process.stdout.write(`${label}… `);
@@ -1300,6 +1433,39 @@ async function run() {
             results,
           );
           result.span = [(runStart - t0) / 1000, (Date.now() - t0) / 1000];
+          // The stretched error (probe=sse): a second page load, since the
+          // probe changes timing; once per engine, in the first repetition.
+          if (
+            example &&
+            rep === 0 &&
+            repeat === 0 &&
+            result.metrics.status === "ok" &&
+            (scene.probe === "sse" || opts.probe === "sse")
+          ) {
+            process.stdout.write("probe=sse… ");
+            const probe = await runOne(
+              await browserFor(scenario),
+              base,
+              { ...spec, capture: false, probe: true },
+              results,
+            );
+            const found = Object.keys(probe.metrics.dev ?? {}).filter((k) =>
+              k.startsWith("stretchedError"),
+            );
+            if (found.length) {
+              result.metrics.dev = {
+                ...result.metrics.dev,
+                ...Object.fromEntries(
+                  found.map((k) => [k, probe.metrics.dev[k]]),
+                ),
+              };
+            } else {
+              result.metrics.probe =
+                probe.metrics.status === "ok"
+                  ? "the probe reported nothing"
+                  : `the probe's load failed: ${probe.metrics.message ?? probe.metrics.status}`;
+            }
+          }
           // The view's settings as the page holds them (metrics.view): one
           // that didn't reach the view fails the run instead of measuring
           // the default under the setting's name.
@@ -1349,13 +1515,17 @@ async function run() {
             failed++;
           }
           console.log(
-            result.metrics.status === "ok"
-              ? `settle ${(result.metrics.settleMs / 1000).toFixed(1)} s, ${
-                  result.metrics.frameP50 === undefined
-                    ? `first content ${(result.metrics.firstContentMs / 1000).toFixed(2)} s`
-                    : `frame p50 ${result.metrics.frameP50.toFixed(1)} ms`
-                }`
-              : `${result.metrics.status}${result.metrics.message ? `: ${result.metrics.message}` : ""}`,
+            result.metrics.status === "ok" && result.metrics.settled === false
+              ? `not settled (${result.metrics.settleReason}); ${result.metrics.requestRateEnd} requests/s over the last 30 s`
+              : result.metrics.status === "ok" && example
+                ? `settled in ${(result.metrics.settleMs / 1000).toFixed(1)} s, ${result.metrics.dev?.triangles ?? "?"} triangles`
+                : result.metrics.status === "ok"
+                  ? `settle ${(result.metrics.settleMs / 1000).toFixed(1)} s, ${
+                      result.metrics.frameP50 === undefined
+                        ? `first content ${(result.metrics.firstContentMs / 1000).toFixed(2)} s`
+                        : `frame p50 ${result.metrics.frameP50.toFixed(1)} ms`
+                    }`
+                  : `${result.metrics.status}${result.metrics.message ? `: ${result.metrics.message}` : ""}`,
           );
           // The first repetition calibrates against stored ones.
           if (
@@ -1530,6 +1700,10 @@ async function run() {
         [card.plan.primary, ...card.plan.guardrails],
       ),
     );
+  } else if (kind === "example") {
+    console.log(
+      "\nno verdict: example scenes (group D) are measured, not judged\n",
+    );
   } else if (results.baseline !== results.candidate) {
     console.log("\nno verdict: no scene was measured by both engines\n");
   }
@@ -1587,6 +1761,11 @@ async function runOne(browser, base, spec, results) {
   const hosts = new Map();
   const sizes = [];
   const starts = [];
+  // Example scenes: requests and bytes by host class (never the URL).
+  const example = isExampleScene(spec.scene);
+  const classes = {};
+  const classBytes = [];
+  const requestStarts = [];
   await page.exposeFunction("measureMemory", () =>
     retainedMemory(context, page),
   );
@@ -1620,6 +1799,12 @@ async function runOne(browser, base, spec, results) {
       .then((s) => s.responseBodySize + s.responseHeadersSize)
       .catch(() => 0);
     sizes.push(size);
+    if (example) {
+      requestStarts.push(request.timing().startTime);
+      const kind = hostClass(url);
+      classes[kind] = (classes[kind] ?? 0) + 1;
+      classBytes.push(size.then((bytes) => [kind, bytes]));
+    }
     // When each request started, to split bytes at the motion's start.
     const startedAt = request.timing().startTime - runStart;
     starts.push(size.then((bytes) => [startedAt, bytes]));
@@ -1642,7 +1827,9 @@ async function runOne(browser, base, spec, results) {
     const { cesium, server } = spec.config.page ?? {};
     const origin = server ?? base;
     await page.goto(
-      `${origin}/bench/suite/suite.html?bench${cesium ? `&cesium=${encodeURIComponent(cesium)}` : ""}`,
+      example
+        ? `${origin}/bench/suite/example.html?bench`
+        : `${origin}/bench/suite/suite.html?bench${cesium ? `&cesium=${encodeURIComponent(cesium)}` : ""}`,
     );
     if (!results.environment.page) {
       results.environment.page = await page.evaluate(() =>
@@ -1662,8 +1849,39 @@ async function runOne(browser, base, spec, results) {
     context.on("requestfinished", count);
     measuring = true;
     runStart = Date.now();
-    const metrics = await page.evaluate((s) => globalThis.runScene(s), spec);
+    const metrics = example
+      ? await page.evaluate((s) => globalThis.runExample(s), {
+          scene: spec.scene,
+          config: spec.config,
+          capture: spec.capture,
+          probe: spec.probe,
+          gpuTicks: spec.gpuTicks,
+        })
+      : await page.evaluate((s) => globalThis.runScene(s), spec);
     context.off("requestfinished", count);
+    if (example && !spec.probe) {
+      const dev = { ...metrics.dev };
+      for (const kind of HOST_CLASSES) {
+        dev[`requests.${kind}`] = classes[kind] ?? 0;
+        dev[`bytes.${kind}`] = 0;
+      }
+      for (const [kind, bytes] of await Promise.all(classBytes)) {
+        dev[`bytes.${kind}`] += bytes;
+      }
+      dev.pageErrors = errors.length;
+      metrics.dev = dev;
+      // Content requests started in the 30 s before the settle rule
+      // decided, per second: still rising, or done.
+      if (metrics.decidedAt !== undefined) {
+        const window = Math.min(30_000, metrics.decidedAt - runStart);
+        const recent = requestStarts.filter(
+          (t) => t > metrics.decidedAt - window && t <= metrics.decidedAt,
+        ).length;
+        metrics.requestRateEnd =
+          window > 0 ? Math.round((recent / (window / 1000)) * 100) / 100 : 0;
+      }
+    }
+    delete metrics.decidedAt;
     // A page from before r39 (a snapshot at an older commit) read
     // performance.memory itself: kept apart, as migrated results are.
     if (metrics.heapBytes !== undefined && metrics.bufferBytes === undefined) {
@@ -1996,6 +2214,10 @@ function validity(result, quietLimit, idle = {}) {
   }
   if (m.message) {
     reasons.push(`page errors: ${m.message}`);
+  }
+  // An example scene that hit its cap: measured, and said so.
+  if (m.settled === false) {
+    reasons.push(`not settled: ${m.settleReason ?? "the cap was reached"}`);
   }
   return { verdict: reasons.length ? "warning" : "valid", reasons };
 }

@@ -15,7 +15,7 @@ import { Link as RouterLink, useLocation } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { ALERT_METRICS, detectAlerts } from "../changepoints.mjs";
 import { engineLabel, isRelease, setupOf } from "../engines.mjs";
-import { METRICS } from "../report.mjs";
+import { headlineSummary, METRICS } from "../report.mjs";
 import { catalog, geomean, metricInfo, short, type Summary } from "../data.ts";
 import type { Budget } from "../schema.ts";
 import { formatChange, Page, Section, useRuns } from "./common.tsx";
@@ -273,8 +273,23 @@ function useAttention(summaries: Summary[]) {
 
 export function Overview() {
   const { summaries } = useRuns();
-  const plain = useMemo(() => summaries.filter((s) => !s.sweep), [summaries]);
-  const latest = plain.at(-1) ?? summaries.at(-1);
+  // Ordinary runs, as headlines read them: group D's example scenes left
+  // out, and runs of only those skipped (they never move these numbers).
+  const plain = useMemo(
+    () =>
+      summaries
+        .filter((s) => !s.sweep)
+        .map((s) => headlineSummary(s))
+        .filter((s) => s !== undefined),
+    [summaries],
+  );
+  const latest =
+    plain.at(-1) ??
+    summaries
+      .map((s) => headlineSummary(s))
+      .filter((s) => s !== undefined)
+      .at(-1) ??
+    summaries.at(-1);
   const previous = plain.at(-2);
   const recent = useMemo(
     () => [...summaries].reverse().slice(0, 5),

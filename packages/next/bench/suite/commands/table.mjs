@@ -99,6 +99,18 @@ const SUITE_OPTIONS = {
     hypothesis: o("what the run expects", "text"),
     tolerance: o("the guardrails' tolerance", "fraction"),
     "no-capture": o("no filmstrips"),
+    probe: o(
+      "example scenes: the stretched error, in a second page load (it changes timing)",
+      "sse",
+    ),
+    "settle-cap": o(
+      "example scenes: the settle rule's cap, over each scene's own (a capped run is not settled, not failed)",
+      "s",
+    ),
+    "gpu-ticks": o(
+      "example scenes: ticks of GPU time per pass after settling (default 120; 0: none)",
+      "n",
+    ),
     configs: o("(replaced by --engines)", "list", { hidden: true }),
     cesium: o("(replaced by --engines)", "list", { hidden: true }),
   },
@@ -205,6 +217,12 @@ const SUITE_DETAILS = {
     "marks the reference points; --reference-reps runs them more often. Engine",
     "settings go without their namespace in engine ids too (2.0+sse=32). Settings:",
     ...settingsList({ kind: "bench" }).split("\n"),
+    "",
+    "Example scenes (group D, catalog/dev.json) run only when --scenes names",
+    "them, on 2.0, from the example host page; they take the view. settings and",
+    "their example's own param. settings, declared in examples/index.ts",
+    "(2.0+param.x=10, --sweep param.x=1,4,10). A run that hits its scene's",
+    "settle cap is reported as not settled, with its metrics, not as failed.",
   ],
   coldstart: [
     "Its dev server listens on --port, 4101 by default. dyno doesn't pick a free",

@@ -121,6 +121,21 @@ export const EXAMPLES: ExampleInfo[] = [
       "Everything drawn up to ten times as tall (globe, terrain, buildings, a model, pins) by one reference frame and a camera rig, with nothing set on any item. Picks and measurements go back through the map and report true heights.",
     labels: ["Terrain", "Frames", "Measurement"],
     globe: "terrain",
+    params: [
+      {
+        name: "x",
+        label: "exaggeration factor",
+        type: "number",
+        min: 1,
+        max: 10,
+      },
+      {
+        name: "view",
+        label: "camera preset",
+        type: "enum",
+        values: ["valley", "zermatt-close"],
+      },
+    ],
     load: () => import("./vertical-exaggeration/main.ts"),
     source: () =>
       import("./vertical-exaggeration/main.ts?raw").then((m) => m.default),

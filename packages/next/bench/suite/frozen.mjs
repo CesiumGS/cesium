@@ -4,7 +4,7 @@
 // ignored ones not) into a commit object through a temporary index, so the
 // branch, its index and the files are untouched; that commit is checked
 // out into one reused worktree (<repo>/.bench/tree) and built with Vite for
-// production (the suite and FLIP pages only), once per commit. Edits made
+// production (the suite, FLIP and example host pages only), once per commit. Edits made
 // while a run is going don't reach it, and pages load as shipped code (the
 // dev server's per-module loading and HMR client added 5.6 MB of JS heap
 // and 19 MB of buffers to NYC, r39). Snapshots at git refs build the same
@@ -89,6 +89,8 @@ export function checkoutFrozen(repo, sha) {
 const PAGES = {
   suite: "bench/suite/suite.html",
   flip: "bench/suite/flip.html",
+  // Group D's host page: one gallery example as a scene (exampleDriver.ts).
+  example: "bench/suite/example.html",
 };
 
 /**

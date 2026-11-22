@@ -14,9 +14,12 @@ import {
   CircularProgress,
   IconButton,
   Link,
+  Popover,
   Typography,
 } from "@mui/material";
 import { svgArrowLeft } from "@stratakit/icons/arrow-left";
+import { svgCopy } from "@stratakit/icons/copy";
+import { svgStopwatch } from "@stratakit/icons/stopwatch";
 import { svgDismiss } from "@stratakit/icons/dismiss";
 import { Icon } from "@stratakit/mui";
 import {
@@ -28,6 +31,7 @@ import {
   type ReactNode,
   type RefObject,
   useEffect,
+  useId,
   useRef,
   useState,
 } from "react";
@@ -39,12 +43,16 @@ import { needsToken, tokenSource } from "../ionToken.ts";
 import { TokenPrompt } from "../IonTokenSettings.tsx";
 import { useIonToken } from "../useIonToken.ts";
 import { limitsTier } from "../limitsTier.ts";
-import { Empty, Page, Section } from "./common.tsx";
+import devCatalog from "../catalog/dev.json";
+import type { ExampleScene } from "../schema.ts";
+import { variantWords } from "../settings.mjs";
+import { Empty, Page, Section, toast } from "./common.tsx";
 import { ExampleSwitcher, ExampleThumbnail } from "./ExampleSwitcher.tsx";
 import {
   createEngineKeeper,
   createParamsStore,
   exampleLink,
+  measureCommand,
   normalizeRun,
   type Params,
   searchToParams,
@@ -245,14 +253,17 @@ export function ExamplePage() {
       description={info.description}
       back={<ExampleSwitcher current={info} />}
       actions={
-        <Button
-          variant="outlined"
-          onClick={() => setShowSource((v) => !v)}
-          aria-expanded={showSource}
-          aria-controls="example-source"
-        >
-          {showSource ? "Hide source" : "Show source"}
-        </Button>
+        <>
+          <MeasureThis info={info} />
+          <Button
+            variant="outlined"
+            onClick={() => setShowSource((v) => !v)}
+            aria-expanded={showSource}
+            aria-controls="example-source"
+          >
+            {showSource ? "Hide source" : "Show source"}
+          </Button>
+        </>
       }
     >
       {leaveError && (
@@ -351,6 +362,105 @@ export function ExamplePage() {
         </Section>
       )}
     </Page>
+  );
+}
+
+/** Group D's scenes: the examples Dyno measures. */
+const EXAMPLE_SCENES = devCatalog.exampleScenes as unknown as ExampleScene[];
+
+/**
+ * "Measure this", as the Explorer has it: the command that runs this
+ * example as a Dyno scene (catalog/dev.json, group D) from a production
+ * build, with the page's own parameters. Only for examples a scene runs.
+ */
+function MeasureThis({ info }: { info: ExampleInfo }) {
+  const params = searchToParams(exampleRoute.useSearch());
+  const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const titleId = useId();
+  const measure = measureCommand(
+    info.id,
+    EXAMPLE_SCENES,
+    info.params ?? [],
+    params,
+  );
+  if (!measure) {
+    return null;
+  }
+  const { scene, command, overrides, others } = measure;
+  // What the scene sets on the view, which this page may not ("shadows on").
+  const view = Object.entries(
+    EXAMPLE_SCENES.find((s) => s.id === scene.id)?.view ?? {},
+  ).map(([key, value]) => variantWords(`view.${key}`, value));
+  const copy = () => {
+    if (!navigator.clipboard) {
+      toast("Could not copy: select the command and copy it.", "bad");
+      return;
+    }
+    void navigator.clipboard.writeText(command).then(
+      () => toast("Command copied"),
+      () => toast("Could not copy: select the command and copy it.", "bad"),
+    );
+  };
+  return (
+    <>
+      <Button
+        variant="outlined"
+        startIcon={<Icon href={svgStopwatch} />}
+        aria-haspopup="dialog"
+        aria-expanded={!!anchor}
+        onClick={(e) => setAnchor(e.currentTarget)}
+      >
+        Measure this
+      </Button>
+      <Popover
+        open={!!anchor}
+        anchorEl={anchor}
+        onClose={() => setAnchor(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        slotProps={{ paper: { "aria-labelledby": titleId } }}
+      >
+        <div className="examples-measure">
+          <Typography variant="subtitle-sm" render={<h2 />} id={titleId}>
+            Measure this example
+          </Typography>
+          <Typography variant="body-sm" color="textSecondary" render={<p />}>
+            Dyno runs it as the scene <b>{scene.title}</b>
+            {view.length > 0 && ` (${view.join(", ")})`} from a production
+            build, with a cold cache and repetitions, waits until it settles,
+            and records tiles and requests per tileset, requests and bytes by
+            host, triangles, draws and GPU time per pass.
+            {overrides.length > 0 &&
+              ` This page's ${overrides.map(([k, v]) => `${k}=${v}`).join(", ")} ${overrides.length === 1 ? "goes in as a parameter" : "go in as parameters"}.`}{" "}
+            Run this from the repository root:
+          </Typography>
+          <pre className="examples-command">
+            <code>{command}</code>
+          </pre>
+          {others.length > 0 && (
+            <Typography
+              variant="caption-lg"
+              color="textSecondary"
+              render={<p />}
+            >
+              Other scenes of this example:{" "}
+              {others.map((s, i) => (
+                <span key={s.id}>
+                  {i > 0 && ", "}
+                  <code>{s.id}</code>
+                </span>
+              ))}
+              .
+            </Typography>
+          )}
+          <div className="examples-measure-actions">
+            <Button startIcon={<Icon href={svgCopy} />} onClick={copy}>
+              Copy command
+            </Button>
+          </div>
+        </div>
+      </Popover>
+    </>
   );
 }
 
@@ -497,6 +607,8 @@ function ExampleRunner({
             watchParams: params.watch,
             link: (next) =>
               exampleLink(router, info.id, next, window.location.href),
+            // Names for Dyno's example scenes (exampleDriver.ts); nothing here.
+            label: () => undefined,
           }),
         );
         if (signal.aborted) {

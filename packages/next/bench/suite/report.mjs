@@ -76,7 +76,88 @@ const METRICS = [
   ["motionFlip", "quality in motion (FLIP, in motion vs settled)", "", 1],
   // A dev server request's time to its whole answer (workApiRun.mjs).
   ["requestMs", "request", "ms", 1],
+  // Example scenes (group D): the settle rule, and the development
+  // metrics of docs/superpowers/plans/2026-11-13-dyno-dev-harness.md,
+  // section 4 (RunMetrics.dev; per tileset, per host class and per pass
+  // in DEV_FAMILIES).
+  ["settled", "settled (share of repetitions)", "", 1],
+  ["requestRateEnd", "requests per second, last 30 s", "", 1],
+  ["triangles", "triangles drawn", "", 1],
+  ["draws", "draws", "", 1],
+  ["trianglesTerrainOnly", "triangles drawn, terrain only", "", 1],
+  ["stretchedErrorMax", "largest stretched error", "px", 1],
+  ["stretchedErrorP99", "stretched error p99", "px", 1],
+  ["stretchedErrorOver", "tiles over the error threshold", "", 1],
+  ["pageErrors", "page errors", "", 1],
 ];
+
+/**
+ * The development metrics named by a tileset, a host class or a pass
+ * (`tiles.osm`, `bytes.imagery`, `gpuPass.opaque`): prefix, label, unit,
+ * scale.
+ */
+const DEV_FAMILIES = [
+  ["tiles.", "tiles drawn", "", 1],
+  ["tilesKnown.", "tiles known", "", 1],
+  ["requests.", "requests", "", 1],
+  ["bytes.", "bytes", "MB", 1e6],
+  ["gpuPass.", "GPU per pass, median", "ms", 1],
+  ["gpuPassP90.", "GPU per pass, p90", "ms", 1],
+];
+
+/**
+ * A metric's row ([key, label, unit, scale]): METRICS', or a development
+ * metric's by its family ("requests, osm"); undefined for neither.
+ */
+export function metricRow(key) {
+  const row = METRICS.find((m) => m[0] === key);
+  if (row) {
+    return row;
+  }
+  const family = DEV_FAMILIES.find(([prefix]) => key.startsWith(prefix));
+  return family
+    ? [
+        key,
+        `${family[1]}, ${key.slice(family[0].length)}`,
+        family[2],
+        family[3],
+      ]
+    : undefined;
+}
+
+/**
+ * One run's value of a metric: its own (`settleMs`), or a development
+ * metric's (`metrics.dev`); `settled` as 1 or 0.
+ */
+export function metricValue(metrics, key) {
+  if (key === "settled") {
+    return metrics.settled === undefined ? undefined : metrics.settled ? 1 : 0;
+  }
+  return metrics[key] ?? metrics.dev?.[key];
+}
+
+/** Group D (example scenes): measured and shown, never in headline means, the Overview or budgets. */
+export const isHeadlineGroup = (group) => group !== "D";
+
+/**
+ * A summary as the Overview reads it: its group D cells left out, so
+ * example scenes never move its numbers. A summary of only group D runs
+ * (`groups`) has nothing for it: `undefined`.
+ */
+export function headlineSummary(summary) {
+  if (
+    summary.groups?.length &&
+    !summary.groups.some((g) => isHeadlineGroup(g))
+  ) {
+    return undefined;
+  }
+  return summary.scenes.some((c) => !isHeadlineGroup(c.group))
+    ? {
+        ...summary,
+        scenes: summary.scenes.filter((c) => isHeadlineGroup(c.group)),
+      }
+    : summary;
+}
 
 const escape = (s) =>
   String(s).replace(
@@ -549,7 +630,11 @@ export function renderReport(results, options = {}) {
   const okValues = (group, config, key) =>
     (group.byConfig.get(config) ?? [])
       .filter((m) => m.status === "ok")
-      .map((m) => m[key]);
+      .map((m) => metricValue(m, key));
+  // The headlines' scenes: group D's are shown below, not averaged.
+  const headlineGroups = [...groups.values()].filter((g) =>
+    isHeadlineGroup(g.run.group),
+  );
   const gapOf = (group) => {
     for (const [config, list] of group.byConfig) {
       const bad = list.find((m) => m.status !== "ok");
@@ -569,7 +654,7 @@ export function renderReport(results, options = {}) {
     const ratios = [];
     let better = 0;
     let worse = 0;
-    for (const group of groups.values()) {
+    for (const group of headlineGroups) {
       const r = ratio(
         okValues(group, baseline, key),
         okValues(group, candidate, key),
@@ -623,7 +708,7 @@ export function renderReport(results, options = {}) {
       const ratios = [];
       let better = 0;
       let worse = 0;
-      for (const group of groups.values()) {
+      for (const group of headlineGroups) {
         const r = ratio(
           okValues(group, baseline, key),
           okValues(group, config, key),
@@ -811,33 +896,44 @@ ${cpu.length ? chart("CPU speed (% of nominal)", "%", cpu, 1) + chart("CPU utili
       configs,
       color,
     });
-    const rows = METRICS.map(([key, label, unit, scale]) => {
-      const values = new Map(configs.map((c) => [c, okValues(group, c, key)]));
-      if (configs.every((c) => !values.get(c).some(Number.isFinite))) {
-        return "";
-      }
-      const cells = configs.map((c) => {
-        const s = summarize(values.get(c));
-        const cell = s
-          ? `${format(s.median, scale)}<span class="ci">${format(s.low, scale)}–${format(s.high, scale)}</span>`
-          : "–";
-        let vs = "";
-        if (c !== baseline) {
-          const r = ratio(values.get(baseline), values.get(c));
-          if (r?.value !== undefined) {
-            const cls = r.separated
-              ? r.value < 1
-                ? "better"
-                : "worse"
-              : "same";
-            const icon = cls === "better" ? "▼ " : cls === "worse" ? "▲ " : "";
-            vs = `<span class="ratio ${cls}">${icon}×${r.value.toFixed(2)}</span>`;
-          }
+    // The catalog's metrics, then any development metric by family.
+    const devKeys = [
+      ...new Set(group.runs.flatMap((r) => Object.keys(r.metrics.dev ?? {}))),
+    ]
+      .filter((k) => !METRICS.some((m) => m[0] === k))
+      .sort();
+    const rows = [...METRICS, ...devKeys.map(metricRow).filter(Boolean)]
+      .map(([key, label, unit, scale]) => {
+        const values = new Map(
+          configs.map((c) => [c, okValues(group, c, key)]),
+        );
+        if (configs.every((c) => !values.get(c).some(Number.isFinite))) {
+          return "";
         }
-        return `<td>${cell}${vs}</td>`;
-      });
-      return `<tr><th>${label}${unit ? ` (${unit})` : ""}</th>${cells.join("")}</tr>`;
-    }).join("");
+        const cells = configs.map((c) => {
+          const s = summarize(values.get(c));
+          const cell = s
+            ? `${format(s.median, scale)}<span class="ci">${format(s.low, scale)}–${format(s.high, scale)}</span>`
+            : "–";
+          let vs = "";
+          if (c !== baseline) {
+            const r = ratio(values.get(baseline), values.get(c));
+            if (r?.value !== undefined) {
+              const cls = r.separated
+                ? r.value < 1
+                  ? "better"
+                  : "worse"
+                : "same";
+              const icon =
+                cls === "better" ? "▼ " : cls === "worse" ? "▲ " : "";
+              vs = `<span class="ratio ${cls}">${icon}×${r.value.toFixed(2)}</span>`;
+            }
+          }
+          return `<td>${cell}${vs}</td>`;
+        });
+        return `<tr><th>${label}${unit ? ` (${unit})` : ""}</th>${cells.join("")}</tr>`;
+      })
+      .join("");
     // Frames: every repetition's line, colored by engine.
     const frameSeries = (phase, index) =>
       group.runs
@@ -981,13 +1077,20 @@ export function summarizeRun(results) {
       scene: run.scene,
       scenario: run.scenario,
       title: run.sceneTitle,
+      ...(run.group ? { group: run.group } : {}),
       config: run.config,
       values: {},
       verdicts: [],
     };
     cells[key].verdicts.push(run.validity?.verdict ?? "valid");
-    for (const [metric] of METRICS) {
-      const v = run.metrics[metric];
+    // The catalog's metrics, then the development metrics (example
+    // scenes: per tileset, host class and pass, by key).
+    const keys = new Set([
+      ...METRICS.map(([metric]) => metric),
+      ...Object.keys(run.metrics.dev ?? {}),
+    ]);
+    for (const metric of keys) {
+      const v = metricValue(run.metrics, metric);
       if (Number.isFinite(v)) {
         (cells[key].values[metric] ??= []).push(v);
       }
@@ -1022,6 +1125,7 @@ export function summarizeRun(results) {
     scene: c.scene,
     scenario: c.scenario,
     title: c.title,
+    ...(c.group ? { group: c.group } : {}),
     config: c.config,
     warnings: c.verdicts.filter((v) => v !== "valid").length,
     ...(c.values.gpuP50 ? { gpuTimer: GPU_TIMER } : {}),
@@ -1066,6 +1170,8 @@ export function summarizeRun(results) {
     cpu: env.cpu,
     browser: env.browser,
     configs: [...new Set(results.runs.map((r) => r.config))],
+    // Every run's catalog group, failed ones too (headlineSummary).
+    groups: [...new Set(results.runs.map((r) => r.group).filter(Boolean))],
     repetitions: Math.max(0, ...results.runs.map((r) => r.rep + 1)),
     reused: results.runs.filter((r) => r.reused).length,
     scenes,
@@ -1091,4 +1197,4 @@ function reusedSummary(runs) {
     : "none: every repetition ran in this session";
 }
 
-export { CONDITION_METRICS, METRICS };
+export { CONDITION_METRICS, DEV_FAMILIES, METRICS };

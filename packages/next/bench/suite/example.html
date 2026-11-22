@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Example scene host</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #0b0e14;
+        color: #d7dce6;
+        font:
+          13px/1.4 system-ui,
+          sans-serif;
+      }
+      h1 {
+        font-size: 16px;
+        margin: 0 0 4px;
+      }
+      p {
+        color: #8a93a6;
+        max-width: 900px;
+      }
+      /* The view at the scene's size (1280×720 CSS px unless it says), pixel ratio 1. */
+      #view {
+        width: 1280px;
+        height: 720px;
+        background: #000;
+        position: relative;
+        overflow: hidden;
+      }
+      /* The example's controls: built, not shown, so they never cover the view. */
+      #panel {
+        position: absolute;
+        left: -10000px;
+        top: 0;
+        width: 320px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Example scene host</h1>
+    <p>
+      Runs one gallery example as a Dyno scene (group D, catalog/dev.json), for
+      the command line:
+      <code>npx @cesium/dyno suite run --scenes vex-x10-zermatt</code>. To look
+      at an example, open it in Dyno's Examples.
+    </p>
+    <div id="view"></div>
+    <div id="panel"></div>
+    <script type="module" src="./exampleDriver.ts"></script>
+  </body>
+</html>

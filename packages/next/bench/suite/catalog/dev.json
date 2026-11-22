@@ -1,0 +1,77 @@
+{
+  "$comment": "Group D: development scenes (docs/superpowers/plans/2026-11-13-dyno-dev-harness.md, section 3). Each names a gallery example (examples/index.ts), its parameters and how it settles; the example host page (example.html) runs it from the frozen build, on 2.0 only. Public content only: each lists the public catalog's datasets its example streams, so the licensing rule still applies (not the viewer's own defaults, which every example loads). Private ones go in a private manifest's exampleScenes (BENCH_MANIFEST). They are kept out of headline means, the Overview and budgets, and out of runs that don't name them (--scenes).",
+  "exampleScenes": [
+    {
+      "id": "vex-valley",
+      "title": "Vertical exaggeration ×4, the valley",
+      "group": "D",
+      "description": "The α study's wide view: Zermatt's valley from the north, terrain and OSM Buildings drawn four times as tall. Sweep param.x and view.lodExponent.",
+      "example": "vertical-exaggeration",
+      "params": { "x": 4, "view": "valley" },
+      "datasets": ["cwt", "bing", "osm-buildings"],
+      "settle": { "holdMs": 3000, "capSeconds": 120 },
+      "checks": ["settled"],
+      "areas": ["terrain"],
+      "engines": ["2.0"],
+      "terrainOnly": true
+    },
+    {
+      "id": "vex-zermatt",
+      "title": "Vertical exaggeration ×4, Zermatt close",
+      "group": "D",
+      "description": "Close over Zermatt, where terrain is at the data's finest level and only OSM Buildings change with α.",
+      "example": "vertical-exaggeration",
+      "params": { "x": 4, "view": "zermatt-close" },
+      "datasets": ["cwt", "bing", "osm-buildings"],
+      "settle": { "holdMs": 3000, "capSeconds": 120 },
+      "checks": ["settled"],
+      "areas": ["terrain"],
+      "engines": ["2.0"],
+      "terrainOnly": true
+    },
+    {
+      "id": "vex-x10-zermatt",
+      "title": "Vertical exaggeration ×10, Zermatt close",
+      "group": "D",
+      "description": "The cliff-band study's view: ×10 close over Zermatt with shadows on. The crop frames the cliffs.",
+      "example": "vertical-exaggeration",
+      "params": { "x": 10, "view": "zermatt-close" },
+      "view": { "shadows": true },
+      "datasets": ["cwt", "bing", "osm-buildings"],
+      "settle": { "holdMs": 3000, "capSeconds": 120 },
+      "checks": ["settled"],
+      "crop": { "cliff": [0.32, 0.18, 0.7, 0.62] },
+      "areas": ["terrain", "render"],
+      "engines": ["2.0"],
+      "terrainOnly": true,
+      "probe": "sse"
+    },
+    {
+      "id": "vex-skirts",
+      "title": "Vertical exaggeration ×10, tile skirts shown",
+      "group": "D",
+      "description": "An image check: debug=skirts at ×10 draws skirts magenta, so a crack that shows them is a regression.",
+      "example": "vertical-exaggeration",
+      "params": { "x": 10, "view": "zermatt-close" },
+      "view": { "debug": "skirts" },
+      "datasets": ["cwt", "bing", "osm-buildings"],
+      "settle": { "holdMs": 3000, "capSeconds": 120 },
+      "checks": ["settled"],
+      "areas": ["terrain"],
+      "engines": ["2.0"]
+    },
+    {
+      "id": "translucency-split",
+      "title": "Translucency: moments and exact, split",
+      "group": "D",
+      "description": "Glass panes from nearly clear to nearly opaque under both translucency methods. It streams no content of its own (the viewer still loads its defaults: Bing's endpoint, city lights, the Moon), so it settles without terrain or tilesets.",
+      "example": "translucency",
+      "params": {},
+      "datasets": [],
+      "settle": { "holdMs": 2000, "capSeconds": 60 },
+      "checks": ["settled"],
+      "areas": ["render"],
+      "engines": ["2.0"]
+    }
+  ]
+}

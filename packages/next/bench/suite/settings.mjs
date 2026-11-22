@@ -11,7 +11,10 @@
 //            (2.0+sse=32, 2.0+maximumScreenSpaceError=8) read as before.
 //   view.    the View, set by the catalog adapter (suite.ts) right after
 //            the view is made and read back after the scene settles.
-//   param.   an example's own URL parameters (with example scenes, CS-394).
+//   param.   an example's own URL parameters, declared by the example in
+//            examples/index.ts (`params`) and registered from there by
+//            the CLI (registerExampleParams): example scenes only, which
+//            the host page (exampleDriver.ts) passes to the example.
 //   tune.    development-only engine knobs (with the work that needs them).
 //
 // An unknown id, a value out of range, an engine or a run kind a setting
@@ -24,8 +27,16 @@ export class SettingError extends Error {}
 /** The namespaces a setting id may start with. */
 export const NAMESPACES = ["engine", "view", "param", "tune"];
 
-/** The run kinds the engine and view settings apply to. */
+/** The run kinds the engine settings apply to. */
 const RUNS = ["bench", "images"];
+
+/**
+ * The kinds `view.` settings apply to: the catalog's runs and example
+ * runs (group D scenes), where the host page sets them on the example's
+ * view. Engine settings aren't an example run's: its viewer makes its own
+ * tilesets, so they would measure the default under their name.
+ */
+const VIEW_RUNS = [...RUNS, "example"];
 
 /** The debug views `view.debug` may name (src/streaming/debugViews.ts). */
 const DEBUG_VIEWS = [
@@ -126,7 +137,7 @@ export const SETTINGS = [
     min: 0,
     max: 1,
     engines: ["2.0"],
-    kinds: RUNS,
+    kinds: VIEW_RUNS,
     apply: ({ view }, v) => (view.lodExponent = v),
     read: ({ view }) => view.lodExponent,
   },
@@ -136,7 +147,7 @@ export const SETTINGS = [
     description: "View.shadows: the sun's cascaded shadow maps",
     type: "boolean",
     engines: ["2.0"],
-    kinds: RUNS,
+    kinds: VIEW_RUNS,
     apply: ({ view }, v) => (view.shadows = v),
     read: ({ view }) => view.shadows,
   },
@@ -147,7 +158,7 @@ export const SETTINGS = [
     type: "enum",
     values: DEBUG_VIEWS,
     engines: ["2.0"],
-    kinds: RUNS,
+    kinds: VIEW_RUNS,
     apply: ({ view }, v) => (view.debug = v),
     read: ({ view }) => view.debug,
   },
@@ -158,7 +169,7 @@ export const SETTINGS = [
     type: "enum",
     values: ["on", "off"],
     engines: ["2.0"],
-    kinds: RUNS,
+    kinds: VIEW_RUNS,
     apply: ({ view }, v) => (view.occlusionCulling = v),
     read: ({ engine, view }) =>
       view.occlusionCulling ?? engine?.occlusionCulling,
@@ -169,7 +180,7 @@ export const SETTINGS = [
     description: "OcclusionFeedback.coarsen: hidden tiles coarsen over time",
     type: "boolean",
     engines: ["2.0"],
-    kinds: RUNS,
+    kinds: VIEW_RUNS,
     apply: ({ view }, v) => (view.occlusionState.coarsen = v),
     read: ({ view }) => view.occlusionState.coarsen,
   },
@@ -180,7 +191,7 @@ export const SETTINGS = [
     type: "enum",
     values: ["morph", "pop"],
     engines: ["2.0"],
-    kinds: RUNS,
+    kinds: VIEW_RUNS,
     apply: ({ view }, v) => (view.lodTransitions = v),
     read: ({ view }) => view.lodTransitions,
   },
@@ -192,6 +203,78 @@ for (const s of SETTINGS) {
   for (const alias of s.aliases ?? []) {
     BY_NAME.set(alias, s);
   }
+}
+
+/**
+ * Adds a `param.<name>` setting for each parameter the examples declare
+ * (examples/index.ts `params`), once: `[{ id, title, params: [{ name,
+ * label, type, min?, max?, values? }] }]`. A name two examples declare
+ * must mean the same range in both; the setting lists the examples that
+ * take it (`examples`). Returns the `param.` settings.
+ */
+export function registerExampleParams(examples) {
+  for (const example of examples) {
+    for (const p of example.params ?? []) {
+      const id = `param.${p.name}`;
+      const declared = {
+        type: p.type,
+        ...(p.type === "enum" ? { values: [...p.values] } : {}),
+        ...(p.type === "number" || p.type === "integer"
+          ? { min: p.min, max: p.max }
+          : {}),
+      };
+      const existing = BY_NAME.get(id);
+      if (existing) {
+        const same =
+          existing.type === declared.type &&
+          existing.min === declared.min &&
+          existing.max === declared.max &&
+          (existing.values ?? []).join() === (declared.values ?? []).join();
+        if (!same) {
+          throw new SettingError(
+            `${id}: ${example.id} declares it as ${rangeOf({ id, ...declared })}, another example as ${rangeOf(existing)}`,
+          );
+        }
+        if (!existing.examples.includes(example.id)) {
+          existing.examples.push(example.id);
+        }
+        continue;
+      }
+      const setting = {
+        id,
+        label: p.label,
+        description: `${example.title}: ${p.label}`,
+        ...declared,
+        engines: ["2.0"],
+        kinds: ["example"],
+        examples: [example.id],
+      };
+      SETTINGS.push(setting);
+      BY_NAME.set(id, setting);
+    }
+  }
+  return SETTINGS.filter((s) => s.id.startsWith("param."));
+}
+
+/**
+ * The example scenes among `scenes` that don't take a `param.` setting,
+ * as "<setting> (<scene>: <example>)", for the CLI's refusal; empty when
+ * every one does.
+ */
+export function paramsNotTaken(settingIds, scenes) {
+  const out = [];
+  for (const id of settingIds) {
+    const setting = findSetting(id);
+    if (!setting?.id.startsWith("param.")) {
+      continue;
+    }
+    for (const scene of scenes) {
+      if (!setting.examples.includes(scene.example)) {
+        out.push(`${setting.id} (${scene.id}: ${scene.example})`);
+      }
+    }
+  }
+  return out;
 }
 
 /**

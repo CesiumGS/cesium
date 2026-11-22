@@ -294,3 +294,94 @@ export function createEngineKeeper<T>(options: {
     },
   };
 }
+
+/** An example scene (catalog/dev.json) as "Measure this" reads it. */
+export interface MeasurableScene {
+  id: string;
+  title: string;
+  example: string;
+  params?: Readonly<Record<string, string | number>>;
+}
+
+/** A declared parameter (examples/types.ts `ExampleParam`), as far as checking it goes. */
+export interface CheckedParam {
+  name: string;
+  type: "number" | "integer" | "boolean" | "enum";
+  min?: number;
+  max?: number;
+  values?: readonly string[];
+}
+
+/** Whether `text` is a value `param` takes (the CLI checks it again). */
+function takes(param: CheckedParam, text: string): boolean {
+  if (param.type === "enum") {
+    return param.values?.includes(text) ?? false;
+  }
+  if (param.type === "boolean") {
+    return text === "true" || text === "false";
+  }
+  const n = Number(text);
+  return (
+    text.trim() !== "" &&
+    Number.isFinite(n) &&
+    n >= (param.min ?? -Infinity) &&
+    n <= (param.max ?? Infinity) &&
+    (param.type !== "integer" || Number.isInteger(n))
+  );
+}
+
+/**
+ * "Measure this": the command that runs example `exampleId` as its
+ * closest example scene, with the page's own parameters where they differ
+ * from the scene's (`--engines 2.0+param.x=7`). The scene whose
+ * parameters match the page's most is taken, the catalog's order breaking
+ * ties; only declared parameters with values they take are passed on.
+ * Undefined when no scene runs the example.
+ */
+export function measureCommand(
+  exampleId: string,
+  scenes: readonly MeasurableScene[],
+  declared: readonly CheckedParam[],
+  params: Params,
+):
+  | {
+      scene: MeasurableScene;
+      command: string;
+      overrides: Array<[string, string]>;
+      others: MeasurableScene[];
+    }
+  | undefined {
+  const mine = scenes.filter((s) => s.example === exampleId);
+  if (!mine.length) {
+    return undefined;
+  }
+  const value = (s: MeasurableScene, name: string) =>
+    s.params?.[name] === undefined ? undefined : String(s.params[name]);
+  const score = (s: MeasurableScene) =>
+    declared.filter(
+      (p) =>
+        params[p.name] !== undefined && value(s, p.name) === params[p.name],
+    ).length;
+  let scene = mine[0]!;
+  for (const s of mine) {
+    if (score(s) > score(scene)) {
+      scene = s;
+    }
+  }
+  const overrides: Array<[string, string]> = [];
+  for (const p of declared) {
+    const text = params[p.name];
+    if (text !== undefined && text !== value(scene, p.name) && takes(p, text)) {
+      overrides.push([p.name, text]);
+    }
+  }
+  const engines = overrides.length
+    ? ` --engines 2.0${overrides.map(([k, v]) => `+param.${k}=${v}`).join("")}`
+    : "";
+  return {
+    scene,
+    command: `npx @cesium/dyno suite run --scenes ${scene.id}${engines}`,
+    overrides,
+    others: mine.filter((s) => s !== scene),
+  };
+}

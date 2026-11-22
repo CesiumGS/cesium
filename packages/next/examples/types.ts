@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Tileset3D } from "@cesium/next";
 import type { GlobeKind, Viewer } from "@cesium/next/widgets";
 
 /**
@@ -55,7 +56,29 @@ export interface ExampleContext {
    * builds it, so the example needn't know the page's address or routes.
    */
   link(params: Readonly<Record<string, string | undefined>>): string;
+  /**
+   * Names a tileset the example added (`"osm"`), for hosts that measure
+   * it: Dyno's example scenes report its tiles and requests under the
+   * name (`tiles.osm`). The globe is named `terrain` by the host. Changes
+   * nothing in the scene; the gallery ignores it.
+   */
+  label(tileset: Tileset3D, name: string): void;
 }
+
+/**
+ * A URL parameter an example reads, declared so Dyno can check and label
+ * it (`param.<name>` settings: `--sweep param.x=1,4,10`). The example still
+ * reads `params` as text and keeps its own defaults.
+ */
+export type ExampleParam = {
+  name: string;
+  /** A person's name for it ("exaggeration factor"). */
+  label: string;
+} & (
+  | { type: "number" | "integer"; min: number; max: number }
+  | { type: "enum"; values: readonly string[] }
+  | { type: "boolean" }
+);
 
 /** Removes what `run` added. */
 export type Dispose = () => void;
@@ -116,6 +139,13 @@ export interface ExampleInfo {
    * the example lists the problems in its own panel.
    */
   noWarningNotice?: boolean;
+  /** The parameters it reads that Dyno may set and sweep. */
+  params?: readonly ExampleParam[];
+  /**
+   * false: the host's shared `camera` parameter doesn't apply, for an
+   * example whose camera is the point of it.
+   */
+  pose?: false;
   load: () => Promise<ExampleModule>;
   /** Its module's source, as shown beside it. */
   source: () => Promise<string>;
