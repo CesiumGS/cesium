@@ -10,3 +10,7 @@ work/views/
 
 # 1.x's test data, moved as it was (CS-611).
 test/fixtures/1x/
+
+# Changesets: front matter, then a sentence for users, with no heading (CS-613).
+.changeset/*.md
+!.changeset/README.md

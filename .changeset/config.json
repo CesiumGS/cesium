@@ -1,0 +1,23 @@
+{
+  "$schema": "../node_modules/@changesets/config/schema.json",
+  "baseBranch": "cesium-2.0-webgpu-poc",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "format": "prettier",
+  "access": "public",
+  "fixed": [
+    [
+      "@cesium/next",
+      "@cesium/core",
+      "@cesium/time",
+      "@cesium/frames",
+      "@cesium/crs",
+      "@cesium/measure",
+      "@cesium/ui"
+    ]
+  ],
+  "linked": [],
+  "ignore": ["@cesium/sandcastle", "@cesium/dyno"],
+  "privatePackages": { "version": true, "tag": false },
+  "updateInternalDependencies": "patch"
+}
