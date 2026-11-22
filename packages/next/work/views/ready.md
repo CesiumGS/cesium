@@ -30,6 +30,7 @@ CS-10 Cesium IR
   CS-571  The IR builder rewrites x + c to x only when c is -0, as the spec's math/add requires
   CS-777  The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned
   CS-794  The transform passes load Cesium IR lazily, so a default view starts without it
+  CS-800  decision: Merge CS-777, the GLSL ES emitter's output is cross-checked against naga's
 
 CS-11 Live MaterialX graph editing
   CS-70  The document layer (reader, writer, generated definitions, flattening; assets through `npm run setup`)
@@ -212,7 +213,6 @@ CS-389 Dyno as the development harness
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
   CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands
   CS-733  Each run records its device, configuration and state
-  CS-753  "Your move" gets a calmer layout: fewer, larger, ranked entries
   CS-764  Engine.create compiles its pipelines in one concurrent round instead of three
   CS-765  Optional subsystems load lazily instead of through the @cesium/next barrel
 

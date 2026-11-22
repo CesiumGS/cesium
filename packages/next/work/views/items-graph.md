@@ -92,6 +92,7 @@ graph LR
     CS_790["CS-790 A Lab parity page draws through a compiled curvilinear route, s"]:::proposed
     CS_791["CS-791 Per-draw center constants on Cesium IR's generic evaluator are "]:::proposed
     CS_794["CS-794 The transform passes load Cesium IR lazily, so a default view s"]:::open
+    CS_800["CS-800 Merge CS-777, the GLSL ES emitter's output is cross-checked aga"]:::decision
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -615,7 +616,7 @@ graph LR
     CS_749["CS-749 The Plan view becomes Order: the planner's sequence for a relea"]:::done
     CS_750["CS-750 The Proposals view says why each item is proposed, and offers c"]:::done
     CS_752["CS-752 Flow answers how well the system and the owner work together: c"]:::done
-    CS_753["CS-753 'Your move' gets a calmer layout: fewer, larger, ranked entries"]:::open
+    CS_753["CS-753 'Your move' gets a calmer layout: fewer, larger, ranked entries"]:::done
     CS_754["CS-754 Merge CS-743, main's npm test exits 0 again"]:::done
     CS_756["CS-756 Merge CS-390, run identity and the machine-wide run lock"]:::done
     CS_757["CS-757 Merge CS-744, the Release view and the Work page's tab shell"]:::done
@@ -639,6 +640,9 @@ graph LR
     CS_787["CS-787 Dyno's Work page says Order where it still says Plan view, and "]:::proposed
     CS_793["CS-793 Merge CS-784, the dyno tool is @cesium/dyno"]:::done
     CS_795["CS-795 Merge CS-752, Flow answers how well the system and the owner wo"]:::done
+    CS_797["CS-797 Merge CS-753, Your move gets a calmer layout: fewer, larger, ra"]:::done
+    CS_798["CS-798 Merge CS-393, the settings registry and multi-axis sweeps"]:::done
+    CS_799["CS-799 The Health view brings a chosen row into view, so a link from Y"]:::proposed
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open

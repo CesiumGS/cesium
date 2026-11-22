@@ -78,7 +78,7 @@ No milestone
 
 ### Cesium IR
 
-CS-10, Planned, led by owner: 13 of 41 done, 12 ready, 12 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
+CS-10, Planned, led by owner: 13 of 42 done, 13 ready, 12 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR (CS-417, Planned)
 
@@ -132,6 +132,7 @@ No milestone
 - [?] CS-790 A Lab parity page draws through a compiled curvilinear route, so IR changes are checked in pixels. Proposed. Needs CS-53.
 - [?] CS-791 Per-draw center constants on Cesium IR's generic evaluator are measured against the old Float64Array loop. Proposed. Needs CS-53.
 - [ ] CS-794 The transform passes load Cesium IR lazily, so a default view starts without it. Needs CS-53.
+- [ ] CS-800 decision: Merge CS-777, the GLSL ES emitter's output is cross-checked against naga's. Needs nothing. Decided by owner.
 
 ### Live MaterialX graph editing
 
@@ -890,7 +891,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 46 of 84 done, 14 ready, 17 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 49 of 87 done, 13 ready, 17 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -953,7 +954,7 @@ Milestone: The owner's views answer what needs me, what's on track and what's wr
 - [x] CS-749 The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting. Done.
 - [x] CS-750 The Proposals view says why each item is proposed, and offers commit, hold or drop. Done.
 - [x] CS-752 Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them. Done.
-- [ ] CS-753 "Your move" gets a calmer layout: fewer, larger, ranked entries. Needs CS-744 and CS-750.
+- [x] CS-753 "Your move" gets a calmer layout: fewer, larger, ranked entries. Done.
 
 No milestone
 
@@ -999,6 +1000,9 @@ No milestone
 - [?] CS-787 Dyno's Work page says Order where it still says Plan view, and DESIGN.md drops the old Projects section. Proposed. Needs CS-749.
 - [x] CS-793 decision: Merge CS-784, the dyno tool is @cesium/dyno. Done.
 - [x] CS-795 decision: Merge CS-752, Flow answers how well the system and the owner work together. Done.
+- [x] CS-797 decision: Merge CS-753, Your move gets a calmer layout: fewer, larger, ranked entries. Done.
+- [x] CS-798 decision: Merge CS-393, the settings registry and multi-axis sweeps. Done.
+- [?] CS-799 The Health view brings a chosen row into view, so a link from Your move lands on it. Proposed. Needs nothing.
 
 ### The public API reviews
 

@@ -135,7 +135,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 13 of 41 done, 12 ready, 12 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 13 of 42 done, 13 ready, 12 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -189,6 +189,7 @@ No milestone
 - [?] [CS-790](./items/CS-790-a-lab-parity-page-draws-through-a-compiled.md) A Lab parity page draws through a compiled curvilinear route, so IR changes are checked in pixels. Proposed. Needs CS-53.
 - [?] [CS-791](./items/CS-791-per-draw-center-constants-on-cesium-ir-s.md) Per-draw center constants on Cesium IR's generic evaluator are measured against the old Float64Array loop. Proposed. Needs CS-53.
 - [ ] [CS-794](./items/CS-794-the-transform-passes-load-cesium-ir-lazily-so-a.md) The transform passes load Cesium IR lazily, so a default view starts without it. Needs CS-53.
+- [ ] [CS-800](./items/CS-800-merge-cs-777-the-glsl-es-emitter-s-output-is.md) decision: Merge CS-777, the GLSL ES emitter's output is cross-checked against naga's. Needs nothing. Decided by owner.
 
 ### Live MaterialX graph editing
 
@@ -947,7 +948,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 46 of 84 done, 14 ready, 17 blocked, 7 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 49 of 87 done, 13 ready, 17 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -1010,7 +1011,7 @@ Milestone: The owner's views answer what needs me, what's on track and what's wr
 - [x] [CS-749](./items/CS-749-the-plan-view-becomes-order-the-planner-s.md) The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting. Done.
 - [x] [CS-750](./items/CS-750-the-proposals-view-says-why-each-item-is.md) The Proposals view says why each item is proposed, and offers commit, hold or drop. Done.
 - [x] [CS-752](./items/CS-752-flow-answers-how-well-the-system-and-the-owner.md) Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them. Done.
-- [ ] [CS-753](./items/CS-753-your-move-gets-a-calmer-layout-fewer-larger.md) "Your move" gets a calmer layout: fewer, larger, ranked entries. Needs CS-744 and CS-750.
+- [x] [CS-753](./items/CS-753-your-move-gets-a-calmer-layout-fewer-larger.md) "Your move" gets a calmer layout: fewer, larger, ranked entries. Done.
 
 No milestone
 
@@ -1056,6 +1057,9 @@ No milestone
 - [?] [CS-787](./items/CS-787-dyno-s-work-page-says-order-where-it-still-says.md) Dyno's Work page says Order where it still says Plan view, and DESIGN.md drops the old Projects section. Proposed. Needs CS-749.
 - [x] [CS-793](./items/CS-793-merge-cs-784-the-dyno-tool-is-cesium-dyno.md) decision: Merge CS-784, the dyno tool is @cesium/dyno. Done.
 - [x] [CS-795](./items/CS-795-merge-cs-752-flow-answers-how-well-the-system.md) decision: Merge CS-752, Flow answers how well the system and the owner work together. Done.
+- [x] [CS-797](./items/CS-797-merge-cs-753-your-move-gets-a-calmer-layout.md) decision: Merge CS-753, Your move gets a calmer layout: fewer, larger, ranked entries. Done.
+- [x] [CS-798](./items/CS-798-merge-cs-393-the-settings-registry-and-multi.md) decision: Merge CS-393, the settings registry and multi-axis sweeps. Done.
+- [?] [CS-799](./items/CS-799-the-health-view-brings-a-chosen-row-into-view.md) The Health view brings a chosen row into view, so a link from Your move lands on it. Proposed. Needs nothing.
 
 ### The public API reviews
 

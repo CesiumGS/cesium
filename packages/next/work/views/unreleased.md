@@ -72,6 +72,7 @@ CS-389 Dyno as the development harness
   CS-749  The Plan view becomes Order: the planner's sequence for a release, with sizes as ranges and no executor-slot setting
   CS-750  The Proposals view says why each item is proposed, and offers commit, hold or drop
   CS-752  Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them
+  CS-753  "Your move" gets a calmer layout: fewer, larger, ranked entries
   CS-774  npx dyno works: the dyno bin lives in a private workspace package, packages/next/tools/dyno
   CS-784  The dyno tool is @cesium/dyno, so npx can never reach an outside package by its name
 
@@ -90,5 +91,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-63 merged item(s) not in a release
+64 merged item(s) not in a release
 ```

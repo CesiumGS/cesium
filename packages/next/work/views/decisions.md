@@ -64,5 +64,8 @@ CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617
 
-20 open decision(s) for owner
+CS-10 Cesium IR
+  CS-800  Merge CS-777, the GLSL ES emitter's output is cross-checked against naga's (owner)
+
+21 open decision(s) for owner
 ```
