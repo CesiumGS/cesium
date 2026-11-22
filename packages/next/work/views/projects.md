@@ -65,7 +65,7 @@ CS-190 Vector drawing and the styling language [Planned], led by owner
   waited on by: CS-193 B-reps and geometry queries (1); CS-196 Infrastructure and geoscience capabilities (2); CS-18 The work tracker (4); CS-191 Content sources and formats (2); CS-642 Geometry generators (1); CS-197 Ray queries and path tracing (1)
 CS-191 Content sources and formats [Planned], led by owner
   14 of 51 done, 16 ready, 18 blocked, 3 proposed
-  waits on: CS-16 Streaming robustness (1); CS-188 Earth to Moon (frames 5c to 5h) (1); CS-190 Vector drawing and the styling language (2); CS-647 Conditional content and motion (1); CS-437 The public API reviews (2); CS-579 Editing (1)
+  waits on: CS-16 Streaming robustness (1); CS-188 Earth to Moon (frames 5c to 5h) (1); CS-190 Vector drawing and the styling language (2); CS-647 Conditional content and motion (1); CS-437 The public API reviews (2)
   waited on by: CS-196 Infrastructure and geoscience capabilities (1); CS-18 The work tracker (5); CS-584 The widgets library (1); CS-647 Conditional content and motion (1); CS-628 Sandcastle as 2.0's gallery (7); CS-579 Editing (5); CS-615 Packaging and package names (1)
 CS-192 Sky, light and atmosphere [Planned], led by owner
   2 of 22 done, 5 ready, 2 blocked, 13 proposed
@@ -108,9 +108,9 @@ CS-437 The public API reviews [Planned], led by owner
   waits on: CS-615 Packaging and package names (1)
   waited on by: CS-13 The worker-mode façade (5); CS-189 Frames and engineering coordinates follow-ups (1); CS-193 B-reps and geometry queries (1); CS-18 The work tracker (4); CS-191 Content sources and formats (2); CS-628 Sandcastle as 2.0's gallery (4); CS-579 Editing (1)
 CS-579 Editing [Planned], led by owner
-  7 of 22 done, 1 ready, 1 blocked, 13 proposed
+  8 of 22 done, 1 ready, 0 blocked, 13 proposed
   waits on: CS-191 Content sources and formats (5); CS-437 The public API reviews (1); CS-628 Sandcastle as 2.0's gallery (1); CS-193 B-reps and geometry queries (1)
-  waited on by: CS-18 The work tracker (1); CS-191 Content sources and formats (1)
+  waited on by: CS-18 The work tracker (1)
 CS-584 The widgets library [Planned], led by owner
   0 of 9 done, 1 ready, 8 blocked
   waits on: CS-191 Content sources and formats (1); CS-189 Frames and engineering coordinates follow-ups (1); CS-188 Earth to Moon (frames 5c to 5h) (1); CS-196 Infrastructure and geoscience capabilities (1)

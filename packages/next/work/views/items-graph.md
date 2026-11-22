@@ -709,7 +709,7 @@ graph LR
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
     CS_578["CS-578 A mesh editing sample: drag a mesh's vertices, edges and faces,"]:::open
-    CS_831["CS-831 A design for editing back through the seams: write capabilities"]:::open
+    CS_831["CS-831 A design for editing back through the seams: write capabilities"]:::done
     CS_855["CS-855 Merge CS-831, the design for editing back through the seams"]:::done
     CS_861["CS-861 CS-831 D1: does alpha.1's change-set type extend CS-552's?"]:::done
     CS_862["CS-862 CS-831 D2: what is the serialized change-set format?"]:::done

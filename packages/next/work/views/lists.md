@@ -1091,7 +1091,7 @@ No milestone
 
 ### Editing
 
-CS-579, Planned, led by owner: 7 of 22 done, 1 ready, 1 blocked, 13 proposed.
+CS-579, Planned, led by owner: 8 of 22 done, 1 ready, 0 blocked, 13 proposed.
 
 Milestone: Meshes can be edited: a sample drags a mesh's vertices, edges and faces through the edit layer (CS-858, Planned)
 
@@ -1100,7 +1100,7 @@ Milestone: Meshes can be edited: a sample drags a mesh's vertices, edges and fac
 No milestone
 
 - [x] CS-453 decision: What editing should the engine support, with vector data and GIS sources among it?. Done.
-- [ ] CS-831 A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration. Needs nothing.
+- [x] CS-831 A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration. Done.
 - [x] CS-855 decision: Merge CS-831, the design for editing back through the seams. Done.
 - [x] CS-861 decision: CS-831 D1: does alpha.1's change-set type extend CS-552's?. Done.
 - [x] CS-862 decision: CS-831 D2: what is the serialized change-set format?. Done.

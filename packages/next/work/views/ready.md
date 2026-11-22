@@ -236,6 +236,9 @@ CS-437 The public API reviews
   CS-816  The host steps the engine: advance to a time, wait until settled, render, read back
   CS-833  A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802
 
+CS-579 Editing
+  CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
+
 CS-584 The widgets library
   CS-585  The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them
 
@@ -269,9 +272,6 @@ CS-18 The work tracker
   CS-677  Release notes and a security review for 2.0.0
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
-
-CS-579 Editing
-  CS-831  A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
 
 204 ready
 ```

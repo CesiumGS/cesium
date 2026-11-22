@@ -403,7 +403,6 @@ CS-191 Content sources and formats
       ← CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
   CS-847  The content-source seam's core: types, kind registry, host, shared budget, sinks and push
       ← CS-815 Scene content has stable identity and semantic labels that don't depend on load order
-        CS-831 A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
   CS-848  Render features: content modules register passes in named slots, declared for picks, rays and shadows
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-849  Streams for push sources: connect on the fetch and credential provider
@@ -611,10 +610,6 @@ CS-18 The work tracker
         CS-676 Geometry has physics representations
         CS-535 Rays query the scene on the GPU
 
-CS-579 Editing
-  CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
-      ← CS-831 A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
-
 CS-584 The widgets library
   CS-586  The existing widgets move onto the library: time controls, credits, the inspector and the observer panel
       ← CS-585 The widgets library's design: React components on StrataKit, DOM wrappers, and the Viewer composed from them
@@ -747,5 +742,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-235 blocked
+234 blocked
 ```

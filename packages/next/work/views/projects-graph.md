@@ -30,7 +30,7 @@ graph LR
   CS_199["Dyno hardening, packaging and CI<br/>5 of 20 done"]
   CS_389["Dyno as the development harness<br/>56 of 93 done"]
   CS_437["public API reviews<br/>9 of 26 done"]
-  CS_579["Editing<br/>7 of 22 done"]
+  CS_579["Editing<br/>8 of 22 done"]
   CS_584["widgets library<br/>0 of 9 done"]
   CS_596["Trust and evals<br/>0 of 9 done"]
   CS_609["A clean 2.0 branch and a modern build<br/>0 of 4 done"]
@@ -124,7 +124,6 @@ graph LR
   CS_191 -->|7| CS_628
   CS_584 -->|1| CS_628
   CS_437 -->|4| CS_628
-  CS_579 -->|1| CS_191
   CS_191 -->|5| CS_579
   CS_437 -->|1| CS_579
   CS_628 -->|1| CS_579

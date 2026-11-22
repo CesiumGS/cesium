@@ -105,5 +105,8 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-76 merged item(s) not in a release
+CS-579 Editing
+  CS-831  A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
+
+77 merged item(s) not in a release
 ```

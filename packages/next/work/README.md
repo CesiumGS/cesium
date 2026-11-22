@@ -1148,7 +1148,7 @@ No milestone
 
 ### Editing
 
-[CS-579](./projects/CS-579-editing.md), Planned, led by owner: 7 of 22 done, 1 ready, 1 blocked, 13 proposed.
+[CS-579](./projects/CS-579-editing.md), Planned, led by owner: 8 of 22 done, 1 ready, 0 blocked, 13 proposed.
 
 Milestone: Meshes can be edited: a sample drags a mesh's vertices, edges and faces through the edit layer ([CS-858](./milestones/CS-858-meshes-can-be-edited-a-sample-drags-a-mesh-s.md), Planned)
 
@@ -1157,7 +1157,7 @@ Milestone: Meshes can be edited: a sample drags a mesh's vertices, edges and fac
 No milestone
 
 - [x] [CS-453](./items/CS-453-what-editing-should-the-engine-support-with.md) decision: What editing should the engine support, with vector data and GIS sources among it?. Done.
-- [ ] [CS-831](./items/CS-831-a-design-for-editing-back-through-the-seams.md) A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration. Needs nothing.
+- [x] [CS-831](./items/CS-831-a-design-for-editing-back-through-the-seams.md) A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration. Done.
 - [x] [CS-855](./items/CS-855-merge-cs-831-the-design-for-editing-back.md) decision: Merge CS-831, the design for editing back through the seams. Done.
 - [x] [CS-861](./items/CS-861-cs-831-d1-does-alpha-1-s-change-set-type-extend.md) decision: CS-831 D1: does alpha.1's change-set type extend CS-552's?. Done.
 - [x] [CS-862](./items/CS-862-cs-831-d2-what-is-the-serialized-change-set.md) decision: CS-831 D2: what is the serialized change-set format?. Done.
