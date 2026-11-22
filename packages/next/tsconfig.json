@@ -1,24 +1,5 @@
 {
-  "compilerOptions": {
-    "target": "ES2023",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["@webgpu/types", "vite/client", "@stratakit/mui/types.d.ts"],
-    "strict": true,
-    "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": false,
-    "isolatedModules": true,
-    "verbatimModuleSyntax": true,
-    "allowJs": false,
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
-    "noEmit": true,
-    "jsx": "react-jsx"
-  },
+  "extends": "../../tsconfig.base.json",
   "include": [
     "src",
     "demo",

@@ -1,0 +1,31 @@
+{
+  "name": "@cesium/measure",
+  "version": "2.0.0-poc.0",
+  "private": true,
+  "description": "Cesium 2.0's measurements and their stated accuracy.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": {
+      "@cesium/source": "./src/index.ts",
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE.md",
+    "README.md"
+  ],
+  "dependencies": {
+    "@cesium/core": "2.0.0-poc.0",
+    "@cesium/time": "2.0.0-poc.0",
+    "@cesium/frames": "2.0.0-poc.0",
+    "@cesium/crs": "2.0.0-poc.0",
+    "geographiclib-geodesic": "2.2.0"
+  }
+}

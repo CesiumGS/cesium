@@ -46,3 +46,7 @@ yarn.lock
 /packages/next/bench/results/
 # Vite dependency cache of snapshot dev servers
 /packages/next/.vite-bench/
+
+# 2.0's packages' build output (tsc --build's declarations and build info)
+/packages/*/dist/
+*.tsbuildinfo

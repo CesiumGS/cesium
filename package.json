@@ -43,8 +43,9 @@
     "node": ">=22.17.0"
   },
   "workspaces": [
-    "packages/sandcastle",
-    "packages/next",
+    "packages/*",
+    "apps/*",
+    "tools/*",
     "packages/next/tools/dyno"
   ],
   "overrides": {

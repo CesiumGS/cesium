@@ -1,0 +1,29 @@
+{
+  "name": "@cesium/core",
+  "version": "2.0.0-poc.0",
+  "private": true,
+  "description": "Cesium 2.0's core: the engine, worlds, views and the camera, the renderer and the GPU layer, streaming, the globe, queries, the transform graph, styling and Cesium IR, and the shared utilities.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": {
+      "@cesium/source": "./src/index.ts",
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE.md",
+    "README.md"
+  ],
+  "dependencies": {
+    "draco3d": "1.5.7",
+    "ktx-parse": "^2.0.0",
+    "meshoptimizer": "^1.2.0"
+  }
+}

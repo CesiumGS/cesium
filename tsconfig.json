@@ -1,0 +1,23 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/core"
+    },
+    {
+      "path": "packages/time"
+    },
+    {
+      "path": "packages/frames"
+    },
+    {
+      "path": "packages/crs"
+    },
+    {
+      "path": "packages/measure"
+    },
+    {
+      "path": "packages/ui"
+    }
+  ]
+}

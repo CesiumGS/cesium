@@ -1,0 +1,27 @@
+{
+  "name": "@cesium/time",
+  "version": "2.0.0-poc.0",
+  "private": true,
+  "description": "Cesium 2.0's time library: instants, leap seconds, the clock, the Sun and the Moon, formatting, and TDB from TT.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "sideEffects": false,
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": {
+      "@cesium/source": "./src/index.ts",
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "LICENSE.md",
+    "README.md"
+  ],
+  "dependencies": {
+    "@cesium/core": "2.0.0-poc.0"
+  }
+}
