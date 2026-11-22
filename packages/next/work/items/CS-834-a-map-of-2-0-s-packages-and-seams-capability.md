@@ -2,7 +2,7 @@
 id: CS-834
 title: "A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-21
 project: CS-615
 claimed_by: orch-11-CS-834

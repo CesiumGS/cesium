@@ -69,6 +69,27 @@ const SEAMS = [
   },
 ];
 
+/** The package map's three kinds (docs/design/package-map.md), proposed. */
+const PACKAGE_KINDS = [
+  {
+    kind: "Capability",
+    packages:
+      "@cesium/core, @cesium/time, @cesium/frames, @cesium/crs, @cesium/measure, @cesium/ui",
+    does: "Defines the stable API and owns the interfaces it consumes. The order is today's: core, then time, frames, coordinates and measurement, with the widgets on top",
+  },
+  {
+    kind: "Adapter",
+    packages:
+      "source-* (content sources), loader-* (formats and decoders), imagery-* (imagery and terrain), data-* (outside data), geocoder-*, crs-proj (PROJ), tiling-native; service bundles such as @cesium/ion",
+    does: "Implements one of those interfaces, so an app can leave it out or supply its own",
+  },
+  {
+    kind: "Umbrella",
+    packages: "cesium",
+    does: "Depends on the standard set, re-exports it, and is the one place that chooses defaults",
+  },
+];
+
 const GRAPH_MODULES = [
   {
     module: "transform",
@@ -146,6 +167,35 @@ export function Architecture() {
           . And <C>time</C> uses only utilities, not the core. The boundary test
           fails on any import that breaks these rules.
         </p>
+      </Section>
+
+      <Section title="From entry points to packages">
+        <p>
+          The entry points above are planned to become packages of their own,
+          released together at one version. This is a proposal under review with
+          the public API review, not built (the design note
+          docs/design/package-map.md). There are three kinds of package, and one
+          rule between them: a capability package never depends on an adapter.
+        </p>
+        <DataTable
+          label="Kinds of package"
+          columns={[
+            { head: "Kind", cell: (r) => r.kind },
+            { head: "Packages", cell: (r) => r.packages },
+            { head: "What it does", cell: (r) => r.does },
+          ]}
+          rows={PACKAGE_KINDS}
+        />
+        <p>
+          Each adapter is named for the interface it implements, so a host
+          application can see what it would replace. A module that isn't ready
+          when the API freezes ships on a 0.x version line, outside the
+          umbrella, until it passes review.
+        </p>
+        <Written
+          from="the design note docs/design/package-map.md"
+          on="2026-11-21"
+        />
       </Section>
 
       <Section title="What your app loads">
