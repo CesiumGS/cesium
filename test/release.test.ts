@@ -9,14 +9,17 @@ import {
   readdirSync,
   readFileSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   applyPaired,
+  compareVersions,
   distTag,
   isLower,
   lineProblems,
@@ -38,7 +41,27 @@ import {
   namedPackages,
   parseNameStatus,
 } from "../scripts/release/changesetCheck.mjs";
-import { publishOrder, stageArgs } from "../scripts/release/stage.mjs";
+import {
+  changedPaths,
+  gitTree,
+  manifestChanges,
+  pushIsRelease,
+  releaseRecordProblems,
+  type Tree,
+} from "../scripts/release/record.mjs";
+import { publishOrder } from "../scripts/release/stage.mjs";
+import {
+  gateProblem,
+  scratchFolder,
+  sha256,
+  stageArgs,
+  stageTarballs,
+  tarballProblems,
+} from "../scripts/release/stageTarballs.mjs";
+import {
+  planProblem,
+  writeReleaseRecord,
+} from "../scripts/release/version.mjs";
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -74,6 +97,15 @@ describe("distTag and isLower", () => {
     expect(isLower("2.0.0-rc.1", "2.0.0")).toBe(true);
     expect(isLower("2.0.0", "2.0.0-rc.1")).toBe(false);
     expect(isLower("2.0.10", "2.0.9")).toBe(false);
+  });
+  it("compares prerelease identifiers as semver does, numbers as numbers", () => {
+    expect(isLower("2.0.0-alpha.9", "2.0.0-alpha.10")).toBe(true);
+    expect(isLower("2.0.0-alpha.10", "2.0.0-alpha.9")).toBe(false);
+    expect(isLower("2.0.0-alpha", "2.0.0-alpha.1")).toBe(true);
+    expect(isLower("2.0.0-alpha.1", "2.0.0-beta")).toBe(true);
+    expect(isLower("2.0.0-1", "2.0.0-alpha")).toBe(true);
+    expect(isLower("2.0.0-rc.1", "2.0.0-beta.11")).toBe(false);
+    expect(compareVersions("2.0.0-alpha.1+abc", "2.0.0-alpha.1")).toBe(0);
   });
 });
 
@@ -134,6 +166,24 @@ describe("lineProblems", () => {
       "@x/umbrella's dependencies names @x/core@^2.1.0, not the exact 2.1.0",
       "@x/lab (experimental) is at 0.1.0, not 0.201.0",
     ]);
+  });
+  it("finds the root's dependency on a sibling at another version", () => {
+    const packages = withLines(
+      [pkg("@x/core", "2.1.0"), pkg("@x/umbrella", "2.1.0")],
+      stable,
+    );
+    expect(
+      lineProblems(packages, stable, {
+        devDependencies: { "@x/umbrella": "2.0.0", vite: "^8.0.0" },
+      }),
+    ).toEqual([
+      "the root package.json's devDependencies names @x/umbrella@2.0.0, not the exact 2.1.0",
+    ]);
+    expect(
+      lineProblems(packages, stable, {
+        devDependencies: { "@x/umbrella": "2.1.0" },
+      }),
+    ).toEqual([]);
   });
   it("finds a fixed-group name that isn't a package", () => {
     const packages = withLines(
@@ -222,8 +272,9 @@ describe("the repository's Changesets config", () => {
     const names = packages.map((p) => p.manifest.name);
     expect(stable.filter((name) => !names.includes(name))).toEqual([]);
   });
-  it("keeps both lines consistent at the version the packages have now", () => {
-    expect(lineProblems(packages, stable)).toEqual([]);
+  it("keeps both lines consistent at the version the packages have now, the root's dependency included", () => {
+    const { rootManifest } = repositoryPackages();
+    expect(lineProblems(packages, stable, rootManifest)).toEqual([]);
   });
   it("ignores every private workspace outside packages/, so Changesets never versions one", () => {
     const workspaces = ["apps", "tools"].flatMap((root) =>
@@ -263,9 +314,10 @@ describe("the repository's Changesets config", () => {
         }
       }
     }
-    expect(stageArgs("next", true)).toEqual([
+    expect(stageArgs("x-core-2.0.0.tgz", "next", true)).toEqual([
       "stage",
       "publish",
+      "./x-core-2.0.0.tgz",
       "--tag",
       "next",
       "--access",
@@ -373,33 +425,59 @@ describe("releaseNotes", () => {
   });
 });
 
-describe("the changeset rule's check", () => {
-  const packages = [
-    { folder: "core", name: "@x/core" },
-    { folder: "time", name: "@x/time" },
-  ];
-  const files: Record<string, string> = {
-    ".changeset/brave-owls.md":
-      '---\n"@x/core": minor\n---\n\nViews gain a thing users want.\n',
-    ".changeset/quiet-fox.md": "---\n---\n",
-    ".changeset/broken.md": "no front matter\n",
+/** A tree for the changeset rule and the release record's check. */
+function tree(
+  packages: Record<string, Record<string, unknown>>,
+  changesets: Record<string, string> = {},
+  rootManifest: Record<string, unknown> = { name: "ws", private: true },
+): Tree {
+  return {
+    changesets,
+    packages: Object.entries(packages).map(([folder, manifest]) => ({
+      folder,
+      manifest,
+    })),
+    rootManifest,
+    config: { fixed: [["@x/core", "@x/time"]] },
   };
-  const read = (path: string) => files[path]!;
-  const lines = (text: string) => parseNameStatus(text);
+}
+
+/** `git diff -z --name-status` text from `status\tpath` lines. */
+function z(lines: string): string {
+  return lines
+    .split("\n")
+    .filter((line) => line !== "")
+    .map((line) => line.replace("\t", "\0"))
+    .join("\0")
+    .concat("\0");
+}
+
+describe("the changeset rule's check", () => {
+  const packages = {
+    core: { name: "@x/core", version: "2.0.0" },
+    time: {
+      name: "@x/time",
+      version: "2.0.0",
+      dependencies: { "@x/core": "2.0.0" },
+    },
+  };
+  const owls = '---\n"@x/core": minor\n---\n\nViews gain a thing users want.\n';
+  const both =
+    '---\n"@x/core": minor\n"@x/time": patch\n---\n\nViews gain a thing.\n';
+  const empty = "---\n---\n";
+  const base = tree(packages);
+  const check = (diff: string, head: Tree = base, from: Tree = base) =>
+    checkChangesets(parseNameStatus(z(diff)), from, head);
 
   it("names a changeset's packages, and none for an empty one", () => {
-    expect(namedPackages(files[".changeset/brave-owls.md"]!)).toEqual([
-      "@x/core",
-    ]);
+    expect(namedPackages(owls)).toEqual(["@x/core"]);
     expect(
       namedPackages(
         "---\n'@x/core': patch\n\"@x/time\": major\n---\n\nText.\n",
       ),
     ).toEqual(["@x/core", "@x/time"]);
-    expect(namedPackages(files[".changeset/quiet-fox.md"]!)).toEqual([]);
-    expect(() => namedPackages(files[".changeset/broken.md"]!)).toThrow(
-      /front matter/,
-    );
+    expect(namedPackages(empty)).toEqual([]);
+    expect(() => namedPackages("no front matter\n")).toThrow(/front matter/);
   });
   it("counts only .changeset/<name>.md, not its README or the pre-mode folder", () => {
     expect(isChangeset(".changeset/brave-owls.md")).toBe(true);
@@ -407,21 +485,27 @@ describe("the changeset rule's check", () => {
     expect(isChangeset(".changeset/pre/brave-owls.md")).toBe(false);
     expect(isChangeset(".changeset/config.json")).toBe(false);
   });
+  it("reads NUL-separated paths whole, a name with é included", () => {
+    expect(
+      parseNameStatus(
+        "M\0packages/core/src/café.ts\0A\0.changeset/brave-owls.md\0",
+      ),
+    ).toEqual([
+      { status: "M", path: "packages/core/src/café.ts" },
+      { status: "A", path: ".changeset/brave-owls.md" },
+    ]);
+    const result = check("M\tpackages/core/src/café.ts\n");
+    expect(result).toMatchObject({ ok: false, touched: ["@x/core"] });
+  });
   it("passes a change that touches no published package", () => {
-    const result = checkChangesets(
-      lines("M\ttest/a.test.ts\nM\tbench/x.mjs\n"),
-      packages,
-      read,
-    );
-    expect(result).toMatchObject({ ok: true, touched: [] });
+    expect(check("M\ttest/a.test.ts\nM\tbench/x.mjs\n")).toMatchObject({
+      ok: true,
+      touched: [],
+    });
   });
   it("fails a change to a package with no changeset, naming the package", () => {
-    const result = checkChangesets(
-      lines(
-        "M\tpackages/core/src/a.ts\nA\tpackages/time/src/b.ts\nM\t.changeset/README.md\n",
-      ),
-      packages,
-      read,
+    const result = check(
+      "M\tpackages/core/src/a.ts\nA\tpackages/time/src/b.ts\nM\t.changeset/README.md\n",
     );
     expect(result.ok).toBe(false);
     expect(result.touched).toEqual(["@x/core", "@x/time"]);
@@ -429,56 +513,475 @@ describe("the changeset rule's check", () => {
       /touches @x\/core, @x\/time and adds no changeset/,
     );
   });
-  it("passes a change to a package with a changeset, and says which packages none names", () => {
-    const result = checkChangesets(
-      lines(
-        "M\tpackages/core/src/a.ts\nM\tpackages/time/src/b.ts\nA\t.changeset/brave-owls.md\n",
-      ),
-      packages,
-      read,
+  it("passes a changeset that names every package the change touches", () => {
+    const result = check(
+      "M\tpackages/core/src/a.ts\nM\tpackages/time/src/b.ts\nA\t.changeset/both.md\n",
+      tree(packages, { ".changeset/both.md": both }),
     );
     expect(result).toMatchObject({
       ok: true,
-      named: ["@x/core"],
-      unnamed: ["@x/time"],
+      named: ["@x/core", "@x/time"],
+      unnamed: [],
     });
   });
-  it("passes a change to a package with an empty changeset", () => {
-    const result = checkChangesets(
-      lines("M\tpackages/core/src/a.ts\nA\t.changeset/quiet-fox.md\n"),
-      packages,
-      read,
+  it("fails a changeset that leaves a touched package unnamed, an empty one included", () => {
+    const one = check(
+      "M\tpackages/core/src/a.ts\nM\tpackages/time/src/b.ts\nA\t.changeset/owls.md\n",
+      tree(packages, { ".changeset/owls.md": owls }),
     );
-    expect(result).toMatchObject({ ok: true, named: [] });
+    expect(one).toMatchObject({ ok: false, unnamed: ["@x/time"] });
+    expect(one.problem).toMatch(/touches @x\/time, and no changeset/);
+    const none = check(
+      "M\tpackages/core/src/a.ts\nA\t.changeset/quiet.md\n",
+      tree(packages, { ".changeset/quiet.md": empty }),
+    );
+    expect(none).toMatchObject({ ok: false, unnamed: ["@x/core"] });
+  });
+  it("counts a deleted package folder as touched, by its name at the base", () => {
+    const head = tree({ core: packages.core });
+    const result = check("D\tpackages/time/package.json\n", head);
+    expect(result).toMatchObject({ ok: false, touched: ["@x/time"] });
   });
   it("fails a changeset without front matter", () => {
-    const result = checkChangesets(
-      lines("M\tpackages/core/src/a.ts\nA\t.changeset/broken.md\n"),
-      packages,
-      read,
+    const result = check(
+      "M\tpackages/core/src/a.ts\nA\t.changeset/broken.md\n",
+      tree(packages, { ".changeset/broken.md": "no front matter\n" }),
     );
     expect(result.ok).toBe(false);
     expect(result.problem).toMatch(
       /broken\.md: a changeset starts with front matter/,
     );
   });
-  it("passes a release record: changesets consumed, only manifests and changelogs changed", () => {
-    const record = checkChangesets(
-      lines(
-        "D\t.changeset/brave-owls.md\nA\t.changeset/pre/brave-owls.md\nM\tpackages/core/package.json\nA\tpackages/core/CHANGELOG.md\nM\tpackages/time/package.json\nM\tpackage-lock.json\n",
-      ),
-      packages,
-      read,
+
+  // The bypass the first version let through: delete any one changeset,
+  // touch only manifests and changelogs, and pass as a "release record".
+  const pending = { ".changeset/owls.md": owls, ".changeset/fox.md": both };
+  const before = tree(packages, pending);
+  it("fails a change that consumes a changeset and changes a package's exports and dependencies", () => {
+    const head = tree(
+      {
+        core: {
+          ...packages.core,
+          exports: { ".": "./dist/evil.js" },
+          dependencies: { "left-pad": "^1.0.0" },
+        },
+        time: packages.time,
+      },
+      { ".changeset/fox.md": both },
     );
-    expect(record).toMatchObject({ ok: true, release: true });
+    const result = check(
+      "D\t.changeset/owls.md\nM\tpackages/core/package.json\nM\tpackages/core/CHANGELOG.md\n",
+      head,
+      before,
+    );
+    expect(result).toMatchObject({ ok: false, release: false });
+    expect(result.recordProblems).toEqual(
+      expect.arrayContaining([
+        "it leaves .changeset/fox.md unconsumed",
+        expect.stringMatching(
+          /@x\/core's package\.json changes exports, dependencies;/,
+        ),
+        expect.stringMatching(/@x\/core goes from 2\.0\.0 to 2\.0\.0/),
+      ]),
+    );
+    expect(result.problem).toMatch(/isn't a release record/);
+  });
+  it("fails a partial consumption, even with every version moved", () => {
+    const head = tree(
+      {
+        core: { name: "@x/core", version: "2.1.0" },
+        time: {
+          name: "@x/time",
+          version: "2.1.0",
+          dependencies: { "@x/core": "2.1.0" },
+        },
+      },
+      { ".changeset/fox.md": both },
+    );
+    const result = check(
+      "D\t.changeset/owls.md\nM\tpackages/core/package.json\nM\tpackages/time/package.json\n",
+      head,
+      before,
+    );
+    expect(result).toMatchObject({ ok: false, release: false });
+    expect(result.recordProblems).toEqual([
+      "it leaves .changeset/fox.md unconsumed",
+    ]);
+  });
+  it("passes a full consumption with every version where the lines put it", () => {
+    const head = tree({
+      core: { name: "@x/core", version: "2.1.0" },
+      time: {
+        name: "@x/time",
+        version: "2.1.0",
+        dependencies: { "@x/core": "2.1.0" },
+      },
+    });
+    const result = check(
+      "D\t.changeset/owls.md\nD\t.changeset/fox.md\nM\tpackages/core/package.json\nA\tpackages/core/CHANGELOG.md\nM\tpackages/time/package.json\nM\tpackage-lock.json\n",
+      head,
+      before,
+    );
+    expect(result).toMatchObject({ ok: true, release: true });
     // A source change can't ride along with one.
-    const sneaky = checkChangesets(
-      lines(
-        "D\t.changeset/brave-owls.md\nM\tpackages/core/package.json\nM\tpackages/core/src/a.ts\n",
-      ),
-      packages,
-      read,
+    const sneaky = check(
+      "D\t.changeset/owls.md\nD\t.changeset/fox.md\nM\tpackages/core/package.json\nM\tpackages/time/package.json\nM\tpackages/core/src/a.ts\n",
+      head,
+      before,
     );
     expect(sneaky).toMatchObject({ ok: false, release: false });
+  });
+  it("tells what changeset version writes in a manifest from anything else", () => {
+    const siblings = new Set(["@x/core"]);
+    expect(
+      manifestChanges(
+        { version: "1.0.0", dependencies: { "@x/core": "1.0.0", a: "1" } },
+        { version: "1.1.0", dependencies: { "@x/core": "1.1.0", a: "1" } },
+        siblings,
+      ),
+    ).toEqual([]);
+    expect(
+      manifestChanges(
+        { version: "1.0.0", dependencies: { a: "1" }, files: ["dist"] },
+        { version: "1.0.0", dependencies: { a: "2" }, files: ["dist", "src"] },
+        siblings,
+        { version: false },
+      ),
+    ).toEqual(["dependencies.a", "files"]);
+  });
+});
+
+/** Runs git in `cwd`, with a throwaway identity. */
+function git(cwd: string, ...args: string[]): string {
+  return execFileSync(
+    "git",
+    ["-c", "user.name=test", "-c", "user.email=test@example.invalid", ...args],
+    { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] },
+  );
+}
+
+/**
+ * A small workspace in the repository's shape, as a git repository: an
+ * umbrella and a core package in one fixed group, an experimental
+ * package, the root's exact dev dependency on the umbrella, and the
+ * pending changesets given. Changesets runs in it from this repository's
+ * node_modules.
+ */
+function workspace(
+  stable: string,
+  changesets: Record<string, string>,
+): { root: string; base: string } {
+  const root = mkdtempSync(join(tmpdir(), "cesium-record-"));
+  const write = (path: string, value: unknown) => {
+    mkdirSync(dirname(join(root, path)), { recursive: true });
+    writeFileSync(
+      join(root, path),
+      typeof value === "string" ? value : `${JSON.stringify(value, null, 2)}\n`,
+    );
+  };
+  write(".gitignore", "node_modules\n");
+  write("package.json", {
+    name: "ws",
+    private: true,
+    workspaces: ["packages/*"],
+    devDependencies: { "@x/next": stable },
+  });
+  write("package-lock.json", {
+    name: "ws",
+    lockfileVersion: 3,
+    requires: true,
+    packages: {},
+  });
+  write("packages/core/package.json", {
+    name: "@x/core",
+    version: stable,
+    private: true,
+  });
+  write("packages/cesium/package.json", {
+    name: "@x/next",
+    version: stable,
+    private: true,
+    dependencies: { "@x/core": stable },
+  });
+  write("packages/lab/package.json", {
+    name: "@x/lab",
+    version: pairedVersion(stable),
+    private: true,
+    dependencies: { "@x/core": stable },
+  });
+  write(".changeset/config.json", {
+    changelog: "@changesets/cli/changelog",
+    commit: false,
+    access: "public",
+    baseBranch: "main",
+    fixed: [["@x/next", "@x/core"]],
+    linked: [],
+    ignore: [],
+    privatePackages: { version: true, tag: false },
+    updateInternalDependencies: "patch",
+  });
+  write(".changeset/README.md", "# Changesets\n");
+  for (const [name, text] of Object.entries(changesets)) {
+    write(`.changeset/${name}`, text);
+  }
+  symlinkSync(join(repo, "node_modules"), join(root, "node_modules"), "dir");
+  git(root, "init", "-q", "-b", "main");
+  git(root, "add", "-A");
+  git(root, "commit", "-q", "-m", "base");
+  return { root, base: git(root, "rev-parse", "HEAD").trim() };
+}
+
+describe("a release record as release:version writes it", () => {
+  const roots: string[] = [];
+  afterEach(() => {
+    for (const root of roots.splice(0)) {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+  const changesets = {
+    "brave-owls.md": '---\n"@x/core": minor\n---\n\nViews gain a thing.\n',
+    "lab-fox.md": '---\n"@x/lab": patch\n---\n\nThe lab gains a mode.\n',
+  };
+
+  it("passes the record check, the changeset rule and the release workflow's push check", () => {
+    const { root, base } = workspace("2.0.0", changesets);
+    roots.push(root);
+    expect(
+      writeReleaseRecord(root, { lockfile: false, log: () => {} }),
+    ).toEqual({ before: "2.0.0", after: "2.1.0" });
+    const manifest = (folder: string) =>
+      JSON.parse(
+        readFileSync(join(root, "packages", folder, "package.json"), "utf8"),
+      );
+    expect(manifest("cesium").version).toBe("2.1.0");
+    expect(manifest("lab").version).toBe("0.201.0");
+    // Changesets itself moves the root's exact dev dependency.
+    expect(
+      JSON.parse(readFileSync(join(root, "package.json"), "utf8"))
+        .devDependencies,
+    ).toEqual({ "@x/next": "2.1.0" });
+    git(root, "add", "-A");
+    git(root, "commit", "-q", "-m", "the record");
+    const head = git(root, "rev-parse", "HEAD").trim();
+    const changed = changedPaths(base, head, root);
+    expect(
+      releaseRecordProblems(changed, gitTree(base, root), gitTree(head, root)),
+    ).toEqual([]);
+    expect(
+      checkChangesets(changed, gitTree(base, root), gitTree(head, root)),
+    ).toMatchObject({ ok: true, release: true });
+    const log: string[] = [];
+    expect(
+      pushIsRelease(base, head, { cwd: root, log: (l) => log.push(l) }),
+    ).toEqual({ release: true, version: "2.1.0" });
+
+    // Not a release: a missing, all-zeros, unknown or non-ancestor before,
+    // a version already tagged, and a version npm already has.
+    const no = (before: string, published = () => false) =>
+      pushIsRelease(before, head, { cwd: root, log: () => {}, published })
+        .release;
+    expect(no("")).toBe(false);
+    expect(no("0".repeat(40))).toBe(false);
+    expect(no("1".repeat(40))).toBe(false);
+    expect(no("--output=x")).toBe(false);
+    expect(no(head)).toBe(false);
+    expect(no(base, () => true)).toBe(false);
+    git(root, "tag", "v2.1.0");
+    expect(no(base)).toBe(false);
+  });
+  it("fails a record with one changeset put back (a partial consumption)", () => {
+    const { root, base } = workspace("2.0.0", changesets);
+    roots.push(root);
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    git(root, "checkout", base, "--", ".changeset/lab-fox.md");
+    git(root, "add", "-A");
+    git(root, "commit", "-q", "-m", "a partial record");
+    const head = git(root, "rev-parse", "HEAD").trim();
+    expect(
+      releaseRecordProblems(
+        changedPaths(base, head, root),
+        gitTree(base, root),
+        gitTree(head, root),
+      ),
+    ).toEqual(["it leaves .changeset/lab-fox.md unconsumed"]);
+  });
+  it("fails the bypass: one changeset deleted and a package's exports changed", () => {
+    const { root, base } = workspace("2.0.0", changesets);
+    roots.push(root);
+    rmSync(join(root, ".changeset", "lab-fox.md"));
+    const path = join(root, "packages", "core", "package.json");
+    const core = JSON.parse(readFileSync(path, "utf8"));
+    writeFileSync(
+      path,
+      JSON.stringify({ ...core, exports: { ".": "./dist/x.js" } }, null, 2),
+    );
+    git(root, "add", "-A");
+    git(root, "commit", "-q", "-m", "the bypass");
+    const head = git(root, "rev-parse", "HEAD").trim();
+    const result = checkChangesets(
+      changedPaths(base, head, root),
+      gitTree(base, root),
+      gitTree(head, root),
+    );
+    expect(result).toMatchObject({ ok: false, release: false });
+    expect(
+      pushIsRelease(base, head, { cwd: root, log: () => {} }).release,
+    ).toBe(false);
+  });
+  it("refuses, with the tree untouched, a minor of 100 and a release that leaves the stable version", () => {
+    const status = (root: string) =>
+      git(root, "status", "--porcelain", "--untracked-files=all");
+    const high = workspace("2.99.0", {
+      "brave-owls.md": changesets["brave-owls.md"],
+    });
+    roots.push(high.root);
+    expect(() =>
+      writeReleaseRecord(high.root, { lockfile: false, log: () => {} }),
+    ).toThrow(/2\.100\.0, which can't pair/);
+    expect(status(high.root)).toBe("");
+    const lab = workspace("2.0.0", { "lab-fox.md": changesets["lab-fox.md"] });
+    roots.push(lab.root);
+    expect(() =>
+      writeReleaseRecord(lab.root, { lockfile: false, log: () => {} }),
+    ).toThrow(/would stay at 2\.0\.0/);
+    expect(status(lab.root)).toBe("");
+    expect(planProblem({ before: "2.0.0", after: "2.0.1" })).toBeUndefined();
+  });
+  it("reads a path with é from git unquoted", () => {
+    const { root, base } = workspace("2.0.0", changesets);
+    roots.push(root);
+    mkdirSync(join(root, "packages", "core", "src"));
+    writeFileSync(join(root, "packages", "core", "src", "café.ts"), "");
+    git(root, "add", "-A");
+    git(root, "commit", "-q", "-m", "é");
+    const head = git(root, "rev-parse", "HEAD").trim();
+    expect(changedPaths(base, head, root)).toEqual([
+      { status: "A", path: "packages/core/src/café.ts" },
+    ]);
+    expect(
+      checkChangesets(
+        changedPaths(base, head, root),
+        gitTree(base, root),
+        gitTree(head, root),
+      ),
+    ).toMatchObject({ ok: false, touched: ["@x/core"] });
+  });
+});
+
+describe("staging the checked tarballs", () => {
+  let dir: string | undefined;
+  afterEach(() => {
+    if (dir) {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+  /** A folder with two tarballs and their release.json; returns its SHA-256. */
+  const release = (version = "2.0.0-alpha.1", isPrivate = false) => {
+    dir = mkdtempSync(join(tmpdir(), "cesium-stage-"));
+    const packages = ["@x/core", "@x/next"].map((name) => {
+      const folder = join(dir!, "src", name.replace("/", "-"));
+      mkdirSync(join(folder, "package"), { recursive: true });
+      writeFileSync(
+        join(folder, "package", "package.json"),
+        JSON.stringify({ name, version, private: isPrivate }),
+      );
+      const file = `${name.replace("@", "").replace("/", "-")}-${version}.tgz`;
+      execFileSync("tar", ["-czf", join(dir!, file), "-C", folder, "package"]);
+      return {
+        name,
+        version,
+        file,
+        sha256: sha256(readFileSync(join(dir!, file))),
+      };
+    });
+    const text = `${JSON.stringify({ version, tag: distTag(version), packages })}\n`;
+    writeFileSync(join(dir, "release.json"), text);
+    return sha256(Buffer.from(text));
+  };
+  const open = { CESIUM_RELEASE_GATE: "reviewed" };
+
+  it("reads and writes tarballs only inside a scratch folder", () => {
+    expect(scratchFolder(join(tmpdir(), "x"), {})).toBe(join(tmpdir(), "x"));
+    expect(scratchFolder("/ci/tmp/npm", { RUNNER_TEMP: "/ci/tmp" })).toBe(
+      "/ci/tmp/npm",
+    );
+    expect(() => scratchFolder(repo, {})).toThrow(
+      /isn't inside a scratch folder/,
+    );
+    expect(() => scratchFolder(join(tmpdir(), "..", "etc"), {})).toThrow(
+      /isn't inside a scratch folder/,
+    );
+  });
+  it("keeps the gate shut until the owner sets the npm environment's variable", () => {
+    expect(gateProblem({})).toMatch(
+      /CESIUM_RELEASE_GATE is not set.*step 1 of "What the owner sets up/,
+    );
+    expect(gateProblem({ CESIUM_RELEASE_GATE: "yes" })).toMatch(
+      /"yes", not "reviewed"/,
+    );
+    expect(gateProblem(open)).toBeUndefined();
+    const sum = release();
+    const npm = vi.fn();
+    expect(() =>
+      stageTarballs(dir!, sum, { env: {}, npm, log: () => {} }),
+    ).toThrow(/the release gate is shut/);
+    expect(npm).not.toHaveBeenCalled();
+  });
+  it("stages the tarballs in release.json's order once every sum matches", () => {
+    const sum = release();
+    const npm = vi.fn();
+    expect(stageTarballs(dir!, sum, { env: open, npm, log: () => {} })).toEqual(
+      ["@x/core@2.0.0-alpha.1", "@x/next@2.0.0-alpha.1"],
+    );
+    expect(npm.mock.calls.map(([args]) => args[2])).toEqual([
+      "./x-core-2.0.0-alpha.1.tgz",
+      "./x-next-2.0.0-alpha.1.tgz",
+    ]);
+    expect(npm.mock.calls[0]![0]).toContain("next");
+  });
+  it("refuses a release.json or a tarball whose sum isn't the one reported", () => {
+    const sum = release();
+    const npm = vi.fn();
+    expect(() =>
+      stageTarballs(dir!, "0".repeat(64), { env: open, npm, log: () => {} }),
+    ).toThrow(/release\.json's SHA-256 is/);
+    writeFileSync(join(dir!, "x-next-2.0.0-alpha.1.tgz"), "swapped");
+    expect(() =>
+      stageTarballs(dir!, sum, { env: open, npm, log: () => {} }),
+    ).toThrow(/x-next-2\.0\.0-alpha\.1\.tgz's SHA-256 is/);
+    expect(npm).not.toHaveBeenCalled();
+  });
+  it("refuses a private package, a wrong tag and a tarball that holds another package", () => {
+    release("2.0.0", true);
+    const manifest = JSON.parse(
+      readFileSync(join(dir!, "release.json"), "utf8"),
+    );
+    const bytes = (file: string) => readFileSync(join(dir!, file));
+    const inner = (file: string) =>
+      file.includes("core")
+        ? { name: "@x/core", version: "2.0.0", private: true }
+        : { name: "@x/other", version: "2.0.0" };
+    expect(tarballProblems({ ...manifest, tag: "next" }, bytes, inner)).toEqual(
+      [
+        "release.json's tag is next, not latest for 2.0.0",
+        "@x/core is private; npm won't stage it, and making it public is the owner's step",
+        "x-next-2.0.0.tgz holds @x/other@2.0.0, not @x/next@2.0.0",
+      ],
+    );
+  });
+  it("names what it staged when a later package fails, for the owner to reject", () => {
+    const sum = release();
+    let calls = 0;
+    const npm = () => {
+      calls += 1;
+      if (calls === 2) {
+        throw new Error("E403");
+      }
+    };
+    expect(() =>
+      stageTarballs(dir!, sum, { env: open, npm, log: () => {} }),
+    ).toThrow(
+      /staging @x\/next@2\.0\.0-alpha\.1 failed \(E403\)\. Already staged: @x\/core@2\.0\.0-alpha\.1; reject each on npm/,
+    );
   });
 });

@@ -8,9 +8,14 @@
 # the umbrella last. The GitHub release is created as a draft, with the
 # combined release notes, for the owner to publish after the approvals.
 #
-# It runs only after the owner has set up npm's trusted publisher for each
-# package and the `npm` environment on GitHub (the design's checklist, under
-# "Releases"). Until then the publish job fails at npm, and nothing is sent.
+# Only `publish` holds `id-token: write`, and it runs no `npm ci` and no
+# build: `verify` builds, tests, packs and checks the tarballs, and
+# `publish` stages exactly those, their SHA-256 sums checked on arrival.
+#
+# It runs only after the owner has set up the `npm` environment (its
+# required reviewer and the CESIUM_RELEASE_GATE variable) and npm's
+# trusted publisher for each package (the design's checklist, under
+# "Releases"). Until then `publish` refuses at the gate, and nothing is sent.
 name: release
 
 on:
@@ -31,8 +36,11 @@ env:
   CI: "true"
 
 jobs:
-  # Whether this push is a release record: the umbrella's version changed
-  # in it, and no tag for that version exists yet.
+  # Whether this push is a release record (scripts/release/record.mjs):
+  # exactly what `npm run release:version` writes, from a before commit
+  # that is an ancestor of this one, at a version with no `v<version>` tag
+  # and not on npm yet. A before it can't resolve (a new branch, a force
+  # push) is never one. No `npm ci`: the script needs only Node.
   record:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -45,40 +53,28 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
           persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          package-manager-cache: false
       - id: record
         name: The release record
         env:
           BEFORE: ${{ github.event.before }}
-        run: |
-          version="$(node -p 'require("./packages/cesium/package.json").version')"
-          if ! printf '%s' "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
-            echo "::error::the umbrella's version isn't one: $version"
-            exit 1
-          fi
-          before=""
-          if [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ] \
-            && git cat-file -e "$BEFORE:packages/cesium/package.json" 2>/dev/null; then
-            before="$(git show "$BEFORE:packages/cesium/package.json" | node -p 'JSON.parse(require("fs").readFileSync(0, "utf8")).version')"
-          fi
-          release=false
-          if [ "$version" = "$before" ]; then
-            echo "the umbrella stays at $version: not a release record"
-          elif git rev-parse --verify --quiet "refs/tags/v$version" >/dev/null; then
-            echo "v$version is already tagged: nothing to release"
-          else
-            release=true
-            echo "a release record: ${before:-?} to $version"
-          fi
-          echo "release=$release" >> "$GITHUB_OUTPUT"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
+        run: node scripts/release/record.mjs --before "$BEFORE" --head HEAD
 
-  # The full tier again on the record's commit: what CI checks, run here so
-  # the release never rests on another workflow's result.
+  # The full tier again on the record's commit, so the release never rests
+  # on another workflow's result; then the tarballs, checked, and the
+  # GitHub release's files, each set with its SHA-256 sums as an output.
+  # No `id-token` and no write token here.
   verify:
     needs: record
     if: needs.record.outputs.release == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 60
+    outputs:
+      tarballs-sha256: ${{ steps.pack.outputs.sha256 }}
+      files-sha256: ${{ steps.files.outputs.sha256 }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -86,23 +82,58 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
+          # No dependency cache on the release path.
           package-manager-cache: false
       - run: npm ci --ignore-scripts --no-audit --no-fund
       - name: The version lines
         run: npm run release:check
+      # The suite's bundle test reads the packages' dist/, so the build comes
+      # first; the packed checks run below, on the tarballs that are staged.
+      - name: Build
+        run: npm run build -- --no-checks
       - run: npm test
-      - name: Build, pack, and the packed checks
-        run: npm run build
       - run: npm run check:bundle
       - run: npm run surface -- --check
+      - id: pack
+        name: Pack every package for staging (the version lines, private, latest, the packed checks)
+        run: |
+          node scripts/release/stage.mjs --pack "$RUNNER_TEMP/npm"
+          echo "sha256=$(sha256sum "$RUNNER_TEMP/npm/release.json" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+      - id: files
+        name: The release notes and the browser build
+        env:
+          VERSION: ${{ needs.record.outputs.version }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/github"
+          node scripts/release/notes.mjs --version "$VERSION" > "$RUNNER_TEMP/github/notes.md"
+          tar -czf "$RUNNER_TEMP/github/cesium-browser-$VERSION.tgz" -C packages/cesium/dist browser
+          (cd "$RUNNER_TEMP/github" && sha256sum notes.md "cesium-browser-$VERSION.tgz" > SHA256SUMS)
+          echo "sha256=$(sha256sum "$RUNNER_TEMP/github/SHA256SUMS" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: npm-tarballs
+          path: ${{ runner.temp }}/npm
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: github-release
+          path: ${{ runner.temp }}/github
+          if-no-files-found: error
+          retention-days: 7
 
-  # Stages every package. The `npm` environment's required reviewer (the
-  # owner) approves the run before this job starts; npm's trusted publisher
-  # for each package names this file and that environment.
+  # Stages the checked tarballs, and nothing else runs here: no `npm ci`, no
+  # build, no dependency's code. The `npm` environment's required reviewer
+  # (the owner) approves the run before this job starts; npm's trusted
+  # publisher for each package names this file and that environment, and
+  # allows `npm stage publish` only. scripts/release/stageTarballs.mjs
+  # refuses unless the environment's CESIUM_RELEASE_GATE is set, checks
+  # release.json against the sum `verify` reported and each tarball against
+  # release.json, then stages each in order.
   publish:
     needs: [record, verify]
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 20
     environment: npm
     permissions:
       contents: read
@@ -111,51 +142,53 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          sparse-checkout: scripts/release
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: "https://registry.npmjs.org"
-          # No dependency cache in the job that publishes.
           package-manager-cache: false
       - name: npm can stage through trusted publishing (11.15.0 or later)
         run: |
           npm --version
           node -e 'const [a,b]=process.argv[1].split(".").map(Number); if (a < 11 || (a === 11 && b < 15)) { console.error(`npm ${process.argv[1]} is older than 11.15.0, the first with npm stage publish`); process.exit(1); }' "$(npm --version)"
-      - run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: Build
-        run: npm run build -- --no-checks
-      - name: Stage every package (the packed checks first)
-        run: npm run release:stage
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: npm-tarballs
+          path: ${{ runner.temp }}/npm
+      - name: Stage every package
+        env:
+          CESIUM_RELEASE_GATE: ${{ vars.CESIUM_RELEASE_GATE }}
+          MANIFEST_SHA256: ${{ needs.verify.outputs.tarballs-sha256 }}
+        run: node scripts/release/stageTarballs.mjs --from "$RUNNER_TEMP/npm" --manifest-sha256 "$MANIFEST_SHA256"
 
-  # The GitHub release, as a draft: the tag, the combined release notes from
-  # every package's CHANGELOG.md, and the browser build as an archive. The
-  # only job with `contents: write`.
+  # The GitHub release, as a draft: the tag, the combined release notes and
+  # the browser build `verify` made, their sums checked on arrival. The only
+  # job with `contents: write`, and it runs nothing from the repository.
   github-release:
-    needs: [record, publish]
+    needs: [record, verify, publish]
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 10
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          package-manager-cache: false
-      - run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: The release notes and the browser build
+          name: github-release
+          path: ${{ runner.temp }}/github
+      - name: The files as verify made them
         env:
-          VERSION: ${{ needs.record.outputs.version }}
+          SUMS_SHA256: ${{ needs.verify.outputs.files-sha256 }}
+        working-directory: ${{ runner.temp }}/github
         run: |
-          node scripts/release/notes.mjs --version "$VERSION" > "$RUNNER_TEMP/notes.md"
-          npm run build -- --no-checks
-          tar -czf "$RUNNER_TEMP/cesium-browser-$VERSION.tgz" -C packages/cesium/dist browser
+          echo "$SUMS_SHA256  SHA256SUMS" | sha256sum --check --strict -
+          sha256sum --check --strict SHA256SUMS
       - name: The draft release
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           VERSION: ${{ needs.record.outputs.version }}
+        working-directory: ${{ runner.temp }}/github
         run: |
           prerelease=""
           case "$VERSION" in *-*) prerelease="--prerelease" ;; esac
@@ -163,5 +196,5 @@ jobs:
             --draft $prerelease \
             --target "$GITHUB_SHA" \
             --title "v$VERSION" \
-            --notes-file "$RUNNER_TEMP/notes.md" \
-            "$RUNNER_TEMP/cesium-browser-$VERSION.tgz"
+            --notes-file notes.md \
+            "cesium-browser-$VERSION.tgz"

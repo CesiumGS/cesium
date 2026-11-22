@@ -16,6 +16,12 @@ export function pairedVersion(version: string): string;
 /** `next` for a prerelease, else `latest`. */
 export function distTag(version: string): "next" | "latest";
 
+/** Compares two prereleases' identifiers as semver does; negative, zero or positive. */
+export function comparePrerelease(a: string, b: string): number;
+
+/** Compares two versions by semver's precedence; negative, zero or positive. */
+export function compareVersions(a: string, b: string): number;
+
 /** Whether `next` is lower than `current`. */
 export function isLower(next: string, current: string): boolean;
 
@@ -23,7 +29,7 @@ export function isLower(next: string, current: string): boolean;
 export function stableNames(config: { fixed?: string[][] }): string[];
 
 /** The repository's Changesets config. */
-export function readConfig(): { fixed?: string[][]; ignore?: string[] } & Record<string, unknown>;
+export function readConfig(root?: string): { fixed?: string[][]; ignore?: string[] } & Record<string, unknown>;
 
 /** Each package with its line: `stable` when in the fixed group, else `experimental`. */
 export function withLines<T extends { manifest: { name: string } }>(
@@ -35,13 +41,24 @@ export function withLines<T extends { manifest: { name: string } }>(
 export function lineProblems(
   packages: readonly Pick<LinePackage, "manifest" | "line">[],
   stable: readonly string[],
+  rootManifest?: Record<string, unknown>,
 ): string[];
 
 /** Writes the paired version into each experimental package; returns their names. */
-export function applyPaired(packages: readonly LinePackage[]): string[];
+export function applyPaired(
+  packages: readonly LinePackage[],
+  root?: { dir: string; manifest: Record<string, unknown> },
+): string[];
 
 /** `text` with its first `## <from>` heading renamed `## <to>`. */
 export function renameNewestHeading(text: string, from: string, to: string): string;
 
-/** The repository's packages under packages/, each with its line. */
-export function repositoryPackages(): { stable: string[]; packages: LinePackage[] };
+/** Each folder under `<root>/packages/` with a package.json, sorted. */
+export function packageFolders(root?: string): string[];
+
+/** The repository's packages under packages/, each with its line, and the root's manifest. */
+export function repositoryPackages(root?: string): {
+  stable: string[];
+  rootManifest: Record<string, unknown>;
+  packages: LinePackage[];
+};

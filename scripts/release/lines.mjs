@@ -14,10 +14,12 @@
 //   node scripts/release/lines.mjs --check   exits 1, listing each problem
 //   node scripts/release/lines.mjs --apply   writes the derived versions
 //   node scripts/release/lines.mjs --tag     prints the dist-tag for the version
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+//
+// It imports nothing outside Node, so the release workflow's jobs that run
+// no `npm ci` (the record and the publish jobs) can use it.
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
-import { packageDirs } from "../build/declarations.mjs";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 
@@ -73,28 +75,66 @@ export function distTag(version) {
 }
 
 /**
- * Whether `next` is lower than `current` (both versions), comparing
- * major, minor and patch, then a prerelease below its release. Prerelease
- * identifiers compare as text; `latest` only ever holds releases.
+ * Compares two prereleases' dot-separated identifiers as semver does:
+ * numeric identifiers as numbers, below any alphanumeric one, others as
+ * ASCII text, and a shorter list below a longer one it begins. Returns a
+ * negative number, zero or a positive number.
  */
-export function isLower(next, current) {
-  const a = parseVersion(next);
-  const b = parseVersion(current);
-  if (!a || !b) {
-    throw new Error(`can't compare ${next} with ${current}`);
-  }
-  for (const key of ["major", "minor", "patch"]) {
-    if (a[key] !== b[key]) {
-      return a[key] < b[key];
+export function comparePrerelease(a, b) {
+  const x = a.split(".");
+  const y = b.split(".");
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    if (x[i] === undefined) {
+      return -1;
+    }
+    if (y[i] === undefined) {
+      return 1;
+    }
+    const xNumeric = /^\d+$/.test(x[i]);
+    const yNumeric = /^\d+$/.test(y[i]);
+    if (xNumeric && yNumeric) {
+      const d = Number(x[i]) - Number(y[i]);
+      if (d !== 0) {
+        return Math.sign(d);
+      }
+    } else if (xNumeric !== yNumeric) {
+      return xNumeric ? -1 : 1;
+    } else if (x[i] !== y[i]) {
+      return x[i] < y[i] ? -1 : 1;
     }
   }
-  if (a.prerelease === b.prerelease) {
-    return false;
+  return 0;
+}
+
+/**
+ * Compares two versions by semver's precedence: major, minor and patch as
+ * numbers, then a prerelease below its release, then the prereleases'
+ * identifiers (comparePrerelease). Build metadata is ignored. Throws when
+ * either isn't a version.
+ */
+export function compareVersions(a, b) {
+  const x = parseVersion(a);
+  const y = parseVersion(b);
+  if (!x || !y) {
+    throw new Error(`can't compare ${a} with ${b}`);
   }
-  if (!a.prerelease || !b.prerelease) {
-    return Boolean(a.prerelease);
+  for (const key of ["major", "minor", "patch"]) {
+    if (x[key] !== y[key]) {
+      return Math.sign(x[key] - y[key]);
+    }
   }
-  return a.prerelease < b.prerelease;
+  if (x.prerelease === y.prerelease) {
+    return 0;
+  }
+  if (!x.prerelease || !y.prerelease) {
+    return x.prerelease ? -1 : 1;
+  }
+  return comparePrerelease(x.prerelease, y.prerelease);
+}
+
+/** Whether `next` is lower than `current` (compareVersions). */
+export function isLower(next, current) {
+  return compareVersions(next, current) < 0;
 }
 
 /** The stable group: Changesets' one `fixed` group, from its config. */
@@ -127,6 +167,7 @@ export function withLines(packages, stable) {
 }
 
 const DEPENDENCY_FIELDS = ["dependencies", "peerDependencies", "optionalDependencies"];
+const ROOT_DEPENDENCY_FIELDS = ["dependencies", "devDependencies"];
 
 /**
  * The problems with the two lines (an empty list when none):
@@ -134,11 +175,14 @@ const DEPENDENCY_FIELDS = ["dependencies", "peerDependencies", "optionalDependen
  *   group is a package under packages/;
  * - every experimental package is at the paired version;
  * - every dependency on a sibling names its exact version, and no stable
- *   package depends on an experimental one.
+ *   package depends on an experimental one;
+ * - the root's `package.json`, when given, names each sibling it depends
+ *   on (the umbrella, as a dev dependency) at its exact version.
  * @param {{ manifest: { name: string, version: string } & Record<string, unknown>, line: "stable" | "experimental" }[]} packages
  * @param {string[]} stable the fixed group's names
+ * @param {Record<string, unknown>} [rootManifest] the root's package.json
  */
-export function lineProblems(packages, stable) {
+export function lineProblems(packages, stable, rootManifest) {
   const problems = [];
   const names = new Set(packages.map((p) => p.manifest.name));
   for (const name of stable) {
@@ -190,6 +234,15 @@ export function lineProblems(packages, stable) {
       }
     }
   }
+  for (const field of ROOT_DEPENDENCY_FIELDS) {
+    for (const [dep, range] of Object.entries(rootManifest?.[field] ?? {})) {
+      if (want.has(dep) && range !== want.get(dep)) {
+        problems.push(
+          `the root package.json's ${field} names ${dep}@${range}, not the exact ${want.get(dep)}`,
+        );
+      }
+    }
+  }
   return problems;
 }
 
@@ -197,10 +250,14 @@ export function lineProblems(packages, stable) {
  * Writes the paired version into each experimental package, in place: its
  * `version`, its dependencies on siblings (exact), and its CHANGELOG.md's
  * newest `## <version>` heading, which Changesets wrote with a number of
- * its own. Returns the packages it changed.
+ * its own. With `root` (the repository's folder and its package.json), it
+ * also writes any of the root's dependencies on an experimental package;
+ * Changesets already writes its dependencies on stable ones. Returns the
+ * packages it changed.
  * @param {{ dir: string, manifest: Record<string, any>, line: string }[]} packages
+ * @param {{ dir: string, manifest: Record<string, any> }} [root]
  */
-export function applyPaired(packages) {
+export function applyPaired(packages, root) {
   const stable = packages.filter((p) => p.line === "stable");
   const version = stable[0]?.manifest.version;
   if (!version || stable.some((p) => p.manifest.version !== version)) {
@@ -232,6 +289,20 @@ export function applyPaired(packages) {
     }
     changed.push(p.manifest.name);
   }
+  if (root) {
+    let rewrote = false;
+    for (const field of ROOT_DEPENDENCY_FIELDS) {
+      for (const [dep, range] of Object.entries(root.manifest[field] ?? {})) {
+        if (want.has(dep) && range !== want.get(dep)) {
+          root.manifest[field][dep] = want.get(dep);
+          rewrote = true;
+        }
+      }
+    }
+    if (rewrote) {
+      writeFileSync(join(root.dir, "package.json"), `${JSON.stringify(root.manifest, null, 2)}\n`);
+    }
+  }
   return changed;
 }
 
@@ -245,13 +316,26 @@ export function renameNewestHeading(text, from, to) {
   return lines.join("\n");
 }
 
-/** The repository's packages under packages/, each with its manifest and line. */
-export function repositoryPackages() {
-  const stable = stableNames(readConfig());
+/** Each folder under `<root>/packages/` with a package.json, by path, sorted. */
+export function packageFolders(root = repo) {
+  const dir = join(root, "packages");
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && existsSync(join(dir, entry.name, "package.json")))
+    .map((entry) => join(dir, entry.name))
+    .sort();
+}
+
+/**
+ * The repository's packages under packages/, each with its manifest and
+ * line, and the root's own package.json.
+ */
+export function repositoryPackages(root = repo) {
+  const stable = stableNames(readConfig(root));
   return {
     stable,
+    rootManifest: JSON.parse(readFileSync(join(root, "package.json"), "utf8")),
     packages: withLines(
-      packageDirs().map((dir) => ({
+      packageFolders(root).map((dir) => ({
         dir,
         manifest: JSON.parse(readFileSync(join(dir, "package.json"), "utf8")),
       })),
@@ -260,11 +344,11 @@ export function repositoryPackages() {
   };
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
-  const { stable, packages } = repositoryPackages();
+  const { stable, packages, rootManifest } = repositoryPackages();
   if (args.includes("--apply")) {
-    const changed = applyPaired(packages);
+    const changed = applyPaired(packages, { dir: repo, manifest: rootManifest });
     console.log(
       changed.length > 0
         ? `lines: the experimental line set on ${changed.join(", ")}`
@@ -276,7 +360,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
     console.log(distTag(version));
   }
   if (args.includes("--check") || args.includes("--apply")) {
-    const problems = lineProblems(packages, stable);
+    const problems = lineProblems(packages, stable, rootManifest);
     if (problems.length > 0) {
       console.error(`lines: ${problems.length} problem(s):\n  ${problems.join("\n  ")}`);
       process.exit(1);

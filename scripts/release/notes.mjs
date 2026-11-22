@@ -10,6 +10,7 @@
 // to standard output.
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { repositoryPackages } from "./lines.mjs";
 
 /**
@@ -105,7 +106,7 @@ function order(packages) {
   );
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
   const option = (flag) => {
     const i = args.indexOf(flag);

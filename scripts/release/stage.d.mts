@@ -8,6 +8,3 @@ export function publishOrder<
     };
   },
 >(packages: readonly T[]): T[];
-
-/** `npm stage publish`'s arguments for one package. */
-export function stageArgs(tag: string, dryRun: boolean): string[];

@@ -63,7 +63,7 @@ jobs:
           # A new branch's push has no before commit.
           if [ "$base" = "0000000000000000000000000000000000000000" ]; then base=""; fi
           if [ -n "$base" ] && ! git cat-file -e "$base^{commit}" 2>/dev/null; then
-            echo "::warning::base $base isn't in the clone; the changeset check is skipped"
+            echo "::warning::base $base isn't in the clone; the changeset check will fail"
             base=""
           fi
           echo "base=$base" >> "$GITHUB_OUTPUT"
@@ -119,11 +119,17 @@ jobs:
         run: node scripts/staleNames.mjs
       - name: The version lines
         run: npm run release:check
+      # Fails, never skips, when there is no base to compare with (a new
+      # branch's push, or a before commit missing after a force push).
       - name: A changeset for a change to a published package
-        if: needs.changes.outputs.base != ''
         env:
           BASE: ${{ needs.changes.outputs.base }}
-        run: npm run changeset:check -- --base "$BASE"
+        run: |
+          if [ -z "$BASE" ]; then
+            echo "::error::no base commit to compare with, so the changeset rule can't be checked; push the change as a pull request against the 2.0 branch"
+            exit 1
+          fi
+          npm run changeset:check -- --base "$BASE"
 
   # The full suite, on Node 24 and the current release.
   test:
