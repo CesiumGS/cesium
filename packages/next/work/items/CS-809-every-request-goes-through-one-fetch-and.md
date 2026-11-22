@@ -2,9 +2,10 @@
 id: CS-809
 title: "Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-21
 project: CS-191
+claimed_by: orch-11-CS-809
 touches: [packages/next/src/io/**, packages/next/src/streaming/**, packages/next/src/globe/**, packages/next/src/tiles/**, packages/next/src/scene/ShaderBindings.ts, packages/next/src/index.ts, packages/next/test, packages/next/api/surface.txt]
 ---
 
