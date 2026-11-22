@@ -1,0 +1,17 @@
+Third-party files in this folder
+
+skybox/ (tycho2t3_80_*.jpg)
+  Sky box images from NASA.
+  http://maps.jpl.nasa.gov/stars.html
+  http://svs.gsfc.nasa.gov/vis/a000000/a003500/a003572/
+  Terms of use: http://www.nasa.gov/audience/formedia/features/MP_Photo_Guidelines.html
+
+moonSmall.jpg
+  The Moon map. The root LICENSE.md credits it under "Data from JHT's
+  Planetary Pixel Emporium": Copyright (c) by James Hastings-Trew,
+  http://planetpixelemporium.com/
+  Copyright information: http://planetpixelemporium.com/planets.html
+
+The root LICENSE.md holds these entries, under "Sky box images from NASA" and
+"Data from JHT's Planetary Pixel Emporium". It is the authority; this file only
+says which files each entry covers.

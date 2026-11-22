@@ -1,0 +1,9 @@
+Third-party files in this folder
+
+basis_transcoder.js and basis_transcoder.wasm
+  The Basis Universal transcoder, from https://github.com/BinomialLLC/basis_universal
+  Licensed under the Apache License, Version 2.0. You may obtain a copy of the
+  License at http://www.apache.org/licenses/LICENSE-2.0
+
+The root LICENSE.md holds this entry, under "basis_universal". It is the
+authority for the license text; this file only says which files it covers.
