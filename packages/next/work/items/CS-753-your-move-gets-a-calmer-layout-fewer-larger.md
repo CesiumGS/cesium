@@ -2,7 +2,7 @@
 id: CS-753
 title: '"Your move" gets a calmer layout: fewer, larger, ranked entries'
 kind: work
-state: in-progress
+state: done
 created: 2026-11-19
 project: CS-389
 needs: [CS-744, CS-750]

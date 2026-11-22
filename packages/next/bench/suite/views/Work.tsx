@@ -27,7 +27,6 @@ import { svgDismiss } from "@stratakit/icons/dismiss";
 import { svgFilter } from "@stratakit/icons/filter";
 import { svgFolderOpen } from "@stratakit/icons/folder-open";
 import { svgGitBranch } from "@stratakit/icons/git-branch";
-import { svgInfo } from "@stratakit/icons/info";
 import { svgSearch } from "@stratakit/icons/search";
 import { svgStatusWarning } from "@stratakit/icons/status-warning";
 import { Icon } from "@stratakit/mui";
@@ -38,6 +37,7 @@ import {
 } from "@tanstack/react-router";
 import {
   createContext,
+  Fragment,
   type ReactNode,
   type RefObject,
   useEffect,
@@ -94,12 +94,6 @@ import {
   mapEntityTitle,
   milestoneRoadmapOf,
   nextActor,
-  possessive,
-  PROPOSAL_STAGES,
-  type Proposal,
-  type ProposalStage,
-  proposalsForOwner,
-  proposalsOf,
   releasesGatedBy,
   type RoadmapRow,
   ownerQueue,
@@ -130,6 +124,21 @@ import {
 import { InlineText, ItemText } from "./ItemText.tsx";
 import { ProjectMatrixView, ProjectsView } from "./Projects.tsx";
 import { Status as StatusBadge } from "./runParts.tsx";
+import {
+  HEALTH_KIND_DEFS,
+  type HealthException,
+  healthForOwner,
+  healthInScope,
+  healthOf,
+  type Words,
+} from "../workHealth.ts";
+import {
+  GROUP_NAMES,
+  GROUP_RULES,
+  type ProposalGroup,
+  type ProposalsModel,
+  proposalsViewOf,
+} from "../workProposals.ts";
 import { concurrencyOf, orderPlanOf } from "./workOrder.tsx";
 
 /**
@@ -180,10 +189,28 @@ export function Work() {
     );
   }
   return (
+    <WorkSnapshotProvider s={snapshot} kinds={kinds}>
+      <Board s={snapshot} search={search} set={set} />
+    </WorkSnapshotProvider>
+  );
+}
+
+/**
+ * The snapshot and its kinds, for every ID drawn under it: `ItemRef` reads
+ * its title and `KindId` its kind from here.
+ */
+export function WorkSnapshotProvider({
+  s,
+  kinds = kindsOf(s),
+  children,
+}: {
+  s: WorkSnapshot;
+  kinds?: ReadonlyMap<string, EntityKind>;
+  children: ReactNode;
+}) {
+  return (
     <KindsContext.Provider value={kinds}>
-      <SnapshotContext.Provider value={snapshot}>
-        <Board s={snapshot} search={search} set={set} />
-      </SnapshotContext.Provider>
+      <SnapshotContext.Provider value={s}>{children}</SnapshotContext.Provider>
     </KindsContext.Provider>
   );
 }
@@ -288,13 +315,6 @@ const BUILT_IN_VIEWS: WorkViewDef[] = [
       "What is left in each release, what holds it, and how it connects",
     place: "page",
     order: 20,
-  },
-  {
-    id: "proposals",
-    label: "Proposals",
-    question: "What is proposed, and what each proposal waits on",
-    place: "page",
-    order: 60,
   },
   {
     id: "deps",
@@ -432,27 +452,60 @@ function Board({
     }
     return by;
   }, [items, flight]);
-  const mostWaitedOn = (list: WorkItem[]) =>
-    [...list].sort(
-      (a, b) => (unblocks.get(b.id) ?? 0) - (unblocks.get(a.id) ?? 0),
-    );
-  const decisions = byActor.owner.filter(isOwnerDecision);
-  const proposals = useMemo(
-    () => proposalsOf(s, items, s.milestones.filter(msInScope), unblocks),
-    // msInScope reads only the scope, which `items` follows.
-    [s, items, unblocks],
-  );
-  const forOwner = useMemo(() => proposalsForOwner(proposals), [proposals]);
-  const forOwnerDiscuss = forOwner.filter((p) => p.stage === "discuss").length;
-  const readyToStart = byActor.agents.filter(
-    (it) => stageOf(it, flight) === "Ready",
-  );
   const live = useMemo(
     () => liveBoxOf(s, size ? new Set(items.map((i) => i.id)) : undefined),
     [s, items, size],
   );
-  const now = Date.now();
-  const ageOf = (it: WorkItem) => now - (flow.since.get(it.id) ?? now);
+  // Your move (CS-753): built only while it is the view shown.
+  const onMove = view === "move" && !pageView.Component;
+  const health = useMemo(() => (onMove ? healthOf(s) : undefined), [onMove, s]);
+  const proposalGroups = useMemo(
+    () =>
+      onMove
+        ? proposalsViewOf(s, items, s.milestones.filter(msInScope), {
+            weight: unblocks,
+          })
+        : undefined,
+    // msInScope reads only the scope, which `items` follows.
+    [onMove, s, items, unblocks],
+  );
+  const move = useMemo(() => {
+    if (!health || !proposalGroups) {
+      return undefined;
+    }
+    const ids = new Set(items.map((i) => i.id));
+    const own = healthForOwner(health).exceptions;
+    return yourMoveOf({
+      s,
+      decisions: byActor.owner.filter(isOwnerDecision),
+      unmerged: live.unmerged,
+      exceptions: size
+        ? healthInScope({ ...health, exceptions: own }, (id) => {
+            const m = msOf.get(id);
+            return ids.has(id) || (!!m && msInScope(m));
+          })
+        : own,
+      outside: byActor.outside,
+      ready: byActor.agents.filter((it) => stageOf(it, flight) === "Ready"),
+      proposals: proposalGroups,
+      unblocks,
+      since: flow.since,
+      now: Date.now(),
+    });
+    // msInScope reads only the scope, which `items` and `size` follow.
+  }, [
+    health,
+    proposalGroups,
+    s,
+    items,
+    size,
+    byActor,
+    live,
+    msOf,
+    flight,
+    unblocks,
+    flow,
+  ]);
   const open = (list: string) => set({ list, item: undefined });
   /** Scopes to one line (or all work), replacing the scope. */
   const scopeTo = (patch: Partial<WorkSearch>) =>
@@ -659,157 +712,15 @@ function Board({
               className="work-view"
             >
               {pageView.Component && <pageView.Component {...viewProps} />}
-              {!pageView.Component && view === "move" && (
-                <div className="work-dash">
-                  <Card
-                    id="work-needs-h"
-                    title="Your decisions"
-                    className="span-7"
-                    stat={{
-                      value: decisions.length,
-                      detail: decisions.length
-                        ? `Oldest waiting ${ageText(Math.max(...decisions.map(ageOf)))}`
-                        : "Nothing waits on you",
-                      tone: decisions.length ? "attention" : undefined,
-                      onOpen: () => open("owner"),
-                    }}
-                    foot={
-                      decisions.length > 8 && (
-                        <Link
-                          component="button"
-                          type="button"
-                          onClick={() => open("owner")}
-                        >
-                          All {decisions.length} decisions
-                        </Link>
-                      )
-                    }
-                  >
-                    <LeverageBars
-                      items={mostWaitedOn(decisions)}
-                      unblocks={unblocks}
-                      limit={8}
-                      selected={search.item}
-                      empty="Nothing waits on you."
-                    />
-                  </Card>
-
-                  <Card
-                    id="work-yourprops-h"
-                    title="Proposals for you"
-                    className="span-5"
-                    stat={{
-                      value: forOwner.length,
-                      detail: forOwner.length
-                        ? `${forOwnerDiscuss} to discuss, ${forOwner.length - forOwnerDiscuss} ready for your yes`
-                        : "No proposal waits on you",
-                      tone: forOwner.length ? "attention" : undefined,
-                      onOpen: () =>
-                        set({
-                          view: "proposals",
-                          list: undefined,
-                          stage: undefined,
-                        }),
-                    }}
-                    foot={
-                      <Link
-                        component="button"
-                        type="button"
-                        onClick={() =>
-                          set({
-                            view: "proposals",
-                            list: undefined,
-                            stage: undefined,
-                          })
-                        }
-                      >
-                        All {proposals.length} proposals
-                      </Link>
-                    }
-                  >
-                    <OwnerProposals
-                      proposals={forOwner}
-                      selected={search.item}
-                      limit={6}
-                    />
-                  </Card>
-
-                  <Card
-                    id="work-flight-h"
-                    title="In progress"
-                    className="span-12"
-                    stat={{
-                      value: live.working.length,
-                      detail: liveDetail(live),
-                      tone: live.blind ? "attention" : undefined,
-                      onOpen: () => open("working"),
-                    }}
-                  >
-                    <LiveRun box={live} branch={s.branch} />
-                  </Card>
-
-                  <Card
-                    id="work-ready-h"
-                    title="Ready to start"
-                    className="span-7"
-                    stat={{
-                      value: readyToStart.length,
-                      onOpen: () => open("ready"),
-                    }}
-                    foot={
-                      readyToStart.length > 8 && (
-                        <Link
-                          component="button"
-                          type="button"
-                          onClick={() => open("ready")}
-                        >
-                          All {readyToStart.length} ready
-                        </Link>
-                      )
-                    }
-                  >
-                    <LeverageBars
-                      items={mostWaitedOn(readyToStart)}
-                      unblocks={unblocks}
-                      limit={8}
-                      selected={search.item}
-                      empty="Nothing is ready to start."
-                    />
-                  </Card>
-
-                  <Card
-                    id="work-outside-h"
-                    title="Waiting outside"
-                    className="span-5"
-                    stat={{
-                      value: byActor.outside.length,
-                      detail: byActor.outside.length
-                        ? `On ${new Set(byActor.outside.map((it) => it.waiting_on ?? "")).size} other parties`
-                        : "Nothing waits outside",
-                      onOpen: () => open("outside"),
-                    }}
-                    foot={
-                      byActor.outside.length > 5 && (
-                        <Link
-                          component="button"
-                          type="button"
-                          onClick={() => open("outside")}
-                        >
-                          All {byActor.outside.length}
-                        </Link>
-                      )
-                    }
-                  >
-                    <LeverageBars
-                      items={mostWaitedOn(byActor.outside)}
-                      unblocks={unblocks}
-                      limit={5}
-                      selected={search.item}
-                      empty="Nothing waits on other parties."
-                      party
-                    />
-                  </Card>
-                </div>
+              {move && (
+                <YourMoveView
+                  move={move}
+                  live={live}
+                  branch={s.branch}
+                  selected={viewProps.selected}
+                  openItem={viewProps.openItem}
+                  goView={goView}
+                />
               )}
 
               {!pageView.Component && view === "roadmap" && (
@@ -936,31 +847,6 @@ function Board({
                   </div>
                 </div>
               )}
-
-              {!pageView.Component && view === "proposals" && (
-                <div className="work-dash">
-                  <ProposalsCard
-                    s={s}
-                    proposals={proposals}
-                    itemOf={itemOf}
-                    unblocks={unblocks}
-                    selected={
-                      search.item ??
-                      (search.list?.startsWith("ms:")
-                        ? search.list.slice(3)
-                        : undefined)
-                    }
-                    stage={
-                      PROPOSAL_STAGES.includes(search.stage as ProposalStage)
-                        ? (search.stage as ProposalStage)
-                        : undefined
-                    }
-                    onStage={(stage) => set({ stage }, true)}
-                    onMilestone={(id) => open(`ms:${id}`)}
-                    msOf={msOf}
-                  />
-                </div>
-              )}
             </div>
           </div>
 
@@ -1015,6 +901,994 @@ function Board({
         </div>
       </Page>
     </WorkCardProvider>
+  );
+}
+
+// ------------------------------------------------------------ Your move (CS-753)
+
+/**
+ * Your move's ranked sections, in the order the page shows them: what
+ * waits on the owner (decisions, merges, the Health view's exceptions
+ * whose fix needs the owner), then what waits on another party.
+ */
+export const MOVE_SECTIONS = [
+  "decisions",
+  "merges",
+  "health",
+  "outside",
+] as const;
+export type MoveSectionKind = (typeof MOVE_SECTIONS)[number];
+
+/** How many entries a section shows before "and N more". */
+export const MOVE_TOP = 5;
+
+/** The Proposals view's groups (CS-750) that the "Proposals for you" card counts. */
+export const MOVE_PROPOSAL_GROUPS = [
+  "needed",
+  "waiting",
+  "new",
+  "deferred",
+] as const satisfies readonly ProposalGroup[];
+
+/** One entry in a section: what it is, what it holds up, how long it has waited. */
+export interface MoveEntry {
+  /** Unique in its section. */
+  key: string;
+  /** The entity shown, by ID, with its title. */
+  id: string;
+  /**
+   * Open items it holds up, directly or through others. An exception
+   * holds up the open items it involves (a milestone's through its
+   * constraints) and everything that waits on them.
+   */
+  holds: number;
+  /** How long it has waited (ms); absent when the tracker can't tell. */
+  age?: number;
+  /** A merge that waits for the owner's yes (hitld's merge-held ref). */
+  held?: boolean;
+  /** A decision or an outside wait. */
+  item?: WorkItem;
+  unmerged?: LiveUnmerged;
+  exception?: HealthException;
+}
+
+export interface MoveSection {
+  kind: MoveSectionKind | "ready";
+  /** Every entry, shown or folded. */
+  count: number;
+  /** The first `MOVE_TOP`, ranked. */
+  top: MoveEntry[];
+  /** The rest, ranked, under "and N more". */
+  more: MoveEntry[];
+}
+
+export interface YourMove {
+  sections: Record<MoveSectionKind, MoveSection>;
+  /** The "Proposals for you" card: CS-750's groups and their counts. */
+  proposals: {
+    count: number;
+    groups: Array<{ group: ProposalGroup; count: number }>;
+    /** Proposals with no header, the chief of staff's to write (not counted). */
+    unheaded: number;
+  };
+  /** Ready to start, the second level: work that moves without the owner. */
+  ready: MoveSection;
+  /** Nothing waits on the owner or on another party, and no proposal either. */
+  clear: boolean;
+}
+
+/**
+ * The ranking every section uses: a merge waiting for the owner's yes
+ * first, then what holds up the most, then the oldest, then by ID.
+ */
+export function byWhatItHolds(a: MoveEntry, b: MoveEntry): number {
+  return (
+    Number(!!b.held) - Number(!!a.held) ||
+    b.holds - a.holds ||
+    (b.age ?? -1) - (a.age ?? -1) ||
+    idNumber(a.id) - idNumber(b.id)
+  );
+}
+
+/**
+ * The open items these hold up: the open items among them (a milestone
+ * stands for its open constraints) and every open item that waits on
+ * them, directly or through others, each counted once.
+ */
+export function holdsUpOf(s: WorkSnapshot, ids: readonly string[]): number {
+  const itemOf = new Map(s.items.map((i) => [i.id, i]));
+  const msOf = new Map(s.milestones.map((m) => [m.id, m]));
+  const held = new Set<string>();
+  const walk = (id: string) => {
+    const it = itemOf.get(id);
+    if (!it || !isOpen(it) || held.has(id)) {
+      return;
+    }
+    held.add(id);
+    for (const d of it.needed_by) {
+      walk(d);
+    }
+  };
+  for (const id of ids) {
+    const m = msOf.get(id);
+    for (const x of m ? m.constraints.map((c) => c.id) : [id]) {
+      walk(x);
+    }
+  }
+  return held.size;
+}
+
+/**
+ * Your move (CS-753): each section's entries ranked by what they hold up,
+ * with their ages, the first `top` shown and the rest folded; and the
+ * proposals counted in CS-750's groups. Pure, for tests: the board passes
+ * what it has already read, in the scope.
+ *
+ * Ages: a decision or an outside wait from when it entered its stage (the
+ * board's state history, `since`); a merge from its close; an exception
+ * from when the item at fault entered its stage, or else the most recent
+ * such change among the items it involves; none when no item is involved.
+ */
+export function yourMoveOf({
+  s,
+  decisions,
+  unmerged,
+  exceptions,
+  outside,
+  ready = [],
+  proposals,
+  unblocks,
+  since,
+  now,
+  top = MOVE_TOP,
+}: {
+  s: WorkSnapshot;
+  /** Open decisions the owner answers, nothing open before them. */
+  decisions: readonly WorkItem[];
+  /** Items done on a branch and not merged (the live read). */
+  unmerged: readonly LiveUnmerged[];
+  /** The Health view's exceptions that need the owner, in the scope. */
+  exceptions: readonly HealthException[];
+  /** Open waits on another party. */
+  outside: readonly WorkItem[];
+  /** Work ready to start. */
+  ready?: readonly WorkItem[];
+  proposals: ProposalsModel;
+  /** Open items behind each item, directly or through others. */
+  unblocks: ReadonlyMap<string, number>;
+  /** When each open item entered its stage (ms). */
+  since: ReadonlyMap<string, number>;
+  now: number;
+  top?: number;
+}): YourMove {
+  const ageOf = (id: string) => {
+    const t = since.get(id);
+    return t === undefined ? undefined : Math.max(0, now - t);
+  };
+  const itemEntry = (it: WorkItem): MoveEntry => ({
+    key: it.id,
+    id: it.id,
+    holds: unblocks.get(it.id) ?? 0,
+    age: ageOf(it.id),
+    item: it,
+  });
+  const exceptionAge = (e: HealthException) => {
+    const own = ageOf(e.id);
+    if (own !== undefined) {
+      return own;
+    }
+    const ages = e.involves
+      .map(ageOf)
+      .filter((a): a is number => a !== undefined);
+    return ages.length ? Math.min(...ages) : undefined;
+  };
+  const entries: Record<MoveSectionKind, MoveEntry[]> = {
+    decisions: decisions.map(itemEntry),
+    merges: unmerged.map((u) => ({
+      key: u.id,
+      id: u.id,
+      holds: unblocks.get(u.id) ?? 0,
+      age: Math.max(0, now - u.closed),
+      held: u.queue === "held",
+      unmerged: u,
+    })),
+    health: exceptions.map((e) => ({
+      key: e.key,
+      id: e.id,
+      holds: holdsUpOf(s, e.involves),
+      age: exceptionAge(e),
+      exception: e,
+    })),
+    outside: outside.map(itemEntry),
+  };
+  const sectionOf = <K extends MoveSectionKind | "ready">(
+    kind: K,
+    list: MoveEntry[],
+  ) => {
+    const ranked = [...list].sort(byWhatItHolds);
+    return {
+      kind,
+      count: ranked.length,
+      top: ranked.slice(0, top),
+      more: ranked.slice(top),
+    };
+  };
+  const sections = Object.fromEntries(
+    MOVE_SECTIONS.map((kind) => [kind, sectionOf(kind, entries[kind])]),
+  ) as Record<MoveSectionKind, MoveSection>;
+  const groups = MOVE_PROPOSAL_GROUPS.map((group) => ({
+    group,
+    count: proposals.groups.find((g) => g.group === group)?.rows.length ?? 0,
+  }));
+  const proposalCount = groups.reduce((n, g) => n + g.count, 0);
+  return {
+    sections,
+    proposals: {
+      count: proposalCount,
+      groups,
+      unheaded:
+        proposals.groups.find((g) => g.group === "unheaded")?.rows.length ?? 0,
+    },
+    ready: sectionOf("ready", ready.map(itemEntry)),
+    clear:
+      proposalCount === 0 && MOVE_SECTIONS.every((k) => !sections[k].count),
+  };
+}
+
+type MoveKind = MoveSectionKind | "ready";
+
+const MOVE_NAMES: Record<MoveKind, string> = {
+  decisions: "Decisions",
+  merges: "Merges",
+  health: "Health exceptions",
+  outside: "Outside waits",
+  ready: "Ready to start",
+};
+/** Each section's one action: what the owner does with an entry. */
+const MOVE_VERBS: Record<MoveSectionKind, string> = {
+  decisions: "Decide",
+  merges: "Review",
+  health: "Fix",
+  outside: "Follow up",
+};
+const MOVE_EMPTY: Record<MoveKind, string> = {
+  decisions: "Nothing waits on you to decide.",
+  merges: "No finished work waits to merge.",
+  health: "Nothing in the work graph needs you.",
+  outside: "Nothing waits on another party.",
+  ready: "Nothing is ready to start.",
+};
+/** What a section's ages count from. */
+const MOVE_AGE_FROM: Record<MoveKind, string> = {
+  decisions: "since it became ready to decide",
+  merges: "since it was closed on its branch",
+  health: "since the item at fault last changed stage",
+  outside: "since it started waiting",
+  ready: "since it became ready",
+};
+
+/**
+ * Your move (CS-753; DESIGN.md, "Your move"): what waits on the owner, in
+ * sections led by their number, each entry ranked by what it holds up,
+ * with its age, its title and its one action, the rest folded; then, a
+ * level down, what moves without the owner. Nothing is applied from the
+ * page: an action opens the entry in the pane or in the view that fixes it.
+ */
+export function YourMoveView({
+  move,
+  live,
+  branch,
+  selected,
+  openItem,
+  goView,
+  now = Date.now(),
+}: {
+  move: YourMove;
+  live: LiveBox;
+  branch?: string;
+  selected?: string;
+  openItem: (id: string) => void;
+  goView: (id: string, patch?: Partial<WorkSearch>) => void;
+  now?: number;
+}) {
+  const { sections: sec } = move;
+  const act = (kind: MoveSectionKind, e: MoveEntry) => {
+    if (kind !== "health") {
+      openItem(e.id);
+      return;
+    }
+    // The Health view, with the entity the row names chosen (its row is
+    // tinted there), from the top: the view leads with what needs you.
+    goView("health", { item: e.id, list: undefined });
+    window.scrollTo({ top: 0 });
+  };
+  // readLive's order: the run, the ledger, the claims, the branches.
+  const mergeSources = live.sources.slice(3);
+  const known = live.sources.length > 0;
+  const held = sec.merges.top
+    .concat(sec.merges.more)
+    .filter((e) => e.held).length;
+  const parties = new Set(
+    [...sec.outside.top, ...sec.outside.more].map(
+      (e) => e.item?.waiting_on ?? "",
+    ),
+  ).size;
+  const oldest = Math.max(
+    0,
+    ...[...sec.decisions.top, ...sec.decisions.more].map((e) => e.age ?? 0),
+  );
+  const details: Record<MoveSectionKind, string | undefined> = {
+    decisions: sec.decisions.count
+      ? `The oldest has waited ${ageText(oldest)}`
+      : undefined,
+    merges: !sec.merges.count
+      ? known && mergeSources.every((x) => x.ok)
+        ? undefined
+        : "None seen, but the branches couldn’t be compared."
+      : held
+        ? `${held} ${held === 1 ? "waits" : "wait"} for your yes`
+        : "Finished on a branch, not merged yet",
+    health: sec.health.count
+      ? "Their fixes change scope or a release"
+      : undefined,
+    outside: sec.outside.count
+      ? `On ${parties} other ${parties === 1 ? "party" : "parties"}`
+      : undefined,
+  };
+  const working = [...live.working].sort(
+    (a, b) => (a.since ?? now) - (b.since ?? now),
+  );
+  return (
+    <div className="work-move">
+      <div className="work-move-grid">
+        <div className="work-move-level work-move-first">
+          <h2 className="work-move-level-h" id="work-move-you-h">
+            Waiting on you
+          </h2>
+          {move.clear ? (
+            <p className="work-move-clear" role="status">
+              <Icon href={svgCheckmark} className="work-move-clear-icon" />
+              Nothing waits on you: no decision, merge, health exception,
+              outside wait or proposal.
+            </p>
+          ) : (
+            <>
+              {MOVE_SECTIONS.map((kind) => (
+                <Fragment key={kind}>
+                  {kind === "outside" && (
+                    <MoveProposals proposals={move.proposals} />
+                  )}
+                  <MoveSectionView
+                    kind={kind}
+                    section={sec[kind]}
+                    detail={details[kind]}
+                    attention={kind !== "outside"}
+                    selected={selected}
+                    verb={MOVE_VERBS[kind]}
+                    onAct={(e) => act(kind, e)}
+                    drawer={(e) => <MoveDrawer kind={kind} e={e} now={now} />}
+                    foot={
+                      kind === "merges" && sec.merges.count > 0 ? (
+                        <SourceNote sources={mergeSources} />
+                      ) : undefined
+                    }
+                  />
+                </Fragment>
+              ))}
+            </>
+          )}
+        </div>
+
+        <div className="work-move-level work-move-second">
+          <h2 className="work-move-level-h" id="work-move-moving-h">
+            Moving without you
+          </h2>
+          <LiveSection
+            live={live}
+            working={working}
+            branch={branch}
+            now={now}
+          />
+          <MoveSectionView
+            kind="ready"
+            section={move.ready}
+            detail={move.ready.count ? "The most waited-on first" : undefined}
+            selected={selected}
+            quiet
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** A section's head: its number, its name and one line on it. */
+function MoveHead({
+  id,
+  count,
+  name,
+  detail,
+  attention,
+  quiet,
+}: {
+  id: string;
+  count: number;
+  name: string;
+  detail?: string;
+  attention?: boolean;
+  quiet?: boolean;
+}) {
+  return (
+    <header className="work-move-head">
+      <h3 id={id} className="work-move-h">
+        <span
+          className={`work-move-n${attention && count ? " attention" : ""}${quiet ? " quiet" : ""}`}
+        >
+          {count}
+        </span>{" "}
+        <span className="work-move-name">{name}</span>
+      </h3>
+      {detail && <p className="work-move-detail">{detail}</p>}
+    </header>
+  );
+}
+
+/**
+ * One section: led by its number, its top entries ranked, the rest under
+ * "and N more"; empty, it collapses to one line.
+ */
+function MoveSectionView({
+  kind,
+  section,
+  detail,
+  attention,
+  quiet,
+  selected,
+  verb,
+  onAct,
+  drawer,
+  foot,
+}: {
+  kind: MoveKind;
+  section: MoveSection;
+  detail?: string;
+  attention?: boolean;
+  quiet?: boolean;
+  selected?: string;
+  verb?: string;
+  onAct?: (e: MoveEntry) => void;
+  drawer?: (e: MoveEntry) => ReactNode;
+  foot?: ReactNode;
+}) {
+  const [all, setAll] = useState(false);
+  const id = `work-move-${kind}`;
+  if (!section.count) {
+    return (
+      <section className="work-move-section empty" aria-labelledby={`${id}-h`}>
+        <MoveHead
+          id={`${id}-h`}
+          count={0}
+          name={MOVE_NAMES[kind]}
+          detail={detail ?? MOVE_EMPTY[kind]}
+          quiet={quiet}
+        />
+      </section>
+    );
+  }
+  const shown = all ? [...section.top, ...section.more] : section.top;
+  return (
+    <section
+      className={`work-move-section${quiet ? " quiet" : ""}`}
+      aria-labelledby={`${id}-h`}
+    >
+      <MoveHead
+        id={`${id}-h`}
+        count={section.count}
+        name={MOVE_NAMES[kind]}
+        detail={detail}
+        attention={attention}
+        quiet={quiet}
+      />
+      <ol className="work-move-rows" id={`${id}-list`}>
+        {shown.map((e) => (
+          <MoveRow
+            key={e.key}
+            e={e}
+            ageFrom={MOVE_AGE_FROM[kind]}
+            selected={e.id === selected}
+            verb={verb}
+            onAct={onAct && (() => onAct(e))}
+            drawer={drawer?.(e)}
+          />
+        ))}
+      </ol>
+      {(section.more.length > 0 || foot) && (
+        <div className="work-move-foot">
+          {section.more.length > 0 && (
+            <Button
+              variant="text"
+              size="small"
+              className="work-move-more"
+              aria-expanded={all}
+              aria-controls={`${id}-list`}
+              onClick={() => setAll(!all)}
+            >
+              <ReservedText
+                value={all ? "Show fewer" : `and ${section.more.length} more`}
+                options={["Show fewer", `and ${section.more.length} more`]}
+              />
+            </Button>
+          )}
+          {foot}
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
+ * An entry: its details' toggle, its ID and title, what it holds up, its
+ * age and its one action, in columns that keep their widths; its details
+ * open under it.
+ */
+function MoveRow({
+  e,
+  ageFrom,
+  selected,
+  verb,
+  onAct,
+  drawer,
+  holds = true,
+}: {
+  e: MoveEntry;
+  /** Has a "holds up" column (In progress has none). */
+  holds?: boolean;
+  ageFrom: string;
+  selected: boolean;
+  verb?: string;
+  onAct?: () => void;
+  drawer?: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const drawerId = useId();
+  const age = e.age === undefined ? undefined : moveAgeText(e.age);
+  return (
+    <li
+      className={`work-move-row${selected ? " selected" : ""}${verb ? " has-act" : ""}${holds ? "" : " no-holds"}`}
+    >
+      <div className="work-move-line">
+        {drawer ? (
+          <button
+            type="button"
+            className={`work-move-toggle${open ? " open" : ""}`}
+            aria-expanded={open}
+            aria-controls={drawerId}
+            aria-label={`Details for ${e.id}`}
+            onClick={() => setOpen(!open)}
+          >
+            <Icon href={svgChevronRight} />
+          </button>
+        ) : (
+          <span className="work-move-toggle" aria-hidden="true" />
+        )}
+        <ItemRef id={e.id} className="work-move-ref" />
+        {holds && (
+          <span className="work-move-holds">
+            {e.holds > 0 ? (
+              <>
+                holds up <span className="work-move-num">{e.holds}</span>
+              </>
+            ) : (
+              <span className="visually-hidden">holds up nothing</span>
+            )}
+          </span>
+        )}
+        <span
+          className="work-move-age"
+          title={age ? `${age} ${ageFrom}` : `The tracker can’t tell how long`}
+        >
+          {age ?? "–"}
+        </span>
+        {verb && onAct && (
+          <Button
+            variant="outlined"
+            size="small"
+            className="work-move-act"
+            onClick={onAct}
+            aria-label={`${verb}: ${e.id}`}
+          >
+            {verb}
+          </Button>
+        )}
+      </div>
+      {drawer && (
+        <div className="work-move-drawer" id={drawerId} hidden={!open}>
+          {drawer}
+        </div>
+      )}
+    </li>
+  );
+}
+
+/**
+ * An entry's age in its column's width: "just now", "40 minutes",
+ * "5 hours", "7 days".
+ */
+export function moveAgeText(ms: number): string {
+  const m = Math.floor(Math.max(0, ms) / 60_000);
+  return m < 1
+    ? "just now"
+    : m < 60
+      ? `${m} ${m === 1 ? "minute" : "minutes"}`
+      : ageText(ms);
+}
+
+/** Up to five items by ID and title, and how many more. */
+function MoveRefs({ ids }: { ids: readonly string[] }) {
+  const named = ids.slice(0, 5);
+  return (
+    <ul className="work-move-refs">
+      {named.map((id) => (
+        <li key={id}>
+          <ItemRef id={id} />
+        </li>
+      ))}
+      {ids.length > named.length && (
+        <li className="work-move-quiet">
+          and {ids.length - named.length} more
+        </li>
+      )}
+    </ul>
+  );
+}
+
+/** A sentence with IDs in it, each with its kind's mark and short title. */
+function MoveWords({ words }: { words: Words }) {
+  return (
+    <>
+      {words.map((x, i) =>
+        typeof x === "string" ? (
+          <span key={i}>{x}</span>
+        ) : (
+          <ItemRef key={i} id={x.id} className="work-move-inline" />
+        ),
+      )}
+    </>
+  );
+}
+
+/** An entry's secondary detail, by section. */
+function MoveDrawer({
+  kind,
+  e,
+  now,
+}: {
+  kind: MoveSectionKind;
+  e: MoveEntry;
+  now: number;
+}) {
+  if (kind === "health" && e.exception) {
+    const x = e.exception;
+    return (
+      <dl className="work-move-facts">
+        <div>
+          <dt>Kind</dt>
+          <dd>{HEALTH_KIND_DEFS[x.kind].name}</dd>
+        </div>
+        <div>
+          <dt>What</dt>
+          <dd>
+            <MoveWords words={x.what} />
+          </dd>
+        </div>
+        <div>
+          <dt>Fix</dt>
+          <dd>
+            <MoveWords words={x.fix} />
+          </dd>
+        </div>
+        {x.command && (
+          <div>
+            <dt>Command</dt>
+            <dd>
+              <code className="work-move-code">{x.command}</code>
+            </dd>
+          </div>
+        )}
+      </dl>
+    );
+  }
+  if (kind === "merges" && e.unmerged) {
+    const u = e.unmerged;
+    return (
+      <dl className="work-move-facts">
+        {u.branches.length > 0 && (
+          <div>
+            <dt>{u.branches.length === 1 ? "Branch" : "Branches"}</dt>
+            <dd className="work-mono">{u.branches.join(", ")}</dd>
+          </div>
+        )}
+        <div>
+          <dt>Closed</dt>
+          <dd>{agoText(now - u.closed)}</dd>
+        </div>
+        <div>
+          <dt>Merge</dt>
+          <dd>
+            It {queueText(u).text}. The orchestrator merges through its gates,
+            on your yes.
+          </dd>
+        </div>
+      </dl>
+    );
+  }
+  const it = e.item;
+  if (!it) {
+    return null;
+  }
+  const direct = it.needed_by;
+  return (
+    <dl className="work-move-facts">
+      {kind === "outside" && it.waiting_on && (
+        <div>
+          <dt>Waiting on</dt>
+          <dd>
+            <InlineText text={it.waiting_on} />
+          </dd>
+        </div>
+      )}
+      <div>
+        <dt>Holds up</dt>
+        <dd>
+          {e.holds
+            ? `${e.holds} open ${e.holds === 1 ? "item" : "items"}${e.holds > direct.length ? `, ${direct.length} directly` : ""}`
+            : "Nothing waits on it yet"}
+          {direct.length > 0 && <MoveRefs ids={direct} />}
+        </dd>
+      </div>
+      {it.project && (
+        <div>
+          <dt>Project</dt>
+          <dd>
+            <ItemRef id={it.project} />
+          </dd>
+        </div>
+      )}
+      {kind === "decisions" && (
+        <div>
+          <dt>To answer</dt>
+          <dd>
+            Decide opens its question and options. Give your answer to the chief
+            of staff, who records it.
+          </dd>
+        </div>
+      )}
+    </dl>
+  );
+}
+
+/** The "Proposals for you" card: CS-750's groups, counted, and a link to the view. */
+function MoveProposals({ proposals: p }: { proposals: YourMove["proposals"] }) {
+  const needed = p.groups.find((g) => g.group === "needed")?.count ?? 0;
+  const link = (
+    <RouterLink
+      to="/work"
+      search={(prev: WorkSearch) => ({
+        ...prev,
+        view: "proposals",
+        item: undefined,
+        list: undefined,
+        stage: undefined,
+      })}
+      className="work-move-link"
+    >
+      Open the Proposals view
+    </RouterLink>
+  );
+  if (!p.count) {
+    return (
+      <section
+        className="work-move-section empty"
+        aria-labelledby="work-move-props-h"
+      >
+        <MoveHead
+          id="work-move-props-h"
+          count={0}
+          name="Proposals for you"
+          detail="No proposal waits on you."
+        />
+      </section>
+    );
+  }
+  return (
+    <section className="work-move-section" aria-labelledby="work-move-props-h">
+      <MoveHead
+        id="work-move-props-h"
+        count={p.count}
+        name="Proposals for you"
+        detail="Each one’s call, in words, is in the Proposals view"
+        attention={needed > 0}
+      />
+      <ul className="work-move-groups">
+        {p.groups.map((g) => (
+          <li
+            key={g.group}
+            className={g.group === "needed" && g.count ? "attention" : ""}
+            title={GROUP_RULES[g.group]}
+          >
+            <span className="work-move-group-name">{GROUP_NAMES[g.group]}</span>
+            <span className="work-move-num">{g.count}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="work-move-foot">
+        {link}
+        {p.unheaded > 0 && (
+          <span className="work-move-quiet">
+            {p.unheaded} more {p.unheaded === 1 ? "has" : "have"} no header yet:
+            the chief of staff writes those
+          </span>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/**
+ * In progress (CS-547), a level down: the work being done now and since
+ * when, from the live run, with the run and its orchestrator in a line.
+ * When a source can't be read, it says so instead of "nothing".
+ */
+function LiveSection({
+  live,
+  working,
+  branch,
+  now,
+}: {
+  live: LiveBox;
+  working: LiveWork[];
+  branch?: string;
+  now: number;
+}) {
+  const known = live.sources.length > 0;
+  const workSources = live.sources.slice(1, 3);
+  const unread = live.sources.filter((x) => !x.ok);
+  const r = live.run;
+  const runLine =
+    r.state === "active"
+      ? `Run ${r.id}${r.started !== undefined ? `, started ${agoText(now - r.started)}` : ""}; ${r.session} holds its lease${r.renewed !== undefined ? `, renewed ${agoText(now - r.renewed)}` : ""}.`
+      : r.state === "free"
+        ? `Run ${r.id} has no orchestrator: its lease ${r.released !== undefined ? `was released ${agoText(now - r.released)}` : "expired"}${r.session ? `; ${r.session} held it last` : ""}.`
+        : r.state === "none"
+          ? "No run is active: hitld has no run state."
+          : r.state === "unknown"
+            ? "Whether a run is active can’t be told: hitld has no run state, and its ledger couldn’t be read."
+            : undefined;
+  const entries: MoveEntry[] = working.map((w) => ({
+    key: `${w.id} ${w.who ?? ""} ${w.where ?? ""}`,
+    id: w.id,
+    holds: 0,
+    age: w.since === undefined ? undefined : Math.max(0, now - w.since),
+  }));
+  const whoOf = new Map(working.map((w) => [w.id, w]));
+  return (
+    <section
+      className="work-move-section quiet"
+      aria-labelledby="work-move-working-h"
+    >
+      <MoveHead
+        id="work-move-working-h"
+        count={live.working.length}
+        name="In progress"
+        detail={runLine}
+        quiet
+      />
+      {!known && (
+        <p className="work-move-alert" role="note">
+          <Icon href={svgStatusWarning} className="work-move-alert-icon" />
+          <span>{live.notes[0]}</span>
+        </p>
+      )}
+      {unread.length > 0 && (
+        <div className="work-move-alert" role="note">
+          <Icon href={svgStatusWarning} className="work-move-alert-icon" />
+          <div>
+            <p>
+              Some of what this reads couldn’t be read, so it may miss work in
+              progress:
+            </p>
+            <ul>
+              {unread.map((x) => (
+                <li key={x.source}>
+                  {x.why}{" "}
+                  <span className="work-move-quiet">
+                    ({x.source}, tried {clock(x.at)})
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
+      {entries.length ? (
+        <ol className="work-move-rows">
+          {entries.map((e) => {
+            const w = whoOf.get(e.id)!;
+            return (
+              <MoveRow
+                key={e.key}
+                e={e}
+                ageFrom={
+                  w.from === "dispatch"
+                    ? "since its dispatch started"
+                    : "since its claim commit"
+                }
+                selected={false}
+                holds={false}
+                drawer={
+                  <dl className="work-move-facts">
+                    <div>
+                      <dt>Who and where</dt>
+                      <dd>{liveLine(w, branch, now)}</dd>
+                    </div>
+                    {w.from === "claim" && (
+                      <div>
+                        <dt>Record</dt>
+                        <dd>
+                          A claim with no dispatch in hitld’s ledger: its age
+                          runs from the claim commit.
+                        </dd>
+                      </div>
+                    )}
+                  </dl>
+                }
+              />
+            );
+          })}
+        </ol>
+      ) : (
+        <p className="work-move-detail">
+          {known && workSources.every((x) => x.ok)
+            ? "No dispatch in flight and no open claim."
+            : "None seen, but not everything could be read."}
+        </p>
+      )}
+      <div className="work-move-foot">
+        <SourceNote sources={workSources} />
+      </div>
+      {known && live.notes.length > 0 && <LiveNotes notes={live.notes} />}
+    </section>
+  );
+}
+
+/** What the live figures leave out, folded under one line. */
+function LiveNotes({ notes }: { notes: readonly string[] }) {
+  const [open, setOpen] = useState(false);
+  const id = useId();
+  return (
+    <div className="work-move-notes">
+      <Button
+        variant="text"
+        size="small"
+        className="work-move-more"
+        aria-expanded={open}
+        aria-controls={id}
+        onClick={() => setOpen(!open)}
+        startIcon={
+          <Icon
+            href={svgChevronRight}
+            className={`work-move-chev${open ? " open" : ""}`}
+          />
+        }
+      >
+        What these figures leave out ({notes.length})
+      </Button>
+      <ul id={id} hidden={!open}>
+        {notes.map((n) => (
+          <li key={n}>{n}</li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
@@ -1407,7 +2281,6 @@ function Card({
   id,
   title,
   caption,
-  stat,
   className,
   tools,
   foot,
@@ -1416,13 +2289,6 @@ function Card({
   id: string;
   title: string;
   caption?: string;
-  /** A section led by its number: the count and a line on it; choosing it lists the items. */
-  stat?: {
-    value: number;
-    detail?: string;
-    tone?: "attention";
-    onOpen?: () => void;
-  };
   className?: string;
   tools?: ReactNode;
   foot?: ReactNode;
@@ -1430,55 +2296,23 @@ function Card({
 }) {
   return (
     <section className={`work-card ${className ?? ""}`} aria-labelledby={id}>
-      <header className={`work-card-head${stat ? " has-stat" : ""}`}>
-        {stat ? (
-          <span className="work-card-titles">
-            <h2 id={id} className="work-stat-title">
-              <button
-                type="button"
-                className={`work-stat ${stat.tone ?? ""}`}
-                onClick={stat.onOpen}
-                title={`List all ${stat.value}`}
-              >
-                <span className="work-stat-value">{stat.value}</span>
-                <span className="work-stat-label">{title}</span>
-              </button>
-            </h2>
-            {stat.detail && (
-              <Typography variant="caption-md" color="textSecondary">
-                {stat.detail}
-              </Typography>
-            )}
-          </span>
-        ) : (
-          <span className="work-card-titles">
-            <Typography variant="subtitle-md" render={<h2 />} id={id}>
-              {title}
+      <header className="work-card-head">
+        <span className="work-card-titles">
+          <Typography variant="subtitle-md" render={<h2 />} id={id}>
+            {title}
+          </Typography>
+          {caption && (
+            <Typography variant="caption-md" color="textSecondary">
+              {caption}
             </Typography>
-            {caption && (
-              <Typography variant="caption-md" color="textSecondary">
-                {caption}
-              </Typography>
-            )}
-          </span>
-        )}
+          )}
+        </span>
         {tools}
       </header>
       {children}
       {foot && <div className="work-card-foot">{foot}</div>}
     </section>
   );
-}
-
-/** The In progress card's line under its count. */
-function liveDetail(box: LiveBox): string {
-  if (box.blind) {
-    return "Not everything could be read: see below";
-  }
-  const n = box.unmerged.length;
-  return n
-    ? `Who works on each and since when; ${n} done, not merged`
-    : "Who works on each, and since when";
 }
 
 /** "11:06 PM", the reading's local time. */
@@ -1500,174 +2334,6 @@ function SourceNote({ sources }: { sources: LiveBox["sources"] }) {
 }
 
 /**
- * The live run (CS-547): the run and its orchestrator, the items being
- * worked on now and since when, and the items done on a branch and not
- * merged, each figure with where it was read from and when. When a source
- * can't be read, it says so instead of "nothing".
- */
-function LiveRun({ box, branch }: { box: LiveBox; branch?: string }) {
-  const now = Date.now();
-  // readLive's order: the run, the ledger, the claims, the branches.
-  const known = box.sources.length > 0;
-  const runSource = box.sources[0];
-  const workSources = box.sources.slice(1, 3);
-  const mergeSources = box.sources.slice(3);
-  const unread = box.sources.filter((x) => !x.ok);
-  const r = box.run;
-  return (
-    <div className="work-live">
-      {!known && (
-        <div className="work-live-alert" role="note">
-          <Icon href={svgStatusWarning} className="work-palert-icon" />
-          <Typography variant="body-sm" render={<p />}>
-            {box.notes[0]}
-          </Typography>
-        </div>
-      )}
-      {unread.length > 0 && (
-        <div className="work-live-alert" role="note">
-          <Icon href={svgStatusWarning} className="work-palert-icon" />
-          <div>
-            <Typography variant="body-sm" render={<p />}>
-              Some of what this box reads couldn’t be read, so it may miss work
-              in progress:
-            </Typography>
-            <ul>
-              {unread.map((x) => (
-                <li key={x.source}>
-                  <Typography variant="body-sm">{x.why}</Typography>{" "}
-                  <Typography variant="caption-md" color="textSecondary">
-                    ({x.source}, tried {clock(x.at)})
-                  </Typography>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      )}
-
-      {r.state !== "unread" && (
-        <Typography variant="body-sm" render={<p />} className="work-live-run">
-          {r.state === "active" ? (
-            <>
-              <strong>Run {r.id}</strong>
-              {r.started !== undefined &&
-                `, started ${agoText(now - r.started)}`}
-              . <strong>{r.session}</strong> holds its lease
-              {r.renewed !== undefined &&
-                `, renewed ${agoText(now - r.renewed)}`}
-              .
-            </>
-          ) : r.state === "free" ? (
-            <>
-              <strong>Run {r.id}</strong> has no orchestrator: its lease{" "}
-              {r.released !== undefined
-                ? `was released ${agoText(now - r.released)}`
-                : "expired"}
-              {r.session ? `; ${r.session} held it last` : ""}.
-            </>
-          ) : r.state === "none" ? (
-            <>No run is active: hitld has no run state.</>
-          ) : (
-            <>
-              Whether a run is active can’t be told: hitld has no run state, and
-              its ledger couldn’t be read.
-            </>
-          )}{" "}
-          {runSource && <SourceNote sources={[runSource]} />}
-        </Typography>
-      )}
-
-      <div className="work-live-cols">
-        <section aria-labelledby="work-live-working-h">
-          <header className="work-live-head">
-            <Typography
-              variant="body-sm"
-              render={<h3 />}
-              id="work-live-working-h"
-            >
-              Working now{" "}
-              <span className="work-proposal-count">{box.working.length}</span>
-            </Typography>
-            <SourceNote sources={workSources} />
-          </header>
-          {box.working.length ? (
-            <ul className="work-rows">
-              {box.working.map((w) => (
-                <LiveWorkRow
-                  key={`${w.id} ${w.who ?? ""} ${w.where ?? ""}`}
-                  w={w}
-                  branch={branch}
-                  now={now}
-                />
-              ))}
-            </ul>
-          ) : (
-            <Typography
-              variant="body-sm"
-              color="textSecondary"
-              render={<p />}
-              className="work-empty"
-            >
-              {known && workSources.every((x) => x.ok)
-                ? "No dispatch in flight and no open claim."
-                : "None seen, but not everything could be read."}
-            </Typography>
-          )}
-        </section>
-
-        <section aria-labelledby="work-live-unmerged-h">
-          <header className="work-live-head">
-            <Typography
-              variant="body-sm"
-              render={<h3 />}
-              id="work-live-unmerged-h"
-            >
-              Done, not merged{" "}
-              <span className="work-proposal-count">{box.unmerged.length}</span>
-            </Typography>
-            <SourceNote sources={mergeSources} />
-          </header>
-          {box.unmerged.length ? (
-            <ul className="work-rows">
-              {box.unmerged.map((u) => (
-                <LiveUnmergedRow key={u.id} u={u} now={now} />
-              ))}
-            </ul>
-          ) : (
-            <Typography
-              variant="body-sm"
-              color="textSecondary"
-              render={<p />}
-              className="work-empty"
-            >
-              {known && mergeSources.every((x) => x.ok)
-                ? "No branch holds finished work that main lacks."
-                : "None seen, but the branches couldn’t be compared."}
-            </Typography>
-          )}
-        </section>
-      </div>
-
-      {known && box.notes.length > 0 && (
-        <ul
-          className="work-live-notes"
-          aria-label="What these figures leave out"
-        >
-          {box.notes.map((n) => (
-            <li key={n}>
-              <Typography variant="caption-md" color="textSecondary">
-                {n}
-              </Typography>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-/**
  * "orch-9-CS-547 on hitld/CS-547-… (this branch) · claimed 12 minutes ago":
  * who, where, and since when, by the record the age comes from.
  */
@@ -1682,145 +2348,6 @@ function liveLine(w: LiveWork, branch: string | undefined, now: number) {
         : undefined
       : `${w.from === "dispatch" ? "dispatched" : "claimed"} ${agoText(now - w.since)}`;
   return [where, when].filter(Boolean).join(" · ");
-}
-
-/** Who works on an item, where, and since when (and by which record). */
-function LiveWorkRow({
-  w,
-  branch,
-  now,
-}: {
-  w: LiveWork;
-  branch?: string;
-  now: number;
-}) {
-  return (
-    <li className="work-row">
-      <ItemLink id={w.id} className="work-row-main" card>
-        <KindId id={w.id} />
-        <span className="work-row-title">
-          {w.item ? <InlineText text={w.item.title} /> : w.id}
-        </span>
-        <Typography
-          variant="caption-md"
-          color="textSecondary"
-          className="work-live-extra"
-        >
-          {liveLine(w, branch, now)}
-          {w.from === "claim" && (
-            <span className="work-live-tag">no dispatch in the ledger</span>
-          )}
-        </Typography>
-      </ItemLink>
-    </li>
-  );
-}
-
-/** A finished item's branch, and where the merge queue has it. */
-function LiveUnmergedRow({ u, now }: { u: LiveUnmerged; now: number }) {
-  const q = queueText(u);
-  return (
-    <li className="work-row">
-      <ItemLink id={u.id} className="work-row-main" card>
-        <KindId id={u.id} />
-        <span className="work-row-title">
-          {u.item ? <InlineText text={u.item.title} /> : u.id}
-        </span>
-        <Typography
-          variant="caption-md"
-          color="textSecondary"
-          className="work-live-extra"
-        >
-          {[
-            u.branches.length ? `on ${u.branches.join(", ")}` : undefined,
-            u.closed ? `closed ${agoText(now - u.closed)}` : undefined,
-          ]
-            .filter(Boolean)
-            .join(" · ")}
-          <span className={`work-live-queue ${q.tone ?? ""}`}>
-            {q.tone === "attention" && (
-              <Icon href={svgStatusWarning} className="work-live-queue-icon" />
-            )}
-            {q.text}
-          </span>
-        </Typography>
-      </ItemLink>
-    </li>
-  );
-}
-
-/** Items as rows with a bar for how much waits behind each. */
-function LeverageBars({
-  items,
-  unblocks,
-  limit,
-  party,
-  selected,
-  empty = "Nothing here.",
-}: {
-  items: WorkItem[];
-  unblocks: Map<string, number>;
-  limit: number;
-  party?: boolean;
-  selected?: string;
-  empty?: string;
-}) {
-  const shown = items.slice(0, limit);
-  const max = Math.max(1, ...shown.map((it) => unblocks.get(it.id) ?? 0));
-  if (!shown.length) {
-    return (
-      <Typography
-        variant="body-sm"
-        color="textSecondary"
-        render={<p />}
-        className="work-empty"
-      >
-        {empty}
-      </Typography>
-    );
-  }
-  return (
-    <ol className="work-bars">
-      <li className="work-bars-head" aria-hidden="true">
-        <span />
-        <span>Items waiting behind each</span>
-      </li>
-      {shown.map((it) => {
-        const n = unblocks.get(it.id) ?? 0;
-        return (
-          <li
-            key={it.id}
-            className={it.id === selected ? "selected" : undefined}
-          >
-            <ItemLink
-              id={it.id}
-              className="work-bar"
-              label={`${it.id} ${it.title}: ${n} items wait behind it`}
-              card
-            >
-              <span className="work-bar-label">
-                <KindId id={it.id} />{" "}
-                <InlineText
-                  text={
-                    party && it.waiting_on
-                      ? `${it.waiting_on}: ${it.title}`
-                      : it.title
-                  }
-                />
-              </span>
-              <span className="work-bar-track" aria-hidden="true">
-                <span
-                  className="work-bar-fill"
-                  style={{ width: `${(100 * n) / max}%` }}
-                />
-              </span>
-              <span className="work-bar-value">{n}</span>
-            </ItemLink>
-          </li>
-        );
-      })}
-    </ol>
-  );
 }
 
 /**
@@ -3460,639 +3987,6 @@ function OwnerQueue({
         );
       })}
     </ol>
-  );
-}
-
-// ------------------------------------------------------------ proposals
-
-/** Each stage of the proposal flow (CS-686): its name and what puts a proposal there. */
-const PROPOSAL_STAGE_NAMES: Record<ProposalStage, string> = {
-  discuss: "To discuss",
-  shaping: "Being shaped",
-  ready: "Ready for your yes",
-  later: "Later, for review",
-};
-const PROPOSAL_STAGE_RULES: Record<ProposalStage, string> = {
-  discuss:
-    "New, with a header but no “Done when” yet: commit it, drop it or send it to shaping",
-  shaping: "An open decision or study comes before the commit",
-  ready:
-    "A header and a “Done when”, and nothing open before the commit but the decider’s yes",
-  later:
-    "No header yet: the “later” copies of design lists and older filings, kept for your review",
-};
-
-/** "the owner's yes", capitalized to lead a sentence. */
-const yesOf = (p: Proposal) => {
-  const yes = `${possessive(p.decider)} yes`;
-  return yes.charAt(0).toUpperCase() + yes.slice(1);
-};
-
-/**
- * The Proposals view (CS-688): candidate commitments, laid out as the
- * flow CS-686 settled. An alert lane leads with the proposals committed
- * work needs; then a section per stage (to discuss, being shaped, ready
- * for your yes, later), each grouped by project. Every row shows the
- * proposal's header (or says it has none), what a commit needs, and how
- * many open items wait on it. A proposal's text opens beside the view.
- */
-function ProposalsCard({
-  s,
-  proposals,
-  itemOf,
-  msOf,
-  unblocks,
-  selected,
-  stage,
-  onStage,
-  onMilestone,
-}: {
-  s: WorkSnapshot;
-  proposals: Proposal[];
-  itemOf: Map<string, WorkItem>;
-  msOf: Map<string, WorkMilestone>;
-  unblocks: Map<string, number>;
-  selected?: string;
-  /** Only one stage's section; all of them when absent. */
-  stage?: ProposalStage;
-  onStage: (stage: ProposalStage | undefined) => void;
-  /** Opens a milestone in the pane. */
-  onMilestone: (id: string) => void;
-}) {
-  const view = useRef<HTMLDivElement>(null);
-  // A proposal chosen elsewhere (Your move) comes into view here.
-  useEffect(() => {
-    if (!selected) {
-      return;
-    }
-    view.current
-      ?.querySelector(`[data-proposal="${CSS.escape(selected)}"]`)
-      ?.scrollIntoView({ block: "nearest" });
-  }, [selected]);
-  const count = (k: ProposalStage) =>
-    proposals.filter((p) => p.stage === k).length;
-  const alerts = proposals.filter((p) => p.neededBy.length);
-  const stages = stage ? [stage] : PROPOSAL_STAGES;
-  const table = (list: Proposal[], label: string, alert = false) => (
-    <ProposalTable
-      s={s}
-      proposals={list}
-      label={label}
-      alert={alert}
-      itemOf={itemOf}
-      msOf={msOf}
-      unblocks={unblocks}
-      selected={selected}
-      onMilestone={onMilestone}
-    />
-  );
-  return (
-    <Card
-      id="work-proposals-h"
-      title="Proposals"
-      caption="Candidate commitments, in the order they come to you: discussed, shaped, then committed or dropped. Choose one to read it."
-      className="span-12"
-      tools={
-        proposals.length > 0 && (
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={stage ?? "all"}
-            onChange={(_, v: string | null) =>
-              v && onStage(v === "all" ? undefined : (v as ProposalStage))
-            }
-            aria-label="Stages shown"
-            className="work-proposal-gates"
-          >
-            <ToggleButton
-              value="all"
-              render={<Button variant="outlined" size="small" />}
-            >
-              All <span className="work-toggle-count">{proposals.length}</span>
-            </ToggleButton>
-            {PROPOSAL_STAGES.map((k) => (
-              <ToggleButton
-                key={k}
-                value={k}
-                disabled={!count(k) && stage !== k}
-                render={
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    title={PROPOSAL_STAGE_RULES[k]}
-                  />
-                }
-              >
-                {PROPOSAL_STAGE_NAMES[k]}{" "}
-                <span className="work-toggle-count">{count(k)}</span>
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-        )
-      }
-    >
-      <p className="work-pnote">
-        <Icon href={svgInfo} className="work-pnote-icon" />
-        <span>
-          To commit one, ask the main session to commit it, or to drop it or
-          send it to shaping. This page only reads the tracker until HITLd’s
-          dashboard can change it.
-        </span>
-      </p>
-      {!proposals.length ? (
-        <Typography variant="body-md" color="textSecondary" render={<p />}>
-          Nothing is proposed here. Proposed items and milestones show here
-          until they are committed or dropped.
-        </Typography>
-      ) : (
-        <div className="work-proposal-sections" ref={view}>
-          {!stage && alerts.length > 0 && (
-            <section aria-labelledby="work-palert-h" className="work-palert">
-              <header className="work-proposal-section-head">
-                <Typography
-                  variant="subtitle-lg"
-                  render={<h3 />}
-                  id="work-palert-h"
-                >
-                  <Icon href={svgStatusWarning} className="work-palert-icon" />
-                  Committed work needs these{" "}
-                  <span className="work-proposal-count">{alerts.length}</span>
-                </Typography>
-                <Typography variant="caption-md" color="textSecondary">
-                  Planned work or a committed milestone needs a proposal that
-                  isn’t committed: commit it, or take the need away
-                </Typography>
-              </header>
-              {table(alerts, "Proposals that committed work needs", true)}
-            </section>
-          )}
-          {stages.map((k) => {
-            const list = proposals.filter((p) => p.stage === k);
-            return (
-              <section key={k} aria-labelledby={`work-pstage-${k}`}>
-                <header className="work-proposal-section-head">
-                  <Typography
-                    variant="subtitle-lg"
-                    render={<h3 />}
-                    id={`work-pstage-${k}`}
-                  >
-                    {PROPOSAL_STAGE_NAMES[k]}{" "}
-                    <span className="work-proposal-count">{list.length}</span>
-                  </Typography>
-                  <Typography variant="caption-md" color="textSecondary">
-                    {PROPOSAL_STAGE_RULES[k]}
-                  </Typography>
-                </header>
-                {list.length ? (
-                  table(list, PROPOSAL_STAGE_NAMES[k])
-                ) : (
-                  <Typography
-                    variant="body-sm"
-                    color="textSecondary"
-                    render={<p />}
-                    className="work-pnone"
-                  >
-                    None now.
-                  </Typography>
-                )}
-              </section>
-            );
-          })}
-        </div>
-      )}
-    </Card>
-  );
-}
-
-function ProposalTable({
-  s,
-  proposals,
-  label,
-  alert,
-  itemOf,
-  msOf,
-  unblocks,
-  selected,
-  onMilestone,
-}: {
-  s: WorkSnapshot;
-  proposals: Proposal[];
-  label: string;
-  /** The alert lane: what needs each, in place of what a commit needs. */
-  alert: boolean;
-  itemOf: Map<string, WorkItem>;
-  msOf: Map<string, WorkMilestone>;
-  unblocks: Map<string, number>;
-  selected?: string;
-  onMilestone: (id: string) => void;
-}) {
-  return (
-    <table className="work-ptable" aria-label={label}>
-      <colgroup>
-        <col className="c-id" />
-        <col />
-        <col className="c-gate" />
-        <col className="c-num" />
-      </colgroup>
-      <thead>
-        <tr>
-          <th scope="col">ID</th>
-          <th scope="col">Proposal</th>
-          <th scope="col">{alert ? "Needed by" : "What a commit needs"}</th>
-          <th
-            scope="col"
-            className="c-num"
-            title="Open items that wait on it, directly or through others"
-          >
-            Waiting
-          </th>
-        </tr>
-      </thead>
-      {byProject(s, proposals).map((g) => (
-        <tbody key={g.project?.id ?? "none"}>
-          <tr className="work-ptable-group">
-            <th colSpan={4} scope="rowgroup">
-              <span className="work-ptable-group-name work-marked">
-                {g.project && <LevelMark level="project" />}
-                {g.project?.title ?? "No project"}
-              </span>
-              <span className="work-ptable-group-meta">
-                {g.project ? `${g.project.id}, ` : ""}
-                {g.items.length}{" "}
-                {g.items.length === 1 ? "proposal" : "proposals"}
-              </span>
-            </th>
-          </tr>
-          {g.items.map((p) => (
-            <ProposalRow
-              key={p.id}
-              p={p}
-              alert={alert}
-              itemOf={itemOf}
-              msOf={msOf}
-              waiting={unblocks.get(p.id) ?? 0}
-              selected={p.id === selected}
-              onMilestone={onMilestone}
-            />
-          ))}
-        </tbody>
-      ))}
-    </table>
-  );
-}
-
-function ProposalRow({
-  p,
-  alert,
-  itemOf,
-  msOf,
-  waiting,
-  selected,
-  onMilestone,
-}: {
-  p: Proposal;
-  alert: boolean;
-  itemOf: Map<string, WorkItem>;
-  msOf: Map<string, WorkMilestone>;
-  /** Open items that wait on it, directly or through others. */
-  waiting: number;
-  selected: boolean;
-  onMilestone: (id: string) => void;
-}) {
-  const m = p.milestone;
-  const refs = (ids: string[]) =>
-    ids.map((id) => itemOf.get(id) ?? msOf.get(id) ?? id);
-  return (
-    <tr
-      className={`work-ptable-row${selected ? " selected" : ""}`}
-      data-proposal={alert ? undefined : p.id}
-    >
-      <td className="c-id">
-        <KindId id={p.id} />
-      </td>
-      <td className="c-title">
-        {m ? (
-          <button
-            type="button"
-            className="work-ptable-link work-ptable-btn"
-            onClick={() => onMilestone(m.id)}
-          >
-            <InlineText text={p.title} />
-          </button>
-        ) : (
-          <ItemLink id={p.id} className="work-ptable-link" card>
-            <InlineText text={p.title} />
-          </ItemLink>
-        )}
-        {m && (
-          <span className="work-ptable-sub">
-            Proposed milestone{m.outcome ? `: ${m.outcome}` : ""}
-          </span>
-        )}
-        {alert ? (
-          <span className="work-ptable-sub">
-            {PROPOSAL_STAGE_NAMES[p.stage]}
-          </span>
-        ) : (
-          <>
-            <ProposalHeaderLines p={p} />
-            {m && <MilestoneConstraints m={m} itemOf={itemOf} msOf={msOf} />}
-            {p.neededBy.length > 0 && (
-              <span className="work-ptable-sub work-pneeded">
-                Committed work needs it: <GateRefs needs={refs(p.neededBy)} />
-              </span>
-            )}
-          </>
-        )}
-      </td>
-      <td className="c-gate">
-        {alert ? (
-          <>
-            <span className="work-pcell-label" aria-hidden="true">
-              Needed by
-            </span>
-            <ul className="work-pneeds" aria-label={`What needs ${p.id}`}>
-              {p.neededBy.map((id) => {
-                const e = itemOf.get(id) ?? msOf.get(id);
-                const body = (
-                  <>
-                    <KindId id={id} />
-                    <span className="work-pneeds-title">
-                      {e ? <InlineText text={e.title} /> : id}
-                    </span>
-                  </>
-                );
-                return (
-                  <li key={id}>
-                    {msOf.has(id) ? (
-                      <button
-                        type="button"
-                        className="work-pneeds-link"
-                        onClick={() => onMilestone(id)}
-                      >
-                        {body}
-                      </button>
-                    ) : (
-                      <ItemLink id={id} className="work-pneeds-link">
-                        {body}
-                      </ItemLink>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </>
-        ) : (
-          <CommitGate p={p} refs={refs} />
-        )}
-      </td>
-      <td className="c-num">{waiting > 0 ? waiting : ""}</td>
-    </tr>
-  );
-}
-
-/**
- * A proposal's header, or a line saying it has none: where it came from
- * and why now, then its size, decider and date on one line.
- */
-function ProposalHeaderLines({ p }: { p: Proposal }) {
-  const h = p.header;
-  if (!h) {
-    return (
-      <span className="work-phead-none">
-        No header yet: no source, why now, size, decider or date
-      </span>
-    );
-  }
-  const facts: Array<[string, string | undefined]> = [
-    ["Size", h.size],
-    ["Decider", h.decider],
-    ["Filed", h.date],
-  ];
-  return (
-    <dl className="work-phead">
-      <div>
-        <dt>Source</dt>
-        <dd>{h.source ? <InlineText text={h.source} /> : "not given"}</dd>
-      </div>
-      <div className="work-phead-why">
-        <dt>Why now</dt>
-        <dd>{h.why ? <InlineText text={h.why} /> : "not given"}</dd>
-      </div>
-      <div className="work-phead-facts">
-        {facts.map(([k, v]) => (
-          <span key={k}>
-            <dt>{k}</dt>
-            <dd>{v ? <InlineText text={v} /> : "not given"}</dd>
-          </span>
-        ))}
-      </div>
-    </dl>
-  );
-}
-
-/**
- * What committing a proposal needs: the decider's yes, after any open
- * decision or study. What starting it waits for comes under it, smaller:
- * it doesn't stand in the commit's way.
- */
-function CommitGate({
-  p,
-  refs,
-}: {
-  p: Proposal;
-  refs: (ids: string[]) => Array<WorkItem | WorkMilestone | string>;
-}) {
-  const first = refs(p.first);
-  const allDecisions = first.every(
-    (n) => typeof n !== "string" && n.kind === "decision",
-  );
-  return (
-    <span className="work-commit">
-      <span className="work-pcell-label" aria-hidden="true">
-        What a commit needs
-      </span>
-      <span className="work-commit-main">
-        {yesOf(p)}
-        {first.length > 0 && (
-          <>
-            , once <GateRefs needs={first} />{" "}
-            {first.length === 1 ? "is" : "are"}{" "}
-            {allDecisions ? "answered" : "settled"}
-          </>
-        )}
-      </span>
-      {p.startsAfter.length > 0 && (
-        <span className="work-commit-start">
-          Starts after <GateRefs needs={refs(p.startsAfter)} />
-        </span>
-      )}
-    </span>
-  );
-}
-
-/** A proposed milestone's constraints, every one, each with its state. */
-function MilestoneConstraints({
-  m,
-  itemOf,
-  msOf,
-}: {
-  m: WorkMilestone;
-  itemOf: Map<string, WorkItem>;
-  msOf: Map<string, WorkMilestone>;
-}) {
-  if (!m.constraints.length) {
-    return <span className="work-ptable-sub">No constraints named yet</span>;
-  }
-  return (
-    <ul className="work-pcons" aria-label={`${m.title}: its constraints`}>
-      {m.constraints.map((c) => {
-        const it = itemOf.get(c.id);
-        const e = it ?? msOf.get(c.id);
-        const state = e?.state;
-        // Proposed is the dashed outline, as on the roadmap (CS-563); a
-        // stage's color is only a fill.
-        const swatch =
-          state === "proposed"
-            ? "proposed"
-            : it
-              ? `stage-${slug(stageOf(it) ?? "Waiting")}`
-              : state === "done"
-                ? "stage-done"
-                : state === "in-progress"
-                  ? "stage-in-flight"
-                  : "none";
-        return (
-          <li key={c.id}>
-            <span className={`work-swatch ${swatch}`} aria-hidden="true" />
-            {it ? (
-              <ItemLink
-                id={c.id}
-                className="work-pcons-link"
-                label={`${c.id} ${e?.title ?? ""}, ${state ? STATE_NAMES[state] : "not in the tracker"}`}
-              >
-                <KindId id={c.id} />
-              </ItemLink>
-            ) : (
-              <KindId id={c.id} />
-            )}
-            <span className="work-pcons-title">
-              {e ? <InlineText text={e.title} /> : "not in the tracker"}
-            </span>
-            <span className="work-pcons-state">
-              {state ? STATE_NAMES[state] : ""}
-            </span>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-/**
- * Your move's proposals (CS-688): the current "to discuss" batch and every
- * one ready for the owner's yes, each with its header and a link into the
- * Proposals view, where it is chosen and opened.
- */
-function OwnerProposals({
-  proposals,
-  selected,
-  limit,
-}: {
-  proposals: Proposal[];
-  selected?: string;
-  limit: number;
-}) {
-  if (!proposals.length) {
-    return (
-      <Typography
-        variant="body-sm"
-        color="textSecondary"
-        render={<p />}
-        className="work-empty"
-      >
-        No proposal waits on you.
-      </Typography>
-    );
-  }
-  return (
-    <ul className="work-rows work-yourprops">
-      {proposals.slice(0, limit).map((p) => (
-        <li
-          key={p.id}
-          className={`work-row${p.id === selected ? " selected" : ""}`}
-        >
-          <RouterLink
-            to="/work"
-            search={(prev: WorkSearch) => ({
-              ...prev,
-              view: "proposals",
-              stage: undefined,
-              list: undefined,
-              item: p.id,
-            })}
-            className="work-row-main"
-            aria-label={`${p.id} ${p.title}, ${PROPOSAL_STAGE_NAMES[p.stage]}: open it in Proposals`}
-          >
-            <KindId id={p.id} />
-            <span className="work-row-title">
-              <InlineText text={p.title} />
-            </span>
-            <span className={`work-pstage-tag ${p.stage}`}>
-              {PROPOSAL_STAGE_NAMES[p.stage]}
-            </span>
-          </RouterLink>
-          <div className="work-yourprops-head">
-            <ProposalHeaderLines p={p} />
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-/** How many IDs a proposal's cell names before "+ N more". */
-const GATE_REFS = 2;
-
-function GateRefs({
-  needs,
-}: {
-  needs: Array<WorkItem | WorkMilestone | string>;
-}) {
-  const named = needs.slice(0, GATE_REFS);
-  const more = needs.length - named.length;
-  return (
-    <span className="work-gate-refs">
-      {named.map((n, i) => (
-        <span key={typeof n === "string" ? n : n.id}>
-          {i > 0 && ", "}
-          {typeof n === "string" ? (
-            <KindId id={n} />
-          ) : (
-            <ItemLink
-              id={n.id}
-              className="work-gate-ref"
-              tip={n.title.length > 60 ? `${n.title.slice(0, 57)}…` : n.title}
-              label={`${n.id} ${n.title}`}
-            >
-              {n.id}
-            </ItemLink>
-          )}
-        </span>
-      ))}
-      {more > 0 && (
-        <span
-          className="work-gate-more"
-          title={needs
-            .slice(GATE_REFS)
-            .map((n) => (typeof n === "string" ? n : `${n.id} ${n.title}`))
-            .join("\n")}
-        >
-          {" "}
-          +{more}
-        </span>
-      )}
-    </span>
   );
 }
 

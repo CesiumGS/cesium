@@ -1807,53 +1807,6 @@ a.work-related-item:focus-visible {
   gap: var(--stratakit-space-150);
 }
 
-/* A section led by its number (Your move). */
-.work-card-head.has-stat {
-  align-items: flex-start;
-  margin-bottom: var(--stratakit-space-400);
-}
-.work-stat-title {
-  margin: 0;
-  font: inherit;
-}
-.work-stat {
-  all: unset;
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--stratakit-space-300);
-  cursor: pointer;
-  border-radius: var(--stratakit-radius-sm);
-}
-.work-stat:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 2px;
-}
-.work-stat-value {
-  font-size: var(--stratakit-font-size-headline-md, 28px);
-  font-weight: 600;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-.work-stat.attention .work-stat-value {
-  color: var(--stratakit-color-text-attention-base);
-}
-.work-stat-label {
-  font-size: var(--stratakit-font-size-subtitle-md, 16px);
-  font-weight: 600;
-}
-.work-stat:hover .work-stat-label {
-  text-decoration: underline;
-}
-
-/* The numbers' column, named once above the bars. */
-.work-bars-head {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  padding: 0 var(--stratakit-space-200) var(--stratakit-space-100);
-  font-size: var(--stratakit-font-size-caption-md);
-  color: var(--stratakit-color-text-neutral-secondary);
-  text-align: end;
-}
 .work-bar {
   grid-template-columns: minmax(0, 1fr) 64px 28px;
 }
@@ -1897,303 +1850,6 @@ a.work-related-item:focus-visible {
   margin-left: 4px;
 }
 
-/*
- * The Proposals view (CS-688): the proposal flow, a section per stage,
- * each one table read top to bottom, every question in a column of its
- * own so the eye runs down it. Projects head their rows. The whole row
- * opens the proposal; the links inside it sit above that.
- */
-.work-pnote {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--stratakit-space-200);
-  margin: 0 0 var(--stratakit-space-500);
-  padding: var(--stratakit-space-300) var(--stratakit-space-400);
-  border-radius: var(--stratakit-radius-md);
-  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
-  font-size: var(--stratakit-font-size-body-sm);
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-pnote-icon {
-  flex: none;
-  margin-top: 1px;
-}
-.work-proposal-sections {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-700);
-}
-.work-proposal-section-head {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: var(--stratakit-space-300);
-}
-.work-proposal-section-head h3 {
-  margin: 0;
-}
-.work-proposal-count {
-  font-weight: 400;
-  color: var(--stratakit-color-text-neutral-secondary);
-  font-variant-numeric: tabular-nums;
-}
-.work-pnone {
-  margin: 0;
-}
-/* The alert lane: committed work needs these, so it reads as a warning. */
-.work-palert {
-  padding: var(--stratakit-space-400);
-  border-radius: var(--stratakit-radius-md);
-  border-inline-start: 3px solid var(--stratakit-color-border-attention-base);
-  background: var(--stratakit-color-bg-attention-faded);
-}
-.work-palert-icon {
-  vertical-align: -3px;
-  margin-inline-end: var(--stratakit-space-200);
-  color: var(--stratakit-color-icon-attention-base);
-}
-.work-ptable {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
-}
-.work-ptable col.c-id {
-  width: 88px;
-}
-.work-ptable col.c-gate {
-  width: 300px;
-}
-.work-ptable col.c-num {
-  width: 96px;
-}
-.work-ptable thead th {
-  padding: 0 var(--stratakit-space-300) var(--stratakit-space-200);
-  text-align: start;
-  font-size: var(--stratakit-font-size-caption-md);
-  font-weight: 500;
-  color: var(--stratakit-color-text-neutral-secondary);
-  border-bottom: 1px solid var(--stratakit-color-border-neutral-base);
-}
-.work-ptable .c-num {
-  text-align: end;
-  font-variant-numeric: tabular-nums;
-}
-.work-ptable-group th {
-  padding: var(--stratakit-space-600) var(--stratakit-space-300)
-    var(--stratakit-space-200);
-  text-align: start;
-  font-weight: inherit;
-  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-.work-ptable tbody:first-of-type .work-ptable-group th {
-  padding-top: var(--stratakit-space-400);
-}
-.work-ptable-group-name {
-  font-size: var(--stratakit-font-size-subtitle-md);
-  font-weight: 600;
-}
-.work-ptable-group-meta {
-  margin-inline-start: var(--stratakit-space-300);
-  font-size: var(--stratakit-font-size-caption-md);
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-ptable-row {
-  position: relative;
-}
-.work-ptable-row td {
-  padding: var(--stratakit-space-300);
-  vertical-align: baseline;
-  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-.work-ptable-row:hover td {
-  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
-}
-.work-ptable-row.selected td:first-child {
-  box-shadow: inset 3px 0 0 var(--stratakit-color-border-accent-strong);
-}
-.work-ptable-link {
-  color: inherit;
-  text-decoration: none;
-}
-/* A proposed milestone's row opens it in the pane: a button, drawn as the link. */
-.work-ptable-btn {
-  all: unset;
-  cursor: pointer;
-  font-weight: 600;
-}
-/* The whole row is the link's target. */
-.work-ptable-link::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-}
-.work-ptable-link:hover {
-  text-decoration: underline;
-}
-/* StrataKit forces every focus ring's width and style; the row's ring
-   stands in for the link's, so the link's is made clear. */
-.work-ptable .work-ptable-link:focus-visible {
-  outline-color: transparent;
-}
-.work-ptable-link:focus-visible::before {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: -2px;
-}
-.work-ptable-sub {
-  display: block;
-  margin-top: 2px;
-  font-size: var(--stratakit-font-size-caption-md);
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-gate-ref,
-.work-gate-more,
-.work-pcons-link {
-  position: relative;
-  z-index: 1;
-}
-
-/* A proposal's header: source and why now, then size, decider and date. */
-.work-phead {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin: var(--stratakit-space-200) 0 0;
-  font-size: var(--stratakit-font-size-caption-md);
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-phead > div {
-  display: flex;
-  gap: var(--stratakit-space-200);
-  min-width: 0;
-}
-.work-phead dt {
-  flex: none;
-  font-weight: 500;
-  color: var(--stratakit-color-text-neutral-primary);
-}
-.work-phead dd {
-  margin: 0;
-  min-width: 0;
-}
-/* Why now runs to two lines here; the whole text is in the pane. */
-.work-phead-why dd {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.work-phead > .work-phead-facts {
-  flex-wrap: wrap;
-  gap: 0 var(--stratakit-space-500);
-}
-.work-phead-facts > span {
-  display: inline-flex;
-  gap: var(--stratakit-space-200);
-}
-.work-phead-none {
-  display: block;
-  margin-top: var(--stratakit-space-100);
-  font-size: var(--stratakit-font-size-caption-md);
-  font-style: italic;
-  color: var(--stratakit-color-text-neutral-tertiary);
-}
-
-/* A proposed milestone's constraints, each with its state. */
-.work-pcons {
-  list-style: none;
-  margin: var(--stratakit-space-200) 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: var(--stratakit-font-size-caption-md);
-}
-.work-pcons li {
-  display: grid;
-  grid-template-columns: 10px auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--stratakit-space-200);
-}
-.work-pcons-link {
-  color: inherit;
-  text-decoration: none;
-  border-radius: var(--stratakit-radius-sm);
-}
-.work-pcons-link:hover {
-  text-decoration: underline;
-}
-.work-pcons-link:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 1px;
-}
-.work-pcons-title {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-pcons-state {
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-/* Proposed is the dashed outline (CS-563), never a fill. */
-.work-pcons .work-swatch.proposed {
-  box-sizing: border-box;
-  background: transparent;
-  border: 1.5px dashed var(--proposed-outline);
-}
-.work-pcons .work-swatch.none {
-  box-sizing: border-box;
-  border: 1px solid var(--stratakit-color-border-neutral-base);
-}
-/* The alert lane: what needs each proposal, named. */
-.work-pneeds {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.work-pneeds li {
-  min-width: 0;
-}
-.work-pneeds-link {
-  all: unset;
-  box-sizing: border-box;
-  max-width: 100%;
-  position: relative;
-  z-index: 1;
-  display: flex;
-  align-items: baseline;
-  gap: var(--stratakit-space-200);
-  min-width: 0;
-  cursor: pointer;
-  color: inherit;
-  text-decoration: none;
-  border-radius: var(--stratakit-radius-sm);
-}
-.work-pneeds-link:hover .work-pneeds-title {
-  text-decoration: underline;
-}
-.work-pneeds-link:focus-visible {
-  outline: 2px solid var(--stratakit-color-border-accent-strong);
-  outline-offset: 1px;
-}
-.work-pneeds-title {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  font-size: var(--stratakit-font-size-body-sm);
-}
-.work-pneeded {
-  color: var(--stratakit-color-text-neutral-primary);
-}
-
-/* A cell's column header, shown only when the rows stack (narrow). */
-.work-pcell-label {
-  display: none;
-}
 /* What a commit needs: the decider's yes, then what starting waits for. */
 .work-gate {
   display: inline-flex;
@@ -2201,42 +1857,7 @@ a.work-related-item:focus-visible {
   align-items: baseline;
   gap: 0 var(--stratakit-space-200);
 }
-.work-commit {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.work-commit-start {
-  font-size: var(--stratakit-font-size-caption-md);
-  color: var(--stratakit-color-text-neutral-secondary);
-}
-.work-gate-refs {
-  font-variant-numeric: tabular-nums;
-}
-.work-gate-ref {
-  color: inherit;
-  text-decoration: underline;
-  text-decoration-color: var(--stratakit-color-border-neutral-base);
-}
-.work-gate-ref:hover {
-  color: var(--stratakit-color-text-neutral-primary);
-}
 
-/* Your move's proposals: each row with its header under it. */
-.work-yourprops .work-row-main {
-  padding-bottom: 0;
-}
-.work-yourprops-head {
-  padding: 0 0 var(--stratakit-space-300);
-}
-.work-yourprops-head .work-phead {
-  margin-top: var(--stratakit-space-100);
-}
-.work-pstage-tag {
-  font-size: var(--stratakit-font-size-caption-md);
-  white-space: nowrap;
-  color: var(--stratakit-color-text-neutral-secondary);
-}
 /* The dashed outline in small: the legend's key and the Proposed switch's mark. */
 .work-proposed-mark {
   flex: none;
@@ -2246,187 +1867,16 @@ a.work-related-item:focus-visible {
   border: 2px dashed var(--proposed-outline);
   border-radius: 3px;
 }
-.work-toggle-count {
-  margin-inline-start: var(--stratakit-space-100);
-  color: var(--stratakit-color-text-neutral-secondary);
-  font-variant-numeric: tabular-nums;
-}
-/* Narrow: the gates scroll sideways rather than squeeze their words. */
-.work-proposal-gates {
-  max-width: 100%;
-  overflow-x: auto;
-}
-.work-proposal-gates button {
-  white-space: nowrap;
-  flex: none;
-}
-
-/* Mid-width (the pane open, say): the fixed columns give the idea room. */
-@container (max-width: 1000px) {
-  .work-ptable col.c-id {
-    width: 76px;
-  }
-  .work-ptable col.c-gate {
-    width: 220px;
-  }
-  .work-ptable col.c-num {
-    width: 64px;
-  }
-}
-
-/* Narrow: each row stacks, the idea over what stands in its way. */
-@container (max-width: 720px) {
-  .work-ptable,
-  .work-ptable tbody,
-  .work-ptable tr,
-  .work-ptable th,
-  .work-ptable td {
-    display: block;
-  }
-  .work-ptable thead,
-  .work-ptable colgroup {
-    display: none;
-  }
-  .work-ptable tr.work-ptable-row {
-    display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    grid-template-areas: "id title" ". gate" ". num";
-    column-gap: var(--stratakit-space-300);
-    padding: var(--stratakit-space-300) 0;
-    border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
-  }
-  .work-ptable-row td {
-    padding: 0;
-    border: none;
-  }
-  .work-ptable-row .c-id {
-    grid-area: id;
-  }
-  .work-ptable-row .c-title {
-    grid-area: title;
-  }
-  .work-ptable-row .c-gate {
-    grid-area: gate;
-    margin-top: var(--stratakit-space-100);
-  }
-  .work-ptable-row .c-num {
-    grid-area: num;
-    text-align: start;
-    color: var(--stratakit-color-text-neutral-secondary);
-  }
-  .work-ptable-row .c-num:not(:empty)::after {
-    content: " waiting on it";
-  }
-  /* The column's header, which the stacked row no longer has. */
-  .work-ptable-row .work-pcell-label {
-    display: block;
-    font-size: var(--stratakit-font-size-caption-md);
-    color: var(--stratakit-color-text-neutral-secondary);
-  }
-}
 
 /*
  * Releases as flags: each on the line after the last milestone it needs,
  * with its pole down the grid; one with no place yet sits apart, dotted.
  */
 
-/*
- * In progress, the live run (CS-547): the run line, two columns (working
- * now, done and not merged) that stack when narrow, then what the figures
- * leave out. Each figure's source and time sit quietly beside it.
- */
-.work-live {
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-500);
-}
-.work-live-run {
-  margin: 0;
-}
+/* Where a live figure was read from, and when (Your move's In progress and Merges). */
 .work-live-source {
   color: var(--stratakit-color-text-neutral-secondary);
   font-size: var(--stratakit-font-size-caption-md);
-}
-.work-live-cols {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
-  gap: var(--stratakit-space-500) var(--stratakit-space-700);
-}
-.work-live-cols > section {
-  min-width: 0;
-}
-.work-live-head {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding-bottom: var(--stratakit-space-200);
-  border-bottom: 1px solid var(--stratakit-color-border-neutral-muted);
-}
-.work-live-head h3 {
-  margin: 0;
-  font-weight: 600;
-}
-.work-live .work-empty {
-  padding-top: var(--stratakit-space-300);
-}
-.work-live-extra {
-  display: flex;
-  flex: 1 1 100%;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--stratakit-space-100) var(--stratakit-space-300);
-  min-width: 0;
-  overflow-wrap: anywhere;
-}
-.work-live-tag,
-.work-live-queue {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--stratakit-space-100);
-  padding: 0 var(--stratakit-space-200);
-  border: 1px solid var(--stratakit-color-border-neutral-muted);
-  border-radius: 999px;
-  white-space: nowrap;
-}
-.work-live-queue.attention {
-  color: var(--stratakit-color-text-attention-base);
-  border-color: var(--stratakit-color-border-attention-base);
-}
-.work-live-queue.info {
-  color: var(--stratakit-color-text-neutral-primary);
-}
-.work-live-queue-icon {
-  color: var(--stratakit-color-icon-attention-base);
-}
-/* A source that couldn't be read: a warning, never color alone. */
-.work-live-alert {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--stratakit-space-200);
-  padding: var(--stratakit-space-300) var(--stratakit-space-400);
-  border-radius: 0 var(--stratakit-radius-md) var(--stratakit-radius-md) 0;
-  border-inline-start: 3px solid var(--stratakit-color-border-attention-base);
-  background: var(--stratakit-color-bg-attention-faded);
-}
-.work-live-alert p {
-  margin: 0;
-}
-.work-live-alert ul {
-  margin: var(--stratakit-space-200) 0 0;
-  padding-inline-start: var(--stratakit-space-500);
-}
-.work-live-alert .work-palert-icon {
-  flex: none;
-  margin-top: 2px;
-}
-.work-live-notes {
-  list-style: none;
-  margin: 0;
-  padding: var(--stratakit-space-300) 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--stratakit-space-100);
-  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
 }
 
 /*
@@ -2444,4 +1894,405 @@ a.work-related-item:focus-visible {
 .work-plan-pop h3,
 .work-plan-pop p {
   margin: 0 0 var(--stratakit-space-200);
+}
+
+/* ---------------------------------------------------------------- Your move (CS-753) */
+
+/*
+ * Two levels: what waits on the owner, then what moves without them.
+ * One column narrow; side by side once the view is wide enough that the
+ * first column's rows keep their title, numbers and action on one line.
+ * Every text is at least the page's base size (body-md); detail goes in
+ * an entry's drawer, never into smaller type. Nothing animates.
+ */
+.work-move {
+  container-type: inline-size;
+}
+.work-move-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--stratakit-space-700);
+}
+@container (min-width: 960px) {
+  .work-move-grid {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: var(--stratakit-space-700) var(--stratakit-space-800);
+  }
+}
+.work-move-level {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-400);
+  min-width: 0;
+}
+.work-move-level-h {
+  margin: 0;
+  font-size: var(--stratakit-font-size-body-md);
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/*
+ * A section: one raised surface, rows set apart by rules only. Its rows
+ * read its own width, so they stack in a narrow column as on a phone.
+ */
+.work-move-section {
+  container-type: inline-size;
+  min-width: 0;
+  padding: var(--stratakit-space-500);
+  border-radius: var(--stratakit-radius-lg, 8px);
+  background: var(--stratakit-color-bg-elevation-level-1);
+  font-size: var(--stratakit-font-size-body-md);
+}
+/* The second level: the same shape, outlined rather than raised. */
+.work-move-section.quiet {
+  background: none;
+  box-shadow: inset 0 0 0 1px var(--stratakit-color-border-neutral-muted);
+}
+.work-move-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  margin-bottom: var(--stratakit-space-300);
+}
+.work-move-h {
+  display: flex;
+  align-items: baseline;
+  gap: var(--stratakit-space-300);
+  margin: 0;
+  font: inherit;
+}
+.work-move-n {
+  min-width: 2ch;
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.work-move-n.attention {
+  color: var(--stratakit-color-text-attention-base);
+}
+.work-move-n.quiet,
+.work-move-section.empty .work-move-n {
+  font-size: var(--stratakit-font-size-headline-md);
+}
+.work-move-name {
+  font-size: var(--stratakit-font-size-body-lg);
+  font-weight: 600;
+}
+.work-move-detail {
+  margin: 0;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* Empty: one line, its number, its name and why it is empty. */
+.work-move-section.empty {
+  padding-block: var(--stratakit-space-300);
+}
+.work-move-section.empty .work-move-head {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--stratakit-space-400);
+  margin: 0;
+}
+.work-move-section.empty .work-move-n,
+.work-move-section.empty .work-move-name {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+.work-move-clear {
+  display: flex;
+  align-items: center;
+  gap: var(--stratakit-space-300);
+  margin: 0;
+  padding: var(--stratakit-space-500);
+  border-radius: var(--stratakit-radius-lg, 8px);
+  background: var(--stratakit-color-bg-elevation-level-1);
+  font-size: var(--stratakit-font-size-body-lg);
+}
+.work-move-clear-icon {
+  flex: none;
+  color: var(--stratakit-color-text-positive-base);
+}
+
+/*
+ * An entry: the drawer's toggle, the ID and title (up to two lines), what
+ * it holds up, its age and its action, each column a fixed width so
+ * nothing moves on hover, selection or a longer number.
+ */
+.work-move-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.work-move-row + .work-move-row {
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-move-row.selected {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+  box-shadow: inset 3px 0 0 var(--stratakit-color-border-accent-strong);
+}
+/* Every cell sits on the title's first line; the title may take two. */
+.work-move-line {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 11ch 10ch;
+  grid-template-areas: "tog ref holds age";
+  align-items: start;
+  gap: var(--stratakit-space-300);
+  padding-block: var(--stratakit-space-300);
+  line-height: 20px;
+}
+.work-move-row.has-act .work-move-line {
+  grid-template-columns: 24px minmax(0, 1fr) 11ch 10ch 92px;
+  grid-template-areas: "tog ref holds age act";
+}
+.work-move-row.no-holds .work-move-line {
+  grid-template-columns: 24px minmax(0, 1fr) 10ch;
+  grid-template-areas: "tog ref age";
+}
+.work-move-toggle {
+  grid-area: tog;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-top: -2px;
+  padding: 0;
+  border: none;
+  border-radius: var(--stratakit-radius-sm);
+  background: none;
+  color: var(--stratakit-color-text-neutral-secondary);
+  cursor: pointer;
+}
+span.work-move-toggle {
+  cursor: default;
+}
+button.work-move-toggle:hover {
+  background: var(--stratakit-color-bg-glow-on-surface-neutral-hover);
+}
+button.work-move-toggle:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 0;
+}
+.work-move-toggle.open svg,
+.work-move-chev.open {
+  transform: rotate(90deg);
+}
+.work-move-ref {
+  grid-area: ref;
+}
+.work-move-row .work-move-ref .work-id {
+  font-size: var(--stratakit-font-size-body-md);
+}
+.work-move-row .work-move-ref .work-ref-title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  white-space: normal;
+}
+.work-move-holds,
+.work-move-age {
+  color: var(--stratakit-color-text-neutral-secondary);
+  text-align: end;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.work-move-holds {
+  grid-area: holds;
+}
+.work-move-age {
+  grid-area: age;
+}
+.work-move-num {
+  color: var(--stratakit-color-text-neutral-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.work-move-act {
+  grid-area: act;
+  width: 92px;
+  margin-top: -4px;
+}
+.work-move .work-move-act {
+  font-size: var(--stratakit-font-size-body-md);
+}
+
+/* An entry's drawer: its secondary detail, at the same size. */
+.work-move-drawer {
+  padding: 0 0 var(--stratakit-space-400)
+    calc(24px + var(--stratakit-space-300));
+}
+.work-move-facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: var(--stratakit-space-200) var(--stratakit-space-500);
+  margin: 0;
+}
+.work-move-facts > div {
+  display: contents;
+}
+.work-move-facts dt {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-move-facts dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.work-move-refs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  list-style: none;
+  margin: var(--stratakit-space-200) 0 0;
+  padding: 0;
+}
+.work-move-inline .work-ref-title {
+  max-width: 26ch;
+}
+.work-move-code {
+  font-family: var(--stratakit-font-family-mono);
+  font-size: var(--stratakit-font-size-body-md);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.work-move-quiet {
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+.work-move-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-200) var(--stratakit-space-500);
+  margin-top: var(--stratakit-space-300);
+}
+.work-move-foot .work-live-source {
+  font-size: var(--stratakit-font-size-body-md);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.work-move .work-move-more {
+  margin-inline-start: calc(-1 * var(--stratakit-space-200));
+  font-size: var(--stratakit-font-size-body-md);
+}
+.work-move-link {
+  color: var(--stratakit-color-text-accent-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.work-move-link:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* The "Proposals for you" card: CS-750's groups and their counts. */
+.work-move-groups {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.work-move-groups li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--stratakit-space-400);
+  padding: var(--stratakit-space-200) 0 var(--stratakit-space-200)
+    var(--stratakit-space-300);
+}
+.work-move-groups li + li {
+  border-top: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.work-move-groups li.attention {
+  box-shadow: inset 3px 0 0 var(--stratakit-color-border-attention-base);
+}
+
+/* What a live source couldn't read, and what its figures leave out. */
+.work-move-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--stratakit-space-200);
+  margin: 0 0 var(--stratakit-space-300);
+  padding: var(--stratakit-space-300) var(--stratakit-space-400);
+  border-radius: 0 var(--stratakit-radius-md) var(--stratakit-radius-md) 0;
+  border-inline-start: 3px solid var(--stratakit-color-border-attention-base);
+  background: var(--stratakit-color-bg-attention-faded);
+}
+.work-move-alert p {
+  margin: 0;
+}
+.work-move-alert ul {
+  margin: var(--stratakit-space-200) 0 0;
+  padding-inline-start: var(--stratakit-space-500);
+}
+.work-move-alert-icon {
+  flex: none;
+  margin-top: 2px;
+  color: var(--stratakit-color-icon-attention-base);
+}
+.work-move-notes ul {
+  margin: var(--stratakit-space-200) 0 0;
+  padding-inline-start: var(--stratakit-space-600);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+
+/* A narrow view: sections pad less. */
+@container (max-width: 560px) {
+  .work-move-section {
+    padding: var(--stratakit-space-400);
+  }
+}
+/* A narrow section: an entry's numbers and action go under its title. */
+@container (max-width: 520px) {
+  .work-move-line,
+  .work-move-row.has-act .work-move-line {
+    grid-template-columns: 24px auto auto minmax(0, 1fr);
+    grid-template-areas:
+      "tog ref ref ref"
+      ". holds age act";
+    align-items: center;
+    row-gap: var(--stratakit-space-200);
+  }
+  .work-move-row.no-holds .work-move-line {
+    grid-template-columns: 24px auto minmax(0, 1fr);
+    grid-template-areas:
+      "tog ref ref"
+      ". age .";
+  }
+  .work-move-act {
+    margin-top: 0;
+  }
+  .work-move-toggle,
+  .work-move-ref {
+    align-self: start;
+  }
+  /* The title flows on after the ID, up to three lines. */
+  .work-move-row .work-move-ref {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+  }
+  .work-move-row .work-move-ref .work-id {
+    margin-inline-end: var(--stratakit-space-200);
+  }
+  .work-move-row .work-move-ref .work-ref-title {
+    display: inline;
+  }
+  .work-move-holds,
+  .work-move-age {
+    text-align: start;
+  }
+  .work-move-act {
+    justify-self: end;
+  }
+  .work-move-drawer {
+    padding-inline-start: 0;
+  }
+  .work-move-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

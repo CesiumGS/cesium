@@ -229,25 +229,19 @@ milestones named by their outcome, each with an `outcome` sentence,
   answers; another view links there rather than repeating it.
 - **Four views, one question each,** and the roadmap's own views
   under it (below, "The view shell"):
-  - **Your move** (the default): the owner's attention is the
-    constraint, so each section leads with its number and lists the
-    most waited-on first, counting what waits through other items.
-    Your decisions and, beside them, the proposals for you (CS-688: the
-    current batch to discuss, at most five, oldest filed first, and
-    every one ready for your yes, each with its header and its stage,
-    linking into the Proposals view with it chosen); In progress
-    across the page (CS-547), which tells the truth about the live run;
-    then ready to start and waiting outside, as they stand now; a
-    decision or an outside wait in progress stays in its own section.
-  - **In progress** reads the live run, not just the item files: the
-    run and the orchestrator holding its lease (`hitld run status`);
-    "Working now", every dispatch in flight (`hitld ledger in-flight`)
-    and every other open claim (`hitld work claims`), each with who
-    holds it, its branch, and its age from the dispatch's start or the
-    claim commit, never from the stage history's day buckets; and
-    "Done, not merged", every item done on a local branch and not on
-    the main branch (git), with its branch and where the merge queue
-    has it: held for the owner's yes (hitld's `refs/hitld/merge-held`),
+  - **Your move** (the default): what waits on the owner, then what
+    moves without them, each section led by its number, the most
+    waited-on first. Its layout is CS-753's, below ("Your move").
+  - **In progress** (Your move's second level) and **Merges** (its
+    first) read the live run, not just the item files: the run and the
+    orchestrator holding its lease (`hitld run status`); in progress,
+    every dispatch in flight (`hitld ledger in-flight`) and every other
+    open claim (`hitld work claims`), each with who holds it, its
+    branch, and its age from the dispatch's start or the claim commit,
+    never from the stage history's day buckets; and, as Merges, every
+    item done on a local branch and not on the main branch (git), with
+    its branch and where the merge queue has it: held for the owner's
+    yes (hitld's `refs/hitld/merge-held`),
     checked by hand on a `-merge-check` branch, in hitld's queue or
     turned down by it (the ledger's `verified` and `merged` events,
     folded as hitld folds them), or not in the queue. Each figure
@@ -342,42 +336,12 @@ milestones named by their outcome, each with an `outcome` sentence,
   - **The roadmap's canvas (CS-683)**, `ZoomCanvas`, held the Plan's
     plot and went with it (CS-749); `fitZoom` and the zoom levels in
     `work.ts` stay for a later view.
-  - **Proposals (CS-688)**: candidate commitments (CS-686), laid out as
-    the flow they go through: new to discuss, being shaped, ready for
-    your yes, and the "later" copies awaiting review. A proposal is a
-    proposed item or milestone. Its header (source, why now and what it
-    unblocks, rough size, decider, date) is the paragraph of its text
-    that starts `**Proposal**`, read field by field
-    (`proposalHeaderOf` in `work.ts`; the adapter passes on only the
-    proposals' text, from `hitld work query --bodies`). The stage
-    follows from the tracker (`proposalsOf`): being shaped when an open
-    decision or study (a learning milestone) comes before the commit;
-    later when it has no header yet, since nobody has made its case for
-    now (CS-680 gives each one); ready for your yes when it has a
-    header and is shaped (an item's text has a "Done when", a milestone
-    has nothing left to shape); to discuss when it has a header but
-    isn't shaped. A line under the title says how to commit one until
-    HITLd's dashboard can: ask the main session to commit it, drop it
-    or send it to shaping. An alert lane leads, with the proposals that
-    committed work (a planned item, or a committed milestone's
-    constraints) needs, and what needs each, named: commit it or take
-    the need away. Then a section per stage, each with its count and
-    the rule that puts a proposal there ("None now" when empty),
-    grouped by project, a proposed milestone first in its project.
-    Every row has the same columns: the proposal, what a commit needs,
-    and how many open items wait on it. Under the title, its header
-    (source and why now, why now cut to two lines, then size, decider
-    and date), or a line saying it has none yet. What a commit needs is
-    the decider's yes (the owner when the header names no one), after
-    any open decision or study; the needs that hold back only its start
-    ("Starts after") sit under it, smaller, since committing isn't
-    starting. A proposed milestone's row lists every one of its
-    constraints with its state, proposed ones with the dashed outline
-    the roadmap uses (CS-563); the row opens the milestone in the pane,
-    as an item's row opens the item. A toggle narrows the view to one
-    stage (`&stage=` discuss, shaping, ready or later; every stage when
-    absent). Narrow, each row stacks, with the column's name over what
-    a commit needs. Nothing animates.
+  - **Proposals (CS-688)** laid proposals out by stage (to discuss,
+    being shaped, ready for your yes, later). The Proposals view
+    (CS-750, below) took its tab and groups them by why each is
+    proposed; CS-688's card and its stages left `Work.tsx` with CS-753.
+    `proposalsOf` and `proposalHeaderOf` in `work.ts` stay: CS-750's
+    model is built on them.
   - **No milestone** (CS-562) is gone (CS-744; the owner, 2026-11-20:
     "what value is this tab adding? shouldn't this be stuff on your
     move if it actually requires my attention?"). Of its 80 entries
@@ -438,9 +402,10 @@ is cheap and clashes with nothing, and that the tabs never move.
   others. CS-749's Order view and CS-748's Projects view keep the IDs
   of the views they replace (`"plan"`, `"projects"`), so old links open
   them. A doubled ID or one that isn't a slug is left out and logged.
-  Built-in orders: page Your move 10, Roadmap 20, Proposals 60;
-  roadmap Release 10; older Dependencies 20, Projects 30. Mounted:
-  page Flow 70 (CS-752 keeps the ID `"flow"`); roadmap Path 20,
+  Built-in orders: page Your move 10, Roadmap 20; roadmap Release 10;
+  older Dependencies 20, Projects 30. Mounted: page Health 30, What
+  changed 40, Proposals 60 (CS-750 keeps the ID `"proposals"`), Flow 70
+  (CS-752 keeps the ID `"flow"`); roadmap Path 20,
   Projects 30, Order 40. The route
   takes any slug for `view=` and `roadmap=`, and the shell shows the
   first view when the slug names none it has.
@@ -479,6 +444,89 @@ is cheap and clashes with nothing, and that the tabs never move.
   in words beside it ("shown", "hidden"; "n/a" and disabled on a view
   that shows committed work only), and one per page. Reduced motion
   turns off its slide and the tab indicators'.
+
+### Your move (CS-753)
+
+The page's first tab, built into `Work.tsx` (`id: "move"`). The owner:
+"the layout for your move is getting cluttered again, too much tiny
+text, bad layout, etc. give it some tlc". hitld's design asks the same:
+each section leads with its number, the most waited-on first, each entry
+with its age.
+
+- **Story.** The owner opens Work and asks "what needs me?". The answer
+  leads: the number in each section, then the few entries that hold up
+  the most, each with the one thing to do about it. A leadership team
+  above the project can read the same numbers to see where the owner's
+  attention goes. When nothing waits, one line says so.
+- **Audience.** The owner first; the chief of staff and the
+  orchestrator, who act on the answers. Nothing is applied from the
+  page.
+- **Two levels.** "Waiting on you": Decisions, Merges, Health
+  exceptions (the Health view's that need the owner, CS-745's
+  `healthForOwner`), Proposals for you, then Outside waits. "Moving
+  without you", a level down and drawn quieter (outlined, not raised,
+  smaller numbers): In progress, the live run (CS-547), and Ready to
+  start. Wide (a view of 960 px or more), the two levels sit side by
+  side, the first wider; narrow, they stack, the first on top.
+- **A section** leads with its number (large, tabular; attention-colored
+  in the first level when not zero), its name and one line on it: the
+  oldest decision's age, how many merges wait for your yes, how many
+  parties the outside waits are on. Then its top five entries, ranked,
+  and the rest under "and N more", which unfolds in place ("Show fewer"
+  folds it; the words share one reserved cell). An empty section is one
+  line: its number, its name and why it is empty ("No finished work
+  waits to merge."). A fully clear first level is one line too:
+  "Nothing waits on you: no decision, merge, health exception, outside
+  wait or proposal."
+- **Ranking.** By what an entry holds up: the open items behind it,
+  directly or through others (`unblocksOf`); for an exception, the open
+  items it involves (a milestone through its open constraints) and
+  everything behind them, each counted once (`holdsUpOf`). A merge that
+  waits for the owner's yes (hitld's merge-held ref) comes first. Ties
+  go to the oldest, then the lower ID. There is no score and no
+  priority label.
+- **Ages.** A decision, an outside wait or ready work from when it
+  entered its stage (the board's state history); a merge from its
+  close; an exception from when its item at fault entered its stage,
+  else the latest such change among what it involves, else "–" with a
+  tip saying the tracker can't tell; in progress from its dispatch or
+  claim commit. Words, never dates: "40 minutes", "5 hours", "7 days".
+  Each age's tip says what it counts from.
+- **An entry** is one row: a toggle for its drawer, its ID and title
+  (`ItemRef`, up to two lines, the whole title in its hover card), what
+  it holds up ("holds up 3"), its age, and its one action, a button of
+  one width: Decide (opens the decision's question and options in the
+  pane), Review (a merge, in the pane), Fix (the Health view, with the
+  exception's entity chosen), Follow up (an outside wait, in the pane).
+  In progress and Ready rows have no action. Narrow (a section under
+  520 px), the numbers and the action go on a second line under the
+  title.
+- **The drawer** holds the secondary detail, at the same size: what
+  waits on it directly (up to five, with their titles) and its project;
+  a merge's branch, when it closed and where the queue has it; an
+  exception's kind, what is wrong, its fix and its command; an outside
+  wait's party; who holds work in progress and where. Detail goes in
+  the drawer, never into smaller type.
+- **Proposals for you** counts proposals in CS-750's groups (needed by
+  committed work, waiting on a decision or study, new, deferred; the
+  needed line has the attention rule when not empty), says how many have
+  no header yet (the chief of staff's to write, so not counted), and
+  links to the Proposals view (`#/work?view=proposals`), where each
+  one's call is in words.
+- **Type.** Every text is at least the page's base size (body-md,
+  14 px), IDs included. Numbers are tabular.
+- **No movement.** Each row's columns have fixed widths (the title takes
+  the rest), the action buttons one width, nothing bolds on hover or
+  focus, and a chosen row is tinted. Nothing animates: the drawers and
+  folds open at once, so reduced motion changes nothing in the view.
+- **Live figures** keep CS-547's rules: each names its source and when
+  it was read, under its section; an unread source is a warning naming
+  it, never "nothing in progress"; what the figures leave out folds
+  under one line.
+- **Model.** `yourMoveOf` in `views/Work.tsx`, with `byWhatItHolds`,
+  `holdsUpOf` and `moveAgeText`, tested in `test/dynoWorkMove.test.ts`
+  with a fixture for each section, its ranking, ages and fold, and the
+  view as it renders.
 
 ### The Release view (CS-744)
 
@@ -755,7 +803,7 @@ job was spotting loops.
 
 The page's Proposals tab, mounted from `views/workProposals.tsx` with
 `id: "proposals"`, so it takes the place of CS-688's tab (whose code
-stays in `Work.tsx` until a clean-up removes it). Promoting a proposal
+left `Work.tsx` with CS-753). Promoting a proposal
 is the owner's call (hitld 04 §4.6); the view makes each call easy.
 
 - **Story.** The owner opens Proposals and asks "what do I do with
