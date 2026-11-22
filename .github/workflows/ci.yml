@@ -143,10 +143,14 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
+      # The suite's bundle test (test/importBoundary.test.ts) builds pages
+      # against the packages' dist/, so the packages are built first.
+      - name: Build (no packed checks; the build job runs those)
+        run: npm run build -- --no-checks
       - run: npm test
 
   # Every package built, packed and checked as it publishes; the bundle check
-  # against that output; the surface; Sandcastle's and the handbook's builds.
+  # against that output; the surface; Sandcastle's build.
   build:
     if: github.event_name != 'schedule'
     runs-on: ubuntu-24.04
@@ -168,8 +172,26 @@ jobs:
         run: npm run surface -- --check
       - name: Sandcastle
         run: npm run build-sandcastle
-      - name: The handbook
-        run: npm run handbook
+
+  # The handbook's single-file build, so a broken figure fails here. A job
+  # of its own, so its result stays apart from the packages' build.
+  handbook:
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      # Its data script runs the bundle check, which builds against dist/.
+      - name: Build (no packed checks)
+        run: npm run build -- --no-checks
+      - run: npm run handbook
 
   # The generated shaders match their Slang sources, compiled with the pinned
   # slangc, checked against the SHA-256 the release publishes for the asset

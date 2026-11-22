@@ -67,13 +67,14 @@ describe("the dyno bin package", () => {
 
   it("stays out of @cesium/next's tarball", () => {
     // Its own .npmignore keeps it out of any `npm pack`, and @cesium/next's
-    // `files` list (CS-612) publishes only the build and its docs.
+    // `files` list (CS-612, CS-613) publishes only the build and its docs.
     const ignore = readFileSync(resolve(pkgDir, ".npmignore"), "utf8");
     expect(ignore.split("\n").map((l) => l.trim())).toContain("*");
     expect(readJson(resolve(next, "package.json")).files).toEqual([
       "dist",
       "LICENSE.md",
       "README.md",
+      "CHANGELOG.md",
     ]);
   });
 });

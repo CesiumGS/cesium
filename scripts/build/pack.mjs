@@ -158,7 +158,12 @@ export async function checkPacked(packageDirs, options = {}) {
       const manifest = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
       // What `files` lists but the tarball lacks: reported while the
       // package is private, failed once it isn't (missingFilesVerdict).
-      const missing = missingFiles(manifest.files ?? [], files);
+      // CHANGELOG.md is left out: Changesets writes it in a package's first
+      // release record, so a package has none until then.
+      const missing = missingFiles(
+        (manifest.files ?? []).filter((entry) => entry !== "CHANGELOG.md"),
+        files,
+      );
       const verdict = missingFilesVerdict(manifest, missing);
       if (verdict.verdict === "report") {
         lacking.push({ name, missing });
