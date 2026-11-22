@@ -2,10 +2,11 @@
 id: CS-780
 title: 'Engine.errors becomes an emitter: errors.on("support", …) reaches notice listeners, as the engine-profiles plan names it'
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-20
 project: CS-437
 needs: [CS-23]
+claimed_by: orch-11-CS-780
 touches: [packages/next/src/scene/Engine.ts, packages/next/src/scene/**, packages/next/src/thread/protocol.ts, packages/next/test, packages/next/api/surface.txt, packages/next/widgets/**, packages/next/bench/**]
 ---
 
