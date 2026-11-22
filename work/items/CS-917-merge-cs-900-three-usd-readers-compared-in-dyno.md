@@ -2,10 +2,14 @@
 id: CS-917
 title: Merge CS-900, three USD readers compared in Dyno
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-191
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), runs the work check on main, regenerates the views and logs the merge. CS-901's evidence is in the tree."
+answered_at: 2026-11-22T13:39:02.752Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question
@@ -28,3 +32,5 @@ If unanswered by 2026-11-24T12:00:00Z: Hold it.
 ## Answer
 
 Recorded in the front matter once answered.
+
+The chief of staff answered A on 2026-11-22 under the owner's overnight approval of safe merges. The only failing test, `test/repoPaths.test.ts`, fails the same way on main's tip in a clean worktree (a fix-up of the move, now in CS-911). Everything else passes, the reviews have nothing Important open, and the chief of staff checked that the diff touches no owner path.
