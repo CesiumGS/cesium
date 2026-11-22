@@ -1,0 +1,402 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cesium-ir-1.0.schema.json",
+  "title": "Cesium IR, cesium-ir/1.0",
+  "description": "The shape of a cesium-ir/1.0 file. The checking reader also refuses what a schema can't say: an operand that doesn't refer to an earlier equation, a declared type that differs from the one the operands give, an extension op that isn't listed, an input index out of range, and a repeated name or slot. See FORMAT.md.",
+  "type": "object",
+  "required": [
+    "format",
+    "vocabulary",
+    "extensions",
+    "inputs",
+    "equations",
+    "outputs"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "cesium-ir/1.0"
+    },
+    "vocabulary": {
+      "const": "KHR_interactivity"
+    },
+    "extensions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^cesium/[A-Za-z][A-Za-z0-9_]*$"
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/input"
+      }
+    },
+    "equations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/equation"
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/output"
+      }
+    }
+  },
+  "$defs": {
+    "type": {
+      "enum": ["bool", "int", "float", "float2", "float3", "float4"]
+    },
+    "rate": {
+      "enum": ["uniform", "feature", "vertex", "fragment"]
+    },
+    "number": {
+      "description": "A float64. -0, NaN and the infinities are text, since JSON has no such numbers.",
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "enum": ["-0", "NaN", "Infinity", "-Infinity"]
+        }
+      ]
+    },
+    "value": {
+      "description": "A boolean, a number, or the lanes of a float2 to float4.",
+      "anyOf": [
+        {
+          "type": "boolean"
+        },
+        {
+          "$ref": "#/$defs/number"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/number"
+          },
+          "minItems": 2,
+          "maxItems": 4
+        }
+      ]
+    },
+    "equationNumber": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "input": {
+      "type": "object",
+      "required": ["name", "type", "rate"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "$ref": "#/$defs/type"
+        },
+        "rate": {
+          "$ref": "#/$defs/rate"
+        }
+      }
+    },
+    "output": {
+      "type": "object",
+      "required": ["name", "id"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "$ref": "#/$defs/equationNumber"
+        }
+      }
+    },
+    "inputEquation": {
+      "description": "A program input: its index in 'inputs'. The type is that input's.",
+      "type": "object",
+      "required": ["op", "type", "index"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "const": "input"
+        },
+        "type": {
+          "$ref": "#/$defs/type"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "constEquation": {
+      "description": "A structural constant: folded freely.",
+      "type": "object",
+      "required": ["op", "type", "value"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "const": "const"
+        },
+        "type": {
+          "$ref": "#/$defs/type"
+        },
+        "value": {
+          "$ref": "#/$defs/value"
+        }
+      }
+    },
+    "literalEquation": {
+      "description": "An editable literal. Its identity is its slot, not its value.",
+      "type": "object",
+      "required": ["op", "type", "value", "slot"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "const": "literal"
+        },
+        "type": {
+          "$ref": "#/$defs/type"
+        },
+        "value": {
+          "$ref": "#/$defs/value"
+        },
+        "slot": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "extractEquation": {
+      "description": "A lane of a vector: 'index' is the component.",
+      "type": "object",
+      "required": ["op", "args", "type", "index"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "enum": ["math/extract2", "math/extract3", "math/extract4"]
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/equationNumber"
+          },
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "type": {
+          "$ref": "#/$defs/type"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        }
+      }
+    },
+    "op1Equation": {
+      "description": "A vocabulary op on 1 operand, each an earlier equation.",
+      "type": "object",
+      "required": ["op", "args", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "enum": [
+            "math/abs",
+            "math/sign",
+            "math/trunc",
+            "math/floor",
+            "math/ceil",
+            "math/round",
+            "math/fract",
+            "math/neg",
+            "math/saturate",
+            "math/sqrt",
+            "math/cbrt",
+            "math/exp",
+            "math/log",
+            "math/log2",
+            "math/log10",
+            "math/sin",
+            "math/cos",
+            "math/tan",
+            "math/asin",
+            "math/acos",
+            "math/atan",
+            "math/sinh",
+            "math/cosh",
+            "math/tanh",
+            "math/not",
+            "math/length",
+            "math/normalize",
+            "type/boolToFloat",
+            "type/intToFloat"
+          ]
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/equationNumber"
+          },
+          "minItems": 1,
+          "maxItems": 1
+        },
+        "type": {
+          "$ref": "#/$defs/type"
+        }
+      }
+    },
+    "op2Equation": {
+      "description": "A vocabulary op on 2 operands, each an earlier equation.",
+      "type": "object",
+      "required": ["op", "args", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "enum": [
+            "math/add",
+            "math/sub",
+            "math/mul",
+            "math/div",
+            "math/rem",
+            "math/min",
+            "math/max",
+            "math/pow",
+            "math/atan2",
+            "math/eq",
+            "math/lt",
+            "math/le",
+            "math/gt",
+            "math/ge",
+            "math/and",
+            "math/or",
+            "math/dot",
+            "math/cross",
+            "math/combine2"
+          ]
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/equationNumber"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "type": {
+          "$ref": "#/$defs/type"
+        }
+      }
+    },
+    "op3Equation": {
+      "description": "A vocabulary op on 3 operands, each an earlier equation.",
+      "type": "object",
+      "required": ["op", "args", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "enum": [
+            "math/clamp",
+            "math/mix",
+            "math/smoothStep",
+            "math/select",
+            "math/combine3"
+          ]
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/equationNumber"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "type": {
+          "$ref": "#/$defs/type"
+        }
+      }
+    },
+    "op4Equation": {
+      "description": "A vocabulary op on 4 operands, each an earlier equation.",
+      "type": "object",
+      "required": ["op", "args", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "enum": ["math/combine4"]
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/equationNumber"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "type": {
+          "$ref": "#/$defs/type"
+        }
+      }
+    },
+    "extensionEquation": {
+      "description": "A cesium/ extension op. It must be listed in 'extensions' (the reader checks that).",
+      "type": "object",
+      "required": ["op", "args", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "op": {
+          "type": "string",
+          "pattern": "^cesium/[A-Za-z][A-Za-z0-9_]*$"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/equationNumber"
+          }
+        },
+        "type": {
+          "$ref": "#/$defs/type"
+        }
+      }
+    },
+    "equation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/inputEquation"
+        },
+        {
+          "$ref": "#/$defs/constEquation"
+        },
+        {
+          "$ref": "#/$defs/literalEquation"
+        },
+        {
+          "$ref": "#/$defs/extractEquation"
+        },
+        {
+          "$ref": "#/$defs/op1Equation"
+        },
+        {
+          "$ref": "#/$defs/op2Equation"
+        },
+        {
+          "$ref": "#/$defs/op3Equation"
+        },
+        {
+          "$ref": "#/$defs/op4Equation"
+        },
+        {
+          "$ref": "#/$defs/extensionEquation"
+        }
+      ]
+    }
+  }
+}

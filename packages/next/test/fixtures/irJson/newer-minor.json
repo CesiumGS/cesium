@@ -1,0 +1,13 @@
+{
+  "format": "cesium-ir/1.7",
+  "vocabulary": "KHR_interactivity",
+  "extensions": [],
+  "title": "A field a 1.7 writer added; an older reader ignores it",
+  "inputs": [{ "name": "x", "type": "float", "rate": "vertex" }],
+  "equations": [
+    { "op": "input", "type": "float", "index": 0 },
+    { "op": "const", "type": "float", "value": 2 },
+    { "op": "math/mul", "args": [0, 1], "type": "float", "hint": "fused" }
+  ],
+  "outputs": [{ "name": "y", "id": 2 }]
+}

@@ -1,11 +1,29 @@
-// Cesium IR's core: the program structure, the builder, the vocabulary and
-// the float64 evaluator. It imports nothing outside this folder, so it can
+// Cesium IR's core: the program structure, the builder, the vocabulary, the
+// float64 evaluator and the JSON form. It imports nothing outside this folder, so it can
 // become the `cesium-ir` package unchanged.
 
 export * from "./types.ts";
 export { OPS, applyValue, typeOf, typeOfValue } from "./ops.ts";
 export { Builder, shapeKey } from "./builder.ts";
 export { evaluate, print } from "./evaluate.ts";
+// The versioned JSON form (cesium-ir/1.0): writer, checking reader, extensions.
+export {
+  EXTENSIONS,
+  type ExtensionOp,
+  type ExtensionTable,
+} from "./extensions.ts";
+export {
+  IrFormatError,
+  programFromDocument,
+  programToDocument,
+  readProgram,
+  writeProgram,
+  type CirDocument,
+  type FormatOptions,
+  type JsonEquation,
+  type JsonNumber,
+  type JsonValue,
+} from "./json.ts";
 // The passes, each an interpretation of the one program structure.
 export {
   derivativeName,

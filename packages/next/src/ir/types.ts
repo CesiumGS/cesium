@@ -2,7 +2,8 @@
 // rate, typed single-assignment equations in dependency order, and named
 // outputs. Types are glTF KHR_interactivity's (matrices come later).
 
-export const IR_VERSION = "cesium-ir/0.1";
+// The program structure's version, and the JSON form's (`json.ts`): `cesium-ir/<major>.<minor>`.
+export const IR_VERSION = "cesium-ir/1.0";
 export const VOCABULARY = "KHR_interactivity";
 
 export type Type = "bool" | "int" | "float" | "float2" | "float3" | "float4";

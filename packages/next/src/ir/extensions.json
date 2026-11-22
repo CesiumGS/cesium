@@ -1,0 +1,5 @@
+{
+  "registry": "cesium-ir-extensions/1",
+  "note": "Each entry is a cesium/ extension op: a name and the format version that introduced it. An op's meaning never changes after release; a change is a new op under a new name. 1.0 has none.",
+  "extensions": []
+}

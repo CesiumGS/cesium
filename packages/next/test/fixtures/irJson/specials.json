@@ -1,0 +1,33 @@
+{
+  "format": "cesium-ir/1.0",
+  "vocabulary": "KHR_interactivity",
+  "extensions": [],
+  "inputs": [
+    { "name": "p", "type": "float3", "rate": "vertex" },
+    { "name": "n", "type": "int", "rate": "uniform" },
+    { "name": "on", "type": "bool", "rate": "feature" }
+  ],
+  "equations": [
+    { "op": "input", "type": "float3", "index": 0 },
+    { "op": "input", "type": "int", "index": 1 },
+    { "op": "input", "type": "bool", "index": 2 },
+    { "op": "const", "type": "float", "value": "-0" },
+    { "op": "const", "type": "float2", "value": ["NaN", "-Infinity"] },
+    {
+      "op": "literal",
+      "type": "float3",
+      "value": [0.1, "Infinity", 1e21],
+      "slot": "color.rgb"
+    },
+    { "op": "type/intToFloat", "args": [1], "type": "float" },
+    { "op": "math/extract3", "args": [0], "type": "float", "index": 2 },
+    { "op": "math/mul", "args": [7, 6], "type": "float" },
+    { "op": "math/add", "args": [8, 3], "type": "float" },
+    { "op": "math/select", "args": [2, 9, 6], "type": "float" }
+  ],
+  "outputs": [
+    { "name": "z", "id": 10 },
+    { "name": "edge", "id": 4 },
+    { "name": "color", "id": 5 }
+  ]
+}

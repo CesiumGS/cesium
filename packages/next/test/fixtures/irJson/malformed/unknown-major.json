@@ -1,0 +1,8 @@
+{
+  "format": "cesium-ir/2.0",
+  "vocabulary": "KHR_interactivity",
+  "extensions": [],
+  "inputs": [{ "name": "x", "type": "float", "rate": "vertex" }],
+  "equations": [{ "op": "input", "type": "float", "index": 0 }],
+  "outputs": [{ "name": "y", "id": 0 }]
+}
