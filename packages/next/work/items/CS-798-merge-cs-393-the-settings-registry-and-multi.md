@@ -2,10 +2,14 @@
 id: CS-798
 title: Merge CS-393, the settings registry and multi-axis sweeps
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the dyno tests, fast-forwards main, regenerates the views and logs the merge; CS-394 can then start."
+answered_at: 2026-11-22T01:13:35.447Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
