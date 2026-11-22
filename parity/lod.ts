@@ -8,7 +8,6 @@ import {
   type TilesetOptions,
   type View,
 } from "../packages/core/src/index.ts";
-import type { TileSelection } from "../packages/core/src/streaming/Stepwise.ts";
 import type { Harness } from "../lab/harness.ts";
 import { createGpuFlip, type GpuFlip } from "./flipGpu.ts";
 import { DEFAULT_ION_TOKEN, requireToken } from "../bench/suite/ionToken.ts";
@@ -377,7 +376,7 @@ async function measure(
     walkMs.push(walked);
   };
   // The tileset's own: `selection` is a proxy that counts any write as a change.
-  const { policy } = tileset as unknown as { policy: TileSelection };
+  const { policy } = tileset.state;
   if (policy.selectCasters) {
     const walk = policy.selectCasters.bind(policy);
     policy.selectCasters = (...args) => {
