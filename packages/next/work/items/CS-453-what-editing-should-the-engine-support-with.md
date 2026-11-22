@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-14
 project: CS-579
 decider: owner
+needs: [CS-831]
 ---
 
 ## Question
@@ -21,6 +22,8 @@ Detail: `docs/design/editing.md`, including "Vector data and GIS sources (owner,
 - Leave it until a host needs editing.
 
 Recommendation: split it: the vector and GIS half with the vector renderer's plan, the mesh and b-rep half with design space and the b-rep work, so each answer meets the design it changes.
+
+The owner, 2026-11-21: design the write path through the seams first (CS-831), review it, then answer this decision's vector and GIS half.
 
 ## Answer
 

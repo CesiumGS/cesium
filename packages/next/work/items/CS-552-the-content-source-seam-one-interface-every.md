@@ -15,6 +15,7 @@ Start from what's written: `docs/design/modular-renderer.md` (the tiers, the `@c
 
 ## Done when
 
+- Its interface leaves room for CS-831's write path: a capability declaration, an override contract and a change-set type. (Added 2026-11-21.)
 - It also covers, from the owner's review of 2.0's seams on 2026-11-21:
   - push updates, so live feeds (SensorThings, digital-twin telemetry) don't have to be polled;
   - render passes registered by modules, so splats and other new content can draw;
