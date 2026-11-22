@@ -122,7 +122,12 @@ function readBuffers(session, attributes) {
   );
 
   const edgeIndices = hasEdgeAttributes
-    ? readEdgeIndices(session, indices, faceVertexCounts, primitiveEdges)
+    ? readEdgeIndices(
+        session,
+        indices,
+        faceVertexCounts,
+        /** @type {Uint32Array} */ (primitiveEdges),
+      )
     : undefined;
 
   const values = new Map();
@@ -174,7 +179,7 @@ function readPrimitives(session, withEdges) {
  * @param {GeometryReadSession} session The read session.
  * @param {Uint32Array} indices The primitives' vertex indices.
  * @param {Uint32Array} faceVertexCounts The number of vertices in each primitive.
- * @param {Uint32Array} [primitiveEdges] The primitives' edge indices.
+ * @param {Uint32Array} primitiveEdges The primitives' edge indices.
  * @returns {Uint32Array} Two vertex indices per edge, <code>UNSET</code> for edges that aren't in any primitive.
  * @ignore
  */
@@ -185,7 +190,7 @@ function readEdgeIndices(session, indices, faceVertexCounts, primitiveEdges) {
   let first = 0;
   for (const vertexCount of faceVertexCounts) {
     for (let i = 0; i < vertexCount; ++i) {
-      const edge = /** @type {Uint32Array} */ (primitiveEdges)[first + i];
+      const edge = primitiveEdges[first + i];
 
       if (edge !== UNSET && edgeIndices[edge * 2] === UNSET) {
         edgeIndices[edge * 2] = indices[first + i];
