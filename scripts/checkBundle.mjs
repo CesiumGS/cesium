@@ -24,6 +24,14 @@
 // shaders, streaming, globe and webgl2 modules, the engine, the world and
 // the view) with the page.
 //
+// A last page uses core's GPU device, a model and a function map, and
+// guards core's side-effect modules, which its `sideEffects` lists: in a
+// production build, the dispose polyfill (core/disposeShim.js) must be in
+// what loads with the page, found by two of its error messages, string
+// literals a minifier keeps; and the IR passes' installer
+// (transform/irPasses.js) must be in some chunk, found as a call whose
+// argument is the passes object (its keys, which a minifier keeps).
+//
 // Every page is built against the packages as they publish (CS-612): their
 // `exports` without the `@cesium/source` condition, so the packages' dist/,
 // which `npm run build` writes first. A wrong `sideEffects` shows here, as
@@ -131,6 +139,66 @@ const RENDERER_MODULES =
   /[\\/]core[\\/]dist[\\/](?:(?:render|gpu|shaders|streaming|globe|webgl2)[\\/]|scene[\\/](?:Engine|World|View)\.js$)/;
 
 /**
+ * The dispose polyfill's markers (core's src/core/disposeShim.ts): string
+ * literals in its code, which a minifier keeps.
+ */
+const DISPOSE_MARKERS = [
+  "DisposableStack: already disposed",
+  "An error was suppressed during disposal.",
+];
+
+/** The IR passes' module (core's src/transform/irPasses.ts), as dist/ has it. */
+const IR_PASSES_MODULE = /[\\/]core[\\/]dist[\\/]transform[\\/]irPasses\.js$/;
+
+/**
+ * The IR passes' installer's marker: the `installIrPasses(passes)` call, as
+ * a call whose argument is the passes object (its keys, which a minifier
+ * keeps, in source order) or a name bound to it.
+ */
+function hasIrInstaller(code) {
+  const object =
+    /\{\s*compileRoute\b[^}]*\badJacobian\b[^}]*\bjacobian\b[^}]*\bparseTransform\b[^}]*\bTransformParseError\b[^}]*\}/;
+  const bound = new RegExp(
+    String.raw`(?:const|let|var)\s+([\w$]+)\s*=\s*` + object.source,
+  ).exec(code);
+  if (bound) {
+    const name = bound[1].replace(/\$/g, "\\$");
+    return new RegExp(String.raw`[\w$.]+\(\s*${name}\s*\)`).test(code);
+  }
+  return new RegExp(String.raw`[\w$.]+\(\s*` + object.source + String.raw`\s*\)`).test(code);
+}
+
+/**
+ * What the side-effect page is missing (an empty list when nothing): the
+ * dispose polyfill in what loads with the page, and the IR passes' installer
+ * in a chunk of its own or with the page.
+ */
+function sideEffectsMissing(page) {
+  const missing = [];
+  const eagerCode = page.eager.map((c) => c.code).join("\n");
+  const absent = DISPOSE_MARKERS.filter((m) => !eagerCode.includes(m));
+  if (absent.length > 0) {
+    missing.push(
+      `no dispose polyfill (core's core/disposeShim.js: ${absent.map((m) => JSON.stringify(m)).join(", ")} missing) in what loads with the side-effect page`,
+    );
+  }
+  const holders = [...page.eager, ...page.lazy].filter((c) =>
+    Object.keys(c.modules).some((id) => IR_PASSES_MODULE.test(id)),
+  );
+  if (!holders.some((c) => hasIrInstaller(c.code))) {
+    missing.push(
+      `no IR passes' installer (core's transform/irPasses.js, installIrPasses(passes)) in ${holders.length > 0 ? holders.map((c) => c.fileName).join(", ") : "any chunk"} of the side-effect page`,
+    );
+  }
+  if (missing.length === 0) {
+    console.log(
+      `checkBundle: the side-effect page keeps the dispose polyfill with the page and the IR passes' installer in ${holders.map((c) => c.fileName).join(", ")}`,
+    );
+  }
+  return missing;
+}
+
+/**
  * Builds a page that runs `code` as its only entry (`name`) and returns
  * what loads with it (`eager`: the main chunk and the chunks it imports
  * statically, transitively) and what loads on demand (`lazy`).
@@ -141,6 +209,7 @@ async function buildPage(work, name, code, logLevel = "error") {
   const outDir = join(work, `dist-${name}`);
   const result = await build({
     configFile: false,
+    mode: "production",
     root,
     base: "./",
     publicDir: false,
@@ -435,9 +504,21 @@ try {
       );
     }
   }
+  // Core's side-effect modules (its `sideEffects` list): an application that
+  // uses the GPU device, a model and a function map must keep the dispose
+  // polyfill in what loads with the page, since the classes' `[Symbol.dispose]`
+  // keys need it first, and the IR passes' installer in some chunk, since
+  // `loadIr()` imports it only for what it installs.
+  const effects = await buildPage(
+    work,
+    "sideEffectModules",
+    `import { GpuDevice, ModelResource, fromFunction } from ${JSON.stringify(published("@cesium/core"))};\n` +
+      `console.log(GpuDevice, ModelResource, fromFunction);\n`,
+  );
+  found.push(...sideEffectsMissing(effects));
   if (found.length > 0) {
     console.error(
-      `checkBundle: what loads with the page holds ${found.join(", ")}; the precise providers and the Slang compiler must load by dynamic import()`,
+      `checkBundle: ${found.length} problem(s), each in the named page's build (the precise providers, the Slang compiler, Cesium IR and the WebGL 2 tier load by dynamic import(); core's side-effect modules stay in its \`sideEffects\`):\n  - ${found.join("\n  - ")}`,
     );
     process.exitCode = 1;
   } else {

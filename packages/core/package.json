@@ -5,7 +5,12 @@
   "description": "Cesium 2.0's core: the engine, worlds, views and the camera, the renderer and the GPU layer, streaming, the globe, queries, the transform graph, styling and Cesium IR, and the shared utilities.",
   "license": "Apache-2.0",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/core/disposeShim.js",
+    "./dist/transform/irPasses.js",
+    "./src/core/disposeShim.ts",
+    "./src/transform/irPasses.ts"
+  ],
   "engines": {
     "node": ">=24"
   },
