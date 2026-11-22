@@ -2,7 +2,7 @@
 id: CS-552
 title: "The content-source seam: one interface every source module implements, designed and planned"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-16
 project: CS-191
 needs: [CS-551]

@@ -2,6 +2,8 @@
 
 **What this holds:** For later: how the renderer could be modularized without cost today (owner, 2026-11-11). Moved from the overall plan (`CESIUM2_WEBGPU_PLAN.md`) on 2026-11-13, with its content and dates unchanged.
 
+**Superseded (2026-11-21):** by [content-source-seam.md](content-source-seam.md), the design of the content-source seam (CS-552). Its tiers, its data-only contracts, the styling compiler's split from `FeatureStyle` and the bundle measure as a baseline carry over; its "not yet" and "when a second consumer appears" don't. Kept for its history.
+
 **The question.** How would the renderer split into modules, with no cost to what is built now, and should 3D Tiles be its own module or package, with the 3D Tiles styling language compiler? These are notes for later. The rule from [bodies-frames-and-engineering-coordinates.md](bodies-frames-and-engineering-coordinates.md) and [layers-engine-renderer-backend.md](layers-engine-renderer-backend.md) holds: no compromise in the WebGPU approach while the prototype is built.
 
 **A candidate split.** By what an application might leave out:

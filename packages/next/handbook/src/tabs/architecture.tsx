@@ -537,39 +537,51 @@ export function Architecture() {
         />
       </Section>
 
-      <Section title="Splitting the core later">
+      <Section title="Content sources as modules">
         <p>
-          The plan's current answer (the design note
-          docs/design/modular-renderer.md, notes for later) is to keep one
-          package until a second consumer needs a part left out: for example a
-          b-rep viewer with no tilesets. What lets the split happen cheaply is
-          already built, and tested:
+          Every kind of content will load through one interface,{" "}
+          <C>ContentSource</C>: 3D Tiles, the globe's terrain and imagery, glTF
+          files, vector tiles, Esri services, USD, and sources an application or
+          its host writes. Each is a module, so an app pays only for the sources
+          it imports. This is designed, not built (the design note
+          docs/design/content-source-seam.md).
         </p>
         <ul>
           <li>
-            Streaming reads the engine only through <C>TilesetHost</C> and{" "}
-            <C>DrawSink</C>, so content never holds the world or the renderer.
+            A source decides what to load: a tree chosen by view, a whole asset,
+            tiles chosen by what they land on, or changes pushed to it. The
+            engine decides how much any source may load, from one budget shared
+            by all of them.
           </li>
           <li>
-            The core's files are in tiers (<C>gpu</C>, <C>renderer</C>,{" "}
-            <C>scene</C>, <C>content</C>), and the boundary test fails on an
-            import across them that isn't a named, explained exception.
+            A source sees only what the engine hands it: requests through the
+            host's fetch and credential provider, decode on the worker pool, and
+            sinks that take meshes, images, vector features and points as plain
+            data. So the same source runs on the main thread or in a worker, and
+            a host can supply its own services underneath.
           </li>
           <li>
-            Draw records, a <C>BrepForm</C>, a compiled style and a query and
-            its answer are plain data, so a module can move to a worker or be
-            replaced.
+            Where an asset lives is a separate interface: a resolver turns a
+            reference (a URL, an ion asset, a host's own ID) into a location,
+            credentials, credits and a kind. ion is one resolver among others.
+          </li>
+          <li>
+            Everything a source writes carries a stable ID, which picks, edits
+            and live updates key by.
           </li>
         </ul>
         <p>
-          Next would come a <C>tiles</C> entry point, then moving the styling
-          compiler apart from its 3D Tiles binding, and a package only if the
-          bundle check shows tilesets cost an app that doesn't use them. None of
-          that is started.
+          What is already built, and tested, is what makes the split cheap:
+          streaming reaches the engine only through <C>TilesetHost</C> and{" "}
+          <C>DrawSink</C>, the core's files are in tiers (<C>gpu</C>,{" "}
+          <C>renderer</C>, <C>scene</C>, <C>content</C>) that the boundary test
+          enforces, and draw records, compiled styles and queries are plain
+          data. The bundle check measures what an app with no tilesets pays
+          today, as the baseline the modules are checked against.
         </p>
         <Written
-          from="the design note docs/design/modular-renderer.md"
-          on="2026-11-12"
+          from="the design note docs/design/content-source-seam.md"
+          on="2026-11-21"
         />
       </Section>
     </Page>
