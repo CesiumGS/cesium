@@ -4,13 +4,15 @@
 
 **What to read first.** "The recommendation for CS-901", then the table under it. The rest is the evidence.
 
+**Changed on 2026-11-22 (CS-913).** CS-901 chose the subset reader (answer A), and CS-913 fixed the composition faults this comparison found. The subset reader now agrees with OpenUSD on 82 of 82 non-empty checks (it was 79), the pallet included, and reports a failed reference as OpenUSD does. The figures below are the rerun's where they say so ("Rerun after CS-913"); LightUSD's and OpenUSD's are unchanged, and the start times stay those of the first run.
+
 **Where the evidence is.** One Dyno instrument, the Lab harness `usdReaders` (`bench/usdReaders.html`, served by `spikes/usd-readers/serve.mjs`), listed in Dyno's instrument catalog (`bench/suite/instruments.mjs`) as `usdReaders`. Its run is `2026-11-22T10-56-32-200Z-apple-metal-3` (a Lab run, measured through `dyno measure start lab usdReaders`, handle `m-2026-11-22T08-48-26-917Z-426a`, started on a quiet machine at 10:56Z). Its results file is kept in the setup store beside the builds. The spike's README says how to run it. The builds and the samples stay in the setup store; nothing built is committed, and no reader became a dependency.
 
 ## The recommendation for CS-901
 
-**Keep the TypeScript subset reader as CS-559's runtime, fix the two composition faults this comparison found, and keep OpenUSD in WebAssembly as the test oracle, not as something the engine ships.** LightUSD stays the fallback if the subset reader's upkeep grows.
+**Keep the TypeScript subset reader as CS-559's runtime, fix the two composition faults this comparison found (done by CS-913, see "Rerun after CS-913"), and keep OpenUSD in WebAssembly as the test oracle, not as something the engine ships.** LightUSD stays the fallback if the subset reader's upkeep grows.
 
-- **The subset reader** is the smallest (9,152 B with Brotli), the fastest to start (15 to 28 ms, median per sample), asks nothing of the host page, and agrees with OpenUSD on every check on five of the six samples, physics included. On the broken sample it gets three facts wrong, from two faults with clear fixes (below). Its cost is that we own it: about 2,300 lines, and a refusal list (relocates, value clips, time offsets) that these samples don't exercise.
+- **The subset reader** is the smallest (9,152 B with Brotli), the fastest to start (15 to 28 ms, median per sample), asks nothing of the host page, and agrees with OpenUSD on every check on five of the six samples, physics included. On the broken sample it got three facts wrong, from two faults, which CS-913 fixed: it now agrees on all six (82 of 82 non-empty checks). Its cost is that we own it: about 2,300 lines, and a refusal list (relocates, value clips, time offsets) that these samples don't exercise.
 - **OpenUSD** is right on every check, as the reference should be, but it costs 1.7 MB with Brotli, 138 to 153 ms to start, and a cross-origin isolated host page, because it needs threads. The last is the deciding cost for an embeddable core: every host page that embeds the engine would have to send COOP and COEP, and every cross-origin resource on it would need CORP or CORS. It earns its place as the oracle in Dyno and in CS-559's tests, and as a source a host can bring when it needs full USD.
 - **LightUSD** needs no threads and agrees with OpenUSD on every check of the five samples it opens, but it is 817 KB with Brotli (about 90 times the subset reader), starts in 42 to 70 ms, and refuses a stage outright when a layer it references is missing, where USD composes the rest. Its C++ build needed a fix under the current emscripten. It is the right fallback if hosts come to need composition the subset reader refuses, and its refusal on broken assets would need raising with its maintainers first.
 
@@ -24,11 +26,11 @@ So CS-901's options, from this evidence:
 
 | Reader                        | Size, Brotli (raw)         | Start, median per sample                 | Agrees with OpenUSD (82 non-empty checks of 126) | Page must allow                                         | License                     | Upkeep                                              |
 | ----------------------------- | -------------------------- | ---------------------------------------- | ------------------------------------------------ | ------------------------------------------------------- | --------------------------- | --------------------------------------------------- |
-| Subset reader (TypeScript)    | 9,152 B (27,633 B)         | 14.7 to 27.6 ms                          | 79 of 82: all but 3, on the pallet               | Nothing                                                 | This repository's           | Ours; no build                                      |
+| Subset reader (TypeScript)    | 9,422 B (28,390 B)         | 14.7 to 27.6 ms                          | 82 of 82 (79 before CS-913)                      | Nothing                                                 | This repository's           | Ours; no build                                      |
 | LightUSD 1.0.0 (wasm, `next`) | 817,081 B (2,855,836 B)    | 42.2 to 70.1 ms; doesn't open the pallet | 67 of 82: all but 15 on the pallet               | `wasm-unsafe-eval`                                      | Apache 2.0                  | Light Transport; C++ and emscripten                 |
 | OpenUSD 26.11.1 (wasm32)      | 1,718,550 B (10,122,668 B) | 138.2 to 153.2 ms                        | The reference                                    | Cross-origin isolation (COOP, COEP); `wasm-unsafe-eval` | TOST 1.0 (Apache 2.0 based) | Pixar and AOUSD; C++, oneTBB, emscripten, a harness |
 
-None of them needs `unsafe-eval`. OpenUSD's time includes copying every layer into its in-memory file system, which the other two readers don't do (see Start time). All three times are from run `2026-11-22T10-56-32-200Z-apple-metal-3`, on the Mac test machine (Apple M2), five runs each.
+None of them needs `unsafe-eval`. OpenUSD's time includes copying every layer into its in-memory file system, which the other two readers don't do (see Start time). The times are from run `2026-11-22T10-56-32-200Z-apple-metal-3`, on the Mac test machine (Apple M2), five runs each. The subset reader's size and coverage are from the rerun after CS-913, which ran on a busy machine (load 14 on 8 cores); its start times (15.6 to 27.5 ms for the subset reader) aren't comparable with the first run's quiet ones and aren't used.
 
 ## Size
 
@@ -74,12 +76,12 @@ Each reader's composed stage becomes plain prim records (path, type, applied sch
 
 | Feature (its checks)                                                                                     | Subset reader | LightUSD | OpenUSD (reference) |
 | -------------------------------------------------------------------------------------------------------- | ------------- | -------- | ------------------- |
-| FET001: up axis, meters per unit, default prim, prims, meshes, triangles, meshes with normals and extent | 37 of 38      | 30 of 38 | 38 of 38            |
-| FET006: materials, UsdPreviewSurface shaders, textures with a file, meshes with UVs                      | 14 of 15      | 13 of 15 | 15 of 15            |
+| FET001: up axis, meters per unit, default prim, prims, meshes, triangles, meshes with normals and extent | 38 of 38      | 30 of 38 | 38 of 38            |
+| FET006: materials, UsdPreviewSurface shaders, textures with a file, meshes with UVs                      | 15 of 15      | 13 of 15 | 15 of 15            |
 | FET009: meshes bound to a material that exists                                                           | 4 of 4        | 3 of 4   | 4 of 4              |
 | FET011: prims with `SemanticsLabelsAPI`, their labels, prims with Isaac's older `SemanticsAPI`           | 9 of 9        | 8 of 9   | 9 of 9              |
-| UsdPhysics: rigid bodies, colliders, mass, joints, physics materials                                     | 15 of 16      | 13 of 16 | 16 of 16            |
-| **All five**                                                                                             | 79 of 82      | 67 of 82 | 82 of 82            |
+| UsdPhysics: rigid bodies, colliders, mass, joints, physics materials                                     | 16 of 16      | 13 of 16 | 16 of 16            |
+| **All five**                                                                                             | 82 of 82      | 67 of 82 | 82 of 82            |
 
 **These count only the non-empty checks:** those where OpenUSD's value isn't empty, zero or null. A reader that ignored a feature would still agree on a sample that has none of it (zero rigid bodies, no labels), so those checks can't tell readers apart. 44 of the 126 checks (21 facts over six samples) are of that kind. They are listed apart, as agreements out of the empty checks: the subset reader 44 of 44, LightUSD 38 of 44, OpenUSD 44 of 44. Per feature, empty checks only:
 
@@ -91,13 +93,13 @@ Each reader's composed stage becomes plain prim records (path, type, applied sch
 | FET011     | 9            | 9             | 7        |
 | UsdPhysics | 14           | 14            | 12       |
 
-The figures are recomputed under this rule from run `2026-11-22T10-56-32-200Z-apple-metal-3`'s saved per-check values, not from a new run. They were first counted over all 126 checks (123 for the subset reader and 105 for LightUSD, which the side-by-side table had misstated as 102 and 84 of 105); the empty checks made that look better than it is. The instrument now reports both counts, and "n/a" when OpenUSD opens no sample, so the reference's own row can't claim agreement it didn't earn.
+The subset reader's column is from the rerun after CS-913 (it was 37, 14, 4, 9 and 15 of the same totals before). The rest is recomputed under this rule from run `2026-11-22T10-56-32-200Z-apple-metal-3`'s saved per-check values, not from a new run. They were first counted over all 126 checks (123 for the subset reader and 105 for LightUSD, which the side-by-side table had misstated as 102 and 84 of 105); the empty checks made that look better than it is. The instrument now reports both counts, and "n/a" when OpenUSD opens no sample, so the reference's own row can't claim agreement it didn't earn.
 
 **On five of the six samples, all three readers agree on every check.** Every disagreement is on one sample, the pallet (`industrialplasticpallet_a01`), the one whose layers reference two files outside its folder that the sample doesn't include (a thumbnail rig and a shared physics material). That is a broken asset, as NP.008 would report it, and it shows how each reader fails:
 
 - **OpenUSD** reports both missing layers as composition errors and composes the rest, as USD specifies.
 - **LightUSD refuses the whole stage.** Its flattening stops at `Unresolved reference prim path @../../../materials/physics/physics_plastic.usda@<defaultPrim>: layer has no defaultPrim and the arc names no prim path`. It has no way to be told a layer is missing; the harness gives it an empty layer, which is what stops it. So every one of the pallet's 21 checks fails for LightUSD, and those are all its misses.
-- **The subset reader composes the pallet but gets three facts wrong.** It keeps `/Tagging/ThumbRig`, which only the missing payload would define, so OpenUSD leaves it out as undefined (HI.010); the subset reader takes the strongest specifier and doesn't know whether any opinion defines the prim. And it drops `…_inst/PhysicsMaterials` and `…/PhysicsMaterials/plastic`, which the pallet defines inside its selected `PhysicsVariant` under a reference that fails, so it counts one material and one collider fewer. Both are composition faults CS-559 must fix and test against OpenUSD.
+- **The subset reader composed the pallet but got three facts wrong** (fixed by CS-913; the next section says how). It kept `/Tagging/ThumbRig`, which only the missing payload would define, so OpenUSD leaves it out as undefined (HI.010); the subset reader took the strongest specifier and didn't know whether any opinion defines the prim. And it dropped `…_inst/PhysicsMaterials` and `…/PhysicsMaterials/plastic` and the collider API on the mesh. CS-900 put that down to the failed reference. It was the variant selection: see below.
 
 **What the samples don't test.** No sample uses relocates, value clips, time-offset layers, variant fallbacks or deep inherits, which the subset reader refuses or leaves out (CS-833's list). So the agreement above is on SimReady props as they are, not on USD in general. OpenUSD composes all of those; LightUSD claims LIVRPS composition, which these samples don't test past references, payloads, sublayers and variants.
 
@@ -134,10 +136,39 @@ Read from the files themselves (`host.ts`), and confirmed by running each in the
 - **The outcome rule:** a run opened a sample only if it composed a stage and delivered its records; a run that composed and then failed is reported as that, not as "not opened". Timings count only runs that opened; records and coverage come from the first run that opened; a sample is opened (every run opened), mixed (some did) or failed (none did). The page and the results file say so, and `test/usdReaders.test.ts` tests the rule.
 - **The page:** on its own dev server (`serve.mjs`, port 4102), Chrome's Edge channel headless through Playwright, the Mac test machine (Apple M2, 8 cores). Five runs per reader and sample, interleaved. Each run creates a new module worker; the reader's module is fetched with `no-store`, so each run fetches and compiles it as a first visit would.
 
+## Rerun after CS-913 (2026-11-22)
+
+CS-913 fixed the subset reader's composition faults on broken assets and tested them against OpenUSD. The reader still lives in `spikes/usd-subset/`; it is not a package module yet, and nothing moved. OpenUSD stays a comparison only (CS-901 A): the run read its builds from the setup store, as CS-900 did, and nothing of it is a dependency.
+
+**What changed in the reader** (`spikes/usd-subset/compose.ts`):
+
+- **A failed reference, payload or sublayer is reported by name, in OpenUSD's words, and contributes nothing.** OpenUSD records `PcpErrorInvalidAssetPath` (`Could not open asset @path@ for reference introduced by @layer@</prim path>.`, with "payload" for a payload) and `PcpErrorInvalidSublayerPath` (`Could not load sublayer @path@ of layer @layer@; skipping.`), then goes on composing: the prim keeps its own opinions and every other prim composes. The reader already kept those prims; what was missing was the report, now `Stage.errors`, shown as the records' `errors`. For the pallet, its two errors are the same text as OpenUSD's, with the same site paths.
+- **A relative asset path is anchored on the layer that authored the arc,** as OpenUSD does, not on the prim's strongest layer.
+- **A variant selection takes in the stronger sites a prim inherits from its parent's namespace.** This was the real cause of the pallet's dropped `PhysicsMaterials`, `plastic` and collider. `industrialplasticpallet_a01_base.usd` selects `PhysicsVariant=RigidBody` in an `over` of the `_inst` prim, and the referenced layer's own prim selects `None`. The reader expanded the sites one at a time and saw the referenced layer's `None` first. It never reached the failed reference at all: the variant that holds it wasn't selected.
+- **A prim is on the stage only when a layer defines it and its parent is defined.** `def` and `class` beat any `over`, wherever it comes from, as in `usd/stage.cpp`; a prim with only `over` specs (the pallet's `/Tagging/ThumbRig`, whose `def` is in the missing payload) is left out with everything under it, as `UsdPrim::IsDefined` and the stage traversal do.
+
+**What OpenUSD documents.** Its published API pages say only that `PcpErrorInvalidAssetPath` is "Invalid asset paths used by references or payloads" (<https://openusd.org/release/api/class_pcp_error_invalid_asset_path.html>, read 2026-11-22), and its glossary says a prim whose contributing specs all say `over` isn't visited by `UsdPrim::GetChildren` or `UsdStage::Traverse` (<https://openusd.org/release/glossary.html>, read 2026-11-22). Neither gives the message text or says the rest of the stage composes. Those come from the v26.11.1 source in the setup store (`pcp/errors.cpp`, `pcp/primIndex.cpp`, where the failed arc is recorded and the loop `continue`s; `pcp/layerStack.cpp`; `usd/stage.cpp`; `usd/primData.cpp`), read 2026-11-22, and from OpenUSD's own run on the pallet, whose two messages the subset reader now matches character for character.
+
+**The rerun.** Run `2026-11-22T18-30-18-194Z-apple-metal-3` (a Lab run, `dyno lab usdReaders --url` on a server of its own on port 4109, the same instrument and rule as CS-900's); its results file is kept in the setup store beside the first run's. Each verdict below is read from the file's own coverage fields. Non-empty checks agreeing with OpenUSD, by sample:
+
+| Sample                        | Non-empty checks | Subset reader, before | Subset reader, now | LightUSD |
+| ----------------------------- | ---------------- | --------------------- | ------------------ | -------- |
+| `copper_brushed`              | 6                | 6                     | 6                  | 6        |
+| `alcohol_a01`                 | 19               | 19                    | 19                 | 19       |
+| `apple_a01`                   | 19               | 19                    | 19                 | 19       |
+| `industrialplasticpallet_a01` | 15               | 12                    | 15                 | 0        |
+| `obs_lamp_revolute_a01`       | 19               | 19                    | 19                 | 19       |
+| `traffic_cone_chn_red`        | 4                | 4                     | 4                  | 4        |
+| **All six**                   | 82               | 79                    | 82                 | 67       |
+
+The empty checks: the subset reader 44 of 44 (as before), LightUSD 38 of 44. OpenUSD is the reference. The subset reader's prim list matches OpenUSD's on every sample (no extra and no missing prims).
+
+**What this doesn't show.** The six samples are still SimReady props as they are. The tests in `test/usdSubsetComposition.test.ts` add fixtures in the shape of these faults, but relocates, value clips, time offsets and variant fallbacks stay refused or left out, and nothing here checks them against OpenUSD. The run was on a busy machine, so its start times are not used.
+
 ## Follow-ups
 
 For the main session to file, with kind, project and needs:
 
-1. **work, CS-191: "The subset reader's composition faults on broken assets, tested against OpenUSD".** Undefined prims (`over` with no `def` anywhere) left out, and a prim's local opinions kept when its reference fails. Fixtures from the pallet's shape. Needs CS-901.
+1. **Done (CS-913), "The subset reader's composition faults on broken assets, tested against OpenUSD".** Undefined prims left out, a failed reference reported and its prim's local opinions kept, and the variant selection fixed. Fixtures from the pallet's shape.
 2. **work, CS-191: "OpenUSD in WebAssembly as a test oracle for the USD source".** Run CS-559's fixtures and the SimReady samples through this instrument's OpenUSD harness in Dyno and fail on disagreement. Needs CS-901.
 3. **work, the benchmark project: "Lab runs in the results store" is CS-401; this instrument's runs should move there with it.** No new item: a note on CS-401.

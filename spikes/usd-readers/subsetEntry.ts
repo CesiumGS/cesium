@@ -24,13 +24,17 @@ export async function open(
   const stage = new Stage(layers, root);
   const prim = stage.compose();
   return {
-    describe: () =>
-      subsetRecords(
-        stage,
-        prim,
-        [...layers.values()]
-          .filter((l) => l.error)
-          .map((l) => `${l.id}: ${l.error}`),
-      ),
+    describe: () => {
+      // The composition's errors, in OpenUSD's words (a layer that fails
+      // only when composed is named there); a root that doesn't open has
+      // no composition to report from.
+      const rootError = layers.get(root)?.error;
+      return subsetRecords(stage, prim, [
+        ...(rootError
+          ? [`Could not open root layer @${root}@: ${rootError}.`]
+          : []),
+        ...stage.errors,
+      ]);
+    },
   };
 }

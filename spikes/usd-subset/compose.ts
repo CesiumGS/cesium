@@ -8,6 +8,14 @@
 // (instanceable prims are composed in place), and list-op subtleties beyond
 // explicit, prepend, append and delete. Spike code for CS-833 and CS-843;
 // not part of @cesium/next.
+//
+// Broken assets (CS-913) follow OpenUSD (v26.11.1, pcp and usd): a reference,
+// payload or sublayer that can't be opened is reported, in OpenUSD's words,
+// in `Stage.errors`, and contributes nothing; everything else composes. A
+// prim is on the stage only when a layer defines it (`def` or `class`, which
+// beat any `over`) and so does its parent. A variant selection is taken from
+// the strongest site, counting the stronger sites the prim inherits from its
+// parent's namespace.
 
 import { readUsdc, isUsdc } from "./crate.ts";
 import {
@@ -242,6 +250,8 @@ export class Stage {
   /** Children by parent path, per layer. */
   private readonly childIndex = new Map<string, Map<string, string[]>>();
   private readonly propIndex = new Map<string, Map<string, string[]>>();
+  /** What failed to compose, in OpenUSD's wording, once each, in the order found. */
+  readonly errors: string[] = [];
 
   constructor(layers: Map<string, LoadedLayer>, root: string) {
     this.layers = layers;
@@ -271,6 +281,12 @@ export class Stage {
     return this.layers.get(id)?.layer;
   }
 
+  private report(message: string): void {
+    if (!this.errors.includes(message)) {
+      this.errors.push(message);
+    }
+  }
+
   /** A layer and its sublayers, strongest first. */
   stack(id: string, seen = new Set<string>()): string[] {
     if (seen.has(id)) {
@@ -289,6 +305,13 @@ export class Stage {
         out.push(...this.stack(r, seen));
       } else if (typeof sub === "string") {
         this.counts.unresolved.push(sub);
+        // PcpErrorInvalidSublayerPath::ToString.
+        const why = r ? this.layers.get(r)?.error : undefined;
+        this.report(
+          `Could not load sublayer @${r ?? sub}@ of layer @${id}@${
+            why && why !== "missing" ? ` -- ${why}` : ""
+          }; skipping.`,
+        );
       }
     }
     return out;
@@ -320,7 +343,12 @@ export class Stage {
   }
 
   /** The sites of one prim, strongest first, with every arc on them followed. */
-  expand(site: Site, out: Site[], depth = 0): void {
+  expand(
+    site: Site,
+    out: Site[],
+    depth = 0,
+    inherited: readonly Site[] = [],
+  ): void {
     if (
       depth > 32 ||
       out.some((s) => s.stack[0] === site.stack[0] && s.path === site.path)
@@ -335,6 +363,15 @@ export class Stage {
       item: Value,
       kind: "references" | "payloads",
     ): Site | undefined => {
+      // The layer that authored the arc: its asset paths are relative to it.
+      const fieldName = kind === "references" ? "references" : "payload";
+      const itemKey = JSON.stringify(item);
+      const source =
+        specs.find(({ spec }) =>
+          listItems(spec.fields.get(fieldName)).some(
+            (x) => JSON.stringify(x) === itemKey,
+          ),
+        )?.id ?? site.stack[0]!;
       const arc: Arc | undefined = isArc(item)
         ? item
         : typeof item === "string"
@@ -345,9 +382,18 @@ export class Stage {
       }
       let stack = site.stack;
       if (arc.asset) {
-        const r = resolveAsset(this.anchor(site.stack[0]!), arc.asset);
+        const r = resolveAsset(this.anchor(source), arc.asset);
         if (!r || !this.layer(r)) {
           this.counts.unresolved.push(arc.asset);
+          // PcpErrorInvalidAssetPath::ToString: the arc type is "reference" or "payload".
+          const why = r ? this.layers.get(r)?.error : undefined;
+          this.report(
+            `Could not open asset @${r ?? arc.asset}@ for ${
+              kind === "references" ? "reference" : "payload"
+            } introduced by @${source}@<${site.path}>${
+              why && why !== "missing" ? ` -- ${why}` : ""
+            }.`,
+          );
           return undefined;
         }
         stack = this.stack(r);
@@ -381,7 +427,7 @@ export class Stage {
       this.counts.inherits++;
       const s = classArc(p);
       if (s) {
-        this.expand(s, out, depth + 1);
+        this.expand(s, out, depth + 1, inherited);
       }
     }
     for (const setName of field("variantSetNames")) {
@@ -389,7 +435,7 @@ export class Stage {
         continue;
       }
       this.counts.variantSets++;
-      const sel = this.selection(out, setName);
+      const sel = this.selection([...inherited, ...out], setName);
       const label = `${setName}=${sel ?? "(none)"}`;
       if (!this.counts.selected.includes(label)) {
         this.counts.selected.push(label);
@@ -397,28 +443,28 @@ export class Stage {
       if (sel) {
         this.counts.variantSelections++;
         const vpath = `${site.path}{${setName}=${sel}}`;
-        this.expand({ ...site, path: vpath }, out, depth + 1);
+        this.expand({ ...site, path: vpath }, out, depth + 1, inherited);
       }
     }
     for (const item of field("references")) {
       this.counts.references++;
       const s = arcTarget(item, "references");
       if (s) {
-        this.expand(s, out, depth + 1);
+        this.expand(s, out, depth + 1, inherited);
       }
     }
     for (const item of field("payload")) {
       this.counts.payloads++;
       const s = arcTarget(item, "payloads");
       if (s) {
-        this.expand(s, out, depth + 1);
+        this.expand(s, out, depth + 1, inherited);
       }
     }
     for (const p of field("specializes")) {
       this.counts.specializes++;
       const s = classArc(p);
       if (s) {
-        this.expand(s, out, depth + 1);
+        this.expand(s, out, depth + 1, inherited);
       }
     }
   }
@@ -479,7 +525,9 @@ export class Stage {
       all.push(...sites);
     } else {
       for (const s of sites) {
-        this.expand(s, all);
+        // The sites handed down from the parent are all stronger than any
+        // arc this prim's own specs add, so a selection they hold wins.
+        this.expand(s, all, 0, sites);
       }
     }
     const specs = all.flatMap((s) =>
@@ -584,6 +632,10 @@ export class Stage {
       if (child.fields.get("active") === false) {
         continue;
       }
+      // Not defined: no layer says `def` or `class`, so USD doesn't visit it.
+      if (child.specifier === "over") {
+        continue;
+      }
       children.push(child);
     }
 
@@ -592,7 +644,7 @@ export class Stage {
       path,
       name,
       typeName: (strongest("typeName") as string | undefined) ?? "",
-      specifier: (strongest("specifier") as string | undefined) ?? "over",
+      specifier: specifier(specs.map((x) => x.spec.fields.get("specifier"))),
       fields,
       apiSchemas: composeList(
         specs.map((s) => s.spec.fields.get("apiSchemas")),
@@ -602,6 +654,14 @@ export class Stage {
       sites: all.map((s) => `${s.stack[0]}:${s.path}`),
     };
   }
+}
+
+/** usd/stage.cpp: a defining specifier beats a non-defining one, whatever the strength. */
+function specifier(opinions: readonly (Value | undefined)[]): string {
+  if (opinions.includes("def")) {
+    return "def";
+  }
+  return opinions.includes("class") ? "class" : "over";
 }
 
 function joinChild(parent: string, name: string): string {
