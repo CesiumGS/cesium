@@ -2,11 +2,13 @@
 id: CS-524
 title: The tracker runs on human-in-the-lead
 kind: milestone
-state: planned
+state: done
 created: 2026-11-15
 project: CS-18
 outcome: Cesium's work is tracked in human-in-the-lead's format with its hitld commands, installed from a release tag, and Dyno's board reads it through human-in-the-lead's read API.
 constraints: [CS-520 c?, CS-521 c?, CS-522 c?, CS-523 c?]
+check: integration-test packages/next/test/workBoardReader.test.ts
+check_results: ["pass 2026-11-22 chief-of-staff: workBoardReader.test.ts 13 of 13 passed; hitld pinned at v0.1.0-rc.1 in packages/next/package.json; hitld work check passes on main"]
 ---
 
 ## Why
@@ -15,7 +17,11 @@ Cesium's tracker began as its own small format, modelled on human-in-the-lead's,
 
 ## Done when
 
-To shape: clauses (c1, c2…), each checkable, and the independent check.
+- c1: Cesium's work is tracked in human-in-the-lead's format: `npx hitld work check` passes on main (799 files, 2026-11-22).
+- c2: hitld is installed from a release tag, pinned as a dev dependency (CS-520).
+- c3: Dyno's board reads hitld's read API (CS-523), and the Work page has run on it since CS-523 merged.
+
+All four constraints are done (CS-520, CS-521, CS-522, CS-523). Closed 2026-11-22 by the chief of staff, after the owner asked in the release sweep, "isn't this already done?" The independent check is that every run since has used it.
 
 ## Notes
 
