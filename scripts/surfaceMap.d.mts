@@ -8,6 +8,12 @@ export interface SurfaceOptions {
 /** The header line, then one tab-separated line per public export. */
 export function surfaceLines(options?: SurfaceOptions): string[];
 
+/**
+ * The whole of `api/surface.txt`: the header, the umbrella's entries, then
+ * every other package's entries under their full specifiers.
+ */
+export function surfaceFile(): string[];
+
 /** One public member of a class or interface in the surface map. */
 export interface MemberRow {
   entry: string;

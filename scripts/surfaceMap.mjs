@@ -4,15 +4,19 @@
 // classes and interfaces the same way, for the protocol table's per-name
 // checks (src/thread/protocol.ts); it never changes the map's text.
 //
-//   node scripts/surfaceMap.mjs [--write]
+//   node scripts/surfaceMap.mjs [--write | --check]
 //
-// Without `--write` it prints the map. With it, it writes `api/surface.txt`.
-// The entries are the `package.json` `exports` (key `.` is entry `.`,
-// `./time` is entry `time`, `./widgets` is entry `widgets`, and so on). A tier comes from the
+// Without a flag it prints the map. `--write` writes `api/surface.txt`;
+// `--check` exits 1 when the file isn't what the code exports (CI's check).
+//
+// The file lists the umbrella's entry points first, by their `exports` keys
+// (key `.` is entry `.`, `./time` is entry `time`, and so on), then every
+// other package's, each entry by its full specifier (`@cesium/core`,
+// `@cesium/core/internal`, `@cesium/time`; CS-612). A tier comes from the
 // declaration's TSDoc tag: `@stable`, `@experimental` or `@internal`; `-` when
 // it has none. A namespace (`export * as vec3`) lists its members as
 // `vec3.add`, each with its own kind and tier.
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
@@ -97,7 +101,7 @@ export const tierOf = (symbol, name) => {
 const openProgram = (root, files) => {
   const program = ts.createProgram(
     Object.values(files).map((file) => resolve(root, file)),
-    compilerOptions(root),
+    { ...compilerOptions(root), composite: false },
   );
   return { program, checker: program.getTypeChecker() };
 };
@@ -149,6 +153,33 @@ export function surfaceLines({ root = defaultRoot, entries } = {}) {
   const order = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
   rows.sort((a, b) => order(a.entry, b.entry) || order(a.name, b.name));
   return [HEADER, ...rows.map((row) => row.line)];
+}
+
+/** Every package under packages/ but the umbrella, by folder, sorted. */
+const otherPackages = () =>
+  readdirSync(resolve(repo, "packages"), { withFileTypes: true })
+    .filter((d) => d.isDirectory())
+    .map((d) => resolve(repo, "packages", d.name))
+    .filter((dir) => dir !== defaultRoot && existsSync(resolve(dir, "package.json")))
+    .sort();
+
+/**
+ * The whole map, as `api/surface.txt` holds it: the header, the umbrella's
+ * entries (`surfaceLines()`), then each other package's entries under their
+ * full specifiers, sorted by specifier and then name.
+ */
+export function surfaceFile() {
+  const [header, ...umbrella] = surfaceLines();
+  // One program over every package's entries, absolute paths.
+  const files = {};
+  for (const dir of otherPackages()) {
+    const { name } = JSON.parse(readFileSync(resolve(dir, "package.json"), "utf8"));
+    for (const [entry, file] of Object.entries(packageEntries(dir))) {
+      files[entry === "." ? name : `${name}/${entry}`] = resolve(dir, file);
+    }
+  }
+  const [, ...packages] = surfaceLines({ entries: files });
+  return [header, ...umbrella, ...packages];
 }
 
 /** Whether a declaration is private, protected or a `#private` name. */
@@ -237,9 +268,26 @@ export function memberRows(owners, { root = defaultRoot, entries } = {}) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const text = `${surfaceLines().join("\n")}\n`;
-  if (process.argv.includes("--write")) {
-    writeFileSync(resolve(repo, "api/surface.txt"), text);
+  const text = `${surfaceFile().join("\n")}\n`;
+  const path = resolve(repo, "api/surface.txt");
+  // `--check` wins, so `npm run surface -- --check` checks.
+  if (process.argv.includes("--check")) {
+    const want = new Set(text.split("\n"));
+    const have = new Set(existsSync(path) ? readFileSync(path, "utf8").split("\n") : []);
+    const added = [...want].filter((line) => !have.has(line));
+    const removed = [...have].filter((line) => !want.has(line));
+    if (added.length > 0 || removed.length > 0 || readFileSync(path, "utf8") !== text) {
+      console.error(
+        `surfaceMap: api/surface.txt is stale (${added.length} line(s) to add, ${removed.length} to remove); run \`npm run surface\` and commit it`,
+      );
+      for (const line of [...added.map((l) => `+ ${l}`), ...removed.map((l) => `- ${l}`)].slice(0, 20)) {
+        console.error(`  ${line.replaceAll("\t", " ")}`);
+      }
+      process.exit(1);
+    }
+    console.log(`surfaceMap: api/surface.txt is current (${want.size - 2} exports)`);
+  } else if (process.argv.includes("--write")) {
+    writeFileSync(path, text);
   } else {
     process.stdout.write(text);
   }

@@ -1,11 +1,38 @@
 import { readFileSync } from "node:fs";
 import { expect, it } from "vitest";
-import { surfaceLines } from "../scripts/surfaceMap.mjs";
+import { surfaceFile, surfaceLines } from "../scripts/surfaceMap.mjs";
 
 it("the checked-in surface map matches the entry points (run `npm run surface`)", () => {
-  expect(`${surfaceLines().join("\n")}\n`).toBe(
+  expect(`${surfaceFile().join("\n")}\n`).toBe(
     readFileSync("api/surface.txt", "utf8"),
   );
+});
+it("lists every package's entries after the umbrella's, by specifier", () => {
+  const entries = [
+    ...new Set(
+      surfaceFile()
+        .slice(1)
+        .map((l) => l.split("\t")[0]),
+    ),
+  ];
+  expect(entries).toEqual([
+    ".",
+    "crs",
+    "frames",
+    "measure",
+    "time",
+    "ui",
+    "@cesium/core",
+    "@cesium/core/internal",
+    "@cesium/crs",
+    "@cesium/crs/internal",
+    "@cesium/frames",
+    "@cesium/frames/internal",
+    "@cesium/measure",
+    "@cesium/time",
+    "@cesium/ui",
+  ]);
+  expect(surfaceFile()).toContain("@cesium/ui\tViewer\tclass\t-");
 });
 it("lists each export with its entry, kind and tier", () => {
   const lines = surfaceLines();

@@ -17,10 +17,12 @@ import {
   type SurfaceRow,
 } from "../packages/core/src/thread/protocol.ts";
 
+// The umbrella's entries (`.`, `time`, ...); each package's rows, which
+// name it (`@cesium/core`), repeat them.
 const surface: SurfaceRow[] = readFileSync("api/surface.txt", "utf8")
   .split("\n")
   .slice(1)
-  .filter((line) => line.length > 0)
+  .filter((line) => line.length > 0 && !line.startsWith("@"))
   .map((line) => {
     const [entry, name, kind] = line.split("\t") as [string, string, string];
     return { entry, name, kind };

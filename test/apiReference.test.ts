@@ -32,10 +32,12 @@ const built = buildReference({ root });
 const reference: Reference = built.reference;
 const { report } = built;
 
+// The umbrella's entries, which the reference documents; each package's
+// rows, which name it (`@cesium/core`), repeat them.
 const surface = readFileSync(join(repo, "api/surface.txt"), "utf8")
   .split("\n")
   .slice(1)
-  .filter((line) => line.length > 0)
+  .filter((line) => line.length > 0 && !line.startsWith("@"))
   .map((line) => {
     const [entry, name, kind, tier] = line.split("\t") as [
       string,
