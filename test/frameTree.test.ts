@@ -11,7 +11,7 @@ import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
 import { frameTransform } from "../packages/next/src/frames/Frame.ts";
 import { createFrames } from "../packages/next/src/frames/frames.ts";
 import { frameBias } from "../packages/next/src/time/erfa/bias.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import bias from "./fixtures/frames/bias.json";
 import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";
 

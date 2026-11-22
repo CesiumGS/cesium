@@ -16,11 +16,11 @@ import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import { type View } from "../packages/core/src/scene/View.ts";
 import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import type { World } from "../packages/core/src/scene/World.ts";
-import { icrfToFixed } from "../packages/next/src/time/celestial.ts";
-import { Clock } from "../packages/next/src/time/Clock.ts";
+import { icrfToFixed } from "../packages/time/src/celestial.ts";
+import { Clock } from "../packages/time/src/Clock.ts";
 import type { EarthOrientationParameters } from "../packages/next/src/time/eop.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";
 

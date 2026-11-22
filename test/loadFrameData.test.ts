@@ -3,7 +3,7 @@ import {
   loadFrameData,
   loadFrameRoles,
 } from "../packages/next/src/ephemeris/loadFrameData.ts";
-import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
+import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import { COUNT, INIT, LEN, pack } from "./syntheticPacks.ts";
 
 const MJD_UNIX_EPOCH = 40587;

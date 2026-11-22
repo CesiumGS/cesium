@@ -13,7 +13,7 @@ import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
 import { createFramesResolver } from "../../packages/next/src/frames/resolver.ts";
 import { rigidMatrixError } from "../../packages/core/src/math/transforms.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 
 const dir = framesDataDirectory();
 const bytes = (file: string): ArrayBuffer => {

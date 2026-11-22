@@ -14,7 +14,7 @@ import { Frame } from "../packages/next/src/frames/Frame.ts";
 import { createFrames } from "../packages/next/src/frames/frames.ts";
 import { framePoint } from "../packages/next/src/frames/local.ts";
 import { measure } from "../packages/next/src/measure/measure.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
 const frames = createFrames(syntheticFrameData());

@@ -2,11 +2,7 @@
 // animation core read of the time library's Clock.
 import { expect, it } from "vitest";
 import type { SceneClock } from "../packages/core/src/core/sceneClock.ts";
-import {
-  Clock,
-  Instant,
-  LeapSeconds,
-} from "../packages/next/src/time/index.ts";
+import { Clock, Instant, LeapSeconds } from "../packages/time/src/index.ts";
 
 const start = Date.UTC(2026, 3, 2);
 

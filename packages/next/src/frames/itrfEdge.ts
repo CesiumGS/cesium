@@ -4,7 +4,7 @@
 import type { FrameData } from "../ephemeris/loadFrameData.ts";
 import { EARTH_ROTATION_RATE } from "@cesium/core/internal";
 import { celestialToTerrestrial } from "../time/earthOrientation.ts";
-import type { Instant } from "../time/Instant.ts";
+import type { Instant } from "../../../time/src/Instant.ts";
 import type { FrameEdge } from "./edges.ts";
 import type { FrameAccuracy } from "./frameAccuracy.ts";
 import { toParentMatrix } from "./matrix.ts";

@@ -6,7 +6,7 @@ import { Instant, LeapSeconds, timeParts } from "@cesium/next/time";
 import {
   ianaAbbreviation,
   ianaOffsetMinutes,
-} from "../packages/next/src/time/format.ts";
+} from "../packages/time/src/format.ts";
 import {
   zoneOf,
   type TimeZoneChoice,

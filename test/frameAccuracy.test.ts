@@ -22,7 +22,7 @@ import {
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { itrfAccuracy } from "../packages/next/src/frames/itrfEdge.ts";
 import { EARTH_ROTATION_RATE } from "../packages/core/src/math/constants.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
 const instant = Instant.fromTdb(0);

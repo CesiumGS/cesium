@@ -20,7 +20,7 @@ import {
 } from "../../../packages/next/src/frames/local.ts";
 import { EARTH_ROTATION_RATE } from "../../../packages/next/src/measure/constants.ts";
 import { measure } from "../../../packages/next/src/measure/measure.ts";
-import { Instant } from "../../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../../packages/time/src/Instant.ts";
 import type { Trajectory } from "../../../packages/next/src/trajectory/Trajectory.ts";
 import {
   fmt,

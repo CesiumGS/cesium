@@ -18,10 +18,10 @@ import { createFrames } from "../packages/next/src/frames/frames.ts";
 import { createSkyState, skyState } from "../packages/next/src/frames/sky.ts";
 import type { FrameDataWarning } from "../packages/next/src/ephemeris/loadFrameData.ts";
 import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
-import { icrfToFixed } from "../packages/next/src/time/celestial.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
-import { sunDirection, sunPosition } from "../packages/next/src/time/sun.ts";
+import { icrfToFixed } from "../packages/time/src/celestial.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
+import { sunDirection, sunPosition } from "../packages/time/src/sun.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { pack } from "./syntheticPacks.ts";
 

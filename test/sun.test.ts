@@ -1,8 +1,8 @@
 // The sun's position from a time (docs/design/time-and-its-controls.md) against almanac values, and
 // the clock.
 import { describe, expect, it } from "vitest";
-import { sunDirection, sunTimes } from "../packages/next/src/time/sun.ts";
-import { Clock } from "../packages/next/src/time/Clock.ts";
+import { sunDirection, sunTimes } from "../packages/time/src/sun.ts";
+import { Clock } from "../packages/time/src/Clock.ts";
 
 const deg = Math.PI / 180;
 const direction = (ms: number) => sunDirection(ms, new Float64Array(3));

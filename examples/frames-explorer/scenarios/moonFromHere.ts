@@ -20,7 +20,7 @@ import { frameTransform } from "../../../packages/next/src/frames/Frame.ts";
 import { framePoint } from "../../../packages/next/src/frames/local.ts";
 import { pointAccuracy } from "../../../packages/next/src/frames/pointAccuracy.ts";
 import { measure } from "../../../packages/next/src/measure/measure.ts";
-import { Instant } from "../../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../../packages/time/src/Instant.ts";
 import references from "../references.json";
 import { MOON_RANGE } from "../stress/groups/space.ts";
 import {

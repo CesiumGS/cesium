@@ -14,7 +14,7 @@ import type {
 } from "../examples/frames-explorer/tree.ts";
 import { createTreeState } from "../examples/frames-explorer/treeState.ts";
 import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import type {
   EarthOrientationParameters,
   EopSample,

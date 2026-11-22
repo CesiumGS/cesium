@@ -9,7 +9,7 @@ import { rotationPart } from "../packages/next/src/frames/matrix.ts";
 import { rigPreset } from "../packages/next/src/frames/presets.ts";
 import { identity } from "../packages/core/src/math/mat4.ts";
 import { MOON } from "../packages/core/src/scene/Body.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 
 const at = Instant.fromTdb(10);
 

@@ -17,7 +17,7 @@ import type {
   MeshHandle,
   TransformHandle,
 } from "../../packages/core/src/scene/world/types.ts";
-import type { Instant } from "../../packages/next/src/time/Instant.ts";
+import type { Instant } from "../../packages/time/src/Instant.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import { clearOfPanels, overlaps, panelBoxes } from "./labelPanels.ts";
 import type { OverlayChunk, Rgba } from "./overlays.ts";

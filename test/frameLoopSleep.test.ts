@@ -18,7 +18,7 @@ import {
   CanvasTarget,
   OffscreenTarget,
 } from "../packages/core/src/scene/renderTarget.ts";
-import { Clock } from "../packages/next/src/time/Clock.ts";
+import { Clock } from "../packages/time/src/Clock.ts";
 import { fakeDevice, fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

@@ -36,8 +36,8 @@ import {
   MAGNITUDE_ZERO_ILLUMINANCE,
   type StarField,
 } from "../packages/core/src/atmosphere/stars.ts";
-import { moonPosition } from "../packages/next/src/time/moon.ts";
-import { sunDirection, sunPosition } from "../packages/next/src/time/sun.ts";
+import { moonPosition } from "../packages/time/src/moon.ts";
+import { sunDirection, sunPosition } from "../packages/time/src/sun.ts";
 import { Viewer } from "../packages/next/widgets/Viewer.ts";
 import { eyePointLimit } from "../packages/core/src/scene/eye.ts";
 import {

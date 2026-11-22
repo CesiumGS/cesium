@@ -7,9 +7,9 @@ import {
   Ephemeris,
   MOON_PA_TO_ME,
 } from "../../packages/next/src/ephemeris/Ephemeris.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
-import { moonAxes } from "../../packages/next/src/time/moon.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
+import { moonAxes } from "../../packages/time/src/moon.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import ephemerisRows from "../fixtures/frames/ephemeris.json";
 import moonRows from "../fixtures/frames/moon.json";

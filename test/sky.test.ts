@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 import { frameTransform } from "../packages/next/src/frames/Frame.ts";
 import { createFrames } from "../packages/next/src/frames/frames.ts";
 import { createSkyState, skyState } from "../packages/next/src/frames/sky.ts";
-import { icrfToFixed } from "../packages/next/src/time/celestial.ts";
+import { icrfToFixed } from "../packages/time/src/celestial.ts";
 import { celestialToTerrestrial } from "../packages/next/src/time/earthOrientation.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
-import { moonAxes, moonPosition } from "../packages/next/src/time/moon.ts";
-import { sunDirection } from "../packages/next/src/time/sun.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
+import { moonAxes, moonPosition } from "../packages/time/src/moon.ts";
+import { sunDirection } from "../packages/time/src/sun.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
 // The synthetic ephemeris covers TDB [-200, 200] s around J2000

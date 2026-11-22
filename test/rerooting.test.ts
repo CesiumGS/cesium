@@ -30,7 +30,7 @@ import type { World } from "../packages/core/src/scene/World.ts";
 import type { AnchorHandle } from "../packages/core/src/scene/world/types.ts";
 import type { SelectionView } from "../packages/core/src/streaming/Stepwise.ts";
 import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
-import { Clock } from "../packages/next/src/time/Clock.ts";
+import { Clock } from "../packages/time/src/Clock.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

@@ -26,7 +26,7 @@ import {
   terrainLineOfSight,
   type TerrainLineOfSight,
 } from "../../packages/next/src/measure/terrainLineOfSight.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import type { Moment, ScenarioEvaluation } from "./scenarios/evaluate.ts";
 import { shipStartTdb } from "./scenarios/scenes.ts";

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { EarthOrientationParameters } from "../packages/next/src/time/eop.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 
 const ARCSEC = Math.PI / (180 * 3600);
 const msOf = (mjd: number) => (mjd - 40587) * 86_400_000;

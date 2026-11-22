@@ -7,7 +7,7 @@ import type { Frame } from "../../packages/next/src/frames/Frame.ts";
 import type { FrameAccuracy } from "../../packages/next/src/frames/frameAccuracy.ts";
 import type { Frames } from "../../packages/next/src/frames/frames.ts";
 import type { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
 import type { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
 import { MOON_ME_ACCURACY } from "./scenarios/stated.ts";
 

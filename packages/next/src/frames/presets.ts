@@ -1,5 +1,5 @@
 import { type Rig, EARTH, MOON, type Body } from "@cesium/core";
-import type { Instant } from "../time/Instant.ts";
+import type { Instant } from "../../../time/src/Instant.ts";
 import type { FrameCatalog, Precision } from "./catalog.ts";
 import type { Frame } from "./Frame.ts";
 import {

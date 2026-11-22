@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { icrfToFixed } from "../packages/next/src/time/celestial.ts";
+import { icrfToFixed } from "../packages/time/src/celestial.ts";
 import {
   celestialToTerrestrial,
   interpolatedXys,
@@ -11,8 +11,8 @@ import {
 import { era00 } from "../packages/next/src/time/erfa/rotation.ts";
 import { s06 } from "../packages/next/src/time/erfa/s06.ts";
 import { xy06 } from "../packages/next/src/time/erfa/xy06.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import earth from "./fixtures/frames/earth.json";
 import earthLeap from "./fixtures/frames/earthLeap.json";
 

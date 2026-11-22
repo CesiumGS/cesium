@@ -52,7 +52,7 @@ import type { CorePick } from "../packages/core/src/scene/pick.ts";
 import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
 import type { TileGeometry } from "../packages/core/src/streaming/Tile.ts";
 import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
 const SECONDS = Date.UTC(2000, 0, 1, 12) / 1000;

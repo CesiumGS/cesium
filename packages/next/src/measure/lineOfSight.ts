@@ -2,7 +2,7 @@ import { frameTransform } from "../frames/Frame.ts";
 import type { Frames } from "../frames/frames.ts";
 import { transformPoint } from "@cesium/core/internal";
 import { EARTH, MOON, type Body } from "@cesium/core";
-import { Instant } from "../time/Instant.ts";
+import { Instant } from "../../../time/src/Instant.ts";
 import type { LightTimeSolution } from "./lightTime.ts";
 
 /** How far in from each end the test starts, m: a surface point doesn't block itself. */

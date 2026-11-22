@@ -35,7 +35,7 @@ import {
   type LoadProgress,
 } from "../../packages/core/src/io/readWithProgress.ts";
 import { EARTH, MOON } from "../../packages/core/src/scene/Body.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
 import type { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
 import {
   RIGID_VS_EXACT_COLORS,

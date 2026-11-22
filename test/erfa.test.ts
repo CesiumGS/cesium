@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { tdbMinusTt } from "../packages/next/src/time/erfa/dtdb.ts";
+import { tdbMinusTt } from "../packages/time/src/erfa/dtdb.ts";
 import dtdbFixtures from "./fixtures/frames/dtdb.json";
 
 describe("erfa", () => {

@@ -8,7 +8,7 @@ import {
   type Frame,
 } from "../../packages/next/src/frames/Frame.ts";
 import { fromDegrees } from "../../packages/core/src/math/ellipsoid.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
 import type { Framing } from "./globe.ts";
 import { RIGID_FRAMING, type EngineeringSetup } from "./overlayConfig.ts";
 import {

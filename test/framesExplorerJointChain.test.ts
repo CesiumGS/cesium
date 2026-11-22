@@ -10,7 +10,7 @@ import {
   dominantTerm,
   pointAccuracy,
 } from "../packages/next/src/frames/pointAccuracy.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import {
   ARM,
   armFrames,

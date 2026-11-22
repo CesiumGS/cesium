@@ -5,16 +5,16 @@ import {
   lommelSeeliger,
   moonPhaseBrightness,
 } from "../packages/core/src/atmosphere/moonLight.ts";
-import { icrfToFixed } from "../packages/next/src/time/celestial.ts";
+import { icrfToFixed } from "../packages/time/src/celestial.ts";
 import {
   moonAxes,
   moonEcliptic,
   moonPosition,
-} from "../packages/next/src/time/moon.ts";
+} from "../packages/time/src/moon.ts";
 import {
   greenwichSiderealTime,
   sunDirection,
-} from "../packages/next/src/time/sun.ts";
+} from "../packages/time/src/sun.ts";
 
 const deg = Math.PI / 180;
 

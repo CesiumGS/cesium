@@ -3,7 +3,7 @@
 // built-in frame tree states it on its ITRF edge (frames.ts) and
 // `accuracyOf` scales it to meters (measure/accuracy.ts) from one source.
 import type { FrameData } from "../ephemeris/loadFrameData.ts";
-import type { Instant } from "../time/Instant.ts";
+import type { Instant } from "../../../time/src/Instant.ts";
 
 const ARCSEC_TO_RAD = Math.PI / (180 * 3600);
 const MS_PER_DAY = 86_400_000;

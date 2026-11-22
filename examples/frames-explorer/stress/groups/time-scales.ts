@@ -1,5 +1,5 @@
 // Time scales: GPS, TAI, TT and UTC (timing and telecom).
-import { Instant } from "../../../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../../../packages/time/src/Instant.ts";
 import { citation, cited, printed } from "../references.ts";
 import { type StressCase, fmt } from "../runner.ts";
 import { TT_STEP, stressCase, utc } from "../shared.ts";

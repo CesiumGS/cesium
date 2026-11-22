@@ -5,7 +5,7 @@
 // (scenarioModel.ts) and the report's environment.
 import type { Frames } from "../../packages/next/src/frames/frames.ts";
 import { earthOrientationSigma } from "../../packages/next/src/frames/orientationSigma.ts";
-import type { Instant } from "../../packages/next/src/time/Instant.ts";
+import type { Instant } from "../../packages/time/src/Instant.ts";
 import { RESULT_LABELS, comparedFor } from "./content.ts";
 import type { LoadingModel } from "./loading.ts";
 import { CONVERGENCE_FACTOR } from "./overlayConfig.ts";

@@ -14,7 +14,7 @@ import {
   type VectorDefinition,
 } from "../packages/next/src/frames/twoVector.ts";
 import { identity } from "../packages/core/src/math/mat4.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 
 const root = Frame.root("Root");
 const at = Instant.fromTdb(100);

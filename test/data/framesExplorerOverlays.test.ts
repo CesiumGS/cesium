@@ -38,8 +38,8 @@ import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
 import { createFrames } from "../../packages/next/src/frames/frames.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
 /** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */

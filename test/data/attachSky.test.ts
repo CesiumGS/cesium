@@ -16,9 +16,9 @@ import {
   type SkyState,
 } from "../../packages/next/src/frames/sky.ts";
 import type { Engine } from "../../packages/core/src/scene/Engine.ts";
-import { Clock } from "../../packages/next/src/time/Clock.ts";
+import { Clock } from "../../packages/time/src/Clock.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 import { fakeEngine } from "../fakeGpu.ts";
 
 const dir = framesDataDirectory();

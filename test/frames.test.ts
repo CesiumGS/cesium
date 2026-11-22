@@ -14,7 +14,7 @@ import {
   rotationPart,
   toParentMatrix,
 } from "../packages/next/src/frames/matrix.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
 import {
   identity,

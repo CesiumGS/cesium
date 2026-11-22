@@ -31,7 +31,7 @@ import type {
   MeshHandle,
   TransformHandle,
 } from "../../packages/core/src/scene/world/types.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
 import type { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
 
 /** Straight sRGB bytes: red, green, blue, alpha. */

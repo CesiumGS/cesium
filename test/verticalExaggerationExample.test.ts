@@ -58,7 +58,7 @@ import type {
   AnchorHandle,
   DrawHandle,
 } from "../packages/core/src/scene/world/types.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { gridTile } from "./terrainRayFixtures.ts";

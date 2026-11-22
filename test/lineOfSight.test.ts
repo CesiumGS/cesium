@@ -10,7 +10,7 @@ import {
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { transformPoint } from "../packages/core/src/math/mat4.ts";
 import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
 const UNIT = [1, 1, 1];

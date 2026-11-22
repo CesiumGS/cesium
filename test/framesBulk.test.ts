@@ -7,7 +7,7 @@ import { framePoint } from "../packages/next/src/frames/local.ts";
 import { piecewiseFrame } from "../packages/next/src/frames/piecewise.ts";
 import { pointAccuracy } from "../packages/next/src/frames/pointAccuracy.ts";
 import { identity } from "../packages/core/src/math/mat4.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 
 const at = (t: number) => Instant.fromTdb(t);
 const root = Frame.root("ROOT");

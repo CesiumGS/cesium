@@ -42,7 +42,7 @@ import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../packages/next/src/ephemeris/loadFrameData.ts";
 import { createFrames } from "../../packages/next/src/frames/frames.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 
 const dir = framesDataDirectory();
 const base = `${join(dir, "proj")}/`;

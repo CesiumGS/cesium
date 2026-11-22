@@ -1,5 +1,5 @@
 import { runBulk, type BulkOptions } from "@cesium/core";
-import { Instant } from "../time/Instant.ts";
+import { Instant } from "../../../time/src/Instant.ts";
 import { frameTransform, type Frame } from "./Frame.ts";
 import type { FramePoint } from "./local.ts";
 import { PiecewiseFrame } from "./piecewise.ts";

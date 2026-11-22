@@ -8,11 +8,11 @@ import {
   createSkyState,
   skyState,
 } from "../../packages/next/src/frames/sky.ts";
-import { icrfToFixed } from "../../packages/next/src/time/celestial.ts";
+import { icrfToFixed } from "../../packages/time/src/celestial.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
-import { moonAxes, moonPosition } from "../../packages/next/src/time/moon.ts";
-import { sunDirection } from "../../packages/next/src/time/sun.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
+import { moonAxes, moonPosition } from "../../packages/time/src/moon.ts";
+import { sunDirection } from "../../packages/time/src/sun.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 
 const dir = framesDataDirectory();

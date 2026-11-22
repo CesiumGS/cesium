@@ -3,7 +3,7 @@
 // instant the globe shows while its path is drawn, with the frame it's
 // drawn in. They go to the globe through the label board, with the triads'.
 import type { Frame } from "../../packages/next/src/frames/Frame.ts";
-import type { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import type { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 import type { LabelSpec } from "./globe.ts";
 import type { OverlayState } from "./overlayConfig.ts";
 import type { OrionLayer } from "./orionLayer.ts";

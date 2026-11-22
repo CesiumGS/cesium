@@ -8,7 +8,7 @@
 // it is.
 import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
 import type { Frames } from "../../packages/next/src/frames/frames.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
 import { familyRgba } from "./globe.ts";
 import { defaultAccuracy, type OverlayState } from "./overlayConfig.ts";
 import type { OverlayChunk, Sampling } from "./overlays.ts";

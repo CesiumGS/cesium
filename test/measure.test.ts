@@ -13,7 +13,7 @@ import { downlink, uplink } from "../packages/next/src/measure/doppler.ts";
 import { measure, measureSpan } from "../packages/next/src/measure/measure.ts";
 import { surfaceDistance } from "../packages/next/src/measure/surface.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import type { EarthOrientationParameters } from "../packages/next/src/time/eop.ts";
 import { Trajectory } from "../packages/next/src/trajectory/Trajectory.ts";
 import { writeSpk } from "./spkWriter.ts";

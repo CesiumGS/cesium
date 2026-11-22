@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { Instant } from "../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import utcRows from "./fixtures/frames/utc.json";
 
 // An excerpt of IERS Leap_Second.dat (Bulletin C): 1972 (10 s) to 2017 (37 s).

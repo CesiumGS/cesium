@@ -10,8 +10,8 @@ import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
 import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
 import { createFrames } from "../../packages/next/src/frames/frames.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 
 const dir = framesDataDirectory();
 const bytes = (file: string): ArrayBuffer => {

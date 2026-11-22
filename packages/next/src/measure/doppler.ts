@@ -1,6 +1,6 @@
 import type { Frames } from "../frames/frames.ts";
 import type { FramePoint } from "../frames/local.ts";
-import { Instant } from "../time/Instant.ts";
+import { Instant } from "../../../time/src/Instant.ts";
 import { C, GM_EARTH, GM_MOON, GM_SUN } from "./constants.ts";
 import {
   apparentDirection,

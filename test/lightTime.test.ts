@@ -10,7 +10,7 @@ import {
   solveLightTime,
 } from "../packages/next/src/measure/lightTime.ts";
 import { positionIn, velocityIn } from "../packages/next/src/measure/motion.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import { Trajectory } from "../packages/next/src/trajectory/Trajectory.ts";
 import { writeSpk } from "./spkWriter.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";

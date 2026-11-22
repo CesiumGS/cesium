@@ -17,8 +17,8 @@ import {
   twoVectorFrame,
 } from "../../packages/next/src/frames/twoVector.ts";
 import type { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 import { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
 import { SAMPLE } from "../syntheticFrames.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";

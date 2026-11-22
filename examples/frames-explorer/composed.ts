@@ -25,7 +25,7 @@ import type {
   AccuracyTerm,
 } from "../../packages/next/src/measure/accuracy.ts";
 import { measure } from "../../packages/next/src/measure/measure.ts";
-import type { Instant } from "../../packages/next/src/time/Instant.ts";
+import type { Instant } from "../../packages/time/src/Instant.ts";
 import {
   REFERENCES,
   type ComposedAccuracy,

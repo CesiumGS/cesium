@@ -8,7 +8,7 @@
 // the same `orionFromOem` (stress/shared.ts re-exports it).
 import { frameTransform } from "../../packages/next/src/frames/Frame.ts";
 import type { Frames } from "../../packages/next/src/frames/frames.ts";
-import type { Instant } from "../../packages/next/src/time/Instant.ts";
+import type { Instant } from "../../packages/time/src/Instant.ts";
 import { Trajectory } from "../../packages/next/src/trajectory/Trajectory.ts";
 import { parseOem } from "../../packages/next/src/trajectory/oem.ts";
 import { MissingDataError } from "./errors.ts";

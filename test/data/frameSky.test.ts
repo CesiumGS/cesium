@@ -10,7 +10,7 @@ import {
   skyState,
 } from "../../packages/next/src/frames/sky.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 
 const dir = framesDataDirectory();

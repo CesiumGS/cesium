@@ -11,7 +11,7 @@
 // (`createTimeSource`), read only by the few lines that print them (Task 4d).
 import type { Frames } from "../../packages/next/src/frames/frames.ts";
 import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
-import type { Instant } from "../../packages/next/src/time/Instant.ts";
+import type { Instant } from "../../packages/time/src/Instant.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import type { Globe } from "./globe.ts";
 import type { LoadingModel } from "./loading.ts";

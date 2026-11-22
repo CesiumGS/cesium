@@ -12,7 +12,7 @@ import {
   measure,
   type Measurement,
 } from "../../packages/next/src/measure/measure.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import type { LoadEvent } from "./page.ts";
 

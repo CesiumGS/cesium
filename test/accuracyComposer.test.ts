@@ -17,7 +17,7 @@ import {
   separationAccuracy,
 } from "../packages/next/src/frames/pointAccuracy.ts";
 import { identity } from "../packages/core/src/math/mat4.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 
 const root = Frame.root("ROOT");
 const at = Instant.fromTdb(0);

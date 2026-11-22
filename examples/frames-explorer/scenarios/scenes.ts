@@ -10,7 +10,7 @@
 // here, and the page never bundles the catalog (protocol.ts's rule).
 import type { Frame } from "../../../packages/next/src/frames/Frame.ts";
 import type { Frames } from "../../../packages/next/src/frames/frames.ts";
-import { Instant } from "../../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../../packages/time/src/Instant.ts";
 import { eastNorthUpFrame } from "../../../packages/next/src/frames/local.ts";
 import {
   Ellipsoid,

@@ -23,10 +23,10 @@ import {
   loadFrameData,
   type FrameData,
 } from "../../packages/next/src/ephemeris/loadFrameData.ts";
-import { icrfToFixed } from "../../packages/next/src/time/celestial.ts";
+import { icrfToFixed } from "../../packages/time/src/celestial.ts";
 import { celestialToTerrestrial } from "../../packages/next/src/time/earthOrientation.ts";
 import type { EopSample } from "../../packages/next/src/time/eop.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
 
 const BASE = "/frames-data/";
 const dir = framesDataDirectory();

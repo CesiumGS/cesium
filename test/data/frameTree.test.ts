@@ -10,8 +10,8 @@ import type {
   EarthOrientationParameters,
   EopSample,
 } from "../../packages/next/src/time/eop.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 import { SAMPLE } from "../syntheticFrames.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import earthRows from "../fixtures/frames/earth.json";

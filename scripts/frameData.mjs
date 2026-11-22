@@ -40,8 +40,8 @@ import {
 import { readDaf } from "../packages/next/src/ephemeris/spk.ts";
 import { writePack } from "../packages/next/src/ephemeris/pack.ts";
 import { EarthOrientationParameters } from "../packages/next/src/time/eop.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import { GRID_SETS } from "./gridSets.mjs";
 import { verifiedDownload } from "./verifiedDownload.mjs";
 

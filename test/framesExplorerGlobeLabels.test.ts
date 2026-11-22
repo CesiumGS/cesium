@@ -8,7 +8,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Globe, type LabelSpec } from "../examples/frames-explorer/globe.ts";
 import type { Frame } from "../packages/next/src/frames/Frame.ts";
-import type { Instant } from "../packages/next/src/time/Instant.ts";
+import type { Instant } from "../packages/time/src/Instant.ts";
 import type { Viewer } from "../packages/next/widgets/index.ts";
 
 /** Just enough of an element for the globe's labels. */

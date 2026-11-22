@@ -99,9 +99,9 @@ import {
 import { pointAccuracy } from "../../packages/next/src/frames/pointAccuracy.ts";
 import { createFrames } from "../../packages/next/src/frames/frames.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 
 const dir = framesDataDirectory();
 const bytes = (file: string): ArrayBuffer => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Ephemeris } from "../packages/next/src/ephemeris/Ephemeris.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import { COUNT, INIT, LEN, pack } from "./syntheticPacks.ts";
 
 // Synthetic packs over TDB [INIT, INIT + COUNT * LEN]; positions are

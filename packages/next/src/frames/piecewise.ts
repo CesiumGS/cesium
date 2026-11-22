@@ -1,5 +1,5 @@
 import { FrameUnavailableError } from "@cesium/core";
-import type { Instant } from "../time/Instant.ts";
+import type { Instant } from "../../../time/src/Instant.ts";
 import { Frame, frameTransform, routeRevision } from "./Frame.ts";
 import { differenceCenter, frameVelocity } from "./motion.ts";
 import type { FrameAccuracy } from "./frameAccuracy.ts";

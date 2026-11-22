@@ -20,7 +20,7 @@ import type {
   AnchorHandle,
   DrawHandle,
 } from "../packages/core/src/scene/world/types.ts";
-import { Clock } from "../packages/next/src/time/Clock.ts";
+import { Clock } from "../packages/time/src/Clock.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const R = 6_378_137;

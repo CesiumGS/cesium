@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { Frame, routeRevision } from "../packages/next/src/frames/Frame.ts";
 import type { FrameAccuracy } from "../packages/next/src/frames/frameAccuracy.ts";
 import { identity } from "../packages/core/src/math/mat4.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 
 const root = Frame.root("Root");
 const at = Instant.fromTt(0);

@@ -17,7 +17,7 @@ import {
 } from "../packages/next/src/measure/doppler.ts";
 import { solveLightTime } from "../packages/next/src/measure/lightTime.ts";
 import { velocityIn } from "../packages/next/src/measure/motion.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
 const at = (tdb: number): Instant => Instant.fromTdb(tdb);

@@ -13,7 +13,7 @@ import {
   fromDegrees,
 } from "../../../../packages/core/src/math/ellipsoid.ts";
 import { measure } from "../../../../packages/next/src/measure/measure.ts";
-import { Instant } from "../../../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../../../packages/time/src/Instant.ts";
 import signalFixture from "../../../../test/fixtures/frames/signal.json";
 import { ARCSECOND, citation, cited, DEGREE, printed } from "../references.ts";
 import {

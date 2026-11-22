@@ -9,7 +9,7 @@ import {
   type FrameDataLoadOptions,
   type FrameManifest,
 } from "../../ephemeris/frameRoles.ts";
-import type { Instant } from "../../time/Instant.ts";
+import type { Instant } from "../../../../time/src/Instant.ts";
 import { bodyEdge, gcrfEdge, moonMeEdge, type PreciseEdge } from "../edges.ts";
 import { BUILT_IN_ACCURACY } from "../frameAccuracy.ts";
 

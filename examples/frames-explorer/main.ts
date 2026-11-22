@@ -19,7 +19,7 @@
 // listeners run in the order registered: the scene's headlight, then the
 // scenario host, then the panel.
 import { createElement } from "react";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
 import { createCallouts } from "./callouts.ts";
 import { createCameraRig } from "./cameraRig.ts";

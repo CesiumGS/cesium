@@ -7,8 +7,8 @@ import {
   type Engine,
   FrameUnavailableError,
 } from "@cesium/core";
-import { Instant } from "../time/Instant.ts";
-import type { LeapSeconds } from "../time/leapSeconds.ts";
+import { Instant } from "../../../time/src/Instant.ts";
+import type { LeapSeconds } from "../../../time/src/leapSeconds.ts";
 import type { FrameCatalog, Precision } from "./catalog.ts";
 import type { Frame } from "./Frame.ts";
 import {

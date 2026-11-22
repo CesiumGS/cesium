@@ -1,5 +1,5 @@
-import { Instant } from "../time/Instant.ts";
-import type { LeapSeconds } from "../time/leapSeconds.ts";
+import { Instant } from "../../../time/src/Instant.ts";
+import type { LeapSeconds } from "../../../time/src/leapSeconds.ts";
 
 /** One OEM ephemeris segment (a META block and its states). */
 export interface OemSegment {

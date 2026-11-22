@@ -5,7 +5,7 @@ import {
   frameTransform,
 } from "../../../../packages/next/src/frames/Frame.ts";
 import { properTimeRate } from "../../../../packages/next/src/measure/doppler.ts";
-import { Instant } from "../../../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../../../packages/time/src/Instant.ts";
 import {
   citation,
   cited,

@@ -22,7 +22,7 @@ import type { EngineeringFrame } from "../../../packages/next/src/engineering/En
 import { frameTransform } from "../../../packages/next/src/frames/Frame.ts";
 import { framePoint } from "../../../packages/next/src/frames/local.ts";
 import { pointAccuracy } from "../../../packages/next/src/frames/pointAccuracy.ts";
-import { Instant } from "../../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../../packages/time/src/Instant.ts";
 import type { FrameCache } from "../frameCache.ts";
 import {
   headingResult,

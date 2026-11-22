@@ -115,8 +115,8 @@ import {
   type Tile,
 } from "../../packages/core/src/streaming/Tile.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 
 const store = framesDataDirectory();
 const out = join(store, DESIGN_TILES_DIRECTORY);

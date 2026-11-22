@@ -6,7 +6,7 @@ import type {
   EarthOrientationParameters,
   EopSample,
 } from "../packages/next/src/time/eop.ts";
-import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
+import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import { pack } from "./syntheticPacks.ts";
 
 const buffer = (u8: Uint8Array): ArrayBuffer =>

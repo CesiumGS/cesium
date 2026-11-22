@@ -25,8 +25,8 @@ import {
   rigidMatrixError,
   type ViewId,
 } from "@cesium/core/internal";
-import { Instant } from "../time/Instant.ts";
-import type { LeapSeconds } from "../time/leapSeconds.ts";
+import { Instant } from "../../../time/src/Instant.ts";
+import type { LeapSeconds } from "../../../time/src/leapSeconds.ts";
 import {
   ANALYTIC_ACCURACY,
   analyticEdges,

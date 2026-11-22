@@ -31,8 +31,8 @@ import {
 } from "../../packages/next/src/measure/measure.ts";
 import { EARTH, MOON } from "../../packages/core/src/scene/Body.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 
 const dir = framesDataDirectory();
 const base = `${join(dir, "proj")}/`;

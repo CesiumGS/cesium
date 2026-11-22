@@ -13,7 +13,7 @@
   },
   "exports": {
     ".": "./src/index.ts",
-    "./time": "./src/time/index.ts",
+    "./time": "./src/time.ts",
     "./frames": "./src/frames/index.ts",
     "./proj": "./src/proj/index.ts",
     "./measure": "./src/measure/index.ts",
@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@cesium/core": "2.0.0-poc.0",
+    "@cesium/time": "2.0.0-poc.0",
     "@emnapi/runtime": "1.8.1",
     "draco3d": "1.5.7",
     "geographiclib-geodesic": "2.2.0",

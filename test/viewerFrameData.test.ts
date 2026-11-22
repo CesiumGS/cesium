@@ -20,9 +20,9 @@ import {
 } from "../packages/next/src/frames/sky.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
-import { Clock } from "../packages/next/src/time/Clock.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
-import { LeapSeconds } from "../packages/next/src/time/leapSeconds.ts";
+import { Clock } from "../packages/time/src/Clock.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
+import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
 import type { Viewer, ViewerOptions } from "../packages/next/widgets/Viewer.ts";
 import { fakeDevice, fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";

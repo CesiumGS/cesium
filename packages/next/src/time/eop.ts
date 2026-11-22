@@ -1,5 +1,5 @@
-import type { Instant } from "./Instant.ts";
-import type { LeapSeconds } from "./leapSeconds.ts";
+import type { Instant } from "../../../time/src/Instant.ts";
+import type { LeapSeconds } from "../../../time/src/leapSeconds.ts";
 
 const ARCSEC_TO_RAD = Math.PI / (180 * 3600);
 const MS_PER_DAY = 86_400_000;

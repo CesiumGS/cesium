@@ -15,7 +15,7 @@ import {
 import { gridFactors } from "../engineering/factors.ts";
 import type { CoordinateOperation } from "../frames/coordinates.ts";
 import { mat4, vec3 } from "@cesium/core/internal";
-import { Instant } from "../time/Instant.ts";
+import { Instant } from "../../../time/src/Instant.ts";
 import type { StationOffset } from "../engineering/alignment.ts";
 import {
   accuracyOf,

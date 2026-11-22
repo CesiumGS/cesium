@@ -22,7 +22,7 @@ import {
   type Frame,
 } from "../../packages/next/src/frames/Frame.ts";
 import type { Frames } from "../../packages/next/src/frames/frames.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
 import { hexRgba, type Globe, type LabelSpec } from "./globe.ts";
 import type { OrionTrack } from "./orionTrack.ts";
 import { overlayMesh, polyline } from "./overlays.ts";

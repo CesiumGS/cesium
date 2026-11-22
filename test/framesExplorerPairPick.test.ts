@@ -9,7 +9,7 @@ import { describe, expect, it } from "vitest";
 import { TreeDiagram } from "../examples/frames-explorer/panel/TreeDiagram.tsx";
 import { buildTree } from "../examples/frames-explorer/tree.ts";
 import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import {
   nextAfter,

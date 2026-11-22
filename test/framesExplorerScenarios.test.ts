@@ -56,7 +56,7 @@ import {
 import type { TerrainLineOfSight } from "../packages/next/src/measure/terrainLineOfSight.ts";
 import { moonCut, rayPlacement } from "../examples/frames-explorer/skyRay.ts";
 import { createCameraViews } from "../examples/frames-explorer/cameraViews.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import {
   belowMask,
   maskAt,

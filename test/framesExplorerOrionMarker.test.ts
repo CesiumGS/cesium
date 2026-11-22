@@ -23,7 +23,7 @@ import type {
 import type { LabelBoard } from "../examples/frames-explorer/triadLayer.ts";
 import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
 import { createFrames } from "../packages/next/src/frames/frames.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 
 /** Orion on a circle in GCRF at the Moon's distance, once round in 10 days. */

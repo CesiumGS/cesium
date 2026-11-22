@@ -5,7 +5,7 @@
 // into the result's axes, and the total is the root of the composed
 // covariance's trace: for independent figures with no axis that is the
 // root-sum-square, exactly.
-import type { Instant } from "../time/Instant.ts";
+import type { Instant } from "../../../time/src/Instant.ts";
 import { frameTransform, type Frame } from "./Frame.ts";
 import {
   eigenSymmetric,

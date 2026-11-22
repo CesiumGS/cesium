@@ -1,6 +1,6 @@
 import type { LoadProgress } from "@cesium/core";
 import { EarthOrientationParameters } from "../time/eop.ts";
-import type { LeapSeconds } from "../time/leapSeconds.ts";
+import type { LeapSeconds } from "../../../time/src/leapSeconds.ts";
 import { Ephemeris } from "./Ephemeris.ts";
 import {
   FRAME_DATA_ROLES,

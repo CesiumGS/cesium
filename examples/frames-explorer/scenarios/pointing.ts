@@ -16,7 +16,7 @@ import {
   C,
   EARTH_ROTATION_RATE,
 } from "../../../packages/next/src/measure/constants.ts";
-import { Instant } from "../../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../../packages/time/src/Instant.ts";
 
 /**
  * Within this of the horizon (degrees) a hand check leaves the Earth's

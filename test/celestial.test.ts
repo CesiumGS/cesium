@@ -1,8 +1,8 @@
 // The celestial frame's rotation to Earth-fixed axes (stars, docs/design/lighting-and-shading.md):
 // precession to the date and sidereal time, against catalog stars.
 import { describe, expect, it } from "vitest";
-import { icrfToFixed } from "../packages/next/src/time/celestial.ts";
-import { greenwichSiderealTime } from "../packages/next/src/time/sun.ts";
+import { icrfToFixed } from "../packages/time/src/celestial.ts";
+import { greenwichSiderealTime } from "../packages/time/src/sun.ts";
 
 const deg = Math.PI / 180;
 

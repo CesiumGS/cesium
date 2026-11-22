@@ -58,9 +58,9 @@ import {
 import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import { measure } from "../../packages/next/src/measure/measure.ts";
 import { createFrames } from "../../packages/next/src/frames/frames.ts";
-import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../packages/time/src/Instant.ts";
 import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
-import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";
 
 export const dir = framesDataDirectory();
 /** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */

@@ -32,7 +32,7 @@ import {
 } from "../../../packages/core/src/math/ellipsoid.ts";
 import { measure } from "../../../packages/next/src/measure/measure.ts";
 import { EARTH } from "../../../packages/core/src/scene/Body.ts";
-import { Instant } from "../../../packages/next/src/time/Instant.ts";
+import { Instant } from "../../../packages/time/src/Instant.ts";
 import type { FrameCache } from "../frameCache.ts";
 import {
   siteGap,

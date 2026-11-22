@@ -25,7 +25,7 @@ import {
 import { Frame, frameTransform } from "../packages/next/src/frames/Frame.ts";
 import { terrainLineOfSight } from "../packages/next/src/measure/terrainLineOfSight.ts";
 import { terrainQueries } from "../packages/core/src/query/terrainBackend.ts";
-import { Instant } from "../packages/next/src/time/Instant.ts";
+import { Instant } from "../packages/time/src/Instant.ts";
 
 const deg = Math.PI / 180;
 const itrf = Frame.root("ITRF");
