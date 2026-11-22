@@ -35,6 +35,7 @@
     "react-dom": "19.3.1"
   },
   "devDependencies": {
+    "@arethetypeswrong/cli": "0.18.5",
     "@cesium/eslint-config": "^14.0.0",
     "@cesium/next": "2.0.0-poc.0",
     "@playwright/test": "^1.62.1",
@@ -57,6 +58,7 @@
     "markdownlint-cli": "^0.50.0",
     "naga-wasm": "30.2.0",
     "prettier": "3.9.10",
+    "publint": "0.3.25",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.68.0",
     "vite": "8.0.16",
@@ -67,8 +69,8 @@
     "dyno": "node bench/suite/commands/serve.mjs",
     "dyno:serve": "vite --host 127.0.0.1 --port 5190 --strictPort",
     "dyno:cli": "node bench/dyno.mjs",
-    "build": "vite build",
-    "build:lib": "npm run build:lib --workspace @cesium/next",
+    "build": "node scripts/build.mjs",
+    "build:site": "vite build",
     "typecheck": "tsc --build",
     "test": "vitest run",
     "test:watch": "vitest",

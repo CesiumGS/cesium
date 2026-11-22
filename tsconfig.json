@@ -8,10 +8,10 @@
     "lab",
     "test",
     "vite.config.ts",
-    "basisTranscoderEsm.ts",
+    "scripts/build/basisTranscoderEsm.ts",
+    "scripts/build/browserFrames.ts",
     "packages/core/src/io/vendor.d.ts",
-    "packages/core/src/io/basisTranscoder.d.ts",
-    "packages/cesium/vite.lib.config.ts"
+    "packages/core/src/io/basisTranscoder.d.ts"
   ],
   "references": [
     {

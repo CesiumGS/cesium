@@ -1,4 +1,4 @@
-// The library build's entry for `@cesium/next/frames`: the frames entry point
+// The browser build's entry for `@cesium/next/frames` (scripts/build/browser.mjs): the frames entry point
 // under another module, so that `src/frames/index.ts` is not an entry itself.
 //
 // A bundler puts a module in the chunk of the entry points that reach it. The

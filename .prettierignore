@@ -33,6 +33,10 @@
 
 **/*.min.js
 
+# 2.0's packages' build output (npm run build) and the type check's (tsc --build).
+packages/*/dist/
+packages/*/.tsbuild/
+
 # 2.0's pinned copy of a third-party build, kept byte for byte.
 packages/core/src/io/ThirdParty/**
 

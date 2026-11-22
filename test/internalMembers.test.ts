@@ -1,90 +1,67 @@
 // Members tagged `@internal` stay out of the published declarations: other
 // modules of the engine may reach them, a consumer's compiler must not. The
-// flag is `stripInternal` in both library configs. This emits the declarations
-// of every entry point from one program, in memory, and reads them.
-import { dirname, join, relative, sep } from "node:path";
+// flag is `stripInternal` in the build's declaration program
+// (scripts/build/declarations.mjs). This emits every package's declarations
+// as `npm run build` does, in memory, and reads them.
+import { join, relative, sep } from "node:path";
 import ts from "typescript";
 import { expect, it } from "vitest";
+import {
+  declarationConfig,
+  emitDeclarations as emitPackages,
+} from "../scripts/build/declarations.mjs";
 
-// Every package's declarations, emitted from one program as the library
-// build emits them (packages/cesium/tsconfig.lib.json), by path from packages/.
+// Every package's declarations, by package folder and path under its
+// dist/types (`core/scene/Engine.d.ts`).
 const root = join(import.meta.dirname, "..", "packages");
 /** TypeScript names files with forward slashes, whatever the platform. */
 const slash = (path: string) => path.split(sep).join("/");
 
-function libraryConfig(config: string): ts.ParsedCommandLine {
-  const path = join(root, "cesium", config);
-  const { config: raw, error } = ts.readConfigFile(path, ts.sys.readFile);
-  if (error) {
-    throw new Error(ts.flattenDiagnosticMessageText(error.messageText, "\n"));
-  }
-  return ts.parseJsonConfigFileContent(raw, ts.sys, dirname(path));
-}
-const libraryOptions = (config: string) => libraryConfig(config).options;
-
-it("the library config strips internal members", () => {
-  expect(libraryOptions("tsconfig.lib.json").stripInternal).toBe(true);
+it("the declaration build strips internal members", () => {
+  expect(declarationConfig().options.stripInternal).toBe(true);
 });
 
-// In memory only. Outside `dist-lib`, whose package.json would claim the
-// package's name for anything under it: the check owes nothing to what's on disk.
+// In memory only, under a folder no package uses.
 const OUT = "never-written-declarations";
 
-/** The umbrella's entry points, as the program below emits them. */
+/** The umbrella's entry points, as the build emits them. */
 const ENTRIES: Readonly<Record<string, string>> = {
-  "@cesium/next": "cesium/src/index",
-  "@cesium/next/time": "cesium/src/time",
-  "@cesium/next/frames": "cesium/src/frames",
-  "@cesium/next/crs": "cesium/src/crs",
-  "@cesium/next/measure": "cesium/src/measure",
-  "@cesium/next/ui": "cesium/src/ui",
+  "@cesium/next": "cesium/index",
+  "@cesium/next/time": "cesium/time",
+  "@cesium/next/frames": "cesium/frames",
+  "@cesium/next/crs": "cesium/crs",
+  "@cesium/next/measure": "cesium/measure",
+  "@cesium/next/ui": "cesium/ui",
 };
 /** The packages' entry points the umbrella's declarations import by name. */
 const PACKAGE_ENTRIES: Readonly<Record<string, string>> = {
   ...Object.fromEntries(
     ["core", "time", "frames", "crs", "measure", "ui"].map((name) => [
       `@cesium/${name}`,
-      `${name}/src/index`,
+      `${name}/index`,
     ]),
   ),
   ...Object.fromEntries(
     ["core", "frames", "crs"].map((name) => [
       `@cesium/${name}/internal`,
-      `${name}/src/internal`,
+      `${name}/internal`,
     ]),
   ),
 };
 
-/** The declarations of every entry point, emitted in memory from one program. */
+/** The declarations of every package, emitted in memory as the build does. */
 function emitDeclarations(): {
   options: ts.CompilerOptions;
   entries: string[];
   emitted: Map<string, string>;
 } {
-  const { options, fileNames } = libraryConfig("tsconfig.lib.json");
-  const entries = Object.values(ENTRIES).map((entry) =>
-    join(root, `${entry}.ts`),
-  );
-  // Every file the library config includes, as `tsc -p` emits them: a file
-  // reached only through node_modules (a package by name) isn't emitted.
-  const program = ts.createProgram(fileNames, {
-    ...options,
-    rootDir: root,
-    outDir: join(root, OUT),
-    paths: {},
-    noEmitOnError: false,
-  });
+  const { options } = declarationConfig();
   const emitted = new Map<string, string>();
-  program.emit(
-    undefined,
-    (path, text) => {
-      if (path.endsWith(".d.ts")) {
-        const from = relative(join(root, OUT), path);
-        emitted.set(from.split(sep).join("/"), text);
-      }
-    },
-    undefined,
-    true,
+  emitPackages({
+    write: (folder, path, text) => emitted.set(`${folder}/${path}`, text),
+  });
+  const entries = Object.values(ENTRIES).map((entry) =>
+    join(root, OUT, `${entry}.d.ts`),
   );
   return { options, entries, emitted };
 }
@@ -93,11 +70,11 @@ it("no published declaration carries an @internal member", () => {
   const { emitted } = emitDeclarations();
   // The detector works only if the classes it names were emitted at all.
   const classes = {
-    "core/src/scene/Engine.d.ts": "class Engine",
-    "core/src/scene/World.d.ts": "class World",
-    "core/src/streaming/Tileset3D.d.ts": "class Tileset3D",
-    "core/src/scene/View.d.ts": "class View",
-    "ui/src/Viewer.d.ts": "class Viewer",
+    "core/scene/Engine.d.ts": "class Engine",
+    "core/scene/World.d.ts": "class World",
+    "core/streaming/Tileset3D.d.ts": "class Tileset3D",
+    "core/scene/View.d.ts": "class View",
+    "ui/Viewer.d.ts": "class Viewer",
   };
   for (const [file, declaration] of Object.entries(classes)) {
     expect(emitted.get(file), file).toContain(declaration);
@@ -174,8 +151,8 @@ it("the published declarations compile with skipLibCheck off", () => {
     consumer,
     entries
       .map((entry, i) => {
-        const from = relative(root, entry).split(sep).join("/");
-        return `import * as e${i} from "./${from.replace(/\.ts$/, ".js")}";\nvoid e${i};`;
+        const from = slash(relative(join(root, OUT), entry));
+        return `import * as e${i} from "./${from.replace(/\.d\.ts$/, ".js")}";\nvoid e${i};`;
       })
       .join("\n"),
   );

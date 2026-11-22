@@ -7,7 +7,7 @@
     "emitDeclarationOnly": true,
     "rewriteRelativeImportExtensions": true,
     "rootDir": "src",
-    "outDir": "dist/types"
+    "outDir": ".tsbuild"
   },
   "include": [
     "src"

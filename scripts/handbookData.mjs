@@ -8,9 +8,10 @@
 //   surface   api/surface.txt, the public API map (`npm run surface`)
 //   layers    test/importBoundary.test.ts's layer table and rules, run over
 //             today's import graph
-//   bundles   scripts/checkBundle.mjs's chunks for a globe-only Viewer, and
-//             the library build of vite.lib.config.ts, into a temporary
-//             directory
+//   bundles   scripts/checkBundle.mjs's chunks for a globe-only Viewer (built
+//             against the packages' dist/, so after `npm run build`), and
+//             the umbrella's browser build (scripts/build/browser.mjs), into
+//             a temporary directory
 //   runtime   files the engine fetches at run time, measured in the setup
 //             store when this machine has it
 //   pipeline  the frame graph's passes and targets as src/scene declares them,
@@ -65,7 +66,11 @@ const coreOf = (root) => join(root, "packages", "core");
 
 const kib = (bytes) => Math.round((bytes / 1024) * 10) / 10;
 
-/** The public API map: per entry point, its names, kinds and tiers. */
+/**
+ * The public API map: per entry point of the umbrella, its names, kinds and
+ * tiers. Each package's rows (`@cesium/core` and the rest, CS-612) repeat
+ * the umbrella's and are left out.
+ */
 export function readSurface(root = repoRoot) {
   const lines = readFileSync(join(root, "api/surface.txt"), "utf8")
     .split("\n")
@@ -77,6 +82,9 @@ export function readSurface(root = repoRoot) {
   const tiers = {};
   for (const line of lines.slice(1)) {
     const [entry, name, kind, tier] = line.split("\t");
+    if (entry.startsWith("@")) {
+      continue;
+    }
     if (!entries.has(entry)) {
       entries.set(entry, { entry, total: 0, kinds: {}, names: [] });
     }
@@ -87,7 +95,7 @@ export function readSurface(root = repoRoot) {
     tiers[tier] = (tiers[tier] ?? 0) + 1;
   }
   return {
-    total: lines.length - 1,
+    total: [...entries.values()].reduce((n, e) => n + e.total, 0),
     tiers,
     entries: [...entries.values()],
   };
@@ -507,17 +515,14 @@ function chunkName(fileName) {
     .replace(/\.m?js$/, "");
 }
 
-/** The five entry points of the library build: what each pulls in, sized. */
+/** The entry points of the browser build: what each pulls in, sized. */
 async function buildLibrary(root) {
-  const { build } = await import("vite");
   const outDir = mkdtempSync(join(tmpdir(), "cesium-next-handbook-"));
   try {
-    const result = await build({
-      root: packageOf(root),
-      configFile: join(packageOf(root), "vite.lib.config.ts"),
-      logLevel: "error",
-      build: { outDir, emptyOutDir: true },
-    });
+    const { buildBrowser } = await import(
+      pathToFileURL(join(root, "scripts/build/browser.mjs")).href
+    );
+    const result = await buildBrowser({ outDir, logLevel: "error" });
     const outputs = (Array.isArray(result) ? result : [result]).flatMap(
       (r) => r.output,
     );

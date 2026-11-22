@@ -1,23 +1,31 @@
-// Checks the library's emitted declarations (`dist-lib/types`, from
-// `npm run build:lib`) for dangling references: a type that an exported
-// declaration names (a parameter, a return, a field, a base class) which is
-// declared in the package but exported from none of its entry points
-// (package.json `exports`, each an `index.d.ts`), so a consumer can't write
-// it down. Members tagged `@internal`, and private ones, are skipped: they
-// aren't API.
+// Checks the packages' published declarations, as a consumer installs them
+// (CS-612): each folder named is an unpacked package (its package.json and
+// dist/, as `npm pack` writes them; scripts/build.mjs passes every package).
 //
-//   node scripts/checkDeclarations.mjs [--only engineering,measure] [index.d.ts ...]
+//   node scripts/checkDeclarations.mjs [--only crs/engineering,measure,ui] <package folder> ...
 //
-// The index files named are the ones whose exports are walked (default:
-// every entry point's); a type exported by any entry point counts as
-// exported.
+// 1. Dangling references: a type that an exported declaration names (a
+//    parameter, a return, a field, a base class) which is declared in a
+//    package but exported from none of the packages' public entry points
+//    (package.json `exports`; an `./internal` entry is for siblings, not
+//    applications, so it doesn't count), so a consumer can't write it down.
+//    Members tagged `@internal`, and private ones, are skipped: they aren't
+//    API.
+// 2. Resolution: every `@cesium/*` import and every relative import in the
+//    declarations resolves, with no `paths` and no source condition, to
+//    declarations in the packages named, the way a consumer's compiler
+//    resolves them through node_modules.
+// 3. A consumer's program, which imports the umbrella's entries and uses a
+//    few of their types, compiles.
 //
 // `--only` reports only dangling types declared under, or named by an export
-// declared under, those directories of the types (`build:lib` checks
-// `engineering` and `measure` from the proj and measure entries, which plan 4b
-// audited; the rest of the API, ~100 types in scene, streaming, io and gpu,
-// waits for plan 5's API review). Exits 1, listing each dangling type, where it is
-// declared and an exported declaration that names it, when there are any.
+// declared under, those folders (`<package folder>/<path under dist/types>`):
+// the parts the API review has audited (crs's engineering, measure, ui). The
+// rest of the API waits for the API review (CS-102).
+//
+// Exits 1, listing each problem, when there are any. Dangling types the owner
+// hasn't decided on yet (PENDING) are listed, with the question, and don't
+// fail the check; any other one does.
 import {
   mkdirSync,
   mkdtempSync,
@@ -27,190 +35,41 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { basename, join, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
-// The package whose library build (dist-lib) it checks.
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "packages", "cesium");
-const args = process.argv.slice(2);
-const onlyAt = args.indexOf("--only");
-const only =
-  onlyAt >= 0 ? args.splice(onlyAt, 2)[1]?.split(",").filter(Boolean) : [];
-const typesDir = resolve(root, "dist-lib/types");
-const entries = JSON.parse(
-  readFileSync(resolve(root, "package.json"), "utf8"),
-).exports;
 /**
- * An entry point's declarations: its source file (the @cesium/source
- * condition), `./src/crs.ts` -> `types/cesium/src/crs.d.ts` (CS-835).
+ * Dangling types that would need a public export, which is a change to the
+ * public names, so the owner's call (CS-612's report). Until it is made they
+ * are reported here, not failed on: each by its name and the file that
+ * declares it, so another type of the same name still fails.
  */
-const declarationsOf = (path) =>
-  resolve(typesDir, "cesium", path.replace(/^\.\//, "").replace(/\.ts$/, ".d.ts"));
-const entryPoints = Object.values(entries)
-  .map((target) =>
-    typeof target === "string" ? target : target["@cesium/source"],
-  )
-  .filter((path) => path?.endsWith(".ts"))
-  .map(declarationsOf);
-const walked =
-  args.length > 0 ? args.map((path) => resolve(root, path)) : entryPoints;
-const reported = (file) =>
-  only.length === 0 ||
-  only.some((dir) => file.split(sep).join("/").startsWith(`${dir}/`));
+export const PENDING = [
+  {
+    name: "Route",
+    file: "core/camera/route.d.ts",
+    why: "exported only from @cesium/core/internal",
+  },
+  {
+    name: "RouteStep",
+    file: "core/camera/route.d.ts",
+    why: "exported only from @cesium/core/internal",
+  },
+  {
+    name: "Recordable",
+    file: "ui/inspectable.d.ts",
+    why: "exported from no entry",
+  },
+];
 
-const program = ts.createProgram([...new Set([...entryPoints, ...walked])], {
-  noEmit: true,
-  skipLibCheck: true,
-  types: [],
-  target: ts.ScriptTarget.ESNext,
-  module: ts.ModuleKind.ESNext,
-  moduleResolution: ts.ModuleResolutionKind.Bundler,
-  // No `paths`: the widgets' declarations import the entry points by the
-  // package's name, and `dist-lib/package.json` has to be what resolves them.
-});
-const checker = program.getTypeChecker();
-const indexOf = (entry) => {
-  const index = program.getSourceFile(entry);
-  if (!index) {
-    console.error(
-      `checkDeclarations: no ${relative(root, entry)}; run build:lib`,
-    );
-    process.exit(2);
-  }
-  return index;
-};
+/** TypeScript names files with forward slashes, whatever the platform. */
+const slash = (path) => path.split(sep).join("/");
 
-const ours = (declaration) =>
-  !relative(typesDir, declaration.getSourceFile().fileName).startsWith("..");
-
-const resolved = (symbol) =>
-  symbol.flags & ts.SymbolFlags.Alias
-    ? checker.getAliasedSymbol(symbol)
-    : symbol;
-
-/** Every symbol an index exports, namespaces (`export * as`) included. */
-const exportsOf = (moduleSymbol, into = new Set()) => {
-  for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
-    const target = resolved(symbol);
-    if (into.has(target)) {
-      continue;
-    }
-    into.add(target);
-    if (target.flags & ts.SymbolFlags.ValueModule) {
-      exportsOf(target, into);
-    }
-  }
-  return into;
-};
-/** What any entry point exports: a consumer can write each of these down. */
-const exported = new Set();
-for (const entry of entryPoints) {
-  exportsOf(checker.getSymbolAtLocation(indexOf(entry)), exported);
-}
-/** What the named index files export: the API walked for dangling types. */
-const roots = new Set();
-for (const entry of walked) {
-  exportsOf(checker.getSymbolAtLocation(indexOf(entry)), roots);
-}
-
-const internal = (node) =>
-  ts.getJSDocTags(node).some((tag) => tag.tagName.text === "internal");
-const isPrivate = (node) =>
-  ts.canHaveModifiers(node) &&
-  (ts.getModifiers(node) ?? []).some(
-    (m) => m.kind === ts.SyntaxKind.PrivateKeyword,
-  );
-
-/** Dangling type name → an exported declaration that names it. */
-const dangling = new Map();
-const visited = new Set();
-
-function visit(node, owner) {
-  if (internal(node) || isPrivate(node) || ts.isPrivateIdentifier(node)) {
-    return;
-  }
-  let name;
-  if (ts.isTypeReferenceNode(node)) {
-    name = node.typeName;
-  } else if (ts.isExpressionWithTypeArguments(node)) {
-    name = node.expression;
-  } else if (ts.isTypeQueryNode(node)) {
-    name = node.exprName;
-  } else if (ts.isImportTypeNode(node)) {
-    name = node.qualifier ?? node;
-  }
-  if (name) {
-    const symbol = checker.getSymbolAtLocation(
-      ts.isQualifiedName(name) ? name.right : name,
-    );
-    if (symbol) {
-      check(resolved(symbol), owner);
-    }
-  }
-  ts.forEachChild(node, (child) => visit(child, owner));
-}
-
-function check(symbol, owner) {
-  if (
-    symbol.flags & ts.SymbolFlags.TypeParameter ||
-    !(symbol.declarations ?? []).some(ours)
-  ) {
-    return;
-  }
-  if (!exported.has(symbol) && !dangling.has(symbol.name)) {
-    const file = relative(
-      typesDir,
-      symbol.declarations.find(ours).getSourceFile().fileName,
-    );
-    if (reported(file) || reported(owner.file)) {
-      dangling.set(symbol.name, { owner: owner.name, file });
-    }
-  }
-  // A dangling type's own references are reachable too.
-  if (!exported.has(symbol)) {
-    walk(symbol, owner);
-  }
-}
-
-function walk(symbol, owner) {
-  if (visited.has(symbol)) {
-    return;
-  }
-  visited.add(symbol);
-  for (const declaration of symbol.declarations ?? []) {
-    if (ours(declaration) && !internal(declaration)) {
-      visit(declaration, owner);
-    }
-  }
-}
-
-for (const symbol of roots) {
-  if (!(symbol.flags & ts.SymbolFlags.ValueModule)) {
-    const declaration = (symbol.declarations ?? []).find(ours);
-    const file = declaration
-      ? relative(typesDir, declaration.getSourceFile().fileName)
-      : "";
-    walk(symbol, { name: symbol.name, file });
-  }
-}
-
-if (dangling.size > 0) {
-  console.error(
-    `checkDeclarations: ${dangling.size} type(s) named by the API but exported from no entry point:`,
-  );
-  for (const [name, { owner, file }] of [...dangling].sort(([a], [b]) =>
-    a.localeCompare(b),
-  )) {
-    console.error(`  ${name} (${file}, named by ${owner})`);
-  }
-  process.exit(1);
-}
 /**
- * What a TypeScript project that has the built folder as the package
- * `@cesium/next` writes. Each `@ts-expect-error` fails the check if the type
- * it names resolved to `any`, as one that couldn't be found does under
- * `skipLibCheck`.
+ * What a TypeScript project that installed the packages writes. Each
+ * `@ts-expect-error` fails the check if the type it names resolved to `any`,
+ * as one that couldn't be found does under `skipLibCheck`.
  */
 const CONSUMER = `import { Emitter } from "@cesium/next";
 import { Clock } from "@cesium/next/time";
@@ -229,23 +88,57 @@ void [wrong, events];
 `;
 
 /**
- * Checks the built folder as a consumer meets it, with no \`paths\`: a project
- * with \`dist-lib\` as \`node_modules/@cesium/next\` imports Viewer from
- * \`@cesium/next/widgets\`, and every \`@cesium/next\` import in the emitted
- * declarations resolves, by \`dist-lib/package.json\`, to emitted declarations.
+ * Checks the unpacked packages in `folders`. Returns the problems and the
+ * pending dangling types found; prints nothing.
+ * @param {string[]} folders
+ * @param {{ only?: string[] }} [options]
  */
-function checkConsumer() {
-  const work = mkdtempSync(join(tmpdir(), "cesium-next-consumer-"));
+export function checkDeclarations(folders, { only = [] } = {}) {
+  const work = mkdtempSync(join(tmpdir(), "cesium-declarations-"));
   const problems = [];
+  const pending = [];
   try {
-    mkdirSync(join(work, "node_modules/@cesium"), { recursive: true });
-    symlinkSync(
-      resolve(root, "dist-lib"),
-      join(work, "node_modules/@cesium/next"),
-      "dir",
+    // node_modules/@cesium/<name> -> each unpacked package, by its name.
+    const packages = folders.map((folder) => {
+      const dir = resolve(folder);
+      const manifest = JSON.parse(
+        readFileSync(join(dir, "package.json"), "utf8"),
+      );
+      const link = join(work, "node_modules", ...manifest.name.split("/"));
+      mkdirSync(join(link, ".."), { recursive: true });
+      symlinkSync(dir, link, "dir");
+      return { dir: link, manifest, folder: basename(dir) };
+    });
+    const typesOf = (pkg) => slash(join(pkg.dir, "dist", "types"));
+    /** The package folder and path under dist/types of a declaration file. */
+    const located = (file) => {
+      const name = slash(file);
+      for (const pkg of packages) {
+        const types = `${typesOf(pkg)}/`;
+        if (name.startsWith(types)) {
+          return `${pkg.folder}/${name.slice(types.length)}`;
+        }
+      }
+      return undefined;
+    };
+    const consumer = join(work, "consumer.ts");
+    writeFileSync(consumer, CONSUMER);
+    // Every entry, by specifier, and whether it is public.
+    const entries = packages.flatMap((pkg) =>
+      Object.keys(pkg.manifest.exports ?? {})
+        .filter((key) => key !== "./package.json")
+        .map((key) => ({
+          specifier: key === "." ? pkg.manifest.name : `${pkg.manifest.name}${key.slice(1)}`,
+          public: !key.endsWith("/internal"),
+        })),
     );
-    const file = join(work, "consumer.ts");
-    writeFileSync(file, CONSUMER);
+    const entriesFile = join(work, "entries.ts");
+    writeFileSync(
+      entriesFile,
+      entries
+        .map((e, i) => `export * as e${i} from ${JSON.stringify(e.specifier)};`)
+        .join("\n"),
+    );
     const options = {
       noEmit: true,
       strict: true,
@@ -255,16 +148,26 @@ function checkConsumer() {
       target: ts.ScriptTarget.ESNext,
       module: ts.ModuleKind.ESNext,
       moduleResolution: ts.ModuleResolutionKind.Bundler,
+      // Through node_modules, as installed: the links are the packages.
+      preserveSymlinks: true,
     };
-    const consumer = ts.createProgram([file], options);
-    for (const diagnostic of ts.getPreEmitDiagnostics(consumer)) {
+    const program = ts.createProgram([consumer, entriesFile], options);
+    const checker = program.getTypeChecker();
+
+    // 3. The consumer compiles.
+    for (const diagnostic of ts.getPreEmitDiagnostics(
+      program,
+      program.getSourceFile(consumer),
+    )) {
       problems.push(
         `consumer.ts: ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`,
       );
     }
-    // Under `skipLibCheck` an unresolved import in a declaration is silent.
-    for (const source of consumer.getSourceFiles()) {
-      if (relative(typesDir, source.fileName).startsWith("..")) {
+
+    // 2. Every import in the declarations resolves to built declarations.
+    for (const source of program.getSourceFiles()) {
+      const where = located(source.fileName);
+      if (where === undefined) {
         continue;
       }
       for (const statement of source.statements) {
@@ -275,7 +178,7 @@ function checkConsumer() {
           ts.isStringLiteral(statement.moduleSpecifier)
             ? statement.moduleSpecifier.text
             : "";
-        if (!specifier.startsWith("@cesium/next")) {
+        if (!specifier.startsWith(".") && !specifier.startsWith("@cesium/")) {
           continue;
         }
         const target = ts.resolveModuleName(
@@ -284,25 +187,184 @@ function checkConsumer() {
           options,
           ts.sys,
         ).resolvedModule?.resolvedFileName;
-        if (!target || relative(typesDir, target).startsWith("..")) {
+        if (!target || located(target) === undefined) {
           problems.push(
-            `${relative(typesDir, source.fileName)}: "${specifier}" does not resolve to the built declarations (${target ?? "not found"})`,
+            `${where}: "${specifier}" does not resolve to the packages' declarations (${target ?? "not found"})`,
           );
         }
       }
     }
+
+    // 1. Dangling references.
+    const resolved = (symbol) =>
+      symbol.flags & ts.SymbolFlags.Alias
+        ? checker.getAliasedSymbol(symbol)
+        : symbol;
+    const exportsOf = (moduleSymbol, into = new Set()) => {
+      for (const symbol of checker.getExportsOfModule(moduleSymbol)) {
+        const target = resolved(symbol);
+        if (into.has(target)) {
+          continue;
+        }
+        into.add(target);
+        if (target.flags & ts.SymbolFlags.ValueModule) {
+          exportsOf(target, into);
+        }
+      }
+      return into;
+    };
+    const moduleOf = (specifier) => {
+      const file = ts.resolveModuleName(specifier, consumer, options, ts.sys)
+        .resolvedModule?.resolvedFileName;
+      const source = file && program.getSourceFile(file);
+      const symbol = source && checker.getSymbolAtLocation(source);
+      if (!symbol) {
+        problems.push(`${specifier}: its declarations don't load`);
+      }
+      return symbol;
+    };
+    /** What any public entry exports: a consumer can write each down. */
+    const exported = new Set();
+    /** What the public entries export: the API walked for dangling types. */
+    const roots = new Set();
+    for (const entry of entries) {
+      // An ./internal entry is for siblings: what it names isn't walked.
+      const symbol = entry.public ? moduleOf(entry.specifier) : undefined;
+      if (symbol) {
+        exportsOf(symbol, roots);
+        exportsOf(symbol, exported);
+      }
+    }
+    const ours = (declaration) =>
+      located(declaration.getSourceFile().fileName) !== undefined;
+    const reported = (file) =>
+      only.length === 0 || only.some((dir) => file.startsWith(`${dir}/`));
+    const internal = (node) =>
+      ts.getJSDocTags(node).some((tag) => tag.tagName.text === "internal");
+    const isPrivate = (node) =>
+      ts.canHaveModifiers(node) &&
+      (ts.getModifiers(node) ?? []).some(
+        (m) => m.kind === ts.SyntaxKind.PrivateKeyword,
+      );
+    const dangling = new Map();
+    // Per kind of owner, so a type first reached from an unreported owner is
+    // still walked, and reported, from a reported one.
+    const visited = { true: new Set(), false: new Set() };
+    function visit(node, owner) {
+      if (internal(node) || isPrivate(node) || ts.isPrivateIdentifier(node)) {
+        return;
+      }
+      let name;
+      if (ts.isTypeReferenceNode(node)) {
+        name = node.typeName;
+      } else if (ts.isExpressionWithTypeArguments(node)) {
+        name = node.expression;
+      } else if (ts.isTypeQueryNode(node)) {
+        name = node.exprName;
+      } else if (ts.isImportTypeNode(node)) {
+        name = node.qualifier ?? node;
+      }
+      if (name) {
+        const symbol = checker.getSymbolAtLocation(
+          ts.isQualifiedName(name) ? name.right : name,
+        );
+        if (symbol) {
+          check(resolved(symbol), owner);
+        }
+      }
+      ts.forEachChild(node, (child) => visit(child, owner));
+    }
+    function check(symbol, owner) {
+      if (
+        symbol.flags & ts.SymbolFlags.TypeParameter ||
+        !(symbol.declarations ?? []).some(ours)
+      ) {
+        return;
+      }
+      if (!exported.has(symbol) && !dangling.has(symbol.name)) {
+        const file = located(
+          symbol.declarations.find(ours).getSourceFile().fileName,
+        );
+        if (reported(file) || reported(owner.file)) {
+          dangling.set(symbol.name, { owner: owner.name, file });
+        }
+      }
+      // A dangling type's own references are reachable too.
+      if (!exported.has(symbol)) {
+        walk(symbol, owner);
+      }
+    }
+    function walk(symbol, owner) {
+      const seen = visited[reported(owner.file)];
+      if (seen.has(symbol)) {
+        return;
+      }
+      seen.add(symbol);
+      for (const declaration of symbol.declarations ?? []) {
+        if (ours(declaration) && !internal(declaration)) {
+          visit(declaration, owner);
+        }
+      }
+    }
+    for (const symbol of roots) {
+      if (!(symbol.flags & ts.SymbolFlags.ValueModule)) {
+        const declaration = (symbol.declarations ?? []).find(ours);
+        const file = declaration
+          ? located(declaration.getSourceFile().fileName)
+          : "";
+        walk(symbol, { name: symbol.name, file });
+      }
+    }
+    for (const [name, { owner, file }] of [...dangling].sort(([a], [b]) =>
+      a.localeCompare(b),
+    )) {
+      const line = `${name} (${file}, named by ${owner})`;
+      const held = PENDING.find((p) => p.name === name && p.file === file);
+      if (held) {
+        pending.push(`${line}: ${held.why}`);
+      } else {
+        problems.push(
+          `a type named by the API but exported from no public entry: ${line}`,
+        );
+      }
+    }
+    return {
+      problems,
+      pending,
+      walked: roots.size,
+      entries: entries.map((e) => e.specifier),
+    };
   } finally {
     rmSync(work, { recursive: true, force: true });
   }
+}
+
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const args = process.argv.slice(2);
+  const onlyAt = args.indexOf("--only");
+  const only =
+    onlyAt >= 0 ? (args.splice(onlyAt, 2)[1]?.split(",").filter(Boolean) ?? []) : [];
+  if (args.length === 0) {
+    console.error(
+      "usage: node scripts/checkDeclarations.mjs [--only dirs] <unpacked package folder> ...",
+    );
+    process.exit(2);
+  }
+  const { problems, pending, walked, entries } = checkDeclarations(args, {
+    only,
+  });
+  for (const line of pending) {
+    console.warn(
+      `checkDeclarations: pending the owner's call (a public export), not failed on: ${line}`,
+    );
+  }
   if (problems.length > 0) {
     console.error(
-      `checkDeclarations: a consumer of dist-lib as @cesium/next can't use its types:\n  ${problems.join("\n  ")}`,
+      `checkDeclarations: ${problems.length} problem(s) in the packed declarations:\n  ${problems.join("\n  ")}`,
     );
     process.exit(1);
   }
+  console.log(
+    `checkDeclarations: ${walked} exports walked over ${entries.length} entries (${entries.join(", ")}); no dangling type references${only.length > 0 ? ` in ${only.join(", ")}` : ""}, every @cesium and relative import resolves to the packed declarations, and a consumer's program compiles`,
+  );
 }
-checkConsumer();
-
-console.log(
-  `checkDeclarations: ${roots.size} exports walked (${walked.map((entry) => relative(typesDir, entry)).join(", ")}), no dangling type references, and a consumer of dist-lib as @cesium/next resolves them${only.length > 0 ? ` into ${only.join(", ")}` : ""}`,
-);

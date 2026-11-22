@@ -22,8 +22,8 @@ import {
   defineConfig,
   type Plugin,
 } from "vite";
-import { basisTranscoderEsm } from "../basisTranscoderEsm.ts";
-import { skyPackGuard } from "../scripts/vitePluginSkyPack.ts";
+import { basisTranscoderEsm } from "../scripts/build/basisTranscoderEsm.ts";
+import { skyPackGuard } from "../scripts/build/vitePluginSkyPack.ts";
 import { findSecrets, findUnembeddedImages } from "../scripts/handbookData.mjs";
 
 const here = fileURLToPath(new URL("./", import.meta.url));

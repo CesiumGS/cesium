@@ -26,7 +26,7 @@
 // Windows the mapped binding can't be deleted), so the sweep is its fallback.
 //
 // Its own module, typed by the little of Node it uses, so the library's
-// declaration build (tsconfig.lib.json, browser types only) checks it without
+// declaration build (scripts/build/declarations.mjs, browser types only) checks it without
 // Node's types.
 import { framesDataFormatProblem } from "@cesium/frames/internal";
 import type { ProjApi } from "./projApi.ts";

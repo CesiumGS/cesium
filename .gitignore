@@ -24,12 +24,14 @@ yarn.lock
 # Vite dependency cache of snapshot dev servers
 /.vite-bench/
 
-# 2.0's packages' build output (tsc --build's declarations and build info)
+# 2.0's packages' build output (npm run build), and the type check's
+# declarations and build info (tsc --build, npm run typecheck)
 /packages/*/dist/
+/packages/*/.tsbuild/
 *.tsbuildinfo
 
 # 2.0's harness at the root (CS-835; these were packages/next/.gitignore's).
-# The dev server's build (npm run build).
+# The dev site's build (npm run build:site).
 /dist/
 /handbook/dist/
 # Local secrets (ion access token for the dev-server proxy)

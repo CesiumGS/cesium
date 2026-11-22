@@ -15,7 +15,7 @@ import {
   skyPackDevRoute,
   skyPackGuard,
   skyPackResponse,
-} from "../scripts/vitePluginSkyPack.ts";
+} from "../scripts/build/vitePluginSkyPack.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -164,11 +164,13 @@ describe("the build configs", () => {
     text.match(/\bskyPackGuard\(\)/g)?.length ?? 0;
 
   it("each lists the guard for its page and its workers", () => {
-    // The main and the library configs have a worker plugin list; the
-    // handbook's page and its live-engine build have one each.
+    // The main config, the packages' library build and the browser build
+    // have a worker plugin list; the handbook's page and its live-engine
+    // build have one each.
     for (const file of [
       "vite.config.ts",
-      "packages/cesium/vite.lib.config.ts",
+      "scripts/build/library.mjs",
+      "scripts/build/browser.mjs",
       "handbook/vite.config.ts",
     ]) {
       expect(guards(readFileSync(join(root, file), "utf8")), file).toBe(2);
@@ -183,7 +185,8 @@ describe("the build configs", () => {
     const has = (file: string) =>
       readFileSync(join(root, file), "utf8").includes("skyPackDevRoute()");
     expect(has("vite.config.ts")).toBe(true);
-    expect(has("packages/cesium/vite.lib.config.ts")).toBe(false);
+    expect(has("scripts/build/library.mjs")).toBe(false);
+    expect(has("scripts/build/browser.mjs")).toBe(false);
     expect(has("handbook/vite.config.ts")).toBe(false);
   });
 });

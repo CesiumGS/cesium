@@ -20,13 +20,16 @@ import { fileURLToPath } from "node:url";
 import basicSsl from "@vitejs/plugin-basic-ssl";
 import { defaultClientConditions, defaultServerConditions } from "vite";
 import { configDefaults, defineConfig, type Plugin } from "vitest/config";
-import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
+import { basisTranscoderEsm } from "./scripts/build/basisTranscoderEsm.ts";
 import { slangShaders } from "./scripts/vitePluginSlang.ts";
 import { dataStatus } from "./scripts/vitePluginDataStatus.ts";
 import { recordEndpoint } from "./scripts/vitePluginRecord.ts";
 import { workApi } from "./scripts/vitePluginWork.ts";
 import { keepEnvSecretsOut } from "./scripts/vitePluginEnvSecrets.ts";
-import { skyPackDevRoute, skyPackGuard } from "./scripts/vitePluginSkyPack.ts";
+import {
+  skyPackDevRoute,
+  skyPackGuard,
+} from "./scripts/build/vitePluginSkyPack.ts";
 import { isRunFile } from "./bench/suite/identity.mjs";
 import { pinned1x } from "./bench/suite/pinned1x.mjs";
 import { studiesEndpoint } from "./bench/suite/studiesEndpoint.mjs";

@@ -37,8 +37,8 @@ import type {
  * Compile-time only: each type is exported from the entry, among them the
  * types exported functions and fields name (`GridSource.catalog`,
  * `EngineeringFrame.fallback`, `TilesetGeoreference.otherCrs`, ProjApi's
- * handles). `build:lib` checks the rest mechanically
- * (scripts/checkDeclarations.mjs).
+ * handles). `npm run build` checks the rest mechanically
+ * (scripts/checkDeclarations.mjs, on the packed packages).
  */
 export type IndexTypes = [
   AlignmentElement,

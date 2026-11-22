@@ -44,9 +44,11 @@
     },
     "./package.json": "./package.json"
   },
-  "scripts": {
-    "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && node ../../scripts/libraryTypes.mjs dist-lib/types && node ../../scripts/checkDeclarations.mjs --only crs/src/engineering,measure/src,ui/src dist-lib/types/cesium/src/crs.d.ts dist-lib/types/cesium/src/measure.d.ts dist-lib/types/cesium/src/ui.d.ts"
-  },
+  "files": [
+    "dist",
+    "LICENSE.md",
+    "README.md"
+  ],
   "dependencies": {
     "@cesium/core": "2.0.0-poc.0",
     "@cesium/crs": "2.0.0-poc.0",

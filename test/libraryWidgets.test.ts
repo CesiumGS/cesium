@@ -1,35 +1,30 @@
-// `@cesium/next/widgets` as a consumer of the built library sees it: the
-// library built into a temporary directory, its widgets entry loaded as a
-// module by its file (the way a page loads it), and its exports compared
-// with the surface map. The widgets reach the engine only through the other
-// entries' chunks, so the core must be in the build once.
+// `@cesium/next/ui` as a page with no build step sees it: the umbrella's
+// browser build (scripts/build/browser.mjs) into a temporary directory, its
+// ui entry loaded as a module by its file (the way a page loads it), and its
+// exports compared with the surface map. The widgets reach the engine only
+// through the other entries' chunks, so the core must be in the build once.
 import { readFileSync, readdirSync, rmSync, mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, posix } from "node:path";
 import { pathToFileURL } from "node:url";
-import { build } from "vite";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { sp } from "../packages/frames/src/time/erfa/s06Table.ts";
 import { xyp } from "../packages/frames/src/time/erfa/xy06Table.ts";
+import { buildBrowser } from "../scripts/build/browser.mjs";
 import { installGpuGlobals } from "./fakeGpu.ts";
 
-const root = join(import.meta.dirname, "..", "packages", "cesium");
+const repo = join(import.meta.dirname, "..");
 let outDir = "";
 
 beforeAll(async () => {
   outDir = mkdtempSync(join(tmpdir(), "cesium-next-widgets-"));
-  await build({
-    root,
-    configFile: join(root, "vite.lib.config.ts"),
-    logLevel: "silent",
-    build: { outDir, emptyOutDir: true },
-  });
+  await buildBrowser({ outDir, logLevel: "silent" });
 }, 120_000);
 afterAll(() => rmSync(outDir, { recursive: true, force: true }));
 
 /** An entry's values in the surface map (types and interfaces are erased). */
 function surfaceValues(entryName: string): string[] {
-  return readFileSync(join(root, "..", "..", "api/surface.txt"), "utf8")
+  return readFileSync(join(repo, "api/surface.txt"), "utf8")
     .split("\n")
     .map((line) => line.split("\t"))
     .filter(([entry, , kind]) => entry === entryName && kind !== undefined)

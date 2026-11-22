@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Plugin } from "vite";
-import { isPackBinary } from "../packages/core/src/atmosphere/skyPack.ts";
-import { chosenPackDirectory } from "./skyStore.mjs";
+import { isPackBinary } from "../../packages/core/src/atmosphere/skyPack.ts";
+import { chosenPackDirectory } from "../skyStore.mjs";
 
 /** Base64 of a pack magic's first six bytes ("CSKYPT", "CSKYBG"). */
 const INLINED = ["Q1NLWVBU", "Q1NLWUJH"];

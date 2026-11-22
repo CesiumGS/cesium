@@ -33,11 +33,12 @@ export default [
       "apps/sandcastle/templates/Sandcastle.d.ts",
       "apps/sandcastle/templates/Sandcastle.js",
       "apps/sandcastle/gallery/pagefind/",
-      // 2.0's build output (git-ignored), written by `npm run build`, `npm
-      // run build:lib` and `tsc --build`.
+      // 2.0's build output (git-ignored): the packages' dist/ (`npm run
+      // build`), the type check's .tsbuild/ (`tsc --build`) and the dev
+      // site's dist/ (`npm run build:site`).
       "dist/",
       "packages/*/dist/",
-      "packages/cesium/dist-lib/",
+      "packages/*/.tsbuild/",
       "handbook/dist/",
       "apps/sandcastle/dist/",
     ],
