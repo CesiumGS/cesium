@@ -12,7 +12,7 @@ it("lists each export with its entry, kind and tier", () => {
   expect(lines[0]).toBe("entry\tname\tkind\ttier");
   expect(lines).toContain(".\tEngine\tclass\t-");
   expect(lines).toContain(".\tvec3.add\tfunction\t-");
-  expect(lines).toContain("widgets\tViewer\tclass\t-");
+  expect(lines).toContain("ui\tViewer\tclass\t-");
 });
 it("reads tiers from TSDoc tags", () => {
   const lines = surfaceLines({

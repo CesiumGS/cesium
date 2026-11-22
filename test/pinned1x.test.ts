@@ -11,7 +11,7 @@ import { PINNED_1X } from "../bench/suite/engines.mjs";
 import { pinned1x } from "../bench/suite/pinned1x.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const next = join(root, "packages", "next");
+const next = join(root, "packages", "cesium");
 /** 2.0's folders: its packages and the harness at the root (CS-835). */
 const twoZero = [
   "packages",

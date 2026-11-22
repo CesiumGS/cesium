@@ -218,8 +218,8 @@ function WorkHelp() {
   return (
     <>
       <p>
-        The board reads the work items in <code>packages/next/work</code> on the
-        branch Dyno is served from, through human-in-the-lead's read API (
+        The board reads the work items in <code>work</code> on the branch Dyno
+        is served from, through human-in-the-lead's read API (
         <code>hitld work query</code>). It never changes a file: edit the item,
         or have the main session make one with <code>npx hitld work new</code>.
       </p>

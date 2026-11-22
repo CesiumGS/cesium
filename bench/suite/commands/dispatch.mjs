@@ -213,7 +213,7 @@ export function helpLines(node, path) {
     if (path.length === 0) {
       lines.push(
         "",
-        "Run it as `npx @cesium/dyno`, from the repository root or packages/next.",
+        "Run it as `npx @cesium/dyno`, from the repository root or any folder below it.",
         "(The scoped name: a missing link then fails instead of downloading the public `dyno` package.)",
       );
     }

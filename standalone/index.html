@@ -36,7 +36,7 @@
     <div id="status">Loading…</div>
     <!--
       A static page using the library build (`npm run build:lib` in
-      packages/next, which writes dist-lib/): no bundler, no TypeScript, a
+      packages/cesium, which writes dist-lib/): no bundler, no TypeScript, a
       module script importing the library. Served from anywhere: ?lib= is
       the library's URL (another origin works when it sends CORS headers,
       as npm CDNs do), ?data= the folder of glTF models. The models are
@@ -45,7 +45,7 @@
     <script type="module">
       const params = new URLSearchParams(location.search);
       const lib =
-        params.get("lib") ?? "../packages/next/dist-lib/cesium-next.mjs";
+        params.get("lib") ?? "../packages/cesium/dist-lib/cesium-next.mjs";
       const data =
         params.get("data") ??
         "https://raw.githubusercontent.com/CesiumGS/cesium/main/Specs/Data/Models/glTF-2.0/";

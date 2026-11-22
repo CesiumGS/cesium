@@ -13,7 +13,7 @@ import { sp } from "../packages/frames/src/time/erfa/s06Table.ts";
 import { xyp } from "../packages/frames/src/time/erfa/xy06Table.ts";
 import { installGpuGlobals } from "./fakeGpu.ts";
 
-const root = join(import.meta.dirname, "..", "packages", "next");
+const root = join(import.meta.dirname, "..", "packages", "cesium");
 let outDir = "";
 
 beforeAll(async () => {
@@ -40,14 +40,13 @@ function surfaceValues(entryName: string): string[] {
 it("loads the widgets entry and exports Viewer and the rest of the surface", async () => {
   installGpuGlobals();
   const widgets = (await import(
-    /* @vite-ignore */ pathToFileURL(join(outDir, "cesium-next-widgets.mjs"))
-      .href
+    /* @vite-ignore */ pathToFileURL(join(outDir, "cesium-next-ui.mjs")).href
   )) as Record<string, unknown>;
   expect(typeof widgets.Viewer).toBe("function");
   expect(typeof (widgets.Viewer as { create?: unknown }).create).toBe(
     "function",
   );
-  const names = surfaceValues("widgets");
+  const names = surfaceValues("ui");
   expect(names).toContain("Viewer");
   expect(Object.keys(widgets).sort()).toEqual([...names].sort());
 });
@@ -121,8 +120,8 @@ it("the widgets entry loads no X, Y or s series and no DAF reader with the page"
         readFileSync(join(outDir, f), "utf8").includes(marker),
       ),
     );
-  const eager = eagerFiles("cesium-next-widgets.mjs");
-  expect(eager).toContain("cesium-next-widgets.mjs");
+  const eager = eagerFiles("cesium-next-ui.mjs");
+  expect(eager).toContain("cesium-next-ui.mjs");
   expect(holding(eager)).toEqual([[], [], []]);
   // Built, and loaded where the precise frames ask for them.
   for (const files of holding(builtFiles())) {

@@ -268,7 +268,7 @@ const TABLE: Record<string, EntryTable> = {
       terrainLineOfSight
     `,
   },
-  proj: {
+  crs: {
     type: `
       AlignmentDefinition AlignmentElement BetterCandidate DeclaredCrs
       DeclaredPlacement DesignPick DesignPoint DesignPointObtained
@@ -316,7 +316,7 @@ const TABLE: Record<string, EntryTable> = {
       tdbMinusTt timeParts
     `,
   },
-  widgets: {
+  ui: {
     type: `
       ContentMix CreditSource CreditsHandle EngineInspectOptions
       EngineSnapshotOptions GlobeKind Inspectable InspectorHandle
@@ -1107,7 +1107,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
       `,
     },
   },
-  proj: {
+  crs: {
     ClientSnapService: {
       snapshot: `
         tilesets
@@ -1120,7 +1120,7 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
       `,
     },
   },
-  widgets: {
+  ui: {
     Viewer: {
       snapshot: `
         clock controls credits engine frames globe orbitDragging

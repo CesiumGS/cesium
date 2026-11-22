@@ -3,7 +3,6 @@
  * entry point doesn't publish (CS-883). Outside the stable API: not for
  * applications, and it may change in any release.
  *
- * @internal
  * @packageDocumentation
  */
 export { framesDataFormatProblem } from "./ephemeris/framesDataFormat.ts";

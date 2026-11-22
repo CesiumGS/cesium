@@ -3,7 +3,6 @@
  * entry point doesn't publish (CS-883). Outside the stable API: not for
  * applications, and it may change in any release.
  *
- * @internal
  * @packageDocumentation
  */
 export {
@@ -48,7 +47,12 @@ export {
 } from "./math/transforms.ts";
 export { vec3 } from "./math/vec3.ts";
 export type { Vec3 } from "./math/vec3.ts";
-export { isCentered, projectThrough, projectToPixel } from "./scene/Camera.ts";
+export { projectToPixel } from "./scene/Camera.ts";
+/**
+ * @internal Tagged where they're declared: library declarations strip them,
+ * and this re-export with them (crs uses them in code only).
+ */
+export { isCentered, projectThrough } from "./scene/Camera.ts";
 export { routeMap } from "./scene/curvilinearBounds.ts";
 export type {
   CurvilinearTerm,

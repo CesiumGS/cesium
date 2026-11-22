@@ -22,7 +22,7 @@ import { compileVectorStyle } from "../packages/core/src/vector/VectorStyle.ts";
 
 const source = (path: string) =>
   readFileSync(
-    new URL(`../packages/next/src/${path}`, import.meta.url),
+    new URL(`../packages/core/src/${path}`, import.meta.url),
     "utf8",
   );
 const surface = wgslUnit(

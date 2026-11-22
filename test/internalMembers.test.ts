@@ -6,35 +6,53 @@ import { dirname, join, relative, sep } from "node:path";
 import ts from "typescript";
 import { expect, it } from "vitest";
 
-const root = join(import.meta.dirname, "..", "packages", "next");
+// Every package's declarations, emitted from one program as the library
+// build emits them (packages/cesium/tsconfig.lib.json), by path from packages/.
+const root = join(import.meta.dirname, "..", "packages");
 /** TypeScript names files with forward slashes, whatever the platform. */
 const slash = (path: string) => path.split(sep).join("/");
 
-function libraryOptions(config: string): ts.CompilerOptions {
-  const path = join(root, config);
+function libraryConfig(config: string): ts.ParsedCommandLine {
+  const path = join(root, "cesium", config);
   const { config: raw, error } = ts.readConfigFile(path, ts.sys.readFile);
   if (error) {
     throw new Error(ts.flattenDiagnosticMessageText(error.messageText, "\n"));
   }
-  return ts.parseJsonConfigFileContent(raw, ts.sys, dirname(path)).options;
+  return ts.parseJsonConfigFileContent(raw, ts.sys, dirname(path));
 }
+const libraryOptions = (config: string) => libraryConfig(config).options;
 
-it("both library configs strip internal members", () => {
+it("the library config strips internal members", () => {
   expect(libraryOptions("tsconfig.lib.json").stripInternal).toBe(true);
-  expect(libraryOptions("tsconfig.lib.widgets.json").stripInternal).toBe(true);
 });
 
 // In memory only. Outside `dist-lib`, whose package.json would claim the
 // package's name for anything under it: the check owes nothing to what's on disk.
 const OUT = "never-written-declarations";
 
-/** The package's entry points, as the program below emits them. */
+/** The umbrella's entry points, as the program below emits them. */
 const ENTRIES: Readonly<Record<string, string>> = {
-  "@cesium/next": "src/index",
-  "@cesium/next/time": "src/time/index",
-  "@cesium/next/frames": "src/frames/index",
-  "@cesium/next/crs": "src/proj/index",
-  "@cesium/next/measure": "src/measure/index",
+  "@cesium/next": "cesium/src/index",
+  "@cesium/next/time": "cesium/src/time",
+  "@cesium/next/frames": "cesium/src/frames",
+  "@cesium/next/crs": "cesium/src/crs",
+  "@cesium/next/measure": "cesium/src/measure",
+  "@cesium/next/ui": "cesium/src/ui",
+};
+/** The packages' entry points the umbrella's declarations import by name. */
+const PACKAGE_ENTRIES: Readonly<Record<string, string>> = {
+  ...Object.fromEntries(
+    ["core", "time", "frames", "crs", "measure", "ui"].map((name) => [
+      `@cesium/${name}`,
+      `${name}/src/index`,
+    ]),
+  ),
+  ...Object.fromEntries(
+    ["core", "frames", "crs"].map((name) => [
+      `@cesium/${name}/internal`,
+      `${name}/src/internal`,
+    ]),
+  ),
 };
 
 /** The declarations of every entry point, emitted in memory from one program. */
@@ -43,12 +61,13 @@ function emitDeclarations(): {
   entries: string[];
   emitted: Map<string, string>;
 } {
-  const options = libraryOptions("tsconfig.lib.json");
-  const entries = [
-    ...Object.values(ENTRIES).map((entry) => `${entry}.ts`),
-    "widgets/index.ts",
-  ].map((entry) => join(root, entry));
-  const program = ts.createProgram(entries, {
+  const { options, fileNames } = libraryConfig("tsconfig.lib.json");
+  const entries = Object.values(ENTRIES).map((entry) =>
+    join(root, `${entry}.ts`),
+  );
+  // Every file the library config includes, as `tsc -p` emits them: a file
+  // reached only through node_modules (a package by name) isn't emitted.
+  const program = ts.createProgram(fileNames, {
     ...options,
     rootDir: root,
     outDir: join(root, OUT),
@@ -74,11 +93,11 @@ it("no published declaration carries an @internal member", () => {
   const { emitted } = emitDeclarations();
   // The detector works only if the classes it names were emitted at all.
   const classes = {
-    "src/scene/Engine.d.ts": "class Engine",
-    "src/scene/World.d.ts": "class World",
-    "src/streaming/Tileset3D.d.ts": "class Tileset3D",
-    "src/scene/View.d.ts": "class View",
-    "widgets/Viewer.d.ts": "class Viewer",
+    "core/src/scene/Engine.d.ts": "class Engine",
+    "core/src/scene/World.d.ts": "class World",
+    "core/src/streaming/Tileset3D.d.ts": "class Tileset3D",
+    "core/src/scene/View.d.ts": "class View",
+    "ui/src/Viewer.d.ts": "class Viewer",
   };
   for (const [file, declaration] of Object.entries(classes)) {
     expect(emitted.get(file), file).toContain(declaration);
@@ -181,12 +200,11 @@ it("the published declarations compile with skipLibCheck off", () => {
       noEmit: true,
       skipLibCheck: false,
       rootDir: undefined,
-      // The widgets' `@cesium/next` is the declarations just emitted.
+      // The packages' names are the declarations just emitted.
       paths: Object.fromEntries(
-        Object.entries(ENTRIES).map(([name, entry]) => [
-          name,
-          [slash(join(root, OUT, `${entry}.d.ts`))],
-        ]),
+        Object.entries({ ...ENTRIES, ...PACKAGE_ENTRIES }).map(
+          ([name, entry]) => [name, [slash(join(root, OUT, `${entry}.d.ts`))]],
+        ),
       ),
       types: ["@webgpu/types"],
     },

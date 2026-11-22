@@ -16,7 +16,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // umbrella) and the harness at the root (CS-835).
 const NEXT_TS = [
   "packages/*/src/**/*.{ts,tsx}",
-  "packages/next/**/*.{ts,tsx}",
+  "packages/cesium/*.ts",
   "{test,parity,bench,lab,handbook,examples,demo,spikes,standalone,scripts,tools}/**/*.{ts,tsx}",
   "*.ts",
 ];
@@ -45,7 +45,7 @@ export default [
       // run build:lib` and `tsc --build`.
       "dist/",
       "packages/*/dist/",
-      "packages/next/dist-lib/",
+      "packages/cesium/dist-lib/",
     ],
   },
   {
@@ -251,7 +251,6 @@ export default [
     // page.evaluate callbacks run in the browser, hence both global sets.
     files: [
       "packages/*/src/**/*.mjs",
-      "packages/next/**/*.mjs",
       "{test,parity,bench,lab,handbook,examples,demo,spikes,standalone,scripts,tools}/**/*.mjs",
     ],
     languageOptions: {

@@ -65,7 +65,7 @@ const STALE_EXCLUDE = [
   ":!**/*.png",
   ":!**/*.jpg",
   ":!spikes/slang/reference/**",
-  ":!packages/next/src/**/*.wgsl",
+  ":!packages/*/src/**/*.wgsl",
   ":!api/**",
   ...STALE_EXEMPT.map((p) => `:!${p}`),
 ];

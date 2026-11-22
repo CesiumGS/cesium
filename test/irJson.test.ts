@@ -25,7 +25,7 @@ import { wgslCases } from "../packages/core/src/ir/wgslCases.ts";
 import { corpus } from "./irCorpus.ts";
 import { validateSchema } from "./irJsonSchema.ts";
 
-const SRC = join(import.meta.dirname, "../packages/next/src/ir");
+const SRC = join(import.meta.dirname, "../packages/core/src/ir");
 const FIXTURES = join(import.meta.dirname, "fixtures/irJson");
 
 const load = (path: string): unknown =>

@@ -9,7 +9,11 @@ import { join, relative } from "node:path";
 import ts from "typescript";
 import { expect, it } from "vitest";
 
-const root = join(import.meta.dirname, "..", "packages", "next");
+const root = join(import.meta.dirname, "..");
+/** Every package's src/ (2.0's src/ before CS-835). */
+const srcs = ["core", "time", "frames", "crs", "measure", "cesium"].map(
+  (name) => join(root, "packages", name, "src"),
+);
 /** WebGPU's constants: values, not types. */
 const GLOBALS =
   /^GPU(BufferUsage|TextureUsage|ShaderStage|MapMode|ColorWrite)$/;
@@ -59,11 +63,13 @@ export function loadTimeReads(text: string): string[] {
 }
 
 it("no module under src/ reads a WebGPU global when it loads", () => {
-  const found = listTs(join(root, "src")).flatMap((file) =>
-    loadTimeReads(readFileSync(file, "utf8")).map(
-      (read) => `${relative(root, file)}:${read}`,
-    ),
-  );
+  const found = srcs
+    .flatMap(listTs)
+    .flatMap((file) =>
+      loadTimeReads(readFileSync(file, "utf8")).map(
+        (read) => `${relative(root, file)}:${read}`,
+      ),
+    );
   expect(found).toEqual([]);
 });
 

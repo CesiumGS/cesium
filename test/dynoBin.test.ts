@@ -20,7 +20,7 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const next = resolve(root, "packages/next");
+const next = resolve(root, "packages/cesium");
 // An address nothing listens on: npx that has to fetch anything fails at once.
 const unreachableRegistry = "http://127.0.0.1:9";
 const pkgDir = resolve(root, "tools/dyno");
@@ -90,7 +90,7 @@ describe("npx @cesium/dyno is the only form", () => {
     "AGENTS.md",
     "docs/design/benchmark-devices-and-sharing.md",
     ".claude/skills/dyno/SKILL.md",
-    "packages/next/README.md",
+    "packages/cesium/README.md",
     "bench/dyno.mjs",
     "bench/suite/commands/dispatch.mjs",
     "bench/suite/commands/suite.mjs",
@@ -158,7 +158,7 @@ describe("npx @cesium/dyno resolves the workspace link and never downloads", () 
 
   for (const [label, cwd] of [
     ["the repository root", root],
-    ["packages/next", next],
+    ["packages/cesium", next],
   ] as const) {
     it(`runs from ${label} after npm install`, () => {
       const scratch = mkdtempSync(join(tmpdir(), "dyno-npx-"));

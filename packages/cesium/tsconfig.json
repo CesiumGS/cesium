@@ -7,17 +7,7 @@
     "emitDeclarationOnly": true,
     "rewriteRelativeImportExtensions": true,
     "rootDir": "src",
-    "outDir": "dist/types",
-    "types": [
-      "@webgpu/types",
-      "vite/client"
-    ],
-    "lib": [
-      "ES2023",
-      "ESNext.Disposable",
-      "DOM",
-      "DOM.Iterable"
-    ]
+    "outDir": "dist/types"
   },
   "include": [
     "src"

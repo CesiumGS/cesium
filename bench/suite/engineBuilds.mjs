@@ -89,7 +89,7 @@ export async function resolveEngine(
     source = { kind: "ref", ref: parsed.source.ref, sha: snap.sha };
     if (!existsSync(join(snap.root, "bench", "suite", "suite.html"))) {
       throw new Error(
-        `engine "${spec}": ${parsed.source.ref} has no 2.0 benchmark suite (packages/next/bench/suite)`,
+        `engine "${spec}": ${parsed.source.ref} has no 2.0 benchmark suite (bench/suite)`,
       );
     }
     page.server = await serve(snap.root, snap.repo);

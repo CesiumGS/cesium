@@ -52,7 +52,7 @@ describe("the protocol table", () => {
     expect(threadKindOf(".", "Engine")).toBe("engine");
     expect(threadKindOf(".", "EngineOptions")).toBe("type");
     expect(threadKindOf(".", "vec3.add")).toBe("local");
-    expect(threadKindOf("widgets", "Viewer")).toBe("engine");
+    expect(threadKindOf("ui", "Viewer")).toBe("engine");
     expect(threadKindOf("frames", "Frame")).toBe("local");
     expect(threadKindOf("frames", "NotAnExport")).toBeUndefined();
   });
@@ -65,7 +65,7 @@ describe("the protocol table", () => {
     expect(memberKindOf(".", "Camera", "position")).toBe("mutation");
     expect(memberKindOf(".", "View", "toPixel")).toBe("sync-read");
     expect(memberKindOf(".", "View", "target")).toBe("dom");
-    expect(memberKindOf("widgets", "Viewer", "canvas")).toBe("dom");
+    expect(memberKindOf("ui", "Viewer", "canvas")).toBe("dom");
     expect(memberKindOf(".", "GpuDevice", "device")).toBe("cannot-cross");
     expect(memberKindOf(".", "Engine", "notAMember")).toBeUndefined();
   });
@@ -76,7 +76,7 @@ describe("the protocol table", () => {
     );
     expect(owners).toContain(".:Engine");
     expect(owners).toContain(".:QueryHost");
-    expect(owners).toContain("widgets:Viewer");
+    expect(owners).toContain("ui:Viewer");
     expect(owners).not.toContain(".:createWorld");
     expect(owners).not.toContain(".:EngineOptions");
   });
@@ -129,12 +129,12 @@ describe("the per-name checks fail by name", () => {
     const added: MemberSurfaceRow[] = [
       ...members,
       { ...owner(".", "Camera"), name: "brandNewMember", callable: true },
-      { ...owner("widgets", "Viewer"), name: "static.other", callable: false },
+      { ...owner("ui", "Viewer"), name: "static.other", callable: false },
     ];
     const found = checkProtocol(surface, protocolRows(), { actual: added });
     expect(found.unclassified).toEqual([
       "Camera.brandNewMember has no thread kind",
-      "widgets:Viewer.static.other has no thread kind",
+      "ui:Viewer.static.other has no thread kind",
     ]);
     expect(found.stale).toEqual([]);
   });

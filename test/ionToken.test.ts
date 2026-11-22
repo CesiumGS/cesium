@@ -183,8 +183,9 @@ describe("keepEnvSecretsOut", () => {
       "bench",
       "parity",
       "examples",
-      "packages/ui/src",
-      "packages/next/src",
+      ...["core", "time", "frames", "crs", "measure", "ui", "cesium"].map(
+        (name) => `packages/${name}/src`,
+      ),
       "lab",
       "spikes",
       "demo",
