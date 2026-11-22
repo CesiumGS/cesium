@@ -2,10 +2,11 @@
 id: CS-847
 title: "The content-source seam's core: types, kind registry, host, shared budget, sinks and push"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-21
 project: CS-191
 needs: [CS-552, CS-809, CS-815, CS-831, CS-846]
+claimed_by: orch-11-CS-847
 touches: [packages/next/src/source/**, packages/next/src/io/Jobs.ts, packages/next/src/io/WorkerPool.ts, packages/next/src/io/worker.ts, packages/next/src/scene/World.ts, packages/next/test/importBoundary.test.ts, packages/next/test/seams.test.ts, packages/next/src/index.ts, packages/next/api/surface.txt]
 ---
 
