@@ -27,6 +27,16 @@
 }
 .sweep-metric {
   margin-block-end: var(--stratakit-space-600);
+  min-inline-size: 0;
+}
+/* One panel a metric: the metrics side by side. */
+.sweep-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr));
+  column-gap: var(--stratakit-space-600);
+}
+.sweep-metrics-grid .sweep-panels {
+  grid-template-columns: minmax(0, 1fr);
 }
 .sweep-metric h3 {
   margin: 0 0 var(--stratakit-space-200);

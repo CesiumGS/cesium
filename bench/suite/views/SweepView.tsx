@@ -34,6 +34,7 @@ import {
   type Layout,
   type Line,
   type Panel,
+  pointValue,
   pointWords,
   referencePoint,
   regionOf,
@@ -197,6 +198,14 @@ function SweepBody({
       : ownScene;
   const setScene = (k: string) => (onScene ? onScene(k) : setOwnScene(k));
   const [compare, setCompare] = useState<CompareState>();
+  // Points that didn't settle in the scenes shown (drawn hollow).
+  const unsettled = useMemo(
+    () =>
+      model.points.filter(
+        (p) => !pointValue(s, p.config, "settled", scene).settled,
+      ).length,
+    [s, model, scene],
+  );
 
   const dims = model.dims;
   const options = dims.map((d) => [d.id, sentence(d.label)] as const);
@@ -280,19 +289,28 @@ function SweepBody({
       {group ? (
         <Section
           title={group.label}
-          description={groupNote(group.id, model, record, results)}
+          description={[
+            `Along x: ${dims.find((d) => d.id === layout.x)!.label}.`,
+            groupNote(group.id, model, record, results, unsettled),
+          ]
+            .filter(Boolean)
+            .join(" ")}
         >
-          {group.keys.map((metric) => (
-            <MetricRow
-              key={metric}
-              s={s}
-              model={model}
-              layout={layout}
-              metric={metric}
-              scene={scene}
-              record={record}
-            />
-          ))}
+          <div
+            className={layout.panels ? "sweep-metrics" : "sweep-metrics-grid"}
+          >
+            {group.keys.map((metric) => (
+              <MetricRow
+                key={metric}
+                s={s}
+                model={model}
+                layout={layout}
+                metric={metric}
+                scene={scene}
+                record={record}
+              />
+            ))}
+          </div>
           {group.zero.length ? (
             <Typography
               variant="body-sm"
@@ -389,6 +407,7 @@ function groupNote(
   model: SweepModel,
   record: ReferenceRecord | undefined,
   results: Json,
+  unsettled: number,
 ): string | undefined {
   if (id === "image") {
     if (!record) {
@@ -401,9 +420,11 @@ function groupNote(
       ? `Each point's settled view against its reference's, same engine. A pixel changes when its linear luminance moves by more than ${record.threshold}. The band is the noise floor: the largest difference between two of the ${reps} captures of one reference point.`
       : `Each point's settled view against its reference's, same engine. A pixel changes when its linear luminance moves by more than ${record.threshold}. Run with --reference-reps 3 for a noise floor.`;
   }
-  return model.settles
-    ? "Hollow points didn't settle within the scene's cap."
-    : undefined;
+  return unsettled
+    ? `${unsettled} point${unsettled === 1 ? "" : "s"} didn't settle within the scene's cap, drawn hollow.`
+    : model.settles
+      ? "Every point settled."
+      : undefined;
 }
 
 /** One metric: a panel per value of "panels by", one scale, a table twin. */
@@ -507,30 +528,29 @@ function MetricRow({
         {name}
         {shownUnit ? `, ${shownUnit}` : ""}
       </Typography>
-      <div className="sweep-legend">
-        <Typography variant="caption-lg" color="textSecondary">
-          Along x: {x.label}
-          {lines.length > 1 && lineDim ? `. ${sentence(lineDim.label)}:` : ""}
-        </Typography>
-        {lines.length > 1
-          ? lines.map((line, i) => (
-              <span key={line.name} className="sweep-legend-item">
-                <svg width="22" height="10" aria-hidden="true">
-                  <line
-                    x1="1"
-                    x2="21"
-                    y1="5"
-                    y2="5"
-                    stroke={color(colors[i]!)}
-                    strokeWidth="2.5"
-                    strokeDasharray={dashOf(line, colors[i]!)}
-                  />
-                </svg>
-                {line.name}
-              </span>
-            ))
-          : null}
-      </div>
+      {lines.length > 1 ? (
+        <div className="sweep-legend">
+          <Typography variant="caption-lg" color="textSecondary">
+            {sentence(lineDim?.label ?? "")}:
+          </Typography>
+          {lines.map((line, i) => (
+            <span key={line.name} className="sweep-legend-item">
+              <svg width="22" height="10" aria-hidden="true">
+                <line
+                  x1="1"
+                  x2="21"
+                  y1="5"
+                  y2="5"
+                  stroke={color(colors[i]!)}
+                  strokeWidth="2.5"
+                  strokeDasharray={dashOf(line, colors[i]!)}
+                />
+              </svg>
+              {line.name}
+            </span>
+          ))}
+        </div>
+      ) : null}
       <div
         className={`sweep-panels ${charts.length > 1 ? "sweep-panels-many" : ""}`}
       >
@@ -961,7 +981,6 @@ function CompareDialog({
           </Typography>
         ) : null}
         <ImageCompare
-          key={`${a?.config}|${b.config}`}
           a={a ? image(a) : undefined}
           b={image(b)}
           {...(heatmap ? { heatmap } : {})}
