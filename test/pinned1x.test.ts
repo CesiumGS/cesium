@@ -11,6 +11,8 @@ import { PINNED_1X } from "../bench/suite/engines.mjs";
 import { pinned1x } from "../bench/suite/pinned1x.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
+/** This file holds the forbidden forms as samples, so the scans skip it. */
+const self = fileURLToPath(import.meta.url);
 const next = join(root, "packages", "cesium");
 /** 2.0's folders: its packages and the harness at the root (CS-835). */
 const twoZero = [
@@ -57,6 +59,38 @@ function sources(dir: string, out: string[] = []): string[] {
   return out;
 }
 
+/** A 1.x package folder under a 1.x tree: `engine/Source`, not 2.0's `core/src`. */
+const TREE_PACKAGES = "(?:engine|core|widgets|gltf)";
+const treePath = new RegExp(
+  [
+    // A string that climbs to a 1.x folder.
+    `(?:\\.\\./)+(?:${TREE_PACKAGES}/Source\\b|Specs/Data\\b|Build/CesiumUnminified\\b)`,
+    // A path in a template (after `${dir}/`) or at the start of a string; prose
+    // that names a 1.x file, such as the handbook's, is not a path.
+    `(?:\\}/|["'])packages/${TREE_PACKAGES}/Source\\b`,
+    // join() and resolve() of folder names: "engine", "Source" and so on.
+    `["'\\x60]${TREE_PACKAGES}["'\\x60]\\s*,\\s*["'\\x60]Source["'\\x60]`,
+    `["'\\x60]Specs["'\\x60]\\s*,\\s*["'\\x60]Data["'\\x60]`,
+    `["'\\x60]Build["'\\x60]\\s*,\\s*["'\\x60]CesiumUnminified["'\\x60]`,
+  ].join("|"),
+);
+/** The one file that finds the pin's build, from the pin's own folder. */
+const pinResolver = join(root, "bench", "suite", "pinned1x.mjs");
+
+/** Whether a file builds a path into a 1.x tree (the pin's resolver excepted). */
+function reachesIntoTree(text: string, file: string): boolean {
+  return file !== pinResolver && treePath.test(text);
+}
+
+/** 1.x's packages by name, in import() and require(); 2.0's @cesium/core is its own. */
+const dynamic1x =
+  /\b(?:import|require)\s*\(\s*["'\x60](?:cesium|cesium-1x|@cesium\/(?:engine|widgets|gltf))(?:\/[^"'\x60]*)?["'\x60]/;
+
+/** Whether a file loads a 1.x package by import() or require(). */
+function dynamicallyLoads1x(text: string): boolean {
+  return dynamic1x.test(text);
+}
+
 describe("the pinned 1.x", () => {
   it("is an exact npm alias of a cesium release, the one Dyno names", () => {
     expect(rootManifest.devDependencies["cesium-1x"]).toBe(
@@ -99,12 +133,51 @@ describe("the pinned 1.x", () => {
   });
 
   it("is the only way into 1.x: nothing of 2.0's reaches into a 1.x tree", () => {
-    const tree =
-      /(?:\.\.\/)+(?:(?:engine|core|widgets|gltf)\/Source\b|Specs\/Data\b|Build\/CesiumUnminified\b)/;
     const offenders = twoZero
       .flatMap((dir) => sources(dir))
-      .filter((file) => tree.test(readFileSync(file, "utf8")));
+      .filter((file) => file !== self)
+      .filter((file) => reachesIntoTree(readFileSync(file, "utf8"), file));
     expect(offenders).toEqual([]);
+  });
+
+  it("never imports 1.x's packages dynamically, by import() or require()", () => {
+    const offenders = twoZero
+      .flatMap((dir) => sources(dir))
+      .filter((file) => file !== self)
+      .filter((file) => dynamicallyLoads1x(readFileSync(file, "utf8")));
+    expect(offenders).toEqual([]);
+  });
+
+  it("recognizes each way of reaching 1.x that it forbids", () => {
+    // A ../ string, a join() or resolve() of folder names, a template path.
+    for (const text of [
+      'const a = "../../engine/Source/Core/Cartesian3.js";',
+      'const a = join(root, "packages", "engine", "Source");',
+      'const a = path.resolve(here, "..", "widgets", "Source", "x.js");',
+      'const a = join(root, "Specs", "Data", "Models");',
+      "const a = `${root}/packages/core/Source/Core`;",
+      'const a = "packages/gltf/Source/index.js";',
+      'const a = join(root, "Build", "CesiumUnminified");',
+    ]) {
+      expect(reachesIntoTree(text, "x.ts"), text).toBe(true);
+    }
+    for (const text of [
+      'import("cesium");',
+      'await import("@cesium/engine/Source/Core/Cartesian3.js");',
+      'const c = require("cesium-1x");',
+      "const w = await import(`@cesium/widgets`);",
+    ]) {
+      expect(dynamicallyLoads1x(text), text).toBe(true);
+    }
+    // 2.0's own packages, the pin's resolver and prose about 1.x are fine.
+    expect(
+      reachesIntoTree("<C>packages/engine/Source/Scene/ShadowMap.js</C>", "x"),
+    ).toBe(false);
+    expect(reachesIntoTree('join(root, "packages", "core", "src")', "x")).toBe(
+      false,
+    );
+    expect(dynamicallyLoads1x('await import("@cesium/core");')).toBe(false);
+    expect(dynamicallyLoads1x('await import("./cesium.js");')).toBe(false);
   });
 
   it("never stands in for the workspace's @cesium/core", () => {
