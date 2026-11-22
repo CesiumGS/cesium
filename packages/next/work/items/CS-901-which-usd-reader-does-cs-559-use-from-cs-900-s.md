@@ -28,6 +28,7 @@ CS-900's Dyno run `2026-11-22T10-56-32-200Z-apple-metal-3`, over the six SimRead
 | License | ours | Apache 2.0 | TOST 1.0 |
 
 - Every miss is on the pallet sample, which lacks two layers that it references. LightUSD refuses that stage. The subset reader drops two prims under the failed reference.
+- **The coverage row is being recomputed.** CS-900's review found that a check counted as agreeing even when both readers found nothing, and most physics and label checks are empty on most samples. So the coverage figures overstate what was tested. A fix round recounts coverage over only the checks where OpenUSD found something. Don't answer this decision until that's done.
 - LightUSD's "7.1 MB" was a deprecated legacy `.wasm` in its npm package, so its size is settled.
 
 ## Options and recommendation
