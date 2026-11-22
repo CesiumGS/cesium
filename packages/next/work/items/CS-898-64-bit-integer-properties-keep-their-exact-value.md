@@ -2,7 +2,7 @@
 id: CS-898
 title: 64-bit integer properties keep their exact value
 kind: work
-state: in-progress
+state: done
 created: 2026-11-21
 project: CS-191
 claimed_by: orch-11-CS-898

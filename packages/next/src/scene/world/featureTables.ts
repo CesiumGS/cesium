@@ -66,9 +66,17 @@ function tableColumnData(table: FeatureTable): TablePlan {
     let components = 0;
     let numeric = true;
     for (const v of values) {
-      if (typeof v === "number" || typeof v === "boolean") {
+      // A 64-bit integer (`bigint`) goes to the GPU as a float32, as before.
+      if (
+        typeof v === "number" ||
+        typeof v === "bigint" ||
+        typeof v === "boolean"
+      ) {
         components = Math.max(components, 1);
-      } else if (Array.isArray(v) && v.every((x) => typeof x === "number")) {
+      } else if (
+        Array.isArray(v) &&
+        v.every((x) => typeof x === "number" || typeof x === "bigint")
+      ) {
         components = Math.max(components, v.length);
       } else if (v !== null) {
         numeric = false;
@@ -92,7 +100,10 @@ function tableColumnData(table: FeatureTable): TablePlan {
     const data = new Float32Array(Math.max(1, table.count) * components);
     values.forEach((v, row) => {
       if (Array.isArray(v)) {
-        data.set(v as number[], row * components);
+        data.set(
+          (v as Array<number | bigint>).map((x) => Number(x)),
+          row * components,
+        );
       } else if (v !== null) {
         data[row * components] = Number(v);
       }

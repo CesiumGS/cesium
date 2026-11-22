@@ -107,6 +107,107 @@ describe("EXT_mesh_features / EXT_structural_metadata", () => {
   });
 });
 
+describe("64-bit integer properties", () => {
+  const read = (
+    componentType: string,
+    values: bigint[],
+    extra: Record<string, unknown> = {},
+    array?: number,
+  ) => {
+    const bytes = new Uint8Array(values.length * 8);
+    const view = new DataView(bytes.buffer);
+    values.forEach((v, i) => {
+      if (componentType === "INT64") {
+        view.setBigInt64(i * 8, v, true);
+      } else {
+        view.setBigUint64(i * 8, v, true);
+      }
+    });
+    const json = {
+      extensions: {
+        EXT_structural_metadata: {
+          schema: {
+            classes: {
+              c: {
+                properties: {
+                  id: {
+                    type: "SCALAR",
+                    componentType,
+                    ...(array ? { array: true, count: array } : {}),
+                    ...extra,
+                  },
+                },
+              },
+            },
+          },
+          propertyTables: [
+            {
+              class: "c",
+              count: array ? values.length / array : values.length,
+              properties: { id: { values: 0 } },
+            },
+          ],
+        },
+      },
+    };
+    const warnings: string[] = [];
+    const [table] = readPropertyTables(json, () => bytes, warnings);
+    expect(warnings).toEqual([]);
+    return table!.columns.id!;
+  };
+
+  it("returns a UINT64 above 2^53 unchanged", () => {
+    const big = 2n ** 64n - 1n;
+    expect(read("UINT64", [big, 2n ** 53n + 1n])).toEqual([
+      big,
+      2n ** 53n + 1n,
+    ]);
+  });
+
+  it("returns an INT64 above 2^53 unchanged, negative too", () => {
+    const values = [2n ** 63n - 1n, -(2n ** 63n), -(2n ** 53n) - 1n, 5n];
+    expect(read("INT64", values)).toEqual(values);
+  });
+
+  it("keeps two IDs one apart distinct", () => {
+    const a = 9007199254740993n;
+    const [x, y] = read("UINT64", [a, a + 1n]);
+    expect(x).not.toBe(y);
+    expect(x).toBe(a);
+    expect(y).toBe(a + 1n);
+  });
+
+  it("returns a small value as a bigint too", () => {
+    expect(read("INT64", [7n])).toEqual([7n]);
+  });
+
+  it("returns an array property's elements as bigints", () => {
+    const values = [2n ** 60n + 1n, 2n ** 60n + 2n, 3n, 4n];
+    expect(read("UINT64", values, {}, 2)).toEqual([
+      [2n ** 60n + 1n, 2n ** 60n + 2n],
+      [3n, 4n],
+    ]);
+  });
+
+  it("ignores offset and scale unless normalized, as the specification leaves them undefined", () => {
+    expect(read("UINT64", [2n ** 60n], { offset: 1, scale: 2 })).toEqual([
+      2n ** 60n,
+    ]);
+  });
+
+  it("denormalizes a normalized value to a number", () => {
+    const [v] = read("UINT64", [2n ** 63n], { normalized: true });
+    expect(v).toBeCloseTo(0.5, 12);
+  });
+
+  it("matches a noData given as a number or a string", () => {
+    expect(read("UINT64", [5n, 6n], { noData: 5 })).toEqual([null, 6n]);
+    expect(
+      read("UINT64", [2n ** 60n, 6n], { noData: "1152921504606846976" }),
+    ).toEqual([null, 6n]);
+  });
+});
+
 describe("3DTILES_batch_table_hierarchy", () => {
   for (const name of [
     "BatchTableHierarchy",

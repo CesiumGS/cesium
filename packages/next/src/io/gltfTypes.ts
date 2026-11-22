@@ -50,9 +50,21 @@ export interface GltfMesh {
   >;
 }
 
-/** A property value of one feature (null: the property's noData). */
+/**
+ * A property value of one feature (null: the property's noData).
+ *
+ * `INT64` and `UINT64` properties are always `bigint`, whatever their size,
+ * so that IDs above 2^53 stay exact (a normalized 64-bit value is a number).
+ * `JSON.stringify` throws on a `bigint`, so code that serializes values
+ * converts them first.
+ */
 export type FeatureValue =
-  string | number | boolean | null | Array<string | number | boolean>;
+  | string
+  | number
+  | bigint
+  | boolean
+  | null
+  | Array<string | number | bigint | boolean>;
 
 /**
  * Per-feature properties, column-oriented: an `EXT_structural_metadata`

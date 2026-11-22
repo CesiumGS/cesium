@@ -131,7 +131,35 @@ function readComponent(
   }
 }
 
+/**
+ * Like `readComponent`, but `INT64` and `UINT64` come back as exact `bigint`s.
+ * For property values only: offsets and enum values are small and stay numbers.
+ */
+function readExact(
+  data: DataView,
+  at: number,
+  componentType: string,
+): number | bigint {
+  switch (componentType) {
+    case "INT64":
+      return data.getBigInt64(at, true);
+    case "UINT64":
+      return data.getBigUint64(at, true);
+    default:
+      return readComponent(data, at, componentType);
+  }
+}
+
 function normalizedValue(value: number, componentType: string): number {
+  // 3D Tiles Metadata, "Normalized Values" (read 2026-11-22): the 64-bit
+  // divisors are 2^63 - 1 and 2^64 - 1, which round to 2^63 and 2^64 as
+  // doubles.
+  if (componentType === "INT64") {
+    return Math.max(value / 2 ** 63, -1);
+  }
+  if (componentType === "UINT64") {
+    return value / 2 ** 64;
+  }
   const max: Record<string, number> = {
     INT8: 127,
     UINT8: 255,
@@ -199,6 +227,24 @@ export function readPropertyTables(
     }
     return { name: table.name, className: table.class, count, columns };
   });
+}
+
+/** True if the raw value equals the property's `noData` (JSON number or string). */
+function isNoData(raw: number | bigint, noData: unknown): boolean {
+  if (noData === undefined) {
+    return false;
+  }
+  if (typeof raw === "bigint") {
+    try {
+      return (
+        (typeof noData === "number" || typeof noData === "string") &&
+        raw === BigInt(noData)
+      );
+    } catch {
+      return false;
+    }
+  }
+  return raw === noData;
 }
 
 function readColumn(
@@ -283,10 +329,23 @@ function readColumn(
   const size = COMPONENT_BYTES[componentType]!;
   const offset = property.offset ?? definition.offset;
   const scale = property.scale ?? definition.scale;
-  const transform = (value: number, c: number): number => {
+  // 3D Tiles Metadata, "Offset and Scale" (read 2026-11-22): offset and scale
+  // are defined only for floating-point component types or `normalized`
+  // integers. So a 64-bit integer that is not normalized is returned exactly,
+  // as a bigint, and a declared offset or scale is ignored for it (the
+  // specification leaves that case undefined). A normalized 64-bit value is
+  // a double, by the specification's equations.
+  const exact =
+    (componentType === "INT64" || componentType === "UINT64") &&
+    !definition.normalized;
+  const transform = (value: number | bigint, c: number): number | bigint => {
+    if (exact) {
+      return value;
+    }
+    const number = Number(value);
     let v = definition.normalized
-      ? normalizedValue(value, componentType)
-      : value;
+      ? normalizedValue(number, componentType)
+      : number;
     const s = Array.isArray(scale) ? scale[c] : scale;
     const o = Array.isArray(offset) ? offset[c] : offset;
     if (s !== undefined) {
@@ -300,18 +359,18 @@ function readColumn(
   const noData = definition.noData;
   const width = components * perFeature;
   for (let i = 0; i < count; i++) {
-    const items: number[] = [];
+    const items: Array<number | bigint> = [];
     for (let k = 0; k < width; k++) {
       items.push(
         transform(
-          readComponent(data, (i * width + k) * size, componentType),
+          readExact(data, (i * width + k) * size, componentType),
           k % components,
         ),
       );
     }
     if (width === 1) {
-      const raw = readComponent(data, i * size, componentType);
-      out[i] = noData !== undefined && raw === noData ? null : items[0]!;
+      const raw = readExact(data, i * size, componentType);
+      out[i] = isNoData(raw, noData) ? null : items[0]!;
     } else {
       out[i] = items;
     }
