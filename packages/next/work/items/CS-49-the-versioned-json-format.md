@@ -2,10 +2,11 @@
 id: CS-49
 title: The versioned JSON format
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-10
 needs: [CS-48]
+claimed_by: orch-11-CS-49
 touches: [packages/next/src/ir/**]
 ---
 
