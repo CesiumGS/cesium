@@ -95,6 +95,7 @@ The public API is open to breaking changes. 1.x serves two roles only: it is the
 - [Color in the styling language](docs/design/color-in-the-styling-language.md): How color works in the styling language (owner, 2026-11-08).
 - [Semantic metadata and picking](docs/design/semantic-metadata-and-picking.md): How metadata reaches the engine, labels by taxonomy, stable IDs, and what a pick means in splats, point clouds and fields (design, CS-832, 2026-11-21).
 - [Editing](docs/design/editing.md): The write path back through the content seams: write capabilities, the edit layer, change sets, conflicts and the change feed (CS-831, 2026-11-21).
+- [SimReady, and how USD comes in](docs/design/simready-and-usd.md): Which SimReady profile to target, OpenUSD in WebAssembly against a TypeScript subset reader against conversion, what alpha.1's seams reserve, and a recommendation for CS-802 (study, CS-833, 2026-11-21).
 - [Ion as a swappable module](docs/design/ion-as-a-module.md): Cesium ion behind an interface the host can replace (owner, 2026-11-08).
 - [Custom post-processing](docs/design/custom-post-processing.md): For later: custom post-processing stages (owner, 2026-11-08).
 - [Risk: indirect draws on Intel integrated GPUs](docs/design/indirect-draws-on-intel.md): A risk found 2026-11-08 and what was measured.
