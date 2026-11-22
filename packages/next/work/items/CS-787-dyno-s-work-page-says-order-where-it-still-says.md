@@ -2,10 +2,11 @@
 id: CS-787
 title: The Work page's code says Order where it still says Plan view, and its dead Plan-view and proposal-stage code goes
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-21
 project: CS-389
 needs: [CS-749, CS-775]
+claimed_by: orch-11-CS-787
 touches: [packages/next/bench/suite/work.ts, packages/next/bench/suite/views/work.css, packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/HoverCard.tsx, packages/next/bench/suite/routes.tsx, packages/next/test/dynoWork*.test.ts]
 ---
 
