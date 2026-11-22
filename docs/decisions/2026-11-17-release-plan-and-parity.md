@@ -104,3 +104,7 @@ As human-in-the-lead matures, its own evals help along the way.
 - **Answered:** glTF 1.0 and the deprecated extensions (CS-274); which milestones each release needs (CS-526 to CS-529), carried into the release items CS-530 to CS-533.
 - **Retired:** the long outcomes CS-1 to CS-7, CS-436 and CS-525, dropped with this record.
 - **Tidy-up:** the stale records and the handbook's compatibility and differences tabs (CS-679); triage of the open items no release needs (CS-680).
+
+## Amendment (2026-11-22)
+
+The owner kept the harness milestones, the spike and the sample as alpha.1 gates (CS-953 A): CS-506, CS-519, CS-561, CS-751, CS-722, CS-857 and CS-858. alpha.1 waits on them, alongside the milestones approved on 2026-11-17.
