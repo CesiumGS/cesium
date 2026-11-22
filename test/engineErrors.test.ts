@@ -107,4 +107,60 @@ describe("engine.errors.on", () => {
     engine.notices.report({ ...notice, given: "off" }, FEATURE, "test");
     expect(late).toHaveBeenCalledTimes(1);
   });
+
+  it("isolates a listener that throws: the next one hears, report returns, the throw is logged once and not listed", async () => {
+    const engine = await engineOn();
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    const boom = new Error("bad listener");
+    engine.errors.on("camera", () => {
+      throw boom;
+    });
+    const after = vi.fn();
+    engine.errors.on("camera", after);
+    expect(() => engine.reportError("camera", "one")).not.toThrow();
+    expect(after).toHaveBeenCalledTimes(1);
+    // The camera error itself is logged once; the throw once more.
+    const throws = logged.mock.calls.filter((call) => call[1] === boom);
+    expect(throws).toHaveLength(1);
+    engine.reportError("camera", "two");
+    expect(after).toHaveBeenCalledTimes(2);
+    expect(logged.mock.calls.filter((call) => call[1] === boom)).toHaveLength(
+      2,
+    );
+    expect(engine.errors.map((e) => e.message)).toEqual(["one", "two"]);
+  });
+
+  it("a listener added during a report hears the next one, not that one", async () => {
+    const engine = await engineOn();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const late = vi.fn();
+    engine.errors.on("camera", () => {
+      engine.errors.on("camera", late);
+    });
+    engine.reportError("camera", "first");
+    expect(late).not.toHaveBeenCalled();
+    engine.reportError("camera", "second");
+    expect(late).toHaveBeenCalledTimes(1);
+  });
+
+  it("a listener hears nothing after the engine is destroyed", async () => {
+    const engine = await engineOn();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const heard = vi.fn();
+    engine.errors.on(heard);
+    engine.destroy();
+    engine.reportError("camera", "after destroy");
+    expect(heard).not.toHaveBeenCalled();
+  });
+
+  it("hands a listener the live entry, whose count grows with repeats", async () => {
+    const engine = await engineOn();
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const kept: EngineError[] = [];
+    engine.errors.on("camera", (e) => kept.push(e));
+    engine.reportError("camera", "again");
+    engine.reportError("camera", "again");
+    expect(kept[0]).toBe(kept[1]);
+    expect(kept[0]!.count).toBe(2);
+  });
 });

@@ -2363,5 +2363,6 @@ export class Engine {
     this.bulkSlices.dispose();
     this.scene.workers.destroy();
     this.device.destroy();
+    this.errors_.dispose();
   }
 }

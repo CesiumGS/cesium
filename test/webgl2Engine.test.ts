@@ -227,6 +227,25 @@ describe('emulate: "webgl2-basic"', () => {
     expect(engine.errors.filter((e) => e.kind === "support")).toHaveLength(1);
   });
 
+  it("isolates a throwing listener, and hears nothing after destroy", async () => {
+    const engine = await create({ emulate: "webgl2-basic" });
+    const logged = vi.spyOn(console, "error").mockImplementation(() => {});
+    const boom = new Error("bad listener");
+    engine.errors.on(() => {
+      throw boom;
+    });
+    const second = vi.fn();
+    engine.errors.on(second);
+    expect(() => engine.reportError("camera", "one")).not.toThrow();
+    expect(second).toHaveBeenCalledTimes(1);
+    expect(logged.mock.calls.filter((call) => call[1] === boom)).toHaveLength(
+      1,
+    );
+    engine.destroy();
+    engine.reportError("camera", "two");
+    expect(second).toHaveBeenCalledTimes(1);
+  });
+
   it("stops, and reports once, when the context is lost", async () => {
     const engine = await create({ emulate: "webgl2-basic" });
     const { canvas, target } = canvasTarget();

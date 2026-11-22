@@ -60,6 +60,15 @@ export type EngineErrorListener = (error: EngineError) => void;
  * live: it grows as errors are reported, and a snapshot is `[...errors]`.
  * Each entry is updated in place when its message repeats.
  *
+ * A listener receives that same entry, not a copy: its `count` and `last`
+ * grow with each repeat, so a listener that keeps the entry sees them move.
+ * (A copy per report would cost an allocation in the tick and break
+ * `error === errors.at(-1)`; read `count` when it is heard to keep a value.)
+ * A listener that throws is logged with `console.error` and skipped; the
+ * others still hear the report, and the throw is not added to this list. A
+ * listener added while a report is being heard hears the next one, not that
+ * one. The engine's `destroy` stops every listener.
+ *
  * `on` hears the errors reported after it is called, never the ones
  * already in the list. Read the list first to catch up.
  */
@@ -132,12 +141,28 @@ export class EngineErrors {
         console.error(`[cesium/next] ${kind}: ${message}`);
       }
     }
-    for (const entry of this.listeners) {
+    // A snapshot, so a listener added while this report is heard waits for
+    // the next one. Each listener is isolated: one that throws is logged
+    // here, never through `report` (it would recurse), and the rest still
+    // hear this report, so a host's bad listener can't break the tick.
+    for (const entry of [...this.listeners]) {
       if (entry.kind === undefined || entry.kind === kind) {
-        entry.listener(error);
+        try {
+          entry.listener(error);
+        } catch (thrown) {
+          console.error(
+            `[cesium/next] an errors.on listener threw (${kind}: ${message}):`,
+            thrown,
+          );
+        }
       }
     }
     return error;
+  }
+
+  /** Stops every listener (the engine's `destroy`). The list stays readable. */
+  dispose(): void {
+    this.listeners.clear();
   }
 
   /** Forgets every error (counts start again). */
