@@ -133,6 +133,58 @@ fn df_mul(a: vec2f, b: vec2f) -> vec2f {
 }
 `;
 
+/**
+ * `DF64_CORE_WGSL` in GLSL ES 3.00 (CS-54), for the vertex code of a route on
+ * WebGL 2: the same functions and statements. The df64 compute pass has no
+ * GLSL form (WebGL 2 has no compute shaders): there the center constants come
+ * from the CPU in float64. A GLSL compiler that reassociates float sums would
+ * lose the low halves; the WebGL 2 readback suite (`bench/irGlsl.ts`) checks
+ * the separable routes that use them.
+ */
+export const DF64_CORE_GLSL = `
+// ---- df64: (hi, lo) pairs in a vec2 ----
+vec2 df_twoSum(float a, float b) {
+  float s = a + b;
+  float v = s - a;
+  return vec2(s, (a - (s - v)) + (b - v));
+}
+
+vec2 df_quick(float a, float b) {
+  float s = a + b;
+  return vec2(s, b - (s - a));
+}
+
+float df_highHalf(float a) {
+  float c = 4097.0 * a;
+  return c - (c - a);
+}
+
+vec2 df_twoProd(float a, float b) {
+  float p = a * b;
+  float ah = df_highHalf(a);
+  float al = a - ah;
+  float bh = df_highHalf(b);
+  float bl = b - bh;
+  return vec2(p, ah * bh - p + ah * bl + al * bh + al * bl);
+}
+
+vec2 df_add(vec2 a, vec2 b) {
+  vec2 s = df_twoSum(a.x, b.x);
+  vec2 t = df_twoSum(a.y, b.y);
+  vec2 u = df_quick(s.x, s.y + t.x);
+  return df_quick(u.x, u.y + t.y);
+}
+
+vec2 df_sub(vec2 a, vec2 b) {
+  return df_add(a, -b);
+}
+
+vec2 df_mul(vec2 a, vec2 b) {
+  vec2 p = df_twoProd(a.x, b.x);
+  return df_quick(p.x, p.y + (a.x * b.y + a.y * b.x));
+}
+`;
+
 /** The whole df64 library as WGSL text (functions prefixed `df_`); include once per module. */
 export const DF64_WGSL = `${DF64_CORE_WGSL}
 fn df_addf(a: vec2f, b: f32) -> vec2f {

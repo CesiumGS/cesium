@@ -510,7 +510,7 @@ const ALSO = [
   {
     what: "Exact sums rely on operation order",
     state:
-      "The exact center sum was checked on NVIDIA under D3D12 only, and df64 also needs the shader compiler to keep the order of float operations. A platform that reassociates, as Dawn's relaxed math does on Apple GPUs, can lose the center's extra accuracy.",
+      "The exact center sum was checked on NVIDIA under D3D12 only, and df64 also needs the shader compiler to keep the order of float operations. On an Apple M2 it doesn't: a compiled route's center term keeps about float32 of its size (0.24 m at the Earth's surface for vertical exaggeration). The change from the center keeps its accuracy, on WebGPU and on WebGL 2, where the route has a GLSL ES form and the CPU makes the center constants.",
   },
   {
     what: "The same content twice in one view",

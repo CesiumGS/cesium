@@ -45,14 +45,23 @@ import {
 import { f32Literal, uniformSlots, type UniformSlot } from "./wgsl.ts";
 
 export interface GlslEmitOptions {
-  /** The function's name. Default `cir_main`. */
+  /** The function's name, before `prefix`. Default `cir_main`. */
   readonly fn?: string;
+  /**
+   * Put before every name the code declares (the uniform block, its instance,
+   * the output struct and the function), so two emitted programs can share one
+   * shader. Default "". As in `wgsl.ts`.
+   */
+  readonly prefix?: string;
 }
 
 export interface EmittedGlsl {
   /** Declarations (uniform block, output struct) and the function. */
   readonly code: string;
+  /** The function's name, with the prefix. */
   readonly fn: string;
+  /** The output struct's name, with the prefix. */
+  readonly outStruct: string;
   /** The uniform block's name, for `getUniformBlockIndex`. */
   readonly uniformBlock: string;
   readonly uniforms: readonly UniformSlot[];
@@ -276,10 +285,19 @@ export function emitGlsl(
   p: Program,
   options: GlslEmitOptions = {},
 ): EmittedGlsl {
-  const fn = options.fn ?? "cir_main";
-  const fnProblem = nameProblem(fn);
-  if (fnProblem) {
-    throw new Error(`'${fn}' ${fnProblem}`);
+  const prefix = options.prefix ?? "";
+  if (prefix !== "" && !IDENT.test(prefix)) {
+    throw new Error(`'${prefix}' can't start a GLSL name`);
+  }
+  const fn = `${prefix}${options.fn ?? "cir_main"}`;
+  const uniformBlock = `${prefix}${UNIFORM_BLOCK}`;
+  const blockVar = `${prefix}cir_u`;
+  const outStruct = `${prefix}CirOut`;
+  for (const name of [fn, uniformBlock, blockVar, outStruct]) {
+    const problem = nameProblem(name);
+    if (problem) {
+      throw new Error(`'${name}' ${problem}`);
+    }
   }
   for (const o of p.outputs) {
     const problem = nameProblem(o.name);
@@ -324,7 +342,7 @@ export function emitGlsl(
   };
   const read = (type: Type, slot: number): string => {
     const n = width(type);
-    const lanes = `cir_u.k[${slot}].${LANES.slice(0, n)}`;
+    const lanes = `${blockVar}.k[${slot}].${LANES.slice(0, n)}`;
     return type === "bool"
       ? `(${lanes} != 0.0)`
       : type === "int"
@@ -334,14 +352,14 @@ export function emitGlsl(
 
   if (uniforms.length > 0) {
     emit(
-      `layout(std140) uniform ${UNIFORM_BLOCK} { vec4 k[${uniforms.length}]; } cir_u;`,
+      `layout(std140) uniform ${uniformBlock} { vec4 k[${uniforms.length}]; } ${blockVar};`,
     );
   }
   emit(
-    `struct CirOut { ${outputs.map((o) => `${GLSL_TYPE[o.type]} ${o.name};`).join(" ")} };`,
+    `struct ${outStruct} { ${outputs.map((o) => `${GLSL_TYPE[o.type]} ${o.name};`).join(" ")} };`,
   );
   emit(
-    `CirOut ${fn}(${params.map((q) => `${GLSL_TYPE[q.type]} ${ident(q.name)}`).join(", ")}) {`,
+    `${outStruct} ${fn}(${params.map((q) => `${GLSL_TYPE[q.type]} ${ident(q.name)}`).join(", ")}) {`,
   );
   p.eqns.forEach((e, id) => {
     let text: string;
@@ -373,12 +391,15 @@ export function emitGlsl(
     }
     emit(`  ${GLSL_TYPE[e.type]} v${id} = ${text};`, id);
   });
-  emit(`  return CirOut(${p.outputs.map((o) => `v${o.id}`).join(", ")});`);
+  emit(
+    `  return ${outStruct}(${p.outputs.map((o) => `v${o.id}`).join(", ")});`,
+  );
   emit("}");
   return {
     code: lines.join("\n"),
     fn,
-    uniformBlock: UNIFORM_BLOCK,
+    outStruct,
+    uniformBlock,
     uniforms,
     params,
     outputs,
@@ -433,7 +454,7 @@ export function emitGlslKernel(p: Program): EmittedGlsl & {
     ...e.params.map((q, i) => `in ${carried(q.type)} ${attributes[i]};`),
     ...e.outputs.map((o, i) => `out ${carried(o.type)} ${varyings[i]};`),
     "void main() {",
-    `  CirOut r = ${e.fn}(${load.join(", ")});`,
+    `  ${e.outStruct} r = ${e.fn}(${load.join(", ")});`,
     ...e.outputs.map((o, i) => {
       const field = `r.${o.name}`;
       return `  ${varyings[i]} = ${o.type === "bool" || o.type === "int" ? `float(${field})` : field};`;

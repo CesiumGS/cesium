@@ -29,6 +29,14 @@
 // and the steps' and affine runs' 3×3s are multiplied; `transformNormalTangent`
 // orthogonalizes against the transformed tangent.
 //
+// The same module is written in GLSL ES 3.00 for WebGL 2 (CS-54): `glsl` and
+// `positionGlsl` have the same structs, functions and slots, with the residual
+// rules spelled in GLSL (residual.ts) and the helpers in GLSL beside them. The
+// df64 compute pass stays WebGPU's: on WebGL 2 the center constants come from
+// the CPU in float64 (`centerConstants`). The normals' modes are the same on
+// both. `prefix` puts a prefix before every name either module declares, so
+// two compiled routes can share one shader.
+//
 // A route is refused (`ok: false`, with the reason) when a curvilinear step has no
 // restricted-JS source, the source does not parse, or the step is an inverse:
 // the caller falls back to fitted lattices. Programs are cached by `key`.
@@ -45,6 +53,7 @@ import { scalarize } from "../ir/scalarize.ts";
 import type { Program } from "../ir/types.ts";
 import { hessianProgram, jacobianProgram } from "./ad.ts";
 import {
+  DF64_CORE_GLSL,
   DF64_CORE_WGSL,
   DF64_WGSL,
   emitDf64,
@@ -56,6 +65,7 @@ import { parseTransform } from "./parse.ts";
 import { paramsOf, valueCount } from "./program.ts";
 import {
   lowerComposites,
+  RESIDUAL_GLSL,
   RESIDUAL_WGSL,
   ResidualPass,
   type PassHost,
@@ -87,6 +97,14 @@ export interface CompileOptions {
    * buffer (the engine's placements buffer).
    */
   centerRows?: boolean;
+  /**
+   * Put before every name the vertex modules declare (`wgsl`, `positionWgsl`,
+   * `glsl`, `positionGlsl`): their structs, the helpers and the entry
+   * functions, so `<prefix>transformPoint` of two routes can share one shader.
+   * Default "". A letter, then letters, digits and single underscores. The
+   * center compute pass is a module of its own and keeps its names.
+   */
+  prefix?: string;
 }
 
 /** "auto" normals go linear for a route whose steps' Jacobian programs have more nodes than this together. */
@@ -148,6 +166,17 @@ export interface CompiledRoute {
    * is several times its positions' (exaggeration: 49 of 58 KB).
    */
   readonly positionWgsl: string;
+  /**
+   * `wgsl` in GLSL ES 3.00, for WebGL 2: the same structs (`DrawCenter` and
+   * `RouteUniforms`, `vec4` members `v0…`), helpers and functions, with
+   * `tgRoute`'s Jacobian an `out mat3`. No `#version` or `precision` line: the
+   * shader that holds it has them. Made on first read.
+   */
+  readonly glsl: string;
+  /** `positionWgsl` in GLSL ES 3.00. Made on first read. */
+  readonly positionGlsl: string;
+  /** The prefix before every name the vertex modules declare ("" by default). */
+  readonly prefix: string;
   /** The per-view uniforms (`RouteUniforms`, vec4f members `v0…`): `eyeHi`, `eyeLo`, `affine<i>` (3 columns of vec4), `param:<key>` (a df64 pair for separable parameters), derived values. */
   readonly uniformsLayout: RecordLayout;
   /** The per-draw record (`DrawCenter`, vec4f members `v0…`): `outHi`, `outLo`, `outG:<key>` (hi then lo), and each center value as `s<step>.<v|j><n>` (then its derivatives). */
@@ -214,7 +243,9 @@ export interface Refusal {
 
 export type CompileResult = CompiledRoute | Refusal;
 
-type Core = Omit<CompiledRoute, "centerConstants"> & {
+type Core = Omit<CompiledRoute, "centerConstants" | "glsl" | "positionGlsl"> & {
+  /** The GLSL ES module, with Jacobians (`glsl`) or positions only. */
+  glslText(positionsOnly: boolean): string;
   centerConstants(
     drawCenterLocal: ArrayLike<number>,
     paramValues: ParamRecord | undefined,
@@ -410,6 +441,12 @@ export function compileRoute(
         : options.normals;
   const normals = requested !== "none";
   const centerRows = options.centerRows ?? false;
+  const prefix = options.prefix ?? "";
+  if (prefix !== "" && !/^[A-Za-z](?:[A-Za-z0-9]|_(?!_))*$/.test(prefix)) {
+    throw new Error(
+      `compileRoute: '${prefix}' can't be a prefix (a letter, then letters, digits and single underscores)`,
+    );
+  }
   const steps = route.steps;
   const infos: CurvilinearInfo[] = [];
   const seen = new Map<string, number>();
@@ -479,6 +516,7 @@ export function compileRoute(
     route.shapeKey,
     hash(infos.map((info) => `${info.id}:${info.spec.source}`).join("\n")),
     `n${normals ? (linear ? infos.map((info) => info.normal[0]).join("") : 1) : 0}c${centerCompute ? 1 : 0}${centerRows ? "r" : ""}`,
+    ...(prefix === "" ? [] : [`p:${prefix}`]),
   ].join("|");
   let core = cache.get(key);
   if (!core) {
@@ -503,18 +541,37 @@ export function compileRoute(
       plan = attempt;
       break;
     }
-    core = assemble(key, plan, infos, normals, centerCompute, centerRows);
+    core = assemble(
+      key,
+      plan,
+      infos,
+      normals,
+      centerCompute,
+      centerRows,
+      prefix,
+    );
     cache.set(key, core);
   }
   return bind(core, route);
 }
 
 function bind(core: Core, route: Route): CompiledRoute {
-  return {
-    ...core,
-    centerConstants: (c, values, other, out) =>
-      core.centerConstants(c, values, other ?? route, out),
-  };
+  const { glslText, ...rest } = core;
+  return Object.defineProperties(
+    {
+      ...rest,
+      centerConstants: (
+        c: ArrayLike<number>,
+        values?: ParamRecord,
+        other?: Route,
+        out?: Float32Array,
+      ) => core.centerConstants(c, values, other ?? route, out),
+    },
+    {
+      glsl: { get: () => glslText(false), enumerable: true },
+      positionGlsl: { get: () => glslText(true), enumerable: true },
+    },
+  ) as CompiledRoute;
 }
 
 function buildPlan(
@@ -669,6 +726,7 @@ function assemble(
   normals: boolean,
   centerCompute: boolean,
   centerRows: boolean,
+  prefix: string,
 ): Core {
   const last = infos[infos.length - 1];
   const uniformLayout = plan.uniforms.layout();
@@ -703,15 +761,30 @@ function assemble(
     }
   }
 
-  const wgsl = generateWgsl(plan, last, uniformLayout, drawLayout, normals);
-  const positionWgsl = generateWgsl(
-    plan,
-    last,
-    uniformLayout,
-    drawLayout,
-    normals,
-    true,
+  const wgsl = prefixNames(
+    generateWgsl(plan, last, uniformLayout, drawLayout, normals),
+    prefix,
+    "wgsl",
   );
+  const positionWgsl = prefixNames(
+    generateWgsl(plan, last, uniformLayout, drawLayout, normals, true),
+    prefix,
+    "wgsl",
+  );
+  const glslMemo: (string | undefined)[] = [undefined, undefined];
+  const glslText = (positionsOnly: boolean): string =>
+    (glslMemo[positionsOnly ? 1 : 0] ??= prefixNames(
+      generateGlsl(
+        plan,
+        last,
+        uniformLayout,
+        drawLayout,
+        normals,
+        positionsOnly,
+      ),
+      prefix,
+      "glsl",
+    ));
 
   const paramList = infos.flatMap((info) =>
     info.locals.map((name) => ({ info, name, key: keyOf(info, name) })),
@@ -871,6 +944,8 @@ function assemble(
     key,
     wgsl,
     positionWgsl,
+    glslText,
+    prefix,
     uniformsLayout: uniformLayout,
     perDrawLayout: drawLayout,
     dynamicParams: dynamic,
@@ -1104,6 +1179,211 @@ function generateWgsl(
     );
   }
   return out.join("\n");
+}
+
+/**
+ * `generateWgsl`'s module in GLSL ES 3.00: the same structs, functions and
+ * statements in the same order, reading the same slots.
+ */
+function generateGlsl(
+  plan: Plan,
+  last: CurvilinearInfo | undefined,
+  uniformLayout: RecordLayout,
+  drawLayout: RecordLayout,
+  normals: boolean,
+  positionsOnly = false,
+): string {
+  const vec4s = (floats: number) =>
+    Array.from({ length: floats / 4 }, (_, i) => `  vec4 v${i};`);
+  const out: string[] = [
+    `struct DrawCenter {`,
+    ...vec4s(drawLayout.floats),
+    `};`,
+    ``,
+    `struct RouteUniforms {`,
+    ...vec4s(uniformLayout.floats),
+    `};`,
+    RESIDUAL_GLSL,
+    DF64_CORE_GLSL,
+  ];
+  const linear = (offset: number) =>
+    `mat3(${slot3("u", offset)}, ${slot3("u", offset + 4)}, ${slot3("u", offset + 8)})`;
+  const component = (a: number) => {
+    const hi = slot("c", plan.outHi + a);
+    const lo = slot("c", plan.outLo + a);
+    const eyeHi = slot("u", plan.eyeHi + a);
+    const eyeLo = slot("u", plan.eyeLo + a);
+    if (plan.separable.length === 0) {
+      return `((${hi} - ${eyeHi}) + (${lo} - ${eyeLo}))`;
+    }
+    let value = `df_sub(vec2(${hi}, ${lo}), vec2(${eyeHi}, ${eyeLo}))`;
+    for (const name of plan.separable) {
+      const s = plan.paramOffsets.get(last!.keys.get(name)!)!;
+      const g = plan.outG.get(name)!;
+      value = `df_add(${value}, df_mul(vec2(${slot("u", s)}, ${slot("u", s + 1)}), vec2(${slot("c", g + a)}, ${slot("c", g + 4 + a)})))`;
+    }
+    return `${value}.x`;
+  };
+  out.push(
+    `// The route's value at the draw center minus the eye, in float32 from df64 sums.`,
+    `vec3 tgCenter(DrawCenter c, RouteUniforms u) {`,
+    `  return vec3(${component(0)}, ${component(1)}, ${component(2)});`,
+    `}`,
+    ``,
+  );
+  const center = "tgCenter(c, u)";
+  for (const link of plan.links) {
+    if (link.kind !== "curvilinear") {
+      continue;
+    }
+    const { j } = link.info;
+    out.push(
+      `// step ${j}: ${link.info.id}`,
+      `vec3 tgStep${j}(vec3 dIn, DrawCenter c, RouteUniforms u) {`,
+      ...link.value.glslLines(),
+      `  return vec3(${link.valueOut.map((o) => o.delta).join(", ")});`,
+      `}`,
+      ``,
+    );
+    if (positionsOnly) {
+      continue;
+    }
+    if (link.jac) {
+      const j9 = link.jacOut!.map(sum);
+      const column = (col: number) =>
+        `vec3(${j9[col]}, ${j9[3 + col]}, ${j9[6 + col]})`;
+      out.push(
+        `mat3 tgJac${j}(vec3 dIn, DrawCenter c, RouteUniforms u) {`,
+        ...link.jac.glslLines(),
+        `  return mat3(${column(0)}, ${column(1)}, ${column(2)});`,
+        `}`,
+        ``,
+      );
+    } else if (link.linear) {
+      const { j0, h0 } = link.linear;
+      const entry = (i: number, k: number) =>
+        `(${slot("c", j0 + 3 * i + k)} + dIn.x * ${slot("c", h0 + 3 * i + k)} + dIn.y * ${slot("c", h0 + 9 + 3 * i + k)} + dIn.z * ${slot("c", h0 + 18 + 3 * i + k)})`;
+      const column = (k: number) =>
+        `vec3(${entry(0, k)}, ${entry(1, k)}, ${entry(2, k)})`;
+      out.push(
+        `// step ${j}'s Jacobian: linear in the offset from the draw center.`,
+        `mat3 tgJacLinear${j}(vec3 dIn, DrawCenter c) {`,
+        `  return mat3(${column(0)}, ${column(1)}, ${column(2)});`,
+        `}`,
+        ``,
+      );
+    }
+  }
+
+  const identity = "mat3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0)";
+  const body: string[] = ["  vec3 d = pLocal;"];
+  const bodyJ: string[] = ["  vec3 d = pLocal;", `  mat3 jt = ${identity};`];
+  for (const link of plan.links) {
+    if (link.kind === "affine") {
+      body.push(`  d = ${linear(link.uniform)} * d;`);
+      bodyJ.push(
+        `  d = ${linear(link.uniform)} * d;`,
+        `  jt = ${linear(link.uniform)} * jt;`,
+      );
+    } else {
+      body.push(`  d = tgStep${link.info.j}(d, c, u);`);
+      if (link.jac) {
+        bodyJ.push(`  jt = tgJac${link.info.j}(d, c, u) * jt;`);
+      } else if (link.linear) {
+        bodyJ.push(`  jt = tgJacLinear${link.info.j}(d, c) * jt;`);
+      }
+      bodyJ.push(`  d = tgStep${link.info.j}(d, c, u);`);
+    }
+  }
+  out.push(
+    `vec3 transformPoint(vec3 pLocal, DrawCenter c, RouteUniforms u) {`,
+    ...body,
+    `  return ${center} + d;`,
+    `}`,
+    ``,
+  );
+  if (positionsOnly) {
+    out.push(
+      `vec3 tgRoute(vec3 pLocal, DrawCenter c, RouteUniforms u, out mat3 jOut) {`,
+      ...body,
+      `  jOut = ${identity};`,
+      `  return ${center} + d;`,
+      `}`,
+      ``,
+    );
+  } else if (normals) {
+    out.push(
+      `vec3 tgRoute(vec3 pLocal, DrawCenter c, RouteUniforms u, out mat3 jOut) {`,
+      ...bodyJ,
+      `  jOut = jt;`,
+      `  return ${center} + d;`,
+      `}`,
+      ``,
+      `mat3 routeJacobian(vec3 pLocal, DrawCenter c, RouteUniforms u) {`,
+      `  mat3 j;`,
+      `  tgRoute(pLocal, c, u, j);`,
+      `  return j;`,
+      `}`,
+      ``,
+      `// The cofactor matrix det(M) M^-T: maps a surface normal through M.`,
+      `mat3 tgCofactor(mat3 m) {`,
+      `  return mat3(cross(m[1], m[2]), cross(m[2], m[0]), cross(m[0], m[1]));`,
+      `}`,
+      ``,
+      `vec3 transformNormal(vec3 nLocal, vec3 pLocal, DrawCenter c, RouteUniforms u) {`,
+      `  return normalize(tgCofactor(routeJacobian(pLocal, c, u)) * nLocal);`,
+      `}`,
+      ``,
+      `// The normal made perpendicular to the transformed tangent (Gram-Schmidt).`,
+      `vec3 transformNormalTangent(vec3 nLocal, vec3 tLocal, vec3 pLocal, DrawCenter c, RouteUniforms u) {`,
+      `  mat3 j = routeJacobian(pLocal, c, u);`,
+      `  vec3 t = normalize(j * tLocal);`,
+      `  vec3 n = tgCofactor(j) * nLocal;`,
+      `  return normalize(n - t * dot(n, t));`,
+      `}`,
+      ``,
+      `struct TransformedVertex {`,
+      `  vec3 position;`,
+      `  vec3 normal;`,
+      `};`,
+      ``,
+      `TransformedVertex transformVertex(vec3 pLocal, vec3 nLocal, DrawCenter c, RouteUniforms u) {`,
+      `  mat3 j;`,
+      `  vec3 position = tgRoute(pLocal, c, u, j);`,
+      `  return TransformedVertex(position, normalize(tgCofactor(j) * nLocal));`,
+      `}`,
+      ``,
+    );
+  }
+  return out.join("\n");
+}
+
+/**
+ * `code` with `prefix` before every name it declares at module scope (its
+ * structs and functions), wherever the name is used. Struct members (`c.v3`)
+ * and locals keep theirs.
+ */
+function prefixNames(
+  code: string,
+  prefix: string,
+  lang: "wgsl" | "glsl",
+): string {
+  if (prefix === "") {
+    return code;
+  }
+  const declared = new Set<string>();
+  const patterns =
+    lang === "wgsl"
+      ? [/^(?:fn|struct) ([A-Za-z_]\w*)/gm]
+      : [/^struct ([A-Za-z_]\w*)/gm, /^[A-Za-z_]\w* ([A-Za-z_]\w*)\(/gm];
+  for (const pattern of patterns) {
+    for (const m of code.matchAll(pattern)) {
+      declared.add(m[1]!);
+    }
+  }
+  return code.replace(/(?<![.\w])[A-Za-z_]\w*(?!\w)/g, (word) =>
+    declared.has(word) ? `${prefix}${word}` : word,
+  );
 }
 
 interface CenterShader {

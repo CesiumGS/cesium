@@ -47,8 +47,15 @@ export interface UniformSlot {
 }
 
 export interface EmitOptions {
-  /** The function's name. Default `cir_main`. */
+  /** The function's name, before `prefix`. Default `cir_main`. */
   readonly fn?: string;
+  /**
+   * Put before every name the module declares (the uniform block's struct and
+   * variable, the output struct and the function), so two emitted programs
+   * can share one module. Default "". The uniform block's `group` and
+   * `binding` are the caller's to keep apart.
+   */
+  readonly prefix?: string;
   /** The uniform block's `@group` and `@binding`. Default 0 and 0. */
   readonly group?: number;
   readonly binding?: number;
@@ -57,7 +64,10 @@ export interface EmitOptions {
 export interface EmittedWgsl {
   /** Declarations (uniform block, output struct) and the function. */
   readonly code: string;
+  /** The function's name, with the prefix. */
   readonly fn: string;
+  /** The output struct's name, with the prefix. */
+  readonly outStruct: string;
   readonly uniforms: readonly UniformSlot[];
   /** The function's parameters (the non-uniform inputs), in order. */
   readonly params: readonly { readonly name: string; readonly type: Type }[];
@@ -298,10 +308,17 @@ const ident = (name: string) => `in_${name.replace(/[^A-Za-z0-9_]/g, "_")}`;
 
 /** WGSL for `p`: a uniform block, an output struct and one function. */
 export function emitWgsl(p: Program, options: EmitOptions = {}): EmittedWgsl {
-  const fn = options.fn ?? "cir_main";
-  if (!IDENT.test(fn)) {
+  const prefix = options.prefix ?? "";
+  if (prefix !== "" && !IDENT.test(prefix)) {
+    throw new Error(`'${prefix}' can't start a WGSL name`);
+  }
+  const fn = `${prefix}${options.fn ?? "cir_main"}`;
+  if (!IDENT.test(fn) || fn.startsWith("__")) {
     throw new Error(`'${fn}' isn't a function name`);
   }
+  const block = `${prefix}CirUniforms`;
+  const blockVar = `${prefix}cir_u`;
+  const outStruct = `${prefix}CirOut`;
   for (const o of p.outputs) {
     if (!IDENT.test(o.name)) {
       throw new Error(`output '${o.name}' isn't a WGSL field name`);
@@ -328,7 +345,7 @@ export function emitWgsl(p: Program, options: EmitOptions = {}): EmittedWgsl {
   };
   const read = (type: Type, slot: number): string => {
     const n = width(type);
-    const lanes = `cir_u.k[${slot}].${LANES.slice(0, n)}`;
+    const lanes = `${blockVar}.k[${slot}].${LANES.slice(0, n)}`;
     return type === "bool"
       ? `(${lanes} != 0.0)`
       : type === "int"
@@ -337,16 +354,16 @@ export function emitWgsl(p: Program, options: EmitOptions = {}): EmittedWgsl {
   };
 
   if (uniforms.length > 0) {
-    emit(`struct CirUniforms { k: array<vec4f, ${uniforms.length}> }`);
+    emit(`struct ${block} { k: array<vec4f, ${uniforms.length}> }`);
     emit(
-      `@group(${options.group ?? 0}) @binding(${options.binding ?? 0}) var<uniform> cir_u: CirUniforms;`,
+      `@group(${options.group ?? 0}) @binding(${options.binding ?? 0}) var<uniform> ${blockVar}: ${block};`,
     );
   }
   emit(
-    `struct CirOut { ${outputs.map((o) => `${o.name}: ${WGSL_TYPE[o.type]}`).join(", ")} }`,
+    `struct ${outStruct} { ${outputs.map((o) => `${o.name}: ${WGSL_TYPE[o.type]}`).join(", ")} }`,
   );
   emit(
-    `fn ${fn}(${params.map((q) => `${ident(q.name)}: ${WGSL_TYPE[q.type]}`).join(", ")}) -> CirOut {`,
+    `fn ${fn}(${params.map((q) => `${ident(q.name)}: ${WGSL_TYPE[q.type]}`).join(", ")}) -> ${outStruct} {`,
   );
   p.eqns.forEach((e, id) => {
     let text: string;
@@ -378,9 +395,19 @@ export function emitWgsl(p: Program, options: EmitOptions = {}): EmittedWgsl {
     }
     emit(`  let v${id} = ${text};`, id);
   });
-  emit(`  return CirOut(${p.outputs.map((o) => `v${o.id}`).join(", ")});`);
+  emit(
+    `  return ${outStruct}(${p.outputs.map((o) => `v${o.id}`).join(", ")});`,
+  );
   emit("}");
-  return { code: lines.join("\n"), fn, uniforms, params, outputs, sourceMap };
+  return {
+    code: lines.join("\n"),
+    fn,
+    outStruct,
+    uniforms,
+    params,
+    outputs,
+    sourceMap,
+  };
 }
 
 /** Lanes a value of `type` takes in a flat float32 buffer. */

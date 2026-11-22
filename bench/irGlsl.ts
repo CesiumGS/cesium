@@ -10,6 +10,11 @@
 // names are generated, so they are bound from the entry's own `@location`s
 // (the vertex inputs), naga's reflection (the uniform block) and the
 // `_vs2fs_location<n>` outputs (see nagaGlsl).
+//
+// CS-54 adds the compiled routes: every built-in's `CompiledRoute.glsl` in a
+// vertex shader, read back through transform feedback against the route's
+// float64 map, and two prefixed routes linked into one program
+// (src/transform/routeReadback.ts), with bench/irWgsl.ts's cases and bounds.
 import * as naga from "naga-wasm";
 import wasmUrl from "naga-wasm/naga_bg.wasm?url";
 import {
@@ -28,6 +33,16 @@ import {
   type ReadbackRow,
 } from "../packages/core/src/ir/readback.ts";
 import { wgslCases, type WgslCase } from "../packages/core/src/ir/wgslCases.ts";
+import {
+  compareRoute,
+  newRouteRow,
+  packRouteRows,
+  routeKernelGlsl,
+  routeOutStride,
+  type RouteCase,
+  type RouteReadbackRow,
+} from "../packages/core/src/transform/routeReadback.ts";
+import { routeCases } from "../packages/core/src/transforms/routeCases.ts";
 
 /** One case: our kernel's result, and naga's beside it. */
 export interface IrGlslRow extends ReadbackRow {
@@ -207,7 +222,114 @@ function runKernel(
   gl.deleteShader(fs);
 }
 
-async function runIrGlsl(): Promise<IrGlslRow[]> {
+/** One route case: compile and link its shader, run it over the rows, compare. */
+function runRoute(gl: WebGL2RenderingContext, c: RouteCase): RouteReadbackRow {
+  const row = newRouteRow(c);
+  const k = routeKernelGlsl(c);
+  const vs = compile(
+    gl,
+    gl.VERTEX_SHADER,
+    k.code,
+    row.compileMessages,
+    "route vertex",
+  );
+  const fs = compile(
+    gl,
+    gl.FRAGMENT_SHADER,
+    GLSL_KERNEL_FRAGMENT,
+    row.compileMessages,
+    "fragment",
+  );
+  const program = gl.createProgram()!;
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.bindAttribLocation(program, 0, k.attribute);
+  gl.transformFeedbackVaryings(program, k.varyings, gl.INTERLEAVED_ATTRIBS);
+  if (row.compileMessages.length === 0) {
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+      row.compileMessages.push(
+        `route link: ${gl.getProgramInfoLog(program) ?? "(no log)"}`,
+      );
+    }
+  }
+  const buffers: WebGLBuffer[] = [];
+  const done = () => {
+    for (const b of buffers) {
+      gl.deleteBuffer(b);
+    }
+    gl.deleteProgram(program);
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+  };
+  if (row.compileMessages.length > 0) {
+    done();
+    return row;
+  }
+  gl.useProgram(program);
+  k.blocks.forEach((block, binding) => {
+    const index = gl.getUniformBlockIndex(program, block.name);
+    if (index === gl.INVALID_INDEX) {
+      row.compileMessages.push(`no uniform block '${block.name}'`);
+      return;
+    }
+    const need = gl.getActiveUniformBlockParameter(
+      program,
+      index,
+      gl.UNIFORM_BLOCK_DATA_SIZE,
+    ) as number;
+    if (need !== block.data.byteLength) {
+      row.compileMessages.push(
+        `block ${block.name} is ${need} bytes, the record ${block.data.byteLength}`,
+      );
+    }
+    const b = gl.createBuffer()!;
+    buffers.push(b);
+    gl.bindBuffer(gl.UNIFORM_BUFFER, b);
+    gl.bufferData(gl.UNIFORM_BUFFER, block.data, gl.STATIC_DRAW);
+    gl.uniformBlockBinding(program, index, binding);
+    gl.bindBufferBase(gl.UNIFORM_BUFFER, binding, b);
+  });
+  const input = packRouteRows(c);
+  const inBuf = gl.createBuffer()!;
+  buffers.push(inBuf);
+  gl.bindBuffer(gl.ARRAY_BUFFER, inBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, input, gl.STATIC_DRAW);
+  const vao = gl.createVertexArray()!;
+  gl.bindVertexArray(vao);
+  gl.enableVertexAttribArray(0);
+  gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 12, 0);
+  if (row.compileMessages.length === 0) {
+    const bytes = Math.max(routeOutStride(c) * c.rows.length, 1) * 4;
+    const outBuf = gl.createBuffer()!;
+    buffers.push(outBuf);
+    gl.bindBuffer(gl.TRANSFORM_FEEDBACK_BUFFER, outBuf);
+    gl.bufferData(gl.TRANSFORM_FEEDBACK_BUFFER, bytes, gl.STREAM_READ);
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, outBuf);
+    gl.beginTransformFeedback(gl.POINTS);
+    gl.drawArrays(gl.POINTS, 0, c.rows.length);
+    gl.endTransformFeedback();
+    gl.bindBufferBase(gl.TRANSFORM_FEEDBACK_BUFFER, 0, null);
+    const error = gl.getError();
+    if (error !== gl.NO_ERROR) {
+      row.compileMessages.push(`route GL error 0x${error.toString(16)}`);
+    } else {
+      const gpu = new Float32Array(bytes / 4);
+      gl.bindBuffer(gl.ARRAY_BUFFER, outBuf);
+      gl.getBufferSubData(gl.ARRAY_BUFFER, 0, gpu);
+      compareRoute(row, c, gpu);
+    }
+  }
+  gl.bindVertexArray(null);
+  gl.deleteVertexArray(vao);
+  for (let i = 0; i < k.blocks.length; i++) {
+    gl.bindBufferBase(gl.UNIFORM_BUFFER, i, null);
+  }
+  done();
+  return row;
+}
+
+async function runIrGlsl(): Promise<(IrGlslRow | RouteReadbackRow)[]> {
   await naga.init({ module_or_path: wasmUrl });
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = 1;
@@ -224,7 +346,7 @@ async function runIrGlsl(): Promise<IrGlslRow[]> {
       throw new Error("The WebGL context was lost.");
     }
   };
-  const out: IrGlslRow[] = [];
+  const out: (IrGlslRow | RouteReadbackRow)[] = [];
   gl.enable(gl.RASTERIZER_DISCARD);
   for (const c of wgslCases()) {
     checkLost();
@@ -283,6 +405,10 @@ async function runIrGlsl(): Promise<IrGlslRow[]> {
       },
       row.naga,
     );
+  }
+  for (const c of routeCases()) {
+    checkLost();
+    out.push(runRoute(gl, c));
   }
   checkLost();
   document.querySelector("#out")!.textContent = JSON.stringify(out, null, 1);

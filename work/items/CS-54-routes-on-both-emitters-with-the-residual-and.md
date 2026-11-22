@@ -2,7 +2,7 @@
 id: CS-54
 title: Routes on both emitters, with the residual and df64 forms
 kind: work
-state: in-progress
+state: done
 created: 2026-11-13
 project: CS-10
 needs: [CS-52, CS-53]

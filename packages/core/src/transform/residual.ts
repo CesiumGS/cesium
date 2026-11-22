@@ -23,6 +23,12 @@
 // slider move. Branches (select, min, max, abs, floor, comparisons) follow
 // the vertex's own side with the crossing term from the center values.
 //
+// The rules are written once and spelled in either shading language (CS-54):
+// `lines` are WGSL, `glslLines()` GLSL ES 3.00, the same statements in the same
+// order over the same per-draw and uniform slots, with the helpers below as a
+// library in each (`RESIDUAL_WGSL`, `RESIDUAL_GLSL`). Only `select` and the
+// declarations differ.
+//
 // The program is Cesium IR, scalarized: `d<n>` takes its number from
 // `numbering`, a lane of the position is `math/extract3` of `p`, and a bool
 // is the float 0 or 1 (`type/boolToFloat` is its operand).
@@ -157,6 +163,149 @@ fn tg_pow4d(ac: f32, da: f32) -> f32 {
   return da * (ac * ac * ac + ac * ac * av + ac * av * av + av * av * av);
 }
 `;
+
+/**
+ * `RESIDUAL_WGSL` in GLSL ES 3.00: the same helpers, names and statements,
+ * with `atan(y, x)` for `atan2` and the ternary for `select`.
+ */
+export const RESIDUAL_GLSL = `
+// ---- residual helpers: accurate for small arguments ----
+float tg_sq(float x) {
+  return x * x;
+}
+
+float tg_sin(float x) {
+  if (abs(x) > 1.6) {
+    return sin(x);
+  }
+  float x2 = x * x;
+  return x * (1.0 + x2 * (-0.166666672 + x2 * (0.00833333377 + x2 * (-1.98412701e-4 + x2 * (2.75573188e-6 + x2 * (-2.50521079e-8 + x2 * 1.60590444e-10))))));
+}
+
+float tg_cos(float x) {
+  if (abs(x) > 3.2) {
+    return cos(x);
+  }
+  return 1.0 - 2.0 * tg_sq(tg_sin(0.5 * x));
+}
+
+float tg_expm1(float x) {
+  if (abs(x) > 0.5) {
+    return exp(x) - 1.0;
+  }
+  return x * (1.0 + x * (0.5 + x * (0.166666672 + x * (0.0416666679 + x * (0.00833333377 + x * (0.00138888892 + x * (1.98412701e-4 + x * 2.48015876e-5)))))));
+}
+
+float tg_log1p(float x) {
+  if (abs(x) > 0.4) {
+    return log(1.0 + x);
+  }
+  float z = x / (2.0 + x);
+  float z2 = z * z;
+  return 2.0 * z * (1.0 + z2 * (0.333333343 + z2 * (0.200000003 + z2 * (0.142857149 + z2 * 0.111111112))));
+}
+
+float tg_atan(float t) {
+  if (abs(t) > 2.0) {
+    return atan(t);
+  }
+  float a = t / (1.0 + sqrt(1.0 + t * t));
+  float b = a / (1.0 + sqrt(1.0 + a * a));
+  float b2 = b * b;
+  return 4.0 * b * (1.0 + b2 * (-0.333333343 + b2 * (0.200000003 + b2 * (-0.142857149 + b2 * (0.111111112 + b2 * -0.0909090936)))));
+}
+
+float tg_sinh(float x) {
+  if (abs(x) > 0.5) {
+    return 0.5 * (exp(x) - exp(-x));
+  }
+  float x2 = x * x;
+  return x * (1.0 + x2 * (0.166666672 + x2 * (0.00833333377 + x2 * (1.98412701e-4 + x2 * (2.75573188e-6 + x2 * 2.50521079e-8)))));
+}
+
+float tg_cosh(float x) {
+  if (abs(x) > 1.0) {
+    return cosh(x);
+  }
+  return 1.0 + 2.0 * tg_sq(tg_sinh(0.5 * x));
+}
+
+// atan(a_c + da) - atan(a_c)
+float tg_atan1(float ac, float da) {
+  float den = 1.0 + ac * (ac + da);
+  return den > 0.0 ? tg_atan(da / den) : atan(ac + da) - atan(ac);
+}
+
+// atan2(yc + dy, xc + dx) - nc, where nc = atan2(yc, xc): the angle between the two points.
+float tg_atan2(float yc, float xc, float dy, float dx, float nc) {
+  float cross = xc * dy - yc * dx;
+  float dotp = xc * xc + yc * yc + xc * dx + yc * dy;
+  return dotp > 0.0 ? tg_atan(cross / dotp) : atan(yc + dy, xc + dx) - nc;
+}
+
+// min(0, dc + dd) - min(0, dc)
+float tg_min0(float dc, float dd) {
+  float v = dc + dd;
+  if (dc <= 0.0) {
+    return v <= 0.0 ? dd : -dc;
+  }
+  return v <= 0.0 ? v : 0.0;
+}
+
+// max(0, dc + dd) - max(0, dc)
+float tg_max0(float dc, float dd) {
+  float v = dc + dd;
+  if (dc >= 0.0) {
+    return v >= 0.0 ? dd : -dc;
+  }
+  return v >= 0.0 ? v : 0.0;
+}
+
+// |ac + da| - |ac|
+float tg_abs(float ac, float da) {
+  float v = ac + da;
+  return ac != 0.0 && ((ac > 0.0) == (v > 0.0)) ? sign(ac) * da : abs(v) - abs(ac);
+}
+
+// The change of select(cond, t, f) when cond is fv at the vertex and fc at the center, e = t_c - f_c.
+float tg_select(float fv, float fc, float dt, float df, float e) {
+  bool tv = fv != 0.0;
+  bool tc = fc != 0.0;
+  if (tv == tc) {
+    return tv ? dt : df;
+  }
+  return tc ? df - e : dt + e;
+}
+
+float tg_pow2d(float ac, float da) {
+  return da * (2.0 * ac + da);
+}
+
+float tg_pow3d(float ac, float da) {
+  float av = ac + da;
+  return da * (ac * ac + ac * av + av * av);
+}
+
+float tg_pow4d(float ac, float da) {
+  float av = ac + da;
+  return da * (ac * ac * ac + ac * ac * av + ac * av * av + av * av * av);
+}
+`;
+
+/** A shading language the residual rules are spelled in. */
+export type ShadingLanguage = "wgsl" | "glsl";
+
+/** `select(whenFalse, whenTrue, cond)` in `lang`. */
+function choose(
+  lang: ShadingLanguage,
+  whenFalse: string,
+  whenTrue: string,
+  cond: string,
+): string {
+  return lang === "wgsl"
+    ? `select(${whenFalse}, ${whenTrue}, ${cond})`
+    : `(${cond} ? ${whenTrue} : ${whenFalse})`;
+}
 
 const COMPOSITES = new Set([
   "math/clamp",
@@ -294,16 +443,18 @@ export interface DerivedValue {
 }
 
 export interface PassOutput {
-  /** WGSL for the output's change Δ at the vertex ("0.0" when it has none). */
+  /** The output's change Δ at the vertex ("0.0" when it has none), in either language. */
   readonly delta: string;
-  /** WGSL for the output's center value. */
+  /** The output's center value, in either language. */
   readonly center: string;
 }
 
 /**
  * One program's residual evaluation: `lines` define `d<id>` (the change of
  * each position-dependent node) from `dIn: vec3f`, the vertex's offset from
- * the center, reading `c: DrawCenter` and `u: RouteUniforms`.
+ * the center, reading `c: DrawCenter` and `u: RouteUniforms`, in WGSL;
+ * `glslLines()` are the same in GLSL ES 3.00. Slot reads (`c.v3.x`) are
+ * spelled alike in both.
  */
 export class ResidualPass {
   /** The program's builder, holding the equations the rules add (`cos a` for `sin a`'s rule). */
@@ -320,6 +471,7 @@ export class ResidualPass {
   private readonly varyingMemo = new Map<NodeId, boolean>();
   private centerMemo: Program | undefined;
   private uniformMemo: Program | undefined;
+  private glslMemo: string[] | undefined;
   private readonly storedExpr = new Map<NodeId, string>();
   private readonly derivedExpr = new Map<NodeId, string>();
   private readonly depsMemo = new Map<
@@ -354,19 +506,50 @@ export class ResidualPass {
 
   /** Emits the statements and returns each program output's change and center value. */
   emit(): PassOutput[] {
+    for (const id of this.statements()) {
+      this.lines.push(`  let ${this.d(id)}: f32 = ${this.rule(id, "wgsl")};`);
+    }
+    return this.outputs.map((id) => ({
+      delta: this.varying(id) ? this.d(id) : "0.0",
+      center: this.cv(id),
+    }));
+  }
+
+  /**
+   * `lines` in GLSL ES 3.00 (after `emit`). The rules run again for the other
+   * spelling; every slot and every equation they reach was made by `emit`
+   * (the builder hash-conses, the slots are memoized), so the layout is the same.
+   */
+  glslLines(): readonly string[] {
+    if (!this.glslMemo) {
+      const before = this.ir.eqns.length;
+      const slots = this.stored.length + this.derived.length;
+      this.glslMemo = this.statements().map(
+        (id) => `  float ${this.d(id)} = ${this.rule(id, "glsl")};`,
+      );
+      if (
+        this.ir.eqns.length !== before ||
+        this.stored.length + this.derived.length !== slots
+      ) {
+        throw new Error("residual: the GLSL spelling reached a new equation");
+      }
+    }
+    return this.glslMemo;
+  }
+
+  /** The equations that get a statement: position-dependent values, in order. */
+  private statements(): NodeId[] {
+    const out: NodeId[] = [];
     this.program.eqns.forEach((e, id) => {
       if (
         e.op !== "input" &&
         through(this.program, id) === id &&
         this.varying(id)
       ) {
-        this.lines.push(`  let ${this.d(id)}: f32 = ${this.rule(id)};`);
+        out.push(id);
       }
     });
-    return this.outputs.map((id) => ({
-      delta: this.varying(id) ? this.d(id) : "0.0",
-      center: this.cv(id),
-    }));
+    return out;
   }
 
   /** The program whose outputs are `this.outputs` followed by each stored value's equation (after `emit`). */
@@ -502,7 +685,7 @@ export class ResidualPass {
       : `(${this.cv(id)} + ${this.d(id)})`;
   }
 
-  private rule(id: NodeId): string {
+  private rule(id: NodeId, lang: ShadingLanguage): string {
     const e = this.ir.eqns[id]!;
     const [a, b, c] = e.args;
     const isVarying = (n: NodeId | undefined) =>
@@ -612,14 +795,29 @@ export class ResidualPass {
       case "math/ge":
       case "math/eq": {
         const d = cvOf(aux("math/sub", a!, b!));
-        return `select(0.0, 1.0, ${d} + ${zero(minus(da, db))} ${COMPARE_TEST[e.op]!})`;
+        return choose(
+          lang,
+          "0.0",
+          "1.0",
+          `${d} + ${zero(minus(da, db))} ${COMPARE_TEST[e.op]!}`,
+        );
       }
       case "math/and":
-        return `select(0.0, 1.0, ${this.flag(a!)} != 0.0 && ${this.flag(b!)} != 0.0)`;
+        return choose(
+          lang,
+          "0.0",
+          "1.0",
+          `${this.flag(a!)} != 0.0 && ${this.flag(b!)} != 0.0`,
+        );
       case "math/or":
-        return `select(0.0, 1.0, ${this.flag(a!)} != 0.0 || ${this.flag(b!)} != 0.0)`;
+        return choose(
+          lang,
+          "0.0",
+          "1.0",
+          `${this.flag(a!)} != 0.0 || ${this.flag(b!)} != 0.0`,
+        );
       case "math/not":
-        return `select(0.0, 1.0, ${this.flag(a!)} == 0.0)`;
+        return choose(lang, "0.0", "1.0", `${this.flag(a!)} == 0.0`);
       case "math/select": {
         const t = through(this.view, b!);
         const f = through(this.view, c!);
