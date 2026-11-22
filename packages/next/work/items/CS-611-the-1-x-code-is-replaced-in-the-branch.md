@@ -2,7 +2,7 @@
 id: CS-611
 title: The 1.x code is replaced in the branch
 kind: work
-state: in-progress
+state: done
 created: 2026-11-17
 project: CS-609
 needs: [CS-610, CS-887]
