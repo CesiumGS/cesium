@@ -521,10 +521,7 @@ describe(
               domain: GeometryAttributeDomain.CORNER,
               componentDatatype: ComponentDatatype.UNSIGNED_INT,
             },
-            [
-              [10, 11, 12],
-              [20, 21, 22],
-            ],
+            [10, 11, 12, 20, 21, 22],
           ),
         ]);
 
@@ -537,6 +534,103 @@ describe(
         expect(getAttribute(mesh, "_CORNER_ID").domain).toBe(
           GeometryAttributeDomain.CORNER,
         );
+      });
+
+      it("loads per-face attributes in the order of the primitives", async function () {
+        const editor = await MeshEditor.addToScene(scene);
+        spyOn(CustomAttribute, "uint32").and.callThrough();
+
+        const mesh = addSquare(editor, [
+          createAttribute(
+            {
+              semantic: "_FACE_ID",
+              type: AttributeType.SCALAR,
+              domain: GeometryAttributeDomain.FACE,
+              componentDatatype: ComponentDatatype.UNSIGNED_INT,
+            },
+            [5, 6],
+          ),
+        ]);
+
+        expect(CustomAttribute.uint32).toHaveBeenCalledOnceWith(
+          "_FACE_ID",
+          AttributeDomain.Face,
+          1,
+          new Uint32Array([5, 6]),
+        );
+        const { faces } = mesh.getComponentKeys(EditMode.FACE);
+        expect(Array.from(mesh.getAttributeValues("_FACE_ID", faces))).toEqual(
+          jasmine.arrayWithExactContents([5, 6]),
+        );
+      });
+
+      describe("per edge", function () {
+        const edgeId = {
+          semantic: "_EDGE_ID",
+          type: AttributeType.SCALAR,
+          domain: GeometryAttributeDomain.EDGE,
+          componentDatatype: ComponentDatatype.UNSIGNED_INT,
+        };
+
+        function addSquareWithEdgeIds(editor, edges) {
+          return editor.addMesh(
+            createGeometrySource({
+              ...square,
+              edges,
+              attributes: [createAttribute(edgeId, [10, 11, 12, 13, 14])],
+            }),
+          );
+        }
+
+        function getEdgeIds(mesh) {
+          const { edges } = mesh.getComponentKeys(EditMode.EDGE);
+          return Array.from(mesh.getAttributeValues("_EDGE_ID", edges));
+        }
+
+        it("loads attributes with the vertices of each edge", async function () {
+          const editor = await MeshEditor.addToScene(scene);
+          spyOn(WasmMesh, "fromBuffers").and.callThrough();
+          spyOn(CustomAttribute, "uint32").and.callThrough();
+
+          const mesh = addSquareWithEdgeIds(editor, [
+            [0, 1, 2],
+            [2, 3, 4],
+          ]);
+
+          const edgeIndices = WasmMesh.fromBuffers.calls.mostRecent().args[6];
+          expect(edgeIndices).toEqual(
+            new Uint32Array([0, 1, 1, 2, 2, 0, 2, 3, 3, 0]),
+          );
+          expect(CustomAttribute.uint32).toHaveBeenCalledOnceWith(
+            "_EDGE_ID",
+            AttributeDomain.Edge,
+            1,
+            new Uint32Array([10, 11, 12, 13, 14]),
+          );
+          expect(getEdgeIds(mesh)).toEqual(
+            jasmine.arrayWithExactContents([10, 11, 12, 13, 14]),
+          );
+        });
+
+        it("loads attributes as their default if the source has no edges", async function () {
+          const editor = await MeshEditor.addToScene(scene);
+
+          const mesh = addSquareWithEdgeIds(editor, undefined);
+
+          expect(getEdgeIds(mesh)).toEqual([0, 0, 0, 0, 0]);
+        });
+
+        it("throws a RuntimeError if an edge isn't in any primitive", async function () {
+          const editor = await MeshEditor.addToScene(scene);
+
+          // Edge 4 isn't in any primitive.
+          expect(() =>
+            addSquareWithEdgeIds(editor, [
+              [0, 1, 2],
+              [2, 3, 5],
+            ]),
+          ).toThrowError(RuntimeError);
+        });
       });
 
       it("skips attributes it can't store, with a warning", async function () {
@@ -573,9 +667,7 @@ describe(
               domain: GeometryAttributeDomain.CORNER,
               componentDatatype: ComponentDatatype.FLOAT,
             },
-            square.primitives.map((primitive) =>
-              primitive.map(() => [0, 0, 1]),
-            ),
+            square.primitives.flat().map(() => [0, 0, 1]),
           ),
         ]);
 

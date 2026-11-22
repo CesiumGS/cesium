@@ -26,7 +26,7 @@ export const square = {
 /**
  * Creates a geometry source that reads the given geometry.
  *
- * @param {object} geometry positions ([x, y, z] per vertex), primitives (vertex indices per primitive), and optionally attributes: <code>{ descriptor, values }</code> with a value per vertex, or for per-corner attributes, an array of values per primitive. Values are numbers or arrays of numbers.
+ * @param {object} geometry positions ([x, y, z] per vertex), primitives (vertex indices per primitive), and optionally edges (an edge index per vertex of each primitive, like primitives) and attributes: <code>{ descriptor, values }</code> with a value per element of the attribute's domain. Values are numbers or arrays of numbers.
  * @returns {object} The source, with an identity world matrix and a show property.
  */
 function createGeometrySource(geometry) {
@@ -39,6 +39,14 @@ function createGeometrySource(geometry) {
   ];
   const getAttribute = (descriptor) =>
     attributes.find((attribute) => attribute.descriptor.equals(descriptor));
+  const counts = {
+    [GeometryAttributeDomain.VERTEX]: geometry.positions.length,
+    [GeometryAttributeDomain.CORNER]: geometry.primitives.flat().length,
+    [GeometryAttributeDomain.FACE]: geometry.primitives.length,
+    [GeometryAttributeDomain.EDGE]: geometry.edges
+      ? Math.max(...geometry.edges.flat()) + 1
+      : 0,
+  };
 
   const copyInto = (value, result, offset = 0) => {
     [].concat(value).forEach((component, i) => {
@@ -50,28 +58,17 @@ function createGeometrySource(geometry) {
   const geometryReader = new GeometryReader({
     availableAttributes: attributes.map((attribute) => attribute.descriptor),
     createReadSession: () => ({
-      vertexCount: () => geometry.positions.length,
-      primitiveCount: () => geometry.primitives.length,
+      elementCount: (domain) => counts[domain],
       primitiveVertexCount: (i) => geometry.primitives[i].length,
-      cornerCount: () =>
-        geometry.primitives.reduce(
-          (sum, primitive) => sum + primitive.length,
-          0,
-        ),
-      primitiveReader: () => (i, result, offset) =>
-        copyInto(geometry.primitives[i], result, offset),
-      vertexAttributeReader: (descriptor) => {
+      primitiveReader: () => (i, result, offset, edgeResult, edgeOffset) => {
+        if (edgeResult && geometry.edges) {
+          copyInto(geometry.edges[i], edgeResult, edgeOffset);
+        }
+        return copyInto(geometry.primitives[i], result, offset);
+      },
+      attributeReader: (descriptor) => {
         const { values } = getAttribute(descriptor);
         return (i, result, offset) => copyInto(values[i], result, offset);
-      },
-      cornerAttributeReader: (descriptor) => {
-        const { descriptor: available, values } = getAttribute(descriptor);
-        if (available.domain === GeometryAttributeDomain.CORNER) {
-          return (p, c, result, offset) =>
-            copyInto(values[p][c], result, offset);
-        }
-        return (p, c, result, offset) =>
-          copyInto(values[geometry.primitives[p][c]], result, offset);
       },
       destroy: () => {},
     }),

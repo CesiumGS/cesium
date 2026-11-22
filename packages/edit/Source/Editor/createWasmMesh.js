@@ -5,7 +5,6 @@ import { GeometryAttributeDomain } from "@cesium/engine";
 import { Mesh as WasmMesh } from "@cesium/mesh-editor";
 import WasmMeshAttributeTranslator from "./WasmMeshAttributeTranslator.js";
 
-/** @import { TypedArray } from "@cesium/core"; */
 /** @import { GeometryAttributeDescriptor, GeometryReadSession, GeometrySource } from "@cesium/engine"; */
 
 // Wasm takes these as per-vertex float buffers rather than custom attributes,
@@ -14,6 +13,9 @@ const POSITION = "POSITION";
 const NORMAL = "NORMAL";
 const UV = "TEXCOORD_0";
 const WASM_BUILT_IN_ATTRIBUTES = [POSITION, NORMAL, UV];
+
+// Fills arrays before they're read into, to find entries the source didn't give.
+const UNSET = 0xffffffff;
 
 /**
  * Reads a source's geometry and attributes into a new wasm mesh. Each
@@ -34,10 +36,10 @@ function createWasmMesh(source) {
     );
   }
 
-  const { indices, faceVertexCounts, values } = reader.withReadSession(
-    { attributes, primitives: true },
-    (session) => readBuffers(session, attributes),
-  );
+  const { indices, faceVertexCounts, edgeIndices, values } =
+    reader.withReadSession({ attributes, primitives: true }, (session) =>
+      readBuffers(session, attributes),
+    );
 
   try {
     const customAttributes = attributes
@@ -58,6 +60,7 @@ function createWasmMesh(source) {
       /** @type {Float32Array|undefined} */ (values.get(UV)),
       faceVertexCounts,
       customAttributes,
+      edgeIndices,
     );
   } catch (error) {
     throw new RuntimeError(`The geometry can't be edited: ${error.message}`);
@@ -100,92 +103,120 @@ function getUnsupportedBuiltInReason(descriptor) {
 }
 
 /**
- * Reads a session's primitives, and each attribute's values in the array type
- * wasm takes.
+ * Reads a session's primitives, each edge's vertices if any attribute is per
+ * edge, and each attribute's values in the array type wasm takes.
  *
  * @param {GeometryReadSession} session The read session.
  * @param {GeometryAttributeDescriptor[]} attributes The attributes to read.
- * @returns {{ indices: Uint32Array, faceVertexCounts: Uint32Array, values: Map<string, Float32Array|Int32Array|Uint32Array> }} The primitives' vertex indices and sizes, and each attribute's values by name.
+ * @returns {{ indices: Uint32Array, faceVertexCounts: Uint32Array, edgeIndices: Uint32Array|undefined, values: Map<string, Float32Array|Int32Array|Uint32Array> }} The primitives' vertex indices and sizes, two vertex indices per edge, and each attribute's values by name.
  * @ignore
  */
 function readBuffers(session, attributes) {
-  const primitiveCount = session.primitiveCount();
+  const hasEdgeAttributes = attributes.some(
+    (descriptor) => descriptor.domain === GeometryAttributeDomain.EDGE,
+  );
+
+  const { indices, faceVertexCounts, primitiveEdges } = readPrimitives(
+    session,
+    hasEdgeAttributes,
+  );
+
+  const edgeIndices = hasEdgeAttributes
+    ? readEdgeIndices(session, indices, faceVertexCounts, primitiveEdges)
+    : undefined;
+
+  const values = new Map();
+  for (const descriptor of attributes) {
+    values.set(descriptor.name, readAttributeValues(session, descriptor));
+  }
+
+  return { indices, faceVertexCounts, edgeIndices, values };
+}
+
+/**
+ * Reads each primitive's vertex indices, and optionally its edge indices: the
+ * edge from each of its vertices to the next.
+ *
+ * @param {GeometryReadSession} session The read session.
+ * @param {boolean} withEdges Whether to read edge indices.
+ * @returns {{ indices: Uint32Array, faceVertexCounts: Uint32Array, primitiveEdges: Uint32Array|undefined }} The primitives' vertex indices, sizes, and edge indices, with <code>UNSET</code> where the source didn't give one.
+ * @ignore
+ */
+function readPrimitives(session, withEdges) {
+  const primitiveCount = session.elementCount(GeometryAttributeDomain.FACE);
   const faceVertexCounts = new Uint32Array(primitiveCount);
   let indexCount = 0;
+
   for (let i = 0; i < primitiveCount; ++i) {
     faceVertexCounts[i] = session.primitiveVertexCount(i);
     indexCount += faceVertexCounts[i];
   }
 
   const indices = new Uint32Array(indexCount);
+  const primitiveEdges = withEdges
+    ? new Uint32Array(indexCount).fill(UNSET)
+    : undefined;
+
   const readPrimitive = session.primitiveReader();
   let offset = 0;
   for (let i = 0; i < primitiveCount; ++i) {
-    readPrimitive(i, indices, offset);
+    readPrimitive(i, indices, offset, primitiveEdges, offset);
     offset += faceVertexCounts[i];
   }
 
-  const values = new Map();
-  for (const descriptor of attributes) {
-    const ArrayType = WASM_BUILT_IN_ATTRIBUTES.includes(descriptor.name)
-      ? Float32Array
-      : WasmMeshAttributeTranslator.getArrayType(descriptor);
-
-    values.set(
-      descriptor.name,
-      descriptor.domain === GeometryAttributeDomain.VERTEX
-        ? readVertexValues(session, descriptor, ArrayType)
-        : readCornerValues(session, descriptor, ArrayType, faceVertexCounts),
-    );
-  }
-
-  return { indices, faceVertexCounts, values };
+  return { indices, faceVertexCounts, primitiveEdges };
 }
 
 /**
- * @template {TypedArray} T
+ * Gets each edge's two vertices, from the first primitive it's in: the vertex
+ * the edge starts from, and the next vertex in the primitive.
+ *
  * @param {GeometryReadSession} session The read session.
- * @param {GeometryAttributeDescriptor} descriptor A per-vertex attribute.
- * @param {function(new:T, number)} ArrayType The array type to read into.
- * @returns {T} The values, in vertex order.
+ * @param {Uint32Array} indices The primitives' vertex indices.
+ * @param {Uint32Array} faceVertexCounts The number of vertices in each primitive.
+ * @param {Uint32Array} [primitiveEdges] The primitives' edge indices.
+ * @returns {Uint32Array} Two vertex indices per edge, <code>UNSET</code> for edges that aren't in any primitive.
  * @ignore
  */
-function readVertexValues(session, descriptor, ArrayType) {
-  const vertexCount = session.vertexCount();
-  const { componentCount } = descriptor;
-  const values = new ArrayType(vertexCount * componentCount);
-  const read = session.vertexAttributeReader(descriptor);
-  for (let i = 0; i < vertexCount; ++i) {
-    read(i, values, i * componentCount);
+function readEdgeIndices(session, indices, faceVertexCounts, primitiveEdges) {
+  const edgeCount = session.elementCount(GeometryAttributeDomain.EDGE);
+  const edgeIndices = new Uint32Array(edgeCount * 2).fill(UNSET);
+
+  let first = 0;
+  for (const vertexCount of faceVertexCounts) {
+    for (let i = 0; i < vertexCount; ++i) {
+      const edge = /** @type {Uint32Array} */ (primitiveEdges)[first + i];
+
+      if (edge !== UNSET && edgeIndices[edge * 2] === UNSET) {
+        edgeIndices[edge * 2] = indices[first + i];
+        edgeIndices[edge * 2 + 1] = indices[first + ((i + 1) % vertexCount)];
+      }
+    }
+    first += vertexCount;
   }
-  return values;
+
+  return edgeIndices;
 }
 
 /**
- * @template {TypedArray} T
  * @param {GeometryReadSession} session The read session.
  * @param {GeometryAttributeDescriptor} descriptor An attribute.
- * @param {function(new:T, number)} ArrayType The array type to read into.
- * @param {Uint32Array} faceVertexCounts The number of corners in each primitive.
- * @returns {T} The values, in the order of the primitives' indices.
+ * @returns {Float32Array|Int32Array|Uint32Array} The values, in the order of the attribute's domain and the array type wasm takes.
  * @ignore
  */
-function readCornerValues(session, descriptor, ArrayType, faceVertexCounts) {
+function readAttributeValues(session, descriptor) {
+  const ArrayType = WASM_BUILT_IN_ATTRIBUTES.includes(descriptor.name)
+    ? Float32Array
+    : WasmMeshAttributeTranslator.getArrayType(descriptor);
+  const count = session.elementCount(descriptor.domain);
   const { componentCount } = descriptor;
-  const values = new ArrayType(session.cornerCount() * componentCount);
-  const read = session.cornerAttributeReader(descriptor);
-  let offset = 0;
-  for (
-    let primitiveIndex = 0;
-    primitiveIndex < faceVertexCounts.length;
-    ++primitiveIndex
-  ) {
-    const cornerCount = faceVertexCounts[primitiveIndex];
-    for (let cornerIndex = 0; cornerIndex < cornerCount; ++cornerIndex) {
-      read(primitiveIndex, cornerIndex, values, offset);
-      offset += componentCount;
-    }
+  const values = new ArrayType(count * componentCount);
+  const read = session.attributeReader(descriptor);
+
+  for (let i = 0; i < count; ++i) {
+    read(i, values, i * componentCount);
   }
+
   return values;
 }
 
