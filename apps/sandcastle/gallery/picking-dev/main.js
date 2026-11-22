@@ -9,7 +9,6 @@ const viewer = new Cesium.Viewer("cesiumContainer", {
 });
 
 const scene = viewer.scene;
-const camera = scene.camera;
 
 let handler;
 let primitive;
@@ -21,7 +20,6 @@ const highlighted = {
   originalColor: new Cesium.Color(),
 };
 
-const worldTerrain = Cesium.Terrain.fromWorldTerrain();
 const ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
 
 let loadedResource;
@@ -369,110 +367,6 @@ Sandcastle.addToolbarMenu([
           pointSize: 10.0,
           color: 'color("yellow")',
         });
-      }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    },
-  },
-  {
-    text: "Vector tile polygons",
-    onselect: async function () {
-      viewer.scene.setTerrain(worldTerrain);
-
-      const url =
-        "../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolygons/tileset.json";
-      loadedResource = url;
-      tileset = await Cesium.Cesium3DTileset.fromUrl(url);
-      if (loadedResource !== url) {
-        // Another scenario was loaded. Discard result.
-        return;
-      }
-      viewer.scene.primitives.add(tileset);
-
-      camera.position = new Cesium.Cartesian3(
-        6382696.762766026,
-        20.61495686957654,
-        -83.83598213685399,
-      );
-      camera.direction = new Cesium.Cartesian3(
-        -0.9999999739409788,
-        0.00022792812935066512,
-        0.000012915478344419502,
-      );
-      camera.up = new Cesium.Cartesian3(
-        0.00001291547800893194,
-        -2.9438010410026854e-9,
-        0.9999999999165953,
-      );
-      camera.right = Cesium.Cartesian3.cross(
-        camera.direction,
-        camera.up,
-        camera.right,
-      );
-
-      handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-      handler.setInputAction(function (movement) {
-        if (Cesium.defined(highlighted.feature)) {
-          highlighted.feature.color = highlighted.originalColor;
-          highlighted.feature = undefined;
-        }
-        const pickedFeature = viewer.scene.pick(movement.endPosition);
-        if (!Cesium.defined(pickedFeature)) {
-          return;
-        }
-        highlighted.feature = pickedFeature;
-        Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
-        pickedFeature.color = Cesium.Color.YELLOW;
-      }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-    },
-  },
-  {
-    text: "Vector tile polylines",
-    onselect: async function () {
-      viewer.scene.setTerrain(worldTerrain);
-
-      const url =
-        "../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolylines/tileset.json";
-      loadedResource = url;
-      tileset = await Cesium.Cesium3DTileset.fromUrl(url);
-      if (loadedResource !== url) {
-        // Another scenario was loaded. Discard result.
-        return;
-      }
-      viewer.scene.primitives.add(tileset);
-
-      camera.position = new Cesium.Cartesian3(
-        6382696.762766026,
-        20.61495686957654,
-        -83.83598213685399,
-      );
-      camera.direction = new Cesium.Cartesian3(
-        -0.9999999739409788,
-        0.00022792812935066512,
-        0.000012915478344419502,
-      );
-      camera.up = new Cesium.Cartesian3(
-        0.00001291547800893194,
-        -2.9438010410026854e-9,
-        0.9999999999165953,
-      );
-      camera.right = Cesium.Cartesian3.cross(
-        camera.direction,
-        camera.up,
-        camera.right,
-      );
-
-      handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-      handler.setInputAction(function (movement) {
-        if (Cesium.defined(highlighted.feature)) {
-          highlighted.feature.color = highlighted.originalColor;
-          highlighted.feature = undefined;
-        }
-        const pickedFeature = viewer.scene.pick(movement.endPosition);
-        if (!Cesium.defined(pickedFeature)) {
-          return;
-        }
-        highlighted.feature = pickedFeature;
-        Cesium.Color.clone(pickedFeature.color, highlighted.originalColor);
-        pickedFeature.color = Cesium.Color.YELLOW;
       }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
     },
   },

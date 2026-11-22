@@ -67,6 +67,27 @@ gallery
 
 Use `npm run create-demo [demo-slug]` to help easily scaffold out a new gallery demo.
 
+### Development examples that left with 1.x's test data
+
+CS-611 deleted 1.x's `Specs/Data`. Six development examples loaded sample
+models from it, and neither 2.0's `test/fixtures/1x/` (served at `/specs-data/`)
+nor the pinned release carries those files, so the examples were removed in
+CS-911:
+
+- `constant-lod-dev` (`Models/glTF-2.0/ConstantLod`)
+- `styled-gltf-lines-dev` (`Models/glTF-2.0/StyledLines`)
+- `styled-gltf-points-dev` (`Models/glTF-2.0/StyledPoints`)
+- `gltf-planar-fill-dev` (`Models/glTF-2.0/PlanarFill`)
+- `multifrustum-snapping-dev` and `edge-visibility-dev`
+  (`Models/glTF-2.0/EdgeVisibility`)
+
+`picking-dev` lost its two vector tile scenarios (`Cesium3DTiles/Vector`) for
+the same reason; its other scenarios use sample data that is still here.
+
+To bring one back, add its files under `test/fixtures/1x/` and load them from
+`/specs-data/`. The files are in this repository's history, in the parent of
+commit `e38c9fb716`, under `Specs/Data/`.
+
 ### `sandcastle.yaml`
 
 Below is a sample metadata yaml file. This data is used in the `scripts/buildGallery.js` file to create the full `gallery-list.json` information. That script also does some validation on these values.
