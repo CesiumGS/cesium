@@ -1,5 +1,6 @@
 import {
   AssociativeArray,
+  Cartesian2,
   Cartesian3,
   Color,
   DeveloperError,
@@ -10,6 +11,8 @@ import {
 } from "@cesium/core";
 import createBillboardPointCallback from "../Scene/createBillboardPointCallback.js";
 import HeightReference from "../Scene/HeightReference.js";
+import HorizontalOrigin from "../Scene/HorizontalOrigin.js";
+import VerticalOrigin from "../Scene/VerticalOrigin.js";
 import BoundingSphereState from "./BoundingSphereState.js";
 import Property from "./Property.js";
 import SplitDirection from "../Scene/SplitDirection.js";
@@ -127,6 +130,18 @@ PointVisualizer.prototype.update = function (time) {
       billboard = cluster.getBillboard(entity);
       billboard.id = entity;
       billboard.image = undefined;
+      // The shared pool may return a billboard previously styled by BillboardVisualizer.
+      billboard.width = undefined;
+      billboard.height = undefined;
+      billboard.color = Color.WHITE;
+      billboard.pixelOffset = Cartesian2.ZERO;
+      billboard.eyeOffset = Cartesian3.ZERO;
+      billboard.rotation = 0.0;
+      billboard.alignedAxis = Cartesian3.ZERO;
+      billboard.horizontalOrigin = HorizontalOrigin.CENTER;
+      billboard.verticalOrigin = VerticalOrigin.CENTER;
+      billboard.sizeInMeters = false;
+      billboard.pixelOffsetScaleByDistance = undefined;
       item.billboard = billboard;
       needsRedraw = true;
 

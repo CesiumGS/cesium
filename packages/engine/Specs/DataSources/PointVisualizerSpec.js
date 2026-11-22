@@ -1,5 +1,6 @@
 import {
   BoundingSphere,
+  Cartesian2,
   Cartesian3,
   Color,
   DistanceDisplayCondition,
@@ -17,9 +18,12 @@ import {
   PointGraphics,
   PointVisualizer,
   BillboardCollection,
+  BillboardVisualizer,
   HeightReference,
+  HorizontalOrigin,
   PointPrimitiveCollection,
   SplitDirection,
+  VerticalOrigin,
 } from "../../index.js";
 import createScene from "../../../../Specs/createScene.js";
 
@@ -71,6 +75,76 @@ describe(
         visualizer = visualizer.destroy();
       }
       entityCluster.destroy();
+    });
+
+    [
+      HeightReference.CLAMP_TO_GROUND,
+      HeightReference.CLAMP_TO_TERRAIN,
+      HeightReference.RELATIVE_TO_GROUND,
+    ].forEach(function (heightReference) {
+      it(`resets reused billboard styles for height reference ${heightReference}`, function () {
+        const time = JulianDate.now();
+        const entities = new EntityCollection();
+        visualizer = new PointVisualizer(entityCluster, entities);
+        const billboardVisualizer = new BillboardVisualizer(
+          entityCluster,
+          entities,
+        );
+        try {
+          const previous = entities.add({
+            position: Cartesian3.fromDegrees(120, 30),
+            billboard: {
+              image: document.createElement("canvas"),
+              width: 200,
+              height: 100,
+              color: Color.RED,
+              pixelOffset: new Cartesian2(30, 40),
+              eyeOffset: new Cartesian3(1, 2, 3),
+              rotation: 1,
+              alignedAxis: Cartesian3.UNIT_Z,
+              horizontalOrigin: HorizontalOrigin.LEFT,
+              verticalOrigin: VerticalOrigin.BOTTOM,
+              sizeInMeters: true,
+              pixelOffsetScaleByDistance: new NearFarScalar(1, 2, 3, 4),
+            },
+          });
+          billboardVisualizer.update(time);
+          const previousBillboard = entityCluster._billboardCollection.get(0);
+          expect(previousBillboard.width).toBe(200);
+          expect(previousBillboard.sizeInMeters).toBe(true);
+
+          entities.remove(previous);
+          billboardVisualizer.update(time);
+          const point = entities.add({
+            position: Cartesian3.fromDegrees(121, 31),
+            point: {
+              pixelSize: 5,
+              color: Color.GREEN,
+              heightReference: heightReference,
+            },
+          });
+          visualizer.update(time);
+          const billboard = entityCluster.getBillboard(point);
+
+          expect(billboard).toBe(previousBillboard);
+          expect(billboard.width).toBeUndefined();
+          expect(billboard.height).toBeUndefined();
+          expect(billboard.color).toEqual(Color.WHITE);
+          expect(billboard.pixelOffset).toEqual(Cartesian2.ZERO);
+          expect(billboard.eyeOffset).toEqual(Cartesian3.ZERO);
+          expect(billboard.rotation).toBe(0);
+          expect(billboard.alignedAxis).toEqual(Cartesian3.ZERO);
+          expect(billboard.horizontalOrigin).toBe(HorizontalOrigin.CENTER);
+          expect(billboard.verticalOrigin).toBe(VerticalOrigin.CENTER);
+          expect(billboard.sizeInMeters).toBe(false);
+          expect(billboard.pixelOffsetScaleByDistance).toBeUndefined();
+          expect(billboard.scale).toBe(0.1);
+          expect(billboard.heightReference).toBe(heightReference);
+          expect(billboard.id).toBe(point);
+        } finally {
+          billboardVisualizer.destroy();
+        }
+      });
     });
 
     it("constructor throws if no scene is passed.", function () {
