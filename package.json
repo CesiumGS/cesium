@@ -62,6 +62,7 @@
     "@cesium/eslint-config": "^14.0.0",
     "@playwright/test": "^1.62.1",
     "@types/express": "^5.0.6",
+    "cesium-1x": "npm:cesium@1.147.0",
     "chokidar": "^5.0.0",
     "cloc": "^2.6.0-cloc",
     "compression": "^1.7.4",
