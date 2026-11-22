@@ -120,6 +120,7 @@ The public API is open to breaking changes. 1.x serves two roles only: it is the
 - [The benchmark suite](docs/design/benchmark-suite.md): The benchmark suite's design (concepts, manifests and storage, measurement and statistics, the catalog, interfaces, engines and versions, scope, later), with what v1 built and the findings it raised.
 - [Benchmark analysis and experience design](docs/design/benchmark-analysis-and-experience.md): Learning from analogous systems: how the benchmark suite's analysis and experience should work.
 - [Image regression in Dyno](docs/design/image-regression-in-dyno.md): Image regression checks in Dyno.
+- [The 2.0 repository: layout, build, tests and releases](docs/design/repository-build-and-release.md): The repository once 1.x leaves the branch: packages at the root, the per-package build, lockfiles, tests and gates, parity on a pinned published 1.x, Sandcastle, CI, the release pipeline and CS-835's move (design, CS-610, 2026-11-21).
 
 ### History
 
