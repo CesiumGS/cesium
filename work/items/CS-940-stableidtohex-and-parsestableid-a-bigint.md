@@ -2,10 +2,11 @@
 id: CS-940
 title: "stableIdToHex and parseStableId: a bigint StableId to and from 16 hex digits (CS-936)"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-22
 project: CS-437
 needs: [CS-815]
+claimed_by: orch-11-CS-940
 ---
 
 > **Committed by the owner (2026-11-22), through CS-936's answer A.**
