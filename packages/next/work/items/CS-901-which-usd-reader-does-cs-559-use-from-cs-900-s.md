@@ -23,12 +23,23 @@ CS-900's Dyno run `2026-11-22T10-56-32-200Z-apple-metal-3`, over the six SimRead
 | --- | --- | --- | --- |
 | Size with Brotli | 9,152 B | 817,081 B | 1,718,550 B |
 | Start, median | 15 to 28 ms | 42 to 70 ms | 138 to 153 ms |
-| Coverage, against OpenUSD | all but 3 checks | misses 17 | the reference |
+| Coverage, where OpenUSD found something | 79 of 82 | 67 of 82 | the reference |
 | What the host page must allow | nothing | `wasm-unsafe-eval` | COOP, COEP and `wasm-unsafe-eval` |
 | License | ours | Apache 2.0 | TOST 1.0 |
 
 - Every miss is on the pallet sample, which lacks two layers that it references. LightUSD refuses that stage. The subset reader drops two prims under the failed reference.
-- **The coverage row is being recomputed.** CS-900's review found that a check counted as agreeing even when both readers found nothing, and most physics and label checks are empty on most samples. So the coverage figures overstate what was tested. A fix round recounts coverage over only the checks where OpenUSD found something. Don't answer this decision until that's done.
+- **Coverage by feature**, counting only checks where OpenUSD found something. The checks where it found nothing are in brackets. Recounted by CS-900's fix round (c8df33df84) from the same run, because the first count credited a reader for agreeing whenever both found nothing.
+
+  | Feature | Subset reader | LightUSD | OpenUSD |
+  | --- | --- | --- | --- |
+  | FET001 | 37 of 38 (10 of 10) | 30 of 38 (10 of 10) | 38 of 38 |
+  | FET006 | 14 of 15 (9 of 9) | 13 of 15 (7 of 9) | 15 of 15 |
+  | FET009 | 4 of 4 (2 of 2) | 3 of 4 (2 of 2) | 4 of 4 |
+  | FET011 | 9 of 9 (9 of 9) | 8 of 9 (7 of 9) | 9 of 9 |
+  | UsdPhysics | 15 of 16 (14 of 14) | 13 of 16 (12 of 14) | 16 of 16 |
+  | All | 79 of 82 (44 of 44) | 67 of 82 (38 of 44) | 82 of 82 |
+
+- OpenUSD's start time includes copying the layers into its in-memory file system, which the other two don't do.
 - LightUSD's "7.1 MB" was a deprecated legacy `.wasm` in its npm package, so its size is settled.
 
 ## Options and recommendation
