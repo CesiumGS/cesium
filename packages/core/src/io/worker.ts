@@ -1,6 +1,7 @@
 /// <reference lib="webworker" />
 import { parseGltf } from "./gltfParse.ts";
 import { settleWorkerFetch, workerFetch } from "./workerFetch.ts";
+import { WorkerDecoders } from "./workerDecoders.ts";
 import {
   decodeQuantizedMesh,
   flatTerrainTile,
@@ -32,6 +33,21 @@ import {
  * `{ id, type: "cancel" }` aborts request `id` (its fetches stop).
  */
 const controllers = new Map<number, AbortController>();
+
+/**
+ * Decoders source kinds registered (`WorkerPool.loadDecoder`): their jobs'
+ * requests go through the page's provider, as the built-in types' do.
+ */
+const decoders = new WorkerDecoders(
+  undefined,
+  (id, signal) => (url, init) =>
+    workerFetch(url, {
+      kind: "content",
+      scope: id,
+      signal,
+      ...(init?.accept ? { accept: init.accept } : {}),
+    }),
+);
 
 /** What a star field's reply hands over rather than copies. */
 const starFieldBuffers = (field: StarField): ArrayBuffer[] =>
@@ -66,7 +82,7 @@ self.onmessage = async (
     size?: number;
   }>,
 ) => {
-  if (settleWorkerFetch(event.data)) {
+  if (settleWorkerFetch(event.data) || decoders.handleLoad(event.data)) {
     return;
   }
   const { id, type } = event.data;
@@ -76,6 +92,15 @@ self.onmessage = async (
   }
   const controller = new AbortController();
   controllers.set(id, controller);
+  if (decoders.has(type)) {
+    // A registered decoder's job (a source kind's, CS-847).
+    void decoders
+      .run(event.data, controller.signal, (reply, transfer) =>
+        self.postMessage(reply, transfer),
+      )
+      .finally(() => controllers.delete(id));
+    return;
+  }
   // Requests go through the page's provider, with this job's headers there
   // (workerFetch.ts): the worker never holds them.
   const request = (

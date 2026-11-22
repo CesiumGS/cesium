@@ -5,8 +5,18 @@ import { isHeadless, noContent } from "./headlessContext.ts";
 import { CpuTable, INITIAL_ROWS } from "./CpuTable.ts";
 import { DrawConstants } from "../render/drawConstants.ts";
 import type { Placement, PlacementParameter } from "./placement.ts";
-import type { SceneItem, SceneItemOptions } from "./SceneItem.ts";
+import {
+  checkItemIdentity,
+  itemIdentity as makeItemIdentity,
+  type SceneItem,
+  type SceneItemOptions,
+} from "./SceneItem.ts";
 import { IdentityTable, type Identity, type ItemIdentity } from "./identity.ts";
+import {
+  SourceContent,
+  type ContentItem,
+  type ContentItemOptions,
+} from "../source/content.ts";
 import type { Tileset3D } from "../streaming/Tileset3D.ts";
 import type { TileCurvilinearMap } from "../streaming/tileCurvilinearMap.ts";
 import type { Occluder } from "../streaming/occluders.ts";
@@ -932,8 +942,29 @@ export class World {
    * `CapacityError` where a loaded tile's draws don't fit the world's tables,
    * leaving nothing behind.
    */
-  add(tileset: Tileset3D, options: SceneItemOptions = {}): SceneItem {
-    const item = tileset.addItem(this, options);
+  add(tileset: Tileset3D, options?: SceneItemOptions): SceneItem;
+  /**
+   * Places content an open source gave (`Engine.open`) in this world: its
+   * source then updates each tick with this world's views, and draws here.
+   * Content belongs to the first world it is added to, with one item there
+   * in this version (`ContentItem`). Throws for content of another world,
+   * a second item, destroyed content, and identity options `SceneItemOptions`
+   * refuses.
+   * @experimental
+   */
+  add(content: SourceContent, options?: ContentItemOptions): ContentItem;
+  add(
+    content: Tileset3D | SourceContent,
+    options: SceneItemOptions | ContentItemOptions = {},
+  ): SceneItem | ContentItem {
+    if (content instanceof SourceContent) {
+      checkItemIdentity(options, "World.add");
+      const identity = makeItemIdentity(this, options, content.source);
+      return content.addItem(this, identity, options, () =>
+        this.identities.releaseItemKey(identity.key),
+      );
+    }
+    const item = content.addItem(this, options as SceneItemOptions);
     this.sceneItems.push(item);
     return item;
   }

@@ -70,6 +70,10 @@ import { castFrameRays } from "../query/frameRays.ts";
 import { castTilesetRays } from "../query/geometryBackend.ts";
 import { updateTilesets } from "./tileSelection.ts";
 import { whenReady, type WhenReadyOptions } from "./engineReady.ts";
+import { engineSources } from "./engineSources.ts";
+import type { OpenOptions, SourceRuntime } from "../source/runtime.ts";
+import type { SourceContent } from "../source/content.ts";
+import type { AssetRef } from "../source/types.ts";
 import {
   loadGltfFile,
   compileShader,
@@ -1296,6 +1300,34 @@ export class Engine {
     return loadTileset(this, url, options);
   }
 
+  /**
+   * Content sources (CS-847): the kind registry (`registerKind`), the
+   * resolvers (`addResolver`) and every open source. Made on first use; its
+   * sources update each tick, and the budget is arbitrated after them.
+   * @experimental
+   */
+  get sources(): SourceRuntime {
+    if (!this.sources_) {
+      const runtime = engineSources(this, (message) =>
+        this.errors_.report("frame", message),
+      );
+      this.sources_ = runtime;
+      this.onTick(() => runtime.tick());
+    }
+    return this.sources_;
+  }
+  private sources_: SourceRuntime | undefined;
+
+  /**
+   * Resolves `ref` (a plain URL through the URL resolver, or a resolver
+   * the host added), picks its kind, opens the source and returns its
+   * content, drawing nothing yet: `World.add` places it.
+   * @experimental
+   */
+  open(ref: AssetRef, options?: OpenOptions): Promise<SourceContent> {
+    return this.sources.open(ref, options);
+  }
+
   /** @internal A tileset loaded alone was added to its world. */
   adoptTileset(tileset: Tileset3D): void {
     adoptTileset(this, tileset);
@@ -2353,6 +2385,7 @@ export class Engine {
   }
 
   destroy(): void {
+    this.sources_?.destroy();
     this.scene.workers.jobs.destroy();
     this.stop();
     for (const unwatch of this.viewWatches.values()) {

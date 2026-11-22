@@ -1,6 +1,6 @@
 # The content-source seam: `ContentSource` (design, 2026-11-21)
 
-**What this holds:** The design of the one interface every content source implements, `ContentSource`, for CS-552. The owner's call is CS-551 ([content sources as modules](../decisions/2026-11-16-content-sources-as-modules.md)): 3D Tiles, the globe's terrain and imagery, glTF files, MVT, Esri services, USD, PostGIS and code an application writes all load through it, built now. The plan that builds it is [2026-11-21-content-source-seam.md](../superpowers/plans/2026-11-21-content-source-seam.md). Nothing here is built.
+**What this holds:** The design of the one interface every content source implements, `ContentSource`, for CS-552. The owner's call is CS-551 ([content sources as modules](../decisions/2026-11-16-content-sources-as-modules.md)): 3D Tiles, the globe's terrain and imagery, glTF files, MVT, Esri services, USD, PostGIS and code an application writes all load through it, built now. The plan that builds it is [2026-11-21-content-source-seam.md](../superpowers/plans/2026-11-21-content-source-seam.md). The seam's core is built (CS-847, `packages/core/src/source/`, experimental API); no source has moved behind it yet. Where the built names differ from this note's working names, the code is right: the raster sink is `ContentSinks.images`, `ResolvedAsset.kind` is optional (the registry asks each kind when a plain URL names none), and `SourceTick` also carries the invalidations applied since a source's last update.
 
 **What it supersedes.** [modular-renderer.md](modular-renderer.md), whose "don't introduce a module system, a package split or dynamic registration yet" no longer holds. Three of its parts carry over: the import-boundary tiers, data-only contracts between tiers, and the styling language's compiler kept apart from 3D Tiles' binding (`FeatureStyle`). The bundle check (`scripts/checkBundle.mjs`) stays as the baseline (CS-553), not as a gate.
 
@@ -378,7 +378,7 @@ The Viewer builds Earth's from ion's defaults. The same layers could later drape
 - **Four ways of selecting** (`tree`, `whole`, `derived`, `push`), declared in capabilities.
 - **Output only through data-only sinks,** with stable IDs and credits on everything. Queries run on what the engine holds.
 - **Decoders are job types a module registers by URL,** and a source kind is a module reference, so every source runs in worker mode unchanged (from the façade's decisions in force).
-- **Push is `host.changed`:** invalidation, feature changes and time-stamped samples. No source polls.
+- **Push is `host.changed`:** invalidation, feature changes and time-stamped samples. The engine never polls. A source may check its own server's version on an interval it declares (`SourceCapabilities.polls`) and turn what it learns into pushes (CS-863, which changed this note's first "no source polls").
 - **The room for CS-831:** the capability declaration, the override contract and the change-set type, in alpha.1. Sources declare `READ_ONLY` until CS-831 adds writers.
 - **Esri's order:** map and tile services, feature services, I3S, elevation.
 

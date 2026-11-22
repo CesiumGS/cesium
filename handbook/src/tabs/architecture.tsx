@@ -67,6 +67,19 @@ const SEAMS = [
     fills: "Input, constraints, what a gesture means",
     default: "Globe and inspect controllers, replaceable",
   },
+  {
+    seam: "Content sources",
+    fills:
+      "What a format or service is, as a kind registered by module URL: what it loads, its decoders on the worker pool, what it writes",
+    default:
+      "The seam and its host are built; 3D Tiles, the globe and glTF still load as before and move behind it next",
+  },
+  {
+    seam: "Asset resolvers",
+    fills:
+      "Where an asset lives: a reference in; its URL, credentials, credits, version and kind out",
+    default: "The URL resolver; a host adds its own",
+  },
 ];
 
 /** The package map's three kinds (docs/design/package-map.md), proposed. */
@@ -594,8 +607,9 @@ export function Architecture() {
           <C>ContentSource</C>: 3D Tiles, the globe's terrain and imagery, glTF
           files, vector tiles, Esri services, USD, and sources an application or
           its host writes. Each is a module, so an app pays only for the sources
-          it imports. This is designed, not built (the design note
-          docs/design/content-source-seam.md).
+          it imports (the design note docs/design/content-source-seam.md). The
+          seam's core is built, as experimental API; no existing format has
+          moved behind it yet.
         </p>
         <ul>
           <li>
@@ -634,8 +648,52 @@ export function Architecture() {
           feature), never by the order it loaded in, with labels by taxonomy
           beside it.
         </p>
+        <p>
+          The seam's core is in <C>packages/core/src/source/</C>, and its tests
+          use an in-memory source with no network:
+        </p>
+        <ul>
+          <li>
+            A kind is registered by module URL, and its decoders load by URL
+            into every worker of the pool. <C>engine.open(ref)</C> resolves a
+            reference, picks the kind and opens the source, and{" "}
+            <C>world.add(content)</C> places it.
+          </li>
+          <li>
+            The budget arbiter takes every source's wants each tick (a class:
+            now, refine or prefetch; a benefit; a cost in bytes; an origin) and
+            grants per origin and over one byte budget, class first. So one
+            source's prefetch no longer holds an origin's requests while
+            another's visible tiles wait.
+          </li>
+          <li>
+            Sinks take images, vector features, points and rows for a render
+            feature as plain columns, each row with its stable ID and each batch
+            with its credits. Drawing what the image, feature and custom sinks
+            hold comes with the sources that write them.
+          </li>
+          <li>
+            A source pushes invalidations, feature changes and time-stamped
+            samples. The engine applies them in its apply phase, and on a
+            stepped clock samples wait for their times, so a replayed feed gives
+            the same rows. The engine never polls; a source may check its own
+            server on an interval it declares and push what changed.
+          </li>
+          <li>
+            For editing: write capabilities (every source is read-only for now),
+            change sets with patch updates, per-operation versions and typed
+            conflicts, serialized as JSON in an experimental 0.x format, and an
+            edit layer that hides, replaces and inserts features by stable ID
+            and holds its edits when content reloads.
+          </li>
+        </ul>
+        <p>
+          A boundary test keeps the seam's types free of GPU types and of the
+          engine's and the renderer's classes, and a seam test fails on any file
+          under a source module that imports them.
+        </p>
         <Written
-          from="the design note docs/design/content-source-seam.md, and the stable IDs in packages/core/src/scene/identity.ts"
+          from="the design note docs/design/content-source-seam.md, the stable IDs in packages/core/src/scene/identity.ts, and the seam in packages/core/src/source/"
           on="2026-11-22"
         />
       </Section>

@@ -5,6 +5,7 @@ import workerUrl from "./worker.ts?worker&url";
 
 import { Jobs, type Job, type JobReply, type JobSpec } from "./Jobs.ts";
 import { isWorkerFetchMessage, WorkerFetchServer } from "./workerFetch.ts";
+import { DECODER_LOAD, type DecoderLoadMessage } from "./workerDecoders.ts";
 
 /**
  * A small pool of content workers, started lazily up to `size`, with the
@@ -16,6 +17,8 @@ export class WorkerPool {
   private readonly workers: Worker[] = [];
   /** Each worker's requests, made on the page (`workerFetch.ts`). */
   private readonly servers: WorkerFetchServer[] = [];
+  /** Decoders loaded into every worker, in the order registered (`loadDecoder`). */
+  private readonly decoders: DecoderLoadMessage[] = [];
   readonly jobs: Jobs;
 
   constructor(
@@ -23,6 +26,9 @@ export class WorkerPool {
       1,
       Math.min(4, (globalThis.navigator?.hardwareConcurrency ?? 4) - 1),
     ),
+    /** Starts worker `index` (default: the content worker); a test's own threads. */
+    private readonly start: (index: number) => Worker = () =>
+      new Worker(workerScript(), { type: "module" }),
   ) {
     this.jobs = new Jobs({
       size,
@@ -65,6 +71,39 @@ export class WorkerPool {
     }).promise;
   }
 
+  /**
+   * Loads a decoder module (a source kind's, CS-847) into every worker of
+   * the pool: those started now, and each one that starts later, before
+   * its first job. Its jobs then run with `submit({ type: jobType })`. A
+   * job type loads once; another URL for it is refused.
+   */
+  loadDecoder(jobType: string, url: string | URL): void {
+    const href = String(url);
+    const known = this.decoders.find((d) => d.jobType === jobType);
+    if (known) {
+      if (known.url !== href) {
+        throw new Error(
+          `WorkerPool: the job type "${jobType}" is loaded from another module already.`,
+        );
+      }
+      return;
+    }
+    const message: DecoderLoadMessage = {
+      type: DECODER_LOAD,
+      jobType,
+      url: href,
+    };
+    this.decoders.push(message);
+    for (const worker of this.workers) {
+      worker?.postMessage(message);
+    }
+  }
+
+  /** Whether a decoder for `jobType` was loaded (`loadDecoder`). */
+  hasDecoder(jobType: string): boolean {
+    return this.decoders.some((d) => d.jobType === jobType);
+  }
+
   /** Submits a job (`Jobs.submit`). */
   submit<R, A = R>(spec: JobSpec<R, A>): Job<A> {
     return this.jobs.submit(spec);
@@ -93,7 +132,7 @@ export class WorkerPool {
   private worker(index: number): Worker {
     let worker = this.workers[index];
     if (!worker) {
-      worker = new Worker(workerScript(), { type: "module" });
+      worker = this.start(index);
       const server = new WorkerFetchServer(worker);
       worker.onmessage = (event: MessageEvent<JobReply>) => {
         if (isWorkerFetchMessage(event.data)) {
@@ -105,6 +144,10 @@ export class WorkerPool {
       };
       this.workers[index] = worker;
       this.servers[index] = server;
+      // Its decoders first: they load before any job reaches it.
+      for (const message of this.decoders) {
+        worker.postMessage(message);
+      }
     }
     return worker;
   }

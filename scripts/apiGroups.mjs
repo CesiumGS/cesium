@@ -346,6 +346,7 @@ export const RULES = [
   { entry: ".", from: "core/src/scene/FeatureStyle.ts", group: "core.vector" },
 
   { entry: ".", from: "core/src/io/", group: "core.io" },
+  { entry: ".", from: "core/src/source/", group: "core.io" },
   { entry: ".", from: "core/src/math/", group: "core.math" },
 
   { entry: ".", from: "core/src/core/", group: "core.util" },

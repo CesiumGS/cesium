@@ -824,6 +824,7 @@ function tierOf(file: string): CoreTier | undefined {
   }
   if (
     file.startsWith("src/streaming/") ||
+    file.startsWith("src/source/") ||
     file.startsWith("src/globe/") ||
     file.startsWith("src/tiles/") ||
     (file.startsWith("src/io/") && layerOf(file) === "core")
@@ -903,6 +904,52 @@ it("refuses a content file that imports the renderer or a whole class", () => {
   ]);
   expect(tierOf("src/streaming/sample.ts")).toBe("content");
 });
+// The content-source seam (CS-847, docs/design/content-source-seam.md): its
+// types and the engine's side of them are data only. No file under
+// src/source/ imports a whole class (World, Engine, RenderContext), the
+// renderer or the GPU layer, even for a type, and none names a WebGPU type.
+// test/seams.test.ts holds every source module to the same imports.
+const seamFiles = files.filter((f) => f.startsWith("src/source/"));
+const seamRefusal = (file: string, text: string): string[] => {
+  const lines: number[] = [];
+  const edges = edgesOfText(file, text, lines);
+  return [
+    ...edges
+      .map((edge, i) => ({ edge, line: lines[i]! }))
+      .filter(({ edge }) => contentRefuses(edge.to))
+      .map(({ edge, line }) => `${file}:${line} → ${edge.to}`),
+    ...webgpuTypeNames(file, text),
+  ];
+};
+it("the content-source seam's types are data only: no GPU type, and no World, Engine or renderer import", () => {
+  expect(seamFiles).toEqual(
+    expect.arrayContaining(["src/source/types.ts", "src/source/editing.ts"]),
+  );
+  expect(seamFiles.every((f) => tierOf(f) === "content")).toBe(true);
+  expect(
+    seamFiles.flatMap((f) =>
+      seamRefusal(f, readFileSync(join(root, f), "utf8")),
+    ),
+  ).toEqual([]);
+});
+it("refuses a seam file that imports World, Engine or the renderer, or names a GPU type, naming the line", () => {
+  const plant = [
+    'import type { StableId } from "../scene/identity.ts";',
+    'import type { World } from "../scene/World.ts";',
+    'import type { Engine } from "../scene/Engine.ts";',
+    'export type Pass = import("../render/view/viewFrame.ts").ViewFrame;',
+    'import type { GpuDevice } from "../gpu/GpuDevice.ts";',
+    "export interface Rows { readonly buffer: GPUBuffer; }",
+  ].join("\n");
+  expect(seamRefusal("src/source/sample.ts", plant)).toEqual([
+    "src/source/sample.ts:2 → src/scene/World.ts",
+    "src/source/sample.ts:3 → src/scene/Engine.ts",
+    "src/source/sample.ts:4 → src/render/view/viewFrame.ts",
+    "src/source/sample.ts:5 → src/gpu/GpuDevice.ts",
+    "src/source/sample.ts:6 GPUBuffer",
+  ]);
+});
+
 /**
  * The rasterizer-side members `text` reads off something: `x.raster`,
  * `x["raster"]`, and `raster` taken out by destructuring (a declaration, a

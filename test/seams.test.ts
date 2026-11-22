@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
-import { join, relative } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import ts from "typescript";
 import { beforeAll, describe, expect, it } from "vitest";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import type { MeshData } from "../packages/core/src/scene/meshes.ts";
@@ -934,5 +935,160 @@ describe("the ray seam", () => {
     expect(scan(RAY_MODULES.terrainBackend).length).toBeGreaterThanOrEqual(3);
     // The world's GPU cast called.
     expect(scan(RAY_MODULES.drawBackend).length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+/**
+ * The content-source seam (CS-847, docs/design/content-source-seam.md): a
+ * source sees only its `SourceHost` and writes only through sinks, so no
+ * file under a source module imports `World`, `Engine`, the renderer
+ * (`src/render/`) or the GPU layer (`src/gpu/`), even for a type: by a
+ * relative path into the core, or by name from `@cesium/core` or the
+ * umbrella. The source modules are the seam's own directory and every
+ * source and loader package (CS-845's `source-*` and `loader-*`), as they
+ * come. The line of each bypass is named; add to the seam, don't go around it.
+ */
+const SOURCE_REFUSED_NAMES = new Set(["World", "Engine", "RenderContext"]);
+const CORE_PACKAGES = /^(?:@cesium\/core|@cesium\/next|cesium)(?:\/|$)/;
+
+export function sourceSeamBypasses(file: string, text: string): string[] {
+  const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
+  const out: string[] = [];
+  const at = (node: ts.Node) =>
+    source.getLineAndCharacterOfPosition(node.getStart(source)).line + 1;
+  const check = (
+    node: ts.Node,
+    specifier: string,
+    names: readonly string[],
+  ) => {
+    if (specifier.startsWith(".")) {
+      const to = resolve(dirname(file), specifier.replace(/\?.*$/, ""));
+      const inCore = relative(src, to).replaceAll("\\", "/");
+      if (
+        !inCore.startsWith("..") &&
+        (inCore === "scene/World.ts" ||
+          inCore === "scene/Engine.ts" ||
+          inCore === "scene/RenderContext.ts" ||
+          inCore.startsWith("render/") ||
+          inCore.startsWith("gpu/"))
+      ) {
+        out.push(`${at(node)}: ${specifier}`);
+      }
+    } else if (CORE_PACKAGES.test(specifier)) {
+      const refused = names.filter((n) => SOURCE_REFUSED_NAMES.has(n));
+      if (refused.length > 0 || /\/(?:render|gpu)(?:\/|$)/.test(specifier)) {
+        out.push(
+          `${at(node)}: ${refused.length > 0 ? `${refused.join(", ")} from ` : ""}${specifier}`,
+        );
+      }
+    }
+  };
+  const visit = (node: ts.Node) => {
+    if (
+      ts.isImportDeclaration(node) &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      const bindings = node.importClause?.namedBindings;
+      check(
+        node,
+        node.moduleSpecifier.text,
+        bindings && ts.isNamedImports(bindings)
+          ? bindings.elements.map((e) => (e.propertyName ?? e.name).text)
+          : [],
+      );
+    } else if (
+      ts.isExportDeclaration(node) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      const clause = node.exportClause;
+      check(
+        node,
+        node.moduleSpecifier.text,
+        clause && ts.isNamedExports(clause)
+          ? clause.elements.map((e) => (e.propertyName ?? e.name).text)
+          : [],
+      );
+    } else if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword &&
+      node.arguments[0] &&
+      ts.isStringLiteralLike(node.arguments[0])
+    ) {
+      check(node, node.arguments[0].text, []);
+    } else if (
+      ts.isImportTypeNode(node) &&
+      ts.isLiteralTypeNode(node.argument) &&
+      ts.isStringLiteral(node.argument.literal)
+    ) {
+      let q = node.qualifier;
+      while (q && ts.isQualifiedName(q)) {
+        q = q.left;
+      }
+      check(node, node.argument.literal.text, q ? [q.text] : []);
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(source);
+  return out;
+}
+
+/** Every TypeScript file of the source modules, absolute. */
+function sourceModuleFiles(): string[] {
+  const packagesDir = join(repo, "packages");
+  const adapters = readdirSync(packagesDir).filter((name) =>
+    /^(?:source|loader)-/.test(name),
+  );
+  return [
+    ...files(join(src, "source"), /\.ts$/),
+    ...adapters.flatMap((name) => {
+      const dir = join(packagesDir, name, "src");
+      return statSync(dir, { throwIfNoEntry: false })?.isDirectory()
+        ? files(dir, /\.ts$/)
+        : [];
+    }),
+  ];
+}
+
+describe("the content-source seam", () => {
+  it("no file under a source module imports World, Engine, src/render/ or src/gpu/", () => {
+    const scanned = sourceModuleFiles();
+    expect(scanned.length).toBeGreaterThanOrEqual(6);
+    const found = scanned.flatMap((path) =>
+      sourceSeamBypasses(path, readFileSync(path, "utf8")).map(
+        (hit) => `${relative(repo, path).replaceAll("\\", "/")}:${hit}`,
+      ),
+    );
+    expect(found).toEqual([]);
+  });
+
+  it("its detector flags each bypass by line: paths, types, dynamic imports and names from the package", () => {
+    const file = join(src, "source", "sample.ts");
+    const plant = [
+      'import type { StableId } from "../scene/identity.ts";',
+      'import type { World } from "../scene/World.ts";',
+      'import { Engine } from "../scene/Engine.ts";',
+      'export { packRecord } from "../render/drawConstants.ts";',
+      'type D = import("../gpu/GpuDevice.ts").GpuDevice;',
+      'const r = () => import("../render/view/viewFrame.ts");',
+      'import type { World as W, StableId as S } from "@cesium/core";',
+      'import { type Engine as E } from "@cesium/next";',
+      'import type { DrawSink } from "../streaming/DrawSink.ts";',
+      'import { FetchProvider } from "@cesium/core";',
+    ].join("\n");
+    expect(sourceSeamBypasses(file, plant)).toEqual([
+      "2: ../scene/World.ts",
+      "3: ../scene/Engine.ts",
+      "4: ../render/drawConstants.ts",
+      "5: ../gpu/GpuDevice.ts",
+      "6: ../render/view/viewFrame.ts",
+      "7: World from @cesium/core",
+      "8: Engine from @cesium/next",
+    ]);
+    // A source package's own file, by the same rules.
+    const adapter = join(repo, "packages", "source-sample", "src", "kind.ts");
+    expect(
+      sourceSeamBypasses(adapter, 'import type { World } from "@cesium/core";'),
+    ).toEqual(["1: World from @cesium/core"]);
   });
 });

@@ -1,0 +1,847 @@
+// The content-source seam's core (CS-847, docs/design/content-source-seam.md):
+// kinds by module reference with decoders on the pool's workers, Engine.open
+// and World.add, the shared budget (the Mount Rainier case), push applied in
+// the apply phase on a fake stepped clock, the edit layer, and CS-831's
+// change sets. The sample source (test/fixtures/sources/sampleKind.ts) is in
+// memory: no network, no timer.
+import { Worker as NodeWorker } from "node:worker_threads";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { FetchProvider } from "../packages/core/src/io/fetchProvider.ts";
+import { Jobs } from "../packages/core/src/io/Jobs.ts";
+import { WorkerPool } from "../packages/core/src/io/WorkerPool.ts";
+import {
+  FLAGS_WORD,
+  RECORD_WORDS,
+  RecordFlags,
+} from "../packages/core/src/render/layout.ts";
+import type { Engine } from "../packages/core/src/scene/Engine.ts";
+import { stableIdOf } from "../packages/core/src/scene/identity.ts";
+import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
+import type { World } from "../packages/core/src/scene/World.ts";
+import { BudgetArbiter } from "../packages/core/src/source/budget.ts";
+import type {
+  ContentWorld,
+  SourceContent,
+} from "../packages/core/src/source/content.ts";
+import {
+  CHANGE_SET_FORMAT,
+  CHANGE_SET_VERSION,
+  READ_ONLY,
+  changeSetFromJson,
+  changeSetToJson,
+  isReadOnly,
+  type ChangeSet,
+} from "../packages/core/src/source/editing.ts";
+import { SourceRuntime } from "../packages/core/src/source/runtime.ts";
+import type { SourceClock } from "../packages/core/src/source/types.ts";
+import type { SampleSource } from "./fixtures/sources/sampleKind.ts";
+import { fakeEngine } from "./fakeGpu.ts";
+
+const SAMPLE = new URL("./fixtures/sources/sampleKind.ts", import.meta.url);
+const THREAD = new URL("./fixtures/sources/decoderThread.mjs", import.meta.url);
+
+const sourceOf = (content: SourceContent) =>
+  content.contentSource as unknown as SampleSource;
+
+/** A world that records what content sets on its draws. */
+function stubWorld() {
+  let next = 1;
+  const visible = new Map<number, boolean>();
+  const world = {
+    addMesh: () => ({ id: next++ }),
+    addDraw: () => ({ index: next++, generation: 0 }),
+    removeDraw: (h: { index: number }) => visible.delete(h.index),
+    setVisible: (h: { index: number }, v: boolean) => visible.set(h.index, v),
+    setViewMask: () => {},
+  };
+  return { world: world as unknown as ContentWorld, visible };
+}
+
+/** A runtime over a fake pool, a test's clock and a stub world. */
+function runtime(
+  options: {
+    slots?: number;
+    clock?: () => SourceClock;
+    phased?: boolean;
+    fetch?: FetchProvider;
+  } = {},
+) {
+  const jobs = new Jobs({ size: 1, post: () => {} });
+  jobs.phased = options.phased ?? false;
+  const reports: string[] = [];
+  const rt = new SourceRuntime({
+    pool: {
+      jobs,
+      submit: (spec) => jobs.submit(spec),
+      loadDecoder: () => {},
+    },
+    fetch: () => options.fetch ?? FetchProvider.default,
+    clock: options.clock ?? (() => ({ seconds: 0, stepped: false })),
+    budget: { slotsPerOrigin: options.slots ?? 16 },
+    report: (message) => reports.push(message),
+  });
+  rt.registerKind({ id: "sample", module: SAMPLE });
+  const { world, visible } = stubWorld();
+  const place = (content: SourceContent) =>
+    content.addItem(world, { key: content.id }, {}, () => {});
+  return { rt, jobs, reports, world, visible, place };
+}
+
+describe("kinds by module reference, and decoders on the pool's workers", () => {
+  let pool: WorkerPool | undefined;
+  afterEach(() => pool?.destroy());
+
+  it("registers a kind and a decoder from a test module, opens a source, and decodes on every worker", async () => {
+    // Two Node threads that run the content worker's decoder host.
+    pool = new WorkerPool(2, () => {
+      const thread = new NodeWorker(THREAD);
+      const adapter = {
+        onmessage: null as ((event: { data: unknown }) => void) | null,
+        postMessage: (message: unknown, transfer?: Transferable[]) =>
+          thread.postMessage(message, transfer as never),
+        terminate: () => void thread.terminate(),
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      };
+      thread.on("message", (data) => adapter.onmessage?.({ data }));
+      return adapter as unknown as Worker;
+    });
+    const rt = new SourceRuntime({
+      pool,
+      fetch: () => FetchProvider.default,
+      clock: () => ({ seconds: 0, stepped: false }),
+    });
+    rt.registerKind({ id: "sample", module: SAMPLE });
+    const content = await rt.open({ url: "https://data.test/city.sample" });
+    expect(content.kind).toBe("sample");
+    expect(pool.hasDecoder("test:sum")).toBe(true);
+    // Two jobs at once go to two workers; each loaded the decoder before its job.
+    const [a, b] = await Promise.all([
+      sourceOf(content).sum(Float64Array.of(1, 2, 3)),
+      sourceOf(content).sum(Float64Array.of(10, 20)),
+    ]);
+    expect(a.sum).toBe(6);
+    expect(b.sum).toBe(30);
+    expect([...a.doubled]).toEqual([2, 4, 6]);
+    expect(a.thread).not.toBe(0); // not the main thread
+    expect(new Set([a.thread, b.thread]).size).toBe(2);
+  }, 30_000);
+
+  it("loads a decoder into workers already started, and into each one that starts later, before its first job", () => {
+    const posted: { worker: number; type: unknown }[] = [];
+    pool = new WorkerPool(3, (index) => {
+      const fake = {
+        onmessage: null,
+        postMessage: (message: { type?: unknown }) =>
+          posted.push({ worker: index, type: message.type }),
+        terminate: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+      };
+      return fake as unknown as Worker;
+    });
+    // Starts worker 0; never answered, so canceled when the pool goes.
+    pool.submit({ type: "x", payload: {} }).promise.catch(() => {});
+    pool.loadDecoder("test:sum", "https://example.test/sum.js");
+    pool.loadDecoder("test:sum", "https://example.test/sum.js"); // once
+    expect(() =>
+      pool!.loadDecoder("test:sum", "https://example.test/other.js"),
+    ).toThrow(/another module/);
+    pool.warm(); // workers 1 and 2 start: the decoder first
+    expect(posted).toEqual([
+      { worker: 0, type: "x" },
+      { worker: 0, type: "decoder:load" },
+      { worker: 1, type: "decoder:load" },
+      { worker: 2, type: "decoder:load" },
+    ]);
+  });
+
+  it("refuses a job type its kind didn't declare, and a kind module whose kind has another ID", async () => {
+    const { rt, place } = runtime();
+    const content = await rt.open({ url: "https://data.test/a.sample" });
+    place(content);
+    expect(() =>
+      sourceOf(content).host.jobs.submit({ type: "terrain", payload: {} }),
+    ).toThrow(/isn't one of the "sample" kind's decoders/);
+    rt.registerKind({ id: "other", module: SAMPLE });
+    await expect(rt.kinds.kind("other")).rejects.toThrow(
+      /registered as "other" holds the kind "sample"/,
+    );
+    expect(() =>
+      rt.registerKind({ id: "sample", module: "https://elsewhere.test/k.js" }),
+    ).toThrow(/another module/);
+  });
+});
+
+describe("Engine.open and World.add", () => {
+  let engine: Engine;
+  let world: World;
+  beforeEach(async () => {
+    engine = await fakeEngine();
+    world = engine.createWorld();
+    engine.addView({ target: new OffscreenTarget(64, 48), world });
+    engine.sources.registerKind({ id: "sample", module: SAMPLE });
+  });
+  afterEach(() => engine.destroy());
+
+  it("resolves a plain URL, picks the kind by what it accepts, and places any content; the sample writes every sink on the fake device", async () => {
+    const content = await engine.open({ url: "https://data.test/city.sample" });
+    expect(content.kind).toBe("sample");
+    expect(content.asset.url.href).toBe("https://data.test/city.sample");
+    const item = world.add(content, { id: "city" });
+    expect(content.item).toBe(item);
+    engine.sources.tick(); // it wants "a"; the budget grants it
+    engine.sources.tick(); // it writes "a"
+    const source = sourceOf(content);
+    expect(source.ticks.map((t) => t.keys)).toEqual([[], ["a"]]);
+    expect(source.ticks[0]!.views).toBe(1);
+    // Every sink holds its output.
+    expect(content.drawCount).toBe(1);
+    expect(content.rows.images.has("a")).toBe(true);
+    expect(content.rows.features.get("a")!.ids.length).toBe(2);
+    expect(content.rows.points.get("a")!.ids.length).toBe(3);
+    expect(content.rows.custom.get("test:splats")!.get("a")!.ids.length).toBe(
+      1,
+    );
+    // Credits ride with content.
+    expect(content.credits().map((c) => c.html)).toEqual([
+      "Sample data",
+      "Roads",
+      "Image a",
+    ]);
+    // Stable IDs from the source's own names (CS-815): the same in another run.
+    const road = stableIdOf({
+      kind: "named",
+      item: content.id,
+      source: content.source,
+      name: "road-1",
+    });
+    expect(content.rows.features.get("a")!.ids[1]).toBe(road);
+    expect(content.feature(road)).toEqual({
+      properties: { lanes: 4, name: "Side" },
+      geometry: {
+        crs: "EPSG:4979",
+        type: "LineString",
+        coordinates: [
+          [1, 1, 0],
+          [2, 2, 0],
+        ],
+      },
+    });
+    // The draw's ID is the one the world's identity table gives it.
+    const drawId = stableIdOf({
+      kind: "draw",
+      item: item.identity.key,
+      source: content.source,
+      content: "a/box",
+    });
+    expect(world.identity.identify(drawId)).toBeDefined();
+    // Tilesets still go through World.add as before; content of another world doesn't.
+    expect(() => engine.createWorld().add(content)).toThrow(/another world/);
+  });
+
+  it("refuses a URL no kind accepts, and a relative URL without a page", async () => {
+    await expect(
+      engine.open({ url: "https://data.test/x.json" }),
+    ).rejects.toThrow(
+      /no registered kind accepts https:\/\/data\.test\/x\.json/,
+    );
+    await expect(engine.open({ url: "city.sample" })).rejects.toThrow(
+      /neither absolute nor relative to a page/,
+    );
+  });
+
+  it("host.changed wakes the engine, and the change applies in the apply phase", async () => {
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", (cb: FrameRequestCallback) => {
+      frames.push(cb);
+      return frames.length;
+    });
+    vi.stubGlobal("cancelAnimationFrame", () => {});
+    const frame = async () => {
+      const due = frames.splice(0);
+      for (const cb of due) {
+        cb(performance.now());
+      }
+      await Promise.resolve();
+    };
+    try {
+      const content = await engine.open({
+        url: "https://data.test/city.sample",
+      });
+      world.add(content);
+      engine.renderMode = "onDemand";
+      engine.start();
+      for (let i = 0; i < 4 && content.drawCount === 0; i++) {
+        await frame();
+      }
+      expect(content.rows.points.has("a")).toBe(true);
+      // Asleep: nothing asks for a frame.
+      while (frames.length > 0) {
+        await frame();
+      }
+      sourceOf(content).push({ kind: "invalidate", keys: ["a"] });
+      // Not applied at the push: it waits for the apply phase, and the engine woke.
+      expect(content.rows.points.has("a")).toBe(true);
+      expect(frames.length).toBe(1);
+      await frame();
+      expect(content.rows.points.has("a")).toBe(false);
+      // Its source saw the invalidation on its next update and selects again.
+      await frame();
+      await frame();
+      expect(sourceOf(content).ticks.some((t) => t.invalidated === 1)).toBe(
+        true,
+      );
+    } finally {
+      engine.stop();
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("the budget arbiter", () => {
+  it("serves one source's now wants before another's prefetch on one origin, whatever the update order (Mount Rainier)", async () => {
+    const { rt, place } = runtime({ slots: 2 });
+    const origin = "https://assets.ion.test";
+    // Buildings open, and update, first: in update order they'd take the window.
+    const buildings = await rt.open({
+      url: "https://assets.ion.test/osm.sample",
+      options: { keys: ["b0", "b1", "b2", "b3"], class: "prefetch", origin },
+    });
+    const terrain = await rt.open({
+      url: "https://assets.ion.test/terrain.sample",
+      options: { keys: ["t0", "t1", "t2"], class: "now", origin },
+    });
+    place(buildings);
+    place(terrain);
+    const grants = () => [
+      sourceOf(terrain).ticks.at(-1)!.keys,
+      sourceOf(buildings).ticks.at(-1)!.keys,
+    ];
+    rt.tick(); // both want; the window takes terrain's first two
+    rt.tick(); // they arrive; terrain's last takes a slot, and prefetch gets the one left
+    expect(grants()).toEqual([["t0", "t1"], []]);
+    rt.tick();
+    expect(grants()).toEqual([["t2"], ["b0"]]);
+    rt.tick();
+    expect(grants()).toEqual([[], ["b1", "b2"]]);
+    expect(rt.budget.inFlight(origin)).toBe(1);
+  });
+
+  it("grants within one byte budget for every source, and frees on settle and release", () => {
+    const arbiter = new BudgetArbiter({ bytes: 1000, slotsPerOrigin: 8 });
+    const a = arbiter.client();
+    const b = arbiter.client();
+    const want = (key: string, bytes: number) => ({
+      key,
+      class: "refine" as const,
+      benefit: 1,
+      cost: { bytes },
+      origin: "https://x.test",
+    });
+    a.want(want("a1", 600));
+    b.want(want("b1", 300));
+    b.want(want("b2", 300));
+    // More benefit per byte first: b1 and b2 (600 bytes), then a1 doesn't fit.
+    expect(arbiter.arbitrate()).toBe(2);
+    expect(arbiter.takeGrant(a).keys).toEqual([]);
+    expect(arbiter.takeGrant(b).keys).toEqual(["b1", "b2"]);
+    b.settle("b1", 200); // it holds less than it asked
+    b.release("b2"); // canceled before it arrived
+    expect(b.resident).toBe(200);
+    a.want(want("a1", 600));
+    expect(arbiter.arbitrate()).toBe(1); // 200 + 600 fits in 1000
+    expect(arbiter.takeGrant(a).keys).toEqual(["a1"]);
+    a.settle("a1");
+    expect(arbiter.resident).toBe(800);
+    b.want(want("b3", 300));
+    expect(arbiter.arbitrate()).toBe(0); // over the budget
+  });
+
+  it("ages a waiting want within its class, and refuses wants it can't read", () => {
+    const arbiter = new BudgetArbiter({ slotsPerOrigin: 1, agingTicks: 1 });
+    const c = arbiter.client();
+    const origin = "https://x.test";
+    const ask = () => {
+      c.want({
+        key: "old",
+        class: "refine",
+        benefit: 1,
+        cost: { bytes: 100 },
+        origin,
+      });
+      c.want({
+        key: "new",
+        class: "refine",
+        benefit: 1.5,
+        cost: { bytes: 100 },
+        origin,
+      });
+    };
+    ask();
+    arbiter.arbitrate();
+    expect(arbiter.takeGrant(c).keys).toEqual(["new"]);
+    c.release("new");
+    ask(); // "old" waited a tick: 1 × 2 beats 1.5 × 1
+    arbiter.arbitrate();
+    expect(arbiter.takeGrant(c).keys).toEqual(["old"]);
+    expect(() =>
+      c.want({
+        key: "k",
+        class: "soon" as never,
+        benefit: 1,
+        cost: { bytes: 1 },
+        origin,
+      }),
+    ).toThrow(/class "soon"/);
+    expect(() =>
+      c.want({
+        key: "k",
+        class: "now",
+        benefit: Number.NaN,
+        cost: { bytes: 1 },
+        origin,
+      }),
+    ).toThrow(/benefit is NaN/);
+  });
+});
+
+describe("push on a stepped clock", () => {
+  /** One run: load, push samples and an invalidation, step the clock 0 to 4 s. */
+  async function run() {
+    let seconds = 0;
+    const { rt, jobs, place } = runtime({
+      phased: true,
+      clock: () => ({ seconds, stepped: true }),
+    });
+    const content = await rt.open({ url: "https://feed.test/cars.sample" });
+    place(content);
+    const step = () => {
+      rt.tick();
+      jobs.apply(Infinity);
+    };
+    step();
+    step(); // "a" loaded
+    const source = sourceOf(content);
+    // Out of order, and before their times: they wait for the clock.
+    source.push({
+      kind: "samples",
+      samples: {
+        times: Float64Array.of(2.5, 0.5, 1.5, 1, 1.5),
+        names: ["car-0", "car-0", "car-0", "car-1", "car-2"],
+        positions: Float64Array.of(3, 0, 0, 1, 0, 0, 2, 0, 0, 0, 1, 0, 0, 0, 2),
+      },
+    });
+    const rows: number[][] = [];
+    const ids = [...content.rows.points.get("a")!.ids];
+    for (seconds = 0; seconds <= 3; seconds++) {
+      step();
+      rows.push([...content.rows.points.get("a")!.batch.positions]);
+    }
+    expect(rt.bufferedSamples).toBe(0);
+    source.push({ kind: "invalidate", keys: ["a"] });
+    const before = content.rows.points.has("a");
+    jobs.apply(Infinity);
+    return { rows, ids, before, after: content.rows.points.has("a"), source };
+  }
+
+  it("applies samples at their times, and two runs give the same rows", async () => {
+    const first = await run();
+    const second = await run();
+    expect(first.rows).toEqual([
+      [0, 0, 0, 0, 0, 0, 0, 0, 0], // t = 0: nothing due
+      [1, 0, 0, 0, 1, 0, 0, 0, 0], // t = 1: 0.5 and 1
+      [2, 0, 0, 0, 1, 0, 0, 0, 2], // t = 2: 1.5's
+      [3, 0, 0, 0, 1, 0, 0, 0, 2], // t = 3: 2.5
+    ]);
+    expect(second.rows).toEqual(first.rows);
+    expect(second.ids).toEqual(first.ids);
+    // The invalidation applied in the apply phase, not at its push.
+    expect(first.before).toBe(true);
+    expect(first.after).toBe(false);
+  });
+
+  it("in real time applies samples as they arrive, and ignores a kind it doesn't know", async () => {
+    const { rt, place, reports } = runtime();
+    const content = await rt.open({ url: "https://feed.test/cars.sample" });
+    place(content);
+    rt.tick();
+    rt.tick();
+    const source = sourceOf(content);
+    source.push({
+      kind: "samples",
+      samples: {
+        times: Float64Array.of(99),
+        names: ["car-1"],
+        positions: Float64Array.of(7, 8, 9),
+      },
+    });
+    expect([
+      ...content.rows.points.get("a")!.batch.positions.subarray(3, 6),
+    ]).toEqual([7, 8, 9]);
+    source.push({ kind: "presence", peers: [] } as never);
+    source.push({
+      kind: "samples",
+      samples: { times: Float64Array.of(1, 2), names: ["car-1"] },
+    });
+    expect(reports).toEqual([
+      "the \"sample\" source's samples threw: times, names and positions don't agree in length; dropped.",
+    ]);
+  });
+});
+
+describe("a source polling its own server (CS-863)", () => {
+  const flush = async () => {
+    for (let i = 0; i < 4; i++) {
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+  };
+
+  it("checks its server's version on its declared interval, under the budget, and turns a change into a push; the engine never polls", async () => {
+    let version = "1";
+    const asked: string[] = [];
+    const provider = new FetchProvider({
+      transport: (url) => {
+        asked.push(url);
+        return Promise.resolve(new Response(version));
+      },
+    });
+    let seconds = 0;
+    const { rt, jobs, place } = runtime({
+      clock: () => ({ seconds, stepped: true }),
+      fetch: provider,
+      phased: true,
+    });
+    const content = await rt.open({
+      url: "https://features.test/parcels.sample",
+      options: { polls: 2, keys: [] },
+    });
+    expect(content.capabilities.polls).toEqual({ intervalSeconds: 2 });
+    place(content);
+    await flush();
+    expect(asked).toEqual([]); // nothing ticks it: nothing asks
+    for (seconds = 0; seconds <= 6; seconds++) {
+      rt.tick();
+      jobs.apply(Infinity);
+      await flush();
+      if (seconds === 3) {
+        version = "2"; // someone else edits upstream
+      }
+    }
+    const source = sourceOf(content);
+    // Wanted at 0 and 3 (its interval since its last check), granted the next tick.
+    expect(source.ticks.map((t) => t.keys)).toEqual([
+      [],
+      ["version"],
+      [],
+      [],
+      ["version"],
+      [],
+      [],
+    ]);
+    expect(asked).toEqual([
+      "https://features.test/version",
+      "https://features.test/version",
+    ]);
+    expect(source.version).toBe("2");
+    // The change came in as a push, applied in the apply phase, seen next update.
+    expect(source.ticks.map((t) => t.invalidated)).toEqual([
+      0, 0, 0, 0, 0, 0, 1,
+    ]);
+  });
+
+  it("refuses an interval under a second, polling without pushes, and a push from a source that declares none", async () => {
+    const { rt, place, reports } = runtime();
+    await expect(
+      rt.open({ url: "https://x.test/a.sample", options: { polls: 0.1 } }),
+    ).rejects.toThrow(/at least 1 s/);
+    await expect(
+      rt.open({
+        url: "https://x.test/b.sample",
+        options: { polls: 5, silent: true },
+      }),
+    ).rejects.toThrow(/polls but doesn't push/);
+    const silent = await rt.open({
+      url: "https://x.test/c.sample",
+      options: { silent: true },
+    });
+    place(silent);
+    sourceOf(silent).push({ kind: "invalidate" });
+    expect(reports).toEqual([
+      'the "sample" source\'s push threw: it declares pushes: false; dropped.',
+    ]);
+  });
+});
+
+describe("the edit layer (CS-865)", () => {
+  it("hides, replaces and inserts by stable ID, over rows and draws, and holds through a reload", async () => {
+    const { rt, place, visible } = runtime();
+    const content = await rt.open({ url: "https://data.test/city.sample" });
+    const item = place(content);
+    rt.tick();
+    rt.tick();
+    const id = (name: string) =>
+      stableIdOf({
+        kind: "named",
+        item: content.id,
+        source: content.source,
+        name,
+      });
+    const drawId = stableIdOf({
+      kind: "draw",
+      item: item.identity.key,
+      source: content.source,
+      content: "a/box",
+    });
+    const shown = () => [...content.features()].map((f) => f.id);
+    expect(shown()).toHaveLength(2 + 3 + 1 + 1); // roads, cars, splat, the box
+
+    content.edits.hide(id("road-0"));
+    content.edits.replace(id("car-1"), { properties: { speed: 30 } });
+    const added = stableIdOf({
+      kind: "host",
+      item: content.id,
+      key: "new-pin",
+    });
+    content.edits.insert(added, {
+      geometry: { crs: "EPSG:4979", type: "Point", coordinates: [1, 2, 3] },
+    });
+    content.edits.hide(drawId);
+    expect(content.feature(id("road-0"))).toBeUndefined();
+    expect(content.feature(id("car-1"))).toEqual({ properties: { speed: 30 } });
+    expect(content.feature(added)?.geometry?.coordinates).toEqual([1, 2, 3]);
+    expect(shown()).not.toContain(id("road-0"));
+    expect(shown()).toContain(added);
+    expect([...visible.values()]).toEqual([false]); // the box's draw
+
+    // A reload: the source drops "a" and writes it again, with a new draw.
+    sourceOf(content).push({ kind: "invalidate", keys: ["a"] });
+    expect(content.rows.features.has("a")).toBe(false);
+    rt.tick(); // sees the invalidation, wants "a"
+    rt.tick(); // writes it
+    expect(content.rows.features.has("a")).toBe(true);
+    expect(content.feature(id("road-0"))).toBeUndefined();
+    expect(content.feature(id("car-1"))).toEqual({ properties: { speed: 30 } });
+    expect([...visible.values()].at(-1)).toBe(false); // the new draw starts hidden
+
+    content.edits.clear(drawId);
+    content.edits.clear(id("road-0"));
+    expect([...visible.values()].at(-1)).toBe(true);
+    expect(content.feature(id("road-0"))?.properties).toEqual({
+      lanes: 2,
+      name: "Main",
+    });
+  });
+
+  it("hides a draw in the world on the fake device, through World.setVisible", async () => {
+    const engine = await fakeEngine();
+    try {
+      const world = engine.createWorld();
+      engine.sources.registerKind({ id: "sample", module: SAMPLE });
+      const content = await engine.open({
+        url: "https://data.test/city.sample",
+      });
+      const item = world.add(content);
+      engine.sources.tick();
+      engine.sources.tick();
+      const drawId = stableIdOf({
+        kind: "draw",
+        item: item.identity.key,
+        source: content.source,
+        content: "a/box",
+      });
+      const index = world.identity.identify(drawId)!.draw!.index;
+      const hidden = () =>
+        (world.draws.recordsU32[index * RECORD_WORDS + FLAGS_WORD]! &
+          RecordFlags.hidden) !==
+        0;
+      expect(hidden()).toBe(false);
+      content.edits.hide(drawId);
+      expect(hidden()).toBe(true);
+      item.show = false;
+      content.edits.clear(drawId);
+      expect(hidden()).toBe(true); // its item hides it
+      item.show = true;
+      expect(hidden()).toBe(false);
+    } finally {
+      engine.destroy();
+    }
+  });
+
+  it("applies a feed's change set under this client's edits, and drops a malformed one", async () => {
+    const { rt, place, reports } = runtime();
+    const content = await rt.open({
+      url: "https://data.test/city.sample",
+      id: "city",
+    });
+    place(content);
+    rt.tick();
+    rt.tick();
+    const road0 = stableIdOf({
+      kind: "named",
+      item: "city",
+      source: content.source,
+      name: "road-0",
+    });
+    const road1 = stableIdOf({
+      kind: "named",
+      item: "city",
+      source: content.source,
+      name: "road-1",
+    });
+    const changes: ChangeSet = {
+      id: "cs-1",
+      source: "city",
+      base: "1",
+      ops: [
+        {
+          op: "update",
+          id: road0,
+          patch: { properties: { lanes: 6, name: null } },
+        },
+        { op: "delete", id: road1 },
+      ],
+    };
+    sourceOf(content).push({ kind: "features", changes });
+    expect(content.feature(road0)?.properties).toEqual({ lanes: 6 });
+    expect(content.feature(road1)).toBeUndefined();
+    content.edits.replace(road0, { properties: { lanes: 1 } });
+    expect(content.feature(road0)?.properties).toEqual({ lanes: 1 }); // mine over theirs
+    sourceOf(content).push({
+      kind: "features",
+      changes: { id: "", source: "city", ops: [] },
+    });
+    expect(reports).toEqual([
+      'the "sample" source\'s features change threw: change set: its id is a non-empty string.',
+    ]);
+  });
+});
+
+describe("CS-831's types: write capabilities and change sets", () => {
+  it("READ_ONLY is frozen and read-only; a writable source names every row and has a writer", async () => {
+    expect(Object.isFrozen(READ_ONLY)).toBe(true);
+    expect(isReadOnly(READ_ONLY)).toBe(true);
+    expect(isReadOnly({ ...READ_ONLY, live: true })).toBe(true);
+    expect(isReadOnly({ ...READ_ONLY, update: true })).toBe(false);
+    const { rt, place, reports } = runtime();
+    const named = await rt.open({
+      url: "https://data.test/w.sample",
+      options: { writable: true },
+    });
+    expect(named.contentSource.writer).toBeDefined();
+    place(named);
+    const unnamed = await rt.open({
+      url: "https://data.test/u.sample",
+      options: { writable: true, unnamed: true },
+    });
+    place(unnamed);
+    rt.tick();
+    rt.tick();
+    expect(named.rows.features.has("a")).toBe(true);
+    expect(unnamed.rows.features.has("a")).toBe(false);
+    expect(reports).toEqual([
+      expect.stringContaining("a writable source names every row"),
+    ]);
+  });
+
+  it("serializes as JSON with a format name and a 0.x version, IDs as decimal strings, and reads it back", () => {
+    const id = (1n << 63n) + 5n;
+    const changes: ChangeSet = {
+      id: "cs-2",
+      source: "city",
+      base: "41",
+      ops: [
+        {
+          op: "insert",
+          id,
+          feature: {
+            geometry: {
+              crs: "EPSG:4979",
+              type: "Point",
+              coordinates: [1, 2, 3],
+            },
+          },
+        },
+        {
+          op: "update",
+          id: 7n,
+          base: "e1",
+          patch: { properties: { lanes: 3, old: null } },
+          before: { properties: { lanes: 2 } },
+          overwrite: true,
+        },
+        { op: "delete", id: 9n, before: { properties: { a: 1 } } },
+      ],
+      meta: { author: "a person", time: "2026-11-22T00:00:00Z", note: "n" },
+    };
+    const text = changeSetToJson(changes);
+    const json = JSON.parse(text) as Record<string, unknown>;
+    expect(json.format).toBe(CHANGE_SET_FORMAT);
+    expect(json.version).toBe(CHANGE_SET_VERSION);
+    expect(CHANGE_SET_VERSION).toMatch(/^0\./);
+    expect((json.changeSet as { ops: { id: string }[] }).ops[0]!.id).toBe(
+      id.toString(),
+    );
+    expect(changeSetFromJson(text)).toEqual(changes);
+  });
+
+  it("refuses another format, a version that isn't 0.x, a bad ID or op, and what passes its limits, naming no value", () => {
+    const wrap = (changeSet: unknown, extra: Record<string, unknown> = {}) =>
+      JSON.stringify({
+        format: CHANGE_SET_FORMAT,
+        version: "0.1.0",
+        changeSet,
+        ...extra,
+      });
+    const ok = { id: "x", source: "s", ops: [] };
+    expect(() =>
+      changeSetFromJson(JSON.stringify({ format: "geojson" })),
+    ).toThrow(/format/);
+    expect(() => changeSetFromJson(wrap(ok, { version: "1.0.0" }))).toThrow(
+      /isn't 0\.x/,
+    );
+    expect(() =>
+      changeSetFromJson(wrap({ ...ok, ops: [{ op: "delete", id: "0" }] })),
+    ).toThrow(/op 0: its id is a stable ID/);
+    expect(() =>
+      changeSetFromJson(wrap({ ...ok, ops: [{ op: "move", id: "3" }] })),
+    ).toThrow(/op 0: its op is/);
+    expect(() =>
+      changeSetFromJson(
+        wrap({
+          ...ok,
+          ops: [
+            { op: "insert", id: "3", feature: { geometry: { type: "Point" } } },
+          ],
+        }),
+      ),
+    ).toThrow(/names its CRS/);
+    expect(() =>
+      changeSetFromJson(
+        wrap({
+          ...ok,
+          ops: [
+            { op: "delete", id: "3" },
+            { op: "delete", id: "4" },
+          ],
+        }),
+        {
+          ops: 1,
+        },
+      ),
+    ).toThrow(/more than its limit/);
+    try {
+      changeSetFromJson(
+        wrap({
+          ...ok,
+          ops: [
+            { op: "update", id: "3", patch: { properties: "secret-value" } },
+          ],
+        }),
+      );
+      expect.unreachable();
+    } catch (error) {
+      expect(String(error)).not.toContain("secret-value");
+    }
+  });
+});
