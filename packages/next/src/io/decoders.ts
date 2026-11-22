@@ -7,13 +7,15 @@ import { engineFetch } from "./fetchProvider.ts";
 import createDracoModule from "draco3d/draco_decoder_nodejs.js";
 import dracoWasmUrl from "draco3d/draco_decoder.wasm?url";
 import { read as readKtx2 } from "ktx-parse";
-// The Basis transcoder has no official npm package. For the PoC this uses the
-// copy vendored in the repo (Binomial's build, Apache-2.0); a published
-// @cesium/next would vendor its own copy. `?basis-esm` loads it as an ES
-// module that generates no code at runtime (basisTranscoderEsm.ts), so
-// workers need no 'unsafe-eval' under a Content Security Policy.
-import createBasisModule from "../../../engine/Source/ThirdParty/Workers/basis_transcoder.js?basis-esm";
-import basisWasmUrl from "../../../engine/Source/ThirdParty/basis_transcoder.wasm?url";
+// The Basis transcoder has no official npm package. 2.0 keeps its own pinned
+// copy in ThirdParty/: Binomial's build (Apache-2.0), byte for byte the one
+// 1.x vendored at @cesium/engine 26.5.0, moved here when 1.x left the branch
+// (CS-611). CS-811 decides how 2.0 builds its decoders. `?basis-esm` loads
+// it as an ES module that generates no code at runtime
+// (basisTranscoderEsm.ts), so workers need no 'unsafe-eval' under a Content
+// Security Policy.
+import createBasisModule from "./ThirdParty/basis_transcoder.js?basis-esm";
+import basisWasmUrl from "./ThirdParty/basis_transcoder.wasm?url";
 import type { CompressedImage, CompressedFormat } from "./gltfTypes.ts";
 import type { TextureTranscodePath } from "../profile/paths.ts";
 

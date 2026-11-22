@@ -232,37 +232,16 @@ export interface ViewerWarning {
 const MOON_CREDIT = {};
 
 /** 1.x's moon map (equirectangular, the near side in the middle). */
-const MOON_MAP = new URL(
-  "../../engine/Source/Assets/Textures/moonSmall.jpg",
-  import.meta.url,
-);
+const MOON_MAP = new URL("./assets/moonSmall.jpg", import.meta.url);
 
 /** 1.x's star map (Tycho), +x, −x, +y, −y, +z, −z in the celestial frame. */
 const STAR_MAP = [
-  new URL(
-    "../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_px.jpg",
-    import.meta.url,
-  ),
-  new URL(
-    "../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_mx.jpg",
-    import.meta.url,
-  ),
-  new URL(
-    "../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_py.jpg",
-    import.meta.url,
-  ),
-  new URL(
-    "../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_my.jpg",
-    import.meta.url,
-  ),
-  new URL(
-    "../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_pz.jpg",
-    import.meta.url,
-  ),
-  new URL(
-    "../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_mz.jpg",
-    import.meta.url,
-  ),
+  new URL("./assets/skybox/tycho2t3_80_px.jpg", import.meta.url),
+  new URL("./assets/skybox/tycho2t3_80_mx.jpg", import.meta.url),
+  new URL("./assets/skybox/tycho2t3_80_py.jpg", import.meta.url),
+  new URL("./assets/skybox/tycho2t3_80_my.jpg", import.meta.url),
+  new URL("./assets/skybox/tycho2t3_80_pz.jpg", import.meta.url),
+  new URL("./assets/skybox/tycho2t3_80_mz.jpg", import.meta.url),
 ];
 
 /** A tileset by URL, or an ion asset. */

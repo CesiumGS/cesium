@@ -1007,7 +1007,7 @@ async function ticks(engine: Engine, count: number, done = () => false) {
 const skyMapFaces = ["px", "mx", "py", "my", "pz", "mz"].map(
   (face) =>
     new URL(
-      `../../engine/Source/Assets/Textures/SkyBox/tycho2t3_80_${face}.jpg`,
+      `../widgets/assets/skybox/tycho2t3_80_${face}.jpg`,
       import.meta.url,
     ),
 );
