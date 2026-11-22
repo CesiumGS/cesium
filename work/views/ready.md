@@ -247,7 +247,6 @@ CS-596 Trust and evals
 
 CS-609 A clean 2.0 branch and a modern build
   CS-612  The new build system
-  CS-911  The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite
 
 CS-615 Packaging and package names
   CS-616  decision: Which scoped package names does 2.0 publish under, beside cesium@2.0.0?
@@ -271,5 +270,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-202 ready
+201 ready
 ```

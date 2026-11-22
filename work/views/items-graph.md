@@ -788,7 +788,8 @@ graph LR
     CS_896["CS-896 Docs and site deploys for 2.0"]:::proposed
     CS_897["CS-897 A software-WebGPU smoke job in CI"]:::proposed
     CS_910["CS-910 Merge CS-611, 1.x leaves the 2.0 branch"]:::done
-    CS_911["CS-911 The move's fix-ups after CS-611: an https lockfile entry, stale"]:::open
+    CS_911["CS-911 The move's fix-ups after CS-611: an https lockfile entry, stale"]:::done
+    CS_918["CS-918 Merge CS-911, the move's fix-ups after CS-611"]:::done
   end
   subgraph CS_615["Packaging and package names"]
     CS_616["CS-616 Which scoped package names does 2.0 publish under, beside cesiu"]:::decision

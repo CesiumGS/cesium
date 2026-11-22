@@ -1236,7 +1236,7 @@ Milestone: Extension users have validated 2.0 with their own data ([CS-608](./mi
 
 ### A clean 2.0 branch and a modern build
 
-[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 12 of 18 done, 2 ready, 1 blocked, 3 proposed.
+[CS-609](./projects/CS-609-a-clean-2-0-branch-and-a-modern-build.md), Planned, led by owner: 14 of 19 done, 1 ready, 1 blocked, 3 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614-the-branch-is-a-clean-modern-2-0-build.md), Planned)
 
@@ -1260,7 +1260,8 @@ No milestone
 - [?] [CS-896](./items/CS-896-docs-and-site-deploys-for-2-0.md) Docs and site deploys for 2.0. Proposed. Needs CS-613.
 - [?] [CS-897](./items/CS-897-a-software-webgpu-smoke-job-in-ci.md) A software-WebGPU smoke job in CI. Proposed. Needs CS-613 and CS-893.
 - [x] [CS-910](./items/CS-910-merge-cs-611-1-x-leaves-the-2-0-branch.md) decision: Merge CS-611, 1.x leaves the 2.0 branch. Done.
-- [ ] [CS-911](./items/CS-911-the-move-s-fix-ups-after-cs-611-an-https.md) The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite. Needs nothing.
+- [x] [CS-911](./items/CS-911-the-move-s-fix-ups-after-cs-611-an-https.md) The move's fix-ups after CS-611: an https lockfile entry, stale 1.x references, Sandcastle's dev data, notices, the lod suite. Done.
+- [x] [CS-918](./items/CS-918-merge-cs-911-the-move-s-fix-ups-after-cs-611.md) decision: Merge CS-911, the move's fix-ups after CS-611. Done.
 
 ### Packaging and package names
 
