@@ -6,22 +6,11 @@ import GeometryReadSession from "./GeometryReadSession.js";
 /** @import GeometryAttributeDescriptor from "./GeometryAttributeDescriptor.js"; */
 
 /**
- * Writes one vertex's value of an attribute. Get one from
- * {@link GeometryWriteSession#vertexAttributeWriter}.
+ * Writes one element's value of an attribute. Get one from
+ * {@link GeometryWriteSession#attributeWriter}.
  *
  * @callback GeometryAttributeWriter
- * @param {number} vertexIndex The index of the vertex to write.
- * @param {number[]|TypedArray} values The array with the attribute's {@link GeometryAttributeDescriptor#componentCount} values.
- * @param {number} [offset=0] The index in <code>values</code> of the first value.
- */
-
-/**
- * Writes one corner's value of an attribute. Get one from
- * {@link GeometryWriteSession#cornerAttributeWriter}.
- *
- * @callback GeometryCornerAttributeWriter
- * @param {number} primitiveIndex The index of the primitive.
- * @param {number} cornerIndex The index of the corner within the primitive, in the order {@link GeometryPrimitiveReader} returns its vertices.
+ * @param {number} index The index of the element to write, in the attribute's domain.
  * @param {number[]|TypedArray} values The array with the attribute's {@link GeometryAttributeDescriptor#componentCount} values.
  * @param {number} [offset=0] The index in <code>values</code> of the first value.
  */
@@ -42,30 +31,15 @@ import GeometryReadSession from "./GeometryReadSession.js";
  */
 class GeometryWriteSession extends GeometryReadSession {
   /**
-   * Creates a function that writes an attribute's value for a vertex.
+   * Creates a function that writes an attribute's value for an element of its
+   * domain, indexed as in {@link GeometryReadSession#attributeReader}.
    *
    * @param {GeometryAttributeDescriptor} descriptor The attribute to write. Must be one of the attributes requested for this session.
    * @returns {GeometryAttributeWriter} The attribute writer.
    *
    * @exception {DeveloperError} The attribute was not requested for this session.
-   * @exception {DeveloperError} The attribute's domain isn't {@link GeometryAttributeDomain.VERTEX}.
    */
-  vertexAttributeWriter(descriptor) {
-    DeveloperError.throwInstantiationError();
-  }
-
-  /**
-   * Creates a function that writes an attribute's value for a corner of a
-   * primitive. Writing a vertex-domain attribute this way writes the corner's
-   * vertex, which other corners may share.
-   *
-   * @param {GeometryAttributeDescriptor} descriptor The attribute to write. Must be one of the attributes requested for this session.
-   * @returns {GeometryCornerAttributeWriter} The attribute writer.
-   *
-   * @exception {DeveloperError} The attribute was not requested for this session.
-   * @exception {DeveloperError} Primitives were not requested for this session.
-   */
-  cornerAttributeWriter(descriptor) {
+  attributeWriter(descriptor) {
     DeveloperError.throwInstantiationError();
   }
 

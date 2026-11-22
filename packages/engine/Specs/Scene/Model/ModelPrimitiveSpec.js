@@ -94,9 +94,11 @@ describe(
       return primitive.geometryReader.withReadSession(
         { attributes: descriptors, primitives: true },
         function (session) {
-          const vertexCount = session.vertexCount();
+          const vertexCount = session.elementCount(
+            GeometryAttributeDomain.VERTEX,
+          );
           const values = descriptors.map(function (descriptor) {
-            const read = session.vertexAttributeReader(descriptor);
+            const read = session.attributeReader(descriptor);
             const componentCount = descriptor.componentCount;
             const result = new Float64Array(vertexCount * componentCount);
             for (let i = 0; i < vertexCount; ++i) {
@@ -107,7 +109,11 @@ describe(
 
           const readPrimitive = session.primitiveReader();
           const primitives = [];
-          for (let i = 0; i < session.primitiveCount(); ++i) {
+          for (
+            let i = 0;
+            i < session.elementCount(GeometryAttributeDomain.FACE);
+            ++i
+          ) {
             const vertices = new Array(session.primitiveVertexCount(i));
             primitives.push(readPrimitive(i, vertices));
           }
@@ -125,9 +131,13 @@ describe(
       primitive.geometryWriter.withWriteSession(
         { attributes: [descriptor] },
         function (session) {
-          const write = session.vertexAttributeWriter(descriptor);
+          const write = session.attributeWriter(descriptor);
           const componentCount = descriptor.componentCount;
-          for (let i = 0; i < session.vertexCount(); ++i) {
+          for (
+            let i = 0;
+            i < session.elementCount(GeometryAttributeDomain.VERTEX);
+            ++i
+          ) {
             write(i, values, i * componentCount);
           }
         },
@@ -307,18 +317,28 @@ describe(
       }
     });
 
-    it("counts the corners of every primitive", async function () {
+    it("counts the elements of each domain", async function () {
+      const { VERTEX, CORNER, FACE, EDGE } = GeometryAttributeDomain;
       const files = [
         // Strips and fans share vertices between triangles, so they have
         // more corners than indices.
-        ["unitSquare11x2_triangleStrip.glb", 20 * 3],
-        ["unitSquare5_triangleFan.glb", 4 * 3],
-        ["unitSquare11x11_plain.glb", 200 * 3],
+        ["unitSquare11x2_triangleStrip.glb", 22, 20],
+        ["unitSquare5_triangleFan.glb", 5, 4],
+        ["unitSquare11x11_plain.glb", 121, 200],
       ];
-      for (const [name, cornerCount] of files) {
+      for (const [name, vertexCount, triangleCount] of files) {
         const [primitive] = await loadPrimitives(`${unitSquareUrl}/${name}`);
         primitive.geometryReader.withReadSession({}, function (session) {
-          expect(session.cornerCount()).withContext(name).toBe(cornerCount);
+          expect(session.elementCount(VERTEX))
+            .withContext(name)
+            .toBe(vertexCount);
+          expect(session.elementCount(CORNER))
+            .withContext(name)
+            .toBe(triangleCount * 3);
+          expect(session.elementCount(FACE))
+            .withContext(name)
+            .toBe(triangleCount);
+          expect(session.elementCount(EDGE)).withContext(name).toBe(0);
         });
       }
     });
@@ -396,7 +416,7 @@ describe(
       const options = { attributes: [position], primitives: true };
       primitive.geometryReader.withReadSession(options, function (session) {
         const positionResult = [7, 7, 7, 7, 7];
-        const returned = session.vertexAttributeReader(position)(
+        const returned = session.attributeReader(position)(
           1,
           positionResult,
           1,
@@ -407,16 +427,6 @@ describe(
         const primitiveResult = new Uint32Array(5);
         session.primitiveReader()(0, primitiveResult, 2);
         expect(Array.from(primitiveResult)).toEqual([0, 0, 0, 1, 2]);
-
-        const cornerResult = [7, 7, 7, 7, 7];
-        const cornerReturned = session.cornerAttributeReader(position)(
-          0,
-          1,
-          cornerResult,
-          1,
-        );
-        expect(cornerReturned).toBe(cornerResult);
-        expect(cornerResult).toEqual([7, 1, 0, 0, 7]);
       });
     });
 
@@ -450,30 +460,6 @@ describe(
           .withContext(semantic)
           .toBe(GeometryAttributeDomain.VERTEX);
       }
-    });
-
-    it("reads corners as their vertices", async function () {
-      if (webglStub) {
-        return;
-      }
-      const [primitive] = await loadPrimitives(
-        `${unitSquareUrl}/unitSquare11x2_triangleStrip.glb`,
-      );
-      const options = { attributes: [position], primitives: true };
-      primitive.geometryReader.withReadSession(options, function (session) {
-        const readVertex = session.vertexAttributeReader(position);
-        const readCorner = session.cornerAttributeReader(position);
-        const readPrimitive = session.primitiveReader();
-
-        for (let p = 0; p < session.primitiveCount(); ++p) {
-          const vertices = readPrimitive(p, []);
-          for (let c = 0; c < vertices.length; ++c) {
-            expect(readCorner(p, c, []))
-              .withContext(`primitive ${p}, corner ${c}`)
-              .toEqual(readVertex(vertices[c], []));
-          }
-        }
-      });
     });
 
     it("writes plain and interleaved attributes", async function () {
@@ -574,10 +560,8 @@ describe(
       primitive.geometryWriter.withWriteSession(
         { attributes: [position] },
         function (session) {
-          session.vertexAttributeWriter(position)(0, [5, 6, 7]);
-          expect(session.vertexAttributeReader(position)(0, [])).toEqual([
-            5, 6, 7,
-          ]);
+          session.attributeWriter(position)(0, [5, 6, 7]);
+          expect(session.attributeReader(position)(0, [])).toEqual([5, 6, 7]);
         },
       );
     });
@@ -591,7 +575,7 @@ describe(
         primitive.geometryWriter.withWriteSession(
           { attributes: [position] },
           function (session) {
-            session.vertexAttributeWriter(position)(0, [5, 6, 7]);
+            session.attributeWriter(position)(0, [5, 6, 7]);
             throw new Error("Callback failed.");
           },
         );
@@ -660,9 +644,13 @@ describe(
       primitive.geometryWriter.withWriteSession(
         { attributes: [position, texCoord] },
         function (session) {
-          const writePosition = session.vertexAttributeWriter(position);
-          const writeTexCoord = session.vertexAttributeWriter(texCoord);
-          for (let i = 0; i < session.vertexCount(); ++i) {
+          const writePosition = session.attributeWriter(position);
+          const writeTexCoord = session.attributeWriter(texCoord);
+          for (
+            let i = 0;
+            i < session.elementCount(GeometryAttributeDomain.VERTEX);
+            ++i
+          ) {
             writePosition(i, reversedPositions, i * 3);
             writeTexCoord(i, reversedTexCoords, i * 2);
           }
@@ -710,7 +698,7 @@ describe(
         primitive.geometryWriter.withWriteSession(
           { attributes: [position] },
           function (session) {
-            session.vertexAttributeWriter(position)(0, [5, 6, 7]);
+            session.attributeWriter(position)(0, [5, 6, 7]);
             throw new Error("Callback failed.");
           },
         );
@@ -718,26 +706,6 @@ describe(
 
       expect(attribute.typedArray).toBe(cpuCopy);
       expect(Array.from(cpuCopy)).toEqual(positions);
-    });
-
-    it("writes corners as their vertices", async function () {
-      if (webglStub) {
-        return;
-      }
-      const [primitive] = await loadPrimitives(
-        `${unitSquareUrl}/unitSquare11x2_triangleStrip.glb`,
-      );
-      const options = { attributes: [position], primitives: true };
-      primitive.geometryWriter.withWriteSession(options, function (session) {
-        const writeCorner = session.cornerAttributeWriter(position);
-        const readVertex = session.vertexAttributeReader(position);
-        const vertices = session.primitiveReader()(1, []);
-
-        for (let c = 0; c < vertices.length; ++c) {
-          writeCorner(1, c, [c, c, c]);
-          expect(readVertex(vertices[c], [])).toEqual([c, c, c]);
-        }
-      });
     });
 
     it("updates the bounds of written positions and the model", async function () {
@@ -774,7 +742,7 @@ describe(
         primitive.geometryWriter.withWriteSession(
           { attributes: [position] },
           function (session) {
-            session.vertexAttributeWriter(position)(0, [5, 6, 7]);
+            session.attributeWriter(position)(0, [5, 6, 7]);
             throw new Error("Callback failed.");
           },
         );
@@ -785,31 +753,11 @@ describe(
       expect(primitive._model.resetDrawCommands).toHaveBeenCalledTimes(1);
     });
 
-    it("throws when reading corners without primitives", async function () {
-      const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
-      const options = { attributes: [position] };
-      primitive.geometryReader.withReadSession(options, function (session) {
-        expect(function () {
-          session.cornerAttributeReader(position);
-        }).toThrowDeveloperError();
-      });
-    });
-
-    it("throws when reading corners of an attribute that wasn't requested", async function () {
-      const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
-      const options = { primitives: true };
-      primitive.geometryReader.withReadSession(options, function (session) {
-        expect(function () {
-          session.cornerAttributeReader(position);
-        }).toThrowDeveloperError();
-      });
-    });
-
     it("throws when reading an attribute that wasn't requested", async function () {
       const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
       primitive.geometryReader.withReadSession({}, function (session) {
         expect(function () {
-          session.vertexAttributeReader(position);
+          session.attributeReader(position);
         }).toThrowDeveloperError();
       });
     });
@@ -817,7 +765,7 @@ describe(
     it("throws when reading primitives that weren't requested", async function () {
       const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
       primitive.geometryReader.withReadSession({}, function (session) {
-        expect(session.primitiveCount()).toBe(1);
+        expect(session.elementCount(GeometryAttributeDomain.FACE)).toBe(1);
         expect(session.primitiveVertexCount(0)).toBe(3);
         expect(function () {
           session.primitiveReader();
@@ -840,10 +788,7 @@ describe(
         session.primitiveReader();
       }).toThrowDeveloperError();
       expect(function () {
-        session.vertexAttributeReader(position);
-      }).toThrowDeveloperError();
-      expect(function () {
-        session.cornerAttributeReader(position);
+        session.attributeReader(position);
       }).toThrowDeveloperError();
     });
 
@@ -851,7 +796,7 @@ describe(
       const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
       primitive.geometryWriter.withWriteSession({}, function (session) {
         expect(function () {
-          session.vertexAttributeWriter(position);
+          session.attributeWriter(position);
         }).toThrowDeveloperError();
       });
     });
@@ -864,20 +809,7 @@ describe(
       const options = { attributes: [position] };
       primitive.geometryReader.withReadSession(options, function (session) {
         expect(function () {
-          session.vertexAttributeWriter(position);
-        }).toThrowDeveloperError();
-      });
-    });
-
-    it("throws when writing corners without primitives", async function () {
-      if (webglStub) {
-        return;
-      }
-      const [primitive] = await loadPrimitives(triangleWithoutIndicesUrl);
-      const options = { attributes: [position] };
-      primitive.geometryWriter.withWriteSession(options, function (session) {
-        expect(function () {
-          session.cornerAttributeWriter(position);
+          session.attributeWriter(position);
         }).toThrowDeveloperError();
       });
     });
@@ -894,10 +826,7 @@ describe(
       });
 
       expect(function () {
-        session.vertexAttributeWriter(position);
-      }).toThrowDeveloperError();
-      expect(function () {
-        session.cornerAttributeWriter(position);
+        session.attributeWriter(position);
       }).toThrowDeveloperError();
     });
   },

@@ -1,5 +1,6 @@
 import {
   GeometryAttributeDescriptor,
+  GeometryAttributeDomain,
   GeometryWriter,
   VertexAttributeSemantic,
 } from "../../index.js";
@@ -18,11 +19,11 @@ describe("Scene/GeometryWriter", function () {
 
   beforeEach(function () {
     session = jasmine.createSpyObj("session", [
-      "vertexCount",
+      "elementCount",
       "commit",
       "destroy",
     ]);
-    session.vertexCount.and.returnValue(3);
+    session.elementCount.and.returnValue(3);
     createWriteSession = jasmine
       .createSpy("createWriteSession")
       .and.returnValue(session);
@@ -85,7 +86,7 @@ describe("Scene/GeometryWriter", function () {
       { attributes: [position] },
       function (s) {
         expect(s).toBe(session);
-        return s.vertexCount();
+        return s.elementCount(GeometryAttributeDomain.VERTEX);
       },
     );
     expect(vertexCount).toBe(3);

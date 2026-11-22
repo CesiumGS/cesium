@@ -107,10 +107,13 @@ Object.defineProperties(ModelPrimitive.prototype, {
    * const positions = primitive.geometryReader.withReadSession(
    *   { attributes: [position] },
    *   (session) => {
-   *     const result = new Float32Array(session.vertexCount() * 3);
-   *     const readPosition = session.vertexAttributeReader(position);
+   *     const vertexCount = session.elementCount(
+   *       Cesium.GeometryAttributeDomain.VERTEX,
+   *     );
+   *     const result = new Float32Array(vertexCount * 3);
+   *     const readPosition = session.attributeReader(position);
    *
-   *     for (let i = 0; i < session.vertexCount(); ++i) {
+   *     for (let i = 0; i < vertexCount; ++i) {
    *       readPosition(i, result, i * 3);
    *     }
    *
@@ -149,11 +152,14 @@ Object.defineProperties(ModelPrimitive.prototype, {
    * primitive.geometryWriter.withWriteSession(
    *   { attributes: [position] },
    *   (session) => {
-   *     const readPosition = session.vertexAttributeReader(position);
-   *     const writePosition = session.vertexAttributeWriter(position);
+   *     const vertexCount = session.elementCount(
+   *       Cesium.GeometryAttributeDomain.VERTEX,
+   *     );
+   *     const readPosition = session.attributeReader(position);
+   *     const writePosition = session.attributeWriter(position);
    *     const value = new Array(3);
    *
-   *     for (let i = 0; i < session.vertexCount(); ++i) {
+   *     for (let i = 0; i < vertexCount; ++i) {
    *       readPosition(i, value);
    *       value[2] += 10.0;
    *       writePosition(i, value);

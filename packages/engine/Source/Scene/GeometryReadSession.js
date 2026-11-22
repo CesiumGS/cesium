@@ -3,38 +3,30 @@
 import { DeveloperError } from "@cesium/core";
 /** @import { TypedArray } from "@cesium/core"; */
 /** @import GeometryAttributeDescriptor from "./GeometryAttributeDescriptor.js"; */
+/** @import GeometryAttributeDomain from "./GeometryAttributeDomain.js"; */
 
 /**
- * Reads one vertex's value of an attribute. Get one from
- * {@link GeometryReadSession#vertexAttributeReader}.
+ * Reads one element's value of an attribute. Get one from
+ * {@link GeometryReadSession#attributeReader}.
  *
  * @callback GeometryAttributeReader
- * @param {number} vertexIndex The index of the vertex to read.
+ * @param {number} index The index of the element to read, in the attribute's domain.
  * @param {number[]|TypedArray} result The array to write the attribute's {@link GeometryAttributeDescriptor#componentCount} values into.
  * @param {number} [offset=0] The index in <code>result</code> at which to write the first value.
  * @returns {number[]|TypedArray} The result array.
  */
 
 /**
- * Reads the vertex indices of one primitive. Get one from
+ * Reads the vertex indices of one primitive, and optionally the index of the
+ * edge from each of its vertices to the next. Get one from
  * {@link GeometryReadSession#primitiveReader}.
  *
  * @callback GeometryPrimitiveReader
  * @param {number} primitiveIndex The index of the primitive to read.
  * @param {number[]|TypedArray} result The array to write the {@link GeometryReadSession#primitiveVertexCount} vertex indices into.
  * @param {number} [offset=0] The index in <code>result</code> at which to write the first vertex index.
- * @returns {number[]|TypedArray} The result array.
- */
-
-/**
- * Reads one corner's value of an attribute. Get one from
- * {@link GeometryReadSession#cornerAttributeReader}.
- *
- * @callback GeometryCornerAttributeReader
- * @param {number} primitiveIndex The index of the primitive.
- * @param {number} cornerIndex The index of the corner within the primitive, in the order {@link GeometryPrimitiveReader} returns its vertices.
- * @param {number[]|TypedArray} result The array to write the attribute's {@link GeometryAttributeDescriptor#componentCount} values into.
- * @param {number} [offset=0] The index in <code>result</code> at which to write the first value.
+ * @param {number[]|TypedArray} [edgeResult] The array to write the {@link GeometryReadSession#primitiveVertexCount} edge indices into.
+ * @param {number} [edgeOffset=0] The index in <code>edgeResult</code> at which to write the first edge index.
  * @returns {number[]|TypedArray} The result array.
  */
 
@@ -66,20 +58,14 @@ class GeometryReadSession {
   }
 
   /**
-   * Gets the number of vertices in the geometry.
+   * Gets the number of elements in a domain, e.g. the number of vertices for
+   * {@link GeometryAttributeDomain.VERTEX}, or the number of primitives for
+   * {@link GeometryAttributeDomain.FACE}.
    *
-   * @returns {number} The number of vertices.
+   * @param {GeometryAttributeDomain} domain The domain.
+   * @returns {number} The number of elements.
    */
-  vertexCount() {
-    DeveloperError.throwInstantiationError();
-  }
-
-  /**
-   * Gets the number of primitives in the geometry.
-   *
-   * @returns {number} The number of primitives.
-   */
-  primitiveCount() {
+  elementCount(domain) {
     DeveloperError.throwInstantiationError();
   }
 
@@ -95,16 +81,6 @@ class GeometryReadSession {
   }
 
   /**
-   * Gets the number of corners in the geometry: the sum of every primitive's
-   * {@link GeometryReadSession#primitiveVertexCount}.
-   *
-   * @returns {number} The number of corners.
-   */
-  cornerCount() {
-    DeveloperError.throwInstantiationError();
-  }
-
-  /**
    * Gets a function that reads the vertex indices of a primitive.
    *
    * @returns {GeometryPrimitiveReader} The primitive reader.
@@ -116,29 +92,17 @@ class GeometryReadSession {
   }
 
   /**
-   * Creates a function that reads an attribute's value for a vertex.
+   * Creates a function that reads an attribute's value for an element of its
+   * domain. Elements are indexed by vertex, by corner in the order
+   * {@link GeometryPrimitiveReader} returns them, by primitive, or by the edge
+   * index {@link GeometryPrimitiveReader} returns.
    *
    * @param {GeometryAttributeDescriptor} descriptor The attribute to read. Must be one of the attributes requested for this session.
    * @returns {GeometryAttributeReader} The attribute reader.
    *
    * @exception {DeveloperError} The attribute was not requested for this session.
-   * @exception {DeveloperError} The attribute's domain isn't {@link GeometryAttributeDomain.VERTEX}.
    */
-  vertexAttributeReader(descriptor) {
-    DeveloperError.throwInstantiationError();
-  }
-
-  /**
-   * Creates a function that reads an attribute's value for a corner of a primitive.
-   * While this can also be used to read vertex-domain attributes, it would perform redundant work in doing so.
-   *
-   * @param {GeometryAttributeDescriptor} descriptor The attribute to read. Must be one of the attributes requested for this session.
-   * @returns {GeometryCornerAttributeReader} The attribute reader.
-   *
-   * @exception {DeveloperError} The attribute was not requested for this session.
-   * @exception {DeveloperError} Primitives were not requested for this session.
-   */
-  cornerAttributeReader(descriptor) {
+  attributeReader(descriptor) {
     DeveloperError.throwInstantiationError();
   }
 

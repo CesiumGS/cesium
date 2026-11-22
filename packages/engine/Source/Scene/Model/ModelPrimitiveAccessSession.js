@@ -10,6 +10,7 @@ import {
   defined,
 } from "@cesium/core";
 import GeometryAttributeDescriptor from "../GeometryAttributeDescriptor.js";
+import GeometryAttributeDomain from "../GeometryAttributeDomain.js";
 import GeometryReader from "../GeometryReader.js";
 import GeometryWriter from "../GeometryWriter.js";
 import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
@@ -18,8 +19,8 @@ import VertexAttributeSemantic from "../VertexAttributeSemantic.js";
 /** @import Buffer from "../../Renderer/Buffer.js"; */
 /** @import { Attribute, Primitive, Quantization } from "../ModelComponents.js"; */
 /** @import { GeometryAccessOptions } from "../GeometryReader.js"; */
-/** @import { GeometryAttributeReader, GeometryCornerAttributeReader, GeometryPrimitiveReader } from "../GeometryReadSession.js"; */
-/** @import GeometryWriteSession, { GeometryAttributeWriter, GeometryCornerAttributeWriter } from "../GeometryWriteSession.js"; */
+/** @import { GeometryAttributeReader, GeometryPrimitiveReader } from "../GeometryReadSession.js"; */
+/** @import GeometryWriteSession, { GeometryAttributeWriter } from "../GeometryWriteSession.js"; */
 
 /**
  * An attribute's components as laid out in its buffer, starting at its first
@@ -173,17 +174,20 @@ class ModelPrimitiveAccessSession {
   }
 
   /**
+   * @param {GeometryAttributeDomain} domain
    * @returns {number}
    */
-  vertexCount() {
-    return this.#vertexCount;
-  }
-
-  /**
-   * @returns {number}
-   */
-  primitiveCount() {
-    return this.#primitiveCount;
+  elementCount(domain) {
+    switch (domain) {
+      case GeometryAttributeDomain.VERTEX:
+        return this.#vertexCount;
+      case GeometryAttributeDomain.CORNER:
+        return this.#primitiveCount * this.#primitiveVertexCount;
+      case GeometryAttributeDomain.FACE:
+        return this.#primitiveCount;
+      default:
+        return 0;
+    }
   }
 
   /**
@@ -192,13 +196,6 @@ class ModelPrimitiveAccessSession {
    */
   primitiveVertexCount(primitiveIndex) {
     return this.#primitiveVertexCount;
-  }
-
-  /**
-   * @returns {number}
-   */
-  cornerCount() {
-    return this.#primitiveCount * this.#primitiveVertexCount;
   }
 
   /**
@@ -221,7 +218,7 @@ class ModelPrimitiveAccessSession {
    * @param {GeometryAttributeDescriptor} descriptor
    * @returns {GeometryAttributeReader}
    */
-  vertexAttributeReader(descriptor) {
+  attributeReader(descriptor) {
     const { attribute, attributeValues } =
       this.#getRequestedAttribute(descriptor);
 
@@ -242,24 +239,10 @@ class ModelPrimitiveAccessSession {
   }
 
   /**
-   * Note: Model attributes (being based on glTF) are all per-vertex, so reading a corner's attribute
-   * value simply reads the corresponding vertex's attribute value. This does redundant work,
-   * so you should always use {@link ModelPrimitiveAccessSession#vertexAttributeReader} instead. This
-   * function exists for completeness, but its use is discouraged.
-   * @param {GeometryAttributeDescriptor} descriptor
-   * @returns {GeometryCornerAttributeReader}
-   */
-  cornerAttributeReader(descriptor) {
-    return /** @type {GeometryCornerAttributeReader} */ (
-      this.#createCornerFunction(this.vertexAttributeReader(descriptor))
-    );
-  }
-
-  /**
    * @param {GeometryAttributeDescriptor} descriptor
    * @returns {GeometryAttributeWriter}
    */
-  vertexAttributeWriter(descriptor) {
+  attributeWriter(descriptor) {
     const requested = this.#getRequestedAttribute(descriptor);
     const { attribute, attributeValues } = requested;
 
@@ -275,18 +258,6 @@ class ModelPrimitiveAccessSession {
       attribute,
       attributeValues,
     );
-  }
-
-  /**
-   * Note: Model attributes are all per-vertex, so writing a corner's attribute
-   * value writes the corresponding vertex's value, which other corners may share.
-   * Thus, prefer the vertexAttributeWriter whenever possible; this method is for completeness.
-   *
-   * @param {GeometryAttributeDescriptor} descriptor
-   * @returns {GeometryCornerAttributeWriter}
-   */
-  cornerAttributeWriter(descriptor) {
-    return this.#createCornerFunction(this.vertexAttributeWriter(descriptor));
   }
 
   commit() {
@@ -378,36 +349,6 @@ class ModelPrimitiveAccessSession {
     //>>includeEnd('debug');
 
     return /** @type {RequestedAttribute} */ (requested);
-  }
-
-  /**
-   * Wraps a vertex attribute reader or writer to take a corner of a primitive
-   * instead of a vertex.
-   *
-   * @template {GeometryAttributeReader|GeometryAttributeWriter} F
-   * @param {F} vertexFunction
-   * @returns {function(number, number, (number[]|TypedArray), number=): ReturnType<F>}
-   */
-  #createCornerFunction(vertexFunction) {
-    //>>includeStart('debug', pragmas.debug);
-    if (!defined(this.#primitiveReader)) {
-      throw new DeveloperError(
-        "Primitives were not requested for this session.",
-      );
-    }
-    //>>includeEnd('debug');
-
-    const readPrimitive = /** @type {GeometryPrimitiveReader} */ (
-      this.#primitiveReader
-    );
-    const vertexIndices = new Array(this.#primitiveVertexCount);
-
-    return (primitiveIndex, cornerIndex, values, offset = 0) => {
-      readPrimitive(primitiveIndex, vertexIndices);
-      return /** @type {ReturnType<F>} */ (
-        vertexFunction(vertexIndices[cornerIndex], values, offset)
-      );
-    };
   }
 
   /**

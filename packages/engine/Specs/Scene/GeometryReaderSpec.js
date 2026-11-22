@@ -23,8 +23,8 @@ describe("Scene/GeometryReader", function () {
   let reader;
 
   beforeEach(function () {
-    session = jasmine.createSpyObj("session", ["vertexCount", "destroy"]);
-    session.vertexCount.and.returnValue(3);
+    session = jasmine.createSpyObj("session", ["elementCount", "destroy"]);
+    session.elementCount.and.returnValue(3);
     createReadSession = jasmine
       .createSpy("createReadSession")
       .and.returnValue(session);
@@ -104,7 +104,7 @@ describe("Scene/GeometryReader", function () {
     const options = { attributes: [position] };
     const vertexCount = reader.withReadSession(options, function (s) {
       expect(s).toBe(session);
-      return s.vertexCount();
+      return s.elementCount(GeometryAttributeDomain.VERTEX);
     });
     expect(vertexCount).toBe(3);
   });
