@@ -712,7 +712,7 @@ nothing in the scene is lifted for looks. `astrophotoCurveStage()` is a look, an
 could hang the GPU is refused at creation (loops need a constant bound), and a
 device loss turns the stages that were on off for good.
 
-**A sky pack's rule.** A pack is never shipped. Builds (`npm run build`, `build:lib`,
+**A sky pack's rule.** A pack is never shipped. Builds (`npm run build`, `build:site`,
 `handbook`) refuse one that isn't marked `distributable: true` with a clearance,
 and the handbook holds no image or file made from one. The Viewer shows a pack's
 credits as text and warns once when it isn't cleared. `setSkyPack` takes a pack,
@@ -777,8 +777,10 @@ npm run dev        # dev server at http://127.0.0.1:5190
 npm run test       # unit + 1.x parity (L0) tests
 npm run typecheck
 npm run bench      # the Lab's harnesses (dyno lab); writes bench/results/*.json
-npm run build:lib  # the library for pages without a build step
+npm run build      # every package's dist/ and the browser build, then the packed checks
 ```
+
+A fresh clone builds and tests with one command: `npm ci && npm run build && npm test`.
 
 **dyno**, Dyno's command line (`npx @cesium/dyno`: the private workspace package `tools/dyno`, which
 runs `bench/dyno.mjs`; the scoped name means a missing link fails instead of
@@ -789,22 +791,31 @@ reports the machine (`dyno status`) and setup's data (`dyno data status`).
 `dyno --help` lists the commands; every one takes `--json`. The old
 `bench/suite/cli.mjs` and `bench/run.mjs` still work and say the new command.
 
-**The library build** (`build:lib`, `vite.lib.config.ts`) writes
-`dist-lib/`: `cesium-next.mjs` (the core's ES module, the shaders
-inlined), `cesium-next-time.mjs`, `cesium-next-frames.mjs`,
-`cesium-next-proj.mjs` and `cesium-next-measure.mjs` (the other entry
-points, `@cesium/next/time` and so on, sharing chunks under `assets/`),
-`assets/` (the content worker and the Draco and Basis wasm, each found
-relative to the module that loads it) and `types/` (declarations). A page
+**The build** (`npm run build`, `scripts/build.mjs`) writes each package's
+`dist/`: one ES module per source file (dependencies, siblings included, stay
+imports; the shaders inlined; workers, WebAssembly and images under
+`dist/assets/`, found through `import.meta.url`) and `dist/types/`
+(declarations, `@internal` members stripped). It then packs every package
+and checks the tarballs (`scripts/checkDeclarations.mjs`, publint and
+`attw`). Development, the tests and Dyno don't need it: they run from source
+through the `@cesium/source` export condition, which a release strips.
+
+**The browser build** (part of `npm run build`, `scripts/build/browser.mjs`)
+writes `packages/cesium/dist/browser/`: `cesium-next.mjs` (the core's ES
+module, the shaders inlined), `cesium-next-time.mjs`,
+`cesium-next-frames.mjs`, `cesium-next-crs.mjs`, `cesium-next-measure.mjs`
+and `cesium-next-ui.mjs` (the other entry points, `@cesium/next/time` and so
+on, sharing chunks under `assets/`) and `assets/` (the content worker and the
+Draco and Basis wasm, each found relative to the module that loads it). A page
 needs no bundler or TypeScript: a module script imports it, from its own
 server or another origin (a CDN, with CORS headers, as npm CDNs send).
 Browsers start workers only from the page's origin, so from another origin
 the worker starts through a same-origin `blob:` module that imports the
 real one (`WorkerPool`). Nothing generates code at runtime: under a
 Content Security Policy only the workers need `'wasm-unsafe-eval'`, the
-page nothing (`basisTranscoderEsm.ts`). `standalone/index.html` loads two compressed
+page nothing (`scripts/build/basisTranscoderEsm.ts`). `standalone/index.html` loads two compressed
 models (Draco, Basis) that way; serve the folder (e.g. `python -m
-http.server` in `packages/next`; pages opened as `file://` load no modules
+http.server` at the repository root; pages opened as `file://` load no modules
 or workers) and open `/standalone/`, with `?lib=<url of
 cesium-next.mjs>` and `?data=<models folder>` to load either from
 elsewhere.

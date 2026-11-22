@@ -269,7 +269,7 @@ export function Architecture() {
         <Generated
           from={
             <>
-              a build with <C>vite.lib.config.ts</C>
+              the browser build, <C>scripts/build/browser.mjs</C>
             </>
           }
         />

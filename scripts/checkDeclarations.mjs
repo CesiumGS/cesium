@@ -31,6 +31,7 @@ import {
   mkdtempSync,
   readFileSync,
   rmSync,
+  statSync,
   symlinkSync,
   writeFileSync,
 } from "node:fs";
@@ -101,10 +102,21 @@ export function checkDeclarations(folders, { only = [] } = {}) {
     // node_modules/@cesium/<name> -> each unpacked package, by its name.
     const packages = folders.map((folder) => {
       const dir = resolve(folder);
+      if (!statSync(dir).isDirectory()) {
+        throw new Error(`checkDeclarations: ${folder} is not a folder`);
+      }
       const manifest = JSON.parse(
         readFileSync(join(dir, "package.json"), "utf8"),
       );
-      const link = join(work, "node_modules", ...manifest.name.split("/"));
+      // The name places the link: only a first-party package name, so it
+      // can't point outside the scratch folder.
+      const name = String(manifest.name);
+      if (!/^@cesium\/[a-z0-9][a-z0-9-]*$/.test(name)) {
+        throw new Error(
+          `checkDeclarations: ${folder}/package.json names "${name}", not an @cesium package`,
+        );
+      }
+      const link = join(work, "node_modules", "@cesium", name.slice("@cesium/".length));
       mkdirSync(join(link, ".."), { recursive: true });
       symlinkSync(dir, link, "dir");
       return { dir: link, manifest, folder: basename(dir) };

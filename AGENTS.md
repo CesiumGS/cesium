@@ -56,7 +56,7 @@ Rules for anyone working on Cesium 2.0, people and coding agents alike (until CS
   - Afterwards, check `git show --stat HEAD`. If another person's file went in, tell them rather than amending or reverting it: their working copy is still intact, and their next commit carries the rest.
 - If `.git/index.lock` exists, wait and retry rather than removing it.
 - Never commit screenshots, downloaded data, or secrets. Data lives in the setup store outside the repo (`npm run setup`; `FRAMES_DATA_DIR`). One exception: images under `handbook/` that the handbook embeds in its single HTML file. Keep them small, and check by eye that none shows a token or anything from an account.
-- A sky data pack (`npm run sky`) is derived data and never ships: it stays in the store outside the repo, and nothing made from one (an image, a binary, a base64 string, a `/sky-pack/` URL) goes in a commit, a build or the handbook. The guard in `scripts/vitePluginSkyPack.ts` refuses it in builds.
+- A sky data pack (`npm run sky`) is derived data and never ships: it stays in the store outside the repo, and nothing made from one (an image, a binary, a base64 string, a `/sky-pack/` URL) goes in a commit, a build or the handbook. The guard in `scripts/build/vitePluginSkyPack.ts` refuses it in builds.
 - Never write an ion token into code, logs, URLs, test output, screenshots or builds. Examples get theirs from Dyno's token setting, or from `.env.local` in development only.
 - Node 24 (`engines`).
 
@@ -64,10 +64,11 @@ Rules for anyone working on Cesium 2.0, people and coding agents alike (until CS
 
 - While iterating, run focused tests: `npx vitest run <files>`.
 - Before committing, run the full `npm test` once.
+- A fresh clone builds and tests with one command: `npm ci && npm run build && npm test`.
 - Run `npm run test:data` (it needs the setup store) when you change code under `packages/frames`, `packages/time` or `packages/crs`.
 - Before the full suite, a build or a measurement, run `dyno status`: while it says `busy` or `waiting-for-quiet`, a measurement runs or waits, so start no heavy work. `dyno` is Dyno's command line (`npx @cesium/dyno`: the scoped name can only be this workspace package, so a missing link fails instead of downloading an unrelated public package); the `dyno` skill says which suite a change needs and how to read a verdict.
 - Run the browser parity suites (`dyno lab <suite>`) when you change rendering. Compare against the previous commit as well as a base commit. Metal's compiler can reorder a float sum when a kernel's code changes, so explain any pixel difference before accepting it.
-- Also run `npx tsc --noEmit -p .` and `-p tsconfig.lib.json`, eslint and prettier on what you changed.
+- Also run `npx tsc --noEmit -p .` and `npm run typecheck` (`tsc --build`), eslint and prettier on what you changed.
 - If you change an entry point's exports, run `npm run surface` and commit `api/surface.txt` with your change.
 
 ## GPU safety

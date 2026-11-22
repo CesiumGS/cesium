@@ -51,6 +51,16 @@ Instructions for serving local data are in the CesiumJS
 
 Interested in contributing? See [CONTRIBUTING.md](CONTRIBUTING.md). :heart:
 
+### Build and test from a clone
+
+This branch holds Cesium 2.0's packages (`packages/`). A fresh clone builds and tests with one command, with Node 24:
+
+```sh
+npm ci && npm run build && npm test
+```
+
+`npm run build` writes each package's `dist/` and the browser build, and checks the packed packages. Development and the tests run from source and need no build first.
+
 ## :green_book: License
 
 [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0.html). CesiumJS is free for both commercial and non-commercial use.

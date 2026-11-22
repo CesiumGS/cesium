@@ -259,7 +259,7 @@ export function Overview() {
         <Generated
           from={
             <>
-              <C>api/surface.txt</C>, the import graph and the library build
+              <C>api/surface.txt</C>, the import graph and the browser build
             </>
           }
         />

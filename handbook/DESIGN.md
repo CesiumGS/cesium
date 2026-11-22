@@ -236,7 +236,7 @@ the build warns. Add its note in `src/pipeline.ts`.
 | --------------------------------------- | ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
 | API map                                 | `api/surface.txt`                                                                         | Each build                                                           |
 | Layers, rules, imports, dynamic imports | `test/importBoundary.test.ts`, run over the import graph                                  | Each build                                                           |
-| Bundle sizes                            | `scripts/checkBundle.mjs`, a `vite.lib.config.ts` build                                   | Each build                                                           |
+| Bundle sizes                            | `scripts/checkBundle.mjs`, the browser build (`scripts/build/browser.mjs`)                | Each build                                                           |
 | Frame graph, layout sizes               | `graph.addPass` and `graph.createTexture` under `src/`, `src/render/generated/layouts.ts` | Each build                                                           |
 | Run-time file sizes                     | The setup store on the building machine                                                   | Each build                                                           |
 | Benchmarks                              | `bench/results`, `handbook/baselines`                                                     | Each build                                                           |
