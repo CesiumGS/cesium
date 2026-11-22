@@ -229,22 +229,19 @@ export function readPropertyTables(
   });
 }
 
-/** True if the raw value equals the property's `noData` (JSON number or string). */
-function isNoData(raw: number | bigint, noData: unknown): boolean {
-  if (noData === undefined) {
-    return false;
+/**
+ * The property's `noData` as a bigint, for comparing with 64-bit values: once
+ * per column, and none if it isn't an integer number or a decimal string of at
+ * most 20 digits (the longest a 64-bit value has, sign aside).
+ */
+function noDataBigInt(noData: unknown): bigint | undefined {
+  if (typeof noData === "number") {
+    return Number.isInteger(noData) ? BigInt(noData) : undefined;
   }
-  if (typeof raw === "bigint") {
-    try {
-      return (
-        (typeof noData === "number" || typeof noData === "string") &&
-        raw === BigInt(noData)
-      );
-    } catch {
-      return false;
-    }
+  if (typeof noData === "string" && /^-?\d{1,20}$/.test(noData)) {
+    return BigInt(noData);
   }
-  return raw === noData;
+  return undefined;
 }
 
 function readColumn(
@@ -357,6 +354,7 @@ function readColumn(
     return v;
   };
   const noData = definition.noData;
+  const noDataBig = noDataBigInt(noData);
   const width = components * perFeature;
   for (let i = 0; i < count; i++) {
     const items: Array<number | bigint> = [];
@@ -370,7 +368,9 @@ function readColumn(
     }
     if (width === 1) {
       const raw = readExact(data, i * size, componentType);
-      out[i] = isNoData(raw, noData) ? null : items[0]!;
+      const missing =
+        typeof raw === "bigint" ? raw === noDataBig : raw === noData;
+      out[i] = noData !== undefined && missing ? null : items[0]!;
     } else {
       out[i] = items;
     }
