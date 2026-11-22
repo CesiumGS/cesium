@@ -5,6 +5,7 @@ kind: work
 state: planned
 created: 2026-11-21
 project: CS-437
+needs: [CS-832]
 touches: [packages/next/src/scene/**, packages/next/src/query/**, packages/next/src/streaming/**, packages/next/src/index.ts, packages/next/test, packages/next/api/surface.txt]
 ---
 
@@ -14,6 +15,7 @@ Source: the owner's review of 2.0's seams, 2026-11-21, after a survey of physica
 
 ## Done when
 
+- It uses CS-832's design for how labels and metadata bind to IDs. (Added 2026-11-21.)
 - Every pickable thing has a stable ID: derived from content (source, content key, feature-ID set, feature ID), or supplied by the host on a scene item. It never depends on load order. A test loads the same content in two orders and gets the same IDs.
 - Labels are keyed by taxonomy, mirroring USD's `SemanticsLabelsAPI` instance names. They're read from glTF `EXT_mesh_features` and `EXT_structural_metadata` and from 3D Tiles metadata, and set by the host on scene items.
 - Picks, CS-813's ID images and ray hits (CS-535) all return the same ID and labels.

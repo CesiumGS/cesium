@@ -2,10 +2,14 @@
 id: CS-452
 title: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?
 kind: decision
-state: planned
+state: done
 created: 2026-11-14
 project: CS-191
 decider: owner
+answer: "Design it now, with CS-815: a design note settles how semantic metadata reaches the engine and what a pick means without surfaces, before or beside CS-815"
+answered_at: 2026-11-22T04:00:25.183Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

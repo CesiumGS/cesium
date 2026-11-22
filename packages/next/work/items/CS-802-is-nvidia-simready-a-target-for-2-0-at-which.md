@@ -6,6 +6,7 @@ state: planned
 created: 2026-11-21
 project: CS-191
 decider: owner
+needs: [CS-833]
 ---
 
 ## Question
@@ -42,6 +43,8 @@ Rule basis: novelty, public commitment. Reversibility: two-way until a format or
 - D. Not a target for 2.0: record it, and revisit after 2.0.0. (cost: Nothing now. A later start has to fit around a frozen API.)
 
 Recommended: A, decided before beta.1. Composition, units and labels touch the content-source seam and the metadata path, both of which freeze at beta.1. Physics and sensors can follow as experimental modules, if CS-681 keeps an experimental tier. Settle CS-452 (semantic metadata) together with this.
+
+The owner, 2026-11-21: "let's sort it out for alpha.1." CS-833 (a SimReady scoping study) gathers what this decision needs, and the owner answers it before alpha.1's seams freeze.
 
 ## Answer
 

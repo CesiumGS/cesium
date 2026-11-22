@@ -20,6 +20,8 @@ Every first-party package releases in lockstep at `cesium`'s version, starting a
 
 Recommendation: fresh names, unless the 1.x team is glad to hand over `@cesium/core` and `@cesium/gltf`. Due before alpha.1.
 
+The owner, 2026-11-21: the StrataKit widgets package is `@cesium/ui`. The rest of the names are still open.
+
 ## Answer
 
 Open.
