@@ -110,6 +110,9 @@ const TABLE: Record<string, EntryTable> = {
       HeightReference ITwinOptions Importance InspectControllerOptions
       InstanceOptions
       IonAsset IonOptions LightHandle LightOptions LimitsTier LiveEdgeOptions
+      CredentialOptions CredentialValue FetchProviderOptions FetchTransport
+      IncomingResponse OriginRule OutgoingRequest ProviderRequestInit
+      RequestKind
       LoadProgress LodTransitions MaterialOptions MeasureIn MeasureInOptions
       MeshCapGeometry MeshCapHit MeshCapPlane MeshCapRegion MeshCapReport
       MeshCapSurface MeshCapSurfaceHit MeshCapTile MeshCapsOptions
@@ -189,9 +192,10 @@ const TABLE: Record<string, EntryTable> = {
       vec3.distance vec3.dot vec3.length vec3.mul vec3.negate vec3.normalize
       vec3.scale vec3.scaleAndAdd vec3.set vec3.sub vec3.vec3 velocityModel
       vertexCount webMercator webMercatorToGeographic wgslUnit
-      writeBrepExtension
+      writeBrepExtension DefaultProxy ForwardingProxy
     `,
     engine: `
+      Credential FetchProvider RequestProxy
       AccelerationStructures BrepCaps BudgetedSelection Camera CameraLayer
       CanvasTarget CapEngine CapScheduler Capabilities ChainIo Engine
       FrameResolver GlareIo Globe GlobeController GlobeImagery
@@ -469,6 +473,20 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
         device passWrites
       `,
     },
+    Credential: {
+      snapshot: `
+        generation headers query renewable
+      `,
+      command: `
+        rotate
+      `,
+      query: `
+        renew
+      `,
+      "sync-read": `
+        appliesTo static.of
+      `,
+    },
     Engine: {
       snapshot: `
         bulk cameras capabilities clamping environment errors gpuPasses
@@ -508,6 +526,14 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
       "cannot-cross": `
         adoptTileset bodyCamera ctx device gpu notices raster renderers
         reportFarAnchors scene
+      `,
+    },
+    FetchProvider: {
+      query: `
+        fetch
+      `,
+      mutation: `
+        static.default
       `,
     },
     FrameResolver: {
@@ -795,6 +821,11 @@ const MEMBERS: Record<string, Record<string, MemberTable>> = {
     RayBackend: {
       callback: `
         answer
+      `,
+    },
+    RequestProxy: {
+      callback: `
+        getURL headers
       `,
     },
     RenderTarget: {

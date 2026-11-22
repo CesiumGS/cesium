@@ -8,6 +8,7 @@
  * around the place, each fetched once.
  */
 
+import { engineFetch } from "../io/fetchProvider.ts";
 import type { ImageryProvider } from "./ImageryProvider.ts";
 
 /**
@@ -127,9 +128,10 @@ export class CityLight {
   }
 
   private async load(x: number, y: number): Promise<Tile> {
-    const response = await fetch(this.provider.tileUrl(x, y, this.level), {
-      headers: this.provider.headers ?? {},
-    });
+    const response = await engineFetch(
+      this.provider.tileUrl(x, y, this.level),
+      { kind: "imagery", headers: this.provider.headers },
+    );
     if (!response.ok) {
       return null;
     }

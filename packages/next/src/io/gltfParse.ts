@@ -24,6 +24,7 @@ import {
 } from "./composite.ts";
 import { splitGlb } from "./glb.ts";
 import { resolveUri } from "./resolveUri.ts";
+import { engineFetch } from "./fetchProvider.ts";
 import type {
   GltfAsset,
   GltfDraw,
@@ -97,21 +98,32 @@ function dataUriResponse(uri: string): Response {
   });
 }
 
+/** Fetches one of a glTF's resources (the content, an external buffer, an image). */
+export type GltfFetch = (
+  url: string,
+  signal: AbortSignal | undefined,
+) => Promise<Response>;
+
+/** What a tile's requests share: how they are made, and what stops them. */
+interface Fetching {
+  get: GltfFetch;
+  signal?: AbortSignal | undefined;
+}
+
 export async function parseGltf(
   url: string,
   textureTarget: TextureTranscodePath,
-  headers?: Record<string, string>,
+  get: GltfFetch = (target, signal) =>
+    engineFetch(target, { kind: "content", signal }),
   signal?: AbortSignal,
 ): Promise<{ asset: GltfAsset; transfer: Transferable[] }> {
-  // Every request under the asset carries the same headers (ion auth).
-  const init: RequestInit = {
-    ...(headers ? { headers } : {}),
-    ...(signal ? { signal } : {}),
-  };
+  // Every request under the asset goes through `get` (the provider, with
+  // the asset's headers on the page: workerFetch.ts).
+  const init: Fetching = { get, ...(signal ? { signal } : {}) };
   const fetchStart = performance.now();
-  const response = await fetch(url, init);
+  const response = await get(url, init.signal);
   if (!response.ok) {
-    throw new Error(`Failed to fetch ${url}: ${response.status}`);
+    throw new Error(`content request failed (${response.status})`);
   }
   const bytes: Uint8Array = new Uint8Array(await response.arrayBuffer());
   const decodeStart = performance.now();
@@ -148,7 +160,7 @@ type Parsed = { asset: GltfAsset; transfer: Transferable[] };
 async function parseComposite(
   bytes: Uint8Array,
   url: string,
-  init: RequestInit,
+  init: Fetching,
   textureTarget: TextureTranscodePath,
   arrival: Arrival,
 ): Promise<Parsed> {
@@ -172,7 +184,7 @@ async function parseComposite(
       outer.addEventListener("abort", onOuterAbort, { once: true });
     }
   }
-  const innerInit: RequestInit = { ...init, signal: stop.signal };
+  const innerInit: Fetching = { ...init, signal: stop.signal };
   const parsed: Parsed[] = [];
   const first: { failure?: { index: number; reason: unknown } } = {};
   try {
@@ -251,7 +263,7 @@ async function parseComposite(
 async function parseTile(
   tileBytes: Uint8Array,
   url: string,
-  init: RequestInit,
+  init: Fetching,
   textureTarget: TextureTranscodePath,
   arrival: Arrival,
 ): Promise<Parsed> {
@@ -260,7 +272,7 @@ async function parseTile(
   const fetchUri = (uri: string) =>
     uri.startsWith("data:")
       ? Promise.resolve(dataUriResponse(uri))
-      : fetch(resolveUri(uri, base), init);
+      : init.get(resolveUri(uri, base), init.signal);
   let bytes = tileBytes;
   const imageTypes: Record<string, number> = {};
   let b3dm: B3dm | undefined;
@@ -279,9 +291,9 @@ async function parseTile(
       bytes = i3dm.glb;
     } else {
       base = resolveUri(i3dm.uri!, url);
-      const gltf = await fetch(base, init);
+      const gltf = await init.get(base, init.signal);
       if (!gltf.ok) {
-        throw new Error(`Failed to fetch ${base}: ${gltf.status}`);
+        throw new Error(`i3dm glTF request failed (${gltf.status})`);
       }
       bytes = new Uint8Array(await gltf.arrayBuffer());
     }

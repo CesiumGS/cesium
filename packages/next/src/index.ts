@@ -430,6 +430,22 @@ export {
   type IonOptions,
 } from "./io/ion.ts";
 export { resolveUri } from "./io/resolveUri.ts";
+export {
+  Credential,
+  DefaultProxy,
+  FetchProvider,
+  ForwardingProxy,
+  type CredentialOptions,
+  type CredentialValue,
+  type FetchProviderOptions,
+  type FetchTransport,
+  type IncomingResponse,
+  type OriginRule,
+  type OutgoingRequest,
+  type ProviderRequestInit,
+  type RequestKind,
+  type RequestProxy,
+} from "./io/fetchProvider.ts";
 export { resolveITwinIModel, type ITwinOptions } from "./io/itwin.ts";
 export {
   STAGES,

@@ -3,7 +3,15 @@
  * addressed (x, y, level) with y counted from the north, as Web Mercator
  * (XYZ, Bing quadkeys) and geographic (WMTS) schemes do.
  */
-import { ionDefaults, type Attribution } from "../io/ion.ts";
+import { engineFetch } from "../io/fetchProvider.ts";
+import {
+  ionAttributions,
+  ionCredential,
+  ionDefaults,
+  ionEndpoint,
+  type Attribution,
+  type IonEndpoint,
+} from "../io/ion.ts";
 import bingLogoUrl from "./assets/bing_maps_credit.png";
 
 export interface ImageryProvider {
@@ -94,36 +102,19 @@ export class IonTmsImagery implements ImageryProvider {
     assetId: number,
     options: { accessToken?: string; server?: string } = {},
   ): Promise<IonTmsImagery> {
-    const accessToken = options.accessToken ?? ionDefaults.accessToken;
-    if (!accessToken) {
-      throw new Error(`ion asset ${assetId}: no access token`);
-    }
-    const server = options.server ?? ionDefaults.server;
-    const response = await fetch(
-      new URL(`v1/assets/${assetId}/endpoint`, server),
-      { headers: { Authorization: `Bearer ${accessToken}` } },
-    );
-    if (!response.ok) {
-      throw new Error(
-        `ion asset ${assetId}: endpoint request failed (${response.status})`,
-      );
-    }
-    const endpoint = (await response.json()) as {
-      type: string;
-      externalType?: string;
-      url?: string;
-      accessToken?: string;
-      attributions?: Array<{ html: string; collapsible?: boolean }>;
-    };
+    const endpoint = await ionImageryEndpoint(assetId, options);
     if (endpoint.type !== "IMAGERY" || endpoint.externalType || !endpoint.url) {
       throw new Error(
         `ion asset ${assetId}: ${endpoint.externalType ?? endpoint.type} imagery is not ion's own tiles`,
       );
     }
-    const headers = { Authorization: `Bearer ${endpoint.accessToken ?? ""}` };
-    const map = await fetch(new URL("tilemapresource.xml", endpoint.url), {
-      headers,
-    });
+    // Renewed on a 401 (fetchProvider.ts), so tiles keep loading past the
+    // asset token's hour.
+    const headers = ionCredential(assetId, options, endpoint).headers;
+    const map = await engineFetch(
+      new URL("tilemapresource.xml", endpoint.url),
+      { kind: "imagery", headers },
+    );
     if (!map.ok) {
       throw new Error(`ion asset ${assetId}: no tile map (${map.status})`);
     }
@@ -143,10 +134,7 @@ export class IonTmsImagery implements ImageryProvider {
       Math.max(...levels, 0),
       Number(format?.getAttribute("width") ?? 256),
       headers,
-      (endpoint.attributions ?? []).map((a) => ({
-        html: a.html,
-        collapsible: a.collapsible === true,
-      })),
+      ionAttributions(endpoint),
     );
   }
 
@@ -184,26 +172,7 @@ export class BingImagery implements ImageryProvider {
     assetId = 2,
     options: { accessToken?: string; server?: string } = {},
   ): Promise<BingImagery> {
-    const accessToken = options.accessToken ?? ionDefaults.accessToken;
-    if (!accessToken) {
-      throw new Error(`ion asset ${assetId}: no access token`);
-    }
-    const server = options.server ?? ionDefaults.server;
-    const response = await fetch(
-      new URL(`v1/assets/${assetId}/endpoint`, server),
-      { headers: { Authorization: `Bearer ${accessToken}` } },
-    );
-    if (!response.ok) {
-      throw new Error(
-        `ion asset ${assetId}: endpoint request failed (${response.status})`,
-      );
-    }
-    const endpoint = (await response.json()) as {
-      type: string;
-      externalType?: string;
-      options?: { url?: string; key?: string; mapStyle?: string };
-      attributions?: Array<{ html: string; collapsible?: boolean }>;
-    };
+    const endpoint = await ionImageryEndpoint(assetId, options);
     if (endpoint.type !== "IMAGERY" || endpoint.externalType !== "BING") {
       throw new Error(
         `ion asset ${assetId}: ${endpoint.externalType ?? endpoint.type} imagery is not supported`,
@@ -217,7 +186,9 @@ export class BingImagery implements ImageryProvider {
     metadata.searchParams.set("incl", "ImageryProviders");
     metadata.searchParams.set("key", key);
     metadata.searchParams.set("uriScheme", "https");
-    const meta = await (await fetch(metadata)).json();
+    const meta = await (
+      await engineFetch(metadata, { kind: "endpoint" })
+    ).json();
     const resource = meta.resourceSets?.[0]?.resources?.[0];
     if (!resource?.imageUrl) {
       throw new Error("Bing metadata: no imageUrl");
@@ -225,9 +196,7 @@ export class BingImagery implements ImageryProvider {
     // ion's attributions and Bing's logo (1.x lists it in the credit
     // lightbox); the imagery providers are credited per tile drawn
     // (`tileCredits`).
-    const attributions: Attribution[] = (endpoint.attributions ?? []).map(
-      (a) => ({ html: a.html, collapsible: a.collapsible === true }),
-    );
+    const attributions: Attribution[] = ionAttributions(endpoint);
     attributions.push({
       html: `<a href="https://www.microsoft.com/en-us/maps/bing-maps/product"><img src="${bingLogoUrl}" title="Bing Imagery"/></a>`,
       collapsible: true,
@@ -330,4 +299,15 @@ interface BingProvider {
 /** Latitude (radians) of a Web Mercator y in [0, 1] from the north. */
 function mercatorLatitude(y: number): number {
   return Math.atan(Math.sinh(Math.PI * (1 - 2 * y)));
+}
+
+/** An imagery asset's ion endpoint (its own message without a token). */
+function ionImageryEndpoint(
+  assetId: number,
+  options: { accessToken?: string; server?: string },
+): Promise<IonEndpoint> {
+  if (!(options.accessToken ?? ionDefaults.accessToken)) {
+    return Promise.reject(new Error(`ion asset ${assetId}: no access token`));
+  }
+  return ionEndpoint(assetId, options);
 }

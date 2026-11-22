@@ -1,3 +1,4 @@
+import { engineFetch } from "../io/fetchProvider.ts";
 import type { MipGenerator } from "../gpu/MipGenerator.ts";
 import type { CustomShader } from "./CustomShader.ts";
 import {
@@ -225,9 +226,9 @@ export class ShaderBindings {
     if (typeof source !== "string") {
       return source;
     }
-    const response = await fetch(source);
+    const response = await engineFetch(source, { kind: "asset" });
     if (!response.ok) {
-      throw new Error(`${source}: HTTP ${response.status}`);
+      throw new Error(`texture request failed (HTTP ${response.status})`);
     }
     return createImageBitmap(await response.blob(), {
       colorSpaceConversion: "none",

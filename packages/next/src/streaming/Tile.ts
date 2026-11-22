@@ -3,6 +3,7 @@
  * bounding volumes in Earth-fixed coordinates (see volumes.ts). Content
  * state lives here too; selection policies only read the tree.
  */
+import { engineFetch } from "../io/fetchProvider.ts";
 import type {
   ClipHandle,
   DrawHandle,
@@ -741,12 +742,9 @@ export async function fetchTilesetJson(
   headers: Record<string, string> | undefined,
   signal?: AbortSignal,
 ): Promise<TileJson> {
-  const response = await fetch(url, {
-    ...(headers ? { headers } : {}),
-    ...(signal ? { signal } : {}),
-  });
+  const response = await engineFetch(url, { kind: "tileset", headers, signal });
   if (!response.ok) {
-    throw new Error(`${url}: ${response.status}`);
+    throw new Error(`tileset JSON request failed (${response.status})`);
   }
   return response.json();
 }

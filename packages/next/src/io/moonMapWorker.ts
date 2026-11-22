@@ -4,8 +4,9 @@
  * The Moon map's worker (`loadIonMoonMap`, moonMapLoad.ts): reads and
  * composes the map off the page (moonMap.ts; at the band's level 2 a few
  * hundred milliseconds of decoding, resampling and matching, at level 3
- * over a second). One request, `{ url, headers, level }`, the asset's root
- * tileset and the headers its requests carry; replied `{ ok: true, image,
+ * over a second). One request, `{ url, level }`, the asset's root tileset
+ * (its requests are made on the page, with the asset's headers there:
+ * workerFetch.ts); replied `{ ok: true, image,
  * warnings, mean }`, the finished map as a transferred ImageBitmap and its
  * mean albedo (albedo.ts, so the page needn't read the map back), or
  * `{ ok: false, error }`.
@@ -13,10 +14,10 @@
 
 import { meanAlbedo } from "../atmosphere/albedo.ts";
 import { decodeImage, readMoonMap } from "./moonMap.ts";
+import { settleWorkerFetch, workerFetch } from "./workerFetch.ts";
 
 export interface MoonMapRequest {
   url: string;
-  headers: Record<string, string>;
   level: number;
 }
 
@@ -25,16 +26,19 @@ export type MoonMapReply =
   | { ok: false; error: string };
 
 self.onmessage = async (event: MessageEvent<MoonMapRequest>) => {
-  const { url, headers, level } = event.data;
+  if (settleWorkerFetch(event.data)) {
+    return;
+  }
+  const { url, level } = event.data;
   let reply: MoonMapReply;
   try {
     const { map, warnings } = await readMoonMap(
       url,
       {
         fetch: async (resource) => {
-          const response = await fetch(resource, { headers });
+          const response = await workerFetch(resource, { kind: "content" });
           if (!response.ok) {
-            throw new Error(`Moon map: ${resource} (${response.status})`);
+            throw new Error(`Moon map: a request failed (${response.status})`);
           }
           return response;
         },

@@ -22,6 +22,7 @@
  *   `R·2π·0.25 / (65·2)`, halving per level. Skirts hang five times the
  *   level's error below each edge.
  */
+import { engineFetch } from "../io/fetchProvider.ts";
 import { Tile, type TileJson, type TileTree } from "../streaming/Tile.ts";
 import type { Job, JobSpec } from "../io/Jobs.ts";
 import { volumeFromJson } from "../streaming/volumes.ts";
@@ -316,7 +317,7 @@ export class TerrainSource {
     load: TerrainLoader,
     tree: TileTree,
   ): Promise<TerrainSource> {
-    const response = await fetch(layerUrl, headers ? { headers } : undefined);
+    const response = await engineFetch(layerUrl, { kind: "terrain", headers });
     if (!response.ok) {
       throw new Error(`terrain layer.json: ${response.status}`);
     }

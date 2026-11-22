@@ -4,6 +4,7 @@
 import workerUrl from "./worker.ts?worker&url";
 
 import { Jobs, type Job, type JobReply, type JobSpec } from "./Jobs.ts";
+import { isWorkerFetchMessage, WorkerFetchServer } from "./workerFetch.ts";
 
 /**
  * A small pool of content workers, started lazily up to `size`, with the
@@ -13,6 +14,8 @@ import { Jobs, type Job, type JobReply, type JobSpec } from "./Jobs.ts";
  */
 export class WorkerPool {
   private readonly workers: Worker[] = [];
+  /** Each worker's requests, made on the page (`workerFetch.ts`). */
+  private readonly servers: WorkerFetchServer[] = [];
   readonly jobs: Jobs;
 
   constructor(
@@ -23,8 +26,24 @@ export class WorkerPool {
   ) {
     this.jobs = new Jobs({
       size,
-      post: (worker, message, transfer) =>
-        this.worker(worker).postMessage(message, transfer),
+      post: (worker, message, transfer) => {
+        const target = this.worker(worker);
+        const server = this.servers[worker]!;
+        if (message.type === "cancel") {
+          server.close(message.id);
+        } else if ("headers" in message) {
+          // A source's headers stay on the page: the worker's requests
+          // name the job, and the page adds them (`workerFetch.ts`).
+          const { headers, ...rest } = message;
+          server.open(
+            message.id,
+            headers as Readonly<Record<string, string>> | undefined,
+          );
+          target.postMessage(rest, transfer);
+          return;
+        }
+        target.postMessage(message, transfer);
+      },
     });
   }
 
@@ -68,15 +87,24 @@ export class WorkerPool {
       worker?.terminate();
     }
     this.workers.length = 0;
+    this.servers.length = 0;
   }
 
   private worker(index: number): Worker {
     let worker = this.workers[index];
     if (!worker) {
       worker = new Worker(workerScript(), { type: "module" });
-      worker.onmessage = (event: MessageEvent<JobReply>) =>
+      const server = new WorkerFetchServer(worker);
+      worker.onmessage = (event: MessageEvent<JobReply>) => {
+        if (isWorkerFetchMessage(event.data)) {
+          server.serve(event.data);
+          return;
+        }
+        server.close(event.data.id);
         this.jobs.reply(event.data);
+      };
       this.workers[index] = worker;
+      this.servers[index] = server;
     }
     return worker;
   }

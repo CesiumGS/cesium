@@ -4,6 +4,7 @@ import { type Attribution, type IonOptions, resolveIonAsset } from "./ion.ts";
 import { CESIUM_MOON_TERRAIN } from "./moonMap.ts";
 import type { MoonMapReply, MoonMapRequest } from "./moonMapWorker.ts";
 import { workerStart } from "./WorkerPool.ts";
+import { isWorkerFetchMessage, WorkerFetchServer } from "./workerFetch.ts";
 
 export interface MoonMap {
   /**
@@ -55,12 +56,8 @@ export async function loadIonMoonMap(
 ): Promise<MoonMap> {
   const asset = await resolveIonAsset(CESIUM_MOON_TERRAIN, options);
   const { image, warnings, mean } = await composeInWorker(
-    {
-      url: asset.url,
-      headers: asset.headers,
-      level: options.level ?? 2,
-    },
-    options,
+    { url: asset.url, level: options.level ?? 2 },
+    { ...options, headers: asset.headers },
   );
   return { image, attributions: asset.attributions, warnings, mean };
 }
@@ -76,18 +73,30 @@ export function composeInWorker(
   {
     signal,
     timeoutMs = MOON_MAP_TIMEOUT_MS,
-  }: { signal?: AbortSignal; timeoutMs?: number } = {},
+    headers,
+  }: {
+    signal?: AbortSignal;
+    timeoutMs?: number;
+    /** The asset's headers: its requests carry them, made on the page. */
+    headers?: Readonly<Record<string, string>>;
+  } = {},
 ): Promise<{ image: ImageBitmap; warnings: string[]; mean: number }> {
   if (signal?.aborted) {
     return Promise.reject(aborted());
   }
   script ??= workerStart(new URL(moonMapWorkerUrl, import.meta.url));
   const worker = new Worker(script, { type: "module" });
+  const server = new WorkerFetchServer(worker);
+  server.open(0, headers);
   let timer: ReturnType<typeof setTimeout> | undefined;
   let onAbort: (() => void) | undefined;
   return new Promise<{ image: ImageBitmap; warnings: string[]; mean: number }>(
     (resolve, reject) => {
       worker.onmessage = (event: MessageEvent<MoonMapReply>) => {
+        if (isWorkerFetchMessage(event.data)) {
+          server.serve({ ...event.data, scope: 0 });
+          return;
+        }
         const reply = event.data;
         if (reply.ok) {
           resolve({
@@ -124,6 +133,7 @@ export function composeInWorker(
     if (onAbort) {
       signal?.removeEventListener("abort", onAbort);
     }
+    server.close(0);
     worker.terminate();
   });
 }

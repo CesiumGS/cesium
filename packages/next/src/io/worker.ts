@@ -1,5 +1,6 @@
 /// <reference lib="webworker" />
 import { parseGltf } from "./gltfParse.ts";
+import { settleWorkerFetch, workerFetch } from "./workerFetch.ts";
 import {
   decodeQuantizedMesh,
   flatTerrainTile,
@@ -46,7 +47,6 @@ self.onmessage = async (
     id: number;
     type: string;
     url: string;
-    headers?: Record<string, string>;
     /** What KTX2 textures are transcoded to: the engine's `textureTranscode` path. */
     textureTarget: TextureTranscodePath;
     rect: Rectangle;
@@ -66,6 +66,9 @@ self.onmessage = async (
     size?: number;
   }>,
 ) => {
+  if (settleWorkerFetch(event.data)) {
+    return;
+  }
   const { id, type } = event.data;
   if (type === "cancel") {
     controllers.get(id)?.abort();
@@ -73,6 +76,19 @@ self.onmessage = async (
   }
   const controller = new AbortController();
   controllers.set(id, controller);
+  // Requests go through the page's provider, with this job's headers there
+  // (workerFetch.ts): the worker never holds them.
+  const request = (
+    url: string,
+    kind: "content" | "terrain" | "imagery" | "asset",
+    accept?: string,
+  ) =>
+    workerFetch(url, {
+      kind,
+      scope: id,
+      signal: controller.signal,
+      ...(accept ? { accept } : {}),
+    });
   try {
     const decodeOptions = {
       ...(event.data.heightNormal
@@ -99,10 +115,11 @@ self.onmessage = async (
       let heights = upsample.heights;
       let bytes = 0;
       if (!heights) {
-        const response = await fetch(upsample.url!, {
-          headers: { ...event.data.headers, Accept: TERRAIN_ACCEPT },
-          signal: controller.signal,
-        });
+        const response = await request(
+          upsample.url!,
+          "terrain",
+          TERRAIN_ACCEPT,
+        );
         if (!response.ok) {
           throw new Error(`terrain tile: ${response.status}`);
         }
@@ -134,10 +151,7 @@ self.onmessage = async (
     }
     if (type === "terrain") {
       const start = performance.now();
-      const response = await fetch(event.data.url, {
-        headers: { ...event.data.headers, Accept: TERRAIN_ACCEPT },
-        signal: controller.signal,
-      });
+      const response = await request(event.data.url, "terrain", TERRAIN_ACCEPT);
       if (!response.ok) {
         throw new Error(`terrain tile: ${response.status}`);
       }
@@ -191,7 +205,7 @@ self.onmessage = async (
       // second of work, here rather than on the page.
       const faces: StarMapFace[] = await Promise.all(
         (event.data.urls ?? []).map(async (url) => {
-          const response = await fetch(url, { signal: controller.signal });
+          const response = await request(url, "asset");
           if (!response.ok) {
             throw new Error(`star map: ${response.status}`);
           }
@@ -230,7 +244,12 @@ self.onmessage = async (
       // A sky data pack (atmosphere/skyPack.ts): read and checked here.
       const loaded = await loadSkyPack(
         event.data.url,
-        fetch,
+        ((input: RequestInfo | URL, init?: RequestInit) =>
+          workerFetch(String(input), {
+            kind: "asset",
+            scope: id,
+            ...(init?.signal ? { signal: init.signal } : {}),
+          })) as typeof fetch,
         controller.signal,
       );
       const result = { ...loaded, field: withStarCells(loaded.field) };
@@ -243,10 +262,7 @@ self.onmessage = async (
     if (type === "image") {
       // An imagery tile, decoded here (createImageBitmap), off the main thread.
       const start = performance.now();
-      const response = await fetch(event.data.url, {
-        ...(event.data.headers ? { headers: event.data.headers } : {}),
-        signal: controller.signal,
-      });
+      const response = await request(event.data.url, "imagery");
       if (!response.ok) {
         throw new Error(`imagery tile: ${response.status}`);
       }
@@ -282,7 +298,12 @@ self.onmessage = async (
     const { asset, transfer } = await parseGltf(
       event.data.url,
       event.data.textureTarget,
-      event.data.headers,
+      (url, signal) =>
+        workerFetch(url, {
+          kind: "content",
+          scope: id,
+          signal: signal ?? controller.signal,
+        }),
       controller.signal,
     );
     self.postMessage({ id, ok: true, result: asset }, transfer);

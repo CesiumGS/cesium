@@ -3,6 +3,7 @@
  * - Draco (KHR_draco_mesh_compression), the official `draco3d` build.
  * - Basis Universal (KHR_texture_basisu), Binomial's transcoder.
  */
+import { engineFetch } from "./fetchProvider.ts";
 import createDracoModule from "draco3d/draco_decoder_nodejs.js";
 import dracoWasmUrl from "draco3d/draco_decoder.wasm?url";
 import { read as readKtx2 } from "ktx-parse";
@@ -22,7 +23,7 @@ let draco: Promise<any> | undefined;
 let basis: Promise<any> | undefined;
 
 async function wasm(url: string): Promise<ArrayBuffer> {
-  const response = await fetch(url);
+  const response = await engineFetch(url, { kind: "engine" });
   return response.arrayBuffer();
 }
 

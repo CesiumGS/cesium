@@ -4,6 +4,7 @@
  * transforms accumulated and external tilesets followed. A stand-in for the
  * parity page and the viewer until M2's streaming and tile selection.
  */
+import { engineFetch } from "../io/fetchProvider.ts";
 import * as m4 from "../math/mat4.ts";
 import { resolveUri } from "../io/resolveUri.ts";
 
@@ -27,9 +28,9 @@ export async function collectFullDetailContents(
   out: TileContent[],
   warnings: Set<string>,
 ): Promise<void> {
-  const response = await fetch(url, headers ? { headers } : undefined);
+  const response = await engineFetch(url, { kind: "tileset", headers });
   if (!response.ok) {
-    throw new Error(`${url}: ${response.status}`);
+    throw new Error(`tileset JSON request failed (${response.status})`);
   }
   const tileset: Json = await response.json();
   const up = tileset.asset?.gltfUpAxis;

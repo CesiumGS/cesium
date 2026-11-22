@@ -2216,11 +2216,31 @@ export const API_ROWS: readonly ApiRow[] = [
   },
   {
     group: "network",
-    old: [
-      "Resource",
-      "Proxy",
+    old: ["Resource", "Proxy", "DefaultProxy", "TrustedServers"],
+    next: [
+      "FetchProvider",
+      "Credential",
       "DefaultProxy",
-      "TrustedServers",
+      "ForwardingProxy",
+      "RequestProxy",
+    ],
+    supporting: [
+      "FetchProviderOptions",
+      "OriginRule",
+      "CredentialOptions",
+      "CredentialValue",
+      "OutgoingRequest",
+      "IncomingResponse",
+      "FetchTransport",
+      "ProviderRequestInit",
+      "RequestKind",
+    ],
+    status: "changed",
+    note: "Every request the engine makes goes through one `FetchProvider`, which the host sets as `FetchProvider.default`. Its origin rules replace `TrustedServers` (headers and the `credentials` mode per origin), and `DefaultProxy` works as in 1.x. A `Credential` holds a token that can change: a 401 renews it and the request is made once more, as `IonResource` does.",
+  },
+  {
+    group: "network",
+    old: [
       "RequestErrorEvent",
       "ElementService",
       "ResourceCache",

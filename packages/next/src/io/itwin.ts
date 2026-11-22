@@ -5,6 +5,8 @@
  * hour), and `resolveUri` carries that query to every resource under it.
  */
 
+import { engineFetch } from "./fetchProvider.ts";
+
 export interface ITwinOptions {
   /** iTwin share key (sent as `Basic`), or else an OAuth access token. */
   shareKey?: string;
@@ -74,7 +76,8 @@ async function fetchITwinIModel(
   if (options.changesetId) {
     url.searchParams.set("changesetId", options.changesetId);
   }
-  const response = await fetch(url, {
+  const response = await engineFetch(url, {
+    kind: "endpoint",
     headers: {
       Authorization: authorization,
       Accept: "application/vnd.bentley.itwin-platform.v1+json",

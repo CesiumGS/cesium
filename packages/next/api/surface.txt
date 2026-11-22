@@ -74,6 +74,9 @@ entry	name	kind	tier
 .	CorePick	interface	-
 .	CorridorElement	type	-
 .	CorridorOptions	type	-
+.	Credential	class	-
+.	CredentialOptions	interface	-
+.	CredentialValue	interface	-
 .	CurvilinearEdge	interface	-
 .	CurvilinearFrameSpec	type	-
 .	CurvilinearMap	interface	-
@@ -91,6 +94,7 @@ entry	name	kind	tier
 .	DebugLegend	interface	-
 .	DebugLegendEntry	interface	-
 .	DebugView	type	-
+.	DefaultProxy	class	-
 .	Degree	type	-
 .	DisplayMesh	interface	-
 .	DistanceField	interface	-
@@ -119,7 +123,11 @@ entry	name	kind	tier
 .	FeatureStyleOptions	interface	-
 .	FeatureTable	interface	-
 .	FeatureValue	type	-
+.	FetchProvider	class	-
+.	FetchProviderOptions	interface	-
+.	FetchTransport	type	-
 .	FittedOperation	interface	-
+.	ForwardingProxy	class	-
 .	FrameKey	interface	-
 .	FrameMotion	interface	-
 .	FrameResolver	interface	-
@@ -157,6 +165,7 @@ entry	name	kind	tier
 .	ITwinOptions	interface	-
 .	ImageryProvider	interface	-
 .	Importance	type	-
+.	IncomingResponse	interface	-
 .	InspectController	class	-
 .	InspectControllerOptions	interface	-
 .	InstanceOptions	interface	-
@@ -223,6 +232,8 @@ entry	name	kind	tier
 .	OrbitBasis	interface	-
 .	OrbitController	class	-
 .	OrbitFrame	interface	-
+.	OriginRule	interface	-
+.	OutgoingRequest	interface	-
 .	OutputEncoding	type	-
 .	PLACEMENT_MONOMIALS	const	-
 .	PLACEMENT_TERMS	const	-
@@ -259,6 +270,7 @@ entry	name	kind	tier
 .	PostStageTarget	interface	-
 .	PostStageViewInfo	interface	-
 .	PostStageViewValues	interface	-
+.	ProviderRequestInit	interface	-
 .	PurposeStats	interface	-
 .	QueryAnswer	interface	-
 .	QueryHost	interface	-
@@ -275,6 +287,8 @@ entry	name	kind	tier
 .	ReferenceSurface	type	-
 .	RefinedPick	interface	-
 .	RenderTarget	interface	-
+.	RequestKind	type	-
+.	RequestProxy	interface	-
 .	RequestPurpose	type	-
 .	ResolveView	type	-
 .	Rig	interface	-
