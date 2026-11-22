@@ -5,7 +5,7 @@ kind: work
 state: planned
 created: 2026-11-15
 project: CS-18
-needs: [CS-527, CS-530, CS-415, CS-417, CS-418, CS-419, CS-420, CS-457, CS-421, CS-422, CS-456, CS-509, CS-462, CS-464, CS-424, CS-425, CS-426, CS-427, CS-487, CS-488, CS-489, CS-490, CS-492, CS-494, CS-473, CS-475, CS-476, CS-498, CS-499, CS-500, CS-501, CS-460, CS-469, CS-595, CS-641, CS-646, CS-653, CS-657, CS-668, CS-675, CS-463, CS-461, CS-505, CS-493, CS-471, CS-423, CS-465, CS-474, CS-495, CS-467, CS-534, CS-504]
+needs: [CS-527, CS-530, CS-415, CS-417, CS-418, CS-419, CS-420, CS-457, CS-421, CS-422, CS-456, CS-509, CS-462, CS-464, CS-424, CS-425, CS-426, CS-427, CS-487, CS-488, CS-489, CS-490, CS-492, CS-494, CS-473, CS-475, CS-476, CS-498, CS-499, CS-500, CS-501, CS-460, CS-469, CS-595, CS-641, CS-646, CS-653, CS-657, CS-668, CS-675, CS-463, CS-461, CS-505, CS-493, CS-471, CS-423, CS-465, CS-474, CS-495, CS-467, CS-534, CS-504, CS-830]
 release: 2.0.0-beta.1
 ---
 
@@ -24,3 +24,5 @@ CS-505 (issues 2.0 found are filed and answered) joined on 2026-11-21, on the ow
 CS-493 (planets show as points, then disks) joined on 2026-11-21, in the same sweep.
 
 CS-471, CS-423, CS-465, CS-474, CS-495, CS-467, CS-534 and CS-504 moved here from 2.0.0 on 2026-11-21. On the owner's word, all eight change or add public API that freezes at beta.1: a renamed `lodTransitions` value, the default thread, the tick budget options, what shading reads under exaggeration, the B-rep extension format, and new view, query and styling options.
+
+CS-830 (2.0's examples show its seams in use) joined on 2026-11-21, on the owner's word.
