@@ -64,9 +64,9 @@ CS-190 Vector drawing and the styling language [Planned], led by owner
   waits on: CS-10 Cesium IR (2)
   waited on by: CS-193 B-reps and geometry queries (1); CS-196 Infrastructure and geoscience capabilities (2); CS-18 The work tracker (4); CS-191 Content sources and formats (2); CS-642 Geometry generators (1); CS-197 Ray queries and path tracing (1)
 CS-191 Content sources and formats [Planned], led by owner
-  13 of 51 done, 15 ready, 20 blocked, 3 proposed
+  14 of 51 done, 16 ready, 18 blocked, 3 proposed
   waits on: CS-16 Streaming robustness (1); CS-188 Earth to Moon (frames 5c to 5h) (1); CS-190 Vector drawing and the styling language (2); CS-647 Conditional content and motion (1); CS-437 The public API reviews (2); CS-579 Editing (1)
-  waited on by: CS-196 Infrastructure and geoscience capabilities (1); CS-18 The work tracker (5); CS-584 The widgets library (1); CS-647 Conditional content and motion (1); CS-628 Sandcastle as 2.0's gallery (8); CS-615 Packaging and package names (1)
+  waited on by: CS-196 Infrastructure and geoscience capabilities (1); CS-18 The work tracker (5); CS-584 The widgets library (1); CS-647 Conditional content and motion (1); CS-628 Sandcastle as 2.0's gallery (7)
 CS-192 Sky, light and atmosphere [Planned], led by owner
   2 of 22 done, 5 ready, 2 blocked, 13 proposed
   waits on: CS-189 Frames and engineering coordinates follow-ups (2); CS-11 Live MaterialX graph editing (1); CS-188 Earth to Moon (frames 5c to 5h) (4)
@@ -125,7 +125,7 @@ CS-609 A clean 2.0 branch and a modern build [Planned], led by owner
   waited on by: CS-18 The work tracker (1); CS-628 Sandcastle as 2.0's gallery (1)
 CS-615 Packaging and package names [Planned], led by owner
   0 of 6 done, 2 ready, 4 blocked
-  waits on: CS-193 B-reps and geometry queries (1); CS-191 Content sources and formats (1); CS-437 The public API reviews (1)
+  waits on: CS-193 B-reps and geometry queries (1); CS-437 The public API reviews (1)
   waited on by: CS-437 The public API reviews (1); CS-18 The work tracker (2)
 CS-622 The agent-first migration kit [Planned], led by owner
   0 of 4 done, 1 ready, 3 blocked
@@ -133,7 +133,7 @@ CS-622 The agent-first migration kit [Planned], led by owner
   waited on by: CS-18 The work tracker (1); CS-628 Sandcastle as 2.0's gallery (1)
 CS-628 Sandcastle as 2.0's gallery [Planned], led by owner
   0 of 16 done, 1 ready, 15 blocked
-  waits on: CS-199 Dyno hardening, packaging and CI (1); CS-622 The agent-first migration kit (1); CS-609 A clean 2.0 branch and a modern build (1); CS-191 Content sources and formats (8); CS-584 The widgets library (1); CS-437 The public API reviews (6)
+  waits on: CS-199 Dyno hardening, packaging and CI (1); CS-622 The agent-first migration kit (1); CS-609 A clean 2.0 branch and a modern build (1); CS-191 Content sources and formats (7); CS-584 The widgets library (1); CS-437 The public API reviews (6)
   waited on by: CS-18 The work tracker (3)
 CS-637 The particle system [Planned], led by owner
   0 of 3 done, 1 ready, 2 blocked

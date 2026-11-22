@@ -430,7 +430,7 @@ graph LR
     CS_802["CS-802 Is NVIDIA SimReady a target for 2.0, at which profile and relea"]:::decision
     CS_806["CS-806 A design and size spike: Cesium Native in WebAssembly as an opt"]:::proposed
     CS_808["CS-808 Outside data comes through a data-resource provider: PROJ grids"]:::open
-    CS_809["CS-809 Every request goes through one fetch and credential provider: r"]:::open
+    CS_809["CS-809 Every request goes through one fetch and credential provider: r"]:::done
     CS_810["CS-810 The imagery and terrain provider seam carries any tiling scheme"]:::open
     CS_811["CS-811 2.0 owns its texture and mesh decoders: Basis and Draco built f"]:::open
     CS_818["CS-818 A catalog and search seam: STAC, CSW and OGC API Records return"]:::proposed

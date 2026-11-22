@@ -399,21 +399,15 @@ CS-191 Content sources and formats
       ← CS-654 The surface-projection design: classification, draping and decals
   CS-802  Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in?
       ← CS-833 A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802
-  CS-808  Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
-      ← CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
-  CS-810  The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
-      ← CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
   CS-811  2.0 owns its texture and mesh decoders: Basis and Draco built for 2.0, with nothing loaded from 1.x's tree
       ← CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
   CS-847  The content-source seam's core: types, kind registry, host, shared budget, sinks and push
-      ← CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
-        CS-815 Scene content has stable identity and semantic labels that don't depend on load order
+      ← CS-815 Scene content has stable identity and semantic labels that don't depend on load order
         CS-831 A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
   CS-848  Render features: content modules register passes in named slots, declared for picks, rays and shadows
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-849  Streams for push sources: connect on the fetch and credential provider
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
-        CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
 
 CS-192 Sky, light and atmosphere
   CS-282  Intel figures into `glareTier` and the Intel tables
@@ -680,7 +674,6 @@ CS-615 Packaging and package names
       ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
       ← CS-834 A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
-        CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
         CS-814 A camera record carries intrinsics, an off-center principal point and a named distortion model
 
 CS-622 The agent-first migration kit
@@ -711,7 +704,6 @@ CS-628 Sandcastle as 2.0's gallery
       ← CS-560 Content from any source loads through one module seam
   CS-822  Example: your imagery, your servers: WMTS, OGC API Tiles and STAC layered, with token renewal and a proxy
       ← CS-810 The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
-        CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
         CS-279 More terrain and imagery providers, and several imagery layers on one globe
   CS-823  Example: offline coordinates, with PROJ grids from a local bundle, HTTP or ion giving the same answer
       ← CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
@@ -753,5 +745,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-237 blocked
+235 blocked
 ```

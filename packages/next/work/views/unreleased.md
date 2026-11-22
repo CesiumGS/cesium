@@ -94,6 +94,7 @@ CS-199 Dyno hardening, packaging and CI
 
 CS-191 Content sources and formats
   CS-552  The content-source seam: one interface every source module implements, designed and planned
+  CS-809  Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
 
 CS-17 The transform graph
   CS-712  One word per idea in the transform graph: CS-671's name for smooth, warp and curved, and affine for rigid steps
@@ -102,5 +103,5 @@ CS-17 The transform graph
 CS-192 Sky, light and atmosphere
   CS-724  Setup notices when the sky pack, or other data it built, is out of date, and asks to be run again
 
-73 merged item(s) not in a release
+74 merged item(s) not in a release
 ```

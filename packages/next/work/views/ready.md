@@ -141,7 +141,8 @@ CS-191 Content sources and formats
   CS-664  GeoParquet loads through the content-source seam
   CS-666  GPM metadata feeds measurement accuracy
   CS-682  Audit every extension 1.x 1.147 reads against 2.0, and refresh the parity table
-  CS-809  Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
+  CS-808  Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
+  CS-810  The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
 
 CS-192 Sky, light and atmosphere
   CS-281  external: Runs on an Intel integrated GPU: the observer cost page, the glare check and indirect draws
@@ -274,5 +275,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-205 ready
+206 ready
 ```

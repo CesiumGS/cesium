@@ -672,7 +672,7 @@ No milestone
 
 ### Content sources and formats
 
-[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 13 of 51 done, 15 ready, 20 blocked, 3 proposed.
+[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 14 of 51 done, 16 ready, 18 blocked, 3 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token ([CS-497](./milestones/CS-497-cesium-ion-is-a-swappable-module-with-a-default.md), Planned)
 
@@ -698,7 +698,7 @@ Milestone: Content from any source loads through one module seam ([CS-560](./mil
 - [ ] [CS-558](./items/CS-558-esri-services-load-through-the-content-source.md) Esri services load through the content-source seam. Needs CS-552, CS-555 and CS-557.
 - [ ] [CS-559](./items/CS-559-usd-loads-through-the-content-source-seam.md) USD loads through the content-source seam. Needs CS-552, CS-556 and CS-843.
 - [ ] [CS-808](./items/CS-808-outside-data-comes-through-a-data-resource.md) Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host. Needs CS-809.
-- [ ] [CS-809](./items/CS-809-every-request-goes-through-one-fetch-and.md) Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers. Needs nothing.
+- [x] [CS-809](./items/CS-809-every-request-goes-through-one-fetch-and.md) Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers. Done.
 - [ ] [CS-810](./items/CS-810-the-imagery-and-terrain-provider-seam-carries.md) The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits. Needs CS-809.
 - [ ] [CS-811](./items/CS-811-2-0-owns-its-texture-and-mesh-decoders-basis.md) 2.0 owns its texture and mesh decoders: Basis and Draco built for 2.0, with nothing loaded from 1.x's tree. Needs CS-808.
 - [ ] [CS-847](./items/CS-847-the-content-source-seam-s-core-types-kind.md) The content-source seam's core: types, kind registry, host, shared budget, sinks and push. Needs CS-552, CS-809, CS-815 (public API reviews), CS-831 (Editing) and CS-846.
