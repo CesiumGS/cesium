@@ -883,7 +883,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-CS-199, Planned, led by owner: 3 of 19 done, 15 ready, 0 blocked, 1 proposed.
+CS-199, Planned, led by owner: 5 of 20 done, 14 ready, 0 blocked, 1 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host (CS-485, Planned)
 
@@ -904,7 +904,7 @@ Milestone: CI keeps packages/next clean (CS-486, Planned)
 - [ ] CS-540 The hitld work check test finishes under full-suite load. Needs nothing.
 - [x] CS-580 naga-wasm is a dev dependency of @cesium/next, so CI validates the WGSL emitter's output. Done.
 - [ ] CS-583 The casterLoop slow-orbit test holds under full-suite load. Needs nothing.
-- [ ] CS-850 eslint passes on main again: the unused PostStageKind import in src/render/post/chain.ts goes. Needs nothing.
+- [x] CS-850 eslint passes on main again: the unused PostStageKind import in src/render/post/chain.ts goes. Done.
 - [ ] CS-851 npm run handbook type-checks again: handbook/viewer/workerPool.ts and src/io/decoders.ts agree on TextureFormatSupport. Needs nothing.
 
 No milestone
@@ -912,6 +912,7 @@ No milestone
 - [ ] CS-363 Packaging for pages without a build step. Needs nothing.
 - [?] CS-364 The gallery shell: filters, editable source, checked-in thumbnails, the playground's later list. Proposed. Needs nothing.
 - [x] CS-796 decision: Merge CS-580, naga-wasm 30.2.0 is a dev dependency of @cesium/next. Done.
+- [x] CS-852 decision: Merge CS-850, eslint passes on main again (the unused PostStageKind import goes). Done.
 
 ### Dyno as the development harness
 

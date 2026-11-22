@@ -96,7 +96,7 @@ CS-198 GPU-driven rendering and capacities [Planned], led by owner
   waits on: nothing open
   waited on by: CS-18 The work tracker (2)
 CS-199 Dyno hardening, packaging and CI [Planned], led by owner
-  3 of 19 done, 15 ready, 0 blocked, 1 proposed
+  5 of 20 done, 14 ready, 0 blocked, 1 proposed
   waits on: nothing open
   waited on by: CS-18 The work tracker (2); CS-628 Sandcastle as 2.0's gallery (1)
 CS-389 Dyno as the development harness [Planned], led by owner

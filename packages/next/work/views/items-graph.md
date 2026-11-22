@@ -576,8 +576,9 @@ graph LR
     CS_580["CS-580 naga-wasm is a dev dependency of @cesium/next, so CI validates "]:::done
     CS_583["CS-583 The casterLoop slow-orbit test holds under full-suite load"]:::open
     CS_796["CS-796 Merge CS-580, naga-wasm 30.2.0 is a dev dependency of @cesium/n"]:::done
-    CS_850["CS-850 eslint passes on main again: the unused PostStageKind import in"]:::open
+    CS_850["CS-850 eslint passes on main again: the unused PostStageKind import in"]:::done
     CS_851["CS-851 npm run handbook type-checks again: handbook/viewer/workerPool."]:::open
+    CS_852["CS-852 Merge CS-850, eslint passes on main again (the unused PostStage"]:::done
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done

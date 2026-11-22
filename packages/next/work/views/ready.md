@@ -204,7 +204,6 @@ CS-199 Dyno hardening, packaging and CI
   CS-540  The hitld work check test finishes under full-suite load
   CS-544  The handbook's reel runs in the served handbook as well as the static file
   CS-583  The casterLoop slow-orbit test holds under full-suite load
-  CS-850  eslint passes on main again: the unused PostStageKind import in src/render/post/chain.ts goes
   CS-851  npm run handbook type-checks again: handbook/viewer/workerPool.ts and src/io/decoders.ts agree on TextureFormatSupport
 
 CS-389 Dyno as the development harness
@@ -273,5 +272,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-204 ready
+203 ready
 ```

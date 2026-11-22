@@ -940,7 +940,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 3 of 19 done, 15 ready, 0 blocked, 1 proposed.
+[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 5 of 20 done, 14 ready, 0 blocked, 1 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host ([CS-485](./milestones/CS-485-dyno-and-the-gallery-are-safe-to-build-and-host.md), Planned)
 
@@ -961,7 +961,7 @@ Milestone: CI keeps packages/next clean ([CS-486](./milestones/CS-486-ci-keeps-p
 - [ ] [CS-540](./items/CS-540-the-hitld-work-check-test-finishes-under-full.md) The hitld work check test finishes under full-suite load. Needs nothing.
 - [x] [CS-580](./items/CS-580-naga-wasm-is-a-dev-dependency-of-cesium-next-so.md) naga-wasm is a dev dependency of @cesium/next, so CI validates the WGSL emitter's output. Done.
 - [ ] [CS-583](./items/CS-583-the-casterloop-slow-orbit-test-holds-under-full.md) The casterLoop slow-orbit test holds under full-suite load. Needs nothing.
-- [ ] [CS-850](./items/CS-850-eslint-passes-on-main-again-the-unused.md) eslint passes on main again: the unused PostStageKind import in src/render/post/chain.ts goes. Needs nothing.
+- [x] [CS-850](./items/CS-850-eslint-passes-on-main-again-the-unused.md) eslint passes on main again: the unused PostStageKind import in src/render/post/chain.ts goes. Done.
 - [ ] [CS-851](./items/CS-851-npm-run-handbook-type-checks-again-handbook.md) npm run handbook type-checks again: handbook/viewer/workerPool.ts and src/io/decoders.ts agree on TextureFormatSupport. Needs nothing.
 
 No milestone
@@ -969,6 +969,7 @@ No milestone
 - [ ] [CS-363](./items/CS-363-packaging-for-pages-without-a-build-step.md) Packaging for pages without a build step. Needs nothing.
 - [?] [CS-364](./items/CS-364-the-gallery-shell-filters-editable-source.md) The gallery shell: filters, editable source, checked-in thumbnails, the playground's later list. Proposed. Needs nothing.
 - [x] [CS-796](./items/CS-796-merge-cs-580-naga-wasm-30-2-0-is-a-dev.md) decision: Merge CS-580, naga-wasm 30.2.0 is a dev dependency of @cesium/next. Done.
+- [x] [CS-852](./items/CS-852-merge-cs-850-eslint-passes-on-main-again-the.md) decision: Merge CS-850, eslint passes on main again (the unused PostStageKind import goes). Done.
 
 ### Dyno as the development harness
 
