@@ -12,6 +12,7 @@ import {
 } from "@cesium/core";
 import {
   GeometryAttributeDescriptor,
+  GeometryAttributeDomain,
   VertexAttributeSemantic,
 } from "@cesium/engine";
 import {
@@ -584,14 +585,14 @@ class MeshEditor {
    * @ignore
    */
   static #readBuffers(session) {
-    const vertexCount = session.vertexCount();
+    const vertexCount = session.elementCount(GeometryAttributeDomain.VERTEX);
     const positions = new Float32Array(vertexCount * 3);
-    const readPosition = session.vertexAttributeReader(POSITION_ATTRIBUTE);
+    const readPosition = session.attributeReader(POSITION_ATTRIBUTE);
     for (let i = 0; i < vertexCount; ++i) {
       readPosition(i, positions, i * 3);
     }
 
-    const primitiveCount = session.primitiveCount();
+    const primitiveCount = session.elementCount(GeometryAttributeDomain.FACE);
     const faceVertexCounts = new Uint32Array(primitiveCount);
     let indexCount = 0;
     for (let i = 0; i < primitiveCount; ++i) {

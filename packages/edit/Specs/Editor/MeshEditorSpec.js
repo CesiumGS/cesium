@@ -9,6 +9,7 @@ import {
 } from "@cesium/core";
 import {
   GeometryAttributeDescriptor,
+  GeometryAttributeDomain,
   GeometryReader,
   SceneTransforms,
   StencilFunction,
@@ -70,12 +71,14 @@ function createSource(geometry) {
   const geometryReader = new GeometryReader({
     availableAttributes: [position],
     createReadSession: () => ({
-      vertexCount: () => geometry.positions.length,
-      primitiveCount: () => geometry.primitives.length,
+      elementCount: (domain) =>
+        domain === GeometryAttributeDomain.VERTEX
+          ? geometry.positions.length
+          : geometry.primitives.length,
       primitiveVertexCount: (i) => geometry.primitives[i].length,
       primitiveReader: () => (i, result, offset) =>
         copyInto(geometry.primitives[i], result, offset),
-      vertexAttributeReader: () => (i, result, offset) =>
+      attributeReader: () => (i, result, offset) =>
         copyInto(geometry.positions[i], result, offset),
       destroy: () => {},
     }),
