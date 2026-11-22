@@ -2,10 +2,14 @@
 id: CS-801
 title: Merge CS-775, the Work page's older views retire
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-389
 decider: owner
+answer: "A. Merge it: The orchestrator replays it onto main's tip, reruns the type checks, work check and the Dyno Work tests, fast-forwards main, regenerates the views and logs the merge; the chief of staff trims CS-787."
+answered_at: 2026-11-22T02:10:17.511Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
