@@ -2,10 +2,11 @@
 id: CS-612
 title: The new build system
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-17
 project: CS-609
 needs: [CS-610]
+claimed_by: orch-11-CS-612
 ---
 
 ## Done when
