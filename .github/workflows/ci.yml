@@ -18,12 +18,19 @@ on:
   # (the design's "CI", the nightly row).
   schedule:
     - cron: "23 7 * * *"
+  # Until then, main's nightly-2.0.yml starts this file on the 2.0 branch
+  # (`gh workflow run ci.yml --ref cesium-2.0-webgpu-poc`). A dispatched run
+  # is a nightly run: the data tier only. It takes no inputs.
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+# A nightly run (scheduled or dispatched) gets its own group: a new run in a
+# group cancels the one pending there, so sharing the branch's group could
+# cancel a push's pending run.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || ((github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && format('nightly-{0}', github.ref)) || github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
@@ -74,7 +81,7 @@ jobs:
           EVENT: ${{ github.event_name }}
           BASE: ${{ steps.base.outputs.base }}
         run: |
-          if [ "$EVENT" = "schedule" ]; then
+          if [ "$EVENT" = "schedule" ] || [ "$EVENT" = "workflow_dispatch" ]; then
             data=true
           elif [ -z "$BASE" ]; then
             data=false
@@ -90,7 +97,7 @@ jobs:
   # version lines, and the changeset rule.
   checks:
     needs: changes
-    if: github.event_name != 'schedule'
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -142,7 +149,7 @@ jobs:
 
   # The full suite, on Node 24 and the current release.
   test:
-    if: github.event_name != 'schedule'
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     strategy:
@@ -167,7 +174,7 @@ jobs:
   # Every package built, packed and checked as it publishes; the bundle check
   # against that output; the surface; Sandcastle's build.
   build:
-    if: github.event_name != 'schedule'
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
     steps:
@@ -191,7 +198,7 @@ jobs:
   # The handbook's single-file build, so a broken figure fails here. A job
   # of its own, so its result stays apart from the packages' build.
   handbook:
-    if: github.event_name != 'schedule'
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -213,7 +220,7 @@ jobs:
   # (GitHub's `digest` for it, read 2026-11-22 from
   # api.github.com/repos/shader-slang/slang/releases/tags/v2026.22).
   shaders:
-    if: github.event_name != 'schedule'
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:

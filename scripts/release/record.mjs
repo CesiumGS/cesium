@@ -491,21 +491,53 @@ export function pushIsRelease(before, head, options = {}) {
   if (judged.length === 0) {
     return notRelease(`the push holds no commits${ancestor ? "" : " of its own"}`);
   }
-  // When the before commit is an ancestor, a record or a stray at or below
-  // its version, or at a version already out, is a stale copy a merged side
-  // branch carries (a record rewritten by `pull --rebase`, say, whose
-  // rewrite released): the push can't release it, and it can't hide a
-  // version the head raises, since notRelease still checks the head.
-  const stale = (c) =>
-    ancestor &&
-    parseVersion(`${beforeVersion}`) !== undefined &&
-    parseVersion(`${c.version}`) !== undefined &&
-    (compareVersions(c.version, beforeVersion) <= 0 || released(c.version));
+  // When the before commit is an ancestor, a record or a stray at a
+  // version already out, or at or below the before commit's version and
+  // not built on it, is a stale copy (a record rewritten by `pull
+  // --rebase`, say, whose rewrite released): the push can't release it,
+  // and it can't hide a version the head raises, since notRelease still
+  // checks the head. A commit whose first parent descends from the before
+  // commit is new work, never a copy: after a failed or reverted record S,
+  // a push of revert(S) and a new record at S's version holds a genuine
+  // record at the before commit's version.
+  const builtOnBefore = (c) => {
+    try {
+      git("merge-base", "--is-ancestor", before, c.parent);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  // Why a candidate is stale, or "" when it isn't; each commit once.
+  const staleness = new Map();
+  const staleWhy = (c) => {
+    if (!staleness.has(c.commit)) {
+      let why = "";
+      if (ancestor && parseVersion(`${beforeVersion}`) && parseVersion(`${c.version}`)) {
+        if (released(c.version)) {
+          why = "already tagged or on npm";
+        } else if (compareVersions(c.version, beforeVersion) <= 0 && !builtOnBefore(c)) {
+          why = `at or below the before commit's ${beforeVersion}, and not built on the before commit`;
+        }
+      }
+      staleness.set(c.commit, why);
+    }
+    return staleness.get(c.commit);
+  };
+  // The head's own first-parent line, to name where a stale copy sits.
+  const ownLine = ancestor
+    ? new Set(revList(cwd, "--first-parent", `${before}..${head}`).map((p) => p.commit))
+    : new Set();
+  const where = (c) =>
+    ownLine.has(c.commit)
+      ? "a copy on the head's own line that isn't built on the before commit (the line reaches the before commit only through a merge)"
+      : "a stale copy from a merged side branch";
+  const kind = (c) =>
+    c.problems.length === 0 ? "a release record" : "a commit that moves the umbrella's version up";
   const candidates = judged.filter((c) => !c.carried && (c.problems.length === 0 || c.raises));
+  const stale = (c) => candidates.includes(c) && staleWhy(c) !== "";
   for (const c of candidates.filter(stale)) {
-    log(
-      `record: ${c.commit}: ${c.problems.length === 0 ? "a release record" : "a commit that moves the umbrella's version up"} for ${c.version}, at or below the before commit's ${beforeVersion} or already released; a stale copy from a merged side branch, skipped`,
-    );
+    log(`record: ${c.commit}: ${kind(c)} for ${c.version}, ${staleWhy(c)}; ${where(c)}, skipped`);
   }
   const live = candidates.filter((c) => !stale(c));
   const records = live.filter((c) => c.problems.length === 0);
@@ -558,9 +590,12 @@ export function pushIsRelease(before, head, options = {}) {
   }
   if (records.length === 0) {
     for (const c of judged) {
-      log(
-        `record: ${c.commit}: ${c.carried ? `a merge that carries ${c.version} from a side` : c.problems.join("; ")}`,
-      );
+      const why = c.carried
+        ? `a merge that carries ${c.version} from a side`
+        : stale(c)
+          ? `${kind(c)} for ${c.version}, skipped as stale (above)`
+          : c.problems.join("; ");
+      log(`record: ${c.commit}: ${why}`);
     }
     return notRelease(`none of the push's ${judged.length} commit(s) is one`);
   }

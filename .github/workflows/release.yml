@@ -217,9 +217,10 @@ jobs:
       # in this repository, that packed this version, and its publish jobs'
       # states (GETs only, every page read), so a second run for one record
       # refuses before it stages. No other workflow and no fork can name an
-      # artifact that counts. A failed read fails this step, and nothing is
-      # staged. Artifacts last 30 days; past that, npm refuses a version
-      # already staged.
+      # artifact that counts. Only runs created in the last 35 days count,
+      # which bounds the GETs. A failed read, or a list at GitHub's
+      # 1,000-result cap, fails this step, and nothing is staged. Artifacts
+      # last 30 days; past that, npm refuses a version already staged.
       - name: Earlier runs for this version
         env:
           GH_TOKEN: ${{ github.token }}

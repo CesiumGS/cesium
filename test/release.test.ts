@@ -54,7 +54,11 @@ import {
   withCommandsStopped,
   type Tree,
 } from "../scripts/release/record.mjs";
-import { earlierRuns, listAll } from "../scripts/release/earlierRuns.mjs";
+import {
+  createdSince,
+  earlierRuns,
+  listAll,
+} from "../scripts/release/earlierRuns.mjs";
 import { publishOrder } from "../scripts/release/stage.mjs";
 import {
   earlierStagingProblem,
@@ -1150,10 +1154,15 @@ describe("a push of several commits (a bundle from another machine)", () => {
     expect(log).toContainEqual(
       expect.stringMatching(
         new RegExp(
-          `${stale}: a release record for 2\\.1\\.0, at or below the before commit's 2\\.1\\.1 .*skipped`,
+          `${stale}: a release record for 2\\.1\\.0, at or below the before commit's 2\\.1\\.1, and not built on the before commit; a stale copy from a merged side branch, skipped`,
         ),
       ),
     );
+    // The closing list names it too, with a reason, never an empty one.
+    expect(log).toContainEqual(
+      `record: ${stale}: a release record for 2.1.0, skipped as stale (above)`,
+    );
+    expect(log.filter((l) => /: $/.test(l))).toEqual([]);
     // Beside a real record in the same push: R is at R′'s 2.1.0, the
     // before commit's version, so only the 2.1.1 record counts.
     expect(pushIsRelease(rewritten, head, { cwd: root, ...quiet })).toEqual({
@@ -1188,6 +1197,47 @@ describe("a push of several commits (a bundle from another machine)", () => {
     );
     expect(message).toMatch(/none can release: revert the other, then/);
     expect(message).not.toMatch(/revert both/);
+  });
+  it("stages a new record at a failed record's version, pushed with that record's revert", () => {
+    const { root } = workspace("2.0.0", pending);
+    roots.push(root);
+    // S lands alone, and its run fails: nothing is tagged or on npm.
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const failed = commitAll(root, "the record S, whose run failed");
+    // One push: S's revert, then a new record R2 at S's version.
+    git(root, "revert", "--no-edit", failed);
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const record = commitAll(root, "the record R2");
+    expect(
+      gitTree(record, root).packages.map((p) => p.manifest.version),
+    ).toContain("2.1.0");
+    const log: string[] = [];
+    expect(
+      pushIsRelease(failed, record, { cwd: root, log: (l) => log.push(l) }),
+    ).toEqual({ release: true, version: "2.1.0", sha: record });
+    expect(log.filter((l) => /stale/.test(l))).toEqual([]);
+  });
+  it("stages a new record pushed with a landed record's revert, and a later commit", () => {
+    const { root } = workspace("2.0.0", pending);
+    roots.push(root);
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const first = commitAll(root, "the record R1");
+    // One push: R1's revert, a new record R2, and a later change.
+    git(root, "revert", "--no-edit", first);
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const record = commitAll(root, "the record R2");
+    put(root, "notes.md", "after the record\n");
+    const head = commitAll(root, "a later note");
+    expect(pushIsRelease(first, head, { cwd: root, ...quiet })).toEqual({
+      release: true,
+      version: "2.1.0",
+      sha: record,
+    });
+    // Once 2.1.0 is out, the same push is green and stages nothing.
+    git(root, "tag", "v2.1.0", first);
+    expect(pushIsRelease(first, head, { cwd: root, ...quiet }).release).toBe(
+      false,
+    );
   });
   it("splits a push's runs at merge commits, so one branch can't pass on another's changeset", () => {
     const { root, base } = workspace("2.0.0", pending);
@@ -1314,6 +1364,7 @@ describe("the earlier runs that packed a version", () => {
     head_branch: string;
     event: string;
     status: string;
+    created_at: string;
     artifacts: { name: string; workflow_run: { id: number } | null }[];
     jobs: { name: string; status: string; conclusion: string | null }[];
   };
@@ -1324,13 +1375,25 @@ describe("the earlier runs that packed a version", () => {
     head_branch: branch,
     event: "push",
     status: "completed",
+    created_at: "2026-11-20T12:00:00Z",
     artifacts: [],
     jobs: [{ name: "publish", status: "completed", conclusion: "skipped" }],
     ...fields,
   });
-  // A fake REST API: runs filtered by workflow file, branch and event as
-  // GitHub filters them, every list paginated.
-  const api = (runs: Run[], options: { failOn?: RegExp } = {}) => {
+  // The clock the tests read: the window starts 35 days before it.
+  const now = Date.parse("2026-11-22T09:00:00Z");
+  // A fake REST API: runs filtered by workflow file, branch, event and
+  // creation date as GitHub filters them, every list paginated. `total`
+  // replaces the runs list's `total_count` (a stale or a capped one), and
+  // `cap` stops the list there, as GitHub's 1,000-result cap does.
+  const api = (
+    runs: Run[],
+    options: {
+      failOn?: RegExp;
+      total?: (count: number) => number;
+      cap?: number;
+    } = {},
+  ) => {
     const paths: string[] = [];
     const get = async (path: string) => {
       paths.push(path);
@@ -1343,13 +1406,22 @@ describe("the earlier runs that packed a version", () => {
       const slice = <T>(list: T[]) => list.slice((page - 1) * per, page * per);
       let m = /\/actions\/workflows\/([^/]+)\/runs$/.exec(url.pathname);
       if (m) {
-        const list = runs.filter(
-          (r) =>
-            r.workflow === decodeURIComponent(m![1]!) &&
-            r.head_branch === url.searchParams.get("branch") &&
-            r.event === url.searchParams.get("event"),
+        const since = /^>=(\d{4}-\d{2}-\d{2})$/.exec(
+          url.searchParams.get("created") ?? "",
         );
-        return { total_count: list.length, workflow_runs: slice(list) };
+        const list = runs
+          .filter(
+            (r) =>
+              r.workflow === decodeURIComponent(m![1]!) &&
+              r.head_branch === url.searchParams.get("branch") &&
+              r.event === url.searchParams.get("event") &&
+              (!since || r.created_at >= since[1]!),
+          )
+          .slice(0, options.cap ?? Infinity);
+        return {
+          total_count: options.total?.(list.length) ?? list.length,
+          workflow_runs: slice(list),
+        };
       }
       m = /\/actions\/runs\/(\d+)\/(artifacts|jobs)$/.exec(url.pathname);
       const run = runs.find((r) => r.id === Number(m?.[1]));
@@ -1369,7 +1441,13 @@ describe("the earlier runs that packed a version", () => {
     { name: "npm-tarballs-2.1.0", workflow_run: id === null ? null : { id } },
   ];
   const read = (runs: Run[], runId = 999) =>
-    earlierRuns({ get: api(runs).get, repository, version: "2.1.0", runId });
+    earlierRuns({
+      get: api(runs).get,
+      repository,
+      version: "2.1.0",
+      runId,
+      now,
+    });
 
   it("ignores another workflow's artifact and a fork's run, so neither blocks a genuine publish", async () => {
     const staged = [
@@ -1403,15 +1481,17 @@ describe("the earlier runs that packed a version", () => {
       repository,
       version: "2.1.0",
       runId: 999,
+      now,
     });
     expect(earlier).toEqual([
       { run: 121, status: "completed", conclusion: "success" },
     ]);
+    // 35 days before 2026-11-22 is 2026-10-18, URL-encoded.
     expect(
       paths.filter((p) => p.includes("/workflows/release.yml/runs")),
     ).toEqual([
-      `repos/${repository}/actions/workflows/release.yml/runs?branch=${branch}&event=push&exclude_pull_requests=true&per_page=100&page=1`,
-      `repos/${repository}/actions/workflows/release.yml/runs?branch=${branch}&event=push&exclude_pull_requests=true&per_page=100&page=2`,
+      `repos/${repository}/actions/workflows/release.yml/runs?branch=${branch}&event=push&created=%3E%3D2026-10-18&exclude_pull_requests=true&per_page=100&page=1`,
+      `repos/${repository}/actions/workflows/release.yml/runs?branch=${branch}&event=push&created=%3E%3D2026-10-18&exclude_pull_requests=true&per_page=100&page=2`,
     ]);
     expect(earlierStagingProblem(earlier)).toMatch(/run 121 \(staged\)/);
   });
@@ -1429,6 +1509,7 @@ describe("the earlier runs that packed a version", () => {
       repository,
       version: "2.1.0+b",
       runId: 999,
+      now,
     });
     expect(earlier).toEqual([
       { run: 5, status: "in_progress", conclusion: null },
@@ -1441,11 +1522,57 @@ describe("the earlier runs that packed a version", () => {
     );
     expect(earlierStagingProblem(earlier)).toMatch(/run 5 \(in_progress\)/);
   });
+  const options = { repository, version: "2.1.0", runId: 999, now };
+  it("reads every page when total_count is stale", async () => {
+    const runs = Array.from({ length: 250 }, (_, i) => runOf(i + 1));
+    runs[220] = runOf(221, {
+      artifacts: packed(221),
+      jobs: [{ name: "publish", status: "completed", conclusion: "success" }],
+    });
+    // A stale total_count, from before most runs were made.
+    const stale = api(runs, { total: () => 100 });
+    expect(await earlierRuns({ ...options, get: stale.get })).toEqual([
+      { run: 221, status: "completed", conclusion: "success" },
+    ]);
+  });
+  it("refuses a list that reaches GitHub's 1,000-result cap", async () => {
+    // GitHub lists 1,000 of 1,050 runs, with total_count capped to match:
+    // the 50 it leaves out could hold the run that staged this version.
+    const many = Array.from({ length: 1050 }, (_, i) => runOf(i + 1));
+    const capped = api(many, { cap: 1000 });
+    await expect(earlierRuns({ ...options, get: capped.get })).rejects.toThrow(
+      /reaches GitHub's cap of 1000 results/,
+    );
+    expect(
+      capped.paths.filter((p) => p.includes("/workflows/release.yml/runs")),
+    ).toHaveLength(10);
+  });
+  it("lists only runs from the last 35 days", async () => {
+    const runs = [
+      runOf(1, {
+        created_at: "2026-10-01T12:00:00Z",
+        artifacts: packed(1),
+        jobs: [{ name: "publish", status: "completed", conclusion: "success" }],
+      }),
+      runOf(2, {
+        created_at: "2026-10-18T00:30:00Z",
+        artifacts: packed(2),
+        jobs: [{ name: "publish", status: "waiting", conclusion: null }],
+      }),
+    ];
+    const { get, paths } = api(runs);
+    expect(
+      await earlierRuns({ get, repository, version: "2.1.0", runId: 999, now }),
+    ).toEqual([{ run: 2, status: "waiting", conclusion: null }]);
+    // No GET for the old run's artifacts.
+    expect(paths.some((p) => p.includes("/runs/1/"))).toBe(false);
+    expect(createdSince(now)).toBe(">=2026-10-18");
+  });
   it("fails closed on a page it can't read", async () => {
     const runs = Array.from({ length: 150 }, (_, i) => runOf(i + 1));
     const { get } = api(runs, { failOn: /page=2/ });
     await expect(
-      earlierRuns({ get, repository, version: "2.1.0", runId: 999 }),
+      earlierRuns({ get, repository, version: "2.1.0", runId: 999, now }),
     ).rejects.toThrow(/HTTP 502/);
     await expect(
       listAll(

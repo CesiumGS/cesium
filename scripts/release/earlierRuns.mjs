@@ -9,10 +9,14 @@
 // workflow, and no fork's pull request, can name an artifact that makes a
 // genuine run refuse. For each other run, it reads that run's artifacts
 // named `npm-tarballs-<version>`, and for each run that has one, its
-// `publish` jobs, every attempt's. Every list is read page by page, to its
-// end; a failed page fails the script, and it writes no file, so the stage
-// step refuses. GETs only, with the job's token (GH_TOKEN, `actions:
-// read`). It imports nothing outside Node and this folder.
+// `publish` jobs, every attempt's. Only runs created in the last 35 days
+// count (WINDOW_DAYS): `verify`'s artifacts last 30 days, and the review
+// put the approval's wait at 30 too, so an older run can't still stage,
+// and the number of GETs stays bounded however long the history grows.
+// Every list is read page by page, to a short page; a failed page, or a list that reaches
+// GitHub's 1,000-result cap, fails the script, and it writes no file, so
+// the stage step refuses. GETs only, with the job's token (GH_TOKEN,
+// `actions: read`). It imports nothing outside Node and this folder.
 import { renameSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 import { RELEASE_BRANCH, scratchFolder } from "./stageTarballs.mjs";
@@ -22,14 +26,40 @@ export const WORKFLOW = "release.yml";
 
 const PER_PAGE = 100;
 
+/**
+ * The most results GitHub returns for a filtered list: its "List workflow
+ * runs for a workflow" page (read 2026-11-22) says "This endpoint will
+ * return up to 1,000 results for each search when using the following
+ * parameters: actor, branch, check_suite_id, created, event, head_sha,
+ * status." A list that reaches it may have dropped its oldest items.
+ */
+export const RESULT_CAP = 1000;
+
+/**
+ * How far back a run counts, in days: past 30 days its artifact is gone
+ * (retention-days: 30 in release.yml) and the approval's wait, which the
+ * review put at 30 days, is over; five more cover a clock's or a day
+ * boundary's slack.
+ */
+export const WINDOW_DAYS = 35;
+
+/** The `created` filter for runs from WINDOW_DAYS days before `now` on. */
+export function createdSince(now) {
+  const day = new Date(now - WINDOW_DAYS * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  return `>=${day}`;
+}
+
 /** The artifact `verify` uploads for a version. */
 export function artifactName(version) {
   return `npm-tarballs-${version}`;
 }
 
 /**
- * Every item of a paginated list, read page by page until a page is short
- * or `total_count` is reached. Throws on a page that isn't a list.
+ * Every item of a paginated list, read page by page until a page is short.
+ * `total_count` isn't trusted to end it: it can be stale, or capped, and
+ * stopping on it would drop the oldest items silently. Throws on a page
+ * that isn't a list, and once the list reaches RESULT_CAP, since GitHub
+ * may then have left items out (fail closed).
  * @param {(path: string) => Promise<any>} get one page, parsed
  * @param {string} path the list's path, with its query
  * @param {string} key the field that holds the items
@@ -44,9 +74,13 @@ export async function listAll(get, path, key) {
       throw new Error(`page ${page} of ${path} has no ${key} list`);
     }
     items.push(...list);
-    const total = Number(body.total_count);
-    if (list.length < PER_PAGE || (Number.isFinite(total) && items.length >= total)) {
+    if (list.length < PER_PAGE) {
       return items;
+    }
+    if (items.length >= RESULT_CAP) {
+      throw new Error(
+        `${path} reaches GitHub's cap of ${RESULT_CAP} results, so it may leave items out; nothing is staged`,
+      );
     }
   }
 }
@@ -56,17 +90,18 @@ export async function listAll(get, path, key) {
  * jobs' states: `[{ run, status, conclusion }]`, as stageTarballs.mjs's
  * `--earlier` reads it. A run that packed the version but has no publish
  * job listed counts by its own status, so one still running refuses too.
- * @param {{ get: (path: string) => Promise<any>, repository: string, version: string, runId: number, workflow?: string, branch?: string }} options
+ * Only runs created from WINDOW_DAYS days before `now` on are listed.
+ * @param {{ get: (path: string) => Promise<any>, repository: string, version: string, runId: number, workflow?: string, branch?: string, now?: number }} options
  */
 export async function earlierRuns(options) {
-  const { get, repository, version, runId, workflow = WORKFLOW, branch = RELEASE_BRANCH } = options;
+  const { get, repository, version, runId, workflow = WORKFLOW, branch = RELEASE_BRANCH, now = Date.now() } = options;
   if (!/^[\w.-]+\/[\w.-]+$/.test(`${repository}`)) {
     throw new Error(`the repository ${JSON.stringify(repository)} isn't owner/name`);
   }
   const repo = `repos/${repository}`;
   const runs = await listAll(
     get,
-    `${repo}/actions/workflows/${encodeURIComponent(workflow)}/runs?branch=${encodeURIComponent(branch)}&event=push&exclude_pull_requests=true`,
+    `${repo}/actions/workflows/${encodeURIComponent(workflow)}/runs?branch=${encodeURIComponent(branch)}&event=push&created=${encodeURIComponent(createdSince(now))}&exclude_pull_requests=true`,
     "workflow_runs",
   );
   const ours = runs.filter(

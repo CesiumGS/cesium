@@ -1,13 +1,22 @@
 /** The workflow file whose runs count. */
 export const WORKFLOW: string;
 
+/** The most results GitHub returns for a filtered list (1,000). */
+export const RESULT_CAP: number;
+
+/** How far back a run counts, in days (35). */
+export const WINDOW_DAYS: number;
+
+/** The `created` filter for runs from WINDOW_DAYS days before `now` (milliseconds since the epoch) on: `>=YYYY-MM-DD`. */
+export function createdSince(now: number): string;
+
 /** The artifact `verify` uploads for a version. */
 export function artifactName(version: string): string;
 
 /** One page of a REST list, parsed. */
 export type Get = (path: string) => Promise<any>;
 
-/** Every item of a paginated list, page by page to its end; throws on a page that isn't a list. */
+/** Every item of a paginated list, page by page until a page is short; throws on a page that isn't a list, and once the list reaches RESULT_CAP. */
 export function listAll(get: Get, path: string, key: string): Promise<unknown[]>;
 
 /** One earlier run's publish job, as stageTarballs.mjs's `--earlier` reads it. */
@@ -17,7 +26,7 @@ export interface EarlierRun {
   conclusion: string | null;
 }
 
-/** Each other run of release.yml on the 2.0 branch, from a push in this repository, that packed `version`. */
+/** Each other run of release.yml on the 2.0 branch, from a push in this repository, created from WINDOW_DAYS days before `now` on, that packed `version`. */
 export function earlierRuns(options: {
   get: Get;
   repository: string;
@@ -25,6 +34,7 @@ export function earlierRuns(options: {
   runId: number;
   workflow?: string;
   branch?: string;
+  now?: number;
 }): Promise<EarlierRun[]>;
 
 /** One GET to GitHub's REST API with the job's token (GH_TOKEN), parsed; throws unless it is 200. */
