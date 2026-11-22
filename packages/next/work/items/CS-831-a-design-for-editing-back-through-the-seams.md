@@ -2,9 +2,10 @@
 id: CS-831
 title: "A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-21
 project: CS-579
+claimed_by: orch-11-CS-831
 touches: [docs/design/editing.md, docs/design]
 ---
 
