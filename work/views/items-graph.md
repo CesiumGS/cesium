@@ -608,7 +608,7 @@ graph LR
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
     CS_391["CS-391 Purpose, branch, item and study in Trends, Runs, Compare and Al"]:::open
-    CS_392["CS-392 Finding runs from the terminal ('runs', 'show', 'pin')"]:::open
+    CS_392["CS-392 Finding runs from the terminal ('runs', 'show', 'pin')"]:::done
     CS_393["CS-393 The settings registry and multi-axis sweeps"]:::done
     CS_394["CS-394 Example scenes and the development metrics"]:::done
     CS_395["CS-395 Reference images and the sweep view"]:::open
@@ -700,6 +700,7 @@ graph LR
     CS_812["CS-812 Merge CS-787, the Work page's code says Order where it still sa"]:::done
     CS_856["CS-856 Dyno measures what each merge touched: targeted A/B runs after "]:::open
     CS_884["CS-884 Merge CS-404, studies: the model, the files and the commands"]:::done
+    CS_929["CS-929 Merge CS-392, finding runs from the terminal (runs, show, pin)"]:::done
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open

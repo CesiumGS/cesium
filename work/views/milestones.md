@@ -255,8 +255,8 @@ CS-477 A MaterialX graph is edited live on the stage [Planned], under CS-11 Live
 
 CS-478 Every run says what it was for [Planned], under CS-389 Dyno as the development harness
   outcome: Each run carries its identity, purpose, branch, item and study under a machine-wide lock; runs are found from the terminal; recordings and test results are runs; and archives export and import them.
-  constraints: 0 of 5 done
-  unmet: not linked to a clause yet (open: CS-391, CS-392, CS-398, CS-399, CS-400; check not passed)
+  constraints: 1 of 5 done
+  unmet: not linked to a clause yet (open: CS-391, CS-398, CS-399, CS-400; check not passed)
   to shape: done_when; check; link CS-391, CS-392, CS-398, CS-399, CS-400 to a clause
 
 CS-479 Sweeps measure development cases [Planned], under CS-389 Dyno as the development harness

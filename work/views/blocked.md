@@ -464,8 +464,6 @@ CS-389 Dyno as the development harness
         CS-405 The Studies page
   CS-397  Image checks for development scenes and sweeps
       ← CS-395 Reference images and the sweep view
-  CS-402  "Measuring with Dyno" in AGENTS.md, and its skill
-      ← CS-392 Finding runs from the terminal (`runs`, `show`, `pin`)
   CS-405  The Studies page
       ← CS-395 Reference images and the sweep view
   CS-407  The runner and remote runs
@@ -729,5 +727,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-232 blocked
+231 blocked
 ```

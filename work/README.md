@@ -1001,12 +1001,12 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 58 of 94 done, 14 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 60 of 95 done, 14 ready, 13 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
 - [ ] [CS-391](./items/CS-391-purpose-branch-item-and-study-in-trends-runs.md) Purpose, branch, item and study in Trends, Runs, Compare and Alerts. Needs CS-390.
-- [ ] [CS-392](./items/CS-392-finding-runs-from-the-terminal-runs-show-pin.md) Finding runs from the terminal (`runs`, `show`, `pin`). Needs CS-390.
+- [x] [CS-392](./items/CS-392-finding-runs-from-the-terminal-runs-show-pin.md) Finding runs from the terminal (`runs`, `show`, `pin`). Done.
 - [ ] [CS-398](./items/CS-398-recordings-as-runs.md) Recordings as runs. Needs CS-390.
 - [ ] [CS-399](./items/CS-399-test-results-in-dyno-the-vitest-reporter-and.md) Test results in Dyno: the vitest reporter and the Tests view. Needs CS-390.
 - [ ] [CS-400](./items/CS-400-archives-export-and-import-the-manual-fallback.md) Archives: export and import (the manual fallback). Needs CS-390.
@@ -1123,6 +1123,7 @@ No milestone
 - [x] [CS-812](./items/CS-812-merge-cs-787-the-work-page-s-code-says-order.md) decision: Merge CS-787, the Work page's code says Order where it still said Plan view, and its dead code goes. Done.
 - [ ] [CS-856](./items/CS-856-dyno-measures-what-each-merge-touched-targeted.md) Dyno measures what each merge touched: targeted A/B runs after merges, a quiet full run overnight, and regressions filed as items. Needs CS-721.
 - [x] [CS-884](./items/CS-884-merge-cs-404-studies-the-model-the-files-and.md) decision: Merge CS-404, studies: the model, the files and the commands. Done.
+- [x] [CS-929](./items/CS-929-merge-cs-392-finding-runs-from-the-terminal.md) decision: Merge CS-392, finding runs from the terminal (runs, show, pin). Done.
 
 ### The public API reviews
 

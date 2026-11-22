@@ -64,6 +64,7 @@ CS-188 Earth to Moon (frames 5c to 5h)
 
 CS-389 Dyno as the development harness
   CS-390  Run identity and the machine-wide run lock
+  CS-392  Finding runs from the terminal (`runs`, `show`, `pin`)
   CS-393  The settings registry and multi-axis sweeps
   CS-394  Example scenes and the development metrics
   CS-403  Dyno's navigation rail, regrouped by what people come to do
@@ -125,5 +126,5 @@ CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
 
-90 merged item(s) not in a release
+91 merged item(s) not in a release
 ```

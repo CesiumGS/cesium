@@ -210,12 +210,12 @@ CS-199 Dyno hardening, packaging and CI
 
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
-  CS-392  Finding runs from the terminal (`runs`, `show`, `pin`)
   CS-395  Reference images and the sweep view
   CS-398  Recordings as runs
   CS-399  Test results in Dyno: the vitest reporter and the Tests view
   CS-400  Archives: export and import (the manual fallback)
   CS-401  Lab pages and their results in the store
+  CS-402  "Measuring with Dyno" in AGENTS.md, and its skill
   CS-406  The local certificate authority, the hub and pairing
   CS-517  The agent system's pages: the merge queue, quotas, the controllers' steps and token ledgers
   CS-718  external: hitld cites dyno's benchmark results by reference, reading them through dyno's commands

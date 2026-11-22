@@ -944,12 +944,12 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 58 of 94 done, 14 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 60 of 95 done, 14 ready, 13 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
 - [ ] CS-391 Purpose, branch, item and study in Trends, Runs, Compare and Alerts. Needs CS-390.
-- [ ] CS-392 Finding runs from the terminal (`runs`, `show`, `pin`). Needs CS-390.
+- [x] CS-392 Finding runs from the terminal (`runs`, `show`, `pin`). Done.
 - [ ] CS-398 Recordings as runs. Needs CS-390.
 - [ ] CS-399 Test results in Dyno: the vitest reporter and the Tests view. Needs CS-390.
 - [ ] CS-400 Archives: export and import (the manual fallback). Needs CS-390.
@@ -1066,6 +1066,7 @@ No milestone
 - [x] CS-812 decision: Merge CS-787, the Work page's code says Order where it still said Plan view, and its dead code goes. Done.
 - [ ] CS-856 Dyno measures what each merge touched: targeted A/B runs after merges, a quiet full run overnight, and regressions filed as items. Needs CS-721.
 - [x] CS-884 decision: Merge CS-404, studies: the model, the files and the commands. Done.
+- [x] CS-929 decision: Merge CS-392, finding runs from the terminal (runs, show, pin). Done.
 
 ### The public API reviews
 
