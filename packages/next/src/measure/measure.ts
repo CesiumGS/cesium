@@ -12,17 +12,17 @@ import {
 import {
   type DesignPoint,
   type EngineeringFrame,
-} from "../../../crs/src/engineering/EngineeringFrame.ts";
+  gridFactors,
+  type StationOffset,
+} from "@cesium/crs";
 import {
   runBulk,
   type BulkOptions,
   cartographic,
   type Body,
 } from "@cesium/core";
-import { gridFactors } from "../../../crs/src/engineering/factors.ts";
 import { mat4, vec3 } from "@cesium/core/internal";
 import { Instant } from "@cesium/time";
-import type { StationOffset } from "../../../crs/src/engineering/alignment.ts";
 import {
   accuracyOf,
   type AccuracyStatement,

@@ -13,9 +13,9 @@ import type {
   EngineeringFrame,
   EngineeringFrameFallback,
   SnapKind,
-} from "../../../crs/src/engineering/EngineeringFrame.ts";
-import type { BetterCandidate } from "../../../crs/src/engineering/crs.ts";
-import { projResolution } from "../../../crs/src/engineering/projCoordinates.ts";
+  BetterCandidate,
+} from "@cesium/crs";
+import { projResolution } from "@cesium/crs/internal";
 import { EARTH_ROTATION_RATE } from "./constants.ts";
 
 /** One contribution to a measurement's uncertainty. */
