@@ -96,6 +96,8 @@ graph LR
     CS_807["CS-807 Merge CS-794, the transform passes load Cesium IR lazily, once "]:::done
     CS_836["CS-836 Merge CS-49, Cesium IR's versioned JSON format, cesium-ir/1.0"]:::done
     CS_837["CS-837 Cesium IR's JSON format is experimental at cesium-ir/0.x until "]:::open
+    CS_838["CS-838 Merge CS-809, one fetch and credential provider for every reque"]:::done
+    CS_839["CS-839 Merge CS-814, camera records with intrinsics, an off-center pri"]:::done
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -406,7 +408,7 @@ graph LR
     CS_280["CS-280 Thin wrappers for ion's REST API, including element metadata"]:::proposed
     CS_452["CS-452 How should semantic metadata reach the engine, and what does pi"]:::done
     CS_551["CS-551 Does content from every kind of source, the globe included, loa"]:::done
-    CS_552["CS-552 The content-source seam: one interface every source module impl"]:::open
+    CS_552["CS-552 The content-source seam: one interface every source module impl"]:::done
     CS_553["CS-553 What 3D Tiles costs an application that doesn't use them, measu"]:::open
     CS_554["CS-554 3D Tiles loads through the content-source seam, with a @cesium/"]:::open
     CS_555["CS-555 The globe's terrain and imagery load through the content-source"]:::open
@@ -432,6 +434,16 @@ graph LR
     CS_810["CS-810 The imagery and terrain provider seam carries any tiling scheme"]:::open
     CS_811["CS-811 2.0 owns its texture and mesh decoders: Basis and Draco built f"]:::open
     CS_818["CS-818 A catalog and search seam: STAC, CSW and OGC API Records return"]:::proposed
+    CS_840["CS-840 Merge CS-552, the content-source seam's design (ContentSource) "]:::done
+    CS_841["CS-841 D1: do content modules register their own render passes?"]:::done
+    CS_842["CS-842 D2: how does the globe fit, as content placed as an item or a s"]:::done
+    CS_843["CS-843 D3: which USD runtime does CS-559 use?"]:::done
+    CS_844["CS-844 D4: how do push sources get streams under the same proxies and "]:::done
+    CS_845["CS-845 D5: how are the content sources' entry points grouped and named"]:::done
+    CS_846["CS-846 D6: what is ion's interface, an asset resolver or a source of i"]:::done
+    CS_847["CS-847 The content-source seam's core: types, kind registry, host, sha"]:::open
+    CS_848["CS-848 Render features: content modules register passes in named slots"]:::open
+    CS_849["CS-849 Streams for push sources: connect on the fetch and credential p"]:::open
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -564,6 +576,8 @@ graph LR
     CS_580["CS-580 naga-wasm is a dev dependency of @cesium/next, so CI validates "]:::done
     CS_583["CS-583 The casterLoop slow-orbit test holds under full-suite load"]:::open
     CS_796["CS-796 Merge CS-580, naga-wasm 30.2.0 is a dev dependency of @cesium/n"]:::done
+    CS_850["CS-850 eslint passes on main again: the unused PostStageKind import in"]:::open
+    CS_851["CS-851 npm run handbook type-checks again: handbook/viewer/workerPool."]:::open
   end
   subgraph CS_389["Dyno as the development harness"]
     CS_390["CS-390 Run identity and the machine-wide run lock"]:::done
@@ -1115,6 +1129,8 @@ graph LR
   CS_50 --> CS_268
   CS_55 --> CS_268
   CS_552 --> CS_269
+  CS_847 --> CS_269
+  CS_846 --> CS_269
   CS_269 --> CS_271
   CS_270 --> CS_271
   CS_150 --> CS_271
@@ -1366,11 +1382,24 @@ graph LR
   CS_543 --> CS_550
   CS_551 --> CS_552
   CS_552 --> CS_554
+  CS_847 --> CS_554
+  CS_553 --> CS_554
   CS_552 --> CS_555
+  CS_554 --> CS_555
+  CS_810 --> CS_555
+  CS_848 --> CS_555
+  CS_842 --> CS_555
   CS_552 --> CS_556
+  CS_847 --> CS_556
   CS_552 --> CS_557
+  CS_554 --> CS_557
+  CS_261 --> CS_557
   CS_552 --> CS_558
+  CS_555 --> CS_558
+  CS_557 --> CS_558
   CS_552 --> CS_559
+  CS_556 --> CS_559
+  CS_843 --> CS_559
   CS_101 --> CS_567
   CS_546 --> CS_571
   CS_454 --> CS_572
@@ -1545,6 +1574,16 @@ graph LR
   CS_814 --> CS_835
   CS_552 --> CS_835
   CS_49 --> CS_837
+  CS_552 --> CS_847
+  CS_809 --> CS_847
+  CS_815 --> CS_847
+  CS_831 --> CS_847
+  CS_846 --> CS_847
+  CS_847 --> CS_848
+  CS_841 --> CS_848
+  CS_847 --> CS_849
+  CS_809 --> CS_849
+  CS_844 --> CS_849
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

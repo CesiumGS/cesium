@@ -130,9 +130,15 @@ CS-191 Content sources and formats
   CS-270  decision: Where does 2.0's default evaluation token come from?
   CS-272  3D Tiles format gaps: implicit tiling, multiple contents, metadata, S2 and cylinder volumes
   CS-273  glTF extension gaps: texture transforms, primitive outlines, WebP, node visibility, specular-glossiness
+  CS-276  Point clouds: glTF points and `pnts`, compute rendering with eye-dome lighting
+  CS-277  Gaussian splats with a GPU sort
   CS-279  More terrain and imagery providers, and several imagery layers on one globe
-  CS-552  The content-source seam: one interface every source module implements, designed and planned
   CS-553  What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline
+  CS-659  KML and KMZ load through the content-source seam
+  CS-660  GPX loads through the content-source seam
+  CS-661  GeoJSON loads through the content-source seam
+  CS-663  PostGIS loads through the content-source seam
+  CS-664  GeoParquet loads through the content-source seam
   CS-666  GPM metadata feeds measurement accuracy
   CS-682  Audit every extension 1.x 1.147 reads against 2.0, and refresh the parity table
   CS-809  Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
@@ -198,6 +204,8 @@ CS-199 Dyno hardening, packaging and CI
   CS-540  The hitld work check test finishes under full-suite load
   CS-544  The handbook's reel runs in the served handbook as well as the static file
   CS-583  The casterLoop slow-orbit test holds under full-suite load
+  CS-850  eslint passes on main again: the unused PostStageKind import in src/render/post/chain.ts goes
+  CS-851  npm run handbook type-checks again: handbook/viewer/workerPool.ts and src/io/decoders.ts agree on TextureFormatSupport
 
 CS-389 Dyno as the development harness
   CS-391  Purpose, branch, item and study in Trends, Runs, Compare and Alerts
@@ -257,6 +265,7 @@ CS-637 The particle system
   CS-638  The particle system's design
 
 CS-647 Conditional content and motion
+  CS-648  The conditional content and motion design
   CS-649  Intervals and interval sets in /time
 
 CS-18 The work tracker
@@ -264,5 +273,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-195 ready
+204 ready
 ```

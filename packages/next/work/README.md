@@ -135,7 +135,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 18 of 45 done, 12 ready, 11 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 20 of 47 done, 12 ready, 11 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -193,6 +193,8 @@ No milestone
 - [x] [CS-800](./items/CS-800-merge-cs-777-the-glsl-es-emitter-s-output-is.md) decision: Merge CS-777, the GLSL ES emitter's output is cross-checked against naga's. Done.
 - [x] [CS-807](./items/CS-807-merge-cs-794-the-transform-passes-load-cesium.md) decision: Merge CS-794, the transform passes load Cesium IR lazily, once a quiet plain cold start passes. Done.
 - [x] [CS-836](./items/CS-836-merge-cs-49-cesium-ir-s-versioned-json-format.md) decision: Merge CS-49, Cesium IR's versioned JSON format, cesium-ir/1.0. Done.
+- [x] [CS-838](./items/CS-838-merge-cs-809-one-fetch-and-credential-provider.md) decision: Merge CS-809, one fetch and credential provider for every request. Done.
+- [x] [CS-839](./items/CS-839-merge-cs-814-camera-records-with-intrinsics-an.md) decision: Merge CS-814, camera records with intrinsics, an off-center principal point and a named distortion. Done.
 
 ### Live MaterialX graph editing
 
@@ -670,11 +672,11 @@ No milestone
 
 ### Content sources and formats
 
-[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 4 of 40 done, 9 ready, 24 blocked, 3 proposed.
+[CS-191](./projects/CS-191-content-sources-and-formats.md), Planned, led by owner: 12 of 50 done, 15 ready, 20 blocked, 3 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token ([CS-497](./milestones/CS-497-cesium-ion-is-a-swappable-module-with-a-default.md), Planned)
 
-- [ ] [CS-269](./items/CS-269-cesium-ion-as-a-swappable-module-a-content.md) Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`. Needs CS-552.
+- [ ] [CS-269](./items/CS-269-cesium-ion-as-a-swappable-module-a-content.md) Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`. Needs CS-552, CS-847 and CS-846.
 - [ ] [CS-270](./items/CS-270-where-does-2-0-s-default-evaluation-token-come.md) decision: Where does 2.0's default evaluation token come from?. Needs nothing. Decided by owner.
 - [ ] [CS-271](./items/CS-271-a-default-evaluation-token-with-the-on-screen.md) A default evaluation token, with the on-screen notice. Needs CS-269, CS-270 and CS-150 (Streaming robustness).
 
@@ -687,18 +689,21 @@ Milestone: glTF and 3D Tiles load at 1.x's coverage ([CS-498](./milestones/CS-49
 
 Milestone: Content from any source loads through one module seam ([CS-560](./milestones/CS-560-content-from-any-source-loads-through-one.md), Planned)
 
-- [ ] [CS-552](./items/CS-552-the-content-source-seam-one-interface-every.md) The content-source seam: one interface every source module implements, designed and planned. Needs CS-551.
+- [x] [CS-552](./items/CS-552-the-content-source-seam-one-interface-every.md) The content-source seam: one interface every source module implements, designed and planned. Done.
 - [ ] [CS-553](./items/CS-553-what-3d-tiles-costs-an-application-that-doesn-t.md) What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline. Needs nothing.
-- [ ] [CS-554](./items/CS-554-3d-tiles-loads-through-the-content-source-seam.md) 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point. Needs CS-552.
-- [ ] [CS-555](./items/CS-555-the-globe-s-terrain-and-imagery-load-through.md) The globe's terrain and imagery load through the content-source seam. Needs CS-552.
-- [ ] [CS-556](./items/CS-556-gltf-files-load-through-the-content-source-seam.md) glTF files load through the content-source seam. Needs CS-552.
-- [ ] [CS-557](./items/CS-557-mvt-vector-tiles-load-through-the-content.md) MVT vector tiles load through the content-source seam. Needs CS-552.
-- [ ] [CS-558](./items/CS-558-esri-services-load-through-the-content-source.md) Esri services load through the content-source seam. Needs CS-552.
-- [ ] [CS-559](./items/CS-559-usd-loads-through-the-content-source-seam.md) USD loads through the content-source seam. Needs CS-552.
+- [ ] [CS-554](./items/CS-554-3d-tiles-loads-through-the-content-source-seam.md) 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point. Needs CS-552, CS-847 and CS-553.
+- [ ] [CS-555](./items/CS-555-the-globe-s-terrain-and-imagery-load-through.md) The globe's terrain and imagery load through the content-source seam. Needs CS-552, CS-554, CS-810, CS-848 and CS-842.
+- [ ] [CS-556](./items/CS-556-gltf-files-load-through-the-content-source-seam.md) glTF files load through the content-source seam. Needs CS-552 and CS-847.
+- [ ] [CS-557](./items/CS-557-mvt-vector-tiles-load-through-the-content.md) MVT vector tiles load through the content-source seam. Needs CS-552, CS-554 and CS-261 (Vector drawing and the styling language).
+- [ ] [CS-558](./items/CS-558-esri-services-load-through-the-content-source.md) Esri services load through the content-source seam. Needs CS-552, CS-555 and CS-557.
+- [ ] [CS-559](./items/CS-559-usd-loads-through-the-content-source-seam.md) USD loads through the content-source seam. Needs CS-552, CS-556 and CS-843.
 - [ ] [CS-808](./items/CS-808-outside-data-comes-through-a-data-resource.md) Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host. Needs CS-809.
 - [ ] [CS-809](./items/CS-809-every-request-goes-through-one-fetch-and.md) Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers. Needs nothing.
 - [ ] [CS-810](./items/CS-810-the-imagery-and-terrain-provider-seam-carries.md) The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits. Needs CS-809.
 - [ ] [CS-811](./items/CS-811-2-0-owns-its-texture-and-mesh-decoders-basis.md) 2.0 owns its texture and mesh decoders: Basis and Draco built for 2.0, with nothing loaded from 1.x's tree. Needs CS-808.
+- [ ] [CS-847](./items/CS-847-the-content-source-seam-s-core-types-kind.md) The content-source seam's core: types, kind registry, host, shared budget, sinks and push. Needs CS-552, CS-809, CS-815 (public API reviews), CS-831 (Editing) and CS-846.
+- [ ] [CS-848](./items/CS-848-render-features-content-modules-register-passes.md) Render features: content modules register passes in named slots, declared for picks, rays and shadows. Needs CS-847 and CS-841.
+- [ ] [CS-849](./items/CS-849-streams-for-push-sources-connect-on-the-fetch.md) Streams for push sources: connect on the fetch and credential provider. Needs CS-847, CS-809 and CS-844.
 
 Milestone: 1.x's data formats load as modules ([CS-668](./milestones/CS-668-1-x-s-data-formats-load-as-modules.md), Planned)
 
@@ -729,6 +734,13 @@ No milestone
 - [ ] [CS-802](./items/CS-802-is-nvidia-simready-a-target-for-2-0-at-which.md) decision: Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in?. Needs CS-833 (public API reviews). Decided by owner.
 - [?] [CS-806](./items/CS-806-a-design-and-size-spike-cesium-native-in.md) A design and size spike: Cesium Native in WebAssembly as an optional tiling-engine host behind the streaming-source seam. Proposed. Needs CS-552.
 - [?] [CS-818](./items/CS-818-a-catalog-and-search-seam-stac-csw-and-ogc-api.md) A catalog and search seam: STAC, CSW and OGC API Records return asset references that sources resolve. Proposed. Needs CS-552.
+- [x] [CS-840](./items/CS-840-merge-cs-552-the-content-source-seam-s-design.md) decision: Merge CS-552, the content-source seam's design (ContentSource) and its plan for CS-554 to CS-559. Done.
+- [x] [CS-841](./items/CS-841-d1-do-content-modules-register-their-own-render.md) decision: D1: do content modules register their own render passes?. Done.
+- [x] [CS-842](./items/CS-842-d2-how-does-the-globe-fit-as-content-placed-as.md) decision: D2: how does the globe fit, as content placed as an item or a special object?. Done.
+- [x] [CS-843](./items/CS-843-d3-which-usd-runtime-does-cs-559-use.md) decision: D3: which USD runtime does CS-559 use?. Done.
+- [x] [CS-844](./items/CS-844-d4-how-do-push-sources-get-streams-under-the.md) decision: D4: how do push sources get streams under the same proxies and credentials?. Done.
+- [x] [CS-845](./items/CS-845-d5-how-are-the-content-sources-entry-points.md) decision: D5: how are the content sources' entry points grouped and named?. Done.
+- [x] [CS-846](./items/CS-846-d6-what-is-ion-s-interface-an-asset-resolver-or.md) decision: D6: what is ion's interface, an asset resolver or a source of its own?. Done.
 
 ### Sky, light and atmosphere
 
@@ -928,7 +940,7 @@ No milestone
 
 ### Dyno hardening, packaging and CI
 
-[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 3 of 17 done, 13 ready, 0 blocked, 1 proposed.
+[CS-199](./projects/CS-199-dyno-hardening-packaging-and-ci.md), Planned, led by owner: 3 of 19 done, 15 ready, 0 blocked, 1 proposed.
 
 Milestone: Dyno and the gallery are safe to build and host ([CS-485](./milestones/CS-485-dyno-and-the-gallery-are-safe-to-build-and-host.md), Planned)
 
@@ -949,6 +961,8 @@ Milestone: CI keeps packages/next clean ([CS-486](./milestones/CS-486-ci-keeps-p
 - [ ] [CS-540](./items/CS-540-the-hitld-work-check-test-finishes-under-full.md) The hitld work check test finishes under full-suite load. Needs nothing.
 - [x] [CS-580](./items/CS-580-naga-wasm-is-a-dev-dependency-of-cesium-next-so.md) naga-wasm is a dev dependency of @cesium/next, so CI validates the WGSL emitter's output. Done.
 - [ ] [CS-583](./items/CS-583-the-casterloop-slow-orbit-test-holds-under-full.md) The casterLoop slow-orbit test holds under full-suite load. Needs nothing.
+- [ ] [CS-850](./items/CS-850-eslint-passes-on-main-again-the-unused.md) eslint passes on main again: the unused PostStageKind import in src/render/post/chain.ts goes. Needs nothing.
+- [ ] [CS-851](./items/CS-851-npm-run-handbook-type-checks-again-handbook.md) npm run handbook type-checks again: handbook/viewer/workerPool.ts and src/io/decoders.ts agree on TextureFormatSupport. Needs nothing.
 
 No milestone
 
@@ -1255,7 +1269,7 @@ Milestone: Geometry generators make 1.x's shapes on the ellipsoid ([CS-646](./mi
 
 ### Conditional content and motion
 
-[CS-647](./projects/CS-647-conditional-content-and-motion.md), Planned, led by owner: 0 of 5 done, 1 ready, 4 blocked.
+[CS-647](./projects/CS-647-conditional-content-and-motion.md), Planned, led by owner: 0 of 5 done, 2 ready, 3 blocked.
 
 Milestone: Content and motion follow one time model ([CS-653](./milestones/CS-653-content-and-motion-follow-one-time-model.md), Planned)
 

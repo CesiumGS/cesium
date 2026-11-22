@@ -302,9 +302,9 @@ CS-485 Dyno and the gallery are safe to build and host [Planned], under CS-199 D
 
 CS-486 CI keeps packages/next clean [Planned], under CS-199 Dyno hardening, packaging and CI
   outcome: CI runs the package's tests on Node 24, the package is Prettier-clean, a fresh worktree passes `npm test`, and the example runner's loose ends are closed.
-  constraints: 2 of 9 done
-  unmet: not linked to a clause yet (open: CS-361, CS-362, CS-412, CS-445, CS-538, CS-540, CS-583; check not passed)
-  to shape: done_when; check; link CS-361, CS-362, CS-412, CS-445, CS-537, CS-538, CS-540, CS-580, CS-583 to a clause
+  constraints: 2 of 11 done
+  unmet: not linked to a clause yet (open: CS-361, CS-362, CS-412, CS-445, CS-538, CS-540, CS-583, CS-850, CS-851; check not passed)
+  to shape: done_when; check; link CS-361, CS-362, CS-412, CS-445, CS-537, CS-538, CS-540, CS-580, CS-583, CS-850, CS-851 to a clause
 
 CS-487 The frames plans' carried-forward fixes are closed [Planned], under CS-189 Frames and engineering coordinates follow-ups
   outcome: The fixes the frames plans carried forward are made, `accuracyOf` composes on `separationAccuracy`, and the owner decides whether a frame with both fallbacks takes the ballpark.
@@ -457,9 +457,9 @@ CS-535 Rays query the scene on the GPU [Planned], under CS-197 Ray queries and p
 
 CS-560 Content from any source loads through one module seam [Planned], under CS-191 Content sources and formats
   outcome: An application loads 3D Tiles, the globe's terrain and imagery, glTF files, MVT, Esri services and USD through one content-source interface, importing only the source modules it uses.
-  constraints: 0 of 13 done
-  unmet: not linked to a clause yet (open: CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553, CS-808, CS-809, CS-810, CS-811, CS-831; check not passed)
-  to shape: done_when; check; link CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553, CS-808, CS-809, CS-810, CS-811, CS-831 to a clause
+  constraints: 1 of 16 done
+  unmet: not linked to a clause yet (open: CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553, CS-808, CS-809, CS-810, CS-811, CS-831, CS-847, CS-848, CS-849; check not passed)
+  to shape: done_when; check; link CS-552, CS-554, CS-555, CS-556, CS-557, CS-558, CS-559, CS-553, CS-808, CS-809, CS-810, CS-811, CS-831, CS-847, CS-848, CS-849 to a clause
 
 CS-561 Dyno's Work page shows the live system and the release plan [Planned], under CS-18 The work tracker
   outcome: A reader of Dyno's Work page sees what's moving now (dispatches, branches waiting to merge, the active run) and where each release falls among the milestones that feed it.

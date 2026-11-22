@@ -367,44 +367,34 @@ CS-190 Vector drawing and the styling language
 
 CS-191 Content sources and formats
   CS-269  Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-271  A default evaluation token, with the on-screen notice
       ← CS-269 Cesium ion as a swappable module: a content-source interface and `@cesium/next/ion`
         CS-270 Where does 2.0's default evaluation token come from?
         CS-150 ion tokens
-  CS-276  Point clouds: glTF points and `pnts`, compute rendering with eye-dome lighting
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
-  CS-277  Gaussian splats with a GPU sort
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
   CS-278  glTF animation playback: skins, morph targets and animated nodes
       ← CS-212 The core's setters, per-node transforms and tracks
   CS-554  3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+        CS-553 What 3D Tiles costs an application that doesn't use them, measured as the seam's baseline
   CS-555  The globe's terrain and imagery load through the content-source seam
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+      ← CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
+        CS-810 The imagery and terrain provider seam carries any tiling scheme, renewable credentials and per-tile credits
+        CS-848 Render features: content modules register passes in named slots, declared for picks, rays and shadows
   CS-556  glTF files load through the content-source seam
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-557  MVT vector tiles load through the content-source seam
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+      ← CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
+        CS-261 Wide lines, polygons and decals, with vector sources and vector tiles
   CS-558  Esri services load through the content-source seam
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+      ← CS-555 The globe's terrain and imagery load through the content-source seam
+        CS-557 MVT vector tiles load through the content-source seam
   CS-559  USD loads through the content-source seam
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+      ← CS-556 glTF files load through the content-source seam
   CS-658  CZML loads through the content-source seam
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
-        CS-648 The conditional content and motion design
-  CS-659  KML and KMZ load through the content-source seam
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
-  CS-660  GPX loads through the content-source seam
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
-  CS-661  GeoJSON loads through the content-source seam
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
+      ← CS-648 The conditional content and motion design
   CS-662  3D Tiles from servers other than Cesium ion load through the seam
       ← CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
-  CS-663  PostGIS loads through the content-source seam
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
-  CS-664  GeoParquet loads through the content-source seam
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
   CS-665  The legacy-glTF module: glTF 1.0 and the deprecated extensions upgraded on load
       ← CS-556 glTF files load through the content-source seam
   CS-667  Panoramas as a module
@@ -417,6 +407,15 @@ CS-191 Content sources and formats
       ← CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
   CS-811  2.0 owns its texture and mesh decoders: Basis and Draco built for 2.0, with nothing loaded from 1.x's tree
       ← CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
+  CS-847  The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+      ← CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
+        CS-815 Scene content has stable identity and semantic labels that don't depend on load order
+        CS-831 A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
+  CS-848  Render features: content modules register passes in named slots, declared for picks, rays and shadows
+      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+  CS-849  Streams for push sources: connect on the fetch and credential provider
+      ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+        CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
 
 CS-192 Sky, light and atmosphere
   CS-282  Intel figures into `glareTier` and the Intel tables
@@ -685,7 +684,6 @@ CS-615 Packaging and package names
       ← CS-834 A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
         CS-809 Every request goes through one fetch and credential provider: renewable auth, retry after a 401, proxies and enterprise headers
         CS-814 A camera record carries intrinsics, an off-center principal point and a named distortion model
-        CS-552 The content-source seam: one interface every source module implements, designed and planned
 
 CS-622 The agent-first migration kit
   CS-624  The migration skill
@@ -749,8 +747,6 @@ CS-642 Geometry generators
         CS-643 Edge types shared across the engine: geodesic, rhumb and straight in a CRS
 
 CS-647 Conditional content and motion
-  CS-648  The conditional content and motion design
-      ← CS-552 The content-source seam: one interface every source module implements, designed and planned
   CS-650  Public interpolation: one module for trajectories, glTF samplers, CZML and camera paths
       ← CS-648 The conditional content and motion design
   CS-651  Articulations as transform-graph nodes
@@ -759,5 +755,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-243 blocked
+238 blocked
 ```
