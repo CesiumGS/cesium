@@ -2,10 +2,14 @@
 id: CS-925
 title: Merge CS-54, routes on both emitters
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-10
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), runs the work check on main, regenerates the views and logs the merge."
+answered_at: 2026-11-22T15:34:27.545Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question
@@ -28,3 +32,5 @@ If unanswered by 2026-11-24T12:00:00Z: Hold it.
 ## Answer
 
 Recorded in the front matter once answered.
+
+The chief of staff answered A on 2026-11-22 under the owner's overnight approval of safe merges. Every gate passes on the replay, the re-review has nothing Important open, and the chief of staff checked that the diff touches no owner path. The WGSL goldens are unchanged, and the before-and-after Lab runs were read from their `pass` fields, not from the exit code.
