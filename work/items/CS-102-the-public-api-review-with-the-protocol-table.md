@@ -17,3 +17,8 @@ The public API review, with CS-101's map and the façade's constraints. It also 
 ## Plan
 
 `docs/superpowers/plans/2026-11-13-worker-facade.md`, its milestone table.
+
+## Notes (2026-11-22)
+
+- A first pass of this review, by a Fable reviewer, is in `fable-review-api.md` in the chief of staff's shared notes. It covers the surface map, the systemic problems and a proposed order for this review.
+- The owner's answers: tiers and names in one review (CS-975 B); `dispose()` everywhere (CS-976 A); alpha.1's packages may be renamed until this review (CS-973 C).
