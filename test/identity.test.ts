@@ -84,6 +84,48 @@ describe("canonical sources", () => {
     );
   });
 
+  it("drops user information from every form: protocol-relative, relative, opaque and blob", () => {
+    expect(canonicalSource("//user:pw@tiles.test/site/x.json?t=1")).toBe(
+      "//tiles.test/site/x.json",
+    );
+    expect(canonicalSource("\\\\user:pw@tiles.test\\x.json")).toBe(
+      "//tiles.test/x.json",
+    );
+    expect(canonicalSource("s3://key:pw@bucket/x.json")).toBe(
+      "s3://bucket/x.json",
+    );
+    expect(canonicalSource("custom:user:pw@site/x.json")).toBe(
+      "custom:site/x.json",
+    );
+    expect(canonicalSource("blob:https://user:pw@tiles.test/4d5e?t=1")).toBe(
+      "blob:https://tiles.test/4d5e",
+    );
+    // An "@" in a relative path is a path, not user information.
+    expect(canonicalSource("site/a@b/x.json")).toBe("site/a@b/x.json");
+  });
+
+  it("keeps a data URI as a digest of its bytes, never its payload", () => {
+    const json = '{"a":1}';
+    const digest = canonicalSource(
+      `data:application/json;base64,${btoa(json)}`,
+    );
+    expect(digest).toMatch(/^data:application\/json;murmur3-128=[0-9a-f]{32}$/);
+    // The same bytes in each encoding give the same digest.
+    expect(
+      canonicalSource(`data:application/json,${encodeURIComponent(json)}`),
+    ).toBe(digest);
+    expect(canonicalSource(`data:Application/JSON;charset=utf-8,${json}`)).toBe(
+      digest,
+    );
+    // Other bytes, another digest; a media type with odd characters goes.
+    expect(canonicalSource("data:application/json,{}")).not.toBe(digest);
+    expect(canonicalSource("data:<script>,x")).toMatch(/^data:;murmur3-128=/);
+    // Bounded whatever the payload's size.
+    expect(
+      canonicalSource(`data:;base64,${btoa("x".repeat(100_000))}`).length,
+    ).toBeLessThan(64);
+  });
+
   it("keeps a Cesium ion asset's version, and nothing else of its query", () => {
     expect(
       canonicalSource(
@@ -299,6 +341,71 @@ describe("the identity table", () => {
     expect(ids.slot(2)!.key).toMatchObject({ content: "b.glb#n0/p0" });
   });
 
+  it("reports one collision once, and clears it when a colliding draw leaves", () => {
+    const { ids, reports } = table({ hash: () => 42n });
+    const add = (index: number, first: number, name: string) => {
+      ids.register(
+        { index, generation: 1 },
+        first,
+        1,
+        true,
+        content(name),
+        undefined,
+      );
+      ids.idOfSlot(first);
+    };
+    add(0, 1, "a.glb");
+    add(1, 2, "b.glb");
+    // a.glb's feature drawn a second time meets b.glb's the other way round.
+    add(2, 3, "a.glb");
+    expect(reports).toHaveLength(1);
+    expect(ids.identify(42n)).toBeUndefined();
+    // b.glb leaves: a.glb's key is the only one left, drawn twice.
+    ids.unregister(1);
+    expect(ids.collisions.has(42n)).toBe(false);
+    expect(ids.identify(42n)!.key).toMatchObject({ content: "a.glb#n0/p0" });
+    // One of a.glb's draws leaving keeps it identified.
+    ids.unregister(0);
+    expect(ids.identify(42n)!.key).toMatchObject({ content: "a.glb#n0/p0" });
+    // b.glb back: the same collision again, not reported a second time.
+    add(1, 4, "b.glb");
+    expect(ids.collisions.get(42n)).toHaveLength(2);
+    expect(ids.identify(42n)).toBeUndefined();
+    expect(reports).toHaveLength(1);
+  });
+
+  it("keeps no credential, token or data URI payload in keys or messages", () => {
+    const secret = /secret|token|pw|eyJ|%7B|\{/;
+    const sources = [
+      "https://user:secret@tiles.test/site/tileset.json?token=pw",
+      "//user:secret@tiles.test/site/tileset.json?access_token=pw",
+      "\\\\user:secret@tiles.test\\site\\tileset.json",
+      "s3://key:secret@bucket/site/tileset.json",
+      "custom:user:secret@site/tileset.json",
+      "blob:https://user:secret@tiles.test/4d5e?token=pw",
+      "site/tileset.json?token=pw#secret",
+      "data:application/json;base64,eyJzZWNyZXQiOiJwdyJ9",
+      'data:application/json;charset=utf-8,{"secret":"pw"}',
+    ];
+    const { ids, reports } = table({ hash: () => 42n });
+    sources.forEach((source, index) => {
+      ids.register(
+        { index, generation: 1 },
+        index + 1,
+        1,
+        true,
+        { ...content("a.glb"), source: canonicalSource(source) },
+        undefined,
+      );
+      ids.idOfSlot(index + 1);
+    });
+    const keys = sources.map((_, i) => canonicalKey(ids.slot(i + 1)!.key));
+    expect(reports.length).toBeGreaterThan(0);
+    for (const text of [...keys, ...reports]) {
+      expect(text).not.toMatch(secret);
+    }
+  });
+
   it("keeps host labels by ID across a reload, over every other level", () => {
     const features: FeatureTable = {
       count: 2,
@@ -344,6 +451,14 @@ describe("the identity table", () => {
       class: ["damaged", "truck"],
       wikidata: ["Q42889"],
     });
+    // An empty set is "none": it hides the lower levels in its taxonomy.
+    ids.setLabels(truck, "class", []);
+    expect(ids.identify(truck)!.labels).toEqual({
+      class: [],
+      wikidata: ["Q42889"],
+    });
+    expect(ids.resolveSlots(Uint32Array.of(8)).semanticId[0]).toBe(0);
+    // Undefined removes the host's set: the feature's own shows again.
     ids.setLabels(truck, "class", undefined);
     expect(ids.identify(truck)!.labels.class).toEqual(["truck"]);
     expect(() => ids.setLabels(truck, "embedding:clip", ["x"])).toThrow(
@@ -396,5 +511,22 @@ describe("the identity table", () => {
     expect(() => ids.claimItemKey("truck-7", "site")).toThrow(/its own/);
     ids.releaseItemKey("site#2");
     expect(ids.claimItemKey(undefined, "site")).toBe("site#2");
+  });
+
+  it("keeps the host's ids apart from derived ordinals", () => {
+    const { ids } = table({});
+    // A host id that looks like an ordinal is freed by its own release.
+    expect(ids.claimItemKey("wall#12", "site")).toBe("wall#12");
+    ids.releaseItemKey("wall#12");
+    expect(ids.claimItemKey("wall#12", "site")).toBe("wall#12");
+    // Releasing a host's "a#2" frees it, not the second derived "a".
+    expect(ids.claimItemKey(undefined, "a")).toBe("a");
+    expect(ids.claimItemKey("a#2", "site")).toBe("a#2");
+    expect(ids.claimItemKey(undefined, "a")).toBe("a#3");
+    ids.releaseItemKey("a#2");
+    expect(() => ids.claimItemKey("a#3", "site")).toThrow(/its own/);
+    expect(ids.claimItemKey("a#2", "site")).toBe("a#2");
+    // A derived key the host's id holds is skipped, never shared.
+    expect(() => ids.claimItemKey("a", "site")).toThrow(/its own/);
   });
 });

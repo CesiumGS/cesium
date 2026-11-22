@@ -179,9 +179,14 @@ export interface Identity {
     options?: { readonly taxonomies?: readonly string[] },
   ): Identified | undefined;
   /**
-   * Sets the host's labels on one ID in one taxonomy (undefined removes
-   * them). They win over every other level, and are kept by ID: they come
-   * back when content that unloaded loads again.
+   * Sets the host's labels on one ID in one taxonomy. They win over every
+   * other level, and are kept by ID: they come back when content that
+   * unloaded loads again.
+   *
+   * An empty array is a label set of its own, "none": it hides the lower
+   * levels' labels in that taxonomy (`labels[taxonomy]` is `[]`, and the
+   * semantic image's index is 0). `undefined` removes the host's set, so the
+   * lower levels show again.
    */
   setLabels(
     id: StableId,
@@ -447,22 +452,115 @@ export function stableIdOf(key: StableKey): StableId {
 /** Hosts whose `v` query parameter is the asset's version, not a token. */
 const VERSIONED_HOSTS = /(^|\.)ion\.cesium\.com$|^assets\.cesium\.com$/i;
 
+/** A reference's scheme, if it has one (RFC 3986's `scheme ":"`). */
+const SCHEME = /^[a-z][a-z0-9+.-]*:/i;
+/** An authority's user information (`user:password@`) after `//`, up to the host. */
+const USER_INFO = /^([a-z][a-z0-9+.-]*:)?([\\/]{2})[^/\\?#]*@/i;
+/** The same in an opaque reference (`scheme:user:password@rest`), which has no `//`. */
+const OPAQUE_USER_INFO = /^([a-z][a-z0-9+.-]*:)[^/\\?#]*@/i;
+/** A data URI's media type, kept only when it is a plain `type/subtype`. */
+const MEDIA_TYPE = /^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/i;
+
+/** Percent-encoded text's bytes: each `%XX` its byte, the rest as UTF-8. */
+function percentBytes(text: string): Uint8Array {
+  if (!text.includes("%")) {
+    return ENCODER.encode(text);
+  }
+  const parts: Uint8Array[] = [];
+  let length = 0;
+  for (const [run, hex] of text.matchAll(/%([0-9a-f]{2})|[^%]+|%/gi)) {
+    const part =
+      hex !== undefined
+        ? Uint8Array.of(parseInt(hex, 16))
+        : ENCODER.encode(run);
+    parts.push(part);
+    length += part.length;
+  }
+  const bytes = new Uint8Array(length);
+  let at = 0;
+  for (const part of parts) {
+    bytes.set(part, at);
+    at += part.length;
+  }
+  return bytes;
+}
+
 /**
- * An asset's canonical reference, for its IDs: the URL without credentials,
- * query or fragment (session tokens never enter an ID). Cesium ion's assets
- * keep their `v` (the asset's version), so a new version of the data gets
- * new IDs. A reference that isn't an absolute URL loses its query and
- * fragment only.
+ * A data URI's media type and bytes: its payload after the first comma,
+ * percent-decoded, then decoded from base64 when it says so (RFC 2397).
+ * Base64 that doesn't decode counts as its percent-decoded bytes.
+ */
+function dataBytes(uri: string): { type: string; bytes: Uint8Array } {
+  const comma = uri.indexOf(",");
+  const header = comma < 0 ? uri.slice(5) : uri.slice(5, comma);
+  const params = header.split(";");
+  const type = MEDIA_TYPE.test(params[0]!) ? params[0]!.toLowerCase() : "";
+  const bytes = percentBytes(comma < 0 ? "" : uri.slice(comma + 1));
+  if (params.at(-1)?.toLowerCase() !== "base64") {
+    return { type, bytes };
+  }
+  let text = "";
+  for (let i = 0; i < bytes.length; i += 8192) {
+    text += String.fromCharCode(...bytes.subarray(i, i + 8192));
+  }
+  try {
+    const binary = atob(text.replace(/\s/g, ""));
+    return { type, bytes: Uint8Array.from(binary, (c) => c.charCodeAt(0)) };
+  } catch {
+    return { type, bytes };
+  }
+}
+
+/**
+ * An asset's canonical reference, for its IDs and every message that names
+ * a key: no credentials, query or fragment (session tokens never enter an
+ * ID).
+ *
+ * - An absolute URL keeps its scheme, host, port and path. Cesium ion's
+ *   assets keep their `v` (the asset's version), so a new version of the
+ *   data gets new IDs.
+ * - A protocol-relative reference (`//host/x`) keeps `//`, its host and path.
+ * - A blob URL keeps `blob:` and its origin's URL, canonical as above.
+ * - A relative or opaque reference loses its query and fragment, and any
+ *   user information (after `//`, or after an opaque reference's scheme).
+ * - A data URI becomes `data:<type>;murmur3-128=<32 hex digits>`: the
+ *   MurmurHash3_x86_128 of its decoded bytes, so the same bytes give the same
+ *   IDs and no payload is kept. Its media type stays only when it is a plain
+ *   `type/subtype`; its parameters go.
  */
 export function canonicalSource(reference: string): string {
-  let url: URL | undefined;
-  try {
-    url = new URL(reference);
-  } catch {
-    url = undefined;
+  if (/^data:/i.test(reference)) {
+    const { type, bytes } = dataBytes(reference);
+    const digest = murmur3x86x128(bytes)
+      .map((w) => w.toString(16).padStart(8, "0"))
+      .join("");
+    return `data:${type};murmur3-128=${digest}`;
   }
-  if (!url || url.protocol === "blob:" || url.protocol === "data:") {
-    return reference.replace(/[?#].*$/s, "");
+  const bare = reference.replace(/[?#].*$/s, "");
+  if (/^[\\/]{2}/.test(bare)) {
+    // Protocol-relative: the host and path as an absolute URL would give them.
+    try {
+      const url = new URL(bare, "https://base.invalid/");
+      return `//${url.host}${url.pathname}`;
+    } catch {
+      return bare.replace(USER_INFO, "$1$2");
+    }
+  }
+  let url: URL | undefined;
+  if (SCHEME.test(bare)) {
+    try {
+      url = new URL(reference);
+    } catch {
+      url = undefined;
+    }
+  }
+  if (url?.protocol === "blob:") {
+    // blob:<origin>/<uuid>: the origin's own URL, canonical.
+    return `blob:${canonicalSource(bare.slice(5))}`;
+  }
+  if (!url || url.host === "") {
+    // Relative or opaque: no query or fragment, no user information.
+    return bare.replace(USER_INFO, "$1$2").replace(OPAQUE_USER_INFO, "$1");
   }
   const version = VERSIONED_HOSTS.test(url.hostname)
     ? url.searchParams.get("v")
@@ -721,7 +819,8 @@ export class IdentityTable implements Identity {
   /** Collisions reported, by both keys' text: each once. */
   private readonly reported = new Set<string>();
   /** Item keys in use, for ordinals of an item without a host key. */
-  private readonly itemKeys = new Map<string, Set<number>>();
+  /** Every item key held now, the host's and the derived alike. */
+  private readonly itemKeys = new Set<string>();
 
   constructor(
     world: IdentityWorld,
@@ -750,44 +849,37 @@ export class IdentityTable implements Identity {
       if (typeof explicit !== "string" || explicit.length === 0) {
         throw new Error("an item's id is a non-empty string");
       }
-      const used = this.itemKeys.get(explicit);
-      if (used?.has(1)) {
+      if (this.itemKeys.has(explicit)) {
         throw new Error(
           `an item with the id "${explicit}" is drawn already: each item's id is its own.`,
         );
       }
-      this.itemKeys.set(explicit, new Set([...(used ?? []), 1]));
+      this.itemKeys.add(explicit);
       return explicit;
     }
-    const used = this.itemKeys.get(derived) ?? new Set<number>();
+    // The first ordinal whose key no item holds: a host's id that looks
+    // like an ordinal ("wall#2") is skipped, never shared.
+    const keyOf = (n: number) => (n === 1 ? derived : `${derived}#${n}`);
     let ordinal = 1;
-    while (used.has(ordinal)) {
+    while (this.itemKeys.has(keyOf(ordinal))) {
       ordinal++;
     }
-    used.add(ordinal);
-    this.itemKeys.set(derived, used);
-    if (ordinal === 1) {
-      return derived;
+    const key = keyOf(ordinal);
+    this.itemKeys.add(key);
+    if (ordinal > 1) {
+      this.world.report(
+        `a second item of ${derived} without an id: its IDs take the ordinal #${ordinal}, which depends on the order items were added. Give each item an id.`,
+      );
     }
-    this.world.report(
-      `a second item of ${derived} without an id: its IDs take the ordinal #${ordinal}, which depends on the order items were added. Give each item an id.`,
-    );
-    return `${derived}#${ordinal}`;
+    return key;
   }
 
-  /** The item key left (its item was removed). */
+  /**
+   * The item key left (its item was removed): exactly the key
+   * `claimItemKey` gave, whether the host's or derived with an ordinal.
+   */
   releaseItemKey(key: string): void {
-    const at = key.lastIndexOf("#");
-    const ordinal = at > 0 ? Number(key.slice(at + 1)) : NaN;
-    const [base, n] =
-      Number.isInteger(ordinal) && ordinal >= 2
-        ? [key.slice(0, at), ordinal]
-        : [key, 1];
-    const used = this.itemKeys.get(base);
-    used?.delete(n);
-    if (used?.size === 0) {
-      this.itemKeys.delete(base);
-    }
+    this.itemKeys.delete(key);
   }
 
   /** A draw was added with `count` slots from `first`. */
@@ -846,6 +938,30 @@ export class IdentityTable implements Identity {
       if (slots.length === 0) {
         this.index.delete(low);
       }
+      if (this.collided.has(ids[local]!)) {
+        this.recheckCollision(ids[local]!);
+      }
+    }
+  }
+
+  /**
+   * A collided ID after one of its draws left: still a collision while two
+   * different keys hash to it in the draws loaded, else cleared, so
+   * `identify` answers for the key that is left.
+   */
+  private recheckCollision(id: StableId): void {
+    const texts = new Set<string>();
+    for (const slot of this.index.get(Number(id & 0xffffffffn)) ?? []) {
+      const entry = this.at(slot);
+      if (entry?.ids && entry.ids[slot - entry.first] === id) {
+        texts.add(canonicalKey(this.keyOf(entry, slot - entry.first)));
+      }
+    }
+    const [a, b] = [...texts];
+    if (a !== undefined && b !== undefined) {
+      this.collided.set(id, [a, b]);
+    } else {
+      this.collided.delete(id);
     }
   }
 
@@ -941,7 +1057,8 @@ export class IdentityTable implements Identity {
       if (!this.collided.has(id)) {
         this.collided.set(id, [otherText, text]);
       }
-      const pair = `${otherText}\u0000${text}`;
+      // One collision, whichever key was seen first: reported once.
+      const pair = [otherText, text].sort().join("\u0000");
       if (!this.reported.has(pair)) {
         this.reported.add(pair);
         this.world.report(
