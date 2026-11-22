@@ -45,12 +45,13 @@ const DEPENDENCY_FIELDS = [
 
 /**
  * What changed between two manifests beyond what `changeset version`
- * writes: its `version` (unless `version` is false) and the ranges of
- * existing dependencies on `siblings`. Returns the fields, or
+ * writes: its `version` (unless `version` is false) and an existing
+ * dependency on a sibling, in any dependency field, moved to exactly that
+ * sibling's version at the head. Returns the fields, or
  * `<field>.<dependency>` for a dependency, that changed otherwise.
  * @param {Record<string, unknown>} before
  * @param {Record<string, unknown>} after
- * @param {Set<string>} siblings
+ * @param {Map<string, string>} siblings each sibling's name and its version at the head
  * @param {{ version?: boolean }} [options]
  */
 export function manifestChanges(before, after, siblings, options = {}) {
@@ -67,7 +68,7 @@ export function manifestChanges(before, after, siblings, options = {}) {
       const deps = [...new Set([...Object.keys(a), ...Object.keys(b)])];
       for (const dep of deps) {
         const added = !(dep in a) || !(dep in b);
-        if (added || (a[dep] !== b[dep] && !siblings.has(dep))) {
+        if (added || (a[dep] !== b[dep] && b[dep] !== siblings.get(dep))) {
           changes.push(`${key}.${dep}`);
         }
       }
@@ -132,9 +133,7 @@ export function releaseRecordProblems(changed, base, head) {
   }
   const before = new Map(base.packages.map((p) => [p.folder, p.manifest]));
   const after = new Map(head.packages.map((p) => [p.folder, p.manifest]));
-  const siblings = new Set(
-    [...before.values(), ...after.values()].map((manifest) => manifest.name),
-  );
+  const siblings = new Map([...after.values()].map((m) => [m.name, m.version]));
   for (const folder of [...new Set([...before.keys(), ...after.keys()])].sort()) {
     const a = before.get(folder);
     const b = after.get(folder);

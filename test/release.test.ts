@@ -632,7 +632,7 @@ describe("the changeset rule's check", () => {
     expect(sneaky).toMatchObject({ ok: false, release: false });
   });
   it("tells what changeset version writes in a manifest from anything else", () => {
-    const siblings = new Set(["@x/core"]);
+    const siblings = new Map([["@x/core", "1.1.0"]]);
     expect(
       manifestChanges(
         { version: "1.0.0", dependencies: { "@x/core": "1.0.0", a: "1" } },
@@ -648,6 +648,16 @@ describe("the changeset rule's check", () => {
         { version: false },
       ),
     ).toEqual(["dependencies.a", "files"]);
+    // A sibling's range moves only to that sibling's exact new version, in
+    // every dependency field, devDependencies included.
+    expect(
+      manifestChanges(
+        { devDependencies: { "@x/core": "1.0.0" } },
+        { devDependencies: { "@x/core": "^1.0.0" } },
+        siblings,
+        { version: false },
+      ),
+    ).toEqual(["devDependencies.@x/core"]);
   });
 });
 

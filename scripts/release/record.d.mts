@@ -20,7 +20,7 @@ export function isChangeset(path: string): boolean;
 export function manifestChanges(
   before: Record<string, unknown> | undefined,
   after: Record<string, unknown> | undefined,
-  siblings: Set<string>,
+  siblings: Map<string, string>,
   options?: { version?: boolean },
 ): string[];
 
