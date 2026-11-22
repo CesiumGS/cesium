@@ -2,9 +2,10 @@
 id: CS-900
 title: "Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-22
 project: CS-191
+claimed_by: orch-11-CS-900
 ---
 
 > **Committed by the owner (2026-11-22)**, through CS-802's answer B. Source: `docs/design/simready-and-usd.md` (CS-833). The owner also asked for full OpenUSD to be included, for measurement only.
