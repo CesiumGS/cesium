@@ -1021,6 +1021,8 @@ ui	zoneOf	function	-
 @cesium/core	Engine	class	-
 @cesium/core	EngineError	interface	-
 @cesium/core	EngineErrorKind	type	-
+@cesium/core	EngineErrorListener	type	-
+@cesium/core	EngineErrorLog	interface	-
 @cesium/core	EngineErrors	class	-
 @cesium/core	EngineOptions	interface	-
 @cesium/core	EntityInfo	interface	-
