@@ -18,22 +18,59 @@
 // so they must sit in a lazy chunk. The check reads each chunk's modules,
 // so it needs no marker in the code.
 //
+// Two more pages guard the packages' `sideEffects` (the package map's call):
+// a page that uses only `@cesium/time`, and one that uses only
+// `@cesium/frames`, must load none of core's renderer (its render, gpu,
+// shaders, streaming, globe and webgl2 modules, the engine, the world and
+// the view) with the page.
+//
+// Every page is built against the packages as they publish (CS-612): their
+// `exports` without the `@cesium/source` condition, so the packages' dist/,
+// which `npm run build` writes first. A wrong `sideEffects` shows here, as
+// it would in an application.
+//
 //   node scripts/checkBundle.mjs [--keep]
 //
 // `--keep` leaves the build in the temporary directory and prints where.
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
-import { build, defaultClientConditions } from "vite";
-import { basisTranscoderEsm } from "../basisTranscoderEsm.ts";
-import { skyPackGuard } from "./vitePluginSkyPack.ts";
+import { build } from "vite";
+import { basisTranscoderEsm } from "./build/basisTranscoderEsm.ts";
+import { skyPackGuard } from "./build/vitePluginSkyPack.ts";
 import { sp } from "../packages/frames/src/time/erfa/s06Table.ts";
 import { xyp } from "../packages/frames/src/time/erfa/xy06Table.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const keep = process.argv.includes("--keep");
+
+/**
+ * The built file a package's entry publishes (its `exports` `default`), as
+ * an absolute path: what an application's bundler resolves the name to.
+ * `file` names a module inside the package's dist/ instead of an entry.
+ */
+function published(name, file) {
+  const dir = join(root, "packages", name.replace(/^@cesium\//, ""));
+  const manifest = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
+  const target = file ? `./dist/${file}` : manifest.exports?.["."]?.default;
+  const path = target && join(dir, target);
+  if (!path || !existsSync(path)) {
+    console.error(
+      `checkBundle: no ${path ?? name}; run \`npm run build\` first (the pages build against the packages' dist/)`,
+    );
+    process.exit(2);
+  }
+  return path;
+}
 
 /**
  * What must not be in the main chunk. A series is found by its first two
@@ -75,11 +112,23 @@ function hasRun(numbers, values) {
 /** naga-wasm's modules, a dev dependency that no build may include. */
 const NAGA_MODULES = /[\\/]naga-wasm[\\/]/;
 
-/** The WebGL 2 tier's modules (src/webgl2/): loaded only by the engine's device choice. */
-const WEBGL2_MODULES = /[\\/]src[\\/]webgl2[\\/]/;
+/** The WebGL 2 tier's modules (core's webgl2/): loaded only by the engine's device choice. */
+const WEBGL2_MODULES = /[\\/]core[\\/]dist[\\/]webgl2[\\/]/;
 
-/** The Slang compiler's modules (a module id may carry a `?worker&url` query). */
-const SLANG_MODULES = /[\\/]src[\\/]scene[\\/]slang(?:Worker)?\.ts(?:\?|$)/;
+/** The Slang compiler's modules (a module id may carry a query). */
+const SLANG_MODULES =
+  /[\\/]core[\\/]dist[\\/]scene[\\/]slang(?:Worker)?\.js(?:\?|$)/;
+
+/** Cesium IR's modules (core's ir/). */
+const IR_MODULES = /[\\/]core[\\/]dist[\\/]ir[\\/]/;
+
+/**
+ * Core's renderer: what a time-only or frames-only page must not load. Its
+ * folders, and the engine, the world and the view (scene/ also holds plain
+ * definitions, such as Body, that frames reach).
+ */
+const RENDERER_MODULES =
+  /[\\/]core[\\/]dist[\\/](?:(?:render|gpu|shaders|streaming|globe|webgl2)[\\/]|scene[\\/](?:Engine|World|View)\.js$)/;
 
 /**
  * Builds a page that runs `code` as its only entry (`name`) and returns
@@ -96,9 +145,8 @@ async function buildPage(work, name, code, logLevel = "error") {
     base: "./",
     publicDir: false,
     logLevel,
-    // 2.0's packages resolve to their sources (the @cesium/source export
-    // condition, which a release strips), so nothing needs a build first.
-    resolve: { conditions: ["@cesium/source", ...defaultClientConditions] },
+    // The packages as they publish: no @cesium/source condition, so each
+    // name resolves to its dist/ (Vite's default conditions).
     plugins: [basisTranscoderEsm(), skyPackGuard()],
     build: {
       outDir,
@@ -150,7 +198,7 @@ try {
   const { main, eager, lazy, outDir } = await buildPage(
     work,
     "globeOnlyViewer",
-    `import { Viewer } from ${JSON.stringify(join(root, "packages/ui/src/index.ts"))};\n` +
+    `import { Viewer } from ${JSON.stringify(published("@cesium/ui"))};\n` +
       `void Viewer.create(document.body);\n`,
   );
   const kb = (code) => (Buffer.byteLength(code) / 1024).toFixed(1);
@@ -179,8 +227,8 @@ try {
   const styled = await buildPage(
     work,
     "styledViewer",
-    `import { Viewer } from ${JSON.stringify(join(root, "packages/ui/src/index.ts"))};\n` +
-      `import { CustomShader, FeatureStyle } from ${JSON.stringify(join(root, "packages/core/src/index.ts"))};\n` +
+    `import { Viewer } from ${JSON.stringify(published("@cesium/ui"))};\n` +
+      `import { CustomShader, FeatureStyle } from ${JSON.stringify(published("@cesium/core"))};\n` +
       `const style = new FeatureStyle({ show: "\${name} !== 'Main St'", color: "color('red')" });\n` +
       `void Viewer.create(document.body);\n` +
       `void CustomShader.fromSlang("", { label: String(style.properties) });\n`,
@@ -193,7 +241,7 @@ try {
   const slangLazy = slangIn(styled.lazy);
   if (slangEager.length > 0) {
     found.push(
-      `the Slang compiler (src/scene/slang.ts) in ${slangEager.map((c) => c.fileName).join(", ")}, in what an app that styles 3D Tiles loads with the page`,
+      `the Slang compiler (core's scene/slang.js) in ${slangEager.map((c) => c.fileName).join(", ")}, in what an app that styles 3D Tiles loads with the page`,
     );
   } else if (slangLazy.length === 0) {
     found.push(
@@ -209,7 +257,7 @@ try {
   // in a chunk of their own, not in what loads with the page.
   const irIn = (chunks) =>
     chunks.filter((c) =>
-      Object.keys(c.modules).some((id) => /[\\/]src[\\/]ir[\\/]/.test(id)),
+      Object.keys(c.modules).some((id) => IR_MODULES.test(id)),
     );
   const irEager = irIn(eager);
   const irLazy = irIn(lazy);
@@ -275,7 +323,10 @@ try {
   const ir = await buildPage(
     work,
     "irCore",
-    `import { Builder, evaluate } from ${JSON.stringify(join(root, "packages/core/src/ir/index.ts"))};\n` +
+    // Not an entry of the package (src/ir/index.ts isn't built): its two
+    // modules, as dist/ has them.
+    `import { Builder } from ${JSON.stringify(published("@cesium/core", "ir/builder.js"))};\n` +
+      `import { evaluate } from ${JSON.stringify(published("@cesium/core", "ir/evaluate.js"))};\n` +
       `const b = new Builder();\n` +
       `const x = b.input("x", "float", "feature");\n` +
       `document.title = String(evaluate(b.program({ y: b.op("math/sin", [x]) }), { x: 1 }).y);\n`,
@@ -283,10 +334,10 @@ try {
   const irModules = Object.keys(ir.main.modules).filter(
     (id) => !id.includes("\0"),
   );
-  const irHere = irModules.filter((id) => /[\\/]src[\\/]ir[\\/]/.test(id));
+  const irHere = irModules.filter((id) => IR_MODULES.test(id));
   // The page's own entry file sits in the work directory.
   const irOutside = irModules.filter(
-    (id) => !/[\\/]src[\\/]ir[\\/]/.test(id) && !id.endsWith("irCore.js"),
+    (id) => !IR_MODULES.test(id) && !id.endsWith("irCore.js"),
   );
   if (irHere.length === 0) {
     found.push("no Cesium IR core (src/ir) in the main chunk of its page");
@@ -346,6 +397,43 @@ try {
     console.log(
       `checkBundle: the WebGL 2 tier is in ${webgl2Lazy.map((c) => `${c.fileName} (${kb(c.code)} KB)`).join(", ")}, loaded on demand; not in the main chunk or its static imports`,
     );
+  }
+  // A page that uses only @cesium/time, and one that uses only
+  // @cesium/frames: both reach core (time and frames depend on it), and an
+  // accurate `sideEffects` is what keeps its renderer out of the page.
+  for (const [name, code] of [
+    [
+      "timeOnly",
+      `import { Clock, Instant, sunPosition } from ${JSON.stringify(published("@cesium/time"))};\n` +
+        `const clock = new Clock({ mode: "paused" });\n` +
+        `console.log(clock, Instant, sunPosition);\n`,
+    ],
+    [
+      "framesOnly",
+      `import { createFrameCatalog } from ${JSON.stringify(published("@cesium/frames"))};\n` +
+        `console.log(createFrameCatalog());\n`,
+    ],
+  ]) {
+    const page = await buildPage(work, name, code);
+    const renderer = page.eager.flatMap((c) =>
+      Object.keys(c.modules).filter((id) => RENDERER_MODULES.test(id)),
+    );
+    if (renderer.length > 0) {
+      found.push(
+        `core's renderer in the ${name} page (${renderer
+          .slice(0, 5)
+          .map((id) => id.replace(/^.*[\\/]core[\\/]dist[\\/]/, "core/"))
+          .join(", ")}${renderer.length > 5 ? `, and ${renderer.length - 5} more` : ""})`,
+      );
+    } else {
+      const loads = page.eager.reduce(
+        (n, c) => n + Buffer.byteLength(c.code),
+        0,
+      );
+      console.log(
+        `checkBundle: the ${name} page loads ${(loads / 1024).toFixed(1)} KB with it and none of core's renderer`,
+      );
+    }
   }
   if (found.length > 0) {
     console.error(
