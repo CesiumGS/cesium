@@ -39,7 +39,7 @@ CS-900's Dyno run `2026-11-22T10-56-32-200Z-apple-metal-3`, over the six SimRead
   | UsdPhysics | 15 of 16 (14 of 14) | 13 of 16 (12 of 14) | 16 of 16 |
   | All | 79 of 82 (44 of 44) | 67 of 82 (38 of 44) | 82 of 82 |
 
-- OpenUSD's start time includes copying the layers into its in-memory file system, which the other two don't do.
+- OpenUSD's compose time includes copying the layers into its in-memory file system, which the other two don't do.
 - LightUSD's "7.1 MB" was a deprecated legacy `.wasm` in its npm package, so its size is settled.
 
 ## Options and recommendation
