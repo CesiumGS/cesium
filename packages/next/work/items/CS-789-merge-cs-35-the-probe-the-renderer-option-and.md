@@ -32,3 +32,5 @@ If unanswered by 2026-11-22T12:00:00Z: Hold it.
 ## Answer
 
 Recorded in the front matter once answered.
+
+**Changed by the owner, 2026-11-21.** The owner replaced the per-merge cold-start gate (see CS-715's note). The chosen option said, in the owner's words: "release the four held engine merges once their checks pass". So this merge waits only for its correctness gates after replay, not for a quiet plain cold-start check. CS-794's own A/B, and tonight's full Dyno run, are evidence. They aren't gates.
