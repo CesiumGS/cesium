@@ -494,15 +494,15 @@ CS-608 Extension users have validated 2.0 with their own data [Planned], under C
 
 CS-614 The branch is a clean, modern 2.0 build [Planned], under CS-609 A clean 2.0 branch and a modern build
   outcome: The branch holds 2.0 alone, built, tested and released by a modern pipeline.
-  constraints: 0 of 4 done
-  unmet: not linked to a clause yet (open: CS-611, CS-612, CS-613, CS-610; check not passed)
-  to shape: done_when; check; link CS-611, CS-612, CS-613, CS-610 to a clause
+  constraints: 0 of 5 done
+  unmet: not linked to a clause yet (open: CS-611, CS-612, CS-613, CS-610, CS-835; check not passed)
+  to shape: done_when; check; link CS-611, CS-612, CS-613, CS-610, CS-835 to a clause
 
 CS-621 The core installs alone, and the whole engine installs from one umbrella package [Planned], under CS-615 Packaging and package names
   outcome: A host installs only the core, or the whole engine through `cesium@2`, with every package at one version.
-  constraints: 1 of 8 done
-  unmet: not linked to a clause yet (open: CS-616, CS-617, CS-618, CS-363, CS-310, CS-835, CS-882; check not passed)
-  to shape: done_when; check; link CS-616, CS-617, CS-618, CS-363, CS-310, CS-834, CS-835, CS-882 to a clause
+  constraints: 1 of 7 done
+  unmet: not linked to a clause yet (open: CS-616, CS-617, CS-618, CS-363, CS-310, CS-882; check not passed)
+  to shape: done_when; check; link CS-616, CS-617, CS-618, CS-363, CS-310, CS-834, CS-882 to a clause
 
 CS-627 A 1.x app moves to 2.0 with the kit and is shown to match [Planned], under CS-622 The agent-first migration kit
   outcome: An agent moves a 1.x app with the kit, and the parity harness shows the result matches.

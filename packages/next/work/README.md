@@ -441,14 +441,14 @@ No milestone
 
 ### The work tracker
 
-[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 42 of 51 done, 3 ready, 4 blocked, 2 proposed, 1 dropped. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
+[CS-18](./projects/CS-18-the-work-tracker.md), Planned, led by owner: 43 of 52 done, 1 in progress, 2 ready, 4 blocked, 2 proposed, 1 dropped. Plan: [2026-11-13-work-tracker.md](../../../docs/superpowers/plans/2026-11-13-work-tracker.md).
 
 Milestone: Initiatives and release gates are settled ([CS-506](./milestones/CS-506-initiatives-and-release-gates-are-settled.md), Planned)
 
 - [x] [CS-388](./items/CS-388-do-frames-and-earth-to-moon-the-sky-b-reps-and.md) decision: Do frames and Earth to Moon, the sky, B-reps and the capabilities want initiatives of their own?. Done.
 - [x] [CS-455](./items/CS-455-which-release-milestones-should-the-tracker.md) decision: Which release items should the tracker have: alphas, betas, release candidates, 2.0.0?. Done.
 - [ ] [CS-679](./items/CS-679-stale-records-the-api-map-s-entity-and-labels.md) Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal. Needs nothing.
-- [ ] [CS-680](./items/CS-680-triage-the-open-items-that-fit-no-release.md) Triage the open items that fit no release. Needs CS-686.
+- [~] [CS-680](./items/CS-680-triage-the-open-items-that-fit-no-release.md) Triage the open items that fit no release. Needs CS-686. Claimed by orch-11-CS-680.
 
 Milestone: The tracker runs on human-in-the-lead ([CS-524](./milestones/CS-524-the-tracker-runs-on-human-in-the-lead.md), Done)
 
@@ -489,9 +489,9 @@ No milestone
 - [x] [CS-527](./items/CS-527-which-milestones-does-2-0-0-beta-1-need.md) decision: Which milestones does 2.0.0-beta.1 need?. Done.
 - [x] [CS-528](./items/CS-528-which-milestones-does-2-0-0-rc-1-need.md) decision: Which milestones does 2.0.0-rc.1 need?. Done.
 - [x] [CS-529](./items/CS-529-which-milestones-does-2-0-0-need.md) decision: Which milestones does 2.0.0 need?. Done.
-- [ ] [CS-530](./items/CS-530-release-2-0-0-alpha-1.md) Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561, CS-751 (Dyno as the development harness), CS-819 (public API reviews), CS-657 (Vector drawing and the styling language), CS-857 (B-reps and geometry queries), CS-858 (Editing) and CS-859 (Dyno as the development harness).
+- [ ] [CS-530](./items/CS-530-release-2-0-0-alpha-1.md) Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561, CS-751 (Dyno as the development harness), CS-819 (public API reviews), CS-657 (Vector drawing and the styling language), CS-857 (B-reps and geometry queries), CS-858 (Editing), CS-859 (Dyno as the development harness) and CS-614 (A clean 2.0 branch and a modern build).
 - [ ] [CS-531](./items/CS-531-release-2-0-0-beta-1.md) Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-668 (Content sources and formats), CS-675 (public API reviews), CS-463 (job system's ports), CS-461 (job system's ports), CS-505 (Follow-ups for other teams), CS-493 (Sky, light and atmosphere), CS-471 (Level-of-detail transitions), CS-423 (worker-mode façade), CS-465 (job system's ports), CS-474 (transform graph), CS-495 (B-reps and geometry queries), CS-467 (Engine profiles), CS-534 (Infrastructure and geoscience capabilities), CS-504 (Budgeted selection and memory) and CS-830 (Sandcastle as 2.0's gallery).
-- [ ] [CS-532](./items/CS-532-release-2-0-0-rc-1.md) Release 2.0.0-rc.1. Needs CS-528, CS-531, CS-416 (WebGL 2 renderer), CS-423 (worker-mode façade), CS-461 (job system's ports), CS-463 (job system's ports), CS-465 (job system's ports), CS-467 (Engine profiles), CS-471 (Level-of-detail transitions), CS-472 (Level-of-detail transitions), CS-474 (transform graph), CS-484 (Benchmarks, parity and image regression), CS-503 (GPU-driven rendering and capacities), CS-504 (Budgeted selection and memory), CS-511 (Benchmarks, parity and image regression), CS-491 (Sky, light and atmosphere), CS-502 (GPU-driven rendering and capacities), CS-481 (Dyno as the development harness), CS-482 (Benchmarks, parity and image regression), CS-478 (Dyno as the development harness), CS-479 (Dyno as the development harness), CS-480 (Dyno as the development harness), CS-483 (Benchmarks, parity and image regression), CS-470 (Refinement and convergence), CS-607 (Trust and evals), CS-614 (A clean 2.0 branch and a modern build), CS-627 (agent-first migration kit), CS-636 (Sandcastle as 2.0's gallery) and CS-695 (Packaging and package names).
+- [ ] [CS-532](./items/CS-532-release-2-0-0-rc-1.md) Release 2.0.0-rc.1. Needs CS-528, CS-531, CS-416 (WebGL 2 renderer), CS-423 (worker-mode façade), CS-461 (job system's ports), CS-463 (job system's ports), CS-465 (job system's ports), CS-467 (Engine profiles), CS-471 (Level-of-detail transitions), CS-472 (Level-of-detail transitions), CS-474 (transform graph), CS-484 (Benchmarks, parity and image regression), CS-503 (GPU-driven rendering and capacities), CS-504 (Budgeted selection and memory), CS-511 (Benchmarks, parity and image regression), CS-491 (Sky, light and atmosphere), CS-502 (GPU-driven rendering and capacities), CS-481 (Dyno as the development harness), CS-482 (Benchmarks, parity and image regression), CS-478 (Dyno as the development harness), CS-479 (Dyno as the development harness), CS-480 (Dyno as the development harness), CS-483 (Benchmarks, parity and image regression), CS-470 (Refinement and convergence), CS-607 (Trust and evals), CS-627 (agent-first migration kit), CS-636 (Sandcastle as 2.0's gallery) and CS-695 (Packaging and package names).
 - [ ] [CS-533](./items/CS-533-release-2-0-0.md) Release 2.0.0. Needs CS-529, CS-532, CS-608 (Trust and evals), CS-678, CS-428 (Earth to Moon (frames 5c to 5h)), CS-429 (Earth to Moon (frames 5c to 5h)), CS-477 (Live MaterialX graph editing), CS-496 (B-reps and geometry queries), CS-674 (Content sources and formats), CS-676 (B-reps and geometry queries) and CS-535 (Ray queries and path tracing).
 - [x] [CS-536](./items/CS-536-approve-a-store-device.md) decision: Approve a store device. Done.
 - [x] [CS-564](./items/CS-564-how-cs-545-s-branch-reaches-main-without-a.md) decision: How CS-545's branch reaches main without a hitld dispatch. Done.
@@ -509,6 +509,7 @@ No milestone
 - [x] [CS-704](./items/CS-704-dyno-s-board-reads-hitld-s-ledger-incrementally.md) The Work board reads in under a second: incremental ledger reads, cached git scans, and a light count for the rail. Done.
 - [?] [CS-705](./items/CS-705-a-test-fails-when-a-class-used-on-the-work-page.md) A test fails when a class used on the Work page has no CSS rule. Proposed. Needs nothing.
 - [x] [CS-710](./items/CS-710-merge-cs-704-the-work-board-read-in-under-a.md) decision: Merge CS-704, the Work board read in under a second. Done.
+- [x] [CS-885](./items/CS-885-merge-cs-680-s-proposal-headers-now-before-the.md) decision: Merge CS-680's proposal headers now, before the owner's batch review. Done.
 
 ### Follow-ups for other teams
 
@@ -1224,13 +1225,13 @@ Milestone: Extension users have validated 2.0 with their own data ([CS-608](./mi
 Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614-the-branch-is-a-clean-modern-2-0-build.md), Planned)
 
 - [ ] [CS-610](./items/CS-610-the-2-0-repository-s-design-build-system-ci-cd.md) The 2.0 repository's design: build system, CI/CD and release pipeline. Needs nothing.
-- [ ] [CS-611](./items/CS-611-the-1-x-code-is-replaced-in-the-branch.md) The 1.x code is replaced in the branch. Needs CS-610.
+- [ ] [CS-611](./items/CS-611-the-1-x-code-is-replaced-in-the-branch.md) The 1.x code is replaced in the branch. Needs CS-610 and CS-835 (Packaging and package names).
 - [ ] [CS-612](./items/CS-612-the-new-build-system.md) The new build system. Needs CS-610.
 - [ ] [CS-613](./items/CS-613-ci-cd-on-the-new-build-with-the-release-pipeline.md) CI/CD on the new build, with the release pipeline. Needs CS-612.
 
 ### Packaging and package names
 
-[CS-615](./projects/CS-615-packaging-and-package-names.md), Planned, led by owner: 5 of 11 done, 2 ready, 4 blocked.
+[CS-615](./projects/CS-615-packaging-and-package-names.md), Planned, led by owner: 5 of 11 done, 1 ready, 5 blocked.
 
 Milestone: The core installs alone, and the whole engine installs from one umbrella package ([CS-621](./milestones/CS-621-the-core-installs-alone-and-the-whole-engine.md), Planned)
 
@@ -1238,7 +1239,6 @@ Milestone: The core installs alone, and the whole engine installs from one umbre
 - [ ] [CS-617](./items/CS-617-2-0-splits-into-scoped-packages-released-in.md) 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella. Needs CS-616, CS-310 (B-reps and geometry queries), CS-834 and CS-835.
 - [ ] [CS-618](./items/CS-618-an-embedding-app-installs-the-core-alone.md) An embedding app installs the core alone, checked by an install and bundle test. Needs CS-617.
 - [x] [CS-834](./items/CS-834-a-map-of-2-0-s-packages-and-seams-capability.md) A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout. Done.
-- [ ] [CS-835](./items/CS-835-2-0-s-folders-become-its-packages-the-move-to.md) 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json. Needs CS-834, CS-809 (Content sources and formats), CS-814 (public API reviews) and CS-552 (Content sources and formats).
 - [ ] [CS-882](./items/CS-882-proj-sits-behind-a-coordinate-operations-seam.md) PROJ sits behind a coordinate-operations seam: @cesium/crs-proj splits from @cesium/crs. Needs CS-835 and CS-808 (Content sources and formats).
 
 Milestone: Every package has its API reference ([CS-695](./milestones/CS-695-every-package-has-its-api-reference.md), Planned)
@@ -1247,6 +1247,7 @@ Milestone: Every package has its API reference ([CS-695](./milestones/CS-695-eve
 
 No milestone
 
+- [ ] [CS-835](./items/CS-835-2-0-s-folders-become-its-packages-the-move-to.md) 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json. Needs CS-834, CS-809 (Content sources and formats), CS-814 (public API reviews), CS-552 (Content sources and formats) and CS-610 (A clean 2.0 branch and a modern build).
 - [x] [CS-867](./items/CS-867-merge-cs-834-the-map-of-2-0-s-packages-and-seams.md) decision: Merge CS-834, the map of 2.0's packages and seams. Done.
 - [x] [CS-880](./items/CS-880-cs-834-d2-how-does-1-x-s-cesium-core-0-1-1-give.md) decision: CS-834 D2: how does 1.x's @cesium/core 0.1.1 give way to 2.0's core?. Done.
 - [x] [CS-881](./items/CS-881-cs-834-d3-what-prefix-do-catalog-adapters-use.md) decision: CS-834 D3: what prefix do catalog adapters use?. Done.

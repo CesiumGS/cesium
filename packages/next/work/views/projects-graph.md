@@ -14,7 +14,7 @@ graph LR
   CS_15["Refinement and convergence<br/>0 of 13 done"]
   CS_16["Streaming robustness<br/>0 of 22 done"]
   CS_17["transform graph<br/>6 of 19 done"]
-  CS_18["work tracker<br/>42 of 51 done"]
+  CS_18["work tracker<br/>43 of 52 done"]
   CS_19["Follow-ups for other teams<br/>0 of 12 done"]
   CS_188["Earth to Moon (frames 5c to 5h)<br/>3 of 43 done"]
   CS_189["Frames and engineering coordinates follow-ups<br/>1 of 22 done"]
@@ -81,6 +81,7 @@ graph LR
   CS_190 -->|4| CS_18
   CS_193 -->|5| CS_18
   CS_579 -->|1| CS_18
+  CS_609 -->|1| CS_18
   CS_10 -->|3| CS_18
   CS_13 -->|5| CS_18
   CS_12 -->|9| CS_18
@@ -100,7 +101,6 @@ graph LR
   CS_194 -->|2| CS_18
   CS_195 -->|4| CS_18
   CS_198 -->|2| CS_18
-  CS_609 -->|1| CS_18
   CS_622 -->|1| CS_18
   CS_197 -->|1| CS_18
   CS_190 -->|2| CS_191
@@ -109,6 +109,7 @@ graph LR
   CS_188 -->|1| CS_584
   CS_196 -->|1| CS_584
   CS_195 -->|1| CS_596
+  CS_615 -->|1| CS_609
   CS_193 -->|1| CS_615
   CS_199 -->|1| CS_628
   CS_622 -->|1| CS_628
@@ -122,6 +123,7 @@ graph LR
   CS_191 -->|7| CS_628
   CS_584 -->|1| CS_628
   CS_437 -->|4| CS_628
+  CS_609 -->|1| CS_615
   CS_191 -->|5| CS_579
   CS_437 -->|1| CS_579
   CS_628 -->|1| CS_579

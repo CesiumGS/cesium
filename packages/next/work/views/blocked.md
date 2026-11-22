@@ -507,6 +507,7 @@ CS-18 The work tracker
         CS-857 Subdivision surfaces have a measured path: OpenSubdiv in WebAssembly or a TypeScript patch conversion
         CS-858 Meshes can be edited: a sample drags a mesh's vertices, edges and faces through the edit layer
         CS-859 The engine starts fast: pipelines compile in one round and optional subsystems load lazily
+        CS-614 The branch is a clean, modern 2.0 build
   CS-531  Release 2.0.0-beta.1
       ← CS-530 Release 2.0.0-alpha.1
         CS-415 WebGL 2 draws models, tiles and the globe
@@ -584,7 +585,6 @@ CS-18 The work tracker
         CS-483 Image regression and parity are checked in CI
         CS-470 Every wait in the repository uses convergence
         CS-607 Every module has a trust report the 1.x team can check
-        CS-614 The branch is a clean, modern 2.0 build
         CS-627 A 1.x app moves to 2.0 with the kit and is shown to match
         CS-636 1.x's Sandcastle examples run on the new engine
         CS-695 Every package has its API reference
@@ -645,6 +645,7 @@ CS-596 Trust and evals
 CS-609 A clean 2.0 branch and a modern build
   CS-611  The 1.x code is replaced in the branch
       ← CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline
+        CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
   CS-612  The new build system
       ← CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline
   CS-613  CI/CD on the new build, with the release pipeline
@@ -659,6 +660,8 @@ CS-615 Packaging and package names
       ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
   CS-619  The API reference for every package
       ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
+  CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
+      ← CS-610 The 2.0 repository's design: build system, CI/CD and release pipeline
   CS-882  PROJ sits behind a coordinate-operations seam: @cesium/crs-proj splits from @cesium/crs
       ← CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
         CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
@@ -729,5 +732,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-231 blocked
+232 blocked
 ```

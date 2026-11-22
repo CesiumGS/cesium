@@ -294,6 +294,7 @@ graph LR
     CS_704["CS-704 The Work board reads in under a second: incremental ledger read"]:::done
     CS_705["CS-705 A test fails when a class used on the Work page has no CSS rule"]:::proposed
     CS_710["CS-710 Merge CS-704, the Work board read in under a second"]:::done
+    CS_885["CS-885 Merge CS-680's proposal headers now, before the owner's batch r"]:::done
   end
   subgraph CS_19["Follow-ups for other teams"]
     CS_174["CS-174 1.x computes NaN for a root without the top-level 'geometricErr"]:::external
@@ -834,6 +835,7 @@ graph LR
   CS_857["CS-857 Subdivision surfaces have a measured path: OpenSubdiv in WebAss"]:::open
   CS_858["CS-858 Meshes can be edited: a sample drags a mesh's vertices, edges a"]:::open
   CS_859["CS-859 The engine starts fast: pipelines compile in one round and opti"]:::open
+  CS_614["CS-614 The branch is a clean, modern 2.0 build"]:::open
   CS_415["CS-415 WebGL 2 draws models, tiles and the globe"]:::open
   CS_417["CS-417 Transforms and styles compile through Cesium IR"]:::open
   CS_418["CS-418 Any shader language reaches both renderers"]:::open
@@ -899,7 +901,6 @@ graph LR
   CS_483["CS-483 Image regression and parity are checked in CI"]:::open
   CS_470["CS-470 Every wait in the repository uses convergence"]:::open
   CS_607["CS-607 Every module has a trust report the 1.x team can check"]:::open
-  CS_614["CS-614 The branch is a clean, modern 2.0 build"]:::open
   CS_627["CS-627 A 1.x app moves to 2.0 with the kit and is shown to match"]:::open
   CS_636["CS-636 1.x's Sandcastle examples run on the new engine"]:::open
   CS_695["CS-695 Every package has its API reference"]:::open
@@ -1318,6 +1319,7 @@ graph LR
   CS_857 --> CS_530
   CS_858 --> CS_530
   CS_859 --> CS_530
+  CS_614 --> CS_530
   CS_527 --> CS_531
   CS_530 --> CS_531
   CS_415 --> CS_531
@@ -1395,7 +1397,6 @@ graph LR
   CS_483 --> CS_532
   CS_470 --> CS_532
   CS_607 --> CS_532
-  CS_614 --> CS_532
   CS_627 --> CS_532
   CS_636 --> CS_532
   CS_695 --> CS_532
@@ -1468,6 +1469,7 @@ graph LR
   CS_597 --> CS_603
   CS_603 --> CS_604
   CS_610 --> CS_611
+  CS_835 --> CS_611
   CS_610 --> CS_612
   CS_612 --> CS_613
   CS_616 --> CS_617
@@ -1610,6 +1612,7 @@ graph LR
   CS_809 --> CS_835
   CS_814 --> CS_835
   CS_552 --> CS_835
+  CS_610 --> CS_835
   CS_49 --> CS_837
   CS_552 --> CS_847
   CS_809 --> CS_847
