@@ -2,10 +2,14 @@
 id: CS-922
 title: "CS-815 Q1: keep the public names CS-815 added beyond CS-832's checklist?"
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-437
 decider: owner
+answer: A
+answered_at: 2026-11-22T17:31:09.216Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

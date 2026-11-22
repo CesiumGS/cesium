@@ -2,13 +2,13 @@
 id: CS-914
 title: OpenUSD in WebAssembly as a test oracle for the USD source
 kind: work
-state: proposed
+state: planned
 created: 2026-11-22
 project: CS-191
 needs: [CS-901]
 ---
 
-> **Proposal**, contingent on CS-901's answer A. Source: CS-900's comparison (run `2026-11-22T10-56-32-200Z-apple-metal-3`). Decider: owner. Filed 2026-11-22.
+> **Committed by the owner (2026-11-22, through CS-901's answer A).** Source: CS-900's comparison (run `2026-11-22T10-56-32-200Z-apple-metal-3`). Filed 2026-11-22.
 
 ## Done when
 

@@ -2,10 +2,14 @@
 id: CS-920
 title: Do a route's residual statements go through Cesium IR's emitters now, or with CS-56?
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-10
 decider: owner
+answer: B
+answered_at: 2026-11-22T17:34:57.543Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

@@ -2,10 +2,14 @@
 id: CS-923
 title: "CS-815 Q2: USD's union of inherited labels, or CS-832's nearest-level rule?"
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-437
 decider: owner
+answer: A
+answered_at: 2026-11-22T17:31:10.602Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

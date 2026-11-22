@@ -2,10 +2,14 @@
 id: CS-935
 title: "CS-815 Q3: rename cameraRecord to camera in PickPositionResult and CorePick before alpha.1?"
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-437
 decider: owner
+answer: A
+answered_at: 2026-11-22T17:31:11.995Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

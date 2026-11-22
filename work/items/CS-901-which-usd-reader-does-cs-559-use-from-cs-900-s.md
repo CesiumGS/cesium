@@ -2,11 +2,15 @@
 id: CS-901
 title: Which USD reader does CS-559 use, from CS-900's comparison?
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-191
 needs: [CS-900]
 decider: owner
+answer: A
+answered_at: 2026-11-22T17:34:56.425Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

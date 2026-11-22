@@ -2,10 +2,14 @@
 id: CS-936
 title: "CS-815 Q4: how does a bigint StableId reach JSON?"
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-437
 decider: owner
+answer: A
+answered_at: 2026-11-22T17:34:53.943Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

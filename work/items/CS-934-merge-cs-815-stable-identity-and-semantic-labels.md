@@ -2,10 +2,14 @@
 id: CS-934
 title: Merge CS-815, stable identity and semantic labels
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-437
 decider: owner
+answer: "A. Merge it: The orchestrator replays it again onto main's tip, reruns the gates if main moved, fast-forwards, runs the work check, regenerates the views and logs the merge; CS-847 is rebased onto it."
+answered_at: 2026-11-22T17:31:07.497Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

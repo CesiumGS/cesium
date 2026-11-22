@@ -2,10 +2,14 @@
 id: CS-930
 title: Merge CS-780, Engine.errors as an emitter
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-437
 decider: owner
+answer: "A. Merge it: The orchestrator replays it again onto main's tip, reruns the gates if main moved, fast-forwards, runs the work check, regenerates the views and logs the merge."
+answered_at: 2026-11-22T17:34:55.241Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
