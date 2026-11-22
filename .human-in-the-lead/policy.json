@@ -19,6 +19,8 @@
       "packages/core/src/index.ts",
       "packages/core/src/ir/FORMAT.md",
       "packages/cesium/package.json",
+      "packages/*/src/index.ts",
+      "packages/*/package.json",
       "package.json",
       ".human-in-the-lead/",
       "AGENTS.md",
