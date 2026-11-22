@@ -29,6 +29,7 @@ import {
   checkStudy,
   parseStudy,
   planPrune,
+  readStudy,
   serializeStudy,
   studyFile,
   studyRuns,
@@ -582,6 +583,51 @@ describe("studies on other branches", () => {
     // Here, it says where the study is.
     const here = await json("study", "show", ID);
     expect(here.body.message).toMatch(/it is on hitld\/CS-396-alpha/);
+  });
+
+  it("reads a branch only if it is a local branch: never an option or another ref", async () => {
+    git("checkout", "-q", "-b", "hitld/CS-396-alpha");
+    await newStudy();
+    git("add", "packages/next/work/studies");
+    git("commit", "-q", "-m", "a study");
+    git("tag", "a-tag");
+    git("checkout", "-q", "main");
+    const view = (branch: string) =>
+      handleStudies({
+        method: "GET",
+        path: `/${ID}`,
+        query: new URLSearchParams({ branch }),
+        root: repo,
+        results,
+      });
+    // A real local branch still reads.
+    expect(view("hitld/CS-396-alpha").status).toBe(200);
+    // Git would read these as options, or as refs that aren't branches.
+    const planted = join(results, "planted.txt");
+    const root = repo;
+    for (const branch of [
+      "-x",
+      `--output=${planted}`,
+      "a-tag",
+      "nosuch",
+      "HEAD~1",
+      "../main",
+    ]) {
+      const out = view(branch);
+      expect(out.status, branch).toBe(400);
+      expect(out.json, branch).toEqual({ error: "not a local branch" });
+      expect(() => readStudy(root, ID, { branch }), branch).toThrow(
+        /is not a local branch/,
+      );
+    }
+    expect(existsSync(planted)).toBe(false);
+    // The CLI's --branch takes the same path.
+    const cli = await json("study", "show", ID, "--branch", "-x");
+    expect(cli.code).toBe(EXIT.usage);
+    expect(cli.body.message).toMatch(/"-x" is not a local branch/);
+    expect(
+      (await json("study", "show", ID, "--branch", "hitld/CS-396-alpha")).code,
+    ).toBe(EXIT.ok);
   });
 
   it("studies --item --json is stable for the tracker", async () => {

@@ -18,6 +18,7 @@ import {
   checkStudy,
   concludeStudy,
   listStudies,
+  localBranches,
   noteStudy,
   readStudy,
   reopenStudy,
@@ -238,8 +239,10 @@ export function handleStudies({
     if (method === "GET") {
       const id = idFrom(path, root);
       const branch = query?.get("branch") ?? undefined;
-      if (branch !== undefined && !/^[\w./-]{1,200}$/.test(branch)) {
-        throw new Refusal(400, "not a branch name");
+      // Only one of the repository's local branches reaches git
+      // (readStudy checks it again, for the CLI's --branch too).
+      if (branch !== undefined && !localBranches(root).includes(branch)) {
+        throw new Refusal(400, "not a local branch");
       }
       return { status: 200, json: studyView(root, id, { branch, results }) };
     }

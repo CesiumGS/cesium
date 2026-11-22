@@ -91,6 +91,7 @@ export function studyPath(id: string): string;
 export function studyFile(directory: string, id: string): string | undefined;
 export function currentBranch(root: string): string;
 export function localBranches(root: string): string[];
+export function localBranch(root: string, name: unknown): string;
 export function branchesWith(root: string, id: string): string[];
 export function readStudy(
   root: string,

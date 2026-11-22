@@ -753,9 +753,27 @@ export const currentBranch = (root) =>
 
 /** The repository's local branches. */
 export const localBranches = (root) =>
-  (git(root, ["for-each-ref", "--format=%(refname:short)", "refs/heads"]) ?? "")
+  (git(root, ["for-each-ref", "--format=%(refname)", "refs/heads"]) ?? "")
     .split("\n")
-    .filter(Boolean);
+    .filter((ref) => ref.startsWith("refs/heads/"))
+    .map((ref) => ref.slice("refs/heads/".length));
+
+/**
+ * `name` when it is one of the repository's local branches; throws
+ * otherwise. A branch from input (`--branch`, `?branch=`) passes here
+ * before it reaches git, so a value git would read as an option (one
+ * starting with "-") or any other ref never does.
+ */
+export function localBranch(root, name) {
+  if (typeof name !== "string" || !localBranches(root).includes(name)) {
+    const error = new Error(
+      `"${String(name).slice(0, 80)}" is not a local branch (git branch lists them)`,
+    );
+    error.kind = "not-a-branch";
+    throw error;
+  }
+  return name;
+}
 
 /** Reads blobs by id in one `git cat-file --batch`: Map id → text. */
 function readBlobs(root, ids) {
@@ -788,7 +806,13 @@ function readBlobs(root, ids) {
 /** Study files on a branch: [{ id, blob }]. */
 function branchStudyBlobs(root, branch) {
   const listing =
-    git(root, ["ls-tree", branch, "--", `${STUDIES_PATH}/`]) ?? "";
+    git(root, [
+      "ls-tree",
+      "--end-of-options",
+      `refs/heads/${branch}`,
+      "--",
+      `${STUDIES_PATH}/`,
+    ]) ?? "";
   return listing
     .split("\n")
     .map((line) => /^\d+ blob ([0-9a-f]+)\t(.+)$/.exec(line))
@@ -834,6 +858,9 @@ export function readStudy(root, id, { branch } = {}) {
     throw new Error(`"${id}" is not a study id (<date>-<slug>)`);
   }
   let text;
+  if (branch !== undefined) {
+    localBranch(root, branch);
+  }
   if (branch && branch !== currentBranch(root)) {
     const found = branchStudyBlobs(root, branch).find((s) => s.id === id);
     if (!found) {
