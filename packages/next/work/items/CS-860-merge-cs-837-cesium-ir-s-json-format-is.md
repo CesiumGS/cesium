@@ -2,10 +2,14 @@
 id: CS-860
 title: Merge CS-837, Cesium IR's JSON format is experimental at cesium-ir/0.1
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-10
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), regenerates the views and logs the merge. CS-54 (routes on both emitters) can then start once CS-794 merges."
+answered_at: 2026-11-22T06:15:39.538Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

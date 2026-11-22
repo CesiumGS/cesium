@@ -2,10 +2,14 @@
 id: CS-855
 title: Merge CS-831, the design for editing back through the seams
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-579
 decider: owner
+answer: "A. Merge it: The orchestrator replays the rewritten commits onto main's tip, rechecks, fast-forwards main, regenerates the views and logs the merge. The main session files D1 to D5 and the follow-ups."
+answered_at: 2026-11-22T06:03:21.750Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

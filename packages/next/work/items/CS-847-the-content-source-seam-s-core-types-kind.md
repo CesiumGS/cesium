@@ -15,6 +15,11 @@ From CS-552's design and plan (`docs/design/content-source-seam.md`; `docs/super
 
 ## Done when
 
+- From CS-831's decisions, answered by the owner on 2026-11-21:
+  - the change-set type is extended (CS-861);
+  - it serializes as JSON at 0.x, experimental (CS-862);
+  - a source may poll its own server's version on a declared interval and turn the result into pushes, while the engine never polls (CS-863, which changes CS-552's "no source polls");
+  - the edit layer's hide, replace and insert are built here, with experimental public API (CS-865).
 - `SourceKind`, `ContentSource`, `SourceCapabilities`, `SourceHost`, `SourceTick`, `BudgetClient`, the sinks (`DrawSink` as it is, `RasterSink`, `FeatureSink`, `PointSink`, custom rows), `SourceChange`, `AssetRef`, `AssetResolver` and `ResolvedAsset` exist as the design gives them. They are data-only, and the import-boundary test refuses a GPU type or a `World`, `Engine` or renderer import in them.
 - CS-831's three pieces are in: `WriteCapabilities` with `READ_ONLY`, the override contract on the sinks (every row has a stable ID from CS-815), and `ChangeSet`, `SourceWriter` and `CommitResult` as types, shaped by CS-831's design.
 - A kind is registered by module reference, and its decoders load by URL into every worker of the pool as Jobs types. A test registers a kind and a decoder from a test module, opens a source, and decodes on a worker.

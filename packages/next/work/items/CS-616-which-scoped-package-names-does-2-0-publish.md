@@ -22,6 +22,8 @@ Recommendation: fresh names, unless the 1.x team is glad to hand over `@cesium/c
 
 The owner, 2026-11-21: the StrataKit widgets package is `@cesium/ui`. Adapters take seam prefixes (`source-*`, `loader-*`, `imagery-*`, `data-*`, `geocoder-*`), and today's `/proj` becomes `@cesium/crs`, with PROJ as `@cesium/crs-proj`. The full list comes from CS-834's package map, reviewed with the API review (CS-102).
 
+1.x's `@cesium/core` keeps a 0.x line under a `1x` dist-tag, and 2.0 takes `latest` at 2.0.0 (CS-880, the owner, 2026-11-21).
+
 ## Answer
 
 Open.

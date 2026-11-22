@@ -2,11 +2,15 @@
 id: CS-453
 title: What editing should the engine support, with vector data and GIS sources among it?
 kind: decision
-state: planned
+state: done
 created: 2026-11-14
 project: CS-579
-decider: owner
 needs: [CS-831]
+decider: owner
+answer: A, answered by CS-831's design note for the vector and GIS half (CS-864); the CAD and B-rep half stays with the B-rep work
+answered_at: 2026-11-22T06:06:03.486Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question

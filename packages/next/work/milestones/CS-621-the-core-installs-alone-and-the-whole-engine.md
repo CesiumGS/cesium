@@ -6,7 +6,7 @@ state: planned
 created: 2026-11-17
 project: CS-615
 outcome: A host installs only the core, or the whole engine through `cesium@2`, with every package at one version.
-constraints: [CS-616 c?, CS-617 c?, CS-618 c?, CS-363 c?, CS-310 c?, CS-834 c?, CS-835 c?]
+constraints: [CS-616 c?, CS-617 c?, CS-618 c?, CS-363 c?, CS-310 c?, CS-834 c?, CS-835 c?, CS-882 c?]
 ---
 
 ## Done when
@@ -20,3 +20,5 @@ From the owner's release planning on 2026-11-17 (`docs/decisions/2026-11-17-rele
 CS-310 (the OCCT license check) joined on 2026-11-17 (owner): packages can't split until it's known whether OCCT can ship.
 
 CS-834 (the package and seam map) and CS-835 (the move to it) joined on 2026-11-21, on the owner's word.
+
+CS-882 (PROJ behind a coordinate-operations seam) joined on 2026-11-21, from CS-834's package map.
