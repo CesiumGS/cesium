@@ -142,7 +142,7 @@ No milestone
 
 ### Live MaterialX graph editing
 
-CS-11, Planned, led by owner: 0 of 17 done, 6 ready, 10 blocked, 1 proposed. Plan: [2026-11-13-materialx-live-graph.md](docs/superpowers/plans/2026-11-13-materialx-live-graph.md).
+CS-11, Planned, led by owner: 0 of 18 done, 6 ready, 11 blocked, 1 proposed. Plan: [2026-11-13-materialx-live-graph.md](docs/superpowers/plans/2026-11-13-materialx-live-graph.md).
 
 Milestone: The engine material speaks OpenPBR and glTF (CS-475, Planned)
 
@@ -172,6 +172,7 @@ Milestone: A MaterialX graph is edited live on the stage (CS-477, Planned)
 No milestone
 
 - [?] CS-374 OpenPBR tier 3: transmission, volume and subsurface. Proposed. Needs CS-76.
+- [ ] CS-905 What a source's material resolved to: UsdPreviewSurface first, then MaterialX, MDL refused by name. Needs CS-475.
 
 ### The job system's ports
 
@@ -432,7 +433,7 @@ No milestone
 - [x] CS-527 decision: Which milestones does 2.0.0-beta.1 need?. Done.
 - [x] CS-528 decision: Which milestones does 2.0.0-rc.1 need?. Done.
 - [x] CS-529 decision: Which milestones does 2.0.0 need?. Done.
-- [ ] CS-530 Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561, CS-751 (Dyno as the development harness), CS-819 (public API reviews), CS-657 (Vector drawing and the styling language), CS-857 (B-reps and geometry queries), CS-858 (Editing), CS-859 (Dyno as the development harness) and CS-614 (A clean 2.0 branch and a modern build).
+- [ ] CS-530 Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561, CS-751 (Dyno as the development harness), CS-819 (public API reviews), CS-657 (Vector drawing and the styling language), CS-857 (B-reps and geometry queries), CS-858 (Editing), CS-859 (Dyno as the development harness), CS-614 (A clean 2.0 branch and a modern build), CS-898 (Content sources and formats), CS-903 (Content sources and formats), CS-904 (Content sources and formats) and CS-906 (Content sources and formats).
 - [ ] CS-531 Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-668 (Content sources and formats), CS-675 (public API reviews), CS-463 (job system's ports), CS-461 (job system's ports), CS-505 (Follow-ups for other teams), CS-493 (Sky, light and atmosphere), CS-471 (Level-of-detail transitions), CS-423 (worker-mode façade), CS-465 (job system's ports), CS-474 (transform graph), CS-495 (B-reps and geometry queries), CS-467 (Engine profiles), CS-534 (Infrastructure and geoscience capabilities), CS-504 (Budgeted selection and memory) and CS-830 (Sandcastle as 2.0's gallery).
 - [ ] CS-532 Release 2.0.0-rc.1. Needs CS-528, CS-531, CS-416 (WebGL 2 renderer), CS-423 (worker-mode façade), CS-461 (job system's ports), CS-463 (job system's ports), CS-465 (job system's ports), CS-467 (Engine profiles), CS-471 (Level-of-detail transitions), CS-472 (Level-of-detail transitions), CS-474 (transform graph), CS-484 (Benchmarks, parity and image regression), CS-503 (GPU-driven rendering and capacities), CS-504 (Budgeted selection and memory), CS-511 (Benchmarks, parity and image regression), CS-491 (Sky, light and atmosphere), CS-502 (GPU-driven rendering and capacities), CS-481 (Dyno as the development harness), CS-482 (Benchmarks, parity and image regression), CS-478 (Dyno as the development harness), CS-479 (Dyno as the development harness), CS-480 (Dyno as the development harness), CS-483 (Benchmarks, parity and image regression), CS-470 (Refinement and convergence), CS-607 (Trust and evals), CS-627 (agent-first migration kit), CS-636 (Sandcastle as 2.0's gallery) and CS-695 (Packaging and package names).
 - [ ] CS-533 Release 2.0.0. Needs CS-529, CS-532, CS-608 (Trust and evals), CS-678, CS-428 (Earth to Moon (frames 5c to 5h)), CS-429 (Earth to Moon (frames 5c to 5h)), CS-477 (Live MaterialX graph editing), CS-496 (B-reps and geometry queries), CS-674 (Content sources and formats), CS-676 (B-reps and geometry queries) and CS-535 (Ray queries and path tracing).
@@ -617,7 +618,7 @@ No milestone
 
 ### Content sources and formats
 
-CS-191, Planned, led by owner: 14 of 51 done, 16 ready, 18 blocked, 3 proposed.
+CS-191, Planned, led by owner: 15 of 59 done, 21 ready, 19 blocked, 4 proposed.
 
 Milestone: Cesium ion is a swappable module with a default token (CS-497, Planned)
 
@@ -676,7 +677,7 @@ No milestone
 - [?] CS-280 Thin wrappers for ion's REST API, including element metadata. Proposed. Needs CS-269.
 - [x] CS-452 decision: How should semantic metadata reach the engine, and what does picking mean in splats and point clouds?. Done.
 - [x] CS-551 decision: Does content from every kind of source, the globe included, load through one module seam built now?. Done.
-- [ ] CS-802 decision: Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in?. Needs CS-833 (public API reviews). Decided by owner.
+- [x] CS-802 decision: Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in?. Done.
 - [?] CS-806 A design and size spike: Cesium Native in WebAssembly as an optional tiling-engine host behind the streaming-source seam. Proposed. Needs CS-552.
 - [?] CS-818 A catalog and search seam: STAC, CSW and OGC API Records return asset references that sources resolve. Proposed. Needs CS-552.
 - [x] CS-840 decision: Merge CS-552, the content-source seam's design (ContentSource) and its plan for CS-554 to CS-559. Done.
@@ -687,6 +688,14 @@ No milestone
 - [x] CS-845 decision: D5: how are the content sources' entry points grouped and named?. Done.
 - [x] CS-846 decision: D6: what is ion's interface, an asset resolver or a source of its own?. Done.
 - [x] CS-853 decision: Merge CS-832, the design for semantic metadata and picking. Done.
+- [ ] CS-898 64-bit integer properties keep their exact value. Needs nothing.
+- [ ] CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD. Needs nothing.
+- [ ] CS-901 decision: Which USD reader does CS-559 use, from CS-900's comparison?. Needs CS-900. Decided by owner.
+- [ ] CS-902 CS-559's scope, from the chosen reader and CS-833's study. Needs CS-901.
+- [ ] CS-903 Label precedence: the bound material, taxonomy aliases and GeomSubset IDs. Needs nothing.
+- [ ] CS-904 Source-declared axis and scale, corrected through placement. Needs nothing.
+- [ ] CS-906 Variant selections and payload policy as open options, and their change as invalidation. Needs nothing.
+- [?] CS-908 Gaussian splats from USD's ParticleField into the splat render feature. Proposed. Needs CS-277 and CS-901.
 
 ### Sky, light and atmosphere
 
@@ -728,7 +737,7 @@ No milestone
 
 ### B-reps and geometry queries
 
-CS-193, Planned, led by owner: 3 of 21 done, 7 ready, 6 blocked, 5 proposed, 1 dropped. Plan: [breps-and-geometry-queries.md](docs/design/breps-and-geometry-queries.md).
+CS-193, Planned, led by owner: 3 of 22 done, 7 ready, 7 blocked, 5 proposed, 1 dropped. Plan: [breps-and-geometry-queries.md](docs/design/breps-and-geometry-queries.md).
 
 Milestone: B-reps snap and measure exactly (CS-494, Planned)
 
@@ -769,6 +778,7 @@ No milestone
 - [?] CS-315 Kernel robustness: SMLib and OCCT on real trimmed models. Proposed. Needs nothing.
 - [-] CS-316 The CSG sample, phases 4 and 5: sketches and parametric history. Dropped: The owner answered CS-301 on 2026-11-18: the CSG sample stops at phase 3.
 - [ ] CS-669 drillPick: every hit along a pixel's ray, or every layer drawn at it. Needs nothing.
+- [ ] CS-907 UsdPhysics read into CS-672's physics seam. Needs CS-672 and CS-901 (Content sources and formats).
 
 ### Budgeted selection and memory
 
@@ -1048,7 +1058,7 @@ No milestone
 
 ### The public API reviews
 
-CS-437, Planned, led by owner: 9 of 26 done, 11 ready, 4 blocked, 2 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+CS-437, Planned, led by owner: 11 of 27 done, 10 ready, 4 blocked, 2 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved (CS-420, Planned)
 
@@ -1080,7 +1090,7 @@ Milestone: Machines can read the engine: render products, camera records, stable
 - [ ] CS-815 Scene content has stable identity and semantic labels that don't depend on load order. Needs CS-832.
 - [ ] CS-816 The host steps the engine: advance to a time, wait until settled, render, read back. Needs nothing.
 - [x] CS-832 A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds. Done.
-- [ ] CS-833 A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802. Needs nothing.
+- [x] CS-833 A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802. Done.
 
 No milestone
 
@@ -1090,6 +1100,7 @@ No milestone
 - [x] CS-769 decision: Merge CS-430, the WebGPU seams audited. Done.
 - [?] CS-771 The seam bypass tests catch the five plants CS-430's audit found passing. Proposed. Needs CS-430.
 - [?] CS-817 Physical-AI modules on the four seams: ROS 2 and MCAP, randomizers, lidar returns, world-model exporters and an agent interface. Proposed. Needs CS-813, CS-814, CS-815 and CS-816.
+- [x] CS-899 decision: Merge CS-833, the SimReady scoping study and its USD subset reader spike. Done.
 
 ### Editing
 
@@ -1163,7 +1174,7 @@ Milestone: Extension users have validated 2.0 with their own data (CS-608, Plann
 
 ### A clean 2.0 branch and a modern build
 
-CS-609, Planned, led by owner: 9 of 16 done, 3 ready, 1 blocked, 3 proposed.
+CS-609, Planned, led by owner: 10 of 16 done, 2 ready, 1 blocked, 3 proposed.
 
 Milestone: The branch is a clean, modern 2.0 build (CS-614, Planned)
 
@@ -1176,7 +1187,7 @@ No milestone
 
 - [x] CS-886 decision: Merge CS-610, the 2.0 repository's design: layout, build, tests and releases. Done.
 - [x] CS-887 decision: CS-610 D1: does 1.x leave (CS-611) before the package move (CS-835)?. Done.
-- [ ] CS-888 decision: CS-610 D2: which release tool does 2.0 use?. Needs nothing. Decided by owner.
+- [x] CS-888 decision: CS-610 D2: which release tool does 2.0 use?. Done.
 - [x] CS-889 decision: CS-610 D3: do packages publish through npm trusted publishing from release.yml?. Done.
 - [x] CS-890 decision: CS-610 D4: when do 1.x's releases move to the 1x dist-tag?. Done.
 - [x] CS-891 decision: CS-610 D5: how is the paired experimental 0.x version numbered?. Done.

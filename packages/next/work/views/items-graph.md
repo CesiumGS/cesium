@@ -118,6 +118,7 @@ graph LR
     CS_84["CS-84 The WebGL 2 renderer's path"]:::open
     CS_85["CS-85 The comparison against MaterialX's own renderer"]:::open
     CS_374["CS-374 OpenPBR tier 3: transmission, volume and subsurface"]:::proposed
+    CS_905["CS-905 What a source's material resolved to: UsdPreviewSurface first, "]:::open
   end
   subgraph CS_12["job system's ports"]
     CS_86["CS-86 The first slice: 'Jobs' behind 'WorkerPool'"]:::done
@@ -429,7 +430,7 @@ graph LR
     CS_666["CS-666 GPM metadata feeds measurement accuracy"]:::open
     CS_667["CS-667 Panoramas as a module"]:::open
     CS_682["CS-682 Audit every extension 1.x 1.147 reads against 2.0, and refresh "]:::open
-    CS_802["CS-802 Is NVIDIA SimReady a target for 2.0, at which profile and relea"]:::decision
+    CS_802["CS-802 Is NVIDIA SimReady a target for 2.0, at which profile and relea"]:::done
     CS_806["CS-806 A design and size spike: Cesium Native in WebAssembly as an opt"]:::proposed
     CS_808["CS-808 Outside data comes through a data-resource provider: PROJ grids"]:::open
     CS_809["CS-809 Every request goes through one fetch and credential provider: r"]:::done
@@ -447,6 +448,14 @@ graph LR
     CS_848["CS-848 Render features: content modules register passes in named slots"]:::open
     CS_849["CS-849 Streams for push sources: connect on the fetch and credential p"]:::open
     CS_853["CS-853 Merge CS-832, the design for semantic metadata and picking"]:::done
+    CS_898["CS-898 64-bit integer properties keep their exact value"]:::open
+    CS_900["CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD"]:::open
+    CS_901["CS-901 Which USD reader does CS-559 use, from CS-900's comparison?"]:::decision
+    CS_902["CS-902 CS-559's scope, from the chosen reader and CS-833's study"]:::open
+    CS_903["CS-903 Label precedence: the bound material, taxonomy aliases and Geom"]:::open
+    CS_904["CS-904 Source-declared axis and scale, corrected through placement"]:::open
+    CS_906["CS-906 Variant selections and payload policy as open options, and thei"]:::open
+    CS_908["CS-908 Gaussian splats from USD's ParticleField into the splat render "]:::proposed
   end
   subgraph CS_192["Sky, light and atmosphere"]
     CS_281["CS-281 Runs on an Intel integrated GPU: the observer cost page, the gl"]:::external
@@ -495,6 +504,7 @@ graph LR
     CS_577["CS-577 Spike: subdivision surfaces through OpenSubdiv in WebAssembly o"]:::open
     CS_669["CS-669 drillPick: every hit along a pixel's ray, or every layer drawn "]:::open
     CS_672["CS-672 Physics representations across the geometry kinds: the design"]:::open
+    CS_907["CS-907 UsdPhysics read into CS-672's physics seam"]:::open
   end
   subgraph CS_194["Budgeted selection and memory"]
     CS_317["CS-317 Budget-driven refinement: benefit per byte"]:::open
@@ -706,7 +716,8 @@ graph LR
     CS_816["CS-816 The host steps the engine: advance to a time, wait until settle"]:::open
     CS_817["CS-817 Physical-AI modules on the four seams: ROS 2 and MCAP, randomiz"]:::proposed
     CS_832["CS-832 A design for semantic metadata and picking: how metadata reache"]:::done
-    CS_833["CS-833 A SimReady scoping study: which profile, how USD comes in, and "]:::open
+    CS_833["CS-833 A SimReady scoping study: which profile, how USD comes in, and "]:::done
+    CS_899["CS-899 Merge CS-833, the SimReady scoping study and its USD subset rea"]:::done
   end
   subgraph CS_579["Editing"]
     CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
@@ -761,7 +772,7 @@ graph LR
     CS_613["CS-613 CI/CD on the new build, with the release pipeline"]:::open
     CS_886["CS-886 Merge CS-610, the 2.0 repository's design: layout, build, tests"]:::done
     CS_887["CS-887 CS-610 D1: does 1.x leave (CS-611) before the package move (CS-"]:::done
-    CS_888["CS-888 CS-610 D2: which release tool does 2.0 use?"]:::decision
+    CS_888["CS-888 CS-610 D2: which release tool does 2.0 use?"]:::done
     CS_889["CS-889 CS-610 D3: do packages publish through npm trusted publishing f"]:::done
     CS_890["CS-890 CS-610 D4: when do 1.x's releases move to the 1x dist-tag?"]:::done
     CS_891["CS-891 CS-610 D5: how is the paired experimental 0.x version numbered?"]:::done
@@ -1332,6 +1343,10 @@ graph LR
   CS_858 --> CS_530
   CS_859 --> CS_530
   CS_614 --> CS_530
+  CS_898 --> CS_530
+  CS_903 --> CS_530
+  CS_904 --> CS_530
+  CS_906 --> CS_530
   CS_527 --> CS_531
   CS_530 --> CS_531
   CS_415 --> CS_531
@@ -1664,6 +1679,13 @@ graph LR
   CS_613 --> CS_896
   CS_613 --> CS_897
   CS_893 --> CS_897
+  CS_900 --> CS_901
+  CS_901 --> CS_902
+  CS_475 --> CS_905
+  CS_672 --> CS_907
+  CS_901 --> CS_907
+  CS_277 --> CS_908
+  CS_901 --> CS_908
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

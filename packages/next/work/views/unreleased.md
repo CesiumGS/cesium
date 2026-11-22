@@ -91,6 +91,7 @@ CS-437 The public API reviews
   CS-708  2.0 is strict-mode safe: a canvas the engine draws survives create, dispose and create again without the caller doing anything
   CS-814  A camera record carries intrinsics, an off-center principal point and a named distortion model
   CS-832  A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds
+  CS-833  A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802
 
 CS-199 Dyno hardening, packaging and CI
   CS-537  The tickSlices budget test holds under full-suite load
@@ -117,5 +118,5 @@ CS-579 Editing
 CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
 
-82 merged item(s) not in a release
+83 merged item(s) not in a release
 ```

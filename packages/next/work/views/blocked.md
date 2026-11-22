@@ -93,6 +93,8 @@ CS-11 Live MaterialX graph editing
   CS-85  The comparison against MaterialX's own renderer
       ← CS-80 The node editor (React Flow) and rewiring, with compiles as cancellable jobs
         CS-75 OpenPBR tier 1 in the engine material, starting with emission in nits; lobes registered as profile features
+  CS-905  What a source's material resolved to: UsdPreviewSurface first, then MaterialX, MDL refused by name
+      ← CS-475 The engine material speaks OpenPBR and glTF
 
 CS-12 The job system's ports
   CS-95  The inspector's Jobs section
@@ -391,8 +393,6 @@ CS-191 Content sources and formats
       ← CS-556 glTF files load through the content-source seam
   CS-667  Panoramas as a module
       ← CS-654 The surface-projection design: classification, draping and decals
-  CS-802  Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in?
-      ← CS-833 A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802
   CS-811  2.0 owns its texture and mesh decoders: Basis and Draco built for 2.0, with nothing loaded from 1.x's tree
       ← CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
   CS-847  The content-source seam's core: types, kind registry, host, shared budget, sinks and push
@@ -401,6 +401,10 @@ CS-191 Content sources and formats
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
   CS-849  Streams for push sources: connect on the fetch and credential provider
       ← CS-847 The content-source seam's core: types, kind registry, host, shared budget, sinks and push
+  CS-901  Which USD reader does CS-559 use, from CS-900's comparison?
+      ← CS-900 Three USD readers compared in Dyno: the subset reader, LightUSD and full OpenUSD
+  CS-902  CS-559's scope, from the chosen reader and CS-833's study
+      ← CS-901 Which USD reader does CS-559 use, from CS-900's comparison?
 
 CS-192 Sky, light and atmosphere
   CS-282  Intel figures into `glareTier` and the Intel tables
@@ -422,6 +426,9 @@ CS-193 B-reps and geometry queries
       ← CS-218 The orthographic camera, `fitBounds` and the dolly between projections
   CS-309  B-rep trims and edges on the vector design's shared kernels
       ← CS-258 The vector drawing design: lines, polygons, labels and CAD styles on one path
+  CS-907  UsdPhysics read into CS-672's physics seam
+      ← CS-672 Physics representations across the geometry kinds: the design
+        CS-901 Which USD reader does CS-559 use, from CS-900's comparison?
 
 CS-195 Benchmarks, parity and image regression
   CS-324  Benchmark suite v2: nightly and per-merge runs, a results store and a dashboard
@@ -508,6 +515,10 @@ CS-18 The work tracker
         CS-858 Meshes can be edited: a sample drags a mesh's vertices, edges and faces through the edit layer
         CS-859 The engine starts fast: pipelines compile in one round and optional subsystems load lazily
         CS-614 The branch is a clean, modern 2.0 build
+        CS-898 64-bit integer properties keep their exact value
+        CS-903 Label precedence: the bound material, taxonomy aliases and GeomSubset IDs
+        CS-904 Source-declared axis and scale, corrected through placement
+        CS-906 Variant selections and payload policy as open options, and their change as invalidation
   CS-531  Release 2.0.0-beta.1
       ← CS-530 Release 2.0.0-alpha.1
         CS-415 WebGL 2 draws models, tiles and the globe
@@ -727,5 +738,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-230 blocked
+233 blocked
 ```

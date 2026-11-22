@@ -34,8 +34,9 @@ CS-190 Vector drawing and the styling language
 CS-191 Content sources and formats
   CS-270  Where does 2.0's default evaluation token come from? (owner)
       waited on by CS-271
-  CS-802  Is NVIDIA SimReady a target for 2.0, at which profile and release, and how does USD come in? (owner)
-      first needs CS-833
+  CS-901  Which USD reader does CS-559 use, from CS-900's comparison? (owner)
+      first needs CS-900
+      waited on by CS-902, CS-907, CS-908
 
 CS-192 Sky, light and atmosphere
   CS-296  Black hole visualization: how much physics, and an engine feature or a gallery example? (owner)
@@ -58,8 +59,5 @@ CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617
 
-CS-609 A clean 2.0 branch and a modern build
-  CS-888  CS-610 D2: which release tool does 2.0 use? (owner)
-
-18 open decision(s) for owner
+17 open decision(s) for owner
 ```
