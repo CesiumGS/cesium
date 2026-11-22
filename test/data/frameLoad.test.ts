@@ -16,16 +16,16 @@ import {
   listOperations,
   type AreaOfInterest,
   type CrsRef,
-} from "../../packages/next/src/engineering/crs.ts";
-import { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import { GridCatalog } from "../../packages/next/src/engineering/gridCatalog.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
+import { EngineeringFrame } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
+import { GridCatalog } from "../../packages/crs/src/engineering/gridCatalog.ts";
 import {
   gridSource,
   loadedGrids,
   loadGrids,
   loadProj,
   type GridSource,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;

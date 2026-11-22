@@ -17,7 +17,7 @@ import {
   fromFunction,
   type FunctionCurvilinearMap,
 } from "@cesium/core";
-import { EngineeringFrame } from "../engineering/EngineeringFrame.ts";
+import { EngineeringFrame } from "./engineering/EngineeringFrame.ts";
 
 /** What `reprojectionCurvilinearMap` takes besides the operation. */
 export interface ReprojectionCurvilinearMapOptions {

@@ -8,7 +8,7 @@
 // scenario's needs, clamps its knobs, calls the evaluator, and judges `live`
 // as the runner would (`judgeResult`), so a live row is never the
 // evaluator's word alone.
-import type { EngineeringFrame } from "../../../packages/next/src/engineering/EngineeringFrame.ts";
+import type { EngineeringFrame } from "../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import type { FrameCache } from "../frameCache.ts";
 import type { SceneLegendRow } from "../panel/legendRows.ts";
 import type { OverlayGeometry } from "../protocol.ts";

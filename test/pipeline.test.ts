@@ -6,7 +6,7 @@ import {
   pipelineGrids,
   pipelineVerticalGrids,
   pipelineVerticalShifts,
-} from "../packages/next/src/engineering/pipeline.ts";
+} from "../packages/crs/src/engineering/pipeline.ts";
 
 const TWO_GRIDS =
   "+proj=pipeline +step +proj=hgridshift +grids=@a.tif,b.tif +step +proj=vgridshift +geoidgrids=us_noaa_g2018u0.tif +multiplier=1";

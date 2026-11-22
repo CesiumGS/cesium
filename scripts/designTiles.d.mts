@@ -1,9 +1,9 @@
 import type {
   EngineeringFrame,
   EngineeringFrameDefinition,
-} from "../packages/next/src/engineering/EngineeringFrame.ts";
-import type { GridSource } from "../packages/next/src/engineering/proj.ts";
-import type { ProjApi } from "../packages/next/src/engineering/projApi.ts";
+} from "../packages/crs/src/engineering/EngineeringFrame.ts";
+import type { GridSource } from "../packages/crs/src/engineering/proj.ts";
+import type { ProjApi } from "../packages/crs/src/engineering/projApi.ts";
 import type { Frames } from "../packages/frames/src/frames.ts";
 
 /** Where in the store the generator writes. */

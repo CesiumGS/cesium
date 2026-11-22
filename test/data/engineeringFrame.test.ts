@@ -6,13 +6,13 @@ import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
   crsUnits,
   type CrsRef,
-} from "../../packages/next/src/engineering/crs.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
 import {
   EngineeringFrame,
   RigidPlacement,
   type SiteTransform,
-} from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import { loadProj } from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/EngineeringFrame.ts";
+import { loadProj } from "../../packages/crs/src/engineering/proj.ts";
 import { EARTH, MOON } from "../../packages/core/src/scene/Body.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;

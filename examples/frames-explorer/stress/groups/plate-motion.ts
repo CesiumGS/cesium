@@ -1,7 +1,7 @@
 // Plate motion: GDA94 to GDA2020 and ITRF2014 to GDA2020 against the ICSM
 // GDA2020 Technical Manual's worked examples, and Australia's drift from its
 // plate-motion model (autonomous vehicles, precision agriculture, HD maps).
-import { resolveOperation } from "../../../../packages/next/src/engineering/crs.ts";
+import { resolveOperation } from "../../../../packages/crs/src/engineering/crs.ts";
 import {
   type HelmertParameters,
   geocentricToGeodetic,

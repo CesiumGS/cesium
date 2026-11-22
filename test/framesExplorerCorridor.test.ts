@@ -6,7 +6,7 @@
 import { describe, expect, it } from "vitest";
 import { stationOffsetNearEnds } from "../examples/frames-explorer/scenarios/corridor.ts";
 import { CLOTHOID_ROAD } from "../examples/frames-explorer/scenarios/sites.ts";
-import { Alignment } from "../packages/next/src/engineering/alignment.ts";
+import { Alignment } from "../packages/crs/src/engineering/alignment.ts";
 
 const road = new Alignment(CLOTHOID_ROAD);
 const TOL = 3e-4;

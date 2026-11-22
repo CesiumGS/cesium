@@ -3,13 +3,13 @@
 // resolves them, the operation's stated accuracy, the grids' credits) and
 // one line of the story (its extent, the rigid error at its edge, and
 // whether rigid will do there). Given PROJ, a function of the site alone.
-import type { Alignment } from "../../packages/next/src/engineering/alignment.ts";
+import type { Alignment } from "../../packages/crs/src/engineering/alignment.ts";
 import {
   compoundParts,
   crsUnits,
-} from "../../packages/next/src/engineering/crs.ts";
-import type { TilesetPlacement } from "../../packages/next/src/engineering/placement.ts";
-import type { ProjApi } from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
+import type { TilesetPlacement } from "../../packages/crs/src/engineering/placement.ts";
+import type { ProjApi } from "../../packages/crs/src/engineering/proj.ts";
 import { fixed, unitSymbol } from "./measureModel.ts";
 import {
   errorText,

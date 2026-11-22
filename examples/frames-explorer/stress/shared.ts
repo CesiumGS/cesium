@@ -1,11 +1,11 @@
 // Helpers the stress-test groups share: tolerances, fingerprints (R12),
 // vector arithmetic and the context's data.
-import { EngineeringFrame } from "../../../packages/next/src/engineering/EngineeringFrame.ts";
+import { EngineeringFrame } from "../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import type {
   CrsRef,
   RecordedOperation,
-} from "../../../packages/next/src/engineering/crs.ts";
-import type { ProjApi } from "../../../packages/next/src/engineering/proj.ts";
+} from "../../../packages/crs/src/engineering/crs.ts";
+import type { ProjApi } from "../../../packages/crs/src/engineering/proj.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 import { Trajectory } from "../../../packages/frames/src/trajectory/Trajectory.ts";
 import { takeCitations } from "./references.ts";

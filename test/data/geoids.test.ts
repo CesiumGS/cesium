@@ -28,15 +28,15 @@ import {
   resolveOperation,
   type AreaOfInterest,
   type CrsRef,
-} from "../../packages/next/src/engineering/crs.ts";
-import { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
+import { EngineeringFrame } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   gridSource,
   loadGrids,
   loadProj,
   type GridSource,
-} from "../../packages/next/src/engineering/proj.ts";
-import type { ProjApi } from "../../packages/next/src/engineering/projApi.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
+import type { ProjApi } from "../../packages/crs/src/engineering/projApi.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";
 
 interface Source {

@@ -3,8 +3,8 @@
 import {
   type CrsRef,
   resolveOperation,
-} from "../../../packages/next/src/engineering/crs.ts";
-import type { ProjApi } from "../../../packages/next/src/engineering/proj.ts";
+} from "../../../packages/crs/src/engineering/crs.ts";
+import type { ProjApi } from "../../../packages/crs/src/engineering/proj.ts";
 import type { Frames } from "../../../packages/frames/src/frames.ts";
 import type { AccuracyStatement } from "../../../packages/next/src/measure/accuracy.ts";
 import { Trajectory } from "../../../packages/frames/src/trajectory/Trajectory.ts";

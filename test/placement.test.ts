@@ -1,12 +1,12 @@
 // TilesetPlacement over the stub PROJ (plan 4b task 10): a depth-positive
 // height axis goes through RigidPlacement's down column.
 import { describe, expect, it } from "vitest";
-import { EngineeringFrame } from "../packages/next/src/engineering/EngineeringFrame.ts";
+import { EngineeringFrame } from "../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   engineeringPlacement,
   placeRigid,
-} from "../packages/next/src/engineering/placement.ts";
-import type { ProjApi } from "../packages/next/src/engineering/projApi.ts";
+} from "../packages/crs/src/engineering/placement.ts";
+import type { ProjApi } from "../packages/crs/src/engineering/projApi.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 
 const stub = (): ProjApi =>

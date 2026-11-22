@@ -1,9 +1,9 @@
 // Projections: design round trips on 17 CRSs (Global Constraints: 1e-4 m).
-import { EngineeringFrame } from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
+import { EngineeringFrame } from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   type CrsRef,
   crsDefinition,
-} from "../../../../packages/next/src/engineering/crs.ts";
+} from "../../../../packages/crs/src/engineering/crs.ts";
 import { fromDegrees } from "../../../../packages/core/src/math/ellipsoid.ts";
 import {
   type Body,

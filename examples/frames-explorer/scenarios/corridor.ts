@@ -14,11 +14,11 @@
 // Off the checked setup it re-runs live what measurement.clothoid checks
 // (the station and offset back from the design point, within 1e-9 ft), and
 // the trip through the ground the answer takes.
-import { Alignment } from "../../../packages/next/src/engineering/alignment.ts";
+import { Alignment } from "../../../packages/crs/src/engineering/alignment.ts";
 import {
   EngineeringFrame,
   designPoint,
-} from "../../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import { framePoint } from "../../../packages/frames/src/local.ts";
 import { measure } from "../../../packages/next/src/measure/measure.ts";
 import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";

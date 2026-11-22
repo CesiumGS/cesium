@@ -2,7 +2,7 @@
 import {
   EngineeringFrame,
   designPoint,
-} from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import { measure } from "../../../../packages/next/src/measure/measure.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import {

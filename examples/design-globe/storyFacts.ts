@@ -2,8 +2,8 @@
 // Task 20), read from the answers and the placements, kept out of main.ts:
 //  - `tourFactsOf`: what the tour's sentences say (tour.ts `TourFacts`);
 //  - `combinedFactorOf`: the combined factor at a site's rigid anchor.
-import type { Alignment } from "../../packages/next/src/engineering/alignment.ts";
-import { gridFactors } from "../../packages/next/src/engineering/factors.ts";
+import type { Alignment } from "../../packages/crs/src/engineering/alignment.ts";
+import { gridFactors } from "../../packages/crs/src/engineering/factors.ts";
 import type { Answers } from "./answers.ts";
 import type { SagSample } from "./overlays.ts";
 import { rigidErrorTerms, type ErrorTerms } from "./siteFacts.ts";

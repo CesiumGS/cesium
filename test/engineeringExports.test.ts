@@ -24,7 +24,7 @@ import type {
   ProjApi,
   RecordedOperation,
   ResolveOptions,
-} from "../packages/next/src/proj/index.ts";
+} from "../packages/crs/src/index.ts";
 // The CRS data types the proj entry's functions name are the frames entry's
 // (with the coordinate service; plan 5a's call 36).
 import type {

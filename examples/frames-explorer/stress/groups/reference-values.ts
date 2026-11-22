@@ -1,12 +1,12 @@
 // Reference values (R10): NGS datasheets, IOGP 373-7-2's worked examples and a
 // published clothoid example.
-import { EngineeringFrame } from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
-import { Alignment } from "../../../../packages/next/src/engineering/alignment.ts";
+import { EngineeringFrame } from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
+import { Alignment } from "../../../../packages/crs/src/engineering/alignment.ts";
 import {
   crsUnits,
   resolveOperation,
-} from "../../../../packages/next/src/engineering/crs.ts";
-import { gridFactors } from "../../../../packages/next/src/engineering/factors.ts";
+} from "../../../../packages/crs/src/engineering/crs.ts";
+import { gridFactors } from "../../../../packages/crs/src/engineering/factors.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import {
   ALIGNMENT_PATH,

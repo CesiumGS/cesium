@@ -11,7 +11,7 @@
 // panel's details, as the explorer's inspector) and tolerances and accuracy
 // to 2. Heights are written in the horizontal unit's symbol: `Measurement`
 // carries no height unit, and the corridor's (NAVD88 ftUS) is the same.
-import type { SnapResult } from "../../packages/next/src/engineering/snap.ts";
+import type { SnapResult } from "../../packages/crs/src/engineering/snap.ts";
 import type {
   AccuracyStatement,
   AccuracyTerm,

@@ -4,7 +4,7 @@
 import {
   EngineeringFrame,
   designPoint,
-} from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   type AreaOfInterest,
   type CrsRef,
@@ -12,10 +12,10 @@ import {
   listOperations,
   resolveOperation,
   strictWkt2,
-} from "../../../../packages/next/src/engineering/crs.ts";
-import { gridFactors } from "../../../../packages/next/src/engineering/factors.ts";
-import { projTokenProblem } from "../../../../packages/next/src/engineering/wkt2.ts";
-import type { ProjApi } from "../../../../packages/next/src/engineering/proj.ts";
+} from "../../../../packages/crs/src/engineering/crs.ts";
+import { gridFactors } from "../../../../packages/crs/src/engineering/factors.ts";
+import { projTokenProblem } from "../../../../packages/crs/src/engineering/wkt2.ts";
+import type { ProjApi } from "../../../../packages/crs/src/engineering/proj.ts";
 import { measure } from "../../../../packages/next/src/measure/measure.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import {

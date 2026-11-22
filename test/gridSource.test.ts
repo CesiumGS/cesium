@@ -12,15 +12,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   listOperations,
   resolveOperation,
-} from "../packages/next/src/engineering/crs.ts";
+} from "../packages/crs/src/engineering/crs.ts";
 import {
   gridSource,
   loadedGrids,
   loadGrids,
   loadProj,
   type ProjApi,
-} from "../packages/next/src/engineering/proj.ts";
-import { PROJ_DATA_CATALOG } from "../packages/next/src/engineering/projPins.ts";
+} from "../packages/crs/src/engineering/proj.ts";
+import { PROJ_DATA_CATALOG } from "../packages/crs/src/engineering/projPins.ts";
 import { sha256Hex } from "../packages/core/src/io/sha256.ts";
 import { HOSTILE_GRID_NAMES, RESERVED_GRID_NAMES } from "./hostileGridNames.ts";
 

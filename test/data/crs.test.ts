@@ -16,11 +16,11 @@ import {
   resolveOperation,
   type CrsRef,
   type OperationCandidate,
-} from "../../packages/next/src/engineering/crs.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
 import {
   loadProj,
   type ProjApi,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 import fixture from "../fixtures/frames/proj.json";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;

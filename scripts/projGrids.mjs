@@ -18,8 +18,8 @@ import { pipeline } from "node:stream";
 import {
   GridCatalog,
   isPlainGridName,
-} from "../packages/next/src/engineering/gridCatalog.ts";
-import { PROJ_DATA_CATALOG } from "../packages/next/src/engineering/projPins.ts";
+} from "../packages/crs/src/engineering/gridCatalog.ts";
+import { PROJ_DATA_CATALOG } from "../packages/crs/src/engineering/projPins.ts";
 import { verifiedDownload } from "./verifiedDownload.mjs";
 
 /** The one origin grids are fetched from. */

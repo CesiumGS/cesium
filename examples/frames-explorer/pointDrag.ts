@@ -8,7 +8,7 @@
 // (`knobsAt`): the knobs move to them, rounded to their steps, and the
 // worker answers there exactly. The sliders stay the keyboard's way in; the
 // target is a pointer convenience, hidden from assistive technology.
-import { Alignment } from "../../packages/next/src/engineering/alignment.ts";
+import { Alignment } from "../../packages/crs/src/engineering/alignment.ts";
 import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import { vec3 } from "../../packages/core/src/math/vec3.ts";
 import { holdBrowserGestures } from "../../packages/core/src/scene/touchGestures.ts";

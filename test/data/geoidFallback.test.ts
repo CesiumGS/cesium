@@ -14,19 +14,19 @@ import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
   listOperations,
   type CrsRef,
-} from "../../packages/next/src/engineering/crs.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
 import {
   EngineeringFrame,
   RigidPlacement,
   type EngineeringFrameDefinition,
-} from "../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   gridSource,
   loadedGrids,
   loadProj,
   type GridSource,
-} from "../../packages/next/src/engineering/proj.ts";
-import type { ProjApi } from "../../packages/next/src/engineering/projApi.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
+import type { ProjApi } from "../../packages/crs/src/engineering/projApi.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;

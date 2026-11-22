@@ -14,13 +14,13 @@ import {
   type ServiceSnapRequest,
   type SnapResult,
   type SnapService,
-} from "../packages/next/src/engineering/snap.ts";
-import type { PickView } from "../packages/next/src/engineering/pick.ts";
-import type { TilesetPlacement } from "../packages/next/src/engineering/placement.ts";
+} from "../packages/crs/src/engineering/snap.ts";
+import type { PickView } from "../packages/crs/src/engineering/pick.ts";
+import type { TilesetPlacement } from "../packages/crs/src/engineering/placement.ts";
 import {
   designPoint,
   EngineeringFrame,
-} from "../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../packages/crs/src/engineering/EngineeringFrame.ts";
 import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
 import * as m4 from "../packages/core/src/math/mat4.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";

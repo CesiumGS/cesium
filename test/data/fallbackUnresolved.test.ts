@@ -6,11 +6,11 @@
 import { join } from "node:path";
 import { expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
-import { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
+import { EngineeringFrame } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   loadedGrids,
   loadProj,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;

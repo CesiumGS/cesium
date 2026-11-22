@@ -3,8 +3,8 @@
 // line each shows before it draws. Plain data and text, unit-tested
 // (test/framesExplorerOverlayConfig.test.ts); overlayControl.ts draws them.
 import { FTUS_PER_M } from "./units.ts";
-import type { CrsRef } from "../../packages/next/src/engineering/crs.ts";
-import type { SiteTransform } from "../../packages/next/src/engineering/EngineeringFrame.ts";
+import type { CrsRef } from "../../packages/crs/src/engineering/crs.ts";
+import type { SiteTransform } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import type { Extent } from "./overlays.ts";
 import { sig } from "./panel/format.ts";
 import type {

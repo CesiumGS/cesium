@@ -34,7 +34,7 @@ import {
   offsetText,
 } from "../../examples/frames-explorer/scenarios/sites.ts";
 import { siteGap } from "../../examples/frames-explorer/stress/groups/rigid-placement-budget.ts";
-import { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
+import { EngineeringFrame } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";
 import { routeSteps } from "../../examples/frames-explorer/panel/routeSteps.ts";
@@ -112,7 +112,7 @@ import { catalogGridsFrom } from "../../examples/frames-explorer/stress/groups/g
 import {
   gridSource,
   loadProj,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 import { frameTransform } from "../../packages/frames/src/Frame.ts";
 import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";

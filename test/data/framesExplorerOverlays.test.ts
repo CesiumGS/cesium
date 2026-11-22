@@ -24,16 +24,16 @@ import { radii } from "../../examples/frames-explorer/stress/references.ts";
 import {
   listOperations,
   type CrsRef,
-} from "../../packages/next/src/engineering/crs.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
 import {
   EngineeringFrame,
   RigidPlacement,
-} from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import { gridFactors } from "../../packages/next/src/engineering/factors.ts";
+} from "../../packages/crs/src/engineering/EngineeringFrame.ts";
+import { gridFactors } from "../../packages/crs/src/engineering/factors.ts";
 import {
   loadProj,
   type ProjApi,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
 import { createFrames } from "../../packages/frames/src/frames.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";

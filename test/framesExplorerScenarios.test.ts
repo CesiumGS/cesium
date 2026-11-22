@@ -6,7 +6,7 @@
 // of sight's words, never "clear" unproven. Pure: no PROJ (the evaluators through it are
 // test/data/framesExplorerScenarios.test.ts's).
 import { describe, expect, it } from "vitest";
-import { Alignment } from "../packages/next/src/engineering/alignment.ts";
+import { Alignment } from "../packages/crs/src/engineering/alignment.ts";
 import {
   answerTitle,
   formatAnswer,

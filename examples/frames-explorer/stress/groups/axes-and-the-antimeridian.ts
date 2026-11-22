@@ -1,6 +1,6 @@
 // Axes and the antimeridian
-import { EngineeringFrame } from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
-import { resolveOperation } from "../../../../packages/next/src/engineering/crs.ts";
+import { EngineeringFrame } from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
+import { resolveOperation } from "../../../../packages/crs/src/engineering/crs.ts";
 import { framePoint } from "../../../../packages/frames/src/local.ts";
 import {
   fromDegrees,

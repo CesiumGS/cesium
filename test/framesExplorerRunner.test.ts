@@ -21,7 +21,7 @@ import {
   type StressResult,
 } from "../examples/frames-explorer/tests.ts";
 import { createFrames } from "../packages/frames/src/frames.ts";
-import type { ProjApi } from "../packages/next/src/engineering/proj.ts";
+import type { ProjApi } from "../packages/crs/src/engineering/proj.ts";
 import {
   fmt,
   isNeedMissing,

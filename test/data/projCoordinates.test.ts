@@ -17,19 +17,19 @@ import {
   corridorFrame,
 } from "../../examples/design-globe/corridor.ts";
 import { PORTFOLIO, SITE_BUILDING } from "../../examples/design-globe/sites.ts";
-import { Alignment } from "../../packages/next/src/engineering/alignment.ts";
+import { Alignment } from "../../packages/crs/src/engineering/alignment.ts";
 import {
   EngineeringFrame,
   type EngineeringFrameDefinition,
-} from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import { gridFactors } from "../../packages/next/src/engineering/factors.ts";
+} from "../../packages/crs/src/engineering/EngineeringFrame.ts";
+import { gridFactors } from "../../packages/crs/src/engineering/factors.ts";
 import {
   gridSource,
   loadProj,
   type GridSource,
-} from "../../packages/next/src/engineering/proj.ts";
-import { projCoordinateService } from "../../packages/next/src/engineering/projCoordinates.ts";
-import type { ProjApi } from "../../packages/next/src/engineering/projApi.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
+import { projCoordinateService } from "../../packages/crs/src/engineering/projCoordinates.ts";
+import type { ProjApi } from "../../packages/crs/src/engineering/projApi.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
 const grids = `${join(framesDataDirectory(), "grids")}/`;

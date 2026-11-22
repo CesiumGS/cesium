@@ -3,8 +3,8 @@ import {
   GridCatalog,
   gridNameProblem,
   isPlainGridName,
-} from "../packages/next/src/engineering/gridCatalog.ts";
-import { PROJ_DATA_CATALOG } from "../packages/next/src/engineering/projPins.ts";
+} from "../packages/crs/src/engineering/gridCatalog.ts";
+import { PROJ_DATA_CATALOG } from "../packages/crs/src/engineering/projPins.ts";
 import { sha256Hex } from "../packages/core/src/io/sha256.ts";
 import {
   PLAIN_GRID_NAMES,

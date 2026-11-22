@@ -18,7 +18,7 @@
 // about 32 m below the ellipsoid here; taken at the ellipsoid's 0 instead,
 // the ship and the light float 32 m too high, and the mast sees further than
 // it can. Charts use mean lower low water: plan 4b's work.
-import type { EngineeringFrame } from "../../../packages/next/src/engineering/EngineeringFrame.ts";
+import type { EngineeringFrame } from "../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import { frameTransform } from "../../../packages/frames/src/Frame.ts";
 import { framePoint } from "../../../packages/frames/src/local.ts";
 import { pointAccuracy } from "../../../packages/frames/src/pointAccuracy.ts";

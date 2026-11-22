@@ -9,11 +9,11 @@
 // tileset whose placement isn't the one drawn there. A pick's answer is
 // applied only if nothing changed while it ran (a generation counter: the
 // camera, the cursor's position, the morph and the exaggeration).
-import { gridFactors } from "../../packages/next/src/engineering/factors.ts";
+import { gridFactors } from "../../packages/crs/src/engineering/factors.ts";
 import {
   pickDesign,
   type DesignPick,
-} from "../../packages/next/src/engineering/pick.ts";
+} from "../../packages/crs/src/engineering/pick.ts";
 import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import {

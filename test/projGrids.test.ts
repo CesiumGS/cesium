@@ -19,7 +19,7 @@ import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { GridCatalog } from "../packages/next/src/engineering/gridCatalog.ts";
+import { GridCatalog } from "../packages/crs/src/engineering/gridCatalog.ts";
 import { HOSTILE_GRID_NAMES } from "./hostileGridNames.ts";
 import {
   createGridCache,

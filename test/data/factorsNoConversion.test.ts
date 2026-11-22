@@ -7,8 +7,8 @@
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
-import { projGridFactors } from "../../packages/next/src/engineering/factors.ts";
-import { loadProj } from "../../packages/next/src/engineering/proj.ts";
+import { projGridFactors } from "../../packages/crs/src/engineering/factors.ts";
+import { loadProj } from "../../packages/crs/src/engineering/proj.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
 

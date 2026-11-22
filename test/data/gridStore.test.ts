@@ -5,8 +5,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { GridCatalog } from "../../packages/next/src/engineering/gridCatalog.ts";
-import { PROJ_DATA_CATALOG } from "../../packages/next/src/engineering/projPins.ts";
+import { GridCatalog } from "../../packages/crs/src/engineering/gridCatalog.ts";
+import { PROJ_DATA_CATALOG } from "../../packages/crs/src/engineering/projPins.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import { GRID_SETS } from "../../scripts/gridSets.mjs";
 

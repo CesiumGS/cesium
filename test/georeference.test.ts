@@ -9,7 +9,7 @@ import {
   CORRIDOR_ALIGNMENT,
   CORRIDOR_PIPELINE,
 } from "../examples/design-globe/corridor.ts";
-import type { AlignmentDefinition } from "../packages/next/src/engineering/alignment.ts";
+import type { AlignmentDefinition } from "../packages/crs/src/engineering/alignment.ts";
 import {
   ALIGNMENTS_EXTENSION,
   ENGINEERING_FRAME_EXTENSION,
@@ -17,14 +17,14 @@ import {
   RENAMED_WARNING,
   alignmentsExtension,
   checkDeclaredGrids,
-} from "../packages/next/src/engineering/georeference.ts";
-import { GridCatalog } from "../packages/next/src/engineering/gridCatalog.ts";
+} from "../packages/crs/src/engineering/georeference.ts";
+import { GridCatalog } from "../packages/crs/src/engineering/gridCatalog.ts";
 import { HOSTILE_GRID_NAMES } from "./hostileGridNames.ts";
 import {
   formatPipeline,
   parsePipeline,
-} from "../packages/next/src/engineering/pipeline.ts";
-import { readGeoreference } from "../packages/next/src/engineering/georeferenceTileset.ts";
+} from "../packages/crs/src/engineering/pipeline.ts";
+import { readGeoreference } from "../packages/crs/src/engineering/georeferenceTileset.ts";
 import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
 
 const ROOT = "extensions.BENTLEY_engineering_frame";

@@ -1,7 +1,7 @@
 // Distortion: Web Mercator's scale, and a low-distortion projection against
 // state plane.
-import { EngineeringFrame } from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
-import { gridFactors } from "../../../../packages/next/src/engineering/factors.ts";
+import { EngineeringFrame } from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
+import { gridFactors } from "../../../../packages/crs/src/engineering/factors.ts";
 import { surfaceDistance } from "../../../../packages/next/src/measure/surface.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import {

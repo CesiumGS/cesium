@@ -1,7 +1,7 @@
 // Types for projGrids.mjs (the dev server's `/proj-grids/` endpoint).
 import type { IncomingMessage, ServerResponse } from "node:http";
 import type { Plugin } from "vite";
-import type { GridCatalog } from "../packages/next/src/engineering/gridCatalog.ts";
+import type { GridCatalog } from "../packages/crs/src/engineering/gridCatalog.ts";
 
 /**
  * What a request path after the prefix (`/<name>`) asks for, or undefined

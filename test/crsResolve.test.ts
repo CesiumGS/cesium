@@ -4,8 +4,8 @@ import {
   betterThan,
   listOperations,
   resolveOperation,
-} from "../packages/next/src/engineering/crs.ts";
-import type { ProjApi } from "../packages/next/src/engineering/projApi.ts";
+} from "../packages/crs/src/engineering/crs.ts";
+import type { ProjApi } from "../packages/crs/src/engineering/projApi.ts";
 
 const ref = { format: "wkid", authority: "EPSG", wkid: 2227 } as const;
 

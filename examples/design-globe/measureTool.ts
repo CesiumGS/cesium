@@ -25,17 +25,17 @@
 //     the snap services, pointer and keyboard input (one AbortController per
 //     pointer event, the previous aborted; each snap judged by the site it
 //     hit, as cursor.ts judges picks), the link and the morph target.
-import type { Alignment } from "../../packages/next/src/engineering/alignment.ts";
+import type { Alignment } from "../../packages/crs/src/engineering/alignment.ts";
 import {
   designPoint,
   type DesignPoint,
   type EngineeringFrame,
-} from "../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   ClientSnapService,
   type SnapResult,
   type SnapService,
-} from "../../packages/next/src/engineering/snap.ts";
+} from "../../packages/crs/src/engineering/snap.ts";
 import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import type { Answers } from "./answers.ts";

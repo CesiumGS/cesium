@@ -10,12 +10,12 @@
 import {
   Alignment,
   type AlignmentDefinition,
-} from "../../../packages/next/src/engineering/alignment.ts";
-import type { CrsRef } from "../../../packages/next/src/engineering/crs.ts";
+} from "../../../packages/crs/src/engineering/alignment.ts";
+import type { CrsRef } from "../../../packages/crs/src/engineering/crs.ts";
 import type {
   EngineeringFrame,
   SiteTransform,
-} from "../../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import type { AddedFrameSpec } from "../tree.ts";
 import type { EngineeringSetup } from "../overlayConfig.ts";
 import type { KnobState } from "./spec.ts";

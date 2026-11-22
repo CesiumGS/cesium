@@ -1,5 +1,5 @@
 // Vertical profile: a symmetric parabolic curve, arithmetic in the case.
-import { Alignment } from "../../../../packages/next/src/engineering/alignment.ts";
+import { Alignment } from "../../../../packages/crs/src/engineering/alignment.ts";
 import { HAND_FORMULA } from "../references.ts";
 import type { ResultBase, StressCase } from "../runner.ts";
 import { stressCase } from "../shared.ts";

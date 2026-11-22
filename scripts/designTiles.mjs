@@ -72,16 +72,16 @@ import { Ephemeris } from "../packages/frames/src/ephemeris/Ephemeris.ts";
 import {
   EngineeringFrame,
   designPoint,
-} from "../packages/next/src/engineering/EngineeringFrame.ts";
-import { gridFactors } from "../packages/next/src/engineering/factors.ts";
+} from "../packages/crs/src/engineering/EngineeringFrame.ts";
+import { gridFactors } from "../packages/crs/src/engineering/factors.ts";
 import {
   ALIGNMENTS_EXTENSION,
   ENGINEERING_FRAME_EXTENSION,
   alignmentsExtension,
-} from "../packages/next/src/engineering/georeference.ts";
-import { formatPipeline, parsePipeline } from "../packages/next/src/engineering/pipeline.ts";
-import { placeRigid } from "../packages/next/src/engineering/placement.ts";
-import { gridSource, loadProj } from "../packages/next/src/engineering/proj.ts";
+} from "../packages/crs/src/engineering/georeference.ts";
+import { formatPipeline, parsePipeline } from "../packages/crs/src/engineering/pipeline.ts";
+import { placeRigid } from "../packages/crs/src/engineering/placement.ts";
+import { gridSource, loadProj } from "../packages/crs/src/engineering/proj.ts";
 import { createFrames } from "../packages/frames/src/frames.ts";
 import { measure } from "../packages/next/src/measure/measure.ts";
 import { EarthOrientationParameters } from "../packages/frames/src/time/eop.ts";

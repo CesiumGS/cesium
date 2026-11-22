@@ -1,4 +1,4 @@
-import type { Alignment } from "../../packages/next/src/engineering/alignment.ts";
+import type { Alignment } from "../../packages/crs/src/engineering/alignment.ts";
 
 /** The most station spacing on a tangent, in design units (30). */
 export const TANGENT_SPACING: number;

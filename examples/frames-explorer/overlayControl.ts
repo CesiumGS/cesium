@@ -4,8 +4,8 @@
 // rigid line's inset, and the legend's view of each. Orion's path is
 // orionLayer.ts's, given the overlay's state; the fixed parts are
 // overlayConfig.ts's.
-import type { CrsRef } from "../../packages/next/src/engineering/crs.ts";
-import type { SiteTransform } from "../../packages/next/src/engineering/EngineeringFrame.ts";
+import type { CrsRef } from "../../packages/crs/src/engineering/crs.ts";
+import type { SiteTransform } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import type { GapInset } from "./gapInset.ts";
 import { SECONDARY, familyRgba, type Globe, type LabelSpec } from "./globe.ts";
 import { distortionAccuracy, operationText } from "./legend.ts";

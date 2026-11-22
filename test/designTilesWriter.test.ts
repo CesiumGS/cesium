@@ -20,8 +20,8 @@ import { treeFromJson } from "../packages/core/src/streaming/Tile.ts";
 import {
   ALIGNMENTS_EXTENSION,
   ENGINEERING_FRAME_EXTENSION,
-} from "../packages/next/src/engineering/georeference.ts";
-import { readGeoreference } from "../packages/next/src/engineering/georeferenceTileset.ts";
+} from "../packages/crs/src/engineering/georeference.ts";
+import { readGeoreference } from "../packages/crs/src/engineering/georeferenceTileset.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 
 // A quad of two triangles, one per feature (glTF Y-up).

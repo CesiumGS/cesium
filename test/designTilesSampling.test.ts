@@ -32,7 +32,7 @@ import { SITE_BUILDING } from "../examples/design-globe/sites.ts";
 import {
   Alignment,
   type AlignmentDefinition,
-} from "../packages/next/src/engineering/alignment.ts";
+} from "../packages/crs/src/engineering/alignment.ts";
 
 /** A tangent, a 3,000 ft arc to the right, and a tangent (no profile). */
 const ARC: AlignmentDefinition = {

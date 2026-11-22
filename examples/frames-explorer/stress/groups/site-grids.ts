@@ -2,7 +2,7 @@
 import {
   EngineeringFrame,
   type SiteTransform,
-} from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import {
   CALIFORNIA,

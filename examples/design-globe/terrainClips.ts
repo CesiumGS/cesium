@@ -9,7 +9,7 @@
 // but the corridor's: main.ts says why).
 // Pure but for `syncTerrainClips`, so test/designGlobeTerrainClips.test.ts
 // runs it in Node.
-import type { Alignment } from "../../packages/next/src/engineering/alignment.ts";
+import type { Alignment } from "../../packages/crs/src/engineering/alignment.ts";
 import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import type { Globe, TerrainRegion } from "../../packages/core/src/index.ts";
 

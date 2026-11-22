@@ -8,8 +8,8 @@ import {
   designPoint,
   type EngineeringFrameDefinition,
   type SiteTransform,
-} from "../packages/next/src/engineering/EngineeringFrame.ts";
-import type { ProjApi } from "../packages/next/src/engineering/projApi.ts";
+} from "../packages/crs/src/engineering/EngineeringFrame.ts";
+import type { ProjApi } from "../packages/crs/src/engineering/projApi.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 

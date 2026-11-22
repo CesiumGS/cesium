@@ -10,8 +10,8 @@
 // - The anchor ring: a white ring on the ground at the rigid placement's
 //   anchor, where the placements agree.
 // (The camera's moves are in shots.ts.)
-import type { Alignment } from "../../packages/next/src/engineering/alignment.ts";
-import type { TilesetPlacement } from "../../packages/next/src/engineering/placement.ts";
+import type { Alignment } from "../../packages/crs/src/engineering/alignment.ts";
+import type { TilesetPlacement } from "../../packages/crs/src/engineering/placement.ts";
 import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import { MaterialFlags } from "../../packages/core/src/render/layout.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";

@@ -6,7 +6,7 @@
 import type {
   DesignPoint,
   EngineeringFrame,
-} from "../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import type { Frames } from "../../packages/frames/src/frames.ts";
 import {
   measure,

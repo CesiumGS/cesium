@@ -15,8 +15,8 @@
 import {
   RigidPlacement,
   type EngineeringFrame,
-} from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import { gridFactors } from "../../packages/next/src/engineering/factors.ts";
+} from "../../packages/crs/src/engineering/EngineeringFrame.ts";
+import { gridFactors } from "../../packages/crs/src/engineering/factors.ts";
 import { frameTransform, type Frame } from "../../packages/frames/src/Frame.ts";
 import type { Frames } from "../../packages/frames/src/frames.ts";
 import { rotationPart } from "../../packages/frames/src/matrix.ts";

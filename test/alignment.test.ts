@@ -6,8 +6,8 @@ import {
   Alignment,
   type AlignmentDefinition,
   type HorizontalElement,
-} from "../packages/next/src/engineering/alignment.ts";
-import { fresnel } from "../packages/next/src/engineering/fresnel.ts";
+} from "../packages/crs/src/engineering/alignment.ts";
+import { fresnel } from "../packages/crs/src/engineering/fresnel.ts";
 
 /** Deterministic PRNG (mulberry32) so the random samples are reproducible. */
 function mulberry32(seed: number): () => number {

@@ -20,8 +20,8 @@
 //   - tour.ts, tourRuntime.ts: the short tour (Task 20);
 //   - viewParams.ts: the compass and error ribbon toggles (Task 20).
 import { createElement } from "react";
-import { Alignment } from "../../packages/next/src/engineering/alignment.ts";
-import type { ProjApi } from "../../packages/next/src/engineering/proj.ts";
+import { Alignment } from "../../packages/crs/src/engineering/alignment.ts";
+import type { ProjApi } from "../../packages/crs/src/engineering/proj.ts";
 import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import type { ExampleContext, ExampleRun } from "../types.ts";
 import type { Answers } from "./answers.ts";

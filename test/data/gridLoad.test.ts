@@ -25,13 +25,13 @@ import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
   listOperations,
   resolveOperation,
-} from "../../packages/next/src/engineering/crs.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
 import {
   gridSource,
   loadedGrids,
   loadGrids,
   loadProj,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 import { sha256Hex } from "../../packages/core/src/io/sha256.ts";
 import {
   HOSTILE_GRID_NAMES,

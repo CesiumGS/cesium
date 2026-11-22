@@ -17,8 +17,8 @@ import {
   refiningSnap,
   type ServiceSnapRequest,
   type SnapResult,
-} from "../packages/next/src/engineering/snap.ts";
-import type { PickView } from "../packages/next/src/engineering/pick.ts";
+} from "../packages/crs/src/engineering/snap.ts";
+import type { PickView } from "../packages/crs/src/engineering/pick.ts";
 import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
 import { createFrames } from "../packages/frames/src/frames.ts";
 import { framePoint } from "../packages/frames/src/local.ts";

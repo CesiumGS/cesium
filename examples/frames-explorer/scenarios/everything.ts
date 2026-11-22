@@ -40,7 +40,7 @@ import { measure } from "../../../packages/next/src/measure/measure.ts";
 import { MOON } from "../../../packages/core/src/scene/Body.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 import type { FrameCache } from "../frameCache.ts";
-import type { EngineeringFrame } from "../../../packages/next/src/engineering/EngineeringFrame.ts";
+import type { EngineeringFrame } from "../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   fmt,
   type StressContext,

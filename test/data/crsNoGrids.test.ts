@@ -10,11 +10,11 @@ import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
   resolveOperation,
   type CrsRef,
-} from "../../packages/next/src/engineering/crs.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
 import {
   loadedGrids,
   loadProj,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
 const GEOID = "us_noaa_g2018u0.tif";

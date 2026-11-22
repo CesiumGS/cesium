@@ -8,7 +8,7 @@
 //      same in both placements, and only reprojected draws it true.
 // And `drawnAt`, the morph's dual position on the CPU, so the figures and the
 // labels follow the morph. Pure: test/designGlobeMeasureTool.test.ts.
-import type { TilesetPlacement } from "../../packages/next/src/engineering/placement.ts";
+import type { TilesetPlacement } from "../../packages/crs/src/engineering/placement.ts";
 import type { Answers } from "./answers.ts";
 import type { Measurement } from "../../packages/next/src/measure/measure.ts";
 import {

@@ -32,11 +32,11 @@ import { join } from "node:path";
 import process from "node:process";
 import { gunzipSync } from "node:zlib";
 import { DATASETS } from "./dataFormats.mjs";
-import { GridCatalog } from "../packages/next/src/engineering/gridCatalog.ts";
+import { GridCatalog } from "../packages/crs/src/engineering/gridCatalog.ts";
 import {
   PROJ_DATA_CATALOG,
   PROJ_FILE_SHA256,
-} from "../packages/next/src/engineering/projPins.ts";
+} from "../packages/crs/src/engineering/projPins.ts";
 import { readDaf } from "../packages/frames/src/ephemeris/spk.ts";
 import { writePack } from "../packages/frames/src/ephemeris/pack.ts";
 import { EarthOrientationParameters } from "../packages/frames/src/time/eop.ts";

@@ -35,7 +35,7 @@ import {
   PAD,
 } from "../../examples/frames-explorer/scenarios/arm.ts";
 import { composedView } from "../../examples/frames-explorer/composed.ts";
-import { resolveOperation } from "../../packages/next/src/engineering/crs.ts";
+import { resolveOperation } from "../../packages/crs/src/engineering/crs.ts";
 import { orientation } from "../../examples/frames-explorer/scenarios/earthTurns.ts";
 import {
   SCENES,
@@ -62,7 +62,7 @@ import { catalogGridsFrom } from "../../examples/frames-explorer/stress/groups/g
 import {
   gridSource,
   loadProj,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
 import { frameTransform } from "../../packages/frames/src/Frame.ts";

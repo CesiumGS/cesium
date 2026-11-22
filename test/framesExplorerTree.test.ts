@@ -21,7 +21,7 @@ import type {
 } from "../packages/frames/src/time/eop.ts";
 import { Trajectory } from "../packages/frames/src/trajectory/Trajectory.ts";
 import { parseOem } from "../packages/frames/src/trajectory/oem.ts";
-import type { EngineeringFrame } from "../packages/next/src/engineering/EngineeringFrame.ts";
+import type { EngineeringFrame } from "../packages/crs/src/engineering/EngineeringFrame.ts";
 import { EARTH_ROTATION_RATE } from "../packages/next/src/measure/constants.ts";
 import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";
 

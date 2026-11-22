@@ -39,7 +39,7 @@ import {
   scaleText,
 } from "../examples/design-globe/siteFacts.ts";
 import type { SiteRuntime } from "../examples/design-globe/siteLoader.ts";
-import type { DesignPick } from "../packages/next/src/engineering/pick.ts";
+import type { DesignPick } from "../packages/crs/src/engineering/pick.ts";
 import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 import {
   EA_LIDAR_CREDIT,

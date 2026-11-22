@@ -13,12 +13,12 @@
 //
 // Erasable TypeScript only (no enums, no parameter properties): the Node
 // generator imports this file directly.
-import type { AlignmentDefinition } from "../../packages/next/src/engineering/alignment.ts";
+import type { AlignmentDefinition } from "../../packages/crs/src/engineering/alignment.ts";
 import type {
   AreaOfInterest,
   CrsRef,
-} from "../../packages/next/src/engineering/crs.ts";
-import type { EngineeringFrameDefinition } from "../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
+import type { EngineeringFrameDefinition } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";
 
 /** NAD83(2011) / California zone 3 (ftUS) + NAVD88 height (ftUS). */

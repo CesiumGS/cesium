@@ -4,7 +4,7 @@
 // ends, the station marker's pin, NGS's survey disk and the ruler's note;
 // a line under 24 px on the screen gets none (far off, it would only
 // clutter), and two pills that would overlap keep the earlier one.
-import type { SnapKind } from "../../packages/next/src/engineering/EngineeringFrame.ts";
+import type { SnapKind } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import type { Answers } from "./answers.ts";
 import { stationText } from "./measureModel.ts";
 import {

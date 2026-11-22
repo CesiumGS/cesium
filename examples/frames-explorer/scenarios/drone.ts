@@ -23,7 +23,7 @@
 import {
   EngineeringFrame,
   type SiteTransform,
-} from "../../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import { frameTransform } from "../../../packages/frames/src/Frame.ts";
 import { framePoint } from "../../../packages/frames/src/local.ts";
 import { pointAccuracy } from "../../../packages/frames/src/pointAccuracy.ts";

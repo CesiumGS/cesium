@@ -31,7 +31,7 @@ import type {
   ServiceSnapRequest,
   SnapResult,
   SnapService,
-} from "../packages/next/src/engineering/snap.ts";
+} from "../packages/crs/src/engineering/snap.ts";
 
 const MPU = 1200 / 3937;
 

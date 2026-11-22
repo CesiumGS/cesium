@@ -58,7 +58,7 @@ import {
   checkRows,
 } from "../../examples/design-globe/checks.ts";
 import { measurementModel } from "../../examples/design-globe/measureModel.ts";
-import type { SnapResult } from "../../packages/next/src/engineering/snap.ts";
+import type { SnapResult } from "../../packages/crs/src/engineering/snap.ts";
 import {
   corridorTree,
   largestSlopeError,
@@ -80,32 +80,32 @@ import { MIN_RADIUS } from "../../scripts/designTiles/meshBuilder.mjs";
 import { poleLinePoles } from "../../scripts/designTiles/poleLineMesh.mjs";
 import { poleLineShot } from "../../examples/design-globe/shots.ts";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
-import { Alignment } from "../../packages/next/src/engineering/alignment.ts";
+import { Alignment } from "../../packages/crs/src/engineering/alignment.ts";
 import {
   EngineeringFrame,
   designPoint,
-} from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import { gridFactors } from "../../packages/next/src/engineering/factors.ts";
+} from "../../packages/crs/src/engineering/EngineeringFrame.ts";
+import { gridFactors } from "../../packages/crs/src/engineering/factors.ts";
 import {
   checkRigidTransform,
   declaredDefinition,
   readGeoreference,
-} from "../../packages/next/src/engineering/georeferenceTileset.ts";
+} from "../../packages/crs/src/engineering/georeferenceTileset.ts";
 import {
   formatPipeline,
   parsePipeline,
-} from "../../packages/next/src/engineering/pipeline.ts";
+} from "../../packages/crs/src/engineering/pipeline.ts";
 import {
   placeReprojected,
   placeRigid,
   type TilesetPlacement,
-} from "../../packages/next/src/engineering/placement.ts";
+} from "../../packages/crs/src/engineering/placement.ts";
 import {
   gridSource,
   loadProj,
   type GridSource,
-} from "../../packages/next/src/engineering/proj.ts";
-import type { ProjApi } from "../../packages/next/src/engineering/projApi.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
+import type { ProjApi } from "../../packages/crs/src/engineering/projApi.ts";
 import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
 import { createFrames } from "../../packages/frames/src/frames.ts";
 import { splitGlb } from "../../packages/core/src/io/glb.ts";

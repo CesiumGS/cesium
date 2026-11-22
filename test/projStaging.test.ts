@@ -17,13 +17,13 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type { GridEntry } from "../packages/next/src/engineering/gridCatalog.ts";
-import { checkGrid } from "../packages/next/src/engineering/projCheck.ts";
+import type { GridEntry } from "../packages/crs/src/engineering/gridCatalog.ts";
+import { checkGrid } from "../packages/crs/src/engineering/projCheck.ts";
 import {
   exitCleanup,
   stageNodeGrid,
   sweepStaging,
-} from "../packages/next/src/engineering/projNode.ts";
+} from "../packages/crs/src/engineering/projNode.ts";
 import { sha256Hex } from "../packages/core/src/io/sha256.ts";
 
 const windows = process.platform === "win32";

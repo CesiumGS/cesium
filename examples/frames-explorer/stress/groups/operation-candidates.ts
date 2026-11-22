@@ -7,7 +7,7 @@ import {
   type OperationCandidate,
   listOperations,
   resolveOperation,
-} from "../../../../packages/next/src/engineering/crs.ts";
+} from "../../../../packages/crs/src/engineering/crs.ts";
 import {
   ellipsoidShape,
   epsgTransformation,

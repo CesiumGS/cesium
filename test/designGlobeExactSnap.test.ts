@@ -9,7 +9,7 @@
 // above looking down −x. The alignment is the corridor's own.
 import { describe, expect, it } from "vitest";
 import * as m4 from "../packages/core/src/math/mat4.ts";
-import type { PickView } from "../packages/next/src/engineering/pick.ts";
+import type { PickView } from "../packages/crs/src/engineering/pick.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 import {
   Camera,
@@ -29,16 +29,16 @@ import {
   ExactSnapService,
   visibleRise,
 } from "../examples/design-globe/exactSnap.ts";
-import { Alignment } from "../packages/next/src/engineering/alignment.ts";
-import { EngineeringFrame } from "../packages/next/src/engineering/EngineeringFrame.ts";
-import type { TilesetPlacement } from "../packages/next/src/engineering/placement.ts";
+import { Alignment } from "../packages/crs/src/engineering/alignment.ts";
+import { EngineeringFrame } from "../packages/crs/src/engineering/EngineeringFrame.ts";
+import type { TilesetPlacement } from "../packages/crs/src/engineering/placement.ts";
 import {
   ClientSnapService,
   refiningSnap,
   type ServiceSnapRequest,
   type SnapCamera,
   type SnapResult,
-} from "../packages/next/src/engineering/snap.ts";
+} from "../packages/crs/src/engineering/snap.ts";
 import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
 
 const R = 6_378_137;

@@ -14,8 +14,8 @@ import {
 import {
   designPoint,
   type EngineeringFrame,
-} from "../packages/next/src/engineering/EngineeringFrame.ts";
-import type { SnapResult } from "../packages/next/src/engineering/snap.ts";
+} from "../packages/crs/src/engineering/EngineeringFrame.ts";
+import type { SnapResult } from "../packages/crs/src/engineering/snap.ts";
 import type { Measurement } from "../packages/next/src/measure/measure.ts";
 
 const MPU = 1200 / 3937;

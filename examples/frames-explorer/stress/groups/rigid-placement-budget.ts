@@ -4,8 +4,8 @@ import {
   EngineeringFrame,
   RigidPlacement,
   type SiteTransform,
-} from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
-import { gridFactors } from "../../../../packages/next/src/engineering/factors.ts";
+} from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
+import { gridFactors } from "../../../../packages/crs/src/engineering/factors.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import { ellipsoidOf, onEarth, radii } from "../references.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";

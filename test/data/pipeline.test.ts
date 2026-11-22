@@ -8,12 +8,12 @@ import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
   resolveOperation,
   type CrsRef,
-} from "../../packages/next/src/engineering/crs.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
 import {
   formatPipeline,
   parsePipeline,
-} from "../../packages/next/src/engineering/pipeline.ts";
-import { loadProj } from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/pipeline.ts";
+import { loadProj } from "../../packages/crs/src/engineering/proj.ts";
 import fixture from "../fixtures/frames/proj.json";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;

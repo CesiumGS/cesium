@@ -8,16 +8,16 @@ import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
   crsDefinition,
   crsObject,
-} from "../../packages/next/src/engineering/crs.ts";
-import { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import { ENGINEERING_FRAME_EXTENSION } from "../../packages/next/src/engineering/georeference.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
+import { EngineeringFrame } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
+import { ENGINEERING_FRAME_EXTENSION } from "../../packages/crs/src/engineering/georeference.ts";
 import {
   checkRigidTransform,
   georeferenceTileset,
   tilesetGeoreference,
-} from "../../packages/next/src/engineering/georeferenceTileset.ts";
-import { placeRigid } from "../../packages/next/src/engineering/placement.ts";
-import { loadProj } from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/georeferenceTileset.ts";
+import { placeRigid } from "../../packages/crs/src/engineering/placement.ts";
+import { loadProj } from "../../packages/crs/src/engineering/proj.ts";
 import * as m4 from "../../packages/core/src/math/mat4.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";
 import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";

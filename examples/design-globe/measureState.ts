@@ -1,14 +1,14 @@
 // The measure tool's state (plan 4b Task 19): the two points, the two-click
 // state machine, the snap mode's choice of service and the deep link that
 // carries both design points. Pure: test/designGlobeMeasureTool.test.ts.
-import type { SnapKind } from "../../packages/next/src/engineering/EngineeringFrame.ts";
+import type { SnapKind } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   ClientSnapService,
   refiningSnap,
   type SnapRequest,
   type SnapResult,
   type SnapService,
-} from "../../packages/next/src/engineering/snap.ts";
+} from "../../packages/crs/src/engineering/snap.ts";
 import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";
 import type { SnapMode } from "./page.ts";
 

@@ -5,16 +5,16 @@
 // engine's workers never answer, and the glTF parser's Basis transcoder
 // doesn't load in Node).
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { EngineeringFrame } from "../packages/next/src/engineering/EngineeringFrame.ts";
-import { ENGINEERING_FRAME_EXTENSION } from "../packages/next/src/engineering/georeference.ts";
+import { EngineeringFrame } from "../packages/crs/src/engineering/EngineeringFrame.ts";
+import { ENGINEERING_FRAME_EXTENSION } from "../packages/crs/src/engineering/georeference.ts";
 import {
   georeferenceTileset,
   tilesetGeoreference,
-} from "../packages/next/src/engineering/georeferenceTileset.ts";
-import { GridCatalog } from "../packages/next/src/engineering/gridCatalog.ts";
-import type { GridSource } from "../packages/next/src/engineering/proj.ts";
-import type { TilesetPlacement } from "../packages/next/src/engineering/placement.ts";
-import type { ProjApi } from "../packages/next/src/engineering/projApi.ts";
+} from "../packages/crs/src/engineering/georeferenceTileset.ts";
+import { GridCatalog } from "../packages/crs/src/engineering/gridCatalog.ts";
+import type { GridSource } from "../packages/crs/src/engineering/proj.ts";
+import type { TilesetPlacement } from "../packages/crs/src/engineering/placement.ts";
+import type { ProjApi } from "../packages/crs/src/engineering/projApi.ts";
 import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
 import * as m4 from "../packages/core/src/math/mat4.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";

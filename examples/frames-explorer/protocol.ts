@@ -10,8 +10,8 @@
 // runner (expected throws are matched in the worker, before serializing: R7),
 // instants as TDB seconds, errors as `{ name, message }`, geometry as typed
 // arrays. The ion token never crosses: R18's request carries only the WKT2.
-import type { SiteTransform } from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import type { CrsRef } from "../../packages/next/src/engineering/crs.ts";
+import type { SiteTransform } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
+import type { CrsRef } from "../../packages/crs/src/engineering/crs.ts";
 import type {
   AdaptiveOptions,
   Extent,

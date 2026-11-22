@@ -27,18 +27,18 @@ import {
   modelFootprint,
   type PortfolioSite,
 } from "../../examples/design-globe/sites.ts";
-import { Alignment } from "../../packages/next/src/engineering/alignment.ts";
+import { Alignment } from "../../packages/crs/src/engineering/alignment.ts";
 import {
   listOperations,
   type AreaOfInterest,
-} from "../../packages/next/src/engineering/crs.ts";
-import { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
+import { EngineeringFrame } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   gridSource,
   loadProj,
   type GridSource,
-} from "../../packages/next/src/engineering/proj.ts";
-import type { ProjApi } from "../../packages/next/src/engineering/projApi.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
+import type { ProjApi } from "../../packages/crs/src/engineering/projApi.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;
 const grids = `${join(framesDataDirectory(), "grids")}/`;

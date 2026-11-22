@@ -1,5 +1,5 @@
 // Units: EPSG:6420 against its international-foot copy (plan 4a, Task 3).
-import { EngineeringFrame } from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
+import { EngineeringFrame } from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import { type StressCase, fmt } from "../runner.ts";
 import {

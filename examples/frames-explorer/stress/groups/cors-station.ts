@@ -10,8 +10,8 @@
 import {
   resolveOperation,
   type RecordedOperation,
-} from "../../../../packages/next/src/engineering/crs.ts";
-import type { ProjApi } from "../../../../packages/next/src/engineering/projApi.ts";
+} from "../../../../packages/crs/src/engineering/crs.ts";
+import type { ProjApi } from "../../../../packages/crs/src/engineering/projApi.ts";
 import { type Printed, cited, printed, sexagesimal } from "../references.ts";
 import { type StressCase, fmt } from "../runner.ts";
 import { operationFingerprint, proj, stressCase } from "../shared.ts";

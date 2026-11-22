@@ -32,20 +32,20 @@
 import type {
   Alignment,
   StationOffset,
-} from "../../packages/next/src/engineering/alignment.ts";
+} from "../../packages/crs/src/engineering/alignment.ts";
 import {
   designPoint,
   type SnapKind,
-} from "../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import type {
   ServiceSnapRequest,
   SnapResult,
   SnapService,
-} from "../../packages/next/src/engineering/snap.ts";
+} from "../../packages/crs/src/engineering/snap.ts";
 import {
   engineeringPlacement,
   type TilesetPlacement,
-} from "../../packages/next/src/engineering/placement.ts";
+} from "../../packages/crs/src/engineering/placement.ts";
 import type { CoordinateOperation } from "../../packages/frames/src/coordinates.ts";
 import { projectToPixel } from "../../packages/core/src/scene/Camera.ts";
 import type { Tileset3D } from "../../packages/core/src/streaming/Tileset3D.ts";

@@ -5,12 +5,12 @@
 // inverts its own forward exactly, the reprojected one round-trips through
 // PROJ, and the rigid one's sag 20 km out (`displayError`) is the hand
 // formula's.
-import { EngineeringFrame } from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
+import { EngineeringFrame } from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   type TilesetPlacement,
   placeReprojected,
   placeRigid,
-} from "../../../../packages/next/src/engineering/placement.ts";
+} from "../../../../packages/crs/src/engineering/placement.ts";
 import { SITE_BUILDING } from "../../../design-globe/sites.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";
 import {

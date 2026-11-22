@@ -27,13 +27,13 @@ import {
   crsDefinition,
   listOperations,
   resolveOperation,
-} from "../../../../packages/next/src/engineering/crs.ts";
-import { EngineeringFrame } from "../../../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../../../packages/crs/src/engineering/crs.ts";
+import { EngineeringFrame } from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   type GridSource,
   type ProjApi,
   loadGrids,
-} from "../../../../packages/next/src/engineering/proj.ts";
+} from "../../../../packages/crs/src/engineering/proj.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import fixture from "../../../../test/fixtures/frames/geoids.json";
 import { cited } from "../references.ts";

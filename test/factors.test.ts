@@ -1,12 +1,12 @@
 // gridFactors rejects PROJ's non-answers (plan 4a task 4), with a stub PROJ:
 // PROJ's coordinate service's factors (projGridFactors), through a frame.
 import { describe, expect, it } from "vitest";
-import type { EngineeringFrame } from "../packages/next/src/engineering/EngineeringFrame.ts";
+import type { EngineeringFrame } from "../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   gridFactors,
   projGridFactors,
-} from "../packages/next/src/engineering/factors.ts";
-import type { ProjApi } from "../packages/next/src/engineering/projApi.ts";
+} from "../packages/crs/src/engineering/factors.ts";
+import type { ProjApi } from "../packages/crs/src/engineering/projApi.ts";
 
 function stubFrame(factors: Record<string, number>): EngineeringFrame {
   const object = {};

@@ -47,7 +47,7 @@ import { catalogGridsFrom } from "../../examples/frames-explorer/stress/groups/g
 import {
   gridSource,
   loadProj,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
 import { createFrames } from "../../packages/frames/src/frames.ts";

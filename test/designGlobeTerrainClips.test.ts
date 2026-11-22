@@ -1,7 +1,7 @@
 // The design globe's terrain clips (feedback F11): each site's footprint,
 // padded, and the corridor's strip, as polygons in geodetic degrees.
 import { describe, expect, it } from "vitest";
-import { Alignment } from "../packages/next/src/engineering/alignment.ts";
+import { Alignment } from "../packages/crs/src/engineering/alignment.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { CORRIDOR_ALIGNMENT } from "../examples/design-globe/corridor.ts";
 import {

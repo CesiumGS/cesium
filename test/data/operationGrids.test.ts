@@ -12,14 +12,14 @@ import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
   resolveOperation,
   type CrsRef,
-} from "../../packages/next/src/engineering/crs.ts";
-import { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
+import { EngineeringFrame } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   gridSource,
   loadGrids,
   loadedGrids,
   loadProj,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 import { HOSTILE_GRID_NAMES } from "../hostileGridNames.ts";
 
 const store = framesDataDirectory();

@@ -24,7 +24,7 @@ import { RING_LIFT, roadPlaneAt } from "../examples/design-globe/overlays.ts";
 import {
   Alignment,
   type HorizontalElement,
-} from "../packages/next/src/engineering/alignment.ts";
+} from "../packages/crs/src/engineering/alignment.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 
 const alignment = new Alignment(CORRIDOR_ALIGNMENT);

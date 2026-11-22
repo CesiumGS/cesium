@@ -20,8 +20,8 @@ import {
   modelRoute,
   type PortfolioSite,
 } from "./sites.ts";
-import type { CrsRef } from "../../packages/next/src/engineering/crs.ts";
-import type { EngineeringFrameDefinition } from "../../packages/next/src/engineering/EngineeringFrame.ts";
+import type { CrsRef } from "../../packages/crs/src/engineering/crs.ts";
+import type { EngineeringFrameDefinition } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 
 // ------------------------------------------------------------------ params
 

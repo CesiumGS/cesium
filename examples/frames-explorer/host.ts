@@ -13,14 +13,14 @@
 // The messages and the page's side (`createClient`) are in protocol.ts, which
 // the main thread imports without this module's catalog and PROJ.
 import { MissingDataError, isMissing } from "./errors.ts";
-import { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import type { CrsRef } from "../../packages/next/src/engineering/crs.ts";
+import { EngineeringFrame } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
+import type { CrsRef } from "../../packages/crs/src/engineering/crs.ts";
 import {
   gridSource,
   loadGrids,
   loadProj,
   type ProjApi,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 import { CATALOG_GRID_SETS } from "./stress/groups/global-geoids.ts";
 import {
   FRAME_DATA_ROLES,

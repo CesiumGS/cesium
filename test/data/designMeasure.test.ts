@@ -7,20 +7,20 @@ import { framesDataDirectory } from "../../scripts/frameData.mjs";
 import {
   Alignment,
   type AlignmentDefinition,
-} from "../../packages/next/src/engineering/alignment.ts";
+} from "../../packages/crs/src/engineering/alignment.ts";
 import {
   EngineeringFrame,
   designPoint,
   type SiteTransform,
-} from "../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import {
   formatPipeline,
   parsePipeline,
-} from "../../packages/next/src/engineering/pipeline.ts";
+} from "../../packages/crs/src/engineering/pipeline.ts";
 import {
   gridSource,
   loadProj,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
 import { createFrames } from "../../packages/frames/src/frames.ts";

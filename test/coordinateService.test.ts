@@ -19,13 +19,13 @@ import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import {
   EngineeringFrame,
   type EngineeringFrameDefinition,
-} from "../packages/next/src/engineering/EngineeringFrame.ts";
-import { gridFactors } from "../packages/next/src/engineering/factors.ts";
-import { DESIGN_NOT_INVERTED } from "../packages/next/src/engineering/pick.ts";
+} from "../packages/crs/src/engineering/EngineeringFrame.ts";
+import { gridFactors } from "../packages/crs/src/engineering/factors.ts";
+import { DESIGN_NOT_INVERTED } from "../packages/crs/src/engineering/pick.ts";
 import {
   engineeringPlacement,
   placeHosted,
-} from "../packages/next/src/engineering/placement.ts";
+} from "../packages/crs/src/engineering/placement.ts";
 import { cartographic } from "../packages/core/src/math/ellipsoid.ts";
 import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";

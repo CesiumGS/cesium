@@ -1,5 +1,5 @@
 // Coordinate epoch: NAD83(2011) against ITRF2014, and the hand-coded Helmert.
-import { resolveOperation } from "../../../../packages/next/src/engineering/crs.ts";
+import { resolveOperation } from "../../../../packages/crs/src/engineering/crs.ts";
 import { type EpsgParameter, epsgTimeDependentHelmert } from "../datum.ts";
 import {
   type HelmertParameters,

@@ -4,13 +4,13 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { framesDataDirectory } from "../../scripts/frameData.mjs";
-import type { CrsRef } from "../../packages/next/src/engineering/crs.ts";
-import { EngineeringFrame } from "../../packages/next/src/engineering/EngineeringFrame.ts";
-import { gridFactors } from "../../packages/next/src/engineering/factors.ts";
+import type { CrsRef } from "../../packages/crs/src/engineering/crs.ts";
+import { EngineeringFrame } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
+import { gridFactors } from "../../packages/crs/src/engineering/factors.ts";
 import {
   loadProj,
   type ProjApi,
-} from "../../packages/next/src/engineering/proj.ts";
+} from "../../packages/crs/src/engineering/proj.ts";
 import { EARTH, MOON } from "../../packages/core/src/scene/Body.ts";
 
 const base = `${join(framesDataDirectory(), "proj")}/`;

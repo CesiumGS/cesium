@@ -7,13 +7,13 @@ import {
   pickDesign,
   pickInFrame,
   type PickView,
-} from "../packages/next/src/engineering/pick.ts";
+} from "../packages/crs/src/engineering/pick.ts";
 import type { CorePick } from "../packages/core/src/scene/pick.ts";
 import type { DrawHandle } from "../packages/core/src/scene/world/types.ts";
 import type { View } from "../packages/core/src/scene/View.ts";
 import type { Tileset3D } from "../packages/core/src/streaming/Tileset3D.ts";
-import type { TilesetPlacement } from "../packages/next/src/engineering/placement.ts";
-import { EngineeringFrame } from "../packages/next/src/engineering/EngineeringFrame.ts";
+import type { TilesetPlacement } from "../packages/crs/src/engineering/placement.ts";
+import { EngineeringFrame } from "../packages/crs/src/engineering/EngineeringFrame.ts";
 
 // An EngineeringFrame to `instanceof` (engineeringPlacement), with only what is read.
 const frame = Object.assign(Object.create(EngineeringFrame.prototype), {

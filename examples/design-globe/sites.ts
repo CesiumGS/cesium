@@ -23,8 +23,8 @@
 import type {
   AreaOfInterest,
   CrsRef,
-} from "../../packages/next/src/engineering/crs.ts";
-import type { EngineeringFrameDefinition } from "../../packages/next/src/engineering/EngineeringFrame.ts";
+} from "../../packages/crs/src/engineering/crs.ts";
+import type { EngineeringFrameDefinition } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
 import type { PlacementMode } from "../../packages/core/src/georeference/georeference.ts";
 import { EARTH } from "../../packages/core/src/scene/Body.ts";
 import {
