@@ -64,7 +64,7 @@ export interface WorkSearch {
   list?: string;
   /** The item open in the details panel. */
   item?: string;
-  /** The release chosen: the Plan view lights what sets its finish. */
+  /** The release chosen: Order lights what sets its finish. */
   release?: string;
   /** The roadmap's view, by its ID: the Release view by default (CS-744), or a mounted view's. */
   roadmap?: string;

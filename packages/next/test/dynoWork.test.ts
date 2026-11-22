@@ -48,7 +48,6 @@ import {
   byProject,
   possessive,
   proposalHeaderOf,
-  proposalsForOwner,
   proposalsOf,
   releasesGatedBy,
   stageOf,
@@ -858,26 +857,15 @@ describe("the proposals (CS-688)", () => {
     expect(proposalHeaderOf(undefined)).toBeUndefined();
   });
 
-  it("puts each proposal in its stage of the flow", () => {
-    expect(Object.fromEntries(all.map((p) => [p.id, p.stage]))).toEqual({
-      "CS-22": "ready",
-      "CS-23": "shaping",
-      "CS-24": "later",
-      "CS-25": "discuss",
-      "CS-26": "later",
-      "CS-30": "later",
-      "CS-40": "later",
-      "CS-42": "shaping",
-    });
-    // By stage, milestones first, then the most waited on, then by ID.
+  it("orders proposals: milestones first, then the most waited on, then by ID", () => {
     expect(all.map((p) => p.id)).toEqual([
-      "CS-25",
-      "CS-42",
-      "CS-23",
-      "CS-22",
       "CS-40",
+      "CS-42",
       "CS-26",
+      "CS-22",
+      "CS-23",
       "CS-24",
+      "CS-25",
       "CS-30",
     ]);
   });
@@ -904,11 +892,6 @@ describe("the proposals (CS-688)", () => {
       ["CS-24", ["CS-27"]],
       ["CS-30", ["CS-41"]],
     ]);
-  });
-
-  it("gives Your move the batch to discuss and those ready for a yes", () => {
-    expect(proposalsForOwner(all).map((p) => p.id)).toEqual(["CS-25", "CS-22"]);
-    expect(proposalsForOwner(all, 0).map((p) => p.id)).toEqual(["CS-22"]);
   });
 
   it("keeps to the items and milestones it is given", () => {

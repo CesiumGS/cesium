@@ -743,28 +743,6 @@ export function proposalHeaderOf(text?: string): ProposalHeader | undefined {
 export const saysDoneWhen = (text?: string) =>
   /^#{2,3}\s+Done when\b/m.test(text ?? "");
 
-/**
- * Where a proposal stands in the flow (CS-686): new to discuss, being
- * shaped, ready for the owner's yes, or a "later" copy awaiting review.
- *
- * - **shaping**: an open decision or study comes before the commit.
- * - **later**: no header yet, so nobody has made its case for now: the
- *   "later" copies of design lists and older filings, kept for the owner's
- *   review (CS-680 gives each the header).
- * - **ready**: a header, and shaped (an item's text has a "Done when"; a
- *   milestone has nothing left to shape), with nothing open before the
- *   commit but the decider's yes.
- * - **discuss**: a header but not shaped yet: the owner commits, drops or
- *   sends it to shaping.
- */
-export type ProposalStage = "discuss" | "shaping" | "ready" | "later";
-export const PROPOSAL_STAGES: readonly ProposalStage[] = [
-  "discuss",
-  "shaping",
-  "ready",
-  "later",
-];
-
 /** One proposed item or milestone, as the Proposals view shows it. */
 export interface Proposal {
   id: string;
@@ -774,7 +752,6 @@ export interface Proposal {
   item?: WorkItem;
   milestone?: WorkMilestone;
   header?: ProposalHeader;
-  stage: ProposalStage;
   /** Who says yes: the header's decider, or the owner when it names none. */
   decider: string;
   /** The open decisions and studies a commit waits for, by ID. */
@@ -813,9 +790,9 @@ function decidesFirst(
 }
 
 /**
- * The proposals among `items` and `milestones`, each with its header, its
- * stage, what a commit needs and what committed work needs it: by stage,
- * milestones first, then the most waited on first, then by ID.
+ * The proposals among `items` and `milestones`, each with its header,
+ * what a commit needs and what committed work needs it: milestones first,
+ * then the most waited on first, then by ID.
  */
 export function proposalsOf(
   s: WorkSnapshot,
@@ -850,12 +827,6 @@ export function proposalsOf(
       }
     }
   }
-  const stageOf = (
-    header: ProposalHeader | undefined,
-    first: string[],
-    shaped: boolean,
-  ): ProposalStage =>
-    first.length ? "shaping" : !header ? "later" : shaped ? "ready" : "discuss";
   const out: Proposal[] = [];
   for (const it of items) {
     if (it.state !== "proposed") {
@@ -869,7 +840,6 @@ export function proposalsOf(
       project: it.project,
       item: it,
       header,
-      stage: stageOf(header, first, saysDoneWhen(it.text)),
       decider: header?.decider ?? DEFAULT_DECIDER,
       first,
       startsAfter: it.open_needs.filter((n) => !first.includes(n)),
@@ -890,7 +860,6 @@ export function proposalsOf(
       project: m.project,
       milestone: m,
       header,
-      stage: stageOf(header, first, m.to_shape.length === 0),
       decider: header?.decider ?? DEFAULT_DECIDER,
       first,
       startsAfter: [],
@@ -899,32 +868,11 @@ export function proposalsOf(
   }
   return out.sort(
     (a, b) =>
-      PROPOSAL_STAGES.indexOf(a.stage) - PROPOSAL_STAGES.indexOf(b.stage) ||
       // A proposed milestone heads its project's proposals: the bigger bet.
       Number(!!b.milestone) - Number(!!a.milestone) ||
       (weight?.get(b.id) ?? 0) - (weight?.get(a.id) ?? 0) ||
       idNumber(a.id) - idNumber(b.id),
   );
-}
-
-/**
- * The proposals waiting on the owner, for Your move: the current "to
- * discuss" batch (the oldest filed first, at most `batch`, as CS-686
- * brings about five at a time) and every one ready for a yes.
- */
-export function proposalsForOwner(
-  proposals: readonly Proposal[],
-  batch = 5,
-): Proposal[] {
-  const filed = (p: Proposal) => p.header?.date ?? p.item?.created ?? "";
-  const discuss = proposals
-    .filter((p) => p.stage === "discuss")
-    .sort(
-      (a, b) =>
-        filed(a).localeCompare(filed(b)) || idNumber(a.id) - idNumber(b.id),
-    )
-    .slice(0, batch);
-  return [...discuss, ...proposals.filter((p) => p.stage === "ready")];
 }
 
 /** "the owner" → "the owner's"; "Ines" → "Ines'". */
@@ -1508,143 +1456,6 @@ export const percentile = (
     Math.min(s.length - 1, Math.max(0, Math.ceil((p / 100) * s.length) - 1))
   ];
 };
-
-/** One finished thing on a chart over time: when it finished and how long it took (ms). */
-export interface MeasurePoint {
-  id: string;
-  t: number;
-  v: number;
-  /** Still open: `t` is now and `v` how long it has waited so far. */
-  open?: boolean;
-}
-
-/**
- * The measures human-in-the-lead uses in place of velocity (its design,
- * part 11.1), as far as the tracker's history holds them, each with its
- * history for a chart. Durations are in milliseconds. Token measures need
- * its ledger and are left out.
- */
-export interface Measures {
-  /** Planned to Done, over every item finished since the history began. */
-  lead: number[];
-  leadPoints: MeasurePoint[];
-  /** Owner decisions: asked (created) to answered (Done). */
-  decisionLatency: number[];
-  /** Owner decisions still open: how long each has been asked. */
-  decisionsOpen: number[];
-  /** Answered decisions at their answer, and open ones now at their age. */
-  decisionPoints: MeasurePoint[];
-  /** Open items that wait on an open owner decision, directly. */
-  blocked: { items: number; decisions: number; itemDays: number };
-  /** The same count at the end of each of the flow's days (the last is now). */
-  blockedDaily: number[];
-  /** Items carrying a token estimate (`estimate_tokens`). */
-  estimated: number;
-}
-
-export function measuresOf(
-  s: WorkSnapshot,
-  items: readonly WorkItem[],
-  flow: Flow,
-  now = Date.now(),
-): Measures {
-  const events = new Map<string, Array<{ t: number; state: State }>>();
-  for (const e of s.history ?? []) {
-    const list = events.get(e.id) ?? [];
-    list.push({ t: Date.parse(e.at), state: e.state });
-    events.set(e.id, list);
-  }
-  for (const list of events.values()) {
-    list.sort((a, b) => a.t - b.t);
-  }
-  const statusAt = (id: string, t: number): State | undefined => {
-    let at: State | undefined;
-    for (const e of events.get(id) ?? []) {
-      if (e.t > t) {
-        break;
-      }
-      at = e.state;
-    }
-    return at;
-  };
-  const itemOf = new Map(s.items.map((i) => [i.id, i]));
-  const lead: number[] = [];
-  const leadPoints: MeasurePoint[] = [];
-  const decisionLatency: number[] = [];
-  const decisionsOpen: number[] = [];
-  const decisionPoints: MeasurePoint[] = [];
-  for (const it of items) {
-    const list = events.get(it.id) ?? [];
-    const done = list.find((e) => e.state === "done");
-    const planned = list.find(
-      (e) => e.state === "planned" || e.state === "in-progress",
-    );
-    if (done && planned) {
-      lead.push(done.t - planned.t);
-      leadPoints.push({ id: it.id, t: done.t, v: done.t - planned.t });
-    }
-    if (it.kind === "decision" && it.decider === "owner") {
-      // Asked when it was made: its creation date, or its first commit.
-      const made = it.created ? Date.parse(`${it.created}T00:00`) : NaN;
-      const asked = Number.isNaN(made) ? list[0]?.t : made;
-      if (asked === undefined) {
-        continue;
-      }
-      if (it.state === "done" && done) {
-        const v = Math.max(0, done.t - asked);
-        decisionLatency.push(v);
-        decisionPoints.push({ id: it.id, t: done.t, v });
-      } else if (isOpen(it)) {
-        decisionsOpen.push(now - asked);
-        decisionPoints.push({ id: it.id, t: now, v: now - asked, open: true });
-      }
-    }
-  }
-  const isOpenStatus = (st?: State) =>
-    st !== undefined && st !== "done" && st !== "dropped";
-  // Items waiting on an open owner decision at a moment, from the history.
-  const blockedAt = (t: number) =>
-    items.filter(
-      (it) =>
-        isOpenStatus(statusAt(it.id, t)) &&
-        it.needs.some((n) => {
-          const need = itemOf.get(n);
-          return need && isOwnerDecision(need) && isOpenStatus(statusAt(n, t));
-        }),
-    ).length;
-  const behind = new Set<string>();
-  let blockedItems = 0;
-  let itemDays = 0;
-  for (const it of items) {
-    if (!isOpen(it)) {
-      continue;
-    }
-    const on = it.open_needs.filter((n) => {
-      const need = itemOf.get(n);
-      return need && isOwnerDecision(need) && isOpen(need);
-    });
-    if (on.length) {
-      blockedItems++;
-      on.forEach((n) => behind.add(n));
-      itemDays += (now - (flow.since.get(it.id) ?? now)) / DAY;
-    }
-  }
-  return {
-    lead,
-    leadPoints,
-    decisionLatency,
-    decisionsOpen,
-    decisionPoints,
-    blocked: { items: blockedItems, decisions: behind.size, itemDays },
-    blockedDaily: flow.days.map((d, i) =>
-      i === flow.days.length - 1 ? blockedItems : blockedAt(d + DAY - 1),
-    ),
-    estimated: items.filter(
-      (it) =>
-        (it as { estimate_tokens?: unknown }).estimate_tokens !== undefined,
-    ).length,
-  };
-}
 
 /**
  * A milestone's critical path: the longest chain of needs among its
@@ -3384,7 +3195,7 @@ export function fitZoom(
   view: { w: number; h: number },
   content: { w: number; h: number },
   fixed: { x: number; y: number },
-  /** "across" for content that zooms across only (the Plan view's rows keep their height). */
+  /** "across" for content that zooms across only (rows that keep their height). */
   axes: "both" | "across" = "both",
 ): number {
   const across = (view.w - fixed.x) / Math.max(1, content.w - fixed.x);
@@ -3405,9 +3216,9 @@ export function cardDetail(w: number, h: number): "full" | "name" | "mark" {
   return h >= 60 && w >= 120 ? "full" : h >= 24 && w >= 64 ? "name" : "mark";
 }
 
-// ------------------------------------------------------------ the Plan view
+// ------------------------------------------------------------ the order's plan
 
-/** The most executor slots the Plan view will sequence for. */
+/** The most executor slots the plan will sequence for. */
 export const SLOTS_MAX = 8;
 
 /** A slot count from the URL, kept in range: 1 when it can't be read. */
@@ -3416,7 +3227,7 @@ export function clampSlots(n: unknown): number {
   return Number.isFinite(k) && k >= 1 ? Math.min(SLOTS_MAX, k) : 1;
 }
 
-/** One item as the Plan view sequences it (CS-692). */
+/** One item as the plan sequences it for Order (CS-692, CS-749). */
 export interface PlanItem {
   id: string;
   /** Where its work starts and finishes across, in the plan's unit. */
@@ -3517,18 +3328,18 @@ export interface Plan {
 }
 
 /**
- * The Plan view (CS-692): what gets built when, with no dates. The open
- * work items are worked by `slots` executor slots (the run's
- * `max_executors`) in the planner's order, each starting once the items
- * it needs are finished. The planner's order is hitld's queue rule
- * (`orderQueue` in its dispatch/queue.mjs): most open items unblocked
- * first, then the smaller estimate, then the ID; work already in progress
- * goes first, and the release bands (CS-685) come before all of it, so
- * an earlier release's work is preferred over a later one's. An item a
- * band's work needs is worked in that band. Across is cumulative tokens
- * per slot, or item count when no item carries an estimate. Decisions
- * and outside waits take no slot: the items behind them list them as
- * `held`, and the plan assumes they are answered in time.
+ * The plan Order draws (CS-692; Order replaced the Plan view, CS-749): what
+ * gets built when, with no dates. The open work items are worked by `slots`
+ * executor slots (the run's `max_executors`) in the planner's order, each
+ * starting once the items it needs are finished. The planner's order is
+ * hitld's queue rule (`orderQueue` in its dispatch/queue.mjs): most open
+ * items unblocked first, then the smaller estimate, then the ID; work
+ * already in progress goes first, and the release bands (CS-685) come
+ * before all of it, so an earlier release's work is preferred over a later
+ * one's. An item a band's work needs is worked in that band. Across is
+ * cumulative tokens per slot, or item count when no item carries an
+ * estimate. Decisions and outside waits take no slot: the items behind them
+ * list them as `held`, and the plan assumes they are answered in time.
  */
 export function planOf(
   snap: WorkSnapshot,
@@ -3836,7 +3647,7 @@ const slackCache = new WeakMap<Plan, Map<string, Map<string, number>>>();
 
 /**
  * How far each sequenced item's finish can slip before a release's
- * finish moves, in the plan's unit, read off the Plan view's own
+ * finish moves, in the plan's unit, read off Order's own
  * sequence: a backward pass over what follows each item, the items that
  * need it and the next item in its slot. Infinity where its delay can't
  * reach the release. An approximation: the planner would refill a slot
@@ -3912,7 +3723,7 @@ export interface CardBlocker {
   owner: boolean;
 }
 
-/** How a mark stands against its release in the Plan view's sequence. */
+/** How a mark stands against its release in Order's sequence. */
 export interface CardSlip {
   /** The release item, and its version. */
   release: string;
@@ -4122,8 +3933,8 @@ export function segmentLabel(
 /**
  * The hover card for any mark on the Work page (CS-696): a work item, a
  * milestone, a release, a project, or a set of items given outright (a
- * Projects cell). The plan is the Plan view's, so the slip line measures
- * against the same sequence and units the Plan view draws.
+ * Projects cell). The plan is Order's, so the slip line measures
+ * against the same sequence and units Order draws.
  */
 export function workCardOf(
   s: WorkSnapshot,

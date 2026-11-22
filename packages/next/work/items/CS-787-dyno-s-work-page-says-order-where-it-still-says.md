@@ -2,7 +2,7 @@
 id: CS-787
 title: The Work page's code says Order where it still says Plan view, and its dead Plan-view and proposal-stage code goes
 kind: work
-state: in-progress
+state: done
 created: 2026-11-21
 project: CS-389
 needs: [CS-749, CS-775]

@@ -173,7 +173,7 @@ export function HoverCard({
 export interface WorkCardScope {
   s: WorkSnapshot;
   flight: InFlight;
-  /** The Plan view's sequence, with its slots: the slip line measures on it. */
+  /** Order's sequence, with its slots: the slip line measures on it. */
   plan?: Plan;
   /** Opens the Path view on a milestone or item (the D key). */
   onDeps?: (id: string) => void;
