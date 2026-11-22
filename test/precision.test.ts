@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -22,7 +22,11 @@ import { splitHigh, splitVec3 } from "../packages/core/src/math/transforms.ts";
  */
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const src = join(root, "packages", "next", "src");
+// Every package's src/ but the widgets' (2.0's src/ before CS-835).
+const srcs = readdirSync(join(root, "packages"))
+  .filter((name) => name !== "ui")
+  .map((name) => join(root, "packages", name, "src"))
+  .filter((dir) => existsSync(dir));
 /** The hi/lo fields shaders see (common.slang View and Transform, rays). */
 const SPLIT = /\b(cameraHi|cameraLo|originHi|originLo)\b/;
 const HELPERS = /\b(hiLoDifference|hiLoSum|SplitPosition)\s*\(/g;
@@ -118,7 +122,7 @@ describe("hi/lo precision", () => {
 
   it("combines split positions only through hiLoDifference and hiLoSum", () => {
     const sources = [
-      ...files(src, /\.(wgsl|slang|ts)$/),
+      ...srcs.flatMap((src) => files(src, /\.(wgsl|slang|ts)$/)),
       ...files(join(root, "spikes", "slang"), /\.slang$/),
     ];
     const violations: string[] = [];
@@ -137,7 +141,7 @@ describe("hi/lo precision", () => {
     // `fround(value - high)` is the low half of a split: written anywhere
     // else, the high half may not be the whole meters the GPU relies on.
     const violations: string[] = [];
-    for (const path of files(src, /\.ts$/)) {
+    for (const path of srcs.flatMap((src) => files(src, /\.ts$/))) {
       if (path.endsWith(join("math", "transforms.ts"))) {
         continue;
       }
