@@ -11,7 +11,7 @@
 // nothing else changed in a package. Any other change to a package's
 // package.json (a dependency, its exports) needs a changeset.
 //
-//   node scripts/release/changesetCheck.mjs --base <ref> [--head <ref>]
+//   node scripts/release/changesetCheck.mjs --base <ref> [--head <ref>] [--split-merges]
 //
 // It walks the head's first-parent line from its merge base with `<base>`
 // (head defaults to HEAD), so the base must be fetched, and judges it in
@@ -19,8 +19,12 @@
 // parent, and each run of commits between records as one change. So a
 // push that batches a record with other work passes when each part does,
 // and a branch's commits, which land one by one with the changeset in the
-// closing commit, are judged together as they were reviewed. Exits 1 with
-// the reason when a part fails the rule.
+// closing commit, are judged together as they were reviewed. With
+// `--split-merges` (ci.yml passes it on a push and in the merge queue),
+// each merge commit on that line is a part by itself too, so one branch's
+// change can't pass on another branch's changeset. Exits 1 with the reason
+// when a part fails the rule. In GitHub Actions its output runs with
+// workflow commands stopped, so a path can't inject one.
 import { execFileSync } from "node:child_process";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -31,6 +35,7 @@ import {
   judgeCommits,
   parseNameStatus,
   releaseRecordProblems,
+  withCommandsStopped,
 } from "./record.mjs";
 
 export { isChangeset, parseNameStatus };
@@ -137,29 +142,34 @@ export function checkChangesets(changed, base, head) {
 /**
  * The parts the rule judges a push or a branch by: each commit along the
  * head's first-parent line from `base` that is a release record, by
- * itself, and each run of commits between them as one change. One part,
- * base to head, when that line doesn't reach `base`.
- * @returns {{ from: string, to: string, commits: number, record: boolean }[]}
+ * itself, and each run of commits between them as one change. With
+ * `splitMerges`, each merge commit on that line is a part by itself too,
+ * judged against its first parent: the merged branch's whole change. One
+ * part, base to head, when that line doesn't reach `base`.
+ * @param {{ splitMerges?: boolean }} [options]
+ * @returns {{ from: string, to: string, commits: number, record: boolean, merge: boolean }[]}
  */
-export function changeParts(base, head, cwd = repo) {
+export function changeParts(base, head, cwd = repo, options = {}) {
+  const { splitMerges = false } = options;
   const judged = judgeCommits(base, head, cwd);
   if (!judged) {
-    return [{ from: base, to: head, commits: 0, record: false }];
+    return [{ from: base, to: head, commits: 0, record: false, merge: false }];
   }
   const parts = [];
   let run;
   for (const c of judged) {
-    if (c.problems.length === 0) {
+    const record = c.problems.length === 0;
+    if (record || (splitMerges && c.merge)) {
       if (run) {
         parts.push(run);
         run = undefined;
       }
-      parts.push({ from: c.parent, to: c.commit, commits: 1, record: true });
+      parts.push({ from: c.parent, to: c.commit, commits: 1, record, merge: c.merge });
     } else if (run) {
       run.to = c.commit;
       run.commits += 1;
     } else {
-      run = { from: c.parent, to: c.commit, commits: 1, record: false };
+      run = { from: c.parent, to: c.commit, commits: 1, record: false, merge: false };
     }
   }
   if (run) {
@@ -172,8 +182,8 @@ export function changeParts(base, head, cwd = repo) {
  * The rule on each part of the change from `base` to `head`
  * (changeParts), each part's result with its range.
  */
-export function checkParts(base, head, cwd = repo) {
-  return changeParts(base, head, cwd).map((part) => ({
+export function checkParts(base, head, cwd = repo, options = {}) {
+  return changeParts(base, head, cwd, options).map((part) => ({
     ...part,
     result: checkChangesets(
       changedPaths(part.from, part.to, cwd),
@@ -195,35 +205,38 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     console.error("changesetCheck: --base <ref> is required");
     process.exit(2);
   }
-  const mergeBase = execFileSync("git", ["merge-base", base, head], {
-    cwd: repo,
-    encoding: "utf8",
-  }).trim();
-  const parts = checkParts(mergeBase, head);
-  let failed = false;
-  for (const { from, to, commits, record, result } of parts) {
-    const range = `${from.slice(0, 10)}..${to.slice(0, 10)}${record ? " (a release record)" : commits > 1 ? ` (${commits} commits)` : ""}`;
-    if (!result.ok) {
-      console.error(`changesetCheck: ${range}: ${result.problem}`);
-      failed = true;
-    } else if (result.touched.length === 0) {
-      console.log(`changesetCheck: ${range}: no published package changed`);
-    } else if (result.release) {
-      console.log(`changesetCheck: ${range}: a release record for ${result.touched.join(", ")}`);
-    } else {
-      console.log(
-        `changesetCheck: ${range}: ${result.added.length} changeset(s) for a change to ${result.touched.join(", ")}; they name ${result.named.join(", ")}`,
-      );
+  const failed = withCommandsStopped(() => {
+    const mergeBase = execFileSync("git", ["merge-base", base, head], {
+      cwd: repo,
+      encoding: "utf8",
+    }).trim();
+    const parts = checkParts(mergeBase, head, repo, { splitMerges: args.includes("--split-merges") });
+    let failed = false;
+    for (const { from, to, commits, record, merge, result } of parts) {
+      const range = `${from.slice(0, 10)}..${to.slice(0, 10)}${record ? " (a release record)" : merge ? " (a merge)" : commits > 1 ? ` (${commits} commits)` : ""}`;
+      if (!result.ok) {
+        console.error(`changesetCheck: ${range}: ${result.problem}`);
+        failed = true;
+      } else if (result.touched.length === 0) {
+        console.log(`changesetCheck: ${range}: no published package changed`);
+      } else if (result.release) {
+        console.log(`changesetCheck: ${range}: a release record for ${result.touched.join(", ")}`);
+      } else {
+        console.log(
+          `changesetCheck: ${range}: ${result.added.length} changeset(s) for a change to ${result.touched.join(", ")}; they name ${result.named.join(", ")}`,
+        );
+      }
+      if (result.ok && !result.release && result.deleted.length > 0) {
+        console.log(
+          `changesetCheck: ${range}: note: it deletes ${result.deleted.join(", ")} outside a release record; the merge review checks that's right (a revert, say)`,
+        );
+      }
     }
-    if (result.ok && !result.release && result.deleted.length > 0) {
-      console.log(
-        `changesetCheck: ${range}: note: it deletes ${result.deleted.join(", ")} outside a release record; the merge review checks that's right (a revert, say)`,
-      );
+    if (parts.length === 0) {
+      console.log("changesetCheck: no commits to check");
     }
-  }
-  if (parts.length === 0) {
-    console.log("changesetCheck: no commits to check");
-  }
+    return failed;
+  });
   if (failed) {
     process.exit(1);
   }

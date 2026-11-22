@@ -17,17 +17,18 @@
 //
 //   node scripts/release/record.mjs --before <sha> [--head <ref>]
 //
-// judges each commit of the push (the head's first-parent line from
-// `before`) against its first parent, so a record pushed in a batch with
-// other commits is still found. It prints `release=true|false`,
-// `version=<the umbrella's version>` and `sha=<the record's commit>` (empty
-// when there is none), and appends them to $GITHUB_OUTPUT when it is set
-// (release.yml's `record` job). A `before` it can't resolve (none, all
-// zeros, missing from the clone, or not an ancestor of the head, as after
-// a force push) is never a release record. It refuses, exiting 1, a push
-// with two records or with a commit that moves the umbrella's version up
-// without being one. It imports nothing outside Node.
+// judges every commit the push adds (`before..head`, on every parent's
+// side, so a merge made by `git pull` or a force push can't hide one)
+// against its own first parent, so a record pushed in a batch with other
+// commits is still found. It prints `release=true|false`, `version=<the
+// umbrella's version>` and `sha=<the record's commit>` (empty when there is
+// none), and appends them to $GITHUB_OUTPUT when it is set (release.yml's
+// `record` job). It never ends green while a version could be lost: once
+// the before commit resolves, a push whose head moves the umbrella's
+// version up, with no tag and not on npm, either holds its record or fails
+// (pushIsRelease). It imports nothing outside Node.
 import { execFileSync } from "node:child_process";
+import { randomUUID } from "node:crypto";
 import { appendFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -260,8 +261,10 @@ export function changedPaths(base, head, cwd = repo) {
 
 /**
  * Whether npm already has `name@version`, published (`npm view`). A
- * version staged but not yet approved doesn't show; npm itself refuses to
- * stage it twice.
+ * version staged but not yet approved doesn't show: npm's stage page says
+ * staged versions share the published versions' unique index, so the
+ * registry refuses a second staging, and stageTarballs.mjs checks for an
+ * earlier run that staged it first.
  */
 export function onNpm(name, version) {
   try {
@@ -280,22 +283,15 @@ export function onNpm(name, version) {
 
 /**
  * The commits from `before` to `head` along the head's first-parent line,
- * oldest first, each with its first parent. Undefined when that line
- * doesn't reach `before` (the before commit sits only on a merged side
- * branch). `before` must be an ancestor of `head`.
- * @returns {{ commit: string, parent: string }[] | undefined}
+ * oldest first, each with its parents (the first is the one it is judged
+ * against). Undefined when that line doesn't reach `before` (the before
+ * commit sits only on a merged side branch). `before` must be an ancestor
+ * of `head`. The changeset rule's parts follow this line.
+ * @returns {{ commit: string, parent: string, parents: string[] }[] | undefined}
  */
 export function firstParentCommits(before, head, cwd = repo) {
-  const git = (...args) =>
-    execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-  const base = git("rev-parse", "--verify", "--quiet", `${before}^{commit}`).trim();
-  const pairs = git("rev-list", "--first-parent", "--reverse", "--parents", `${base}..${head}`)
-    .split("\n")
-    .filter((line) => line !== "")
-    .map((line) => {
-      const [commit, parent] = line.split(" ");
-      return { commit, parent };
-    });
+  const base = gitIn(cwd, "rev-parse", "--verify", "--quiet", `${before}^{commit}`).trim();
+  const pairs = revList(cwd, "--first-parent", `${base}..${head}`);
   if (pairs.length > 0 && pairs[0].parent !== base) {
     return undefined;
   }
@@ -303,16 +299,52 @@ export function firstParentCommits(before, head, cwd = repo) {
 }
 
 /**
- * Each commit of the push from `before` to `head` (its first-parent
- * line), judged against its first parent: whether it is a release record,
- * and if not, why, and whether it moves the umbrella's version up.
- * @returns {{ commit: string, parent: string, problems: string[], version: string | undefined, raises: boolean }[] | undefined}
+ * Every commit in `before..head`, on every parent's side and not only the
+ * first-parent line, oldest first, each with its parents. A merge made by
+ * `git pull` puts the local line first and the remote's old tip (the push's
+ * before commit) second, and a force push's before commit isn't an
+ * ancestor, so the first-parent line alone can miss a record.
+ * @returns {{ commit: string, parent: string, parents: string[] }[]}
  */
-export function judgeCommits(before, head, cwd = repo) {
-  const pairs = firstParentCommits(before, head, cwd);
-  if (!pairs) {
-    return undefined;
-  }
+export function pushCommits(before, head, cwd = repo) {
+  return revList(cwd, "--topo-order", `${before}..${head}`);
+}
+
+function gitIn(cwd, ...args) {
+  return execFileSync("git", args, {
+    cwd,
+    encoding: "utf8",
+    maxBuffer: 64 << 20,
+    stdio: ["ignore", "pipe", "pipe"],
+  });
+}
+
+function revList(cwd, ...args) {
+  return gitIn(cwd, "rev-list", "--reverse", "--parents", ...args)
+    .split("\n")
+    .filter((line) => line !== "")
+    .map((line) => {
+      const [commit, ...parents] = line.split(" ");
+      return { commit, parent: parents[0], parents };
+    });
+}
+
+/** The umbrella's version in a tree, or undefined. */
+function umbrellaVersion(tree) {
+  return tree.packages.find((p) => p.folder === "cesium")?.manifest.version;
+}
+
+/**
+ * Each commit given, judged against its first parent: whether it is a
+ * release record, and if not, why; whether it moves the umbrella's version
+ * above every parent's (`raises`); and, for a merge, whether it only
+ * carries a version one of its other parents already has (`carried`), as a
+ * merge of a branch that holds a record does. A carried merge is neither a
+ * record nor a stray: the record, if any, is the side's own commit.
+ * @param {{ commit: string, parent: string, parents: string[] }[]} commits
+ * @returns {{ commit: string, parent: string, parents: string[], merge: boolean, problems: string[], version: string | undefined, raises: boolean, carried: boolean }[]}
+ */
+export function judge(commits, cwd = repo) {
   const trees = new Map();
   const tree = (rev) => {
     if (!trees.has(rev)) {
@@ -320,49 +352,79 @@ export function judgeCommits(before, head, cwd = repo) {
     }
     return trees.get(rev);
   };
-  const umbrella = (t) => t.packages.find((p) => p.folder === "cesium")?.manifest.version;
-  return pairs.map(({ commit, parent }) => {
-    const a = tree(parent);
-    const b = tree(commit);
-    const problems = releaseRecordProblems(changedPaths(parent, commit, cwd), a, b);
-    const from = umbrella(a);
-    const to = umbrella(b);
-    const raises =
-      parseVersion(`${from}`) !== undefined &&
-      parseVersion(`${to}`) !== undefined &&
-      compareVersions(to, from) > 0;
-    return { commit, parent, problems, version: to, raises };
-  });
+  const isVersion = (v) => parseVersion(`${v}`) !== undefined;
+  return commits
+    .filter(({ parent }) => parent !== undefined)
+    .map(({ commit, parent, parents }) => {
+      const a = tree(parent);
+      const b = tree(commit);
+      const problems = releaseRecordProblems(changedPaths(parent, commit, cwd), a, b);
+      const to = umbrellaVersion(b);
+      const versions = parents.map((p) => umbrellaVersion(tree(p)));
+      const raises =
+        isVersion(to) && versions.every((v) => isVersion(v) && compareVersions(to, v) > 0);
+      const merge = parents.length > 1;
+      const carried = merge && versions.slice(1).some((v) => v === to);
+      return { commit, parent, parents, merge, problems, version: to, raises, carried };
+    });
+}
+
+/**
+ * Each commit of the push from `before` to `head` along the head's
+ * first-parent line, judged against its first parent (judge). Undefined
+ * when that line doesn't reach `before`.
+ */
+export function judgeCommits(before, head, cwd = repo) {
+  const pairs = firstParentCommits(before, head, cwd);
+  return pairs ? judge(pairs, cwd) : undefined;
 }
 
 /**
  * Whether the push from `before` to `head` holds a release record to
- * stage, and which commit it is. Each commit of the push (its first-parent
- * line, so a batch pushed from a bundle is judged commit by commit) is
- * tested against its first parent. Logs each reason it isn't one.
+ * stage, and which commit it is. Every commit the push adds (`before..head`,
+ * on every parent's side) is judged against its first parent, so a record
+ * is found in a batch pushed from a bundle, under a merge made by `git
+ * pull` and after a force push. Logs each reason it isn't one.
  * `published(name, version)` says whether npm already has the umbrella at
- * that version, as after a record that was reverted and landed again.
+ * that version.
  *
- * Throws, so the run fails rather than ends green with nothing staged,
- * when the push holds two release records, or a commit that moves the
+ * It never ends green while a version could be lost. It throws, so the
+ * run fails, when the push holds two records; a commit that moves the
  * umbrella's version up without being one (a record that landed after new
- * changesets, say); either version would otherwise never release, since
- * the next push's before commit is past it.
+ * changesets, say); a record below the head's version; or, on any other
+ * path once the before commit resolves, a head whose umbrella version is
+ * above the before commit's with no `v<version>` tag and not on npm. Each
+ * such version would otherwise never release, since the next push's
+ * before commit is past it. When the before commit isn't in the clone (a
+ * force push's old tip that couldn't be fetched), it can't tell what the
+ * push added, and throws unless the head's version is tagged or on npm.
+ * A record the head has since reverted (the head's version below it) is
+ * not staged, and the run ends green.
  * @returns {{ release: boolean, version: string, sha: string }}
  */
 export function pushIsRelease(before, head, options = {}) {
   const { log = console.log, cwd = repo, published = () => false } = options;
-  const git = (...args) =>
-    execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
-  const headVersion = gitTree(head, cwd).packages.find((p) => p.folder === "cesium")?.manifest
-    .version;
+  const git = (...args) => gitIn(cwd, ...args);
+  const headTree = gitTree(head, cwd);
+  const headVersion = umbrellaVersion(headTree);
   if (!headVersion || !parseVersion(headVersion)) {
     throw new Error(`the umbrella's version at ${head} isn't one: ${headVersion}`);
   }
+  const name = headTree.packages.find((p) => p.folder === "cesium").manifest.name;
+  const tagged = (version) => {
+    try {
+      git("rev-parse", "--verify", "--quiet", `refs/tags/v${version}`);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const released = (version) => tagged(version) || published(name, version);
   const no = (why) => {
     log(`record: not a release record: ${why}`);
     return { release: false, version: headVersion, sha: "" };
   };
+  const recovery = `Find the release record's commit (\`git log --first-parent -- packages/cesium/package.json\`). If it is a record, rerun this workflow with "Re-run all jobs" once the cause is fixed, or revert it and write the record again from the tip with \`npm run release:version\`, then push that commit by itself`;
   if (!before || /^0+$/.test(before)) {
     return no("the push has no before commit (a new branch), so there is nothing to compare");
   }
@@ -372,22 +434,45 @@ export function pushIsRelease(before, head, options = {}) {
   try {
     git("cat-file", "-e", `${before}^{commit}`);
   } catch {
-    return no(`the before commit ${before} isn't in the clone`);
+    if (released(headVersion)) {
+      return no(
+        `the before commit ${before} isn't in the clone, and the head's version ${headVersion} is already tagged or on npm`,
+      );
+    }
+    throw new Error(
+      `the before commit ${before} isn't in the clone (a force push's old tip that couldn't be fetched?), so this can't tell whether the push holds a release record, and the head's version ${headVersion} has no tag and isn't on npm. ${recovery}. If no record was pushed, nothing is lost`,
+    );
   }
+  const beforeVersion = umbrellaVersion(gitTree(before, cwd));
+  // Every "not a release" path from here: green only when the head's
+  // version didn't go up, or is already released.
+  const notRelease = (why) => {
+    if (
+      parseVersion(`${beforeVersion}`) &&
+      compareVersions(headVersion, beforeVersion) > 0 &&
+      !released(headVersion)
+    ) {
+      throw new Error(
+        `${why}, yet the umbrella's version goes from ${beforeVersion} to ${headVersion}, with no v${headVersion} tag and not on npm, so that version would never release. ${recovery}`,
+      );
+    }
+    return no(why);
+  };
+  let ancestor = true;
   try {
     git("merge-base", "--is-ancestor", before, head);
   } catch {
-    return no(`the before commit ${before} isn't an ancestor of ${head} (a force push?)`);
+    ancestor = false;
+    log(
+      `record: the before commit ${before} isn't an ancestor of ${head} (a force push?); judging the commits the head adds`,
+    );
   }
-  const judged = judgeCommits(before, head, cwd);
-  if (!judged) {
-    return no(`${head}'s first-parent line doesn't reach the before commit ${before}`);
-  }
+  const judged = judge(pushCommits(before, head, cwd), cwd);
   if (judged.length === 0) {
-    return no("the push holds no commits");
+    return notRelease(`the push holds no commits${ancestor ? "" : " of its own"}`);
   }
-  const records = judged.filter((c) => c.problems.length === 0);
-  const strays = judged.filter((c) => c.problems.length > 0 && c.raises);
+  const records = judged.filter((c) => !c.carried && c.problems.length === 0);
+  const strays = judged.filter((c) => !c.carried && c.problems.length > 0 && c.raises);
   if (records.length > 1) {
     throw new Error(
       `the push holds ${records.length} release records, ${records.map((c) => `${c.commit} (${c.version})`).join(" and ")}; a push holds at most one, so none is staged. Push each record by itself (up to the first, then the rest). Once they have landed together, neither can release: revert both, then write one record from the tip with \`npm run release:version\``,
@@ -404,19 +489,27 @@ export function pushIsRelease(before, head, options = {}) {
   }
   if (records.length === 0) {
     for (const c of judged) {
-      log(`record: ${c.commit}: ${c.problems.join("; ")}`);
+      log(
+        `record: ${c.commit}: ${c.carried ? `a merge that carries ${c.version} from a side` : c.problems.join("; ")}`,
+      );
     }
-    return no(`none of the push's ${judged.length} commit(s) is one`);
+    return notRelease(`none of the push's ${judged.length} commit(s) is one`);
   }
   const [record] = records;
   const version = record.version;
-  const name = gitTree(record.commit, cwd).packages.find((p) => p.folder === "cesium").manifest
-    .name;
-  try {
-    git("rev-parse", "--verify", "--quiet", `refs/tags/v${version}`);
+  const order = compareVersions(headVersion, version);
+  if (order < 0) {
+    return notRelease(
+      `${record.commit} is a release record for ${version}, but the head is at ${headVersion}, below it: a later commit reverts it, so it isn't staged`,
+    );
+  }
+  if (order > 0) {
+    throw new Error(
+      `${record.commit} is a release record for ${version}, but the head is at ${headVersion}, above it, and no commit of the push is a record for that. ${recovery}`,
+    );
+  }
+  if (tagged(version)) {
     return no(`v${version} is already tagged`);
-  } catch {
-    // No tag: go on.
   }
   if (published(name, version)) {
     return no(`npm already has ${name}@${version}`);
@@ -427,25 +520,48 @@ export function pushIsRelease(before, head, options = {}) {
   return { release: true, version, sha: record.commit };
 }
 
+/**
+ * Runs `fn` with GitHub's workflow commands stopped, in GitHub Actions
+ * only, so a path or a message that holds a line like `::error::` or
+ * `::stop-commands::` is printed, not obeyed. The token is random for each
+ * run, as GitHub's workflow-commands page asks.
+ */
+export function withCommandsStopped(fn, env = process.env, write = (line) => process.stdout.write(line)) {
+  if (env.GITHUB_ACTIONS !== "true") {
+    return fn();
+  }
+  const token = randomUUID();
+  write(`::stop-commands::${token}\n`);
+  try {
+    return fn();
+  } finally {
+    write(`::${token}::\n`);
+  }
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
   const option = (flag) => {
     const i = args.indexOf(flag);
     return i >= 0 ? args[i + 1] : undefined;
   };
-  try {
-    const { release, version, sha } = pushIsRelease(
-      option("--before") ?? "",
-      option("--head") ?? "HEAD",
-      { published: onNpm },
-    );
-    const lines = `release=${release}\nversion=${version}\nsha=${sha}\n`;
-    process.stdout.write(lines);
-    if (process.env.GITHUB_OUTPUT) {
-      appendFileSync(process.env.GITHUB_OUTPUT, lines);
+  const code = withCommandsStopped(() => {
+    try {
+      const { release, version, sha } = pushIsRelease(
+        option("--before") ?? "",
+        option("--head") ?? "HEAD",
+        { published: onNpm },
+      );
+      const lines = `release=${release}\nversion=${version}\nsha=${sha}\n`;
+      process.stdout.write(lines);
+      if (process.env.GITHUB_OUTPUT) {
+        appendFileSync(process.env.GITHUB_OUTPUT, lines);
+      }
+      return 0;
+    } catch (error) {
+      console.error(`record: ${error instanceof Error ? error.message : error}`);
+      return 1;
     }
-  } catch (error) {
-    console.error(`record: ${error instanceof Error ? error.message : error}`);
-    process.exit(1);
-  }
+  });
+  process.exit(code);
 }

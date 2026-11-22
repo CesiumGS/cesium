@@ -50,10 +50,12 @@ import {
   manifestChanges,
   pushIsRelease,
   releaseRecordProblems,
+  withCommandsStopped,
   type Tree,
 } from "../scripts/release/record.mjs";
 import { publishOrder } from "../scripts/release/stage.mjs";
 import {
+  earlierStagingProblem,
   environmentProblems,
   gateProblem,
   runnerProblem,
@@ -790,15 +792,20 @@ describe("a release record as release:version writes it", () => {
       pushIsRelease(base, head, { cwd: root, log: (l) => log.push(l) }),
     ).toEqual({ release: true, version: "2.1.0", sha: head });
 
-    // Not a release: a missing, all-zeros, unknown or non-ancestor before,
-    // a version already tagged, and a version npm already has.
+    // Not a release: a missing, all-zeros or malformed before, a push of no
+    // commits, a version already tagged, and a version npm already has.
     const no = (before: string, published = () => false) =>
       pushIsRelease(before, head, { cwd: root, log: () => {}, published })
         .release;
     expect(no("")).toBe(false);
     expect(no("0".repeat(40))).toBe(false);
-    expect(no("1".repeat(40))).toBe(false);
     expect(no("--output=x")).toBe(false);
+    // A before missing from the clone: it can't tell, so it fails unless
+    // the head's version is already out.
+    expect(() => no("1".repeat(40))).toThrow(
+      /isn't in the clone .*can't tell whether the push holds a release record/,
+    );
+    expect(no("1".repeat(40), () => true)).toBe(false);
     expect(no(head)).toBe(false);
     expect(no(base, () => true)).toBe(false);
     git(root, "tag", "v2.1.0");
@@ -998,6 +1005,168 @@ describe("a push of several commits (a bundle from another machine)", () => {
       /touches @x\/core and adds no changeset/,
     );
   });
+  it("finds a record under a merge made by git pull (a foxtrot merge)", () => {
+    const { root, base } = workspace("2.0.0", pending);
+    roots.push(root);
+    // Origin moved on: its tip is the push's before commit.
+    put(root, "notes.md", "on origin\n");
+    const before = commitAll(root, "origin's commit");
+    // The local line wrote the record from the older base, then pulled.
+    git(root, "checkout", "-q", "-b", "local", base);
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const record = commitAll(root, "the record");
+    git(root, "merge", "-q", "--no-edit", before);
+    const head = git(root, "rev-parse", "HEAD").trim();
+    // The merge's first parent is the local line, so that line never
+    // reaches the before commit.
+    expect(git(root, "rev-parse", `${head}^1`).trim()).toBe(record);
+    expect(git(root, "rev-parse", `${head}^2`).trim()).toBe(before);
+    expect(pushIsRelease(before, head, { cwd: root, ...quiet })).toEqual({
+      release: true,
+      version: "2.1.0",
+      sha: record,
+    });
+  });
+  it("finds a record after a force push, among the commits the head adds", () => {
+    const { root, base } = workspace("2.0.0", pending);
+    roots.push(root);
+    put(root, "notes.md", "dropped by the force push\n");
+    const before = commitAll(root, "a commit the force push drops");
+    git(root, "checkout", "-q", "-b", "rewritten", base);
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const record = commitAll(root, "the record");
+    put(root, "notes.md", "rewritten\n");
+    const head = commitAll(root, "a later commit");
+    const log: string[] = [];
+    expect(
+      pushIsRelease(before, head, { cwd: root, log: (l) => log.push(l) }),
+    ).toEqual({ release: true, version: "2.1.0", sha: record });
+    expect(log[0]).toMatch(
+      /isn't an ancestor .*judging the commits the head adds/,
+    );
+  });
+  it("counts a record once when a merge brings in the branch that holds it", () => {
+    const { root, base } = workspace("2.0.0", pending);
+    roots.push(root);
+    git(root, "checkout", "-q", "-b", "release", base);
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const record = commitAll(root, "the record");
+    git(root, "checkout", "-q", "main");
+    git(root, "merge", "-q", "--no-ff", "--no-edit", "release");
+    const head = git(root, "rev-parse", "HEAD").trim();
+    expect(pushIsRelease(base, head, { cwd: root, ...quiet })).toEqual({
+      release: true,
+      version: "2.1.0",
+      sha: record,
+    });
+  });
+  it("doesn't stage a record the head reverts, in the push or after it", () => {
+    const { root, base } = workspace("2.0.0", pending);
+    roots.push(root);
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const record = commitAll(root, "the record");
+    git(root, "revert", "--no-edit", record);
+    const head = git(root, "rev-parse", "HEAD").trim();
+    const log: string[] = [];
+    expect(
+      pushIsRelease(base, head, { cwd: root, log: (l) => log.push(l) }),
+    ).toEqual({ release: false, version: "2.0.0", sha: "" });
+    expect(log.at(-1)).toMatch(
+      /a release record for 2\.1\.0, but the head is at 2\.0\.0, below it: a later commit reverts it/,
+    );
+    // The record landed alone, and a later push reverts it.
+    expect(pushIsRelease(record, head, { cwd: root, ...quiet }).release).toBe(
+      false,
+    );
+  });
+  it("fails, rather than ends green, when the version went up and no record is found", () => {
+    const { root, base } = workspace("2.0.0", pending);
+    roots.push(root);
+    // The record and its revert, then a force push to a merge that
+    // carries the record's version from a side the old tip already holds.
+    writeReleaseRecord(root, { lockfile: false, log: () => {} });
+    const record = commitAll(root, "the record");
+    git(root, "revert", "--no-edit", record);
+    const before = git(root, "rev-parse", "HEAD").trim();
+    git(root, "checkout", "-q", "-b", "other", base);
+    put(root, "notes.md", "a note\n");
+    commitAll(root, "a note");
+    git(root, "merge", "-q", "--no-edit", record);
+    const head = git(root, "rev-parse", "HEAD").trim();
+    expect(() => pushIsRelease(before, head, { cwd: root, ...quiet })).toThrow(
+      /none of the push's 2 commit\(s\) is one, yet the umbrella's version goes from 2\.0\.0 to 2\.1\.0, with no v2\.1\.0 tag and not on npm/,
+    );
+    // Green once that version is out.
+    expect(
+      pushIsRelease(before, head, {
+        cwd: root,
+        ...quiet,
+        published: () => true,
+      }).release,
+    ).toBe(false);
+  });
+  it("splits a push's runs at merge commits, so one branch can't pass on another's changeset", () => {
+    const { root, base } = workspace("2.0.0", pending);
+    roots.push(root);
+    // One branch changes @x/core with no changeset; another adds one.
+    git(root, "checkout", "-q", "-b", "change", base);
+    put(root, "packages/core/src/view.ts", "export {};\n");
+    commitAll(root, "a change, no changeset");
+    git(root, "checkout", "-q", "-b", "changeset", base);
+    put(root, ".changeset/quick-cats.md", coreChangeset);
+    commitAll(root, "a changeset alone");
+    git(root, "checkout", "-q", "main");
+    git(root, "merge", "-q", "--no-ff", "--no-edit", "change");
+    git(root, "merge", "-q", "--no-ff", "--no-edit", "changeset");
+    const head = git(root, "rev-parse", "HEAD").trim();
+    // Judged as one run, the two branches pass together.
+    expect(checkParts(base, head, root).map((p) => p.result.ok)).toEqual([
+      true,
+    ]);
+    const parts = checkParts(base, head, root, { splitMerges: true });
+    expect(parts.map((p) => [p.merge, p.result.ok])).toEqual([
+      [true, false],
+      [true, true],
+    ]);
+    expect(parts[0]!.result.problem).toMatch(
+      /touches @x\/core and adds no changeset/,
+    );
+  });
+});
+
+describe("workflow commands in the release scripts' logs", () => {
+  it("stops workflow commands around the run in GitHub Actions, with a fresh token", () => {
+    const lines: string[] = [];
+    const write = (line: string) => lines.push(line);
+    expect(
+      withCommandsStopped(
+        () => {
+          write("::error::a path's newline\n");
+          return 7;
+        },
+        { GITHUB_ACTIONS: "true" },
+        write,
+      ),
+    ).toBe(7);
+    const token = /^::stop-commands::([0-9a-f-]{36})\n$/.exec(lines[0]!)?.[1];
+    expect(token).toBeDefined();
+    expect(lines.at(-1)).toBe(`::${token}::\n`);
+    // A second run takes another token; outside Actions, nothing is added.
+    const again: string[] = [];
+    withCommandsStopped(
+      () => {},
+      { GITHUB_ACTIONS: "true" },
+      (l) => again.push(l),
+    );
+    expect(again[0]).not.toContain(token!);
+    const local: string[] = [];
+    withCommandsStopped(
+      () => {},
+      {},
+      (l) => local.push(l),
+    );
+    expect(local).toEqual([]);
+  });
 });
 
 describe("staging the checked tarballs", () => {
@@ -1052,7 +1221,20 @@ describe("staging the checked tarballs", () => {
       custom_branch_policies: true,
     },
   };
-  const ok = { env: open, environment: guarded, log: () => {} };
+  /** Its deployment branch policies: the 2.0 branch alone. */
+  const policies = {
+    total_count: 1,
+    branch_policies: [
+      { id: 3, node_id: "x", name: "cesium-2.0-webgpu-poc", type: "branch" },
+    ],
+  };
+  const ok = {
+    env: open,
+    environment: guarded,
+    branchPolicies: policies,
+    earlier: [],
+    log: () => {},
+  };
 
   it("reads and writes tarballs only strictly inside a scratch folder", () => {
     const temp = realpathSync(tmpdir());
@@ -1117,7 +1299,48 @@ describe("staging the checked tarballs", () => {
     expect(npm.mock.calls[0]![0]).toContain("--dry-run");
   });
   it("keeps the gate shut until the npm environment has a reviewer and a branch policy", () => {
-    expect(environmentProblems(guarded)).toEqual([]);
+    expect(environmentProblems(guarded, policies)).toEqual([]);
+    // GitHub's environment names ignore case.
+    expect(environmentProblems({ ...guarded, name: "NPM" }, policies)).toEqual(
+      [],
+    );
+    // "Protected branches" lets any protected branch deploy, main included.
+    expect(
+      environmentProblems(
+        {
+          ...guarded,
+          deployment_branch_policy: {
+            protected_branches: true,
+            custom_branch_policies: false,
+          },
+        },
+        policies,
+      ),
+    ).toEqual([expect.stringMatching(/uses "protected branches"/)]);
+    // Custom policies are read, and must be the 2.0 branch alone.
+    expect(environmentProblems(guarded, undefined)).toEqual([
+      expect.stringMatching(/branch policies couldn't be read \(no JSON\)/),
+    ]);
+    const branches = (...list: { name: string; type?: string }[]) =>
+      environmentProblems(guarded, {
+        total_count: list.length,
+        branch_policies: list,
+      });
+    expect(branches()).toEqual([
+      expect.stringMatching(/policies are none, not the branch/),
+    ]);
+    expect(branches({ name: "*", type: "branch" })).toEqual([
+      expect.stringMatching(/policies are branch "\*", not/),
+    ]);
+    expect(
+      branches({ name: "cesium-2.0-webgpu-poc", type: "tag" }),
+    ).toHaveLength(1);
+    expect(
+      branches(
+        { name: "cesium-2.0-webgpu-poc", type: "branch" },
+        { name: "main", type: "branch" },
+      ),
+    ).toHaveLength(1);
     expect(environmentProblems(undefined)).toEqual([
       expect.stringMatching(/couldn't be read \(no JSON\)/),
     ]);
@@ -1133,7 +1356,7 @@ describe("staging the checked tarballs", () => {
       }),
     ).toEqual([
       "the environment `npm` has no required reviewer",
-      "the environment `npm` lets any branch deploy; limit it to the 2.0 branch",
+      "the environment `npm` lets any branch deploy; limit it to cesium-2.0-webgpu-poc",
     ]);
     const sum = release();
     const npm = vi.fn();
@@ -1200,6 +1423,46 @@ describe("staging the checked tarballs", () => {
         "x-next-2.0.0.tgz holds @x/other@2.0.0, not @x/next@2.0.0",
       ],
     );
+  });
+  it("refuses before staging when an earlier run staged this version or is staging it", () => {
+    expect(earlierStagingProblem([])).toBeUndefined();
+    expect(
+      earlierStagingProblem([
+        { run: 11, status: "completed", conclusion: "failure" },
+        { run: 12, status: "completed", conclusion: "cancelled" },
+      ]),
+    ).toBeUndefined();
+    expect(
+      earlierStagingProblem([
+        { run: 11, status: "completed", conclusion: "success" },
+        { run: 12, status: "waiting", conclusion: null },
+      ]),
+    ).toMatch(
+      /^run 11 \(staged\), 12 \(waiting\) of release\.yml already staged/,
+    );
+    expect(earlierStagingProblem(undefined)).toMatch(/couldn't be read/);
+    const sum = release();
+    const npm = vi.fn();
+    expect(() =>
+      stageTarballs(dir!, sum, {
+        ...ok,
+        earlier: [{ run: 11, status: "completed", conclusion: "success" }],
+        npm,
+      }),
+    ).toThrow(/nothing staged: run 11 \(staged\)/);
+    expect(() =>
+      stageTarballs(dir!, sum, { ...ok, earlier: undefined, npm }),
+    ).toThrow(/nothing staged: the earlier runs .* couldn't be read/);
+    expect(npm).not.toHaveBeenCalled();
+    // npm's own refusal of a version already staged, on the first package.
+    expect(() =>
+      stageTarballs(dir!, sum, {
+        ...ok,
+        npm: () => {
+          throw new Error("E409");
+        },
+      }),
+    ).toThrow(/Nothing was staged before it.*staged or published already/);
   });
   it("names what it staged when a later package fails, for the owner to reject", () => {
     const sum = release();

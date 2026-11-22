@@ -27,13 +27,15 @@ export function changeParts(
   base: string,
   head: string,
   cwd?: string,
-): { from: string; to: string; commits: number; record: boolean }[];
+  options?: { splitMerges?: boolean },
+): { from: string; to: string; commits: number; record: boolean; merge: boolean }[];
 
 /** The rule on each part of the change from `base` to `head`. */
 export function checkParts(
   base: string,
   head: string,
   cwd?: string,
-): ({ from: string; to: string; commits: number; record: boolean } & {
+  options?: { splitMerges?: boolean },
+): ({ from: string; to: string; commits: number; record: boolean; merge: boolean } & {
   result: ReturnType<typeof checkChangesets>;
 })[];

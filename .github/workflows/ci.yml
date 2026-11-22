@@ -122,18 +122,23 @@ jobs:
       # Judged in parts (scripts/release/changesetCheck.mjs): each release
       # record by itself, against its first parent, and each run of commits
       # between records as one change, so a push that batches a record with
-      # other work passes when each part does. Fails, never skips, when
+      # other work passes when each part does. On a push and in the merge
+      # queue, each merge commit is a part by itself too, so one branch's
+      # change can't pass on another's changeset. Fails, never skips, when
       # there is no base to compare with (a new branch's push, or a before
       # commit missing after a force push).
       - name: A changeset for a change to a published package
         env:
           BASE: ${{ needs.changes.outputs.base }}
+          EVENT: ${{ github.event_name }}
         run: |
           if [ -z "$BASE" ]; then
             echo "::error::no base commit to compare with, so the changeset rule can't be checked; push the change as a pull request against the 2.0 branch"
             exit 1
           fi
-          npm run changeset:check -- --base "$BASE"
+          split=""
+          case "$EVENT" in push | merge_group) split="--split-merges" ;; esac
+          npm run changeset:check -- --base "$BASE" $split
 
   # The full suite, on Node 24 and the current release.
   test:

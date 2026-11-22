@@ -12,12 +12,13 @@
 # build: `verify` builds, tests, packs and checks the tarballs, and
 # `publish` stages exactly those, their SHA-256 sums checked on arrival.
 #
-# A push can hold several commits (a bundle pushed from another machine),
-# so `record` judges each commit and names the record's; every later job
-# works on that commit, not on the push's head (GITHUB_SHA).
+# A push can hold several commits (a bundle pushed from another machine, a
+# merge made by `git pull`, a force push), so `record` judges every commit
+# the push adds and names the record's; every later job works on that
+# commit, not on the push's head (GITHUB_SHA).
 #
 # It runs only after the owner has set up the `npm` environment (its
-# required reviewer, its branch policy and the CESIUM_RELEASE_GATE
+# required reviewer, its branch policy (the 2.0 branch alone) and the CESIUM_RELEASE_GATE
 # variable) and npm's trusted publisher for each package (the design's
 # checklist, under "Releases"). Until then `publish` refuses at the gate,
 # and nothing is sent.
@@ -43,12 +44,13 @@ env:
 
 jobs:
   # Whether this push holds a release record (scripts/release/record.mjs):
-  # a commit, judged against its first parent, that is exactly what `npm
-  # run release:version` writes, at a version with no `v<version>` tag and
-  # not on npm yet. A before it can't resolve (a new branch, a force push)
-  # never holds one. It fails the run for two records in one push, or a
-  # commit that moves the version up without being one, since that version
-  # would otherwise never release. No `npm ci`: the script needs only Node.
+  # a commit the push adds (on any parent's side), judged against its first
+  # parent, that is exactly what `npm run release:version` writes, at a
+  # version with no `v<version>` tag and not on npm yet. It fails the run,
+  # never ends green, when a version could be lost: two records in one
+  # push, a commit that moves the version up without being one, or a head
+  # whose version went up from the before commit's with no record found.
+  # No `npm ci`: the script needs only Node.
   record:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -66,6 +68,16 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           package-manager-cache: false
+      # A force push's old tip is on no branch, so the clone lacks it; fetch
+      # it by its id (a read), so the record can still be judged against it.
+      - name: The push's before commit
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          case "$BEFORE" in
+            "" | *[!0-9a-f]* | 0000000000000000000000000000000000000000) exit 0 ;;
+          esac
+          git cat-file -e "$BEFORE^{commit}" 2>/dev/null || git fetch --no-tags --quiet origin "$BEFORE" || echo "the before commit $BEFORE couldn't be fetched"
       - id: record
         name: The release record
         env:
@@ -126,9 +138,11 @@ jobs:
           tar -czf "$RUNNER_TEMP/github/cesium-browser-$VERSION.tgz" -C packages/cesium/dist browser
           (cd "$RUNNER_TEMP/github" && sha256sum notes.md "cesium-browser-$VERSION.tgz" > SHA256SUMS)
           echo "sha256=$(sha256sum "$RUNNER_TEMP/github/SHA256SUMS" | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+      # Named by the version, so a later run can find this one (`publish`'s
+      # earlier-runs check).
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: npm-tarballs
+          name: npm-tarballs-${{ needs.record.outputs.version }}
           path: ${{ runner.temp }}/npm
           if-no-files-found: error
           # 30 days, so they outlast a long wait for the owner's approval.
@@ -146,9 +160,11 @@ jobs:
   # publisher for each package names this file and that environment, and
   # allows `npm stage publish` only. scripts/release/stageTarballs.mjs
   # refuses unless the `npm` environment, as the REST API returns it, has a
-  # required reviewer and a branch policy, and its CESIUM_RELEASE_GATE is
-  # set; checks release.json against the sum `verify` reported and each
-  # tarball against release.json, then stages each in order.
+  # required reviewer and custom branch policies that are the 2.0 branch
+  # alone, its CESIUM_RELEASE_GATE is set, and no earlier run staged this
+  # version or is staging it; checks release.json against the sum `verify`
+  # reported and each tarball against release.json, then stages each in
+  # order.
   publish:
     needs: [record, verify]
     runs-on: ubuntu-24.04
@@ -157,7 +173,12 @@ jobs:
     concurrency:
       group: release-publish-${{ needs.record.outputs.sha || github.run_id }}
       cancel-in-progress: false
+    # `actions: read` for the environment, its branch policies and the
+    # earlier runs: GitHub's "Permissions required for fine-grained personal
+    # access tokens" lists both environment GETs under "Repository
+    # permissions for "Actions"", read (read 2026-11-22).
     permissions:
+      actions: read
       contents: read
       id-token: write
     steps:
@@ -181,22 +202,46 @@ jobs:
           node -e 'const [a,b]=process.argv[1].split(".").map(Number); if (a < 11 || (a === 11 && b < 15)) { console.error(`npm ${process.argv[1]} is older than 11.15.0, the first with npm stage publish`); process.exit(1); }' "$(npm --version)"
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: npm-tarballs
+          name: npm-tarballs-${{ needs.record.outputs.version }}
           path: ${{ runner.temp }}/npm
-      # The real gate: the environment's own protection, read with the job's
-      # token (read access to the repository is all the endpoint asks). A
-      # failed read leaves no file, and the next step refuses.
+      # The real gate: the environment's own protection and its branch
+      # policies, read with the job's token (`actions: read`). A failed read
+      # leaves no file, and the stage step refuses.
       - name: The npm environment's protection
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh api "repos/$GITHUB_REPOSITORY/environments/npm" > "$RUNNER_TEMP/environment.json" || rm -f "$RUNNER_TEMP/environment.json"
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/environments/npm" > "$RUNNER_TEMP/environment.json" || rm -f "$RUNNER_TEMP/environment.json"
+          gh api "repos/$GITHUB_REPOSITORY/environments/npm/deployment-branch-policies" > "$RUNNER_TEMP/branch-policies.json" || rm -f "$RUNNER_TEMP/branch-policies.json"
+      # Every other run that packed this version, and its publish job's
+      # state (GETs only), so a second run for one record refuses before it
+      # stages. Artifacts last 30 days; past that, npm refuses a version
+      # already staged.
+      - name: Earlier runs for this version
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.record.outputs.version }}
+        run: |
+          set -euo pipefail
+          out="$RUNNER_TEMP/earlier.json"
+          rm -f "$out"
+          runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/artifacts?name=npm-tarballs-$VERSION&per_page=100" --jq ".artifacts[].workflow_run.id | select(. != $GITHUB_RUN_ID)" | sort -u)
+          for run in $runs; do
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$run/jobs?per_page=100" --jq "[.jobs[] | select(.name == \"publish\") | {run: $run, status, conclusion}]"
+          done | jq -s 'add // []' > "$out.part"
+          mv "$out.part" "$out"
       - name: Stage every package
         env:
           # A second guard only: `vars.` falls back to a repository's or an
           # organization's variable of this name (the checklist forbids one).
           CESIUM_RELEASE_GATE: ${{ vars.CESIUM_RELEASE_GATE }}
           MANIFEST_SHA256: ${{ needs.verify.outputs.tarballs-sha256 }}
-        run: node scripts/release/stageTarballs.mjs --from "$RUNNER_TEMP/npm" --manifest-sha256 "$MANIFEST_SHA256" --environment "$RUNNER_TEMP/environment.json"
+        run: >-
+          node scripts/release/stageTarballs.mjs --from "$RUNNER_TEMP/npm"
+          --manifest-sha256 "$MANIFEST_SHA256"
+          --environment "$RUNNER_TEMP/environment.json"
+          --branch-policies "$RUNNER_TEMP/branch-policies.json"
+          --earlier "$RUNNER_TEMP/earlier.json"
 
   # The GitHub release, as a draft: the tag, the combined release notes and
   # the browser build `verify` made, their sums checked on arrival. The only

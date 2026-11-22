@@ -1,3 +1,6 @@
+/** The only branch the `npm` environment may deploy from. */
+export const RELEASE_BRANCH: string;
+
 /** The variable the owner sets on the `npm` environment, and its value. */
 export const GATE: { name: string; value: string };
 
@@ -5,7 +8,10 @@ export const GATE: { name: string; value: string };
 export function gateProblem(env: Record<string, string | undefined>): string | undefined;
 
 /** Why the GitHub environment `npm` (the REST API's JSON) doesn't guard the release. */
-export function environmentProblems(environment: unknown): string[];
+export function environmentProblems(environment: unknown, branchPolicies?: unknown): string[];
+
+/** Why an earlier run of release.yml, staged or staging this version, keeps this one from staging. */
+export function earlierStagingProblem(earlier: unknown): string | undefined;
 
 /** Why this process can't stage: undefined only in GitHub Actions with an OIDC token. */
 export function runnerProblem(env: Record<string, string | undefined>): string | undefined;
@@ -42,6 +48,8 @@ export function stageTarballs(
     dryRun?: boolean;
     env?: Record<string, string | undefined>;
     environment?: unknown;
+    branchPolicies?: unknown;
+    earlier?: unknown;
     log?: (line: string) => void;
     npm?: (args: string[], cwd: string) => void;
   },
