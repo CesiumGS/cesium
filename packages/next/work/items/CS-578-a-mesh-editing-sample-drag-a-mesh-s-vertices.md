@@ -7,6 +7,7 @@ created: 2026-11-17
 project: CS-579
 touches: [packages/next/examples/**]
 tier_override: 3
+needs: [CS-831]
 ---
 
 The owner, 2026-11-18: a simple mesh editing sample to complement the CSG sample (`examples/csg/`), so a user can drag a mesh's points, edges and faces. The CSG sample edits B-reps through a kernel. This one edits a plain triangle mesh directly, the "CAD-style mesh editing" that `docs/design/editing.md` lists as not yet designed.
