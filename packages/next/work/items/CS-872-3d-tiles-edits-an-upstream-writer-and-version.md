@@ -10,7 +10,7 @@ needs: [CS-868, CS-306]
 
 The authoritative source is written and re-tiled; tiles follow by versioned invalidation.
 
-Source: CS-831's design (`docs/design/editing.md`, "Follow-up items"), filed by the chief of staff on 2026-11-21 when the owner merged it. Why now: it is the next piece of editing back through the seams once its needs land. Rough size: see the design note. Decider: the owner, when committing it. Filed: 2026-11-21.
+**Proposal** (CS-686). Source: CS-831's design (`docs/design/editing.md`, "Follow-up items"), filed by the chief of staff on 2026-11-21 when the owner merged it. Why now: it is the next piece of editing back through the seams once its needs land. Rough size: see the design note. Decider: the owner, when committing it. Filed: 2026-11-21.
 
 ## Done when
 

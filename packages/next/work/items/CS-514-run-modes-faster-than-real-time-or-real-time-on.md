@@ -8,6 +8,8 @@ project: CS-195
 needs: [CS-512, CS-513]
 ---
 
+**Proposal** (CS-686). Source: proposed 2026-11-15 with CS-512, the same virtual-clock work (`docs/design/benchmark-suite.md`); can't tell the section. Why now: Committed work needs it: it is a constraint of CS-511 (Scene benchmarks run faster than real time), so that milestone cannot be checked while this stays proposed. It also waits on CS-512, CS-513. Rough size: medium, a few related changes. Decider: the owner. Filed: 2026-11-15.
+
 The suite's command line and Dyno choose how a run keeps time and where its content comes from, and results record the choice.
 
 ## Done when

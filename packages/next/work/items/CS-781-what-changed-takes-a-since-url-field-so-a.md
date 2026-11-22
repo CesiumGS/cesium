@@ -11,7 +11,7 @@ touches: [packages/next/bench/suite/routes.tsx, packages/next/bench/suite/views/
 
 CS-747's What changed view lets the viewer pick a starting point: their last visit, a date, or a commit. That choice lives only in the page. A `since=` field in the URL would let the owner share "what changed since Monday" as a link. The field belongs in the shell's `routes.tsx`, which CS-747 didn't touch.
 
-Source: CS-747's report, relayed by orch-11, 2026-11-20. Why now: the view is meant to give a leadership team a weekly "what changed", and a link is how that gets shared. Rough size: small. Decider: the executor. Filed: 2026-11-20.
+**Proposal** (CS-686). Source: CS-747's report, relayed by orch-11, 2026-11-20. Why now: the view is meant to give a leadership team a weekly "what changed", and a link is how that gets shared. Rough size: small. Decider: the executor. Filed: 2026-11-20.
 
 ## Done when
 

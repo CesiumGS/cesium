@@ -11,7 +11,7 @@ touches: [packages/next/bench/suite/**, packages/next/bench/run.mjs, packages/ne
 
 CS-721 made `node bench/dyno.mjs <command>` the one command for Dyno's runs, Lab pages, servers and measurements. Dyno's views and help still show the old `bench/suite/cli.mjs` and `bench/run.mjs` lines, which are now thin wrappers that print the new command. Also, `dyno suite coldstart` defaults to port 4101 and can collide with an executor's leased port, while `dyno serve` already picks a free one.
 
-Source: CS-721's report, relayed by orch-11, 2026-11-20. Why now: two ways to run the same thing confuse executors and readers, and the fixed port has already collided with a lease once. Rough size: small. Decider: the executor. Removing a wrapper that a script outside `packages/next` calls comes back as a question. Filed: 2026-11-20.
+**Proposal** (CS-686). Source: CS-721's report, relayed by orch-11, 2026-11-20. Why now: two ways to run the same thing confuse executors and readers, and the fixed port has already collided with a lease once. Rough size: small. Decider: the executor. Removing a wrapper that a script outside `packages/next` calls comes back as a question. Filed: 2026-11-20.
 
 ## Done when
 

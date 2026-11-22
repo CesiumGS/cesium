@@ -11,7 +11,7 @@ touches: [packages/next/bench/dyno.mjs, packages/next/bench/suite/commands/**, p
 
 CS-721's `dyno` command exits 3, "not built yet", for analysis compare, trend and bisect, and these have no item. An agent or a script that wants a verdict ("is this branch slower than its base?") has to open Dyno's Compare and Trends pages, which a program can't read.
 
-Source: CS-721's report, relayed by orch-11, 2026-11-20. Why now: executors are asked to measure with the benchmark tool and cite run IDs, and with no verdict they cite bare numbers. Rough size: medium. Decider: the executor for the command's shape, within CS-721's JSON contract (`api_version`, `command`, `ok`). Automatic bisection itself is CS-325 and stays there. Filed: 2026-11-20.
+**Proposal** (CS-686). Source: CS-721's report, relayed by orch-11, 2026-11-20. Why now: executors are asked to measure with the benchmark tool and cite run IDs, and with no verdict they cite bare numbers. Rough size: medium. Decider: the executor for the command's shape, within CS-721's JSON contract (`api_version`, `command`, `ok`). Automatic bisection itself is CS-325 and stays there. Filed: 2026-11-20.
 
 ## Done when
 

@@ -11,7 +11,7 @@ touches: [packages/next/bench/suite/catalog/**, packages/next/bench/suite/comman
 
 CS-394 records the development metrics (its section 4) for example scenes. Catalog scenes don't record them yet, so the two groups can't be compared on the same measures.
 
-Source: CS-394's report, relayed by orch-11, 2026-11-21. Why now: the metrics only pay off when every scene reports them. Rough size: small to medium. Decider: the executor. A metric that changes a catalog scene's budget or its alerts comes back as a question. Filed: 2026-11-21.
+**Proposal** (CS-686). Source: CS-394's report, relayed by orch-11, 2026-11-21. Why now: the metrics only pay off when every scene reports them. Rough size: small to medium. Decider: the executor. A metric that changes a catalog scene's budget or its alerts comes back as a question. Filed: 2026-11-21.
 
 ## Done when
 

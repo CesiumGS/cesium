@@ -11,7 +11,7 @@ touches: [packages/next/bench/webgl2Probe.html, packages/next/src/profile/**, pa
 
 CS-35's probe page (`bench/webgl2Probe.html`) writes a report that the WebGL 2 personas are built from. The plan wants reports from an iPhone on iOS 18, an Android phone with a Mali or Xclipse GPU, and Firefox on Linux or an Intel Mac. The owner, 2026-11-21: "we probably need to use something like browserstack at some point, but local testing for now with whatever devices i can scrounge up." For now the reports come from Firefox and from Safari on this Mac (CS-46).
 
-Source: the owner's answer to CS-46, with CS-35's merge. Why now: it doesn't need to happen yet. The `webgl2-apple-mobile` and `webgl2-android` personas stay unwritten until a real report exists. Rough size: small for the runs. Choosing a service is the owner's call, because it is a new outside service with its own cost and terms. Decider: the owner, for the service and its spend. Filed: 2026-11-21.
+**Proposal** (CS-686). Source: the owner's answer to CS-46, with CS-35's merge. Why now: it doesn't need to happen yet. The `webgl2-apple-mobile` and `webgl2-android` personas stay unwritten until a real report exists. Rough size: small for the runs. Choosing a service is the owner's call, because it is a new outside service with its own cost and terms. Decider: the owner, for the service and its spend. Filed: 2026-11-21.
 
 ## Done when
 

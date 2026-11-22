@@ -10,7 +10,7 @@ touches: [packages/next/src/query/**, packages/next/src/render/features/**, pack
 
 CS-832's design settles that a pick in Gaussian splats names the splat where accumulated opacity first reaches 0.5. GPU ray queries (CS-535) then need an acceleration structure over splats as ellipsoids, so that rays and picks agree.
 
-Source: CS-832's report, relayed by orch-11, 2026-11-21. Why now: it's recorded so CS-535's ray seam leaves room for non-triangle primitives. Rough size: medium. Decider: the owner, when committing it. Filed: 2026-11-21.
+**Proposal** (CS-686). Source: CS-832's report, relayed by orch-11, 2026-11-21. Why now: it's recorded so CS-535's ray seam leaves room for non-triangle primitives. Rough size: medium. Decider: the owner, when committing it. Filed: 2026-11-21.
 
 ## Done when
 

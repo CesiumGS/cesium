@@ -10,7 +10,7 @@ needs: [CS-552]
 
 STAC, CSW, OGC API Records and ion's asset list each answer "what data is there for this place and time?" A catalog seam takes a query and returns asset references that a streaming source or loader then resolves. It's a query seam, like the geocoder, not a content source.
 
-Source: the owner's review of 2.0's seams, 2026-11-21. Why now: it isn't urgent. It's recorded so that CS-552's seam leaves room for it. Rough size: medium. Decider: the owner, when committing it. Filed: 2026-11-21.
+**Proposal** (CS-686). Source: the owner's review of 2.0's seams, 2026-11-21. Why now: it isn't urgent. It's recorded so that CS-552's seam leaves room for it. Rough size: medium. Decider: the owner, when committing it. Filed: 2026-11-21.
 
 ## Done when
 

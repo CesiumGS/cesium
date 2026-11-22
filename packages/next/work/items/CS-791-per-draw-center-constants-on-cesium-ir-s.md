@@ -11,7 +11,7 @@ touches: [packages/next/bench/**, packages/next/src/transform/**, packages/next/
 
 CS-53 replaced the per-draw center constants' Float64Array loop with Cesium IR's generic evaluator. The numbers are pinned bit for bit, but the cost per draw wasn't measured.
 
-Source: CS-53's report, relayed by orch-11, 2026-11-21. Why now: per-draw constants run every tick for every draw, so a slower evaluator costs time in every scene. Rough size: small. Decider: the executor. If the generic evaluator is clearly slower, a fix comes back as a proposal with the numbers, not in this item. Filed: 2026-11-21.
+**Proposal** (CS-686). Source: CS-53's report, relayed by orch-11, 2026-11-21. Why now: per-draw constants run every tick for every draw, so a slower evaluator costs time in every scene. Rough size: small. Decider: the executor. If the generic evaluator is clearly slower, a fix comes back as a proposal with the numbers, not in this item. Filed: 2026-11-21.
 
 ## Done when
 

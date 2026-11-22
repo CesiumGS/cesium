@@ -8,6 +8,8 @@ project: CS-195
 needs: [CS-328]
 ---
 
+**Proposal** (CS-686). Source: proposed 2026-11-15 to cut the scene suite's wall time (`docs/design/benchmark-suite.md`); can't tell who proposed it. Why now: Committed work needs it: it is a constraint of CS-511 (Scene benchmarks run faster than real time), so that milestone cannot be checked while this stays proposed. It also waits on CS-328. Rough size: medium, a few related changes. Decider: the owner. Filed: 2026-11-15.
+
 A scene run's engine loop, camera path and time-varying content advance on a simulated clock rather than the wall clock, so a run ticks as fast as each tick's work finishes instead of at the display's rate. Proposed on 2026-11-15, to cut the suite's wall time.
 
 ## Done when

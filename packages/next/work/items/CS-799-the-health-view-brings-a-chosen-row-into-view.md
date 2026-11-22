@@ -10,7 +10,7 @@ touches: [packages/next/bench/suite/views/workHealth.tsx, packages/next/bench/su
 
 CS-753's calmer Your move links each health exception to the Health view. The link opens the view, but it doesn't bring the chosen row into view, so the owner has to find it in a long list.
 
-Source: CS-753's report, relayed by orch-11, 2026-11-21. Why now: Your move's links are the main way into Health. Rough size: small. Decider: the executor. Filed: 2026-11-21.
+**Proposal** (CS-686). Source: CS-753's report, relayed by orch-11, 2026-11-21. Why now: Your move's links are the main way into Health. Rough size: small. Decider: the executor. Filed: 2026-11-21.
 
 ## Done when
 

@@ -19,7 +19,7 @@ CS-430's audit (`docs/design/webgpu-seams-audit.md`) planted a bypass against ea
 
 This item changes tests only.
 
-Source: CS-430's report, relayed by orch-11, 2026-11-20. Why now: a seam whose test misses a bypass guards nothing, and CS-35 (the WebGL 2 device) and CS-34 lean on these seams next. Rough size: small. Decider: the executor, within tests. A test that fails on main as it is today comes back as a question naming the line, and is not fixed in engine code here. Filed: 2026-11-20.
+**Proposal** (CS-686). Source: CS-430's report, relayed by orch-11, 2026-11-20. Why now: a seam whose test misses a bypass guards nothing, and CS-35 (the WebGL 2 device) and CS-34 lean on these seams next. Rough size: small. Decider: the executor, within tests. A test that fails on main as it is today comes back as a question naming the line, and is not fixed in engine code here. Filed: 2026-11-20.
 
 ## Done when
 

@@ -10,7 +10,7 @@ needs: [CS-870, CS-825]
 
 Two views edit one local fixture database through a Part 4 server that pushes changes; a conflict names the feature, both versions and both values. No outside service, no token.
 
-Source: CS-831's design (`docs/design/editing.md`, "Follow-up items"), filed by the chief of staff on 2026-11-21 when the owner merged it. Why now: it is the next piece of editing back through the seams once its needs land. Rough size: see the design note. Decider: the owner, when committing it. Filed: 2026-11-21.
+**Proposal** (CS-686). Source: CS-831's design (`docs/design/editing.md`, "Follow-up items"), filed by the chief of staff on 2026-11-21 when the owner merged it. Why now: it is the next piece of editing back through the seams once its needs land. Rough size: see the design note. Decider: the owner, when committing it. Filed: 2026-11-21.
 
 ## Done when
 

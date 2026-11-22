@@ -11,7 +11,7 @@ touches: [packages/next/bench/suite/views/Scenes.tsx, packages/next/bench/suite/
 
 CS-394 added group D, the example scenes such as `vex-x10-zermatt`, and kept it out of Overview, scorecards and budgets. The Scenes view doesn't list group D yet, so there's no page that shows an example scene's runs beside the catalog's.
 
-Source: CS-394's report, relayed by orch-11, 2026-11-21. Why now: example runs are recorded but can't be browsed. Rough size: small. Decider: the executor. Filed: 2026-11-21.
+**Proposal** (CS-686). Source: CS-394's report, relayed by orch-11, 2026-11-21. Why now: example runs are recorded but can't be browsed. Rough size: small. Decider: the executor. Filed: 2026-11-21.
 
 ## Done when
 

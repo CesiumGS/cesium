@@ -16,7 +16,7 @@ Modules that sit on the four physical-AI seams (CS-813 to CS-816). None of them 
 - world-model exporters that write conditioning videos (depth, segmentation, edges) at a fixed rate;
 - an agent interface to observe and act, for example an MCP-style server.
 
-Source: the owner's review of 2.0's seams, 2026-11-21, after a survey of physical-AI practice (Omniverse Replicator and Isaac Sim, CARLA, AirSim, MuJoCo, Habitat, Cosmos, USD and glTF semantics). The owner put the four core seams in alpha.1. Why now: it records what the seams are for, so their contracts stay usable. Rough size: large, split later. Decider: the owner, when committing each. Cosmos and WebMCP change quickly, so their details are left open. Filed: 2026-11-21.
+**Proposal** (CS-686). Source: the owner's review of 2.0's seams, 2026-11-21, after a survey of physical-AI practice (Omniverse Replicator and Isaac Sim, CARLA, AirSim, MuJoCo, Habitat, Cosmos, USD and glTF semantics). The owner put the four core seams in alpha.1. Why now: it records what the seams are for, so their contracts stay usable. Rough size: large, split later. Decider: the owner, when committing each. Cosmos and WebMCP change quickly, so their details are left open. Filed: 2026-11-21.
 
 ## Done when
 

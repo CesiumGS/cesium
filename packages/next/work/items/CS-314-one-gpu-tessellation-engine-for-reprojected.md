@@ -7,6 +7,8 @@ created: 2026-11-13
 project: CS-193
 ---
 
+**Proposal** (CS-686). Source: later, a copy of the follow-up list in `docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md`, sections 3 and 8; `docs/superpowers/plans/2026-11-12-transform-graph.md`, Task 5, made by the 2026-11-13 plan migration. Why now: Nothing committed needs it; no release on the ladder names it. Rough size: large, a project of its own. Decider: the owner. Filed: 2026-11-13.
+
 ## Done when
 
 Patches and the draw's placement evaluated together in compute, subdivided by screen-space error with crack-free edges, for reprojected models and B-reps; ordinary meshes under a smooth route get an H-based chord bound and a subdivision pass (today a spike, `spikes/routeTessellation.ts`).
