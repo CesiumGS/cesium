@@ -2,9 +2,10 @@
 id: CS-144
 title: The fault-injection harness
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-16
+claimed_by: orch-11-CS-144
 touches: [packages/next/test/faultNetwork.ts, packages/next/test/faultNetwork.test.ts]
 ---
 
