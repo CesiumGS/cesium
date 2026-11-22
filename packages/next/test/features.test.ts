@@ -290,13 +290,19 @@ describe("64-bit integer properties: edge cases", () => {
     ).toEqual([[1n, -(2n ** 63n)]]);
   });
 
-  it("denormalizes a class default of a normalized 64-bit property", () => {
+  it("leaves a class default of a normalized 64-bit property as written", () => {
     const [v] = table(
-      scalar("INT64", { normalized: true, default: -(2 ** 63) }),
+      scalar("INT64", { normalized: true, default: -1 }),
       undefined,
       1,
     ).id!;
     expect(v).toBe(-1);
+    const [u] = table(
+      scalar("UINT64", { normalized: true, default: 0.5 }),
+      undefined,
+      1,
+    ).id!;
+    expect(u).toBe(0.5);
   });
 
   it("leaves a default of another type as written", () => {

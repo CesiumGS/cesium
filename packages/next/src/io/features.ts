@@ -247,24 +247,28 @@ function noDataBigInt(noData: unknown): bigint | undefined {
 }
 
 /**
- * A class `default`, converted like a read value when the property is 64-bit:
- * a bigint for a non-normalized INT64 or UINT64 (a decimal string is parsed as
- * `noData` is), a double for a normalized one. Any other default passes
- * through as written.
+ * A class `default`: a bigint for a non-normalized INT64 or UINT64 (a decimal
+ * string is parsed as `noData` is). A normalized default is already in its
+ * final, floating-point form, so it passes through like any other default.
+ *
+ * 3D Tiles Metadata specification, "Property Values Structure", read
+ * 2026-11-22 at
+ * https://github.com/CesiumGS/3d-tiles/blob/main/specification/Metadata/README.adoc :
+ * "For `noData` values and numeric values that are not `normalized`, the type
+ * of the innermost elements of these arrays corresponds to the
+ * `componentType`. For numeric values that are `normalized`, the innermost
+ * elements are floating-point values."
  */
 function defaultValue(definition: Json): FeatureValue {
   const componentType = definition.componentType;
-  if (componentType !== "INT64" && componentType !== "UINT64") {
+  if (
+    (componentType !== "INT64" && componentType !== "UINT64") ||
+    definition.normalized
+  ) {
     return definition.default;
   }
-  const one = (v: unknown): unknown => {
-    if (definition.normalized) {
-      return typeof v === "number" || typeof v === "string"
-        ? normalizedValue(Number(v), componentType)
-        : v;
-    }
-    return noDataBigInt(v) ?? v;
-  };
+  // A JSON number above 2^53 already lost its exact value at JSON.parse.
+  const one = (v: unknown): unknown => noDataBigInt(v) ?? v;
   const value = definition.default;
   return (Array.isArray(value) ? value.map(one) : one(value)) as FeatureValue;
 }
@@ -324,7 +328,8 @@ function readColumn(
   if (definition.type === "ENUM") {
     const e = enums?.[definition.enumType];
     const valueType = e?.valueType ?? "UINT16";
-    // Keyed by the decimal text of the value, so a 64-bit enum is read exactly.
+    // Keyed by the decimal text of the value, so a 64-bit enum is read exactly
+    // (a value written as a JSON number above 2^53 lost its exactness at JSON.parse).
     const names = new Map<string, string>(
       (e?.values ?? []).map((v: Json) => [String(v.value), v.name]),
     );
