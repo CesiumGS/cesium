@@ -286,16 +286,15 @@ fn rayFeature(@builtin(workgroup_id) wg_1 : vec3<u32>, @builtin(local_invocation
     var origin_1 : vec3<f32> = SplitPosition_difference_0(SplitPosition_x24init_0(ray_2.originHi_1, ray_2.originLo_1), SplitPosition_x24init_0(t_1.originHi_0, t_1.originLo_0));
     var _S18 : mat3x3<f32> = mat3x3<f32>(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f);
     var _S19 : vec3<f32> = vec3<f32>(0.0f);
-    var _S20 : bool = (job_1.instance_0) != u32(4294967295);
     var local_1 : mat3x3<f32>;
     var offset_2 : vec3<f32>;
     var instanceFeature_0 : u32;
-    if(_S20)
+    if((job_1.instance_0) != u32(4294967295))
     {
         var inst_1 : Instance_std430_0 = instanceTable_0[job_1.instance_0];
-        var _S21 : vec3<f32> = vec3<f32>(inst_1.row0_0.w, inst_1.row1_0.w, inst_1.row2_0.w);
+        var _S20 : vec3<f32> = vec3<f32>(inst_1.row0_0.w, inst_1.row1_0.w, inst_1.row2_0.w);
         local_1 = mat3x3<f32>(inst_1.row0_0.xyz, inst_1.row1_0.xyz, inst_1.row2_0.xyz);
-        offset_2 = _S21;
+        offset_2 = _S20;
         instanceFeature_0 = inst_1.feature_0;
     }
     else
@@ -305,10 +304,10 @@ fn rayFeature(@builtin(workgroup_id) wg_1 : vec3<u32>, @builtin(local_invocation
         instanceFeature_0 = u32(4294967295);
     }
     var first_1 : u32 = firstIndex_2 + _S14;
-    var _S22 : mat3x3<f32> = mat3x3<f32>(t_1.linear_0.data_0[i32(0)][i32(0)], t_1.linear_0.data_0[i32(1)][i32(0)], t_1.linear_0.data_0[i32(2)][i32(0)], t_1.linear_0.data_0[i32(0)][i32(1)], t_1.linear_0.data_0[i32(1)][i32(1)], t_1.linear_0.data_0[i32(2)][i32(1)], t_1.linear_0.data_0[i32(0)][i32(2)], t_1.linear_0.data_0[i32(1)][i32(2)], t_1.linear_0.data_0[i32(2)][i32(2)]);
-    var a_1 : vec3<f32> = ((((((position_0(positionOffset_2, indices_0[first_1])) * (local_1))) + offset_2) * (_S22)));
-    var e1_1 : vec3<f32> = ((((((position_0(positionOffset_2, indices_0[first_1 + u32(1)])) * (local_1))) + offset_2) * (_S22))) - a_1;
-    var e2_1 : vec3<f32> = ((((((position_0(positionOffset_2, indices_0[first_1 + u32(2)])) * (local_1))) + offset_2) * (_S22))) - a_1;
+    var _S21 : mat3x3<f32> = mat3x3<f32>(t_1.linear_0.data_0[i32(0)][i32(0)], t_1.linear_0.data_0[i32(1)][i32(0)], t_1.linear_0.data_0[i32(2)][i32(0)], t_1.linear_0.data_0[i32(0)][i32(1)], t_1.linear_0.data_0[i32(1)][i32(1)], t_1.linear_0.data_0[i32(2)][i32(1)], t_1.linear_0.data_0[i32(0)][i32(2)], t_1.linear_0.data_0[i32(1)][i32(2)], t_1.linear_0.data_0[i32(2)][i32(2)]);
+    var a_1 : vec3<f32> = ((((((position_0(positionOffset_2, indices_0[first_1])) * (local_1))) + offset_2) * (_S21)));
+    var e1_1 : vec3<f32> = ((((((position_0(positionOffset_2, indices_0[first_1 + u32(1)])) * (local_1))) + offset_2) * (_S21))) - a_1;
+    var e2_1 : vec3<f32> = ((((((position_0(positionOffset_2, indices_0[first_1 + u32(2)])) * (local_1))) + offset_2) * (_S21))) - a_1;
     var p_1 : vec3<f32> = cross(ray_2.direction_0, e2_1);
     var det_1 : f32 = dot(e1_1, p_1);
     if(((abs(det_1)) < 9.999999960041972e-13f))
@@ -361,50 +360,47 @@ fn rayFeature(@builtin(workgroup_id) wg_1 : vec3<u32>, @builtin(local_invocation
     {
         return;
     }
-    var _S23 : u32 = records_0[_S13].featureId_0;
-    var slot_0 : u32;
-    if(_S20)
+    var _S22 : u32 = records_0[_S13].featureId_0;
+    if(instanceFeature_0 != u32(4294967295))
     {
-        if(instanceFeature_0 != u32(4294967295))
-        {
-            _S17 = _S23 != u32(0);
-        }
-        else
-        {
-            _S17 = false;
-        }
-        if(_S17)
-        {
-            slot_0 = _S23 + instanceFeature_0;
-        }
-        else
-        {
-            slot_0 = _S23;
-        }
+        _S17 = _S22 != u32(0);
     }
     else
     {
-        var _S24 : u32 = records_0[_S13].featureIdOffset_0;
+        _S17 = false;
+    }
+    var slot_0 : u32;
+    if(_S17)
+    {
+        slot_0 = _S22 + instanceFeature_0;
+    }
+    else
+    {
+        var _S23 : u32 = records_0[_S13].featureIdOffset_0;
         if((records_0[_S13].featureIdOffset_0) != u32(4294967295))
         {
-            var _S25 : vec2<u32> = vec2<u32>(arrayLength(&vertices_0), 4);
-            var localFeature_0 : u32 = (bitcast<u32>((vertices_0[min(_S24 + indices_0[first_1], max(_S25.x, u32(1)) - u32(1))])));
+            var _S24 : vec2<u32> = vec2<u32>(arrayLength(&vertices_0), 4);
+            var localFeature_0 : u32 = (bitcast<u32>((vertices_0[min(_S23 + indices_0[first_1], max(_S24.x, u32(1)) - u32(1))])));
             if(localFeature_0 == u32(4294967295))
             {
                 instanceFeature_0 = u32(0);
             }
             else
             {
-                instanceFeature_0 = _S23 + localFeature_0;
+                instanceFeature_0 = _S22 + localFeature_0;
             }
             slot_0 = instanceFeature_0;
         }
         else
         {
-            slot_0 = _S23;
+            slot_0 = _S22;
         }
     }
-    var _S26 : u32 = atomicMin(&(hits_0[rayCount_0 + job_1.ray_0]), slot_0);
+    if(slot_0 == u32(0))
+    {
+        return;
+    }
+    var _S25 : u32 = atomicMin(&(hits_0[rayCount_0 + job_1.ray_0]), slot_0);
     return;
 }
 
@@ -414,16 +410,16 @@ fn pickTriangle()
 {
     var draw_0 : u32 = pickResult_0[i32(0)];
     var number_0 : u32 = pickResult_0[i32(2)];
-    var _S27 : bool;
+    var _S26 : bool;
     if(pickResult_0[i32(0)] == u32(4294967295))
     {
-        _S27 = true;
+        _S26 = true;
     }
     else
     {
-        _S27 = number_0 == u32(4294967295);
+        _S26 = number_0 == u32(4294967295);
     }
-    if(_S27)
+    if(_S26)
     {
         return;
     }
@@ -431,7 +427,7 @@ fn pickTriangle()
     {
         return;
     }
-    var _S28 : u32 = records_0[draw_0].firstIndex_0 + number_0 * u32(3);
+    var _S27 : u32 = records_0[draw_0].firstIndex_0 + number_0 * u32(3);
     var k_0 : u32 = u32(0);
     loop
     {
@@ -442,11 +438,11 @@ fn pickTriangle()
         {
             break;
         }
-        var p_2 : vec3<f32> = position_0(records_0[draw_0].positionOffset_0, indices_0[_S28 + k_0]);
-        var _S29 : u32 = k_0 * u32(3);
-        pickResult_0[u32(10) + _S29] = (bitcast<u32>((p_2.x)));
-        pickResult_0[u32(11) + _S29] = (bitcast<u32>((p_2.y)));
-        pickResult_0[u32(12) + _S29] = (bitcast<u32>((p_2.z)));
+        var p_2 : vec3<f32> = position_0(records_0[draw_0].positionOffset_0, indices_0[_S27 + k_0]);
+        var _S28 : u32 = k_0 * u32(3);
+        pickResult_0[u32(10) + _S28] = (bitcast<u32>((p_2.x)));
+        pickResult_0[u32(11) + _S28] = (bitcast<u32>((p_2.y)));
+        pickResult_0[u32(12) + _S28] = (bitcast<u32>((p_2.z)));
         k_0 = k_0 + u32(1);
     }
     pickResult_0[i32(9)] = u32(1);

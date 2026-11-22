@@ -227,6 +227,8 @@ describe("stable IDs through the engine", () => {
     s.world.identity.setLabels(truck!.id, "class", undefined);
 
     // A ray hit: the cast reports the slot it hit, as `rayFeature` writes it.
+    // This checks the slot's way to an ID only; the kernel's slot against the
+    // pick pass's, on a GPU, is parity/rayIds.ts (`dyno lab rayIds`).
     vi.spyOn(s.world, "castRays").mockImplementation(
       async (rays, options?: CastOptions) => {
         options?.hitSlots?.push(...rays.map(() => truck!.slot));

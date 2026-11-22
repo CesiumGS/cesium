@@ -281,7 +281,7 @@ interface EmbeddingTable {
 - per-world interning of label sets, and pinned palettes;
 - `identify` and `setLabels`, with host labels kept across reloads;
 - `PickResult` with `id`, `labels`, `basis`, `coverage`, `sample`, `camera` and `time`, and `featureId` removed from the public API;
-- `id` and `basis` on ray hits;
+- `id` and `basis` on ray hits. As built, a hit's slot is the one the pick pass writes for its triangle (`raycast.slang`'s `rayFeature`), and `parity/rayIds.ts` checks the two against each other on the GPU. Where two triangles meet the ray at one distance (within 4 ulps: a shared edge, coplanar faces), the hit takes the lowest pickable slot, and a triangle with nothing pickable never wins a tie. The pick pass keeps whichever fragment its depth test passes, which follows draw order, so at such a tie a pick and a hit can name different features;
 - room for `embeddings` in the schema, even if empty.
 
 **CS-813 (render products) must carry:**

@@ -80,6 +80,8 @@ export function labSuites(env = process.env) {
     translucency: ["/parity/translucency.html?bench", "runTranslucency"],
     customShader: ["/parity/customShader.html?bench", "runCustomShader"],
     tracks: ["/parity/tracks.html?bench", "runTracks"],
+    // Ray hits' stable IDs against the pick pass's, on the real shaders (CS-815).
+    rayIds: ["/parity/rayIds.html?bench", "runRayIds"],
     tracksBench: ["/bench/tracksBench.html?bench", "runTracksBench"],
     shaderCost: ["/bench/shaderCost.html?bench", "runShaderCost"],
     translucencyCost: [

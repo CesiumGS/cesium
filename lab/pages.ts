@@ -49,6 +49,16 @@ export const HARNESSES: HarnessInfo[] = [
     load: () => import("../parity/customShader.ts").then((m) => m.harness),
   },
   {
+    id: "ray-ids",
+    group: "parity",
+    title: "Ray hits' IDs against picks",
+    description:
+      "Every sampled pixel's ray cast on the GPU against the pick pass there: the same stable ID inside each quad, none where both miss, one of the quads along a shared edge, the lowest pickable slot where two are coplanar.",
+    page: "/parity/rayIds.html",
+    entry: "runRayIds",
+    load: () => import("../parity/rayIds.ts").then((m) => m.harness),
+  },
+  {
     id: "tracks",
     group: "parity",
     title: "Live points and styled layers",

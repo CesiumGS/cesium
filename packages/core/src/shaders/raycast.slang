@@ -121,9 +121,19 @@ void main(uint3 wg : SV_GroupID, uint lane : SV_GroupIndex) {
 // triangle at its ray's nearest distance (the first half, as `main` left it)
 // writes the slot the pick pass would (surface.slang's `ids.y`: the record's
 // first slot, plus its instance's or its vertex's local feature) into the
-// second half, keeping the lowest. "At the distance" is within 4 ulps: this
-// entry point's float math is `main`'s, copied so `main` compiles as before,
-// and a compiler may order the two apart. No loops.
+// second half. "At the distance" is within 4 ulps: this entry point's float
+// math is `main`'s, copied so `main` compiles as before, and a compiler may
+// order the two apart. No loops.
+//
+// Ties: of the triangles at the distance, the lowest pickable slot wins. A
+// slot of 0 (nothing pickable) never writes, so a tie with a pickable
+// triangle gives that one's, and a ray whose only nearest triangles have
+// none gives none, as a pick there does. Two pickable triangles at one
+// distance (a shared edge, coplanar faces) can differ from the pick pass,
+// which keeps whichever fragment its depth test passes: the first drawn
+// under `greater`, the last under the prepass's `equal`. Its order is the
+// draw order, so no rule here can match it; the lowest slot is at least the
+// same in every cast (parity/rayIds.ts checks both rules).
 [shader("compute")]
 [numthreads(64, 1, 1)]
 void rayFeature(uint3 wg : SV_GroupID, uint lane : SV_GroupIndex) {
@@ -197,11 +207,11 @@ void rayFeature(uint3 wg : SV_GroupID, uint lane : SV_GroupIndex) {
   if (abs(apart) > 4) {
     return;
   }
+  // surface.slang's order: an instance's own feature (as cull.slang makes
+  // it global), else the vertex's, else the record's first slot.
   uint slot = r.featureId;
-  if (job.instance != NONE) {
-    if (instanceFeature != NONE && r.featureId != 0u) {
-      slot = r.featureId + instanceFeature;
-    }
+  if (instanceFeature != NONE && r.featureId != 0u) {
+    slot = r.featureId + instanceFeature;
   } else if (r.featureIdOffset != NO_STREAM) {
     // Clamped: a vertex past the arena reads its last word.
     uint vertexCount, vertexStride;
@@ -209,6 +219,9 @@ void rayFeature(uint3 wg : SV_GroupID, uint lane : SV_GroupIndex) {
     uint at = min(r.featureIdOffset + indices[first], max(vertexCount, 1u) - 1u);
     uint localFeature = asuint(vertices[at]);
     slot = localFeature == NONE ? 0u : r.featureId + localFeature;
+  }
+  if (slot == 0u) {
+    return;
   }
   hits[rayCount + job.ray].min(slot);
 }
