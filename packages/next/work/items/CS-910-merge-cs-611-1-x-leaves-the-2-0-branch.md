@@ -2,10 +2,14 @@
 id: CS-910
 title: Merge CS-611, 1.x leaves the 2.0 branch
 kind: decision
-state: planned
+state: done
 created: 2026-11-22
 project: CS-609
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), runs the work check on main, regenerates the views and logs the merge; then it starts CS-835's move into the final layout, headless."
+answered_at: 2026-11-22T09:42:20.358Z
+answered_via: main-session
+answered_by: owner
 ---
 
 ## Question
@@ -28,3 +32,5 @@ If unanswered by 2026-11-24T12:00:00Z: Hold it.
 ## Answer
 
 Recorded in the front matter once answered.
+
+The chief of staff answered A on 2026-11-22 under the owner's approval in advance: "i give you permission to merge 611 when it's ready to unblock more work". Ready meant that every gate passes on the replay and a fresh review has no open Important findings. The evidence above shows both.
