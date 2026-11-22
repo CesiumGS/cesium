@@ -35,6 +35,10 @@ export interface Verdict {
   settle: string | null;
   readout: string[];
 }
+export function kindOf(
+  record: Record<string, unknown>,
+  images: boolean,
+): string;
 export function resultsDirectory(
   env?: Record<string, string | undefined>,
 ): string;

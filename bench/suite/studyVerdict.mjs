@@ -48,7 +48,7 @@ const readJson = (file) => {
 };
 
 /** A run's kind, from its summary or record. */
-function kindOf(record, images) {
+export function kindOf(record, images) {
   if (images) {
     return "images";
   }

@@ -13,7 +13,7 @@ const resultsDirectory = (env) =>
   env.BENCH_RESULTS ?? join(homedir(), ".cesium-bench", "results");
 
 /** What a run is, without its values. */
-function identity(summary, id) {
+export function identity(summary, id) {
   return {
     id: summary.id ?? id,
     date: summary.date,
@@ -56,6 +56,32 @@ function verdictOf(card) {
   };
 }
 
+/**
+ * The store's run summaries (`*.summary.json`, the only files opened: never a
+ * run's full record), oldest name first: { id, file, summary } or, for one
+ * that isn't valid JSON, { id, file, problem }.
+ */
+export function summariesIn(directory) {
+  if (!existsSync(directory)) {
+    return [];
+  }
+  return readdirSync(directory)
+    .filter((f) => f.endsWith(".summary.json"))
+    .sort()
+    .map((file) => {
+      const id = file.replace(/\.summary\.json$/, "");
+      try {
+        return {
+          id,
+          file,
+          summary: JSON.parse(readFileSync(join(directory, file), "utf8")),
+        };
+      } catch {
+        return { id, file, problem: "its summary is not valid JSON" };
+      }
+    });
+}
+
 /** The store's runs, newest first. */
 export function listResults({ env = process.env, fake = false, limit = 20 }) {
   if (fake) {
@@ -76,22 +102,10 @@ export function listResults({ env = process.env, fake = false, limit = 20 }) {
   if (!existsSync(directory)) {
     return { directory, runs: [] };
   }
-  const runs = readdirSync(directory)
-    .filter((f) => f.endsWith(".summary.json"))
-    .sort()
+  const runs = summariesIn(directory)
     .reverse()
     .slice(0, limit)
-    .map((f) => {
-      const id = f.replace(/\.summary\.json$/, "");
-      try {
-        return identity(
-          JSON.parse(readFileSync(join(directory, f), "utf8")),
-          id,
-        );
-      } catch {
-        return { id, problem: "its summary is not valid JSON" };
-      }
-    });
+    .map((e) => (e.summary ? identity(e.summary, e.id) : { id: e.id, problem: e.problem }));
   return { directory, runs };
 }
 

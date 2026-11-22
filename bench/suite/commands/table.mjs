@@ -1072,6 +1072,64 @@ export const TABLE = {
       return studiesList(ctx);
     },
   },
+  runs: {
+    summary: "list the store's runs, newest first (reads summaries only)",
+    usage:
+      "dyno runs [--kind k] [--commit sha] [--scene s] [--tag t] [--pinned] [--since date] [--until date] [--purpose p] [--item CS-n] [--branch b] [--limit n]",
+    options: {
+      kind: o("bench, images, coldstart, recording or lab", "kind"),
+      commit: o("the run's commit starts with this", "sha"),
+      scene: o("runs that include this scene", "scene"),
+      tag: o("runs with this tag", "tag"),
+      pinned: o("only pinned runs"),
+      since: o("from this date on (UTC)", "YYYY-MM-DD"),
+      until: o("up to the end of this date (UTC)", "YYYY-MM-DD"),
+      purpose: o("dev or baseline", "purpose"),
+      item: o("runs made for this item", "CS-n"),
+      branch: o("runs from this branch", "branch"),
+      limit: o("the newest n runs", "n"),
+    },
+    details: [
+      "Reads each run's summary, never its samples. --json prints { runs: [{ id, date,",
+      "kind, purpose, commit, branch, item, study, machine, scenes, tags, validity,",
+      "note, pinned }], total }; total counts the matches before --limit.",
+    ],
+    async run(ctx) {
+      const { runs } = await import("./runs.mjs");
+      return runs(ctx);
+    },
+  },
+  show: {
+    summary: "one run's identity, verdict and cells (dyno result show, with its pin)",
+    usage: "dyno show <id> [--values]",
+    args: [{ name: "id", required: true }],
+    options: {
+      values: o("the measured values too (they carry machine details)"),
+    },
+    details: [
+      "--json prints what dyno result show prints, with kind, scenes, note and pinned",
+      "added to `run`. An id the store doesn't hold is refused (exit 1), naming it.",
+    ],
+    async run(ctx) {
+      const { show } = await import("./runs.mjs");
+      return show(ctx);
+    },
+  },
+  pin: {
+    summary: "pin a run so the store's clean-up keeps it (--unpin undoes it)",
+    usage: "dyno pin <id> [--unpin]",
+    args: [{ name: "id", required: true }],
+    options: { unpin: o("remove the pin") },
+    details: [
+      "The pin is kept in pins.json in the results store. Pinning twice, or unpinning",
+      "a run that isn't pinned, changes nothing and says so. --json prints",
+      "{ id, pinned, changed }.",
+    ],
+    async run(ctx) {
+      const { pin } = await import("./runs.mjs");
+      return pin(ctx);
+    },
+  },
   device: {
     summary: "other devices: pairing and device runs",
     planned: "CS-408",
