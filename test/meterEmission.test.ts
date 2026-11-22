@@ -347,11 +347,11 @@ describe("the exposure meter and emission", () => {
       readFileSync(new URL(path, import.meta.url), "utf8");
 
     it("meter takes the alpha share of the color", () => {
-      const wgsl = read("../src/shaders/generated/meter.wgsl");
+      const wgsl = read("../packages/next/src/shaders/generated/meter.wgsl");
       expect(wgsl).toMatch(
         /max\(color_0\.xyz, \w+\) \* vec3<f32>\(min\(\w+, 1\.0f\)\)/,
       );
-      const slang = read("../src/shaders/meter.slang");
+      const slang = read("../packages/next/src/shaders/meter.slang");
       expect(slang).toContain(
         "float3 opaque = max(color.rgb, float3(0.0)) * min(color.a, 1.0);",
       );
@@ -361,14 +361,14 @@ describe("the exposure meter and emission", () => {
     });
 
     it("the lists keep a layer's emission apart, and the composite out of the scene's light", () => {
-      const surface = read("../src/shaders/surface.slang");
+      const surface = read("../packages/next/src/shaders/surface.slang");
       expect(surface).toContain(
         "listNode(in, s.color * s.sceneShare, alpha, visible);",
       );
       expect(surface).toContain(
         "listNode(in, s.color * (1.0 - s.sceneShare) * alpha, EMISSION_NODE, visible);",
       );
-      const composite = read("../src/shaders/composite.slang");
+      const composite = read("../packages/next/src/shaders/composite.slang");
       expect(composite).toContain(
         "float scene = emission ? 0.0 : dot(color, LUMINANCE);",
       );
@@ -384,18 +384,18 @@ describe("the exposure meter and emission", () => {
     });
 
     it("the moments carry the same luminance in the unlit target's alpha", () => {
-      const surface = read("../src/shaders/surface.slang");
+      const surface = read("../packages/next/src/shaders/surface.slang");
       expect(surface).toContain(
         "float sceneLuminance = dot(weighted, float3(0.2126, 0.7152, 0.0722)) * s.sceneShare;",
       );
       // Their composite doesn't read that alpha.
-      expect(read("../src/shaders/composite.slang")).toContain(
+      expect(read("../packages/next/src/shaders/composite.slang")).toContain(
         "out.display = float4(unlit.rgb * k, opacity);",
       );
     });
 
     it("surface writes the scene share to the scene target's alpha", () => {
-      const slang = read("../src/shaders/surface.slang");
+      const slang = read("../packages/next/src/shaders/surface.slang");
       expect(slang).toContain("float4(s.color, s.sceneShare)");
       expect(slang).not.toMatch(/out\.color = float4\(s\.color, 1\.0\)/);
       // The share is built from the light before the display-relative term.

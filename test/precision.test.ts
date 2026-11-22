@@ -22,6 +22,7 @@ import { splitHigh, splitVec3 } from "../packages/next/src/math/transforms.ts";
  */
 
 const root = fileURLToPath(new URL("..", import.meta.url));
+const src = join(root, "packages", "next", "src");
 /** The hi/lo fields shaders see (common.slang View and Transform, rays). */
 const SPLIT = /\b(cameraHi|cameraLo|originHi|originLo)\b/;
 const HELPERS = /\b(hiLoDifference|hiLoSum|SplitPosition)\s*\(/g;
@@ -117,7 +118,7 @@ describe("hi/lo precision", () => {
 
   it("combines split positions only through hiLoDifference and hiLoSum", () => {
     const sources = [
-      ...files(join(root, "src"), /\.(wgsl|slang|ts)$/),
+      ...files(src, /\.(wgsl|slang|ts)$/),
       ...files(join(root, "spikes", "slang"), /\.slang$/),
     ];
     const violations: string[] = [];
@@ -136,7 +137,7 @@ describe("hi/lo precision", () => {
     // `fround(value - high)` is the low half of a split: written anywhere
     // else, the high half may not be the whole meters the GPU relies on.
     const violations: string[] = [];
-    for (const path of files(join(root, "src"), /\.ts$/)) {
+    for (const path of files(src, /\.ts$/)) {
       if (path.endsWith(join("math", "transforms.ts"))) {
         continue;
       }

@@ -157,7 +157,7 @@ export function needsToken(
 
 /** The end of an error for a page that needs the person's own token. */
 export const NEEDS_TOKEN =
-  "needs a Cesium ion token: paste one in Dyno (ion token, in the rail), or set VITE_ION_TOKEN in packages/next/.env.local for the dev server";
+  "needs a Cesium ion token: paste one in Dyno (ion token, in the rail), or set VITE_ION_TOKEN in .env.local for the dev server";
 
 /** The person's own token, or an error saying where `who` gets one. */
 export function requireToken(who: string): string {

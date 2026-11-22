@@ -14,7 +14,14 @@ import { fileURLToPath } from "node:url";
 
 export const STALE_EXEMPT = [
   "docs/history/2026-11-13-work-items-renumbered.md",
-  "packages/next/test/work.test.ts", // fixtures hold old names on purpose
+  "test/work.test.ts", // fixtures hold old names on purpose
+];
+
+/** 2.0's folders: its packages and, since CS-835, the harness at the root. */
+const NEXT_PATHS = [
+  "packages",
+  ...["test", "parity", "bench", "lab", "handbook", "examples", "demo"],
+  ...["spikes", "standalone", "scripts", "api", "work", "tools", ".claude"],
 ];
 
 /**
@@ -27,7 +34,7 @@ export const STALE_PATTERNS = [
   {
     name: "old milestone name",
     regex: String.raw`\b(?:IR-(?:[1-9]|1[0-5])|IR-G[1-6]|JP-[1-9]|LT-[1-8]|MX-(?:[1-9]|1[01])[a-d]?|SR-(?:[1-9]|1[0-3])|WF-(?:[1-9]|1[0-2])[a-d]?|W(?:[0-9]|1[01])|Profiles M[1-9][a-c]?)\b(?!-)`,
-    paths: ["docs", "CESIUM2_WEBGPU_PLAN.md", "packages/next"],
+    paths: ["docs", "CESIUM2_WEBGPU_PLAN.md", ...NEXT_PATHS],
   },
   {
     name: "old milestone name",
@@ -38,15 +45,15 @@ export const STALE_PATTERNS = [
       "docs/superpowers/plans/2026-11-12-transform-graph.md",
       "docs/superpowers/plans/2026-11-13-*",
       "packages/next/AGENTS.md",
-      "packages/next/work",
-      "packages/next/handbook/src",
-      "packages/next/.claude",
+      "work",
+      "handbook/src",
+      ".claude",
     ],
   },
   {
     name: "section reference into the old overall plan",
     regex: String.raw`(?:CESIUM2_WEBGPU_PLAN(?:\.md)?\x60?|[Oo]verall plan(?:'s)?|the plan(?:'s)?|\b[Pp]lan),? *§|(?:CESIUM2_WEBGPU_PLAN(?:\.md)?\x60?|[Oo]verall plan(?:'s)?|\bthe plan),? *section +[0-9]|\b[Pp]lan section +[0-9]`,
-    paths: ["docs", "CESIUM2_WEBGPU_PLAN.md", "packages/next"],
+    paths: ["docs", "CESIUM2_WEBGPU_PLAN.md", ...NEXT_PATHS],
   },
 ];
 
@@ -57,9 +64,9 @@ const STALE_EXCLUDE = [
   ":!**/*.glb",
   ":!**/*.png",
   ":!**/*.jpg",
-  ":!packages/next/spikes/slang/reference/**",
+  ":!spikes/slang/reference/**",
   ":!packages/next/src/**/*.wgsl",
-  ":!packages/next/api/**",
+  ":!api/**",
   ...STALE_EXEMPT.map((p) => `:!${p}`),
 ];
 
@@ -122,7 +129,7 @@ const OLD_SECTIONS = new Set([
  * numbered heading of its own with that number, reads as a reference into
  * the old overall plan. Returns hits like `staleNames`.
  */
-export function bareSectionRefs(root, paths = ["docs", "packages/next"]) {
+export function bareSectionRefs(root, paths = ["docs", ...NEXT_PATHS]) {
   let out;
   try {
     out = execFileSync(
@@ -202,7 +209,7 @@ export function bareSectionRefs(root, paths = ["docs", "packages/next"]) {
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const root = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+  const root = join(dirname(fileURLToPath(import.meta.url)), "..");
   const hits = [...staleNames(root), ...bareSectionRefs(root)];
   for (const h of hits) {
     console.log(`${h.path}:${h.line}: ${h.name}: ${h.text.trim()}`);

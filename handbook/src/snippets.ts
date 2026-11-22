@@ -19,7 +19,7 @@ export function snippetText(file: string): string {
   const from = start < 0 ? raw : raw.slice(start + "// ---\n".length);
   const end = from.indexOf("// --- end");
   return (end < 0 ? from : from.slice(0, end))
-    .replaceAll("../../widgets/index.ts", "./widgets/index.ts")
+    .replaceAll("../../packages/next/widgets/index.ts", "./widgets/index.ts")
     .trim();
 }
 

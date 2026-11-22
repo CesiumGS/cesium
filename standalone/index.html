@@ -44,7 +44,8 @@
     -->
     <script type="module">
       const params = new URLSearchParams(location.search);
-      const lib = params.get("lib") ?? "../dist-lib/cesium-next.mjs";
+      const lib =
+        params.get("lib") ?? "../packages/next/dist-lib/cesium-next.mjs";
       const data =
         params.get("data") ??
         "https://raw.githubusercontent.com/CesiumGS/cesium/main/Specs/Data/Models/glTF-2.0/";
@@ -55,7 +56,7 @@
         if (location.protocol === "file:") {
           // Browsers load no modules or workers into file:// pages.
           throw new Error(
-            "open this page from a web server, not as a file (e.g. `python -m http.server` in packages/next, then http://localhost:8000/standalone/)",
+            "open this page from a web server, not as a file (e.g. `python -m http.server` at the repository root, then http://localhost:8000/standalone/)",
           );
         }
         const {

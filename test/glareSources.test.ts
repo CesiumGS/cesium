@@ -353,8 +353,8 @@ describe("the list in a view's graph", () => {
 
   it("adds no read of the field of view", () => {
     for (const file of [
-      "../src/render/post/glare.ts",
-      "../src/scene/lightList.ts",
+      "../packages/next/src/render/post/glare.ts",
+      "../packages/next/src/scene/lightList.ts",
     ]) {
       const source = readFileSync(new URL(file, import.meta.url), "utf8");
       expect(source).not.toMatch(/\.fovy\b/);

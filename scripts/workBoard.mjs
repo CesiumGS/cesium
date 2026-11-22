@@ -47,7 +47,7 @@ export class HitldUnavailable extends Error {
 /** What the page may be told for each reason: fixed words, never hitld's output. */
 export const UNAVAILABLE_TEXT = {
   missing:
-    "hitld isn't installed: run npm install in the repository (human-in-the-lead is a dev dependency of packages/next)",
+    "hitld isn't installed: run npm install in the repository (human-in-the-lead is a dev dependency of the workspace root)",
   version: `hitld's read API isn't version ${API_VERSION}, the version Dyno's board reads; install the release package.json pins`,
   failed: "hitld couldn't read the tracker; see the dev server's log",
 };
@@ -549,7 +549,7 @@ export function stateHistory(root) {
     "--no-merges",
     "--format=@@commit %cI",
     "--",
-    "packages/next/work/items",
+    "work/items",
   ]);
   const events = [];
   const last = new Map();
@@ -723,7 +723,7 @@ function closesIn(root, range) {
     "-U0",
     "--format=@@commit %H %cI",
     "--",
-    "packages/next/work/items",
+    "work/items",
   ]);
   const out = [];
   let commit;
@@ -750,7 +750,7 @@ function statesOn(root, ref) {
     "^state: ",
     ref,
     "--",
-    "packages/next/work/items",
+    "work/items",
   ]);
   for (const line of (lines ?? "").split("\n")) {
     const m = /\/(CS-[1-9]\d*)[-.][^/:]*:state: (\S+)/.exec(line);
@@ -1476,9 +1476,9 @@ export async function showItem(root, id) {
 
 /** The tracker's folders, repository-relative. */
 const WORK_PATHS = [
-  "packages/next/work/items",
-  "packages/next/work/milestones",
-  "packages/next/work/projects",
+  "work/items",
+  "work/milestones",
+  "work/projects",
 ];
 
 /** A commit as given in a URL: hex, 7 to 40 digits. */
@@ -2266,7 +2266,7 @@ async function flowLogOf(run, root, head) {
     `--format=${FLOW_MARK}%h${FIELD}%aI${FIELD}%cI${FIELD}%B${FIELD}`,
     head,
     "--",
-    "packages/next/work/items",
+    "work/items",
   ]);
   if (code !== 0) {
     throw new Error("log");

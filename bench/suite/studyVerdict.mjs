@@ -1,5 +1,5 @@
 // A study's evidence and its computed verdict (CS-404;
-// packages/next/work/studies/README.md, "The verdict").
+// work/studies/README.md, "The verdict").
 //
 // Evidence is every run in this machine's results store whose `study`
 // names the study, the runs its file attaches, and the runs a verdict

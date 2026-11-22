@@ -92,7 +92,7 @@ export function Machines() {
       <Empty title="No runs to compare yet">
         Machines compare ordinary runs (a sweep varies the configurations, so it
         doesn't count). On each machine, run{" "}
-        <code>node packages/next/bench/suite/cli.mjs run</code>.
+        <code>node bench/suite/cli.mjs run</code>.
       </Empty>
     );
   }

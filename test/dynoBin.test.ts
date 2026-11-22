@@ -19,11 +19,11 @@ import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const next = fileURLToPath(new URL("..", import.meta.url));
-const root = resolve(next, "../..");
+const root = fileURLToPath(new URL("..", import.meta.url));
+const next = resolve(root, "packages/next");
 // An address nothing listens on: npx that has to fetch anything fails at once.
 const unreachableRegistry = "http://127.0.0.1:9";
-const pkgDir = resolve(next, "tools/dyno");
+const pkgDir = resolve(root, "tools/dyno");
 
 const readJson = (path: string) =>
   JSON.parse(readFileSync(path, "utf8")) as Record<string, unknown>;
@@ -53,7 +53,7 @@ describe("the dyno bin package", () => {
     const imports = [
       ...readFileSync(bin, "utf8").matchAll(/^import\s+"([^"]+)";$/gm),
     ].map((m) => resolve(dirname(bin), m[1] ?? ""));
-    expect(imports).toContain(resolve(next, "bench/dyno.mjs"));
+    expect(imports).toContain(resolve(root, "bench/dyno.mjs"));
     expect(readFileSync(bin, "utf8").startsWith("#!/usr/bin/env node")).toBe(
       true,
     );
@@ -62,7 +62,7 @@ describe("the dyno bin package", () => {
   it("is in the root workspaces list", () => {
     const workspaces = readJson(resolve(root, "package.json"))
       .workspaces as string[];
-    expect(workspaces).toContain("packages/next/tools/dyno");
+    expect(workspaces).toContain("tools/*");
   });
 
   it("stays out of @cesium/next's tarball", () => {
@@ -87,11 +87,11 @@ describe("npx @cesium/dyno is the only form", () => {
   }
 
   const files = [
-    "../../AGENTS.md",
-    "../../docs/design/benchmark-devices-and-sharing.md",
-    ".claude/skills/dyno/SKILL.md",
     "AGENTS.md",
-    "README.md",
+    "docs/design/benchmark-devices-and-sharing.md",
+    ".claude/skills/dyno/SKILL.md",
+    "packages/next/AGENTS.md",
+    "packages/next/README.md",
     "bench/dyno.mjs",
     "bench/suite/commands/dispatch.mjs",
     "bench/suite/commands/suite.mjs",
@@ -101,7 +101,7 @@ describe("npx @cesium/dyno is the only form", () => {
 
   it("in the docs, the skill, the help source and the package", () => {
     const found = files.flatMap((f) =>
-      unscoped(f, readFileSync(resolve(next, f), "utf8")),
+      unscoped(f, readFileSync(resolve(root, f), "utf8")),
     );
     expect(found).toEqual([]);
   });
@@ -109,7 +109,7 @@ describe("npx @cesium/dyno is the only form", () => {
   it("in the --help text dyno prints", () => {
     const out = spawnSync(
       process.execPath,
-      [resolve(next, "bench/dyno.mjs"), "--help"],
+      [resolve(root, "bench/dyno.mjs"), "--help"],
       { encoding: "utf8", timeout: 60000 },
     );
     expect(out.status).toBe(0);
@@ -119,7 +119,7 @@ describe("npx @cesium/dyno is the only form", () => {
 
   it("in the command a suite run records", () => {
     const source = readFileSync(
-      resolve(next, "bench/suite/commands/suite.mjs"),
+      resolve(root, "bench/suite/commands/suite.mjs"),
       "utf8",
     );
     expect(source).toContain('as = ["npx", "@cesium/dyno", "suite"]');

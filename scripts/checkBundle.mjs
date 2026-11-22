@@ -147,7 +147,7 @@ try {
   const { main, eager, lazy, outDir } = await buildPage(
     work,
     "globeOnlyViewer",
-    `import { Viewer } from ${JSON.stringify(join(root, "widgets/index.ts"))};\n` +
+    `import { Viewer } from ${JSON.stringify(join(root, "packages/next/widgets/index.ts"))};\n` +
       `void Viewer.create(document.body);\n`,
   );
   const kb = (code) => (Buffer.byteLength(code) / 1024).toFixed(1);
@@ -176,8 +176,8 @@ try {
   const styled = await buildPage(
     work,
     "styledViewer",
-    `import { Viewer } from ${JSON.stringify(join(root, "widgets/index.ts"))};\n` +
-      `import { CustomShader, FeatureStyle } from ${JSON.stringify(join(root, "src/index.ts"))};\n` +
+    `import { Viewer } from ${JSON.stringify(join(root, "packages/next/widgets/index.ts"))};\n` +
+      `import { CustomShader, FeatureStyle } from ${JSON.stringify(join(root, "packages/next/src/index.ts"))};\n` +
       `const style = new FeatureStyle({ show: "\${name} !== 'Main St'", color: "color('red')" });\n` +
       `void Viewer.create(document.body);\n` +
       `void CustomShader.fromSlang("", { label: String(style.properties) });\n`,
@@ -272,7 +272,7 @@ try {
   const ir = await buildPage(
     work,
     "irCore",
-    `import { Builder, evaluate } from ${JSON.stringify(join(root, "src/ir/index.ts"))};\n` +
+    `import { Builder, evaluate } from ${JSON.stringify(join(root, "packages/next/src/ir/index.ts"))};\n` +
       `const b = new Builder();\n` +
       `const x = b.input("x", "float", "feature");\n` +
       `document.title = String(evaluate(b.program({ y: b.op("math/sin", [x]) }), { x: 1 }).y);\n`,

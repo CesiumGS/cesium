@@ -72,7 +72,7 @@ const NIGHT = { ev100: -8 };
 const STAR_MAP = ["px", "mx", "py", "my", "pz", "mz"].map(
   (face) =>
     new URL(
-      `../widgets/assets/skybox/tycho2t3_80_${face}.jpg`,
+      `../packages/next/widgets/assets/skybox/tycho2t3_80_${face}.jpg`,
       import.meta.url,
     ),
 );

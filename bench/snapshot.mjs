@@ -1,7 +1,7 @@
 // Benchmarks against a commit instead of the working tree, so development
 // can continue while they run (a minimal CI).
 //
-//   BENCH_COMMIT=HEAD node packages/next/bench/run.mjs lod
+//   BENCH_COMMIT=HEAD node bench/run.mjs lod
 //
 // The commit is checked out once into a git worktree at <repo>/.bench/<sha>
 // (gitignored). It contains no links of any kind: Node's resolution walks up
@@ -18,8 +18,18 @@ const git = (args, cwd) =>
   execFileSync("git", args, { cwd, encoding: "utf8" }).trim();
 
 /**
- * The `packages/next` directory to serve for `commit` (created on first
- * use), the repo root, and the resolved SHA.
+ * Where 2.0's harness is in a checkout: `packages/next` before CS-835's
+ * move (its vite.config.ts is there), the checkout's root after it.
+ */
+export function harnessRoot(dir) {
+  return existsSync(join(dir, "packages", "next", "vite.config.ts"))
+    ? join(dir, "packages", "next")
+    : dir;
+}
+
+/**
+ * The 2.0 harness to serve for `commit` (created on first use), the repo
+ * root, and the resolved SHA.
  */
 export function snapshot(commit, cwd) {
   const repo = git(["rev-parse", "--show-toplevel"], cwd);
@@ -28,9 +38,10 @@ export function snapshot(commit, cwd) {
   if (!existsSync(dir)) {
     git(["worktree", "add", "--detach", dir, sha], repo);
   }
-  const env = join("packages", "next", ".env.local");
-  if (existsSync(join(repo, env)) && !existsSync(join(dir, env))) {
-    copyFileSync(join(repo, env), join(dir, env));
+  const root = harnessRoot(dir);
+  const env = join(repo, ".env.local");
+  if (existsSync(env) && !existsSync(join(root, ".env.local"))) {
+    copyFileSync(env, join(root, ".env.local"));
   }
-  return { root: join(dir, "packages", "next"), repo, sha };
+  return { root, repo, sha };
 }

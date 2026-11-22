@@ -93,7 +93,7 @@ function ScenarioAnswerView({
         </p>
         <Typography variant="body-sm" color="textSecondary" render={<p />}>
           {scenario.problem.missing
-            ? "Run npm run setup in packages/next, then reload."
+            ? "Run npm run setup at the repository root, then reload."
             : scenario.problem.message}
         </Typography>
         {!scenario.problem.missing && (onRetry || onBack) && (

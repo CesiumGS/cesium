@@ -26,12 +26,13 @@ import {
   type Reference,
 } from "../handbook/src/reference.ts";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
+const root = join(repo, "packages", "next");
 const built = buildReference({ root });
 const reference: Reference = built.reference;
 const { report } = built;
 
-const surface = readFileSync(join(root, "api/surface.txt"), "utf8")
+const surface = readFileSync(join(repo, "api/surface.txt"), "utf8")
   .split("\n")
   .slice(1)
   .filter((line) => line.length > 0)

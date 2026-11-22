@@ -22,6 +22,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { extname, join, normalize } from "node:path";
+import { harnessRoot } from "../snapshot.mjs";
 
 const git = (args, cwd, env) =>
   execFileSync("git", args, {
@@ -67,7 +68,7 @@ export function freezeTree(cwd) {
 
 /**
  * `sha` checked out in the reused worktree <repo>/.bench/tree (created on
- * first use); returns its packages/next.
+ * first use); returns its 2.0 harness (snapshot.mjs's `harnessRoot`).
  */
 export function checkoutFrozen(repo, sha) {
   const dir = join(repo, ".bench", "tree");
@@ -78,11 +79,12 @@ export function checkoutFrozen(repo, sha) {
     // Files the previous commit had and this one doesn't stay behind as
     // untracked files; harmless to a build of the pages' imports.
   }
-  const env = join("packages", "next", ".env.local");
-  if (existsSync(join(repo, env))) {
-    copyFileSync(join(repo, env), join(dir, env));
+  const root = harnessRoot(dir);
+  const env = join(repo, ".env.local");
+  if (existsSync(env)) {
+    copyFileSync(env, join(root, ".env.local"));
   }
-  return join(dir, "packages", "next");
+  return root;
 }
 
 /** The bench pages a build includes. */

@@ -66,7 +66,7 @@ const read = (path: string) =>
 
 describe("proj entry: engineering frames", () => {
   it("exports the loader, CRS and factor API", () => {
-    const source = read("../src/proj/index.ts");
+    const source = read("../packages/next/src/proj/index.ts");
     for (const name of [
       "loadProj",
       "gridSource",
@@ -88,7 +88,7 @@ describe("proj entry: engineering frames", () => {
   });
 
   it("doesn't export the frame's implementation details", () => {
-    const source = read("../src/proj/index.ts");
+    const source = read("../packages/next/src/proj/index.ts");
     for (const name of [
       "parseGeoreference",
       "GeoreferenceBodies",
@@ -103,19 +103,19 @@ describe("proj entry: engineering frames", () => {
   });
 
   it("exports the frames explorer's two internals only as @internal", () => {
-    expect(read("../src/proj/index.ts")).toMatch(
+    expect(read("../packages/next/src/proj/index.ts")).toMatch(
       /\/\*\* @internal [^\n]*\*\/\nexport \{ projTokenProblem \} from "\.\.\/engineering\/wkt2\.ts";\n\/\*\* @internal [^\n]*\*\/\nexport \{ strictWkt2 \} from "\.\.\/engineering\/crs\.ts";/,
     );
-    expect(read("../src/engineering/wkt2.ts")).toMatch(
+    expect(read("../packages/next/src/engineering/wkt2.ts")).toMatch(
       /@internal[^/]*\/\nexport function projTokenProblem/,
     );
-    expect(read("../src/engineering/crs.ts")).toMatch(
+    expect(read("../packages/next/src/engineering/crs.ts")).toMatch(
       /@internal[^/]*\/\nexport function strictWkt2/,
     );
   });
 
   it("imports @emnapi/runtime only dynamically", () => {
-    const source = read("../src/engineering/proj.ts");
+    const source = read("../packages/next/src/engineering/proj.ts");
     expect(source).not.toMatch(/^import[^;]*@emnapi\/runtime/m);
     expect(source).toMatch(/await import\("@emnapi\/runtime"\)/);
   });

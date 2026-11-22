@@ -21,7 +21,7 @@ const TEMPLATE = `
 <p>
   Blended surfaces in controlled scenes on the bare ellipsoid (no terrain),
   rendered with moment-based OIT ("moments", the default) and with the
-  exact per-pixel lists (the reference, packages/next/work/README.md M4): stacked and crossing
+  exact per-pixel lists (the reference, work/README.md M4): stacked and crossing
   layers, glass around opaque boxes, a dense stack, near-opaque layers and
   layers a centimeter apart. FLIP of moments against exact; and the exact
   lists against themselves with the draws added in reverse (order

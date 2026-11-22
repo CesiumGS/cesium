@@ -410,7 +410,7 @@ const STUDY_COMMANDS = {
       "Each kind writes down what it needs before results, and new refuses a missing one",
       "(exit 2, naming each): a comparison needs --baseline, --candidate, --primary",
       "(metric:direction:effect), --guardrails (with margins) and --noise (runs come from",
-      "the power analysis unless --runs says). See packages/next/work/studies/README.md.",
+      "the power analysis unless --runs says). See work/studies/README.md.",
     ],
   }),
   note: studyCommand("studyNote", {

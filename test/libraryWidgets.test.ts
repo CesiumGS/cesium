@@ -13,7 +13,7 @@ import { sp } from "../packages/next/src/time/erfa/s06Table.ts";
 import { xyp } from "../packages/next/src/time/erfa/xy06Table.ts";
 import { installGpuGlobals } from "./fakeGpu.ts";
 
-const root = join(import.meta.dirname, "..");
+const root = join(import.meta.dirname, "..", "packages", "next");
 let outDir = "";
 
 beforeAll(async () => {
@@ -29,7 +29,7 @@ afterAll(() => rmSync(outDir, { recursive: true, force: true }));
 
 /** An entry's values in the surface map (types and interfaces are erased). */
 function surfaceValues(entryName: string): string[] {
-  return readFileSync(join(root, "api/surface.txt"), "utf8")
+  return readFileSync(join(root, "..", "..", "api/surface.txt"), "utf8")
     .split("\n")
     .map((line) => line.split("\t"))
     .filter(([entry, , kind]) => entry === entryName && kind !== undefined)

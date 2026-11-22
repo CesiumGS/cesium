@@ -48,7 +48,7 @@ async function getJson(url: string): Promise<unknown> {
   }
   if (response.status === 404) {
     throw new WorkUnavailable(
-      "this server has no tracker API: the board reads the tracker through Dyno's dev server (npm run dev in packages/next)",
+      "this server has no tracker API: the board reads the tracker through Dyno's dev server (npm run dev at the repository root)",
     );
   }
   if (response.status === 503) {

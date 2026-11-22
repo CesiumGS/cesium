@@ -99,8 +99,7 @@ const HELP = (
       baseline; rejecting records that the change needs a fix.
     </p>
     <p>
-      Run checks with{" "}
-      <code>node packages/next/bench/suite/cli.mjs images --parity</code>;{" "}
+      Run checks with <code>node bench/suite/cli.mjs images --parity</code>;{" "}
       <code>--parity</code> also compares 2.0 with 1.x.
     </p>
   </>
@@ -196,8 +195,8 @@ export function Images() {
   if (!runs.length) {
     return page(
       <Empty title="No image checks yet.">
-        Run <code>node packages/next/bench/suite/cli.mjs images --parity</code>{" "}
-        (<code>--update</code> approves the first baselines).
+        Run <code>node bench/suite/cli.mjs images --parity</code> (
+        <code>--update</code> approves the first baselines).
       </Empty>,
     );
   }

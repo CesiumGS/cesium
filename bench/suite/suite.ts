@@ -1575,7 +1575,7 @@ export interface MotionFrame {
 }
 
 /**
- * Quality in motion (packages/next/work/README.md): the scenario's motion again in a fresh page
+ * Quality in motion (work/README.md): the scenario's motion again in a fresh page
  * after the measured runs (nothing here is timed), the canvas copied as
  * drawn at evenly spaced points of the motion; then each of those poses
  * fully loaded. The CLI compares the two (FLIP): what motion cost the

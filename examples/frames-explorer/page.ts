@@ -51,7 +51,7 @@ export const ITEM_NAME: Record<DataItem, string> = {
 
 /** An item the frames store doesn't have (R5). */
 export const missingText = (item: DataItem): string =>
-  `${ITEM_NAME[item]} isn't in the frames store: run npm run setup in packages/next, then reload.`;
+  `${ITEM_NAME[item]} isn't in the frames store: run npm run setup at the repository root, then reload.`;
 
 /** The frame Orion's path is drawn in, by the worker's name for it. */
 export const DRAW_IN: Record<OrionFrame, FrameName> = {

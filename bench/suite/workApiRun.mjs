@@ -6,7 +6,7 @@
 // request: scene "work-board-read", the scenario says which request, the
 // configuration which tracker, and `requestMs` the time to the whole answer.
 //
-//   node packages/next/bench/suite/workApiRun.mjs [--configs live,today,ten-times]
+//   node bench/suite/workApiRun.mjs [--configs live,today,ten-times]
 //        [--cold 3] [--warm 20] [--note "what changed"] [--tag a,b] [--keep]
 //
 // Configurations:
@@ -341,7 +341,7 @@ const results = {
   tags: ["work-api", ...(opt("tag") ? opt("tag").split(",") : [])],
   dirty: git(pkg, ["status", "--porcelain"]).length > 0,
   served: "dev",
-  command: ["node", "packages/next/bench/suite/workApiRun.mjs", ...args],
+  command: ["node", "bench/suite/workApiRun.mjs", ...args],
   workApi: { sizes, cold, warm, port: PORT },
   environment: {
     os: `${platform()} ${release()} (${arch()})`,

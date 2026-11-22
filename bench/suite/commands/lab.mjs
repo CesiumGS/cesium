@@ -2,7 +2,7 @@
 // Playwright's browser, one JSON file per run in bench/results/.
 //
 //   dyno lab [suite ...]        # suites: `dyno lab --list`; none runs all
-//   (the old entry point, `node packages/next/bench/run.mjs`, still works and
+//   (the old entry point, `node bench/run.mjs`, still works and
 //   says the new command)
 //
 // The runner serves the pages from its own Vite server with file watching
@@ -76,7 +76,7 @@ export function labSuites(env = process.env) {
       "runGlobe",
     ],
     imagery: ["/parity/imagery.html?bench", "runImagery"],
-    // Moment-based OIT against the exact per-pixel lists (packages/next/work/README.md M4).
+    // Moment-based OIT against the exact per-pixel lists (work/README.md M4).
     translucency: ["/parity/translucency.html?bench", "runTranslucency"],
     customShader: ["/parity/customShader.html?bench", "runCustomShader"],
     tracks: ["/parity/tracks.html?bench", "runTracks"],

@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
-const root = fileURLToPath(new URL("..", import.meta.url));
+const root = fileURLToPath(new URL("../packages/next/", import.meta.url));
 const src = join(root, "src");
 
 /** The provider itself: its default transport is the global `fetch`. */

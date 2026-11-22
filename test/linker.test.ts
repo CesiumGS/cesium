@@ -21,7 +21,10 @@ import { POINT_STYLE_DEFAULTS } from "../packages/next/src/scene/pointStyle.ts";
 import { compileVectorStyle } from "../packages/next/src/vector/VectorStyle.ts";
 
 const source = (path: string) =>
-  readFileSync(new URL(`../src/${path}`, import.meta.url), "utf8");
+  readFileSync(
+    new URL(`../packages/next/src/${path}`, import.meta.url),
+    "utf8",
+  );
 const surface = wgslUnit(
   "surface.slang",
   source("shaders/generated/surface.wgsl"),

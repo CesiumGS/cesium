@@ -17,7 +17,7 @@ import { createPostStage } from "../packages/next/src/scene/postStage.ts";
 import { cameraGlare } from "../packages/next/src/scene/observer.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
-const root = join(import.meta.dirname, "..");
+const root = join(import.meta.dirname, "..", "packages", "next");
 
 /** The engine with its writes recorded: the bytes each buffer last holds. */
 async function recorded() {

@@ -1,5 +1,5 @@
 {
-  "$comment": "Template for a private manifest. Copy it OUTSIDE the repository (e.g. ~/.cesium-bench/manifest.json) and point BENCH_MANIFEST at it. Same schema as public.json; entries merge with it. Use aliases as ids and titles: reports show only those. Tokens and share keys never go here: ion assets marked token 'env' use VITE_ION_TOKEN from packages/next/.env.local. Every dataset needs a license entry cleared for commercial use at Bentley: status 'commercial-ok' (Bentley-owned or licensed data), 'redistributable', or 'stream-only' through Bentley's own account (token 'env'). Non-commercial licenses are refused.",
+  "$comment": "Template for a private manifest. Copy it OUTSIDE the repository (e.g. ~/.cesium-bench/manifest.json) and point BENCH_MANIFEST at it. Same schema as public.json; entries merge with it. Use aliases as ids and titles: reports show only those. Tokens and share keys never go here: ion assets marked token 'env' use VITE_ION_TOKEN from .env.local. Every dataset needs a license entry cleared for commercial use at Bentley: status 'commercial-ok' (Bentley-owned or licensed data), 'redistributable', or 'stream-only' through Bentley's own account (token 'env'). Non-commercial licenses are refused.",
   "datasets": [
     {
       "id": "cad-plant-01",

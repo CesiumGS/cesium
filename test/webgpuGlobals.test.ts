@@ -9,7 +9,7 @@ import { join, relative } from "node:path";
 import ts from "typescript";
 import { expect, it } from "vitest";
 
-const root = join(import.meta.dirname, "..");
+const root = join(import.meta.dirname, "..", "packages", "next");
 /** WebGPU's constants: values, not types. */
 const GLOBALS =
   /^GPU(BufferUsage|TextureUsage|ShaderStage|MapMode|ColorWrite)$/;

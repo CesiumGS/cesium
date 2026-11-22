@@ -109,7 +109,7 @@ export function ShellError({ error }: { error: unknown }) {
   return (
     <Alert severity="error" className="shell-error">
       Dyno could not read the results ({String(error)}). It reads them through
-      the dev server: run <code>npm run dev</code> in packages/next.
+      the dev server: run <code>npm run dev</code> at the repository root.
     </Alert>
   );
 }

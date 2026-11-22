@@ -31,13 +31,15 @@ import { fileURLToPath } from "node:url";
 import { SLANG_VERSION, slangcPath } from "./slangTools.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const SOURCES = join(root, "src");
+/** The engine's package: its src/ holds the Slang, and headers name sources from it. */
+const ENGINE = join(root, "packages", "next");
+const SOURCES = join(ENGINE, "src");
 /** Examples may hold shaders of their own, built to a `generated/` beside them. */
 const EXAMPLES = join(root, "examples");
-export const GENERATED = join(root, "src", "shaders", "generated");
+export const GENERATED = join(ENGINE, "src", "shaders", "generated");
 /** The TypeScript layouts, from `layouts.slang`'s reflection. */
 export const LAYOUTS_TS = join(
-  root,
+  ENGINE,
   "src",
   "render",
   "generated",
@@ -45,7 +47,7 @@ export const LAYOUTS_TS = join(
 );
 /** The surface boundary's description, from reflection (`boundaryTs`). */
 export const BOUNDARY_TS = join(
-  root,
+  ENGINE,
   "src",
   "shaders",
   "generated",
@@ -56,9 +58,9 @@ export const BOUNDARY_TS = join(
  * the atmosphere's), then the source tree.
  */
 const INCLUDES = [
-  join(root, "src", "shaders"),
-  join(root, "src", "shaders", "stages"),
-  join(root, "src", "atmosphere"),
+  join(ENGINE, "src", "shaders"),
+  join(ENGINE, "src", "shaders", "stages"),
+  join(ENGINE, "src", "atmosphere"),
   SOURCES,
 ];
 
@@ -103,7 +105,7 @@ function hasEntryPoints(path) {
  */
 export function isPostStage(path) {
   return (
-    dirname(path) === join(root, "src", "shaders", "stages") &&
+    dirname(path) === join(ENGINE, "src", "shaders", "stages") &&
     /\bfloat4\s+postStage\s*\(/.test(
       readFileSync(path, "utf8").replace(/\/\/[^\n]*/g, ""),
     )
@@ -147,14 +149,16 @@ export function dependents(changed, sources = slangSources()) {
   // cesium.slang isn't imported by the engine, but the boundary's
   // description reads it (`boundaryTs`).
   if (name === "cesium") {
-    affected.add(join(root, "src", "shaders", "boundary.slang"));
+    affected.add(join(ENGINE, "src", "shaders", "boundary.slang"));
   }
   return [...affected].filter((s) => existsSync(s) && definesEntryPoints(s));
 }
 
 /** The header every generated file starts with. */
 function header(source) {
-  const from = relative(root, source).split(sep).join("/");
+  const from = relative(source.startsWith(EXAMPLES + sep) ? root : ENGINE, source)
+    .split(sep)
+    .join("/");
   return `// Generated from ${from} by slangc ${SLANG_VERSION}
 // (scripts/slangBuild.mjs). Do not edit: change the .slang and regenerate.
 `;
@@ -416,7 +420,7 @@ async function contractReflection(slangc) {
     writeFileSync(
       join(temp, "cesium.slang"),
       cesiumModule(
-        readFileSync(join(root, "src", "shaders", "cesium.slang"), "utf8"),
+        readFileSync(join(ENGINE, "src", "shaders", "cesium.slang"), "utf8"),
         {
           attributes: {},
           metadata: {},

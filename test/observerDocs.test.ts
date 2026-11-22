@@ -31,7 +31,7 @@ const NAMES = [
 ];
 
 describe("the README", () => {
-  const readme = read("README.md");
+  const readme = read("packages/next/README.md");
   const surface = read("api/surface.txt");
 
   it("names each value export of the observer, stages and pack that the surface lists", () => {

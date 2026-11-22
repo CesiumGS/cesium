@@ -23,7 +23,7 @@ vi.mock("../packages/next/src/scene/slangWorker.ts", () => {
 });
 
 const SLANG_FILES = ["src/scene/slang.ts", "src/scene/slangWorker.ts"];
-const root = normalize(join(import.meta.dirname, ".."));
+const root = normalize(join(import.meta.dirname, "..", "packages", "next"));
 
 describe("styling without Slang", () => {
   it("creates and uses a style, strings included, without loading Slang", async () => {

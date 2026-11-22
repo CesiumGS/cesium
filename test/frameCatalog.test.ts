@@ -598,7 +598,7 @@ describe("the frame catalog", () => {
 });
 
 describe("the catalog's imports", () => {
-  const root = normalize(join(import.meta.dirname, ".."));
+  const root = normalize(join(import.meta.dirname, "..", "packages", "next"));
   /** Every file reached by static (non-type) imports from `start`. */
   const staticClosure = (start: string): string[] => {
     const seen = new Set([start]);

@@ -64,7 +64,7 @@ function walk(dir) {
 }
 const newFiles = [
   join(root, "CESIUM2_WEBGPU_PLAN.md"),
-  ...["docs/decisions", "docs/design", "docs/history", "packages/next/work"]
+  ...["docs/decisions", "docs/design", "docs/history", "work"]
     .map((d) => join(root, d))
     .flatMap(walk),
 ];

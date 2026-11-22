@@ -68,7 +68,7 @@ function put(id: string, fm: Record<string, string>, text = "") {
       : fm.kind === "project"
         ? "projects"
         : "items";
-  const path = `packages/next/work/${folder}/${id}-x.md`;
+  const path = `work/${folder}/${id}-x.md`;
   PATHS[id] = path;
   const lines = Object.entries({ id, ...fm }).map(([k, v]) => `${k}: ${v}`);
   const abs = join(dir, path);

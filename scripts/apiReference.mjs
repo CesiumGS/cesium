@@ -40,7 +40,9 @@ import {
   tierOf,
 } from "./surfaceMap.mjs";
 
-const defaultRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+/** The package whose entry points the reference reads. */
+const defaultRoot = resolve(repo, "packages", "next");
 const FORMAT = ts.TypeFormatFlags.NoTruncation;
 const NOT_PUBLIC = ts.ModifierFlags.Private | ts.ModifierFlags.Protected;
 // Tags that become fields of their own, or that the tier already says.
@@ -696,7 +698,7 @@ export function buildReference({ root = defaultRoot, entries } = {}) {
 /** Writes handbook/generated/reference.json and returns what it found. */
 export function writeReference({ root = defaultRoot, out } = {}) {
   const result = buildReference({ root });
-  const file = out ?? resolve(root, "handbook/generated/reference.json");
+  const file = out ?? resolve(repo, "handbook/generated/reference.json");
   mkdirSync(dirname(file), { recursive: true });
   const json = `${JSON.stringify(result.reference)}\n`;
   writeFileSync(file, json);

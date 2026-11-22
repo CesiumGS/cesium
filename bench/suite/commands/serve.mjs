@@ -243,7 +243,7 @@ async function describeRecord(record, here) {
   };
 }
 
-/** The command that starts a server on a port, in packages/next. */
+/** The command that starts a server on a port, at the repository root. */
 export function serverCommand(name, port, root = ROOT) {
   if (name === "dyno") {
     const vite = join(

@@ -11,12 +11,7 @@ import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
 import { bareSectionRefs, staleNames } from "../scripts/staleNames.mjs";
 
-const repoRoot = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "..",
-  "..",
-);
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const temps: string[] = [];
 
 afterEach(() => {

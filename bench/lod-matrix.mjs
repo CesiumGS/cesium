@@ -3,7 +3,7 @@
 // fast and a throttled link (20 Mbit/s, 80 ms). Passes where Budgeted's
 // FLIP average is lower at equal or fewer bytes.
 //
-//   node packages/next/bench/lod-matrix.mjs [--content a,b] [--links fast,slow]
+//   node bench/lod-matrix.mjs [--content a,b] [--links fast,slow]
 //        [--policies stepwise,adaptive] [--note "what changed"]
 //
 // SHADOWS=1 draws the sun's shadows, with off-screen casters in the

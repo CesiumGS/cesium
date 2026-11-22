@@ -69,7 +69,7 @@ const git = (...args: string[]) =>
 beforeEach(() => {
   repo = mkdtempSync(join(tmpdir(), "dyno-studies-repo-"));
   results = mkdtempSync(join(tmpdir(), "dyno-studies-results-"));
-  mkdirSync(join(repo, "packages/next/work/studies"), { recursive: true });
+  mkdirSync(join(repo, "work/studies"), { recursive: true });
   git("init", "-q", "-b", "main");
   git("config", "user.email", "test@example.invalid");
   git("config", "user.name", "test");
@@ -108,7 +108,7 @@ async function json(...argv: string[]): Promise<{ code: number; body: Json }> {
 }
 
 const studyText = (id = ID) =>
-  readFileSync(join(repo, "packages/next/work/studies", `${id}.md`), "utf8");
+  readFileSync(join(repo, "work/studies", `${id}.md`), "utf8");
 
 const COMPARISON = [
   "--kind",
@@ -296,7 +296,7 @@ describe("the file format", () => {
       checkStudy(parseStudy(text), { file: "other.md" }).errors.join("\n"),
     ).toMatch(/the name is the id/);
     // The tracker's check runs the same validator on every committed study.
-    const committed = checkAll(join(here, "..", ".."));
+    const committed = checkAll(here);
     for (const study of committed) {
       expect(study.errors, study.path).toEqual([]);
     }
@@ -323,7 +323,7 @@ describe("study new asks for what its kind requires", () => {
       expect(body.message, kind).toMatch(/before any run counts/);
       expect(body.missing.length, kind).toBeGreaterThan(0);
     }
-    expect(readdirSync(join(repo, "packages/next/work/studies"))).toEqual([]);
+    expect(readdirSync(join(repo, "work/studies"))).toEqual([]);
   });
 
   it("a comparison without a primary metric, a minimum effect, guardrail margins or a sample plan is refused", async () => {
@@ -364,7 +364,7 @@ describe("study new asks for what its kind requires", () => {
   it("refuses an id that exists on another local branch", async () => {
     git("checkout", "-q", "-b", "other");
     await newStudy();
-    git("add", "packages/next/work/studies");
+    git("add", "work/studies");
     git("commit", "-q", "-m", "a study");
     git("checkout", "-q", "main");
     const { code, body } = await newStudy();
@@ -376,7 +376,7 @@ describe("study new asks for what its kind requires", () => {
 describe("a study from the CLI, start to verdict", () => {
   it("is made, run against, noted and concluded, and reads back with its evidence; each change diffs cleanly", async () => {
     expect((await newStudy()).code).toBe(EXIT.ok);
-    git("add", "packages/next/work/studies");
+    git("add", "work/studies");
     git("commit", "-q", "-m", "study");
     writeRun({ id: run(10), seed: 1 });
     writeRun({ id: run(11), seed: 2 });
@@ -428,7 +428,7 @@ describe("a study from the CLI, start to verdict", () => {
     expect(verdict.code).toBe(EXIT.ok);
     expect(verdict.body.outcome).toBe("supported");
     expect(verdict.body.computed.holds_for).toEqual([MAC]);
-    const diff = git("diff", "--", `packages/next/work/studies/${ID}.md`);
+    const diff = git("diff", "--", `work/studies/${ID}.md`);
     expect(diff).toMatch(/^-status: open$/m);
     expect(diff).toMatch(/^\+status: concluded$/m);
     expect(diff).not.toMatch(/^-(id|title|kind|item|primary):/m);
@@ -561,7 +561,7 @@ describe("studies on other branches", () => {
   it("lists a study on another local branch with its branch, read-only, and shows it", async () => {
     git("checkout", "-q", "-b", "hitld/CS-396-alpha");
     await newStudy();
-    git("add", "packages/next/work/studies");
+    git("add", "work/studies");
     git("commit", "-q", "-m", "a study");
     git("checkout", "-q", "main");
     expect((await json("studies")).body.studies).toEqual([]);
@@ -588,7 +588,7 @@ describe("studies on other branches", () => {
   it("reads a branch only if it is a local branch: never an option or another ref", async () => {
     git("checkout", "-q", "-b", "hitld/CS-396-alpha");
     await newStudy();
-    git("add", "packages/next/work/studies");
+    git("add", "work/studies");
     git("commit", "-q", "-m", "a study");
     git("tag", "a-tag");
     git("checkout", "-q", "main");
@@ -658,7 +658,7 @@ describe("studies on other branches", () => {
       item: "CS-396",
       status: "open",
       branch: "main",
-      path: `packages/next/work/studies/${ID}.md`,
+      path: `work/studies/${ID}.md`,
       uncommitted: true,
       valid: true,
     });
@@ -672,7 +672,7 @@ describe("retention", () => {
     writeRun({ id: run(10) });
     await json("study", "attach", ID, run(8));
     await json("study", "verdict", ID, "--cite", `${run(10)}:6% lower`);
-    git("add", "packages/next/work/studies");
+    git("add", "work/studies");
     git("commit", "-q", "-m", "concluded");
     git("checkout", "-q", "main");
     const cited = studyRuns(repo);
@@ -702,7 +702,7 @@ describe("runs and studies", () => {
     expect(out.status).toBe(EXIT.usage);
     expect(JSON.parse(out.stdout).message).toMatch(/dyno study new/);
     expect(readdirSync(results)).toEqual(before);
-    expect(readdirSync(join(repo, "packages/next/work/studies"))).toEqual([]);
+    expect(readdirSync(join(repo, "work/studies"))).toEqual([]);
   });
 
   it("measure start refuses it too, before anything is queued", async () => {
@@ -721,7 +721,7 @@ describe("runs and studies", () => {
   it("refuses a run against a study that isn't ready: no run counts before its pre-registration", async () => {
     await newStudy();
     // A hand edit drops the guardrails' margins.
-    const file = join(repo, "packages/next/work/studies", `${ID}.md`);
+    const file = join(repo, "work/studies", `${ID}.md`);
     writeFileSync(
       file,
       studyText().replace("guardrails: [settleMs:0.03]\n", ""),
@@ -1030,9 +1030,7 @@ describe("the dev server's endpoint", () => {
     );
     expect(files().sort()).toEqual(before);
     expect(studyText()).toBe(text);
-    expect(
-      studyFile(join(repo, "packages/next/work/studies"), "../x"),
-    ).toBeUndefined();
+    expect(studyFile(join(repo, "work/studies"), "../x")).toBeUndefined();
   });
 
   it("drops a body over the limit as it streams, with a 413", async () => {
@@ -1091,8 +1089,6 @@ describe("the dev server's endpoint", () => {
     }
     expect(parseStudy(studyText()).sections.Notes).toMatch(/over the wire/);
     expect(parseStudy(studyText()).sections.Notes).not.toMatch(/yyyy/);
-    expect(
-      existsSync(join(repo, "packages/next/work/studies", `${ID}.md`)),
-    ).toBe(true);
+    expect(existsSync(join(repo, "work/studies", `${ID}.md`))).toBe(true);
   });
 });

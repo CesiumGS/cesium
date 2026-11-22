@@ -366,7 +366,7 @@ export function Alerts() {
         Alerts need about six runs of a scene on the same machine (there{" "}
         {summaries.length === 1 ? "is 1 run" : `are ${summaries.length} runs`}{" "}
         so far). Run the suite a few more times from the repository root:{" "}
-        <code>node packages/next/bench/suite/cli.mjs run</code>
+        <code>node bench/suite/cli.mjs run</code>
       </Empty>
     );
   } else if (!list.length) {

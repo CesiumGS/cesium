@@ -4,7 +4,7 @@
 // A study is a judgment: a question and a hypothesis written down before
 // results, the runs that test it, and a verdict that cites them. It lives
 // in the repository, one Markdown file per study in
-// packages/next/work/studies/, in the tracker's own format: a front matter
+// work/studies/, in the tracker's own format: a front matter
 // block in the tracker's YAML subset (`key: value` lines, inline and block
 // lists, no multi-line values), then sections. It holds no machine details:
 // runs are cited by ID, and they stay in the results store.
@@ -13,7 +13,7 @@
 // sets what it writes down before results and what its verdict looks like,
 // and a set of instruments (instruments.mjs) whose runs it draws on. The
 // format, the fields each kind requires and the verdict's rules are in
-// packages/next/work/studies/README.md.
+// work/studies/README.md.
 //
 // Everything here reads and writes files in one worktree, and reads other
 // local branches through git without checking them out. Nothing commits:
@@ -35,7 +35,7 @@ import { declares, instrumentIds, metricDirection } from "./instruments.mjs";
 import { runsNeeded } from "./studyStats.mjs";
 
 /** Where studies live, from the repository's top level. */
-export const STUDIES_PATH = "packages/next/work/studies";
+export const STUDIES_PATH = "work/studies";
 
 /** A study's ID: its creation date and a short slug. */
 export const STUDY_ID = /^(\d{4}-\d{2}-\d{2})-([a-z0-9]+(?:-[a-z0-9]+)*)$/;

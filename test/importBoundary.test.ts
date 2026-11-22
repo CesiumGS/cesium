@@ -13,7 +13,7 @@ import { dirname, join, normalize, relative, sep } from "node:path";
 import ts from "typescript";
 import { expect, it } from "vitest";
 
-const root = normalize(join(import.meta.dirname, ".."));
+const root = normalize(join(import.meta.dirname, "..", "packages", "next"));
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
   exports: Record<string, string>;
 };
@@ -429,7 +429,7 @@ it("refuses an internal import from the widgets", () => {
 it("a globe-only Viewer bundles no X, Y or s series, Earth orientation, EOP parser or ephemeris (plan 5a's call 32)", () => {
   const report = execFileSync(
     process.execPath,
-    [join(root, "scripts/checkBundle.mjs")],
+    [join(root, "..", "..", "scripts/checkBundle.mjs")],
     { cwd: root, encoding: "utf8" },
   );
   expect(report).toContain("no X, Y or s series and no DAF reader");

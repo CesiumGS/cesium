@@ -13,7 +13,7 @@ import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-const root = fileURLToPath(new URL("..", import.meta.url));
+const root = fileURLToPath(new URL("../packages/next/", import.meta.url));
 const src = join(root, "src");
 
 /** The layers that may read device facts. */

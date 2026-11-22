@@ -6,7 +6,7 @@ import { dirname, join, relative, sep } from "node:path";
 import ts from "typescript";
 import { expect, it } from "vitest";
 
-const root = join(import.meta.dirname, "..");
+const root = join(import.meta.dirname, "..", "packages", "next");
 /** TypeScript names files with forward slashes, whatever the platform. */
 const slash = (path: string) => path.split(sep).join("/");
 

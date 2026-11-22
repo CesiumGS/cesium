@@ -31,7 +31,8 @@ import { dirname, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+// The package whose library build (dist-lib) it checks.
+const root = resolve(dirname(fileURLToPath(import.meta.url)), "..", "packages", "next");
 const args = process.argv.slice(2);
 const onlyAt = args.indexOf("--only");
 const only =

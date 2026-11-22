@@ -16,7 +16,7 @@ import ts from "typescript";
 import { describe, expect, it, vi } from "vitest";
 import { curvilinear } from "../packages/next/src/transform/graph.ts";
 
-const root = normalize(join(import.meta.dirname, ".."));
+const root = normalize(join(import.meta.dirname, "..", "packages", "next"));
 const pkg = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
   exports: Record<string, string>;
 };

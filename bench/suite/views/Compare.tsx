@@ -154,9 +154,7 @@ export function Compare() {
       <Page title="Compare runs" back={back}>
         <Empty title="Compare needs two runs.">
           Run the suite again after a change:{" "}
-          <code>
-            node packages/next/bench/suite/cli.mjs run --note "what changed"
-          </code>
+          <code>node bench/suite/cli.mjs run --note "what changed"</code>
         </Empty>
       </Page>
     );

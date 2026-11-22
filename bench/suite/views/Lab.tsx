@@ -34,7 +34,7 @@ import { Empty, Page, Section, toast } from "./common.tsx";
 const labRoute = getRouteApi("/lab/$id");
 
 /** The command that runs a page headless, from the repository root. */
-const runnerCommand = (id: string) => `node packages/next/bench/run.mjs ${id}`;
+const runnerCommand = (id: string) => `node bench/run.mjs ${id}`;
 
 /** Group descriptions in Dyno's words (lab/pages.ts has the titles). */
 const GROUP_DESCRIPTIONS: Partial<Record<string, string>> = {

@@ -3,9 +3,9 @@
 // (over 34 ms): the main thread, workers, the GPU process (Dawn, the
 // command buffer service), the compositor and the network service.
 //
-//   node packages/next/bench/trace.mjs [lon,lat]
+//   node bench/trace.mjs [lon,lat]
 //
-// Needs VITE_ION_TOKEN in packages/next/.env.local (Google 3D Tiles via ion).
+// Needs VITE_ION_TOKEN in .env.local (Google 3D Tiles via ion).
 // TRACE_ASSET overrides the ion asset, TRACE_FROM the settled start
 // (lon,lat), TRACE_OUT the trace file (default: the OS temp directory).
 // BENCH_HEADED=1 shows the browser.

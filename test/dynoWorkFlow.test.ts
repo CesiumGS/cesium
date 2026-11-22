@@ -67,7 +67,7 @@ const git = (...args: string[]) =>
   ).trim();
 
 function put(id: string, fm: Record<string, string>, text = "") {
-  const path = join(dir, `packages/next/work/items/${id}-x.md`);
+  const path = join(dir, `work/items/${id}-x.md`);
   mkdirSync(dirname(path), { recursive: true });
   const lines = Object.entries({ id, ...fm }).map(([k, v]) => `${k}: ${v}`);
   writeFileSync(path, `---\n${lines.join("\n")}\n---\n\n${text}\n`);

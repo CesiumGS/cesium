@@ -430,7 +430,7 @@ describe("the drawn position, rebuilt from the window position and depth", () =>
 
 describe("the surface shaders' varyings", () => {
   const source = (path: string) =>
-    readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
+    readFileSync(new URL(`../packages/next/${path}`, import.meta.url), "utf8");
 
   it("keep their 13 locations, the position at 4 and the model position at 8", () => {
     const wgsl = source("src/shaders/surfaceVertex.wgsl");

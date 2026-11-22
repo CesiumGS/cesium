@@ -33,7 +33,7 @@ const STATE: Record<
 
 /** The first run's command, against one 1.x release (or npm's latest). */
 const firstRun = (release: string) =>
-  `node packages/next/bench/suite/cli.mjs run --scenes osm-philadelphia --engines ${release},2.0 --reps 3 --note "first run"`;
+  `node bench/suite/cli.mjs run --scenes osm-philadelphia --engines ${release},2.0 --reps 3 --note "first run"`;
 
 /** "1.147.0" after "1.146.0": by each number, not as text. */
 const newer = (a: string, b: string) => {

@@ -14,7 +14,7 @@ const item = (id: string, over: Partial<WorkItem> = {}): WorkItem => ({
   state: "planned",
   project: "CS-2",
   needs: [],
-  path: `packages/next/work/items/${id}.md`,
+  path: `work/items/${id}.md`,
   ready: true,
   blocked: false,
   open_needs: [],

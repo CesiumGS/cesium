@@ -2,7 +2,7 @@
 // first drawn frame in a browser with nothing cached, measured as a Dyno
 // run and stored with the others (BENCH_RESULTS).
 //
-//   node packages/next/bench/suite/cli.mjs coldstart
+//   node bench/suite/cli.mjs coldstart
 //        [--url http://127.0.0.1:4101 | --roots <dir>,<dir>] [--port 4101]
 //        [--https] [--interleave]
 //        [--route /viewer] [--reps 5] [--board with,without]

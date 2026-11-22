@@ -17,7 +17,9 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
-const defaultRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+/** The package whose entry points the map lists. */
+const defaultRoot = resolve(repo, "packages", "next");
 const TIERS = ["stable", "experimental", "internal"];
 const HEADER = "entry\tname\tkind\ttier";
 
@@ -234,7 +236,7 @@ export function memberRows(owners, { root = defaultRoot, entries } = {}) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const text = `${surfaceLines().join("\n")}\n`;
   if (process.argv.includes("--write")) {
-    writeFileSync(resolve(defaultRoot, "api/surface.txt"), text);
+    writeFileSync(resolve(repo, "api/surface.txt"), text);
   } else {
     process.stdout.write(text);
   }

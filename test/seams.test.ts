@@ -35,7 +35,8 @@ import { RAY_MODULES, rayBypasses, rayProgram } from "./raySeam.ts";
  * detector is first shown to flag a bypass.
  */
 
-const root = fileURLToPath(new URL("..", import.meta.url));
+const repo = fileURLToPath(new URL("..", import.meta.url));
+const root = join(repo, "packages", "next");
 const src = join(root, "src");
 
 function files(directory: string, pattern: RegExp): string[] {
@@ -551,21 +552,21 @@ describe("the ray seam's detector flags bypasses", () => {
     // type imports, members bracketed or destructured, a tile under
     // another name.
     const lines = [
-      `import { castTerrainRay } from "../src/globe/terrainRay.ts"; // rays`,
-      `import { castTerrainRay as trace } from "../src/index.ts"; // rays`,
-      `import * as next from "../src/index.ts";`,
-      `import type { TerrainRayTarget } from "../src/globe/terrainRay.ts"; // rays`,
-      `import { drawBackend } from "../src/query/drawBackend.ts"; // rays`,
-      `import { castEllipsoid } from "../src/query/ellipsoidBackend.ts"; // rays`,
-      `import { castFrameRays } from "../src/query/frameRays.ts"; // rays`,
-      `import { terrainQueries, terrainBackend } from "../src/query/terrainBackend.ts"; // rays`,
-      `import { terrainQueries as fine } from "../src/query/terrainBackend.ts";`,
-      `import type { Tile } from "../src/streaming/Tile.ts";`,
-      `import type { World } from "../src/scene/World.ts";`,
-      `import type { Engine } from "../src/scene/Engine.ts";`,
-      `export * from "../src/query/drawBackend.ts"; // rays`,
-      `export { castRays as moved } from "../src/scene/world/rays.ts"; // rays`,
-      `export { globeTarget } from "../src/query/terrainBackend.ts"; // rays`,
+      `import { castTerrainRay } from "../packages/next/src/globe/terrainRay.ts"; // rays`,
+      `import { castTerrainRay as trace } from "../packages/next/src/index.ts"; // rays`,
+      `import * as next from "../packages/next/src/index.ts";`,
+      `import type { TerrainRayTarget } from "../packages/next/src/globe/terrainRay.ts"; // rays`,
+      `import { drawBackend } from "../packages/next/src/query/drawBackend.ts"; // rays`,
+      `import { castEllipsoid } from "../packages/next/src/query/ellipsoidBackend.ts"; // rays`,
+      `import { castFrameRays } from "../packages/next/src/query/frameRays.ts"; // rays`,
+      `import { terrainQueries, terrainBackend } from "../packages/next/src/query/terrainBackend.ts"; // rays`,
+      `import { terrainQueries as fine } from "../packages/next/src/query/terrainBackend.ts";`,
+      `import type { Tile } from "../packages/next/src/streaming/Tile.ts";`,
+      `import type { World } from "../packages/next/src/scene/World.ts";`,
+      `import type { Engine } from "../packages/next/src/scene/Engine.ts";`,
+      `export * from "../packages/next/src/query/drawBackend.ts"; // rays`,
+      `export { castRays as moved } from "../packages/next/src/scene/world/rays.ts"; // rays`,
+      `export { globeTarget } from "../packages/next/src/query/terrainBackend.ts"; // rays`,
       `declare const tile: Tile;`,
       `declare const world: World;`,
       `declare const engine: Engine;`,
@@ -591,7 +592,7 @@ describe("the ray seam's detector flags bypasses", () => {
       `void overlay.geometry;`,
       `const options = { retainGeometry: true }; // retained`,
       `void options;`,
-      `void (await import("../src/globe/terrainRay.ts")); // rays`,
+      `void (await import("../packages/next/src/globe/terrainRay.ts")); // rays`,
       `void fine; void target;`,
       `void terrainQueries; void terrainBackend; // rays`,
       `void castEllipsoid; void castFrameRays; // rays`,
@@ -599,7 +600,7 @@ describe("the ray seam's detector flags bypasses", () => {
     ];
     const marked = (mark: string) =>
       lines.flatMap((l, i) => (l.endsWith(`// ${mark}`) ? [i + 1] : []));
-    const path = join(root, "examples", "__ray_seam_snippet__.ts");
+    const path = join(repo, "examples", "__ray_seam_snippet__.ts");
     const program = rayProgram([], { [path]: lines.join("\n") });
     expect(rayBypasses(program, program.getSourceFile(path)!)).toEqual({
       rays: marked("rays"),
@@ -885,7 +886,7 @@ describe("DrawArguments.slotOf", () => {
 });
 
 describe("the ray seam", () => {
-  const examples = join(root, "examples");
+  const examples = join(repo, "examples");
   const measure = join(src, "measure");
   let program: ReturnType<typeof rayProgram>;
   let scanned: string[];
@@ -898,7 +899,7 @@ describe("the ray seam", () => {
     const violations: string[] = [];
     const allowed = new Set<string>();
     for (const path of scanned) {
-      const where = relative(root, path).replaceAll("\\", "/");
+      const where = relative(repo, path).replaceAll("\\", "/");
       const found = rayBypasses(program, program.getSourceFile(path)!);
       for (const line of found.rays) {
         violations.push(`${where}:${line} reaches rays around src/query`);

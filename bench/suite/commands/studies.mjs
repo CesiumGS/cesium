@@ -1,7 +1,7 @@
 // dyno's study commands (CS-404): `study new`, `note`, `attach`, `verdict`,
 // `abandon`, `reopen`, `show`, `check`, `power`, and `studies`. The model
 // and the files are studies.mjs; the evidence and the computed verdict
-// studyVerdict.mjs; the format packages/next/work/studies/README.md.
+// studyVerdict.mjs; the format work/studies/README.md.
 //
 // Each write validates the whole file, writes it in this worktree, and says
 // to commit it with your work. Nothing commits.

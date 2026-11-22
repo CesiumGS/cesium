@@ -16,7 +16,7 @@ it("lists each export with its entry, kind and tier", () => {
 });
 it("reads tiers from TSDoc tags", () => {
   const lines = surfaceLines({
-    entries: { fixture: "test/fixtures/surface/entry.ts" },
+    entries: { fixture: "../../test/fixtures/surface/entry.ts" },
   });
   expect(lines).toEqual([
     "entry\tname\tkind\ttier",
@@ -36,6 +36,8 @@ it("reads tiers from TSDoc tags", () => {
 });
 it("throws naming an export whose declarations disagree on the tier", () => {
   expect(() =>
-    surfaceLines({ entries: { fixture: "test/fixtures/surface/conflict.ts" } }),
+    surfaceLines({
+      entries: { fixture: "../../test/fixtures/surface/conflict.ts" },
+    }),
   ).toThrow(/Clash/);
 });

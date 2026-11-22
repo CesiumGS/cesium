@@ -114,13 +114,16 @@ describe("what may be culled", () => {
 
   it("is what the first phase's kernels test, and nothing else", async () => {
     const { readFileSync } = await import("node:fs");
-    const cull = readFileSync("src/shaders/cull.slang", "utf8");
+    const cull = readFileSync("packages/next/src/shaders/cull.slang", "utf8");
     // The retest list takes an item only from a batch flagged occludable...
     expect(cull).toMatch(
       /occlusion\.test != 0u && occludable\(batch\) &&\s+sphereHidden\(/,
     );
     // ...the flag that writeBatches sets from `occludable`.
-    const bundles = readFileSync("src/render/world/bundles.ts", "utf8");
+    const bundles = readFileSync(
+      "packages/next/src/render/world/bundles.ts",
+      "utf8",
+    );
     expect(bundles).toMatch(
       /table\[o \+ 3\] = occludable\(batch, world\.draws\.materialsU32\) \? 1 : 0;/,
     );

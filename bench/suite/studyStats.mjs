@@ -1,4 +1,4 @@
-// Statistics for studies (CS-404; packages/next/work/studies/README.md).
+// Statistics for studies (CS-404; work/studies/README.md).
 //
 // A study's verdict rests on these, so each is small, pure and tested
 // against a known case:

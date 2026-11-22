@@ -11,7 +11,7 @@ import { dirname, join, normalize } from "node:path";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
-const root = normalize(join(import.meta.dirname, ".."));
+const root = normalize(join(import.meta.dirname, "..", "packages", "next"));
 
 /** The relative value imports of `text`, read as the file `file`. */
 export function valueImports(file: string, text: string): string[] {

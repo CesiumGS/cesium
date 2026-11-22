@@ -25,7 +25,7 @@
 // judges what should match: time to settle, frame time, hitches and the
 // bytes until settled; bytes in motion (2.0 loads in motion and prefetches
 // ahead, 1.x defers requests while moving) and the JS heap (2.0 keeps
-// structures 1.x doesn't; packages/next/work/README.md) are product choices there, reported
+// structures 1.x doesn't; work/README.md) are product choices there, reported
 // but not judged. 2.0 against 2.0 (a change against main) judges them all.
 //
 // No scene measured by both engines (all errored, say) has no scorecard.

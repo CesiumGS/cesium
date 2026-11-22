@@ -73,7 +73,7 @@ try {
   writeFileSync(
     join(temp, "cesium.slang"),
     cesiumModule(
-      readFileSync(join(here, "../src/shaders/cesium.slang"), "utf8"),
+      readFileSync(join(here, "../packages/next/src/shaders/cesium.slang"), "utf8"),
       {
         ...fields,
         uniforms: Object.fromEntries(

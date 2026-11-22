@@ -99,9 +99,8 @@ export function TryYourOwn({
         {token === undefined ? (
           <Alert severity="info">
             No ion token. Set one in Dyno&rsquo;s settings, or add{" "}
-            <code className="fx-code">VITE_ION_TOKEN</code> to
-            packages/next/.env.local, then reload. Pasting WKT2 works without
-            one.
+            <code className="fx-code">VITE_ION_TOKEN</code> to .env.local, then
+            reload. Pasting WKT2 works without one.
           </Alert>
         ) : (
           <>

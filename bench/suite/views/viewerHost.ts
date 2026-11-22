@@ -851,7 +851,7 @@ export class LegacyViewerHost implements ViewerHost {
       const key = import.meta.env.VITE_ITWIN_SHARE_KEY as string | undefined;
       if (!key) {
         throw new Error(
-          "Set VITE_ITWIN_SHARE_KEY in packages/next/.env.local to load iModels.",
+          "Set VITE_ITWIN_SHARE_KEY in .env.local to load iModels.",
         );
       }
       Cesium.ITwinPlatform.defaultShareKey = key;

@@ -117,9 +117,7 @@ export function Trends() {
       <Page title={TITLE} description={DESCRIPTION}>
         <Empty title="No runs yet.">
           Trends need a few runs to draw a line. Record one with{" "}
-          <code>
-            node packages/next/bench/suite/cli.mjs run --note "what changed"
-          </code>
+          <code>node bench/suite/cli.mjs run --note "what changed"</code>
         </Empty>
       </Page>
     );

@@ -340,7 +340,7 @@ describe("the builder", () => {
 
 describe("the import boundary", () => {
   it("src/ir imports nothing outside itself", () => {
-    const dir = join(import.meta.dirname, "../src/ir");
+    const dir = join(import.meta.dirname, "../packages/next/src/ir");
     const files = readdirSync(dir).filter((f) => f.endsWith(".ts"));
     expect(files.length).toBeGreaterThan(0);
     const bad: string[] = [];

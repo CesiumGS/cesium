@@ -2,17 +2,17 @@
 // (commands/suite.mjs) and says so. Kept until the repository's docs, items
 // and skills say `dyno` (CS-721).
 //
-//   node packages/next/bench/suite/cli.mjs <command> [options]
+//   node bench/suite/cli.mjs <command> [options]
 import process from "node:process";
 import { main } from "./commands/suite.mjs";
 
 const argv = process.argv.slice(2);
 console.error(
-  `cli.mjs is now \`dyno suite ${argv[0] ?? "list"}\` (node packages/next/bench/dyno.mjs suite --help)`,
+  `cli.mjs is now \`dyno suite ${argv[0] ?? "list"}\` (node bench/dyno.mjs suite --help)`,
 );
 try {
   const result = await main(argv, {
-    as: ["node", "packages/next/bench/suite/cli.mjs"],
+    as: ["node", "bench/suite/cli.mjs"],
   });
   process.exitCode = result.exitCode ?? 0;
 } catch (error) {

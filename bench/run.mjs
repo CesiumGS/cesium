@@ -2,12 +2,12 @@
 // (suite/commands/lab.mjs) and says so. Kept until the repository's docs,
 // items and skills say `dyno` (CS-721).
 //
-//   node packages/next/bench/run.mjs [suite ...]
+//   node bench/run.mjs [suite ...]
 import process from "node:process";
 import { main } from "./suite/commands/lab.mjs";
 
 const names = process.argv.slice(2);
 console.error(
-  `run.mjs is now \`dyno lab${names.length ? ` ${names.join(" ")}` : ""}\` (node packages/next/bench/dyno.mjs lab --help)`,
+  `run.mjs is now \`dyno lab${names.length ? ` ${names.join(" ")}` : ""}\` (node bench/dyno.mjs lab --help)`,
 );
 await main(names);

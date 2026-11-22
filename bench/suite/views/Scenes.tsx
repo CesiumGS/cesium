@@ -204,7 +204,7 @@ export function Scenes() {
         <div className="scenes-empty">
           <Empty title="No runs yet.">
             Run the suite to fill these in:{" "}
-            <code>node packages/next/bench/suite/cli.mjs run</code>
+            <code>node bench/suite/cli.mjs run</code>
           </Empty>
         </div>
       )}
@@ -549,7 +549,7 @@ function SceneDetail({
     return undefined;
   }, [loaded, entry, scenario, colors]);
 
-  const runCommand = `node packages/next/bench/suite/cli.mjs run --scenes ${entry.scene}`;
+  const runCommand = `node bench/suite/cli.mjs run --scenes ${entry.scene}`;
   const facts = scene
     ? [
         `Group ${scene.group}`,

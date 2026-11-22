@@ -1325,7 +1325,7 @@ function OpenContent({
           ) : (
             <Alert severity="info">
               iModels load with an iTwin share key: set VITE_ITWIN_SHARE_KEY in
-              packages/next/.env.local and restart the dev server.
+              .env.local and restart the dev server.
             </Alert>
           ))}
       </DialogContent>

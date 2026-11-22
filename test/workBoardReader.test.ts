@@ -312,7 +312,7 @@ describe("the dev server's reader against a whole read (this repository)", () =>
     expect(performance.now() - t0).toBeLessThan(1000);
     expect(untimed(again)).toEqual(untimed(full));
     // An item file changing makes it read the tracker again.
-    reader.changed(join(root, "packages/next/work/items/CS-1-x.md"));
+    reader.changed(join(root, "work/items/CS-1-x.md"));
     expect(untimed(await reader.query())).toEqual(untimed(full));
   }, 240_000);
 

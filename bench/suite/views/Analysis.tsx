@@ -176,8 +176,7 @@ function Sweeps() {
         A sweep runs each configuration once per value of a parameter. From the
         repository root, run{" "}
         <code>
-          node packages/next/bench/suite/cli.mjs run --sweep
-          maximumScreenSpaceError=8,16,32
+          node bench/suite/cli.mjs run --sweep maximumScreenSpaceError=8,16,32
         </code>
         , or compare 1.x releases with <code>--releases 1.120.0..1.146.0</code>.
       </Empty>

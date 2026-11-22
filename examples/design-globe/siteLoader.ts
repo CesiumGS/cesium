@@ -167,7 +167,7 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
             ? {
                 type: "missing",
                 id,
-                detail: `${site.entry.name}'s tilesets aren't in the frames store. Generate them once, in packages/next:`,
+                detail: `${site.entry.name}'s tilesets aren't in the frames store. Generate them once, at the repository root:`,
                 command: SETUP,
               }
             : {
@@ -266,13 +266,13 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
                 type: "missing",
                 id: "proj",
                 detail:
-                  "PROJ isn't in the frames store. Run once, in packages/next:",
+                  "PROJ isn't in the frames store. Run once, at the repository root:",
                 command: SETUP,
               }
             : {
                 type: "error",
                 id: "proj",
-                detail: `PROJ didn't load: ${messageOf(error)}. If the frames store isn't set up yet, run ${SETUP} in packages/next.`,
+                detail: `PROJ didn't load: ${messageOf(error)}. If the frames store isn't set up yet, run ${SETUP} at the repository root.`,
               },
         );
         throw error;
@@ -436,7 +436,7 @@ export function createSiteLoader(deps: LoaderDeps): SiteLoader {
                   type: "missing",
                   id: "answers",
                   detail:
-                    "The design globe's answers aren't in the frames store. Run once, in packages/next:",
+                    "The design globe's answers aren't in the frames store. Run once, at the repository root:",
                   command: SETUP,
                 }
               : { type: "error", id: "answers", detail: messageOf(error) },

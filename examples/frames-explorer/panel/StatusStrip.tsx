@@ -286,8 +286,8 @@ function MissingAlert({ missing }: { missing: DataItem[] }) {
   return (
     <Alert severity="info" className="fx-strip-alert">
       {names} {missing.length === 1 ? "isn't" : "aren't"} in the frames store.
-      Run <code className="fx-code">npm run setup</code> in packages/next, then
-      reload. Everything that doesn't need{" "}
+      Run <code className="fx-code">npm run setup</code> at the repository root,
+      then reload. Everything that doesn't need{" "}
       {missing.length === 1 ? "it" : "them"} still works.
     </Alert>
   );

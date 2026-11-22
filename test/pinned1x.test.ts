@@ -10,8 +10,14 @@ import { describe, expect, it } from "vitest";
 import { PINNED_1X } from "../bench/suite/engines.mjs";
 import { pinned1x } from "../bench/suite/pinned1x.mjs";
 
-const next = fileURLToPath(new URL("..", import.meta.url));
-const root = join(next, "..", "..");
+const root = fileURLToPath(new URL("..", import.meta.url));
+const next = join(root, "packages", "next");
+/** 2.0's folders: its packages and the harness at the root (CS-835). */
+const twoZero = [
+  "packages",
+  ...["test", "parity", "bench", "lab", "handbook", "examples", "demo"],
+  ...["spikes", "standalone", "scripts", "tools"],
+].map((dir) => join(root, dir));
 const json = (path: string) => JSON.parse(readFileSync(path, "utf8"));
 
 interface LockEntry {
@@ -95,9 +101,9 @@ describe("the pinned 1.x", () => {
   it("is the only way into 1.x: nothing of 2.0's reaches into a 1.x tree", () => {
     const tree =
       /(?:\.\.\/)+(?:(?:engine|core|widgets|gltf)\/Source\b|Specs\/Data\b|Build\/CesiumUnminified\b)/;
-    const offenders = sources(next).filter((file) =>
-      tree.test(readFileSync(file, "utf8")),
-    );
+    const offenders = twoZero
+      .flatMap((dir) => sources(dir))
+      .filter((file) => tree.test(readFileSync(file, "utf8")));
     expect(offenders).toEqual([]);
   });
 
@@ -119,9 +125,9 @@ describe("the pinned 1.x", () => {
       // import it, or any other 1.x package, by name.
       const named =
         /\bfrom\s+["'](?:cesium|cesium-1x|@cesium\/(?:core|engine|widgets|gltf))(?:\/[^"']*)?["']/;
-      const offenders = sources(next).filter((file) =>
-        named.test(readFileSync(file, "utf8")),
-      );
+      const offenders = twoZero
+        .flatMap((dir) => sources(dir))
+        .filter((file) => named.test(readFileSync(file, "utf8")));
       expect(offenders).toEqual([]);
     }
   });

@@ -195,7 +195,7 @@ const item = (id: string, over: Partial<WorkItem> = {}): WorkItem => ({
   state: "planned",
   project: "CS-2",
   needs: [],
-  path: `packages/next/work/items/${id}.md`,
+  path: `work/items/${id}.md`,
   ready: true,
   blocked: false,
   open_needs: [],
@@ -2019,7 +2019,7 @@ describe("the live run in Your move's In progress (CS-547)", () => {
       }).trim();
     const put = (id: string, state: string) => {
       writeFileSync(
-        join(repo, "packages/next/work/items", `${id}-x.md`),
+        join(repo, "work/items", `${id}-x.md`),
         `---\nid: ${id}\ntitle: x\nkind: work\nstate: ${state}\n---\n`,
       );
     };
@@ -2029,7 +2029,7 @@ describe("the live run in Your move's In progress (CS-547)", () => {
     };
     beforeAll(() => {
       repo = mkdtempSync(join(tmpdir(), "dyno-unmerged-"));
-      mkdirSync(join(repo, "packages/next/work/items"), { recursive: true });
+      mkdirSync(join(repo, "work/items"), { recursive: true });
       g("init", "-q", "-b", "trunk");
       g("config", "user.email", "test@example.com");
       g("config", "user.name", "Test");

@@ -50,12 +50,15 @@ import { verifiedDownload } from "./verifiedDownload.mjs";
 import { describeReference, writeReference } from "./apiReference.mjs";
 import { pinned1x } from "../bench/suite/pinned1x.mjs";
 
-const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+// The repository root (the harness, the surface, Dyno's results) and the
+// package whose sources the figures read (CS-835).
+const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+const packageOf = (root) => join(root, "packages", "next");
 
 const kib = (bytes) => Math.round((bytes / 1024) * 10) / 10;
 
 /** The public API map: per entry point, its names, kinds and tiers. */
-export function readSurface(root = packageRoot) {
+export function readSurface(root = repoRoot) {
   const lines = readFileSync(join(root, "api/surface.txt"), "utf8")
     .split("\n")
     .filter((line) => line.length > 0);
@@ -139,10 +142,19 @@ export function readOneX() {
  * This package's history, from git: commits touching it, how many name a
  * coding agent as co-author, and the calendar span. Nothing about spend.
  */
-export function readHistory(root = packageRoot) {
+/** 2.0's paths, before CS-835's move (packages/next) and after it. */
+const HISTORY_PATHS = [
+  "packages/next",
+  ...["core", "time", "frames", "crs", "measure", "ui", "cesium"].map(
+    (name) => `packages/${name}`,
+  ),
+  ...["test", "parity", "bench", "lab", "handbook", "examples", "demo"],
+  ...["spikes", "standalone", "api", "work", "tools/dyno"],
+];
+export function readHistory(root = repoRoot) {
   const log = execFileSync(
     "git",
-    ["log", "--format=%as%x09%b%x00", "--", "."],
+    ["log", "--format=%as%x09%b%x00", "--", ...HISTORY_PATHS],
     { cwd: root, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
   )
     .split("\0")
@@ -184,7 +196,7 @@ export function findUnembeddedImages(html) {
  * What the Dyno tab shows of the public catalog: its shape and one scene.
  * Dataset entries stay out: the page needs no asset IDs or license notes.
  */
-export function readCatalog(root = packageRoot) {
+export function readCatalog(root = repoRoot) {
   const catalog = JSON.parse(
     readFileSync(join(root, "bench/suite/catalog/public.json"), "utf8"),
   );
@@ -228,7 +240,7 @@ const TEST_DECLARATIONS = [
  * rather than copied, so a change to the rule changes the site. Fails naming
  * any declaration the test no longer has.
  */
-export function readBoundaryRules(root = packageRoot) {
+export function readBoundaryRules(root = repoRoot) {
   const file = join(root, "test/importBoundary.test.ts");
   const text = readFileSync(file, "utf8");
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
@@ -261,7 +273,7 @@ export function readBoundaryRules(root = packageRoot) {
   );
   const scope = {
     ts,
-    root,
+    root: packageOf(root),
     readdirSync,
     readFileSync,
     join,
@@ -275,14 +287,15 @@ export function readBoundaryRules(root = packageRoot) {
 }
 
 /** Layers, their sizes, the rules, and the imports that exist today. */
-export function readLayers(root = packageRoot) {
+export function readLayers(root = repoRoot) {
   const rules = readBoundaryRules(root);
   const files = [...rules.listTs("src"), ...rules.listTs("widgets")];
+  const pkg = packageOf(root);
   const layers = new Map();
   const edges = new Map();
   const dynamicImports = [];
   for (const file of files) {
-    const text = readFileSync(join(root, file), "utf8");
+    const text = readFileSync(join(pkg, file), "utf8");
     const from = rules.layerOf(file);
     if (!layers.has(from)) {
       layers.set(from, { id: from, files: 0, lines: 0 });
@@ -323,7 +336,7 @@ export function readLayers(root = packageRoot) {
     framesCoreValues: rules.FRAMES_CORE_VALUES,
     edges: [...edges.values()],
     dynamicImports,
-    core: readCoreTiers(rules, files, root),
+    core: readCoreTiers(rules, files, pkg),
   };
 }
 
@@ -425,8 +438,8 @@ async function buildLibrary(root) {
   const outDir = mkdtempSync(join(tmpdir(), "cesium-next-handbook-"));
   try {
     const result = await build({
-      root,
-      configFile: join(root, "vite.lib.config.ts"),
+      root: packageOf(root),
+      configFile: join(packageOf(root), "vite.lib.config.ts"),
       logLevel: "error",
       build: { outDir, emptyOutDir: true },
     });
@@ -618,7 +631,7 @@ const selectionParity = (a) => {
  * tables the benchmarks tab charts. Run errors stay out: they can quote
  * local paths.
  */
-export function readBenchResults(root = packageRoot) {
+export function readBenchResults(root = repoRoot) {
   const dir = process.env.BENCH_RESULTS_DIR ?? join(root, "bench/results");
   const runs = [];
   for (const name of existsSync(dir) ? readdirSync(dir).sort() : []) {
@@ -739,11 +752,11 @@ function tsFiles(root, dir) {
  * with its format. Found by walking the syntax of every file that adds a
  * pass, so a file split doesn't lose it. Fails naming what it can't read.
  */
-export function readFrameGraph(root = packageRoot) {
+export function readFrameGraph(root = repoRoot) {
   const textures = new Map();
   const passes = [];
-  for (const path of tsFiles(root, "src")) {
-    const text = readFileSync(join(root, path), "utf8");
+  for (const path of tsFiles(packageOf(root), "src")) {
+    const text = readFileSync(join(packageOf(root), path), "utf8");
     if (!text.includes(".addPass(")) {
       continue;
     }
@@ -841,7 +854,7 @@ export function readFrameGraph(root = packageRoot) {
 
 /** A constant's value in a file, read from its text. Fails if it has gone. */
 function readConstant(root, file, pattern, what) {
-  const match = pattern.exec(readFileSync(join(root, file), "utf8"));
+  const match = pattern.exec(readFileSync(join(packageOf(root), file), "utf8"));
   if (!match) {
     throw new Error(`${file}: no ${what}; update scripts/handbookData.mjs`);
   }
@@ -849,9 +862,9 @@ function readConstant(root, file, pattern, what) {
 }
 
 /** Sizes and fixed limits the pipeline's figures state. */
-export function readPipelineFigures(root = packageRoot) {
+export function readPipelineFigures(root = repoRoot) {
   const layouts = readFileSync(
-    join(root, "src/render/generated/layouts.ts"),
+    join(packageOf(root), "src/render/generated/layouts.ts"),
     "utf8",
   );
   const size = (name) => {
@@ -905,7 +918,7 @@ export function readPipelineFigures(root = packageRoot) {
  * a note, notes for passes that have gone, tests or code names that have
  * gone. The page shows an unnoted pass as such, so these warn, not fail.
  */
-export function pipelineDrift(graph, notes, root = packageRoot) {
+export function pipelineDrift(graph, notes, root = repoRoot) {
   const drift = [];
   const names = new Set(graph.passes.map((p) => p.name));
   for (const pass of names) {
@@ -930,8 +943,8 @@ export function pipelineDrift(graph, notes, root = packageRoot) {
       }
     }
     for (const { name, file } of seam.code) {
-      const text = existsSync(join(root, file))
-        ? readFileSync(join(root, file), "utf8")
+      const text = existsSync(join(packageOf(root), file))
+        ? readFileSync(join(packageOf(root), file), "utf8")
         : "";
       if (!text.includes(name)) {
         drift.push(`${seam.id}: no ${name} in ${file}`);
@@ -971,7 +984,7 @@ function readCounts(root) {
   };
   return {
     testFiles: count("test", /\.test\.tsx?$/),
-    slangFiles: count("src", /\.slang$/),
+    slangFiles: count("packages/next/src", /\.slang$/),
     examples: readdirSync(join(root, "examples"), {
       withFileTypes: true,
     }).filter((e) => e.isDirectory()).length,
@@ -1026,7 +1039,7 @@ function envFiles(root) {
     "--path-format=absolute",
     "--git-common-dir",
   );
-  const roots = new Set([root, join(dirname(common), "packages/next")]);
+  const roots = new Set([root, dirname(common)]);
   return [...roots].flatMap((dir) =>
     existsSync(dir)
       ? readdirSync(dir)
@@ -1043,7 +1056,7 @@ function envFiles(root) {
  */
 export function findSecrets(
   html,
-  { files = envFiles(packageRoot), home = homedir() } = {},
+  { files = envFiles(repoRoot), home = homedir() } = {},
 ) {
   const found = [];
   for (const file of files) {
@@ -1066,7 +1079,7 @@ function git(root, ...args) {
   return execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
 }
 
-export async function generate({ root = packageRoot, bundles = true } = {}) {
+export async function generate({ root = repoRoot, bundles = true } = {}) {
   const outDir = join(root, "handbook/generated");
   const outFile = join(outDir, "data.json");
   const previous = existsSync(outFile)
@@ -1079,8 +1092,8 @@ export async function generate({ root = packageRoot, bundles = true } = {}) {
       "status",
       "--porcelain",
       "--",
-      "src",
-      "widgets",
+      "packages/next/src",
+      "packages/next/widgets",
       "api",
       "handbook",
     ).length > 0;
@@ -1090,7 +1103,9 @@ export async function generate({ root = packageRoot, bundles = true } = {}) {
       commit: git(root, "rev-parse", "--short", "HEAD"),
       commitDate: git(root, "log", "-1", "--format=%cs"),
       dirty,
-      version: JSON.parse(readFileSync(join(root, "package.json"), "utf8"))
+      version: JSON.parse(
+        readFileSync(join(packageOf(root), "package.json"), "utf8"),
+      )
         .version,
     },
     surface: readSurface(root),

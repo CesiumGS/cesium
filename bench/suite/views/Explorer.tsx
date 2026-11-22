@@ -303,7 +303,7 @@ export function LiveView({ sceneId }: { sceneId: string }) {
     }
   };
 
-  const command = `node packages/next/bench/suite/cli.mjs run --scenes ${sceneId} --engines ${ids.join(",")}${
+  const command = `node bench/suite/cli.mjs run --scenes ${sceneId} --engines ${ids.join(",")}${
     ids.length === 2 ? ` --baseline ${left} --candidate ${right}` : ""
   } --reps 3 --note "live: ${sceneId}"`;
 
