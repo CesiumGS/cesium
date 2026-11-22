@@ -9,15 +9,21 @@
 //
 //   node scripts/libraryTypes.mjs <dist-lib/types>
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, sep } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
 
 /** The packages whose names the declarations may import, and their entries. */
 const PACKAGES = ["core", "time", "frames", "crs", "measure", "ui"];
 const ENTRIES = { "": "index", "/internal": "internal" };
 
-const [typesDir] = process.argv.slice(2);
-if (!typesDir) {
-  console.error("usage: node scripts/libraryTypes.mjs <dist-lib/types>");
+const repo = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+const [argument] = process.argv.slice(2);
+// Only a folder inside the repository (the library build's own output).
+const typesDir = argument ? resolve(argument) : "";
+if (!argument || relative(repo, typesDir).split(sep)[0] === "..") {
+  console.error(
+    "usage: node scripts/libraryTypes.mjs <dist-lib/types>, a folder inside the repository",
+  );
   process.exit(2);
 }
 

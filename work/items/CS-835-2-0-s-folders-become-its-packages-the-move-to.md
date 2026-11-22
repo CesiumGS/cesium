@@ -2,7 +2,7 @@
 id: CS-835
 title: "2.0's folders become its packages: the move to the package map, with the layer rule read from package.json"
 kind: work
-state: in-progress
+state: done
 created: 2026-11-21
 project: CS-615
 needs: [CS-834, CS-809, CS-814, CS-552, CS-610, CS-611, CS-887]

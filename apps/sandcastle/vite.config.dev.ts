@@ -77,7 +77,7 @@ export default defineConfig(({ command }) => {
   }
 
   const cesiumSource = join(cesium1x, "Build", "CesiumUnminified");
-  const sampleData = join(__dirname, "../../Apps/SampleData");
+  const sampleData = join(__dirname, "public/SampleData");
   const packages = ["core", "gltf", "engine", "widgets"];
 
   const extraFiles = [
@@ -86,7 +86,8 @@ export default defineConfig(({ command }) => {
     { src: `${cesiumSource}/Assets`, dest: "" },
     { src: `${cesiumSource}/Widgets`, dest: "" },
     { src: `${cesiumSource}/*.{js,cjs}`, dest: "" },
-    { src: sampleData, dest: "" },
+    // public/SampleData at both paths 1.x served it from.
+    { src: sampleData, dest: "Apps", rename: { stripBase: 1 } },
     { src: sampleData, dest: "", rename: { stripBase: 1 } },
     { src: join(cesium1x, "Source/Cesium.{d.ts,js}"), dest: "" },
     ...packages.flatMap((name) => [

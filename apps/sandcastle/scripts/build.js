@@ -26,7 +26,6 @@ import sandcastleConfig from "../sandcastle.config.js";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const sandcastleRoot = join(here, "..");
-const repositoryRoot = join(sandcastleRoot, "..", "..");
 
 /** The packages the import map names, besides `cesium` itself. */
 const PACKAGES = ["core", "gltf", "engine", "widgets"];
@@ -190,7 +189,7 @@ for (const name of PACKAGES) {
   );
 }
 // The sample data at both paths 1.x's deployments served it from.
-const sampleData = join(repositoryRoot, "Apps", "SampleData");
+const sampleData = join(sandcastleRoot, "public", "SampleData");
 copy(sampleData, join(outDir, "SampleData"));
 copy(sampleData, join(outDir, "Apps", "SampleData"));
 
