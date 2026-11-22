@@ -32,3 +32,11 @@ If unanswered by 2026-11-24T12:00:00Z: Hold it.
 ## Answer
 
 Recorded in the front matter once answered.
+
+**Correction by the chief of staff, 2026-11-21.** The recorded answer is option A's full text, including "with the three recommendations". That's wrong. The owner chose A for the merge, after a quiet check, but answered the three questions separately in the same question set:
+
+- Q1 (other readers of the field of view): fix it before merging. Every reader, including the sky and occlusion culling, uses the camera record, with a test of an off-center view with culling on.
+- Q2: `pickPosition` returns a record (the position and the camera record). That's a public API change.
+- Q3: cx and cy count from the image's top-left corner, as recommended.
+
+So CS-814 gets a fix round for Q1 and Q2 before its quiet check and merge. No follow-up item is needed for Q1. The answer was recorded as the option's text because hitld takes one option per decision. The questions' answers belong here.
