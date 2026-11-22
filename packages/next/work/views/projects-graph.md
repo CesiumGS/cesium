@@ -6,7 +6,7 @@
 graph LR
   CS_8["Engine profiles<br/>7 of 21 done"]
   CS_9["WebGL 2 renderer<br/>7 of 21 done"]
-  CS_10["Cesium IR<br/>20 of 47 done"]
+  CS_10["Cesium IR<br/>21 of 48 done"]
   CS_11["Live MaterialX graph editing<br/>0 of 17 done"]
   CS_12["job system's ports<br/>1 of 20 done"]
   CS_13["worker-mode façade<br/>3 of 22 done"]
@@ -29,12 +29,12 @@ graph LR
   CS_198["GPU-driven rendering and capacities<br/>0 of 9 done"]
   CS_199["Dyno hardening, packaging and CI<br/>5 of 20 done"]
   CS_389["Dyno as the development harness<br/>56 of 93 done"]
-  CS_437["public API reviews<br/>8 of 26 done"]
-  CS_579["Editing<br/>0 of 4 done"]
+  CS_437["public API reviews<br/>9 of 26 done"]
+  CS_579["Editing<br/>7 of 22 done"]
   CS_584["widgets library<br/>0 of 9 done"]
   CS_596["Trust and evals<br/>0 of 9 done"]
   CS_609["A clean 2.0 branch and a modern build<br/>0 of 4 done"]
-  CS_615["Packaging and package names<br/>0 of 6 done"]
+  CS_615["Packaging and package names<br/>2 of 10 done"]
   CS_622["agent-first migration kit<br/>0 of 4 done"]
   CS_628["Sandcastle as 2.0's gallery<br/>0 of 16 done"]
   CS_637["particle system<br/>0 of 3 done"]
@@ -78,18 +78,19 @@ graph LR
   CS_615 -->|2| CS_18
   CS_628 -->|3| CS_18
   CS_596 -->|3| CS_18
-  CS_389 -->|7| CS_18
+  CS_389 -->|8| CS_18
   CS_437 -->|4| CS_18
+  CS_190 -->|4| CS_18
+  CS_193 -->|5| CS_18
+  CS_579 -->|1| CS_18
   CS_10 -->|3| CS_18
   CS_13 -->|5| CS_18
   CS_12 -->|9| CS_18
   CS_188 -->|6| CS_18
   CS_189 -->|4| CS_18
   CS_192 -->|3| CS_18
-  CS_193 -->|4| CS_18
   CS_17 -->|3| CS_18
   CS_11 -->|3| CS_18
-  CS_190 -->|4| CS_18
   CS_15 -->|2| CS_18
   CS_584 -->|1| CS_18
   CS_637 -->|1| CS_18
@@ -122,7 +123,11 @@ graph LR
   CS_437 -->|2| CS_191
   CS_191 -->|7| CS_628
   CS_584 -->|1| CS_628
-  CS_437 -->|6| CS_628
-  CS_437 -->|1| CS_615
+  CS_437 -->|4| CS_628
   CS_579 -->|1| CS_191
+  CS_191 -->|5| CS_579
+  CS_437 -->|1| CS_579
+  CS_628 -->|1| CS_579
+  CS_193 -->|1| CS_579
+  CS_191 -->|1| CS_615
 ```

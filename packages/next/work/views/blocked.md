@@ -494,10 +494,6 @@ CS-389 Dyno as the development harness
   CS-740  A verdict says whether it carries to another hardware class
       ← CS-739 Studies across devices: noise floors per hardware class, pooling, and the health bar
 
-CS-579 Editing
-  CS-453  What editing should the engine support, with vector data and GIS sources among it?
-      ← CS-831 A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
-
 CS-18 The work tracker
   CS-530  Release 2.0.0-alpha.1
       ← CS-414 Renderers plug in behind one seam
@@ -518,6 +514,10 @@ CS-18 The work tracker
         CS-561 Dyno's Work page shows the live system and the release plan
         CS-751 The owner's views answer what needs me, what's on track and what's wrong
         CS-819 Machines can read the engine: render products, camera records, stable identity and explicit stepping
+        CS-657 Content projects onto any surface
+        CS-857 Subdivision surfaces have a measured path: OpenSubdiv in WebAssembly or a TypeScript patch conversion
+        CS-858 Meshes can be edited: a sample drags a mesh's vertices, edges and faces through the edit layer
+        CS-859 The engine starts fast: pipelines compile in one round and optional subsystems load lazily
   CS-531  Release 2.0.0-beta.1
       ← CS-530 Release 2.0.0-alpha.1
         CS-415 WebGL 2 draws models, tiles and the globe
@@ -555,7 +555,6 @@ CS-18 The work tracker
         CS-641 Particles run on the GPU for 1.x's uses and beyond
         CS-646 Geometry generators make 1.x's shapes on the ellipsoid
         CS-653 Content and motion follow one time model
-        CS-657 Content projects onto any surface
         CS-668 1.x's data formats load as modules
         CS-675 1.x's smaller tools have 2.0 homes
         CS-463 Main-thread work fits the tick's slices
@@ -611,6 +610,10 @@ CS-18 The work tracker
         CS-674 Panoramas, sensors and legacy glTF ship as experimental modules
         CS-676 Geometry has physics representations
         CS-535 Rays query the scene on the GPU
+
+CS-579 Editing
+  CS-578  A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample
+      ← CS-831 A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration
 
 CS-584 The widgets library
   CS-586  The existing widgets move onto the library: time controls, credits, the inspector and the observer panel
@@ -674,7 +677,9 @@ CS-615 Packaging and package names
       ← CS-617 2.0 splits into scoped packages, released in lockstep, with cesium@2 as the umbrella
   CS-835  2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
       ← CS-834 A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
-        CS-814 A camera record carries intrinsics, an off-center principal point and a named distortion model
+  CS-882  PROJ sits behind a coordinate-operations seam: @cesium/crs-proj splits from @cesium/crs
+      ← CS-835 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json
+        CS-808 Outside data comes through a data-resource provider: PROJ grids, the geoid, frames data, sky packs and decoders, from any host
 
 CS-622 The agent-first migration kit
   CS-624  The migration skill
@@ -714,10 +719,7 @@ CS-628 Sandcastle as 2.0's gallery
         CS-663 PostGIS loads through the content-source seam
   CS-826  Example: synthetic data capture, stepping a scene and exporting color, depth and IDs with each camera record
       ← CS-813 A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color
-        CS-814 A camera record carries intrinsics, an off-center principal point and a named distortion model
         CS-816 The host steps the engine: advance to a time, wait until settled, render, read back
-  CS-827  Example: a calibrated camera from an OpenCV calibration, overlaid on its reference photo
-      ← CS-814 A camera record carries intrinsics, an off-center principal point and a named distortion model
   CS-828  Example: what is this? Stable IDs and semantic labels on a city, with a segmentation view
       ← CS-815 Scene content has stable identity and semantic labels that don't depend on load order
   CS-829  Example: simulator in the loop, a small rigid-body sim writing timed poses and replaying identically

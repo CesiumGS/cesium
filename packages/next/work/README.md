@@ -135,7 +135,7 @@ No milestone
 
 ### Cesium IR
 
-[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 20 of 47 done, 12 ready, 11 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
+[CS-10](./projects/CS-10-cesium-ir.md), Planned, led by owner: 21 of 48 done, 12 ready, 11 blocked, 4 proposed. Plan: [2026-11-13-cesium-ir.md](../../../docs/superpowers/plans/2026-11-13-cesium-ir.md).
 
 Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestones/CS-417-transforms-and-styles-compile-through-cesium-ir.md), Planned)
 
@@ -149,6 +149,7 @@ Milestone: Transforms and styles compile through Cesium IR ([CS-417](./milestone
 - [ ] [CS-55](./items/CS-55-styles-move-onto-cesium-ir-literals-as-uniforms.md) Styles move onto Cesium IR, literals as uniforms. Needs CS-50, CS-51 and CS-52.
 - [ ] [CS-56](./items/CS-56-tables-and-the-bounded-search-the-first.md) Tables and the bounded search, the first extensions, with the residual's row window. Needs CS-53 and CS-54.
 - [ ] [CS-371](./items/CS-371-math-ops-the-transform-graph-needs-atanh-asinh.md) Math ops the transform graph needs: `atanh`, `asinh`, `acosh`, `expm1`, `log1p`, `%`, `hypot`. Needs CS-48.
+- [ ] [CS-794](./items/CS-794-the-transform-passes-load-cesium-ir-lazily-so-a.md) The transform passes load Cesium IR lazily, so a default view starts without it. Needs CS-53.
 - [ ] [CS-837](./items/CS-837-cesium-ir-s-json-format-is-experimental-at.md) Cesium IR's JSON format is experimental at cesium-ir/0.x until it graduates. Needs CS-49.
 
 Milestone: Any shader language reaches both renderers ([CS-418](./milestones/CS-418-any-shader-language-reaches-both-renderers.md), Planned)
@@ -189,12 +190,12 @@ No milestone
 - [x] [CS-788](./items/CS-788-merge-cs-53-transforms-move-onto-cesium-ir-with.md) decision: Merge CS-53, transforms move onto Cesium IR, with its browser parity bullet not showable today. Done.
 - [?] [CS-790](./items/CS-790-a-lab-parity-page-draws-through-a-compiled.md) A Lab parity page draws through a compiled curvilinear route, so IR changes are checked in pixels. Proposed. Needs CS-53.
 - [?] [CS-791](./items/CS-791-per-draw-center-constants-on-cesium-ir-s.md) Per-draw center constants on Cesium IR's generic evaluator are measured against the old Float64Array loop. Proposed. Needs CS-53.
-- [ ] [CS-794](./items/CS-794-the-transform-passes-load-cesium-ir-lazily-so-a.md) The transform passes load Cesium IR lazily, so a default view starts without it. Needs CS-53.
 - [x] [CS-800](./items/CS-800-merge-cs-777-the-glsl-es-emitter-s-output-is.md) decision: Merge CS-777, the GLSL ES emitter's output is cross-checked against naga's. Done.
 - [x] [CS-807](./items/CS-807-merge-cs-794-the-transform-passes-load-cesium.md) decision: Merge CS-794, the transform passes load Cesium IR lazily, once a quiet plain cold start passes. Done.
 - [x] [CS-836](./items/CS-836-merge-cs-49-cesium-ir-s-versioned-json-format.md) decision: Merge CS-49, Cesium IR's versioned JSON format, cesium-ir/1.0. Done.
 - [x] [CS-838](./items/CS-838-merge-cs-809-one-fetch-and-credential-provider.md) decision: Merge CS-809, one fetch and credential provider for every request. Done.
 - [x] [CS-839](./items/CS-839-merge-cs-814-camera-records-with-intrinsics-an.md) decision: Merge CS-814, camera records with intrinsics, an off-center principal point and a named distortion. Done.
+- [x] [CS-860](./items/CS-860-merge-cs-837-cesium-ir-s-json-format-is.md) decision: Merge CS-837, Cesium IR's JSON format is experimental at cesium-ir/0.1. Done.
 
 ### Live MaterialX graph editing
 
@@ -488,8 +489,8 @@ No milestone
 - [x] [CS-527](./items/CS-527-which-milestones-does-2-0-0-beta-1-need.md) decision: Which milestones does 2.0.0-beta.1 need?. Done.
 - [x] [CS-528](./items/CS-528-which-milestones-does-2-0-0-rc-1-need.md) decision: Which milestones does 2.0.0-rc.1 need?. Done.
 - [x] [CS-529](./items/CS-529-which-milestones-does-2-0-0-need.md) decision: Which milestones does 2.0.0 need?. Done.
-- [ ] [CS-530](./items/CS-530-release-2-0-0-alpha-1.md) Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561, CS-751 (Dyno as the development harness) and CS-819 (public API reviews).
-- [ ] [CS-531](./items/CS-531-release-2-0-0-beta-1.md) Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-657 (Vector drawing and the styling language), CS-668 (Content sources and formats), CS-675 (public API reviews), CS-463 (job system's ports), CS-461 (job system's ports), CS-505 (Follow-ups for other teams), CS-493 (Sky, light and atmosphere), CS-471 (Level-of-detail transitions), CS-423 (worker-mode façade), CS-465 (job system's ports), CS-474 (transform graph), CS-495 (B-reps and geometry queries), CS-467 (Engine profiles), CS-534 (Infrastructure and geoscience capabilities), CS-504 (Budgeted selection and memory) and CS-830 (Sandcastle as 2.0's gallery).
+- [ ] [CS-530](./items/CS-530-release-2-0-0-alpha-1.md) Release 2.0.0-alpha.1. Needs CS-526, CS-414 (WebGL 2 renderer), CS-560 (Content sources and formats), CS-458 (Streaming robustness), CS-459 (Streaming robustness), CS-466 (Engine profiles), CS-468 (Engine profiles), CS-485 (Dyno hardening, packaging and CI), CS-486 (Dyno hardening, packaging and CI), CS-497 (Content sources and formats), CS-621 (Packaging and package names), CS-635 (Sandcastle as 2.0's gallery), CS-606 (Trust and evals), CS-722 (Dyno as the development harness), CS-506, CS-519 (Dyno as the development harness), CS-561, CS-751 (Dyno as the development harness), CS-819 (public API reviews), CS-657 (Vector drawing and the styling language), CS-857 (B-reps and geometry queries), CS-858 (Editing) and CS-859 (Dyno as the development harness).
+- [ ] [CS-531](./items/CS-531-release-2-0-0-beta-1.md) Release 2.0.0-beta.1. Needs CS-527, CS-530, CS-415 (WebGL 2 renderer), CS-417 (Cesium IR), CS-418 (Cesium IR), CS-419 (Cesium IR), CS-420 (public API reviews), CS-457 (public API reviews), CS-421 (worker-mode façade), CS-422 (worker-mode façade), CS-456 (worker-mode façade), CS-509 (job system's ports), CS-462 (job system's ports), CS-464 (job system's ports), CS-424 (Earth to Moon (frames 5c to 5h)), CS-425 (Earth to Moon (frames 5c to 5h)), CS-426 (Earth to Moon (frames 5c to 5h)), CS-427 (Earth to Moon (frames 5c to 5h)), CS-487 (Frames and engineering coordinates follow-ups), CS-488 (Frames and engineering coordinates follow-ups), CS-489 (Frames and engineering coordinates follow-ups), CS-490 (Frames and engineering coordinates follow-ups), CS-492 (Sky, light and atmosphere), CS-494 (B-reps and geometry queries), CS-473 (transform graph), CS-475 (Live MaterialX graph editing), CS-476 (Live MaterialX graph editing), CS-498 (Content sources and formats), CS-499 (Vector drawing and the styling language), CS-500 (Vector drawing and the styling language), CS-501 (Vector drawing and the styling language), CS-460 (Streaming robustness), CS-469 (Refinement and convergence), CS-595 (widgets library), CS-641 (particle system), CS-646 (Geometry generators), CS-653 (Conditional content and motion), CS-668 (Content sources and formats), CS-675 (public API reviews), CS-463 (job system's ports), CS-461 (job system's ports), CS-505 (Follow-ups for other teams), CS-493 (Sky, light and atmosphere), CS-471 (Level-of-detail transitions), CS-423 (worker-mode façade), CS-465 (job system's ports), CS-474 (transform graph), CS-495 (B-reps and geometry queries), CS-467 (Engine profiles), CS-534 (Infrastructure and geoscience capabilities), CS-504 (Budgeted selection and memory) and CS-830 (Sandcastle as 2.0's gallery).
 - [ ] [CS-532](./items/CS-532-release-2-0-0-rc-1.md) Release 2.0.0-rc.1. Needs CS-528, CS-531, CS-416 (WebGL 2 renderer), CS-423 (worker-mode façade), CS-461 (job system's ports), CS-463 (job system's ports), CS-465 (job system's ports), CS-467 (Engine profiles), CS-471 (Level-of-detail transitions), CS-472 (Level-of-detail transitions), CS-474 (transform graph), CS-484 (Benchmarks, parity and image regression), CS-503 (GPU-driven rendering and capacities), CS-504 (Budgeted selection and memory), CS-511 (Benchmarks, parity and image regression), CS-491 (Sky, light and atmosphere), CS-502 (GPU-driven rendering and capacities), CS-481 (Dyno as the development harness), CS-482 (Benchmarks, parity and image regression), CS-478 (Dyno as the development harness), CS-479 (Dyno as the development harness), CS-480 (Dyno as the development harness), CS-483 (Benchmarks, parity and image regression), CS-470 (Refinement and convergence), CS-607 (Trust and evals), CS-614 (A clean 2.0 branch and a modern build), CS-627 (agent-first migration kit), CS-636 (Sandcastle as 2.0's gallery) and CS-695 (Packaging and package names).
 - [ ] [CS-533](./items/CS-533-release-2-0-0.md) Release 2.0.0. Needs CS-529, CS-532, CS-608 (Trust and evals), CS-678, CS-428 (Earth to Moon (frames 5c to 5h)), CS-429 (Earth to Moon (frames 5c to 5h)), CS-477 (Live MaterialX graph editing), CS-496 (B-reps and geometry queries), CS-674 (Content sources and formats), CS-676 (B-reps and geometry queries) and CS-535 (Ray queries and path tracing).
 - [x] [CS-536](./items/CS-536-approve-a-store-device.md) decision: Approve a store device. Done.
@@ -643,7 +644,6 @@ No milestone
 
 Milestone: Lines, polygons, labels and CAD styles draw on one path ([CS-499](./milestones/CS-499-lines-polygons-labels-and-cad-styles-draw-on.md), Planned)
 
-- [ ] [CS-258](./items/CS-258-the-vector-drawing-design-lines-polygons-labels.md) The vector drawing design: lines, polygons, labels and CAD styles on one path. Needs nothing.
 - [ ] [CS-259](./items/CS-259-labels-with-gpu-decluttering-and-labels-and.md) Labels with GPU decluttering, and labels and pins drawn in the engine. Needs CS-258.
 - [ ] [CS-260](./items/CS-260-cad-display-extensions-planar-fill-line-and.md) CAD display extensions: planar fill, line and point styles, edge visibility. Needs CS-258.
 
@@ -658,6 +658,7 @@ Milestone: The styling language's form and semantics are decided ([CS-501](./mil
 
 Milestone: Content projects onto any surface ([CS-657](./milestones/CS-657-content-projects-onto-any-surface.md), Planned)
 
+- [ ] [CS-258](./items/CS-258-the-vector-drawing-design-lines-polygons-labels.md) The vector drawing design: lines, polygons, labels and CAD styles on one path. Needs nothing.
 - [ ] [CS-261](./items/CS-261-wide-lines-polygons-and-decals-with-vector.md) Wide lines, polygons and decals, with vector sources and vector tiles. Needs CS-258.
 - [ ] [CS-654](./items/CS-654-the-surface-projection-design-classification.md) The surface-projection design: classification, draping and decals. Needs CS-258.
 - [ ] [CS-655](./items/CS-655-classification-of-terrain-tilesets-and-models.md) Classification of terrain, tilesets and models. Needs CS-654.
@@ -809,6 +810,10 @@ Milestone: Geometry has physics representations ([CS-676](./milestones/CS-676-ge
 
 - [ ] [CS-672](./items/CS-672-physics-representations-across-the-geometry.md) Physics representations across the geometry kinds: the design. Needs nothing.
 
+Milestone: Subdivision surfaces have a measured path: OpenSubdiv in WebAssembly or a TypeScript patch conversion ([CS-857](./milestones/CS-857-subdivision-surfaces-have-a-measured-path.md), Planned)
+
+- [ ] [CS-577](./items/CS-577-spike-subdivision-surfaces-through-opensubdiv.md) Spike: subdivision surfaces through OpenSubdiv in WebAssembly or a TypeScript patch conversion, measured. Needs CS-300.
+
 No milestone
 
 - [x] [CS-300](./items/CS-300-subdivision-surfaces-opensubdiv-or-a-typescript.md) decision: Subdivision surfaces: OpenSubdiv, or a TypeScript patch conversion?. Done.
@@ -819,7 +824,6 @@ No milestone
 - [?] [CS-314](./items/CS-314-one-gpu-tessellation-engine-for-reprojected.md) One GPU tessellation engine for reprojected models, B-reps and meshes under smooth routes. Proposed. Needs nothing.
 - [?] [CS-315](./items/CS-315-kernel-robustness-smlib-and-occt-on-real.md) Kernel robustness: SMLib and OCCT on real trimmed models. Proposed. Needs nothing.
 - [-] [CS-316](./items/CS-316-the-csg-sample-phases-4-and-5-sketches-and.md) The CSG sample, phases 4 and 5: sketches and parametric history. Dropped: The owner answered CS-301 on 2026-11-18: the CSG sample stops at phase 3.
-- [ ] [CS-577](./items/CS-577-spike-subdivision-surfaces-through-opensubdiv.md) Spike: subdivision surfaces through OpenSubdiv in WebAssembly or a TypeScript patch conversion, measured. Needs CS-300.
 - [ ] [CS-669](./items/CS-669-drillpick-every-hit-along-a-pixel-s-ray-or.md) drillPick: every hit along a pixel's ray, or every layer drawn at it. Needs nothing.
 
 ### Budgeted selection and memory
@@ -1040,6 +1044,11 @@ Milestone: The owner's views answer what needs me, what's on track and what's wr
 - [x] [CS-752](./items/CS-752-flow-answers-how-well-the-system-and-the-owner.md) Flow answers how well the system and the owner work together: cost, throughput, latencies, quality and the feedback between them. Done.
 - [x] [CS-753](./items/CS-753-your-move-gets-a-calmer-layout-fewer-larger.md) "Your move" gets a calmer layout: fewer, larger, ranked entries. Done.
 
+Milestone: The engine starts fast: pipelines compile in one round and optional subsystems load lazily ([CS-859](./milestones/CS-859-the-engine-starts-fast-pipelines-compile-in-one.md), Planned)
+
+- [ ] [CS-764](./items/CS-764-engine-create-compiles-its-pipelines-in-one.md) Engine.create compiles its pipelines in one concurrent round instead of three. Needs nothing.
+- [ ] [CS-765](./items/CS-765-optional-subsystems-load-lazily-instead-of.md) Optional subsystems load lazily instead of through the @cesium/next barrel. Needs nothing.
+
 No milestone
 
 - [x] [CS-403](./items/CS-403-dyno-s-navigation-rail-regrouped-by-what-people.md) Dyno's navigation rail, regrouped by what people come to do. Done.
@@ -1065,8 +1074,6 @@ No milestone
 - [x] [CS-756](./items/CS-756-merge-cs-390-run-identity-and-the-machine-wide.md) decision: Merge CS-390, run identity and the machine-wide run lock. Done.
 - [x] [CS-757](./items/CS-757-merge-cs-744-the-release-view-and-the-work-page.md) decision: Merge CS-744, the Release view and the Work page's tab shell. Done.
 - [x] [CS-760](./items/CS-760-merge-cs-745-the-health-view-of-the-work-graph.md) decision: Merge CS-745, the Health view of the work graph's exceptions. Done.
-- [ ] [CS-764](./items/CS-764-engine-create-compiles-its-pipelines-in-one.md) Engine.create compiles its pipelines in one concurrent round instead of three. Needs nothing.
-- [ ] [CS-765](./items/CS-765-optional-subsystems-load-lazily-instead-of.md) Optional subsystems load lazily instead of through the @cesium/next barrel. Needs nothing.
 - [x] [CS-766](./items/CS-766-merge-cs-746-the-path-view-of-what-lies.md) decision: Merge CS-746, the Path view of what lies upstream of a target. Done.
 - [x] [CS-767](./items/CS-767-merge-cs-748-the-projects-view-shows-each.md) decision: Merge CS-748, the Projects view shows each project as a bet. Done.
 - [x] [CS-768](./items/CS-768-merge-cs-750-the-proposals-view-says-why-each.md) decision: Merge CS-750, the Proposals view says why each item is proposed. Done.
@@ -1096,7 +1103,7 @@ No milestone
 
 ### The public API reviews
 
-[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 8 of 26 done, 12 ready, 4 blocked, 2 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
+[CS-437](./projects/CS-437-the-public-api-reviews.md), Planned, led by owner: 9 of 26 done, 11 ready, 4 blocked, 2 proposed. Plan: [2026-11-07-frames-5-earth-to-moon-design.md](../../../docs/superpowers/specs/2026-11-07-frames-5-earth-to-moon-design.md).
 
 Milestone: The public API shape is approved ([CS-420](./milestones/CS-420-the-public-api-shape-is-approved.md), Planned)
 
@@ -1124,7 +1131,7 @@ Milestone: 1.x's smaller tools have 2.0 homes ([CS-675](./milestones/CS-675-1-x-
 Milestone: Machines can read the engine: render products, camera records, stable identity and explicit stepping ([CS-819](./milestones/CS-819-machines-can-read-the-engine-render-products.md), Planned)
 
 - [ ] [CS-813](./items/CS-813-a-view-hands-out-render-products-depth-normals.md) A view hands out render products: depth, normals, motion vectors, and instance and semantic IDs beside color. Needs nothing.
-- [ ] [CS-814](./items/CS-814-a-camera-record-carries-intrinsics-an-off.md) A camera record carries intrinsics, an off-center principal point and a named distortion model. Needs nothing.
+- [x] [CS-814](./items/CS-814-a-camera-record-carries-intrinsics-an-off.md) A camera record carries intrinsics, an off-center principal point and a named distortion model. Done.
 - [ ] [CS-815](./items/CS-815-scene-content-has-stable-identity-and-semantic.md) Scene content has stable identity and semantic labels that don't depend on load order. Needs CS-832.
 - [ ] [CS-816](./items/CS-816-the-host-steps-the-engine-advance-to-a-time.md) The host steps the engine: advance to a time, wait until settled, render, read back. Needs nothing.
 - [x] [CS-832](./items/CS-832-a-design-for-semantic-metadata-and-picking-how.md) A design for semantic metadata and picking: how metadata reaches the engine, and what a pick means in splats and point clouds. Done.
@@ -1141,12 +1148,35 @@ No milestone
 
 ### Editing
 
-[CS-579](./projects/CS-579-editing.md), Planned, led by owner: 0 of 4 done, 3 ready, 1 blocked.
+[CS-579](./projects/CS-579-editing.md), Planned, led by owner: 7 of 22 done, 1 ready, 1 blocked, 13 proposed.
 
-- [ ] [CS-453](./items/CS-453-what-editing-should-the-engine-support-with.md) decision: What editing should the engine support, with vector data and GIS sources among it?. Needs CS-831. Decided by owner.
-- [ ] [CS-578](./items/CS-578-a-mesh-editing-sample-drag-a-mesh-s-vertices.md) A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample. Needs nothing.
+Milestone: Meshes can be edited: a sample drags a mesh's vertices, edges and faces through the edit layer ([CS-858](./milestones/CS-858-meshes-can-be-edited-a-sample-drags-a-mesh-s.md), Planned)
+
+- [ ] [CS-578](./items/CS-578-a-mesh-editing-sample-drag-a-mesh-s-vertices.md) A mesh editing sample: drag a mesh's vertices, edges and faces, beside the CSG sample. Needs CS-831.
+
+No milestone
+
+- [x] [CS-453](./items/CS-453-what-editing-should-the-engine-support-with.md) decision: What editing should the engine support, with vector data and GIS sources among it?. Done.
 - [ ] [CS-831](./items/CS-831-a-design-for-editing-back-through-the-seams.md) A design for editing back through the seams: write capabilities, an edit layer, change sets, conflicts and collaboration. Needs nothing.
-- [ ] [CS-855](./items/CS-855-merge-cs-831-the-design-for-editing-back.md) decision: Merge CS-831, the design for editing back through the seams. Needs nothing. Decided by owner.
+- [x] [CS-855](./items/CS-855-merge-cs-831-the-design-for-editing-back.md) decision: Merge CS-831, the design for editing back through the seams. Done.
+- [x] [CS-861](./items/CS-861-cs-831-d1-does-alpha-1-s-change-set-type-extend.md) decision: CS-831 D1: does alpha.1's change-set type extend CS-552's?. Done.
+- [x] [CS-862](./items/CS-862-cs-831-d2-what-is-the-serialized-change-set.md) decision: CS-831 D2: what is the serialized change-set format?. Done.
+- [x] [CS-863](./items/CS-863-cs-831-d3-may-a-source-turn-polling-of-its-own.md) decision: CS-831 D3: may a source turn polling of its own server into pushes?. Done.
+- [x] [CS-864](./items/CS-864-cs-831-d4-does-cs-831-s-note-answer-cs-453-s.md) decision: CS-831 D4: does CS-831's note answer CS-453's vector and GIS half?. Done.
+- [x] [CS-865](./items/CS-865-cs-831-d5-how-much-of-the-edit-layer-is-in.md) decision: CS-831 D5: how much of the edit layer is in alpha.1?. Done.
+- [?] [CS-866](./items/CS-866-the-edit-layer-hide-replace-and-insert-by.md) The edit layer: hide, replace and insert by stable ID, re-applied on reload, seen by queries. Proposed. Needs CS-847 (Content sources and formats) and CS-815 (public API reviews).
+- [?] [CS-868](./items/CS-868-edit-sessions-change-sets-undo-and-redo-replay.md) Edit sessions: change sets, undo and redo, replay, the per-property merge and rebasing on a feed. Proposed. Needs CS-866.
+- [?] [CS-869](./items/CS-869-the-fetch-and-credential-provider-makes-writes.md) The fetch and credential provider makes writes: method, body, a write kind and no write retries. Proposed. Needs CS-809 (Content sources and formats).
+- [?] [CS-870](./items/CS-870-an-ogc-api-features-source-and-its-part-4.md) An OGC API Features source and its Part 4 writer, checked against the standard's status and two servers. Proposed. Needs CS-868, CS-869 and CS-663 (Content sources and formats).
+- [?] [CS-871](./items/CS-871-example-cs-830-collaborative-postgis-editing-in.md) Example (CS-830): collaborative PostGIS editing in two views, with a conflict shown. Proposed. Needs CS-870 and CS-825 (Sandcastle as 2.0's gallery).
+- [?] [CS-872](./items/CS-872-3d-tiles-edits-an-upstream-writer-and-version.md) 3D Tiles edits: an upstream writer and version invalidation, with overrides dropped on reload. Proposed. Needs CS-868 and CS-306 (B-reps and geometry queries).
+- [?] [CS-873](./items/CS-873-a-writable-data-resource-provider-with-geojson.md) A writable data-resource provider, with GeoJSON written back through it. Proposed. Needs CS-808 (Content sources and formats) and CS-868.
+- [?] [CS-874](./items/CS-874-presence-hooks-on-the-edit-layer.md) Presence hooks on the edit layer. Proposed. Needs CS-866.
+- [?] [CS-875](./items/CS-875-example-cs-830-an-application-layer-edited.md) Example (CS-830): an application layer edited together through a CRDT, behind the change-set interface. Proposed. Needs CS-868.
+- [?] [CS-876](./items/CS-876-a-wfs-t-writer.md) A WFS-T writer. Proposed. Needs CS-870.
+- [?] [CS-877](./items/CS-877-an-esri-applyedits-writer.md) An Esri applyEdits writer. Proposed. Needs CS-558 (Content sources and formats).
+- [?] [CS-878](./items/CS-878-an-itwin-writer-through-a-host-backend-what.md) An iTwin writer through a host backend: what iTwin's libraries do, and what the writer adds. Proposed. Needs CS-868.
+- [?] [CS-879](./items/CS-879-a-usd-layer-writer.md) A USD layer writer. Proposed. Needs CS-559 (Content sources and formats).
 
 ### The widgets library
 
@@ -1199,7 +1229,7 @@ Milestone: The branch is a clean, modern 2.0 build ([CS-614](./milestones/CS-614
 
 ### Packaging and package names
 
-[CS-615](./projects/CS-615-packaging-and-package-names.md), Planned, led by owner: 0 of 6 done, 2 ready, 4 blocked.
+[CS-615](./projects/CS-615-packaging-and-package-names.md), Planned, led by owner: 2 of 10 done, 3 ready, 5 blocked.
 
 Milestone: The core installs alone, and the whole engine installs from one umbrella package ([CS-621](./milestones/CS-621-the-core-installs-alone-and-the-whole-engine.md), Planned)
 
@@ -1208,10 +1238,17 @@ Milestone: The core installs alone, and the whole engine installs from one umbre
 - [ ] [CS-618](./items/CS-618-an-embedding-app-installs-the-core-alone.md) An embedding app installs the core alone, checked by an install and bundle test. Needs CS-617.
 - [ ] [CS-834](./items/CS-834-a-map-of-2-0-s-packages-and-seams-capability.md) A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout. Needs nothing.
 - [ ] [CS-835](./items/CS-835-2-0-s-folders-become-its-packages-the-move-to.md) 2.0's folders become its packages: the move to the package map, with the layer rule read from package.json. Needs CS-834, CS-809 (Content sources and formats), CS-814 (public API reviews) and CS-552 (Content sources and formats).
+- [ ] [CS-882](./items/CS-882-proj-sits-behind-a-coordinate-operations-seam.md) PROJ sits behind a coordinate-operations seam: @cesium/crs-proj splits from @cesium/crs. Needs CS-835 and CS-808 (Content sources and formats).
 
 Milestone: Every package has its API reference ([CS-695](./milestones/CS-695-every-package-has-its-api-reference.md), Planned)
 
 - [ ] [CS-619](./items/CS-619-the-api-reference-for-every-package.md) The API reference for every package. Needs CS-617.
+
+No milestone
+
+- [ ] [CS-867](./items/CS-867-merge-cs-834-the-map-of-2-0-s-packages-and-seams.md) decision: Merge CS-834, the map of 2.0's packages and seams. Needs nothing. Decided by owner.
+- [x] [CS-880](./items/CS-880-cs-834-d2-how-does-1-x-s-cesium-core-0-1-1-give.md) decision: CS-834 D2: how does 1.x's @cesium/core 0.1.1 give way to 2.0's core?. Done.
+- [x] [CS-881](./items/CS-881-cs-834-d3-what-prefix-do-catalog-adapters-use.md) decision: CS-834 D3: what prefix do catalog adapters use?. Done.
 
 ### The agent-first migration kit
 
@@ -1226,7 +1263,7 @@ Milestone: A 1.x app moves to 2.0 with the kit and is shown to match ([CS-627](.
 
 ### Sandcastle as 2.0's gallery
 
-[CS-628](./projects/CS-628-sandcastle-as-2-0-s-gallery.md), Planned, led by owner: 0 of 16 done, 1 ready, 15 blocked.
+[CS-628](./projects/CS-628-sandcastle-as-2-0-s-gallery.md), Planned, led by owner: 0 of 16 done, 2 ready, 14 blocked.
 
 Milestone: Sandcastle hosts 2.0's examples ([CS-635](./milestones/CS-635-sandcastle-hosts-2-0-s-examples.md), Planned)
 

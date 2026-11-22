@@ -98,6 +98,7 @@ graph LR
     CS_837["CS-837 Cesium IR's JSON format is experimental at cesium-ir/0.x until "]:::open
     CS_838["CS-838 Merge CS-809, one fetch and credential provider for every reque"]:::done
     CS_839["CS-839 Merge CS-814, camera records with intrinsics, an off-center pri"]:::done
+    CS_860["CS-860 Merge CS-837, Cesium IR's JSON format is experimental at cesium"]:::done
   end
   subgraph CS_11["Live MaterialX graph editing"]
     CS_70["CS-70 The document layer (reader, writer, generated definitions, flatt"]:::open
@@ -698,7 +699,7 @@ graph LR
     CS_771["CS-771 The seam bypass tests catch the five plants CS-430's audit foun"]:::proposed
     CS_780["CS-780 Engine.errors becomes an emitter: errors.on('support', …) reach"]:::open
     CS_813["CS-813 A view hands out render products: depth, normals, motion vector"]:::open
-    CS_814["CS-814 A camera record carries intrinsics, an off-center principal poi"]:::open
+    CS_814["CS-814 A camera record carries intrinsics, an off-center principal poi"]:::done
     CS_815["CS-815 Scene content has stable identity and semantic labels that don'"]:::open
     CS_816["CS-816 The host steps the engine: advance to a time, wait until settle"]:::open
     CS_817["CS-817 Physical-AI modules on the four seams: ROS 2 and MCAP, randomiz"]:::proposed
@@ -706,10 +707,28 @@ graph LR
     CS_833["CS-833 A SimReady scoping study: which profile, how USD comes in, and "]:::open
   end
   subgraph CS_579["Editing"]
-    CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::decision
+    CS_453["CS-453 What editing should the engine support, with vector data and GI"]:::done
     CS_578["CS-578 A mesh editing sample: drag a mesh's vertices, edges and faces,"]:::open
     CS_831["CS-831 A design for editing back through the seams: write capabilities"]:::open
-    CS_855["CS-855 Merge CS-831, the design for editing back through the seams"]:::decision
+    CS_855["CS-855 Merge CS-831, the design for editing back through the seams"]:::done
+    CS_861["CS-861 CS-831 D1: does alpha.1's change-set type extend CS-552's?"]:::done
+    CS_862["CS-862 CS-831 D2: what is the serialized change-set format?"]:::done
+    CS_863["CS-863 CS-831 D3: may a source turn polling of its own server into pus"]:::done
+    CS_864["CS-864 CS-831 D4: does CS-831's note answer CS-453's vector and GIS ha"]:::done
+    CS_865["CS-865 CS-831 D5: how much of the edit layer is in alpha.1?"]:::done
+    CS_866["CS-866 The edit layer: hide, replace and insert by stable ID, re-appli"]:::proposed
+    CS_868["CS-868 Edit sessions: change sets, undo and redo, replay, the per-prop"]:::proposed
+    CS_869["CS-869 The fetch and credential provider makes writes: method, body, a"]:::proposed
+    CS_870["CS-870 An OGC API Features source and its Part 4 writer, checked again"]:::proposed
+    CS_871["CS-871 Example (CS-830): collaborative PostGIS editing in two views, w"]:::proposed
+    CS_872["CS-872 3D Tiles edits: an upstream writer and version invalidation, wi"]:::proposed
+    CS_873["CS-873 A writable data-resource provider, with GeoJSON written back th"]:::proposed
+    CS_874["CS-874 Presence hooks on the edit layer"]:::proposed
+    CS_875["CS-875 Example (CS-830): an application layer edited together through "]:::proposed
+    CS_876["CS-876 A WFS-T writer"]:::proposed
+    CS_877["CS-877 An Esri applyEdits writer"]:::proposed
+    CS_878["CS-878 An iTwin writer through a host backend: what iTwin's libraries "]:::proposed
+    CS_879["CS-879 A USD layer writer"]:::proposed
   end
   subgraph CS_584["widgets library"]
     CS_585["CS-585 The widgets library's design: React components on StrataKit, DO"]:::open
@@ -746,6 +765,10 @@ graph LR
     CS_619["CS-619 The API reference for every package"]:::open
     CS_834["CS-834 A map of 2.0's packages and seams: capability packages, seam-pr"]:::open
     CS_835["CS-835 2.0's folders become its packages: the move to the package map,"]:::open
+    CS_867["CS-867 Merge CS-834, the map of 2.0's packages and seams"]:::decision
+    CS_880["CS-880 CS-834 D2: how does 1.x's @cesium/core 0.1.1 give way to 2.0's "]:::done
+    CS_881["CS-881 CS-834 D3: what prefix do catalog adapters use?"]:::done
+    CS_882["CS-882 PROJ sits behind a coordinate-operations seam: @cesium/crs-proj"]:::open
   end
   subgraph CS_622["agent-first migration kit"]
     CS_623["CS-623 The 1.x-to-2.0 map in a form agents read, with worked patterns"]:::open
@@ -805,6 +828,10 @@ graph LR
   CS_561["CS-561 Dyno's Work page shows the live system and the release plan"]:::open
   CS_751["CS-751 The owner's views answer what needs me, what's on track and wha"]:::open
   CS_819["CS-819 Machines can read the engine: render products, camera records, "]:::open
+  CS_657["CS-657 Content projects onto any surface"]:::open
+  CS_857["CS-857 Subdivision surfaces have a measured path: OpenSubdiv in WebAss"]:::open
+  CS_858["CS-858 Meshes can be edited: a sample drags a mesh's vertices, edges a"]:::open
+  CS_859["CS-859 The engine starts fast: pipelines compile in one round and opti"]:::open
   CS_415["CS-415 WebGL 2 draws models, tiles and the globe"]:::open
   CS_417["CS-417 Transforms and styles compile through Cesium IR"]:::open
   CS_418["CS-418 Any shader language reaches both renderers"]:::open
@@ -840,7 +867,6 @@ graph LR
   CS_641["CS-641 Particles run on the GPU for 1.x's uses and beyond"]:::open
   CS_646["CS-646 Geometry generators make 1.x's shapes on the ellipsoid"]:::open
   CS_653["CS-653 Content and motion follow one time model"]:::open
-  CS_657["CS-657 Content projects onto any surface"]:::open
   CS_668["CS-668 1.x's data formats load as modules"]:::open
   CS_675["CS-675 1.x's smaller tools have 2.0 homes"]:::open
   CS_463["CS-463 Main-thread work fits the tick's slices"]:::open
@@ -1286,6 +1312,10 @@ graph LR
   CS_561 --> CS_530
   CS_751 --> CS_530
   CS_819 --> CS_530
+  CS_657 --> CS_530
+  CS_857 --> CS_530
+  CS_858 --> CS_530
+  CS_859 --> CS_530
   CS_527 --> CS_531
   CS_530 --> CS_531
   CS_415 --> CS_531
@@ -1323,7 +1353,6 @@ graph LR
   CS_641 --> CS_531
   CS_646 --> CS_531
   CS_653 --> CS_531
-  CS_657 --> CS_531
   CS_668 --> CS_531
   CS_675 --> CS_531
   CS_463 --> CS_531
@@ -1410,6 +1439,7 @@ graph LR
   CS_454 --> CS_572
   CS_299 --> CS_576
   CS_300 --> CS_577
+  CS_831 --> CS_578
   CS_574 --> CS_580
   CS_575 --> CS_581
   CS_585 --> CS_586
@@ -1590,6 +1620,27 @@ graph LR
   CS_809 --> CS_849
   CS_844 --> CS_849
   CS_721 --> CS_856
+  CS_847 --> CS_866
+  CS_815 --> CS_866
+  CS_866 --> CS_868
+  CS_809 --> CS_869
+  CS_868 --> CS_870
+  CS_869 --> CS_870
+  CS_663 --> CS_870
+  CS_870 --> CS_871
+  CS_825 --> CS_871
+  CS_868 --> CS_872
+  CS_306 --> CS_872
+  CS_808 --> CS_873
+  CS_868 --> CS_873
+  CS_866 --> CS_874
+  CS_868 --> CS_875
+  CS_870 --> CS_876
+  CS_558 --> CS_877
+  CS_868 --> CS_878
+  CS_559 --> CS_879
+  CS_835 --> CS_882
+  CS_808 --> CS_882
   classDef open fill:#fff,stroke:#333
   classDef done fill:#ddd,color:#666,stroke:#999
   classDef dropped fill:#eee,color:#999,stroke:#ccc,stroke-dasharray:3

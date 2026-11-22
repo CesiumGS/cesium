@@ -54,14 +54,10 @@ CS-437 The public API reviews
       first needs CS-102
       waited on by CS-103, CS-104, CS-105, CS-107, CS-243, CS-303, CS-378, CS-434, CS-435
 
-CS-579 Editing
-  CS-453  What editing should the engine support, with vector data and GIS sources among it? (owner)
-      first needs CS-831
-  CS-855  Merge CS-831, the design for editing back through the seams (owner)
-
 CS-615 Packaging and package names
   CS-616  Which scoped package names does 2.0 publish under, beside cesium@2.0.0? (owner)
       waited on by CS-617
+  CS-867  Merge CS-834, the map of 2.0's packages and seams (owner)
 
-19 open decision(s) for owner
+18 open decision(s) for owner
 ```

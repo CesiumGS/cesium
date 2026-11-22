@@ -24,9 +24,9 @@ CS-416 WebGL 2 reaches parity with WebGPU [Planned], under CS-9 The WebGL 2 rend
 
 CS-417 Transforms and styles compile through Cesium IR [Planned], under CS-10 Cesium IR
   outcome: Styles, transforms and routes are Cesium IR programs that evaluate in float64 on the CPU and emit both WGSL and GLSL ES, with the same results as today.
-  constraints: 6 of 12 done
-  unmet: not linked to a clause yet (open: CS-54, CS-55, CS-56, CS-371, CS-39, CS-837; check not passed)
-  to shape: done_when; check; link CS-48, CS-49, CS-50, CS-51, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371, CS-39, CS-837 to a clause
+  constraints: 6 of 13 done
+  unmet: not linked to a clause yet (open: CS-54, CS-55, CS-56, CS-371, CS-39, CS-837, CS-794; check not passed)
+  to shape: done_when; check; link CS-48, CS-49, CS-50, CS-51, CS-52, CS-53, CS-54, CS-55, CS-56, CS-371, CS-39, CS-837, CS-794 to a clause
 
 CS-418 Any shader language reaches both renderers [Planned], under CS-10 Cesium IR
   outcome: WGSL, MaterialX and `KHR_interactivity` graphs come into Cesium IR through one public API, with diagnostics and an inspector, so one program runs on both renderers and the CPU.
@@ -380,9 +380,9 @@ CS-498 glTF and 3D Tiles load at 1.x's coverage [Planned], under CS-191 Content 
 
 CS-499 Lines, polygons, labels and CAD styles draw on one path [Planned], under CS-190 Vector drawing and the styling language
   outcome: One drawing path carries lines, polygons and CAD display styles, and labels and pins are drawn in the engine with GPU decluttering.
-  constraints: 0 of 3 done
-  unmet: not linked to a clause yet (open: CS-258, CS-259, CS-260; check not passed)
-  to shape: done_when; check; link CS-258, CS-259, CS-260 to a clause
+  constraints: 0 of 2 done
+  unmet: not linked to a clause yet (open: CS-259, CS-260; check not passed)
+  to shape: done_when; check; link CS-259, CS-260 to a clause
 
 CS-500 Real-time tracks stay cheap at scale [Planned], under CS-190 Vector drawing and the styling language
   outcome: Shadow cascades skip casters too small to matter, and one glTF asset can be placed in several worlds.
@@ -392,8 +392,8 @@ CS-500 Real-time tracks stay cheap at scale [Planned], under CS-190 Vector drawi
 
 CS-501 The styling language's form and semantics are decided [Planned], under CS-190 Vector drawing and the styling language
   outcome: The owner has decided the styling language's form, where its spec lives, its semantics, and what editing the engine supports.
-  constraints: 0 of 3 done
-  unmet: not linked to a clause yet (open: CS-265, CS-266, CS-453; check not passed)
+  constraints: 1 of 3 done
+  unmet: not linked to a clause yet (open: CS-265, CS-266; check not passed)
   to shape: done_when; check; link CS-265, CS-266, CS-453 to a clause
 
 CS-502 Slang shaders pass the gate on Windows [Planned], under CS-198 GPU-driven rendering and capacities
@@ -499,9 +499,9 @@ CS-614 The branch is a clean, modern 2.0 build [Planned], under CS-609 A clean 2
 
 CS-621 The core installs alone, and the whole engine installs from one umbrella package [Planned], under CS-615 Packaging and package names
   outcome: A host installs only the core, or the whole engine through `cesium@2`, with every package at one version.
-  constraints: 0 of 7 done
-  unmet: not linked to a clause yet (open: CS-616, CS-617, CS-618, CS-363, CS-310, CS-834, CS-835; check not passed)
-  to shape: done_when; check; link CS-616, CS-617, CS-618, CS-363, CS-310, CS-834, CS-835 to a clause
+  constraints: 0 of 8 done
+  unmet: not linked to a clause yet (open: CS-616, CS-617, CS-618, CS-363, CS-310, CS-834, CS-835, CS-882; check not passed)
+  to shape: done_when; check; link CS-616, CS-617, CS-618, CS-363, CS-310, CS-834, CS-835, CS-882 to a clause
 
 CS-627 A 1.x app moves to 2.0 with the kit and is shown to match [Planned], under CS-622 The agent-first migration kit
   outcome: An agent moves a 1.x app with the kit, and the parity harness shows the result matches.
@@ -541,9 +541,9 @@ CS-653 Content and motion follow one time model [Planned], under CS-647 Conditio
 
 CS-657 Content projects onto any surface [Planned], under CS-190 Vector drawing and the styling language
   outcome: Vector features, imagery and classification volumes project onto terrain, tilesets and models through one design.
-  constraints: 0 of 4 done
-  unmet: not linked to a clause yet (open: CS-654, CS-655, CS-656, CS-261; check not passed)
-  to shape: done_when; check; link CS-654, CS-655, CS-656, CS-261 to a clause
+  constraints: 0 of 5 done
+  unmet: not linked to a clause yet (open: CS-654, CS-655, CS-656, CS-261, CS-258; check not passed)
+  to shape: done_when; check; link CS-654, CS-655, CS-656, CS-261, CS-258 to a clause
 
 CS-668 1.x's data formats load as modules [Planned], under CS-191 Content sources and formats
   outcome: CZML, KML, GPX, GeoJSON, other 3D Tiles servers, PostGIS, GeoParquet, voxels, point clouds and splats load through the content-source seam, and providers plug in through one interface.
@@ -603,8 +603,8 @@ CS-751 The owner's views answer what needs me, what's on track and what's wrong 
 
 CS-819 Machines can read the engine: render products, camera records, stable identity and explicit stepping [Planned], under CS-437 The public API reviews
   outcome: A simulator, a synthetic-data pipeline or a world model drives the engine step by step and reads back depth, normals, motion and IDs, with each frame's camera record and stable, labeled identity.
-  constraints: 1 of 6 done
-  unmet: not linked to a clause yet (open: CS-813, CS-814, CS-815, CS-816, CS-833; check not passed)
+  constraints: 2 of 6 done
+  unmet: not linked to a clause yet (open: CS-813, CS-815, CS-816, CS-833; check not passed)
   to shape: done_when; check; link CS-813, CS-814, CS-815, CS-816, CS-832, CS-833 to a clause
 
 CS-830 2.0's examples show its seams in use [Planned], under CS-628 Sandcastle as 2.0's gallery
@@ -612,6 +612,24 @@ CS-830 2.0's examples show its seams in use [Planned], under CS-628 Sandcastle a
   constraints: 0 of 10 done
   unmet: not linked to a clause yet (open: CS-820, CS-821, CS-822, CS-823, CS-824, CS-825, CS-826, CS-827, CS-828, CS-829; check not passed)
   to shape: done_when; check; link CS-820, CS-821, CS-822, CS-823, CS-824, CS-825, CS-826, CS-827, CS-828, CS-829 to a clause
+
+CS-857 Subdivision surfaces have a measured path: OpenSubdiv in WebAssembly or a TypeScript patch conversion [Planned], under CS-193 B-reps and geometry queries
+  outcome: A measured comparison settles how 2.0 draws subdivision surfaces, by size, start time and fidelity, so the B-rep and mesh work builds on one path.
+  constraints: 0 of 1 done
+  unmet: not linked to a clause yet (open: CS-577; check not passed)
+  to shape: done_when; check; link CS-577 to a clause
+
+CS-858 Meshes can be edited: a sample drags a mesh's vertices, edges and faces through the edit layer [Planned], under CS-579 Editing
+  outcome: A sample edits a mesh's vertices, edges and faces beside the CSG sample, through the edit layer that CS-831 designs.
+  constraints: 0 of 1 done
+  unmet: not linked to a clause yet (open: CS-578; check not passed)
+  to shape: done_when; check; link CS-578 to a clause
+
+CS-859 The engine starts fast: pipelines compile in one round and optional subsystems load lazily [Planned], under CS-389 Dyno as the development harness
+  outcome: A default view starts without waiting on three compile rounds or loading optional subsystems it doesn't use, measured by Dyno's cold-start run.
+  constraints: 0 of 2 done
+  unmet: not linked to a clause yet (open: CS-764, CS-765; check not passed)
+  to shape: done_when; check; link CS-764, CS-765 to a clause
 
 CS-1 Renderers and engine profiles [Dropped]
 CS-2 Cesium IR and materials [Dropped]
@@ -624,5 +642,5 @@ CS-436 The public API [Dropped]
 CS-524 The tracker runs on human-in-the-lead [Done]
 CS-525 Bodies, frames and engineering coordinates [Dropped]
 
-97 open milestone(s)
+100 open milestone(s)
 ```
