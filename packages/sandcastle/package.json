@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsc -b && node scripts/buildGallery.js && vite --config vite.config.dev.ts",
     "dev-no-embedding": "tsc -b && node scripts/buildGallery.js --no-embeddings && vite --config vite.config.dev.ts",
-    "build": "echo 'Sandcastle cannot be built directly. Use the exported buildStatic() function instead'",
+    "build": "node scripts/build.js",
     "build-gallery": "node scripts/buildGallery.js",
     "build-gallery-no-embedding": "node scripts/buildGallery.js --no-embeddings",
     "create-demo": "node scripts/createDemo.js"

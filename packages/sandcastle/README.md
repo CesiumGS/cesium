@@ -4,7 +4,8 @@ This package is the application for Sandcastle.
 
 ## Running/Building
 
-- `npm run dev`: run the development server
+- `npm run build`: build the static site into `dist/` against the pinned CesiumJS 1.x (`cesium-1x`, a dev dependency of the repository root). Options: `--out-dir`, `--outer-origin`, `--inner-origin`, `--production` (leave out development gallery entries), `--no-embeddings`
+- `npm run dev`: run the development server (run `npm run build` once first: it bundles the pinned release's packages)
 - `npm run dev-no-embedding`: run the development server without generating semantic search embeddings
 - `npm run build-gallery`: run the gallery build for local development
 - `npm run build-gallery-no-embedding`: run the gallery build without generating semantic search embeddings
@@ -19,16 +20,17 @@ There are 2 main conceptual ways that Sandcastle gets built which mostly revolve
 1. Sandcastle points to "external" paths for CesiumJS resources
 2. Sandcastle is built to 1 static location that is co-located with all CesiumJS files. ie they're all copied into the built location
 
-The first method is useful and desired when developing the project locally and you want to refer to the actively built and updated CesiumJS files as you do other work. This is how the Sandcastle development server (`npm run dev`) and the local static version at `/Apps/Sandcastle2` are built.
+The first method is how the Sandcastle development server (`npm run dev`) works: it serves CesiumJS's files from the pinned release in `node_modules`.
 
-The second method is used when building Sandcastle to be deployed to the website or other static location. You can think of this as "bundling" all the necessary files needed for Sandcastle into 1 single directory.
+The second method is `npm run build` (`scripts/build.js`), for a deployment or any other static location. You can think of this as "bundling" all the necessary files needed for Sandcastle into 1 single directory.
+
+On the Cesium 2.0 branch, CesiumJS 1.x isn't built from source: it comes from the pinned release (`cesium-1x`, an npm alias of `cesium` at an exact version). The published `@cesium/core`, `@cesium/gltf`, `@cesium/engine` and `@cesium/widgets` carry their source modules but no bundle, so `npm run build` bundles each one's `index.js` with Vite, leaving the other `@cesium` packages to the import map.
 
 Regardless the method you want to use Sandcastle is always built using the exported `buildStatic`, `createSandcastleConfig` and `buildGalleryList` functions. Refer to the JSDoc and params for specifics on these functions.
 
 By default the gallery build generates semantic search embeddings by downloading an embedding model at build time. If you run into issues when fetching the open source embedding model, embeddings generation can be skipped in several ways depending on how you are building:
 
-- **`npm run build-sandcastle`** at the project root: pass `--no-embeddings` (e.g. `npm run build-sandcastle -- --no-embeddings`) or set `SANDCASTLE_NO_EMBEDDINGS=1` in your environment.
-- **`npm start`** at the project root: pass `--no-embeddings` (e.g. `npm start -- --no-embeddings`) or set `SANDCASTLE_NO_EMBEDDINGS=1` in your environment. This applies both to the initial build when `Apps/Sandcastle2` does not exist and to gallery rebuilds triggered by file changes.
+- **`npm run build`** in this package (or `npm run build-sandcastle` at the project root): pass `--no-embeddings` (e.g. `npm run build -- --no-embeddings`) or set `SANDCASTLE_NO_EMBEDDINGS=1` in your environment.
 - **`npm run dev`** in this package: use the dedicated `npm run dev-no-embedding` script, or set `SANDCASTLE_NO_EMBEDDINGS=1` in your environment.
 - **`npm run build-gallery`** in this package: use the dedicated `npm run build-gallery-no-embedding` script, or set `SANDCASTLE_NO_EMBEDDINGS=1`.
 - **`node scripts/buildGallery.js` directly**: pass `--no-embeddings` or set `SANDCASTLE_NO_EMBEDDINGS=1`.
@@ -47,7 +49,7 @@ The `iframe` that the Viewer is loaded from is a separate page (loaded by the `B
 
 Given this separation the build process needs to know what **origin** each part is expected to be located at. The `createSandcastleConfig` function will take take these in as `outerOrigin` for the App and `innerOrigin` for the Viewer part. These origins can be the same but it is not recommended as you lose the cross-origin security benefits like local storage isolation. It is also possible for Sandcastle code to modify the App page directly if they are on the same origin.
 
-Currently for local development using `npm run dev` these run at the same origin of `localhost:5173` for simplicity with `vite`. When running locally in the CesiumJS repo (`npm run start` at the root) these are split to `localhost:8080` for App and `localhost:8081` for the Viewer. Other deployments are managed by the build functions in CI.
+Currently for local development using `npm run dev` these run at the same origin of `localhost:5173` for simplicity with `vite`. `npm run build` defaults to `localhost:8080` for the App and `localhost:8081` for the Viewer; pass `--outer-origin` and `--inner-origin` for other deployments.
 
 ## Gallery structure
 
