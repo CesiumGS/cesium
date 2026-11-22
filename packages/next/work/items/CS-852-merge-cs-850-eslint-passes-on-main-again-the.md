@@ -2,10 +2,14 @@
 id: CS-852
 title: Merge CS-850, eslint passes on main again (the unused PostStageKind import goes)
 kind: decision
-state: planned
+state: done
 created: 2026-11-21
 project: CS-199
 decider: owner
+answer: "A. Merge it: The orchestrator fast-forwards main to the checked replay (replaying again if main moved), regenerates the views and logs the merge; eslint passes on main and merge checks stop showing the error."
+answered_at: 2026-11-22T05:23:48.385Z
+answered_via: question-tool
+answered_by: owner
 ---
 
 ## Question
