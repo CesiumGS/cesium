@@ -27,6 +27,7 @@
 
 #### Fixes :wrench:
 
+- Fixed sorted point and polygon buffer collections uploading stale positions when using non-double position datatypes. [#13869](https://github.com/CesiumGS/cesium/issues/13869)
 - Fixed picking for clamped vector tilesets and `GeoJsonPrimitive` polylines and polygons. [#13917](https://github.com/CesiumGS/cesium/pull/13917)
 - Fixed the globe failing to render when clamped vector data is combined with many imagery layers. [#13922](https://github.com/CesiumGS/cesium/pull/13922)
 - Fixed the TypeScript types of `Camera.frustum`, which now accepts an `OrthographicOffCenterFrustum`, and of `TextureUniform`'s `typedArray`, which now accepts any typed array. [#14030](https://github.com/CesiumGS/cesium/pull/14030)
