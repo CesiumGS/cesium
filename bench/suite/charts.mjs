@@ -168,10 +168,15 @@ export function forestPlot({ title, subtitle, rows, baseline, candidate }) {
 /**
  * A line chart: series of [x, y] points (one y-axis), optional shaded
  * bands along x (e.g. which engine ran when) and a crosshair readout.
- * `series`: { label, color, points, group?, band?, markers?, dash? } —
- * lines sharing a group share a legend entry (e.g. three repetitions of
- * one engine); `band` is [x, low, high] per point, drawn as a faint area
- * (an interval). `refs`: horizontal reference lines { y, label, color? };
+ * `series`: { label, color, points, group?, band?, markers?, dash?,
+ * hollow? } — lines sharing a group share a legend entry (e.g. three
+ * repetitions of one engine); `band` is [x, low, high] per point, drawn as
+ * a faint area (an interval); `hollow` lists the x of points drawn as
+ * hollow markers (a sweep's points that didn't settle), with
+ * `hollowLabel` as their hover title. `yMax` fixes the top of the y axis
+ * (small multiples share one scale); `twin: false` leaves out the table
+ * twin, `legend: false` the legend and `caption: false` the title (still
+ * the drawing's label), for a host that draws its own. `refs`: horizontal reference lines { y, label, color? };
  * `hbands`: horizontal ranges { y0, y1, label, color } (control bands);
  * `marks`: vertical markers { x, label } (annotations). `width` sets the
  * drawing's own width (small panels use less, so text stays legible).
@@ -193,6 +198,11 @@ export function lineChart({
   hbands = [],
   marks = [],
   width = 960,
+  yMax: fixedMax,
+  twin = true,
+  legend: showLegend = true,
+  caption = true,
+  hollowLabel = "not settled",
 }) {
   const id = `c${++chartIds}`;
   const left = 52;
@@ -213,7 +223,7 @@ export function lineChart({
     ...hbands.flatMap((b) => [b.y0, b.y1]),
   ];
   const ys = [...all.map((p) => p[1]), ...extra];
-  const yMax = Math.max(...ys) * 1.08 || 1;
+  const yMax = fixedMax ?? (Math.max(...ys) * 1.08 || 1);
   const y0 = Math.min(yMin, ...ys);
   const sx = (v) => left + ((v - x0) / (x1 - x0 || 1)) * (width - left - right);
   const sy = (v) =>
@@ -305,7 +315,10 @@ export function lineChart({
       for (const [px, py] of s.points) {
         if (py !== null && py !== undefined) {
           const flagged = s.flags?.includes(px);
-          svg += `<circle cx="${sx(px).toFixed(1)}" cy="${sy(py).toFixed(1)}" r="${flagged ? 6 : 4}" fill="${flagged ? "var(--surface)" : s.color}" stroke="${flagged ? s.color : "var(--ring)"}" stroke-width="${flagged ? 3 : 2}"/>`;
+          const hollow = s.hollow?.includes(px);
+          svg += hollow
+            ? `<circle cx="${sx(px).toFixed(1)}" cy="${sy(py).toFixed(1)}" r="4.5" fill="var(--surface)" stroke="${s.color}" stroke-width="2.5"><title>${escape(`${s.label}: ${hollowLabel}`)}</title></circle>`
+            : `<circle cx="${sx(px).toFixed(1)}" cy="${sy(py).toFixed(1)}" r="${flagged ? 6 : 4}" fill="${flagged ? "var(--surface)" : s.color}" stroke="${flagged ? s.color : "var(--ring)"}" stroke-width="${flagged ? 3 : 2}"/>`;
         }
       }
     }
@@ -318,7 +331,7 @@ export function lineChart({
     groups.set(s.group ?? s.label, s.color);
   }
   const legend =
-    groups.size > 1 || bandLegend.length
+    showLegend && (groups.size > 1 || bandLegend.length)
       ? `<div class="legend">${[...groups]
           .map(
             ([label, color]) =>
@@ -348,7 +361,9 @@ export function lineChart({
     })),
     bands: bands.map((b) => [b.x0, b.x1, b.label]),
   };
-  const table = `<details class="twin"><summary>Table</summary><table class="twin"><tr><th>series</th><th>points</th><th>min</th><th>median</th><th>max</th></tr>${series
+  const table = !twin
+    ? ""
+    : `<details class="twin"><summary>Table</summary><table class="twin"><tr><th>series</th><th>points</th><th>min</th><th>median</th><th>max</th></tr>${series
     .map((s) => {
       const ys = s.points
         .map((p) => p[1])
@@ -357,7 +372,7 @@ export function lineChart({
       return `<tr><td>${escape(s.label)}</td><td>${ys.length}</td><td>${ys.length ? compact(ys[0]) : "–"}</td><td>${ys.length ? compact(ys[ys.length >> 1]) : "–"}</td><td>${ys.length ? compact(ys[ys.length - 1]) : "–"}</td></tr>`;
     })
     .join("")}</table></details>`;
-  return `<figure class="chart" id="${id}"><figcaption>${escape(title)}</figcaption>${subtitle ? `<div class="sub">${escape(subtitle)}</div>` : ""}${legend}${svg}<script type="application/json" data-for="${id}">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>${table}</figure>`;
+  return `<figure class="chart" id="${id}">${caption ? `<figcaption>${escape(title)}</figcaption>` : ""}${subtitle ? `<div class="sub">${escape(subtitle)}</div>` : ""}${legend}${svg}<script type="application/json" data-for="${id}">${JSON.stringify(data).replace(/</g, "\\u003c")}</script>${table}</figure>`;
 }
 
 /**

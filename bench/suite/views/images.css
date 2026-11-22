@@ -83,7 +83,8 @@
   gap: var(--stratakit-space-300);
 }
 /* Plain figures (charts.mjs styles every .viz figure as a chart card). */
-.image-check figure {
+.image-check figure,
+.image-compare figure {
   margin: 0;
   padding: 0;
   border: 0;
@@ -93,13 +94,15 @@
 .image-check-single {
   max-inline-size: 960px;
 }
-.image-check img {
+.image-check img,
+.image-compare img {
   display: block;
   inline-size: 100%;
   border-radius: var(--stratakit-radius-sm);
   border: 1px solid var(--stratakit-color-border-neutral-muted);
 }
-.image-check figcaption {
+.image-check figcaption,
+.image-compare figcaption {
   font-weight: normal;
   margin-block-start: var(--stratakit-space-100);
   font-size: var(--stratakit-font-size-caption-lg);
@@ -127,4 +130,12 @@
 }
 .image-check-outcome:empty {
   display: none;
+}
+
+/* ImageCompare's flicker controls (Images.tsx). */
+.image-compare-flicker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-200);
+  margin-block-start: var(--stratakit-space-200);
 }

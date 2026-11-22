@@ -16,3 +16,165 @@
 .analysis-toolbar-end {
   align-self: flex-end;
 }
+
+/* The sweep view (SweepView.tsx): small multiples, table twins, images. */
+.sweep-sentence {
+  margin: 0 0 var(--stratakit-space-400);
+  max-width: 900px;
+}
+.sweep .toolbar {
+  margin-block-end: var(--stratakit-space-500);
+}
+.sweep-metric {
+  margin-block-end: var(--stratakit-space-600);
+}
+.sweep-metric h3 {
+  margin: 0 0 var(--stratakit-space-200);
+}
+.sweep-legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-200) var(--stratakit-space-400);
+  margin-block-end: var(--stratakit-space-200);
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.sweep-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--stratakit-space-100);
+}
+.sweep-panels {
+  display: grid;
+  grid-template-columns: minmax(0, 520px);
+  gap: var(--stratakit-space-300);
+}
+.sweep-panels-many {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 400px));
+}
+/* The charts' own figure margin (charts.mjs) would double the grid gap. */
+.sweep-panel figure {
+  margin: 0;
+}
+.sweep-twin {
+  margin-block-start: var(--stratakit-space-200);
+}
+.sweep-twin > summary {
+  cursor: pointer;
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+  inline-size: fit-content;
+}
+.sweep-twin-scroll,
+.sweep-grid-scroll {
+  overflow-x: auto;
+  max-inline-size: 100%;
+}
+.sweep-twin-scroll:focus-visible,
+.sweep-grid-scroll:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.sweep-twin table,
+.sweep-grid {
+  border-collapse: collapse;
+  font-size: var(--stratakit-font-size-caption-lg);
+  font-variant-numeric: tabular-nums;
+  margin-block-start: var(--stratakit-space-200);
+}
+.sweep-twin th,
+.sweep-twin td {
+  padding: var(--stratakit-space-100) var(--stratakit-space-300);
+  border-block-end: 1px solid var(--stratakit-color-border-neutral-muted);
+  text-align: end;
+  white-space: nowrap;
+}
+.sweep-twin th[scope="row"],
+.sweep-grid th[scope="row"] {
+  text-align: start;
+  font-weight: 600;
+}
+.sweep-twin p {
+  margin: var(--stratakit-space-200) 0 0;
+  font-size: var(--stratakit-font-size-caption-lg);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.sweep-zero {
+  margin: 0 0 var(--stratakit-space-500);
+  max-width: 900px;
+}
+.sweep-grid-panel {
+  margin-block-end: var(--stratakit-space-500);
+}
+.sweep-grid-title {
+  margin: 0;
+  font-weight: 600;
+}
+.sweep-grid th,
+.sweep-grid td {
+  padding: var(--stratakit-space-200);
+  vertical-align: top;
+}
+.sweep-grid thead th {
+  text-align: start;
+  font-weight: 600;
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.sweep-grid-empty {
+  color: var(--stratakit-color-text-neutral-tertiary);
+}
+.sweep-thumb {
+  display: flex;
+  flex-direction: column;
+  gap: var(--stratakit-space-100);
+  inline-size: 200px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  border-radius: var(--stratakit-radius-md);
+}
+.sweep-thumb img {
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--stratakit-radius-sm);
+  border: 1px solid var(--stratakit-color-border-neutral-muted);
+}
+.sweep-thumb:hover img {
+  border-color: var(--stratakit-color-border-neutral-base);
+}
+.sweep-thumb:focus-visible {
+  outline: 2px solid var(--stratakit-color-border-accent-strong);
+  outline-offset: 2px;
+}
+.sweep-thumb-words {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--stratakit-space-200);
+  color: var(--stratakit-color-text-neutral-secondary);
+}
+.sweep-thumb-changed {
+  color: var(--stratakit-color-text-neutral-primary);
+  font-weight: 600;
+}
+.sweep-compare-pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--stratakit-space-300);
+  margin-block: var(--stratakit-space-200) var(--stratakit-space-300);
+}
+.sweep-compare > p {
+  margin: 0 0 var(--stratakit-space-300);
+}
+@media (max-width: 600px) {
+  .sweep-thumb {
+    inline-size: 150px;
+  }
+}

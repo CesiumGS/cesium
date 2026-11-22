@@ -17,15 +17,17 @@ import { bindChartsIn } from "../charts.mjs";
 import { renderReport } from "../report.mjs";
 import { catalog, full, short } from "../data.ts";
 import type { SceneLiveSearch } from "../routes.tsx";
-import { Choice, Empty, Page, useDark, useRuns } from "./common.tsx";
+import { Choice, Empty, Page, Section, useDark, useRuns } from "./common.tsx";
 import { dateOf, runOption } from "./runParts.tsx";
+import { SweepView } from "./SweepView.tsx";
+import { sweepModelOf } from "./sweepModel.ts";
 
 /**
  * One run's report (DESIGN.md) at /runs/$run: the same HTML the CLI
  * writes (report.mjs), drawn in a shadow root so its styles stay its
  * own, under Dyno's page header (back to Runs, a run picker, compare
  * with the previous run). Clicks on live-view links and path charts open
- * the Explorer in the app.
+ * the Explorer in the app. A sweep run shows its sweep view first.
  */
 
 const route = getRouteApi("/_runs/runs/$run");
@@ -220,6 +222,14 @@ export function Report() {
             Rendering the report…
           </Typography>
         </div>
+      ) : null}
+      {sweepModelOf(s) ? (
+        <Section
+          title="Sweep"
+          description="Every point of the sweep, its images and their difference from the reference."
+        >
+          <SweepView summary={s} />
+        </Section>
       ) : null}
       <div ref={host} className="report-host" hidden={!html || !!error} />
     </Page>

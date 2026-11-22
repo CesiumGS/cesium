@@ -1302,6 +1302,57 @@ leadership team's weekly "what changed" without the owner writing it.
   commit per kind of change, and against CS-704's read budget on this
   repository.
 
+## The sweep view (CS-395)
+
+`views/SweepView.tsx`, with its model in `views/sweepModel.ts`. It shows
+one sweep run: at the top of the run's report, and in Analysis until
+Studies replace it (CS-405), where each sweep in a study's evidence will
+be one.
+
+- **Who it is for.** An engineer, or an agent reporting to one, who ran
+  a grid of settings to answer a question ("which α draws α 1's image
+  with a third of the tiles?"). They know the settings; they come for
+  the answer and the evidence behind it, and they must be able to trust
+  a "within noise".
+- **Its story, top to bottom.** What was swept, on what, and against
+  which reference, in one sentence. Then the reader places each axis:
+  along x, as lines, as panels, or held at one value. Then each metric
+  of a group as a row of panels (small multiples) on one y scale, so
+  panels compare by eye. Then the images, laid out as the charts are.
+  A click on an image opens it beside its reference, or any other point.
+- **Layout.**
+  - The toolbar: scene (or every scene's geometric mean), along x, lines
+    by, panels by, an "at" choice for each axis left over, and the
+    metric group. Image metrics come first when the run has reference
+    images; otherwise tiles and requests.
+  - Each metric: its heading with its unit, one line naming the x axis
+    and keying the lines, the panels, and a "Table" twin with every
+    point's value and its notes ("reference", "within noise", "not
+    settled"). Charts carry no legend or title of their own; a panel's
+    caption is its value.
+  - The reference: a dashed vertical mark when it lies along x, a dashed
+    line when it is a line or a setting outside the grid (beside its
+    line, in its color), "(reference)" on its panel.
+  - A point that didn't settle is hollow in every chart, and its image
+    carries a "Not settled" badge. A group's description says so only
+    when its scenes record settling.
+  - The noise floor is a shaded band from 0 on image-difference charts:
+    the largest difference between two captures of one reference point.
+    Its value is in the band's hover title and under the table. Without
+    repeated references there is no band, and words never claim "within
+    noise": "4.1% of pixels (no noise floor)".
+  - The images: per panel, a table with lines down and x across; each
+    thumbnail says its difference in words ("Within noise", "25% of
+    pixels", "Reference"). Over every scene, an "Images of" choice picks
+    the scene, since images belong to one.
+  - Compare: a dialog with the Images view's modes (`ImageCompare` in
+    `Images.tsx`), opening on the swipe: side by side, swipe, flicker
+    and, for a point against its own reference, FLIP's heatmap. "Left"
+    and "Right" pick any two points. Flicker starts paused under reduced
+    motion, and has a button to switch by hand.
+- **Narrow screens.** Panels stack; the tables and the image grid scroll
+  sideways inside their own box (focusable, labeled), never the page.
+
 ## Page anatomy
 
 Every view renders through `Page` (views/common.tsx):

@@ -131,6 +131,7 @@ import { acquireRunLock, defaultLockFile } from "../runLock.mjs";
 import { compareTable, defaultPlan, scorecard } from "../scorecard.mjs";
 import { ALERT_METRICS, detectAlerts } from "../changepoints.mjs";
 import { runImages } from "../images.mjs";
+import { compareSweep, REFERENCE_MOMENT, shotName } from "../reference.mjs";
 import { applyStudy, studyForRun } from "./studies.mjs";
 import {
   COLD_START_BUDGET_MS,
@@ -1325,6 +1326,9 @@ async function run() {
     results.sweep = sweep.record;
   }
   const filmstrip = [];
+  // A sweep with a reference: every point's settled capture, and every
+  // repeat of the reference points (reference.mjs, the noise floor).
+  const sweepShots = [];
   const motionFrames = [];
   // A sweep's reference points run --reference-reps times in each
   // repetition (the noise floor), and never come from stored runs.
@@ -1441,7 +1445,9 @@ async function run() {
               : scenario,
             config,
             unsupported: unsupportedReason(catalog, scene, config.engine),
-            capture: rep === 0 && repeat === 0 && !opts["no-capture"],
+            // The first repetition captures; a reference point's repeats
+            // too, since they set the noise floor (reference.mjs).
+            capture: rep === 0 && !opts["no-capture"],
             render,
             ...(example ? { gpuTicks } : {}),
           };
@@ -1513,13 +1519,19 @@ async function run() {
           result.validity = validity(result, quietLimit, idle);
           if (result.shots) {
             for (const shot of result.shots) {
-              filmstrip.push({
+              const frame = {
                 scene: scene.id,
                 scenario: scenario.id,
                 config: config.id,
                 moment: shot.moment,
                 png: shot.png,
-              });
+              };
+              if (!repeat) {
+                filmstrip.push(frame);
+              }
+              if (sweep?.reference && shot.moment === REFERENCE_MOMENT) {
+                sweepShots.push({ ...frame, repeat });
+              }
             }
             delete result.shots;
           }
@@ -1677,6 +1689,29 @@ async function run() {
       baseline,
     );
     console.log("done");
+  }
+  if (sweepShots.length) {
+    process.stdout.write(
+      `reference images and the noise floor (${sweepShots.length} captures)… `,
+    );
+    results.assets = `/bench-results/${stamp}/`;
+    results.reference = await referenceImages(
+      browser,
+      base,
+      sweepShots,
+      results.sweep,
+      Object.fromEntries(scenes.map((s) => [s.id, s])),
+      join(directory, stamp),
+    );
+    console.log(
+      results.reference.floors
+        .map((f) =>
+          f.regions
+            ? `${f.scene}: noise floor ${(f.regions.whole.share * 100).toFixed(2)}% of pixels over ${f.pairs} pair${f.pairs === 1 ? "" : "s"}`
+            : `${f.scene}: no noise floor (--reference-reps 2 or more gives one)`,
+        )
+        .join("; "),
+    );
   }
   if (motionFrames.length) {
     process.stdout.write(
@@ -2288,11 +2323,7 @@ async function filmstrips(browser, base, frames, directory, baseline) {
     };
     const reference = list.find((f) => f.config === baseline);
     for (const f of list) {
-      const name =
-        `${f.scene}__${f.scenario}__${f.config}__${f.moment}`.replace(
-          /[^\w@.-]/g,
-          "_",
-        );
+      const name = shotName(f);
       const result = await page.evaluate(
         ({ test, ref }) => globalThis.processFrame(test, ref),
         {
@@ -2349,6 +2380,45 @@ async function filmstrips(browser, base, frames, directory, baseline) {
   }
   await page.close();
   return out;
+}
+
+/**
+ * A sweep's reference images (reference.mjs): each point's capture
+ * against its reference's, over the whole image and the scene's crops,
+ * with FLIP's heatmap, and the noise floor from the reference points'
+ * repeats, computed in the FLIP page (flip.ts, compareFrames). Writes the
+ * repeats' JPEGs and the heatmaps beside the filmstrip.
+ */
+async function referenceImages(browser, base, shots, sweep, scenes, directory) {
+  mkdirSync(directory, { recursive: true });
+  const page = await browser.newPage();
+  await page.goto(`${base}/bench/suite/flip.html`);
+  try {
+    return await compareSweep({
+      shots,
+      sweep,
+      scenes,
+      compare: (test, ref, regions) =>
+        page.evaluate(
+          ({ test, ref, regions }) =>
+            globalThis.compareFrames(test, ref, regions),
+          {
+            test: test.toString("base64"),
+            ref: ref.toString("base64"),
+            regions,
+          },
+        ),
+      encode: (shot) =>
+        page.evaluate((test) => globalThis.jpegOf(test), shot.png.toString("base64")),
+      save: async (name, base64) => {
+        writeFileSync(join(directory, name), Buffer.from(base64, "base64"));
+        return name;
+      },
+      image: (shot) => `${shotName(shot)}.jpg`,
+    });
+  } finally {
+    await page.close();
+  }
 }
 
 function sha256(data) {

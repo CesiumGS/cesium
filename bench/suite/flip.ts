@@ -1,9 +1,16 @@
 // Filmstrip processing for the benchmark CLI (docs/design/benchmark-analysis-and-experience.md, Diagnose): turns
 // a captured PNG into a JPEG frame and, given the baseline's frame of the
 // same moment, the image parity (FLIP, docs/design/parity.md) and its heatmap. The CLI calls
-// `processFrame` through Playwright once the runs are done.
+// `processFrame` through Playwright once the runs are done, and
+// `compareFrames` for a sweep's reference images (reference.mjs, CS-395).
 import { createGpuFlip, type GpuFlip } from "../../parity/flipGpu.ts";
 import { flip } from "../../parity/flip.js";
+import {
+  cropRect,
+  errorStats,
+  pixelDifference,
+  type Region,
+} from "./reference.mjs";
 
 /** On the GPU (40 to 60 times faster); the JS reference without WebGPU. */
 let gpu: Promise<GpuFlip | undefined> | undefined;
@@ -55,15 +62,8 @@ async function encode(canvas: OffscreenCanvas, type: string, quality?: number) {
   return btoa(text);
 }
 
-async function processFrame(test: string, reference: string | null) {
-  const image = await decode(test);
-  const full = new OffscreenCanvas(image.width, image.height);
-  full.getContext("2d")!.drawImage(image, 0, 0);
-  const jpeg = await encode(full, "image/jpeg", 0.85);
-  if (!reference) {
-    return { jpeg };
-  }
-  const other = await decode(reference);
+/** FLIP of `image` against `other` at FLIP_WIDTH at most, with its errors. */
+async function flipOf(image: ImageBitmap, other: ImageBitmap) {
   const width = Math.min(FLIP_WIDTH, image.width);
   const height = Math.round((image.height * width) / image.width);
   // Pixels per degree scaled with the frame, as if the full frame were
@@ -77,7 +77,11 @@ async function processFrame(test: string, reference: string | null) {
   const result = evaluator
     ? await evaluator.flip(ref, tst, width, height, ppd, { errors: true })
     : flip(ref, tst, width, height, ppd);
-  const errors = result.errors!;
+  return { result, errors: result.errors!, width, height };
+}
+
+/** A FLIP error map as a magma heatmap PNG (base64). */
+async function heatmapOf(errors: Float32Array, width: number, height: number) {
   const heat = new OffscreenCanvas(width, height);
   const context = heat.getContext("2d")!;
   const data = context.createImageData(width, height);
@@ -86,15 +90,88 @@ async function processFrame(test: string, reference: string | null) {
     data.data.set([r, g, b, 255], i * 4);
   }
   context.putImageData(data, 0, 0);
+  return encode(heat, "image/png");
+}
+
+async function processFrame(test: string, reference: string | null) {
+  const image = await decode(test);
+  const full = new OffscreenCanvas(image.width, image.height);
+  full.getContext("2d")!.drawImage(image, 0, 0);
+  const jpeg = await encode(full, "image/jpeg", 0.85);
+  if (!reference) {
+    return { jpeg };
+  }
+  const { result, errors, width, height } = await flipOf(
+    image,
+    await decode(reference),
+  );
   return {
     jpeg,
     flip: {
       mean: result.mean,
       p95: result.p95,
-      heatmap: await encode(heat, "image/png"),
+      heatmap: await heatmapOf(errors, width, height),
     },
   };
 }
 
-(globalThis as { processFrame?: typeof processFrame }).processFrame =
-  processFrame;
+/**
+ * A sweep point's capture against its reference's (reference.mjs): per
+ * region (the whole image and each named crop), the pixel difference at
+ * full size and FLIP over the same region of FLIP's error map, and the
+ * whole image's heatmap when `heatmap` is set.
+ */
+async function compareFrames(
+  test: string,
+  reference: string,
+  regions: Region[],
+  heatmap = true,
+) {
+  const image = await decode(test);
+  const other = await decode(reference);
+  const { width, height } = image;
+  const a = pixels(image, width, height);
+  // The reference drawn at the test's size, should the two differ.
+  const b = pixels(other, width, height);
+  const f = await flipOf(image, other);
+  const out: Record<
+    string,
+    { share: number; mean: number; flip: number; flipP95: number }
+  > = {};
+  for (const region of regions) {
+    const d = pixelDifference(
+      a,
+      b,
+      width,
+      height,
+      cropRect(region.box, width, height),
+    );
+    const e = errorStats(
+      f.errors,
+      f.width,
+      cropRect(region.box, f.width, f.height),
+    );
+    out[region.name] = {
+      share: d.share,
+      mean: d.mean,
+      flip: e.mean,
+      flipP95: e.p95,
+    };
+  }
+  return {
+    regions: out,
+    ...(heatmap
+      ? { heatmap: await heatmapOf(f.errors, f.width, f.height) }
+      : {}),
+  };
+}
+
+/** A capture as a JPEG (base64), as the filmstrip stores frames. */
+async function jpegOf(test: string) {
+  const image = await decode(test);
+  const full = new OffscreenCanvas(image.width, image.height);
+  full.getContext("2d")!.drawImage(image, 0, 0);
+  return encode(full, "image/jpeg", 0.85);
+}
+
+Object.assign(globalThis, { processFrame, compareFrames, jpegOf });

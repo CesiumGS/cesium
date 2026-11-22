@@ -342,7 +342,119 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-type Mode = "side" | "swipe" | "flicker" | "diff" | "parity";
+/** An image to compare: its URL and what it is ("Baseline", "α 0.5"). */
+export interface ComparedImage {
+  src: string;
+  label: string;
+  /** A caption's detail after the label ("approved Nov 21, 18:49"). */
+  detail?: string;
+}
+
+/** A mode a host adds after the four (a check's "Against 1.x"). */
+export interface ExtraMode {
+  id: string;
+  label: string;
+  render: () => ReactNode;
+}
+
+type Mode = "side" | "swipe" | "flicker" | "diff" | string;
+
+/**
+ * Any two images compared (DESIGN.md: Images): side by side, a swipe,
+ * a flicker and, given one, the FLIP heatmap of `b` against `a`. Image
+ * checks compare an approved image with a new one; the sweep view any two
+ * points of a sweep. Without `a`, `b` alone ("New image").
+ */
+export function ImageCompare({
+  a,
+  b,
+  heatmap,
+  extra = [],
+  initial = "side",
+}: {
+  a?: ComparedImage;
+  b: ComparedImage;
+  /** FLIP's error per pixel of `b` against `a`, as an image. */
+  heatmap?: string;
+  extra?: ExtraMode[];
+  initial?: Mode;
+}) {
+  const modes: Array<[Mode, string]> = [
+    ...(a
+      ? ([
+          ["side", "Side by side"],
+          ["swipe", "Swipe"],
+          ["flicker", "Flicker"],
+          ...(heatmap ? [["diff", "Difference"]] : []),
+        ] as Array<[Mode, string]>)
+      : ([["side", b.label]] as Array<[Mode, string]>)),
+    ...extra.map((m) => [m.id, m.label] as [Mode, string]),
+  ];
+  const [chosen, setMode] = useState<Mode>(initial);
+  // A mode the pair can't show (no heatmap for this pair) falls back.
+  const mode = modes.some(([m]) => m === chosen) ? chosen : "side";
+  const caption = (i: ComparedImage) =>
+    `${i.label}${i.detail ? `, ${i.detail}` : ""}`;
+  return (
+    <div className="image-compare">
+      <ToggleButtonGroup
+        size="small"
+        exclusive
+        value={mode}
+        onChange={(_, m: Mode | null) => {
+          if (m) {
+            setMode(m);
+          }
+        }}
+        aria-label="Compare by"
+        className="image-check-modes"
+      >
+        {modes.map(([m, label]) => (
+          <ToggleButton
+            key={m}
+            value={m}
+            render={<Button variant="outlined" size="small" />}
+          >
+            {label}
+          </ToggleButton>
+        ))}
+      </ToggleButtonGroup>
+      <div className="image-check-viewer">
+        {mode === "side" ? (
+          <div className="image-check-side">
+            {a ? (
+              <figure>
+                <img src={a.src} alt={a.label} />
+                <figcaption>{caption(a)}</figcaption>
+              </figure>
+            ) : null}
+            <figure>
+              <img src={b.src} alt={b.label} />
+              <figcaption>{caption(b)}</figcaption>
+            </figure>
+          </div>
+        ) : mode === "swipe" && a ? (
+          <Swipe a={a} b={b} />
+        ) : mode === "flicker" && a ? (
+          <Flicker a={a} b={b} />
+        ) : mode === "diff" && heatmap ? (
+          <figure className="image-check-single">
+            <img
+              src={heatmap}
+              alt={`FLIP heatmap of ${b.label} against ${a?.label ?? ""}`}
+            />
+            <figcaption>
+              FLIP error per pixel of {b.label} against {a?.label}: black none,
+              yellow large.
+            </figcaption>
+          </figure>
+        ) : (
+          extra.find((m) => m.id === mode)?.render()
+        )}
+      </div>
+    </div>
+  );
+}
 
 /** One check: its numbers, the viewer and the review. */
 function Check({
@@ -363,22 +475,6 @@ function Check({
   const heat: string = row.heatmap ? run.assets + row.heatmap : "";
   const parity: string = row.parity ? run.assets + row.parity.image : "";
   const parityHeat: string = row.parity ? run.assets + row.parity.heatmap : "";
-  const modes: Array<[Mode, string]> = [
-    ...(before
-      ? ([
-          ["side", "Side by side"],
-          ["swipe", "Swipe"],
-          ["flicker", "Flicker"],
-          ...(heat ? [["diff", "Difference"]] : []),
-        ] as Array<[Mode, string]>)
-      : ([["side", "New image"]] as Array<[Mode, string]>)),
-    ...(parity
-      ? ([["parity", `Against ${engineLabel(row.parity.config)}`]] as Array<
-          [Mode, string]
-        >)
-      : []),
-  ];
-  const [mode, setMode] = useState<Mode>("side");
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -454,75 +550,52 @@ function Check({
       </header>
 
       {now ? (
-        <>
-          <ToggleButtonGroup
-            size="small"
-            exclusive
-            value={mode}
-            onChange={(_, m: Mode | null) => {
-              if (m) {
-                setMode(m);
-              }
-            }}
-            aria-label="Compare by"
-            className="image-check-modes"
-          >
-            {modes.map(([m, label]) => (
-              <ToggleButton
-                key={m}
-                value={m}
-                render={<Button variant="outlined" size="small" />}
-              >
-                {label}
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-          <div className="image-check-viewer">
-            {mode === "side" ? (
-              <div className="image-check-side">
-                {before ? (
-                  <figure>
-                    <img src={before} alt="Baseline" />
-                    <figcaption>
-                      Baseline
-                      {row.baseline?.approvedAt
-                        ? `, approved ${listDate(new Date(row.baseline.approvedAt))}`
-                        : ""}
-                    </figcaption>
-                  </figure>
-                ) : null}
-                <figure>
-                  <img src={now} alt="New image" />
-                  <figcaption>New image</figcaption>
-                </figure>
-              </div>
-            ) : mode === "swipe" ? (
-              <Swipe before={before} now={now} />
-            ) : mode === "flicker" ? (
-              <Flicker before={before} now={now} />
-            ) : mode === "diff" ? (
-              <figure className="image-check-single">
-                <img src={heat} alt="FLIP heatmap against the baseline" />
-                <figcaption>
-                  FLIP error per pixel: black none, yellow large.
-                </figcaption>
-              </figure>
-            ) : (
-              <div className="image-check-side">
-                <figure>
-                  <img src={parity} alt={engineLabel(row.parity.config)} />
-                  <figcaption>{engineLabel(row.parity.config)}</figcaption>
-                </figure>
-                <figure>
-                  <img src={parityHeat} alt="FLIP heatmap against it" />
-                  <figcaption>
-                    FLIP against {engineLabel(row.parity.config)}
-                  </figcaption>
-                </figure>
-              </div>
-            )}
-          </div>
-        </>
+        <ImageCompare
+          a={
+            before
+              ? {
+                  src: before,
+                  label: "Approved image",
+                  ...(row.baseline?.approvedAt
+                    ? {
+                        detail: `approved ${listDate(new Date(row.baseline.approvedAt))}`,
+                      }
+                    : {}),
+                }
+              : undefined
+          }
+          b={{ src: now, label: "New image" }}
+          {...(heat ? { heatmap: heat } : {})}
+          extra={
+            parity
+              ? [
+                  {
+                    id: "parity",
+                    label: `Against ${engineLabel(row.parity.config)}`,
+                    render: () => (
+                      <div className="image-check-side">
+                        <figure>
+                          <img
+                            src={parity}
+                            alt={engineLabel(row.parity.config)}
+                          />
+                          <figcaption>
+                            {engineLabel(row.parity.config)}
+                          </figcaption>
+                        </figure>
+                        <figure>
+                          <img src={parityHeat} alt="FLIP heatmap against it" />
+                          <figcaption>
+                            FLIP against {engineLabel(row.parity.config)}
+                          </figcaption>
+                        </figure>
+                      </div>
+                    ),
+                  },
+                ]
+              : []
+          }
+        />
       ) : null}
 
       <div className="image-check-review">
@@ -586,18 +659,18 @@ function Check({
   );
 }
 
-/** The new image over the baseline, revealed from the slider rightward. */
-function Swipe({ before, now }: { before: string; now: string }) {
+/** `b` over `a`, revealed from the slider rightward. */
+function Swipe({ a, b }: { a: ComparedImage; b: ComparedImage }) {
   const [at, setAt] = useState(50);
   return (
     <figure className="image-check-single">
       <div className="image-check-stack">
-        <img src={before} alt="Baseline" />
+        <img src={a.src} alt={a.label} />
         <div
           className="image-check-top"
           style={{ clipPath: `inset(0 0 0 ${at}%)` }}
         >
-          <img src={now} alt="New image" />
+          <img src={b.src} alt={b.label} />
         </div>
       </div>
       <Slider
@@ -606,38 +679,84 @@ function Swipe({ before, now }: { before: string; now: string }) {
         onChange={(_, v) => setAt(v as number)}
         min={0}
         max={100}
-        aria-label="Swipe between the baseline and the new image"
-        getAriaValueText={(v) => `${v}% baseline`}
+        aria-label={`Swipe between ${a.label} and ${b.label}`}
+        getAriaValueText={(v) => `${v}% ${a.label}`}
       />
       <figcaption>
-        Baseline on the left of the line, new image on the right.
+        {a.label} on the left of the line, {b.label} on the right.
       </figcaption>
     </figure>
   );
 }
 
-/** Baseline and new alternating every half second; hover holds the new. */
-function Flicker({ before, now }: { before: string; now: string }) {
+/** Whether the viewer asked for reduced motion (followed as it changes). */
+function useReducedMotion() {
+  const query = "(prefers-reduced-motion: reduce)";
+  const [reduced, setReduced] = useState(
+    () => typeof matchMedia === "function" && matchMedia(query).matches,
+  );
+  useEffect(() => {
+    if (typeof matchMedia !== "function") {
+      return;
+    }
+    const list = matchMedia(query);
+    const on = () => setReduced(list.matches);
+    list.addEventListener("change", on);
+    return () => list.removeEventListener("change", on);
+  }, []);
+  return reduced;
+}
+
+/**
+ * `a` and `b` alternating every half second; hover holds `b`. With
+ * reduced motion it starts paused, and a button switches by hand.
+ */
+function Flicker({ a, b }: { a: ComparedImage; b: ComparedImage }) {
+  const reduced = useReducedMotion();
   const [on, setOn] = useState(false);
   const [hold, setHold] = useState(false);
+  const [playing, setPlaying] = useState(!reduced);
+  useEffect(() => setPlaying(!reduced), [reduced]);
   useEffect(() => {
-    if (hold) {
+    if (hold || !playing) {
       return;
     }
     const timer = window.setInterval(() => setOn((x) => !x), 500);
     return () => clearInterval(timer);
-  }, [hold]);
-  const showing = hold || on ? "New image" : "Baseline";
+  }, [hold, playing]);
+  const shown = hold || on ? b : a;
   return (
     <figure className="image-check-single">
       <img
-        src={hold || on ? now : before}
-        alt={`Flicker between the baseline and the new image (now: ${showing})`}
+        src={shown.src}
+        alt={`Flicker between ${a.label} and ${b.label} (now: ${shown.label})`}
         onMouseEnter={() => setHold(true)}
         onMouseLeave={() => setHold(false)}
       />
-      <figcaption>
-        {showing}. Alternates every half second; hover to hold the new image.
+      <div className="image-compare-flicker">
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => setPlaying((p) => !p)}
+        >
+          {playing ? "Pause" : "Alternate"}
+        </Button>
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => {
+            setPlaying(false);
+            setOn((x) => !x);
+          }}
+        >
+          Show {(hold || on ? a : b).label}
+        </Button>
+      </div>
+      <figcaption aria-live="polite">
+        Showing {shown.label}.{" "}
+        {playing
+          ? `Alternates with ${shown === a ? b.label : a.label} every half second; hover to hold ${b.label}.`
+          : "Paused: switch by hand."}
       </figcaption>
     </figure>
   );

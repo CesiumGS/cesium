@@ -10,6 +10,7 @@ import { ratio, summarize } from "./stats.mjs";
 import { currentGpuTimer, GPU_TIMER } from "./gpuTimer.mjs";
 import { engineLabel, isRelease } from "./engines.mjs";
 import { readSweep } from "./settings.mjs";
+import { referenceCellValues } from "./reference.mjs";
 import {
   CHART_CSS,
   CHART_SCRIPT,
@@ -74,6 +75,12 @@ const METRICS = [
   // Quality in motion: frames in motion against the same pose settled,
   // the engine's own (mean over the replay's frames).
   ["motionFlip", "quality in motion (FLIP, in motion vs settled)", "", 1],
+  // A sweep point's settled view against its reference point's, same
+  // engine (reference.mjs; ".<crop>" after the key for a scene's crop).
+  ["pixelDiffShare", "pixels changed from the reference", "%", 0.01],
+  ["pixelDiffMean", "mean luminance change from the reference", "", 1],
+  ["flipRef", "image difference from the reference (FLIP)", "", 1],
+  ["flipRefP95", "image difference from the reference (FLIP p95)", "", 1],
   // A dev server request's time to its whole answer (workApiRun.mjs).
   ["requestMs", "request", "ms", 1],
   // Example scenes (group D): the settle rule, and the development
@@ -103,6 +110,10 @@ const DEV_FAMILIES = [
   ["bytes.", "bytes", "MB", 1e6],
   ["gpuPass.", "GPU per pass, median", "ms", 1],
   ["gpuPassP90.", "GPU per pass, p90", "ms", 1],
+  ["pixelDiffShare.", "pixels changed from the reference", "%", 0.01],
+  ["pixelDiffMean.", "mean luminance change from the reference", "", 1],
+  ["flipRefP95.", "image difference from the reference (FLIP p95)", "", 1],
+  ["flipRef.", "image difference from the reference (FLIP)", "", 1],
 ];
 
 /**
@@ -1112,6 +1123,17 @@ export function summarizeRun(results) {
         cells[`${strip.scene}|${strip.scenario ?? "cold-orbit"}|${config}`];
       if (cell) {
         cell.values.flipEnd = [flip.mean];
+      }
+    }
+  }
+  // Pixel difference from a sweep's reference point (first repetition).
+  for (const [key, values] of Object.entries(
+    referenceCellValues(results.reference),
+  )) {
+    const cell = cells[key];
+    if (cell) {
+      for (const [metric, v] of Object.entries(values)) {
+        cell.values[metric] = [v];
       }
     }
   }
