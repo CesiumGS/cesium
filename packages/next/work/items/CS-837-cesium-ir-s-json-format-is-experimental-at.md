@@ -2,10 +2,11 @@
 id: CS-837
 title: Cesium IR's JSON format is experimental at cesium-ir/0.x until it graduates
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-21
 project: CS-10
 needs: [CS-49]
+claimed_by: orch-11-CS-837
 touches: [packages/next/src/ir/**, packages/next/test]
 ---
 
