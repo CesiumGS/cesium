@@ -2,10 +2,11 @@
 id: CS-938
 title: Packed pre-release builds a host application can install, at a named commit
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-22
 project: CS-609
 needs: [CS-612]
+claimed_by: orch-11-CS-938
 ---
 
 > **Committed by the owner (2026-11-22):** a host application outside this repository installs pre-release 2.0 from packed tarballs. Source: a host integration's needs, through the chief of staff. Size: small. It builds on CS-612's `npm pack` checks.
