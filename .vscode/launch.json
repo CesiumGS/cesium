@@ -1,53 +1,35 @@
 {
     "version": "0.2.0",
     "configurations": [
-    
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Server",
+            "name": "Launch dev server",
             "cwd": "${workspaceFolder}",
             "runtimeExecutable": "npm",
-            "runtimeArgs": ["run-script", "start"],
+            "runtimeArgs": ["run", "dev"],
             "noDebug": true,
-            "serverReadyAction":{
+            "serverReadyAction": {
                 "action": "startDebugging",
                 "name": "Launch in Chrome",
-                "pattern": "Cesium development server running locally."
+                "pattern": "Local:"
             }
         },
         {
             "name": "Launch in Chrome",
             "request": "launch",
             "type": "chrome",
-            "url": "http://localhost:8080",
+            "url": "http://127.0.0.1:5190",
             "webRoot": "${workspaceFolder}"
-        },
-        {
-            "request": "attach",
-            "name": "Attach to Karma",
-            "type": "chrome",
-            "port": 9333, // This is the remote debugging port specified in karma.conf.cjs
-            "webRoot": "${workspaceFolder}",
-            "timeout": 60000
         },
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Test Suite",
+            "name": "Run the open test file",
             "cwd": "${workspaceFolder}",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": ["run", "test", "--", "--includeName", "${fileDirnameBasename}${/}${fileBasenameNoExtension}", "--debug"],
+            "runtimeExecutable": "npx",
+            "runtimeArgs": ["vitest", "run", "${relativeFile}"],
             "console": "integratedTerminal"
-        }
-    ],
-    "compounds": [
-        {
-            "name": "Launch Test Suite and Debug in VSCode",
-            "configurations": [
-                "Launch Test Suite",
-                "Attach to Karma"
-            ]
         }
     ]
 }

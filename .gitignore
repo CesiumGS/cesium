@@ -1,33 +1,10 @@
 /.metadata
-/Build
-/Cesium-*.zip
 /cesium-*.tgz
 /packages/**/*.tgz
 .directory
 .DS_Store
 Thumbs.db
 .eslintcache
-
-/Apps/CesiumViewer/Gallery/gallery-index.js
-
-/Apps/Sandcastle2
-
-/Source/Assets/
-/Source/**/*.d.ts
-/Source/ThirdParty/
-/Source/Widgets/
-/Source/Cesium.d.ts
-/Source/Cesium.js
-
-/Specs/SpecList.js
-/Specs/jasmine/**
-
-# playwright
-/playwright/.cache/
-/Specs/e2e/*-snapshots/
-
-/Tools/jsdoc/cesium_template/static/javascript/prism.js
-/Tools/jsdoc/cesium_template/static/styles/prism.css
 
 /node_modules
 npm-debug.log

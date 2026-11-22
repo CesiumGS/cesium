@@ -10,7 +10,7 @@
             },
             "problemMatcher": [],
             "label": "npm: build",
-            "detail": "gulp build"
+            "detail": "vite build"
         },
         {
             "type": "npm",
@@ -21,7 +21,7 @@
             },
             "problemMatcher": [],
             "label": "npm: test",
-            "detail": "gulp test"
+            "detail": "vitest run"
         }
     ]
 }

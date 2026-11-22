@@ -27,20 +27,12 @@ export default [
     ignores: [
       "**/Build/",
       "Documentation/**/*",
-      "Source/*",
       "**/ThirdParty/",
-      "Tools/**/*",
       "index.html",
-      "index.release.html",
-      "Apps/HelloWorld.html",
-      "Apps/Sandcastle2/",
       "apps/sandcastle/public/",
       "apps/sandcastle/templates/Sandcastle.d.ts",
       "apps/sandcastle/templates/Sandcastle.js",
       "apps/sandcastle/gallery/pagefind/",
-      "packages/engine/Source/Shaders/**/*",
-      "Specs/jasmine/*",
-      "**/*/SpecList.js",
       // 2.0's build output (git-ignored), written by `npm run build`, `npm
       // run build:lib` and `tsc --build`.
       "dist/",
@@ -66,10 +58,6 @@ export default [
       ".github/**/*.js",
       "scripts/**/*.js",
       "apps/sandcastle/scripts/**/*.js",
-      "gulpfile.js",
-      "gulpfile.apps.js",
-      "gulpfile.makezip.js",
-      "server.js",
     ],
     ...configCesium.configs.node,
     languageOptions: {
@@ -78,7 +66,7 @@ export default [
     },
   },
   {
-    files: ["packages/**/*.js", "apps/**/*.js", "Specs/**/*.js", "**/*.html"],
+    files: ["packages/**/*.js", "apps/**/*.js", "**/*.html"],
     ignores: ["apps/sandcastle/scripts/**/*.js"],
     ...configCesium.configs.browser,
     plugins: { html, "eslint-seatbelt": seatbelt },
@@ -271,29 +259,6 @@ export default [
     files: ["apps/sandcastle/gallery/hello-world/main.js"],
     rules: {
       // ignore this rule here to avoid the excessive eslint-disable comment in our bare minimum example
-      "no-unused-vars": "off",
-    },
-  },
-  {
-    files: ["Specs/**/*", "packages/**/Specs/**/*"],
-    languageOptions: {
-      globals: {
-        ...globals.jasmine,
-      },
-    },
-    rules: {
-      "no-self-assign": "off",
-    },
-  },
-  {
-    files: ["Specs/e2e/**/*"],
-    languageOptions: {
-      globals: {
-        ...globals.node,
-        Cesium: true,
-      },
-    },
-    rules: {
       "no-unused-vars": "off",
     },
   },

@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readdirSync, readFileSync, writeFileSync } from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -9,10 +9,13 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
 
+// The workspace root's and each of 2.0's packages' (packages/<name>).
+const packagesDir = path.join(__dirname, "../../packages");
 const packageJsons = [
-  path.join(__dirname, "../package.json"),
-  path.join(__dirname, "../packages/engine/package.json"),
-  path.join(__dirname, "../packages/widgets/package.json"),
+  path.join(__dirname, "../../package.json"),
+  ...readdirSync(packagesDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => path.join(packagesDir, entry.name, "package.json")),
 ];
 const words = packageJsons.reduce((acc, packageJsonPath) => {
   const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));

@@ -13,7 +13,6 @@
     "node_modules/**",
     "**/ThirdParty/**",
     "**/Build/**",
-    "Source/**",
     "CONTRIBUTORS.md",
     "**/LICENSE.md"
   ],

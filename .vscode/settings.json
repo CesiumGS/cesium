@@ -13,8 +13,7 @@
     },
     "search.exclude": {
         "Build": true,
-        "node_modules": true,
-        "Source/Shaders/**/*.js": true
+        "node_modules": true
     },
     "files.associations": {
         "*.czml": "json"
