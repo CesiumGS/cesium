@@ -14,7 +14,8 @@
       "@cesium/source": "./src/index.ts",
       "types": "./dist/types/index.d.ts",
       "default": "./dist/index.js"
-    }
+    },
+    "./package.json": "./package.json"
   },
   "files": [
     "dist",
