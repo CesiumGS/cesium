@@ -10,7 +10,7 @@ claimed_by: orch-11-CS-775
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/Dependencies.tsx, packages/next/bench/suite/views/dependencies.css, packages/next/bench/suite/views/Projects.tsx, packages/next/bench/suite/views/projects.css, packages/next/bench/suite/views/work.css, packages/next/bench/suite/workModel.ts, packages/next/bench/suite/work.ts, packages/next/bench/suite/DESIGN.md, packages/next/test/dynoDependencies.test.ts, packages/next/test/dynoProjects.test.ts, packages/next/test/dynoWork*.test.ts]
 ---
 
-The owner, 2026-11-22: "you can get rid of the older views in the work tab." The Roadmap kept the old views behind one "Older views" menu (CS-744) until their replacements landed. They have now:
+The owner, 2026-11-21: "you can get rid of the older views in the work tab." The Roadmap kept the old views behind one "Older views" menu (CS-744) until their replacements landed. They have now:
 
 - the Dependencies view (`deps`, CS-694), with its waves grid and project matrix, is replaced by Path (CS-746);
 - the old Projects view (`ProjectsView` and `ProjectMatrixView` in `Projects.tsx`) is replaced by Projects as bets (CS-748);
@@ -18,7 +18,7 @@ The owner, 2026-11-22: "you can get rid of the older views in the work tab." The
 
 This takes in what CS-775 first held, which was the waves grid alone, kept until the owner had tried Path. The owner's word covers the whole menu now.
 
-Source: the owner, through the chief of staff, 2026-11-22. Why now: two views of one answer drift apart, and the menu is clutter. Rough size: small to medium, mostly deletion. Decider: the executor, within the touches above. Filed: 2026-11-20; widened 2026-11-22.
+Source: the owner, through the chief of staff, 2026-11-21. Why now: two views of one answer drift apart, and the menu is clutter. Rough size: small to medium, mostly deletion. Decider: the executor, within the touches above. Filed: 2026-11-20; widened 2026-11-21.
 
 ## Done when
 

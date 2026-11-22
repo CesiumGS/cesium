@@ -19,8 +19,8 @@ The release item for 2.0.0-beta.1 (the owner's answer to CS-455, the release lad
 
 On 2026-11-18 beta.1 also needs CS-463 (CS-509, public Jobs API, waits on it) and CS-461 (the worker-mode spike CS-99, which worker mode needs) (owner, 2026-11-18, fixing the release crossings CS-685 found).
 
-CS-505 (issues 2.0 found are filed and answered) joined on 2026-11-22, on the owner's word in a sweep of milestones that were in no release.
+CS-505 (issues 2.0 found are filed and answered) joined on 2026-11-21, on the owner's word in a sweep of milestones that were in no release.
 
-CS-493 (planets show as points, then disks) joined on 2026-11-22, in the same sweep.
+CS-493 (planets show as points, then disks) joined on 2026-11-21, in the same sweep.
 
-CS-471, CS-423, CS-465, CS-474, CS-495, CS-467, CS-534 and CS-504 moved here from 2.0.0 on 2026-11-22. On the owner's word, all eight change or add public API that freezes at beta.1: a renamed `lodTransitions` value, the default thread, the tick budget options, what shading reads under exaggeration, the B-rep extension format, and new view, query and styling options.
+CS-471, CS-423, CS-465, CS-474, CS-495, CS-467, CS-534 and CS-504 moved here from 2.0.0 on 2026-11-21. On the owner's word, all eight change or add public API that freezes at beta.1: a renamed `lodTransitions` value, the default thread, the tick budget options, what shading reads under exaggeration, the B-rep extension format, and new view, query and styling options.

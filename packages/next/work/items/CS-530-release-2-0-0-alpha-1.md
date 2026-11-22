@@ -17,6 +17,6 @@ release: 2.0.0-alpha.1
 
 The release item for 2.0.0-alpha.1 (the owner's answer to CS-455, the release ladder): a host can build on it; the API may still change. Which milestones it needs is CS-526; once answered, they join its needs.
 
-CS-506 (initiatives and release gates are settled) and CS-519 (Dyno switches between the engine and the work) joined on 2026-11-22, on the owner's word in a sweep of milestones that were in no release.
+CS-506 (initiatives and release gates are settled) and CS-519 (Dyno switches between the engine and the work) joined on 2026-11-21, on the owner's word in a sweep of milestones that were in no release.
 
-CS-561 (the Work page shows the live system, committed from proposed) and CS-751 (the owner's views) joined on 2026-11-22, in the same sweep.
+CS-561 (the Work page shows the live system, committed from proposed) and CS-751 (the owner's views) joined on 2026-11-21, in the same sweep.

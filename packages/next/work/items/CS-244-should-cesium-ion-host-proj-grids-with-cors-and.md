@@ -27,4 +27,4 @@ The source recommends keeping the grid source a configurable base URL, which is 
 
 Open.
 
-The owner's answer, 2026-11-22, in a review of 2.0's seams. The engine doesn't care where the grids come from: PROJ grids, `proj.db`, the geoid and VDatum come through a data-resource provider (`read(name) → bytes`, with the engine still checking pins), not a fixed base URL. Ion, a new API, local files and the setup store are each one provider. Whether ion actually hosts the grids, with CORS and cropped tiles, is a hosting call and goes with CS-490 (reference data's hosting and shipping) and its legal review.
+The owner's answer, 2026-11-21, in a review of 2.0's seams. The engine doesn't care where the grids come from: PROJ grids, `proj.db`, the geoid and VDatum come through a data-resource provider (`read(name) → bytes`, with the engine still checking pins), not a fixed base URL. Ion, a new API, local files and the setup store are each one provider. Whether ion actually hosts the grids, with CORS and cropped tiles, is a hosting call and goes with CS-490 (reference data's hosting and shipping) and its legal review.

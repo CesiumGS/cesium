@@ -9,11 +9,11 @@ needs: [CS-552]
 touches: [packages/next/docs/design, packages/next/spikes]
 ---
 
-The owner, 2026-11-22: 2.0 will likely pull in a Cesium Native WebAssembly wrapper, perhaps under a new name such as "tiling engine", from a separate repository and package. The owner chose to make it an optional host behind the streaming-source seam (CS-552), with today's TypeScript streaming as the default.
+The owner, 2026-11-21: 2.0 will likely pull in a Cesium Native WebAssembly wrapper, perhaps under a new name such as "tiling engine", from a separate repository and package. The owner chose to make it an optional host behind the streaming-source seam (CS-552), with today's TypeScript streaming as the default.
 
 Nothing in the plan named Cesium Native until now. It brings its own selection, request scheduling, cache and ion client. Those duplicate what the TypeScript side has tuned: `BudgetedSelection`, `RequestScheduler`, eviction, LOD transitions, curvilinear maps, occlusion and `io/ion.ts`.
 
-Source: the owner, through the chief of staff, from a review of 2.0's seams. Why now: the streaming-source seam's shape freezes at beta.1, and it has to admit an outside engine. Rough size: medium (a spike and a design note). Decider: the executor for the spike. Whether Cesium Native replaces anything, how it's versioned outside lockstep, and any new dependency all come back as decisions. Filed: 2026-11-22.
+Source: the owner, through the chief of staff, from a review of 2.0's seams. Why now: the streaming-source seam's shape freezes at beta.1, and it has to admit an outside engine. Rough size: medium (a spike and a design note). Decider: the executor for the spike. Whether Cesium Native replaces anything, how it's versioned outside lockstep, and any new dependency all come back as decisions. Filed: 2026-11-21.
 
 ## Done when
 
