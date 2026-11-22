@@ -5,12 +5,23 @@
 # Unignore directories (to all depths) and unignore code and style files in these directories
 !.github/**/
 !.vscode/**/
-!Apps/**/
+!apps/**/
 !Documentation/**/
 !packages/**/
 !scripts/**/
 !Specs/**/
 !Tools/**/
+# 2.0's harness, at the root since CS-835.
+!test/**/
+!parity/**/
+!bench/**/
+!lab/**/
+!handbook/**/
+!examples/**/
+!demo/**/
+!spikes/**/
+!standalone/**/
+!tools/**/
 
 !**/*.js
 !**/*.cjs
@@ -38,11 +49,11 @@ packages/widgets/Source/ThirdParty/**
 packages/next/src/io/ThirdParty/**
 
 # 1.x's test data, moved as it was (CS-611).
-packages/next/test/fixtures/1x/**
+test/fixtures/1x/**
 
-packages/sandcastle/node_modules/**
-packages/sandcastle/templates/Sandcastle.d.ts
-packages/sandcastle/templates/Sandcastle.js
+apps/sandcastle/node_modules/**
+apps/sandcastle/templates/Sandcastle.d.ts
+apps/sandcastle/templates/Sandcastle.js
 
 Apps/Sandcastle2/**
 
@@ -53,6 +64,9 @@ Tools/jsdoc/cesium_template/static/styles/prism.css
 **/LICENSE.md
 
 # The tracker's files are human-in-the-lead's format, written by hitld, not prettier.
-packages/next/work/
+work/
 # The contract block in AGENTS.md is written by hitld install; a reformat fails hitld check contract.
 /AGENTS.md
+
+# Written by scripts/frameFixtures.py; a reformat would be undone on regeneration.
+test/fixtures/frames/*.json

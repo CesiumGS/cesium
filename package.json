@@ -36,6 +36,7 @@
   },
   "devDependencies": {
     "@cesium/eslint-config": "^14.0.0",
+    "@cesium/next": "2.0.0-poc.0",
     "@playwright/test": "^1.62.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
@@ -77,8 +78,7 @@
   "workspaces": [
     "packages/*",
     "apps/*",
-    "tools/*",
-    "packages/next/tools/dyno"
+    "tools/*"
   ],
   "overrides": {
     "protobufjs": "^8.8.0",

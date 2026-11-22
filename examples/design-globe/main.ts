@@ -1,0 +1,1287 @@
+// Design coordinates on the globe (plan 4b Task 18; DESIGN.md): a 50 km
+// highway designed in California State Plane, drawn two ways, rigidly at
+// one anchor as most viewers place a model, or reprojected through its CRS
+// at every vertex, with a morph between them; and a portfolio of sites,
+// each in its own country's CRS and height system.
+//
+// `run` returns its panel at once and loads afterwards (siteLoader.ts): the
+// corridor's tileset draws, and morphs, before PROJ is in; once each
+// site's placements are in, its facts (siteFacts.ts) and, for the corridor,
+// the whiskers, the anchor ring and the sag chart appear. The parts:
+//   - siteLoader.ts: tilesets, answers, PROJ, the catalog, grids, placements;
+//   - morphDriver.ts: the morph's clock (plan 5's animation core replaces it);
+//   - siteDrawings.ts, overlays.ts: what the placements draw;
+//   - cursor.ts: picks and the HUD readout (`pickAt`, the measure tool's seam);
+//   - measureTool.ts, measureOverlay.ts: the measure tool, the openers and
+//     their lines on the globe (Task 19);
+//   - shots.ts: the camera;
+//   - panelModel.ts: the panel's model from a snapshot of the state here;
+//   - checksView.ts: the checks (Task 20), from the measure tool's shown values;
+//   - tour.ts, tourRuntime.ts: the short tour (Task 20);
+//   - viewParams.ts: the compass and error ribbon toggles (Task 20).
+import { createElement } from "react";
+import { Alignment } from "../../packages/next/src/engineering/alignment.ts";
+import type { ProjApi } from "../../packages/next/src/engineering/proj.ts";
+import { Ellipsoid } from "../../packages/next/src/math/ellipsoid.ts";
+import type { ExampleContext, ExampleRun } from "../types.ts";
+import type { Answers } from "./answers.ts";
+import { checksView } from "./checksView.ts";
+import { ANCHOR_STATION, CORRIDOR_ALIGNMENT } from "./corridor.ts";
+import { createCursor, drawnPlacement } from "./cursor.ts";
+import { createMeasureTool } from "./measureTool.ts";
+import { pointsLink } from "./measureState.ts";
+import type { MeasurePanel } from "./measureView.ts";
+import { createFrameDriver } from "./frameDriver.ts";
+import { MorphDriver, type MorphTarget } from "./morphDriver.ts";
+import { hexLinear } from "./colors.ts";
+import {
+  AnchorRing,
+  ErrorRibbon,
+  Whiskers,
+  roadPlaneAt,
+  sagSamples,
+  type SagSample,
+} from "./overlays.ts";
+import {
+  SITES,
+  errorText,
+  formatParams,
+  loadingFor,
+  nextLoading,
+  parseParams,
+  type LoadEvent,
+  type LoadItem,
+  type PageParams,
+  type Placement,
+} from "./page.ts";
+import type { MeasureActions } from "./panel/Measure.tsx";
+import { Panel } from "./panel/Panel.tsx";
+import type { LiveValues, PanelActions, PanelModel } from "./panel/model.ts";
+import { buildPanelModel, type SiteSnapshot } from "./panelModel.ts";
+import { reducedTransparency, type PlacementLook } from "./siteDrawings.ts";
+import {
+  CameraMoves,
+  createShots,
+  markGapFraming,
+  openerFraming,
+  reducedMotion,
+  rulerFraming,
+  tunnelFraming,
+} from "./shots.ts";
+import { siteFacts } from "./siteFacts.ts";
+import { clearTimeControls, createStore } from "./stores.ts";
+import { combinedFactorOf, corridorTerms, tourFactsOf } from "./storyFacts.ts";
+import { createSiteLoader, type SiteRuntime } from "./siteLoader.ts";
+import { EARTHWORK, daylightBreaks, daylightLine } from "./sideSlopes.ts";
+import {
+  CORRIDOR_CLIP_PLANS,
+  clearTerrainClips,
+  setTerrainClipOpacity,
+  daylightPieces,
+  daylightRegion,
+  horizontalApart,
+  siteClipRegion,
+  syncTerrainClip,
+  syncUnderground,
+  undergroundRegion,
+  UNDERGROUND_HALF_WIDTH,
+  UNDERGROUND_OPACITY,
+  type DaylightStretch,
+} from "./terrainClips.ts";
+import { createRulerView } from "./rulerView.ts";
+import { siteCredits } from "./dataCredits.ts";
+import { TOUR_TUNNEL, tourCard, type TourTarget } from "./tour.ts";
+import { createTour, type TourRuntime } from "./tourRuntime.ts";
+import { formatView, parseView, type ViewParams } from "./viewParams.ts";
+
+const deg = Math.PI / 180;
+/** The corridor's daylight lines, by earthwork stretch (sideSlopes.ts). */
+const DAYLIGHT_STRETCHES: readonly DaylightStretch[] = (() => {
+  const breaks = daylightBreaks();
+  return EARTHWORK.map((range) => ({
+    ...range,
+    left: daylightLine(range, -1, breaks).map(([s, o]) => [s, -o] as const),
+    right: daylightLine(range, 1, breaks),
+  }));
+})();
+/** A site's clipped footprint reaches this far past rigid's error at its edge, meters. */
+const CLIP_MARGIN = 3;
+/** How far the tour's shots lift their subject, as a share of the range (shots.ts `CameraMoves.lift`). */
+const TOUR_LIFT = 0.2;
+
+/** The placements' colors (DESIGN.md "On the globe"): orange rigid, cyan true. */
+export const RIGID_HEX = "#fc9252";
+export const REPROJECTED_HEX = "#3bcddc";
+const LOOK: PlacementLook = {
+  rigidTint: hexLinear("#ffc8a0"),
+  reprojectedTint: hexLinear("#a8eef4"),
+  rigidGhost: hexLinear(RIGID_HEX),
+  reprojectedGhost: hexLinear(REPROJECTED_HEX),
+};
+
+export function run(context: ExampleContext): ExampleRun {
+  const { viewer, scope, signal } = context;
+  const token = context.accessToken;
+  /** The token never enters what the page shows. */
+  const scrub = (text: string) =>
+    token !== undefined && token.length >= 8
+      ? text.split(token).join("[redacted]")
+      : text;
+  let disposed = false;
+  scope.defer(() => {
+    disposed = true;
+  });
+
+  // The HUD over the canvas: the cursor readout, the legend, the anchor's label.
+  const hud = document.createElement("div");
+  hud.className = "dg-hud-host";
+  // Right after the canvas in the document (UX review S6): the keyboard
+  // reaches the toolbar, the cursor card and the tour's card before the
+  // credits, the time controls and the inspector. Layering is by z-index
+  // (toolbar.css), not by this order.
+  if (viewer.canvas.parentElement === viewer.container) {
+    viewer.canvas.after(hud);
+  } else {
+    viewer.container.prepend(hud);
+  }
+  scope.defer(() => hud.remove());
+  viewer.view.camera.near = 0.1;
+  // The clock in the selected site's civil time (its IANA zone, feedback
+  // F9); each Fly to sets it to the site's daylight (shots.ts `daylight`).
+  // On leaving, the zone, label and clock go back.
+  const prior = {
+    zone: viewer.timeControls?.zone(),
+    label: viewer.timeControls?.label(),
+    time: viewer.clock.time,
+    mode: viewer.clock.mode,
+  };
+  /** The time controls show `entry`'s civil time. */
+  const siteClock = (entry: {
+    readonly timeZone: string;
+    readonly name: string;
+  }) => {
+    viewer.timeControls?.setZone({ iana: entry.timeZone });
+    viewer.timeControls?.setLabel(
+      `Time at ${entry.name} (${entry.timeZone}), and the sun there`,
+    );
+  };
+  scope.defer(() => {
+    if (prior.zone !== undefined) {
+      viewer.timeControls?.setZone(prior.zone);
+    }
+    if (prior.label) {
+      viewer.timeControls?.setLabel(prior.label);
+    }
+    viewer.clock.time = prior.time;
+    viewer.clock.mode = prior.mode;
+  });
+  const alignment = new Alignment(CORRIDOR_ALIGNMENT);
+
+  // ------------------------------------------------------------ state
+  let params: PageParams = parseParams(context.params);
+  /** The viewer toggles, off by default (viewParams.ts). */
+  let view: ViewParams = parseView(context.params);
+  /** The link as it is now, for "Copy link": every parameter the page set. */
+  const linkParams: Record<string, string | undefined> = { ...context.params };
+  const setLink = (next: Readonly<Record<string, string | undefined>>) => {
+    Object.assign(linkParams, next);
+    context.setParams(next);
+  };
+  let loading: readonly LoadItem[] = [];
+  let answers: Answers | undefined;
+  let samples: readonly SagSample[] | undefined;
+  let whiskers: Whiskers | undefined;
+  let ring: AnchorRing | undefined;
+  let ribbon: ErrorRibbon | undefined;
+  /** Why "See underground" isn't drawn while it's on (undefined: it is). */
+  let undergroundNote: string | undefined;
+  let anchorPoint: Float64Array | undefined;
+  const sites = new Map<string, SiteRuntime>(
+    SITES.map((entry) => [entry.id, { entry }]),
+  );
+  const corridor = sites.get("corridor")!;
+  siteClock((sites.get(params.site) ?? corridor).entry);
+  scope.defer(() => {
+    whiskers?.dispose();
+    ring?.dispose();
+    ribbon?.dispose();
+  });
+
+  // The page's frames are the engine's (frameDriver.ts): animations before
+  // its render, overlays and the stores' listeners after it.
+  const frames = createFrameDriver(viewer.engine);
+  scope.defer(() => frames.dispose());
+  /** The camera and canvas size the overlays were last placed for. */
+  let lastCamera = -1;
+  let lastSize = "";
+  /** The morph started or ended: the labels again after the render. */
+  let placeLabels = false;
+
+  const live = createStore<LiveValues>({}, frames);
+  scope.defer(() => live.dispose());
+  /** The panel's model: made once everything it reads is set up (below). */
+  const model: {
+    store?: ReturnType<typeof createStore<PanelModel>>;
+    measure?: ReturnType<typeof createStore<MeasurePanel>>;
+  } = {};
+  const refresh = () => {
+    if (!disposed) {
+      // A linked tour step that waited for its data (the openers, the answers).
+      if (model.store !== undefined) {
+        tour?.flush();
+      }
+      model.store?.set(buildModel());
+      model.measure?.set(tool.view());
+    }
+  };
+  const report = (event: LoadEvent) => {
+    const next = nextLoading(loading, {
+      ...event,
+      ...("detail" in event && { detail: scrub(event.detail ?? "") }),
+    } as LoadEvent);
+    if (next !== loading) {
+      loading = next;
+      refresh();
+    }
+  };
+
+  // ------------------------------------------------------------ parts
+  // The measure tool (measureTool.ts), first of the parts: the morph draws
+  // it and `refresh` reads it. Its snaps are judged by the cursor's seam, by
+  // the site they hit; what it reads of the morph, the cursor and the frame
+  // loop it reads when called, after they are made below.
+  const tool = createMeasureTool({
+    viewer,
+    signal,
+    sites: () => sites.values(),
+    site: (id) => sites.get(id),
+    alignment,
+    answers: () => answers,
+    pickState: () => {
+      const selected = sites.get(params.site) ?? corridor;
+      return {
+        mode: drawnPlacement(selected, morph.t()),
+        t: morph.t(),
+        morphing: morph.morphing,
+        exaggeration: morph.exaggeration,
+        selectedPaired: selected.drawings !== undefined,
+      };
+    },
+    pickAt: (x, y) => cursor.pickAt(x, y),
+    snapMode: () => params.snap,
+    drawState: () => ({
+      t: morph.t(),
+      exaggeration: morph.exaggeration,
+      morphing: morph.morphing,
+      ghost: morph.ghost,
+    }),
+    setLink: (link) => setLink(link),
+    changed: refresh,
+    wake: () => viewer.engine.requestRender(),
+    frame: frames,
+    report,
+    disposed: () => disposed,
+    away: () => {
+      const site = sites.get(params.site);
+      if (site === undefined || site === corridor) {
+        return undefined;
+      }
+      const story = site.view?.story;
+      return {
+        name: site.entry.name,
+        ...(story !== undefined && {
+          story: `${story.extent}; rigid is ${story.edgeError} off at its edge${story.cause}. ${story.verdict}`,
+        }),
+      };
+    },
+  });
+  scope.defer(() => tool.dispose());
+
+  /**
+   * The corridor's ground follows the morph (plan 5a Task 20): cut for the true
+   * slopes at the reprojected end, fading back as the geometry leaves, whole
+   * at the rigid end, which stands clear of it. The same regions throughout,
+   * with no remove and add again.
+   */
+  const corridorGround: MorphTarget = {
+    setState: ({ t }) => {
+      const globe = viewer.globe;
+      if (globe !== undefined && !globe.isDestroyed()) {
+        setTerrainClipOpacity(globe, `${corridor.entry.id}#`, 1 - t);
+      }
+    },
+  };
+  /** Each ladder site's whiskers, from its own vertices (the generator's). */
+  const siteWhiskers = new Map<SiteRuntime, Whiskers>();
+  scope.defer(() => {
+    for (const w of siteWhiskers.values()) {
+      w.dispose();
+    }
+  });
+  function buildSiteWhiskers(site: SiteRuntime): void {
+    const points = answers?.sites[site.entry.id]?.whiskers;
+    const { rigidPlacement: rigid, reprojectedPlacement: truth } = site;
+    if (
+      points === undefined ||
+      points.length === 0 ||
+      rigid === undefined ||
+      truth === undefined ||
+      siteWhiskers.has(site)
+    ) {
+      return;
+    }
+    const placed: SagSample[] = [];
+    for (let i = 0; i + 2 < points.length; i += 3) {
+      const design = Float64Array.from(points.slice(i, i + 3));
+      const r = rigid.displayed(design);
+      const p = truth.displayed(design);
+      placed.push({
+        station: i / 3,
+        design,
+        rigid: r,
+        truth: p,
+        error: Math.hypot(r[0]! - p[0]!, r[1]! - p[1]!, r[2]! - p[2]!),
+      });
+    }
+    siteWhiskers.set(site, new Whiskers(viewer.world, placed));
+    morph.apply();
+  }
+
+  const morph = new MorphDriver(
+    {
+      targets: () =>
+        [...sites.values()]
+          .flatMap((s): (MorphTarget | undefined)[] => [
+            s.drawings,
+            siteWhiskers.get(s),
+          ])
+          .concat(whiskers, corridorGround, tool.target)
+          .filter((x): x is MorphTarget => x !== undefined),
+      requestRender: () => viewer.engine.requestRender(),
+      changed: () => {
+        cursor.update();
+        placeLabels = true;
+        refresh();
+      },
+      disposed: () => disposed,
+      animate: (step) => frames.animate(step),
+    },
+    params.mode,
+  );
+  scope.defer(() => morph.dispose());
+
+  const cursor = createCursor({
+    viewer,
+    signal,
+    sites: () => sites.values(),
+    // As the selected site is drawn: a one-tileset site is rigid, unmoving.
+    state: () => {
+      const selected = sites.get(params.site) ?? corridor;
+      const paired = selected.drawings !== undefined;
+      return {
+        mode: drawnPlacement(selected, morph.t()),
+        t: morph.t(),
+        morphing: morph.morphing,
+        exaggeration: morph.exaggeration,
+        selectedPaired: paired,
+      };
+    },
+    changed: refresh,
+    disposed: () => disposed,
+    compass: () => view.compass,
+  });
+
+  const camera = new CameraMoves(
+    viewer,
+    () => {
+      if (!camera.flying && shots.alongStation() !== undefined) {
+        shots.endAlong();
+      }
+      refresh();
+    },
+    (step) => frames.animate(step),
+  );
+  scope.defer(() => camera.stop());
+  const shots = createShots({
+    viewer,
+    camera,
+    alignment,
+    answers: () => answers,
+    samples: () => samples,
+    alongChanged: (station) => {
+      live.set({ ...live.get(), station });
+      if (station === undefined) {
+        refresh();
+      }
+    },
+  });
+
+  const loader = createSiteLoader({
+    viewer,
+    scope,
+    signal,
+    // The ghost deck translucent, or hatched for less transparency.
+    look: {
+      ...LOOK,
+      ghostDeck: reducedTransparency() ? "hatch" : "translucent",
+    },
+    report,
+    disposed: () => disposed,
+    paired: () => morph.apply(),
+    placed: (site, api) => {
+      placedApi.set(site, api);
+      if (
+        site === corridor &&
+        site.rigidPlacement &&
+        site.reprojectedPlacement
+      ) {
+        samples = sagSamples(
+          alignment,
+          site.rigidPlacement,
+          site.reprojectedPlacement,
+          1000,
+        );
+        buildCorridorEvidence(site);
+      }
+      computeFacts(site);
+      buildSiteWhiskers(site);
+      clipTerrain(site);
+      // The openers and exact snapping (the corridor), or a linked measurement.
+      tool.placementsChanged();
+      tour?.flush();
+      // The grids' and the ground data's credits, with the data credits
+      // (bottom left), while the site is drawn (UX review I3).
+      const credits = siteCredits(
+        site.entry.id,
+        (site.rigidPlacement ?? site.reprojectedPlacement)!.frame.gridCredits,
+      );
+      if (credits.length > 0) {
+        viewer.addAttributions(site, credits);
+        scope.defer(() => viewer.addAttributions(site, []));
+      }
+      refresh();
+    },
+    warn: (message) => console.warn(scrub(message)),
+  });
+
+  /**
+   * The terrain under the site's design (feedback F11): its footprint,
+   * padded by rigid's error there, so the ground never pokes through a
+   * flat design surface in either placement; or the corridor out to its
+   * side slopes' daylight lines, so the ground meets the slopes; none under
+   * a model on the real ground (terrainClips.ts `siteClipRegion`).
+   */
+  function clipTerrain(site: SiteRuntime): void {
+    const globe = viewer.globe;
+    const placement = site.reprojectedPlacement ?? site.rigidPlacement;
+    if (globe === undefined || placement === undefined) {
+      return;
+    }
+    const displayed = (d: ArrayLike<number>) => placement.displayed(d);
+    const mpu = placement.frame.units.metersPerUnit;
+    const rigidError = (d: ArrayLike<number>) =>
+      site.rigidPlacement?.displayError(d) ?? 0;
+    // Rigid's error across the ground (its drop is up or down, so a clip
+    // needn't reach past it).
+    const rigidAcross = (d: ArrayLike<number>) =>
+      site.rigidPlacement === undefined
+        ? 0
+        : horizontalApart(site.rigidPlacement.displayed(d), displayed(d));
+    if (site === corridor) {
+      // Out to the side slopes' daylight lines on its earthwork, so the
+      // ground meets the slopes; a sliver over its structures, so the
+      // ground stays under its viaducts and over its tunnels. No room for
+      // the rigid copy (it would leave a gap beside the true slopes): it
+      // moves sideways by the scale factor's share, but rises off the
+      // ground faster, by the curvature's d²/2R (2.3 m sideways and 38.1 m
+      // up at the far end), so the ground doesn't come through it. At the
+      // rigid end the ground comes back whole (`corridorGround`).
+      // In a few regions (terrainClips.ts `CORRIDOR_CLIP_PLANS`), each
+      // keyed by its piece; the first plan the globe takes whole.
+      const key = (k: number) => `${site.entry.id}#${k}`;
+      const most = Math.max(...CORRIDOR_CLIP_PLANS.map((p) => p.pieces));
+      const clear = () => {
+        for (let k = 0; k < most; k++) {
+          syncTerrainClip(globe, key(k), undefined);
+        }
+      };
+      let why: string | undefined;
+      for (const plan of CORRIDOR_CLIP_PLANS) {
+        clear();
+        const ranges = daylightPieces(
+          alignment,
+          DAYLIGHT_STRETCHES,
+          plan.pieces,
+        );
+        why = undefined;
+        for (let k = 0; k < ranges.length && why === undefined; k++) {
+          const region = daylightRegion(
+            alignment,
+            displayed,
+            DAYLIGHT_STRETCHES,
+            plan.vertices,
+            ranges[k],
+          );
+          why = syncTerrainClip(globe, key(k), region.polygon, 1 - morph.t());
+        }
+        if (why === undefined) {
+          syncUndergroundTerrain();
+          return;
+        }
+      }
+      clear();
+      console.warn(scrub(`${site.entry.name}: terrain not clipped: ${why}`));
+      syncUndergroundTerrain();
+      return;
+    }
+    // None under a model on the real ground: its clip, if any, cleared.
+    const polygon = siteClipRegion(
+      site.entry,
+      displayed,
+      mpu,
+      { error: rigidError, across: rigidAcross },
+      CLIP_MARGIN,
+    );
+    const why = syncTerrainClip(globe, site.entry.id, polygon);
+    if (why !== undefined) {
+      console.warn(scrub(`${site.entry.name}: terrain not clipped: ${why}`));
+    }
+  }
+  scope.defer(() => {
+    const globe = viewer.globe;
+    if (globe !== undefined && !globe.isDestroyed()) {
+      clearTerrainClips(globe);
+      syncUnderground(globe, [], UNDERGROUND_OPACITY);
+    }
+  });
+  // A site placed before the terrain was built (the corridor, on a cold
+  // load) found no globe to clip: clip every placed site once it is there.
+  void viewer.ready.then(
+    () => {
+      if (signal.aborted) {
+        return;
+      }
+      for (const site of placedApi.keys()) {
+        clipTerrain(site);
+      }
+    },
+    () => {}, // the viewer's own status says why
+  );
+
+  /** PROJ, as each placed site was placed with (for its facts again). */
+  const placedApi = new Map<SiteRuntime, ProjApi>();
+  /** A site's facts, again when the answers arrive (a ladder site's story is theirs). */
+  function computeFacts(site: SiteRuntime): void {
+    const api = placedApi.get(site);
+    if (api === undefined) {
+      return;
+    }
+    site.view = siteFacts({
+      entry: site.entry,
+      ...(site.rigidPlacement && { rigid: site.rigidPlacement }),
+      ...(site.reprojectedPlacement && {
+        reprojected: site.reprojectedPlacement,
+      }),
+      api,
+      ...combinedFactorOf(site, { answers, corridor, alignment }),
+      ...(site === corridor &&
+        samples !== undefined && {
+          along: {
+            alignment,
+            errors: samples.map((s) => s.error),
+            ...corridorTerms(site, samples, { answers, corridor, alignment }),
+          },
+        }),
+      ...(answers?.sites[site.entry.id] !== undefined && {
+        answer: answers.sites[site.entry.id]!,
+      }),
+    });
+  }
+
+  /**
+   * "See underground" (owner, 2026-11-08): while on, the ground around the
+   * corridor (`UNDERGROUND_HALF_WIDTH` either side) is translucent, so its
+   * tunnels show in place under their hills, drawn as ever (the engine's
+   * translucent terrain); clicks go through that ground to the road. In
+   * one region if the globe takes it, else in more pieces (each piece's
+   * edges are fewer to test where it overlaps the clips).
+   */
+  function syncUndergroundTerrain(): void {
+    const globe = viewer.globe;
+    const placement = corridor.reprojectedPlacement;
+    if (globe === undefined || globe.isDestroyed()) {
+      undergroundNote = view.underground ? "once the terrain is in" : undefined;
+      return;
+    }
+    if (!view.underground) {
+      syncUnderground(globe, [], UNDERGROUND_OPACITY);
+      undergroundNote = undefined;
+      return;
+    }
+    if (placement === undefined) {
+      undergroundNote = "once the corridor's frame is in";
+      return;
+    }
+    const displayed = (d: ArrayLike<number>) => placement.displayed(d);
+    const { startStation: start, endStation: end } = alignment;
+    let why: string | undefined;
+    for (const count of [1, 2, 3, 4]) {
+      const pieces = Array.from({ length: count }, (_, k) =>
+        undergroundRegion(
+          alignment,
+          displayed,
+          UNDERGROUND_HALF_WIDTH,
+          500,
+          start + ((end - start) * k) / count,
+          start + ((end - start) * (k + 1)) / count,
+        ),
+      );
+      why = syncUnderground(globe, pieces, UNDERGROUND_OPACITY);
+      if (why === undefined) {
+        break;
+      }
+    }
+    if (why !== undefined) {
+      console.warn(scrub(`See underground: not drawn: ${why}`));
+    }
+    undergroundNote = why === undefined ? undefined : "the globe refused it";
+    viewer.engine.requestRender();
+    frames.wake();
+  }
+
+  /** The error ribbon, drawn while its toggle is on (built once the corridor is placed). */
+  function syncRibbon(): void {
+    const site = corridor;
+    if (
+      view.ribbon &&
+      ribbon === undefined &&
+      site.rigidPlacement &&
+      site.reprojectedPlacement
+    ) {
+      ribbon = new ErrorRibbon(
+        viewer.world,
+        alignment,
+        site.rigidPlacement,
+        site.reprojectedPlacement,
+        100,
+      );
+    }
+    ribbon?.setVisible(view.ribbon);
+    viewer.engine.requestRender();
+    frames.wake();
+  }
+
+  /** The whiskers and the anchor ring. */
+  function buildCorridorEvidence(site: SiteRuntime): void {
+    if (
+      samples === undefined ||
+      !site.rigidPlacement ||
+      !site.reprojectedPlacement
+    ) {
+      return;
+    }
+    whiskers?.dispose();
+    whiskers = new Whiskers(viewer.world, samples);
+    const station = answers?.anchorStation ?? ANCHOR_STATION;
+    const [e, n] = alignment.pointAt(station, 0);
+    anchorPoint = site.reprojectedPlacement.displayed([
+      e!,
+      n!,
+      alignment.elevationAt(station),
+    ]);
+    ring?.dispose();
+    const placed = site.reprojectedPlacement;
+    ring = new AnchorRing(
+      viewer.world,
+      anchorPoint,
+      30,
+      roadPlaneAt(alignment, (d) => placed.displayed(d), station),
+    );
+    // The ribbon again on the new placements.
+    ribbon?.dispose();
+    ribbon = undefined;
+    syncRibbon();
+    placeAnchorLabel();
+    morph.apply();
+  }
+
+  // ----------------------------------------------------- the frame loop
+  // In the engine's frames (frameDriver.ts), which run only while something
+  // changes: a settled page requests no frames, so on-demand rendering
+  // idles. The camera, the tilesets and the world wake the engine
+  // themselves; the morph and the flights are its animations.
+  // Before the render: the pairs whose tiles unloaded since.
+  scope.defer(
+    viewer.engine.onTick(() => {
+      if (disposed) {
+        return false;
+      }
+      return false;
+    }),
+  );
+  // After it: what is placed against the frame drawn, from the camera and
+  // the morph it was drawn with.
+  scope.defer(
+    frames.afterRender(() => {
+      if (disposed) {
+        return;
+      }
+      const cam = viewer.view.camera;
+      const size = `${viewer.canvas.clientWidth}x${viewer.canvas.clientHeight}`;
+      if (cam.version !== lastCamera || size !== lastSize) {
+        lastCamera = cam.version;
+        lastSize = size;
+        // What was under the cursor no longer is.
+        cursor.cameraMoved();
+        placeAnchorLabel();
+        tool.place();
+      } else if (morph.morphing || placeLabels) {
+        tool.place();
+      }
+      placeLabels = false;
+    }),
+  );
+  scope.defer(clearTimeControls(viewer.container, hud, viewer.canvas));
+  /** The user has taken the camera: no opening shot cuts it away after. */
+  let userMoved = false;
+  const tookCamera = () => {
+    userMoved = true;
+    endRulerView();
+  };
+  for (const type of ["pointerdown", "wheel", "keydown"]) {
+    viewer.canvas.addEventListener(type, tookCamera, { signal, passive: true });
+  }
+
+  /** The anchor's label: in front of the camera, above its horizon and near. */
+  function placeAnchorLabel(): void {
+    if (anchorPoint === undefined) {
+      return;
+    }
+    const cam = viewer.view.camera;
+    const to = [0, 1, 2].map((k) => cam.position[k]! - anchorPoint![k]!);
+    const up = new Float64Array(3);
+    Ellipsoid.WGS84.geodeticSurfaceNormal(anchorPoint, up);
+    const seen =
+      Math.hypot(to[0]!, to[1]!, to[2]!) < 60_000 &&
+      to[0]! * up[0]! + to[1]! * up[1]! + to[2]! * up[2]! > 0;
+    const px = seen ? viewer.view.toPixel(anchorPoint) : undefined;
+    const anchor = px ? { x: px[0]!, y: px[1]! } : undefined;
+    live.set({ ...live.get(), anchor });
+  }
+
+  // ---------------------------------------------------------- the model
+  function buildModel(): PanelModel {
+    const base = buildPanelModel({
+      params,
+      // Another site's own failures stay on it.
+      loading: loadingFor(loading, params.site),
+      t: morph.t(),
+      morphing: morph.morphing,
+      // What is drawn: the ruler's view sets the ghost aside for a while.
+      ghost: morph.ghost,
+      exaggerate: morph.exaggerate,
+      sites: new Map(
+        [...sites].map(([id, s]): [string, SiteSnapshot] => [
+          id,
+          {
+            entry: s.entry,
+            paired: s.drawings !== undefined,
+            started: s.tiles !== undefined || s.frame !== undefined,
+            drawn: s.tileset !== undefined,
+            ...(s.view && { view: s.view }),
+          },
+        ]),
+      ),
+      ...(samples && { samples }),
+      ...(answers && { anchorStation: answers.anchorStation }),
+      // Fly along starts at the self-check's station, the opening shot's.
+      ...(answers !== undefined && { alongFrom: answers.marker.station }),
+      stations: { start: alignment.startStation, end: alignment.endStation },
+      cursor: cursor.view(),
+      ...(answers && {
+        extents: new Map(
+          Object.entries(answers.sites).map(([id, a]) => [id, a.extent]),
+        ),
+        edgeErrors: new Map(
+          Object.entries(answers.sites).map(([id, a]) => [id, a.displayError]),
+        ),
+      }),
+      flyingAlong: camera.flying && shots.alongStation() !== undefined,
+      evidence: whiskers !== undefined && ring !== undefined,
+    });
+    const user = tool.userEnds();
+    const state = tour?.state();
+    return {
+      ...base,
+      legend: {
+        ...base.legend,
+        ...(rulerView.ribbonShown(view.ribbon) &&
+          ribbon !== undefined && {
+            ribbon: { min: "0 m", max: errorText(ribbon.max) },
+          }),
+      },
+      checks: checksView(answers, tool.shownValues(), user),
+      // The card waits for the answers and the opening shot (story M7).
+      ...(state !== undefined &&
+        answers !== undefined && {
+          tour: tourCard(state, tourFactsOf(answers, corridor)),
+        }),
+      view: {
+        compass: view.compass,
+        ribbon: rulerView.ribbonShown(view.ribbon),
+        ribbonReady:
+          corridor.rigidPlacement !== undefined &&
+          corridor.reprojectedPlacement !== undefined,
+        underground: view.underground,
+        ...(undergroundNote !== undefined && { undergroundNote }),
+      },
+    };
+  }
+
+  // -------------------------------------------------------- the actions
+  function setMode(mode: Placement): void {
+    if (mode === params.mode && morph.heading(mode)) {
+      return;
+    }
+    params = { ...params, mode };
+    setLink(formatParams(params));
+    morph.setMode(mode, reducedMotion());
+    refresh();
+  }
+
+  /** Selects a site: its tiles and frame load; the camera flies to it when `fly`. */
+  function selectSite(id: string, fly: boolean): void {
+    const site = sites.get(id);
+    if (site === undefined) {
+      return;
+    }
+    endRulerView();
+    params = { ...params, site: id };
+    setLink(formatParams(params));
+    siteClock(site.entry);
+    // In the site's daylight at once (again on arrival, shots.ts `flyLit`),
+    // whatever time it was where the camera was.
+    const known = site.tileset?.root.volume.sphere.center;
+    if (fly && known !== undefined) {
+      shots.daylight(known);
+    }
+    // The corridor's openers are drawn on the corridor only.
+    tool.siteChanged();
+    refresh();
+    void loader
+      .loadTiles(site)
+      .then(() => {
+        const t = site.tileset;
+        if (fly && t !== undefined && params.site === id && !disposed) {
+          shots.flyToTileset(t, id === "corridor", answers?.sites[id]);
+        }
+        refresh();
+        return loader.loadFrame(site);
+      })
+      .catch(() => {})
+      .finally(refresh);
+  }
+
+  /** Flies to a framing in its own daylight. */
+  function flyLit(to: Parameters<typeof camera.flyTo>[0]): void {
+    shots.daylight(to.center);
+    camera.flyTo(to, () => shots.daylight(to.center));
+  }
+
+  /**
+   * Shows a tour step (tour.ts `tourTarget`): its site, its placement (the
+   * morph runs, or cuts under reduced motion) and its shot, at true scale.
+   * False while what it shows isn't in yet; the tour tries again.
+   */
+  function applyTour(target: TourTarget): boolean {
+    // Off the pair step, the ghost and the ribbon come back (UX review I2).
+    rulerFollowsTour(target);
+    undergroundFollowsTour(target);
+    if (target.shot === "keep") {
+      return true;
+    }
+    if (
+      answers === undefined ||
+      corridor.rigidPlacement === undefined ||
+      corridor.reprojectedPlacement === undefined
+    ) {
+      return false;
+    }
+    if (
+      (target.shot === "mark" && tool.openerFocus("mark") === undefined) ||
+      (target.shot === "pair" && tool.rulerFocus() === undefined)
+    ) {
+      return false;
+    }
+    if (morph.exaggerate) {
+      morph.exaggerate = false;
+      morph.apply();
+      cursor.update();
+    }
+    if (target.site !== params.site || target.shot === "site") {
+      selectSite(target.site, target.shot === "site");
+    }
+    setMode(target.mode);
+    if (target.shot === "opening") {
+      const f = shots.openingShot(answers);
+      if (f !== undefined) {
+        flyLit(f);
+      }
+    } else if (target.shot === "mark") {
+      measureActions.show("mark");
+    } else if (target.shot === "pair") {
+      // The pair's far end, close in (UX review S10): from its overview
+      // 4 km out the pair is a line and its figures a pixel; here the
+      // ruler's bracket between ground's feet and design's reads.
+      measureActions.closeInOnRuler();
+    } else if (target.shot === "tunnel") {
+      const placement = corridor.reprojectedPlacement!;
+      flyLit(
+        tunnelFraming(
+          alignment,
+          (d) => placement.displayed(d),
+          TOUR_TUNNEL.from,
+          TOUR_TUNNEL.to,
+        ),
+      );
+    }
+    return true;
+  }
+
+  /**
+   * The tour's tunnel step turns "See underground" on, if it was off, and
+   * any other step turns it off again (leaving the tour keeps it, as it
+   * keeps the view); the viewer's own toggle in between makes it theirs.
+   */
+  let undergroundByTour = false;
+  function undergroundFollowsTour(target: TourTarget): void {
+    const tunnel = target.shot === "tunnel";
+    if (tunnel && !view.underground) {
+      actions.setUnderground(true);
+      undergroundByTour = true;
+    } else if (!tunnel && target.shot !== "keep" && undergroundByTour) {
+      undergroundByTour = false;
+      if (view.underground) {
+        actions.setUnderground(false);
+      }
+    }
+  }
+
+  /**
+   * "Close in on the ruler" sets the ghost deck and the ribbon aside, so the
+   * ruler isn't seen through an orange field (rulerView.ts): until the user
+   * takes the camera or sets either, the tour moves off its pair step or is
+   * left, or another site is selected.
+   */
+  const rulerView = createRulerView({
+    ghost: () => morph.ghost,
+    setGhost(on) {
+      morph.ghost = on;
+      morph.apply();
+    },
+    setRibbonHidden(hidden) {
+      if (hidden) {
+        ribbon?.setVisible(false);
+        viewer.engine.requestRender();
+        frames.wake();
+      } else {
+        syncRibbon();
+      }
+    },
+  });
+  function endRulerView(): void {
+    if (rulerView.active) {
+      rulerView.end();
+      refresh();
+    }
+  }
+  /** A tour step is shown, or the tour is left (undefined). */
+  function rulerFollowsTour(target: TourTarget | undefined): void {
+    const was = rulerView.active;
+    rulerView.tourStep(target);
+    if (was && !rulerView.active) {
+      refresh();
+    }
+  }
+
+  const actions: PanelActions = {
+    setMode,
+    setGhost(on) {
+      rulerView.end();
+      morph.ghost = on;
+      morph.apply();
+      syncRibbon();
+      refresh();
+    },
+    setExaggerate(on) {
+      morph.exaggerate = on;
+      morph.apply();
+      cursor.update();
+      // On the corridor's opening view, keep the deck in frame: the shot
+      // pulls back with the drawn gap, and returns when it's off.
+      if (
+        params.site === "corridor" &&
+        answers !== undefined &&
+        !camera.flying
+      ) {
+        const f = shots.openingShot(answers, morph.exaggeration);
+        if (f !== undefined) {
+          camera.flyTo(f);
+        }
+      }
+      refresh();
+    },
+    flyAlong: () => shots.flyAlong(),
+    stopFlight: () => camera.stop(),
+    selectSite: (id) => selectSite(id, true),
+    // Everything that failed, answers included: the corridor, the selected
+    // site, and any site whose tiles failed.
+    retry() {
+      void loader
+        .retry(
+          [...sites.values()].filter(
+            (s) =>
+              s === corridor ||
+              s.entry.id === params.site ||
+              s.tilesFailed === true,
+          ),
+        )
+        .finally(refresh);
+      void fetchAnswers();
+      tool.retry();
+    },
+    link: () => context.link(linkParams),
+    setCompass(on) {
+      view = { ...view, compass: on };
+      setLink(formatView(view));
+      // The compass shows with the next pick; off, it goes now.
+      cursor.cameraMoved();
+      refresh();
+    },
+    setRibbon(on) {
+      rulerView.end();
+      view = { ...view, ribbon: on };
+      setLink(formatView(view));
+      syncRibbon();
+      refresh();
+    },
+    setUnderground(on) {
+      undergroundByTour = false;
+      view = { ...view, underground: on };
+      setLink(formatView(view));
+      syncUndergroundTerrain();
+      refresh();
+    },
+    holdRail: (on) => cursor.holdRail(on),
+    tour: (action) => tour?.go(action),
+    measurePair(id) {
+      const pair = answers?.pairs.find((p) => p.id === id);
+      const a = pair && answers?.points[pair.from];
+      const b = pair && answers?.points[pair.to];
+      if (a === undefined || b === undefined) {
+        return;
+      }
+      const link = pointsLink(a.design, b.design, "corridor");
+      setLink(link);
+      tool.applyLink({ ...linkParams });
+      // Over the pair, where it truly is.
+      const center = a.bodyFixed.map((x, k) => (x + b.bodyFixed[k]!) / 2);
+      const length = Math.hypot(
+        ...a.bodyFixed.map((x, k) => x - b.bodyFixed[k]!),
+      );
+      flyLit({
+        center,
+        heading: -35 * deg,
+        pitch: -40 * deg,
+        range: Math.max(200, length * 1.3),
+      });
+      refresh();
+    },
+  };
+
+  const measureActions: MeasureActions = {
+    setSnap(snap) {
+      params = { ...params, snap };
+      setLink(formatParams(params));
+      tool.snapChanged();
+      refresh();
+    },
+    clear: () => tool.clear(),
+    pointAtCenter: () => tool.pointAtCenter(),
+    retryMeasure: () => tool.retryMeasure(),
+    toCorridor: () => selectSite("corridor", true),
+    closeInOnRuler() {
+      const focus = tool.rulerFocus();
+      if (focus === undefined) {
+        return;
+      }
+      const to = rulerFraming(focus);
+      rulerView.begin();
+      shots.daylight(to.center);
+      camera.flyTo(to, () => shots.daylight(to.center));
+    },
+    show(id) {
+      const focus = tool.openerFocus(id);
+      if (focus === undefined) {
+        return;
+      }
+      const rigid = corridor.rigidPlacement;
+      const reprojected = corridor.reprojectedPlacement;
+      if (id === "mark" && answers && rigid && reprojected) {
+        const near = answers.mark.nearestDesign;
+        flyLit(
+          markGapFraming(
+            answers.mark.bodyFixed,
+            reprojected.displayed(near),
+            rigid.displayed(near),
+          ),
+        );
+        return;
+      }
+      const to = openerFraming(id, focus, answers, alignment);
+      shots.daylight(to.center);
+      camera.flyTo(to, () => shots.daylight(to.center));
+    },
+  };
+
+  // -------------------------------------------------------- deep links
+  scope.defer(
+    context.watchParams((next) => {
+      for (const key of Object.keys(linkParams)) {
+        delete linkParams[key];
+      }
+      Object.assign(linkParams, next);
+      const v = parseView(next);
+      if (v.compass !== view.compass) {
+        actions.setCompass(v.compass);
+      }
+      if (v.ribbon !== view.ribbon) {
+        actions.setRibbon(v.ribbon);
+      }
+      if (v.underground !== view.underground) {
+        actions.setUnderground(v.underground);
+      }
+      tour?.fromLink(next);
+      const p = parseParams(next);
+      // The snap first: the mode and the site write the link with it.
+      if (p.snap !== params.snap) {
+        params = { ...params, snap: p.snap };
+        tool.snapChanged();
+      }
+      if (p.mode !== params.mode) {
+        setMode(p.mode);
+      }
+      if (p.site !== params.site) {
+        actions.selectSite(p.site);
+      }
+      tool.applyLink(next);
+      refresh();
+    }),
+  );
+
+  // The tour (tour.ts): on a bare link from its first step, which is the
+  // page's own opening; at a linked step once that step's data is in.
+  const tour: TourRuntime | undefined = createTour({
+    initial: context.params,
+    setLink,
+    apply: applyTour,
+    left: () => rulerFollowsTour(undefined),
+    changed: () => {
+      liftForTour();
+      refresh();
+    },
+  });
+  /** While the tour's card covers the view's lower middle, shots lift their subject above it. */
+  function liftForTour(): void {
+    camera.lift = tour?.state() !== undefined ? TOUR_LIFT : 0;
+  }
+  liftForTour();
+
+  const store = createStore<PanelModel>(buildModel(), frames);
+  model.store = store;
+  scope.defer(() => store.dispose());
+  const measureStore = createStore<MeasurePanel>(tool.view(), frames);
+  model.measure = measureStore;
+  scope.defer(() => measureStore.dispose());
+  // A deep link's measurement, once its site's placements are in.
+  tool.applyLink(context.params);
+
+  /** The answers (again on Retry); the opening shot once they're in. */
+  let opened = false;
+  async function fetchAnswers(): Promise<void> {
+    try {
+      const a = await loader.loadAnswers();
+      if (disposed || answers === a) {
+        return;
+      }
+      answers = a;
+      for (const site of sites.values()) {
+        buildSiteWhiskers(site);
+      }
+      tool.answersChanged();
+      tour?.flush();
+      // Ladder sites placed before the answers: their story is the answers'.
+      for (const site of sites.values()) {
+        computeFacts(site);
+      }
+      // The opening shot (DESIGN.md "The story"): true scale, near the far
+      // end; once, and not over a view the user has chosen since.
+      // A linked tour step past the first frames its own shot.
+      if (
+        params.site === "corridor" &&
+        !opened &&
+        !userMoved &&
+        (tour?.state()?.step ?? 0) === 0
+      ) {
+        opened = true;
+        const f = shots.openingShot(a);
+        if (f) {
+          camera.cut(f);
+          shots.daylight(f.center);
+          frames.wake();
+        }
+      }
+      refresh();
+    } catch {
+      // Reported as the answers' item (siteLoader.ts), with Retry.
+    }
+  }
+
+  // ------------------------------------------------------------ startup
+  // The corridor first: its tiles draw and morph before PROJ is in.
+  void loader.loadTiles(corridor).catch(() => {});
+  void fetchAnswers();
+  void loader.loadFrame(corridor);
+  if (params.site !== "corridor") {
+    actions.selectSite(params.site);
+  }
+  // Before the answers arrive, frame the corridor from above its middle.
+  {
+    const center = new Float64Array(3);
+    Ellipsoid.WGS84.cartographicToCartesian(
+      { longitude: -122.02 * deg, latitude: 37.76 * deg, height: 200 },
+      center,
+    );
+    viewer.controller.focus(center, 0, -50 * deg, 60_000);
+    // In daylight from the start, even if nothing loads (story M12).
+    shots.daylight(center);
+  }
+
+  return {
+    dispose: () => {
+      disposed = true;
+      camera.stop();
+    },
+    panel: createElement(Panel, {
+      source: store,
+      live,
+      actions,
+      hud,
+      measure: {
+        source: measureStore,
+        live: tool.live,
+        actions: measureActions,
+      },
+    }),
+  };
+}

@@ -1,0 +1,700 @@
+// The frames explorer's overlay geometry (examples/frames-explorer/overlays.ts)
+// over real PROJ-backed engineering frames. `npm run test:data` runs it; the
+// pure cases are in test/framesExplorerOverlays.test.ts.
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { beforeAll, describe, expect, it } from "vitest";
+import { framesDataDirectory } from "../../scripts/frameData.mjs";
+import {
+  designGrid,
+  distortion,
+  rigidSeparation,
+  rigidVsExact,
+  triad,
+  trueNorthLines,
+} from "../../examples/frames-explorer/overlays.ts";
+import { defaultCreateFrame } from "../../examples/frames-explorer/host.ts";
+import { gapParts } from "../../examples/frames-explorer/inset.ts";
+import {
+  RIGID_FRAME,
+  RIGID_LINE,
+  rigidCopy,
+} from "../../examples/frames-explorer/rigidLine.ts";
+import { radii } from "../../examples/frames-explorer/stress/references.ts";
+import {
+  listOperations,
+  type CrsRef,
+} from "../../packages/next/src/engineering/crs.ts";
+import {
+  EngineeringFrame,
+  RigidPlacement,
+} from "../../packages/next/src/engineering/EngineeringFrame.ts";
+import { gridFactors } from "../../packages/next/src/engineering/factors.ts";
+import {
+  loadProj,
+  type ProjApi,
+} from "../../packages/next/src/engineering/proj.ts";
+import { Ephemeris } from "../../packages/next/src/ephemeris/Ephemeris.ts";
+import { createFrames } from "../../packages/next/src/frames/frames.ts";
+import { EARTH } from "../../packages/next/src/scene/Body.ts";
+import { EarthOrientationParameters } from "../../packages/next/src/time/eop.ts";
+import { Instant } from "../../packages/next/src/time/Instant.ts";
+import { LeapSeconds } from "../../packages/next/src/time/leapSeconds.ts";
+
+const base = `${join(framesDataDirectory(), "proj")}/`;
+/** The grids this file's PROJ loads: Node, like the browser, loads none unless named (Task 21). */
+const GRIDS = ["us_noaa_g2018u0.tif"];
+let proj: ProjApi;
+beforeAll(async () => {
+  proj = await loadProj({ base, grids: GRIDS });
+});
+
+const epsg = (wkid: number): CrsRef => ({
+  format: "wkid",
+  authority: "EPSG",
+  wkid,
+});
+const frameOf = (wkid: number, site?: EngineeringFrame["definition"]["site"]) =>
+  EngineeringFrame.create(
+    {
+      name: `EPSG:${wkid}`,
+      body: EARTH,
+      crs: epsg(wkid),
+      ...(site && { site }),
+    },
+    proj,
+  );
+const vertex = (g: { positions: Float64Array }, i: number) =>
+  Array.from(g.positions.subarray(3 * i, 3 * i + 3));
+const sub = (a: number[], b: number[]) => a.map((x, i) => x - b[i]!);
+const norm = (a: number[]) => Math.hypot(...a);
+/** The angle between two vectors, radians. */
+const angle = (a: number[], b: number[]) => {
+  const cross = [
+    a[1]! * b[2]! - a[2]! * b[1]!,
+    a[2]! * b[0]! - a[0]! * b[2]!,
+    a[0]! * b[1]! - a[1]! * b[0]!,
+  ];
+  return Math.atan2(norm(cross), a[0]! * b[0]! + a[1]! * b[1]! + a[2]! * b[2]!);
+};
+
+describe("designGrid and trueNorthLines on UTM zone 10N", () => {
+  const frame = () => frameOf(32610);
+  // 200 km east of the central meridian, near 37 degrees north.
+  const extent = {
+    min: [700_000, 4_100_000] as [number, number],
+    max: [703_000, 4_103_000] as [number, number],
+  };
+
+  it("every designGrid vertex is toBodyFixed of its E and N, to 1e-9 m", () => {
+    const f = frame();
+    const g = designGrid(f, extent, 1000, 500);
+    // 4 E lines and 4 N lines of 6 segments each, as pairs.
+    expect(g.positions.length / 3).toBe(2 * 8 * 6);
+    // The first E line: E = 700000, N 4100000 to 4103000 in 500 m steps.
+    for (let s = 0; s < 6; s++) {
+      for (const [v, n] of [
+        [2 * s, 4_100_000 + 500 * s],
+        [2 * s + 1, 4_100_000 + 500 * (s + 1)],
+      ] as const) {
+        const want = f.toBodyFixed([700_000, n, 0]);
+        const got = vertex(g, v);
+        for (let c = 0; c < 3; c++) {
+          expect(Math.abs(got[c]! - want[c]!)).toBeLessThan(1e-9);
+        }
+      }
+    }
+  });
+
+  it("every trueNorthLines vertex has its line's longitude to 1e-12 rad", () => {
+    const f = frame();
+    const g = trueNorthLines(f, extent, 1000, 500);
+    expect(g.positions.length / 3).toBe(2 * 4 * 6);
+    for (let i = 0; i < g.positions.length / 3; i++) {
+      const line = Math.floor(i / 12);
+      const want = f.toGeodetic([
+        700_000 + 1000 * line,
+        4_100_000,
+        0,
+      ]).longitude;
+      const [x, y] = vertex(g, i);
+      expect(Math.abs(Math.atan2(y!, x!) - want)).toBeLessThan(1e-12);
+    }
+  });
+
+  it("the grid line leans from the meridian by the grid convergence, to 1e-5 rad", () => {
+    const f = frame();
+    const grid = designGrid(f, extent, 3000, 1000);
+    const north = trueNorthLines(f, extent, 3000, 1000);
+    // Both start at (700000, 4100000) and head north: segment 0 of each.
+    const gridDirection = sub(vertex(grid, 1), vertex(grid, 0));
+    const trueDirection = sub(vertex(north, 1), vertex(north, 0));
+    expect(norm(sub(vertex(grid, 0), vertex(north, 0)))).toBeLessThan(1e-6);
+    const gamma = gridFactors(f, [700_000, 4_100_000, 0]).convergence;
+    expect(Math.abs(gamma)).toBeGreaterThan(0.01);
+    expect(
+      Math.abs(angle(gridDirection, trueDirection) - Math.abs(gamma)),
+    ).toBeLessThan(1e-5);
+  });
+});
+
+describe("rigidVsExact", () => {
+  // A ground-scaled site grid at 37 N, 123 W, as the stress catalog's rigid
+  // placement budget builds it.
+  function site() {
+    const plain = frameOf(32610);
+    const origin = plain.fromBodyFixed(
+      EARTH.ellipsoid.cartographicToCartesian(
+        {
+          longitude: (-123 * Math.PI) / 180,
+          latitude: (37 * Math.PI) / 180,
+          height: 0,
+        },
+        new Float64Array(3),
+      ),
+    );
+    const scale = gridFactors(plain, origin).combinedFactor;
+    return frameOf(32610, {
+      origin: [origin[0]!, origin[1]!, 0],
+      rotation: 0,
+      scale,
+    });
+  }
+
+  it("a 10 km line sags 6.3 to 9.3 m (plan 4a's 7.8 m +- 1.5)", () => {
+    const f = site();
+    const { sagAtEnd } = rigidVsExact(f, [0, 0], [10_000, 0], 20);
+    expect(sagAtEnd).toBeGreaterThan(6.3);
+    expect(sagAtEnd).toBeLessThan(9.3);
+  });
+
+  it("the polylines coincide at `from` and exact[i] is toBodyFixed", () => {
+    const f = site();
+    const samples = 20;
+    const r = rigidVsExact(f, [0, 0], [10_000, 0], samples);
+    expect(r.exact).toHaveLength(3 * (samples + 1));
+    expect(r.rigid).toHaveLength(3 * (samples + 1));
+    expect(
+      norm(
+        sub(
+          Array.from(r.exact.subarray(0, 3)),
+          Array.from(r.rigid.subarray(0, 3)),
+        ),
+      ),
+    ).toBeLessThan(1e-6);
+    for (let i = 0; i <= samples; i++) {
+      const want = f.toBodyFixed([(10_000 * i) / samples, 0, 0]);
+      for (let c = 0; c < 3; c++) {
+        expect(Math.abs(r.exact[3 * i + c]! - want[c]!)).toBeLessThan(1e-9);
+      }
+    }
+    // The rigid line is the other one: it ends where RigidPlacement puts `to`.
+    const rigid = RigidPlacement.at(f, [0, 0, 0]).toBodyFixed([10_000, 0, 0]);
+    for (let c = 0; c < 3; c++) {
+      expect(Math.abs(r.rigid[3 * samples + c]! - rigid[c]!)).toBeLessThan(
+        1e-9,
+      );
+    }
+    // And they differ at the end by sagAtEnd.
+    expect(
+      norm(
+        sub(
+          Array.from(r.exact.subarray(3 * samples)),
+          Array.from(r.rigid.subarray(3 * samples)),
+        ),
+      ),
+    ).toBeCloseTo(r.sagAtEnd, 9);
+  });
+
+  it("agrees with the stress catalog's rigid placement budget on the same frame (ruling F1)", () => {
+    const f = site();
+    // The budget's own separation, written out: the distance between the rigid
+    // and the exact placement of the point x east of the origin.
+    const rigid = RigidPlacement.at(f, [0, 0, 0]);
+    for (const x of [100, 1000, 10_000, 20_000]) {
+      const a = rigid.toBodyFixed([x, 0, 0]);
+      const b = f.toBodyFixed([x, 0, 0]);
+      const budget = Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!, a[2]! - b[2]!);
+      expect(rigidSeparation(rigid, f, [x, 0, 0])).toBe(budget);
+      expect(rigidVsExact(f, [0, 0], [x, 0], 4).sagAtEnd).toBe(budget);
+    }
+  });
+
+  it("has no exaggeration: the rigid line is drawn where RigidPlacement puts it (true scale)", () => {
+    const f = site();
+    const r = rigidVsExact(f, [0, 0], [20_000, 0], 10);
+    const placement = RigidPlacement.at(f, [0, 0, 0]);
+    for (let i = 0; i <= 10; i++) {
+      const want = placement.toBodyFixed([2000 * i, 0, 0]);
+      for (let c = 0; c < 3; c++) {
+        expect(Math.abs(r.rigid[3 * i + c]! - want[c]!)).toBeLessThan(1e-9);
+      }
+    }
+  });
+
+  it("rejects a sample count that is not a whole number of segments", () => {
+    expect(() => rigidVsExact(site(), [0, 0], [1, 0], 0)).toThrow(/samples/);
+    expect(() => rigidVsExact(site(), [0, 0], [1, 0], 2.5)).toThrow(/samples/);
+  });
+});
+
+describe("stop 4's long line (rigidLine.ts): 400 km east in California zone 3", () => {
+  // The design frame and start the page draws: EPSG:6420, from the catalog's
+  // California site origin, 400 km east along grid east.
+  const california = () => frameOf(6420);
+  const line = () =>
+    rigidVsExact(
+      california(),
+      RIGID_LINE.from,
+      RIGID_LINE.to,
+      RIGID_LINE.samples,
+      { ticks: RIGID_LINE.ticks, marks: [RIGID_LINE.markDesign] },
+    );
+  const point = (a: Float64Array, i: number) =>
+    Array.from(a.subarray(3 * i, 3 * i + 3));
+
+  it("places the line with the transform the page uses: not a ballpark, every point inside its area of use and the CRS's", () => {
+    // The frame the worker builds from the page's parameters (host.ts).
+    const f = defaultCreateFrame(RIGID_FRAME, proj);
+    expect(f.definition.crs).toEqual(epsg(6420));
+    expect(f.operation.ballpark).toBe(false);
+    expect(f.operation.accuracy).toBe(2);
+    // The recorded operation among PROJ's candidates, with its area of use.
+    const candidate = listOperations(proj, f.definition.crs, epsg(4979)).find(
+      (c) => c.pipeline === f.operation.pipeline,
+    );
+    expect(candidate?.ballpark).toBe(false);
+    const operationArea = candidate!.areaOfUse!;
+    const [west, south, east, north] = proj.proj_get_area_of_use(
+      proj.proj_create("EPSG:6420"),
+    )!;
+    // California zone 3: 36.73 N to 38.71 N, 123.02 W to 117.83 W.
+    expect([west, south, east, north]).toEqual([
+      -123.02, 36.73, -117.83, 38.71,
+    ]);
+    const inside = (
+      lon: number,
+      lat: number,
+      a: { west: number; south: number; east: number; north: number },
+    ) =>
+      lat >= a.south &&
+      lat <= a.north &&
+      (a.west <= a.east
+        ? lon >= a.west && lon <= a.east
+        : lon >= a.west || lon <= a.east);
+    const { exact } = rigidVsExact(
+      f,
+      RIGID_LINE.from,
+      RIGID_LINE.to,
+      RIGID_LINE.samples,
+    );
+    let lowest = 90;
+    let highest = -90;
+    for (let i = 0; i < exact.length / 3; i++) {
+      const g = f.body.ellipsoid.cartesianToCartographic(
+        exact.subarray(3 * i, 3 * i + 3),
+        { longitude: 0, latitude: 0, height: 0 },
+      )!;
+      const lon = (g.longitude * 180) / Math.PI;
+      const lat = (g.latitude * 180) / Math.PI;
+      lowest = Math.min(lowest, lat);
+      highest = Math.max(highest, lat);
+      expect(inside(lon, lat, { west, south, east, north })).toBe(true);
+      expect(inside(lon, lat, operationArea)).toBe(true);
+    }
+    // The line runs east along grid east: its latitude stays near 37.7 N,
+    // clear of the zone's edges.
+    expect(lowest).toBeGreaterThan(south + 0.5);
+    expect(highest).toBeLessThan(north - 0.5);
+  });
+
+  it("draws the rigid polyline straight: every point on the chord to 1e-6 m", () => {
+    const { rigid } = line();
+    const n = rigid.length / 3;
+    expect(n).toBe(RIGID_LINE.samples + 1);
+    const a = point(rigid, 0);
+    const b = point(rigid, n - 1);
+    const ab = sub(b, a);
+    const length = norm(ab);
+    expect(length).toBeGreaterThan(399_000);
+    for (let i = 1; i < n - 1; i++) {
+      // The distance from the chord: |ap × ab| / |ab|.
+      const ap = sub(point(rigid, i), a);
+      const off =
+        norm([
+          ap[1]! * ab[2]! - ap[2]! * ab[1]!,
+          ap[2]! * ab[0]! - ap[0]! * ab[2]!,
+          ap[0]! * ab[1]! - ap[1]! * ab[0]!,
+        ]) / length;
+      expect(off).toBeLessThan(1e-6);
+    }
+  });
+
+  it("the exact line sags from it by d²/2R at 400 km (R the Gaussian radius), within 1%", () => {
+    const f = california();
+    const { sagAtEnd } = line();
+    const start = f.toGeodetic([RIGID_LINE.from[0], RIGID_LINE.from[1], 0]);
+    const [a, , b] = EARTH.ellipsoid.radii;
+    const R = radii(
+      a!,
+      1 - (b! / a!) ** 2,
+      (start.latitude * 180) / Math.PI,
+    ).gaussian;
+    const d = RIGID_LINE.lengthM;
+    const formula = (d * d) / (2 * R);
+    expect(formula).toBeGreaterThan(12_000);
+    // They agree to about 0.3%: the formula is the sphere's.
+    expect(Math.abs(sagAtEnd / formula - 1)).toBeLessThanOrEqual(0.01);
+  });
+
+  it("the exact line is sampled every kilometer: each chord within 2 cm of the ellipsoid", () => {
+    const { exact } = line();
+    const f = california();
+    for (const i of [0, 100, 399]) {
+      const a = point(exact, i);
+      const b = point(exact, i + 1);
+      expect(norm(sub(b, a))).toBeLessThan(1001);
+      const mid = a.map((v, c) => (v + b[c]!) / 2);
+      const h = f.body.ellipsoid.cartesianToCartographic(
+        Float64Array.from(mid),
+        {
+          longitude: 0,
+          latitude: 0,
+          height: 0,
+        },
+      )!.height;
+      expect(h).toBeLessThan(0);
+      expect(h).toBeGreaterThan(-0.02);
+    }
+  });
+
+  it("the 20 km mark is 31.4 m, the catalog's figure, and the gap at that design point", () => {
+    const f = california();
+    const { marks } = line();
+    expect(marks).toHaveLength(1);
+    const m = marks[0]!;
+    const design = [
+      RIGID_LINE.from[0] + RIGID_LINE.markDesign,
+      RIGID_LINE.from[1],
+      0,
+    ];
+    expect(m.separation).toBe(
+      rigidSeparation(RigidPlacement.at(f, [...RIGID_LINE.from, 0]), f, design),
+    );
+    expect(norm(sub(Array.from(m.rigid), Array.from(m.exact)))).toBeCloseTo(
+      m.separation,
+      9,
+    );
+    // The catalog's rigid placement budget holds the extent to √(2Rε) within
+    // 10%; the inset's figure is 31.4 m within the same 10%, and reads so.
+    expect(Math.abs(m.separation / 31.4 - 1)).toBeLessThanOrEqual(0.1);
+    expect(m.separation.toFixed(1)).toBe("31.4");
+  });
+
+  it("splits the 20 km gap into its drop and a part along the line from the grid's scale factor", () => {
+    const f = california();
+    const { rigid, marks } = line();
+    const m = marks[0]!;
+    const n = rigid.length / 3;
+    const along = sub(point(rigid, n - 1), point(rigid, 0));
+    const parts = gapParts(m.exact, m.rigid, along, f.body.ellipsoid);
+    expect(parts.apart).toBeCloseTo(m.separation, 9);
+    expect(Math.abs(parts.across)).toBeLessThan(0.01);
+    expect(parts.drop.toFixed(2)).toBe("31.32");
+    expect(parts.along.toFixed(2)).toBe("-1.48");
+    // In quadrature, not by addition.
+    expect(Math.hypot(parts.drop, parts.along, parts.across)).toBeCloseTo(
+      m.separation,
+      9,
+    );
+    // The part along: the exact line covers 20 km of grid as 20 km / k of
+    // ground (k under 1 between the standard parallels), the rigid line 20
+    // km; with the normal's turn over 20 km (31 m × 20/6371 rad) and the
+    // arc against its chord, about 0.1 m, on top.
+    let ground = 0;
+    const steps = 20;
+    for (let i = 0; i < steps; i++) {
+      const k = gridFactors(f, [
+        RIGID_LINE.from[0] + (RIGID_LINE.markDesign * (i + 0.5)) / steps,
+        RIGID_LINE.from[1],
+        0,
+      ]).pointScale;
+      ground += RIGID_LINE.markM / steps / k;
+    }
+    const scale = ground - RIGID_LINE.markM;
+    expect(scale).toBeGreaterThan(1.2);
+    expect(Math.abs(-parts.along - scale)).toBeLessThan(0.15);
+    // The page's words for them.
+    const copy = rigidCopy({
+      sagEnd: line().sagAtEnd,
+      gapAtMark: m.separation,
+      markDrop: parts.drop,
+      markAlong: parts.along,
+    });
+    expect(copy.inset.description).toBe(
+      "31.4 m apart: 31.32 m down and 1.48 m along the line, at right angles (grid scale)",
+    );
+  });
+
+  it("puts a gap tick every 50 km, from the exact line up to the rigid one", () => {
+    const f = california();
+    const { ticks } = line();
+    const placement = RigidPlacement.at(f, [...RIGID_LINE.from, 0]);
+    expect(ticks.length / 6).toBe(RIGID_LINE.ticks - 1);
+    let last = 0;
+    for (let k = 0; k < RIGID_LINE.ticks - 1; k++) {
+      const design = [
+        RIGID_LINE.from[0] +
+          ((RIGID_LINE.to[0] - RIGID_LINE.from[0]) * (k + 1)) /
+            RIGID_LINE.ticks,
+        RIGID_LINE.from[1],
+        0,
+      ];
+      const e = f.toBodyFixed(design);
+      const r = placement.toBodyFixed(design);
+      for (let c = 0; c < 3; c++) {
+        expect(Math.abs(ticks[6 * k + c]! - e[c]!)).toBeLessThan(1e-9);
+        expect(Math.abs(ticks[6 * k + 3 + c]! - r[c]!)).toBeLessThan(1e-9);
+      }
+      // The gap grows as distance squared: each tick longer than the last.
+      const gap = norm(sub(Array.from(r), Array.from(e)));
+      expect(gap).toBeGreaterThan(last);
+      last = gap;
+    }
+  });
+});
+
+describe("distortion", () => {
+  const WGS84_F = 1 / 298.257223563;
+  const E2 = WGS84_F * (2 - WGS84_F);
+  const RADIUS = 1000;
+
+  it("EPSG:3857 at 60 degrees: the parallel axis is sqrt(1 - e2 sin2 phi) / cos phi times the radius, to 1e-9", () => {
+    const f = frameOf(3857);
+    // Pseudo-Mercator's northing at 60 degrees: a ln tan(45 + 30 degrees).
+    const a = 6378137;
+    const n60 = a * Math.log(Math.tan(Math.PI / 4 + Math.PI / 6));
+    const d = distortion(f, { min: [0, n60], max: [0, n60] }, 1000, {
+      height: 0,
+      contoursPpm: [],
+      tissotRadius: RADIUS,
+    });
+    const center = Array.from(f.toBodyFixed([0, n60, 0]));
+    const sinPhi = Math.sin(Math.PI / 3);
+    const w = 1 - E2 * sinPhi * sinPhi;
+    const parallel = Math.sqrt(w) / Math.cos(Math.PI / 3);
+    // Vertex 0 of the first ellipse (its first segment's start) is the
+    // parallel axis's end.
+    const axis = norm(sub(vertex(d.tissot, 0), center));
+    expect(Math.abs(axis / (RADIUS * parallel) - 1)).toBeLessThan(1e-9);
+    // The meridian axis (a quarter of the way round: vertex 8 of 32), against
+    // the hand formula h = w^(3/2) / ((1 - e2) cos phi) for the same map.
+    const meridian = norm(sub(vertex(d.tissot, 2 * 8), center));
+    const h = w ** 1.5 / ((1 - E2) * Math.cos(Math.PI / 3));
+    expect(Math.abs(meridian / (RADIUS * h) - 1)).toBeLessThan(1e-9);
+    // Pseudo-Mercator is not conformal on the ellipsoid: h differs from k.
+    expect(Math.abs(h / parallel - 1)).toBeGreaterThan(1e-3);
+  });
+
+  it("UTM zone 31N (conformal): h = k to 1e-10 and the axes are at right angles to 1e-10 rad (ruling F15)", () => {
+    const f = frameOf(32631);
+    const d = distortion(
+      f,
+      { min: [400_000, 4_900_000], max: [650_000, 5_100_000] },
+      50_000,
+      { height: 0, contoursPpm: [], tissotRadius: RADIUS },
+    );
+    // 6 x 5 nodes, one ellipse of 32 segments (64 vertices) each.
+    expect(d.tissot.positions.length / 3).toBe(30 * 64);
+    let worstRatio = 0;
+    let worstAngle = 0;
+    for (let node = 0; node < 30; node++) {
+      const i = node * 64;
+      // The ellipse's center: the mean of the opposite vertices 0 and 16.
+      const p0 = vertex(d.tissot, i);
+      const p16 = vertex(d.tissot, i + 2 * 16);
+      const center = p0.map((x, c) => (x + p16[c]!) / 2);
+      const k = norm(sub(p0, center));
+      const pm = vertex(d.tissot, i + 2 * 8);
+      const hVec = sub(pm, center);
+      worstRatio = Math.max(worstRatio, Math.abs(norm(hVec) / k - 1));
+      worstAngle = Math.max(
+        worstAngle,
+        Math.abs(angle(sub(p0, center), hVec) - Math.PI / 2),
+      );
+      expect(Math.abs(k / RADIUS - 1)).toBeLessThan(5e-3);
+    }
+    expect(worstRatio).toBeLessThan(1e-10);
+    expect(worstAngle).toBeLessThan(1e-10);
+  });
+
+  it("contours the combined factor: UTM 10N's 0 ppm lines are where k x elevation = 1, about 180 km from the central meridian", () => {
+    const f = frameOf(32610);
+    const d = distortion(
+      f,
+      { min: [250_000, 4_100_000], max: [750_000, 4_200_000] },
+      10_000,
+      { height: 0, contoursPpm: [-200, 0, 200], tissotRadius: 100 },
+    );
+    expect(d.contours.positions.length).toBeGreaterThan(0);
+    // The hand formula: k = k0 (1 + x^2 / (2 R^2)) with x the ground distance
+    // from the central meridian, so k = 1 at x = R sqrt(2 (1 / k0 - 1)), and
+    // the grid distance is k0 x. R is the Gaussian radius, 6.37e6 m at 37 N.
+    const k0 = 0.9996;
+    const R = 6.37e6;
+    const expected = k0 * R * Math.sqrt(2 * (1 / k0 - 1));
+    // The 0 ppm contour's vertices are the segments with the 0 ppm color:
+    // every vertex is at design E = 500000 +- expected, to a km or two.
+    const zeroColor = [255, 255, 255, 255];
+    let seen = 0;
+    for (let v = 0; v < d.contours.positions.length / 3; v++) {
+      const c = Array.from(d.contours.colors.subarray(4 * v, 4 * v + 4));
+      if (String(c) !== String(zeroColor)) {
+        continue;
+      }
+      const design = f.fromBodyFixed(vertex(d.contours, v));
+      expect(Math.abs(Math.abs(design[0]! - 500_000) - expected)).toBeLessThan(
+        1500,
+      );
+      seen++;
+    }
+    expect(seen).toBeGreaterThan(10);
+    // The central meridian is at k0 = -400 ppm: no -200 contour crosses it.
+    for (let v = 0; v < d.contours.positions.length / 3; v++) {
+      const design = f.fromBodyFixed(vertex(d.contours, v));
+      expect(Math.abs(design[0]! - 500_000)).toBeGreaterThan(50_000);
+    }
+    // Labels carry the ppm of the levels that drew something.
+    expect(d.skipped).toBe(0);
+    expect(d.labels.positions.length).toBe(3 * d.labels.ppm.length);
+    expect(new Set(d.labels.ppm)).toEqual(new Set([-200, 0, 200]));
+  });
+
+  it("returns typed arrays a worker can transfer", () => {
+    const f = frameOf(32610);
+    const d = distortion(
+      f,
+      { min: [400_000, 4_000_000], max: [450_000, 4_050_000] },
+      25_000,
+      {
+        height: 0,
+        tissotRadius: 100,
+      },
+    );
+    for (const buffer of [
+      d.tissot.positions,
+      d.tissot.colors,
+      d.contours.positions,
+      d.contours.colors,
+      d.labels.positions,
+      d.labels.ppm,
+    ]) {
+      expect(buffer.buffer).toBeInstanceOf(ArrayBuffer);
+    }
+  });
+});
+
+describe("triad against the real frames, a physical check", () => {
+  const dir = framesDataDirectory();
+  const bytes = (file: string): ArrayBuffer => {
+    const b = readFileSync(join(dir, file));
+    return b.buffer.slice(
+      b.byteOffset,
+      b.byteOffset + b.byteLength,
+    ) as ArrayBuffer;
+  };
+  const leapSeconds = LeapSeconds.builtIn();
+  const frames = createFrames({
+    leapSeconds,
+    eop: EarthOrientationParameters.fromCelestrakCsv(
+      readFileSync(join(dir, "EOP-All.csv"), "utf8"),
+    ),
+    ephemeris: Ephemeris.fromPacks(
+      bytes("planets-de440-2000-2050.pack"),
+      bytes("moon-pa-de440-2000-2050.pack"),
+    ),
+    warnings: [],
+  });
+
+  it("GCRF's z axis lands within 0.5 degrees of ITRF's z axis in 2026 (the pole has moved about 0.15 degrees since J2000)", () => {
+    const instant = Instant.fromUtc(Date.UTC(2026, 5, 1, 12), leapSeconds);
+    const L = 1000;
+    const g = triad(frames, frames.gcrf, instant, L);
+    const tip = vertex(g, 5);
+    const z = sub(tip, vertex(g, 4)).map((x) => x / L);
+    // Precession (about 20 arcsec a year) plus nutation and polar motion.
+    const degrees = (angle(z, [0, 0, 1]) * 180) / Math.PI;
+    expect(degrees).toBeLessThan(0.5);
+    expect(degrees).toBeGreaterThan(0.05);
+    // x and y lie near the equatorial plane, rotated by the Earth's spin
+    // (any angle), so their z components are small.
+    for (const axis of [1, 3]) {
+      const v = sub(vertex(g, axis), vertex(g, axis - 1));
+      expect(Math.abs(v[2]! / L)).toBeLessThan(0.01);
+    }
+  });
+});
+
+describe("distortion skips only nodes PROJ has no scale at", () => {
+  const options = { height: 0, contoursPpm: [], tissotRadius: 1000 };
+
+  it("EPSG:3857 nodes at the pole (gridFactors throws there) are counted, and only the other nodes get an ellipse", () => {
+    const f = frameOf(3857);
+    // Northings of 0, 5e8 and 1e9 m: the last two are the pole to float64.
+    const d = distortion(f, { min: [0, 0], max: [0, 1e9] }, 5e8, options);
+    expect(d.skipped).toBeGreaterThan(0);
+    expect(d.skipped).toBeLessThan(3);
+    expect(d.tissot.positions.length / 3).toBe((3 - d.skipped) * 64);
+    // The surviving node is the equator one, with a unit-sized ellipse.
+    const first = vertex(d.tissot, 0);
+    const center = Array.from(f.toBodyFixed([0, 0, 0]));
+    expect(norm(sub(first, center))).toBeCloseTo(1000, 3);
+  });
+
+  // A frame whose first step throws the given RangeError at one node.
+  const throwing = (message: string, northing: number) => {
+    const f = frameOf(32610);
+    return Object.create(f, {
+      projected: {
+        value: (design: ArrayLike<number>) => {
+          if (design[1] === northing) {
+            throw new RangeError(message);
+          }
+          return f.projected(design);
+        },
+      },
+    }) as EngineeringFrame;
+  };
+  const extent = { min: [500_000, 4_000_000], max: [500_000, 4_200_000] } as {
+    min: [number, number];
+    max: [number, number];
+  };
+
+  it("each of the three gridFactors messages skips its node", () => {
+    for (const message of [
+      "gridFactors: (1, 2) is outside the projection's domain",
+      "gridFactors: (1, 2) is at a pole, where X's scales are not defined",
+      "gridFactors: PROJ has no scale factor at (1, 2): a singular point of the projection",
+    ]) {
+      const d = distortion(
+        throwing(message, 4_100_000),
+        extent,
+        100_000,
+        options,
+      );
+      expect(d.skipped).toBe(1);
+      expect(d.tissot.positions.length / 3).toBe(2 * 64);
+    }
+  });
+
+  it("a RangeError with any other message is rethrown, not counted", () => {
+    expect(() =>
+      distortion(
+        throwing("something else went wrong", 4_100_000),
+        extent,
+        100_000,
+        options,
+      ),
+    ).toThrow(/something else went wrong/);
+  });
+});

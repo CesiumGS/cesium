@@ -1,0 +1,435 @@
+import {
+  BingImagery,
+  Ellipsoid,
+  Engine,
+  fromDegrees,
+  GlobeStepwiseSelection,
+  OffscreenTarget,
+  resolveIonAsset,
+  type Tileset3D,
+  UNITLESS_EXPOSURE,
+  UNITLESS_SKY,
+  UNITLESS_SUN_ILLUMINANCE,
+} from "../packages/next/src/index.ts";
+import { imageryLevel } from "../packages/next/src/globe/GlobeImagery.ts";
+import { flip } from "./flip.ts";
+import type { Harness } from "../lab/harness.ts";
+import { compareImages } from "./metrics.ts";
+import "./imagery.css";
+import { requireToken } from "../bench/suite/ionToken.ts";
+
+// CesiumJS 1.x, loaded from the repo build as a global (see imagery.html).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped global
+declare const Cesium: any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- untyped 1.x objects
+type Json = any;
+
+const TEMPLATE = `
+<h1>Globe imagery parity (L2): 1.x vs 2.0, Cesium World Terrain with Bing</h1>
+<p>
+  The same cameras rendered by each engine after loading settles. Terrain
+  selection is identical (globe Stepwise), fog and atmosphere are off in
+  both, so the difference is imagery: level choice, compositing, filtering
+  and color. 2.0 may look better; FLIP records how far and where. The
+  Amsterdam rows run 2.0's budgeted selection instead, where the terrain
+  data ends at level 13 and 1.x upsamples it: they also compare the imagery
+  level at the view's center (within 1 of 1.x's).
+  <code>?only=</code> runs one camera.
+</p>
+<div class="status">Run to render each camera in both engines.</div>
+<div class="imagery">
+  <table data-id="results"></table>
+  <div class="captures" data-id="images"></div>
+  <div class="offscreen" data-id="legacy"></div>
+  <div data-id="credits" hidden></div>
+</div>`;
+
+/** Where the page is mounted, and its options (harness `mount`). */
+let root: HTMLElement;
+let params = new URLSearchParams();
+const $ = <T extends Element = HTMLElement>(id: string) =>
+  root.querySelector<T>(`[data-id="${id}"]`)!;
+
+/**
+ * L2 globe imagery parity (docs/history/m3-progress.md): Cesium World Terrain with the ion
+ * default imagery (Bing Maps Aerial), rendered by 1.x and by 2.0 for the
+ * same cameras after loading settles. Terrain selection is identical in
+ * both (globe `Stepwise`, 100% L1), and fog and atmosphere are off in
+ * both, so the difference is imagery: level choice, compositing,
+ * filtering and color. 2.0 is allowed to look better; this records by how
+ * much and where (docs/imagery-1x-spec.md §7).
+ *
+ * The Amsterdam cameras run globe `Budgeted` (`policy: "budgeted"`): Cesium
+ * World Terrain has no data below level 13 over the polders, 1.x upsamples
+ * the terrain there so the imagery keeps refining, and 2.0's imagery
+ * stopped at Bing's level 13 (about 12 m a texel) at every range (engine
+ * bug 1). Their rows compare the imagery level of the tile at the view's
+ * center with 1.x's, which must be within 1.
+ */
+
+const WIDTH = 640;
+const HEIGHT = 360;
+const deg = Math.PI / 180;
+
+interface Camera {
+  label: string;
+  at: number[];
+  heading: number;
+  pitch: number;
+  range: number;
+  /** Default "stepwise", as 1.x selects terrain. */
+  policy?: "budgeted";
+}
+
+const CAMERAS: Camera[] = [
+  {
+    label: "Rainier oblique",
+    at: [-121.76, 46.85, 2000],
+    heading: 30,
+    pitch: -25,
+    range: 15000,
+  },
+  {
+    label: "San Francisco top-down",
+    at: [-122.42, 37.78, 0],
+    heading: 0,
+    pitch: -89,
+    range: 6000,
+  },
+  {
+    label: "Matterhorn",
+    at: [7.66, 45.98, 3000],
+    heading: 120,
+    pitch: -20,
+    range: 9000,
+  },
+  {
+    label: "Alps regional",
+    at: [9.0, 46.3, 1500],
+    heading: 0,
+    pitch: -55,
+    range: 150000,
+  },
+  // The viewer's framing for ?at=-121.76,46.80,9000 (over the ellipsoid).
+  {
+    label: "Rainier viewer framing",
+    at: [-121.76, 46.8, 0],
+    heading: 35,
+    pitch: -30,
+    range: 9000,
+  },
+  // Terrain data ends at level 13 here. Budgeted selection, and the
+  // imagery level at the center is compared.
+  ...[3000, 1000, 300].map((range) => ({
+    label: `Amsterdam ${range} m (budgeted)`,
+    at: [4.9, 52.37, 0],
+    heading: 0,
+    pitch: -45,
+    range,
+    policy: "budgeted" as const,
+  })),
+];
+
+/** The imagery level of the center's tile may differ from 1.x's by this. */
+const LEVEL_TOLERANCE = 1;
+/**
+ * FLIP limits for the budgeted rows. Their first run gave a mean of 0.033
+ * to 0.037 and a 95th percentile of 0.083 to 0.085; the stepwise rows
+ * reach 0.047 and 0.11, so the limits sit at those.
+ */
+const BUDGETED_FLIP_MEAN = 0.05;
+const BUDGETED_FLIP_P95 = 0.11;
+
+interface Row {
+  view: string;
+  status: string;
+  flipMean?: number;
+  flipP95?: number;
+  meanDeltaE?: number;
+  noticeable?: number;
+  /** The imagery level at the view's center: 2.0's, and 1.x's. */
+  level?: number;
+  level1x?: number;
+}
+
+async function settle(step: () => boolean, maxMs = 120000): Promise<void> {
+  const deadline = performance.now() + maxMs;
+  let stable = 0;
+  while (stable < 8) {
+    stable = step() ? stable + 1 : 0;
+    if (performance.now() > deadline) {
+      throw new Error("did not settle");
+    }
+    await new Promise((resolve) => setTimeout(resolve, 30));
+  }
+}
+
+function capture(canvas: HTMLCanvasElement): ImageData {
+  const copy = document.createElement("canvas");
+  copy.width = WIDTH;
+  copy.height = HEIGHT;
+  const ctx = copy.getContext("2d")!;
+  ctx.drawImage(canvas, 0, 0, WIDTH, HEIGHT);
+  return ctx.getImageData(0, 0, WIDTH, HEIGHT);
+}
+
+function heatmap(errors: Float32Array): ImageData {
+  const image = new ImageData(WIDTH, HEIGHT);
+  errors.forEach((e, i) => {
+    image.data[i * 4] = 255 * Math.min(1, e * 3);
+    image.data[i * 4 + 1] = 255 * Math.min(1, Math.max(0, e * 3 - 1));
+    image.data[i * 4 + 2] = 255 * Math.max(0, e * 3 - 2);
+    image.data[i * 4 + 3] = 255;
+  });
+  return image;
+}
+
+async function createViewer(token: string, ellipsoid: boolean): Promise<Json> {
+  Cesium.Ion.defaultAccessToken = token;
+  const viewer = new Cesium.Viewer($("legacy"), {
+    baseLayer: Cesium.ImageryLayer.fromProviderAsync(
+      Cesium.IonImageryProvider.fromAssetId(2),
+    ),
+    ...(ellipsoid ? {} : { terrain: Cesium.Terrain.fromWorldTerrain() }),
+    skyBox: false,
+    skyAtmosphere: false,
+    animation: false,
+    timeline: false,
+    baseLayerPicker: false,
+    geocoder: false,
+    homeButton: false,
+    sceneModePicker: false,
+    navigationHelpButton: false,
+    fullscreenButton: false,
+    infoBox: false,
+    selectionIndicator: false,
+    msaaSamples: 4,
+    useDefaultRenderLoop: false,
+    contextOptions: { webgl: { preserveDrawingBuffer: true } },
+    creditContainer: $("credits"),
+  });
+  const scene = viewer.scene;
+  scene.fog.enabled = false;
+  scene.globe.showGroundAtmosphere = false;
+  scene.sun = undefined;
+  scene.moon = undefined;
+  scene.backgroundColor = Cesium.Color.BLACK;
+  scene.screenSpaceCameraController.enableCollisionDetection = false;
+  // Wait for the terrain and imagery providers.
+  await new Promise<void>((resolve) => {
+    const check = () =>
+      (ellipsoid || scene.globe.terrainProvider?.availability !== undefined) &&
+      scene.imageryLayers.get(0)?.ready
+        ? resolve()
+        : setTimeout(check, 50);
+    check();
+  });
+  return viewer;
+}
+
+async function runImagery(): Promise<Row[]> {
+  const status = root.querySelector(".status")!;
+  const images = $("images");
+  const token = requireToken("The imagery check");
+  const only = params.get("only")?.toLowerCase();
+  const [terrain, imagery] = await Promise.all([
+    resolveIonAsset(1, { accessToken: token }),
+    BingImagery.fromIon(2, { accessToken: token }),
+  ]);
+  // ?ellipsoid: the globe without terrain in both engines.
+  const ellipsoid = params.has("ellipsoid");
+  const viewer = await createViewer(token, ellipsoid);
+  const engine = await Engine.create();
+  // 1.x's lighting has no units: compare in the same terms.
+  engine.environment.setSky(UNITLESS_SKY);
+  const rows: Row[] = [];
+
+  for (const cam of CAMERAS) {
+    if (only && !cam.label.toLowerCase().includes(only)) {
+      continue;
+    }
+    status.textContent = `${cam.label}…`;
+    try {
+      const world = engine.createWorld({
+        maxDraws: 1 << 14,
+        vertexBytes: 256 << 20,
+        indexBytes: 128 << 20,
+      });
+      const target = new OffscreenTarget(WIDTH, HEIGHT);
+      const view = engine.addView({
+        target,
+        world,
+        clearColor: [0, 0, 0],
+        observer: { exposure: UNITLESS_EXPOSURE },
+        background: "color",
+        lighting: {
+          sunIlluminance: UNITLESS_SUN_ILLUMINANCE,
+          environment: "procedural",
+        },
+      });
+      const tileset: Tileset3D = ellipsoid
+        ? engine.addEllipsoid(world, {
+            policy: cam.policy ?? "stepwise",
+            imagery,
+            // 1.x's globe is unlit by default: compared as is.
+            imageryOptions: { lit: false },
+          })
+        : await engine.addTerrain(world, terrain.url, {
+            headers: terrain.headers,
+            policy: cam.policy ?? "stepwise",
+            imagery,
+            imageryOptions: { lit: false },
+          });
+      if (tileset.selection instanceof GlobeStepwiseSelection) {
+        tileset.selection.fog = false;
+      }
+      const at = Ellipsoid.WGS84.cartographicToCartesian(
+        fromDegrees(cam.at[0]!, cam.at[1]!, cam.at[2]!),
+        new Float64Array(3),
+      );
+      view.camera.near = 1;
+      view.camera.lookAt(at, cam.heading * deg, cam.pitch * deg, cam.range);
+      const id = Math.log2(engine.viewBit(view));
+      let previous = "";
+      await settle(() => {
+        engine.renderFrame();
+        const now = (tileset.lastSelected.get(id) ?? []).length;
+        const same =
+          tileset.idle && !tileset.imagery?.busy && String(now) === previous;
+        previous = String(now);
+        return same;
+      });
+      engine.renderFrame();
+      const next = new ImageData(await target.read(), WIDTH, HEIGHT);
+
+      // 1.x, same camera.
+      const c = viewer.scene.camera;
+      c.frustum.near = 1;
+      c.setView({
+        destination: new Cesium.Cartesian3(...view.camera.position),
+        orientation: {
+          direction: new Cesium.Cartesian3(...view.camera.direction),
+          up: new Cesium.Cartesian3(...view.camera.up),
+        },
+      });
+      await settle(() => {
+        viewer.render();
+        return viewer.scene.globe.tilesLoaded;
+      });
+      viewer.render();
+      const legacy = capture(viewer.scene.canvas);
+      // Each engine's imagery level at the view's center.
+      const longitude = cam.at[0]! * deg;
+      const latitude = cam.at[1]! * deg;
+      const centerTile = (tileset.lastSelected.get(id) ?? []).find((t) => {
+        const r = t.globe!.rectangle;
+        return (
+          longitude >= r.west &&
+          longitude <= r.east &&
+          latitude >= r.south &&
+          latitude <= r.north
+        );
+      });
+      const level =
+        centerTile && tileset.imagery
+          ? imageryLevel(tileset.imagery.provider, centerTile)
+          : undefined;
+      let level1x: number | undefined;
+      for (const tile of viewer.scene.globe._surface._tilesToRender as Json[]) {
+        const r = tile.rectangle;
+        if (
+          longitude >= r.west &&
+          longitude <= r.east &&
+          latitude >= r.south &&
+          latitude <= r.north
+        ) {
+          for (const ti of tile.data?.imagery ?? []) {
+            const ready = ti.readyImagery?.level;
+            if (ready !== undefined) {
+              level1x = Math.max(level1x ?? 0, ready);
+            }
+          }
+        }
+      }
+      engine.removeView(view);
+      engine.removeTileset(tileset);
+      engine.removeWorld(world);
+
+      const f = flip(legacy.data, next.data, WIDTH, HEIGHT);
+      const m = compareImages(legacy.data, next.data, WIDTH, HEIGHT);
+      let failure: string | undefined;
+      if (cam.policy) {
+        if (
+          level === undefined ||
+          level1x === undefined ||
+          Math.abs(level - level1x) > LEVEL_TOLERANCE
+        ) {
+          failure = `imagery level ${level} at the center, 1.x ${level1x}`;
+        } else if (f.mean > BUDGETED_FLIP_MEAN || f.p95 > BUDGETED_FLIP_P95) {
+          failure = `FLIP ${f.mean.toFixed(3)} mean, ${f.p95.toFixed(3)} p95`;
+        }
+      }
+      rows.push({
+        view: cam.label,
+        status: failure ? `FAIL: ${failure}` : "ok",
+        ...(level !== undefined ? { level } : {}),
+        ...(level1x !== undefined ? { level1x } : {}),
+        flipMean: f.mean,
+        flipP95: f.p95,
+        meanDeltaE: m.meanDeltaE,
+        noticeable: m.noticeable,
+      });
+      const figure = document.createElement("div");
+      figure.className = "row";
+      for (const [label, image] of [
+        ["1.x", legacy],
+        ["2.0", next],
+        ["FLIP error", heatmap(f.errors)],
+      ] as const) {
+        const box = document.createElement("figure");
+        const caption = document.createElement("figcaption");
+        caption.textContent = `${cam.label}: ${label}`;
+        const canvas = document.createElement("canvas");
+        canvas.width = WIDTH;
+        canvas.height = HEIGHT;
+        canvas.getContext("2d")!.putImageData(image, 0, 0);
+        box.append(caption, canvas);
+        figure.append(box);
+      }
+      images.append(figure);
+    } catch (error) {
+      rows.push({
+        view: cam.label,
+        status: `error: ${error instanceof Error ? error.message : String(error)}`,
+      });
+    }
+    renderTable(rows);
+  }
+  engine.destroy();
+  viewer.destroy();
+  status.textContent = "done";
+  return rows;
+}
+
+function renderTable(rows: Row[]): void {
+  const pct = (v?: number) =>
+    v === undefined ? "" : `${(v * 100).toFixed(1)}%`;
+  const n = (v?: number) => (v === undefined ? "" : v.toFixed(3));
+  $("results").innerHTML =
+    `<tr><th>view</th><th>status</th><th>level 2.0 / 1.x</th><th>FLIP mean</th><th>FLIP p95</th><th>mean ΔE</th><th>ΔE > 2.3</th></tr>${rows
+      .map(
+        (r) =>
+          `<tr><td>${r.view}</td><td>${r.status}</td><td>${r.level ?? ""}${r.level1x === undefined ? "" : ` / ${r.level1x}`}</td><td>${n(r.flipMean)}</td><td>${n(r.flipP95)}</td>` +
+          `<td>${n(r.meanDeltaE)}</td><td>${pct(r.noticeable)}</td></tr>`,
+      )
+      .join("")}`;
+}
+
+export const harness: Harness = {
+  mount(element, options) {
+    root = element;
+    params = options;
+    root.innerHTML = TEMPLATE;
+    return { run: runImagery };
+  },
+};

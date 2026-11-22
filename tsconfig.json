@@ -1,5 +1,17 @@
 {
-  "files": [],
+  "extends": "./tsconfig.base.json",
+  "include": [
+    "demo",
+    "parity",
+    "spikes",
+    "bench",
+    "lab",
+    "test",
+    "vite.config.ts",
+    "basisTranscoderEsm.ts",
+    "packages/next/src/io/vendor.d.ts",
+    "packages/next/src/io/basisTranscoder.d.ts"
+  ],
   "references": [
     {
       "path": "packages/core"

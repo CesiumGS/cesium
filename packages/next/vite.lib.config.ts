@@ -25,8 +25,8 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig, type Plugin } from "vite";
-import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
-import { skyPackGuard } from "./scripts/vitePluginSkyPack.ts";
+import { basisTranscoderEsm } from "../../basisTranscoderEsm.ts";
+import { skyPackGuard } from "../../scripts/vitePluginSkyPack.ts";
 
 /** The repository's license and third-party notices, beside the library. */
 function licenses(): Plugin {

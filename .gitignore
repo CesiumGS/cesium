@@ -39,14 +39,30 @@ yarn.lock
 .idea/tasks.xml
 .idea/shelf
 
-# Benchmark worktrees of commits (packages/next/bench/snapshot.mjs)
+# Benchmark worktrees of commits (bench/snapshot.mjs)
 /.bench/
 
-# Microbenchmark results (packages/next/bench/run.mjs; machine details)
-/packages/next/bench/results/
+# Microbenchmark results (bench/run.mjs; machine details)
+/bench/results/
 # Vite dependency cache of snapshot dev servers
-/packages/next/.vite-bench/
+/.vite-bench/
 
 # 2.0's packages' build output (tsc --build's declarations and build info)
 /packages/*/dist/
 *.tsbuildinfo
+
+# 2.0's harness at the root (CS-835; these were packages/next/.gitignore's).
+# The dev server's build (npm run build).
+/dist/
+/handbook/dist/
+# Local secrets (ion access token for the dev-server proxy)
+.env.local
+.env.*.local
+# Design-review screenshots: local only (large, retaken often; never committed)
+/examples/*/design-screenshots/
+# Python bytecode (importing scripts/frameFixtures.py writes it)
+__pycache__/
+# Browser checks' screenshots and pages at the root: local only
+/design-screenshots/
+# The handbook's generated figures (npm run handbook:data); its build goes to handbook/dist/
+/handbook/generated/

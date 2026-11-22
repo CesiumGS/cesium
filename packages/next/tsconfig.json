@@ -2,15 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "include": [
     "src",
-    "demo",
     "widgets",
-    "parity",
-    "spikes",
-    "bench",
-    "lab",
-    "test",
-    "vite.config.ts",
-    "vite.lib.config.ts",
-    "basisTranscoderEsm.ts"
+    "vite.lib.config.ts"
   ]
 }

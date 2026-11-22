@@ -12,6 +12,15 @@ import { dirname, join } from "node:path";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// 2.0's TypeScript: its packages (packages/next until it becomes the
+// umbrella) and the harness at the root (CS-835).
+const NEXT_TS = [
+  "packages/*/src/**/*.{ts,tsx}",
+  "packages/next/**/*.{ts,tsx}",
+  "{test,parity,bench,lab,handbook,examples,demo,spikes,standalone,scripts,tools}/**/*.{ts,tsx}",
+  "*.ts",
+];
+
 export default [
   tseslint.configs.base,
   {
@@ -25,16 +34,17 @@ export default [
       "index.release.html",
       "Apps/HelloWorld.html",
       "Apps/Sandcastle2/",
-      "packages/sandcastle/public/",
-      "packages/sandcastle/templates/Sandcastle.d.ts",
-      "packages/sandcastle/templates/Sandcastle.js",
-      "packages/sandcastle/gallery/pagefind/",
+      "apps/sandcastle/public/",
+      "apps/sandcastle/templates/Sandcastle.d.ts",
+      "apps/sandcastle/templates/Sandcastle.js",
+      "apps/sandcastle/gallery/pagefind/",
       "packages/engine/Source/Shaders/**/*",
       "Specs/jasmine/*",
       "**/*/SpecList.js",
-      // @cesium/next's build output (git-ignored), written by `npm run build`
-      // and `npm run build:lib`.
-      "packages/next/dist/",
+      // 2.0's build output (git-ignored), written by `npm run build`, `npm
+      // run build:lib` and `tsc --build`.
+      "dist/",
+      "packages/*/dist/",
       "packages/next/dist-lib/",
     ],
   },
@@ -55,7 +65,7 @@ export default [
     files: [
       ".github/**/*.js",
       "scripts/**/*.js",
-      "packages/sandcastle/scripts/**/*.js",
+      "apps/sandcastle/scripts/**/*.js",
       "gulpfile.js",
       "gulpfile.apps.js",
       "gulpfile.makezip.js",
@@ -68,8 +78,8 @@ export default [
     },
   },
   {
-    files: ["packages/**/*.js", "Apps/**/*.js", "Specs/**/*.js", "**/*.html"],
-    ignores: ["packages/sandcastle/scripts/**/*.js"],
+    files: ["packages/**/*.js", "apps/**/*.js", "Specs/**/*.js", "**/*.html"],
+    ignores: ["apps/sandcastle/scripts/**/*.js"],
     ...configCesium.configs.browser,
     plugins: { html, "eslint-seatbelt": seatbelt },
     processor: "eslint-seatbelt/seatbelt",
@@ -126,11 +136,19 @@ export default [
   {
     // Sources in a package may only import packages declared in that package's
     // own package.json. Published files may not import devDependencies.
-    files: ["packages/**/*.{js,mjs,cjs,ts,tsx}"],
+    files: [
+      "packages/**/*.{js,mjs,cjs,ts,tsx}",
+      "apps/**/*.{js,mjs,cjs,ts,tsx}",
+      // 2.0's harness, moved from packages/next to the root (CS-835).
+      "{test,parity,bench,lab,handbook,examples,demo,spikes,standalone,tools}/**/*.{js,mjs,cjs,ts,tsx}",
+      "*.ts",
+    ],
     ignores: [
       "**/*.d.ts",
       // Build scripts are run from the repo root, so use its devDependencies
       "packages/*/scripts/**/*",
+      "packages/*/vite.*.ts",
+      "apps/*/scripts/**/*",
     ],
     plugins: { n: nodePlugin },
     rules: {
@@ -158,11 +176,11 @@ export default [
     // This is needed to restrict to a specific path unless using the tseslint.config function
     // https://typescript-eslint.io/packages/typescript-eslint#config
     ...config,
-    files: ["packages/sandcastle/**/*.{ts,tsx}"],
+    files: ["apps/sandcastle/**/*.{ts,tsx}"],
   })),
   {
     // This config came from the vite project generation
-    files: ["packages/sandcastle/**/*.{ts,tsx}"],
+    files: ["apps/sandcastle/**/*.{ts,tsx}"],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
@@ -181,10 +199,10 @@ export default [
   },
   ...[...tseslint.configs.recommended].map((config) => ({
     ...config,
-    files: ["packages/next/**/*.ts", "packages/next/**/*.tsx"],
+    files: NEXT_TS,
   })),
   {
-    files: ["packages/next/**/*.ts", "packages/next/**/*.tsx"],
+    files: NEXT_TS,
     languageOptions: {
       globals: globals.browser,
     },
@@ -209,10 +227,7 @@ export default [
     // to Dyno's suite to keep lint elsewhere fast. Uses that were already
     // there are held in eslint.seatbelt.tsv, which only lets their count
     // fall.
-    files: [
-      "packages/next/bench/suite/**/*.ts",
-      "packages/next/bench/suite/**/*.tsx",
-    ],
+    files: ["bench/suite/**/*.ts", "bench/suite/**/*.tsx"],
     plugins: { "eslint-seatbelt": seatbelt },
     processor: "eslint-seatbelt/seatbelt",
     settings: {
@@ -234,13 +249,17 @@ export default [
   {
     // Node scripts in the PoC (benchmark runner, shader build). The runner's
     // page.evaluate callbacks run in the browser, hence both global sets.
-    files: ["packages/next/**/*.mjs"],
+    files: [
+      "packages/*/src/**/*.mjs",
+      "packages/next/**/*.mjs",
+      "{test,parity,bench,lab,handbook,examples,demo,spikes,standalone,scripts,tools}/**/*.mjs",
+    ],
     languageOptions: {
       globals: { ...globals.node, ...globals.browser },
     },
   },
   {
-    files: ["packages/sandcastle/gallery/**/*.js"],
+    files: ["apps/sandcastle/gallery/**/*.js"],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "module",
@@ -250,7 +269,7 @@ export default [
     },
   },
   {
-    files: ["packages/sandcastle/gallery/hello-world/main.js"],
+    files: ["apps/sandcastle/gallery/hello-world/main.js"],
     rules: {
       // ignore this rule here to avoid the excessive eslint-disable comment in our bare minimum example
       "no-unused-vars": "off",

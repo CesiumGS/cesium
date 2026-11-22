@@ -1,0 +1,346 @@
+// The design globe's checks (plan 4b Task 17): every value the page shows,
+// compared with the generator's exact answer (answers.json), and the survey
+// mark's zone 3 coordinates, as PROJ gives them, compared with NGS's
+// datasheet. The check panel (Task 20) draws these rows.
+import type { PlacementMode } from "../../packages/next/src/georeference/georeference.ts";
+import type { Answers } from "./answers.ts";
+import { offsetText, stationText, unitSymbol } from "./measureModel.ts";
+
+/**
+ * How a shown value was obtained, which sets its tolerance: an exact snap
+ * (1e-6 design units), a mesh vertex (1e-4 m, in design units) or a pick
+ * (its stated tolerance).
+ */
+export type CheckBasis = "exact" | "vertex" | "pick";
+
+/** One comparison. */
+export interface CheckRow {
+  readonly id: string;
+  readonly label: string;
+  /** "ftUS" (design units) or "m". */
+  readonly unit: string;
+  /** What the page shows; absent when it doesn't show it. */
+  readonly shown?: number;
+  readonly expected: number;
+  /** In `unit`: |shown − expected| within it passes. */
+  readonly tolerance: number;
+  readonly status: "pass" | "fail" | "not-shown";
+  /** How the shown value was obtained; "published" for a published reference's rows. */
+  readonly basis: CheckBasis | "published";
+  /**
+   * What `expected` is: the generator's exact answer, or a published
+   * reference (NGS's datasheet).
+   */
+  readonly kind: "exact answer" | "published reference";
+}
+
+/** What the page shows, by answer. */
+export interface ShownValues {
+  /** By index into `answers.points`. */
+  readonly points: Map<
+    number,
+    {
+      readonly design?: Float64Array;
+      readonly station?: number;
+      readonly offset?: number;
+      readonly basis: CheckBasis;
+      /** Meters; a pick's stated tolerance. */
+      readonly tolerance?: number;
+    }
+  >;
+  /** By `answers.pairs[].id`. */
+  readonly pairs: Map<
+    string,
+    {
+      /** Design units. */
+      readonly designDistance?: number;
+      readonly horizontalDistance?: number;
+      /** Meters. */
+      readonly trueDistance?: number;
+      readonly basis: CheckBasis;
+      /** Meters; a pick's stated tolerance (for the distance, both ends'). */
+      readonly tolerance?: number;
+    }
+  >;
+  /**
+   * The station 170,000 marker's separation as shown, in meters, and the
+   * placement it is shown in: the rigid one's is `answers.marker.separation`,
+   * the reprojected one's 0.
+   */
+  marker?: {
+    readonly separation?: number;
+    readonly mode: PlacementMode;
+    readonly basis: CheckBasis;
+    readonly tolerance?: number;
+  };
+  /**
+   * PROJ's zone 3 easting and northing for the survey mark, and the page's
+   * measured horizontal distance from the mark to the nearest centerline
+   * point, design units.
+   */
+  mark?: {
+    readonly easting?: number;
+    readonly northing?: number;
+    readonly offset?: number;
+  };
+}
+
+/** An exact snap's tolerance, design units (Global Constraints). */
+export const EXACT_TOLERANCE = 1e-6;
+/** A vertex's tolerance, meters (spec §10's round trip). */
+export const VERTEX_TOLERANCE_M = 1e-4;
+/**
+ * The datasheet's stated precision for its zone 3 coordinates in US survey
+ * feet, ftUS: they are published to 0.01 sFT (half of it, 0.005), and are
+ * converted from the metric ones, which are rounded to the millimeter first
+ * (half a millimeter, 0.00164 ftUS). HS5109's northing shows it: 632,517.990
+ * m is 2,075,186.1055 sFT, published as .11, where the unrounded northing
+ * (PROJ's, 632,517.98982 m) is 2,075,186.1049.
+ */
+export const MARK_SPC_TOLERANCE = 0.005 + (0.0005 * 3937) / 1200;
+/**
+ * The mark's independent test (`mark.offset`, and the headline that shows
+ * it, measureOpeners.ts `markTest`): a horizontal distance from the two
+ * published coordinates, so within √2 of each one's precision, 0.0094 ftUS.
+ * One tolerance for one test, so the headline and Checks can't disagree.
+ */
+export const MARK_OFFSET_TOLERANCE = MARK_SPC_TOLERANCE * Math.SQRT2;
+
+/**
+ * A tolerance in meters for a basis (a pick's must be stated), for a value
+ * from `ends` points: a vertex distance may be off by each end's 1e-4 m. An
+ * exact snap's 1e-6 design units bound float64 noise, not an end's error,
+ * so it isn't doubled; a pick's stated tolerance already covers both ends.
+ */
+function meters(
+  basis: CheckBasis,
+  stated: number | undefined,
+  mpu: number,
+  id: string,
+  ends: 1 | 2 = 1,
+): number {
+  switch (basis) {
+    case "exact":
+      return EXACT_TOLERANCE * mpu;
+    case "vertex":
+      return ends * VERTEX_TOLERANCE_M;
+    case "pick":
+      if (!(stated !== undefined && Number.isFinite(stated) && stated >= 0)) {
+        throw new Error(
+          `checkRows: ${id} is a pick with no stated tolerance (meters)`,
+        );
+      }
+      return stated;
+  }
+}
+
+/** The tolerance in design units (exact: 1e-6 itself, not via meters). */
+function design(
+  basis: CheckBasis,
+  stated: number | undefined,
+  mpu: number,
+  id: string,
+  ends: 1 | 2 = 1,
+): number {
+  return basis === "exact"
+    ? EXACT_TOLERANCE
+    : meters(basis, stated, mpu, id, ends) / mpu;
+}
+
+function compare(
+  fields: Omit<CheckRow, "status" | "shown">,
+  shown: number | undefined,
+): CheckRow {
+  return {
+    ...fields,
+    ...(shown !== undefined && { shown }),
+    status:
+      shown === undefined
+        ? "not-shown"
+        : Math.abs(shown - fields.expected) <= fields.tolerance
+          ? "pass"
+          : "fail",
+  };
+}
+
+/** "Sta. 450+00.000, 35.000 ftUS right", as the measure panel writes it. */
+function where(station: number, offset: number, symbol: string): string {
+  const side = offset === 0 ? "on the centerline" : offsetText(offset, symbol);
+  return `Sta. ${stationText(station)}, ${side}`;
+}
+
+/**
+ * The check rows for what the page shows: for each shown point, its
+ * easting, northing, height, station and offset; for every pair, its 3D
+ * and horizontal design distances and its true distance; the station
+ * 170,000 marker's separation; and the survey mark's zone 3 easting and
+ * northing against the datasheet ("published reference"). A value the
+ * page doesn't show is "not-shown"; points it doesn't show have no rows.
+ *
+ * Tolerances by basis: exact, 1e-6 design units; vertex, 1e-4 m (2e-4 m
+ * for a pair's distances, one per end); pick, the stated tolerance
+ * (meters). The mark's rows have basis "published" and the datasheet's
+ * stated precision (`MARK_SPC_TOLERANCE`). Throws for a shown point or pair that isn't an
+ * answer, and for a pick with no stated tolerance.
+ */
+export function checkRows(answers: Answers, shown: ShownValues): CheckRow[] {
+  const mpu = answers.frame.metersPerUnit;
+  const symbol = unitSymbol(answers.frame.unitName);
+  const rows: CheckRow[] = [];
+  const kind = "exact answer";
+
+  for (const [index, value] of shown.points) {
+    const point = answers.points[index];
+    if (point === undefined) {
+      throw new Error(
+        `checkRows: shown point ${index} isn't one of answers.points (0 to ${answers.points.length - 1})`,
+      );
+    }
+    const id = `point.${index}`;
+    const tolerance = design(value.basis, value.tolerance, mpu, id);
+    const label = where(point.station, point.offset, symbol);
+    const fields = [
+      ["easting", "easting", point.design[0], value.design?.[0]],
+      ["northing", "northing", point.design[1], value.design?.[1]],
+      ["height", "NAVD88 height", point.design[2], value.design?.[2]],
+      ["station", "station", point.station, value.station],
+      ["offset", "offset", point.offset, value.offset],
+    ] as const;
+    for (const [name, what, expected, got] of fields) {
+      rows.push(
+        compare(
+          {
+            id: `${id}.${name}`,
+            label: `${label}: ${what}`,
+            unit: symbol,
+            expected,
+            tolerance,
+            basis: value.basis,
+            kind,
+          },
+          got,
+        ),
+      );
+    }
+  }
+
+  for (const id of shown.pairs.keys()) {
+    if (!answers.pairs.some((p) => p.id === id)) {
+      throw new Error(
+        `checkRows: shown pair "${id}" isn't one of answers.pairs`,
+      );
+    }
+  }
+  for (const pair of answers.pairs) {
+    const value = shown.pairs.get(pair.id);
+    const basis = value?.basis ?? "exact";
+    const id = `pair.${pair.id}`;
+    const inDesign = design(basis, value?.tolerance, mpu, id, 2);
+    const inMeters = meters(basis, value?.tolerance, mpu, id, 2);
+    const common = { basis, kind } as const;
+    rows.push(
+      compare(
+        {
+          ...common,
+          id: `${id}.design`,
+          label: `${pair.label}: design distance (3D)`,
+          unit: symbol,
+          expected: pair.designDistance,
+          tolerance: inDesign,
+        },
+        value?.designDistance,
+      ),
+      compare(
+        {
+          ...common,
+          id: `${id}.horizontal`,
+          label: `${pair.label}: horizontal design distance`,
+          unit: symbol,
+          expected: pair.horizontalDistance,
+          tolerance: inDesign,
+        },
+        value?.horizontalDistance,
+      ),
+      compare(
+        {
+          ...common,
+          id: `${id}.true`,
+          label: `${pair.label}: true distance`,
+          unit: "m",
+          expected: pair.trueDistance,
+          tolerance: inMeters,
+        },
+        value?.trueDistance,
+      ),
+    );
+  }
+
+  const marker = shown.marker;
+  const markerBasis = marker?.basis ?? "exact";
+  const mode = marker?.mode ?? "rigid";
+  rows.push(
+    compare(
+      {
+        id: "marker.separation",
+        label: `Sta. ${stationText(answers.marker.station)} marker: drawn to true, ${mode}`,
+        unit: "m",
+        expected: mode === "rigid" ? answers.marker.separation : 0,
+        tolerance: meters(markerBasis, marker?.tolerance, mpu, "marker"),
+        basis: markerBasis,
+        kind,
+      },
+      marker?.separation,
+    ),
+  );
+
+  const mark = answers.mark;
+  const published = {
+    basis: "published",
+    kind: "published reference",
+  } as const;
+  rows.push(
+    compare(
+      {
+        ...published,
+        id: "mark.easting",
+        label: `${mark.pid} ${mark.name}: zone 3 easting against NGS's datasheet`,
+        unit: symbol,
+        expected: mark.publishedSpc.easting,
+        tolerance: MARK_SPC_TOLERANCE,
+      },
+      shown.mark?.easting,
+    ),
+    compare(
+      {
+        ...published,
+        id: "mark.northing",
+        label: `${mark.pid} ${mark.name}: zone 3 northing against NGS's datasheet`,
+        unit: symbol,
+        expected: mark.publishedSpc.northing,
+        tolerance: MARK_SPC_TOLERANCE,
+      },
+      shown.mark?.northing,
+    ),
+    // The independent test of the design against the control it was
+    // surveyed from: the design's offset from the mark by the page's
+    // measurement (PROJ's position of NGS's mark) against the same offset
+    // from NGS's own published zone 3. Each published coordinate carries
+    // the datasheet's precision, so a distance from them carries up to √2
+    // of it.
+    compare(
+      {
+        ...published,
+        id: "mark.offset",
+        label: `${mark.pid} ${mark.name}: horizontal offset to the centerline against NGS's own zone 3`,
+        unit: symbol,
+        expected: Math.hypot(
+          mark.publishedSpc.easting - mark.nearestDesign[0],
+          mark.publishedSpc.northing - mark.nearestDesign[1],
+        ),
+        tolerance: MARK_OFFSET_TOLERANCE,
+      },
+      shown.mark?.offset,
+    ),
+  );
+  return rows;
+}

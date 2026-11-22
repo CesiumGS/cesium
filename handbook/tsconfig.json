@@ -1,0 +1,8 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "types": ["@webgpu/types", "vite/client", "@stratakit/mui/types.d.ts"]
+  },
+  "include": ["src", "snippets", "viewer", "vite.config.ts", "../packages/next/src/io/vendor.d.ts", "../packages/next/src/io/basisTranscoder.d.ts"]
+}

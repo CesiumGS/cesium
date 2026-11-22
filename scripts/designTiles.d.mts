@@ -1,0 +1,65 @@
+import type {
+  EngineeringFrame,
+  EngineeringFrameDefinition,
+} from "../packages/next/src/engineering/EngineeringFrame.ts";
+import type { GridSource } from "../packages/next/src/engineering/proj.ts";
+import type { ProjApi } from "../packages/next/src/engineering/projApi.ts";
+import type { Frames } from "../packages/next/src/frames/frames.ts";
+
+/** Where in the store the generator writes. */
+export const DESIGN_TILES_DIRECTORY: string;
+/**
+ * What the output's manifest must say to be current: its `version` (the
+ * format), instant, input hashes and the store's grids.
+ */
+export function wantedManifest(store: string): {
+  version: number;
+  instant: string;
+  sha256: Record<string, string>;
+  grids: Record<string, string>;
+};
+/** The manifest as written: `wanted` and each frame's resolved operation. */
+export function designManifest<W extends object, F>(
+  wanted: W,
+  frames: F,
+): W & { frames: F };
+/** The instant `measure` runs at for answers.json (2026-01-01T00:00:00 UTC). */
+export const DESIGN_TILES_INSTANT: string;
+/**
+ * PROJ with no grids loaded yet, a GridSource over the store's grids, and the
+ * Frames from the store's frame data.
+ */
+export function designTilesInputs(
+  store: string,
+): Promise<{ proj: ProjApi; grids: GridSource; frames: Frames }>;
+/**
+ * The parts of a rigid placement's error at a design point, meters:
+ * curvature d²/2R, scale d·|1 − 1/k| and the geoid's rise from the anchor.
+ */
+export function rigidErrorTerms(
+  frame: EngineeringFrame,
+  anchor: ArrayLike<number>,
+  point: ArrayLike<number>,
+): { curvature: number; scale: number; geoid: number };
+/**
+ * Writes `<store>/design-globe-dual/` (the corridor and the scale ladder's
+ * sites, one tileset each with both placements in its vertices, the site
+ * building, answers.json and manifest.json) unless its manifest is current.
+ */
+export function ensureDesignTiles(
+  store: string,
+  proj: ProjApi,
+  grids: GridSource,
+  frames: Frames,
+  log?: (line: string) => void,
+): Promise<void>;
+/**
+ * The tileset-level extensions of a frame and a placement: the
+ * `BENTLEY_engineering_frame` declaration, and `BENTLEY_alignments` when the
+ * frame has alignments.
+ */
+export function frameExtensions(
+  definition: EngineeringFrameDefinition,
+  placement:
+    { mode: "rigid"; anchor: readonly number[] } | { mode: "reprojected" },
+): Record<string, unknown>;

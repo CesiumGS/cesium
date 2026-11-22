@@ -1,0 +1,1056 @@
+// The design globe's measure tool (plan 4b Task 19; DESIGN.md "The story"):
+// two points on a model, snapped as the snap mode says, measured through the
+// library's `measure` between their design points, and drawn on the globe
+// in whichever placement is drawn, morphing with it; and the measurements
+// the page opens with.
+//
+// What a measurement says, in both placements:
+//   - the design distance (design units, what CAD reports) and the true
+//     distance (meters, between where the design points truly are), side by
+//     side: from the design, so the same whichever placement is drawn;
+//   - "on the globe": the straight line between the two points as they are
+//     drawn now, which is the true distance when the drawing is true
+//     (reprojected) and isn't when it isn't (rigid).
+//
+// The parts, each its own module:
+//   - measureState.ts: the points, the two-click state machine, the snap
+//     mode's choice of service and the deep link;
+//   - measureOpeners.ts: the openers, their figures and Details;
+//   - measureShown.ts: what is shown, for the checks;
+//   - measureView.ts: the panel's strings;
+//   - measureLabels.ts: the labels over the globe;
+//   - measureOverlay.ts: the lines on the globe;
+//   - measureFrames.ts: the frame data `measure` needs, and `measure`;
+//   - here, the runtime (`createMeasureTool`): the frame data and `measure`,
+//     the snap services, pointer and keyboard input (one AbortController per
+//     pointer event, the previous aborted; each snap judged by the site it
+//     hit, as cursor.ts judges picks), the link and the morph target.
+import type { Alignment } from "../../packages/next/src/engineering/alignment.ts";
+import {
+  designPoint,
+  type DesignPoint,
+  type EngineeringFrame,
+} from "../../packages/next/src/engineering/EngineeringFrame.ts";
+import {
+  ClientSnapService,
+  type SnapResult,
+  type SnapService,
+} from "../../packages/next/src/engineering/snap.ts";
+import type { Tileset3D } from "../../packages/next/src/streaming/Tileset3D.ts";
+import type { Viewer } from "@cesium/next/widgets";
+import type { Answers } from "./answers.ts";
+import type { ShownValues } from "./checks.ts";
+import { hitRefusal, type PagePick, type PickState } from "./cursor.ts";
+import { sectionSurface } from "./corridor.ts";
+import { ExactSnapService, visibleRise } from "./exactSnap.ts";
+import { createMeasureFrames } from "./measureFrames.ts";
+import { measurementModel, unitSymbol } from "./measureModel.ts";
+import { liveStore, placeLabels, type MeasureLive } from "./measureLabels.ts";
+import {
+  dist,
+  drawnAt,
+  measuredOf,
+  openerDetails,
+  openingMeasurements,
+  rulerEnd,
+  type OpenerMeasure,
+  type RulerEnd,
+  type DrawState,
+  type DrawnEnd,
+  type Opener,
+  type OpenerId,
+} from "./measureOpeners.ts";
+import { MeasureOverlay, measureLines, rulerTips } from "./measureOverlay.ts";
+import { shownOf, shownValues } from "./measureShown.ts";
+import {
+  formatMeasureLink,
+  nextMeasure,
+  parseMeasureLink,
+  routeByTileset,
+  snapWith,
+  type MeasureEnd,
+  type MeasureInput,
+  type MeasureState,
+  type SnapDeps,
+} from "./measureState.ts";
+import {
+  OUT_OF_SIGHT_NOTE,
+  measurePanel,
+  userResult,
+  type MeasurePanel,
+  type Measured,
+} from "./measureView.ts";
+import type { MorphTarget } from "./morphDriver.ts";
+import type { LoadEvent, SnapMode } from "./page.ts";
+import type { SiteRuntime } from "./siteLoader.ts";
+import type { StoreFrame } from "./stores.ts";
+
+/** How far from the cursor a snap may land, CSS pixels. */
+export const APERTURE = 12;
+/** The snap preview starts a snap at most this often, ms (one in flight). */
+export const HOVER_INTERVAL_MS = 50;
+
+/**
+ * The pointer while snapping: a ring of the snap's reach (`APERTURE`) with
+ * a dot at its center, as CAD tools draw their aperture (feedback F5).
+ */
+const SNAP_CURSOR = (() => {
+  const r = APERTURE;
+  const size = 2 * r + 4;
+  const c = size / 2;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}"><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="black" stroke-opacity="0.45" stroke-width="3"/><circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="white" stroke-opacity="0.9" stroke-width="1.25"/><circle cx="${c}" cy="${c}" r="1.5" fill="white" stroke="black" stroke-width="0.75"/></svg>`;
+  return `url("data:image/svg+xml,${encodeURIComponent(svg)}") ${c} ${c}, crosshair`;
+})();
+/** A click: the pointer moved less than this between down and up, CSS pixels. */
+const CLICK_SLOP = 5;
+
+export interface MeasureToolDeps {
+  readonly viewer: Viewer;
+  readonly signal: AbortSignal;
+  sites(): Iterable<SiteRuntime>;
+  site(id: string): SiteRuntime | undefined;
+  /** The corridor's alignment (the exact snap's). */
+  readonly alignment: Alignment;
+  answers(): Answers | undefined;
+  /** As the cursor judges a pick (cursor.ts). */
+  pickState(): PickState;
+  pickAt(x: number, y: number): Promise<PagePick>;
+  snapMode(): SnapMode;
+  /** The morph now (the openers' figures, the overlay). */
+  drawState(): DrawState & { readonly ghost: boolean };
+  /** The link's measure parameters changed. */
+  setLink(params: ReturnType<typeof formatMeasureLink>): void;
+  /** The panel's view changed. */
+  changed(): void;
+  /** Something on the globe changed: draw a frame and run the frame loop. */
+  wake(): void;
+  /** When the labels' listeners are told: after the render (frameDriver.ts). */
+  readonly frame: StoreFrame;
+  /** Loading items (the frame data `measure` needs). */
+  report(event: LoadEvent): void;
+  disposed(): boolean;
+  /**
+   * The selected site, when it isn't the corridor: the corridor's openers
+   * belong to the corridor, so they aren't drawn or shown there; the panel
+   * says the site's own story instead (Task 20 fix 1, C1).
+   */
+  away?(): { readonly name: string; readonly story?: string } | undefined;
+}
+
+export interface MeasureTool {
+  view(): MeasurePanel;
+  readonly live: {
+    get(): MeasureLive;
+    subscribe(listener: () => void): () => void;
+  };
+  /** Draws the openers and the user's line in both placements. */
+  readonly target: MorphTarget;
+  /** Places the labels (each frame the camera or the morph moves). */
+  place(): void;
+  /** The corridor's placements are in (or changed): the openers and exact snapping. */
+  placementsChanged(): void;
+  /** The answers are in. */
+  answersChanged(): void;
+  /** A point at the view's center (keyboard). */
+  pointAtCenter(): void;
+  clear(): void;
+  /** A link's measurement (deep link, back or forward). */
+  applyLink(params: Readonly<Record<string, string | undefined>>): void;
+  /** Loads the frame data again after a failure. */
+  retry(): void;
+  /** What the measure section shows, for the checks (Task 20). */
+  shownValues(): ShownValues | undefined;
+  /** The selected site changed: the corridor's openers are drawn on the corridor only. */
+  siteChanged(): void;
+  /** The snap mode changed: the pointer and the preview follow it. */
+  snapChanged(): void;
+  /** The viewer's own finished measurement's ends, design units (for the checks). */
+  userEnds():
+    | {
+        readonly a: Float64Array;
+        readonly b: Float64Array;
+        readonly site: string;
+      }
+    | undefined;
+  /** Measures the openers and the user's line again (after a failure). */
+  retryMeasure(): void;
+  /**
+   * Where to look closely at the ruler: its far end's bracket as drawn, and
+   * the line's direction there (body-fixed).
+   */
+  rulerFocus(): { center: Float64Array; along: Float64Array } | undefined;
+  /** Where to look at an opener: its middle as drawn, and its length. */
+  openerFocus(
+    id: OpenerId,
+  ): { center: Float64Array; length: number } | undefined;
+  dispose(): void;
+}
+
+/** A snap result for a measured end, for `measurementModel`. */
+function asSnap(end: MeasureEnd, point: DesignPoint): SnapResult {
+  return {
+    snapPoint: end.reprojected,
+    hitPoint: end.reprojected,
+    distance: 0,
+    kind: end.kind ?? "point",
+    design: point,
+    tolerance: end.tolerance,
+    exact: end.how === "exact" || end.how === "link",
+    source: end.how === "exact" ? "server" : "client",
+    provisional: false,
+  };
+}
+
+export function createMeasureTool(deps: MeasureToolDeps): MeasureTool {
+  const { viewer, signal } = deps;
+  let state: MeasureState = { phase: "empty" };
+  let instruction: string | undefined;
+  let refused = false;
+  /** Said of the last point: its exact snap was out of sight from here. */
+  let note: string | undefined;
+  let busy = false;
+  /** The user's measurement through `measure`, once both ends are in. */
+  let measured: Measured | undefined;
+  let openers: Opener[] = [];
+  /** The openers by the page's `measure`, and why it failed for any. */
+  let openerMeasures = new Map<OpenerId, OpenerMeasure>();
+  let openerErrors = new Map<OpenerId, string>();
+  /** The ruler's far end, from the pair's measurement. */
+  let ruler: RulerEnd | undefined;
+  /** Why the user's measurement failed, if it did. */
+  let userError: string | undefined;
+  let markDesign: Float64Array | undefined;
+  let hover: MeasureLive["hover"];
+  let crosshair = false;
+
+  const live = liveStore<MeasureLive>(
+    {
+      pills: [],
+      dots: [],
+      crosshair: false,
+      figures: {},
+    },
+    deps.frame,
+  );
+  const overlay = new MeasureOverlay(viewer.world);
+
+  // ------------------------------------------------------ frame data
+  const frames = createMeasureFrames({
+    viewer,
+    report: deps.report,
+    disposed: deps.disposed,
+    loaded: () => remeasure(),
+    failed: () => deps.changed(),
+  });
+  const measureDesign = frames.measure;
+
+  // --------------------------------------------------- the placements
+  const corridor = () => deps.site("corridor");
+  /** The corridor's tileset and placements the openers were built from. */
+  let corridorSeen: readonly unknown[] = [];
+  /**
+   * A site's heights as the frame names them, with the model they're read
+   * through: "NAVD88 height via GEOID18".
+   */
+  const datumOf = (site: SiteRuntime | undefined): string | undefined => {
+    const vertical = site?.view?.frame?.vertical?.replace(
+      /\s*\([^)]*\)\s*$/,
+      "",
+    );
+    if (vertical === undefined) {
+      return undefined;
+    }
+    const models = site!.entry.models;
+    return models.length > 0
+      ? `${vertical} via ${models.join(", ")}`
+      : vertical;
+  };
+  let client:
+    { tilesets: readonly Tileset3D[]; service: ClientSnapService } | undefined;
+  const exact = new Map<Tileset3D, ExactSnapService>();
+
+  function pickable(): Tileset3D[] {
+    return [...deps.sites()].flatMap((s) =>
+      s.tileset !== undefined ? [s.tileset] : [],
+    );
+  }
+  function clientService(): ClientSnapService {
+    const tilesets = pickable();
+    if (
+      client === undefined ||
+      client.tilesets.length !== tilesets.length ||
+      client.tilesets.some((t, i) => t !== tilesets[i])
+    ) {
+      client = { tilesets, service: new ClientSnapService(tilesets) };
+    }
+    return client.service;
+  }
+  /** The corridor's `ExactSnapService`, routed by the request's tileset. */
+  const server: SnapService = routeByTileset(exact);
+
+  function siteOf(tileset: Tileset3D | undefined): SiteRuntime | undefined {
+    if (tileset === undefined) {
+      return undefined;
+    }
+    return [...deps.sites()].find((s) => s.tileset === tileset);
+  }
+
+  /** Where each placement of `site` draws `design` (a one-tileset site: rigid in both). */
+  function drawnEnd(
+    site: SiteRuntime,
+    design: ArrayLike<number>,
+  ): DrawnEnd | undefined {
+    const rigid = site.rigidPlacement ?? site.reprojectedPlacement;
+    if (rigid === undefined) {
+      return undefined;
+    }
+    const r = rigid.displayed(design);
+    const p =
+      site.drawings !== undefined && site.reprojectedPlacement !== undefined
+        ? site.reprojectedPlacement.displayed(design)
+        : r;
+    return { rigid: r, reprojected: p };
+  }
+  const frameOf = (site: SiteRuntime): EngineeringFrame | undefined =>
+    (site.reprojectedPlacement ?? site.rigidPlacement)?.frame;
+
+  // ---------------------------------------------------------- openers
+  function buildOpeners(): void {
+    const a = deps.answers();
+    const site = corridor();
+    const rigid = site?.rigidPlacement;
+    const reprojected = site?.reprojectedPlacement;
+    if (a === undefined || rigid === undefined || reprojected === undefined) {
+      return;
+    }
+    // Marked on the visible top: the barrier's over the profile grade line.
+    openers = openingMeasurements(
+      a,
+      { rigid, reprojected },
+      (offset) => visibleRise(offset) - sectionSurface(offset),
+    );
+    // PROJ's zone 3 for the mark, from NGS's published position.
+    markDesign = reprojected.designOf(Float64Array.from(a.mark.bodyFixed));
+    openerMeasures = new Map();
+    ruler = undefined;
+    remeasure();
+    redraw();
+  }
+
+  /** The openers' and the user's `measure` (again once the frame data is in). */
+  function remeasure(): void {
+    const a = deps.answers();
+    const frame = corridor()?.reprojectedPlacement?.frame;
+    if (a !== undefined && frame !== undefined && frames.loaded()) {
+      const measures = new Map<OpenerId, OpenerMeasure>();
+      const errors = new Map<OpenerId, string>();
+      const exactEnd = (design: ArrayLike<number>): MeasureEnd => ({
+        site: "corridor",
+        design: Float64Array.from(design),
+        rigid: Float64Array.from(design),
+        reprojected: Float64Array.from(design),
+        how: "exact",
+        kind: "point",
+        tolerance: 0,
+      });
+      // Each opener between its two design points: the marker is the
+      // station's own design point, so its two ends are one point.
+      const pairs: [OpenerId, ArrayLike<number>, ArrayLike<number>][] = [
+        ["marker", a.marker.design, a.points[a.marker.point]!.design],
+        ["mark", a.mark.design, a.mark.nearestDesign],
+      ];
+      const first = a.pairs[0];
+      if (first !== undefined) {
+        pairs.push([
+          "pair",
+          a.points[first.from]!.design,
+          a.points[first.to]!.design,
+        ]);
+      }
+      for (const [id, da, db] of pairs) {
+        const pa = designPoint(frame, da);
+        const pb = designPoint(frame, db);
+        const outcome = measureDesign(frame, pa, pb);
+        if (outcome?.m !== undefined) {
+          measures.set(id, {
+            m: outcome.m,
+            view: measurementModel(
+              asSnap(exactEnd(da), pa),
+              asSnap(exactEnd(db), pb),
+              outcome.m,
+            ),
+          });
+        } else if (outcome?.error !== undefined) {
+          errors.set(id, outcome.error);
+        }
+      }
+      openerMeasures = measures;
+      openerErrors = errors;
+      const pair = measuredOf(measures.get("pair"));
+      ruler =
+        pair === undefined
+          ? undefined
+          : rulerEnd(pair, a.frame.metersPerUnit, unitSymbol(a.frame.unitName));
+      redraw();
+    }
+    measureUser(true);
+    deps.changed();
+  }
+
+  /** The user's measurement, when both points are in (`again`: even if measured). */
+  function measureUser(again = false): void {
+    if (state.phase !== "done") {
+      measured = undefined;
+      userError = undefined;
+      return;
+    }
+    if (!again && measured?.state === state) {
+      return;
+    }
+    const site = deps.site(state.a.site);
+    const frame = site && frameOf(site);
+    if (frame === undefined) {
+      measured = undefined;
+      return;
+    }
+    const point = (end: MeasureEnd) =>
+      designPoint(
+        frame,
+        end.design,
+        end.how === "link"
+          ? undefined
+          : end.how === "pick"
+            ? { how: "pick", tolerance: end.tolerance }
+            : {
+                how: "snap",
+                tolerance: end.tolerance,
+                ...(end.kind !== undefined && { kind: end.kind }),
+              },
+      );
+    const pa = point(state.a);
+    const pb = point(state.b);
+    const outcome = measureDesign(frame, pa, pb);
+    userError = outcome?.error;
+    measured =
+      outcome?.m === undefined
+        ? undefined
+        : {
+            state,
+            m: outcome.m,
+            view: measurementModel(
+              asSnap(state.a, pa),
+              asSnap(state.b, pb),
+              outcome.m,
+            ),
+          };
+  }
+
+  // -------------------------------------------------------- the globe
+  /** The corridor's openers are drawn and shown: the corridor is selected. */
+  const here = () => deps.away?.() === undefined;
+
+  function redraw(): void {
+    overlay.set(
+      measureLines(here() ? openers : [], here() ? ruler : undefined, state),
+    );
+    overlay.setState(deps.drawState());
+    deps.wake();
+    place();
+  }
+
+  // ------------------------------------------------------ the labels
+  function place(): void {
+    if (deps.disposed()) {
+      return;
+    }
+    const r = canvas.getBoundingClientRect();
+    const next = placeLabels({
+      view: viewer.view,
+      width: r.width,
+      height: r.height,
+      answers: deps.answers(),
+      draw: deps.drawState(),
+      openers: here() ? openers : [],
+      state,
+      userText:
+        measured !== undefined
+          ? `${measured.view.designDistance} design`
+          : userError !== undefined
+            ? "No measurement"
+            : "Measuring…",
+      measured: new Map(
+        [...openerMeasures].flatMap(([id, m]) => {
+          const figures = measuredOf(m);
+          return figures === undefined ? [] : [[id, figures] as const];
+        }),
+      ),
+      ruler,
+      hover,
+      crosshair,
+    });
+    if (JSON.stringify(next) !== JSON.stringify(live.get())) {
+      live.set(next);
+    }
+  }
+
+  // -------------------------------------------------------- the input
+  let hoverAbort: AbortController | undefined;
+  let hoverBusy = false;
+  let hoverNext: [number, number] | undefined;
+  /** When the last hover snap started, and the timer waiting out the interval. */
+  let hoverStarted = -Infinity;
+  let hoverTimer: ReturnType<typeof setTimeout> | undefined;
+  let clickAbort: AbortController | undefined;
+
+  const snapDeps = (): SnapDeps => ({
+    client: clientService(),
+    server,
+    pick: async (x, y) => {
+      const { hit } = await deps.pickAt(x, y);
+      if (hit === undefined) {
+        return undefined;
+      }
+      return {
+        snapPoint: hit.position,
+        hitPoint: hit.position,
+        distance: 0,
+        kind: "surface",
+        ...(hit.design !== undefined && { design: hit.design }),
+        tolerance: hit.tolerance,
+        exact: false,
+        ...(hit.tileset !== undefined && { tileset: hit.tileset }),
+        source: "client",
+        provisional: false,
+      };
+    },
+  });
+
+  /** A snap as a measured end, or why it isn't one. */
+  function toEnd(result: SnapResult | undefined): MeasureEnd | string {
+    if (result === undefined) {
+      return "Nothing to measure there: point at a model.";
+    }
+    const site = siteOf(result.tileset);
+    if (site === undefined) {
+      return "No design model there: the ground isn't measurable.";
+    }
+    const judged = hitRefusal(site, result.tileset, deps.pickState());
+    if (judged.refused !== undefined) {
+      return judged.refused;
+    }
+    const placement = result.item?.georeference;
+    if (result.design === undefined || placement === undefined) {
+      return "This site's frame is still loading: no design coordinates yet.";
+    }
+    const design = Float64Array.from(result.design.design);
+    const shownDesign =
+      result.shownPoint !== undefined
+        ? placement.designOf(result.shownPoint)
+        : undefined;
+    const drawn = drawnEnd(site, shownDesign ?? design);
+    if (drawn === undefined) {
+      return "This site's frame is still loading: no design coordinates yet.";
+    }
+    const mode = deps.snapMode();
+    return {
+      site: site.entry.id,
+      design,
+      ...drawn,
+      how:
+        result.source === "server" && result.exact
+          ? "exact"
+          : mode === "none"
+            ? "pick"
+            : "geometry",
+      kind: result.kind,
+      tolerance: result.tolerance,
+      ...(shownDesign !== undefined && { shownAbove: true }),
+    };
+  }
+
+  function apply(input: MeasureInput): void {
+    const next = nextMeasure(state, input);
+    if (input.type === "point" && next === state) {
+      instruction = "Both points go on one model: this one is another site's.";
+      refused = true;
+      deps.changed();
+      return;
+    }
+    state = next;
+    instruction = undefined;
+    refused = false;
+    note = undefined;
+    measureUser();
+    deps.setLink(formatMeasureLink(state));
+    redraw();
+    deps.changed();
+  }
+
+  /** A point where the user clicked (or the view's center). */
+  function pointAt(x: number, y: number): void {
+    clickAbort?.abort();
+    const ctl = new AbortController();
+    clickAbort = ctl;
+    const camera = viewer.view.camera.version;
+    const before = deps.pickState();
+    busy = true;
+    deps.changed();
+    void snapWith(
+      deps.snapMode(),
+      { view: viewer.view, x, y, aperture: APERTURE },
+      snapDeps(),
+      () => {},
+      ctl.signal,
+    )
+      .then((result) => {
+        if (ctl.signal.aborted || deps.disposed()) {
+          return;
+        }
+        const now = deps.pickState();
+        // Stale: the camera or the morph moved while it ran.
+        if (
+          camera !== viewer.view.camera.version ||
+          now.t !== before.t ||
+          now.exaggeration !== before.exaggeration
+        ) {
+          instruction = "The view moved while snapping: click again.";
+          refused = true;
+          return;
+        }
+        const end = toEnd(result);
+        if (typeof end === "string") {
+          instruction = end;
+          refused = true;
+          return;
+        }
+        apply({ type: "point", end });
+        // A correct refusal, said plainly: the design's exact point is
+        // behind what is drawn from here (its far face, under a deck).
+        if (result?.serverOutOfSight !== undefined) {
+          note = OUT_OF_SIGHT_NOTE;
+        }
+      })
+      .catch(() => {
+        instruction = "That snap failed: click again.";
+        refused = true;
+      })
+      .finally(() => {
+        if (clickAbort === ctl) {
+          clickAbort = undefined;
+          busy = false;
+          deps.changed();
+        }
+      });
+  }
+
+  function hoverAt(x: number, y: number): void {
+    if (deps.snapMode() === "none") {
+      setHover(undefined);
+      return;
+    }
+    hoverNext = [x, y];
+    if (hoverBusy || hoverTimer !== undefined) {
+      return;
+    }
+    // Throttled: one snap in flight, at most one start per interval.
+    const wait = hoverStarted + HOVER_INTERVAL_MS - performance.now();
+    if (wait > 0) {
+      hoverTimer = setTimeout(() => {
+        hoverTimer = undefined;
+        if (hoverNext !== undefined && !deps.disposed()) {
+          hoverAt(...hoverNext);
+        }
+      }, wait);
+      return;
+    }
+    hoverStarted = performance.now();
+    const [hx, hy] = hoverNext;
+    hoverNext = undefined;
+    hoverAbort?.abort();
+    const ctl = new AbortController();
+    hoverAbort = ctl;
+    hoverBusy = true;
+    const camera = viewer.view.camera.version;
+    const show = (result: SnapResult) => {
+      if (ctl.signal.aborted || camera !== viewer.view.camera.version) {
+        return;
+      }
+      const site = siteOf(result.tileset);
+      if (
+        site === undefined ||
+        hitRefusal(site, result.tileset, deps.pickState()).refused !==
+          undefined ||
+        result.design === undefined
+      ) {
+        setHover(undefined);
+        return;
+      }
+      const px = viewer.view.toPixel(result.shownPoint ?? result.snapPoint);
+      setHover(
+        px === undefined
+          ? undefined
+          : {
+              x: px[0]!,
+              y: px[1]!,
+              kind: result.kind,
+              exact: result.exact,
+              provisional: result.provisional,
+            },
+      );
+    };
+    void snapWith(
+      deps.snapMode(),
+      { view: viewer.view, x: hx, y: hy, aperture: APERTURE },
+      snapDeps(),
+      show,
+      ctl.signal,
+    )
+      .then((r) => {
+        if (r === undefined && !ctl.signal.aborted) {
+          setHover(undefined);
+        }
+      })
+      .catch(() => setHover(undefined))
+      .finally(() => {
+        hoverBusy = false;
+        if (hoverNext !== undefined && !deps.disposed()) {
+          hoverAt(...hoverNext);
+        }
+      });
+  }
+
+  /** The aperture cursor while snapping; the default otherwise. */
+  function syncCursor(): void {
+    canvas.style.cursor = deps.snapMode() === "none" ? "" : SNAP_CURSOR;
+  }
+
+  function setHover(next: MeasureLive["hover"]): void {
+    if (JSON.stringify(next) === JSON.stringify(hover)) {
+      return;
+    }
+    hover = next;
+    place();
+  }
+
+  const canvas = viewer.canvas;
+  const local = (e: PointerEvent): [number, number] => {
+    const r = canvas.getBoundingClientRect();
+    return [e.clientX - r.left, e.clientY - r.top];
+  };
+  let down: { x: number; y: number; id: number } | undefined;
+  canvas.addEventListener(
+    "pointerdown",
+    (e) => {
+      if (e.button === 0) {
+        down = { x: e.clientX, y: e.clientY, id: e.pointerId };
+      }
+    },
+    { signal },
+  );
+  canvas.addEventListener(
+    "pointerup",
+    (e) => {
+      const d = down;
+      down = undefined;
+      if (
+        d !== undefined &&
+        d.id === e.pointerId &&
+        Math.hypot(e.clientX - d.x, e.clientY - d.y) < CLICK_SLOP
+      ) {
+        pointAt(...local(e));
+      }
+    },
+    { signal },
+  );
+  canvas.addEventListener(
+    "pointermove",
+    (e) => {
+      if (e.buttons === 0) {
+        hoverAt(...local(e));
+      } else {
+        setHover(undefined);
+      }
+    },
+    { signal },
+  );
+  canvas.addEventListener(
+    "pointerleave",
+    () => {
+      hoverNext = undefined;
+      hoverAbort?.abort();
+      setHover(undefined);
+    },
+    { signal },
+  );
+  syncCursor();
+  // Keyboard: the canvas takes focus; Enter places a point at the center
+  // (the crosshair marks it), Escape clears.
+  const priorTabIndex = canvas.getAttribute("tabindex");
+  if (priorTabIndex === null) {
+    canvas.tabIndex = 0;
+  }
+  canvas.addEventListener(
+    "keydown",
+    (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        pointAtCenter();
+      } else if (e.key === "Escape") {
+        clear();
+      }
+    },
+    { signal },
+  );
+  canvas.addEventListener(
+    "focus",
+    () => {
+      crosshair = canvas.matches(":focus-visible");
+      place();
+    },
+    { signal },
+  );
+  canvas.addEventListener(
+    "blur",
+    () => {
+      crosshair = false;
+      place();
+    },
+    { signal },
+  );
+
+  function pointAtCenter(): void {
+    const r = canvas.getBoundingClientRect();
+    pointAt(r.width / 2, r.height / 2);
+  }
+  function clear(): void {
+    clickAbort?.abort();
+    apply({ type: "escape" });
+  }
+
+  // --------------------------------------------------------- the link
+  let pendingLink: ReturnType<typeof parseMeasureLink> | undefined;
+  function applyLink(
+    params: Readonly<Record<string, string | undefined>>,
+  ): void {
+    const linked = parseMeasureLink(
+      params,
+      [...deps.sites()].map((s) => s.entry.id),
+    );
+    const current = formatMeasureLink(state);
+    if (
+      linked === undefined
+        ? current.a === undefined
+        : current.a === params.a && current.b === params.b
+    ) {
+      return;
+    }
+    pendingLink = linked;
+    if (linked === undefined) {
+      apply({ type: "escape" });
+      return;
+    }
+    resolveLink();
+  }
+  /** A linked measurement once its site's placements are in. */
+  function resolveLink(): void {
+    const linked = pendingLink;
+    const site = linked && deps.site(linked.site);
+    if (linked === undefined || site === undefined) {
+      return;
+    }
+    const a = drawnEnd(site, linked.a);
+    const b = drawnEnd(site, linked.b);
+    if (a === undefined || b === undefined) {
+      return;
+    }
+    pendingLink = undefined;
+    const end = (design: Float64Array, drawn: DrawnEnd): MeasureEnd => ({
+      site: linked.site,
+      design,
+      ...drawn,
+      how: "link",
+      tolerance: 0,
+    });
+    state = { phase: "done", a: end(linked.a, a), b: end(linked.b, b) };
+    measureUser();
+    redraw();
+    deps.changed();
+  }
+
+  // --------------------------------------------------------- the view
+  function view(): MeasurePanel {
+    const s = deps.drawState();
+    const site = state.phase === "done" ? deps.site(state.a.site) : undefined;
+    const away = deps.away?.();
+    return measurePanel({
+      answers: deps.answers(),
+      draw: s,
+      openers: away === undefined ? openers : [],
+      ...(away !== undefined && { away }),
+      details: (id, a) =>
+        openerDetails(id, a, openerMeasures, markDesign, datumOf(corridor())),
+      measured: (id) => measuredOf(openerMeasures.get(id)),
+      openerError: (id) => openerErrors.get(id),
+      userError,
+      snap: deps.snapMode(),
+      state,
+      instruction,
+      refused,
+      ...(note !== undefined && { note }),
+      busy,
+      result:
+        state.phase === "done" && measured !== undefined
+          ? userResult(
+              measured,
+              s,
+              site?.drawings !== undefined,
+              site && frameOf(site),
+              datumOf(site),
+            )
+          : undefined,
+      framesFailed: frames.failed(),
+      framesLoaded: frames.loaded(),
+    });
+  }
+
+  // ------------------------------------------------------- the target
+  const target: MorphTarget = {
+    setState(st) {
+      overlay.setState(st);
+    },
+  };
+
+  void frames.load();
+  signal.addEventListener("abort", () => {
+    hoverAbort?.abort();
+    clickAbort?.abort();
+    clearTimeout(hoverTimer);
+    canvas.style.cursor = "";
+  });
+
+  return {
+    view,
+    live,
+    target,
+    place,
+    placementsChanged() {
+      // Only the corridor's placements make the openers and exact snapping.
+      const site = corridor();
+      const now = [
+        site?.tileset,
+        site?.rigidPlacement,
+        site?.reprojectedPlacement,
+      ];
+      if (now.some((x, i) => x !== corridorSeen[i])) {
+        corridorSeen = now;
+        exact.clear();
+        const t = site?.tileset;
+        if (t !== undefined && t.placement !== undefined) {
+          exact.set(t, new ExactSnapService(t, deps.alignment));
+        }
+        buildOpeners();
+      }
+      resolveLink();
+    },
+    answersChanged() {
+      buildOpeners();
+    },
+    pointAtCenter,
+    clear,
+    applyLink,
+    retry: () => frames.retry(),
+    retryMeasure: () => remeasure(),
+    rulerFocus() {
+      const o = openers.find((x) => x.id === "pair");
+      if (o === undefined || ruler === undefined) {
+        return undefined;
+      }
+      const s = deps.drawState();
+      const [ta, tb] = rulerTips(o, ruler).map((e) =>
+        drawnAt(e, s.t, s.exaggeration),
+      );
+      const pa = drawnAt(o.a, s.t, s.exaggeration);
+      const pb = drawnAt(o.b, s.t, s.exaggeration);
+      return {
+        center: Float64Array.from(
+          [0, 1, 2].map((k) => (ta![k]! + tb![k]!) / 2),
+        ),
+        along: Float64Array.from([0, 1, 2].map((k) => pb[k]! - pa[k]!)),
+      };
+    },
+    siteChanged() {
+      redraw();
+      deps.changed();
+    },
+    snapChanged() {
+      syncCursor();
+      hoverAbort?.abort();
+      setHover(undefined);
+    },
+    shownValues() {
+      const a = deps.answers();
+      if (a === undefined) {
+        return undefined;
+      }
+      const s = deps.drawState();
+      const marker = openers.find((o) => o.id === "marker");
+      const pair = openerMeasures.get("pair")?.m;
+      const pairShown = pair && shownOf(pair);
+      const settled = !s.morphing && s.exaggeration === 1;
+      const done = state.phase === "done" ? state : undefined;
+      const userShown =
+        done !== undefined && measured?.state === done
+          ? shownOf(measured.m)
+          : undefined;
+      return shownValues(a, {
+        ...(pairShown !== undefined && { pair: pairShown }),
+        ...(settled &&
+          marker !== undefined && {
+            marker: {
+              separation: dist(
+                drawnAt(marker.a, s.t, 1),
+                drawnAt(marker.b, s.t, 1),
+              ),
+              mode: s.t >= 0.5 ? "reprojected" : "rigid",
+            },
+          }),
+        ...(markDesign !== undefined && { mark: markDesign }),
+        ...(openerMeasures.get("mark")?.m.design !== undefined && {
+          markOffset: openerMeasures.get("mark")!.m.design!.horizontalDistance,
+        }),
+        ...(done !== undefined && {
+          user: {
+            a: done.a,
+            b: done.b,
+            ...(userShown !== undefined && { measurement: userShown }),
+          },
+        }),
+      });
+    },
+    userEnds() {
+      return state.phase === "done"
+        ? { a: state.a.design, b: state.b.design, site: state.a.site }
+        : undefined;
+    },
+    openerFocus(id) {
+      const o = openers.find((x) => x.id === id);
+      if (o === undefined) {
+        return undefined;
+      }
+      const s = deps.drawState();
+      const pa = drawnAt(o.a, s.t, s.exaggeration);
+      const pb = drawnAt(o.b, s.t, s.exaggeration);
+      return {
+        center: Float64Array.from([0, 1, 2].map((k) => (pa[k]! + pb[k]!) / 2)),
+        length: dist(pa, pb),
+      };
+    },
+    dispose() {
+      live.dispose();
+      overlay.dispose();
+      if (priorTabIndex === null) {
+        canvas.removeAttribute("tabindex");
+      }
+    },
+  };
+}

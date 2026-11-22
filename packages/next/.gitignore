@@ -1,18 +1,3 @@
 node_modules/
 dist/
 dist-lib/
-# Local secrets (ion access token for the dev-server proxy)
-.env.local
-.env.*.local
-
-# Design-review screenshots: local only (large, retaken often; never committed)
-examples/*/design-screenshots/
-
-# Python bytecode (importing scripts/frameFixtures.py writes it)
-__pycache__/
-
-# Browser checks' screenshots and pages at the package root: local only
-/design-screenshots/
-
-# The handbook's generated figures (npm run handbook:data); its build goes to handbook/dist/
-/handbook/generated/
