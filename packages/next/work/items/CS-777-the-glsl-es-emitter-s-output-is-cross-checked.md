@@ -2,7 +2,7 @@
 id: CS-777
 title: The GLSL ES emitter's output is cross-checked against naga's, as CS-52 planned
 kind: work
-state: in-progress
+state: done
 created: 2026-11-20
 project: CS-10
 needs: [CS-52, CS-580]

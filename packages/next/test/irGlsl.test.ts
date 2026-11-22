@@ -3,12 +3,9 @@
 // either fails here, in both), each difference the plan lists has its form,
 // and the layout, source map and refusals match the WGSL emitter's. The
 // compile, link and readback half runs in the browser suite
-// (`node bench/run.mjs irGlsl`). naga's GLSL ES output as a cross-check runs
-// when `NAGA` names a naga binary, and is skipped with its reason otherwise.
-import { execFileSync } from "node:child_process";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+// (`node bench/run.mjs irGlsl`), which also compiles naga's GLSL ES output
+// beside ours (CS-777). The Node half of that cross-check, naga-wasm writing
+// GLSL ES 3.00 for every module, runs here whenever naga-wasm is installed.
 import { describe, expect, it } from "vitest";
 import {
   Builder,
@@ -19,6 +16,7 @@ import {
   packUniforms,
   type Program,
 } from "../src/ir/index.ts";
+import { nagaGlsl, type NagaApi } from "../src/ir/nagaVertex.ts";
 import { wgslCases } from "../src/ir/wgslCases.ts";
 
 const cases = wgslCases();
@@ -261,74 +259,84 @@ describe("the emitter", () => {
   });
 });
 
-describe("naga's GLSL ES output, as a cross-check", () => {
-  // CS-52's done-when asks for naga's GLSL ES 3.00 for one emitted WGSL module
-  // per test, compiled beside ours. naga isn't a dependency yet (installing it
-  // is the owner's call: a Rust crate or an npm package). Set NAGA to a naga
-  // binary to run this half, which checks that naga translates every module.
-  // Compiling its output in a WebGL 2 context beside ours is not written yet:
-  // it needs a naga to try it on. Until a naga is found the test is skipped.
-  const naga = process.env.NAGA;
-  const reason = naga
-    ? ""
-    : "no naga: set NAGA to a naga binary (CS-52 asks the owner which naga to use)";
-  it.skipIf(!naga)(`translates every emitted module (${reason})`, () => {
-    const dir = mkdtempSync(join(tmpdir(), "cir-naga-"));
-    try {
-      for (const [i, c] of cases.entries()) {
-        const w = emitWgsl(c.program);
-        // A vertex entry over the same function: naga's GLSL ES back end has
-        // no compute stage. Parameters are @location attributes (bools and
-        // ints as f32, as the kernels carry them).
-        const attrs = w.params.map(
-          (q, j) =>
-            `@location(${j}) a${j}: ${
-              q.type === "bool" || q.type === "int"
-                ? "f32"
-                : {
-                    float: "f32",
-                    float2: "vec2f",
-                    float3: "vec3f",
-                    float4: "vec4f",
-                  }[q.type]
-            }`,
-        );
-        const args = w.params.map((q, j) =>
-          q.type === "bool"
-            ? `a${j} != 0.0`
-            : q.type === "int"
-              ? `i32(a${j})`
-              : `a${j}`,
-        );
-        const first = w.outputs[0]!;
-        const sink =
-          first.type === "bool"
-            ? `select(0.0, 1.0, r.${first.name})`
-            : first.type === "int"
-              ? `f32(r.${first.name})`
-              : first.type === "float"
-                ? `r.${first.name}`
-                : `r.${first.name}.x`;
-        const wgsl = [
-          w.code,
-          `@vertex fn cir_vs(${attrs.join(", ")}) -> @builtin(position) vec4f {`,
-          `  let r = ${w.fn}(${args.join(", ")});`,
-          `  return vec4f(${sink}, 0.0, 0.0, 1.0);`,
-          `}`,
-        ].join("\n");
-        const input = join(dir, `${i}.wgsl`);
-        const output = join(dir, `${i}.vert`);
-        writeFileSync(input, wgsl);
-        execFileSync(
-          naga!,
-          [input, output, "--entry-point", "cir_vs", "--profile", "es300"],
-          { stdio: "pipe" },
-        );
-        const glsl = readFileSync(output, "utf8");
-        expect(glsl, c.name).toMatch(/^#version 300 es/);
-      }
-    } finally {
-      rmSync(dir, { recursive: true, force: true });
+// naga-wasm is a devDependency, so `npm install` provides it. Only a package
+// that isn't installed skips the cases below, with a hint (and the run fails
+// under CI); a broken install throws.
+const naga: NagaApi | undefined = await import("naga-wasm").then(
+  (m) => m as unknown as NagaApi,
+  (error: unknown) => {
+    if ((error as { code?: string }).code === "ERR_MODULE_NOT_FOUND") {
+      return undefined;
     }
+    throw error;
+  },
+);
+
+describe("naga's GLSL ES output, as a cross-check", () => {
+  // CS-52 asked for naga's GLSL ES 3.00 for one emitted WGSL module per test,
+  // compiled beside ours. This half checks that naga writes it for every
+  // module and that the names the browser page binds by are there; the page
+  // (`bench/irGlsl.ts`) compiles, links and reads it back in WebGL 2.
+  it("is installed (run `npm install` if this fails or the cases below skip)", () => {
+    if (process.env.CI) {
+      expect(naga).toBeDefined();
+    } else if (!naga) {
+      console.warn(
+        "naga-wasm is not installed, so the naga cross-check cases are skipped. Run `npm install` at the repository root.",
+      );
+    }
+  });
+  for (const c of cases) {
+    it.skipIf(!naga)(`writes ${c.name} as GLSL ES 3.00`, () => {
+      const w = emitWgsl(c.program);
+      const g = nagaGlsl(naga!, w);
+      expect(g.code, c.name).toMatch(/^#version 300 es\n/);
+      // Vertex inputs keep their @location, as `layout(location = n)`.
+      for (const a of g.attributes) {
+        expect(g.code, c.name).toMatch(
+          new RegExp(`layout\\(location = ${a.location}\\) in \\w+ \\w+;`),
+        );
+      }
+      // The outputs are the names the page records through transform feedback.
+      for (const [i, name] of g.varyingNames.entries()) {
+        const out = g.varyings[i]!;
+        expect(g.code, c.name).toMatch(
+          new RegExp(`out (float|vec[234]) ${name};`),
+        );
+        expect(g.code, c.name).toContain(
+          `${name} = _tmp_return.o${out.location}_;`,
+        );
+      }
+      // One std140 block for the uniform buffer, and none without one.
+      expect(g.uniformBlock !== undefined, c.name).toBe(w.uniforms.length > 0);
+      if (g.uniformBlock) {
+        expect(g.code, c.name).toContain(
+          `layout(std140) uniform ${g.uniformBlock}`,
+        );
+      }
+    });
+  }
+  it.skipIf(!naga)(
+    "rewrites gl_Position.yz for clip-space depth, and no output reads it",
+    () => {
+      const g = nagaGlsl(naga!, emitWgsl(programOf("composite")));
+      expect(g.code).toContain(
+        "gl_Position.yz = vec2(-gl_Position.y, gl_Position.z * 2.0 - gl_Position.w);",
+      );
+      // The page reads transform feedback varyings, never gl_Position, so the
+      // rewrite can't reach a readback.
+      expect(g.varyingNames.every((n) => n.startsWith("_vs2fs_"))).toBe(true);
+    },
+  );
+  it.skipIf(!naga)("refuses nothing the emitter writes", () => {
+    const refused: string[] = [];
+    for (const c of cases) {
+      try {
+        nagaGlsl(naga!, emitWgsl(c.program));
+      } catch (error) {
+        refused.push(`${c.name}: ${(error as Error).message}`);
+      }
+    }
+    expect(refused).toEqual([]);
   });
 });
