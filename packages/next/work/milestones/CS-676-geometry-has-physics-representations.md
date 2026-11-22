@@ -15,4 +15,4 @@ To shape: clauses (c1, c2…), each checkable, and the independent check.
 
 ## Notes
 
-From the owner's release planning on 2026-11-17 (`docs/decisions/2026-11-17-release-plan-and-parity.md`). Release: gates no release (design). Its items are constraints marked `c?` until shaping links each to a clause.
+From the owner's release planning on 2026-11-17 (`docs/decisions/2026-11-17-release-plan-and-parity.md`). Release: 2.0.0 since the owner's release sweep on 2026-11-22 (it was "gates no release" before). Its items are constraints marked `c?` until shaping links each to a clause.
