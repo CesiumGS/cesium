@@ -293,12 +293,15 @@ export function checkDeclarations(folders, { only = [] } = {}) {
       ) {
         return;
       }
-      if (!exported.has(symbol) && !dangling.has(symbol.name)) {
+      if (!exported.has(symbol)) {
         const file = located(
           symbol.declarations.find(ours).getSourceFile().fileName,
         );
-        if (reported(file) || reported(owner.file)) {
-          dangling.set(symbol.name, { owner: owner.name, file });
+        // Keyed by name and declaring file, as PENDING is: a dangling type
+        // that shares a name with a pending one is still recorded.
+        const key = `${symbol.name}\0${file}`;
+        if (!dangling.has(key) && (reported(file) || reported(owner.file))) {
+          dangling.set(key, { name: symbol.name, owner: owner.name, file });
         }
       }
       // A dangling type's own references are reachable too.
@@ -327,8 +330,8 @@ export function checkDeclarations(folders, { only = [] } = {}) {
         walk(symbol, { name: symbol.name, file });
       }
     }
-    for (const [name, { owner, file }] of [...dangling].sort(([a], [b]) =>
-      a.localeCompare(b),
+    for (const { name, owner, file } of [...dangling.values()].sort(
+      (a, b) => a.name.localeCompare(b.name) || a.file.localeCompare(b.file),
     )) {
       const line = `${name} (${file}, named by ${owner})`;
       const held = PENDING.find((p) => p.name === name && p.file === file);
