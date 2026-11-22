@@ -2,10 +2,11 @@
 id: CS-54
 title: Routes on both emitters, with the residual and df64 forms
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-13
 project: CS-10
 needs: [CS-52, CS-53]
+claimed_by: orch-11-CS-54
 touches: [packages/next/src/ir/**, packages/next/src/transform/**]
 ---
 
