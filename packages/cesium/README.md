@@ -6,7 +6,7 @@ Clean-slate, WebGPU-only engine prototype. See `CESIUM2_WEBGPU_PLAN.md` at the r
 
 ```sh
 npm install                                 # at the repo root
-npm run setup      # the 1.x build, the CesiumJS releases Dyno and the benchmarks run, the Slang WASM build, SMLib, Open CASCADE, NIST's STEP samples
+npm run setup      # checks the pinned 1.x, the CesiumJS releases Dyno and the benchmarks run, the Slang WASM build, SMLib, Open CASCADE, NIST's STEP samples
 ```
 
 `npm install` (or `npm ci`) installs the pinned CesiumJS 1.x (`cesium-1x`), which

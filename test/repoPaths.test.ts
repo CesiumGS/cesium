@@ -19,10 +19,14 @@ const scripts = join(repo, "scripts");
  */
 function isGitIgnored(path: string): boolean {
   try {
-    execFileSync("git", ["check-ignore", "-q", "--", path], { cwd: repo });
+    execFileSync("git", ["check-ignore", "-q", "--", path], {
+      cwd: repo,
+      stdio: "ignore",
+    });
     return true;
   } catch {
-    // Exit 1 means "not ignored".
+    // Exit 1 means "not ignored". Any other failure (exit 128 with no .git,
+    // no git binary) also returns false, so the path is reported as missing.
     return false;
   }
 }

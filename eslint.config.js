@@ -38,6 +38,8 @@ export default [
       "dist/",
       "packages/*/dist/",
       "packages/cesium/dist-lib/",
+      "handbook/dist/",
+      "apps/sandcastle/dist/",
     ],
   },
   {
