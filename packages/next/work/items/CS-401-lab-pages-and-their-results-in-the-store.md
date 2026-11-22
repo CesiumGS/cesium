@@ -21,3 +21,7 @@ Every id Lab shows runs headless. `run --scenes globe-parity` records FLIP per v
 ## Plan
 
 `docs/superpowers/plans/2026-11-13-dyno-dev-harness.md`, its milestone table.
+
+## Note (2026-11-22)
+
+CS-900's instrument, the USD reader comparison, also writes Lab runs. They move into the results store with this item.
