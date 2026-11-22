@@ -24,7 +24,7 @@
 // 'wasm-unsafe-eval', and only for the worker (basisTranscoderEsm.ts).
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { defineConfig, type Plugin } from "vite";
+import { defaultClientConditions, defineConfig, type Plugin } from "vite";
 import { basisTranscoderEsm } from "../../basisTranscoderEsm.ts";
 import { skyPackGuard } from "../../scripts/vitePluginSkyPack.ts";
 
@@ -95,6 +95,9 @@ export default defineConfig({
   // Asset URLs relative to the module that references them, not the page.
   base: "./",
   publicDir: false,
+  // 2.0's packages resolve to their sources (the @cesium/source export
+  // condition, which a release strips), so nothing needs a build first.
+  resolve: { conditions: ["@cesium/source", ...defaultClientConditions] },
   plugins: [basisTranscoderEsm(), skyPackGuard(), licenses(), libraryPackage()],
   build: {
     outDir: "dist-lib",

@@ -24,7 +24,7 @@ import { OffscreenTarget } from "../packages/core/src/scene/renderTarget.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const SOURCE = readFileSync(
-  join(import.meta.dirname, "../packages/next/src/atmosphere/sky.slang"),
+  join(import.meta.dirname, "../packages/core/src/atmosphere/sky.slang"),
   "utf8",
 );
 

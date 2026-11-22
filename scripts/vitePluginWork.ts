@@ -70,7 +70,7 @@ export function workApi(prefix = "/work-api"): Plugin {
       const board = boardReader(root, { onChange: tell });
       const changes = changesReader(root);
       const flow = flowReader(root);
-      const workDir = join(root, "packages", "next", "work");
+      const workDir = join(root, "work");
       server.watcher.add(workDir);
       const changed = (file: string) => {
         board.changed(file);

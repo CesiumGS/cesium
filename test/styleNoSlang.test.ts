@@ -23,7 +23,7 @@ vi.mock("../packages/core/src/scene/slangWorker.ts", () => {
 });
 
 const SLANG_FILES = ["src/scene/slang.ts", "src/scene/slangWorker.ts"];
-const root = normalize(join(import.meta.dirname, "..", "packages", "next"));
+const root = normalize(join(import.meta.dirname, "..", "packages", "core"));
 
 describe("styling without Slang", () => {
   it("creates and uses a style, strings included, without loading Slang", async () => {
@@ -108,7 +108,7 @@ describe("what loads with the page", () => {
     "src/scene/FeatureStyle.ts",
     "src/scene/CustomShader.ts",
     "src/index.ts",
-    "widgets/index.ts",
+    "../next/widgets/index.ts",
   ])("%s imports Slang's modules by no static import", (entry) => {
     const reached = staticImports(entry, readFile);
     expect(reached.filter((f) => SLANG_FILES.includes(f))).toEqual([]);

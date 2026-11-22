@@ -14,7 +14,7 @@ import type { PointSpread } from "../packages/core/src/scene/observer.ts";
 import { fakeEngine } from "./fakeGpu.ts";
 
 const SOURCE = readFileSync(
-  join(import.meta.dirname, "../packages/next/src/atmosphere/sky.slang"),
+  join(import.meta.dirname, "../packages/core/src/atmosphere/sky.slang"),
   "utf8",
 );
 
@@ -165,7 +165,7 @@ describe("the background's level", () => {
     );
     expect(SOURCE).not.toMatch(/SampleLevel\(starSampler, d, 0\.0\)/);
     const sky = readFileSync(
-      join(import.meta.dirname, "../packages/next/src/atmosphere/Sky.ts"),
+      join(import.meta.dirname, "../packages/core/src/atmosphere/Sky.ts"),
       "utf8",
     );
     expect(sky).toMatch(/mipmapFilter: "linear"/);

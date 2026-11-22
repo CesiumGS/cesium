@@ -16,7 +16,12 @@ import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
-import { build, defineConfig, type Plugin } from "vite";
+import {
+  build,
+  defaultClientConditions,
+  defineConfig,
+  type Plugin,
+} from "vite";
 import { basisTranscoderEsm } from "../basisTranscoderEsm.ts";
 import { skyPackGuard } from "../scripts/vitePluginSkyPack.ts";
 import { findSecrets, findUnembeddedImages } from "../scripts/handbookData.mjs";
@@ -267,6 +272,10 @@ async function buildLiveEngine(): Promise<string> {
     envDir: false,
     publicDir: false,
     logLevel: "warn",
+    // 2.0's packages resolve to their sources (the @cesium/source export
+    // condition, which a release strips), so nothing needs a build first.
+    resolve: { conditions: ["@cesium/source", ...defaultClientConditions] },
+
     plugins: [liveViewModules(), basisTranscoderEsm(), skyPackGuard()],
     build: {
       write: false,
@@ -324,6 +333,9 @@ export default defineConfig({
   // No env file reaches this build: the page is for handing out.
   envDir: false,
   publicDir: false,
+  // 2.0's packages resolve to their sources (the @cesium/source export
+  // condition, which a release strips), so nothing needs a build first.
+  resolve: { conditions: ["@cesium/source", ...defaultClientConditions] },
   plugins: [
     liveViewModules(),
     skyPackGuard(),

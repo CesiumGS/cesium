@@ -32,7 +32,7 @@ import { SLANG_VERSION, slangcPath } from "./slangTools.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 /** The engine's package: its src/ holds the Slang, and headers name sources from it. */
-const ENGINE = join(root, "packages", "next");
+const ENGINE = join(root, "packages", "core");
 const SOURCES = join(ENGINE, "src");
 /** Examples may hold shaders of their own, built to a `generated/` beside them. */
 const EXAMPLES = join(root, "examples");

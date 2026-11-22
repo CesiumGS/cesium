@@ -32,11 +32,11 @@ const source = (path: string) =>
   readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 const surface = wgslUnit(
   "surface.slang",
-  source("packages/next/src/shaders/generated/surface.wgsl"),
+  source("packages/core/src/shaders/generated/surface.wgsl"),
 );
 const vertex = wgslUnit(
   "surfaceVertex.wgsl",
-  source("packages/next/src/shaders/surfaceVertex.wgsl"),
+  source("packages/core/src/shaders/surfaceVertex.wgsl"),
 );
 const moments = wgslUnit(
   "moment bindings",

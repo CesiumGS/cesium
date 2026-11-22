@@ -29,7 +29,7 @@ import {
 import { SURFACE_VERTEX_BOUNDARY } from "../packages/core/src/shaders/link/index.ts";
 
 const source = (path: string) =>
-  readFileSync(new URL(`../packages/next/${path}`, import.meta.url), "utf8");
+  readFileSync(new URL(`../packages/core/${path}`, import.meta.url), "utf8");
 
 /** `public static const uint NAME = n;` of a Slang module, by name. */
 function constants(text: string): Map<string, number> {

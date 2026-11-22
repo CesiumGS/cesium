@@ -18,6 +18,7 @@ import {
 } from "node:path";
 import { fileURLToPath } from "node:url";
 import basicSsl from "@vitejs/plugin-basic-ssl";
+import { defaultClientConditions, defaultServerConditions } from "vite";
 import { configDefaults, defineConfig, type Plugin } from "vitest/config";
 import { basisTranscoderEsm } from "./basisTranscoderEsm.ts";
 import { slangShaders } from "./scripts/vitePluginSlang.ts";
@@ -527,12 +528,18 @@ export default defineConfig({
       },
     },
   },
+  // 2.0's packages resolve to their sources (the @cesium/source export
+  // condition, which a release strips), so nothing needs a build first.
   resolve: {
+    conditions: ["@cesium/source", ...defaultClientConditions],
     alias: {
       "cesium-oracle": pinned.core.dir,
       // 1.x scene code (tile bounding volumes), also only for parity tests.
       "cesium-engine-oracle": pinned.engine.dir,
     },
+  },
+  ssr: {
+    resolve: { conditions: ["@cesium/source", ...defaultServerConditions] },
   },
   test: {
     include: ["test/**/*.test.ts"],

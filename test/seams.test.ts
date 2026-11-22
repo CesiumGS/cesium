@@ -36,7 +36,7 @@ import { RAY_MODULES, rayBypasses, rayProgram } from "./raySeam.ts";
  */
 
 const repo = fileURLToPath(new URL("..", import.meta.url));
-const root = join(repo, "packages", "next");
+const root = join(repo, "packages", "core");
 const src = join(root, "src");
 
 function files(directory: string, pattern: RegExp): string[] {
@@ -552,21 +552,21 @@ describe("the ray seam's detector flags bypasses", () => {
     // type imports, members bracketed or destructured, a tile under
     // another name.
     const lines = [
-      `import { castTerrainRay } from "../packages/next/src/globe/terrainRay.ts"; // rays`,
-      `import { castTerrainRay as trace } from "../packages/next/src/index.ts"; // rays`,
-      `import * as next from "../packages/next/src/index.ts";`,
-      `import type { TerrainRayTarget } from "../packages/next/src/globe/terrainRay.ts"; // rays`,
-      `import { drawBackend } from "../packages/next/src/query/drawBackend.ts"; // rays`,
-      `import { castEllipsoid } from "../packages/next/src/query/ellipsoidBackend.ts"; // rays`,
-      `import { castFrameRays } from "../packages/next/src/query/frameRays.ts"; // rays`,
-      `import { terrainQueries, terrainBackend } from "../packages/next/src/query/terrainBackend.ts"; // rays`,
-      `import { terrainQueries as fine } from "../packages/next/src/query/terrainBackend.ts";`,
-      `import type { Tile } from "../packages/next/src/streaming/Tile.ts";`,
-      `import type { World } from "../packages/next/src/scene/World.ts";`,
-      `import type { Engine } from "../packages/next/src/scene/Engine.ts";`,
-      `export * from "../packages/next/src/query/drawBackend.ts"; // rays`,
-      `export { castRays as moved } from "../packages/next/src/scene/world/rays.ts"; // rays`,
-      `export { globeTarget } from "../packages/next/src/query/terrainBackend.ts"; // rays`,
+      `import { castTerrainRay } from "../packages/core/src/globe/terrainRay.ts"; // rays`,
+      `import { castTerrainRay as trace } from "../packages/core/src/index.ts"; // rays`,
+      `import * as next from "../packages/core/src/index.ts";`,
+      `import type { TerrainRayTarget } from "../packages/core/src/globe/terrainRay.ts"; // rays`,
+      `import { drawBackend } from "../packages/core/src/query/drawBackend.ts"; // rays`,
+      `import { castEllipsoid } from "../packages/core/src/query/ellipsoidBackend.ts"; // rays`,
+      `import { castFrameRays } from "../packages/core/src/query/frameRays.ts"; // rays`,
+      `import { terrainQueries, terrainBackend } from "../packages/core/src/query/terrainBackend.ts"; // rays`,
+      `import { terrainQueries as fine } from "../packages/core/src/query/terrainBackend.ts";`,
+      `import type { Tile } from "../packages/core/src/streaming/Tile.ts";`,
+      `import type { World } from "../packages/core/src/scene/World.ts";`,
+      `import type { Engine } from "../packages/core/src/scene/Engine.ts";`,
+      `export * from "../packages/core/src/query/drawBackend.ts"; // rays`,
+      `export { castRays as moved } from "../packages/core/src/scene/world/rays.ts"; // rays`,
+      `export { globeTarget } from "../packages/core/src/query/terrainBackend.ts"; // rays`,
       `declare const tile: Tile;`,
       `declare const world: World;`,
       `declare const engine: Engine;`,
@@ -592,7 +592,7 @@ describe("the ray seam's detector flags bypasses", () => {
       `void overlay.geometry;`,
       `const options = { retainGeometry: true }; // retained`,
       `void options;`,
-      `void (await import("../packages/next/src/globe/terrainRay.ts")); // rays`,
+      `void (await import("../packages/core/src/globe/terrainRay.ts")); // rays`,
       `void fine; void target;`,
       `void terrainQueries; void terrainBackend; // rays`,
       `void castEllipsoid; void castFrameRays; // rays`,
@@ -887,7 +887,7 @@ describe("DrawArguments.slotOf", () => {
 
 describe("the ray seam", () => {
   const examples = join(repo, "examples");
-  const measure = join(src, "measure");
+  const measure = join(repo, "packages", "next", "src", "measure");
   let program: ReturnType<typeof rayProgram>;
   let scanned: string[];
   beforeAll(() => {

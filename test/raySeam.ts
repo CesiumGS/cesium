@@ -8,7 +8,7 @@ import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
-const root = fileURLToPath(new URL("../packages/next/", import.meta.url));
+const root = fileURLToPath(new URL("../packages/core/", import.meta.url));
 const src = join(root, "src");
 
 /** The modules the seam keeps to itself, and the one it answers through. */
@@ -36,6 +36,8 @@ const OPTIONS: ts.CompilerOptions = {
   target: ts.ScriptTarget.ESNext,
   module: ts.ModuleKind.ESNext,
   moduleResolution: ts.ModuleResolutionKind.Bundler,
+  // 2.0's packages resolve to their sources, as in development (CS-835).
+  customConditions: ["@cesium/source"],
   allowImportingTsExtensions: true,
   strict: true,
 };

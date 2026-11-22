@@ -893,7 +893,7 @@ describe("what may block", () => {
   it("leaves translucent draws out of the opaque depth", async () => {
     const { readFileSync } = await import("node:fs");
     const surface = readFileSync(
-      "packages/next/src/shaders/surface.slang",
+      "packages/core/src/shaders/surface.slang",
       "utf8",
     );
     // The opaque pass drops a blended material's translucent fragments...
@@ -901,7 +901,7 @@ describe("what may block", () => {
     // ...and a draw blended whole (an opacity under 1, a clip ghost, translucent
     // terrain) is left out of its bundle altogether.
     const bundles = readFileSync(
-      "packages/next/src/render/world/bundles.ts",
+      "packages/core/src/render/world/bundles.ts",
       "utf8",
     );
     expect(bundles).toMatch(/MaterialFlags\.blendedOnly\) ===/);

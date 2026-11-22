@@ -523,7 +523,7 @@ describe("the cascades' block", () => {
 
 describe("the shadow pipeline", () => {
   const source = (path: string) =>
-    readFileSync(new URL(`../packages/next/${path}`, import.meta.url), "utf8");
+    readFileSync(new URL(`../packages/core/${path}`, import.meta.url), "utf8");
 
   it("places vertices as the view's passes do: the cascades' vertex stage is the common one", () => {
     const surface = source("src/shaders/surface.slang");
@@ -556,7 +556,7 @@ describe("the shadow pipeline", () => {
 
 describe("the cull", () => {
   const source = (path: string) =>
-    readFileSync(new URL(`../packages/next/${path}`, import.meta.url), "utf8");
+    readFileSync(new URL(`../packages/core/${path}`, import.meta.url), "utf8");
 
   it("reads the caster mask only in a cascade's view, in `drawable`", () => {
     const tables = source("src/shaders/cullTables.slang");

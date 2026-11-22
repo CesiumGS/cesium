@@ -26,7 +26,7 @@ import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { gzipSync } from "node:zlib";
-import { build } from "vite";
+import { build, defaultClientConditions } from "vite";
 import { basisTranscoderEsm } from "../basisTranscoderEsm.ts";
 import { skyPackGuard } from "./vitePluginSkyPack.ts";
 import { sp } from "../packages/next/src/time/erfa/s06Table.ts";
@@ -96,6 +96,9 @@ async function buildPage(work, name, code, logLevel = "error") {
     base: "./",
     publicDir: false,
     logLevel,
+    // 2.0's packages resolve to their sources (the @cesium/source export
+    // condition, which a release strips), so nothing needs a build first.
+    resolve: { conditions: ["@cesium/source", ...defaultClientConditions] },
     plugins: [basisTranscoderEsm(), skyPackGuard()],
     build: {
       outDir,
@@ -177,7 +180,7 @@ try {
     work,
     "styledViewer",
     `import { Viewer } from ${JSON.stringify(join(root, "packages/next/widgets/index.ts"))};\n` +
-      `import { CustomShader, FeatureStyle } from ${JSON.stringify(join(root, "packages/next/src/index.ts"))};\n` +
+      `import { CustomShader, FeatureStyle } from ${JSON.stringify(join(root, "packages/core/src/index.ts"))};\n` +
       `const style = new FeatureStyle({ show: "\${name} !== 'Main St'", color: "color('red')" });\n` +
       `void Viewer.create(document.body);\n` +
       `void CustomShader.fromSlang("", { label: String(style.properties) });\n`,
@@ -272,7 +275,7 @@ try {
   const ir = await buildPage(
     work,
     "irCore",
-    `import { Builder, evaluate } from ${JSON.stringify(join(root, "packages/next/src/ir/index.ts"))};\n` +
+    `import { Builder, evaluate } from ${JSON.stringify(join(root, "packages/core/src/ir/index.ts"))};\n` +
       `const b = new Builder();\n` +
       `const x = b.input("x", "float", "feature");\n` +
       `document.title = String(evaluate(b.program({ y: b.op("math/sin", [x]) }), { x: 1 }).y);\n`,

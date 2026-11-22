@@ -54,6 +54,8 @@ import { pinned1x } from "../bench/suite/pinned1x.mjs";
 // package whose sources the figures read (CS-835).
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const packageOf = (root) => join(root, "packages", "next");
+// The engine's package: the sources the pipeline figures read.
+const coreOf = (root) => join(root, "packages", "core");
 
 const kib = (bytes) => Math.round((bytes / 1024) * 10) / 10;
 
@@ -755,8 +757,8 @@ function tsFiles(root, dir) {
 export function readFrameGraph(root = repoRoot) {
   const textures = new Map();
   const passes = [];
-  for (const path of tsFiles(packageOf(root), "src")) {
-    const text = readFileSync(join(packageOf(root), path), "utf8");
+  for (const path of tsFiles(coreOf(root), "src")) {
+    const text = readFileSync(join(coreOf(root), path), "utf8");
     if (!text.includes(".addPass(")) {
       continue;
     }
@@ -854,7 +856,7 @@ export function readFrameGraph(root = repoRoot) {
 
 /** A constant's value in a file, read from its text. Fails if it has gone. */
 function readConstant(root, file, pattern, what) {
-  const match = pattern.exec(readFileSync(join(packageOf(root), file), "utf8"));
+  const match = pattern.exec(readFileSync(join(coreOf(root), file), "utf8"));
   if (!match) {
     throw new Error(`${file}: no ${what}; update scripts/handbookData.mjs`);
   }
@@ -864,7 +866,7 @@ function readConstant(root, file, pattern, what) {
 /** Sizes and fixed limits the pipeline's figures state. */
 export function readPipelineFigures(root = repoRoot) {
   const layouts = readFileSync(
-    join(packageOf(root), "src/render/generated/layouts.ts"),
+    join(coreOf(root), "src/render/generated/layouts.ts"),
     "utf8",
   );
   const size = (name) => {
@@ -943,8 +945,8 @@ export function pipelineDrift(graph, notes, root = repoRoot) {
       }
     }
     for (const { name, file } of seam.code) {
-      const text = existsSync(join(packageOf(root), file))
-        ? readFileSync(join(packageOf(root), file), "utf8")
+      const text = existsSync(join(coreOf(root), file))
+        ? readFileSync(join(coreOf(root), file), "utf8")
         : "";
       if (!text.includes(name)) {
         drift.push(`${seam.id}: no ${name} in ${file}`);
@@ -984,7 +986,7 @@ function readCounts(root) {
   };
   return {
     testFiles: count("test", /\.test\.tsx?$/),
-    slangFiles: count("packages/next/src", /\.slang$/),
+    slangFiles: count("packages/core/src", /\.slang$/),
     examples: readdirSync(join(root, "examples"), {
       withFileTypes: true,
     }).filter((e) => e.isDirectory()).length,
@@ -1092,8 +1094,7 @@ export async function generate({ root = repoRoot, bundles = true } = {}) {
       "status",
       "--porcelain",
       "--",
-      "packages/next/src",
-      "packages/next/widgets",
+      "packages",
       "api",
       "handbook",
     ).length > 0;

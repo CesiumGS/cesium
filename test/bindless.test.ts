@@ -16,7 +16,7 @@ import {
  * (`World.textureRefs`) and the group-2 layout, and nothing else.
  */
 
-const root = fileURLToPath(new URL("../packages/next/", import.meta.url));
+const root = fileURLToPath(new URL("../packages/core/", import.meta.url));
 const BINDINGS =
   /\b(baseColor|metallicRoughness|normal|occlusion|emissive)(Texture|Sampler)\b/g;
 

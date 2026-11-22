@@ -184,7 +184,7 @@ function fixture(dir, times) {
   out.push(...ledger);
   writeFileSync(join(store, "ledger.jsonl"), `${out.join("\n")}\n`);
   return {
-    root: join(repo, "packages", "next"),
+    root: repo,
     xdg,
     branches: refs.filter(([, r]) => r.startsWith("refs/heads/")).length * times -
       (times - 1),

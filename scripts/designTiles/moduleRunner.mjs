@@ -59,9 +59,11 @@ export async function moduleRunner(root) {
           optimizeDeps: { noDiscovery: true, include: [] },
           resolve: {
             external: true,
-            noExternal: COMMONJS,
+            // 2.0's packages run from source (their @cesium/source
+            // condition), not from a build they don't have.
+            noExternal: [...COMMONJS, /^@cesium\//],
             mainFields: [],
-            conditions: ["node"],
+            conditions: ["@cesium/source", "node"],
           },
         },
       },
