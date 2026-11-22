@@ -52,8 +52,8 @@ import {
   ionDefaults,
   type AerosolType,
 } from "../../../packages/core/src/index.ts";
-import { attachInspector } from "../../../packages/next/widgets/index.ts";
-import { ev100Text } from "../../../packages/next/widgets/observerPanel.ts";
+import { attachInspector } from "../../../packages/ui/src/index.ts";
+import { ev100Text } from "../../../packages/ui/src/observerPanel.ts";
 import { Choice, Page, toast, useRuns, useStored } from "./common.tsx";
 import { useAvailableReleases } from "../releases.ts";
 import { limitsTier, reloadWithLimits } from "../limitsTier.ts";

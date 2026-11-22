@@ -6,7 +6,7 @@ import {
   markAt,
   markSpans,
   pressStep,
-} from "../packages/next/widgets/timeControls.ts";
+} from "../packages/ui/src/timeControls.ts";
 
 const DAY = 86_400_000;
 const start = Date.parse("2026-04-06T00:00:00Z");

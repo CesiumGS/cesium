@@ -1,7 +1,7 @@
 // The Viewer's sun and sky: from the clock, or set by hand (Viewer's sky methods).
 import type { Viewer } from "./Viewer.ts";
 import { ellipsoid, deg } from "./viewerCamera.ts";
-import { eastNorthUpToFixedFrame, mat4, vec3 } from "@cesium/next";
+import { eastNorthUpToFixedFrame, mat4, vec3 } from "@cesium/core";
 import type { ViewerState } from "./viewerState.ts";
 
 /** The sun and sky. */

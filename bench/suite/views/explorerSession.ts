@@ -3,7 +3,7 @@ import type {
   CreditSource,
   Inspectable,
   PickInfo,
-} from "../../../packages/next/widgets/index.ts";
+} from "../../../packages/ui/src/index.ts";
 import type { EngineConfig, Pose } from "../schema.ts";
 import {
   type Adapter,

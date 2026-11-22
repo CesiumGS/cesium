@@ -43,7 +43,7 @@ import type {
 import {
   attachCredits,
   attachInspector,
-} from "../../../packages/next/widgets/index.ts";
+} from "../../../packages/ui/src/index.ts";
 import { ensureCesium } from "../cesium1x.ts";
 import {
   compareEngines,

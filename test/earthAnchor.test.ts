@@ -582,7 +582,7 @@ describe("the Viewer's camera through the Earth's anchor (plan 5a, Task 10)", ()
     vi.stubGlobal("document", { createElement: () => element() });
     vi.stubGlobal("getComputedStyle", () => ({ position: "relative" }));
     vi.stubGlobal("devicePixelRatio", 1);
-    const { Viewer } = await import("../packages/next/widgets/Viewer.ts");
+    const { Viewer } = await import("../packages/ui/src/Viewer.ts");
     const make = () =>
       Viewer.create(element() as unknown as HTMLElement, {
         engine,

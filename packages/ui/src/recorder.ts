@@ -7,7 +7,7 @@
  * only imported when a page asks (`record` in the URL, or the inspector's
  * toggle), and only in development (`import.meta.env.DEV`).
  */
-import { TICK_REASONS, type Engine } from "@cesium/next";
+import { TICK_REASONS, type Engine } from "@cesium/core";
 import type { EngineSnapshotOptions } from "./engine.ts";
 import {
   RECORD_HEADER_NAME,

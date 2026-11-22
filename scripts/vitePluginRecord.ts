@@ -14,7 +14,7 @@ import {
   RECORD_COLUMNS,
   RECORD_HEADER,
   RECORD_HEADER_NAME,
-} from "../packages/next/widgets/recorderRows.ts";
+} from "../packages/ui/src/recorderRows.ts";
 
 /** The largest body accepted, bytes: 500 ms of rows is a few KB. */
 export const MAX_RECORD_BYTES = 256 * 1024;

@@ -15,7 +15,7 @@ import {
   type Tileset3D,
   type View,
   type World,
-} from "@cesium/next";
+} from "@cesium/core";
 import type {
   ContentMix,
   Inspectable,

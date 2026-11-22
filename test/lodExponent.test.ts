@@ -26,7 +26,7 @@ import {
   sphereFromObb,
 } from "../packages/core/src/streaming/volumes.ts";
 import type { Tile } from "../packages/core/src/streaming/Tile.ts";
-import { parseAlpha } from "../packages/next/widgets/urlAlpha.ts";
+import { parseAlpha } from "../packages/ui/src/urlAlpha.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { at } from "./terrainRayFixtures.ts";
 

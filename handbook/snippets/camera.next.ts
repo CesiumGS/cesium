@@ -1,4 +1,4 @@
-import type { Viewer } from "../../packages/next/widgets/index.ts";
+import type { Viewer } from "../../packages/ui/src/index.ts";
 declare const viewer: Viewer;
 // ---
 // Degrees, and meters from the point.

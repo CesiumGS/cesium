@@ -39,7 +39,7 @@ import { Camera } from "../packages/core/src/scene/Camera.ts";
 // globals as it loads: install them first, then import.
 installGpuGlobals();
 const { orbitState, planOrbit } =
-  await import("../packages/next/widgets/orbitFocus.ts");
+  await import("../packages/ui/src/orbitFocus.ts");
 
 const sub = (a: ArrayLike<number>, b: ArrayLike<number>) =>
   [0, 1, 2].map((i) => a[i]! - b[i]!);

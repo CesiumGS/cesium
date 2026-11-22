@@ -24,7 +24,7 @@ import {
   engineSnapshot,
   type InspectorSnapshot,
   type PickInfo,
-} from "../../packages/next/widgets/index.ts";
+} from "../../packages/ui/src/index.ts";
 import publicCatalog from "./catalog/public.json";
 import type {
   CameraScript,

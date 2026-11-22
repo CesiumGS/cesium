@@ -21,7 +21,7 @@ import {
   gpuRow,
   parseFrames,
   tickRow,
-} from "../packages/next/widgets/recorderRows.ts";
+} from "../packages/ui/src/recorderRows.ts";
 
 const cells = (row: string) => row.split(",");
 const col = (row: string, name: (typeof RECORD_COLUMNS)[number]) =>

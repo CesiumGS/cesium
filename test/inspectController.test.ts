@@ -21,7 +21,7 @@ import { installGpuGlobals } from "./fakeGpu.ts";
 // globals as it loads: install them first, then import.
 installGpuGlobals();
 const { followZoom, orbitState, planOrbit } =
-  await import("../packages/next/widgets/orbitFocus.ts");
+  await import("../packages/ui/src/orbitFocus.ts");
 
 const SIZE = 100;
 const maxPitch = Math.PI / 2 - 1e-3;

@@ -7,8 +7,8 @@ import {
   type Tileset3D,
   vec3,
 } from "../../packages/core/src/index.ts";
-import { Viewer } from "../../packages/next/widgets/index.ts";
-import { startSseProbe } from "../../packages/next/widgets/sseProbe.ts";
+import { Viewer } from "../../packages/ui/src/index.ts";
+import { startSseProbe } from "../../packages/ui/src/sseProbe.ts";
 import { EXAMPLES, type ExampleInfo } from "../../examples/index.ts";
 import { ionToken, needsToken, NEEDS_TOKEN } from "./ionToken.ts";
 import { limitsTier } from "./limitsTier.ts";

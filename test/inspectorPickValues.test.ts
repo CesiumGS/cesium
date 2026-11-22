@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatValue } from "../packages/next/widgets/inspector.ts";
+import { formatValue } from "../packages/ui/src/inspector.ts";
 
 describe("inspector formatValue", () => {
   it("writes a bigint as its decimal digits", () => {

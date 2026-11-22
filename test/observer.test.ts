@@ -294,7 +294,7 @@ describe("Viewer.setSplit", () => {
     // The method itself assigns as above (a source pin: it needs a canvas).
     expect(
       readFileSync(
-        new URL("../packages/next/widgets/Viewer.ts", import.meta.url),
+        new URL("../packages/ui/src/Viewer.ts", import.meta.url),
         "utf8",
       ),
     ).toContain("second.observer = this.view.observer");

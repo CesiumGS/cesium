@@ -7,8 +7,8 @@
  * and one `[probe] csv` line. Reads the engine's internals by shape; it
  * changes nothing.
  */
-import type { Engine, Tileset3D } from "@cesium/next";
-import { routeForward, type Route } from "@cesium/next/frames";
+import type { Engine, Tileset3D } from "@cesium/core";
+import { routeForward, type Route } from "@cesium/frames";
 
 interface Heights {
   u: Uint16Array;

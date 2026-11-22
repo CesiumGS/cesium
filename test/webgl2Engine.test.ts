@@ -10,8 +10,8 @@ import {
   forgetProbes,
 } from "../packages/core/src/scene/deviceChoice.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
-import { engineSnapshot } from "../packages/next/widgets/engine.ts";
-import { gpuHtml } from "../packages/next/widgets/inspector.ts";
+import { engineSnapshot } from "../packages/ui/src/engine.ts";
+import { gpuHtml } from "../packages/ui/src/inspector.ts";
 import type { GltfAsset } from "../packages/core/src/io/gltfTypes.ts";
 import { GlobeImagery } from "../packages/core/src/globe/GlobeImagery.ts";
 import { isCapacityError } from "../packages/core/src/scene/CapacityError.ts";

@@ -183,7 +183,7 @@ describe("keepEnvSecretsOut", () => {
       "bench",
       "parity",
       "examples",
-      "packages/next/widgets",
+      "packages/ui/src",
       "packages/next/src",
       "lab",
       "spikes",

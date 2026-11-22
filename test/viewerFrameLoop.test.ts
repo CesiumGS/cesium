@@ -6,7 +6,7 @@
 // is a queue flushed by hand.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
-import type { Viewer } from "../packages/next/widgets/Viewer.ts";
+import type { Viewer } from "../packages/ui/src/Viewer.ts";
 import { fakeDevice, fakeEngine } from "./fakeGpu.ts";
 
 interface FakeElement {
@@ -106,7 +106,7 @@ describe("the Viewer in the engine's frame loop", () => {
   async function viewer(
     options: { suspendPresentation?: boolean } = {},
   ): Promise<Viewer> {
-    const { Viewer } = await import("../packages/next/widgets/Viewer.ts");
+    const { Viewer } = await import("../packages/ui/src/Viewer.ts");
     const v = await Viewer.create(element() as unknown as HTMLElement, {
       engine,
       globe: false,

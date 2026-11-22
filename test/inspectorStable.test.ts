@@ -12,8 +12,8 @@ import {
   type InspectorView,
   type SlowWin,
   type TickEntry,
-} from "../packages/next/widgets/inspector.ts";
-import type { InspectorSnapshot } from "../packages/next/widgets/inspectable.ts";
+} from "../packages/ui/src/inspector.ts";
+import type { InspectorSnapshot } from "../packages/ui/src/inspectable.ts";
 
 const SERIES = [
   "cache",

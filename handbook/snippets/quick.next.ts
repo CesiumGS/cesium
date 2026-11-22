@@ -1,6 +1,6 @@
 declare const container: HTMLElement;
 // ---
-import { Viewer } from "../../packages/next/widgets/index.ts";
+import { Viewer } from "../../packages/ui/src/index.ts";
 
 // A globe with imagery and controls, in one call.
 const viewer = await Viewer.create(container);

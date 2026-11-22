@@ -47,7 +47,7 @@ import {
   type SunTimes,
   type TimeZone,
   type ZoneLookup,
-} from "@cesium/next/time";
+} from "@cesium/time";
 
 export interface TimeControlsOptions {
   /** The place the time is about (geodetic radians), if any yet. */

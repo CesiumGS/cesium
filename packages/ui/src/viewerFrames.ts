@@ -2,7 +2,7 @@
 // new catalog (Viewer.setFrameData and what it uses).
 import type { Viewer } from "./Viewer.ts";
 import { showWarnings, emit, warn } from "./viewerWarnings.ts";
-import { type AnchorHandle, defaultRig } from "@cesium/next";
+import { type AnchorHandle, defaultRig } from "@cesium/core";
 import {
   type FrameData,
   type CatalogFrameName,
@@ -12,7 +12,7 @@ import {
   type FrameDataWarning,
   attachSky,
   createFrameCatalog,
-} from "@cesium/next/frames";
+} from "@cesium/frames";
 import type { ViewerState } from "./viewerState.ts";
 
 /** Frame data and the catalog. */

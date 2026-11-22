@@ -1,4 +1,4 @@
-import type { Viewer } from "../../packages/next/widgets/index.ts";
+import type { Viewer } from "../../packages/ui/src/index.ts";
 declare const viewer: Viewer;
 // ---
 const deg = Math.PI / 180;

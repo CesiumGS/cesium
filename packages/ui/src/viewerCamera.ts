@@ -10,7 +10,7 @@ import {
   ModelPlacement,
   fromDegrees,
   vec3,
-} from "@cesium/next";
+} from "@cesium/core";
 import type { ViewerState } from "./viewerState.ts";
 
 /** Camera, zoom and the clock's sun. */

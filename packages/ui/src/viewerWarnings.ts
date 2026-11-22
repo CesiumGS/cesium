@@ -1,6 +1,6 @@
 // The Viewer's warnings: kept once each, shown on the page and sent as events.
 import type { ViewerWarning, Viewer } from "./Viewer.ts";
-import type { FrameDataWarning } from "@cesium/next/frames";
+import type { FrameDataWarning } from "@cesium/frames";
 import type { ViewerState } from "./viewerState.ts";
 
 /** Warnings. */

@@ -10,10 +10,7 @@
 // Design: one column on a phone, two from 900 px; the choice first, the
 // facts below it, the engine beside them. Every verdict is text and a mark,
 // never color alone; both themes follow the system's.
-import {
-  attachInspector,
-  inspectEngine,
-} from "../packages/next/widgets/index.ts";
+import { attachInspector, inspectEngine } from "../packages/ui/src/index.ts";
 import { Engine } from "../packages/core/src/scene/Engine.ts";
 import {
   chooseDevice,

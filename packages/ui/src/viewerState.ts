@@ -12,8 +12,8 @@ import {
   type View,
   type GlobeController,
   type Rig,
-} from "@cesium/next";
-import type { FrameCatalog, FramesResolver } from "@cesium/next/frames";
+} from "@cesium/core";
+import type { FrameCatalog, FramesResolver } from "@cesium/frames";
 import type { WarningsHandle } from "./warnings.ts";
 import type { TimeControlsHandle } from "./timeControls.ts";
 

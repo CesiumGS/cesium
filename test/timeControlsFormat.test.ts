@@ -10,7 +10,7 @@ import {
 import {
   zoneOf,
   type TimeZoneChoice,
-} from "../packages/next/widgets/timeControls.ts";
+} from "../packages/ui/src/timeControls.ts";
 
 const leap = LeapSeconds.builtIn();
 const deg = Math.PI / 180;

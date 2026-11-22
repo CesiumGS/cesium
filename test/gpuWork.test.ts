@@ -9,7 +9,7 @@ import {
   gpuRow,
   RECORD_COLUMNS,
   tickRow,
-} from "../packages/next/widgets/recorderRows.ts";
+} from "../packages/ui/src/recorderRows.ts";
 
 describe("GPU work counters", () => {
   it("counts nothing, and wraps nothing, where WebGPU is missing", () => {

@@ -11,7 +11,7 @@ import {
   vec3,
 } from "../../packages/core/src/index.ts";
 import { holdBrowserGestures } from "../../packages/core/src/scene/touchGestures.ts";
-import { attachObserverPanel } from "../../packages/next/widgets/observerPanel.ts";
+import { attachObserverPanel } from "../../packages/ui/src/observerPanel.ts";
 import { spritesStage } from "./sprites.ts";
 import type { ExampleContext } from "../types.ts";
 

@@ -23,7 +23,7 @@ import type { Engine } from "../packages/core/src/scene/Engine.ts";
 import { Clock } from "../packages/time/src/Clock.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";
-import type { Viewer, ViewerOptions } from "../packages/next/widgets/Viewer.ts";
+import type { Viewer, ViewerOptions } from "../packages/ui/src/Viewer.ts";
 import { fakeDevice, fakeEngine } from "./fakeGpu.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 import { pack } from "./syntheticPacks.ts";
@@ -207,7 +207,7 @@ afterEach(() => {
 });
 
 async function viewer(options: ViewerOptions = {}): Promise<Viewer> {
-  const { Viewer } = await import("../packages/next/widgets/Viewer.ts");
+  const { Viewer } = await import("../packages/ui/src/Viewer.ts");
   const v = await Viewer.create(element() as unknown as HTMLElement, {
     engine,
     globe: false,
@@ -378,7 +378,7 @@ describe("setFrameData keeps what the application set", () => {
     engine.cameras.resolver(v.world) as ReturnType<typeof createFramesResolver>;
 
   it("an application's rig stays; the viewer's own moves to the new ITRF", async () => {
-    const { Viewer } = await import("../packages/next/widgets/Viewer.ts");
+    const { Viewer } = await import("../packages/ui/src/Viewer.ts");
     void Viewer;
     const v = await viewer();
     v.split = true;
@@ -505,7 +505,7 @@ describe("the Viewer's warnings and loads, guarded", () => {
         return served(input, init);
       }),
     );
-    const { Viewer } = await import("../packages/next/widgets/Viewer.ts");
+    const { Viewer } = await import("../packages/ui/src/Viewer.ts");
     const { Engine } = await import("../packages/core/src/scene/Engine.ts");
     vi.spyOn(Engine, "create").mockRejectedValue(new Error("no device"));
     await expect(

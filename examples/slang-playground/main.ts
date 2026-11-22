@@ -13,7 +13,7 @@ import {
   type SkyOptions,
   type ToneMapping,
 } from "../../packages/core/src/index.ts";
-import { ev100Text } from "../../packages/next/widgets/observerPanel.ts";
+import { ev100Text } from "../../packages/ui/src/observerPanel.ts";
 import type { ExampleContext } from "../types.ts";
 import { createContractView, createSlangEditor } from "./editor.ts";
 import { CONTRACT, SlangLanguageServer } from "./languageServer.ts";

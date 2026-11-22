@@ -11,8 +11,8 @@ import {
   type StarField,
 } from "../packages/core/src/atmosphere/stars.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
-import { attachCredits } from "../packages/next/widgets/credits.ts";
-import type { Viewer } from "../packages/next/widgets/Viewer.ts";
+import { attachCredits } from "../packages/ui/src/credits.ts";
+import type { Viewer } from "../packages/ui/src/Viewer.ts";
 import { fakeDevice, fakeEngine } from "./fakeGpu.ts";
 
 function element(): unknown {
@@ -86,7 +86,7 @@ const warnings = () =>
   );
 
 async function makeViewer(options: Record<string, unknown> = {}) {
-  const { Viewer } = await import("../packages/next/widgets/Viewer.ts");
+  const { Viewer } = await import("../packages/ui/src/Viewer.ts");
   return Viewer.create(element() as HTMLElement, {
     engine,
     globe: false,

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import {
   ianaAbbreviation,
   ianaOffsetMinutes,
-} from "../packages/next/widgets/timeControls.ts";
+} from "../packages/ui/src/timeControls.ts";
 
 const summer = Date.parse("2026-07-01T12:00:00Z");
 const winter = Date.parse("2026-01-15T12:00:00Z");

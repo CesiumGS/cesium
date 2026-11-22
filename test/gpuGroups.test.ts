@@ -5,11 +5,8 @@ import {
   groupOf,
   groupPasses,
   untimedMs,
-} from "../packages/next/widgets/gpuGroups.ts";
-import {
-  gpuRow,
-  RECORD_COLUMNS,
-} from "../packages/next/widgets/recorderRows.ts";
+} from "../packages/ui/src/gpuGroups.ts";
+import { gpuRow, RECORD_COLUMNS } from "../packages/ui/src/recorderRows.ts";
 import { GpuTimer } from "../packages/core/src/gpu/GpuTimer.ts";
 
 describe("GPU groups", () => {

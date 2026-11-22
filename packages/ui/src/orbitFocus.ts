@@ -13,7 +13,7 @@ import {
   vec3,
   type InspectController,
   type OrbitFrame,
-} from "@cesium/next";
+} from "@cesium/core";
 
 /**
  * Where `setControls("orbit", options)` orbits. Fields left out keep the

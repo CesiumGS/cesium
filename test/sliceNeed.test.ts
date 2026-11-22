@@ -58,8 +58,7 @@ describe("imagery slices: what a frame needs", () => {
 
   it("the meter warns on the need, not on a full cache", async () => {
     // Imported here: the widgets read WebGPU's globals as they load.
-    const { imagerySlicesRow } =
-      await import("../packages/next/widgets/engine.ts");
+    const { imagerySlicesRow } = await import("../packages/ui/src/engine.ts");
     // A full cache with a small need: the state of every flight after
     // 10 seconds, which read past 90% and warned.
     const cached = imagerySlicesRow({

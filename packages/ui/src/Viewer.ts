@@ -52,14 +52,14 @@ import {
   type View,
   type ViewLink,
   type World,
-} from "@cesium/next";
+} from "@cesium/core";
 import type {
   FrameCatalog,
   FrameData,
   FrameDataWarning,
   SkyInputs,
-} from "@cesium/next/frames";
-import { Clock, type ZoneLookup } from "@cesium/next/time";
+} from "@cesium/frames";
+import { Clock, type ZoneLookup } from "@cesium/time";
 import { attachCredits, type CreditsHandle } from "./credits.ts";
 import { inspectEngine } from "./engine.ts";
 import { orbitState, planOrbit, type OrbitOptions } from "./orbitFocus.ts";

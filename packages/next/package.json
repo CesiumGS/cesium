@@ -17,7 +17,7 @@
     "./frames": "./src/frames.ts",
     "./proj": "./src/proj.ts",
     "./measure": "./src/measure.ts",
-    "./widgets": "./widgets/index.ts"
+    "./widgets": "./src/widgets.ts"
   },
   "scripts": {
     "build:lib": "vite build --config vite.lib.config.ts && tsc -p tsconfig.lib.json && tsc -p tsconfig.lib.widgets.json && node ../../scripts/checkDeclarations.mjs --only engineering,measure,widgets dist-lib/types/proj/index.d.ts dist-lib/types/measure/index.d.ts dist-lib/types/widgets/index.d.ts"
@@ -28,6 +28,7 @@
     "@cesium/frames": "2.0.0-poc.0",
     "@cesium/measure": "2.0.0-poc.0",
     "@cesium/time": "2.0.0-poc.0",
+    "@cesium/ui": "2.0.0-poc.0",
     "@emnapi/runtime": "1.8.1",
     "draco3d": "1.5.7",
     "geographiclib-geodesic": "2.2.0",

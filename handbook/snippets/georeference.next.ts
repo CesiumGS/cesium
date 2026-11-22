@@ -1,4 +1,4 @@
-import type { Viewer } from "../../packages/next/widgets/index.ts";
+import type { Viewer } from "../../packages/ui/src/index.ts";
 declare const world: import("@cesium/next").World;
 declare const viewer: Viewer;
 declare const catalog: import("@cesium/next/frames").FrameCatalog;

@@ -22,7 +22,7 @@ const {
   readoutText,
   signed,
   sliderFromEv100,
-} = await import("../packages/next/widgets/observerPanel.ts");
+} = await import("../packages/ui/src/observerPanel.ts");
 
 // ------------------------------------------------------------------ fake DOM
 

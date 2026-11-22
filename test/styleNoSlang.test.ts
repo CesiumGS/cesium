@@ -108,7 +108,7 @@ describe("what loads with the page", () => {
     "src/scene/FeatureStyle.ts",
     "src/scene/CustomShader.ts",
     "src/index.ts",
-    "../next/widgets/index.ts",
+    "../ui/src/index.ts",
   ])("%s imports Slang's modules by no static import", (entry) => {
     const reached = staticImports(entry, readFile);
     expect(reached.filter((f) => SLANG_FILES.includes(f))).toEqual([]);

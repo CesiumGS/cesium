@@ -28,12 +28,12 @@ import {
   type FrameData,
 } from "../../packages/frames/src/index.ts";
 import { Clock, LeapSeconds } from "../../packages/time/src/index.ts";
-import px from "../../packages/next/widgets/assets/skybox/tycho2t3_80_px.jpg?inline";
-import mx from "../../packages/next/widgets/assets/skybox/tycho2t3_80_mx.jpg?inline";
-import py from "../../packages/next/widgets/assets/skybox/tycho2t3_80_py.jpg?inline";
-import my from "../../packages/next/widgets/assets/skybox/tycho2t3_80_my.jpg?inline";
-import pz from "../../packages/next/widgets/assets/skybox/tycho2t3_80_pz.jpg?inline";
-import mz from "../../packages/next/widgets/assets/skybox/tycho2t3_80_mz.jpg?inline";
+import px from "../../packages/ui/src/assets/skybox/tycho2t3_80_px.jpg?inline";
+import mx from "../../packages/ui/src/assets/skybox/tycho2t3_80_mx.jpg?inline";
+import py from "../../packages/ui/src/assets/skybox/tycho2t3_80_py.jpg?inline";
+import my from "../../packages/ui/src/assets/skybox/tycho2t3_80_my.jpg?inline";
+import pz from "../../packages/ui/src/assets/skybox/tycho2t3_80_pz.jpg?inline";
+import mz from "../../packages/ui/src/assets/skybox/tycho2t3_80_mz.jpg?inline";
 import presets from "../reel/shaders/presets.json";
 import { openData, type ReelData } from "./data.ts";
 import { feedSource } from "./feed.ts";

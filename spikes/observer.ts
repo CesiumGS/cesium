@@ -38,7 +38,7 @@ import {
 } from "../packages/core/src/atmosphere/stars.ts";
 import { moonPosition } from "../packages/time/src/moon.ts";
 import { sunDirection, sunPosition } from "../packages/time/src/sun.ts";
-import { Viewer } from "../packages/next/widgets/Viewer.ts";
+import { Viewer } from "../packages/ui/src/Viewer.ts";
 import { eyePointLimit } from "../packages/core/src/scene/eye.ts";
 import {
   ev100ToScale,
@@ -1013,7 +1013,7 @@ async function ticks(engine: Engine, count: number, done = () => false) {
 const skyMapFaces = ["px", "mx", "py", "my", "pz", "mz"].map(
   (face) =>
     new URL(
-      `../packages/next/widgets/assets/skybox/tycho2t3_80_${face}.jpg`,
+      `../packages/ui/src/assets/skybox/tycho2t3_80_${face}.jpg`,
       import.meta.url,
     ),
 );

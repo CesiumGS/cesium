@@ -1,7 +1,7 @@
 declare const container: HTMLElement;
 declare const yourIonToken: string;
 // ---
-import { Viewer } from "../../packages/next/widgets/index.ts";
+import { Viewer } from "../../packages/ui/src/index.ts";
 
 // Imagery from ion is on by default.
 // Terrain is asked for by name.

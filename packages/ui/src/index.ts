@@ -1,2 +1,63 @@
-// @cesium/ui's entry point: its code moves here in CS-835.
-export {};
+/**
+ * Widgets: UI over an engine view, kept out of the headless engine core (as
+ * 1.x keeps its widgets apart from its engine). `Viewer`, 2.0's counterpart
+ * to `Cesium.Viewer`; the inspector (docs/design/benchmark-analysis-and-experience.md), for 2.0 through
+ * `inspectEngine` and for other engines through `Inspectable`; the credits.
+ */
+export {
+  Viewer,
+  type GlobeKind,
+  type TilesetSource,
+  type ViewerOptions,
+  type ViewerWarning,
+  type ZoomTarget,
+} from "./Viewer.ts";
+export {
+  followZoom,
+  orbitState,
+  planOrbit,
+  type OrbitContext,
+  type OrbitOptions,
+  type OrbitPlan,
+} from "./orbitFocus.ts";
+export {
+  attachTimeControls,
+  zoneOf,
+  type TimeControlsHandle,
+  type TimeControlsOptions,
+  type TimeMark,
+  type TimeZoneChoice,
+} from "./timeControls.ts";
+export {
+  attachCredits,
+  type CreditSource,
+  type CreditsHandle,
+} from "./credits.ts";
+export {
+  attachObserverPanel,
+  type ObserverControlKind,
+  type ObserverPanelHandle,
+  type ObserverPanelOptions,
+  type ObserverPanelSection,
+} from "./observerPanel.ts";
+export {
+  attachInspector,
+  type InspectorHandle,
+  type InspectorOptions,
+} from "./inspector.ts";
+export {
+  engineSnapshot,
+  inspectEngine,
+  type EngineInspectOptions,
+  type EngineSnapshotOptions,
+  type ModelLoad,
+} from "./engine.ts";
+export type {
+  ContentMix,
+  Inspectable,
+  InspectorSnapshot,
+  MemoryRow,
+  PickInfo,
+  StagePercentiles,
+  TickEvent,
+} from "./inspectable.ts";

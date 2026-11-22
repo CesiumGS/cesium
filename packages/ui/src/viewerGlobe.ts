@@ -8,7 +8,7 @@ import {
   type Attribution,
   type TilesetOptions,
   type Tileset3D,
-} from "@cesium/next";
+} from "@cesium/core";
 import type { ViewerState } from "./viewerState.ts";
 
 /** The globe and tilesets. */

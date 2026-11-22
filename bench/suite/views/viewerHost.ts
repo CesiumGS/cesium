@@ -37,7 +37,7 @@ import {
   type PickInfo,
   type ViewerWarning,
   type ZoomTarget,
-} from "../../../packages/next/widgets/index.ts";
+} from "../../../packages/ui/src/index.ts";
 import { legacyPick, legacySnapshot, type LegacyLoad } from "../suite.ts";
 
 // ---------------------------------------------------------------- sources

@@ -38,7 +38,7 @@ import {
 import { createPortal } from "react-dom";
 import { EXAMPLES, type ExampleInfo } from "../../../examples/index.ts";
 import { Engine } from "../../../packages/core/src/index.ts";
-import { Viewer } from "../../../packages/next/widgets/index.ts";
+import { Viewer } from "../../../packages/ui/src/index.ts";
 import { needsToken, tokenSource } from "../ionToken.ts";
 import { TokenPrompt } from "../IonTokenSettings.tsx";
 import { useIonToken } from "../useIonToken.ts";

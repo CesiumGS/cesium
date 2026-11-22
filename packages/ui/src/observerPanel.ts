@@ -24,7 +24,7 @@ import {
   type SkyPackManifest,
   type ToneMapping,
   type View,
-} from "@cesium/next";
+} from "@cesium/core";
 
 export type ObserverPanelSection = "exposure" | "optics" | "look" | "sky";
 

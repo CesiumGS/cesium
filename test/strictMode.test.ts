@@ -7,7 +7,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createFrameCatalog } from "../packages/frames/src/catalog.ts";
 import { Clock } from "../packages/time/src/Clock.ts";
-import type { ViewerOptions } from "../packages/next/widgets/Viewer.ts";
+import type { ViewerOptions } from "../packages/ui/src/Viewer.ts";
 import { fakeDevice, installGpuGlobals } from "./fakeGpu.ts";
 import { sharedLoadCount } from "../packages/frames/src/sharedLoads.ts";
 import {
@@ -318,7 +318,7 @@ describe("a Viewer under StrictMode (create, dispose, create again at once)", ()
     counts: Record<string, number>;
     live: number;
   }> {
-    const { Viewer } = await import("../packages/next/widgets/Viewer.ts");
+    const { Viewer } = await import("../packages/ui/src/Viewer.ts");
     const v = await Viewer.create(
       element(platform) as unknown as HTMLElement,
       viewerOptions(new Clock({ mode: "paused" })),
@@ -338,7 +338,7 @@ describe("a Viewer under StrictMode (create, dispose, create again at once)", ()
     for (const file of DATA_FILES) {
       expect(single.counts[file]).toBe(1);
     }
-    const { Viewer } = await import("../packages/next/widgets/Viewer.ts");
+    const { Viewer } = await import("../packages/ui/src/Viewer.ts");
     const container = element(platform) as unknown as HTMLElement;
     const clock = new Clock({ mode: "paused" });
     const listening = platform.listening;
@@ -381,7 +381,7 @@ describe("a Viewer under StrictMode (create, dispose, create again at once)", ()
   });
 
   it("disposed as it arrives, with no create after it: one device, destroyed, its loads canceled quietly", async () => {
-    const { Viewer } = await import("../packages/next/widgets/Viewer.ts");
+    const { Viewer } = await import("../packages/ui/src/Viewer.ts");
     const pending = Viewer.create(
       element(platform) as unknown as HTMLElement,
       viewerOptions(new Clock({ mode: "paused" })),
@@ -400,7 +400,7 @@ describe("a Viewer under StrictMode (create, dispose, create again at once)", ()
   });
 
   it("a viewer kept beside another on the same container gets its own engine", async () => {
-    const { Viewer } = await import("../packages/next/widgets/Viewer.ts");
+    const { Viewer } = await import("../packages/ui/src/Viewer.ts");
     const container = element(platform) as unknown as HTMLElement;
     const a = Viewer.create(container, viewerOptions(new Clock()));
     const b = await Viewer.create(container, viewerOptions(new Clock()));

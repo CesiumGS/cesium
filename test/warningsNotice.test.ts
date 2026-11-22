@@ -3,7 +3,7 @@
 // next one, hidden by an empty list, commands shown as code, and Escape
 // returning focus to the toggle only from inside the notice.
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { attachWarnings } from "../packages/next/widgets/warnings.ts";
+import { attachWarnings } from "../packages/ui/src/warnings.ts";
 
 type Listener = (event: {
   key?: string;

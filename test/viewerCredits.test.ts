@@ -5,7 +5,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Attribution } from "../packages/core/src/io/ion.ts";
 import type { Engine } from "../packages/core/src/scene/Engine.ts";
-import type { Viewer } from "../packages/next/widgets/Viewer.ts";
+import type { Viewer } from "../packages/ui/src/Viewer.ts";
 import { fakeDevice, fakeEngine } from "./fakeGpu.ts";
 
 const URL_ = "https://tiles.test/credit/tileset.json";
@@ -73,7 +73,7 @@ beforeEach(async () => {
   vi.stubGlobal("getComputedStyle", () => ({ position: "relative" }));
   vi.stubGlobal("devicePixelRatio", 1);
   engine = await fakeEngine();
-  const { Viewer } = await import("../packages/next/widgets/Viewer.ts");
+  const { Viewer } = await import("../packages/ui/src/Viewer.ts");
   viewer = await Viewer.create(element() as HTMLElement, {
     engine,
     globe: false,
