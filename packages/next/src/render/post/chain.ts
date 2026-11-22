@@ -11,7 +11,6 @@ import {
   SLOT_FORMAT,
   type PostStageBinding,
   type PostStageImage,
-  type PostStageKind,
   type PostStageSlot,
   type PostStageTexture,
   type PostStageViewInfo,
