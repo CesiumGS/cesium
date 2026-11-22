@@ -61,7 +61,7 @@ Generated from the item files by `npx hitld work views` (its marker keeps the ol
 
 ### Engine profiles
 
-[CS-8](./projects/CS-8-engine-profiles.md), Planned, led by owner: 7 of 21 done, 8 ready, 4 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](../../../docs/superpowers/plans/2026-11-13-engine-profiles.md).
+[CS-8](./projects/CS-8-engine-profiles.md), Planned, led by owner: 7 of 21 done, 9 ready, 3 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](../../../docs/superpowers/plans/2026-11-13-engine-profiles.md).
 
 Milestone: Each view knows what the device supports and why ([CS-466](./milestones/CS-466-each-view-knows-what-the-device-supports-and-why.md), Planned)
 
@@ -98,13 +98,13 @@ No milestone
 
 ### The WebGL 2 renderer
 
-[CS-9](./projects/CS-9-the-webgl-2-renderer.md), Planned, led by owner: 7 of 21 done, 2 ready, 10 blocked, 2 proposed. Plan: [2026-11-13-webgl2-renderer.md](../../../docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
+[CS-9](./projects/CS-9-the-webgl-2-renderer.md), Planned, led by owner: 8 of 21 done, 2 ready, 9 blocked, 2 proposed. Plan: [2026-11-13-webgl2-renderer.md](../../../docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
 
 Milestone: Renderers plug in behind one seam ([CS-414](./milestones/CS-414-renderers-plug-in-behind-one-seam.md), Planned)
 
 - [x] [CS-33](./items/CS-33-the-seam-extracted-webgpu-only-worlddraws.md) The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves. Done.
 - [x] [CS-34](./items/CS-34-renderer-neutral-content-resources-texture.md) Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`). Done.
-- [ ] [CS-35](./items/CS-35-the-probe-the-renderer-option-and-an-empty.md) The probe, the `renderer` option and an empty WebGL 2 device. Needs CS-33 and CS-21 (Engine profiles).
+- [x] [CS-35](./items/CS-35-the-probe-the-renderer-option-and-an-empty.md) The probe, the `renderer` option and an empty WebGL 2 device. Done.
 - [x] [CS-43](./items/CS-43-research-which-browsers-lack-webgpu-by-share.md) Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have. Done.
 
 Milestone: WebGL 2 draws models, tiles and the globe ([CS-415](./milestones/CS-415-webgl-2-draws-models-tiles-and-the-globe.md), Planned)
@@ -979,7 +979,7 @@ No milestone
 
 ### Dyno as the development harness
 
-[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 56 of 93 done, 15 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+[CS-389](./projects/CS-389-dyno-as-the-development-harness.md), Planned, led by owner: 57 of 94 done, 15 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](../../../docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for ([CS-478](./milestones/CS-478-every-run-says-what-it-was-for.md), Planned)
 
@@ -1100,6 +1100,7 @@ No milestone
 - [?] [CS-805](./items/CS-805-catalog-scenes-record-the-development-metrics.md) Catalog scenes record the development metrics that example scenes now do. Proposed. Needs CS-394.
 - [x] [CS-812](./items/CS-812-merge-cs-787-the-work-page-s-code-says-order.md) decision: Merge CS-787, the Work page's code says Order where it still said Plan view, and its dead code goes. Done.
 - [ ] [CS-856](./items/CS-856-dyno-measures-what-each-merge-touched-targeted.md) Dyno measures what each merge touched: targeted A/B runs after merges, a quiet full run overnight, and regressions filed as items. Needs CS-721.
+- [x] [CS-884](./items/CS-884-merge-cs-404-studies-the-model-the-files-and.md) decision: Merge CS-404, studies: the model, the files and the commands. Done.
 
 ### The public API reviews
 

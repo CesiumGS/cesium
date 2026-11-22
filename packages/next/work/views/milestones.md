@@ -5,10 +5,11 @@
 ```text
 CS-414 Renderers plug in behind one seam [Planned], under CS-9 The WebGL 2 renderer
   outcome: An app can ask for the WebGL 2 renderer and get an engine that runs on it, or a named reason it can't, while WebGPU apps draw exactly as before through the same seam.
-  constraints: 3 of 4 done
+  constraints: 4 of 4 done
+  check due: every constraint is done; the check has not passed
   unmet: c1 WebGPU apps see no change: every WebGPU parity suite gives the same results before and after the seam is extracted. (check not passed)
   unmet: c2 A second renderer reaches everything the WebGPU renderer draws (draw records, meshes, textures, imagery) without holding a WebGPU object: the import-boundary test has no content-tier exceptions for imagery, and a `webgl2` tier that may not import WebGPU code. (check not passed)
-  unmet: c3 An app gets an engine that clears to its background on WebGL 2, with the inspector naming the device and why, when it sets `renderer: "webgl2"`, when it leaves auto on a browser without WebGPU (with one warning), or when it emulates `webgl2-basic`; below the floor, `Engine.create` rejects naming what is missing, and WebGPU apps never download the WebGL 2 code. (open: CS-35; check not passed)
+  unmet: c3 An app gets an engine that clears to its background on WebGL 2, with the inspector naming the device and why, when it sets `renderer: "webgl2"`, when it leaves auto on a browser without WebGPU (with one warning), or when it emulates `webgl2-basic`; below the floor, `Engine.create` rejects naming what is missing, and WebGPU apps never download the WebGL 2 code. (check not passed)
 
 CS-415 WebGL 2 draws models, tiles and the globe [Planned], under CS-9 The WebGL 2 renderer
   outcome: On a browser without WebGPU, glTF models, 3D Tiles and the globe with terrain and imagery draw lit, within tolerance of WebGPU.

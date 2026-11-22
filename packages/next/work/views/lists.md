@@ -4,7 +4,7 @@
 
 ### Engine profiles
 
-CS-8, Planned, led by owner: 7 of 21 done, 8 ready, 4 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](docs/superpowers/plans/2026-11-13-engine-profiles.md).
+CS-8, Planned, led by owner: 7 of 21 done, 9 ready, 3 blocked, 2 proposed. Plan: [2026-11-13-engine-profiles.md](docs/superpowers/plans/2026-11-13-engine-profiles.md).
 
 Milestone: Each view knows what the device supports and why (CS-466, Planned)
 
@@ -41,13 +41,13 @@ No milestone
 
 ### The WebGL 2 renderer
 
-CS-9, Planned, led by owner: 7 of 21 done, 2 ready, 10 blocked, 2 proposed. Plan: [2026-11-13-webgl2-renderer.md](docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
+CS-9, Planned, led by owner: 8 of 21 done, 2 ready, 9 blocked, 2 proposed. Plan: [2026-11-13-webgl2-renderer.md](docs/superpowers/plans/2026-11-13-webgl2-renderer.md).
 
 Milestone: Renderers plug in behind one seam (CS-414, Planned)
 
 - [x] CS-33 The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves. Done.
 - [x] CS-34 Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`). Done.
-- [ ] CS-35 The probe, the `renderer` option and an empty WebGL 2 device. Needs CS-33 and CS-21 (Engine profiles).
+- [x] CS-35 The probe, the `renderer` option and an empty WebGL 2 device. Done.
 - [x] CS-43 Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have. Done.
 
 Milestone: WebGL 2 draws models, tiles and the globe (CS-415, Planned)
@@ -922,7 +922,7 @@ No milestone
 
 ### Dyno as the development harness
 
-CS-389, Planned, led by owner: 56 of 93 done, 15 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
+CS-389, Planned, led by owner: 57 of 94 done, 15 ready, 14 blocked, 8 proposed. Plan: [2026-11-13-dyno-dev-harness.md](docs/superpowers/plans/2026-11-13-dyno-dev-harness.md).
 
 Milestone: Every run says what it was for (CS-478, Planned)
 
@@ -1043,6 +1043,7 @@ No milestone
 - [?] CS-805 Catalog scenes record the development metrics that example scenes now do. Proposed. Needs CS-394.
 - [x] CS-812 decision: Merge CS-787, the Work page's code says Order where it still said Plan view, and its dead code goes. Done.
 - [ ] CS-856 Dyno measures what each merge touched: targeted A/B runs after merges, a quiet full run overnight, and regressions filed as items. Needs CS-721.
+- [x] CS-884 decision: Merge CS-404, studies: the model, the files and the commands. Done.
 
 ### The public API reviews
 

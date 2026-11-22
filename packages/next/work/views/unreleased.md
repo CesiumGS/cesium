@@ -12,6 +12,7 @@ CS-8 Engine profiles
 CS-9 The WebGL 2 renderer
   CS-33  The seam extracted, WebGPU only (`WorldDraws`, `RenderDevice`, `WorldMirror`, `ViewRenderer`), as pure moves
   CS-34  Renderer-neutral content resources (texture sources, `MeshData`, `ImageryCompositor`)
+  CS-35  The probe, the `renderer` option and an empty WebGL 2 device
   CS-43  Research: which browsers lack WebGPU, by share and platform, and which WebGL 2 extensions they have
 
 CS-10 Cesium IR
@@ -112,5 +113,5 @@ CS-579 Editing
 CS-615 Packaging and package names
   CS-834  A map of 2.0's packages and seams: capability packages, seam-prefixed adapters, the umbrella, and the directory layout
 
-79 merged item(s) not in a release
+80 merged item(s) not in a release
 ```

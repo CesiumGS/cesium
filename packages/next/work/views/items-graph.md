@@ -31,7 +31,7 @@ graph LR
     CS_32["CS-32 The shader route spike: our own naga crate measured against the "]:::open
     CS_33["CS-33 The seam extracted, WebGPU only ('WorldDraws', 'RenderDevice', '"]:::done
     CS_34["CS-34 Renderer-neutral content resources (texture sources, 'MeshData',"]:::done
-    CS_35["CS-35 The probe, the 'renderer' option and an empty WebGL 2 device"]:::open
+    CS_35["CS-35 The probe, the 'renderer' option and an empty WebGL 2 device"]:::done
     CS_36["CS-36 First draws, unlit (glTF and 3D Tiles meshes)"]:::open
     CS_37["CS-37 The globe, terrain and imagery"]:::open
     CS_38["CS-38 Lighting and instancing"]:::open
@@ -677,6 +677,7 @@ graph LR
     CS_805["CS-805 Catalog scenes record the development metrics that example scen"]:::proposed
     CS_812["CS-812 Merge CS-787, the Work page's code says Order where it still sa"]:::done
     CS_856["CS-856 Dyno measures what each merge touched: targeted A/B runs after "]:::open
+    CS_884["CS-884 Merge CS-404, studies: the model, the files and the commands"]:::done
   end
   subgraph CS_437["public API reviews"]
     CS_102["CS-102 The public API review, with the protocol table and the façade's"]:::open

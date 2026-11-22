@@ -6,8 +6,6 @@
 CS-8 Engine profiles
   CS-26  The opt-in resolution governor
       ← CS-24 `resolution` and `msaa` as features
-  CS-30  The WebGL 2 renderer's facts and support rules
-      ← CS-35 The probe, the `renderer` option and an empty WebGL 2 device
   CS-31  The worker mode's snapshots
       ← CS-99 The worker-mode spike: a headed run on an otherwise idle GPU
   CS-366  The remaining silent fallbacks: translucency layers, the slice pool's capacity, the normals choice
@@ -16,7 +14,6 @@ CS-8 Engine profiles
 CS-9 The WebGL 2 renderer
   CS-36  First draws, unlit (glTF and 3D Tiles meshes)
       ← CS-32 The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points
-        CS-35 The probe, the `renderer` option and an empty WebGL 2 device
   CS-37  The globe, terrain and imagery
       ← CS-36 First draws, unlit (glTF and 3D Tiles meshes)
   CS-38  Lighting and instancing
@@ -37,8 +34,6 @@ CS-9 The WebGL 2 renderer
       ← CS-42 The atmosphere
   CS-45  The runner suite, the gallery's renderer switch, the handbook
       ← CS-36 First draws, unlit (glTF and 3D Tiles meshes)
-  CS-47  Probe runs on the test devices
-      ← CS-35 The probe, the `renderer` option and an empty WebGL 2 device
 
 CS-10 Cesium IR
   CS-56  Tables and the bounded search, the first extensions, with the residual's row window
@@ -738,5 +733,5 @@ CS-647 Conditional content and motion
       ← CS-648 The conditional content and motion design
         CS-554 3D Tiles loads through the content-source seam, with a @cesium/next/tiles entry point
 
-233 blocked
+231 blocked
 ```

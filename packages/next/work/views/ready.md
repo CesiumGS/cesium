@@ -9,13 +9,14 @@ CS-8 Engine profiles
   CS-27  The inspector's Profile section and emulation
   CS-28  The `@cesium/next/gpu` entry point
   CS-29  The Viewer's defaults migrated
+  CS-30  The WebGL 2 renderer's facts and support rules
   CS-365  Limit-forced accuracy changes carried into query results
   CS-368  `Engine.queries` takes the application's backends
   CS-507  Silent fallbacks become support notices
 
 CS-9 The WebGL 2 renderer
   CS-32  The shader route spike: our own naga crate measured against the published one; Slang → WGSL → naga → GLSL ES for engine entry points
-  CS-35  The probe, the `renderer` option and an empty WebGL 2 device
+  CS-47  Probe runs on the test devices
 
 CS-10 Cesium IR
   CS-54  Routes on both emitters, with the residual and df64 forms
@@ -271,5 +272,5 @@ CS-18 The work tracker
   CS-679  Stale records: the API map's Entity and labels rows, costs.tsx's M6 count, and globe translucency as a non-goal
   CS-680  Triage the open items that fit no release
 
-202 ready
+203 ready
 ```
