@@ -67,10 +67,10 @@ try {
   const { EARTHWORK, HINGE_RISE, SIDE_SLOPES, slopeSection } =
     await runner.import(join(root, "examples/design-globe/sideSlopes.ts"));
   const { Alignment } = await runner.import(
-    join(root, "src/engineering/alignment.ts"),
+    join(root, "packages/crs/src/engineering/alignment.ts"),
   );
   const { EngineeringFrame } = await runner.import(
-    join(root, "src/engineering/EngineeringFrame.ts"),
+    join(root, "packages/crs/src/engineering/EngineeringFrame.ts"),
   );
   const { designTilesInputs } = await runner.import(
     join(root, "scripts/designTiles.mjs"),

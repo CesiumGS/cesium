@@ -313,7 +313,11 @@ export const EXPRESSION_FORMATS: Record<string, string> = {
 export interface SeamNote {
   id: string;
   name: string;
-  /** Code names, each checked to exist in its file. */
+  /**
+   * Code names, each checked to exist in its file: a path in the core
+   * (packages/core), or from the repository root when it starts with
+   * `packages/`.
+   */
   code: readonly { name: string; file: string }[];
   /** Passes it's drawn on in the chart. */
   passes: readonly string[];
@@ -392,7 +396,7 @@ export const SEAMS: readonly SeamNote[] = [
     code: [
       { name: "placementRow", file: "src/shaders/placement.slang" },
       { name: "placements", file: "src/scene/placementTable.ts" },
-      { name: "placementOf", file: "src/frames/placementQuery.ts" },
+      { name: "placementOf", file: "packages/frames/src/placementQuery.ts" },
     ],
     passes: ["shadows", "prepass", "opaque", "translucent"],
     today: "A placements buffer, evaluated in the vertex stage.",
@@ -471,8 +475,8 @@ export const SEAMS: readonly SeamNote[] = [
     name: "Module boundaries a host can replace",
     code: [
       { name: "FrameResolver", file: "src/camera/frameResolver.ts" },
-      { name: "CoordinateService", file: "src/frames/index.ts" },
-      { name: "SnapService", file: "src/proj/index.ts" },
+      { name: "CoordinateService", file: "packages/frames/src/index.ts" },
+      { name: "SnapService", file: "packages/crs/src/index.ts" },
     ],
     passes: [],
     today:
@@ -481,7 +485,7 @@ export const SEAMS: readonly SeamNote[] = [
     guards: [
       {
         file: "test/importBoundary.test.ts",
-        title: "the core imports nothing from time, frames, proj or measure",
+        title: "the packages follow the rule their package.json files state",
       },
     ],
   },

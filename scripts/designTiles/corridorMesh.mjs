@@ -207,7 +207,7 @@ function withinTolerance(alignment, a, b, pieces, tolerance) {
  * (`chordError`, which also counts the profile's vertical curves) and split
  * further until it is within the tolerance.
  *
- * @param {import("../../src/engineering/alignment.ts").Alignment} alignment
+ * @param {import("../../packages/crs/src/engineering/alignment.ts").Alignment} alignment
  * @param {number} from
  * @param {number} to
  * @param {number} chordTolerance design units

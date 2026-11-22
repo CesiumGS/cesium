@@ -78,8 +78,9 @@ ${lines.join("\n")}
 const target = join(
   dirname(fileURLToPath(import.meta.url)),
   "..",
-  "src",
+  "packages",
   "time",
+  "src",
   "leapTable.ts",
 );
 writeFileSync(target, out);

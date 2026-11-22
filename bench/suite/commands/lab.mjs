@@ -26,7 +26,7 @@ import { fileURLToPath } from "node:url";
 import { keepAwake } from "../telemetry.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
-/** packages/next/bench. */
+/** bench/ at the repository's root. */
 const bench = join(here, "..", "..");
 
 /**
@@ -197,7 +197,7 @@ async function allocSuite(page) {
     walk(profile.head);
     const all = [...sites.values()];
     const sum = (list) => list.reduce((n, s) => n + s.bytes, 0);
-    const engine = all.filter((s) => s.file.startsWith("src/"));
+    const engine = all.filter((s) => /^packages\/[^/]+\/src\//.test(s.file));
     runs.push({
       draws,
       records: scene.records,

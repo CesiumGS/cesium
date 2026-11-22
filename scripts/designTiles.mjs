@@ -983,9 +983,9 @@ function corridorAnswers(frame, alignment, placement, frames) {
  * version, instant and input hashes, and every output present).
  *
  * @param {string} store
- * @param {import("../src/engineering/projApi.ts").ProjApi} proj
- * @param {import("../src/engineering/proj.ts").GridSource} grids
- * @param {import("../src/frames/frames.ts").Frames} frames
+ * @param {import("../packages/crs/src/engineering/projApi.ts").ProjApi} proj
+ * @param {import("../packages/crs/src/engineering/proj.ts").GridSource} grids
+ * @param {import("../packages/frames/src/frames.ts").Frames} frames
  * @param {(line: string) => void} [logger]
  */
 export async function ensureDesignTiles(

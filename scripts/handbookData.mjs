@@ -992,6 +992,8 @@ export function readPipelineFigures(root = repoRoot) {
  * Where handbook/src/pipeline.ts no longer matches the code: passes without
  * a note, notes for passes that have gone, tests or code names that have
  * gone. The page shows an unnoted pass as such, so these warn, not fail.
+ * A code file is a path in the core, or from the root when it starts with
+ * `packages/`.
  */
 export function pipelineDrift(graph, notes, root = repoRoot) {
   const drift = [];
@@ -1018,9 +1020,11 @@ export function pipelineDrift(graph, notes, root = repoRoot) {
       }
     }
     for (const { name, file } of seam.code) {
-      const text = existsSync(join(coreOf(root), file))
-        ? readFileSync(join(coreOf(root), file), "utf8")
-        : "";
+      const path = join(
+        file.startsWith("packages/") ? root : coreOf(root),
+        file,
+      );
+      const text = existsSync(path) ? readFileSync(path, "utf8") : "";
       if (!text.includes(name)) {
         drift.push(`${seam.id}: no ${name} in ${file}`);
       }

@@ -162,6 +162,13 @@ it("reports where the pipeline's notes no longer match the code", () => {
   expect(drift.join()).toContain('no test "no such test"');
 });
 
+it("every seam note's code names and guard tests are where it says", async () => {
+  const notes = await import("../handbook/src/pipeline.ts");
+  // The graph has exactly the noted passes, so only code and tests can drift.
+  const graph = { passes: Object.keys(notes.PASSES).map((name) => ({ name })) };
+  expect(pipelineDrift(graph, notes)).toEqual([]);
+});
+
 it("highlights code without changing a character", () => {
   const ts = `// A comment
 import { Engine } from "@cesium/next";

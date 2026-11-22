@@ -5,8 +5,9 @@
 // Usage: node scripts/erfaTables.mjs <erfa-src-dir>
 //
 // Each table is written flat, row-major, with the numbers' source spelling
-// preserved so no precision is lost. Derived from ERFA; see
-// src/time/erfa/LICENSE.
+// preserved so no precision is lost. Derived from ERFA; see the LICENSE
+// beside each output: packages/time/src/erfa (TDB-TT) and
+// packages/frames/src/time/erfa (the CIP X, Y and CIO locator s series).
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -16,13 +17,9 @@ if (!srcDir) {
   console.error("usage: node scripts/erfaTables.mjs <erfa-src-dir>");
   process.exit(1);
 }
-const outDir = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "..",
-  "src",
-  "time",
-  "erfa",
-);
+const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
+const TIME_ERFA = join(repo, "packages", "time", "src", "erfa");
+const FRAMES_ERFA = join(repo, "packages", "frames", "src", "time", "erfa");
 
 /** What each ERFA table holds, with its row layout. */
 const DOCS = {
@@ -47,9 +44,9 @@ const DOCS = {
 };
 
 const FILES = [
-  ["dtdb.c", "dtdbTable.ts", "eraDtdb (TDB-TT)"],
-  ["xy06.c", "xy06Table.ts", "eraXy06 (CIP X, Y)"],
-  ["s06.c", "s06Table.ts", "eraS06 (CIO locator s)"],
+  ["dtdb.c", "dtdbTable.ts", "eraDtdb (TDB-TT)", TIME_ERFA],
+  ["xy06.c", "xy06Table.ts", "eraXy06 (CIP X, Y)", FRAMES_ERFA],
+  ["s06.c", "s06Table.ts", "eraS06 (CIO locator s)", FRAMES_ERFA],
 ];
 
 const NUMBER = /[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/g;
@@ -57,7 +54,7 @@ const DECL =
   /static const (?:double|int|TERM)\s+(\w+)((?:\[[^\]]*\])+)\s*=\s*\{/g;
 
 const counts = [];
-for (const [cFile, tsFile, what] of FILES) {
+for (const [cFile, tsFile, what, outDir] of FILES) {
   const src = readFileSync(join(srcDir, cFile), "utf8").replace(
     /\/\*[\s\S]*?\*\//g,
     "",
