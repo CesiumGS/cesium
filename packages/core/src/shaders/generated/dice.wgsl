@@ -170,8 +170,8 @@ fn unpackSpan_0( w_2 : SpanWords_0) -> PatchSpan_0
     var s_0 : PatchSpan_0;
     s_0.kind_0 = ((w_2.u_0[u32(0)]) & (u32(255)));
     s_0.reversed_0 = (((w_2.u_0[u32(0)]) & (u32(256)))) != u32(0);
-    s_0.degreeU_0 = ((w_2.u_0[u32(1)]) & (u32(255)));
-    s_0.degreeV_0 = ((((w_2.u_0[u32(1)]) >> (u32(8)))) & (u32(255)));
+    s_0.degreeU_0 = min(((w_2.u_0[u32(1)]) & (u32(255))), u32(7));
+    s_0.degreeV_0 = min(((((w_2.u_0[u32(1)]) >> (u32(8)))) & (u32(255))), u32(7));
     s_0.face_0 = w_2.u_0[u32(2)];
     s_0.controls_0 = w_2.u_0[u32(3)];
     s_0.origin_0 = f3_0(w_2, u32(4));
@@ -343,22 +343,29 @@ fn dicePatches(@builtin(global_invocation_id) gid_0 : vec3<u32>)
     var c_0 : u32 = u32(0);
     loop
     {
-        if((c_0 < total_0))
+        if((c_0 < u32(256)))
         {
         }
         else
         {
             break;
         }
-        var _S14 : u32 = first_0 + c_0;
-        if((_S14 >= (dice_0.capacity_0)))
+        if((c_0 >= total_0))
+        {
+            _S7 = true;
+        }
+        else
+        {
+            _S7 = ((first_0 + c_0) >= (dice_0.capacity_0));
+        }
+        if(_S7)
         {
             break;
         }
-        var _S15 : u32 = c_0 % across_0;
-        var i0_0 : u32 = _S15 * u32(4);
-        var _S16 : u32 = c_0 / across_0;
-        chunks_0[_S14] = vec4<u32>(dice_0.record_0, index_0, (((((i0_0 | ((((_S16 * u32(4)) << (u32(8))))))) | (((nu_0 << (u32(16))))))) | (((nv_0 << (u32(24)))))), u32(0));
+        var _S14 : u32 = c_0 % across_0;
+        var i0_0 : u32 = _S14 * u32(4);
+        var _S15 : u32 = c_0 / across_0;
+        chunks_0[first_0 + c_0] = vec4<u32>(dice_0.record_0, index_0, (((((i0_0 | ((((_S15 * u32(4)) << (u32(8))))))) | (((nu_0 << (u32(16))))))) | (((nv_0 << (u32(24)))))), u32(0));
         c_0 = c_0 + u32(1);
     }
     return;
@@ -369,16 +376,16 @@ fn dicePatches(@builtin(global_invocation_id) gid_0 : vec3<u32>)
 fn writePatchArgs()
 {
     var a_1 : u32 = dice_0.batch_0 * u32(5);
-    var _S17 : u32 = a_1 + u32(4);
-    var _S18 : u32 = atomicLoad(&(args_0[_S17]));
-    var _S19 : u32 = min(_S18, dice_0.capacity_0);
-    atomicStore(&(stats_0[i32(2)]), _S18);
-    atomicStore(&(stats_0[i32(3)]), _S19);
+    var _S16 : u32 = a_1 + u32(4);
+    var _S17 : u32 = atomicLoad(&(args_0[_S16]));
+    var _S18 : u32 = min(_S17, dice_0.capacity_0);
+    atomicStore(&(stats_0[i32(2)]), _S17);
+    atomicStore(&(stats_0[i32(3)]), _S18);
     atomicStore(&(args_0[a_1]), u32(96));
-    atomicStore(&(args_0[a_1 + u32(1)]), _S19);
+    atomicStore(&(args_0[a_1 + u32(1)]), _S18);
     atomicStore(&(args_0[a_1 + u32(2)]), u32(0));
     atomicStore(&(args_0[a_1 + u32(3)]), u32(0));
-    atomicStore(&(args_0[_S17]), u32(0));
+    atomicStore(&(args_0[_S16]), u32(0));
     return;
 }
 

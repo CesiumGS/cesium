@@ -30,6 +30,10 @@ public struct Atmosphere {
 public static const float PI = 3.14159265358979;
 public static const float2 TRANSMITTANCE_SIZE = float2(256.0, 64.0);
 public static const float MULTIPLE_SCATTERING_SIZE = 32.0;
+// The most steps a march takes (AGENTS.md, GPU safety): the sky asks 32
+// (atmosphere/Sky.ts SKY_STEPS), its tables 30 and 20, and a probe what its
+// caller asks, which RealtimeAtmosphere.ts `marchSteps` refuses past this.
+public static const int MAX_MARCH_STEPS = 1024;
 
 // --- the medium ---------------------------------------------------------------
 
@@ -192,8 +196,13 @@ public Scattered march(float3 position, float3 direction, float3 sun, float maxL
   float nu = dot(direction, sun);
   float phaseR = uniformPhase ? 1.0 / (4.0 * PI) : rayleighPhase(nu);
   float phaseM = uniformPhase ? 1.0 / (4.0 * PI) : miePhase(nu);
-  float dt = (end - start) / float(steps);
-  for (int i = 0; i < steps; i++) {
+  // At most MAX_MARCH_STEPS, over the whole ray: fewer, longer steps, never a shorter ray.
+  int count = min(max(steps, 0), MAX_MARCH_STEPS);
+  float dt = (end - start) / float(count);
+  for (int i = 0; i < MAX_MARCH_STEPS; i++) {
+    if (i >= count) {
+      break;
+    }
     float t = start + (float(i) + 0.5) * dt;
     float3 p = position + direction * t;
     float rp = length(p);

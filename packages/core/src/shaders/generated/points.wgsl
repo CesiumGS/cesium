@@ -186,26 +186,34 @@ fn groundHeight_0( x_0 : f32,  y_0 : f32,  none_0 : f32) -> f32
 
 fn placementParameter_0( word_0 : u32) -> f32
 {
-    return placements_0[(word_0 >> (u32(2)))][(word_0 & (u32(3)))];
+    var _S14 : u32 = (word_0 >> (u32(2)));
+    var _S15 : vec2<u32> = vec2<u32>(arrayLength(&placements_0), 16);
+    return placements_0[min(_S14, max(_S15.x, u32(1)) - u32(1))][(word_0 & (u32(3)))];
 }
 
 fn termWeight_0( row_0 : u32,  head_0 : vec4<u32>) -> f32
 {
-    var _S14 : f32 = (bitcast<f32>((head_0.y)));
-    var _S15 : u32 = ((((head_0.x) >> (u32(8)))) & (u32(3)));
+    var _S16 : f32 = (bitcast<f32>((head_0.y)));
+    var _S17 : u32 = ((((head_0.x) >> (u32(8)))) & (u32(3)));
     var f_1 : u32 = u32(0);
-    var w_0 : f32 = _S14;
+    var w_0 : f32 = _S16;
     loop
     {
-        if((f_1 < _S15))
+        if((f_1 < u32(2)))
         {
         }
         else
         {
             break;
         }
-        var _S16 : vec4<f32> = placements_0[row_0 + u32(1) + f_1];
-        var w_1 : f32 = w_0 * (_S16.y + _S16.z * placementParameter_0((bitcast<u32>((_S16.x)))));
+        if((f_1 >= _S17))
+        {
+            break;
+        }
+        var _S18 : u32 = row_0 + u32(1) + f_1;
+        var _S19 : vec2<u32> = vec2<u32>(arrayLength(&placements_0), 16);
+        var _S20 : vec4<f32> = placements_0[min(_S18, max(_S19.x, u32(1)) - u32(1))];
+        var w_1 : f32 = w_0 * (_S20.y + _S20.z * placementParameter_0((bitcast<u32>((_S20.x)))));
         f_1 = f_1 + u32(1);
         w_0 = w_1;
     }
@@ -214,51 +222,52 @@ fn termWeight_0( row_0 : u32,  head_0 : vec4<u32>) -> f32
 
 fn latticeDisplacement_0( body_0 : u32,  cells_0 : u32,  p_0 : vec3<f32>,  jacobian_0 : ptr<function, mat3x3<f32>>,  clip_0 : ptr<function, f32>) -> vec3<f32>
 {
-    var _S17 : vec4<f32> = placements_0[body_0];
-    var _S18 : f32 = _S17.w;
-    var v_0 : vec3<f32> = (p_0 - _S17.xyz) * vec3<f32>(_S18);
+    var _S21 : vec2<u32> = vec2<u32>(arrayLength(&placements_0), 16);
+    var _S22 : vec4<f32> = placements_0[min(body_0, max(_S21.x, u32(1)) - u32(1))];
+    var _S23 : f32 = _S22.w;
+    var v_0 : vec3<f32> = (p_0 - _S22.xyz) * vec3<f32>(_S23);
     var v_1 : vec3<f32>;
     var cell_0 : u32;
     var dvdp_0 : f32;
     if((cells_0 > u32(1)))
     {
         var n_1 : f32 = f32(cells_0);
-        var _S19 : vec3<f32> = vec3<f32>(1.0f);
-        var s_3 : vec3<f32> = (v_0 + _S19) * vec3<f32>((0.5f * n_1));
+        var _S24 : vec3<f32> = vec3<f32>(1.0f);
+        var s_3 : vec3<f32> = (v_0 + _S24) * vec3<f32>((0.5f * n_1));
         var f_2 : vec3<f32> = clamp(floor(s_3), vec3<f32>(0.0f), vec3<f32>((n_1 - 1.0f)));
-        var _S20 : vec3<u32> = vec3<u32>(f_2);
-        var _S21 : u32 = (_S20.z * cells_0 + _S20.y) * cells_0 + _S20.x;
-        var dvdp_1 : f32 = _S18 * n_1;
-        v_1 = vec3<f32>(2.0f) * (s_3 - f_2) - _S19;
-        cell_0 = _S21;
+        var _S25 : vec3<u32> = vec3<u32>(f_2);
+        var _S26 : u32 = (_S25.z * cells_0 + _S25.y) * cells_0 + _S25.x;
+        var dvdp_1 : f32 = _S23 * n_1;
+        v_1 = vec3<f32>(2.0f) * (s_3 - f_2) - _S24;
+        cell_0 = _S26;
         dvdp_0 = dvdp_1;
     }
     else
     {
         v_1 = v_0;
         cell_0 = u32(0);
-        dvdp_0 = _S18;
+        dvdp_0 = _S23;
     }
-    var _S22 : f32 = v_1.x;
-    var _S23 : f32 = _S22 * _S22;
-    var _S24 : vec4<f32> = vec4<f32>(1.0f, _S22, _S23, _S23 * _S22);
-    var _S25 : f32 = v_1.y;
-    var _S26 : f32 = _S25 * _S25;
-    var _S27 : vec4<f32> = vec4<f32>(1.0f, _S25, _S26, _S26 * _S25);
-    var _S28 : f32 = v_1.z;
-    var _S29 : f32 = _S28 * _S28;
-    var _S30 : vec4<f32> = vec4<f32>(1.0f, _S28, _S29, _S29 * _S28);
-    var _S31 : vec4<f32> = vec4<f32>(0.0f, 1.0f, 2.0f * _S22, 3.0f * _S22 * _S22);
-    var _S32 : vec4<f32> = vec4<f32>(0.0f, 1.0f, 2.0f * _S25, 3.0f * _S25 * _S25);
-    var _S33 : vec4<f32> = vec4<f32>(0.0f, 1.0f, 2.0f * _S28, 3.0f * _S28 * _S28);
-    var _S34 : u32 = body_0 + u32(3) + cell_0 * u32(20);
-    var _S35 : vec3<f32> = vec3<f32>(0.0f);
+    var _S27 : f32 = v_1.x;
+    var _S28 : f32 = _S27 * _S27;
+    var _S29 : vec4<f32> = vec4<f32>(1.0f, _S27, _S28, _S28 * _S27);
+    var _S30 : f32 = v_1.y;
+    var _S31 : f32 = _S30 * _S30;
+    var _S32 : vec4<f32> = vec4<f32>(1.0f, _S30, _S31, _S31 * _S30);
+    var _S33 : f32 = v_1.z;
+    var _S34 : f32 = _S33 * _S33;
+    var _S35 : vec4<f32> = vec4<f32>(1.0f, _S33, _S34, _S34 * _S33);
+    var _S36 : vec4<f32> = vec4<f32>(0.0f, 1.0f, 2.0f * _S27, 3.0f * _S27 * _S27);
+    var _S37 : vec4<f32> = vec4<f32>(0.0f, 1.0f, 2.0f * _S30, 3.0f * _S30 * _S30);
+    var _S38 : vec4<f32> = vec4<f32>(0.0f, 1.0f, 2.0f * _S33, 3.0f * _S33 * _S33);
+    var _S39 : u32 = body_0 + u32(3) + cell_0 * u32(20);
+    var _S40 : vec3<f32> = vec3<f32>(0.0f);
     var k_1 : u32 = u32(0);
-    var d_1 : vec3<f32> = _S35;
+    var d_1 : vec3<f32> = _S40;
     var scalar_0 : f32 = 0.0f;
-    var gx_0 : vec3<f32> = _S35;
-    var gy_0 : vec3<f32> = _S35;
-    var gz_0 : vec3<f32> = _S35;
+    var gx_0 : vec3<f32> = _S40;
+    var gy_0 : vec3<f32> = _S40;
+    var gz_0 : vec3<f32> = _S40;
     loop
     {
         if((k_1 < u32(20)))
@@ -271,15 +280,17 @@ fn latticeDisplacement_0( body_0 : u32,  cells_0 : u32,  p_0 : vec3<f32>,  jacob
         var a_2 : u32 = ((TERM_POWERS_0[k_1]) & (u32(3)));
         var b_0 : u32 = ((((TERM_POWERS_0[k_1]) >> (u32(2)))) & (u32(3)));
         var c_0 : u32 = ((((TERM_POWERS_0[k_1]) >> (u32(4)))) & (u32(3)));
-        var _S36 : vec4<f32> = placements_0[_S34 + k_1];
-        var coefficient_0 : vec3<f32> = _S36.xyz;
-        var _S37 : f32 = _S24[a_2] * _S27[b_0];
-        var _S38 : f32 = _S37 * _S30[c_0];
-        var d_2 : vec3<f32> = d_1 + coefficient_0 * vec3<f32>(_S38);
-        var scalar_1 : f32 = scalar_0 + _S36.w * _S38;
-        var gx_1 : vec3<f32> = gx_0 + coefficient_0 * vec3<f32>((_S31[a_2] * (_S27[b_0] * _S30[c_0])));
-        var gy_1 : vec3<f32> = gy_0 + coefficient_0 * vec3<f32>((_S32[b_0] * (_S24[a_2] * _S30[c_0])));
-        var gz_1 : vec3<f32> = gz_0 + coefficient_0 * vec3<f32>((_S33[c_0] * _S37));
+        var _S41 : u32 = _S39 + k_1;
+        var _S42 : vec2<u32> = vec2<u32>(arrayLength(&placements_0), 16);
+        var _S43 : vec4<f32> = placements_0[min(_S41, max(_S42.x, u32(1)) - u32(1))];
+        var coefficient_0 : vec3<f32> = _S43.xyz;
+        var _S44 : f32 = _S29[a_2] * _S32[b_0];
+        var _S45 : f32 = _S44 * _S35[c_0];
+        var d_2 : vec3<f32> = d_1 + coefficient_0 * vec3<f32>(_S45);
+        var scalar_1 : f32 = scalar_0 + _S43.w * _S45;
+        var gx_1 : vec3<f32> = gx_0 + coefficient_0 * vec3<f32>((_S36[a_2] * (_S32[b_0] * _S35[c_0])));
+        var gy_1 : vec3<f32> = gy_0 + coefficient_0 * vec3<f32>((_S37[b_0] * (_S29[a_2] * _S35[c_0])));
+        var gz_1 : vec3<f32> = gz_0 + coefficient_0 * vec3<f32>((_S38[c_0] * _S44));
         k_1 = k_1 + u32(1);
         d_1 = d_2;
         scalar_0 = scalar_1;
@@ -298,30 +309,43 @@ fn placeAnchor_0( placement_1 : u32,  p_1 : vec3<f32>) -> vec3<f32>
     {
         return p_1;
     }
-    var _S39 : u32 = (bitcast<u32>((placements_0[placement_1].x)));
-    var _S40 : vec3<f32> = vec3<f32>(0.0f);
+    var _S46 : vec2<u32> = vec2<u32>(arrayLength(&placements_0), 16);
+    var _S47 : u32 = min((bitcast<u32>((placements_0[min(placement_1, max(_S46.x, u32(1)) - u32(1))].x))), u32(3));
+    var _S48 : vec3<f32> = vec3<f32>(0.0f);
     var i_1 : u32 = u32(0);
-    var d_3 : vec3<f32> = _S40;
+    var d_3 : vec3<f32> = _S48;
     loop
     {
-        if((i_1 < _S39))
+        if((i_1 < u32(3)))
         {
         }
         else
         {
             break;
         }
+        if((i_1 >= _S47))
+        {
+            break;
+        }
         var row_1 : u32 = placement_1 + u32(1) + i_1 * u32(3);
-        var head_1 : vec4<u32> = (bitcast<vec4<u32>>((placements_0[row_1])));
+        var _S49 : vec2<u32> = vec2<u32>(arrayLength(&placements_0), 16);
+        var head_1 : vec4<u32> = (bitcast<vec4<u32>>((placements_0[min(row_1, max(_S49.x, u32(1)) - u32(1))])));
         if((((head_1.x) & (u32(255)))) != u32(1))
         {
             i_1 = i_1 + u32(1);
             continue;
         }
+        var w_2 : f32 = termWeight_0(row_1, head_1);
         var body_1 : u32 = placement_1 + head_1.z;
         var jacobian_1 : mat3x3<f32>;
         var clip_1 : f32;
-        d_3 = d_3 + vec3<f32>(termWeight_0(row_1, head_1)) * (placements_0[body_1 + u32(1)].xyz + placements_0[body_1 + u32(2)].xyz + latticeDisplacement_0(body_1, head_1.w, p_1, &(jacobian_1), &(clip_1)));
+        var residual_0 : vec3<f32> = latticeDisplacement_0(body_1, head_1.w, p_1, &(jacobian_1), &(clip_1));
+        var _S50 : u32 = body_1 + u32(1);
+        var _S51 : vec2<u32> = vec2<u32>(arrayLength(&placements_0), 16);
+        var _S52 : vec3<f32> = placements_0[min(_S50, max(_S51.x, u32(1)) - u32(1))].xyz;
+        var _S53 : u32 = body_1 + u32(2);
+        var _S54 : vec2<u32> = vec2<u32>(arrayLength(&placements_0), 16);
+        d_3 = d_3 + vec3<f32>(w_2) * (_S52 + placements_0[min(_S53, max(_S54.x, u32(1)) - u32(1))].xyz + residual_0);
         i_1 = i_1 + u32(1);
     }
     return p_1 + d_3;
@@ -337,39 +361,39 @@ fn placePoints(@builtin(global_invocation_id) gid_1 : vec3<u32>)
         return;
     }
     var a_3 : u32 = params_0.anchors_0 + i_2 * u32(4);
-    var _S41 : State_std430_0 = state_0[i_2];
-    var _S42 : bool;
+    var _S55 : State_std430_0 = state_0[i_2];
+    var _S56 : bool;
     if((i_2 >= (params_0.count_0)))
     {
-        _S42 = true;
+        _S56 = true;
     }
     else
     {
-        _S42 = ((_S41.sampled_0) < 0.5f);
+        _S56 = ((_S55.sampled_0) < 0.5f);
     }
-    if(_S42)
+    if(_S56)
     {
-        _S42 = true;
+        _S56 = true;
     }
     else
     {
-        _S42 = (params_0.held_0) != u32(0);
+        _S56 = (params_0.held_0) != u32(0);
     }
-    if(_S42)
+    if(_S56)
     {
         vertices_0[a_3] = 3.00000000549775576e+38f;
         return;
     }
-    var _S43 : vec4<f32> = shown_0(&(_S41), params_0.time_0 - params_0.delay_1);
-    var p_2 : vec4<f32> = _S43;
+    var _S57 : vec4<f32> = shown_0(&(_S55), params_0.time_0 - params_0.delay_1);
+    var p_2 : vec4<f32> = _S57;
     if((params_0.clamped_0) != u32(0))
     {
         p_2[i32(2)] = p_2[i32(2)] + groundHeight_0(p_2.x, p_2.y, 0.0f);
     }
-    var _S44 : vec3<f32> = placeAnchor_0(params_0.placement_0, p_2.xyz);
-    p_2.x = _S44.x;
-    p_2.y = _S44.y;
-    p_2.z = _S44.z;
+    var _S58 : vec3<f32> = placeAnchor_0(params_0.placement_0, p_2.xyz);
+    p_2.x = _S58.x;
+    p_2.y = _S58.y;
+    p_2.z = _S58.z;
     vertices_0[a_3] = p_2.x;
     vertices_0[a_3 + u32(1)] = p_2.y;
     vertices_0[a_3 + u32(2)] = p_2.z;

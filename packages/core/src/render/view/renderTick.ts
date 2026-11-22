@@ -3,7 +3,7 @@ import { updateEnvironment } from "./environment.ts";
 import { updateExposure, adaptExposure } from "./exposure.ts";
 import { resolvePicks, whenMapped, halfToFloat } from "./picks.ts";
 import { readOcclusion } from "./occlusionPass.ts";
-import { writeTranslucency } from "./translucency.ts";
+import { readListCounts, writeTranslucency } from "./translucency.ts";
 import { writeClips } from "./clipTable.ts";
 import { writeView } from "./viewBlocks.ts";
 import { viewFrameFor } from "./viewFrame.ts";
@@ -97,6 +97,7 @@ export interface RenderTickEngine extends Pick<
     | "listCountPending"
     | "listCounts"
     | "listNodes"
+    | "listWalksCut"
     | "lists"
     | "meters"
     | "occlusionReads"
@@ -408,17 +409,9 @@ export function render(
   }
   for (const readback of engine.raster.listCounts.splice(0)) {
     whenMapped(readback, () => {
-      const needed = new Uint32Array(readback.getMappedRange())[0]!;
+      const words = new Uint32Array(readback.getMappedRange().slice(0));
       readback.destroy();
-      engine.raster.listCountPending = false;
-      // Room for a quarter more than the frame needed (`writeTranslucency`),
-      // and a frame drawn with it: that one dropped what didn't fit, and
-      // drawing on demand, nothing else might come (glass missing until
-      // the camera moved).
-      if (needed > engine.raster.listNodes) {
-        engine.raster.listNodes = Math.ceil(needed * 1.25);
-        engine.requestRender();
-      }
+      readListCounts(engine.raster, words, () => engine.requestRender());
     });
   }
   for (const read of engine.raster.hdrReads.splice(0)) {

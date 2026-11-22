@@ -153,6 +153,11 @@ void prefilter(uint3 id : SV_DispatchThreadID) {
 
 groupshared float3 partialSums[64][9];
 
+// The most texels of a face `shFace` reads (AGENTS.md, GPU safety): a
+// 128 × 128 face, the sky cube's largest; Environment.ts projects its
+// level 2, 32 × 32 (`SH_SOURCE_TEXELS`, which a test holds to this).
+static const uint MAX_SH_TEXELS = 128u * 128u;
+
 float shBasis(float3 d, uint k) {
   switch (k) {
   case 0u: return 0.282095;
@@ -180,7 +185,11 @@ void shFace(uint lid : SV_GroupIndex, uint3 wg : SV_GroupID) {
   for (uint k = 0u; k < 9u; k++) {
     sum[k] = float3(0.0);
   }
-  for (uint t = lid; t < size * size; t += 64u) {
+  uint texels = size * size;
+  for (uint t = lid; t < MAX_SH_TEXELS; t += 64u) {
+    if (t >= texels) {
+      break;
+    }
     uint x = t % size;
     uint y = t / size;
     float3 d = cubeDirection(face, x, y, size);
@@ -360,9 +369,9 @@ void brdf(uint3 id : SV_DispatchThreadID) {
   float3 n = float3(0.0, 0.0, 1.0);
   float a = 0.0;
   float b = 0.0;
-  uint count = 512u;
-  for (uint i = 0u; i < count; i++) {
-    float3 h = importanceSampleGgx(hammersley(i, count), n, alpha);
+  static const uint BRDF_SAMPLES = 512u;
+  for (uint i = 0u; i < BRDF_SAMPLES; i++) {
+    float3 h = importanceSampleGgx(hammersley(i, BRDF_SAMPLES), n, alpha);
     float3 l = normalize(2.0 * dot(v, h) * h - v);
     float nDotL = max(l.z, 0.0);
     float nDotH = max(h.z, 0.0);
@@ -379,5 +388,5 @@ void brdf(uint3 id : SV_DispatchThreadID) {
       b += fc * g;
     }
   }
-  brdfTarget.Store(id.xy, float4(a / float(count), b / float(count), 0.0, 1.0));
+  brdfTarget.Store(id.xy, float4(a / float(BRDF_SAMPLES), b / float(BRDF_SAMPLES), 0.0, 1.0));
 }

@@ -141,12 +141,14 @@ export function translucentPass(
       sort.end();
       if (!engine.raster.listCountPending) {
         engine.raster.listCountPending = true;
+        // The nodes the tick needed, and whether the sort cut a list
+        // (composite.slang LIST_WALK_CUT): `readListCounts`.
         const readback = device.createBuffer({
           label: "translucent.count",
-          size: 4,
+          size: 8,
           usage: GPUBufferUsage.MAP_READ | GPUBufferUsage.COPY_DST,
         });
-        enc.copyBufferToBuffer(lists, 0, readback, 0, 4);
+        enc.copyBufferToBuffer(lists, 0, readback, 0, 8);
         engine.raster.listCounts.push(readback);
       }
       return;

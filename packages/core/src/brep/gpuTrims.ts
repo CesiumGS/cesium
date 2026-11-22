@@ -73,6 +73,13 @@ export const MAX_TRIM_BANDS = 256;
 export const DISPLAY_TRIM_TOLERANCE = 1e-4;
 /** A face's band lists no more pieces than this where the tolerance can be loosened to make it so. */
 export const MAX_PIECES_PER_BAND = 16;
+/**
+ * The most pieces the fragment's trim test reads in a band (coverage.slang
+ * `MAX_BAND_PIECES`, AGENTS.md's GPU safety): a face whose busiest band
+ * lists more, loosened or not, is drawn from the CPU mesh instead
+ * (scene/world/brep.ts, `BrepHandle.cpuFaces`).
+ */
+export const MAX_BAND_PIECES = 256;
 /** Times the tolerance is multiplied by `LOOSEN` to bring the busiest band under `MAX_PIECES_PER_BAND`. */
 const LOOSENINGS = 2;
 const LOOSEN = 4;

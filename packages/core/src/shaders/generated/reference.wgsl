@@ -450,26 +450,31 @@ fn main(@builtin(global_invocation_id) id_0 : vec3<u32>)
     var rng_3 : Rng_0;
     rng_3.state_1 = pcg_0(i_1 * u32(9781) + params_0.seed_0 * u32(6271) + u32(1));
     var _S49 : vec3<f32> = vec3<f32>(0.0f);
+    var _S50 : u32 = min(params_0.samples_0, u32(32));
     var s_3 : u32 = u32(0);
     var xyz_0 : vec3<f32> = _S49;
     loop
     {
-        if((s_3 < (params_0.samples_0)))
+        if((s_3 < u32(32)))
         {
         }
         else
         {
             break;
         }
+        if((s_3 >= _S50))
+        {
+            break;
+        }
         var stratum_0 : f32 = f32((s_3 + params_0.seed_0) % u32(8));
-        var _S50 : f32 = random_0(&(rng_3));
-        var lambda_5 : vec4<f32> = vec4<f32>((360.0f + 117.5f * (stratum_0 + _S50) / 8.0f)) + vec4<f32>(0.0f, 1.0f, 2.0f, 3.0f) * vec4<f32>(117.5f);
+        var _S51 : f32 = random_0(&(rng_3));
+        var lambda_5 : vec4<f32> = vec4<f32>((360.0f + 117.5f * (stratum_0 + _S51) / 8.0f)) + vec4<f32>(0.0f, 1.0f, 2.0f, 3.0f) * vec4<f32>(117.5f);
         var radiance_3 : vec4<f32> = tracePath_0(_S48, _S47, lambda_5, &(rng_3));
         var xyz_1 : vec3<f32> = xyz_0 + (vec3<f32>(radiance_3.x) * cie_0(lambda_5.x) + vec3<f32>(radiance_3.y) * cie_0(lambda_5.y) + vec3<f32>(radiance_3.z) * cie_0(lambda_5.z) + vec3<f32>(radiance_3.w) * cie_0(lambda_5.w)) * vec3<f32>(117.5f);
         s_3 = s_3 + u32(1);
         xyz_0 = xyz_1;
     }
-    accum_0[i_1] = accum_0[i_1] + vec4<f32>(xyz_0, f32(params_0.samples_0));
+    accum_0[i_1] = accum_0[i_1] + vec4<f32>(xyz_0, f32(_S50));
     return;
 }
 

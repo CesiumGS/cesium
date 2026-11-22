@@ -50,6 +50,12 @@ struct Part {
   uint pad2;
 };
 
+// The most views' cameras and the most parts (a model's primitives) a pool
+// takes (AGENTS.md, GPU safety): ModelPool.ts writes at most 4 cameras, and
+// refuses a model of more parts.
+static const uint MAX_POOL_CAMERAS = 4u;
+static const uint MAX_POOL_PARTS = 1024u;
+
 [[vk::binding(0, 0)]] ConstantBuffer<PoolParams> pool;
 [[vk::binding(1, 0)]] StructuredBuffer<float> vertices;
 [[vk::binding(2, 0)]] StructuredBuffer<Part> parts;
@@ -93,7 +99,10 @@ float4 anchorOf(uint i) {
 // Meters to the nearest view's camera.
 float nearest(float3 p) {
   float d = 3.4e38;
-  for (uint k = 0u; k < min(pool.cameras, 4u); k++) {
+  for (uint k = 0u; k < MAX_POOL_CAMERAS; k++) {
+    if (k >= pool.cameras) {
+      break;
+    }
     d = min(d, distance(p, pool.camera[k].xyz));
   }
   return d;
@@ -177,7 +186,10 @@ void claimSlots(uint3 gid : SV_DispatchThreadID) {
       float4((north * s - east * c) * scale, 0.0),
       float4(up * scale, 0.0),
       float4(a.xyz, 1.0)));
-  for (uint k = 0u; k < pool.parts; k++) {
+  for (uint k = 0u; k < MAX_POOL_PARTS; k++) {
+    if (k >= pool.parts) {
+      break;
+    }
     Part part = parts[k];
     float4x4 m = mul(mul(part.inverse, placement), part.local);
     uint row = part.first + slot;

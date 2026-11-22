@@ -49,6 +49,11 @@ struct Sphere {
 [[vk::binding(4, 0)]] RWStructuredBuffer<float4> accum;
 
 static const float PI = 3.14159265358979;
+// The most spheres a scene has and the most sample pairs a dispatch takes
+// (AGENTS.md, GPU safety): IblReference.ts refuses more spheres, and asks
+// SAMPLES_PER_DISPATCH, 64, every dispatch.
+static const uint MAX_REFERENCE_SPHERES = 64u;
+static const uint MAX_SAMPLES_PER_DISPATCH = 64u;
 
 uint pcg(uint v) {
   uint state = v * 747796405u + 2891336453u;
@@ -184,7 +189,10 @@ void main(uint3 id : SV_DispatchThreadID) {
                          ndc.y * params.tanY * params.up);
   float nearest = 1e30;
   int hit = -1;
-  for (uint i = 0u; i < params.sphereCount; i++) {
+  for (uint i = 0u; i < MAX_REFERENCE_SPHERES; i++) {
+    if (i >= params.sphereCount) {
+      break;
+    }
     Sphere s = spheres[i];
     float b = dot(ray, s.center);
     float c = dot(s.center, s.center) - s.radius * s.radius;
@@ -212,7 +220,10 @@ void main(uint3 id : SV_DispatchThreadID) {
   Rng rng;
   rng.state = pcg(index * 7919u + params.seed * 104729u + 1u);
   float3 sum = float3(0.0);
-  for (uint k = 0u; k < params.samples; k++) {
+  for (uint k = 0u; k < MAX_SAMPLES_PER_DISPATCH; k++) {
+    if (k >= params.samples) {
+      break;
+    }
     // Cosine sample.
     float u1 = rng.next();
     float phi = 2.0 * PI * rng.next();

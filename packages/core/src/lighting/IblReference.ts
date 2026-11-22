@@ -40,7 +40,10 @@ export interface IblReferenceImage {
   data: Float32Array;
 }
 
-const SAMPLES_PER_DISPATCH = 64;
+/** Sample pairs per pixel in one dispatch (iblReference.slang `MAX_SAMPLES_PER_DISPATCH`). */
+export const SAMPLES_PER_DISPATCH = 64;
+/** The most spheres a scene has (iblReference.slang `MAX_REFERENCE_SPHERES`). */
+export const MAX_REFERENCE_SPHERES = 64;
 
 /**
  * Environment lighting by Monte Carlo integration of the glTF BRDF
@@ -75,6 +78,11 @@ export class IblReference {
     const device = this.device;
     const { width, height, camera } = options;
     const count = width * height;
+    if (options.spheres.length > MAX_REFERENCE_SPHERES) {
+      throw new RangeError(
+        `IblReference.render: ${options.spheres.length} spheres; it takes at most ${MAX_REFERENCE_SPHERES}.`,
+      );
+    }
     const spheres = new Float32Array(options.spheres.length * 12);
     options.spheres.forEach((s, i) => {
       const o = i * 12;

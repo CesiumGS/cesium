@@ -12,6 +12,23 @@ import {
 
 type V3 = readonly [number, number, number];
 
+/** The most steps a march takes (air.slang `MAX_MARCH_STEPS`, AGENTS.md's GPU safety). */
+export const MAX_MARCH_STEPS = 1024;
+
+/**
+ * @internal `steps` for a probe's march: a whole number from 1 to
+ * `MAX_MARCH_STEPS`, refused otherwise, so the shader's cap never
+ * changes what was asked.
+ */
+export function marchSteps(steps: number): number {
+  if (!Number.isInteger(steps) || steps < 1 || steps > MAX_MARCH_STEPS) {
+    throw new RangeError(
+      `RealtimeAtmosphere.radiance: steps is ${steps}; it takes a whole number from 1 to ${MAX_MARCH_STEPS}.`,
+    );
+  }
+  return steps;
+}
+
 /** Four of the 8 bands: their parameters and tables. */
 export interface AtmosphereGroup {
   wavelengths: number[];
@@ -243,6 +260,7 @@ export class RealtimeAtmosphere {
     directions: ArrayLike<number>,
     { steps = 64, multipleScattering = true, maxLength = 1e12 } = {},
   ): Promise<Float64Array> {
+    marchSteps(steps);
     const device = this.device;
     const count = directions.length / 3;
     const dirs = new Float32Array(count * 4);

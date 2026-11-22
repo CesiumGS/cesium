@@ -4,7 +4,8 @@
 // trim, whose fragment stage tests it per pixel. Patches of degree 1 to 7
 // are evaluated on the GPU alike. Only a face with nothing to draw (no loop
 // of a finite extent, no patch under its rect) is left out, reported in
-// `unsupported`; the CPU mesh is a diagnostic (`cpuFaces: "trimmed"`).
+// `unsupported`; the CPU mesh is a diagnostic (`cpuFaces: "trimmed"`), and
+// draws a face whose trim is past what the fragment's test reads.
 // Provisional.
 import type { BrepForm } from "../../brep/form.ts";
 import {
@@ -12,6 +13,7 @@ import {
   prepareGpuPatches,
   type GpuPatches,
 } from "../../brep/gpuPatches.ts";
+import { MAX_BAND_PIECES } from "../../brep/gpuTrims.ts";
 import { tessellateBrep } from "../../brep/tessellate.ts";
 import { brepGeometry, type BrepGeometry } from "../../geometry/brep.ts";
 import type { Mat4 } from "../../math/mat4.ts";
@@ -83,9 +85,11 @@ export interface BrepOptions extends Pick<
    */
   prepared?: GpuPatches;
   /**
-   * Which faces are a CPU mesh. "unsupported" (default): none, every face is
-   * on the GPU. "trimmed": every face with a trim, as before the per-pixel
-   * trim test; a diagnostic, to compare the two on one solid.
+   * Which faces are a CPU mesh. "unsupported" (default): every face is on
+   * the GPU but one whose trim the fragment's test can't read whole (more
+   * than `MAX_BAND_PIECES` pieces in a band). "trimmed": every face with a
+   * trim, as before the per-pixel trim test; a diagnostic, to compare the
+   * two on one solid.
    */
   cpuFaces?: "unsupported" | "trimmed";
 }
@@ -96,12 +100,17 @@ export interface BrepHandle {
   readonly patches: DrawHandle | undefined;
   /** The faces drawn by GPU dicing with the per-pixel trim test. Undefined when none is. */
   readonly trimmed: DrawHandle | undefined;
-  /** The faces drawn from a CPU mesh (`cpuFaces: "trimmed"`'s trimmed ones). Undefined when none is. */
+  /** The faces drawn from a CPU mesh (`cpuFaces`). Undefined when none is. */
   readonly mesh: DrawHandle | undefined;
   /** Every face drawn by GPU dicing, trimmed or not. */
   readonly gpuFaces: readonly number[];
   /** Those of `gpuFaces` that have a trim test. */
   readonly trimmedFaces: readonly number[];
+  /**
+   * The faces drawn from a CPU mesh: `cpuFaces: "trimmed"`'s trimmed ones,
+   * and any whose trim's busiest band lists more than `MAX_BAND_PIECES`
+   * pieces, more than the fragment's trim test reads.
+   */
   readonly cpuFaces: readonly number[];
   /** Faces with nothing to draw (and why: no loop of a finite extent, no patch under the rect), drawn by neither path. */
   readonly unsupported: readonly { face: number; reason: string }[];
@@ -148,7 +157,12 @@ export function addBrep(
     const f = prepared.faces[face]!;
     if (!f.supported) {
       unsupported.push({ face, reason: f.reason ?? "" });
-    } else if (cpuTrimmed && f.needsTrim) {
+    } else if (
+      f.needsTrim &&
+      (cpuTrimmed || (f.trim?.maxPerBand ?? 0) > MAX_BAND_PIECES)
+    ) {
+      // A trim the fragment's test can't read whole (`MAX_BAND_PIECES`) is
+      // drawn from the CPU mesh, not with pieces left out.
       cpuFaces.push(face);
     } else {
       gpuFaces.push(face);

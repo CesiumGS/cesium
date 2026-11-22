@@ -52,6 +52,10 @@ struct PatchDice {
 // Cleared before the cull.
 [[vk::binding(3, 2)]] RWStructuredBuffer<Atomic<uint>> stats;
 
+// The most chunks a span is diced into: MAX_CELLS a side, CHUNK_CELLS a
+// chunk's side (`cellCount` keeps every side to MAX_CELLS, so this never binds).
+static const uint MAX_SPAN_CHUNKS = (MAX_CELLS / CHUNK_CELLS) * (MAX_CELLS / CHUNK_CELLS);
+
 // The cells a side of `x` per unit takes, 1 to MAX_CELLS (NaN or beyond: the most).
 uint cellCount(float x) {
   float y = (x == x) ? min(x, 1.0e6) : 1.0e6;
@@ -130,8 +134,8 @@ void dicePatches(uint3 gid : SV_DispatchThreadID) {
   stats[0].add(1u);
   stats[1].add(nu * nv);
   uint first = countChunks(a, total);
-  for (uint c = 0u; c < total; c++) {
-    if (first + c >= dice.capacity) {
+  for (uint c = 0u; c < MAX_SPAN_CHUNKS; c++) {
+    if (c >= total || first + c >= dice.capacity) {
       break;
     }
     uint i0 = (c % across) * CHUNK_CELLS;

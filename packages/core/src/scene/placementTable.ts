@@ -1,7 +1,13 @@
 import { attributeHash } from "../render/layout.ts";
 import { PLACEMENT_TERMS } from "./placement.ts";
 import { latticeDisplacement } from "./curvilinearEvaluate.ts";
-import type { CurvilinearTerms } from "./curvilinearTerms.ts";
+import {
+  MAX_CURVILINEAR_TERMS,
+  type CurvilinearTerms,
+} from "./curvilinearTerms.ts";
+
+/** The most factors a term's weight has (placement.slang `MAX_TERM_FACTORS`). */
+export const MAX_TERM_FACTORS = 2;
 
 /**
  * A world's placements buffer (plan 5a's call 42): one storage buffer of
@@ -306,6 +312,18 @@ export class PlacementRows {
     at: number,
     slotOf: (p: { value: number }) => number,
   ): void {
+    // The vertex stage reads at most these (placement.slang
+    // `MAX_PLACEMENT_TERMS`, `MAX_TERM_FACTORS`): a block past them would be
+    // drawn without its last terms, so it is refused (`checkTerms` refuses
+    // it first, naming the field).
+    if (
+      terms.length > MAX_CURVILINEAR_TERMS ||
+      terms.some((t) => t.weight.factors.length > MAX_TERM_FACTORS)
+    ) {
+      throw new RangeError(
+        `PlacementTable.pack: a block takes at most ${MAX_CURVILINEAR_TERMS} terms of at most ${MAX_TERM_FACTORS} factors.`,
+      );
+    }
     const u32 = this.u32;
     const f32 = this.f32;
     const h = at * 4;

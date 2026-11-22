@@ -166,28 +166,35 @@ fn assign(@builtin(workgroup_id) tile_0 : vec3<u32>, @builtin(local_invocation_i
             t_0 = t_0 + u32(1);
             continue;
         }
-        var at_1 : u32 = min(count_0, u32(15));
+        var _S38 : u32 = min(count_0, u32(15));
+        var shift_0 : u32 = u32(0);
+        var at_1 : u32 = _S38;
         loop
         {
-            if((at_1 > u32(0)))
-            {
-                _S4 = ((score_0[at_1 - u32(1)]) < s_0);
-            }
-            else
-            {
-                _S4 = false;
-            }
-            if(_S4)
+            if((shift_0 < u32(16)))
             {
             }
             else
             {
                 break;
             }
-            var _S38 : u32 = at_1 - u32(1);
-            kept_0[at_1] = kept_0[_S38];
-            score_0[at_1] = score_0[_S38];
-            at_1 = _S38;
+            if(at_1 == u32(0))
+            {
+                _S4 = true;
+            }
+            else
+            {
+                _S4 = !((score_0[at_1 - u32(1)]) < s_0);
+            }
+            if(_S4)
+            {
+                break;
+            }
+            var _S39 : u32 = at_1 - u32(1);
+            kept_0[at_1] = kept_0[_S39];
+            score_0[at_1] = score_0[_S39];
+            shift_0 = shift_0 + u32(1);
+            at_1 = _S39;
         }
         kept_0[at_1] = _S36;
         score_0[at_1] = s_0;

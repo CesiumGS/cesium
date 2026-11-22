@@ -57,6 +57,10 @@ public static const uint TRIM_PENDING = 4294967294u;
 // triangles, over the static index buffer in render/drawArguments.ts.
 public static const uint MAX_CELLS = 64u;
 public static const uint CHUNK_CELLS = 4u;
+// The most degree a patch has in each direction (src/brep/gpuPatches.ts
+// MAX_GPU_DEGREE, which refuses a face of more): a span's degrees are
+// clamped to it, so the wide path's 8 points always hold a row.
+public static const uint MAX_PATCH_DEGREE = 7u;
 
 public struct PatchSpan {
   public uint kind;
@@ -104,8 +108,8 @@ public PatchSpan unpackSpan(SpanWords w) {
   s.kind = k & 255u;
   s.reversed = (k & SPAN_REVERSED_BIT) != 0u;
   uint d = w.u[SPAN_DEGREES];
-  s.degreeU = d & 255u;
-  s.degreeV = (d >> 8u) & 255u;
+  s.degreeU = min(d & 255u, MAX_PATCH_DEGREE);
+  s.degreeV = min((d >> 8u) & 255u, MAX_PATCH_DEGREE);
   s.face = w.u[SPAN_FACE];
   s.controls = w.u[SPAN_CONTROLS];
   s.origin = f3(w, SPAN_ORIGIN);
@@ -140,8 +144,8 @@ public PatchSpan loadSpan(StructuredBuffer<float> words, uint base) {
   s.kind = k & 255u;
   s.reversed = (k & SPAN_REVERSED_BIT) != 0u;
   uint d = asuint(words[base + SPAN_DEGREES]);
-  s.degreeU = d & 255u;
-  s.degreeV = (d >> 8u) & 255u;
+  s.degreeU = min(d & 255u, MAX_PATCH_DEGREE);
+  s.degreeV = min((d >> 8u) & 255u, MAX_PATCH_DEGREE);
   s.face = asuint(words[base + SPAN_FACE]);
   s.controls = asuint(words[base + SPAN_CONTROLS]);
   s.rect = load4(words, base + SPAN_RECT);
@@ -230,15 +234,19 @@ public PatchPoint evaluateAnalytic(PatchSpan s, float u, float v) {
 // and the derivative with respect to t (taken from the last two points).
 void casteljau(float4 p[4], uint n, float t, out float4 value, out float4 derivative) {
   float s = 1.0 - t;
+  uint degree = min(n, 3u);
   derivative = float4(0.0);
   for (uint level = 1u; level <= 3u; level++) {
-    if (level > n) {
+    if (level > degree) {
       break;
     }
-    if (level == n) {
-      derivative = float(n) * (p[1] - p[0]);
+    if (level == degree) {
+      derivative = float(degree) * (p[1] - p[0]);
     }
-    for (uint i = 0u; i + level <= n; i++) {
+    for (uint i = 0u; i < 3u; i++) {
+      if (i + level > degree) {
+        break;
+      }
       p[i] = s * p[i] + t * p[i + 1u];
     }
   }
@@ -284,15 +292,19 @@ void bezierPatch(PatchSpan sp, float4 net[16], float s, float t, out float3 posi
 // keeps its smaller arrays.
 void casteljauWide(float4 p[8], uint n, float t, out float4 value, out float4 derivative) {
   float s = 1.0 - t;
+  uint degree = min(n, MAX_PATCH_DEGREE);
   derivative = float4(0.0);
-  for (uint level = 1u; level <= 7u; level++) {
-    if (level > n) {
+  for (uint level = 1u; level <= MAX_PATCH_DEGREE; level++) {
+    if (level > degree) {
       break;
     }
-    if (level == n) {
-      derivative = float(n) * (p[1] - p[0]);
+    if (level == degree) {
+      derivative = float(degree) * (p[1] - p[0]);
     }
-    for (uint i = 0u; i + level <= n; i++) {
+    for (uint i = 0u; i < MAX_PATCH_DEGREE; i++) {
+      if (i + level > degree) {
+        break;
+      }
       p[i] = s * p[i] + t * p[i + 1u];
     }
   }

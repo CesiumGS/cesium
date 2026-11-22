@@ -282,6 +282,17 @@ done:
   where the WGSL had `select` (Slang's `?:` is a branch, which rounded
   otherwise: paths drifted a few ulps), and `any(bool3(…))` over a `||`
   chain (Slang emits nested branches: 4 of the 11 points).
+- **Every Slang loop is bounded by a constant (AGENTS.md, GPU safety;
+  CS-971).** `test/boundedLoops.test.ts` refuses a `while` or `do`, and a
+  `for` whose condition doesn't bound its variable by a literal, a
+  `static const` or a `#define`, whose step isn't by a constant, or whose
+  body assigns the variable. A count from data ends the loop early
+  (`if (i >= count) break;`). Where a constant caps a count the CPU
+  writes, the CPU holds the same number and refuses, reroutes or reports
+  past it (`test/boundedLoopsCpu.test.ts`): a probe's march steps, a model
+  pool's parts, a trim band's pieces (the face goes to the CPU mesh), a
+  pixel's translucent list (a cut walk is read back and reported). Tint
+  still guards these loops (above): Slang writes them as `loop {}`.
 - **Large struct loads are split per field at each use** (deferred buffer
   loads): raycast was 30% slower until it read its draw record's fields
   once. **Stores too (r60):** a struct read, changed and written back

@@ -50,6 +50,12 @@ static const uint CURVILINEAR_ROUTE = 3u;
 // [base, ceiling, band, 0].
 static const uint CURVILINEAR_PROFILE = 4u;
 static const uint TERM_ROWS = 3u;
+// The most terms a block has and factors a weight has (AGENTS.md, GPU
+// safety): scene/curvilinearEvaluate.ts refuses more than
+// MAX_CURVILINEAR_TERMS (3) and 2, and scene/placementTable.ts `pack` checks
+// again before it writes a block.
+static const uint MAX_PLACEMENT_TERMS = 3u;
+static const uint MAX_TERM_FACTORS = 2u;
 // Rows before a lattice body's cells: the center and 1 / scale, then the
 // lattice's constant displacement (its value at the center) as hi and lo.
 static const uint LATTICE_HEAD_ROWS = 3u;
@@ -67,10 +73,13 @@ static const uint TERM_POWERS[20] = {
 __target_intrinsic(wgsl, "readNamed($0, $1, $2, $3)")
 float4 placementAttribute(uint directory, uint hash, uint vertexIndex, uint feature);
 
-// The only read of `placements` (the buffer's seam, test/seams.test.ts).
+// The only read of `placements` (the buffer's seam, test/seams.test.ts),
+// its row kept inside the buffer: rows come from the records and blocks.
 [ForceInline]
 float4 placementRow(uint row) {
-  return placements[row];
+  uint rows, stride;
+  placements.GetDimensions(rows, stride);
+  return placements[min(row, max(rows, 1u) - 1u)];
 }
 
 // A parameter's float (its word in the buffer).
@@ -89,7 +98,10 @@ public float4 placementBlockRow(uint row) {
 float termWeight(uint row, uint4 head) {
   float w = asfloat(head.y);
   uint factors = (head.x >> 8u) & 3u;
-  for (uint f = 0u; f < factors; f++) {
+  for (uint f = 0u; f < MAX_TERM_FACTORS; f++) {
+    if (f >= factors) {
+      break;
+    }
     float4 factor = placementRow(row + 1u + f);
     w *= factor.y + factor.z * placementParameter(asuint(factor.x));
   }
@@ -218,11 +230,14 @@ public Placed placeVertex(uint placement, float3 positionMC, uint vertexIndex, u
   if (placement == NO_PLACEMENT) {
     return placed;
   }
-  uint count = asuint(placementRow(placement).x);
+  uint count = min(asuint(placementRow(placement).x), MAX_PLACEMENT_TERMS);
   float3 d = float3(0.0);
   float3x3 j = ZERO_JACOBIAN;
   bool clipTaken = false;
-  for (uint i = 0u; i < count; i++) {
+  for (uint i = 0u; i < MAX_PLACEMENT_TERMS; i++) {
+    if (i >= count) {
+      break;
+    }
     uint row = placement + 1u + i * TERM_ROWS;
     uint4 head = asuint(placementRow(row));
     float w = termWeight(row, head);
@@ -274,8 +289,11 @@ public void placementOffset(uint placement, out float3 hi, out float3 lo) {
   if (placement == NO_PLACEMENT) {
     return;
   }
-  uint count = asuint(placementRow(placement).x);
-  for (uint i = 0u; i < count; i++) {
+  uint count = min(asuint(placementRow(placement).x), MAX_PLACEMENT_TERMS);
+  for (uint i = 0u; i < MAX_PLACEMENT_TERMS; i++) {
+    if (i >= count) {
+      break;
+    }
     uint row = placement + 1u + i * TERM_ROWS;
     uint4 head = asuint(placementRow(row));
     if ((head.x & 255u) != CURVILINEAR_LATTICE) {
@@ -308,9 +326,12 @@ public float3 placeAnchor(uint placement, float3 p) {
   if (placement == NO_PLACEMENT) {
     return p;
   }
-  uint count = asuint(placementRow(placement).x);
+  uint count = min(asuint(placementRow(placement).x), MAX_PLACEMENT_TERMS);
   float3 d = float3(0.0);
-  for (uint i = 0u; i < count; i++) {
+  for (uint i = 0u; i < MAX_PLACEMENT_TERMS; i++) {
+    if (i >= count) {
+      break;
+    }
     uint row = placement + 1u + i * TERM_ROWS;
     uint4 head = asuint(placementRow(row));
     if ((head.x & 255u) != CURVILINEAR_LATTICE) {

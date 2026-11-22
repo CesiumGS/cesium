@@ -16,6 +16,23 @@ import type { EngineRaster } from "./engineRaster.ts";
 import type { EngineScene } from "../../scene/engineScene.ts";
 
 /** Rasterizer side: meter, readbacks, adaptation, present and overlay pass bodies. */
+/** The most rows and columns a depth-range thread visits (depthRange.slang `DEPTH_RANGE_STEPS`). */
+export const DEPTH_RANGE_STEPS = 64;
+
+/**
+ * @internal The depth-range pass's workgroups along x and y: 8 × 8, or more
+ * where 8 workgroups of 16 threads, `DEPTH_RANGE_STEPS` texels each, fall
+ * short of the image, so every pixel is read.
+ */
+export function depthRangeGroups(
+  width: number,
+  height: number,
+): [number, number] {
+  const groups = (size: number) =>
+    Math.max(8, Math.ceil(size / (16 * DEPTH_RANGE_STEPS)));
+  return [groups(width), groups(height)];
+}
+
 export interface OutputPassEngine extends Pick<
   Engine,
   "bodyCamera" | "cameras" | "ctx" | "tilesets" | "viewBit" | "views"
@@ -257,7 +274,7 @@ export function depthRangePass(
         ],
       }),
     );
-    pass.dispatchWorkgroups(8, 8);
+    pass.dispatchWorkgroups(...depthRangeGroups(width, height));
     pass.end();
     enc.copyBufferToBuffer(result, 0, readback, 0, 8);
     engine.raster.depthRanges.push({

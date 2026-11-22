@@ -60,6 +60,9 @@ static const float LAMBDA_RANGE = 470.0;
 static const float PI = 3.14159265358979;
 static const uint OZONE_OFFSET = 48u;
 static const uint CIE_OFFSET = 96u;
+// The most paths a dispatch traces per direction (AGENTS.md, GPU safety):
+// AtmosphereReference.ts asks SAMPLES_PER_DISPATCH, 32, every dispatch.
+static const uint MAX_PATHS_PER_DISPATCH = 32u;
 
 // PCG hash (Jarzynski & Olano 2020).
 uint pcg(uint v) {
@@ -370,7 +373,11 @@ void main(uint3 id : SV_DispatchThreadID) {
   rng.state = pcg(i * 9781u + params.seed * 6271u + 1u);
   float3 xyz = float3(0.0);
   float spacing = LAMBDA_RANGE / 4.0;
-  for (uint s = 0u; s < params.samples; s++) {
+  uint samples = min(params.samples, MAX_PATHS_PER_DISPATCH);
+  for (uint s = 0u; s < MAX_PATHS_PER_DISPATCH; s++) {
+    if (s >= samples) {
+      break;
+    }
     // Four wavelengths a quarter of the spectrum apart, the first
     // stratified over its quarter (8 strata).
     float stratum = float((s + params.seed) % 8u);
@@ -380,5 +387,5 @@ void main(uint3 id : SV_DispatchThreadID) {
     xyz += (radiance.x * cie(lambda.x) + radiance.y * cie(lambda.y) +
             radiance.z * cie(lambda.z) + radiance.w * cie(lambda.w)) * spacing;
   }
-  accum[i] += float4(xyz, float(params.samples));
+  accum[i] += float4(xyz, float(samples));
 }

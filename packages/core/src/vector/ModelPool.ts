@@ -20,6 +20,8 @@ import { dispatchSize, type PointSource } from "./PointSource.ts";
 /** Words per part (modelPool.slang `Part`). */
 const PART_WORDS = 36;
 const PARAMS_BYTES = 48 + 64;
+/** The most parts (primitives) a pool's model has (modelPool.slang `MAX_POOL_PARTS`). */
+export const MAX_POOL_PARTS = 1024;
 
 /**
  * A styled model layer's models (vector/VectorStyle.ts `model()` layers):
@@ -80,6 +82,13 @@ export class ModelPool {
       instances: { matrices: identities },
     });
     const frames = this.placement.instanceFrames!;
+    if (this.placement.draws.length > MAX_POOL_PARTS) {
+      const parts = this.placement.draws.length;
+      this.placement.remove();
+      throw new Error(
+        `ModelPool: the model has ${parts} primitives; a pool takes at most ${MAX_POOL_PARTS}`,
+      );
+    }
     const partData = new ArrayBuffer(
       Math.max(1, this.placement.draws.length) * PART_WORDS * 4,
     );

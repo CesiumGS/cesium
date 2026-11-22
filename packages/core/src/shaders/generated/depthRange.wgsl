@@ -37,29 +37,37 @@ fn main(@builtin(global_invocation_id) id_0 : vec3<u32>, @builtin(local_invocati
     }
     workgroupBarrier();
     var _S3 : vec2<u32> = WorkgroupCount_0().xy * vec2<u32>(u32(16));
-    var _S4 : u32 = id_0.y;
     var lo_0 : f32 = 3.39999995214436425e+38f;
     var hi_0 : f32 = 0.0f;
-    var y_0 : u32 = _S4;
+    var row_0 : u32 = u32(0);
     loop
     {
-        if((y_0 < (params_0.height_0)))
+        if((row_0 < u32(64)))
         {
         }
         else
         {
             break;
         }
-        var _S5 : u32 = id_0.x;
+        var y_0 : u32 = id_0.y + row_0 * _S3.y;
+        if((y_0 >= (params_0.height_0)))
+        {
+            break;
+        }
         var lo_1 : f32 = lo_0;
         var hi_1 : f32 = hi_0;
-        var x_0 : u32 = _S5;
+        var column_0 : u32 = u32(0);
         loop
         {
-            if((x_0 < (params_0.width_0)))
+            if((column_0 < u32(64)))
             {
             }
             else
+            {
+                break;
+            }
+            var x_0 : u32 = id_0.x + column_0 * _S3.x;
+            if((x_0 >= (params_0.width_0)))
             {
                 break;
             }
@@ -67,29 +75,29 @@ fn main(@builtin(global_invocation_id) id_0 : vec3<u32>, @builtin(local_invocati
             if((d_0 > 0.0f))
             {
                 var distance_0 : f32 = params_0.near_0 / d_0;
-                var _S6 : f32 = max(hi_1, distance_0);
+                var _S4 : f32 = max(hi_1, distance_0);
                 lo_1 = min(lo_1, distance_0);
-                hi_1 = _S6;
+                hi_1 = _S4;
             }
-            x_0 = x_0 + _S3.x;
+            column_0 = column_0 + u32(1);
         }
-        var y_1 : u32 = y_0 + _S3.y;
+        var _S5 : u32 = row_0 + u32(1);
         lo_0 = lo_1;
         hi_0 = hi_1;
-        y_0 = y_1;
+        row_0 = _S5;
     }
     if((hi_0 > 0.0f))
     {
-        var _S7 : u32 = atomicMin(&(nearest_0), (bitcast<u32>((lo_0))));
-        var _S8 : u32 = atomicMax(&(farthest_0), (bitcast<u32>((hi_0))));
+        var _S6 : u32 = atomicMin(&(nearest_0), (bitcast<u32>((lo_0))));
+        var _S7 : u32 = atomicMax(&(farthest_0), (bitcast<u32>((hi_0))));
     }
     workgroupBarrier();
     if(_S2)
     {
-        var _S9 : u32 = atomicLoad(&(nearest_0));
-        var _S10 : u32 = atomicMin(&(result_0[i32(0)]), _S9);
-        var _S11 : u32 = atomicLoad(&(farthest_0));
-        var _S12 : u32 = atomicMax(&(result_0[i32(1)]), _S11);
+        var _S8 : u32 = atomicLoad(&(nearest_0));
+        var _S9 : u32 = atomicMin(&(result_0[i32(0)]), _S8);
+        var _S10 : u32 = atomicLoad(&(farthest_0));
+        var _S11 : u32 = atomicMax(&(result_0[i32(1)]), _S10);
     }
     return;
 }

@@ -20,7 +20,8 @@ struct TranslucentParams {
 };
 
 [[vk::binding(0, 0)]] ConstantBuffer<TranslucentParams> translucency;
-[[vk::binding(1, 0)]] StructuredBuffer<uint> lists;
+// Read and written: `sortLists` marks a list it cut short (LIST_WALK_CUT).
+[[vk::binding(1, 0)]] RWStructuredBuffer<uint> lists;
 [[vk::binding(2, 0)]] Texture2D<float4> momentsZero;
 [[vk::binding(3, 0)]] Texture2D<float4> accumulatedLit;
 [[vk::binding(4, 0)]] Texture2D<float4> accumulatedUnlit;
@@ -33,6 +34,13 @@ static const uint LIST_NEXT = (1u << LIST_SAMPLE_SHIFT) - 1u;
 static const uint SAMPLES = 4u;
 // Layers per pixel sorted; past these, the nearest are kept.
 static const uint MAX_LAYERS = 32u;
+// The most nodes a pixel's list is walked for (AGENTS.md, GPU safety): the
+// list is written by the GPU, but a stale or broken one could cycle. A walk
+// cut at this sets the header's word LIST_WALK_CUT, which the CPU reads
+// back with the node count and reports (render/view/renderTick.ts
+// `readListCounts`): the layers past it were left out.
+static const uint MAX_LIST_WALK = 4096u;
+static const uint LIST_WALK_CUT = 1u;
 // A node's alpha for a layer's emission (surface.slang `EMISSION_NODE`).
 static const float EMISSION_NODE = 2.0;
 static const float3 LUMINANCE = float3(0.2126, 0.7152, 0.0722);
@@ -79,7 +87,12 @@ void sortLists(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
   }
   uint next = lists[LIST_HEADER + id.y * translucency.width + id.x];
   uint count = 0u;
-  while (next != 0u) {
+  for (uint walked = 0u; walked < MAX_LIST_WALK; walked++) {
+    // No more nodes, or a node past the lists' (a broken list): done.
+    if (next == 0u || next - 1u >= translucency.capacity) {
+      next = 0u;
+      break;
+    }
     uint node = translucency.nodesBase + (next - 1u) * 4u;
     float depth = asfloat(lists[node + 2u]);
     next = lists[node + 3u] & LIST_NEXT;
@@ -94,13 +107,22 @@ void sortLists(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
     } else {
       count++;
     }
-    while (i > 0u && sortDepths[slot(i - 1u, lane)] < depth) {
+    // At most MAX_LAYERS - 1 moves: `i` starts below MAX_LAYERS.
+    for (uint shift = 0u; shift < MAX_LAYERS; shift++) {
+      if (i == 0u || !(sortDepths[slot(i - 1u, lane)] < depth)) {
+        break;
+      }
       sortDepths[slot(i, lane)] = sortDepths[slot(i - 1u, lane)];
       sortNodes[slot(i, lane)] = sortNodes[slot(i - 1u, lane)];
       i--;
     }
     sortDepths[slot(i, lane)] = depth;
     sortNodes[slot(i, lane)] = node;
+  }
+  // Nodes left after MAX_LIST_WALK: the list was cut short. Every such
+  // thread writes the same word, so the race leaves it set.
+  if (next != 0u && next - 1u < translucency.capacity) {
+    lists[LIST_WALK_CUT] = 1u;
   }
   // Each sample blended on its own (a node over the samples it covers),
   // then the four averaged: glass's edges antialias. The loops over the
@@ -115,7 +137,10 @@ void sortLists(uint3 id : SV_DispatchThreadID, uint lane : SV_GroupIndex) {
     lit[s] = float3(0.0);
     unlit[s] = float3(0.0);
   }
-  for (uint k = 0u; k < count && any(through > 1e-3); k++) {
+  for (uint k = 0u; k < MAX_LAYERS && any(through > 1e-3); k++) {
+    if (k >= count) {
+      break;
+    }
     uint node = sortNodes[slot(k, lane)];
     float2 rg = unpackHalf2x16ToFloat(lists[node]);
     float2 ba = unpackHalf2x16ToFloat(lists[node + 1u]);

@@ -2274,8 +2274,11 @@ float sunShadow(float3 relPosition, float3 n) {
     return 1.0;
   }
   uint c = 0u;
-  while (c < 3u && depth > shadows.splits[c]) {
-    c++;
+  for (uint split = 0u; split < 3u; split++) {
+    if (!(depth > shadows.splits[split])) {
+      break;
+    }
+    c = split + 1u;
   }
   float lit = cascadeLight(c, relPosition, n);
   // Over the last tenth of a cascade, blend into the next: their texels

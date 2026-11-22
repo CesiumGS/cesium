@@ -278,32 +278,37 @@ fn shFace(@builtin(local_invocation_index) lid_0 : u32, @builtin(workgroup_id) w
     sum_0[u32(6)] = _S20;
     sum_0[u32(7)] = _S20;
     sum_0[u32(8)] = _S20;
+    var _S21 : u32 = size_3 * size_3;
     var t_0 : u32 = lid_0;
     loop
     {
-        if((t_0 < (size_3 * size_3)))
+        if((t_0 < u32(16384)))
         {
         }
         else
         {
             break;
         }
+        if((t_0 >= _S21))
+        {
+            break;
+        }
         var x_2 : u32 = t_0 % size_3;
         var y_2 : u32 = t_0 / size_3;
-        var _S21 : vec3<f32> = cubeDirection_0(_S19, x_2, y_2, size_3);
-        var _S22 : f32 = texelSolidAngle_0(x_2, y_2, size_3);
-        var _S23 : vec4<i32> = vec4<i32>(i32(x_2), i32(y_2), i32(_S19), i32(0));
-        var _S24 : vec3<f32> = (textureLoad((shSource_0), ((_S23)).xy, i32(((_S23)).z), ((_S23)).w)).xyz;
-        var _S25 : vec3<f32> = vec3<f32>(_S22);
-        sum_0[u32(0)] = sum_0[u32(0)] + _S24 * vec3<f32>(shBasis_0(_S21, u32(0))) * _S25;
-        sum_0[u32(1)] = sum_0[u32(1)] + _S24 * vec3<f32>(shBasis_0(_S21, u32(1))) * _S25;
-        sum_0[u32(2)] = sum_0[u32(2)] + _S24 * vec3<f32>(shBasis_0(_S21, u32(2))) * _S25;
-        sum_0[u32(3)] = sum_0[u32(3)] + _S24 * vec3<f32>(shBasis_0(_S21, u32(3))) * _S25;
-        sum_0[u32(4)] = sum_0[u32(4)] + _S24 * vec3<f32>(shBasis_0(_S21, u32(4))) * _S25;
-        sum_0[u32(5)] = sum_0[u32(5)] + _S24 * vec3<f32>(shBasis_0(_S21, u32(5))) * _S25;
-        sum_0[u32(6)] = sum_0[u32(6)] + _S24 * vec3<f32>(shBasis_0(_S21, u32(6))) * _S25;
-        sum_0[u32(7)] = sum_0[u32(7)] + _S24 * vec3<f32>(shBasis_0(_S21, u32(7))) * _S25;
-        sum_0[u32(8)] = sum_0[u32(8)] + _S24 * vec3<f32>(shBasis_0(_S21, u32(8))) * _S25;
+        var _S22 : vec3<f32> = cubeDirection_0(_S19, x_2, y_2, size_3);
+        var _S23 : f32 = texelSolidAngle_0(x_2, y_2, size_3);
+        var _S24 : vec4<i32> = vec4<i32>(i32(x_2), i32(y_2), i32(_S19), i32(0));
+        var _S25 : vec3<f32> = (textureLoad((shSource_0), ((_S24)).xy, i32(((_S24)).z), ((_S24)).w)).xyz;
+        var _S26 : vec3<f32> = vec3<f32>(_S23);
+        sum_0[u32(0)] = sum_0[u32(0)] + _S25 * vec3<f32>(shBasis_0(_S22, u32(0))) * _S26;
+        sum_0[u32(1)] = sum_0[u32(1)] + _S25 * vec3<f32>(shBasis_0(_S22, u32(1))) * _S26;
+        sum_0[u32(2)] = sum_0[u32(2)] + _S25 * vec3<f32>(shBasis_0(_S22, u32(2))) * _S26;
+        sum_0[u32(3)] = sum_0[u32(3)] + _S25 * vec3<f32>(shBasis_0(_S22, u32(3))) * _S26;
+        sum_0[u32(4)] = sum_0[u32(4)] + _S25 * vec3<f32>(shBasis_0(_S22, u32(4))) * _S26;
+        sum_0[u32(5)] = sum_0[u32(5)] + _S25 * vec3<f32>(shBasis_0(_S22, u32(5))) * _S26;
+        sum_0[u32(6)] = sum_0[u32(6)] + _S25 * vec3<f32>(shBasis_0(_S22, u32(6))) * _S26;
+        sum_0[u32(7)] = sum_0[u32(7)] + _S25 * vec3<f32>(shBasis_0(_S22, u32(7))) * _S26;
+        sum_0[u32(8)] = sum_0[u32(8)] + _S25 * vec3<f32>(shBasis_0(_S22, u32(8))) * _S26;
         t_0 = t_0 + u32(64);
     }
     partialSums_0[lid_0][u32(0)] = sum_0[u32(0)];
@@ -343,16 +348,16 @@ fn shFace(@builtin(local_invocation_index) lid_0 : u32, @builtin(workgroup_id) w
     }
     if(lid_0 == u32(0))
     {
-        var _S26 : u32 = _S19 * u32(9);
-        shPartial_0[_S26] = vec4<f32>(partialSums_0[i32(0)][u32(0)], 0.0f);
-        shPartial_0[_S26 + u32(1)] = vec4<f32>(partialSums_0[i32(0)][u32(1)], 0.0f);
-        shPartial_0[_S26 + u32(2)] = vec4<f32>(partialSums_0[i32(0)][u32(2)], 0.0f);
-        shPartial_0[_S26 + u32(3)] = vec4<f32>(partialSums_0[i32(0)][u32(3)], 0.0f);
-        shPartial_0[_S26 + u32(4)] = vec4<f32>(partialSums_0[i32(0)][u32(4)], 0.0f);
-        shPartial_0[_S26 + u32(5)] = vec4<f32>(partialSums_0[i32(0)][u32(5)], 0.0f);
-        shPartial_0[_S26 + u32(6)] = vec4<f32>(partialSums_0[i32(0)][u32(6)], 0.0f);
-        shPartial_0[_S26 + u32(7)] = vec4<f32>(partialSums_0[i32(0)][u32(7)], 0.0f);
-        shPartial_0[_S26 + u32(8)] = vec4<f32>(partialSums_0[i32(0)][u32(8)], 0.0f);
+        var _S27 : u32 = _S19 * u32(9);
+        shPartial_0[_S27] = vec4<f32>(partialSums_0[i32(0)][u32(0)], 0.0f);
+        shPartial_0[_S27 + u32(1)] = vec4<f32>(partialSums_0[i32(0)][u32(1)], 0.0f);
+        shPartial_0[_S27 + u32(2)] = vec4<f32>(partialSums_0[i32(0)][u32(2)], 0.0f);
+        shPartial_0[_S27 + u32(3)] = vec4<f32>(partialSums_0[i32(0)][u32(3)], 0.0f);
+        shPartial_0[_S27 + u32(4)] = vec4<f32>(partialSums_0[i32(0)][u32(4)], 0.0f);
+        shPartial_0[_S27 + u32(5)] = vec4<f32>(partialSums_0[i32(0)][u32(5)], 0.0f);
+        shPartial_0[_S27 + u32(6)] = vec4<f32>(partialSums_0[i32(0)][u32(6)], 0.0f);
+        shPartial_0[_S27 + u32(7)] = vec4<f32>(partialSums_0[i32(0)][u32(7)], 0.0f);
+        shPartial_0[_S27 + u32(8)] = vec4<f32>(partialSums_0[i32(0)][u32(8)], 0.0f);
     }
     return;
 }
@@ -371,18 +376,18 @@ fn shFinal()
     L_0[u32(6)] = shPartial_0[u32(6)].xyz + shPartial_0[u32(15)].xyz + shPartial_0[u32(24)].xyz + shPartial_0[u32(33)].xyz + shPartial_0[u32(42)].xyz + shPartial_0[u32(51)].xyz;
     L_0[u32(7)] = shPartial_0[u32(7)].xyz + shPartial_0[u32(16)].xyz + shPartial_0[u32(25)].xyz + shPartial_0[u32(34)].xyz + shPartial_0[u32(43)].xyz + shPartial_0[u32(52)].xyz;
     L_0[u32(8)] = shPartial_0[u32(8)].xyz + shPartial_0[u32(17)].xyz + shPartial_0[u32(26)].xyz + shPartial_0[u32(35)].xyz + shPartial_0[u32(44)].xyz + shPartial_0[u32(53)].xyz;
-    var _S27 : vec3<f32> = vec3<f32>(0.31830987334251404f);
-    shOut_0[i32(0)] = vec4<f32>(vec3<f32>(0.88622701168060303f) * L_0[i32(0)] * _S27, 0.0f);
-    var _S28 : vec3<f32> = vec3<f32>(1.0233279466629028f);
-    shOut_0[i32(1)] = vec4<f32>(_S28 * L_0[i32(1)] * _S27, 0.0f);
-    shOut_0[i32(2)] = vec4<f32>(_S28 * L_0[i32(2)] * _S27, 0.0f);
-    shOut_0[i32(3)] = vec4<f32>(_S28 * L_0[i32(3)] * _S27, 0.0f);
-    var _S29 : vec3<f32> = vec3<f32>(0.8580859899520874f);
-    shOut_0[i32(4)] = vec4<f32>(_S29 * L_0[i32(4)] * _S27, 0.0f);
-    shOut_0[i32(5)] = vec4<f32>(_S29 * L_0[i32(5)] * _S27, 0.0f);
-    shOut_0[i32(6)] = vec4<f32>(vec3<f32>(0.24770833551883698f) * L_0[i32(6)] * _S27, 0.0f);
-    shOut_0[i32(7)] = vec4<f32>(_S29 * L_0[i32(7)] * _S27, 0.0f);
-    shOut_0[i32(8)] = vec4<f32>(vec3<f32>(0.4290429949760437f) * L_0[i32(8)] * _S27, 0.0f);
+    var _S28 : vec3<f32> = vec3<f32>(0.31830987334251404f);
+    shOut_0[i32(0)] = vec4<f32>(vec3<f32>(0.88622701168060303f) * L_0[i32(0)] * _S28, 0.0f);
+    var _S29 : vec3<f32> = vec3<f32>(1.0233279466629028f);
+    shOut_0[i32(1)] = vec4<f32>(_S29 * L_0[i32(1)] * _S28, 0.0f);
+    shOut_0[i32(2)] = vec4<f32>(_S29 * L_0[i32(2)] * _S28, 0.0f);
+    shOut_0[i32(3)] = vec4<f32>(_S29 * L_0[i32(3)] * _S28, 0.0f);
+    var _S30 : vec3<f32> = vec3<f32>(0.8580859899520874f);
+    shOut_0[i32(4)] = vec4<f32>(_S30 * L_0[i32(4)] * _S28, 0.0f);
+    shOut_0[i32(5)] = vec4<f32>(_S30 * L_0[i32(5)] * _S28, 0.0f);
+    shOut_0[i32(6)] = vec4<f32>(vec3<f32>(0.24770833551883698f) * L_0[i32(6)] * _S28, 0.0f);
+    shOut_0[i32(7)] = vec4<f32>(_S30 * L_0[i32(7)] * _S28, 0.0f);
+    shOut_0[i32(8)] = vec4<f32>(vec3<f32>(0.4290429949760437f) * L_0[i32(8)] * _S28, 0.0f);
     return;
 }
 
@@ -398,9 +403,9 @@ fn irradianceCube(@builtin(global_invocation_id) id_2 : vec3<u32>, @builtin(loca
     var height_1 : u32;
     var layers_1 : u32;
     {var dim = textureDimensions((irradianceTarget_0));((size_4)) = dim.x;((height_1)) = dim.y;((layers_1)) = textureNumLayers((irradianceTarget_0));};
-    var _S30 : u32 = id_2.x;
+    var _S31 : u32 = id_2.x;
     var inside_0 : bool;
-    if((_S30 < size_4))
+    if((_S31 < size_4))
     {
         inside_0 = ((id_2.y) < size_4);
     }
@@ -408,15 +413,15 @@ fn irradianceCube(@builtin(global_invocation_id) id_2 : vec3<u32>, @builtin(loca
     {
         inside_0 = false;
     }
-    var _S31 : vec3<f32> = cubeDirection_0(id_2.z, min(_S30, size_4 - u32(1)), min(id_2.y, size_4 - u32(1)), size_4);
+    var _S32 : vec3<f32> = cubeDirection_0(id_2.z, min(_S31, size_4 - u32(1)), min(id_2.y, size_4 - u32(1)), size_4);
     var sourceSize_1 : u32;
     var sourceHeight_1 : u32;
     var sourceLayers_0 : u32;
     {var dim = textureDimensions((irradianceSource_0));((sourceSize_1)) = dim.x;((sourceHeight_1)) = dim.y;((sourceLayers_0)) = textureNumLayers((irradianceSource_0));};
-    var _S32 : u32 = sourceSize_1 * sourceSize_1;
-    var _S33 : vec3<f32> = vec3<f32>(0.0f);
+    var _S33 : u32 = sourceSize_1 * sourceSize_1;
+    var _S34 : vec3<f32> = vec3<f32>(0.0f);
     var face_1 : u32 = u32(0);
-    var sum_1 : vec3<f32> = _S33;
+    var sum_1 : vec3<f32> = _S34;
     loop
     {
         if((face_1 < u32(6)))
@@ -437,11 +442,11 @@ fn irradianceCube(@builtin(global_invocation_id) id_2 : vec3<u32>, @builtin(loca
                 break;
             }
             var base_0 : u32 = chunk_0 * u32(256);
-            if((base_0 >= _S32))
+            if((base_0 >= _S33))
             {
                 break;
             }
-            var _S34 : u32 = min(u32(256), _S32 - base_0);
+            var _S35 : u32 = min(u32(256), _S33 - base_0);
             var t_1 : u32 = lane_0;
             loop
             {
@@ -452,15 +457,15 @@ fn irradianceCube(@builtin(global_invocation_id) id_2 : vec3<u32>, @builtin(loca
                 {
                     break;
                 }
-                if((t_1 >= _S34))
+                if((t_1 >= _S35))
                 {
                     break;
                 }
-                var _S35 : u32 = base_0 + t_1;
-                var x_3 : u32 = _S35 % sourceSize_1;
-                var y_3 : u32 = _S35 / sourceSize_1;
-                var _S36 : vec4<i32> = vec4<i32>(i32(x_3), i32(y_3), i32(face_1), i32(0));
-                chunkRadiance_0[t_1] = (textureLoad((irradianceSource_0), ((_S36)).xy, i32(((_S36)).z), ((_S36)).w)).xyz;
+                var _S36 : u32 = base_0 + t_1;
+                var x_3 : u32 = _S36 % sourceSize_1;
+                var y_3 : u32 = _S36 / sourceSize_1;
+                var _S37 : vec4<i32> = vec4<i32>(i32(x_3), i32(y_3), i32(face_1), i32(0));
+                chunkRadiance_0[t_1] = (textureLoad((irradianceSource_0), ((_S37)).xy, i32(((_S37)).z), ((_S37)).w)).xyz;
                 chunkDirection_0[t_1] = vec4<f32>(cubeDirection_0(face_1, x_3, y_3, sourceSize_1), texelSolidAngle_0(x_3, y_3, sourceSize_1));
                 t_1 = t_1 + u32(64);
             }
@@ -476,12 +481,12 @@ fn irradianceCube(@builtin(global_invocation_id) id_2 : vec3<u32>, @builtin(loca
                 {
                     break;
                 }
-                if((t_2 >= _S34))
+                if((t_2 >= _S35))
                 {
                     break;
                 }
                 var d_2 : vec4<f32> = chunkDirection_0[t_2];
-                var cosine_0 : f32 = dot(_S31, chunkDirection_0[t_2].xyz);
+                var cosine_0 : f32 = dot(_S32, chunkDirection_0[t_2].xyz);
                 if((cosine_0 > 0.0f))
                 {
                     sum_2 = sum_2 + chunkRadiance_0[t_2] * vec3<f32>(cosine_0) * vec3<f32>(d_2.w);
@@ -509,26 +514,26 @@ fn downsample(@builtin(global_invocation_id) id_3 : vec3<u32>)
     var height_2 : u32;
     var layers_2 : u32;
     {var dim = textureDimensions((mipTarget_0));((size_5)) = dim.x;((height_2)) = dim.y;((layers_2)) = textureNumLayers((mipTarget_0));};
-    var _S37 : bool;
+    var _S38 : bool;
     if(((id_3.x) >= size_5))
     {
-        _S37 = true;
+        _S38 = true;
     }
     else
     {
-        _S37 = ((id_3.y) >= size_5);
+        _S38 = ((id_3.y) >= size_5);
     }
-    if(_S37)
+    if(_S38)
     {
         return;
     }
     var s_0 : vec2<i32> = vec2<i32>(id_3.xy) * vec2<i32>(i32(2));
     var z_0 : i32 = i32(id_3.z);
-    var _S38 : vec4<i32> = vec4<i32>(s_0, z_0, i32(0));
-    var _S39 : vec4<i32> = vec4<i32>(s_0 + vec2<i32>(i32(1), i32(0)), z_0, i32(0));
-    var _S40 : vec4<i32> = vec4<i32>(s_0 + vec2<i32>(i32(0), i32(1)), z_0, i32(0));
-    var _S41 : vec4<i32> = vec4<i32>(s_0 + vec2<i32>(i32(1), i32(1)), z_0, i32(0));
-    textureStore((mipTarget_0), ((id_3)).xy, i32(((id_3)).z), (((textureLoad((mipSource_0), ((_S38)).xy, i32(((_S38)).z), ((_S38)).w)) + (textureLoad((mipSource_0), ((_S39)).xy, i32(((_S39)).z), ((_S39)).w)) + (textureLoad((mipSource_0), ((_S40)).xy, i32(((_S40)).z), ((_S40)).w)) + (textureLoad((mipSource_0), ((_S41)).xy, i32(((_S41)).z), ((_S41)).w))) * vec4<f32>(0.25f)));
+    var _S39 : vec4<i32> = vec4<i32>(s_0, z_0, i32(0));
+    var _S40 : vec4<i32> = vec4<i32>(s_0 + vec2<i32>(i32(1), i32(0)), z_0, i32(0));
+    var _S41 : vec4<i32> = vec4<i32>(s_0 + vec2<i32>(i32(0), i32(1)), z_0, i32(0));
+    var _S42 : vec4<i32> = vec4<i32>(s_0 + vec2<i32>(i32(1), i32(1)), z_0, i32(0));
+    textureStore((mipTarget_0), ((id_3)).xy, i32(((id_3)).z), (((textureLoad((mipSource_0), ((_S39)).xy, i32(((_S39)).z), ((_S39)).w)) + (textureLoad((mipSource_0), ((_S40)).xy, i32(((_S40)).z), ((_S40)).w)) + (textureLoad((mipSource_0), ((_S41)).xy, i32(((_S41)).z), ((_S41)).w)) + (textureLoad((mipSource_0), ((_S42)).xy, i32(((_S42)).z), ((_S42)).w))) * vec4<f32>(0.25f)));
     return;
 }
 
@@ -539,26 +544,26 @@ fn brdf(@builtin(global_invocation_id) id_4 : vec3<u32>)
     var width_0 : u32;
     var height_3 : u32;
     {var dim = textureDimensions((brdfTarget_0));((width_0)) = dim.x;((height_3)) = dim.y;};
-    var _S42 : u32 = id_4.x;
-    var _S43 : bool;
-    if((_S42 >= width_0))
+    var _S43 : u32 = id_4.x;
+    var _S44 : bool;
+    if((_S43 >= width_0))
     {
-        _S43 = true;
+        _S44 = true;
     }
     else
     {
-        _S43 = ((id_4.y) >= height_3);
+        _S44 = ((id_4.y) >= height_3);
     }
-    if(_S43)
+    if(_S44)
     {
         return;
     }
-    var _S44 : f32 = max((f32(_S42) + 0.5f) / f32(width_0), 9.9999997473787516e-05f);
+    var _S45 : f32 = max((f32(_S43) + 0.5f) / f32(width_0), 9.9999997473787516e-05f);
     var roughness_1 : f32 = (f32(id_4.y) + 0.5f) / f32(height_3);
-    var _S45 : f32 = roughness_1 * roughness_1;
-    var _S46 : f32 = _S44 * _S44;
-    var _S47 : vec3<f32> = vec3<f32>(sqrt(1.0f - _S46), 0.0f, _S44);
-    const _S48 : vec3<f32> = vec3<f32>(0.0f, 0.0f, 1.0f);
+    var _S46 : f32 = roughness_1 * roughness_1;
+    var _S47 : f32 = _S45 * _S45;
+    var _S48 : vec3<f32> = vec3<f32>(sqrt(1.0f - _S47), 0.0f, _S45);
+    const _S49 : vec3<f32> = vec3<f32>(0.0f, 0.0f, 1.0f);
     var i_2 : u32 = u32(0);
     var a_0 : f32 = 0.0f;
     var b_0 : f32 = 0.0f;
@@ -571,17 +576,17 @@ fn brdf(@builtin(global_invocation_id) id_4 : vec3<u32>)
         {
             break;
         }
-        var h_1 : vec3<f32> = importanceSampleGgx_0(hammersley_0(i_2, u32(512)), _S48, _S45);
-        var _S49 : f32 = dot(_S47, h_1);
-        var _S50 : f32 = max(normalize(vec3<f32>((2.0f * _S49)) * h_1 - _S47).z, 0.0f);
-        var _S51 : f32 = max(h_1.z, 0.0f);
-        var _S52 : f32 = max(_S49, 0.0f);
-        if((_S50 > 0.0f))
+        var h_1 : vec3<f32> = importanceSampleGgx_0(hammersley_0(i_2, u32(512)), _S49, _S46);
+        var _S50 : f32 = dot(_S48, h_1);
+        var _S51 : f32 = max(normalize(vec3<f32>((2.0f * _S50)) * h_1 - _S48).z, 0.0f);
+        var _S52 : f32 = max(h_1.z, 0.0f);
+        var _S53 : f32 = max(_S50, 0.0f);
+        if((_S51 > 0.0f))
         {
-            var a2_1 : f32 = _S45 * _S45;
-            var _S53 : f32 = 1.0f - a2_1;
-            var g_0 : f32 = 0.5f / max(_S50 * sqrt(_S46 * _S53 + a2_1) + _S44 * sqrt(_S50 * _S50 * _S53 + a2_1), 9.99999997475242708e-07f) * 4.0f * _S50 * _S52 / max(_S51, 9.99999997475242708e-07f);
-            var fc_0 : f32 = pow(1.0f - _S52, 5.0f);
+            var a2_1 : f32 = _S46 * _S46;
+            var _S54 : f32 = 1.0f - a2_1;
+            var g_0 : f32 = 0.5f / max(_S51 * sqrt(_S47 * _S54 + a2_1) + _S45 * sqrt(_S51 * _S51 * _S54 + a2_1), 9.99999997475242708e-07f) * 4.0f * _S51 * _S53 / max(_S52, 9.99999997475242708e-07f);
+            var fc_0 : f32 = pow(1.0f - _S53, 5.0f);
             var b_1 : f32 = b_0 + fc_0 * g_0;
             a_0 = a_0 + (1.0f - fc_0) * g_0;
             b_0 = b_1;

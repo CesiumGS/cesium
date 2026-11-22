@@ -2,7 +2,7 @@
 id: CS-971
 title: Every Slang loop is bounded by a constant, and a test enforces it
 kind: work
-state: in-progress
+state: done
 created: 2026-11-22
 project: CS-8
 claimed_by: orch-11-CS-971

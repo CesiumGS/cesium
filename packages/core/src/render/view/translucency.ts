@@ -23,6 +23,39 @@ export interface TranslucencyEngine extends Pick<
 /** Nodes a list's `next` word can address (28 bits, the node plus one). */
 const LIST_NODES_MAX = (1 << 28) - 2;
 
+/** The most nodes the composite walks of a pixel's list (composite.slang `MAX_LIST_WALK`). */
+export const MAX_LIST_WALK = 4096;
+
+/**
+ * @internal A tick's list words read back: `[nodes needed, walk cut]`
+ * (composite.slang `LIST_WALK_CUT`). Grows the lists to a quarter more than
+ * the tick needed, and a tick drawn with them: that one dropped what didn't
+ * fit, and drawing on demand, nothing else might come (glass missing until
+ * the camera moved). A cut walk is counted (`listWalksCut`) and reported
+ * once: a pixel had more than `MAX_LIST_WALK` layers, and those past it
+ * were left out.
+ */
+export function readListCounts(
+  raster: Pick<EngineRaster, "listCountPending" | "listNodes" | "listWalksCut">,
+  words: Uint32Array,
+  requestRender: () => void,
+): void {
+  raster.listCountPending = false;
+  const needed = words[0] ?? 0;
+  if (needed > raster.listNodes) {
+    raster.listNodes = Math.ceil(needed * 1.25);
+    requestRender();
+  }
+  if ((words[1] ?? 0) !== 0) {
+    if (raster.listWalksCut === 0) {
+      console.warn(
+        `[cesium/next] translucency: a pixel has more than ${MAX_LIST_WALK} translucent layers; the composite left out those past ${MAX_LIST_WALK}.`,
+      );
+    }
+    raster.listWalksCut++;
+  }
+}
+
 /**
  * Whether a view draws blended surfaces this frame, and its translucent
  * passes' parameters: the lists' layout ("exact", grown to what the last

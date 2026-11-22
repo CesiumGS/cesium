@@ -447,7 +447,7 @@ fn glareSources()
     var count_0 : u32 = u32(1);
     loop
     {
-        if((i_0 < _S13))
+        if((i_0 < u32(2048)))
         {
         }
         else
@@ -455,21 +455,30 @@ fn glareSources()
             break;
         }
         var _S14 : bool;
-        if((count_0 >= u32(frame_0.spriteCap_0)))
+        if((i_0 >= _S13))
         {
             _S14 = true;
         }
         else
         {
-            _S14 = (pixels_0 >= (frame_0.spritePixels_0));
+            _S14 = (count_0 >= u32(frame_0.spriteCap_0));
         }
+        var _S15 : bool;
         if(_S14)
+        {
+            _S15 = true;
+        }
+        else
+        {
+            _S15 = (pixels_0 >= (frame_0.spritePixels_0));
+        }
+        if(_S15)
         {
             break;
         }
-        var _S15 : u32 = i_0 * u32(2);
-        var a_0 : vec4<f32> = glareStars_0[_S15];
-        var color_0 : vec3<f32> = glareStars_0[_S15 + u32(1)].xyz;
+        var _S16 : u32 = i_0 * u32(2);
+        var a_0 : vec4<f32> = glareStars_0[_S16];
+        var color_0 : vec3<f32> = glareStars_0[_S16 + u32(1)].xyz;
         var d_1 : vec3<f32> = frame_0.rows_0[i32(0)].xyz * vec3<f32>(a_0.x) + frame_0.rows_0[i32(1)].xyz * vec3<f32>(a_0.y) + frame_0.rows_0[i32(2)].xyz * vec3<f32>(a_0.z);
         var z_2 : f32 = dot(d_1, frame_0.forward_0);
         if((z_2 < 0.0099999997764825821f))
@@ -494,25 +503,16 @@ fn glareSources()
             continue;
         }
         var pixel_2 : vec2<f32> = toPixel_0(d_1, z_2);
-        var _S16 : f32 = pixel_2.x;
-        var _S17 : f32 = - radius_1;
-        var _S18 : bool;
-        if((_S16 < _S17))
-        {
-            _S18 = true;
-        }
-        else
-        {
-            _S18 = ((pixel_2.y) < _S17);
-        }
+        var _S17 : f32 = pixel_2.x;
+        var _S18 : f32 = - radius_1;
         var _S19 : bool;
-        if(_S18)
+        if((_S17 < _S18))
         {
             _S19 = true;
         }
         else
         {
-            _S19 = (_S16 > (frame_0.size_0.x + radius_1));
+            _S19 = ((pixel_2.y) < _S18);
         }
         var _S20 : bool;
         if(_S19)
@@ -521,9 +521,18 @@ fn glareSources()
         }
         else
         {
-            _S20 = ((pixel_2.y) > (frame_0.size_0.y + radius_1));
+            _S20 = (_S17 > (frame_0.size_0.x + radius_1));
         }
+        var _S21 : bool;
         if(_S20)
+        {
+            _S21 = true;
+        }
+        else
+        {
+            _S21 = ((pixel_2.y) > (frame_0.size_0.y + radius_1));
+        }
+        if(_S21)
         {
             i_0 = i_0 + u32(1);
             continue;
@@ -540,13 +549,13 @@ fn glareSources()
         star_0.visibility_0 = 1.0f;
         star_0.light_0 = light_2;
         star_0.kind_0 = 2.0f;
-        var _S21 : u32 = count_0 + u32(1);
-        sources_0[_S21].pixel_0 = star_0.pixel_0;
-        sources_0[_S21].radius_0 = star_0.radius_0;
-        sources_0[_S21].visibility_0 = star_0.visibility_0;
-        sources_0[_S21].light_0 = star_0.light_0;
-        sources_0[_S21].kind_0 = star_0.kind_0;
-        count_0 = _S21;
+        var _S22 : u32 = count_0 + u32(1);
+        sources_0[_S22].pixel_0 = star_0.pixel_0;
+        sources_0[_S22].radius_0 = star_0.radius_0;
+        sources_0[_S22].visibility_0 = star_0.visibility_0;
+        sources_0[_S22].light_0 = star_0.light_0;
+        sources_0[_S22].kind_0 = star_0.kind_0;
+        count_0 = _S22;
         pixels_0 = pixels_1;
         i_0 = i_0 + u32(1);
     }

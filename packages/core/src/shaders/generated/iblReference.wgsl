@@ -226,10 +226,14 @@ fn main(@builtin(global_invocation_id) id_0 : vec3<u32>)
     var i_0 : u32 = u32(0);
     loop
     {
-        if((i_0 < (params_0.sphereCount_0)))
+        if((i_0 < u32(64)))
         {
         }
         else
+        {
+            break;
+        }
+        if((i_0 >= (params_0.sphereCount_0)))
         {
             break;
         }
@@ -285,10 +289,14 @@ fn main(@builtin(global_invocation_id) id_0 : vec3<u32>)
     var sum_0 : vec3<f32> = _S20;
     loop
     {
-        if((k_0 < (params_0.samples_0)))
+        if((k_0 < u32(64)))
         {
         }
         else
+        {
+            break;
+        }
+        if((k_0 >= (params_0.samples_0)))
         {
             break;
         }

@@ -34,8 +34,8 @@ export interface ReferenceResult {
   luminance: Float64Array;
 }
 
-/** Paths per direction in one dispatch (keeps each dispatch short). */
-const SAMPLES_PER_DISPATCH = 32;
+/** Paths per direction in one dispatch (keeps each dispatch short; reference.slang `MAX_PATHS_PER_DISPATCH`). */
+export const SAMPLES_PER_DISPATCH = 32;
 
 /**
  * The reference atmosphere (reference.slang): sky radiance by spectral

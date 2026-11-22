@@ -55,6 +55,8 @@ const SKY_SIZE = 128;
 const SPECULAR_SIZE = 128;
 const SPECULAR_LEVELS = 6;
 const SH_SOURCE_LEVEL = 2; // 32×32 faces
+/** @internal Texels of a face `shFace` projects (ibl.slang `MAX_SH_TEXELS` is the most it reads). */
+export const SH_SOURCE_TEXELS = (SKY_SIZE >> SH_SOURCE_LEVEL) ** 2;
 /**
  * GGX samples per prefiltered texel, by level from the first blurred one
  * (filtered importance sampling: each sample reads a level as blurred as

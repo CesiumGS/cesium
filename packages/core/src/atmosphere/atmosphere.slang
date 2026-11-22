@@ -22,10 +22,10 @@ void transmittanceLut(uint3 id : SV_DispatchThreadID) {
   float r = rMu.x;
   float mu = rMu.y;
   float length = max(0.0, sphereDistance(r, mu, atmosphere.topRadius, false));
-  static const int steps = 500;
-  float dt = length / float(steps);
+  static const int TRANSMITTANCE_STEPS = 500;
+  float dt = length / float(TRANSMITTANCE_STEPS);
   float4 depth = float4(0.0);
-  for (int i = 0; i < steps; i++) {
+  for (int i = 0; i < TRANSMITTANCE_STEPS; i++) {
     float t = (float(i) + 0.5) * dt;
     float rt = sqrt(r * r + t * t + 2.0 * r * mu * t);
     depth += medium(rt - atmosphere.bottomRadius).extinction * dt;
@@ -52,13 +52,13 @@ void multipleScatteringLut(uint3 id : SV_DispatchThreadID) {
   float3 sun = float3(sqrt(max(0.0, 1.0 - muSun * muSun)), 0.0, muSun);
   // Second-order light and the transfer f_ms, averaged over the sphere of
   // directions (uniform phase): Ψ_ms = L2 / (1 − f_ms).
-  static const uint n = 8u;
+  static const uint SPHERE_STEPS = 8u;
   float4 second = float4(0.0);
   float4 transfer = float4(0.0);
-  for (uint i = 0u; i < n; i++) {
-    for (uint j = 0u; j < n; j++) {
-      float cosTheta = 1.0 - 2.0 * (float(i) + 0.5) / float(n);
-      float phi = 2.0 * PI * (float(j) + 0.5) / float(n);
+  for (uint i = 0u; i < SPHERE_STEPS; i++) {
+    for (uint j = 0u; j < SPHERE_STEPS; j++) {
+      float cosTheta = 1.0 - 2.0 * (float(i) + 0.5) / float(SPHERE_STEPS);
+      float phi = 2.0 * PI * (float(j) + 0.5) / float(SPHERE_STEPS);
       float sinTheta = sqrt(max(0.0, 1.0 - cosTheta * cosTheta));
       float3 direction = float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
       Scattered s = march(position, direction, sun, 1e9, 20, true);
@@ -66,7 +66,7 @@ void multipleScatteringLut(uint3 id : SV_DispatchThreadID) {
       transfer += s.transfer;
     }
   }
-  float count = float(n * n);
+  float count = float(SPHERE_STEPS * SPHERE_STEPS);
   // Averages over the sphere times the uniform phase's 4π / 4π.
   second /= count;
   transfer /= count;

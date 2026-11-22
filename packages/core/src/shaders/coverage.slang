@@ -26,6 +26,11 @@ module coverage;
 public static const uint COVERAGE_HEADER = 4u;
 public static const uint COVERAGE_BAND_WORDS = 3u;
 public static const uint COVERAGE_PIECE_WORDS = 8u;
+// The most pieces a band's list is read for (AGENTS.md, GPU safety): the
+// counts come from content, so a band is read no further than this, and a
+// face whose busiest band lists more is drawn from the CPU mesh instead
+// (src/brep/gpuTrims.ts MAX_BAND_PIECES, scene/world/brep.ts).
+public static const uint MAX_BAND_PIECES = 256u;
 
 // What a ray finds: the winding number to +x, the distance in x to the
 // nearest crossing on either side (not beyond `reach`: then it's 3e38), and
@@ -50,23 +55,34 @@ public Crossings crossings(StructuredBuffer<float> words, uint base, float2 p, f
   result.winding = 0;
   result.nearest = 3.0e38;
   result.taps = false;
-  uint bands = asuint(words[base]);
-  float scale = words[base + 1u];
+  // Every index read from the data is kept inside the buffer: the header,
+  // a band's record, its list's entries and a piece's 8 words.
+  uint wordCount, stride;
+  words.GetDimensions(wordCount, stride);
+  uint lastWord = max(wordCount, 1u) - 1u;
+  uint lastRecord = wordCount >= COVERAGE_BAND_WORDS ? wordCount - COVERAGE_BAND_WORDS : 0u;
+  uint lastPiece = wordCount >= COVERAGE_PIECE_WORDS ? wordCount - COVERAGE_PIECE_WORDS : 0u;
+  uint head = min(base, max(wordCount, 2u) - 2u);
+  uint bands = asuint(words[head]);
+  float scale = words[head + 1u];
   int band = clamp(int(floor(p.y * scale)), 0, int(bands) - 1);
   if (reach.y > 0.0) {
     int below = clamp(int(floor((p.y - reach.y) * scale)), 0, int(bands) - 1);
     int above = clamp(int(floor((p.y + reach.y) * scale)), 0, int(bands) - 1);
     result.taps = below != band || above != band;
   }
-  uint record = base + COVERAGE_HEADER + uint(band) * COVERAGE_BAND_WORDS;
+  uint record = min(base + COVERAGE_HEADER + uint(band) * COVERAGE_BAND_WORDS, lastRecord);
   uint list = base + asuint(words[record]);
-  uint count = asuint(words[record + 1u]);
+  uint count = min(asuint(words[record + 1u]), MAX_BAND_PIECES);
   if (count == 0u) {
     result.winding = asint(words[record + 2u]);
     return result;
   }
-  for (uint i = 0u; i < count; i++) {
-    uint s = base + asuint(words[list + i]);
+  for (uint i = 0u; i < MAX_BAND_PIECES; i++) {
+    if (i >= count) {
+      break;
+    }
+    uint s = min(base + asuint(words[min(list + i, lastWord)]), lastPiece);
     if (words[s + 6u] < p.x - reach.x) {
       break;
     }

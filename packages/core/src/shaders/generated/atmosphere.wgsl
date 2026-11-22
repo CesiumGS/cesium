@@ -304,18 +304,23 @@ fn march_0( position_0 : vec3<f32>,  direction_0 : vec3<f32>,  sun_1 : vec3<f32>
     {
         _S21 = miePhase_0(nu_0);
     }
-    var _S22 : f32 = (_S20 - start_0) / f32(steps_1);
+    var _S22 : i32 = min(max(steps_1, i32(0)), i32(1024));
+    var _S23 : f32 = (_S20 - start_0) / f32(_S22);
     var i_1 : i32 = i32(0);
     loop
     {
-        if((i_1 < steps_1))
+        if((i_1 < i32(1024)))
         {
         }
         else
         {
             break;
         }
-        var p_0 : vec3<f32> = position_0 + direction_0 * vec3<f32>((start_0 + (f32(i_1) + 0.5f) * _S22));
+        if((i_1 >= _S22))
+        {
+            break;
+        }
+        var p_0 : vec3<f32> = position_0 + direction_0 * vec3<f32>((start_0 + (f32(i_1) + 0.5f) * _S23));
         var rp_0 : f32 = length(p_0);
         var muSun_2 : f32 = dot(p_0, sun_1) / rp_0;
         var m_1 : Medium_0 = medium_0(rp_0 - a_1.bottomRadius_0);
@@ -329,7 +334,7 @@ fn march_0( position_0 : vec3<f32>,  direction_0 : vec3<f32>,  sun_1 : vec3<f32>
         {
             scattered_1 = scattered_0;
         }
-        var segment_0 : vec4<f32> = exp((vec4<f32>(0) - m_1.extinction_0) * vec4<f32>(_S22));
+        var segment_0 : vec4<f32> = exp((vec4<f32>(0) - m_1.extinction_0) * vec4<f32>(_S23));
         var integral_0 : vec4<f32> = (vec4<f32>(1.0f) - segment_0) / max(m_1.extinction_0, vec4<f32>(9.99999971718068537e-10f));
         out_0.radiance_0 = out_0.radiance_0 + out_0.transmittance_0 * scattered_1 * integral_0;
         out_0.transfer_0 = out_0.transfer_0 + out_0.transmittance_0 * m_1.scattering_0 * integral_0;
@@ -357,28 +362,28 @@ fn march_0( position_0 : vec3<f32>,  direction_0 : vec3<f32>,  sun_1 : vec3<f32>
 @workgroup_size(8, 8, 1)
 fn multipleScatteringLut(@builtin(global_invocation_id) id_1 : vec3<u32>)
 {
-    var _S23 : bool;
+    var _S24 : bool;
     if(((id_1.x) >= u32(32)))
     {
-        _S23 = true;
+        _S24 = true;
     }
     else
     {
-        _S23 = ((id_1.y) >= u32(32));
+        _S24 = ((id_1.y) >= u32(32));
     }
-    if(_S23)
+    if(_S24)
     {
         return;
     }
-    var _S24 : vec2<u32> = id_1.xy;
-    var uv_1 : vec2<f32> = (vec2<f32>(_S24) + vec2<f32>(0.5f)) / vec2<f32>(32.0f);
+    var _S25 : vec2<u32> = id_1.xy;
+    var uv_1 : vec2<f32> = (vec2<f32>(_S25) + vec2<f32>(0.5f)) / vec2<f32>(32.0f);
     var muSun_4 : f32 = texelToUnit_0(uv_1.x, 32.0f) * 2.0f - 1.0f;
-    var _S25 : vec3<f32> = vec3<f32>(0.0f, 0.0f, max(atmosphere_0.bottomRadius_0 + clamp(texelToUnit_0(uv_1.y, 32.0f), 0.0f, 1.0f) * (atmosphere_0.topRadius_0 - atmosphere_0.bottomRadius_0), atmosphere_0.bottomRadius_0 + 0.0010000000474974513f));
-    var _S26 : vec3<f32> = vec3<f32>(sqrt(max(0.0f, 1.0f - muSun_4 * muSun_4)), 0.0f, muSun_4);
-    var _S27 : vec4<f32> = vec4<f32>(0.0f);
+    var _S26 : vec3<f32> = vec3<f32>(0.0f, 0.0f, max(atmosphere_0.bottomRadius_0 + clamp(texelToUnit_0(uv_1.y, 32.0f), 0.0f, 1.0f) * (atmosphere_0.topRadius_0 - atmosphere_0.bottomRadius_0), atmosphere_0.bottomRadius_0 + 0.0010000000474974513f));
+    var _S27 : vec3<f32> = vec3<f32>(sqrt(max(0.0f, 1.0f - muSun_4 * muSun_4)), 0.0f, muSun_4);
+    var _S28 : vec4<f32> = vec4<f32>(0.0f);
     var i_2 : u32 = u32(0);
-    var second_0 : vec4<f32> = _S27;
-    var transfer_1 : vec4<f32> = _S27;
+    var second_0 : vec4<f32> = _S28;
+    var transfer_1 : vec4<f32> = _S28;
     loop
     {
         if((i_2 < u32(8)))
@@ -401,7 +406,7 @@ fn multipleScatteringLut(@builtin(global_invocation_id) id_1 : vec3<u32>)
             var cosTheta_0 : f32 = 1.0f - 2.0f * (f32(i_2) + 0.5f) / 8.0f;
             var phi_0 : f32 = 6.2831854820251465f * (f32(j_0) + 0.5f) / 8.0f;
             var sinTheta_0 : f32 = sqrt(max(0.0f, 1.0f - cosTheta_0 * cosTheta_0));
-            var s_1 : Scattered_0 = march_0(_S25, vec3<f32>(sinTheta_0 * cos(phi_0), sinTheta_0 * sin(phi_0), cosTheta_0), _S26, 1.0e+09f, i32(20), true);
+            var s_1 : Scattered_0 = march_0(_S26, vec3<f32>(sinTheta_0 * cos(phi_0), sinTheta_0 * sin(phi_0), cosTheta_0), _S27, 1.0e+09f, i32(20), true);
             var second_1 : vec4<f32> = second_0 + s_1.radiance_0;
             var transfer_2 : vec4<f32> = transfer_1 + s_1.transfer_0;
             j_0 = j_0 + u32(1);
@@ -410,8 +415,8 @@ fn multipleScatteringLut(@builtin(global_invocation_id) id_1 : vec3<u32>)
         }
         i_2 = i_2 + u32(1);
     }
-    var _S28 : vec4<f32> = vec4<f32>(64.0f);
-    textureStore((multipleScatteringTarget_0), (_S24), (second_0 / _S28 / (vec4<f32>(1.0f) - transfer_1 / _S28)));
+    var _S29 : vec4<f32> = vec4<f32>(64.0f);
+    textureStore((multipleScatteringTarget_0), (_S25), (second_0 / _S29 / (vec4<f32>(1.0f) - transfer_1 / _S29)));
     return;
 }
 
@@ -419,26 +424,26 @@ fn multipleScatteringLut(@builtin(global_invocation_id) id_1 : vec3<u32>)
 @workgroup_size(64, 1, 1)
 fn skyProbe(@builtin(global_invocation_id) id_2 : vec3<u32>)
 {
-    var _S29 : u32 = id_2.x;
-    if((_S29 >= (probe_0.count_0)))
+    var _S30 : u32 = id_2.x;
+    if((_S30 >= (probe_0.count_0)))
     {
         return;
     }
-    var direction_1 : vec3<f32> = normalize(probeDirections_0[_S29].xyz);
+    var direction_1 : vec3<f32> = normalize(probeDirections_0[_S30].xyz);
     var maxLength_2 : f32 = probe_0.maxLength_0;
     var r_9 : f32 = length(probe_0.observer_0);
     var mu_9 : f32 = dot(probe_0.observer_0, direction_1) / r_9;
-    var _S30 : bool;
+    var _S31 : bool;
     if(((probe_0.maxLength_0) < 1.0e+08f))
     {
-        _S30 = hitsGround_0(r_9, mu_9);
+        _S31 = hitsGround_0(r_9, mu_9);
     }
     else
     {
-        _S30 = false;
+        _S31 = false;
     }
     var maxLength_3 : f32;
-    if(_S30)
+    if(_S31)
     {
         maxLength_3 = min(maxLength_2, sphereDistance_0(r_9, mu_9, atmosphere_0.bottomRadius_0, true) * 0.99900001287460327f);
     }
@@ -446,7 +451,7 @@ fn skyProbe(@builtin(global_invocation_id) id_2 : vec3<u32>)
     {
         maxLength_3 = maxLength_2;
     }
-    probeRadiance_0[_S29] = march_0(probe_0.observer_0, direction_1, probe_0.sun_0, maxLength_3, i32(probe_0.steps_0), false).radiance_0 * atmosphere_0.solarIrradiance_0;
+    probeRadiance_0[_S30] = march_0(probe_0.observer_0, direction_1, probe_0.sun_0, maxLength_3, i32(probe_0.steps_0), false).radiance_0 * atmosphere_0.solarIrradiance_0;
     return;
 }
 

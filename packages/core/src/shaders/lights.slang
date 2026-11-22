@@ -97,7 +97,11 @@ void assign(uint3 tile : SV_GroupID, uint k : SV_GroupIndex) {
       continue;
     }
     uint at = min(count, CLUSTER_LIGHTS - 1u);
-    while (at > 0u && score[at - 1u] < s) {
+    // At most CLUSTER_LIGHTS - 1 moves: `at` starts below CLUSTER_LIGHTS.
+    for (uint shift = 0u; shift < CLUSTER_LIGHTS; shift++) {
+      if (at == 0u || !(score[at - 1u] < s)) {
+        break;
+      }
       kept[at] = kept[at - 1u];
       score[at] = score[at - 1u];
       at--;

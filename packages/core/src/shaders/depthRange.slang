@@ -17,6 +17,11 @@ struct RangeParams {
 [[vk::binding(1, 0)]] ConstantBuffer<RangeParams> params;
 [[vk::binding(2, 0)]] RWStructuredBuffer<Atomic<uint>> result;
 
+// The most rows and columns a thread visits (AGENTS.md, GPU safety): the
+// CPU dispatches enough workgroups that 16 threads × this cover the image
+// along each axis (render/view/outputPasses.ts `depthRangeGroups`).
+static const uint DEPTH_RANGE_STEPS = 64u;
+
 groupshared Atomic<uint> nearest;
 groupshared Atomic<uint> farthest;
 
@@ -31,8 +36,16 @@ void main(uint3 id : SV_DispatchThreadID, uint local : SV_GroupIndex) {
   uint2 stride = WorkgroupCount().xy * 16u;
   float lo = 3.4e38;
   float hi = 0.0;
-  for (uint y = id.y; y < params.height; y += stride.y) {
-    for (uint x = id.x; x < params.width; x += stride.x) {
+  for (uint row = 0u; row < DEPTH_RANGE_STEPS; row++) {
+    uint y = id.y + row * stride.y;
+    if (y >= params.height) {
+      break;
+    }
+    for (uint column = 0u; column < DEPTH_RANGE_STEPS; column++) {
+      uint x = id.x + column * stride.x;
+      if (x >= params.width) {
+        break;
+      }
       float d = depth.Load(int2(x, y), 0);
       if (d > 0.0) {
         float distance = params.near / d;

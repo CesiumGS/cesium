@@ -123,6 +123,11 @@ export class EngineRaster {
   lists?: GPUBuffer;
   listNodes = 0;
   listCountPending = false;
+  /**
+   * Readbacks in which a pixel's list was longer than the composite walks
+   * (composite.slang `MAX_LIST_WALK`): its layers past that were left out.
+   */
+  listWalksCut = 0;
   readonly listCounts: GPUBuffer[] = [];
   /** Bound where a translucent pass doesn't read the lists or moments. */
   translucentDummies?: {

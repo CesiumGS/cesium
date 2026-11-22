@@ -217,6 +217,7 @@
             "type": {
                 "kind": "resource",
                 "baseShape": "structuredBuffer",
+                "access": "readWrite",
                 "resultType": {
                     "kind": "scalar",
                     "scalarType": "uint32",
@@ -548,6 +549,7 @@
                 "type": {
                     "kind": "resource",
                     "baseShape": "structuredBuffer",
+                    "access": "readWrite",
                     "resultType": {
                         "kind": "scalar",
                         "scalarType": "uint32",

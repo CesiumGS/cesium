@@ -998,18 +998,23 @@ fn march_0( position_4 : vec3<f32>,  direction_2 : vec3<f32>,  sun_1 : vec3<f32>
     {
         _S58 = miePhase_0(nu_2);
     }
-    var _S59 : f32 = (_S57 - start_0) / f32(steps_1);
+    var _S59 : i32 = min(max(steps_1, i32(0)), i32(1024));
+    var _S60 : f32 = (_S57 - start_0) / f32(_S59);
     var i_3 : i32 = i32(0);
     loop
     {
-        if((i_3 < steps_1))
+        if((i_3 < i32(1024)))
         {
         }
         else
         {
             break;
         }
-        var p_3 : vec3<f32> = position_4 + direction_2 * vec3<f32>((start_0 + (f32(i_3) + 0.5f) * _S59));
+        if((i_3 >= _S59))
+        {
+            break;
+        }
+        var p_3 : vec3<f32> = position_4 + direction_2 * vec3<f32>((start_0 + (f32(i_3) + 0.5f) * _S60));
         var rp_0 : f32 = length(p_3);
         var muSun_4 : f32 = dot(p_3, sun_1) / rp_0;
         var m_3 : Medium_0 = medium_0(rp_0 - a_4.bottomRadius_1);
@@ -1023,7 +1028,7 @@ fn march_0( position_4 : vec3<f32>,  direction_2 : vec3<f32>,  sun_1 : vec3<f32>
         {
             scattered_5 = scattered_4;
         }
-        var segment_2 : vec4<f32> = exp((vec4<f32>(0) - m_3.extinction_0) * vec4<f32>(_S59));
+        var segment_2 : vec4<f32> = exp((vec4<f32>(0) - m_3.extinction_0) * vec4<f32>(_S60));
         var integral_0 : vec4<f32> = (vec4<f32>(1.0f) - segment_2) / max(m_3.extinction_0, vec4<f32>(9.99999971718068537e-10f));
         out_2.radiance_6 = out_2.radiance_6 + out_2.transmittance_6 * scattered_5 * integral_0;
         out_2.transfer_0 = out_2.transfer_0 + out_2.transmittance_6 * m_3.scattering_0 * integral_0;
@@ -1062,21 +1067,21 @@ fn sunDisk_0( direction_4 : vec3<f32>) -> f32
     var pixel_2 : f32 = 2.0f * sky_0.tanY_0 / sky_0.size_0.y;
     var sinRadius_0 : f32 = sqrt(max(0.0f, 1.0f - sky_0.sunCos_0 * sky_0.sunCos_0));
     var sinAngle_0 : f32 = sqrt(max(0.0f, 1.0f - cosAngle_0 * cosAngle_0));
-    var _S60 : bool;
+    var _S61 : bool;
     if((cosAngle_0 <= 0.0f))
     {
-        _S60 = true;
+        _S61 = true;
     }
     else
     {
-        _S60 = (sinAngle_0 >= (sinRadius_0 + pixel_2));
+        _S61 = (sinAngle_0 >= (sinRadius_0 + pixel_2));
     }
-    if(_S60)
+    if(_S61)
     {
         return 0.0f;
     }
-    var _S61 : f32 = min(sinAngle_0 / sinRadius_0, 1.0f);
-    return (1.0f - 0.60000002384185791f * (1.0f - sqrt(max(0.0f, 1.0f - _S61 * _S61)))) / 0.80000001192092896f * clamp((sinRadius_0 - sinAngle_0) / pixel_2 + 0.5f, 0.0f, 1.0f);
+    var _S62 : f32 = min(sinAngle_0 / sinRadius_0, 1.0f);
+    return (1.0f - 0.60000002384185791f * (1.0f - sqrt(max(0.0f, 1.0f - _S62 * _S62)))) / 0.80000001192092896f * clamp((sinRadius_0 - sinAngle_0) / pixel_2 + 0.5f, 0.0f, 1.0f);
 }
 
 fn luminanceShare_0( t_4 : vec4<f32>,  group_3 : u32) -> f32
@@ -1104,22 +1109,22 @@ fn luminanceShare_0( t_4 : vec4<f32>,  group_3 : u32) -> f32
 fn sphereSpan_0( r_7 : f32,  mu_7 : f32,  radius_3 : f32,  a_5 : f32,  b_2 : f32) -> f32
 {
     var disc_1 : f32 = r_7 * r_7 * (mu_7 * mu_7 - 1.0f) + radius_3 * radius_3;
-    var _S62 : bool;
+    var _S63 : bool;
     if((disc_1 <= 0.0f))
     {
-        _S62 = true;
+        _S63 = true;
     }
     else
     {
-        _S62 = (b_2 <= a_5);
+        _S63 = (b_2 <= a_5);
     }
-    if(_S62)
+    if(_S63)
     {
         return 0.0f;
     }
     var s_2 : f32 = sqrt(disc_1);
-    var _S63 : f32 = - r_7 * mu_7;
-    return max(min(_S63 + s_2, b_2) - max(_S63 - s_2, a_5), 0.0f);
+    var _S64 : f32 = - r_7 * mu_7;
+    return max(min(_S64 + s_2, b_2) - max(_S64 - s_2, a_5), 0.0f);
 }
 
 fn cityGlow_0( height_0 : f32,  mu_8 : f32,  ground_1 : bool) -> vec3<f32>
@@ -1132,8 +1137,8 @@ fn cityGlow_0( height_0 : f32,  mu_8 : f32,  ground_1 : bool) -> vec3<f32>
     {
         return vec3<f32>(1.25f, 0.94999998807907104f, 0.62000000476837158f) * vec3<f32>((sky_0.cityLight_0 * 0.5f));
     }
-    var _S64 : f32 = - max(height_0, 0.0f);
-    return vec3<f32>(1.25f, 0.94999998807907104f, 0.62000000476837158f) * vec3<f32>((sky_0.cityLight_0 * 0.10000000149011612f * (1.0f + 2.0f * pow(1.0f - clamp(mu_8, 0.0f, 1.0f), 3.0f)) * (0.60000002384185791f * exp(_S64 / 1.5f) + 0.40000000596046448f * exp(_S64 / 8.0f)) * 0.5f));
+    var _S65 : f32 = - max(height_0, 0.0f);
+    return vec3<f32>(1.25f, 0.94999998807907104f, 0.62000000476837158f) * vec3<f32>((sky_0.cityLight_0 * 0.10000000149011612f * (1.0f + 2.0f * pow(1.0f - clamp(mu_8, 0.0f, 1.0f), 3.0f)) * (0.60000002384185791f * exp(_S65 / 1.5f) + 0.40000000596046448f * exp(_S65 / 8.0f)) * 0.5f));
 }
 
 fn nightGlow_0( r_8 : f32,  mu_9 : f32,  ground_2 : bool,  toSpace_0 : f32) -> vec3<f32>
@@ -1152,7 +1157,7 @@ fn nightGlow_0( r_8 : f32,  mu_9 : f32,  ground_2 : bool,  toSpace_0 : f32) -> v
     var r1_0 : f32 = bottom_1 + 87.0f;
     var r2_0 : f32 = bottom_1 + 97.0f;
     var far_0 : f32 = sphereSpan_0(r_8, mu_9, r2_0, lowest_0, end_1) - sphereSpan_0(r_8, mu_9, r1_0, lowest_0, end_1);
-    var _S65 : f32 = (sphereSpan_0(r_8, mu_9, r2_0, 0.0f, lowest_0) - sphereSpan_0(r_8, mu_9, r1_0, 0.0f, lowest_0)) * 0.5f;
+    var _S66 : f32 = (sphereSpan_0(r_8, mu_9, r2_0, 0.0f, lowest_0) - sphereSpan_0(r_8, mu_9, r1_0, 0.0f, lowest_0)) * 0.5f;
     if(ground_2)
     {
         end_1 = 0.5f;
@@ -1161,7 +1166,7 @@ fn nightGlow_0( r_8 : f32,  mu_9 : f32,  ground_2 : bool,  toSpace_0 : f32) -> v
     {
         end_1 = toSpace_0;
     }
-    return vec3<f32>(0.85500001907348633f, 1.0690000057220459f, 0.74800002574920654f) * vec3<f32>(1.4000000192027073e-05f) * vec3<f32>((_S65 + far_0 * end_1)) + sky_0.faintStars_0 * vec3<f32>(toSpace_0) + cityGlow_0(r_8 - bottom_1, mu_9, ground_2);
+    return vec3<f32>(0.85500001907348633f, 1.0690000057220459f, 0.74800002574920654f) * vec3<f32>(1.4000000192027073e-05f) * vec3<f32>((_S66 + far_0 * end_1)) + sky_0.faintStars_0 * vec3<f32>(toSpace_0) + cityGlow_0(r_8 - bottom_1, mu_9, ground_2);
 }
 
 struct MarchedSky_0
@@ -1177,45 +1182,45 @@ fn marchedSky_0( pixel_3 : vec2<f32>,  group_4 : u32) -> MarchedSky_0
     var direction_5 : vec3<f32> = normalize(sky_0.shape_0 * seen_0);
     var sun_3 : vec3<f32> = normalize(sky_0.shape_0 * sky_0.sun_0);
     var s_3 : Scattered_0 = march_0(sky_0.position_0, direction_5, sun_3, 1.0e+09f, i32(sky_0.steps_0), false);
-    var _S66 : vec4<f32> = s_3.radiance_6 * atmosphere_0.solarIrradiance_0;
+    var _S67 : vec4<f32> = s_3.radiance_6 * atmosphere_0.solarIrradiance_0;
     var r0_0 : f32 = length(sky_0.position_0);
     var mu0_0 : f32 = dot(sky_0.position_0, direction_5) / r0_0;
     var closest_0 : f32 = r0_0 * sqrt(max(0.0f, 1.0f - mu0_0 * mu0_0));
     var pixelAngle_1 : f32 = 2.0f * sky_0.tanY_0 / sky_0.size_0.y;
     var footprint_0 : f32 = max(- r0_0 * mu0_0, 0.0f) * pixelAngle_1;
-    var _S67 : bool;
+    var _S68 : bool;
     if((r0_0 > (atmosphere_0.topRadius_0)))
     {
-        _S67 = (mu0_0 < 0.0f);
+        _S68 = (mu0_0 < 0.0f);
     }
     else
     {
-        _S67 = false;
+        _S68 = false;
     }
-    if(_S67)
+    if(_S68)
     {
-        _S67 = (closest_0 < (atmosphere_0.topRadius_0 + footprint_0));
-    }
-    else
-    {
-        _S67 = false;
-    }
-    if(_S67)
-    {
-        _S67 = (closest_0 > (atmosphere_0.bottomRadius_1 - footprint_0));
+        _S68 = (closest_0 < (atmosphere_0.topRadius_0 + footprint_0));
     }
     else
     {
-        _S67 = false;
+        _S68 = false;
+    }
+    if(_S68)
+    {
+        _S68 = (closest_0 > (atmosphere_0.bottomRadius_1 - footprint_0));
+    }
+    else
+    {
+        _S68 = false;
     }
     var spectral_1 : vec4<f32>;
-    if(_S67)
+    if(_S68)
     {
         var center_2 : vec3<f32> = (vec3<f32>(0) - sky_0.position_0) / vec3<f32>(r0_0);
-        var _S68 : vec3<f32> = normalize(center_2 - direction_5 * vec3<f32>(dot(center_2, direction_5)));
-        var _S69 : vec4<f32> = vec4<f32>(0.0f);
+        var _S69 : vec3<f32> = normalize(center_2 - direction_5 * vec3<f32>(dot(center_2, direction_5)));
+        var _S70 : vec4<f32> = vec4<f32>(0.0f);
         var k_2 : i32 = i32(0);
-        spectral_1 = _S69;
+        spectral_1 = _S70;
         loop
         {
             if((k_2 < i32(8)))
@@ -1225,7 +1230,7 @@ fn marchedSky_0( pixel_3 : vec2<f32>,  group_4 : u32) -> MarchedSky_0
             {
                 break;
             }
-            var sum_0 : vec4<f32> = spectral_1 + skyAlong_0(normalize(direction_5 + _S68 * vec3<f32>((((f32(k_2) + 0.5f) / 8.0f - 0.5f) * pixelAngle_1))), sun_3);
+            var sum_0 : vec4<f32> = spectral_1 + skyAlong_0(normalize(direction_5 + _S69 * vec3<f32>((((f32(k_2) + 0.5f) / 8.0f - 0.5f) * pixelAngle_1))), sun_3);
             k_2 = k_2 + i32(1);
             spectral_1 = sum_0;
         }
@@ -1233,7 +1238,7 @@ fn marchedSky_0( pixel_3 : vec2<f32>,  group_4 : u32) -> MarchedSky_0
     }
     else
     {
-        spectral_1 = _S66;
+        spectral_1 = _S67;
     }
     var r_9 : f32 = length(sky_0.position_0);
     var mu_10 : f32 = dot(sky_0.position_0, direction_5) / r_9;
@@ -1281,10 +1286,10 @@ struct pixelInput_1
 };
 
 @fragment
-fn skyFragment( _S70 : pixelInput_1, @builtin(position) position_5 : vec4<f32>) -> pixelOutput_1
+fn skyFragment( _S71 : pixelInput_1, @builtin(position) position_5 : vec4<f32>) -> pixelOutput_1
 {
-    var _S71 : pixelOutput_1 = pixelOutput_1( vec4<f32>(min(marchedSky_0(position_5.xy, _S70.group_5).color_0, vec3<f32>(30000.0f)), 1.0f) );
-    return _S71;
+    var _S72 : pixelOutput_1 = pixelOutput_1( vec4<f32>(min(marchedSky_0(position_5.xy, _S71.group_5).color_0, vec3<f32>(30000.0f)), 1.0f) );
+    return _S72;
 }
 
 struct MoonSample_0
@@ -1327,16 +1332,16 @@ fn moonDisk_0( direction_7 : vec3<f32>) -> MoonSample_0
 {
     var m_5 : vec3<f32> = sky_0.moon_0;
     var k_3 : f32 = sky_0.moonSize_0;
-    var _S72 : bool;
+    var _S73 : bool;
     if(((sky_0.moonSize_0) <= 0.0f))
     {
-        _S72 = true;
+        _S73 = true;
     }
     else
     {
-        _S72 = ((dot(direction_7, m_5)) <= 0.0f);
+        _S73 = ((dot(direction_7, m_5)) <= 0.0f);
     }
-    if(_S72)
+    if(_S73)
     {
         return moonSample_0(0.0f, 0.0f);
     }
@@ -1351,23 +1356,23 @@ fn moonDisk_0( direction_7 : vec3<f32>) -> MoonSample_0
     var mu_11 : f32 = - dot(normal_1, m_5);
     var mu0_1 : f32 = dot(normal_1, sky_0.moonSun_0);
     var uv_0 : vec2<f32> = moonUv_0(normal_1);
-    var _S73 : vec3<f32>;
+    var _S74 : vec3<f32>;
     if(((abs(m_5.z)) > 0.89999997615814209f))
     {
-        _S73 = vec3<f32>(1.0f, 0.0f, 0.0f);
+        _S74 = vec3<f32>(1.0f, 0.0f, 0.0f);
     }
     else
     {
-        _S73 = vec3<f32>(0.0f, 0.0f, 1.0f);
+        _S74 = vec3<f32>(0.0f, 0.0f, 1.0f);
     }
-    var across_0 : vec3<f32> = normalize(cross(m_5, _S73));
-    var _S74 : vec3<f32> = vec3<f32>(pixel_4);
-    var _S75 : vec2<f32> = moonUv_0(moonSurface_0(direction_7 + across_0 * _S74)) - uv_0;
-    var dx_0 : vec2<f32> = _S75;
-    var _S76 : vec2<f32> = moonUv_0(moonSurface_0(direction_7 + cross(m_5, across_0) * _S74)) - uv_0;
-    var dy_0 : vec2<f32> = _S76;
-    dx_0[i32(0)] = dx_0[i32(0)] - round(_S75.x);
-    dy_0[i32(0)] = dy_0[i32(0)] - round(_S76.x);
+    var across_0 : vec3<f32> = normalize(cross(m_5, _S74));
+    var _S75 : vec3<f32> = vec3<f32>(pixel_4);
+    var _S76 : vec2<f32> = moonUv_0(moonSurface_0(direction_7 + across_0 * _S75)) - uv_0;
+    var dx_0 : vec2<f32> = _S76;
+    var _S77 : vec2<f32> = moonUv_0(moonSurface_0(direction_7 + cross(m_5, across_0) * _S75)) - uv_0;
+    var dy_0 : vec2<f32> = _S77;
+    dx_0[i32(0)] = dx_0[i32(0)] - round(_S76.x);
+    dy_0[i32(0)] = dy_0[i32(0)] - round(_S77.x);
     var albedo_0 : f32 = dot((textureSampleGrad((moonMap_0), (starSampler_0), (uv_0), (dx_0), (dy_0))).xyz, vec3<f32>(0.2125999927520752f, 0.71520000696182251f, 0.072200000286102295f));
     var sunlit_0 : f32;
     if((mu0_1 > 0.0f))
@@ -1383,8 +1388,8 @@ fn moonDisk_0( direction_7 : vec3<f32>) -> MoonSample_0
 
 fn starLight_0( pixel_5 : vec2<f32>,  direction_8 : vec3<f32>) -> vec3<f32>
 {
-    var _S77 : vec3<i32> = vec3<i32>(vec2<i32>(pixel_5), i32(0));
-    return (textureLoad((starLayer_0), ((_S77)).xy, ((_S77)).z)).xyz + (textureSampleLevel((starBackground_0), (starSampler_0), (vec3<f32>(dot(stars_0.rows_0[i32(0)].xyz, direction_8), dot(stars_0.rows_0[i32(1)].xyz, direction_8), dot(stars_0.rows_0[i32(2)].xyz, direction_8))), (sky_0.starBackgroundLevel_0))).xyz * vec3<f32>(stars_0.rows_0[i32(0)].w);
+    var _S78 : vec3<i32> = vec3<i32>(vec2<i32>(pixel_5), i32(0));
+    return (textureLoad((starLayer_0), ((_S78)).xy, ((_S78)).z)).xyz + (textureSampleLevel((starBackground_0), (starSampler_0), (vec3<f32>(dot(stars_0.rows_0[i32(0)].xyz, direction_8), dot(stars_0.rows_0[i32(1)].xyz, direction_8), dot(stars_0.rows_0[i32(2)].xyz, direction_8))), (sky_0.starBackgroundLevel_0))).xyz * vec3<f32>(stars_0.rows_0[i32(0)].w);
 }
 
 struct pixelOutput_2
@@ -1398,14 +1403,14 @@ struct pixelInput_2
 };
 
 @fragment
-fn skyStarsFragment( _S78 : pixelInput_2, @builtin(position) position_6 : vec4<f32>) -> pixelOutput_2
+fn skyStarsFragment( _S79 : pixelInput_2, @builtin(position) position_6 : vec4<f32>) -> pixelOutput_2
 {
-    var _S79 : vec2<f32> = position_6.xy;
-    var m_6 : MarchedSky_0 = marchedSky_0(_S79, _S78.group_6);
-    var direction_9 : vec3<f32> = viewDirection_0(_S79);
+    var _S80 : vec2<f32> = position_6.xy;
+    var m_6 : MarchedSky_0 = marchedSky_0(_S80, _S79.group_6);
+    var direction_9 : vec3<f32> = viewDirection_0(_S80);
     var moon_1 : MoonSample_0 = moonDisk_0(direction_9);
-    var _S80 : pixelOutput_2 = pixelOutput_2( vec4<f32>(min(m_6.color_0 + toRgb_0(atmosphere_0.solarIrradiance_0 * vec4<f32>(moon_1.radiance_7) * m_6.transmittance_7, _S78.group_6) * vec3<f32>(sky_0.exposure_0) + starLight_0(_S79, direction_9) * vec3<f32>(m_6.toSpace_1) * vec3<f32>(sky_0.exposure_0) * vec3<f32>((1.0f - moon_1.coverage_0)), vec3<f32>(30000.0f)), 1.0f) );
-    return _S80;
+    var _S81 : pixelOutput_2 = pixelOutput_2( vec4<f32>(min(m_6.color_0 + toRgb_0(atmosphere_0.solarIrradiance_0 * vec4<f32>(moon_1.radiance_7) * m_6.transmittance_7, _S79.group_6) * vec3<f32>(sky_0.exposure_0) + starLight_0(_S80, direction_9) * vec3<f32>(m_6.toSpace_1) * vec3<f32>(sky_0.exposure_0) * vec3<f32>((1.0f - moon_1.coverage_0)), vec3<f32>(30000.0f)), 1.0f) );
+    return _S81;
 }
 
 struct SkyFrame_0
@@ -1458,28 +1463,28 @@ fn skyViewAngles_0( unit_0 : vec2<f32>,  r_10 : f32,  bottom_2 : f32) -> vec2<f3
 {
     var beta_0 : f32 = acos(sqrt(max(0.0f, r_10 * r_10 - bottom_2 * bottom_2)) / r_10);
     var horizon_0 : f32 = 3.1415927410125732f - beta_0;
-    var _S81 : f32 = unit_0.y;
+    var _S82 : f32 = unit_0.y;
     var zenith_0 : f32;
-    if((_S81 < 0.5f))
+    if((_S82 < 0.5f))
     {
-        var c_0 : f32 = 1.0f - _S81 * 2.0f;
+        var c_0 : f32 = 1.0f - _S82 * 2.0f;
         zenith_0 = horizon_0 * (1.0f - c_0 * c_0);
     }
     else
     {
-        var c_1 : f32 = _S81 * 2.0f - 1.0f;
+        var c_1 : f32 = _S82 * 2.0f - 1.0f;
         zenith_0 = horizon_0 + beta_0 * c_1 * c_1;
     }
-    var _S82 : f32 = unit_0.x;
-    return vec2<f32>(zenith_0, 1.0f - 2.0f * (_S82 * _S82));
+    var _S83 : f32 = unit_0.x;
+    return vec2<f32>(zenith_0, 1.0f - 2.0f * (_S83 * _S83));
 }
 
 fn tableDirection_0( unit_1 : vec2<f32>,  r_11 : f32,  f_1 : SkyFrame_0) -> vec3<f32>
 {
     var angles_0 : vec2<f32> = skyViewAngles_0(unit_1, r_11, atmosphere_0.bottomRadius_1);
-    var _S83 : f32 = angles_0.x;
+    var _S84 : f32 = angles_0.x;
     var cosAzimuth_0 : f32 = angles_0.y;
-    return f_1.up_1 * vec3<f32>(cos(_S83)) + (f_1.toward_0 * vec3<f32>(cosAzimuth_0) + f_1.side_0 * vec3<f32>(sqrt(max(0.0f, 1.0f - cosAzimuth_0 * cosAzimuth_0)))) * vec3<f32>(sin(_S83));
+    return f_1.up_1 * vec3<f32>(cos(_S84)) + (f_1.toward_0 * vec3<f32>(cosAzimuth_0) + f_1.side_0 * vec3<f32>(sqrt(max(0.0f, 1.0f - cosAzimuth_0 * cosAzimuth_0)))) * vec3<f32>(sin(_S84));
 }
 
 struct pixelOutput_3
@@ -1493,45 +1498,45 @@ struct pixelInput_3
 };
 
 @fragment
-fn skyViewFragment( _S84 : pixelInput_3, @builtin(position) position_7 : vec4<f32>) -> pixelOutput_3
+fn skyViewFragment( _S85 : pixelInput_3, @builtin(position) position_7 : vec4<f32>) -> pixelOutput_3
 {
     var r_12 : f32 = length(sky_0.position_0);
     var f_2 : SkyFrame_0 = skyFrame_0();
-    var _S85 : vec4<f32> = vec4<f32>(0.0f);
-    var _S86 : f32 = position_7.y;
+    var _S86 : vec4<f32> = vec4<f32>(0.0f);
+    var _S87 : f32 = position_7.y;
     var spectral_2 : vec4<f32>;
-    if((_S86 >= 109.0f))
+    if((_S87 >= 109.0f))
     {
         if(((sky_0.moonLight_0) <= 0.0f))
         {
-            var _S87 : pixelOutput_3 = pixelOutput_3( _S85 );
-            return _S87;
+            var _S88 : pixelOutput_3 = pixelOutput_3( _S86 );
+            return _S88;
         }
-        spectral_2 = march_0(sky_0.position_0, tableDirection_0(vec2<f32>(texelToUnit_0(position_7.x / 192.0f, 192.0f), texelToUnit_0((_S86 - 109.0f) / 108.0f, 108.0f)), r_12, frameToward_0(sky_0.moon_0)), sky_0.moon_0, 1.0e+09f, i32(30), false).radiance_6 * atmosphere_0.solarIrradiance_0 * vec4<f32>(sky_0.moonLight_0);
+        spectral_2 = march_0(sky_0.position_0, tableDirection_0(vec2<f32>(texelToUnit_0(position_7.x / 192.0f, 192.0f), texelToUnit_0((_S87 - 109.0f) / 108.0f, 108.0f)), r_12, frameToward_0(sky_0.moon_0)), sky_0.moon_0, 1.0e+09f, i32(30), false).radiance_6 * atmosphere_0.solarIrradiance_0 * vec4<f32>(sky_0.moonLight_0);
     }
     else
     {
-        if((_S86 >= 108.0f))
+        if((_S87 >= 108.0f))
         {
-            var _S88 : f32 = position_7.x;
-            if((_S88 >= 1.0f))
+            var _S89 : f32 = position_7.x;
+            if((_S89 >= 1.0f))
             {
-                var _S89 : bool;
-                if((_S88 < 2.0f))
+                var _S90 : bool;
+                if((_S89 < 2.0f))
                 {
-                    _S89 = ((sky_0.moonSize_0) > 0.0f);
+                    _S90 = ((sky_0.moonSize_0) > 0.0f);
                 }
                 else
                 {
-                    _S89 = false;
+                    _S90 = false;
                 }
-                if(_S89)
+                if(_S90)
                 {
-                    var _S90 : pixelOutput_3 = pixelOutput_3( vec4<f32>(toRgb_0(atmosphere_0.solarIrradiance_0 * sunTransmittance_0(r_12, dot(f_2.up_1, sky_0.moon_0)), _S84.group_7) * vec3<f32>(9.9999997473787516e-06f), 0.0f) );
-                    return _S90;
+                    var _S91 : pixelOutput_3 = pixelOutput_3( vec4<f32>(toRgb_0(atmosphere_0.solarIrradiance_0 * sunTransmittance_0(r_12, dot(f_2.up_1, sky_0.moon_0)), _S85.group_7) * vec3<f32>(9.9999997473787516e-06f), 0.0f) );
+                    return _S91;
                 }
-                var _S91 : pixelOutput_3 = pixelOutput_3( _S85 );
-                return _S91;
+                var _S92 : pixelOutput_3 = pixelOutput_3( _S86 );
+                return _S92;
             }
             if(((sky_0.sunCos_0) <= 1.0f))
             {
@@ -1539,12 +1544,12 @@ fn skyViewFragment( _S84 : pixelInput_3, @builtin(position) position_7 : vec4<f3
             }
             else
             {
-                spectral_2 = _S85;
+                spectral_2 = _S86;
             }
         }
         else
         {
-            var direction_10 : vec3<f32> = tableDirection_0(vec2<f32>(texelToUnit_0(position_7.x / 192.0f, 192.0f), texelToUnit_0(_S86 / 108.0f, 108.0f)), r_12, f_2);
+            var direction_10 : vec3<f32> = tableDirection_0(vec2<f32>(texelToUnit_0(position_7.x / 192.0f, 192.0f), texelToUnit_0(_S87 / 108.0f, 108.0f)), r_12, f_2);
             var s_5 : Scattered_0 = march_0(sky_0.position_0, direction_10, sky_0.sun_0, 1.0e+09f, i32(30), false);
             var spectral_3 : vec4<f32> = s_5.radiance_6 * atmosphere_0.solarIrradiance_0;
             var mu_12 : f32 = dot(sky_0.position_0, direction_10) / r_12;
@@ -1552,18 +1557,18 @@ fn skyViewFragment( _S84 : pixelInput_3, @builtin(position) position_7 : vec4<f3
             var toSpace_3 : f32;
             if(!ground_4)
             {
-                toSpace_3 = luminanceShare_0(s_5.transmittance_6, _S84.group_7);
+                toSpace_3 = luminanceShare_0(s_5.transmittance_6, _S85.group_7);
             }
             else
             {
                 toSpace_3 = 0.0f;
             }
-            var _S92 : pixelOutput_3 = pixelOutput_3( vec4<f32>(min((toRgb_0(spectral_3, _S84.group_7) + nightGlow_0(r_12, mu_12, ground_4, toSpace_3)) * vec3<f32>(sky_0.exposure_0), vec3<f32>(30000.0f)), toSpace_3) );
-            return _S92;
+            var _S93 : pixelOutput_3 = pixelOutput_3( vec4<f32>(min((toRgb_0(spectral_3, _S85.group_7) + nightGlow_0(r_12, mu_12, ground_4, toSpace_3)) * vec3<f32>(sky_0.exposure_0), vec3<f32>(30000.0f)), toSpace_3) );
+            return _S93;
         }
     }
-    var _S93 : pixelOutput_3 = pixelOutput_3( vec4<f32>(min(toRgb_0(spectral_2, _S84.group_7) * vec3<f32>(sky_0.exposure_0), vec3<f32>(30000.0f)), 0.0f) );
-    return _S93;
+    var _S94 : pixelOutput_3 = pixelOutput_3( vec4<f32>(min(toRgb_0(spectral_2, _S85.group_7) * vec3<f32>(sky_0.exposure_0), vec3<f32>(30000.0f)), 0.0f) );
+    return _S94;
 }
 
 fn skyViewUnit_0( cosZenith_0 : f32,  cosAzimuth_1 : f32,  ground_5 : bool,  r_13 : f32,  bottom_3 : f32) -> vec2<f32>
@@ -1662,34 +1667,34 @@ struct pixelInput_4
 };
 
 @fragment
-fn skyFromTableFragment( _S94 : pixelInput_4, @builtin(position) position_8 : vec4<f32>) -> pixelOutput_4
+fn skyFromTableFragment( _S95 : pixelInput_4, @builtin(position) position_8 : vec4<f32>) -> pixelOutput_4
 {
-    var _S95 : vec2<f32> = position_8.xy;
-    var direction_13 : vec3<f32> = viewDirection_0(_S95);
+    var _S96 : vec2<f32> = position_8.xy;
+    var direction_13 : vec3<f32> = viewDirection_0(_S96);
     var s_6 : TableSky_0 = skyFromTable_0(direction_13);
     var color_4 : vec3<f32>;
     if(!s_6.ground_7)
     {
-        const _S96 : vec3<i32> = vec3<i32>(i32(0), i32(108), i32(0));
-        var color_5 : vec3<f32> = s_6.color_1 + (textureLoad((skyView_0), ((_S96)).xy, ((_S96)).z)).xyz * vec3<f32>(sunDisk_0(direction_13));
+        const _S97 : vec3<i32> = vec3<i32>(i32(0), i32(108), i32(0));
+        var color_5 : vec3<f32> = s_6.color_1 + (textureLoad((skyView_0), ((_S97)).xy, ((_S97)).z)).xyz * vec3<f32>(sunDisk_0(direction_13));
         var moon_2 : MoonSample_0 = moonDisk_0(direction_13);
         if(((moon_2.coverage_0) > 0.0f))
         {
-            const _S97 : vec3<i32> = vec3<i32>(i32(1), i32(108), i32(0));
-            color_4 = color_5 + (textureLoad((skyView_0), ((_S97)).xy, ((_S97)).z)).xyz / vec3<f32>(9.9999997473787516e-06f) * vec3<f32>(moon_2.radiance_7) * vec3<f32>(sky_0.exposure_0);
+            const _S98 : vec3<i32> = vec3<i32>(i32(1), i32(108), i32(0));
+            color_4 = color_5 + (textureLoad((skyView_0), ((_S98)).xy, ((_S98)).z)).xyz / vec3<f32>(9.9999997473787516e-06f) * vec3<f32>(moon_2.radiance_7) * vec3<f32>(sky_0.exposure_0);
         }
         else
         {
             color_4 = color_5;
         }
-        color_4 = color_4 + starLight_0(_S95, direction_13) * vec3<f32>(s_6.toSpace_4) * vec3<f32>(sky_0.exposure_0) * vec3<f32>((1.0f - moon_2.coverage_0));
+        color_4 = color_4 + starLight_0(_S96, direction_13) * vec3<f32>(s_6.toSpace_4) * vec3<f32>(sky_0.exposure_0) * vec3<f32>((1.0f - moon_2.coverage_0));
     }
     else
     {
         color_4 = s_6.color_1;
     }
-    var _S98 : pixelOutput_4 = pixelOutput_4( vec4<f32>(min(color_4, vec3<f32>(60000.0f)), 1.0f) );
-    return _S98;
+    var _S99 : pixelOutput_4 = pixelOutput_4( vec4<f32>(min(color_4, vec3<f32>(60000.0f)), 1.0f) );
+    return _S99;
 }
 
 struct pixelOutput_5
@@ -1703,11 +1708,11 @@ struct pixelInput_5
 };
 
 @fragment
-fn environmentFromTableFragment( _S99 : pixelInput_5, @builtin(position) position_9 : vec4<f32>) -> pixelOutput_5
+fn environmentFromTableFragment( _S100 : pixelInput_5, @builtin(position) position_9 : vec4<f32>) -> pixelOutput_5
 {
     var s_7 : TableSky_0 = skyFromTable_0(viewDirection_0(position_9.xy));
-    var _S100 : pixelOutput_5 = pixelOutput_5( vec4<f32>(s_7.color_1 * vec3<f32>(sky_0.exposure_0) + sky_0.faintStars_0 * vec3<f32>(s_7.toSpace_4), 1.0f) );
-    return _S100;
+    var _S101 : pixelOutput_5 = pixelOutput_5( vec4<f32>(s_7.color_1 * vec3<f32>(sky_0.exposure_0) + sky_0.faintStars_0 * vec3<f32>(s_7.toSpace_4), 1.0f) );
+    return _S101;
 }
 
 struct pixelOutput_6
@@ -1721,15 +1726,15 @@ struct pixelInput_6
 };
 
 @fragment
-fn sunLightFragment( _S101 : pixelInput_6, @builtin(position) position_10 : vec4<f32>) -> pixelOutput_6
+fn sunLightFragment( _S102 : pixelInput_6, @builtin(position) position_10 : vec4<f32>) -> pixelOutput_6
 {
-    var _S102 : f32 = texelToUnit_0(position_10.y / 64.0f, 64.0f);
+    var _S103 : f32 = texelToUnit_0(position_10.y / 64.0f, 64.0f);
     var s_8 : f32 = texelToUnit_0(position_10.x / 256.0f, 256.0f) * 2.0f - 1.0f;
     var mu_13 : f32 = f32((i32(sign((s_8))))) * s_8 * s_8;
-    var r_16 : f32 = atmosphere_0.bottomRadius_1 + (atmosphere_0.topRadius_0 - atmosphere_0.bottomRadius_1) * _S102 * _S102;
+    var r_16 : f32 = atmosphere_0.bottomRadius_1 + (atmosphere_0.topRadius_0 - atmosphere_0.bottomRadius_1) * _S103 * _S103;
     var muHorizon_0 : f32 = - sqrt(max(0.0f, 1.0f - atmosphere_0.bottomRadius_1 / r_16 * (atmosphere_0.bottomRadius_1 / r_16)));
-    var _S103 : pixelOutput_6 = pixelOutput_6( vec4<f32>(toRgb_0(atmosphere_0.solarIrradiance_0 * transmittanceToTop_0(r_16, max(mu_13, muHorizon_0 + 9.9999997473787516e-05f)) * vec4<f32>(clamp(0.5f + (asin(clamp(mu_13, -1.0f, 1.0f)) - asin(muHorizon_0)) / 0.0093499999493360519f, 0.0f, 1.0f)), _S101.group_10) * vec3<f32>(9.9999997473787516e-06f), 1.0f) );
-    return _S103;
+    var _S104 : pixelOutput_6 = pixelOutput_6( vec4<f32>(toRgb_0(atmosphere_0.solarIrradiance_0 * transmittanceToTop_0(r_16, max(mu_13, muHorizon_0 + 9.9999997473787516e-05f)) * vec4<f32>(clamp(0.5f + (asin(clamp(mu_13, -1.0f, 1.0f)) - asin(muHorizon_0)) / 0.0093499999493360519f, 0.0f, 1.0f)), _S102.group_10) * vec3<f32>(9.9999997473787516e-06f), 1.0f) );
+    return _S104;
 }
 
 @compute
@@ -1760,7 +1765,7 @@ struct pixelInput_7
 };
 
 @fragment
-fn aerialScreenFragment( _S104 : pixelInput_7, @builtin(position) position_11 : vec4<f32>) -> AerialScreen_0
+fn aerialScreenFragment( _S105 : pixelInput_7, @builtin(position) position_11 : vec4<f32>) -> AerialScreen_0
 {
     var ndc_4 : vec2<f32> = vec2<f32>(position_11.x / 640.0f * 2.0f - 1.0f, 1.0f - position_11.y / 400.0f * 2.0f) - sky_0.shift_0;
     var direction_14 : vec3<f32> = normalize(sky_0.shape_0 * normalize(sky_0.forward_0 + sky_0.right_0 * vec3<f32>((ndc_4.x * sky_0.tanX_0)) + sky_0.up_0 * vec3<f32>((ndc_4.y * sky_0.tanY_0))));
@@ -1787,9 +1792,9 @@ fn aerialScreenFragment( _S104 : pixelInput_7, @builtin(position) position_11 : 
     {
         spectral_5 = spectral_4;
     }
-    var _S105 : vec3<f32> = vec3<f32>(0.0f);
+    var _S106 : vec3<f32> = vec3<f32>(0.0f);
     var k_4 : u32 = u32(0);
-    var total_6 : vec3<f32> = _S105;
+    var total_6 : vec3<f32> = _S106;
     loop
     {
         if((k_4 < u32(8)))
@@ -1803,10 +1808,10 @@ fn aerialScreenFragment( _S104 : pixelInput_7, @builtin(position) position_11 : 
         k_4 = k_4 + u32(1);
         total_6 = total_7;
     }
-    var base_2 : u32 = _S104.group_11 * u32(4);
+    var base_2 : u32 = _S105.group_11 * u32(4);
     var t_6 : vec3<f32> = (vec3<f32>(s_9.transmittance_6.x) * sky_0.weights_0[base_2].xyz + vec3<f32>(s_9.transmittance_6.y) * sky_0.weights_0[base_2 + u32(1)].xyz + vec3<f32>(s_9.transmittance_6.z) * sky_0.weights_0[base_2 + u32(2)].xyz + vec3<f32>(s_9.transmittance_6.w) * sky_0.weights_0[base_2 + u32(3)].xyz) / total_6;
     var out_3 : AerialScreen_0;
-    out_3.inscatter_2 = vec4<f32>(min(toRgb_0(spectral_5, _S104.group_11) * vec3<f32>(sky_0.exposure_0), vec3<f32>(30000.0f)), 0.0f);
+    out_3.inscatter_2 = vec4<f32>(min(toRgb_0(spectral_5, _S105.group_11) * vec3<f32>(sky_0.exposure_0), vec3<f32>(30000.0f)), 0.0f);
     out_3.transmittance_8 = vec4<f32>(t_6, 0.0f);
     return out_3;
 }

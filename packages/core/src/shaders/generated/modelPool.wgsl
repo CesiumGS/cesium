@@ -78,10 +78,14 @@ fn nearest_0( p_0 : vec3<f32>) -> f32
     var k_0 : u32 = u32(0);
     loop
     {
-        if((k_0 < (min(pool_0.cameras_0, u32(4)))))
+        if((k_0 < u32(4)))
         {
         }
         else
+        {
+            break;
+        }
+        if((k_0 >= (pool_0.cameras_0)))
         {
             break;
         }
@@ -196,10 +200,14 @@ fn claimSlots(@builtin(global_invocation_id) gid_2 : vec3<u32>)
     var k_1 : u32 = u32(0);
     loop
     {
-        if((k_1 < (pool_0.parts_0)))
+        if((k_1 < u32(1024)))
         {
         }
         else
+        {
+            break;
+        }
+        if((k_1 >= (pool_0.parts_0)))
         {
             break;
         }
