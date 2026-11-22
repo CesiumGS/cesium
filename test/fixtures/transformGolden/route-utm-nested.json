@@ -1,39 +1,41 @@
 {
  "exact": {
   "wgsl": {
-   "canonical": "c2e517fbf106ee486c6ec32fabbb6f7a",
-   "canonicalLength": 149892
+   "canonical": "e339737abf777645a99103275dc87b81",
+   "canonicalLength": 150525
   },
   "positionWgsl": {
-   "canonical": "dd606610a096c7c57311318dfdd880bc",
-   "canonicalLength": 32850
+   "canonical": "b6d9c99c333344980f0e02aeb8e33ff7",
+   "canonicalLength": 33452
   },
   "centerConstantsWgsl": {
-   "canonical": "b217416da1871eb7660d57929ffc686c",
-   "canonicalLength": 184634
+   "canonical": "b8c95e9eee655bcc11e4a1f521138a33",
+   "canonicalLength": 186146
   },
   "uniformsLayout": {
-   "floats": 32,
+   "floats": 48,
    "fields": {
-    "eyeHi": 0,
-    "eyeLo": 4,
-    "affine0": 8,
-    "s0.v20": 20,
-    "s0.v21": 21,
-    "s0.j22": 22,
-    "s0.j23": 23,
-    "s2.v24": 24,
-    "param:transverseMercator.falseEasting": 25,
-    "param:transverseMercator.scaleFactor": 27,
-    "param:transverseMercator.falseNorthing": 29,
-    "s2.j31": 31
+    "eye": 0,
+    "affine0": 12,
+    "s0.v24": 24,
+    "s0.v25": 25,
+    "s0.j26": 26,
+    "s0.j27": 27,
+    "s2.v28": 28,
+    "param:transverseMercator.falseEasting": 29,
+    "param:transverseMercator.scaleFactor": 30,
+    "param:transverseMercator.falseNorthing": 31,
+    "s2.j32": 32,
+    "paramParts:transverseMercator.falseEasting": 36,
+    "paramParts:transverseMercator.falseNorthing": 40,
+    "paramParts:transverseMercator.scaleFactor": 44
    }
   },
   "perDrawLayout": {
-   "floats": 1100,
+   "floats": 1116,
    "fields": {
-    "n": 1065,
-    "sha": "baa1a13df6ab13114e1f3d894310ab4a"
+    "n": 1064,
+    "sha": "ca354b87eab812b4a5fa764612d565cf"
    }
   },
   "dynamicParams": ["verticalExaggeration.factor", "verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band", "transverseMercator.centralMeridian"],
@@ -71,15 +73,15 @@
    "transverseMercator.falseEasting": 500000,
    "transverseMercator.falseNorthing": 0
   },
-  "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, -0.08715574443340302, 0.9961947202682495, 0, 0, -0.7166025042533875, -0.06269459426403046, 0.6946583986282349, 0, 0.6920149922370911, 0.06054346635937691, 0.7193397879600525, 0, 3600, 2, 3600, 2, 6364902, 500000, 0, 0.9995999932289124, 6.771087690538025e-9, 0, 0, 6364902],
+  "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, -0.08715574443340302, 0.9961947202682495, 0, 0, -0.7166025042533875, -0.06269459426403046, 0.6946583986282349, 0, 0.6920149922370911, 0.06054346635937691, 0.7193397879600525, 0, 3600, 2, 3600, 2, 6364902, 500000, 0.9995999932289124, 0, 6364902, 0, 0, 0, 7, 41248, 0, 0, 0, 0, 0, 0, 0, 1, -6711, 6.771087690538025e-9],
   "records": [
    {
-    "n": 1100,
-    "sha": "8614921d7ef30e029c82145c9224aa7c"
+    "n": 1116,
+    "sha": "26458d4416c39c22c244c42fad82e668"
    },
    {
-    "n": 1100,
-    "sha": "366dd467c00dbc50edccc1b9737f441b"
+    "n": 1116,
+    "sha": "1797fe88bc42b346806f5f691d4da2a5"
    }
   ],
   "centerUniforms": {
@@ -90,32 +92,31 @@
  },
  "linear": {
   "wgsl": {
-   "canonical": "be8eaec2b45f92a5bc81a3794cc5fe45",
-   "canonicalLength": 81964
+   "canonical": "b57989c7cddb3a2ddce94b294133fa0c",
+   "canonicalLength": 82859
   },
   "positionWgsl": {
-   "canonical": "d65bd69ae4d22aaad0d37ede57d48976",
-   "canonicalLength": 30554
+   "canonical": "d70ac7faae478b5bd5b395dd170ec3da",
+   "canonicalLength": 31439
   },
   "centerConstantsWgsl": null,
   "uniformsLayout": {
-   "floats": 28,
+   "floats": 32,
    "fields": {
-    "eyeHi": 0,
-    "eyeLo": 4,
-    "affine0": 8,
-    "s0.v20": 20,
-    "s0.v21": 21,
-    "s0.j22": 22,
-    "s0.j23": 23,
-    "s2.v24": 24
+    "eye": 0,
+    "affine0": 12,
+    "s0.v24": 24,
+    "s0.v25": 25,
+    "s0.j26": 26,
+    "s0.j27": 27,
+    "s2.v28": 28
    }
   },
   "perDrawLayout": {
-   "floats": 664,
+   "floats": 668,
    "fields": {
-    "n": 582,
-    "sha": "ed8716397f31779ee241ba38baa330ee"
+    "n": 581,
+    "sha": "3146a0a017f6edeb0d4cb80ab0c39a10"
    }
   },
   "dynamicParams": ["verticalExaggeration.factor", "verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band", "transverseMercator.centralMeridian", "transverseMercator.scaleFactor", "transverseMercator.falseEasting", "transverseMercator.falseNorthing"],
@@ -153,15 +154,15 @@
    "transverseMercator.falseEasting": 500000,
    "transverseMercator.falseNorthing": 0
   },
-  "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, -0.08715574443340302, 0.9961947202682495, 0, 0, -0.7166025042533875, -0.06269459426403046, 0.6946583986282349, 0, 0.6920149922370911, 0.06054346635937691, 0.7193397879600525, 0, 3600, 2, 3600, 2, 6364902, 0, 0, 0],
+  "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, -0.08715574443340302, 0.9961947202682495, 0, 0, -0.7166025042533875, -0.06269459426403046, 0.6946583986282349, 0, 0.6920149922370911, 0.06054346635937691, 0.7193397879600525, 0, 3600, 2, 3600, 2, 6364902, 0, 0, 0],
   "records": [
    {
-    "n": 664,
-    "sha": "1179c0355f49bbc80bd9e69953cb0441"
+    "n": 668,
+    "sha": "c32bc165fa5774f7bea81420a5498f4b"
    },
    {
-    "n": 664,
-    "sha": "a9d19ef101924e4f5e9c02592c00ab6c"
+    "n": 668,
+    "sha": "171e4e3a8983f6bb5809efe22387e329"
    }
   ],
   "centerUniforms": null,
@@ -169,32 +170,31 @@
  },
  "auto": {
   "wgsl": {
-   "canonical": "be8eaec2b45f92a5bc81a3794cc5fe45",
-   "canonicalLength": 81964
+   "canonical": "b57989c7cddb3a2ddce94b294133fa0c",
+   "canonicalLength": 82859
   },
   "positionWgsl": {
-   "canonical": "d65bd69ae4d22aaad0d37ede57d48976",
-   "canonicalLength": 30554
+   "canonical": "d70ac7faae478b5bd5b395dd170ec3da",
+   "canonicalLength": 31439
   },
   "centerConstantsWgsl": null,
   "uniformsLayout": {
-   "floats": 28,
+   "floats": 32,
    "fields": {
-    "eyeHi": 0,
-    "eyeLo": 4,
-    "affine0": 8,
-    "s0.v20": 20,
-    "s0.v21": 21,
-    "s0.j22": 22,
-    "s0.j23": 23,
-    "s2.v24": 24
+    "eye": 0,
+    "affine0": 12,
+    "s0.v24": 24,
+    "s0.v25": 25,
+    "s0.j26": 26,
+    "s0.j27": 27,
+    "s2.v28": 28
    }
   },
   "perDrawLayout": {
-   "floats": 664,
+   "floats": 668,
    "fields": {
-    "n": 582,
-    "sha": "ed8716397f31779ee241ba38baa330ee"
+    "n": 581,
+    "sha": "3146a0a017f6edeb0d4cb80ab0c39a10"
    }
   },
   "dynamicParams": ["verticalExaggeration.factor", "verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band", "transverseMercator.centralMeridian", "transverseMercator.scaleFactor", "transverseMercator.falseEasting", "transverseMercator.falseNorthing"],
@@ -232,15 +232,15 @@
    "transverseMercator.falseEasting": 500000,
    "transverseMercator.falseNorthing": 0
   },
-  "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, -0.08715574443340302, 0.9961947202682495, 0, 0, -0.7166025042533875, -0.06269459426403046, 0.6946583986282349, 0, 0.6920149922370911, 0.06054346635937691, 0.7193397879600525, 0, 3600, 2, 3600, 2, 6364902, 0, 0, 0],
+  "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, -0.08715574443340302, 0.9961947202682495, 0, 0, -0.7166025042533875, -0.06269459426403046, 0.6946583986282349, 0, 0.6920149922370911, 0.06054346635937691, 0.7193397879600525, 0, 3600, 2, 3600, 2, 6364902, 0, 0, 0],
   "records": [
    {
-    "n": 664,
-    "sha": "1179c0355f49bbc80bd9e69953cb0441"
+    "n": 668,
+    "sha": "c32bc165fa5774f7bea81420a5498f4b"
    },
    {
-    "n": 664,
-    "sha": "a9d19ef101924e4f5e9c02592c00ab6c"
+    "n": 668,
+    "sha": "171e4e3a8983f6bb5809efe22387e329"
    }
   ],
   "centerUniforms": null,
@@ -248,36 +248,38 @@
  },
  "none": {
   "wgsl": {
-   "canonical": "8f3d60f3ab4959d80d74fb5979b6fcb3",
-   "canonicalLength": 29169
+   "canonical": "a3e41f2000410d0206101f222fa2f029",
+   "canonicalLength": 29750
   },
   "positionWgsl": {
-   "canonical": "c5866ffcf6a3f24089e38a6853d95bbc",
-   "canonicalLength": 29511
+   "canonical": "310e2584838e880ad2a3b8433b4a6191",
+   "canonicalLength": 30092
   },
   "centerConstantsWgsl": {
-   "canonical": "551958d38c6d4a7ad41e311ce4d98550",
-   "canonicalLength": 43932
+   "canonical": "c61b62d985f1996c0c65a8295512285f",
+   "canonicalLength": 45428
   },
   "uniformsLayout": {
-   "floats": 32,
+   "floats": 44,
    "fields": {
-    "eyeHi": 0,
-    "eyeLo": 4,
-    "affine0": 8,
-    "s0.v20": 20,
-    "s0.v21": 21,
-    "s2.v22": 22,
-    "param:transverseMercator.falseEasting": 23,
-    "param:transverseMercator.scaleFactor": 25,
-    "param:transverseMercator.falseNorthing": 27
+    "eye": 0,
+    "affine0": 12,
+    "s0.v24": 24,
+    "s0.v25": 25,
+    "s2.v26": 26,
+    "param:transverseMercator.falseEasting": 27,
+    "param:transverseMercator.scaleFactor": 28,
+    "param:transverseMercator.falseNorthing": 29,
+    "paramParts:transverseMercator.falseEasting": 32,
+    "paramParts:transverseMercator.falseNorthing": 36,
+    "paramParts:transverseMercator.scaleFactor": 40
    }
   },
   "perDrawLayout": {
-   "floats": 276,
+   "floats": 292,
    "fields": {
-    "n": 242,
-    "sha": "de0c5f58c4a293d99e300215b620cbd7"
+    "n": 241,
+    "sha": "a951faa3095120a11f73ef12be4aabcb"
    }
   },
   "dynamicParams": ["verticalExaggeration.factor", "verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band", "transverseMercator.centralMeridian"],
@@ -315,15 +317,15 @@
    "transverseMercator.falseEasting": 500000,
    "transverseMercator.falseNorthing": 0
   },
-  "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, -0.08715574443340302, 0.9961947202682495, 0, 0, -0.7166025042533875, -0.06269459426403046, 0.6946583986282349, 0, 0.6920149922370911, 0.06054346635937691, 0.7193397879600525, 0, 3600, 2, 6364902, 500000, 0, 0.9995999932289124, 6.771087690538025e-9, 0, 0, 0, 0, 0],
+  "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, -0.08715574443340302, 0.9961947202682495, 0, 0, -0.7166025042533875, -0.06269459426403046, 0.6946583986282349, 0, 0.6920149922370911, 0.06054346635937691, 0.7193397879600525, 0, 3600, 2, 6364902, 500000, 0.9995999932289124, 0, 0, 0, 7, 41248, 0, 0, 0, 0, 0, 0, 0, 1, -6711, 6.771087690538025e-9],
   "records": [
    {
-    "n": 276,
-    "sha": "e1100f9224ca65246f652793713a9ff0"
+    "n": 292,
+    "sha": "9795ca662a8dbfc2a6f0d7bdb46f4221"
    },
    {
-    "n": 276,
-    "sha": "3442af158783de7673ad1a91c54c3fc3"
+    "n": 292,
+    "sha": "b17c0d6c5f0374d2caaeba01b54cadd5"
    }
   ],
   "centerUniforms": {

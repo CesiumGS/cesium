@@ -9,6 +9,7 @@ import {
   utm,
   verticalExaggerationEdge,
 } from "../packages/core/src/georeference/index.ts";
+import { fromFixParts } from "../packages/core/src/transform/centerTerm.ts";
 import {
   clearCompileCache,
   compileRoute,
@@ -120,12 +121,12 @@ function centerValue(
   record: Float32Array,
   values: Record<string, number>,
 ): number[] {
-  const { outHi, outLo } = c.perDrawLayout.fields;
+  const { out } = c.perDrawLayout.fields;
   return [0, 1, 2].map((a) => {
-    let v = record[outHi! + a]! + record[outLo! + a]!;
+    let v = fromFixParts(record, out! + 4 * a);
     for (const key of c.separableParams) {
       const g = c.perDrawLayout.fields[`outG:${key}`]!;
-      v += values[key]! * (record[g + a]! + record[g + 4 + a]!);
+      v += values[key]! * fromFixParts(record, g + 4 * a);
     }
     return v;
   });
@@ -245,12 +246,11 @@ describe("layouts", () => {
       expect(c.perDrawLayout.floats % 4).toBe(0);
       expect(c.uniformsLayout.floats % 4).toBe(0);
       const draw = c.perDrawLayout.fields;
-      expect(draw.outHi! % 4).toBe(0);
-      expect(draw.outLo! % 4).toBe(0);
+      expect(draw.out! % 4).toBe(0);
       const offsets = Object.values(draw);
       expect(new Set(offsets).size).toBe(offsets.length);
       expect(Math.max(...offsets)).toBeLessThan(c.perDrawLayout.floats);
-      expect(c.uniformsLayout.fields.eyeHi! % 4).toBe(0);
+      expect(c.uniformsLayout.fields.eye! % 4).toBe(0);
       expect(Math.max(...Object.values(c.uniformsLayout.fields))).toBeLessThan(
         c.uniformsLayout.floats,
       );
@@ -267,6 +267,9 @@ describe("layouts", () => {
     ]);
     expect(c.uniformsLayout.fields).toHaveProperty(
       "param:verticalExaggeration.factor",
+    );
+    expect(c.uniformsLayout.fields).toHaveProperty(
+      "paramParts:verticalExaggeration.factor",
     );
     expect(c.perDrawLayout.fields).toHaveProperty(
       "outG:verticalExaggeration.factor",
@@ -334,7 +337,7 @@ describe("layouts", () => {
 });
 
 describe("float64 center constants", () => {
-  it("carry the route's value at the center, in hi and lo", () => {
+  it("carry the route's value at the center, as the center term's parts", () => {
     const { route } = exaggerationRoute();
     const c = compiled(route);
     for (const center of [
@@ -408,16 +411,13 @@ describe("float64 center constants", () => {
     const uniforms = c.fillUniforms(route, undefined, eye);
     expect(uniforms).toHaveLength(c.uniformsLayout.floats);
     const {
-      eyeHi,
-      eyeLo,
+      eye: eyeAt,
       affine0,
       ["param:verticalExaggeration.factor"]: p,
+      ["paramParts:verticalExaggeration.factor"]: parts,
     } = c.uniformsLayout.fields;
     for (let a = 0; a < 3; a++) {
-      expect(uniforms[eyeHi! + a]! + uniforms[eyeLo! + a]!).toBeCloseTo(
-        eye[a]!,
-        6,
-      );
+      expect(fromFixParts(uniforms, eyeAt! + 4 * a)).toBeCloseTo(eye[a]!, 12);
     }
     const m = (route.steps[0] as { matrix: Float64Array }).matrix;
     for (let col = 0; col < 3; col++) {
@@ -428,7 +428,8 @@ describe("float64 center constants", () => {
         );
       }
     }
-    expect(uniforms[p!]! + uniforms[p! + 1]!).toBeCloseTo(6, 10);
+    expect(uniforms[p!]).toBe(6);
+    expect(fromFixParts(uniforms, parts!)).toBe(6);
   });
 });
 

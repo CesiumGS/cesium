@@ -3,8 +3,8 @@
 // built-in to the world, as in the golden fixtures, `test/transformGolden.test.ts`)
 // is compiled with exact normals. A kernel runs `tgRoute` at offsets from a
 // draw center and writes the position, relative to an eye at the route's
-// image of the center, the center term alone (`tgCenter`, the df64 sums of the
-// center constants and the separable parameters, which should be 0 there), and
+// image of the center, the center term alone (`tgCenter`, the integer sums of
+// the center constants and the separable parameters, which should be 0 there), and
 // the Jacobian's three columns. The change from the center is the position
 // minus the center term: the float32 work of the residual rules. The WebGPU suite (`bench/irWgsl.ts`) runs a compute
 // kernel around `CompiledRoute.wgsl`, and the WebGL 2 suite (`bench/irGlsl.ts`)
@@ -63,7 +63,7 @@ export interface RouteCase {
    * bound is relative to how far the vertex moved.
    */
   readonly position: Bound;
-  /** The center term (`tgCenter`, in `units`): its scale is |F(c)|, the size of what the df64 sums cancel. */
+  /** The center term (`tgCenter`, in `units`): its scale is |F(c)|, the size of what the sums cancel. */
   readonly center: Bound;
   /** The Jacobian's entries: their scale is the largest entry of J there. */
   readonly jacobian: Bound;
@@ -96,15 +96,6 @@ export const CORRIDOR_CHANGE_M = 1e-4;
 export const CORRIDOR_DRAWN_M = 1e-4;
 
 /**
- * The corridor's center term, in meters, absolute. `CENTER` would allow
- * 2 × 10⁻⁷ of |F(c)|, about 3 × 10⁻⁴ m at a station 1.5 km out, more than
- * the baseline. Measured on an Apple M2 (2026-11-22): at most 3.9 × 10⁻⁵ m on
- * WebGL 2 (GLSL's plain `(hi - eyeHi) + (lo - eyeLo)`), less on WebGPU, so
- * 10⁻⁴ m holds with room.
- */
-export const CORRIDOR_CENTER: Bound = { abs: 1e-4, rel: 0 };
-
-/**
  * float32 on changes: a few hundred ulps of the vertex's own movement, for
  * the residual rules' helpers and the GPU's transcendental built-ins, which
  * WebGPU and GLSL ES leave a few ulps loose each. Measured on an Apple M2
@@ -112,22 +103,20 @@ export const CORRIDOR_CENTER: Bound = { abs: 1e-4, rel: 0 };
  */
 export const POSITION: Bound = { abs: 0, rel: 4e-5 };
 /**
- * The center term, measured and not designed. On paper it is df64, about
- * 2⁻⁴⁸ of |F(c)|. On an Apple M2 (Metal, 2026-11-22) it keeps about float32 of
- * |F(c)|: Dawn and ANGLE compile with relaxed math there, which reassociates
- * the sums and folds df64's error terms (docs/design/risks.md; the engine's
- * positions subtract their highs as integers for that reason,
- * `SplitPosition.difference` in shaders/common.slang, and a route's center
- * doesn't yet). In WGSL that hits a route with
- * separable parameters (`tgCenter`'s df64 sum: 0.24 m at the Earth's
- * surface for verticalExaggeration, 0.29 m for flatten), and in GLSL for
- * every route (also the plain `(hi - eyeHi) + (lo - eyeLo)`: 3.9 × 10⁻⁵ m on the
- * corridor 1.5 km from the origin). The worst is 7.8 × 10⁻⁸ of |F(c)|
- * (velocityModel); the bound is 2 × 10⁻⁷ of it. The change from the center, which the
- * draws' offsets ride on, is held apart (`POSITION`). The corridor cases take
- * `CORRIDOR_CENTER` instead, in meters.
+ * The center term, in the output's units, absolute (CS-921). The shader sums
+ * its parts as integers (centerTerm.ts), so relaxed math can't drop the low
+ * parts: the GPU's own error is the float32 rounding of the fraction and the
+ * rests, under 2 × 10⁻⁸ in a Node emulation of the helpers. What is left is
+ * the CPU's: the float64 derivative G(c) of a separable route, a difference
+ * of two values as large as |F(c)|, times the parameter (flatten's 150 m).
+ * Measured on an Apple M2 (2026-11-22), the same on WebGPU and WebGL 2: at
+ * most 6.6 × 10⁻⁸ m (flatten), and 0 to 6 × 10⁻⁸ m for the separable routes
+ * at the Earth's surface, which the df64 form missed by 0.08 to 0.29 m.
+ * CS-54's bound was 2 × 10⁻⁷ of |F(c)|, at least 4 × 10⁻⁷ for every case
+ * (the smallest |F(c)| is 2.06) and 10⁻⁴ m for the corridor; this one is
+ * tighter for all of them.
  */
-export const CENTER: Bound = { abs: 0, rel: 2e-7 };
+export const CENTER: Bound = { abs: 1e-7, rel: 0 };
 /** float32 on J's entries, against the largest: measured at most 3.5 × 10⁻⁷ of it. */
 export const JACOBIAN: Bound = { abs: 0, rel: 2e-6 };
 

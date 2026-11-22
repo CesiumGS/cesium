@@ -1,36 +1,36 @@
 {
  "exact": {
   "wgsl": {
-   "canonical": "a6f3496595bb570b45cfb220b56c8b68",
-   "canonicalLength": 65935
+   "canonical": "9ae4e9ca42274f5ec91758f3d190bb98",
+   "canonicalLength": 66718
   },
   "positionWgsl": {
-   "canonical": "2c242d6ee52afc74e9a3527b23aef569",
-   "canonicalLength": 15497
+   "canonical": "acb7dfd3bbd1cbc33239c1159ec8dd3e",
+   "canonicalLength": 16268
   },
   "centerConstantsWgsl": {
-   "canonical": "ba33ffdff48135d5b5e972325b6caf18",
-   "canonicalLength": 83906
+   "canonical": "66f41d7b723517f90f66e0bfd8126d24",
+   "canonicalLength": 84826
   },
   "uniformsLayout": {
-   "floats": 40,
+   "floats": 48,
    "fields": {
-    "eyeHi": 0,
-    "eyeLo": 4,
-    "affine0": 8,
-    "s0.v20": 20,
-    "s0.v21": 21,
-    "param:verticalExaggeration.factor": 22,
-    "s0.j24": 24,
-    "s0.j25": 25,
-    "affine2": 28
+    "eye": 0,
+    "affine0": 12,
+    "s0.v24": 24,
+    "s0.v25": 25,
+    "param:verticalExaggeration.factor": 26,
+    "s0.j27": 27,
+    "s0.j28": 28,
+    "affine2": 32,
+    "paramParts:verticalExaggeration.factor": 44
    }
   },
   "perDrawLayout": {
-   "floats": 464,
+   "floats": 472,
    "fields": {
-    "n": 431,
-    "sha": "95d43b6dc43449d78b01e0bc86b4bb66"
+    "n": 430,
+    "sha": "1555f7414588093230315073fd4b13d7"
    }
   },
   "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
@@ -52,15 +52,15 @@
    "verticalExaggeration.baseHeight": 0,
    "verticalExaggeration.band": 1800
   },
-  "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, -0.14780941605567932, 0.9890158772468567, 0, 0, -0.7174067497253418, -0.10721715539693832, 0.6883545517921448, 0, 0.6807935833930969, 0.10174528509378433, 0.7253744006156921, 0, 3600, 9, 10, 0, 3600, 9, 0, 0, 0.8775825500488281, 0.4794255495071411, 0, 0, -0.4794255495071411, 0.8775825500488281, 0, 0, 0, 0, 1, 0],
+  "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, -0.14780941605567932, 0.9890158772468567, 0, 0, -0.7174067497253418, -0.10721715539693832, 0.6883545517921448, 0, 0.6807935833930969, 0.10174528509378433, 0.7253744006156921, 0, 3600, 9, 10, 3600, 9, 0, 0, 0, 0.8775825500488281, 0.4794255495071411, 0, 0, -0.4794255495071411, 0.8775825500488281, 0, 0, 0, 0, 1, 0, 0, 10, 0, 0],
   "records": [
    {
-    "n": 464,
-    "sha": "a967e59f9d1bf0d4b646ea9a3dfbe28e"
+    "n": 472,
+    "sha": "b425d9c7b7ef05bb2cd1fe6868b00a87"
    },
    {
-    "n": 464,
-    "sha": "d254458a00642ffda398c719d2336052"
+    "n": 472,
+    "sha": "3a45aa11b1de2dcccfb7dd21fb23d8fb"
    }
   ],
   "centerUniforms": {
@@ -71,36 +71,36 @@
  },
  "linear": {
   "wgsl": {
-   "canonical": "a6f3496595bb570b45cfb220b56c8b68",
-   "canonicalLength": 65935
+   "canonical": "9ae4e9ca42274f5ec91758f3d190bb98",
+   "canonicalLength": 66718
   },
   "positionWgsl": {
-   "canonical": "2c242d6ee52afc74e9a3527b23aef569",
-   "canonicalLength": 15497
+   "canonical": "acb7dfd3bbd1cbc33239c1159ec8dd3e",
+   "canonicalLength": 16268
   },
   "centerConstantsWgsl": {
-   "canonical": "ba33ffdff48135d5b5e972325b6caf18",
-   "canonicalLength": 83906
+   "canonical": "66f41d7b723517f90f66e0bfd8126d24",
+   "canonicalLength": 84826
   },
   "uniformsLayout": {
-   "floats": 40,
+   "floats": 48,
    "fields": {
-    "eyeHi": 0,
-    "eyeLo": 4,
-    "affine0": 8,
-    "s0.v20": 20,
-    "s0.v21": 21,
-    "param:verticalExaggeration.factor": 22,
-    "s0.j24": 24,
-    "s0.j25": 25,
-    "affine2": 28
+    "eye": 0,
+    "affine0": 12,
+    "s0.v24": 24,
+    "s0.v25": 25,
+    "param:verticalExaggeration.factor": 26,
+    "s0.j27": 27,
+    "s0.j28": 28,
+    "affine2": 32,
+    "paramParts:verticalExaggeration.factor": 44
    }
   },
   "perDrawLayout": {
-   "floats": 464,
+   "floats": 472,
    "fields": {
-    "n": 431,
-    "sha": "95d43b6dc43449d78b01e0bc86b4bb66"
+    "n": 430,
+    "sha": "1555f7414588093230315073fd4b13d7"
    }
   },
   "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
@@ -122,15 +122,15 @@
    "verticalExaggeration.baseHeight": 0,
    "verticalExaggeration.band": 1800
   },
-  "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, -0.14780941605567932, 0.9890158772468567, 0, 0, -0.7174067497253418, -0.10721715539693832, 0.6883545517921448, 0, 0.6807935833930969, 0.10174528509378433, 0.7253744006156921, 0, 3600, 9, 10, 0, 3600, 9, 0, 0, 0.8775825500488281, 0.4794255495071411, 0, 0, -0.4794255495071411, 0.8775825500488281, 0, 0, 0, 0, 1, 0],
+  "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, -0.14780941605567932, 0.9890158772468567, 0, 0, -0.7174067497253418, -0.10721715539693832, 0.6883545517921448, 0, 0.6807935833930969, 0.10174528509378433, 0.7253744006156921, 0, 3600, 9, 10, 3600, 9, 0, 0, 0, 0.8775825500488281, 0.4794255495071411, 0, 0, -0.4794255495071411, 0.8775825500488281, 0, 0, 0, 0, 1, 0, 0, 10, 0, 0],
   "records": [
    {
-    "n": 464,
-    "sha": "a967e59f9d1bf0d4b646ea9a3dfbe28e"
+    "n": 472,
+    "sha": "b425d9c7b7ef05bb2cd1fe6868b00a87"
    },
    {
-    "n": 464,
-    "sha": "d254458a00642ffda398c719d2336052"
+    "n": 472,
+    "sha": "3a45aa11b1de2dcccfb7dd21fb23d8fb"
    }
   ],
   "centerUniforms": {
@@ -141,36 +141,36 @@
  },
  "auto": {
   "wgsl": {
-   "canonical": "a6f3496595bb570b45cfb220b56c8b68",
-   "canonicalLength": 65935
+   "canonical": "9ae4e9ca42274f5ec91758f3d190bb98",
+   "canonicalLength": 66718
   },
   "positionWgsl": {
-   "canonical": "2c242d6ee52afc74e9a3527b23aef569",
-   "canonicalLength": 15497
+   "canonical": "acb7dfd3bbd1cbc33239c1159ec8dd3e",
+   "canonicalLength": 16268
   },
   "centerConstantsWgsl": {
-   "canonical": "ba33ffdff48135d5b5e972325b6caf18",
-   "canonicalLength": 83906
+   "canonical": "66f41d7b723517f90f66e0bfd8126d24",
+   "canonicalLength": 84826
   },
   "uniformsLayout": {
-   "floats": 40,
+   "floats": 48,
    "fields": {
-    "eyeHi": 0,
-    "eyeLo": 4,
-    "affine0": 8,
-    "s0.v20": 20,
-    "s0.v21": 21,
-    "param:verticalExaggeration.factor": 22,
-    "s0.j24": 24,
-    "s0.j25": 25,
-    "affine2": 28
+    "eye": 0,
+    "affine0": 12,
+    "s0.v24": 24,
+    "s0.v25": 25,
+    "param:verticalExaggeration.factor": 26,
+    "s0.j27": 27,
+    "s0.j28": 28,
+    "affine2": 32,
+    "paramParts:verticalExaggeration.factor": 44
    }
   },
   "perDrawLayout": {
-   "floats": 464,
+   "floats": 472,
    "fields": {
-    "n": 431,
-    "sha": "95d43b6dc43449d78b01e0bc86b4bb66"
+    "n": 430,
+    "sha": "1555f7414588093230315073fd4b13d7"
    }
   },
   "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
@@ -192,15 +192,15 @@
    "verticalExaggeration.baseHeight": 0,
    "verticalExaggeration.band": 1800
   },
-  "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, -0.14780941605567932, 0.9890158772468567, 0, 0, -0.7174067497253418, -0.10721715539693832, 0.6883545517921448, 0, 0.6807935833930969, 0.10174528509378433, 0.7253744006156921, 0, 3600, 9, 10, 0, 3600, 9, 0, 0, 0.8775825500488281, 0.4794255495071411, 0, 0, -0.4794255495071411, 0.8775825500488281, 0, 0, 0, 0, 1, 0],
+  "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, -0.14780941605567932, 0.9890158772468567, 0, 0, -0.7174067497253418, -0.10721715539693832, 0.6883545517921448, 0, 0.6807935833930969, 0.10174528509378433, 0.7253744006156921, 0, 3600, 9, 10, 3600, 9, 0, 0, 0, 0.8775825500488281, 0.4794255495071411, 0, 0, -0.4794255495071411, 0.8775825500488281, 0, 0, 0, 0, 1, 0, 0, 10, 0, 0],
   "records": [
    {
-    "n": 464,
-    "sha": "a967e59f9d1bf0d4b646ea9a3dfbe28e"
+    "n": 472,
+    "sha": "b425d9c7b7ef05bb2cd1fe6868b00a87"
    },
    {
-    "n": 464,
-    "sha": "d254458a00642ffda398c719d2336052"
+    "n": 472,
+    "sha": "3a45aa11b1de2dcccfb7dd21fb23d8fb"
    }
   ],
   "centerUniforms": {
@@ -211,34 +211,34 @@
  },
  "none": {
   "wgsl": {
-   "canonical": "968e8c6817546d67e316e3e9a1070555",
-   "canonicalLength": 13893
+   "canonical": "9d1f13d0d02ceb6a5a74e6d17bcc0327",
+   "canonicalLength": 14659
   },
   "positionWgsl": {
-   "canonical": "c8d4c2bb9a72a0cf9d51155ce41308ad",
-   "canonicalLength": 14236
+   "canonical": "e633b07bdb7c09dcb1c8b460382adb86",
+   "canonicalLength": 15002
   },
   "centerConstantsWgsl": {
-   "canonical": "87ee5bc4ad8426b2cef0318eafa66a3c",
-   "canonicalLength": 23384
+   "canonical": "b9cb3034bd4cc10371ef9e552fee6828",
+   "canonicalLength": 24304
   },
   "uniformsLayout": {
-   "floats": 36,
+   "floats": 44,
    "fields": {
-    "eyeHi": 0,
-    "eyeLo": 4,
-    "affine0": 8,
-    "s0.v20": 20,
-    "s0.v21": 21,
-    "param:verticalExaggeration.factor": 22,
-    "affine2": 24
+    "eye": 0,
+    "affine0": 12,
+    "s0.v24": 24,
+    "s0.v25": 25,
+    "param:verticalExaggeration.factor": 26,
+    "affine2": 28,
+    "paramParts:verticalExaggeration.factor": 40
    }
   },
   "perDrawLayout": {
-   "floats": 112,
+   "floats": 120,
    "fields": {
-    "n": 92,
-    "sha": "90262d4306c2a3b8b6e2843c25ee101e"
+    "n": 91,
+    "sha": "2da9416135418d0f48800040f835faac"
    }
   },
   "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
@@ -260,15 +260,15 @@
    "verticalExaggeration.baseHeight": 0,
    "verticalExaggeration.band": 1800
   },
-  "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, -0.14780941605567932, 0.9890158772468567, 0, 0, -0.7174067497253418, -0.10721715539693832, 0.6883545517921448, 0, 0.6807935833930969, 0.10174528509378433, 0.7253744006156921, 0, 3600, 9, 10, 0, 0.8775825500488281, 0.4794255495071411, 0, 0, -0.4794255495071411, 0.8775825500488281, 0, 0, 0, 0, 1, 0],
+  "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, -0.14780941605567932, 0.9890158772468567, 0, 0, -0.7174067497253418, -0.10721715539693832, 0.6883545517921448, 0, 0.6807935833930969, 0.10174528509378433, 0.7253744006156921, 0, 3600, 9, 10, 0, 0.8775825500488281, 0.4794255495071411, 0, 0, -0.4794255495071411, 0.8775825500488281, 0, 0, 0, 0, 1, 0, 0, 10, 0, 0],
   "records": [
    {
-    "n": 112,
-    "sha": "2371e2b5fc79f82f35d1f4ff98604cdf"
+    "n": 120,
+    "sha": "f30a692c80262001749540a2828596ba"
    },
    {
-    "n": 112,
-    "sha": "f616ce50eed2e92a3833628a48ca07c0"
+    "n": 120,
+    "sha": "4b7e1d7723bb718102a4786a4e0e4ce4"
    }
   ],
   "centerUniforms": {

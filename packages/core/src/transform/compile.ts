@@ -3,18 +3,20 @@
 // float64 path for the data it reads. Vertices are offsets δ from a draw's
 // center c (the content's local frame), so the route is
 //   F(c + δ) = F(c) + [F(c + δ) - F(c)],
-// the first term per draw in hi/lo float32 (from float64 on the CPU, or a
-// df64 compute pass), the second per vertex in float32 and relative to
+// the first term per draw as integer and fixed-point float32 parts
+// (centerTerm.ts; from float64 on the CPU, or a df64 compute pass), the second per vertex in float32 and relative to
 // itself, by the residual rules of residual.ts: each curvilinear step's IR is
 // evaluated as (center value, change) pairs, so a position 6.4e6 m from the
 // origin or a UTM coordinate keeps its millimeters. Affine runs collapse to
 // a float32 3×3 on δ (the translation is in F(c)); the output is
 // `F(c) - eye + residual`, relative to the camera as the engine's RTC is.
 //
-// Per-draw data (`DrawCenter`): F(c) as hi and lo, the center values the
-// rules read, and the derivative of each of those with respect to the
-// separable parameters. Per-view data (`RouteUniforms`): the eye as hi and
-// lo, the affine 3×3s, the parameter values, and values derived from the
+// Per-draw data (`DrawCenter`): F(c) as the center term's parts
+// (centerTerm.ts: whole units and a fixed-point rest, which the shader sums
+// as integers, so relaxed math can't drop the low parts), the center values
+// the rules read, and the derivative of each of those with respect to the
+// separable parameters. Per-view data (`RouteUniforms`): the eye as parts,
+// the affine 3×3s, the parameter values, and values derived from the
 // parameters alone (float64 on the CPU). A parameter that enters affinely at
 // the last curvilinear step and declares itself `separable` is a uniform for
 // good: the shader forms the center values from it, with no per-frame work.
@@ -53,12 +55,12 @@ import { scalarize } from "../ir/scalarize.ts";
 import type { Program } from "../ir/types.ts";
 import { hessianProgram, jacobianProgram } from "./ad.ts";
 import {
-  DF64_CORE_GLSL,
-  DF64_CORE_WGSL,
-  DF64_WGSL,
-  emitDf64,
-  splitDouble,
-} from "./df64Wgsl.ts";
+  CENTER_PARTS_WGSL,
+  CENTER_TERM_GLSL,
+  CENTER_TERM_WGSL,
+  fixParts,
+} from "./centerTerm.ts";
+import { DF64_WGSL, emitDf64, splitDouble } from "./df64Wgsl.ts";
 import { evaluate } from "./evaluate.ts";
 import type { CurvilinearSpec } from "./graph.ts";
 import { parseTransform } from "./parse.ts";
@@ -177,9 +179,9 @@ export interface CompiledRoute {
   readonly positionGlsl: string;
   /** The prefix before every name the vertex modules declare ("" by default). */
   readonly prefix: string;
-  /** The per-view uniforms (`RouteUniforms`, vec4f members `v0…`): `eyeHi`, `eyeLo`, `affine<i>` (3 columns of vec4), `param:<key>` (a df64 pair for separable parameters), derived values. */
+  /** The per-view uniforms (`RouteUniforms`, vec4f members `v0…`): `eye` (one vec4 an axis, as the center term's parts, centerTerm.ts), `affine<i>` (3 columns of vec4), `param:<key>`, `paramParts:<key>` (a separable parameter as parts), derived values. */
   readonly uniformsLayout: RecordLayout;
-  /** The per-draw record (`DrawCenter`, vec4f members `v0…`): `outHi`, `outLo`, `outG:<key>` (hi then lo), and each center value as `s<step>.<v|j><n>` (then its derivatives). */
+  /** The per-draw record (`DrawCenter`, vec4f members `v0…`): `out` and `outG:<key>` (F(c) and its derivatives, one vec4 an axis, as the center term's parts), and each center value as `s<step>.<v|j><n>` (then its derivatives). */
   readonly perDrawLayout: RecordLayout;
   /** Parameters (as `<id>.<name>`) whose change needs the center constants recomputed. */
   readonly dynamicParams: readonly string[];
@@ -215,7 +217,7 @@ export interface CompiledRoute {
   ): Float32Array;
   /**
    * One draw's record, in float64: the route's value at the draw center
-   * (local coordinates) as hi and lo, and the center values. `route`
+   * (local coordinates) as the center term's parts, and the center values. `route`
    * defaults to the one `compileRoute` was given.
    */
   centerConstants(
@@ -335,11 +337,14 @@ interface Plan {
   readonly links: readonly Link[];
   /** Separable parameters kept as uniforms: local names, at the last curvilinear step. */
   readonly separable: readonly string[];
-  readonly eyeHi: number;
-  readonly eyeLo: number;
-  readonly outHi: number;
-  readonly outLo: number;
+  /** The eye, as the center term's parts (centerTerm.ts): one vec4 per axis. */
+  readonly eye: number;
+  /** F(c), the route's value at the draw center (separable parameters at 0), the same way. */
+  readonly out: number;
+  /** Each separable parameter's derivative of F(c), the same way. */
   readonly outG: ReadonlyMap<string, number>;
+  /** Each separable parameter (by key) as the center term's parts: one vec4. */
+  readonly paramParts: ReadonlyMap<string, number>;
 }
 
 const parsed = new Map<string, Program>();
@@ -584,15 +589,13 @@ function buildPlan(
   const uniforms = new Records();
   const draw = new Records();
   const paramOffsets = new Map<string, number>();
-  const eyeHi = uniforms.alloc(4, "eyeHi", 4);
-  const eyeLo = uniforms.alloc(4, "eyeLo", 4);
-  const outHi = draw.alloc(4, "outHi", 4);
-  const outLo = draw.alloc(4, "outLo", 4);
+  const eye = uniforms.alloc(12, "eye", 4);
+  const out = draw.alloc(12, "out", 4);
   const last = infos[infos.length - 1];
   const sLocals = [...separable].sort();
   const outG = new Map<string, number>();
   for (const name of sLocals) {
-    outG.set(name, draw.alloc(8, `outG:${last!.keys.get(name)}`, 4));
+    outG.set(name, draw.alloc(12, `outG:${last!.keys.get(name)}`, 4));
   }
 
   const links: Link[] = [];
@@ -616,9 +619,7 @@ function buildPlan(
         const key = info.keys.get(name)!;
         let offset = paramOffsets.get(key);
         if (offset === undefined) {
-          // A separable parameter is a df64 pair: it scales a center value as large as the route's output.
-          const wide = info === last && separable.has(name);
-          offset = uniforms.alloc(wide ? 2 : 1, `param:${key}`);
+          offset = uniforms.alloc(1, `param:${key}`);
           paramOffsets.set(key, offset);
         }
         return slot("u", offset);
@@ -659,11 +660,15 @@ function buildPlan(
   if (demote.size > 0) {
     return demote;
   }
+  // A separable parameter scales a center value as large as the route's
+  // output: the center term reads it as parts, the residual rules as a float.
+  const paramParts = new Map<string, number>();
   for (const name of sLocals) {
     const key = last!.keys.get(name)!;
     if (!paramOffsets.has(key)) {
-      paramOffsets.set(key, uniforms.alloc(2, `param:${key}`));
+      paramOffsets.set(key, uniforms.alloc(1, `param:${key}`));
     }
+    paramParts.set(key, uniforms.alloc(4, `paramParts:${key}`, 4));
   }
   return {
     uniforms,
@@ -671,11 +676,10 @@ function buildPlan(
     paramOffsets,
     links,
     separable: sLocals,
-    eyeHi,
-    eyeLo,
-    outHi,
-    outLo,
+    eye,
+    out,
     outG,
+    paramParts,
   };
 }
 
@@ -820,9 +824,7 @@ function assemble(
     const steps = route.steps;
     const values = paramValues(route);
     for (let a = 0; a < 3; a++) {
-      const [hi, lo] = splitDouble(eye?.[a] ?? 0);
-      buffer[plan.eyeHi + a] = hi;
-      buffer[plan.eyeLo + a] = lo;
+      fixParts(eye?.[a] ?? 0, buffer, plan.eye + 4 * a);
     }
     for (const link of plan.links) {
       if (link.kind === "affine") {
@@ -836,11 +838,10 @@ function assemble(
       }
     }
     for (const [k, offset] of plan.paramOffsets) {
-      const [hi, lo] = splitDouble(values[k]!);
-      buffer[offset] = hi;
-      if (separableKeys.includes(k)) {
-        buffer[offset + 1] = lo;
-      }
+      buffer[offset] = values[k]!;
+    }
+    for (const [k, offset] of plan.paramParts) {
+      fixParts(values[k]!, buffer, offset);
     }
     for (const link of plan.links) {
       if (link.kind !== "curvilinear") {
@@ -922,16 +923,12 @@ function assemble(
       }
     }
     for (let a = 0; a < 3; a++) {
-      const [hi, lo] = splitDouble(x[a]!);
-      record[plan.outHi + a] = hi;
-      record[plan.outLo + a] = lo;
+      fixParts(x[a]!, record, plan.out + 4 * a);
     }
     for (const [name, offset] of plan.outG) {
       const v = g.get(name);
       for (let a = 0; a < 3; a++) {
-        const [hi, lo] = splitDouble(v?.[a] ?? 0);
-        record[offset + a] = hi;
-        record[offset + 4 + a] = lo;
+        fixParts(v?.[a] ?? 0, record, offset + 4 * a);
       }
     }
     return record;
@@ -1008,6 +1005,25 @@ function assemble(
   };
 }
 
+/**
+ * The center term's axis `a` (the same text in WGSL and GLSL ES): F(c) less
+ * the eye, plus each separable parameter times its derivative, summed as
+ * integers by centerTerm.ts's helpers.
+ */
+function centerSum(
+  plan: Plan,
+  last: CurvilinearInfo | undefined,
+  a: number,
+): string {
+  const vec = (base: string, offset: number) => `${base}.v${(offset >> 2) + a}`;
+  let sum = `tg_diff(${vec("c", plan.out)}, ${vec("u", plan.eye)})`;
+  for (const name of plan.separable) {
+    const s = plan.paramParts.get(last!.keys.get(name)!)!;
+    sum = `tg_addMul(${sum}, u.v${s >> 2}, ${vec("c", plan.outG.get(name)!)})`;
+  }
+  return `tg_value(${sum})`;
+}
+
 function generateWgsl(
   plan: Plan,
   last: CurvilinearInfo | undefined,
@@ -1028,25 +1044,10 @@ function generateWgsl(
   ];
   const linear = (offset: number) =>
     `mat3x3f(${slot3("u", offset)}, ${slot3("u", offset + 4)}, ${slot3("u", offset + 8)})`;
-  out.push(DF64_CORE_WGSL);
-  const component = (a: number) => {
-    const hi = slot("c", plan.outHi + a);
-    const lo = slot("c", plan.outLo + a);
-    const eyeHi = slot("u", plan.eyeHi + a);
-    const eyeLo = slot("u", plan.eyeLo + a);
-    if (plan.separable.length === 0) {
-      return `((${hi} - ${eyeHi}) + (${lo} - ${eyeLo}))`;
-    }
-    let value = `df_sub(vec2f(${hi}, ${lo}), vec2f(${eyeHi}, ${eyeLo}))`;
-    for (const name of plan.separable) {
-      const s = plan.paramOffsets.get(last!.keys.get(name)!)!;
-      const g = plan.outG.get(name)!;
-      value = `df_add(${value}, df_mul(vec2f(${slot("u", s)}, ${slot("u", s + 1)}), vec2f(${slot("c", g + a)}, ${slot("c", g + 4 + a)})))`;
-    }
-    return `${value}.x`;
-  };
+  out.push(CENTER_TERM_WGSL);
+  const component = (a: number) => centerSum(plan, last, a);
   out.push(
-    `// The route's value at the draw center minus the eye, in float32 from df64 sums.`,
+    `// The route's value at the draw center minus the eye, in float32 from integer sums.`,
     `fn tgCenter(c: DrawCenter, u: RouteUniforms) -> vec3f {`,
     `  return vec3f(${component(0)}, ${component(1)}, ${component(2)});`,
     `}`,
@@ -1206,28 +1207,13 @@ function generateGlsl(
     ...vec4s(uniformLayout.floats),
     `};`,
     RESIDUAL_GLSL,
-    DF64_CORE_GLSL,
+    CENTER_TERM_GLSL,
   ];
   const linear = (offset: number) =>
     `mat3(${slot3("u", offset)}, ${slot3("u", offset + 4)}, ${slot3("u", offset + 8)})`;
-  const component = (a: number) => {
-    const hi = slot("c", plan.outHi + a);
-    const lo = slot("c", plan.outLo + a);
-    const eyeHi = slot("u", plan.eyeHi + a);
-    const eyeLo = slot("u", plan.eyeLo + a);
-    if (plan.separable.length === 0) {
-      return `((${hi} - ${eyeHi}) + (${lo} - ${eyeLo}))`;
-    }
-    let value = `df_sub(vec2(${hi}, ${lo}), vec2(${eyeHi}, ${eyeLo}))`;
-    for (const name of plan.separable) {
-      const s = plan.paramOffsets.get(last!.keys.get(name)!)!;
-      const g = plan.outG.get(name)!;
-      value = `df_add(${value}, df_mul(vec2(${slot("u", s)}, ${slot("u", s + 1)}), vec2(${slot("c", g + a)}, ${slot("c", g + 4 + a)})))`;
-    }
-    return `${value}.x`;
-  };
+  const component = (a: number) => centerSum(plan, last, a);
   out.push(
-    `// The route's value at the draw center minus the eye, in float32 from df64 sums.`,
+    `// The route's value at the draw center minus the eye, in float32 from integer sums.`,
     `vec3 tgCenter(DrawCenter c, RouteUniforms u) {`,
     `  return vec3(${component(0)}, ${component(1)}, ${component(2)});`,
     `}`,
@@ -1421,6 +1407,7 @@ function centerShader(
 
   const out: string[] = [
     DF64_WGSL,
+    CENTER_PARTS_WGSL,
     `struct CenterUniforms {`,
     ...members(uniformFloats),
     `}`,
@@ -1571,18 +1558,20 @@ function centerShader(
     );
     main.push(`  }`);
   }
+  // The center term's values as its parts (centerTerm.ts), a vec4 an axis.
+  const parts = (offset: number, value: string) => {
+    main.push(`  {`, `    let p = tgc_parts(${value});`);
+    for (let e = 0; e < 4; e++) {
+      main.push(`    records[rb + ${offset + e}u] = p.${COMPONENT[e]};`);
+    }
+    main.push(`  }`);
+  };
   for (let a = 0; a < 3; a++) {
-    main.push(
-      `  records[rb + ${plan.outHi + a}u] = x${a}.x;`,
-      `  records[rb + ${plan.outLo + a}u] = x${a}.y;`,
-    );
+    parts(plan.out + 4 * a, `x${a}`);
   }
   for (const name of plan.separable) {
     for (let a = 0; a < 3; a++) {
-      main.push(
-        `  records[rb + ${plan.outG.get(name)! + a}u] = g_${name}_${a}.x;`,
-        `  records[rb + ${plan.outG.get(name)! + 4 + a}u] = g_${name}_${a}.y;`,
-      );
+      parts(plan.outG.get(name)! + 4 * a, `g_${name}_${a}`);
     }
   }
   main.push(`}`, ``);

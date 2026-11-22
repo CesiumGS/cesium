@@ -59,35 +59,35 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "d9916156c06692e73f0e637230dbd946",
-    "canonicalLength": 65747
+    "canonical": "152cb96dc97198b043a49de8a643caef",
+    "canonicalLength": 66522
    },
    "positionWgsl": {
-    "canonical": "08a6f1b03e1ad2b8336d7b168d6cf0af",
-    "canonicalLength": 15360
+    "canonical": "c6ecf083dea05d26eb3a2b07e8beaa28",
+    "canonicalLength": 16124
    },
    "centerConstantsWgsl": {
-    "canonical": "653f27bb005888db478b24b578e1e5b6",
-    "canonicalLength": 82723
+    "canonical": "0c6f5308595feb68472f01f50b32c69d",
+    "canonicalLength": 83643
    },
    "uniformsLayout": {
-    "floats": 28,
+    "floats": 36,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20,
-     "s0.v21": 21,
-     "param:verticalExaggeration.factor": 22,
-     "s0.j24": 24,
-     "s0.j25": 25
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "param:verticalExaggeration.factor": 26,
+     "s0.j27": 27,
+     "s0.j28": 28,
+     "paramParts:verticalExaggeration.factor": 32
     }
    },
    "perDrawLayout": {
-    "floats": 464,
+    "floats": 472,
     "fields": {
-     "n": 431,
-     "sha": "95d43b6dc43449d78b01e0bc86b4bb66"
+     "n": 430,
+     "sha": "1555f7414588093230315073fd4b13d7"
     }
    },
    "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
@@ -109,15 +109,15 @@
     "verticalExaggeration.baseHeight": 0,
     "verticalExaggeration.band": 1800
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3600, 2, 3, 0, 3600, 2, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3600, 2, 3, 3600, 2, 0, 0, 0, 0, 3, 0, 0],
    "records": [
     {
-     "n": 464,
-     "sha": "363de2f90f675941e8ddad7bfa63442b"
+     "n": 472,
+     "sha": "27baf65938742d9837e353ff9f76fc03"
     },
     {
-     "n": 464,
-     "sha": "e9819b7e82fe9b35e9b51622bc1312ba"
+     "n": 472,
+     "sha": "28899cabe90245ac36e05bbc91e7f37d"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, 9000, 0, 0, 0, 1800, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -125,35 +125,35 @@
   },
   "linear": {
    "wgsl": {
-    "canonical": "d9916156c06692e73f0e637230dbd946",
-    "canonicalLength": 65747
+    "canonical": "152cb96dc97198b043a49de8a643caef",
+    "canonicalLength": 66522
    },
    "positionWgsl": {
-    "canonical": "08a6f1b03e1ad2b8336d7b168d6cf0af",
-    "canonicalLength": 15360
+    "canonical": "c6ecf083dea05d26eb3a2b07e8beaa28",
+    "canonicalLength": 16124
    },
    "centerConstantsWgsl": {
-    "canonical": "653f27bb005888db478b24b578e1e5b6",
-    "canonicalLength": 82723
+    "canonical": "0c6f5308595feb68472f01f50b32c69d",
+    "canonicalLength": 83643
    },
    "uniformsLayout": {
-    "floats": 28,
+    "floats": 36,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20,
-     "s0.v21": 21,
-     "param:verticalExaggeration.factor": 22,
-     "s0.j24": 24,
-     "s0.j25": 25
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "param:verticalExaggeration.factor": 26,
+     "s0.j27": 27,
+     "s0.j28": 28,
+     "paramParts:verticalExaggeration.factor": 32
     }
    },
    "perDrawLayout": {
-    "floats": 464,
+    "floats": 472,
     "fields": {
-     "n": 431,
-     "sha": "95d43b6dc43449d78b01e0bc86b4bb66"
+     "n": 430,
+     "sha": "1555f7414588093230315073fd4b13d7"
     }
    },
    "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
@@ -175,15 +175,15 @@
     "verticalExaggeration.baseHeight": 0,
     "verticalExaggeration.band": 1800
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3600, 2, 3, 0, 3600, 2, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3600, 2, 3, 3600, 2, 0, 0, 0, 0, 3, 0, 0],
    "records": [
     {
-     "n": 464,
-     "sha": "363de2f90f675941e8ddad7bfa63442b"
+     "n": 472,
+     "sha": "27baf65938742d9837e353ff9f76fc03"
     },
     {
-     "n": 464,
-     "sha": "e9819b7e82fe9b35e9b51622bc1312ba"
+     "n": 472,
+     "sha": "28899cabe90245ac36e05bbc91e7f37d"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, 9000, 0, 0, 0, 1800, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -191,35 +191,35 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "d9916156c06692e73f0e637230dbd946",
-    "canonicalLength": 65747
+    "canonical": "152cb96dc97198b043a49de8a643caef",
+    "canonicalLength": 66522
    },
    "positionWgsl": {
-    "canonical": "08a6f1b03e1ad2b8336d7b168d6cf0af",
-    "canonicalLength": 15360
+    "canonical": "c6ecf083dea05d26eb3a2b07e8beaa28",
+    "canonicalLength": 16124
    },
    "centerConstantsWgsl": {
-    "canonical": "653f27bb005888db478b24b578e1e5b6",
-    "canonicalLength": 82723
+    "canonical": "0c6f5308595feb68472f01f50b32c69d",
+    "canonicalLength": 83643
    },
    "uniformsLayout": {
-    "floats": 28,
+    "floats": 36,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20,
-     "s0.v21": 21,
-     "param:verticalExaggeration.factor": 22,
-     "s0.j24": 24,
-     "s0.j25": 25
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "param:verticalExaggeration.factor": 26,
+     "s0.j27": 27,
+     "s0.j28": 28,
+     "paramParts:verticalExaggeration.factor": 32
     }
    },
    "perDrawLayout": {
-    "floats": 464,
+    "floats": 472,
     "fields": {
-     "n": 431,
-     "sha": "95d43b6dc43449d78b01e0bc86b4bb66"
+     "n": 430,
+     "sha": "1555f7414588093230315073fd4b13d7"
     }
    },
    "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
@@ -241,15 +241,15 @@
     "verticalExaggeration.baseHeight": 0,
     "verticalExaggeration.band": 1800
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3600, 2, 3, 0, 3600, 2, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3600, 2, 3, 3600, 2, 0, 0, 0, 0, 3, 0, 0],
    "records": [
     {
-     "n": 464,
-     "sha": "363de2f90f675941e8ddad7bfa63442b"
+     "n": 472,
+     "sha": "27baf65938742d9837e353ff9f76fc03"
     },
     {
-     "n": 464,
-     "sha": "e9819b7e82fe9b35e9b51622bc1312ba"
+     "n": 472,
+     "sha": "28899cabe90245ac36e05bbc91e7f37d"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, 9000, 0, 0, 0, 1800, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -257,33 +257,33 @@
   },
   "none": {
    "wgsl": {
-    "canonical": "532659d2d0315641c60b0752be4f2dc7",
-    "canonicalLength": 13805
+    "canonical": "d58e53c62bf11efeaf2c73b5b311a82b",
+    "canonicalLength": 14567
    },
    "positionWgsl": {
-    "canonical": "3f3d3ff5ef8da691a6642bee22addb07",
-    "canonicalLength": 14099
+    "canonical": "1936bc9a1eab8fb444b8e624bd17be97",
+    "canonicalLength": 14861
    },
    "centerConstantsWgsl": {
-    "canonical": "b6f8cfe6eb1916d664b487d703fbe049",
-    "canonicalLength": 22201
+    "canonical": "59f267fd21bdf969c7e6a0be0da28321",
+    "canonicalLength": 23121
    },
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 32,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20,
-     "s0.v21": 21,
-     "param:verticalExaggeration.factor": 22
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "param:verticalExaggeration.factor": 26,
+     "paramParts:verticalExaggeration.factor": 28
     }
    },
    "perDrawLayout": {
-    "floats": 112,
+    "floats": 120,
     "fields": {
-     "n": 92,
-     "sha": "90262d4306c2a3b8b6e2843c25ee101e"
+     "n": 91,
+     "sha": "2da9416135418d0f48800040f835faac"
     }
    },
    "dynamicParams": ["verticalExaggeration.ceiling", "verticalExaggeration.baseHeight", "verticalExaggeration.band"],
@@ -305,15 +305,15 @@
     "verticalExaggeration.baseHeight": 0,
     "verticalExaggeration.band": 1800
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3600, 2, 3, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 3600, 2, 3, 0, 0, 3, 0, 0],
    "records": [
     {
-     "n": 112,
-     "sha": "49fafd8016ded2c4f5debdbca7d9c55b"
+     "n": 120,
+     "sha": "e79d464e4aaf906bfe83514e8a317f1c"
     },
     {
-     "n": 112,
-     "sha": "20eaf7a89ec033a960ab92b6afa36f23"
+     "n": 120,
+     "sha": "28352cafa27ff46ef635523c3f69f9bd"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, 9000, 0, 0, 0, 1800, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

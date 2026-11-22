@@ -47,32 +47,32 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "3de8010be00b49d1223c0645e65e84c5",
-    "canonicalLength": 96715
+    "canonical": "e845a6e112044433fea9a272611b42d2",
+    "canonicalLength": 97491
    },
    "positionWgsl": {
-    "canonical": "a55774be3958b29e875f1f1f8f475116",
-    "canonicalLength": 22660
+    "canonical": "4bf84e319dd395a1f872db1e4e1d3a5f",
+    "canonicalLength": 23424
    },
    "centerConstantsWgsl": {
-    "canonical": "f6ed5b372bf3ca3f205cd56078d7870a",
-    "canonicalLength": 132298
+    "canonical": "466bcf5958db79bc80371fdc374fb5ee",
+    "canonicalLength": 133218
    },
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 32,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:flatten5.falloff": 20,
-     "param:flatten5.height": 21
+     "eye": 0,
+     "affine0": 12,
+     "param:flatten5.falloff": 24,
+     "param:flatten5.height": 25,
+     "paramParts:flatten5.height": 28
     }
    },
    "perDrawLayout": {
-    "floats": 700,
+    "floats": 708,
     "fields": {
-     "n": 667,
-     "sha": "d3311fe80b214c792f5e5a434ccaff6d"
+     "n": 666,
+     "sha": "009681c76ecdf4fa83a599aab55b76f5"
     }
    },
    "dynamicParams": ["flatten5.falloff"],
@@ -92,15 +92,15 @@
     "flatten5.height": 150,
     "flatten5.falloff": 4000
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4000, 150, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4000, 150, 0, 0, 0, 150, 0, 0],
    "records": [
     {
-     "n": 700,
-     "sha": "6bfc3ddbbc82c41938b44f788dc6466f"
+     "n": 708,
+     "sha": "038a031b4c4be9b608fbf2dc0e228c62"
     },
     {
-     "n": 700,
-     "sha": "0a1a9caf990318177fa99e79b7fc8f19"
+     "n": 708,
+     "sha": "42ccbc2e6ea45b40dfe6e0e4137f3b24"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 150, 0, 4000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -108,32 +108,32 @@
   },
   "linear": {
    "wgsl": {
-    "canonical": "3de8010be00b49d1223c0645e65e84c5",
-    "canonicalLength": 96715
+    "canonical": "e845a6e112044433fea9a272611b42d2",
+    "canonicalLength": 97491
    },
    "positionWgsl": {
-    "canonical": "a55774be3958b29e875f1f1f8f475116",
-    "canonicalLength": 22660
+    "canonical": "4bf84e319dd395a1f872db1e4e1d3a5f",
+    "canonicalLength": 23424
    },
    "centerConstantsWgsl": {
-    "canonical": "f6ed5b372bf3ca3f205cd56078d7870a",
-    "canonicalLength": 132298
+    "canonical": "466bcf5958db79bc80371fdc374fb5ee",
+    "canonicalLength": 133218
    },
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 32,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:flatten5.falloff": 20,
-     "param:flatten5.height": 21
+     "eye": 0,
+     "affine0": 12,
+     "param:flatten5.falloff": 24,
+     "param:flatten5.height": 25,
+     "paramParts:flatten5.height": 28
     }
    },
    "perDrawLayout": {
-    "floats": 700,
+    "floats": 708,
     "fields": {
-     "n": 667,
-     "sha": "d3311fe80b214c792f5e5a434ccaff6d"
+     "n": 666,
+     "sha": "009681c76ecdf4fa83a599aab55b76f5"
     }
    },
    "dynamicParams": ["flatten5.falloff"],
@@ -153,15 +153,15 @@
     "flatten5.height": 150,
     "flatten5.falloff": 4000
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4000, 150, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4000, 150, 0, 0, 0, 150, 0, 0],
    "records": [
     {
-     "n": 700,
-     "sha": "6bfc3ddbbc82c41938b44f788dc6466f"
+     "n": 708,
+     "sha": "038a031b4c4be9b608fbf2dc0e228c62"
     },
     {
-     "n": 700,
-     "sha": "0a1a9caf990318177fa99e79b7fc8f19"
+     "n": 708,
+     "sha": "42ccbc2e6ea45b40dfe6e0e4137f3b24"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 150, 0, 4000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -169,32 +169,32 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "3de8010be00b49d1223c0645e65e84c5",
-    "canonicalLength": 96715
+    "canonical": "e845a6e112044433fea9a272611b42d2",
+    "canonicalLength": 97491
    },
    "positionWgsl": {
-    "canonical": "a55774be3958b29e875f1f1f8f475116",
-    "canonicalLength": 22660
+    "canonical": "4bf84e319dd395a1f872db1e4e1d3a5f",
+    "canonicalLength": 23424
    },
    "centerConstantsWgsl": {
-    "canonical": "f6ed5b372bf3ca3f205cd56078d7870a",
-    "canonicalLength": 132298
+    "canonical": "466bcf5958db79bc80371fdc374fb5ee",
+    "canonicalLength": 133218
    },
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 32,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:flatten5.falloff": 20,
-     "param:flatten5.height": 21
+     "eye": 0,
+     "affine0": 12,
+     "param:flatten5.falloff": 24,
+     "param:flatten5.height": 25,
+     "paramParts:flatten5.height": 28
     }
    },
    "perDrawLayout": {
-    "floats": 700,
+    "floats": 708,
     "fields": {
-     "n": 667,
-     "sha": "d3311fe80b214c792f5e5a434ccaff6d"
+     "n": 666,
+     "sha": "009681c76ecdf4fa83a599aab55b76f5"
     }
    },
    "dynamicParams": ["flatten5.falloff"],
@@ -214,15 +214,15 @@
     "flatten5.height": 150,
     "flatten5.falloff": 4000
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4000, 150, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4000, 150, 0, 0, 0, 150, 0, 0],
    "records": [
     {
-     "n": 700,
-     "sha": "6bfc3ddbbc82c41938b44f788dc6466f"
+     "n": 708,
+     "sha": "038a031b4c4be9b608fbf2dc0e228c62"
     },
     {
-     "n": 700,
-     "sha": "0a1a9caf990318177fa99e79b7fc8f19"
+     "n": 708,
+     "sha": "42ccbc2e6ea45b40dfe6e0e4137f3b24"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 150, 0, 4000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -230,32 +230,32 @@
   },
   "none": {
    "wgsl": {
-    "canonical": "bc6355fadac18f57e9456c61316dbd30",
-    "canonicalLength": 20415
+    "canonical": "c8290c901133dc1a0561fec96cf4fe73",
+    "canonicalLength": 21177
    },
    "positionWgsl": {
-    "canonical": "903c31815430bdc45850b87f1d1d4ef0",
-    "canonicalLength": 20709
+    "canonical": "acb6bb4a13b122c8e243e10ad1d08ed9",
+    "canonicalLength": 21471
    },
    "centerConstantsWgsl": {
-    "canonical": "a32ca8fe6bb0093585aade055ca93a76",
-    "canonicalLength": 34022
+    "canonical": "03f7760b5561c841ec36b5aea4505072",
+    "canonicalLength": 34942
    },
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 32,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:flatten5.falloff": 20,
-     "param:flatten5.height": 21
+     "eye": 0,
+     "affine0": 12,
+     "param:flatten5.falloff": 24,
+     "param:flatten5.height": 25,
+     "paramParts:flatten5.height": 28
     }
    },
    "perDrawLayout": {
-    "floats": 164,
+    "floats": 172,
     "fields": {
-     "n": 146,
-     "sha": "2ce01ae345211ce4beee9aa20bd144f2"
+     "n": 145,
+     "sha": "e971b761fcfe8573c7cb0796d4e9dfb0"
     }
    },
    "dynamicParams": ["flatten5.falloff"],
@@ -275,15 +275,15 @@
     "flatten5.height": 150,
     "flatten5.falloff": 4000
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4000, 150, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 4000, 150, 0, 0, 0, 150, 0, 0],
    "records": [
     {
-     "n": 164,
-     "sha": "149301326df00e97d286d9fa876ad7fc"
+     "n": 172,
+     "sha": "d7d02c530ce023cb79fec7ac6c2fbcfa"
     },
     {
-     "n": 164,
-     "sha": "26861b2a159c55d33cb2ffa4e32a584c"
+     "n": 172,
+     "sha": "884ea30e703bbb1223adf6f44ba68d59"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 150, 0, 4000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

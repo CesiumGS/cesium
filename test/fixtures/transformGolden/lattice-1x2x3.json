@@ -68,29 +68,29 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "4ad2b70547f3c94d7d7c339520d1447a",
-    "canonicalLength": 71295
+    "canonical": "4226c2f99f126c390d2ccf34a41ccc05",
+    "canonicalLength": 65161
    },
    "positionWgsl": {
-    "canonical": "f24c0a4449c99d38dbb740ec7e5387a2",
-    "canonicalLength": 31976
+    "canonical": "c9d2edd96fb4dd03edaac04902e049db",
+    "canonicalLength": 25848
    },
    "centerConstantsWgsl": {
-    "canonical": "405009e243a7aa49bef1d4b49ec8fbbc",
-    "canonicalLength": 117672
+    "canonical": "d3e003d7262aa7a60b8bcc5b3c17b9fd",
+    "canonicalLength": 139182
    },
    "uniformsLayout": {
-    "floats": 208,
+    "floats": 428,
     "fields": {
-     "n": 119,
-     "sha": "d367f7d78389a8848162af92a9c252ed"
+     "n": 190,
+     "sha": "8ac968fcca3c01daaa796c7304e521f7"
     }
    },
    "perDrawLayout": {
-    "floats": 988,
+    "floats": 1280,
     "fields": {
-     "n": 187,
-     "sha": "dcc7e6492f885b6e025fa37ad969f007"
+     "n": 186,
+     "sha": "5af1c6260884841d9486448cfb63cbe1"
     }
    },
    "dynamicParams": ["lattice123.ox", "lattice123.oy", "lattice123.oz", "lattice123.e1x", "lattice123.e1y", "lattice123.e1z", "lattice123.e2x", "lattice123.e2y", "lattice123.e2z", "lattice123.e3x", "lattice123.e3y", "lattice123.e3z"],
@@ -117,17 +117,17 @@
     "sha": "024f45b4a28091dc96042991fe1398b8"
    },
    "uniforms": {
-    "n": 208,
-    "sha": "4d3ab748e32ec7870bd44e9d1a79d130"
+    "n": 428,
+    "sha": "cc6096b4240f342590813b7189e10657"
    },
    "records": [
     {
-     "n": 988,
-     "sha": "29f142bf0ab0687bdd60db7d61bce02e"
+     "n": 1280,
+     "sha": "3b712b41aaf8eb37a509fa438f6abefd"
     },
     {
-     "n": 988,
-     "sha": "86da10bb83fa68a2d8fa4c9c235d4981"
+     "n": 1280,
+     "sha": "977591f47c8d1f38eaa9c6918e490699"
     }
    ],
    "centerUniforms": {
@@ -138,30 +138,25 @@
   },
   "linear": {
    "wgsl": {
-    "canonical": "2b04f52931fa6314ac6f78253b2093d7",
-    "canonicalLength": 15710
+    "canonical": "ac3ea49a252107604a6973e46ad95269",
+    "canonicalLength": 16599
    },
    "positionWgsl": {
-    "canonical": "7f7fb58f05b2359f27226ae64d5d2735",
-    "canonicalLength": 13719
+    "canonical": "71b7b53592a198eba1c141325f6d7318",
+    "canonicalLength": 14604
    },
    "centerConstantsWgsl": null,
    "uniformsLayout": {
-    "floats": 104,
+    "floats": 108,
     "fields": {
-     "n": 85,
-     "sha": "5a60bc39f555d969ec2e372169e91437"
+     "n": 84,
+     "sha": "69aa05a90e399d25cf3be6f77064b3f5"
     }
    },
    "perDrawLayout": {
-    "floats": 76,
+    "floats": 80,
     "fields": {
-     "outHi": 0,
-     "outLo": 4,
-     "s0.v8": 8,
-     "s0.v9": 9,
-     "s0.v10": 10,
-     "s0.v11": 11,
+     "out": 0,
      "s0.v12": 12,
      "s0.v13": 13,
      "s0.v14": 14,
@@ -186,8 +181,12 @@
      "s0.v33": 33,
      "s0.v34": 34,
      "s0.v35": 35,
-     "s0.lj0": 36,
-     "s0.lh0": 48
+     "s0.v36": 36,
+     "s0.v37": 37,
+     "s0.v38": 38,
+     "s0.v39": 39,
+     "s0.lj0": 40,
+     "s0.lh0": 52
     }
    },
    "dynamicParams": {
@@ -214,17 +213,17 @@
     "sha": "024f45b4a28091dc96042991fe1398b8"
    },
    "uniforms": {
-    "n": 104,
-    "sha": "e348d44d70a638742a76278dc19786bb"
+    "n": 108,
+    "sha": "6c5287f723fa852e181654471f6518db"
    },
    "records": [
     {
-     "n": 76,
-     "sha": "acf0a63127082d504ab7ebd5ef3392bb"
+     "n": 80,
+     "sha": "c4fb8ce58692601d69b633e92d2d79d2"
     },
     {
-     "n": 76,
-     "sha": "7edd1c30e29f12ab0ed9e35e3971c3a9"
+     "n": 80,
+     "sha": "87ff2df9fe961afe314a0c6bef340718"
     }
    ],
    "centerUniforms": null,
@@ -232,30 +231,25 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "2b04f52931fa6314ac6f78253b2093d7",
-    "canonicalLength": 15710
+    "canonical": "ac3ea49a252107604a6973e46ad95269",
+    "canonicalLength": 16599
    },
    "positionWgsl": {
-    "canonical": "7f7fb58f05b2359f27226ae64d5d2735",
-    "canonicalLength": 13719
+    "canonical": "71b7b53592a198eba1c141325f6d7318",
+    "canonicalLength": 14604
    },
    "centerConstantsWgsl": null,
    "uniformsLayout": {
-    "floats": 104,
+    "floats": 108,
     "fields": {
-     "n": 85,
-     "sha": "5a60bc39f555d969ec2e372169e91437"
+     "n": 84,
+     "sha": "69aa05a90e399d25cf3be6f77064b3f5"
     }
    },
    "perDrawLayout": {
-    "floats": 76,
+    "floats": 80,
     "fields": {
-     "outHi": 0,
-     "outLo": 4,
-     "s0.v8": 8,
-     "s0.v9": 9,
-     "s0.v10": 10,
-     "s0.v11": 11,
+     "out": 0,
      "s0.v12": 12,
      "s0.v13": 13,
      "s0.v14": 14,
@@ -280,8 +274,12 @@
      "s0.v33": 33,
      "s0.v34": 34,
      "s0.v35": 35,
-     "s0.lj0": 36,
-     "s0.lh0": 48
+     "s0.v36": 36,
+     "s0.v37": 37,
+     "s0.v38": 38,
+     "s0.v39": 39,
+     "s0.lj0": 40,
+     "s0.lh0": 52
     }
    },
    "dynamicParams": {
@@ -308,17 +306,17 @@
     "sha": "024f45b4a28091dc96042991fe1398b8"
    },
    "uniforms": {
-    "n": 104,
-    "sha": "e348d44d70a638742a76278dc19786bb"
+    "n": 108,
+    "sha": "6c5287f723fa852e181654471f6518db"
    },
    "records": [
     {
-     "n": 76,
-     "sha": "acf0a63127082d504ab7ebd5ef3392bb"
+     "n": 80,
+     "sha": "c4fb8ce58692601d69b633e92d2d79d2"
     },
     {
-     "n": 76,
-     "sha": "7edd1c30e29f12ab0ed9e35e3971c3a9"
+     "n": 80,
+     "sha": "87ff2df9fe961afe314a0c6bef340718"
     }
    ],
    "centerUniforms": null,
@@ -326,29 +324,29 @@
   },
   "none": {
    "wgsl": {
-    "canonical": "d0b14bd8d05e7243a2fe73f511f422bb",
-    "canonicalLength": 30430
+    "canonical": "03177e7e3117c6877eff8896d6bce819",
+    "canonicalLength": 24274
    },
    "positionWgsl": {
-    "canonical": "14a4ee0072ffb377eca5f31a93009075",
-    "canonicalLength": 30724
+    "canonical": "faee0a772597b90f6c46a8ce9462fc5e",
+    "canonicalLength": 24568
    },
    "centerConstantsWgsl": {
-    "canonical": "2c1714721d9b939dfe501e44646aea38",
-    "canonicalLength": 64152
+    "canonical": "4b1d6b8685a89f18bb165d38c7908bd6",
+    "canonicalLength": 85384
    },
    "uniformsLayout": {
-    "floats": 176,
+    "floats": 396,
     "fields": {
-     "n": 85,
-     "sha": "f93ea9f5e56c8b381ab2d8f90ea2f4b1"
+     "n": 156,
+     "sha": "a94dfd7a4f9c262d45a2a002fdeabe57"
     }
    },
    "perDrawLayout": {
-    "floats": 684,
+    "floats": 976,
     "fields": {
-     "n": 102,
-     "sha": "70acf10d70ab7dcdd51620a18f856a32"
+     "n": 101,
+     "sha": "7847f771bfecb4aea87dc488ea7f030b"
     }
    },
    "dynamicParams": ["lattice123.ox", "lattice123.oy", "lattice123.oz", "lattice123.e1x", "lattice123.e1y", "lattice123.e1z", "lattice123.e2x", "lattice123.e2y", "lattice123.e2z", "lattice123.e3x", "lattice123.e3y", "lattice123.e3z"],
@@ -375,17 +373,17 @@
     "sha": "024f45b4a28091dc96042991fe1398b8"
    },
    "uniforms": {
-    "n": 176,
-    "sha": "8967edd03b89a8cf2ab2ab1b272ea74c"
+    "n": 396,
+    "sha": "0622816e0b19ba7e090040ab37e1e296"
    },
    "records": [
     {
-     "n": 684,
-     "sha": "572a06d44b99b2cd6ab364d80da0f6cf"
+     "n": 976,
+     "sha": "a79245d67f87fbb7f1319f906f3d8cb9"
     },
     {
-     "n": 684,
-     "sha": "2ec154c388678cde8f08981ac6a84eeb"
+     "n": 976,
+     "sha": "7388bd25293aa271c333879db963bd0a"
     }
    ],
    "centerUniforms": {

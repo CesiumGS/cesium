@@ -59,38 +59,37 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "5cc470daac651cf64df39c783f5fa9b0",
-    "canonicalLength": 62332
+    "canonical": "d73bbc837c27b7fa5df905a63bddc2f7",
+    "canonicalLength": 63226
    },
    "positionWgsl": {
-    "canonical": "46ef573a99cb66f380c3b82c5d31b936",
-    "canonicalLength": 19657
+    "canonical": "e6351faf33599e17dc82105a2f2173cf",
+    "canonicalLength": 20544
    },
    "centerConstantsWgsl": {
-    "canonical": "b93367c6a4b88a30fb7d6170569efda2",
-    "canonicalLength": 79018
+    "canonical": "161565c26eadd128e1dd6370b7ff9ebc",
+    "canonicalLength": 79649
    },
    "uniformsLayout": {
-    "floats": 28,
+    "floats": 32,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20,
-     "s0.j21": 21,
-     "s0.j22": 22,
-     "s0.j23": 23,
-     "s0.j24": 24,
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24,
      "s0.j25": 25,
      "s0.j26": 26,
-     "s0.j27": 27
+     "s0.j27": 27,
+     "s0.j28": 28,
+     "s0.j29": 29,
+     "s0.j30": 30,
+     "s0.j31": 31
     }
    },
    "perDrawLayout": {
-    "floats": 524,
+    "floats": 528,
     "fields": {
-     "n": 515,
-     "sha": "9be96542aa33c6d64d9c3a01564f4768"
+     "n": 514,
+     "sha": "93d16efa0365bd70874db078a3de3e58"
     }
    },
    "dynamicParams": ["transverseMercatorToGeographic.centralMeridian", "transverseMercatorToGeographic.scaleFactor", "transverseMercatorToGeographic.falseEasting", "transverseMercatorToGeographic.falseNorthing"],
@@ -112,15 +111,15 @@
     "transverseMercatorToGeographic.falseEasting": 500000,
     "transverseMercatorToGeographic.falseNorthing": 0
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 6364902, 3.142232003483514e-7, 6.284464006967028e-7, 9.42669657888473e-7, 0.0000012568928013934055, 0.0000015711160585851758, 0.000001885339315776946],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 6364902, 3.142232003483514e-7, 6.284464006967028e-7, 9.42669657888473e-7, 0.0000012568928013934055, 0.0000015711160585851758, 0.000001885339315776946],
    "records": [
     {
-     "n": 524,
-     "sha": "d42b1f2422a639545b4878ed1a567923"
+     "n": 528,
+     "sha": "a2d5e300d3cdb1ed4eb17341cc1e9f7e"
     },
     {
-     "n": 524,
-     "sha": "18bcbd9af920ae2e15b4bc331fbfcbed"
+     "n": 528,
+     "sha": "54bfd80dde4004cc0c72b1f0566a492e"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 9, 0, 0.9995999932289124, 6.771087690538025e-9, 500000, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -128,28 +127,27 @@
   },
   "linear": {
    "wgsl": {
-    "canonical": "20afbd253321f94a3ab0d7392182e9b3",
-    "canonicalLength": 20446
+    "canonical": "024685a2fc35dd33a095f745649e00b2",
+    "canonicalLength": 21332
    },
    "positionWgsl": {
-    "canonical": "af4d3d8e65425be173c379dea3ae6e40",
-    "canonicalLength": 18451
+    "canonical": "b2f2f33bb485fc295f8f0131ee5c4fe4",
+    "canonicalLength": 19337
    },
    "centerConstantsWgsl": null,
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 28,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24
     }
    },
    "perDrawLayout": {
-    "floats": 192,
+    "floats": 196,
     "fields": {
-     "n": 147,
-     "sha": "e5a9c8735454a5a7e8f5b1404b6d389c"
+     "n": 146,
+     "sha": "12b04ba1647475682d92a4326a21ed89"
     }
    },
    "dynamicParams": ["transverseMercatorToGeographic.centralMeridian", "transverseMercatorToGeographic.scaleFactor", "transverseMercatorToGeographic.falseEasting", "transverseMercatorToGeographic.falseNorthing"],
@@ -171,15 +169,15 @@
     "transverseMercatorToGeographic.falseEasting": 500000,
     "transverseMercatorToGeographic.falseNorthing": 0
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 0, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 0, 0, 0],
    "records": [
     {
-     "n": 192,
-     "sha": "5f53cfdebb54462ebbbceface343f7ca"
+     "n": 196,
+     "sha": "6a5db44c6013ff73945bf1d962524dbe"
     },
     {
-     "n": 192,
-     "sha": "a42728c23f6c0b33de90ef58be5176f1"
+     "n": 196,
+     "sha": "0fabd91991664f9026bbca40ee209fe8"
     }
    ],
    "centerUniforms": null,
@@ -187,28 +185,27 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "20afbd253321f94a3ab0d7392182e9b3",
-    "canonicalLength": 20446
+    "canonical": "024685a2fc35dd33a095f745649e00b2",
+    "canonicalLength": 21332
    },
    "positionWgsl": {
-    "canonical": "af4d3d8e65425be173c379dea3ae6e40",
-    "canonicalLength": 18451
+    "canonical": "b2f2f33bb485fc295f8f0131ee5c4fe4",
+    "canonicalLength": 19337
    },
    "centerConstantsWgsl": null,
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 28,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24
     }
    },
    "perDrawLayout": {
-    "floats": 192,
+    "floats": 196,
     "fields": {
-     "n": 147,
-     "sha": "e5a9c8735454a5a7e8f5b1404b6d389c"
+     "n": 146,
+     "sha": "12b04ba1647475682d92a4326a21ed89"
     }
    },
    "dynamicParams": ["transverseMercatorToGeographic.centralMeridian", "transverseMercatorToGeographic.scaleFactor", "transverseMercatorToGeographic.falseEasting", "transverseMercatorToGeographic.falseNorthing"],
@@ -230,15 +227,15 @@
     "transverseMercatorToGeographic.falseEasting": 500000,
     "transverseMercatorToGeographic.falseNorthing": 0
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 0, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 0, 0, 0],
    "records": [
     {
-     "n": 192,
-     "sha": "5f53cfdebb54462ebbbceface343f7ca"
+     "n": 196,
+     "sha": "6a5db44c6013ff73945bf1d962524dbe"
     },
     {
-     "n": 192,
-     "sha": "a42728c23f6c0b33de90ef58be5176f1"
+     "n": 196,
+     "sha": "0fabd91991664f9026bbca40ee209fe8"
     }
    ],
    "centerUniforms": null,
@@ -246,31 +243,30 @@
   },
   "none": {
    "wgsl": {
-    "canonical": "6790548820b44d9ecacfeddf791daccd",
-    "canonicalLength": 18017
+    "canonical": "a664658cd74810490dd5c370c2a8d1bb",
+    "canonicalLength": 18903
    },
    "positionWgsl": {
-    "canonical": "89f4b314431bcfb911e225ef28debbae",
-    "canonicalLength": 18311
+    "canonical": "19e4813fddfee030700b3b21d542e018",
+    "canonicalLength": 19197
    },
    "centerConstantsWgsl": {
-    "canonical": "7b6cc53b4c53405e09b36f610661c6d4",
-    "canonicalLength": 26450
+    "canonical": "7c959b54f4465fbe37ea40f4e92a268f",
+    "canonicalLength": 27081
    },
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 28,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24
     }
    },
    "perDrawLayout": {
-    "floats": 152,
+    "floats": 156,
     "fields": {
-     "n": 145,
-     "sha": "f23adcfe5deda61088a58781f3f6157d"
+     "n": 144,
+     "sha": "299dbf17800964303e8cbec06f95a1ca"
     }
    },
    "dynamicParams": ["transverseMercatorToGeographic.centralMeridian", "transverseMercatorToGeographic.scaleFactor", "transverseMercatorToGeographic.falseEasting", "transverseMercatorToGeographic.falseNorthing"],
@@ -292,15 +288,15 @@
     "transverseMercatorToGeographic.falseEasting": 500000,
     "transverseMercatorToGeographic.falseNorthing": 0
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 0, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 0, 0, 0],
    "records": [
     {
-     "n": 152,
-     "sha": "310ccf94969e63b6fa6d5c6f6b6adf35"
+     "n": 156,
+     "sha": "cf8689ee223d67346b3e6b4b77967d35"
     },
     {
-     "n": 152,
-     "sha": "47d15618c901cf7490b7470df4840baa"
+     "n": 156,
+     "sha": "ab190b83d4a97f132379ff0f5c91ff0f"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 9, 0, 0.9995999932289124, 6.771087690538025e-9, 500000, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

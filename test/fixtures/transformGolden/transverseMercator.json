@@ -59,35 +59,37 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "26df266bdd64eb194d6fc382e720c429",
-    "canonicalLength": 32178
+    "canonical": "226dcddeefed1a4ac3d5a7c2702c7441",
+    "canonicalLength": 32765
    },
    "positionWgsl": {
-    "canonical": "078d788b304596cf43c7053c67cec676",
-    "canonicalLength": 13040
+    "canonical": "6211c57986300bcf408dd5e3f83c07e4",
+    "canonicalLength": 13627
    },
    "centerConstantsWgsl": {
-    "canonical": "39dee66f0f588ec69c38d1a5b8318146",
-    "canonicalLength": 41740
+    "canonical": "8771e2e3431f1253bf2193ec90e5823f",
+    "canonicalLength": 43236
    },
    "uniformsLayout": {
-    "floats": 28,
+    "floats": 44,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20,
-     "param:transverseMercator.falseEasting": 21,
-     "param:transverseMercator.scaleFactor": 23,
-     "param:transverseMercator.falseNorthing": 25,
-     "s0.j27": 27
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24,
+     "param:transverseMercator.falseEasting": 25,
+     "param:transverseMercator.scaleFactor": 26,
+     "param:transverseMercator.falseNorthing": 27,
+     "s0.j28": 28,
+     "paramParts:transverseMercator.falseEasting": 32,
+     "paramParts:transverseMercator.falseNorthing": 36,
+     "paramParts:transverseMercator.scaleFactor": 40
     }
    },
    "perDrawLayout": {
-    "floats": 260,
+    "floats": 276,
     "fields": {
-     "n": 222,
-     "sha": "fdebf943d7638938864e6201e86fe8e6"
+     "n": 221,
+     "sha": "1a73f825645d8ded8d664bde1fc1e236"
     }
    },
    "dynamicParams": ["transverseMercator.centralMeridian"],
@@ -109,15 +111,15 @@
     "transverseMercator.falseEasting": 500000,
     "transverseMercator.falseNorthing": 0
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 500000, 0, 0.9995999932289124, 6.771087690538025e-9, 0, 0, 6364902],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 500000, 0.9995999932289124, 0, 6364902, 0, 0, 0, 7, 41248, 0, 0, 0, 0, 0, 0, 0, 1, -6711, 6.771087690538025e-9],
    "records": [
     {
-     "n": 260,
-     "sha": "eb9b8c05acbd35411272f1328f480240"
+     "n": 276,
+     "sha": "945c0989e24a9eaadfbd75c5b8e1ff47"
     },
     {
-     "n": 260,
-     "sha": "7fb7e1b8f13077de23ceabce7f8fb750"
+     "n": 276,
+     "sha": "73f380f345656be8a6f87e1042ee9181"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 9, 0, 0.9995999932289124, 6.771087690538025e-9, 500000, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -125,28 +127,27 @@
   },
   "linear": {
    "wgsl": {
-    "canonical": "c88ef29e0a10cf5977ab68550c5771fb",
-    "canonicalLength": 13838
+    "canonical": "8d5191b1675e935333f4c00f060cddae",
+    "canonicalLength": 14727
    },
    "positionWgsl": {
-    "canonical": "54bad8d256dd1b17e9042fd11843948e",
-    "canonicalLength": 11843
+    "canonical": "1a2e68893baeab29d5bc677046d06866",
+    "canonicalLength": 12732
    },
    "centerConstantsWgsl": null,
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 28,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24
     }
    },
    "perDrawLayout": {
-    "floats": 108,
+    "floats": 112,
     "fields": {
-     "n": 64,
-     "sha": "5fc1ea556d0f2ff40ad0e4df2c35aab3"
+     "n": 63,
+     "sha": "0299f73c8cbe9d56443e7bf4907ef5cf"
     }
    },
    "dynamicParams": ["transverseMercator.centralMeridian", "transverseMercator.scaleFactor", "transverseMercator.falseEasting", "transverseMercator.falseNorthing"],
@@ -168,15 +169,15 @@
     "transverseMercator.falseEasting": 500000,
     "transverseMercator.falseNorthing": 0
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 0, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 0, 0, 0],
    "records": [
     {
-     "n": 108,
-     "sha": "b31b89a392608017ba69e97730e79b18"
+     "n": 112,
+     "sha": "eb1c578e5c61fba996fa1874a20b7242"
     },
     {
-     "n": 108,
-     "sha": "e20e92c9840e3d2bc155e81399de0f27"
+     "n": 112,
+     "sha": "d1002af9ce9d31479673b534674d9a82"
     }
    ],
    "centerUniforms": null,
@@ -184,35 +185,37 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "26df266bdd64eb194d6fc382e720c429",
-    "canonicalLength": 32178
+    "canonical": "226dcddeefed1a4ac3d5a7c2702c7441",
+    "canonicalLength": 32765
    },
    "positionWgsl": {
-    "canonical": "078d788b304596cf43c7053c67cec676",
-    "canonicalLength": 13040
+    "canonical": "6211c57986300bcf408dd5e3f83c07e4",
+    "canonicalLength": 13627
    },
    "centerConstantsWgsl": {
-    "canonical": "39dee66f0f588ec69c38d1a5b8318146",
-    "canonicalLength": 41740
+    "canonical": "8771e2e3431f1253bf2193ec90e5823f",
+    "canonicalLength": 43236
    },
    "uniformsLayout": {
-    "floats": 28,
+    "floats": 44,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20,
-     "param:transverseMercator.falseEasting": 21,
-     "param:transverseMercator.scaleFactor": 23,
-     "param:transverseMercator.falseNorthing": 25,
-     "s0.j27": 27
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24,
+     "param:transverseMercator.falseEasting": 25,
+     "param:transverseMercator.scaleFactor": 26,
+     "param:transverseMercator.falseNorthing": 27,
+     "s0.j28": 28,
+     "paramParts:transverseMercator.falseEasting": 32,
+     "paramParts:transverseMercator.falseNorthing": 36,
+     "paramParts:transverseMercator.scaleFactor": 40
     }
    },
    "perDrawLayout": {
-    "floats": 260,
+    "floats": 276,
     "fields": {
-     "n": 222,
-     "sha": "fdebf943d7638938864e6201e86fe8e6"
+     "n": 221,
+     "sha": "1a73f825645d8ded8d664bde1fc1e236"
     }
    },
    "dynamicParams": ["transverseMercator.centralMeridian"],
@@ -234,15 +237,15 @@
     "transverseMercator.falseEasting": 500000,
     "transverseMercator.falseNorthing": 0
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 500000, 0, 0.9995999932289124, 6.771087690538025e-9, 0, 0, 6364902],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 500000, 0.9995999932289124, 0, 6364902, 0, 0, 0, 7, 41248, 0, 0, 0, 0, 0, 0, 0, 1, -6711, 6.771087690538025e-9],
    "records": [
     {
-     "n": 260,
-     "sha": "eb9b8c05acbd35411272f1328f480240"
+     "n": 276,
+     "sha": "945c0989e24a9eaadfbd75c5b8e1ff47"
     },
     {
-     "n": 260,
-     "sha": "7fb7e1b8f13077de23ceabce7f8fb750"
+     "n": 276,
+     "sha": "73f380f345656be8a6f87e1042ee9181"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 9, 0, 0.9995999932289124, 6.771087690538025e-9, 500000, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -250,34 +253,36 @@
   },
   "none": {
    "wgsl": {
-    "canonical": "8325507a099877718e5f1dbb686e070f",
-    "canonicalLength": 12172
+    "canonical": "3658e6118318cff13c8a330eba154441",
+    "canonicalLength": 12742
    },
    "positionWgsl": {
-    "canonical": "3edff2ad8b57dba6750ce9ed87a18777",
-    "canonicalLength": 12466
+    "canonical": "9fdfb8a3bbffe0de9853b87500e97445",
+    "canonicalLength": 13036
    },
    "centerConstantsWgsl": {
-    "canonical": "862aded1acefea4917cfca9368d6977e",
-    "canonicalLength": 18620
+    "canonical": "344e1d5b694e79bf84596fb7f4d8d065",
+    "canonicalLength": 20113
    },
    "uniformsLayout": {
-    "floats": 28,
+    "floats": 40,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20,
-     "param:transverseMercator.falseEasting": 21,
-     "param:transverseMercator.scaleFactor": 23,
-     "param:transverseMercator.falseNorthing": 25
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24,
+     "param:transverseMercator.falseEasting": 25,
+     "param:transverseMercator.scaleFactor": 26,
+     "param:transverseMercator.falseNorthing": 27,
+     "paramParts:transverseMercator.falseEasting": 28,
+     "paramParts:transverseMercator.falseNorthing": 32,
+     "paramParts:transverseMercator.scaleFactor": 36
     }
    },
    "perDrawLayout": {
-    "floats": 96,
+    "floats": 112,
     "fields": {
-     "n": 65,
-     "sha": "d4a4635d7125c69802f47b7f8c3983f7"
+     "n": 64,
+     "sha": "6459f199fa7c2539cada84995ed11871"
     }
    },
    "dynamicParams": ["transverseMercator.centralMeridian"],
@@ -299,15 +304,15 @@
     "transverseMercator.falseEasting": 500000,
     "transverseMercator.falseNorthing": 0
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 500000, 0, 0.9995999932289124, 6.771087690538025e-9, 0, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 6364902, 500000, 0.9995999932289124, 0, 7, 41248, 0, 0, 0, 0, 0, 0, 0, 1, -6711, 6.771087690538025e-9],
    "records": [
     {
-     "n": 96,
-     "sha": "cadd708ebdc6aea7bbe4361e5e294fc0"
+     "n": 112,
+     "sha": "8e52ba292974944a92596ed65e5e1b6f"
     },
     {
-     "n": 96,
-     "sha": "210d95d78dff2026b0ceef14f28333b3"
+     "n": 112,
+     "sha": "4612ce61a140e3d8a114782da9adebf6"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 9, 0, 0.9995999932289124, 6.771087690538025e-9, 500000, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

@@ -80,39 +80,43 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "5e5a2c021d0422e4e069e236494ec6ba",
-    "canonicalLength": 18103
+    "canonical": "5e95fc8a696cfd36193a148db428d478",
+    "canonicalLength": 18493
    },
    "positionWgsl": {
-    "canonical": "cd4e638fb99ae24ad0a10be4150c9974",
-    "canonicalLength": 8810
+    "canonical": "48c3afe909aa52159f085d3bd86bb944",
+    "canonicalLength": 9200
    },
    "centerConstantsWgsl": {
-    "canonical": "0ccf08a673f44ddd1b602e1f18b61fd3",
-    "canonicalLength": 26529
+    "canonical": "d270aff673db28a0e41e29f27b2b9c17",
+    "canonicalLength": 28597
    },
    "uniformsLayout": {
-    "floats": 36,
+    "floats": 56,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:radialDistortion.k3": 20,
-     "param:radialDistortion.k2": 22,
-     "param:radialDistortion.k1": 24,
-     "s0.v26": 26,
-     "param:radialDistortion.p1": 27,
+     "eye": 0,
+     "affine0": 12,
+     "param:radialDistortion.k3": 24,
+     "param:radialDistortion.k2": 25,
+     "param:radialDistortion.k1": 26,
+     "s0.v27": 27,
+     "param:radialDistortion.p1": 28,
      "param:radialDistortion.p2": 29,
-     "s0.v31": 31,
+     "s0.v30": 30,
+     "s0.j31": 31,
      "s0.j32": 32,
-     "s0.j33": 33
+     "paramParts:radialDistortion.k1": 36,
+     "paramParts:radialDistortion.k2": 40,
+     "paramParts:radialDistortion.k3": 44,
+     "paramParts:radialDistortion.p1": 48,
+     "paramParts:radialDistortion.p2": 52
     }
    },
    "perDrawLayout": {
-    "floats": 224,
+    "floats": 248,
     "fields": {
-     "n": 60,
-     "sha": "d2239768462805ff3220fe9577a6f6f2"
+     "n": 59,
+     "sha": "c0efaefa8f02c5c6c279ed93d391179f"
     }
    },
    "dynamicParams": [],
@@ -135,19 +139,22 @@
     "radialDistortion.p1": 0.001,
     "radialDistortion.p2": -0.002
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -0.009999999776482582, -2.2351741291171123e-10, 0.05000000074505806, -7.450580707946131e-10, -0.20000000298023224, 2.9802322831784522e-9, 0.0020000000949949026, 0.0010000000474974513, -4.7497450417210985e-11, -0.0020000000949949026, 9.499490083442197e-11, -0.004000000189989805, 0.0020000000949949026, -0.004000000189989805, 0, 0],
+   "uniforms": {
+    "n": 56,
+    "sha": "1c5796452ccdc1140e2b65680b1ce63f"
+   },
    "records": [
     {
-     "n": 224,
-     "sha": "9ec6cc289f4ca9224eb7cf96b0761001"
+     "n": 248,
+     "sha": "d46b830dc7ce845218e5a91093f16eeb"
     },
     {
-     "n": 224,
-     "sha": "6e47ef795b5cfee05b0ca7b5e4723583"
+     "n": 248,
+     "sha": "d89a5a3476ea042b133e93c249ca9f7d"
     },
     {
-     "n": 224,
-     "sha": "85ce167c7234f623865a6d3bd94bd03c"
+     "n": 248,
+     "sha": "e27c134136271a11d49cdc21dc02be6c"
     }
    ],
    "centerUniforms": [4.203895392974451e-45, 0, 0, 0, -0.20000000298023224, 2.9802322831784522e-9, 0.05000000074505806, -7.450580707946131e-10, -0.009999999776482582, -2.2351741291171123e-10, 0.0010000000474974513, -4.7497450417210985e-11, -0.0020000000949949026, 9.499490083442197e-11, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -155,36 +162,30 @@
   },
   "linear": {
    "wgsl": {
-    "canonical": "89d9faec7326f013f443e7e17e670dd9",
-    "canonicalLength": 8748
+    "canonical": "cfa526c24c562585597bd2b3a52bcec3",
+    "canonicalLength": 9632
    },
    "positionWgsl": {
-    "canonical": "68d6f71e5bb34335c8a6a6298247df1e",
-    "canonicalLength": 6766
+    "canonical": "6534067d5ca990bb7623b659c52f9318",
+    "canonicalLength": 7646
    },
    "centerConstantsWgsl": null,
    "uniformsLayout": {
-    "floats": 28,
+    "floats": 32,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:radialDistortion.k3": 20,
-     "s0.v21": 21,
-     "param:radialDistortion.p2": 22,
-     "param:radialDistortion.p1": 23,
-     "s0.v24": 24
+     "eye": 0,
+     "affine0": 12,
+     "param:radialDistortion.k3": 24,
+     "s0.v25": 25,
+     "param:radialDistortion.p2": 26,
+     "param:radialDistortion.p1": 27,
+     "s0.v28": 28
     }
    },
    "perDrawLayout": {
-    "floats": 64,
+    "floats": 68,
     "fields": {
-     "outHi": 0,
-     "outLo": 4,
-     "s0.v8": 8,
-     "s0.v9": 9,
-     "s0.v10": 10,
-     "s0.v11": 11,
+     "out": 0,
      "s0.v12": 12,
      "s0.v13": 13,
      "s0.v14": 14,
@@ -194,8 +195,12 @@
      "s0.v18": 18,
      "s0.v19": 19,
      "s0.v20": 20,
-     "s0.lj0": 24,
-     "s0.lh0": 36
+     "s0.v21": 21,
+     "s0.v22": 22,
+     "s0.v23": 23,
+     "s0.v24": 24,
+     "s0.lj0": 28,
+     "s0.lh0": 40
     }
    },
    "dynamicParams": ["radialDistortion.k1", "radialDistortion.k2", "radialDistortion.k3", "radialDistortion.p1", "radialDistortion.p2"],
@@ -218,19 +223,19 @@
     "radialDistortion.p1": 0.001,
     "radialDistortion.p2": -0.002
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -0.009999999776482582, 0.0020000000949949026, -0.0020000000949949026, 0.0010000000474974513, -0.004000000189989805, 0, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -0.009999999776482582, 0.0020000000949949026, -0.0020000000949949026, 0.0010000000474974513, -0.004000000189989805, 0, 0, 0],
    "records": [
     {
-     "n": 64,
-     "sha": "0c85a19f17886b0db4120b477911a385"
+     "n": 68,
+     "sha": "02190761e8da1c907a286985939144ca"
     },
     {
-     "n": 64,
-     "sha": "26885cf1f366ff09e0992696033b0002"
+     "n": 68,
+     "sha": "1862c86520c1a7a062d951159700863d"
     },
     {
-     "n": 64,
-     "sha": "bfb86ed785c33177b27c006bb41d77af"
+     "n": 68,
+     "sha": "da37f2967d69e07abcf086d667eb2be3"
     }
    ],
    "centerUniforms": null,
@@ -238,39 +243,43 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "5e5a2c021d0422e4e069e236494ec6ba",
-    "canonicalLength": 18103
+    "canonical": "5e95fc8a696cfd36193a148db428d478",
+    "canonicalLength": 18493
    },
    "positionWgsl": {
-    "canonical": "cd4e638fb99ae24ad0a10be4150c9974",
-    "canonicalLength": 8810
+    "canonical": "48c3afe909aa52159f085d3bd86bb944",
+    "canonicalLength": 9200
    },
    "centerConstantsWgsl": {
-    "canonical": "0ccf08a673f44ddd1b602e1f18b61fd3",
-    "canonicalLength": 26529
+    "canonical": "d270aff673db28a0e41e29f27b2b9c17",
+    "canonicalLength": 28597
    },
    "uniformsLayout": {
-    "floats": 36,
+    "floats": 56,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:radialDistortion.k3": 20,
-     "param:radialDistortion.k2": 22,
-     "param:radialDistortion.k1": 24,
-     "s0.v26": 26,
-     "param:radialDistortion.p1": 27,
+     "eye": 0,
+     "affine0": 12,
+     "param:radialDistortion.k3": 24,
+     "param:radialDistortion.k2": 25,
+     "param:radialDistortion.k1": 26,
+     "s0.v27": 27,
+     "param:radialDistortion.p1": 28,
      "param:radialDistortion.p2": 29,
-     "s0.v31": 31,
+     "s0.v30": 30,
+     "s0.j31": 31,
      "s0.j32": 32,
-     "s0.j33": 33
+     "paramParts:radialDistortion.k1": 36,
+     "paramParts:radialDistortion.k2": 40,
+     "paramParts:radialDistortion.k3": 44,
+     "paramParts:radialDistortion.p1": 48,
+     "paramParts:radialDistortion.p2": 52
     }
    },
    "perDrawLayout": {
-    "floats": 224,
+    "floats": 248,
     "fields": {
-     "n": 60,
-     "sha": "d2239768462805ff3220fe9577a6f6f2"
+     "n": 59,
+     "sha": "c0efaefa8f02c5c6c279ed93d391179f"
     }
    },
    "dynamicParams": [],
@@ -293,19 +302,22 @@
     "radialDistortion.p1": 0.001,
     "radialDistortion.p2": -0.002
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -0.009999999776482582, -2.2351741291171123e-10, 0.05000000074505806, -7.450580707946131e-10, -0.20000000298023224, 2.9802322831784522e-9, 0.0020000000949949026, 0.0010000000474974513, -4.7497450417210985e-11, -0.0020000000949949026, 9.499490083442197e-11, -0.004000000189989805, 0.0020000000949949026, -0.004000000189989805, 0, 0],
+   "uniforms": {
+    "n": 56,
+    "sha": "1c5796452ccdc1140e2b65680b1ce63f"
+   },
    "records": [
     {
-     "n": 224,
-     "sha": "9ec6cc289f4ca9224eb7cf96b0761001"
+     "n": 248,
+     "sha": "d46b830dc7ce845218e5a91093f16eeb"
     },
     {
-     "n": 224,
-     "sha": "6e47ef795b5cfee05b0ca7b5e4723583"
+     "n": 248,
+     "sha": "d89a5a3476ea042b133e93c249ca9f7d"
     },
     {
-     "n": 224,
-     "sha": "85ce167c7234f623865a6d3bd94bd03c"
+     "n": 248,
+     "sha": "e27c134136271a11d49cdc21dc02be6c"
     }
    ],
    "centerUniforms": [4.203895392974451e-45, 0, 0, 0, -0.20000000298023224, 2.9802322831784522e-9, 0.05000000074505806, -7.450580707946131e-10, -0.009999999776482582, -2.2351741291171123e-10, 0.0010000000474974513, -4.7497450417210985e-11, -0.0020000000949949026, 9.499490083442197e-11, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -313,55 +325,58 @@
   },
   "none": {
    "wgsl": {
-    "canonical": "0a4e14db10b8a8127dcdee6057506939",
-    "canonicalLength": 8041
+    "canonical": "f722b1dfe3a0d8c91e1e9bce535f5d9a",
+    "canonicalLength": 8427
    },
    "positionWgsl": {
-    "canonical": "b381311dd5cb791cbccf912b1def0be3",
-    "canonicalLength": 8335
+    "canonical": "0132ef24b4256bc734d2a0bcd811bea9",
+    "canonicalLength": 8721
    },
    "centerConstantsWgsl": {
-    "canonical": "cfd3cce43cf135263d78a24643cc6aaf",
-    "canonicalLength": 14750
+    "canonical": "79ed1e0a631766011ca11492e4d5b384",
+    "canonicalLength": 16810
    },
    "uniformsLayout": {
-    "floats": 32,
+    "floats": 52,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:radialDistortion.k3": 20,
-     "param:radialDistortion.k2": 22,
-     "param:radialDistortion.k1": 24,
-     "s0.v26": 26,
-     "param:radialDistortion.p1": 27,
+     "eye": 0,
+     "affine0": 12,
+     "param:radialDistortion.k3": 24,
+     "param:radialDistortion.k2": 25,
+     "param:radialDistortion.k1": 26,
+     "s0.v27": 27,
+     "param:radialDistortion.p1": 28,
      "param:radialDistortion.p2": 29,
-     "s0.v31": 31
+     "s0.v30": 30,
+     "paramParts:radialDistortion.k1": 32,
+     "paramParts:radialDistortion.k2": 36,
+     "paramParts:radialDistortion.k3": 40,
+     "paramParts:radialDistortion.p1": 44,
+     "paramParts:radialDistortion.p2": 48
     }
    },
    "perDrawLayout": {
-    "floats": 92,
+    "floats": 116,
     "fields": {
-     "outHi": 0,
-     "outLo": 4,
-     "outG:radialDistortion.k1": 8,
-     "outG:radialDistortion.k2": 16,
-     "outG:radialDistortion.k3": 24,
-     "outG:radialDistortion.p1": 32,
-     "outG:radialDistortion.p2": 40,
-     "s0.v48": 48,
-     "s0.v49": 49,
-     "s0.v50": 50,
-     "s0.v51": 51,
-     "s0.v52": 52,
-     "s0.v55": 55,
-     "s0.v59": 59,
-     "s0.v61": 61,
-     "s0.v63": 63,
-     "s0.v67": 67,
+     "out": 0,
+     "outG:radialDistortion.k1": 12,
+     "outG:radialDistortion.k2": 24,
+     "outG:radialDistortion.k3": 36,
+     "outG:radialDistortion.p1": 48,
+     "outG:radialDistortion.p2": 60,
+     "s0.v72": 72,
      "s0.v73": 73,
+     "s0.v74": 74,
+     "s0.v75": 75,
+     "s0.v76": 76,
      "s0.v79": 79,
-     "s0.v85": 85
+     "s0.v83": 83,
+     "s0.v85": 85,
+     "s0.v87": 87,
+     "s0.v91": 91,
+     "s0.v97": 97,
+     "s0.v103": 103,
+     "s0.v109": 109
     }
    },
    "dynamicParams": [],
@@ -384,19 +399,22 @@
     "radialDistortion.p1": 0.001,
     "radialDistortion.p2": -0.002
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, -0.009999999776482582, -2.2351741291171123e-10, 0.05000000074505806, -7.450580707946131e-10, -0.20000000298023224, 2.9802322831784522e-9, 0.0020000000949949026, 0.0010000000474974513, -4.7497450417210985e-11, -0.0020000000949949026, 9.499490083442197e-11, -0.004000000189989805],
+   "uniforms": {
+    "n": 52,
+    "sha": "c64f26698b643feaf7c4249859489565"
+   },
    "records": [
     {
-     "n": 92,
-     "sha": "695557abf7ede574e6273c68f47c4770"
+     "n": 116,
+     "sha": "02bf69b49a9ece566cf80dfbc7c5b7f8"
     },
     {
-     "n": 92,
-     "sha": "3a0c90bd1e448e9ed846d86156145820"
+     "n": 116,
+     "sha": "04dde7ee2383d78e07b07f8770995cf9"
     },
     {
-     "n": 92,
-     "sha": "2a346b9ec8aacc43fbfbaa0d805b80ee"
+     "n": 116,
+     "sha": "dd0023dac423ecb84a22013455d757bd"
     }
    ],
    "centerUniforms": [4.203895392974451e-45, 0, 0, 0, -0.20000000298023224, 2.9802322831784522e-9, 0.05000000074505806, -7.450580707946131e-10, -0.009999999776482582, -2.2351741291171123e-10, 0.0010000000474974513, -4.7497450417210985e-11, -0.0020000000949949026, 9.499490083442197e-11, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

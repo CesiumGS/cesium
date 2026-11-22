@@ -20,6 +20,7 @@ import {
   emitWgsl,
   type Program,
 } from "../packages/core/src/ir/index.ts";
+import { fromFixParts } from "../packages/core/src/transform/centerTerm.ts";
 import {
   clearCompileCache,
   compileRoute,
@@ -32,6 +33,7 @@ import {
   TransformGraph,
 } from "../packages/core/src/transform/index.ts";
 import {
+  CENTER,
   compareRoute,
   CORRIDOR_CHANGE_M,
   CORRIDOR_DRAWN_M,
@@ -434,10 +436,10 @@ describe("the WebGL 2 corridor baseline, its float64 half", () => {
         for (const o of offsets) {
           const c = [s, o, 12.5];
           descriptor.forward(c, params, want, analytic);
-          // What WebGL 2 draws from: the record's F(c) as hi + lo, from float64 on the CPU.
+          // What WebGL 2 draws from: the record's F(c) as the center term's parts, from float64 on the CPU.
           const record = compiled.centerConstants(c);
           for (let a = 0; a < 3; a++) {
-            const got = record[layout.outHi! + a]! + record[layout.outLo! + a]!;
+            const got = fromFixParts(record, layout.out! + 4 * a);
             mapM = Math.max(mapM, Math.abs(got - want[a]!));
           }
           // The Jacobian program both emitters' normals come from, in float64 (row-major).
@@ -475,12 +477,14 @@ describe("the WebGL 2 corridor baseline, its float64 half", () => {
       expect(c.units).toBe("m");
       expect(c.position.abs).toBe(CORRIDOR_CHANGE_M);
       expect(c.drawn, c.name).toEqual({ abs: CORRIDOR_DRAWN_M, rel: 0 });
-      // The center term may not take the rest: it is held in meters too.
-      expect(c.center, c.name).toEqual({ abs: 1e-4, rel: 0 });
+      // The center term may not take the rest: it is held in meters, to 10⁻⁷ m (CS-921).
+      expect(c.center, c.name).toEqual(CENTER);
+      expect(CENTER).toEqual({ abs: 1e-7, rel: 0 });
     }
     // The readback's comparison, on GPU answers made from the float64 ones:
-    // exact, then off by 0.07 mm in the center term and 0.07 mm in the change,
-    // which each bound alone passes and the drawn position (0.14 mm) fails.
+    // exact, then off by 0.07 mm in the center term and 0.07 mm in the change.
+    // The change bound passes them; the center bound (10⁻⁷ m since CS-921)
+    // and the drawn position (0.14 mm) fail.
     const c = corridor[0]!;
     const want = expectedRoute(c);
     const exact = Float32Array.from(want);
@@ -497,7 +501,7 @@ describe("the WebGL 2 corridor baseline, its float64 half", () => {
     }
     const row = newRouteRow(c);
     compareRoute(row, c, off);
-    expect(row.center.worstRatio).toBeLessThan(1);
+    expect(row.center.worstRatio).toBeGreaterThan(1);
     expect(row.position.worstRatio).toBeLessThan(1);
     expect(
       row.drawn!.maxAbs,

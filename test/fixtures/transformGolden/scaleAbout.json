@@ -59,36 +59,34 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "d497d88eb50bfa6d71660bba1cf0206f",
-    "canonicalLength": 7059
+    "canonical": "cfc4efecd30d0b56e53114260d98542d",
+    "canonicalLength": 7938
    },
    "positionWgsl": {
-    "canonical": "bbd6240c220aec177a1bb66bec8fdb68",
-    "canonicalLength": 5651
+    "canonical": "10feaabb5ebb446c5e4789c63a96a6e7",
+    "canonicalLength": 6530
    },
    "centerConstantsWgsl": {
-    "canonical": "84514d5ceefe8a86518cba9db7e18c8b",
-    "canonicalLength": 9706
+    "canonical": "2907a8ee970ac75ad4106e35abb67309",
+    "canonicalLength": 10333
    },
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 28,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:scaleAbout.sx": 20,
-     "param:scaleAbout.sy": 21,
-     "param:scaleAbout.sz": 22
+     "eye": 0,
+     "affine0": 12,
+     "param:scaleAbout.sx": 24,
+     "param:scaleAbout.sy": 25,
+     "param:scaleAbout.sz": 26
     }
    },
    "perDrawLayout": {
-    "floats": 12,
+    "floats": 16,
     "fields": {
-     "outHi": 0,
-     "outLo": 4,
-     "s0.v8": 8,
-     "s0.v9": 9,
-     "s0.v10": 10
+     "out": 0,
+     "s0.v12": 12,
+     "s0.v13": 13,
+     "s0.v14": 14
     }
    },
    "dynamicParams": ["scaleAbout.cx", "scaleAbout.cy", "scaleAbout.cz", "scaleAbout.sx", "scaleAbout.sy", "scaleAbout.sz"],
@@ -112,45 +110,43 @@
     "scaleAbout.sy": 0.5,
     "scaleAbout.sz": -1.5
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0.5, -1.5, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0.5, -1.5, 0],
    "records": [
-    [-1, 0, -2, 0, 0, 0, 0, 0, -1, 0, -2, 0],
-    [-83, 11.5, -14, 0, 0, 0, 0, 0, -83, 11.5, -14, 0]
+    [-1, 65535, 0, 0, 0, 0, 0, 0, -1, 65534, 0, 0, -1, 0, -2, 0],
+    [-1, 65453, 0, 0, 0, 12, -8388608, 0, -1, 65522, 0, 0, -83, 11.5, -14, 0]
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, -2, 0, 1, 0, 2, 0, 0.5, 0, -1.5, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
    "packCenters": [1, 2, 3, 0, 0, 0, 0, 0, -40, 25, 11, 0, 0, 0, 0, 0]
   },
   "linear": {
    "wgsl": {
-    "canonical": "a825ef4f0b483cbbca94c7c5aa9c6a02",
-    "canonicalLength": 7754
+    "canonical": "6a116c4771063321e0d4ba8b258ce5d7",
+    "canonicalLength": 8638
    },
    "positionWgsl": {
-    "canonical": "cb37fcef31864f0a96fd92ff7e6d9d74",
-    "canonicalLength": 5784
+    "canonical": "3f17d51297fa9a2ec6f526a552292e2a",
+    "canonicalLength": 6664
    },
    "centerConstantsWgsl": null,
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 28,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:scaleAbout.sx": 20,
-     "param:scaleAbout.sy": 21,
-     "param:scaleAbout.sz": 22
+     "eye": 0,
+     "affine0": 12,
+     "param:scaleAbout.sx": 24,
+     "param:scaleAbout.sy": 25,
+     "param:scaleAbout.sz": 26
     }
    },
    "perDrawLayout": {
-    "floats": 52,
+    "floats": 56,
     "fields": {
-     "outHi": 0,
-     "outLo": 4,
-     "s0.v8": 8,
-     "s0.v9": 9,
-     "s0.v10": 10,
-     "s0.lj0": 12,
-     "s0.lh0": 24
+     "out": 0,
+     "s0.v12": 12,
+     "s0.v13": 13,
+     "s0.v14": 14,
+     "s0.lj0": 16,
+     "s0.lh0": 28
     }
    },
    "dynamicParams": ["scaleAbout.cx", "scaleAbout.cy", "scaleAbout.cz", "scaleAbout.sx", "scaleAbout.sy", "scaleAbout.sz"],
@@ -174,15 +170,15 @@
     "scaleAbout.sy": 0.5,
     "scaleAbout.sz": -1.5
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0.5, -1.5, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0.5, -1.5, 0],
    "records": [
     {
-     "n": 52,
-     "sha": "3705e2e5f388f9f7cb2e408597714fe8"
+     "n": 56,
+     "sha": "5c088a2fc5ec3667b2b5ffe0d250fd5b"
     },
     {
-     "n": 52,
-     "sha": "04672286dbb90f23e54cd5176d817011"
+     "n": 56,
+     "sha": "bb4b4d930ee4ff4ccc149e562e078920"
     }
    ],
    "centerUniforms": null,
@@ -190,36 +186,34 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "d497d88eb50bfa6d71660bba1cf0206f",
-    "canonicalLength": 7059
+    "canonical": "cfc4efecd30d0b56e53114260d98542d",
+    "canonicalLength": 7938
    },
    "positionWgsl": {
-    "canonical": "bbd6240c220aec177a1bb66bec8fdb68",
-    "canonicalLength": 5651
+    "canonical": "10feaabb5ebb446c5e4789c63a96a6e7",
+    "canonicalLength": 6530
    },
    "centerConstantsWgsl": {
-    "canonical": "84514d5ceefe8a86518cba9db7e18c8b",
-    "canonicalLength": 9706
+    "canonical": "2907a8ee970ac75ad4106e35abb67309",
+    "canonicalLength": 10333
    },
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 28,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:scaleAbout.sx": 20,
-     "param:scaleAbout.sy": 21,
-     "param:scaleAbout.sz": 22
+     "eye": 0,
+     "affine0": 12,
+     "param:scaleAbout.sx": 24,
+     "param:scaleAbout.sy": 25,
+     "param:scaleAbout.sz": 26
     }
    },
    "perDrawLayout": {
-    "floats": 12,
+    "floats": 16,
     "fields": {
-     "outHi": 0,
-     "outLo": 4,
-     "s0.v8": 8,
-     "s0.v9": 9,
-     "s0.v10": 10
+     "out": 0,
+     "s0.v12": 12,
+     "s0.v13": 13,
+     "s0.v14": 14
     }
    },
    "dynamicParams": ["scaleAbout.cx", "scaleAbout.cy", "scaleAbout.cz", "scaleAbout.sx", "scaleAbout.sy", "scaleAbout.sz"],
@@ -243,46 +237,44 @@
     "scaleAbout.sy": 0.5,
     "scaleAbout.sz": -1.5
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0.5, -1.5, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0.5, -1.5, 0],
    "records": [
-    [-1, 0, -2, 0, 0, 0, 0, 0, -1, 0, -2, 0],
-    [-83, 11.5, -14, 0, 0, 0, 0, 0, -83, 11.5, -14, 0]
+    [-1, 65535, 0, 0, 0, 0, 0, 0, -1, 65534, 0, 0, -1, 0, -2, 0],
+    [-1, 65453, 0, 0, 0, 12, -8388608, 0, -1, 65522, 0, 0, -83, 11.5, -14, 0]
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, -2, 0, 1, 0, 2, 0, 0.5, 0, -1.5, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
    "packCenters": [1, 2, 3, 0, 0, 0, 0, 0, -40, 25, 11, 0, 0, 0, 0, 0]
   },
   "none": {
    "wgsl": {
-    "canonical": "e80fefe0e65583e8c6fe4eb824c539e5",
-    "canonicalLength": 5357
+    "canonical": "6ca796a1d9a35996c3b99d1a33427cc6",
+    "canonicalLength": 6236
    },
    "positionWgsl": {
-    "canonical": "bbd6240c220aec177a1bb66bec8fdb68",
-    "canonicalLength": 5651
+    "canonical": "10feaabb5ebb446c5e4789c63a96a6e7",
+    "canonicalLength": 6530
    },
    "centerConstantsWgsl": {
-    "canonical": "86af452ac9ae38f6e0dbc65f5132dfdd",
-    "canonicalLength": 9433
+    "canonical": "a87c9433d7e75930409c404786831491",
+    "canonicalLength": 10060
    },
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 28,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:scaleAbout.sx": 20,
-     "param:scaleAbout.sy": 21,
-     "param:scaleAbout.sz": 22
+     "eye": 0,
+     "affine0": 12,
+     "param:scaleAbout.sx": 24,
+     "param:scaleAbout.sy": 25,
+     "param:scaleAbout.sz": 26
     }
    },
    "perDrawLayout": {
-    "floats": 12,
+    "floats": 16,
     "fields": {
-     "outHi": 0,
-     "outLo": 4,
-     "s0.v8": 8,
-     "s0.v9": 9,
-     "s0.v10": 10
+     "out": 0,
+     "s0.v12": 12,
+     "s0.v13": 13,
+     "s0.v14": 14
     }
    },
    "dynamicParams": ["scaleAbout.cx", "scaleAbout.cy", "scaleAbout.cz", "scaleAbout.sx", "scaleAbout.sy", "scaleAbout.sz"],
@@ -306,10 +298,10 @@
     "scaleAbout.sy": 0.5,
     "scaleAbout.sz": -1.5
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0.5, -1.5, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 2, 0.5, -1.5, 0],
    "records": [
-    [-1, 0, -2, 0, 0, 0, 0, 0, -1, 0, -2, 0],
-    [-83, 11.5, -14, 0, 0, 0, 0, 0, -83, 11.5, -14, 0]
+    [-1, 65535, 0, 0, 0, 0, 0, 0, -1, 65534, 0, 0, -1, 0, -2, 0],
+    [-1, 65453, 0, 0, 0, 12, -8388608, 0, -1, 65522, 0, 0, -83, 11.5, -14, 0]
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 3, 0, -2, 0, 1, 0, 2, 0, 0.5, 0, -1.5, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
    "packCenters": [1, 2, 3, 0, 0, 0, 0, 0, -40, 25, 11, 0, 0, 0, 0, 0]

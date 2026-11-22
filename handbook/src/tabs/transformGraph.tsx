@@ -510,7 +510,7 @@ const ALSO = [
   {
     what: "Exact sums rely on operation order",
     state:
-      "The exact center sum was checked on NVIDIA under D3D12 only, and df64 also needs the shader compiler to keep the order of float operations. On an Apple M2 it doesn't: a compiled route's center term keeps about float32 of its size (0.24 m at the Earth's surface for vertical exaggeration). The change from the center keeps its accuracy, on WebGPU and on WebGL 2, where the route has a GLSL ES form and the CPU makes the center constants.",
+      "A compiled route's center term sums its parts as integers: whole meters and 2⁻²⁴ m, with only small rests in float32. Relaxed math, which Apple GPUs compile with, can't reorder or drop them. Measured on an Apple M2, the term is within 7 × 10⁻⁸ m at the Earth's surface on WebGPU and WebGL 2; its old df64 sums were 0.08 to 0.29 m off there. The df64 compute pass, for a parameter that doesn't separate, still relies on the order of float operations, and other vendors' GPUs are not measured yet.",
   },
   {
     what: "The same content twice in one view",

@@ -41,7 +41,6 @@ import { affine, TransformGraph, type Params } from "../transform/graph.ts";
 import { routeBetween, type Route } from "../transform/route.ts";
 import {
   CENTER,
-  CORRIDOR_CENTER,
   CORRIDOR_CHANGE_M,
   CORRIDOR_DRAWN_M,
   JACOBIAN,
@@ -305,7 +304,6 @@ const BUILTINS: readonly Builtin[] = [
     ],
     half: [60, 60, 1],
     position: { abs: CORRIDOR_CHANGE_M, rel: 0 },
-    center: CORRIDOR_CENTER,
     drawn: { abs: CORRIDOR_DRAWN_M, rel: 0 },
   },
   {
@@ -319,7 +317,6 @@ const BUILTINS: readonly Builtin[] = [
     ],
     half: [2, 1, 1],
     position: { abs: CORRIDOR_CHANGE_M, rel: 0 },
-    center: CORRIDOR_CENTER,
     drawn: { abs: CORRIDOR_DRAWN_M, rel: 0 },
   },
   {
@@ -495,9 +492,9 @@ export function routeCases(): RouteCase[] {
     // The corridor's offsets; the twist's box is inside them.
     rows: offsetsOf([3, 3, 1]),
     position: { abs: CORRIDOR_CHANGE_M, rel: POSITION.rel },
-    // The corridor's center and drawn bounds, in meters, for both routes: the
-    // twist's center term is meters near the origin, well inside them.
-    center: CORRIDOR_CENTER,
+    // The center bound, and the corridor's drawn bound, in meters, for both
+    // routes: the twist's center term is meters near the origin.
+    center: CENTER,
     jacobian: JACOBIAN,
     drawn: { abs: CORRIDOR_DRAWN_M, rel: 0 },
   });

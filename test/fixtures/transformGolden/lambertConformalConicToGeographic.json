@@ -59,40 +59,39 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "f6672eeddfaf6c3bb0ba00b313fa1b61",
-    "canonicalLength": 30073
+    "canonical": "edd4bac21e1e4f56003b16a0c1a9a383",
+    "canonicalLength": 30959
    },
    "positionWgsl": {
-    "canonical": "4731ecc05590c4f9c269baee920164ad",
-    "canonicalLength": 10649
+    "canonical": "773651253ce939f51b603af86b143251",
+    "canonicalLength": 11535
    },
    "centerConstantsWgsl": {
-    "canonical": "647ae688bd3e138d3696715f7dc29f13",
-    "canonicalLength": 48861
+    "canonical": "1b1414fea4cbb6572c70a5d7b9ab6f2d",
+    "canonicalLength": 49492
    },
    "uniformsLayout": {
-    "floats": 32,
+    "floats": 36,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20,
-     "s0.v21": 21,
-     "s0.v22": 22,
-     "s0.v23": 23,
-     "s0.j24": 24,
-     "s0.j25": 25,
-     "s0.j26": 26,
-     "s0.j27": 27,
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
      "s0.j28": 28,
-     "s0.j29": 29
+     "s0.j29": 29,
+     "s0.j30": 30,
+     "s0.j31": 31,
+     "s0.j32": 32,
+     "s0.j33": 33
     }
    },
    "perDrawLayout": {
-    "floats": 248,
+    "floats": 252,
     "fields": {
-     "n": 241,
-     "sha": "9c1808c9a5366a50ff150865678f53c0"
+     "n": 240,
+     "sha": "57e18f67df8095cffe13bcc96d9daa57"
     }
    },
    "dynamicParams": ["lambertConformalConicToGeographic.lon0", "lambertConformalConicToGeographic.lat0", "lambertConformalConicToGeographic.lat1", "lambertConformalConicToGeographic.lat2", "lambertConformalConicToGeographic.falseEasting", "lambertConformalConicToGeographic.falseNorthing"],
@@ -116,15 +115,15 @@
     "lambertConformalConicToGeographic.falseEasting": 1000000,
     "lambertConformalConicToGeographic.falseNorthing": -2000000
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 0.5860522389411926, -1, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 0.5860522389411926, -1, 0, 0],
    "records": [
     {
-     "n": 248,
-     "sha": "48cd5a37d403b9f56477d37e48d2648a"
+     "n": 252,
+     "sha": "d9e08a038f1ec49f8751bf28d63e1632"
     },
     {
-     "n": 248,
-     "sha": "1f66588ce74c65726ca6530c15e087da"
+     "n": 252,
+     "sha": "4258b38ef8294f180903b7d134e30286"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, -96, 0, 23, 0, 33, 0, 45, 0, 1000000, 0, -2000000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -132,40 +131,39 @@
   },
   "linear": {
    "wgsl": {
-    "canonical": "f6672eeddfaf6c3bb0ba00b313fa1b61",
-    "canonicalLength": 30073
+    "canonical": "edd4bac21e1e4f56003b16a0c1a9a383",
+    "canonicalLength": 30959
    },
    "positionWgsl": {
-    "canonical": "4731ecc05590c4f9c269baee920164ad",
-    "canonicalLength": 10649
+    "canonical": "773651253ce939f51b603af86b143251",
+    "canonicalLength": 11535
    },
    "centerConstantsWgsl": {
-    "canonical": "647ae688bd3e138d3696715f7dc29f13",
-    "canonicalLength": 48861
+    "canonical": "1b1414fea4cbb6572c70a5d7b9ab6f2d",
+    "canonicalLength": 49492
    },
    "uniformsLayout": {
-    "floats": 32,
+    "floats": 36,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20,
-     "s0.v21": 21,
-     "s0.v22": 22,
-     "s0.v23": 23,
-     "s0.j24": 24,
-     "s0.j25": 25,
-     "s0.j26": 26,
-     "s0.j27": 27,
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
      "s0.j28": 28,
-     "s0.j29": 29
+     "s0.j29": 29,
+     "s0.j30": 30,
+     "s0.j31": 31,
+     "s0.j32": 32,
+     "s0.j33": 33
     }
    },
    "perDrawLayout": {
-    "floats": 248,
+    "floats": 252,
     "fields": {
-     "n": 241,
-     "sha": "9c1808c9a5366a50ff150865678f53c0"
+     "n": 240,
+     "sha": "57e18f67df8095cffe13bcc96d9daa57"
     }
    },
    "dynamicParams": ["lambertConformalConicToGeographic.lon0", "lambertConformalConicToGeographic.lat0", "lambertConformalConicToGeographic.lat1", "lambertConformalConicToGeographic.lat2", "lambertConformalConicToGeographic.falseEasting", "lambertConformalConicToGeographic.falseNorthing"],
@@ -189,15 +187,15 @@
     "lambertConformalConicToGeographic.falseEasting": 1000000,
     "lambertConformalConicToGeographic.falseNorthing": -2000000
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 0.5860522389411926, -1, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 0.5860522389411926, -1, 0, 0],
    "records": [
     {
-     "n": 248,
-     "sha": "48cd5a37d403b9f56477d37e48d2648a"
+     "n": 252,
+     "sha": "d9e08a038f1ec49f8751bf28d63e1632"
     },
     {
-     "n": 248,
-     "sha": "1f66588ce74c65726ca6530c15e087da"
+     "n": 252,
+     "sha": "4258b38ef8294f180903b7d134e30286"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, -96, 0, 23, 0, 33, 0, 45, 0, 1000000, 0, -2000000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -205,40 +203,39 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "f6672eeddfaf6c3bb0ba00b313fa1b61",
-    "canonicalLength": 30073
+    "canonical": "edd4bac21e1e4f56003b16a0c1a9a383",
+    "canonicalLength": 30959
    },
    "positionWgsl": {
-    "canonical": "4731ecc05590c4f9c269baee920164ad",
-    "canonicalLength": 10649
+    "canonical": "773651253ce939f51b603af86b143251",
+    "canonicalLength": 11535
    },
    "centerConstantsWgsl": {
-    "canonical": "647ae688bd3e138d3696715f7dc29f13",
-    "canonicalLength": 48861
+    "canonical": "1b1414fea4cbb6572c70a5d7b9ab6f2d",
+    "canonicalLength": 49492
    },
    "uniformsLayout": {
-    "floats": 32,
+    "floats": 36,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20,
-     "s0.v21": 21,
-     "s0.v22": 22,
-     "s0.v23": 23,
-     "s0.j24": 24,
-     "s0.j25": 25,
-     "s0.j26": 26,
-     "s0.j27": 27,
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27,
      "s0.j28": 28,
-     "s0.j29": 29
+     "s0.j29": 29,
+     "s0.j30": 30,
+     "s0.j31": 31,
+     "s0.j32": 32,
+     "s0.j33": 33
     }
    },
    "perDrawLayout": {
-    "floats": 248,
+    "floats": 252,
     "fields": {
-     "n": 241,
-     "sha": "9c1808c9a5366a50ff150865678f53c0"
+     "n": 240,
+     "sha": "57e18f67df8095cffe13bcc96d9daa57"
     }
    },
    "dynamicParams": ["lambertConformalConicToGeographic.lon0", "lambertConformalConicToGeographic.lat0", "lambertConformalConicToGeographic.lat1", "lambertConformalConicToGeographic.lat2", "lambertConformalConicToGeographic.falseEasting", "lambertConformalConicToGeographic.falseNorthing"],
@@ -262,15 +259,15 @@
     "lambertConformalConicToGeographic.falseEasting": 1000000,
     "lambertConformalConicToGeographic.falseNorthing": -2000000
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 0.5860522389411926, -1, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 1, 12452754, 1.5860522985458374, 0.6304962635040283, 0.5860522389411926, -1, 0, 0],
    "records": [
     {
-     "n": 248,
-     "sha": "48cd5a37d403b9f56477d37e48d2648a"
+     "n": 252,
+     "sha": "d9e08a038f1ec49f8751bf28d63e1632"
     },
     {
-     "n": 248,
-     "sha": "1f66588ce74c65726ca6530c15e087da"
+     "n": 252,
+     "sha": "4258b38ef8294f180903b7d134e30286"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, -96, 0, 23, 0, 33, 0, 45, 0, 1000000, 0, -2000000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -278,34 +275,33 @@
   },
   "none": {
    "wgsl": {
-    "canonical": "ee8f835d6a47d6c70ef7d8f5a245a03a",
-    "canonicalLength": 9699
+    "canonical": "f9c67a665257c686e5c96e27b988e975",
+    "canonicalLength": 10585
    },
    "positionWgsl": {
-    "canonical": "8d9779b0481d6024c6f92f5a62ed82c3",
-    "canonicalLength": 9993
+    "canonical": "3b225b8d3f76391226459f9fe5e04463",
+    "canonicalLength": 10879
    },
    "centerConstantsWgsl": {
-    "canonical": "43e1a2ccb7e679a26f132938b67d72c4",
-    "canonicalLength": 20405
+    "canonical": "659aadb2b779457dcab3ba0398e69374",
+    "canonicalLength": 21032
    },
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 28,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "s0.v20": 20,
-     "s0.v21": 21,
-     "s0.v22": 22,
-     "s0.v23": 23
+     "eye": 0,
+     "affine0": 12,
+     "s0.v24": 24,
+     "s0.v25": 25,
+     "s0.v26": 26,
+     "s0.v27": 27
     }
    },
    "perDrawLayout": {
-    "floats": 68,
+    "floats": 72,
     "fields": {
-     "n": 62,
-     "sha": "1cffa2ec0d589a3b3d2f1c8e8e7b4181"
+     "n": 61,
+     "sha": "bca20ec9a66076cda4c2680b3180d13d"
     }
    },
    "dynamicParams": ["lambertConformalConicToGeographic.lon0", "lambertConformalConicToGeographic.lat0", "lambertConformalConicToGeographic.lat1", "lambertConformalConicToGeographic.lat2", "lambertConformalConicToGeographic.falseEasting", "lambertConformalConicToGeographic.falseNorthing"],
@@ -329,15 +325,15 @@
     "lambertConformalConicToGeographic.falseEasting": 1000000,
     "lambertConformalConicToGeographic.falseNorthing": -2000000
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 12452754, 1.5860522985458374, 0.6304962635040283],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 12452754, 1.5860522985458374, 0.6304962635040283],
    "records": [
     {
-     "n": 68,
-     "sha": "cf2c5b619a6705fee7ffc58cc3d26661"
+     "n": 72,
+     "sha": "3e12204242e34d1354ebdfefdbcf808a"
     },
     {
-     "n": 68,
-     "sha": "760bdc133c8c1f7ba04aa81d34784654"
+     "n": 72,
+     "sha": "2517dffadf0398d0523b8aef136504c1"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, -96, 0, 23, 0, 33, 0, 45, 0, 1000000, 0, -2000000, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

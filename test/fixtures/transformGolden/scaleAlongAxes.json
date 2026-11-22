@@ -59,36 +59,34 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "481fe3ce0905b14a0b3aa90e27baefd7",
-    "canonicalLength": 8771
+    "canonical": "8909d6295d5df1bee23256f2a9b46395",
+    "canonicalLength": 9352
    },
    "positionWgsl": {
-    "canonical": "b22b60816c5e632496e99c1cec1ede27",
-    "canonicalLength": 7341
+    "canonical": "21b370d15dcf748c8209fb50b4e1707f",
+    "canonicalLength": 7921
    },
    "centerConstantsWgsl": {
-    "canonical": "5d8b8b08342015c6f56b487ac3520a75",
-    "canonicalLength": 15399
+    "canonical": "877e892c88ae077ec402bd5a5082bd99",
+    "canonicalLength": 16879
    },
    "uniformsLayout": {
-    "floats": 44,
+    "floats": 60,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:scaleAlongAxes.ax": 20,
-     "param:scaleAlongAxes.ay": 21,
-     "param:scaleAlongAxes.az": 22,
-     "param:scaleAlongAxes.sa": 23,
-     "param:scaleAlongAxes.bx": 25,
-     "param:scaleAlongAxes.by": 26,
-     "param:scaleAlongAxes.bz": 27,
-     "param:scaleAlongAxes.sb": 28,
-     "param:scaleAlongAxes.ux": 30,
-     "param:scaleAlongAxes.uy": 31,
-     "param:scaleAlongAxes.uz": 32,
-     "param:scaleAlongAxes.sc": 33,
-     "s0.j35": 35,
+     "eye": 0,
+     "affine0": 12,
+     "param:scaleAlongAxes.ax": 24,
+     "param:scaleAlongAxes.ay": 25,
+     "param:scaleAlongAxes.az": 26,
+     "param:scaleAlongAxes.sa": 27,
+     "param:scaleAlongAxes.bx": 28,
+     "param:scaleAlongAxes.by": 29,
+     "param:scaleAlongAxes.bz": 30,
+     "param:scaleAlongAxes.sb": 31,
+     "param:scaleAlongAxes.ux": 32,
+     "param:scaleAlongAxes.uy": 33,
+     "param:scaleAlongAxes.uz": 34,
+     "param:scaleAlongAxes.sc": 35,
      "s0.j36": 36,
      "s0.j37": 37,
      "s0.j38": 38,
@@ -96,20 +94,23 @@
      "s0.j40": 40,
      "s0.j41": 41,
      "s0.j42": 42,
-     "s0.j43": 43
+     "s0.j43": 43,
+     "s0.j44": 44,
+     "paramParts:scaleAlongAxes.sa": 48,
+     "paramParts:scaleAlongAxes.sb": 52,
+     "paramParts:scaleAlongAxes.sc": 56
     }
    },
    "perDrawLayout": {
-    "floats": 44,
+    "floats": 60,
     "fields": {
-     "outHi": 0,
-     "outLo": 4,
-     "outG:scaleAlongAxes.sa": 8,
-     "outG:scaleAlongAxes.sb": 16,
-     "outG:scaleAlongAxes.sc": 24,
-     "s0.v32": 32,
-     "s0.v36": 36,
-     "s0.v40": 40
+     "out": 0,
+     "outG:scaleAlongAxes.sa": 12,
+     "outG:scaleAlongAxes.sb": 24,
+     "outG:scaleAlongAxes.sc": 36,
+     "s0.v48": 48,
+     "s0.v52": 52,
+     "s0.v56": 56
     }
    },
    "dynamicParams": ["scaleAlongAxes.ox", "scaleAlongAxes.oy", "scaleAlongAxes.oz", "scaleAlongAxes.ax", "scaleAlongAxes.ay", "scaleAlongAxes.az", "scaleAlongAxes.bx", "scaleAlongAxes.by", "scaleAlongAxes.bz", "scaleAlongAxes.ux", "scaleAlongAxes.uy", "scaleAlongAxes.uz"],
@@ -142,10 +143,19 @@
     "scaleAlongAxes.uy": 0,
     "scaleAlongAxes.uz": 1
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1.5, 0, 0, 1, 0, 0.75, 0, 0, 0, 1, 2, 0, 1.5, 0, 0, 0, 0.75, 0, 0, 0, 2],
+   "uniforms": {
+    "n": 60,
+    "sha": "e664723090aa6dc25319beb48aa7549c"
+   },
    "records": [
-    [2, -1, 0.5, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 2.5, 0, 0, 0, 0, 0, 2, -1, 0, 0, -1, 0, 3, 0, 0.5, 0, 0, 2.5],
-    [2, -1, 0.5, 0, 0, 0, 0, 0, -42, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 10.5, 0, 0, 0, 0, 0, 2, -42, 0, 0, -1, 0, 26, 0, 0.5, 0, 0, 10.5]
+    {
+     "n": 60,
+     "sha": "597f947772ab0277c6e89c55a5ae65bf"
+    },
+    {
+     "n": 60,
+     "sha": "a3b1633c20c1b566ee6aef14e862665e"
+    }
    ],
    "centerUniforms": {
     "n": 68,
@@ -155,44 +165,42 @@
   },
   "linear": {
    "wgsl": {
-    "canonical": "c607c00b38b0fc58b6262c0011a0b0ad",
-    "canonicalLength": 8696
+    "canonical": "0ea7b10252bc56c842a7270a4fea3e76",
+    "canonicalLength": 9580
    },
    "positionWgsl": {
-    "canonical": "410a88a75a6f128b935024c4a273f8c5",
-    "canonicalLength": 6726
+    "canonical": "bff79778421091ee048f38b31f94101f",
+    "canonicalLength": 7606
    },
    "centerConstantsWgsl": null,
    "uniformsLayout": {
-    "floats": 32,
+    "floats": 36,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:scaleAlongAxes.ax": 20,
-     "param:scaleAlongAxes.ay": 21,
-     "param:scaleAlongAxes.az": 22,
-     "param:scaleAlongAxes.sa": 23,
-     "param:scaleAlongAxes.bx": 24,
-     "param:scaleAlongAxes.by": 25,
-     "param:scaleAlongAxes.bz": 26,
-     "param:scaleAlongAxes.sb": 27,
-     "param:scaleAlongAxes.ux": 28,
-     "param:scaleAlongAxes.uy": 29,
-     "param:scaleAlongAxes.uz": 30,
-     "param:scaleAlongAxes.sc": 31
+     "eye": 0,
+     "affine0": 12,
+     "param:scaleAlongAxes.ax": 24,
+     "param:scaleAlongAxes.ay": 25,
+     "param:scaleAlongAxes.az": 26,
+     "param:scaleAlongAxes.sa": 27,
+     "param:scaleAlongAxes.bx": 28,
+     "param:scaleAlongAxes.by": 29,
+     "param:scaleAlongAxes.bz": 30,
+     "param:scaleAlongAxes.sb": 31,
+     "param:scaleAlongAxes.ux": 32,
+     "param:scaleAlongAxes.uy": 33,
+     "param:scaleAlongAxes.uz": 34,
+     "param:scaleAlongAxes.sc": 35
     }
    },
    "perDrawLayout": {
-    "floats": 52,
+    "floats": 56,
     "fields": {
-     "outHi": 0,
-     "outLo": 4,
-     "s0.v8": 8,
-     "s0.v9": 9,
-     "s0.v10": 10,
-     "s0.lj0": 12,
-     "s0.lh0": 24
+     "out": 0,
+     "s0.v12": 12,
+     "s0.v13": 13,
+     "s0.v14": 14,
+     "s0.lj0": 16,
+     "s0.lh0": 28
     }
    },
    "dynamicParams": ["scaleAlongAxes.ox", "scaleAlongAxes.oy", "scaleAlongAxes.oz", "scaleAlongAxes.sa", "scaleAlongAxes.sb", "scaleAlongAxes.sc", "scaleAlongAxes.ax", "scaleAlongAxes.ay", "scaleAlongAxes.az", "scaleAlongAxes.bx", "scaleAlongAxes.by", "scaleAlongAxes.bz", "scaleAlongAxes.ux", "scaleAlongAxes.uy", "scaleAlongAxes.uz"],
@@ -225,15 +233,15 @@
     "scaleAlongAxes.uy": 0,
     "scaleAlongAxes.uz": 1
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1.5, 0, 1, 0, 0.75, 0, 0, 1, 2],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1.5, 0, 1, 0, 0.75, 0, 0, 1, 2],
    "records": [
     {
-     "n": 52,
-     "sha": "2d3c9179470f37ffab048e268b26056c"
+     "n": 56,
+     "sha": "f6bda0560b4844e878ac2f9cee98c6c2"
     },
     {
-     "n": 52,
-     "sha": "e27c08410ae7e8905b16c19913857885"
+     "n": 56,
+     "sha": "ba27584d5422dc115fa8fc6ead66fdd7"
     }
    ],
    "centerUniforms": null,
@@ -241,36 +249,34 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "481fe3ce0905b14a0b3aa90e27baefd7",
-    "canonicalLength": 8771
+    "canonical": "8909d6295d5df1bee23256f2a9b46395",
+    "canonicalLength": 9352
    },
    "positionWgsl": {
-    "canonical": "b22b60816c5e632496e99c1cec1ede27",
-    "canonicalLength": 7341
+    "canonical": "21b370d15dcf748c8209fb50b4e1707f",
+    "canonicalLength": 7921
    },
    "centerConstantsWgsl": {
-    "canonical": "5d8b8b08342015c6f56b487ac3520a75",
-    "canonicalLength": 15399
+    "canonical": "877e892c88ae077ec402bd5a5082bd99",
+    "canonicalLength": 16879
    },
    "uniformsLayout": {
-    "floats": 44,
+    "floats": 60,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:scaleAlongAxes.ax": 20,
-     "param:scaleAlongAxes.ay": 21,
-     "param:scaleAlongAxes.az": 22,
-     "param:scaleAlongAxes.sa": 23,
-     "param:scaleAlongAxes.bx": 25,
-     "param:scaleAlongAxes.by": 26,
-     "param:scaleAlongAxes.bz": 27,
-     "param:scaleAlongAxes.sb": 28,
-     "param:scaleAlongAxes.ux": 30,
-     "param:scaleAlongAxes.uy": 31,
-     "param:scaleAlongAxes.uz": 32,
-     "param:scaleAlongAxes.sc": 33,
-     "s0.j35": 35,
+     "eye": 0,
+     "affine0": 12,
+     "param:scaleAlongAxes.ax": 24,
+     "param:scaleAlongAxes.ay": 25,
+     "param:scaleAlongAxes.az": 26,
+     "param:scaleAlongAxes.sa": 27,
+     "param:scaleAlongAxes.bx": 28,
+     "param:scaleAlongAxes.by": 29,
+     "param:scaleAlongAxes.bz": 30,
+     "param:scaleAlongAxes.sb": 31,
+     "param:scaleAlongAxes.ux": 32,
+     "param:scaleAlongAxes.uy": 33,
+     "param:scaleAlongAxes.uz": 34,
+     "param:scaleAlongAxes.sc": 35,
      "s0.j36": 36,
      "s0.j37": 37,
      "s0.j38": 38,
@@ -278,20 +284,23 @@
      "s0.j40": 40,
      "s0.j41": 41,
      "s0.j42": 42,
-     "s0.j43": 43
+     "s0.j43": 43,
+     "s0.j44": 44,
+     "paramParts:scaleAlongAxes.sa": 48,
+     "paramParts:scaleAlongAxes.sb": 52,
+     "paramParts:scaleAlongAxes.sc": 56
     }
    },
    "perDrawLayout": {
-    "floats": 44,
+    "floats": 60,
     "fields": {
-     "outHi": 0,
-     "outLo": 4,
-     "outG:scaleAlongAxes.sa": 8,
-     "outG:scaleAlongAxes.sb": 16,
-     "outG:scaleAlongAxes.sc": 24,
-     "s0.v32": 32,
-     "s0.v36": 36,
-     "s0.v40": 40
+     "out": 0,
+     "outG:scaleAlongAxes.sa": 12,
+     "outG:scaleAlongAxes.sb": 24,
+     "outG:scaleAlongAxes.sc": 36,
+     "s0.v48": 48,
+     "s0.v52": 52,
+     "s0.v56": 56
     }
    },
    "dynamicParams": ["scaleAlongAxes.ox", "scaleAlongAxes.oy", "scaleAlongAxes.oz", "scaleAlongAxes.ax", "scaleAlongAxes.ay", "scaleAlongAxes.az", "scaleAlongAxes.bx", "scaleAlongAxes.by", "scaleAlongAxes.bz", "scaleAlongAxes.ux", "scaleAlongAxes.uy", "scaleAlongAxes.uz"],
@@ -324,10 +333,19 @@
     "scaleAlongAxes.uy": 0,
     "scaleAlongAxes.uz": 1
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1.5, 0, 0, 1, 0, 0.75, 0, 0, 0, 1, 2, 0, 1.5, 0, 0, 0, 0.75, 0, 0, 0, 2],
+   "uniforms": {
+    "n": 60,
+    "sha": "e664723090aa6dc25319beb48aa7549c"
+   },
    "records": [
-    [2, -1, 0.5, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 2.5, 0, 0, 0, 0, 0, 2, -1, 0, 0, -1, 0, 3, 0, 0.5, 0, 0, 2.5],
-    [2, -1, 0.5, 0, 0, 0, 0, 0, -42, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 10.5, 0, 0, 0, 0, 0, 2, -42, 0, 0, -1, 0, 26, 0, 0.5, 0, 0, 10.5]
+    {
+     "n": 60,
+     "sha": "597f947772ab0277c6e89c55a5ae65bf"
+    },
+    {
+     "n": 60,
+     "sha": "a3b1633c20c1b566ee6aef14e862665e"
+    }
    ],
    "centerUniforms": {
     "n": 68,
@@ -337,48 +355,49 @@
   },
   "none": {
    "wgsl": {
-    "canonical": "90e1be318d9fc33974edfc96c2846405",
-    "canonicalLength": 7020
+    "canonical": "78763108f70642faa072597102aa2565",
+    "canonicalLength": 7582
    },
    "positionWgsl": {
-    "canonical": "eac63ac64e60af543b5f25b33a67f755",
-    "canonicalLength": 7314
+    "canonical": "322f344437492710299b2d5f13da266c",
+    "canonicalLength": 7876
    },
    "centerConstantsWgsl": {
-    "canonical": "04c1b496b9119ec1fc0b55f7261a81c4",
-    "canonicalLength": 13037
+    "canonical": "e5b2f92bb5f650ae4c634052df3f3a16",
+    "canonicalLength": 14517
    },
    "uniformsLayout": {
-    "floats": 36,
+    "floats": 48,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:scaleAlongAxes.ax": 20,
-     "param:scaleAlongAxes.ay": 21,
-     "param:scaleAlongAxes.az": 22,
-     "param:scaleAlongAxes.sa": 23,
-     "param:scaleAlongAxes.bx": 25,
-     "param:scaleAlongAxes.by": 26,
-     "param:scaleAlongAxes.bz": 27,
-     "param:scaleAlongAxes.sb": 28,
-     "param:scaleAlongAxes.ux": 30,
-     "param:scaleAlongAxes.uy": 31,
-     "param:scaleAlongAxes.uz": 32,
-     "param:scaleAlongAxes.sc": 33
+     "eye": 0,
+     "affine0": 12,
+     "param:scaleAlongAxes.ax": 24,
+     "param:scaleAlongAxes.ay": 25,
+     "param:scaleAlongAxes.az": 26,
+     "param:scaleAlongAxes.sa": 27,
+     "param:scaleAlongAxes.bx": 28,
+     "param:scaleAlongAxes.by": 29,
+     "param:scaleAlongAxes.bz": 30,
+     "param:scaleAlongAxes.sb": 31,
+     "param:scaleAlongAxes.ux": 32,
+     "param:scaleAlongAxes.uy": 33,
+     "param:scaleAlongAxes.uz": 34,
+     "param:scaleAlongAxes.sc": 35,
+     "paramParts:scaleAlongAxes.sa": 36,
+     "paramParts:scaleAlongAxes.sb": 40,
+     "paramParts:scaleAlongAxes.sc": 44
     }
    },
    "perDrawLayout": {
-    "floats": 44,
+    "floats": 60,
     "fields": {
-     "outHi": 0,
-     "outLo": 4,
-     "outG:scaleAlongAxes.sa": 8,
-     "outG:scaleAlongAxes.sb": 16,
-     "outG:scaleAlongAxes.sc": 24,
-     "s0.v32": 32,
-     "s0.v36": 36,
-     "s0.v40": 40
+     "out": 0,
+     "outG:scaleAlongAxes.sa": 12,
+     "outG:scaleAlongAxes.sb": 24,
+     "outG:scaleAlongAxes.sc": 36,
+     "s0.v48": 48,
+     "s0.v52": 52,
+     "s0.v56": 56
     }
    },
    "dynamicParams": ["scaleAlongAxes.ox", "scaleAlongAxes.oy", "scaleAlongAxes.oz", "scaleAlongAxes.ax", "scaleAlongAxes.ay", "scaleAlongAxes.az", "scaleAlongAxes.bx", "scaleAlongAxes.by", "scaleAlongAxes.bz", "scaleAlongAxes.ux", "scaleAlongAxes.uy", "scaleAlongAxes.uz"],
@@ -411,10 +430,16 @@
     "scaleAlongAxes.uy": 0,
     "scaleAlongAxes.uz": 1
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1.5, 0, 0, 1, 0, 0.75, 0, 0, 0, 1, 2, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1.5, 0, 1, 0, 0.75, 0, 0, 1, 2, 0, 2, -8388608, 0, 0, 1, -4194304, 0, 0, 2, 0, 0],
    "records": [
-    [2, -1, 0.5, 0, 0, 0, 0, 0, -1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 0, 0, 0, 0, 0, 0, 2.5, 0, 0, 0, 0, 0, 2, -1, 0, 0, -1, 0, 3, 0, 0.5, 0, 0, 2.5],
-    [2, -1, 0.5, 0, 0, 0, 0, 0, -42, 0, 0, 0, 0, 0, 0, 0, 0, 26, 0, 0, 0, 0, 0, 0, 0, 0, 10.5, 0, 0, 0, 0, 0, 2, -42, 0, 0, -1, 0, 26, 0, 0.5, 0, 0, 10.5]
+    {
+     "n": 60,
+     "sha": "597f947772ab0277c6e89c55a5ae65bf"
+    },
+    {
+     "n": 60,
+     "sha": "a3b1633c20c1b566ee6aef14e862665e"
+    }
    ],
    "centerUniforms": {
     "n": 68,

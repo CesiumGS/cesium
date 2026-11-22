@@ -59,31 +59,31 @@
  "route": {
   "exact": {
    "wgsl": {
-    "canonical": "b828f9aa9a028dd397df1ee61e53717f",
-    "canonicalLength": 60957
+    "canonical": "dd91a3fa02975b962b464358384849c2",
+    "canonicalLength": 61735
    },
    "positionWgsl": {
-    "canonical": "4a432ececb81ec70e0d2fea40ae01592",
-    "canonicalLength": 14582
+    "canonical": "f1e6befa65f2719e6f5e7161c80a361d",
+    "canonicalLength": 15346
    },
    "centerConstantsWgsl": {
-    "canonical": "d6afc4a1267248be4c327cc21115b908",
-    "canonicalLength": 76440
+    "canonical": "3dc2538b248844a5ec10dbc77e8a8f53",
+    "canonicalLength": 77360
    },
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 32,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:heightOffset.offset": 20
+     "eye": 0,
+     "affine0": 12,
+     "param:heightOffset.offset": 24,
+     "paramParts:heightOffset.offset": 28
     }
    },
    "perDrawLayout": {
-    "floats": 424,
+    "floats": 432,
     "fields": {
-     "n": 396,
-     "sha": "de43a65c6812149bfaafa1c20edd25d0"
+     "n": 395,
+     "sha": "e1c4a7ba066b3a78da5755eee695d796"
     }
    },
    "dynamicParams": [],
@@ -102,15 +102,15 @@
    "paramValues": {
     "heightOffset.offset": 123
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 123, 0, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 123, 0, 0, 0, 0, 123, 0, 0],
    "records": [
     {
-     "n": 424,
-     "sha": "f63ab135fa8643bf46c312a7921fa3c1"
+     "n": 432,
+     "sha": "7002f00c532f2bd86b33029656716885"
     },
     {
-     "n": 424,
-     "sha": "f908ca7e2503d7e67d1e171845f7263a"
+     "n": 432,
+     "sha": "ee2e5108cb23389f815260c5e6102b7d"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 123, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -118,28 +118,27 @@
   },
   "linear": {
    "wgsl": {
-    "canonical": "127e6c1328c0c5a548d1f2f96e45cb71",
-    "canonicalLength": 15310
+    "canonical": "152e093f3ab5a2e845ee50e16f997745",
+    "canonicalLength": 16194
    },
    "positionWgsl": {
-    "canonical": "4e3feff2cf62e4874b443f4ad777e57d",
-    "canonicalLength": 13315
+    "canonical": "97bf7a017d901dfa7d9f9eb70c223f9b",
+    "canonicalLength": 14199
    },
    "centerConstantsWgsl": null,
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 28,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:heightOffset.offset": 20
+     "eye": 0,
+     "affine0": 12,
+     "param:heightOffset.offset": 24
     }
    },
    "perDrawLayout": {
-    "floats": 132,
+    "floats": 136,
     "fields": {
-     "n": 87,
-     "sha": "677a56e61f8be60ef22d1032422b9c50"
+     "n": 86,
+     "sha": "322b569c1a57ee1a9a62fc681730333c"
     }
    },
    "dynamicParams": ["heightOffset.offset"],
@@ -158,15 +157,15 @@
    "paramValues": {
     "heightOffset.offset": 123
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 123, 0, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 123, 0, 0, 0],
    "records": [
     {
-     "n": 132,
-     "sha": "463b9987705d65cfc89148cbd14d8f26"
+     "n": 136,
+     "sha": "b8312b063d3f7de0f103338be4979b0c"
     },
     {
-     "n": 132,
-     "sha": "16e879ad2e35719530356ce084c0374e"
+     "n": 136,
+     "sha": "b80b4c5b32c46aecf73b97c0361118f7"
     }
    ],
    "centerUniforms": null,
@@ -174,28 +173,27 @@
   },
   "auto": {
    "wgsl": {
-    "canonical": "127e6c1328c0c5a548d1f2f96e45cb71",
-    "canonicalLength": 15310
+    "canonical": "152e093f3ab5a2e845ee50e16f997745",
+    "canonicalLength": 16194
    },
    "positionWgsl": {
-    "canonical": "4e3feff2cf62e4874b443f4ad777e57d",
-    "canonicalLength": 13315
+    "canonical": "97bf7a017d901dfa7d9f9eb70c223f9b",
+    "canonicalLength": 14199
    },
    "centerConstantsWgsl": null,
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 28,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:heightOffset.offset": 20
+     "eye": 0,
+     "affine0": 12,
+     "param:heightOffset.offset": 24
     }
    },
    "perDrawLayout": {
-    "floats": 132,
+    "floats": 136,
     "fields": {
-     "n": 87,
-     "sha": "677a56e61f8be60ef22d1032422b9c50"
+     "n": 86,
+     "sha": "322b569c1a57ee1a9a62fc681730333c"
     }
    },
    "dynamicParams": ["heightOffset.offset"],
@@ -214,15 +212,15 @@
    "paramValues": {
     "heightOffset.offset": 123
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 123, 0, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 123, 0, 0, 0],
    "records": [
     {
-     "n": 132,
-     "sha": "463b9987705d65cfc89148cbd14d8f26"
+     "n": 136,
+     "sha": "b8312b063d3f7de0f103338be4979b0c"
     },
     {
-     "n": 132,
-     "sha": "16e879ad2e35719530356ce084c0374e"
+     "n": 136,
+     "sha": "b80b4c5b32c46aecf73b97c0361118f7"
     }
    ],
    "centerUniforms": null,
@@ -230,31 +228,31 @@
   },
   "none": {
    "wgsl": {
-    "canonical": "0abb444432724918e456a3bb172f0bc3",
-    "canonicalLength": 13162
+    "canonical": "c8d38944718fd0f21a21cbdfc0af355d",
+    "canonicalLength": 13924
    },
    "positionWgsl": {
-    "canonical": "c2e16ce9abbdde4ce16993784246f1df",
-    "canonicalLength": 13456
+    "canonical": "fffadf5d5d925fc4e16d50f6088c40fa",
+    "canonicalLength": 14218
    },
    "centerConstantsWgsl": {
-    "canonical": "c6b12577c2ce9208191cb0a18fd72431",
-    "canonicalLength": 20999
+    "canonical": "904aa3ac8af122af1e52c2d3466a3098",
+    "canonicalLength": 21919
    },
    "uniformsLayout": {
-    "floats": 24,
+    "floats": 32,
     "fields": {
-     "eyeHi": 0,
-     "eyeLo": 4,
-     "affine0": 8,
-     "param:heightOffset.offset": 20
+     "eye": 0,
+     "affine0": 12,
+     "param:heightOffset.offset": 24,
+     "paramParts:heightOffset.offset": 28
     }
    },
    "perDrawLayout": {
-    "floats": 104,
+    "floats": 112,
     "fields": {
-     "n": 86,
-     "sha": "aa02721ddc7a41860177e7f2e0c32765"
+     "n": 85,
+     "sha": "48b949619dc4df8cd3ddd8a3cb1146e1"
     }
    },
    "dynamicParams": [],
@@ -273,15 +271,15 @@
    "paramValues": {
     "heightOffset.offset": 123
    },
-   "uniforms": [12.5, -40.25, 7.75, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 123, 0, 0, 0],
+   "uniforms": [0, 13, -8388608, 0, -1, 65496, -4194304, 0, 0, 8, -4194304, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 123, 0, 0, 0, 0, 123, 0, 0],
    "records": [
     {
-     "n": 104,
-     "sha": "f3ab1645c68065bb75647e9f615519c3"
+     "n": 112,
+     "sha": "040c5a50f7faee77dd6b5fc35cbd36a6"
     },
     {
-     "n": 104,
-     "sha": "c0ed0543e5b7e39c4dd0c710809b856f"
+     "n": 112,
+     "sha": "deb62884363998176fb2ce8030117741"
     }
    ],
    "centerUniforms": [2.802596928649634e-45, 0, 0, 0, 123, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
