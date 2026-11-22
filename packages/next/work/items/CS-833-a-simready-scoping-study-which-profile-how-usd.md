@@ -2,9 +2,10 @@
 id: CS-833
 title: "A SimReady scoping study: which profile, how USD comes in, and what alpha.1 must reserve, answering CS-802"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-21
 project: CS-437
+claimed_by: orch-11-CS-833
 touches: [packages/next/docs/design, packages/next/spikes]
 ---
 
