@@ -2,10 +2,11 @@
 id: CS-815
 title: Scene content has stable identity and semantic labels that don't depend on load order
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-21
 project: CS-437
 needs: [CS-832]
+claimed_by: orch-11-CS-815
 touches: [packages/next/src/scene/**, packages/next/src/query/**, packages/next/src/streaming/**, packages/next/src/index.ts, packages/next/test, packages/next/api/surface.txt]
 ---
 
