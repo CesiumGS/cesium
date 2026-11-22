@@ -2,10 +2,7 @@
 // checked against its SHA-256, and the leap-second and staleness rules. A
 // module of its own, light enough that each frame catalog provider pulls it
 // without the other provider's parsers.
-import {
-  readWithProgress,
-  type LoadProgress,
-} from "../../../core/src/io/readWithProgress.ts";
+import { readWithProgress, type LoadProgress } from "@cesium/core";
 import type { EarthOrientationParameters } from "../time/eop.ts";
 import { LeapSeconds } from "../time/leapSeconds.ts";
 import { framesDataFormatProblem } from "./framesDataFormat.ts";

@@ -164,12 +164,8 @@
 // (`parseGeoreference`), and `readGeoreference`, which passes EARTH and MOON,
 // is in georeferenceTileset.ts with `georeferenceTileset` and
 // `checkRigidTransform`, which need the engineering modules.
-import type { Cartographic } from "../../../core/src/math/ellipsoid.ts";
-import type { Body } from "../../../core/src/scene/Body.ts";
-import {
-  TilesetBodyError,
-  tilesetBody,
-} from "../../../core/src/streaming/tilesetBody.ts";
+import type { Cartographic, Body } from "@cesium/core";
+import { TilesetBodyError, tilesetBody } from "@cesium/core/internal";
 import type {
   AlignmentDefinition,
   HorizontalElement,

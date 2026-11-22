@@ -4,7 +4,7 @@
 // model's lunar axes, and `icrfToFixed`'s precession and sidereal time.
 // EME2000 and MOON_PA are constant and built in; their matrices live here so
 // the catalog and `createFrames` share them.
-import { identity, type Mat4 } from "../../../core/src/math/mat4.ts";
+import { identity, type Mat4 } from "@cesium/core/internal";
 import { icrfToFixed } from "../time/celestial.ts";
 import { frameBias } from "../time/erfa/bias.ts";
 import type { Instant } from "../time/Instant.ts";

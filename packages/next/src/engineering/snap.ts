@@ -10,15 +10,19 @@ import {
   isCentered,
   projectThrough,
   projectToPixel,
-} from "../../../core/src/scene/Camera.ts";
-import type { PickResult } from "../../../core/src/scene/View.ts";
+  routeMap,
+  routeForward,
+  type Route,
+  invertAffine,
+} from "@cesium/core/internal";
+import {
+  type PickResult,
+  type SceneItem,
+  type TileGeometry,
+  type Tileset3D,
+  meshGeometry,
+} from "@cesium/core";
 import type { CoordinateOperation } from "../frames/coordinates.ts";
-import type { SceneItem } from "../../../core/src/scene/SceneItem.ts";
-import { routeMap } from "../../../core/src/scene/curvilinearBounds.ts";
-import type { TileGeometry } from "../../../core/src/streaming/Tile.ts";
-import type { Tileset3D } from "../../../core/src/streaming/Tileset3D.ts";
-import { routeForward, type Route } from "../../../core/src/camera/route.ts";
-import { invertAffine } from "../../../core/src/math/mat4.ts";
 import type { DrawnThrough } from "../frames/drawn.ts";
 import type { TruePick } from "../frames/pickTruth.ts";
 import {
@@ -26,7 +30,6 @@ import {
   type DesignPoint,
   type SnapKind,
 } from "./EngineeringFrame.ts";
-import { meshGeometry } from "../../../core/src/geometry/mesh.ts";
 import { pickInFrame, type PickCamera, type PickView } from "./pick.ts";
 import { engineeringPlacement } from "./placement.ts";
 

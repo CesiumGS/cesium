@@ -11,7 +11,7 @@ import {
   routeIsAffine,
   curvilinearScaleOf,
   type Route,
-} from "../../../core/src/camera/route.ts";
+} from "@cesium/core/internal";
 import { distanceToSegment } from "./drawn.ts";
 
 /**

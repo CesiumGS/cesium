@@ -1,4 +1,4 @@
-import type { Vec3 } from "../../../core/src/math/vec3.ts";
+import type { Vec3 } from "@cesium/core/internal";
 import { icrfToFixed } from "./celestial.ts";
 
 const DAY_MS = 86_400_000;

@@ -2,21 +2,19 @@
 // closes plan 3's R8): a core pick (`View.pickPoint`) tagged with its
 // reference frame, its body, its body-fixed position, design coordinates
 // where the content has a placement, and its composed accuracy.
-import type { FrameKey } from "../../../core/src/camera/frameResolver.ts";
-import type { Body } from "../../../core/src/scene/Body.ts";
 import type {
+  FrameKey,
+  Body,
   CorePick,
   PickInterpreter,
-} from "../../../core/src/scene/pick.ts";
-import type { Placement } from "../../../core/src/scene/placement.ts";
-import type {
+  Placement,
   AnchorHandle,
   DrawHandle,
-} from "../../../core/src/scene/world/types.ts";
+  Georeference,
+} from "@cesium/core";
 import type { Instant } from "../time/Instant.ts";
 import type { DrawnThrough } from "./drawn.ts";
 import { truePick, type TruePick } from "./pickTruth.ts";
-import type { Georeference } from "../../../core/src/georeference/georeference.ts";
 import type { CatalogFrameName, FrameCatalog } from "./catalog.ts";
 import { Frame } from "./Frame.ts";
 import { isUnstated } from "./frameAccuracy.ts";

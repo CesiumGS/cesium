@@ -22,10 +22,7 @@
 // Licenses: PROJ and proj.js are MIT; proj.db carries the EPSG Dataset (IOGP,
 // https://epsg.org/terms-of-use.html); each grid carries its own, from the
 // catalog's copyright_and_licenses.csv (GridCatalog.credit).
-import {
-  readWithProgress,
-  type LoadProgress,
-} from "../../../core/src/io/readWithProgress.ts";
+import { readWithProgress, type LoadProgress } from "@cesium/core";
 import { GridCatalog, gridNameProblem, type GridEntry } from "./gridCatalog.ts";
 import { exists, type ProjApi } from "./projApi.ts";
 import { checkGrid, verify } from "./projCheck.ts";

@@ -14,15 +14,16 @@
 // body's geographic CRS, EPSG:4979 for the Earth and MOON_GEOGRAPHIC_CRS for
 // the Moon), or a host application's own. The engine's own `Ellipsoid` does
 // geodetic to body-fixed (R4).
-import { runBulk, type BulkOptions } from "../../../core/src/core/bulk.ts";
-import type { Body } from "../../../core/src/scene/Body.ts";
 import {
+  runBulk,
+  type BulkOptions,
+  type Body,
   cartographic,
   type Cartographic,
-} from "../../../core/src/math/ellipsoid.ts";
-import * as m4 from "../../../core/src/math/mat4.ts";
-import * as v3 from "../../../core/src/math/vec3.ts";
-import type { Mat4 } from "../../../core/src/math/mat4.ts";
+  mat4 as m4,
+  vec3 as v3,
+} from "@cesium/core";
+import type { Mat4 } from "@cesium/core/internal";
 import type {
   AreaOfInterest,
   CoordinateOperation,

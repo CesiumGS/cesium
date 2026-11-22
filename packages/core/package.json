@@ -15,6 +15,11 @@
       "types": "./dist/types/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./internal": {
+      "@cesium/source": "./src/internal.ts",
+      "types": "./dist/types/internal.d.ts",
+      "default": "./dist/internal.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [

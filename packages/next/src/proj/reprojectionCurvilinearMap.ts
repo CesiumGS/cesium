@@ -9,14 +9,15 @@ import type {
   CoordinateOperation,
   ResolvedCoordinates,
 } from "../frames/coordinates.ts";
-import type { CurvilinearScale } from "../../../core/src/camera/route.ts";
-import { cartographic } from "../../../core/src/math/ellipsoid.ts";
-import { EARTH, type Body } from "../../../core/src/scene/Body.ts";
-import { EngineeringFrame } from "../engineering/EngineeringFrame.ts";
 import {
+  type CurvilinearScale,
+  cartographic,
+  EARTH,
+  type Body,
   fromFunction,
   type FunctionCurvilinearMap,
-} from "../../../core/src/transforms/fromFunction.ts";
+} from "@cesium/core";
+import { EngineeringFrame } from "../engineering/EngineeringFrame.ts";
 
 /** What `reprojectionCurvilinearMap` takes besides the operation. */
 export interface ReprojectionCurvilinearMapOptions {

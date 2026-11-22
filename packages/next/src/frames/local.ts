@@ -1,12 +1,10 @@
-import { mat4 } from "../../../core/src/math/mat4.ts";
 import {
+  mat4,
   eastNorthUpToFixedFrame,
   isOnPolarAxis,
-} from "../../../core/src/math/transforms.ts";
-import type { Ellipsoid } from "../../../core/src/math/ellipsoid.ts";
+} from "@cesium/core/internal";
+import type { Ellipsoid, World, TransformHandle } from "@cesium/core";
 import type { Instant } from "../time/Instant.ts";
-import type { World } from "../../../core/src/scene/World.ts";
-import type { TransformHandle } from "../../../core/src/scene/world/types.ts";
 import { Frame, frameTransform, type FrameOptions } from "./Frame.ts";
 
 /**

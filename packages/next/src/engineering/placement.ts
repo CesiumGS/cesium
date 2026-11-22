@@ -2,9 +2,12 @@ import type {
   CoordinateOperation,
   ResolvedCoordinates,
 } from "../frames/coordinates.ts";
-import { cartographic } from "../../../core/src/math/ellipsoid.ts";
-import { EARTH, type Body } from "../../../core/src/scene/Body.ts";
-import type { Georeference } from "../../../core/src/georeference/georeference.ts";
+import {
+  cartographic,
+  EARTH,
+  type Body,
+  type Georeference,
+} from "@cesium/core";
 import type { RecordedOperation } from "./crs.ts";
 import { EngineeringFrame, RigidPlacement } from "./EngineeringFrame.ts";
 

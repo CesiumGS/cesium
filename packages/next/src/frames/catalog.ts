@@ -7,16 +7,20 @@
 // the data arrives. The providers own the edges of plan 5a's ruling 1: Earth
 // orientation owns ITRF's; the ephemeris owns GCRF, EARTH_ICRF, HCRS,
 // MOON_ICRF and MOON_ME. EME2000 and MOON_PA are constant and built in.
-import { FrameUnavailableError } from "../../../core/src/camera/frameResolver.ts";
-import { Emitter } from "../../../core/src/core/Emitter.ts";
+import {
+  FrameUnavailableError,
+  Emitter,
+  type LoadProgress,
+  EARTH,
+  MOON,
+  type Body,
+} from "@cesium/core";
 import type {
   FrameData,
   FrameDataLoadOptions,
   FrameDataWarning,
 } from "../ephemeris/loadFrameData.ts";
 import type { FrameManifest } from "../ephemeris/frameRoles.ts";
-import type { LoadProgress } from "../../../core/src/io/readWithProgress.ts";
-import { EARTH, MOON, type Body } from "../../../core/src/scene/Body.ts";
 import { LeapSeconds } from "../time/leapSeconds.ts";
 import {
   ANALYTIC_ACCURACY,

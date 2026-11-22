@@ -11,7 +11,7 @@ import {
   curvilinearForward,
   curvilinearInverse,
   type Route,
-} from "../../../core/src/camera/route.ts";
+} from "@cesium/core/internal";
 import { eigenSymmetric } from "./covariance.ts";
 
 /** `a · b` for column-major 3 × 3. */

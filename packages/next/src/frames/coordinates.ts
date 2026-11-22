@@ -8,7 +8,7 @@
 // This module holds only data types and interfaces, so the frames layer
 // names them without importing PROJ. The CRS data types moved here from the
 // engineering module, which re-exports them.
-import type { Body } from "../../../core/src/scene/Body.ts";
+import type { Body } from "@cesium/core";
 
 /**
  * A reference to a coordinate reference system, with the shapes of the 3D Tiles

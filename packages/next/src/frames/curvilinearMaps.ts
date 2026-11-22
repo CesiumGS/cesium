@@ -12,7 +12,7 @@ import {
   type Route as CoreRoute,
   type CurvilinearMap as CoreCurvilinearMap,
   type CurvilinearScale as CoreCurvilinearScale,
-} from "../../../core/src/camera/route.ts";
+} from "@cesium/core/internal";
 
 /** A curvilinear edge of the frame tree: a map from a frame's own coordinates to its parent's (see `CurvilinearFrameSpec`, `curvilinearFrame`). */
 export type CurvilinearMap = CoreCurvilinearMap;

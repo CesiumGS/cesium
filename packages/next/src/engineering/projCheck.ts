@@ -1,7 +1,7 @@
 // The byte checks PROJ's loaders share (proj.ts in the browser, projNode.ts in
 // Node): a file against its pin, and a grid against its catalog entry. Every
 // refusal names the file and both hashes (Review Focus 2).
-import { sha256Hex } from "../../../core/src/io/sha256.ts";
+import { sha256Hex } from "@cesium/core/internal";
 import type { GridEntry } from "./gridCatalog.ts";
 
 /** Throws unless `bytes` hash to `expected`, naming the file and both hashes. */

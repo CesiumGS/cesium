@@ -2,10 +2,7 @@ import {
   curvilinearForward,
   curvilinearInverse,
   type CurvilinearMap,
-} from "../../../core/src/camera/route.ts";
-import type { Instant } from "../time/Instant.ts";
-import type { EdgeAccuracy } from "../../../core/src/transform/accuracy.ts";
-import {
+  type EdgeAccuracy,
   affine,
   curvilinear,
   switchEdge,
@@ -13,7 +10,8 @@ import {
   type Edge,
   type PlainEdge,
   type TransformNode,
-} from "../../../core/src/transform/graph.ts";
+} from "@cesium/core/internal";
+import type { Instant } from "../time/Instant.ts";
 import type { FrameCatalog } from "./catalog.ts";
 import type { Frame } from "./Frame.ts";
 import { framePoint } from "./local.ts";

@@ -9,7 +9,7 @@ import {
   routeIsAffine,
   curvilinearScaleOf,
   type Route,
-} from "../../../core/src/camera/route.ts";
+} from "@cesium/core/internal";
 import { routeStretch } from "./routeStretch.ts";
 
 /** One curvilinear map a view drew content through. */

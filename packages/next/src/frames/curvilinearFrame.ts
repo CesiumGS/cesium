@@ -17,9 +17,9 @@ import {
   NonAffineRouteError,
   type CurvilinearFrameSpec,
   type CurvilinearMap,
-} from "../../../core/src/camera/route.ts";
-import { identity } from "../../../core/src/math/mat4.ts";
-import type { ViewId } from "../../../core/src/transform/graph.ts";
+  identity,
+  type ViewId,
+} from "@cesium/core/internal";
 import { Frame } from "./Frame.ts";
 import type { FrameAccuracy } from "./frameAccuracy.ts";
 

@@ -1,6 +1,4 @@
-import type { SpatialQueries } from "../../../core/src/query/queries.ts";
-import type { View } from "../../../core/src/scene/View.ts";
-import type { AnchorHandle } from "../../../core/src/scene/world/types.ts";
+import type { SpatialQueries, View, AnchorHandle } from "@cesium/core";
 
 export interface TerrainLineOfSightOptions {
   /**

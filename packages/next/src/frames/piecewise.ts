@@ -1,4 +1,4 @@
-import { FrameUnavailableError } from "../../../core/src/camera/frameResolver.ts";
+import { FrameUnavailableError } from "@cesium/core";
 import type { Instant } from "../time/Instant.ts";
 import { Frame, frameTransform, routeRevision } from "./Frame.ts";
 import { differenceCenter, frameVelocity } from "./motion.ts";

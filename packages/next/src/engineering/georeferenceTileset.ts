@@ -2,9 +2,8 @@
 // 11): the part that needs the engineering modules (EngineeringFrame, PROJ),
 // kept apart from the parser (georeference.ts) so a page that streams
 // tilesets without georeferencing them doesn't load it.
-import type { Mat4 } from "../../../core/src/math/mat4.ts";
-import { EARTH, MOON } from "../../../core/src/scene/Body.ts";
-import type { Tileset3D } from "../../../core/src/streaming/Tileset3D.ts";
+import type { Mat4 } from "@cesium/core/internal";
+import { EARTH, MOON, type Tileset3D } from "@cesium/core";
 import { crsObject, strictWkt2, type CrsRef } from "./crs.ts";
 import {
   EngineeringFrame,

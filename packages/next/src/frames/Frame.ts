@@ -4,7 +4,7 @@ import {
   multiply,
   copy,
   type Mat4,
-} from "../../../core/src/math/mat4.ts";
+} from "@cesium/core/internal";
 import type { Instant } from "../time/Instant.ts";
 import {
   NOT_STATED,

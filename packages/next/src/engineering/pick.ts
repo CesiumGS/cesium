@@ -1,22 +1,20 @@
-import type { Body } from "../../../core/src/scene/Body.ts";
 import type {
+  Body,
   PickPositionResult,
   PickResult,
-} from "../../../core/src/scene/View.ts";
-import type { DrawHandle } from "../../../core/src/scene/world/types.ts";
-import type { Tile } from "../../../core/src/streaming/Tile.ts";
-import type { SceneItem } from "../../../core/src/scene/SceneItem.ts";
-import type { Tileset3D } from "../../../core/src/streaming/Tileset3D.ts";
+  DrawHandle,
+  Tile,
+  SceneItem,
+  Tileset3D,
+  CorePick,
+  PickInterpreter,
+} from "@cesium/core";
 import {
   sphereDistance,
   obbDistanceSquaredTo,
   volumeObb,
   type TileVolume,
-} from "../../../core/src/streaming/volumes.ts";
-import type {
-  CorePick,
-  PickInterpreter,
-} from "../../../core/src/scene/pick.ts";
+} from "@cesium/core/internal";
 import type { CoordinateOperation } from "../frames/coordinates.ts";
 import { designPoint, type DesignPoint } from "./EngineeringFrame.ts";
 import { DESIGN_NOT_INVERTED, engineeringPlacement } from "./placement.ts";

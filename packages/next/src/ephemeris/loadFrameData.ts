@@ -1,4 +1,4 @@
-import type { LoadProgress } from "../../../core/src/io/readWithProgress.ts";
+import type { LoadProgress } from "@cesium/core";
 import { EarthOrientationParameters } from "../time/eop.ts";
 import type { LeapSeconds } from "../time/leapSeconds.ts";
 import { Ephemeris } from "./Ephemeris.ts";

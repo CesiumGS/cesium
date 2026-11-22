@@ -7,29 +7,27 @@
 // "drawn") and carries the point to the node asked for, in float64, from the
 // point itself. A catalog frame is a node of the frames' graph
 // (`graphOfFrames`); the pick's anchor is where the two graphs meet.
-import type { FrameKey } from "../../../core/src/camera/frameResolver.ts";
+import {
+  type FrameKey,
+  type CorePick,
+  type SigmaIn,
+  pointIn,
+  type NodePoint,
+  type PointIn,
+  type PointInOptions,
+} from "@cesium/core";
 import {
   curvilinearValuesOf,
   curvilinearForward,
   curvilinearInverse,
   type Route as CameraRoute,
   type CurvilinearMap,
-} from "../../../core/src/camera/route.ts";
-import type { CorePick } from "../../../core/src/scene/pick.ts";
-import type { SigmaIn } from "../../../core/src/transform/accuracy.ts";
-import {
   affine,
   curvilinear,
   TransformGraph,
   type CurvilinearSpec,
   type TransformNode,
-} from "../../../core/src/transform/graph.ts";
-import {
-  pointIn,
-  type NodePoint,
-  type PointIn,
-  type PointInOptions,
-} from "../../../core/src/transform/queries.ts";
+} from "@cesium/core/internal";
 import type { Frame } from "./Frame.ts";
 import type { FrameGraph } from "./graphOfFrames.ts";
 import { locatePick, type TruthHow } from "./pickTruth.ts";

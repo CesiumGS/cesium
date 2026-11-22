@@ -3,7 +3,7 @@ import { frameTransform } from "../frames/Frame.ts";
 import type { Frames } from "../frames/frames.ts";
 import type { FramePoint } from "../frames/local.ts";
 import { rotationPart } from "../frames/matrix.ts";
-import { Ellipsoid } from "../../../core/src/math/ellipsoid.ts";
+import { Ellipsoid } from "@cesium/core";
 import { Instant } from "../time/Instant.ts";
 import { C, GM_EARTH, GM_MOON, GM_SUN } from "./constants.ts";
 import { positionIn, velocityIn } from "./motion.ts";

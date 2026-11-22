@@ -1,8 +1,4 @@
-import { Emitter } from "../../../core/src/core/Emitter.ts";
-import type {
-  ClockChange,
-  SceneClock,
-} from "../../../core/src/core/sceneClock.ts";
+import { Emitter, type ClockChange, type SceneClock } from "@cesium/core";
 import { Instant } from "./Instant.ts";
 import { LeapSeconds } from "./leapSeconds.ts";
 

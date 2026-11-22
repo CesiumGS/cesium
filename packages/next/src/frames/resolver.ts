@@ -10,7 +10,11 @@ import {
   type FrameKey,
   type FrameMotion,
   type FrameResolver,
-} from "../../../core/src/camera/frameResolver.ts";
+  Emitter,
+  mat4 as m4,
+  type AnchorHandle,
+  type TransformFrameKey,
+} from "@cesium/core";
 import {
   NonAffineRouteError,
   curvilinearForward,
@@ -18,17 +22,11 @@ import {
   type Route,
   type RouteStep,
   type CurvilinearMap,
-} from "../../../core/src/camera/route.ts";
-import { Emitter } from "../../../core/src/core/Emitter.ts";
-import * as m4 from "../../../core/src/math/mat4.ts";
-import { rigidMatrixError } from "../../../core/src/math/transforms.ts";
-import type {
-  AnchorHandle,
-  TransformFrameKey,
-} from "../../../core/src/scene/world/types.ts";
+  rigidMatrixError,
+  type ViewId,
+} from "@cesium/core/internal";
 import { Instant } from "../time/Instant.ts";
 import type { LeapSeconds } from "../time/leapSeconds.ts";
-import type { ViewId } from "../../../core/src/transform/graph.ts";
 import {
   ANALYTIC_ACCURACY,
   analyticEdges,

@@ -1,7 +1,7 @@
 import { frameTransform } from "../frames/Frame.ts";
 import type { Frames } from "../frames/frames.ts";
-import { transformPoint } from "../../../core/src/math/mat4.ts";
-import { EARTH, MOON, type Body } from "../../../core/src/scene/Body.ts";
+import { transformPoint } from "@cesium/core/internal";
+import { EARTH, MOON, type Body } from "@cesium/core";
 import { Instant } from "../time/Instant.ts";
 import type { LightTimeSolution } from "./lightTime.ts";
 

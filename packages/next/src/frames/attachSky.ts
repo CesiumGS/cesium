@@ -2,11 +2,13 @@
 // turn, the Sun's direction and the Moon's place and axes, in the Earth's
 // anchor axes (ITRF), from GCRF, ITRF, HCRS, MOON_ICRF and MOON_ME. 5e makes
 // them per body.
-import type { SceneClock } from "../../../core/src/core/sceneClock.ts";
-import type { Engine } from "../../../core/src/scene/Engine.ts";
+import {
+  type SceneClock,
+  type Engine,
+  FrameUnavailableError,
+} from "@cesium/core";
 import { Instant } from "../time/Instant.ts";
 import type { LeapSeconds } from "../time/leapSeconds.ts";
-import { FrameUnavailableError } from "../../../core/src/camera/frameResolver.ts";
 import type { FrameCatalog, Precision } from "./catalog.ts";
 import type { Frame } from "./Frame.ts";
 import {
