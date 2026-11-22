@@ -2,10 +2,11 @@
 id: CS-775
 title: "The Work page's older views retire: the Older views menu, the Dependencies view and the old Projects matrix go"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-20
 project: CS-389
 needs: [CS-746, CS-748, CS-749]
+claimed_by: orch-11-CS-775
 touches: [packages/next/bench/suite/views/Work.tsx, packages/next/bench/suite/views/Dependencies.tsx, packages/next/bench/suite/views/dependencies.css, packages/next/bench/suite/views/Projects.tsx, packages/next/bench/suite/views/projects.css, packages/next/bench/suite/views/work.css, packages/next/bench/suite/workModel.ts, packages/next/bench/suite/work.ts, packages/next/bench/suite/DESIGN.md, packages/next/test/dynoDependencies.test.ts, packages/next/test/dynoProjects.test.ts, packages/next/test/dynoWork*.test.ts]
 ---
 
