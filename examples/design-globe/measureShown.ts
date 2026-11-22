@@ -1,6 +1,6 @@
 // What the measure section shows, for the checks (plan 4b Task 19; checks.ts
 // `checkRows`, Task 20's panel). Pure: test/designGlobeMeasureTool.test.ts.
-import type { Measurement } from "../../packages/next/src/measure/measure.ts";
+import type { Measurement } from "../../packages/measure/src/measure.ts";
 import type { Answers } from "./answers.ts";
 import type { CheckBasis, ShownValues } from "./checks.ts";
 import type { MeasureEnd } from "./measureState.ts";

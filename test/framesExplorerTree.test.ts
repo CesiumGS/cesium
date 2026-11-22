@@ -22,7 +22,7 @@ import type {
 import { Trajectory } from "../packages/frames/src/trajectory/Trajectory.ts";
 import { parseOem } from "../packages/frames/src/trajectory/oem.ts";
 import type { EngineeringFrame } from "../packages/crs/src/engineering/EngineeringFrame.ts";
-import { EARTH_ROTATION_RATE } from "../packages/next/src/measure/constants.ts";
+import { EARTH_ROTATION_RATE } from "../packages/measure/src/constants.ts";
 import { SAMPLE, syntheticFrameData } from "./syntheticFrames.ts";
 
 const leap = LeapSeconds.builtIn();

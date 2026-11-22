@@ -9,14 +9,14 @@ import {
   GM_EARTH,
   GM_MOON,
   GM_SUN,
-} from "../packages/next/src/measure/constants.ts";
+} from "../packages/measure/src/constants.ts";
 import {
   downlink,
   properTimeRate,
   uplink,
-} from "../packages/next/src/measure/doppler.ts";
-import { solveLightTime } from "../packages/next/src/measure/lightTime.ts";
-import { velocityIn } from "../packages/next/src/measure/motion.ts";
+} from "../packages/measure/src/doppler.ts";
+import { solveLightTime } from "../packages/measure/src/lightTime.ts";
+import { velocityIn } from "../packages/measure/src/motion.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { syntheticFrameData } from "./syntheticFrames.ts";
 

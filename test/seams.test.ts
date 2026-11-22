@@ -887,7 +887,7 @@ describe("DrawArguments.slotOf", () => {
 
 describe("the ray seam", () => {
   const examples = join(repo, "examples");
-  const measure = join(repo, "packages", "next", "src", "measure");
+  const measure = join(repo, "packages", "measure", "src");
   let program: ReturnType<typeof rayProgram>;
   let scanned: string[];
   beforeAll(() => {

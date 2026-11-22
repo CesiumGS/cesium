@@ -16,7 +16,7 @@ import {
 import { framePoint } from "../../../packages/frames/src/local.ts";
 import { pointAccuracy } from "../../../packages/frames/src/pointAccuracy.ts";
 import { earthOrientationSigma } from "../../../packages/frames/src/orientationSigma.ts";
-import { EARTH_ROTATION_RATE } from "../../../packages/next/src/measure/constants.ts";
+import { EARTH_ROTATION_RATE } from "../../../packages/measure/src/constants.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 import { length, radians } from "../panel/format.ts";
 import {

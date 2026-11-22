@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { castTerrainRay } from "../packages/core/src/globe/terrainRay.ts";
-import { terrainLineOfSight } from "../packages/next/src/measure/terrainLineOfSight.ts";
+import { terrainLineOfSight } from "../packages/measure/src/terrainLineOfSight.ts";
 import { terrainQueries } from "../packages/core/src/query/terrainBackend.ts";
 import {
   LEVEL_ZERO_ERROR,

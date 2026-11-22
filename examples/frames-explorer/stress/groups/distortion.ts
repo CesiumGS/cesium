@@ -2,7 +2,7 @@
 // state plane.
 import { EngineeringFrame } from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../../../../packages/crs/src/engineering/factors.ts";
-import { surfaceDistance } from "../../../../packages/next/src/measure/surface.ts";
+import { surfaceDistance } from "../../../../packages/measure/src/surface.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import {
   ANGLE_PATH,

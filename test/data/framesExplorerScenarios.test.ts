@@ -101,7 +101,7 @@ import {
   eastNorthUpFrame,
   framePoint,
 } from "../../packages/frames/src/local.ts";
-import { measure } from "../../packages/next/src/measure/measure.ts";
+import { measure } from "../../packages/measure/src/measure.ts";
 import { Trajectory } from "../../packages/frames/src/trajectory/Trajectory.ts";
 import { adaptivePath } from "../../examples/frames-explorer/overlays.ts";
 import {

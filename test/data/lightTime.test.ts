@@ -11,12 +11,12 @@ import {
   type FramePoint,
 } from "../../packages/frames/src/local.ts";
 import { rotationPart } from "../../packages/frames/src/matrix.ts";
-import { C } from "../../packages/next/src/measure/constants.ts";
-import { downlink } from "../../packages/next/src/measure/doppler.ts";
+import { C } from "../../packages/measure/src/constants.ts";
+import { downlink } from "../../packages/measure/src/doppler.ts";
 import {
   apparentDirection,
   solveLightTime,
-} from "../../packages/next/src/measure/lightTime.ts";
+} from "../../packages/measure/src/lightTime.ts";
 import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";

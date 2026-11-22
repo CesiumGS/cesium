@@ -62,7 +62,7 @@ import {
   testHill,
 } from "../../examples/frames-explorer/scenarios/testHill.ts";
 import { terrainSightText } from "../../examples/frames-explorer/sightLines.ts";
-import { terrainLineOfSight } from "../../packages/next/src/measure/terrainLineOfSight.ts";
+import { terrainLineOfSight } from "../../packages/measure/src/terrainLineOfSight.ts";
 import { terrainQueries } from "../../packages/core/src/query/terrainBackend.ts";
 import { LEVEL_ZERO_ERROR } from "../../packages/core/src/globe/TerrainSource.ts";
 import references from "../../examples/frames-explorer/references.json";

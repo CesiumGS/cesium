@@ -5,7 +5,7 @@
 import type {
   AccuracyStatement,
   AccuracyTerm,
-} from "../../../packages/next/src/measure/accuracy.ts";
+} from "../../../packages/measure/src/accuracy.ts";
 import type { DataItem, RunSummary } from "../protocol.ts";
 import type {
   Citation,

@@ -28,15 +28,12 @@ import { createFramesResolver } from "../packages/frames/src/resolver.ts";
 import { curvilinearFrame } from "../packages/frames/src/curvilinearFrame.ts";
 import { fromFunction } from "../packages/core/src/transforms/fromFunction.ts";
 import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
-import { accuracyOf } from "../packages/next/src/measure/accuracy.ts";
-import {
-  DrawnCurve,
-  sampleSegment,
-} from "../packages/next/src/measure/curve.ts";
-import { drawnDistance } from "../packages/next/src/measure/drawn.ts";
+import { accuracyOf } from "../packages/measure/src/accuracy.ts";
+import { DrawnCurve, sampleSegment } from "../packages/measure/src/curve.ts";
+import { drawnDistance } from "../packages/measure/src/drawn.ts";
 import { drawnThrough, AFFINE_ONLY } from "../packages/frames/src/drawn.ts";
 import { routeStretch } from "../packages/frames/src/routeStretch.ts";
-import { measure } from "../packages/next/src/measure/measure.ts";
+import { measure } from "../packages/measure/src/measure.ts";
 import { truePick } from "../packages/frames/src/pickTruth.ts";
 import { routeSingularRange } from "../packages/core/src/scene/curvilinearBounds.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";

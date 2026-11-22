@@ -6,7 +6,7 @@ import {
   fromDegrees,
   type Cartographic,
 } from "../../../../packages/core/src/math/ellipsoid.ts";
-import { measure } from "../../../../packages/next/src/measure/measure.ts";
+import { measure } from "../../../../packages/measure/src/measure.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import {
   DEGREE,

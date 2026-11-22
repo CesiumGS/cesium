@@ -5,7 +5,7 @@ import type {
   EngineeringFrame,
   SnapKind,
 } from "../../packages/crs/src/engineering/EngineeringFrame.ts";
-import type { Measurement } from "../../packages/next/src/measure/measure.ts";
+import type { Measurement } from "../../packages/measure/src/measure.ts";
 import type { Answers } from "./answers.ts";
 import {
   accuracyRows,

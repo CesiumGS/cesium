@@ -19,7 +19,7 @@ import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
 import {
   terrainLineOfSight,
   type TerrainLineOfSight,
-} from "../../packages/next/src/measure/terrainLineOfSight.ts";
+} from "../../packages/measure/src/terrainLineOfSight.ts";
 import type { SpatialQueries } from "../../packages/core/src/query/queries.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import { length, share } from "./panel/format.ts";

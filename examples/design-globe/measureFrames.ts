@@ -11,7 +11,7 @@ import type { Frames } from "../../packages/frames/src/frames.ts";
 import {
   measure,
   type Measurement,
-} from "../../packages/next/src/measure/measure.ts";
+} from "../../packages/measure/src/measure.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import type { LoadEvent } from "./page.ts";

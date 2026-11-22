@@ -19,7 +19,7 @@ import { ARCSECOND } from "../units.ts";
 import { frameTransform } from "../../../packages/frames/src/Frame.ts";
 import { framePoint } from "../../../packages/frames/src/local.ts";
 import { pointAccuracy } from "../../../packages/frames/src/pointAccuracy.ts";
-import { measure } from "../../../packages/next/src/measure/measure.ts";
+import { measure } from "../../../packages/measure/src/measure.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 import references from "../references.json";
 import { MOON_RANGE } from "../stress/groups/space.ts";

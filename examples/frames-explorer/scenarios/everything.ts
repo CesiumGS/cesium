@@ -35,8 +35,8 @@ import {
   type PointAccuracy,
 } from "../../../packages/frames/src/pointAccuracy.ts";
 import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
-import { C } from "../../../packages/next/src/measure/constants.ts";
-import { measure } from "../../../packages/next/src/measure/measure.ts";
+import { C } from "../../../packages/measure/src/constants.ts";
+import { measure } from "../../../packages/measure/src/measure.ts";
 import { MOON } from "../../../packages/core/src/scene/Body.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 import type { FrameCache } from "../frameCache.ts";

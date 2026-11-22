@@ -11,10 +11,7 @@ import {
   type FramePoint,
 } from "../../packages/frames/src/local.ts";
 import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
-import {
-  measure,
-  measureSpan,
-} from "../../packages/next/src/measure/measure.ts";
+import { measure, measureSpan } from "../../packages/measure/src/measure.ts";
 import { MOON } from "../../packages/core/src/scene/Body.ts";
 import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";

@@ -18,8 +18,8 @@ import {
   convertPoint,
   framePoint,
 } from "../../../packages/frames/src/local.ts";
-import { EARTH_ROTATION_RATE } from "../../../packages/next/src/measure/constants.ts";
-import { measure } from "../../../packages/next/src/measure/measure.ts";
+import { EARTH_ROTATION_RATE } from "../../../packages/measure/src/constants.ts";
+import { measure } from "../../../packages/measure/src/measure.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 import type { Trajectory } from "../../../packages/frames/src/trajectory/Trajectory.ts";
 import {

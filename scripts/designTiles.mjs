@@ -83,7 +83,7 @@ import { formatPipeline, parsePipeline } from "../packages/crs/src/engineering/p
 import { placeRigid } from "../packages/crs/src/engineering/placement.ts";
 import { gridSource, loadProj } from "../packages/crs/src/engineering/proj.ts";
 import { createFrames } from "../packages/frames/src/frames.ts";
-import { measure } from "../packages/next/src/measure/measure.ts";
+import { measure } from "../packages/measure/src/measure.ts";
 import { EarthOrientationParameters } from "../packages/frames/src/time/eop.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { LeapSeconds } from "../packages/time/src/leapSeconds.ts";

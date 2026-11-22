@@ -8,7 +8,7 @@ import {
   type Frame,
 } from "../../../../packages/frames/src/Frame.ts";
 import { Ellipsoid } from "../../../../packages/core/src/math/ellipsoid.ts";
-import { terrainLineOfSight } from "../../../../packages/next/src/measure/terrainLineOfSight.ts";
+import { terrainLineOfSight } from "../../../../packages/measure/src/terrainLineOfSight.ts";
 import { terrainQueries } from "../../../../packages/core/src/query/terrainBackend.ts";
 import { Instant } from "../../../../packages/time/src/Instant.ts";
 import { trackFrame, type BodyTrack } from "../../scenarios/bodyFrame.ts";

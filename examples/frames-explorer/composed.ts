@@ -20,8 +20,8 @@ import type { Frames } from "../../packages/frames/src/frames.ts";
 import type {
   AccuracyStatement,
   AccuracyTerm,
-} from "../../packages/next/src/measure/accuracy.ts";
-import { measure } from "../../packages/next/src/measure/measure.ts";
+} from "../../packages/measure/src/accuracy.ts";
+import { measure } from "../../packages/measure/src/measure.ts";
 import type { Instant } from "../../packages/time/src/Instant.ts";
 import {
   REFERENCES,

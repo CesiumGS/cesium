@@ -26,7 +26,7 @@ import {
 import type { Frames } from "../../../packages/frames/src/frames.ts";
 import { frameTransform } from "../../../packages/frames/src/Frame.ts";
 import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
-import { measure } from "../../../packages/next/src/measure/measure.ts";
+import { measure } from "../../../packages/measure/src/measure.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 import { Trajectory } from "../../../packages/frames/src/trajectory/Trajectory.ts";
 import {

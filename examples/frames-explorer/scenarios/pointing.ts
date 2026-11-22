@@ -15,7 +15,7 @@ import { rotationPart } from "../../../packages/frames/src/matrix.ts";
 import {
   C,
   EARTH_ROTATION_RATE,
-} from "../../../packages/next/src/measure/constants.ts";
+} from "../../../packages/measure/src/constants.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 
 /**

@@ -68,7 +68,7 @@ import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameDat
 import { frameTransform } from "../../packages/frames/src/Frame.ts";
 import { createFrames } from "../../packages/frames/src/frames.ts";
 import { convertPoint, framePoint } from "../../packages/frames/src/local.ts";
-import { measure } from "../../packages/next/src/measure/measure.ts";
+import { measure } from "../../packages/measure/src/measure.ts";
 import { pointAccuracy } from "../../packages/frames/src/pointAccuracy.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";

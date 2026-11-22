@@ -4,12 +4,12 @@ import { Frame } from "../packages/frames/src/Frame.ts";
 import { createFrames } from "../packages/frames/src/frames.ts";
 import { framePoint } from "../packages/frames/src/local.ts";
 import { toParentMatrix } from "../packages/frames/src/matrix.ts";
-import { C, GM_SUN } from "../packages/next/src/measure/constants.ts";
+import { C, GM_SUN } from "../packages/measure/src/constants.ts";
 import {
   apparentDirection,
   solveLightTime,
-} from "../packages/next/src/measure/lightTime.ts";
-import { positionIn, velocityIn } from "../packages/next/src/measure/motion.ts";
+} from "../packages/measure/src/lightTime.ts";
+import { positionIn, velocityIn } from "../packages/measure/src/motion.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import { Trajectory } from "../packages/frames/src/trajectory/Trajectory.ts";
 import { writeSpk } from "./spkWriter.ts";

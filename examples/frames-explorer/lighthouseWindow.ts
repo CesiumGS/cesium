@@ -25,7 +25,7 @@ import type { Frames } from "../../packages/frames/src/frames.ts";
 import {
   terrainLineOfSight,
   type TerrainLineOfSight,
-} from "../../packages/next/src/measure/terrainLineOfSight.ts";
+} from "../../packages/measure/src/terrainLineOfSight.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import type { Viewer } from "@cesium/next/widgets";
 import type { Moment, ScenarioEvaluation } from "./scenarios/evaluate.ts";

@@ -15,8 +15,8 @@ import type { SnapResult } from "../../packages/crs/src/engineering/snap.ts";
 import type {
   AccuracyStatement,
   AccuracyTerm,
-} from "../../packages/next/src/measure/accuracy.ts";
-import type { Measurement } from "../../packages/next/src/measure/measure.ts";
+} from "../../packages/measure/src/accuracy.ts";
+import type { Measurement } from "../../packages/measure/src/measure.ts";
 
 /** One end of a measurement. */
 export interface EndView {

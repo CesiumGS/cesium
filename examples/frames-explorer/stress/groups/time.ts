@@ -1,6 +1,6 @@
 // Time: the leap second, the end of the EOP table and the leap-second table's expiry.
 import { framePoint } from "../../../../packages/frames/src/local.ts";
-import { measure } from "../../../../packages/next/src/measure/measure.ts";
+import { measure } from "../../../../packages/measure/src/measure.ts";
 import { Instant } from "../../../../packages/time/src/Instant.ts";
 import { type StressCase, expectThrow, fmt, plainAccuracy } from "../runner.ts";
 import { TT_STEP, stressCase, utc } from "../shared.ts";

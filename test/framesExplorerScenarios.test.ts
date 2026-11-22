@@ -53,7 +53,7 @@ import {
   placeObserver,
   terrainSightText,
 } from "../examples/frames-explorer/sightLines.ts";
-import type { TerrainLineOfSight } from "../packages/next/src/measure/terrainLineOfSight.ts";
+import type { TerrainLineOfSight } from "../packages/measure/src/terrainLineOfSight.ts";
 import { moonCut, rayPlacement } from "../examples/frames-explorer/skyRay.ts";
 import { createCameraViews } from "../examples/frames-explorer/cameraViews.ts";
 import { Instant } from "../packages/time/src/Instant.ts";

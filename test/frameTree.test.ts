@@ -1,12 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import type { Ephemeris } from "../packages/frames/src/ephemeris/Ephemeris.ts";
-import {
-  C,
-  GM_MOON,
-  GM_SUN,
-  L_C,
-} from "../packages/next/src/measure/constants.ts";
+import { C, GM_MOON, GM_SUN, L_C } from "../packages/measure/src/constants.ts";
 import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
 import { frameTransform } from "../packages/frames/src/Frame.ts";
 import { createFrames } from "../packages/frames/src/frames.ts";

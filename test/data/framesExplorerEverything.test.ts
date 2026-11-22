@@ -73,7 +73,7 @@ import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameDat
 import { frameTransform, type Frame } from "../../packages/frames/src/Frame.ts";
 import { createFrames } from "../../packages/frames/src/frames.ts";
 import { framePoint } from "../../packages/frames/src/local.ts";
-import { solveLightTime } from "../../packages/next/src/measure/lightTime.ts";
+import { solveLightTime } from "../../packages/measure/src/lightTime.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { LeapSeconds } from "../../packages/time/src/leapSeconds.ts";

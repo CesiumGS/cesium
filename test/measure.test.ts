@@ -8,10 +8,10 @@ import {
 } from "../packages/frames/src/local.ts";
 import { Frame } from "../packages/frames/src/Frame.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
-import { C } from "../packages/next/src/measure/constants.ts";
-import { downlink, uplink } from "../packages/next/src/measure/doppler.ts";
-import { measure, measureSpan } from "../packages/next/src/measure/measure.ts";
-import { surfaceDistance } from "../packages/next/src/measure/surface.ts";
+import { C } from "../packages/measure/src/constants.ts";
+import { downlink, uplink } from "../packages/measure/src/doppler.ts";
+import { measure, measureSpan } from "../packages/measure/src/measure.ts";
+import { surfaceDistance } from "../packages/measure/src/surface.ts";
 import { EARTH } from "../packages/core/src/scene/Body.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import type { EarthOrientationParameters } from "../packages/frames/src/time/eop.ts";

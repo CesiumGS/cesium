@@ -6,7 +6,7 @@ import {
 } from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import { Alignment } from "../../../../packages/crs/src/engineering/alignment.ts";
 import { framePoint } from "../../../../packages/frames/src/local.ts";
-import { measure } from "../../../../packages/next/src/measure/measure.ts";
+import { measure } from "../../../../packages/measure/src/measure.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import { CALIFORNIA, type StressCase, plainAccuracy } from "../runner.ts";
 import { CLOTHOID_ROAD } from "../../scenarios/sites.ts";

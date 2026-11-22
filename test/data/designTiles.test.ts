@@ -109,7 +109,7 @@ import type { ProjApi } from "../../packages/crs/src/engineering/projApi.ts";
 import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
 import { createFrames } from "../../packages/frames/src/frames.ts";
 import { splitGlb } from "../../packages/core/src/io/glb.ts";
-import { measure } from "../../packages/next/src/measure/measure.ts";
+import { measure } from "../../packages/measure/src/measure.ts";
 import {
   treeFromJson,
   type Tile,

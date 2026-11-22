@@ -16,7 +16,7 @@ import {
 import { gridFactors } from "../../../../packages/crs/src/engineering/factors.ts";
 import { projTokenProblem } from "../../../../packages/crs/src/engineering/wkt2.ts";
 import type { ProjApi } from "../../../../packages/crs/src/engineering/proj.ts";
-import { measure } from "../../../../packages/next/src/measure/measure.ts";
+import { measure } from "../../../../packages/measure/src/measure.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import {
   type EllipsoidShape,

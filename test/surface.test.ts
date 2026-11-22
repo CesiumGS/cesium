@@ -2,7 +2,7 @@
 // geographiclib, in test/fixtures/frames/geodesic.json (scripts/frameFixtures.py geodesic).
 import { describe, expect, it } from "vitest";
 import { Ellipsoid, fromDegrees } from "../packages/core/src/math/ellipsoid.ts";
-import { surfaceDistance } from "../packages/next/src/measure/surface.ts";
+import { surfaceDistance } from "../packages/measure/src/surface.ts";
 import { vec3 } from "../packages/core/src/math/vec3.ts";
 import fixture from "./fixtures/frames/geodesic.json";
 

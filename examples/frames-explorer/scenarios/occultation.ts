@@ -29,7 +29,7 @@ import type { Frames } from "../../../packages/frames/src/frames.ts";
 import {
   C,
   EARTH_ROTATION_RATE,
-} from "../../../packages/next/src/measure/constants.ts";
+} from "../../../packages/measure/src/constants.ts";
 import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";
 import type { Trajectory } from "../../../packages/frames/src/trajectory/Trajectory.ts";

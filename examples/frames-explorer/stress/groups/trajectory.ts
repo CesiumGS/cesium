@@ -4,7 +4,7 @@ import {
   convertPoint,
   framePoint,
 } from "../../../../packages/frames/src/local.ts";
-import { measure } from "../../../../packages/next/src/measure/measure.ts";
+import { measure } from "../../../../packages/measure/src/measure.ts";
 import { type StressCase, expectThrow, fmt, plainAccuracy } from "../runner.ts";
 import {
   FLYBY,

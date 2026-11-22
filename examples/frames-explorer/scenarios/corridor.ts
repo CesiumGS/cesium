@@ -20,7 +20,7 @@ import {
   designPoint,
 } from "../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import { framePoint } from "../../../packages/frames/src/local.ts";
-import { measure } from "../../../packages/next/src/measure/measure.ts";
+import { measure } from "../../../packages/measure/src/measure.ts";
 import { Ellipsoid } from "../../../packages/core/src/math/ellipsoid.ts";
 import { EARTH } from "../../../packages/core/src/scene/Body.ts";
 import { Instant } from "../../../packages/time/src/Instant.ts";

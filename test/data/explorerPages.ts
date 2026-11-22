@@ -56,7 +56,7 @@ import {
   framePoint,
 } from "../../packages/frames/src/local.ts";
 import { Ellipsoid } from "../../packages/core/src/math/ellipsoid.ts";
-import { measure } from "../../packages/next/src/measure/measure.ts";
+import { measure } from "../../packages/measure/src/measure.ts";
 import { createFrames } from "../../packages/frames/src/frames.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";
 import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";

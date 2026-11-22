@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { Frame } from "../packages/frames/src/Frame.ts";
 import { createFrames } from "../packages/frames/src/frames.ts";
 import { framePoint } from "../packages/frames/src/local.ts";
-import { accuracyOf } from "../packages/next/src/measure/accuracy.ts";
-import { EARTH_ROTATION_RATE } from "../packages/next/src/measure/constants.ts";
+import { accuracyOf } from "../packages/measure/src/accuracy.ts";
+import { EARTH_ROTATION_RATE } from "../packages/measure/src/constants.ts";
 import { Instant } from "../packages/time/src/Instant.ts";
 import type {
   EarthOrientationParameters,

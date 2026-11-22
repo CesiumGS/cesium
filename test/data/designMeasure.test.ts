@@ -25,10 +25,7 @@ import { Ephemeris } from "../../packages/frames/src/ephemeris/Ephemeris.ts";
 import type { FrameData } from "../../packages/frames/src/ephemeris/loadFrameData.ts";
 import { createFrames } from "../../packages/frames/src/frames.ts";
 import { framePoint } from "../../packages/frames/src/local.ts";
-import {
-  measure,
-  measureSpan,
-} from "../../packages/next/src/measure/measure.ts";
+import { measure, measureSpan } from "../../packages/measure/src/measure.ts";
 import { EARTH, MOON } from "../../packages/core/src/scene/Body.ts";
 import { EarthOrientationParameters } from "../../packages/frames/src/time/eop.ts";
 import { Instant } from "../../packages/time/src/Instant.ts";

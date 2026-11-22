@@ -6,7 +6,7 @@ import {
 } from "../../../packages/crs/src/engineering/crs.ts";
 import type { ProjApi } from "../../../packages/crs/src/engineering/proj.ts";
 import type { Frames } from "../../../packages/frames/src/frames.ts";
-import type { AccuracyStatement } from "../../../packages/next/src/measure/accuracy.ts";
+import type { AccuracyStatement } from "../../../packages/measure/src/accuracy.ts";
 import { Trajectory } from "../../../packages/frames/src/trajectory/Trajectory.ts";
 import {
   type Citation,

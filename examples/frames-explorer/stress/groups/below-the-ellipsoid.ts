@@ -3,7 +3,7 @@
 import { EngineeringFrame } from "../../../../packages/crs/src/engineering/EngineeringFrame.ts";
 import { gridFactors } from "../../../../packages/crs/src/engineering/factors.ts";
 import { framePoint } from "../../../../packages/frames/src/local.ts";
-import { measure } from "../../../../packages/next/src/measure/measure.ts";
+import { measure } from "../../../../packages/measure/src/measure.ts";
 import { EARTH } from "../../../../packages/core/src/scene/Body.ts";
 import { DEGREE, ellipsoidOf, onEarth } from "../references.ts";
 import { type StressCase, type StressResult, fmt } from "../runner.ts";

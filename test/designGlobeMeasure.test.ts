@@ -16,7 +16,7 @@ import {
   type EngineeringFrame,
 } from "../packages/crs/src/engineering/EngineeringFrame.ts";
 import type { SnapResult } from "../packages/crs/src/engineering/snap.ts";
-import type { Measurement } from "../packages/next/src/measure/measure.ts";
+import type { Measurement } from "../packages/measure/src/measure.ts";
 
 const MPU = 1200 / 3937;
 const frame = { units: { metersPerUnit: MPU } } as unknown as EngineeringFrame;

@@ -5,7 +5,7 @@
 import type {
   AccuracyStatement,
   WarningCode,
-} from "../../packages/next/src/measure/accuracy.ts";
+} from "../../packages/measure/src/accuracy.ts";
 
 const NOT_ABOUT_SEPARATION: ReadonlySet<WarningCode> = new Set([
   "own-instant-no-signal",

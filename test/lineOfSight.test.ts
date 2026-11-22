@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { frameTransform } from "../packages/frames/src/Frame.ts";
 import { createFrames } from "../packages/frames/src/frames.ts";
-import { C } from "../packages/next/src/measure/constants.ts";
-import type { LightTimeSolution } from "../packages/next/src/measure/lightTime.ts";
+import { C } from "../packages/measure/src/constants.ts";
+import type { LightTimeSolution } from "../packages/measure/src/lightTime.ts";
 import {
   lineOfSight,
   segmentBlocked,
-} from "../packages/next/src/measure/lineOfSight.ts";
+} from "../packages/measure/src/lineOfSight.ts";
 import { Ellipsoid } from "../packages/core/src/math/ellipsoid.ts";
 import { transformPoint } from "../packages/core/src/math/mat4.ts";
 import { EARTH, MOON } from "../packages/core/src/scene/Body.ts";
