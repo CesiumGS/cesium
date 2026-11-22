@@ -73,7 +73,7 @@ const opt = (name, fallback) => {
 // ------------------------------------------------------------ child: a server
 
 if (args[0] === "--child") {
-  // argv: --child <root of packages/next in the repository read>
+  // argv: --child <the harness root of the repository read>
   const { createServer } = await import("vite");
   const { workApi } = await import(
     pathToFileURL(join(pkg, "scripts", "vitePluginWork.ts")).href
@@ -117,7 +117,7 @@ const realStore = storeOf(
 
 /**
  * A repository and store `times` the size of today's, in `dir`: returns
- * the packages/next folder to serve and the XDG_DATA_HOME to point hitld at.
+ * the repository to serve and the XDG_DATA_HOME to point hitld at.
  */
 function fixture(dir, times) {
   const repo = join(dir, "repo");

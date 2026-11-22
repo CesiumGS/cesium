@@ -1,5 +1,5 @@
 // One-off developer tool: extracts DELTET/DELTA_AT from a NAIF leapseconds
-// kernel (naif0012.tls) into src/time/leapTable.ts, the table
+// kernel (naif0012.tls) into packages/time/src/leapTable.ts, the table
 // `LeapSeconds.builtIn()` uses. Its output is committed; it is not part of
 // the build.
 //

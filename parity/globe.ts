@@ -258,7 +258,7 @@ async function legacySelection(
   // Heights come from sampleTerrain (below): 1.x frees a tile's quantized
   // buffers once its mesh exists, and its interpolateHeight then compares
   // texture coordinates in 0..1 with u, v scaled to 0..32767, so loaded
-  // globe tiles can't be sampled (a 1.x bug, packages/next/work/README.md).
+  // globe tiles can't be sampled (a 1.x bug, work/README.md).
   const heights: Array<number | undefined> = points.map(() => undefined);
   // The drawn surface: 1.x clamps models and billboards to it.
   const surface = points.map(([lon, lat]) =>

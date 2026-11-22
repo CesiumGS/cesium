@@ -109,14 +109,14 @@ export function Overview() {
       status="current"
       lede={
         <>
-          <C>packages/next</C> is a clean-slate, WebGPU-only engine. It is built
-          as an embeddable rendering core: small at its center, with time,
-          reference frames, coordinates and measurement as optional modules, and
-          seams where a host application can supply its own services. Where
-          content sits in a tree of transforms decides how it is placed,
-          reprojected or deformed, and the core compiles that tree for the GPU.
-          It is a proof of concept today (version {data.meta.version}), and its
-          public API is still open to change.
+          Cesium 2.0 is a clean-slate, WebGPU-only engine. It is built as an
+          embeddable rendering core: small at its center, with time, reference
+          frames, coordinates and measurement as optional modules, and seams
+          where a host application can supply its own services. Where content
+          sits in a tree of transforms decides how it is placed, reprojected or
+          deformed, and the core compiles that tree for the GPU. It is a proof
+          of concept today (version {data.meta.version}), and its public API is
+          still open to change.
         </>
       }
     >
@@ -199,12 +199,12 @@ export function Overview() {
           </p>
           <p>
             The prototype was developed with heavy use of coding agents, under
-            human direction. From git, <C>packages/next</C> has{" "}
-            {count(data.history.commits)} commits between{" "}
-            {day(data.history.firstDate)} and {day(data.history.lastDate)}, of
-            which {count(data.history.withAgent)} name a coding agent as
-            co-author, and {count(data.counts.testFiles)} test files. That pace
-            may not predict the cost of production.
+            human direction. From git, 2.0 has {count(data.history.commits)}{" "}
+            commits between {day(data.history.firstDate)} and{" "}
+            {day(data.history.lastDate)}, of which{" "}
+            {count(data.history.withAgent)} name a coding agent as co-author,
+            and {count(data.counts.testFiles)} test files. That pace may not
+            predict the cost of production.
           </p>
           <p>Whatever the tooling, going to production involves:</p>
           <ul>

@@ -57,7 +57,7 @@ const METHOD_FILES = [
   "vite.config.ts",
 ];
 
-/** The measuring harness in `root` (the frozen tree's packages/next). */
+/** The measuring harness in `root` (the frozen tree's harness root). */
 export function methodKey(root) {
   return hash(
     METHOD_FILES.map((f) =>

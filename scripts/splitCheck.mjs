@@ -6,7 +6,7 @@
 // The old file is `git show <rev>:CESIUM2_WEBGPU_PLAN.md` (default: the last
 // commit before the split, found by its message). The new layout is the
 // working tree's CESIUM2_WEBGPU_PLAN.md, docs/decisions, docs/design,
-// docs/history and packages/next/work.
+// docs/history and work.
 //
 // - lines: every non-blank line of the old file appears in the new layout
 //   (headings compared without their section numbers and levels). Lines of

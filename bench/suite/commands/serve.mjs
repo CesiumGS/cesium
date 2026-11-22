@@ -40,7 +40,7 @@ import { DynoError } from "./dispatch.mjs";
 
 export const PORTS = { from: 5200, to: 5299 };
 
-/** packages/next. */
+/** The repository's root. */
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
 
 /** The servers dyno starts: the owner's port, and how to start one. */

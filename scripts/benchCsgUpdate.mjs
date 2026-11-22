@@ -1,6 +1,6 @@
 // Where a CSG update's time goes (parameter change -> a new solid on the
 // page), in the kernels' real worker (a Node worker thread: a real thread,
-// a real structured clone). Run from packages/next:
+// a real structured clone). Run from the repository's root:
 //
 //   node --experimental-transform-types --disable-warning=ExperimentalWarning scripts/benchCsgUpdate.mjs [options]
 //

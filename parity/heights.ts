@@ -48,7 +48,7 @@ const $ = <T extends Element = HTMLElement>(id: string) =>
  * - `Cesium3DTileset.getHeight`, what 1.x clamps models to: CPU picking of
  *   the selected tiles along a geocentric ray, the first tile with any hit.
  *   It misses geometry the renderer draws and can return a lower surface
- *   (packages/next/work/README.md), so it is reported, not held to.
+ *   (work/README.md), so it is reported, not held to.
  */
 
 const WIDTH = 480;

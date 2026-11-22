@@ -50,7 +50,8 @@ function setPath(target, path, value) {
  * list), the canonical id (releases exact, the working tree named by its
  * branch), the source and how the page loads the engine (`page`:
  * { cesium?, server? }). `serve(root)` returns the
- * origin of a dev server for a snapshot's packages/next (2.0 at a ref).
+ * origin of a dev server for a snapshot's harness root (2.0 at a ref; see
+ * harnessRoot).
  */
 export async function resolveEngine(
   spec,

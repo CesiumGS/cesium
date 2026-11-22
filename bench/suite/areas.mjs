@@ -15,7 +15,7 @@ const git = (args, cwd) =>
     .filter(Boolean);
 
 /**
- * Files changed in `root` (packages/next) since `ref`, uncommitted and
+ * Files changed in `root` (the repository's root) since `ref`, uncommitted and
  * untracked ones included, relative to `root`.
  */
 export function changedFiles(root, ref = "HEAD") {

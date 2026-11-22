@@ -36,7 +36,8 @@
 //
 // Without `--url` (a server already running), the command serves this tree
 // with its own Vite on `--port`; `--roots` serves each directory given (a
-// worktree's packages/next) instead, one at a time, for other commits.
+// worktree's root, or its packages/next before CS-835) instead, one at a
+// time, for other commits.
 // `--https` serves them over TLS (DEV_HTTPS), so the browser speaks HTTP/2.
 // `--interleave` serves each tree in turn within every repetition (a fresh
 // server warmed by one load each time), so bursts of other work on the

@@ -47,7 +47,7 @@ import {
   machineState,
 } from "./status.mjs";
 
-/** packages/next/bench/dyno.mjs. */
+/** bench/dyno.mjs. */
 const DYNO = join(
   dirname(fileURLToPath(import.meta.url)),
   "..",

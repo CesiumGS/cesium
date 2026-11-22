@@ -2,7 +2,7 @@
 // with no build step of its own, from its server or another origin.
 //
 //   dist-lib/cesium-next.mjs   the core's ES module (shaders inlined)
-//   dist-lib/cesium-next-{time,frames,proj,measure,widgets}.mjs
+//   dist-lib/cesium-next-{time,frames,crs,measure,ui}.mjs
 //                              the other entry points (`@cesium/next/time`, ...)
 //   dist-lib/assets/           the content worker, its chunks, and the
 //                              Draco and Basis wasm, each found relative to
