@@ -2,11 +2,12 @@
 id: CS-552
 title: "The content-source seam: one interface every source module implements, designed and planned"
 kind: work
-state: planned
+state: in-progress
 created: 2026-11-16
 project: CS-191
-tier_override: 3
 needs: [CS-551]
+claimed_by: orch-11-CS-552
+tier_override: 3
 ---
 
 Design the content-source seam that the owner's call (CS-551, `docs/decisions/2026-11-16-content-sources-as-modules.md`) asks for: one interface every source module implements, so 3D Tiles, the globe's terrain and imagery, glTF files, MVT, Esri services, USD and later sources load the same way. This is the design-heavy step the source items (CS-554 to CS-559) wait on.
